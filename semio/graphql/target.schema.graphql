@@ -279,7 +279,7 @@ type VectorDiffConnection implements EntityConnectionInterface {
   hash: String! # cached
 }
 
-union VectorDiffsOwner = AttributeDiff | Change | ChangedDescription | CreatedFixedPiece | Diffs | DraggedPiece | FixedPiece | LocationDiff | PlaneDiff | PlaceDiff | PositionDiff | RenamedKit
+union VectorDiffsOwner = AddedAttributeToConcept | AddedAttributeToDesign | AddedAttributeToPiece | AddedAttributeToPort | AddedAttributeToQuality | AddedAttributeToTag | AddedAttributeToType | AddedAttributesToConcept | AddedAttributesToDesign | AddedAttributesToPiece | AddedAttributesToPort | AddedAttributesToQuality | AddedAttributesToTag | AddedAttributesToType | AddedChildPieceWithParentConnectionToDesign | AddedChildPiecesWithParentConnectionsToDesign | AddedConnectorToType | AddedConnectorsToType | AddedFixedPieceToDesign | AddedHangingChildPieceWithParentConnectionToDesign | AddedHangingChildPiecesWithParentConnectionsToDesign | AttributeDiff | Change | ChangedDescription | ChangedPieceToTypeInDesign | ChangedPiecesToTypeInDesign | CreatedConcept | CreatedConcepts | CreatedDesign | CreatedDesigns | CreatedPort | CreatedPorts | CreatedQualities | CreatedQuality | CreatedTag | CreatedTags | CreatedType | CreatedTypes | DeletedConcept | DeletedConcepts | DeletedDesign | DeletedDesigns | DeletedPieceInDesign | DeletedPiecesAndConnectionsInDesign | DeletedPiecesInDesign | DeletedPort | DeletedPorts | DeletedQualities | DeletedQuality | DeletedTag | DeletedTags | DeletedType | DeletedTypes | Diffs | DraggedPieceInDesign | DraggedPiecesInDesign | FixedPieceInDesign | FixedPiecesInDesign | FlattenedDesign | LocationDiff | MovedPieceInDesign | MovedPiecesInDesign | PlaceDiff | PlaneDiff | PositionDiff | RemovedAttributeFromConcept | RemovedAttributeFromDesign | RemovedAttributeFromPiece | RemovedAttributeFromPort | RemovedAttributeFromQuality | RemovedAttributeFromTag | RemovedAttributeFromType | RemovedAttributesFromConcept | RemovedAttributesFromDesign | RemovedAttributesFromPiece | RemovedAttributesFromPort | RemovedAttributesFromQuality | RemovedAttributesFromTag | RemovedAttributesFromType | RemovedConnectorFromType | RemovedConnectorsFromType | RenamedConcept | RenamedConnectorInType | RenamedKit | RenamedPieceInDesign | RenamedPort | RenamedQuality | RenamedTag | RenamedType | UpdatedConceptDescription | UpdatedConceptIcon | UpdatedConnectorDescriptionInType | UpdatedConnectorIconInType | UpdatedPieceDescriptionInDesign | UpdatedPortDescription | UpdatedPortIcon | UpdatedQualityDescription | UpdatedQualityIcon | UpdatedTagDescription | UpdatedTagIcon | UpdatedTypeDescription | UpdatedTypeIcon
 
 union VectorDiffsOwned = VectorDiffs | VectorDiff | PlaneDiff | PositionDiff | AttributeDiff | LocationDiff | PlaceDiff
 
@@ -405,7 +405,7 @@ type PointDiffConnection implements EntityConnectionInterface {
   hash: String! # cached
 }
 
-union PointDiffsOwner = AttributeDiff | Change | ChangedDescription | CreatedFixedPiece | Diffs | DraggedPiece | FixedPiece | LocationDiff | PlaneDiff | PlaceDiff | PositionDiff | RenamedKit
+union PointDiffsOwner = AddedAttributeToConcept | AddedAttributeToDesign | AddedAttributeToPiece | AddedAttributeToPort | AddedAttributeToQuality | AddedAttributeToTag | AddedAttributeToType | AddedAttributesToConcept | AddedAttributesToDesign | AddedAttributesToPiece | AddedAttributesToPort | AddedAttributesToQuality | AddedAttributesToTag | AddedAttributesToType | AddedChildPieceWithParentConnectionToDesign | AddedChildPiecesWithParentConnectionsToDesign | AddedConnectorToType | AddedConnectorsToType | AddedFixedPieceToDesign | AddedHangingChildPieceWithParentConnectionToDesign | AddedHangingChildPiecesWithParentConnectionsToDesign | AttributeDiff | Change | ChangedDescription | ChangedPieceToTypeInDesign | ChangedPiecesToTypeInDesign | CreatedConcept | CreatedConcepts | CreatedDesign | CreatedDesigns | CreatedPort | CreatedPorts | CreatedQualities | CreatedQuality | CreatedTag | CreatedTags | CreatedType | CreatedTypes | DeletedConcept | DeletedConcepts | DeletedDesign | DeletedDesigns | DeletedPieceInDesign | DeletedPiecesAndConnectionsInDesign | DeletedPiecesInDesign | DeletedPort | DeletedPorts | DeletedQualities | DeletedQuality | DeletedTag | DeletedTags | DeletedType | DeletedTypes | Diffs | DraggedPieceInDesign | DraggedPiecesInDesign | FixedPieceInDesign | FixedPiecesInDesign | FlattenedDesign | LocationDiff | MovedPieceInDesign | MovedPiecesInDesign | PlaceDiff | PlaneDiff | PositionDiff | RemovedAttributeFromConcept | RemovedAttributeFromDesign | RemovedAttributeFromPiece | RemovedAttributeFromPort | RemovedAttributeFromQuality | RemovedAttributeFromTag | RemovedAttributeFromType | RemovedAttributesFromConcept | RemovedAttributesFromDesign | RemovedAttributesFromPiece | RemovedAttributesFromPort | RemovedAttributesFromQuality | RemovedAttributesFromTag | RemovedAttributesFromType | RemovedConnectorFromType | RemovedConnectorsFromType | RenamedConcept | RenamedConnectorInType | RenamedKit | RenamedPieceInDesign | RenamedPort | RenamedQuality | RenamedTag | RenamedType | UpdatedConceptDescription | UpdatedConceptIcon | UpdatedConnectorDescriptionInType | UpdatedConnectorIconInType | UpdatedPieceDescriptionInDesign | UpdatedPortDescription | UpdatedPortIcon | UpdatedQualityDescription | UpdatedQualityIcon | UpdatedTagDescription | UpdatedTagIcon | UpdatedTypeDescription | UpdatedTypeIcon
 
 union PointDiffsOwned = PointDiffs | PointDiff | PlaneDiff | PositionDiff | AttributeDiff | LocationDiff | PlaceDiff
 
@@ -528,7 +528,7 @@ type CoordinateDiffConnection implements EntityConnectionInterface {
   hash: String! # cached
 }
 
-union CoordinateDiffsOwner = AttributeDiff | Change | ChangedDescription | CreatedFixedPiece | Diffs | DraggedPiece | FixedPiece | LocationDiff | PlaneDiff | PlaceDiff | PositionDiff | RenamedKit
+union CoordinateDiffsOwner = AddedAttributeToConcept | AddedAttributeToDesign | AddedAttributeToPiece | AddedAttributeToPort | AddedAttributeToQuality | AddedAttributeToTag | AddedAttributeToType | AddedAttributesToConcept | AddedAttributesToDesign | AddedAttributesToPiece | AddedAttributesToPort | AddedAttributesToQuality | AddedAttributesToTag | AddedAttributesToType | AddedChildPieceWithParentConnectionToDesign | AddedChildPiecesWithParentConnectionsToDesign | AddedConnectorToType | AddedConnectorsToType | AddedFixedPieceToDesign | AddedHangingChildPieceWithParentConnectionToDesign | AddedHangingChildPiecesWithParentConnectionsToDesign | AttributeDiff | Change | ChangedDescription | ChangedPieceToTypeInDesign | ChangedPiecesToTypeInDesign | CreatedConcept | CreatedConcepts | CreatedDesign | CreatedDesigns | CreatedPort | CreatedPorts | CreatedQualities | CreatedQuality | CreatedTag | CreatedTags | CreatedType | CreatedTypes | DeletedConcept | DeletedConcepts | DeletedDesign | DeletedDesigns | DeletedPieceInDesign | DeletedPiecesAndConnectionsInDesign | DeletedPiecesInDesign | DeletedPort | DeletedPorts | DeletedQualities | DeletedQuality | DeletedTag | DeletedTags | DeletedType | DeletedTypes | Diffs | DraggedPieceInDesign | DraggedPiecesInDesign | FixedPieceInDesign | FixedPiecesInDesign | FlattenedDesign | LocationDiff | MovedPieceInDesign | MovedPiecesInDesign | PlaceDiff | PlaneDiff | PositionDiff | RemovedAttributeFromConcept | RemovedAttributeFromDesign | RemovedAttributeFromPiece | RemovedAttributeFromPort | RemovedAttributeFromQuality | RemovedAttributeFromTag | RemovedAttributeFromType | RemovedAttributesFromConcept | RemovedAttributesFromDesign | RemovedAttributesFromPiece | RemovedAttributesFromPort | RemovedAttributesFromQuality | RemovedAttributesFromTag | RemovedAttributesFromType | RemovedConnectorFromType | RemovedConnectorsFromType | RenamedConcept | RenamedConnectorInType | RenamedKit | RenamedPieceInDesign | RenamedPort | RenamedQuality | RenamedTag | RenamedType | UpdatedConceptDescription | UpdatedConceptIcon | UpdatedConnectorDescriptionInType | UpdatedConnectorIconInType | UpdatedPieceDescriptionInDesign | UpdatedPortDescription | UpdatedPortIcon | UpdatedQualityDescription | UpdatedQualityIcon | UpdatedTagDescription | UpdatedTagIcon | UpdatedTypeDescription | UpdatedTypeIcon
 
 union CoordinateDiffsOwned = CoordinateDiffs | CoordinateDiff | PlaneDiff | PositionDiff | AttributeDiff | LocationDiff | PlaceDiff
 
@@ -651,7 +651,7 @@ type OffsetDiffConnection implements EntityConnectionInterface {
   hash: String! # cached
 }
 
-union OffsetDiffsOwner = AttributeDiff | Change | ChangedDescription | CreatedFixedPiece | Diffs | DraggedPiece | FixedPiece | LocationDiff | PlaneDiff | PlaceDiff | PositionDiff | RenamedKit
+union OffsetDiffsOwner = AddedAttributeToConcept | AddedAttributeToDesign | AddedAttributeToPiece | AddedAttributeToPort | AddedAttributeToQuality | AddedAttributeToTag | AddedAttributeToType | AddedAttributesToConcept | AddedAttributesToDesign | AddedAttributesToPiece | AddedAttributesToPort | AddedAttributesToQuality | AddedAttributesToTag | AddedAttributesToType | AddedChildPieceWithParentConnectionToDesign | AddedChildPiecesWithParentConnectionsToDesign | AddedConnectorToType | AddedConnectorsToType | AddedFixedPieceToDesign | AddedHangingChildPieceWithParentConnectionToDesign | AddedHangingChildPiecesWithParentConnectionsToDesign | AttributeDiff | Change | ChangedDescription | ChangedPieceToTypeInDesign | ChangedPiecesToTypeInDesign | CreatedConcept | CreatedConcepts | CreatedDesign | CreatedDesigns | CreatedPort | CreatedPorts | CreatedQualities | CreatedQuality | CreatedTag | CreatedTags | CreatedType | CreatedTypes | DeletedConcept | DeletedConcepts | DeletedDesign | DeletedDesigns | DeletedPieceInDesign | DeletedPiecesAndConnectionsInDesign | DeletedPiecesInDesign | DeletedPort | DeletedPorts | DeletedQualities | DeletedQuality | DeletedTag | DeletedTags | DeletedType | DeletedTypes | Diffs | DraggedPieceInDesign | DraggedPiecesInDesign | FixedPieceInDesign | FixedPiecesInDesign | FlattenedDesign | LocationDiff | MovedPieceInDesign | MovedPiecesInDesign | PlaceDiff | PlaneDiff | PositionDiff | RemovedAttributeFromConcept | RemovedAttributeFromDesign | RemovedAttributeFromPiece | RemovedAttributeFromPort | RemovedAttributeFromQuality | RemovedAttributeFromTag | RemovedAttributeFromType | RemovedAttributesFromConcept | RemovedAttributesFromDesign | RemovedAttributesFromPiece | RemovedAttributesFromPort | RemovedAttributesFromQuality | RemovedAttributesFromTag | RemovedAttributesFromType | RemovedConnectorFromType | RemovedConnectorsFromType | RenamedConcept | RenamedConnectorInType | RenamedKit | RenamedPieceInDesign | RenamedPort | RenamedQuality | RenamedTag | RenamedType | UpdatedConceptDescription | UpdatedConceptIcon | UpdatedConnectorDescriptionInType | UpdatedConnectorIconInType | UpdatedPieceDescriptionInDesign | UpdatedPortDescription | UpdatedPortIcon | UpdatedQualityDescription | UpdatedQualityIcon | UpdatedTagDescription | UpdatedTagIcon | UpdatedTypeDescription | UpdatedTypeIcon
 
 union OffsetDiffsOwned = OffsetDiffs | OffsetDiff | PlaneDiff | PositionDiff | AttributeDiff | LocationDiff | PlaceDiff
 
@@ -780,7 +780,7 @@ type PlaneDiffConnection implements EntityConnectionInterface {
   hash: String! # cached
 }
 
-union PlaneDiffsOwner = AttributeDiff | Change | ChangedDescription | CreatedFixedPiece | Diffs | DraggedPiece | FixedPiece | LocationDiff | PlaneDiff | PlaceDiff | PositionDiff | RenamedKit
+union PlaneDiffsOwner = AddedAttributeToConcept | AddedAttributeToDesign | AddedAttributeToPiece | AddedAttributeToPort | AddedAttributeToQuality | AddedAttributeToTag | AddedAttributeToType | AddedAttributesToConcept | AddedAttributesToDesign | AddedAttributesToPiece | AddedAttributesToPort | AddedAttributesToQuality | AddedAttributesToTag | AddedAttributesToType | AddedChildPieceWithParentConnectionToDesign | AddedChildPiecesWithParentConnectionsToDesign | AddedConnectorToType | AddedConnectorsToType | AddedFixedPieceToDesign | AddedHangingChildPieceWithParentConnectionToDesign | AddedHangingChildPiecesWithParentConnectionsToDesign | AttributeDiff | Change | ChangedDescription | ChangedPieceToTypeInDesign | ChangedPiecesToTypeInDesign | CreatedConcept | CreatedConcepts | CreatedDesign | CreatedDesigns | CreatedPort | CreatedPorts | CreatedQualities | CreatedQuality | CreatedTag | CreatedTags | CreatedType | CreatedTypes | DeletedConcept | DeletedConcepts | DeletedDesign | DeletedDesigns | DeletedPieceInDesign | DeletedPiecesAndConnectionsInDesign | DeletedPiecesInDesign | DeletedPort | DeletedPorts | DeletedQualities | DeletedQuality | DeletedTag | DeletedTags | DeletedType | DeletedTypes | Diffs | DraggedPieceInDesign | DraggedPiecesInDesign | FixedPieceInDesign | FixedPiecesInDesign | FlattenedDesign | LocationDiff | MovedPieceInDesign | MovedPiecesInDesign | PlaceDiff | PlaneDiff | PositionDiff | RemovedAttributeFromConcept | RemovedAttributeFromDesign | RemovedAttributeFromPiece | RemovedAttributeFromPort | RemovedAttributeFromQuality | RemovedAttributeFromTag | RemovedAttributeFromType | RemovedAttributesFromConcept | RemovedAttributesFromDesign | RemovedAttributesFromPiece | RemovedAttributesFromPort | RemovedAttributesFromQuality | RemovedAttributesFromTag | RemovedAttributesFromType | RemovedConnectorFromType | RemovedConnectorsFromType | RenamedConcept | RenamedConnectorInType | RenamedKit | RenamedPieceInDesign | RenamedPort | RenamedQuality | RenamedTag | RenamedType | UpdatedConceptDescription | UpdatedConceptIcon | UpdatedConnectorDescriptionInType | UpdatedConnectorIconInType | UpdatedPieceDescriptionInDesign | UpdatedPortDescription | UpdatedPortIcon | UpdatedQualityDescription | UpdatedQualityIcon | UpdatedTagDescription | UpdatedTagIcon | UpdatedTypeDescription | UpdatedTypeIcon
 
 union PlaneDiffsOwned = PlaneDiffs | PlaneDiff | PositionDiff | AttributeDiff | LocationDiff | PlaceDiff
 
@@ -903,7 +903,7 @@ type PositionDiffConnection implements EntityConnectionInterface {
   hash: String! # cached
 }
 
-union PositionDiffsOwner = AttributeDiff | Change | ChangedDescription | CreatedFixedPiece | Diffs | DraggedPiece | FixedPiece | LocationDiff | PlaneDiff | PlaceDiff | PositionDiff | RenamedKit
+union PositionDiffsOwner = AddedAttributeToConcept | AddedAttributeToDesign | AddedAttributeToPiece | AddedAttributeToPort | AddedAttributeToQuality | AddedAttributeToTag | AddedAttributeToType | AddedAttributesToConcept | AddedAttributesToDesign | AddedAttributesToPiece | AddedAttributesToPort | AddedAttributesToQuality | AddedAttributesToTag | AddedAttributesToType | AddedChildPieceWithParentConnectionToDesign | AddedChildPiecesWithParentConnectionsToDesign | AddedConnectorToType | AddedConnectorsToType | AddedFixedPieceToDesign | AddedHangingChildPieceWithParentConnectionToDesign | AddedHangingChildPiecesWithParentConnectionsToDesign | AttributeDiff | Change | ChangedDescription | ChangedPieceToTypeInDesign | ChangedPiecesToTypeInDesign | CreatedConcept | CreatedConcepts | CreatedDesign | CreatedDesigns | CreatedPort | CreatedPorts | CreatedQualities | CreatedQuality | CreatedTag | CreatedTags | CreatedType | CreatedTypes | DeletedConcept | DeletedConcepts | DeletedDesign | DeletedDesigns | DeletedPieceInDesign | DeletedPiecesAndConnectionsInDesign | DeletedPiecesInDesign | DeletedPort | DeletedPorts | DeletedQualities | DeletedQuality | DeletedTag | DeletedTags | DeletedType | DeletedTypes | Diffs | DraggedPieceInDesign | DraggedPiecesInDesign | FixedPieceInDesign | FixedPiecesInDesign | FlattenedDesign | LocationDiff | MovedPieceInDesign | MovedPiecesInDesign | PlaceDiff | PlaneDiff | PositionDiff | RemovedAttributeFromConcept | RemovedAttributeFromDesign | RemovedAttributeFromPiece | RemovedAttributeFromPort | RemovedAttributeFromQuality | RemovedAttributeFromTag | RemovedAttributeFromType | RemovedAttributesFromConcept | RemovedAttributesFromDesign | RemovedAttributesFromPiece | RemovedAttributesFromPort | RemovedAttributesFromQuality | RemovedAttributesFromTag | RemovedAttributesFromType | RemovedConnectorFromType | RemovedConnectorsFromType | RenamedConcept | RenamedConnectorInType | RenamedKit | RenamedPieceInDesign | RenamedPort | RenamedQuality | RenamedTag | RenamedType | UpdatedConceptDescription | UpdatedConceptIcon | UpdatedConnectorDescriptionInType | UpdatedConnectorIconInType | UpdatedPieceDescriptionInDesign | UpdatedPortDescription | UpdatedPortIcon | UpdatedQualityDescription | UpdatedQualityIcon | UpdatedTagDescription | UpdatedTagIcon | UpdatedTypeDescription | UpdatedTypeIcon
 
 union PositionDiffsOwned = PositionDiffs | PlaneDiff | PositionDiff | AttributeDiff | LocationDiff | PlaceDiff
 
@@ -1028,7 +1028,7 @@ type LocationDiffConnection implements EntityConnectionInterface {
   hash: String! # cached
 }
 
-union LocationDiffsOwner = AttributeDiff | Change | ChangedDescription | CreatedFixedPiece | Diffs | DraggedPiece | FixedPiece | LocationDiff | PlaneDiff | PlaceDiff | PositionDiff | RenamedKit
+union LocationDiffsOwner = AddedAttributeToConcept | AddedAttributeToDesign | AddedAttributeToPiece | AddedAttributeToPort | AddedAttributeToQuality | AddedAttributeToTag | AddedAttributeToType | AddedAttributesToConcept | AddedAttributesToDesign | AddedAttributesToPiece | AddedAttributesToPort | AddedAttributesToQuality | AddedAttributesToTag | AddedAttributesToType | AddedChildPieceWithParentConnectionToDesign | AddedChildPiecesWithParentConnectionsToDesign | AddedConnectorToType | AddedConnectorsToType | AddedFixedPieceToDesign | AddedHangingChildPieceWithParentConnectionToDesign | AddedHangingChildPiecesWithParentConnectionsToDesign | AttributeDiff | Change | ChangedDescription | ChangedPieceToTypeInDesign | ChangedPiecesToTypeInDesign | CreatedConcept | CreatedConcepts | CreatedDesign | CreatedDesigns | CreatedPort | CreatedPorts | CreatedQualities | CreatedQuality | CreatedTag | CreatedTags | CreatedType | CreatedTypes | DeletedConcept | DeletedConcepts | DeletedDesign | DeletedDesigns | DeletedPieceInDesign | DeletedPiecesAndConnectionsInDesign | DeletedPiecesInDesign | DeletedPort | DeletedPorts | DeletedQualities | DeletedQuality | DeletedTag | DeletedTags | DeletedType | DeletedTypes | Diffs | DraggedPieceInDesign | DraggedPiecesInDesign | FixedPieceInDesign | FixedPiecesInDesign | FlattenedDesign | LocationDiff | MovedPieceInDesign | MovedPiecesInDesign | PlaceDiff | PlaneDiff | PositionDiff | RemovedAttributeFromConcept | RemovedAttributeFromDesign | RemovedAttributeFromPiece | RemovedAttributeFromPort | RemovedAttributeFromQuality | RemovedAttributeFromTag | RemovedAttributeFromType | RemovedAttributesFromConcept | RemovedAttributesFromDesign | RemovedAttributesFromPiece | RemovedAttributesFromPort | RemovedAttributesFromQuality | RemovedAttributesFromTag | RemovedAttributesFromType | RemovedConnectorFromType | RemovedConnectorsFromType | RenamedConcept | RenamedConnectorInType | RenamedKit | RenamedPieceInDesign | RenamedPort | RenamedQuality | RenamedTag | RenamedType | UpdatedConceptDescription | UpdatedConceptIcon | UpdatedConnectorDescriptionInType | UpdatedConnectorIconInType | UpdatedPieceDescriptionInDesign | UpdatedPortDescription | UpdatedPortIcon | UpdatedQualityDescription | UpdatedQualityIcon | UpdatedTagDescription | UpdatedTagIcon | UpdatedTypeDescription | UpdatedTypeIcon
 
 union LocationDiffsOwned = LocationDiffs | PlaneDiff | PositionDiff | AttributeDiff | LocationDiff | PlaceDiff
 
@@ -1176,7 +1176,7 @@ type DiffAttributesConnection implements EntityConnectionInterface {
   hash: String! # cached
 }
 
-union AttributeDiffsOwner = AttributeDiff | Change | ChangedDescription | CreatedFixedPiece | Diffs | DraggedPiece | FixedPiece | LocationDiff | PlaneDiff | PlaceDiff | PositionDiff | RenamedKit
+union AttributeDiffsOwner = AddedAttributeToConcept | AddedAttributeToDesign | AddedAttributeToPiece | AddedAttributeToPort | AddedAttributeToQuality | AddedAttributeToTag | AddedAttributeToType | AddedAttributesToConcept | AddedAttributesToDesign | AddedAttributesToPiece | AddedAttributesToPort | AddedAttributesToQuality | AddedAttributesToTag | AddedAttributesToType | AddedChildPieceWithParentConnectionToDesign | AddedChildPiecesWithParentConnectionsToDesign | AddedConnectorToType | AddedConnectorsToType | AddedFixedPieceToDesign | AddedHangingChildPieceWithParentConnectionToDesign | AddedHangingChildPiecesWithParentConnectionsToDesign | AttributeDiff | Change | ChangedDescription | ChangedPieceToTypeInDesign | ChangedPiecesToTypeInDesign | CreatedConcept | CreatedConcepts | CreatedDesign | CreatedDesigns | CreatedPort | CreatedPorts | CreatedQualities | CreatedQuality | CreatedTag | CreatedTags | CreatedType | CreatedTypes | DeletedConcept | DeletedConcepts | DeletedDesign | DeletedDesigns | DeletedPieceInDesign | DeletedPiecesAndConnectionsInDesign | DeletedPiecesInDesign | DeletedPort | DeletedPorts | DeletedQualities | DeletedQuality | DeletedTag | DeletedTags | DeletedType | DeletedTypes | Diffs | DraggedPieceInDesign | DraggedPiecesInDesign | FixedPieceInDesign | FixedPiecesInDesign | FlattenedDesign | LocationDiff | MovedPieceInDesign | MovedPiecesInDesign | PlaceDiff | PlaneDiff | PositionDiff | RemovedAttributeFromConcept | RemovedAttributeFromDesign | RemovedAttributeFromPiece | RemovedAttributeFromPort | RemovedAttributeFromQuality | RemovedAttributeFromTag | RemovedAttributeFromType | RemovedAttributesFromConcept | RemovedAttributesFromDesign | RemovedAttributesFromPiece | RemovedAttributesFromPort | RemovedAttributesFromQuality | RemovedAttributesFromTag | RemovedAttributesFromType | RemovedConnectorFromType | RemovedConnectorsFromType | RenamedConcept | RenamedConnectorInType | RenamedKit | RenamedPieceInDesign | RenamedPort | RenamedQuality | RenamedTag | RenamedType | UpdatedConceptDescription | UpdatedConceptIcon | UpdatedConnectorDescriptionInType | UpdatedConnectorIconInType | UpdatedPieceDescriptionInDesign | UpdatedPortDescription | UpdatedPortIcon | UpdatedQualityDescription | UpdatedQualityIcon | UpdatedTagDescription | UpdatedTagIcon | UpdatedTypeDescription | UpdatedTypeIcon
 union AttributeDiffsOwned = Attribute | AttributeDiff | Diffs
 
 type AttributeDiffs implements Entity {
@@ -1207,10 +1207,202 @@ type AttributeDiffsConnection implements EntityConnectionInterface {
 
 #endregion Attribute
 
-union Input = RenamedKitInput | ChangedDescriptionInput | CreatedFixedPieceInput | FixedPieceInput | DraggedPieceInput
+union Input =
+  | AddedAttributeToConceptInput
+  | AddedAttributeToDesignInput
+  | AddedAttributeToPieceInput
+  | AddedAttributeToPortInput
+  | AddedAttributeToQualityInput
+  | AddedAttributeToTagInput
+  | AddedAttributeToTypeInput
+  | AddedAttributesToConceptInput
+  | AddedAttributesToDesignInput
+  | AddedAttributesToPieceInput
+  | AddedAttributesToPortInput
+  | AddedAttributesToQualityInput
+  | AddedAttributesToTagInput
+  | AddedAttributesToTypeInput
+  | AddedChildPieceWithParentConnectionToDesignInput
+  | AddedChildPiecesWithParentConnectionsToDesignInput
+  | AddedConnectorToTypeInput
+  | AddedConnectorsToTypeInput
+  | AddedFixedPieceToDesignInput
+  | AddedHangingChildPieceWithParentConnectionToDesignInput
+  | AddedHangingChildPiecesWithParentConnectionsToDesignInput
+  | ChangedDescriptionInput
+  | ChangedPieceToTypeInDesignInput
+  | ChangedPiecesToTypeInDesignInput
+  | CreatedConceptInput
+  | CreatedConceptsInput
+  | CreatedDesignInput
+  | CreatedDesignsInput
+  | CreatedPortInput
+  | CreatedPortsInput
+  | CreatedQualitiesInput
+  | CreatedQualityInput
+  | CreatedTagInput
+  | CreatedTagsInput
+  | CreatedTypeInput
+  | CreatedTypesInput
+  | DeletedConceptInput
+  | DeletedConceptsInput
+  | DeletedDesignInput
+  | DeletedDesignsInput
+  | DeletedPieceInDesignInput
+  | DeletedPiecesAndConnectionsInDesignInput
+  | DeletedPiecesInDesignInput
+  | DeletedPortInput
+  | DeletedPortsInput
+  | DeletedQualitiesInput
+  | DeletedQualityInput
+  | DeletedTagInput
+  | DeletedTagsInput
+  | DeletedTypeInput
+  | DeletedTypesInput
+  | DraggedPieceInDesignInput
+  | DraggedPiecesInDesignInput
+  | FixedPieceInDesignInput
+  | FixedPiecesInDesignInput
+  | FlattenedDesignInput
+  | MovedPieceInDesignInput
+  | MovedPiecesInDesignInput
+  | RemovedAttributeFromConceptInput
+  | RemovedAttributeFromDesignInput
+  | RemovedAttributeFromPieceInput
+  | RemovedAttributeFromPortInput
+  | RemovedAttributeFromQualityInput
+  | RemovedAttributeFromTagInput
+  | RemovedAttributeFromTypeInput
+  | RemovedAttributesFromConceptInput
+  | RemovedAttributesFromDesignInput
+  | RemovedAttributesFromPieceInput
+  | RemovedAttributesFromPortInput
+  | RemovedAttributesFromQualityInput
+  | RemovedAttributesFromTagInput
+  | RemovedAttributesFromTypeInput
+  | RemovedConnectorFromTypeInput
+  | RemovedConnectorsFromTypeInput
+  | RenamedConceptInput
+  | RenamedConnectorInTypeInput
+  | RenamedKitInput
+  | RenamedPieceInDesignInput
+  | RenamedPortInput
+  | RenamedQualityInput
+  | RenamedTagInput
+  | RenamedTypeInput
+  | UpdatedConceptDescriptionInput
+  | UpdatedConceptIconInput
+  | UpdatedConnectorDescriptionInTypeInput
+  | UpdatedConnectorIconInTypeInput
+  | UpdatedPieceDescriptionInDesignInput
+  | UpdatedPortDescriptionInput
+  | UpdatedPortIconInput
+  | UpdatedQualityDescriptionInput
+  | UpdatedQualityIconInput
+  | UpdatedTagDescriptionInput
+  | UpdatedTagIconInput
+  | UpdatedTypeDescriptionInput
+  | UpdatedTypeIconInput
 
 union OperationOwner = Change
 # union OperationOwned = Nothing
+
+union AnyOperation =
+  | AddedAttributeToConcept
+  | AddedAttributeToDesign
+  | AddedAttributeToPiece
+  | AddedAttributeToPort
+  | AddedAttributeToQuality
+  | AddedAttributeToTag
+  | AddedAttributeToType
+  | AddedAttributesToConcept
+  | AddedAttributesToDesign
+  | AddedAttributesToPiece
+  | AddedAttributesToPort
+  | AddedAttributesToQuality
+  | AddedAttributesToTag
+  | AddedAttributesToType
+  | AddedChildPieceWithParentConnectionToDesign
+  | AddedChildPiecesWithParentConnectionsToDesign
+  | AddedConnectorToType
+  | AddedConnectorsToType
+  | AddedFixedPieceToDesign
+  | AddedHangingChildPieceWithParentConnectionToDesign
+  | AddedHangingChildPiecesWithParentConnectionsToDesign
+  | ChangedDescription
+  | ChangedPieceToTypeInDesign
+  | ChangedPiecesToTypeInDesign
+  | CreatedConcept
+  | CreatedConcepts
+  | CreatedDesign
+  | CreatedDesigns
+  | CreatedPort
+  | CreatedPorts
+  | CreatedQualities
+  | CreatedQuality
+  | CreatedTag
+  | CreatedTags
+  | CreatedType
+  | CreatedTypes
+  | DeletedConcept
+  | DeletedConcepts
+  | DeletedDesign
+  | DeletedDesigns
+  | DeletedPieceInDesign
+  | DeletedPiecesAndConnectionsInDesign
+  | DeletedPiecesInDesign
+  | DeletedPort
+  | DeletedPorts
+  | DeletedQualities
+  | DeletedQuality
+  | DeletedTag
+  | DeletedTags
+  | DeletedType
+  | DeletedTypes
+  | DraggedPieceInDesign
+  | DraggedPiecesInDesign
+  | FixedPieceInDesign
+  | FixedPiecesInDesign
+  | FlattenedDesign
+  | MovedPieceInDesign
+  | MovedPiecesInDesign
+  | RemovedAttributeFromConcept
+  | RemovedAttributeFromDesign
+  | RemovedAttributeFromPiece
+  | RemovedAttributeFromPort
+  | RemovedAttributeFromQuality
+  | RemovedAttributeFromTag
+  | RemovedAttributeFromType
+  | RemovedAttributesFromConcept
+  | RemovedAttributesFromDesign
+  | RemovedAttributesFromPiece
+  | RemovedAttributesFromPort
+  | RemovedAttributesFromQuality
+  | RemovedAttributesFromTag
+  | RemovedAttributesFromType
+  | RemovedConnectorFromType
+  | RemovedConnectorsFromType
+  | RenamedConcept
+  | RenamedConnectorInType
+  | RenamedKit
+  | RenamedPieceInDesign
+  | RenamedPort
+  | RenamedQuality
+  | RenamedTag
+  | RenamedType
+  | UpdatedConceptDescription
+  | UpdatedConceptIcon
+  | UpdatedConnectorDescriptionInType
+  | UpdatedConnectorIconInType
+  | UpdatedPieceDescriptionInDesign
+  | UpdatedPortDescription
+  | UpdatedPortIcon
+  | UpdatedQualityDescription
+  | UpdatedQualityIcon
+  | UpdatedTagDescription
+  | UpdatedTagIcon
+  | UpdatedTypeDescription
+  | UpdatedTypeIcon
 
 interface Operation implements Entity { # implements StrongEntity
   # StrongEntity
@@ -1324,7 +1516,7 @@ type PlaceDiffConnection implements EntityConnectionInterface {
   hash: String! # cached
 }
 
-union PlaceDiffsOwner = AttributeDiff | Change | ChangedDescription | CreatedFixedPiece | Diffs | DraggedPiece | FixedPiece | LocationDiff | PlaneDiff | PlaceDiff | PositionDiff | RenamedKit
+union PlaceDiffsOwner = AddedAttributeToConcept | AddedAttributeToDesign | AddedAttributeToPiece | AddedAttributeToPort | AddedAttributeToQuality | AddedAttributeToTag | AddedAttributeToType | AddedAttributesToConcept | AddedAttributesToDesign | AddedAttributesToPiece | AddedAttributesToPort | AddedAttributesToQuality | AddedAttributesToTag | AddedAttributesToType | AddedChildPieceWithParentConnectionToDesign | AddedChildPiecesWithParentConnectionsToDesign | AddedConnectorToType | AddedConnectorsToType | AddedFixedPieceToDesign | AddedHangingChildPieceWithParentConnectionToDesign | AddedHangingChildPiecesWithParentConnectionsToDesign | AttributeDiff | Change | ChangedDescription | ChangedPieceToTypeInDesign | ChangedPiecesToTypeInDesign | CreatedConcept | CreatedConcepts | CreatedDesign | CreatedDesigns | CreatedPort | CreatedPorts | CreatedQualities | CreatedQuality | CreatedTag | CreatedTags | CreatedType | CreatedTypes | DeletedConcept | DeletedConcepts | DeletedDesign | DeletedDesigns | DeletedPieceInDesign | DeletedPiecesAndConnectionsInDesign | DeletedPiecesInDesign | DeletedPort | DeletedPorts | DeletedQualities | DeletedQuality | DeletedTag | DeletedTags | DeletedType | DeletedTypes | Diffs | DraggedPieceInDesign | DraggedPiecesInDesign | FixedPieceInDesign | FixedPiecesInDesign | FlattenedDesign | LocationDiff | MovedPieceInDesign | MovedPiecesInDesign | PlaceDiff | PlaneDiff | PositionDiff | RemovedAttributeFromConcept | RemovedAttributeFromDesign | RemovedAttributeFromPiece | RemovedAttributeFromPort | RemovedAttributeFromQuality | RemovedAttributeFromTag | RemovedAttributeFromType | RemovedAttributesFromConcept | RemovedAttributesFromDesign | RemovedAttributesFromPiece | RemovedAttributesFromPort | RemovedAttributesFromQuality | RemovedAttributesFromTag | RemovedAttributesFromType | RemovedConnectorFromType | RemovedConnectorsFromType | RenamedConcept | RenamedConnectorInType | RenamedKit | RenamedPieceInDesign | RenamedPort | RenamedQuality | RenamedTag | RenamedType | UpdatedConceptDescription | UpdatedConceptIcon | UpdatedConnectorDescriptionInType | UpdatedConnectorIconInType | UpdatedPieceDescriptionInDesign | UpdatedPortDescription | UpdatedPortIcon | UpdatedQualityDescription | UpdatedQualityIcon | UpdatedTagDescription | UpdatedTagIcon | UpdatedTypeDescription | UpdatedTypeIcon
 
 union PlaceDiffsOwned = PlaceDiffs | PlaneDiff | PositionDiff | AttributeDiff | LocationDiff | PlaceDiff
 
@@ -1442,7 +1634,7 @@ type FamilyDiffConnection implements EntityConnectionInterface {
   hash: String! # cached
 }
 
-union FamilyDiffsOwner = AttributeDiff | Change | ChangedDescription | CreatedFixedPiece | Diffs | DraggedPiece | FixedPiece | LocationDiff | PlaneDiff | PlaceDiff | PositionDiff | RenamedKit
+union FamilyDiffsOwner = AddedAttributeToConcept | AddedAttributeToDesign | AddedAttributeToPiece | AddedAttributeToPort | AddedAttributeToQuality | AddedAttributeToTag | AddedAttributeToType | AddedAttributesToConcept | AddedAttributesToDesign | AddedAttributesToPiece | AddedAttributesToPort | AddedAttributesToQuality | AddedAttributesToTag | AddedAttributesToType | AddedChildPieceWithParentConnectionToDesign | AddedChildPiecesWithParentConnectionsToDesign | AddedConnectorToType | AddedConnectorsToType | AddedFixedPieceToDesign | AddedHangingChildPieceWithParentConnectionToDesign | AddedHangingChildPiecesWithParentConnectionsToDesign | AttributeDiff | Change | ChangedDescription | ChangedPieceToTypeInDesign | ChangedPiecesToTypeInDesign | CreatedConcept | CreatedConcepts | CreatedDesign | CreatedDesigns | CreatedPort | CreatedPorts | CreatedQualities | CreatedQuality | CreatedTag | CreatedTags | CreatedType | CreatedTypes | DeletedConcept | DeletedConcepts | DeletedDesign | DeletedDesigns | DeletedPieceInDesign | DeletedPiecesAndConnectionsInDesign | DeletedPiecesInDesign | DeletedPort | DeletedPorts | DeletedQualities | DeletedQuality | DeletedTag | DeletedTags | DeletedType | DeletedTypes | Diffs | DraggedPieceInDesign | DraggedPiecesInDesign | FixedPieceInDesign | FixedPiecesInDesign | FlattenedDesign | LocationDiff | MovedPieceInDesign | MovedPiecesInDesign | PlaceDiff | PlaneDiff | PositionDiff | RemovedAttributeFromConcept | RemovedAttributeFromDesign | RemovedAttributeFromPiece | RemovedAttributeFromPort | RemovedAttributeFromQuality | RemovedAttributeFromTag | RemovedAttributeFromType | RemovedAttributesFromConcept | RemovedAttributesFromDesign | RemovedAttributesFromPiece | RemovedAttributesFromPort | RemovedAttributesFromQuality | RemovedAttributesFromTag | RemovedAttributesFromType | RemovedConnectorFromType | RemovedConnectorsFromType | RenamedConcept | RenamedConnectorInType | RenamedKit | RenamedPieceInDesign | RenamedPort | RenamedQuality | RenamedTag | RenamedType | UpdatedConceptDescription | UpdatedConceptIcon | UpdatedConnectorDescriptionInType | UpdatedConnectorIconInType | UpdatedPieceDescriptionInDesign | UpdatedPortDescription | UpdatedPortIcon | UpdatedQualityDescription | UpdatedQualityIcon | UpdatedTagDescription | UpdatedTagIcon | UpdatedTypeDescription | UpdatedTypeIcon
 
 union FamilyDiffsOwned = FamilyDiffs | FamilyDiff | PlaneDiff | PositionDiff | AttributeDiff | LocationDiff | PlaceDiff
 
@@ -1572,7 +1764,7 @@ type FolderDiffConnection implements EntityConnectionInterface {
   hash: String! # cached
 }
 
-union FolderDiffsOwner = AttributeDiff | Change | ChangedDescription | CreatedFixedPiece | Diffs | DraggedPiece | FixedPiece | LocationDiff | PlaneDiff | PlaceDiff | PositionDiff | RenamedKit
+union FolderDiffsOwner = AddedAttributeToConcept | AddedAttributeToDesign | AddedAttributeToPiece | AddedAttributeToPort | AddedAttributeToQuality | AddedAttributeToTag | AddedAttributeToType | AddedAttributesToConcept | AddedAttributesToDesign | AddedAttributesToPiece | AddedAttributesToPort | AddedAttributesToQuality | AddedAttributesToTag | AddedAttributesToType | AddedChildPieceWithParentConnectionToDesign | AddedChildPiecesWithParentConnectionsToDesign | AddedConnectorToType | AddedConnectorsToType | AddedFixedPieceToDesign | AddedHangingChildPieceWithParentConnectionToDesign | AddedHangingChildPiecesWithParentConnectionsToDesign | AttributeDiff | Change | ChangedDescription | ChangedPieceToTypeInDesign | ChangedPiecesToTypeInDesign | CreatedConcept | CreatedConcepts | CreatedDesign | CreatedDesigns | CreatedPort | CreatedPorts | CreatedQualities | CreatedQuality | CreatedTag | CreatedTags | CreatedType | CreatedTypes | DeletedConcept | DeletedConcepts | DeletedDesign | DeletedDesigns | DeletedPieceInDesign | DeletedPiecesAndConnectionsInDesign | DeletedPiecesInDesign | DeletedPort | DeletedPorts | DeletedQualities | DeletedQuality | DeletedTag | DeletedTags | DeletedType | DeletedTypes | Diffs | DraggedPieceInDesign | DraggedPiecesInDesign | FixedPieceInDesign | FixedPiecesInDesign | FlattenedDesign | LocationDiff | MovedPieceInDesign | MovedPiecesInDesign | PlaceDiff | PlaneDiff | PositionDiff | RemovedAttributeFromConcept | RemovedAttributeFromDesign | RemovedAttributeFromPiece | RemovedAttributeFromPort | RemovedAttributeFromQuality | RemovedAttributeFromTag | RemovedAttributeFromType | RemovedAttributesFromConcept | RemovedAttributesFromDesign | RemovedAttributesFromPiece | RemovedAttributesFromPort | RemovedAttributesFromQuality | RemovedAttributesFromTag | RemovedAttributesFromType | RemovedConnectorFromType | RemovedConnectorsFromType | RenamedConcept | RenamedConnectorInType | RenamedKit | RenamedPieceInDesign | RenamedPort | RenamedQuality | RenamedTag | RenamedType | UpdatedConceptDescription | UpdatedConceptIcon | UpdatedConnectorDescriptionInType | UpdatedConnectorIconInType | UpdatedPieceDescriptionInDesign | UpdatedPortDescription | UpdatedPortIcon | UpdatedQualityDescription | UpdatedQualityIcon | UpdatedTagDescription | UpdatedTagIcon | UpdatedTypeDescription | UpdatedTypeIcon
 
 union FolderDiffsOwned = FolderDiffs | FolderDiff | PlaneDiff | PositionDiff | AttributeDiff | LocationDiff | PlaceDiff
 
@@ -1714,7 +1906,7 @@ type FileDiffConnection implements EntityConnectionInterface {
   hash: String! # cached
 }
 
-union FileDiffsOwner = AttributeDiff | Change | ChangedDescription | CreatedFixedPiece | Diffs | DraggedPiece | FixedPiece | LocationDiff | PlaneDiff | PlaceDiff | PositionDiff | RenamedKit
+union FileDiffsOwner = AddedAttributeToConcept | AddedAttributeToDesign | AddedAttributeToPiece | AddedAttributeToPort | AddedAttributeToQuality | AddedAttributeToTag | AddedAttributeToType | AddedAttributesToConcept | AddedAttributesToDesign | AddedAttributesToPiece | AddedAttributesToPort | AddedAttributesToQuality | AddedAttributesToTag | AddedAttributesToType | AddedChildPieceWithParentConnectionToDesign | AddedChildPiecesWithParentConnectionsToDesign | AddedConnectorToType | AddedConnectorsToType | AddedFixedPieceToDesign | AddedHangingChildPieceWithParentConnectionToDesign | AddedHangingChildPiecesWithParentConnectionsToDesign | AttributeDiff | Change | ChangedDescription | ChangedPieceToTypeInDesign | ChangedPiecesToTypeInDesign | CreatedConcept | CreatedConcepts | CreatedDesign | CreatedDesigns | CreatedPort | CreatedPorts | CreatedQualities | CreatedQuality | CreatedTag | CreatedTags | CreatedType | CreatedTypes | DeletedConcept | DeletedConcepts | DeletedDesign | DeletedDesigns | DeletedPieceInDesign | DeletedPiecesAndConnectionsInDesign | DeletedPiecesInDesign | DeletedPort | DeletedPorts | DeletedQualities | DeletedQuality | DeletedTag | DeletedTags | DeletedType | DeletedTypes | Diffs | DraggedPieceInDesign | DraggedPiecesInDesign | FixedPieceInDesign | FixedPiecesInDesign | FlattenedDesign | LocationDiff | MovedPieceInDesign | MovedPiecesInDesign | PlaceDiff | PlaneDiff | PositionDiff | RemovedAttributeFromConcept | RemovedAttributeFromDesign | RemovedAttributeFromPiece | RemovedAttributeFromPort | RemovedAttributeFromQuality | RemovedAttributeFromTag | RemovedAttributeFromType | RemovedAttributesFromConcept | RemovedAttributesFromDesign | RemovedAttributesFromPiece | RemovedAttributesFromPort | RemovedAttributesFromQuality | RemovedAttributesFromTag | RemovedAttributesFromType | RemovedConnectorFromType | RemovedConnectorsFromType | RenamedConcept | RenamedConnectorInType | RenamedKit | RenamedPieceInDesign | RenamedPort | RenamedQuality | RenamedTag | RenamedType | UpdatedConceptDescription | UpdatedConceptIcon | UpdatedConnectorDescriptionInType | UpdatedConnectorIconInType | UpdatedPieceDescriptionInDesign | UpdatedPortDescription | UpdatedPortIcon | UpdatedQualityDescription | UpdatedQualityIcon | UpdatedTagDescription | UpdatedTagIcon | UpdatedTypeDescription | UpdatedTypeIcon
 
 union FileDiffsOwned = FileDiffs | FileDiff | PlaneDiff | PositionDiff | AttributeDiff | LocationDiff | PlaceDiff
 
@@ -1846,7 +2038,7 @@ type AuthorDiffConnection implements EntityConnectionInterface {
   hash: String! # cached
 }
 
-union AuthorDiffsOwner = AttributeDiff | Change | ChangedDescription | CreatedFixedPiece | Diffs | DraggedPiece | FixedPiece | LocationDiff | PlaneDiff | PlaceDiff | PositionDiff | RenamedKit
+union AuthorDiffsOwner = AddedAttributeToConcept | AddedAttributeToDesign | AddedAttributeToPiece | AddedAttributeToPort | AddedAttributeToQuality | AddedAttributeToTag | AddedAttributeToType | AddedAttributesToConcept | AddedAttributesToDesign | AddedAttributesToPiece | AddedAttributesToPort | AddedAttributesToQuality | AddedAttributesToTag | AddedAttributesToType | AddedChildPieceWithParentConnectionToDesign | AddedChildPiecesWithParentConnectionsToDesign | AddedConnectorToType | AddedConnectorsToType | AddedFixedPieceToDesign | AddedHangingChildPieceWithParentConnectionToDesign | AddedHangingChildPiecesWithParentConnectionsToDesign | AttributeDiff | Change | ChangedDescription | ChangedPieceToTypeInDesign | ChangedPiecesToTypeInDesign | CreatedConcept | CreatedConcepts | CreatedDesign | CreatedDesigns | CreatedPort | CreatedPorts | CreatedQualities | CreatedQuality | CreatedTag | CreatedTags | CreatedType | CreatedTypes | DeletedConcept | DeletedConcepts | DeletedDesign | DeletedDesigns | DeletedPieceInDesign | DeletedPiecesAndConnectionsInDesign | DeletedPiecesInDesign | DeletedPort | DeletedPorts | DeletedQualities | DeletedQuality | DeletedTag | DeletedTags | DeletedType | DeletedTypes | Diffs | DraggedPieceInDesign | DraggedPiecesInDesign | FixedPieceInDesign | FixedPiecesInDesign | FlattenedDesign | LocationDiff | MovedPieceInDesign | MovedPiecesInDesign | PlaceDiff | PlaneDiff | PositionDiff | RemovedAttributeFromConcept | RemovedAttributeFromDesign | RemovedAttributeFromPiece | RemovedAttributeFromPort | RemovedAttributeFromQuality | RemovedAttributeFromTag | RemovedAttributeFromType | RemovedAttributesFromConcept | RemovedAttributesFromDesign | RemovedAttributesFromPiece | RemovedAttributesFromPort | RemovedAttributesFromQuality | RemovedAttributesFromTag | RemovedAttributesFromType | RemovedConnectorFromType | RemovedConnectorsFromType | RenamedConcept | RenamedConnectorInType | RenamedKit | RenamedPieceInDesign | RenamedPort | RenamedQuality | RenamedTag | RenamedType | UpdatedConceptDescription | UpdatedConceptIcon | UpdatedConnectorDescriptionInType | UpdatedConnectorIconInType | UpdatedPieceDescriptionInDesign | UpdatedPortDescription | UpdatedPortIcon | UpdatedQualityDescription | UpdatedQualityIcon | UpdatedTagDescription | UpdatedTagIcon | UpdatedTypeDescription | UpdatedTypeIcon
 
 union AuthorDiffsOwned = AuthorDiffs | AuthorDiff | PlaneDiff | PositionDiff | AttributeDiff | LocationDiff | PlaceDiff
 
@@ -1972,7 +2164,7 @@ type PropDiffConnection implements EntityConnectionInterface {
   hash: String! # cached
 }
 
-union PropDiffsOwner = AttributeDiff | Change | ChangedDescription | CreatedFixedPiece | Diffs | DraggedPiece | FixedPiece | LocationDiff | PlaneDiff | PlaceDiff | PositionDiff | RenamedKit
+union PropDiffsOwner = AddedAttributeToConcept | AddedAttributeToDesign | AddedAttributeToPiece | AddedAttributeToPort | AddedAttributeToQuality | AddedAttributeToTag | AddedAttributeToType | AddedAttributesToConcept | AddedAttributesToDesign | AddedAttributesToPiece | AddedAttributesToPort | AddedAttributesToQuality | AddedAttributesToTag | AddedAttributesToType | AddedChildPieceWithParentConnectionToDesign | AddedChildPiecesWithParentConnectionsToDesign | AddedConnectorToType | AddedConnectorsToType | AddedFixedPieceToDesign | AddedHangingChildPieceWithParentConnectionToDesign | AddedHangingChildPiecesWithParentConnectionsToDesign | AttributeDiff | Change | ChangedDescription | ChangedPieceToTypeInDesign | ChangedPiecesToTypeInDesign | CreatedConcept | CreatedConcepts | CreatedDesign | CreatedDesigns | CreatedPort | CreatedPorts | CreatedQualities | CreatedQuality | CreatedTag | CreatedTags | CreatedType | CreatedTypes | DeletedConcept | DeletedConcepts | DeletedDesign | DeletedDesigns | DeletedPieceInDesign | DeletedPiecesAndConnectionsInDesign | DeletedPiecesInDesign | DeletedPort | DeletedPorts | DeletedQualities | DeletedQuality | DeletedTag | DeletedTags | DeletedType | DeletedTypes | Diffs | DraggedPieceInDesign | DraggedPiecesInDesign | FixedPieceInDesign | FixedPiecesInDesign | FlattenedDesign | LocationDiff | MovedPieceInDesign | MovedPiecesInDesign | PlaceDiff | PlaneDiff | PositionDiff | RemovedAttributeFromConcept | RemovedAttributeFromDesign | RemovedAttributeFromPiece | RemovedAttributeFromPort | RemovedAttributeFromQuality | RemovedAttributeFromTag | RemovedAttributeFromType | RemovedAttributesFromConcept | RemovedAttributesFromDesign | RemovedAttributesFromPiece | RemovedAttributesFromPort | RemovedAttributesFromQuality | RemovedAttributesFromTag | RemovedAttributesFromType | RemovedConnectorFromType | RemovedConnectorsFromType | RenamedConcept | RenamedConnectorInType | RenamedKit | RenamedPieceInDesign | RenamedPort | RenamedQuality | RenamedTag | RenamedType | UpdatedConceptDescription | UpdatedConceptIcon | UpdatedConnectorDescriptionInType | UpdatedConnectorIconInType | UpdatedPieceDescriptionInDesign | UpdatedPortDescription | UpdatedPortIcon | UpdatedQualityDescription | UpdatedQualityIcon | UpdatedTagDescription | UpdatedTagIcon | UpdatedTypeDescription | UpdatedTypeIcon
 
 union PropDiffsOwned = PropDiffs | PropDiff | PlaneDiff | PositionDiff | AttributeDiff | LocationDiff | PlaceDiff
 
@@ -2099,7 +2291,7 @@ type BenchmarkDiffConnection implements EntityConnectionInterface {
   hash: String! # cached
 }
 
-union BenchmarkDiffsOwner = AttributeDiff | Change | ChangedDescription | CreatedFixedPiece | Diffs | DraggedPiece | FixedPiece | LocationDiff | PlaneDiff | PlaceDiff | PositionDiff | RenamedKit
+union BenchmarkDiffsOwner = AddedAttributeToConcept | AddedAttributeToDesign | AddedAttributeToPiece | AddedAttributeToPort | AddedAttributeToQuality | AddedAttributeToTag | AddedAttributeToType | AddedAttributesToConcept | AddedAttributesToDesign | AddedAttributesToPiece | AddedAttributesToPort | AddedAttributesToQuality | AddedAttributesToTag | AddedAttributesToType | AddedChildPieceWithParentConnectionToDesign | AddedChildPiecesWithParentConnectionsToDesign | AddedConnectorToType | AddedConnectorsToType | AddedFixedPieceToDesign | AddedHangingChildPieceWithParentConnectionToDesign | AddedHangingChildPiecesWithParentConnectionsToDesign | AttributeDiff | Change | ChangedDescription | ChangedPieceToTypeInDesign | ChangedPiecesToTypeInDesign | CreatedConcept | CreatedConcepts | CreatedDesign | CreatedDesigns | CreatedPort | CreatedPorts | CreatedQualities | CreatedQuality | CreatedTag | CreatedTags | CreatedType | CreatedTypes | DeletedConcept | DeletedConcepts | DeletedDesign | DeletedDesigns | DeletedPieceInDesign | DeletedPiecesAndConnectionsInDesign | DeletedPiecesInDesign | DeletedPort | DeletedPorts | DeletedQualities | DeletedQuality | DeletedTag | DeletedTags | DeletedType | DeletedTypes | Diffs | DraggedPieceInDesign | DraggedPiecesInDesign | FixedPieceInDesign | FixedPiecesInDesign | FlattenedDesign | LocationDiff | MovedPieceInDesign | MovedPiecesInDesign | PlaceDiff | PlaneDiff | PositionDiff | RemovedAttributeFromConcept | RemovedAttributeFromDesign | RemovedAttributeFromPiece | RemovedAttributeFromPort | RemovedAttributeFromQuality | RemovedAttributeFromTag | RemovedAttributeFromType | RemovedAttributesFromConcept | RemovedAttributesFromDesign | RemovedAttributesFromPiece | RemovedAttributesFromPort | RemovedAttributesFromQuality | RemovedAttributesFromTag | RemovedAttributesFromType | RemovedConnectorFromType | RemovedConnectorsFromType | RenamedConcept | RenamedConnectorInType | RenamedKit | RenamedPieceInDesign | RenamedPort | RenamedQuality | RenamedTag | RenamedType | UpdatedConceptDescription | UpdatedConceptIcon | UpdatedConnectorDescriptionInType | UpdatedConnectorIconInType | UpdatedPieceDescriptionInDesign | UpdatedPortDescription | UpdatedPortIcon | UpdatedQualityDescription | UpdatedQualityIcon | UpdatedTagDescription | UpdatedTagIcon | UpdatedTypeDescription | UpdatedTypeIcon
 
 union BenchmarkDiffsOwned = BenchmarkDiffs | BenchmarkDiff | PlaneDiff | PositionDiff | AttributeDiff | LocationDiff | PlaceDiff
 
@@ -2236,7 +2428,7 @@ type QualityDiffConnection implements EntityConnectionInterface {
   hash: String! # cached
 }
 
-union QualityDiffsOwner = AttributeDiff | Change | ChangedDescription | CreatedFixedPiece | Diffs | DraggedPiece | FixedPiece | LocationDiff | PlaneDiff | PlaceDiff | PositionDiff | RenamedKit
+union QualityDiffsOwner = AddedAttributeToConcept | AddedAttributeToDesign | AddedAttributeToPiece | AddedAttributeToPort | AddedAttributeToQuality | AddedAttributeToTag | AddedAttributeToType | AddedAttributesToConcept | AddedAttributesToDesign | AddedAttributesToPiece | AddedAttributesToPort | AddedAttributesToQuality | AddedAttributesToTag | AddedAttributesToType | AddedChildPieceWithParentConnectionToDesign | AddedChildPiecesWithParentConnectionsToDesign | AddedConnectorToType | AddedConnectorsToType | AddedFixedPieceToDesign | AddedHangingChildPieceWithParentConnectionToDesign | AddedHangingChildPiecesWithParentConnectionsToDesign | AttributeDiff | Change | ChangedDescription | ChangedPieceToTypeInDesign | ChangedPiecesToTypeInDesign | CreatedConcept | CreatedConcepts | CreatedDesign | CreatedDesigns | CreatedPort | CreatedPorts | CreatedQualities | CreatedQuality | CreatedTag | CreatedTags | CreatedType | CreatedTypes | DeletedConcept | DeletedConcepts | DeletedDesign | DeletedDesigns | DeletedPieceInDesign | DeletedPiecesAndConnectionsInDesign | DeletedPiecesInDesign | DeletedPort | DeletedPorts | DeletedQualities | DeletedQuality | DeletedTag | DeletedTags | DeletedType | DeletedTypes | Diffs | DraggedPieceInDesign | DraggedPiecesInDesign | FixedPieceInDesign | FixedPiecesInDesign | FlattenedDesign | LocationDiff | MovedPieceInDesign | MovedPiecesInDesign | PlaceDiff | PlaneDiff | PositionDiff | RemovedAttributeFromConcept | RemovedAttributeFromDesign | RemovedAttributeFromPiece | RemovedAttributeFromPort | RemovedAttributeFromQuality | RemovedAttributeFromTag | RemovedAttributeFromType | RemovedAttributesFromConcept | RemovedAttributesFromDesign | RemovedAttributesFromPiece | RemovedAttributesFromPort | RemovedAttributesFromQuality | RemovedAttributesFromTag | RemovedAttributesFromType | RemovedConnectorFromType | RemovedConnectorsFromType | RenamedConcept | RenamedConnectorInType | RenamedKit | RenamedPieceInDesign | RenamedPort | RenamedQuality | RenamedTag | RenamedType | UpdatedConceptDescription | UpdatedConceptIcon | UpdatedConnectorDescriptionInType | UpdatedConnectorIconInType | UpdatedPieceDescriptionInDesign | UpdatedPortDescription | UpdatedPortIcon | UpdatedQualityDescription | UpdatedQualityIcon | UpdatedTagDescription | UpdatedTagIcon | UpdatedTypeDescription | UpdatedTypeIcon
 
 union QualityDiffsOwned = QualityDiffs | QualityDiff | PlaneDiff | PositionDiff | AttributeDiff | LocationDiff | PlaceDiff
 
@@ -2280,7 +2472,7 @@ input QualityInput {
 
 type CreatedQualityInput {
   ownerId: ID! # data
-  quality: QualityInput! # data
+  quality: Quality! # data
 }
 
 type CreatedQuality implements Operation & Entity {
@@ -2301,7 +2493,7 @@ union CreatedQualityOwned = Quality
 
 type CreatedQualitiesInput {
   ownerId: ID! # data
-  qualities: [QualityInput!]! # data
+  qualities: QualityConnection! # data
 }
 
 type CreatedQualities implements Operation & Entity {
@@ -2385,7 +2577,7 @@ union UpdatedQualityIconOwned = Quality
 
 type AddedAttributeToQualityInput {
   qualityId: ID! # data
-  attribute: AttributeInput! # data
+  attribute: Attribute! # data
 }
 
 type AddedAttributeToQuality implements Operation & Entity {
@@ -2407,7 +2599,7 @@ union AddedAttributeToQualityOwned = Attribute
 
 type AddedAttributesToQualityInput {
   qualityId: ID! # data
-  attributes: [AttributeInput!]! # data
+  attributes: AttributeConnection! # data
 }
 
 type AddedAttributesToQuality implements Operation & Entity {
@@ -2619,7 +2811,7 @@ type TagDiffConnection implements EntityConnectionInterface {
   hash: String! # cached
 }
 
-union TagDiffsOwner = AttributeDiff | Change | ChangedDescription | CreatedFixedPiece | Diffs | DraggedPiece | FixedPiece | LocationDiff | PlaneDiff | PlaceDiff | PositionDiff | RenamedKit
+union TagDiffsOwner = AddedAttributeToConcept | AddedAttributeToDesign | AddedAttributeToPiece | AddedAttributeToPort | AddedAttributeToQuality | AddedAttributeToTag | AddedAttributeToType | AddedAttributesToConcept | AddedAttributesToDesign | AddedAttributesToPiece | AddedAttributesToPort | AddedAttributesToQuality | AddedAttributesToTag | AddedAttributesToType | AddedChildPieceWithParentConnectionToDesign | AddedChildPiecesWithParentConnectionsToDesign | AddedConnectorToType | AddedConnectorsToType | AddedFixedPieceToDesign | AddedHangingChildPieceWithParentConnectionToDesign | AddedHangingChildPiecesWithParentConnectionsToDesign | AttributeDiff | Change | ChangedDescription | ChangedPieceToTypeInDesign | ChangedPiecesToTypeInDesign | CreatedConcept | CreatedConcepts | CreatedDesign | CreatedDesigns | CreatedPort | CreatedPorts | CreatedQualities | CreatedQuality | CreatedTag | CreatedTags | CreatedType | CreatedTypes | DeletedConcept | DeletedConcepts | DeletedDesign | DeletedDesigns | DeletedPieceInDesign | DeletedPiecesAndConnectionsInDesign | DeletedPiecesInDesign | DeletedPort | DeletedPorts | DeletedQualities | DeletedQuality | DeletedTag | DeletedTags | DeletedType | DeletedTypes | Diffs | DraggedPieceInDesign | DraggedPiecesInDesign | FixedPieceInDesign | FixedPiecesInDesign | FlattenedDesign | LocationDiff | MovedPieceInDesign | MovedPiecesInDesign | PlaceDiff | PlaneDiff | PositionDiff | RemovedAttributeFromConcept | RemovedAttributeFromDesign | RemovedAttributeFromPiece | RemovedAttributeFromPort | RemovedAttributeFromQuality | RemovedAttributeFromTag | RemovedAttributeFromType | RemovedAttributesFromConcept | RemovedAttributesFromDesign | RemovedAttributesFromPiece | RemovedAttributesFromPort | RemovedAttributesFromQuality | RemovedAttributesFromTag | RemovedAttributesFromType | RemovedConnectorFromType | RemovedConnectorsFromType | RenamedConcept | RenamedConnectorInType | RenamedKit | RenamedPieceInDesign | RenamedPort | RenamedQuality | RenamedTag | RenamedType | UpdatedConceptDescription | UpdatedConceptIcon | UpdatedConnectorDescriptionInType | UpdatedConnectorIconInType | UpdatedPieceDescriptionInDesign | UpdatedPortDescription | UpdatedPortIcon | UpdatedQualityDescription | UpdatedQualityIcon | UpdatedTagDescription | UpdatedTagIcon | UpdatedTypeDescription | UpdatedTypeIcon
 
 union TagDiffsOwned = TagDiffs | TagDiff | PlaneDiff | PositionDiff | AttributeDiff | LocationDiff | PlaceDiff
 
@@ -2661,7 +2853,7 @@ input TagInput {
 
 type CreatedTagInput {
   ownerId: ID! # data
-  tag: TagInput! # data
+  tag: Tag! # data
 }
 
 type CreatedTag implements Operation & Entity {
@@ -2682,7 +2874,7 @@ union CreatedTagOwned = Tag
 
 type CreatedTagsInput {
   ownerId: ID! # data
-  tags: [TagInput!]! # data
+  tags: TagConnection! # data
 }
 
 type CreatedTags implements Operation & Entity {
@@ -2766,7 +2958,7 @@ union UpdatedTagIconOwned = Tag
 
 type AddedAttributeToTagInput {
   tagId: ID! # data
-  attribute: AttributeInput! # data
+  attribute: Attribute! # data
 }
 
 type AddedAttributeToTag implements Operation & Entity {
@@ -2788,7 +2980,7 @@ union AddedAttributeToTagOwned = Attribute
 
 type AddedAttributesToTagInput {
   tagId: ID! # data
-  attributes: [AttributeInput!]! # data
+  attributes: AttributeConnection! # data
 }
 
 type AddedAttributesToTag implements Operation & Entity {
@@ -2999,7 +3191,7 @@ type ConceptDiffConnection implements EntityConnectionInterface {
   hash: String! # cached
 }
 
-union ConceptDiffsOwner = AttributeDiff | Change | ChangedDescription | CreatedFixedPiece | Diffs | DraggedPiece | FixedPiece | LocationDiff | PlaneDiff | PlaceDiff | PositionDiff | RenamedKit
+union ConceptDiffsOwner = AddedAttributeToConcept | AddedAttributeToDesign | AddedAttributeToPiece | AddedAttributeToPort | AddedAttributeToQuality | AddedAttributeToTag | AddedAttributeToType | AddedAttributesToConcept | AddedAttributesToDesign | AddedAttributesToPiece | AddedAttributesToPort | AddedAttributesToQuality | AddedAttributesToTag | AddedAttributesToType | AddedChildPieceWithParentConnectionToDesign | AddedChildPiecesWithParentConnectionsToDesign | AddedConnectorToType | AddedConnectorsToType | AddedFixedPieceToDesign | AddedHangingChildPieceWithParentConnectionToDesign | AddedHangingChildPiecesWithParentConnectionsToDesign | AttributeDiff | Change | ChangedDescription | ChangedPieceToTypeInDesign | ChangedPiecesToTypeInDesign | CreatedConcept | CreatedConcepts | CreatedDesign | CreatedDesigns | CreatedPort | CreatedPorts | CreatedQualities | CreatedQuality | CreatedTag | CreatedTags | CreatedType | CreatedTypes | DeletedConcept | DeletedConcepts | DeletedDesign | DeletedDesigns | DeletedPieceInDesign | DeletedPiecesAndConnectionsInDesign | DeletedPiecesInDesign | DeletedPort | DeletedPorts | DeletedQualities | DeletedQuality | DeletedTag | DeletedTags | DeletedType | DeletedTypes | Diffs | DraggedPieceInDesign | DraggedPiecesInDesign | FixedPieceInDesign | FixedPiecesInDesign | FlattenedDesign | LocationDiff | MovedPieceInDesign | MovedPiecesInDesign | PlaceDiff | PlaneDiff | PositionDiff | RemovedAttributeFromConcept | RemovedAttributeFromDesign | RemovedAttributeFromPiece | RemovedAttributeFromPort | RemovedAttributeFromQuality | RemovedAttributeFromTag | RemovedAttributeFromType | RemovedAttributesFromConcept | RemovedAttributesFromDesign | RemovedAttributesFromPiece | RemovedAttributesFromPort | RemovedAttributesFromQuality | RemovedAttributesFromTag | RemovedAttributesFromType | RemovedConnectorFromType | RemovedConnectorsFromType | RenamedConcept | RenamedConnectorInType | RenamedKit | RenamedPieceInDesign | RenamedPort | RenamedQuality | RenamedTag | RenamedType | UpdatedConceptDescription | UpdatedConceptIcon | UpdatedConnectorDescriptionInType | UpdatedConnectorIconInType | UpdatedPieceDescriptionInDesign | UpdatedPortDescription | UpdatedPortIcon | UpdatedQualityDescription | UpdatedQualityIcon | UpdatedTagDescription | UpdatedTagIcon | UpdatedTypeDescription | UpdatedTypeIcon
 
 union ConceptDiffsOwned = ConceptDiffs | ConceptDiff | PlaneDiff | PositionDiff | AttributeDiff | LocationDiff | PlaceDiff
 
@@ -3041,7 +3233,7 @@ input ConceptInput {
 
 type CreatedConceptInput {
   ownerId: ID! # data
-  concept: ConceptInput! # data
+  concept: Concept! # data
 }
 
 type CreatedConcept implements Operation & Entity {
@@ -3062,7 +3254,7 @@ union CreatedConceptOwned = Concept
 
 type CreatedConceptsInput {
   ownerId: ID! # data
-  concepts: [ConceptInput!]! # data
+  concepts: ConceptConnection! # data
 }
 
 type CreatedConcepts implements Operation & Entity {
@@ -3146,7 +3338,7 @@ union UpdatedConceptIconOwned = Concept
 
 type AddedAttributeToConceptInput {
   conceptId: ID! # data
-  attribute: AttributeInput! # data
+  attribute: Attribute! # data
 }
 
 type AddedAttributeToConcept implements Operation & Entity {
@@ -3168,7 +3360,7 @@ union AddedAttributeToConceptOwned = Attribute
 
 type AddedAttributesToConceptInput {
   conceptId: ID! # data
-  attributes: [AttributeInput!]! # data
+  attributes: AttributeConnection! # data
 }
 
 type AddedAttributesToConcept implements Operation & Entity {
@@ -3378,7 +3570,7 @@ type StatDiffConnection implements EntityConnectionInterface {
   hash: String! # cached
 }
 
-union StatDiffsOwner = AttributeDiff | Change | ChangedDescription | CreatedFixedPiece | Diffs | DraggedPiece | FixedPiece | LocationDiff | PlaneDiff | PlaceDiff | PositionDiff | RenamedKit
+union StatDiffsOwner = AddedAttributeToConcept | AddedAttributeToDesign | AddedAttributeToPiece | AddedAttributeToPort | AddedAttributeToQuality | AddedAttributeToTag | AddedAttributeToType | AddedAttributesToConcept | AddedAttributesToDesign | AddedAttributesToPiece | AddedAttributesToPort | AddedAttributesToQuality | AddedAttributesToTag | AddedAttributesToType | AddedChildPieceWithParentConnectionToDesign | AddedChildPiecesWithParentConnectionsToDesign | AddedConnectorToType | AddedConnectorsToType | AddedFixedPieceToDesign | AddedHangingChildPieceWithParentConnectionToDesign | AddedHangingChildPiecesWithParentConnectionsToDesign | AttributeDiff | Change | ChangedDescription | ChangedPieceToTypeInDesign | ChangedPiecesToTypeInDesign | CreatedConcept | CreatedConcepts | CreatedDesign | CreatedDesigns | CreatedPort | CreatedPorts | CreatedQualities | CreatedQuality | CreatedTag | CreatedTags | CreatedType | CreatedTypes | DeletedConcept | DeletedConcepts | DeletedDesign | DeletedDesigns | DeletedPieceInDesign | DeletedPiecesAndConnectionsInDesign | DeletedPiecesInDesign | DeletedPort | DeletedPorts | DeletedQualities | DeletedQuality | DeletedTag | DeletedTags | DeletedType | DeletedTypes | Diffs | DraggedPieceInDesign | DraggedPiecesInDesign | FixedPieceInDesign | FixedPiecesInDesign | FlattenedDesign | LocationDiff | MovedPieceInDesign | MovedPiecesInDesign | PlaceDiff | PlaneDiff | PositionDiff | RemovedAttributeFromConcept | RemovedAttributeFromDesign | RemovedAttributeFromPiece | RemovedAttributeFromPort | RemovedAttributeFromQuality | RemovedAttributeFromTag | RemovedAttributeFromType | RemovedAttributesFromConcept | RemovedAttributesFromDesign | RemovedAttributesFromPiece | RemovedAttributesFromPort | RemovedAttributesFromQuality | RemovedAttributesFromTag | RemovedAttributesFromType | RemovedConnectorFromType | RemovedConnectorsFromType | RenamedConcept | RenamedConnectorInType | RenamedKit | RenamedPieceInDesign | RenamedPort | RenamedQuality | RenamedTag | RenamedType | UpdatedConceptDescription | UpdatedConceptIcon | UpdatedConnectorDescriptionInType | UpdatedConnectorIconInType | UpdatedPieceDescriptionInDesign | UpdatedPortDescription | UpdatedPortIcon | UpdatedQualityDescription | UpdatedQualityIcon | UpdatedTagDescription | UpdatedTagIcon | UpdatedTypeDescription | UpdatedTypeIcon
 
 union StatDiffsOwned = StatDiffs | StatDiff | PlaneDiff | PositionDiff | AttributeDiff | LocationDiff | PlaceDiff
 
@@ -3507,7 +3699,7 @@ type PortDiffConnection implements EntityConnectionInterface {
   hash: String! # cached
 }
 
-union PortDiffsOwner = AttributeDiff | Change | ChangedDescription | CreatedFixedPiece | Diffs | DraggedPiece | FixedPiece | LocationDiff | PlaneDiff | PlaceDiff | PositionDiff | RenamedKit
+union PortDiffsOwner = AddedAttributeToConcept | AddedAttributeToDesign | AddedAttributeToPiece | AddedAttributeToPort | AddedAttributeToQuality | AddedAttributeToTag | AddedAttributeToType | AddedAttributesToConcept | AddedAttributesToDesign | AddedAttributesToPiece | AddedAttributesToPort | AddedAttributesToQuality | AddedAttributesToTag | AddedAttributesToType | AddedChildPieceWithParentConnectionToDesign | AddedChildPiecesWithParentConnectionsToDesign | AddedConnectorToType | AddedConnectorsToType | AddedFixedPieceToDesign | AddedHangingChildPieceWithParentConnectionToDesign | AddedHangingChildPiecesWithParentConnectionsToDesign | AttributeDiff | Change | ChangedDescription | ChangedPieceToTypeInDesign | ChangedPiecesToTypeInDesign | CreatedConcept | CreatedConcepts | CreatedDesign | CreatedDesigns | CreatedPort | CreatedPorts | CreatedQualities | CreatedQuality | CreatedTag | CreatedTags | CreatedType | CreatedTypes | DeletedConcept | DeletedConcepts | DeletedDesign | DeletedDesigns | DeletedPieceInDesign | DeletedPiecesAndConnectionsInDesign | DeletedPiecesInDesign | DeletedPort | DeletedPorts | DeletedQualities | DeletedQuality | DeletedTag | DeletedTags | DeletedType | DeletedTypes | Diffs | DraggedPieceInDesign | DraggedPiecesInDesign | FixedPieceInDesign | FixedPiecesInDesign | FlattenedDesign | LocationDiff | MovedPieceInDesign | MovedPiecesInDesign | PlaceDiff | PlaneDiff | PositionDiff | RemovedAttributeFromConcept | RemovedAttributeFromDesign | RemovedAttributeFromPiece | RemovedAttributeFromPort | RemovedAttributeFromQuality | RemovedAttributeFromTag | RemovedAttributeFromType | RemovedAttributesFromConcept | RemovedAttributesFromDesign | RemovedAttributesFromPiece | RemovedAttributesFromPort | RemovedAttributesFromQuality | RemovedAttributesFromTag | RemovedAttributesFromType | RemovedConnectorFromType | RemovedConnectorsFromType | RenamedConcept | RenamedConnectorInType | RenamedKit | RenamedPieceInDesign | RenamedPort | RenamedQuality | RenamedTag | RenamedType | UpdatedConceptDescription | UpdatedConceptIcon | UpdatedConnectorDescriptionInType | UpdatedConnectorIconInType | UpdatedPieceDescriptionInDesign | UpdatedPortDescription | UpdatedPortIcon | UpdatedQualityDescription | UpdatedQualityIcon | UpdatedTagDescription | UpdatedTagIcon | UpdatedTypeDescription | UpdatedTypeIcon
 
 union PortDiffsOwned = PortDiffs | PortDiff | PlaneDiff | PositionDiff | AttributeDiff | LocationDiff | PlaceDiff
 
@@ -3550,7 +3742,7 @@ input PortInput {
 
 type CreatedPortInput {
   ownerId: ID! # data
-  port: PortInput! # data
+  port: Port! # data
 }
 
 type CreatedPort implements Operation & Entity {
@@ -3571,7 +3763,7 @@ union CreatedPortOwned = Port
 
 type CreatedPortsInput {
   ownerId: ID! # data
-  ports: [PortInput!]! # data
+  ports: PortConnection! # data
 }
 
 type CreatedPorts implements Operation & Entity {
@@ -3656,7 +3848,7 @@ union UpdatedPortIconOwned = Port
 
 type AddedAttributeToPortInput {
   portId: ID! # data
-  attribute: AttributeInput! # data
+  attribute: Attribute! # data
 }
 
 type AddedAttributeToPort implements Operation & Entity {
@@ -3678,7 +3870,7 @@ union AddedAttributeToPortOwned = Attribute
 
 type AddedAttributesToPortInput {
   portId: ID! # data
-  attributes: [AttributeInput!]! # data
+  attributes: AttributeConnection! # data
 }
 
 type AddedAttributesToPort implements Operation & Entity {
@@ -3890,7 +4082,7 @@ type ConnectorDiffConnection implements EntityConnectionInterface {
   hash: String! # cached
 }
 
-union ConnectorDiffsOwner = AttributeDiff | Change | ChangedDescription | CreatedFixedPiece | Diffs | DraggedPiece | FixedPiece | LocationDiff | PlaneDiff | PlaceDiff | PositionDiff | RenamedKit
+union ConnectorDiffsOwner = AddedAttributeToConcept | AddedAttributeToDesign | AddedAttributeToPiece | AddedAttributeToPort | AddedAttributeToQuality | AddedAttributeToTag | AddedAttributeToType | AddedAttributesToConcept | AddedAttributesToDesign | AddedAttributesToPiece | AddedAttributesToPort | AddedAttributesToQuality | AddedAttributesToTag | AddedAttributesToType | AddedChildPieceWithParentConnectionToDesign | AddedChildPiecesWithParentConnectionsToDesign | AddedConnectorToType | AddedConnectorsToType | AddedFixedPieceToDesign | AddedHangingChildPieceWithParentConnectionToDesign | AddedHangingChildPiecesWithParentConnectionsToDesign | AttributeDiff | Change | ChangedDescription | ChangedPieceToTypeInDesign | ChangedPiecesToTypeInDesign | CreatedConcept | CreatedConcepts | CreatedDesign | CreatedDesigns | CreatedPort | CreatedPorts | CreatedQualities | CreatedQuality | CreatedTag | CreatedTags | CreatedType | CreatedTypes | DeletedConcept | DeletedConcepts | DeletedDesign | DeletedDesigns | DeletedPieceInDesign | DeletedPiecesAndConnectionsInDesign | DeletedPiecesInDesign | DeletedPort | DeletedPorts | DeletedQualities | DeletedQuality | DeletedTag | DeletedTags | DeletedType | DeletedTypes | Diffs | DraggedPieceInDesign | DraggedPiecesInDesign | FixedPieceInDesign | FixedPiecesInDesign | FlattenedDesign | LocationDiff | MovedPieceInDesign | MovedPiecesInDesign | PlaceDiff | PlaneDiff | PositionDiff | RemovedAttributeFromConcept | RemovedAttributeFromDesign | RemovedAttributeFromPiece | RemovedAttributeFromPort | RemovedAttributeFromQuality | RemovedAttributeFromTag | RemovedAttributeFromType | RemovedAttributesFromConcept | RemovedAttributesFromDesign | RemovedAttributesFromPiece | RemovedAttributesFromPort | RemovedAttributesFromQuality | RemovedAttributesFromTag | RemovedAttributesFromType | RemovedConnectorFromType | RemovedConnectorsFromType | RenamedConcept | RenamedConnectorInType | RenamedKit | RenamedPieceInDesign | RenamedPort | RenamedQuality | RenamedTag | RenamedType | UpdatedConceptDescription | UpdatedConceptIcon | UpdatedConnectorDescriptionInType | UpdatedConnectorIconInType | UpdatedPieceDescriptionInDesign | UpdatedPortDescription | UpdatedPortIcon | UpdatedQualityDescription | UpdatedQualityIcon | UpdatedTagDescription | UpdatedTagIcon | UpdatedTypeDescription | UpdatedTypeIcon
 
 union ConnectorDiffsOwned = ConnectorDiffs | ConnectorDiff | PlaneDiff | PositionDiff | AttributeDiff | LocationDiff | PlaceDiff
 
@@ -4011,7 +4203,7 @@ type RepresentationDiffConnection implements EntityConnectionInterface {
   hash: String! # cached
 }
 
-union RepresentationDiffsOwner = AttributeDiff | Change | ChangedDescription | CreatedFixedPiece | Diffs | DraggedPiece | FixedPiece | LocationDiff | PlaneDiff | PlaceDiff | PositionDiff | RenamedKit
+union RepresentationDiffsOwner = AddedAttributeToConcept | AddedAttributeToDesign | AddedAttributeToPiece | AddedAttributeToPort | AddedAttributeToQuality | AddedAttributeToTag | AddedAttributeToType | AddedAttributesToConcept | AddedAttributesToDesign | AddedAttributesToPiece | AddedAttributesToPort | AddedAttributesToQuality | AddedAttributesToTag | AddedAttributesToType | AddedChildPieceWithParentConnectionToDesign | AddedChildPiecesWithParentConnectionsToDesign | AddedConnectorToType | AddedConnectorsToType | AddedFixedPieceToDesign | AddedHangingChildPieceWithParentConnectionToDesign | AddedHangingChildPiecesWithParentConnectionsToDesign | AttributeDiff | Change | ChangedDescription | ChangedPieceToTypeInDesign | ChangedPiecesToTypeInDesign | CreatedConcept | CreatedConcepts | CreatedDesign | CreatedDesigns | CreatedPort | CreatedPorts | CreatedQualities | CreatedQuality | CreatedTag | CreatedTags | CreatedType | CreatedTypes | DeletedConcept | DeletedConcepts | DeletedDesign | DeletedDesigns | DeletedPieceInDesign | DeletedPiecesAndConnectionsInDesign | DeletedPiecesInDesign | DeletedPort | DeletedPorts | DeletedQualities | DeletedQuality | DeletedTag | DeletedTags | DeletedType | DeletedTypes | Diffs | DraggedPieceInDesign | DraggedPiecesInDesign | FixedPieceInDesign | FixedPiecesInDesign | FlattenedDesign | LocationDiff | MovedPieceInDesign | MovedPiecesInDesign | PlaceDiff | PlaneDiff | PositionDiff | RemovedAttributeFromConcept | RemovedAttributeFromDesign | RemovedAttributeFromPiece | RemovedAttributeFromPort | RemovedAttributeFromQuality | RemovedAttributeFromTag | RemovedAttributeFromType | RemovedAttributesFromConcept | RemovedAttributesFromDesign | RemovedAttributesFromPiece | RemovedAttributesFromPort | RemovedAttributesFromQuality | RemovedAttributesFromTag | RemovedAttributesFromType | RemovedConnectorFromType | RemovedConnectorsFromType | RenamedConcept | RenamedConnectorInType | RenamedKit | RenamedPieceInDesign | RenamedPort | RenamedQuality | RenamedTag | RenamedType | UpdatedConceptDescription | UpdatedConceptIcon | UpdatedConnectorDescriptionInType | UpdatedConnectorIconInType | UpdatedPieceDescriptionInDesign | UpdatedPortDescription | UpdatedPortIcon | UpdatedQualityDescription | UpdatedQualityIcon | UpdatedTagDescription | UpdatedTagIcon | UpdatedTypeDescription | UpdatedTypeIcon
 
 union RepresentationDiffsOwned = RepresentationDiffs | RepresentationDiff | PlaneDiff | PositionDiff | AttributeDiff | LocationDiff | PlaceDiff
 
@@ -4164,7 +4356,7 @@ type TypeDiffConnection implements EntityConnectionInterface {
   hash: String! # cached
 }
 
-union TypeDiffsOwner = AttributeDiff | Change | ChangedDescription | CreatedFixedPiece | Diffs | DraggedPiece | FixedPiece | LocationDiff | PlaneDiff | PlaceDiff | PositionDiff | RenamedKit
+union TypeDiffsOwner = AddedAttributeToConcept | AddedAttributeToDesign | AddedAttributeToPiece | AddedAttributeToPort | AddedAttributeToQuality | AddedAttributeToTag | AddedAttributeToType | AddedAttributesToConcept | AddedAttributesToDesign | AddedAttributesToPiece | AddedAttributesToPort | AddedAttributesToQuality | AddedAttributesToTag | AddedAttributesToType | AddedChildPieceWithParentConnectionToDesign | AddedChildPiecesWithParentConnectionsToDesign | AddedConnectorToType | AddedConnectorsToType | AddedFixedPieceToDesign | AddedHangingChildPieceWithParentConnectionToDesign | AddedHangingChildPiecesWithParentConnectionsToDesign | AttributeDiff | Change | ChangedDescription | ChangedPieceToTypeInDesign | ChangedPiecesToTypeInDesign | CreatedConcept | CreatedConcepts | CreatedDesign | CreatedDesigns | CreatedPort | CreatedPorts | CreatedQualities | CreatedQuality | CreatedTag | CreatedTags | CreatedType | CreatedTypes | DeletedConcept | DeletedConcepts | DeletedDesign | DeletedDesigns | DeletedPieceInDesign | DeletedPiecesAndConnectionsInDesign | DeletedPiecesInDesign | DeletedPort | DeletedPorts | DeletedQualities | DeletedQuality | DeletedTag | DeletedTags | DeletedType | DeletedTypes | Diffs | DraggedPieceInDesign | DraggedPiecesInDesign | FixedPieceInDesign | FixedPiecesInDesign | FlattenedDesign | LocationDiff | MovedPieceInDesign | MovedPiecesInDesign | PlaceDiff | PlaneDiff | PositionDiff | RemovedAttributeFromConcept | RemovedAttributeFromDesign | RemovedAttributeFromPiece | RemovedAttributeFromPort | RemovedAttributeFromQuality | RemovedAttributeFromTag | RemovedAttributeFromType | RemovedAttributesFromConcept | RemovedAttributesFromDesign | RemovedAttributesFromPiece | RemovedAttributesFromPort | RemovedAttributesFromQuality | RemovedAttributesFromTag | RemovedAttributesFromType | RemovedConnectorFromType | RemovedConnectorsFromType | RenamedConcept | RenamedConnectorInType | RenamedKit | RenamedPieceInDesign | RenamedPort | RenamedQuality | RenamedTag | RenamedType | UpdatedConceptDescription | UpdatedConceptIcon | UpdatedConnectorDescriptionInType | UpdatedConnectorIconInType | UpdatedPieceDescriptionInDesign | UpdatedPortDescription | UpdatedPortIcon | UpdatedQualityDescription | UpdatedQualityIcon | UpdatedTagDescription | UpdatedTagIcon | UpdatedTypeDescription | UpdatedTypeIcon
 
 union TypeDiffsOwned = TypeDiffs | TypeDiff | PlaneDiff | PositionDiff | AttributeDiff | LocationDiff | PlaceDiff
 
@@ -4207,7 +4399,7 @@ input TypeInput {
 
 type CreatedTypeInput {
   ownerId: ID! # data
-  type: TypeInput! # data
+  type: Type! # data
 }
 
 type CreatedType implements Operation & Entity {
@@ -4228,7 +4420,7 @@ union CreatedTypeOwned = Type
 
 type CreatedTypesInput {
   ownerId: ID! # data
-  types: [TypeInput!]! # data
+  types: TypeConnection! # data
 }
 
 type CreatedTypes implements Operation & Entity {
@@ -4312,7 +4504,7 @@ union UpdatedTypeIconOwned = Type
 
 type AddedAttributeToTypeInput {
   typeId: ID! # data
-  attribute: AttributeInput! # data
+  attribute: Attribute! # data
 }
 
 type AddedAttributeToType implements Operation & Entity {
@@ -4334,7 +4526,7 @@ union AddedAttributeToTypeOwned = Attribute
 
 type AddedAttributesToTypeInput {
   typeId: ID! # data
-  attributes: [AttributeInput!]! # data
+  attributes: AttributeConnection! # data
 }
 
 type AddedAttributesToType implements Operation & Entity {
@@ -4459,7 +4651,7 @@ input ConnectorInput {
 
 type AddedConnectorToTypeInput {
   typeId: ID! # data
-  connector: ConnectorInput! # data
+  connector: Connector! # data
 }
 
 type AddedConnectorToType implements Operation & Entity {
@@ -4481,7 +4673,7 @@ union AddedConnectorToTypeOwned = Connector
 
 type AddedConnectorsToTypeInput {
   typeId: ID! # data
-  connectors: [ConnectorInput!]! # data
+  connectors: ConnectorConnection! # data
 }
 
 type AddedConnectorsToType implements Operation & Entity {
@@ -4719,7 +4911,7 @@ type LayerDiffConnection implements EntityConnectionInterface {
   hash: String! # cached
 }
 
-union LayerDiffsOwner = AttributeDiff | Change | ChangedDescription | CreatedFixedPiece | Diffs | DraggedPiece | FixedPiece | LocationDiff | PlaneDiff | PlaceDiff | PositionDiff | RenamedKit
+union LayerDiffsOwner = AddedAttributeToConcept | AddedAttributeToDesign | AddedAttributeToPiece | AddedAttributeToPort | AddedAttributeToQuality | AddedAttributeToTag | AddedAttributeToType | AddedAttributesToConcept | AddedAttributesToDesign | AddedAttributesToPiece | AddedAttributesToPort | AddedAttributesToQuality | AddedAttributesToTag | AddedAttributesToType | AddedChildPieceWithParentConnectionToDesign | AddedChildPiecesWithParentConnectionsToDesign | AddedConnectorToType | AddedConnectorsToType | AddedFixedPieceToDesign | AddedHangingChildPieceWithParentConnectionToDesign | AddedHangingChildPiecesWithParentConnectionsToDesign | AttributeDiff | Change | ChangedDescription | ChangedPieceToTypeInDesign | ChangedPiecesToTypeInDesign | CreatedConcept | CreatedConcepts | CreatedDesign | CreatedDesigns | CreatedPort | CreatedPorts | CreatedQualities | CreatedQuality | CreatedTag | CreatedTags | CreatedType | CreatedTypes | DeletedConcept | DeletedConcepts | DeletedDesign | DeletedDesigns | DeletedPieceInDesign | DeletedPiecesAndConnectionsInDesign | DeletedPiecesInDesign | DeletedPort | DeletedPorts | DeletedQualities | DeletedQuality | DeletedTag | DeletedTags | DeletedType | DeletedTypes | Diffs | DraggedPieceInDesign | DraggedPiecesInDesign | FixedPieceInDesign | FixedPiecesInDesign | FlattenedDesign | LocationDiff | MovedPieceInDesign | MovedPiecesInDesign | PlaceDiff | PlaneDiff | PositionDiff | RemovedAttributeFromConcept | RemovedAttributeFromDesign | RemovedAttributeFromPiece | RemovedAttributeFromPort | RemovedAttributeFromQuality | RemovedAttributeFromTag | RemovedAttributeFromType | RemovedAttributesFromConcept | RemovedAttributesFromDesign | RemovedAttributesFromPiece | RemovedAttributesFromPort | RemovedAttributesFromQuality | RemovedAttributesFromTag | RemovedAttributesFromType | RemovedConnectorFromType | RemovedConnectorsFromType | RenamedConcept | RenamedConnectorInType | RenamedKit | RenamedPieceInDesign | RenamedPort | RenamedQuality | RenamedTag | RenamedType | UpdatedConceptDescription | UpdatedConceptIcon | UpdatedConnectorDescriptionInType | UpdatedConnectorIconInType | UpdatedPieceDescriptionInDesign | UpdatedPortDescription | UpdatedPortIcon | UpdatedQualityDescription | UpdatedQualityIcon | UpdatedTagDescription | UpdatedTagIcon | UpdatedTypeDescription | UpdatedTypeIcon
 
 union LayerDiffsOwned = LayerDiffs | LayerDiff | PlaneDiff | PositionDiff | AttributeDiff | LocationDiff | PlaceDiff
 
@@ -4845,7 +5037,7 @@ type GroupDiffConnection implements EntityConnectionInterface {
   hash: String! # cached
 }
 
-union GroupDiffsOwner = AttributeDiff | Change | ChangedDescription | CreatedFixedPiece | Diffs | DraggedPiece | FixedPiece | LocationDiff | PlaneDiff | PlaceDiff | PositionDiff | RenamedKit
+union GroupDiffsOwner = AddedAttributeToConcept | AddedAttributeToDesign | AddedAttributeToPiece | AddedAttributeToPort | AddedAttributeToQuality | AddedAttributeToTag | AddedAttributeToType | AddedAttributesToConcept | AddedAttributesToDesign | AddedAttributesToPiece | AddedAttributesToPort | AddedAttributesToQuality | AddedAttributesToTag | AddedAttributesToType | AddedChildPieceWithParentConnectionToDesign | AddedChildPiecesWithParentConnectionsToDesign | AddedConnectorToType | AddedConnectorsToType | AddedFixedPieceToDesign | AddedHangingChildPieceWithParentConnectionToDesign | AddedHangingChildPiecesWithParentConnectionsToDesign | AttributeDiff | Change | ChangedDescription | ChangedPieceToTypeInDesign | ChangedPiecesToTypeInDesign | CreatedConcept | CreatedConcepts | CreatedDesign | CreatedDesigns | CreatedPort | CreatedPorts | CreatedQualities | CreatedQuality | CreatedTag | CreatedTags | CreatedType | CreatedTypes | DeletedConcept | DeletedConcepts | DeletedDesign | DeletedDesigns | DeletedPieceInDesign | DeletedPiecesAndConnectionsInDesign | DeletedPiecesInDesign | DeletedPort | DeletedPorts | DeletedQualities | DeletedQuality | DeletedTag | DeletedTags | DeletedType | DeletedTypes | Diffs | DraggedPieceInDesign | DraggedPiecesInDesign | FixedPieceInDesign | FixedPiecesInDesign | FlattenedDesign | LocationDiff | MovedPieceInDesign | MovedPiecesInDesign | PlaceDiff | PlaneDiff | PositionDiff | RemovedAttributeFromConcept | RemovedAttributeFromDesign | RemovedAttributeFromPiece | RemovedAttributeFromPort | RemovedAttributeFromQuality | RemovedAttributeFromTag | RemovedAttributeFromType | RemovedAttributesFromConcept | RemovedAttributesFromDesign | RemovedAttributesFromPiece | RemovedAttributesFromPort | RemovedAttributesFromQuality | RemovedAttributesFromTag | RemovedAttributesFromType | RemovedConnectorFromType | RemovedConnectorsFromType | RenamedConcept | RenamedConnectorInType | RenamedKit | RenamedPieceInDesign | RenamedPort | RenamedQuality | RenamedTag | RenamedType | UpdatedConceptDescription | UpdatedConceptIcon | UpdatedConnectorDescriptionInType | UpdatedConnectorIconInType | UpdatedPieceDescriptionInDesign | UpdatedPortDescription | UpdatedPortIcon | UpdatedQualityDescription | UpdatedQualityIcon | UpdatedTagDescription | UpdatedTagIcon | UpdatedTypeDescription | UpdatedTypeIcon
 
 union GroupDiffsOwned = GroupDiffs | GroupDiff | PlaneDiff | PositionDiff | AttributeDiff | LocationDiff | PlaceDiff
 
@@ -5007,7 +5199,7 @@ type PieceDiffConnection implements EntityConnectionInterface {
   hash: String! # cached
 }
 
-union PieceDiffsOwner = AttributeDiff | Change | ChangedDescription | CreatedFixedPiece | Diffs | DraggedPiece | FixedPiece | LocationDiff | PlaneDiff | PlaceDiff | PositionDiff | RenamedKit
+union PieceDiffsOwner = AddedAttributeToConcept | AddedAttributeToDesign | AddedAttributeToPiece | AddedAttributeToPort | AddedAttributeToQuality | AddedAttributeToTag | AddedAttributeToType | AddedAttributesToConcept | AddedAttributesToDesign | AddedAttributesToPiece | AddedAttributesToPort | AddedAttributesToQuality | AddedAttributesToTag | AddedAttributesToType | AddedChildPieceWithParentConnectionToDesign | AddedChildPiecesWithParentConnectionsToDesign | AddedConnectorToType | AddedConnectorsToType | AddedFixedPieceToDesign | AddedHangingChildPieceWithParentConnectionToDesign | AddedHangingChildPiecesWithParentConnectionsToDesign | AttributeDiff | Change | ChangedDescription | ChangedPieceToTypeInDesign | ChangedPiecesToTypeInDesign | CreatedConcept | CreatedConcepts | CreatedDesign | CreatedDesigns | CreatedPort | CreatedPorts | CreatedQualities | CreatedQuality | CreatedTag | CreatedTags | CreatedType | CreatedTypes | DeletedConcept | DeletedConcepts | DeletedDesign | DeletedDesigns | DeletedPieceInDesign | DeletedPiecesAndConnectionsInDesign | DeletedPiecesInDesign | DeletedPort | DeletedPorts | DeletedQualities | DeletedQuality | DeletedTag | DeletedTags | DeletedType | DeletedTypes | Diffs | DraggedPieceInDesign | DraggedPiecesInDesign | FixedPieceInDesign | FixedPiecesInDesign | FlattenedDesign | LocationDiff | MovedPieceInDesign | MovedPiecesInDesign | PlaceDiff | PlaneDiff | PositionDiff | RemovedAttributeFromConcept | RemovedAttributeFromDesign | RemovedAttributeFromPiece | RemovedAttributeFromPort | RemovedAttributeFromQuality | RemovedAttributeFromTag | RemovedAttributeFromType | RemovedAttributesFromConcept | RemovedAttributesFromDesign | RemovedAttributesFromPiece | RemovedAttributesFromPort | RemovedAttributesFromQuality | RemovedAttributesFromTag | RemovedAttributesFromType | RemovedConnectorFromType | RemovedConnectorsFromType | RenamedConcept | RenamedConnectorInType | RenamedKit | RenamedPieceInDesign | RenamedPort | RenamedQuality | RenamedTag | RenamedType | UpdatedConceptDescription | UpdatedConceptIcon | UpdatedConnectorDescriptionInType | UpdatedConnectorIconInType | UpdatedPieceDescriptionInDesign | UpdatedPortDescription | UpdatedPortIcon | UpdatedQualityDescription | UpdatedQualityIcon | UpdatedTagDescription | UpdatedTagIcon | UpdatedTypeDescription | UpdatedTypeIcon
 
 union PieceDiffsOwned = PieceDiffs | PieceDiff | PlaneDiff | PositionDiff | AttributeDiff | LocationDiff | PlaceDiff
 
@@ -5127,7 +5319,7 @@ type ConnectionDiffConnection implements EntityConnectionInterface {
   hash: String! # cached
 }
 
-union ConnectionDiffsOwner = AttributeDiff | Change | ChangedDescription | CreatedFixedPiece | Diffs | DraggedPiece | FixedPiece | LocationDiff | PlaneDiff | PlaceDiff | PositionDiff | RenamedKit
+union ConnectionDiffsOwner = AddedAttributeToConcept | AddedAttributeToDesign | AddedAttributeToPiece | AddedAttributeToPort | AddedAttributeToQuality | AddedAttributeToTag | AddedAttributeToType | AddedAttributesToConcept | AddedAttributesToDesign | AddedAttributesToPiece | AddedAttributesToPort | AddedAttributesToQuality | AddedAttributesToTag | AddedAttributesToType | AddedChildPieceWithParentConnectionToDesign | AddedChildPiecesWithParentConnectionsToDesign | AddedConnectorToType | AddedConnectorsToType | AddedFixedPieceToDesign | AddedHangingChildPieceWithParentConnectionToDesign | AddedHangingChildPiecesWithParentConnectionsToDesign | AttributeDiff | Change | ChangedDescription | ChangedPieceToTypeInDesign | ChangedPiecesToTypeInDesign | CreatedConcept | CreatedConcepts | CreatedDesign | CreatedDesigns | CreatedPort | CreatedPorts | CreatedQualities | CreatedQuality | CreatedTag | CreatedTags | CreatedType | CreatedTypes | DeletedConcept | DeletedConcepts | DeletedDesign | DeletedDesigns | DeletedPieceInDesign | DeletedPiecesAndConnectionsInDesign | DeletedPiecesInDesign | DeletedPort | DeletedPorts | DeletedQualities | DeletedQuality | DeletedTag | DeletedTags | DeletedType | DeletedTypes | Diffs | DraggedPieceInDesign | DraggedPiecesInDesign | FixedPieceInDesign | FixedPiecesInDesign | FlattenedDesign | LocationDiff | MovedPieceInDesign | MovedPiecesInDesign | PlaceDiff | PlaneDiff | PositionDiff | RemovedAttributeFromConcept | RemovedAttributeFromDesign | RemovedAttributeFromPiece | RemovedAttributeFromPort | RemovedAttributeFromQuality | RemovedAttributeFromTag | RemovedAttributeFromType | RemovedAttributesFromConcept | RemovedAttributesFromDesign | RemovedAttributesFromPiece | RemovedAttributesFromPort | RemovedAttributesFromQuality | RemovedAttributesFromTag | RemovedAttributesFromType | RemovedConnectorFromType | RemovedConnectorsFromType | RenamedConcept | RenamedConnectorInType | RenamedKit | RenamedPieceInDesign | RenamedPort | RenamedQuality | RenamedTag | RenamedType | UpdatedConceptDescription | UpdatedConceptIcon | UpdatedConnectorDescriptionInType | UpdatedConnectorIconInType | UpdatedPieceDescriptionInDesign | UpdatedPortDescription | UpdatedPortIcon | UpdatedQualityDescription | UpdatedQualityIcon | UpdatedTagDescription | UpdatedTagIcon | UpdatedTypeDescription | UpdatedTypeIcon
 
 union ConnectionDiffsOwned = ConnectionDiffs | ConnectionDiff | PlaneDiff | PositionDiff | AttributeDiff | LocationDiff | PlaceDiff
 
@@ -5159,7 +5351,7 @@ type ConnectionDiffsConnection implements EntityConnectionInterface {
 
 #region Operations
 
-type CreatedFixedPieceInput {
+type AddedFixedPieceToDesignInput {
   designId: ID!
   blueprintId: ID!
   position: Position!
@@ -5167,64 +5359,522 @@ type CreatedFixedPieceInput {
   description: String
 }
 
-type CreatedFixedPiece implements Operation & Entity {
+type AddedFixedPieceToDesign implements Operation & Entity {
   # StrongEntity
   id: ID! # data // uuidv7
   hash: String! # cached
-  owner: CreatedFixedPieceOwner! # reference
+  owner: AddedFixedPieceToDesignOwner! # reference
   changeOwner: Change # reference // spine
-  entityOwner: OwnerEntity! # computed // CreatedFixedPieceOwner
-  ownedEntities: OwnedEntityConnection # computed // CreatedFixedPieceOwned
-  input: CreatedFixedPieceInput! # data
+  entityOwner: OwnerEntity! # computed // AddedFixedPieceToDesignOwner
+  ownedEntities: OwnedEntityConnection # computed // AddedFixedPieceToDesignOwned
+  input: AddedFixedPieceToDesignInput! # data
   diff: Diff! # data
   piece: Piece! # data
 }
 
-union CreatedFixedPieceOwner = Change
-union CreatedFixedPieceOwned = Piece
+union AddedFixedPieceToDesignOwner = Change
+union AddedFixedPieceToDesignOwned = Piece
 
-type FixedPieceInput {
+type FixedPieceInDesignInput {
   designId: ID!
   pieceId: ID!
 }
 
-type FixedPiece implements Operation & Entity {
+type FixedPieceInDesign implements Operation & Entity {
   # StrongEntity
   id: ID! # data // uuidv7
   hash: String! # cached
-  owner: FixedPieceOwner! # reference
+  owner: FixedPieceInDesignOwner! # reference
   changeOwner: Change # reference // spine
-  entityOwner: OwnerEntity! # computed // FixedPieceOwner
-  ownedEntities: OwnedEntityConnection # computed // FixedPieceOwned
-  input: FixedPieceInput! # data
+  entityOwner: OwnerEntity! # computed // FixedPieceInDesignOwner
+  ownedEntities: OwnedEntityConnection # computed // FixedPieceInDesignOwned
+  input: FixedPieceInDesignInput! # data
   diff: Diff! # data
   piece: Piece! # data
 }
 
-union FixedPieceOwner = Change
-union FixedPieceOwned = Piece
+union FixedPieceInDesignOwner = Change
+union FixedPieceInDesignOwned = Piece
 
-type DraggedPieceInput {
+type DraggedPiecesInDesignInput {
   designId: ID!
   pieceIds: [ID!]!
   offset: Offset!
 }
 
-type DraggedPiece implements Operation & Entity {
+type DraggedPiecesInDesign implements Operation & Entity {
   # StrongEntity
   id: ID! # data // uuidv7
   hash: String! # cached
-  owner: DraggedPieceOwner! # reference
+  owner: DraggedPiecesInDesignOwner! # reference
   changeOwner: Change # reference // spine
-  entityOwner: OwnerEntity! # computed // DraggedPieceOwner
-  ownedEntities: OwnedEntityConnection # computed // DraggedPieceOwned
-  input: DraggedPieceInput! # data
+  entityOwner: OwnerEntity! # computed // DraggedPiecesInDesignOwner
+  ownedEntities: OwnedEntityConnection # computed // DraggedPiecesInDesignOwned
+  input: DraggedPiecesInDesignInput! # data
   diff: Diff! # data
   pieces: PieceConnection! # data
 }
 
-union DraggedPieceOwner = Change
-union DraggedPieceOwned = Piece
+union DraggedPiecesInDesignOwner = Change
+union DraggedPiecesInDesignOwned = Piece
+
+type DraggedPieceInDesignInput {
+  designId: ID! # data
+  pieceId: ID! # data
+  offset: Offset! # data
+}
+
+type DraggedPieceInDesign implements Operation & Entity {
+  # StrongEntity
+  id: ID! # data // uuidv7
+  hash: String! # cached
+  owner: DraggedPieceInDesignOwner! # reference
+  changeOwner: Change # reference // spine
+  entityOwner: OwnerEntity! # computed // DraggedPieceInDesignOwner
+  ownedEntities: OwnedEntityConnection # computed // DraggedPieceInDesignOwned
+  input: DraggedPieceInDesignInput! # data
+  diff: Diff! # data
+  piece: Piece! # data
+}
+
+union DraggedPieceInDesignOwner = Change
+union DraggedPieceInDesignOwned = Piece
+
+input ChildPieceWithParentConnectionInput {
+  blueprintId: ID!
+  parentPieceId: ID!
+  parentConnector: String!
+  childConnector: String!
+  name: String
+  description: String
+  position: PositionInput
+  scale: Float
+  attributes: [AttributeInput!]
+}
+
+input HangingChildPieceWithParentConnectionInput {
+  blueprintId: ID!
+  parentPieceId: ID!
+  parentConnector: String!
+  childConnector: String!
+  position: PositionInput!
+  name: String
+  description: String
+  scale: Float
+  attributes: [AttributeInput!]
+}
+
+type AddedChildPieceWithParentConnectionToDesignInput {
+  designId: ID! # data
+  piece: Piece! # data
+  connection: Connection! # data
+}
+
+type AddedChildPieceWithParentConnectionToDesign implements Operation & Entity {
+  # StrongEntity
+  id: ID! # data // uuidv7
+  hash: String! # cached
+  owner: AddedChildPieceWithParentConnectionToDesignOwner! # reference
+  changeOwner: Change # reference // spine
+  entityOwner: OwnerEntity! # computed // AddedChildPieceWithParentConnectionToDesignOwner
+  ownedEntities: OwnedEntityConnection # computed // AddedChildPieceWithParentConnectionToDesignOwned
+  input: AddedChildPieceWithParentConnectionToDesignInput! # data
+  diff: Diff! # data
+  piece: Piece! # data
+  connection: Connection! # data
+}
+
+union AddedChildPieceWithParentConnectionToDesignOwner = Change
+union AddedChildPieceWithParentConnectionToDesignOwned = Piece | Connection
+
+type AddedChildPiecesWithParentConnectionsToDesignInput {
+  designId: ID! # data
+  pieces: PieceConnection! # data
+  connections: ConnectionConnection! # data
+}
+
+type AddedChildPiecesWithParentConnectionsToDesign implements Operation & Entity {
+  # StrongEntity
+  id: ID! # data // uuidv7
+  hash: String! # cached
+  owner: AddedChildPiecesWithParentConnectionsToDesignOwner! # reference
+  changeOwner: Change # reference // spine
+  entityOwner: OwnerEntity! # computed // AddedChildPiecesWithParentConnectionsToDesignOwner
+  ownedEntities: OwnedEntityConnection # computed // AddedChildPiecesWithParentConnectionsToDesignOwned
+  input: AddedChildPiecesWithParentConnectionsToDesignInput! # data
+  diff: Diff! # data
+  pieces: PieceConnection! # data
+  connections: ConnectionConnection! # data
+}
+
+union AddedChildPiecesWithParentConnectionsToDesignOwner = Change
+union AddedChildPiecesWithParentConnectionsToDesignOwned = Piece | Connection
+
+type AddedHangingChildPieceWithParentConnectionToDesignInput {
+  designId: ID! # data
+  piece: Piece! # data
+  connection: Connection! # data
+}
+
+type AddedHangingChildPieceWithParentConnectionToDesign implements Operation & Entity {
+  # StrongEntity
+  id: ID! # data // uuidv7
+  hash: String! # cached
+  owner: AddedHangingChildPieceWithParentConnectionToDesignOwner! # reference
+  changeOwner: Change # reference // spine
+  entityOwner: OwnerEntity! # computed // AddedHangingChildPieceWithParentConnectionToDesignOwner
+  ownedEntities: OwnedEntityConnection # computed // AddedHangingChildPieceWithParentConnectionToDesignOwned
+  input: AddedHangingChildPieceWithParentConnectionToDesignInput! # data
+  diff: Diff! # data
+  piece: Piece! # data
+  connection: Connection! # data
+}
+
+union AddedHangingChildPieceWithParentConnectionToDesignOwner = Change
+union AddedHangingChildPieceWithParentConnectionToDesignOwned = Piece | Connection
+
+type AddedHangingChildPiecesWithParentConnectionsToDesignInput {
+  designId: ID! # data
+  pieces: PieceConnection! # data
+  connections: ConnectionConnection! # data
+}
+
+type AddedHangingChildPiecesWithParentConnectionsToDesign implements Operation & Entity {
+  # StrongEntity
+  id: ID! # data // uuidv7
+  hash: String! # cached
+  owner: AddedHangingChildPiecesWithParentConnectionsToDesignOwner! # reference
+  changeOwner: Change # reference // spine
+  entityOwner: OwnerEntity! # computed // AddedHangingChildPiecesWithParentConnectionsToDesignOwner
+  ownedEntities: OwnedEntityConnection # computed // AddedHangingChildPiecesWithParentConnectionsToDesignOwned
+  input: AddedHangingChildPiecesWithParentConnectionsToDesignInput! # data
+  diff: Diff! # data
+  pieces: PieceConnection! # data
+  connections: ConnectionConnection! # data
+}
+
+union AddedHangingChildPiecesWithParentConnectionsToDesignOwner = Change
+union AddedHangingChildPiecesWithParentConnectionsToDesignOwned = Piece | Connection
+
+type RenamedPieceInDesignInput {
+  pieceId: ID! # data
+  name: String! # data
+}
+
+type RenamedPieceInDesign implements Operation & Entity {
+  # StrongEntity
+  id: ID! # data // uuidv7
+  hash: String! # cached
+  owner: RenamedPieceInDesignOwner! # reference
+  changeOwner: Change # reference // spine
+  entityOwner: OwnerEntity! # computed // RenamedPieceInDesignOwner
+  ownedEntities: OwnedEntityConnection # computed // RenamedPieceInDesignOwned
+  input: RenamedPieceInDesignInput! # data
+  diff: Diff! # data
+  piece: Piece! # data
+}
+
+union RenamedPieceInDesignOwner = Change
+union RenamedPieceInDesignOwned = Piece
+
+type UpdatedPieceDescriptionInDesignInput {
+  pieceId: ID! # data
+  description: String! # data
+}
+
+type UpdatedPieceDescriptionInDesign implements Operation & Entity {
+  # StrongEntity
+  id: ID! # data // uuidv7
+  hash: String! # cached
+  owner: UpdatedPieceDescriptionInDesignOwner! # reference
+  changeOwner: Change # reference // spine
+  entityOwner: OwnerEntity! # computed // UpdatedPieceDescriptionInDesignOwner
+  ownedEntities: OwnedEntityConnection # computed // UpdatedPieceDescriptionInDesignOwned
+  input: UpdatedPieceDescriptionInDesignInput! # data
+  diff: Diff! # data
+  piece: Piece! # data
+}
+
+union UpdatedPieceDescriptionInDesignOwner = Change
+union UpdatedPieceDescriptionInDesignOwned = Piece
+
+type MovedPieceInDesignInput {
+  designId: ID! # data
+  pieceId: ID! # data
+  position: Position! # data
+}
+
+type MovedPieceInDesign implements Operation & Entity {
+  # StrongEntity
+  id: ID! # data // uuidv7
+  hash: String! # cached
+  owner: MovedPieceInDesignOwner! # reference
+  changeOwner: Change # reference // spine
+  entityOwner: OwnerEntity! # computed // MovedPieceInDesignOwner
+  ownedEntities: OwnedEntityConnection # computed // MovedPieceInDesignOwned
+  input: MovedPieceInDesignInput! # data
+  diff: Diff! # data
+  piece: Piece! # data
+}
+
+union MovedPieceInDesignOwner = Change
+union MovedPieceInDesignOwned = Piece
+
+type MovedPiecesInDesignInput {
+  designId: ID! # data
+  pieceIds: [ID!]! # data
+  offset: Offset! # data
+}
+
+type MovedPiecesInDesign implements Operation & Entity {
+  # StrongEntity
+  id: ID! # data // uuidv7
+  hash: String! # cached
+  owner: MovedPiecesInDesignOwner! # reference
+  changeOwner: Change # reference // spine
+  entityOwner: OwnerEntity! # computed // MovedPiecesInDesignOwner
+  ownedEntities: OwnedEntityConnection # computed // MovedPiecesInDesignOwned
+  input: MovedPiecesInDesignInput! # data
+  diff: Diff! # data
+  pieces: PieceConnection! # data
+}
+
+union MovedPiecesInDesignOwner = Change
+union MovedPiecesInDesignOwned = Piece
+
+type FixedPiecesInDesignInput {
+  designId: ID! # data
+  pieceIds: [ID!]! # data
+}
+
+type FixedPiecesInDesign implements Operation & Entity {
+  # StrongEntity
+  id: ID! # data // uuidv7
+  hash: String! # cached
+  owner: FixedPiecesInDesignOwner! # reference
+  changeOwner: Change # reference // spine
+  entityOwner: OwnerEntity! # computed // FixedPiecesInDesignOwner
+  ownedEntities: OwnedEntityConnection # computed // FixedPiecesInDesignOwned
+  input: FixedPiecesInDesignInput! # data
+  diff: Diff! # data
+  pieces: PieceConnection! # data
+}
+
+union FixedPiecesInDesignOwner = Change
+union FixedPiecesInDesignOwned = Piece
+
+type ChangedPieceToTypeInDesignInput {
+  pieceId: ID! # data
+  blueprintId: ID! # data
+}
+
+type ChangedPieceToTypeInDesign implements Operation & Entity {
+  # StrongEntity
+  id: ID! # data // uuidv7
+  hash: String! # cached
+  owner: ChangedPieceToTypeInDesignOwner! # reference
+  changeOwner: Change # reference // spine
+  entityOwner: OwnerEntity! # computed // ChangedPieceToTypeInDesignOwner
+  ownedEntities: OwnedEntityConnection # computed // ChangedPieceToTypeInDesignOwned
+  input: ChangedPieceToTypeInDesignInput! # data
+  diff: Diff! # data
+  piece: Piece! # data
+}
+
+union ChangedPieceToTypeInDesignOwner = Change
+union ChangedPieceToTypeInDesignOwned = Piece
+
+type ChangedPiecesToTypeInDesignInput {
+  pieceIds: [ID!]! # data
+  blueprintId: ID! # data
+}
+
+type ChangedPiecesToTypeInDesign implements Operation & Entity {
+  # StrongEntity
+  id: ID! # data // uuidv7
+  hash: String! # cached
+  owner: ChangedPiecesToTypeInDesignOwner! # reference
+  changeOwner: Change # reference // spine
+  entityOwner: OwnerEntity! # computed // ChangedPiecesToTypeInDesignOwner
+  ownedEntities: OwnedEntityConnection # computed // ChangedPiecesToTypeInDesignOwned
+  input: ChangedPiecesToTypeInDesignInput! # data
+  diff: Diff! # data
+  pieces: PieceConnection! # data
+}
+
+union ChangedPiecesToTypeInDesignOwner = Change
+union ChangedPiecesToTypeInDesignOwned = Piece
+
+type AddedAttributeToPieceInput {
+  pieceId: ID! # data
+  attribute: Attribute! # data
+}
+
+type AddedAttributeToPiece implements Operation & Entity {
+  # StrongEntity
+  id: ID! # data // uuidv7
+  hash: String! # cached
+  owner: AddedAttributeToPieceOwner! # reference
+  changeOwner: Change # reference // spine
+  entityOwner: OwnerEntity! # computed // AddedAttributeToPieceOwner
+  ownedEntities: OwnedEntityConnection # computed // AddedAttributeToPieceOwned
+  input: AddedAttributeToPieceInput! # data
+  diff: Diff! # data
+  piece: Piece! # data
+  attribute: Attribute! # data
+}
+
+union AddedAttributeToPieceOwner = Change
+union AddedAttributeToPieceOwned = Attribute
+
+type AddedAttributesToPieceInput {
+  pieceId: ID! # data
+  attributes: AttributeConnection! # data
+}
+
+type AddedAttributesToPiece implements Operation & Entity {
+  # StrongEntity
+  id: ID! # data // uuidv7
+  hash: String! # cached
+  owner: AddedAttributesToPieceOwner! # reference
+  changeOwner: Change # reference // spine
+  entityOwner: OwnerEntity! # computed // AddedAttributesToPieceOwner
+  ownedEntities: OwnedEntityConnection # computed // AddedAttributesToPieceOwned
+  input: AddedAttributesToPieceInput! # data
+  diff: Diff! # data
+  piece: Piece! # data
+  attributes: AttributeConnection! # data
+}
+
+union AddedAttributesToPieceOwner = Change
+union AddedAttributesToPieceOwned = Attribute
+
+type RemovedAttributeFromPieceInput {
+  pieceId: ID! # data
+  attributeId: ID! # data
+}
+
+type RemovedAttributeFromPiece implements Operation & Entity {
+  # StrongEntity
+  id: ID! # data // uuidv7
+  hash: String! # cached
+  owner: RemovedAttributeFromPieceOwner! # reference
+  changeOwner: Change # reference // spine
+  entityOwner: OwnerEntity! # computed // RemovedAttributeFromPieceOwner
+  ownedEntities: OwnedEntityConnection # computed // RemovedAttributeFromPieceOwned
+  input: RemovedAttributeFromPieceInput! # data
+  diff: Diff! # data
+  piece: Piece! # data
+}
+
+union RemovedAttributeFromPieceOwner = Change
+# union RemovedAttributeFromPieceOwned = Nothing
+
+type RemovedAttributesFromPieceInput {
+  pieceId: ID! # data
+  attributeIds: [ID!]! # data
+}
+
+type RemovedAttributesFromPiece implements Operation & Entity {
+  # StrongEntity
+  id: ID! # data // uuidv7
+  hash: String! # cached
+  owner: RemovedAttributesFromPieceOwner! # reference
+  changeOwner: Change # reference // spine
+  entityOwner: OwnerEntity! # computed // RemovedAttributesFromPieceOwner
+  ownedEntities: OwnedEntityConnection # computed // RemovedAttributesFromPieceOwned
+  input: RemovedAttributesFromPieceInput! # data
+  diff: Diff! # data
+  piece: Piece! # data
+}
+
+union RemovedAttributesFromPieceOwner = Change
+# union RemovedAttributesFromPieceOwned = Nothing
+
+type DeletedPieceInDesignInput {
+  designId: ID! # data
+  pieceId: ID! # data
+}
+
+type DeletedPieceInDesign implements Operation & Entity {
+  # StrongEntity
+  id: ID! # data // uuidv7
+  hash: String! # cached
+  owner: DeletedPieceInDesignOwner! # reference
+  changeOwner: Change # reference // spine
+  entityOwner: OwnerEntity! # computed // DeletedPieceInDesignOwner
+  ownedEntities: OwnedEntityConnection # computed // DeletedPieceInDesignOwned
+  input: DeletedPieceInDesignInput! # data
+  diff: Diff! # data
+}
+
+union DeletedPieceInDesignOwner = Change
+# union DeletedPieceInDesignOwned = Nothing
+
+type DeletedPiecesInDesignInput {
+  designId: ID! # data
+  pieceIds: [ID!]! # data
+}
+
+type DeletedPiecesInDesign implements Operation & Entity {
+  # StrongEntity
+  id: ID! # data // uuidv7
+  hash: String! # cached
+  owner: DeletedPiecesInDesignOwner! # reference
+  changeOwner: Change # reference // spine
+  entityOwner: OwnerEntity! # computed // DeletedPiecesInDesignOwner
+  ownedEntities: OwnedEntityConnection # computed // DeletedPiecesInDesignOwned
+  input: DeletedPiecesInDesignInput! # data
+  diff: Diff! # data
+}
+
+union DeletedPiecesInDesignOwner = Change
+# union DeletedPiecesInDesignOwned = Nothing
+
+type DeletedPiecesAndConnectionsInDesignInput {
+  designId: ID! # data
+  pieceIds: [ID!]! # data
+  connectionIds: [ID!]! # data
+}
+
+type DeletedPiecesAndConnectionsInDesign implements Operation & Entity {
+  # StrongEntity
+  id: ID! # data // uuidv7
+  hash: String! # cached
+  owner: DeletedPiecesAndConnectionsInDesignOwner! # reference
+  changeOwner: Change # reference // spine
+  entityOwner: OwnerEntity! # computed // DeletedPiecesAndConnectionsInDesignOwner
+  ownedEntities: OwnedEntityConnection # computed // DeletedPiecesAndConnectionsInDesignOwned
+  input: DeletedPiecesAndConnectionsInDesignInput! # data
+  diff: Diff! # data
+}
+
+union DeletedPiecesAndConnectionsInDesignOwner = Change
+# union DeletedPiecesAndConnectionsInDesignOwned = Nothing
+
+union PieceOperation =
+  | AddedAttributeToPiece
+  | AddedAttributesToPiece
+  | AddedChildPieceWithParentConnectionToDesign
+  | AddedChildPiecesWithParentConnectionsToDesign
+  | AddedFixedPieceToDesign
+  | AddedHangingChildPieceWithParentConnectionToDesign
+  | AddedHangingChildPiecesWithParentConnectionsToDesign
+  | ChangedPieceToTypeInDesign
+  | ChangedPiecesToTypeInDesign
+  | DeletedPieceInDesign
+  | DeletedPiecesAndConnectionsInDesign
+  | DeletedPiecesInDesign
+  | DraggedPieceInDesign
+  | DraggedPiecesInDesign
+  | FixedPieceInDesign
+  | FixedPiecesInDesign
+  | MovedPieceInDesign
+  | MovedPiecesInDesign
+  | RemovedAttributeFromPiece
+  | RemovedAttributesFromPiece
+  | RenamedPieceInDesign
+  | UpdatedPieceDescriptionInDesign
 
 #endregion Operations
 
@@ -5324,7 +5974,7 @@ type SideDiffConnection implements EntityConnectionInterface {
   hash: String! # cached
 }
 
-union SideDiffsOwner = AttributeDiff | Change | ChangedDescription | CreatedFixedPiece | Diffs | DraggedPiece | FixedPiece | LocationDiff | PlaneDiff | PlaceDiff | PositionDiff | RenamedKit
+union SideDiffsOwner = AddedAttributeToConcept | AddedAttributeToDesign | AddedAttributeToPiece | AddedAttributeToPort | AddedAttributeToQuality | AddedAttributeToTag | AddedAttributeToType | AddedAttributesToConcept | AddedAttributesToDesign | AddedAttributesToPiece | AddedAttributesToPort | AddedAttributesToQuality | AddedAttributesToTag | AddedAttributesToType | AddedChildPieceWithParentConnectionToDesign | AddedChildPiecesWithParentConnectionsToDesign | AddedConnectorToType | AddedConnectorsToType | AddedFixedPieceToDesign | AddedHangingChildPieceWithParentConnectionToDesign | AddedHangingChildPiecesWithParentConnectionsToDesign | AttributeDiff | Change | ChangedDescription | ChangedPieceToTypeInDesign | ChangedPiecesToTypeInDesign | CreatedConcept | CreatedConcepts | CreatedDesign | CreatedDesigns | CreatedPort | CreatedPorts | CreatedQualities | CreatedQuality | CreatedTag | CreatedTags | CreatedType | CreatedTypes | DeletedConcept | DeletedConcepts | DeletedDesign | DeletedDesigns | DeletedPieceInDesign | DeletedPiecesAndConnectionsInDesign | DeletedPiecesInDesign | DeletedPort | DeletedPorts | DeletedQualities | DeletedQuality | DeletedTag | DeletedTags | DeletedType | DeletedTypes | Diffs | DraggedPieceInDesign | DraggedPiecesInDesign | FixedPieceInDesign | FixedPiecesInDesign | FlattenedDesign | LocationDiff | MovedPieceInDesign | MovedPiecesInDesign | PlaceDiff | PlaneDiff | PositionDiff | RemovedAttributeFromConcept | RemovedAttributeFromDesign | RemovedAttributeFromPiece | RemovedAttributeFromPort | RemovedAttributeFromQuality | RemovedAttributeFromTag | RemovedAttributeFromType | RemovedAttributesFromConcept | RemovedAttributesFromDesign | RemovedAttributesFromPiece | RemovedAttributesFromPort | RemovedAttributesFromQuality | RemovedAttributesFromTag | RemovedAttributesFromType | RemovedConnectorFromType | RemovedConnectorsFromType | RenamedConcept | RenamedConnectorInType | RenamedKit | RenamedPieceInDesign | RenamedPort | RenamedQuality | RenamedTag | RenamedType | UpdatedConceptDescription | UpdatedConceptIcon | UpdatedConnectorDescriptionInType | UpdatedConnectorIconInType | UpdatedPieceDescriptionInDesign | UpdatedPortDescription | UpdatedPortIcon | UpdatedQualityDescription | UpdatedQualityIcon | UpdatedTagDescription | UpdatedTagIcon | UpdatedTypeDescription | UpdatedTypeIcon
 
 union SideDiffsOwned = SideDiffs | SideDiff | PlaneDiff | PositionDiff | AttributeDiff | LocationDiff | PlaceDiff
 
@@ -5503,7 +6153,7 @@ type DesignDiffConnection implements EntityConnectionInterface {
   hash: String! # cached
 }
 
-union DesignDiffsOwner = AttributeDiff | Change | ChangedDescription | CreatedFixedPiece | Diffs | DraggedPiece | FixedPiece | LocationDiff | PlaneDiff | PlaceDiff | PositionDiff | RenamedKit
+union DesignDiffsOwner = AddedAttributeToConcept | AddedAttributeToDesign | AddedAttributeToPiece | AddedAttributeToPort | AddedAttributeToQuality | AddedAttributeToTag | AddedAttributeToType | AddedAttributesToConcept | AddedAttributesToDesign | AddedAttributesToPiece | AddedAttributesToPort | AddedAttributesToQuality | AddedAttributesToTag | AddedAttributesToType | AddedChildPieceWithParentConnectionToDesign | AddedChildPiecesWithParentConnectionsToDesign | AddedConnectorToType | AddedConnectorsToType | AddedFixedPieceToDesign | AddedHangingChildPieceWithParentConnectionToDesign | AddedHangingChildPiecesWithParentConnectionsToDesign | AttributeDiff | Change | ChangedDescription | ChangedPieceToTypeInDesign | ChangedPiecesToTypeInDesign | CreatedConcept | CreatedConcepts | CreatedDesign | CreatedDesigns | CreatedPort | CreatedPorts | CreatedQualities | CreatedQuality | CreatedTag | CreatedTags | CreatedType | CreatedTypes | DeletedConcept | DeletedConcepts | DeletedDesign | DeletedDesigns | DeletedPieceInDesign | DeletedPiecesAndConnectionsInDesign | DeletedPiecesInDesign | DeletedPort | DeletedPorts | DeletedQualities | DeletedQuality | DeletedTag | DeletedTags | DeletedType | DeletedTypes | Diffs | DraggedPieceInDesign | DraggedPiecesInDesign | FixedPieceInDesign | FixedPiecesInDesign | FlattenedDesign | LocationDiff | MovedPieceInDesign | MovedPiecesInDesign | PlaceDiff | PlaneDiff | PositionDiff | RemovedAttributeFromConcept | RemovedAttributeFromDesign | RemovedAttributeFromPiece | RemovedAttributeFromPort | RemovedAttributeFromQuality | RemovedAttributeFromTag | RemovedAttributeFromType | RemovedAttributesFromConcept | RemovedAttributesFromDesign | RemovedAttributesFromPiece | RemovedAttributesFromPort | RemovedAttributesFromQuality | RemovedAttributesFromTag | RemovedAttributesFromType | RemovedConnectorFromType | RemovedConnectorsFromType | RenamedConcept | RenamedConnectorInType | RenamedKit | RenamedPieceInDesign | RenamedPort | RenamedQuality | RenamedTag | RenamedType | UpdatedConceptDescription | UpdatedConceptIcon | UpdatedConnectorDescriptionInType | UpdatedConnectorIconInType | UpdatedPieceDescriptionInDesign | UpdatedPortDescription | UpdatedPortIcon | UpdatedQualityDescription | UpdatedQualityIcon | UpdatedTagDescription | UpdatedTagIcon | UpdatedTypeDescription | UpdatedTypeIcon
 
 union DesignDiffsOwned = DesignDiffs | DesignDiff | PlaneDiff | PositionDiff | AttributeDiff | LocationDiff | PlaceDiff
 
@@ -5546,7 +6196,7 @@ input DesignInput {
 
 type CreatedDesignInput {
   ownerId: ID! # data
-  design: DesignInput! # data
+  design: Design! # data
 }
 
 type CreatedDesign implements Operation & Entity {
@@ -5567,7 +6217,7 @@ union CreatedDesignOwned = Design
 
 type CreatedDesignsInput {
   ownerId: ID! # data
-  designs: [DesignInput!]! # data
+  designs: DesignConnection! # data
 }
 
 type CreatedDesigns implements Operation & Entity {
@@ -5646,7 +6296,7 @@ union FlattenedDesignOwned = Design
 
 type AddedAttributeToDesignInput {
   designId: ID! # data
-  attribute: AttributeInput! # data
+  attribute: Attribute! # data
 }
 
 type AddedAttributeToDesign implements Operation & Entity {
@@ -5668,7 +6318,7 @@ union AddedAttributeToDesignOwned = Attribute
 
 type AddedAttributesToDesignInput {
   designId: ID! # data
-  attributes: [AttributeInput!]! # data
+  attributes: AttributeConnection! # data
 }
 
 type AddedAttributesToDesign implements Operation & Entity {
@@ -5883,7 +6533,7 @@ type KitDiffConnection implements EntityConnectionInterface {
   hash: String! # cached
 }
 
-union KitDiffsOwner = AttributeDiff | Change | ChangedDescription | CreatedFixedPiece | Diffs | DraggedPiece | FixedPiece | LocationDiff | PlaneDiff | PlaceDiff | PositionDiff | RenamedKit
+union KitDiffsOwner = AddedAttributeToConcept | AddedAttributeToDesign | AddedAttributeToPiece | AddedAttributeToPort | AddedAttributeToQuality | AddedAttributeToTag | AddedAttributeToType | AddedAttributesToConcept | AddedAttributesToDesign | AddedAttributesToPiece | AddedAttributesToPort | AddedAttributesToQuality | AddedAttributesToTag | AddedAttributesToType | AddedChildPieceWithParentConnectionToDesign | AddedChildPiecesWithParentConnectionsToDesign | AddedConnectorToType | AddedConnectorsToType | AddedFixedPieceToDesign | AddedHangingChildPieceWithParentConnectionToDesign | AddedHangingChildPiecesWithParentConnectionsToDesign | AttributeDiff | Change | ChangedDescription | ChangedPieceToTypeInDesign | ChangedPiecesToTypeInDesign | CreatedConcept | CreatedConcepts | CreatedDesign | CreatedDesigns | CreatedPort | CreatedPorts | CreatedQualities | CreatedQuality | CreatedTag | CreatedTags | CreatedType | CreatedTypes | DeletedConcept | DeletedConcepts | DeletedDesign | DeletedDesigns | DeletedPieceInDesign | DeletedPiecesAndConnectionsInDesign | DeletedPiecesInDesign | DeletedPort | DeletedPorts | DeletedQualities | DeletedQuality | DeletedTag | DeletedTags | DeletedType | DeletedTypes | Diffs | DraggedPieceInDesign | DraggedPiecesInDesign | FixedPieceInDesign | FixedPiecesInDesign | FlattenedDesign | LocationDiff | MovedPieceInDesign | MovedPiecesInDesign | PlaceDiff | PlaneDiff | PositionDiff | RemovedAttributeFromConcept | RemovedAttributeFromDesign | RemovedAttributeFromPiece | RemovedAttributeFromPort | RemovedAttributeFromQuality | RemovedAttributeFromTag | RemovedAttributeFromType | RemovedAttributesFromConcept | RemovedAttributesFromDesign | RemovedAttributesFromPiece | RemovedAttributesFromPort | RemovedAttributesFromQuality | RemovedAttributesFromTag | RemovedAttributesFromType | RemovedConnectorFromType | RemovedConnectorsFromType | RenamedConcept | RenamedConnectorInType | RenamedKit | RenamedPieceInDesign | RenamedPort | RenamedQuality | RenamedTag | RenamedType | UpdatedConceptDescription | UpdatedConceptIcon | UpdatedConnectorDescriptionInType | UpdatedConnectorIconInType | UpdatedPieceDescriptionInDesign | UpdatedPortDescription | UpdatedPortIcon | UpdatedQualityDescription | UpdatedQualityIcon | UpdatedTagDescription | UpdatedTagIcon | UpdatedTypeDescription | UpdatedTypeIcon
 
 union KitDiffsOwned = KitDiffs | KitDiff | PlaneDiff | PositionDiff | AttributeDiff | LocationDiff | PlaceDiff
 
@@ -5956,6 +6606,10 @@ type ChangedDescription implements Operation & Entity {
 union ChangedDescriptionOwner = Change
 # union ChangedDescriptionOwned = Nothing
 
+union KitOperation =
+  | ChangedDescription
+  | RenamedKit
+
 #endregion Operations
 
 #endregion Kit
@@ -5965,7 +6619,102 @@ union ChangedDescriptionOwner = Change
 #region VCS
 
 union ChangeOwner = Transaction | Draft | Checkpoint
-union ChangeOwned = ChangedDescription | CreatedFixedPiece | DraggedPiece | FixedPiece | RenamedKit
+union ChangeOwned =
+  | AddedAttributeToConcept
+  | AddedAttributeToDesign
+  | AddedAttributeToPiece
+  | AddedAttributeToPort
+  | AddedAttributeToQuality
+  | AddedAttributeToTag
+  | AddedAttributeToType
+  | AddedAttributesToConcept
+  | AddedAttributesToDesign
+  | AddedAttributesToPiece
+  | AddedAttributesToPort
+  | AddedAttributesToQuality
+  | AddedAttributesToTag
+  | AddedAttributesToType
+  | AddedChildPieceWithParentConnectionToDesign
+  | AddedChildPiecesWithParentConnectionsToDesign
+  | AddedConnectorToType
+  | AddedConnectorsToType
+  | AddedFixedPieceToDesign
+  | AddedHangingChildPieceWithParentConnectionToDesign
+  | AddedHangingChildPiecesWithParentConnectionsToDesign
+  | ChangedDescription
+  | ChangedPieceToTypeInDesign
+  | ChangedPiecesToTypeInDesign
+  | CreatedConcept
+  | CreatedConcepts
+  | CreatedDesign
+  | CreatedDesigns
+  | CreatedPort
+  | CreatedPorts
+  | CreatedQualities
+  | CreatedQuality
+  | CreatedTag
+  | CreatedTags
+  | CreatedType
+  | CreatedTypes
+  | DeletedConcept
+  | DeletedConcepts
+  | DeletedDesign
+  | DeletedDesigns
+  | DeletedPieceInDesign
+  | DeletedPiecesAndConnectionsInDesign
+  | DeletedPiecesInDesign
+  | DeletedPort
+  | DeletedPorts
+  | DeletedQualities
+  | DeletedQuality
+  | DeletedTag
+  | DeletedTags
+  | DeletedType
+  | DeletedTypes
+  | DraggedPieceInDesign
+  | DraggedPiecesInDesign
+  | FixedPieceInDesign
+  | FixedPiecesInDesign
+  | FlattenedDesign
+  | MovedPieceInDesign
+  | MovedPiecesInDesign
+  | RemovedAttributeFromConcept
+  | RemovedAttributeFromDesign
+  | RemovedAttributeFromPiece
+  | RemovedAttributeFromPort
+  | RemovedAttributeFromQuality
+  | RemovedAttributeFromTag
+  | RemovedAttributeFromType
+  | RemovedAttributesFromConcept
+  | RemovedAttributesFromDesign
+  | RemovedAttributesFromPiece
+  | RemovedAttributesFromPort
+  | RemovedAttributesFromQuality
+  | RemovedAttributesFromTag
+  | RemovedAttributesFromType
+  | RemovedConnectorFromType
+  | RemovedConnectorsFromType
+  | RenamedConcept
+  | RenamedConnectorInType
+  | RenamedKit
+  | RenamedPieceInDesign
+  | RenamedPort
+  | RenamedQuality
+  | RenamedTag
+  | RenamedType
+  | UpdatedConceptDescription
+  | UpdatedConceptIcon
+  | UpdatedConnectorDescriptionInType
+  | UpdatedConnectorIconInType
+  | UpdatedPieceDescriptionInDesign
+  | UpdatedPortDescription
+  | UpdatedPortIcon
+  | UpdatedQualityDescription
+  | UpdatedQualityIcon
+  | UpdatedTagDescription
+  | UpdatedTagIcon
+  | UpdatedTypeDescription
+  | UpdatedTypeIcon
 
 type Change implements Entity {
   # StrongEntity
@@ -6057,7 +6806,7 @@ type ChangeDiffConnection implements EntityConnectionInterface {
   hash: String! # cached
 }
 
-union ChangeDiffsOwner = AttributeDiff | Change | ChangedDescription | CreatedFixedPiece | Diffs | DraggedPiece | FixedPiece | LocationDiff | PlaneDiff | PlaceDiff | PositionDiff | RenamedKit
+union ChangeDiffsOwner = AddedAttributeToConcept | AddedAttributeToDesign | AddedAttributeToPiece | AddedAttributeToPort | AddedAttributeToQuality | AddedAttributeToTag | AddedAttributeToType | AddedAttributesToConcept | AddedAttributesToDesign | AddedAttributesToPiece | AddedAttributesToPort | AddedAttributesToQuality | AddedAttributesToTag | AddedAttributesToType | AddedChildPieceWithParentConnectionToDesign | AddedChildPiecesWithParentConnectionsToDesign | AddedConnectorToType | AddedConnectorsToType | AddedFixedPieceToDesign | AddedHangingChildPieceWithParentConnectionToDesign | AddedHangingChildPiecesWithParentConnectionsToDesign | AttributeDiff | Change | ChangedDescription | ChangedPieceToTypeInDesign | ChangedPiecesToTypeInDesign | CreatedConcept | CreatedConcepts | CreatedDesign | CreatedDesigns | CreatedPort | CreatedPorts | CreatedQualities | CreatedQuality | CreatedTag | CreatedTags | CreatedType | CreatedTypes | DeletedConcept | DeletedConcepts | DeletedDesign | DeletedDesigns | DeletedPieceInDesign | DeletedPiecesAndConnectionsInDesign | DeletedPiecesInDesign | DeletedPort | DeletedPorts | DeletedQualities | DeletedQuality | DeletedTag | DeletedTags | DeletedType | DeletedTypes | Diffs | DraggedPieceInDesign | DraggedPiecesInDesign | FixedPieceInDesign | FixedPiecesInDesign | FlattenedDesign | LocationDiff | MovedPieceInDesign | MovedPiecesInDesign | PlaceDiff | PlaneDiff | PositionDiff | RemovedAttributeFromConcept | RemovedAttributeFromDesign | RemovedAttributeFromPiece | RemovedAttributeFromPort | RemovedAttributeFromQuality | RemovedAttributeFromTag | RemovedAttributeFromType | RemovedAttributesFromConcept | RemovedAttributesFromDesign | RemovedAttributesFromPiece | RemovedAttributesFromPort | RemovedAttributesFromQuality | RemovedAttributesFromTag | RemovedAttributesFromType | RemovedConnectorFromType | RemovedConnectorsFromType | RenamedConcept | RenamedConnectorInType | RenamedKit | RenamedPieceInDesign | RenamedPort | RenamedQuality | RenamedTag | RenamedType | UpdatedConceptDescription | UpdatedConceptIcon | UpdatedConnectorDescriptionInType | UpdatedConnectorIconInType | UpdatedPieceDescriptionInDesign | UpdatedPortDescription | UpdatedPortIcon | UpdatedQualityDescription | UpdatedQualityIcon | UpdatedTagDescription | UpdatedTagIcon | UpdatedTypeDescription | UpdatedTypeIcon
 
 union ChangeDiffsOwned = ChangeDiffs | ChangeDiff | PlaneDiff | PositionDiff | AttributeDiff | LocationDiff | PlaceDiff
 
@@ -6168,7 +6917,7 @@ type TransactionDiffConnection implements EntityConnectionInterface {
   hash: String! # cached
 }
 
-union TransactionDiffsOwner = AttributeDiff | Change | ChangedDescription | CreatedFixedPiece | Diffs | DraggedPiece | FixedPiece | LocationDiff | PlaneDiff | PlaceDiff | PositionDiff | RenamedKit
+union TransactionDiffsOwner = AddedAttributeToConcept | AddedAttributeToDesign | AddedAttributeToPiece | AddedAttributeToPort | AddedAttributeToQuality | AddedAttributeToTag | AddedAttributeToType | AddedAttributesToConcept | AddedAttributesToDesign | AddedAttributesToPiece | AddedAttributesToPort | AddedAttributesToQuality | AddedAttributesToTag | AddedAttributesToType | AddedChildPieceWithParentConnectionToDesign | AddedChildPiecesWithParentConnectionsToDesign | AddedConnectorToType | AddedConnectorsToType | AddedFixedPieceToDesign | AddedHangingChildPieceWithParentConnectionToDesign | AddedHangingChildPiecesWithParentConnectionsToDesign | AttributeDiff | Change | ChangedDescription | ChangedPieceToTypeInDesign | ChangedPiecesToTypeInDesign | CreatedConcept | CreatedConcepts | CreatedDesign | CreatedDesigns | CreatedPort | CreatedPorts | CreatedQualities | CreatedQuality | CreatedTag | CreatedTags | CreatedType | CreatedTypes | DeletedConcept | DeletedConcepts | DeletedDesign | DeletedDesigns | DeletedPieceInDesign | DeletedPiecesAndConnectionsInDesign | DeletedPiecesInDesign | DeletedPort | DeletedPorts | DeletedQualities | DeletedQuality | DeletedTag | DeletedTags | DeletedType | DeletedTypes | Diffs | DraggedPieceInDesign | DraggedPiecesInDesign | FixedPieceInDesign | FixedPiecesInDesign | FlattenedDesign | LocationDiff | MovedPieceInDesign | MovedPiecesInDesign | PlaceDiff | PlaneDiff | PositionDiff | RemovedAttributeFromConcept | RemovedAttributeFromDesign | RemovedAttributeFromPiece | RemovedAttributeFromPort | RemovedAttributeFromQuality | RemovedAttributeFromTag | RemovedAttributeFromType | RemovedAttributesFromConcept | RemovedAttributesFromDesign | RemovedAttributesFromPiece | RemovedAttributesFromPort | RemovedAttributesFromQuality | RemovedAttributesFromTag | RemovedAttributesFromType | RemovedConnectorFromType | RemovedConnectorsFromType | RenamedConcept | RenamedConnectorInType | RenamedKit | RenamedPieceInDesign | RenamedPort | RenamedQuality | RenamedTag | RenamedType | UpdatedConceptDescription | UpdatedConceptIcon | UpdatedConnectorDescriptionInType | UpdatedConnectorIconInType | UpdatedPieceDescriptionInDesign | UpdatedPortDescription | UpdatedPortIcon | UpdatedQualityDescription | UpdatedQualityIcon | UpdatedTagDescription | UpdatedTagIcon | UpdatedTypeDescription | UpdatedTypeIcon
 
 union TransactionDiffsOwned = TransactionDiffs | TransactionDiff | PlaneDiff | PositionDiff | AttributeDiff | LocationDiff | PlaceDiff
 
@@ -6296,7 +7045,7 @@ type DraftDiffConnection implements EntityConnectionInterface {
   hash: String! # cached
 }
 
-union DraftDiffsOwner = AttributeDiff | Change | ChangedDescription | CreatedFixedPiece | Diffs | DraggedPiece | FixedPiece | LocationDiff | PlaneDiff | PlaceDiff | PositionDiff | RenamedKit
+union DraftDiffsOwner = AddedAttributeToConcept | AddedAttributeToDesign | AddedAttributeToPiece | AddedAttributeToPort | AddedAttributeToQuality | AddedAttributeToTag | AddedAttributeToType | AddedAttributesToConcept | AddedAttributesToDesign | AddedAttributesToPiece | AddedAttributesToPort | AddedAttributesToQuality | AddedAttributesToTag | AddedAttributesToType | AddedChildPieceWithParentConnectionToDesign | AddedChildPiecesWithParentConnectionsToDesign | AddedConnectorToType | AddedConnectorsToType | AddedFixedPieceToDesign | AddedHangingChildPieceWithParentConnectionToDesign | AddedHangingChildPiecesWithParentConnectionsToDesign | AttributeDiff | Change | ChangedDescription | ChangedPieceToTypeInDesign | ChangedPiecesToTypeInDesign | CreatedConcept | CreatedConcepts | CreatedDesign | CreatedDesigns | CreatedPort | CreatedPorts | CreatedQualities | CreatedQuality | CreatedTag | CreatedTags | CreatedType | CreatedTypes | DeletedConcept | DeletedConcepts | DeletedDesign | DeletedDesigns | DeletedPieceInDesign | DeletedPiecesAndConnectionsInDesign | DeletedPiecesInDesign | DeletedPort | DeletedPorts | DeletedQualities | DeletedQuality | DeletedTag | DeletedTags | DeletedType | DeletedTypes | Diffs | DraggedPieceInDesign | DraggedPiecesInDesign | FixedPieceInDesign | FixedPiecesInDesign | FlattenedDesign | LocationDiff | MovedPieceInDesign | MovedPiecesInDesign | PlaceDiff | PlaneDiff | PositionDiff | RemovedAttributeFromConcept | RemovedAttributeFromDesign | RemovedAttributeFromPiece | RemovedAttributeFromPort | RemovedAttributeFromQuality | RemovedAttributeFromTag | RemovedAttributeFromType | RemovedAttributesFromConcept | RemovedAttributesFromDesign | RemovedAttributesFromPiece | RemovedAttributesFromPort | RemovedAttributesFromQuality | RemovedAttributesFromTag | RemovedAttributesFromType | RemovedConnectorFromType | RemovedConnectorsFromType | RenamedConcept | RenamedConnectorInType | RenamedKit | RenamedPieceInDesign | RenamedPort | RenamedQuality | RenamedTag | RenamedType | UpdatedConceptDescription | UpdatedConceptIcon | UpdatedConnectorDescriptionInType | UpdatedConnectorIconInType | UpdatedPieceDescriptionInDesign | UpdatedPortDescription | UpdatedPortIcon | UpdatedQualityDescription | UpdatedQualityIcon | UpdatedTagDescription | UpdatedTagIcon | UpdatedTypeDescription | UpdatedTypeIcon
 
 union DraftDiffsOwned = DraftDiffs | DraftDiff | PlaneDiff | PositionDiff | AttributeDiff | LocationDiff | PlaceDiff
 
@@ -6422,7 +7171,7 @@ type CheckpointDiffConnection implements EntityConnectionInterface {
   hash: String! # cached
 }
 
-union CheckpointDiffsOwner = AttributeDiff | Change | ChangedDescription | CreatedFixedPiece | Diffs | DraggedPiece | FixedPiece | LocationDiff | PlaneDiff | PlaceDiff | PositionDiff | RenamedKit
+union CheckpointDiffsOwner = AddedAttributeToConcept | AddedAttributeToDesign | AddedAttributeToPiece | AddedAttributeToPort | AddedAttributeToQuality | AddedAttributeToTag | AddedAttributeToType | AddedAttributesToConcept | AddedAttributesToDesign | AddedAttributesToPiece | AddedAttributesToPort | AddedAttributesToQuality | AddedAttributesToTag | AddedAttributesToType | AddedChildPieceWithParentConnectionToDesign | AddedChildPiecesWithParentConnectionsToDesign | AddedConnectorToType | AddedConnectorsToType | AddedFixedPieceToDesign | AddedHangingChildPieceWithParentConnectionToDesign | AddedHangingChildPiecesWithParentConnectionsToDesign | AttributeDiff | Change | ChangedDescription | ChangedPieceToTypeInDesign | ChangedPiecesToTypeInDesign | CreatedConcept | CreatedConcepts | CreatedDesign | CreatedDesigns | CreatedPort | CreatedPorts | CreatedQualities | CreatedQuality | CreatedTag | CreatedTags | CreatedType | CreatedTypes | DeletedConcept | DeletedConcepts | DeletedDesign | DeletedDesigns | DeletedPieceInDesign | DeletedPiecesAndConnectionsInDesign | DeletedPiecesInDesign | DeletedPort | DeletedPorts | DeletedQualities | DeletedQuality | DeletedTag | DeletedTags | DeletedType | DeletedTypes | Diffs | DraggedPieceInDesign | DraggedPiecesInDesign | FixedPieceInDesign | FixedPiecesInDesign | FlattenedDesign | LocationDiff | MovedPieceInDesign | MovedPiecesInDesign | PlaceDiff | PlaneDiff | PositionDiff | RemovedAttributeFromConcept | RemovedAttributeFromDesign | RemovedAttributeFromPiece | RemovedAttributeFromPort | RemovedAttributeFromQuality | RemovedAttributeFromTag | RemovedAttributeFromType | RemovedAttributesFromConcept | RemovedAttributesFromDesign | RemovedAttributesFromPiece | RemovedAttributesFromPort | RemovedAttributesFromQuality | RemovedAttributesFromTag | RemovedAttributesFromType | RemovedConnectorFromType | RemovedConnectorsFromType | RenamedConcept | RenamedConnectorInType | RenamedKit | RenamedPieceInDesign | RenamedPort | RenamedQuality | RenamedTag | RenamedType | UpdatedConceptDescription | UpdatedConceptIcon | UpdatedConnectorDescriptionInType | UpdatedConnectorIconInType | UpdatedPieceDescriptionInDesign | UpdatedPortDescription | UpdatedPortIcon | UpdatedQualityDescription | UpdatedQualityIcon | UpdatedTagDescription | UpdatedTagIcon | UpdatedTypeDescription | UpdatedTypeIcon
 
 union CheckpointDiffsOwned = CheckpointDiffs | CheckpointDiff | PlaneDiff | PositionDiff | AttributeDiff | LocationDiff | PlaceDiff
 
@@ -6545,7 +7294,7 @@ type AlternativeDiffConnection implements EntityConnectionInterface {
   hash: String! # cached
 }
 
-union AlternativeDiffsOwner = AttributeDiff | Change | ChangedDescription | CreatedFixedPiece | Diffs | DraggedPiece | FixedPiece | LocationDiff | PlaneDiff | PlaceDiff | PositionDiff | RenamedKit
+union AlternativeDiffsOwner = AddedAttributeToConcept | AddedAttributeToDesign | AddedAttributeToPiece | AddedAttributeToPort | AddedAttributeToQuality | AddedAttributeToTag | AddedAttributeToType | AddedAttributesToConcept | AddedAttributesToDesign | AddedAttributesToPiece | AddedAttributesToPort | AddedAttributesToQuality | AddedAttributesToTag | AddedAttributesToType | AddedChildPieceWithParentConnectionToDesign | AddedChildPiecesWithParentConnectionsToDesign | AddedConnectorToType | AddedConnectorsToType | AddedFixedPieceToDesign | AddedHangingChildPieceWithParentConnectionToDesign | AddedHangingChildPiecesWithParentConnectionsToDesign | AttributeDiff | Change | ChangedDescription | ChangedPieceToTypeInDesign | ChangedPiecesToTypeInDesign | CreatedConcept | CreatedConcepts | CreatedDesign | CreatedDesigns | CreatedPort | CreatedPorts | CreatedQualities | CreatedQuality | CreatedTag | CreatedTags | CreatedType | CreatedTypes | DeletedConcept | DeletedConcepts | DeletedDesign | DeletedDesigns | DeletedPieceInDesign | DeletedPiecesAndConnectionsInDesign | DeletedPiecesInDesign | DeletedPort | DeletedPorts | DeletedQualities | DeletedQuality | DeletedTag | DeletedTags | DeletedType | DeletedTypes | Diffs | DraggedPieceInDesign | DraggedPiecesInDesign | FixedPieceInDesign | FixedPiecesInDesign | FlattenedDesign | LocationDiff | MovedPieceInDesign | MovedPiecesInDesign | PlaceDiff | PlaneDiff | PositionDiff | RemovedAttributeFromConcept | RemovedAttributeFromDesign | RemovedAttributeFromPiece | RemovedAttributeFromPort | RemovedAttributeFromQuality | RemovedAttributeFromTag | RemovedAttributeFromType | RemovedAttributesFromConcept | RemovedAttributesFromDesign | RemovedAttributesFromPiece | RemovedAttributesFromPort | RemovedAttributesFromQuality | RemovedAttributesFromTag | RemovedAttributesFromType | RemovedConnectorFromType | RemovedConnectorsFromType | RenamedConcept | RenamedConnectorInType | RenamedKit | RenamedPieceInDesign | RenamedPort | RenamedQuality | RenamedTag | RenamedType | UpdatedConceptDescription | UpdatedConceptIcon | UpdatedConnectorDescriptionInType | UpdatedConnectorIconInType | UpdatedPieceDescriptionInDesign | UpdatedPortDescription | UpdatedPortIcon | UpdatedQualityDescription | UpdatedQualityIcon | UpdatedTagDescription | UpdatedTagIcon | UpdatedTypeDescription | UpdatedTypeIcon
 
 union AlternativeDiffsOwned = AlternativeDiffs | AlternativeDiff | PlaneDiff | PositionDiff | AttributeDiff | LocationDiff | PlaceDiff
 
@@ -6670,7 +7419,7 @@ type GraphDiffConnection implements EntityConnectionInterface {
   hash: String! # cached
 }
 
-union GraphDiffsOwner = AttributeDiff | Change | ChangedDescription | CreatedFixedPiece | Diffs | DraggedPiece | FixedPiece | LocationDiff | PlaneDiff | PlaceDiff | PositionDiff | RenamedKit
+union GraphDiffsOwner = AddedAttributeToConcept | AddedAttributeToDesign | AddedAttributeToPiece | AddedAttributeToPort | AddedAttributeToQuality | AddedAttributeToTag | AddedAttributeToType | AddedAttributesToConcept | AddedAttributesToDesign | AddedAttributesToPiece | AddedAttributesToPort | AddedAttributesToQuality | AddedAttributesToTag | AddedAttributesToType | AddedChildPieceWithParentConnectionToDesign | AddedChildPiecesWithParentConnectionsToDesign | AddedConnectorToType | AddedConnectorsToType | AddedFixedPieceToDesign | AddedHangingChildPieceWithParentConnectionToDesign | AddedHangingChildPiecesWithParentConnectionsToDesign | AttributeDiff | Change | ChangedDescription | ChangedPieceToTypeInDesign | ChangedPiecesToTypeInDesign | CreatedConcept | CreatedConcepts | CreatedDesign | CreatedDesigns | CreatedPort | CreatedPorts | CreatedQualities | CreatedQuality | CreatedTag | CreatedTags | CreatedType | CreatedTypes | DeletedConcept | DeletedConcepts | DeletedDesign | DeletedDesigns | DeletedPieceInDesign | DeletedPiecesAndConnectionsInDesign | DeletedPiecesInDesign | DeletedPort | DeletedPorts | DeletedQualities | DeletedQuality | DeletedTag | DeletedTags | DeletedType | DeletedTypes | Diffs | DraggedPieceInDesign | DraggedPiecesInDesign | FixedPieceInDesign | FixedPiecesInDesign | FlattenedDesign | LocationDiff | MovedPieceInDesign | MovedPiecesInDesign | PlaceDiff | PlaneDiff | PositionDiff | RemovedAttributeFromConcept | RemovedAttributeFromDesign | RemovedAttributeFromPiece | RemovedAttributeFromPort | RemovedAttributeFromQuality | RemovedAttributeFromTag | RemovedAttributeFromType | RemovedAttributesFromConcept | RemovedAttributesFromDesign | RemovedAttributesFromPiece | RemovedAttributesFromPort | RemovedAttributesFromQuality | RemovedAttributesFromTag | RemovedAttributesFromType | RemovedConnectorFromType | RemovedConnectorsFromType | RenamedConcept | RenamedConnectorInType | RenamedKit | RenamedPieceInDesign | RenamedPort | RenamedQuality | RenamedTag | RenamedType | UpdatedConceptDescription | UpdatedConceptIcon | UpdatedConnectorDescriptionInType | UpdatedConnectorIconInType | UpdatedPieceDescriptionInDesign | UpdatedPortDescription | UpdatedPortIcon | UpdatedQualityDescription | UpdatedQualityIcon | UpdatedTagDescription | UpdatedTagIcon | UpdatedTypeDescription | UpdatedTypeIcon
 
 union GraphDiffsOwned = GraphDiffs | GraphDiff | PlaneDiff | PositionDiff | AttributeDiff | LocationDiff | PlaceDiff
 
@@ -7182,6 +7931,27 @@ union EntityConnection =
   | WriteVersionModificationConnection
 
 union OwnerEntity =
+  | AddedAttributeToConcept
+  | AddedAttributeToDesign
+  | AddedAttributeToPiece
+  | AddedAttributeToPort
+  | AddedAttributeToQuality
+  | AddedAttributeToTag
+  | AddedAttributeToType
+  | AddedAttributesToConcept
+  | AddedAttributesToDesign
+  | AddedAttributesToPiece
+  | AddedAttributesToPort
+  | AddedAttributesToQuality
+  | AddedAttributesToTag
+  | AddedAttributesToType
+  | AddedChildPieceWithParentConnectionToDesign
+  | AddedChildPiecesWithParentConnectionsToDesign
+  | AddedConnectorToType
+  | AddedConnectorsToType
+  | AddedFixedPieceToDesign
+  | AddedHangingChildPieceWithParentConnectionToDesign
+  | AddedHangingChildPiecesWithParentConnectionsToDesign
   | Alternative
   | AlternativeDiff
   | AlternativeDiffs
@@ -7199,10 +7969,12 @@ union OwnerEntity =
   | BenchmarkDiffs
   | BenchmarkModification
   | Change
-  | ChangedDescription
   | ChangeDiff
   | ChangeDiffs
   | ChangeModification
+  | ChangedDescription
+  | ChangedPieceToTypeInDesign
+  | ChangedPiecesToTypeInDesign
   | Checkpoint
   | CheckpointDiff
   | CheckpointDiffs
@@ -7227,7 +7999,33 @@ union OwnerEntity =
   | CoordinateDiff
   | CoordinateDiffs
   | CoordinateModification
-  | CreatedFixedPiece
+  | CreatedConcept
+  | CreatedConcepts
+  | CreatedDesign
+  | CreatedDesigns
+  | CreatedPort
+  | CreatedPorts
+  | CreatedQualities
+  | CreatedQuality
+  | CreatedTag
+  | CreatedTags
+  | CreatedType
+  | CreatedTypes
+  | DeletedConcept
+  | DeletedConcepts
+  | DeletedDesign
+  | DeletedDesigns
+  | DeletedPieceInDesign
+  | DeletedPiecesAndConnectionsInDesign
+  | DeletedPiecesInDesign
+  | DeletedPort
+  | DeletedPorts
+  | DeletedQualities
+  | DeletedQuality
+  | DeletedTag
+  | DeletedTags
+  | DeletedType
+  | DeletedTypes
   | Design
   | DesignDiff
   | DesignDiffs
@@ -7237,7 +8035,8 @@ union OwnerEntity =
   | DraftDiff
   | DraftDiffs
   | DraftModification
-  | DraggedPiece
+  | DraggedPieceInDesign
+  | DraggedPiecesInDesign
   | Family
   | FamilyDiff
   | FamilyDiffs
@@ -7246,7 +8045,9 @@ union OwnerEntity =
   | FileDiff
   | FileDiffs
   | FileModification
-  | FixedPiece
+  | FixedPieceInDesign
+  | FixedPiecesInDesign
+  | FlattenedDesign
   | Folder
   | FolderDiff
   | FolderDiffs
@@ -7271,6 +8072,8 @@ union OwnerEntity =
   | LocationDiff
   | LocationDiffs
   | LocationModification
+  | MovedPieceInDesign
+  | MovedPiecesInDesign
   | Offset
   | OffsetDiff
   | OffsetDiffs
@@ -7311,7 +8114,30 @@ union OwnerEntity =
   | ReadVersionDiff
   | ReadVersionDiffs
   | ReadVersionModification
+  | RemovedAttributeFromConcept
+  | RemovedAttributeFromDesign
+  | RemovedAttributeFromPiece
+  | RemovedAttributeFromPort
+  | RemovedAttributeFromQuality
+  | RemovedAttributeFromTag
+  | RemovedAttributeFromType
+  | RemovedAttributesFromConcept
+  | RemovedAttributesFromDesign
+  | RemovedAttributesFromPiece
+  | RemovedAttributesFromPort
+  | RemovedAttributesFromQuality
+  | RemovedAttributesFromTag
+  | RemovedAttributesFromType
+  | RemovedConnectorFromType
+  | RemovedConnectorsFromType
+  | RenamedConcept
+  | RenamedConnectorInType
   | RenamedKit
+  | RenamedPieceInDesign
+  | RenamedPort
+  | RenamedQuality
+  | RenamedTag
+  | RenamedType
   | Representation
   | RepresentationDiff
   | RepresentationDiffs
@@ -7340,6 +8166,19 @@ union OwnerEntity =
   | TypeDiff
   | TypeDiffs
   | TypeModification
+  | UpdatedConceptDescription
+  | UpdatedConceptIcon
+  | UpdatedConnectorDescriptionInType
+  | UpdatedConnectorIconInType
+  | UpdatedPieceDescriptionInDesign
+  | UpdatedPortDescription
+  | UpdatedPortIcon
+  | UpdatedQualityDescription
+  | UpdatedQualityIcon
+  | UpdatedTagDescription
+  | UpdatedTagIcon
+  | UpdatedTypeDescription
+  | UpdatedTypeIcon
   | Vector
   | VectorDiff
   | VectorDiffs
@@ -7555,7 +8394,104 @@ union Modification =
   | VectorModification
   | WriteVersionModification
 
-union DiffOwner = Change | ChangedDescription | CreatedFixedPiece | Diffs | DraggedPiece | FixedPiece | RenamedKit
+union DiffOwner =
+  | AddedAttributeToConcept
+  | AddedAttributeToDesign
+  | AddedAttributeToPiece
+  | AddedAttributeToPort
+  | AddedAttributeToQuality
+  | AddedAttributeToTag
+  | AddedAttributeToType
+  | AddedAttributesToConcept
+  | AddedAttributesToDesign
+  | AddedAttributesToPiece
+  | AddedAttributesToPort
+  | AddedAttributesToQuality
+  | AddedAttributesToTag
+  | AddedAttributesToType
+  | AddedChildPieceWithParentConnectionToDesign
+  | AddedChildPiecesWithParentConnectionsToDesign
+  | AddedConnectorToType
+  | AddedConnectorsToType
+  | AddedFixedPieceToDesign
+  | AddedHangingChildPieceWithParentConnectionToDesign
+  | AddedHangingChildPiecesWithParentConnectionsToDesign
+  | Change
+  | ChangedDescription
+  | ChangedPieceToTypeInDesign
+  | ChangedPiecesToTypeInDesign
+  | CreatedConcept
+  | CreatedConcepts
+  | CreatedDesign
+  | CreatedDesigns
+  | CreatedPort
+  | CreatedPorts
+  | CreatedQualities
+  | CreatedQuality
+  | CreatedTag
+  | CreatedTags
+  | CreatedType
+  | CreatedTypes
+  | DeletedConcept
+  | DeletedConcepts
+  | DeletedDesign
+  | DeletedDesigns
+  | DeletedPieceInDesign
+  | DeletedPiecesAndConnectionsInDesign
+  | DeletedPiecesInDesign
+  | DeletedPort
+  | DeletedPorts
+  | DeletedQualities
+  | DeletedQuality
+  | DeletedTag
+  | DeletedTags
+  | DeletedType
+  | DeletedTypes
+  | Diffs
+  | DraggedPieceInDesign
+  | DraggedPiecesInDesign
+  | FixedPieceInDesign
+  | FixedPiecesInDesign
+  | FlattenedDesign
+  | MovedPieceInDesign
+  | MovedPiecesInDesign
+  | RemovedAttributeFromConcept
+  | RemovedAttributeFromDesign
+  | RemovedAttributeFromPiece
+  | RemovedAttributeFromPort
+  | RemovedAttributeFromQuality
+  | RemovedAttributeFromTag
+  | RemovedAttributeFromType
+  | RemovedAttributesFromConcept
+  | RemovedAttributesFromDesign
+  | RemovedAttributesFromPiece
+  | RemovedAttributesFromPort
+  | RemovedAttributesFromQuality
+  | RemovedAttributesFromTag
+  | RemovedAttributesFromType
+  | RemovedConnectorFromType
+  | RemovedConnectorsFromType
+  | RenamedConcept
+  | RenamedConnectorInType
+  | RenamedKit
+  | RenamedPieceInDesign
+  | RenamedPort
+  | RenamedQuality
+  | RenamedTag
+  | RenamedType
+  | UpdatedConceptDescription
+  | UpdatedConceptIcon
+  | UpdatedConnectorDescriptionInType
+  | UpdatedConnectorIconInType
+  | UpdatedPieceDescriptionInDesign
+  | UpdatedPortDescription
+  | UpdatedPortIcon
+  | UpdatedQualityDescription
+  | UpdatedQualityIcon
+  | UpdatedTagDescription
+  | UpdatedTagIcon
+  | UpdatedTypeDescription
+  | UpdatedTypeIcon
 union DiffOwned =
   | AlternativeDiff
   | AttributeDiff
@@ -7597,7 +8533,7 @@ union DiffOwned =
   | VectorDiff
   | WriteVersionDiff
 
-union DiffsOwner = AttributeDiff | Change | ChangedDescription | CreatedFixedPiece | Diffs | DraggedPiece | FixedPiece | LocationDiff | PlaneDiff | PlaceDiff | PositionDiff | RenamedKit
+union DiffsOwner = AddedAttributeToConcept | AddedAttributeToDesign | AddedAttributeToPiece | AddedAttributeToPort | AddedAttributeToQuality | AddedAttributeToTag | AddedAttributeToType | AddedAttributesToConcept | AddedAttributesToDesign | AddedAttributesToPiece | AddedAttributesToPort | AddedAttributesToQuality | AddedAttributesToTag | AddedAttributesToType | AddedChildPieceWithParentConnectionToDesign | AddedChildPiecesWithParentConnectionsToDesign | AddedConnectorToType | AddedConnectorsToType | AddedFixedPieceToDesign | AddedHangingChildPieceWithParentConnectionToDesign | AddedHangingChildPiecesWithParentConnectionsToDesign | AttributeDiff | Change | ChangedDescription | ChangedPieceToTypeInDesign | ChangedPiecesToTypeInDesign | CreatedConcept | CreatedConcepts | CreatedDesign | CreatedDesigns | CreatedPort | CreatedPorts | CreatedQualities | CreatedQuality | CreatedTag | CreatedTags | CreatedType | CreatedTypes | DeletedConcept | DeletedConcepts | DeletedDesign | DeletedDesigns | DeletedPieceInDesign | DeletedPiecesAndConnectionsInDesign | DeletedPiecesInDesign | DeletedPort | DeletedPorts | DeletedQualities | DeletedQuality | DeletedTag | DeletedTags | DeletedType | DeletedTypes | Diffs | DraggedPieceInDesign | DraggedPiecesInDesign | FixedPieceInDesign | FixedPiecesInDesign | FlattenedDesign | LocationDiff | MovedPieceInDesign | MovedPiecesInDesign | PlaceDiff | PlaneDiff | PositionDiff | RemovedAttributeFromConcept | RemovedAttributeFromDesign | RemovedAttributeFromPiece | RemovedAttributeFromPort | RemovedAttributeFromQuality | RemovedAttributeFromTag | RemovedAttributeFromType | RemovedAttributesFromConcept | RemovedAttributesFromDesign | RemovedAttributesFromPiece | RemovedAttributesFromPort | RemovedAttributesFromQuality | RemovedAttributesFromTag | RemovedAttributesFromType | RemovedConnectorFromType | RemovedConnectorsFromType | RenamedConcept | RenamedConnectorInType | RenamedKit | RenamedPieceInDesign | RenamedPort | RenamedQuality | RenamedTag | RenamedType | UpdatedConceptDescription | UpdatedConceptIcon | UpdatedConnectorDescriptionInType | UpdatedConnectorIconInType | UpdatedPieceDescriptionInDesign | UpdatedPortDescription | UpdatedPortIcon | UpdatedQualityDescription | UpdatedQualityIcon | UpdatedTagDescription | UpdatedTagIcon | UpdatedTypeDescription | UpdatedTypeIcon
 union DiffsOwned =
   | AlternativeDiffs
   | AttributeDiff
@@ -7668,25 +8604,243 @@ type Query {
   conflicts: ConflictConnection! # computed
   node: Node # reference
   entity(id: ID!): Entity
+  pieceInDesign(designId: ID!, pieceId: ID!): Piece
+  alternativePieceKind(designId: ID!, pieceId: ID!): Blueprint
 }
 
 type Mutation {
+  # Kit
   renameKit(draftId: ID!, transactionId: ID!, name: String!): ID!
-  changeDescription(draftId: ID!, transactionId: ID!, description: String!): ID!
-  createFixedPiece(draftId: ID!, transactionId: ID!, designId: ID!, position: PositionInput!, name: String, description: String): ID!
-  fixPiece(draftId: ID!, transactionId: ID!, designId: ID!, pieceId: ID!): ID!
+  changeDescription(draftId: ID!, transactionId: ID!, entityId: ID!, description: String!): ID!
+
+  # Tag
+  createTag(draftId: ID!, transactionId: ID!, ownerId: ID!, tag: TagInput!): ID!
+  createTags(draftId: ID!, transactionId: ID!, ownerId: ID!, tags: [TagInput!]!): ID!
+  renameTag(draftId: ID!, transactionId: ID!, tagId: ID!, name: String!): ID!
+  updateTagDescription(draftId: ID!, transactionId: ID!, tagId: ID!, description: String!): ID!
+  updateTagIcon(draftId: ID!, transactionId: ID!, tagId: ID!, icon: String!): ID!
+  addAttributeToTag(draftId: ID!, transactionId: ID!, tagId: ID!, attribute: AttributeInput!): ID!
+  addAttributesToTag(draftId: ID!, transactionId: ID!, tagId: ID!, attributes: [AttributeInput!]!): ID!
+  removeAttributeFromTag(draftId: ID!, transactionId: ID!, tagId: ID!, attributeId: ID!): ID!
+  removeAttributesFromTag(draftId: ID!, transactionId: ID!, tagId: ID!, attributeIds: [ID!]!): ID!
+  deleteTag(draftId: ID!, transactionId: ID!, tagId: ID!): ID!
+  deleteTags(draftId: ID!, transactionId: ID!, tagIds: [ID!]!): ID!
+
+  # Concept
+  createConcept(draftId: ID!, transactionId: ID!, ownerId: ID!, concept: ConceptInput!): ID!
+  createConcepts(draftId: ID!, transactionId: ID!, ownerId: ID!, concepts: [ConceptInput!]!): ID!
+  renameConcept(draftId: ID!, transactionId: ID!, conceptId: ID!, name: String!): ID!
+  updateConceptDescription(draftId: ID!, transactionId: ID!, conceptId: ID!, description: String!): ID!
+  updateConceptIcon(draftId: ID!, transactionId: ID!, conceptId: ID!, icon: String!): ID!
+  addAttributeToConcept(draftId: ID!, transactionId: ID!, conceptId: ID!, attribute: AttributeInput!): ID!
+  addAttributesToConcept(draftId: ID!, transactionId: ID!, conceptId: ID!, attributes: [AttributeInput!]!): ID!
+  removeAttributeFromConcept(draftId: ID!, transactionId: ID!, conceptId: ID!, attributeId: ID!): ID!
+  removeAttributesFromConcept(draftId: ID!, transactionId: ID!, conceptId: ID!, attributeIds: [ID!]!): ID!
+  deleteConcept(draftId: ID!, transactionId: ID!, conceptId: ID!): ID!
+  deleteConcepts(draftId: ID!, transactionId: ID!, conceptIds: [ID!]!): ID!
+
+  # Port
+  createPort(draftId: ID!, transactionId: ID!, ownerId: ID!, port: PortInput!): ID!
+  createPorts(draftId: ID!, transactionId: ID!, ownerId: ID!, ports: [PortInput!]!): ID!
+  renamePort(draftId: ID!, transactionId: ID!, portId: ID!, code: String!, label: String): ID!
+  updatePortDescription(draftId: ID!, transactionId: ID!, portId: ID!, description: String!): ID!
+  updatePortIcon(draftId: ID!, transactionId: ID!, portId: ID!, icon: String!): ID!
+  addAttributeToPort(draftId: ID!, transactionId: ID!, portId: ID!, attribute: AttributeInput!): ID!
+  addAttributesToPort(draftId: ID!, transactionId: ID!, portId: ID!, attributes: [AttributeInput!]!): ID!
+  removeAttributeFromPort(draftId: ID!, transactionId: ID!, portId: ID!, attributeId: ID!): ID!
+  removeAttributesFromPort(draftId: ID!, transactionId: ID!, portId: ID!, attributeIds: [ID!]!): ID!
+  deletePort(draftId: ID!, transactionId: ID!, portId: ID!): ID!
+  deletePorts(draftId: ID!, transactionId: ID!, portIds: [ID!]!): ID!
+
+  # Quality
+  createQuality(draftId: ID!, transactionId: ID!, ownerId: ID!, quality: QualityInput!): ID!
+  createQualities(draftId: ID!, transactionId: ID!, ownerId: ID!, qualities: [QualityInput!]!): ID!
+  renameQuality(draftId: ID!, transactionId: ID!, qualityId: ID!, key: String!): ID!
+  updateQualityDescription(draftId: ID!, transactionId: ID!, qualityId: ID!, description: String!): ID!
+  updateQualityIcon(draftId: ID!, transactionId: ID!, qualityId: ID!, icon: String!): ID!
+  addAttributeToQuality(draftId: ID!, transactionId: ID!, qualityId: ID!, attribute: AttributeInput!): ID!
+  addAttributesToQuality(draftId: ID!, transactionId: ID!, qualityId: ID!, attributes: [AttributeInput!]!): ID!
+  removeAttributeFromQuality(draftId: ID!, transactionId: ID!, qualityId: ID!, attributeId: ID!): ID!
+  removeAttributesFromQuality(draftId: ID!, transactionId: ID!, qualityId: ID!, attributeIds: [ID!]!): ID!
+  deleteQuality(draftId: ID!, transactionId: ID!, qualityId: ID!): ID!
+  deleteQualities(draftId: ID!, transactionId: ID!, qualityIds: [ID!]!): ID!
+
+  # Type
+  createType(draftId: ID!, transactionId: ID!, ownerId: ID!, type: TypeInput!): ID!
+  createTypes(draftId: ID!, transactionId: ID!, ownerId: ID!, types: [TypeInput!]!): ID!
+  renameType(draftId: ID!, transactionId: ID!, typeId: ID!, name: String!): ID!
+  updateTypeDescription(draftId: ID!, transactionId: ID!, typeId: ID!, description: String!): ID!
+  updateTypeIcon(draftId: ID!, transactionId: ID!, typeId: ID!, icon: String!): ID!
+  addAttributeToType(draftId: ID!, transactionId: ID!, typeId: ID!, attribute: AttributeInput!): ID!
+  addAttributesToType(draftId: ID!, transactionId: ID!, typeId: ID!, attributes: [AttributeInput!]!): ID!
+  removeAttributeFromType(draftId: ID!, transactionId: ID!, typeId: ID!, attributeId: ID!): ID!
+  removeAttributesFromType(draftId: ID!, transactionId: ID!, typeId: ID!, attributeIds: [ID!]!): ID!
+  deleteType(draftId: ID!, transactionId: ID!, typeId: ID!): ID!
+  deleteTypes(draftId: ID!, transactionId: ID!, typeIds: [ID!]!): ID!
+
+  # Connector
+  addConnectorToType(draftId: ID!, transactionId: ID!, typeId: ID!, connector: ConnectorInput!): ID!
+  addConnectorsToType(draftId: ID!, transactionId: ID!, typeId: ID!, connectors: [ConnectorInput!]!): ID!
+  renameConnectorInType(draftId: ID!, transactionId: ID!, connectorId: ID!, code: String!): ID!
+  updateConnectorDescriptionInType(draftId: ID!, transactionId: ID!, connectorId: ID!, description: String!): ID!
+  updateConnectorIconInType(draftId: ID!, transactionId: ID!, connectorId: ID!, icon: String!): ID!
+  removeConnectorFromType(draftId: ID!, transactionId: ID!, connectorId: ID!): ID!
+  removeConnectorsFromType(draftId: ID!, transactionId: ID!, connectorIds: [ID!]!): ID!
+
+  # Design
+  createDesign(draftId: ID!, transactionId: ID!, ownerId: ID!, design: DesignInput!): ID!
+  createDesigns(draftId: ID!, transactionId: ID!, ownerId: ID!, designs: [DesignInput!]!): ID!
+  deleteDesign(draftId: ID!, transactionId: ID!, designId: ID!): ID!
+  deleteDesigns(draftId: ID!, transactionId: ID!, designIds: [ID!]!): ID!
+  flattenDesign(draftId: ID!, transactionId: ID!, designId: ID!): ID!
+  addAttributeToDesign(draftId: ID!, transactionId: ID!, designId: ID!, attribute: AttributeInput!): ID!
+  addAttributesToDesign(draftId: ID!, transactionId: ID!, designId: ID!, attributes: [AttributeInput!]!): ID!
+  removeAttributeFromDesign(draftId: ID!, transactionId: ID!, designId: ID!, attributeId: ID!): ID!
+  removeAttributesFromDesign(draftId: ID!, transactionId: ID!, designId: ID!, attributeIds: [ID!]!): ID!
+
+  # Piece
+  addFixedPieceToDesign(draftId: ID!, transactionId: ID!, designId: ID!, blueprintId: ID!, position: PositionInput!, name: String, description: String): ID!
+  addChildPieceWithParentConnectionToDesign(draftId: ID!, transactionId: ID!, designId: ID!, child: ChildPieceWithParentConnectionInput!): ID!
+  addChildPiecesWithParentConnectionsToDesign(draftId: ID!, transactionId: ID!, designId: ID!, children: [ChildPieceWithParentConnectionInput!]!): ID!
+  addHangingChildPieceWithParentConnectionToDesign(draftId: ID!, transactionId: ID!, designId: ID!, child: HangingChildPieceWithParentConnectionInput!): ID!
+  addHangingChildPiecesWithParentConnectionsToDesign(draftId: ID!, transactionId: ID!, designId: ID!, children: [HangingChildPieceWithParentConnectionInput!]!): ID!
+  renamePieceInDesign(draftId: ID!, transactionId: ID!, pieceId: ID!, name: String!): ID!
+  updatePieceDescriptionInDesign(draftId: ID!, transactionId: ID!, pieceId: ID!, description: String!): ID!
+  dragPieceInDesign(draftId: ID!, transactionId: ID!, designId: ID!, pieceId: ID!, offset: OffsetInput!): ID!
+  dragPiecesInDesign(draftId: ID!, transactionId: ID!, designId: ID!, pieceIds: [ID!]!, offset: OffsetInput!): ID!
+  movePieceInDesign(draftId: ID!, transactionId: ID!, designId: ID!, pieceId: ID!, position: PositionInput!): ID!
+  movePiecesInDesign(draftId: ID!, transactionId: ID!, designId: ID!, pieceIds: [ID!]!, offset: OffsetInput!): ID!
+  fixPieceInDesign(draftId: ID!, transactionId: ID!, designId: ID!, pieceId: ID!): ID!
+  fixPiecesInDesign(draftId: ID!, transactionId: ID!, designId: ID!, pieceIds: [ID!]!): ID!
+  changePieceToTypeInDesign(draftId: ID!, transactionId: ID!, pieceId: ID!, blueprintId: ID!): ID!
+  changePiecesToTypeInDesign(draftId: ID!, transactionId: ID!, pieceIds: [ID!]!, blueprintId: ID!): ID!
+  addAttributeToPiece(draftId: ID!, transactionId: ID!, pieceId: ID!, attribute: AttributeInput!): ID!
+  addAttributesToPiece(draftId: ID!, transactionId: ID!, pieceId: ID!, attributes: [AttributeInput!]!): ID!
+  removeAttributeFromPiece(draftId: ID!, transactionId: ID!, pieceId: ID!, attributeId: ID!): ID!
+  removeAttributesFromPiece(draftId: ID!, transactionId: ID!, pieceId: ID!, attributeIds: [ID!]!): ID!
+  deletePieceInDesign(draftId: ID!, transactionId: ID!, designId: ID!, pieceId: ID!): ID!
+  deletePiecesInDesign(draftId: ID!, transactionId: ID!, designId: ID!, pieceIds: [ID!]!): ID!
+  deletePiecesAndConnectionsInDesign(draftId: ID!, transactionId: ID!, designId: ID!, pieceIds: [ID!]!, connectionIds: [ID!]!): ID!
 }
 
 type Subscription {
   commandSucceeded: Command!
   operationSucceeded: Operation!
   operationFailed: Error!
+  error: Error!
+
+  # Kit
   kitRenamed: RenamedKit!
   descriptionChanged: ChangedDescription!
-  createdFixedPiece: CreatedFixedPiece!
-  fixedPiece: FixedPiece!
-  draggedPiece: DraggedPiece!
-  error: Error!
+
+  # Tag
+  tagCreated: CreatedTag!
+  tagsCreated: CreatedTags!
+  tagRenamed: RenamedTag!
+  tagDescriptionUpdated: UpdatedTagDescription!
+  tagIconUpdated: UpdatedTagIcon!
+  attributeAddedToTag: AddedAttributeToTag!
+  attributesAddedToTag: AddedAttributesToTag!
+  attributeRemovedFromTag: RemovedAttributeFromTag!
+  attributesRemovedFromTag: RemovedAttributesFromTag!
+  tagDeleted: DeletedTag!
+  tagsDeleted: DeletedTags!
+
+  # Concept
+  conceptCreated: CreatedConcept!
+  conceptsCreated: CreatedConcepts!
+  conceptRenamed: RenamedConcept!
+  conceptDescriptionUpdated: UpdatedConceptDescription!
+  conceptIconUpdated: UpdatedConceptIcon!
+  attributeAddedToConcept: AddedAttributeToConcept!
+  attributesAddedToConcept: AddedAttributesToConcept!
+  attributeRemovedFromConcept: RemovedAttributeFromConcept!
+  attributesRemovedFromConcept: RemovedAttributesFromConcept!
+  conceptDeleted: DeletedConcept!
+  conceptsDeleted: DeletedConcepts!
+
+  # Port
+  portCreated: CreatedPort!
+  portsCreated: CreatedPorts!
+  portRenamed: RenamedPort!
+  portDescriptionUpdated: UpdatedPortDescription!
+  portIconUpdated: UpdatedPortIcon!
+  attributeAddedToPort: AddedAttributeToPort!
+  attributesAddedToPort: AddedAttributesToPort!
+  attributeRemovedFromPort: RemovedAttributeFromPort!
+  attributesRemovedFromPort: RemovedAttributesFromPort!
+  portDeleted: DeletedPort!
+  portsDeleted: DeletedPorts!
+
+  # Quality
+  qualityCreated: CreatedQuality!
+  qualitiesCreated: CreatedQualities!
+  qualityRenamed: RenamedQuality!
+  qualityDescriptionUpdated: UpdatedQualityDescription!
+  qualityIconUpdated: UpdatedQualityIcon!
+  attributeAddedToQuality: AddedAttributeToQuality!
+  attributesAddedToQuality: AddedAttributesToQuality!
+  attributeRemovedFromQuality: RemovedAttributeFromQuality!
+  attributesRemovedFromQuality: RemovedAttributesFromQuality!
+  qualityDeleted: DeletedQuality!
+  qualitiesDeleted: DeletedQualities!
+
+  # Type
+  typeCreated: CreatedType!
+  typesCreated: CreatedTypes!
+  typeRenamed: RenamedType!
+  typeDescriptionUpdated: UpdatedTypeDescription!
+  typeIconUpdated: UpdatedTypeIcon!
+  attributeAddedToType: AddedAttributeToType!
+  attributesAddedToType: AddedAttributesToType!
+  attributeRemovedFromType: RemovedAttributeFromType!
+  attributesRemovedFromType: RemovedAttributesFromType!
+  typeDeleted: DeletedType!
+  typesDeleted: DeletedTypes!
+
+  # Connector
+  connectorAddedToType: AddedConnectorToType!
+  connectorsAddedToType: AddedConnectorsToType!
+  connectorRenamedInType: RenamedConnectorInType!
+  connectorDescriptionUpdatedInType: UpdatedConnectorDescriptionInType!
+  connectorIconUpdatedInType: UpdatedConnectorIconInType!
+  connectorRemovedFromType: RemovedConnectorFromType!
+  connectorsRemovedFromType: RemovedConnectorsFromType!
+
+  # Design
+  designCreated: CreatedDesign!
+  designsCreated: CreatedDesigns!
+  designDeleted: DeletedDesign!
+  designsDeleted: DeletedDesigns!
+  designFlattened: FlattenedDesign!
+  attributeAddedToDesign: AddedAttributeToDesign!
+  attributesAddedToDesign: AddedAttributesToDesign!
+  attributeRemovedFromDesign: RemovedAttributeFromDesign!
+  attributesRemovedFromDesign: RemovedAttributesFromDesign!
+
+  # Piece
+  fixedPieceAddedToDesign: AddedFixedPieceToDesign!
+  childPieceWithParentConnectionAddedToDesign: AddedChildPieceWithParentConnectionToDesign!
+  childPiecesWithParentConnectionsAddedToDesign: AddedChildPiecesWithParentConnectionsToDesign!
+  hangingChildPieceWithParentConnectionAddedToDesign: AddedHangingChildPieceWithParentConnectionToDesign!
+  hangingChildPiecesWithParentConnectionsAddedToDesign: AddedHangingChildPiecesWithParentConnectionsToDesign!
+  pieceRenamedInDesign: RenamedPieceInDesign!
+  pieceDescriptionUpdatedInDesign: UpdatedPieceDescriptionInDesign!
+  pieceDraggedInDesign: DraggedPieceInDesign!
+  piecesDraggedInDesign: DraggedPiecesInDesign!
+  pieceMovedInDesign: MovedPieceInDesign!
+  piecesMovedInDesign: MovedPiecesInDesign!
+  pieceFixedInDesign: FixedPieceInDesign!
+  piecesFixedInDesign: FixedPiecesInDesign!
+  pieceChangedToTypeInDesign: ChangedPieceToTypeInDesign!
+  piecesChangedToTypeInDesign: ChangedPiecesToTypeInDesign!
+  attributeAddedToPiece: AddedAttributeToPiece!
+  attributesAddedToPiece: AddedAttributesToPiece!
+  attributeRemovedFromPiece: RemovedAttributeFromPiece!
+  attributesRemovedFromPiece: RemovedAttributesFromPiece!
+  pieceDeletedInDesign: DeletedPieceInDesign!
+  piecesDeletedInDesign: DeletedPiecesInDesign!
+  piecesAndConnectionsDeletedInDesign: DeletedPiecesAndConnectionsInDesign!
 }
 
 schema {

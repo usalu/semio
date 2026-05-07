@@ -4,7 +4,7 @@ overview: Extend `semio/graphql/target.schema.graphql` so every entity region (T
 todos:
   - id: field-ext
     content: Add description/icon fields to Tag, Concept, Port, Quality, Connector entities and their Modifications
-    status: in_progress
+    status: completed
   - id: tag-ops
     content: Add Tag operations subregion + TagOperation union
     status: completed
@@ -25,19 +25,19 @@ todos:
     status: completed
   - id: piece-ops
     content: Extend Piece operations subregion with full action set, rename existing ops, add PieceOperation union
-    status: in_progress
+    status: completed
   - id: kit-ops
     content: Add KitOperation union and any kit-level ops not yet captured
-    status: pending
+    status: completed
   - id: global-unions
     content: Extend Input, ChangeOwned, DiffOwner, DiffsOwner, OwnerEntity, AggregateEntityEdge, EntityConnection, OwnedEntityConnection, every <X>DiffsOwner; add AnyOperation union
-    status: pending
+    status: completed
   - id: queries
     content: Add pieceInDesign and alternativePieceKind Query fields for the read-only actions
-    status: pending
+    status: completed
   - id: mutations-subs
     content: Add Mutation and Subscription fields per new operation
-    status: pending
+    status: completed
 isProject: false
 ---
 
