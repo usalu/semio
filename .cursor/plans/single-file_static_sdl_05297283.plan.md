@@ -10,7 +10,7 @@ todos:
     status: completed
   - id: lift-meta
     content: "Lift meta entities (Tag/Concept/Quality/Attribute/Author/Stat/Prop/Layer/Group/File/Folder/Benchmark) to Arc/RwLock + #[Object]"
-    status: pending
+    status: in_progress
   - id: vcs-entities
     content: Add Conflict/ReadVersion/WriteVersion + audit existing VCS Arc structs for Entity field parity
     status: completed

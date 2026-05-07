@@ -371,7 +371,7 @@ pub mod gql_relay {
     use crate::kit::design::Design;
     use crate::kit::design::piece::Piece;
     use crate::kit::r#type::Type;
-    use crate::meta::{Author, Concept, File, Folder, Group, Layer, Prop, Quality, Stat, Tag};
+    use crate::meta::{Author, Benchmark, Concept, File, Folder, Group, Layer, Prop, Quality, Stat, Tag};
     use crate::vcs::{Alternative, Checkpoint, Conflict};
 
     fn edge_cursor(i: usize) -> String {
@@ -679,9 +679,10 @@ pub mod gql_relay {
     simple_conn!(FileConnection, FileEdge, File, |f: &File| f.id.clone());
     simple_conn!(FolderConnection, FolderEdge, Folder, |f: &Folder| f.id.clone());
     simple_conn!(AuthorConnection, AuthorEdge, Author, |a: &Author| a.id.clone());
-    simple_conn!(ConceptConnection, ConceptEdge, Concept, |c: &Concept| c.id.clone());
-    simple_conn!(TagConnection, TagEdge, Tag, |t: &Tag| t.id.clone());
-    simple_conn!(QualityConnection, QualityEdge, Quality, |q: &Quality| q.id.clone());
+    simple_conn!(ConceptConnection, ConceptEdge, std::sync::Arc<Concept>, |c: &std::sync::Arc<Concept>| c.id.clone());
+    simple_conn!(TagConnection, TagEdge, std::sync::Arc<Tag>, |t: &std::sync::Arc<Tag>| t.id.clone());
+    simple_conn!(QualityConnection, QualityEdge, std::sync::Arc<Quality>, |q: &std::sync::Arc<Quality>| q.id.clone());
+    simple_conn!(BenchmarkConnection, BenchmarkEdge, Benchmark, |b: &Benchmark| b.id.clone());
     simple_conn!(PropConnection, PropEdge, Prop, |p: &Prop| p.id.clone());
     simple_conn!(AttributeConnection, AttributeEdge, crate::meta::Attribute, |a: &crate::meta::Attribute| a.id.clone());
     simple_conn!(StatConnection, StatEdge, Stat, |s: &Stat| s.id.clone());
@@ -756,12 +757,78 @@ pub mod gql_relay {
 //#region 🏷️ meta
 
 pub mod meta {
-    //! 🏷️ Strong shared metadata as plain SimpleObject value types (small, immutable).
-    use async_graphql::SimpleObject;
+    //! 🏷️ Metadata: DTO [`SimpleObject`] shells plus Arc-backed [`Tag`]/[`Concept`]/[`Quality`] entities (SDL `Entity`).
+    use std::sync::{Arc, Weak};
+
+    use async_graphql::{InputObject, SimpleObject};
+    use async_lock::RwLock;
     use serde::{Deserialize, Serialize};
 
     use crate::id::Id;
     use crate::timestamp::Timestamp;
+
+    //#region 🧾 graphql inputs
+    /// @emoji 🧾 SDL `AttributeInput` — instantiates [`Attribute`] rows on entity create/update paths.
+    #[derive(Clone, Debug, Default, InputObject)]
+    pub struct AttributeInput {
+        pub key: String,
+        pub value: Option<String>,
+        pub definition: Option<String>,
+    }
+
+    /// @emoji 🧾 SDL `TagInput`.
+    #[derive(Clone, Debug, Default, InputObject)]
+    pub struct TagInput {
+        pub name: String,
+        pub description: Option<String>,
+        pub icon: Option<String>,
+        pub order: Option<i32>,
+        pub attributes: Option<Vec<AttributeInput>>,
+    }
+
+    /// @emoji 🧾 SDL `ConceptInput`.
+    #[derive(Clone, Debug, Default, InputObject)]
+    pub struct ConceptInput {
+        pub name: String,
+        pub description: Option<String>,
+        pub icon: Option<String>,
+        pub order: Option<i32>,
+        pub attributes: Option<Vec<AttributeInput>>,
+    }
+
+    /// @emoji 🧾 SDL `QualityInput` (subset aligned to persisted kit fields).
+    #[derive(Clone, Debug, Default, InputObject)]
+    pub struct QualityInput {
+        pub key: String,
+        pub value: Option<String>,
+        pub unit: Option<String>,
+        pub definition: Option<String>,
+        pub description: Option<String>,
+        pub icon: Option<String>,
+        pub attributes: Option<Vec<AttributeInput>>,
+    }
+    //#endregion 🧾 graphql inputs
+
+    impl AttributeInput {
+        /// @emoji ➕ Mint a persisted [`Attribute`] from GraphQL input (fresh [`Id`]).
+        pub async fn into_attribute(self) -> Attribute {
+            Attribute {
+                id: Id::new().await,
+                key: self.key,
+                value: self.value.unwrap_or_default(),
+                definition: self.definition,
+            }
+        }
+    }
+
+    /// @emoji ➕ Expand optional GraphQL attribute rows into minted [`Attribute`] entities.
+    pub async fn attributes_from_inputs(inp: Option<Vec<AttributeInput>>) -> Vec<Attribute> {
+        let mut v = Vec::new();
+        for a in inp.into_iter().flatten() {
+            v.push(a.into_attribute().await);
+        }
+        v
+    }
 
     #[derive(Clone, Debug, Default, Serialize, Deserialize, SimpleObject)]
     pub struct Location {
@@ -817,38 +884,186 @@ pub mod meta {
     }
 
     #[derive(Clone, Debug, Default, Serialize, Deserialize, SimpleObject)]
-    pub struct Quality {
-        pub id: Id,
-        pub key: String,
-        pub value: Option<String>,
-        pub unit: Option<String>,
-        pub definition: Option<String>,
-        pub description: Option<String>,
-        pub benchmarks: Vec<Benchmark>,
-    }
-
-    #[derive(Clone, Debug, Default, Serialize, Deserialize, SimpleObject)]
     pub struct Prop {
         pub id: Id,
         pub key: String,
         pub value: String,
         pub unit: Option<String>,
-        pub quality: Option<Quality>,
+        #[graphql(skip)]
+        #[serde(skip)]
+        pub quality: Option<std::sync::Arc<Quality>>,
     }
 
-    #[derive(Clone, Debug, Default, Serialize, Deserialize, SimpleObject)]
+    /// @emoji 🪢 Resolved kit/type/representation owner for a [`Tag`] (write path sets exactly one arm).
+    #[derive(Debug)]
+    pub enum TagOwnerSlot {
+        Unset,
+        Kit(Weak<crate::kit::Kit>),
+        Type(Weak<crate::kit::r#type::Type>),
+        Rep(Weak<crate::kit::r#type::Representation>),
+    }
+
+    impl Default for TagOwnerSlot {
+        fn default() -> Self {
+            Self::Unset
+        }
+    }
+
+    /// @emoji 🏷️ SDL `Tag` — Arc-shared entity with interior mutability (GraphQL `#[Object]` in `meta_objects` region).
+    #[derive(Debug)]
     pub struct Tag {
         pub id: Id,
-        pub name: String,
-        pub order: Option<i32>,
+        pub owner: RwLock<TagOwnerSlot>,
+        pub name: RwLock<String>,
+        pub description: RwLock<Option<String>>,
+        pub icon: RwLock<Option<String>>,
+        pub order: RwLock<Option<i32>>,
+        pub attributes: RwLock<Vec<Attribute>>,
     }
 
-    #[derive(Clone, Debug, Default, Serialize, Deserialize, SimpleObject)]
+    impl Tag {
+        pub async fn new(
+            owner: TagOwnerSlot,
+            name: String,
+            description: Option<String>,
+            icon: Option<String>,
+            order: Option<i32>,
+            attributes: Vec<Attribute>,
+        ) -> Arc<Self> {
+            Arc::new(Self {
+                id: Id::new().await,
+                owner: RwLock::new(owner),
+                name: RwLock::new(name),
+                description: RwLock::new(description),
+                icon: RwLock::new(icon),
+                order: RwLock::new(order),
+                attributes: RwLock::new(attributes),
+            })
+        }
+
+        pub async fn compute_hash(&self) -> String {
+            let n = self.name.read().await;
+            let d = self.description.read().await.clone().unwrap_or_default();
+            crate::hash::h(&[self.id.as_str(), n.as_str(), d.as_str()])
+        }
+    }
+
+    /// @emoji 🪢 Resolved kit/type owner for a [`Concept`].
+    #[derive(Debug)]
+    pub enum ConceptOwnerSlot {
+        Unset,
+        Kit(Weak<crate::kit::Kit>),
+        Type(Weak<crate::kit::r#type::Type>),
+    }
+
+    impl Default for ConceptOwnerSlot {
+        fn default() -> Self {
+            Self::Unset
+        }
+    }
+
+    /// @emoji 🏷️ SDL `Concept` entity.
+    #[derive(Debug)]
     pub struct Concept {
         pub id: Id,
-        pub name: String,
-        pub description: Option<String>,
-        pub order: Option<i32>,
+        pub owner: RwLock<ConceptOwnerSlot>,
+        pub name: RwLock<String>,
+        pub description: RwLock<Option<String>>,
+        pub icon: RwLock<Option<String>>,
+        pub order: RwLock<Option<i32>>,
+        pub attributes: RwLock<Vec<Attribute>>,
+    }
+
+    impl Concept {
+        pub async fn new(
+            owner: ConceptOwnerSlot,
+            name: String,
+            description: Option<String>,
+            icon: Option<String>,
+            order: Option<i32>,
+            attributes: Vec<Attribute>,
+        ) -> Arc<Self> {
+            Arc::new(Self {
+                id: Id::new().await,
+                owner: RwLock::new(owner),
+                name: RwLock::new(name),
+                description: RwLock::new(description),
+                icon: RwLock::new(icon),
+                order: RwLock::new(order),
+                attributes: RwLock::new(attributes),
+            })
+        }
+
+        pub async fn compute_hash(&self) -> String {
+            let n = self.name.read().await;
+            let d = self.description.read().await.clone().unwrap_or_default();
+            crate::hash::h(&[self.id.as_str(), n.as_str(), d.as_str()])
+        }
+    }
+
+    /// @emoji 🪢 Resolved multi-parent owner for [`Quality`] (connector/representation/type/design/kit).
+    #[derive(Debug)]
+    pub enum QualityOwnerSlot {
+        Unset,
+        Kit(Weak<crate::kit::Kit>),
+        Type(Weak<crate::kit::r#type::Type>),
+        Rep(Weak<crate::kit::r#type::Representation>),
+        Conn(Weak<crate::kit::r#type::Connector>),
+        Design(Weak<crate::kit::design::Design>),
+    }
+
+    impl Default for QualityOwnerSlot {
+        fn default() -> Self {
+            Self::Unset
+        }
+    }
+
+    /// @emoji 🏷️ SDL `Quality` entity (benchmarks stay value-typed [`Benchmark`] rows).
+    #[derive(Debug)]
+    pub struct Quality {
+        pub id: Id,
+        pub owner: RwLock<QualityOwnerSlot>,
+        pub key: RwLock<String>,
+        pub value: RwLock<Option<String>>,
+        pub unit: RwLock<Option<String>>,
+        pub definition: RwLock<Option<String>>,
+        pub description: RwLock<Option<String>>,
+        pub icon: RwLock<Option<String>>,
+        pub benchmarks: RwLock<Vec<Benchmark>>,
+        pub attributes: RwLock<Vec<Attribute>>,
+    }
+
+    impl Quality {
+        pub async fn new(
+            owner: QualityOwnerSlot,
+            key: String,
+            value: Option<String>,
+            unit: Option<String>,
+            definition: Option<String>,
+            description: Option<String>,
+            icon: Option<String>,
+            benchmarks: Vec<Benchmark>,
+            attributes: Vec<Attribute>,
+        ) -> Arc<Self> {
+            Arc::new(Self {
+                id: Id::new().await,
+                owner: RwLock::new(owner),
+                key: RwLock::new(key),
+                value: RwLock::new(value),
+                unit: RwLock::new(unit),
+                definition: RwLock::new(definition),
+                description: RwLock::new(description),
+                icon: RwLock::new(icon),
+                benchmarks: RwLock::new(benchmarks),
+                attributes: RwLock::new(attributes),
+            })
+        }
+
+        pub async fn compute_hash(&self) -> String {
+            let k = self.key.read().await;
+            let v = self.value.read().await.clone().unwrap_or_default();
+            crate::hash::h(&[self.id.as_str(), k.as_str(), v.as_str()])
+        }
     }
 
     #[derive(Clone, Debug, Default, Serialize, Deserialize, SimpleObject)]
@@ -981,7 +1196,7 @@ pub mod kit {
             pub description: RwLock<Option<String>>,
             /// @emoji 🔗 Resolved port via `Weak` (no id scan in GraphQL resolvers).
             pub port: RwLock<Weak<Port>>,
-            pub qualities: RwLock<Vec<Quality>>,
+            pub qualities: RwLock<Vec<Arc<Quality>>>,
             pub attributes: RwLock<Vec<Attribute>>,
         }
 
@@ -1039,8 +1254,8 @@ pub mod kit {
             async fn port(&self) -> Option<Arc<Port>> {
                 self.port.read().await.upgrade()
             }
-            async fn qualities(&self) -> Vec<Quality> {
-                self.qualities.read().await.clone()
+            async fn qualities(&self) -> crate::gql_relay::QualityConnection {
+                crate::gql_relay::QualityConnection::from_rows(self.qualities.read().await.clone())
             }
             async fn attributes(&self) -> Vec<Attribute> {
                 self.attributes.read().await.clone()
@@ -1055,8 +1270,8 @@ pub mod kit {
             pub url: RwLock<String>,
             pub description: RwLock<Option<String>>,
             pub file: RwLock<Option<File>>,
-            pub tags: RwLock<Vec<Tag>>,
-            pub qualities: RwLock<Vec<Quality>>,
+            pub tags: RwLock<Vec<Arc<Tag>>>,
+            pub qualities: RwLock<Vec<Arc<Quality>>>,
             pub attributes: RwLock<Vec<Attribute>>,
         }
 
@@ -1107,11 +1322,11 @@ pub mod kit {
             async fn file(&self) -> Option<File> {
                 self.file.read().await.clone()
             }
-            async fn tags(&self) -> Vec<Tag> {
-                self.tags.read().await.clone()
+            async fn tags(&self) -> crate::gql_relay::TagConnection {
+                crate::gql_relay::TagConnection::from_rows(self.tags.read().await.clone())
             }
-            async fn qualities(&self) -> Vec<Quality> {
-                self.qualities.read().await.clone()
+            async fn qualities(&self) -> crate::gql_relay::QualityConnection {
+                crate::gql_relay::QualityConnection::from_rows(self.qualities.read().await.clone())
             }
             async fn attributes(&self) -> Vec<Attribute> {
                 self.attributes.read().await.clone()
@@ -1138,9 +1353,9 @@ pub mod kit {
             pub port_weak_by_id: RwLock<std::collections::HashMap<Id, Weak<Port>>>,
             pub representation_weak_by_id: RwLock<std::collections::HashMap<Id, Weak<Representation>>>,
             pub authors: RwLock<Vec<Author>>,
-            pub concepts: RwLock<Vec<Concept>>,
-            pub tags: RwLock<Vec<Tag>>,
-            pub qualities: RwLock<Vec<Quality>>,
+            pub concepts: RwLock<Vec<Arc<Concept>>>,
+            pub tags: RwLock<Vec<Arc<Tag>>>,
+            pub qualities: RwLock<Vec<Arc<Quality>>>,
             pub props: RwLock<Vec<Prop>>,
             pub attributes: RwLock<Vec<Attribute>>,
             pub stats: RwLock<Vec<Stat>>,
@@ -1287,14 +1502,14 @@ pub mod kit {
             async fn authors(&self) -> Vec<Author> {
                 self.authors.read().await.clone()
             }
-            async fn concepts(&self) -> Vec<Concept> {
-                self.concepts.read().await.clone()
+            async fn concepts(&self) -> crate::gql_relay::ConceptConnection {
+                crate::gql_relay::ConceptConnection::from_rows(self.concepts.read().await.clone())
             }
-            async fn tags(&self) -> Vec<Tag> {
-                self.tags.read().await.clone()
+            async fn tags(&self) -> crate::gql_relay::TagConnection {
+                crate::gql_relay::TagConnection::from_rows(self.tags.read().await.clone())
             }
-            async fn qualities(&self) -> Vec<Quality> {
-                self.qualities.read().await.clone()
+            async fn qualities(&self) -> crate::gql_relay::QualityConnection {
+                crate::gql_relay::QualityConnection::from_rows(self.qualities.read().await.clone())
             }
             async fn props(&self) -> Vec<Prop> {
                 self.props.read().await.clone()
@@ -1693,7 +1908,7 @@ pub mod kit {
 
         use crate::hash::h;
         use crate::id::Id;
-        use crate::meta::{Attribute, Author, Concept, Group, Layer, Location, Prop, Quality, Stat, Tag};
+        use crate::meta::{Attribute, Author, Group, Layer, Location, Prop, Quality, Stat};
         use crate::timestamp::Timestamp;
 
         /// @emoji 🏠 SDL `union DesignOwner = Kit`.
@@ -1721,9 +1936,7 @@ pub mod kit {
             pub layers: RwLock<Vec<Layer>>,
             pub groups: RwLock<Vec<Group>>,
             pub authors: RwLock<Vec<Author>>,
-            pub concepts: RwLock<Vec<Concept>>,
-            pub tags: RwLock<Vec<Tag>>,
-            pub qualities: RwLock<Vec<Quality>>,
+            pub qualities: RwLock<Vec<Arc<Quality>>>,
             pub props: RwLock<Vec<Prop>>,
             pub attributes: RwLock<Vec<Attribute>>,
             pub stats: RwLock<Vec<Stat>>,
@@ -1748,8 +1961,6 @@ pub mod kit {
                     layers: RwLock::new(Vec::new()),
                     groups: RwLock::new(Vec::new()),
                     authors: RwLock::new(Vec::new()),
-                    concepts: RwLock::new(Vec::new()),
-                    tags: RwLock::new(Vec::new()),
                     qualities: RwLock::new(Vec::new()),
                     props: RwLock::new(Vec::new()),
                     attributes: RwLock::new(Vec::new()),
@@ -1889,12 +2100,6 @@ pub mod kit {
             async fn authors(&self) -> crate::gql_relay::AuthorConnection {
                 crate::gql_relay::AuthorConnection::from_rows(self.authors.read().await.clone())
             }
-            async fn concepts(&self) -> crate::gql_relay::ConceptConnection {
-                crate::gql_relay::ConceptConnection::from_rows(self.concepts.read().await.clone())
-            }
-            async fn tags(&self) -> crate::gql_relay::TagConnection {
-                crate::gql_relay::TagConnection::from_rows(self.tags.read().await.clone())
-            }
             async fn qualities(&self) -> crate::gql_relay::QualityConnection {
                 crate::gql_relay::QualityConnection::from_rows(self.qualities.read().await.clone())
             }
@@ -1979,12 +2184,18 @@ pub mod kit {
         pub files: RwLock<Vec<File>>,
         pub folders: RwLock<Vec<Folder>>,
         pub authors: RwLock<Vec<Author>>,
-        pub concepts: RwLock<Vec<Concept>>,
-        pub tags: RwLock<Vec<Tag>>,
-        pub qualities: RwLock<Vec<Quality>>,
+        pub concepts: RwLock<Vec<Arc<Concept>>>,
+        pub tags: RwLock<Vec<Arc<Tag>>>,
+        pub qualities: RwLock<Vec<Arc<Quality>>>,
         pub props: RwLock<Vec<Prop>>,
         pub attributes: RwLock<Vec<Attribute>>,
         pub stats: RwLock<Vec<Stat>>,
+        /// 🧷 Kit-wide tag identity map (all tag owners).
+        pub tag_by_id: RwLock<HashMap<Id, Arc<Tag>>>,
+        pub concept_by_id: RwLock<HashMap<Id, Arc<Concept>>>,
+        pub quality_by_id: RwLock<HashMap<Id, Arc<Quality>>>,
+        /// @emoji 🔢 Monotonic counter bumped by every GraphQL graph mutation (test / backbone observability).
+        pub touch_epoch: RwLock<u64>,
         /// 🧭 Optional client-facing kit id from WASM/JSON hydration (`@semio/js` DTO `id`); when None, fall back to internally minted [`Kit::id`].
         pub snapshot_external_kit_id: RwLock<Option<Id>>,
     }
@@ -2019,6 +2230,10 @@ pub mod kit {
                 props: RwLock::new(Vec::new()),
                 attributes: RwLock::new(Vec::new()),
                 stats: RwLock::new(Vec::new()),
+                tag_by_id: RwLock::new(HashMap::new()),
+                concept_by_id: RwLock::new(HashMap::new()),
+                quality_by_id: RwLock::new(HashMap::new()),
+                touch_epoch: RwLock::new(0),
                 snapshot_external_kit_id: RwLock::new(None),
             }
         }
@@ -2037,6 +2252,11 @@ pub mod kit {
             self.snapshot_external_kit_id.read().await.clone().unwrap_or_else(|| self.id.clone())
         }
 
+        pub async fn bump_touch_epoch(&self) {
+            let mut g = self.touch_epoch.write().await;
+            *g = g.saturating_add(1);
+        }
+
         pub async fn compute_hash(&self) -> String {
             let name = self.name.read().await;
             let kid = self.workspace_kit_id().await;
@@ -2050,7 +2270,154 @@ pub mod kit {
             self.type_weak_by_id.read().await.get(id).and_then(|w| w.upgrade())
         }
 
-        /// 🆕 Insert (or look up) a design by id, returning the shared Arc (maintains [`Kit::design_weak_by_id`]).
+        /// @emoji 🔎 Locate a representation by id across all kit types.
+        pub async fn find_representation(&self, id: &Id) -> Option<Arc<r#type::Representation>> {
+            let tys = self.types.read().await;
+            for t in tys.iter() {
+                let reps = t.representations.read().await;
+                for r in reps.iter() {
+                    if &r.id == id {
+                        return Some(r.clone());
+                    }
+                }
+            }
+            None
+        }
+
+        /// @emoji 🔎 Locate a connector by id across all kit types.
+        pub async fn find_connector(&self, id: &Id) -> Option<Arc<r#type::Connector>> {
+            let tys = self.types.read().await;
+            for t in tys.iter() {
+                let conns = t.connectors.read().await;
+                for c in conns.iter() {
+                    if &c.id == id {
+                        return Some(c.clone());
+                    }
+                }
+            }
+            None
+        }
+
+        pub async fn register_tag(self: &Arc<Self>, t: Arc<Tag>) {
+            self.tag_by_id.write().await.insert(t.id.clone(), t);
+        }
+        pub async fn find_tag(&self, id: &Id) -> Option<Arc<Tag>> {
+            self.tag_by_id.read().await.get(id).cloned()
+        }
+        pub async fn register_concept(self: &Arc<Self>, c: Arc<Concept>) {
+            self.concept_by_id.write().await.insert(c.id.clone(), c);
+        }
+        pub async fn find_concept(&self, id: &Id) -> Option<Arc<Concept>> {
+            self.concept_by_id.read().await.get(id).cloned()
+        }
+        pub async fn register_quality(self: &Arc<Self>, q: Arc<Quality>) {
+            self.quality_by_id.write().await.insert(q.id.clone(), q);
+        }
+        pub async fn find_quality(&self, id: &Id) -> Option<Arc<Quality>> {
+            self.quality_by_id.read().await.get(id).cloned()
+        }
+
+        /// @emoji 🪢 Resolve SDL `TagInput` owner (`Kit` root id, `Type` id, or `Representation` id).
+        pub async fn resolve_tag_owner_slot(self: &Arc<Self>, owner_id: &Id) -> Result<crate::meta::TagOwnerSlot, crate::error::SemioError> {
+            let kid = self.workspace_kit_id().await;
+            if owner_id == &kid || owner_id == &self.id {
+                return Ok(crate::meta::TagOwnerSlot::Kit(Arc::downgrade(self)));
+            }
+            if let Some(ty) = self.type_by_external_id(owner_id).await {
+                return Ok(crate::meta::TagOwnerSlot::Type(Arc::downgrade(&ty)));
+            }
+            if let Some(rep) = self.find_representation(owner_id).await {
+                return Ok(crate::meta::TagOwnerSlot::Rep(Arc::downgrade(&rep)));
+            }
+            Err(crate::error::SemioError::not_found("TagOwner", owner_id.as_str()))
+        }
+
+        /// @emoji 🪢 Resolve SDL `ConceptInput` owner (`Kit` or `Type`).
+        pub async fn resolve_concept_owner_slot(self: &Arc<Self>, owner_id: &Id) -> Result<crate::meta::ConceptOwnerSlot, crate::error::SemioError> {
+            let kid = self.workspace_kit_id().await;
+            if owner_id == &kid || owner_id == &self.id {
+                return Ok(crate::meta::ConceptOwnerSlot::Kit(Arc::downgrade(self)));
+            }
+            if let Some(ty) = self.type_by_external_id(owner_id).await {
+                return Ok(crate::meta::ConceptOwnerSlot::Type(Arc::downgrade(&ty)));
+            }
+            Err(crate::error::SemioError::not_found("ConceptOwner", owner_id.as_str()))
+        }
+
+        /// @emoji 🪢 Resolve SDL `QualityInput` owner (kit/type/representation/connector/design).
+        pub async fn resolve_quality_owner_slot(self: &Arc<Self>, owner_id: &Id) -> Result<crate::meta::QualityOwnerSlot, crate::error::SemioError> {
+            let kid = self.workspace_kit_id().await;
+            if owner_id == &kid || owner_id == &self.id {
+                return Ok(crate::meta::QualityOwnerSlot::Kit(Arc::downgrade(self)));
+            }
+            if let Some(ty) = self.type_by_external_id(owner_id).await {
+                return Ok(crate::meta::QualityOwnerSlot::Type(Arc::downgrade(&ty)));
+            }
+            if let Some(rep) = self.find_representation(owner_id).await {
+                return Ok(crate::meta::QualityOwnerSlot::Rep(Arc::downgrade(&rep)));
+            }
+            if let Some(conn) = self.find_connector(owner_id).await {
+                return Ok(crate::meta::QualityOwnerSlot::Conn(Arc::downgrade(&conn)));
+            }
+            if let Some(des) = self.design_by_external_id(owner_id).await {
+                return Ok(crate::meta::QualityOwnerSlot::Design(Arc::downgrade(&des)));
+            }
+            Err(crate::error::SemioError::not_found("QualityOwner", owner_id.as_str()))
+        }
+
+        /// @emoji ➕ Create [`Tag`], register globally, append to owner collection.
+        pub async fn create_and_register_tag(self: &Arc<Self>, owner_id: &Id, input: crate::meta::TagInput) -> Result<Arc<Tag>, crate::error::SemioError> {
+            let slot = self.resolve_tag_owner_slot(owner_id).await?;
+            let attrs = crate::meta::attributes_from_inputs(input.attributes).await;
+            let tag = Tag::new(slot, input.name, input.description, input.icon, input.order, attrs).await;
+            self.register_tag(tag.clone()).await;
+            match &*tag.owner.read().await {
+                crate::meta::TagOwnerSlot::Kit(w) => {
+                    if let Some(k) = w.upgrade() {
+                        k.tags.write().await.push(tag.clone());
+                    }
+                }
+                crate::meta::TagOwnerSlot::Type(w) => {
+                    if let Some(t) = w.upgrade() {
+                        t.tags.write().await.push(tag.clone());
+                    }
+                }
+                crate::meta::TagOwnerSlot::Rep(w) => {
+                    if let Some(r) = w.upgrade() {
+                        r.tags.write().await.push(tag.clone());
+                    }
+                }
+                crate::meta::TagOwnerSlot::Unset => {}
+            }
+            Ok(tag)
+        }
+
+        /// @emoji 🗑 Remove a tag from its owner vec + id map.
+        pub async fn delete_tag_by_id(self: &Arc<Self>, tag_id: &Id) -> Result<(), crate::error::SemioError> {
+            let tag = self.find_tag(tag_id).await.ok_or_else(|| crate::error::SemioError::not_found("Tag", tag_id.as_str()))?;
+            match &*tag.owner.read().await {
+                crate::meta::TagOwnerSlot::Kit(w) => {
+                    if let Some(k) = w.upgrade() {
+                        k.tags.write().await.retain(|t| &t.id != tag_id);
+                    }
+                }
+                crate::meta::TagOwnerSlot::Type(w) => {
+                    if let Some(t) = w.upgrade() {
+                        t.tags.write().await.retain(|t| &t.id != tag_id);
+                    }
+                }
+                crate::meta::TagOwnerSlot::Rep(w) => {
+                    if let Some(r) = w.upgrade() {
+                        r.tags.write().await.retain(|t| &t.id != tag_id);
+                    }
+                }
+                crate::meta::TagOwnerSlot::Unset => {}
+            }
+            self.tag_by_id.write().await.remove(tag_id);
+            Ok(())
+        }
+
+        /// @emoji 🆕 Insert (or look up) a design by id, returning the shared Arc (maintains [`Kit::design_weak_by_id`]).
         pub async fn ensure_design(self: &Arc<Self>, design_id: &Id) -> Arc<design::Design> {
             {
                 let map = self.design_weak_by_id.read().await;
@@ -2371,6 +2738,278 @@ pub mod kit {
 }
 
 //#endregion 📦 kit
+
+//#region 🏷️ meta graphql
+
+/// @emoji 🔗 SDL `union TagOwner`.
+#[derive(Clone, async_graphql::Union)]
+#[graphql(name = "TagOwner")]
+pub enum TagOwnerUnion {
+    Kit(std::sync::Arc<crate::kit::Kit>),
+    Type(std::sync::Arc<crate::kit::r#type::Type>),
+    Representation(std::sync::Arc<crate::kit::r#type::Representation>),
+}
+
+/// @emoji 🔗 SDL `union ConceptOwner`.
+#[derive(Clone, async_graphql::Union)]
+#[graphql(name = "ConceptOwner")]
+pub enum ConceptOwnerUnion {
+    Kit(std::sync::Arc<crate::kit::Kit>),
+    Type(std::sync::Arc<crate::kit::r#type::Type>),
+}
+
+/// @emoji 🔗 SDL `union QualityOwner`.
+#[derive(Clone, async_graphql::Union)]
+#[graphql(name = "QualityOwner")]
+pub enum QualityOwnerUnion {
+    Connector(std::sync::Arc<crate::kit::r#type::Connector>),
+    Representation(std::sync::Arc<crate::kit::r#type::Representation>),
+    Type(std::sync::Arc<crate::kit::r#type::Type>),
+    Design(std::sync::Arc<crate::kit::design::Design>),
+    Kit(std::sync::Arc<crate::kit::Kit>),
+}
+
+#[async_graphql::Object(name = "Tag")]
+impl crate::meta::Tag {
+    async fn id(&self) -> crate::id::Id {
+        self.id.clone()
+    }
+    async fn hash(&self) -> String {
+        self.compute_hash().await
+    }
+    async fn owner(&self) -> async_graphql::Result<TagOwnerUnion> {
+        match &*self.owner.read().await {
+            crate::meta::TagOwnerSlot::Kit(w) => w
+                .upgrade()
+                .ok_or_else(|| async_graphql::Error::new("Tag.kit owner dropped"))
+                .map(TagOwnerUnion::Kit),
+            crate::meta::TagOwnerSlot::Type(w) => w
+                .upgrade()
+                .ok_or_else(|| async_graphql::Error::new("Tag.type owner dropped"))
+                .map(TagOwnerUnion::Type),
+            crate::meta::TagOwnerSlot::Rep(w) => w
+                .upgrade()
+                .ok_or_else(|| async_graphql::Error::new("Tag.representation owner dropped"))
+                .map(TagOwnerUnion::Representation),
+            crate::meta::TagOwnerSlot::Unset => Err(async_graphql::Error::new("Tag.owner unset")),
+        }
+    }
+    #[graphql(name = "kitOwner")]
+    async fn kit_owner(&self) -> Option<std::sync::Arc<crate::kit::Kit>> {
+        match &*self.owner.read().await {
+            crate::meta::TagOwnerSlot::Kit(w) => w.upgrade(),
+            _ => None,
+        }
+    }
+    #[graphql(name = "typeOwner")]
+    async fn type_owner(&self) -> Option<std::sync::Arc<crate::kit::r#type::Type>> {
+        match &*self.owner.read().await {
+            crate::meta::TagOwnerSlot::Type(w) => w.upgrade(),
+            _ => None,
+        }
+    }
+    #[graphql(name = "representationOwner")]
+    async fn representation_owner(&self) -> Option<std::sync::Arc<crate::kit::r#type::Representation>> {
+        match &*self.owner.read().await {
+            crate::meta::TagOwnerSlot::Rep(w) => w.upgrade(),
+            _ => None,
+        }
+    }
+    #[graphql(name = "ownerEntity")]
+    async fn owner_entity(&self) -> Option<crate::iface::OwnerEntity> {
+        match &*self.owner.read().await {
+            crate::meta::TagOwnerSlot::Kit(w) => w.upgrade().map(crate::iface::OwnerEntity::Kit),
+            crate::meta::TagOwnerSlot::Type(w) => w.upgrade().map(crate::iface::OwnerEntity::Type),
+            crate::meta::TagOwnerSlot::Rep(w) => w.upgrade().map(crate::iface::OwnerEntity::Representation),
+            crate::meta::TagOwnerSlot::Unset => None,
+        }
+    }
+    #[graphql(name = "ownedEntities")]
+    async fn owned_entities(&self) -> crate::iface::OwnedEntityConnection {
+        crate::iface::OwnedEntityConnection::empty()
+    }
+    async fn name(&self) -> String {
+        self.name.read().await.clone()
+    }
+    async fn description(&self) -> Option<String> {
+        self.description.read().await.clone()
+    }
+    async fn icon(&self) -> Option<String> {
+        self.icon.read().await.clone()
+    }
+    async fn order(&self) -> Option<i32> {
+        *self.order.read().await
+    }
+    async fn attributes(&self) -> crate::gql_relay::AttributeConnection {
+        crate::gql_relay::AttributeConnection::from_rows(self.attributes.read().await.clone())
+    }
+}
+
+#[async_graphql::Object(name = "Concept")]
+impl crate::meta::Concept {
+    async fn id(&self) -> crate::id::Id {
+        self.id.clone()
+    }
+    async fn hash(&self) -> String {
+        self.compute_hash().await
+    }
+    async fn owner(&self) -> async_graphql::Result<ConceptOwnerUnion> {
+        match &*self.owner.read().await {
+            crate::meta::ConceptOwnerSlot::Kit(w) => w
+                .upgrade()
+                .ok_or_else(|| async_graphql::Error::new("Concept.kit owner dropped"))
+                .map(ConceptOwnerUnion::Kit),
+            crate::meta::ConceptOwnerSlot::Type(w) => w
+                .upgrade()
+                .ok_or_else(|| async_graphql::Error::new("Concept.type owner dropped"))
+                .map(ConceptOwnerUnion::Type),
+            crate::meta::ConceptOwnerSlot::Unset => Err(async_graphql::Error::new("Concept.owner unset")),
+        }
+    }
+    #[graphql(name = "kitOwner")]
+    async fn kit_owner(&self) -> Option<std::sync::Arc<crate::kit::Kit>> {
+        match &*self.owner.read().await {
+            crate::meta::ConceptOwnerSlot::Kit(w) => w.upgrade(),
+            _ => None,
+        }
+    }
+    #[graphql(name = "typeOwner")]
+    async fn type_owner(&self) -> Option<std::sync::Arc<crate::kit::r#type::Type>> {
+        match &*self.owner.read().await {
+            crate::meta::ConceptOwnerSlot::Type(w) => w.upgrade(),
+            _ => None,
+        }
+    }
+    #[graphql(name = "ownerEntity")]
+    async fn owner_entity(&self) -> Option<crate::iface::OwnerEntity> {
+        match &*self.owner.read().await {
+            crate::meta::ConceptOwnerSlot::Kit(w) => w.upgrade().map(crate::iface::OwnerEntity::Kit),
+            crate::meta::ConceptOwnerSlot::Type(w) => w.upgrade().map(crate::iface::OwnerEntity::Type),
+            crate::meta::ConceptOwnerSlot::Unset => None,
+        }
+    }
+    #[graphql(name = "ownedEntities")]
+    async fn owned_entities(&self) -> crate::iface::OwnedEntityConnection {
+        crate::iface::OwnedEntityConnection::empty()
+    }
+    async fn name(&self) -> String {
+        self.name.read().await.clone()
+    }
+    async fn description(&self) -> Option<String> {
+        self.description.read().await.clone()
+    }
+    async fn icon(&self) -> Option<String> {
+        self.icon.read().await.clone()
+    }
+    async fn order(&self) -> Option<i32> {
+        *self.order.read().await
+    }
+    async fn attributes(&self) -> crate::gql_relay::AttributeConnection {
+        crate::gql_relay::AttributeConnection::from_rows(self.attributes.read().await.clone())
+    }
+}
+
+#[async_graphql::Object(name = "Quality")]
+impl crate::meta::Quality {
+    async fn id(&self) -> crate::id::Id {
+        self.id.clone()
+    }
+    async fn hash(&self) -> String {
+        self.compute_hash().await
+    }
+    async fn owner(&self) -> async_graphql::Result<QualityOwnerUnion> {
+        match &*self.owner.read().await {
+            crate::meta::QualityOwnerSlot::Kit(w) => w.upgrade().ok_or_else(|| async_graphql::Error::new("Quality.kit owner dropped")).map(QualityOwnerUnion::Kit),
+            crate::meta::QualityOwnerSlot::Type(w) => w.upgrade().ok_or_else(|| async_graphql::Error::new("Quality.type owner dropped")).map(QualityOwnerUnion::Type),
+            crate::meta::QualityOwnerSlot::Rep(w) => w
+                .upgrade()
+                .ok_or_else(|| async_graphql::Error::new("Quality.representation owner dropped"))
+                .map(QualityOwnerUnion::Representation),
+            crate::meta::QualityOwnerSlot::Conn(w) => w
+                .upgrade()
+                .ok_or_else(|| async_graphql::Error::new("Quality.connector owner dropped"))
+                .map(QualityOwnerUnion::Connector),
+            crate::meta::QualityOwnerSlot::Design(w) => w.upgrade().ok_or_else(|| async_graphql::Error::new("Quality.design owner dropped")).map(QualityOwnerUnion::Design),
+            crate::meta::QualityOwnerSlot::Unset => Err(async_graphql::Error::new("Quality.owner unset")),
+        }
+    }
+    #[graphql(name = "connectorOwner")]
+    async fn connector_owner(&self) -> Option<std::sync::Arc<crate::kit::r#type::Connector>> {
+        match &*self.owner.read().await {
+            crate::meta::QualityOwnerSlot::Conn(w) => w.upgrade(),
+            _ => None,
+        }
+    }
+    #[graphql(name = "representationOwner")]
+    async fn representation_owner(&self) -> Option<std::sync::Arc<crate::kit::r#type::Representation>> {
+        match &*self.owner.read().await {
+            crate::meta::QualityOwnerSlot::Rep(w) => w.upgrade(),
+            _ => None,
+        }
+    }
+    #[graphql(name = "typeOwner")]
+    async fn type_owner(&self) -> Option<std::sync::Arc<crate::kit::r#type::Type>> {
+        match &*self.owner.read().await {
+            crate::meta::QualityOwnerSlot::Type(w) => w.upgrade(),
+            _ => None,
+        }
+    }
+    #[graphql(name = "designOwner")]
+    async fn design_owner(&self) -> Option<std::sync::Arc<crate::kit::design::Design>> {
+        match &*self.owner.read().await {
+            crate::meta::QualityOwnerSlot::Design(w) => w.upgrade(),
+            _ => None,
+        }
+    }
+    #[graphql(name = "kitOwner")]
+    async fn kit_owner(&self) -> Option<std::sync::Arc<crate::kit::Kit>> {
+        match &*self.owner.read().await {
+            crate::meta::QualityOwnerSlot::Kit(w) => w.upgrade(),
+            _ => None,
+        }
+    }
+    #[graphql(name = "ownerEntity")]
+    async fn owner_entity(&self) -> Option<crate::iface::OwnerEntity> {
+        match &*self.owner.read().await {
+            crate::meta::QualityOwnerSlot::Kit(w) => w.upgrade().map(crate::iface::OwnerEntity::Kit),
+            crate::meta::QualityOwnerSlot::Design(w) => w.upgrade().map(crate::iface::OwnerEntity::Design),
+            crate::meta::QualityOwnerSlot::Type(w) => w.upgrade().map(crate::iface::OwnerEntity::Type),
+            crate::meta::QualityOwnerSlot::Rep(w) => w.upgrade().map(crate::iface::OwnerEntity::Representation),
+            crate::meta::QualityOwnerSlot::Conn(_) => None,
+            crate::meta::QualityOwnerSlot::Unset => None,
+        }
+    }
+    #[graphql(name = "ownedEntities")]
+    async fn owned_entities(&self) -> crate::iface::OwnedEntityConnection {
+        crate::iface::OwnedEntityConnection::empty()
+    }
+    async fn key(&self) -> String {
+        self.key.read().await.clone()
+    }
+    async fn value(&self) -> Option<String> {
+        self.value.read().await.clone()
+    }
+    async fn unit(&self) -> Option<String> {
+        self.unit.read().await.clone()
+    }
+    async fn definition(&self) -> Option<String> {
+        self.definition.read().await.clone()
+    }
+    async fn description(&self) -> Option<String> {
+        self.description.read().await.clone()
+    }
+    async fn icon(&self) -> Option<String> {
+        self.icon.read().await.clone()
+    }
+    async fn benchmarks(&self) -> crate::gql_relay::BenchmarkConnection {
+        crate::gql_relay::BenchmarkConnection::from_rows(self.benchmarks.read().await.clone())
+    }
+    async fn attributes(&self) -> crate::gql_relay::AttributeConnection {
+        crate::gql_relay::AttributeConnection::from_rows(self.attributes.read().await.clone())
+    }
+}
+
+//#endregion 🏷️ meta graphql
 
 //#region 🌿 vcs
 
@@ -2926,6 +3565,47 @@ pub mod vcs {
             let diff = crate::kit_graph_engine::deterministic_semantic_diff("createdFixedPiece", &payload_json, &fp_before, &fp_after);
             Ok((piece, diff))
         }
+
+        /// @emoji ↔ Apply UV offset to a piece center (creates a default [`PositionNode`] when absent).
+        pub async fn apply_drag_piece_in_design(self: &Arc<Self>, design_id: &Id, piece_id: &Id, offset: crate::geom::Offset) -> Result<(), SemioError> {
+            use crate::geom::entity::PositionNode;
+            let design = self
+                .the_kit
+                .design_by_external_id(design_id)
+                .await
+                .ok_or_else(|| SemioError::not_found("Design", design_id.as_str()))?;
+            let piece = design
+                .piece_by_external_id(piece_id)
+                .await
+                .ok_or_else(|| SemioError::not_found("Piece", piece_id.as_str()))?;
+            let pos_slot = piece.position.read().await.clone();
+            if let Some(pos) = pos_slot {
+                let mut d = pos.data.write().await;
+                d.center.u += offset.u;
+                d.center.v += offset.v;
+                *pos.center.u.write().await = d.center.u;
+                *pos.center.v.write().await = d.center.v;
+            } else {
+                let n = PositionNode::from_position_value(crate::geom::Position::default());
+                {
+                    let mut d = n.data.write().await;
+                    d.center.u += offset.u;
+                    d.center.v += offset.v;
+                }
+                *n.center.u.write().await = n.data.read().await.center.u;
+                *n.center.v.write().await = n.data.read().await.center.v;
+                *piece.position.write().await = Some(n);
+            }
+            Ok(())
+        }
+
+        /// @emoji ↔ Batch drag: same offset for every piece id.
+        pub async fn apply_drag_pieces_in_design(self: &Arc<Self>, design_id: &Id, piece_ids: &[Id], offset: crate::geom::Offset) -> Result<(), SemioError> {
+            for pid in piece_ids {
+                self.apply_drag_piece_in_design(design_id, pid, offset).await?;
+            }
+            Ok(())
+        }
     }
 
     #[Object(name = "Graph")]
@@ -3244,6 +3924,8 @@ pub mod iface {
     #[derive(Clone, Union)]
     pub enum OwnerEntity {
         Kit(Arc<Kit>),
+        Type(std::sync::Arc<crate::kit::r#type::Type>),
+        Representation(std::sync::Arc<crate::kit::r#type::Representation>),
         Design(Arc<Design>),
         Piece(Arc<Piece>),
         Graph(Arc<Graph>),
@@ -3304,6 +3986,9 @@ pub mod iface {
         Piece(Arc<Piece>),
         Session(Arc<Session>),
         Conflict(Arc<Conflict>),
+        Tag(std::sync::Arc<crate::meta::Tag>),
+        Concept(std::sync::Arc<crate::meta::Concept>),
+        Quality(std::sync::Arc<crate::meta::Quality>),
     }
 
     /// @emoji 🔎 Resolve a global id against WIP + authoritative graphs, sessions, and conflicts.
@@ -3315,6 +4000,15 @@ pub mod iface {
             let kid = g.the_kit.workspace_kit_id().await;
             if id == &kid || id == &g.the_kit.id {
                 return Some(GqlNode::Kit(g.the_kit.clone()));
+            }
+            if let Some(t) = g.the_kit.find_tag(id).await {
+                return Some(GqlNode::Tag(t));
+            }
+            if let Some(c) = g.the_kit.find_concept(id).await {
+                return Some(GqlNode::Concept(c));
+            }
+            if let Some(q) = g.the_kit.find_quality(id).await {
+                return Some(GqlNode::Quality(q));
             }
             let designs = g.the_kit.designs.read().await;
             for d in designs.iter() {
@@ -3628,11 +4322,16 @@ pub mod op {
 
     #[derive(Clone, Debug, Default, Serialize, Deserialize)]
     pub struct ChangedDescriptionInput {
+        pub entity_id: Id,
         pub description: String,
     }
 
     #[Object(name = "ChangedDescriptionInput")]
     impl ChangedDescriptionInput {
+        #[graphql(name = "entityId")]
+        async fn entity_id(&self) -> Id {
+            self.entity_id.clone()
+        }
         async fn description(&self) -> String {
             self.description.clone()
         }
@@ -3954,6 +4653,8 @@ pub mod op {
 
     #[derive(Clone, Debug, InputObject)]
     pub struct ChangedDescriptionInputDto {
+        #[graphql(name = "entityId")]
+        pub entity_id: Id,
         pub description: String,
     }
     //#endregion 🪄 operations
@@ -3965,7 +4666,14 @@ pub mod op {
         AddFixedPieceToDesign { request_id: Id, draft_id: Id, transaction_id: Id, design_id: Id, blueprint_id: Id, position: Position, name: Option<String>, description: Option<String> },
         FixPieceInDesign { request_id: Id, draft_id: Id, transaction_id: Id, design_id: Id, piece_id: Id },
         RenameKit { request_id: Id, draft_id: Id, transaction_id: Id, name: String },
-        ChangeDescription { request_id: Id, draft_id: Id, transaction_id: Id, description: String },
+        ChangeDescription { request_id: Id, draft_id: Id, transaction_id: Id, entity_id: Id, description: String },
+        CreateTag { request_id: Id, draft_id: Id, transaction_id: Id, owner_id: Id, input: crate::meta::TagInput },
+        CreateTags { request_id: Id, draft_id: Id, transaction_id: Id, owner_id: Id, inputs: Vec<crate::meta::TagInput> },
+        RenameTag { request_id: Id, draft_id: Id, transaction_id: Id, tag_id: Id, name: String },
+        DeleteTag { request_id: Id, draft_id: Id, transaction_id: Id, tag_id: Id },
+        DeleteTags { request_id: Id, draft_id: Id, transaction_id: Id, tag_ids: Vec<Id> },
+        DragPieceInDesign { request_id: Id, draft_id: Id, transaction_id: Id, design_id: Id, piece_id: Id, offset: Offset },
+        DragPiecesInDesign { request_id: Id, draft_id: Id, transaction_id: Id, design_id: Id, piece_ids: Vec<Id>, offset: Offset },
         BackboneAttach { request_id: Id, connection_uri: String, store_kind: BackboneStoreKind },
         BackboneDetach { request_id: Id, connection_uri: String },
     }
@@ -3977,6 +4685,13 @@ pub mod op {
                 Command::FixPieceInDesign { request_id, .. } => request_id,
                 Command::RenameKit { request_id, .. } => request_id,
                 Command::ChangeDescription { request_id, .. } => request_id,
+                Command::CreateTag { request_id, .. } => request_id,
+                Command::CreateTags { request_id, .. } => request_id,
+                Command::RenameTag { request_id, .. } => request_id,
+                Command::DeleteTag { request_id, .. } => request_id,
+                Command::DeleteTags { request_id, .. } => request_id,
+                Command::DragPieceInDesign { request_id, .. } => request_id,
+                Command::DragPiecesInDesign { request_id, .. } => request_id,
                 Command::BackboneAttach { request_id, .. } => request_id,
                 Command::BackboneDetach { request_id, .. } => request_id,
             }
@@ -4646,6 +5361,13 @@ pub mod worker {
                     Command::FixPieceInDesign { .. } => "fixPieceInDesign",
                     Command::RenameKit { .. } => "renameKit",
                     Command::ChangeDescription { .. } => "changeDescription",
+                    Command::CreateTag { .. } => "createTag",
+                    Command::CreateTags { .. } => "createTags",
+                    Command::RenameTag { .. } => "renameTag",
+                    Command::DeleteTag { .. } => "deleteTag",
+                    Command::DeleteTags { .. } => "deleteTags",
+                    Command::DragPieceInDesign { .. } => "dragPieceInDesign",
+                    Command::DragPiecesInDesign { .. } => "dragPiecesInDesign",
                     Command::BackboneAttach { .. } => "backboneAttach",
                     Command::BackboneDetach { .. } => "backboneDetach",
                 };
@@ -4681,8 +5403,77 @@ pub mod worker {
                     self.bus.emit_event(Event::CreatedFixedPiece(op)).await;
                     Ok(())
                 }
-                Command::FixPieceInDesign { .. } | Command::RenameKit { .. } | Command::ChangeDescription { .. } => {
-                    // Skeleton stubs — wired through commandSucceeded only.
+                Command::FixPieceInDesign { design_id, piece_id, .. } => {
+                    let kit = &self.graph.the_kit;
+                    let design = kit.design_by_external_id(&design_id).await.ok_or_else(|| SemioError::not_found("Design", design_id.as_str()))?;
+                    let piece = design.piece_by_external_id(&piece_id).await.ok_or_else(|| SemioError::not_found("Piece", piece_id.as_str()))?;
+                    *piece.connection_kind.write().await = Some(crate::kit::design::piece::PieceConnectionKind::Fixed);
+                    kit.bump_touch_epoch().await;
+                    Ok(())
+                }
+                Command::RenameKit { name, .. } => {
+                    *self.graph.the_kit.name.write().await = name;
+                    self.graph.the_kit.bump_touch_epoch().await;
+                    Ok(())
+                }
+                Command::ChangeDescription { entity_id, description, .. } => {
+                    let kit = &self.graph.the_kit;
+                    let kid = kit.workspace_kit_id().await;
+                    if entity_id == kid || entity_id == kit.id {
+                        *kit.description.write().await = Some(description);
+                    } else if let Some(t) = kit.type_by_external_id(&entity_id).await {
+                        *t.description.write().await = Some(description);
+                    } else if let Some(d) = kit.design_by_external_id(&entity_id).await {
+                        *d.description.write().await = Some(description);
+                    } else {
+                        return Err(SemioError::not_found("DescriptionEntity", entity_id.as_str()));
+                    }
+                    kit.bump_touch_epoch().await;
+                    Ok(())
+                }
+                Command::CreateTag { owner_id, input, .. } => {
+                    self.graph.the_kit.create_and_register_tag(&owner_id, input).await?;
+                    self.graph.the_kit.bump_touch_epoch().await;
+                    Ok(())
+                }
+                Command::CreateTags { owner_id, inputs, .. } => {
+                    for inp in inputs {
+                        self.graph.the_kit.create_and_register_tag(&owner_id, inp).await?;
+                    }
+                    self.graph.the_kit.bump_touch_epoch().await;
+                    Ok(())
+                }
+                Command::RenameTag { tag_id, name, .. } => {
+                    let tag = self
+                        .graph
+                        .the_kit
+                        .find_tag(&tag_id)
+                        .await
+                        .ok_or_else(|| SemioError::not_found("Tag", tag_id.as_str()))?;
+                    *tag.name.write().await = name;
+                    self.graph.the_kit.bump_touch_epoch().await;
+                    Ok(())
+                }
+                Command::DeleteTag { tag_id, .. } => {
+                    self.graph.the_kit.delete_tag_by_id(&tag_id).await?;
+                    self.graph.the_kit.bump_touch_epoch().await;
+                    Ok(())
+                }
+                Command::DeleteTags { tag_ids, .. } => {
+                    for id in tag_ids {
+                        self.graph.the_kit.delete_tag_by_id(&id).await?;
+                    }
+                    self.graph.the_kit.bump_touch_epoch().await;
+                    Ok(())
+                }
+                Command::DragPieceInDesign { design_id, piece_id, offset, .. } => {
+                    self.graph.apply_drag_piece_in_design(&design_id, &piece_id, offset).await?;
+                    self.graph.the_kit.bump_touch_epoch().await;
+                    Ok(())
+                }
+                Command::DragPiecesInDesign { design_id, piece_ids, offset, .. } => {
+                    self.graph.apply_drag_pieces_in_design(&design_id, &piece_ids, offset).await?;
+                    self.graph.the_kit.bump_touch_epoch().await;
                     Ok(())
                 }
                 Command::BackboneAttach { connection_uri, store_kind, .. } => {
@@ -4708,8 +5499,9 @@ pub mod gql {
 
     use crate::event::{Event, EventBus};
     use crate::error::SemioError;
-    use crate::geom::Position;
+    use crate::geom::{Offset, Position};
     use crate::id::Id;
+    use crate::meta::TagInput;
     use crate::op::{Command, CommandReceipt, OperationKind};
     use crate::vcs::Graph;
     use crate::worker::ParentRuntime;
@@ -4853,6 +5645,7 @@ pub mod gql {
             ctx: &Context<'_>,
             #[graphql(name = "draftId")] draft_id: Id,
             #[graphql(name = "transactionId")] transaction_id: Id,
+            #[graphql(name = "entityId")] entity_id: Id,
             description: String,
         ) -> async_graphql::Result<Id> {
             let rt = ctx.data::<Arc<ParentRuntime>>()?;
@@ -4861,7 +5654,155 @@ pub mod gql {
                 request_id: request_id.clone(),
                 draft_id,
                 transaction_id,
+                entity_id,
                 description,
+            };
+            Ok(rt.dispatch_wip(cmd).await)
+        }
+
+        #[graphql(name = "createTag")]
+        async fn create_tag(
+            &self,
+            ctx: &Context<'_>,
+            #[graphql(name = "draftId")] draft_id: Id,
+            #[graphql(name = "transactionId")] transaction_id: Id,
+            #[graphql(name = "ownerId")] owner_id: Id,
+            tag: TagInput,
+        ) -> async_graphql::Result<Id> {
+            let rt = ctx.data::<Arc<ParentRuntime>>()?;
+            let request_id = Id::new().await;
+            let cmd = Command::CreateTag {
+                request_id: request_id.clone(),
+                draft_id,
+                transaction_id,
+                owner_id,
+                input: tag,
+            };
+            Ok(rt.dispatch_wip(cmd).await)
+        }
+
+        #[graphql(name = "createTags")]
+        async fn create_tags(
+            &self,
+            ctx: &Context<'_>,
+            #[graphql(name = "draftId")] draft_id: Id,
+            #[graphql(name = "transactionId")] transaction_id: Id,
+            #[graphql(name = "ownerId")] owner_id: Id,
+            tags: Vec<TagInput>,
+        ) -> async_graphql::Result<Id> {
+            let rt = ctx.data::<Arc<ParentRuntime>>()?;
+            let request_id = Id::new().await;
+            let cmd = Command::CreateTags {
+                request_id: request_id.clone(),
+                draft_id,
+                transaction_id,
+                owner_id,
+                inputs: tags,
+            };
+            Ok(rt.dispatch_wip(cmd).await)
+        }
+
+        #[graphql(name = "renameTag")]
+        async fn rename_tag(
+            &self,
+            ctx: &Context<'_>,
+            #[graphql(name = "draftId")] draft_id: Id,
+            #[graphql(name = "transactionId")] transaction_id: Id,
+            #[graphql(name = "tagId")] tag_id: Id,
+            name: String,
+        ) -> async_graphql::Result<Id> {
+            let rt = ctx.data::<Arc<ParentRuntime>>()?;
+            let request_id = Id::new().await;
+            let cmd = Command::RenameTag {
+                request_id: request_id.clone(),
+                draft_id,
+                transaction_id,
+                tag_id,
+                name,
+            };
+            Ok(rt.dispatch_wip(cmd).await)
+        }
+
+        #[graphql(name = "deleteTag")]
+        async fn delete_tag(
+            &self,
+            ctx: &Context<'_>,
+            #[graphql(name = "draftId")] draft_id: Id,
+            #[graphql(name = "transactionId")] transaction_id: Id,
+            #[graphql(name = "tagId")] tag_id: Id,
+        ) -> async_graphql::Result<Id> {
+            let rt = ctx.data::<Arc<ParentRuntime>>()?;
+            let request_id = Id::new().await;
+            let cmd = Command::DeleteTag {
+                request_id: request_id.clone(),
+                draft_id,
+                transaction_id,
+                tag_id,
+            };
+            Ok(rt.dispatch_wip(cmd).await)
+        }
+
+        #[graphql(name = "deleteTags")]
+        async fn delete_tags(
+            &self,
+            ctx: &Context<'_>,
+            #[graphql(name = "draftId")] draft_id: Id,
+            #[graphql(name = "transactionId")] transaction_id: Id,
+            #[graphql(name = "tagIds")] tag_ids: Vec<Id>,
+        ) -> async_graphql::Result<Id> {
+            let rt = ctx.data::<Arc<ParentRuntime>>()?;
+            let request_id = Id::new().await;
+            let cmd = Command::DeleteTags {
+                request_id: request_id.clone(),
+                draft_id,
+                transaction_id,
+                tag_ids,
+            };
+            Ok(rt.dispatch_wip(cmd).await)
+        }
+
+        #[graphql(name = "dragPieceInDesign")]
+        async fn drag_piece_in_design(
+            &self,
+            ctx: &Context<'_>,
+            #[graphql(name = "draftId")] draft_id: Id,
+            #[graphql(name = "transactionId")] transaction_id: Id,
+            #[graphql(name = "designId")] design_id: Id,
+            #[graphql(name = "pieceId")] piece_id: Id,
+            offset: Offset,
+        ) -> async_graphql::Result<Id> {
+            let rt = ctx.data::<Arc<ParentRuntime>>()?;
+            let request_id = Id::new().await;
+            let cmd = Command::DragPieceInDesign {
+                request_id: request_id.clone(),
+                draft_id,
+                transaction_id,
+                design_id,
+                piece_id,
+                offset,
+            };
+            Ok(rt.dispatch_wip(cmd).await)
+        }
+
+        #[graphql(name = "dragPiecesInDesign")]
+        async fn drag_pieces_in_design(
+            &self,
+            ctx: &Context<'_>,
+            #[graphql(name = "draftId")] draft_id: Id,
+            #[graphql(name = "transactionId")] transaction_id: Id,
+            #[graphql(name = "designId")] design_id: Id,
+            #[graphql(name = "pieceIds")] piece_ids: Vec<Id>,
+            offset: Offset,
+        ) -> async_graphql::Result<Id> {
+            let rt = ctx.data::<Arc<ParentRuntime>>()?;
+            let request_id = Id::new().await;
+            let cmd = Command::DragPiecesInDesign {
+                request_id: request_id.clone(),
+                draft_id,
+                transaction_id,
+                design_id,
+                piece_ids,
+                offset,
             };
             Ok(rt.dispatch_wip(cmd).await)
         }
@@ -5229,6 +6170,50 @@ mod tests {
         let needle = concat!("pub async fn ", "emit_event(&self, ev: Event)");
         let count = src.matches(needle).count();
         assert_eq!(count, 1, "expected exactly one canonical emit_event definition in lib.rs, found {}", count);
+    }
+
+    #[test]
+    fn create_tag_on_kit_graphql_roundtrip() {
+        block_on(async {
+            let schema = crate::gql::build_schema().await;
+            let kit_id = schema
+                .execute("{ wip { theKit { id } } }")
+                .await
+                .data
+                .into_json()
+                .unwrap()["wip"]["theKit"]["id"]
+                .as_str()
+                .expect("kit id")
+                .to_string();
+
+            const M: &str = r#"
+                mutation($draftId: ID!, $transactionId: ID!, $ownerId: ID!, $tag: TagInput!) {
+                    createTag(draftId: $draftId, transactionId: $transactionId, ownerId: $ownerId, tag: $tag)
+                }
+            "#;
+            let vars = async_graphql::value!({
+                "draftId": "d1",
+                "transactionId": "t1",
+                "ownerId": kit_id,
+                "tag": { "name": "alpha-tag" }
+            });
+            let res = schema.execute(Request::new(M).variables(Variables::from_value(vars))).await;
+            assert!(res.errors.is_empty(), "createTag errors: {:?}", res.errors);
+
+            std::thread::sleep(std::time::Duration::from_millis(150));
+
+            let q = "{ wip { theKit { tags { edges { node { name } } } } } }";
+            let res = schema.execute(q).await;
+            assert!(res.errors.is_empty(), "query errors: {:?}", res.errors);
+            let data = res.data.into_json().unwrap();
+            let names: Vec<String> = data["wip"]["theKit"]["tags"]["edges"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .filter_map(|e| e["node"]["name"].as_str().map(String::from))
+                .collect();
+            assert!(names.iter().any(|n| n == "alpha-tag"), "tags missing new name: {:?}", names);
+        });
     }
 
     #[test]
