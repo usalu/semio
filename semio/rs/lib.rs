@@ -143,42 +143,42 @@ pub mod error {
 //#region 📐 geom
 
 pub mod geom {
-    //! 📐 Pure value geometry: vectors, points, planes, positions (Copy values; never Arc-wrapped).
-    use async_graphql::{InputObject, SimpleObject};
+    //! 📐 Geometry: `values` (Copy DTOs for serde / kit engine) + `entity` (`Arc` graph nodes, WeakEntity-style ids).
+    use async_graphql::InputObject;
     use serde::{Deserialize, Serialize};
 
-    #[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize, SimpleObject, InputObject)]
-    #[graphql(name = "Vector", input_name = "VectorInput")]
+    #[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize, InputObject)]
+    #[graphql(name = "VectorInput")]
     pub struct Vector {
         pub x: f64,
         pub y: f64,
         pub z: f64,
     }
 
-    #[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize, SimpleObject, InputObject)]
-    #[graphql(name = "Point", input_name = "PointInput")]
+    #[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize, InputObject)]
+    #[graphql(name = "PointInput")]
     pub struct Point {
         pub x: f64,
         pub y: f64,
         pub z: f64,
     }
 
-    #[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize, SimpleObject, InputObject)]
-    #[graphql(name = "Coordinate", input_name = "CoordinateInput")]
+    #[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize, InputObject)]
+    #[graphql(name = "CoordinateInput")]
     pub struct Coordinate {
         pub u: f64,
         pub v: f64,
     }
 
-    #[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize, SimpleObject, InputObject)]
-    #[graphql(name = "Offset", input_name = "OffsetInput")]
+    #[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize, InputObject)]
+    #[graphql(name = "OffsetInput")]
     pub struct Offset {
         pub u: f64,
         pub v: f64,
     }
 
-    #[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize, SimpleObject, InputObject)]
-    #[graphql(name = "Plane", input_name = "PlaneInput")]
+    #[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize, InputObject)]
+    #[graphql(name = "PlaneInput")]
     pub struct Plane {
         pub origin: Point,
         #[graphql(name = "xAxis")]
@@ -189,12 +189,171 @@ pub mod geom {
         pub y_axis: Vector,
     }
 
-    #[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize, SimpleObject, InputObject)]
-    #[graphql(name = "Position", input_name = "PositionInput")]
+    #[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize, InputObject)]
+    #[graphql(name = "PositionInput")]
     pub struct Position {
         pub center: Coordinate,
         pub plane: Plane,
     }
+
+    //#region 📐 entity
+    pub mod entity {
+        //! 📐 `Arc` geometry nodes (target WeakEntity / Entity graph shapes); `#[Object]` impls live after [`crate::iface`].
+        use std::sync::Arc;
+
+        use async_lock::RwLock;
+
+        use crate::hash::h;
+        use crate::id::Id;
+
+        use super::{Coordinate, Plane, Point, Position, Vector};
+
+        fn weak(prefix: &str, parts: &[&str]) -> Id {
+            Id::from(format!("semio:weak:{prefix}:{}", h(parts)))
+        }
+
+        /// @emoji 📍 Coordinate WeakEntity data node.
+        pub struct CoordinateNode {
+            pub id: Id,
+            pub u: RwLock<f64>,
+            pub v: RwLock<f64>,
+        }
+
+        impl CoordinateNode {
+            pub fn from_value(c: Coordinate) -> Arc<Self> {
+                let id = weak(
+                    "coordinate",
+                    &[&format!("{:.9}", c.u), &format!("{:.9}", c.v)],
+                );
+                Arc::new(Self { id, u: RwLock::new(c.u), v: RwLock::new(c.v) })
+            }
+        }
+
+        /// @emoji ↗ Vector WeakEntity data node.
+        pub struct VectorNode {
+            pub id: Id,
+            pub x: RwLock<f64>,
+            pub y: RwLock<f64>,
+            pub z: RwLock<f64>,
+        }
+
+        impl VectorNode {
+            pub fn from_value(v: Vector) -> Arc<Self> {
+                let id = weak("vector", &[&format!("{:.9}", v.x), &format!("{:.9}", v.y), &format!("{:.9}", v.z)]);
+                Arc::new(Self {
+                    id,
+                    x: RwLock::new(v.x),
+                    y: RwLock::new(v.y),
+                    z: RwLock::new(v.z),
+                })
+            }
+        }
+
+        /// @emoji ◆ Point WeakEntity data node.
+        pub struct PointNode {
+            pub id: Id,
+            pub x: RwLock<f64>,
+            pub y: RwLock<f64>,
+            pub z: RwLock<f64>,
+        }
+
+        impl PointNode {
+            pub fn from_value(p: Point) -> Arc<Self> {
+                let id = weak("point", &[&format!("{:.9}", p.x), &format!("{:.9}", p.y), &format!("{:.9}", p.z)]);
+                Arc::new(Self {
+                    id,
+                    x: RwLock::new(p.x),
+                    y: RwLock::new(p.y),
+                    z: RwLock::new(p.z),
+                })
+            }
+        }
+
+        /// @emoji ▭ Plane WeakEntity data node (owns origin + axes).
+        pub struct PlaneNode {
+            pub id: Id,
+            pub origin: Arc<PointNode>,
+            pub x_axis: Arc<VectorNode>,
+            pub y_axis: Arc<VectorNode>,
+        }
+
+        impl PlaneNode {
+            pub fn from_value(pl: Plane) -> Arc<Self> {
+                let origin = PointNode::from_value(pl.origin);
+                let x_axis = VectorNode::from_value(pl.x_axis);
+                let y_axis = VectorNode::from_value(pl.y_axis);
+                let id = weak(
+                    "plane",
+                    &[
+                        origin.id.as_str(),
+                        x_axis.id.as_str(),
+                        y_axis.id.as_str(),
+                    ],
+                );
+                Arc::new(Self { id, origin, x_axis, y_axis })
+            }
+        }
+
+        /// @emoji ↖ WeakEntity-style offset (piece drag input echo).
+        pub struct OffsetNode {
+            pub id: Id,
+            pub u: RwLock<f64>,
+            pub v: RwLock<f64>,
+        }
+
+        impl OffsetNode {
+            pub fn from_value(o: super::Offset) -> Arc<Self> {
+                let id = weak("offset", &[&format!("{:.9}", o.u), &format!("{:.9}", o.v)]);
+                Arc::new(Self {
+                    id,
+                    u: RwLock::new(o.u),
+                    v: RwLock::new(o.v),
+                })
+            }
+        }
+
+        /// @emoji ⌖ Position WeakEntity root (center + plane); mirrors live [`super::Position`] DTO via RwLock sync.
+        pub struct PositionNode {
+            pub id: Id,
+            pub center: Arc<CoordinateNode>,
+            pub plane: Arc<PlaneNode>,
+            pub data: RwLock<Position>,
+        }
+
+        impl PositionNode {
+            pub fn from_position_value(value: Position) -> Arc<Self> {
+                let center = CoordinateNode::from_value(value.center);
+                let plane = PlaneNode::from_value(value.plane);
+                let id = weak("position", &[center.id.as_str(), plane.id.as_str()]);
+                Arc::new(Self {
+                    id,
+                    center,
+                    plane,
+                    data: RwLock::new(value),
+                })
+            }
+
+            pub async fn snapshot_value(&self) -> Position {
+                *self.data.read().await
+            }
+        }
+
+        /// @emoji 🧭 Placeholder StrongEntity shell for `Place` (full meta wiring lands with meta lift).
+        pub struct PlaceNode {
+            pub id: Id,
+            pub label: RwLock<Option<String>>,
+        }
+
+        impl PlaceNode {
+            pub async fn new() -> Arc<Self> {
+                Arc::new(Self {
+                    id: Id::new().await,
+                    label: RwLock::new(None),
+                })
+            }
+        }
+    }
+    //#endregion 📐 entity
 }
 
 //#endregion 📐 geom
@@ -212,7 +371,7 @@ pub mod gql_relay {
     use crate::kit::design::Design;
     use crate::kit::design::piece::Piece;
     use crate::kit::r#type::Type;
-    use crate::meta::{Author, Concept, File, Folder, Prop, Quality, Stat, Tag};
+    use crate::meta::{Author, Concept, File, Folder, Group, Layer, Prop, Quality, Stat, Tag};
     use crate::vcs::{Alternative, Checkpoint, Conflict};
 
     fn edge_cursor(i: usize) -> String {
@@ -438,6 +597,41 @@ pub mod gql_relay {
         }
     }
 
+    #[derive(Clone, SimpleObject)]
+    #[graphql(name = "ConnectionEdge")]
+    pub struct ConnectionEdge {
+        pub cursor: String,
+        pub node: Arc<crate::kit::design::connection::Connection>,
+    }
+
+    #[derive(Clone, SimpleObject)]
+    #[graphql(name = "ConnectionConnection")]
+    pub struct ConnectionConnection {
+        pub edges: Vec<ConnectionEdge>,
+        #[graphql(name = "pageInfo")]
+        pub page_info: PageInfo,
+        pub hash: String,
+    }
+
+    impl ConnectionConnection {
+        pub fn from_connections(rows: Vec<Arc<crate::kit::design::connection::Connection>>) -> Self {
+            let hash = hash_ids(rows.iter().map(|c| c.id.as_str()));
+            let edges = rows
+                .into_iter()
+                .enumerate()
+                .map(|(i, node)| ConnectionEdge {
+                    cursor: edge_cursor(i),
+                    node,
+                })
+                .collect();
+            Self {
+                edges,
+                page_info: PageInfo::default(),
+                hash,
+            }
+        }
+    }
+
     macro_rules! simple_conn {
         ($Conn:ident, $Edge:ident, $node:ty, $id_closure:expr) => {
             #[derive(Clone, SimpleObject)]
@@ -457,7 +651,13 @@ pub mod gql_relay {
             impl $Conn {
                 pub fn from_rows(rows: Vec<$node>) -> Self {
                     let id_fn = $id_closure;
-                    let hash = hash_ids(rows.iter().map(|r| id_fn(r).as_str()));
+                    let mut hasher = Hasher::new();
+                    for r in &rows {
+                        let id = id_fn(r);
+                        hasher.update(id.as_str().as_bytes());
+                        hasher.update(b"\x1f");
+                    }
+                    let hash = hasher.finalize().to_hex().to_string();
                     let edges = rows
                         .into_iter()
                         .enumerate()
@@ -485,6 +685,62 @@ pub mod gql_relay {
     simple_conn!(PropConnection, PropEdge, Prop, |p: &Prop| p.id.clone());
     simple_conn!(AttributeConnection, AttributeEdge, crate::meta::Attribute, |a: &crate::meta::Attribute| a.id.clone());
     simple_conn!(StatConnection, StatEdge, Stat, |s: &Stat| s.id.clone());
+    simple_conn!(LayerConnection, LayerEdge, Layer, |l: &Layer| l.id.clone());
+    simple_conn!(GroupConnection, GroupEdge, Group, |g: &Group| g.id.clone());
+    simple_conn!(
+        PositionNodeConnection,
+        PositionNodeEdge,
+        Arc<crate::geom::entity::PositionNode>,
+        |p: &Arc<crate::geom::entity::PositionNode>| p.id.clone()
+    );
+
+    /// @emoji 🪢 `entity_relay!` — delegates to [`simple_conn!`] for `Arc`/value nodes with an id extractor closure.
+    macro_rules! entity_relay {
+        ($Conn:ident, $Edge:ident, $Node:ty, $id_expr:expr) => {
+            simple_conn!($Conn, $Edge, $Node, $id_expr);
+        };
+    }
+
+    entity_relay!(
+        VectorNodeConnection,
+        VectorNodeEdge,
+        Arc<crate::geom::entity::VectorNode>,
+        |v: &Arc<crate::geom::entity::VectorNode>| v.id.clone()
+    );
+    entity_relay!(
+        CoordinateNodeConnection,
+        CoordinateNodeEdge,
+        Arc<crate::geom::entity::CoordinateNode>,
+        |c: &Arc<crate::geom::entity::CoordinateNode>| c.id.clone()
+    );
+    entity_relay!(
+        PointNodeConnection,
+        PointNodeEdge,
+        Arc<crate::geom::entity::PointNode>,
+        |p: &Arc<crate::geom::entity::PointNode>| p.id.clone()
+    );
+    entity_relay!(
+        PlaneNodeConnection,
+        PlaneNodeEdge,
+        Arc<crate::geom::entity::PlaneNode>,
+        |p: &Arc<crate::geom::entity::PlaneNode>| p.id.clone()
+    );
+    entity_relay!(
+        OffsetNodeConnection,
+        OffsetNodeEdge,
+        Arc<crate::geom::entity::OffsetNode>,
+        |o: &Arc<crate::geom::entity::OffsetNode>| o.id.clone()
+    );
+
+    /// @emoji 🪜 `entity_diffs!` — expands modification / diff / diffs relay ladder (hook for codegen; invoke per entity family).
+    macro_rules! entity_diffs {
+        ($($_base:ident),* $(,)?) => {};
+    }
+
+    /// @emoji 🪢 `entity_owner!` — expands owner/owned union shells (hook for codegen).
+    macro_rules! entity_owner {
+        ($($_base:ident),* $(,)?) => {};
+    }
 
     /// @emoji 🧷 Placeholder `Family` row until the kit family model is lifted into Arc entities.
     #[derive(Clone, Debug, Default, SimpleObject)]
@@ -1082,6 +1338,7 @@ pub mod kit {
             use async_graphql::{Enum, Object};
             use async_lock::RwLock;
 
+            use crate::geom::entity::PositionNode;
             use crate::geom::Position;
             use crate::hash::h;
             use crate::id::Id;
@@ -1102,7 +1359,7 @@ pub mod kit {
                 pub owner_design: Weak<super::Design>,
                 pub name: RwLock<Option<String>>,
                 pub description: RwLock<Option<String>>,
-                pub position: RwLock<Option<Position>>,
+                pub position: RwLock<Option<Arc<PositionNode>>>,
                 pub scale: RwLock<Option<f64>>,
                 pub blueprint: RwLock<super::super::r#type::Blueprint>,
                 pub connection_kind: RwLock<Option<PieceConnectionKind>>,
@@ -1141,12 +1398,28 @@ pub mod kit {
 
             impl Piece {
                 pub async fn new_fixed(owner_design: Weak<super::Design>, blueprint: super::super::r#type::Blueprint, position: Position) -> Arc<Self> {
-                    Arc::new(Self { id: Id::new().await, owner_design, position: RwLock::new(Some(position)), blueprint: RwLock::new(blueprint), connection_kind: RwLock::new(Some(PieceConnectionKind::Fixed)), ..Default::default() })
+                    let pos_node = PositionNode::from_position_value(position);
+                    Arc::new(Self {
+                        id: Id::new().await,
+                        owner_design,
+                        position: RwLock::new(Some(pos_node)),
+                        blueprint: RwLock::new(blueprint),
+                        connection_kind: RwLock::new(Some(PieceConnectionKind::Fixed)),
+                        ..Default::default()
+                    })
                 }
 
                 /// 🧾 Hydrated workspace piece aligned to external JSON id (facade snapshot hydration).
                 pub async fn new_fixed_with_external_id(id: Id, owner_design: Weak<super::Design>, blueprint: super::super::r#type::Blueprint, position: Position) -> Arc<Self> {
-                    Arc::new(Self { id, owner_design, position: RwLock::new(Some(position)), blueprint: RwLock::new(blueprint), connection_kind: RwLock::new(Some(PieceConnectionKind::Fixed)), ..Default::default() })
+                    let pos_node = PositionNode::from_position_value(position);
+                    Arc::new(Self {
+                        id,
+                        owner_design,
+                        position: RwLock::new(Some(pos_node)),
+                        blueprint: RwLock::new(blueprint),
+                        connection_kind: RwLock::new(Some(PieceConnectionKind::Fixed)),
+                        ..Default::default()
+                    })
                 }
 
                 pub async fn set_name(&self, name: Option<String>) {
@@ -1156,7 +1429,8 @@ pub mod kit {
                     *self.description.write().await = description;
                 }
                 pub async fn set_position(&self, position: Option<Position>) {
-                    *self.position.write().await = position;
+                    let mut g = self.position.write().await;
+                    *g = position.map(PositionNode::from_position_value);
                 }
 
                 pub async fn compute_hash(&self) -> String {
@@ -1165,7 +1439,10 @@ pub mod kit {
                 }
 
                 pub async fn compute_flat_position(&self) -> Position {
-                    self.position.read().await.unwrap_or_default()
+                    if let Some(n) = self.position.read().await.as_ref() {
+                        return n.snapshot_value().await;
+                    }
+                    Position::default()
                 }
             }
 
@@ -1186,8 +1463,8 @@ pub mod kit {
                 async fn description(&self) -> Option<String> {
                     self.description.read().await.clone()
                 }
-                async fn position(&self) -> Option<Position> {
-                    *self.position.read().await
+                async fn position(&self) -> Option<Arc<PositionNode>> {
+                    self.position.read().await.clone()
                 }
                 async fn scale(&self) -> Option<f64> {
                     *self.scale.read().await
@@ -1200,8 +1477,11 @@ pub mod kit {
                     *self.connection_kind.read().await
                 }
                 #[graphql(name = "flatPosition")]
-                async fn flat_position(&self) -> Position {
-                    self.compute_flat_position().await
+                async fn flat_position(&self) -> Arc<PositionNode> {
+                    if let Some(n) = self.position.read().await.clone() {
+                        return n;
+                    }
+                    PositionNode::from_position_value(Position::default())
                 }
                 #[graphql(name = "replaceableBlueprint")]
                 async fn replaceable_blueprint(&self) -> Vec<super::super::r#type::Blueprint> {
@@ -1234,6 +1514,16 @@ pub mod kit {
                 }
                 async fn attributes(&self) -> Vec<Attribute> {
                     self.attributes.read().await.clone()
+                }
+
+                #[graphql(name = "ownerEntity")]
+                async fn owner_entity(&self) -> Option<crate::iface::OwnerEntity> {
+                    None
+                }
+
+                #[graphql(name = "ownedEntities")]
+                async fn owned_entities(&self) -> crate::iface::OwnedEntityConnection {
+                    crate::iface::OwnedEntityConnection::empty()
                 }
             }
         }
@@ -1398,13 +1688,20 @@ pub mod kit {
         use std::collections::HashMap;
         use std::sync::{Arc, Weak};
 
-        use async_graphql::Object;
+        use async_graphql::{Object, Union};
         use async_lock::RwLock;
 
         use crate::hash::h;
         use crate::id::Id;
         use crate::meta::{Attribute, Author, Concept, Group, Layer, Location, Prop, Quality, Stat, Tag};
         use crate::timestamp::Timestamp;
+
+        /// @emoji 🏠 SDL `union DesignOwner = Kit`.
+        #[derive(Clone, Union)]
+        #[graphql(name = "DesignOwner")]
+        pub enum DesignOwner {
+            Kit(Arc<super::Kit>),
+        }
 
         pub struct Design {
             pub id: Id,
@@ -1542,8 +1839,8 @@ pub mod kit {
             async fn hash(&self) -> String {
                 self.compute_hash().await
             }
-            async fn owner(&self) -> Arc<crate::kit::Kit> {
-                self.owner_kit.upgrade().unwrap_or_default()
+            async fn owner(&self) -> DesignOwner {
+                DesignOwner::Kit(self.owner_kit.upgrade().unwrap_or_default())
             }
             async fn name(&self) -> String {
                 self.name.read().await.clone()
@@ -1563,61 +1860,74 @@ pub mod kit {
             async fn unit(&self) -> Option<String> {
                 self.unit.read().await.clone()
             }
-            async fn created(&self) -> Option<Timestamp> {
+            #[graphql(name = "createdAt")]
+            async fn created_at(&self) -> Option<Timestamp> {
                 self.created.read().await.clone()
             }
-            async fn updated(&self) -> Option<Timestamp> {
+            #[graphql(name = "updatedAt")]
+            async fn updated_at(&self) -> Option<Timestamp> {
                 self.updated.read().await.clone()
             }
-            async fn pieces(&self) -> Vec<Arc<piece::Piece>> {
-                self.pieces.read().await.clone()
+            async fn pieces(&self) -> crate::gql_relay::PieceConnection {
+                crate::gql_relay::PieceConnection::from_pieces(self.pieces.read().await.clone())
             }
             async fn piece(&self, id: Id) -> Option<Arc<piece::Piece>> {
                 self.piece_by_external_id(&id).await
             }
-            async fn connections(&self) -> Vec<Arc<connection::Connection>> {
-                self.connections.read().await.clone()
+            async fn connections(&self) -> crate::gql_relay::ConnectionConnection {
+                crate::gql_relay::ConnectionConnection::from_connections(self.connections.read().await.clone())
             }
             async fn connection(&self, id: Id) -> Option<Arc<connection::Connection>> {
                 self.connections.read().await.iter().find(|c| c.id == id).cloned()
             }
-            async fn layers(&self) -> Vec<Layer> {
-                self.layers.read().await.clone()
+            async fn layers(&self) -> crate::gql_relay::LayerConnection {
+                crate::gql_relay::LayerConnection::from_rows(self.layers.read().await.clone())
             }
-            async fn groups(&self) -> Vec<Group> {
-                self.groups.read().await.clone()
+            async fn groups(&self) -> crate::gql_relay::GroupConnection {
+                crate::gql_relay::GroupConnection::from_rows(self.groups.read().await.clone())
             }
-            async fn authors(&self) -> Vec<Author> {
-                self.authors.read().await.clone()
+            async fn authors(&self) -> crate::gql_relay::AuthorConnection {
+                crate::gql_relay::AuthorConnection::from_rows(self.authors.read().await.clone())
             }
-            async fn concepts(&self) -> Vec<Concept> {
-                self.concepts.read().await.clone()
+            async fn concepts(&self) -> crate::gql_relay::ConceptConnection {
+                crate::gql_relay::ConceptConnection::from_rows(self.concepts.read().await.clone())
             }
-            async fn tags(&self) -> Vec<Tag> {
-                self.tags.read().await.clone()
+            async fn tags(&self) -> crate::gql_relay::TagConnection {
+                crate::gql_relay::TagConnection::from_rows(self.tags.read().await.clone())
             }
-            async fn qualities(&self) -> Vec<Quality> {
-                self.qualities.read().await.clone()
+            async fn qualities(&self) -> crate::gql_relay::QualityConnection {
+                crate::gql_relay::QualityConnection::from_rows(self.qualities.read().await.clone())
             }
-            async fn props(&self) -> Vec<Prop> {
-                self.props.read().await.clone()
+            async fn props(&self) -> crate::gql_relay::PropConnection {
+                crate::gql_relay::PropConnection::from_rows(self.props.read().await.clone())
             }
-            async fn attributes(&self) -> Vec<Attribute> {
-                self.attributes.read().await.clone()
+            async fn attributes(&self) -> crate::gql_relay::AttributeConnection {
+                crate::gql_relay::AttributeConnection::from_rows(self.attributes.read().await.clone())
             }
-            async fn stats(&self) -> Vec<Stat> {
-                self.stats.read().await.clone()
+            async fn stats(&self) -> crate::gql_relay::StatConnection {
+                crate::gql_relay::StatConnection::from_rows(self.stats.read().await.clone())
             }
             #[graphql(name = "qualitySum")]
             async fn quality_sum(&self, _quality_id: Id) -> f64 {
                 0.0
             }
-            async fn references(&self) -> Vec<Arc<Design>> {
-                Vec::new()
+
+            #[graphql(name = "ownerEntity")]
+            async fn owner_entity(&self) -> Option<crate::iface::OwnerEntity> {
+                self.owner_kit.upgrade().map(crate::iface::OwnerEntity::Kit)
+            }
+
+            #[graphql(name = "ownedEntities")]
+            async fn owned_entities(&self) -> crate::iface::OwnedEntityConnection {
+                crate::iface::OwnedEntityConnection::empty()
+            }
+
+            async fn references(&self) -> crate::gql_relay::DesignConnection {
+                crate::gql_relay::DesignConnection::from_designs(Vec::new())
             }
             #[graphql(name = "referencedBy")]
-            async fn referenced_by(&self) -> Vec<Arc<piece::Piece>> {
-                Vec::new()
+            async fn referenced_by(&self) -> crate::gql_relay::PieceConnection {
+                crate::gql_relay::PieceConnection::from_pieces(Vec::new())
             }
         }
         //#endregion 🏘 design
@@ -1628,13 +1938,22 @@ pub mod kit {
     use std::collections::HashMap;
     use std::sync::{Arc, Weak};
 
-    use async_graphql::Object;
+    use async_graphql::{Object, Union};
     use async_lock::RwLock;
 
     use crate::hash::h;
     use crate::id::Id;
     use crate::meta::{Attribute, Author, Concept, File, Folder, Prop, Quality, Stat, Tag};
     use crate::timestamp::Timestamp;
+
+    /// @emoji 🔗 SDL `union KitOwner = Graph | Checkpoint | Alternative`.
+    #[derive(Clone, Union)]
+    #[graphql(name = "KitOwner")]
+    pub enum KitOwner {
+        Graph(Arc<crate::vcs::Graph>),
+        Checkpoint(Arc<crate::vcs::Checkpoint>),
+        Alternative(Arc<crate::vcs::Alternative>),
+    }
 
     pub struct Kit {
         pub id: Id,
@@ -1857,13 +2176,17 @@ pub mod kit {
                     let mut pieces_arr = Vec::<serde_json::Value>::new();
                     let plist = d.pieces.read().await;
                     for p in plist.iter() {
-                        let pos = (*p.position.read().await).unwrap_or_default();
+                        let pv = if let Some(n) = p.position.read().await.as_ref() {
+                            n.snapshot_value().await
+                        } else {
+                            crate::geom::Position::default()
+                        };
                         let tid = match p.blueprint.read().await.clone() {
                             crate::kit::r#type::Blueprint::Type(ty) => ty.id.clone(),
                             crate::kit::r#type::Blueprint::Design(_) => continue,
                         };
                         let pname = (*p.name.read().await).clone().unwrap_or_default();
-                        let pl = pos.plane;
+                        let pl = pv.plane;
                         pieces_arr.push(serde_json::json!({
                           "id": p.id.as_str(),
                           "name": pname,
@@ -1873,7 +2196,7 @@ pub mod kit {
                             "xAxis": { "x": pl.x_axis.x, "y": pl.x_axis.y, "z": pl.x_axis.z },
                             "yAxis": { "x": pl.y_axis.x, "y": pl.y_axis.y, "z": pl.y_axis.z },
                           },
-                          "center": serde_json::to_value(pos.center).unwrap_or_default(),
+                          "center": { "u": pv.center.u, "v": pv.center.v },
                           "scale": p.scale.read().await.unwrap_or(1.0),
                           "color": "#000000",
                           "props": [],
@@ -1919,8 +2242,23 @@ pub mod kit {
             self.compute_hash().await
         }
         /// Owner [`crate::vcs::Graph`] is set by [`crate::worker::ChildRuntime::new`] via Weak.
-        async fn owner(&self) -> Option<Arc<crate::vcs::Graph>> {
+        async fn owner(&self) -> KitOwner {
+            match self.owner_graph.upgrade() {
+                Some(g) => KitOwner::Graph(g),
+                None => KitOwner::Graph(Arc::new(crate::vcs::Graph::default())),
+            }
+        }
+        #[graphql(name = "graphOwner")]
+        async fn graph_owner(&self) -> Option<Arc<crate::vcs::Graph>> {
             self.owner_graph.upgrade()
+        }
+        #[graphql(name = "checkpointOwner")]
+        async fn checkpoint_owner(&self) -> Option<Arc<crate::vcs::Checkpoint>> {
+            None
+        }
+        #[graphql(name = "alternativeOwner")]
+        async fn alternative_owner(&self) -> Option<Arc<crate::vcs::Alternative>> {
+            None
         }
         async fn checkpoint(&self) -> Option<Arc<crate::vcs::Checkpoint>> {
             None
@@ -1958,10 +2296,12 @@ pub mod kit {
         async fn uri(&self) -> Option<String> {
             self.uri.read().await.clone()
         }
-        async fn created(&self) -> Option<Timestamp> {
+        #[graphql(name = "createdAt")]
+        async fn created_at(&self) -> Option<Timestamp> {
             self.created.read().await.clone()
         }
-        async fn updated(&self) -> Option<Timestamp> {
+        #[graphql(name = "updatedAt")]
+        async fn updated_at(&self) -> Option<Timestamp> {
             self.updated.read().await.clone()
         }
         async fn version(&self) -> Option<String> {
@@ -1970,42 +2310,55 @@ pub mod kit {
         async fn design(&self, id: Id) -> Option<Arc<design::Design>> {
             self.design_by_external_id(&id).await
         }
-        async fn designs(&self) -> Vec<Arc<design::Design>> {
-            self.designs.read().await.clone()
+        async fn designs(&self) -> crate::gql_relay::DesignConnection {
+            crate::gql_relay::DesignConnection::from_designs(self.designs.read().await.clone())
         }
         #[graphql(name = "type")]
         async fn type_(&self, id: Id) -> Option<Arc<r#type::Type>> {
             self.type_by_external_id(&id).await
         }
-        async fn types(&self) -> Vec<Arc<r#type::Type>> {
-            self.types.read().await.clone()
+        async fn types(&self) -> crate::gql_relay::TypeConnection {
+            crate::gql_relay::TypeConnection::from_types(self.types.read().await.clone())
         }
-        async fn files(&self) -> Vec<File> {
-            self.files.read().await.clone()
+        async fn files(&self) -> crate::gql_relay::FileConnection {
+            crate::gql_relay::FileConnection::from_rows(self.files.read().await.clone())
         }
-        async fn folders(&self) -> Vec<Folder> {
-            self.folders.read().await.clone()
+        async fn folders(&self) -> crate::gql_relay::FolderConnection {
+            crate::gql_relay::FolderConnection::from_rows(self.folders.read().await.clone())
         }
-        async fn authors(&self) -> Vec<Author> {
-            self.authors.read().await.clone()
+        async fn families(&self) -> crate::gql_relay::FamilyConnection {
+            crate::gql_relay::FamilyConnection::from_rows(Vec::new())
         }
-        async fn concepts(&self) -> Vec<Concept> {
-            self.concepts.read().await.clone()
+        async fn authors(&self) -> crate::gql_relay::AuthorConnection {
+            crate::gql_relay::AuthorConnection::from_rows(self.authors.read().await.clone())
         }
-        async fn tags(&self) -> Vec<Tag> {
-            self.tags.read().await.clone()
+        async fn concepts(&self) -> crate::gql_relay::ConceptConnection {
+            crate::gql_relay::ConceptConnection::from_rows(self.concepts.read().await.clone())
         }
-        async fn qualities(&self) -> Vec<Quality> {
-            self.qualities.read().await.clone()
+        async fn tags(&self) -> crate::gql_relay::TagConnection {
+            crate::gql_relay::TagConnection::from_rows(self.tags.read().await.clone())
         }
-        async fn props(&self) -> Vec<Prop> {
-            self.props.read().await.clone()
+        async fn qualities(&self) -> crate::gql_relay::QualityConnection {
+            crate::gql_relay::QualityConnection::from_rows(self.qualities.read().await.clone())
         }
-        async fn attributes(&self) -> Vec<Attribute> {
-            self.attributes.read().await.clone()
+        async fn props(&self) -> crate::gql_relay::PropConnection {
+            crate::gql_relay::PropConnection::from_rows(self.props.read().await.clone())
         }
-        async fn stats(&self) -> Vec<Stat> {
-            self.stats.read().await.clone()
+        async fn attributes(&self) -> crate::gql_relay::AttributeConnection {
+            crate::gql_relay::AttributeConnection::from_rows(self.attributes.read().await.clone())
+        }
+        async fn stats(&self) -> crate::gql_relay::StatConnection {
+            crate::gql_relay::StatConnection::from_rows(self.stats.read().await.clone())
+        }
+
+        #[graphql(name = "ownerEntity")]
+        async fn owner_entity(&self) -> Option<crate::iface::OwnerEntity> {
+            self.owner_graph.upgrade().map(crate::iface::OwnerEntity::Graph)
+        }
+
+        #[graphql(name = "ownedEntities")]
+        async fn owned_entities(&self) -> crate::iface::OwnedEntityConnection {
+            crate::iface::OwnedEntityConnection::empty()
         }
 
         /// @emoji 📸 JSON string projection of `@semio/js` KitFullDto (camelCase ids + ordered pieces); WASM + Node pull this via GraphQL (`wip.theKit`).
@@ -2345,6 +2698,16 @@ pub mod vcs {
         async fn semantic_op_record_ids(&self) -> Vec<Id> {
             Vec::new()
         }
+
+        #[graphql(name = "ownerEntity")]
+        async fn owner_entity(&self) -> Option<crate::iface::OwnerEntity> {
+            None
+        }
+
+        #[graphql(name = "ownedEntities")]
+        async fn owned_entities(&self) -> crate::iface::OwnedEntityConnection {
+            crate::iface::OwnedEntityConnection::empty()
+        }
     }
     //#endregion 🪧 checkpoint
 
@@ -2411,6 +2774,16 @@ pub mod vcs {
         async fn transaction(&self) -> Option<Arc<Transaction>> {
             self.transaction.read().await.upgrade()
         }
+
+        #[graphql(name = "ownerEntity")]
+        async fn owner_entity(&self) -> Option<crate::iface::OwnerEntity> {
+            self.owner_graph.upgrade().map(crate::iface::OwnerEntity::Graph)
+        }
+
+        #[graphql(name = "ownedEntities")]
+        async fn owned_entities(&self) -> crate::iface::OwnedEntityConnection {
+            crate::iface::OwnedEntityConnection::empty()
+        }
     }
     //#endregion 🌱 alternative
 
@@ -2429,6 +2802,8 @@ pub mod vcs {
         pub checkpoints: RwLock<Vec<Arc<Checkpoint>>>,
         pub releases: RwLock<Vec<Arc<Checkpoint>>>,
         pub drafts: RwLock<Vec<Arc<Draft>>>,
+        /// @emoji 📜 Ordered operation spine for this graph head (static schema / replay).
+        pub op_history: RwLock<Vec<Arc<crate::op::OperationIface>>>,
     }
 
     impl Default for Graph {
@@ -2441,6 +2816,7 @@ pub mod vcs {
                 checkpoints: RwLock::new(Vec::new()),
                 releases: RwLock::new(Vec::new()),
                 drafts: RwLock::new(Vec::new()),
+                op_history: RwLock::new(Vec::new()),
             }
         }
     }
@@ -2460,6 +2836,7 @@ pub mod vcs {
                     checkpoints: RwLock::new(Vec::new()),
                     releases: RwLock::new(Vec::new()),
                     drafts: RwLock::new(Vec::new()),
+                    op_history: RwLock::new(Vec::new()),
                 }
             })
         }
@@ -2614,6 +2991,16 @@ pub mod vcs {
         async fn root_snapshot_hash(&self) -> String {
             self.the_kit.compute_hash().await
         }
+
+        #[graphql(name = "ownerEntity")]
+        async fn owner_entity(&self) -> Option<crate::iface::OwnerEntity> {
+            self.owner_session.read().await.upgrade().map(crate::iface::OwnerEntity::Session)
+        }
+
+        #[graphql(name = "ownedEntities")]
+        async fn owned_entities(&self) -> crate::iface::OwnedEntityConnection {
+            crate::iface::OwnedEntityConnection::empty()
+        }
     }
     //#endregion 🌐 graph
 
@@ -2648,6 +3035,16 @@ pub mod vcs {
         async fn drafts(&self) -> Vec<Arc<Draft>> {
             self.drafts.read().await.clone()
         }
+
+        #[graphql(name = "ownerEntity")]
+        async fn owner_entity(&self) -> Option<crate::iface::OwnerEntity> {
+            None
+        }
+
+        #[graphql(name = "ownedEntities")]
+        async fn owned_entities(&self) -> crate::iface::OwnedEntityConnection {
+            crate::iface::OwnedEntityConnection::empty()
+        }
     }
     //#endregion 👤 session
 
@@ -2681,11 +3078,456 @@ pub mod vcs {
         async fn created_at(&self) -> Timestamp {
             self.created_at.read().await.clone()
         }
+
+        #[graphql(name = "ownerEntity")]
+        async fn owner_entity(&self) -> Option<crate::iface::OwnerEntity> {
+            None
+        }
+
+        #[graphql(name = "ownedEntities")]
+        async fn owned_entities(&self) -> crate::iface::OwnedEntityConnection {
+            crate::iface::OwnedEntityConnection::empty()
+        }
     }
     //#endregion ⚠️ conflict
+
+    //#region 📖 read-write version
+    /// @emoji 📖 SDL `ReadVersionOwner = Conflict`.
+    #[derive(Clone, Union)]
+    #[graphql(name = "ReadVersionOwner")]
+    pub enum ReadVersionOwner {
+        Conflict(Arc<Conflict>),
+    }
+
+    /// @emoji 📖 Read-side version marker on a [`Conflict`].
+    pub struct ReadVersion {
+        pub id: Id,
+        pub owner_conflict: Weak<Conflict>,
+        pub checkpoint: RwLock<Option<Arc<Checkpoint>>>,
+        pub change: RwLock<Option<Arc<Change>>>,
+        pub operation: RwLock<Option<Arc<crate::op::OperationIface>>>,
+    }
+
+    impl Default for ReadVersion {
+        fn default() -> Self {
+            Self {
+                id: Id::default(),
+                owner_conflict: Weak::new(),
+                checkpoint: RwLock::new(None),
+                change: RwLock::new(None),
+                operation: RwLock::new(None),
+            }
+        }
+    }
+
+    #[Object(name = "ReadVersion")]
+    impl ReadVersion {
+        async fn id(&self) -> Id {
+            self.id.clone()
+        }
+        async fn hash(&self) -> String {
+            h(&[self.id.as_str()])
+        }
+        async fn owner(&self) -> ReadVersionOwner {
+            ReadVersionOwner::Conflict(self.owner_conflict.upgrade().unwrap_or_default())
+        }
+        #[graphql(name = "conflictOwner")]
+        async fn conflict_owner(&self) -> Option<Arc<Conflict>> {
+            self.owner_conflict.upgrade()
+        }
+        async fn owner_entity(&self) -> Option<crate::iface::OwnerEntity> {
+            self.owner_conflict.upgrade().map(crate::iface::OwnerEntity::Conflict)
+        }
+        async fn owned_entities(&self) -> crate::iface::OwnedEntityConnection {
+            crate::iface::OwnedEntityConnection::empty()
+        }
+        async fn checkpoint(&self) -> Option<Arc<Checkpoint>> {
+            self.checkpoint.read().await.clone()
+        }
+        async fn change(&self) -> Option<Arc<Change>> {
+            self.change.read().await.clone()
+        }
+        async fn operation(&self) -> Option<Arc<crate::op::OperationIface>> {
+            self.operation.read().await.clone()
+        }
+    }
+
+    #[derive(Clone, Union)]
+    #[graphql(name = "WriteVersionOwner")]
+    pub enum WriteVersionOwner {
+        Conflict(Arc<Conflict>),
+    }
+
+    /// @emoji ✏️ Write-side version marker on a [`Conflict`].
+    pub struct WriteVersion {
+        pub id: Id,
+        pub owner_conflict: Weak<Conflict>,
+        pub draft: RwLock<Option<Arc<Draft>>>,
+        pub transaction: RwLock<Option<Arc<Transaction>>>,
+        pub checkpoint: RwLock<Option<Arc<Checkpoint>>>,
+        pub change: RwLock<Option<Arc<Change>>>,
+        pub operation: RwLock<Option<Arc<crate::op::OperationIface>>>,
+    }
+
+    impl Default for WriteVersion {
+        fn default() -> Self {
+            Self {
+                id: Id::default(),
+                owner_conflict: Weak::new(),
+                draft: RwLock::new(None),
+                transaction: RwLock::new(None),
+                checkpoint: RwLock::new(None),
+                change: RwLock::new(None),
+                operation: RwLock::new(None),
+            }
+        }
+    }
+
+    #[Object(name = "WriteVersion")]
+    impl WriteVersion {
+        async fn id(&self) -> Id {
+            self.id.clone()
+        }
+        async fn hash(&self) -> String {
+            h(&[self.id.as_str()])
+        }
+        async fn owner(&self) -> WriteVersionOwner {
+            WriteVersionOwner::Conflict(self.owner_conflict.upgrade().unwrap_or_default())
+        }
+        #[graphql(name = "conflictOwner")]
+        async fn conflict_owner(&self) -> Option<Arc<Conflict>> {
+            self.owner_conflict.upgrade()
+        }
+        async fn owner_entity(&self) -> Option<crate::iface::OwnerEntity> {
+            self.owner_conflict.upgrade().map(crate::iface::OwnerEntity::Conflict)
+        }
+        async fn owned_entities(&self) -> crate::iface::OwnedEntityConnection {
+            crate::iface::OwnedEntityConnection::empty()
+        }
+        async fn draft(&self) -> Option<Arc<Draft>> {
+            self.draft.read().await.clone()
+        }
+        async fn transaction(&self) -> Option<Arc<Transaction>> {
+            self.transaction.read().await.clone()
+        }
+        async fn checkpoint(&self) -> Option<Arc<Checkpoint>> {
+            self.checkpoint.read().await.clone()
+        }
+        async fn change(&self) -> Option<Arc<Change>> {
+            self.change.read().await.clone()
+        }
+        async fn operation(&self) -> Option<Arc<crate::op::OperationIface>> {
+            self.operation.read().await.clone()
+        }
+    }
+    //#endregion 📖 read-write version
 }
 
 //#endregion 🌿 vcs
+
+//#region 🧷 iface
+
+/// 🧷 Cross-cutting GraphQL `OwnerEntity` / `OwnedEntity` unions and empty Relay shells (expanded as more entities register).
+pub mod iface {
+    use std::sync::Arc;
+
+    use async_graphql::{Object, SimpleObject, Union};
+
+    use crate::geom::entity::{CoordinateNode, OffsetNode, PlaceNode, PlaneNode, PointNode, PositionNode, VectorNode};
+    use crate::id::Id;
+    use crate::kit::design::piece::Piece;
+    use crate::kit::design::Design;
+    use crate::kit::Kit;
+    use crate::vcs::{Alternative, Checkpoint, Conflict, Graph, ReadVersion, Session, WriteVersion};
+
+    /// @emoji 🔗 SDL `OwnerEntity` subset (grow toward full target union).
+    #[derive(Clone, Union)]
+    pub enum OwnerEntity {
+        Kit(Arc<Kit>),
+        Design(Arc<Design>),
+        Piece(Arc<Piece>),
+        Graph(Arc<Graph>),
+        Session(Arc<Session>),
+        Checkpoint(Arc<Checkpoint>),
+        Alternative(Arc<Alternative>),
+        Conflict(Arc<Conflict>),
+        ReadVersion(Arc<ReadVersion>),
+        WriteVersion(Arc<WriteVersion>),
+        Position(Arc<PositionNode>),
+        Coordinate(Arc<CoordinateNode>),
+        Plane(Arc<PlaneNode>),
+        Point(Arc<PointNode>),
+        Vector(Arc<VectorNode>),
+        Place(Arc<PlaceNode>),
+        Offset(Arc<OffsetNode>),
+    }
+
+    /// @emoji 🔗 SDL `OwnedEntity` subset for non-empty `ownedEntities` edges.
+    #[derive(Clone, Union)]
+    pub enum OwnedEntity {
+        Kit(Arc<Kit>),
+        Design(Arc<Design>),
+        Piece(Arc<Piece>),
+        Position(Arc<PositionNode>),
+    }
+
+    #[derive(Clone, SimpleObject)]
+    pub struct OwnedEntityEdge {
+        pub cursor: String,
+        pub node: OwnedEntity,
+    }
+
+    #[derive(Clone, SimpleObject)]
+    pub struct OwnedEntityConnection {
+        pub edges: Vec<OwnedEntityEdge>,
+        #[graphql(name = "pageInfo")]
+        pub page_info: crate::gql_relay::PageInfo,
+        pub hash: String,
+    }
+
+    impl OwnedEntityConnection {
+        pub fn empty() -> Self {
+            Self {
+                edges: Vec::new(),
+                page_info: crate::gql_relay::PageInfo::default(),
+                hash: crate::hash::h(&[""]),
+            }
+        }
+    }
+
+    /// @emoji 🌐 Global `node` / `entity` resolution union (Relay `Node` stand-in until full `Entity` interface wiring).
+    #[derive(Clone, Union)]
+    pub enum GqlNode {
+        Graph(Arc<Graph>),
+        Kit(Arc<Kit>),
+        Design(Arc<Design>),
+        Piece(Arc<Piece>),
+        Session(Arc<Session>),
+        Conflict(Arc<Conflict>),
+    }
+
+    /// @emoji 🔎 Resolve a global id against WIP + authoritative graphs, sessions, and conflicts.
+    pub async fn resolve_node(rt: &crate::worker::ParentRuntime, id: &Id) -> Option<GqlNode> {
+        for g in [&rt.wip_graph, &rt.auth_graph] {
+            if &g.id == id {
+                return Some(GqlNode::Graph(g.clone()));
+            }
+            let kid = g.the_kit.workspace_kit_id().await;
+            if id == &kid || id == &g.the_kit.id {
+                return Some(GqlNode::Kit(g.the_kit.clone()));
+            }
+            let designs = g.the_kit.designs.read().await;
+            for d in designs.iter() {
+                if &d.id == id {
+                    return Some(GqlNode::Design(d.clone()));
+                }
+                let pieces = d.pieces.read().await;
+                for p in pieces.iter() {
+                    if &p.id == id {
+                        return Some(GqlNode::Piece(p.clone()));
+                    }
+                }
+            }
+        }
+        let sessions = rt.sessions.read().await;
+        for s in sessions.iter() {
+            if &s.id == id {
+                return Some(GqlNode::Session(s.clone()));
+            }
+        }
+        let conflicts = rt.conflicts.read().await;
+        for c in conflicts.iter() {
+            if &c.id == id {
+                return Some(GqlNode::Conflict(c.clone()));
+            }
+        }
+        None
+    }
+
+    /// @emoji 📍 Resolve `pieceInDesign` on the WIP graph line.
+    pub async fn piece_in_design_on_wip(rt: &crate::worker::ParentRuntime, design_id: &Id, piece_id: &Id) -> Option<Arc<Piece>> {
+        let g = &rt.wip_graph;
+        let des = g.the_kit.design_by_external_id(design_id).await?;
+        des.piece_by_external_id(piece_id).await
+    }
+
+    /// @emoji 📍 `alternativePieceKind` stub (returns `None` until alternative graph model is wired).
+    pub async fn alternative_piece_kind(_rt: &crate::worker::ParentRuntime, _piece_id: &Id) -> Option<String> {
+        None
+    }
+
+    /// @emoji 📍 WeakEntity + entity shell for [`CoordinateNode`] (SDL `Coordinate`).
+    #[Object(name = "Coordinate")]
+    impl CoordinateNode {
+        async fn id(&self) -> Id {
+            self.id.clone()
+        }
+        async fn hash(&self) -> String {
+            let u = *self.u.read().await;
+            let v = *self.v.read().await;
+            crate::hash::h(&[&format!("{u:.9}"), &format!("{v:.9}")])
+        }
+        async fn owner_entity(&self) -> Option<OwnerEntity> {
+            None
+        }
+        async fn owned_entities(&self) -> OwnedEntityConnection {
+            OwnedEntityConnection::empty()
+        }
+        async fn u(&self) -> f64 {
+            *self.u.read().await
+        }
+        async fn v(&self) -> f64 {
+            *self.v.read().await
+        }
+    }
+
+    #[Object(name = "Vector")]
+    impl VectorNode {
+        async fn id(&self) -> Id {
+            self.id.clone()
+        }
+        async fn hash(&self) -> String {
+            let x = *self.x.read().await;
+            let y = *self.y.read().await;
+            let z = *self.z.read().await;
+            crate::hash::h(&[&format!("{x:.9}"), &format!("{y:.9}"), &format!("{z:.9}")])
+        }
+        async fn owner_entity(&self) -> Option<OwnerEntity> {
+            None
+        }
+        async fn owned_entities(&self) -> OwnedEntityConnection {
+            OwnedEntityConnection::empty()
+        }
+        async fn x(&self) -> f64 {
+            *self.x.read().await
+        }
+        async fn y(&self) -> f64 {
+            *self.y.read().await
+        }
+        async fn z(&self) -> f64 {
+            *self.z.read().await
+        }
+    }
+
+    #[Object(name = "Point")]
+    impl PointNode {
+        async fn id(&self) -> Id {
+            self.id.clone()
+        }
+        async fn hash(&self) -> String {
+            let x = *self.x.read().await;
+            let y = *self.y.read().await;
+            let z = *self.z.read().await;
+            crate::hash::h(&[&format!("{x:.9}"), &format!("{y:.9}"), &format!("{z:.9}")])
+        }
+        async fn owner_entity(&self) -> Option<OwnerEntity> {
+            None
+        }
+        async fn owned_entities(&self) -> OwnedEntityConnection {
+            OwnedEntityConnection::empty()
+        }
+        async fn x(&self) -> f64 {
+            *self.x.read().await
+        }
+        async fn y(&self) -> f64 {
+            *self.y.read().await
+        }
+        async fn z(&self) -> f64 {
+            *self.z.read().await
+        }
+    }
+
+    #[Object(name = "Plane")]
+    impl PlaneNode {
+        async fn id(&self) -> Id {
+            self.id.clone()
+        }
+        async fn hash(&self) -> String {
+            crate::hash::h(&[self.origin.id.as_str(), self.x_axis.id.as_str(), self.y_axis.id.as_str()])
+        }
+        async fn owner_entity(&self) -> Option<OwnerEntity> {
+            None
+        }
+        async fn owned_entities(&self) -> OwnedEntityConnection {
+            OwnedEntityConnection::empty()
+        }
+        async fn origin(&self) -> Arc<PointNode> {
+            self.origin.clone()
+        }
+        #[graphql(name = "xAxis")]
+        async fn x_axis(&self) -> Arc<VectorNode> {
+            self.x_axis.clone()
+        }
+        #[graphql(name = "yAxis")]
+        async fn y_axis(&self) -> Arc<VectorNode> {
+            self.y_axis.clone()
+        }
+    }
+
+    #[Object(name = "Position")]
+    impl PositionNode {
+        async fn id(&self) -> Id {
+            self.id.clone()
+        }
+        async fn hash(&self) -> String {
+            crate::hash::h(&[self.center.id.as_str(), self.plane.id.as_str()])
+        }
+        async fn owner_entity(&self) -> Option<OwnerEntity> {
+            None
+        }
+        async fn owned_entities(&self) -> OwnedEntityConnection {
+            OwnedEntityConnection::empty()
+        }
+        async fn center(&self) -> Arc<CoordinateNode> {
+            self.center.clone()
+        }
+        async fn plane(&self) -> Arc<PlaneNode> {
+            self.plane.clone()
+        }
+    }
+
+    #[Object(name = "Offset")]
+    impl OffsetNode {
+        async fn id(&self) -> Id {
+            self.id.clone()
+        }
+        async fn hash(&self) -> String {
+            let u = *self.u.read().await;
+            let v = *self.v.read().await;
+            crate::hash::h(&[&format!("{u:.9}"), &format!("{v:.9}")])
+        }
+        async fn owner_entity(&self) -> Option<OwnerEntity> {
+            None
+        }
+        async fn owned_entities(&self) -> OwnedEntityConnection {
+            OwnedEntityConnection::empty()
+        }
+        async fn u(&self) -> f64 {
+            *self.u.read().await
+        }
+        async fn v(&self) -> f64 {
+            *self.v.read().await
+        }
+    }
+
+    #[Object(name = "Place")]
+    impl PlaceNode {
+        async fn id(&self) -> Id {
+            self.id.clone()
+        }
+        async fn hash(&self) -> String {
+            crate::hash::h(&[self.id.as_str()])
+        }
+        async fn owner_entity(&self) -> Option<OwnerEntity> {
+            None
+        }
+        async fn owned_entities(&self) -> OwnedEntityConnection {
+            OwnedEntityConnection::empty()
+        }
+    }
+}
+
+//#endregion 🧷 iface
 
 //#region ⚙️ op
 
@@ -2721,8 +3563,8 @@ pub mod op {
         async fn blueprint_id(&self) -> Id {
             self.blueprint_id.clone()
         }
-        async fn position(&self) -> Position {
-            self.position
+        async fn position(&self) -> Arc<crate::geom::entity::PositionNode> {
+            crate::geom::entity::PositionNode::from_position_value(self.position)
         }
         async fn name(&self) -> Option<String> {
             self.name.clone()
@@ -2767,8 +3609,8 @@ pub mod op {
         async fn piece_ids(&self) -> Vec<Id> {
             self.piece_ids.clone()
         }
-        async fn offset(&self) -> Offset {
-            self.offset
+        async fn offset(&self) -> Arc<crate::geom::entity::OffsetNode> {
+            crate::geom::entity::OffsetNode::from_value(self.offset)
         }
     }
 
@@ -3150,6 +3992,19 @@ pub mod op {
         pub kind: String,
     }
     //#endregion 📡 commands
+
+    /// @emoji 🧩 Declarative op row registration hook (`ops! { CreatedFixedPiece, … }`) — expand to typed op structs + history wiring.
+    macro_rules! ops {
+        ($($_row:ident),* $(,)?) => {};
+    }
+
+    ops! {
+        CreatedFixedPiece,
+        FixedPiece,
+        DraggedPiece,
+        RenamedKit,
+        ChangedDescription
+    }
 }
 
 //#endregion ⚙️ op
@@ -3184,7 +4039,8 @@ pub mod kit_graph_engine {
         for d in designs.iter() {
             let mut pts: Vec<(f64, f64)> = Vec::new();
             for p in d.pieces.read().await.iter() {
-                if let Some(pos) = *p.position.read().await {
+                if let Some(node) = p.position.read().await.as_ref() {
+                    let pos = node.snapshot_value().await;
                     pts.push((pos.center.u, pos.center.v));
                 }
             }
@@ -3613,7 +4469,7 @@ pub mod worker {
     use crate::error::SemioError;
     use crate::event::{Event, EventBus};
     use crate::id::Id;
-    use crate::op::{BackboneStoreKind, Command, CommandReceipt, CreatedFixedPiece, CreatedFixedPieceInput};
+    use crate::op::{BackboneStoreKind, Command, CommandReceipt, CreatedFixedPiece, CreatedFixedPieceInput, OperationIface};
     use crate::vcs::{Conflict, Graph, Session};
 
     //#region 🗄️ backbone slot
@@ -3821,6 +4677,7 @@ pub mod worker {
 
                     let input = CreatedFixedPieceInput { design_id, blueprint_id, position, name, description };
                     let op = CreatedFixedPiece::new(input, piece, diff).await;
+                    self.graph.op_history.write().await.push(Arc::new(OperationIface::CreatedFixedPiece(op.clone())));
                     self.bus.emit_event(Event::CreatedFixedPiece(op)).await;
                     Ok(())
                 }
@@ -3842,21 +4699,255 @@ pub mod worker {
 //#region 🌐 gql
 
 pub mod gql {
-    //! 🌐 Dynamic GraphQL schema from `gql_target` (matches `semio/graphql/target.schema.graphql`).
+    //! 🌐 Type-safe static GraphQL schema via `Schema::build` (embedded target SDL string for tooling).
+    use std::pin::Pin;
     use std::sync::Arc;
+    use async_graphql::{Context, Object, Schema, Subscription};
+    use async_stream::stream;
+    use futures_util::Stream;
 
-    use async_graphql::dynamic::Schema;
-
-    use crate::event::EventBus;
-    use crate::gql_target::{build_executable_target_schema, TARGET_GRAPHQL_SDL};
+    use crate::event::{Event, EventBus};
+    use crate::error::SemioError;
+    use crate::geom::Position;
+    use crate::id::Id;
+    use crate::op::{Command, CommandReceipt, OperationKind};
+    use crate::vcs::Graph;
     use crate::worker::ParentRuntime;
 
-    /// @emoji 🧩 Executable schema type (async-graphql dynamic).
-    pub type AppSchema = Schema;
+    /// @emoji 🧩 Executable schema (`Query`, `Mutation`, `Subscription`).
+    pub type AppSchema = Schema<Query, Mutation, Subscription>;
 
-    /// 📜 Canonical SDL string (embedded target contract).
+    pub struct Query;
+
+    #[Object]
+    impl Query {
+        async fn wip(&self, ctx: &Context<'_>) -> async_graphql::Result<Arc<Graph>> {
+            Ok(ctx.data::<Arc<ParentRuntime>>()?.wip_graph.clone())
+        }
+
+        #[graphql(name = "authoritative")]
+        async fn authoritative(&self, ctx: &Context<'_>) -> async_graphql::Result<Arc<Graph>> {
+            Ok(ctx.data::<Arc<ParentRuntime>>()?.auth_graph.clone())
+        }
+
+        async fn session(&self, ctx: &Context<'_>, id: Id) -> async_graphql::Result<Option<Arc<crate::vcs::Session>>> {
+            let rt = ctx.data::<Arc<ParentRuntime>>()?;
+            let sessions = rt.sessions.read().await;
+            Ok(sessions.iter().find(|s| s.id == id).cloned())
+        }
+
+        async fn conflicts(&self, ctx: &Context<'_>) -> async_graphql::Result<crate::gql_relay::ConflictConnection> {
+            let rt = ctx.data::<Arc<ParentRuntime>>()?;
+            let list = rt.conflicts.read().await.clone();
+            Ok(crate::gql_relay::ConflictConnection::from_conflicts(list))
+        }
+
+        /// @emoji 🔎 Relay-style global `node` lookup (WIP + authoritative + sessions + conflicts).
+        async fn node(&self, ctx: &Context<'_>, id: Id) -> async_graphql::Result<Option<crate::iface::GqlNode>> {
+            let rt = ctx.data::<Arc<ParentRuntime>>()?;
+            Ok(crate::iface::resolve_node(rt.as_ref(), &id).await)
+        }
+
+        /// @emoji 🔎 Alias of [`Query::node`] for SDL `entity` entry point.
+        async fn entity(&self, ctx: &Context<'_>, id: Id) -> async_graphql::Result<Option<crate::iface::GqlNode>> {
+            self.node(ctx, id).await
+        }
+
+        /// @emoji 🧩 Resolve a piece within a design on the WIP graph line.
+        #[graphql(name = "pieceInDesign")]
+        async fn piece_in_design(
+            &self,
+            ctx: &Context<'_>,
+            #[graphql(name = "designId")] design_id: Id,
+            #[graphql(name = "pieceId")] piece_id: Id,
+        ) -> async_graphql::Result<Option<Arc<crate::kit::design::piece::Piece>>> {
+            let rt = ctx.data::<Arc<ParentRuntime>>()?;
+            Ok(crate::iface::piece_in_design_on_wip(rt.as_ref(), &design_id, &piece_id).await)
+        }
+
+        /// @emoji 🧩 Alternative-line piece kind (stub until alternatives are modeled in Rust).
+        #[graphql(name = "alternativePieceKind")]
+        async fn alternative_piece_kind(
+            &self,
+            ctx: &Context<'_>,
+            #[graphql(name = "pieceId")] piece_id: Id,
+        ) -> async_graphql::Result<Option<String>> {
+            let rt = ctx.data::<Arc<ParentRuntime>>()?;
+            Ok(crate::iface::alternative_piece_kind(rt.as_ref(), &piece_id).await)
+        }
+    }
+
+    pub struct Mutation;
+
+    #[Object]
+    impl Mutation {
+        /// @emoji ➕ Routes through [`ParentRuntime::dispatch_wip`] → child apply + event bus.
+        #[graphql(name = "addFixedPieceToDesign")]
+        async fn add_fixed_piece_to_design(
+            &self,
+            ctx: &Context<'_>,
+            #[graphql(name = "draftId")] draft_id: Id,
+            #[graphql(name = "transactionId")] transaction_id: Id,
+            #[graphql(name = "designId")] design_id: Id,
+            #[graphql(name = "blueprintId")] blueprint_id: Id,
+            position: Position,
+        ) -> async_graphql::Result<Id> {
+            let rt = ctx.data::<Arc<ParentRuntime>>()?;
+            let request_id = Id::new().await;
+            let cmd = Command::AddFixedPieceToDesign {
+                request_id: request_id.clone(),
+                draft_id,
+                transaction_id,
+                design_id,
+                blueprint_id,
+                position,
+                name: None,
+                description: None,
+            };
+            Ok(rt.dispatch_wip(cmd).await)
+        }
+
+        #[graphql(name = "fixPieceInDesign")]
+        async fn fix_piece_in_design(
+            &self,
+            ctx: &Context<'_>,
+            #[graphql(name = "draftId")] draft_id: Id,
+            #[graphql(name = "transactionId")] transaction_id: Id,
+            #[graphql(name = "designId")] design_id: Id,
+            #[graphql(name = "pieceId")] piece_id: Id,
+        ) -> async_graphql::Result<Id> {
+            let rt = ctx.data::<Arc<ParentRuntime>>()?;
+            let request_id = Id::new().await;
+            let cmd = Command::FixPieceInDesign {
+                request_id: request_id.clone(),
+                draft_id,
+                transaction_id,
+                design_id,
+                piece_id,
+            };
+            Ok(rt.dispatch_wip(cmd).await)
+        }
+
+        #[graphql(name = "renameKit")]
+        async fn rename_kit(
+            &self,
+            ctx: &Context<'_>,
+            #[graphql(name = "draftId")] draft_id: Id,
+            #[graphql(name = "transactionId")] transaction_id: Id,
+            name: String,
+        ) -> async_graphql::Result<Id> {
+            let rt = ctx.data::<Arc<ParentRuntime>>()?;
+            let request_id = Id::new().await;
+            let cmd = Command::RenameKit {
+                request_id: request_id.clone(),
+                draft_id,
+                transaction_id,
+                name,
+            };
+            Ok(rt.dispatch_wip(cmd).await)
+        }
+
+        #[graphql(name = "changeDescription")]
+        async fn change_description(
+            &self,
+            ctx: &Context<'_>,
+            #[graphql(name = "draftId")] draft_id: Id,
+            #[graphql(name = "transactionId")] transaction_id: Id,
+            description: String,
+        ) -> async_graphql::Result<Id> {
+            let rt = ctx.data::<Arc<ParentRuntime>>()?;
+            let request_id = Id::new().await;
+            let cmd = Command::ChangeDescription {
+                request_id: request_id.clone(),
+                draft_id,
+                transaction_id,
+                description,
+            };
+            Ok(rt.dispatch_wip(cmd).await)
+        }
+    }
+
+    pub struct Subscription;
+
+    type CommandSucceededStream = Pin<Box<dyn Stream<Item = CommandReceipt> + Send>>;
+    type OperationSucceededStream = Pin<Box<dyn Stream<Item = OperationKind> + Send>>;
+    type OperationFailedStream = Pin<Box<dyn Stream<Item = SemioError> + Send>>;
+
+    #[Subscription]
+    impl Subscription {
+        #[graphql(name = "commandSucceeded")]
+        async fn command_succeeded(&self, ctx: &Context<'_>) -> async_graphql::Result<CommandSucceededStream> {
+            let bus = ctx.data::<Arc<EventBus>>()?.clone();
+            let mut rx = bus.subscribe();
+            Ok(Box::pin(stream! {
+                loop {
+                    match rx.recv().await {
+                        Ok(ev) => {
+                            if let Event::CommandSucceeded(r) = ev {
+                                yield r;
+                            }
+                        }
+                        Err(_) => break,
+                    }
+                }
+            }))
+        }
+
+        #[graphql(name = "operationSucceeded")]
+        async fn operation_succeeded(&self, ctx: &Context<'_>) -> async_graphql::Result<OperationSucceededStream> {
+            let bus = ctx.data::<Arc<EventBus>>()?.clone();
+            let mut rx = bus.subscribe();
+            Ok(Box::pin(stream! {
+                loop {
+                    match rx.recv().await {
+                        Ok(ev) => {
+                            match ev {
+                                Event::OperationSucceeded(k) => yield k,
+                                Event::CreatedFixedPiece(o) => yield OperationKind::CreatedFixedPiece(o),
+                                Event::FixedPiece(o) => yield OperationKind::FixedPiece(o),
+                                Event::DraggedPiece(o) => yield OperationKind::DraggedPiece(o),
+                                Event::RenamedKit(o) => yield OperationKind::RenamedKit(o),
+                                Event::ChangedDescription(o) => yield OperationKind::ChangedDescription(o),
+                                _ => {}
+                            }
+                        }
+                        Err(_) => break,
+                    }
+                }
+            }))
+        }
+
+        #[graphql(name = "operationFailed")]
+        async fn operation_failed(&self, ctx: &Context<'_>) -> async_graphql::Result<OperationFailedStream> {
+            let bus = ctx.data::<Arc<EventBus>>()?.clone();
+            let mut rx = bus.subscribe();
+            Ok(Box::pin(stream! {
+                loop {
+                    match rx.recv().await {
+                        Ok(ev) => {
+                            if let Event::OperationFailed(e) = ev {
+                                yield e;
+                            }
+                        }
+                        Err(_) => break,
+                    }
+                }
+            }))
+        }
+
+        /// @emoji 🚨 Mirrors [`Subscription::operationFailed`] for SDL `error` consumers.
+        async fn error(&self, ctx: &Context<'_>) -> async_graphql::Result<OperationFailedStream> {
+            self.operation_failed(ctx).await
+        }
+    }
+
+    fn build_schema_sync_for(rt: Arc<ParentRuntime>) -> AppSchema {
+        Schema::build(Query, Mutation, Subscription).data(rt.clone()).data(rt.bus.clone()).finish()
+    }
+
+    /// 📜 Canonical target SDL (contract file; executable schema is derived from Rust types).
     pub fn target_schema_sdl() -> String {
-        TARGET_GRAPHQL_SDL.to_string()
+        include_str!("../graphql/target.schema.graphql").to_string()
     }
 
     /// 📜 Same as [`target_schema_sdl`] (async for historical call sites).
@@ -3865,14 +4956,13 @@ pub mod gql {
     }
 
     /// 🧱 Build schema with parent runtime + bus.
-    pub async fn build_schema_for(rt: Arc<ParentRuntime>) -> AppSchema {
-        let bus: Arc<EventBus> = rt.bus.clone();
-        build_executable_target_schema(rt, bus).expect("semio GraphQL target schema")
+    pub fn build_schema_for(rt: Arc<ParentRuntime>) -> AppSchema {
+        build_schema_sync_for(rt)
     }
 
     /// 🧱 Default schema (fresh runtime).
     pub async fn build_schema() -> AppSchema {
-        build_schema_for(ParentRuntime::spawn().await).await
+        build_schema_sync_for(ParentRuntime::spawn().await)
     }
 }
 
@@ -3968,7 +5058,7 @@ pub mod wasm_bridge {
             future_to_promise(async move {
                 let mut locked = mtx.lock().map_err(|_| JsValue::from_str("schema lock poisoned"))?;
                 if locked.is_none() {
-                    *locked = Some(build_schema_for(rt.clone()).await);
+                    *locked = Some(build_schema_for(rt.clone()));
                 }
                 let schema = locked.as_ref().ok_or_else(|| JsValue::from_str("schema init failed"))?;
                 let schema = schema.clone();
@@ -3994,7 +5084,7 @@ pub mod wasm_bridge {
 
                 let mut locked = mtx.lock().map_err(|_| JsValue::from_str("schema lock poisoned"))?;
                 if locked.is_none() {
-                    *locked = Some(build_schema_for(rt.clone()).await);
+                    *locked = Some(build_schema_for(rt.clone()));
                 }
                 let schema = locked.as_ref().ok_or_else(|| JsValue::from_str("schema init failed"))?;
                 let schema = schema.clone();
@@ -4116,6 +5206,22 @@ mod tests {
         }
     }
 
+    fn normalize_sdl_trailing_ws(s: &str) -> String {
+        s.lines().map(str::trim_end).collect::<Vec<_>>().join("\n")
+    }
+
+    /// @emoji 📜 Plan `target_sdl_byte_match`: full parity requires registering every target type (689+); run with `cargo test target_sdl_byte_match -- --ignored` while expanding static registration.
+    #[test]
+    #[ignore = "executable Schema::sdl() will not match target.schema.graphql until all types/unions are registered"]
+    fn target_sdl_byte_match() {
+        block_on(async {
+            let schema = crate::gql::build_schema().await;
+            let got = normalize_sdl_trailing_ws(&schema.sdl());
+            let want = normalize_sdl_trailing_ws(&crate::gql::target_schema_sdl());
+            assert_eq!(got, want);
+        });
+    }
+
     /// 🛡️ Guard test: the crate must contain exactly **one** `pub async fn emit_event` definition.
     #[test]
     fn single_emit_event_in_codebase() {
@@ -4177,7 +5283,7 @@ mod tests {
     fn no_deep_clone_on_traversal() {
         block_on(async {
             let rt = crate::worker::ParentRuntime::spawn().await;
-            let schema = crate::gql::build_schema_for(rt.clone()).await;
+            let schema = crate::gql::build_schema_for(rt.clone());
 
             // Insert two pieces directly via the wip graph (no GraphQL plumbing).
             let position = crate::geom::Position::default();
@@ -4286,8 +5392,9 @@ mod tests {
                 for p in d.pieces.read().await.iter() {
                     total += 1;
                     let guard = p.position.read().await;
-                    let pos = guard.as_ref().expect("piece position");
-                    centers.push([pos.center.u, pos.center.v]);
+                    let n = guard.as_ref().expect("piece position");
+                    let pv = n.snapshot_value().await;
+                    centers.push([pv.center.u, pv.center.v]);
                 }
             }
             centers.sort_by(|a, b| a[0].partial_cmp(&b[0]).unwrap().then_with(|| a[1].partial_cmp(&b[1]).unwrap()));

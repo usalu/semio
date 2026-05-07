@@ -1,0 +1,6 @@
+{
+  "title": "Static Gql Schema Semio Rs",
+  "status": "open",
+  "summary": "Replace dynamic gql_target with Schema::build(Query, Mutation, Subscription); Relay connections on Kit/Design; fix simple_conn hash borrow; wasm sync build_schema_for.",
+  "goal": "🎯graphqltargetsemiors"
+}
