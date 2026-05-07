@@ -22,7 +22,7 @@ async-channel = "2"
 async-executor = "1.13"
 async-lock = "3"
 # GraphQL control plane: shared by wasm (WASM) and rlib (native tests / future hosts).
-async-graphql = { version = "7.0.17", default-features = false }
+async-graphql = { version = "7.2.1", default-features = false, features = ["dynamic-schema"] }
 async-stream = "0.3.6"
 futures-channel = "0.3.31"
 futures-util = { version = "0.3.31", default-features = false, features = ["async-await", "std"] }

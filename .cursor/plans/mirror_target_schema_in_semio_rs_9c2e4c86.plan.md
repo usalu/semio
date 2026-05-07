@@ -4,10 +4,10 @@ overview: Bring `semio/rs`'s generated GraphQL SDL to full structural parity wit
 todos:
   - id: ticket
     content: Open ticket in repo MCP for this work and record working tree under .repo/🎫/YY/MM/DD/
-    status: in_progress
+    status: completed
   - id: foundation
     content: "Phase 1 (sequential): add Node/Entity/WeakEntity/StrongEntity/Artifact/Document/Modification/Diff interfaces, PageInfo, EntityEdge/EntityConnectionInterface, global OwnerEntity/OwnedEntityConnection/ChangeOwned/DiffOwner/DiffsOwner/Input unions, plus entity_relay!/entity_diffs!/entity_owner! macros. Single edit pass on lib.rs."
-    status: pending
+    status: in_progress
   - id: pointer-sweep
     content: "Phase 2 (sequential): replace Connector.port_id, Group.piece_ids, Design.piece_id_to_index, Kit.design_id_to_index with Weak/Arc; delete *_by_id from resolvers; keep id→Arc indexes only at command-apply boundary."
     status: pending
