@@ -19,8 +19,6 @@
 #![allow(clippy::too_many_arguments)]
 #![allow(dead_code)]
 
-mod gql_target;
-
 //#region 🆔 id
 
 pub mod id {
@@ -200,6 +198,304 @@ pub mod geom {
 }
 
 //#endregion 📐 geom
+
+//#region 🪢 gql_relay
+
+/// 🪢 Relay `PageInfo` + connection shells for static GraphQL (edges, pageInfo, hash).
+pub mod gql_relay {
+    use std::sync::Arc;
+
+    use async_graphql::SimpleObject;
+    use blake3::Hasher;
+
+    use crate::id::Id;
+    use crate::kit::design::Design;
+    use crate::kit::design::piece::Piece;
+    use crate::kit::r#type::Type;
+    use crate::meta::{Author, Concept, File, Folder, Prop, Quality, Stat, Tag};
+    use crate::vcs::{Alternative, Checkpoint, Conflict};
+
+    fn edge_cursor(i: usize) -> String {
+        format!("e{i}")
+    }
+
+    fn hash_ids(ids: impl Iterator<Item = impl AsRef<str>>) -> String {
+        let mut hasher = Hasher::new();
+        for id in ids {
+            hasher.update(id.as_ref().as_bytes());
+            hasher.update(b"\x1f");
+        }
+        hasher.finalize().to_hex().to_string()
+    }
+
+    #[derive(Clone, Debug, Default, SimpleObject)]
+    pub struct PageInfo {
+        #[graphql(name = "hasNextPage")]
+        pub has_next_page: bool,
+        #[graphql(name = "hasPreviousPage")]
+        pub has_previous_page: bool,
+        #[graphql(name = "startCursor")]
+        pub start_cursor: Option<String>,
+        #[graphql(name = "endCursor")]
+        pub end_cursor: Option<String>,
+    }
+
+    #[derive(Clone, SimpleObject)]
+    pub struct DesignEdge {
+        pub cursor: String,
+        pub node: Arc<Design>,
+    }
+
+    #[derive(Clone, SimpleObject)]
+    pub struct DesignConnection {
+        pub edges: Vec<DesignEdge>,
+        #[graphql(name = "pageInfo")]
+        pub page_info: PageInfo,
+        pub hash: String,
+    }
+
+    impl DesignConnection {
+        pub fn from_designs(rows: Vec<Arc<Design>>) -> Self {
+            let hash = hash_ids(rows.iter().map(|d| d.id.as_str()));
+            let edges = rows
+                .into_iter()
+                .enumerate()
+                .map(|(i, d)| DesignEdge {
+                    cursor: edge_cursor(i),
+                    node: d,
+                })
+                .collect();
+            Self {
+                edges,
+                page_info: PageInfo::default(),
+                hash,
+            }
+        }
+    }
+
+    #[derive(Clone, SimpleObject)]
+    pub struct PieceEdge {
+        pub cursor: String,
+        pub node: Arc<Piece>,
+    }
+
+    #[derive(Clone, SimpleObject)]
+    pub struct PieceConnection {
+        pub edges: Vec<PieceEdge>,
+        #[graphql(name = "pageInfo")]
+        pub page_info: PageInfo,
+        pub hash: String,
+    }
+
+    impl PieceConnection {
+        pub fn from_pieces(rows: Vec<Arc<Piece>>) -> Self {
+            let hash = hash_ids(rows.iter().map(|p| p.id.as_str()));
+            let edges = rows
+                .into_iter()
+                .enumerate()
+                .map(|(i, p)| PieceEdge {
+                    cursor: edge_cursor(i),
+                    node: p,
+                })
+                .collect();
+            Self {
+                edges,
+                page_info: PageInfo::default(),
+                hash,
+            }
+        }
+    }
+
+    #[derive(Clone, SimpleObject)]
+    pub struct TypeEdge {
+        pub cursor: String,
+        pub node: Arc<Type>,
+    }
+
+    #[derive(Clone, SimpleObject)]
+    pub struct TypeConnection {
+        pub edges: Vec<TypeEdge>,
+        #[graphql(name = "pageInfo")]
+        pub page_info: PageInfo,
+        pub hash: String,
+    }
+
+    impl TypeConnection {
+        pub fn from_types(rows: Vec<Arc<Type>>) -> Self {
+            let hash = hash_ids(rows.iter().map(|t| t.id.as_str()));
+            let edges = rows
+                .into_iter()
+                .enumerate()
+                .map(|(i, t)| TypeEdge {
+                    cursor: edge_cursor(i),
+                    node: t,
+                })
+                .collect();
+            Self {
+                edges,
+                page_info: PageInfo::default(),
+                hash,
+            }
+        }
+    }
+
+    #[derive(Clone, SimpleObject)]
+    pub struct ConflictEdge {
+        pub cursor: String,
+        pub node: Arc<Conflict>,
+    }
+
+    #[derive(Clone, SimpleObject)]
+    pub struct ConflictConnection {
+        pub edges: Vec<ConflictEdge>,
+        #[graphql(name = "pageInfo")]
+        pub page_info: PageInfo,
+        pub hash: String,
+    }
+
+    impl ConflictConnection {
+        pub fn from_conflicts(rows: Vec<Arc<Conflict>>) -> Self {
+            let hash = hash_ids(rows.iter().map(|c| c.id.as_str()));
+            let edges = rows
+                .into_iter()
+                .enumerate()
+                .map(|(i, c)| ConflictEdge {
+                    cursor: edge_cursor(i),
+                    node: c,
+                })
+                .collect();
+            Self {
+                edges,
+                page_info: PageInfo::default(),
+                hash,
+            }
+        }
+    }
+
+    #[derive(Clone, SimpleObject)]
+    pub struct AlternativeEdge {
+        pub cursor: String,
+        pub node: Arc<Alternative>,
+    }
+
+    #[derive(Clone, SimpleObject)]
+    pub struct AlternativeConnection {
+        pub edges: Vec<AlternativeEdge>,
+        #[graphql(name = "pageInfo")]
+        pub page_info: PageInfo,
+        pub hash: String,
+    }
+
+    impl AlternativeConnection {
+        pub fn from_alternatives(rows: Vec<Arc<Alternative>>) -> Self {
+            let hash = hash_ids(rows.iter().map(|a| a.id.as_str()));
+            let edges = rows
+                .into_iter()
+                .enumerate()
+                .map(|(i, a)| AlternativeEdge {
+                    cursor: edge_cursor(i),
+                    node: a,
+                })
+                .collect();
+            Self {
+                edges,
+                page_info: PageInfo::default(),
+                hash,
+            }
+        }
+    }
+
+    #[derive(Clone, SimpleObject)]
+    pub struct CheckpointEdge {
+        pub cursor: String,
+        pub node: Arc<Checkpoint>,
+    }
+
+    #[derive(Clone, SimpleObject)]
+    pub struct CheckpointConnection {
+        pub edges: Vec<CheckpointEdge>,
+        #[graphql(name = "pageInfo")]
+        pub page_info: PageInfo,
+        pub hash: String,
+    }
+
+    impl CheckpointConnection {
+        pub fn from_checkpoints(rows: Vec<Arc<Checkpoint>>) -> Self {
+            let hash = hash_ids(rows.iter().map(|c| c.id.as_str()));
+            let edges = rows
+                .into_iter()
+                .enumerate()
+                .map(|(i, c)| CheckpointEdge {
+                    cursor: edge_cursor(i),
+                    node: c,
+                })
+                .collect();
+            Self {
+                edges,
+                page_info: PageInfo::default(),
+                hash,
+            }
+        }
+    }
+
+    macro_rules! simple_conn {
+        ($Conn:ident, $Edge:ident, $node:ty, $id_closure:expr) => {
+            #[derive(Clone, SimpleObject)]
+            pub struct $Edge {
+                pub cursor: String,
+                pub node: $node,
+            }
+
+            #[derive(Clone, SimpleObject)]
+            pub struct $Conn {
+                pub edges: Vec<$Edge>,
+                #[graphql(name = "pageInfo")]
+                pub page_info: PageInfo,
+                pub hash: String,
+            }
+
+            impl $Conn {
+                pub fn from_rows(rows: Vec<$node>) -> Self {
+                    let id_fn = $id_closure;
+                    let hash = hash_ids(rows.iter().map(|r| id_fn(r).as_str()));
+                    let edges = rows
+                        .into_iter()
+                        .enumerate()
+                        .map(|(i, node)| $Edge {
+                            cursor: edge_cursor(i),
+                            node,
+                        })
+                        .collect();
+                    Self {
+                        edges,
+                        page_info: PageInfo::default(),
+                        hash,
+                    }
+                }
+            }
+        };
+    }
+
+    simple_conn!(FileConnection, FileEdge, File, |f: &File| f.id.clone());
+    simple_conn!(FolderConnection, FolderEdge, Folder, |f: &Folder| f.id.clone());
+    simple_conn!(AuthorConnection, AuthorEdge, Author, |a: &Author| a.id.clone());
+    simple_conn!(ConceptConnection, ConceptEdge, Concept, |c: &Concept| c.id.clone());
+    simple_conn!(TagConnection, TagEdge, Tag, |t: &Tag| t.id.clone());
+    simple_conn!(QualityConnection, QualityEdge, Quality, |q: &Quality| q.id.clone());
+    simple_conn!(PropConnection, PropEdge, Prop, |p: &Prop| p.id.clone());
+    simple_conn!(AttributeConnection, AttributeEdge, crate::meta::Attribute, |a: &crate::meta::Attribute| a.id.clone());
+    simple_conn!(StatConnection, StatEdge, Stat, |s: &Stat| s.id.clone());
+
+    /// @emoji 🧷 Placeholder `Family` row until the kit family model is lifted into Arc entities.
+    #[derive(Clone, Debug, Default, SimpleObject)]
+    pub struct Family {
+        pub id: Id,
+    }
+
+    simple_conn!(FamilyConnection, FamilyEdge, Family, |f: &Family| f.id.clone());
+}
+
+//#endregion 🪢 gql_relay
 
 //#region 🏷️ meta
 
@@ -2119,9 +2415,15 @@ pub mod vcs {
     //#endregion 🌱 alternative
 
     //#region 🌐 graph
+    /// @emoji 🔗 `Graph.owner` — target SDL `union GraphOwner = Session`.
+    #[derive(Clone, Union)]
+    pub enum GraphOwner {
+        Session(Arc<Session>),
+    }
+
     pub struct Graph {
         pub id: Id,
-        pub owner_session: Weak<Session>,
+        pub owner_session: RwLock<Weak<Session>>,
         pub the_kit: Arc<Kit>,
         pub alternatives: RwLock<Vec<Arc<Alternative>>>,
         pub checkpoints: RwLock<Vec<Arc<Checkpoint>>>,
@@ -2131,7 +2433,15 @@ pub mod vcs {
 
     impl Default for Graph {
         fn default() -> Self {
-            Self { id: Id::default(), owner_session: Weak::new(), the_kit: Arc::default(), alternatives: RwLock::new(Vec::new()), checkpoints: RwLock::new(Vec::new()), releases: RwLock::new(Vec::new()), drafts: RwLock::new(Vec::new()) }
+            Self {
+                id: Id::default(),
+                owner_session: RwLock::new(Weak::new()),
+                the_kit: Arc::default(),
+                alternatives: RwLock::new(Vec::new()),
+                checkpoints: RwLock::new(Vec::new()),
+                releases: RwLock::new(Vec::new()),
+                drafts: RwLock::new(Vec::new()),
+            }
         }
     }
 
@@ -2142,7 +2452,15 @@ pub mod vcs {
             let id = Id::new().await;
             Arc::new_cyclic(|weak_self: &Weak<Graph>| {
                 let kit = crate::kit::Kit::new_sync(weak_self.clone(), "the kit".to_string());
-                Self { id, owner_session: Weak::new(), the_kit: kit, alternatives: RwLock::new(Vec::new()), checkpoints: RwLock::new(Vec::new()), releases: RwLock::new(Vec::new()), drafts: RwLock::new(Vec::new()) }
+                Self {
+                    id,
+                    owner_session: RwLock::new(Weak::new()),
+                    the_kit: kit,
+                    alternatives: RwLock::new(Vec::new()),
+                    checkpoints: RwLock::new(Vec::new()),
+                    releases: RwLock::new(Vec::new()),
+                    drafts: RwLock::new(Vec::new()),
+                }
             })
         }
 
@@ -2241,8 +2559,16 @@ pub mod vcs {
         async fn hash(&self) -> String {
             self.compute_hash().await
         }
-        async fn owner(&self) -> Option<Arc<Session>> {
-            self.owner_session.upgrade()
+        async fn owner(&self) -> GraphOwner {
+            let g = self.owner_session.read().await;
+            match g.upgrade() {
+                Some(s) => GraphOwner::Session(s),
+                None => GraphOwner::Session(Arc::new(Session::default())),
+            }
+        }
+        #[graphql(name = "sessionOwner")]
+        async fn session_owner(&self) -> Option<Arc<Session>> {
+            self.owner_session.read().await.upgrade()
         }
         #[graphql(name = "theKit")]
         async fn the_kit(&self) -> Option<Arc<Kit>> {
@@ -2251,20 +2577,20 @@ pub mod vcs {
         async fn alternative(&self, id: Id) -> Option<Arc<Alternative>> {
             self.alternatives.read().await.iter().find(|a| a.id == id).cloned()
         }
-        async fn alternatives(&self) -> Vec<Arc<Alternative>> {
-            self.alternatives.read().await.clone()
+        async fn alternatives(&self) -> crate::gql_relay::AlternativeConnection {
+            crate::gql_relay::AlternativeConnection::from_alternatives(self.alternatives.read().await.clone())
         }
         async fn checkpoint(&self, id: Id) -> Option<Arc<Checkpoint>> {
             self.checkpoints.read().await.iter().find(|c| c.id == id).cloned()
         }
-        async fn checkpoints(&self) -> Vec<Arc<Checkpoint>> {
-            self.checkpoints.read().await.clone()
+        async fn checkpoints(&self) -> crate::gql_relay::CheckpointConnection {
+            crate::gql_relay::CheckpointConnection::from_checkpoints(self.checkpoints.read().await.clone())
         }
         async fn release(&self, id: Id) -> Option<Arc<Checkpoint>> {
             self.releases.read().await.iter().find(|c| c.id == id).cloned()
         }
-        async fn releases(&self) -> Vec<Arc<Checkpoint>> {
-            self.releases.read().await.clone()
+        async fn releases(&self) -> crate::gql_relay::CheckpointConnection {
+            crate::gql_relay::CheckpointConnection::from_checkpoints(self.releases.read().await.clone())
         }
 
         /// @emoji 📜 Ordered semantic op log for this graph line (persisted bundle field); empty until store wiring lands.
