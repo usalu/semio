@@ -1,6 +1,6 @@
 //! 🦀 semio rust control plane — in-memory Arc-reference architecture.
 //!
-//! Every entity from the emitted `semio/graphql/schema.graphql` (see `crate::gql::sdl`) is one Rust struct shared as
+//! Every entity from the emitted `semio/graphql/schema.graphql` (see `crate::gql::target_schema_sdl`) is one Rust struct shared as
 //! `Arc<Self>` with interior `async_lock::RwLock` per mutable field. GraphQL resolvers take
 //! `&self` on the entity (deref'd through the Arc) and return `Arc<Child>` for relationships,
 //! so a query like `wip.theKit.design(id).piece(id).position` only acquires the locks it actually
@@ -427,20 +427,37 @@ pub mod kit {
             pub owner_type: Weak<Type>,
             pub code: RwLock<String>,
             pub description: RwLock<Option<String>>,
-            pub port_id: RwLock<Option<Id>>,
+            /// @emoji 🔗 Resolved port via `Weak` (no id scan in GraphQL resolvers).
+            pub port: RwLock<Weak<Port>>,
             pub qualities: RwLock<Vec<Quality>>,
             pub attributes: RwLock<Vec<Attribute>>,
         }
 
         impl Default for Connector {
             fn default() -> Self {
-                Self { id: Id::default(), owner_type: Weak::new(), code: RwLock::new(String::new()), description: RwLock::new(None), port_id: RwLock::new(None), qualities: RwLock::new(Vec::new()), attributes: RwLock::new(Vec::new()) }
+                Self {
+                    id: Id::default(),
+                    owner_type: Weak::new(),
+                    code: RwLock::new(String::new()),
+                    description: RwLock::new(None),
+                    port: RwLock::new(Weak::new()),
+                    qualities: RwLock::new(Vec::new()),
+                    attributes: RwLock::new(Vec::new()),
+                }
             }
         }
 
         impl Connector {
             pub async fn new(owner_type: Weak<Type>, code: String) -> Arc<Self> {
-                Arc::new(Self { id: Id::new().await, owner_type, code: RwLock::new(code), description: RwLock::new(None), port_id: RwLock::new(None), qualities: RwLock::new(Vec::new()), attributes: RwLock::new(Vec::new()) })
+                Arc::new(Self {
+                    id: Id::new().await,
+                    owner_type,
+                    code: RwLock::new(code),
+                    description: RwLock::new(None),
+                    port: RwLock::new(Weak::new()),
+                    qualities: RwLock::new(Vec::new()),
+                    attributes: RwLock::new(Vec::new()),
+                })
             }
 
             pub async fn compute_hash(&self) -> String {
@@ -468,9 +485,7 @@ pub mod kit {
                 self.description.read().await.clone()
             }
             async fn port(&self) -> Option<Arc<Port>> {
-                let pid = self.port_id.read().await.clone()?;
-                let t = self.owner_type.upgrade()?;
-                t.port_by_id(&pid).await
+                self.port.read().await.upgrade()
             }
             async fn qualities(&self) -> Vec<Quality> {
                 self.qualities.read().await.clone()
@@ -566,6 +581,10 @@ pub mod kit {
             pub connectors: RwLock<Vec<Arc<Connector>>>,
             pub ports: RwLock<Vec<Arc<Port>>>,
             pub representations: RwLock<Vec<Arc<Representation>>>,
+            /// 🧷 Refreshed from `connectors` before single-id GraphQL lookups (no stale `Id` scans in resolvers).
+            pub connector_weak_by_id: RwLock<std::collections::HashMap<Id, Weak<Connector>>>,
+            pub port_weak_by_id: RwLock<std::collections::HashMap<Id, Weak<Port>>>,
+            pub representation_weak_by_id: RwLock<std::collections::HashMap<Id, Weak<Representation>>>,
             pub authors: RwLock<Vec<Author>>,
             pub concepts: RwLock<Vec<Concept>>,
             pub tags: RwLock<Vec<Tag>>,
@@ -590,6 +609,9 @@ pub mod kit {
                     connectors: RwLock::new(Vec::new()),
                     ports: RwLock::new(Vec::new()),
                     representations: RwLock::new(Vec::new()),
+                    connector_weak_by_id: RwLock::new(std::collections::HashMap::new()),
+                    port_weak_by_id: RwLock::new(std::collections::HashMap::new()),
+                    representation_weak_by_id: RwLock::new(std::collections::HashMap::new()),
                     authors: RwLock::new(Vec::new()),
                     concepts: RwLock::new(Vec::new()),
                     tags: RwLock::new(Vec::new()),
@@ -617,15 +639,32 @@ pub mod kit {
                 h(&[self.id.as_str(), name.as_str(), desc.as_deref().unwrap_or("")])
             }
 
-            /// 🔎 Linear scan of the connector Vec without cloning matched siblings.
-            pub async fn connector_by_id(&self, id: &Id) -> Option<Arc<Connector>> {
-                self.connectors.read().await.iter().find(|c| &c.id == id).cloned()
-            }
-            pub async fn port_by_id(&self, id: &Id) -> Option<Arc<Port>> {
-                self.ports.read().await.iter().find(|p| &p.id == id).cloned()
-            }
-            pub async fn representation_by_id(&self, id: &Id) -> Option<Arc<Representation>> {
-                self.representations.read().await.iter().find(|r| &r.id == id).cloned()
+            /// 🧷 Rebuild weak maps from the live vecs (call before `connector` / `representation` field resolution).
+            pub async fn refresh_connector_child_weak_maps(&self) {
+                {
+                    let v = self.connectors.read().await;
+                    let mut m = self.connector_weak_by_id.write().await;
+                    m.clear();
+                    for c in v.iter() {
+                        m.insert(c.id.clone(), Arc::downgrade(c));
+                    }
+                }
+                {
+                    let v = self.ports.read().await;
+                    let mut m = self.port_weak_by_id.write().await;
+                    m.clear();
+                    for p in v.iter() {
+                        m.insert(p.id.clone(), Arc::downgrade(p));
+                    }
+                }
+                {
+                    let v = self.representations.read().await;
+                    let mut m = self.representation_weak_by_id.write().await;
+                    m.clear();
+                    for r in v.iter() {
+                        m.insert(r.id.clone(), Arc::downgrade(r));
+                    }
+                }
             }
             pub async fn best_representation_for_tags(&self, tag_ids: &[Id]) -> Option<Arc<Representation>> {
                 use std::collections::HashSet;
@@ -679,13 +718,15 @@ pub mod kit {
                 self.connectors.read().await.clone()
             }
             async fn connector(&self, id: Id) -> Option<Arc<Connector>> {
-                self.connector_by_id(&id).await
+                self.refresh_connector_child_weak_maps().await;
+                self.connector_weak_by_id.read().await.get(&id).and_then(|w| w.upgrade())
             }
             async fn representations(&self) -> Vec<Arc<Representation>> {
                 self.representations.read().await.clone()
             }
             async fn representation(&self, id: Id) -> Option<Arc<Representation>> {
-                self.representation_by_id(&id).await
+                self.refresh_connector_child_weak_maps().await;
+                self.representation_weak_by_id.read().await.get(&id).and_then(|w| w.upgrade())
             }
             #[graphql(name = "bestRepresentation")]
             async fn best_representation(&self, tag_ids: Vec<Id>) -> Option<Arc<Representation>> {
@@ -1081,8 +1122,8 @@ pub mod kit {
             pub created: RwLock<Option<Timestamp>>,
             pub updated: RwLock<Option<Timestamp>>,
             pub pieces: RwLock<Vec<Arc<piece::Piece>>>,
-            /// 🧷 Internal slot table: external [`Id`] → `pieces` index (GraphQL resolves `Id` once at the boundary).
-            pub piece_id_to_index: RwLock<HashMap<Id, usize>>,
+            /// 🧷 Write-side only: external piece [`Id`] → `Weak` (GraphQL `piece(id:)` upgrades here; no vec index table).
+            pub piece_weak_by_external_id: RwLock<HashMap<Id, Weak<piece::Piece>>>,
             pub connections: RwLock<Vec<Arc<connection::Connection>>>,
             pub layers: RwLock<Vec<Layer>>,
             pub groups: RwLock<Vec<Group>>,
@@ -1109,7 +1150,7 @@ pub mod kit {
                     created: RwLock::new(None),
                     updated: RwLock::new(None),
                     pieces: RwLock::new(Vec::new()),
-                    piece_id_to_index: RwLock::new(HashMap::new()),
+                    piece_weak_by_external_id: RwLock::new(HashMap::new()),
                     connections: RwLock::new(Vec::new()),
                     layers: RwLock::new(Vec::new()),
                     groups: RwLock::new(Vec::new()),
@@ -1141,27 +1182,16 @@ pub mod kit {
             /// 🆕 Push a piece into this design's pieces; returns the same Arc (refcount + 1) for the caller.
             pub async fn insert_piece(&self, piece: Arc<piece::Piece>) -> Arc<piece::Piece> {
                 let mut pieces = self.pieces.write().await;
-                let mut ix = self.piece_id_to_index.write().await;
-                let idx = pieces.len();
+                let mut weak_ix = self.piece_weak_by_external_id.write().await;
                 let pid = piece.id.clone();
+                weak_ix.insert(pid, Arc::downgrade(&piece));
                 pieces.push(piece.clone());
-                ix.insert(pid, idx);
                 piece
             }
 
-            pub async fn piece_by_id(&self, id: &Id) -> Option<Arc<piece::Piece>> {
-                let ix = self.piece_id_to_index.read().await;
-                let idx = *ix.get(id)?;
-                self.pieces.read().await.get(idx).cloned()
-            }
-
-            /// @emoji 🪢 GraphQL / command boundary: resolve a piece by external [`Id`] via the write-side index.
+            /// @emoji 🪢 Command / GraphQL boundary: resolve a piece by external [`Id`] via the write-side weak map.
             pub async fn piece_by_external_id(&self, id: &Id) -> Option<Arc<piece::Piece>> {
-                self.piece_by_id(id).await
-            }
-
-            pub async fn connection_by_id(&self, id: &Id) -> Option<Arc<connection::Connection>> {
-                self.connections.read().await.iter().find(|c| &c.id == id).cloned()
+                self.piece_weak_by_external_id.read().await.get(id).and_then(|w| w.upgrade())
             }
 
             pub async fn hydrate_pieces_from_snapshot_json(des: &Arc<Self>, kit: &Arc<crate::kit::Kit>, d_json: &serde_json::Value) -> Result<(), crate::error::SemioError> {
@@ -1169,7 +1199,7 @@ pub mod kit {
                     let mut pcs = des.pieces.write().await;
                     pcs.clear();
                 }
-                *des.piece_id_to_index.write().await = HashMap::new();
+                *des.piece_weak_by_external_id.write().await = HashMap::new();
                 let plist = d_json.get("pieces").and_then(|p| p.as_array()).cloned().unwrap_or_default();
                 let owner_des = Arc::downgrade(des);
                 for pj in plist {
@@ -1247,13 +1277,13 @@ pub mod kit {
                 self.pieces.read().await.clone()
             }
             async fn piece(&self, id: Id) -> Option<Arc<piece::Piece>> {
-                self.piece_by_id(&id).await
+                self.piece_by_external_id(&id).await
             }
             async fn connections(&self) -> Vec<Arc<connection::Connection>> {
                 self.connections.read().await.clone()
             }
             async fn connection(&self, id: Id) -> Option<Arc<connection::Connection>> {
-                self.connection_by_id(&id).await
+                self.connections.read().await.iter().find(|c| c.id == id).cloned()
             }
             async fn layers(&self) -> Vec<Layer> {
                 self.layers.read().await.clone()
@@ -1326,9 +1356,11 @@ pub mod kit {
         pub updated: RwLock<Option<Timestamp>>,
         pub version: RwLock<Option<String>>,
         pub designs: RwLock<Vec<Arc<design::Design>>>,
-        /// 🧷 Internal slot table: external design [`Id`] → `designs` vec index (translate at host/GraphQL boundary only).
-        pub design_id_to_index: RwLock<HashMap<Id, usize>>,
+        /// 🧷 Write-side only: external design [`Id`] → `Weak` (GraphQL `design(id:)` upgrades here).
+        pub design_weak_by_id: RwLock<HashMap<Id, Weak<design::Design>>>,
         pub types: RwLock<Vec<Arc<r#type::Type>>>,
+        /// 🧷 Write-side: type [`Id`] → `Weak` for GraphQL `type(id:)` (filled on snapshot hydration).
+        pub type_weak_by_id: RwLock<HashMap<Id, Weak<r#type::Type>>>,
         pub files: RwLock<Vec<File>>,
         pub folders: RwLock<Vec<Folder>>,
         pub authors: RwLock<Vec<Author>>,
@@ -1360,8 +1392,9 @@ pub mod kit {
                 updated: RwLock::new(None),
                 version: RwLock::new(None),
                 designs: RwLock::new(Vec::new()),
-                design_id_to_index: RwLock::new(HashMap::new()),
+                design_weak_by_id: RwLock::new(HashMap::new()),
                 types: RwLock::new(Vec::new()),
+                type_weak_by_id: RwLock::new(HashMap::new()),
                 files: RwLock::new(Vec::new()),
                 folders: RwLock::new(Vec::new()),
                 authors: RwLock::new(Vec::new()),
@@ -1395,29 +1428,33 @@ pub mod kit {
             h(&[kid.as_str(), name.as_str()])
         }
 
-        pub async fn design_by_id(&self, id: &Id) -> Option<Arc<design::Design>> {
-            let map = self.design_id_to_index.read().await;
-            let idx = *map.get(id)?;
-            self.designs.read().await.get(idx).cloned()
+        pub async fn design_by_external_id(&self, id: &Id) -> Option<Arc<design::Design>> {
+            self.design_weak_by_id.read().await.get(id).and_then(|w| w.upgrade())
         }
-        pub async fn type_by_id(&self, id: &Id) -> Option<Arc<r#type::Type>> {
-            self.types.read().await.iter().find(|t| &t.id == id).cloned()
+        pub async fn type_by_external_id(&self, id: &Id) -> Option<Arc<r#type::Type>> {
+            self.type_weak_by_id.read().await.get(id).and_then(|w| w.upgrade())
         }
 
-        /// 🆕 Insert (or look up) a design by id, returning the shared Arc (maintains [`Kit::design_id_to_index`]).
+        /// 🆕 Insert (or look up) a design by id, returning the shared Arc (maintains [`Kit::design_weak_by_id`]).
         pub async fn ensure_design(self: &Arc<Self>, design_id: &Id) -> Arc<design::Design> {
-            if let Some(d) = self.design_by_id(design_id).await {
-                return d;
+            {
+                let map = self.design_weak_by_id.read().await;
+                if let Some(w) = map.get(design_id) {
+                    if let Some(d) = w.upgrade() {
+                        return d;
+                    }
+                }
+            }
+            let mut designs = self.designs.write().await;
+            let mut map = self.design_weak_by_id.write().await;
+            if let Some(w) = map.get(design_id) {
+                if let Some(d) = w.upgrade() {
+                    return d;
+                }
             }
             let d = design::Design::with_id(Arc::downgrade(self), design_id.clone(), format!("design-{}", design_id.as_str())).await;
-            let mut designs = self.designs.write().await;
-            let mut map = self.design_id_to_index.write().await;
-            if let Some(idx) = map.get(design_id) {
-                return designs[*idx].clone();
-            }
-            let idx = designs.len();
+            map.insert(design_id.clone(), Arc::downgrade(&d));
             designs.push(d.clone());
-            map.insert(design_id.clone(), idx);
             d
         }
 
@@ -1425,8 +1462,11 @@ pub mod kit {
         pub async fn bind_external_design_id(self: &Arc<Self>, design_id: &Id) -> (crate::kit_graph_engine::DesignHandle, Arc<design::Design>) {
             let design = self.ensure_design(design_id).await;
             let slot = {
-                let map = self.design_id_to_index.read().await;
-                *map.get(design_id).expect("design slot after ensure_design") as u32
+                let designs = self.designs.read().await;
+                designs
+                    .iter()
+                    .position(|d| &d.id == design_id)
+                    .expect("design slot after ensure_design") as u32
             };
             (crate::kit_graph_engine::DesignHandle(slot), design)
         }
@@ -1436,7 +1476,7 @@ pub mod kit {
             let designs = self.designs.read().await;
             for design in designs.iter() {
                 design.pieces.write().await.clear();
-                design.piece_id_to_index.write().await.clear();
+                design.piece_weak_by_external_id.write().await.clear();
             }
         }
 
@@ -1453,13 +1493,16 @@ pub mod kit {
 
             {
                 let mut tys = self.types.write().await;
+                let mut tw = self.type_weak_by_id.write().await;
                 tys.clear();
+                tw.clear();
                 let types_arr = dto.get("types").and_then(|v| v.as_array()).cloned().unwrap_or_default();
                 let owner = Arc::downgrade(self);
                 for t in &types_arr {
                     let Some(ts) = t.get("id").and_then(|x| x.as_str()) else { continue };
                     let nm = t.get("name").and_then(|x| x.as_str()).unwrap_or("");
                     let row = crate::kit::r#type::Type::new_with_external_id(owner.clone(), ts.into(), nm.to_string()).await;
+                    tw.insert(row.id.clone(), Arc::downgrade(&row));
                     tys.push(row);
                 }
             }
@@ -1480,14 +1523,13 @@ pub mod kit {
             }
             {
                 let mut designs_slot = self.designs.write().await;
-                let mut ixmap = self.design_id_to_index.write().await;
+                let mut weak_map = self.design_weak_by_id.write().await;
                 designs_slot.clear();
-                ixmap.clear();
+                weak_map.clear();
                 for des in appended {
                     let did = des.id.clone();
-                    let idx = designs_slot.len();
+                    weak_map.insert(did, Arc::downgrade(&des));
                     designs_slot.push(des);
-                    ixmap.insert(did, idx);
                 }
             }
 
@@ -1630,14 +1672,14 @@ pub mod kit {
             self.version.read().await.clone()
         }
         async fn design(&self, id: Id) -> Option<Arc<design::Design>> {
-            self.design_by_id(&id).await
+            self.design_by_external_id(&id).await
         }
         async fn designs(&self) -> Vec<Arc<design::Design>> {
             self.designs.read().await.clone()
         }
         #[graphql(name = "type")]
         async fn type_(&self, id: Id) -> Option<Arc<r#type::Type>> {
-            self.type_by_id(&id).await
+            self.type_by_external_id(&id).await
         }
         async fn types(&self) -> Vec<Arc<r#type::Type>> {
             self.types.read().await.clone()
@@ -3695,11 +3737,11 @@ mod tests {
     "#;
 
     fn relay_wip_designs_have_piece() -> &'static str {
-        "{ wip { theKit { designs { edges { node { id pieces { edges { node { id position { center { u v } } } } } } } } } } } }"
+        "{ wip { theKit { designs { edges { node { id pieces { edges { node { id position { center { u v } } } } } } } } } } }"
     }
 
     fn relay_auth_designs_piece_ids() -> &'static str {
-        "{ authoritative { theKit { designs { edges { node { pieces { edges { node { id } } } } } } } } } }"
+        "{ authoritative { theKit { designs { edges { node { pieces { edges { node { id } } } } } } } } }"
     }
 
     /// 📤 Writes the generated SDL to `SEMIO_GRAPHQL_SCHEMA_OUT`; run via `npx nx build semio/graphql`.

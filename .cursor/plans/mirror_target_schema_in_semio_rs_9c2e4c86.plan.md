@@ -7,31 +7,31 @@ todos:
     status: completed
   - id: foundation
     content: "Phase 1 (sequential): add Node/Entity/WeakEntity/StrongEntity/Artifact/Document/Modification/Diff interfaces, PageInfo, EntityEdge/EntityConnectionInterface, global OwnerEntity/OwnedEntityConnection/ChangeOwned/DiffOwner/DiffsOwner/Input unions, plus entity_relay!/entity_diffs!/entity_owner! macros. Single edit pass on lib.rs."
-    status: in_progress
+    status: completed
   - id: pointer-sweep
     content: "Phase 2 (sequential): replace Connector.port_id, Group.piece_ids, Design.piece_id_to_index, Kit.design_id_to_index with Weak/Arc; delete *_by_id from resolvers; keep id→Arc indexes only at command-apply boundary."
-    status: pending
+    status: completed
   - id: geom-relay
     content: "Phase 3a (parallel subagent): apply entity_relay!+entity_diffs!+entity_owner! to Vector/Point/Coordinate/Offset/Plane/Position/Place/Location; add hash. Lift current SimpleObject geom types to Arc-shared structs."
-    status: pending
+    status: completed
   - id: meta-relay
     content: "Phase 3b (parallel subagent): same scaffolding + hash for Author/Attribute/Benchmark/Quality/Prop/Tag/Concept/Stat/Layer/Group/File/Folder."
-    status: pending
+    status: completed
   - id: type-relay
     content: "Phase 3c (parallel subagent): same scaffolding for Type/Port/Connector/Representation; wire owner unions Type→Kit, Connector/Port/Representation→Type."
-    status: pending
+    status: completed
   - id: design-relay
     content: "Phase 3d (parallel subagent): same scaffolding for Design/Piece/Connection/Side/Clump; wire DesignOwner=Kit, PieceOwner=Blueprint, ConnectionOwner=Design, SideOwner=Connection, ClumpOwner=Design."
-    status: pending
+    status: completed
   - id: kit-vcs-relay
     content: "Phase 3e (parallel subagent): same scaffolding for Kit/Graph/Session/Draft/Transaction/Checkpoint/Alternative/Change."
-    status: pending
+    status: completed
   - id: ops-relay
     content: "Phase 3f (parallel subagent): per-entity Operations + per-entity Operation unions per the existing extend_graphql_operations plan; rename CreatedFixedPiece→AddedFixedPieceToDesign, FixedPiece→FixedPieceInDesign, DraggedPiece→DraggedPiecesInDesign; add Mutation + Subscription field per op."
-    status: pending
+    status: completed
   - id: validate
     content: "Phase 4 (sequential): regenerate semio/graphql/schema.graphql, diff vs target.schema.graphql, fix unmatched types, ensure cargo build passes for native + wasm32, close ticket."
-    status: pending
+    status: completed
 isProject: false
 ---
 

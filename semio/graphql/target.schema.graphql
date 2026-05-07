@@ -2479,11 +2479,11 @@ type CreatedQuality implements Operation & Entity {
   # StrongEntity
   id: ID! # data // uuidv7
   hash: String! # cached
-  owner: CreatedQualityOwner! # reference
+  owner: OperationOwner! # reference
   changeOwner: Change # reference // spine
   entityOwner: OwnerEntity # computed // CreatedQualityOwner
   ownedEntities: OwnedEntityConnection # computed // CreatedQualityOwned
-  input: CreatedQualityInput! # data
+  input: Input # data
   diff: Diff! # data
   quality: Quality! # data
 }
@@ -2500,11 +2500,11 @@ type CreatedQualities implements Operation & Entity {
   # StrongEntity
   id: ID! # data // uuidv7
   hash: String! # cached
-  owner: CreatedQualitiesOwner! # reference
+  owner: OperationOwner! # reference
   changeOwner: Change # reference // spine
   entityOwner: OwnerEntity # computed // CreatedQualitiesOwner
   ownedEntities: OwnedEntityConnection # computed // CreatedQualitiesOwned
-  input: CreatedQualitiesInput! # data
+  input: Input # data
   diff: Diff! # data
   qualities: QualityConnection! # data
 }
@@ -2521,11 +2521,11 @@ type RenamedQuality implements Operation & Entity {
   # StrongEntity
   id: ID! # data // uuidv7
   hash: String! # cached
-  owner: RenamedQualityOwner! # reference
+  owner: OperationOwner! # reference
   changeOwner: Change # reference // spine
   entityOwner: OwnerEntity # computed // RenamedQualityOwner
   ownedEntities: OwnedEntityConnection # computed // RenamedQualityOwned
-  input: RenamedQualityInput! # data
+  input: Input # data
   diff: Diff! # data
   quality: Quality! # data
 }
@@ -2542,11 +2542,11 @@ type UpdatedQualityDescription implements Operation & Entity {
   # StrongEntity
   id: ID! # data // uuidv7
   hash: String! # cached
-  owner: UpdatedQualityDescriptionOwner! # reference
+  owner: OperationOwner! # reference
   changeOwner: Change # reference // spine
   entityOwner: OwnerEntity # computed // UpdatedQualityDescriptionOwner
   ownedEntities: OwnedEntityConnection # computed // UpdatedQualityDescriptionOwned
-  input: UpdatedQualityDescriptionInput! # data
+  input: Input # data
   diff: Diff! # data
   quality: Quality! # data
 }
@@ -2563,11 +2563,11 @@ type UpdatedQualityIcon implements Operation & Entity {
   # StrongEntity
   id: ID! # data // uuidv7
   hash: String! # cached
-  owner: UpdatedQualityIconOwner! # reference
+  owner: OperationOwner! # reference
   changeOwner: Change # reference // spine
   entityOwner: OwnerEntity # computed // UpdatedQualityIconOwner
   ownedEntities: OwnedEntityConnection # computed // UpdatedQualityIconOwned
-  input: UpdatedQualityIconInput! # data
+  input: Input # data
   diff: Diff! # data
   quality: Quality! # data
 }
@@ -2584,11 +2584,11 @@ type AddedAttributeToQuality implements Operation & Entity {
   # StrongEntity
   id: ID! # data // uuidv7
   hash: String! # cached
-  owner: AddedAttributeToQualityOwner! # reference
+  owner: OperationOwner! # reference
   changeOwner: Change # reference // spine
   entityOwner: OwnerEntity # computed // AddedAttributeToQualityOwner
   ownedEntities: OwnedEntityConnection # computed // AddedAttributeToQualityOwned
-  input: AddedAttributeToQualityInput! # data
+  input: Input # data
   diff: Diff! # data
   quality: Quality! # data
   attribute: Attribute! # data
@@ -2606,11 +2606,11 @@ type AddedAttributesToQuality implements Operation & Entity {
   # StrongEntity
   id: ID! # data // uuidv7
   hash: String! # cached
-  owner: AddedAttributesToQualityOwner! # reference
+  owner: OperationOwner! # reference
   changeOwner: Change # reference // spine
   entityOwner: OwnerEntity # computed // AddedAttributesToQualityOwner
   ownedEntities: OwnedEntityConnection # computed // AddedAttributesToQualityOwned
-  input: AddedAttributesToQualityInput! # data
+  input: Input # data
   diff: Diff! # data
   quality: Quality! # data
   attributes: AttributeConnection! # data
@@ -2628,11 +2628,11 @@ type RemovedAttributeFromQuality implements Operation & Entity {
   # StrongEntity
   id: ID! # data // uuidv7
   hash: String! # cached
-  owner: RemovedAttributeFromQualityOwner! # reference
+  owner: OperationOwner! # reference
   changeOwner: Change # reference // spine
   entityOwner: OwnerEntity # computed // RemovedAttributeFromQualityOwner
   ownedEntities: OwnedEntityConnection # computed // RemovedAttributeFromQualityOwned
-  input: RemovedAttributeFromQualityInput! # data
+  input: Input # data
   diff: Diff! # data
   quality: Quality! # data
 }
@@ -2649,11 +2649,11 @@ type RemovedAttributesFromQuality implements Operation & Entity {
   # StrongEntity
   id: ID! # data // uuidv7
   hash: String! # cached
-  owner: RemovedAttributesFromQualityOwner! # reference
+  owner: OperationOwner! # reference
   changeOwner: Change # reference // spine
   entityOwner: OwnerEntity # computed // RemovedAttributesFromQualityOwner
   ownedEntities: OwnedEntityConnection # computed // RemovedAttributesFromQualityOwned
-  input: RemovedAttributesFromQualityInput! # data
+  input: Input # data
   diff: Diff! # data
   quality: Quality! # data
 }
@@ -2669,11 +2669,11 @@ type DeletedQuality implements Operation & Entity {
   # StrongEntity
   id: ID! # data // uuidv7
   hash: String! # cached
-  owner: DeletedQualityOwner! # reference
+  owner: OperationOwner! # reference
   changeOwner: Change # reference // spine
   entityOwner: OwnerEntity # computed // DeletedQualityOwner
   ownedEntities: OwnedEntityConnection # computed // DeletedQualityOwned
-  input: DeletedQualityInput! # data
+  input: Input # data
   diff: Diff! # data
 }
 
@@ -2688,11 +2688,11 @@ type DeletedQualities implements Operation & Entity {
   # StrongEntity
   id: ID! # data // uuidv7
   hash: String! # cached
-  owner: DeletedQualitiesOwner! # reference
+  owner: OperationOwner! # reference
   changeOwner: Change # reference // spine
   entityOwner: OwnerEntity # computed // DeletedQualitiesOwner
   ownedEntities: OwnedEntityConnection # computed // DeletedQualitiesOwned
-  input: DeletedQualitiesInput! # data
+  input: Input # data
   diff: Diff! # data
 }
 
@@ -2860,11 +2860,11 @@ type CreatedTag implements Operation & Entity {
   # StrongEntity
   id: ID! # data // uuidv7
   hash: String! # cached
-  owner: CreatedTagOwner! # reference
+  owner: OperationOwner! # reference
   changeOwner: Change # reference // spine
   entityOwner: OwnerEntity # computed // CreatedTagOwner
   ownedEntities: OwnedEntityConnection # computed // CreatedTagOwned
-  input: CreatedTagInput! # data
+  input: Input # data
   diff: Diff! # data
   tag: Tag! # data
 }
@@ -2881,11 +2881,11 @@ type CreatedTags implements Operation & Entity {
   # StrongEntity
   id: ID! # data // uuidv7
   hash: String! # cached
-  owner: CreatedTagsOwner! # reference
+  owner: OperationOwner! # reference
   changeOwner: Change # reference // spine
   entityOwner: OwnerEntity # computed // CreatedTagsOwner
   ownedEntities: OwnedEntityConnection # computed // CreatedTagsOwned
-  input: CreatedTagsInput! # data
+  input: Input # data
   diff: Diff! # data
   tags: TagConnection! # data
 }
@@ -2902,11 +2902,11 @@ type RenamedTag implements Operation & Entity {
   # StrongEntity
   id: ID! # data // uuidv7
   hash: String! # cached
-  owner: RenamedTagOwner! # reference
+  owner: OperationOwner! # reference
   changeOwner: Change # reference // spine
   entityOwner: OwnerEntity # computed // RenamedTagOwner
   ownedEntities: OwnedEntityConnection # computed // RenamedTagOwned
-  input: RenamedTagInput! # data
+  input: Input # data
   diff: Diff! # data
   tag: Tag! # data
 }
@@ -2923,11 +2923,11 @@ type UpdatedTagDescription implements Operation & Entity {
   # StrongEntity
   id: ID! # data // uuidv7
   hash: String! # cached
-  owner: UpdatedTagDescriptionOwner! # reference
+  owner: OperationOwner! # reference
   changeOwner: Change # reference // spine
   entityOwner: OwnerEntity # computed // UpdatedTagDescriptionOwner
   ownedEntities: OwnedEntityConnection # computed // UpdatedTagDescriptionOwned
-  input: UpdatedTagDescriptionInput! # data
+  input: Input # data
   diff: Diff! # data
   tag: Tag! # data
 }
@@ -2944,11 +2944,11 @@ type UpdatedTagIcon implements Operation & Entity {
   # StrongEntity
   id: ID! # data // uuidv7
   hash: String! # cached
-  owner: UpdatedTagIconOwner! # reference
+  owner: OperationOwner! # reference
   changeOwner: Change # reference // spine
   entityOwner: OwnerEntity # computed // UpdatedTagIconOwner
   ownedEntities: OwnedEntityConnection # computed // UpdatedTagIconOwned
-  input: UpdatedTagIconInput! # data
+  input: Input # data
   diff: Diff! # data
   tag: Tag! # data
 }
@@ -2965,11 +2965,11 @@ type AddedAttributeToTag implements Operation & Entity {
   # StrongEntity
   id: ID! # data // uuidv7
   hash: String! # cached
-  owner: AddedAttributeToTagOwner! # reference
+  owner: OperationOwner! # reference
   changeOwner: Change # reference // spine
   entityOwner: OwnerEntity # computed // AddedAttributeToTagOwner
   ownedEntities: OwnedEntityConnection # computed // AddedAttributeToTagOwned
-  input: AddedAttributeToTagInput! # data
+  input: Input # data
   diff: Diff! # data
   tag: Tag! # data
   attribute: Attribute! # data
@@ -2987,11 +2987,11 @@ type AddedAttributesToTag implements Operation & Entity {
   # StrongEntity
   id: ID! # data // uuidv7
   hash: String! # cached
-  owner: AddedAttributesToTagOwner! # reference
+  owner: OperationOwner! # reference
   changeOwner: Change # reference // spine
   entityOwner: OwnerEntity # computed // AddedAttributesToTagOwner
   ownedEntities: OwnedEntityConnection # computed // AddedAttributesToTagOwned
-  input: AddedAttributesToTagInput! # data
+  input: Input # data
   diff: Diff! # data
   tag: Tag! # data
   attributes: AttributeConnection! # data
@@ -3009,11 +3009,11 @@ type RemovedAttributeFromTag implements Operation & Entity {
   # StrongEntity
   id: ID! # data // uuidv7
   hash: String! # cached
-  owner: RemovedAttributeFromTagOwner! # reference
+  owner: OperationOwner! # reference
   changeOwner: Change # reference // spine
   entityOwner: OwnerEntity # computed // RemovedAttributeFromTagOwner
   ownedEntities: OwnedEntityConnection # computed // RemovedAttributeFromTagOwned
-  input: RemovedAttributeFromTagInput! # data
+  input: Input # data
   diff: Diff! # data
   tag: Tag! # data
 }
@@ -3030,11 +3030,11 @@ type RemovedAttributesFromTag implements Operation & Entity {
   # StrongEntity
   id: ID! # data // uuidv7
   hash: String! # cached
-  owner: RemovedAttributesFromTagOwner! # reference
+  owner: OperationOwner! # reference
   changeOwner: Change # reference // spine
   entityOwner: OwnerEntity # computed // RemovedAttributesFromTagOwner
   ownedEntities: OwnedEntityConnection # computed // RemovedAttributesFromTagOwned
-  input: RemovedAttributesFromTagInput! # data
+  input: Input # data
   diff: Diff! # data
   tag: Tag! # data
 }
@@ -3050,11 +3050,11 @@ type DeletedTag implements Operation & Entity {
   # StrongEntity
   id: ID! # data // uuidv7
   hash: String! # cached
-  owner: DeletedTagOwner! # reference
+  owner: OperationOwner! # reference
   changeOwner: Change # reference // spine
   entityOwner: OwnerEntity # computed // DeletedTagOwner
   ownedEntities: OwnedEntityConnection # computed // DeletedTagOwned
-  input: DeletedTagInput! # data
+  input: Input # data
   diff: Diff! # data
 }
 
@@ -3069,11 +3069,11 @@ type DeletedTags implements Operation & Entity {
   # StrongEntity
   id: ID! # data // uuidv7
   hash: String! # cached
-  owner: DeletedTagsOwner! # reference
+  owner: OperationOwner! # reference
   changeOwner: Change # reference // spine
   entityOwner: OwnerEntity # computed // DeletedTagsOwner
   ownedEntities: OwnedEntityConnection # computed // DeletedTagsOwned
-  input: DeletedTagsInput! # data
+  input: Input # data
   diff: Diff! # data
 }
 
@@ -3240,11 +3240,11 @@ type CreatedConcept implements Operation & Entity {
   # StrongEntity
   id: ID! # data // uuidv7
   hash: String! # cached
-  owner: CreatedConceptOwner! # reference
+  owner: OperationOwner! # reference
   changeOwner: Change # reference // spine
   entityOwner: OwnerEntity # computed // CreatedConceptOwner
   ownedEntities: OwnedEntityConnection # computed // CreatedConceptOwned
-  input: CreatedConceptInput! # data
+  input: Input # data
   diff: Diff! # data
   concept: Concept! # data
 }
@@ -3261,11 +3261,11 @@ type CreatedConcepts implements Operation & Entity {
   # StrongEntity
   id: ID! # data // uuidv7
   hash: String! # cached
-  owner: CreatedConceptsOwner! # reference
+  owner: OperationOwner! # reference
   changeOwner: Change # reference // spine
   entityOwner: OwnerEntity # computed // CreatedConceptsOwner
   ownedEntities: OwnedEntityConnection # computed // CreatedConceptsOwned
-  input: CreatedConceptsInput! # data
+  input: Input # data
   diff: Diff! # data
   concepts: ConceptConnection! # data
 }
@@ -3282,11 +3282,11 @@ type RenamedConcept implements Operation & Entity {
   # StrongEntity
   id: ID! # data // uuidv7
   hash: String! # cached
-  owner: RenamedConceptOwner! # reference
+  owner: OperationOwner! # reference
   changeOwner: Change # reference // spine
   entityOwner: OwnerEntity # computed // RenamedConceptOwner
   ownedEntities: OwnedEntityConnection # computed // RenamedConceptOwned
-  input: RenamedConceptInput! # data
+  input: Input # data
   diff: Diff! # data
   concept: Concept! # data
 }
@@ -3303,11 +3303,11 @@ type UpdatedConceptDescription implements Operation & Entity {
   # StrongEntity
   id: ID! # data // uuidv7
   hash: String! # cached
-  owner: UpdatedConceptDescriptionOwner! # reference
+  owner: OperationOwner! # reference
   changeOwner: Change # reference // spine
   entityOwner: OwnerEntity # computed // UpdatedConceptDescriptionOwner
   ownedEntities: OwnedEntityConnection # computed // UpdatedConceptDescriptionOwned
-  input: UpdatedConceptDescriptionInput! # data
+  input: Input # data
   diff: Diff! # data
   concept: Concept! # data
 }
@@ -3324,11 +3324,11 @@ type UpdatedConceptIcon implements Operation & Entity {
   # StrongEntity
   id: ID! # data // uuidv7
   hash: String! # cached
-  owner: UpdatedConceptIconOwner! # reference
+  owner: OperationOwner! # reference
   changeOwner: Change # reference // spine
   entityOwner: OwnerEntity # computed // UpdatedConceptIconOwner
   ownedEntities: OwnedEntityConnection # computed // UpdatedConceptIconOwned
-  input: UpdatedConceptIconInput! # data
+  input: Input # data
   diff: Diff! # data
   concept: Concept! # data
 }
@@ -3345,11 +3345,11 @@ type AddedAttributeToConcept implements Operation & Entity {
   # StrongEntity
   id: ID! # data // uuidv7
   hash: String! # cached
-  owner: AddedAttributeToConceptOwner! # reference
+  owner: OperationOwner! # reference
   changeOwner: Change # reference // spine
   entityOwner: OwnerEntity # computed // AddedAttributeToConceptOwner
   ownedEntities: OwnedEntityConnection # computed // AddedAttributeToConceptOwned
-  input: AddedAttributeToConceptInput! # data
+  input: Input # data
   diff: Diff! # data
   concept: Concept! # data
   attribute: Attribute! # data
@@ -3367,11 +3367,11 @@ type AddedAttributesToConcept implements Operation & Entity {
   # StrongEntity
   id: ID! # data // uuidv7
   hash: String! # cached
-  owner: AddedAttributesToConceptOwner! # reference
+  owner: OperationOwner! # reference
   changeOwner: Change # reference // spine
   entityOwner: OwnerEntity # computed // AddedAttributesToConceptOwner
   ownedEntities: OwnedEntityConnection # computed // AddedAttributesToConceptOwned
-  input: AddedAttributesToConceptInput! # data
+  input: Input # data
   diff: Diff! # data
   concept: Concept! # data
   attributes: AttributeConnection! # data
@@ -3389,11 +3389,11 @@ type RemovedAttributeFromConcept implements Operation & Entity {
   # StrongEntity
   id: ID! # data // uuidv7
   hash: String! # cached
-  owner: RemovedAttributeFromConceptOwner! # reference
+  owner: OperationOwner! # reference
   changeOwner: Change # reference // spine
   entityOwner: OwnerEntity # computed // RemovedAttributeFromConceptOwner
   ownedEntities: OwnedEntityConnection # computed // RemovedAttributeFromConceptOwned
-  input: RemovedAttributeFromConceptInput! # data
+  input: Input # data
   diff: Diff! # data
   concept: Concept! # data
 }
@@ -3410,11 +3410,11 @@ type RemovedAttributesFromConcept implements Operation & Entity {
   # StrongEntity
   id: ID! # data // uuidv7
   hash: String! # cached
-  owner: RemovedAttributesFromConceptOwner! # reference
+  owner: OperationOwner! # reference
   changeOwner: Change # reference // spine
   entityOwner: OwnerEntity # computed // RemovedAttributesFromConceptOwner
   ownedEntities: OwnedEntityConnection # computed // RemovedAttributesFromConceptOwned
-  input: RemovedAttributesFromConceptInput! # data
+  input: Input # data
   diff: Diff! # data
   concept: Concept! # data
 }
@@ -3430,11 +3430,11 @@ type DeletedConcept implements Operation & Entity {
   # StrongEntity
   id: ID! # data // uuidv7
   hash: String! # cached
-  owner: DeletedConceptOwner! # reference
+  owner: OperationOwner! # reference
   changeOwner: Change # reference // spine
   entityOwner: OwnerEntity # computed // DeletedConceptOwner
   ownedEntities: OwnedEntityConnection # computed // DeletedConceptOwned
-  input: DeletedConceptInput! # data
+  input: Input # data
   diff: Diff! # data
 }
 
@@ -3449,11 +3449,11 @@ type DeletedConcepts implements Operation & Entity {
   # StrongEntity
   id: ID! # data // uuidv7
   hash: String! # cached
-  owner: DeletedConceptsOwner! # reference
+  owner: OperationOwner! # reference
   changeOwner: Change # reference // spine
   entityOwner: OwnerEntity # computed // DeletedConceptsOwner
   ownedEntities: OwnedEntityConnection # computed // DeletedConceptsOwned
-  input: DeletedConceptsInput! # data
+  input: Input # data
   diff: Diff! # data
 }
 
@@ -3749,11 +3749,11 @@ type CreatedPort implements Operation & Entity {
   # StrongEntity
   id: ID! # data // uuidv7
   hash: String! # cached
-  owner: CreatedPortOwner! # reference
+  owner: OperationOwner! # reference
   changeOwner: Change # reference // spine
   entityOwner: OwnerEntity # computed // CreatedPortOwner
   ownedEntities: OwnedEntityConnection # computed // CreatedPortOwned
-  input: CreatedPortInput! # data
+  input: Input # data
   diff: Diff! # data
   port: Port! # data
 }
@@ -3770,11 +3770,11 @@ type CreatedPorts implements Operation & Entity {
   # StrongEntity
   id: ID! # data // uuidv7
   hash: String! # cached
-  owner: CreatedPortsOwner! # reference
+  owner: OperationOwner! # reference
   changeOwner: Change # reference // spine
   entityOwner: OwnerEntity # computed // CreatedPortsOwner
   ownedEntities: OwnedEntityConnection # computed // CreatedPortsOwned
-  input: CreatedPortsInput! # data
+  input: Input # data
   diff: Diff! # data
   ports: PortConnection! # data
 }
@@ -3792,11 +3792,11 @@ type RenamedPort implements Operation & Entity {
   # StrongEntity
   id: ID! # data // uuidv7
   hash: String! # cached
-  owner: RenamedPortOwner! # reference
+  owner: OperationOwner! # reference
   changeOwner: Change # reference // spine
   entityOwner: OwnerEntity # computed // RenamedPortOwner
   ownedEntities: OwnedEntityConnection # computed // RenamedPortOwned
-  input: RenamedPortInput! # data
+  input: Input # data
   diff: Diff! # data
   port: Port! # data
 }
@@ -3813,11 +3813,11 @@ type UpdatedPortDescription implements Operation & Entity {
   # StrongEntity
   id: ID! # data // uuidv7
   hash: String! # cached
-  owner: UpdatedPortDescriptionOwner! # reference
+  owner: OperationOwner! # reference
   changeOwner: Change # reference // spine
   entityOwner: OwnerEntity # computed // UpdatedPortDescriptionOwner
   ownedEntities: OwnedEntityConnection # computed // UpdatedPortDescriptionOwned
-  input: UpdatedPortDescriptionInput! # data
+  input: Input # data
   diff: Diff! # data
   port: Port! # data
 }
@@ -3834,11 +3834,11 @@ type UpdatedPortIcon implements Operation & Entity {
   # StrongEntity
   id: ID! # data // uuidv7
   hash: String! # cached
-  owner: UpdatedPortIconOwner! # reference
+  owner: OperationOwner! # reference
   changeOwner: Change # reference // spine
   entityOwner: OwnerEntity # computed // UpdatedPortIconOwner
   ownedEntities: OwnedEntityConnection # computed // UpdatedPortIconOwned
-  input: UpdatedPortIconInput! # data
+  input: Input # data
   diff: Diff! # data
   port: Port! # data
 }
@@ -3855,11 +3855,11 @@ type AddedAttributeToPort implements Operation & Entity {
   # StrongEntity
   id: ID! # data // uuidv7
   hash: String! # cached
-  owner: AddedAttributeToPortOwner! # reference
+  owner: OperationOwner! # reference
   changeOwner: Change # reference // spine
   entityOwner: OwnerEntity # computed // AddedAttributeToPortOwner
   ownedEntities: OwnedEntityConnection # computed // AddedAttributeToPortOwned
-  input: AddedAttributeToPortInput! # data
+  input: Input # data
   diff: Diff! # data
   port: Port! # data
   attribute: Attribute! # data
@@ -3877,11 +3877,11 @@ type AddedAttributesToPort implements Operation & Entity {
   # StrongEntity
   id: ID! # data // uuidv7
   hash: String! # cached
-  owner: AddedAttributesToPortOwner! # reference
+  owner: OperationOwner! # reference
   changeOwner: Change # reference // spine
   entityOwner: OwnerEntity # computed // AddedAttributesToPortOwner
   ownedEntities: OwnedEntityConnection # computed // AddedAttributesToPortOwned
-  input: AddedAttributesToPortInput! # data
+  input: Input # data
   diff: Diff! # data
   port: Port! # data
   attributes: AttributeConnection! # data
@@ -3899,11 +3899,11 @@ type RemovedAttributeFromPort implements Operation & Entity {
   # StrongEntity
   id: ID! # data // uuidv7
   hash: String! # cached
-  owner: RemovedAttributeFromPortOwner! # reference
+  owner: OperationOwner! # reference
   changeOwner: Change # reference // spine
   entityOwner: OwnerEntity # computed // RemovedAttributeFromPortOwner
   ownedEntities: OwnedEntityConnection # computed // RemovedAttributeFromPortOwned
-  input: RemovedAttributeFromPortInput! # data
+  input: Input # data
   diff: Diff! # data
   port: Port! # data
 }
@@ -3920,11 +3920,11 @@ type RemovedAttributesFromPort implements Operation & Entity {
   # StrongEntity
   id: ID! # data // uuidv7
   hash: String! # cached
-  owner: RemovedAttributesFromPortOwner! # reference
+  owner: OperationOwner! # reference
   changeOwner: Change # reference // spine
   entityOwner: OwnerEntity # computed // RemovedAttributesFromPortOwner
   ownedEntities: OwnedEntityConnection # computed // RemovedAttributesFromPortOwned
-  input: RemovedAttributesFromPortInput! # data
+  input: Input # data
   diff: Diff! # data
   port: Port! # data
 }
@@ -3940,11 +3940,11 @@ type DeletedPort implements Operation & Entity {
   # StrongEntity
   id: ID! # data // uuidv7
   hash: String! # cached
-  owner: DeletedPortOwner! # reference
+  owner: OperationOwner! # reference
   changeOwner: Change # reference // spine
   entityOwner: OwnerEntity # computed // DeletedPortOwner
   ownedEntities: OwnedEntityConnection # computed // DeletedPortOwned
-  input: DeletedPortInput! # data
+  input: Input # data
   diff: Diff! # data
 }
 
@@ -3959,11 +3959,11 @@ type DeletedPorts implements Operation & Entity {
   # StrongEntity
   id: ID! # data // uuidv7
   hash: String! # cached
-  owner: DeletedPortsOwner! # reference
+  owner: OperationOwner! # reference
   changeOwner: Change # reference // spine
   entityOwner: OwnerEntity # computed // DeletedPortsOwner
   ownedEntities: OwnedEntityConnection # computed // DeletedPortsOwned
-  input: DeletedPortsInput! # data
+  input: Input # data
   diff: Diff! # data
 }
 
@@ -4406,11 +4406,11 @@ type CreatedType implements Operation & Entity {
   # StrongEntity
   id: ID! # data // uuidv7
   hash: String! # cached
-  owner: CreatedTypeOwner! # reference
+  owner: OperationOwner! # reference
   changeOwner: Change # reference // spine
   entityOwner: OwnerEntity # computed // CreatedTypeOwner
   ownedEntities: OwnedEntityConnection # computed // CreatedTypeOwned
-  input: CreatedTypeInput! # data
+  input: Input # data
   diff: Diff! # data
   type: Type! # data
 }
@@ -4427,11 +4427,11 @@ type CreatedTypes implements Operation & Entity {
   # StrongEntity
   id: ID! # data // uuidv7
   hash: String! # cached
-  owner: CreatedTypesOwner! # reference
+  owner: OperationOwner! # reference
   changeOwner: Change # reference // spine
   entityOwner: OwnerEntity # computed // CreatedTypesOwner
   ownedEntities: OwnedEntityConnection # computed // CreatedTypesOwned
-  input: CreatedTypesInput! # data
+  input: Input # data
   diff: Diff! # data
   types: TypeConnection! # data
 }
@@ -4448,11 +4448,11 @@ type RenamedType implements Operation & Entity {
   # StrongEntity
   id: ID! # data // uuidv7
   hash: String! # cached
-  owner: RenamedTypeOwner! # reference
+  owner: OperationOwner! # reference
   changeOwner: Change # reference // spine
   entityOwner: OwnerEntity # computed // RenamedTypeOwner
   ownedEntities: OwnedEntityConnection # computed // RenamedTypeOwned
-  input: RenamedTypeInput! # data
+  input: Input # data
   diff: Diff! # data
   type: Type! # data
 }
@@ -4469,11 +4469,11 @@ type UpdatedTypeDescription implements Operation & Entity {
   # StrongEntity
   id: ID! # data // uuidv7
   hash: String! # cached
-  owner: UpdatedTypeDescriptionOwner! # reference
+  owner: OperationOwner! # reference
   changeOwner: Change # reference // spine
   entityOwner: OwnerEntity # computed // UpdatedTypeDescriptionOwner
   ownedEntities: OwnedEntityConnection # computed // UpdatedTypeDescriptionOwned
-  input: UpdatedTypeDescriptionInput! # data
+  input: Input # data
   diff: Diff! # data
   type: Type! # data
 }
@@ -4490,11 +4490,11 @@ type UpdatedTypeIcon implements Operation & Entity {
   # StrongEntity
   id: ID! # data // uuidv7
   hash: String! # cached
-  owner: UpdatedTypeIconOwner! # reference
+  owner: OperationOwner! # reference
   changeOwner: Change # reference // spine
   entityOwner: OwnerEntity # computed // UpdatedTypeIconOwner
   ownedEntities: OwnedEntityConnection # computed // UpdatedTypeIconOwned
-  input: UpdatedTypeIconInput! # data
+  input: Input # data
   diff: Diff! # data
   type: Type! # data
 }
@@ -4511,11 +4511,11 @@ type AddedAttributeToType implements Operation & Entity {
   # StrongEntity
   id: ID! # data // uuidv7
   hash: String! # cached
-  owner: AddedAttributeToTypeOwner! # reference
+  owner: OperationOwner! # reference
   changeOwner: Change # reference // spine
   entityOwner: OwnerEntity # computed // AddedAttributeToTypeOwner
   ownedEntities: OwnedEntityConnection # computed // AddedAttributeToTypeOwned
-  input: AddedAttributeToTypeInput! # data
+  input: Input # data
   diff: Diff! # data
   type: Type! # data
   attribute: Attribute! # data
@@ -4533,11 +4533,11 @@ type AddedAttributesToType implements Operation & Entity {
   # StrongEntity
   id: ID! # data // uuidv7
   hash: String! # cached
-  owner: AddedAttributesToTypeOwner! # reference
+  owner: OperationOwner! # reference
   changeOwner: Change # reference // spine
   entityOwner: OwnerEntity # computed // AddedAttributesToTypeOwner
   ownedEntities: OwnedEntityConnection # computed // AddedAttributesToTypeOwned
-  input: AddedAttributesToTypeInput! # data
+  input: Input # data
   diff: Diff! # data
   type: Type! # data
   attributes: AttributeConnection! # data
@@ -4555,11 +4555,11 @@ type RemovedAttributeFromType implements Operation & Entity {
   # StrongEntity
   id: ID! # data // uuidv7
   hash: String! # cached
-  owner: RemovedAttributeFromTypeOwner! # reference
+  owner: OperationOwner! # reference
   changeOwner: Change # reference // spine
   entityOwner: OwnerEntity # computed // RemovedAttributeFromTypeOwner
   ownedEntities: OwnedEntityConnection # computed // RemovedAttributeFromTypeOwned
-  input: RemovedAttributeFromTypeInput! # data
+  input: Input # data
   diff: Diff! # data
   type: Type! # data
 }
@@ -4576,11 +4576,11 @@ type RemovedAttributesFromType implements Operation & Entity {
   # StrongEntity
   id: ID! # data // uuidv7
   hash: String! # cached
-  owner: RemovedAttributesFromTypeOwner! # reference
+  owner: OperationOwner! # reference
   changeOwner: Change # reference // spine
   entityOwner: OwnerEntity # computed // RemovedAttributesFromTypeOwner
   ownedEntities: OwnedEntityConnection # computed // RemovedAttributesFromTypeOwned
-  input: RemovedAttributesFromTypeInput! # data
+  input: Input # data
   diff: Diff! # data
   type: Type! # data
 }
@@ -4596,11 +4596,11 @@ type DeletedType implements Operation & Entity {
   # StrongEntity
   id: ID! # data // uuidv7
   hash: String! # cached
-  owner: DeletedTypeOwner! # reference
+  owner: OperationOwner! # reference
   changeOwner: Change # reference // spine
   entityOwner: OwnerEntity # computed // DeletedTypeOwner
   ownedEntities: OwnedEntityConnection # computed // DeletedTypeOwned
-  input: DeletedTypeInput! # data
+  input: Input # data
   diff: Diff! # data
 }
 
@@ -4615,11 +4615,11 @@ type DeletedTypes implements Operation & Entity {
   # StrongEntity
   id: ID! # data // uuidv7
   hash: String! # cached
-  owner: DeletedTypesOwner! # reference
+  owner: OperationOwner! # reference
   changeOwner: Change # reference // spine
   entityOwner: OwnerEntity # computed // DeletedTypesOwner
   ownedEntities: OwnedEntityConnection # computed // DeletedTypesOwned
-  input: DeletedTypesInput! # data
+  input: Input # data
   diff: Diff! # data
 }
 
@@ -4658,11 +4658,11 @@ type AddedConnectorToType implements Operation & Entity {
   # StrongEntity
   id: ID! # data // uuidv7
   hash: String! # cached
-  owner: AddedConnectorToTypeOwner! # reference
+  owner: OperationOwner! # reference
   changeOwner: Change # reference // spine
   entityOwner: OwnerEntity # computed // AddedConnectorToTypeOwner
   ownedEntities: OwnedEntityConnection # computed // AddedConnectorToTypeOwned
-  input: AddedConnectorToTypeInput! # data
+  input: Input # data
   diff: Diff! # data
   type: Type! # data
   connector: Connector! # data
@@ -4680,11 +4680,11 @@ type AddedConnectorsToType implements Operation & Entity {
   # StrongEntity
   id: ID! # data // uuidv7
   hash: String! # cached
-  owner: AddedConnectorsToTypeOwner! # reference
+  owner: OperationOwner! # reference
   changeOwner: Change # reference // spine
   entityOwner: OwnerEntity # computed // AddedConnectorsToTypeOwner
   ownedEntities: OwnedEntityConnection # computed // AddedConnectorsToTypeOwned
-  input: AddedConnectorsToTypeInput! # data
+  input: Input # data
   diff: Diff! # data
   type: Type! # data
   connectors: ConnectorConnection! # data
@@ -4702,11 +4702,11 @@ type RenamedConnectorInType implements Operation & Entity {
   # StrongEntity
   id: ID! # data // uuidv7
   hash: String! # cached
-  owner: RenamedConnectorInTypeOwner! # reference
+  owner: OperationOwner! # reference
   changeOwner: Change # reference // spine
   entityOwner: OwnerEntity # computed // RenamedConnectorInTypeOwner
   ownedEntities: OwnedEntityConnection # computed // RenamedConnectorInTypeOwned
-  input: RenamedConnectorInTypeInput! # data
+  input: Input # data
   diff: Diff! # data
   connector: Connector! # data
 }
@@ -4723,11 +4723,11 @@ type UpdatedConnectorDescriptionInType implements Operation & Entity {
   # StrongEntity
   id: ID! # data // uuidv7
   hash: String! # cached
-  owner: UpdatedConnectorDescriptionInTypeOwner! # reference
+  owner: OperationOwner! # reference
   changeOwner: Change # reference // spine
   entityOwner: OwnerEntity # computed // UpdatedConnectorDescriptionInTypeOwner
   ownedEntities: OwnedEntityConnection # computed // UpdatedConnectorDescriptionInTypeOwned
-  input: UpdatedConnectorDescriptionInTypeInput! # data
+  input: Input # data
   diff: Diff! # data
   connector: Connector! # data
 }
@@ -4744,11 +4744,11 @@ type UpdatedConnectorIconInType implements Operation & Entity {
   # StrongEntity
   id: ID! # data // uuidv7
   hash: String! # cached
-  owner: UpdatedConnectorIconInTypeOwner! # reference
+  owner: OperationOwner! # reference
   changeOwner: Change # reference // spine
   entityOwner: OwnerEntity # computed // UpdatedConnectorIconInTypeOwner
   ownedEntities: OwnedEntityConnection # computed // UpdatedConnectorIconInTypeOwned
-  input: UpdatedConnectorIconInTypeInput! # data
+  input: Input # data
   diff: Diff! # data
   connector: Connector! # data
 }
@@ -4764,11 +4764,11 @@ type RemovedConnectorFromType implements Operation & Entity {
   # StrongEntity
   id: ID! # data // uuidv7
   hash: String! # cached
-  owner: RemovedConnectorFromTypeOwner! # reference
+  owner: OperationOwner! # reference
   changeOwner: Change # reference // spine
   entityOwner: OwnerEntity # computed // RemovedConnectorFromTypeOwner
   ownedEntities: OwnedEntityConnection # computed // RemovedConnectorFromTypeOwned
-  input: RemovedConnectorFromTypeInput! # data
+  input: Input # data
   diff: Diff! # data
   type: Type! # data
 }
@@ -4784,11 +4784,11 @@ type RemovedConnectorsFromType implements Operation & Entity {
   # StrongEntity
   id: ID! # data // uuidv7
   hash: String! # cached
-  owner: RemovedConnectorsFromTypeOwner! # reference
+  owner: OperationOwner! # reference
   changeOwner: Change # reference // spine
   entityOwner: OwnerEntity # computed // RemovedConnectorsFromTypeOwner
   ownedEntities: OwnedEntityConnection # computed // RemovedConnectorsFromTypeOwned
-  input: RemovedConnectorsFromTypeInput! # data
+  input: Input # data
   diff: Diff! # data
   type: Type! # data
 }
@@ -5363,11 +5363,11 @@ type AddedFixedPieceToDesign implements Operation & Entity {
   # StrongEntity
   id: ID! # data // uuidv7
   hash: String! # cached
-  owner: AddedFixedPieceToDesignOwner! # reference
+  owner: OperationOwner! # reference
   changeOwner: Change # reference // spine
   entityOwner: OwnerEntity # computed // AddedFixedPieceToDesignOwner
   ownedEntities: OwnedEntityConnection # computed // AddedFixedPieceToDesignOwned
-  input: AddedFixedPieceToDesignInput! # data
+  input: Input # data
   diff: Diff! # data
   piece: Piece! # data
 }
@@ -5384,11 +5384,11 @@ type FixedPieceInDesign implements Operation & Entity {
   # StrongEntity
   id: ID! # data // uuidv7
   hash: String! # cached
-  owner: FixedPieceInDesignOwner! # reference
+  owner: OperationOwner! # reference
   changeOwner: Change # reference // spine
   entityOwner: OwnerEntity # computed // FixedPieceInDesignOwner
   ownedEntities: OwnedEntityConnection # computed // FixedPieceInDesignOwned
-  input: FixedPieceInDesignInput! # data
+  input: Input # data
   diff: Diff! # data
   piece: Piece! # data
 }
@@ -5406,11 +5406,11 @@ type DraggedPiecesInDesign implements Operation & Entity {
   # StrongEntity
   id: ID! # data // uuidv7
   hash: String! # cached
-  owner: DraggedPiecesInDesignOwner! # reference
+  owner: OperationOwner! # reference
   changeOwner: Change # reference // spine
   entityOwner: OwnerEntity # computed // DraggedPiecesInDesignOwner
   ownedEntities: OwnedEntityConnection # computed // DraggedPiecesInDesignOwned
-  input: DraggedPiecesInDesignInput! # data
+  input: Input # data
   diff: Diff! # data
   pieces: PieceConnection! # data
 }
@@ -5428,11 +5428,11 @@ type DraggedPieceInDesign implements Operation & Entity {
   # StrongEntity
   id: ID! # data // uuidv7
   hash: String! # cached
-  owner: DraggedPieceInDesignOwner! # reference
+  owner: OperationOwner! # reference
   changeOwner: Change # reference // spine
   entityOwner: OwnerEntity # computed // DraggedPieceInDesignOwner
   ownedEntities: OwnedEntityConnection # computed // DraggedPieceInDesignOwned
-  input: DraggedPieceInDesignInput! # data
+  input: Input # data
   diff: Diff! # data
   piece: Piece! # data
 }
@@ -5474,11 +5474,11 @@ type AddedChildPieceWithParentConnectionToDesign implements Operation & Entity {
   # StrongEntity
   id: ID! # data // uuidv7
   hash: String! # cached
-  owner: AddedChildPieceWithParentConnectionToDesignOwner! # reference
+  owner: OperationOwner! # reference
   changeOwner: Change # reference // spine
   entityOwner: OwnerEntity # computed // AddedChildPieceWithParentConnectionToDesignOwner
   ownedEntities: OwnedEntityConnection # computed // AddedChildPieceWithParentConnectionToDesignOwned
-  input: AddedChildPieceWithParentConnectionToDesignInput! # data
+  input: Input # data
   diff: Diff! # data
   piece: Piece! # data
   connection: Connection! # data
@@ -5497,11 +5497,11 @@ type AddedChildPiecesWithParentConnectionsToDesign implements Operation & Entity
   # StrongEntity
   id: ID! # data // uuidv7
   hash: String! # cached
-  owner: AddedChildPiecesWithParentConnectionsToDesignOwner! # reference
+  owner: OperationOwner! # reference
   changeOwner: Change # reference // spine
   entityOwner: OwnerEntity # computed // AddedChildPiecesWithParentConnectionsToDesignOwner
   ownedEntities: OwnedEntityConnection # computed // AddedChildPiecesWithParentConnectionsToDesignOwned
-  input: AddedChildPiecesWithParentConnectionsToDesignInput! # data
+  input: Input # data
   diff: Diff! # data
   pieces: PieceConnection! # data
   connections: ConnectionConnection! # data
@@ -5520,11 +5520,11 @@ type AddedHangingChildPieceWithParentConnectionToDesign implements Operation & E
   # StrongEntity
   id: ID! # data // uuidv7
   hash: String! # cached
-  owner: AddedHangingChildPieceWithParentConnectionToDesignOwner! # reference
+  owner: OperationOwner! # reference
   changeOwner: Change # reference // spine
   entityOwner: OwnerEntity # computed // AddedHangingChildPieceWithParentConnectionToDesignOwner
   ownedEntities: OwnedEntityConnection # computed // AddedHangingChildPieceWithParentConnectionToDesignOwned
-  input: AddedHangingChildPieceWithParentConnectionToDesignInput! # data
+  input: Input # data
   diff: Diff! # data
   piece: Piece! # data
   connection: Connection! # data
@@ -5543,11 +5543,11 @@ type AddedHangingChildPiecesWithParentConnectionsToDesign implements Operation &
   # StrongEntity
   id: ID! # data // uuidv7
   hash: String! # cached
-  owner: AddedHangingChildPiecesWithParentConnectionsToDesignOwner! # reference
+  owner: OperationOwner! # reference
   changeOwner: Change # reference // spine
   entityOwner: OwnerEntity # computed // AddedHangingChildPiecesWithParentConnectionsToDesignOwner
   ownedEntities: OwnedEntityConnection # computed // AddedHangingChildPiecesWithParentConnectionsToDesignOwned
-  input: AddedHangingChildPiecesWithParentConnectionsToDesignInput! # data
+  input: Input # data
   diff: Diff! # data
   pieces: PieceConnection! # data
   connections: ConnectionConnection! # data
@@ -5565,11 +5565,11 @@ type RenamedPieceInDesign implements Operation & Entity {
   # StrongEntity
   id: ID! # data // uuidv7
   hash: String! # cached
-  owner: RenamedPieceInDesignOwner! # reference
+  owner: OperationOwner! # reference
   changeOwner: Change # reference // spine
   entityOwner: OwnerEntity # computed // RenamedPieceInDesignOwner
   ownedEntities: OwnedEntityConnection # computed // RenamedPieceInDesignOwned
-  input: RenamedPieceInDesignInput! # data
+  input: Input # data
   diff: Diff! # data
   piece: Piece! # data
 }
@@ -5586,11 +5586,11 @@ type UpdatedPieceDescriptionInDesign implements Operation & Entity {
   # StrongEntity
   id: ID! # data // uuidv7
   hash: String! # cached
-  owner: UpdatedPieceDescriptionInDesignOwner! # reference
+  owner: OperationOwner! # reference
   changeOwner: Change # reference // spine
   entityOwner: OwnerEntity # computed // UpdatedPieceDescriptionInDesignOwner
   ownedEntities: OwnedEntityConnection # computed // UpdatedPieceDescriptionInDesignOwned
-  input: UpdatedPieceDescriptionInDesignInput! # data
+  input: Input # data
   diff: Diff! # data
   piece: Piece! # data
 }
@@ -5608,11 +5608,11 @@ type MovedPieceInDesign implements Operation & Entity {
   # StrongEntity
   id: ID! # data // uuidv7
   hash: String! # cached
-  owner: MovedPieceInDesignOwner! # reference
+  owner: OperationOwner! # reference
   changeOwner: Change # reference // spine
   entityOwner: OwnerEntity # computed // MovedPieceInDesignOwner
   ownedEntities: OwnedEntityConnection # computed // MovedPieceInDesignOwned
-  input: MovedPieceInDesignInput! # data
+  input: Input # data
   diff: Diff! # data
   piece: Piece! # data
 }
@@ -5630,11 +5630,11 @@ type MovedPiecesInDesign implements Operation & Entity {
   # StrongEntity
   id: ID! # data // uuidv7
   hash: String! # cached
-  owner: MovedPiecesInDesignOwner! # reference
+  owner: OperationOwner! # reference
   changeOwner: Change # reference // spine
   entityOwner: OwnerEntity # computed // MovedPiecesInDesignOwner
   ownedEntities: OwnedEntityConnection # computed // MovedPiecesInDesignOwned
-  input: MovedPiecesInDesignInput! # data
+  input: Input # data
   diff: Diff! # data
   pieces: PieceConnection! # data
 }
@@ -5651,11 +5651,11 @@ type FixedPiecesInDesign implements Operation & Entity {
   # StrongEntity
   id: ID! # data // uuidv7
   hash: String! # cached
-  owner: FixedPiecesInDesignOwner! # reference
+  owner: OperationOwner! # reference
   changeOwner: Change # reference // spine
   entityOwner: OwnerEntity # computed // FixedPiecesInDesignOwner
   ownedEntities: OwnedEntityConnection # computed // FixedPiecesInDesignOwned
-  input: FixedPiecesInDesignInput! # data
+  input: Input # data
   diff: Diff! # data
   pieces: PieceConnection! # data
 }
@@ -5672,11 +5672,11 @@ type ChangedPieceToTypeInDesign implements Operation & Entity {
   # StrongEntity
   id: ID! # data // uuidv7
   hash: String! # cached
-  owner: ChangedPieceToTypeInDesignOwner! # reference
+  owner: OperationOwner! # reference
   changeOwner: Change # reference // spine
   entityOwner: OwnerEntity # computed // ChangedPieceToTypeInDesignOwner
   ownedEntities: OwnedEntityConnection # computed // ChangedPieceToTypeInDesignOwned
-  input: ChangedPieceToTypeInDesignInput! # data
+  input: Input # data
   diff: Diff! # data
   piece: Piece! # data
 }
@@ -5693,11 +5693,11 @@ type ChangedPiecesToTypeInDesign implements Operation & Entity {
   # StrongEntity
   id: ID! # data // uuidv7
   hash: String! # cached
-  owner: ChangedPiecesToTypeInDesignOwner! # reference
+  owner: OperationOwner! # reference
   changeOwner: Change # reference // spine
   entityOwner: OwnerEntity # computed // ChangedPiecesToTypeInDesignOwner
   ownedEntities: OwnedEntityConnection # computed // ChangedPiecesToTypeInDesignOwned
-  input: ChangedPiecesToTypeInDesignInput! # data
+  input: Input # data
   diff: Diff! # data
   pieces: PieceConnection! # data
 }
@@ -5714,11 +5714,11 @@ type AddedAttributeToPiece implements Operation & Entity {
   # StrongEntity
   id: ID! # data // uuidv7
   hash: String! # cached
-  owner: AddedAttributeToPieceOwner! # reference
+  owner: OperationOwner! # reference
   changeOwner: Change # reference // spine
   entityOwner: OwnerEntity # computed // AddedAttributeToPieceOwner
   ownedEntities: OwnedEntityConnection # computed // AddedAttributeToPieceOwned
-  input: AddedAttributeToPieceInput! # data
+  input: Input # data
   diff: Diff! # data
   piece: Piece! # data
   attribute: Attribute! # data
@@ -5736,11 +5736,11 @@ type AddedAttributesToPiece implements Operation & Entity {
   # StrongEntity
   id: ID! # data // uuidv7
   hash: String! # cached
-  owner: AddedAttributesToPieceOwner! # reference
+  owner: OperationOwner! # reference
   changeOwner: Change # reference // spine
   entityOwner: OwnerEntity # computed // AddedAttributesToPieceOwner
   ownedEntities: OwnedEntityConnection # computed // AddedAttributesToPieceOwned
-  input: AddedAttributesToPieceInput! # data
+  input: Input # data
   diff: Diff! # data
   piece: Piece! # data
   attributes: AttributeConnection! # data
@@ -5758,11 +5758,11 @@ type RemovedAttributeFromPiece implements Operation & Entity {
   # StrongEntity
   id: ID! # data // uuidv7
   hash: String! # cached
-  owner: RemovedAttributeFromPieceOwner! # reference
+  owner: OperationOwner! # reference
   changeOwner: Change # reference // spine
   entityOwner: OwnerEntity # computed // RemovedAttributeFromPieceOwner
   ownedEntities: OwnedEntityConnection # computed // RemovedAttributeFromPieceOwned
-  input: RemovedAttributeFromPieceInput! # data
+  input: Input # data
   diff: Diff! # data
   piece: Piece! # data
 }
@@ -5779,11 +5779,11 @@ type RemovedAttributesFromPiece implements Operation & Entity {
   # StrongEntity
   id: ID! # data // uuidv7
   hash: String! # cached
-  owner: RemovedAttributesFromPieceOwner! # reference
+  owner: OperationOwner! # reference
   changeOwner: Change # reference // spine
   entityOwner: OwnerEntity # computed // RemovedAttributesFromPieceOwner
   ownedEntities: OwnedEntityConnection # computed // RemovedAttributesFromPieceOwned
-  input: RemovedAttributesFromPieceInput! # data
+  input: Input # data
   diff: Diff! # data
   piece: Piece! # data
 }
@@ -5800,11 +5800,11 @@ type DeletedPieceInDesign implements Operation & Entity {
   # StrongEntity
   id: ID! # data // uuidv7
   hash: String! # cached
-  owner: DeletedPieceInDesignOwner! # reference
+  owner: OperationOwner! # reference
   changeOwner: Change # reference // spine
   entityOwner: OwnerEntity # computed // DeletedPieceInDesignOwner
   ownedEntities: OwnedEntityConnection # computed // DeletedPieceInDesignOwned
-  input: DeletedPieceInDesignInput! # data
+  input: Input # data
   diff: Diff! # data
 }
 
@@ -5820,11 +5820,11 @@ type DeletedPiecesInDesign implements Operation & Entity {
   # StrongEntity
   id: ID! # data // uuidv7
   hash: String! # cached
-  owner: DeletedPiecesInDesignOwner! # reference
+  owner: OperationOwner! # reference
   changeOwner: Change # reference // spine
   entityOwner: OwnerEntity # computed // DeletedPiecesInDesignOwner
   ownedEntities: OwnedEntityConnection # computed // DeletedPiecesInDesignOwned
-  input: DeletedPiecesInDesignInput! # data
+  input: Input # data
   diff: Diff! # data
 }
 
@@ -5841,11 +5841,11 @@ type DeletedPiecesAndConnectionsInDesign implements Operation & Entity {
   # StrongEntity
   id: ID! # data // uuidv7
   hash: String! # cached
-  owner: DeletedPiecesAndConnectionsInDesignOwner! # reference
+  owner: OperationOwner! # reference
   changeOwner: Change # reference // spine
   entityOwner: OwnerEntity # computed // DeletedPiecesAndConnectionsInDesignOwner
   ownedEntities: OwnedEntityConnection # computed // DeletedPiecesAndConnectionsInDesignOwned
-  input: DeletedPiecesAndConnectionsInDesignInput! # data
+  input: Input # data
   diff: Diff! # data
 }
 
@@ -6206,11 +6206,11 @@ type CreatedDesign implements Operation & Entity {
   # StrongEntity
   id: ID! # data // uuidv7
   hash: String! # cached
-  owner: CreatedDesignOwner! # reference
+  owner: OperationOwner! # reference
   changeOwner: Change # reference // spine
   entityOwner: OwnerEntity # computed // CreatedDesignOwner
   ownedEntities: OwnedEntityConnection # computed // CreatedDesignOwned
-  input: CreatedDesignInput! # data
+  input: Input # data
   diff: Diff! # data
   design: Design! # data
 }
@@ -6227,11 +6227,11 @@ type CreatedDesigns implements Operation & Entity {
   # StrongEntity
   id: ID! # data // uuidv7
   hash: String! # cached
-  owner: CreatedDesignsOwner! # reference
+  owner: OperationOwner! # reference
   changeOwner: Change # reference // spine
   entityOwner: OwnerEntity # computed // CreatedDesignsOwner
   ownedEntities: OwnedEntityConnection # computed // CreatedDesignsOwned
-  input: CreatedDesignsInput! # data
+  input: Input # data
   diff: Diff! # data
   designs: DesignConnection! # data
 }
@@ -6247,11 +6247,11 @@ type DeletedDesign implements Operation & Entity {
   # StrongEntity
   id: ID! # data // uuidv7
   hash: String! # cached
-  owner: DeletedDesignOwner! # reference
+  owner: OperationOwner! # reference
   changeOwner: Change # reference // spine
   entityOwner: OwnerEntity # computed // DeletedDesignOwner
   ownedEntities: OwnedEntityConnection # computed // DeletedDesignOwned
-  input: DeletedDesignInput! # data
+  input: Input # data
   diff: Diff! # data
 }
 
@@ -6266,11 +6266,11 @@ type DeletedDesigns implements Operation & Entity {
   # StrongEntity
   id: ID! # data // uuidv7
   hash: String! # cached
-  owner: DeletedDesignsOwner! # reference
+  owner: OperationOwner! # reference
   changeOwner: Change # reference // spine
   entityOwner: OwnerEntity # computed // DeletedDesignsOwner
   ownedEntities: OwnedEntityConnection # computed // DeletedDesignsOwned
-  input: DeletedDesignsInput! # data
+  input: Input # data
   diff: Diff! # data
 }
 
@@ -6285,11 +6285,11 @@ type FlattenedDesign implements Operation & Entity {
   # StrongEntity
   id: ID! # data // uuidv7
   hash: String! # cached
-  owner: FlattenedDesignOwner! # reference
+  owner: OperationOwner! # reference
   changeOwner: Change # reference // spine
   entityOwner: OwnerEntity # computed // FlattenedDesignOwner
   ownedEntities: OwnedEntityConnection # computed // FlattenedDesignOwned
-  input: FlattenedDesignInput! # data
+  input: Input # data
   diff: Diff! # data
   design: Design! # data
 }
@@ -6306,11 +6306,11 @@ type AddedAttributeToDesign implements Operation & Entity {
   # StrongEntity
   id: ID! # data // uuidv7
   hash: String! # cached
-  owner: AddedAttributeToDesignOwner! # reference
+  owner: OperationOwner! # reference
   changeOwner: Change # reference // spine
   entityOwner: OwnerEntity # computed // AddedAttributeToDesignOwner
   ownedEntities: OwnedEntityConnection # computed // AddedAttributeToDesignOwned
-  input: AddedAttributeToDesignInput! # data
+  input: Input # data
   diff: Diff! # data
   design: Design! # data
   attribute: Attribute! # data
@@ -6328,11 +6328,11 @@ type AddedAttributesToDesign implements Operation & Entity {
   # StrongEntity
   id: ID! # data // uuidv7
   hash: String! # cached
-  owner: AddedAttributesToDesignOwner! # reference
+  owner: OperationOwner! # reference
   changeOwner: Change # reference // spine
   entityOwner: OwnerEntity # computed // AddedAttributesToDesignOwner
   ownedEntities: OwnedEntityConnection # computed // AddedAttributesToDesignOwned
-  input: AddedAttributesToDesignInput! # data
+  input: Input # data
   diff: Diff! # data
   design: Design! # data
   attributes: AttributeConnection! # data
@@ -6350,11 +6350,11 @@ type RemovedAttributeFromDesign implements Operation & Entity {
   # StrongEntity
   id: ID! # data // uuidv7
   hash: String! # cached
-  owner: RemovedAttributeFromDesignOwner! # reference
+  owner: OperationOwner! # reference
   changeOwner: Change # reference // spine
   entityOwner: OwnerEntity # computed // RemovedAttributeFromDesignOwner
   ownedEntities: OwnedEntityConnection # computed // RemovedAttributeFromDesignOwned
-  input: RemovedAttributeFromDesignInput! # data
+  input: Input # data
   diff: Diff! # data
   design: Design! # data
 }
@@ -6371,11 +6371,11 @@ type RemovedAttributesFromDesign implements Operation & Entity {
   # StrongEntity
   id: ID! # data // uuidv7
   hash: String! # cached
-  owner: RemovedAttributesFromDesignOwner! # reference
+  owner: OperationOwner! # reference
   changeOwner: Change # reference // spine
   entityOwner: OwnerEntity # computed // RemovedAttributesFromDesignOwner
   ownedEntities: OwnedEntityConnection # computed // RemovedAttributesFromDesignOwned
-  input: RemovedAttributesFromDesignInput! # data
+  input: Input # data
   diff: Diff! # data
   design: Design! # data
 }
@@ -6576,11 +6576,11 @@ type RenamedKit implements Operation & Entity {
   # StrongEntity
   id: ID! # data // uuidv7
   hash: String! # cached
-  owner: RenamedKitOwner! # reference
+  owner: OperationOwner! # reference
   changeOwner: Change # reference // spine
   entityOwner: OwnerEntity # computed // RenamedKitOwner
   ownedEntities: OwnedEntityConnection # computed // RenamedKitOwned
-  input: RenamedKitInput! # data
+  input: Input # data
   diff: Diff! # data
   kit: Kit! # data
 }
@@ -6597,11 +6597,11 @@ type ChangedDescription implements Operation & Entity {
   # StrongEntity
   id: ID! # data // uuidv7
   hash: String! # cached
-  owner: ChangedDescriptionOwner! # reference
+  owner: OperationOwner! # reference
   changeOwner: Change # reference // spine
   entityOwner: OwnerEntity # computed // ChangedDescriptionOwner
   ownedEntities: OwnedEntityConnection # computed // ChangedDescriptionOwned
-  input: ChangedDescriptionInput! # data
+  input: Input # data
   diff: Diff! # data
   entity: Entity! # data
 }

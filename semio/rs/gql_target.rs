@@ -854,7 +854,7 @@ fn real_design_object() -> Object {
         .field(Field::new("kitOwner", TypeRef::named("Kit"), |_ctx| {
             FieldFuture::new(async move { Ok(Some(FieldValue::NULL)) })
         }))
-        .field(Field::new("entityOwner", TypeRef::named_nn("OwnerEntity"), |_ctx| {
+        .field(Field::new("entityOwner", TypeRef::named("OwnerEntity"), |_ctx| {
             FieldFuture::new(async move { Ok(Some(FieldValue::NULL)) })
         }))
         .field(
@@ -1030,7 +1030,7 @@ fn real_piece_object() -> Object {
         .field(Field::new("pieceOwner", TypeRef::named("Piece"), |_ctx| {
             FieldFuture::new(async move { Ok(Some(FieldValue::NULL)) })
         }))
-        .field(Field::new("entityOwner", TypeRef::named_nn("OwnerEntity"), |_ctx| {
+        .field(Field::new("entityOwner", TypeRef::named("OwnerEntity"), |_ctx| {
             FieldFuture::new(async move { Ok(Some(FieldValue::NULL)) })
         }))
         .field(
