@@ -263,7 +263,7 @@ export type ReadKitCommand =
   | { readonly readKitTypeCommands: { readonly id: KitIdDto; readonly commands: ReadonlyArray<ReadTypeCommand> } };
 
 /**
- * @emoji 🧭 Which materialized `KitStore` view read commands run against (`Query.session.wip` + nested store path).
+ * @emoji 🧭 Which materialized `KitStore` view read commands run against (`Query.wip.theKit` + nested store path).
  * Use `theKitReadScope` for the main live line (`wip.theKit`).
  */
 export type KitReadScope =
@@ -1164,6 +1164,17 @@ function gqlDataSessionWipKitStore(d: JsonValue | null | undefined, scope: KitRe
   return tk != null && typeof tk === "object" && !Array.isArray(tk) ? (tk as JsonObject) : null;
 }
 
+/** @emoji 🧾 Flattens Relay `*Connection` lists on `Query.wip` for VCS helpers (`canUndo`, tests). */
+function __normalizeWipVcsRelayFields(wip: JsonObject | null | undefined): JsonObject {
+  if (wip == null || typeof wip !== "object" || Array.isArray(wip)) return {} as JsonObject;
+  const out = __mutableJsonObjectCopy(wip);
+  for (const k of ["alternatives", "checkpoints", "releases"] as const) {
+    const v = out[k];
+    if (v != null) out[k] = kitGraphqlJsonToReadonlyArray(v as JsonValue) as unknown as JsonValue;
+  }
+  return out as JsonObject;
+}
+
 function kitGraphqlJsonToReadonlyArray(v: JsonValue | KitJsonTreeDto | null | undefined): readonly KitJsonTreeDto[] {
   if (Array.isArray(v)) return v as readonly KitJsonTreeDto[];
   if (v == null) return [];
@@ -1528,10 +1539,10 @@ async function __readSemioWasmBytesFromMonorepoCandidates(): Promise<Uint8Array 
   return undefined;
 }
 
-/** @emoji 🔗 Smoke query: `session` + `wip` at GraphQL root (`semio/graphql/schema.graphql`). */
-export const KIT_SESSION_QUERY_ENTRY = `query { session { id } wip { id theKit { id } } }` as const;
+/** @emoji 🔗 Smoke query: `Query.wip` + `theKit` at GraphQL root (`semio/graphql/schema.graphql`); `session` requires `session(id:)`. */
+export const KIT_SESSION_QUERY_ENTRY = `query { wip { id theKit { id } } }` as const;
 
-/** @emoji 🔗 Root subscription aligned with `SubscriptionRoot.operationSucceeded`. */
+/** @emoji 🔗 Root subscription aligned with `Subscription.operationSucceeded` (`semio/graphql/schema.graphql`). */
 export const KIT_EVENT_STREAM_SUBSCRIPTION = `subscription { operationSucceeded { __typename id } }` as const;
 
 /** @emoji 🔗 Kit rename bus: {@link KitStore.renameKit} correlates `requestId` with {@link Subscription.kitRenamed}. GraphQL subscriptions allow only one root field, so {@link Subscription.operationFailed} is wired through {@link KIT_OPERATION_FAILED_SUBSCRIPTION}. */
@@ -1816,7 +1827,7 @@ export class KitStore {
     return kitGraphqlRun(this.graphqlHandle(), body, this.timeoutMs);
   }
 
-  /** @emoji 🧾 `Query.session.wip` materialized {@link KitStore} selection for read helpers. */
+  /** @emoji 🧾 `Query.wip.theKit` materialized {@link KitStore} selection for read helpers. */
   private async gqlKitReadOnlyScope(scope: KitReadScope, innerOnKitStore: string): Promise<JsonObject> {
     const { query, variables } = kitSessionWipStoreSelect(scope, innerOnKitStore);
     const data = kitGraphqlData(await this.gqlRun({ query, variables })) as JsonValue;
@@ -2032,12 +2043,12 @@ export class KitStore {
     this.transport.dispose();
   }
 
-  /** @internal One `Query.session.wip.theKit { fullSnapshot }` read to verify GraphQL after WASM init (no local kit cache). */
+  /** @internal One `Query.wip.theKit { fullSnapshot }` read to verify GraphQL after WASM init (no local kit cache). */
   private async warmGraphqlRead(): Promise<void> {
     await this.materializedLiveJsonForReadScope(theKitReadScope);
   }
 
-  /** @emoji 🧾 Full DTO for a {@link KitReadScope} via `Query.session.wip.*.store` (`fullSnapshot` scalar); sole full-kit read path (no WASM `snapshot` fallback). */
+  /** @emoji 🧾 Full DTO for a {@link KitReadScope} via `Query.wip.theKit` (`fullSnapshot` scalar); sole full-kit read path (no WASM `snapshot` fallback). */
   async materializedLiveJsonForReadScope(scope: KitReadScope): Promise<KitFullDto> {
     this.ensureAlive();
     const { query, variables } = kitSessionWipStoreSelect(scope, "fullSnapshot");
@@ -2052,7 +2063,7 @@ export class KitStore {
     return semioCoerceKitFullDtoFromJson(j as KitJsonTreeDto);
   }
 
-  /** @emoji 🧾 Main-line live kit DTO from `Query.session.wip.theKit.full`. */
+  /** @emoji 🧾 Main-line live kit DTO from `Query.wip.theKit` (`fullSnapshot` / materialized JSON). */
   async theKit(): Promise<KitFullDto> {
     return this.materializedLiveJsonForReadScope(theKitReadScope);
   }
@@ -2066,10 +2077,11 @@ export class KitStore {
   async vcsState(): Promise<JsonObject> {
     const data = kitGraphqlData(
       await this.gqlRun({
-        query: `query { wip { id theKit { id } checkpoints { id message isRelease changeCount parentCheckpoint { id } } alternatives { id name draft { id u1: canUndo(steps:1) r1: canRedo(steps:1) openTransaction { id } } } } }`,
+        query: `query { wip { id theKit { id } checkpoints { edges { node { id message isRelease changeCount parentCheckpoint { id } } } } alternatives { edges { node { id name draft { id u1: canUndo(steps:1) r1: canRedo(steps:1) openTransaction { id } } } } } } }`,
       }),
     ) as JsonValue;
-    const wip = (data as { wip?: JsonObject }).wip ?? {};
+    const wipRaw = (data as { wip?: JsonObject | null }).wip;
+    const wip = __normalizeWipVcsRelayFields(wipRaw);
     return { wip } as JsonObject;
   }
 
@@ -2622,7 +2634,7 @@ export class KitStore {
       return { readKitFullCommand: { full: d } };
     }
     if ("readKitShallowCommand" in c && c.readKitShallowCommand === null) {
-      const row = await this.gqlKitReadOnlyScope(scope, `types { ${KIT_GQL_TYPE_SHALLOW_FIELDS} } designs { ${KIT_GQL_DESIGN_SHALLOW_FIELDS} }`);
+      const row = await this.gqlKitReadOnlyScope(scope, `${kitGqlKitTypesRelay(KIT_GQL_TYPE_SHALLOW_FIELDS)} ${kitGqlKitDesignsRelay(KIT_GQL_DESIGN_SHALLOW_FIELDS)}`);
       const typesRows = kitGraphqlJsonToReadonlyArray((row.types as KitJsonTreeDto | undefined) ?? []);
       const designRows = kitGraphqlJsonToReadonlyArray((row.designs as KitJsonTreeDto | undefined) ?? []);
       return {
@@ -2633,15 +2645,15 @@ export class KitStore {
       };
     }
     if ("readKitTypeIdsCommand" in c && c.readKitTypeIdsCommand === null) {
-      const row = await this.gqlKitReadOnlyScope(scope, "types { id }");
+      const row = await this.gqlKitReadOnlyScope(scope, kitGqlKitTypesRelay("id"));
       return { readKitTypeIdsCommand: { typeIds: semioParseKitIdDtoArray(row.types as KitJsonTreeDto | string) } };
     }
     if ("readKitDesignIdsCommand" in c && c.readKitDesignIdsCommand === null) {
-      const row = await this.gqlKitReadOnlyScope(scope, "designs { id }");
+      const row = await this.gqlKitReadOnlyScope(scope, kitGqlKitDesignsRelay("id"));
       return { readKitDesignIdsCommand: { designIds: semioParseKitIdDtoArray(row.designs as KitJsonTreeDto | string) } };
     }
     if ("readKitTypesMetadataCommand" in c && c.readKitTypesMetadataCommand === null) {
-      const row = await this.gqlKitReadOnlyScope(scope, `types { ${KIT_GQL_TYPE_METADATA_FIELDS} }`);
+      const row = await this.gqlKitReadOnlyScope(scope, kitGqlKitTypesRelay(KIT_GQL_TYPE_METADATA_FIELDS));
       const metas = kitGraphqlJsonToReadonlyArray((row.types as KitJsonTreeDto | undefined) ?? []);
       const parsed = metas.map((raw) =>
         typeof raw === "object" && raw != null ? TypeMetadataDtoSchema.parse(__coerceTypeMetadataGqlRow(raw as JsonObject)) : null,
@@ -2653,7 +2665,7 @@ export class KitStore {
       };
     }
     if ("readKitDesignsMetadataCommand" in c && c.readKitDesignsMetadataCommand === null) {
-      const row = await this.gqlKitReadOnlyScope(scope, `designs { ${KIT_GQL_DESIGN_METADATA_FIELDS} }`);
+      const row = await this.gqlKitReadOnlyScope(scope, kitGqlKitDesignsRelay(KIT_GQL_DESIGN_METADATA_FIELDS));
       const metas = kitGraphqlJsonToReadonlyArray((row.designs as KitJsonTreeDto | undefined) ?? []);
       const parsed = metas.map((raw) =>
         typeof raw === "object" && raw != null ? DesignMetadataDtoSchema.parse(__stripTopLevelJsonNulls(raw as JsonObject) as KitJsonTreeDto) : null,
@@ -2665,7 +2677,7 @@ export class KitStore {
       };
     }
     if ("readKitTypesShallowCommand" in c && c.readKitTypesShallowCommand === null) {
-      const row = await this.gqlKitReadOnlyScope(scope, `types { ${KIT_GQL_TYPE_SHALLOW_FIELDS} }`);
+      const row = await this.gqlKitReadOnlyScope(scope, kitGqlKitTypesRelay(KIT_GQL_TYPE_SHALLOW_FIELDS));
       const rows = kitGraphqlJsonToReadonlyArray((row.types as KitJsonTreeDto | undefined) ?? []);
       return {
         readKitTypesShallowCommand: {
@@ -2674,7 +2686,7 @@ export class KitStore {
       };
     }
     if ("readKitDesignsShallowCommand" in c && c.readKitDesignsShallowCommand === null) {
-      const row = await this.gqlKitReadOnlyScope(scope, `designs { ${KIT_GQL_DESIGN_SHALLOW_FIELDS} }`);
+      const row = await this.gqlKitReadOnlyScope(scope, kitGqlKitDesignsRelay(KIT_GQL_DESIGN_SHALLOW_FIELDS));
       const rows = kitGraphqlJsonToReadonlyArray((row.designs as KitJsonTreeDto | undefined) ?? []);
       return {
         readKitDesignsShallowCommand: {
@@ -2683,7 +2695,7 @@ export class KitStore {
       };
     }
     if ("readKitAuthorsShallowCommand" in c && c.readKitAuthorsShallowCommand === null) {
-      const row = await this.gqlKitReadOnlyScope(scope, "authors { id name email role rank }");
+      const row = await this.gqlKitReadOnlyScope(scope, kitGqlKitAuthorsRelay("id name email role rank"));
       const authors = kitGraphqlJsonToReadonlyArray((row.authors as KitJsonTreeDto | undefined) ?? []);
       return {
         readKitAuthorsShallowCommand: {
@@ -3281,9 +3293,8 @@ export class LiveKitRoot {
   }
 
   async readColoredConnectors(): Promise<readonly KitColoredConnectorRowDto[]> {
-    const store = await this.ks.kitStoreGraphqlFieldsForReadScope(this.readScope, "types { id connectors { id color { css } } }");
-    const types = store["types"] as JsonValue;
-    if (!Array.isArray(types)) return [];
+    const store = await this.ks.kitStoreGraphqlFieldsForReadScope(this.readScope, kitGqlKitTypesRelay("id connectors { id color { css } }"));
+    const types = kitGraphqlJsonToReadonlyArray(store["types"] as JsonValue);
     const out: KitColoredConnectorRowDto[] = [];
     for (const t of types) {
       if (!t || typeof t !== "object" || Array.isArray(t)) continue;
@@ -6216,7 +6227,18 @@ function semioParseTypeShallowArrayJson(v: KitJsonTreeDto | string | undefined |
 }
 
 function semioParseDesignShallowArrayJson(v: KitJsonTreeDto | string | undefined | null): readonly DesignShallow[] {
-  const xs = kitGraphqlJsonToReadonlyArray(v).map((row) => (row && typeof row === "object" && !Array.isArray(row) ? __stripTopLevelJsonNulls(__normalizeTypeOrDesignMetadataRow(row as JsonObject)) : row));
+  const xs = kitGraphqlJsonToReadonlyArray(v).map((row) => {
+    if (row == null || typeof row !== "object" || Array.isArray(row)) return row;
+    const r0 = __stripTopLevelJsonNulls(__normalizeTypeOrDesignMetadataRow(row as JsonObject)) as JsonObject;
+    const r = __mutableJsonObjectCopy(r0);
+    for (const k of ["pieces", "connections", "layers", "groups", "stats", "props", "attributes"] as const) {
+      const inner = r[k];
+      if (inner != null && typeof inner === "object") {
+        r[k] = kitGraphqlJsonToReadonlyArray(inner as JsonValue) as unknown as JsonValue;
+      }
+    }
+    return r as KitJsonTreeDto;
+  });
   const r = z.array(DesignShallowSchema).safeParse(xs);
   return r.success ? r.data : [];
 }
@@ -7853,10 +7875,10 @@ if (
         }
       }
       expect(sdl.length).toBeGreaterThan(100);
-      expect(sdl).toContain("session: Session!");
+      expect(sdl).toContain("type Session");
       expect(sdl).toContain("type Kit");
       expect(sdl).toMatch(/fullSnapshot/s);
-      expect(sdl).toMatch(/type SubscriptionRoot[\s\S]*operationSucceeded/s);
+      expect(sdl).toMatch(/type Subscription[\s\S]*operationSucceeded/s);
       expect(sdl).not.toContain("type KitStoreMutation");
       expect(KIT_SESSION_QUERY_ENTRY).toContain("wip { id theKit");
       expect(KIT_EVENT_STREAM_SUBSCRIPTION).toContain("operationSucceeded");

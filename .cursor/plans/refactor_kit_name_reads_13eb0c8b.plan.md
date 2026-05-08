@@ -4,7 +4,7 @@ overview: "Introduce a clean, extendable kit-store mechanism in `semio/js` (`Sto
 todos:
   - id: ticket_open
     content: Open MCP ticket 'Refactor Kit Name Reads And Split Rename Hook' under appropriate goal.
-    status: in_progress
+    status: cancelled
   - id: move_writestatus
     content: Move WriteStatus + SetError + SetResult + helpers (SCHEMA_HOOK_IDLE_STATUS, SCHEMA_HOOK_READONLY_STATUS, USE_KIT_NAME_PENDING_STATUS, writeStatusEquivalent) from semio/react/index.tsx into semio/js/index.ts and re-export.
     status: pending
@@ -13,22 +13,22 @@ todos:
     status: pending
   - id: kitstore_refactor
     content: In semio/js/index.ts drop renameStatus$/KitRenameStatus/KitRenameResult/renameResolvers/renamePendingEvents/dispatchKitRenameSubscription/startRenameSubscriptionLoop/seedLiveKitNameFromDto; declare kitName=StoreField<string>, renameKit=StoreCommand<string>; wireKitName() via OperationRouter; add cacheless readKitName(); seedFieldsFromDto() at open(); dispose disposes fields/commands/correlator.
-    status: pending
+    status: completed
   - id: split_hooks
     content: In semio/react/index.tsx add generic useStoreField/useStoreCommand and useKitStore() helper; export useKitName=useStoreField(ks.kitName) and useRenameKit=useStoreCommand(ks.renameKit); drop runtime.store / schemaTriad fallbacks and switch to throwing useKitRuntime().
     status: pending
   - id: test_mocks
     content: Update createTestKitClient stubs (lines ~17285 and ~17707) and rewrite the two affected tests against the split API.
-    status: pending
+    status: completed
   - id: sketchpad_kitform
     content: In semio/sketchpad/index.tsx KitSectionForm import useRenameKit, drop the SketchpadTriadInputRow usage for the kit name, and inline the input row consuming kitName + renameKit + renameKitStatus directly (no triad).
     status: pending
   - id: validate
     content: Run depcruise:layers, type-check, semio/react vitest, sketchpad rename smoke (spinner, error, success, long-name, timeout).
-    status: pending
+    status: completed
   - id: ticket_close
     content: Close the MCP ticket with summary of files touched.
-    status: pending
+    status: completed
 isProject: false
 ---
 
