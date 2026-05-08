@@ -4,7 +4,7 @@ overview: Promote every read on KitStoreClient to a StoreField and every write t
 todos:
   - id: ticket_open
     content: Open MCP ticket 'Strict Read Write Hooks' under .repo/🎫/26/05/08/strict-read-write-hooks/
-    status: pending
+    status: in_progress
   - id: phase1_storefields_storecommands
     content: "semio/js: rename SCHEMA_HOOK_IDLE_STATUS/SCHEMA_HOOK_READONLY_STATUS/USE_KIT_NAME_PENDING_STATUS to WRITE_STATUS_IDLE/WRITE_STATUS_READONLY/WRITE_STATUS_PENDING; rebuild StoreField (no public set; values pushed via constructor source callback); rebuild StoreCommand status using same source pattern (no kit/schema constants in the generic class); add KitStore.query<T>(body, parse, initial) read helper + KitStore.operation<TArgs>(name, vars, body, toVars) transactional kit-modifying helper (one per SDL OperationKind variant: RenameKit, DraggedPiece, AddedType, ...) + KitStore.command<TArgs>(...) non-transactional helper for workspace writes (attachBackbone, syncNow, importKit, ...); wire operationSucceeded -> correlator + invalidations.next() and operationFailed -> correlator; delete OperationRouter, seedFieldsFromDto, dispatchCorrelationEnvelope typed-kind branch, kitRenamed subscription, fieldCache; privatize submitChangeKitCommands and fetchFullKit; extend embedded tests"
     status: pending

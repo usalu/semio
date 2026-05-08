@@ -1,35 +1,48 @@
 ---
+name: Plan
+overview: ""
+todos: []
+isProject: false
+---
+
+---
+
 name: rs kit store materialization
-overview: "Refactor `semio/rs` so the root kit is structurally immutable: every command (rename, description, drag, createFixedPiece, tag/concept/quality CRUD, etc.) appends forward+backward `KitOperation`s onto the open transaction's `Change`, and the visible kit is always recomputed by deep-cloning the parent checkpoint's frozen root and replaying forward ops from finalized + open transactions, with per-checkpoint snapshot caching and per-draft materialization caching."
+overview: ""
 todos:
-  - id: kitdiff_apply
-    content: Port the canonical `KitDiff` family of types (sparse partials with `removed`/`updated`/`added` triples on every collection, recursive on Type/Design/Representation/Connector/Piece/Connection/Tag/Concept/File/Folder/Author/Attribute/Port) into the rs `operation` region with serde matching `semio/assets/semio/metabolism.kit.diff.semio.json`, and implement `Kit::apply_diff` as the single central mutation entry point; remove every per-field mutator helper on `Kit`/`Design`/`Piece`/...
-    status: pending
-  - id: kit_deep_clone
-    content: Implement `Kit::deep_clone() -> Arc<Kit>` walking Type/Representation/Connector/Design/Piece/Tag/Concept/Quality/Author/File/Folder/Prop/Attribute/Stat and rebuilding `*_by_id` weak maps.
+
+- id: kitdiff_apply
+content: Port the canonical `KitDiff` family of types (sparse partials with `removed`/`updated`/`added` triples on every collection, recursive on Type/Design/Representation/Connector/Piece/Connection/Tag/Concept/File/Folder/Author/Attribute/Port) into the rs `operation` region with serde matching `semio/assets/semio/metabolism.kit.diff.semio.json`, and implement `Kit::apply_diff` as the single central mutation entry point; remove every per-field mutator helper on `Kit`/`Design`/`Piece`/...
+status: pending
+- id: kit_deep_clone
+content: Implement `Kit::deep_clone() -> Arc<Kit>` walking Type/Representation/Connector/Design/Piece/Tag/Concept/Quality/Author/File/Folder/Prop/Attribute/Stat and rebuilding `*_by_id` weak maps.
+status: pending
+  - id: scope_input_enums
+    content: "Define a single shared `operation::Scope` enum with one variant per distinct id-shape used across the 15 commands (`Kit`, `Entity { entity_id }`, `Tag { tag_id }`, `Tags { tag_ids }`, `CreateTag { owner_id, tag_id, attribute_ids }`, `CreateTags { owner_id, tag_ids, attribute_ids }`, `CreateConcept { owner_id, concept_id, attribute_ids }`, `CreateQuality { owner_id, quality_id, attribute_ids, benchmark_ids }`, `CreateFixedPiece { design_id, piece_id, blueprint_id, attribute_ids }`, `PieceInDesign { design_id, piece_id }`, `PiecesInDesign { design_id, piece_ids }`, ...) — each variant carries every `Id` the operation references (target / owner / system-minted-on-creation). And a single shared `operation::Input` enum with one variant per distinct non-id payload shape (`None`, `Name { name }`, `Description { description }`, `Icon { icon }`, `Image { image }`, `Tag { tag }`, `Tags { tags }`, `Concept { concept }`, `Quality { quality }`, `FixedPiece { position, name, description }`, `Offset { offset }`, ...) — operations sharing a payload shape reuse the same variant (e.g. `RenameKit` and `RenameTag` both use `Input::Name`)."
     status: pending
   - id: kitop_enum
-    content: Define one-way `operation::KitOperation` with one variant per existing Command. Every variant is uniformly shaped as `{ scope: <variant>Scope, input: <variant>Input }`; `scope` holds every `Id` the op references (target / owner / system-minted-on-creation), `input` holds the non-id payload only. The user-facing GraphQL command never accepts an entity id for creations; the worker mints them into `scope` at record time. Two pure read methods per variant; `to_diff(&Arc<Kit>) -> KitDiff` (uses ids from `scope` to populate `KitDiff.added[*].id`) and `to_backwards(&Arc<Kit>) -> Vec<KitOperation>` (returns ordered forward-intent ops that undo the operation; deletions construct a fresh `scope` reusing prior ids from `pre`). No undo state on variants; no separate inverse helper.
+    content: "Define one-way `operation::KitOperation` with one variant per existing Command. Every variant is uniformly shaped as `{ scope: Scope, input: Input }` reusing both shared enums. The variant name encodes the operation kind; the (Scope variant, Input variant) pairing is fixed and runtime-validated inside `to_diff` / `to_backwards`. The user-facing GraphQL command never accepts an entity id for creations; the worker mints them into the matching `Scope` variant at record time. Two pure read methods per variant; `to_diff(&Arc<Kit>) -> KitDiff` (uses ids from `scope` to populate `KitDiff.added[*].id`) and `to_backwards(&Arc<Kit>) -> Vec<KitOperation>` (returns ordered forward-intent ops that undo the operation; deletions construct a fresh `Scope` reusing prior ids from `pre`). No undo state on variants; no separate inverse helper."
     status: pending
-  - id: vcs_root_freeze
-    content: Change `Checkpoint.root` to immutable `frozen_root Arc<Kit>`; add `Draft.change_seq`; remove `Graph.the_kit` in favour of `parent_root_for_active_draft` + cached `materialized_kit()` (deep-clone + replay via op->diff->apply_diff) + `record_op_in_open_transaction()`.
-    status: pending
+- id: vcs_root_freeze
+content: Change `Checkpoint.root` to immutable `frozen_root Arc<Kit>`; add `Draft.change_seq`; remove `Graph.the_kit` in favour of `parent_root_for_active_draft` + cached `materialized_kit()` (deep-clone + replay via op->diff->apply_diff) + `record_op_in_open_transaction()`.
+status: pending
   - id: worker_rewrite
-    content: Rewrite `worker::ChildRuntime::apply` so every command captures `before_kit`, mints all required ids via `Id::new()` for any entities the command will create (placed directly into the operation's `scope` struct alongside any owner / target ids the user supplied), builds the forward `KitOperation { scope, input }` from `scope` + the user payload `input`, derives backwards via `forward.to_backwards(&before_kit)`, records both onto the open transaction's `Change` (extends `Change.forwards` with the forward op and `Change.backwards` with the returned `Vec`), invalidates the materialization cache, then emits the existing `OperationKind` events from the freshly materialized kit. The worker never mutates a `Kit` directly.
+    content: Rewrite `worker::ChildRuntime::apply` so every command captures `before_kit`, mints all required ids via `Id::new()` for any entities the command will create (placed directly into the matching `Scope` variant alongside any owner / target ids the user supplied), builds the forward `KitOperation::<Variant> { scope: Scope::<…> { … }, input: Input::<…> { … } }`, derives backwards via `forward.to_backwards(&before_kit)`, records both onto the open transaction's `Change` (extends `Change.forwards` with the forward op and `Change.backwards` with the returned `Vec`), invalidates the materialization cache, then emits the existing `OperationKind` events from the freshly materialized kit. The worker never mutates a `Kit` directly.
     status: pending
-  - id: resolvers_switch
-    content: Switch every `graph.the_kit.*` access in `gql`, `iface`, `kit_backbone`, and `kit_graph_engine` to `graph.materialized_kit().await`.
-    status: pending
-  - id: abort_via_invalidation
-    content: Make `Graph::abort_transaction` simply drop the open transaction's `Change` list and invalidate `materialized_cache`; the next `materialized_kit()` re-replays only the surviving finalized ops via op->diff->apply_diff. `Change.backwards` is preserved on disk for explicit undo/redo flows.
-    status: pending
-  - id: tests_update
-    content: Update existing tests that reach into `g.the_kit` and add new assertions; root immutability after rename, abort restores prior materialized state, and `Kit::apply_diff` is the only mutation entry point (grep guard test).
-    status: pending
-  - id: ticket
-    content: Open MCP ticket 'Refactor RS Kit Store To Materialized Reads', close with summary at the end.
-    status: pending
+- id: resolvers_switch
+content: Switch every `graph.the_kit.*` access in `gql`, `iface`, `kit_backbone`, and `kit_graph_engine` to `graph.materialized_kit().await`.
+status: pending
+- id: abort_via_invalidation
+content: Make `Graph::abort_transaction` simply drop the open transaction's `Change` list and invalidate `materialized_cache`; the next `materialized_kit()` re-replays only the surviving finalized ops via op->diff->apply_diff. `Change.backwards` is preserved on disk for explicit undo/redo flows.
+status: pending
+- id: tests_update
+content: Update existing tests that reach into `g.the_kit` and add new assertions; root immutability after rename, abort restores prior materialized state, and `Kit::apply_diff` is the only mutation entry point (grep guard test).
+status: pending
+- id: ticket
+content: Open MCP ticket 'Refactor RS Kit Store To Materialized Reads', close with summary at the end.
+status: pending
 isProject: false
+
 ---
 
 # Refactor `semio/rs` Kit Store Read/Write to Pure Materialization
@@ -90,52 +103,66 @@ Invariants:
   - `Draft` gains `change_seq: AtomicU64`.
   - Remove the in-place `the_kit` mutation paths: `Graph::apply_create_fixed_piece`*, `Graph::apply_drag_piece_in_design`, `Graph::apply_drag_pieces_in_design`. Their logic moves into the operation's `to_diff` (see below); structural mutation only happens in `Kit::apply_diff`.
 - `⚙️ operation` (lines 4488–5146):
-  - Introduce a **strictly one-way** semantic op enum. **Every variant has the same uniform shape: `{ scope, input }`** — `scope` carries every `Id` the operation references (entities it reads, mutates, deletes, or creates), `input` carries the non-id payload (values, embedded `TagInput` / `ConceptInput` / `Position` / `Offset` / `String` / …). No variant carries undo state. Both `scope` and `input` are dedicated structs per variant so the shape is grep-uniform.
+  - Introduce a **strictly one-way** semantic op enum. **Every variant has the same uniform shape: `{ scope: Scope, input: Input }`** — both `Scope` and `Input` are single shared enums. `Scope` carries every `Id` the operation references (entities it reads, mutates, deletes, or creates). `Input` carries the non-id payload (values, embedded `TagInput` / `ConceptInput` / `Position` / `Offset` / `String` / …). No variant carries undo state. Variant–scope–input pairings are documented per variant and validated at runtime inside `to_diff` / `to_backwards`.
     ```rust
-    pub enum KitOperation {
-        RenameKit          { scope: RenameKitScope,          input: RenameKitInput },
-        ChangeDescription  { scope: EntityScope,             input: ChangeDescriptionInput },
-        ChangeIcon         { scope: EntityScope,             input: ChangeIconInput },
-        ChangeImage        { scope: EntityScope,             input: ChangeImageInput },
-        CreateTag          { scope: CreateTagScope,          input: TagInput },
-        CreateTags         { scope: CreateTagsScope,         input: CreateTagsInput },
-        DeleteTag          { scope: TagScope,                input: NoInput },
-        DeleteTags         { scope: TagsScope,               input: NoInput },
-        RenameTag          { scope: TagScope,                input: RenameTagInput },
-        CreateConcept      { scope: CreateConceptScope,      input: ConceptInput },
-        CreateQuality      { scope: CreateQualityScope,      input: QualityInput },
-        CreateFixedPiece   { scope: CreateFixedPieceScope,   input: CreateFixedPieceInput },
-        DeletePieceInDesign{ scope: PieceInDesignScope,      input: NoInput },
-        DragPieceInDesign  { scope: PieceInDesignScope,      input: DragPieceInput },
-        DragPiecesInDesign { scope: PiecesInDesignScope,     input: DragPieceInput },
-        FixPieceInDesign   { scope: PieceInDesignScope,      input: NoInput },
-        // ...one variant per existing Command, all pure forward, all { scope, input }.
+    /// Single shared scope enum. One variant per distinct id-shape used across operations.
+    /// Ids the worker mints at record time (creations) sit alongside ids the worker reads
+    /// from existing state (targets, owners) — both are just `Id`s by the time they reach
+    /// the op log.
+    pub enum Scope {
+        Kit,                                                                                                            // kit is implicit
+        Entity           { entity_id: Id },
+        Tag              { tag_id: Id },
+        Tags             { tag_ids: Vec<Id> },
+        CreateTag        { owner_id: Id, tag_id: Id,        attribute_ids: Vec<Id> },                                   // tag_id + attribute_ids minted
+        CreateTags       { owner_id: Id, tag_ids: Vec<Id>,  attribute_ids: Vec<Vec<Id>> },
+        CreateConcept    { owner_id: Id, concept_id: Id,    attribute_ids: Vec<Id> },
+        CreateQuality    { owner_id: Id, quality_id: Id,    attribute_ids: Vec<Id>, benchmark_ids: Vec<Id> },
+        CreateFixedPiece { design_id: Id, piece_id: Id,     blueprint_id: Id,       attribute_ids: Vec<Id> },
+        PieceInDesign    { design_id: Id, piece_id: Id },
+        PiecesInDesign   { design_id: Id, piece_ids: Vec<Id> },
+        // ...one variant per distinct id-shape used by the 15 commands.
     }
 
-    // Scopes — every id the op references lives here. Ids the worker mints at record time
-    // (creations) sit alongside ids the worker reads from existing state (targets, owners).
-    pub struct RenameKitScope;                                                              // kit is implicit
-    pub struct EntityScope          { pub entity_id: Id }
-    pub struct TagScope             { pub tag_id: Id }
-    pub struct TagsScope            { pub tag_ids: Vec<Id> }
-    pub struct CreateTagScope       { pub owner_id: Id, pub tag_id: Id,           pub attribute_ids: Vec<Id> }   // tag_id + attribute_ids minted
-    pub struct CreateTagsScope      { pub owner_id: Id, pub tag_ids: Vec<Id>,     pub attribute_ids: Vec<Vec<Id>> }
-    pub struct CreateConceptScope   { pub owner_id: Id, pub concept_id: Id,       pub attribute_ids: Vec<Id> }
-    pub struct CreateQualityScope   { pub owner_id: Id, pub quality_id: Id,       pub attribute_ids: Vec<Id>, pub benchmark_ids: Vec<Id> }
-    pub struct CreateFixedPieceScope{ pub design_id: Id, pub piece_id: Id,        pub blueprint_id: Id, pub attribute_ids: Vec<Id> }
-    pub struct PieceInDesignScope   { pub design_id: Id, pub piece_id: Id }
-    pub struct PiecesInDesignScope  { pub design_id: Id, pub piece_ids: Vec<Id> }
+    /// Single shared input enum. One variant per distinct non-id payload shape used
+    /// across operations. Two operations sharing a payload shape (e.g. `RenameKit` and
+    /// `RenameTag` both carry just a `name: String`) reuse the same `Input::Name` variant.
+    pub enum Input {
+        None,                                                                                                           // Delete*, FixPieceInDesign
+        Name        { name: String },                                                                                   // RenameKit, RenameTag
+        Description { description: Option<String> },                                                                    // ChangeDescription
+        Icon        { icon: Option<String> },                                                                           // ChangeIcon
+        Image       { image: Option<String> },                                                                          // ChangeImage
+        Tag         { tag: TagInput },                                                                                  // CreateTag
+        Tags        { tags: Vec<TagInput> },                                                                            // CreateTags
+        Concept     { concept: ConceptInput },                                                                          // CreateConcept
+        Quality     { quality: QualityInput },                                                                          // CreateQuality
+        FixedPiece  { position: Position, name: Option<String>, description: Option<String> },                          // CreateFixedPiece
+        Offset      { offset: Offset },                                                                                 // DragPieceInDesign, DragPiecesInDesign
+        // ...one variant per distinct payload shape used by the 15 commands.
+    }
 
-    // Inputs — non-id payload only.
-    pub struct NoInput;
-    pub struct RenameKitInput          { pub name: String }
-    pub struct RenameTagInput          { pub name: String }
-    pub struct ChangeDescriptionInput  { pub description: Option<String> }
-    pub struct ChangeIconInput         { pub icon: Option<String> }
-    pub struct ChangeImageInput        { pub image: Option<String> }
-    pub struct CreateTagsInput         { pub tags: Vec<TagInput> }
-    pub struct CreateFixedPieceInput   { pub position: Position, pub name: Option<String>, pub description: Option<String> }
-    pub struct DragPieceInput          { pub offset: Offset }
+    pub enum KitOperation {
+        RenameKit          { scope: Scope, input: Input },   // scope = Scope::Kit                            ; input = Input::Name { .. }
+        ChangeDescription  { scope: Scope, input: Input },   // scope = Scope::Entity { .. }                  ; input = Input::Description { .. }
+        ChangeIcon         { scope: Scope, input: Input },   // scope = Scope::Entity { .. }                  ; input = Input::Icon { .. }
+        ChangeImage        { scope: Scope, input: Input },   // scope = Scope::Entity { .. }                  ; input = Input::Image { .. }
+        CreateTag          { scope: Scope, input: Input },   // scope = Scope::CreateTag { .. }               ; input = Input::Tag { .. }
+        CreateTags         { scope: Scope, input: Input },   // scope = Scope::CreateTags { .. }              ; input = Input::Tags { .. }
+        DeleteTag          { scope: Scope, input: Input },   // scope = Scope::Tag { .. }                     ; input = Input::None
+        DeleteTags         { scope: Scope, input: Input },   // scope = Scope::Tags { .. }                    ; input = Input::None
+        RenameTag          { scope: Scope, input: Input },   // scope = Scope::Tag { .. }                     ; input = Input::Name { .. }
+        CreateConcept      { scope: Scope, input: Input },   // scope = Scope::CreateConcept { .. }           ; input = Input::Concept { .. }
+        CreateQuality      { scope: Scope, input: Input },   // scope = Scope::CreateQuality { .. }           ; input = Input::Quality { .. }
+        CreateFixedPiece   { scope: Scope, input: Input },   // scope = Scope::CreateFixedPiece { .. }        ; input = Input::FixedPiece { .. }
+        DeletePieceInDesign{ scope: Scope, input: Input },   // scope = Scope::PieceInDesign { .. }           ; input = Input::None
+        DragPieceInDesign  { scope: Scope, input: Input },   // scope = Scope::PieceInDesign { .. }           ; input = Input::Offset { .. }
+        DragPiecesInDesign { scope: Scope, input: Input },   // scope = Scope::PiecesInDesign { .. }          ; input = Input::Offset { .. }
+        FixPieceInDesign   { scope: Scope, input: Input },   // scope = Scope::PieceInDesign { .. }           ; input = Input::None
+        // ...one variant per existing Command. Every variant has identical signature
+        // `{ scope: Scope, input: Input }`. The variant name encodes the operation kind;
+        // the (Scope variant, Input variant) pairing is fixed and runtime-validated.
+    }
 
     impl KitOperation {
         /// Pure: read pre-state, produce a structural `KitDiff`. Uses ids from `scope`
@@ -169,19 +196,19 @@ Invariants:
   - `Kit::apply_diff(&self, diff: &KitDiff)` is the **single central mutation entry point**. Internally it walks the sparse `KitDiff` tree, applies scalar overrides, removes entities by id, applies per-entity `*Diff` updates (recursively re-using `apply_diff` on the same pattern for sub-entities), and appends `added` entities. No other `Kit`-mutating call exists.
   - Each existing `OperationKind` (`RenamedKit`, `CreatedFixedPiece`, `DraggedPiece`, `ChangedDescription`, `FixedPiece`) is constructed from the corresponding `KitOperation` + post-apply materialized kit so the GraphQL operation event stream stays unchanged.
 - **System mints all new ids; user input never carries an id for a created entity.** Existing GraphQL mutation arguments stay id-free for creations (`createTag(ownerId, tag: TagInput)`, `createConcept(ownerId, concept: ConceptInput)`, `addFixedPieceToDesign(draftId, transactionId, designId, blueprintId, position)`, ...). At command acceptance the worker calls `Id::new().await` once per entity that will be created (entity itself + any nested attributes / benchmarks the input carries) and packs the resulting ids into the operation's `scope` (creation `scope` structs include the freshly-minted entity id alongside any owner / target ids the operation also references). Replay (`to_diff`) reads ids from `scope` to populate `KitDiff.added[*].id`, so persisted op logs replay deterministically without re-minting.
-- **Inverse computation lives on the operation itself via `KitOperation::to_backwards`.** Every variant knows how to read pre-state and produce the ordered list of forward-intent `KitOperation`s that undo it. The list lets one forward op fan out to multiple backward ops where the structural change is non-atomic (e.g. deleting a piece may recreate the piece + recreate any dependent connections; a batch `DeleteTags` returns one creation op per id). For Creations the backward `Delete*` op references the ids in `self.scope`; for Deletions the backward Creation op constructs a fresh `scope` re-using the prior ids from `pre` so undo restores the same identity. Examples (illustrative — every variant must implement its own):
-  - forward `RenameKit { scope: {}, input: { name: "Bar" } }` → backwards `[ RenameKit { scope: {}, input: { name: <pre.name> } } ]`
-  - forward `DeleteTag { scope: { tag_id }, input: NoInput }` → backwards `[ CreateTag { scope: { owner_id: <pre.tag.owner>, tag_id, attribute_ids: <pre.tag attribute ids> }, input: <pre.tag input snapshot> } ]`
-  - forward `CreateTag { scope: { owner_id, tag_id, attribute_ids }, input }` → backwards `[ DeleteTag { scope: { tag_id }, input: NoInput } ]`
-  - forward `DragPieceInDesign { scope: { design_id, piece_id }, input: { offset } }` → backwards `[ DragPieceInDesign { scope: { design_id, piece_id }, input: { offset: -offset } } ]`
-  - forward `CreateFixedPiece { scope: { design_id, piece_id, blueprint_id, attribute_ids }, input }` → backwards `[ DeletePieceInDesign { scope: { design_id, piece_id }, input: NoInput } ]`
-  - forward `DeletePieceInDesign { scope: { design_id, piece_id }, input: NoInput }` → backwards `[ CreateFixedPiece { scope: { design_id, piece_id, blueprint_id: <pre.blueprint>, attribute_ids: <pre.attrs> }, input: <pre piece input snapshot> }, /* one connection-recreating op per connection that referenced the piece, scope reusing prior connection ids */ ]`
-  - forward `DeleteTags { scope: { tag_ids }, input: NoInput }` → backwards = ordered `Vec` of `CreateTag` ops (one per id, oldest first), each with `scope.tag_id` set to the original id from `pre`.
+- **Inverse computation lives on the operation itself via `KitOperation::to_backwards`.** Every variant knows how to read pre-state and produce the ordered list of forward-intent `KitOperation`s that undo it. The list lets one forward op fan out to multiple backward ops where the structural change is non-atomic (e.g. deleting a piece may recreate the piece + recreate any dependent connections; a batch `DeleteTags` returns one creation op per id). For Creations the backward `Delete`* op references the ids in `self.scope`; for Deletions the backward Creation op constructs a fresh `Scope` re-using the prior ids from `pre` so undo restores the same identity. Examples (illustrative — every variant must implement its own):
+  - forward `RenameKit { scope: Scope::Kit, input: Input::Name { name: "Bar" } }` → backwards `[ RenameKit { scope: Scope::Kit, input: Input::Name { name: <pre.name> } } ]`
+  - forward `DeleteTag { scope: Scope::Tag { tag_id }, input: Input::None }` → backwards `[ CreateTag { scope: Scope::CreateTag { owner_id: <pre.tag.owner>, tag_id, attribute_ids: <pre.tag attribute ids> }, input: Input::Tag { tag: <pre.tag input snapshot> } } ]`
+  - forward `CreateTag { scope: Scope::CreateTag { owner_id, tag_id, attribute_ids }, input: Input::Tag { tag } }` → backwards `[ DeleteTag { scope: Scope::Tag { tag_id }, input: Input::None } ]`
+  - forward `DragPieceInDesign { scope: Scope::PieceInDesign { design_id, piece_id }, input: Input::Offset { offset } }` → backwards `[ DragPieceInDesign { scope: Scope::PieceInDesign { design_id, piece_id }, input: Input::Offset { offset: -offset } } ]`
+  - forward `CreateFixedPiece { scope: Scope::CreateFixedPiece { design_id, piece_id, blueprint_id, attribute_ids }, input: Input::FixedPiece { .. } }` → backwards `[ DeletePieceInDesign { scope: Scope::PieceInDesign { design_id, piece_id }, input: Input::None } ]`
+  - forward `DeletePieceInDesign { scope: Scope::PieceInDesign { design_id, piece_id }, input: Input::None }` → backwards `[ CreateFixedPiece { scope: Scope::CreateFixedPiece { design_id, piece_id, blueprint_id: <pre.blueprint>, attribute_ids: <pre.attrs> }, input: Input::FixedPiece { position: <pre.position>, name: <pre.name>, description: <pre.description> } }, /* one connection-recreating op per connection that referenced the piece, scope reusing prior connection ids */ ]`
+  - forward `DeleteTags { scope: Scope::Tags { tag_ids }, input: Input::None }` → backwards = ordered `Vec` of `CreateTag` ops (one per id, oldest first), each with `Scope::CreateTag.tag_id` set to the original id from `pre` and `input: Input::Tag { tag: <pre.tag input snapshot> }`.
   `KitOperation` stays a flat data type with no undo state inside variants; `to_backwards` is a pure read on `kit` returning a fresh `Vec`. `Change.forwards: Vec<KitOperation>` / `Change.backwards: Vec<KitOperation>` are symmetric — both are just lists of one-way ops that go through the same op → diff → `apply_diff` pipeline at replay time. There is no separate `operation::inverse_for` helper; the logic is on the variants of `KitOperation` itself.
 - `🧵 worker` (lines 5887–6211): `ChildRuntime::apply` becomes a flat dispatcher per `Command` that:
   1. Captures `before_kit = self.graph.materialized_kit().await` (used by `to_backwards` to derive the inverse ops, e.g. previous name / previous tag input snapshot).
-  2. For every entity the command will create, mints fresh ids via the system id generator (`Id::new().await`); these ids go directly into the operation's `scope` struct (alongside any owner / target ids the user did supply).
-  3. Builds the forward `KitOperation { scope, input }` from `scope` (with minted ids in place) and `input` (user payload, no ids).
+  2. For every entity the command will create, mints fresh ids via the system id generator (`Id::new().await`); these ids go directly into the matching `Scope` variant (alongside any owner / target ids the user did supply).
+  3. Builds the forward `KitOperation::<Variant> { scope: Scope::<…> { … }, input: Input::<…> { … } }` from the populated `Scope` and the user-supplied non-id payload wrapped in the matching `Input` variant.
   4. Computes `backwards: Vec<KitOperation> = forward.to_backwards(&before_kit).await?`.
   5. Calls `self.graph.record_op_in_open_transaction(draft_id, transaction_id, forward.clone(), backwards).await?` which (a) ensures the open transaction exists, (b) extends the current `Change.forwards` with `forward` and the current `Change.backwards` with `backwards` (kept in their natural order; replay during undo iterates the change's `backwards` in reverse), (c) bumps `draft.change_seq`, (d) invalidates `materialized_cache`. The worker itself never calls `to_diff` or `apply_diff` — those run lazily inside `materialized_kit()` so cancelled (aborted) ops never touch a kit.
   6. Re-materializes via `self.graph.materialized_kit().await` (which, internally, deep-clones root then for each recorded forward op runs `op.to_diff(&kit) → kit.apply_diff(diff)`).
@@ -201,11 +228,12 @@ Invariants:
 
 1. Canonical `KitDiff` family of types (`KitDiff`, `TypesDiff` / `TypeDiff` / `TypeDiffUpdate`, `DesignsDiff` / `DesignDiff` / `DesignDiffUpdate`, `RepresentationsDiff` / `RepresentationDiff` / `…Update`, `ConnectorsDiff` / `ConnectorDiff` / `…Update`, `PiecesDiff` / `PieceDiff` / `…Update`, `ConnectionsDiff` / `ConnectionDiff` / `…Update`, `TagsDiff` / `TagDiff` / `…Update`, `ConceptsDiff` / `ConceptDiff` / `…Update`, `FilesDiff` / `FileDiff` / `…Update`, `FoldersDiff` / `FolderDiff` / `…Update`, `AuthorsDiff` / `AuthorDiff` / `…Update`, `AttributesDiff` / `AttributeDiff` / `…Update`, `PortsDiff` / `PortDiff` / `…Update`, plus the corresponding `*Id` newtype refs) + serde camelCase config matching [semio/assets/semio/metabolism.kit.diff.semio.json](semio/assets/semio/metabolism.kit.diff.semio.json), and `Kit::apply_diff` walking that tree as the single central mutation entry point; deletion of all per-field mutators on `Kit`.
 2. `Kit::deep_clone()` walking every sub-entity and rebuilding `*_by_id` weak maps.
-3. `KitOperation` enum (one-way) covering the existing 15 `Command` variants, every variant uniformly shaped as `{ scope, input }` with a dedicated `*Scope` and `*Input` struct per variant. `*Scope` holds every `Id` the operation references (target / owner / minted-on-creation); `*Input` holds the non-id payload only. Two pure read methods per variant: `to_diff(&Arc<Kit>) -> KitDiff` and `to_backwards(&Arc<Kit>) -> Vec<KitOperation>`.
-4. `Checkpoint.frozen_root: Arc<Kit>`, `Draft.change_seq`, `Graph.parent_root_for_active_draft` + `materialized_kit` (deep-clone + replay via op → diff → `apply_diff`) + `record_op_in_open_transaction`.
-5. Remove `Graph.the_kit`; rewrite `worker::ChildRuntime::apply` to record ops only (no mutation; mutation happens inside `materialized_kit()`).
-6. Switch every resolver / backbone path to `materialized_kit()`.
-7. Update `kit_full_snapshot_value` consumers and tests.
+3. Shared `Scope` enum (one variant per distinct id-shape used across the 15 commands: `Kit`, `Entity { entity_id }`, `Tag { tag_id }`, `Tags { tag_ids }`, `CreateTag { owner_id, tag_id, attribute_ids }`, `CreateTags { owner_id, tag_ids, attribute_ids }`, `CreateConcept { .. }`, `CreateQuality { .. }`, `CreateFixedPiece { design_id, piece_id, blueprint_id, attribute_ids }`, `PieceInDesign { design_id, piece_id }`, `PiecesInDesign { design_id, piece_ids }`, ...) and shared `Input` enum (one variant per distinct non-id payload shape: `None`, `Name { name }`, `Description { description }`, `Icon { icon }`, `Image { image }`, `Tag { tag }`, `Tags { tags }`, `Concept { concept }`, `Quality { quality }`, `FixedPiece { position, name, description }`, `Offset { offset }`, ...). Operations sharing a payload shape reuse the same `Input` variant.
+4. `KitOperation` enum (one-way) covering the existing 15 `Command` variants, every variant uniformly shaped as `{ scope: Scope, input: Input }` reusing both shared enums. The variant name encodes the operation kind; the (Scope variant, Input variant) pairing is fixed and runtime-validated inside `to_diff` / `to_backwards`. Two pure read methods per variant: `to_diff(&Arc<Kit>) -> KitDiff` and `to_backwards(&Arc<Kit>) -> Vec<KitOperation>`.
+5. `Checkpoint.frozen_root: Arc<Kit>`, `Draft.change_seq`, `Graph.parent_root_for_active_draft` + `materialized_kit` (deep-clone + replay via op → diff → `apply_diff`) + `record_op_in_open_transaction`.
+6. Remove `Graph.the_kit`; rewrite `worker::ChildRuntime::apply` to record ops only (no mutation; mutation happens inside `materialized_kit()`).
+7. Switch every resolver / backbone path to `materialized_kit()`.
+8. Update `kit_full_snapshot_value` consumers and tests.
 
 ## Validation
 
