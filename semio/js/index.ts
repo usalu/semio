@@ -1360,22 +1360,39 @@ class WorkerStringTransport {
     this.worker = worker;
   }
 
+  /** @emoji 🧵 Resolves on `ready`; rejects fast on worker-thread `error` (e.g. `@semio/rs-wasm` not resolvable from Blob worker) instead of waiting the full timeout. */
   init(dto: KitFullDto): Promise<void> {
     return new Promise((resolve, reject) => {
-      const t = setTimeout(() => reject(new Error("worker init timeout")), 30_000);
-      const onReady = (ev: MessageEvent<string>) => {
+      const t = setTimeout(() => {
+        cleanup();
+        reject(new Error("worker init timeout"));
+      }, 30_000);
+      const onMessage = (ev: MessageEvent<string>) => {
+        let m: { op?: string; message?: string };
         try {
-          const m = JSON.parse(ev.data) as { op: string };
-          if (m.op === "ready") {
-            clearTimeout(t);
-            this.worker.removeEventListener("message", onReady);
-            resolve();
-          }
+          m = JSON.parse(ev.data) as typeof m;
         } catch {
-          /* ignore */
+          return;
+        }
+        if (m.op === "ready") {
+          cleanup();
+          resolve();
+        } else if (m.op === "error") {
+          cleanup();
+          reject(new Error(`worker init error: ${m.message ?? "unknown"}`));
         }
       };
-      this.worker.addEventListener("message", onReady);
+      const onError = (ev: ErrorEvent) => {
+        cleanup();
+        reject(new Error(`worker init error: ${ev.message ?? String(ev)}`));
+      };
+      const cleanup = () => {
+        clearTimeout(t);
+        this.worker.removeEventListener("message", onMessage);
+        this.worker.removeEventListener("error", onError as EventListener);
+      };
+      this.worker.addEventListener("message", onMessage);
+      this.worker.addEventListener("error", onError as EventListener);
       this.worker.postMessage(JSON.stringify({ op: "init", dto }));
     });
   }
@@ -1513,6 +1530,9 @@ export type KitRenameStatus =
   | { readonly kind: "success"; readonly requestId: string; readonly name: string }
   | { readonly kind: "error"; readonly requestId: string; readonly message: string };
 
+/** @emoji 🪪 Frozen idle status — stable identity for `useSyncExternalStore` snapshots in fallback / pre-init code paths. */
+export const KIT_RENAME_STATUS_IDLE: KitRenameStatus = Object.freeze({ kind: "idle" } as const);
+
 /** @emoji 🪪 Result of {@link KitStore.rename} once the event bus reports completion for `requestId`. */
 export type KitRenameResult =
   | { readonly ok: true; readonly requestId: string }
@@ -1535,7 +1555,7 @@ export class KitStore {
   /** @emoji 🪪 Live kit `name` field (rs authority via {@link KIT_RENAME_EVENT_SUBSCRIPTION}). */
   private readonly kitName$ = new BehaviorSubject<string>("");
   /** @emoji 🪪 Last {@link KitStore.rename} lifecycle for UI / {@link useKitName}. */
-  private readonly renameStatus$ = new BehaviorSubject<KitRenameStatus>({ kind: "idle" });
+  private readonly renameStatus$ = new BehaviorSubject<KitRenameStatus>(KIT_RENAME_STATUS_IDLE);
   private readonly renameResolvers = new Map<string, (r: KitRenameResult) => void>();
   private renameSubRunning = false;
 
@@ -1564,14 +1584,24 @@ export class KitStore {
     if (useDedicatedWorker) {
       const worker = opts?.workerFactory?.() ?? createKitStoreWorker();
       const wt = new WorkerStringTransport(worker);
-      await wt.init(dto);
-      const ks = new KitStore(timeoutMs);
-      ks.transport = wt;
-      ks.seedLiveKitNameFromDto(dto);
-      await withTimeout(ks.warmGraphqlRead(), timeoutMs, "graphql");
-      void ks.startSubscriptionLoop();
-      void ks.startRenameSubscriptionLoop();
-      return ks;
+      try {
+        await wt.init(dto);
+        const ks = new KitStore(timeoutMs);
+        ks.transport = wt;
+        ks.seedLiveKitNameFromDto(dto);
+        await withTimeout(ks.warmGraphqlRead(), timeoutMs, "graphql");
+        void ks.startSubscriptionLoop();
+        void ks.startRenameSubscriptionLoop();
+        return ks;
+      } catch (workerErr) {
+        /** @emoji 🧵 Blob worker can't resolve `@semio/rs-wasm` bare specifier → fall back to inline WASM on the main thread (still real rust authority). */
+        console.warn("[semio/js] dedicated WASM worker init failed; falling back to inline main-thread WASM", workerErr);
+        try {
+          wt.dispose();
+        } catch {
+          /* ignore */
+        }
+      }
     }
 
     const mod = wasmSpecifier === "@semio/rs-wasm" ? await import("@semio/rs-wasm") : await import(/* @vite-ignore */ wasmSpecifier);
@@ -3973,8 +4003,9 @@ class FallbackKitClient implements KitStoreClient {
     return { ok: true };
   }
 
-  subscribeKitName(cb: () => void): () => void {
-    cb();
+  /** @emoji 🪪 No live rename in fallback: subscribe is a no-op (must NOT fire `cb` synchronously — `useSyncExternalStore` would loop). */
+  subscribeKitName(_cb: () => void): () => void {
+    void _cb;
     return () => {};
   }
 
@@ -3982,13 +4013,14 @@ class FallbackKitClient implements KitStoreClient {
     return this.kit.name;
   }
 
-  subscribeRenameStatus(cb: () => void): () => void {
-    cb();
+  subscribeRenameStatus(_cb: () => void): () => void {
+    void _cb;
     return () => {};
   }
 
+  /** @emoji 🪪 Stable identity: returning a fresh `{ kind: "idle" }` would re-trigger `useSyncExternalStore` infinitely. */
   getRenameStatusSnapshot(): KitRenameStatus {
-    return { kind: "idle" };
+    return KIT_RENAME_STATUS_IDLE;
   }
 
   async rename(_name: string): Promise<KitRenameResult> {
@@ -7261,7 +7293,11 @@ export class FolderStore {
 // #endregion 🧩KitWasmBridgeMerged
 
 // #region 🧪EmbeddedTests
-if (process.env["SEMIO_JS_RUN_EMBEDDED_TESTS"] === "1") {
+if (
+  typeof process !== "undefined" &&
+  !!process.env &&
+  process.env["SEMIO_JS_RUN_EMBEDDED_TESTS"] === "1"
+) {
   const { describe, it, expect } = await import("vitest");
 
   describe("semio-js KitStore", () => {

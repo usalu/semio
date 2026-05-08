@@ -18426,17 +18426,8 @@ export class SketchpadStore {
   }
 
   hasKitApp(kitApp: KitAppId): boolean {
-    return hasSameKitApp(
-      kitApp,
-      Array.from(this.kitApps.values())
-        .map((kitAppStore) => {
-          if (typeof kitAppStore?.id === "function") {
-            return kitAppStore.id();
-          }
-          return null;
-        })
-        .filter((id): id is KitAppId => id !== null),
-    );
+    /** 🧾 {@link Store.id} is a random sync-store id string; kit-app rows are keyed by kit uuid in {@link kitApps}. */
+    return this.kitApps.has(kitApp.kit);
   }
 
   home(): HomeStoreInstance {
@@ -18464,14 +18455,7 @@ export class SketchpadStore {
   }
 
   kitAppIds(): KitAppId[] {
-    return Array.from(this.kitApps.values())
-      .map((kitAppStore) => {
-        if (typeof kitAppStore?.id === "function") {
-          return kitAppStore.id();
-        }
-        return null;
-      })
-      .filter((id): id is KitAppId => id !== null);
+    return Array.from(this.kitApps.keys(), (kid) => ({ kit: kid }));
   }
 
   getAllKitApps(): KitAppStoreInstance[] {
@@ -18715,7 +18699,6 @@ const SketchpadScopeWithKitRegistry: FC<SketchpadScopeProviderProps & { scopeId:
     if (typeof window !== "undefined") {
       (window as any).__SEMIO_STORE__ = store;
       (window as any).__SEMIO_ACTOR__ = actor;
-      (window as any).__piecesMetadata = piecesMetadata;
       (window as any).__SEMIO_EXECUTE_SEMIO_KIT_COMMAND__ = executeSemioKitCommand;
     }
   }
@@ -19921,17 +19904,24 @@ export const sketchpadDevCommands = {
 // #region 🎁Apps Registry
 // Dynamic app panel loader for registering app-specific panels.
 
+// #region 📋AppPanelGlob
+/** 🗂️ Vite-static glob map so esbuild can resolve optional `./apps/<id>/panels.ts` modules (no dynamic template imports). */
+const appPanelLoaders = import.meta.glob<{ panels?: PanelConfig[] }>("./apps/*/panels.ts");
+// #endregion 📋AppPanelGlob
+
 /**
- * Loads panel configurations for a given app by dynamic import.
+ * Loads panel configurations for a given app from the glob map (same optional modules as before).
  **/
 export async function loadAppPanels(appId: string): Promise<PanelConfig[]> {
+  const panelsModulePath = `./apps/${appId}/panels.ts`;
+  const load = appPanelLoaders[panelsModulePath];
+  if (!load) return [];
   try {
-    const module = await import(`./apps/${appId}/panels.ts`);
-    if (module && module.panels) {
-      return module.panels;
-    }
-  } catch (e) {}
-  return [];
+    const module = await load();
+    return module.panels ?? [];
+  } catch {
+    return [];
+  }
 }
 
 /** AppRegistry holds the data fields for a AppRegistry record.

@@ -29,6 +29,7 @@ import {
   FileSchema,
   FolderSchema,
   isKitCommandLifecycleEvent,
+  KIT_RENAME_STATUS_IDLE,
   kitEventAffectsCanUndoRedo,
   kitEventAffectsDesignQualitySumRead,
   kitEventAffectsKitColoredConnectorsRead,
@@ -8778,12 +8779,13 @@ export function useKitName(idValue?: string): HookTriad<any> {
     [ks, runtime?.store],
   );
 
+  /** @emoji 🪪 Snapshot must be referentially stable (reads `kitName$` BehaviorSubject value or local store snapshot) — `runtime.snapshot.kit?.name` is a string so identity is safe. */
   const snapName = React.useCallback(() => {
     if (ks) return ks.getKitNameSnapshot();
-    const kn = (runtime?.snapshot?.kit as Kit | undefined)?.name;
+    const kn = (runtime?.store?.getSnapshot()?.kit as Kit | undefined)?.name;
     if (kn != null) return String(kn);
     return String(schemaValue ?? "");
-  }, [ks, runtime?.snapshot, schemaValue]);
+  }, [ks, runtime?.store, schemaValue]);
 
   const liveName = React.useSyncExternalStore(storeSubName, snapName, snapName);
 
@@ -8795,8 +8797,9 @@ export function useKitName(idValue?: string): HookTriad<any> {
     [ks],
   );
 
+  /** @emoji 🪪 Stable identity required: returns the BehaviorSubject's current value (cached) or {@link KIT_RENAME_STATUS_IDLE}. */
   const snapRename = React.useCallback(() => {
-    if (!ks) return { kind: "idle" } as const;
+    if (!ks) return KIT_RENAME_STATUS_IDLE;
     return ks.getRenameStatusSnapshot();
   }, [ks]);
 
@@ -17081,7 +17084,7 @@ if (shouldRunReactEmbeddedTests) {
       subscribeKitName: () => () => {},
       getKitNameSnapshot: () => String((kitJsonFromStore(store) as KitFullDto).name ?? ""),
       subscribeRenameStatus: () => () => {},
-      getRenameStatusSnapshot: () => ({ kind: "idle" } as const),
+      getRenameStatusSnapshot: () => KIT_RENAME_STATUS_IDLE,
       rename: async () => ({ ok: false, requestId: "", error: { kind: "NotSupported", message: "embedded test client" } }),
       getKitWriteScope: () => null,
       setKitWriteScope: () => {},
@@ -17502,7 +17505,7 @@ if (shouldRunReactEmbeddedTests) {
         subscribeKitName: () => () => {},
         getKitNameSnapshot: () => "",
         subscribeRenameStatus: () => () => {},
-        getRenameStatusSnapshot: () => ({ kind: "idle" } as const),
+        getRenameStatusSnapshot: () => KIT_RENAME_STATUS_IDLE,
         rename: async () => ({ ok: false, requestId: "", error: { kind: "NotSupported", message: "stub" } }),
         readPieceFlatPlane: async () => null,
         readPieceFlatCenter: async () => null,

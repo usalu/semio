@@ -1,11 +1,12 @@
 {
   "mcpServers": {
     "repo": {
+      "type": "stdio",
       "command": "go",
-      "args": [
-        "run",
-        "./repo/cursor"
-      ]
+      "args": ["run", "${workspaceFolder}${/}repo${/}cursor"],
+      "env": {
+        "GOWORK": "${workspaceFolder}${/}go.work"
+      }
     }
   }
 }

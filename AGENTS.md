@@ -5,6 +5,7 @@ You are working on a greenfield repo. All code is internal in the development ph
 You MUST follow the following rules unless explicitly asked to do otherwise:
 
 - You MUST NOT edit `AGENTS.md` files.
+- You MUST setup everything zero-touch and cross-platform compatible for devcontainer, native windows, native macos and native linux environments.
 - You MUST work simultaneously with others on the same files.
   - You MUST NOT use any modifying git command such as `git  commit`, `git stash`, `git stash pop`, `git checkout`, … because others will lose their work.
   - You MUST NOT use `kill $(lsof -t -i:<port>)` because it kills the ide aswell.

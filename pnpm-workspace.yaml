@@ -1,6 +1,0 @@
-# US-001: minimal install graph for root typecheck/lint (js + react + assets).
-# Extend this list as more packages migrate to pnpm-native workspace resolution.
-packages:
-  - semio/js
-  - semio/react
-  - semio/assets
