@@ -3659,14 +3659,12 @@ pub mod vcs {
                     .cloned()
                     .ok_or_else(|| SemioError::invalid("no main-line draft"))?,
                 Some(aid) => {
-                    let alts = self.alternatives.read().await;
-                    let alt = alts
-                        .iter()
-                        .find(|a| &a.id == aid)
-                        .ok_or_else(|| SemioError::not_found("Alternative", aid.as_str()))?
-                        .clone();
-                    drop(alts);
-                    alt.draft.read().await.upgrade().ok_or_else(|| SemioError::invalid("alternative has no draft"))?
+                    let alt = {
+                        let alts = self.alternatives.read().await;
+                        alts.iter().find(|a| &a.id == aid).ok_or_else(|| SemioError::not_found("Alternative", aid.as_str()))?.clone()
+                    };
+                    let draft_slot = alt.draft.read().await;
+                    draft_slot.upgrade().ok_or_else(|| SemioError::invalid("alternative has no draft"))?
                 }
             };
 
@@ -5614,11 +5612,13 @@ pub mod kit_backbone {
     }
     //#endregion 🧾 wire format
 
-    //#region 🧭 paths + uri
+    //#region 🧭 paths + uri (native only)
+    #[cfg(not(target_arch = "wasm32"))]
     pub fn normalize_connection_uri(raw: &str) -> String {
         raw.trim().to_string()
     }
 
+    #[cfg(not(target_arch = "wasm32"))]
     pub fn filesystem_path_from_uri(uri: &str) -> Result<PathBuf, SemioError> {
         let u = uri.trim();
         let p = if let Some(r) = u.strip_prefix("file://") { r } else { u };
@@ -5628,6 +5628,7 @@ pub mod kit_backbone {
         Ok(PathBuf::from(p))
     }
 
+    #[cfg(not(target_arch = "wasm32"))]
     fn resolve_local_semio_root(project_or_dot_semio: &Path) -> PathBuf {
         if project_or_dot_semio.file_name().and_then(|s| s.to_str()) == Some(".semio") {
             project_or_dot_semio.to_path_buf()
@@ -5636,6 +5637,7 @@ pub mod kit_backbone {
         }
     }
 
+    #[cfg(not(target_arch = "wasm32"))]
     fn init_local_dot_semio_layout(semio_root: &Path) -> Result<(), SemioError> {
         std::fs::create_dir_all(semio_root).map_err(|e| SemioError::invalid(format!("create .semio root: {e}")))?;
         std::fs::create_dir_all(semio_root.join("blobs")).map_err(|e| SemioError::invalid(format!("create blobs dir: {e}")))?;
@@ -5659,6 +5661,7 @@ CREATE TABLE IF NOT EXISTS conflict_stub (
         Ok(())
     }
 
+    #[cfg(not(target_arch = "wasm32"))]
     fn db_file_for_child(semio_root: &Path, child_label: &'static str) -> Result<PathBuf, SemioError> {
         let name = match child_label {
             "wip" => "wip.db",
@@ -5669,7 +5672,8 @@ CREATE TABLE IF NOT EXISTS conflict_stub (
     }
     //#endregion 🧭 paths + uri
 
-    //#region ✍️ atomic json
+    //#region ✍️ atomic json (native only)
+    #[cfg(not(target_arch = "wasm32"))]
     fn atomic_write_bundle(path: &Path, doc: &KitStoreBundleFile) -> Result<(), SemioError> {
         let parent = path.parent().ok_or_else(|| SemioError::invalid("kit-store bundle path has no parent directory"))?;
         std::fs::create_dir_all(parent).map_err(|e| SemioError::invalid(format!("create kit-store bundle parent: {e}")))?;
@@ -5680,6 +5684,7 @@ CREATE TABLE IF NOT EXISTS conflict_stub (
         Ok(())
     }
 
+    #[cfg(not(target_arch = "wasm32"))]
     fn read_or_init_bundle(path: &Path) -> Result<KitStoreBundleFile, SemioError> {
         if !path.exists() {
             return Ok(KitStoreBundleFile::template());
@@ -5702,12 +5707,14 @@ CREATE TABLE IF NOT EXISTS conflict_stub (
     }
     //#endregion 🔁 replay
 
-    //#region 🧩 attached variants
+    //#region 🧩 attached variants (native only)
+    #[cfg(not(target_arch = "wasm32"))]
     pub struct DevJsonAttached {
         path: PathBuf,
         connection_uri_normalized: String,
     }
 
+    #[cfg(not(target_arch = "wasm32"))]
     impl DevJsonAttached {
         /// @emoji 📥 Read the on-disk bundle (or fresh template if file is absent).
         pub fn read_bundle(&self) -> Result<KitStoreBundleFile, SemioError> {
@@ -5722,6 +5729,7 @@ CREATE TABLE IF NOT EXISTS conflict_stub (
         }
     }
 
+    #[cfg(not(target_arch = "wasm32"))]
     pub struct LocalAttached {
         #[allow(dead_code)]
         semio_root: PathBuf,
@@ -5729,6 +5737,7 @@ CREATE TABLE IF NOT EXISTS conflict_stub (
         connection_uri_normalized: String,
     }
 
+    #[cfg(not(target_arch = "wasm32"))]
     impl LocalAttached {
         pub fn append_op(&mut self, draft_id: &Id, transaction_id: &Id, kind: &str, input: &serde_json::Value) -> Result<(), SemioError> {
             let conn = Connection::open(&self.db_path).map_err(|e| SemioError::invalid(format!("sqlite append: {e}")))?;
@@ -5755,11 +5764,13 @@ CREATE TABLE IF NOT EXISTS conflict_stub (
         }
     }
 
+    #[cfg(not(target_arch = "wasm32"))]
     pub enum AttachedBackbone {
         DevJson(DevJsonAttached),
         Local(LocalAttached),
     }
 
+    #[cfg(not(target_arch = "wasm32"))]
     impl AttachedBackbone {
         pub async fn mount_and_replay(connection_uri: &str, store_kind: BackboneStoreKind, child_label: &'static str, graph: &Arc<Graph>) -> Result<Self, SemioError> {
             let norm = normalize_connection_uri(connection_uri);
@@ -6885,6 +6896,33 @@ mod tests {
             let json_b: String = res.data.into_json().unwrap()["kitStoreBundleJson"].as_str().expect("bundle json b").to_string();
             let vb: serde_json::Value = serde_json::from_str(&json_b).expect("bundle b parses");
             assert_eq!(vb["wip"]["root"]["name"].as_str().unwrap_or(""), "Hello Bundle", "kit name survives bundle round-trip");
+        });
+    }
+
+    #[test]
+    fn create_alternative_from_tip_graphql() {
+        block_on(async {
+            let schema = crate::gql::build_schema().await;
+            let res = schema.execute(r#"mutation { kitStoreInitializeDefaults }"#).await;
+            assert!(res.errors.is_empty(), "init defaults errors: {:?}", res.errors);
+
+            const M: &str = r#"mutation($n: String!) { createAlternativeFromTip(name: $n) }"#;
+            let res = schema
+                .execute(Request::new(M).variables(Variables::from_value(async_graphql::value!({ "n": "branch-a" }))))
+                .await;
+            assert!(res.errors.is_empty(), "createAlternativeFromTip errors: {:?}", res.errors);
+            let id: String = res.data.into_json().unwrap()["createAlternativeFromTip"].as_str().expect("alt id").to_string();
+
+            let q = r#"{ wip { alternatives { edges { node { id name } } } } }"#;
+            let res = schema.execute(q).await;
+            assert!(res.errors.is_empty(), "alternatives query errors: {:?}", res.errors);
+            let v = res.data.into_json().unwrap();
+            let edges = v["wip"]["alternatives"]["edges"].as_array().expect("edges");
+            assert!(
+                edges.iter().any(|e| e["node"]["id"].as_str() == Some(id.as_str())),
+                "expected new alternative id in wip.alternatives"
+            );
+            assert!(edges.iter().any(|e| e["node"]["name"].as_str() == Some("branch-a")));
         });
     }
 

@@ -7713,6 +7713,26 @@ if (
       expect(typeof (await ks.canRedo())).toBe("boolean");
       await ks.dispose();
     });
+
+    it("createAlternativeFromTip adds an alternative on wip", async () => {
+      const minimalKit: KitFullDto = {
+        id: "alt-create-kit",
+        name: "A",
+        createdAt: "2020-01-01T00:00:00.000Z",
+        updatedAt: "2020-01-01T00:00:00.000Z",
+        types: [],
+        designs: [],
+      };
+      const ks = await KitStore.open(minimalKit);
+      await ks.kitStoreInitializeDefaults();
+      const aid = await ks.createAlternativeFromTip("branch-one", null);
+      expect(aid.length).toBeGreaterThan(8);
+      const vcs = await ks.vcsState();
+      const wip = vcs["wip"] as { alternatives?: readonly { id?: string }[] } | undefined;
+      const alts = wip?.alternatives;
+      expect(Array.isArray(alts)).toBe(true);
+      expect((alts as readonly { id?: string }[]).some((a) => String(a?.id) === aid)).toBe(true);
+      await ks.dispose();
     });
 
     it("compile-time: KitStore public surface excludes rxjs-style stream fields", () => {

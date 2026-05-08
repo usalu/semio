@@ -17287,6 +17287,7 @@ if (shouldRunReactEmbeddedTests) {
       subscribeRenameStatus: () => () => {},
       getRenameStatusSnapshot: () => KIT_RENAME_STATUS_IDLE,
       rename: async () => ({ ok: false, requestId: "", error: { kind: "NotSupported", message: "embedded test client" } }),
+      createAlternativeFromTip: async () => "alt-test",
       getKitWriteScope: () => null,
       setKitWriteScope: () => {},
       finalizeKitWriteTransaction: async () => ({ ok: true }),

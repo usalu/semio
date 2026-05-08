@@ -159,6 +159,7 @@ import {
   Vector,
   type HookTriad,
 } from "@semio/react";
+import { kitStoreFromKitStoreClient } from "@semio/js";
 import { gunzipSync } from "fflate";
 
 import type {
@@ -16509,6 +16510,35 @@ const KitAlternativeFooterSelector: FC = () => {
   const appType = useAppType();
   const [selectedAlternativeId, setSelectedAlternativeId] = useKitAlternativeSelection();
   const alternatives = useKitAlternatives();
+  const kitRuntime = useKitRuntimeSafe();
+  const kitClient = kitRuntime?.kitClient ?? null;
+  const newAltInputRef = useRef<HTMLInputElement>(null);
+  const [creatingAlt, setCreatingAlt] = useState(false);
+
+  const handleCreateAlternative = useCallback(async () => {
+    const name = newAltInputRef.current?.value?.trim() ?? "";
+    if (!kitClient || name === "" || creatingAlt) return;
+    setCreatingAlt(true);
+    try {
+      const newId = await kitClient.createAlternativeFromTip(name, selectedAlternativeId);
+      const ks = kitStoreFromKitStoreClient(kitClient);
+      const vcs = ks && typeof (ks as { vcsState?: () => Promise<unknown> }).vcsState === "function" ? (ks as { vcsState: () => Promise<unknown> }).vcsState : null;
+      if (vcs) {
+        for (let i = 0; i < 60; i++) {
+          const row = (await vcs()) as { wip?: { alternatives?: readonly { id?: string }[] } };
+          const alts = row.wip?.alternatives;
+          if (Array.isArray(alts) && alts.some((a) => String(a?.id) === newId)) break;
+          await new Promise((r) => setTimeout(r, 15));
+        }
+      }
+      setSelectedAlternativeId(newId);
+      if (newAltInputRef.current) newAltInputRef.current.value = "";
+    } catch (e) {
+      console.warn("[DEBUG] createAlternativeFromTip failed", e);
+    } finally {
+      setCreatingAlt(false);
+    }
+  }, [kitClient, creatingAlt, selectedAlternativeId, setSelectedAlternativeId]);
 
   useEffect(() => {
     if (appType !== "kit" && appType !== "design" && appType !== "type") return;
@@ -16520,28 +16550,61 @@ const KitAlternativeFooterSelector: FC = () => {
       order: -1000,
       className: footerEquivClass,
       content: (
-        <Select
-          id="semio.sketchpad.footer.alternative.select"
-          value={value}
-          onValueChange={(v: string) => setSelectedAlternativeId(v === SEMIO_SKETCHPAD_THE_KIT_ALT_VALUE ? null : v)}
-          showLabel={false}
-        >
-          <SelectTrigger className="min-w-[10rem]">
-            <SelectValue placeholder="the kit" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value={SEMIO_SKETCHPAD_THE_KIT_ALT_VALUE}>the kit</SelectItem>
-            {alternatives.map((a) => (
-              <SelectItem key={a.id} value={a.id}>
-                {a.name?.trim() ? a.name : a.id.slice(0, 8)}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <div className="flex items-center gap-1">
+          <Select
+            id="semio.sketchpad.footer.alternative.select"
+            value={value}
+            onValueChange={(v: string) => setSelectedAlternativeId(v === SEMIO_SKETCHPAD_THE_KIT_ALT_VALUE ? null : v)}
+            showLabel={false}
+          >
+            <SelectTrigger className="min-w-[10rem]">
+              <SelectValue placeholder="the kit" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value={SEMIO_SKETCHPAD_THE_KIT_ALT_VALUE}>the kit</SelectItem>
+              {alternatives.map((a) => (
+                <SelectItem key={a.id} value={a.id}>
+                  {a.name?.trim() ? a.name : a.id.slice(0, 8)}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Input
+            ref={newAltInputRef}
+            className="h-8 min-w-[7rem] max-w-[12rem] text-xs"
+            placeholder="Branch name"
+            disabled={!kitClient}
+            aria-label="New alternative name"
+            onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => {
+              if (e.key === "Enter") void handleCreateAlternative();
+            }}
+          />
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="h-8 min-w-8 px-2"
+            disabled={!kitClient || creatingAlt}
+            aria-label="Create alternative from current checkpoint"
+            onClick={() => void handleCreateAlternative()}
+          >
+            +
+          </Button>
+        </div>
       ),
     });
     return () => removeFooterItem("semio.sketchpad.footer.alternative");
-  }, [appType, addFooterItem, removeFooterItem, selectedAlternativeId, alternatives, setSelectedAlternativeId]);
+  }, [
+    appType,
+    addFooterItem,
+    removeFooterItem,
+    selectedAlternativeId,
+    alternatives,
+    setSelectedAlternativeId,
+    kitClient,
+    creatingAlt,
+    handleCreateAlternative,
+  ]);
 
   return null;
 };
