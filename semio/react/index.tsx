@@ -1429,6 +1429,8 @@ export type SemioKitScopedView = {
   kitId: string;
   kitReadScope: KitReadScope;
   kitWriteScope: KitWriteScope | null;
+  /** @emoji 🌱 When {@link KitAlternativeSelectionProvider} is present: chosen alternative id, or `null` for the kit main line. */
+  selectedAlternativeId: string | null;
 };
 
 const SemioKitScopedViewContext = React.createContext<SemioKitScopedView | null>(null);
@@ -1513,6 +1515,138 @@ export function subscribeKitRegistryListChanged(onChange: () => void): () => voi
     _kitRegistryListListeners.delete(onChange);
   };
 }
+
+// #region 🌱KitAlternativeSelection
+/** @emoji 🌱 One row in the host alternative dropdown (id + display name from rs). */
+export type KitAlternativeSummary = { readonly id: string; readonly name: string };
+
+export type KitAlternativeSelectionContextValue = {
+  readonly selectedAlternativeId: string | null;
+  readonly setSelectedAlternativeId: (id: string | null) => void;
+  readonly alternatives: ReadonlyArray<KitAlternativeSummary>;
+};
+
+const __kitAltNoopSet = (_id: string | null): void => {
+  void _id;
+};
+
+const KIT_ALTERNATIVE_EMPTY_LIST: ReadonlyArray<KitAlternativeSummary> = Object.freeze([]);
+
+const KIT_ALTERNATIVE_SELECTION_DEFAULT: KitAlternativeSelectionContextValue = Object.freeze({
+  selectedAlternativeId: null,
+  setSelectedAlternativeId: __kitAltNoopSet,
+  alternatives: KIT_ALTERNATIVE_EMPTY_LIST,
+});
+
+const KitAlternativeSelectionContext = React.createContext<KitAlternativeSelectionContextValue>(KIT_ALTERNATIVE_SELECTION_DEFAULT);
+
+type KitStoreWithVcs = { vcsState(): Promise<Record<string, unknown>> };
+
+/** @emoji 🌱 Normalizes `wip.alternatives` whether rs returns a flat list or a relay {@link AlternativeConnection}. */
+function __normalizeWipAlternatives(wip: unknown): KitAlternativeSummary[] {
+  if (wip == null || typeof wip !== "object") return [];
+  const altRaw = (wip as { alternatives?: unknown }).alternatives;
+  if (altRaw == null) return [];
+  if (Array.isArray(altRaw)) {
+    const next: KitAlternativeSummary[] = [];
+    for (const r of altRaw) {
+      const id = String((r as { id?: unknown })?.id ?? "").trim();
+      if (id === "") continue;
+      next.push({ id, name: String((r as { name?: unknown })?.name ?? "") });
+    }
+    return next;
+  }
+  const edges = (altRaw as { edges?: readonly { node?: { id?: unknown; name?: unknown } | null }[] | null }).edges;
+  if (!Array.isArray(edges)) return [];
+  const next: KitAlternativeSummary[] = [];
+  for (const e of edges) {
+    const n = e?.node;
+    if (!n) continue;
+    const id = String(n.id ?? "").trim();
+    if (id === "") continue;
+    next.push({ id, name: String(n.name ?? "") });
+  }
+  return next;
+}
+
+/**
+ * @emoji 🌱 Host wires the open kit id so {@link kitStoreFromKitStoreClient} can list graph alternatives (rs `wip.alternatives`).
+ * When {@link kitId} is omitted, selection state is inert and alternatives stay empty.
+ */
+export function KitAlternativeSelectionProvider(props: { readonly kitId?: string; readonly children: React.ReactNode }): React.ReactElement {
+  const { kitId, children } = props;
+  const registry = React.useContext(KitRegistryContext);
+  const [registryTick, setRegistryTick] = React.useState(0);
+  const [selectedAlternativeId, setSelectedAlternativeId] = React.useState<string | null>(null);
+  const [alternatives, setAlternatives] = React.useState<ReadonlyArray<KitAlternativeSummary>>(KIT_ALTERNATIVE_EMPTY_LIST);
+
+  React.useEffect(() => subscribeKitRegistryListChanged(() => setRegistryTick((t) => t + 1)), []);
+
+  const kitClient = React.useMemo(() => (kitId && registry ? registry.get(kitId)?.kitClient ?? null : null), [kitId, registry, registryTick]);
+
+  React.useEffect(() => {
+    if (!kitClient) {
+      setAlternatives(KIT_ALTERNATIVE_EMPTY_LIST);
+      return;
+    }
+    const ks = kitStoreFromKitStoreClient(kitClient) as KitStoreWithVcs | null;
+    if (!ks || typeof ks.vcsState !== "function") {
+      setAlternatives(KIT_ALTERNATIVE_EMPTY_LIST);
+      return;
+    }
+    let cancelled = false;
+    const pull = async () => {
+      try {
+        const v = await ks.vcsState();
+        if (cancelled) return;
+        const wip = v["wip"];
+        const next = __normalizeWipAlternatives(wip);
+        setAlternatives(next.length === 0 ? KIT_ALTERNATIVE_EMPTY_LIST : Object.freeze(next));
+      } catch {
+        if (!cancelled) setAlternatives(KIT_ALTERNATIVE_EMPTY_LIST);
+      }
+    };
+    void pull();
+    const offKit = kitClient.subscribe(() => {
+      void pull();
+    });
+    return () => {
+      cancelled = true;
+      offKit();
+    };
+  }, [kitClient]);
+
+  React.useEffect(() => {
+    if (selectedAlternativeId == null) return;
+    if (!alternatives.some((a) => a.id === selectedAlternativeId)) {
+      setSelectedAlternativeId(null);
+    }
+  }, [alternatives, selectedAlternativeId]);
+
+  const value = React.useMemo<KitAlternativeSelectionContextValue>(
+    () => ({
+      selectedAlternativeId,
+      setSelectedAlternativeId,
+      alternatives,
+    }),
+    [selectedAlternativeId, alternatives],
+  );
+
+  return React.createElement(KitAlternativeSelectionContext.Provider, { value }, children);
+}
+
+/** @emoji 🌱 Current alternative id, or `null` for the kit main line. */
+export function useKitAlternativeSelection(): readonly [string | null, (id: string | null) => void] {
+  const v = React.useContext(KitAlternativeSelectionContext);
+  return [v.selectedAlternativeId, v.setSelectedAlternativeId] as const;
+}
+
+/** @emoji 🌱 Alternatives from rs (read-only), for host dropdowns. */
+export function useKitAlternatives(): ReadonlyArray<KitAlternativeSummary> {
+  return React.useContext(KitAlternativeSelectionContext).alternatives;
+}
+
+// #endregion 🌱KitAlternativeSelection
 
 /** @internal For {@link SketchpadStore} and other non-hook callers. Cleared on {@link KitRegistryProvider} unmount. */
 let _semioKitRegistryBridge: KitRegistryValue | null = null;
@@ -2336,7 +2470,7 @@ export type KitScopeProps = {
   kitId?: string;
   /** When provided (e.g. from registry), skips creating a new worker client. */
   kitClient?: KitStoreClient | null;
-  /** @emoji 🧭 Initial {@link KitReadScope} for `createKitStoreClient` / read materialization (default main line). */
+  /** @emoji 🧭 Initial {@link KitReadScope} for `createKitStoreClient` / read materialization (omit to follow {@link KitAlternativeSelectionProvider}, else main line). */
   kitReadScope?: KitReadScope;
   /** @emoji 🧭 When set, pins {@link KitStoreClient.setKitWriteScope} for batched kit mutations (omit to auto-bootstrap per gesture). */
   kitWriteScope?: KitWriteScope | null;
@@ -2350,13 +2484,20 @@ export function KitScope({
   store: externalStore,
   kitId: kitIdProp,
   kitClient: kitClientProp,
-  kitReadScope: kitReadScopeProp = theKitReadScope,
+  kitReadScope: kitReadScopeProp,
   kitWriteScope: kitWriteScopeProp,
   backbone,
   initialKit,
   children,
   fallback = null,
 }: KitScopeProps): React.ReactElement | null {
+  const altSel = React.useContext(KitAlternativeSelectionContext);
+  const effectiveKitReadScope = React.useMemo((): KitReadScope => {
+    if (kitReadScopeProp !== undefined) return kitReadScopeProp;
+    const altId = altSel.selectedAlternativeId;
+    return altId ? { alternative: { alternativeId: altId } } : theKitReadScope;
+  }, [kitReadScopeProp, altSel.selectedAlternativeId]);
+
   const registry = React.useContext(KitRegistryContext);
   if (kitIdProp && !registry) {
     throw new Error("semio/react: <KitScope kitId={...}> must be wrapped in <KitRegistryProvider>.");
@@ -2391,7 +2532,7 @@ export function KitScope({
     if (!st) return;
     let cancelled = false;
     let client: KitStoreClient | null = null;
-    void createKitStoreClient({ initialKit: st.getSnapshot().kit.toJSON(), forceFallback: shouldForceKitClientFallback(), readScope: kitReadScopeProp }).then((c) => {
+    void createKitStoreClient({ initialKit: st.getSnapshot().kit.toJSON(), forceFallback: shouldForceKitClientFallback(), readScope: effectiveKitReadScope }).then((c) => {
       if (cancelled) {
         c.dispose();
         return;
@@ -2406,21 +2547,27 @@ export function KitScope({
       }
       setKitClientState(null);
     };
-  }, [kitIdProp, externalStore, internalStore, kitClientProp, kitReadScopeProp]);
+  }, [kitIdProp, externalStore, internalStore, kitClientProp, effectiveKitReadScope]);
 
   const store = kitIdProp && registryEntry ? registryEntry.store : (externalStore ?? internalStore);
   const kitClient = kitIdProp && registryEntry ? registryEntry.kitClient : (kitClientProp ?? kitClientState);
 
   React.useEffect(() => {
     if (!kitClient) return;
-    kitClient.setKitReadScope(kitReadScopeProp);
-  }, [kitClient, kitReadScopeProp]);
+    kitClient.setKitReadScope(effectiveKitReadScope);
+  }, [kitClient, effectiveKitReadScope]);
 
   React.useEffect(() => {
     if (!kitClient) return;
     if (kitWriteScopeProp === undefined) return;
     kitClient.setKitWriteScope(kitWriteScopeProp);
   }, [kitClient, kitWriteScopeProp]);
+
+  React.useEffect(() => {
+    if (!kitClient) return;
+    if (kitWriteScopeProp !== undefined) return;
+    kitClient.setKitWriteScope(null);
+  }, [kitClient, kitWriteScopeProp, altSel.selectedAlternativeId]);
 
   if (kitIdProp && registry && !registryEntry) return React.createElement(React.Fragment, null, fallback);
   if (!store) return React.createElement(React.Fragment, null, fallback);
@@ -2580,10 +2727,11 @@ export function KitScope({
   const semioKitScopedView = React.useMemo<SemioKitScopedView>(
     () => ({
       kitId: String(activeKitId ?? ""),
-      kitReadScope: kitReadScopeProp,
+      kitReadScope: effectiveKitReadScope,
       kitWriteScope: kitWriteScopeProp === undefined ? (kitClient?.getKitWriteScope() ?? null) : kitWriteScopeProp,
+      selectedAlternativeId: altSel.selectedAlternativeId,
     }),
-    [activeKitId, kitReadScopeProp, kitWriteScopeProp, kitClient],
+    [activeKitId, effectiveKitReadScope, kitWriteScopeProp, kitClient, altSel.selectedAlternativeId],
   );
 
   const value = React.useMemo<KitRuntimeContextValue>(
@@ -17632,6 +17780,48 @@ if (shouldRunReactEmbeddedTests) {
       });
       const ckKey = kitReadScopeKey({ checkpoint: { checkpointId: "cpx" } });
       expect(log).toContain(ckKey);
+      unmount();
+    });
+
+    it("KitScope without kitReadScope follows KitAlternativeSelectionProvider alternative id", async () => {
+      const log: string[] = [];
+      const kit = asKitInstance({
+        id: "k1",
+        name: "K",
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        types: [],
+        designs: [],
+      });
+      const store = new InMemoryKitStore(kit);
+      const base = createTestKitClient(store);
+      const client: KitStoreClient = {
+        ...base,
+        setKitReadScope: (s) => {
+          log.push(kitReadScopeKey(s));
+        },
+      };
+      function Probe() {
+        const [, setAlt] = useKitAlternativeSelection();
+        React.useEffect(() => {
+          setAlt("alt-7");
+        }, [setAlt]);
+        useKitDataScope();
+        return null;
+      }
+      const tree = React.createElement(
+        KitAlternativeSelectionProvider,
+        {},
+        React.createElement(KitScope, {
+          store,
+          kitClient: client,
+          children: React.createElement(Probe, null),
+        }),
+      );
+      const { unmount } = render(tree);
+      await waitFor(() => {
+        expect(log).toContain(kitReadScopeKey({ alternative: { alternativeId: "alt-7" } }));
+      });
       unmount();
     });
   });

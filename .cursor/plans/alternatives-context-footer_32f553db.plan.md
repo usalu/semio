@@ -4,19 +4,19 @@ overview: Add a `KitAlternativeSelection` context in `@semio/react` for switchin
 todos:
   - id: react-context
     content: Add KitAlternativeSelectionContext + Provider + useKitAlternativeSelection / useKitAlternatives hooks in semio/react/index.tsx (new 🌱KitAlternativeSelection region).
-    status: in_progress
+    status: completed
   - id: react-kitscope-wire
     content: Inside KitScope, when caller omits kitReadScope, derive it from the selection (null → theKit, id → alternative); reset kitWriteScope on selection change so rs re-bootstraps.
-    status: pending
+    status: completed
   - id: sketchpad-selector
     content: Add KitAlternativeFooterSelector component registering a footer item with order -1000 (left) and a Select dropdown of [the kit, ...alternatives].
-    status: pending
+    status: completed
   - id: sketchpad-mount-footers
     content: Render <KitAlternativeFooterSelector /> inside KitAppFooter, DesignAppFooter, and TypeAppFooter only.
-    status: pending
+    status: completed
   - id: sketchpad-provider-wrap
     content: Wrap the KitScope tab-shell wrapper with KitAlternativeSelectionProvider so the selector and KitScope share the selection state.
-    status: pending
+    status: completed
 isProject: false
 ---
 

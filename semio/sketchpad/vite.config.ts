@@ -115,7 +115,9 @@ export default defineConfig(async ({ mode }) => {
       dedupe: ["react", "react-dom", "scheduler", "use-sync-external-store"],
       alias: [
         { find: "@semio/js", replacement: path.resolve(__dirname, "../js") },
-        { find: "@semio/rs-wasm", replacement: path.resolve(__dirname, "../rs/pkg") },
+        // 🧷 Point directly at `semio.js` (the wasm-bindgen entry) so we don't depend on `pkg/package.json`,
+        // which `wasm-pack build --no-pack` regenerates / wipes on every rebuild. Resilient to rebuilds.
+        { find: "@semio/rs-wasm", replacement: path.resolve(__dirname, "../rs/pkg/semio.js") },
         { find: "@semio/ui", replacement: path.resolve(__dirname, "../ui") },
         { find: "@semio/sketchpad", replacement: path.resolve(__dirname) },
         { find: "@semio/studio", replacement: path.resolve(__dirname, "../studio") },

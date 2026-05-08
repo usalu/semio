@@ -50,6 +50,7 @@ import {
   ICON_WIDTH,
   id,
   Kit,
+  KitAlternativeSelectionProvider,
   KitDiff,
   KitFullDtoSchema,
   KitStoreProvider,
@@ -104,6 +105,8 @@ import {
   useIsInDesignScope,
   useIsInKitScope,
   useIsInTypeScope,
+  useKitAlternativeSelection,
+  useKitAlternatives,
   useKitCommandEngineExplicitOrigin,
   useKitDescription,
   useKitFileBlobUrl,
@@ -7321,10 +7324,10 @@ function KitWasmRuntimeBridge(props: { kitId: string; children: React.ReactNode 
     const status = registry.status(kitId);
     const entry = registry.get(kitId);
     if (status === "ready" && entry) {
-      return React.createElement(KitScope, { kitId, store: entry.store, kitClient: entry.kitClient, children });
+      return React.createElement(KitAlternativeSelectionProvider, { kitId }, React.createElement(KitScope, { kitId, store: entry.store, kitClient: entry.kitClient, children }));
     }
   }
-  return React.createElement(KitScope, { store: innerStore, children });
+  return React.createElement(KitAlternativeSelectionProvider, { kitId }, React.createElement(KitScope, { store: innerStore, children }));
 }
 
 /**
@@ -15445,6 +15448,7 @@ const MultiWindowApp: FC = () => {
       })()}
     >
       <TransactionProvider transaction={transaction}>
+        <KitAppFooter />
         <KitDropZone>
           <Canvas id="semio.sketchpad.app.kit.canvas">
             <LayoutCanvas windowConfig={windowConfig} layoutState={windowLayout} onLayoutChange={handleLayoutChange} />
@@ -16492,6 +16496,57 @@ const SketchpadSettingsContent: FC = () => {
 
 // #endregion 📋Canvas
 
+// #region 🌱AlternativeSelector
+/** @emoji 🌱 Sentinel option value for the main kit line (Radix Select rejects empty string). */
+const SEMIO_SKETCHPAD_THE_KIT_ALT_VALUE = "__semio_sketchpad_the_kit__";
+
+/**
+ * @emoji 🌱 Registers the left-most footer dropdown: `the kit` vs rs alternatives (draft scope follows {@link KitAlternativeSelectionProvider}).
+ **/
+const KitAlternativeFooterSelector: FC = () => {
+  const addFooterItem = useAddFooterItem();
+  const removeFooterItem = useRemoveFooterItem();
+  const appType = useAppType();
+  const [selectedAlternativeId, setSelectedAlternativeId] = useKitAlternativeSelection();
+  const alternatives = useKitAlternatives();
+
+  useEffect(() => {
+    if (appType !== "kit" && appType !== "design" && appType !== "type") return;
+    const value = selectedAlternativeId ?? SEMIO_SKETCHPAD_THE_KIT_ALT_VALUE;
+    const altStamp = alternatives.map((a) => a.id).join(",");
+    const footerEquivClass = `semio-sketchpad-footer-alt-${value.replace(/[^a-zA-Z0-9_-]/g, "_")}--${altStamp.replace(/[^a-zA-Z0-9_-]/g, "_").slice(0, 160)}`;
+    addFooterItem({
+      id: "semio.sketchpad.footer.alternative",
+      order: -1000,
+      className: footerEquivClass,
+      content: (
+        <Select
+          id="semio.sketchpad.footer.alternative.select"
+          value={value}
+          onValueChange={(v: string) => setSelectedAlternativeId(v === SEMIO_SKETCHPAD_THE_KIT_ALT_VALUE ? null : v)}
+          showLabel={false}
+        >
+          <SelectTrigger className="min-w-[10rem]">
+            <SelectValue placeholder="the kit" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value={SEMIO_SKETCHPAD_THE_KIT_ALT_VALUE}>the kit</SelectItem>
+            {alternatives.map((a) => (
+              <SelectItem key={a.id} value={a.id}>
+                {a.name?.trim() ? a.name : a.id.slice(0, 8)}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      ),
+    });
+    return () => removeFooterItem("semio.sketchpad.footer.alternative");
+  }, [appType, addFooterItem, removeFooterItem, selectedAlternativeId, alternatives, setSelectedAlternativeId]);
+
+  return null;
+};
+// #endregion 🌱AlternativeSelector
+
 // #region 🎮Footer
 // Footer MUST render the Kit app footer with selection count status.
 
@@ -16514,7 +16569,11 @@ export const KitAppFooter: FC = () => {
     };
   }, [appType, addFooterItem, removeFooterItem]);
 
-  return null;
+  return (
+    <>
+      <KitAlternativeFooterSelector />
+    </>
+  );
 };
 
 // #endregion 🎮Footer
@@ -29122,7 +29181,11 @@ export const DesignAppFooter: FC = () => {
     };
   }, [footerTagsKey, addFooterItem, removeFooterItem]);
 
-  return null;
+  return (
+    <>
+      <KitAlternativeFooterSelector />
+    </>
+  );
 };
 
 // #endregion 🎮Footer
@@ -40533,7 +40596,11 @@ export const TypeAppFooter: FC = () => {
     };
   }, [appType, allRepresentationTagIds, tagNameMap, selectedRepresentationTags, addFooterItem, removeFooterItem]);
 
-  return null;
+  return (
+    <>
+      <KitAlternativeFooterSelector />
+    </>
+  );
 };
 
 // #endregion 🎮Footer

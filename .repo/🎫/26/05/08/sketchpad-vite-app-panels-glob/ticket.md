@@ -241,3 +241,41 @@ cd semio/js && npm test -- --testNamePattern=rename                  → rename 
 - `semio/react/index.tsx`
 - `.repo/🎫/26/05/08/sketchpad-vite-app-panels-glob/ticket.md`
 
+---
+
+## Follow-up: `npx nx dev @semio/sketchpad` always uses the latest rs WASM (zero-touch)
+
+**Problem reported:** `npx nx dev @semio/sketchpad` fails with `Failed to resolve import "@semio/rs-wasm" from "../js/index.ts"` even after `wasm-pack` ran successfully. Root cause: `wasm-pack build --no-pack` regenerates `semio/rs/pkg/` on every invocation and **wipes `pkg/package.json`**, so the Vite alias `path.resolve(__dirname, "../rs/pkg")` (a directory) has no `main` / `module` entry to resolve.
+
+### Resilient fix (two layers, defence in depth)
+
+1. **Direct-file Vite aliases** — alias `@semio/rs-wasm` to `pkg/semio.js` (the wasm-bindgen entry) instead of the directory. Survives `wasm-pack` regenerations because there's no `package.json` lookup involved.
+   - `semio/sketchpad/vite.config.ts`
+   - `semio/js/vite.config.ts`
+   - `semio/react/vite.config.ts`
+2. **Always-fresh WASM via predev / prebuild / pretest hooks** — new `semio/rs/scripts/build-wasm.mjs`:
+   - Runs `wasm-pack build --release --target web --out-dir pkg --no-pack` (cargo's incremental cache makes this ~1-2s on no-source-change vs. ~80s for a clean build).
+   - Always restores `pkg/package.json` (with the canonical `@semio/rs-wasm` name) so node-style module resolution (cli, vitest, ssr) still works alongside the file aliases.
+   - Cross-platform (`spawnSync('npx', [...], { shell: true })`) — works on devcontainer, native Windows, native macOS, native Linux.
+   - Skip with `SEMIO_SKIP_WASM_BUILD=1` for CI that pre-builds.
+3. **Wired into npm script lifecycle** — npm runs `pre*` automatically:
+   - `semio/sketchpad/package.json` → `predev` + `prebuild`
+   - `semio/react/package.json` → `pretest` + `prebuild`
+   - `semio/js/package.json` → `pretest` + `pretest:unit` + `prebuild`
+
+### Verification
+
+- `node semio/rs/scripts/build-wasm.mjs` → wasm-pack build done in ~1s (cached) + `pkg/semio_bg.wasm` ready (5.91 MiB) + `pkg/package.json` restored.
+- `cd semio/sketchpad && npx vite --strictPort --port 5215` → vite ready in ~10s, no `Failed to resolve import` errors. Entry `index.tsx` transforms cleanly (200 OK, 7.4 MiB), `/@fs/C:/git/semio/semio/rs/pkg/semio.js` returns 200, HMR fires for `semio/react/index.tsx`.
+
+### Files
+
+- `semio/rs/scripts/build-wasm.mjs` (new)
+- `semio/sketchpad/vite.config.ts`
+- `semio/sketchpad/package.json`
+- `semio/js/vite.config.ts`
+- `semio/js/package.json`
+- `semio/react/vite.config.ts`
+- `semio/react/package.json`
+- `.repo/🎫/26/05/08/sketchpad-vite-app-panels-glob/ticket.md`
+

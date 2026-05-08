@@ -19,7 +19,8 @@ const semioWasmBg = path.resolve(__dirname, "../rs/pkg/semio_bg.wasm");
 export default defineConfig({
   resolve: {
     alias: {
-      "@semio/rs-wasm": path.resolve(__dirname, "../rs/pkg"),
+      // 🧷 Direct file alias — survives `wasm-pack build --no-pack` regenerating `pkg/`.
+      "@semio/rs-wasm": path.resolve(__dirname, "../rs/pkg/semio.js"),
     },
   },
   test: {
