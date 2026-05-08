@@ -2023,6 +2023,103 @@ type AttributeDiffsConnection implements EntityConnectionInterface {
 
 #endregion Attribute
 
+union Scope =
+  | CreatedQualityScope
+  | CreatedQualitiesScope
+  | RenamedQualityScope
+  | UpdatedQualityDescriptionScope
+  | UpdatedQualityIconScope
+  | AddedAttributeToQualityScope
+  | AddedAttributesToQualityScope
+  | RemovedAttributeFromQualityScope
+  | RemovedAttributesFromQualityScope
+  | DeletedQualityScope
+  | DeletedQualitiesScope
+  | CreatedTagScope
+  | CreatedTagsScope
+  | RenamedTagScope
+  | UpdatedTagDescriptionScope
+  | UpdatedTagIconScope
+  | AddedAttributeToTagScope
+  | AddedAttributesToTagScope
+  | RemovedAttributeFromTagScope
+  | RemovedAttributesFromTagScope
+  | DeletedTagScope
+  | DeletedTagsScope
+  | CreatedConceptScope
+  | CreatedConceptsScope
+  | RenamedConceptScope
+  | UpdatedConceptDescriptionScope
+  | UpdatedConceptIconScope
+  | AddedAttributeToConceptScope
+  | AddedAttributesToConceptScope
+  | RemovedAttributeFromConceptScope
+  | RemovedAttributesFromConceptScope
+  | DeletedConceptScope
+  | DeletedConceptsScope
+  | CreatedPortScope
+  | CreatedPortsScope
+  | RenamedPortScope
+  | UpdatedPortDescriptionScope
+  | UpdatedPortIconScope
+  | AddedAttributeToPortScope
+  | AddedAttributesToPortScope
+  | RemovedAttributeFromPortScope
+  | RemovedAttributesFromPortScope
+  | DeletedPortScope
+  | DeletedPortsScope
+  | CreatedTypeScope
+  | CreatedTypesScope
+  | RenamedTypeScope
+  | UpdatedTypeDescriptionScope
+  | UpdatedTypeIconScope
+  | AddedAttributeToTypeScope
+  | AddedAttributesToTypeScope
+  | RemovedAttributeFromTypeScope
+  | RemovedAttributesFromTypeScope
+  | DeletedTypeScope
+  | DeletedTypesScope
+  | AddedConnectorToTypeScope
+  | AddedConnectorsToTypeScope
+  | RenamedConnectorInTypeScope
+  | UpdatedConnectorDescriptionInTypeScope
+  | UpdatedConnectorIconInTypeScope
+  | RemovedConnectorFromTypeScope
+  | RemovedConnectorsFromTypeScope
+  | AddedFixedPieceToDesignScope
+  | FixedPieceInDesignScope
+  | DraggedPiecesInDesignScope
+  | DraggedPieceInDesignScope
+  | AddedChildPieceWithParentConnectionToDesignScope
+  | AddedChildPiecesWithParentConnectionsToDesignScope
+  | AddedHangingChildPieceWithParentConnectionToDesignScope
+  | AddedHangingChildPiecesWithParentConnectionsToDesignScope
+  | RenamedPieceInDesignScope
+  | UpdatedPieceDescriptionInDesignScope
+  | MovedPieceInDesignScope
+  | MovedPiecesInDesignScope
+  | FixedPiecesInDesignScope
+  | ChangedPieceToTypeInDesignScope
+  | ChangedPiecesToTypeInDesignScope
+  | AddedAttributeToPieceScope
+  | AddedAttributesToPieceScope
+  | RemovedAttributeFromPieceScope
+  | RemovedAttributesFromPieceScope
+  | DeletedPieceInDesignScope
+  | DeletedPiecesInDesignScope
+  | DeletedPiecesAndConnectionsInDesignScope
+  | CreatedDesignScope
+  | CreatedDesignsScope
+  | DeletedDesignScope
+  | DeletedDesignsScope
+  | FlattenedDesignScope
+  | AddedAttributeToDesignScope
+  | AddedAttributesToDesignScope
+  | RemovedAttributeFromDesignScope
+  | RemovedAttributesFromDesignScope
+  | RenamedKitScope
+  | ChangedDescriptionScope
+
 union Input =
   | AddedAttributeToConceptInput
   | AddedAttributeToDesignInput
@@ -2228,7 +2325,8 @@ interface Operation implements Entity { # implements StrongEntity
   changeOwner: Change # reference // spine
   ownerEntity: OwnerEntity # computed // OperationOwner
   ownedEntities: OwnedEntityConnection # computed // OperationOwned
-  input: Input # data
+  scope: Scope! # data
+  input: Input! # data
   diff: Diff! # computed
 }
 
@@ -4102,8 +4200,11 @@ input QualityInput {
   attributes: [AttributeInput!]
 }
 
-type CreatedQualityInput {
+type CreatedQualityScope {
   ownerId: ID! # data
+}
+
+type CreatedQualityInput {
   quality: Quality! # data
 }
 
@@ -4115,7 +4216,8 @@ type CreatedQuality implements Operation & Entity {
   changeOwner: Change # reference // spine
   ownerEntity: OwnerEntity # computed // CreatedQualityOwner
   ownedEntities: OwnedEntityConnection # computed // CreatedQualityOwned
-  input: Input # data
+  scope: Scope! # data
+  input: Input! # data
   diff: Diff! # computed
   quality: Quality! # data
 }
@@ -4123,8 +4225,11 @@ type CreatedQuality implements Operation & Entity {
 union CreatedQualityOwner = Change
 union CreatedQualityOwned = Quality
 
-type CreatedQualitiesInput {
+type CreatedQualitiesScope {
   ownerId: ID! # data
+}
+
+type CreatedQualitiesInput {
   qualities: QualityConnection! # data
 }
 
@@ -4136,7 +4241,8 @@ type CreatedQualities implements Operation & Entity {
   changeOwner: Change # reference // spine
   ownerEntity: OwnerEntity # computed // CreatedQualitiesOwner
   ownedEntities: OwnedEntityConnection # computed // CreatedQualitiesOwned
-  input: Input # data
+  scope: Scope! # data
+  input: Input! # data
   diff: Diff! # computed
   qualities: QualityConnection! # data
 }
@@ -4144,8 +4250,11 @@ type CreatedQualities implements Operation & Entity {
 union CreatedQualitiesOwner = Change
 union CreatedQualitiesOwned = Quality
 
-type RenamedQualityInput {
+type RenamedQualityScope {
   qualityId: ID! # data
+}
+
+type RenamedQualityInput {
   key: String! # data
 }
 
@@ -4157,7 +4266,8 @@ type RenamedQuality implements Operation & Entity {
   changeOwner: Change # reference // spine
   ownerEntity: OwnerEntity # computed // RenamedQualityOwner
   ownedEntities: OwnedEntityConnection # computed // RenamedQualityOwned
-  input: Input # data
+  scope: Scope! # data
+  input: Input! # data
   diff: Diff! # computed
   quality: Quality! # data
 }
@@ -4165,8 +4275,11 @@ type RenamedQuality implements Operation & Entity {
 union RenamedQualityOwner = Change
 union RenamedQualityOwned = Quality
 
-type UpdatedQualityDescriptionInput {
+type UpdatedQualityDescriptionScope {
   qualityId: ID! # data
+}
+
+type UpdatedQualityDescriptionInput {
   description: String! # data
 }
 
@@ -4178,7 +4291,8 @@ type UpdatedQualityDescription implements Operation & Entity {
   changeOwner: Change # reference // spine
   ownerEntity: OwnerEntity # computed // UpdatedQualityDescriptionOwner
   ownedEntities: OwnedEntityConnection # computed // UpdatedQualityDescriptionOwned
-  input: Input # data
+  scope: Scope! # data
+  input: Input! # data
   diff: Diff! # computed
   quality: Quality! # data
 }
@@ -4186,8 +4300,11 @@ type UpdatedQualityDescription implements Operation & Entity {
 union UpdatedQualityDescriptionOwner = Change
 union UpdatedQualityDescriptionOwned = Quality
 
-type UpdatedQualityIconInput {
+type UpdatedQualityIconScope {
   qualityId: ID! # data
+}
+
+type UpdatedQualityIconInput {
   icon: String! # data
 }
 
@@ -4199,7 +4316,8 @@ type UpdatedQualityIcon implements Operation & Entity {
   changeOwner: Change # reference // spine
   ownerEntity: OwnerEntity # computed // UpdatedQualityIconOwner
   ownedEntities: OwnedEntityConnection # computed // UpdatedQualityIconOwned
-  input: Input # data
+  scope: Scope! # data
+  input: Input! # data
   diff: Diff! # computed
   quality: Quality! # data
 }
@@ -4207,8 +4325,11 @@ type UpdatedQualityIcon implements Operation & Entity {
 union UpdatedQualityIconOwner = Change
 union UpdatedQualityIconOwned = Quality
 
-type AddedAttributeToQualityInput {
+type AddedAttributeToQualityScope {
   qualityId: ID! # data
+}
+
+type AddedAttributeToQualityInput {
   attribute: Attribute! # data
 }
 
@@ -4220,7 +4341,8 @@ type AddedAttributeToQuality implements Operation & Entity {
   changeOwner: Change # reference // spine
   ownerEntity: OwnerEntity # computed // AddedAttributeToQualityOwner
   ownedEntities: OwnedEntityConnection # computed // AddedAttributeToQualityOwned
-  input: Input # data
+  scope: Scope! # data
+  input: Input! # data
   diff: Diff! # computed
   quality: Quality! # data
   attribute: Attribute! # data
@@ -4229,8 +4351,11 @@ type AddedAttributeToQuality implements Operation & Entity {
 union AddedAttributeToQualityOwner = Change
 union AddedAttributeToQualityOwned = Attribute
 
-type AddedAttributesToQualityInput {
+type AddedAttributesToQualityScope {
   qualityId: ID! # data
+}
+
+type AddedAttributesToQualityInput {
   attributes: AttributeConnection! # data
 }
 
@@ -4242,7 +4367,8 @@ type AddedAttributesToQuality implements Operation & Entity {
   changeOwner: Change # reference // spine
   ownerEntity: OwnerEntity # computed // AddedAttributesToQualityOwner
   ownedEntities: OwnedEntityConnection # computed // AddedAttributesToQualityOwned
-  input: Input # data
+  scope: Scope! # data
+  input: Input! # data
   diff: Diff! # computed
   quality: Quality! # data
   attributes: AttributeConnection! # data
@@ -4251,9 +4377,13 @@ type AddedAttributesToQuality implements Operation & Entity {
 union AddedAttributesToQualityOwner = Change
 union AddedAttributesToQualityOwned = Attribute
 
-type RemovedAttributeFromQualityInput {
+type RemovedAttributeFromQualityScope {
   qualityId: ID! # data
   attributeId: ID! # data
+}
+
+type RemovedAttributeFromQualityInput {
+  hasInput: Boolean! # computed // false when all operation data is carried by scope
 }
 
 type RemovedAttributeFromQuality implements Operation & Entity {
@@ -4264,7 +4394,8 @@ type RemovedAttributeFromQuality implements Operation & Entity {
   changeOwner: Change # reference // spine
   ownerEntity: OwnerEntity # computed // RemovedAttributeFromQualityOwner
   ownedEntities: OwnedEntityConnection # computed // RemovedAttributeFromQualityOwned
-  input: Input # data
+  scope: Scope! # data
+  input: Input! # data
   diff: Diff! # computed
   quality: Quality! # data
 }
@@ -4272,9 +4403,13 @@ type RemovedAttributeFromQuality implements Operation & Entity {
 union RemovedAttributeFromQualityOwner = Change
 # union RemovedAttributeFromQualityOwned = Nothing
 
-type RemovedAttributesFromQualityInput {
+type RemovedAttributesFromQualityScope {
   qualityId: ID! # data
   attributeIds: [ID!]! # data
+}
+
+type RemovedAttributesFromQualityInput {
+  hasInput: Boolean! # computed // false when all operation data is carried by scope
 }
 
 type RemovedAttributesFromQuality implements Operation & Entity {
@@ -4285,7 +4420,8 @@ type RemovedAttributesFromQuality implements Operation & Entity {
   changeOwner: Change # reference // spine
   ownerEntity: OwnerEntity # computed // RemovedAttributesFromQualityOwner
   ownedEntities: OwnedEntityConnection # computed // RemovedAttributesFromQualityOwned
-  input: Input # data
+  scope: Scope! # data
+  input: Input! # data
   diff: Diff! # computed
   quality: Quality! # data
 }
@@ -4293,8 +4429,12 @@ type RemovedAttributesFromQuality implements Operation & Entity {
 union RemovedAttributesFromQualityOwner = Change
 # union RemovedAttributesFromQualityOwned = Nothing
 
-type DeletedQualityInput {
+type DeletedQualityScope {
   qualityId: ID! # data
+}
+
+type DeletedQualityInput {
+  hasInput: Boolean! # computed // false when all operation data is carried by scope
 }
 
 type DeletedQuality implements Operation & Entity {
@@ -4305,15 +4445,20 @@ type DeletedQuality implements Operation & Entity {
   changeOwner: Change # reference // spine
   ownerEntity: OwnerEntity # computed // DeletedQualityOwner
   ownedEntities: OwnedEntityConnection # computed // DeletedQualityOwned
-  input: Input # data
+  scope: Scope! # data
+  input: Input! # data
   diff: Diff! # computed
 }
 
 union DeletedQualityOwner = Change
 # union DeletedQualityOwned = Nothing
 
-type DeletedQualitiesInput {
+type DeletedQualitiesScope {
   qualityIds: [ID!]! # data
+}
+
+type DeletedQualitiesInput {
+  hasInput: Boolean! # computed // false when all operation data is carried by scope
 }
 
 type DeletedQualities implements Operation & Entity {
@@ -4324,7 +4469,8 @@ type DeletedQualities implements Operation & Entity {
   changeOwner: Change # reference // spine
   ownerEntity: OwnerEntity # computed // DeletedQualitiesOwner
   ownedEntities: OwnedEntityConnection # computed // DeletedQualitiesOwned
-  input: Input # data
+  scope: Scope! # data
+  input: Input! # data
   diff: Diff! # computed
 }
 
@@ -4585,8 +4731,11 @@ input TagInput {
   attributes: [AttributeInput!]
 }
 
-type CreatedTagInput {
+type CreatedTagScope {
   ownerId: ID! # data
+}
+
+type CreatedTagInput {
   tag: Tag! # data
 }
 
@@ -4598,7 +4747,8 @@ type CreatedTag implements Operation & Entity {
   changeOwner: Change # reference // spine
   ownerEntity: OwnerEntity # computed // CreatedTagOwner
   ownedEntities: OwnedEntityConnection # computed // CreatedTagOwned
-  input: Input # data
+  scope: Scope! # data
+  input: Input! # data
   diff: Diff! # computed
   tag: Tag! # data
 }
@@ -4606,8 +4756,11 @@ type CreatedTag implements Operation & Entity {
 union CreatedTagOwner = Change
 union CreatedTagOwned = Tag
 
-type CreatedTagsInput {
+type CreatedTagsScope {
   ownerId: ID! # data
+}
+
+type CreatedTagsInput {
   tags: TagConnection! # data
 }
 
@@ -4619,7 +4772,8 @@ type CreatedTags implements Operation & Entity {
   changeOwner: Change # reference // spine
   ownerEntity: OwnerEntity # computed // CreatedTagsOwner
   ownedEntities: OwnedEntityConnection # computed // CreatedTagsOwned
-  input: Input # data
+  scope: Scope! # data
+  input: Input! # data
   diff: Diff! # computed
   tags: TagConnection! # data
 }
@@ -4627,8 +4781,11 @@ type CreatedTags implements Operation & Entity {
 union CreatedTagsOwner = Change
 union CreatedTagsOwned = Tag
 
-type RenamedTagInput {
+type RenamedTagScope {
   tagId: ID! # data
+}
+
+type RenamedTagInput {
   name: String! # data
 }
 
@@ -4640,7 +4797,8 @@ type RenamedTag implements Operation & Entity {
   changeOwner: Change # reference // spine
   ownerEntity: OwnerEntity # computed // RenamedTagOwner
   ownedEntities: OwnedEntityConnection # computed // RenamedTagOwned
-  input: Input # data
+  scope: Scope! # data
+  input: Input! # data
   diff: Diff! # computed
   tag: Tag! # data
 }
@@ -4648,8 +4806,11 @@ type RenamedTag implements Operation & Entity {
 union RenamedTagOwner = Change
 union RenamedTagOwned = Tag
 
-type UpdatedTagDescriptionInput {
+type UpdatedTagDescriptionScope {
   tagId: ID! # data
+}
+
+type UpdatedTagDescriptionInput {
   description: String! # data
 }
 
@@ -4661,7 +4822,8 @@ type UpdatedTagDescription implements Operation & Entity {
   changeOwner: Change # reference // spine
   ownerEntity: OwnerEntity # computed // UpdatedTagDescriptionOwner
   ownedEntities: OwnedEntityConnection # computed // UpdatedTagDescriptionOwned
-  input: Input # data
+  scope: Scope! # data
+  input: Input! # data
   diff: Diff! # computed
   tag: Tag! # data
 }
@@ -4669,8 +4831,11 @@ type UpdatedTagDescription implements Operation & Entity {
 union UpdatedTagDescriptionOwner = Change
 union UpdatedTagDescriptionOwned = Tag
 
-type UpdatedTagIconInput {
+type UpdatedTagIconScope {
   tagId: ID! # data
+}
+
+type UpdatedTagIconInput {
   icon: String! # data
 }
 
@@ -4682,7 +4847,8 @@ type UpdatedTagIcon implements Operation & Entity {
   changeOwner: Change # reference // spine
   ownerEntity: OwnerEntity # computed // UpdatedTagIconOwner
   ownedEntities: OwnedEntityConnection # computed // UpdatedTagIconOwned
-  input: Input # data
+  scope: Scope! # data
+  input: Input! # data
   diff: Diff! # computed
   tag: Tag! # data
 }
@@ -4690,8 +4856,11 @@ type UpdatedTagIcon implements Operation & Entity {
 union UpdatedTagIconOwner = Change
 union UpdatedTagIconOwned = Tag
 
-type AddedAttributeToTagInput {
+type AddedAttributeToTagScope {
   tagId: ID! # data
+}
+
+type AddedAttributeToTagInput {
   attribute: Attribute! # data
 }
 
@@ -4703,7 +4872,8 @@ type AddedAttributeToTag implements Operation & Entity {
   changeOwner: Change # reference // spine
   ownerEntity: OwnerEntity # computed // AddedAttributeToTagOwner
   ownedEntities: OwnedEntityConnection # computed // AddedAttributeToTagOwned
-  input: Input # data
+  scope: Scope! # data
+  input: Input! # data
   diff: Diff! # computed
   tag: Tag! # data
   attribute: Attribute! # data
@@ -4712,8 +4882,11 @@ type AddedAttributeToTag implements Operation & Entity {
 union AddedAttributeToTagOwner = Change
 union AddedAttributeToTagOwned = Attribute
 
-type AddedAttributesToTagInput {
+type AddedAttributesToTagScope {
   tagId: ID! # data
+}
+
+type AddedAttributesToTagInput {
   attributes: AttributeConnection! # data
 }
 
@@ -4725,7 +4898,8 @@ type AddedAttributesToTag implements Operation & Entity {
   changeOwner: Change # reference // spine
   ownerEntity: OwnerEntity # computed // AddedAttributesToTagOwner
   ownedEntities: OwnedEntityConnection # computed // AddedAttributesToTagOwned
-  input: Input # data
+  scope: Scope! # data
+  input: Input! # data
   diff: Diff! # computed
   tag: Tag! # data
   attributes: AttributeConnection! # data
@@ -4734,9 +4908,13 @@ type AddedAttributesToTag implements Operation & Entity {
 union AddedAttributesToTagOwner = Change
 union AddedAttributesToTagOwned = Attribute
 
-type RemovedAttributeFromTagInput {
+type RemovedAttributeFromTagScope {
   tagId: ID! # data
   attributeId: ID! # data
+}
+
+type RemovedAttributeFromTagInput {
+  hasInput: Boolean! # computed // false when all operation data is carried by scope
 }
 
 type RemovedAttributeFromTag implements Operation & Entity {
@@ -4747,7 +4925,8 @@ type RemovedAttributeFromTag implements Operation & Entity {
   changeOwner: Change # reference // spine
   ownerEntity: OwnerEntity # computed // RemovedAttributeFromTagOwner
   ownedEntities: OwnedEntityConnection # computed // RemovedAttributeFromTagOwned
-  input: Input # data
+  scope: Scope! # data
+  input: Input! # data
   diff: Diff! # computed
   tag: Tag! # data
 }
@@ -4755,9 +4934,13 @@ type RemovedAttributeFromTag implements Operation & Entity {
 union RemovedAttributeFromTagOwner = Change
 # union RemovedAttributeFromTagOwned = Nothing
 
-type RemovedAttributesFromTagInput {
+type RemovedAttributesFromTagScope {
   tagId: ID! # data
   attributeIds: [ID!]! # data
+}
+
+type RemovedAttributesFromTagInput {
+  hasInput: Boolean! # computed // false when all operation data is carried by scope
 }
 
 type RemovedAttributesFromTag implements Operation & Entity {
@@ -4768,7 +4951,8 @@ type RemovedAttributesFromTag implements Operation & Entity {
   changeOwner: Change # reference // spine
   ownerEntity: OwnerEntity # computed // RemovedAttributesFromTagOwner
   ownedEntities: OwnedEntityConnection # computed // RemovedAttributesFromTagOwned
-  input: Input # data
+  scope: Scope! # data
+  input: Input! # data
   diff: Diff! # computed
   tag: Tag! # data
 }
@@ -4776,8 +4960,12 @@ type RemovedAttributesFromTag implements Operation & Entity {
 union RemovedAttributesFromTagOwner = Change
 # union RemovedAttributesFromTagOwned = Nothing
 
-type DeletedTagInput {
+type DeletedTagScope {
   tagId: ID! # data
+}
+
+type DeletedTagInput {
+  hasInput: Boolean! # computed // false when all operation data is carried by scope
 }
 
 type DeletedTag implements Operation & Entity {
@@ -4788,15 +4976,20 @@ type DeletedTag implements Operation & Entity {
   changeOwner: Change # reference // spine
   ownerEntity: OwnerEntity # computed // DeletedTagOwner
   ownedEntities: OwnedEntityConnection # computed // DeletedTagOwned
-  input: Input # data
+  scope: Scope! # data
+  input: Input! # data
   diff: Diff! # computed
 }
 
 union DeletedTagOwner = Change
 # union DeletedTagOwned = Nothing
 
-type DeletedTagsInput {
+type DeletedTagsScope {
   tagIds: [ID!]! # data
+}
+
+type DeletedTagsInput {
+  hasInput: Boolean! # computed // false when all operation data is carried by scope
 }
 
 type DeletedTags implements Operation & Entity {
@@ -4807,7 +5000,8 @@ type DeletedTags implements Operation & Entity {
   changeOwner: Change # reference // spine
   ownerEntity: OwnerEntity # computed // DeletedTagsOwner
   ownedEntities: OwnedEntityConnection # computed // DeletedTagsOwned
-  input: Input # data
+  scope: Scope! # data
+  input: Input! # data
   diff: Diff! # computed
 }
 
@@ -5056,8 +5250,11 @@ input ConceptInput {
   attributes: [AttributeInput!]
 }
 
-type CreatedConceptInput {
+type CreatedConceptScope {
   ownerId: ID! # data
+}
+
+type CreatedConceptInput {
   concept: Concept! # data
 }
 
@@ -5069,7 +5266,8 @@ type CreatedConcept implements Operation & Entity {
   changeOwner: Change # reference // spine
   ownerEntity: OwnerEntity # computed // CreatedConceptOwner
   ownedEntities: OwnedEntityConnection # computed // CreatedConceptOwned
-  input: Input # data
+  scope: Scope! # data
+  input: Input! # data
   diff: Diff! # computed
   concept: Concept! # data
 }
@@ -5077,8 +5275,11 @@ type CreatedConcept implements Operation & Entity {
 union CreatedConceptOwner = Change
 union CreatedConceptOwned = Concept
 
-type CreatedConceptsInput {
+type CreatedConceptsScope {
   ownerId: ID! # data
+}
+
+type CreatedConceptsInput {
   concepts: ConceptConnection! # data
 }
 
@@ -5090,7 +5291,8 @@ type CreatedConcepts implements Operation & Entity {
   changeOwner: Change # reference // spine
   ownerEntity: OwnerEntity # computed // CreatedConceptsOwner
   ownedEntities: OwnedEntityConnection # computed // CreatedConceptsOwned
-  input: Input # data
+  scope: Scope! # data
+  input: Input! # data
   diff: Diff! # computed
   concepts: ConceptConnection! # data
 }
@@ -5098,8 +5300,11 @@ type CreatedConcepts implements Operation & Entity {
 union CreatedConceptsOwner = Change
 union CreatedConceptsOwned = Concept
 
-type RenamedConceptInput {
+type RenamedConceptScope {
   conceptId: ID! # data
+}
+
+type RenamedConceptInput {
   name: String! # data
 }
 
@@ -5111,7 +5316,8 @@ type RenamedConcept implements Operation & Entity {
   changeOwner: Change # reference // spine
   ownerEntity: OwnerEntity # computed // RenamedConceptOwner
   ownedEntities: OwnedEntityConnection # computed // RenamedConceptOwned
-  input: Input # data
+  scope: Scope! # data
+  input: Input! # data
   diff: Diff! # computed
   concept: Concept! # data
 }
@@ -5119,8 +5325,11 @@ type RenamedConcept implements Operation & Entity {
 union RenamedConceptOwner = Change
 union RenamedConceptOwned = Concept
 
-type UpdatedConceptDescriptionInput {
+type UpdatedConceptDescriptionScope {
   conceptId: ID! # data
+}
+
+type UpdatedConceptDescriptionInput {
   description: String! # data
 }
 
@@ -5132,7 +5341,8 @@ type UpdatedConceptDescription implements Operation & Entity {
   changeOwner: Change # reference // spine
   ownerEntity: OwnerEntity # computed // UpdatedConceptDescriptionOwner
   ownedEntities: OwnedEntityConnection # computed // UpdatedConceptDescriptionOwned
-  input: Input # data
+  scope: Scope! # data
+  input: Input! # data
   diff: Diff! # computed
   concept: Concept! # data
 }
@@ -5140,8 +5350,11 @@ type UpdatedConceptDescription implements Operation & Entity {
 union UpdatedConceptDescriptionOwner = Change
 union UpdatedConceptDescriptionOwned = Concept
 
-type UpdatedConceptIconInput {
+type UpdatedConceptIconScope {
   conceptId: ID! # data
+}
+
+type UpdatedConceptIconInput {
   icon: String! # data
 }
 
@@ -5153,7 +5366,8 @@ type UpdatedConceptIcon implements Operation & Entity {
   changeOwner: Change # reference // spine
   ownerEntity: OwnerEntity # computed // UpdatedConceptIconOwner
   ownedEntities: OwnedEntityConnection # computed // UpdatedConceptIconOwned
-  input: Input # data
+  scope: Scope! # data
+  input: Input! # data
   diff: Diff! # computed
   concept: Concept! # data
 }
@@ -5161,8 +5375,11 @@ type UpdatedConceptIcon implements Operation & Entity {
 union UpdatedConceptIconOwner = Change
 union UpdatedConceptIconOwned = Concept
 
-type AddedAttributeToConceptInput {
+type AddedAttributeToConceptScope {
   conceptId: ID! # data
+}
+
+type AddedAttributeToConceptInput {
   attribute: Attribute! # data
 }
 
@@ -5174,7 +5391,8 @@ type AddedAttributeToConcept implements Operation & Entity {
   changeOwner: Change # reference // spine
   ownerEntity: OwnerEntity # computed // AddedAttributeToConceptOwner
   ownedEntities: OwnedEntityConnection # computed // AddedAttributeToConceptOwned
-  input: Input # data
+  scope: Scope! # data
+  input: Input! # data
   diff: Diff! # computed
   concept: Concept! # data
   attribute: Attribute! # data
@@ -5183,8 +5401,11 @@ type AddedAttributeToConcept implements Operation & Entity {
 union AddedAttributeToConceptOwner = Change
 union AddedAttributeToConceptOwned = Attribute
 
-type AddedAttributesToConceptInput {
+type AddedAttributesToConceptScope {
   conceptId: ID! # data
+}
+
+type AddedAttributesToConceptInput {
   attributes: AttributeConnection! # data
 }
 
@@ -5196,7 +5417,8 @@ type AddedAttributesToConcept implements Operation & Entity {
   changeOwner: Change # reference // spine
   ownerEntity: OwnerEntity # computed // AddedAttributesToConceptOwner
   ownedEntities: OwnedEntityConnection # computed // AddedAttributesToConceptOwned
-  input: Input # data
+  scope: Scope! # data
+  input: Input! # data
   diff: Diff! # computed
   concept: Concept! # data
   attributes: AttributeConnection! # data
@@ -5205,9 +5427,13 @@ type AddedAttributesToConcept implements Operation & Entity {
 union AddedAttributesToConceptOwner = Change
 union AddedAttributesToConceptOwned = Attribute
 
-type RemovedAttributeFromConceptInput {
+type RemovedAttributeFromConceptScope {
   conceptId: ID! # data
   attributeId: ID! # data
+}
+
+type RemovedAttributeFromConceptInput {
+  hasInput: Boolean! # computed // false when all operation data is carried by scope
 }
 
 type RemovedAttributeFromConcept implements Operation & Entity {
@@ -5218,7 +5444,8 @@ type RemovedAttributeFromConcept implements Operation & Entity {
   changeOwner: Change # reference // spine
   ownerEntity: OwnerEntity # computed // RemovedAttributeFromConceptOwner
   ownedEntities: OwnedEntityConnection # computed // RemovedAttributeFromConceptOwned
-  input: Input # data
+  scope: Scope! # data
+  input: Input! # data
   diff: Diff! # computed
   concept: Concept! # data
 }
@@ -5226,9 +5453,13 @@ type RemovedAttributeFromConcept implements Operation & Entity {
 union RemovedAttributeFromConceptOwner = Change
 # union RemovedAttributeFromConceptOwned = Nothing
 
-type RemovedAttributesFromConceptInput {
+type RemovedAttributesFromConceptScope {
   conceptId: ID! # data
   attributeIds: [ID!]! # data
+}
+
+type RemovedAttributesFromConceptInput {
+  hasInput: Boolean! # computed // false when all operation data is carried by scope
 }
 
 type RemovedAttributesFromConcept implements Operation & Entity {
@@ -5239,7 +5470,8 @@ type RemovedAttributesFromConcept implements Operation & Entity {
   changeOwner: Change # reference // spine
   ownerEntity: OwnerEntity # computed // RemovedAttributesFromConceptOwner
   ownedEntities: OwnedEntityConnection # computed // RemovedAttributesFromConceptOwned
-  input: Input # data
+  scope: Scope! # data
+  input: Input! # data
   diff: Diff! # computed
   concept: Concept! # data
 }
@@ -5247,8 +5479,12 @@ type RemovedAttributesFromConcept implements Operation & Entity {
 union RemovedAttributesFromConceptOwner = Change
 # union RemovedAttributesFromConceptOwned = Nothing
 
-type DeletedConceptInput {
+type DeletedConceptScope {
   conceptId: ID! # data
+}
+
+type DeletedConceptInput {
+  hasInput: Boolean! # computed // false when all operation data is carried by scope
 }
 
 type DeletedConcept implements Operation & Entity {
@@ -5259,15 +5495,20 @@ type DeletedConcept implements Operation & Entity {
   changeOwner: Change # reference // spine
   ownerEntity: OwnerEntity # computed // DeletedConceptOwner
   ownedEntities: OwnedEntityConnection # computed // DeletedConceptOwned
-  input: Input # data
+  scope: Scope! # data
+  input: Input! # data
   diff: Diff! # computed
 }
 
 union DeletedConceptOwner = Change
 # union DeletedConceptOwned = Nothing
 
-type DeletedConceptsInput {
+type DeletedConceptsScope {
   conceptIds: [ID!]! # data
+}
+
+type DeletedConceptsInput {
+  hasInput: Boolean! # computed // false when all operation data is carried by scope
 }
 
 type DeletedConcepts implements Operation & Entity {
@@ -5278,7 +5519,8 @@ type DeletedConcepts implements Operation & Entity {
   changeOwner: Change # reference // spine
   ownerEntity: OwnerEntity # computed // DeletedConceptsOwner
   ownedEntities: OwnedEntityConnection # computed // DeletedConceptsOwned
-  input: Input # data
+  scope: Scope! # data
+  input: Input! # data
   diff: Diff! # computed
 }
 
@@ -5769,8 +6011,11 @@ input PortInput {
   attributes: [AttributeInput!]
 }
 
-type CreatedPortInput {
+type CreatedPortScope {
   ownerId: ID! # data
+}
+
+type CreatedPortInput {
   port: Port! # data
 }
 
@@ -5782,7 +6027,8 @@ type CreatedPort implements Operation & Entity {
   changeOwner: Change # reference // spine
   ownerEntity: OwnerEntity # computed // CreatedPortOwner
   ownedEntities: OwnedEntityConnection # computed // CreatedPortOwned
-  input: Input # data
+  scope: Scope! # data
+  input: Input! # data
   diff: Diff! # computed
   port: Port! # data
 }
@@ -5790,8 +6036,11 @@ type CreatedPort implements Operation & Entity {
 union CreatedPortOwner = Change
 union CreatedPortOwned = Port
 
-type CreatedPortsInput {
+type CreatedPortsScope {
   ownerId: ID! # data
+}
+
+type CreatedPortsInput {
   ports: PortConnection! # data
 }
 
@@ -5803,7 +6052,8 @@ type CreatedPorts implements Operation & Entity {
   changeOwner: Change # reference // spine
   ownerEntity: OwnerEntity # computed // CreatedPortsOwner
   ownedEntities: OwnedEntityConnection # computed // CreatedPortsOwned
-  input: Input # data
+  scope: Scope! # data
+  input: Input! # data
   diff: Diff! # computed
   ports: PortConnection! # data
 }
@@ -5811,8 +6061,11 @@ type CreatedPorts implements Operation & Entity {
 union CreatedPortsOwner = Change
 union CreatedPortsOwned = Port
 
-type RenamedPortInput {
+type RenamedPortScope {
   portId: ID! # data
+}
+
+type RenamedPortInput {
   code: String! # data
   label: String # data
 }
@@ -5825,7 +6078,8 @@ type RenamedPort implements Operation & Entity {
   changeOwner: Change # reference // spine
   ownerEntity: OwnerEntity # computed // RenamedPortOwner
   ownedEntities: OwnedEntityConnection # computed // RenamedPortOwned
-  input: Input # data
+  scope: Scope! # data
+  input: Input! # data
   diff: Diff! # computed
   port: Port! # data
 }
@@ -5833,8 +6087,11 @@ type RenamedPort implements Operation & Entity {
 union RenamedPortOwner = Change
 union RenamedPortOwned = Port
 
-type UpdatedPortDescriptionInput {
+type UpdatedPortDescriptionScope {
   portId: ID! # data
+}
+
+type UpdatedPortDescriptionInput {
   description: String! # data
 }
 
@@ -5846,7 +6103,8 @@ type UpdatedPortDescription implements Operation & Entity {
   changeOwner: Change # reference // spine
   ownerEntity: OwnerEntity # computed // UpdatedPortDescriptionOwner
   ownedEntities: OwnedEntityConnection # computed // UpdatedPortDescriptionOwned
-  input: Input # data
+  scope: Scope! # data
+  input: Input! # data
   diff: Diff! # computed
   port: Port! # data
 }
@@ -5854,8 +6112,11 @@ type UpdatedPortDescription implements Operation & Entity {
 union UpdatedPortDescriptionOwner = Change
 union UpdatedPortDescriptionOwned = Port
 
-type UpdatedPortIconInput {
+type UpdatedPortIconScope {
   portId: ID! # data
+}
+
+type UpdatedPortIconInput {
   icon: String! # data
 }
 
@@ -5867,7 +6128,8 @@ type UpdatedPortIcon implements Operation & Entity {
   changeOwner: Change # reference // spine
   ownerEntity: OwnerEntity # computed // UpdatedPortIconOwner
   ownedEntities: OwnedEntityConnection # computed // UpdatedPortIconOwned
-  input: Input # data
+  scope: Scope! # data
+  input: Input! # data
   diff: Diff! # computed
   port: Port! # data
 }
@@ -5875,8 +6137,11 @@ type UpdatedPortIcon implements Operation & Entity {
 union UpdatedPortIconOwner = Change
 union UpdatedPortIconOwned = Port
 
-type AddedAttributeToPortInput {
+type AddedAttributeToPortScope {
   portId: ID! # data
+}
+
+type AddedAttributeToPortInput {
   attribute: Attribute! # data
 }
 
@@ -5888,7 +6153,8 @@ type AddedAttributeToPort implements Operation & Entity {
   changeOwner: Change # reference // spine
   ownerEntity: OwnerEntity # computed // AddedAttributeToPortOwner
   ownedEntities: OwnedEntityConnection # computed // AddedAttributeToPortOwned
-  input: Input # data
+  scope: Scope! # data
+  input: Input! # data
   diff: Diff! # computed
   port: Port! # data
   attribute: Attribute! # data
@@ -5897,8 +6163,11 @@ type AddedAttributeToPort implements Operation & Entity {
 union AddedAttributeToPortOwner = Change
 union AddedAttributeToPortOwned = Attribute
 
-type AddedAttributesToPortInput {
+type AddedAttributesToPortScope {
   portId: ID! # data
+}
+
+type AddedAttributesToPortInput {
   attributes: AttributeConnection! # data
 }
 
@@ -5910,7 +6179,8 @@ type AddedAttributesToPort implements Operation & Entity {
   changeOwner: Change # reference // spine
   ownerEntity: OwnerEntity # computed // AddedAttributesToPortOwner
   ownedEntities: OwnedEntityConnection # computed // AddedAttributesToPortOwned
-  input: Input # data
+  scope: Scope! # data
+  input: Input! # data
   diff: Diff! # computed
   port: Port! # data
   attributes: AttributeConnection! # data
@@ -5919,9 +6189,13 @@ type AddedAttributesToPort implements Operation & Entity {
 union AddedAttributesToPortOwner = Change
 union AddedAttributesToPortOwned = Attribute
 
-type RemovedAttributeFromPortInput {
+type RemovedAttributeFromPortScope {
   portId: ID! # data
   attributeId: ID! # data
+}
+
+type RemovedAttributeFromPortInput {
+  hasInput: Boolean! # computed // false when all operation data is carried by scope
 }
 
 type RemovedAttributeFromPort implements Operation & Entity {
@@ -5932,7 +6206,8 @@ type RemovedAttributeFromPort implements Operation & Entity {
   changeOwner: Change # reference // spine
   ownerEntity: OwnerEntity # computed // RemovedAttributeFromPortOwner
   ownedEntities: OwnedEntityConnection # computed // RemovedAttributeFromPortOwned
-  input: Input # data
+  scope: Scope! # data
+  input: Input! # data
   diff: Diff! # computed
   port: Port! # data
 }
@@ -5940,9 +6215,13 @@ type RemovedAttributeFromPort implements Operation & Entity {
 union RemovedAttributeFromPortOwner = Change
 # union RemovedAttributeFromPortOwned = Nothing
 
-type RemovedAttributesFromPortInput {
+type RemovedAttributesFromPortScope {
   portId: ID! # data
   attributeIds: [ID!]! # data
+}
+
+type RemovedAttributesFromPortInput {
+  hasInput: Boolean! # computed // false when all operation data is carried by scope
 }
 
 type RemovedAttributesFromPort implements Operation & Entity {
@@ -5953,7 +6232,8 @@ type RemovedAttributesFromPort implements Operation & Entity {
   changeOwner: Change # reference // spine
   ownerEntity: OwnerEntity # computed // RemovedAttributesFromPortOwner
   ownedEntities: OwnedEntityConnection # computed // RemovedAttributesFromPortOwned
-  input: Input # data
+  scope: Scope! # data
+  input: Input! # data
   diff: Diff! # computed
   port: Port! # data
 }
@@ -5961,8 +6241,12 @@ type RemovedAttributesFromPort implements Operation & Entity {
 union RemovedAttributesFromPortOwner = Change
 # union RemovedAttributesFromPortOwned = Nothing
 
-type DeletedPortInput {
+type DeletedPortScope {
   portId: ID! # data
+}
+
+type DeletedPortInput {
+  hasInput: Boolean! # computed // false when all operation data is carried by scope
 }
 
 type DeletedPort implements Operation & Entity {
@@ -5973,15 +6257,20 @@ type DeletedPort implements Operation & Entity {
   changeOwner: Change # reference // spine
   ownerEntity: OwnerEntity # computed // DeletedPortOwner
   ownedEntities: OwnedEntityConnection # computed // DeletedPortOwned
-  input: Input # data
+  scope: Scope! # data
+  input: Input! # data
   diff: Diff! # computed
 }
 
 union DeletedPortOwner = Change
 # union DeletedPortOwned = Nothing
 
-type DeletedPortsInput {
+type DeletedPortsScope {
   portIds: [ID!]! # data
+}
+
+type DeletedPortsInput {
+  hasInput: Boolean! # computed // false when all operation data is carried by scope
 }
 
 type DeletedPorts implements Operation & Entity {
@@ -5992,7 +6281,8 @@ type DeletedPorts implements Operation & Entity {
   changeOwner: Change # reference // spine
   ownerEntity: OwnerEntity # computed // DeletedPortsOwner
   ownedEntities: OwnedEntityConnection # computed // DeletedPortsOwned
-  input: Input # data
+  scope: Scope! # data
+  input: Input! # data
   diff: Diff! # computed
 }
 
@@ -6721,8 +7011,11 @@ input TypeInput {
   attributes: [AttributeInput!]
 }
 
-type CreatedTypeInput {
+type CreatedTypeScope {
   ownerId: ID! # data
+}
+
+type CreatedTypeInput {
   type: Type! # data
 }
 
@@ -6734,7 +7027,8 @@ type CreatedType implements Operation & Entity {
   changeOwner: Change # reference // spine
   ownerEntity: OwnerEntity # computed // CreatedTypeOwner
   ownedEntities: OwnedEntityConnection # computed // CreatedTypeOwned
-  input: Input # data
+  scope: Scope! # data
+  input: Input! # data
   diff: Diff! # computed
   type: Type! # data
 }
@@ -6742,8 +7036,11 @@ type CreatedType implements Operation & Entity {
 union CreatedTypeOwner = Change
 union CreatedTypeOwned = Type
 
-type CreatedTypesInput {
+type CreatedTypesScope {
   ownerId: ID! # data
+}
+
+type CreatedTypesInput {
   types: TypeConnection! # data
 }
 
@@ -6755,7 +7052,8 @@ type CreatedTypes implements Operation & Entity {
   changeOwner: Change # reference // spine
   ownerEntity: OwnerEntity # computed // CreatedTypesOwner
   ownedEntities: OwnedEntityConnection # computed // CreatedTypesOwned
-  input: Input # data
+  scope: Scope! # data
+  input: Input! # data
   diff: Diff! # computed
   types: TypeConnection! # data
 }
@@ -6763,8 +7061,11 @@ type CreatedTypes implements Operation & Entity {
 union CreatedTypesOwner = Change
 union CreatedTypesOwned = Type
 
-type RenamedTypeInput {
+type RenamedTypeScope {
   typeId: ID! # data
+}
+
+type RenamedTypeInput {
   name: String! # data
 }
 
@@ -6776,7 +7077,8 @@ type RenamedType implements Operation & Entity {
   changeOwner: Change # reference // spine
   ownerEntity: OwnerEntity # computed // RenamedTypeOwner
   ownedEntities: OwnedEntityConnection # computed // RenamedTypeOwned
-  input: Input # data
+  scope: Scope! # data
+  input: Input! # data
   diff: Diff! # computed
   type: Type! # data
 }
@@ -6784,8 +7086,11 @@ type RenamedType implements Operation & Entity {
 union RenamedTypeOwner = Change
 union RenamedTypeOwned = Type
 
-type UpdatedTypeDescriptionInput {
+type UpdatedTypeDescriptionScope {
   typeId: ID! # data
+}
+
+type UpdatedTypeDescriptionInput {
   description: String! # data
 }
 
@@ -6797,7 +7102,8 @@ type UpdatedTypeDescription implements Operation & Entity {
   changeOwner: Change # reference // spine
   ownerEntity: OwnerEntity # computed // UpdatedTypeDescriptionOwner
   ownedEntities: OwnedEntityConnection # computed // UpdatedTypeDescriptionOwned
-  input: Input # data
+  scope: Scope! # data
+  input: Input! # data
   diff: Diff! # computed
   type: Type! # data
 }
@@ -6805,8 +7111,11 @@ type UpdatedTypeDescription implements Operation & Entity {
 union UpdatedTypeDescriptionOwner = Change
 union UpdatedTypeDescriptionOwned = Type
 
-type UpdatedTypeIconInput {
+type UpdatedTypeIconScope {
   typeId: ID! # data
+}
+
+type UpdatedTypeIconInput {
   icon: String! # data
 }
 
@@ -6818,7 +7127,8 @@ type UpdatedTypeIcon implements Operation & Entity {
   changeOwner: Change # reference // spine
   ownerEntity: OwnerEntity # computed // UpdatedTypeIconOwner
   ownedEntities: OwnedEntityConnection # computed // UpdatedTypeIconOwned
-  input: Input # data
+  scope: Scope! # data
+  input: Input! # data
   diff: Diff! # computed
   type: Type! # data
 }
@@ -6826,8 +7136,11 @@ type UpdatedTypeIcon implements Operation & Entity {
 union UpdatedTypeIconOwner = Change
 union UpdatedTypeIconOwned = Type
 
-type AddedAttributeToTypeInput {
+type AddedAttributeToTypeScope {
   typeId: ID! # data
+}
+
+type AddedAttributeToTypeInput {
   attribute: Attribute! # data
 }
 
@@ -6839,7 +7152,8 @@ type AddedAttributeToType implements Operation & Entity {
   changeOwner: Change # reference // spine
   ownerEntity: OwnerEntity # computed // AddedAttributeToTypeOwner
   ownedEntities: OwnedEntityConnection # computed // AddedAttributeToTypeOwned
-  input: Input # data
+  scope: Scope! # data
+  input: Input! # data
   diff: Diff! # computed
   type: Type! # data
   attribute: Attribute! # data
@@ -6848,8 +7162,11 @@ type AddedAttributeToType implements Operation & Entity {
 union AddedAttributeToTypeOwner = Change
 union AddedAttributeToTypeOwned = Attribute
 
-type AddedAttributesToTypeInput {
+type AddedAttributesToTypeScope {
   typeId: ID! # data
+}
+
+type AddedAttributesToTypeInput {
   attributes: AttributeConnection! # data
 }
 
@@ -6861,7 +7178,8 @@ type AddedAttributesToType implements Operation & Entity {
   changeOwner: Change # reference // spine
   ownerEntity: OwnerEntity # computed // AddedAttributesToTypeOwner
   ownedEntities: OwnedEntityConnection # computed // AddedAttributesToTypeOwned
-  input: Input # data
+  scope: Scope! # data
+  input: Input! # data
   diff: Diff! # computed
   type: Type! # data
   attributes: AttributeConnection! # data
@@ -6870,9 +7188,13 @@ type AddedAttributesToType implements Operation & Entity {
 union AddedAttributesToTypeOwner = Change
 union AddedAttributesToTypeOwned = Attribute
 
-type RemovedAttributeFromTypeInput {
+type RemovedAttributeFromTypeScope {
   typeId: ID! # data
   attributeId: ID! # data
+}
+
+type RemovedAttributeFromTypeInput {
+  hasInput: Boolean! # computed // false when all operation data is carried by scope
 }
 
 type RemovedAttributeFromType implements Operation & Entity {
@@ -6883,7 +7205,8 @@ type RemovedAttributeFromType implements Operation & Entity {
   changeOwner: Change # reference // spine
   ownerEntity: OwnerEntity # computed // RemovedAttributeFromTypeOwner
   ownedEntities: OwnedEntityConnection # computed // RemovedAttributeFromTypeOwned
-  input: Input # data
+  scope: Scope! # data
+  input: Input! # data
   diff: Diff! # computed
   type: Type! # data
 }
@@ -6891,9 +7214,13 @@ type RemovedAttributeFromType implements Operation & Entity {
 union RemovedAttributeFromTypeOwner = Change
 # union RemovedAttributeFromTypeOwned = Nothing
 
-type RemovedAttributesFromTypeInput {
+type RemovedAttributesFromTypeScope {
   typeId: ID! # data
   attributeIds: [ID!]! # data
+}
+
+type RemovedAttributesFromTypeInput {
+  hasInput: Boolean! # computed // false when all operation data is carried by scope
 }
 
 type RemovedAttributesFromType implements Operation & Entity {
@@ -6904,7 +7231,8 @@ type RemovedAttributesFromType implements Operation & Entity {
   changeOwner: Change # reference // spine
   ownerEntity: OwnerEntity # computed // RemovedAttributesFromTypeOwner
   ownedEntities: OwnedEntityConnection # computed // RemovedAttributesFromTypeOwned
-  input: Input # data
+  scope: Scope! # data
+  input: Input! # data
   diff: Diff! # computed
   type: Type! # data
 }
@@ -6912,8 +7240,12 @@ type RemovedAttributesFromType implements Operation & Entity {
 union RemovedAttributesFromTypeOwner = Change
 # union RemovedAttributesFromTypeOwned = Nothing
 
-type DeletedTypeInput {
+type DeletedTypeScope {
   typeId: ID! # data
+}
+
+type DeletedTypeInput {
+  hasInput: Boolean! # computed // false when all operation data is carried by scope
 }
 
 type DeletedType implements Operation & Entity {
@@ -6924,15 +7256,20 @@ type DeletedType implements Operation & Entity {
   changeOwner: Change # reference // spine
   ownerEntity: OwnerEntity # computed // DeletedTypeOwner
   ownedEntities: OwnedEntityConnection # computed // DeletedTypeOwned
-  input: Input # data
+  scope: Scope! # data
+  input: Input! # data
   diff: Diff! # computed
 }
 
 union DeletedTypeOwner = Change
 # union DeletedTypeOwned = Nothing
 
-type DeletedTypesInput {
+type DeletedTypesScope {
   typeIds: [ID!]! # data
+}
+
+type DeletedTypesInput {
+  hasInput: Boolean! # computed // false when all operation data is carried by scope
 }
 
 type DeletedTypes implements Operation & Entity {
@@ -6943,7 +7280,8 @@ type DeletedTypes implements Operation & Entity {
   changeOwner: Change # reference // spine
   ownerEntity: OwnerEntity # computed // DeletedTypesOwner
   ownedEntities: OwnedEntityConnection # computed // DeletedTypesOwned
-  input: Input # data
+  scope: Scope! # data
+  input: Input! # data
   diff: Diff! # computed
 }
 
@@ -6962,8 +7300,11 @@ input ConnectorInput {
   attributes: [AttributeInput!]
 }
 
-type AddedConnectorToTypeInput {
+type AddedConnectorToTypeScope {
   typeId: ID! # data
+}
+
+type AddedConnectorToTypeInput {
   connector: Connector! # data
 }
 
@@ -6975,7 +7316,8 @@ type AddedConnectorToType implements Operation & Entity {
   changeOwner: Change # reference // spine
   ownerEntity: OwnerEntity # computed // AddedConnectorToTypeOwner
   ownedEntities: OwnedEntityConnection # computed // AddedConnectorToTypeOwned
-  input: Input # data
+  scope: Scope! # data
+  input: Input! # data
   diff: Diff! # computed
   type: Type! # data
   connector: Connector! # data
@@ -6984,8 +7326,11 @@ type AddedConnectorToType implements Operation & Entity {
 union AddedConnectorToTypeOwner = Change
 union AddedConnectorToTypeOwned = Connector
 
-type AddedConnectorsToTypeInput {
+type AddedConnectorsToTypeScope {
   typeId: ID! # data
+}
+
+type AddedConnectorsToTypeInput {
   connectors: ConnectorConnection! # data
 }
 
@@ -6997,7 +7342,8 @@ type AddedConnectorsToType implements Operation & Entity {
   changeOwner: Change # reference // spine
   ownerEntity: OwnerEntity # computed // AddedConnectorsToTypeOwner
   ownedEntities: OwnedEntityConnection # computed // AddedConnectorsToTypeOwned
-  input: Input # data
+  scope: Scope! # data
+  input: Input! # data
   diff: Diff! # computed
   type: Type! # data
   connectors: ConnectorConnection! # data
@@ -7006,8 +7352,11 @@ type AddedConnectorsToType implements Operation & Entity {
 union AddedConnectorsToTypeOwner = Change
 union AddedConnectorsToTypeOwned = Connector
 
-type RenamedConnectorInTypeInput {
+type RenamedConnectorInTypeScope {
   connectorId: ID! # data
+}
+
+type RenamedConnectorInTypeInput {
   code: String! # data
 }
 
@@ -7019,7 +7368,8 @@ type RenamedConnectorInType implements Operation & Entity {
   changeOwner: Change # reference // spine
   ownerEntity: OwnerEntity # computed // RenamedConnectorInTypeOwner
   ownedEntities: OwnedEntityConnection # computed // RenamedConnectorInTypeOwned
-  input: Input # data
+  scope: Scope! # data
+  input: Input! # data
   diff: Diff! # computed
   connector: Connector! # data
 }
@@ -7027,8 +7377,11 @@ type RenamedConnectorInType implements Operation & Entity {
 union RenamedConnectorInTypeOwner = Change
 union RenamedConnectorInTypeOwned = Connector
 
-type UpdatedConnectorDescriptionInTypeInput {
+type UpdatedConnectorDescriptionInTypeScope {
   connectorId: ID! # data
+}
+
+type UpdatedConnectorDescriptionInTypeInput {
   description: String! # data
 }
 
@@ -7040,7 +7393,8 @@ type UpdatedConnectorDescriptionInType implements Operation & Entity {
   changeOwner: Change # reference // spine
   ownerEntity: OwnerEntity # computed // UpdatedConnectorDescriptionInTypeOwner
   ownedEntities: OwnedEntityConnection # computed // UpdatedConnectorDescriptionInTypeOwned
-  input: Input # data
+  scope: Scope! # data
+  input: Input! # data
   diff: Diff! # computed
   connector: Connector! # data
 }
@@ -7048,8 +7402,11 @@ type UpdatedConnectorDescriptionInType implements Operation & Entity {
 union UpdatedConnectorDescriptionInTypeOwner = Change
 union UpdatedConnectorDescriptionInTypeOwned = Connector
 
-type UpdatedConnectorIconInTypeInput {
+type UpdatedConnectorIconInTypeScope {
   connectorId: ID! # data
+}
+
+type UpdatedConnectorIconInTypeInput {
   icon: String! # data
 }
 
@@ -7061,7 +7418,8 @@ type UpdatedConnectorIconInType implements Operation & Entity {
   changeOwner: Change # reference // spine
   ownerEntity: OwnerEntity # computed // UpdatedConnectorIconInTypeOwner
   ownedEntities: OwnedEntityConnection # computed // UpdatedConnectorIconInTypeOwned
-  input: Input # data
+  scope: Scope! # data
+  input: Input! # data
   diff: Diff! # computed
   connector: Connector! # data
 }
@@ -7069,8 +7427,12 @@ type UpdatedConnectorIconInType implements Operation & Entity {
 union UpdatedConnectorIconInTypeOwner = Change
 union UpdatedConnectorIconInTypeOwned = Connector
 
-type RemovedConnectorFromTypeInput {
+type RemovedConnectorFromTypeScope {
   connectorId: ID! # data
+}
+
+type RemovedConnectorFromTypeInput {
+  hasInput: Boolean! # computed // false when all operation data is carried by scope
 }
 
 type RemovedConnectorFromType implements Operation & Entity {
@@ -7081,7 +7443,8 @@ type RemovedConnectorFromType implements Operation & Entity {
   changeOwner: Change # reference // spine
   ownerEntity: OwnerEntity # computed // RemovedConnectorFromTypeOwner
   ownedEntities: OwnedEntityConnection # computed // RemovedConnectorFromTypeOwned
-  input: Input # data
+  scope: Scope! # data
+  input: Input! # data
   diff: Diff! # computed
   type: Type! # data
 }
@@ -7089,8 +7452,12 @@ type RemovedConnectorFromType implements Operation & Entity {
 union RemovedConnectorFromTypeOwner = Change
 # union RemovedConnectorFromTypeOwned = Nothing
 
-type RemovedConnectorsFromTypeInput {
+type RemovedConnectorsFromTypeScope {
   connectorIds: [ID!]! # data
+}
+
+type RemovedConnectorsFromTypeInput {
+  hasInput: Boolean! # computed // false when all operation data is carried by scope
 }
 
 type RemovedConnectorsFromType implements Operation & Entity {
@@ -7101,7 +7468,8 @@ type RemovedConnectorsFromType implements Operation & Entity {
   changeOwner: Change # reference // spine
   ownerEntity: OwnerEntity # computed // RemovedConnectorsFromTypeOwner
   ownedEntities: OwnedEntityConnection # computed // RemovedConnectorsFromTypeOwned
-  input: Input # data
+  scope: Scope! # data
+  input: Input! # data
   diff: Diff! # computed
   type: Type! # data
 }
@@ -8065,8 +8433,11 @@ type ConnectionDiffsConnection implements EntityConnectionInterface {
 
 #region Operations
 
-type AddedFixedPieceToDesignInput {
+type AddedFixedPieceToDesignScope {
   designId: ID!
+}
+
+type AddedFixedPieceToDesignInput {
   blueprintId: ID!
   position: Position!
   name: String
@@ -8081,7 +8452,8 @@ type AddedFixedPieceToDesign implements Operation & Entity {
   changeOwner: Change # reference // spine
   ownerEntity: OwnerEntity # computed // AddedFixedPieceToDesignOwner
   ownedEntities: OwnedEntityConnection # computed // AddedFixedPieceToDesignOwned
-  input: Input # data
+  scope: Scope! # data
+  input: Input! # data
   diff: Diff! # computed
   piece: Piece! # data
 }
@@ -8089,9 +8461,13 @@ type AddedFixedPieceToDesign implements Operation & Entity {
 union AddedFixedPieceToDesignOwner = Change
 union AddedFixedPieceToDesignOwned = Piece
 
-type FixedPieceInDesignInput {
+type FixedPieceInDesignScope {
   designId: ID!
   pieceId: ID!
+}
+
+type FixedPieceInDesignInput {
+  hasInput: Boolean! # computed // false when all operation data is carried by scope
 }
 
 type FixedPieceInDesign implements Operation & Entity {
@@ -8102,7 +8478,8 @@ type FixedPieceInDesign implements Operation & Entity {
   changeOwner: Change # reference // spine
   ownerEntity: OwnerEntity # computed // FixedPieceInDesignOwner
   ownedEntities: OwnedEntityConnection # computed // FixedPieceInDesignOwned
-  input: Input # data
+  scope: Scope! # data
+  input: Input! # data
   diff: Diff! # computed
   piece: Piece! # data
 }
@@ -8110,9 +8487,12 @@ type FixedPieceInDesign implements Operation & Entity {
 union FixedPieceInDesignOwner = Change
 union FixedPieceInDesignOwned = Piece
 
-type DraggedPiecesInDesignInput {
+type DraggedPiecesInDesignScope {
   designId: ID!
   pieceIds: [ID!]!
+}
+
+type DraggedPiecesInDesignInput {
   offset: Offset!
 }
 
@@ -8124,7 +8504,8 @@ type DraggedPiecesInDesign implements Operation & Entity {
   changeOwner: Change # reference // spine
   ownerEntity: OwnerEntity # computed // DraggedPiecesInDesignOwner
   ownedEntities: OwnedEntityConnection # computed // DraggedPiecesInDesignOwned
-  input: Input # data
+  scope: Scope! # data
+  input: Input! # data
   diff: Diff! # computed
   pieces: PieceConnection! # data
 }
@@ -8132,9 +8513,12 @@ type DraggedPiecesInDesign implements Operation & Entity {
 union DraggedPiecesInDesignOwner = Change
 union DraggedPiecesInDesignOwned = Piece
 
-type DraggedPieceInDesignInput {
+type DraggedPieceInDesignScope {
   designId: ID! # data
   pieceId: ID! # data
+}
+
+type DraggedPieceInDesignInput {
   offset: Offset! # data
 }
 
@@ -8146,7 +8530,8 @@ type DraggedPieceInDesign implements Operation & Entity {
   changeOwner: Change # reference // spine
   ownerEntity: OwnerEntity # computed // DraggedPieceInDesignOwner
   ownedEntities: OwnedEntityConnection # computed // DraggedPieceInDesignOwned
-  input: Input # data
+  scope: Scope! # data
+  input: Input! # data
   diff: Diff! # computed
   piece: Piece! # data
 }
@@ -8178,8 +8563,11 @@ input HangingChildPieceWithParentConnectionInput {
   attributes: [AttributeInput!]
 }
 
-type AddedChildPieceWithParentConnectionToDesignInput {
+type AddedChildPieceWithParentConnectionToDesignScope {
   designId: ID! # data
+}
+
+type AddedChildPieceWithParentConnectionToDesignInput {
   piece: Piece! # data
   connection: Connection! # data
 }
@@ -8192,7 +8580,8 @@ type AddedChildPieceWithParentConnectionToDesign implements Operation & Entity {
   changeOwner: Change # reference // spine
   ownerEntity: OwnerEntity # computed // AddedChildPieceWithParentConnectionToDesignOwner
   ownedEntities: OwnedEntityConnection # computed // AddedChildPieceWithParentConnectionToDesignOwned
-  input: Input # data
+  scope: Scope! # data
+  input: Input! # data
   diff: Diff! # computed
   piece: Piece! # data
   connection: Connection! # data
@@ -8201,8 +8590,11 @@ type AddedChildPieceWithParentConnectionToDesign implements Operation & Entity {
 union AddedChildPieceWithParentConnectionToDesignOwner = Change
 union AddedChildPieceWithParentConnectionToDesignOwned = Piece | Connection
 
-type AddedChildPiecesWithParentConnectionsToDesignInput {
+type AddedChildPiecesWithParentConnectionsToDesignScope {
   designId: ID! # data
+}
+
+type AddedChildPiecesWithParentConnectionsToDesignInput {
   pieces: PieceConnection! # data
   connections: ConnectionConnection! # data
 }
@@ -8215,7 +8607,8 @@ type AddedChildPiecesWithParentConnectionsToDesign implements Operation & Entity
   changeOwner: Change # reference // spine
   ownerEntity: OwnerEntity # computed // AddedChildPiecesWithParentConnectionsToDesignOwner
   ownedEntities: OwnedEntityConnection # computed // AddedChildPiecesWithParentConnectionsToDesignOwned
-  input: Input # data
+  scope: Scope! # data
+  input: Input! # data
   diff: Diff! # computed
   pieces: PieceConnection! # data
   connections: ConnectionConnection! # data
@@ -8224,8 +8617,11 @@ type AddedChildPiecesWithParentConnectionsToDesign implements Operation & Entity
 union AddedChildPiecesWithParentConnectionsToDesignOwner = Change
 union AddedChildPiecesWithParentConnectionsToDesignOwned = Piece | Connection
 
-type AddedHangingChildPieceWithParentConnectionToDesignInput {
+type AddedHangingChildPieceWithParentConnectionToDesignScope {
   designId: ID! # data
+}
+
+type AddedHangingChildPieceWithParentConnectionToDesignInput {
   piece: Piece! # data
   connection: Connection! # data
 }
@@ -8238,7 +8634,8 @@ type AddedHangingChildPieceWithParentConnectionToDesign implements Operation & E
   changeOwner: Change # reference // spine
   ownerEntity: OwnerEntity # computed // AddedHangingChildPieceWithParentConnectionToDesignOwner
   ownedEntities: OwnedEntityConnection # computed // AddedHangingChildPieceWithParentConnectionToDesignOwned
-  input: Input # data
+  scope: Scope! # data
+  input: Input! # data
   diff: Diff! # computed
   piece: Piece! # data
   connection: Connection! # data
@@ -8247,8 +8644,11 @@ type AddedHangingChildPieceWithParentConnectionToDesign implements Operation & E
 union AddedHangingChildPieceWithParentConnectionToDesignOwner = Change
 union AddedHangingChildPieceWithParentConnectionToDesignOwned = Piece | Connection
 
-type AddedHangingChildPiecesWithParentConnectionsToDesignInput {
+type AddedHangingChildPiecesWithParentConnectionsToDesignScope {
   designId: ID! # data
+}
+
+type AddedHangingChildPiecesWithParentConnectionsToDesignInput {
   pieces: PieceConnection! # data
   connections: ConnectionConnection! # data
 }
@@ -8261,7 +8661,8 @@ type AddedHangingChildPiecesWithParentConnectionsToDesign implements Operation &
   changeOwner: Change # reference // spine
   ownerEntity: OwnerEntity # computed // AddedHangingChildPiecesWithParentConnectionsToDesignOwner
   ownedEntities: OwnedEntityConnection # computed // AddedHangingChildPiecesWithParentConnectionsToDesignOwned
-  input: Input # data
+  scope: Scope! # data
+  input: Input! # data
   diff: Diff! # computed
   pieces: PieceConnection! # data
   connections: ConnectionConnection! # data
@@ -8270,8 +8671,11 @@ type AddedHangingChildPiecesWithParentConnectionsToDesign implements Operation &
 union AddedHangingChildPiecesWithParentConnectionsToDesignOwner = Change
 union AddedHangingChildPiecesWithParentConnectionsToDesignOwned = Piece | Connection
 
-type RenamedPieceInDesignInput {
+type RenamedPieceInDesignScope {
   pieceId: ID! # data
+}
+
+type RenamedPieceInDesignInput {
   name: String! # data
 }
 
@@ -8283,7 +8687,8 @@ type RenamedPieceInDesign implements Operation & Entity {
   changeOwner: Change # reference // spine
   ownerEntity: OwnerEntity # computed // RenamedPieceInDesignOwner
   ownedEntities: OwnedEntityConnection # computed // RenamedPieceInDesignOwned
-  input: Input # data
+  scope: Scope! # data
+  input: Input! # data
   diff: Diff! # computed
   piece: Piece! # data
 }
@@ -8291,8 +8696,11 @@ type RenamedPieceInDesign implements Operation & Entity {
 union RenamedPieceInDesignOwner = Change
 union RenamedPieceInDesignOwned = Piece
 
-type UpdatedPieceDescriptionInDesignInput {
+type UpdatedPieceDescriptionInDesignScope {
   pieceId: ID! # data
+}
+
+type UpdatedPieceDescriptionInDesignInput {
   description: String! # data
 }
 
@@ -8304,7 +8712,8 @@ type UpdatedPieceDescriptionInDesign implements Operation & Entity {
   changeOwner: Change # reference // spine
   ownerEntity: OwnerEntity # computed // UpdatedPieceDescriptionInDesignOwner
   ownedEntities: OwnedEntityConnection # computed // UpdatedPieceDescriptionInDesignOwned
-  input: Input # data
+  scope: Scope! # data
+  input: Input! # data
   diff: Diff! # computed
   piece: Piece! # data
 }
@@ -8312,9 +8721,12 @@ type UpdatedPieceDescriptionInDesign implements Operation & Entity {
 union UpdatedPieceDescriptionInDesignOwner = Change
 union UpdatedPieceDescriptionInDesignOwned = Piece
 
-type MovedPieceInDesignInput {
+type MovedPieceInDesignScope {
   designId: ID! # data
   pieceId: ID! # data
+}
+
+type MovedPieceInDesignInput {
   position: Position! # data
 }
 
@@ -8326,7 +8738,8 @@ type MovedPieceInDesign implements Operation & Entity {
   changeOwner: Change # reference // spine
   ownerEntity: OwnerEntity # computed // MovedPieceInDesignOwner
   ownedEntities: OwnedEntityConnection # computed // MovedPieceInDesignOwned
-  input: Input # data
+  scope: Scope! # data
+  input: Input! # data
   diff: Diff! # computed
   piece: Piece! # data
 }
@@ -8334,9 +8747,12 @@ type MovedPieceInDesign implements Operation & Entity {
 union MovedPieceInDesignOwner = Change
 union MovedPieceInDesignOwned = Piece
 
-type MovedPiecesInDesignInput {
+type MovedPiecesInDesignScope {
   designId: ID! # data
   pieceIds: [ID!]! # data
+}
+
+type MovedPiecesInDesignInput {
   offset: Offset! # data
 }
 
@@ -8348,7 +8764,8 @@ type MovedPiecesInDesign implements Operation & Entity {
   changeOwner: Change # reference // spine
   ownerEntity: OwnerEntity # computed // MovedPiecesInDesignOwner
   ownedEntities: OwnedEntityConnection # computed // MovedPiecesInDesignOwned
-  input: Input # data
+  scope: Scope! # data
+  input: Input! # data
   diff: Diff! # computed
   pieces: PieceConnection! # data
 }
@@ -8356,9 +8773,13 @@ type MovedPiecesInDesign implements Operation & Entity {
 union MovedPiecesInDesignOwner = Change
 union MovedPiecesInDesignOwned = Piece
 
-type FixedPiecesInDesignInput {
+type FixedPiecesInDesignScope {
   designId: ID! # data
   pieceIds: [ID!]! # data
+}
+
+type FixedPiecesInDesignInput {
+  hasInput: Boolean! # computed // false when all operation data is carried by scope
 }
 
 type FixedPiecesInDesign implements Operation & Entity {
@@ -8369,7 +8790,8 @@ type FixedPiecesInDesign implements Operation & Entity {
   changeOwner: Change # reference // spine
   ownerEntity: OwnerEntity # computed // FixedPiecesInDesignOwner
   ownedEntities: OwnedEntityConnection # computed // FixedPiecesInDesignOwned
-  input: Input # data
+  scope: Scope! # data
+  input: Input! # data
   diff: Diff! # computed
   pieces: PieceConnection! # data
 }
@@ -8377,8 +8799,11 @@ type FixedPiecesInDesign implements Operation & Entity {
 union FixedPiecesInDesignOwner = Change
 union FixedPiecesInDesignOwned = Piece
 
-type ChangedPieceToTypeInDesignInput {
+type ChangedPieceToTypeInDesignScope {
   pieceId: ID! # data
+}
+
+type ChangedPieceToTypeInDesignInput {
   blueprintId: ID! # data
 }
 
@@ -8390,7 +8815,8 @@ type ChangedPieceToTypeInDesign implements Operation & Entity {
   changeOwner: Change # reference // spine
   ownerEntity: OwnerEntity # computed // ChangedPieceToTypeInDesignOwner
   ownedEntities: OwnedEntityConnection # computed // ChangedPieceToTypeInDesignOwned
-  input: Input # data
+  scope: Scope! # data
+  input: Input! # data
   diff: Diff! # computed
   piece: Piece! # data
 }
@@ -8398,8 +8824,11 @@ type ChangedPieceToTypeInDesign implements Operation & Entity {
 union ChangedPieceToTypeInDesignOwner = Change
 union ChangedPieceToTypeInDesignOwned = Piece
 
-type ChangedPiecesToTypeInDesignInput {
+type ChangedPiecesToTypeInDesignScope {
   pieceIds: [ID!]! # data
+}
+
+type ChangedPiecesToTypeInDesignInput {
   blueprintId: ID! # data
 }
 
@@ -8411,7 +8840,8 @@ type ChangedPiecesToTypeInDesign implements Operation & Entity {
   changeOwner: Change # reference // spine
   ownerEntity: OwnerEntity # computed // ChangedPiecesToTypeInDesignOwner
   ownedEntities: OwnedEntityConnection # computed // ChangedPiecesToTypeInDesignOwned
-  input: Input # data
+  scope: Scope! # data
+  input: Input! # data
   diff: Diff! # computed
   pieces: PieceConnection! # data
 }
@@ -8419,8 +8849,11 @@ type ChangedPiecesToTypeInDesign implements Operation & Entity {
 union ChangedPiecesToTypeInDesignOwner = Change
 union ChangedPiecesToTypeInDesignOwned = Piece
 
-type AddedAttributeToPieceInput {
+type AddedAttributeToPieceScope {
   pieceId: ID! # data
+}
+
+type AddedAttributeToPieceInput {
   attribute: Attribute! # data
 }
 
@@ -8432,7 +8865,8 @@ type AddedAttributeToPiece implements Operation & Entity {
   changeOwner: Change # reference // spine
   ownerEntity: OwnerEntity # computed // AddedAttributeToPieceOwner
   ownedEntities: OwnedEntityConnection # computed // AddedAttributeToPieceOwned
-  input: Input # data
+  scope: Scope! # data
+  input: Input! # data
   diff: Diff! # computed
   piece: Piece! # data
   attribute: Attribute! # data
@@ -8441,8 +8875,11 @@ type AddedAttributeToPiece implements Operation & Entity {
 union AddedAttributeToPieceOwner = Change
 union AddedAttributeToPieceOwned = Attribute
 
-type AddedAttributesToPieceInput {
+type AddedAttributesToPieceScope {
   pieceId: ID! # data
+}
+
+type AddedAttributesToPieceInput {
   attributes: AttributeConnection! # data
 }
 
@@ -8454,7 +8891,8 @@ type AddedAttributesToPiece implements Operation & Entity {
   changeOwner: Change # reference // spine
   ownerEntity: OwnerEntity # computed // AddedAttributesToPieceOwner
   ownedEntities: OwnedEntityConnection # computed // AddedAttributesToPieceOwned
-  input: Input # data
+  scope: Scope! # data
+  input: Input! # data
   diff: Diff! # computed
   piece: Piece! # data
   attributes: AttributeConnection! # data
@@ -8463,9 +8901,13 @@ type AddedAttributesToPiece implements Operation & Entity {
 union AddedAttributesToPieceOwner = Change
 union AddedAttributesToPieceOwned = Attribute
 
-type RemovedAttributeFromPieceInput {
+type RemovedAttributeFromPieceScope {
   pieceId: ID! # data
   attributeId: ID! # data
+}
+
+type RemovedAttributeFromPieceInput {
+  hasInput: Boolean! # computed // false when all operation data is carried by scope
 }
 
 type RemovedAttributeFromPiece implements Operation & Entity {
@@ -8476,7 +8918,8 @@ type RemovedAttributeFromPiece implements Operation & Entity {
   changeOwner: Change # reference // spine
   ownerEntity: OwnerEntity # computed // RemovedAttributeFromPieceOwner
   ownedEntities: OwnedEntityConnection # computed // RemovedAttributeFromPieceOwned
-  input: Input # data
+  scope: Scope! # data
+  input: Input! # data
   diff: Diff! # computed
   piece: Piece! # data
 }
@@ -8484,9 +8927,13 @@ type RemovedAttributeFromPiece implements Operation & Entity {
 union RemovedAttributeFromPieceOwner = Change
 # union RemovedAttributeFromPieceOwned = Nothing
 
-type RemovedAttributesFromPieceInput {
+type RemovedAttributesFromPieceScope {
   pieceId: ID! # data
   attributeIds: [ID!]! # data
+}
+
+type RemovedAttributesFromPieceInput {
+  hasInput: Boolean! # computed // false when all operation data is carried by scope
 }
 
 type RemovedAttributesFromPiece implements Operation & Entity {
@@ -8497,7 +8944,8 @@ type RemovedAttributesFromPiece implements Operation & Entity {
   changeOwner: Change # reference // spine
   ownerEntity: OwnerEntity # computed // RemovedAttributesFromPieceOwner
   ownedEntities: OwnedEntityConnection # computed // RemovedAttributesFromPieceOwned
-  input: Input # data
+  scope: Scope! # data
+  input: Input! # data
   diff: Diff! # computed
   piece: Piece! # data
 }
@@ -8505,9 +8953,13 @@ type RemovedAttributesFromPiece implements Operation & Entity {
 union RemovedAttributesFromPieceOwner = Change
 # union RemovedAttributesFromPieceOwned = Nothing
 
-type DeletedPieceInDesignInput {
+type DeletedPieceInDesignScope {
   designId: ID! # data
   pieceId: ID! # data
+}
+
+type DeletedPieceInDesignInput {
+  hasInput: Boolean! # computed // false when all operation data is carried by scope
 }
 
 type DeletedPieceInDesign implements Operation & Entity {
@@ -8518,16 +8970,21 @@ type DeletedPieceInDesign implements Operation & Entity {
   changeOwner: Change # reference // spine
   ownerEntity: OwnerEntity # computed // DeletedPieceInDesignOwner
   ownedEntities: OwnedEntityConnection # computed // DeletedPieceInDesignOwned
-  input: Input # data
+  scope: Scope! # data
+  input: Input! # data
   diff: Diff! # computed
 }
 
 union DeletedPieceInDesignOwner = Change
 # union DeletedPieceInDesignOwned = Nothing
 
-type DeletedPiecesInDesignInput {
+type DeletedPiecesInDesignScope {
   designId: ID! # data
   pieceIds: [ID!]! # data
+}
+
+type DeletedPiecesInDesignInput {
+  hasInput: Boolean! # computed // false when all operation data is carried by scope
 }
 
 type DeletedPiecesInDesign implements Operation & Entity {
@@ -8538,17 +8995,22 @@ type DeletedPiecesInDesign implements Operation & Entity {
   changeOwner: Change # reference // spine
   ownerEntity: OwnerEntity # computed // DeletedPiecesInDesignOwner
   ownedEntities: OwnedEntityConnection # computed // DeletedPiecesInDesignOwned
-  input: Input # data
+  scope: Scope! # data
+  input: Input! # data
   diff: Diff! # computed
 }
 
 union DeletedPiecesInDesignOwner = Change
 # union DeletedPiecesInDesignOwned = Nothing
 
-type DeletedPiecesAndConnectionsInDesignInput {
+type DeletedPiecesAndConnectionsInDesignScope {
   designId: ID! # data
   pieceIds: [ID!]! # data
   connectionIds: [ID!]! # data
+}
+
+type DeletedPiecesAndConnectionsInDesignInput {
+  hasInput: Boolean! # computed // false when all operation data is carried by scope
 }
 
 type DeletedPiecesAndConnectionsInDesign implements Operation & Entity {
@@ -8559,7 +9021,8 @@ type DeletedPiecesAndConnectionsInDesign implements Operation & Entity {
   changeOwner: Change # reference // spine
   ownerEntity: OwnerEntity # computed // DeletedPiecesAndConnectionsInDesignOwner
   ownedEntities: OwnedEntityConnection # computed // DeletedPiecesAndConnectionsInDesignOwned
-  input: Input # data
+  scope: Scope! # data
+  input: Input! # data
   diff: Diff! # computed
 }
 
@@ -9115,8 +9578,11 @@ input DesignInput {
   attributes: [AttributeInput!]
 }
 
-type CreatedDesignInput {
+type CreatedDesignScope {
   ownerId: ID! # data
+}
+
+type CreatedDesignInput {
   design: Design! # data
 }
 
@@ -9128,7 +9594,8 @@ type CreatedDesign implements Operation & Entity {
   changeOwner: Change # reference // spine
   ownerEntity: OwnerEntity # computed // CreatedDesignOwner
   ownedEntities: OwnedEntityConnection # computed // CreatedDesignOwned
-  input: Input # data
+  scope: Scope! # data
+  input: Input! # data
   diff: Diff! # computed
   design: Design! # data
 }
@@ -9136,8 +9603,11 @@ type CreatedDesign implements Operation & Entity {
 union CreatedDesignOwner = Change
 union CreatedDesignOwned = Design
 
-type CreatedDesignsInput {
+type CreatedDesignsScope {
   ownerId: ID! # data
+}
+
+type CreatedDesignsInput {
   designs: DesignConnection! # data
 }
 
@@ -9149,7 +9619,8 @@ type CreatedDesigns implements Operation & Entity {
   changeOwner: Change # reference // spine
   ownerEntity: OwnerEntity # computed // CreatedDesignsOwner
   ownedEntities: OwnedEntityConnection # computed // CreatedDesignsOwned
-  input: Input # data
+  scope: Scope! # data
+  input: Input! # data
   diff: Diff! # computed
   designs: DesignConnection! # data
 }
@@ -9157,8 +9628,12 @@ type CreatedDesigns implements Operation & Entity {
 union CreatedDesignsOwner = Change
 union CreatedDesignsOwned = Design
 
-type DeletedDesignInput {
+type DeletedDesignScope {
   designId: ID! # data
+}
+
+type DeletedDesignInput {
+  hasInput: Boolean! # computed // false when all operation data is carried by scope
 }
 
 type DeletedDesign implements Operation & Entity {
@@ -9169,15 +9644,20 @@ type DeletedDesign implements Operation & Entity {
   changeOwner: Change # reference // spine
   ownerEntity: OwnerEntity # computed // DeletedDesignOwner
   ownedEntities: OwnedEntityConnection # computed // DeletedDesignOwned
-  input: Input # data
+  scope: Scope! # data
+  input: Input! # data
   diff: Diff! # computed
 }
 
 union DeletedDesignOwner = Change
 # union DeletedDesignOwned = Nothing
 
-type DeletedDesignsInput {
+type DeletedDesignsScope {
   designIds: [ID!]! # data
+}
+
+type DeletedDesignsInput {
+  hasInput: Boolean! # computed // false when all operation data is carried by scope
 }
 
 type DeletedDesigns implements Operation & Entity {
@@ -9188,15 +9668,20 @@ type DeletedDesigns implements Operation & Entity {
   changeOwner: Change # reference // spine
   ownerEntity: OwnerEntity # computed // DeletedDesignsOwner
   ownedEntities: OwnedEntityConnection # computed // DeletedDesignsOwned
-  input: Input # data
+  scope: Scope! # data
+  input: Input! # data
   diff: Diff! # computed
 }
 
 union DeletedDesignsOwner = Change
 # union DeletedDesignsOwned = Nothing
 
-type FlattenedDesignInput {
+type FlattenedDesignScope {
   designId: ID! # data
+}
+
+type FlattenedDesignInput {
+  hasInput: Boolean! # computed // false when all operation data is carried by scope
 }
 
 type FlattenedDesign implements Operation & Entity {
@@ -9207,7 +9692,8 @@ type FlattenedDesign implements Operation & Entity {
   changeOwner: Change # reference // spine
   ownerEntity: OwnerEntity # computed // FlattenedDesignOwner
   ownedEntities: OwnedEntityConnection # computed // FlattenedDesignOwned
-  input: Input # data
+  scope: Scope! # data
+  input: Input! # data
   diff: Diff! # computed
   design: Design! # data
 }
@@ -9215,8 +9701,11 @@ type FlattenedDesign implements Operation & Entity {
 union FlattenedDesignOwner = Change
 union FlattenedDesignOwned = Design
 
-type AddedAttributeToDesignInput {
+type AddedAttributeToDesignScope {
   designId: ID! # data
+}
+
+type AddedAttributeToDesignInput {
   attribute: Attribute! # data
 }
 
@@ -9228,7 +9717,8 @@ type AddedAttributeToDesign implements Operation & Entity {
   changeOwner: Change # reference // spine
   ownerEntity: OwnerEntity # computed // AddedAttributeToDesignOwner
   ownedEntities: OwnedEntityConnection # computed // AddedAttributeToDesignOwned
-  input: Input # data
+  scope: Scope! # data
+  input: Input! # data
   diff: Diff! # computed
   design: Design! # data
   attribute: Attribute! # data
@@ -9237,8 +9727,11 @@ type AddedAttributeToDesign implements Operation & Entity {
 union AddedAttributeToDesignOwner = Change
 union AddedAttributeToDesignOwned = Attribute
 
-type AddedAttributesToDesignInput {
+type AddedAttributesToDesignScope {
   designId: ID! # data
+}
+
+type AddedAttributesToDesignInput {
   attributes: AttributeConnection! # data
 }
 
@@ -9250,7 +9743,8 @@ type AddedAttributesToDesign implements Operation & Entity {
   changeOwner: Change # reference // spine
   ownerEntity: OwnerEntity # computed // AddedAttributesToDesignOwner
   ownedEntities: OwnedEntityConnection # computed // AddedAttributesToDesignOwned
-  input: Input # data
+  scope: Scope! # data
+  input: Input! # data
   diff: Diff! # computed
   design: Design! # data
   attributes: AttributeConnection! # data
@@ -9259,9 +9753,13 @@ type AddedAttributesToDesign implements Operation & Entity {
 union AddedAttributesToDesignOwner = Change
 union AddedAttributesToDesignOwned = Attribute
 
-type RemovedAttributeFromDesignInput {
+type RemovedAttributeFromDesignScope {
   designId: ID! # data
   attributeId: ID! # data
+}
+
+type RemovedAttributeFromDesignInput {
+  hasInput: Boolean! # computed // false when all operation data is carried by scope
 }
 
 type RemovedAttributeFromDesign implements Operation & Entity {
@@ -9272,7 +9770,8 @@ type RemovedAttributeFromDesign implements Operation & Entity {
   changeOwner: Change # reference // spine
   ownerEntity: OwnerEntity # computed // RemovedAttributeFromDesignOwner
   ownedEntities: OwnedEntityConnection # computed // RemovedAttributeFromDesignOwned
-  input: Input # data
+  scope: Scope! # data
+  input: Input! # data
   diff: Diff! # computed
   design: Design! # data
 }
@@ -9280,9 +9779,13 @@ type RemovedAttributeFromDesign implements Operation & Entity {
 union RemovedAttributeFromDesignOwner = Change
 # union RemovedAttributeFromDesignOwned = Nothing
 
-type RemovedAttributesFromDesignInput {
+type RemovedAttributesFromDesignScope {
   designId: ID! # data
   attributeIds: [ID!]! # data
+}
+
+type RemovedAttributesFromDesignInput {
+  hasInput: Boolean! # computed // false when all operation data is carried by scope
 }
 
 type RemovedAttributesFromDesign implements Operation & Entity {
@@ -9293,7 +9796,8 @@ type RemovedAttributesFromDesign implements Operation & Entity {
   changeOwner: Change # reference // spine
   ownerEntity: OwnerEntity # computed // RemovedAttributesFromDesignOwner
   ownedEntities: OwnedEntityConnection # computed // RemovedAttributesFromDesignOwned
-  input: Input # data
+  scope: Scope! # data
+  input: Input! # data
   diff: Diff! # computed
   design: Design! # data
 }
@@ -9579,6 +10083,10 @@ type KitDiffsConnection implements EntityConnectionInterface {
 
 #region Operations
 
+type RenamedKitScope {
+  kitId: ID! # data
+}
+
 type RenamedKitInput {
   name: String!
 }
@@ -9591,7 +10099,8 @@ type RenamedKit implements Operation & Entity {
   changeOwner: Change # reference // spine
   ownerEntity: OwnerEntity # computed // RenamedKitOwner
   ownedEntities: OwnedEntityConnection # computed // RenamedKitOwned
-  input: Input # data
+  scope: Scope! # data
+  input: Input! # data
   diff: Diff! # computed
   kit: Kit! # data
 }
@@ -9599,8 +10108,11 @@ type RenamedKit implements Operation & Entity {
 union RenamedKitOwner = Change
 union RenamedKitOwned = Kit
 
-type ChangedDescriptionInput {
+type ChangedDescriptionScope {
   entityId: ID!
+}
+
+type ChangedDescriptionInput {
   description: String!
 }
 
@@ -9612,7 +10124,8 @@ type ChangedDescription implements Operation & Entity {
   changeOwner: Change # reference // spine
   ownerEntity: OwnerEntity # computed // ChangedDescriptionOwner
   ownedEntities: OwnedEntityConnection # computed // ChangedDescriptionOwned
-  input: Input # data
+  scope: Scope! # data
+  input: Input! # data
   diff: Diff! # computed
   entity: Entity! # data
 }
@@ -12579,119 +13092,1100 @@ type Query {
   alternativePieceKind(designId: ID!, pieceId: ID!): Blueprint
 }
 
+#region MutationInputs
+
+input RenameKitScopeInput {
+  draftId: ID!
+  transactionId: ID!
+}
+
+input RenameKitInput {
+  name: String!
+}
+
+input ChangeDescriptionScopeInput {
+  draftId: ID!
+  transactionId: ID!
+  entityId: ID!
+}
+
+input ChangeDescriptionInput {
+  description: String!
+}
+
+input CreateTagScopeInput {
+  draftId: ID!
+  transactionId: ID!
+  ownerId: ID!
+}
+
+input CreateTagInput {
+  tag: TagInput!
+}
+
+input CreateTagsScopeInput {
+  draftId: ID!
+  transactionId: ID!
+  ownerId: ID!
+}
+
+input CreateTagsInput {
+  tags: [TagInput!]!
+}
+
+input RenameTagScopeInput {
+  draftId: ID!
+  transactionId: ID!
+  tagId: ID!
+}
+
+input RenameTagInput {
+  name: String!
+}
+
+input UpdateTagDescriptionScopeInput {
+  draftId: ID!
+  transactionId: ID!
+  tagId: ID!
+}
+
+input UpdateTagDescriptionInput {
+  description: String!
+}
+
+input UpdateTagIconScopeInput {
+  draftId: ID!
+  transactionId: ID!
+  tagId: ID!
+}
+
+input UpdateTagIconInput {
+  icon: String!
+}
+
+input AddAttributeToTagScopeInput {
+  draftId: ID!
+  transactionId: ID!
+  tagId: ID!
+}
+
+input AddAttributeToTagInput {
+  attribute: AttributeInput!
+}
+
+input AddAttributesToTagScopeInput {
+  draftId: ID!
+  transactionId: ID!
+  tagId: ID!
+}
+
+input AddAttributesToTagInput {
+  attributes: [AttributeInput!]!
+}
+
+input RemoveAttributeFromTagScopeInput {
+  draftId: ID!
+  transactionId: ID!
+  tagId: ID!
+  attributeId: ID!
+}
+
+input RemoveAttributeFromTagInput {
+  hasInput: Boolean = false
+}
+
+input RemoveAttributesFromTagScopeInput {
+  draftId: ID!
+  transactionId: ID!
+  tagId: ID!
+  attributeIds: [ID!]!
+}
+
+input RemoveAttributesFromTagInput {
+  hasInput: Boolean = false
+}
+
+input DeleteTagScopeInput {
+  draftId: ID!
+  transactionId: ID!
+  tagId: ID!
+}
+
+input DeleteTagInput {
+  hasInput: Boolean = false
+}
+
+input DeleteTagsScopeInput {
+  draftId: ID!
+  transactionId: ID!
+  tagIds: [ID!]!
+}
+
+input DeleteTagsInput {
+  hasInput: Boolean = false
+}
+
+input CreateConceptScopeInput {
+  draftId: ID!
+  transactionId: ID!
+  ownerId: ID!
+}
+
+input CreateConceptInput {
+  concept: ConceptInput!
+}
+
+input CreateConceptsScopeInput {
+  draftId: ID!
+  transactionId: ID!
+  ownerId: ID!
+}
+
+input CreateConceptsInput {
+  concepts: [ConceptInput!]!
+}
+
+input RenameConceptScopeInput {
+  draftId: ID!
+  transactionId: ID!
+  conceptId: ID!
+}
+
+input RenameConceptInput {
+  name: String!
+}
+
+input UpdateConceptDescriptionScopeInput {
+  draftId: ID!
+  transactionId: ID!
+  conceptId: ID!
+}
+
+input UpdateConceptDescriptionInput {
+  description: String!
+}
+
+input UpdateConceptIconScopeInput {
+  draftId: ID!
+  transactionId: ID!
+  conceptId: ID!
+}
+
+input UpdateConceptIconInput {
+  icon: String!
+}
+
+input AddAttributeToConceptScopeInput {
+  draftId: ID!
+  transactionId: ID!
+  conceptId: ID!
+}
+
+input AddAttributeToConceptInput {
+  attribute: AttributeInput!
+}
+
+input AddAttributesToConceptScopeInput {
+  draftId: ID!
+  transactionId: ID!
+  conceptId: ID!
+}
+
+input AddAttributesToConceptInput {
+  attributes: [AttributeInput!]!
+}
+
+input RemoveAttributeFromConceptScopeInput {
+  draftId: ID!
+  transactionId: ID!
+  conceptId: ID!
+  attributeId: ID!
+}
+
+input RemoveAttributeFromConceptInput {
+  hasInput: Boolean = false
+}
+
+input RemoveAttributesFromConceptScopeInput {
+  draftId: ID!
+  transactionId: ID!
+  conceptId: ID!
+  attributeIds: [ID!]!
+}
+
+input RemoveAttributesFromConceptInput {
+  hasInput: Boolean = false
+}
+
+input DeleteConceptScopeInput {
+  draftId: ID!
+  transactionId: ID!
+  conceptId: ID!
+}
+
+input DeleteConceptInput {
+  hasInput: Boolean = false
+}
+
+input DeleteConceptsScopeInput {
+  draftId: ID!
+  transactionId: ID!
+  conceptIds: [ID!]!
+}
+
+input DeleteConceptsInput {
+  hasInput: Boolean = false
+}
+
+input CreatePortScopeInput {
+  draftId: ID!
+  transactionId: ID!
+  ownerId: ID!
+}
+
+input CreatePortInput {
+  port: PortInput!
+}
+
+input CreatePortsScopeInput {
+  draftId: ID!
+  transactionId: ID!
+  ownerId: ID!
+}
+
+input CreatePortsInput {
+  ports: [PortInput!]!
+}
+
+input RenamePortScopeInput {
+  draftId: ID!
+  transactionId: ID!
+  portId: ID!
+}
+
+input RenamePortInput {
+  code: String!
+  label: String
+}
+
+input UpdatePortDescriptionScopeInput {
+  draftId: ID!
+  transactionId: ID!
+  portId: ID!
+}
+
+input UpdatePortDescriptionInput {
+  description: String!
+}
+
+input UpdatePortIconScopeInput {
+  draftId: ID!
+  transactionId: ID!
+  portId: ID!
+}
+
+input UpdatePortIconInput {
+  icon: String!
+}
+
+input AddAttributeToPortScopeInput {
+  draftId: ID!
+  transactionId: ID!
+  portId: ID!
+}
+
+input AddAttributeToPortInput {
+  attribute: AttributeInput!
+}
+
+input AddAttributesToPortScopeInput {
+  draftId: ID!
+  transactionId: ID!
+  portId: ID!
+}
+
+input AddAttributesToPortInput {
+  attributes: [AttributeInput!]!
+}
+
+input RemoveAttributeFromPortScopeInput {
+  draftId: ID!
+  transactionId: ID!
+  portId: ID!
+  attributeId: ID!
+}
+
+input RemoveAttributeFromPortInput {
+  hasInput: Boolean = false
+}
+
+input RemoveAttributesFromPortScopeInput {
+  draftId: ID!
+  transactionId: ID!
+  portId: ID!
+  attributeIds: [ID!]!
+}
+
+input RemoveAttributesFromPortInput {
+  hasInput: Boolean = false
+}
+
+input DeletePortScopeInput {
+  draftId: ID!
+  transactionId: ID!
+  portId: ID!
+}
+
+input DeletePortInput {
+  hasInput: Boolean = false
+}
+
+input DeletePortsScopeInput {
+  draftId: ID!
+  transactionId: ID!
+  portIds: [ID!]!
+}
+
+input DeletePortsInput {
+  hasInput: Boolean = false
+}
+
+input CreateQualityScopeInput {
+  draftId: ID!
+  transactionId: ID!
+  ownerId: ID!
+}
+
+input CreateQualityInput {
+  quality: QualityInput!
+}
+
+input CreateQualitiesScopeInput {
+  draftId: ID!
+  transactionId: ID!
+  ownerId: ID!
+}
+
+input CreateQualitiesInput {
+  qualities: [QualityInput!]!
+}
+
+input RenameQualityScopeInput {
+  draftId: ID!
+  transactionId: ID!
+  qualityId: ID!
+}
+
+input RenameQualityInput {
+  key: String!
+}
+
+input UpdateQualityDescriptionScopeInput {
+  draftId: ID!
+  transactionId: ID!
+  qualityId: ID!
+}
+
+input UpdateQualityDescriptionInput {
+  description: String!
+}
+
+input UpdateQualityIconScopeInput {
+  draftId: ID!
+  transactionId: ID!
+  qualityId: ID!
+}
+
+input UpdateQualityIconInput {
+  icon: String!
+}
+
+input AddAttributeToQualityScopeInput {
+  draftId: ID!
+  transactionId: ID!
+  qualityId: ID!
+}
+
+input AddAttributeToQualityInput {
+  attribute: AttributeInput!
+}
+
+input AddAttributesToQualityScopeInput {
+  draftId: ID!
+  transactionId: ID!
+  qualityId: ID!
+}
+
+input AddAttributesToQualityInput {
+  attributes: [AttributeInput!]!
+}
+
+input RemoveAttributeFromQualityScopeInput {
+  draftId: ID!
+  transactionId: ID!
+  qualityId: ID!
+  attributeId: ID!
+}
+
+input RemoveAttributeFromQualityInput {
+  hasInput: Boolean = false
+}
+
+input RemoveAttributesFromQualityScopeInput {
+  draftId: ID!
+  transactionId: ID!
+  qualityId: ID!
+  attributeIds: [ID!]!
+}
+
+input RemoveAttributesFromQualityInput {
+  hasInput: Boolean = false
+}
+
+input DeleteQualityScopeInput {
+  draftId: ID!
+  transactionId: ID!
+  qualityId: ID!
+}
+
+input DeleteQualityInput {
+  hasInput: Boolean = false
+}
+
+input DeleteQualitiesScopeInput {
+  draftId: ID!
+  transactionId: ID!
+  qualityIds: [ID!]!
+}
+
+input DeleteQualitiesInput {
+  hasInput: Boolean = false
+}
+
+input CreateTypeScopeInput {
+  draftId: ID!
+  transactionId: ID!
+  ownerId: ID!
+}
+
+input CreateTypeInput {
+  type: TypeInput!
+}
+
+input CreateTypesScopeInput {
+  draftId: ID!
+  transactionId: ID!
+  ownerId: ID!
+}
+
+input CreateTypesInput {
+  types: [TypeInput!]!
+}
+
+input RenameTypeScopeInput {
+  draftId: ID!
+  transactionId: ID!
+  typeId: ID!
+}
+
+input RenameTypeInput {
+  name: String!
+}
+
+input UpdateTypeDescriptionScopeInput {
+  draftId: ID!
+  transactionId: ID!
+  typeId: ID!
+}
+
+input UpdateTypeDescriptionInput {
+  description: String!
+}
+
+input UpdateTypeIconScopeInput {
+  draftId: ID!
+  transactionId: ID!
+  typeId: ID!
+}
+
+input UpdateTypeIconInput {
+  icon: String!
+}
+
+input AddAttributeToTypeScopeInput {
+  draftId: ID!
+  transactionId: ID!
+  typeId: ID!
+}
+
+input AddAttributeToTypeInput {
+  attribute: AttributeInput!
+}
+
+input AddAttributesToTypeScopeInput {
+  draftId: ID!
+  transactionId: ID!
+  typeId: ID!
+}
+
+input AddAttributesToTypeInput {
+  attributes: [AttributeInput!]!
+}
+
+input RemoveAttributeFromTypeScopeInput {
+  draftId: ID!
+  transactionId: ID!
+  typeId: ID!
+  attributeId: ID!
+}
+
+input RemoveAttributeFromTypeInput {
+  hasInput: Boolean = false
+}
+
+input RemoveAttributesFromTypeScopeInput {
+  draftId: ID!
+  transactionId: ID!
+  typeId: ID!
+  attributeIds: [ID!]!
+}
+
+input RemoveAttributesFromTypeInput {
+  hasInput: Boolean = false
+}
+
+input DeleteTypeScopeInput {
+  draftId: ID!
+  transactionId: ID!
+  typeId: ID!
+}
+
+input DeleteTypeInput {
+  hasInput: Boolean = false
+}
+
+input DeleteTypesScopeInput {
+  draftId: ID!
+  transactionId: ID!
+  typeIds: [ID!]!
+}
+
+input DeleteTypesInput {
+  hasInput: Boolean = false
+}
+
+input AddConnectorToTypeScopeInput {
+  draftId: ID!
+  transactionId: ID!
+  typeId: ID!
+}
+
+input AddConnectorToTypeInput {
+  connector: ConnectorInput!
+}
+
+input AddConnectorsToTypeScopeInput {
+  draftId: ID!
+  transactionId: ID!
+  typeId: ID!
+}
+
+input AddConnectorsToTypeInput {
+  connectors: [ConnectorInput!]!
+}
+
+input RenameConnectorInTypeScopeInput {
+  draftId: ID!
+  transactionId: ID!
+  connectorId: ID!
+}
+
+input RenameConnectorInTypeInput {
+  code: String!
+}
+
+input UpdateConnectorDescriptionInTypeScopeInput {
+  draftId: ID!
+  transactionId: ID!
+  connectorId: ID!
+}
+
+input UpdateConnectorDescriptionInTypeInput {
+  description: String!
+}
+
+input UpdateConnectorIconInTypeScopeInput {
+  draftId: ID!
+  transactionId: ID!
+  connectorId: ID!
+}
+
+input UpdateConnectorIconInTypeInput {
+  icon: String!
+}
+
+input RemoveConnectorFromTypeScopeInput {
+  draftId: ID!
+  transactionId: ID!
+  connectorId: ID!
+}
+
+input RemoveConnectorFromTypeInput {
+  hasInput: Boolean = false
+}
+
+input RemoveConnectorsFromTypeScopeInput {
+  draftId: ID!
+  transactionId: ID!
+  connectorIds: [ID!]!
+}
+
+input RemoveConnectorsFromTypeInput {
+  hasInput: Boolean = false
+}
+
+input CreateDesignScopeInput {
+  draftId: ID!
+  transactionId: ID!
+  ownerId: ID!
+}
+
+input CreateDesignInput {
+  design: DesignInput!
+}
+
+input CreateDesignsScopeInput {
+  draftId: ID!
+  transactionId: ID!
+  ownerId: ID!
+}
+
+input CreateDesignsInput {
+  designs: [DesignInput!]!
+}
+
+input DeleteDesignScopeInput {
+  draftId: ID!
+  transactionId: ID!
+  designId: ID!
+}
+
+input DeleteDesignInput {
+  hasInput: Boolean = false
+}
+
+input DeleteDesignsScopeInput {
+  draftId: ID!
+  transactionId: ID!
+  designIds: [ID!]!
+}
+
+input DeleteDesignsInput {
+  hasInput: Boolean = false
+}
+
+input FlattenDesignScopeInput {
+  draftId: ID!
+  transactionId: ID!
+  designId: ID!
+}
+
+input FlattenDesignInput {
+  hasInput: Boolean = false
+}
+
+input AddAttributeToDesignScopeInput {
+  draftId: ID!
+  transactionId: ID!
+  designId: ID!
+}
+
+input AddAttributeToDesignInput {
+  attribute: AttributeInput!
+}
+
+input AddAttributesToDesignScopeInput {
+  draftId: ID!
+  transactionId: ID!
+  designId: ID!
+}
+
+input AddAttributesToDesignInput {
+  attributes: [AttributeInput!]!
+}
+
+input RemoveAttributeFromDesignScopeInput {
+  draftId: ID!
+  transactionId: ID!
+  designId: ID!
+  attributeId: ID!
+}
+
+input RemoveAttributeFromDesignInput {
+  hasInput: Boolean = false
+}
+
+input RemoveAttributesFromDesignScopeInput {
+  draftId: ID!
+  transactionId: ID!
+  designId: ID!
+  attributeIds: [ID!]!
+}
+
+input RemoveAttributesFromDesignInput {
+  hasInput: Boolean = false
+}
+
+input AddFixedPieceToDesignScopeInput {
+  draftId: ID!
+  transactionId: ID!
+  designId: ID!
+}
+
+input AddFixedPieceToDesignInput {
+  blueprintId: ID!
+  position: PositionInput!
+  name: String
+  description: String
+}
+
+input AddChildPieceWithParentConnectionToDesignScopeInput {
+  draftId: ID!
+  transactionId: ID!
+  designId: ID!
+}
+
+input AddChildPieceWithParentConnectionToDesignInput {
+  child: ChildPieceWithParentConnectionInput!
+}
+
+input AddChildPiecesWithParentConnectionsToDesignScopeInput {
+  draftId: ID!
+  transactionId: ID!
+  designId: ID!
+}
+
+input AddChildPiecesWithParentConnectionsToDesignInput {
+  children: [ChildPieceWithParentConnectionInput!]!
+}
+
+input AddHangingChildPieceWithParentConnectionToDesignScopeInput {
+  draftId: ID!
+  transactionId: ID!
+  designId: ID!
+}
+
+input AddHangingChildPieceWithParentConnectionToDesignInput {
+  child: HangingChildPieceWithParentConnectionInput!
+}
+
+input AddHangingChildPiecesWithParentConnectionsToDesignScopeInput {
+  draftId: ID!
+  transactionId: ID!
+  designId: ID!
+}
+
+input AddHangingChildPiecesWithParentConnectionsToDesignInput {
+  children: [HangingChildPieceWithParentConnectionInput!]!
+}
+
+input RenamePieceInDesignScopeInput {
+  draftId: ID!
+  transactionId: ID!
+  pieceId: ID!
+}
+
+input RenamePieceInDesignInput {
+  name: String!
+}
+
+input UpdatePieceDescriptionInDesignScopeInput {
+  draftId: ID!
+  transactionId: ID!
+  pieceId: ID!
+}
+
+input UpdatePieceDescriptionInDesignInput {
+  description: String!
+}
+
+input DragPieceInDesignScopeInput {
+  draftId: ID!
+  transactionId: ID!
+  designId: ID!
+  pieceId: ID!
+}
+
+input DragPieceInDesignInput {
+  offset: OffsetInput!
+}
+
+input DragPiecesInDesignScopeInput {
+  draftId: ID!
+  transactionId: ID!
+  designId: ID!
+  pieceIds: [ID!]!
+}
+
+input DragPiecesInDesignInput {
+  offset: OffsetInput!
+}
+
+input MovePieceInDesignScopeInput {
+  draftId: ID!
+  transactionId: ID!
+  designId: ID!
+  pieceId: ID!
+}
+
+input MovePieceInDesignInput {
+  position: PositionInput!
+}
+
+input MovePiecesInDesignScopeInput {
+  draftId: ID!
+  transactionId: ID!
+  designId: ID!
+  pieceIds: [ID!]!
+}
+
+input MovePiecesInDesignInput {
+  offset: OffsetInput!
+}
+
+input FixPieceInDesignScopeInput {
+  draftId: ID!
+  transactionId: ID!
+  designId: ID!
+  pieceId: ID!
+}
+
+input FixPieceInDesignInput {
+  hasInput: Boolean = false
+}
+
+input FixPiecesInDesignScopeInput {
+  draftId: ID!
+  transactionId: ID!
+  designId: ID!
+  pieceIds: [ID!]!
+}
+
+input FixPiecesInDesignInput {
+  hasInput: Boolean = false
+}
+
+input ChangePieceToTypeInDesignScopeInput {
+  draftId: ID!
+  transactionId: ID!
+  pieceId: ID!
+}
+
+input ChangePieceToTypeInDesignInput {
+  blueprintId: ID!
+}
+
+input ChangePiecesToTypeInDesignScopeInput {
+  draftId: ID!
+  transactionId: ID!
+  pieceIds: [ID!]!
+}
+
+input ChangePiecesToTypeInDesignInput {
+  blueprintId: ID!
+}
+
+input AddAttributeToPieceScopeInput {
+  draftId: ID!
+  transactionId: ID!
+  pieceId: ID!
+}
+
+input AddAttributeToPieceInput {
+  attribute: AttributeInput!
+}
+
+input AddAttributesToPieceScopeInput {
+  draftId: ID!
+  transactionId: ID!
+  pieceId: ID!
+}
+
+input AddAttributesToPieceInput {
+  attributes: [AttributeInput!]!
+}
+
+input RemoveAttributeFromPieceScopeInput {
+  draftId: ID!
+  transactionId: ID!
+  pieceId: ID!
+  attributeId: ID!
+}
+
+input RemoveAttributeFromPieceInput {
+  hasInput: Boolean = false
+}
+
+input RemoveAttributesFromPieceScopeInput {
+  draftId: ID!
+  transactionId: ID!
+  pieceId: ID!
+  attributeIds: [ID!]!
+}
+
+input RemoveAttributesFromPieceInput {
+  hasInput: Boolean = false
+}
+
+input DeletePieceInDesignScopeInput {
+  draftId: ID!
+  transactionId: ID!
+  designId: ID!
+  pieceId: ID!
+}
+
+input DeletePieceInDesignInput {
+  hasInput: Boolean = false
+}
+
+input DeletePiecesInDesignScopeInput {
+  draftId: ID!
+  transactionId: ID!
+  designId: ID!
+  pieceIds: [ID!]!
+}
+
+input DeletePiecesInDesignInput {
+  hasInput: Boolean = false
+}
+
+input DeletePiecesAndConnectionsInDesignScopeInput {
+  draftId: ID!
+  transactionId: ID!
+  designId: ID!
+  pieceIds: [ID!]!
+  connectionIds: [ID!]!
+}
+
+input DeletePiecesAndConnectionsInDesignInput {
+  hasInput: Boolean = false
+}
+
+#endregion MutationInputs
+
 type Mutation {
   # Kit
-  renameKit(draftId: ID!, transactionId: ID!, name: String!): ID!
-  changeDescription(draftId: ID!, transactionId: ID!, entityId: ID!, description: String!): ID!
+  renameKit(scope: RenameKitScopeInput!, input: RenameKitInput!): ID!
+  changeDescription(scope: ChangeDescriptionScopeInput!, input: ChangeDescriptionInput!): ID!
 
   # Tag
-  createTag(draftId: ID!, transactionId: ID!, ownerId: ID!, tag: TagInput!): ID!
-  createTags(draftId: ID!, transactionId: ID!, ownerId: ID!, tags: [TagInput!]!): ID!
-  renameTag(draftId: ID!, transactionId: ID!, tagId: ID!, name: String!): ID!
-  updateTagDescription(draftId: ID!, transactionId: ID!, tagId: ID!, description: String!): ID!
-  updateTagIcon(draftId: ID!, transactionId: ID!, tagId: ID!, icon: String!): ID!
-  addAttributeToTag(draftId: ID!, transactionId: ID!, tagId: ID!, attribute: AttributeInput!): ID!
-  addAttributesToTag(draftId: ID!, transactionId: ID!, tagId: ID!, attributes: [AttributeInput!]!): ID!
-  removeAttributeFromTag(draftId: ID!, transactionId: ID!, tagId: ID!, attributeId: ID!): ID!
-  removeAttributesFromTag(draftId: ID!, transactionId: ID!, tagId: ID!, attributeIds: [ID!]!): ID!
-  deleteTag(draftId: ID!, transactionId: ID!, tagId: ID!): ID!
-  deleteTags(draftId: ID!, transactionId: ID!, tagIds: [ID!]!): ID!
+  createTag(scope: CreateTagScopeInput!, input: CreateTagInput!): ID!
+  createTags(scope: CreateTagsScopeInput!, input: CreateTagsInput!): ID!
+  renameTag(scope: RenameTagScopeInput!, input: RenameTagInput!): ID!
+  updateTagDescription(scope: UpdateTagDescriptionScopeInput!, input: UpdateTagDescriptionInput!): ID!
+  updateTagIcon(scope: UpdateTagIconScopeInput!, input: UpdateTagIconInput!): ID!
+  addAttributeToTag(scope: AddAttributeToTagScopeInput!, input: AddAttributeToTagInput!): ID!
+  addAttributesToTag(scope: AddAttributesToTagScopeInput!, input: AddAttributesToTagInput!): ID!
+  removeAttributeFromTag(scope: RemoveAttributeFromTagScopeInput!, input: RemoveAttributeFromTagInput!): ID!
+  removeAttributesFromTag(scope: RemoveAttributesFromTagScopeInput!, input: RemoveAttributesFromTagInput!): ID!
+  deleteTag(scope: DeleteTagScopeInput!, input: DeleteTagInput!): ID!
+  deleteTags(scope: DeleteTagsScopeInput!, input: DeleteTagsInput!): ID!
 
   # Concept
-  createConcept(draftId: ID!, transactionId: ID!, ownerId: ID!, concept: ConceptInput!): ID!
-  createConcepts(draftId: ID!, transactionId: ID!, ownerId: ID!, concepts: [ConceptInput!]!): ID!
-  renameConcept(draftId: ID!, transactionId: ID!, conceptId: ID!, name: String!): ID!
-  updateConceptDescription(draftId: ID!, transactionId: ID!, conceptId: ID!, description: String!): ID!
-  updateConceptIcon(draftId: ID!, transactionId: ID!, conceptId: ID!, icon: String!): ID!
-  addAttributeToConcept(draftId: ID!, transactionId: ID!, conceptId: ID!, attribute: AttributeInput!): ID!
-  addAttributesToConcept(draftId: ID!, transactionId: ID!, conceptId: ID!, attributes: [AttributeInput!]!): ID!
-  removeAttributeFromConcept(draftId: ID!, transactionId: ID!, conceptId: ID!, attributeId: ID!): ID!
-  removeAttributesFromConcept(draftId: ID!, transactionId: ID!, conceptId: ID!, attributeIds: [ID!]!): ID!
-  deleteConcept(draftId: ID!, transactionId: ID!, conceptId: ID!): ID!
-  deleteConcepts(draftId: ID!, transactionId: ID!, conceptIds: [ID!]!): ID!
+  createConcept(scope: CreateConceptScopeInput!, input: CreateConceptInput!): ID!
+  createConcepts(scope: CreateConceptsScopeInput!, input: CreateConceptsInput!): ID!
+  renameConcept(scope: RenameConceptScopeInput!, input: RenameConceptInput!): ID!
+  updateConceptDescription(scope: UpdateConceptDescriptionScopeInput!, input: UpdateConceptDescriptionInput!): ID!
+  updateConceptIcon(scope: UpdateConceptIconScopeInput!, input: UpdateConceptIconInput!): ID!
+  addAttributeToConcept(scope: AddAttributeToConceptScopeInput!, input: AddAttributeToConceptInput!): ID!
+  addAttributesToConcept(scope: AddAttributesToConceptScopeInput!, input: AddAttributesToConceptInput!): ID!
+  removeAttributeFromConcept(scope: RemoveAttributeFromConceptScopeInput!, input: RemoveAttributeFromConceptInput!): ID!
+  removeAttributesFromConcept(scope: RemoveAttributesFromConceptScopeInput!, input: RemoveAttributesFromConceptInput!): ID!
+  deleteConcept(scope: DeleteConceptScopeInput!, input: DeleteConceptInput!): ID!
+  deleteConcepts(scope: DeleteConceptsScopeInput!, input: DeleteConceptsInput!): ID!
 
   # Port
-  createPort(draftId: ID!, transactionId: ID!, ownerId: ID!, port: PortInput!): ID!
-  createPorts(draftId: ID!, transactionId: ID!, ownerId: ID!, ports: [PortInput!]!): ID!
-  renamePort(draftId: ID!, transactionId: ID!, portId: ID!, code: String!, label: String): ID!
-  updatePortDescription(draftId: ID!, transactionId: ID!, portId: ID!, description: String!): ID!
-  updatePortIcon(draftId: ID!, transactionId: ID!, portId: ID!, icon: String!): ID!
-  addAttributeToPort(draftId: ID!, transactionId: ID!, portId: ID!, attribute: AttributeInput!): ID!
-  addAttributesToPort(draftId: ID!, transactionId: ID!, portId: ID!, attributes: [AttributeInput!]!): ID!
-  removeAttributeFromPort(draftId: ID!, transactionId: ID!, portId: ID!, attributeId: ID!): ID!
-  removeAttributesFromPort(draftId: ID!, transactionId: ID!, portId: ID!, attributeIds: [ID!]!): ID!
-  deletePort(draftId: ID!, transactionId: ID!, portId: ID!): ID!
-  deletePorts(draftId: ID!, transactionId: ID!, portIds: [ID!]!): ID!
+  createPort(scope: CreatePortScopeInput!, input: CreatePortInput!): ID!
+  createPorts(scope: CreatePortsScopeInput!, input: CreatePortsInput!): ID!
+  renamePort(scope: RenamePortScopeInput!, input: RenamePortInput!): ID!
+  updatePortDescription(scope: UpdatePortDescriptionScopeInput!, input: UpdatePortDescriptionInput!): ID!
+  updatePortIcon(scope: UpdatePortIconScopeInput!, input: UpdatePortIconInput!): ID!
+  addAttributeToPort(scope: AddAttributeToPortScopeInput!, input: AddAttributeToPortInput!): ID!
+  addAttributesToPort(scope: AddAttributesToPortScopeInput!, input: AddAttributesToPortInput!): ID!
+  removeAttributeFromPort(scope: RemoveAttributeFromPortScopeInput!, input: RemoveAttributeFromPortInput!): ID!
+  removeAttributesFromPort(scope: RemoveAttributesFromPortScopeInput!, input: RemoveAttributesFromPortInput!): ID!
+  deletePort(scope: DeletePortScopeInput!, input: DeletePortInput!): ID!
+  deletePorts(scope: DeletePortsScopeInput!, input: DeletePortsInput!): ID!
 
   # Quality
-  createQuality(draftId: ID!, transactionId: ID!, ownerId: ID!, quality: QualityInput!): ID!
-  createQualities(draftId: ID!, transactionId: ID!, ownerId: ID!, qualities: [QualityInput!]!): ID!
-  renameQuality(draftId: ID!, transactionId: ID!, qualityId: ID!, key: String!): ID!
-  updateQualityDescription(draftId: ID!, transactionId: ID!, qualityId: ID!, description: String!): ID!
-  updateQualityIcon(draftId: ID!, transactionId: ID!, qualityId: ID!, icon: String!): ID!
-  addAttributeToQuality(draftId: ID!, transactionId: ID!, qualityId: ID!, attribute: AttributeInput!): ID!
-  addAttributesToQuality(draftId: ID!, transactionId: ID!, qualityId: ID!, attributes: [AttributeInput!]!): ID!
-  removeAttributeFromQuality(draftId: ID!, transactionId: ID!, qualityId: ID!, attributeId: ID!): ID!
-  removeAttributesFromQuality(draftId: ID!, transactionId: ID!, qualityId: ID!, attributeIds: [ID!]!): ID!
-  deleteQuality(draftId: ID!, transactionId: ID!, qualityId: ID!): ID!
-  deleteQualities(draftId: ID!, transactionId: ID!, qualityIds: [ID!]!): ID!
+  createQuality(scope: CreateQualityScopeInput!, input: CreateQualityInput!): ID!
+  createQualities(scope: CreateQualitiesScopeInput!, input: CreateQualitiesInput!): ID!
+  renameQuality(scope: RenameQualityScopeInput!, input: RenameQualityInput!): ID!
+  updateQualityDescription(scope: UpdateQualityDescriptionScopeInput!, input: UpdateQualityDescriptionInput!): ID!
+  updateQualityIcon(scope: UpdateQualityIconScopeInput!, input: UpdateQualityIconInput!): ID!
+  addAttributeToQuality(scope: AddAttributeToQualityScopeInput!, input: AddAttributeToQualityInput!): ID!
+  addAttributesToQuality(scope: AddAttributesToQualityScopeInput!, input: AddAttributesToQualityInput!): ID!
+  removeAttributeFromQuality(scope: RemoveAttributeFromQualityScopeInput!, input: RemoveAttributeFromQualityInput!): ID!
+  removeAttributesFromQuality(scope: RemoveAttributesFromQualityScopeInput!, input: RemoveAttributesFromQualityInput!): ID!
+  deleteQuality(scope: DeleteQualityScopeInput!, input: DeleteQualityInput!): ID!
+  deleteQualities(scope: DeleteQualitiesScopeInput!, input: DeleteQualitiesInput!): ID!
 
   # Type
-  createType(draftId: ID!, transactionId: ID!, ownerId: ID!, type: TypeInput!): ID!
-  createTypes(draftId: ID!, transactionId: ID!, ownerId: ID!, types: [TypeInput!]!): ID!
-  renameType(draftId: ID!, transactionId: ID!, typeId: ID!, name: String!): ID!
-  updateTypeDescription(draftId: ID!, transactionId: ID!, typeId: ID!, description: String!): ID!
-  updateTypeIcon(draftId: ID!, transactionId: ID!, typeId: ID!, icon: String!): ID!
-  addAttributeToType(draftId: ID!, transactionId: ID!, typeId: ID!, attribute: AttributeInput!): ID!
-  addAttributesToType(draftId: ID!, transactionId: ID!, typeId: ID!, attributes: [AttributeInput!]!): ID!
-  removeAttributeFromType(draftId: ID!, transactionId: ID!, typeId: ID!, attributeId: ID!): ID!
-  removeAttributesFromType(draftId: ID!, transactionId: ID!, typeId: ID!, attributeIds: [ID!]!): ID!
-  deleteType(draftId: ID!, transactionId: ID!, typeId: ID!): ID!
-  deleteTypes(draftId: ID!, transactionId: ID!, typeIds: [ID!]!): ID!
+  createType(scope: CreateTypeScopeInput!, input: CreateTypeInput!): ID!
+  createTypes(scope: CreateTypesScopeInput!, input: CreateTypesInput!): ID!
+  renameType(scope: RenameTypeScopeInput!, input: RenameTypeInput!): ID!
+  updateTypeDescription(scope: UpdateTypeDescriptionScopeInput!, input: UpdateTypeDescriptionInput!): ID!
+  updateTypeIcon(scope: UpdateTypeIconScopeInput!, input: UpdateTypeIconInput!): ID!
+  addAttributeToType(scope: AddAttributeToTypeScopeInput!, input: AddAttributeToTypeInput!): ID!
+  addAttributesToType(scope: AddAttributesToTypeScopeInput!, input: AddAttributesToTypeInput!): ID!
+  removeAttributeFromType(scope: RemoveAttributeFromTypeScopeInput!, input: RemoveAttributeFromTypeInput!): ID!
+  removeAttributesFromType(scope: RemoveAttributesFromTypeScopeInput!, input: RemoveAttributesFromTypeInput!): ID!
+  deleteType(scope: DeleteTypeScopeInput!, input: DeleteTypeInput!): ID!
+  deleteTypes(scope: DeleteTypesScopeInput!, input: DeleteTypesInput!): ID!
 
   # Connector
-  addConnectorToType(draftId: ID!, transactionId: ID!, typeId: ID!, connector: ConnectorInput!): ID!
-  addConnectorsToType(draftId: ID!, transactionId: ID!, typeId: ID!, connectors: [ConnectorInput!]!): ID!
-  renameConnectorInType(draftId: ID!, transactionId: ID!, connectorId: ID!, code: String!): ID!
-  updateConnectorDescriptionInType(draftId: ID!, transactionId: ID!, connectorId: ID!, description: String!): ID!
-  updateConnectorIconInType(draftId: ID!, transactionId: ID!, connectorId: ID!, icon: String!): ID!
-  removeConnectorFromType(draftId: ID!, transactionId: ID!, connectorId: ID!): ID!
-  removeConnectorsFromType(draftId: ID!, transactionId: ID!, connectorIds: [ID!]!): ID!
+  addConnectorToType(scope: AddConnectorToTypeScopeInput!, input: AddConnectorToTypeInput!): ID!
+  addConnectorsToType(scope: AddConnectorsToTypeScopeInput!, input: AddConnectorsToTypeInput!): ID!
+  renameConnectorInType(scope: RenameConnectorInTypeScopeInput!, input: RenameConnectorInTypeInput!): ID!
+  updateConnectorDescriptionInType(scope: UpdateConnectorDescriptionInTypeScopeInput!, input: UpdateConnectorDescriptionInTypeInput!): ID!
+  updateConnectorIconInType(scope: UpdateConnectorIconInTypeScopeInput!, input: UpdateConnectorIconInTypeInput!): ID!
+  removeConnectorFromType(scope: RemoveConnectorFromTypeScopeInput!, input: RemoveConnectorFromTypeInput!): ID!
+  removeConnectorsFromType(scope: RemoveConnectorsFromTypeScopeInput!, input: RemoveConnectorsFromTypeInput!): ID!
 
   # Design
-  createDesign(draftId: ID!, transactionId: ID!, ownerId: ID!, design: DesignInput!): ID!
-  createDesigns(draftId: ID!, transactionId: ID!, ownerId: ID!, designs: [DesignInput!]!): ID!
-  deleteDesign(draftId: ID!, transactionId: ID!, designId: ID!): ID!
-  deleteDesigns(draftId: ID!, transactionId: ID!, designIds: [ID!]!): ID!
-  flattenDesign(draftId: ID!, transactionId: ID!, designId: ID!): ID!
-  addAttributeToDesign(draftId: ID!, transactionId: ID!, designId: ID!, attribute: AttributeInput!): ID!
-  addAttributesToDesign(draftId: ID!, transactionId: ID!, designId: ID!, attributes: [AttributeInput!]!): ID!
-  removeAttributeFromDesign(draftId: ID!, transactionId: ID!, designId: ID!, attributeId: ID!): ID!
-  removeAttributesFromDesign(draftId: ID!, transactionId: ID!, designId: ID!, attributeIds: [ID!]!): ID!
+  createDesign(scope: CreateDesignScopeInput!, input: CreateDesignInput!): ID!
+  createDesigns(scope: CreateDesignsScopeInput!, input: CreateDesignsInput!): ID!
+  deleteDesign(scope: DeleteDesignScopeInput!, input: DeleteDesignInput!): ID!
+  deleteDesigns(scope: DeleteDesignsScopeInput!, input: DeleteDesignsInput!): ID!
+  flattenDesign(scope: FlattenDesignScopeInput!, input: FlattenDesignInput!): ID!
+  addAttributeToDesign(scope: AddAttributeToDesignScopeInput!, input: AddAttributeToDesignInput!): ID!
+  addAttributesToDesign(scope: AddAttributesToDesignScopeInput!, input: AddAttributesToDesignInput!): ID!
+  removeAttributeFromDesign(scope: RemoveAttributeFromDesignScopeInput!, input: RemoveAttributeFromDesignInput!): ID!
+  removeAttributesFromDesign(scope: RemoveAttributesFromDesignScopeInput!, input: RemoveAttributesFromDesignInput!): ID!
 
   # Piece
-  addFixedPieceToDesign(draftId: ID!, transactionId: ID!, designId: ID!, blueprintId: ID!, position: PositionInput!, name: String, description: String): ID!
-  addChildPieceWithParentConnectionToDesign(draftId: ID!, transactionId: ID!, designId: ID!, child: ChildPieceWithParentConnectionInput!): ID!
-  addChildPiecesWithParentConnectionsToDesign(draftId: ID!, transactionId: ID!, designId: ID!, children: [ChildPieceWithParentConnectionInput!]!): ID!
-  addHangingChildPieceWithParentConnectionToDesign(draftId: ID!, transactionId: ID!, designId: ID!, child: HangingChildPieceWithParentConnectionInput!): ID!
-  addHangingChildPiecesWithParentConnectionsToDesign(draftId: ID!, transactionId: ID!, designId: ID!, children: [HangingChildPieceWithParentConnectionInput!]!): ID!
-  renamePieceInDesign(draftId: ID!, transactionId: ID!, pieceId: ID!, name: String!): ID!
-  updatePieceDescriptionInDesign(draftId: ID!, transactionId: ID!, pieceId: ID!, description: String!): ID!
-  dragPieceInDesign(draftId: ID!, transactionId: ID!, designId: ID!, pieceId: ID!, offset: OffsetInput!): ID!
-  dragPiecesInDesign(draftId: ID!, transactionId: ID!, designId: ID!, pieceIds: [ID!]!, offset: OffsetInput!): ID!
-  movePieceInDesign(draftId: ID!, transactionId: ID!, designId: ID!, pieceId: ID!, position: PositionInput!): ID!
-  movePiecesInDesign(draftId: ID!, transactionId: ID!, designId: ID!, pieceIds: [ID!]!, offset: OffsetInput!): ID!
-  fixPieceInDesign(draftId: ID!, transactionId: ID!, designId: ID!, pieceId: ID!): ID!
-  fixPiecesInDesign(draftId: ID!, transactionId: ID!, designId: ID!, pieceIds: [ID!]!): ID!
-  changePieceToTypeInDesign(draftId: ID!, transactionId: ID!, pieceId: ID!, blueprintId: ID!): ID!
-  changePiecesToTypeInDesign(draftId: ID!, transactionId: ID!, pieceIds: [ID!]!, blueprintId: ID!): ID!
-  addAttributeToPiece(draftId: ID!, transactionId: ID!, pieceId: ID!, attribute: AttributeInput!): ID!
-  addAttributesToPiece(draftId: ID!, transactionId: ID!, pieceId: ID!, attributes: [AttributeInput!]!): ID!
-  removeAttributeFromPiece(draftId: ID!, transactionId: ID!, pieceId: ID!, attributeId: ID!): ID!
-  removeAttributesFromPiece(draftId: ID!, transactionId: ID!, pieceId: ID!, attributeIds: [ID!]!): ID!
-  deletePieceInDesign(draftId: ID!, transactionId: ID!, designId: ID!, pieceId: ID!): ID!
-  deletePiecesInDesign(draftId: ID!, transactionId: ID!, designId: ID!, pieceIds: [ID!]!): ID!
-  deletePiecesAndConnectionsInDesign(draftId: ID!, transactionId: ID!, designId: ID!, pieceIds: [ID!]!, connectionIds: [ID!]!): ID!
+  addFixedPieceToDesign(scope: AddFixedPieceToDesignScopeInput!, input: AddFixedPieceToDesignInput!): ID!
+  addChildPieceWithParentConnectionToDesign(scope: AddChildPieceWithParentConnectionToDesignScopeInput!, input: AddChildPieceWithParentConnectionToDesignInput!): ID!
+  addChildPiecesWithParentConnectionsToDesign(scope: AddChildPiecesWithParentConnectionsToDesignScopeInput!, input: AddChildPiecesWithParentConnectionsToDesignInput!): ID!
+  addHangingChildPieceWithParentConnectionToDesign(scope: AddHangingChildPieceWithParentConnectionToDesignScopeInput!, input: AddHangingChildPieceWithParentConnectionToDesignInput!): ID!
+  addHangingChildPiecesWithParentConnectionsToDesign(scope: AddHangingChildPiecesWithParentConnectionsToDesignScopeInput!, input: AddHangingChildPiecesWithParentConnectionsToDesignInput!): ID!
+  renamePieceInDesign(scope: RenamePieceInDesignScopeInput!, input: RenamePieceInDesignInput!): ID!
+  updatePieceDescriptionInDesign(scope: UpdatePieceDescriptionInDesignScopeInput!, input: UpdatePieceDescriptionInDesignInput!): ID!
+  dragPieceInDesign(scope: DragPieceInDesignScopeInput!, input: DragPieceInDesignInput!): ID!
+  dragPiecesInDesign(scope: DragPiecesInDesignScopeInput!, input: DragPiecesInDesignInput!): ID!
+  movePieceInDesign(scope: MovePieceInDesignScopeInput!, input: MovePieceInDesignInput!): ID!
+  movePiecesInDesign(scope: MovePiecesInDesignScopeInput!, input: MovePiecesInDesignInput!): ID!
+  fixPieceInDesign(scope: FixPieceInDesignScopeInput!, input: FixPieceInDesignInput!): ID!
+  fixPiecesInDesign(scope: FixPiecesInDesignScopeInput!, input: FixPiecesInDesignInput!): ID!
+  changePieceToTypeInDesign(scope: ChangePieceToTypeInDesignScopeInput!, input: ChangePieceToTypeInDesignInput!): ID!
+  changePiecesToTypeInDesign(scope: ChangePiecesToTypeInDesignScopeInput!, input: ChangePiecesToTypeInDesignInput!): ID!
+  addAttributeToPiece(scope: AddAttributeToPieceScopeInput!, input: AddAttributeToPieceInput!): ID!
+  addAttributesToPiece(scope: AddAttributesToPieceScopeInput!, input: AddAttributesToPieceInput!): ID!
+  removeAttributeFromPiece(scope: RemoveAttributeFromPieceScopeInput!, input: RemoveAttributeFromPieceInput!): ID!
+  removeAttributesFromPiece(scope: RemoveAttributesFromPieceScopeInput!, input: RemoveAttributesFromPieceInput!): ID!
+  deletePieceInDesign(scope: DeletePieceInDesignScopeInput!, input: DeletePieceInDesignInput!): ID!
+  deletePiecesInDesign(scope: DeletePiecesInDesignScopeInput!, input: DeletePiecesInDesignInput!): ID!
+  deletePiecesAndConnectionsInDesign(scope: DeletePiecesAndConnectionsInDesignScopeInput!, input: DeletePiecesAndConnectionsInDesignInput!): ID!
 }
 
 type Subscription {
