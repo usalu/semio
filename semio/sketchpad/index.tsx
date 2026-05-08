@@ -613,7 +613,9 @@ export async function importKit(data: ArrayBuffer | Blob | File | string): Promi
     bytes = gunzipSync(bytes);
   }
   const text = new TextDecoder().decode(bytes);
-  const plain = KitFullDtoSchema.parse(JSON.parse(text));
+  const parsed = JSON.parse(text);
+  const dtoCandidate = parsed != null && typeof parsed === "object" && !Array.isArray(parsed) && typeof (parsed as { schema?: unknown }).schema === "string" && (parsed as { wip?: { root?: unknown } }).wip != null && (parsed as { wip: { root?: unknown } }).wip.root != null ? (parsed as { wip: { root: unknown } }).wip.root : parsed;
+  const plain = KitFullDtoSchema.parse(dtoCandidate);
   return { kit: asKitInstance(Kit.fromPlain(plain)) };
 }
 

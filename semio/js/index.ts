@@ -6441,6 +6441,31 @@ export class InMemoryKitStore implements KitHostStore {
   }
 }
 
+/** @emoji 🪪 Schema marker stamped into every persisted kit-store bundle (see `semio/assets/semio/metabolism.new.kit.semio.json`). */
+export const KIT_STORE_BUNDLE_SCHEMA = "🎆26🌙06⬆️1";
+
+/** @emoji 📦 On-disk kit bundle envelope: `{ schema, wip: { id, root: <KitFullDto> } }` mirroring `metabolism.new.kit.semio.json`. */
+export type KitStoreBundle = {
+  readonly schema: string;
+  readonly wip: { readonly id: string; readonly root: KitFullDto };
+};
+
+/** @emoji 📦 Wrap a `KitFullDto` into a {@link KitStoreBundle} for file/folder persistence. */
+export function encodeKitStoreBundle(dto: KitFullDto): KitStoreBundle {
+  return { schema: KIT_STORE_BUNDLE_SCHEMA, wip: { id: String((dto as { id?: unknown }).id ?? ""), root: dto } };
+}
+
+/** @emoji 📦 Extract the `KitFullDto` from a {@link KitStoreBundle}; accepts a flat DTO too (returns it as-is). */
+export function decodeKitStoreBundle(value: unknown): KitFullDto {
+  if (value != null && typeof value === "object" && !Array.isArray(value)) {
+    const v = value as { schema?: unknown; wip?: { root?: unknown } };
+    if (typeof v.schema === "string" && v.wip != null && typeof v.wip === "object" && (v.wip as { root?: unknown }).root != null) {
+      return (v.wip as { root: KitFullDto }).root;
+    }
+  }
+  return value as KitFullDto;
+}
+
 export type KitJsonFileAdapter = { read: () => Promise<string>; write: (json: string) => Promise<void> };
 /** @emoji 🧾 Folder persistence adapter (Electron passes two path segments for `createDirectory`). */
 export type KitFolderAdapter = {
@@ -6468,7 +6493,7 @@ export class JsonFileKitStore implements KitHostStore {
   }
   static async create(adapter: KitJsonFileAdapter) {
     const json = await adapter.read();
-    const seed = json.trim() === "" ? asKitInstance({ id: id(), name: "Untitled", createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() }) : Kit.fromDto(JSON.parse(json) as KitFullDto);
+    const seed = json.trim() === "" ? asKitInstance({ id: id(), name: "Untitled", createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() }) : Kit.fromDto(decodeKitStoreBundle(JSON.parse(json)));
     return new JsonFileKitStore(adapter, seed);
   }
   getSnapshot(): KitStoreSnapshot {
@@ -6483,7 +6508,7 @@ export class JsonFileKitStore implements KitHostStore {
   replace(kit: Kit) {
     this._kit = kit;
     for (const l of this.listeners) l();
-    void this.adapter.write(JSON.stringify(kit.toJSON()));
+    void this.adapter.write(JSON.stringify(encodeKitStoreBundle(kit.toJSON()), null, 2));
   }
 }
 
@@ -6503,7 +6528,7 @@ export class FolderKitStore implements KitHostStore {
     if (bytes != null && bytes.length > 0) {
       try {
         const t = new TextDecoder().decode(bytes);
-        return new FolderKitStore(adapter, Kit.fromDto(JSON.parse(t) as KitFullDto));
+        return new FolderKitStore(adapter, Kit.fromDto(decodeKitStoreBundle(JSON.parse(t))));
       } catch {
         /* fall through */
       }
@@ -6524,7 +6549,7 @@ export class FolderKitStore implements KitHostStore {
     for (const l of this.listeners) l();
     void (async () => {
       try {
-        const enc = new TextEncoder().encode(JSON.stringify(kit.toJSON()));
+        const enc = new TextEncoder().encode(JSON.stringify(encodeKitStoreBundle(kit.toJSON()), null, 2));
         await this.adapter.writeKit(enc);
       } catch {
         /* ignore */
@@ -6728,11 +6753,11 @@ export type KitDiff = ReadonlyDto<z.infer<typeof KitDiffSchema>>;
 // #endregion Kit
 
 // #region KitImportHelpers
-/** @emoji 🧾 Decode kit bytes as JSON DTO (host handles archives before calling). */
+/** @emoji 🧾 Decode kit bytes as JSON DTO (accepts both flat `KitFullDto` and {@link KitStoreBundle}; host handles archives before calling). */
 export function importKitToDto(buf: ArrayBuffer | Uint8Array): KitFullDto {
   const u8 = buf instanceof Uint8Array ? buf : new Uint8Array(buf);
   const text = new TextDecoder().decode(u8);
-  return KitFullDtoSchema.parse(JSON.parse(text));
+  return KitFullDtoSchema.parse(decodeKitStoreBundle(JSON.parse(text)));
 }
 // #endregion KitImportHelpers
 
