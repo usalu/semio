@@ -15632,7 +15632,7 @@ export const KitSection: FC = () => {
 const KitSectionForm: FC = () => {
   const [ksKit] = useKitSnapshotTriad();
   const kit = ksKit?.kit as Kit | undefined;
-  const [, setName] = useKitName();
+  const [kitName, renameKit, nameStatus] = useKitName();
   const [, setVersion] = useKitRelease();
   const [, setDescription] = useKitDescription();
   const [, setIcon] = useKitIcon();
@@ -15659,7 +15659,23 @@ const KitSectionForm: FC = () => {
   return (
     <>
       <TreeRow>
-        <Input lazy id="semio.sketchpad.app.kit.panel.details.section.kit.name" value={kit.name} onLazyChange={(value) => void setName(value)} showLabel />
+        <div className="flex min-w-0 w-full flex-col gap-tiny">
+          <div className="flex min-w-0 w-full items-center gap-single">
+            <div className="min-w-0 flex-1">
+              <Input
+                lazy
+                id="semio.sketchpad.app.kit.panel.details.section.kit.name"
+                value={kitName}
+                onLazyChange={(value) => void renameKit(value)}
+                showLabel
+              />
+            </div>
+            {nameStatus.kind === "pending" ? <Spinner size="small" className="text-muted-foreground shrink-0" /> : null}
+          </div>
+          {nameStatus.kind === "error" && nameStatus.lastError?.message ? (
+            <p className="pl-tiny text-xs text-destructive">{nameStatus.lastError.message}</p>
+          ) : null}
+        </div>
       </TreeRow>
       <TreeRow>
         <Input lazy id="semio.sketchpad.app.kit.panel.details.section.kit.version" value={kit.version || ""} placeholder={versionPlaceholder} onLazyChange={(value) => void setVersion(optionalKitText(value))} showLabel />

@@ -4,7 +4,7 @@
 // #endregion 🧲Header
 
 // #region 📥Imports
-import { Subject, filter } from "rxjs";
+import { BehaviorSubject, Subject, filter } from "rxjs";
 import { z } from "zod";
 // #endregion 📥Imports
 
@@ -1490,6 +1490,12 @@ export const KIT_SESSION_QUERY_ENTRY = `query { session { id } wip { id theKit {
 /** @emoji 🔗 Root subscription aligned with `SubscriptionRoot.operationSucceeded`. */
 export const KIT_EVENT_STREAM_SUBSCRIPTION = `subscription { operationSucceeded { __typename id } }` as const;
 
+/** @emoji 🔗 Kit rename bus: {@link KitStore.rename} correlates `requestId` with {@link Subscription.kitRenamed} / {@link Subscription.operationFailed}. */
+export const KIT_RENAME_EVENT_SUBSCRIPTION = `subscription {
+  kitRenamed { requestId kit { name } }
+  operationFailed { kind message requestId }
+}` as const;
+
 /**
  * @emoji 🔗 Main-line full kit DTO via `wip.theKit.fullSnapshot` — aligns with `semio/graphql/schema.graphql`.
  */
@@ -1499,6 +1505,18 @@ export const KIT_SCOPED_FULL_DTO_QUERY = `query { wip { theKit { fullSnapshot } 
 export type KitGraphqlDataKitScopedFullDto = Readonly<{
   readonly wip: Readonly<{ readonly theKit: Readonly<{ readonly fullSnapshot: KitJsonTreeDto }> | null }> | null;
 }>;
+
+/** @emoji 🪪 Lifecycle for {@link KitStore.rename} correlated by GraphQL `requestId`. */
+export type KitRenameStatus =
+  | { readonly kind: "idle" }
+  | { readonly kind: "pending"; readonly requestId: string }
+  | { readonly kind: "success"; readonly requestId: string; readonly name: string }
+  | { readonly kind: "error"; readonly requestId: string; readonly message: string };
+
+/** @emoji 🪪 Result of {@link KitStore.rename} once the event bus reports completion for `requestId`. */
+export type KitRenameResult =
+  | { readonly ok: true; readonly requestId: string }
+  | { readonly ok: false; readonly requestId: string; readonly error: SetError };
 
 /**
  * @emoji 🌐 Single kit control plane: GraphQL strings over one dedicated `Worker` running `semio/rs` WASM (`KitStoreHandle`).
@@ -1513,6 +1531,13 @@ export class KitStore {
   private kitWriteAlternativeId: string | null = null;
   private kitWriteDraftId: string | null = null;
   private kitWriteTransactionId: string | null = null;
+
+  /** @emoji 🪪 Live kit `name` field (rs authority via {@link KIT_RENAME_EVENT_SUBSCRIPTION}). */
+  private readonly kitName$ = new BehaviorSubject<string>("");
+  /** @emoji 🪪 Last {@link KitStore.rename} lifecycle for UI / {@link useKitName}. */
+  private readonly renameStatus$ = new BehaviorSubject<KitRenameStatus>({ kind: "idle" });
+  private readonly renameResolvers = new Map<string, (r: KitRenameResult) => void>();
+  private renameSubRunning = false;
 
   private constructor(timeoutMs: number) {
     this.timeoutMs = timeoutMs;
@@ -1542,8 +1567,10 @@ export class KitStore {
       await wt.init(dto);
       const ks = new KitStore(timeoutMs);
       ks.transport = wt;
+      ks.seedLiveKitNameFromDto(dto);
       await withTimeout(ks.warmGraphqlRead(), timeoutMs, "graphql");
       void ks.startSubscriptionLoop();
+      void ks.startRenameSubscriptionLoop();
       return ks;
     }
 
@@ -1561,8 +1588,10 @@ export class KitStore {
     const t = new InlineWasmTransport(handle as { execute: WasmExecuteFn; subscribe: WasmSubscribeFn; free?: () => void });
     const ks = new KitStore(timeoutMs);
     ks.transport = t;
+    ks.seedLiveKitNameFromDto(dto);
     await withTimeout(ks.warmGraphqlRead(), timeoutMs, "graphql");
     void ks.startSubscriptionLoop();
+    void ks.startRenameSubscriptionLoop();
     return ks;
   }
 
@@ -1629,6 +1658,150 @@ export class KitStore {
     );
   }
 
+  //#region 🪪Rename
+
+  /** @emoji 🪪 Seeds {@link kitName$} from the initial kit DTO (before GraphQL streaming). */
+  private seedLiveKitNameFromDto(dto: KitFullDto): void {
+    this.kitName$.next(dto.name);
+  }
+
+  /** @emoji 🪪 Subscribe to live kit name updates from rs (`kitRenamed` / snapshot seed). */
+  subscribeKitName(handler: () => void): Unsubscribe {
+    const sub = this.kitName$.subscribe({ next: () => handler() });
+    return () => {
+      sub.unsubscribe();
+    };
+  }
+
+  getKitNameSnapshot(): string {
+    return this.kitName$.getValue();
+  }
+
+  /** @emoji 🪪 Subscribe to {@link KitRenameStatus} for the latest rename request. */
+  subscribeRenameStatus(handler: () => void): Unsubscribe {
+    const sub = this.renameStatus$.subscribe({ next: () => handler() });
+    return () => {
+      sub.unsubscribe();
+    };
+  }
+
+  getRenameStatusSnapshot(): KitRenameStatus {
+    return this.renameStatus$.getValue();
+  }
+
+  private resolveRename(requestId: string, result: KitRenameResult): void {
+    const fn = this.renameResolvers.get(requestId);
+    if (fn) {
+      fn(result);
+      this.renameResolvers.delete(requestId);
+    }
+  }
+
+  private mapOperationFailedToSetError(kind: string, message: string): SetError {
+    const k = kind.trim();
+    if (k === "Invalid") return { kind: "InvalidValue", message };
+    if (k === "NotFound") return { kind: "NotFound", message };
+    return { kind: "Internal", message };
+  }
+
+  private dispatchKitRenameSubscription(data: {
+    readonly kitRenamed?: { readonly requestId?: string; readonly kit?: { readonly name?: string } | null } | null;
+    readonly operationFailed?: { readonly kind?: string; readonly message?: string; readonly requestId?: string | null } | null;
+  }): void {
+    const renamed = data.kitRenamed;
+    if (renamed != null && typeof renamed === "object") {
+      const rid = String(renamed.requestId ?? "");
+      const nm = String(renamed.kit?.name ?? "");
+      if (rid !== "") {
+        this.kitName$.next(nm);
+        this.renameStatus$.next({ kind: "success", requestId: rid, name: nm });
+        this.resolveRename(rid, { ok: true, requestId: rid });
+      }
+    }
+    const failed = data.operationFailed;
+    if (failed != null && typeof failed === "object") {
+      const ridRaw = failed.requestId;
+      const rid = ridRaw != null && String(ridRaw).length > 0 ? String(ridRaw) : "";
+      if (rid !== "" && this.renameResolvers.has(rid)) {
+        const err = this.mapOperationFailedToSetError(String(failed.kind ?? "Internal"), String(failed.message ?? "operationFailed"));
+        this.renameStatus$.next({ kind: "error", requestId: rid, message: err.message });
+        this.resolveRename(rid, { ok: false, requestId: rid, error: err });
+      }
+    }
+  }
+
+  /** @emoji 🪪 Second GraphQL subscription loop for rename correlation (non-blocking toward UI). */
+  private startRenameSubscriptionLoop(): void {
+    if (this.renameSubRunning) return;
+    this.renameSubRunning = true;
+    void this.transport
+      .subscribe(JSON.stringify({ query: KIT_RENAME_EVENT_SUBSCRIPTION }), (eventJson: string) => {
+        try {
+          const msg = parseJsonValue(eventJson) as KitGraphqlResponseEnvelope<{
+            kitRenamed?: { requestId?: string; kit?: { name?: string } };
+            operationFailed?: { kind?: string; message?: string; requestId?: string | null };
+          }>;
+          if (msg.errors && Array.isArray(msg.errors) && msg.errors.length) return;
+          const row = msg.data;
+          if (row == null || typeof row !== "object") return;
+          this.dispatchKitRenameSubscription(row);
+        } catch {
+          /* ignore */
+        }
+      })
+      .catch(() => {
+        this.renameSubRunning = false;
+      });
+  }
+
+  /**
+   * @emoji 🪪 Async kit rename: GraphQL `renameKit` returns `requestId`; completion arrives on `kitRenamed` / `operationFailed`.
+   */
+  async rename(name: string): Promise<KitRenameResult> {
+    this.ensureAlive();
+    await this.ensureWriteGraph();
+    const draftId = this.kitWriteDraftId;
+    const transactionId = this.kitWriteTransactionId;
+    if (!draftId || !transactionId) {
+      const err: SetError = { kind: "Internal", message: "rename: missing draft or transaction id after ensureWriteGraph" };
+      return { ok: false, requestId: "", error: err };
+    }
+    const query = `mutation RenameKit($draftId: Id!, $transactionId: Id!, $name: String!) {
+      renameKit(draftId: $draftId, transactionId: $transactionId, name: $name)
+    }`;
+    let requestId: string;
+    try {
+      const data = kitGraphqlData(
+        await this.gqlRun({
+          query,
+          variables: { draftId, transactionId, name },
+        }),
+      ) as { renameKit?: string };
+      requestId = String(data.renameKit ?? "");
+      if (requestId === "") throw new Error("renameKit: empty id");
+    } catch (e) {
+      const err: SetError = { kind: "Internal", message: String(e) };
+      return { ok: false, requestId: "", error: err };
+    }
+    this.renameStatus$.next({ kind: "pending", requestId });
+    return await new Promise<KitRenameResult>((resolve) => {
+      const t = setTimeout(() => {
+        if (!this.renameResolvers.has(requestId)) return;
+        this.renameResolvers.delete(requestId);
+        const err: SetError = { kind: "Timeout", message: "rename: timed out waiting for kitRenamed / operationFailed" };
+        this.renameStatus$.next({ kind: "error", requestId, message: err.message });
+        resolve({ ok: false, requestId, error: err });
+      }, this.timeoutMs);
+      const wrapped = (r: KitRenameResult) => {
+        clearTimeout(t);
+        resolve(r);
+      };
+      this.renameResolvers.set(requestId, wrapped);
+    });
+  }
+
+  //#endregion 🪪Rename
+
   private startSubscriptionLoop(): void {
     if (this.gqlLoopRunning) return;
     this.gqlLoopRunning = true;
@@ -1654,7 +1827,22 @@ export class KitStore {
   async dispose(): Promise<void> {
     if (this.disposed) return;
     this.disposed = true;
+    for (const [rid, fn] of this.renameResolvers.entries()) {
+      const err: SetError = { kind: "Disposed", message: "KitStore disposed" };
+      fn({ ok: false, requestId: rid, error: err });
+    }
+    this.renameResolvers.clear();
     this.fanout.complete();
+    try {
+      this.kitName$.complete();
+    } catch {
+      /* ignore */
+    }
+    try {
+      this.renameStatus$.complete();
+    } catch {
+      /* ignore */
+    }
     this.transport.dispose();
   }
 
@@ -2776,6 +2964,12 @@ export type KitStoreClient = SemioKitBridge & {
   listConflicts(): Promise<KitConflict[]>;
   resolveConflict(id: string, strategy: ConflictResolution): Promise<SetResult>;
   syncNow(): Promise<SetResult>;
+  /** @emoji 🪪 Live kit name + async rename (see {@link KitStore.rename}). */
+  subscribeKitName(onChange: () => void): () => void;
+  getKitNameSnapshot(): string;
+  subscribeRenameStatus(onChange: () => void): () => void;
+  getRenameStatusSnapshot(): KitRenameStatus;
+  rename(name: string): Promise<KitRenameResult>;
   kitGraphql(): LiveKitRoot;
   subscribe(cb: (ev: KitEvent) => void): () => void;
   readPieceFlatPlane(designId: string, pieceId: string): Promise<PlaneDto | null>;
@@ -3270,6 +3464,26 @@ export class WasmKitStoreClient implements KitStoreClient {
   syncNow(): Promise<SetResult> {
     return this.ks.syncNow();
   }
+
+  subscribeKitName(onChange: () => void): () => void {
+    return this.ks.subscribeKitName(onChange);
+  }
+
+  getKitNameSnapshot(): string {
+    return this.ks.getKitNameSnapshot();
+  }
+
+  subscribeRenameStatus(onChange: () => void): () => void {
+    return this.ks.subscribeRenameStatus(onChange);
+  }
+
+  getRenameStatusSnapshot(): KitRenameStatus {
+    return this.ks.getRenameStatusSnapshot();
+  }
+
+  rename(name: string): Promise<KitRenameResult> {
+    return this.ks.rename(name);
+  }
 }
 
 /** @emoji 🧾 Resolves the live {@link KitStore} behind a WASM {@link KitStoreClient}, or null for fallback clients. */
@@ -3757,6 +3971,29 @@ class FallbackKitClient implements KitStoreClient {
   async syncNow(): Promise<SetResult> {
     this.notify();
     return { ok: true };
+  }
+
+  subscribeKitName(cb: () => void): () => void {
+    cb();
+    return () => {};
+  }
+
+  getKitNameSnapshot(): string {
+    return this.kit.name;
+  }
+
+  subscribeRenameStatus(cb: () => void): () => void {
+    cb();
+    return () => {};
+  }
+
+  getRenameStatusSnapshot(): KitRenameStatus {
+    return { kind: "idle" };
+  }
+
+  async rename(_name: string): Promise<KitRenameResult> {
+    void _name;
+    return { ok: false, requestId: "", error: { kind: "NotSupported", message: "rename requires live WASM KitStore" } };
   }
 
   setKitReadScope(_scope: KitReadScope): void {

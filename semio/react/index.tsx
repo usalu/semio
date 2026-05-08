@@ -8761,7 +8761,70 @@ export function useKitId(idValue?: string): HookTriad<any> {
 }
 
 export function useKitName(idValue?: string): HookTriad<any> {
-  return useSchemaFieldState("Kit", "name", idValue);
+  const schemaTriad = useSchemaFieldState("Kit", "name", idValue);
+  const runtime = useKitRuntimeSafe();
+  const ks = React.useMemo(() => {
+    const c = runtime?.kitClient ?? null;
+    return c ? kitStoreFromKitStoreClient(c) : null;
+  }, [runtime?.kitClient]);
+  const schemaValue = schemaTriad[0];
+
+  const storeSubName = React.useCallback(
+    (onChange: () => void) => {
+      if (ks) return ks.subscribeKitName(onChange);
+      if (runtime?.store) return runtime.store.subscribe(onChange);
+      return () => {};
+    },
+    [ks, runtime?.store],
+  );
+
+  const snapName = React.useCallback(() => {
+    if (ks) return ks.getKitNameSnapshot();
+    const kn = (runtime?.snapshot?.kit as Kit | undefined)?.name;
+    if (kn != null) return String(kn);
+    return String(schemaValue ?? "");
+  }, [ks, runtime?.snapshot, schemaValue]);
+
+  const liveName = React.useSyncExternalStore(storeSubName, snapName, snapName);
+
+  const storeSubRename = React.useCallback(
+    (onChange: () => void) => {
+      if (!ks) return () => {};
+      return ks.subscribeRenameStatus(onChange);
+    },
+    [ks],
+  );
+
+  const snapRename = React.useCallback(() => {
+    if (!ks) return { kind: "idle" } as const;
+    return ks.getRenameStatusSnapshot();
+  }, [ks]);
+
+  const renameSnap = React.useSyncExternalStore(storeSubRename, snapRename, snapRename);
+
+  const setter = React.useCallback(
+    async (next: React.SetStateAction<any>) => {
+      const cur = ks ? liveName : schemaValue;
+      const v = typeof next === "function" ? (next as (p: any) => any)(cur) : next;
+      if (ks) {
+        const r = await ks.rename(String(v));
+        return r.ok ? ({ ok: true } as const) : ({ ok: false, error: r.error! } as const);
+      }
+      return schemaTriad[1](next);
+    },
+    [ks, liveName, schemaTriad, schemaValue],
+  );
+
+  const status: WriteStatus = !ks
+    ? schemaTriad[2]
+    : renameSnap.kind === "pending"
+      ? { kind: "pending", pending: 1 }
+      : renameSnap.kind === "error"
+        ? { kind: "error", pending: 0, lastError: { kind: "InvalidValue", message: renameSnap.message } }
+        : { kind: "idle", pending: 0 };
+
+  const displayName = ks ? liveName : schemaValue;
+  return [displayName, setter, status] as const;
 }
 
 export function useKitRelease(idValue?: string): HookTriad<any> {
@@ -17015,6 +17078,11 @@ if (shouldRunReactEmbeddedTests) {
       listConflicts: async () => [] as const,
       resolveConflict: async () => ({ ok: true } as const),
       syncNow: async () => ({ ok: true } as const),
+      subscribeKitName: () => () => {},
+      getKitNameSnapshot: () => String((kitJsonFromStore(store) as KitFullDto).name ?? ""),
+      subscribeRenameStatus: () => () => {},
+      getRenameStatusSnapshot: () => ({ kind: "idle" } as const),
+      rename: async () => ({ ok: false, requestId: "", error: { kind: "NotSupported", message: "embedded test client" } }),
       getKitWriteScope: () => null,
       setKitWriteScope: () => {},
       finalizeKitWriteTransaction: async () => ({ ok: true }),
@@ -17431,6 +17499,11 @@ if (shouldRunReactEmbeddedTests) {
         listConflicts: async () => [],
         resolveConflict: async () => ({ ok: true } as const),
         syncNow: async () => ({ ok: true } as const),
+        subscribeKitName: () => () => {},
+        getKitNameSnapshot: () => "",
+        subscribeRenameStatus: () => () => {},
+        getRenameStatusSnapshot: () => ({ kind: "idle" } as const),
+        rename: async () => ({ ok: false, requestId: "", error: { kind: "NotSupported", message: "stub" } }),
         readPieceFlatPlane: async () => null,
         readPieceFlatCenter: async () => null,
         readPieceParentConnectionFull: async () => null,

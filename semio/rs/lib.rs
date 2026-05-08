@@ -124,11 +124,7 @@ pub mod error {
 
     impl Default for SemioError {
         fn default() -> Self {
-            Self {
-                kind: String::new(),
-                message: String::new(),
-                request_id: None,
-            }
+            Self { kind: String::new(), message: String::new(), request_id: None }
         }
     }
 
@@ -231,10 +227,7 @@ pub mod geom {
 
         impl CoordinateNode {
             pub fn from_value(c: Coordinate) -> Arc<Self> {
-                let id = weak(
-                    "coordinate",
-                    &[&format!("{:.9}", c.u), &format!("{:.9}", c.v)],
-                );
+                let id = weak("coordinate", &[&format!("{:.9}", c.u), &format!("{:.9}", c.v)]);
                 Arc::new(Self { id, u: RwLock::new(c.u), v: RwLock::new(c.v) })
             }
         }
@@ -250,12 +243,7 @@ pub mod geom {
         impl VectorNode {
             pub fn from_value(v: Vector) -> Arc<Self> {
                 let id = weak("vector", &[&format!("{:.9}", v.x), &format!("{:.9}", v.y), &format!("{:.9}", v.z)]);
-                Arc::new(Self {
-                    id,
-                    x: RwLock::new(v.x),
-                    y: RwLock::new(v.y),
-                    z: RwLock::new(v.z),
-                })
+                Arc::new(Self { id, x: RwLock::new(v.x), y: RwLock::new(v.y), z: RwLock::new(v.z) })
             }
         }
 
@@ -270,12 +258,7 @@ pub mod geom {
         impl PointNode {
             pub fn from_value(p: Point) -> Arc<Self> {
                 let id = weak("point", &[&format!("{:.9}", p.x), &format!("{:.9}", p.y), &format!("{:.9}", p.z)]);
-                Arc::new(Self {
-                    id,
-                    x: RwLock::new(p.x),
-                    y: RwLock::new(p.y),
-                    z: RwLock::new(p.z),
-                })
+                Arc::new(Self { id, x: RwLock::new(p.x), y: RwLock::new(p.y), z: RwLock::new(p.z) })
             }
         }
 
@@ -292,14 +275,7 @@ pub mod geom {
                 let origin = PointNode::from_value(pl.origin);
                 let x_axis = VectorNode::from_value(pl.x_axis);
                 let y_axis = VectorNode::from_value(pl.y_axis);
-                let id = weak(
-                    "plane",
-                    &[
-                        origin.id.as_str(),
-                        x_axis.id.as_str(),
-                        y_axis.id.as_str(),
-                    ],
-                );
+                let id = weak("plane", &[origin.id.as_str(), x_axis.id.as_str(), y_axis.id.as_str()]);
                 Arc::new(Self { id, origin, x_axis, y_axis })
             }
         }
@@ -314,11 +290,7 @@ pub mod geom {
         impl OffsetNode {
             pub fn from_value(o: super::Offset) -> Arc<Self> {
                 let id = weak("offset", &[&format!("{:.9}", o.u), &format!("{:.9}", o.v)]);
-                Arc::new(Self {
-                    id,
-                    u: RwLock::new(o.u),
-                    v: RwLock::new(o.v),
-                })
+                Arc::new(Self { id, u: RwLock::new(o.u), v: RwLock::new(o.v) })
             }
         }
 
@@ -335,12 +307,7 @@ pub mod geom {
                 let center = CoordinateNode::from_value(value.center);
                 let plane = PlaneNode::from_value(value.plane);
                 let id = weak("position", &[center.id.as_str(), plane.id.as_str()]);
-                Arc::new(Self {
-                    id,
-                    center,
-                    plane,
-                    data: RwLock::new(value),
-                })
+                Arc::new(Self { id, center, plane, data: RwLock::new(value) })
             }
 
             pub async fn snapshot_value(&self) -> Position {
@@ -356,84 +323,50 @@ pub mod geom {
 
         impl PlaceNode {
             pub async fn new() -> Arc<Self> {
-                Arc::new(Self {
-                    id: Id::new().await,
-                    label: RwLock::new(None),
-                })
+                Arc::new(Self { id: Id::new().await, label: RwLock::new(None) })
             }
         }
 
         //#region 🔧 Default stubs (schema codegen union / interface defaults)
         impl Default for CoordinateNode {
             fn default() -> Self {
-                Self {
-                    id: Id::default(),
-                    u: RwLock::new(0.0),
-                    v: RwLock::new(0.0),
-                }
+                Self { id: Id::default(), u: RwLock::new(0.0), v: RwLock::new(0.0) }
             }
         }
 
         impl Default for VectorNode {
             fn default() -> Self {
-                Self {
-                    id: Id::default(),
-                    x: RwLock::new(0.0),
-                    y: RwLock::new(0.0),
-                    z: RwLock::new(0.0),
-                }
+                Self { id: Id::default(), x: RwLock::new(0.0), y: RwLock::new(0.0), z: RwLock::new(0.0) }
             }
         }
 
         impl Default for PointNode {
             fn default() -> Self {
-                Self {
-                    id: Id::default(),
-                    x: RwLock::new(0.0),
-                    y: RwLock::new(0.0),
-                    z: RwLock::new(0.0),
-                }
+                Self { id: Id::default(), x: RwLock::new(0.0), y: RwLock::new(0.0), z: RwLock::new(0.0) }
             }
         }
 
         impl Default for PlaneNode {
             fn default() -> Self {
-                Self {
-                    id: Id::default(),
-                    origin: Arc::new(PointNode::default()),
-                    x_axis: Arc::new(VectorNode::default()),
-                    y_axis: Arc::new(VectorNode::default()),
-                }
+                Self { id: Id::default(), origin: Arc::new(PointNode::default()), x_axis: Arc::new(VectorNode::default()), y_axis: Arc::new(VectorNode::default()) }
             }
         }
 
         impl Default for OffsetNode {
             fn default() -> Self {
-                Self {
-                    id: Id::default(),
-                    u: RwLock::new(0.0),
-                    v: RwLock::new(0.0),
-                }
+                Self { id: Id::default(), u: RwLock::new(0.0), v: RwLock::new(0.0) }
             }
         }
 
         impl Default for PositionNode {
             fn default() -> Self {
-                Self {
-                    id: Id::default(),
-                    center: Arc::new(CoordinateNode::default()),
-                    plane: Arc::new(PlaneNode::default()),
-                    data: RwLock::new(Position::default()),
-                }
+                Self { id: Id::default(), center: Arc::new(CoordinateNode::default()), plane: Arc::new(PlaneNode::default()), data: RwLock::new(Position::default()) }
             }
         }
 
         impl Default for PlaceNode {
             fn default() -> Self {
-                Self {
-                    id: Id::default(),
-                    label: RwLock::new(None),
-                }
+                Self { id: Id::default(), label: RwLock::new(None) }
             }
         }
         //#endregion 🔧 Default stubs (schema codegen union / interface defaults)
@@ -454,8 +387,8 @@ pub mod gql_relay {
     use blake3::Hasher;
 
     use crate::id::Id;
-    use crate::kit::design::Design;
     use crate::kit::design::piece::Piece;
+    use crate::kit::design::Design;
     use crate::kit::r#type::Type;
     use crate::meta::{Author, Benchmark, Concept, File, Folder, Group, Layer, Prop, Quality, Stat, Tag};
     use crate::vcs::{Alternative, Checkpoint, Conflict};
@@ -502,19 +435,8 @@ pub mod gql_relay {
     impl DesignConnection {
         pub fn from_designs(rows: Vec<Arc<Design>>) -> Self {
             let hash = hash_ids(rows.iter().map(|d| d.id.as_str()));
-            let edges = rows
-                .into_iter()
-                .enumerate()
-                .map(|(i, d)| DesignEdge {
-                    cursor: edge_cursor(i),
-                    node: d,
-                })
-                .collect();
-            Self {
-                edges,
-                page_info: std::sync::Arc::new(PageInfo::default()),
-                hash,
-            }
+            let edges = rows.into_iter().enumerate().map(|(i, d)| DesignEdge { cursor: edge_cursor(i), node: d }).collect();
+            Self { edges, page_info: std::sync::Arc::new(PageInfo::default()), hash }
         }
     }
 
@@ -535,19 +457,8 @@ pub mod gql_relay {
     impl PieceConnection {
         pub fn from_pieces(rows: Vec<Arc<Piece>>) -> Self {
             let hash = hash_ids(rows.iter().map(|p| p.id.as_str()));
-            let edges = rows
-                .into_iter()
-                .enumerate()
-                .map(|(i, p)| PieceEdge {
-                    cursor: edge_cursor(i),
-                    node: p,
-                })
-                .collect();
-            Self {
-                edges,
-                page_info: std::sync::Arc::new(PageInfo::default()),
-                hash,
-            }
+            let edges = rows.into_iter().enumerate().map(|(i, p)| PieceEdge { cursor: edge_cursor(i), node: p }).collect();
+            Self { edges, page_info: std::sync::Arc::new(PageInfo::default()), hash }
         }
     }
 
@@ -568,19 +479,8 @@ pub mod gql_relay {
     impl TypeConnection {
         pub fn from_types(rows: Vec<Arc<Type>>) -> Self {
             let hash = hash_ids(rows.iter().map(|t| t.id.as_str()));
-            let edges = rows
-                .into_iter()
-                .enumerate()
-                .map(|(i, t)| TypeEdge {
-                    cursor: edge_cursor(i),
-                    node: t,
-                })
-                .collect();
-            Self {
-                edges,
-                page_info: std::sync::Arc::new(PageInfo::default()),
-                hash,
-            }
+            let edges = rows.into_iter().enumerate().map(|(i, t)| TypeEdge { cursor: edge_cursor(i), node: t }).collect();
+            Self { edges, page_info: std::sync::Arc::new(PageInfo::default()), hash }
         }
     }
 
@@ -601,19 +501,8 @@ pub mod gql_relay {
     impl ConflictConnection {
         pub fn from_conflicts(rows: Vec<Arc<Conflict>>) -> Self {
             let hash = hash_ids(rows.iter().map(|c| c.id.as_str()));
-            let edges = rows
-                .into_iter()
-                .enumerate()
-                .map(|(i, c)| ConflictEdge {
-                    cursor: edge_cursor(i),
-                    node: c,
-                })
-                .collect();
-            Self {
-                edges,
-                page_info: std::sync::Arc::new(PageInfo::default()),
-                hash,
-            }
+            let edges = rows.into_iter().enumerate().map(|(i, c)| ConflictEdge { cursor: edge_cursor(i), node: c }).collect();
+            Self { edges, page_info: std::sync::Arc::new(PageInfo::default()), hash }
         }
     }
 
@@ -634,19 +523,8 @@ pub mod gql_relay {
     impl AlternativeConnection {
         pub fn from_alternatives(rows: Vec<Arc<Alternative>>) -> Self {
             let hash = hash_ids(rows.iter().map(|a| a.id.as_str()));
-            let edges = rows
-                .into_iter()
-                .enumerate()
-                .map(|(i, a)| AlternativeEdge {
-                    cursor: edge_cursor(i),
-                    node: a,
-                })
-                .collect();
-            Self {
-                edges,
-                page_info: std::sync::Arc::new(PageInfo::default()),
-                hash,
-            }
+            let edges = rows.into_iter().enumerate().map(|(i, a)| AlternativeEdge { cursor: edge_cursor(i), node: a }).collect();
+            Self { edges, page_info: std::sync::Arc::new(PageInfo::default()), hash }
         }
     }
 
@@ -667,19 +545,8 @@ pub mod gql_relay {
     impl CheckpointConnection {
         pub fn from_checkpoints(rows: Vec<Arc<Checkpoint>>) -> Self {
             let hash = hash_ids(rows.iter().map(|c| c.id.as_str()));
-            let edges = rows
-                .into_iter()
-                .enumerate()
-                .map(|(i, c)| CheckpointEdge {
-                    cursor: edge_cursor(i),
-                    node: c,
-                })
-                .collect();
-            Self {
-                edges,
-                page_info: std::sync::Arc::new(PageInfo::default()),
-                hash,
-            }
+            let edges = rows.into_iter().enumerate().map(|(i, c)| CheckpointEdge { cursor: edge_cursor(i), node: c }).collect();
+            Self { edges, page_info: std::sync::Arc::new(PageInfo::default()), hash }
         }
     }
 
@@ -702,19 +569,8 @@ pub mod gql_relay {
     impl ConnectionConnection {
         pub fn from_connections(rows: Vec<Arc<crate::kit::design::connection::Connection>>) -> Self {
             let hash = hash_ids(rows.iter().map(|c| c.id.as_str()));
-            let edges = rows
-                .into_iter()
-                .enumerate()
-                .map(|(i, node)| ConnectionEdge {
-                    cursor: edge_cursor(i),
-                    node,
-                })
-                .collect();
-            Self {
-                edges,
-                page_info: std::sync::Arc::new(PageInfo::default()),
-                hash,
-            }
+            let edges = rows.into_iter().enumerate().map(|(i, node)| ConnectionEdge { cursor: edge_cursor(i), node }).collect();
+            Self { edges, page_info: std::sync::Arc::new(PageInfo::default()), hash }
         }
     }
 
@@ -744,19 +600,8 @@ pub mod gql_relay {
                         hasher.update(b"\x1f");
                     }
                     let hash = hasher.finalize().to_hex().to_string();
-                    let edges = rows
-                        .into_iter()
-                        .enumerate()
-                        .map(|(i, node)| $Edge {
-                            cursor: edge_cursor(i),
-                            node,
-                        })
-                        .collect();
-                    Self {
-                        edges,
-                        page_info: std::sync::Arc::new(PageInfo::default()),
-                        hash,
-                    }
+                    let edges = rows.into_iter().enumerate().map(|(i, node)| $Edge { cursor: edge_cursor(i), node }).collect();
+                    Self { edges, page_info: std::sync::Arc::new(PageInfo::default()), hash }
                 }
             }
         };
@@ -774,12 +619,7 @@ pub mod gql_relay {
     simple_conn!(StatConnection, StatEdge, Stat, |s: &Stat| s.id.clone());
     simple_conn!(LayerConnection, LayerEdge, Layer, |l: &Layer| l.id.clone());
     simple_conn!(GroupConnection, GroupEdge, Group, |g: &Group| g.id.clone());
-    simple_conn!(
-        PositionNodeConnection,
-        PositionNodeEdge,
-        Arc<crate::geom::entity::PositionNode>,
-        |p: &Arc<crate::geom::entity::PositionNode>| p.id.clone()
-    );
+    simple_conn!(PositionNodeConnection, PositionNodeEdge, Arc<crate::geom::entity::PositionNode>, |p: &Arc<crate::geom::entity::PositionNode>| p.id.clone());
 
     /// @emoji 🪢 `entity_relay!` — delegates to [`simple_conn!`] for `Arc`/value nodes with an id extractor closure.
     macro_rules! entity_relay {
@@ -788,36 +628,11 @@ pub mod gql_relay {
         };
     }
 
-    entity_relay!(
-        VectorNodeConnection,
-        VectorNodeEdge,
-        Arc<crate::geom::entity::VectorNode>,
-        |v: &Arc<crate::geom::entity::VectorNode>| v.id.clone()
-    );
-    entity_relay!(
-        CoordinateNodeConnection,
-        CoordinateNodeEdge,
-        Arc<crate::geom::entity::CoordinateNode>,
-        |c: &Arc<crate::geom::entity::CoordinateNode>| c.id.clone()
-    );
-    entity_relay!(
-        PointNodeConnection,
-        PointNodeEdge,
-        Arc<crate::geom::entity::PointNode>,
-        |p: &Arc<crate::geom::entity::PointNode>| p.id.clone()
-    );
-    entity_relay!(
-        PlaneNodeConnection,
-        PlaneNodeEdge,
-        Arc<crate::geom::entity::PlaneNode>,
-        |p: &Arc<crate::geom::entity::PlaneNode>| p.id.clone()
-    );
-    entity_relay!(
-        OffsetNodeConnection,
-        OffsetNodeEdge,
-        Arc<crate::geom::entity::OffsetNode>,
-        |o: &Arc<crate::geom::entity::OffsetNode>| o.id.clone()
-    );
+    entity_relay!(VectorNodeConnection, VectorNodeEdge, Arc<crate::geom::entity::VectorNode>, |v: &Arc<crate::geom::entity::VectorNode>| v.id.clone());
+    entity_relay!(CoordinateNodeConnection, CoordinateNodeEdge, Arc<crate::geom::entity::CoordinateNode>, |c: &Arc<crate::geom::entity::CoordinateNode>| c.id.clone());
+    entity_relay!(PointNodeConnection, PointNodeEdge, Arc<crate::geom::entity::PointNode>, |p: &Arc<crate::geom::entity::PointNode>| p.id.clone());
+    entity_relay!(PlaneNodeConnection, PlaneNodeEdge, Arc<crate::geom::entity::PlaneNode>, |p: &Arc<crate::geom::entity::PlaneNode>| p.id.clone());
+    entity_relay!(OffsetNodeConnection, OffsetNodeEdge, Arc<crate::geom::entity::OffsetNode>, |o: &Arc<crate::geom::entity::OffsetNode>| o.id.clone());
 
     /// @emoji 🪜 `entity_diffs!` — expands modification / diff / diffs relay ladder (hook for codegen; invoke per entity family).
     macro_rules! entity_diffs {
@@ -898,12 +713,7 @@ pub mod meta {
     impl AttributeInput {
         /// @emoji ➕ Mint a persisted [`Attribute`] from GraphQL input (fresh [`Id`]).
         pub async fn into_attribute(self) -> Attribute {
-            Attribute {
-                id: Id::new().await,
-                key: self.key,
-                value: self.value.unwrap_or_default(),
-                definition: self.definition,
-            }
+            Attribute { id: Id::new().await, key: self.key, value: self.value.unwrap_or_default(), definition: self.definition }
         }
     }
 
@@ -1138,23 +948,8 @@ pub mod meta {
     }
 
     impl Tag {
-        pub async fn new(
-            owner: TagOwnerSlot,
-            name: String,
-            description: Option<String>,
-            icon: Option<String>,
-            order: Option<i32>,
-            attributes: Vec<Attribute>,
-        ) -> Arc<Self> {
-            Arc::new(Self {
-                id: Id::new().await,
-                owner: RwLock::new(owner),
-                name: RwLock::new(name),
-                description: RwLock::new(description),
-                icon: RwLock::new(icon),
-                order: RwLock::new(order),
-                attributes: RwLock::new(attributes),
-            })
+        pub async fn new(owner: TagOwnerSlot, name: String, description: Option<String>, icon: Option<String>, order: Option<i32>, attributes: Vec<Attribute>) -> Arc<Self> {
+            Arc::new(Self { id: Id::new().await, owner: RwLock::new(owner), name: RwLock::new(name), description: RwLock::new(description), icon: RwLock::new(icon), order: RwLock::new(order), attributes: RwLock::new(attributes) })
         }
 
         pub async fn compute_hash(&self) -> String {
@@ -1166,15 +961,7 @@ pub mod meta {
 
     impl Default for Tag {
         fn default() -> Self {
-            Self {
-                id: Id::default(),
-                owner: RwLock::new(TagOwnerSlot::default()),
-                name: RwLock::new(String::new()),
-                description: RwLock::new(None),
-                icon: RwLock::new(None),
-                order: RwLock::new(None),
-                attributes: RwLock::new(Vec::new()),
-            }
+            Self { id: Id::default(), owner: RwLock::new(TagOwnerSlot::default()), name: RwLock::new(String::new()), description: RwLock::new(None), icon: RwLock::new(None), order: RwLock::new(None), attributes: RwLock::new(Vec::new()) }
         }
     }
 
@@ -1205,23 +992,8 @@ pub mod meta {
     }
 
     impl Concept {
-        pub async fn new(
-            owner: ConceptOwnerSlot,
-            name: String,
-            description: Option<String>,
-            icon: Option<String>,
-            order: Option<i32>,
-            attributes: Vec<Attribute>,
-        ) -> Arc<Self> {
-            Arc::new(Self {
-                id: Id::new().await,
-                owner: RwLock::new(owner),
-                name: RwLock::new(name),
-                description: RwLock::new(description),
-                icon: RwLock::new(icon),
-                order: RwLock::new(order),
-                attributes: RwLock::new(attributes),
-            })
+        pub async fn new(owner: ConceptOwnerSlot, name: String, description: Option<String>, icon: Option<String>, order: Option<i32>, attributes: Vec<Attribute>) -> Arc<Self> {
+            Arc::new(Self { id: Id::new().await, owner: RwLock::new(owner), name: RwLock::new(name), description: RwLock::new(description), icon: RwLock::new(icon), order: RwLock::new(order), attributes: RwLock::new(attributes) })
         }
 
         pub async fn compute_hash(&self) -> String {
@@ -1233,15 +1005,7 @@ pub mod meta {
 
     impl Default for Concept {
         fn default() -> Self {
-            Self {
-                id: Id::default(),
-                owner: RwLock::new(ConceptOwnerSlot::default()),
-                name: RwLock::new(String::new()),
-                description: RwLock::new(None),
-                icon: RwLock::new(None),
-                order: RwLock::new(None),
-                attributes: RwLock::new(Vec::new()),
-            }
+            Self { id: Id::default(), owner: RwLock::new(ConceptOwnerSlot::default()), name: RwLock::new(String::new()), description: RwLock::new(None), icon: RwLock::new(None), order: RwLock::new(None), attributes: RwLock::new(Vec::new()) }
         }
     }
 
@@ -1471,29 +1235,13 @@ pub mod kit {
 
         impl Default for Connector {
             fn default() -> Self {
-                Self {
-                    id: Id::default(),
-                    owner_type: Weak::new(),
-                    code: RwLock::new(String::new()),
-                    description: RwLock::new(None),
-                    port: RwLock::new(Weak::new()),
-                    qualities: RwLock::new(Vec::new()),
-                    attributes: RwLock::new(Vec::new()),
-                }
+                Self { id: Id::default(), owner_type: Weak::new(), code: RwLock::new(String::new()), description: RwLock::new(None), port: RwLock::new(Weak::new()), qualities: RwLock::new(Vec::new()), attributes: RwLock::new(Vec::new()) }
             }
         }
 
         impl Connector {
             pub async fn new(owner_type: Weak<Type>, code: String) -> Arc<Self> {
-                Arc::new(Self {
-                    id: Id::new().await,
-                    owner_type,
-                    code: RwLock::new(code),
-                    description: RwLock::new(None),
-                    port: RwLock::new(Weak::new()),
-                    qualities: RwLock::new(Vec::new()),
-                    attributes: RwLock::new(Vec::new()),
-                })
+                Arc::new(Self { id: Id::new().await, owner_type, code: RwLock::new(code), description: RwLock::new(None), port: RwLock::new(Weak::new()), qualities: RwLock::new(Vec::new()), attributes: RwLock::new(Vec::new()) })
             }
 
             pub async fn compute_hash(&self) -> String {
@@ -1907,27 +1655,13 @@ pub mod kit {
             impl Piece {
                 pub async fn new_fixed(owner_design: Weak<super::Design>, blueprint: super::super::r#type::Blueprint, position: Position) -> Arc<Self> {
                     let pos_node = PositionNode::from_position_value(position);
-                    Arc::new(Self {
-                        id: Id::new().await,
-                        owner_design,
-                        position: RwLock::new(Some(pos_node)),
-                        blueprint: RwLock::new(blueprint),
-                        connection_kind: RwLock::new(Some(PieceConnectionKind::Fixed)),
-                        ..Default::default()
-                    })
+                    Arc::new(Self { id: Id::new().await, owner_design, position: RwLock::new(Some(pos_node)), blueprint: RwLock::new(blueprint), connection_kind: RwLock::new(Some(PieceConnectionKind::Fixed)), ..Default::default() })
                 }
 
                 /// 🧾 Hydrated workspace piece aligned to external JSON id (facade snapshot hydration).
                 pub async fn new_fixed_with_external_id(id: Id, owner_design: Weak<super::Design>, blueprint: super::super::r#type::Blueprint, position: Position) -> Arc<Self> {
                     let pos_node = PositionNode::from_position_value(position);
-                    Arc::new(Self {
-                        id,
-                        owner_design,
-                        position: RwLock::new(Some(pos_node)),
-                        blueprint: RwLock::new(blueprint),
-                        connection_kind: RwLock::new(Some(PieceConnectionKind::Fixed)),
-                        ..Default::default()
-                    })
+                    Arc::new(Self { id, owner_design, position: RwLock::new(Some(pos_node)), blueprint: RwLock::new(blueprint), connection_kind: RwLock::new(Some(PieceConnectionKind::Fixed)), ..Default::default() })
                 }
 
                 pub async fn set_name(&self, name: Option<String>) {
@@ -2333,27 +2067,12 @@ pub mod kit {
                 let plist = d_json.get("pieces").and_then(|p| p.as_array()).cloned().unwrap_or_default();
                 let owner_des = Arc::downgrade(des);
                 for pj in plist {
-                    let pid = pj
-                        .get("id")
-                        .and_then(|x| x.as_str())
-                        .ok_or_else(|| crate::error::SemioError::invalid("design piece missing id"))?;
-                    let type_id_raw = pj
-                        .get("type")
-                        .and_then(|t| t.get("id"))
-                        .and_then(|x| x.as_str())
-                        .ok_or_else(|| crate::error::SemioError::invalid("design piece missing type.id"))?;
-                    let ty = kit
-                        .types
-                        .read()
-                        .await
-                        .iter()
-                        .find(|t| t.id.as_str() == type_id_raw)
-                        .cloned()
-                        .ok_or_else(|| crate::error::SemioError::not_found("Type", type_id_raw))?;
+                    let pid = pj.get("id").and_then(|x| x.as_str()).ok_or_else(|| crate::error::SemioError::invalid("design piece missing id"))?;
+                    let type_id_raw = pj.get("type").and_then(|t| t.get("id")).and_then(|x| x.as_str()).ok_or_else(|| crate::error::SemioError::invalid("design piece missing type.id"))?;
+                    let ty = kit.types.read().await.iter().find(|t| t.id.as_str() == type_id_raw).cloned().ok_or_else(|| crate::error::SemioError::not_found("Type", type_id_raw))?;
                     let plane_val = pj.get("plane").cloned().unwrap_or_else(|| serde_json::json!({}));
                     let center_val = pj.get("center").cloned().unwrap_or_else(|| serde_json::json!({"u":0.0,"v":0.0}));
-                    let position: crate::geom::Position = serde_json::from_value(serde_json::json!({"plane": plane_val, "center": center_val}))
-                        .map_err(|e| crate::error::SemioError::invalid(format!("piece position serde: {}", e)))?;
+                    let position: crate::geom::Position = serde_json::from_value(serde_json::json!({"plane": plane_val, "center": center_val})).map_err(|e| crate::error::SemioError::invalid(format!("piece position serde: {}", e)))?;
                     let scale = pj.get("scale").and_then(|s| s.as_f64()).unwrap_or(1.0);
                     let nm_opt = pj.get("name").and_then(|x| x.as_str());
                     let bp = crate::kit::r#type::Blueprint::Type(ty.clone());
@@ -2769,18 +2488,7 @@ pub mod kit {
         pub async fn create_and_register_quality(self: &Arc<Self>, owner_id: &Id, input: crate::meta::QualityInput) -> Result<Arc<Quality>, crate::error::SemioError> {
             let slot = self.resolve_quality_owner_slot(owner_id).await?;
             let attrs = crate::meta::attributes_from_inputs(input.attributes).await;
-            let q = Quality::new(
-                slot,
-                input.key,
-                input.value,
-                input.unit,
-                input.definition,
-                input.description,
-                input.icon,
-                Vec::new(),
-                attrs,
-            )
-            .await;
+            let q = Quality::new(slot, input.key, input.value, input.unit, input.definition, input.description, input.icon, Vec::new(), attrs).await;
             self.register_quality(q.clone()).await;
             match &*q.owner.read().await {
                 crate::meta::QualityOwnerSlot::Kit(w) => {
@@ -2841,10 +2549,7 @@ pub mod kit {
             let design = self.ensure_design(design_id).await;
             let slot = {
                 let designs = self.designs.read().await;
-                designs
-                    .iter()
-                    .position(|d| &d.id == design_id)
-                    .expect("design slot after ensure_design") as u32
+                designs.iter().position(|d| &d.id == design_id).expect("design slot after ensure_design") as u32
             };
             (crate::kit_graph_engine::DesignHandle(slot), design)
         }
@@ -2886,11 +2591,7 @@ pub mod kit {
             }
 
             let owner = Arc::downgrade(self);
-            let design_arr_owned = dto
-                .get("designs")
-                .and_then(|v| v.as_array())
-                .cloned()
-                .unwrap_or_default();
+            let design_arr_owned = dto.get("designs").and_then(|v| v.as_array()).cloned().unwrap_or_default();
             let mut appended: Vec<Arc<design::Design>> = Vec::new();
             for d in &design_arr_owned {
                 let Some(ds) = d.get("id").and_then(|x| x.as_str()) else { continue };
@@ -2939,11 +2640,7 @@ pub mod kit {
                     let mut pieces_arr = Vec::<serde_json::Value>::new();
                     let plist = d.pieces.read().await;
                     for p in plist.iter() {
-                        let pv = if let Some(n) = p.position.read().await.as_ref() {
-                            n.snapshot_value().await
-                        } else {
-                            crate::geom::Position::default()
-                        };
+                        let pv = if let Some(n) = p.position.read().await.as_ref() { n.snapshot_value().await } else { crate::geom::Position::default() };
                         let tid = match p.blueprint.read().await.clone() {
                             crate::kit::r#type::Blueprint::Type(ty) => ty.id.clone(),
                             crate::kit::r#type::Blueprint::Design(_) => continue,
@@ -3175,18 +2872,9 @@ impl crate::meta::Tag {
     }
     pub async fn owner(&self) -> async_graphql::Result<TagOwnerUnion> {
         match &*self.owner.read().await {
-            crate::meta::TagOwnerSlot::Kit(w) => w
-                .upgrade()
-                .ok_or_else(|| async_graphql::Error::new("Tag.kit owner dropped"))
-                .map(TagOwnerUnion::Kit),
-            crate::meta::TagOwnerSlot::Type(w) => w
-                .upgrade()
-                .ok_or_else(|| async_graphql::Error::new("Tag.type owner dropped"))
-                .map(TagOwnerUnion::Type),
-            crate::meta::TagOwnerSlot::Rep(w) => w
-                .upgrade()
-                .ok_or_else(|| async_graphql::Error::new("Tag.representation owner dropped"))
-                .map(TagOwnerUnion::Representation),
+            crate::meta::TagOwnerSlot::Kit(w) => w.upgrade().ok_or_else(|| async_graphql::Error::new("Tag.kit owner dropped")).map(TagOwnerUnion::Kit),
+            crate::meta::TagOwnerSlot::Type(w) => w.upgrade().ok_or_else(|| async_graphql::Error::new("Tag.type owner dropped")).map(TagOwnerUnion::Type),
+            crate::meta::TagOwnerSlot::Rep(w) => w.upgrade().ok_or_else(|| async_graphql::Error::new("Tag.representation owner dropped")).map(TagOwnerUnion::Representation),
             crate::meta::TagOwnerSlot::Unset => Err(async_graphql::Error::new("Tag.owner unset")),
         }
     }
@@ -3252,14 +2940,8 @@ impl crate::meta::Concept {
     }
     pub async fn owner(&self) -> async_graphql::Result<ConceptOwnerUnion> {
         match &*self.owner.read().await {
-            crate::meta::ConceptOwnerSlot::Kit(w) => w
-                .upgrade()
-                .ok_or_else(|| async_graphql::Error::new("Concept.kit owner dropped"))
-                .map(ConceptOwnerUnion::Kit),
-            crate::meta::ConceptOwnerSlot::Type(w) => w
-                .upgrade()
-                .ok_or_else(|| async_graphql::Error::new("Concept.type owner dropped"))
-                .map(ConceptOwnerUnion::Type),
+            crate::meta::ConceptOwnerSlot::Kit(w) => w.upgrade().ok_or_else(|| async_graphql::Error::new("Concept.kit owner dropped")).map(ConceptOwnerUnion::Kit),
+            crate::meta::ConceptOwnerSlot::Type(w) => w.upgrade().ok_or_else(|| async_graphql::Error::new("Concept.type owner dropped")).map(ConceptOwnerUnion::Type),
             crate::meta::ConceptOwnerSlot::Unset => Err(async_graphql::Error::new("Concept.owner unset")),
         }
     }
@@ -3319,14 +3001,8 @@ impl crate::meta::Quality {
         match &*self.owner.read().await {
             crate::meta::QualityOwnerSlot::Kit(w) => w.upgrade().ok_or_else(|| async_graphql::Error::new("Quality.kit owner dropped")).map(QualityOwnerUnion::Kit),
             crate::meta::QualityOwnerSlot::Type(w) => w.upgrade().ok_or_else(|| async_graphql::Error::new("Quality.type owner dropped")).map(QualityOwnerUnion::Type),
-            crate::meta::QualityOwnerSlot::Rep(w) => w
-                .upgrade()
-                .ok_or_else(|| async_graphql::Error::new("Quality.representation owner dropped"))
-                .map(QualityOwnerUnion::Representation),
-            crate::meta::QualityOwnerSlot::Conn(w) => w
-                .upgrade()
-                .ok_or_else(|| async_graphql::Error::new("Quality.connector owner dropped"))
-                .map(QualityOwnerUnion::Connector),
+            crate::meta::QualityOwnerSlot::Rep(w) => w.upgrade().ok_or_else(|| async_graphql::Error::new("Quality.representation owner dropped")).map(QualityOwnerUnion::Representation),
+            crate::meta::QualityOwnerSlot::Conn(w) => w.upgrade().ok_or_else(|| async_graphql::Error::new("Quality.connector owner dropped")).map(QualityOwnerUnion::Connector),
             crate::meta::QualityOwnerSlot::Design(w) => w.upgrade().ok_or_else(|| async_graphql::Error::new("Quality.design owner dropped")).map(QualityOwnerUnion::Design),
             crate::meta::QualityOwnerSlot::Unset => Err(async_graphql::Error::new("Quality.owner unset")),
         }
@@ -3970,23 +3646,9 @@ pub mod vcs {
         ) -> Result<(Arc<crate::kit::design::piece::Piece>, op::SemanticDiff), SemioError> {
             let fp_before = crate::kit_graph_engine::projection_fingerprint_for_kit(&self.the_kit).await;
             let (_handle, design) = self.the_kit.bind_external_design_id(&design_id).await;
-            let piece = self
-                .apply_create_fixed_piece_on_design_node(
-                    draft_id, transaction_id, design,
-                    blueprint_id.clone(),
-                    position,
-                    name.clone(),
-                    description.clone(),
-                )
-                .await?;
+            let piece = self.apply_create_fixed_piece_on_design_node(draft_id, transaction_id, design, blueprint_id.clone(), position, name.clone(), description.clone()).await?;
             let fp_after = crate::kit_graph_engine::projection_fingerprint_for_kit(&self.the_kit).await;
-            let input = op::CreatedFixedPieceInput {
-                design_id,
-                blueprint_id,
-                position,
-                name,
-                description,
-            };
+            let input = op::CreatedFixedPieceInput { design_id, blueprint_id, position, name, description };
             let payload_json = serde_json::to_string(&input).map_err(|e| SemioError::invalid(e.to_string()))?;
             let diff = crate::kit_graph_engine::deterministic_semantic_diff("createdFixedPiece", &payload_json, &fp_before, &fp_after);
             Ok((piece, diff))
@@ -3995,15 +3657,8 @@ pub mod vcs {
         /// @emoji ↔ Apply UV offset to a piece center (creates a default [`PositionNode`] when absent).
         pub async fn apply_drag_piece_in_design(self: &Arc<Self>, design_id: &Id, piece_id: &Id, offset: crate::geom::Offset) -> Result<(), SemioError> {
             use crate::geom::entity::PositionNode;
-            let design = self
-                .the_kit
-                .design_by_external_id(design_id)
-                .await
-                .ok_or_else(|| SemioError::not_found("Design", design_id.as_str()))?;
-            let piece = design
-                .piece_by_external_id(piece_id)
-                .await
-                .ok_or_else(|| SemioError::not_found("Piece", piece_id.as_str()))?;
+            let design = self.the_kit.design_by_external_id(design_id).await.ok_or_else(|| SemioError::not_found("Design", design_id.as_str()))?;
+            let piece = design.piece_by_external_id(piece_id).await.ok_or_else(|| SemioError::not_found("Piece", piece_id.as_str()))?;
             let pos_slot = piece.position.read().await.clone();
             if let Some(pos) = pos_slot {
                 let mut d = pos.data.write().await;
@@ -4222,13 +3877,7 @@ pub mod vcs {
 
     impl Default for ReadVersion {
         fn default() -> Self {
-            Self {
-                id: Id::default(),
-                owner_conflict: Weak::new(),
-                checkpoint: RwLock::new(None),
-                change: RwLock::new(None),
-                operation: RwLock::new(None),
-            }
+            Self { id: Id::default(), owner_conflict: Weak::new(), checkpoint: RwLock::new(None), change: RwLock::new(None), operation: RwLock::new(None) }
         }
     }
 
@@ -4283,15 +3932,7 @@ pub mod vcs {
 
     impl Default for WriteVersion {
         fn default() -> Self {
-            Self {
-                id: Id::default(),
-                owner_conflict: Weak::new(),
-                draft: RwLock::new(None),
-                transaction: RwLock::new(None),
-                checkpoint: RwLock::new(None),
-                change: RwLock::new(None),
-                operation: RwLock::new(None),
-            }
+            Self { id: Id::default(), owner_conflict: Weak::new(), draft: RwLock::new(None), transaction: RwLock::new(None), checkpoint: RwLock::new(None), change: RwLock::new(None), operation: RwLock::new(None) }
         }
     }
 
@@ -4402,11 +4043,7 @@ pub mod iface {
 
     impl OwnedEntityConnection {
         pub fn empty() -> Self {
-            Self {
-                edges: Vec::new(),
-                page_info: crate::gql_relay::PageInfo::default(),
-                hash: crate::hash::h(&[""]),
-            }
+            Self { edges: Vec::new(), page_info: crate::gql_relay::PageInfo::default(), hash: crate::hash::h(&[""]) }
         }
     }
 
@@ -4682,8 +4319,8 @@ pub mod op {
     use serde::{Deserialize, Serialize};
 
     use crate::geom::{Offset, Position};
-    use crate::iface::{OwnedEntityConnection, OwnerEntity, empty_owned_entity_connection};
     use crate::id::Id;
+    use crate::iface::{empty_owned_entity_connection, OwnedEntityConnection, OwnerEntity};
     use crate::vcs::Change;
 
     /// 🏷️ Hand union for `Operation.owner` (every operation is owned by a `Change`).
@@ -4865,30 +4502,14 @@ pub mod op {
     }
 
     impl CreatedFixedPiece {
-        pub async fn new(
-            input: CreatedFixedPieceInput,
-            piece: Arc<crate::kit::design::piece::Piece>,
-            diff: SemanticDiff,
-        ) -> Arc<Self> {
-            Arc::new(Self {
-                id: Id::new().await,
-                owner_change: Weak::new(),
-                input,
-                diff,
-                piece,
-            })
+        pub async fn new(input: CreatedFixedPieceInput, piece: Arc<crate::kit::design::piece::Piece>, diff: SemanticDiff) -> Arc<Self> {
+            Arc::new(Self { id: Id::new().await, owner_change: Weak::new(), input, diff, piece })
         }
     }
 
     impl Default for CreatedFixedPiece {
         fn default() -> Self {
-            Self {
-                id: Id::default(),
-                owner_change: Weak::new(),
-                input: CreatedFixedPieceInput::default(),
-                diff: SemanticDiff::default(),
-                piece: Arc::default(),
-            }
+            Self { id: Id::default(), owner_change: Weak::new(), input: CreatedFixedPieceInput::default(), diff: SemanticDiff::default(), piece: Arc::default() }
         }
     }
 
@@ -4930,13 +4551,7 @@ pub mod op {
 
     impl Default for FixedPiece {
         fn default() -> Self {
-            Self {
-                id: Id::default(),
-                owner_change: Weak::new(),
-                input: FixedPieceInput::default(),
-                diff: SemanticDiff::default(),
-                piece: Arc::default(),
-            }
+            Self { id: Id::default(), owner_change: Weak::new(), input: FixedPieceInput::default(), diff: SemanticDiff::default(), piece: Arc::default() }
         }
     }
 
@@ -4978,13 +4593,7 @@ pub mod op {
 
     impl Default for DraggedPiece {
         fn default() -> Self {
-            Self {
-                id: Id::default(),
-                owner_change: Weak::new(),
-                input: DraggedPieceInput::default(),
-                diff: SemanticDiff::default(),
-                pieces: Vec::new(),
-            }
+            Self { id: Id::default(), owner_change: Weak::new(), input: DraggedPieceInput::default(), diff: SemanticDiff::default(), pieces: Vec::new() }
         }
     }
 
@@ -5018,6 +4627,8 @@ pub mod op {
 
     pub struct RenamedKit {
         pub id: Id,
+        /// @emoji Correlates with the `renameKit` mutation return value and `CommandReceipt.requestId`.
+        pub request_id: Id,
         pub owner_change: Weak<Change>,
         pub input: RenamedKitInput,
         pub diff: SemanticDiff,
@@ -5026,13 +4637,7 @@ pub mod op {
 
     impl Default for RenamedKit {
         fn default() -> Self {
-            Self {
-                id: Id::default(),
-                owner_change: Weak::new(),
-                input: RenamedKitInput::default(),
-                diff: SemanticDiff::default(),
-                kit: Arc::default(),
-            }
+            Self { id: Id::default(), request_id: Id::default(), owner_change: Weak::new(), input: RenamedKitInput::default(), diff: SemanticDiff::default(), kit: Arc::default() }
         }
     }
 
@@ -5040,6 +4645,10 @@ pub mod op {
     impl RenamedKit {
         pub async fn id(&self) -> Id {
             self.id.clone()
+        }
+        #[graphql(name = "requestId")]
+        pub async fn request_id_field(&self) -> Id {
+            self.request_id.clone()
         }
         pub async fn hash(&self) -> String {
             crate::hash::h(&[self.id.as_str()])
@@ -5074,13 +4683,7 @@ pub mod op {
 
     impl Default for ChangedDescription {
         fn default() -> Self {
-            Self {
-                id: Id::default(),
-                owner_change: Weak::new(),
-                input: ChangedDescriptionInput::default(),
-                diff: SemanticDiff::default(),
-                entity: Arc::default(),
-            }
+            Self { id: Id::default(), owner_change: Weak::new(), input: ChangedDescriptionInput::default(), diff: SemanticDiff::default(), entity: Arc::default() }
         }
     }
 
@@ -5132,7 +4735,7 @@ pub mod op {
         field(name = "owner", ty = "std::sync::Arc<crate::op::OperationOwner>"),
         field(name = "changeOwner", method = "change_owner", ty = "Option<std::sync::Arc<crate::vcs::Change>>"),
         field(name = "ownerEntity", method = "owner_entity", ty = "Option<std::sync::Arc<crate::iface::OwnerEntity>>"),
-        field(name = "ownedEntities", method = "owned_entities", ty = "Option<std::sync::Arc<crate::iface::OwnedEntityConnection>>"),
+        field(name = "ownedEntities", method = "owned_entities", ty = "Option<std::sync::Arc<crate::iface::OwnedEntityConnection>>")
     )]
     pub enum OperationIface {
         CreatedFixedPiece(Arc<CreatedFixedPiece>),
@@ -5418,10 +5021,7 @@ pub mod kit_graph_engine {
     /// @emoji 📦 Deterministic non-persisted diff from op kind + payload + projection fingerprint transition.
     pub fn deterministic_semantic_diff(op_kind: &str, payload_json: &str, projection_fp_before: &str, projection_fp_after: &str) -> op::SemanticDiff {
         let digest = h(&[op_kind, payload_json, projection_fp_before, projection_fp_after]);
-        op::SemanticDiff {
-            id: Id::from(format!("semio:diff:{digest}")),
-            summary: Some(digest),
-        }
+        op::SemanticDiff { id: Id::from(format!("semio:diff:{digest}")), summary: Some(digest) }
     }
     //#endregion 📦 semantic diff
 
@@ -5444,29 +5044,13 @@ pub mod kit_graph_engine {
     }
 
     /// @emoji 🪡 Async apply for one persisted semantic op (`kind` + JSON payload); routes through [`Graph::apply_create_fixed_piece`] for `createdFixedPiece`.
-    pub async fn apply_semantic_op_json(
-        graph: &Arc<Graph>,
-        draft_id: &Id,
-        transaction_id: &Id,
-        op_kind: &str,
-        payload_json: &str,
-    ) -> Result<AppliedSemanticOp, SemioError> {
+    pub async fn apply_semantic_op_json(graph: &Arc<Graph>, draft_id: &Id, transaction_id: &Id, op_kind: &str, payload_json: &str) -> Result<AppliedSemanticOp, SemioError> {
         match op_kind {
             "createdFixedPiece" => {
                 let payload: CreatedFixedPiecePayload = serde_json::from_str(payload_json).map_err(|e| SemioError::invalid(e.to_string()))?;
                 let design_id = Id::from(payload.design_id.as_str());
                 let blueprint_id = Id::from(payload.blueprint_id.as_str());
-                let (piece, diff) = graph
-                    .apply_create_fixed_piece(
-                        draft_id.clone(),
-                        transaction_id.clone(),
-                        design_id,
-                        blueprint_id,
-                        payload.position,
-                        payload.name,
-                        payload.description,
-                    )
-                    .await?;
+                let (piece, diff) = graph.apply_create_fixed_piece(draft_id.clone(), transaction_id.clone(), design_id, blueprint_id, payload.position, payload.name, payload.description).await?;
                 Ok(AppliedSemanticOp { diff, created_piece: Some(piece) })
             }
             other => Err(SemioError::invalid(format!("unsupported semantic op kind `{other}`"))),
@@ -5641,12 +5225,7 @@ CREATE TABLE IF NOT EXISTS conflict_stub (
 
         pub fn append_op(&mut self, draft_id: &Id, transaction_id: &Id, kind: &str, input: &serde_json::Value) -> Result<(), SemioError> {
             let mut doc = self.read_doc()?;
-            doc.semantic_op_log.push(StoredSemanticOp {
-                draft_id: draft_id.to_string(),
-                transaction_id: transaction_id.to_string(),
-                kind: kind.to_string(),
-                input: input.clone(),
-            });
+            doc.semantic_op_log.push(StoredSemanticOp { draft_id: draft_id.to_string(), transaction_id: transaction_id.to_string(), kind: kind.to_string(), input: input.clone() });
             atomic_write_json(&self.path, &doc)
         }
     }
@@ -5662,19 +5241,14 @@ CREATE TABLE IF NOT EXISTS conflict_stub (
         pub fn append_op(&mut self, draft_id: &Id, transaction_id: &Id, kind: &str, input: &serde_json::Value) -> Result<(), SemioError> {
             let conn = Connection::open(&self.db_path).map_err(|e| SemioError::invalid(format!("sqlite append: {e}")))?;
             let input_json = serde_json::to_string(input).map_err(|e| SemioError::invalid(e.to_string()))?;
-            conn.execute(
-                "INSERT INTO semantic_op_log (draft_id, transaction_id, kind, input_json) VALUES (?1, ?2, ?3, ?4)",
-                rusqlite::params![draft_id.as_str(), transaction_id.as_str(), kind, input_json],
-            )
-            .map_err(|e| SemioError::invalid(format!("sqlite insert: {e}")))?;
+            conn.execute("INSERT INTO semantic_op_log (draft_id, transaction_id, kind, input_json) VALUES (?1, ?2, ?3, ?4)", rusqlite::params![draft_id.as_str(), transaction_id.as_str(), kind, input_json])
+                .map_err(|e| SemioError::invalid(format!("sqlite insert: {e}")))?;
             Ok(())
         }
 
         fn load_ops(&self) -> Result<Vec<StoredSemanticOp>, SemioError> {
             let conn = Connection::open(&self.db_path).map_err(|e| SemioError::invalid(format!("sqlite read: {e}")))?;
-            let mut stmt = conn
-                .prepare("SELECT draft_id, transaction_id, kind, input_json FROM semantic_op_log ORDER BY seq ASC")
-                .map_err(|e| SemioError::invalid(format!("sqlite prepare: {e}")))?;
+            let mut stmt = conn.prepare("SELECT draft_id, transaction_id, kind, input_json FROM semantic_op_log ORDER BY seq ASC").map_err(|e| SemioError::invalid(format!("sqlite prepare: {e}")))?;
             let mut rows = stmt.query([]).map_err(|e| SemioError::invalid(format!("sqlite query: {e}")))?;
             let mut out = Vec::new();
             while let Some(row) = rows.next().map_err(|e| SemioError::invalid(format!("sqlite row: {e}")))? {
@@ -5817,7 +5391,7 @@ pub mod worker {
     //!
     //! Native: both children are spawned on `std::thread + futures-lite::block_on`.
     //! Wasm: each child lives in a dedicated [`web_sys::Worker`]; messages cross via [`crate::wasm_bridge`].
-    use std::sync::Arc;
+    use std::sync::{Arc, Weak};
 
     use async_channel::{Receiver, Sender};
     use async_lock::RwLock;
@@ -5825,7 +5399,7 @@ pub mod worker {
     use crate::error::SemioError;
     use crate::event::{Event, EventBus};
     use crate::id::Id;
-    use crate::op::{BackboneStoreKind, Command, CommandReceipt, CreatedFixedPiece, CreatedFixedPieceInput, OperationIface};
+    use crate::op::{BackboneStoreKind, Command, CommandReceipt, CreatedFixedPiece, CreatedFixedPieceInput, OperationIface, RenamedKit, RenamedKitInput, SemanticDiff};
     use crate::vcs::{Conflict, Graph, Session};
 
     //#region 🗄️ backbone slot
@@ -5857,9 +5431,7 @@ pub mod worker {
             #[cfg(target_arch = "wasm32")]
             {
                 let _ = (graph, child_label, uri, store_kind);
-                Err(SemioError::invalid(
-                    "Attachable kit backbones use native disk (atomic JSON / SQLite); drive them from native hosts over GraphQL IPC instead of WASM.",
-                ))
+                Err(SemioError::invalid("Attachable kit backbones use native disk (atomic JSON / SQLite); drive them from native hosts over GraphQL IPC instead of WASM."))
             }
         }
 
@@ -5870,9 +5442,7 @@ pub mod worker {
                 let mut guard = self.slot.write().await;
                 match &*guard {
                     Some(current) if current.normalized_connection_uri() != norm => {
-                        return Err(SemioError::invalid(
-                            "`connectionUri` did not match the attached backbone; detach aborted to avoid confusing persistence drift.",
-                        ));
+                        return Err(SemioError::invalid("`connectionUri` did not match the attached backbone; detach aborted to avoid confusing persistence drift."));
                     }
                     _ => {}
                 }
@@ -6014,11 +5584,12 @@ pub mod worker {
                     Command::BackboneAttach { .. } => "backboneAttach",
                     Command::BackboneDetach { .. } => "backboneDetach",
                 };
-                self.bus.emit_event(Event::CommandSucceeded(CommandReceipt { request_id: request_id.clone(), kind: kind.to_string() })).await;
 
                 if let Err(e) = self.apply(cmd).await {
                     let err = e.with_request(request_id);
                     self.bus.emit_event(Event::OperationFailed(err)).await;
+                } else {
+                    self.bus.emit_event(Event::CommandSucceeded(CommandReceipt { request_id, kind: kind.to_string() })).await;
                 }
             }
         }
@@ -6026,10 +5597,7 @@ pub mod worker {
         pub async fn apply(&self, cmd: Command) -> Result<(), SemioError> {
             match cmd {
                 Command::AddFixedPieceToDesign { request_id: _, draft_id, transaction_id, design_id, blueprint_id, position, name, description } => {
-                    let (piece, diff) = self
-                        .graph
-                        .apply_create_fixed_piece(draft_id.clone(), transaction_id.clone(), design_id.clone(), blueprint_id.clone(), position, name.clone(), description.clone())
-                        .await?;
+                    let (piece, diff) = self.graph.apply_create_fixed_piece(draft_id.clone(), transaction_id.clone(), design_id.clone(), blueprint_id.clone(), position, name.clone(), description.clone()).await?;
 
                     let payload = serde_json::json!({
                         "designId": design_id.as_str(),
@@ -6054,9 +5622,18 @@ pub mod worker {
                     kit.bump_touch_epoch().await;
                     Ok(())
                 }
-                Command::RenameKit { name, .. } => {
-                    *self.graph.the_kit.name.write().await = name;
+                Command::RenameKit { request_id, name, .. } => {
+                    if name.chars().count() > 256 {
+                        return Err(SemioError::invalid(format!("Kit name too long: {} > 256", name.chars().count())));
+                    }
+                    *self.graph.the_kit.name.write().await = name.clone();
                     self.graph.the_kit.bump_touch_epoch().await;
+                    let mut diff = SemanticDiff::default();
+                    diff.id = Id::new().await;
+                    diff.summary = Some("renameKit".to_string());
+                    let op = Arc::new(RenamedKit { id: Id::new().await, request_id: request_id.clone(), owner_change: Weak::new(), input: RenamedKitInput { name }, diff, kit: self.graph.the_kit.clone() });
+                    self.graph.op_history.write().await.push(Arc::new(OperationIface::RenamedKit(op.clone())));
+                    self.bus.emit_event(Event::RenamedKit(op)).await;
                     Ok(())
                 }
                 Command::ChangeDescription { entity_id, description, .. } => {
@@ -6087,12 +5664,7 @@ pub mod worker {
                     Ok(())
                 }
                 Command::RenameTag { tag_id, name, .. } => {
-                    let tag = self
-                        .graph
-                        .the_kit
-                        .find_tag(&tag_id)
-                        .await
-                        .ok_or_else(|| SemioError::not_found("Tag", tag_id.as_str()))?;
+                    let tag = self.graph.the_kit.find_tag(&tag_id).await.ok_or_else(|| SemioError::not_found("Tag", tag_id.as_str()))?;
                     *tag.name.write().await = name;
                     self.graph.the_kit.bump_touch_epoch().await;
                     Ok(())
@@ -6129,9 +5701,7 @@ pub mod worker {
                     self.graph.the_kit.bump_touch_epoch().await;
                     Ok(())
                 }
-                Command::BackboneAttach { connection_uri, store_kind, .. } => {
-                    self.backbone.mount(&self.graph, self.label, &connection_uri, store_kind).await
-                }
+                Command::BackboneAttach { connection_uri, store_kind, .. } => self.backbone.mount(&self.graph, self.label, &connection_uri, store_kind).await,
                 Command::BackboneDetach { connection_uri, .. } => self.backbone.detach_matching(&connection_uri).await,
             }
         }
@@ -6144,18 +5714,18 @@ pub mod worker {
 
 pub mod gql {
     //! 🌐 Type-safe static GraphQL schema via `Schema::build` (embedded target SDL string for tooling).
-    use std::pin::Pin;
-    use std::sync::Arc;
     use async_graphql::{Context, Object, Schema, Subscription};
     use async_stream::stream;
     use futures_util::Stream;
+    use std::pin::Pin;
+    use std::sync::Arc;
 
-    use crate::event::{Event, EventBus};
     use crate::error::SemioError;
+    use crate::event::{Event, EventBus};
     use crate::geom::{Offset, Position};
     use crate::id::Id;
     use crate::meta::{ConceptInput, QualityInput, TagInput};
-    use crate::op::{Command, CommandReceipt, OperationKind};
+    use crate::op::{Command, CommandReceipt, OperationKind, RenamedKit};
     use crate::vcs::Graph;
     use crate::worker::ParentRuntime;
 
@@ -6200,23 +5770,14 @@ pub mod gql {
 
         /// @emoji 🧩 Resolve a piece within a design on the WIP graph line.
         #[graphql(name = "pieceInDesign")]
-        pub async fn piece_in_design(
-            &self,
-            ctx: &Context<'_>,
-            #[graphql(name = "designId")] design_id: Id,
-            #[graphql(name = "pieceId")] piece_id: Id,
-        ) -> async_graphql::Result<Option<Arc<crate::kit::design::piece::Piece>>> {
+        pub async fn piece_in_design(&self, ctx: &Context<'_>, #[graphql(name = "designId")] design_id: Id, #[graphql(name = "pieceId")] piece_id: Id) -> async_graphql::Result<Option<Arc<crate::kit::design::piece::Piece>>> {
             let rt = ctx.data::<Arc<ParentRuntime>>()?;
             Ok(crate::iface::piece_in_design_on_wip(rt.as_ref(), &design_id, &piece_id).await)
         }
 
         /// @emoji 🧩 Alternative-line piece kind (stub until alternatives are modeled in Rust).
         #[graphql(name = "alternativePieceKind")]
-        pub async fn alternative_piece_kind(
-            &self,
-            ctx: &Context<'_>,
-            #[graphql(name = "pieceId")] piece_id: Id,
-        ) -> async_graphql::Result<Option<String>> {
+        pub async fn alternative_piece_kind(&self, ctx: &Context<'_>, #[graphql(name = "pieceId")] piece_id: Id) -> async_graphql::Result<Option<String>> {
             let rt = ctx.data::<Arc<ParentRuntime>>()?;
             Ok(crate::iface::alternative_piece_kind(rt.as_ref(), &piece_id).await)
         }
@@ -6239,16 +5800,7 @@ pub mod gql {
         ) -> async_graphql::Result<Id> {
             let rt = ctx.data::<Arc<ParentRuntime>>()?;
             let request_id = Id::new().await;
-            let cmd = Command::AddFixedPieceToDesign {
-                request_id: request_id.clone(),
-                draft_id,
-                transaction_id,
-                design_id,
-                blueprint_id,
-                position,
-                name: None,
-                description: None,
-            };
+            let cmd = Command::AddFixedPieceToDesign { request_id: request_id.clone(), draft_id, transaction_id, design_id, blueprint_id, position, name: None, description: None };
             Ok(rt.dispatch_wip(cmd).await)
         }
 
@@ -6263,32 +5815,15 @@ pub mod gql {
         ) -> async_graphql::Result<Id> {
             let rt = ctx.data::<Arc<ParentRuntime>>()?;
             let request_id = Id::new().await;
-            let cmd = Command::FixPieceInDesign {
-                request_id: request_id.clone(),
-                draft_id,
-                transaction_id,
-                design_id,
-                piece_id,
-            };
+            let cmd = Command::FixPieceInDesign { request_id: request_id.clone(), draft_id, transaction_id, design_id, piece_id };
             Ok(rt.dispatch_wip(cmd).await)
         }
 
         #[graphql(name = "renameKit")]
-        pub async fn rename_kit(
-            &self,
-            ctx: &Context<'_>,
-            #[graphql(name = "draftId")] draft_id: Id,
-            #[graphql(name = "transactionId")] transaction_id: Id,
-            name: String,
-        ) -> async_graphql::Result<Id> {
+        pub async fn rename_kit(&self, ctx: &Context<'_>, #[graphql(name = "draftId")] draft_id: Id, #[graphql(name = "transactionId")] transaction_id: Id, name: String) -> async_graphql::Result<Id> {
             let rt = ctx.data::<Arc<ParentRuntime>>()?;
             let request_id = Id::new().await;
-            let cmd = Command::RenameKit {
-                request_id: request_id.clone(),
-                draft_id,
-                transaction_id,
-                name,
-            };
+            let cmd = Command::RenameKit { request_id: request_id.clone(), draft_id, transaction_id, name };
             Ok(rt.dispatch_wip(cmd).await)
         }
 
@@ -6303,34 +5838,15 @@ pub mod gql {
         ) -> async_graphql::Result<Id> {
             let rt = ctx.data::<Arc<ParentRuntime>>()?;
             let request_id = Id::new().await;
-            let cmd = Command::ChangeDescription {
-                request_id: request_id.clone(),
-                draft_id,
-                transaction_id,
-                entity_id,
-                description,
-            };
+            let cmd = Command::ChangeDescription { request_id: request_id.clone(), draft_id, transaction_id, entity_id, description };
             Ok(rt.dispatch_wip(cmd).await)
         }
 
         #[graphql(name = "createTag")]
-        pub async fn create_tag(
-            &self,
-            ctx: &Context<'_>,
-            #[graphql(name = "draftId")] draft_id: Id,
-            #[graphql(name = "transactionId")] transaction_id: Id,
-            #[graphql(name = "ownerId")] owner_id: Id,
-            tag: TagInput,
-        ) -> async_graphql::Result<Id> {
+        pub async fn create_tag(&self, ctx: &Context<'_>, #[graphql(name = "draftId")] draft_id: Id, #[graphql(name = "transactionId")] transaction_id: Id, #[graphql(name = "ownerId")] owner_id: Id, tag: TagInput) -> async_graphql::Result<Id> {
             let rt = ctx.data::<Arc<ParentRuntime>>()?;
             let request_id = Id::new().await;
-            let cmd = Command::CreateTag {
-                request_id: request_id.clone(),
-                draft_id,
-                transaction_id,
-                owner_id,
-                input: tag,
-            };
+            let cmd = Command::CreateTag { request_id: request_id.clone(), draft_id, transaction_id, owner_id, input: tag };
             Ok(rt.dispatch_wip(cmd).await)
         }
 
@@ -6345,72 +5861,31 @@ pub mod gql {
         ) -> async_graphql::Result<Id> {
             let rt = ctx.data::<Arc<ParentRuntime>>()?;
             let request_id = Id::new().await;
-            let cmd = Command::CreateTags {
-                request_id: request_id.clone(),
-                draft_id,
-                transaction_id,
-                owner_id,
-                inputs: tags,
-            };
+            let cmd = Command::CreateTags { request_id: request_id.clone(), draft_id, transaction_id, owner_id, inputs: tags };
             Ok(rt.dispatch_wip(cmd).await)
         }
 
         #[graphql(name = "renameTag")]
-        pub async fn rename_tag(
-            &self,
-            ctx: &Context<'_>,
-            #[graphql(name = "draftId")] draft_id: Id,
-            #[graphql(name = "transactionId")] transaction_id: Id,
-            #[graphql(name = "tagId")] tag_id: Id,
-            name: String,
-        ) -> async_graphql::Result<Id> {
+        pub async fn rename_tag(&self, ctx: &Context<'_>, #[graphql(name = "draftId")] draft_id: Id, #[graphql(name = "transactionId")] transaction_id: Id, #[graphql(name = "tagId")] tag_id: Id, name: String) -> async_graphql::Result<Id> {
             let rt = ctx.data::<Arc<ParentRuntime>>()?;
             let request_id = Id::new().await;
-            let cmd = Command::RenameTag {
-                request_id: request_id.clone(),
-                draft_id,
-                transaction_id,
-                tag_id,
-                name,
-            };
+            let cmd = Command::RenameTag { request_id: request_id.clone(), draft_id, transaction_id, tag_id, name };
             Ok(rt.dispatch_wip(cmd).await)
         }
 
         #[graphql(name = "deleteTag")]
-        pub async fn delete_tag(
-            &self,
-            ctx: &Context<'_>,
-            #[graphql(name = "draftId")] draft_id: Id,
-            #[graphql(name = "transactionId")] transaction_id: Id,
-            #[graphql(name = "tagId")] tag_id: Id,
-        ) -> async_graphql::Result<Id> {
+        pub async fn delete_tag(&self, ctx: &Context<'_>, #[graphql(name = "draftId")] draft_id: Id, #[graphql(name = "transactionId")] transaction_id: Id, #[graphql(name = "tagId")] tag_id: Id) -> async_graphql::Result<Id> {
             let rt = ctx.data::<Arc<ParentRuntime>>()?;
             let request_id = Id::new().await;
-            let cmd = Command::DeleteTag {
-                request_id: request_id.clone(),
-                draft_id,
-                transaction_id,
-                tag_id,
-            };
+            let cmd = Command::DeleteTag { request_id: request_id.clone(), draft_id, transaction_id, tag_id };
             Ok(rt.dispatch_wip(cmd).await)
         }
 
         #[graphql(name = "deleteTags")]
-        pub async fn delete_tags(
-            &self,
-            ctx: &Context<'_>,
-            #[graphql(name = "draftId")] draft_id: Id,
-            #[graphql(name = "transactionId")] transaction_id: Id,
-            #[graphql(name = "tagIds")] tag_ids: Vec<Id>,
-        ) -> async_graphql::Result<Id> {
+        pub async fn delete_tags(&self, ctx: &Context<'_>, #[graphql(name = "draftId")] draft_id: Id, #[graphql(name = "transactionId")] transaction_id: Id, #[graphql(name = "tagIds")] tag_ids: Vec<Id>) -> async_graphql::Result<Id> {
             let rt = ctx.data::<Arc<ParentRuntime>>()?;
             let request_id = Id::new().await;
-            let cmd = Command::DeleteTags {
-                request_id: request_id.clone(),
-                draft_id,
-                transaction_id,
-                tag_ids,
-            };
+            let cmd = Command::DeleteTags { request_id: request_id.clone(), draft_id, transaction_id, tag_ids };
             Ok(rt.dispatch_wip(cmd).await)
         }
 
@@ -6425,13 +5900,7 @@ pub mod gql {
         ) -> async_graphql::Result<Id> {
             let rt = ctx.data::<Arc<ParentRuntime>>()?;
             let request_id = Id::new().await;
-            let cmd = Command::CreateConcept {
-                request_id: request_id.clone(),
-                draft_id,
-                transaction_id,
-                owner_id,
-                input: concept,
-            };
+            let cmd = Command::CreateConcept { request_id: request_id.clone(), draft_id, transaction_id, owner_id, input: concept };
             Ok(rt.dispatch_wip(cmd).await)
         }
 
@@ -6446,13 +5915,7 @@ pub mod gql {
         ) -> async_graphql::Result<Id> {
             let rt = ctx.data::<Arc<ParentRuntime>>()?;
             let request_id = Id::new().await;
-            let cmd = Command::CreateQuality {
-                request_id: request_id.clone(),
-                draft_id,
-                transaction_id,
-                owner_id,
-                input: quality,
-            };
+            let cmd = Command::CreateQuality { request_id: request_id.clone(), draft_id, transaction_id, owner_id, input: quality };
             Ok(rt.dispatch_wip(cmd).await)
         }
 
@@ -6468,14 +5931,7 @@ pub mod gql {
         ) -> async_graphql::Result<Id> {
             let rt = ctx.data::<Arc<ParentRuntime>>()?;
             let request_id = Id::new().await;
-            let cmd = Command::DragPieceInDesign {
-                request_id: request_id.clone(),
-                draft_id,
-                transaction_id,
-                design_id,
-                piece_id,
-                offset,
-            };
+            let cmd = Command::DragPieceInDesign { request_id: request_id.clone(), draft_id, transaction_id, design_id, piece_id, offset };
             Ok(rt.dispatch_wip(cmd).await)
         }
 
@@ -6491,14 +5947,7 @@ pub mod gql {
         ) -> async_graphql::Result<Id> {
             let rt = ctx.data::<Arc<ParentRuntime>>()?;
             let request_id = Id::new().await;
-            let cmd = Command::DragPiecesInDesign {
-                request_id: request_id.clone(),
-                draft_id,
-                transaction_id,
-                design_id,
-                piece_ids,
-                offset,
-            };
+            let cmd = Command::DragPiecesInDesign { request_id: request_id.clone(), draft_id, transaction_id, design_id, piece_ids, offset };
             Ok(rt.dispatch_wip(cmd).await)
         }
     }
@@ -6508,6 +5957,7 @@ pub mod gql {
     type CommandSucceededStream = Pin<Box<dyn Stream<Item = CommandReceipt> + Send>>;
     type OperationSucceededStream = Pin<Box<dyn Stream<Item = OperationKind> + Send>>;
     type OperationFailedStream = Pin<Box<dyn Stream<Item = SemioError> + Send>>;
+    type KitRenamedStream = Pin<Box<dyn Stream<Item = Arc<RenamedKit>> + Send>>;
 
     #[Subscription]
     impl Subscription {
@@ -6521,6 +5971,24 @@ pub mod gql {
                         Ok(ev) => {
                             if let Event::CommandSucceeded(r) = ev {
                                 yield r;
+                            }
+                        }
+                        Err(_) => break,
+                    }
+                }
+            }))
+        }
+
+        #[graphql(name = "kitRenamed")]
+        pub async fn kit_renamed(&self, ctx: &Context<'_>) -> async_graphql::Result<KitRenamedStream> {
+            let bus = ctx.data::<Arc<EventBus>>()?.clone();
+            let mut rx = bus.subscribe();
+            Ok(Box::pin(stream! {
+                loop {
+                    match rx.recv().await {
+                        Ok(ev) => {
+                            if let Event::RenamedKit(o) = ev {
+                                yield o;
                             }
                         }
                         Err(_) => break,
@@ -6578,10 +6046,7 @@ pub mod gql {
     }
 
     fn build_schema_sync_for(rt: Arc<ParentRuntime>) -> AppSchema {
-        Schema::build(Query, Mutation, Subscription)
-            .data(rt.clone())
-            .data(rt.bus.clone())
-            .finish()
+        Schema::build(Query, Mutation, Subscription).data(rt.clone()).data(rt.bus.clone()).finish()
     }
 
     /// 📜 Executable SDL emitted by the in-Rust schema (code-first).
@@ -6677,8 +6142,7 @@ pub mod wasm_bridge {
         #[wasm_bindgen(js_name = create)]
         pub fn create(dto_js: JsValue) -> js_sys::Promise {
             future_to_promise(async move {
-                let v: serde_json::Value =
-                    serde_wasm_bindgen::from_value(dto_js).map_err(|e| JsValue::from_str(&e.to_string()))?;
+                let v: serde_json::Value = serde_wasm_bindgen::from_value(dto_js).map_err(|e| JsValue::from_str(&e.to_string()))?;
                 let rt = ParentRuntime::spawn_wip_overlay_from_kit_dto(v).await.map_err(|e| JsValue::from_str(&e.message))?;
                 Ok(JsValue::from(KitStoreHandle { rt, schema_mtx: Arc::new(Mutex::new(None)) }))
             })
@@ -6701,8 +6165,7 @@ pub mod wasm_bridge {
                 let mut req = request_from_wire(&req_str)?;
                 req = req.data(rt.clone()).data(rt.bus.clone());
                 let resp = schema.execute(req).await;
-                let json =
-                    serde_json::to_string(&async_graphql::Response::from(resp)).map_err(|e| JsValue::from_str(&e.to_string()))?;
+                let json = serde_json::to_string(&async_graphql::Response::from(resp)).map_err(|e| JsValue::from_str(&e.to_string()))?;
                 Ok(JsValue::from_str(&json))
             })
         }
@@ -6728,8 +6191,7 @@ pub mod wasm_bridge {
                 req = req.data(rt.clone()).data(rt.bus.clone());
                 let mut stream = schema.execute_stream(req);
                 while let Some(resp) = stream.next().await {
-                    let json = serde_json::to_string(&async_graphql::Response::from(resp))
-                        .map_err(|e| JsValue::from_str(&e.to_string()))?;
+                    let json = serde_json::to_string(&async_graphql::Response::from(resp)).map_err(|e| JsValue::from_str(&e.to_string()))?;
                     let msg = JsValue::from_str(&json);
                     if cb.call1(&JsValue::UNDEFINED, &msg).is_err() {
                         break;
@@ -6819,15 +6281,7 @@ mod tests {
     fn create_tag_on_kit_graphql_roundtrip() {
         block_on(async {
             let schema = crate::gql::build_schema().await;
-            let kit_id = schema
-                .execute("{ wip { theKit { id } } }")
-                .await
-                .data
-                .into_json()
-                .unwrap()["wip"]["theKit"]["id"]
-                .as_str()
-                .expect("kit id")
-                .to_string();
+            let kit_id = schema.execute("{ wip { theKit { id } } }").await.data.into_json().unwrap()["wip"]["theKit"]["id"].as_str().expect("kit id").to_string();
 
             const M: &str = r#"
                 mutation($draftId: ID!, $transactionId: ID!, $ownerId: ID!, $tag: TagInput!) {
@@ -6849,12 +6303,7 @@ mod tests {
             let res = schema.execute(q).await;
             assert!(res.errors.is_empty(), "query errors: {:?}", res.errors);
             let data = res.data.into_json().unwrap();
-            let names: Vec<String> = data["wip"]["theKit"]["tags"]["edges"]
-                .as_array()
-                .unwrap()
-                .iter()
-                .filter_map(|e| e["node"]["name"].as_str().map(String::from))
-                .collect();
+            let names: Vec<String> = data["wip"]["theKit"]["tags"]["edges"].as_array().unwrap().iter().filter_map(|e| e["node"]["name"].as_str().map(String::from)).collect();
             assert!(names.iter().any(|n| n == "alpha-tag"), "tags missing new name: {:?}", names);
         });
     }
@@ -6863,15 +6312,7 @@ mod tests {
     fn create_concept_on_kit_graphql_roundtrip() {
         block_on(async {
             let schema = crate::gql::build_schema().await;
-            let kit_id = schema
-                .execute("{ wip { theKit { id } } }")
-                .await
-                .data
-                .into_json()
-                .unwrap()["wip"]["theKit"]["id"]
-                .as_str()
-                .expect("kit id")
-                .to_string();
+            let kit_id = schema.execute("{ wip { theKit { id } } }").await.data.into_json().unwrap()["wip"]["theKit"]["id"].as_str().expect("kit id").to_string();
 
             const M: &str = r#"
                 mutation($draftId: ID!, $transactionId: ID!, $ownerId: ID!, $concept: ConceptInput!) {
@@ -6893,12 +6334,7 @@ mod tests {
             let res = schema.execute(q).await;
             assert!(res.errors.is_empty(), "query errors: {:?}", res.errors);
             let data = res.data.into_json().unwrap();
-            let names: Vec<String> = data["wip"]["theKit"]["concepts"]["edges"]
-                .as_array()
-                .unwrap()
-                .iter()
-                .filter_map(|e| e["node"]["name"].as_str().map(String::from))
-                .collect();
+            let names: Vec<String> = data["wip"]["theKit"]["concepts"]["edges"].as_array().unwrap().iter().filter_map(|e| e["node"]["name"].as_str().map(String::from)).collect();
             assert!(names.iter().any(|n| n == "beta-concept"), "concepts missing new name: {:?}", names);
         });
     }
@@ -6907,15 +6343,7 @@ mod tests {
     fn create_quality_on_kit_graphql_roundtrip() {
         block_on(async {
             let schema = crate::gql::build_schema().await;
-            let kit_id = schema
-                .execute("{ wip { theKit { id } } }")
-                .await
-                .data
-                .into_json()
-                .unwrap()["wip"]["theKit"]["id"]
-                .as_str()
-                .expect("kit id")
-                .to_string();
+            let kit_id = schema.execute("{ wip { theKit { id } } }").await.data.into_json().unwrap()["wip"]["theKit"]["id"].as_str().expect("kit id").to_string();
 
             const M: &str = r#"
                 mutation($draftId: ID!, $transactionId: ID!, $ownerId: ID!, $quality: QualityInput!) {
@@ -6937,12 +6365,7 @@ mod tests {
             let res = schema.execute(q).await;
             assert!(res.errors.is_empty(), "query errors: {:?}", res.errors);
             let data = res.data.into_json().unwrap();
-            let keys: Vec<String> = data["wip"]["theKit"]["qualities"]["edges"]
-                .as_array()
-                .unwrap()
-                .iter()
-                .filter_map(|e| e["node"]["key"].as_str().map(String::from))
-                .collect();
+            let keys: Vec<String> = data["wip"]["theKit"]["qualities"]["edges"].as_array().unwrap().iter().filter_map(|e| e["node"]["key"].as_str().map(String::from)).collect();
             assert!(keys.iter().any(|k| k == "q1"), "qualities missing new key: {:?}", keys);
         });
     }
@@ -6956,9 +6379,7 @@ mod tests {
     fn create_fixed_piece_end_to_end() {
         block_on(async {
             let schema = crate::gql::build_schema().await;
-            let res = schema
-                .execute(Request::new(ADD_FIXED_PIECE_TO_DESIGN).variables(Variables::from_value(add_fixed_piece_vars("des1"))))
-                .await;
+            let res = schema.execute(Request::new(ADD_FIXED_PIECE_TO_DESIGN).variables(Variables::from_value(add_fixed_piece_vars("des1")))).await;
             assert!(res.errors.is_empty(), "mutation errors: {:?}", res.errors);
 
             // The wip child applies asynchronously; wait briefly for the event loop.
@@ -6969,12 +6390,7 @@ mod tests {
             assert!(res.errors.is_empty(), "query errors: {:?}", res.errors);
             let data = res.data.into_json().unwrap();
             let edges = data["wip"]["theKit"]["designs"]["edges"].as_array().expect("design edges");
-            let any_piece = edges.iter().any(|e| {
-                e["node"]["pieces"]["edges"]
-                    .as_array()
-                    .map(|pe| pe.iter().any(|_| true))
-                    .unwrap_or(false)
-            });
+            let any_piece = edges.iter().any(|e| e["node"]["pieces"]["edges"].as_array().map(|pe| pe.iter().any(|_| true)).unwrap_or(false));
             assert!(any_piece, "expected at least one piece in wip; got: {}", serde_json::to_string_pretty(&data).unwrap());
         });
     }
@@ -6983,9 +6399,7 @@ mod tests {
     fn wip_and_authoritative_are_isolated() {
         block_on(async {
             let schema = crate::gql::build_schema().await;
-            let _ = schema
-                .execute(Request::new(ADD_FIXED_PIECE_TO_DESIGN).variables(Variables::from_value(add_fixed_piece_vars("des1"))))
-                .await;
+            let _ = schema.execute(Request::new(ADD_FIXED_PIECE_TO_DESIGN).variables(Variables::from_value(add_fixed_piece_vars("des1")))).await;
             std::thread::sleep(std::time::Duration::from_millis(150));
 
             let q = relay_auth_designs_piece_ids();
@@ -7009,18 +6423,8 @@ mod tests {
             // Insert two pieces directly via the wip graph (no GraphQL plumbing).
             let position = crate::geom::Position::default();
             let blueprint_id = crate::id::Id::new().await;
-            let p1 = rt
-                .wip_graph
-                .apply_create_fixed_piece(crate::id::Id::from("d1"), crate::id::Id::from("t1"), crate::id::Id::from("des1"), blueprint_id.clone(), position, None, None)
-                .await
-                .expect("insert piece 1")
-                .0;
-            let _p2 = rt
-                .wip_graph
-                .apply_create_fixed_piece(crate::id::Id::from("d1"), crate::id::Id::from("t1"), crate::id::Id::from("des1"), blueprint_id, position, None, None)
-                .await
-                .expect("insert piece 2")
-                .0;
+            let p1 = rt.wip_graph.apply_create_fixed_piece(crate::id::Id::from("d1"), crate::id::Id::from("t1"), crate::id::Id::from("des1"), blueprint_id.clone(), position, None, None).await.expect("insert piece 1").0;
+            let _p2 = rt.wip_graph.apply_create_fixed_piece(crate::id::Id::from("d1"), crate::id::Id::from("t1"), crate::id::Id::from("des1"), blueprint_id, position, None, None).await.expect("insert piece 2").0;
 
             // Baseline strong count for p1: held by the design's pieces Vec + our local handle = 2.
             let baseline = Arc::strong_count(&p1);
@@ -7041,10 +6445,7 @@ mod tests {
         let Some(edges) = data["wip"]["theKit"]["designs"]["edges"].as_array() else {
             return 0;
         };
-        edges
-            .iter()
-            .map(|e| e["node"]["pieces"]["edges"].as_array().map(|pe| pe.len()).unwrap_or(0))
-            .sum()
+        edges.iter().map(|e| e["node"]["pieces"]["edges"].as_array().map(|pe| pe.len()).unwrap_or(0)).sum()
     }
 
     /// 🛡️ Mutation visibility without re-snapshotting: read wip, mutate, read wip again, second
@@ -7059,9 +6460,7 @@ mod tests {
             let before_data = before.data.into_json().unwrap();
             let before_pieces = relay_piece_count_wip(&before_data);
 
-            let _ = schema
-                .execute(Request::new(ADD_FIXED_PIECE_TO_DESIGN).variables(Variables::from_value(add_fixed_piece_vars("des1"))))
-                .await;
+            let _ = schema.execute(Request::new(ADD_FIXED_PIECE_TO_DESIGN).variables(Variables::from_value(add_fixed_piece_vars("des1")))).await;
             std::thread::sleep(std::time::Duration::from_millis(150));
 
             let after = schema.execute(q).await;
@@ -7168,10 +6567,8 @@ mod tests {
 
             let path_ops = Path::new(env!("CARGO_MANIFEST_DIR")).join("../assets/semio/kit-store.golden.ops.semio.json");
             let path_exp = Path::new(env!("CARGO_MANIFEST_DIR")).join("../assets/semio/kit-store.golden.expected.semio.json");
-            let golden_ops: serde_json::Value =
-                serde_json::from_str(&std::fs::read_to_string(path_ops).expect("read ops")).expect("parse golden ops");
-            let exp: serde_json::Value =
-                serde_json::from_str(&std::fs::read_to_string(path_exp).expect("read expected")).expect("parse golden expected");
+            let golden_ops: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(path_ops).expect("read ops")).expect("parse golden ops");
+            let exp: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(path_exp).expect("read expected")).expect("parse golden expected");
 
             let stored = crate::kit_backbone::stored_ops_from_golden_ops_json(&golden_ops).expect("golden → stored ops");
             let uri_full = format!("file://{}", path.display());
@@ -7180,18 +6577,13 @@ mod tests {
                 kind: "semio.kit_backbone.dev_json".to_string(),
                 schema: "2026-05-06".to_string(),
                 connection_uri: norm.clone(),
-                persistence: crate::kit_backbone::DevJsonPersistenceNotes {
-                    atomic_rewrite: "fixture".to_string(),
-                    crash_safety: "fixture".to_string(),
-                },
+                persistence: crate::kit_backbone::DevJsonPersistenceNotes { atomic_rewrite: "fixture".to_string(), crash_safety: "fixture".to_string() },
                 semantic_op_log: stored,
             };
             std::fs::write(&path, serde_json::to_string_pretty(&doc).expect("serialize dev json")).expect("write dev json");
 
             let g = crate::vcs::Graph::new().await;
-            crate::kit_backbone::AttachedBackbone::mount_and_replay(&norm, crate::op::BackboneStoreKind::DevJson, "wip", &g)
-                .await
-                .expect("dev json mount+replay");
+            crate::kit_backbone::AttachedBackbone::mount_and_replay(&norm, crate::op::BackboneStoreKind::DevJson, "wip", &g).await.expect("dev json mount+replay");
 
             let fp = stable_projection_fingerprint(&g.the_kit).await;
             let exp_fp = exp["projectionFingerprint"].as_str().expect("projectionFingerprint");
@@ -7212,34 +6604,24 @@ mod tests {
 
             let path_ops = Path::new(env!("CARGO_MANIFEST_DIR")).join("../assets/semio/kit-store.golden.ops.semio.json");
             let path_exp = Path::new(env!("CARGO_MANIFEST_DIR")).join("../assets/semio/kit-store.golden.expected.semio.json");
-            let golden_ops: serde_json::Value =
-                serde_json::from_str(&std::fs::read_to_string(path_ops).expect("read ops")).expect("parse golden ops");
-            let exp: serde_json::Value =
-                serde_json::from_str(&std::fs::read_to_string(path_exp).expect("read expected")).expect("parse golden expected");
+            let golden_ops: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(path_ops).expect("read ops")).expect("parse golden ops");
+            let exp: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(path_exp).expect("read expected")).expect("parse golden expected");
 
             let stored = crate::kit_backbone::stored_ops_from_golden_ops_json(&golden_ops).expect("golden → stored ops");
 
             let g_bootstrap = crate::vcs::Graph::new().await;
-            let _bones = crate::kit_backbone::AttachedBackbone::mount_and_replay(&norm, crate::op::BackboneStoreKind::LocalDotSemio, "wip", &g_bootstrap)
-                .await
-                .expect("bootstrap .semio layout");
+            let _bones = crate::kit_backbone::AttachedBackbone::mount_and_replay(&norm, crate::op::BackboneStoreKind::LocalDotSemio, "wip", &g_bootstrap).await.expect("bootstrap .semio layout");
 
             let db_path = proj_canon.join(".semio").join("wip.db");
             let conn = rusqlite::Connection::open(&db_path).expect("open wip.db");
             for op in &stored {
                 let input_json = serde_json::to_string(&op.input).expect("input json");
-                conn.execute(
-                    "INSERT INTO semantic_op_log (draft_id, transaction_id, kind, input_json) VALUES (?1, ?2, ?3, ?4)",
-                    rusqlite::params![op.draft_id, op.transaction_id, op.kind, input_json],
-                )
-                .expect("insert semantic op row");
+                conn.execute("INSERT INTO semantic_op_log (draft_id, transaction_id, kind, input_json) VALUES (?1, ?2, ?3, ?4)", rusqlite::params![op.draft_id, op.transaction_id, op.kind, input_json]).expect("insert semantic op row");
             }
             drop(conn);
 
             let g2 = crate::vcs::Graph::new().await;
-            crate::kit_backbone::AttachedBackbone::mount_and_replay(&norm, crate::op::BackboneStoreKind::LocalDotSemio, "wip", &g2)
-                .await
-                .expect("replay wip.db");
+            crate::kit_backbone::AttachedBackbone::mount_and_replay(&norm, crate::op::BackboneStoreKind::LocalDotSemio, "wip", &g2).await.expect("replay wip.db");
 
             let fp = stable_projection_fingerprint(&g2.the_kit).await;
             let exp_fp = exp["projectionFingerprint"].as_str().expect("projectionFingerprint");
