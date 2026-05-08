@@ -7734,6 +7734,7 @@ if (
       expect((alts as readonly { id?: string }[]).some((a) => String(a?.id) === aid)).toBe(true);
       await ks.dispose();
     });
+    });
 
     it("compile-time: KitStore public surface excludes rxjs-style stream fields", () => {
       type KitStorePublicKeys = keyof KitStore;

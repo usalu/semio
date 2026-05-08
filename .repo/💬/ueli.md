@@ -346,6 +346,15 @@ semio:
 
 ---
 
+semio/graphql, semio/rs, semio/js, semio/react, semio/sketchpad:
+We are in the middle of state managment refactor.
+Achieve the following first example of the new architecture:
+
+- Running sketchpad
+- When editing the name of the kit in kit app inside the details panel input then hook [kitName, renameKit, status] = useKitName() from semio/react is called. renameKit calls the KitStore class method rename(). The rename method sends a graphql request to semio/rs which returns a request id. Then as soon as the renamedKit subscription emits a response with the reuquest id the store updates the status of that request. The rename can be successful, pending, failed due to multiple reasons. One example is when it is too long. The sketchpad input for name should have a spinner on loading and show the error message on error. The whole time it is non-blocking. All the data is always kept on semio/rs and semio/js just rexports its using internally rxjs. semio/react uses useSyncExternalStore.
+
+---
+
 semio/rs, semio/js, semio/react:
 All kit data that is being modified over commands MUST always be scoped within a transaction which is scoped within a draft which is scoped whithin `the kit` or an alternative (always the latest checkpoint of `the kit` or an alternative)
 e.g. in react there MUST be Scopes for everything. Depending in which scope all CRUDs are executed different.
