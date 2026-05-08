@@ -26,9 +26,11 @@ isProject: false
 
 - **Read**     = a `StoreField<T>` fed by one GraphQL query. No side-effects. No public mutator.
 - **Command**  = a `StoreCommand<TArgs>` -- the only side-effect carrier in the system. Every write is a command.
-- **Operation** = a *kit-modifying* command. Operations correspond 1:1 to the SDL `union OperationKind` (`RenameKit`, `DraggedPiece`, `AddedType`, `ChangedDescription`, `CreatedFixedPiece`, `FixedPiece`, ...). Operations are always scoped inside a draft + transaction and complete asynchronously through the rs operation stream (correlated by `requestId`).
+- **Operation** = a *kit-modifying* command. Operations correspond 1:1 to the SDL `Mutation` fields backed by `union OperationKind` (`renameKit`, `dragPiecesInDesign`, `changeDescription`, `addFixedPieceToDesign`, `fixPieceInDesign`, ...). Operations are always scoped inside a draft + transaction and complete asynchronously through the rs operation stream (correlated by `requestId`).
+- **Finalize** = the act of closing a transaction. The operation helper finalizes the transaction with `applied: true` after `operationSucceeded` arrives (the SDL term used in `Draft.finalizedTransactions` and the existing `KitStore.finalizeKitWriteTransaction()`); on failure it finalizes with `applied: false`. There is no separate "commit" or "abort" verb.
+- **Save** = the act of turning the current draft into a checkpoint. `Save` belongs to the workspace command tier (built via `command<TArgs>`), not the operation tier. Inside an SDL operation we never "save" -- we only "finalize the open transaction".
 
-Operations are a strict subset of commands. The `operation<TArgs>` helper builds a kit-modifying `StoreCommand` (transactional); the `command<TArgs>` helper builds a non-transactional `StoreCommand` (e.g. backbone attach, sync now, file import / export). Both produce the same `StoreCommand<TArgs>` public type; consumers never need to care which kind they hold.
+Operations are a strict subset of commands. The `operation<TArgs>` helper builds a kit-modifying `StoreCommand` (transactional, finalized per call); the `command<TArgs>` helper builds a non-transactional `StoreCommand` (e.g. save draft -> checkpoint, backbone attach, sync now, file import / export). Both produce the same `StoreCommand<TArgs>` public type; consumers never need to care which kind they hold.
 
 ## Target shape
 
@@ -53,8 +55,8 @@ graph LR
     USF["useStoreField(field): T"]
     USC["useStoreCommand(cmd): [run, WriteStatus]"]
     UGF["useGraphqlField(make, deps): T"]
-    R["useTypeName, useTypesIds, useKitFileUrl, useCanUndo, ..."]
-    W["useRenameKit, useUndo, useDragPieces, useUpdateType, ...<br/>useAttachBackbone, useSyncNow, useImportKit, ..."]
+    R["useTypeName, useTypesIds, useKitFileUrl, ..."]
+    W["useRenameKit, useDragPiecesInDesign, useChangeDescription, useCreateTag, ..."]
     R --> USF
     R --> UGF
     W --> USC
@@ -64,11 +66,13 @@ graph LR
   OP --> USC
   CMD --> USC
   subgraph Sketchpad["semio/sketchpad"]
-    Row["SketchpadFieldRow / ToggleRow<br/>{ value, status, onCommit }"]
-    Row --> R
-    Row --> W
+    Bind["SketchpadInput / SketchpadToggle<br/>{ value, status, onCommit }"]
+    Bind --> R
+    Bind --> W
   end
 ```
+
+
 
 The new contract is:
 
@@ -171,7 +175,7 @@ In [semio/react/index.tsx](semio/react/index.tsx):
 
 In [semio/sketchpad/index.tsx](semio/sketchpad/index.tsx):
 
-- Delete `SketchpadTriadInputRow`, `SketchpadTriadToggleRow` and replace with a new `SketchpadFieldRow({ value, status, onCommit, ... })` and `SketchpadToggleFieldRow({ value, status, onCommit })` that take separated read/write inputs.
+- Delete `SketchpadTriadInputRow`, `SketchpadTriadToggleRow` and replace with `SketchpadInput({ value, status, onCommit, ... })` and `SketchpadToggle({ value, status, onCommit })` that take separated read/write inputs. No "Row" suffix anywhere; rows are rendered by `TreeRow` internally and the binding component just wires `StoreField` + `StoreCommand` to a single widget.
 - Update every call site (kit / type / design / folder / file detail panels and footer/navbar status). Every `const [v, set, st] = useXxx()` becomes `const v = useReadXxx(); const [run, st] = useWriteXxx();`.
 
 ## Phase 1 - KitStore + client surface ([semio/js/index.ts](semio/js/index.ts))
@@ -205,7 +209,7 @@ private query<T>(body: string, parse: (data: JsonValue) => T, initial: T): Store
   });
 }
 
-/** @emoji 🪪 Transactional kit-modifying operation. Builds a StoreCommand that opens draft + tx, runs the named SDL operation, awaits the rs `operationSucceeded` row by `requestId`, then commits / aborts. Maps 1:1 to a SDL `OperationKind` variant. */
+/** @emoji 🪪 Transactional kit-modifying operation. Builds a StoreCommand that opens draft + tx, runs the named SDL operation, awaits the rs `operationSucceeded` event by `requestId`, then finalizes the transaction (`applied: true` on success, `applied: false` on failure). Maps 1:1 to a SDL `Mutation` field backed by `union OperationKind`. */
 private operation<TArgs>(
   fieldName: string,                                          // e.g. "renameKit"
   variableSignatures: string,                                 // e.g. "$name: String!"
@@ -225,11 +229,10 @@ private operation<TArgs>(
       const requestId = String(data[fieldName] ?? "");
       if (requestId === "") throw new Error(`${fieldName}: empty requestId`);
       const result = await this.correlator.await(requestId);
-      if (result.ok) await this.commitTransaction(draftId, transactionId);
-      else await this.abortTransaction(draftId, transactionId);
+      await this.finalizeTransaction(draftId, transactionId, { applied: result.ok });
       return result;
     } catch (e) {
-      await this.abortTransaction(draftId, transactionId).catch(() => {});
+      await this.finalizeTransaction(draftId, transactionId, { applied: false }).catch(() => {});
       return { ok: false, error: { kind: "Internal", message: String(e) } };
     }
   });
@@ -284,8 +287,7 @@ Every read field is one line. `parse` returns the typed `T` directly (no `JsonOb
 ```ts
 // semio/js/index.ts -- KitStore constructor.
 readonly kitName     = this.query<string>          ("wip { theKit { name } }",                    (d) => String((d as KitNameQuery).wip?.theKit?.name ?? ""), "");
-readonly canUndo     = this.query<boolean>         ("wip { canUndo(steps: 1) }",                  (d) => Boolean((d as CanUndoQuery).wip?.canUndo), false);
-readonly canRedo     = this.query<boolean>         ("wip { canRedo(steps: 1) }",                  (d) => Boolean((d as CanRedoQuery).wip?.canRedo), false);
+// canUndo / canRedo: only added when the SDL exposes them; not in current schema, so the read field is omitted and the legacy useCanUndo / useCanRedo hooks are deleted.
 readonly typesIds    = this.query<readonly string[]>("wip { theKit { types { edges { node { id } } } } }",
                                                      parseTypesIds, []);
 readonly typesShallow = this.query<readonly TypeShallow[]>(
@@ -326,54 +328,99 @@ typeName(typeId: string): StoreField<string> {
 
 ### Defining operations (kit-modifying, transactional)
 
+One line per SDL `Mutation` field. No generic key/value updaters.
+
 ```ts
-// semio/js/index.ts -- KitStore constructor. Every line here is one entry in OperationKind.
-readonly renameKit          = this.operation<string>("renameKit",
-  "$name: String!", "name: $name",
-  (name) => ({ name }));
+// semio/js/index.ts -- KitStore constructor.
+readonly renameKit             = this.operation<{ name: string }>(
+  "renameKit", "$name: String!", "name: $name",
+  (a) => ({ name: a.name }),
+);
 
-readonly undo               = this.operation<void>("undo", "", "", () => ({}));
-readonly redo               = this.operation<void>("redo", "", "", () => ({}));
+readonly changeDescription     = this.operation<{ entityId: string; description: string }>(
+  "changeDescription",
+  "$entityId: Id!, $description: String!",
+  "entityId: $entityId, description: $description",
+  (a) => ({ entityId: a.entityId, description: a.description }),
+);
 
-readonly dragPiecesInDesign = this.operation<{ designId: string; pieceIds: readonly string[]; offset: { u: number; v: number } }>(
+readonly addFixedPieceToDesign = this.operation<{ designId: string; blueprintId: string; position: PositionInput }>(
+  "addFixedPieceToDesign",
+  "$designId: Id!, $blueprintId: Id!, $position: PositionInput!",
+  "designId: $designId, blueprintId: $blueprintId, position: $position",
+  (a) => ({ designId: a.designId, blueprintId: a.blueprintId, position: a.position as JsonValue }),
+);
+
+readonly fixPieceInDesign      = this.operation<{ designId: string; pieceId: string }>(
+  "fixPieceInDesign",
+  "$designId: Id!, $pieceId: Id!",
+  "designId: $designId, pieceId: $pieceId",
+  (a) => ({ designId: a.designId, pieceId: a.pieceId }),
+);
+
+readonly dragPieceInDesign     = this.operation<{ designId: string; pieceId: string; offset: { u: number; v: number } }>(
+  "dragPieceInDesign",
+  "$designId: Id!, $pieceId: Id!, $offset: OffsetInput!",
+  "designId: $designId, pieceId: $pieceId, offset: $offset",
+  (a) => ({ designId: a.designId, pieceId: a.pieceId, offset: a.offset }),
+);
+
+readonly dragPiecesInDesign    = this.operation<{ designId: string; pieceIds: readonly string[]; offset: { u: number; v: number } }>(
   "dragPiecesInDesign",
   "$designId: Id!, $pieceIds: [Id!]!, $offset: OffsetInput!",
   "designId: $designId, pieceIds: $pieceIds, offset: $offset",
   (a) => ({ designId: a.designId, pieceIds: [...a.pieceIds], offset: a.offset }),
 );
 
-readonly flattenDesign      = this.operation<{ designId: string }>(
-  "flattenDesign", "$designId: Id!", "designId: $designId",
-  (a) => ({ designId: a.designId }),
+readonly createTag             = this.operation<{ ownerId: string; tag: TagInput }>(
+  "createTag",
+  "$ownerId: Id!, $tag: TagInput!",
+  "ownerId: $ownerId, tag: $tag",
+  (a) => ({ ownerId: a.ownerId, tag: a.tag as JsonValue }),
 );
 
-readonly updateType         = this.operation<{ id: string; key: string; value: unknown }>(
-  "updateType",
-  "$id: Id!, $key: String!, $value: AttributeValueInput!",
-  "id: $id, key: $key, value: $value",
-  (a) => ({ id: a.id, key: a.key, value: a.value as JsonValue }),
+readonly createTags            = this.operation<{ ownerId: string; tags: readonly TagInput[] }>(
+  "createTags",
+  "$ownerId: Id!, $tags: [TagInput!]!",
+  "ownerId: $ownerId, tags: $tags",
+  (a) => ({ ownerId: a.ownerId, tags: [...a.tags] as unknown as JsonValue }),
 );
-// ... same shape for every other entry in union OperationKind.
+
+readonly renameTag             = this.operation<{ tagId: string; name: string }>(
+  "renameTag", "$tagId: Id!, $name: String!", "tagId: $tagId, name: $name",
+  (a) => ({ tagId: a.tagId, name: a.name }),
+);
+
+readonly deleteTag             = this.operation<{ tagId: string }>(
+  "deleteTag", "$tagId: Id!", "tagId: $tagId",
+  (a) => ({ tagId: a.tagId }),
+);
+
+readonly deleteTags            = this.operation<{ tagIds: readonly string[] }>(
+  "deleteTags", "$tagIds: [Id!]!", "tagIds: $tagIds",
+  (a) => ({ tagIds: [...a.tagIds] }),
+);
+
+readonly createConcept         = this.operation<{ ownerId: string; concept: ConceptInput }>(
+  "createConcept",
+  "$ownerId: Id!, $concept: ConceptInput!",
+  "ownerId: $ownerId, concept: $concept",
+  (a) => ({ ownerId: a.ownerId, concept: a.concept as JsonValue }),
+);
+
+readonly createQuality         = this.operation<{ ownerId: string; quality: QualityInput }>(
+  "createQuality",
+  "$ownerId: Id!, $quality: QualityInput!",
+  "ownerId: $ownerId, quality: $quality",
+  (a) => ({ ownerId: a.ownerId, quality: a.quality as JsonValue }),
+);
 ```
 
 ### Defining commands (non-transactional, non-kit)
 
-```ts
-// semio/js/index.ts -- KitStore constructor.
-readonly attachBackbone   = this.command<{ uri: string }>("attachBackbone", "$uri: String!", "uri: $uri", (a) => ({ uri: a.uri }));
-readonly detachBackbone   = this.command<void>           ("detachBackbone", "", "", () => ({}));
-readonly syncNow          = this.command<void>           ("syncNow",        "", "", () => ({}));
-readonly importKit        = this.command<{ source: string }>("importKit",   "$source: String!", "source: $source", (a) => ({ source: a.source }));
-readonly exportKit        = this.command<{ target: string }>("exportKit",   "$target: String!", "target: $target", (a) => ({ target: a.target }));
-readonly resolveConflict  = this.command<{ id: string; resolution: ConflictResolution }>(
-  "resolveConflict",
-  "$id: Id!, $resolution: ConflictResolutionInput!",
-  "id: $id, resolution: $resolution",
-  (a) => ({ id: a.id, resolution: a.resolution as JsonValue }),
-);
-```
+The `command<TArgs>` helper exists for workspace-level writes (backbone attach / detach, sync now, file import / export, conflict resolution) **as soon as the SDL exposes the matching named mutations**. Until then no `command<TArgs>` instances are declared and the legacy hooks (`useAttachBackbone`, `useSyncNow`, etc.) are deleted in Phase 2 with their UI marked `WRITE_STATUS_READONLY`.
 
-The `operation<TArgs>` helper is the only place `openDraft` / `openTransaction` / `commit / abort` / `correlator.await` ever appear. `command<TArgs>` is a flat GraphQL mutation with no transaction lifecycle.
+The `operation<TArgs>` helper is the only place `openDraft` / `openTransaction` / `finalizeTransaction` / `correlator.await` ever appear. `command<TArgs>` is a flat GraphQL mutation with no draft or transaction lifecycle. Saving (turning the current draft into a checkpoint) is a separate `command<TArgs>` -- never triggered implicitly inside an operation.
 
 - `StoreCommand`s on `KitStore` (and exposed on `KitStoreClient`):
   - Already: `renameKit`.
@@ -381,29 +428,25 @@ The `operation<TArgs>` helper is the only place `openDraft` / `openTransaction` 
   - Per-entity: `createType / deleteType / updateType`, `createDesign / deleteDesign / updateDesign`, `createAuthor / deleteAuthor / updateAuthor`, `createQuality / deleteQuality / updateQuality`, `createPort / deletePort / updatePort`, `createTag / deleteTag / updateTag`, `createConcept / deleteConcept`, `addFile / removeFile / updateFile`, `createFolder / deleteFolder / updateFolder`, `moveToFolder`, `moveKitArtifactToFolder`.
   - `importKit`, `exportKit` (kept readonly until backed; expose as `StoreCommand` whose status field is seeded `SCHEMA_HOOK_READONLY_STATUS`).
 
-Each `StoreCommand` has a single typed `TArgs` (object). Concrete signatures:
+Each `StoreCommand` has a single typed `TArgs` (object). The operations list is grounded in [semio/graphql/schema.graphql](semio/graphql/schema.graphql) `type Mutation` -- one `StoreCommand` per SDL field, no generic `update<Entity>(id, key, value)` shapes:
 
 ```ts
-client.renameKit          : StoreCommand<string>;                                          // arg = name
-client.undo               : StoreCommand<void>;
-client.redo               : StoreCommand<void>;
-client.dragPiecesInDesign : StoreCommand<{ designId: string; pieceIds: readonly string[]; offset: { u: number; v: number } }>;
-client.flattenDesign      : StoreCommand<{ designId: string }>;
-client.expandDesign       : StoreCommand<{ designId: string; pieceIds: readonly string[] }>;
-client.deleteConnection   : StoreCommand<{ designId: string; connectionId: string }>;
-client.changePieceType    : StoreCommand<{ designId: string; pieceId: string; typeId: string }>;
-client.addConnections     : StoreCommand<{ designId: string; connections: readonly ConnectionDto[] }>;
-client.removeConnections  : StoreCommand<{ designId: string; connectionIds: readonly string[] }>;
-client.createType         : StoreCommand<{ dto: TypeDto }>;
-client.deleteType         : StoreCommand<{ id: string }>;
-client.updateType         : StoreCommand<{ id: string; key: string; value: unknown }>;
-client.moveToFolder       : StoreCommand<{ artifactId: string; folderId: string | null }>;
-// …same shape for createDesign/deleteDesign/updateDesign, createAuthor/deleteAuthor/updateAuthor,
-//    createQuality/deleteQuality/updateQuality, createPort/deletePort/updatePort,
-//    createTag/deleteTag/updateTag, createConcept/deleteConcept,
-//    addFile/removeFile/updateFile, createFolder/deleteFolder/updateFolder,
-//    moveKitArtifactToFolder, importKit, exportKit.
+client.renameKit            : StoreCommand<{ name: string }>;
+client.changeDescription    : StoreCommand<{ entityId: string; description: string }>;
+client.addFixedPieceToDesign: StoreCommand<{ designId: string; blueprintId: string; position: PositionInput }>;
+client.fixPieceInDesign     : StoreCommand<{ designId: string; pieceId: string }>;
+client.dragPieceInDesign    : StoreCommand<{ designId: string; pieceId: string; offset: { u: number; v: number } }>;
+client.dragPiecesInDesign   : StoreCommand<{ designId: string; pieceIds: readonly string[]; offset: { u: number; v: number } }>;
+client.createTag            : StoreCommand<{ ownerId: string; tag: TagInput }>;
+client.createTags           : StoreCommand<{ ownerId: string; tags: readonly TagInput[] }>;
+client.renameTag            : StoreCommand<{ tagId: string; name: string }>;
+client.deleteTag            : StoreCommand<{ tagId: string }>;
+client.deleteTags           : StoreCommand<{ tagIds: readonly string[] }>;
+client.createConcept        : StoreCommand<{ ownerId: string; concept: ConceptInput }>;
+client.createQuality        : StoreCommand<{ ownerId: string; quality: QualityInput }>;
 ```
+
+**Removed**: every "general" command that took a free-form key/value bag and dispatched legacy `submitChangeKitCommands` -- `updateType`, `updateDesign`, `updateAuthor`, `updateQuality`, `updatePort`, `updateTag`, `updateFile`, `updateFolder`, plus the never-real `createType`, `deleteType`, `createDesign`, `deleteDesign`, `createAuthor`, `deleteAuthor`, `createPort`, `deletePort`, `addFile`, `removeFile`, `createFolder`, `deleteFolder`, `clusterPieces`, `movePieces`, `fixPieces` (bulk), `flattenDesign`, `expandDesign`, `deleteConnection`, `addConnections`, `removeConnections`, `changePieceType`, `moveToFolder`, `moveKitArtifactToFolder`, `useKitAddToKit` / `useKitRemoveFromKit`, `useUndo` / `useRedo`. None of these are in `union OperationKind`; if the SDL grows a specific named operation later (e.g. `renameType`, `undo`, `redo`), it appears as one more line in the same operation list. Until then, the corresponding sketchpad rows render with `WRITE_STATUS_READONLY` (or are removed from the panel altogether).
 
 ### `KitStoreClient` interface delta
 
@@ -421,8 +464,6 @@ export interface KitStoreClient {
 export interface KitStoreClient {
   // Static reads.
   readonly kitName:        StoreField<string>;
-  readonly canUndo:        StoreField<boolean>;
-  readonly canRedo:        StoreField<boolean>;
   readonly typesIds:       StoreField<readonly string[]>;
   readonly typesShallow:   StoreField<readonly TypeShallow[]>;
   readonly typesMetadata:  StoreField<readonly TypeMetadataDto[]>;
@@ -438,31 +479,33 @@ export interface KitStoreClient {
   typeName(typeId: string): StoreField<string>;
   // ... rest of factories ...
 
-  // Operations (kit-modifying; built via KitStore.operation<TArgs>; one per OperationKind variant).
-  readonly renameKit:          StoreCommand<string>;
-  readonly undo:               StoreCommand<void>;
-  readonly redo:               StoreCommand<void>;
-  readonly dragPiecesInDesign: StoreCommand<{ designId: string; pieceIds: readonly string[]; offset: { u: number; v: number } }>;
-  readonly updateType:         StoreCommand<{ id: string; key: string; value: unknown }>;
-  // ... rest of operations ...
+  // Operations (kit-modifying; built via KitStore.operation<TArgs>; exactly one per SDL Mutation field).
+  readonly renameKit:             StoreCommand<{ name: string }>;
+  readonly changeDescription:     StoreCommand<{ entityId: string; description: string }>;
+  readonly addFixedPieceToDesign: StoreCommand<{ designId: string; blueprintId: string; position: PositionInput }>;
+  readonly fixPieceInDesign:      StoreCommand<{ designId: string; pieceId: string }>;
+  readonly dragPieceInDesign:     StoreCommand<{ designId: string; pieceId: string; offset: { u: number; v: number } }>;
+  readonly dragPiecesInDesign:    StoreCommand<{ designId: string; pieceIds: readonly string[]; offset: { u: number; v: number } }>;
+  readonly createTag:             StoreCommand<{ ownerId: string; tag: TagInput }>;
+  readonly createTags:            StoreCommand<{ ownerId: string; tags: readonly TagInput[] }>;
+  readonly renameTag:             StoreCommand<{ tagId: string; name: string }>;
+  readonly deleteTag:             StoreCommand<{ tagId: string }>;
+  readonly deleteTags:            StoreCommand<{ tagIds: readonly string[] }>;
+  readonly createConcept:         StoreCommand<{ ownerId: string; concept: ConceptInput }>;
+  readonly createQuality:         StoreCommand<{ ownerId: string; quality: QualityInput }>;
 
-  // Commands (workspace-level; built via KitStore.command<TArgs>; no draft / tx).
-  readonly attachBackbone:     StoreCommand<{ uri: string }>;
-  readonly detachBackbone:     StoreCommand<void>;
-  readonly syncNow:            StoreCommand<void>;
-  readonly importKit:          StoreCommand<{ source: string }>;
-  readonly exportKit:          StoreCommand<{ target: string }>;
-  readonly resolveConflict:    StoreCommand<{ id: string; resolution: ConflictResolution }>;
+  // Commands: empty until SDL exposes non-transactional mutations (attachBackbone, syncNow, importKit, ...).
 }
 ```
 
-`fetchFullKit` and `submitChangeKitCommands` become `private` on `WasmKitStoreClient` / `KitStore`. Nothing on the public surface bypasses the `query` / `operation` / `command` helpers.
+`fetchFullKit` and `submitChangeKitCommands` become `private` on `WasmKitStoreClient` / `KitStore`. Nothing on the public surface bypasses the `query` / `operation` / `command` helpers. There are no generic `update<Entity>` shapes; every write is a specific named SDL operation.
 
 Embedded tests in [semio/js/index.ts](semio/js/index.ts) get one new `describe` per family asserting that:
 
-- The opening DTO seeds every static field.
-- Each `StoreCommand` resolves with `{ ok: true }` and bumps the matching read field.
-- Parameterized factories return identical `StoreField` objects for identical args (memoization) and disposed on `KitStore.dispose`.
+- Every static read field returns the same value as a hand-rolled GraphQL query against the same body.
+- Each operation `StoreCommand` resolves with `{ ok: true }` after a `requestId` arrives on `operationSucceeded`, and the broadcast `invalidations.next()` makes dependent read fields refetch.
+- A failing operation surfaces `{ ok: false, error }` and `status.kind === "error"` with `lastError` populated.
+- A parameterized read field disposes its `invalidations` subscription on `dispose()`.
 
 ## Phase 2 - React hook layer ([semio/react/index.tsx](semio/react/index.tsx))
 
@@ -525,7 +568,7 @@ export function usePieceMetadata(designId?: string, pieceId?: string): PiecePlac
 ### Write hook -- before / after
 
 ```tsx
-// BEFORE (lines ~3404-3431) -- useDragPieces with manual useState<WriteStatus>.
+// BEFORE (lines ~3404-3431) -- useDragPieces with manual useState<WriteStatus> and hand-built ChangeKitCommand.
 export function useDragPieces(): {
   run: (designId: string, pieceIds: readonly string[], offset: { u: number; v: number }) => Promise<SetResult>;
   status: WriteStatus;
@@ -541,16 +584,18 @@ export function useDragPieces(): {
   return { run, status };
 }
 
-// AFTER -- one line; tuple shape; args packaged into a single TArgs object.
-export function useDragPieces(): readonly [
+// AFTER -- one line; tuple shape; named SDL operation; args packaged into a single TArgs object.
+export function useDragPiecesInDesign(): readonly [
   (args: { designId: string; pieceIds: readonly string[]; offset: { u: number; v: number } }) => Promise<SetResult>,
   WriteStatus,
 ] {
   const client = useKitStoreClient();
-  if (!client) throw new Error("useDragPieces: kit client required inside KitScope");
+  if (!client) throw new Error("useDragPiecesInDesign: kit client required inside KitScope");
   return useStoreCommand(client.dragPiecesInDesign);
 }
 ```
+
+Hooks for legacy generic writes (`useUpdateType`, `useUpdateDesign`, `useUpdateAuthor`, `useUpdateQuality`, `useUpdatePort`, `useUpdateTag`, `useUpdateFile`, `useUpdateFolder`, `useCreateType` / `useDeleteType` / ... / `useDeleteConnection`, `useFlattenDesign`, `useExpandDesign`, `useChangePieceType`, `useMoveToFolder`, `useMoveKitArtifactToFolder`, `useUndo`, `useRedo`, `useImportKit`, `useExportKit`, `useAttachBackbone`, `useDetachBackbone`, `useResolveConflict`, `useSyncNow`, `useAddConnections`, `useRemoveConnections`, `useClusterPieces`, `useMovePieces`, `useFixPieces`) are deleted outright -- they have no SDL operation behind them. Sketchpad rows that previously bound to them either disappear or render with `WRITE_STATUS_READONLY` (Phase 3).
 
 ### Embedded tests (sample)
 
@@ -593,8 +638,9 @@ it("StoreField has no public set / mutation surface", () => {
 ### New row primitives
 
 ```tsx
-// semio/sketchpad/index.tsx — replaces SketchpadTriadInputRow / SketchpadTriadToggleRow.
-function SketchpadFieldRow<T = string>(props: {
+// semio/sketchpad/index.tsx -- replaces SketchpadTriadInputRow / SketchpadTriadToggleRow.
+// "Row" is gone from every name; the binding component is just a value+status+onCommit widget.
+function SketchpadInput<T = string>(props: {
   id: string;
   value: T;
   status: WriteStatus;
@@ -606,7 +652,7 @@ function SketchpadFieldRow<T = string>(props: {
   const { disabled, spinning, error } = useWriteIndicator(props.status);
   const [draft, setDraft] = React.useState<T | null>(null);
   const display = (draft ?? props.value) as T;
-  const commit = React.useCallback(async () => {
+  const finalize = React.useCallback(async () => {
     if (draft === null) return;
     const r = await props.onCommit(draft);
     if (r.ok) setDraft(null);
@@ -618,7 +664,7 @@ function SketchpadFieldRow<T = string>(props: {
         disabled={disabled}
         placeholder={props.placeholder}
         onChange={(e) => setDraft((props.mapCommit ?? ((s) => s as unknown as T))(e.target.value))}
-        onBlur={commit}
+        onBlur={finalize}
       />
       {spinning ? <Spinner /> : null}
       {error ? <ErrorLine message={error.message} /> : null}
@@ -626,7 +672,7 @@ function SketchpadFieldRow<T = string>(props: {
   );
 }
 
-function SketchpadToggleFieldRow(props: {
+function SketchpadToggle(props: {
   id: string;
   value: boolean | undefined | null;
   status: WriteStatus;
@@ -643,6 +689,8 @@ function SketchpadToggleFieldRow(props: {
   );
 }
 ```
+
+`SketchpadInput` and `SketchpadToggle` are the *only* binding components. `TreeRow` stays as the layout primitive but is never wrapped under a "Row"-suffixed semantic name.
 
 ### Call site migration — kit name row
 
@@ -668,27 +716,44 @@ function KitSectionForm() {
 }
 ```
 
-### Call site migration — type detail row (icon)
+### Call site migration — type detail row (description, real SDL operation)
 
 ```tsx
-// BEFORE — auto-generated schema field hook.
+// BEFORE — auto-generated generic-field hook routed through legacy submitChangeKitCommands.
 function TypeSectionForm({ id }: { id: string }) {
-  const iconTriad = useTypeIcon(id);                       // HookTriad<any>
-  return <SketchpadTriadInputRow triad={iconTriad} id="…type.icon" placeholderId="…iconPlaceholder" />;
+  const descTriad = useTypeDescription(id);                  // HookTriad<string>
+  return <SketchpadTriadInputRow triad={descTriad} id="…type.description" />;
 }
 
-// AFTER -- paired read + write, no caching, fresh StoreField per typeId.
+// AFTER -- paired read + write, no caching, fresh StoreField per typeId, actual SDL operation.
 function TypeSectionForm({ id }: { id: string }) {
   const client = useKitStoreClient()!;
+  const description = useGraphqlField(() => client.entityDescription(id), [client, id]);
+  const [changeDescription, status] = useStoreCommand(client.changeDescription);
+  return (
+    <SketchpadFieldRow
+      id="semio.sketchpad.app.type.panel.details.section.type.description"
+      value={description}
+      status={status}
+      onCommit={(next) => changeDescription({ entityId: id, description: next })}
+    />
+  );
+}
+```
+
+### Call site migration — type icon row (no SDL operation yet -> readonly)
+
+```tsx
+// AFTER -- read still works; commit short-circuits with WRITE_STATUS_READONLY until SDL exposes a `changeTypeIcon` operation.
+function TypeIconRow({ id }: { id: string }) {
+  const client = useKitStoreClient()!;
   const icon = useGraphqlField(() => client.typeIcon(id), [client, id]);
-  const [updateType, status] = useStoreCommand(client.updateType);
   return (
     <SketchpadFieldRow
       id="semio.sketchpad.app.type.panel.details.section.type.icon"
       value={icon}
-      status={status}
-      onCommit={(next) => updateType({ id, key: "icon", value: next })}
-      placeholderId="semio.sketchpad.app.type.iconPlaceholder.label"
+      status={WRITE_STATUS_READONLY}
+      onCommit={async () => ({ ok: false, error: { kind: "Readonly", message: "icon edits not yet supported by SDL" } })}
     />
   );
 }
@@ -717,6 +782,8 @@ if (ks0) doStuff(ks0);
 - `rg "HookTriad|HookRead|useDraft|useOptimistic|useSchemaObjectState|useSchemaFieldState|writeKitStoreClientSchemaField|kitReadonlyTriad|useSemioReadSnap|SketchpadTriadInputRow|SketchpadTriadToggleRow|submitChangeKitCommands\b|OperationRouter|OperationEvent|seedFieldsFromDto|dispatchCorrelationEnvelope|fieldCache|cachedField" semio` returns zero matches.
 - `rg "StoreField[^>]*\\.set\\(|\\.kitName\\.set\\(|\\.status\\.set\\(" semio` returns zero matches (no public mutator on `StoreField`).
 - `rg "SCHEMA_HOOK_IDLE_STATUS|SCHEMA_HOOK_READONLY_STATUS|USE_KIT_NAME_PENDING_STATUS" semio` returns zero matches (consumer-specific names removed from the generic primitives).
+- `rg "\\bupdateType\\b|\\bupdateDesign\\b|\\bupdateAuthor\\b|\\bupdateQuality\\b|\\bupdatePort\\b|\\bupdateTag\\b|\\bupdateFile\\b|\\bupdateFolder\\b|\\bcreateType\\b|\\bdeleteType\\b|\\bcreateDesign\\b|\\bdeleteDesign\\b|\\bcreatePort\\b|\\bdeletePort\\b|\\bdeleteConnection\\b|\\bflattenDesign\\b|\\bexpandDesign\\b|\\bchangePieceType\\b|\\bmoveToFolder\\b|\\bmoveKitArtifactToFolder\\b|\\buseUndo\\b|\\buseRedo\\b" semio/js semio/react semio/sketchpad` returns zero matches (every generic / non-SDL operation removed).
+- The `KitStoreClient` operation list matches `Mutation` field names in [semio/graphql/schema.graphql](semio/graphql/schema.graphql) one-for-one (sanity check via `rg "type Mutation" -A 30 semio/graphql/schema.graphql` and visual diff against the interface).
 - Manual sketchpad smoke run: type a kit name, observe spinner -> success; rename a type; drag pieces; undo / redo.
 
 ## Delivery
