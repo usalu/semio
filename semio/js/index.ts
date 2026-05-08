@@ -1507,11 +1507,11 @@ export const KIT_SESSION_QUERY_ENTRY = `query { session { id } wip { id theKit {
 /** @emoji 🔗 Root subscription aligned with `SubscriptionRoot.operationSucceeded`. */
 export const KIT_EVENT_STREAM_SUBSCRIPTION = `subscription { operationSucceeded { __typename id } }` as const;
 
-/** @emoji 🔗 Kit rename bus: {@link KitStore.rename} correlates `requestId` with {@link Subscription.kitRenamed} / {@link Subscription.operationFailed}. */
-export const KIT_RENAME_EVENT_SUBSCRIPTION = `subscription {
-  kitRenamed { requestId kit { name } }
-  operationFailed { kind message requestId }
-}` as const;
+/** @emoji 🔗 Kit rename bus: {@link KitStore.rename} correlates `requestId` with {@link Subscription.kitRenamed}. GraphQL subscriptions allow only one root field, so {@link Subscription.operationFailed} is wired through {@link KIT_OPERATION_FAILED_SUBSCRIPTION}. */
+export const KIT_RENAME_EVENT_SUBSCRIPTION = `subscription { kitRenamed { requestId kit { name } } }` as const;
+
+/** @emoji 🚨 Failure-side subscription for {@link KitStore.rename} (and other request-id-correlated mutations). */
+export const KIT_OPERATION_FAILED_SUBSCRIPTION = `subscription { operationFailed { kind message requestId } }` as const;
 
 /**
  * @emoji 🔗 Main-line full kit DTO via `wip.theKit.fullSnapshot` — aligns with `semio/graphql/schema.graphql`.
@@ -1557,6 +1557,8 @@ export class KitStore {
   /** @emoji 🪪 Last {@link KitStore.rename} lifecycle for UI / {@link useKitName}. */
   private readonly renameStatus$ = new BehaviorSubject<KitRenameStatus>(KIT_RENAME_STATUS_IDLE);
   private readonly renameResolvers = new Map<string, (r: KitRenameResult) => void>();
+  /** @emoji 🪪 Buffered rename events arriving before the mutation Promise resolves (inline WASM emits the event synchronously during `apply`, ahead of the mutation return). Entries auto-evict after 10s. */
+  private readonly renamePendingEvents = new Map<string, KitRenameResult>();
   private renameSubRunning = false;
 
   private constructor(timeoutMs: number) {
@@ -1724,7 +1726,13 @@ export class KitStore {
     if (fn) {
       fn(result);
       this.renameResolvers.delete(requestId);
+      return;
     }
+    this.renamePendingEvents.set(requestId, result);
+    setTimeout(() => {
+      const cur = this.renamePendingEvents.get(requestId);
+      if (cur === result) this.renamePendingEvents.delete(requestId);
+    }, 10_000);
   }
 
   private mapOperationFailedToSetError(kind: string, message: string): SetError {
@@ -1744,23 +1752,26 @@ export class KitStore {
       const nm = String(renamed.kit?.name ?? "");
       if (rid !== "") {
         this.kitName$.next(nm);
-        this.renameStatus$.next({ kind: "success", requestId: rid, name: nm });
         this.resolveRename(rid, { ok: true, requestId: rid });
+        try {
+          this.fanout.next({ Changed: null } as KitEvent);
+        } catch {
+          /* ignore */
+        }
       }
     }
     const failed = data.operationFailed;
     if (failed != null && typeof failed === "object") {
       const ridRaw = failed.requestId;
       const rid = ridRaw != null && String(ridRaw).length > 0 ? String(ridRaw) : "";
-      if (rid !== "" && this.renameResolvers.has(rid)) {
+      if (rid !== "") {
         const err = this.mapOperationFailedToSetError(String(failed.kind ?? "Internal"), String(failed.message ?? "operationFailed"));
-        this.renameStatus$.next({ kind: "error", requestId: rid, message: err.message });
         this.resolveRename(rid, { ok: false, requestId: rid, error: err });
       }
     }
   }
 
-  /** @emoji 🪪 Second GraphQL subscription loop for rename correlation (non-blocking toward UI). */
+  /** @emoji 🪪 Two GraphQL subscription loops for rename correlation (one root field per subscription per GraphQL spec). */
   private startRenameSubscriptionLoop(): void {
     if (this.renameSubRunning) return;
     this.renameSubRunning = true;
@@ -1769,7 +1780,6 @@ export class KitStore {
         try {
           const msg = parseJsonValue(eventJson) as KitGraphqlResponseEnvelope<{
             kitRenamed?: { requestId?: string; kit?: { name?: string } };
-            operationFailed?: { kind?: string; message?: string; requestId?: string | null };
           }>;
           if (msg.errors && Array.isArray(msg.errors) && msg.errors.length) return;
           const row = msg.data;
@@ -1781,6 +1791,23 @@ export class KitStore {
       })
       .catch(() => {
         this.renameSubRunning = false;
+      });
+    void this.transport
+      .subscribe(JSON.stringify({ query: KIT_OPERATION_FAILED_SUBSCRIPTION }), (eventJson: string) => {
+        try {
+          const msg = parseJsonValue(eventJson) as KitGraphqlResponseEnvelope<{
+            operationFailed?: { kind?: string; message?: string; requestId?: string | null };
+          }>;
+          if (msg.errors && Array.isArray(msg.errors) && msg.errors.length) return;
+          const row = msg.data;
+          if (row == null || typeof row !== "object") return;
+          this.dispatchKitRenameSubscription(row);
+        } catch {
+          /* ignore */
+        }
+      })
+      .catch(() => {
+        /* ignore */
       });
   }
 
@@ -1813,6 +1840,13 @@ export class KitStore {
       const err: SetError = { kind: "Internal", message: String(e) };
       return { ok: false, requestId: "", error: err };
     }
+    const buffered = this.renamePendingEvents.get(requestId);
+    if (buffered) {
+      this.renamePendingEvents.delete(requestId);
+      if (buffered.ok) this.renameStatus$.next({ kind: "success", requestId, name });
+      else this.renameStatus$.next({ kind: "error", requestId, message: buffered.error.message });
+      return buffered;
+    }
     this.renameStatus$.next({ kind: "pending", requestId });
     return await new Promise<KitRenameResult>((resolve) => {
       const t = setTimeout(() => {
@@ -1824,6 +1858,8 @@ export class KitStore {
       }, this.timeoutMs);
       const wrapped = (r: KitRenameResult) => {
         clearTimeout(t);
+        if (r.ok) this.renameStatus$.next({ kind: "success", requestId, name });
+        else this.renameStatus$.next({ kind: "error", requestId, message: r.error.message });
         resolve(r);
       };
       this.renameResolvers.set(requestId, wrapped);
@@ -1993,41 +2029,15 @@ export class KitStore {
     }
   }
 
-  /** @emoji 🧾 Ensures {@link KitStore.kitWriteAlternativeId} / draft / open transaction exist for nested `Mutation.session` writes. */
+  /** @emoji 🧾 Allocates local alternative/draft/transaction ids; the rust runtime auto-creates draft+transaction lazily for write commands. */
   private async ensureWriteGraph(): Promise<string> {
     let aid = this.kitWriteAlternativeId;
     if (!aid) {
-      const data = kitGraphqlData(
-        await this.gqlRun({ query: `mutation { session { createAlternative(input: { name: "wip" }) { id } } }` }),
-      ) as { session?: { createAlternative?: { id?: string } } };
-      aid = data.session?.createAlternative?.id ?? "";
-      if (!aid) throw new Error("ensureWriteGraph: createAlternative missing id");
+      aid = id();
       this.kitWriteAlternativeId = aid;
     }
-    let did = this.kitWriteDraftId;
-    if (!did) {
-      const data = kitGraphqlData(
-        await this.gqlRun({
-          query: `mutation($aid: KitAlternativeIdIn!) { session { alternative(id: $aid) { createDraft { id } } } }`,
-          variables: { aid: { id: aid } },
-        }),
-      ) as { session?: { alternative?: { createDraft?: { id?: string } } } };
-      did = data.session?.alternative?.createDraft?.id ?? "";
-      if (!did) throw new Error("ensureWriteGraph: createDraft missing id");
-      this.kitWriteDraftId = did;
-    }
-    let tid = this.kitWriteTransactionId;
-    if (!tid) {
-      const data = kitGraphqlData(
-        await this.gqlRun({
-          query: `mutation($aid: KitAlternativeIdIn!) { session { alternative(id: $aid) { draft { startTransaction { id } } } } }`,
-          variables: { aid: { id: aid } },
-        }),
-      ) as { session?: { alternative?: { draft?: { startTransaction?: { id?: string } } } } };
-      tid = data.session?.alternative?.draft?.startTransaction?.id ?? "";
-      if (!tid) throw new Error("ensureWriteGraph: startTransaction missing id");
-      this.kitWriteTransactionId = tid;
-    }
+    if (!this.kitWriteDraftId) this.kitWriteDraftId = id();
+    if (!this.kitWriteTransactionId) this.kitWriteTransactionId = id();
     return aid;
   }
 

@@ -17918,17 +17918,21 @@ export class SketchpadStore {
       await this.openKitInRegistry(kid, { store: kitStore }, "remote", source?.kind === "remote" ? source : undefined);
       return kid;
     }
-    if (regKind === "folder" && this.folderKitStoreFactory) {
+    if (regKind === "folder" && this.folderKitStoreFactory && interactive) {
       const kitStore = await this.folderKitStoreFactory(Object.assign({}, kit, { __semioKitPersistenceSource: source }) as Kit);
       const kid = kitStore.getSnapshot().kit.id;
       await this.openKitInRegistry(kid, { store: kitStore }, "folder", source);
       return kid;
     }
-    if (regKind === "file" && this.fileKitStoreFactory) {
+    if (regKind === "file" && this.fileKitStoreFactory && interactive) {
       const kitStore = await this.fileKitStoreFactory(Object.assign({}, kit, { __semioKitPersistenceSource: source }) as Kit);
       const kid = kitStore.getSnapshot().kit.id;
       await this.openKitInRegistry(kid, { store: kitStore }, "file", source);
       return kid;
+    }
+    if ((regKind === "folder" || regKind === "file") && !interactive) {
+      await this.openKitInRegistry(kit.id, { backbone: { kind: "memory", initialKit: kit }, initialKit: kit as any }, regKind, source);
+      return kit.id;
     }
     if (regKind === "temporary" && this.temporaryKitStoreFactory) {
       const kitStore = await this.temporaryKitStoreFactory(kit);
@@ -19910,7 +19914,8 @@ export const sketchpadCommands = {
     return {};
   },
   "semio.sketchpad.navigateBack": (context: SketchpadCommandContext): SketchpadCommandResult => {
-    const { navigationHistory, navigationHistoryIndex } = context.sketchpad;
+    const navigationHistory = context.sketchpad.navigationHistory;
+    const navigationHistoryIndex = context.sketchpad.navigationHistoryIndex;
     if (navigationHistoryIndex > 0) {
       const newIndex = navigationHistoryIndex - 1;
       return {
@@ -19923,6 +19928,8 @@ export const sketchpadCommands = {
     return {};
   },
   "semio.sketchpad.navigateForward": (context: SketchpadCommandContext): SketchpadCommandResult => {
+    const navigationHistory = context.sketchpad.navigationHistory;
+    const navigationHistoryIndex = context.sketchpad.navigationHistoryIndex;
     if (navigationHistoryIndex < navigationHistory.length - 1) {
       const newIndex = navigationHistoryIndex + 1;
       return {
@@ -23329,11 +23336,22 @@ const LayoutWrapper: FC = () => {
     return groups;
   }, [toolbarSections]);
 
-  useEffect(() => {
-    const groupOrder = ["hand", "selection", "filter", "create", "view", "actions"];
-    const firstGroup = groupOrder.find((g) => g !== "hand" && toolbarGroups[g]);
-    setActiveToolbarGroup((prev) => (prev === null || (prev !== null && !toolbarGroups[prev]) ? (firstGroup ?? null) : prev));
+  const orderedToolbarGroupIds = useMemo(() => {
+    const preferredOrder = ["history", "hand", "selection", "filter", "open", "create", "view", "actions"];
+    return Object.keys(toolbarGroups).sort((left, right) => {
+      const leftOrder = Math.min(...toolbarGroups[left].map((section) => section.toolbarGroup?.order ?? 0));
+      const rightOrder = Math.min(...toolbarGroups[right].map((section) => section.toolbarGroup?.order ?? 0));
+      if (leftOrder !== rightOrder) return leftOrder - rightOrder;
+      const leftPreferredOrder = preferredOrder.indexOf(left);
+      const rightPreferredOrder = preferredOrder.indexOf(right);
+      return (leftPreferredOrder === -1 ? Number.MAX_SAFE_INTEGER : leftPreferredOrder) - (rightPreferredOrder === -1 ? Number.MAX_SAFE_INTEGER : rightPreferredOrder);
+    });
   }, [toolbarGroups]);
+
+  useEffect(() => {
+    const firstGroup = orderedToolbarGroupIds.find((groupId) => groupId !== "history" && groupId !== "hand" && toolbarGroups[groupId]);
+    setActiveToolbarGroup((prev) => (prev === null || (prev !== null && !toolbarGroups[prev]) ? (firstGroup ?? null) : prev));
+  }, [toolbarGroups, orderedToolbarGroupIds]);
 
   const toolbarGroupsRef = useRef(toolbarGroups);
   toolbarGroupsRef.current = toolbarGroups;
@@ -23623,7 +23641,9 @@ const LayoutWrapper: FC = () => {
                                 })}
                               </ToolbarScopeWrapper>
                             )}
-                            {["hand", "selection", "filter", "open", "create", "view", "actions"].map((groupId) => {
+                            {orderedToolbarGroupIds
+                              .filter((groupId) => groupId !== "history")
+                              .map((groupId) => {
                               if (!toolbarGroups[groupId]) return null;
                               const isActive = activeToolbarGroup === groupId;
 
@@ -45961,11 +45981,11 @@ const Home: FC = () => {
     addSection("toolbar", {
       id: "semio.sketchpad.app.home.toolbar.open",
       specificity: 20,
-      order: 0,
+      order: 20,
       toolbarGroup: {
         id: "open",
         labelId: "semio.sketchpad.toolbar.parent.open",
-        order: 10,
+        order: 20,
       },
       content: <HomeToolbarOpen />,
     });
@@ -45974,22 +45994,22 @@ const Home: FC = () => {
       addSection("toolbar", {
         id: "semio.sketchpad.app.home.toolbar.filters",
         specificity: 20,
-        order: 0,
+        order: 30,
         toolbarGroup: {
           id: "filter",
           labelId: "semio.sketchpad.toolbar.parent.filter",
-          order: 20,
+          order: 30,
         },
         content: <HomeToolbarFilters />,
       });
       addSection("toolbar", {
         id: "semio.sketchpad.app.home.toolbar.create",
         specificity: 20,
-        order: 0,
+        order: 10,
         toolbarGroup: {
           id: "create",
           labelId: "semio.sketchpad.toolbar.parent.create",
-          order: 30,
+          order: 10,
         },
         content: <HomeToolbarCreate />,
       });
@@ -48322,11 +48342,10 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
       console.log(`[Home] Create group toggle visible: ${hasCreateGroup}`);
       expect(hasCreateGroup).toBe(true);
 
-      console.log("[Home] Testing auto-activated filter group settings zone");
+      console.log("[Home] Testing filter group settings zone");
       const settingsZone = page.locator('[id="semio.sketchpad.toolbar.zone.settings"]');
-      const settingsInitiallyVisible = await settingsZone.isVisible({ timeout: 3000 }).catch(() => false);
-      console.log(`[Home] Settings zone initially visible (filter auto-active): ${settingsInitiallyVisible}`);
-      if (!settingsInitiallyVisible) {
+      const filterGroupPressed = (await filterGroupToggle.getAttribute("aria-pressed").catch(() => null)) === "true";
+      if (!filterGroupPressed) {
         await filterGroupToggle.click();
         await page.waitForTimeout(500);
       }
