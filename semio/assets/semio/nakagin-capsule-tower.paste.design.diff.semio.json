@@ -1,7 +1,7 @@
 {
   "pieces": {
     "removed": [],
-    "updated": [],
+    "modified": [],
     "added": [
       {
         "id": "31be08e1-e75c-4024-86b4-c3c6d3939fbb",
@@ -226,7 +226,7 @@
   },
   "connections": {
     "removed": [],
-    "updated": [],
+    "modified": [],
     "added": [
       {
         "id": "06e4aa42-4a30-4149-9f0d-0eea397c0120",

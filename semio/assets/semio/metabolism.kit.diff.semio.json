@@ -14,7 +14,7 @@
         "id": "71749140-9db9-43f6-bd81-d89011667b80"
       }
     ],
-    "updated": [
+    "modified": [
       {
         "type": {
           "id": "277768b5-9220-4312-bf0d-ab82d9fb6a73"
@@ -33,7 +33,7 @@
                 "id": "c1b9624e-51ed-459c-8f9c-497e39768cc3"
               }
             ],
-            "updated": [
+            "modified": [
               {
                 "representation": {
                   "id": "c2aded58-7995-4ea5-b990-91bd44482bcb"
@@ -71,7 +71,7 @@
                 "id": "c5465220-19ba-4443-8f1d-617c832dd13c"
               }
             ],
-            "updated": [
+            "modified": [
               {
                 "connector": {
                   "id": "d25a91ed-b124-4e5b-8e7e-af832541c953"
@@ -281,7 +281,7 @@
         "id": "019ab4e0-cb2a-7613-a16a-ae086e331c95"
       }
     ],
-    "updated": [
+    "modified": [
       {
         "design": {
           "id": "37ba7ec4-9023-4be7-9ab6-e0ebc80007f8"
@@ -306,7 +306,7 @@
                 "id": "739c5e32-217f-4d03-b7b6-78b9c0cda46a"
               }
             ],
-            "updated": [
+            "modified": [
               {
                 "piece": {
                   "id": "ddd6320b-ae3d-4121-9b28-fc091011f79a"
@@ -382,7 +382,7 @@
                 "id": "d75e9ac3-bb29-403e-9ec2-90f4f4e0dbe7"
               }
             ],
-            "updated": [
+            "modified": [
               {
                 "connection": {
                   "id": "883929fa-4fea-4eae-bc93-ae08b7271527"
@@ -563,7 +563,7 @@
         "id": "212dec6a-b3ba-42e9-a624-b097176dbaa6"
       }
     ],
-    "updated": [
+    "modified": [
       {
         "tag": {
           "id": "348efbfa-e275-4dda-9f66-229917c6b4ab"
@@ -595,7 +595,7 @@
         "id": "019adc5e-40ee-789d-a877-5baef7bc79fa"
       }
     ],
-    "updated": [
+    "modified": [
       {
         "concept": {
           "id": "019adc5e-9205-7364-a213-66fda12e5120"
@@ -621,7 +621,7 @@
         "id": "457d2061-ac4b-4317-8563-ba41afffd149"
       }
     ],
-    "updated": [
+    "modified": [
       {
         "file": {
           "id": "77e02ef4-e37e-41dd-80f6-00889cfcabb4"
@@ -647,7 +647,7 @@
     ]
   },
   "folders": {
-    "updated": [
+    "modified": [
       {
         "folder": {
           "id": "019adc83-0113-75e0-90b2-9d0912f1d60f"
@@ -671,7 +671,7 @@
     ]
   },
   "authors": {
-    "updated": [
+    "modified": [
       {
         "author": {
           "id": "e3d5369e-b103-42a8-960a-7960c75f0f88"

@@ -6,7 +6,7 @@ todos:
     content: Open MCP ticket 'Strict Read Write Hooks' under .repo/🎫/26/05/08/strict-read-write-hooks/
     status: pending
   - id: phase1_storefields_storecommands
-    content: "semio/js: rename SCHEMA_HOOK_IDLE_STATUS/SCHEMA_HOOK_READONLY_STATUS/USE_KIT_NAME_PENDING_STATUS to WRITE_STATUS_IDLE/WRITE_STATUS_READONLY/WRITE_STATUS_PENDING; rebuild StoreField (no public set; values pushed via constructor source callback); rebuild StoreCommand status using same source pattern (no kit/schema constants in the generic class); add KitStore.query<T>(body, parse, initial) + KitStore.mutation<TArgs>(name, vars, body, toVars) helpers; declare every read as a one-liner query<T>(...) and every write as a one-liner mutation<TArgs>(...) backed by an Operation (RenameKit, DraggedPiece, AddedType, ...); wire operationSucceeded -> correlator + invalidations.next() and operationFailed -> correlator; delete OperationRouter, seedFieldsFromDto, dispatchCorrelationEnvelope typed-kind branch, kitRenamed subscription, fieldCache; privatize submitChangeKitCommands and fetchFullKit; extend embedded tests"
+    content: "semio/js: rename SCHEMA_HOOK_IDLE_STATUS/SCHEMA_HOOK_READONLY_STATUS/USE_KIT_NAME_PENDING_STATUS to WRITE_STATUS_IDLE/WRITE_STATUS_READONLY/WRITE_STATUS_PENDING; rebuild StoreField (no public set; values pushed via constructor source callback); rebuild StoreCommand status using same source pattern (no kit/schema constants in the generic class); add KitStore.query<T>(body, parse, initial) read helper + KitStore.operation<TArgs>(name, vars, body, toVars) transactional kit-modifying helper (one per SDL OperationKind variant: RenameKit, DraggedPiece, AddedType, ...) + KitStore.command<TArgs>(...) non-transactional helper for workspace writes (attachBackbone, syncNow, importKit, ...); wire operationSucceeded -> correlator + invalidations.next() and operationFailed -> correlator; delete OperationRouter, seedFieldsFromDto, dispatchCorrelationEnvelope typed-kind branch, kitRenamed subscription, fieldCache; privatize submitChangeKitCommands and fetchFullKit; extend embedded tests"
     status: pending
   - id: phase2_react_hooks
     content: "semio/react: rewrite every read hook as useStoreField (static) or useGraphqlField (parameterized, disposes per dep change) and every write hook as useStoreCommand; delete HookTriad/HookRead/useDraft/useOptimistic/useSchemaObjectState/useSchemaFieldState + auto-generated wrappers/useSemioReadSnap/useKitSync/useWriteQueue/useSetErrors; update embedded tests"
@@ -22,17 +22,27 @@ isProject: false
 
 # Strict read / write hooks via StoreField + StoreCommand
 
+## Vocabulary
+
+- **Read**     = a `StoreField<T>` fed by one GraphQL query. No side-effects. No public mutator.
+- **Command**  = a `StoreCommand<TArgs>` -- the only side-effect carrier in the system. Every write is a command.
+- **Operation** = a *kit-modifying* command. Operations correspond 1:1 to the SDL `union OperationKind` (`RenameKit`, `DraggedPiece`, `AddedType`, `ChangedDescription`, `CreatedFixedPiece`, `FixedPiece`, ...). Operations are always scoped inside a draft + transaction and complete asynchronously through the rs operation stream (correlated by `requestId`).
+
+Operations are a strict subset of commands. The `operation<TArgs>` helper builds a kit-modifying `StoreCommand` (transactional); the `command<TArgs>` helper builds a non-transactional `StoreCommand` (e.g. backbone attach, sync now, file import / export). Both produce the same `StoreCommand<TArgs>` public type; consumers never need to care which kind they hold.
+
 ## Target shape
 
 ```mermaid
 graph LR
   subgraph SemioJs["semio/js KitStore"]
     Q["query<T>(body, parse, initial)<br/>-> StoreField<T>"]
-    M["mutation<TArgs>(name, vars, body, toVars)<br/>-> StoreCommand<TArgs>"]
+    OP["operation<TArgs>(name, vars, body, toVars)<br/>-> StoreCommand<TArgs><br/>(transactional, kit-modifying)"]
+    CMD["command<TArgs>(name, vars, body, toVars)<br/>-> StoreCommand<TArgs><br/>(non-transactional)"]
     INVS["invalidations Subject<void>"]
     CORR["RequestCorrelator"]
     Q -- subscribe --> INVS
-    M -- await requestId --> CORR
+    OP -- draft + tx + await requestId --> CORR
+    CMD -- direct gqlRun --> CORR
   end
   subgraph Sub["GraphQL subscriptions"]
     OS["operationSucceeded"] --> CORR
@@ -44,27 +54,21 @@ graph LR
     USC["useStoreCommand(cmd): [run, WriteStatus]"]
     UGF["useGraphqlField(make, deps): T"]
     R["useTypeName, useTypesIds, useKitFileUrl, useCanUndo, ..."]
-    W["useRenameKit, useUndo, useDragPieces, useUpdateType, ..."]
+    W["useRenameKit, useUndo, useDragPieces, useUpdateType, ...<br/>useAttachBackbone, useSyncNow, useImportKit, ..."]
     R --> USF
     R --> UGF
     W --> USC
   end
   Q --> USF
   Q --> UGF
-  M --> USC
+  OP --> USC
+  CMD --> USC
   subgraph Sketchpad["semio/sketchpad"]
     Row["SketchpadFieldRow / ToggleRow<br/>{ value, status, onCommit }"]
     Row --> R
     Row --> W
   end
 ```
-
-
-
-Two mechanisms only, and they cannot be confused:
-
-- **Read** = one GraphQL query → `StoreField<T>`. The field exposes `subscribe` / `getSnapshot` / `dispose` and **nothing else**; there is no public `set`. Values are pushed in by the `query` helper via a constructor-time `source` callback. Reads never have side-effects.
-- **Write** = one GraphQL operation (`RenameKit`, `DraggedPiece`, `AddedType`, ... -- the SDL `union OperationKind`) wrapped in a draft + transaction → `StoreCommand<TArgs>`. A `StoreCommand` is the only thing in the system that produces side-effects; every side-effect is an operation. The shared `mutation<TArgs>` executor is the only place draft / transaction / correlator code exists.
 
 The new contract is:
 
@@ -174,9 +178,9 @@ In [semio/sketchpad/index.tsx](semio/sketchpad/index.tsx):
 
 Two helpers replace every read/write-specific method in `KitStore` and remove all seeding / typed-event filtering.
 
-### Two helpers + one invalidation tick
+### Three helpers + one invalidation tick
 
-`StoreField` has no `set`; the `query<T>` helper only feeds values via the `push` closure handed to the field's constructor. `mutation<TArgs>` is the only thing that calls draft / transaction / correlator code.
+`StoreField` has no `set`; the `query<T>` helper only feeds values via the `push` closure handed to the field's constructor. `operation<TArgs>` is the only place draft / transaction / correlator code exists. `command<TArgs>` is the escape hatch for non-transactional GraphQL mutations (no kit modification, no draft/tx).
 
 ```ts
 // semio/js/index.ts -- inside KitStore.
@@ -201,8 +205,8 @@ private query<T>(body: string, parse: (data: JsonValue) => T, initial: T): Store
   });
 }
 
-/** @emoji 📝 Transactional GraphQL operation. The single executor for every side-effect in the system. */
-private mutation<TArgs>(
+/** @emoji 🪪 Transactional kit-modifying operation. Builds a StoreCommand that opens draft + tx, runs the named SDL operation, awaits the rs `operationSucceeded` row by `requestId`, then commits / aborts. Maps 1:1 to a SDL `OperationKind` variant. */
+private operation<TArgs>(
   fieldName: string,                                          // e.g. "renameKit"
   variableSignatures: string,                                 // e.g. "$name: String!"
   argList: string,                                            // e.g. "name: $name"
@@ -230,9 +234,32 @@ private mutation<TArgs>(
     }
   });
 }
+
+/** @emoji 📝 Non-transactional command. Builds a StoreCommand that runs a plain GraphQL mutation (no draft / tx / correlator). Used for workspace-level writes that are not kit operations. */
+private command<TArgs, TData = JsonValue>(
+  fieldName: string,
+  variableSignatures: string,
+  argList: string,
+  toVariables: (args: TArgs) => Record<string, JsonValue>,
+  parse: (data: TData) => SetResult = () => ({ ok: true }),
+): StoreCommand<TArgs> {
+  return new StoreCommand<TArgs>(async (args) => {
+    try {
+      const data = kitGraphqlData(await this.gqlRun({
+        query: `mutation(${variableSignatures}) {
+                  ${fieldName}(${argList})
+                }`,
+        variables: toVariables(args),
+      })) as TData;
+      return parse(data);
+    } catch (e) {
+      return { ok: false, error: { kind: "Internal", message: String(e) } };
+    }
+  });
+}
 ```
 
-Every kit-store side-effect is one of the operations in SDL `union OperationKind = CreatedFixedPiece | FixedPiece | DraggedPiece | RenamedKit | ChangedDescription | ...`. Each `StoreCommand` exists only to dispatch the matching mutation through `mutation<TArgs>`. Reads can never trigger an operation; operations can never be issued except through a `StoreCommand`.
+Every kit side-effect is an entry in SDL `union OperationKind = CreatedFixedPiece | FixedPiece | DraggedPiece | RenamedKit | ChangedDescription | ...`; every operation `StoreCommand` is built by `operation<TArgs>`. Workspace-level writes (backbone attach / detach, sync now, file import / export, conflict resolution) are commands built by `command<TArgs>`. Reads never trigger either.
 
 `operationSucceeded` and `operationFailed` are the only subscriptions; both call `correlator.resolve(...)` and the success path additionally `invalidations.next()`. No `kitRenamed`-specific subscription, no `OperationRouter`, no `seedFieldsFromDto`, no `dispatchCorrelationEnvelope` typed-kind branch.
 
@@ -297,40 +324,56 @@ typeName(typeId: string): StoreField<string> {
 }
 ```
 
-### Defining writes (one mechanism for every mutation)
+### Defining operations (kit-modifying, transactional)
 
 ```ts
-// semio/js/index.ts -- KitStore constructor.
-readonly renameKit          = this.mutation<string>("renameKit",
+// semio/js/index.ts -- KitStore constructor. Every line here is one entry in OperationKind.
+readonly renameKit          = this.operation<string>("renameKit",
   "$name: String!", "name: $name",
   (name) => ({ name }));
 
-readonly undo               = this.mutation<void>("undo", "", "", () => ({}));
-readonly redo               = this.mutation<void>("redo", "", "", () => ({}));
+readonly undo               = this.operation<void>("undo", "", "", () => ({}));
+readonly redo               = this.operation<void>("redo", "", "", () => ({}));
 
-readonly dragPiecesInDesign = this.mutation<{ designId: string; pieceIds: readonly string[]; offset: { u: number; v: number } }>(
+readonly dragPiecesInDesign = this.operation<{ designId: string; pieceIds: readonly string[]; offset: { u: number; v: number } }>(
   "dragPiecesInDesign",
   "$designId: Id!, $pieceIds: [Id!]!, $offset: OffsetInput!",
   "designId: $designId, pieceIds: $pieceIds, offset: $offset",
   (a) => ({ designId: a.designId, pieceIds: [...a.pieceIds], offset: a.offset }),
 );
 
-readonly flattenDesign      = this.mutation<{ designId: string }>(
+readonly flattenDesign      = this.operation<{ designId: string }>(
   "flattenDesign", "$designId: Id!", "designId: $designId",
   (a) => ({ designId: a.designId }),
 );
 
-readonly updateType         = this.mutation<{ id: string; key: string; value: unknown }>(
+readonly updateType         = this.operation<{ id: string; key: string; value: unknown }>(
   "updateType",
   "$id: Id!, $key: String!, $value: AttributeValueInput!",
   "id: $id, key: $key, value: $value",
   (a) => ({ id: a.id, key: a.key, value: a.value as JsonValue }),
 );
-
-// ...same shape for every other mutation in the OperationKind union.
+// ... same shape for every other entry in union OperationKind.
 ```
 
-The `mutation<TArgs>` helper is the only place `openDraft` / `openTransaction` / `commit/abort` / `correlator.await` ever appear.
+### Defining commands (non-transactional, non-kit)
+
+```ts
+// semio/js/index.ts -- KitStore constructor.
+readonly attachBackbone   = this.command<{ uri: string }>("attachBackbone", "$uri: String!", "uri: $uri", (a) => ({ uri: a.uri }));
+readonly detachBackbone   = this.command<void>           ("detachBackbone", "", "", () => ({}));
+readonly syncNow          = this.command<void>           ("syncNow",        "", "", () => ({}));
+readonly importKit        = this.command<{ source: string }>("importKit",   "$source: String!", "source: $source", (a) => ({ source: a.source }));
+readonly exportKit        = this.command<{ target: string }>("exportKit",   "$target: String!", "target: $target", (a) => ({ target: a.target }));
+readonly resolveConflict  = this.command<{ id: string; resolution: ConflictResolution }>(
+  "resolveConflict",
+  "$id: Id!, $resolution: ConflictResolutionInput!",
+  "id: $id, resolution: $resolution",
+  (a) => ({ id: a.id, resolution: a.resolution as JsonValue }),
+);
+```
+
+The `operation<TArgs>` helper is the only place `openDraft` / `openTransaction` / `commit / abort` / `correlator.await` ever appear. `command<TArgs>` is a flat GraphQL mutation with no transaction lifecycle.
 
 - `StoreCommand`s on `KitStore` (and exposed on `KitStoreClient`):
   - Already: `renameKit`.
@@ -395,17 +438,25 @@ export interface KitStoreClient {
   typeName(typeId: string): StoreField<string>;
   // ... rest of factories ...
 
-  // Writes (every mutation built via KitStore.mutation<TArgs>).
+  // Operations (kit-modifying; built via KitStore.operation<TArgs>; one per OperationKind variant).
   readonly renameKit:          StoreCommand<string>;
   readonly undo:               StoreCommand<void>;
   readonly redo:               StoreCommand<void>;
   readonly dragPiecesInDesign: StoreCommand<{ designId: string; pieceIds: readonly string[]; offset: { u: number; v: number } }>;
   readonly updateType:         StoreCommand<{ id: string; key: string; value: unknown }>;
-  // ... rest of commands ...
+  // ... rest of operations ...
+
+  // Commands (workspace-level; built via KitStore.command<TArgs>; no draft / tx).
+  readonly attachBackbone:     StoreCommand<{ uri: string }>;
+  readonly detachBackbone:     StoreCommand<void>;
+  readonly syncNow:            StoreCommand<void>;
+  readonly importKit:          StoreCommand<{ source: string }>;
+  readonly exportKit:          StoreCommand<{ target: string }>;
+  readonly resolveConflict:    StoreCommand<{ id: string; resolution: ConflictResolution }>;
 }
 ```
 
-`fetchFullKit` and `submitChangeKitCommands` become `private` on `WasmKitStoreClient` / `KitStore`. Nothing on the public surface bypasses the `query` / `mutation` helpers.
+`fetchFullKit` and `submitChangeKitCommands` become `private` on `WasmKitStoreClient` / `KitStore`. Nothing on the public surface bypasses the `query` / `operation` / `command` helpers.
 
 Embedded tests in [semio/js/index.ts](semio/js/index.ts) get one new `describe` per family asserting that:
 

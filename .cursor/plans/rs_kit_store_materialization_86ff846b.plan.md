@@ -3,19 +3,19 @@ name: rs kit store materialization
 overview: "Refactor `semio/rs` so the root kit is structurally immutable: every command (rename, description, drag, createFixedPiece, tag/concept/quality CRUD, etc.) appends forward+backward `KitOperation`s onto the open transaction's `Change`, and the visible kit is always recomputed by deep-cloning the parent checkpoint's frozen root and replaying forward ops from finalized + open transactions, with per-checkpoint snapshot caching and per-draft materialization caching."
 todos:
   - id: kitdiff_apply
-    content: Port the canonical `KitDiff` family of types (sparse partials with `removed`/`updated`/`added` triples on every collection, recursive on Type/Design/Representation/Connector/Piece/Connection/Tag/Concept/File/Folder/Author/Attribute/Port) into the rs `operation` region with serde matching `semio/assets/semio/metabolism.kit.diff.semio.json`, and implement `Kit::apply_diff` as the single central mutation entry point; remove every per-field mutator helper on `Kit`/`Design`/`Piece`/...
+    content: Port the canonical `KitDiff` family of types (sparse partials with `removed`/`modified`/`added` triples on every collection, recursive on Type/Design/Representation/Connector/Piece/Connection/Tag/Concept/File/Folder/Author/Attribute/Port) into the rs `operation` region with serde matching `semio/assets/semio/metabolism.kit.diff.semio.json`, and implement `Kit::apply_diff` as the single central mutation entry point; remove every per-field mutator helper on `Kit`/`Design`/`Piece`/...
     status: pending
   - id: kit_deep_clone
     content: Implement `Kit::deep_clone() -> Arc<Kit>` walking Type/Representation/Connector/Design/Piece/Tag/Concept/Quality/Author/File/Folder/Prop/Attribute/Stat and rebuilding `*_by_id` weak maps.
     status: pending
   - id: kitop_enum
-    content: Define one-way `operation::KitOperation` with one variant per existing Command + pure `to_diff(&Arc<Kit>) -> KitDiff`; add separate `operation::inverse_for(forward, pre)` helper that returns another forward-intent `KitOperation` (no undo state on variants).
+    content: Define one-way `operation::KitOperation` with one variant per existing Command and two pure read methods per variant; `to_diff(&Arc<Kit>) -> KitDiff` and `to_backwards(&Arc<Kit>) -> Vec<KitOperation>` (returns ordered forward-intent ops that undo the operation, allowing fan-out for non-atomic structural changes). No undo state on variants; no separate inverse helper.
     status: pending
   - id: vcs_root_freeze
     content: Change `Checkpoint.root` to immutable `frozen_root Arc<Kit>`; add `Draft.change_seq`; remove `Graph.the_kit` in favour of `parent_root_for_active_draft` + cached `materialized_kit()` (deep-clone + replay via op->diff->apply_diff) + `record_op_in_open_transaction()`.
     status: pending
   - id: worker_rewrite
-    content: Rewrite `worker::ChildRuntime::apply` so every command builds a forward `KitOperation`, derives a separate forward-intent backward via `inverse_for`, records both onto the open transaction's `Change`, invalidates the materialization cache, then emits the existing `OperationKind` events from the freshly materialized kit. The worker never mutates a `Kit` directly.
+    content: Rewrite `worker::ChildRuntime::apply` so every command builds a forward `KitOperation`, derives backwards via `forward.to_backwards(&before_kit)`, records both onto the open transaction's `Change` (extends `Change.forwards` with the forward op and `Change.backwards` with the returned `Vec`), invalidates the materialization cache, then emits the existing `OperationKind` events from the freshly materialized kit. The worker never mutates a `Kit` directly.
     status: pending
   - id: resolvers_switch
     content: Switch every `graph.the_kit.*` access in `gql`, `iface`, `kit_backbone`, and `kit_graph_engine` to `graph.materialized_kit().await`.
@@ -79,7 +79,7 @@ Invariants:
 
 - `📦 kit` (lines 1148–2833):
   - Add `Kit::deep_clone()` walking every sub-entity (Type, Representation, Connector, Design, Piece, Tag, Concept, Quality, Author, File, Folder, Prop, Attribute, Stat, plus all `*_by_id` weak maps re-pointing into the cloned graph).
-  - Add **the single central mutation entry point** `Kit::apply_diff(&self, diff: &KitDiff) -> Result<(), SemioError>`. This is the only public mutator on `Kit`. Internally it walks the canonical `KitDiff` (sparse scalar overrides + `removed` / `updated` / `added` triples on every collection) and writes the corresponding `RwLock<…>` slot (or pushes/removes from `Vec`/`HashMap`). Every direct field-mutation in the file that currently reaches into `kit.name.write().await`, `kit.description.write().await`, `kit.tags.write().await.push(...)`, `design.pieces.write().await.push(...)`, etc., is collapsed into this one method.
+  - Add **the single central mutation entry point** `Kit::apply_diff(&self, diff: &KitDiff) -> Result<(), SemioError>`. This is the only public mutator on `Kit`. Internally it walks the canonical `KitDiff` (sparse scalar overrides + `removed` / `modified` / `added` triples on every collection) and writes the corresponding `RwLock<…>` slot (or pushes/removes from `Vec`/`HashMap`). Every direct field-mutation in the file that currently reaches into `kit.name.write().await`, `kit.description.write().await`, `kit.tags.write().await.push(...)`, `design.pieces.write().await.push(...)`, etc., is collapsed into this one method.
   - All existing per-field mutator helpers on `Kit` (e.g. `create_and_register_tag`, `delete_tag_by_id`, `register_tag`, `register_concept`, `register_quality`) are removed; their behaviour is expressed as `KitDiff` fragments produced from operations and applied centrally.
   - Strip `bump_touch_epoch` from `Kit` (now done at `Graph` level on materialization invalidation).
 - `🌿 vcs` (lines 3089–4156):
@@ -111,6 +111,11 @@ Invariants:
     impl KitOperation {
         /// Pure: read pre-state, produce a structural `KitDiff`. Never mutates `kit`.
         pub async fn to_diff(&self, kit: &Arc<Kit>) -> Result<KitDiff, SemioError>;
+
+        /// Pure: read pre-state, return the ordered list of one-way `KitOperation`s
+        /// that, applied in order through the same op → diff → `apply_diff` pipeline,
+        /// undo this operation. Never mutates `kit`.
+        pub async fn to_backwards(&self, kit: &Arc<Kit>) -> Result<Vec<KitOperation>, SemioError>;
     }
     ```
   - Adopt the **canonical `KitDiff`** schema already defined for the semio kit format. It is a partial mirror of `Kit` where:
@@ -119,30 +124,33 @@ Invariants:
       ```rust
       pub struct TypesDiff {
           pub removed: Vec<TypeId>,
-          pub updated: Vec<TypeDiffUpdate>,
+          pub modified: Vec<TypeDiffUpdate>,
           pub added:   Vec<Type>,
       }
       pub struct TypeDiffUpdate { pub r#type: TypeId, pub diff: TypeDiff }
       ```
       and identically for `DesignsDiff` / `TagsDiff` / `FilesDiff` / `FoldersDiff` / `PortsDiff` / `AuthorsDiff` / `AttributesDiff` / `ConceptsDiff`.
     - Each per-entity `*Diff` (e.g. `TypeDiff`, `DesignDiff`, `RepresentationDiff`, `ConnectorDiff`, `PieceDiff`, `ConnectionDiff`, `TagDiff`, `ConceptDiff`, `FileDiff`, `FolderDiff`, `AuthorDiff`, `AttributeDiff`) recursively follows the same pattern (sparse scalar fields + nested `*Diff` containers for its own collections; e.g. `TypeDiff.representations: Option<RepresentationsDiff>`, `TypeDiff.connectors: Option<ConnectorsDiff>`, `DesignDiff.pieces: Option<PiecesDiff>`, `DesignDiff.connections: Option<ConnectionsDiff>`, `RepresentationDiff.tags: Option<TagsDiff>`, etc.).
-    - The id-only references inside `removed[]` / `updated[*].<entity>` are dedicated `*Id` newtype structs (`TypeId`, `DesignId`, `PieceId`, `ConnectionId`, `RepresentationId`, `ConnectorId`, `TagId`, `ConceptId`, `FileId`, `FolderId`, `AuthorId`, `AttributeId`) so the on-wire JSON looks like `{ "id": "..." }` (matching the canonical example).
-    - Reference shape: [semio/assets/semio/metabolism.kit.diff.semio.json](semio/assets/semio/metabolism.kit.diff.semio.json) is the authoritative on-disk sample; the Rust types must serde to / deserialize from exactly that JSON shape (camelCase field names, `id` for entity references, `diff` for nested updates, `removed` / `updated` / `added` keys).
+    - The id-only references inside `removed[]` / `modified[*].<entity>` are dedicated `*Id` newtype structs (`TypeId`, `DesignId`, `PieceId`, `ConnectionId`, `RepresentationId`, `ConnectorId`, `TagId`, `ConceptId`, `FileId`, `FolderId`, `AuthorId`, `AttributeId`) so the on-wire JSON looks like `{ "id": "..." }` (matching the canonical example).
+    - Reference shape: [semio/assets/semio/metabolism.kit.diff.semio.json](semio/assets/semio/metabolism.kit.diff.semio.json) is the authoritative on-disk sample; the Rust types must serde to / deserialize from exactly that JSON shape (camelCase field names, `id` for entity references, `diff` for nested updates, `removed` / `modified` / `added` keys).
   - All these types live in the `operation` region of [semio/rs/lib.rs](semio/rs/lib.rs) next to `KitOperation`.
   - `Kit::apply_diff(&self, diff: &KitDiff)` is the **single central mutation entry point**. Internally it walks the sparse `KitDiff` tree, applies scalar overrides, removes entities by id, applies per-entity `*Diff` updates (recursively re-using `apply_diff` on the same pattern for sub-entities), and appends `added` entities. No other `Kit`-mutating call exists.
   - Each existing `OperationKind` (`RenamedKit`, `CreatedFixedPiece`, `DraggedPiece`, `ChangedDescription`, `FixedPiece`) is constructed from the corresponding `KitOperation` + post-apply materialized kit so the GraphQL operation event stream stays unchanged.
-- **Inverse computation lives on the recorder, not on the op or the diff.** When the worker accepts a command, it captures the current materialized kit, builds the forward `KitOperation` from the command, and *separately* builds a backward `KitOperation` (also a pure forward-intent op) that, when fed through op → diff → `apply_diff`, restores the prior visible state. Examples:
-  - forward `RenameKit { name: "Bar" }` → backward `RenameKit { name: <pre.name> }`
-  - forward `DeleteTag { tag_id }` → backward `CreateTag { owner_id: <pre.tag.owner>, tag_id, input: <pre.tag input snapshot> }`
-  - forward `CreateTag { owner_id, tag_id, input }` → backward `DeleteTag { tag_id }`
-  - forward `DragPieceInDesign { design_id, piece_id, offset }` → backward `DragPieceInDesign { design_id, piece_id, offset: -offset }`
-  - forward `CreateFixedPiece { design_id, piece_id, … }` → backward `DeletePieceInDesign { design_id, piece_id }`
-  This logic lives in a single `operation::inverse_for(forward: &KitOperation, pre: &Arc<Kit>) -> Result<KitOperation, SemioError>` helper next to the enum, not on the variants. `KitOperation` stays a flat data type with no undo coupling, and `Change.forwards: Vec<KitOperation>` / `Change.backwards: Vec<KitOperation>` are symmetric — both are just lists of one-way ops that go through the same op → diff → `apply_diff` pipeline at replay time.
+- **Inverse computation lives on the operation itself via `KitOperation::to_backwards`.** Every variant knows how to read pre-state and produce the ordered list of forward-intent `KitOperation`s that undo it. The list lets one forward op fan out to multiple backward ops where the structural change is non-atomic (e.g. deleting a piece may recreate the piece + recreate any dependent connections; a batch `DeleteTags` returns one `CreateTag` per id). Examples (illustrative — every variant must implement its own):
+  - forward `RenameKit { name: "Bar" }` → backwards `[ RenameKit { name: <pre.name> } ]`
+  - forward `DeleteTag { tag_id }` → backwards `[ CreateTag { owner_id: <pre.tag.owner>, tag_id, input: <pre.tag input snapshot> } ]`
+  - forward `CreateTag { owner_id, tag_id, input }` → backwards `[ DeleteTag { tag_id } ]`
+  - forward `DragPieceInDesign { design_id, piece_id, offset }` → backwards `[ DragPieceInDesign { design_id, piece_id, offset: -offset } ]`
+  - forward `CreateFixedPiece { design_id, piece_id, … }` → backwards `[ DeletePieceInDesign { design_id, piece_id } ]`
+  - forward `DeletePieceInDesign { design_id, piece_id }` → backwards `[ CreateFixedPiece { … from <pre> piece state … }, /* one connection-recreating op per connection that referenced the piece */ ]`
+  - forward `DeleteTags { tag_ids }` → backwards = ordered `Vec` of `CreateTag` ops (one per id, oldest first).
+
+  `KitOperation` stays a flat data type with no undo state inside variants; `to_backwards` is a pure read on `kit` returning a fresh `Vec`. `Change.forwards: Vec<KitOperation>` / `Change.backwards: Vec<KitOperation>` are symmetric — both are just lists of one-way ops that go through the same op → diff → `apply_diff` pipeline at replay time. There is no separate `operation::inverse_for` helper; the logic is on the variants of `KitOperation` itself.
 - `🧵 worker` (lines 5887–6211): `ChildRuntime::apply` becomes a flat dispatcher per `Command` that:
-  1. Captures `before_kit = self.graph.materialized_kit().await` (used to derive the inverse op, e.g. previous name / previous tag input snapshot).
+  1. Captures `before_kit = self.graph.materialized_kit().await` (used by `to_backwards` to derive the inverse ops, e.g. previous name / previous tag input snapshot).
   2. Builds the forward `KitOperation` from the command payload.
-  3. Computes `backward = operation::inverse_for(&forward, &before_kit).await?` — a separate one-way `KitOperation`, no extra state hung off the forward variant.
-  4. Calls `self.graph.record_op_in_open_transaction(draft_id, transaction_id, forward.clone(), backward).await?` which (a) ensures the open transaction exists, (b) appends to its current (single) `Change.forwards` / `Change.backwards`, (c) bumps `draft.change_seq`, (d) invalidates `materialized_cache`. The worker itself never calls `to_diff` or `apply_diff` — those run lazily inside `materialized_kit()` so cancelled (aborted) ops never touch a kit.
+  3. Computes `backwards: Vec<KitOperation> = forward.to_backwards(&before_kit).await?`.
+  4. Calls `self.graph.record_op_in_open_transaction(draft_id, transaction_id, forward.clone(), backwards).await?` which (a) ensures the open transaction exists, (b) extends the current `Change.forwards` with `forward` and the current `Change.backwards` with `backwards` (kept in their natural order; replay during undo iterates the change's `backwards` in reverse), (c) bumps `draft.change_seq`, (d) invalidates `materialized_cache`. The worker itself never calls `to_diff` or `apply_diff` — those run lazily inside `materialized_kit()` so cancelled (aborted) ops never touch a kit.
   5. Re-materializes via `self.graph.materialized_kit().await` (which, internally, deep-clones root then for each recorded forward op runs `op.to_diff(&kit) → kit.apply_diff(diff)`).
   6. Builds the existing `OperationKind` (e.g. `RenamedKit { kit: materialized_kit, … }`) and pushes to `op_history` + emits on the bus, exactly as today.
   - `Graph::abort_transaction` simply drops the open transaction's `Change` list and invalidates the materialization cache; the next `materialized_kit()` deep-clones root and replays only the surviving (finalized) ops, automatically yielding the pre-transaction state — no manual undo execution needed. `Change.backwards` is preserved on disk for explicit undo/redo flows (future).
@@ -160,7 +168,7 @@ Invariants:
 
 1. Canonical `KitDiff` family of types (`KitDiff`, `TypesDiff` / `TypeDiff` / `TypeDiffUpdate`, `DesignsDiff` / `DesignDiff` / `DesignDiffUpdate`, `RepresentationsDiff` / `RepresentationDiff` / `…Update`, `ConnectorsDiff` / `ConnectorDiff` / `…Update`, `PiecesDiff` / `PieceDiff` / `…Update`, `ConnectionsDiff` / `ConnectionDiff` / `…Update`, `TagsDiff` / `TagDiff` / `…Update`, `ConceptsDiff` / `ConceptDiff` / `…Update`, `FilesDiff` / `FileDiff` / `…Update`, `FoldersDiff` / `FolderDiff` / `…Update`, `AuthorsDiff` / `AuthorDiff` / `…Update`, `AttributesDiff` / `AttributeDiff` / `…Update`, `PortsDiff` / `PortDiff` / `…Update`, plus the corresponding `*Id` newtype refs) + serde camelCase config matching [semio/assets/semio/metabolism.kit.diff.semio.json](semio/assets/semio/metabolism.kit.diff.semio.json), and `Kit::apply_diff` walking that tree as the single central mutation entry point; deletion of all per-field mutators on `Kit`.
 2. `Kit::deep_clone()` walking every sub-entity and rebuilding `*_by_id` weak maps.
-3. `KitOperation` enum (one-way, `to_diff(&Arc<Kit>) -> KitDiff` only) + `operation::inverse_for` helper covering the existing 15 `Command` variants.
+3. `KitOperation` enum (one-way) covering the existing 15 `Command` variants, with two pure read methods per variant: `to_diff(&Arc<Kit>) -> KitDiff` and `to_backwards(&Arc<Kit>) -> Vec<KitOperation>`.
 4. `Checkpoint.frozen_root: Arc<Kit>`, `Draft.change_seq`, `Graph.parent_root_for_active_draft` + `materialized_kit` (deep-clone + replay via op → diff → `apply_diff`) + `record_op_in_open_transaction`.
 5. Remove `Graph.the_kit`; rewrite `worker::ChildRuntime::apply` to record ops only (no mutation; mutation happens inside `materialized_kit()`).
 6. Switch every resolver / backbone path to `materialized_kit()`.
