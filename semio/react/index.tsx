@@ -890,6 +890,22 @@ async function noopAsyncSet(_next?: unknown): Promise<SetResult> {
 const SCHEMA_HOOK_READONLY_STATUS = Object.freeze({ kind: "readonly" as const, pending: 0 });
 const SCHEMA_HOOK_IDLE_STATUS = Object.freeze({ kind: "idle" as const, pending: 0 });
 
+/** @emoji 🪪 Frozen pending for {@link useKitName} rust rename — stable identity while rename is in flight. */
+const USE_KIT_NAME_PENDING_STATUS = Object.freeze({ kind: "pending" as const, pending: 1 });
+
+/** @emoji 🪪 Same semantic {@link WriteStatus} → reuse prior reference (triads + `useWriteIndicator` subscribers). */
+function writeStatusEquivalent(a: WriteStatus, b: WriteStatus): boolean {
+  if (a === b) return true;
+  if (a.kind !== b.kind) return false;
+  if (a.kind === "pending" && b.kind === "pending") {
+    return a.pending === b.pending && (a as { lastError?: SetError }).lastError === (b as { lastError?: SetError }).lastError;
+  }
+  if (a.kind === "error" && b.kind === "error") {
+    return a.lastError === b.lastError;
+  }
+  return true;
+}
+
 function kitIdFromRuntime(runtime: KitRuntimeContextValue): string | null {
   const g = runtime.kitId ?? (runtime.snapshot as { kit?: { id?: string } }).kit?.id;
   return g != null && g !== "" ? String(g) : null;
@@ -5749,14 +5765,24 @@ function useSchemaFieldState(typeName: string, fieldName: string, idValue?: stri
     [runtime, rustTarget, schemaScanWritable, typeName, fieldName, idValue, scope, value],
   );
 
-  const status: WriteStatus = React.useMemo(() => {
-    if (rustTarget && runtime.kitClient) {
-      if (!runtime.canWrite) return SCHEMA_HOOK_READONLY_STATUS;
-      if (pending > 0) return { kind: "pending", pending, lastError: lastErr } as const;
-      if (lastErr) return { kind: "error", pending: 0, lastError: lastErr } as const;
-      return SCHEMA_HOOK_IDLE_STATUS;
-    }
-    return schemaScanWritable ? SCHEMA_HOOK_IDLE_STATUS : SCHEMA_HOOK_READONLY_STATUS;
+  const fieldWriteStatusRef = React.useRef<WriteStatus>(SCHEMA_HOOK_IDLE_STATUS);
+  const status = React.useMemo((): WriteStatus => {
+    const next: WriteStatus =
+      rustTarget && runtime.kitClient
+        ? !runtime.canWrite
+          ? SCHEMA_HOOK_READONLY_STATUS
+          : pending > 0
+            ? ({ kind: "pending", pending, lastError: lastErr } as WriteStatus)
+            : lastErr
+              ? ({ kind: "error", pending: 0, lastError: lastErr } as const)
+              : SCHEMA_HOOK_IDLE_STATUS
+        : schemaScanWritable
+          ? SCHEMA_HOOK_IDLE_STATUS
+          : SCHEMA_HOOK_READONLY_STATUS;
+    const prev = fieldWriteStatusRef.current;
+    if (writeStatusEquivalent(prev, next)) return prev;
+    fieldWriteStatusRef.current = next;
+    return next;
   }, [rustTarget, runtime.kitClient, runtime.canWrite, pending, lastErr, schemaScanWritable]);
 
   return [value, setValue, status] as const;
@@ -8763,6 +8789,7 @@ export function useKitId(idValue?: string): HookTriad<any> {
 
 export function useKitName(idValue?: string): HookTriad<any> {
   const schemaTriad = useSchemaFieldState("Kit", "name", idValue);
+  const schemaStatus = schemaTriad[2];
   const runtime = useKitRuntimeSafe();
   const ks = React.useMemo(() => {
     const c = runtime?.kitClient ?? null;
@@ -8818,13 +8845,24 @@ export function useKitName(idValue?: string): HookTriad<any> {
     [ks, liveName, schemaTriad, schemaValue],
   );
 
-  const status: WriteStatus = !ks
-    ? schemaTriad[2]
-    : renameSnap.kind === "pending"
-      ? { kind: "pending", pending: 1 }
-      : renameSnap.kind === "error"
-        ? { kind: "error", pending: 0, lastError: { kind: "InvalidValue", message: renameSnap.message } }
-        : { kind: "idle", pending: 0 };
+  const renameKind = renameSnap.kind;
+  const renameErrorMessage = renameKind === "error" ? renameSnap.message : undefined;
+  const kitRenameErrRef = React.useRef<{ msg: string; status: WriteStatus } | null>(null);
+
+  const status: WriteStatus = React.useMemo((): WriteStatus => {
+    if (!ks) return schemaStatus;
+    if (renameKind === "pending") return USE_KIT_NAME_PENDING_STATUS;
+    if (renameKind === "error" && renameErrorMessage !== undefined) {
+      const cached = kitRenameErrRef.current;
+      if (cached && cached.msg === renameErrorMessage) return cached.status;
+      const lastError = { kind: "InvalidValue" as const, message: renameErrorMessage };
+      const st = { kind: "error" as const, pending: 0 as const, lastError };
+      kitRenameErrRef.current = { msg: renameErrorMessage, status: st };
+      return st;
+    }
+    kitRenameErrRef.current = null;
+    return SCHEMA_HOOK_IDLE_STATUS;
+  }, [ks, schemaStatus, renameKind, renameErrorMessage]);
 
   const displayName = ks ? liveName : schemaValue;
   return [displayName, setter, status] as const;

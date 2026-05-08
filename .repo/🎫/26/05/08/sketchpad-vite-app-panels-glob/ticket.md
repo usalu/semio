@@ -41,3 +41,26 @@
 - `semio/react/index.tsx`
 - `semio/sketchpad/index.tsx`
 - `.repo/🎫/26/05/08/sketchpad-vite-app-panels-glob/ticket.md`
+
+---
+
+## Follow-up: Triad field rows + stable `WriteStatus` (general architecture)
+
+**Goal:** Apply the same UX pattern as kit rename (inline spinner + error under control, stable subscription semantics) across sketchpad detail panels and schema hooks.
+
+### React (`semio/react/index.tsx`)
+
+- Added `writeStatusEquivalent()` plus `USE_KIT_NAME_PENDING_STATUS` (frozen). `useKitName` now derives status with **primitive deps** (`renameKind`, `renameErrorMessage`) instead of the whole `renameSnap` object, and caches error `{ kind: "error", … }` by message so **`WriteStatus` identity stays stable** across renders when nothing changed.
+- `useSchemaFieldState` wraps computed status in a ref: reuse the previous **`WriteStatus` reference** when semantically equal (pending count + `lastError` ref, error ref, idle/readonly frozen singletons).
+
+### Sketchpad (`semio/sketchpad/index.tsx`)
+
+- New region **`SketchpadTriadFieldRows`**: `SketchpadTriadInputRow`, `SketchpadTriadTextareaRow`, `SketchpadTriadToggleRow` — each consumes a **`HookTriad`** + **`useWriteIndicator`** (spinner + destructive error text).
+- **Kit detail**: all kit metadata rows use triad components + `mapCommit` where optional strings trim to `null`.
+- **Type detail (`SingleTypeSection`)**: wired to `useType*` hooks; parent id remains read-only display with shared write-indicator line (graph reference is not edited as a plain string).
+- **Design detail (`DesignSectionForm`)**: name/description/icon/image/unit use schema triads + triad rows; **variant/view** stay on `runUpdateDesign` (client-only extensions, not in GraphQL `Design`).
+
+### Verification (this pass)
+
+- `cd semio/react && npm test` → **15 / 15 passed**.
+

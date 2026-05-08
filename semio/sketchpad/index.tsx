@@ -86,6 +86,11 @@ import {
   useCreateQuality,
   useCreateType,
   useDesign,
+  useDesignDescription,
+  useDesignIcon,
+  useDesignImage,
+  useDesignName,
+  useDesignUnit,
   useDesignClusterableGroups,
   useDesigns,
   useDesignScope,
@@ -134,13 +139,22 @@ import {
   useResolvedKitIdentifier,
   useTagsFull,
   useType,
+  useTypeDescription,
+  useTypeIcon,
+  useTypeImage,
+  useTypeIsAbstract,
+  useTypeName,
+  useTypeParent,
+  useTypeUnit,
   useTypes,
   useTypeScope,
   useTypesFull,
   useUpdateAuthor,
   useUpdateDesign,
   useUpdateType,
+  useWriteIndicator,
   Vector,
+  type HookTriad,
 } from "@semio/react";
 import { gunzipSync } from "fflate";
 
@@ -15615,6 +15629,124 @@ export const KitToolbarReset: FC = () => {
 // #region 💧Details
 // Details MUST render the Kit app detail panels for kit, type, port, tag, design, file, folder, and multi-artifact sections.
 
+// #region 🔖SketchpadTriadFieldRows
+/**
+ * @emoji 🧾 Stringify optional type parent reference for read-only display rows.
+ */
+function formatTypeParentRefForInput(value: unknown): string {
+  if (value == null) return "";
+  if (typeof value === "string") return value;
+  if (typeof value === "object" && "id" in (value as object)) {
+    const id = (value as { id?: unknown }).id;
+    return id != null ? String(id) : "";
+  }
+  return "";
+}
+
+/**
+ * @emoji 🧾 Reusable “kit name” row: {@link HookTriad} + {@link useWriteIndicator} (spinner + inline error).
+ */
+function SketchpadTriadInputRow(props: {
+  triad: HookTriad<any>;
+  id: string;
+  placeholder?: string;
+  placeholderId?: string;
+  readOnly?: boolean;
+  /** Map commit string (e.g. empty → `null` for optional kit fields). */
+  mapCommit?: (raw: string) => unknown;
+}): React.ReactElement {
+  const { triad, id, placeholder, placeholderId, readOnly, mapCommit } = props;
+  const [raw, setValue, status] = triad;
+  const { spinning, error, disabled } = useWriteIndicator(status);
+  const value = raw == null ? "" : typeof raw === "string" ? raw : String(raw);
+  const isReadOnly = readOnly === true || disabled;
+  return (
+    <TreeRow>
+      <div className="flex min-w-0 w-full flex-col gap-tiny">
+        <div className="flex min-w-0 w-full items-center gap-single">
+          <div className="min-w-0 flex-1">
+            <Input
+              lazy
+              id={id}
+              value={value}
+              readOnly={isReadOnly}
+              placeholder={placeholder}
+              placeholderId={placeholderId}
+              onLazyChange={isReadOnly ? undefined : (v) => void setValue((mapCommit != null ? mapCommit(v) : v) as any)}
+              showLabel
+            />
+          </div>
+          {spinning ? <Spinner size="small" className="text-muted-foreground shrink-0" /> : null}
+        </div>
+        {error?.message ? <p className="pl-tiny text-xs text-destructive">{error.message}</p> : null}
+      </div>
+    </TreeRow>
+  );
+}
+
+/**
+ * @emoji 🧾 Same as {@link SketchpadTriadInputRow} for multiline fields.
+ */
+function SketchpadTriadTextareaRow(props: {
+  triad: HookTriad<any>;
+  id: string;
+  placeholder?: string;
+  placeholderId?: string;
+  readOnly?: boolean;
+  mapCommit?: (raw: string) => unknown;
+}): React.ReactElement {
+  const { triad, id, placeholder, placeholderId, readOnly, mapCommit } = props;
+  const [raw, setValue, status] = triad;
+  const { spinning, error, disabled } = useWriteIndicator(status);
+  const value = raw == null ? "" : typeof raw === "string" ? raw : String(raw);
+  const isReadOnly = readOnly === true || disabled;
+  return (
+    <TreeRow>
+      <div className="flex min-w-0 w-full flex-col gap-tiny">
+        <div className="flex min-w-0 w-full items-center gap-single">
+          <div className="min-w-0 flex-1">
+            <Textarea
+              lazy
+              id={id}
+              value={value}
+              readOnly={isReadOnly}
+              placeholder={placeholder}
+              placeholderId={placeholderId}
+              onLazyChange={isReadOnly ? undefined : (v) => void setValue((mapCommit != null ? mapCommit(v) : v) as any)}
+              showLabel
+            />
+          </div>
+          {spinning ? <Spinner size="small" className="text-muted-foreground shrink-0" /> : null}
+        </div>
+        {error?.message ? <p className="pl-tiny text-xs text-destructive">{error.message}</p> : null}
+      </div>
+    </TreeRow>
+  );
+}
+
+/**
+ * @emoji 🧾 Triad-backed toggle row (e.g. type abstract flag).
+ */
+function SketchpadTriadToggleRow(props: { triad: HookTriad<boolean | undefined | null>; id: string; icon?: React.ReactNode }): React.ReactElement {
+  const { triad, id, icon } = props;
+  const [pressed, setPressed, status] = triad;
+  const { spinning, error, disabled } = useWriteIndicator(status);
+  return (
+    <TreeRow>
+      <div className="flex min-w-0 w-full flex-col gap-tiny">
+        <div className="flex min-w-0 w-full items-center gap-single">
+          <div className="min-w-0 flex-1">
+            <Toggle id={id} pressed={!!pressed} disabled={disabled} onPressedChange={(p) => void setPressed(p)} showLabel icon={icon} />
+          </div>
+          {spinning ? <Spinner size="small" className="text-muted-foreground shrink-0" /> : null}
+        </div>
+        {error?.message ? <p className="pl-tiny text-xs text-destructive">{error.message}</p> : null}
+      </div>
+    </TreeRow>
+  );
+}
+// #endregion 🔖SketchpadTriadFieldRows
+
 /**
  * Detail section component for the currently open kit.
  *MUST render the kit metadata form fields within a detail panel section.
@@ -15632,13 +15764,13 @@ export const KitSection: FC = () => {
 const KitSectionForm: FC = () => {
   const [ksKit] = useKitSnapshotTriad();
   const kit = ksKit?.kit as Kit | undefined;
-  const [kitName, renameKit, nameStatus] = useKitName();
-  const [, setVersion] = useKitRelease();
-  const [, setDescription] = useKitDescription();
-  const [, setIcon] = useKitIcon();
-  const [, setImage] = useKitImage();
-  const [, setHomepage] = useKitHomepage();
-  const [, setLicense] = useKitLicense();
+  const kitNameTriad = useKitName();
+  const releaseTriad = useKitRelease();
+  const descriptionTriad = useKitDescription();
+  const iconTriad = useKitIcon();
+  const imageTriad = useKitImage();
+  const homepageTriad = useKitHomepage();
+  const licenseTriad = useKitLicense();
   const notAvailableLabel = useLabel("semio.sketchpad.app.kit.notAvailable");
   const versionPlaceholder = useLabel("semio.sketchpad.app.kit.versionPlaceholder.label");
   const descriptionPlaceholder = useLabel("semio.sketchpad.app.kit.descriptionPlaceholder.label");
@@ -15658,43 +15790,13 @@ const KitSectionForm: FC = () => {
 
   return (
     <>
-      <TreeRow>
-        <div className="flex min-w-0 w-full flex-col gap-tiny">
-          <div className="flex min-w-0 w-full items-center gap-single">
-            <div className="min-w-0 flex-1">
-              <Input
-                lazy
-                id="semio.sketchpad.app.kit.panel.details.section.kit.name"
-                value={kitName}
-                onLazyChange={(value) => void renameKit(value)}
-                showLabel
-              />
-            </div>
-            {nameStatus.kind === "pending" ? <Spinner size="small" className="text-muted-foreground shrink-0" /> : null}
-          </div>
-          {nameStatus.kind === "error" && nameStatus.lastError?.message ? (
-            <p className="pl-tiny text-xs text-destructive">{nameStatus.lastError.message}</p>
-          ) : null}
-        </div>
-      </TreeRow>
-      <TreeRow>
-        <Input lazy id="semio.sketchpad.app.kit.panel.details.section.kit.version" value={kit.version || ""} placeholder={versionPlaceholder} onLazyChange={(value) => void setVersion(optionalKitText(value))} showLabel />
-      </TreeRow>
-      <TreeRow>
-        <Textarea lazy id="semio.sketchpad.app.kit.panel.details.section.kit.description" value={kit.description || ""} placeholder={descriptionPlaceholder} onLazyChange={(value) => void setDescription(optionalKitText(value))} showLabel />
-      </TreeRow>
-      <TreeRow>
-        <Input lazy id="semio.sketchpad.app.kit.panel.details.section.kit.icon" value={kit.icon || ""} placeholder={iconPlaceholder} onLazyChange={(value) => void setIcon(optionalKitText(value))} showLabel />
-      </TreeRow>
-      <TreeRow>
-        <Input lazy id="semio.sketchpad.app.kit.panel.details.section.kit.image" value={kit.image || ""} placeholder={imagePlaceholder} onLazyChange={(value) => void setImage(optionalKitText(value))} showLabel />
-      </TreeRow>
-      <TreeRow>
-        <Input lazy id="semio.sketchpad.app.kit.panel.details.section.kit.homepage" value={kit.homepage || ""} placeholder={homepagePlaceholder} onLazyChange={(value) => void setHomepage(optionalKitText(value))} showLabel />
-      </TreeRow>
-      <TreeRow>
-        <Input lazy id="semio.sketchpad.app.kit.panel.details.section.kit.license" value={kit.license || ""} placeholder={licensePlaceholder} onLazyChange={(value) => void setLicense(optionalKitText(value))} showLabel />
-      </TreeRow>
+      <SketchpadTriadInputRow triad={kitNameTriad} id="semio.sketchpad.app.kit.panel.details.section.kit.name" />
+      <SketchpadTriadInputRow triad={releaseTriad} id="semio.sketchpad.app.kit.panel.details.section.kit.version" placeholder={versionPlaceholder} mapCommit={optionalKitText} />
+      <SketchpadTriadTextareaRow triad={descriptionTriad} id="semio.sketchpad.app.kit.panel.details.section.kit.description" placeholder={descriptionPlaceholder} mapCommit={optionalKitText} />
+      <SketchpadTriadInputRow triad={iconTriad} id="semio.sketchpad.app.kit.panel.details.section.kit.icon" placeholder={iconPlaceholder} mapCommit={optionalKitText} />
+      <SketchpadTriadInputRow triad={imageTriad} id="semio.sketchpad.app.kit.panel.details.section.kit.image" placeholder={imagePlaceholder} mapCommit={optionalKitText} />
+      <SketchpadTriadInputRow triad={homepageTriad} id="semio.sketchpad.app.kit.panel.details.section.kit.homepage" placeholder={homepagePlaceholder} mapCommit={optionalKitText} />
+      <SketchpadTriadInputRow triad={licenseTriad} id="semio.sketchpad.app.kit.panel.details.section.kit.license" placeholder={licensePlaceholder} mapCommit={optionalKitText} />
     </>
   );
 };
@@ -15716,35 +15818,41 @@ export const TypeSection: FC = () => {
 /**
  **/
 const SingleTypeSection: FC<{ typeId: string }> = ({ typeId }) => {
+  const nameTriad = useTypeName(typeId);
+  const descriptionTriad = useTypeDescription(typeId);
+  const iconTriad = useTypeIcon(typeId);
+  const imageTriad = useTypeImage(typeId);
+  const parentTriad = useTypeParent(typeId);
+  const abstractTriad = useTypeIsAbstract(typeId);
+  const unitTriad = useTypeUnit(typeId);
+
+  const parentDisplay = formatTypeParentRefForInput(parentTriad[0]);
+  const parentIndicator = useWriteIndicator(parentTriad[2]);
+
   const [ksKit] = useKitSnapshotTriad();
   const kit = ksKit?.kit as Kit;
   const type = kit?.types?.find((t) => t.id === typeId);
   if (!type) return null;
+
   return (
     <>
+      <SketchpadTriadInputRow triad={nameTriad} id="semio.sketchpad.app.type.panel.details.section.type.name" />
+      <SketchpadTriadTextareaRow triad={descriptionTriad} id="semio.sketchpad.app.type.panel.details.section.type.description" placeholderId="semio.sketchpad.app.type.descriptionPlaceholder.label" />
+      <SketchpadTriadInputRow triad={iconTriad} id="semio.sketchpad.app.type.panel.details.section.type.icon" placeholderId="semio.sketchpad.app.type.iconPlaceholder.label" />
+      <SketchpadTriadInputRow triad={imageTriad} id="semio.sketchpad.app.type.panel.details.section.type.image" placeholderId="semio.sketchpad.app.type.imagePlaceholder.label" />
       <TreeRow>
-        <Input id="semio.sketchpad.app.type.panel.details.section.type.name" value={type.name} readOnly showLabel />
+        <div className="flex min-w-0 w-full flex-col gap-tiny">
+          <div className="flex min-w-0 w-full items-center gap-single">
+            <div className="min-w-0 flex-1">
+              <Input id="semio.sketchpad.app.type.panel.details.section.type.parent" value={parentDisplay} readOnly placeholderId="semio.sketchpad.app.type.parentPlaceholder.label" showLabel />
+            </div>
+            {parentIndicator.spinning ? <Spinner size="small" className="text-muted-foreground shrink-0" /> : null}
+          </div>
+          {parentIndicator.error?.message ? <p className="pl-tiny text-xs text-destructive">{parentIndicator.error.message}</p> : null}
+        </div>
       </TreeRow>
-      <TreeRow>
-        <Textarea id="semio.sketchpad.app.type.panel.details.section.type.description" value={type.description || ""} placeholderId="semio.sketchpad.app.type.descriptionPlaceholder.label" readOnly showLabel />
-      </TreeRow>
-      <TreeRow>
-        <Input id="semio.sketchpad.app.type.panel.details.section.type.icon" value={type.icon || ""} placeholderId="semio.sketchpad.app.type.iconPlaceholder.label" readOnly showLabel />
-      </TreeRow>
-      <TreeRow>
-        <Input id="semio.sketchpad.app.type.panel.details.section.type.image" value={type.image || ""} placeholderId="semio.sketchpad.app.type.imagePlaceholder.label" readOnly showLabel />
-      </TreeRow>
-      <TreeRow>
-        <Input id="semio.sketchpad.app.type.panel.details.section.type.parent" value={type.parent?.id || ""} placeholderId="semio.sketchpad.app.type.parentPlaceholder.label" readOnly showLabel />
-      </TreeRow>
-      <TreeRow>
-        <Toggle id="semio.sketchpad.app.type.panel.details.section.type.abstract" pressed={type.isAbstract || false} disabled showLabel icon={<CheckIcon />} />
-      </TreeRow>
-      {type.unit !== undefined && (
-        <TreeRow>
-          <Input id="semio.sketchpad.app.type.panel.details.section.type.unit" value={type.unit} readOnly showLabel />
-        </TreeRow>
-      )}
+      <SketchpadTriadToggleRow triad={abstractTriad} id="semio.sketchpad.app.type.panel.details.section.type.abstract" icon={<CheckIcon />} />
+      {type.unit !== undefined ? <SketchpadTriadInputRow triad={unitTriad} id="semio.sketchpad.app.type.panel.details.section.type.unit" /> : null}
     </>
   );
 };
@@ -29499,6 +29607,13 @@ const DesignSectionForm: FC = () => {
   const authorLabel = useLabel("semio.sketchpad.app.design.author");
   const attributeLabel = useLabel("semio.sketchpad.app.design.attribute");
 
+  const designDetailId = design?.id;
+  const designNameTriad = useDesignName(designDetailId);
+  const designDescriptionTriad = useDesignDescription(designDetailId);
+  const designIconTriad = useDesignIcon(designDetailId);
+  const designImageTriad = useDesignImage(designDetailId);
+  const designUnitTriad = useDesignUnit(designDetailId);
+
   if (!design) return null;
 
   const updateDesignField = (diff: any) => {
@@ -29519,25 +29634,10 @@ const DesignSectionForm: FC = () => {
 
   return (
     <>
-      <TreeRow>
-        <Input lazy id="semio.sketchpad.app.design.panel.details.section.design.name" value={design.name} onLazyChange={(value) => updateDesignField({ name: value })} showLabel />
-      </TreeRow>
-      <TreeRow>
-        <Textarea
-          lazy
-          id="semio.sketchpad.app.design.panel.details.section.design.description"
-          value={design.description || ""}
-          placeholderId="semio.sketchpad.app.design.descriptionPlaceholder"
-          onLazyChange={(value) => updateDesignField({ description: value })}
-          showLabel
-        />
-      </TreeRow>
-      <TreeRow>
-        <Input lazy id="semio.sketchpad.app.design.panel.details.section.design.icon" value={design.icon || ""} placeholderId="semio.sketchpad.app.design.iconPlaceholder" onLazyChange={(value) => updateDesignField({ icon: value })} showLabel />
-      </TreeRow>
-      <TreeRow>
-        <Input lazy id="semio.sketchpad.app.design.panel.details.section.design.image" value={design.image || ""} placeholderId="semio.sketchpad.app.design.imagePlaceholder" onLazyChange={(value) => updateDesignField({ image: value })} showLabel />
-      </TreeRow>
+      <SketchpadTriadInputRow triad={designNameTriad} id="semio.sketchpad.app.design.panel.details.section.design.name" />
+      <SketchpadTriadTextareaRow triad={designDescriptionTriad} id="semio.sketchpad.app.design.panel.details.section.design.description" placeholderId="semio.sketchpad.app.design.descriptionPlaceholder" />
+      <SketchpadTriadInputRow triad={designIconTriad} id="semio.sketchpad.app.design.panel.details.section.design.icon" placeholderId="semio.sketchpad.app.design.iconPlaceholder" />
+      <SketchpadTriadInputRow triad={designImageTriad} id="semio.sketchpad.app.design.panel.details.section.design.image" placeholderId="semio.sketchpad.app.design.imagePlaceholder" />
       <TreeRow>
         <Input
           lazy
@@ -29558,9 +29658,7 @@ const DesignSectionForm: FC = () => {
           showLabel
         />
       </TreeRow>
-      <TreeRow>
-        <Input lazy id="semio.sketchpad.app.design.panel.details.section.design.unit" value={design.unit || ""} onLazyChange={(value) => updateDesignField({ unit: value })} showLabel />
-      </TreeRow>
+      <SketchpadTriadInputRow triad={designUnitTriad} id="semio.sketchpad.app.design.panel.details.section.design.unit" />
       {design.location ? (
         <TreeItem
           id="semio.sketchpad.app.design.location"
