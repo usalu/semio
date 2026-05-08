@@ -1,6 +1,6 @@
-//! 🦀 semio rust control plane — in-memory Arc-reference architecture.
+//! 🦀 semio rust control plane — in-memory Arc-reference architecture (code-first GraphQL).
 //!
-//! Every entity from the emitted `semio/graphql/schema.graphql` (see `crate::gql::target_schema_sdl`) is one Rust struct shared as
+//! Every entity is one hand-written Rust struct shared as
 //! `Arc<Self>` with interior `async_lock::RwLock` per mutable field. GraphQL resolvers take
 //! `&self` on the entity (deref'd through the Arc) and return `Arc<Child>` for relationships,
 //! so a query like `wip.theKit.design(id).piece(id).position` only acquires the locks it actually
@@ -921,6 +921,14 @@ pub mod meta {
         pub id: Id,
     }
 
+    /// 🏷️ Hand union for `Location.owner` (Place | Kit | Design).
+    #[derive(Clone, async_graphql::Union)]
+    pub enum LocationOwner {
+        Place(std::sync::Arc<crate::geom::entity::PlaceNode>),
+        Kit(std::sync::Arc<crate::kit::Kit>),
+        Design(std::sync::Arc<crate::kit::design::Design>),
+    }
+
     #[Object(name = "Location")]
     impl Location {
         pub async fn id(&self) -> Id {
@@ -929,8 +937,8 @@ pub mod meta {
         pub async fn hash(&self) -> String {
             crate::hash::h(&[self.id.as_str()])
         }
-        pub async fn owner(&self) -> crate::schema_gen::SgLocationOwner {
-            crate::schema_gen::SgLocationOwner::Kit(std::sync::Arc::new(crate::kit::Kit::default()))
+        pub async fn owner(&self) -> LocationOwner {
+            LocationOwner::Kit(std::sync::Arc::new(crate::kit::Kit::default()))
         }
         #[graphql(name = "placeOwner")]
         pub async fn place_owner(&self) -> Option<std::sync::Arc<crate::geom::entity::PlaceNode>> {
@@ -945,12 +953,12 @@ pub mod meta {
             None
         }
         #[graphql(name = "ownerEntity")]
-        pub async fn owner_entity(&self) -> Option<std::sync::Arc<crate::schema_gen::SgOwnerEntity>> {
+        pub async fn owner_entity(&self) -> Option<std::sync::Arc<crate::iface::OwnerEntity>> {
             None
         }
         #[graphql(name = "ownedEntities")]
-        pub async fn owned_entities(&self) -> Option<std::sync::Arc<crate::schema_gen::SgOwnedEntityConnection>> {
-            Some(crate::iface_sg_bridge::empty_owned_connection())
+        pub async fn owned_entities(&self) -> Option<std::sync::Arc<crate::iface::OwnedEntityConnection>> {
+            Some(crate::iface::empty_owned_entity_connection())
         }
         pub async fn longitude(&self) -> f64 {
             0.0
@@ -999,6 +1007,20 @@ pub mod meta {
         pub definition: Option<String>,
     }
 
+    /// 🏷️ Hand union for `Attribute.owner` (subset of carriers Attribute can hang off of).
+    #[derive(Clone, async_graphql::Union)]
+    pub enum AttributeOwner {
+        Piece(std::sync::Arc<crate::kit::design::piece::Piece>),
+        Connector(std::sync::Arc<crate::kit::r#type::Connector>),
+        Representation(std::sync::Arc<crate::kit::r#type::Representation>),
+        Connection(std::sync::Arc<crate::kit::design::connection::Connection>),
+        Kit(std::sync::Arc<crate::kit::Kit>),
+        Design(std::sync::Arc<crate::kit::design::Design>),
+        Type(std::sync::Arc<crate::kit::r#type::Type>),
+        Concept(std::sync::Arc<crate::meta::Concept>),
+        Tag(std::sync::Arc<crate::meta::Tag>),
+    }
+
     #[Object(name = "Attribute")]
     impl Attribute {
         pub async fn id(&self) -> Id {
@@ -1007,8 +1029,8 @@ pub mod meta {
         pub async fn hash(&self) -> String {
             crate::hash::h(&[self.id.as_str(), self.key.as_str()])
         }
-        pub async fn owner(&self) -> crate::schema_gen::SgAttributeOwner {
-            crate::schema_gen::SgAttributeOwner::Kit(std::sync::Arc::new(crate::kit::Kit::default()))
+        pub async fn owner(&self) -> AttributeOwner {
+            AttributeOwner::Kit(std::sync::Arc::new(crate::kit::Kit::default()))
         }
         #[graphql(name = "pieceOwner")]
         pub async fn piece_owner(&self) -> Option<std::sync::Arc<crate::kit::design::piece::Piece>> {
@@ -1046,25 +1068,13 @@ pub mod meta {
         pub async fn tag_owner(&self) -> Option<std::sync::Arc<crate::meta::Tag>> {
             None
         }
-        #[graphql(name = "attributeDiffOwner")]
-        pub async fn attribute_diff_owner(&self) -> Option<std::sync::Arc<crate::schema_gen::SgAttributeDiff>> {
-            None
-        }
-        #[graphql(name = "positionModificationOwner")]
-        pub async fn position_modification_owner(&self) -> Option<std::sync::Arc<crate::schema_gen::SgPositionModification>> {
-            None
-        }
-        #[graphql(name = "pieceModificationOwner")]
-        pub async fn piece_modification_owner(&self) -> Option<std::sync::Arc<crate::schema_gen::SgPieceModification>> {
-            None
-        }
         #[graphql(name = "ownerEntity")]
-        pub async fn owner_entity(&self) -> Option<std::sync::Arc<crate::schema_gen::SgOwnerEntity>> {
+        pub async fn owner_entity(&self) -> Option<std::sync::Arc<crate::iface::OwnerEntity>> {
             None
         }
         #[graphql(name = "ownedEntities")]
-        pub async fn owned_entities(&self) -> Option<std::sync::Arc<crate::schema_gen::SgOwnedEntityConnection>> {
-            Some(crate::iface_sg_bridge::empty_owned_connection())
+        pub async fn owned_entities(&self) -> Option<std::sync::Arc<crate::iface::OwnedEntityConnection>> {
+            Some(crate::iface::empty_owned_entity_connection())
         }
         pub async fn key(&self) -> String {
             self.key.clone()
@@ -1437,12 +1447,12 @@ pub mod kit {
                 *self.order.read().await
             }
             #[graphql(name = "ownerEntity")]
-            pub async fn owner_entity(&self) -> Option<std::sync::Arc<crate::schema_gen::SgOwnerEntity>> {
+            pub async fn owner_entity(&self) -> Option<std::sync::Arc<crate::iface::OwnerEntity>> {
                 None
             }
             #[graphql(name = "ownedEntities")]
-            pub async fn owned_entities(&self) -> Option<std::sync::Arc<crate::schema_gen::SgOwnedEntityConnection>> {
-                Some(crate::iface_sg_bridge::empty_owned_connection())
+            pub async fn owned_entities(&self) -> Option<std::sync::Arc<crate::iface::OwnedEntityConnection>> {
+                Some(crate::iface::empty_owned_entity_connection())
             }
         }
         //#endregion 🛟 port
@@ -1520,12 +1530,12 @@ pub mod kit {
                 self.attributes.read().await.clone()
             }
             #[graphql(name = "ownerEntity")]
-            pub async fn owner_entity(&self) -> Option<std::sync::Arc<crate::schema_gen::SgOwnerEntity>> {
+            pub async fn owner_entity(&self) -> Option<std::sync::Arc<crate::iface::OwnerEntity>> {
                 None
             }
             #[graphql(name = "ownedEntities")]
-            pub async fn owned_entities(&self) -> Option<std::sync::Arc<crate::schema_gen::SgOwnedEntityConnection>> {
-                Some(crate::iface_sg_bridge::empty_owned_connection())
+            pub async fn owned_entities(&self) -> Option<std::sync::Arc<crate::iface::OwnedEntityConnection>> {
+                Some(crate::iface::empty_owned_entity_connection())
             }
         }
         //#endregion ⚓ connector
@@ -1599,12 +1609,12 @@ pub mod kit {
                 self.attributes.read().await.clone()
             }
             #[graphql(name = "ownerEntity")]
-            pub async fn owner_entity(&self) -> Option<std::sync::Arc<crate::schema_gen::SgOwnerEntity>> {
+            pub async fn owner_entity(&self) -> Option<std::sync::Arc<crate::iface::OwnerEntity>> {
                 None
             }
             #[graphql(name = "ownedEntities")]
-            pub async fn owned_entities(&self) -> Option<std::sync::Arc<crate::schema_gen::SgOwnedEntityConnection>> {
-                Some(crate::iface_sg_bridge::empty_owned_connection())
+            pub async fn owned_entities(&self) -> Option<std::sync::Arc<crate::iface::OwnedEntityConnection>> {
+                Some(crate::iface::empty_owned_entity_connection())
             }
         }
         //#endregion 💾 representation
@@ -1796,12 +1806,12 @@ pub mod kit {
                 self.stats.read().await.clone()
             }
             #[graphql(name = "ownerEntity")]
-            pub async fn owner_entity(&self) -> Option<std::sync::Arc<crate::schema_gen::SgOwnerEntity>> {
+            pub async fn owner_entity(&self) -> Option<std::sync::Arc<crate::iface::OwnerEntity>> {
                 None
             }
             #[graphql(name = "ownedEntities")]
-            pub async fn owned_entities(&self) -> Option<std::sync::Arc<crate::schema_gen::SgOwnedEntityConnection>> {
-                Some(crate::iface_sg_bridge::empty_owned_connection())
+            pub async fn owned_entities(&self) -> Option<std::sync::Arc<crate::iface::OwnedEntityConnection>> {
+                Some(crate::iface::empty_owned_entity_connection())
             }
         }
         //#endregion 🏠 type
@@ -2015,13 +2025,13 @@ pub mod kit {
                 }
 
                 #[graphql(name = "ownerEntity")]
-                pub async fn owner_entity(&self) -> Option<std::sync::Arc<crate::schema_gen::SgOwnerEntity>> {
+                pub async fn owner_entity(&self) -> Option<std::sync::Arc<crate::iface::OwnerEntity>> {
                     None
                 }
 
                 #[graphql(name = "ownedEntities")]
-                pub async fn owned_entities(&self) -> Option<std::sync::Arc<crate::schema_gen::SgOwnedEntityConnection>> {
-                    Some(crate::iface_sg_bridge::empty_owned_connection())
+                pub async fn owned_entities(&self) -> Option<std::sync::Arc<crate::iface::OwnedEntityConnection>> {
+                    Some(crate::iface::empty_owned_entity_connection())
                 }
             }
         }
@@ -2083,12 +2093,12 @@ pub mod kit {
                     None
                 }
                 #[graphql(name = "ownerEntity")]
-                pub async fn owner_entity(&self) -> Option<std::sync::Arc<crate::schema_gen::SgOwnerEntity>> {
+                pub async fn owner_entity(&self) -> Option<std::sync::Arc<crate::iface::OwnerEntity>> {
                     None
                 }
                 #[graphql(name = "ownedEntities")]
-                pub async fn owned_entities(&self) -> Option<std::sync::Arc<crate::schema_gen::SgOwnedEntityConnection>> {
-                    Some(crate::iface_sg_bridge::empty_owned_connection())
+                pub async fn owned_entities(&self) -> Option<std::sync::Arc<crate::iface::OwnedEntityConnection>> {
+                    Some(crate::iface::empty_owned_entity_connection())
                 }
                 pub async fn piece(&self) -> Arc<super::piece::Piece> {
                     self.piece.read().await.upgrade().unwrap_or_default()
@@ -2203,12 +2213,12 @@ pub mod kit {
                     self.attributes.read().await.clone()
                 }
                 #[graphql(name = "ownerEntity")]
-                pub async fn owner_entity(&self) -> Option<std::sync::Arc<crate::schema_gen::SgOwnerEntity>> {
+                pub async fn owner_entity(&self) -> Option<std::sync::Arc<crate::iface::OwnerEntity>> {
                     None
                 }
                 #[graphql(name = "ownedEntities")]
-                pub async fn owned_entities(&self) -> Option<std::sync::Arc<crate::schema_gen::SgOwnedEntityConnection>> {
-                    Some(crate::iface_sg_bridge::empty_owned_connection())
+                pub async fn owned_entities(&self) -> Option<std::sync::Arc<crate::iface::OwnedEntityConnection>> {
+                    Some(crate::iface::empty_owned_entity_connection())
                 }
             }
             //#endregion 🔗 connection
@@ -2434,13 +2444,13 @@ pub mod kit {
             }
 
             #[graphql(name = "ownerEntity")]
-            pub async fn owner_entity(&self) -> Option<std::sync::Arc<crate::schema_gen::SgOwnerEntity>> {
-                crate::iface_sg_bridge::sg_owner_opt(self.owner_kit.upgrade().map(crate::iface::OwnerEntity::Kit))
+            pub async fn owner_entity(&self) -> Option<std::sync::Arc<crate::iface::OwnerEntity>> {
+                crate::iface::owner_entity_arc_opt(self.owner_kit.upgrade().map(crate::iface::OwnerEntity::Kit))
             }
 
             #[graphql(name = "ownedEntities")]
-            pub async fn owned_entities(&self) -> Option<std::sync::Arc<crate::schema_gen::SgOwnedEntityConnection>> {
-                Some(crate::iface_sg_bridge::empty_owned_connection())
+            pub async fn owned_entities(&self) -> Option<std::sync::Arc<crate::iface::OwnedEntityConnection>> {
+                Some(crate::iface::empty_owned_entity_connection())
             }
 
             pub async fn references(&self) -> crate::gql_relay::DesignConnection {
@@ -3105,13 +3115,13 @@ pub mod kit {
         }
 
         #[graphql(name = "ownerEntity")]
-        pub async fn owner_entity(&self) -> Option<std::sync::Arc<crate::schema_gen::SgOwnerEntity>> {
-            crate::iface_sg_bridge::sg_owner_opt(self.owner_graph.upgrade().map(crate::iface::OwnerEntity::Graph))
+        pub async fn owner_entity(&self) -> Option<std::sync::Arc<crate::iface::OwnerEntity>> {
+            crate::iface::owner_entity_arc_opt(self.owner_graph.upgrade().map(crate::iface::OwnerEntity::Graph))
         }
 
         #[graphql(name = "ownedEntities")]
-        pub async fn owned_entities(&self) -> Option<std::sync::Arc<crate::schema_gen::SgOwnedEntityConnection>> {
-            Some(crate::iface_sg_bridge::empty_owned_connection())
+        pub async fn owned_entities(&self) -> Option<std::sync::Arc<crate::iface::OwnedEntityConnection>> {
+            Some(crate::iface::empty_owned_entity_connection())
         }
 
         /// @emoji 📸 JSON string projection of `@semio/js` KitFullDto (camelCase ids + ordered pieces); WASM + Node pull this via GraphQL (`wip.theKit`).
@@ -3202,18 +3212,18 @@ impl crate::meta::Tag {
         }
     }
     #[graphql(name = "ownerEntity")]
-    pub async fn owner_entity(&self) -> Option<std::sync::Arc<crate::schema_gen::SgOwnerEntity>> {
+    pub async fn owner_entity(&self) -> Option<std::sync::Arc<crate::iface::OwnerEntity>> {
         let raw = match &*self.owner.read().await {
             crate::meta::TagOwnerSlot::Kit(w) => w.upgrade().map(crate::iface::OwnerEntity::Kit),
             crate::meta::TagOwnerSlot::Type(w) => w.upgrade().map(crate::iface::OwnerEntity::Type),
             crate::meta::TagOwnerSlot::Rep(w) => w.upgrade().map(crate::iface::OwnerEntity::Representation),
             crate::meta::TagOwnerSlot::Unset => None,
         };
-        raw.map(crate::iface_sg_bridge::owner_entity_to_sg)
+        raw.map(crate::iface::owner_entity_arc)
     }
     #[graphql(name = "ownedEntities")]
-    pub async fn owned_entities(&self) -> Option<std::sync::Arc<crate::schema_gen::SgOwnedEntityConnection>> {
-        Some(crate::iface_sg_bridge::empty_owned_connection())
+    pub async fn owned_entities(&self) -> Option<std::sync::Arc<crate::iface::OwnedEntityConnection>> {
+        Some(crate::iface::empty_owned_entity_connection())
     }
     pub async fn name(&self) -> String {
         self.name.read().await.clone()
@@ -3268,17 +3278,17 @@ impl crate::meta::Concept {
         }
     }
     #[graphql(name = "ownerEntity")]
-    pub async fn owner_entity(&self) -> Option<std::sync::Arc<crate::schema_gen::SgOwnerEntity>> {
+    pub async fn owner_entity(&self) -> Option<std::sync::Arc<crate::iface::OwnerEntity>> {
         let raw = match &*self.owner.read().await {
             crate::meta::ConceptOwnerSlot::Kit(w) => w.upgrade().map(crate::iface::OwnerEntity::Kit),
             crate::meta::ConceptOwnerSlot::Type(w) => w.upgrade().map(crate::iface::OwnerEntity::Type),
             crate::meta::ConceptOwnerSlot::Unset => None,
         };
-        raw.map(crate::iface_sg_bridge::owner_entity_to_sg)
+        raw.map(crate::iface::owner_entity_arc)
     }
     #[graphql(name = "ownedEntities")]
-    pub async fn owned_entities(&self) -> Option<std::sync::Arc<crate::schema_gen::SgOwnedEntityConnection>> {
-        Some(crate::iface_sg_bridge::empty_owned_connection())
+    pub async fn owned_entities(&self) -> Option<std::sync::Arc<crate::iface::OwnedEntityConnection>> {
+        Some(crate::iface::empty_owned_entity_connection())
     }
     pub async fn name(&self) -> String {
         self.name.read().await.clone()
@@ -3357,7 +3367,7 @@ impl crate::meta::Quality {
         }
     }
     #[graphql(name = "ownerEntity")]
-    pub async fn owner_entity(&self) -> Option<std::sync::Arc<crate::schema_gen::SgOwnerEntity>> {
+    pub async fn owner_entity(&self) -> Option<std::sync::Arc<crate::iface::OwnerEntity>> {
         let raw = match &*self.owner.read().await {
             crate::meta::QualityOwnerSlot::Kit(w) => w.upgrade().map(crate::iface::OwnerEntity::Kit),
             crate::meta::QualityOwnerSlot::Design(w) => w.upgrade().map(crate::iface::OwnerEntity::Design),
@@ -3366,11 +3376,11 @@ impl crate::meta::Quality {
             crate::meta::QualityOwnerSlot::Conn(w) => w.upgrade().map(crate::iface::OwnerEntity::Connector),
             crate::meta::QualityOwnerSlot::Unset => None,
         };
-        raw.map(crate::iface_sg_bridge::owner_entity_to_sg)
+        raw.map(crate::iface::owner_entity_arc)
     }
     #[graphql(name = "ownedEntities")]
-    pub async fn owned_entities(&self) -> Option<std::sync::Arc<crate::schema_gen::SgOwnedEntityConnection>> {
-        Some(crate::iface_sg_bridge::empty_owned_connection())
+    pub async fn owned_entities(&self) -> Option<std::sync::Arc<crate::iface::OwnedEntityConnection>> {
+        Some(crate::iface::empty_owned_entity_connection())
     }
     pub async fn key(&self) -> String {
         self.key.read().await.clone()
@@ -3484,12 +3494,12 @@ pub mod vcs {
         }
 
         #[graphql(name = "ownerEntity")]
-        pub async fn owner_entity(&self) -> Option<std::sync::Arc<crate::schema_gen::SgOwnerEntity>> {
+        pub async fn owner_entity(&self) -> Option<std::sync::Arc<crate::iface::OwnerEntity>> {
             None
         }
         #[graphql(name = "ownedEntities")]
-        pub async fn owned_entities(&self) -> Option<std::sync::Arc<crate::schema_gen::SgOwnedEntityConnection>> {
-            Some(crate::iface_sg_bridge::empty_owned_connection())
+        pub async fn owned_entities(&self) -> Option<std::sync::Arc<crate::iface::OwnedEntityConnection>> {
+            Some(crate::iface::empty_owned_entity_connection())
         }
     }
 
@@ -3552,12 +3562,12 @@ pub mod vcs {
         }
 
         #[graphql(name = "ownerEntity")]
-        pub async fn owner_entity(&self) -> Option<std::sync::Arc<crate::schema_gen::SgOwnerEntity>> {
+        pub async fn owner_entity(&self) -> Option<std::sync::Arc<crate::iface::OwnerEntity>> {
             None
         }
         #[graphql(name = "ownedEntities")]
-        pub async fn owned_entities(&self) -> Option<std::sync::Arc<crate::schema_gen::SgOwnedEntityConnection>> {
-            Some(crate::iface_sg_bridge::empty_owned_connection())
+        pub async fn owned_entities(&self) -> Option<std::sync::Arc<crate::iface::OwnedEntityConnection>> {
+            Some(crate::iface::empty_owned_entity_connection())
         }
     }
     //#endregion 💼 transaction
@@ -3669,12 +3679,12 @@ pub mod vcs {
         }
 
         #[graphql(name = "ownerEntity")]
-        pub async fn owner_entity(&self) -> Option<std::sync::Arc<crate::schema_gen::SgOwnerEntity>> {
+        pub async fn owner_entity(&self) -> Option<std::sync::Arc<crate::iface::OwnerEntity>> {
             None
         }
         #[graphql(name = "ownedEntities")]
-        pub async fn owned_entities(&self) -> Option<std::sync::Arc<crate::schema_gen::SgOwnedEntityConnection>> {
-            Some(crate::iface_sg_bridge::empty_owned_connection())
+        pub async fn owned_entities(&self) -> Option<std::sync::Arc<crate::iface::OwnedEntityConnection>> {
+            Some(crate::iface::empty_owned_entity_connection())
         }
     }
     //#endregion 📝 draft
@@ -3755,13 +3765,13 @@ pub mod vcs {
         }
 
         #[graphql(name = "ownerEntity")]
-        pub async fn owner_entity(&self) -> Option<std::sync::Arc<crate::schema_gen::SgOwnerEntity>> {
+        pub async fn owner_entity(&self) -> Option<std::sync::Arc<crate::iface::OwnerEntity>> {
             None
         }
 
         #[graphql(name = "ownedEntities")]
-        pub async fn owned_entities(&self) -> Option<std::sync::Arc<crate::schema_gen::SgOwnedEntityConnection>> {
-            Some(crate::iface_sg_bridge::empty_owned_connection())
+        pub async fn owned_entities(&self) -> Option<std::sync::Arc<crate::iface::OwnedEntityConnection>> {
+            Some(crate::iface::empty_owned_entity_connection())
         }
     }
     //#endregion 🪧 checkpoint
@@ -3831,13 +3841,13 @@ pub mod vcs {
         }
 
         #[graphql(name = "ownerEntity")]
-        pub async fn owner_entity(&self) -> Option<std::sync::Arc<crate::schema_gen::SgOwnerEntity>> {
-            crate::iface_sg_bridge::sg_owner_opt(self.owner_graph.upgrade().map(crate::iface::OwnerEntity::Graph))
+        pub async fn owner_entity(&self) -> Option<std::sync::Arc<crate::iface::OwnerEntity>> {
+            crate::iface::owner_entity_arc_opt(self.owner_graph.upgrade().map(crate::iface::OwnerEntity::Graph))
         }
 
         #[graphql(name = "ownedEntities")]
-        pub async fn owned_entities(&self) -> Option<std::sync::Arc<crate::schema_gen::SgOwnedEntityConnection>> {
-            Some(crate::iface_sg_bridge::empty_owned_connection())
+        pub async fn owned_entities(&self) -> Option<std::sync::Arc<crate::iface::OwnedEntityConnection>> {
+            Some(crate::iface::empty_owned_entity_connection())
         }
     }
     //#endregion 🌱 alternative
@@ -4089,13 +4099,13 @@ pub mod vcs {
         }
 
         #[graphql(name = "ownerEntity")]
-        pub async fn owner_entity(&self) -> Option<std::sync::Arc<crate::schema_gen::SgOwnerEntity>> {
-            crate::iface_sg_bridge::sg_owner_opt(self.owner_session.read().await.upgrade().map(crate::iface::OwnerEntity::Session))
+        pub async fn owner_entity(&self) -> Option<std::sync::Arc<crate::iface::OwnerEntity>> {
+            crate::iface::owner_entity_arc_opt(self.owner_session.read().await.upgrade().map(crate::iface::OwnerEntity::Session))
         }
 
         #[graphql(name = "ownedEntities")]
-        pub async fn owned_entities(&self) -> Option<std::sync::Arc<crate::schema_gen::SgOwnedEntityConnection>> {
-            Some(crate::iface_sg_bridge::empty_owned_connection())
+        pub async fn owned_entities(&self) -> Option<std::sync::Arc<crate::iface::OwnedEntityConnection>> {
+            Some(crate::iface::empty_owned_entity_connection())
         }
     }
     //#endregion 🌐 graph
@@ -4136,13 +4146,13 @@ pub mod vcs {
         }
 
         #[graphql(name = "ownerEntity")]
-        pub async fn owner_entity(&self) -> Option<std::sync::Arc<crate::schema_gen::SgOwnerEntity>> {
+        pub async fn owner_entity(&self) -> Option<std::sync::Arc<crate::iface::OwnerEntity>> {
             None
         }
 
         #[graphql(name = "ownedEntities")]
-        pub async fn owned_entities(&self) -> Option<std::sync::Arc<crate::schema_gen::SgOwnedEntityConnection>> {
-            Some(crate::iface_sg_bridge::empty_owned_connection())
+        pub async fn owned_entities(&self) -> Option<std::sync::Arc<crate::iface::OwnedEntityConnection>> {
+            Some(crate::iface::empty_owned_entity_connection())
         }
     }
     //#endregion 👤 session
@@ -4182,13 +4192,13 @@ pub mod vcs {
         }
 
         #[graphql(name = "ownerEntity")]
-        pub async fn owner_entity(&self) -> Option<std::sync::Arc<crate::schema_gen::SgOwnerEntity>> {
+        pub async fn owner_entity(&self) -> Option<std::sync::Arc<crate::iface::OwnerEntity>> {
             None
         }
 
         #[graphql(name = "ownedEntities")]
-        pub async fn owned_entities(&self) -> Option<std::sync::Arc<crate::schema_gen::SgOwnedEntityConnection>> {
-            Some(crate::iface_sg_bridge::empty_owned_connection())
+        pub async fn owned_entities(&self) -> Option<std::sync::Arc<crate::iface::OwnedEntityConnection>> {
+            Some(crate::iface::empty_owned_entity_connection())
         }
     }
     //#endregion ⚠️ conflict
@@ -4237,11 +4247,11 @@ pub mod vcs {
         pub async fn conflict_owner(&self) -> Option<Arc<Conflict>> {
             self.owner_conflict.upgrade()
         }
-        pub async fn owner_entity(&self) -> Option<std::sync::Arc<crate::schema_gen::SgOwnerEntity>> {
-            crate::iface_sg_bridge::sg_owner_opt(self.owner_conflict.upgrade().map(crate::iface::OwnerEntity::Conflict))
+        pub async fn owner_entity(&self) -> Option<std::sync::Arc<crate::iface::OwnerEntity>> {
+            crate::iface::owner_entity_arc_opt(self.owner_conflict.upgrade().map(crate::iface::OwnerEntity::Conflict))
         }
-        pub async fn owned_entities(&self) -> Option<std::sync::Arc<crate::schema_gen::SgOwnedEntityConnection>> {
-            Some(crate::iface_sg_bridge::empty_owned_connection())
+        pub async fn owned_entities(&self) -> Option<std::sync::Arc<crate::iface::OwnedEntityConnection>> {
+            Some(crate::iface::empty_owned_entity_connection())
         }
         pub async fn checkpoint(&self) -> Option<Arc<Checkpoint>> {
             self.checkpoint.read().await.clone()
@@ -4300,11 +4310,11 @@ pub mod vcs {
         pub async fn conflict_owner(&self) -> Option<Arc<Conflict>> {
             self.owner_conflict.upgrade()
         }
-        pub async fn owner_entity(&self) -> Option<std::sync::Arc<crate::schema_gen::SgOwnerEntity>> {
-            crate::iface_sg_bridge::sg_owner_opt(self.owner_conflict.upgrade().map(crate::iface::OwnerEntity::Conflict))
+        pub async fn owner_entity(&self) -> Option<std::sync::Arc<crate::iface::OwnerEntity>> {
+            crate::iface::owner_entity_arc_opt(self.owner_conflict.upgrade().map(crate::iface::OwnerEntity::Conflict))
         }
-        pub async fn owned_entities(&self) -> Option<std::sync::Arc<crate::schema_gen::SgOwnedEntityConnection>> {
-            Some(crate::iface_sg_bridge::empty_owned_connection())
+        pub async fn owned_entities(&self) -> Option<std::sync::Arc<crate::iface::OwnedEntityConnection>> {
+            Some(crate::iface::empty_owned_entity_connection())
         }
         pub async fn draft(&self) -> Option<Arc<Draft>> {
             self.draft.read().await.clone()
@@ -4400,6 +4410,21 @@ pub mod iface {
         }
     }
 
+    /// 🏷️ Wrap an [`OwnerEntity`] in `Arc` (resolver convenience).
+    pub fn owner_entity_arc(e: OwnerEntity) -> Arc<OwnerEntity> {
+        Arc::new(e)
+    }
+
+    /// 🏷️ Map an `Option<OwnerEntity>` resolver value into the `Arc<OwnerEntity>` shape.
+    pub fn owner_entity_arc_opt(o: Option<OwnerEntity>) -> Option<Arc<OwnerEntity>> {
+        o.map(Arc::new)
+    }
+
+    /// 🏷️ Empty `OwnedEntityConnection` shell (used by entities with no owned children yet).
+    pub fn empty_owned_entity_connection() -> Arc<OwnedEntityConnection> {
+        Arc::new(OwnedEntityConnection::empty())
+    }
+
     /// @emoji 🌐 Global `node` / `entity` resolution union (Relay `Node` stand-in until full `Entity` interface wiring).
     #[derive(Clone, Union)]
     pub enum GqlNode {
@@ -4484,11 +4509,11 @@ pub mod iface {
             let v = *self.v.read().await;
             crate::hash::h(&[&format!("{u:.9}"), &format!("{v:.9}")])
         }
-        pub async fn owner_entity(&self) -> Option<std::sync::Arc<crate::schema_gen::SgOwnerEntity>> {
+        pub async fn owner_entity(&self) -> Option<std::sync::Arc<crate::iface::OwnerEntity>> {
             None
         }
-        pub async fn owned_entities(&self) -> Option<std::sync::Arc<crate::schema_gen::SgOwnedEntityConnection>> {
-            Some(crate::iface_sg_bridge::empty_owned_connection())
+        pub async fn owned_entities(&self) -> Option<std::sync::Arc<crate::iface::OwnedEntityConnection>> {
+            Some(crate::iface::empty_owned_entity_connection())
         }
         pub async fn u(&self) -> f64 {
             *self.u.read().await
@@ -4509,11 +4534,11 @@ pub mod iface {
             let z = *self.z.read().await;
             crate::hash::h(&[&format!("{x:.9}"), &format!("{y:.9}"), &format!("{z:.9}")])
         }
-        pub async fn owner_entity(&self) -> Option<std::sync::Arc<crate::schema_gen::SgOwnerEntity>> {
+        pub async fn owner_entity(&self) -> Option<std::sync::Arc<crate::iface::OwnerEntity>> {
             None
         }
-        pub async fn owned_entities(&self) -> Option<std::sync::Arc<crate::schema_gen::SgOwnedEntityConnection>> {
-            Some(crate::iface_sg_bridge::empty_owned_connection())
+        pub async fn owned_entities(&self) -> Option<std::sync::Arc<crate::iface::OwnedEntityConnection>> {
+            Some(crate::iface::empty_owned_entity_connection())
         }
         pub async fn x(&self) -> f64 {
             *self.x.read().await
@@ -4537,11 +4562,11 @@ pub mod iface {
             let z = *self.z.read().await;
             crate::hash::h(&[&format!("{x:.9}"), &format!("{y:.9}"), &format!("{z:.9}")])
         }
-        pub async fn owner_entity(&self) -> Option<std::sync::Arc<crate::schema_gen::SgOwnerEntity>> {
+        pub async fn owner_entity(&self) -> Option<std::sync::Arc<crate::iface::OwnerEntity>> {
             None
         }
-        pub async fn owned_entities(&self) -> Option<std::sync::Arc<crate::schema_gen::SgOwnedEntityConnection>> {
-            Some(crate::iface_sg_bridge::empty_owned_connection())
+        pub async fn owned_entities(&self) -> Option<std::sync::Arc<crate::iface::OwnedEntityConnection>> {
+            Some(crate::iface::empty_owned_entity_connection())
         }
         pub async fn x(&self) -> f64 {
             *self.x.read().await
@@ -4562,11 +4587,11 @@ pub mod iface {
         pub async fn hash(&self) -> String {
             crate::hash::h(&[self.origin.id.as_str(), self.x_axis.id.as_str(), self.y_axis.id.as_str()])
         }
-        pub async fn owner_entity(&self) -> Option<std::sync::Arc<crate::schema_gen::SgOwnerEntity>> {
+        pub async fn owner_entity(&self) -> Option<std::sync::Arc<crate::iface::OwnerEntity>> {
             None
         }
-        pub async fn owned_entities(&self) -> Option<std::sync::Arc<crate::schema_gen::SgOwnedEntityConnection>> {
-            Some(crate::iface_sg_bridge::empty_owned_connection())
+        pub async fn owned_entities(&self) -> Option<std::sync::Arc<crate::iface::OwnedEntityConnection>> {
+            Some(crate::iface::empty_owned_entity_connection())
         }
         pub async fn origin(&self) -> Arc<PointNode> {
             self.origin.clone()
@@ -4589,11 +4614,11 @@ pub mod iface {
         pub async fn hash(&self) -> String {
             crate::hash::h(&[self.center.id.as_str(), self.plane.id.as_str()])
         }
-        pub async fn owner_entity(&self) -> Option<std::sync::Arc<crate::schema_gen::SgOwnerEntity>> {
+        pub async fn owner_entity(&self) -> Option<std::sync::Arc<crate::iface::OwnerEntity>> {
             None
         }
-        pub async fn owned_entities(&self) -> Option<std::sync::Arc<crate::schema_gen::SgOwnedEntityConnection>> {
-            Some(crate::iface_sg_bridge::empty_owned_connection())
+        pub async fn owned_entities(&self) -> Option<std::sync::Arc<crate::iface::OwnedEntityConnection>> {
+            Some(crate::iface::empty_owned_entity_connection())
         }
         pub async fn center(&self) -> Arc<CoordinateNode> {
             self.center.clone()
@@ -4613,11 +4638,11 @@ pub mod iface {
             let v = *self.v.read().await;
             crate::hash::h(&[&format!("{u:.9}"), &format!("{v:.9}")])
         }
-        pub async fn owner_entity(&self) -> Option<std::sync::Arc<crate::schema_gen::SgOwnerEntity>> {
+        pub async fn owner_entity(&self) -> Option<std::sync::Arc<crate::iface::OwnerEntity>> {
             None
         }
-        pub async fn owned_entities(&self) -> Option<std::sync::Arc<crate::schema_gen::SgOwnedEntityConnection>> {
-            Some(crate::iface_sg_bridge::empty_owned_connection())
+        pub async fn owned_entities(&self) -> Option<std::sync::Arc<crate::iface::OwnedEntityConnection>> {
+            Some(crate::iface::empty_owned_entity_connection())
         }
         pub async fn u(&self) -> f64 {
             *self.u.read().await
@@ -4635,11 +4660,11 @@ pub mod iface {
         pub async fn hash(&self) -> String {
             crate::hash::h(&[self.id.as_str()])
         }
-        pub async fn owner_entity(&self) -> Option<std::sync::Arc<crate::schema_gen::SgOwnerEntity>> {
+        pub async fn owner_entity(&self) -> Option<std::sync::Arc<crate::iface::OwnerEntity>> {
             None
         }
-        pub async fn owned_entities(&self) -> Option<std::sync::Arc<crate::schema_gen::SgOwnedEntityConnection>> {
-            Some(crate::iface_sg_bridge::empty_owned_connection())
+        pub async fn owned_entities(&self) -> Option<std::sync::Arc<crate::iface::OwnedEntityConnection>> {
+            Some(crate::iface::empty_owned_entity_connection())
         }
     }
 }
@@ -4657,12 +4682,21 @@ pub mod op {
     use serde::{Deserialize, Serialize};
 
     use crate::geom::{Offset, Position};
+    use crate::iface::{OwnedEntityConnection, OwnerEntity, empty_owned_entity_connection};
     use crate::id::Id;
-    use crate::schema_gen::{
-        SgAddedFixedPieceToDesignInput, SgDiff, SgDraggedPiecesInDesignInput, SgFixedPieceInDesignInput, SgInput,
-        SgOperationOwner, SgOwnedEntityConnection, SgOwnerEntity, SgVectorDiff,
-    };
     use crate::vcs::Change;
+
+    /// 🏷️ Hand union for `Operation.owner` (every operation is owned by a `Change`).
+    #[derive(Clone, Union)]
+    pub enum OperationOwner {
+        Change(Arc<Change>),
+    }
+
+    impl Default for OperationOwner {
+        fn default() -> Self {
+            Self::Change(Arc::default())
+        }
+    }
 
     //#region 🧾 inputs
     #[derive(Clone, Debug, Default, Serialize, Deserialize)]
@@ -4812,40 +4846,12 @@ pub mod op {
     }
     //#endregion 📜 semantic op record (kit bundle / op log contract)
 
-    //#region 📦 diff (placeholder)
-    /// @emoji 📜 Ephemeral semantic diff payload for the kit engine — distinct from the GraphQL `Diff` interface ([`crate::schema_gen::SgDiff`]).
+    //#region 📦 diff
+    /// 📜 Ephemeral semantic diff payload for the kit engine; replay/apply diff carrier (not a GraphQL output type).
     #[derive(Clone, Debug, Default, Serialize, Deserialize)]
     pub struct SemanticDiff {
         pub id: Id,
         pub summary: Option<String>,
-    }
-
-    fn stub_graphql_diff() -> Arc<SgDiff> {
-        Arc::new(SgDiff::VectorDiff(Arc::new(SgVectorDiff::default())))
-    }
-
-    fn stub_graphql_input_created_fixed() -> Option<Arc<SgInput>> {
-        Some(Arc::new(SgInput::AddedFixedPieceToDesignInput(Arc::new(
-            SgAddedFixedPieceToDesignInput::default(),
-        ))))
-    }
-
-    fn stub_graphql_input_fixed_piece() -> Option<Arc<SgInput>> {
-        Some(Arc::new(SgInput::FixedPieceInDesignInput(Arc::new(SgFixedPieceInDesignInput::default()))))
-    }
-
-    fn stub_graphql_input_dragged() -> Option<Arc<SgInput>> {
-        Some(Arc::new(SgInput::DraggedPiecesInDesignInput(Arc::new(
-            SgDraggedPiecesInDesignInput::default(),
-        ))))
-    }
-
-    fn stub_graphql_input_renamed_kit() -> Option<Arc<SgInput>> {
-        Some(Arc::new(SgInput::RenamedKitInput(Arc::new(RenamedKitInput::default()))))
-    }
-
-    fn stub_graphql_input_changed_desc() -> Option<Arc<SgInput>> {
-        Some(Arc::new(SgInput::ChangedDescriptionInput(Arc::new(ChangedDescriptionInput::default()))))
     }
     //#endregion 📦 diff
 
@@ -4894,26 +4900,20 @@ pub mod op {
         pub async fn hash(&self) -> String {
             crate::hash::h(&[self.id.as_str()])
         }
-        pub async fn owner(&self) -> Arc<SgOperationOwner> {
-            Arc::new(SgOperationOwner::Change(self.owner_change.upgrade().unwrap_or_default()))
+        pub async fn owner(&self) -> Arc<OperationOwner> {
+            Arc::new(OperationOwner::Change(self.owner_change.upgrade().unwrap_or_default()))
         }
         #[graphql(name = "changeOwner")]
         pub async fn change_owner(&self) -> Option<Arc<Change>> {
             self.owner_change.upgrade()
         }
         #[graphql(name = "ownerEntity")]
-        pub async fn owner_entity(&self) -> Option<Arc<SgOwnerEntity>> {
+        pub async fn owner_entity(&self) -> Option<Arc<OwnerEntity>> {
             None
         }
         #[graphql(name = "ownedEntities")]
-        pub async fn owned_entities(&self) -> Option<Arc<SgOwnedEntityConnection>> {
-            Some(Arc::new(SgOwnedEntityConnection::default()))
-        }
-        pub async fn input(&self) -> Option<Arc<SgInput>> {
-            stub_graphql_input_created_fixed()
-        }
-        pub async fn diff(&self) -> Arc<SgDiff> {
-            stub_graphql_diff()
+        pub async fn owned_entities(&self) -> Option<Arc<OwnedEntityConnection>> {
+            Some(empty_owned_entity_connection())
         }
         pub async fn piece(&self) -> Arc<crate::kit::design::piece::Piece> {
             self.piece.clone()
@@ -4948,26 +4948,20 @@ pub mod op {
         pub async fn hash(&self) -> String {
             crate::hash::h(&[self.id.as_str()])
         }
-        pub async fn owner(&self) -> Arc<SgOperationOwner> {
-            Arc::new(SgOperationOwner::Change(self.owner_change.upgrade().unwrap_or_default()))
+        pub async fn owner(&self) -> Arc<OperationOwner> {
+            Arc::new(OperationOwner::Change(self.owner_change.upgrade().unwrap_or_default()))
         }
         #[graphql(name = "changeOwner")]
         pub async fn change_owner(&self) -> Option<Arc<Change>> {
             self.owner_change.upgrade()
         }
         #[graphql(name = "ownerEntity")]
-        pub async fn owner_entity(&self) -> Option<Arc<SgOwnerEntity>> {
+        pub async fn owner_entity(&self) -> Option<Arc<OwnerEntity>> {
             None
         }
         #[graphql(name = "ownedEntities")]
-        pub async fn owned_entities(&self) -> Option<Arc<SgOwnedEntityConnection>> {
-            Some(Arc::new(SgOwnedEntityConnection::default()))
-        }
-        pub async fn input(&self) -> Option<Arc<SgInput>> {
-            stub_graphql_input_fixed_piece()
-        }
-        pub async fn diff(&self) -> Arc<SgDiff> {
-            stub_graphql_diff()
+        pub async fn owned_entities(&self) -> Option<Arc<OwnedEntityConnection>> {
+            Some(empty_owned_entity_connection())
         }
         pub async fn piece(&self) -> Arc<crate::kit::design::piece::Piece> {
             self.piece.clone()
@@ -5002,26 +4996,20 @@ pub mod op {
         pub async fn hash(&self) -> String {
             crate::hash::h(&[self.id.as_str()])
         }
-        pub async fn owner(&self) -> Arc<SgOperationOwner> {
-            Arc::new(SgOperationOwner::Change(self.owner_change.upgrade().unwrap_or_default()))
+        pub async fn owner(&self) -> Arc<OperationOwner> {
+            Arc::new(OperationOwner::Change(self.owner_change.upgrade().unwrap_or_default()))
         }
         #[graphql(name = "changeOwner")]
         pub async fn change_owner(&self) -> Option<Arc<Change>> {
             self.owner_change.upgrade()
         }
         #[graphql(name = "ownerEntity")]
-        pub async fn owner_entity(&self) -> Option<Arc<SgOwnerEntity>> {
+        pub async fn owner_entity(&self) -> Option<Arc<OwnerEntity>> {
             None
         }
         #[graphql(name = "ownedEntities")]
-        pub async fn owned_entities(&self) -> Option<Arc<SgOwnedEntityConnection>> {
-            Some(Arc::new(SgOwnedEntityConnection::default()))
-        }
-        pub async fn input(&self) -> Option<Arc<SgInput>> {
-            stub_graphql_input_dragged()
-        }
-        pub async fn diff(&self) -> Arc<SgDiff> {
-            stub_graphql_diff()
+        pub async fn owned_entities(&self) -> Option<Arc<OwnedEntityConnection>> {
+            Some(empty_owned_entity_connection())
         }
         pub async fn pieces(&self) -> Vec<Arc<crate::kit::design::piece::Piece>> {
             self.pieces.clone()
@@ -5056,26 +5044,20 @@ pub mod op {
         pub async fn hash(&self) -> String {
             crate::hash::h(&[self.id.as_str()])
         }
-        pub async fn owner(&self) -> Arc<SgOperationOwner> {
-            Arc::new(SgOperationOwner::Change(self.owner_change.upgrade().unwrap_or_default()))
+        pub async fn owner(&self) -> Arc<OperationOwner> {
+            Arc::new(OperationOwner::Change(self.owner_change.upgrade().unwrap_or_default()))
         }
         #[graphql(name = "changeOwner")]
         pub async fn change_owner(&self) -> Option<Arc<Change>> {
             self.owner_change.upgrade()
         }
         #[graphql(name = "ownerEntity")]
-        pub async fn owner_entity(&self) -> Option<Arc<SgOwnerEntity>> {
+        pub async fn owner_entity(&self) -> Option<Arc<OwnerEntity>> {
             None
         }
         #[graphql(name = "ownedEntities")]
-        pub async fn owned_entities(&self) -> Option<Arc<SgOwnedEntityConnection>> {
-            Some(Arc::new(SgOwnedEntityConnection::default()))
-        }
-        pub async fn input(&self) -> Option<Arc<SgInput>> {
-            stub_graphql_input_renamed_kit()
-        }
-        pub async fn diff(&self) -> Arc<SgDiff> {
-            stub_graphql_diff()
+        pub async fn owned_entities(&self) -> Option<Arc<OwnedEntityConnection>> {
+            Some(empty_owned_entity_connection())
         }
         pub async fn kit(&self) -> Arc<crate::kit::Kit> {
             self.kit.clone()
@@ -5110,26 +5092,20 @@ pub mod op {
         pub async fn hash(&self) -> String {
             crate::hash::h(&[self.id.as_str()])
         }
-        pub async fn owner(&self) -> Arc<SgOperationOwner> {
-            Arc::new(SgOperationOwner::Change(self.owner_change.upgrade().unwrap_or_default()))
+        pub async fn owner(&self) -> Arc<OperationOwner> {
+            Arc::new(OperationOwner::Change(self.owner_change.upgrade().unwrap_or_default()))
         }
         #[graphql(name = "changeOwner")]
         pub async fn change_owner(&self) -> Option<Arc<Change>> {
             self.owner_change.upgrade()
         }
         #[graphql(name = "ownerEntity")]
-        pub async fn owner_entity(&self) -> Option<Arc<SgOwnerEntity>> {
+        pub async fn owner_entity(&self) -> Option<Arc<OwnerEntity>> {
             None
         }
         #[graphql(name = "ownedEntities")]
-        pub async fn owned_entities(&self) -> Option<Arc<SgOwnedEntityConnection>> {
-            Some(Arc::new(SgOwnedEntityConnection::default()))
-        }
-        pub async fn input(&self) -> Option<Arc<SgInput>> {
-            stub_graphql_input_changed_desc()
-        }
-        pub async fn diff(&self) -> Arc<SgDiff> {
-            stub_graphql_diff()
+        pub async fn owned_entities(&self) -> Option<Arc<OwnedEntityConnection>> {
+            Some(empty_owned_entity_connection())
         }
         pub async fn entity(&self) -> Arc<crate::kit::Kit> {
             self.entity.clone()
@@ -5153,12 +5129,10 @@ pub mod op {
         name = "Operation",
         field(name = "id", ty = "crate::id::Id"),
         field(name = "hash", ty = "String"),
-        field(name = "owner", ty = "std::sync::Arc<crate::schema_gen::SgOperationOwner>"),
+        field(name = "owner", ty = "std::sync::Arc<crate::op::OperationOwner>"),
         field(name = "changeOwner", method = "change_owner", ty = "Option<std::sync::Arc<crate::vcs::Change>>"),
-        field(name = "ownerEntity", method = "owner_entity", ty = "Option<std::sync::Arc<crate::schema_gen::SgOwnerEntity>>"),
-        field(name = "ownedEntities", method = "owned_entities", ty = "Option<std::sync::Arc<crate::schema_gen::SgOwnedEntityConnection>>"),
-        field(name = "input", ty = "Option<std::sync::Arc<crate::schema_gen::SgInput>>"),
-        field(name = "diff", ty = "std::sync::Arc<crate::schema_gen::SgDiff>"),
+        field(name = "ownerEntity", method = "owner_entity", ty = "Option<std::sync::Arc<crate::iface::OwnerEntity>>"),
+        field(name = "ownedEntities", method = "owned_entities", ty = "Option<std::sync::Arc<crate::iface::OwnedEntityConnection>>"),
     )]
     pub enum OperationIface {
         CreatedFixedPiece(Arc<CreatedFixedPiece>),
@@ -5388,56 +5362,6 @@ pub mod op {
         DeletePiecesAndConnectionsInDesign
     }
 }
-
-mod schema_gen {
-    //! @emoji 🤖 Build-time GraphQL types from `target.schema.graphql` (see `build.rs`).
-    include!(concat!(env!("OUT_DIR"), "/semio_schema_gen.rs"));
-}
-
-//#region 🔗 iface schema bridge
-
-/// @emoji 🔗 Maps hand [`crate::iface::OwnerEntity`] into generated [`crate::schema_gen::SgOwnerEntity`] for SDL `OwnerEntity` parity.
-pub mod iface_sg_bridge {
-    use std::sync::Arc;
-
-    use crate::iface::OwnerEntity;
-    use crate::schema_gen::{SgOwnedEntityConnection, SgOwnerEntity};
-
-    pub fn empty_owned_connection() -> Arc<SgOwnedEntityConnection> {
-        Arc::new(SgOwnedEntityConnection::default())
-    }
-
-    pub fn sg_owner_opt(o: Option<OwnerEntity>) -> Option<Arc<SgOwnerEntity>> {
-        o.map(owner_entity_to_sg)
-    }
-
-    pub fn owner_entity_to_sg(e: OwnerEntity) -> Arc<SgOwnerEntity> {
-        Arc::new(match e {
-            OwnerEntity::Kit(v) => SgOwnerEntity::Kit(v),
-            OwnerEntity::Type(v) => SgOwnerEntity::Type(v),
-            OwnerEntity::Representation(v) => SgOwnerEntity::Representation(v),
-            OwnerEntity::Connector(v) => SgOwnerEntity::Connector(v),
-            OwnerEntity::Design(v) => SgOwnerEntity::Design(v),
-            OwnerEntity::Piece(v) => SgOwnerEntity::Piece(v),
-            OwnerEntity::Graph(v) => SgOwnerEntity::Graph(v),
-            OwnerEntity::Session(v) => SgOwnerEntity::Session(v),
-            OwnerEntity::Checkpoint(v) => SgOwnerEntity::Checkpoint(v),
-            OwnerEntity::Alternative(v) => SgOwnerEntity::Alternative(v),
-            OwnerEntity::Conflict(v) => SgOwnerEntity::Conflict(v),
-            OwnerEntity::ReadVersion(v) => SgOwnerEntity::ReadVersion(v),
-            OwnerEntity::WriteVersion(v) => SgOwnerEntity::WriteVersion(v),
-            OwnerEntity::Position(v) => SgOwnerEntity::Position(v),
-            OwnerEntity::Coordinate(v) => SgOwnerEntity::Coordinate(v),
-            OwnerEntity::Plane(v) => SgOwnerEntity::Plane(v),
-            OwnerEntity::Point(v) => SgOwnerEntity::Point(v),
-            OwnerEntity::Vector(v) => SgOwnerEntity::Vector(v),
-            OwnerEntity::Place(v) => SgOwnerEntity::Place(v),
-            OwnerEntity::Offset(v) => SgOwnerEntity::Offset(v),
-        })
-    }
-}
-
-//#endregion 🔗 iface schema bridge
 
 //#endregion ⚙️ op
 
@@ -6654,20 +6578,15 @@ pub mod gql {
     }
 
     fn build_schema_sync_for(rt: Arc<ParentRuntime>) -> AppSchema {
-        crate::schema_gen::register_generated(Schema::build(Query, Mutation, Subscription))
+        Schema::build(Query, Mutation, Subscription)
             .data(rt.clone())
             .data(rt.bus.clone())
             .finish()
     }
 
-    /// 📜 Canonical target SDL (contract file; executable schema is derived from Rust types).
-    pub fn target_schema_sdl() -> String {
-        include_str!("../graphql/target.schema.graphql").to_string()
-    }
-
-    /// 📜 Same as [`target_schema_sdl`] (async for historical call sites).
+    /// 📜 Executable SDL emitted by the in-Rust schema (code-first).
     pub async fn sdl() -> String {
-        target_schema_sdl()
+        build_schema().await.sdl()
     }
 
     /// 🧱 Build schema with parent runtime + bus.
@@ -6731,7 +6650,7 @@ pub mod wasm_bridge {
     #[wasm_bindgen]
     pub fn schema_sdl() -> js_sys::Promise {
         future_to_promise(async move {
-            let sdl = crate::gql::target_schema_sdl();
+            let sdl = crate::gql::sdl().await;
             Ok(JsValue::from_str(&sdl))
         })
     }
@@ -6875,7 +6794,7 @@ mod tests {
         "{ authoritative { theKit { designs { edges { node { pieces { edges { node { id } } } } } } } } }"
     }
 
-    /// 📤 Writes the generated SDL to `SEMIO_GRAPHQL_SCHEMA_OUT`; run via `npx nx build semio/graphql`.
+    /// 📤 Writes the executable schema's SDL to `SEMIO_GRAPHQL_SCHEMA_OUT`; run via `npx nx build semio/graphql`.
     #[test]
     #[ignore = "writes the generated SDL to SEMIO_GRAPHQL_SCHEMA_OUT"]
     fn export_semio_graphql_schema_file() {
@@ -6885,59 +6804,6 @@ mod tests {
             std::fs::create_dir_all(parent).expect("create schema output parent");
         }
         std::fs::write(path, block_on(crate::gql::sdl())).expect("write generated GraphQL schema");
-    }
-
-    #[test]
-    fn parses_target_schema() {
-        let sdl = block_on(crate::gql::sdl());
-        for t in [
-            "type Query",
-            "type Mutation",
-            "type Piece",
-            "type Connector",
-            "type Port",
-            "type Connection",
-            "type Design",
-            "type Kit",
-            "type Graph",
-            "type Session",
-            "type Conflict",
-            "type Checkpoint",
-            "type Alternative",
-            "type Draft",
-            "type Transaction",
-            "type Change",
-            "interface Operation",
-            "interface Entity",
-            "scalar Timestamp",
-            "pieceInDesign",
-            "addFixedPieceToDesign",
-            "fixPieceInDesign",
-            "createTag",
-            "createConcept",
-            "createQuality",
-            "DraftConnection",
-            "DesignConnection",
-            "PieceConnection",
-        ] {
-            assert!(sdl.contains(t), "schema missing `{}`", t);
-        }
-    }
-
-    fn normalize_sdl_trailing_ws(s: &str) -> String {
-        s.lines().map(str::trim_end).collect::<Vec<_>>().join("\n")
-    }
-
-    /// @emoji 📜 Plan `target_sdl_byte_match`: full parity requires registering every target type (689+); run with `cargo test target_sdl_byte_match -- --ignored` while expanding static registration.
-    #[test]
-    #[ignore = "executable Schema::sdl() will not match target.schema.graphql until all types/unions are registered"]
-    fn target_sdl_byte_match() {
-        block_on(async {
-            let schema = crate::gql::build_schema().await;
-            let got = normalize_sdl_trailing_ws(&schema.sdl());
-            let want = normalize_sdl_trailing_ws(&crate::gql::target_schema_sdl());
-            assert_eq!(got, want);
-        });
     }
 
     /// 🛡️ Guard test: the crate must contain exactly **one** `pub async fn emit_event` definition.
