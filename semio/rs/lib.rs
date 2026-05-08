@@ -28,6 +28,7 @@ pub mod id {
     use std::fmt;
 
     #[derive(Clone, Debug, Default, Eq, Hash, PartialEq, Serialize, Deserialize)]
+    #[serde(transparent)]
     pub struct Id(pub String);
 
     impl Id {
@@ -2366,6 +2367,234 @@ pub mod kit {
             *g = g.saturating_add(1);
         }
 
+        /// @emoji 🧬 Deep-clone this kit graph (snapshot JSON round-trip) for immutable checkpoint roots / materialization bases.
+        pub async fn deep_clone(self: &Arc<Self>) -> Arc<Kit> {
+            let snap = self.kit_full_snapshot_value().await;
+            let owner = self.owner_graph.clone();
+            let nm = self.name.read().await.clone();
+            let row = Kit::new_sync(owner, nm);
+            let _ = row.hydrate_from_kit_full_snapshot_json(&snap).await;
+            row
+        }
+
+        /// @emoji 📦 Single mutation entry: applies [`crate::operation::KitDiff`] envelopes (`__ops`) plus sparse canonical scalar keys.
+        pub async fn apply_diff(self: &Arc<Self>, diff: &crate::operation::KitDiff) -> Result<(), crate::error::SemioError> {
+            let v = &diff.0;
+            if let Some(name) = v.get("name").and_then(|x| x.as_str()) {
+                *self.name.write().await = name.to_string();
+            }
+            if let Some(description) = v.get("description") {
+                if !description.is_null() {
+                    *self.description.write().await = description.as_str().map(|s| s.to_string());
+                }
+            }
+            if let Some(ops) = v.get("__ops").and_then(|x| x.as_array()) {
+                for op in ops {
+                    let kind = op.get("kind").and_then(|k| k.as_str()).unwrap_or("");
+                    match kind {
+                        "renameKit" => {
+                            let name = op.get("name").and_then(|x| x.as_str()).ok_or_else(|| crate::error::SemioError::invalid("renameKit name"))?;
+                            *self.name.write().await = name.to_string();
+                        }
+                        "changeDescription" => {
+                            let entity_id: Id = serde_json::from_value(op.get("entityId").cloned().ok_or_else(|| crate::error::SemioError::invalid("entityId"))?)
+                                .map_err(|e| crate::error::SemioError::invalid(e.to_string()))?;
+                            let description = op.get("description").and_then(|d| d.as_str().map(|s| s.to_string()));
+                            let kid = self.workspace_kit_id().await;
+                            if entity_id == kid || entity_id == self.id {
+                                *self.description.write().await = description;
+                            } else if let Some(tag) = self.find_tag(&entity_id).await {
+                                *tag.description.write().await = description;
+                            } else if let Some(concept) = self.find_concept(&entity_id).await {
+                                *concept.description.write().await = description;
+                            } else if let Some(quality) = self.find_quality(&entity_id).await {
+                                *quality.description.write().await = description;
+                            } else if let Some(ty) = self.type_by_external_id(&entity_id).await {
+                                *ty.description.write().await = description;
+                            } else if let Some(design) = self.design_by_external_id(&entity_id).await {
+                                *design.description.write().await = description;
+                            } else {
+                                return Err(crate::error::SemioError::not_found("DescriptionEntity", entity_id.as_str()));
+                            }
+                        }
+                        "changeIcon" => {
+                            let entity_id: Id = serde_json::from_value(op.get("entityId").cloned().ok_or_else(|| crate::error::SemioError::invalid("entityId"))?)
+                                .map_err(|e| crate::error::SemioError::invalid(e.to_string()))?;
+                            let icon = op.get("icon").and_then(|i| i.as_str().map(|s| s.to_string()));
+                            let kid = self.workspace_kit_id().await;
+                            if entity_id == kid || entity_id == self.id {
+                                *self.icon.write().await = icon;
+                            } else if let Some(tag) = self.find_tag(&entity_id).await {
+                                *tag.icon.write().await = icon;
+                            } else if let Some(concept) = self.find_concept(&entity_id).await {
+                                *concept.icon.write().await = icon;
+                            } else if let Some(quality) = self.find_quality(&entity_id).await {
+                                *quality.icon.write().await = icon;
+                            } else if let Some(ty) = self.type_by_external_id(&entity_id).await {
+                                *ty.icon.write().await = icon;
+                            } else if let Some(design) = self.design_by_external_id(&entity_id).await {
+                                *design.icon.write().await = icon;
+                            } else {
+                                return Err(crate::error::SemioError::not_found("IconEntity", entity_id.as_str()));
+                            }
+                        }
+                        "changeImage" => {
+                            let entity_id: Id = serde_json::from_value(op.get("entityId").cloned().ok_or_else(|| crate::error::SemioError::invalid("entityId"))?)
+                                .map_err(|e| crate::error::SemioError::invalid(e.to_string()))?;
+                            let image = op.get("image").and_then(|i| i.as_str().map(|s| s.to_string()));
+                            let kid = self.workspace_kit_id().await;
+                            if entity_id == kid || entity_id == self.id {
+                                *self.image.write().await = image;
+                            } else if let Some(ty) = self.type_by_external_id(&entity_id).await {
+                                *ty.image.write().await = image;
+                            } else if let Some(design) = self.design_by_external_id(&entity_id).await {
+                                *design.image.write().await = image;
+                            } else {
+                                return Err(crate::error::SemioError::not_found("ImageEntity", entity_id.as_str()));
+                            }
+                        }
+                        "createTag" => {
+                            let owner_id: Id = serde_json::from_value(op.get("ownerId").cloned().ok_or_else(|| crate::error::SemioError::invalid("ownerId"))?)
+                                .map_err(|e| crate::error::SemioError::invalid(e.to_string()))?;
+                            let tag_id: Id = serde_json::from_value(op.get("tagId").cloned().ok_or_else(|| crate::error::SemioError::invalid("tagId"))?)
+                                .map_err(|e| crate::error::SemioError::invalid(e.to_string()))?;
+                            let attribute_ids: Vec<Id> = serde_json::from_value(op.get("attributeIds").cloned().unwrap_or(serde_json::json!([])))
+                                .map_err(|e| crate::error::SemioError::invalid(e.to_string()))?;
+                            let input: crate::meta::TagInput = serde_json::from_value(op.get("tag").cloned().ok_or_else(|| crate::error::SemioError::invalid("tag"))?)
+                                .map_err(|e| crate::error::SemioError::invalid(e.to_string()))?;
+                            self.create_and_register_tag_with_scope(&owner_id, &tag_id, &attribute_ids, input).await?;
+                        }
+                        "createTags" => {
+                            let owner_id: Id = serde_json::from_value(op.get("ownerId").cloned().ok_or_else(|| crate::error::SemioError::invalid("ownerId"))?)
+                                .map_err(|e| crate::error::SemioError::invalid(e.to_string()))?;
+                            let tag_ids: Vec<Id> = serde_json::from_value(op.get("tagIds").cloned().ok_or_else(|| crate::error::SemioError::invalid("tagIds"))?)
+                                .map_err(|e| crate::error::SemioError::invalid(e.to_string()))?;
+                            let attribute_ids: Vec<Vec<Id>> =
+                                serde_json::from_value(op.get("attributeIds").cloned().unwrap_or(serde_json::json!([]))).map_err(|e| crate::error::SemioError::invalid(e.to_string()))?;
+                            let tags: Vec<crate::meta::TagInput> = serde_json::from_value(op.get("tags").cloned().ok_or_else(|| crate::error::SemioError::invalid("tags"))?)
+                                .map_err(|e| crate::error::SemioError::invalid(e.to_string()))?;
+                            for (index, tag) in tags.into_iter().enumerate() {
+                                self.create_and_register_tag_with_scope(&owner_id, &tag_ids[index], &attribute_ids[index], tag).await?;
+                            }
+                        }
+                        "deleteTag" => {
+                            let tag_id: Id = serde_json::from_value(op.get("tagId").cloned().ok_or_else(|| crate::error::SemioError::invalid("tagId"))?)
+                                .map_err(|e| crate::error::SemioError::invalid(e.to_string()))?;
+                            self.delete_tag_by_id(&tag_id).await?;
+                        }
+                        "renameTag" => {
+                            let tag_id: Id = serde_json::from_value(op.get("tagId").cloned().ok_or_else(|| crate::error::SemioError::invalid("tagId"))?)
+                                .map_err(|e| crate::error::SemioError::invalid(e.to_string()))?;
+                            let name = op.get("name").and_then(|x| x.as_str()).ok_or_else(|| crate::error::SemioError::invalid("name"))?.to_string();
+                            let tag = self.find_tag(&tag_id).await.ok_or_else(|| crate::error::SemioError::not_found("Tag", tag_id.as_str()))?;
+                            *tag.name.write().await = name;
+                        }
+                        "createConcept" => {
+                            let owner_id: Id = serde_json::from_value(op.get("ownerId").cloned().ok_or_else(|| crate::error::SemioError::invalid("ownerId"))?)
+                                .map_err(|e| crate::error::SemioError::invalid(e.to_string()))?;
+                            let concept_id: Id = serde_json::from_value(op.get("conceptId").cloned().ok_or_else(|| crate::error::SemioError::invalid("conceptId"))?)
+                                .map_err(|e| crate::error::SemioError::invalid(e.to_string()))?;
+                            let attribute_ids: Vec<Id> = serde_json::from_value(op.get("attributeIds").cloned().unwrap_or(serde_json::json!([])))
+                                .map_err(|e| crate::error::SemioError::invalid(e.to_string()))?;
+                            let input: crate::meta::ConceptInput = serde_json::from_value(op.get("concept").cloned().ok_or_else(|| crate::error::SemioError::invalid("concept"))?)
+                                .map_err(|e| crate::error::SemioError::invalid(e.to_string()))?;
+                            let _ = self.create_and_register_concept_with_scope(&owner_id, &concept_id, &attribute_ids, input).await?;
+                        }
+                        "deleteConcept" => {
+                            let concept_id: Id = serde_json::from_value(op.get("conceptId").cloned().ok_or_else(|| crate::error::SemioError::invalid("conceptId"))?)
+                                .map_err(|e| crate::error::SemioError::invalid(e.to_string()))?;
+                            self.delete_concept_by_id(&concept_id).await?;
+                        }
+                        "createQuality" => {
+                            let owner_id: Id = serde_json::from_value(op.get("ownerId").cloned().ok_or_else(|| crate::error::SemioError::invalid("ownerId"))?)
+                                .map_err(|e| crate::error::SemioError::invalid(e.to_string()))?;
+                            let quality_id: Id = serde_json::from_value(op.get("qualityId").cloned().ok_or_else(|| crate::error::SemioError::invalid("qualityId"))?)
+                                .map_err(|e| crate::error::SemioError::invalid(e.to_string()))?;
+                            let attribute_ids: Vec<Id> = serde_json::from_value(op.get("attributeIds").cloned().unwrap_or(serde_json::json!([])))
+                                .map_err(|e| crate::error::SemioError::invalid(e.to_string()))?;
+                            let benchmark_ids: Vec<Id> = serde_json::from_value(op.get("benchmarkIds").cloned().unwrap_or(serde_json::json!([])))
+                                .map_err(|e| crate::error::SemioError::invalid(e.to_string()))?;
+                            let input: crate::meta::QualityInput = serde_json::from_value(op.get("quality").cloned().ok_or_else(|| crate::error::SemioError::invalid("quality"))?)
+                                .map_err(|e| crate::error::SemioError::invalid(e.to_string()))?;
+                            let _ = self.create_and_register_quality_with_scope(&owner_id, &quality_id, &attribute_ids, &benchmark_ids, input).await?;
+                        }
+                        "deleteQuality" => {
+                            let quality_id: Id = serde_json::from_value(op.get("qualityId").cloned().ok_or_else(|| crate::error::SemioError::invalid("qualityId"))?)
+                                .map_err(|e| crate::error::SemioError::invalid(e.to_string()))?;
+                            self.delete_quality_by_id(&quality_id).await?;
+                        }
+                        "createFixedPiece" => {
+                            let design_id: Id = serde_json::from_value(op.get("designId").cloned().ok_or_else(|| crate::error::SemioError::invalid("designId"))?)
+                                .map_err(|e| crate::error::SemioError::invalid(e.to_string()))?;
+                            let piece_id: Id = serde_json::from_value(op.get("pieceId").cloned().ok_or_else(|| crate::error::SemioError::invalid("pieceId"))?)
+                                .map_err(|e| crate::error::SemioError::invalid(e.to_string()))?;
+                            let blueprint_id: Id = serde_json::from_value(op.get("blueprintId").cloned().ok_or_else(|| crate::error::SemioError::invalid("blueprintId"))?)
+                                .map_err(|e| crate::error::SemioError::invalid(e.to_string()))?;
+                            let position: crate::geom::Position = serde_json::from_value(op.get("position").cloned().ok_or_else(|| crate::error::SemioError::invalid("position"))?)
+                                .map_err(|e| crate::error::SemioError::invalid(e.to_string()))?;
+                            let name = op.get("name").and_then(|x| x.as_str()).map(|s| s.to_string());
+                            let description = op.get("description").and_then(|x| x.as_str()).map(|s| s.to_string());
+                            let (_handle, design) = self.bind_external_design_id(&design_id).await;
+                            let blueprint_type = crate::kit::r#type::Type::new(Arc::downgrade(self), format!("type-{}", blueprint_id.as_str())).await;
+                            let blueprint = crate::kit::r#type::Blueprint::Type(blueprint_type);
+                            let piece = crate::kit::design::piece::Piece::new_fixed_with_external_id(piece_id, Arc::downgrade(&design), blueprint, position).await;
+                            piece.set_name(name).await;
+                            piece.set_description(description).await;
+                            let _ = design.insert_piece(piece).await;
+                        }
+                        "deletePieceInDesign" => {
+                            let design_id: Id = serde_json::from_value(op.get("designId").cloned().ok_or_else(|| crate::error::SemioError::invalid("designId"))?)
+                                .map_err(|e| crate::error::SemioError::invalid(e.to_string()))?;
+                            let piece_id: Id = serde_json::from_value(op.get("pieceId").cloned().ok_or_else(|| crate::error::SemioError::invalid("pieceId"))?)
+                                .map_err(|e| crate::error::SemioError::invalid(e.to_string()))?;
+                            let design = self.design_by_external_id(&design_id).await.ok_or_else(|| crate::error::SemioError::not_found("Design", design_id.as_str()))?;
+                            design.delete_piece_by_external_id(&piece_id).await?;
+                        }
+                        "dragPieceInDesign" => {
+                            let design_id: Id = serde_json::from_value(op.get("designId").cloned().ok_or_else(|| crate::error::SemioError::invalid("designId"))?)
+                                .map_err(|e| crate::error::SemioError::invalid(e.to_string()))?;
+                            let piece_id: Id = serde_json::from_value(op.get("pieceId").cloned().ok_or_else(|| crate::error::SemioError::invalid("pieceId"))?)
+                                .map_err(|e| crate::error::SemioError::invalid(e.to_string()))?;
+                            let offset: crate::geom::Offset = serde_json::from_value(op.get("offset").cloned().ok_or_else(|| crate::error::SemioError::invalid("offset"))?)
+                                .map_err(|e| crate::error::SemioError::invalid(e.to_string()))?;
+                            use crate::geom::entity::PositionNode;
+                            let design = self.design_by_external_id(&design_id).await.ok_or_else(|| crate::error::SemioError::not_found("Design", design_id.as_str()))?;
+                            let piece = design.piece_by_external_id(&piece_id).await.ok_or_else(|| crate::error::SemioError::not_found("Piece", piece_id.as_str()))?;
+                            let pos_slot = piece.position.read().await.clone();
+                            if let Some(pos) = pos_slot {
+                                let mut d = pos.data.write().await;
+                                d.center.u += offset.u;
+                                d.center.v += offset.v;
+                                *pos.center.u.write().await = d.center.u;
+                                *pos.center.v.write().await = d.center.v;
+                            } else {
+                                let n = PositionNode::from_position_value(crate::geom::Position::default());
+                                {
+                                    let mut d = n.data.write().await;
+                                    d.center.u += offset.u;
+                                    d.center.v += offset.v;
+                                }
+                                *n.center.u.write().await = n.data.read().await.center.u;
+                                *n.center.v.write().await = n.data.read().await.center.v;
+                                *piece.position.write().await = Some(n);
+                            }
+                        }
+                        "fixPieceInDesign" => {
+                            let design_id: Id = serde_json::from_value(op.get("designId").cloned().ok_or_else(|| crate::error::SemioError::invalid("designId"))?)
+                                .map_err(|e| crate::error::SemioError::invalid(e.to_string()))?;
+                            let piece_id: Id = serde_json::from_value(op.get("pieceId").cloned().ok_or_else(|| crate::error::SemioError::invalid("pieceId"))?)
+                                .map_err(|e| crate::error::SemioError::invalid(e.to_string()))?;
+                            let design = self.design_by_external_id(&design_id).await.ok_or_else(|| crate::error::SemioError::not_found("Design", design_id.as_str()))?;
+                            let piece = design.piece_by_external_id(&piece_id).await.ok_or_else(|| crate::error::SemioError::not_found("Piece", piece_id.as_str()))?;
+                            *piece.connection_kind.write().await = Some(crate::kit::design::piece::PieceConnectionKind::Fixed);
+                        }
+                        other => return Err(crate::error::SemioError::invalid(format!("unknown __ops kind: {other}"))),
+                    }
+                }
+            }
+            Ok(())
+        }
+
         pub async fn compute_hash(&self) -> String {
             let name = self.name.read().await;
             let kid = self.workspace_kit_id().await;
@@ -3328,7 +3557,7 @@ pub mod vcs {
                 None => ChangeOwnerUnion::Transaction(Arc::default()),
             }
         }
-        pub async fn forwards(&self) -> Vec<Json> {
+        pub async fn forwards(&self) -> Vec<Json<serde_json::Value>> {
             self.forwards
                 .read()
                 .await
@@ -3336,7 +3565,7 @@ pub mod vcs {
                 .filter_map(|operation| serde_json::to_value(operation).ok().map(Json))
                 .collect()
         }
-        pub async fn backwards(&self) -> Vec<Json> {
+        pub async fn backwards(&self) -> Vec<Json<serde_json::Value>> {
             self.backwards
                 .read()
                 .await
@@ -3461,6 +3690,7 @@ pub mod vcs {
                 finalized_transactions: RwLock::new(Vec::new()),
                 redo_transactions: RwLock::new(Vec::new()),
                 transactions: RwLock::new(Vec::new()),
+                change_seq: AtomicU64::new(0),
             }
         }
     }
@@ -3573,7 +3803,7 @@ pub mod vcs {
                 id: Id::default(),
                 timestamp: RwLock::new(None),
                 authors: RwLock::new(Vec::new()),
-                frozen_root: Arc::default(),
+                root: RwLock::new(Some(Arc::default())),
                 parent_checkpoint: RwLock::new(Weak::new()),
                 message: RwLock::new(None),
                 is_release: RwLock::new(false),
@@ -3605,14 +3835,15 @@ pub mod vcs {
         pub async fn authors(&self) -> Vec<Author> {
             self.authors.read().await.clone()
         }
-        /// @emoji 🧊 SDL `checkpoint.root` — frozen snapshot (alias of `frozenRoot`).
+        /// @emoji 🧊 SDL `checkpoint.root` — optional frozen snapshot held under [`Checkpoint::root`].
         pub async fn root(&self) -> Option<Arc<Kit>> {
-            Some(self.frozen_root.clone())
+            self.root.read().await.clone()
         }
         #[graphql(name = "frozenRoot")]
-        pub async fn frozen_root_gql(&self) -> Arc<Kit> {
-            self.frozen_root.clone()
+        pub async fn frozen_root_gql(&self) -> Option<Arc<Kit>> {
+            self.root.read().await.clone()
         }
+
         #[graphql(name = "parentCheckpoint")]
         pub async fn parent_checkpoint(&self) -> Option<Arc<Checkpoint>> {
             self.parent_checkpoint.read().await.upgrade()
@@ -3740,7 +3971,9 @@ pub mod vcs {
     pub struct Graph {
         pub id: Id,
         pub owner_session: RwLock<Weak<Session>>,
-        /// @emoji 🧊 Read-only kit line cloned from the active checkpoint `frozen_root` (never aliased with mutation targets).
+        /// @emoji 🔗 Weak back-reference so `&Graph` resolvers upgrade to [`Arc`] for materialization.
+        pub self_weak: std::sync::Mutex<std::sync::Weak<Graph>>,
+        /// @emoji 🧊 Live WIP kit line (materialized root); mutations target this [`Arc<Kit>`].
         pub parent_root_for_active_draft: RwLock<Arc<Kit>>,
         pub materialized_cache: RwLock<Option<MaterializedSlot>>,
         pub alternatives: RwLock<Vec<Arc<Alternative>>>,
@@ -3756,6 +3989,7 @@ pub mod vcs {
             Self {
                 id: Id::default(),
                 owner_session: RwLock::new(Weak::new()),
+                self_weak: std::sync::Mutex::new(Weak::new()),
                 parent_root_for_active_draft: RwLock::new(Arc::default()),
                 materialized_cache: RwLock::new(None),
                 alternatives: RwLock::new(Vec::new()),
@@ -3776,6 +4010,7 @@ pub mod vcs {
                 Self {
                     id,
                     owner_session: RwLock::new(Weak::new()),
+                    self_weak: std::sync::Mutex::new(weak_self.clone()),
                     parent_root_for_active_draft: RwLock::new(kit),
                     materialized_cache: RwLock::new(None),
                     alternatives: RwLock::new(Vec::new()),
@@ -3789,6 +4024,22 @@ pub mod vcs {
             let frozen = base.deep_clone().await;
             *g.parent_root_for_active_draft.write().await = frozen;
             g
+        }
+
+        /// @emoji 🔗 Upgrade `&Graph` to [`Arc`] via the cyclic weak slot (panics if weak is unset).
+        pub fn arc_here(&self) -> Arc<Graph> {
+            self.self_weak.lock().ok().and_then(|slot| slot.upgrade()).expect("Graph.self_weak upgrade")
+        }
+
+        /// @emoji 📦 Materialized kit for the default seed draft (GraphQL `theKit` / node resolution).
+        pub async fn materialized_head_kit(self: &Arc<Self>) -> Arc<Kit> {
+            let d = self.ensure_default_seed_state().await;
+            self.materialized_kit_for_draft(&d.id).await
+        }
+
+        /// @emoji 📦 Same as [`Graph::materialized_head_kit`] but callable from `&Graph` resolvers.
+        pub async fn materialized_head_kit_from_ref(&self) -> Arc<Kit> {
+            self.arc_here().materialized_head_kit().await
         }
 
         /// 🛰️ WIP bootstrap for `@semio/js` WASM: hydrates [`Graph::parent_root_for_active_draft`] then re-seeds a deep-cloned immutable parent line.
@@ -3818,6 +4069,45 @@ pub mod vcs {
             *self.materialized_cache.write().await = None;
         }
 
+        /// @emoji ➕ Golden / backbone helper: records [`KitOperation::CreateFixedPiece`] on the given draft transaction and returns the piece from [`Graph::materialized_kit_for_draft`].
+        pub async fn apply_create_fixed_piece(
+            self: &Arc<Self>,
+            draft_id: Id,
+            transaction_id: Id,
+            design_id: Id,
+            blueprint_id: Id,
+            position: crate::geom::Position,
+            name: Option<String>,
+            description: Option<String>,
+        ) -> Result<(Arc<crate::kit::design::piece::Piece>, operation::SemanticDiff), SemioError> {
+            let piece_id = Id::new().await;
+            let op = operation::KitOperation::CreateFixedPiece {
+                scope: operation::Scope::CreateFixedPiece {
+                    design_id: design_id.clone(),
+                    piece_id: piece_id.clone(),
+                    blueprint_id,
+                    attribute_ids: Vec::new(),
+                },
+                input: operation::Input::FixedPiece { position, name, description },
+            };
+            let before = self.materialized_kit_for_draft(&draft_id).await;
+            let payload_json = op.payload_json()?;
+            let fp_before = crate::kit_graph_engine::projection_fingerprint_for_kit(before.as_ref()).await;
+            let backwards = op.to_backwards(&before).await?;
+            self.record_op_in_open_transaction(&draft_id, &transaction_id, op.clone(), backwards).await?;
+            let after = self.materialized_kit_for_draft(&draft_id).await;
+            let fp_after = crate::kit_graph_engine::projection_fingerprint_for_kit(after.as_ref()).await;
+            let diff = crate::kit_graph_engine::deterministic_semantic_diff(op.kind(), &payload_json, &fp_before, &fp_after);
+            let piece = after
+                .design_by_external_id(&design_id)
+                .await
+                .ok_or_else(|| SemioError::not_found("Design", design_id.as_str()))?
+                .piece_by_external_id(&piece_id)
+                .await
+                .ok_or_else(|| SemioError::not_found("Piece", piece_id.as_str()))?;
+            Ok((piece, diff))
+        }
+
         /// @emoji 📖 Active draft for `draft_id` or the first main-line draft.
         pub async fn active_draft_for(self: &Arc<Self>, draft_id: Option<&Id>) -> Arc<Draft> {
             if let Some(did) = draft_id {
@@ -3828,7 +4118,7 @@ pub mod vcs {
             self.ensure_default_seed_state().await
         }
 
-        /// @emoji 🔁 Replays all recorded [`crate::operation::KitOperation`] steps for `draft_id` onto a scratch [`Kit`] cloned from [`Graph::parent_root_for_active_draft`].
+        /// @emoji 🔁 Replays finalized transactions then the open transaction onto a scratch [`Kit`] cloned from [`Graph::parent_root_for_active_draft`].
         pub async fn materialized_kit_for_draft(self: &Arc<Self>, draft_id: &Id) -> Arc<Kit> {
             let draft = self.active_draft_for(Some(draft_id)).await;
             let seq = draft.change_seq.load(Ordering::Relaxed);
@@ -3850,7 +4140,7 @@ pub mod vcs {
                     }
                 }
             }
-            for tx in draft.transactions.read().await.iter() {
+            if let Some(tx) = draft.open_transaction.read().await.upgrade() {
                 for ch in tx.changes.read().await.iter() {
                     for op in ch.forwards.read().await.iter() {
                         let diff = op.to_diff(&kit).await.expect("replay to_diff open");
@@ -3907,7 +4197,7 @@ pub mod vcs {
                         id,
                         timestamp: RwLock::new(None),
                         authors: RwLock::new(Vec::new()),
-                        frozen_root: frozen,
+                        root: RwLock::new(Some(frozen)),
                         parent_checkpoint: RwLock::new(Weak::new()),
                         message: RwLock::new(Some("init".to_string())),
                         is_release: RwLock::new(false),
@@ -3955,6 +4245,13 @@ pub mod vcs {
 
             let parent_cp = source_draft.parent_checkpoint.read().await.upgrade().ok_or_else(|| SemioError::invalid("draft has no parent checkpoint"))?;
 
+            let parent_root = parent_cp
+                .root
+                .read()
+                .await
+                .clone()
+                .ok_or_else(|| SemioError::invalid("parent checkpoint has no root kit"))?;
+
             let new_alt_id = Id::new().await;
             let new_alt = Arc::new(Alternative {
                 id: new_alt_id.clone(),
@@ -3962,7 +4259,7 @@ pub mod vcs {
                 name: RwLock::new(name),
                 start: RwLock::new(Arc::downgrade(&parent_cp)),
                 checkpoints: RwLock::new(vec![parent_cp.clone()]),
-                kit: RwLock::new(Some(parent_cp.frozen_root.clone())),
+                kit: RwLock::new(Some(parent_root)),
                 draft: RwLock::new(Weak::new()),
                 transaction: RwLock::new(Weak::new()),
             });
@@ -4039,143 +4336,8 @@ pub mod vcs {
                     *draft.open_transaction.write().await = std::sync::Weak::new();
                 }
             }
-            Ok(())
-        }
-
-        /// 🪡 Hot path: mutate using an already-bound [`crate::kit_graph_engine::DesignHandle`] / design node (no further design-id scans).
-        pub(crate) async fn apply_create_fixed_piece_on_design_node(
-            self: &Arc<Self>,
-            draft_id: Id,
-            transaction_id: Id,
-            design: Arc<crate::kit::design::Design>,
-            blueprint_id: Id,
-            position: crate::geom::Position,
-            name: Option<String>,
-            description: Option<String>,
-        ) -> Result<Arc<crate::kit::design::piece::Piece>, SemioError> {
-            let blueprint_type = crate::kit::r#type::Type::new(Arc::downgrade(&self.the_kit), format!("type-{}", blueprint_id.as_str())).await;
-            let blueprint = crate::kit::r#type::Blueprint::Type(blueprint_type);
-
-            let piece = crate::kit::design::piece::Piece::new_fixed(Arc::downgrade(&design), blueprint, position).await;
-            piece.set_name(name).await;
-            piece.set_description(description).await;
-            let _ = design.insert_piece(piece.clone()).await;
-
-            let draft = self.ensure_draft(&draft_id).await;
-            let _ = draft.ensure_transaction(&transaction_id).await;
-
-            Ok(piece)
-        }
-
-        /// 🪪 Hot path variant of [`Graph::apply_create_fixed_piece_on_design_node`] that reuses a pre-recorded piece id from operation scope.
-        pub(crate) async fn apply_create_fixed_piece_on_design_node_with_scope(
-            self: &Arc<Self>,
-            draft_id: Id,
-            transaction_id: Id,
-            design: Arc<crate::kit::design::Design>,
-            piece_id: Id,
-            blueprint_id: Id,
-            position: crate::geom::Position,
-            name: Option<String>,
-            description: Option<String>,
-        ) -> Result<Arc<crate::kit::design::piece::Piece>, SemioError> {
-            let blueprint_type = crate::kit::r#type::Type::new(Arc::downgrade(&self.the_kit), format!("type-{}", blueprint_id.as_str())).await;
-            let blueprint = crate::kit::r#type::Blueprint::Type(blueprint_type);
-
-            let piece = crate::kit::design::piece::Piece::new_fixed_with_external_id(piece_id, Arc::downgrade(&design), blueprint, position).await;
-            piece.set_name(name).await;
-            piece.set_description(description).await;
-            let _ = design.insert_piece(piece.clone()).await;
-
-            let draft = self.ensure_draft(&draft_id).await;
-            let _ = draft.ensure_transaction(&transaction_id).await;
-
-            Ok(piece)
-        }
-
-        /// 🪡 Graph-mutating entry for `createFixedPiece`: one external id bind, then pointer-only core; returns deterministic ephemeral diff (not persisted).
-        pub async fn apply_create_fixed_piece(
-            self: &Arc<Self>,
-            draft_id: Id,
-            transaction_id: Id,
-            design_id: Id,
-            blueprint_id: Id,
-            position: crate::geom::Position,
-            name: Option<String>,
-            description: Option<String>,
-        ) -> Result<(Arc<crate::kit::design::piece::Piece>, operation::SemanticDiff), SemioError> {
-            let fp_before = crate::kit_graph_engine::projection_fingerprint_for_kit(&self.the_kit).await;
-            let (_handle, design) = self.the_kit.bind_external_design_id(&design_id).await;
-            let piece = self.apply_create_fixed_piece_on_design_node(draft_id, transaction_id, design, blueprint_id.clone(), position, name.clone(), description.clone()).await?;
-            let fp_after = crate::kit_graph_engine::projection_fingerprint_for_kit(&self.the_kit).await;
-            let input = operation::CreatedFixedPieceInput { design_id, blueprint_id, position, name, description };
-            let payload_json = serde_json::to_string(&input).map_err(|e| SemioError::invalid(e.to_string()))?;
-            let diff = crate::kit_graph_engine::deterministic_semantic_diff("createdFixedPiece", &payload_json, &fp_before, &fp_after);
-            Ok((piece, diff))
-        }
-
-        /// 🪪 Graph-mutating fixed-piece create using a pre-recorded piece id from normalized operation scope.
-        pub async fn apply_create_fixed_piece_with_scope(
-            self: &Arc<Self>,
-            draft_id: Id,
-            transaction_id: Id,
-            scope: &crate::operation::CreateFixedPieceScope,
-            input: &crate::operation::CreateFixedPieceInput,
-        ) -> Result<(Arc<crate::kit::design::piece::Piece>, operation::SemanticDiff), SemioError> {
-            if !scope.attribute_ids.is_empty() {
-                return Err(SemioError::invalid("piece attribute ids are not supported yet"));
-            }
-            let fp_before = crate::kit_graph_engine::projection_fingerprint_for_kit(&self.the_kit).await;
-            let (_handle, design) = self.the_kit.bind_external_design_id(&scope.design_id).await;
-            let piece = self
-                .apply_create_fixed_piece_on_design_node_with_scope(
-                    draft_id,
-                    transaction_id,
-                    design,
-                    scope.piece_id.clone(),
-                    scope.blueprint_id.clone(),
-                    input.position,
-                    input.name.clone(),
-                    input.description.clone(),
-                )
-                .await?;
-            let fp_after = crate::kit_graph_engine::projection_fingerprint_for_kit(&self.the_kit).await;
-            let payload_json = crate::operation::KitOperation::CreateFixedPiece { scope: scope.clone(), input: input.clone() }.payload_json()?;
-            let diff = crate::kit_graph_engine::deterministic_semantic_diff("createFixedPiece", &payload_json, &fp_before, &fp_after);
-            Ok((piece, diff))
-        }
-
-        /// @emoji ↔ Apply UV offset to a piece center (creates a default [`PositionNode`] when absent).
-        pub async fn apply_drag_piece_in_design(self: &Arc<Self>, design_id: &Id, piece_id: &Id, offset: crate::geom::Offset) -> Result<(), SemioError> {
-            use crate::geom::entity::PositionNode;
-            let design = self.the_kit.design_by_external_id(design_id).await.ok_or_else(|| SemioError::not_found("Design", design_id.as_str()))?;
-            let piece = design.piece_by_external_id(piece_id).await.ok_or_else(|| SemioError::not_found("Piece", piece_id.as_str()))?;
-            let pos_slot = piece.position.read().await.clone();
-            if let Some(pos) = pos_slot {
-                let mut d = pos.data.write().await;
-                d.center.u += offset.u;
-                d.center.v += offset.v;
-                *pos.center.u.write().await = d.center.u;
-                *pos.center.v.write().await = d.center.v;
-            } else {
-                let n = PositionNode::from_position_value(crate::geom::Position::default());
-                {
-                    let mut d = n.data.write().await;
-                    d.center.u += offset.u;
-                    d.center.v += offset.v;
-                }
-                *n.center.u.write().await = n.data.read().await.center.u;
-                *n.center.v.write().await = n.data.read().await.center.v;
-                *piece.position.write().await = Some(n);
-            }
-            Ok(())
-        }
-
-        /// @emoji ↔ Batch drag: same offset for every piece id.
-        pub async fn apply_drag_pieces_in_design(self: &Arc<Self>, design_id: &Id, piece_ids: &[Id], offset: crate::geom::Offset) -> Result<(), SemioError> {
-            for pid in piece_ids {
-                self.apply_drag_piece_in_design(design_id, pid, offset).await?;
-            }
+            draft.change_seq.fetch_add(1, Ordering::Relaxed);
+            self.invalidate_materialized_cache().await;
             Ok(())
         }
     }
@@ -4201,7 +4363,7 @@ pub mod vcs {
         }
         #[graphql(name = "theKit")]
         pub async fn the_kit(&self) -> Option<Arc<Kit>> {
-            Some(self.the_kit.clone())
+            Some(self.materialized_head_kit_from_ref().await)
         }
         pub async fn alternative(&self, id: Id) -> Option<Arc<Alternative>> {
             self.alternatives.read().await.iter().find(|a| a.id == id).cloned()
@@ -4244,14 +4406,15 @@ pub mod vcs {
         /// **Memoization:** none — derived on every read from live piece centers. **Invalidate:** any semantic operation or mutation changing piece geometry on this graph line.
         #[graphql(name = "projectionFingerprint")]
         pub async fn projection_fingerprint(&self) -> String {
-            crate::kit_graph_engine::projection_fingerprint_for_kit(&self.the_kit).await
+            let kit = self.materialized_head_kit_from_ref().await;
+            crate::kit_graph_engine::projection_fingerprint_for_kit(kit.as_ref()).await
         }
 
         /// @emoji 📸 Hash of the materialized root kit aggregate for this graph head.
         /// **Memoization:** none — recomputed per request from the current [`Kit`] graph. **Invalidate:** any structural or identity change the kit hash subscribes to (mutations, replay).
         #[graphql(name = "rootSnapshotHash")]
         pub async fn root_snapshot_hash(&self) -> String {
-            self.the_kit.compute_hash().await
+            self.materialized_head_kit_from_ref().await.compute_hash().await
         }
 
         #[graphql(name = "ownerEntity")]
@@ -4583,20 +4746,21 @@ pub mod iface {
             if &g.id == id {
                 return Some(GqlNode::Graph(g.clone()));
             }
-            let kid = g.the_kit.workspace_kit_id().await;
-            if id == &kid || id == &g.the_kit.id {
-                return Some(GqlNode::Kit(g.the_kit.clone()));
+            let kit = g.parent_root_for_active_draft.read().await.clone();
+            let kid = kit.workspace_kit_id().await;
+            if id == &kid || id == &kit.id {
+                return Some(GqlNode::Kit(kit.clone()));
             }
-            if let Some(t) = g.the_kit.find_tag(id).await {
+            if let Some(t) = kit.find_tag(id).await {
                 return Some(GqlNode::Tag(t));
             }
-            if let Some(c) = g.the_kit.find_concept(id).await {
+            if let Some(c) = kit.find_concept(id).await {
                 return Some(GqlNode::Concept(c));
             }
-            if let Some(q) = g.the_kit.find_quality(id).await {
+            if let Some(q) = kit.find_quality(id).await {
                 return Some(GqlNode::Quality(q));
             }
-            let designs = g.the_kit.designs.read().await;
+            let designs = kit.designs.read().await;
             for d in designs.iter() {
                 if &d.id == id {
                     return Some(GqlNode::Design(d.clone()));
@@ -4627,7 +4791,8 @@ pub mod iface {
     /// @emoji 📍 Resolve `pieceInDesign` on the WIP graph line.
     pub async fn piece_in_design_on_wip(rt: &crate::worker::ParentRuntime, design_id: &Id, piece_id: &Id) -> Option<Arc<Piece>> {
         let g = &rt.wip_graph;
-        let des = g.the_kit.design_by_external_id(design_id).await?;
+        let kit = g.parent_root_for_active_draft.read().await.clone();
+        let des = kit.design_by_external_id(design_id).await?;
         des.piece_by_external_id(piece_id).await
     }
 
@@ -4993,27 +5158,61 @@ pub mod operation {
         pub offset: Offset,
     }
 
-    /// @emoji 🧩 Normalized semantic operation surface: every variant is `{ scope, input }`.
+    /// @emoji 🧭 Shared scope payload: every distinct id-shape used across [`KitOperation`] commands.
+    #[derive(Clone, Debug, Serialize, Deserialize)]
+    pub enum Scope {
+        Kit,
+        Entity { entity_id: Id },
+        Tag { tag_id: Id },
+        Tags { tag_ids: Vec<Id> },
+        Concept { concept_id: Id },
+        Quality { quality_id: Id },
+        CreateTag { owner_id: Id, tag_id: Id, attribute_ids: Vec<Id> },
+        CreateTags { owner_id: Id, tag_ids: Vec<Id>, attribute_ids: Vec<Vec<Id>> },
+        CreateConcept { owner_id: Id, concept_id: Id, attribute_ids: Vec<Id> },
+        CreateQuality { owner_id: Id, quality_id: Id, attribute_ids: Vec<Id>, benchmark_ids: Vec<Id> },
+        CreateFixedPiece { design_id: Id, piece_id: Id, blueprint_id: Id, attribute_ids: Vec<Id> },
+        PieceInDesign { design_id: Id, piece_id: Id },
+        PiecesInDesign { design_id: Id, piece_ids: Vec<Id> },
+    }
+
+    /// @emoji 🧭 Shared non-id input payload reused across commands with the same shape.
+    #[derive(Clone, Debug, Serialize, Deserialize)]
+    pub enum Input {
+        None,
+        Name { name: String },
+        Description { description: Option<String> },
+        Icon { icon: Option<String> },
+        Image { image: Option<String> },
+        Tag { tag: TagInput },
+        Tags { tags: Vec<TagInput> },
+        Concept { concept: ConceptInput },
+        Quality { quality: QualityInput },
+        FixedPiece { position: Position, name: Option<String>, description: Option<String> },
+        Offset { offset: Offset },
+    }
+
+    /// @emoji 🧩 Normalized semantic operation surface: every variant is `{ scope: Scope, input: Input }`.
     #[derive(Clone, Debug, Serialize, Deserialize)]
     pub enum KitOperation {
-        RenameKit { scope: RenameKitScope, input: RenameKitInput },
-        ChangeDescription { scope: EntityScope, input: ChangeDescriptionInput },
-        ChangeIcon { scope: EntityScope, input: ChangeIconInput },
-        ChangeImage { scope: EntityScope, input: ChangeImageInput },
-        CreateTag { scope: CreateTagScope, input: TagInput },
-        CreateTags { scope: CreateTagsScope, input: CreateTagsInput },
-        DeleteTag { scope: TagScope, input: NoInput },
-        DeleteTags { scope: TagsScope, input: NoInput },
-        RenameTag { scope: TagScope, input: RenameTagInput },
-        CreateConcept { scope: CreateConceptScope, input: ConceptInput },
-        DeleteConcept { scope: ConceptScope, input: NoInput },
-        CreateQuality { scope: CreateQualityScope, input: QualityInput },
-        DeleteQuality { scope: QualityScope, input: NoInput },
-        CreateFixedPiece { scope: CreateFixedPieceScope, input: CreateFixedPieceInput },
-        DeletePieceInDesign { scope: PieceInDesignScope, input: NoInput },
-        DragPieceInDesign { scope: PieceInDesignScope, input: DragPieceInput },
-        DragPiecesInDesign { scope: PiecesInDesignScope, input: DragPieceInput },
-        FixPieceInDesign { scope: PieceInDesignScope, input: NoInput },
+        RenameKit { scope: Scope, input: Input },
+        ChangeDescription { scope: Scope, input: Input },
+        ChangeIcon { scope: Scope, input: Input },
+        ChangeImage { scope: Scope, input: Input },
+        CreateTag { scope: Scope, input: Input },
+        CreateTags { scope: Scope, input: Input },
+        DeleteTag { scope: Scope, input: Input },
+        DeleteTags { scope: Scope, input: Input },
+        RenameTag { scope: Scope, input: Input },
+        CreateConcept { scope: Scope, input: Input },
+        DeleteConcept { scope: Scope, input: Input },
+        CreateQuality { scope: Scope, input: Input },
+        DeleteQuality { scope: Scope, input: Input },
+        CreateFixedPiece { scope: Scope, input: Input },
+        DeletePieceInDesign { scope: Scope, input: Input },
+        DragPieceInDesign { scope: Scope, input: Input },
+        DragPiecesInDesign { scope: Scope, input: Input },
+        FixPieceInDesign { scope: Scope, input: Input },
     }
 
     impl KitOperation {
@@ -5055,156 +5254,246 @@ pub mod operation {
         /// Pure: read pre-state and produce a structural diff without mutating the kit.
         pub async fn to_diff(&self, kit: &Arc<crate::kit::Kit>) -> Result<KitDiff, SemioError> {
             let ops = match self {
-                KitOperation::RenameKit { input, .. } => {
-                    if input.name.chars().count() > 256 {
-                        return Err(SemioError::invalid(format!("Kit name too long: {} > 256", input.name.chars().count())));
+                KitOperation::RenameKit { scope, input } => {
+                    let Scope::Kit = scope else {
+                        return Err(SemioError::invalid("renameKit expects Scope::Kit"));
+                    };
+                    let Input::Name { name } = input else {
+                        return Err(SemioError::invalid("renameKit expects Input::Name"));
+                    };
+                    if name.chars().count() > 256 {
+                        return Err(SemioError::invalid(format!("Kit name too long: {} > 256", name.chars().count())));
                     }
-                    serde_json::json!([{"kind": "renameKit", "name": input.name}])
+                    serde_json::json!([{"kind": "renameKit", "name": name}])
                 }
                 KitOperation::ChangeDescription { scope, input } => {
-                    entity_description(kit, &scope.entity_id).await?;
-                    serde_json::json!([{"kind": "changeDescription", "entityId": scope.entity_id, "description": input.description}])
+                    let Scope::Entity { entity_id } = scope else {
+                        return Err(SemioError::invalid("changeDescription expects Scope::Entity"));
+                    };
+                    let Input::Description { description } = input else {
+                        return Err(SemioError::invalid("changeDescription expects Input::Description"));
+                    };
+                    entity_description(kit, entity_id).await?;
+                    serde_json::json!([{"kind": "changeDescription", "entityId": entity_id, "description": description}])
                 }
                 KitOperation::ChangeIcon { scope, input } => {
-                    entity_icon(kit, &scope.entity_id).await?;
-                    serde_json::json!([{"kind": "changeIcon", "entityId": scope.entity_id, "icon": input.icon}])
+                    let Scope::Entity { entity_id } = scope else {
+                        return Err(SemioError::invalid("changeIcon expects Scope::Entity"));
+                    };
+                    let Input::Icon { icon } = input else {
+                        return Err(SemioError::invalid("changeIcon expects Input::Icon"));
+                    };
+                    entity_icon(kit, entity_id).await?;
+                    serde_json::json!([{"kind": "changeIcon", "entityId": entity_id, "icon": icon}])
                 }
                 KitOperation::ChangeImage { scope, input } => {
-                    entity_image(kit, &scope.entity_id).await?;
-                    serde_json::json!([{"kind": "changeImage", "entityId": scope.entity_id, "image": input.image}])
+                    let Scope::Entity { entity_id } = scope else {
+                        return Err(SemioError::invalid("changeImage expects Scope::Entity"));
+                    };
+                    let Input::Image { image } = input else {
+                        return Err(SemioError::invalid("changeImage expects Input::Image"));
+                    };
+                    entity_image(kit, entity_id).await?;
+                    serde_json::json!([{"kind": "changeImage", "entityId": entity_id, "image": image}])
                 }
                 KitOperation::CreateTag { scope, input } => {
-                    kit.resolve_tag_owner_slot(&scope.owner_id).await?;
-                    if kit.find_tag(&scope.tag_id).await.is_some() {
-                        return Err(SemioError::invalid(format!("Tag already exists: {}", scope.tag_id.as_str())));
+                    let Scope::CreateTag { owner_id, tag_id, attribute_ids } = scope else {
+                        return Err(SemioError::invalid("createTag expects Scope::CreateTag"));
+                    };
+                    let Input::Tag { tag } = input else {
+                        return Err(SemioError::invalid("createTag expects Input::Tag"));
+                    };
+                    kit.resolve_tag_owner_slot(owner_id).await?;
+                    if kit.find_tag(tag_id).await.is_some() {
+                        return Err(SemioError::invalid(format!("Tag already exists: {}", tag_id.as_str())));
                     }
-                    validate_attribute_ids(input.attributes.as_ref().map(|items| items.len()).unwrap_or_default(), &scope.attribute_ids)?;
+                    validate_attribute_ids(tag.attributes.as_ref().map(|items| items.len()).unwrap_or_default(), attribute_ids)?;
                     serde_json::json!([{
                         "kind": "createTag",
-                        "ownerId": scope.owner_id,
-                        "tagId": scope.tag_id,
-                        "attributeIds": scope.attribute_ids,
-                        "tag": serde_json::to_value(input).map_err(|e| SemioError::invalid(e.to_string()))?,
+                        "ownerId": owner_id,
+                        "tagId": tag_id,
+                        "attributeIds": attribute_ids,
+                        "tag": serde_json::to_value(tag).map_err(|e| SemioError::invalid(e.to_string()))?,
                     }])
                 }
                 KitOperation::CreateTags { scope, input } => {
-                    if scope.tag_ids.len() != input.tags.len() || scope.attribute_ids.len() != input.tags.len() {
+                    let Scope::CreateTags { owner_id, tag_ids, attribute_ids } = scope else {
+                        return Err(SemioError::invalid("createTags expects Scope::CreateTags"));
+                    };
+                    let Input::Tags { tags } = input else {
+                        return Err(SemioError::invalid("createTags expects Input::Tags"));
+                    };
+                    if tag_ids.len() != tags.len() || attribute_ids.len() != tags.len() {
                         return Err(SemioError::invalid("createTags scope length mismatch"));
                     }
-                    kit.resolve_tag_owner_slot(&scope.owner_id).await?;
-                    for (index, tag) in input.tags.iter().enumerate() {
-                        if kit.find_tag(&scope.tag_ids[index]).await.is_some() {
-                            return Err(SemioError::invalid(format!("Tag already exists: {}", scope.tag_ids[index].as_str())));
+                    kit.resolve_tag_owner_slot(owner_id).await?;
+                    for (index, tag) in tags.iter().enumerate() {
+                        if kit.find_tag(&tag_ids[index]).await.is_some() {
+                            return Err(SemioError::invalid(format!("Tag already exists: {}", tag_ids[index].as_str())));
                         }
-                        validate_attribute_ids(tag.attributes.as_ref().map(|items| items.len()).unwrap_or_default(), &scope.attribute_ids[index])?;
+                        validate_attribute_ids(tag.attributes.as_ref().map(|items| items.len()).unwrap_or_default(), &attribute_ids[index])?;
                     }
                     serde_json::json!([{
                         "kind": "createTags",
-                        "ownerId": scope.owner_id,
-                        "tagIds": scope.tag_ids,
-                        "attributeIds": scope.attribute_ids,
-                        "tags": serde_json::to_value(&input.tags).map_err(|e| SemioError::invalid(e.to_string()))?,
+                        "ownerId": owner_id,
+                        "tagIds": tag_ids,
+                        "attributeIds": attribute_ids,
+                        "tags": serde_json::to_value(tags).map_err(|e| SemioError::invalid(e.to_string()))?,
                     }])
                 }
                 KitOperation::DeleteTag { scope, .. } => {
-                    ensure_tag(kit, &scope.tag_id).await?;
-                    serde_json::json!([{"kind": "deleteTag", "tagId": scope.tag_id}])
+                    let Scope::Tag { tag_id } = scope else {
+                        return Err(SemioError::invalid("deleteTag expects Scope::Tag"));
+                    };
+                    ensure_tag(kit, tag_id).await?;
+                    serde_json::json!([{"kind": "deleteTag", "tagId": tag_id}])
                 }
                 KitOperation::DeleteTags { scope, .. } => {
+                    let Scope::Tags { tag_ids } = scope else {
+                        return Err(SemioError::invalid("deleteTags expects Scope::Tags"));
+                    };
                     let mut rows = Vec::new();
-                    for tag_id in &scope.tag_ids {
+                    for tag_id in tag_ids {
                         ensure_tag(kit, tag_id).await?;
                         rows.push(serde_json::json!({"kind": "deleteTag", "tagId": tag_id}));
                     }
                     serde_json::Value::Array(rows)
                 }
                 KitOperation::RenameTag { scope, input } => {
-                    ensure_tag(kit, &scope.tag_id).await?;
-                    serde_json::json!([{"kind": "renameTag", "tagId": scope.tag_id, "name": input.name}])
+                    let Scope::Tag { tag_id } = scope else {
+                        return Err(SemioError::invalid("renameTag expects Scope::Tag"));
+                    };
+                    let Input::Name { name } = input else {
+                        return Err(SemioError::invalid("renameTag expects Input::Name"));
+                    };
+                    ensure_tag(kit, tag_id).await?;
+                    serde_json::json!([{"kind": "renameTag", "tagId": tag_id, "name": name}])
                 }
                 KitOperation::CreateConcept { scope, input } => {
-                    kit.resolve_concept_owner_slot(&scope.owner_id).await?;
-                    if kit.find_concept(&scope.concept_id).await.is_some() {
-                        return Err(SemioError::invalid(format!("Concept already exists: {}", scope.concept_id.as_str())));
+                    let Scope::CreateConcept { owner_id, concept_id, attribute_ids } = scope else {
+                        return Err(SemioError::invalid("createConcept expects Scope::CreateConcept"));
+                    };
+                    let Input::Concept { concept } = input else {
+                        return Err(SemioError::invalid("createConcept expects Input::Concept"));
+                    };
+                    kit.resolve_concept_owner_slot(owner_id).await?;
+                    if kit.find_concept(concept_id).await.is_some() {
+                        return Err(SemioError::invalid(format!("Concept already exists: {}", concept_id.as_str())));
                     }
-                    validate_attribute_ids(input.attributes.as_ref().map(|items| items.len()).unwrap_or_default(), &scope.attribute_ids)?;
+                    validate_attribute_ids(concept.attributes.as_ref().map(|items| items.len()).unwrap_or_default(), attribute_ids)?;
                     serde_json::json!([{
                         "kind": "createConcept",
-                        "ownerId": scope.owner_id,
-                        "conceptId": scope.concept_id,
-                        "attributeIds": scope.attribute_ids,
-                        "concept": serde_json::to_value(input).map_err(|e| SemioError::invalid(e.to_string()))?,
+                        "ownerId": owner_id,
+                        "conceptId": concept_id,
+                        "attributeIds": attribute_ids,
+                        "concept": serde_json::to_value(concept).map_err(|e| SemioError::invalid(e.to_string()))?,
                     }])
                 }
                 KitOperation::DeleteConcept { scope, .. } => {
-                    ensure_concept(kit, &scope.concept_id).await?;
-                    serde_json::json!([{"kind": "deleteConcept", "conceptId": scope.concept_id}])
+                    let Scope::Concept { concept_id } = scope else {
+                        return Err(SemioError::invalid("deleteConcept expects Scope::Concept"));
+                    };
+                    ensure_concept(kit, concept_id).await?;
+                    serde_json::json!([{"kind": "deleteConcept", "conceptId": concept_id}])
                 }
                 KitOperation::CreateQuality { scope, input } => {
-                    kit.resolve_quality_owner_slot(&scope.owner_id).await?;
-                    if kit.find_quality(&scope.quality_id).await.is_some() {
-                        return Err(SemioError::invalid(format!("Quality already exists: {}", scope.quality_id.as_str())));
+                    let Scope::CreateQuality { owner_id, quality_id, attribute_ids, benchmark_ids } = scope else {
+                        return Err(SemioError::invalid("createQuality expects Scope::CreateQuality"));
+                    };
+                    let Input::Quality { quality } = input else {
+                        return Err(SemioError::invalid("createQuality expects Input::Quality"));
+                    };
+                    kit.resolve_quality_owner_slot(owner_id).await?;
+                    if kit.find_quality(quality_id).await.is_some() {
+                        return Err(SemioError::invalid(format!("Quality already exists: {}", quality_id.as_str())));
                     }
-                    validate_attribute_ids(input.attributes.as_ref().map(|items| items.len()).unwrap_or_default(), &scope.attribute_ids)?;
-                    if !scope.benchmark_ids.is_empty() {
+                    validate_attribute_ids(quality.attributes.as_ref().map(|items| items.len()).unwrap_or_default(), attribute_ids)?;
+                    if !benchmark_ids.is_empty() {
                         return Err(SemioError::invalid("quality benchmark ids are not supported yet"));
                     }
                     serde_json::json!([{
                         "kind": "createQuality",
-                        "ownerId": scope.owner_id,
-                        "qualityId": scope.quality_id,
-                        "attributeIds": scope.attribute_ids,
-                        "benchmarkIds": scope.benchmark_ids,
-                        "quality": serde_json::to_value(input).map_err(|e| SemioError::invalid(e.to_string()))?,
+                        "ownerId": owner_id,
+                        "qualityId": quality_id,
+                        "attributeIds": attribute_ids,
+                        "benchmarkIds": benchmark_ids,
+                        "quality": serde_json::to_value(quality).map_err(|e| SemioError::invalid(e.to_string()))?,
                     }])
                 }
                 KitOperation::DeleteQuality { scope, .. } => {
-                    ensure_quality(kit, &scope.quality_id).await?;
-                    serde_json::json!([{"kind": "deleteQuality", "qualityId": scope.quality_id}])
+                    let Scope::Quality { quality_id } = scope else {
+                        return Err(SemioError::invalid("deleteQuality expects Scope::Quality"));
+                    };
+                    ensure_quality(kit, quality_id).await?;
+                    serde_json::json!([{"kind": "deleteQuality", "qualityId": quality_id}])
                 }
                 KitOperation::CreateFixedPiece { scope, input } => {
-                    if !scope.attribute_ids.is_empty() {
+                    let Scope::CreateFixedPiece { design_id, piece_id, blueprint_id, attribute_ids } = scope else {
+                        return Err(SemioError::invalid("createFixedPiece expects Scope::CreateFixedPiece"));
+                    };
+                    let Input::FixedPiece { position, name, description } = input else {
+                        return Err(SemioError::invalid("createFixedPiece expects Input::FixedPiece"));
+                    };
+                    if !attribute_ids.is_empty() {
                         return Err(SemioError::invalid("piece attribute ids are not supported yet"));
                     }
                     serde_json::json!([{
                         "kind": "createFixedPiece",
-                        "designId": scope.design_id,
-                        "pieceId": scope.piece_id,
-                        "blueprintId": scope.blueprint_id,
-                        "position": serde_json::to_value(&input.position).map_err(|e| SemioError::invalid(e.to_string()))?,
-                        "name": input.name,
-                        "description": input.description,
+                        "designId": design_id,
+                        "pieceId": piece_id,
+                        "blueprintId": blueprint_id,
+                        "position": serde_json::to_value(position).map_err(|e| SemioError::invalid(e.to_string()))?,
+                        "name": name,
+                        "description": description,
                     }])
                 }
                 KitOperation::DeletePieceInDesign { scope, .. } => {
-                    ensure_piece(kit, &scope.design_id, &scope.piece_id).await?;
-                    serde_json::json!([{"kind": "deletePieceInDesign", "designId": scope.design_id, "pieceId": scope.piece_id}])
+                    let Scope::PieceInDesign { design_id, piece_id } = scope else {
+                        return Err(SemioError::invalid("deletePieceInDesign expects Scope::PieceInDesign"));
+                    };
+                    ensure_piece(kit, design_id, piece_id).await?;
+                    serde_json::json!([{"kind": "deletePieceInDesign", "designId": design_id, "pieceId": piece_id}])
                 }
                 KitOperation::DragPieceInDesign { scope, input } => {
-                    ensure_piece(kit, &scope.design_id, &scope.piece_id).await?;
+                    let Scope::PieceInDesign { design_id, piece_id } = scope else {
+                        return Err(SemioError::invalid("dragPieceInDesign expects Scope::PieceInDesign"));
+                    };
+                    let Input::Offset { offset } = input else {
+                        return Err(SemioError::invalid("dragPieceInDesign expects Input::Offset"));
+                    };
+                    ensure_piece(kit, design_id, piece_id).await?;
                     serde_json::json!([{
                         "kind": "dragPieceInDesign",
-                        "designId": scope.design_id,
-                        "pieceId": scope.piece_id,
-                        "offset": serde_json::to_value(&input.offset).map_err(|e| SemioError::invalid(e.to_string()))?,
+                        "designId": design_id,
+                        "pieceId": piece_id,
+                        "offset": serde_json::to_value(offset).map_err(|e| SemioError::invalid(e.to_string()))?,
                     }])
                 }
                 KitOperation::DragPiecesInDesign { scope, input } => {
+                    let Scope::PiecesInDesign { design_id, piece_ids } = scope else {
+                        return Err(SemioError::invalid("dragPiecesInDesign expects Scope::PiecesInDesign"));
+                    };
+                    let Input::Offset { offset } = input else {
+                        return Err(SemioError::invalid("dragPiecesInDesign expects Input::Offset"));
+                    };
                     let mut rows = Vec::new();
-                    for piece_id in &scope.piece_ids {
-                        ensure_piece(kit, &scope.design_id, piece_id).await?;
+                    for piece_id in piece_ids {
+                        ensure_piece(kit, design_id, piece_id).await?;
                         rows.push(serde_json::json!({
                             "kind": "dragPieceInDesign",
-                            "designId": scope.design_id,
+                            "designId": design_id,
                             "pieceId": piece_id,
-                            "offset": serde_json::to_value(&input.offset).map_err(|e| SemioError::invalid(e.to_string()))?,
+                            "offset": serde_json::to_value(offset).map_err(|e| SemioError::invalid(e.to_string()))?,
                         }));
                     }
                     serde_json::Value::Array(rows)
                 }
                 KitOperation::FixPieceInDesign { scope, .. } => {
-                    ensure_piece(kit, &scope.design_id, &scope.piece_id).await?;
-                    serde_json::json!([{"kind": "fixPieceInDesign", "designId": scope.design_id, "pieceId": scope.piece_id}])
+                    let Scope::PieceInDesign { design_id, piece_id } = scope else {
+                        return Err(SemioError::invalid("fixPieceInDesign expects Scope::PieceInDesign"));
+                    };
+                    ensure_piece(kit, design_id, piece_id).await?;
+                    serde_json::json!([{"kind": "fixPieceInDesign", "designId": design_id, "pieceId": piece_id}])
                 }
             };
             Ok(KitDiff(serde_json::json!({ "__ops": ops })))
@@ -5214,38 +5503,69 @@ pub mod operation {
         pub async fn to_backwards(&self, kit: &Arc<crate::kit::Kit>) -> Result<Vec<KitOperation>, SemioError> {
             match self {
                 KitOperation::RenameKit { .. } => Ok(vec![KitOperation::RenameKit {
-                    scope: RenameKitScope,
-                    input: RenameKitInput { name: kit.name.read().await.clone() },
+                    scope: Scope::Kit,
+                    input: Input::Name { name: kit.name.read().await.clone() },
                 }]),
-                KitOperation::ChangeDescription { scope, .. } => Ok(vec![KitOperation::ChangeDescription {
-                    scope: scope.clone(),
-                    input: ChangeDescriptionInput { description: entity_description(kit, &scope.entity_id).await? },
-                }]),
-                KitOperation::ChangeIcon { scope, .. } => Ok(vec![KitOperation::ChangeIcon {
-                    scope: scope.clone(),
-                    input: ChangeIconInput { icon: entity_icon(kit, &scope.entity_id).await? },
-                }]),
-                KitOperation::ChangeImage { scope, .. } => Ok(vec![KitOperation::ChangeImage {
-                    scope: scope.clone(),
-                    input: ChangeImageInput { image: entity_image(kit, &scope.entity_id).await? },
-                }]),
-                KitOperation::CreateTag { scope, .. } => Ok(vec![KitOperation::DeleteTag { scope: TagScope { tag_id: scope.tag_id.clone() }, input: NoInput }]),
-                KitOperation::CreateTags { scope, .. } => Ok(vec![KitOperation::DeleteTags { scope: TagsScope { tag_ids: scope.tag_ids.clone() }, input: NoInput }]),
+                KitOperation::ChangeDescription { scope, .. } => {
+                    let Scope::Entity { entity_id } = scope else {
+                        return Err(SemioError::invalid("changeDescription expects Scope::Entity"));
+                    };
+                    Ok(vec![KitOperation::ChangeDescription {
+                        scope: Scope::Entity { entity_id: entity_id.clone() },
+                        input: Input::Description { description: entity_description(kit, entity_id).await? },
+                    }])
+                }
+                KitOperation::ChangeIcon { scope, .. } => {
+                    let Scope::Entity { entity_id } = scope else {
+                        return Err(SemioError::invalid("changeIcon expects Scope::Entity"));
+                    };
+                    Ok(vec![KitOperation::ChangeIcon {
+                        scope: Scope::Entity { entity_id: entity_id.clone() },
+                        input: Input::Icon { icon: entity_icon(kit, entity_id).await? },
+                    }])
+                }
+                KitOperation::ChangeImage { scope, .. } => {
+                    let Scope::Entity { entity_id } = scope else {
+                        return Err(SemioError::invalid("changeImage expects Scope::Entity"));
+                    };
+                    Ok(vec![KitOperation::ChangeImage {
+                        scope: Scope::Entity { entity_id: entity_id.clone() },
+                        input: Input::Image { image: entity_image(kit, entity_id).await? },
+                    }])
+                }
+                KitOperation::CreateTag { scope, .. } => {
+                    let Scope::CreateTag { tag_id, .. } = scope else {
+                        return Err(SemioError::invalid("createTag expects Scope::CreateTag"));
+                    };
+                    Ok(vec![KitOperation::DeleteTag { scope: Scope::Tag { tag_id: tag_id.clone() }, input: Input::None }])
+                }
+                KitOperation::CreateTags { scope, .. } => {
+                    let Scope::CreateTags { tag_ids, .. } = scope else {
+                        return Err(SemioError::invalid("createTags expects Scope::CreateTags"));
+                    };
+                    Ok(vec![KitOperation::DeleteTags { scope: Scope::Tags { tag_ids: tag_ids.clone() }, input: Input::None }])
+                }
                 KitOperation::DeleteTag { scope, .. } => {
-                    let tag = ensure_tag(kit, &scope.tag_id).await?;
+                    let Scope::Tag { tag_id } = scope else {
+                        return Err(SemioError::invalid("deleteTag expects Scope::Tag"));
+                    };
+                    let tag = ensure_tag(kit, tag_id).await?;
                     let owner_id = tag_owner_id(kit, &tag).await?;
                     let attributes = tag.attributes.read().await.clone();
                     Ok(vec![KitOperation::CreateTag {
-                        scope: CreateTagScope { owner_id, tag_id: tag.id.clone(), attribute_ids: attributes.iter().map(|attribute| attribute.id.clone()).collect() },
-                        input: tag_input_from_entity(&tag).await,
+                        scope: Scope::CreateTag { owner_id, tag_id: tag.id.clone(), attribute_ids: attributes.iter().map(|attribute| attribute.id.clone()).collect() },
+                        input: Input::Tag { tag: tag_input_from_entity(&tag).await },
                     }])
                 }
                 KitOperation::DeleteTags { scope, .. } => {
+                    let Scope::Tags { tag_ids } = scope else {
+                        return Err(SemioError::invalid("deleteTags expects Scope::Tags"));
+                    };
                     let mut tags = Vec::new();
-                    let mut tag_ids = Vec::new();
+                    let mut out_tag_ids = Vec::new();
                     let mut attribute_ids = Vec::new();
                     let mut owner_id: Option<Id> = None;
-                    for tag_id in &scope.tag_ids {
+                    for tag_id in tag_ids {
                         let tag = ensure_tag(kit, tag_id).await?;
                         let current_owner_id = tag_owner_id(kit, &tag).await?;
                         if let Some(existing_owner_id) = &owner_id {
@@ -5256,38 +5576,56 @@ pub mod operation {
                             owner_id = Some(current_owner_id);
                         }
                         let attrs = tag.attributes.read().await.clone();
-                        tag_ids.push(tag.id.clone());
+                        out_tag_ids.push(tag.id.clone());
                         attribute_ids.push(attrs.iter().map(|attribute| attribute.id.clone()).collect());
                         tags.push(tag_input_from_entity(&tag).await);
                     }
                     Ok(vec![KitOperation::CreateTags {
-                        scope: CreateTagsScope { owner_id: owner_id.unwrap_or_default(), tag_ids, attribute_ids },
-                        input: CreateTagsInput { tags },
+                        scope: Scope::CreateTags { owner_id: owner_id.unwrap_or_default(), tag_ids: out_tag_ids, attribute_ids },
+                        input: Input::Tags { tags },
                     }])
                 }
                 KitOperation::RenameTag { scope, .. } => {
-                    let tag = ensure_tag(kit, &scope.tag_id).await?;
+                    let Scope::Tag { tag_id } = scope else {
+                        return Err(SemioError::invalid("renameTag expects Scope::Tag"));
+                    };
+                    let tag = ensure_tag(kit, tag_id).await?;
                     let name = {
                         let guard = tag.name.read().await;
                         guard.clone()
                     };
                     drop(tag);
-                    let backwards = KitOperation::RenameTag { scope: scope.clone(), input: RenameTagInput { name } };
-                    Ok(vec![backwards])
+                    Ok(vec![KitOperation::RenameTag { scope: Scope::Tag { tag_id: tag_id.clone() }, input: Input::Name { name } }])
                 }
-                KitOperation::CreateConcept { scope, .. } => Ok(vec![KitOperation::DeleteConcept { scope: ConceptScope { concept_id: scope.concept_id.clone() }, input: NoInput }]),
+                KitOperation::CreateConcept { scope, .. } => {
+                    let Scope::CreateConcept { concept_id, .. } = scope else {
+                        return Err(SemioError::invalid("createConcept expects Scope::CreateConcept"));
+                    };
+                    Ok(vec![KitOperation::DeleteConcept { scope: Scope::Concept { concept_id: concept_id.clone() }, input: Input::None }])
+                }
                 KitOperation::DeleteConcept { scope, .. } => {
-                    let concept = ensure_concept(kit, &scope.concept_id).await?;
+                    let Scope::Concept { concept_id } = scope else {
+                        return Err(SemioError::invalid("deleteConcept expects Scope::Concept"));
+                    };
+                    let concept = ensure_concept(kit, concept_id).await?;
                     let owner_id = concept_owner_id(kit, &concept).await?;
                     let attributes = concept.attributes.read().await.clone();
                     Ok(vec![KitOperation::CreateConcept {
-                        scope: CreateConceptScope { owner_id, concept_id: concept.id.clone(), attribute_ids: attributes.iter().map(|attribute| attribute.id.clone()).collect() },
-                        input: concept_input_from_entity(&concept).await,
+                        scope: Scope::CreateConcept { owner_id, concept_id: concept.id.clone(), attribute_ids: attributes.iter().map(|attribute| attribute.id.clone()).collect() },
+                        input: Input::Concept { concept: concept_input_from_entity(&concept).await },
                     }])
                 }
-                KitOperation::CreateQuality { scope, .. } => Ok(vec![KitOperation::DeleteQuality { scope: QualityScope { quality_id: scope.quality_id.clone() }, input: NoInput }]),
+                KitOperation::CreateQuality { scope, .. } => {
+                    let Scope::CreateQuality { quality_id, .. } = scope else {
+                        return Err(SemioError::invalid("createQuality expects Scope::CreateQuality"));
+                    };
+                    Ok(vec![KitOperation::DeleteQuality { scope: Scope::Quality { quality_id: quality_id.clone() }, input: Input::None }])
+                }
                 KitOperation::DeleteQuality { scope, .. } => {
-                    let quality = ensure_quality(kit, &scope.quality_id).await?;
+                    let Scope::Quality { quality_id } = scope else {
+                        return Err(SemioError::invalid("deleteQuality expects Scope::Quality"));
+                    };
+                    let quality = ensure_quality(kit, quality_id).await?;
                     let owner_id = quality_owner_id(kit, &quality).await?;
                     let attributes = quality.attributes.read().await.clone();
                     let benchmarks = quality.benchmarks.read().await.clone();
@@ -5295,21 +5633,29 @@ pub mod operation {
                         return Err(SemioError::invalid("deleteQuality backwards does not support benchmarks yet"));
                     }
                     Ok(vec![KitOperation::CreateQuality {
-                        scope: CreateQualityScope {
+                        scope: Scope::CreateQuality {
                             owner_id,
                             quality_id: quality.id.clone(),
                             attribute_ids: attributes.iter().map(|attribute| attribute.id.clone()).collect(),
                             benchmark_ids: Vec::new(),
                         },
-                        input: quality_input_from_entity(&quality).await,
+                        input: Input::Quality { quality: quality_input_from_entity(&quality).await },
                     }])
                 }
-                KitOperation::CreateFixedPiece { scope, .. } => Ok(vec![KitOperation::DeletePieceInDesign {
-                    scope: PieceInDesignScope { design_id: scope.design_id.clone(), piece_id: scope.piece_id.clone() },
-                    input: NoInput,
-                }]),
+                KitOperation::CreateFixedPiece { scope, .. } => {
+                    let Scope::CreateFixedPiece { design_id, piece_id, .. } = scope else {
+                        return Err(SemioError::invalid("createFixedPiece expects Scope::CreateFixedPiece"));
+                    };
+                    Ok(vec![KitOperation::DeletePieceInDesign {
+                        scope: Scope::PieceInDesign { design_id: design_id.clone(), piece_id: piece_id.clone() },
+                        input: Input::None,
+                    }])
+                }
                 KitOperation::DeletePieceInDesign { scope, .. } => {
-                    let piece = ensure_piece(kit, &scope.design_id, &scope.piece_id).await?;
+                    let Scope::PieceInDesign { design_id, piece_id } = scope else {
+                        return Err(SemioError::invalid("deletePieceInDesign expects Scope::PieceInDesign"));
+                    };
+                    let piece = ensure_piece(kit, design_id, piece_id).await?;
                     let piece_id = piece.id.clone();
                     let blueprint_id = match &*piece.blueprint.read().await {
                         crate::kit::r#type::Blueprint::Type(ty) => ty.id.clone(),
@@ -5329,22 +5675,40 @@ pub mod operation {
                         guard.clone()
                     };
                     drop(piece);
-                    let backwards = KitOperation::CreateFixedPiece {
-                        scope: CreateFixedPieceScope { design_id: scope.design_id.clone(), piece_id, blueprint_id, attribute_ids },
-                        input: CreateFixedPieceInput { position, name, description },
-                    };
-                    Ok(vec![backwards])
+                    Ok(vec![KitOperation::CreateFixedPiece {
+                        scope: Scope::CreateFixedPiece { design_id: design_id.clone(), piece_id, blueprint_id, attribute_ids },
+                        input: Input::FixedPiece { position, name, description },
+                    }])
                 }
-                KitOperation::DragPieceInDesign { scope, input } => Ok(vec![KitOperation::DragPieceInDesign {
-                    scope: scope.clone(),
-                    input: DragPieceInput { offset: Offset { u: -input.offset.u, v: -input.offset.v } },
-                }]),
-                KitOperation::DragPiecesInDesign { scope, input } => Ok(vec![KitOperation::DragPiecesInDesign {
-                    scope: scope.clone(),
-                    input: DragPieceInput { offset: Offset { u: -input.offset.u, v: -input.offset.v } },
-                }]),
+                KitOperation::DragPieceInDesign { scope, input } => {
+                    let Input::Offset { offset } = input else {
+                        return Err(SemioError::invalid("dragPieceInDesign expects Input::Offset"));
+                    };
+                    let Scope::PieceInDesign { design_id, piece_id } = scope else {
+                        return Err(SemioError::invalid("dragPieceInDesign expects Scope::PieceInDesign"));
+                    };
+                    Ok(vec![KitOperation::DragPieceInDesign {
+                        scope: Scope::PieceInDesign { design_id: design_id.clone(), piece_id: piece_id.clone() },
+                        input: Input::Offset { offset: Offset { u: -offset.u, v: -offset.v } },
+                    }])
+                }
+                KitOperation::DragPiecesInDesign { scope, input } => {
+                    let Input::Offset { offset } = input else {
+                        return Err(SemioError::invalid("dragPiecesInDesign expects Input::Offset"));
+                    };
+                    let Scope::PiecesInDesign { design_id, piece_ids } = scope else {
+                        return Err(SemioError::invalid("dragPiecesInDesign expects Scope::PiecesInDesign"));
+                    };
+                    Ok(vec![KitOperation::DragPiecesInDesign {
+                        scope: Scope::PiecesInDesign { design_id: design_id.clone(), piece_ids: piece_ids.clone() },
+                        input: Input::Offset { offset: Offset { u: -offset.u, v: -offset.v } },
+                    }])
+                }
                 KitOperation::FixPieceInDesign { scope, .. } => {
-                    let piece = ensure_piece(kit, &scope.design_id, &scope.piece_id).await?;
+                    let Scope::PieceInDesign { design_id, piece_id } = scope else {
+                        return Err(SemioError::invalid("fixPieceInDesign expects Scope::PieceInDesign"));
+                    };
+                    let piece = ensure_piece(kit, design_id, piece_id).await?;
                     let connection_kind = {
                         let guard = piece.connection_kind.read().await;
                         *guard
@@ -6212,7 +6576,7 @@ pub mod kit_graph_engine {
         pub created_piece: Option<Arc<kit::design::piece::Piece>>,
     }
 
-    #[derive(Debug, Deserialize)]
+    #[derive(Debug, Deserialize, serde::Serialize)]
     struct CreatedFixedPiecePayload {
         #[serde(rename = "designId")]
         design_id: String,
@@ -6228,17 +6592,52 @@ pub mod kit_graph_engine {
         match op_kind {
             "createdFixedPiece" => {
                 let payload: CreatedFixedPiecePayload = serde_json::from_str(payload_json).map_err(|e| SemioError::invalid(e.to_string()))?;
+                let input_ser = serde_json::to_string(&payload).map_err(|e| SemioError::invalid(e.to_string()))?;
                 let design_id = Id::from(payload.design_id.as_str());
                 let blueprint_id = Id::from(payload.blueprint_id.as_str());
-                let (piece, diff) = graph.apply_create_fixed_piece(draft_id.clone(), transaction_id.clone(), design_id, blueprint_id, payload.position, payload.name, payload.description).await?;
+                let piece_id = Id::new().await;
+                let forward = operation::KitOperation::CreateFixedPiece {
+                    scope: operation::Scope::CreateFixedPiece {
+                        design_id: design_id.clone(),
+                        piece_id: piece_id.clone(),
+                        blueprint_id,
+                        attribute_ids: Vec::new(),
+                    },
+                    input: operation::Input::FixedPiece {
+                        position: payload.position,
+                        name: payload.name,
+                        description: payload.description,
+                    },
+                };
+                let before = graph.materialized_kit_for_draft(draft_id).await;
+                let backwards = forward.to_backwards(&before).await?;
+                graph.record_op_in_open_transaction(draft_id, transaction_id, forward, backwards).await?;
+                let after = graph.materialized_kit_for_draft(draft_id).await;
+                let design = after.design_by_external_id(&design_id).await.ok_or_else(|| SemioError::not_found("Design", design_id.as_str()))?;
+                let piece = design.piece_by_external_id(&piece_id).await.ok_or_else(|| SemioError::not_found("Piece", piece_id.as_str()))?;
+                let fp_before = projection_fingerprint_for_kit(before.as_ref()).await;
+                let fp_after = projection_fingerprint_for_kit(after.as_ref()).await;
+                let diff = deterministic_semantic_diff("createdFixedPiece", &input_ser, &fp_before, &fp_after);
                 Ok(AppliedSemanticOp { diff, created_piece: Some(piece) })
             }
             "createFixedPiece" => {
-                let operation = crate::operation::KitOperation::from_kind_and_payload(op_kind, payload_json)?;
-                let crate::operation::KitOperation::CreateFixedPiece { scope, input } = operation else {
-                    return Err(SemioError::invalid("createFixedPiece payload did not decode to CreateFixedPiece"));
+                let op = operation::KitOperation::from_kind_and_payload(op_kind, payload_json)?;
+                let (design_id, piece_id) = match &op {
+                    operation::KitOperation::CreateFixedPiece { scope, .. } => match scope {
+                        operation::Scope::CreateFixedPiece { design_id, piece_id, .. } => (design_id.clone(), piece_id.clone()),
+                        _ => return Err(SemioError::invalid("createFixedPiece expects Scope::CreateFixedPiece")),
+                    },
+                    _ => return Err(SemioError::invalid("createFixedPiece payload did not decode to CreateFixedPiece")),
                 };
-                let (piece, diff) = graph.apply_create_fixed_piece_with_scope(draft_id.clone(), transaction_id.clone(), &scope, &input).await?;
+                let before = graph.materialized_kit_for_draft(draft_id).await;
+                let backwards = op.to_backwards(&before).await?;
+                graph.record_op_in_open_transaction(draft_id, transaction_id, op.clone(), backwards).await?;
+                let after = graph.materialized_kit_for_draft(draft_id).await;
+                let design = after.design_by_external_id(&design_id).await.ok_or_else(|| SemioError::not_found("Design", design_id.as_str()))?;
+                let piece = design.piece_by_external_id(&piece_id).await.ok_or_else(|| SemioError::not_found("Piece", piece_id.as_str()))?;
+                let fp_before = projection_fingerprint_for_kit(before.as_ref()).await;
+                let fp_after = projection_fingerprint_for_kit(after.as_ref()).await;
+                let diff = deterministic_semantic_diff("createFixedPiece", payload_json, &fp_before, &fp_after);
                 Ok(AppliedSemanticOp { diff, created_piece: Some(piece) })
             }
             other => Err(SemioError::invalid(format!("unsupported semantic operation kind `{other}`"))),
@@ -6415,13 +6814,14 @@ pub mod kit_backbone {
         }
 
         /// @emoji 📸 Project the live `Graph` into a metabolism-shaped bundle ready for atomic write.
-        /// `wip.id` mirrors the graph id; `wip.root` is the camelCase `KitFullDto` projection of `the_kit`;
+        /// `wip.id` mirrors the graph id; `wip.root` is the camelCase `KitFullDto` projection of `parent_root_for_active_draft`;
         /// checkpoints / drafts / transactions echo the in-memory state so the on-disk file matches what
         /// sketchpad is currently editing. The dev who reads the file should see the same shape as
         /// `semio/assets/semio/metabolism.new.kit.semio.json`.
         pub async fn from_graph(graph: &crate::vcs::Graph) -> Self {
             let mut bundle = Self::template();
-            let kit_dto = graph.the_kit.kit_full_snapshot_value().await;
+            let g = graph.arc_here();
+            let kit_dto = g.materialized_head_kit().await.kit_full_snapshot_value().await;
             let gid = graph.id.as_str().to_string();
             bundle.wip.id = gid.clone();
             bundle.authoritative.id = gid.clone();
@@ -6459,7 +6859,7 @@ pub mod kit_backbone {
         }
 
         /// @emoji 🩻 Hydrate the live graph from a previously-persisted bundle JSON. Today this only restores
-        /// the kit projection (`wip.root`) into `the_kit`; the draft / transaction structure is preserved on
+        /// the kit projection (`wip.root`) into `parent_root_for_active_draft`; the draft / transaction structure is preserved on
         /// disk via `from_graph` round-trip but operation replay is owned by the existing semantic-operation log path.
         pub async fn hydrate_into_graph(graph: &std::sync::Arc<crate::vcs::Graph>, json: &str) -> Result<Self, SemioError> {
             let bundle: Self = serde_json::from_str(json).map_err(|e| SemioError::invalid(format!("bundle parse: {e}")))?;
@@ -6467,7 +6867,7 @@ pub mod kit_backbone {
                 return Err(SemioError::invalid(format!("bundle schema mismatch: {} != {}", bundle.schema, KIT_STORE_BUNDLE_SCHEMA)));
             }
             if !bundle.wip.root.is_null() && bundle.wip.root.is_object() {
-                graph.the_kit.hydrate_from_kit_full_snapshot_json(&bundle.wip.root).await?;
+                graph.parent_root_for_active_draft.write().await.hydrate_from_kit_full_snapshot_json(&bundle.wip.root).await?;
             }
             Ok(bundle)
         }
@@ -6666,7 +7066,7 @@ CREATE TABLE IF NOT EXISTS conflict_stub (
 
     //#region 🔁 replay
     pub async fn replay_stored_ops(graph: &Arc<Graph>, ops: &[StoredSemanticOp]) -> Result<(), SemioError> {
-        graph.the_kit.clear_piece_projections_for_backbone_replay().await;
+        graph.parent_root_for_active_draft.read().await.clear_piece_projections_for_backbone_replay().await;
         for operation in ops {
             let draft_id = Id::from(operation.draft_id.as_str());
             let transaction_id = Id::from(operation.transaction_id.as_str());
@@ -6869,7 +7269,7 @@ pub mod worker {
     use crate::error::SemioError;
     use crate::event::{Event, EventBus};
     use crate::id::Id;
-    use crate::operation::{BackboneStoreKind, Command, CommandReceipt, CreatedFixedPiece, CreatedFixedPieceInput, KitOperation, OperationIface, RenamedKit, RenamedKitInput as OperationRenamedKitInput, SemanticDiff};
+    use crate::operation::{BackboneStoreKind, Command, CommandReceipt, CreatedFixedPiece, CreatedFixedPieceInput, Input, KitOperation, OperationIface, RenamedKit, RenamedKitInput as OperationRenamedKitInput, Scope, SemanticDiff};
     use crate::vcs::{Conflict, Graph, Session};
 
     //#region 🗄️ backbone slot
@@ -7062,181 +7462,62 @@ pub mod worker {
         }
 
         async fn apply_kit_operation(&self, request_id: Id, draft_id: Id, transaction_id: Id, operation: KitOperation) -> Result<(), SemioError> {
-            let _ = operation.to_diff(&self.graph.the_kit).await?;
-            match operation {
+            let graph = self.graph.clone();
+            let before_kit = graph.materialized_kit_for_draft(&draft_id).await;
+            let _ = operation.to_diff(&before_kit).await?;
+            let backwards = operation.to_backwards(&before_kit).await?;
+            let forward = operation.clone();
+            graph.record_op_in_open_transaction(&draft_id, &transaction_id, forward, backwards).await?;
+            let after_kit = graph.materialized_kit_for_draft(&draft_id).await;
+
+            match &operation {
                 KitOperation::RenameKit { input, .. } => {
-                    *self.graph.the_kit.name.write().await = input.name.clone();
-                    self.graph.the_kit.bump_touch_epoch().await;
+                    let Input::Name { name } = input else {
+                        return Err(SemioError::invalid("renameKit expects Input::Name"));
+                    };
                     let mut diff = SemanticDiff::default();
                     diff.id = Id::new().await;
                     diff.summary = Some("renameKit".to_string());
-                    let operation = Arc::new(RenamedKit {
+                    let op_evt = Arc::new(RenamedKit {
                         id: Id::new().await,
                         request_id,
                         owner_change: Weak::new(),
-                        input: OperationRenamedKitInput { name: input.name },
+                        input: OperationRenamedKitInput { name: name.clone() },
                         diff,
-                        kit: self.graph.the_kit.clone(),
+                        kit: after_kit.clone(),
                     });
-                    self.graph.op_history.write().await.push(Arc::new(OperationIface::RenamedKit(operation.clone())));
-                    self.bus.emit_event(Event::RenamedKit(operation)).await;
-                    Ok(())
-                }
-                KitOperation::ChangeDescription { scope, input } => {
-                    let kit = &self.graph.the_kit;
-                    let kid = kit.workspace_kit_id().await;
-                    if scope.entity_id == kid || scope.entity_id == kit.id {
-                        *kit.description.write().await = input.description;
-                    } else if let Some(tag) = kit.find_tag(&scope.entity_id).await {
-                        *tag.description.write().await = input.description;
-                    } else if let Some(concept) = kit.find_concept(&scope.entity_id).await {
-                        *concept.description.write().await = input.description;
-                    } else if let Some(quality) = kit.find_quality(&scope.entity_id).await {
-                        *quality.description.write().await = input.description;
-                    } else if let Some(ty) = kit.type_by_external_id(&scope.entity_id).await {
-                        *ty.description.write().await = input.description;
-                    } else if let Some(design) = kit.design_by_external_id(&scope.entity_id).await {
-                        *design.description.write().await = input.description;
-                    } else {
-                        return Err(SemioError::not_found("DescriptionEntity", scope.entity_id.as_str()));
-                    }
-                    kit.bump_touch_epoch().await;
-                    Ok(())
-                }
-                KitOperation::ChangeIcon { scope, input } => {
-                    let kit = &self.graph.the_kit;
-                    let kid = kit.workspace_kit_id().await;
-                    if scope.entity_id == kid || scope.entity_id == kit.id {
-                        *kit.icon.write().await = input.icon;
-                    } else if let Some(tag) = kit.find_tag(&scope.entity_id).await {
-                        *tag.icon.write().await = input.icon;
-                    } else if let Some(concept) = kit.find_concept(&scope.entity_id).await {
-                        *concept.icon.write().await = input.icon;
-                    } else if let Some(quality) = kit.find_quality(&scope.entity_id).await {
-                        *quality.icon.write().await = input.icon;
-                    } else if let Some(ty) = kit.type_by_external_id(&scope.entity_id).await {
-                        *ty.icon.write().await = input.icon;
-                    } else if let Some(design) = kit.design_by_external_id(&scope.entity_id).await {
-                        *design.icon.write().await = input.icon;
-                    } else {
-                        return Err(SemioError::not_found("IconEntity", scope.entity_id.as_str()));
-                    }
-                    kit.bump_touch_epoch().await;
-                    Ok(())
-                }
-                KitOperation::ChangeImage { scope, input } => {
-                    let kit = &self.graph.the_kit;
-                    let kid = kit.workspace_kit_id().await;
-                    if scope.entity_id == kid || scope.entity_id == kit.id {
-                        *kit.image.write().await = input.image;
-                    } else if let Some(ty) = kit.type_by_external_id(&scope.entity_id).await {
-                        *ty.image.write().await = input.image;
-                    } else if let Some(design) = kit.design_by_external_id(&scope.entity_id).await {
-                        *design.image.write().await = input.image;
-                    } else {
-                        return Err(SemioError::not_found("ImageEntity", scope.entity_id.as_str()));
-                    }
-                    kit.bump_touch_epoch().await;
-                    Ok(())
-                }
-                KitOperation::CreateTag { scope, input } => {
-                    self.graph.the_kit.create_and_register_tag_with_scope(&scope.owner_id, &scope.tag_id, &scope.attribute_ids, input).await?;
-                    self.graph.the_kit.bump_touch_epoch().await;
-                    Ok(())
-                }
-                KitOperation::CreateTags { scope, input } => {
-                    for (index, tag) in input.tags.into_iter().enumerate() {
-                        self.graph
-                            .the_kit
-                            .create_and_register_tag_with_scope(&scope.owner_id, &scope.tag_ids[index], &scope.attribute_ids[index], tag)
-                            .await?;
-                    }
-                    self.graph.the_kit.bump_touch_epoch().await;
-                    Ok(())
-                }
-                KitOperation::DeleteTag { scope, .. } => {
-                    self.graph.the_kit.delete_tag_by_id(&scope.tag_id).await?;
-                    self.graph.the_kit.bump_touch_epoch().await;
-                    Ok(())
-                }
-                KitOperation::DeleteTags { scope, .. } => {
-                    for tag_id in scope.tag_ids {
-                        self.graph.the_kit.delete_tag_by_id(&tag_id).await?;
-                    }
-                    self.graph.the_kit.bump_touch_epoch().await;
-                    Ok(())
-                }
-                KitOperation::RenameTag { scope, input } => {
-                    let tag = self.graph.the_kit.find_tag(&scope.tag_id).await.ok_or_else(|| SemioError::not_found("Tag", scope.tag_id.as_str()))?;
-                    *tag.name.write().await = input.name;
-                    self.graph.the_kit.bump_touch_epoch().await;
-                    Ok(())
-                }
-                KitOperation::CreateConcept { scope, input } => {
-                    let _ = self.graph.the_kit.create_and_register_concept_with_scope(&scope.owner_id, &scope.concept_id, &scope.attribute_ids, input).await?;
-                    self.graph.the_kit.bump_touch_epoch().await;
-                    Ok(())
-                }
-                KitOperation::DeleteConcept { scope, .. } => {
-                    self.graph.the_kit.delete_concept_by_id(&scope.concept_id).await?;
-                    self.graph.the_kit.bump_touch_epoch().await;
-                    Ok(())
-                }
-                KitOperation::CreateQuality { scope, input } => {
-                    let _ = self
-                        .graph
-                        .the_kit
-                        .create_and_register_quality_with_scope(&scope.owner_id, &scope.quality_id, &scope.attribute_ids, &scope.benchmark_ids, input)
-                        .await?;
-                    self.graph.the_kit.bump_touch_epoch().await;
-                    Ok(())
-                }
-                KitOperation::DeleteQuality { scope, .. } => {
-                    self.graph.the_kit.delete_quality_by_id(&scope.quality_id).await?;
-                    self.graph.the_kit.bump_touch_epoch().await;
-                    Ok(())
+                    graph.op_history.write().await.push(Arc::new(OperationIface::RenamedKit(op_evt.clone())));
+                    self.bus.emit_event(Event::RenamedKit(op_evt)).await;
                 }
                 KitOperation::CreateFixedPiece { scope, input } => {
-                    let persisted = KitOperation::CreateFixedPiece { scope: scope.clone(), input: input.clone() };
-                    let (piece, diff) = self.graph.apply_create_fixed_piece_with_scope(draft_id.clone(), transaction_id.clone(), &scope, &input).await?;
+                    let persisted = operation.clone();
                     self.backbone.record_kit_operation_if_attached(&draft_id, &transaction_id, &persisted).await?;
-
-                    let created_input = CreatedFixedPieceInput {
-                        design_id: scope.design_id,
-                        blueprint_id: scope.blueprint_id,
-                        position: input.position,
-                        name: input.name,
-                        description: input.description,
+                    let Scope::CreateFixedPiece { design_id, piece_id, blueprint_id, .. } = scope else {
+                        return Err(SemioError::invalid("createFixedPiece expects Scope::CreateFixedPiece"));
                     };
-                    let operation = CreatedFixedPiece::new(created_input, piece, diff).await;
-                    self.graph.op_history.write().await.push(Arc::new(OperationIface::CreatedFixedPiece(operation.clone())));
-                    self.bus.emit_event(Event::CreatedFixedPiece(operation)).await;
-                    Ok(())
+                    let Input::FixedPiece { position, name, description } = input else {
+                        return Err(SemioError::invalid("createFixedPiece expects Input::FixedPiece"));
+                    };
+                    let design = after_kit.design_by_external_id(design_id).await.ok_or_else(|| SemioError::not_found("Design", design_id.as_str()))?;
+                    let piece = design.piece_by_external_id(piece_id).await.ok_or_else(|| SemioError::not_found("Piece", piece_id.as_str()))?;
+                    let payload_json = persisted.payload_json()?;
+                    let fp_before = crate::kit_graph_engine::projection_fingerprint_for_kit(before_kit.as_ref()).await;
+                    let fp_after = crate::kit_graph_engine::projection_fingerprint_for_kit(after_kit.as_ref()).await;
+                    let diff = crate::kit_graph_engine::deterministic_semantic_diff("createFixedPiece", &payload_json, &fp_before, &fp_after);
+                    let created_input = CreatedFixedPieceInput {
+                        design_id: design_id.clone(),
+                        blueprint_id: blueprint_id.clone(),
+                        position: position.clone(),
+                        name: name.clone(),
+                        description: description.clone(),
+                    };
+                    let op_iface = CreatedFixedPiece::new(created_input, piece, diff).await;
+                    graph.op_history.write().await.push(Arc::new(OperationIface::CreatedFixedPiece(op_iface.clone())));
+                    self.bus.emit_event(Event::CreatedFixedPiece(op_iface)).await;
                 }
-                KitOperation::DeletePieceInDesign { scope, .. } => {
-                    let design = self.graph.the_kit.design_by_external_id(&scope.design_id).await.ok_or_else(|| SemioError::not_found("Design", scope.design_id.as_str()))?;
-                    design.delete_piece_by_external_id(&scope.piece_id).await?;
-                    self.graph.the_kit.bump_touch_epoch().await;
-                    Ok(())
-                }
-                KitOperation::DragPieceInDesign { scope, input } => {
-                    self.graph.apply_drag_piece_in_design(&scope.design_id, &scope.piece_id, input.offset).await?;
-                    self.graph.the_kit.bump_touch_epoch().await;
-                    Ok(())
-                }
-                KitOperation::DragPiecesInDesign { scope, input } => {
-                    self.graph.apply_drag_pieces_in_design(&scope.design_id, &scope.piece_ids, input.offset).await?;
-                    self.graph.the_kit.bump_touch_epoch().await;
-                    Ok(())
-                }
-                KitOperation::FixPieceInDesign { scope, .. } => {
-                    let design = self.graph.the_kit.design_by_external_id(&scope.design_id).await.ok_or_else(|| SemioError::not_found("Design", scope.design_id.as_str()))?;
-                    let piece = design.piece_by_external_id(&scope.piece_id).await.ok_or_else(|| SemioError::not_found("Piece", scope.piece_id.as_str()))?;
-                    *piece.connection_kind.write().await = Some(crate::kit::design::piece::PieceConnectionKind::Fixed);
-                    self.graph.the_kit.bump_touch_epoch().await;
-                    Ok(())
-                }
+                _ => {}
             }
+            Ok(())
         }
     }
 }
@@ -7258,7 +7539,7 @@ pub mod gql {
     use crate::geom::{Offset, Position};
     use crate::id::Id;
     use crate::meta::{ConceptInput, QualityInput, TagInput};
-    use crate::operation::{Command, CommandReceipt, CreateConceptScope, CreateFixedPieceInput, CreateFixedPieceScope, CreateQualityScope, CreateTagScope, CreateTagsScope, DragPieceInput, EntityScope, KitOperation, OperationKind, PieceInDesignScope, PiecesInDesignScope, RenameKitScope, RenamedKit, TagScope, TagsScope};
+    use crate::operation::{Command, CommandReceipt, Input, KitOperation, OperationKind, RenamedKit, Scope};
     use crate::vcs::Graph;
     use crate::worker::ParentRuntime;
 
@@ -7543,7 +7824,7 @@ pub mod gql {
             &self,
             ctx: &Context<'_>,
             scope: AddFixedPieceToDesignScopeInput,
-            input: AddFixedPieceToDesignInput,
+            input: AddFixedPieceToDesignGqlInput,
         ) -> async_graphql::Result<Id> {
             let rt = ctx.data::<Arc<ParentRuntime>>()?;
             let request_id = Id::new().await;
@@ -7553,13 +7834,13 @@ pub mod gql {
                 draft_id: scope.draft_id,
                 transaction_id: scope.transaction_id,
                 operation: KitOperation::CreateFixedPiece {
-                    scope: CreateFixedPieceScope {
+                    scope: Scope::CreateFixedPiece {
                         design_id: scope.design_id,
                         piece_id,
                         blueprint_id: input.blueprint_id,
                         attribute_ids: Vec::new(),
                     },
-                    input: CreateFixedPieceInput {
+                    input: Input::FixedPiece {
                         position: input.position,
                         name: input.name,
                         description: input.description,
@@ -7578,11 +7859,8 @@ pub mod gql {
                 draft_id: scope.draft_id,
                 transaction_id: scope.transaction_id,
                 operation: KitOperation::FixPieceInDesign {
-                    scope: PieceInDesignScope {
-                        design_id: scope.design_id,
-                        piece_id: scope.piece_id,
-                    },
-                    input: crate::operation::NoInput,
+                    scope: Scope::PieceInDesign { design_id: scope.design_id, piece_id: scope.piece_id },
+                    input: Input::None,
                 },
             };
             Ok(rt.dispatch_wip(cmd).await)
@@ -7597,8 +7875,8 @@ pub mod gql {
                 draft_id: scope.draft_id,
                 transaction_id: scope.transaction_id,
                 operation: KitOperation::RenameKit {
-                    scope: RenameKitScope,
-                    input: crate::operation::RenameKitInput { name: input.name },
+                    scope: Scope::Kit,
+                    input: Input::Name { name: input.name },
                 },
             };
             Ok(rt.dispatch_wip(cmd).await)
@@ -7628,7 +7906,7 @@ pub mod gql {
             Ok(true)
         }
 
-        /// @emoji 🌱 Bootstrap the `wip` graph for a fresh dev kit: ensures a seed checkpoint anchored on `the_kit`
+        /// @emoji 🌱 Bootstrap the `wip` graph for a fresh dev kit: ensures a seed checkpoint anchored on `parent_root_for_active_draft`
         /// and a default draft on that checkpoint. Idempotent — returns the active default draft id (existing or new).
         /// Sketchpad calls this once when a JSON file backbone is mounted so the on-disk bundle immediately
         /// shows "root + first checkpoint + first draft".
@@ -7665,8 +7943,8 @@ pub mod gql {
                 draft_id: scope.draft_id,
                 transaction_id: scope.transaction_id,
                 operation: KitOperation::ChangeDescription {
-                    scope: EntityScope { entity_id: scope.entity_id },
-                    input: crate::operation::ChangeDescriptionInput { description: Some(input.description) },
+                    scope: Scope::Entity { entity_id: scope.entity_id },
+                    input: Input::Description { description: Some(input.description) },
                 },
             };
             Ok(rt.dispatch_wip(cmd).await)
@@ -7688,12 +7966,12 @@ pub mod gql {
                 draft_id: scope.draft_id,
                 transaction_id: scope.transaction_id,
                 operation: KitOperation::CreateTag {
-                    scope: CreateTagScope {
+                    scope: Scope::CreateTag {
                         owner_id: scope.owner_id,
                         tag_id,
                         attribute_ids,
                     },
-                    input: tag,
+                    input: Input::Tag { tag },
                 },
             };
             Ok(rt.dispatch_wip(cmd).await)
@@ -7720,12 +7998,12 @@ pub mod gql {
                 draft_id: scope.draft_id,
                 transaction_id: scope.transaction_id,
                 operation: KitOperation::CreateTags {
-                    scope: CreateTagsScope {
+                    scope: Scope::CreateTags {
                         owner_id: scope.owner_id,
                         tag_ids,
                         attribute_ids,
                     },
-                    input: crate::operation::CreateTagsInput { tags },
+                    input: Input::Tags { tags },
                 },
             };
             Ok(rt.dispatch_wip(cmd).await)
@@ -7740,8 +8018,8 @@ pub mod gql {
                 draft_id: scope.draft_id,
                 transaction_id: scope.transaction_id,
                 operation: KitOperation::RenameTag {
-                    scope: TagScope { tag_id: scope.tag_id },
-                    input: crate::operation::RenameTagInput { name: input.name },
+                    scope: Scope::Tag { tag_id: scope.tag_id },
+                    input: Input::Name { name: input.name },
                 },
             };
             Ok(rt.dispatch_wip(cmd).await)
@@ -7756,8 +8034,8 @@ pub mod gql {
                 draft_id: scope.draft_id,
                 transaction_id: scope.transaction_id,
                 operation: KitOperation::DeleteTag {
-                    scope: TagScope { tag_id: scope.tag_id },
-                    input: crate::operation::NoInput,
+                    scope: Scope::Tag { tag_id: scope.tag_id },
+                    input: Input::None,
                 },
             };
             Ok(rt.dispatch_wip(cmd).await)
@@ -7772,8 +8050,8 @@ pub mod gql {
                 draft_id: scope.draft_id,
                 transaction_id: scope.transaction_id,
                 operation: KitOperation::DeleteTags {
-                    scope: TagsScope { tag_ids: scope.tag_ids },
-                    input: crate::operation::NoInput,
+                    scope: Scope::Tags { tag_ids: scope.tag_ids },
+                    input: Input::None,
                 },
             };
             Ok(rt.dispatch_wip(cmd).await)
@@ -7795,12 +8073,12 @@ pub mod gql {
                 draft_id: scope.draft_id,
                 transaction_id: scope.transaction_id,
                 operation: KitOperation::CreateConcept {
-                    scope: CreateConceptScope {
+                    scope: Scope::CreateConcept {
                         owner_id: scope.owner_id,
                         concept_id,
                         attribute_ids,
                     },
-                    input: concept,
+                    input: Input::Concept { concept },
                 },
             };
             Ok(rt.dispatch_wip(cmd).await)
@@ -7822,13 +8100,13 @@ pub mod gql {
                 draft_id: scope.draft_id,
                 transaction_id: scope.transaction_id,
                 operation: KitOperation::CreateQuality {
-                    scope: CreateQualityScope {
+                    scope: Scope::CreateQuality {
                         owner_id: scope.owner_id,
                         quality_id,
                         attribute_ids,
                         benchmark_ids: Vec::new(),
                     },
-                    input: quality,
+                    input: Input::Quality { quality },
                 },
             };
             Ok(rt.dispatch_wip(cmd).await)
@@ -7843,11 +8121,8 @@ pub mod gql {
                 draft_id: scope.draft_id,
                 transaction_id: scope.transaction_id,
                 operation: KitOperation::DragPieceInDesign {
-                    scope: PieceInDesignScope {
-                        design_id: scope.design_id,
-                        piece_id: scope.piece_id,
-                    },
-                    input: DragPieceInput { offset: input.offset },
+                    scope: Scope::PieceInDesign { design_id: scope.design_id, piece_id: scope.piece_id },
+                    input: Input::Offset { offset: input.offset },
                 },
             };
             Ok(rt.dispatch_wip(cmd).await)
@@ -7862,11 +8137,8 @@ pub mod gql {
                 draft_id: scope.draft_id,
                 transaction_id: scope.transaction_id,
                 operation: KitOperation::DragPiecesInDesign {
-                    scope: PiecesInDesignScope {
-                        design_id: scope.design_id,
-                        piece_ids: scope.piece_ids,
-                    },
-                    input: DragPieceInput { offset: input.offset },
+                    scope: Scope::PiecesInDesign { design_id: scope.design_id, piece_ids: scope.piece_ids },
+                    input: Input::Offset { offset: input.offset },
                 },
             };
             Ok(rt.dispatch_wip(cmd).await)
@@ -8142,6 +8414,23 @@ mod tests {
     use futures_lite::future::block_on;
     use serde_json::json;
 
+    use crate::gql::AppSchema;
+
+    /// @emoji 🌱 GraphQL tests must target the same draft [`Graph::materialized_head_kit_from_ref`] uses (seed draft), not hard-coded ids.
+    async fn graphql_seed_defaults_and_open_tx(schema: &AppSchema) -> (String, String) {
+        let res = schema.execute(Request::new("mutation { kitStoreInitializeDefaults }")).await;
+        assert!(res.errors.is_empty(), "kitStoreInitializeDefaults: {:?}", res.errors);
+        let draft_id: String = res.data.into_json().unwrap()["kitStoreInitializeDefaults"].as_str().expect("draft id").to_string();
+        let res = schema
+            .execute(
+                Request::new(r#"mutation($d: ID!) { transactionOpen(draftId: $d) }"#).variables(Variables::from_value(async_graphql::value!({ "d": draft_id.clone() }))),
+            )
+            .await;
+        assert!(res.errors.is_empty(), "transactionOpen: {:?}", res.errors);
+        let tx_id: String = res.data.into_json().unwrap()["transactionOpen"].as_str().expect("tx id").to_string();
+        (draft_id, tx_id)
+    }
+
     fn position_value() -> serde_json::Value {
         json!({
             "center": { "u": 0.0, "v": 0.0 },
@@ -8153,11 +8442,11 @@ mod tests {
         })
     }
 
-    fn add_fixed_piece_vars(design_id: &str) -> async_graphql::Value {
+    fn add_fixed_piece_vars(draft_id: &str, transaction_id: &str, design_id: &str) -> async_graphql::Value {
         async_graphql::value!({
             "scope": {
-                "draftId": "d1",
-                "transactionId": "t1",
+                "draftId": draft_id,
+                "transactionId": transaction_id,
                 "designId": design_id,
             },
             "input": {
@@ -8202,6 +8491,20 @@ mod tests {
         assert_eq!(count, 1, "expected exactly one canonical emit_event definition in lib.rs, found {}", count);
     }
 
+    /// 🛡️ [`crate::worker::ChildRuntime`] must record operations and rely on materialization replay (`Kit::apply_diff` inside `Graph::materialized_kit_for_draft`); it must not replace `parent_root_for_active_draft` or call `apply_diff` directly.
+    #[test]
+    fn worker_child_runtime_guard_no_direct_root_or_apply_diff() {
+        let src = include_str!("lib.rs");
+        let i = src.find("impl ChildRuntime").expect("ChildRuntime impl");
+        let j = src[i..].find("//#endregion 🧵 worker").expect("worker end marker") + i;
+        let worker = &src[i..j];
+        assert!(
+            !worker.contains("parent_root_for_active_draft.write()"),
+            "ChildRuntime must not assign Graph::parent_root_for_active_draft"
+        );
+        assert!(!worker.contains("apply_diff"), "ChildRuntime must not call Kit::apply_diff; use record_op_in_open_transaction + materialized_kit_for_draft");
+    }
+
     #[test]
     fn kit_store_bundle_serialize_hydrate_round_trip_via_graphql() {
         // 📸🩻 Sketchpad path: Mutation.kitStoreInitializeDefaults → Query.kitStoreBundleJson → write to file →
@@ -8228,6 +8531,47 @@ mod tests {
                 )
                 .await;
             assert!(res.errors.is_empty(), "renameKit errors: {:?}", res.errors);
+            std::thread::sleep(std::time::Duration::from_millis(150));
+
+            // Materialized head reflects the open transaction; seed checkpoint frozen root stays immutable.
+            let q_roots = r#"{
+                wip {
+                    theKit { name }
+                    checkpoints { edges { node { frozenRoot { name } } } }
+                }
+            }"#;
+            let res = schema_a.execute(q_roots).await;
+            assert!(res.errors.is_empty(), "roots query errors: {:?}", res.errors);
+            let vr = res.data.into_json().unwrap();
+            assert_eq!(vr["wip"]["theKit"]["name"].as_str(), Some("Hello Bundle"), "materialized wip.theKit");
+            let frozen_name = vr["wip"]["checkpoints"]["edges"][0]["node"]["frozenRoot"]["name"].as_str().expect("frozenRoot.name");
+            assert_eq!(frozen_name, "the kit", "checkpoint.frozenRoot must not alias live rename");
+
+            // Abort drops the open rename from replay; materialized view reverts to the frozen snapshot name.
+            const ABORT: &str = r#"mutation($d: ID!, $t: ID!) { transactionAbort(draftId: $d, transactionId: $t) }"#;
+            let res = schema_a
+                .execute(Request::new(ABORT).variables(Variables::from_value(async_graphql::value!({ "d": draft_a.clone(), "t": tx_a.clone() }))))
+                .await;
+            assert!(res.errors.is_empty(), "transactionAbort errors: {:?}", res.errors);
+            let res = schema_a.execute(q_roots).await;
+            assert!(res.errors.is_empty(), "roots after abort: {:?}", res.errors);
+            let vr = res.data.into_json().unwrap();
+            assert_eq!(vr["wip"]["theKit"]["name"].as_str(), Some("the kit"), "materialized kit reverts after abort");
+            assert_eq!(vr["wip"]["checkpoints"]["edges"][0]["node"]["frozenRoot"]["name"].as_str(), Some("the kit"));
+
+            // Re-open and re-apply rename so the rest of this test still exercises bundle JSON with the renamed head.
+            let res = schema_a.execute(Request::new(r#"mutation($d: ID!) { transactionOpen(draftId: $d) }"#).variables(Variables::from_value(async_graphql::value!({ "d": draft_a.clone() })))).await;
+            assert!(res.errors.is_empty(), "re-open tx errors: {:?}", res.errors);
+            let tx_a2: String = res.data.into_json().unwrap()["transactionOpen"].as_str().expect("tx id").to_string();
+            let res = schema_a
+                .execute(
+                    Request::new(RN).variables(Variables::from_value(async_graphql::value!({
+                        "scope": { "draftId": draft_a.clone(), "transactionId": tx_a2.clone() },
+                        "input": { "name": "Hello Bundle" }
+                    }))),
+                )
+                .await;
+            assert!(res.errors.is_empty(), "renameKit re-apply errors: {:?}", res.errors);
             std::thread::sleep(std::time::Duration::from_millis(150));
 
             // Serialize bundle to JSON.
@@ -8348,6 +8692,7 @@ mod tests {
     fn create_tag_on_kit_graphql_roundtrip() {
         block_on(async {
             let schema = crate::gql::build_schema().await;
+            let (draft_id, tx_id) = graphql_seed_defaults_and_open_tx(&schema).await;
             let kit_id = schema.execute("{ wip { theKit { id } } }").await.data.into_json().unwrap()["wip"]["theKit"]["id"].as_str().expect("kit id").to_string();
 
             const M: &str = r#"
@@ -8357,8 +8702,8 @@ mod tests {
             "#;
             let vars = async_graphql::value!({
                 "scope": {
-                    "draftId": "d1",
-                    "transactionId": "t1",
+                    "draftId": draft_id,
+                    "transactionId": tx_id,
                     "ownerId": kit_id,
                 },
                 "input": { "tag": { "name": "alpha-tag" } }
@@ -8381,6 +8726,7 @@ mod tests {
     fn create_concept_on_kit_graphql_roundtrip() {
         block_on(async {
             let schema = crate::gql::build_schema().await;
+            let (draft_id, tx_id) = graphql_seed_defaults_and_open_tx(&schema).await;
             let kit_id = schema.execute("{ wip { theKit { id } } }").await.data.into_json().unwrap()["wip"]["theKit"]["id"].as_str().expect("kit id").to_string();
 
             const M: &str = r#"
@@ -8390,8 +8736,8 @@ mod tests {
             "#;
             let vars = async_graphql::value!({
                 "scope": {
-                    "draftId": "d1",
-                    "transactionId": "t1",
+                    "draftId": draft_id,
+                    "transactionId": tx_id,
                     "ownerId": kit_id,
                 },
                 "input": { "concept": { "name": "beta-concept" } }
@@ -8414,6 +8760,7 @@ mod tests {
     fn create_quality_on_kit_graphql_roundtrip() {
         block_on(async {
             let schema = crate::gql::build_schema().await;
+            let (draft_id, tx_id) = graphql_seed_defaults_and_open_tx(&schema).await;
             let kit_id = schema.execute("{ wip { theKit { id } } }").await.data.into_json().unwrap()["wip"]["theKit"]["id"].as_str().expect("kit id").to_string();
 
             const M: &str = r#"
@@ -8423,8 +8770,8 @@ mod tests {
             "#;
             let vars = async_graphql::value!({
                 "scope": {
-                    "draftId": "d1",
-                    "transactionId": "t1",
+                    "draftId": draft_id,
+                    "transactionId": tx_id,
                     "ownerId": kit_id,
                 },
                 "input": { "quality": { "key": "q1", "value": "v1" } }
@@ -8452,7 +8799,10 @@ mod tests {
     fn create_fixed_piece_end_to_end() {
         block_on(async {
             let schema = crate::gql::build_schema().await;
-            let res = schema.execute(Request::new(ADD_FIXED_PIECE_TO_DESIGN).variables(Variables::from_value(add_fixed_piece_vars("des1")))).await;
+            let (draft_id, tx_id) = graphql_seed_defaults_and_open_tx(&schema).await;
+            let res = schema
+                .execute(Request::new(ADD_FIXED_PIECE_TO_DESIGN).variables(Variables::from_value(add_fixed_piece_vars(&draft_id, &tx_id, "des1"))))
+                .await;
             assert!(res.errors.is_empty(), "mutation errors: {:?}", res.errors);
 
             // The wip child applies asynchronously; wait briefly for the event loop.
@@ -8472,7 +8822,10 @@ mod tests {
     fn wip_and_authoritative_are_isolated() {
         block_on(async {
             let schema = crate::gql::build_schema().await;
-            let _ = schema.execute(Request::new(ADD_FIXED_PIECE_TO_DESIGN).variables(Variables::from_value(add_fixed_piece_vars("des1")))).await;
+            let (draft_id, tx_id) = graphql_seed_defaults_and_open_tx(&schema).await;
+            let _ = schema
+                .execute(Request::new(ADD_FIXED_PIECE_TO_DESIGN).variables(Variables::from_value(add_fixed_piece_vars(&draft_id, &tx_id, "des1"))))
+                .await;
             std::thread::sleep(std::time::Duration::from_millis(150));
 
             let q = relay_auth_designs_piece_ids();
@@ -8493,11 +8846,24 @@ mod tests {
             let rt = crate::worker::ParentRuntime::spawn().await;
             let schema = crate::gql::build_schema_for(rt.clone());
 
+            let draft = rt.wip_graph.ensure_default_seed_state().await;
+            let tx = rt.wip_graph.open_transaction(&draft.id).await;
+
             // Insert two pieces directly via the wip graph (no GraphQL plumbing).
             let position = crate::geom::Position::default();
             let blueprint_id = crate::id::Id::new().await;
-            let p1 = rt.wip_graph.apply_create_fixed_piece(crate::id::Id::from("d1"), crate::id::Id::from("t1"), crate::id::Id::from("des1"), blueprint_id.clone(), position, None, None).await.expect("insert piece 1").0;
-            let _p2 = rt.wip_graph.apply_create_fixed_piece(crate::id::Id::from("d1"), crate::id::Id::from("t1"), crate::id::Id::from("des1"), blueprint_id, position, None, None).await.expect("insert piece 2").0;
+            let p1 = rt
+                .wip_graph
+                .apply_create_fixed_piece(draft.id.clone(), tx.id.clone(), crate::id::Id::from("des1"), blueprint_id.clone(), position, None, None)
+                .await
+                .expect("insert piece 1")
+                .0;
+            let _p2 = rt
+                .wip_graph
+                .apply_create_fixed_piece(draft.id.clone(), tx.id.clone(), crate::id::Id::from("des1"), blueprint_id, position, None, None)
+                .await
+                .expect("insert piece 2")
+                .0;
 
             // Baseline strong count for p1: held by the design's pieces Vec + our local handle = 2.
             let baseline = Arc::strong_count(&p1);
@@ -8527,13 +8893,16 @@ mod tests {
     fn mutation_visible_without_resnapshotting() {
         block_on(async {
             let schema = crate::gql::build_schema().await;
+            let (draft_id, tx_id) = graphql_seed_defaults_and_open_tx(&schema).await;
             let q = relay_wip_designs_have_piece();
 
             let before = schema.execute(q).await;
             let before_data = before.data.into_json().unwrap();
             let before_pieces = relay_piece_count_wip(&before_data);
 
-            let _ = schema.execute(Request::new(ADD_FIXED_PIECE_TO_DESIGN).variables(Variables::from_value(add_fixed_piece_vars("des1")))).await;
+            let _ = schema
+                .execute(Request::new(ADD_FIXED_PIECE_TO_DESIGN).variables(Variables::from_value(add_fixed_piece_vars(&draft_id, &tx_id, "des1"))))
+                .await;
             std::thread::sleep(std::time::Duration::from_millis(150));
 
             let after = schema.execute(q).await;
@@ -8577,7 +8946,8 @@ mod tests {
             }
 
             let inv = &exp["invariants"];
-            let ds = g.the_kit.designs.read().await;
+            let kit = g.materialized_kit_for_draft(&draft_id).await;
+            let ds = kit.designs.read().await;
             assert_eq!(ds.len(), inv["designCount"].as_u64().expect("designCount") as usize, "designCount");
             let mut total = 0usize;
             let mut centers: Vec<[f64; 2]> = Vec::new();
@@ -8599,7 +8969,7 @@ mod tests {
                 assert!((got[1] - want[1]).abs() < 1e-9, "center v");
             }
 
-            let fp = stable_projection_fingerprint(&g.the_kit).await;
+            let fp = stable_projection_fingerprint(&g.materialized_kit_for_draft(&draft_id).await).await;
             let exp_fp = exp["projectionFingerprint"].as_str().expect("projectionFingerprint in kit-store.golden.expected.semio.json");
             assert_eq!(fp, exp_fp, "projectionFingerprint");
         });
@@ -8625,7 +8995,7 @@ mod tests {
                 assert!(applied.diff.summary.as_ref().map(|s| !s.is_empty()).unwrap_or(false), "diff summary");
             }
 
-            let fp = stable_projection_fingerprint(&g.the_kit).await;
+            let fp = stable_projection_fingerprint(&g.materialized_kit_for_draft(&draft_id).await).await;
             let exp_fp = exp["projectionFingerprint"].as_str().expect("projectionFingerprint");
             assert_eq!(fp, exp_fp, "projectionFingerprint via semantic json apply");
         });
@@ -8652,7 +9022,8 @@ mod tests {
             let g = crate::vcs::Graph::new().await;
             crate::kit_backbone::AttachedBackbone::mount_and_replay(&norm, crate::operation::BackboneStoreKind::DevJson, "wip", &g).await.expect("dev json mount+replay");
 
-            let fp = stable_projection_fingerprint(&g.the_kit).await;
+            let draft_id = crate::id::Id::from(golden_ops["draftId"].as_str().expect("draftId"));
+            let fp = stable_projection_fingerprint(&g.materialized_kit_for_draft(&draft_id).await).await;
             let exp_fp = exp["projectionFingerprint"].as_str().expect("projectionFingerprint");
             assert_eq!(fp, exp_fp, "dev-json backbone replay must match US-001 golden fingerprint");
         });
@@ -8691,7 +9062,8 @@ mod tests {
             let g2 = crate::vcs::Graph::new().await;
             crate::kit_backbone::AttachedBackbone::mount_and_replay(&norm, crate::operation::BackboneStoreKind::LocalDotSemio, "wip", &g2).await.expect("replay wip.db");
 
-            let fp = stable_projection_fingerprint(&g2.the_kit).await;
+            let draft_id = crate::id::Id::from(golden_ops["draftId"].as_str().expect("draftId"));
+            let fp = stable_projection_fingerprint(&g2.materialized_kit_for_draft(&draft_id).await).await;
             let exp_fp = exp["projectionFingerprint"].as_str().expect("projectionFingerprint");
             assert_eq!(fp, exp_fp, "local .semio backbone replay must match US-001 golden fingerprint");
         });
@@ -8855,47 +9227,53 @@ mod tests {
     fn normalized_kit_operation_create_tag_diff_and_backwards_use_scoped_ids() {
         block_on(async {
             let graph = crate::vcs::Graph::new().await;
-            let kit = graph.the_kit.clone();
+            let kit = graph.parent_root_for_active_draft.read().await.clone();
             let owner_id = kit.workspace_kit_id().await;
             let tag_id = crate::id::Id::from("tag-scope-1");
             let attribute_id = crate::id::Id::from("attr-scope-1");
+            let tag_input = crate::meta::TagInput {
+                name: "alpha-tag".to_string(),
+                description: Some("tag description".to_string()),
+                icon: Some("tag-icon".to_string()),
+                order: Some(3),
+                attributes: Some(vec![crate::meta::AttributeInput {
+                    key: "material".to_string(),
+                    value: Some("steel".to_string()),
+                    definition: Some("visible material".to_string()),
+                }]),
+            };
             let create = crate::operation::KitOperation::CreateTag {
-                scope: crate::operation::CreateTagScope { owner_id: owner_id.clone(), tag_id: tag_id.clone(), attribute_ids: vec![attribute_id.clone()] },
-                input: crate::meta::TagInput {
-                    name: "alpha-tag".to_string(),
-                    description: Some("tag description".to_string()),
-                    icon: Some("tag-icon".to_string()),
-                    order: Some(3),
-                    attributes: Some(vec![crate::meta::AttributeInput {
-                        key: "material".to_string(),
-                        value: Some("steel".to_string()),
-                        definition: Some("visible material".to_string()),
-                    }]),
-                },
+                scope: crate::operation::Scope::CreateTag { owner_id: owner_id.clone(), tag_id: tag_id.clone(), attribute_ids: vec![attribute_id.clone()] },
+                input: crate::operation::Input::Tag { tag: tag_input.clone() },
             };
 
             let diff = create.to_diff(&kit).await.expect("createTag diff");
-            assert_eq!(diff.kind, "createTag");
-            assert!(diff.added.iter().any(|entity| entity.id == tag_id && entity.kind == "tag"));
-            assert!(diff.added.iter().any(|entity| entity.id == attribute_id && entity.kind == "attribute"));
+            let ops = diff.0.get("__ops").and_then(|x| x.as_array()).expect("__ops");
+            assert_eq!(ops.len(), 1);
+            assert_eq!(ops[0].get("kind").and_then(|k| k.as_str()), Some("createTag"));
+            assert_eq!(ops[0].get("tagId").and_then(|v| v.as_str()), Some(tag_id.as_str()));
 
-            let crate::operation::KitOperation::CreateTag { scope, input } = create.clone() else {
-                panic!("expected createTag operation");
-            };
-            kit.create_and_register_tag_with_scope(&scope.owner_id, &scope.tag_id, &scope.attribute_ids, input).await.expect("apply createTag");
+            let staged = kit.deep_clone().await;
+            staged.apply_diff(&diff).await.expect("apply createTag diff on clone");
 
-            let backwards = crate::operation::KitOperation::DeleteTag { scope: crate::operation::TagScope { tag_id: tag_id.clone() }, input: crate::operation::NoInput }
-                .to_backwards(&kit)
+            let backwards = crate::operation::KitOperation::DeleteTag { scope: crate::operation::Scope::Tag { tag_id: tag_id.clone() }, input: crate::operation::Input::None }
+                .to_backwards(&staged)
                 .await
                 .expect("deleteTag backwards");
             assert_eq!(backwards.len(), 1);
             match &backwards[0] {
                 crate::operation::KitOperation::CreateTag { scope, input } => {
-                    assert_eq!(scope.owner_id, owner_id);
-                    assert_eq!(scope.tag_id, tag_id);
-                    assert_eq!(scope.attribute_ids, vec![attribute_id]);
-                    assert_eq!(input.name, "alpha-tag");
-                    assert_eq!(input.description.as_deref(), Some("tag description"));
+                    let crate::operation::Scope::CreateTag { owner_id: o, tag_id: t, attribute_ids } = scope else {
+                        panic!("expected CreateTag scope");
+                    };
+                    assert_eq!(o, &owner_id);
+                    assert_eq!(t, &tag_id);
+                    assert_eq!(attribute_ids, &vec![attribute_id.clone()]);
+                    let crate::operation::Input::Tag { tag } = input else {
+                        panic!("expected Tag input");
+                    };
+                    assert_eq!(tag.name, "alpha-tag");
+                    assert_eq!(tag.description.as_deref(), Some("tag description"));
                 }
                 other => panic!("unexpected backwards operation: {:?}", other),
             }
@@ -8906,14 +9284,15 @@ mod tests {
     fn normalized_create_fixed_piece_replay_reuses_scoped_piece_id() {
         block_on(async {
             let graph = crate::vcs::Graph::new().await;
+            let draft_id = crate::id::Id::from("draft-scoped-1");
             let operation = crate::operation::KitOperation::CreateFixedPiece {
-                scope: crate::operation::CreateFixedPieceScope {
+                scope: crate::operation::Scope::CreateFixedPiece {
                     design_id: crate::id::Id::from("design-scoped-1"),
                     piece_id: crate::id::Id::from("piece-scoped-1"),
                     blueprint_id: crate::id::Id::from("blueprint-scoped-1"),
                     attribute_ids: Vec::new(),
                 },
-                input: crate::operation::CreateFixedPieceInput {
+                input: crate::operation::Input::FixedPiece {
                     position: crate::geom::Position::default(),
                     name: Some("Scoped Piece".to_string()),
                     description: Some("Persisted with explicit scope ids".to_string()),
@@ -8923,7 +9302,7 @@ mod tests {
             let payload = operation.payload_json().expect("payload json");
             let applied = crate::kit_graph_engine::apply_semantic_op_json(
                 &graph,
-                &crate::id::Id::from("draft-scoped-1"),
+                &draft_id,
                 &crate::id::Id::from("tx-scoped-1"),
                 operation.kind(),
                 &payload,
@@ -8935,7 +9314,8 @@ mod tests {
             assert_eq!(piece.id, crate::id::Id::from("piece-scoped-1"));
             assert_eq!(piece.name.read().await.clone().as_deref(), Some("Scoped Piece"));
 
-            let design = graph.the_kit.design_by_external_id(&crate::id::Id::from("design-scoped-1")).await.expect("design exists");
+            let mat = graph.materialized_kit_for_draft(&draft_id).await;
+            let design = mat.design_by_external_id(&crate::id::Id::from("design-scoped-1")).await.expect("design exists");
             assert!(design.piece_by_external_id(&crate::id::Id::from("piece-scoped-1")).await.is_some(), "piece should be addressable by scoped id");
         });
     }
