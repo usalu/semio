@@ -612,10 +612,11 @@ export async function importKit(data: ArrayBuffer | Blob | File | string): Promi
   if (bytes.length >= 2 && bytes[0] === 0x1f && bytes[1] === 0x8b) {
     bytes = gunzipSync(bytes);
   }
+  // 🚧 The on-disk kit-store bundle envelope (`{schema, wip:{...}}` from `*.kit.semio.json`)
+  // is owned by `semio/rs`. Sketchpad MUST NOT decode that envelope here — it accepts only
+  // the flat `KitFullDto` form. Wrapped files must reach the host through the Rust backbone.
   const text = new TextDecoder().decode(bytes);
-  const parsed = JSON.parse(text);
-  const dtoCandidate = parsed != null && typeof parsed === "object" && !Array.isArray(parsed) && typeof (parsed as { schema?: unknown }).schema === "string" && (parsed as { wip?: { root?: unknown } }).wip != null && (parsed as { wip: { root?: unknown } }).wip.root != null ? (parsed as { wip: { root: unknown } }).wip.root : parsed;
-  const plain = KitFullDtoSchema.parse(dtoCandidate);
+  const plain = KitFullDtoSchema.parse(JSON.parse(text));
   return { kit: asKitInstance(Kit.fromPlain(plain)) };
 }
 

@@ -6441,30 +6441,11 @@ export class InMemoryKitStore implements KitHostStore {
   }
 }
 
-/** @emoji 🪪 Schema marker stamped into every persisted kit-store bundle (see `semio/assets/semio/metabolism.new.kit.semio.json`). */
-export const KIT_STORE_BUNDLE_SCHEMA = "🎆26🌙06⬆️1";
-
-/** @emoji 📦 On-disk kit bundle envelope: `{ schema, wip: { id, root: <KitFullDto> } }` mirroring `metabolism.new.kit.semio.json`. */
-export type KitStoreBundle = {
-  readonly schema: string;
-  readonly wip: { readonly id: string; readonly root: KitFullDto };
-};
-
-/** @emoji 📦 Wrap a `KitFullDto` into a {@link KitStoreBundle} for file/folder persistence. */
-export function encodeKitStoreBundle(dto: KitFullDto): KitStoreBundle {
-  return { schema: KIT_STORE_BUNDLE_SCHEMA, wip: { id: String((dto as { id?: unknown }).id ?? ""), root: dto } };
-}
-
-/** @emoji 📦 Extract the `KitFullDto` from a {@link KitStoreBundle}; accepts a flat DTO too (returns it as-is). */
-export function decodeKitStoreBundle(value: unknown): KitFullDto {
-  if (value != null && typeof value === "object" && !Array.isArray(value)) {
-    const v = value as { schema?: unknown; wip?: { root?: unknown } };
-    if (typeof v.schema === "string" && v.wip != null && typeof v.wip === "object" && (v.wip as { root?: unknown }).root != null) {
-      return (v.wip as { root: KitFullDto }).root;
-    }
-  }
-  return value as KitFullDto;
-}
+// NOTE 🚧 The on-disk kit-store bundle format (see `semio/assets/semio/metabolism.new.kit.semio.json`)
+// is owned exclusively by `semio/rs`. JS host stores MUST NOT parse, validate, generate, or
+// reshape that file format. The JS file/folder host stores below are transient bridges that
+// will be replaced once Rust drives the dev-json backbone end-to-end through a host adapter.
+// Until then they keep a flat in-memory DTO snapshot for React without speaking the bundle.
 
 export type KitJsonFileAdapter = { read: () => Promise<string>; write: (json: string) => Promise<void> };
 /** @emoji 🧾 Folder persistence adapter (Electron passes two path segments for `createDirectory`). */
@@ -6492,8 +6473,10 @@ export class JsonFileKitStore implements KitHostStore {
     this._kit = seed;
   }
   static async create(adapter: KitJsonFileAdapter) {
-    const json = await adapter.read();
-    const seed = json.trim() === "" ? asKitInstance({ id: id(), name: "Untitled", createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() }) : Kit.fromDto(decodeKitStoreBundle(JSON.parse(json)));
+    // 🚧 Bundle format is Rust-owned. We start from an empty in-memory kit; once Rust
+    // attaches the dev-json backbone it will project the authoritative state back to us.
+    const _json = await adapter.read();
+    const seed = asKitInstance({ id: id(), name: "Untitled", createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() });
     return new JsonFileKitStore(adapter, seed);
   }
   getSnapshot(): KitStoreSnapshot {
@@ -6506,9 +6489,9 @@ export class JsonFileKitStore implements KitHostStore {
     };
   }
   replace(kit: Kit) {
+    // 🚧 No JS-side persistence: file writing is Rust's job (dev-json backbone).
     this._kit = kit;
     for (const l of this.listeners) l();
-    void this.adapter.write(JSON.stringify(encodeKitStoreBundle(kit.toJSON()), null, 2));
   }
 }
 
@@ -6524,15 +6507,9 @@ export class FolderKitStore implements KitHostStore {
     this._kit = seed;
   }
   static async create(adapter: KitFolderAdapter, initial?: KitFullDto) {
-    const bytes = await adapter.readKit();
-    if (bytes != null && bytes.length > 0) {
-      try {
-        const t = new TextDecoder().decode(bytes);
-        return new FolderKitStore(adapter, Kit.fromDto(decodeKitStoreBundle(JSON.parse(t))));
-      } catch {
-        /* fall through */
-      }
-    }
+    // 🚧 Bundle format is Rust-owned. We probe the kit byte stream only to keep the adapter
+    // contract alive but never decode it; Rust will project the authoritative state.
+    await adapter.readKit();
     return new FolderKitStore(adapter, asKitInstance(initial ?? { id: id(), name: "Untitled", createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() }));
   }
   getSnapshot(): KitStoreSnapshot {
@@ -6545,16 +6522,9 @@ export class FolderKitStore implements KitHostStore {
     };
   }
   replace(kit: Kit) {
+    // 🚧 No JS-side persistence: folder kit bundle writing is Rust's job (dev-json backbone).
     this._kit = kit;
     for (const l of this.listeners) l();
-    void (async () => {
-      try {
-        const enc = new TextEncoder().encode(JSON.stringify(encodeKitStoreBundle(kit.toJSON()), null, 2));
-        await this.adapter.writeKit(enc);
-      } catch {
-        /* ignore */
-      }
-    })();
   }
 }
 
@@ -6753,11 +6723,12 @@ export type KitDiff = ReadonlyDto<z.infer<typeof KitDiffSchema>>;
 // #endregion Kit
 
 // #region KitImportHelpers
-/** @emoji 🧾 Decode kit bytes as JSON DTO (accepts both flat `KitFullDto` and {@link KitStoreBundle}; host handles archives before calling). */
+/** @emoji 🧾 Decode kit bytes as a flat `KitFullDto`. The on-disk bundle/wip envelope is Rust-owned;
+ *           if you receive a wrapped file, hand it to Rust instead of unwrapping in JS. */
 export function importKitToDto(buf: ArrayBuffer | Uint8Array): KitFullDto {
   const u8 = buf instanceof Uint8Array ? buf : new Uint8Array(buf);
   const text = new TextDecoder().decode(u8);
-  return KitFullDtoSchema.parse(decodeKitStoreBundle(JSON.parse(text)));
+  return KitFullDtoSchema.parse(JSON.parse(text));
 }
 // #endregion KitImportHelpers
 

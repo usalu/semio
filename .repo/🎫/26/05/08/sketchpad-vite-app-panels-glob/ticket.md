@@ -64,3 +64,56 @@
 
 - `cd semio/react && npm test` → **15 / 15 passed**.
 
+---
+
+## Follow-up: Strip JS-side knowledge of the on-disk kit-store bundle envelope (Rust-owned format)
+
+**Constraint reaffirmed by the dev:** *"Everything kit state related MUST be only in semio/rs. The dev kit backbone (json file) is only interacted by rust."*
+
+### Why this changed
+
+A previous in-session attempt added a JS bundle codec
+(`KIT_STORE_BUNDLE_SCHEMA` / `encodeKitStoreBundle` / `decodeKitStoreBundle`) and used it
+in `JsonFileKitStore`, `FolderKitStore`, `importKitToDto`, and the sketchpad
+`importKit` to read/write `{ schema, wip: { id, root: <KitFullDto> } }` envelopes
+matching `semio/assets/semio/metabolism.new.kit.semio.json`. That violated the
+layering: **JS reshaped/persisted the on-disk bundle** that is owned by `semio/rs`.
+
+In addition, the *real* dev-json backbone (Rust `DevJsonBackboneFile` in `semio/rs/lib.rs`)
+uses an entirely different on-disk shape — `kind` / `schema = "2026-05-06"` /
+`connectionUri` / `persistence` / `semanticOpLog[]` — so **the JS bundle envelope was
+both architecturally wrong and format-wrong.**
+
+### Reverts in this pass
+
+- `semio/js/index.ts`
+  - **Removed** `KIT_STORE_BUNDLE_SCHEMA`, `KitStoreBundle`, `encodeKitStoreBundle`,
+    `decodeKitStoreBundle`. Replaced with a `🚧` block-comment explaining JS does not
+    speak the on-disk kit bundle format.
+  - `JsonFileKitStore.create` / `replace`: stops parsing or writing the file. The store
+    seeds an in-memory empty kit and `replace` only updates listeners — disk persistence
+    is Rust's responsibility once the dev-json backbone is wired through a host adapter.
+  - `FolderKitStore.create` / `replace`: same treatment (probes `readKit()` to keep the
+    adapter contract alive but does not decode bytes).
+  - `importKitToDto`: parses bytes strictly as the flat `KitFullDto`. Wrapped files
+    must reach the host through Rust.
+- `semio/sketchpad/index.tsx`
+  - `importKit`: removed bundle-shape unwrapping. Parses the flat `KitFullDto` only.
+
+### Open Rust-side gap (next ticket)
+
+- Wire the JS file/folder adapter callbacks (`KitJsonFileAdapter`, `KitFolderAdapter`)
+  through to a Rust host hook so `AttachedBackbone::DevJson` (and the future folder
+  variant) reads/writes the on-disk bundle. After that, `JsonFileKitStore` /
+  `FolderKitStore` can become pure projections of the rs `KitStore` snapshot, and the
+  empty-seed bootstrap above can be replaced with the rs-projected DTO.
+- Decide which on-disk shape is canonical (the `metabolism.new.kit.semio.json`
+  wip-projection envelope vs. the `DevJsonBackboneFile` op-log envelope) and converge
+  the rs serializer.
+
+### Files (this pass)
+
+- `semio/js/index.ts`
+- `semio/sketchpad/index.tsx`
+- `.repo/🎫/26/05/08/sketchpad-vite-app-panels-glob/ticket.md`
+
