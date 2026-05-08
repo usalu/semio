@@ -3608,6 +3608,66 @@ pub mod vcs {
             d
         }
 
+        /// @emoji 🟢 Open a brand-new transaction inside `draft_id` (draft is created on demand) and mark it as the draft's open transaction.
+        pub async fn open_transaction(self: &Arc<Self>, draft_id: &Id) -> Arc<Transaction> {
+            let draft = self.ensure_draft(draft_id).await;
+            let tx_id = Id::new().await;
+            let tx = Transaction::with_id(Arc::downgrade(&draft), tx_id).await;
+            draft.transactions.write().await.push(tx.clone());
+            *draft.open_transaction.write().await = Arc::downgrade(&tx);
+            tx
+        }
+
+        /// @emoji ✅ Mark a transaction as finalized: moved from `transactions` into `finalized_transactions`; clears the draft's open pointer if it matched.
+        pub async fn commit_transaction(self: &Arc<Self>, draft_id: &Id, transaction_id: &Id) -> Result<(), SemioError> {
+            let draft = self
+                .drafts
+                .read()
+                .await
+                .iter()
+                .find(|d| &d.id == draft_id)
+                .cloned()
+                .ok_or_else(|| SemioError::not_found("Draft", draft_id.as_str()))?;
+            let tx = {
+                let mut txs = draft.transactions.write().await;
+                let pos = txs.iter().position(|t| &t.id == transaction_id).ok_or_else(|| SemioError::not_found("Transaction", transaction_id.as_str()))?;
+                txs.remove(pos)
+            };
+            draft.finalized_transactions.write().await.push(tx);
+            // 🧹 Clear the draft's open pointer if it referred to the just-committed transaction.
+            let open = draft.open_transaction.read().await.upgrade();
+            if let Some(open_tx) = open {
+                if &open_tx.id == transaction_id {
+                    *draft.open_transaction.write().await = std::sync::Weak::new();
+                }
+            }
+            Ok(())
+        }
+
+        /// @emoji ⛔ Drop a transaction from a draft entirely; clears the draft's open pointer if it matched.
+        pub async fn abort_transaction(self: &Arc<Self>, draft_id: &Id, transaction_id: &Id) -> Result<(), SemioError> {
+            let draft = self
+                .drafts
+                .read()
+                .await
+                .iter()
+                .find(|d| &d.id == draft_id)
+                .cloned()
+                .ok_or_else(|| SemioError::not_found("Draft", draft_id.as_str()))?;
+            {
+                let mut txs = draft.transactions.write().await;
+                let pos = txs.iter().position(|t| &t.id == transaction_id).ok_or_else(|| SemioError::not_found("Transaction", transaction_id.as_str()))?;
+                txs.remove(pos);
+            }
+            let open = draft.open_transaction.read().await.upgrade();
+            if let Some(open_tx) = open {
+                if &open_tx.id == transaction_id {
+                    *draft.open_transaction.write().await = std::sync::Weak::new();
+                }
+            }
+            Ok(())
+        }
+
         /// 🪡 Hot path: mutate using an already-bound [`crate::kit_graph_engine::DesignHandle`] / design node (no further design-id scans).
         pub(crate) async fn apply_create_fixed_piece_on_design_node(
             self: &Arc<Self>,
@@ -3729,6 +3789,16 @@ pub mod vcs {
         }
         pub async fn releases(&self) -> crate::gql_relay::CheckpointConnection {
             crate::gql_relay::CheckpointConnection::from_checkpoints(self.releases.read().await.clone())
+        }
+
+        /// @emoji 📝 Lookup a draft on this graph by id (sketchpad uses this after `transactionOpen` / before `transactionCommit`).
+        pub async fn draft(&self, id: Id) -> Option<Arc<Draft>> {
+            self.drafts.read().await.iter().find(|d| d.id == id).cloned()
+        }
+
+        /// @emoji 📝 All drafts currently open on this graph (sketchpad probes `wip.drafts` to know which ones to commit / abort on close).
+        pub async fn drafts(&self) -> Vec<Arc<Draft>> {
+            self.drafts.read().await.clone()
         }
 
         /// @emoji 📜 Ordered semantic op log for this graph line (persisted bundle field); empty until store wiring lands.
@@ -5078,49 +5148,291 @@ pub mod kit_backbone {
     use crate::vcs::Graph;
 
     //#region 🧾 wire format
-    /// @emoji 🧾 One row in a dev JSON `semanticOpLog` or SQLite `semantic_op_log` (camelCase `draftId` / `transactionId` to match bundle fixtures).
+
+    /// @emoji 🪪 On-disk schema marker stamped at the bundle root; matches `semio/assets/semio/metabolism.new.kit.semio.json`.
+    pub const KIT_STORE_BUNDLE_SCHEMA: &str = "🎆26🌙06⬆️1";
+
+    /// @emoji 🚧 Block-merkle hash sentinel reused everywhere until real hashing is wired (matches the literal `"…"` placeholders in the metabolism fixture).
+    pub const HASH_PLACEHOLDER: &str = "…";
+
+    /// @emoji 📜 `{hash, items: [T]}` envelope — the universal "block-hashed list" reused in every nested collection of the bundle.
     #[derive(Clone, Debug, serde::Deserialize, serde::Serialize)]
-    pub struct StoredSemanticOp {
-        #[serde(rename = "draftId")]
-        pub draft_id: String,
-        #[serde(rename = "transactionId")]
-        pub transaction_id: String,
+    pub struct BlockHashedListDto<T> {
+        pub hash: String,
+        pub items: Vec<T>,
+    }
+
+    impl<T> Default for BlockHashedListDto<T> {
+        fn default() -> Self {
+            Self { hash: HASH_PLACEHOLDER.to_string(), items: Vec::new() }
+        }
+    }
+
+    /// @emoji 🔗 `{id, hash}` typed reference to another node in the bundle (authors, qualities, ports, families, …).
+    #[derive(Clone, Debug, serde::Deserialize, serde::Serialize)]
+    pub struct HashRefDto {
+        pub id: String,
+        pub hash: String,
+    }
+
+    /// @emoji 📦 Top-level on-disk kit store bundle (mirrors `metabolism.new.kit.semio.json`: `schema / wip / authoritative / stage / conflicts / blobs`).
+    #[derive(Clone, Debug, serde::Deserialize, serde::Serialize)]
+    pub struct KitStoreBundleFile {
+        pub schema: String,
+        pub wip: GraphSnapshotDto,
+        pub authoritative: GraphSnapshotDto,
+        pub stage: GraphSnapshotDto,
+        #[serde(default)]
+        pub conflicts: BlockHashedListDto<serde_json::Value>,
+        #[serde(default)]
+        pub blobs: BlockHashedListDto<serde_json::Value>,
+    }
+
+    /// @emoji 🌐 One graph snapshot (head pointer used as `wip` / `authoritative` / `stage` heads in the bundle).
+    #[derive(Clone, Debug, serde::Deserialize, serde::Serialize)]
+    pub struct GraphSnapshotDto {
+        pub id: String,
+        pub hash: String,
+        #[serde(default)]
+        pub authors: BlockHashedListDto<HashRefDto>,
+        #[serde(default = "empty_root_value")]
+        pub root: serde_json::Value,
+        #[serde(default)]
+        pub checkpoints: BlockHashedListDto<serde_json::Value>,
+        #[serde(default)]
+        pub alternatives: BlockHashedListDto<serde_json::Value>,
+        #[serde(default)]
+        pub drafts: BlockHashedListDto<DraftDto>,
+    }
+
+    /// @emoji 📝 Draft record: pointer to a checkpoint plus ordered transactions of forward / backward semantic ops.
+    #[derive(Clone, Debug, serde::Deserialize, serde::Serialize)]
+    pub struct DraftDto {
+        pub id: String,
+        pub hash: String,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        pub checkpoint: Option<HashRefDto>,
+        #[serde(default)]
+        pub transactions: BlockHashedListDto<TransactionDto>,
+    }
+
+    /// @emoji 💼 Transaction = ordered forward + backward semantic op steps (mirrors `Transaction.forwards` / `.backwards` in the bundle).
+    #[derive(Clone, Debug, serde::Deserialize, serde::Serialize)]
+    pub struct TransactionDto {
+        pub id: String,
+        pub hash: String,
+        #[serde(default)]
+        pub forwards: BlockHashedListDto<TransactionStepDto>,
+        #[serde(default)]
+        pub backwards: BlockHashedListDto<TransactionStepDto>,
+    }
+
+    /// @emoji 🪡 One semantic op step inside a transaction (id, op `kind`, optional human description, payload `input`).
+    #[derive(Clone, Debug, serde::Deserialize, serde::Serialize)]
+    pub struct TransactionStepDto {
+        pub id: String,
+        pub hash: String,
         pub kind: String,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        pub description: Option<String>,
+        #[serde(default)]
         pub input: serde_json::Value,
     }
 
-    #[derive(Clone, Debug, serde::Deserialize, serde::Serialize)]
-    pub struct DevJsonPersistenceNotes {
-        /// @emoji 🛡️ Human-readable: write `*.tmp.semio-write` in the same directory then `rename(2)` into the final filename.
-        pub atomic_rewrite: String,
-        /// @emoji 🛡️ Human-readable: after `fsync`+`rename`, readers see the previous or the new whole file; torn JSON only on the temp path (ignored by readers).
-        pub crash_safety: String,
+    /// @emoji 🌱 Empty `root` projection placeholder used until [`Kit`] dumps a real metabolism-shaped root.
+    fn empty_root_value() -> serde_json::Value {
+        serde_json::json!({
+            "hash": HASH_PLACEHOLDER,
+            "name": "",
+            "types": { "hash": HASH_PLACEHOLDER, "items": [] },
+            "designs": { "hash": HASH_PLACEHOLDER, "items": [] },
+        })
     }
 
-    #[derive(Clone, Debug, serde::Deserialize, serde::Serialize)]
-    pub struct DevJsonBackboneFile {
-        pub kind: String,
-        pub schema: String,
-        #[serde(rename = "connectionUri")]
-        pub connection_uri: String,
-        pub persistence: DevJsonPersistenceNotes,
-        #[serde(rename = "semanticOpLog")]
-        pub semantic_op_log: Vec<StoredSemanticOp>,
-    }
-
-    impl DevJsonBackboneFile {
-        fn template(uri: &str) -> Self {
+    impl GraphSnapshotDto {
+        /// @emoji 🌱 Empty graph snapshot stamped with `kit_id` (used for fresh `wip` / `authoritative` / `stage` heads).
+        pub fn empty(kit_id: &str) -> Self {
             Self {
-                kind: "semio.kit_backbone.dev_json".to_string(),
-                schema: "2026-05-06".to_string(),
-                connection_uri: uri.to_string(),
-                persistence: DevJsonPersistenceNotes {
-                    atomic_rewrite: "Serialize full document to <path>.tmp.semio-write in the same directory, fsync, then atomic rename(2) over <path>.".to_string(),
-                    crash_safety: "Readers never observe a partial JSON object: they keep the last fully-renamed file. A crash may leave an orphan temp file to delete manually.".to_string(),
-                },
-                semantic_op_log: Vec::new(),
+                id: kit_id.to_string(),
+                hash: HASH_PLACEHOLDER.to_string(),
+                authors: BlockHashedListDto::default(),
+                root: empty_root_value(),
+                checkpoints: BlockHashedListDto::default(),
+                alternatives: BlockHashedListDto::default(),
+                drafts: BlockHashedListDto::default(),
             }
         }
+    }
+
+    impl KitStoreBundleFile {
+        /// @emoji 🌱 Fresh empty bundle stamped with [`KIT_STORE_BUNDLE_SCHEMA`]; kit ids fill in once the live kit projects into `root`.
+        pub fn template() -> Self {
+            Self {
+                schema: KIT_STORE_BUNDLE_SCHEMA.to_string(),
+                wip: GraphSnapshotDto::empty(""),
+                authoritative: GraphSnapshotDto::empty(""),
+                stage: GraphSnapshotDto::empty(""),
+                conflicts: BlockHashedListDto::default(),
+                blobs: BlockHashedListDto::default(),
+            }
+        }
+
+        /// @emoji 🔁 Flatten every recorded `wip` draft transaction into ordered [`StoredSemanticOp`] records ready for replay.
+        pub fn wip_semantic_ops(&self) -> Vec<StoredSemanticOp> {
+            let mut out = Vec::new();
+            for draft in &self.wip.drafts.items {
+                for tx in &draft.transactions.items {
+                    for step in &tx.forwards.items {
+                        out.push(StoredSemanticOp {
+                            draft_id: draft.id.clone(),
+                            transaction_id: tx.id.clone(),
+                            kind: step.kind.clone(),
+                            input: step.input.clone(),
+                        });
+                    }
+                }
+            }
+            out
+        }
+
+        /// @emoji 🌱 Initialize an empty bundle with a non-empty `wip` head: empty root projection stamped with `kit_id`,
+        /// a single seed checkpoint anchored on the empty kit, and a single empty draft pointing at that checkpoint.
+        /// This is the "create dev kit" bootstrap state that sketchpad sees the moment a JSON file is opened/created.
+        pub fn initialize_with_active_draft(kit_id: &str, draft_id: &str, checkpoint_id: &str) -> Self {
+            let mut bundle = Self::template();
+            bundle.wip.id = kit_id.to_string();
+            bundle.authoritative.id = kit_id.to_string();
+            bundle.stage.id = kit_id.to_string();
+            // 🪧 First checkpoint anchors the kit at its initial empty projection (no changes yet).
+            bundle.wip.checkpoints.items.push(serde_json::json!({
+                "id": checkpoint_id,
+                "hash": HASH_PLACEHOLDER,
+                "timestamp": HASH_PLACEHOLDER,
+                "message": "init",
+                "authors": { "hash": HASH_PLACEHOLDER, "items": [] },
+                "changes": { "hash": HASH_PLACEHOLDER, "items": [] },
+            }));
+            // 📝 Active draft on the seed checkpoint (no transactions yet).
+            bundle.wip.drafts.items.push(DraftDto {
+                id: draft_id.to_string(),
+                hash: HASH_PLACEHOLDER.to_string(),
+                checkpoint: Some(HashRefDto { id: checkpoint_id.to_string(), hash: HASH_PLACEHOLDER.to_string() }),
+                transactions: BlockHashedListDto::default(),
+            });
+            bundle
+        }
+
+        /// @emoji 🪪 Locate the wip draft mutably (returns `Err` if not present).
+        fn wip_draft_mut(&mut self, draft_id: &str) -> Result<&mut DraftDto, SemioError> {
+            self.wip
+                .drafts
+                .items
+                .iter_mut()
+                .find(|d| d.id == draft_id)
+                .ok_or_else(|| SemioError::not_found("Draft", draft_id))
+        }
+
+        /// @emoji 🟢 Open a new (empty) transaction inside the targeted `wip` draft and return its id; the draft is created if absent.
+        pub fn open_transaction(&mut self, draft_id: &str) -> String {
+            let drafts = &mut self.wip.drafts.items;
+            let draft_idx = match drafts.iter().position(|d| d.id == draft_id) {
+                Some(i) => i,
+                None => {
+                    drafts.push(DraftDto {
+                        id: draft_id.to_string(),
+                        hash: HASH_PLACEHOLDER.to_string(),
+                        checkpoint: None,
+                        transactions: BlockHashedListDto::default(),
+                    });
+                    drafts.len() - 1
+                }
+            };
+            let tx_id = uuid::Uuid::now_v7().to_string();
+            drafts[draft_idx].transactions.items.push(TransactionDto {
+                id: tx_id.clone(),
+                hash: HASH_PLACEHOLDER.to_string(),
+                forwards: BlockHashedListDto::default(),
+                backwards: BlockHashedListDto::default(),
+            });
+            tx_id
+        }
+
+        /// @emoji ✅ Mark a transaction as finalized inside its draft. Until checkpointing lands the row stays in
+        /// `wip.drafts[*].transactions[*]`; the call is a no-op except for validating that the (draft, tx) pair exists.
+        pub fn commit_transaction(&mut self, draft_id: &str, transaction_id: &str) -> Result<(), SemioError> {
+            let draft = self.wip_draft_mut(draft_id)?;
+            if draft.transactions.items.iter().any(|t| t.id == transaction_id) {
+                Ok(())
+            } else {
+                Err(SemioError::not_found("Transaction", transaction_id))
+            }
+        }
+
+        /// @emoji ⛔ Drop a transaction (and all its steps) from the targeted draft.
+        pub fn abort_transaction(&mut self, draft_id: &str, transaction_id: &str) -> Result<(), SemioError> {
+            let draft = self.wip_draft_mut(draft_id)?;
+            let before = draft.transactions.items.len();
+            draft.transactions.items.retain(|t| t.id != transaction_id);
+            if draft.transactions.items.len() == before {
+                return Err(SemioError::not_found("Transaction", transaction_id));
+            }
+            Ok(())
+        }
+
+        /// @emoji ➕ Append a single forward step to the targeted draft / transaction in `wip` (creating either if absent).
+        pub fn append_wip_step(&mut self, draft_id: &str, transaction_id: &str, kind: &str, input: serde_json::Value) {
+            let drafts = &mut self.wip.drafts.items;
+            let draft_idx = match drafts.iter().position(|d| d.id == draft_id) {
+                Some(i) => i,
+                None => {
+                    drafts.push(DraftDto {
+                        id: draft_id.to_string(),
+                        hash: HASH_PLACEHOLDER.to_string(),
+                        checkpoint: None,
+                        transactions: BlockHashedListDto::default(),
+                    });
+                    drafts.len() - 1
+                }
+            };
+            let txs = &mut drafts[draft_idx].transactions.items;
+            let tx_idx = match txs.iter().position(|t| t.id == transaction_id) {
+                Some(i) => i,
+                None => {
+                    txs.push(TransactionDto {
+                        id: transaction_id.to_string(),
+                        hash: HASH_PLACEHOLDER.to_string(),
+                        forwards: BlockHashedListDto::default(),
+                        backwards: BlockHashedListDto::default(),
+                    });
+                    txs.len() - 1
+                }
+            };
+            txs[tx_idx].forwards.items.push(TransactionStepDto {
+                id: uuid::Uuid::now_v7().to_string(),
+                hash: HASH_PLACEHOLDER.to_string(),
+                kind: kind.to_string(),
+                description: None,
+                input,
+            });
+        }
+
+        /// @emoji 🪪 Build a metabolism-shaped bundle from a flat ordered semantic op log (used by golden test fixtures and import paths).
+        pub fn from_stored_semantic_ops(ops: &[StoredSemanticOp]) -> Self {
+            let mut bundle = Self::template();
+            for op in ops {
+                bundle.append_wip_step(&op.draft_id, &op.transaction_id, &op.kind, op.input.clone());
+            }
+            bundle
+        }
+    }
+
+    /// @emoji 📜 Internal value type used by replay + the SQLite local-`.semio/` path; not part of the on-disk dev-json wire format.
+    #[derive(Clone, Debug)]
+    pub struct StoredSemanticOp {
+        pub draft_id: String,
+        pub transaction_id: String,
+        pub kind: String,
+        pub input: serde_json::Value,
     }
     //#endregion 🧾 wire format
 
@@ -5180,22 +5492,22 @@ CREATE TABLE IF NOT EXISTS conflict_stub (
     //#endregion 🧭 paths + uri
 
     //#region ✍️ atomic json
-    fn atomic_write_json(path: &Path, doc: &DevJsonBackboneFile) -> Result<(), SemioError> {
-        let parent = path.parent().ok_or_else(|| SemioError::invalid("dev json path has no parent directory"))?;
-        std::fs::create_dir_all(parent).map_err(|e| SemioError::invalid(format!("create dev json parent: {e}")))?;
+    fn atomic_write_bundle(path: &Path, doc: &KitStoreBundleFile) -> Result<(), SemioError> {
+        let parent = path.parent().ok_or_else(|| SemioError::invalid("kit-store bundle path has no parent directory"))?;
+        std::fs::create_dir_all(parent).map_err(|e| SemioError::invalid(format!("create kit-store bundle parent: {e}")))?;
         let tmp = path.with_extension("tmp.semio-write");
         let body = serde_json::to_string_pretty(doc).map_err(|e| SemioError::invalid(e.to_string()))?;
-        std::fs::write(&tmp, body).map_err(|e| SemioError::invalid(format!("write temp dev json: {e}")))?;
-        std::fs::rename(&tmp, path).map_err(|e| SemioError::invalid(format!("rename dev json: {e}")))?;
+        std::fs::write(&tmp, body).map_err(|e| SemioError::invalid(format!("write temp kit-store bundle: {e}")))?;
+        std::fs::rename(&tmp, path).map_err(|e| SemioError::invalid(format!("rename kit-store bundle: {e}")))?;
         Ok(())
     }
 
-    fn read_or_init_dev_json(path: &Path, uri: &str) -> Result<DevJsonBackboneFile, SemioError> {
+    fn read_or_init_bundle(path: &Path) -> Result<KitStoreBundleFile, SemioError> {
         if !path.exists() {
-            return Ok(DevJsonBackboneFile::template(uri));
+            return Ok(KitStoreBundleFile::template());
         }
-        let s = std::fs::read_to_string(path).map_err(|e| SemioError::invalid(format!("read dev json: {e}")))?;
-        serde_json::from_str(&s).map_err(|e| SemioError::invalid(format!("parse dev json: {e}")))
+        let s = std::fs::read_to_string(path).map_err(|e| SemioError::invalid(format!("read kit-store bundle: {e}")))?;
+        serde_json::from_str(&s).map_err(|e| SemioError::invalid(format!("parse kit-store bundle: {e}")))
     }
     //#endregion ✍️ atomic json
 
@@ -5219,14 +5531,16 @@ CREATE TABLE IF NOT EXISTS conflict_stub (
     }
 
     impl DevJsonAttached {
-        fn read_doc(&self) -> Result<DevJsonBackboneFile, SemioError> {
-            read_or_init_dev_json(&self.path, &self.connection_uri_normalized)
+        /// @emoji 📥 Read the on-disk bundle (or fresh template if file is absent).
+        pub fn read_bundle(&self) -> Result<KitStoreBundleFile, SemioError> {
+            read_or_init_bundle(&self.path)
         }
 
+        /// @emoji ➕ Append a forward semantic op step into the targeted `wip` draft / transaction and atomically rewrite the bundle.
         pub fn append_op(&mut self, draft_id: &Id, transaction_id: &Id, kind: &str, input: &serde_json::Value) -> Result<(), SemioError> {
-            let mut doc = self.read_doc()?;
-            doc.semantic_op_log.push(StoredSemanticOp { draft_id: draft_id.to_string(), transaction_id: transaction_id.to_string(), kind: kind.to_string(), input: input.clone() });
-            atomic_write_json(&self.path, &doc)
+            let mut doc = self.read_bundle()?;
+            doc.append_wip_step(draft_id.as_str(), transaction_id.as_str(), kind, input.clone());
+            atomic_write_bundle(&self.path, &doc)
         }
     }
 
@@ -5287,7 +5601,7 @@ CREATE TABLE IF NOT EXISTS conflict_stub (
 
         pub async fn replay_into_graph(&mut self, graph: &Arc<Graph>) -> Result<(), SemioError> {
             let ops: Vec<StoredSemanticOp> = match self {
-                AttachedBackbone::DevJson(d) => d.read_doc()?.semantic_op_log.clone(),
+                AttachedBackbone::DevJson(d) => d.read_bundle()?.wip_semantic_ops(),
                 AttachedBackbone::Local(l) => l.load_ops()?,
             };
             replay_stored_ops(graph, &ops).await
@@ -5827,6 +6141,30 @@ pub mod gql {
             Ok(rt.dispatch_wip(cmd).await)
         }
 
+        /// @emoji 🟢 Open a brand-new transaction inside the targeted `wip` draft (creating the draft if missing); returns the new transaction id.
+        #[graphql(name = "transactionOpen")]
+        pub async fn transaction_open(&self, ctx: &Context<'_>, #[graphql(name = "draftId")] draft_id: Id) -> async_graphql::Result<Id> {
+            let rt = ctx.data::<Arc<ParentRuntime>>()?;
+            let tx = rt.wip_graph.open_transaction(&draft_id).await;
+            Ok(tx.id.clone())
+        }
+
+        /// @emoji ✅ Finalize a transaction inside the targeted `wip` draft; moves it to `finalizedTransactions`.
+        #[graphql(name = "transactionCommit")]
+        pub async fn transaction_commit(&self, ctx: &Context<'_>, #[graphql(name = "draftId")] draft_id: Id, #[graphql(name = "transactionId")] transaction_id: Id) -> async_graphql::Result<bool> {
+            let rt = ctx.data::<Arc<ParentRuntime>>()?;
+            rt.wip_graph.commit_transaction(&draft_id, &transaction_id).await.map_err(|e| async_graphql::Error::new(e.to_string()))?;
+            Ok(true)
+        }
+
+        /// @emoji ⛔ Drop an in-flight transaction inside the targeted `wip` draft (no-op for already-finalized ones).
+        #[graphql(name = "transactionAbort")]
+        pub async fn transaction_abort(&self, ctx: &Context<'_>, #[graphql(name = "draftId")] draft_id: Id, #[graphql(name = "transactionId")] transaction_id: Id) -> async_graphql::Result<bool> {
+            let rt = ctx.data::<Arc<ParentRuntime>>()?;
+            rt.wip_graph.abort_transaction(&draft_id, &transaction_id).await.map_err(|e| async_graphql::Error::new(e.to_string()))?;
+            Ok(true)
+        }
+
         #[graphql(name = "changeDescription")]
         pub async fn change_description(
             &self,
@@ -6278,6 +6616,67 @@ mod tests {
     }
 
     #[test]
+    fn transaction_open_commit_abort_lifecycle_on_wip_graph() {
+        // 🟢✅⛔ The full transaction lifecycle drives `wip.drafts[*].transactions / finalizedTransactions` through GraphQL.
+        block_on(async {
+            let schema = crate::gql::build_schema().await;
+
+            const OPEN: &str = r#"mutation($draftId: ID!) { transactionOpen(draftId: $draftId) }"#;
+            let res = schema.execute(Request::new(OPEN).variables(Variables::from_value(async_graphql::value!({ "draftId": "draft-tx-test" })))).await;
+            assert!(res.errors.is_empty(), "transactionOpen errors: {:?}", res.errors);
+            let tx_id_a: String = res.data.into_json().unwrap()["transactionOpen"].as_str().expect("tx id").to_string();
+
+            // The newly opened transaction is visible on the draft via `wip.draft(id:)`.
+            let q = r#"
+                query($id: ID!) {
+                    wip { draft(id: $id) {
+                        id
+                        openTransaction { id }
+                        orderedTransactionIds
+                    } }
+                }
+            "#;
+            let res = schema.execute(Request::new(q).variables(Variables::from_value(async_graphql::value!({ "id": "draft-tx-test" })))).await;
+            assert!(res.errors.is_empty(), "draft probe errors: {:?}", res.errors);
+            let v = res.data.into_json().unwrap();
+            assert_eq!(v["wip"]["draft"]["id"], "draft-tx-test");
+            assert_eq!(v["wip"]["draft"]["openTransaction"]["id"], tx_id_a);
+            let ordered: Vec<String> = v["wip"]["draft"]["orderedTransactionIds"].as_array().unwrap().iter().map(|x| x.as_str().unwrap().to_string()).collect();
+            assert_eq!(ordered, vec![tx_id_a.clone()]);
+
+            // Commit moves the transaction to finalized and clears the open pointer.
+            const COMMIT: &str = r#"mutation($d: ID!, $t: ID!) { transactionCommit(draftId: $d, transactionId: $t) }"#;
+            let res = schema.execute(Request::new(COMMIT).variables(Variables::from_value(async_graphql::value!({ "d": "draft-tx-test", "t": tx_id_a.clone() })))).await;
+            assert!(res.errors.is_empty(), "transactionCommit errors: {:?}", res.errors);
+            assert_eq!(res.data.into_json().unwrap()["transactionCommit"], true);
+
+            let res = schema.execute(Request::new(q).variables(Variables::from_value(async_graphql::value!({ "id": "draft-tx-test" })))).await;
+            let v = res.data.into_json().unwrap();
+            assert!(v["wip"]["draft"]["openTransaction"].is_null(), "open transaction cleared after commit");
+            let ordered: Vec<String> = v["wip"]["draft"]["orderedTransactionIds"].as_array().unwrap().iter().map(|x| x.as_str().unwrap().to_string()).collect();
+            assert!(ordered.is_empty(), "committed tx removed from active transactions");
+
+            // Abort: open another, abort it, gone.
+            let res = schema.execute(Request::new(OPEN).variables(Variables::from_value(async_graphql::value!({ "draftId": "draft-tx-test" })))).await;
+            let tx_id_b: String = res.data.into_json().unwrap()["transactionOpen"].as_str().expect("tx id b").to_string();
+            const ABORT: &str = r#"mutation($d: ID!, $t: ID!) { transactionAbort(draftId: $d, transactionId: $t) }"#;
+            let res = schema.execute(Request::new(ABORT).variables(Variables::from_value(async_graphql::value!({ "d": "draft-tx-test", "t": tx_id_b.clone() })))).await;
+            assert!(res.errors.is_empty(), "transactionAbort errors: {:?}", res.errors);
+            let res = schema.execute(Request::new(q).variables(Variables::from_value(async_graphql::value!({ "id": "draft-tx-test" })))).await;
+            let v = res.data.into_json().unwrap();
+            assert!(v["wip"]["draft"]["openTransaction"].is_null(), "open transaction cleared after abort");
+            let ordered: Vec<String> = v["wip"]["draft"]["orderedTransactionIds"].as_array().unwrap().iter().map(|x| x.as_str().unwrap().to_string()).collect();
+            assert!(ordered.is_empty(), "aborted tx removed");
+
+            // Unknown ids surface as errors.
+            let res = schema.execute(Request::new(COMMIT).variables(Variables::from_value(async_graphql::value!({ "d": "draft-tx-test", "t": "missing" })))).await;
+            assert!(!res.errors.is_empty(), "commit unknown tx must error");
+            let res = schema.execute(Request::new(ABORT).variables(Variables::from_value(async_graphql::value!({ "d": "missing-draft", "t": "x" })))).await;
+            assert!(!res.errors.is_empty(), "abort on unknown draft must error");
+        });
+    }
+
+    #[test]
     fn create_tag_on_kit_graphql_roundtrip() {
         block_on(async {
             let schema = crate::gql::build_schema().await;
@@ -6573,14 +6972,8 @@ mod tests {
             let stored = crate::kit_backbone::stored_ops_from_golden_ops_json(&golden_ops).expect("golden → stored ops");
             let uri_full = format!("file://{}", path.display());
             let norm = crate::kit_backbone::normalize_connection_uri(&uri_full);
-            let doc = crate::kit_backbone::DevJsonBackboneFile {
-                kind: "semio.kit_backbone.dev_json".to_string(),
-                schema: "2026-05-06".to_string(),
-                connection_uri: norm.clone(),
-                persistence: crate::kit_backbone::DevJsonPersistenceNotes { atomic_rewrite: "fixture".to_string(), crash_safety: "fixture".to_string() },
-                semantic_op_log: stored,
-            };
-            std::fs::write(&path, serde_json::to_string_pretty(&doc).expect("serialize dev json")).expect("write dev json");
+            let bundle = crate::kit_backbone::KitStoreBundleFile::from_stored_semantic_ops(&stored);
+            std::fs::write(&path, serde_json::to_string_pretty(&bundle).expect("serialize kit-store bundle")).expect("write kit-store bundle");
 
             let g = crate::vcs::Graph::new().await;
             crate::kit_backbone::AttachedBackbone::mount_and_replay(&norm, crate::op::BackboneStoreKind::DevJson, "wip", &g).await.expect("dev json mount+replay");
@@ -6633,10 +7026,155 @@ mod tests {
     fn kit_store_bundle_metabolism_new_has_contract_shape() {
         let path = Path::new(env!("CARGO_MANIFEST_DIR")).join("../assets/semio/metabolism.new.kit.semio.json");
         let v: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(path).expect("read metabolism.new bundle")).expect("parse");
-        // Portable kit snapshot bundle (not the kit-store contract root); see `kit-store.contract.semio.json` for store shape.
-        for k in ["schema", "wip"] {
+        for k in ["schema", "wip", "authoritative", "stage", "conflicts", "blobs"] {
             assert!(v.get(k).is_some(), "metabolism.new.kit.semio.json missing `{k}`");
         }
+        assert_eq!(v.get("schema").and_then(|s| s.as_str()), Some(crate::kit_backbone::KIT_STORE_BUNDLE_SCHEMA), "metabolism.new.kit.semio.json schema marker drift");
+    }
+
+    #[cfg(not(target_arch = "wasm32"))]
+    #[test]
+    fn kit_store_bundle_template_round_trips_metabolism_top_level_keys() {
+        // 🧾 The empty bundle template is byte-stable in its top-level shape: serialise → deserialise → keys match.
+        let bundle = crate::kit_backbone::KitStoreBundleFile::template();
+        let s = serde_json::to_string_pretty(&bundle).expect("serialize empty template");
+        let v: serde_json::Value = serde_json::from_str(&s).expect("parse template");
+        for k in ["schema", "wip", "authoritative", "stage", "conflicts", "blobs"] {
+            assert!(v.get(k).is_some(), "empty template missing `{k}`");
+        }
+        assert_eq!(v["schema"], crate::kit_backbone::KIT_STORE_BUNDLE_SCHEMA);
+        for graph_key in ["wip", "authoritative", "stage"] {
+            for inner in ["id", "hash", "authors", "root", "checkpoints", "alternatives", "drafts"] {
+                assert!(v[graph_key].get(inner).is_some(), "graph `{graph_key}` missing `{inner}`");
+            }
+            assert!(v[graph_key]["root"].get("types").is_some(), "graph `{graph_key}.root` missing `types`");
+            assert!(v[graph_key]["root"].get("designs").is_some(), "graph `{graph_key}.root` missing `designs`");
+        }
+    }
+
+    #[cfg(not(target_arch = "wasm32"))]
+    #[test]
+    fn kit_store_bundle_initialize_with_active_draft_seeds_root_checkpoint_and_draft() {
+        // 🌱 Bundle bootstrap matches sketchpad "create dev kit (json)": one root, one checkpoint, one draft on that checkpoint.
+        let bundle = crate::kit_backbone::KitStoreBundleFile::initialize_with_active_draft("kit-id-1", "draft-1", "ckpt-1");
+        assert_eq!(bundle.schema, crate::kit_backbone::KIT_STORE_BUNDLE_SCHEMA);
+        assert_eq!(bundle.wip.id, "kit-id-1");
+        assert_eq!(bundle.authoritative.id, "kit-id-1");
+        assert_eq!(bundle.stage.id, "kit-id-1");
+        assert_eq!(bundle.wip.checkpoints.items.len(), 1, "first checkpoint anchored on root");
+        assert_eq!(bundle.wip.checkpoints.items[0]["id"], "ckpt-1");
+        assert_eq!(bundle.wip.checkpoints.items[0]["message"], "init");
+        assert_eq!(bundle.wip.drafts.items.len(), 1, "one active draft on the seed checkpoint");
+        let draft = &bundle.wip.drafts.items[0];
+        assert_eq!(draft.id, "draft-1");
+        assert_eq!(draft.checkpoint.as_ref().expect("draft anchored on checkpoint").id, "ckpt-1");
+        assert!(draft.transactions.items.is_empty(), "no transactions opened yet");
+    }
+
+    #[cfg(not(target_arch = "wasm32"))]
+    #[test]
+    fn kit_store_bundle_open_commit_abort_transaction_lifecycle() {
+        // 🟢✅⛔ Full transaction lifecycle on an initialized bundle (no rs ↔ js round-trip yet, just data-shape level).
+        let mut bundle = crate::kit_backbone::KitStoreBundleFile::initialize_with_active_draft("kit-1", "draft-1", "ckpt-1");
+
+        // Open: draft already exists — adds a fresh transaction.
+        let tx_a = bundle.open_transaction("draft-1");
+        assert!(!tx_a.is_empty(), "open_transaction returns a non-empty id");
+        assert_eq!(bundle.wip.drafts.items[0].transactions.items.len(), 1);
+        assert_eq!(bundle.wip.drafts.items[0].transactions.items[0].id, tx_a);
+
+        // Open second transaction on same draft.
+        let tx_b = bundle.open_transaction("draft-1");
+        assert_ne!(tx_a, tx_b, "transaction ids are unique");
+        assert_eq!(bundle.wip.drafts.items[0].transactions.items.len(), 2);
+
+        // Append a forward step into tx_b.
+        bundle.append_wip_step("draft-1", &tx_b, "kit.renamedKit", serde_json::json!({"name": "Hello"}));
+        assert_eq!(bundle.wip.drafts.items[0].transactions.items[1].forwards.items.len(), 1);
+
+        // Commit tx_a: stays in draft (no checkpoint move yet).
+        bundle.commit_transaction("draft-1", &tx_a).expect("commit known tx");
+        assert_eq!(bundle.wip.drafts.items[0].transactions.items.len(), 2, "commit keeps tx in draft pre-checkpointing");
+
+        // Abort tx_b: removed from draft.
+        bundle.abort_transaction("draft-1", &tx_b).expect("abort known tx");
+        assert_eq!(bundle.wip.drafts.items[0].transactions.items.len(), 1);
+        assert_eq!(bundle.wip.drafts.items[0].transactions.items[0].id, tx_a);
+
+        // Commit / abort errors are surfaced for unknown ids / drafts.
+        assert!(bundle.commit_transaction("draft-1", "tx-missing").is_err());
+        assert!(bundle.abort_transaction("draft-1", "tx-missing").is_err());
+        assert!(bundle.commit_transaction("draft-missing", &tx_a).is_err());
+    }
+
+    #[cfg(not(target_arch = "wasm32"))]
+    #[test]
+    fn dev_json_backbone_round_trip_persists_metabolism_shape_on_disk() {
+        // 🔁 Mount (no file) → append op via attached backbone → re-read on-disk JSON → confirm metabolism top-level + drafts path.
+        block_on(async {
+            let dir = tempfile::tempdir().expect("temp dir");
+            let path = dir.path().join("dev-kit.json");
+            let uri_full = format!("file://{}", path.display());
+            let norm = crate::kit_backbone::normalize_connection_uri(&uri_full);
+
+            let g = crate::vcs::Graph::new().await;
+            let mut bone = crate::kit_backbone::AttachedBackbone::mount_and_replay(&norm, crate::op::BackboneStoreKind::DevJson, "wip", &g).await.expect("mount empty bundle");
+            let draft_id = crate::id::Id::from("draft-rs-1");
+            let tx_id = crate::id::Id::from("tx-rs-1");
+            bone.append_semantic_op(&draft_id, &tx_id, "kit.design.piece.createdFixedPiece", &serde_json::json!({"designId": "d-1", "blueprintId": "b-1"}))
+                .expect("append op");
+
+            let raw = std::fs::read_to_string(&path).expect("read on-disk bundle");
+            let v: serde_json::Value = serde_json::from_str(&raw).expect("parse on-disk bundle");
+            for k in ["schema", "wip", "authoritative", "stage", "conflicts", "blobs"] {
+                assert!(v.get(k).is_some(), "on-disk bundle missing `{k}` after append");
+            }
+            assert_eq!(v["schema"], crate::kit_backbone::KIT_STORE_BUNDLE_SCHEMA);
+            let drafts = v["wip"]["drafts"]["items"].as_array().expect("wip drafts items array");
+            assert_eq!(drafts.len(), 1, "single draft on disk");
+            assert_eq!(drafts[0]["id"], "draft-rs-1");
+            let txs = drafts[0]["transactions"]["items"].as_array().expect("tx items");
+            assert_eq!(txs.len(), 1, "single transaction on disk");
+            assert_eq!(txs[0]["id"], "tx-rs-1");
+            let fwd = txs[0]["forwards"]["items"].as_array().expect("forwards items");
+            assert_eq!(fwd.len(), 1, "single forward step on disk");
+            assert_eq!(fwd[0]["kind"], "kit.design.piece.createdFixedPiece");
+            assert_eq!(fwd[0]["input"]["designId"], "d-1");
+        });
+    }
+
+    #[cfg(not(target_arch = "wasm32"))]
+    #[test]
+    fn kit_store_bundle_append_wip_step_creates_draft_and_transaction_paths() {
+        // ➕ Appending to a fresh template materialises wip.drafts[0].transactions[0].forwards[0] without touching authoritative/stage.
+        let mut bundle = crate::kit_backbone::KitStoreBundleFile::template();
+        bundle.append_wip_step("draft-x", "tx-y", "kit.design.piece.createdFixedPiece", serde_json::json!({"hello": "world"}));
+        assert_eq!(bundle.wip.drafts.items.len(), 1, "wip draft created");
+        let draft = &bundle.wip.drafts.items[0];
+        assert_eq!(draft.id, "draft-x");
+        assert_eq!(draft.transactions.items.len(), 1, "transaction created under draft");
+        let tx = &draft.transactions.items[0];
+        assert_eq!(tx.id, "tx-y");
+        assert_eq!(tx.forwards.items.len(), 1, "single forward step appended");
+        let step = &tx.forwards.items[0];
+        assert_eq!(step.kind, "kit.design.piece.createdFixedPiece");
+        assert_eq!(step.input["hello"], "world");
+        assert!(bundle.authoritative.drafts.items.is_empty(), "authoritative untouched");
+        assert!(bundle.stage.drafts.items.is_empty(), "stage untouched");
+
+        // Appending another step into the same draft+tx grows the same transaction.
+        bundle.append_wip_step("draft-x", "tx-y", "kit.design.piece.deletedFixedPieces", serde_json::json!({"pieceIds": []}));
+        assert_eq!(bundle.wip.drafts.items.len(), 1, "no extra draft");
+        assert_eq!(bundle.wip.drafts.items[0].transactions.items.len(), 1, "no extra transaction");
+        assert_eq!(bundle.wip.drafts.items[0].transactions.items[0].forwards.items.len(), 2, "two forward steps");
+
+        // Flatten replays everything in order from wip drafts.
+        let flat = bundle.wip_semantic_ops();
+        assert_eq!(flat.len(), 2);
+        assert_eq!(flat[0].draft_id, "draft-x");
+        assert_eq!(flat[0].transaction_id, "tx-y");
+        assert_eq!(flat[0].kind, "kit.design.piece.createdFixedPiece");
+        assert_eq!(flat[1].kind, "kit.design.piece.deletedFixedPieces");
     }
 }
 

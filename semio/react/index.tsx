@@ -8837,8 +8837,23 @@ export function useKitName(idValue?: string): HookTriad<any> {
       const cur = ks ? liveName : schemaValue;
       const v = typeof next === "function" ? (next as (p: any) => any)(cur) : next;
       if (ks) {
+        // 🟢 Each logical edit (focus → enter / blur) is wrapped in its own rs-side transaction:
+        //   1. open a fresh transaction on the active draft
+        //   2. send the rename op (which records into that transaction)
+        //   3. on success commit the transaction (finalize); on failure abort it.
+        // This satisfies the architectural rule that "every kit change operation must happen within a draft and a transaction".
+        const opened = await ks.openKitWriteTransaction();
+        if (!opened.ok) {
+          return { ok: false, error: opened.error } as const;
+        }
         const r = await ks.rename(String(v));
-        return r.ok ? ({ ok: true } as const) : ({ ok: false, error: r.error! } as const);
+        if (r.ok) {
+          // 🧹 Commit failures are rare and shouldn't mask the rename success — surface but don't override.
+          await ks.finalizeKitWriteTransaction().catch(() => undefined);
+          return { ok: true } as const;
+        }
+        await ks.abortKitWriteTransaction().catch(() => undefined);
+        return { ok: false, error: r.error! } as const;
       }
       return schemaTriad[1](next);
     },

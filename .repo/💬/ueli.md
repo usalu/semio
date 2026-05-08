@@ -1783,6 +1783,16 @@ useChildConnectionsIds():ConnectionId[]
 ### ✏️sketchpad
 
 semio/sketchpad:
+
+---
+
+Alternatives have been introduced to semio. All changes are either made inside `the kit` (draft on the last checkpoint) or inside an alternative (draft on the last checkpoint).
+Add to semio/react context for switching between `the kit` and alternatives.
+Inside all kit editing apps add on the left of the footer a dropdown for choosing an alternative. If no alternative is selected then work in on `the kit`.
+Dont forget that all kit state is only inside semio/rs.
+
+---
+
 Extend the current Versions window kind to a complete VersionsApp.
 The KitApp, DesignApp, TypeApp are all bound to an active
 

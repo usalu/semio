@@ -1816,11 +1816,14 @@ export class KitStore {
    */
   async rename(name: string): Promise<KitRenameResult> {
     this.ensureAlive();
-    await this.ensureWriteGraph();
-    const draftId = this.kitWriteDraftId;
-    const transactionId = this.kitWriteTransactionId;
-    if (!draftId || !transactionId) {
-      const err: SetError = { kind: "Internal", message: "rename: missing draft or transaction id after ensureWriteGraph" };
+    let draftId: string;
+    let transactionId: string;
+    try {
+      const ctx = await this.ensureOpenKitWriteTransaction();
+      draftId = ctx.draftId;
+      transactionId = ctx.transactionId;
+    } catch (e) {
+      const err: SetError = { kind: "Internal", message: String(e) };
       return { ok: false, requestId: "", error: err };
     }
     const query = `mutation RenameKit($draftId: Id!, $transactionId: Id!, $name: String!) {
@@ -2029,7 +2032,9 @@ export class KitStore {
     }
   }
 
-  /** @emoji 🧾 Allocates local alternative/draft/transaction ids; the rust runtime auto-creates draft+transaction lazily for write commands. */
+  /** @emoji 🧾 Allocates local alternative/draft ids; the rust runtime auto-creates the draft on the first write,
+   *  and the transaction is opened explicitly through {@link KitStore.openKitWriteTransaction} (or lazily on the first write
+   *  via {@link KitStore.ensureOpenKitWriteTransaction}). */
   private async ensureWriteGraph(): Promise<string> {
     let aid = this.kitWriteAlternativeId;
     if (!aid) {
@@ -2037,8 +2042,40 @@ export class KitStore {
       this.kitWriteAlternativeId = aid;
     }
     if (!this.kitWriteDraftId) this.kitWriteDraftId = id();
-    if (!this.kitWriteTransactionId) this.kitWriteTransactionId = id();
     return aid;
+  }
+
+  /** @emoji 🟢 Lazily ensure an open kit-write transaction exists (calls {@link KitStore.openKitWriteTransaction} on first use). */
+  private async ensureOpenKitWriteTransaction(): Promise<{ draftId: string; transactionId: string }> {
+    await this.ensureWriteGraph();
+    if (this.kitWriteDraftId && this.kitWriteTransactionId) {
+      return { draftId: this.kitWriteDraftId, transactionId: this.kitWriteTransactionId };
+    }
+    const opened = await this.openKitWriteTransaction();
+    if (!opened.ok) throw new Error(opened.error.message);
+    return { draftId: opened.draftId, transactionId: opened.transactionId };
+  }
+
+  /** @emoji 🟢 Open a brand-new kit-write transaction on the active draft via rs `transactionOpen`. Sketchpad calls this on input focus. */
+  async openKitWriteTransaction(): Promise<{ ok: true; draftId: string; transactionId: string } | { ok: false; error: SetError }> {
+    this.ensureAlive();
+    await this.ensureWriteGraph();
+    const draftId = this.kitWriteDraftId;
+    if (!draftId) return { ok: false, error: { kind: "Internal", message: "openKitWriteTransaction: missing draft id" } };
+    try {
+      const data = kitGraphqlData(
+        await this.gqlRun({
+          query: `mutation OpenKitWriteTransaction($draftId: Id!) { transactionOpen(draftId: $draftId) }`,
+          variables: { draftId },
+        }),
+      ) as { transactionOpen?: string };
+      const txId = String(data.transactionOpen ?? "");
+      if (txId === "") return { ok: false, error: { kind: "Internal", message: "openKitWriteTransaction: empty transaction id" } };
+      this.kitWriteTransactionId = txId;
+      return { ok: true, draftId, transactionId: txId };
+    } catch (e) {
+      return { ok: false, error: { kind: "Internal", message: String(e) } };
+    }
   }
 
   /** @emoji 🧾 Runs `Mutation.session` nested draft transaction commands (auto-starts alternative/draft/transaction). */
@@ -2098,17 +2135,18 @@ export class KitStore {
     this.kitWriteTransactionId = scope.transactionId;
   }
 
-  /** @emoji 🧾 Finalizes the active kit write transaction (commits atoms into the draft). */
+  /** @emoji ✅ Finalizes the active kit-write transaction via rs `transactionCommit`; clears the local tx pointer on success. */
   async finalizeKitWriteTransaction(): Promise<SetResult> {
-    const aid = this.kitWriteAlternativeId;
-    if (!aid || !this.kitWriteDraftId || !this.kitWriteTransactionId) {
+    if (!this.kitWriteDraftId || !this.kitWriteTransactionId) {
       return { ok: false, error: { kind: "Internal", message: "finalizeKitWriteTransaction: no open transaction" } };
     }
+    const draftId = this.kitWriteDraftId;
+    const transactionId = this.kitWriteTransactionId;
     try {
       kitGraphqlData(
         await this.gqlRun({
-          query: `mutation($aid: KitAlternativeIdIn!) { session { alternative(id: $aid) { draft { transaction { finalize { id } } } } } }`,
-          variables: { aid: { id: aid } },
+          query: `mutation CommitKitWriteTransaction($draftId: Id!, $transactionId: Id!) { transactionCommit(draftId: $draftId, transactionId: $transactionId) }`,
+          variables: { draftId, transactionId },
         }),
       );
       this.kitWriteTransactionId = null;
@@ -2118,17 +2156,18 @@ export class KitStore {
     }
   }
 
-  /** @emoji 🧾 Aborts the active kit write transaction (drops uncommitted atoms). */
+  /** @emoji ⛔ Drops the active kit-write transaction via rs `transactionAbort`; clears the local tx pointer on success. */
   async abortKitWriteTransaction(): Promise<SetResult> {
-    const aid = this.kitWriteAlternativeId;
-    if (!aid || !this.kitWriteDraftId || !this.kitWriteTransactionId) {
+    if (!this.kitWriteDraftId || !this.kitWriteTransactionId) {
       return { ok: false, error: { kind: "Internal", message: "abortKitWriteTransaction: no open transaction" } };
     }
+    const draftId = this.kitWriteDraftId;
+    const transactionId = this.kitWriteTransactionId;
     try {
       kitGraphqlData(
         await this.gqlRun({
-          query: `mutation($aid: KitAlternativeIdIn!) { session { alternative(id: $aid) { draft { transaction { abort } } } } } }`,
-          variables: { aid: { id: aid } },
+          query: `mutation AbortKitWriteTransaction($draftId: Id!, $transactionId: Id!) { transactionAbort(draftId: $draftId, transactionId: $transactionId) }`,
+          variables: { draftId, transactionId },
         }),
       );
       this.kitWriteTransactionId = null;
@@ -7574,17 +7613,26 @@ if (
       expect(exp.projectionFingerprint.length).toBe(64);
     });
 
-    it("metabolism.new kit bundle encodes root snapshot + semantic op log", async () => {
+    it("metabolism.new kit bundle has metabolism on-disk shape (Rust-owned)", async () => {
+      // 🚧 The on-disk bundle format is owned by `semio/rs` — JS only verifies the metabolism shape exists on the asset.
       const { readFileSync } = await import("node:fs");
       const { resolve, dirname } = await import("node:path");
       const { fileURLToPath } = await import("node:url");
       const here = dirname(fileURLToPath(import.meta.url));
       const b = JSON.parse(readFileSync(resolve(here, "../assets/semio/metabolism.new.kit.semio.json"), "utf8")) as {
-        kind: string;
-        semanticOpLog: unknown[];
+        schema: string;
+        wip: { id: string; root: unknown; checkpoints: { items: unknown[] }; drafts: { items: unknown[] } };
+        authoritative: { id: string };
+        stage: { id: string };
+        conflicts: { items: unknown[] };
+        blobs: { items: unknown[] };
       };
-      expect(b.kind).toBe("semio.kit_store.bundle");
-      expect(Array.isArray(b.semanticOpLog)).toBe(true);
+      expect(b.schema).toBe("🎆26🌙06⬆️1");
+      for (const k of ["wip", "authoritative", "stage", "conflicts", "blobs"] as const) {
+        expect(b[k]).toBeTruthy();
+      }
+      expect(typeof b.wip.id).toBe("string");
+      expect(b.wip.root).toBeTruthy();
     });
 
     it("dev JSON backbone wire shape documents semanticOpLog + persistence hints (US-004)", async () => {

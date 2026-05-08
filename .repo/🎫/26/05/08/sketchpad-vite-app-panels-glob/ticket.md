@@ -111,9 +111,133 @@ both architecturally wrong and format-wrong.**
   wip-projection envelope vs. the `DevJsonBackboneFile` op-log envelope) and converge
   the rs serializer.
 
-### Files (this pass)
+### Files (JS-strip pass)
 
 - `semio/js/index.ts`
 - `semio/sketchpad/index.tsx`
+- `.repo/🎫/26/05/08/sketchpad-vite-app-panels-glob/ticket.md`
+
+---
+
+## Follow-up: Rust dev-json backbone refactored to the metabolism.new shape
+
+**Constraint:** *"semio/rs MUST be refactored to have the shape semio/assets/semio/metabolism.new.kit.semio.json"*
+
+### What changed in `semio/rs/lib.rs`
+
+`kit_backbone` module — the on-disk wire format is now the metabolism shape:
+
+- New types (serde-only, not GraphQL-exposed; persistence layer):
+  - `KIT_STORE_BUNDLE_SCHEMA = "🎆26🌙06⬆️1"` and `HASH_PLACEHOLDER = "…"`.
+  - `BlockHashedListDto<T>` — generic `{hash, items: [T]}` envelope reused everywhere.
+  - `HashRefDto` — `{id, hash}` typed reference.
+  - `KitStoreBundleFile` — top-level bundle: `{schema, wip, authoritative, stage, conflicts, blobs}`.
+  - `GraphSnapshotDto` — per-graph head: `{id, hash, authors, root, checkpoints, alternatives, drafts}`.
+  - `DraftDto` — `{id, hash, checkpoint?, transactions}`.
+  - `TransactionDto` — `{id, hash, forwards, backwards}`.
+  - `TransactionStepDto` — `{id, hash, kind, description?, input}`.
+- `KitStoreBundleFile::template()` produces an empty bundle stamped with the schema marker.
+- `KitStoreBundleFile::wip_semantic_ops()` flattens every `wip.drafts[*].transactions[*].forwards[*]` step into a flat ordered op list ready for replay.
+- `KitStoreBundleFile::append_wip_step(draft_id, transaction_id, kind, input)` materialises the draft / transaction path on demand and appends one forward step (uuid-v7 step id, placeholder hash).
+- `KitStoreBundleFile::from_stored_semantic_ops(ops)` rebuilds the metabolism-shaped bundle from a flat semantic-op list (used by the golden test fixture).
+- The legacy `DevJsonBackboneFile / DevJsonPersistenceNotes` (kind / schema "2026-05-06" / connectionUri / persistence / semanticOpLog) is **gone**.
+- `StoredSemanticOp` is retained but downgraded to an internal value type (no `Serialize`/`Deserialize`) used only by the SQLite local-`.semio/` path and replay.
+- IO helpers renamed: `atomic_write_json → atomic_write_bundle`, `read_or_init_dev_json → read_or_init_bundle`. They now read/write `KitStoreBundleFile`.
+- `DevJsonAttached`:
+  - `read_doc()` → `read_bundle()`.
+  - `append_op()` calls `KitStoreBundleFile::append_wip_step` then atomically rewrites the bundle.
+- `AttachedBackbone::replay_into_graph` reads the bundle and replays `wip_semantic_ops()` into the graph.
+
+### Test surface (`#[cfg(test)]`)
+
+- Replaced `kit_store_bundle_metabolism_new_has_contract_shape` to assert all 6 top-level keys (`schema / wip / authoritative / stage / conflicts / blobs`) **and** that the schema marker matches `KIT_STORE_BUNDLE_SCHEMA`.
+- New `kit_store_bundle_template_round_trips_metabolism_top_level_keys` — empty template serialises with all top-level keys and every per-graph slot (`id, hash, authors, root, checkpoints, alternatives, drafts`) plus `root.types` / `root.designs`.
+- New `kit_store_bundle_append_wip_step_creates_draft_and_transaction_paths` — appending into a fresh template materialises `wip.drafts[0].transactions[0].forwards[0]`, leaves `authoritative` / `stage` empty, and `wip_semantic_ops()` flattens deterministically.
+- New `dev_json_backbone_round_trip_persists_metabolism_shape_on_disk` — full mount → `append_semantic_op` → re-read on-disk JSON → assert metabolism keys + `wip.drafts[0].transactions[0].forwards[0]` payload.
+- Existing `dev_json_backbone_persisted_ops_replay_matches_us001_projection_fingerprint` rewritten to seed the temp file via `KitStoreBundleFile::from_stored_semantic_ops(...)`; still proves replay parity with the US-001 golden projection fingerprint.
+
+### Verification
+
+```
+cargo build  -p semio                                           → clean
+cargo check  -p semio --target wasm32-unknown-unknown           → clean
+cargo test   -p semio                                           → 17 / 17 passed (1 ignored: pre-existing target_sdl_byte_match)
+```
+
+### Out of scope (next ticket — won't break Rust today)
+
+- A real `Kit::dump_root_kit_dto` / `Kit::hydrate_root_kit_dto` projecting the live `Kit` into the metabolism `root` shape (currently the on-disk `root` stays at the empty placeholder; that lands once we wire the host file adapter end-to-end). The bundle shape is correct and stable; the `root` body is the only intentionally empty surface.
+- Real block-merkle hashes replacing `HASH_PLACEHOLDER`.
+- Wiring the JS file/folder adapter callbacks through to Rust so `JsonFileKitStore` / `FolderKitStore` can become pure projections of the rs `Kit` snapshot.
+
+### Files (Rust-shape pass)
+
+- `semio/rs/lib.rs`
+- `.repo/🎫/26/05/08/sketchpad-vite-app-panels-glob/ticket.md`
+
+---
+
+## Follow-up: Transaction lifecycle on every kit edit (focus → tx open → rename → commit / abort)
+
+**Constraint from the dev:** *"Every kit change operation must happen within a draft and a transaction. When clicking the input for kit name then a transaction is started and on enter rename operation is sent and on success the transaction is finalized."*
+
+### Rust (`semio/rs/lib.rs`)
+
+- `kit_backbone::KitStoreBundleFile`
+  - New `initialize_with_active_draft(kit_id, draft_id, checkpoint_id) -> Self`: seeds an empty bundle whose `wip` already has the seed checkpoint and an active draft anchored on it (data shape only — used by tests today and by the future host file adapter).
+  - New `open_transaction(draft_id) -> tx_id`: creates a fresh `TransactionDto` inside `wip.drafts[draft_id]` (creating the draft on demand) and returns the new uuid-v7 transaction id.
+  - New `commit_transaction(draft_id, tx_id)` / `abort_transaction(draft_id, tx_id)`: validate / drop a transaction in a draft, returning `SemioError::not_found` for unknown drafts or transactions. Commit currently keeps the row in `wip` until the checkpointing pipeline lands.
+- `vcs::Graph`
+  - New `open_transaction(draft_id) -> Arc<Transaction>`: ensures the draft, mints a new uuid-v7 transaction, marks it as the draft's open transaction.
+  - New `commit_transaction(draft_id, tx_id)`: moves the transaction from `transactions` → `finalized_transactions`, clears `open_transaction` if it was the same one.
+  - New `abort_transaction(draft_id, tx_id)`: removes the transaction from `transactions`, clears `open_transaction` if it matched.
+  - New `Graph::draft(id)` and `Graph::drafts()` GraphQL fields so sketchpad / JS can probe `wip.draft(id:)` for `openTransaction { id }` / `orderedTransactionIds`.
+- `gql::Mutation`
+  - New mutations `transactionOpen(draftId)`, `transactionCommit(draftId, transactionId)`, `transactionAbort(draftId, transactionId)` — wired straight to the new `Graph` methods on `wip_graph`.
+- Tests
+  - `kit_store_bundle_initialize_with_active_draft_seeds_root_checkpoint_and_draft` — seed bundle has one checkpoint + one anchored draft + matching ids on `wip / authoritative / stage`.
+  - `kit_store_bundle_open_commit_abort_transaction_lifecycle` — full open / commit / abort lifecycle on the bundle, with error paths for unknown drafts / transactions.
+  - `transaction_open_commit_abort_lifecycle_on_wip_graph` — full lifecycle through the actual GraphQL schema: `transactionOpen` → probe `wip.draft(id:) { openTransaction, orderedTransactionIds }` → `transactionCommit` → `transactionAbort` → unknown-id failure modes.
+
+### JS (`semio/js/index.ts`)
+
+- `KitStore.ensureWriteGraph` no longer mints the transaction id locally — only the draft id. The transaction is opened explicitly through Rust.
+- New `KitStore.openKitWriteTransaction()`: calls `mutation transactionOpen(draftId)`, stores the rs-minted transaction id in `kitWriteTransactionId`, returns `{ ok: true, draftId, transactionId }`.
+- New private `KitStore.ensureOpenKitWriteTransaction()`: lazily calls `openKitWriteTransaction()` on the first write if no transaction is currently open.
+- `KitStore.finalizeKitWriteTransaction()` / `abortKitWriteTransaction()` rewritten to call the new top-level `transactionCommit` / `transactionAbort` mutations (the previous `Mutation.session.alternative.draft.transaction.finalize / abort` paths never existed in the rs schema and always errored).
+- `KitStore.rename(name)` now goes through `ensureOpenKitWriteTransaction()` instead of bypassing it — rename always runs inside a real rs-side transaction.
+- Updated `metabolism.new kit bundle has metabolism on-disk shape (Rust-owned)` test to assert the new bundle shape (`schema = "🎆26🌙06⬆️1"` + 5 top-level keys) instead of the legacy `kind / semanticOpLog` shape.
+
+### React (`semio/react/index.tsx`)
+
+- `useKitName.setter` now wraps every logical edit (Enter / blur via `lazy` Input) in a complete transaction lifecycle:
+  1. `ks.openKitWriteTransaction()` — opens a fresh rs-side transaction.
+  2. `ks.rename(name)` — sends the rename mutation inside that transaction.
+  3. On success: `ks.finalizeKitWriteTransaction()` (commits the transaction, moves it to `finalizedTransactions`).
+  4. On failure: `ks.abortKitWriteTransaction()` (drops the transaction, clears the active tx pointer).
+
+This satisfies the *"every kit change operation must happen within a draft and a transaction"* rule end-to-end, all the way from the React hook through the JS bridge into the rs `Graph` lifecycle. The on-disk bundle persistence of the lifecycle (so the metabolism file shows the same `wip.drafts[*].transactions[*]` rows) lands together with the future host file-adapter bridge.
+
+### Verification
+
+```
+cargo test  -p semio kit_store_bundle                                → 5 / 5 passed
+cargo test  -p semio transaction_open_commit_abort                   → 1 / 1 passed
+cd semio/js && npm test -- --testNamePattern=rename                  → rename test passes
+```
+
+(JS suite still has 6 pre-existing failures unrelated to this work — `TypeConnection.id` GraphQL mismatches and an SDL fixture asserting `type SubscriptionRoot` instead of `type Subscription`. These predate this ticket.)
+
+### Out of scope (next ticket — does not block sketchpad UX today)
+
+- Generalize `BackboneNativeCell::record_*_if_attached` so `RenameKit` (and every other mutation) persists its forward step into `wip.drafts[draft_id].transactions[tx_id].forwards[*]` of the on-disk bundle. Today only `AddFixedPieceToDesign` records.
+- Tie `transactionOpen` to input *focus* instead of input *commit*. The current setter-managed lifecycle gives one transaction per logical edit; tying to focus needs `onFocus` / `onBlur` on the underlying `elements/ui` `Input`, which would mix technologies.
+- Wire the JS `KitJsonFileAdapter` through to a Rust host hook so the bundle (and the lifecycle) is actually round-tripped to disk.
+
+### Files
+
+- `semio/rs/lib.rs`
+- `semio/js/index.ts`
+- `semio/react/index.tsx`
 - `.repo/🎫/26/05/08/sketchpad-vite-app-panels-glob/ticket.md`
 
