@@ -29,7 +29,6 @@ import {
   FileSchema,
   FolderSchema,
   isKitCommandLifecycleEvent,
-  KIT_RENAME_STATUS_IDLE,
   kitEventAffectsCanUndoRedo,
   kitEventAffectsDesignQualitySumRead,
   kitEventAffectsKitColoredConnectorsRead,
@@ -53,6 +52,12 @@ import {
   type KitStoreReadSnap,
   type KitViewCatalogKey,
   type WriteStatus,
+  SCHEMA_HOOK_IDLE_STATUS,
+  SCHEMA_HOOK_READONLY_STATUS,
+  USE_KIT_NAME_PENDING_STATUS,
+  writeStatusEquivalent,
+  StoreField,
+  StoreCommand,
   writeKitStoreClientSchemaField,
   getSemioKitLiveReadStore,
 } from "@semio/js";
@@ -620,7 +625,15 @@ export function createKitCommandEngine(store: KitHostStore): ReturnType<typeof c
 }
 // #endregion 🔖KitHostCommandDispatch
 
-export type { BackboneConfig, BackboneStatusDto, ConflictResolution, KitConflict, KitReadScope, KitWriteScope, SetError, SetResult } from "@semio/js";
+export type { BackboneConfig, BackboneStatusDto, ConflictResolution, KitConflict, KitReadScope, KitWriteScope, SetError, SetResult, WriteStatus } from "@semio/js";
+export {
+  SCHEMA_HOOK_IDLE_STATUS,
+  SCHEMA_HOOK_READONLY_STATUS,
+  USE_KIT_NAME_PENDING_STATUS,
+  writeStatusEquivalent,
+  StoreField,
+  StoreCommand,
+} from "@semio/js";
 export { getKitClientReadScope, kitReadScopeKey, kitStoreFromKitStoreClient, theKitReadScope } from "@semio/js";
 export type { KitBinaryStore, KitFileState } from "@semio/js";
 export type { KitHostStore, KitHostStoreSnapshot } from "@semio/js";
@@ -630,7 +643,6 @@ export type {
   KitShallowListKind,
   KitStoreReadSnap,
   KitViewCatalogKey,
-  WriteStatus,
 } from "@semio/js";
 export { DesignStore, TypeStore, PieceStore, ConnectionStore, FamilyStore, FileStore, FolderStore, KitEntityStore } from "@semio/js";
 export {
@@ -884,26 +896,6 @@ function noop(): void {}
 
 async function noopAsyncSet(_next?: unknown): Promise<SetResult> {
   return { ok: true } as const;
-}
-
-/** Stable {@link WriteStatus} for schema hooks outside {@link KitScope} (avoids React #520 from fresh object identity). */
-const SCHEMA_HOOK_READONLY_STATUS = Object.freeze({ kind: "readonly" as const, pending: 0 });
-const SCHEMA_HOOK_IDLE_STATUS = Object.freeze({ kind: "idle" as const, pending: 0 });
-
-/** @emoji 🪪 Frozen pending for {@link useKitName} rust rename — stable identity while rename is in flight. */
-const USE_KIT_NAME_PENDING_STATUS = Object.freeze({ kind: "pending" as const, pending: 1 });
-
-/** @emoji 🪪 Same semantic {@link WriteStatus} → reuse prior reference (triads + `useWriteIndicator` subscribers). */
-function writeStatusEquivalent(a: WriteStatus, b: WriteStatus): boolean {
-  if (a === b) return true;
-  if (a.kind !== b.kind) return false;
-  if (a.kind === "pending" && b.kind === "pending") {
-    return a.pending === b.pending && (a as { lastError?: SetError }).lastError === (b as { lastError?: SetError }).lastError;
-  }
-  if (a.kind === "error" && b.kind === "error") {
-    return a.lastError === b.lastError;
-  }
-  return true;
 }
 
 function kitIdFromRuntime(runtime: KitRuntimeContextValue): string | null {
@@ -8935,100 +8927,29 @@ export function useKitId(idValue?: string): HookTriad<any> {
   return useSchemaFieldState("Kit", "id", idValue);
 }
 
-export function useKitName(idValue?: string): HookTriad<any> {
-  const schemaTriad = useSchemaFieldState("Kit", "name", idValue);
-  const schemaStatus = schemaTriad[2];
-  const runtime = useKitRuntimeSafe();
-  const ks = React.useMemo(() => {
-    const c = runtime?.kitClient ?? null;
-    return c ? kitStoreFromKitStoreClient(c) : null;
-  }, [runtime?.kitClient]);
-  const schemaValue = schemaTriad[0];
+/** @emoji 🧾 One `useSyncExternalStore` over a {@link StoreField} (no local mechanism). */
+export function useStoreField<T>(field: StoreField<T>): T {
+  return React.useSyncExternalStore(field.subscribe, field.getSnapshot, field.getSnapshot);
+}
 
-  const storeSubName = React.useCallback(
-    (onChange: () => void) => {
-      if (ks) return ks.subscribeKitName(onChange);
-      if (runtime?.store) return runtime.store.subscribe(onChange);
-      return () => {};
-    },
-    [ks, runtime?.store],
-  );
+/** @emoji 🧾 One `useSyncExternalStore` on command status + stable {@link StoreCommand.run}. */
+export function useStoreCommand<TArgs>(cmd: StoreCommand<TArgs>): readonly [(args: TArgs) => Promise<SetResult>, WriteStatus] {
+  const status = useStoreField(cmd.status);
+  return [cmd.run, status] as const;
+}
 
-  /** @emoji 🪪 Snapshot must be referentially stable (reads `kitName$` BehaviorSubject value or local store snapshot) — `runtime.snapshot.kit?.name` is a string so identity is safe. */
-  const snapName = React.useCallback(() => {
-    if (ks) return ks.getKitNameSnapshot();
-    const kn = (runtime?.store?.getSnapshot()?.kit as Kit | undefined)?.name;
-    if (kn != null) return String(kn);
-    return String(schemaValue ?? "");
-  }, [ks, runtime?.store, schemaValue]);
+/** @emoji 🪪 Live kit name string from {@link KitStoreClient.kitName} (requires {@link KitScope} with kit client). */
+export function useKitName(): string {
+  const client = useKitStoreClient();
+  if (!client) throw new Error("useKitName: kit client required inside KitScope");
+  return useStoreField(client.kitName);
+}
 
-  const liveName = React.useSyncExternalStore(storeSubName, snapName, snapName);
-
-  const storeSubRename = React.useCallback(
-    (onChange: () => void) => {
-      if (!ks) return () => {};
-      return ks.subscribeRenameStatus(onChange);
-    },
-    [ks],
-  );
-
-  /** @emoji 🪪 Stable identity required: returns the BehaviorSubject's current value (cached) or {@link KIT_RENAME_STATUS_IDLE}. */
-  const snapRename = React.useCallback(() => {
-    if (!ks) return KIT_RENAME_STATUS_IDLE;
-    return ks.getRenameStatusSnapshot();
-  }, [ks]);
-
-  const renameSnap = React.useSyncExternalStore(storeSubRename, snapRename, snapRename);
-
-  const setter = React.useCallback(
-    async (next: React.SetStateAction<any>) => {
-      const cur = ks ? liveName : schemaValue;
-      const v = typeof next === "function" ? (next as (p: any) => any)(cur) : next;
-      if (ks) {
-        // 🟢 Each logical edit (focus → enter / blur) is wrapped in its own rs-side transaction:
-        //   1. open a fresh transaction on the active draft
-        //   2. send the rename op (which records into that transaction)
-        //   3. on success commit the transaction (finalize); on failure abort it.
-        // This satisfies the architectural rule that "every kit change operation must happen within a draft and a transaction".
-        const opened = await ks.openKitWriteTransaction();
-        if (!opened.ok) {
-          return { ok: false, error: opened.error } as const;
-        }
-        const r = await ks.rename(String(v));
-        if (r.ok) {
-          // 🧹 Commit failures are rare and shouldn't mask the rename success — surface but don't override.
-          await ks.finalizeKitWriteTransaction().catch(() => undefined);
-          return { ok: true } as const;
-        }
-        await ks.abortKitWriteTransaction().catch(() => undefined);
-        return { ok: false, error: r.error! } as const;
-      }
-      return schemaTriad[1](next);
-    },
-    [ks, liveName, schemaTriad, schemaValue],
-  );
-
-  const renameKind = renameSnap.kind;
-  const renameErrorMessage = renameKind === "error" ? renameSnap.message : undefined;
-  const kitRenameErrRef = React.useRef<{ msg: string; status: WriteStatus } | null>(null);
-
-  const status: WriteStatus = React.useMemo((): WriteStatus => {
-    if (!ks) return schemaStatus;
-    if (renameKind === "pending") return USE_KIT_NAME_PENDING_STATUS;
-    if (renameKind === "error" && renameErrorMessage !== undefined) {
-      const cached = kitRenameErrRef.current;
-      if (cached && cached.msg === renameErrorMessage) return cached.status;
-      const lastError = { kind: "InvalidValue" as const, message: renameErrorMessage };
-      const st = { kind: "error" as const, pending: 0 as const, lastError };
-      kitRenameErrRef.current = { msg: renameErrorMessage, status: st };
-      return st;
-    }
-    kitRenameErrRef.current = null;
-    return SCHEMA_HOOK_IDLE_STATUS;
-  }, [ks, schemaStatus, renameKind, renameErrorMessage]);
-
-  const displayName = ks ? liveName : schemaValue;
-  return [displayName, setter, status] as const;
+/** @emoji 🪪 Rename kit command + {@link WriteStatus} from {@link KitStoreClient.renameKit}. */
+export function useRenameKit(): readonly [(name: string) => Promise<SetResult>, WriteStatus] {
+  const client = useKitStoreClient();
+  if (!client) throw new Error("useRenameKit: kit client required inside KitScope");
+  return useStoreCommand(client.renameKit);
 }
 
 export function useKitRelease(idValue?: string): HookTriad<any> {
@@ -17198,7 +17119,7 @@ const shouldRunReactEmbeddedTests =
 if (shouldRunReactEmbeddedTests) {
   const { describe, expect, it } = await import("vitest");
   const { act, cleanup, render, waitFor } = await import("@testing-library/react");
-  const { InMemoryKitStore, asKitInstance, kitReadScopeKey, theKitReadScope } = await import("@semio/js");
+  const { InMemoryKitStore, asKitInstance, kitReadScopeKey, theKitReadScope, StoreField, StoreCommand } = await import("@semio/js");
 
   const kitJsonFromStore = (store: KitHostStore) => {
     const host = store as KitHostStore & { _kit?: { toJSON: () => unknown } };
@@ -17206,8 +17127,18 @@ if (shouldRunReactEmbeddedTests) {
     return store.getSnapshot().kit.toJSON();
   };
 
-  const createTestKitClient = (store: KitHostStore): KitStoreClient =>
-    ({
+  const createTestKitClient = (store: KitHostStore): KitStoreClient => {
+    const kitNameField = new StoreField<string>(String((kitJsonFromStore(store) as KitFullDto).name ?? ""));
+    const renameKitCmd = new StoreCommand<string>(async (next) => {
+      const v = String(next ?? "").trim();
+      if (v === "") return { ok: false, error: { kind: "InvalidValue", message: "kit name required" } };
+      const kitDto: KitFullDto = JSON.parse(JSON.stringify(kitJsonFromStore(store))) as KitFullDto;
+      (kitDto as { name: string }).name = v;
+      store.replace(asKitInstance(kitDto));
+      kitNameField.set(v);
+      return { ok: true };
+    });
+    return {
       fetchFullKit: async () => kitJsonFromStore(store) as KitFullDto,
       kitReadScope: theKitReadScope,
       submitChangeKitCommands: async (commands: readonly ChangeKitCommand[]) => {
@@ -17218,6 +17149,7 @@ if (shouldRunReactEmbeddedTests) {
             const nm = String((c.name as { name?: string }).name ?? "");
             if (nm.trim() === "") return { ok: false, error: { kind: "IllegalName", message: "name cannot be empty" } };
             (kit as { name: string }).name = nm;
+            kitNameField.set(nm);
           }
           if ("description" in c && c.description && typeof c.description === "object")
             (kit as { description?: string }).description =
@@ -17282,11 +17214,9 @@ if (shouldRunReactEmbeddedTests) {
       listConflicts: async () => [] as const,
       resolveConflict: async () => ({ ok: true } as const),
       syncNow: async () => ({ ok: true } as const),
-      subscribeKitName: () => () => {},
-      getKitNameSnapshot: () => String((kitJsonFromStore(store) as KitFullDto).name ?? ""),
-      subscribeRenameStatus: () => () => {},
-      getRenameStatusSnapshot: () => KIT_RENAME_STATUS_IDLE,
-      rename: async () => ({ ok: false, requestId: "", error: { kind: "NotSupported", message: "embedded test client" } }),
+      kitName: kitNameField,
+      renameKit: renameKitCmd,
+      readKitName: async () => String((kitJsonFromStore(store) as KitFullDto).name ?? ""),
       createAlternativeFromTip: async () => "alt-test",
       getKitWriteScope: () => null,
       setKitWriteScope: () => {},
@@ -17294,8 +17224,12 @@ if (shouldRunReactEmbeddedTests) {
       abortKitWriteTransaction: async () => ({ ok: true }),
       subscribe: (cb: (ev: any) => void) => store.subscribe(() => cb({ kind: "test" })),
       setKitReadScope: (_s: import("@semio/js").KitReadScope) => {},
-      dispose: () => {},
-    }) as unknown as KitStoreClient;
+      dispose: () => {
+        kitNameField.dispose();
+        renameKitCmd.dispose();
+      },
+    } as unknown as KitStoreClient;
+  };
 
   describe("pipeline hooks", () => {
     it("useKitName rejects empty required name via kit client", async () => {
@@ -17316,14 +17250,14 @@ if (shouldRunReactEmbeddedTests) {
       });
       const store = new InMemoryKitStore(kit);
       const kitClient = createTestKitClient(store);
-      let setName: ((v: any) => Promise<any>) | undefined;
+      let renameKit: ((v: string) => Promise<SetResult>) | undefined;
       let lastStatus: WriteStatus | undefined;
       let client: KitStoreClient | null = null;
 
       function Probe() {
-        const triad = useKitName();
-        setName = triad[1];
-        lastStatus = triad[2];
+        const [run, st] = useRenameKit();
+        renameKit = run;
+        lastStatus = st;
         client = useKitStoreClient();
         return null;
       }
@@ -17331,10 +17265,10 @@ if (shouldRunReactEmbeddedTests) {
       render(React.createElement(KitScope, { store, kitClient, children: React.createElement(Probe) }));
 
       await waitFor(() => {
-        expect(setName).toBeDefined();
+        expect(renameKit).toBeDefined();
         expect(client).not.toBeNull();
       });
-      const r = await setName!("");
+      const r = await renameKit!("");
       expect(r.ok).toBe(false);
       await waitFor(() => expect(lastStatus?.kind).toBe("error"));
     });
@@ -17372,7 +17306,7 @@ if (shouldRunReactEmbeddedTests) {
       let client: KitStoreClient | null = null;
 
       function Probe() {
-        setName = useKitName()[1];
+        setName = useRenameKit()[0];
         setRelease = useKitRelease()[1];
         setDescription = useKitDescription()[1];
         setIcon = useKitIcon()[1];
@@ -17704,11 +17638,12 @@ if (shouldRunReactEmbeddedTests) {
         listConflicts: async () => [],
         resolveConflict: async () => ({ ok: true } as const),
         syncNow: async () => ({ ok: true } as const),
-        subscribeKitName: () => () => {},
-        getKitNameSnapshot: () => "",
-        subscribeRenameStatus: () => () => {},
-        getRenameStatusSnapshot: () => KIT_RENAME_STATUS_IDLE,
-        rename: async () => ({ ok: false, requestId: "", error: { kind: "NotSupported", message: "stub" } }),
+        kitName: new StoreField<string>(""),
+        renameKit: new StoreCommand<string>(async () => ({
+          ok: false,
+          error: { kind: "NotSupported", message: "stub" },
+        })),
+        readKitName: async () => "",
         readPieceFlatPlane: async () => null,
         readPieceFlatCenter: async () => null,
         readPieceParentConnectionFull: async () => null,
@@ -17723,7 +17658,7 @@ if (shouldRunReactEmbeddedTests) {
         subscribe: () => () => {},
         setKitReadScope: () => {},
         dispose: () => {},
-      } as KitStoreClient;
+      } as unknown as KitStoreClient;
       let seen: SetError[] = [];
       function Probe() {
         const { run } = useClusterPieces();
@@ -17810,15 +17745,13 @@ if (shouldRunReactEmbeddedTests) {
         useKitDataScope();
         return null;
       }
-      const tree = React.createElement(
-        KitAlternativeSelectionProvider,
-        {},
-        React.createElement(KitScope, {
+      const tree = React.createElement(KitAlternativeSelectionProvider, {
+        children: React.createElement(KitScope, {
           store,
           kitClient: client,
           children: React.createElement(Probe, null),
         }),
-      );
+      });
       const { unmount } = render(tree);
       await waitFor(() => {
         expect(log).toContain(kitReadScopeKey({ alternative: { alternativeId: "alt-7" } }));

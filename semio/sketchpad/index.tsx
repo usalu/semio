@@ -116,6 +116,7 @@ import {
   useKitImage,
   useKitLicense,
   useKitName,
+  useRenameKit,
   useKitRegistrySafe,
   useKitRelease,
   useKitRuntimeSafe,
@@ -15772,7 +15773,9 @@ export const KitSection: FC = () => {
 const KitSectionForm: FC = () => {
   const [ksKit] = useKitSnapshotTriad();
   const kit = ksKit?.kit as Kit | undefined;
-  const kitNameTriad = useKitName();
+  const kitName = useKitName();
+  const [renameKit, renameKitStatus] = useRenameKit();
+  const { spinning, error, disabled } = useWriteIndicator(renameKitStatus);
   const releaseTriad = useKitRelease();
   const descriptionTriad = useKitDescription();
   const iconTriad = useKitIcon();
@@ -15798,7 +15801,24 @@ const KitSectionForm: FC = () => {
 
   return (
     <>
-      <SketchpadTriadInputRow triad={kitNameTriad} id="semio.sketchpad.app.kit.panel.details.section.kit.name" />
+      <TreeRow>
+        <div className="flex min-w-0 w-full flex-col gap-tiny">
+          <div className="flex min-w-0 w-full items-center gap-single">
+            <div className="min-w-0 flex-1">
+              <Input
+                lazy
+                id="semio.sketchpad.app.kit.panel.details.section.kit.name"
+                value={kitName}
+                readOnly={disabled}
+                onLazyChange={disabled ? undefined : (v) => void renameKit(v)}
+                showLabel
+              />
+            </div>
+            {spinning ? <Spinner size="small" className="text-muted-foreground shrink-0" /> : null}
+          </div>
+          {error?.message ? <p className="pl-tiny text-xs text-destructive">{error.message}</p> : null}
+        </div>
+      </TreeRow>
       <SketchpadTriadInputRow triad={releaseTriad} id="semio.sketchpad.app.kit.panel.details.section.kit.version" placeholder={versionPlaceholder} mapCommit={optionalKitText} />
       <SketchpadTriadTextareaRow triad={descriptionTriad} id="semio.sketchpad.app.kit.panel.details.section.kit.description" placeholder={descriptionPlaceholder} mapCommit={optionalKitText} />
       <SketchpadTriadInputRow triad={iconTriad} id="semio.sketchpad.app.kit.panel.details.section.kit.icon" placeholder={iconPlaceholder} mapCommit={optionalKitText} />
