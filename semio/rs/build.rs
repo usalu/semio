@@ -28,8 +28,14 @@ fn main() {
     for t in gql_relay_hand_edge_type_names() {
         manual.insert(t.to_string());
     }
-    for t in union_derive_graphql_names(&lib_rs) {
-        manual.insert(t);
+    for t in hand_implemented_sdl_union_type_names() {
+        manual.insert(t.to_string());
+    }
+    for t in hand_implemented_sdl_enum_type_names() {
+        manual.insert(t.to_string());
+    }
+    for t in hand_implemented_sdl_input_type_names() {
+        manual.insert(t.to_string());
     }
 
     let out_dir = PathBuf::from(env::var("OUT_DIR").expect("OUT_DIR"));
@@ -38,7 +44,7 @@ fn main() {
 
     w.line("/// @emoji 🤖 Generated from `target.schema.graphql` — do not edit.");
     w.line("use std::sync::Arc;");
-    w.line("use async_graphql::{Enum, InputObject, Interface, Object, Union};");
+    w.line("use async_graphql::{InputObject, Interface, Object, Union};");
     w.line("use async_graphql::SchemaBuilder;");
     w.line("use crate::id::Id;");
     w.line("");
@@ -90,6 +96,9 @@ fn main() {
     let skip_objects: HashSet<String> = manual.iter().cloned().collect();
 
     for (name, vals) in &enums {
+        if skip_objects.contains(name) {
+            continue;
+        }
         let rs = rust_ty(name);
         w.line("#[derive(Clone, Copy, Debug, Eq, PartialEq, Enum)]");
         w.fmt_line(format_args!("#[graphql(name = \"{}\")]", name));
@@ -104,6 +113,9 @@ fn main() {
 
     for (name, fields) in &inputs {
         if name == "Timestamp" {
+            continue;
+        }
+        if skip_objects.contains(name) {
             continue;
         }
         let rs = rust_ty(name);
@@ -345,6 +357,9 @@ fn main() {
         ));
     }
     for (name, _) in &enums {
+        if skip_objects.contains(name) {
+            continue;
+        }
         w.fmt_line(format_args!(
             "    b = b.register_output_type::<{}>();",
             rust_ty(name)
@@ -352,6 +367,9 @@ fn main() {
     }
     for (name, _) in &inputs {
         if name == "Timestamp" {
+            continue;
+        }
+        if skip_objects.contains(name) {
             continue;
         }
         w.fmt_line(format_args!(
@@ -798,46 +816,59 @@ fn object_impl_graphql_names(lib_rs: &PathBuf) -> HashSet<String> {
     out
 }
 
-/// @emoji 🪢 GraphQL names of hand-written `Union` types (`#[derive(..., Union)]`), avoiding duplicate `Sg*` SDL unions.
-fn union_derive_graphql_names(lib_rs: &PathBuf) -> HashSet<String> {
-    let s = fs::read_to_string(lib_rs).expect("read lib.rs");
-    let mut out = HashSet::new();
-    let re_gql_name = regex::Regex::new(r#"graphql\(name = "([^"]+)""#).unwrap();
-    let re_derive_union = regex::Regex::new(r"derive\([^)]*\bUnion\b").unwrap();
-    let mut name_before_union: Option<String> = None;
-    let mut expect_graphql_after_union = false;
-    for line in s.lines() {
-        let t = line.trim();
-        if t.starts_with("#[graphql(name") {
-            if let Some(c) = re_gql_name.captures(t) {
-                let n = c[1].to_string();
-                if expect_graphql_after_union {
-                    out.insert(n);
-                    expect_graphql_after_union = false;
-                } else {
-                    name_before_union = Some(n);
-                }
-            }
-            continue;
-        }
-        if re_derive_union.is_match(line) {
-            if let Some(n) = name_before_union.take() {
-                out.insert(n);
-            } else {
-                expect_graphql_after_union = true;
-            }
-            continue;
-        }
-        if !t.is_empty()
-            && !t.starts_with("#[")
-            && !t.starts_with("///")
-            && !t.starts_with("//")
-        {
-            name_before_union = None;
-            expect_graphql_after_union = false;
-        }
+/// @emoji 🪢 SDL union names implemented by hand in `lib.rs` (must not emit/register a second `Sg…` union).
+fn hand_implemented_sdl_union_type_names() -> &'static [&'static str] {
+    &[
+        "Blueprint",
+        "ChangeOwner",
+        "ConceptOwner",
+        "DesignOwner",
+        "GraphOwner",
+        "KitOwner",
+        "QualityOwner",
+        "ReadVersionOwner",
+        "SideOwner",
+        "TagOwner",
+        "WriteVersionOwner",
+    ]
+}
+
+/// @emoji 🪢 SDL enum names implemented by hand in `lib.rs` (must not emit/register a second `Sg…` enum).
+fn hand_implemented_sdl_enum_type_names() -> &'static [&'static str] {
+    &["PieceConnectionKind"]
+}
+
+/// @emoji 🪢 SDL input object names implemented by hand in `lib.rs` (must not emit/register `Sg…Input` duplicates).
+fn hand_implemented_sdl_input_type_names() -> &'static [&'static str] {
+    &[
+        "VectorInput",
+        "PointInput",
+        "CoordinateInput",
+        "OffsetInput",
+        "PlaneInput",
+        "PositionInput",
+        "AttributeInput",
+        "TagInput",
+        "ConceptInput",
+        "QualityInput",
+    ]
+}
+
+/// @emoji 🧾 Rust type path for hand `InputObject` types referenced from generated SDL inputs.
+fn hand_implemented_sdl_input_rust_type(n: &str) -> Option<&'static str> {
+    match n {
+        "VectorInput" => Some("crate::geom::Vector"),
+        "PointInput" => Some("crate::geom::Point"),
+        "CoordinateInput" => Some("crate::geom::Coordinate"),
+        "OffsetInput" => Some("crate::geom::Offset"),
+        "PlaneInput" => Some("crate::geom::Plane"),
+        "PositionInput" => Some("crate::geom::Position"),
+        "AttributeInput" => Some("crate::meta::AttributeInput"),
+        "TagInput" => Some("crate::meta::TagInput"),
+        "ConceptInput" => Some("crate::meta::ConceptInput"),
+        "QualityInput" => Some("crate::meta::QualityInput"),
+        _ => None,
     }
-    out
 }
 
 fn manual_graphql_types(lib_rs: &PathBuf) -> HashSet<String> {
@@ -983,6 +1014,12 @@ fn input_named(n: &str, rust_ty: &dyn Fn(&str) -> String) -> (String, Option<Str
         "Float" => ("f64".to_string(), None),
         "Boolean" => ("bool".to_string(), None),
         "Timestamp" => ("crate::timestamp::Timestamp".to_string(), None),
-        x => (rust_ty(x), Some(x.to_string())),
+        x => {
+            if let Some(p) = hand_implemented_sdl_input_rust_type(x) {
+                (p.to_string(), Some(x.to_string()))
+            } else {
+                (rust_ty(x), Some(x.to_string()))
+            }
+        }
     }
 }

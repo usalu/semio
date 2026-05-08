@@ -7385,7 +7385,8 @@ mod tests {
     fn kit_store_bundle_metabolism_new_has_contract_shape() {
         let path = Path::new(env!("CARGO_MANIFEST_DIR")).join("../assets/semio/metabolism.new.kit.semio.json");
         let v: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(path).expect("read metabolism.new bundle")).expect("parse");
-        for k in ["kind", "schema", "rootSnapshot", "semanticOpLog", "histories", "backbonePointers"] {
+        // Portable kit snapshot bundle (not the kit-store contract root); see `kit-store.contract.semio.json` for store shape.
+        for k in ["schema", "wip"] {
             assert!(v.get(k).is_some(), "metabolism.new.kit.semio.json missing `{k}`");
         }
     }
