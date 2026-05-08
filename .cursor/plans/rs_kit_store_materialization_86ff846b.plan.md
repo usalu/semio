@@ -1,0 +1,136 @@
+---
+name: rs kit store materialization
+overview: "Refactor `semio/rs` so the root kit is structurally immutable: every command (rename, description, drag, createFixedPiece, tag/concept/quality CRUD, etc.) appends forward+backward `KitOperation`s onto the open transaction's `Change`, and the visible kit is always recomputed by deep-cloning the parent checkpoint's frozen root and replaying forward ops from finalized + open transactions, with per-checkpoint snapshot caching and per-draft materialization caching."
+todos:
+  - id: kit_deep_clone
+    content: Implement `Kit::deep_clone() -> Arc<Kit>` walking Type/Representation/Connector/Design/Piece/Tag/Concept/Quality/Author/File/Folder/Prop/Attribute/Stat and rebuilding `*_by_id` weak maps.
+    status: pending
+  - id: kitop_enum
+    content: Define `operation::KitOperation` with one variant per existing Command + `apply_forward(&Arc<Kit>)` + `inverse_against(&Arc<Kit>) -> KitOperation`.
+    status: pending
+  - id: vcs_root_freeze
+    content: "Change `Checkpoint.root` to immutable `frozen_root: Arc<Kit>`; add `Draft.change_seq`; remove `Graph.the_kit` in favour of `parent_root_for_active_draft` + cached `materialized_kit()` + `record_op_in_open_transaction()`."
+    status: pending
+  - id: worker_rewrite
+    content: Rewrite `worker::ChildRuntime::apply` so every command computes forward+backward KitOperation, records to open transaction, invalidates cache, then emits the existing OperationKind events from the freshly materialized kit.
+    status: pending
+  - id: resolvers_switch
+    content: Switch every `graph.the_kit.*` access in `gql`, `iface`, `kit_backbone`, and `kit_graph_engine` to `graph.materialized_kit().await`.
+    status: pending
+  - id: abort_via_invalidation
+    content: Make `Graph::abort_transaction` rely on cache invalidation + dropped change list (no manual undo); keep `Change.backwards` for explicit undo/redo paths.
+    status: pending
+  - id: tests_update
+    content: "Update existing tests that reach into `g.the_kit` and add new assertions: root immutability after rename + abort restores prior materialized state."
+    status: pending
+  - id: ticket
+    content: Open MCP ticket 'Refactor RS Kit Store To Materialized Reads', close with summary at the end.
+    status: pending
+isProject: false
+---
+
+# Refactor `semio/rs` Kit Store Read/Write to Pure Materialization
+
+## Problem (current state)
+
+In [semio/rs/lib.rs](semio/rs/lib.rs):
+
+- `Graph.the_kit: Arc<Kit>` is a single live mutable instance.
+- `Checkpoint.root` stores the **same** `Arc<Kit>` (see `ensure_default_seed_state` at line 3618: `root: RwLock::new(Some(self.the_kit.clone()))`), so root and live state are aliased.
+- `worker::ChildRuntime::apply` (lines 6097–6206) mutates `the_kit` directly for every command (e.g. `*self.graph.the_kit.name.write().await = name.clone();` at line 6129).
+- `Change.forwards` / `Change.backwards` (lines 3110–3111), `Transaction.changes`, `Draft.transactions` exist but the worker never appends to them.
+
+Result: opening a dev kit and renaming it visibly mutates `Checkpoint.root.name` — the bug the user reported.
+
+## Target architecture
+
+```mermaid
+flowchart LR
+  RootKit["Checkpoint.frozen_root<br/>Arc<Kit> (immutable)"] -->|deep_clone + replay| Materialized["Graph.materialized_kit()<br/>Arc<Kit> (cached per draft state)"]
+  OpenTx["Transaction.changes<br/>Change.forwards: Vec<KitOperation><br/>Change.backwards: Vec<KitOperation>"] -->|"replay forwards"| Materialized
+  FinalizedTx["Draft.finalized_transactions"] -->|"replay forwards"| Materialized
+  Cmd["Mutation.renameKit / changeDescription / dragPiece / ..."] -->|append forward+backward| OpenTx
+  Cmd -.->|"invalidate cache"| Materialized
+  Commit["Mutation.checkpointCommit (future)"] -->|compresses| NewCp["Checkpoint.frozen_root = previous Materialized.deep_clone()"]
+```
+
+
+
+Invariants:
+
+- `Checkpoint.frozen_root` is set **once** at checkpoint creation from a deep clone and is never written to again.
+- `Graph` no longer owns a live `the_kit`; it owns the active draft and the parent checkpoint of that draft.
+- `Graph.materialized_kit()` = `parent_checkpoint.frozen_root.deep_clone()` then `KitOperation::apply_forward` for every operation in every finalized transaction (in order) and the open transaction.
+- Caches: per-`Checkpoint` `frozen_root` is itself the cache; per-`Draft` materialization caches an `Arc<Kit>` keyed by a monotonic `change_seq` bumped on every transaction mutation and reset on commit/abort.
+
+## Affected regions in [semio/rs/lib.rs](semio/rs/lib.rs)
+
+- `📦 kit` (lines 1148–2833): add `Kit::deep_clone()` walking every sub-entity (Type, Representation, Connector, Design, Piece, Tag, Concept, Quality, Author, File, Folder, Prop, Attribute, Stat, plus all `*_by_id` weak maps re-pointing into the cloned graph). Strip `bump_touch_epoch` from `Kit` (now done at `Graph` level on materialization invalidation).
+- `🌿 vcs` (lines 3089–4156):
+  - Replace `Graph.the_kit: Arc<Kit>` with: `parent_root_for_active_draft: RwLock<Arc<Kit>>` (clone of the seed checkpoint's `frozen_root`) and `materialized_cache: RwLock<Option<MaterializedSlot>>` where `MaterializedSlot { change_seq: u64, kit: Arc<Kit> }`.
+  - Add `Graph::materialized_kit(&self) -> Arc<Kit>` (deep-clones parent root and replays draft ops; reuses cache when `change_seq` matches).
+  - Add `Graph::active_draft()` accessor and `Graph::record_op_in_open_transaction(forward: KitOperation, backward: KitOperation)` that appends to the current `Change`, bumps `Draft.change_seq`, and invalidates the materialization cache.
+  - `Checkpoint.root` → `Checkpoint.frozen_root: Arc<Kit>` (no `RwLock`, no `Option`); fixed at construction.
+  - `Draft` gains `change_seq: AtomicU64`.
+  - Remove the in-place `the_kit` mutation paths: `Graph::apply_create_fixed_piece`*, `Graph::apply_drag_piece_in_design`, `Graph::apply_drag_pieces_in_design`. Their logic moves into `KitOperation::apply_forward` (see below) operating on a passed-in `&Arc<Kit>`.
+- `⚙️ operation` (lines 4488–5146): introduce
+  ```rust
+  pub enum KitOperation {
+      RenameKit { name: String },
+      ChangeDescription { entity_id: Id, description: Option<String> },
+      ChangeIcon { entity_id: Id, icon: Option<String> },
+      ChangeImage { entity_id: Id, image: Option<String> },
+      // ...one variant per existing Command...
+      CreateFixedPiece { design_id: Id, piece_id: Id, blueprint_id: Id, position: Position, name: Option<String>, description: Option<String> },
+      DeletePieceInDesign { design_id: Id, piece_id: Id },
+      DragPieceInDesign { design_id: Id, piece_id: Id, offset: Offset },
+      FixPieceInDesign { design_id: Id, piece_id: Id },
+      CreateTag { owner_id: Id, tag_id: Id, input: TagInput },
+      DeleteTag { tag_id: Id, restored: TagSnapshot },
+      RenameTag { tag_id: Id, name: String },
+      CreateConcept { owner_id: Id, concept_id: Id, input: ConceptInput },
+      CreateQuality { owner_id: Id, quality_id: Id, input: QualityInput },
+      // ...etc., one per command...
+  }
+  impl KitOperation {
+      pub async fn apply_forward(&self, kit: &Arc<Kit>) -> Result<(), SemioError>;
+      pub async fn inverse_against(&self, kit: &Arc<Kit>) -> Result<KitOperation, SemioError>;
+  }
+  ```
+  Each existing `OperationKind` (`RenamedKit`, `CreatedFixedPiece`, `DraggedPiece`, `ChangedDescription`, `FixedPiece`) is constructed from the corresponding `KitOperation` after replay so the GraphQL operation event stream stays unchanged.
+- `🧵 worker` (lines 5887–6211): `ChildRuntime::apply` becomes a flat dispatcher per `Command` that:
+  1. Captures `before_kit = self.graph.materialized_kit().await` (used to compute the inverse, e.g. previous name).
+  2. Builds the forward `KitOperation` from the command payload.
+  3. Computes `backward = forward.inverse_against(&before_kit).await?`.
+  4. Calls `self.graph.record_op_in_open_transaction(draft_id, transaction_id, forward.clone(), backward).await?` which (a) ensures the open transaction exists, (b) appends to its current (single) `Change.forwards` / `Change.backwards`, (c) bumps `draft.change_seq`, (d) invalidates `materialized_cache`.
+  5. Re-materializes via `self.graph.materialized_kit().await` (single new materialized `Arc<Kit>` for downstream event payload).
+  6. Builds the existing `OperationKind` (e.g. `RenamedKit { kit: materialized_kit, … }`) and pushes to `op_history` + emits on the bus, exactly as today.
+  - `Graph::abort_transaction` walks `Change.backwards` in reverse and applies them to a scratch materialized kit only as a safety check; since the cache is invalidated and the open transaction's changes are dropped, the next `materialized_kit()` automatically yields the prior state — no manual undo needed.
+- `🌐 gql` (lines 6213–6638): every resolver that calls `graph.the_kit.*` (`Graph::the_kit`, `Graph::projection_fingerprint`, `Graph::root_snapshot_hash`, `Query::node`, `Query::piece_in_design`, `Query::kit_store_bundle_json`, `Mutation::kit_store_bundle_hydrate`, `Mutation::kit_store_initialize_defaults`) switches to `let kit = graph.materialized_kit().await;`.
+- `🗄️ kit_backbone` (lines 5241–5830):
+  - `KitStoreBundleFile::from_graph` serializes from `graph.materialized_kit()` for `wip.root` and from each `Checkpoint.frozen_root.kit_full_snapshot_value()` for the checkpoint list.
+  - `KitStoreBundleFile::hydrate_into_graph` materializes a fresh `Arc<Kit>` from the bundle JSON, freezes it as the seed `Checkpoint.frozen_root`, and points `Graph.parent_root_for_active_draft` at a clone of it.
+  - `clear_piece_projections_for_backbone_replay` (line 5699) is removed; replay just re-hydrates a fresh checkpoint root.
+- `🧪 tests` (lines 6783–7492): update `g.the_kit` references in tests (lines 7239, 7240, 7265, 7292, 7330, 7185–7186, 7217, 4262–4264) to `g.materialized_kit().await`. Extend `kit_store_bundle_serialize_hydrate_round_trip_via_graphql` (line 6850) with assertions:
+  - After `renameKit` to "Hello Bundle", `wip.checkpoints.edges[0].node.frozenRoot.name` == previous name (root unchanged).
+  - `wip.theKit.name` == "Hello Bundle" (materialized changed).
+  - After `transactionAbort` of the rename transaction, `wip.theKit.name` reverts to the previous name.
+
+## Implementation order (single ticket, no sub-delegation needed since this is one cohesive refactor)
+
+1. `Kit::deep_clone` and `KitOperation` enum + `apply_forward` + `inverse_against` for the existing 15 `Command` variants.
+2. `Checkpoint.frozen_root: Arc<Kit>`, `Draft.change_seq`, `Graph.parent_root_for_active_draft` + `materialized_kit` + `record_op_in_open_transaction`.
+3. Remove `Graph.the_kit`; rewrite `worker::ChildRuntime::apply` using `KitOperation`.
+4. Switch every resolver / backbone path to `materialized_kit()`.
+5. Update `kit_full_snapshot_value` consumers and tests.
+
+## Validation
+
+- `cargo test -p semio` (covers golden fingerprint, bundle round-trip, transaction lifecycle, alternative-from-tip, tag CRUD).
+- New assertions on root immutability + abort-restores-state in `kit_store_bundle_serialize_hydrate_round_trip_via_graphql`.
+- `npm run build` for `semio/rs/pkg` (wasm32 target).
+- `semio/js` + `semio/react` test suites unchanged (GraphQL surface is preserved; only internal Rust storage changes).
+
+## Ticketing
+
+Open a new MCP ticket "Refactor RS Kit Store To Materialized Reads" under the kit-store goal; close with summary listing `semio/rs/lib.rs` as the only touched file.

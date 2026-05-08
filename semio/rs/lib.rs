@@ -3100,15 +3100,15 @@ pub mod vcs {
     use crate::id::Id;
     use crate::kit::Kit;
     use crate::meta::Author;
-    use crate::op;
+    use crate::operation;
     use crate::timestamp::Timestamp;
 
     //#region 🪪 change
     pub struct Change {
         pub id: Id,
         pub owner: RwLock<Option<ChangeOwnerRef>>,
-        pub forwards: RwLock<Vec<op::OperationKind>>,
-        pub backwards: RwLock<Vec<op::OperationKind>>,
+        pub forwards: RwLock<Vec<operation::OperationKind>>,
+        pub backwards: RwLock<Vec<operation::OperationKind>>,
     }
 
     /// 🔗 Untyped reference to one of the variants of the [`ChangeOwnerUnion`].
@@ -3150,20 +3150,20 @@ pub mod vcs {
                 None => ChangeOwnerUnion::Transaction(Arc::default()),
             }
         }
-        pub async fn forwards(&self) -> Vec<op::OperationKind> {
+        pub async fn forwards(&self) -> Vec<operation::OperationKind> {
             self.forwards.read().await.clone()
         }
-        pub async fn backwards(&self) -> Vec<op::OperationKind> {
+        pub async fn backwards(&self) -> Vec<operation::OperationKind> {
             self.backwards.read().await.clone()
         }
 
-        /// @emoji 🔗 Ordered semantic op record ids constituting the forwards side (bundle `semanticOpLog` ids) when persisted.
+        /// @emoji 🔗 Ordered semantic operation record ids constituting the forwards side (bundle `semanticOpLog` ids) when persisted.
         #[graphql(name = "forwardSemanticOpRecordIds")]
         pub async fn forward_semantic_op_record_ids(&self) -> Vec<Id> {
             Vec::new()
         }
 
-        /// @emoji 🔗 Ordered semantic op record ids for backwards / inverse application when persisted separately from `OperationKind`.
+        /// @emoji 🔗 Ordered semantic operation record ids for backwards / inverse application when persisted separately from `OperationKind`.
         #[graphql(name = "backwardSemanticOpRecordIds")]
         pub async fn backward_semantic_op_record_ids(&self) -> Vec<Id> {
             Vec::new()
@@ -3231,7 +3231,7 @@ pub mod vcs {
             self.changes.read().await.clone()
         }
 
-        /// @emoji 🔗 Transaction forwards op sequence as `semanticOpLog` ids (see `histories.transaction`).
+        /// @emoji 🔗 Transaction forwards operation sequence as `semanticOpLog` ids (see `histories.transaction`).
         #[graphql(name = "semanticOpRecordIds")]
         pub async fn semantic_op_record_ids(&self) -> Vec<Id> {
             Vec::new()
@@ -3434,7 +3434,7 @@ pub mod vcs {
             *self.change_count.read().await
         }
 
-        /// @emoji 🔗 Checkpoint-scoped semantic op ids (`histories.checkpoint` wraps op log ids without duplicating kit trees).
+        /// @emoji 🔗 Checkpoint-scoped semantic operation ids (`histories.checkpoint` wraps operation log ids without duplicating kit trees).
         #[graphql(name = "semanticOpRecordIds")]
         pub async fn semantic_op_record_ids(&self) -> Vec<Id> {
             Vec::new()
@@ -3544,7 +3544,7 @@ pub mod vcs {
         pub releases: RwLock<Vec<Arc<Checkpoint>>>,
         pub drafts: RwLock<Vec<Arc<Draft>>>,
         /// @emoji 📜 Ordered operation spine for this graph head (static schema / replay).
-        pub op_history: RwLock<Vec<Arc<crate::op::OperationIface>>>,
+        pub op_history: RwLock<Vec<Arc<crate::operation::OperationIface>>>,
     }
 
     impl Default for Graph {
@@ -3650,14 +3650,7 @@ pub mod vcs {
             self.ensure_default_seed_state().await;
 
             let source_draft = match source_alternative_id {
-                None => self
-                    .drafts
-                    .read()
-                    .await
-                    .iter()
-                    .find(|d| d.owner_alternative.upgrade().is_none())
-                    .cloned()
-                    .ok_or_else(|| SemioError::invalid("no main-line draft"))?,
+                None => self.drafts.read().await.iter().find(|d| d.owner_alternative.upgrade().is_none()).cloned().ok_or_else(|| SemioError::invalid("no main-line draft"))?,
                 Some(aid) => {
                     let alt = {
                         let alts = self.alternatives.read().await;
@@ -3668,12 +3661,7 @@ pub mod vcs {
                 }
             };
 
-            let parent_cp = source_draft
-                .parent_checkpoint
-                .read()
-                .await
-                .upgrade()
-                .ok_or_else(|| SemioError::invalid("draft has no parent checkpoint"))?;
+            let parent_cp = source_draft.parent_checkpoint.read().await.upgrade().ok_or_else(|| SemioError::invalid("draft has no parent checkpoint"))?;
 
             let new_alt_id = Id::new().await;
             let new_alt = Arc::new(Alternative {
@@ -3727,14 +3715,7 @@ pub mod vcs {
 
         /// @emoji ✅ Mark a transaction as finalized: moved from `transactions` into `finalized_transactions`; clears the draft's open pointer if it matched.
         pub async fn commit_transaction(self: &Arc<Self>, draft_id: &Id, transaction_id: &Id) -> Result<(), SemioError> {
-            let draft = self
-                .drafts
-                .read()
-                .await
-                .iter()
-                .find(|d| &d.id == draft_id)
-                .cloned()
-                .ok_or_else(|| SemioError::not_found("Draft", draft_id.as_str()))?;
+            let draft = self.drafts.read().await.iter().find(|d| &d.id == draft_id).cloned().ok_or_else(|| SemioError::not_found("Draft", draft_id.as_str()))?;
             let tx = {
                 let mut txs = draft.transactions.write().await;
                 let pos = txs.iter().position(|t| &t.id == transaction_id).ok_or_else(|| SemioError::not_found("Transaction", transaction_id.as_str()))?;
@@ -3753,14 +3734,7 @@ pub mod vcs {
 
         /// @emoji ⛔ Drop a transaction from a draft entirely; clears the draft's open pointer if it matched.
         pub async fn abort_transaction(self: &Arc<Self>, draft_id: &Id, transaction_id: &Id) -> Result<(), SemioError> {
-            let draft = self
-                .drafts
-                .read()
-                .await
-                .iter()
-                .find(|d| &d.id == draft_id)
-                .cloned()
-                .ok_or_else(|| SemioError::not_found("Draft", draft_id.as_str()))?;
+            let draft = self.drafts.read().await.iter().find(|d| &d.id == draft_id).cloned().ok_or_else(|| SemioError::not_found("Draft", draft_id.as_str()))?;
             {
                 let mut txs = draft.transactions.write().await;
                 let pos = txs.iter().position(|t| &t.id == transaction_id).ok_or_else(|| SemioError::not_found("Transaction", transaction_id.as_str()))?;
@@ -3810,12 +3784,12 @@ pub mod vcs {
             position: crate::geom::Position,
             name: Option<String>,
             description: Option<String>,
-        ) -> Result<(Arc<crate::kit::design::piece::Piece>, op::SemanticDiff), SemioError> {
+        ) -> Result<(Arc<crate::kit::design::piece::Piece>, operation::SemanticDiff), SemioError> {
             let fp_before = crate::kit_graph_engine::projection_fingerprint_for_kit(&self.the_kit).await;
             let (_handle, design) = self.the_kit.bind_external_design_id(&design_id).await;
             let piece = self.apply_create_fixed_piece_on_design_node(draft_id, transaction_id, design, blueprint_id.clone(), position, name.clone(), description.clone()).await?;
             let fp_after = crate::kit_graph_engine::projection_fingerprint_for_kit(&self.the_kit).await;
-            let input = op::CreatedFixedPieceInput { design_id, blueprint_id, position, name, description };
+            let input = operation::CreatedFixedPieceInput { design_id, blueprint_id, position, name, description };
             let payload_json = serde_json::to_string(&input).map_err(|e| SemioError::invalid(e.to_string()))?;
             let diff = crate::kit_graph_engine::deterministic_semantic_diff("createdFixedPiece", &payload_json, &fp_before, &fp_after);
             Ok((piece, diff))
@@ -3908,16 +3882,16 @@ pub mod vcs {
             self.drafts.read().await.clone()
         }
 
-        /// @emoji 📜 Ordered semantic op log for this graph line (persisted bundle field); empty until store wiring lands.
+        /// @emoji 📜 Ordered semantic operation log for this graph line (persisted bundle field); empty until store wiring lands.
         /// **Memoization:** none — each field resolution recomputes from current graph/backbone state once wired. **Invalidate:** backbone attach/replay, bundle tips, or any writer appending to the log (no stale cached slice).
         #[graphql(name = "semanticOpLog")]
-        pub async fn semantic_op_log(&self, #[graphql(name = "limit")] limit: Option<i32>) -> Vec<op::SemanticOpRecord> {
+        pub async fn semantic_op_log(&self, #[graphql(name = "limit")] limit: Option<i32>) -> Vec<operation::SemanticOpRecord> {
             let _ = limit;
             Vec::new()
         }
 
         /// @emoji 🔢 Stable `projectionFingerprint` (sorted piece centers via [`crate::kit_graph_engine::projection_fingerprint_for_kit`]).
-        /// **Memoization:** none — derived on every read from live piece centers. **Invalidate:** any semantic op or mutation changing piece geometry on this graph line.
+        /// **Memoization:** none — derived on every read from live piece centers. **Invalidate:** any semantic operation or mutation changing piece geometry on this graph line.
         #[graphql(name = "projectionFingerprint")]
         pub async fn projection_fingerprint(&self) -> String {
             crate::kit_graph_engine::projection_fingerprint_for_kit(&self.the_kit).await
@@ -4049,7 +4023,7 @@ pub mod vcs {
         pub owner_conflict: Weak<Conflict>,
         pub checkpoint: RwLock<Option<Arc<Checkpoint>>>,
         pub change: RwLock<Option<Arc<Change>>>,
-        pub operation: RwLock<Option<Arc<crate::op::OperationIface>>>,
+        pub operation: RwLock<Option<Arc<crate::operation::OperationIface>>>,
     }
 
     impl Default for ReadVersion {
@@ -4085,7 +4059,7 @@ pub mod vcs {
         pub async fn change(&self) -> Option<Arc<Change>> {
             self.change.read().await.clone()
         }
-        pub async fn operation(&self) -> Option<Arc<crate::op::OperationIface>> {
+        pub async fn operation(&self) -> Option<Arc<crate::operation::OperationIface>> {
             self.operation.read().await.clone()
         }
     }
@@ -4104,7 +4078,7 @@ pub mod vcs {
         pub transaction: RwLock<Option<Arc<Transaction>>>,
         pub checkpoint: RwLock<Option<Arc<Checkpoint>>>,
         pub change: RwLock<Option<Arc<Change>>>,
-        pub operation: RwLock<Option<Arc<crate::op::OperationIface>>>,
+        pub operation: RwLock<Option<Arc<crate::operation::OperationIface>>>,
     }
 
     impl Default for WriteVersion {
@@ -4146,7 +4120,7 @@ pub mod vcs {
         pub async fn change(&self) -> Option<Arc<Change>> {
             self.change.read().await.clone()
         }
-        pub async fn operation(&self) -> Option<Arc<crate::op::OperationIface>> {
+        pub async fn operation(&self) -> Option<Arc<crate::operation::OperationIface>> {
             self.operation.read().await.clone()
         }
     }
@@ -4485,9 +4459,9 @@ pub mod iface {
 
 //#endregion 🧷 iface
 
-//#region ⚙️ op
+//#region ⚙️ operation
 
-pub mod op {
+pub mod operation {
     //! ⚙️ Operation entities and their inputs. Operations carry `Arc<Entity>` payloads so the
     //! event bus broadcasts shared references, never deep-copied entity data.
     use std::sync::{Arc, Weak};
@@ -4646,8 +4620,8 @@ pub mod op {
     }
     //#endregion 🧭 graph workspace + backbone store kind (readable/writable selectors)
 
-    //#region 📜 semantic op record (kit bundle / op log contract)
-    /// @emoji 📜 One persisted semantic op: stable id, kind string, JSON payload, monotonic sequence index.
+    //#region 📜 semantic operation record (kit bundle / operation log contract)
+    /// @emoji 📜 One persisted semantic operation: stable id, kind string, JSON payload, monotonic sequence index.
     #[derive(Clone, Debug, Default, async_graphql::SimpleObject)]
     #[graphql(name = "SemanticOpRecord")]
     pub struct SemanticOpRecord {
@@ -4658,7 +4632,7 @@ pub mod op {
         pub payload_json: String,
         pub sequence: i32,
     }
-    //#endregion 📜 semantic op record (kit bundle / op log contract)
+    //#endregion 📜 semantic operation record (kit bundle / operation log contract)
 
     //#region 📦 diff
     /// 📜 Ephemeral semantic diff payload for the kit engine; replay/apply diff carrier (not a GraphQL output type).
@@ -4909,7 +4883,7 @@ pub mod op {
         name = "Operation",
         field(name = "id", ty = "crate::id::Id"),
         field(name = "hash", ty = "String"),
-        field(name = "owner", ty = "std::sync::Arc<crate::op::OperationOwner>"),
+        field(name = "owner", ty = "std::sync::Arc<crate::operation::OperationOwner>"),
         field(name = "changeOwner", method = "change_owner", ty = "Option<std::sync::Arc<crate::vcs::Change>>"),
         field(name = "ownerEntity", method = "owner_entity", ty = "Option<std::sync::Arc<crate::iface::OwnerEntity>>"),
         field(name = "ownedEntities", method = "owned_entities", ty = "Option<std::sync::Arc<crate::iface::OwnedEntityConnection>>")
@@ -5033,7 +5007,7 @@ pub mod op {
     }
     //#endregion 📡 commands
 
-    /// @emoji 🧩 Declarative op row registration hook (`ops! { CreatedFixedPiece, … }`) — expand to typed op structs + history wiring.
+    /// @emoji 🧩 Declarative operation row registration hook (`ops! { CreatedFixedPiece, … }`) — expand to typed operation structs + history wiring.
     macro_rules! ops {
         ($($row:ident),* $(,)?) => {
             /// @emoji 🔢 Row count listed in `ops! { … }` (static registry grows toward ~100 SDL operations).
@@ -5143,7 +5117,7 @@ pub mod op {
     }
 }
 
-//#endregion ⚙️ op
+//#endregion ⚙️ operation
 
 //#region 🧩 kit graph engine
 
@@ -5158,7 +5132,7 @@ pub mod kit_graph_engine {
     use crate::hash::h;
     use crate::id::Id;
     use crate::kit;
-    use crate::op;
+    use crate::operation;
     use crate::vcs::Graph;
 
     //#region 🧷 handles
@@ -5195,17 +5169,17 @@ pub mod kit_graph_engine {
     //#endregion 🔢 projection fingerprint
 
     //#region 📦 semantic diff
-    /// @emoji 📦 Deterministic non-persisted diff from op kind + payload + projection fingerprint transition.
-    pub fn deterministic_semantic_diff(op_kind: &str, payload_json: &str, projection_fp_before: &str, projection_fp_after: &str) -> op::SemanticDiff {
+    /// @emoji 📦 Deterministic non-persisted diff from operation kind + payload + projection fingerprint transition.
+    pub fn deterministic_semantic_diff(op_kind: &str, payload_json: &str, projection_fp_before: &str, projection_fp_after: &str) -> operation::SemanticDiff {
         let digest = h(&[op_kind, payload_json, projection_fp_before, projection_fp_after]);
-        op::SemanticDiff { id: Id::from(format!("semio:diff:{digest}")), summary: Some(digest) }
+        operation::SemanticDiff { id: Id::from(format!("semio:diff:{digest}")), summary: Some(digest) }
     }
     //#endregion 📦 semantic diff
 
-    //#region 🪡 semantic op apply
+    //#region 🪡 semantic operation apply
     /// @emoji 🧾 Output of [`apply_semantic_op_json`]: ephemeral diff + optional created entities.
     pub struct AppliedSemanticOp {
-        pub diff: op::SemanticDiff,
+        pub diff: operation::SemanticDiff,
         pub created_piece: Option<Arc<kit::design::piece::Piece>>,
     }
 
@@ -5220,7 +5194,7 @@ pub mod kit_graph_engine {
         description: Option<String>,
     }
 
-    /// @emoji 🪡 Async apply for one persisted semantic op (`kind` + JSON payload); routes through [`Graph::apply_create_fixed_piece`] for `createdFixedPiece`.
+    /// @emoji 🪡 Async apply for one persisted semantic operation (`kind` + JSON payload); routes through [`Graph::apply_create_fixed_piece`] for `createdFixedPiece`.
     pub async fn apply_semantic_op_json(graph: &Arc<Graph>, draft_id: &Id, transaction_id: &Id, op_kind: &str, payload_json: &str) -> Result<AppliedSemanticOp, SemioError> {
         match op_kind {
             "createdFixedPiece" => {
@@ -5230,10 +5204,10 @@ pub mod kit_graph_engine {
                 let (piece, diff) = graph.apply_create_fixed_piece(draft_id.clone(), transaction_id.clone(), design_id, blueprint_id, payload.position, payload.name, payload.description).await?;
                 Ok(AppliedSemanticOp { diff, created_piece: Some(piece) })
             }
-            other => Err(SemioError::invalid(format!("unsupported semantic op kind `{other}`"))),
+            other => Err(SemioError::invalid(format!("unsupported semantic operation kind `{other}`"))),
         }
     }
-    //#endregion 🪡 semantic op apply
+    //#endregion 🪡 semantic operation apply
 }
 
 //#endregion 🧩 kit graph engine
@@ -5257,7 +5231,7 @@ pub mod kit_backbone {
     use crate::error::SemioError;
     use crate::id::Id;
     #[cfg(not(target_arch = "wasm32"))]
-    use crate::op::BackboneStoreKind;
+    use crate::operation::BackboneStoreKind;
     use crate::vcs::Graph;
 
     //#region 🧾 wire format
@@ -5329,7 +5303,7 @@ pub mod kit_backbone {
         pub transactions: BlockHashedListDto<TransactionDto>,
     }
 
-    /// @emoji 💼 Transaction = ordered forward + backward semantic op steps (mirrors `Transaction.forwards` / `.backwards` in the bundle).
+    /// @emoji 💼 Transaction = ordered forward + backward semantic operation steps (mirrors `Transaction.forwards` / `.backwards` in the bundle).
     #[derive(Clone, Debug, serde::Deserialize, serde::Serialize)]
     pub struct TransactionDto {
         pub id: String,
@@ -5340,7 +5314,7 @@ pub mod kit_backbone {
         pub backwards: BlockHashedListDto<TransactionStepDto>,
     }
 
-    /// @emoji 🪡 One semantic op step inside a transaction (id, op `kind`, optional human description, payload `input`).
+    /// @emoji 🪡 One semantic operation step inside a transaction (id, operation `kind`, optional human description, payload `input`).
     #[derive(Clone, Debug, serde::Deserialize, serde::Serialize)]
     pub struct TransactionStepDto {
         pub id: String,
@@ -5396,12 +5370,7 @@ pub mod kit_backbone {
             for draft in &self.wip.drafts.items {
                 for tx in &draft.transactions.items {
                     for step in &tx.forwards.items {
-                        out.push(StoredSemanticOp {
-                            draft_id: draft.id.clone(),
-                            transaction_id: tx.id.clone(),
-                            kind: step.kind.clone(),
-                            input: step.input.clone(),
-                        });
+                        out.push(StoredSemanticOp { draft_id: draft.id.clone(), transaction_id: tx.id.clone(), kind: step.kind.clone(), input: step.input.clone() });
                     }
                 }
             }
@@ -5446,12 +5415,7 @@ pub mod kit_backbone {
                     txs.push(TransactionDto { id: tx.id.as_str().to_string(), hash: HASH_PLACEHOLDER.to_string(), forwards: BlockHashedListDto::default(), backwards: BlockHashedListDto::default() });
                 }
                 let parent = draft.parent_checkpoint.read().await.upgrade().map(|c| HashRefDto { id: c.id.as_str().to_string(), hash: HASH_PLACEHOLDER.to_string() });
-                bundle.wip.drafts.items.push(DraftDto {
-                    id: draft.id.as_str().to_string(),
-                    hash: HASH_PLACEHOLDER.to_string(),
-                    checkpoint: parent,
-                    transactions: BlockHashedListDto { hash: HASH_PLACEHOLDER.to_string(), items: txs },
-                });
+                bundle.wip.drafts.items.push(DraftDto { id: draft.id.as_str().to_string(), hash: HASH_PLACEHOLDER.to_string(), checkpoint: parent, transactions: BlockHashedListDto { hash: HASH_PLACEHOLDER.to_string(), items: txs } });
             }
 
             bundle
@@ -5459,7 +5423,7 @@ pub mod kit_backbone {
 
         /// @emoji 🩻 Hydrate the live graph from a previously-persisted bundle JSON. Today this only restores
         /// the kit projection (`wip.root`) into `the_kit`; the draft / transaction structure is preserved on
-        /// disk via `from_graph` round-trip but op replay is owned by the existing semantic-op log path.
+        /// disk via `from_graph` round-trip but operation replay is owned by the existing semantic-operation log path.
         pub async fn hydrate_into_graph(graph: &std::sync::Arc<crate::vcs::Graph>, json: &str) -> Result<Self, SemioError> {
             let bundle: Self = serde_json::from_str(json).map_err(|e| SemioError::invalid(format!("bundle parse: {e}")))?;
             if bundle.schema != KIT_STORE_BUNDLE_SCHEMA {
@@ -5500,12 +5464,7 @@ pub mod kit_backbone {
 
         /// @emoji 🪪 Locate the wip draft mutably (returns `Err` if not present).
         fn wip_draft_mut(&mut self, draft_id: &str) -> Result<&mut DraftDto, SemioError> {
-            self.wip
-                .drafts
-                .items
-                .iter_mut()
-                .find(|d| d.id == draft_id)
-                .ok_or_else(|| SemioError::not_found("Draft", draft_id))
+            self.wip.drafts.items.iter_mut().find(|d| d.id == draft_id).ok_or_else(|| SemioError::not_found("Draft", draft_id))
         }
 
         /// @emoji 🟢 Open a new (empty) transaction inside the targeted `wip` draft and return its id; the draft is created if absent.
@@ -5514,27 +5473,17 @@ pub mod kit_backbone {
             let draft_idx = match drafts.iter().position(|d| d.id == draft_id) {
                 Some(i) => i,
                 None => {
-                    drafts.push(DraftDto {
-                        id: draft_id.to_string(),
-                        hash: HASH_PLACEHOLDER.to_string(),
-                        checkpoint: None,
-                        transactions: BlockHashedListDto::default(),
-                    });
+                    drafts.push(DraftDto { id: draft_id.to_string(), hash: HASH_PLACEHOLDER.to_string(), checkpoint: None, transactions: BlockHashedListDto::default() });
                     drafts.len() - 1
                 }
             };
             let tx_id = uuid::Uuid::now_v7().to_string();
-            drafts[draft_idx].transactions.items.push(TransactionDto {
-                id: tx_id.clone(),
-                hash: HASH_PLACEHOLDER.to_string(),
-                forwards: BlockHashedListDto::default(),
-                backwards: BlockHashedListDto::default(),
-            });
+            drafts[draft_idx].transactions.items.push(TransactionDto { id: tx_id.clone(), hash: HASH_PLACEHOLDER.to_string(), forwards: BlockHashedListDto::default(), backwards: BlockHashedListDto::default() });
             tx_id
         }
 
         /// @emoji ✅ Mark a transaction as finalized inside its draft. Until checkpointing lands the row stays in
-        /// `wip.drafts[*].transactions[*]`; the call is a no-op except for validating that the (draft, tx) pair exists.
+        /// `wip.drafts[*].transactions[*]`; the call is a no-operation except for validating that the (draft, tx) pair exists.
         pub fn commit_transaction(&mut self, draft_id: &str, transaction_id: &str) -> Result<(), SemioError> {
             let draft = self.wip_draft_mut(draft_id)?;
             if draft.transactions.items.iter().any(|t| t.id == transaction_id) {
@@ -5561,12 +5510,7 @@ pub mod kit_backbone {
             let draft_idx = match drafts.iter().position(|d| d.id == draft_id) {
                 Some(i) => i,
                 None => {
-                    drafts.push(DraftDto {
-                        id: draft_id.to_string(),
-                        hash: HASH_PLACEHOLDER.to_string(),
-                        checkpoint: None,
-                        transactions: BlockHashedListDto::default(),
-                    });
+                    drafts.push(DraftDto { id: draft_id.to_string(), hash: HASH_PLACEHOLDER.to_string(), checkpoint: None, transactions: BlockHashedListDto::default() });
                     drafts.len() - 1
                 }
             };
@@ -5574,29 +5518,18 @@ pub mod kit_backbone {
             let tx_idx = match txs.iter().position(|t| t.id == transaction_id) {
                 Some(i) => i,
                 None => {
-                    txs.push(TransactionDto {
-                        id: transaction_id.to_string(),
-                        hash: HASH_PLACEHOLDER.to_string(),
-                        forwards: BlockHashedListDto::default(),
-                        backwards: BlockHashedListDto::default(),
-                    });
+                    txs.push(TransactionDto { id: transaction_id.to_string(), hash: HASH_PLACEHOLDER.to_string(), forwards: BlockHashedListDto::default(), backwards: BlockHashedListDto::default() });
                     txs.len() - 1
                 }
             };
-            txs[tx_idx].forwards.items.push(TransactionStepDto {
-                id: uuid::Uuid::now_v7().to_string(),
-                hash: HASH_PLACEHOLDER.to_string(),
-                kind: kind.to_string(),
-                description: None,
-                input,
-            });
+            txs[tx_idx].forwards.items.push(TransactionStepDto { id: uuid::Uuid::now_v7().to_string(), hash: HASH_PLACEHOLDER.to_string(), kind: kind.to_string(), description: None, input });
         }
 
-        /// @emoji 🪪 Build a metabolism-shaped bundle from a flat ordered semantic op log (used by golden test fixtures and import paths).
+        /// @emoji 🪪 Build a metabolism-shaped bundle from a flat ordered semantic operation log (used by golden test fixtures and import paths).
         pub fn from_stored_semantic_ops(ops: &[StoredSemanticOp]) -> Self {
             let mut bundle = Self::template();
-            for op in ops {
-                bundle.append_wip_step(&op.draft_id, &op.transaction_id, &op.kind, op.input.clone());
+            for operation in ops {
+                bundle.append_wip_step(&operation.draft_id, &operation.transaction_id, &operation.kind, operation.input.clone());
             }
             bundle
         }
@@ -5697,11 +5630,11 @@ CREATE TABLE IF NOT EXISTS conflict_stub (
     //#region 🔁 replay
     pub async fn replay_stored_ops(graph: &Arc<Graph>, ops: &[StoredSemanticOp]) -> Result<(), SemioError> {
         graph.the_kit.clear_piece_projections_for_backbone_replay().await;
-        for op in ops {
-            let draft_id = Id::from(op.draft_id.as_str());
-            let transaction_id = Id::from(op.transaction_id.as_str());
-            let payload = serde_json::to_string(&op.input).map_err(|e| SemioError::invalid(e.to_string()))?;
-            crate::kit_graph_engine::apply_semantic_op_json(graph, &draft_id, &transaction_id, op.kind.as_str(), &payload).await?;
+        for operation in ops {
+            let draft_id = Id::from(operation.draft_id.as_str());
+            let transaction_id = Id::from(operation.transaction_id.as_str());
+            let payload = serde_json::to_string(&operation.input).map_err(|e| SemioError::invalid(e.to_string()))?;
+            crate::kit_graph_engine::apply_semantic_op_json(graph, &draft_id, &transaction_id, operation.kind.as_str(), &payload).await?;
         }
         Ok(())
     }
@@ -5721,7 +5654,7 @@ CREATE TABLE IF NOT EXISTS conflict_stub (
             read_or_init_bundle(&self.path)
         }
 
-        /// @emoji ➕ Append a forward semantic op step into the targeted `wip` draft / transaction and atomically rewrite the bundle.
+        /// @emoji ➕ Append a forward semantic operation step into the targeted `wip` draft / transaction and atomically rewrite the bundle.
         pub fn append_op(&mut self, draft_id: &Id, transaction_id: &Id, kind: &str, input: &serde_json::Value) -> Result<(), SemioError> {
             let mut doc = self.read_bundle()?;
             doc.append_wip_step(draft_id.as_str(), transaction_id.as_str(), kind, input.clone());
@@ -5819,8 +5752,8 @@ CREATE TABLE IF NOT EXISTS conflict_stub (
         let arr = src["ops"].as_array().ok_or_else(|| SemioError::invalid("golden ops missing ops"))?;
         let mut out = Vec::new();
         for rec in arr {
-            let kind = rec["kind"].as_str().ok_or_else(|| SemioError::invalid("op.kind"))?;
-            let input = rec.get("input").cloned().ok_or_else(|| SemioError::invalid("op.input"))?;
+            let kind = rec["kind"].as_str().ok_or_else(|| SemioError::invalid("operation.kind"))?;
+            let input = rec.get("input").cloned().ok_or_else(|| SemioError::invalid("operation.input"))?;
             out.push(StoredSemanticOp { draft_id: draft_id.clone(), transaction_id: transaction_id.clone(), kind: kind.to_string(), input });
         }
         Ok(out)
@@ -5839,19 +5772,19 @@ pub mod event {
     use async_lock::Mutex;
 
     use crate::error::SemioError;
-    use crate::op;
+    use crate::operation;
 
     /// 🌐 Broadcast envelope for every observable thing the control plane emits.
     #[derive(Clone)]
     pub enum Event {
-        CommandSucceeded(op::CommandReceipt),
-        OperationSucceeded(op::OperationKind),
+        CommandSucceeded(operation::CommandReceipt),
+        OperationSucceeded(operation::OperationKind),
         OperationFailed(SemioError),
-        CreatedFixedPiece(Arc<op::CreatedFixedPiece>),
-        FixedPiece(Arc<op::FixedPiece>),
-        DraggedPiece(Arc<op::DraggedPiece>),
-        RenamedKit(Arc<op::RenamedKit>),
-        ChangedDescription(Arc<op::ChangedDescription>),
+        CreatedFixedPiece(Arc<operation::CreatedFixedPiece>),
+        FixedPiece(Arc<operation::FixedPiece>),
+        DraggedPiece(Arc<operation::DraggedPiece>),
+        RenamedKit(Arc<operation::RenamedKit>),
+        ChangedDescription(Arc<operation::ChangedDescription>),
     }
 
     /// 📣 The bus. Holds the only `emit_event` function in the crate.
@@ -5899,7 +5832,7 @@ pub mod worker {
     use crate::error::SemioError;
     use crate::event::{Event, EventBus};
     use crate::id::Id;
-    use crate::op::{BackboneStoreKind, Command, CommandReceipt, CreatedFixedPiece, CreatedFixedPieceInput, OperationIface, RenamedKit, RenamedKitInput, SemanticDiff};
+    use crate::operation::{BackboneStoreKind, Command, CommandReceipt, CreatedFixedPiece, CreatedFixedPieceInput, OperationIface, RenamedKit, RenamedKitInput, SemanticDiff};
     use crate::vcs::{Conflict, Graph, Session};
 
     //#region 🗄️ backbone slot
@@ -6109,9 +6042,9 @@ pub mod worker {
                     self.backbone.record_created_fixed_piece_if_attached(&draft_id, &transaction_id, &payload).await?;
 
                     let input = CreatedFixedPieceInput { design_id, blueprint_id, position, name, description };
-                    let op = CreatedFixedPiece::new(input, piece, diff).await;
-                    self.graph.op_history.write().await.push(Arc::new(OperationIface::CreatedFixedPiece(op.clone())));
-                    self.bus.emit_event(Event::CreatedFixedPiece(op)).await;
+                    let operation = CreatedFixedPiece::new(input, piece, diff).await;
+                    self.graph.op_history.write().await.push(Arc::new(OperationIface::CreatedFixedPiece(operation.clone())));
+                    self.bus.emit_event(Event::CreatedFixedPiece(operation)).await;
                     Ok(())
                 }
                 Command::FixPieceInDesign { design_id, piece_id, .. } => {
@@ -6131,9 +6064,9 @@ pub mod worker {
                     let mut diff = SemanticDiff::default();
                     diff.id = Id::new().await;
                     diff.summary = Some("renameKit".to_string());
-                    let op = Arc::new(RenamedKit { id: Id::new().await, request_id: request_id.clone(), owner_change: Weak::new(), input: RenamedKitInput { name }, diff, kit: self.graph.the_kit.clone() });
-                    self.graph.op_history.write().await.push(Arc::new(OperationIface::RenamedKit(op.clone())));
-                    self.bus.emit_event(Event::RenamedKit(op)).await;
+                    let operation = Arc::new(RenamedKit { id: Id::new().await, request_id: request_id.clone(), owner_change: Weak::new(), input: RenamedKitInput { name }, diff, kit: self.graph.the_kit.clone() });
+                    self.graph.op_history.write().await.push(Arc::new(OperationIface::RenamedKit(operation.clone())));
+                    self.bus.emit_event(Event::RenamedKit(operation)).await;
                     Ok(())
                 }
                 Command::ChangeDescription { entity_id, description, .. } => {
@@ -6225,7 +6158,7 @@ pub mod gql {
     use crate::geom::{Offset, Position};
     use crate::id::Id;
     use crate::meta::{ConceptInput, QualityInput, TagInput};
-    use crate::op::{Command, CommandReceipt, OperationKind, RenamedKit};
+    use crate::operation::{Command, CommandReceipt, OperationKind, RenamedKit};
     use crate::vcs::Graph;
     use crate::worker::ParentRuntime;
 
@@ -6352,7 +6285,7 @@ pub mod gql {
             Ok(true)
         }
 
-        /// @emoji ⛔ Drop an in-flight transaction inside the targeted `wip` draft (no-op for already-finalized ones).
+        /// @emoji ⛔ Drop an in-flight transaction inside the targeted `wip` draft (no-operation for already-finalized ones).
         #[graphql(name = "transactionAbort")]
         pub async fn transaction_abort(&self, ctx: &Context<'_>, #[graphql(name = "draftId")] draft_id: Id, #[graphql(name = "transactionId")] transaction_id: Id) -> async_graphql::Result<bool> {
             let rt = ctx.data::<Arc<ParentRuntime>>()?;
@@ -6373,23 +6306,14 @@ pub mod gql {
 
         /// @emoji 🌱 Create a new alternative branch from the current checkpoint tip (`sourceAlternativeId` omitted = fork from the kit main line).
         #[graphql(name = "createAlternativeFromTip")]
-        pub async fn create_alternative_from_tip(
-            &self,
-            ctx: &Context<'_>,
-            name: String,
-            #[graphql(name = "sourceAlternativeId")] source_alternative_id: Option<Id>,
-        ) -> async_graphql::Result<Id> {
+        pub async fn create_alternative_from_tip(&self, ctx: &Context<'_>, name: String, #[graphql(name = "sourceAlternativeId")] source_alternative_id: Option<Id>) -> async_graphql::Result<Id> {
             let rt = ctx.data::<Arc<ParentRuntime>>()?;
-            let id = rt
-                .wip_graph
-                .create_alternative_from_tip(name, source_alternative_id.as_ref())
-                .await
-                .map_err(|e| async_graphql::Error::new(e.to_string()))?;
+            let id = rt.wip_graph.create_alternative_from_tip(name, source_alternative_id.as_ref()).await.map_err(|e| async_graphql::Error::new(e.to_string()))?;
             Ok(id)
         }
 
         /// @emoji 🩻 Hydrate the `wip` graph from a previously-persisted metabolism-shaped bundle JSON.
-        /// Restores the kit projection (`wip.root`); future passes also replay drafts / transactions through the op log.
+        /// Restores the kit projection (`wip.root`); future passes also replay drafts / transactions through the operation log.
         #[graphql(name = "kitStoreBundleHydrate")]
         pub async fn kit_store_bundle_hydrate(&self, ctx: &Context<'_>, json: String) -> async_graphql::Result<bool> {
             let rt = ctx.data::<Arc<ParentRuntime>>()?;
@@ -6907,9 +6831,7 @@ mod tests {
             assert!(res.errors.is_empty(), "init defaults errors: {:?}", res.errors);
 
             const M: &str = r#"mutation($n: String!) { createAlternativeFromTip(name: $n) }"#;
-            let res = schema
-                .execute(Request::new(M).variables(Variables::from_value(async_graphql::value!({ "n": "branch-a" }))))
-                .await;
+            let res = schema.execute(Request::new(M).variables(Variables::from_value(async_graphql::value!({ "n": "branch-a" })))).await;
             assert!(res.errors.is_empty(), "createAlternativeFromTip errors: {:?}", res.errors);
             let id: String = res.data.into_json().unwrap()["createAlternativeFromTip"].as_str().expect("alt id").to_string();
 
@@ -6918,10 +6840,7 @@ mod tests {
             assert!(res.errors.is_empty(), "alternatives query errors: {:?}", res.errors);
             let v = res.data.into_json().unwrap();
             let edges = v["wip"]["alternatives"]["edges"].as_array().expect("edges");
-            assert!(
-                edges.iter().any(|e| e["node"]["id"].as_str() == Some(id.as_str())),
-                "expected new alternative id in wip.alternatives"
-            );
+            assert!(edges.iter().any(|e| e["node"]["id"].as_str() == Some(id.as_str())), "expected new alternative id in wip.alternatives");
             assert!(edges.iter().any(|e| e["node"]["name"].as_str() == Some("branch-a")));
         });
     }
@@ -7082,7 +7001,7 @@ mod tests {
 
     #[test]
     fn graph_op_registry_row_count() {
-        assert_eq!(crate::op::GRAPH_OP_REGISTRY_ROWS, 98);
+        assert_eq!(crate::operation::GRAPH_OP_REGISTRY_ROWS, 98);
     }
 
     #[test]
@@ -7198,7 +7117,7 @@ mod tests {
             let draft_id = crate::id::Id::from(ops_json["draftId"].as_str().expect("draftId"));
             let tx_id = crate::id::Id::from(ops_json["transactionId"].as_str().expect("transactionId"));
             for rec in ops_json["ops"].as_array().expect("ops") {
-                let kind = rec["kind"].as_str().expect("op kind");
+                let kind = rec["kind"].as_str().expect("operation kind");
                 let input = &rec["input"];
                 match kind {
                     "createdFixedPiece" => {
@@ -7209,7 +7128,7 @@ mod tests {
                         let description = input.get("description").and_then(|v| v.as_str()).map(|s| s.to_string());
                         g.apply_create_fixed_piece(draft_id.clone(), tx_id.clone(), design_id, blueprint_id, position, name, description).await.expect("apply createFixedPiece");
                     }
-                    other => panic!("unsupported golden op kind: {other}"),
+                    other => panic!("unsupported golden operation kind: {other}"),
                 }
             }
 
@@ -7255,7 +7174,7 @@ mod tests {
             let draft_id = crate::id::Id::from(ops_json["draftId"].as_str().expect("draftId"));
             let tx_id = crate::id::Id::from(ops_json["transactionId"].as_str().expect("transactionId"));
             for rec in ops_json["ops"].as_array().expect("ops") {
-                let kind = rec["kind"].as_str().expect("op kind");
+                let kind = rec["kind"].as_str().expect("operation kind");
                 let payload = serde_json::to_string(rec.get("input").expect("input")).expect("payload json");
                 let applied = crate::kit_graph_engine::apply_semantic_op_json(&g, &draft_id, &tx_id, kind, &payload).await.expect("apply_semantic_op_json");
                 assert!(applied.created_piece.is_some(), "expected piece for {kind}");
@@ -7287,7 +7206,7 @@ mod tests {
             std::fs::write(&path, serde_json::to_string_pretty(&bundle).expect("serialize kit-store bundle")).expect("write kit-store bundle");
 
             let g = crate::vcs::Graph::new().await;
-            crate::kit_backbone::AttachedBackbone::mount_and_replay(&norm, crate::op::BackboneStoreKind::DevJson, "wip", &g).await.expect("dev json mount+replay");
+            crate::kit_backbone::AttachedBackbone::mount_and_replay(&norm, crate::operation::BackboneStoreKind::DevJson, "wip", &g).await.expect("dev json mount+replay");
 
             let fp = stable_projection_fingerprint(&g.the_kit).await;
             let exp_fp = exp["projectionFingerprint"].as_str().expect("projectionFingerprint");
@@ -7314,18 +7233,19 @@ mod tests {
             let stored = crate::kit_backbone::stored_ops_from_golden_ops_json(&golden_ops).expect("golden → stored ops");
 
             let g_bootstrap = crate::vcs::Graph::new().await;
-            let _bones = crate::kit_backbone::AttachedBackbone::mount_and_replay(&norm, crate::op::BackboneStoreKind::LocalDotSemio, "wip", &g_bootstrap).await.expect("bootstrap .semio layout");
+            let _bones = crate::kit_backbone::AttachedBackbone::mount_and_replay(&norm, crate::operation::BackboneStoreKind::LocalDotSemio, "wip", &g_bootstrap).await.expect("bootstrap .semio layout");
 
             let db_path = proj_canon.join(".semio").join("wip.db");
             let conn = rusqlite::Connection::open(&db_path).expect("open wip.db");
-            for op in &stored {
-                let input_json = serde_json::to_string(&op.input).expect("input json");
-                conn.execute("INSERT INTO semantic_op_log (draft_id, transaction_id, kind, input_json) VALUES (?1, ?2, ?3, ?4)", rusqlite::params![op.draft_id, op.transaction_id, op.kind, input_json]).expect("insert semantic op row");
+            for operation in &stored {
+                let input_json = serde_json::to_string(&operation.input).expect("input json");
+                conn.execute("INSERT INTO semantic_op_log (draft_id, transaction_id, kind, input_json) VALUES (?1, ?2, ?3, ?4)", rusqlite::params![operation.draft_id, operation.transaction_id, operation.kind, input_json])
+                    .expect("insert semantic operation row");
             }
             drop(conn);
 
             let g2 = crate::vcs::Graph::new().await;
-            crate::kit_backbone::AttachedBackbone::mount_and_replay(&norm, crate::op::BackboneStoreKind::LocalDotSemio, "wip", &g2).await.expect("replay wip.db");
+            crate::kit_backbone::AttachedBackbone::mount_and_replay(&norm, crate::operation::BackboneStoreKind::LocalDotSemio, "wip", &g2).await.expect("replay wip.db");
 
             let fp = stable_projection_fingerprint(&g2.the_kit).await;
             let exp_fp = exp["projectionFingerprint"].as_str().expect("projectionFingerprint");
@@ -7421,7 +7341,7 @@ mod tests {
     #[cfg(not(target_arch = "wasm32"))]
     #[test]
     fn dev_json_backbone_round_trip_persists_metabolism_shape_on_disk() {
-        // 🔁 Mount (no file) → append op via attached backbone → re-read on-disk JSON → confirm metabolism top-level + drafts path.
+        // 🔁 Mount (no file) → append operation via attached backbone → re-read on-disk JSON → confirm metabolism top-level + drafts path.
         block_on(async {
             let dir = tempfile::tempdir().expect("temp dir");
             let path = dir.path().join("dev-kit.json");
@@ -7429,11 +7349,10 @@ mod tests {
             let norm = crate::kit_backbone::normalize_connection_uri(&uri_full);
 
             let g = crate::vcs::Graph::new().await;
-            let mut bone = crate::kit_backbone::AttachedBackbone::mount_and_replay(&norm, crate::op::BackboneStoreKind::DevJson, "wip", &g).await.expect("mount empty bundle");
+            let mut bone = crate::kit_backbone::AttachedBackbone::mount_and_replay(&norm, crate::operation::BackboneStoreKind::DevJson, "wip", &g).await.expect("mount empty bundle");
             let draft_id = crate::id::Id::from("draft-rs-1");
             let tx_id = crate::id::Id::from("tx-rs-1");
-            bone.append_semantic_op(&draft_id, &tx_id, "kit.design.piece.createdFixedPiece", &serde_json::json!({"designId": "d-1", "blueprintId": "b-1"}))
-                .expect("append op");
+            bone.append_semantic_op(&draft_id, &tx_id, "kit.design.piece.createdFixedPiece", &serde_json::json!({"designId": "d-1", "blueprintId": "b-1"})).expect("append operation");
 
             let raw = std::fs::read_to_string(&path).expect("read on-disk bundle");
             let v: serde_json::Value = serde_json::from_str(&raw).expect("parse on-disk bundle");

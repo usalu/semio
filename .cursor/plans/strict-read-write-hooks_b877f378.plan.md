@@ -6,10 +6,10 @@ todos:
     content: Open MCP ticket 'Strict Read Write Hooks' under .repo/🎫/26/05/08/strict-read-write-hooks/
     status: pending
   - id: phase1_storefields_storecommands
-    content: "semio/js: add StoreField/StoreCommand surface (static fields, parameterized factories, all mutations); wire operationSucceeded/operationFailed routing; privatize submitChangeKitCommands and fetchFullKit; extend embedded tests"
+    content: "semio/js: add KitStore.query<T>(body, parse, initial) + KitStore.mutation<TArgs>(name, vars, body, toVars) helpers; declare every read as a one-liner query<T>(...) and every write as a one-liner mutation<TArgs>(...); wire operationSucceeded -> correlator + invalidations.next() and operationFailed -> correlator; delete OperationRouter, seedFieldsFromDto, dispatchCorrelationEnvelope typed-kind branch, kitRenamed subscription, fieldCache; privatize submitChangeKitCommands and fetchFullKit; extend embedded tests"
     status: pending
   - id: phase2_react_hooks
-    content: "semio/react: rewrite every read hook as useStoreField (or useStoreFieldFactory) and every write hook as useStoreCommand; delete HookTriad/HookRead/useDraft/useOptimistic/useSchemaObjectState/useSchemaFieldState + auto-generated wrappers/useSemioReadSnap/useKitSync/useWriteQueue/useSetErrors; update embedded tests"
+    content: "semio/react: rewrite every read hook as useStoreField (static) or useGraphqlField (parameterized, disposes per dep change) and every write hook as useStoreCommand; delete HookTriad/HookRead/useDraft/useOptimistic/useSchemaObjectState/useSchemaFieldState + auto-generated wrappers/useSemioReadSnap/useKitSync/useWriteQueue/useSetErrors; update embedded tests"
     status: pending
   - id: phase3_sketchpad
     content: "semio/sketchpad: introduce SketchpadFieldRow / SketchpadToggleFieldRow with separated value+status+onCommit; migrate every consumer (kit/type/design/folder/file panels, footer, navbar); drop SketchpadTriadInputRow/SketchpadTriadToggleRow and HookTriad import"
@@ -26,33 +26,43 @@ isProject: false
 
 ```mermaid
 graph LR
-  subgraph SemioJs["semio/js KitStore + KitStoreClient"]
-    KS["KitStore (correlator + router)"]
-    KS --> RF["StoreField fields (read)"]
-    KS --> WC["StoreCommand fields (write)"]
-    RF --> RFP["Parameterized factories<br/>typeBestRepresentation(typeId, tagIds)<br/>kitFileUrl(fileId), pieceMetadata(designId, pieceId), ..."]
+  subgraph SemioJs["semio/js KitStore"]
+    Q["query&lt;T&gt;(body, parse, initial)<br/>-&gt; StoreField&lt;T&gt;"]
+    M["mutation&lt;TArgs&gt;(name, vars, body, toVars)<br/>-&gt; StoreCommand&lt;TArgs&gt;"]
+    INVS["invalidations Subject&lt;void&gt;"]
+    CORR["RequestCorrelator"]
+    Q -- subscribe --> INVS
+    M -- await requestId --> CORR
   end
   subgraph Sub["GraphQL subscriptions"]
-    OS["operationSucceeded"] --> KS
-    OF["operationFailed"] --> KS
-    INV["Changed / ValidationInvalidated"] --> KS
+    OS["operationSucceeded"] --> CORR
+    OS --> INVS
+    OF["operationFailed"] --> CORR
   end
   subgraph SemioReact["semio/react hooks"]
     USF["useStoreField(field): T"]
     USC["useStoreCommand(cmd): [run, WriteStatus]"]
+    UGF["useGraphqlField(make, deps): T"]
     R["useTypeName, useTypesIds, useKitFileUrl, useCanUndo, ..."]
     W["useRenameKit, useUndo, useDragPieces, useUpdateType, ..."]
     R --> USF
+    R --> UGF
     W --> USC
   end
-  RF --> USF
-  WC --> USC
+  Q --> USF
+  Q --> UGF
+  M --> USC
   subgraph Sketchpad["semio/sketchpad"]
     Row["SketchpadFieldRow / ToggleRow<br/>{ value, status, onCommit }"]
     Row --> R
     Row --> W
   end
 ```
+
+Two mechanisms only:
+
+- **Read** = one GraphQL query → `StoreField<T>` (no seeding, no event filtering, no JsonObject in the public type; the `parse` callback returns `T`).
+- **Write** = one GraphQL mutation, always wrapped in a draft + transaction → `StoreCommand<TArgs>` (one shared executor; no per-mutation boilerplate).
 
 
 
@@ -61,6 +71,54 @@ The new contract is:
 - A read hook returns the value only: `useTypeName(typeId): string`. No `WriteStatus`, no setter.
 - A write hook returns `[run, WriteStatus]`: `useRenameType(): [(args) => Promise<SetResult>, WriteStatus]`. No value.
 - Read + write of the same field are two separate hooks the consumer composes.
+
+## Existing primitives (already in [semio/js/index.ts](semio/js/index.ts))
+
+The refactor keeps these as-is and removes everything else from `#region 🧱StorePrimitives`:
+
+```ts
+export type WriteStatus =
+  | { kind: "readonly"; pending: 0; lastError?: SetError }
+  | { kind: "idle";     pending: 0; lastError?: SetError }
+  | { kind: "pending";  pending: number; lastError?: SetError }
+  | { kind: "error";    pending: 0; lastError: SetError };
+
+export class StoreField<T> {
+  constructor(initial: T) { /* BehaviorSubject<T> internally */ }
+  subscribe(h: () => void): Unsubscribe;
+  getSnapshot(): T;
+  set(next: T): void;
+  dispose(): void;
+}
+
+export class StoreCommand<TArgs> {
+  readonly status: StoreField<WriteStatus>;
+  constructor(exec: (args: TArgs) => Promise<SetResult>);
+  readonly run: (args: TArgs) => Promise<SetResult>;  // sets pending -> idle / error
+  dispose(): void;
+}
+
+export class RequestCorrelator {
+  await(requestId: string): Promise<SetResult>;
+  resolve(requestId: string, r: SetResult): void;
+  disposeAll(reason?: string): void;
+}
+```
+
+`OperationRouter`, `OperationEvent`, `KitStore.seedFieldsFromDto`, `KitStore.dispatchCorrelationEnvelope` (the typed-kind branch), and the dedicated `kitRenamed` GraphQL subscription are **removed** in this refactor — they were demuxing typed events onto fields, but in the new model fields just refetch on a single invalidation tick and there is no seeding.
+
+```tsx
+// React-side primitives (kept).
+export function useStoreField<T>(field: StoreField<T>): T {
+  return React.useSyncExternalStore(field.subscribe, field.getSnapshot, field.getSnapshot);
+}
+export function useStoreCommand<TArgs>(
+  cmd: StoreCommand<TArgs>,
+): readonly [(args: TArgs) => Promise<SetResult>, WriteStatus] {
+  const status = useStoreField(cmd.status);
+  return [cmd.run, status] as const;
+}
+```
 
 ## Scope of deletion
 
@@ -84,25 +142,162 @@ In [semio/sketchpad/index.tsx](semio/sketchpad/index.tsx):
 
 ## Phase 1 - KitStore + client surface ([semio/js/index.ts](semio/js/index.ts))
 
-Add to `KitStore` (and mirror on `WasmKitStoreClient` getters + `FallbackKitClient`):
+Two helpers replace every read/write-specific method in `KitStore` and remove all seeding / typed-event filtering.
 
-- Static `StoreField`s seeded from the opening DTO and refreshed by the operation/event subscriptions:
-  - `kitName` (already exists), `kitMetadata`, `kitDescription`, `kitIcon`, `kitImage`, `kitPreview`, `kitVersion`, `kitRemote`, `kitHomepage`, `kitLicense`, `kitUri`, `kitCreatedAt`, `kitUpdatedAt`.
-  - `typesIds`, `designsIds`, `typesShallow`, `designsShallow`, `typesMetadata`, `designsMetadata`, `typesFull`, `designsFull`, `filesFull`, `tagsFull`, `authorsShallow`, `authors`.
-  - `kitColoredConnectors`, `kitDesignsShallow`, `kitTypesShallow`, `kitAuthorsShallow`.
-  - `canUndo`, `canRedo`, `kitFileState`, `kitPersistenceKind`, `kitPersistenceSource`, `kitSnapshot` (= materialized `KitFullDto`).
-- Parameterized factories on `KitStoreClient` (each returns a memoized `StoreField<T>`; identity is keyed by serialized args):
-  - `typeBestRepresentation(typeId, tagIds): StoreField<unknown>`
-  - `kitFileUrl(fileId): StoreField<string | null>`
-  - `pieceMetadata(designId, pieceId): StoreField<PiecePlacementRowDto | undefined>`
-  - `pieceFlatPlane(designId, pieceId)`, `pieceFlatCenter(designId, pieceId)`
-  - `isConnectedPiece(designId, pieceId)`, `pieceDepth(designId, pieceId)`, `fixedPieceId(designId, pieceId)`, `parentPieceId(designId, pieceId)`, `pieceParentConnection(designId, pieceId)`
-  - `kitPieces(designId)`, `kitConnections(designId)`, `includedDesigns(designId)`
-  - `designClusterableGroups(designId, selection)`, `designQualitySum(designId, qualityId)`
-  - `replacableTypes(designId, pieceIds)`, `replacableDesigns(designId, pieceIds)`, `explodeableDesignNodes(designId)`
-  - Per-entity field factories `typeName(typeId)`, `typeIcon(typeId)`, ..., `designName(designId)`, ..., `pieceDescription(designId, pieceId)`, ... (only the ones today's hooks/sketchpad rows actually consume - exact list audited from the deleted `useSchemaFieldState` call sites in sketchpad).
+### Two helpers + one invalidation tick
 
-Internally each parameterized factory returns the cached `StoreField`, lazily fetches via the existing GraphQL helpers (e.g. `gqlKitReadOnlyScope`, `runScopedTransactionBatch`), invalidates on the relevant `subscribeRootInvalidation` / `operationSucceeded` rows, and wires last-error onto the field via the existing `WriteStatus` slot only on the *command* side.
+```ts
+// semio/js/index.ts -- inside KitStore.
+import { Subject } from "rxjs";
+
+private readonly invalidations = new Subject<void>();
+
+/** @emoji 🧾 GraphQL-backed read field. Re-runs `body` on every invalidation tick. */
+private query<T>(body: string, parse: (data: JsonValue) => T, initial: T): StoreField<T> {
+  const field = new StoreField<T>(initial);
+  const fetch = async () => {
+    try {
+      const data = kitGraphqlData(await this.gqlRun({ query: `query { ${body} }` })) as JsonValue;
+      field.set(parse(data));
+    } catch {
+      /* keep last value; errors only surface on the write path via WriteStatus */
+    }
+  };
+  const sub = this.invalidations.subscribe({ next: () => void fetch() });
+  const origDispose = field.dispose.bind(field);
+  field.dispose = () => { sub.unsubscribe(); origDispose(); };
+  void fetch();
+  return field;
+}
+
+/** @emoji 📝 Transactional mutation. Opens draft + tx, runs the named mutation, awaits correlator, commits / aborts. */
+private mutation<TArgs>(
+  fieldName: string,                                          // e.g. "renameKit"
+  variableSignatures: string,                                 // e.g. "$name: String!"
+  argList: string,                                            // e.g. "name: $name"
+  toVariables: (args: TArgs) => Record<string, JsonValue>,
+): StoreCommand<TArgs> {
+  return new StoreCommand<TArgs>(async (args) => {
+    const draftId = await this.openDraft();
+    const transactionId = await this.openTransaction(draftId);
+    try {
+      const data = kitGraphqlData(await this.gqlRun({
+        query: `mutation($draftId: Id!, $transactionId: Id!${variableSignatures ? ", " + variableSignatures : ""}) {
+                  ${fieldName}(draftId: $draftId, transactionId: $transactionId${argList ? ", " + argList : ""})
+                }`,
+        variables: { draftId, transactionId, ...toVariables(args) },
+      })) as Record<string, string>;
+      const requestId = String(data[fieldName] ?? "");
+      if (requestId === "") throw new Error(`${fieldName}: empty requestId`);
+      const result = await this.correlator.await(requestId);
+      if (result.ok) await this.commitTransaction(draftId, transactionId);
+      else await this.abortTransaction(draftId, transactionId);
+      return result;
+    } catch (e) {
+      await this.abortTransaction(draftId, transactionId).catch(() => {});
+      return { ok: false, error: { kind: "Internal", message: String(e) } };
+    }
+  });
+}
+```
+
+`operationSucceeded` and `operationFailed` are the only subscriptions; both call `correlator.resolve(...)` and the success path additionally `invalidations.next()`. No `kitRenamed`-specific subscription, no `OperationRouter`, no `seedFieldsFromDto`, no `dispatchCorrelationEnvelope` typed-kind branch.
+
+```ts
+private startCorrelationSubscriptions(): void {
+  // operationSucceeded { id requestId } -> resolve correlator, then broadcast invalidation.
+  this.subscribeOperationSucceeded((requestId) => {
+    if (requestId) this.correlator.resolve(requestId, { ok: true });
+    this.invalidations.next();
+  });
+  // operationFailed { kind message requestId } -> resolve correlator with error.
+  this.subscribeOperationFailed((requestId, error) => {
+    if (requestId) this.correlator.resolve(requestId, { ok: false, error });
+  });
+}
+```
+
+### Defining reads
+
+Every read field is one line. `parse` returns the typed `T` directly (no `JsonObject` leaks out of `KitStore`).
+
+```ts
+// semio/js/index.ts -- KitStore constructor.
+readonly kitName     = this.query<string>          ("wip { theKit { name } }",                    (d) => String((d as KitNameQuery).wip?.theKit?.name ?? ""), "");
+readonly canUndo     = this.query<boolean>         ("wip { canUndo(steps: 1) }",                  (d) => Boolean((d as CanUndoQuery).wip?.canUndo), false);
+readonly canRedo     = this.query<boolean>         ("wip { canRedo(steps: 1) }",                  (d) => Boolean((d as CanRedoQuery).wip?.canRedo), false);
+readonly typesIds    = this.query<readonly string[]>("wip { theKit { types { edges { node { id } } } } }",
+                                                     parseTypesIds, []);
+readonly typesShallow = this.query<readonly TypeShallow[]>(
+  `wip { theKit { types { edges { node { ${KIT_GQL_TYPE_SHALLOW_FIELDS} } } } } }`,
+  parseTypesShallow, [],
+);
+readonly designsIds  = this.query<readonly string[]>("wip { theKit { designs { edges { node { id } } } } }",
+                                                     parseDesignsIds, []);
+readonly kitSnapshot = this.query<KitFullDto | undefined>("wip { theKit { fullSnapshot } }", parseKitFullSnapshot, undefined);
+// ... rest of static reads ...
+```
+
+Parameterized reads are plain factory methods — they construct a fresh `StoreField` and never cache. The React layer disposes them on unmount.
+
+```ts
+kitFileUrl(fileId: string | undefined): StoreField<string | null> {
+  return this.query<string | null>(
+    `wip { theKit { file(id: "${fileId ?? ""}") { url } } }`,
+    (d) => ((d as KitFileUrlQuery).wip?.theKit?.file?.url ?? null) as string | null,
+    null,
+  );
+}
+
+pieceMetadata(designId: string, pieceId: string): StoreField<PiecePlacementRowDto | undefined> {
+  return this.query<PiecePlacementRowDto | undefined>(
+    `pieceInDesign(designId: "${designId}", pieceId: "${pieceId}") { ${KIT_GQL_PIECE_METADATA_FIELDS} }`,
+    parsePieceMetadata, undefined,
+  );
+}
+
+typeName(typeId: string): StoreField<string> {
+  return this.query<string>(
+    `wip { theKit { type(id: "${typeId}") { name } } }`,
+    (d) => String((d as TypeNameQuery).wip?.theKit?.type?.name ?? ""), "",
+  );
+}
+```
+
+### Defining writes (one mechanism for every mutation)
+
+```ts
+// semio/js/index.ts -- KitStore constructor.
+readonly renameKit          = this.mutation<string>("renameKit",
+  "$name: String!", "name: $name",
+  (name) => ({ name }));
+
+readonly undo               = this.mutation<void>("undo", "", "", () => ({}));
+readonly redo               = this.mutation<void>("redo", "", "", () => ({}));
+
+readonly dragPiecesInDesign = this.mutation<{ designId: string; pieceIds: readonly string[]; offset: { u: number; v: number } }>(
+  "dragPiecesInDesign",
+  "$designId: Id!, $pieceIds: [Id!]!, $offset: OffsetInput!",
+  "designId: $designId, pieceIds: $pieceIds, offset: $offset",
+  (a) => ({ designId: a.designId, pieceIds: [...a.pieceIds], offset: a.offset }),
+);
+
+readonly flattenDesign      = this.mutation<{ designId: string }>(
+  "flattenDesign", "$designId: Id!", "designId: $designId",
+  (a) => ({ designId: a.designId }),
+);
+
+readonly updateType         = this.mutation<{ id: string; key: string; value: unknown }>(
+  "updateType",
+  "$id: Id!, $key: String!, $value: AttributeValueInput!",
+  "id: $id, key: $key, value: $value",
+  (a) => ({ id: a.id, key: a.key, value: a.value as JsonValue }),
+);
+
+// ...same shape for every other mutation in the OperationKind union.
+```
+
+The `mutation<TArgs>` helper is the only place `openDraft` / `openTransaction` / `commit/abort` / `correlator.await` ever appear.
 
 - `StoreCommand`s on `KitStore` (and exposed on `KitStoreClient`):
   - Already: `renameKit`.
@@ -110,18 +305,74 @@ Internally each parameterized factory returns the cached `StoreField`, lazily fe
   - Per-entity: `createType / deleteType / updateType`, `createDesign / deleteDesign / updateDesign`, `createAuthor / deleteAuthor / updateAuthor`, `createQuality / deleteQuality / updateQuality`, `createPort / deletePort / updatePort`, `createTag / deleteTag / updateTag`, `createConcept / deleteConcept`, `addFile / removeFile / updateFile`, `createFolder / deleteFolder / updateFolder`, `moveToFolder`, `moveKitArtifactToFolder`.
   - `importKit`, `exportKit` (kept readonly until backed; expose as `StoreCommand` whose status field is seeded `SCHEMA_HOOK_READONLY_STATUS`).
 
-Each `StoreCommand` has a single typed `TArgs` (object). Examples:
+Each `StoreCommand` has a single typed `TArgs` (object). Concrete signatures:
 
 ```ts
-client.dragPiecesInDesign : StoreCommand<{ designId: string; pieceIds: readonly string[]; offset: { u: number; v: number } }>
-client.updateType : StoreCommand<{ id: string; key: string; value: unknown }>
-client.flattenDesign : StoreCommand<{ designId: string }>
-client.undo / client.redo : StoreCommand<void>
+client.renameKit          : StoreCommand<string>;                                          // arg = name
+client.undo               : StoreCommand<void>;
+client.redo               : StoreCommand<void>;
+client.dragPiecesInDesign : StoreCommand<{ designId: string; pieceIds: readonly string[]; offset: { u: number; v: number } }>;
+client.flattenDesign      : StoreCommand<{ designId: string }>;
+client.expandDesign       : StoreCommand<{ designId: string; pieceIds: readonly string[] }>;
+client.deleteConnection   : StoreCommand<{ designId: string; connectionId: string }>;
+client.changePieceType    : StoreCommand<{ designId: string; pieceId: string; typeId: string }>;
+client.addConnections     : StoreCommand<{ designId: string; connections: readonly ConnectionDto[] }>;
+client.removeConnections  : StoreCommand<{ designId: string; connectionIds: readonly string[] }>;
+client.createType         : StoreCommand<{ dto: TypeDto }>;
+client.deleteType         : StoreCommand<{ id: string }>;
+client.updateType         : StoreCommand<{ id: string; key: string; value: unknown }>;
+client.moveToFolder       : StoreCommand<{ artifactId: string; folderId: string | null }>;
+// …same shape for createDesign/deleteDesign/updateDesign, createAuthor/deleteAuthor/updateAuthor,
+//    createQuality/deleteQuality/updateQuality, createPort/deletePort/updatePort,
+//    createTag/deleteTag/updateTag, createConcept/deleteConcept,
+//    addFile/removeFile/updateFile, createFolder/deleteFolder/updateFolder,
+//    moveKitArtifactToFolder, importKit, exportKit.
 ```
 
-Subscriptions: extend `dispatchCorrelationEnvelope` / `startCorrelationSubscriptions` so that `operationSucceeded` (typed by `OperationKind`) routes to the matching `StoreField`s (e.g. a `RenamedKit` payload updates `kitName`, an `AddedType` payload appends to `typesIds` and refreshes `typesMetadata`, etc.). The router pattern is already in place via `OperationRouter` - this phase only widens it.
+### `KitStoreClient` interface delta
 
-Drop public methods that no longer have callers (`KitStoreClient.submitChangeKitCommands`, `fetchFullKit`); keep them on the concrete classes as `private` so commands can still call them internally.
+```ts
+// BEFORE -- semio/js/index.ts
+export interface KitStoreClient {
+  readonly kitName: StoreField<string>;
+  readonly renameKit: StoreCommand<string>;
+  readKitName(): Promise<string>;
+  fetchFullKit(): Promise<KitFullDto>;                                  // remove
+  submitChangeKitCommands(commands: readonly ChangeKitCommand[]): Promise<SetResult>; // remove
+}
+
+// AFTER -- one StoreField per read, one StoreCommand per write, factories for parameterized reads.
+export interface KitStoreClient {
+  // Static reads.
+  readonly kitName:        StoreField<string>;
+  readonly canUndo:        StoreField<boolean>;
+  readonly canRedo:        StoreField<boolean>;
+  readonly typesIds:       StoreField<readonly string[]>;
+  readonly typesShallow:   StoreField<readonly TypeShallow[]>;
+  readonly typesMetadata:  StoreField<readonly TypeMetadataDto[]>;
+  readonly designsIds:     StoreField<readonly string[]>;
+  readonly designsShallow: StoreField<readonly DesignShallow[]>;
+  readonly designsMetadata:StoreField<readonly DesignMetadataDto[]>;
+  readonly kitSnapshot:    StoreField<KitFullDto | undefined>;
+  // ... rest of static fields ...
+
+  // Parameterized reads. Each call returns a fresh, single-purpose StoreField; React disposes via useGraphqlField.
+  kitFileUrl(fileId: string | undefined): StoreField<string | null>;
+  pieceMetadata(designId: string, pieceId: string): StoreField<PiecePlacementRowDto | undefined>;
+  typeName(typeId: string): StoreField<string>;
+  // ... rest of factories ...
+
+  // Writes (every mutation built via KitStore.mutation<TArgs>).
+  readonly renameKit:          StoreCommand<string>;
+  readonly undo:               StoreCommand<void>;
+  readonly redo:               StoreCommand<void>;
+  readonly dragPiecesInDesign: StoreCommand<{ designId: string; pieceIds: readonly string[]; offset: { u: number; v: number } }>;
+  readonly updateType:         StoreCommand<{ id: string; key: string; value: unknown }>;
+  // ... rest of commands ...
+}
+```
+
+`fetchFullKit` and `submitChangeKitCommands` become `private` on `WasmKitStoreClient` / `KitStore`. Nothing on the public surface bypasses the `query` / `mutation` helpers.
 
 Embedded tests in [semio/js/index.ts](semio/js/index.ts) get one new `describe` per family asserting that:
 
@@ -131,44 +382,250 @@ Embedded tests in [semio/js/index.ts](semio/js/index.ts) get one new `describe` 
 
 ## Phase 2 - React hook layer ([semio/react/index.tsx](semio/react/index.tsx))
 
-- Keep `useStoreField`, `useStoreCommand`, `useKitName`, `useRenameKit` as the canonical primitives.
-- Add `useStoreFieldFactory<TArgs, T>(factory, args): T` that memoizes the produced `StoreField` by stable JSON-of-args key. Used internally by every parameterized read hook.
-- Rewrite every existing read hook to one of the two shapes:
-  - Static: `export function useTypesIds(): readonly string[] { return useStoreField(useKitStoreClient()!.typesIds); }`
-  - Parameterized: `export function useKitFileUrl(fileId?: string): string | null { const c = useKitStoreClient(); return useStoreFieldFactory((id) => c!.kitFileUrl(id), [fileId]); }`
-- Rewrite every existing write hook to: `export function useUndo() { return useStoreCommand(useKitStoreClient()!.undo); }`. Multi-arg hooks expose `[run(args), status]`.
-- Delete bulk schema generators. The hooks that survive are only those that have a real consumer in sketchpad / external apps; the audit script `rg "useActor|useUser|useAgent|useCoordinate|usePoint|useVector|usePlane|useCamera|useAttribute|useGroup|useLayer|useStat|useProp|useFile\\(" semio` confirms zero outside-of-react consumers, so the entire generator block (~lines 5837-7100) is removed.
-- Keep `useWriteIndicator(status)` (it is now the only `WriteStatus` UI helper; reads no longer need it).
+- Keep `useStoreField`, `useStoreCommand`, `useKitName`, `useRenameKit` as primitives.
+- Add `useGraphqlField<T>(make, deps): T` for parameterized reads. The hook memoizes the `StoreField` over `deps` and **disposes** it on dep change / unmount (no caching anywhere else).
+- Delete bulk schema generators (`useActor*`, `useUser*`, ..., `useKitTags`, `useKitVersion`, `useKitId`, `useKitHash` -- all `useSchemaFieldState` / `useSchemaObjectState` callers).
+- Keep `useWriteIndicator(status)` as the only `WriteStatus` UI helper; reads no longer carry status.
 - Delete `useDraft`, `useOptimistic`, `useSemioReadSnap`, `useSemioStoreSelector`, `useKitSync`, `useWriteQueue`, `useSetErrors` (subsumed by per-command `WriteStatus.lastError`).
-- Embedded tests: keep the kit-name suite, add one suite per area exercising the new read/write split (rename / undo / dragPiece / updateType / addFile flows). Tests assert: read hook returns `T` only; write hook returns `[run, WriteStatus]`; `useStoreFieldFactory` returns stable refs across re-renders with identical args.
+
+### `useGraphqlField` (new helper)
+
+```tsx
+// semio/react/index.tsx
+export function useGraphqlField<T>(make: () => StoreField<T>, deps: React.DependencyList): T {
+  const field = React.useMemo(make, deps);
+  React.useEffect(() => () => field.dispose(), [field]);
+  return useStoreField(field);
+}
+```
+
+Each dep change throws away the previous field (which unsubscribes from `invalidations` and completes its subject) and constructs a fresh one. No caching, no shared identity, no leaks.
+
+### Read hook -- before / after
+
+```tsx
+// BEFORE (lines ~2096-2136)
+export function useTypesIds(explicitKitId?: string): HookTriad<readonly string[]> {
+  const scopeKey = useKitDataScopeKey();
+  const readScope = useKitDataScope();
+  // ~30 lines of subscribe + getSnapshot + ad-hoc WriteStatus + setter
+  const snap = useSemioReadSnap(subscribe, getSnap, getSnap);
+  const status: WriteStatus = /* ... */;
+  return [snap.data as readonly string[], setter, status] as const;
+}
+
+// AFTER
+export function useTypesIds(): readonly string[] {
+  const client = useKitStoreClient();
+  if (!client) throw new Error("useTypesIds: kit client required inside KitScope");
+  return useStoreField(client.typesIds);
+}
+```
+
+```tsx
+// Parameterized read -- BEFORE: HookTriad<string | null>, ~80 lines.
+// AFTER:
+export function useKitFileUrl(fileId: string | undefined): string | null {
+  const client = useKitStoreClient();
+  if (!client) throw new Error("useKitFileUrl: kit client required inside KitScope");
+  return useGraphqlField(() => client.kitFileUrl(fileId), [client, fileId]);
+}
+
+export function usePieceMetadata(designId?: string, pieceId?: string): PiecePlacementRowDto | undefined {
+  const client = useKitStoreClient();
+  if (!client) throw new Error("usePieceMetadata: kit client required inside KitScope");
+  return useGraphqlField(() => client.pieceMetadata(designId ?? "", pieceId ?? ""), [client, designId, pieceId]);
+}
+```
+
+### Write hook -- before / after
+
+```tsx
+// BEFORE (lines ~3404-3431) -- useDragPieces with manual useState<WriteStatus>.
+export function useDragPieces(): {
+  run: (designId: string, pieceIds: readonly string[], offset: { u: number; v: number }) => Promise<SetResult>;
+  status: WriteStatus;
+} {
+  const client = useKitStoreClient();
+  const [status, setStatus] = React.useState<WriteStatus>({ kind: "idle", pending: 0 });
+  const run = React.useCallback(async (designId, pieceIds, offset) => {
+    setStatus({ kind: "pending", pending: 1 });
+    const r = await client!.submitChangeKitCommands(/* hand-built ChangeKitCommand */);
+    setStatus(r.ok ? { kind: "idle", pending: 0 } : { kind: "error", pending: 0, lastError: r.error });
+    return r;
+  }, [client]);
+  return { run, status };
+}
+
+// AFTER -- one line; tuple shape; args packaged into a single TArgs object.
+export function useDragPieces(): readonly [
+  (args: { designId: string; pieceIds: readonly string[]; offset: { u: number; v: number } }) => Promise<SetResult>,
+  WriteStatus,
+] {
+  const client = useKitStoreClient();
+  if (!client) throw new Error("useDragPieces: kit client required inside KitScope");
+  return useStoreCommand(client.dragPiecesInDesign);
+}
+```
+
+### Embedded tests (sample)
+
+```tsx
+it("useTypesIds returns readonly string[] only (no WriteStatus)", async () => {
+  const { result } = renderHook(() => useTypesIds(), { wrapper: KitScopeWrapper });
+  expect(Array.isArray(result.current)).toBe(true);
+});
+
+it("useDragPieces returns [run, WriteStatus] tuple", async () => {
+  const { result } = renderHook(() => useDragPieces(), { wrapper: KitScopeWrapper });
+  const [run, status] = result.current;
+  expect(typeof run).toBe("function");
+  expect(status.kind).toBe("idle");
+});
+
+it("useGraphqlField disposes the previous field on dep change", () => {
+  const disposed: string[] = [];
+  const make = (id: string) => {
+    const f = new StoreField<string>(id);
+    const orig = f.dispose.bind(f);
+    f.dispose = () => { disposed.push(id); orig(); };
+    return f;
+  };
+  const { rerender } = renderHook(({ id }: { id: string }) => useGraphqlField(() => make(id), [id]), {
+    initialProps: { id: "a" },
+  });
+  rerender({ id: "b" });
+  expect(disposed).toEqual(["a"]);
+});
+```
 
 ## Phase 3 - Sketchpad migration ([semio/sketchpad/index.tsx](semio/sketchpad/index.tsx))
 
-- New row primitives:
+### New row primitives
 
 ```tsx
-function SketchpadFieldRow<T>(props: {
+// semio/sketchpad/index.tsx — replaces SketchpadTriadInputRow / SketchpadTriadToggleRow.
+function SketchpadFieldRow<T = string>(props: {
   id: string;
   value: T;
   status: WriteStatus;
   onCommit: (next: T) => Promise<SetResult>;
   placeholder?: string;
-  mapCommit?: (raw: string) => T;
-}): React.ReactElement
+  placeholderId?: string;
+  mapCommit?: (raw: string) => T;          // default: identity for T = string
+}): React.ReactElement {
+  const { disabled, spinning, error } = useWriteIndicator(props.status);
+  const [draft, setDraft] = React.useState<T | null>(null);
+  const display = (draft ?? props.value) as T;
+  const commit = React.useCallback(async () => {
+    if (draft === null) return;
+    const r = await props.onCommit(draft);
+    if (r.ok) setDraft(null);
+  }, [draft, props.onCommit]);
+  return (
+    <TreeRow id={props.id}>
+      <Input
+        value={String(display ?? "")}
+        disabled={disabled}
+        placeholder={props.placeholder}
+        onChange={(e) => setDraft((props.mapCommit ?? ((s) => s as unknown as T))(e.target.value))}
+        onBlur={commit}
+      />
+      {spinning ? <Spinner /> : null}
+      {error ? <ErrorLine message={error.message} /> : null}
+    </TreeRow>
+  );
+}
+
+function SketchpadToggleFieldRow(props: {
+  id: string;
+  value: boolean | undefined | null;
+  status: WriteStatus;
+  onCommit: (next: boolean) => Promise<SetResult>;
+  icon?: React.ReactNode;
+}): React.ReactElement {
+  const { disabled, spinning, error } = useWriteIndicator(props.status);
+  return (
+    <TreeRow id={props.id} icon={props.icon}>
+      <Toggle checked={!!props.value} disabled={disabled} onChange={(next) => void props.onCommit(next)} />
+      {spinning ? <Spinner /> : null}
+      {error ? <ErrorLine message={error.message} /> : null}
+    </TreeRow>
+  );
+}
 ```
 
-  Same for `SketchpadToggleFieldRow`. Internally uses `useWriteIndicator(status)` for spinner + inline error and `<TreeRow>` / `<Input>` for layout. No coupling to any "triad" type.
+### Call site migration — kit name row
 
-- Migrate every existing `<SketchpadTriadInputRow triad={x} ... />` to `<SketchpadFieldRow value={useReadX()} status={writeX[1]} onCommit={writeX[0]} ... />`.
-- Replace every `useKitSnapshotTriad()` consumer with `useKitSnapshot()` (the new value-only read returning `KitHostStoreSnapshot | undefined`). Because the legacy `useKitStore()` was a triad-shaped read, replace `const [kitStore] = useKitStore()` with `const kitStore = useKitStore()`.
-- Remove the unused `import { type HookTriad }` line and any `useDraft` / `useOptimistic` references.
+```tsx
+// BEFORE — legacy triad row.
+function KitSectionForm() {
+  const nameTriad = useKitName();   // legacy: returned [name, setName, status] before this ticket
+  return <SketchpadTriadInputRow triad={nameTriad} id="…name" />;
+}
+
+// AFTER — strict split.
+function KitSectionForm() {
+  const name = useKitName();                                 // read: string
+  const [renameKit, status] = useRenameKit();                // write: [run, WriteStatus]
+  return (
+    <SketchpadFieldRow
+      id="semio.sketchpad.app.kit.panel.details.section.kit.name"
+      value={name}
+      status={status}
+      onCommit={renameKit}
+    />
+  );
+}
+```
+
+### Call site migration — type detail row (icon)
+
+```tsx
+// BEFORE — auto-generated schema field hook.
+function TypeSectionForm({ id }: { id: string }) {
+  const iconTriad = useTypeIcon(id);                       // HookTriad<any>
+  return <SketchpadTriadInputRow triad={iconTriad} id="…type.icon" placeholderId="…iconPlaceholder" />;
+}
+
+// AFTER -- paired read + write, no caching, fresh StoreField per typeId.
+function TypeSectionForm({ id }: { id: string }) {
+  const client = useKitStoreClient()!;
+  const icon = useGraphqlField(() => client.typeIcon(id), [client, id]);
+  const [updateType, status] = useStoreCommand(client.updateType);
+  return (
+    <SketchpadFieldRow
+      id="semio.sketchpad.app.type.panel.details.section.type.icon"
+      value={icon}
+      status={status}
+      onCommit={(next) => updateType({ id, key: "icon", value: next })}
+      placeholderId="semio.sketchpad.app.type.iconPlaceholder.label"
+    />
+  );
+}
+```
+
+### Call site migration — snapshot consumer
+
+```tsx
+// BEFORE — destructure triad even though only the value is used.
+const [ks0] = useKitSnapshotTriad();
+if (ks0) doStuff(ks0);
+
+// AFTER — value-only read, no destructure.
+const ks0 = useKitSnapshot();
+if (ks0) doStuff(ks0);
+```
+
+- Remove `import { type HookTriad }` and any residual `useDraft` / `useOptimistic` references.
+- All ~100 `useKitSnapshotTriad()` / `useTypesFull()` / `useDesignsFull()` / `useFilesFull()` / `useTagsFull()` call sites collapse to single-binding reads in the same way.
 
 ## Phase 4 - validation
 
 - `npm run depcruise:layers` (root).
 - `npx tsc --noEmit` in [semio/js](semio/js), [semio/react](semio/react), [semio/sketchpad](semio/sketchpad).
 - `npm test` in [semio/js](semio/js) and [semio/react](semio/react).
-- `rg "HookTriad|HookRead|useDraft|useOptimistic|useSchemaObjectState|useSchemaFieldState|writeKitStoreClientSchemaField|kitReadonlyTriad|useSemioReadSnap|SketchpadTriadInputRow|SketchpadTriadToggleRow|submitChangeKitCommands\b" semio` returns zero matches outside of `// removed` markers.
+- `rg "HookTriad|HookRead|useDraft|useOptimistic|useSchemaObjectState|useSchemaFieldState|writeKitStoreClientSchemaField|kitReadonlyTriad|useSemioReadSnap|SketchpadTriadInputRow|SketchpadTriadToggleRow|submitChangeKitCommands\b|OperationRouter|OperationEvent|seedFieldsFromDto|dispatchCorrelationEnvelope|fieldCache|cachedField" semio` returns zero matches.
 - Manual sketchpad smoke run: type a kit name, observe spinner -> success; rename a type; drag pieces; undo / redo.
 
 ## Delivery
