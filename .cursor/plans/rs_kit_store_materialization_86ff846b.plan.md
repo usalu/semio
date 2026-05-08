@@ -3,7 +3,7 @@ name: rs kit store materialization
 overview: "Refactor `semio/rs` so the root kit is structurally immutable: every command (rename, description, drag, createFixedPiece, tag/concept/quality CRUD, etc.) appends forward+backward `KitOperation`s onto the open transaction's `Change`, and the visible kit is always recomputed by deep-cloning the parent checkpoint's frozen root and replaying forward ops from finalized + open transactions, with per-checkpoint snapshot caching and per-draft materialization caching."
 todos:
   - id: kitdiff_apply
-    content: Define `operation::KitDiff` + `KitDiffStep` (one variant per atomic structural mutation existing today) and `Kit::apply_diff` as the single central mutation entry point; remove every per-field mutator helper on `Kit`/`Design`/`Piece`/...
+    content: Port the canonical `KitDiff` family of types (sparse partials with `removed`/`updated`/`added` triples on every collection, recursive on Type/Design/Representation/Connector/Piece/Connection/Tag/Concept/File/Folder/Author/Attribute/Port) into the rs `operation` region with serde matching `semio/assets/semio/metabolism.kit.diff.semio.json`, and implement `Kit::apply_diff` as the single central mutation entry point; remove every per-field mutator helper on `Kit`/`Design`/`Piece`/...
     status: pending
   - id: kit_deep_clone
     content: Implement `Kit::deep_clone() -> Arc<Kit>` walking Type/Representation/Connector/Design/Piece/Tag/Concept/Quality/Author/File/Folder/Prop/Attribute/Stat and rebuilding `*_by_id` weak maps.
@@ -79,7 +79,7 @@ Invariants:
 
 - `📦 kit` (lines 1148–2833):
   - Add `Kit::deep_clone()` walking every sub-entity (Type, Representation, Connector, Design, Piece, Tag, Concept, Quality, Author, File, Folder, Prop, Attribute, Stat, plus all `*_by_id` weak maps re-pointing into the cloned graph).
-  - Add **the single central mutation entry point** `Kit::apply_diff(&self, diff: &KitDiff) -> Result<(), SemioError>`. This is the only public mutator on `Kit`. Internally it pattern-matches every `KitDiff` variant and writes the corresponding `RwLock<…>` slot (or pushes/removes from `Vec`/`HashMap`). Every direct field-mutation in the file that currently reaches into `kit.name.write().await`, `kit.description.write().await`, `kit.tags.write().await.push(...)`, `design.pieces.write().await.push(...)`, etc., is collapsed into this one method.
+  - Add **the single central mutation entry point** `Kit::apply_diff(&self, diff: &KitDiff) -> Result<(), SemioError>`. This is the only public mutator on `Kit`. Internally it walks the canonical `KitDiff` (sparse scalar overrides + `removed` / `updated` / `added` triples on every collection) and writes the corresponding `RwLock<…>` slot (or pushes/removes from `Vec`/`HashMap`). Every direct field-mutation in the file that currently reaches into `kit.name.write().await`, `kit.description.write().await`, `kit.tags.write().await.push(...)`, `design.pieces.write().await.push(...)`, etc., is collapsed into this one method.
   - All existing per-field mutator helpers on `Kit` (e.g. `create_and_register_tag`, `delete_tag_by_id`, `register_tag`, `register_concept`, `register_quality`) are removed; their behaviour is expressed as `KitDiff` fragments produced from operations and applied centrally.
   - Strip `bump_touch_epoch` from `Kit` (now done at `Graph` level on materialization invalidation).
 - `🌿 vcs` (lines 3089–4156):
@@ -113,31 +113,23 @@ Invariants:
         pub async fn to_diff(&self, kit: &Arc<Kit>) -> Result<KitDiff, SemioError>;
     }
     ```
-  - Introduce **`KitDiff`** — a flat structural state-transition description; the only thing `Kit::apply_diff` accepts:
-    ```rust
-    pub struct KitDiff { pub steps: Vec<KitDiffStep> }
-
-    pub enum KitDiffStep {
-        // Kit-level fields
-        SetKitName(String),
-        SetKitDescription(Option<String>),
-        SetKitIcon(Option<String>),
-        SetKitImage(Option<String>),
-        // Designs / pieces
-        InsertPieceInDesign { design_id: Id, piece: PieceState },
-        RemovePieceInDesign { design_id: Id, piece_id: Id },
-        SetPiecePosition { design_id: Id, piece_id: Id, position: Position },
-        SetPieceConnectionKind { design_id: Id, piece_id: Id, kind: PieceConnectionKind },
-        // Tags / concepts / qualities
-        InsertTag { owner: TagOwnerRef, tag: TagState },
-        RemoveTag { tag_id: Id },
-        SetTagName { tag_id: Id, name: String },
-        InsertConcept { owner: ConceptOwnerRef, concept: ConceptState },
-        InsertQuality { owner: QualityOwnerRef, quality: QualityState },
-        // ...one step per atomic structural mutation existing in the codebase today.
-    }
-    ```
-    Field-level descriptions (`PieceState`, `TagState`, `ConceptState`, `QualityState`, `TagOwnerRef`, ...) are pure data structs that mirror exactly what's needed to construct/replace the corresponding entity. They live in the `operation` region next to `KitDiff`.
+  - Adopt the **canonical `KitDiff`** schema already defined for the semio kit format. It is a partial mirror of `Kit` where:
+    - Every scalar field on `Kit` (`name`, `description`, `icon`, `image`, `preview`, `version`, `remote`, `homepage`, `license`, `createdAt`, `updatedAt`, plus `id`) is `Option<…>`; `Some` means "set to this value", `None` means "untouched". Serde uses `skip_serializing_if = Option::is_none` to keep the JSON representation sparse.
+    - Every collection field on `Kit` (`types`, `designs`, `tags`, `files`, `folders`, `ports`, `authors`, `attributes`, `concepts`) becomes a `*Diff` container with the canonical triple shape:
+      ```rust
+      pub struct TypesDiff {
+          pub removed: Vec<TypeId>,
+          pub updated: Vec<TypeDiffUpdate>,
+          pub added:   Vec<Type>,
+      }
+      pub struct TypeDiffUpdate { pub r#type: TypeId, pub diff: TypeDiff }
+      ```
+      and identically for `DesignsDiff` / `TagsDiff` / `FilesDiff` / `FoldersDiff` / `PortsDiff` / `AuthorsDiff` / `AttributesDiff` / `ConceptsDiff`.
+    - Each per-entity `*Diff` (e.g. `TypeDiff`, `DesignDiff`, `RepresentationDiff`, `ConnectorDiff`, `PieceDiff`, `ConnectionDiff`, `TagDiff`, `ConceptDiff`, `FileDiff`, `FolderDiff`, `AuthorDiff`, `AttributeDiff`) recursively follows the same pattern (sparse scalar fields + nested `*Diff` containers for its own collections; e.g. `TypeDiff.representations: Option<RepresentationsDiff>`, `TypeDiff.connectors: Option<ConnectorsDiff>`, `DesignDiff.pieces: Option<PiecesDiff>`, `DesignDiff.connections: Option<ConnectionsDiff>`, `RepresentationDiff.tags: Option<TagsDiff>`, etc.).
+    - The id-only references inside `removed[]` / `updated[*].<entity>` are dedicated `*Id` newtype structs (`TypeId`, `DesignId`, `PieceId`, `ConnectionId`, `RepresentationId`, `ConnectorId`, `TagId`, `ConceptId`, `FileId`, `FolderId`, `AuthorId`, `AttributeId`) so the on-wire JSON looks like `{ "id": "..." }` (matching the canonical example).
+    - Reference shape: [semio/assets/semio/metabolism.kit.diff.semio.json](semio/assets/semio/metabolism.kit.diff.semio.json) is the authoritative on-disk sample; the Rust types must serde to / deserialize from exactly that JSON shape (camelCase field names, `id` for entity references, `diff` for nested updates, `removed` / `updated` / `added` keys).
+  - All these types live in the `operation` region of [semio/rs/lib.rs](semio/rs/lib.rs) next to `KitOperation`.
+  - `Kit::apply_diff(&self, diff: &KitDiff)` is the **single central mutation entry point**. Internally it walks the sparse `KitDiff` tree, applies scalar overrides, removes entities by id, applies per-entity `*Diff` updates (recursively re-using `apply_diff` on the same pattern for sub-entities), and appends `added` entities. No other `Kit`-mutating call exists.
   - Each existing `OperationKind` (`RenamedKit`, `CreatedFixedPiece`, `DraggedPiece`, `ChangedDescription`, `FixedPiece`) is constructed from the corresponding `KitOperation` + post-apply materialized kit so the GraphQL operation event stream stays unchanged.
 - **Inverse computation lives on the recorder, not on the op or the diff.** When the worker accepts a command, it captures the current materialized kit, builds the forward `KitOperation` from the command, and *separately* builds a backward `KitOperation` (also a pure forward-intent op) that, when fed through op → diff → `apply_diff`, restores the prior visible state. Examples:
   - forward `RenameKit { name: "Bar" }` → backward `RenameKit { name: <pre.name> }`
@@ -166,9 +158,9 @@ Invariants:
 
 ## Implementation order (single ticket, no sub-delegation needed since this is one cohesive refactor)
 
-1. `KitDiff` + `KitDiffStep` data types and `Kit::apply_diff` (the single central mutation entry point); deletion of all per-field mutators on `Kit`.
+1. Canonical `KitDiff` family of types (`KitDiff`, `TypesDiff` / `TypeDiff` / `TypeDiffUpdate`, `DesignsDiff` / `DesignDiff` / `DesignDiffUpdate`, `RepresentationsDiff` / `RepresentationDiff` / `…Update`, `ConnectorsDiff` / `ConnectorDiff` / `…Update`, `PiecesDiff` / `PieceDiff` / `…Update`, `ConnectionsDiff` / `ConnectionDiff` / `…Update`, `TagsDiff` / `TagDiff` / `…Update`, `ConceptsDiff` / `ConceptDiff` / `…Update`, `FilesDiff` / `FileDiff` / `…Update`, `FoldersDiff` / `FolderDiff` / `…Update`, `AuthorsDiff` / `AuthorDiff` / `…Update`, `AttributesDiff` / `AttributeDiff` / `…Update`, `PortsDiff` / `PortDiff` / `…Update`, plus the corresponding `*Id` newtype refs) + serde camelCase config matching [semio/assets/semio/metabolism.kit.diff.semio.json](semio/assets/semio/metabolism.kit.diff.semio.json), and `Kit::apply_diff` walking that tree as the single central mutation entry point; deletion of all per-field mutators on `Kit`.
 2. `Kit::deep_clone()` walking every sub-entity and rebuilding `*_by_id` weak maps.
-3. `KitOperation` enum (one-way, `to_diff` only) + `operation::inverse_for` helper covering the existing 15 `Command` variants.
+3. `KitOperation` enum (one-way, `to_diff(&Arc<Kit>) -> KitDiff` only) + `operation::inverse_for` helper covering the existing 15 `Command` variants.
 4. `Checkpoint.frozen_root: Arc<Kit>`, `Draft.change_seq`, `Graph.parent_root_for_active_draft` + `materialized_kit` (deep-clone + replay via op → diff → `apply_diff`) + `record_op_in_open_transaction`.
 5. Remove `Graph.the_kit`; rewrite `worker::ChildRuntime::apply` to record ops only (no mutation; mutation happens inside `materialized_kit()`).
 6. Switch every resolver / backbone path to `materialized_kit()`.
@@ -177,6 +169,7 @@ Invariants:
 ## Validation
 
 - `cargo test -p semio` (covers golden fingerprint, bundle round-trip, transaction lifecycle, alternative-from-tip, tag CRUD).
+- New `KitDiff` JSON round-trip test that loads [semio/assets/semio/metabolism.kit.diff.semio.json](semio/assets/semio/metabolism.kit.diff.semio.json), deserializes it into the new `KitDiff` type, re-serializes it, and asserts JSON equivalence.
 - New assertions on root immutability + abort-restores-state in `kit_store_bundle_serialize_hydrate_round_trip_via_graphql`.
 - `npm run build` for `semio/rs/pkg` (wasm32 target).
 - `semio/js` + `semio/react` test suites unchanged (GraphQL surface is preserved; only internal Rust storage changes).

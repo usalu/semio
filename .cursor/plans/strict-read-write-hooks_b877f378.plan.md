@@ -6,7 +6,7 @@ todos:
     content: Open MCP ticket 'Strict Read Write Hooks' under .repo/🎫/26/05/08/strict-read-write-hooks/
     status: pending
   - id: phase1_storefields_storecommands
-    content: "semio/js: rebuild StoreField (no public set; values pushed via constructor source callback); rebuild StoreCommand status using same source pattern; add KitStore.query<T>(body, parse, initial) + KitStore.mutation<TArgs>(name, vars, body, toVars) helpers; declare every read as a one-liner query<T>(...) and every write as a one-liner mutation<TArgs>(...) backed by an Operation (RenameKit, DraggedPiece, AddedType, ...); wire operationSucceeded -> correlator + invalidations.next() and operationFailed -> correlator; delete OperationRouter, seedFieldsFromDto, dispatchCorrelationEnvelope typed-kind branch, kitRenamed subscription, fieldCache; privatize submitChangeKitCommands and fetchFullKit; extend embedded tests"
+    content: "semio/js: rename SCHEMA_HOOK_IDLE_STATUS/SCHEMA_HOOK_READONLY_STATUS/USE_KIT_NAME_PENDING_STATUS to WRITE_STATUS_IDLE/WRITE_STATUS_READONLY/WRITE_STATUS_PENDING; rebuild StoreField (no public set; values pushed via constructor source callback); rebuild StoreCommand status using same source pattern (no kit/schema constants in the generic class); add KitStore.query<T>(body, parse, initial) + KitStore.mutation<TArgs>(name, vars, body, toVars) helpers; declare every read as a one-liner query<T>(...) and every write as a one-liner mutation<TArgs>(...) backed by an Operation (RenameKit, DraggedPiece, AddedType, ...); wire operationSucceeded -> correlator + invalidations.next() and operationFailed -> correlator; delete OperationRouter, seedFieldsFromDto, dispatchCorrelationEnvelope typed-kind branch, kitRenamed subscription, fieldCache; privatize submitChangeKitCommands and fetchFullKit; extend embedded tests"
     status: pending
   - id: phase2_react_hooks
     content: "semio/react: rewrite every read hook as useStoreField (static) or useGraphqlField (parameterized, disposes per dep change) and every write hook as useStoreCommand; delete HookTriad/HookRead/useDraft/useOptimistic/useSchemaObjectState/useSchemaFieldState + auto-generated wrappers/useSemioReadSnap/useKitSync/useWriteQueue/useSetErrors; update embedded tests"
@@ -74,12 +74,19 @@ The new contract is:
 
 ## Primitives ([semio/js/index.ts](semio/js/index.ts))
 
+The primitives are domain-agnostic. Nothing in here mentions kit, kit name, schema hooks, or any other consumer concept.
+
 ```ts
 export type WriteStatus =
   | { kind: "readonly"; pending: 0; lastError?: SetError }
   | { kind: "idle";     pending: 0; lastError?: SetError }
   | { kind: "pending";  pending: number; lastError?: SetError }
   | { kind: "error";    pending: 0; lastError: SetError };
+
+/** @emoji 🧊 Stable frozen identities for `useSyncExternalStore` snapshots. */
+export const WRITE_STATUS_IDLE:     WriteStatus = Object.freeze({ kind: "idle",     pending: 0 });
+export const WRITE_STATUS_READONLY: WriteStatus = Object.freeze({ kind: "readonly", pending: 0 });
+export const WRITE_STATUS_PENDING:  WriteStatus = Object.freeze({ kind: "pending",  pending: 1 });
 
 /** @emoji 📥 Read-only typed mirror. Values are pushed in by the `source` callback at construction; consumers cannot mutate. */
 export class StoreField<T> {
@@ -93,20 +100,20 @@ export class StoreField<T> {
   // NOTE: no `set` method. The only path that writes a value is the `push` closure handed to `source`.
 }
 
-/** @emoji 📝 The only side-effect carrier. Always dispatches a GraphQL operation. */
+/** @emoji 📝 The only side-effect carrier. Generic over `TArgs`; knows nothing about kit / kit-name / schema hooks. */
 export class StoreCommand<TArgs> {
   readonly status: StoreField<WriteStatus>;
   constructor(exec: (args: TArgs) => Promise<SetResult>) {
-    this.status = new StoreField<WriteStatus>(SCHEMA_HOOK_IDLE_STATUS, (push) => {
+    this.status = new StoreField<WriteStatus>(WRITE_STATUS_IDLE, (push) => {
       this.pushStatus = push;
       return () => {};
     });
     this.exec = exec;
   }
   readonly run = async (args: TArgs): Promise<SetResult> => {
-    this.pushStatus(USE_KIT_NAME_PENDING_STATUS);
+    this.pushStatus(WRITE_STATUS_PENDING);
     const r = await this.exec(args);
-    this.pushStatus(r.ok ? SCHEMA_HOOK_IDLE_STATUS : { kind: "error", pending: 0, lastError: r.error });
+    this.pushStatus(r.ok ? WRITE_STATUS_IDLE : { kind: "error", pending: 0, lastError: r.error });
     return r;
   };
   dispose(): void { this.status.dispose(); }
@@ -121,6 +128,12 @@ export class RequestCorrelator {
   disposeAll(reason?: string): void;
 }
 ```
+
+Renamed across the codebase as part of Phase 1 (none of these names embed a consumer-specific concept like "kit name" or "schema hook"):
+
+- `SCHEMA_HOOK_IDLE_STATUS`     -> `WRITE_STATUS_IDLE`
+- `SCHEMA_HOOK_READONLY_STATUS` -> `WRITE_STATUS_READONLY`
+- `USE_KIT_NAME_PENDING_STATUS` -> `WRITE_STATUS_PENDING`
 
 Deleted in the same `#region 🧱StorePrimitives`: `OperationRouter`, `OperationEvent`, `StoreField.set` (public method gone), `KitStore.seedFieldsFromDto`, `KitStore.dispatchCorrelationEnvelope` (typed-kind branch), the dedicated `kitRenamed` GraphQL subscription, and `KitStore.fieldCache` / `cachedField` if present.
 
@@ -404,7 +417,7 @@ Embedded tests in [semio/js/index.ts](semio/js/index.ts) get one new `describe` 
 
 - Keep `useStoreField`, `useStoreCommand`, `useKitName`, `useRenameKit` as primitives.
 - Add `useGraphqlField<T>(make, deps): T` for parameterized reads. The hook memoizes the `StoreField` over `deps` and **disposes** it on dep change / unmount (no caching anywhere else).
-- Delete bulk schema generators (`useActor`*, `useUser*`, ..., `useKitTags`, `useKitVersion`, `useKitId`, `useKitHash` -- all `useSchemaFieldState` / `useSchemaObjectState` callers).
+- Delete bulk schema generators (`useActor`*, `useUser`*, ..., `useKitTags`, `useKitVersion`, `useKitId`, `useKitHash` -- all `useSchemaFieldState` / `useSchemaObjectState` callers).
 - Keep `useWriteIndicator(status)` as the only `WriteStatus` UI helper; reads no longer carry status.
 - Delete `useDraft`, `useOptimistic`, `useSemioReadSnap`, `useSemioStoreSelector`, `useKitSync`, `useWriteQueue`, `useSetErrors` (subsumed by per-command `WriteStatus.lastError`).
 
@@ -652,6 +665,7 @@ if (ks0) doStuff(ks0);
 - `npm test` in [semio/js](semio/js) and [semio/react](semio/react).
 - `rg "HookTriad|HookRead|useDraft|useOptimistic|useSchemaObjectState|useSchemaFieldState|writeKitStoreClientSchemaField|kitReadonlyTriad|useSemioReadSnap|SketchpadTriadInputRow|SketchpadTriadToggleRow|submitChangeKitCommands\b|OperationRouter|OperationEvent|seedFieldsFromDto|dispatchCorrelationEnvelope|fieldCache|cachedField" semio` returns zero matches.
 - `rg "StoreField[^>]*\\.set\\(|\\.kitName\\.set\\(|\\.status\\.set\\(" semio` returns zero matches (no public mutator on `StoreField`).
+- `rg "SCHEMA_HOOK_IDLE_STATUS|SCHEMA_HOOK_READONLY_STATUS|USE_KIT_NAME_PENDING_STATUS" semio` returns zero matches (consumer-specific names removed from the generic primitives).
 - Manual sketchpad smoke run: type a kit name, observe spinner -> success; rename a type; drag pieces; undo / redo.
 
 ## Delivery
