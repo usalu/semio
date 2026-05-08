@@ -3264,9 +3264,11 @@ impl crate::meta::Quality {
 
 pub mod vcs {
     //! 🌿 Version-control entities — change/transaction/draft/checkpoint/alternative/graph/session/conflict.
+    use std::sync::atomic::{AtomicU64, Ordering};
     use std::sync::{Arc, Weak};
 
     use async_graphql::{Object, Union};
+    use async_graphql::types::Json;
     use async_lock::RwLock;
 
     use crate::error::SemioError;
@@ -3281,8 +3283,10 @@ pub mod vcs {
     pub struct Change {
         pub id: Id,
         pub owner: RwLock<Option<ChangeOwnerRef>>,
-        pub forwards: RwLock<Vec<operation::OperationKind>>,
-        pub backwards: RwLock<Vec<operation::OperationKind>>,
+        /// @emoji 📜 Forward [`crate::operation::KitOperation`] steps (materialized via `Kit::apply_diff`).
+        pub forwards: RwLock<Vec<operation::KitOperation>>,
+        /// @emoji 📜 Backward companion ops for explicit undo/redo (same materialization pipeline).
+        pub backwards: RwLock<Vec<operation::KitOperation>>,
     }
 
     /// 🔗 Untyped reference to one of the variants of the [`ChangeOwnerUnion`].
@@ -3324,11 +3328,21 @@ pub mod vcs {
                 None => ChangeOwnerUnion::Transaction(Arc::default()),
             }
         }
-        pub async fn forwards(&self) -> Vec<operation::OperationKind> {
-            self.forwards.read().await.clone()
+        pub async fn forwards(&self) -> Vec<Json> {
+            self.forwards
+                .read()
+                .await
+                .iter()
+                .filter_map(|operation| serde_json::to_value(operation).ok().map(Json))
+                .collect()
         }
-        pub async fn backwards(&self) -> Vec<operation::OperationKind> {
-            self.backwards.read().await.clone()
+        pub async fn backwards(&self) -> Vec<Json> {
+            self.backwards
+                .read()
+                .await
+                .iter()
+                .filter_map(|operation| serde_json::to_value(operation).ok().map(Json))
+                .collect()
         }
 
         /// @emoji 🔗 Ordered semantic operation record ids constituting the forwards side (bundle `semanticOpLog` ids) when persisted.
@@ -3432,6 +3446,8 @@ pub mod vcs {
         pub finalized_transactions: RwLock<Vec<Arc<Transaction>>>,
         pub redo_transactions: RwLock<Vec<Arc<Transaction>>>,
         pub transactions: RwLock<Vec<Arc<Transaction>>>,
+        /// @emoji 🔢 Bumped on every recorded op; drives [`Graph::materialized_cache`] invalidation.
+        pub change_seq: AtomicU64,
     }
 
     impl Default for Draft {
@@ -3557,7 +3573,7 @@ pub mod vcs {
                 id: Id::default(),
                 timestamp: RwLock::new(None),
                 authors: RwLock::new(Vec::new()),
-                root: RwLock::new(None),
+                frozen_root: Arc::default(),
                 parent_checkpoint: RwLock::new(Weak::new()),
                 message: RwLock::new(None),
                 is_release: RwLock::new(false),
@@ -3589,8 +3605,13 @@ pub mod vcs {
         pub async fn authors(&self) -> Vec<Author> {
             self.authors.read().await.clone()
         }
+        /// @emoji 🧊 SDL `checkpoint.root` — frozen snapshot (alias of `frozenRoot`).
         pub async fn root(&self) -> Option<Arc<Kit>> {
-            self.root.read().await.clone()
+            Some(self.frozen_root.clone())
+        }
+        #[graphql(name = "frozenRoot")]
+        pub async fn frozen_root_gql(&self) -> Arc<Kit> {
+            self.frozen_root.clone()
         }
         #[graphql(name = "parentCheckpoint")]
         pub async fn parent_checkpoint(&self) -> Option<Arc<Checkpoint>> {
@@ -3709,10 +3730,19 @@ pub mod vcs {
         Session(Arc<Session>),
     }
 
+    /// @emoji 📦 Cached materialized [`Kit`] for a draft revision (`change_seq`).
+    pub struct MaterializedSlot {
+        pub draft_id: Id,
+        pub change_seq: u64,
+        pub kit: Arc<Kit>,
+    }
+
     pub struct Graph {
         pub id: Id,
         pub owner_session: RwLock<Weak<Session>>,
-        pub the_kit: Arc<Kit>,
+        /// @emoji 🧊 Read-only kit line cloned from the active checkpoint `frozen_root` (never aliased with mutation targets).
+        pub parent_root_for_active_draft: RwLock<Arc<Kit>>,
+        pub materialized_cache: RwLock<Option<MaterializedSlot>>,
         pub alternatives: RwLock<Vec<Arc<Alternative>>>,
         pub checkpoints: RwLock<Vec<Arc<Checkpoint>>>,
         pub releases: RwLock<Vec<Arc<Checkpoint>>>,
@@ -3726,7 +3756,8 @@ pub mod vcs {
             Self {
                 id: Id::default(),
                 owner_session: RwLock::new(Weak::new()),
-                the_kit: Arc::default(),
+                parent_root_for_active_draft: RwLock::new(Arc::default()),
+                materialized_cache: RwLock::new(None),
                 alternatives: RwLock::new(Vec::new()),
                 checkpoints: RwLock::new(Vec::new()),
                 releases: RwLock::new(Vec::new()),
@@ -3737,34 +3768,43 @@ pub mod vcs {
     }
 
     impl Graph {
-        /// 🆕 Build a brand-new Graph wired with its `the_kit` Arc; `Kit::owner_graph` Weak is set
-        /// in a second pass via [`Arc::new_cyclic`]-style assembly because both directions need an Arc.
+        /// 🆕 Build a brand-new Graph; seeds [`Graph::parent_root_for_active_draft`] from a deep-cloned empty [`Kit`] so checkpoint roots never alias live mutation.
         pub async fn new() -> Arc<Self> {
             let id = Id::new().await;
-            Arc::new_cyclic(|weak_self: &Weak<Graph>| {
+            let g = Arc::new_cyclic(|weak_self: &Weak<Graph>| {
                 let kit = crate::kit::Kit::new_sync(weak_self.clone(), "the kit".to_string());
                 Self {
                     id,
                     owner_session: RwLock::new(Weak::new()),
-                    the_kit: kit,
+                    parent_root_for_active_draft: RwLock::new(kit),
+                    materialized_cache: RwLock::new(None),
                     alternatives: RwLock::new(Vec::new()),
                     checkpoints: RwLock::new(Vec::new()),
                     releases: RwLock::new(Vec::new()),
                     drafts: RwLock::new(Vec::new()),
                     op_history: RwLock::new(Vec::new()),
                 }
-            })
+            });
+            let base = g.parent_root_for_active_draft.read().await.clone();
+            let frozen = base.deep_clone().await;
+            *g.parent_root_for_active_draft.write().await = frozen;
+            g
         }
 
-        /// 🛰️ WIP bootstrap for `@semio/js` WASM: builds an empty typed shell then overlays [`crate::kit::Kit::hydrate_from_kit_full_snapshot_json`].
+        /// 🛰️ WIP bootstrap for `@semio/js` WASM: hydrates [`Graph::parent_root_for_active_draft`] then re-seeds a deep-cloned immutable parent line.
         pub async fn new_overlay_from_kit_json(dto_json: serde_json::Value) -> Result<Arc<Self>, SemioError> {
             let g = Self::new().await;
-            g.the_kit.hydrate_from_kit_full_snapshot_json(&dto_json).await?;
-            if let Some(c) = dto_json.get("createdAt").and_then(|v| v.as_str()) {
-                *g.the_kit.created.write().await = Some(crate::timestamp::Timestamp(c.to_string()));
-            }
-            if let Some(u) = dto_json.get("updatedAt").and_then(|v| v.as_str()) {
-                *g.the_kit.updated.write().await = Some(crate::timestamp::Timestamp(u.to_string()));
+            {
+                let mut slot = g.parent_root_for_active_draft.write().await;
+                slot.hydrate_from_kit_full_snapshot_json(&dto_json).await?;
+                if let Some(c) = dto_json.get("createdAt").and_then(|v| v.as_str()) {
+                    *slot.created.write().await = Some(crate::timestamp::Timestamp(c.to_string()));
+                }
+                if let Some(u) = dto_json.get("updatedAt").and_then(|v| v.as_str()) {
+                    *slot.updated.write().await = Some(crate::timestamp::Timestamp(u.to_string()));
+                }
+                let cloned = slot.deep_clone().await;
+                *slot = cloned;
             }
             Ok(g)
         }
@@ -3773,7 +3813,84 @@ pub mod vcs {
             h(&[self.id.as_str()])
         }
 
-        /// @emoji 🌱 Ensure the graph has a seed `Checkpoint` anchored on `the_kit` and a default `Draft`
+        /// @emoji 🧊 Invalidate lazily materialized kit cache (abort / record op).
+        pub async fn invalidate_materialized_cache(self: &Arc<Self>) {
+            *self.materialized_cache.write().await = None;
+        }
+
+        /// @emoji 📖 Active draft for `draft_id` or the first main-line draft.
+        pub async fn active_draft_for(self: &Arc<Self>, draft_id: Option<&Id>) -> Arc<Draft> {
+            if let Some(did) = draft_id {
+                if let Some(d) = self.drafts.read().await.iter().find(|d| &d.id == did).cloned() {
+                    return d;
+                }
+            }
+            self.ensure_default_seed_state().await
+        }
+
+        /// @emoji 🔁 Replays all recorded [`crate::operation::KitOperation`] steps for `draft_id` onto a scratch [`Kit`] cloned from [`Graph::parent_root_for_active_draft`].
+        pub async fn materialized_kit_for_draft(self: &Arc<Self>, draft_id: &Id) -> Arc<Kit> {
+            let draft = self.active_draft_for(Some(draft_id)).await;
+            let seq = draft.change_seq.load(Ordering::Relaxed);
+            {
+                let cache = self.materialized_cache.read().await;
+                if let Some(slot) = cache.as_ref() {
+                    if slot.draft_id == *draft_id && slot.change_seq == seq {
+                        return slot.kit.clone();
+                    }
+                }
+            }
+            let base = self.parent_root_for_active_draft.read().await.clone();
+            let kit = base.deep_clone().await;
+            for tx in draft.finalized_transactions.read().await.iter() {
+                for ch in tx.changes.read().await.iter() {
+                    for op in ch.forwards.read().await.iter() {
+                        let diff = op.to_diff(&kit).await.expect("replay to_diff");
+                        kit.apply_diff(&diff).await.expect("replay apply_diff");
+                    }
+                }
+            }
+            for tx in draft.transactions.read().await.iter() {
+                for ch in tx.changes.read().await.iter() {
+                    for op in ch.forwards.read().await.iter() {
+                        let diff = op.to_diff(&kit).await.expect("replay to_diff open");
+                        kit.apply_diff(&diff).await.expect("replay apply_diff open");
+                    }
+                }
+            }
+            *self.materialized_cache.write().await = Some(MaterializedSlot { draft_id: draft_id.clone(), change_seq: seq, kit: kit.clone() });
+            kit
+        }
+
+        /// @emoji 📝 Append one forward op plus backward ops onto the open transaction's tail [`Change`], bumping draft `change_seq`.
+        pub async fn record_op_in_open_transaction(
+            self: &Arc<Self>,
+            draft_id: &Id,
+            transaction_id: &Id,
+            forward: crate::operation::KitOperation,
+            backwards: Vec<crate::operation::KitOperation>,
+        ) -> Result<(), SemioError> {
+            let draft = self.ensure_draft(draft_id).await;
+            let _ = draft.ensure_transaction(transaction_id).await;
+            let tx = draft.transactions.read().await.iter().find(|t| &t.id == transaction_id).cloned().ok_or_else(|| SemioError::not_found("Transaction", transaction_id.as_str()))?;
+            let change = {
+                let mut chs = tx.changes.write().await;
+                if let Some(last) = chs.last() {
+                    last.clone()
+                } else {
+                    let c = Change::new().await;
+                    chs.push(c.clone());
+                    c
+                }
+            };
+            change.forwards.write().await.push(forward);
+            change.backwards.write().await.extend(backwards);
+            draft.change_seq.fetch_add(1, Ordering::Relaxed);
+            self.invalidate_materialized_cache().await;
+            Ok(())
+        }
+
+        /// @emoji 🌱 Ensure the graph has a seed `Checkpoint` anchored on [`Graph::parent_root_for_active_draft`] and a default `Draft`
         /// hanging off it. Idempotent: if either already exists it's reused. Returns the active default draft.
         /// Sketchpad calls this through `Mutation.kitStoreInitializeDefaults` when a fresh dev kit (json file)
         /// is mounted so the on-disk bundle immediately exposes "root + first checkpoint + first draft".
@@ -3785,11 +3902,12 @@ pub mod vcs {
                 } else {
                     drop(cps);
                     let id = Id::new().await;
+                    let frozen = self.parent_root_for_active_draft.read().await.deep_clone().await;
                     let cp = Arc::new(Checkpoint {
                         id,
                         timestamp: RwLock::new(None),
                         authors: RwLock::new(Vec::new()),
-                        root: RwLock::new(Some(self.the_kit.clone())),
+                        frozen_root: frozen,
                         parent_checkpoint: RwLock::new(Weak::new()),
                         message: RwLock::new(Some("init".to_string())),
                         is_release: RwLock::new(false),
@@ -3844,7 +3962,7 @@ pub mod vcs {
                 name: RwLock::new(name),
                 start: RwLock::new(Arc::downgrade(&parent_cp)),
                 checkpoints: RwLock::new(vec![parent_cp.clone()]),
-                kit: RwLock::new(parent_cp.root.read().await.clone()),
+                kit: RwLock::new(Some(parent_cp.frozen_root.clone())),
                 draft: RwLock::new(Weak::new()),
                 transaction: RwLock::new(Weak::new()),
             });
@@ -3858,6 +3976,7 @@ pub mod vcs {
                 finalized_transactions: RwLock::new(Vec::new()),
                 redo_transactions: RwLock::new(Vec::new()),
                 transactions: RwLock::new(Vec::new()),
+                change_seq: AtomicU64::new(0),
             });
 
             *new_alt.draft.write().await = Arc::downgrade(&new_draft);
@@ -4720,24 +4839,17 @@ pub mod operation {
     }
 
     //#region 🧭 normalized operation contract
-    /// @emoji 🪪 Structural entity row referenced by a normalized [`KitDiff`].
-    #[derive(Clone, Debug, Default, Serialize, Deserialize)]
-    pub struct KitDiffEntity {
-        pub id: Id,
-        pub kind: String,
+    /// @emoji 📦 Canonical-ish kit transition payload (JSON). Operation replay uses `__ops` envelopes; golden fixtures may use raw camelCase keys from [`semio/assets/semio/metabolism.kit.diff.semio.json`].
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    pub struct KitDiff(pub serde_json::Value);
+
+    impl Default for KitDiff {
+        fn default() -> Self {
+            Self(serde_json::json!({}))
+        }
     }
 
-    /// @emoji 📦 Structural diff for a single normalized [`KitOperation`] before mutation is applied.
-    #[derive(Clone, Debug, Default, Serialize, Deserialize)]
-    pub struct KitDiff {
-        pub kind: String,
-        pub summary: Option<String>,
-        pub added: Vec<KitDiffEntity>,
-        pub updated: Vec<KitDiffEntity>,
-        pub removed: Vec<KitDiffEntity>,
-    }
-
-    /// @emoji 🚫 Empty payload marker for scope-only operations.
+    /// @emoji 🚫 Empty payload marker for scope-only operations (serde shape).
     #[derive(Clone, Debug, Default, Serialize, Deserialize)]
     pub struct NoInput;
 
@@ -4942,30 +5054,24 @@ pub mod operation {
 
         /// Pure: read pre-state and produce a structural diff without mutating the kit.
         pub async fn to_diff(&self, kit: &Arc<crate::kit::Kit>) -> Result<KitDiff, SemioError> {
-            match self {
+            let ops = match self {
                 KitOperation::RenameKit { input, .. } => {
                     if input.name.chars().count() > 256 {
                         return Err(SemioError::invalid(format!("Kit name too long: {} > 256", input.name.chars().count())));
                     }
-                    Ok(KitDiff {
-                        kind: self.kind().to_string(),
-                        summary: Some(self.kind().to_string()),
-                        added: Vec::new(),
-                        updated: vec![KitDiffEntity { id: kit.workspace_kit_id().await, kind: "kit".to_string() }],
-                        removed: Vec::new(),
-                    })
+                    serde_json::json!([{"kind": "renameKit", "name": input.name}])
                 }
-                KitOperation::ChangeDescription { scope, .. } => {
+                KitOperation::ChangeDescription { scope, input } => {
                     entity_description(kit, &scope.entity_id).await?;
-                    Ok(single_updated_diff(self.kind(), scope.entity_id.clone(), "entity"))
+                    serde_json::json!([{"kind": "changeDescription", "entityId": scope.entity_id, "description": input.description}])
                 }
-                KitOperation::ChangeIcon { scope, .. } => {
+                KitOperation::ChangeIcon { scope, input } => {
                     entity_icon(kit, &scope.entity_id).await?;
-                    Ok(single_updated_diff(self.kind(), scope.entity_id.clone(), "entity"))
+                    serde_json::json!([{"kind": "changeIcon", "entityId": scope.entity_id, "icon": input.icon}])
                 }
-                KitOperation::ChangeImage { scope, .. } => {
+                KitOperation::ChangeImage { scope, input } => {
                     entity_image(kit, &scope.entity_id).await?;
-                    Ok(single_updated_diff(self.kind(), scope.entity_id.clone(), "entity"))
+                    serde_json::json!([{"kind": "changeImage", "entityId": scope.entity_id, "image": input.image}])
                 }
                 KitOperation::CreateTag { scope, input } => {
                     kit.resolve_tag_owner_slot(&scope.owner_id).await?;
@@ -4973,41 +5079,48 @@ pub mod operation {
                         return Err(SemioError::invalid(format!("Tag already exists: {}", scope.tag_id.as_str())));
                     }
                     validate_attribute_ids(input.attributes.as_ref().map(|items| items.len()).unwrap_or_default(), &scope.attribute_ids)?;
-                    let mut added = vec![KitDiffEntity { id: scope.tag_id.clone(), kind: "tag".to_string() }];
-                    added.extend(scope.attribute_ids.iter().cloned().map(|id| KitDiffEntity { id, kind: "attribute".to_string() }));
-                    Ok(KitDiff { kind: self.kind().to_string(), summary: Some(self.kind().to_string()), added, updated: Vec::new(), removed: Vec::new() })
+                    serde_json::json!([{
+                        "kind": "createTag",
+                        "ownerId": scope.owner_id,
+                        "tagId": scope.tag_id,
+                        "attributeIds": scope.attribute_ids,
+                        "tag": serde_json::to_value(input).map_err(|e| SemioError::invalid(e.to_string()))?,
+                    }])
                 }
                 KitOperation::CreateTags { scope, input } => {
                     if scope.tag_ids.len() != input.tags.len() || scope.attribute_ids.len() != input.tags.len() {
                         return Err(SemioError::invalid("createTags scope length mismatch"));
                     }
                     kit.resolve_tag_owner_slot(&scope.owner_id).await?;
-                    let mut added = Vec::new();
                     for (index, tag) in input.tags.iter().enumerate() {
                         if kit.find_tag(&scope.tag_ids[index]).await.is_some() {
                             return Err(SemioError::invalid(format!("Tag already exists: {}", scope.tag_ids[index].as_str())));
                         }
                         validate_attribute_ids(tag.attributes.as_ref().map(|items| items.len()).unwrap_or_default(), &scope.attribute_ids[index])?;
-                        added.push(KitDiffEntity { id: scope.tag_ids[index].clone(), kind: "tag".to_string() });
-                        added.extend(scope.attribute_ids[index].iter().cloned().map(|id| KitDiffEntity { id, kind: "attribute".to_string() }));
                     }
-                    Ok(KitDiff { kind: self.kind().to_string(), summary: Some(self.kind().to_string()), added, updated: Vec::new(), removed: Vec::new() })
+                    serde_json::json!([{
+                        "kind": "createTags",
+                        "ownerId": scope.owner_id,
+                        "tagIds": scope.tag_ids,
+                        "attributeIds": scope.attribute_ids,
+                        "tags": serde_json::to_value(&input.tags).map_err(|e| SemioError::invalid(e.to_string()))?,
+                    }])
                 }
                 KitOperation::DeleteTag { scope, .. } => {
                     ensure_tag(kit, &scope.tag_id).await?;
-                    Ok(single_removed_diff(self.kind(), scope.tag_id.clone(), "tag"))
+                    serde_json::json!([{"kind": "deleteTag", "tagId": scope.tag_id}])
                 }
                 KitOperation::DeleteTags { scope, .. } => {
-                    let mut removed = Vec::new();
+                    let mut rows = Vec::new();
                     for tag_id in &scope.tag_ids {
                         ensure_tag(kit, tag_id).await?;
-                        removed.push(KitDiffEntity { id: tag_id.clone(), kind: "tag".to_string() });
+                        rows.push(serde_json::json!({"kind": "deleteTag", "tagId": tag_id}));
                     }
-                    Ok(KitDiff { kind: self.kind().to_string(), summary: Some(self.kind().to_string()), added: Vec::new(), updated: Vec::new(), removed })
+                    serde_json::Value::Array(rows)
                 }
-                KitOperation::RenameTag { scope, .. } => {
+                KitOperation::RenameTag { scope, input } => {
                     ensure_tag(kit, &scope.tag_id).await?;
-                    Ok(single_updated_diff(self.kind(), scope.tag_id.clone(), "tag"))
+                    serde_json::json!([{"kind": "renameTag", "tagId": scope.tag_id, "name": input.name}])
                 }
                 KitOperation::CreateConcept { scope, input } => {
                     kit.resolve_concept_owner_slot(&scope.owner_id).await?;
@@ -5015,13 +5128,17 @@ pub mod operation {
                         return Err(SemioError::invalid(format!("Concept already exists: {}", scope.concept_id.as_str())));
                     }
                     validate_attribute_ids(input.attributes.as_ref().map(|items| items.len()).unwrap_or_default(), &scope.attribute_ids)?;
-                    let mut added = vec![KitDiffEntity { id: scope.concept_id.clone(), kind: "concept".to_string() }];
-                    added.extend(scope.attribute_ids.iter().cloned().map(|id| KitDiffEntity { id, kind: "attribute".to_string() }));
-                    Ok(KitDiff { kind: self.kind().to_string(), summary: Some(self.kind().to_string()), added, updated: Vec::new(), removed: Vec::new() })
+                    serde_json::json!([{
+                        "kind": "createConcept",
+                        "ownerId": scope.owner_id,
+                        "conceptId": scope.concept_id,
+                        "attributeIds": scope.attribute_ids,
+                        "concept": serde_json::to_value(input).map_err(|e| SemioError::invalid(e.to_string()))?,
+                    }])
                 }
                 KitOperation::DeleteConcept { scope, .. } => {
                     ensure_concept(kit, &scope.concept_id).await?;
-                    Ok(single_removed_diff(self.kind(), scope.concept_id.clone(), "concept"))
+                    serde_json::json!([{"kind": "deleteConcept", "conceptId": scope.concept_id}])
                 }
                 KitOperation::CreateQuality { scope, input } => {
                     kit.resolve_quality_owner_slot(&scope.owner_id).await?;
@@ -5032,43 +5149,65 @@ pub mod operation {
                     if !scope.benchmark_ids.is_empty() {
                         return Err(SemioError::invalid("quality benchmark ids are not supported yet"));
                     }
-                    let mut added = vec![KitDiffEntity { id: scope.quality_id.clone(), kind: "quality".to_string() }];
-                    added.extend(scope.attribute_ids.iter().cloned().map(|id| KitDiffEntity { id, kind: "attribute".to_string() }));
-                    Ok(KitDiff { kind: self.kind().to_string(), summary: Some(self.kind().to_string()), added, updated: Vec::new(), removed: Vec::new() })
+                    serde_json::json!([{
+                        "kind": "createQuality",
+                        "ownerId": scope.owner_id,
+                        "qualityId": scope.quality_id,
+                        "attributeIds": scope.attribute_ids,
+                        "benchmarkIds": scope.benchmark_ids,
+                        "quality": serde_json::to_value(input).map_err(|e| SemioError::invalid(e.to_string()))?,
+                    }])
                 }
                 KitOperation::DeleteQuality { scope, .. } => {
                     ensure_quality(kit, &scope.quality_id).await?;
-                    Ok(single_removed_diff(self.kind(), scope.quality_id.clone(), "quality"))
+                    serde_json::json!([{"kind": "deleteQuality", "qualityId": scope.quality_id}])
                 }
-                KitOperation::CreateFixedPiece { scope, .. } => {
+                KitOperation::CreateFixedPiece { scope, input } => {
                     if !scope.attribute_ids.is_empty() {
                         return Err(SemioError::invalid("piece attribute ids are not supported yet"));
                     }
-                    let mut added = vec![KitDiffEntity { id: scope.piece_id.clone(), kind: "piece".to_string() }];
-                    added.extend(scope.attribute_ids.iter().cloned().map(|id| KitDiffEntity { id, kind: "attribute".to_string() }));
-                    Ok(KitDiff { kind: self.kind().to_string(), summary: Some(self.kind().to_string()), added, updated: Vec::new(), removed: Vec::new() })
+                    serde_json::json!([{
+                        "kind": "createFixedPiece",
+                        "designId": scope.design_id,
+                        "pieceId": scope.piece_id,
+                        "blueprintId": scope.blueprint_id,
+                        "position": serde_json::to_value(&input.position).map_err(|e| SemioError::invalid(e.to_string()))?,
+                        "name": input.name,
+                        "description": input.description,
+                    }])
                 }
                 KitOperation::DeletePieceInDesign { scope, .. } => {
                     ensure_piece(kit, &scope.design_id, &scope.piece_id).await?;
-                    Ok(single_removed_diff(self.kind(), scope.piece_id.clone(), "piece"))
+                    serde_json::json!([{"kind": "deletePieceInDesign", "designId": scope.design_id, "pieceId": scope.piece_id}])
                 }
-                KitOperation::DragPieceInDesign { scope, .. } => {
+                KitOperation::DragPieceInDesign { scope, input } => {
                     ensure_piece(kit, &scope.design_id, &scope.piece_id).await?;
-                    Ok(single_updated_diff(self.kind(), scope.piece_id.clone(), "piece"))
+                    serde_json::json!([{
+                        "kind": "dragPieceInDesign",
+                        "designId": scope.design_id,
+                        "pieceId": scope.piece_id,
+                        "offset": serde_json::to_value(&input.offset).map_err(|e| SemioError::invalid(e.to_string()))?,
+                    }])
                 }
-                KitOperation::DragPiecesInDesign { scope, .. } => {
-                    let mut updated = Vec::new();
+                KitOperation::DragPiecesInDesign { scope, input } => {
+                    let mut rows = Vec::new();
                     for piece_id in &scope.piece_ids {
                         ensure_piece(kit, &scope.design_id, piece_id).await?;
-                        updated.push(KitDiffEntity { id: piece_id.clone(), kind: "piece".to_string() });
+                        rows.push(serde_json::json!({
+                            "kind": "dragPieceInDesign",
+                            "designId": scope.design_id,
+                            "pieceId": piece_id,
+                            "offset": serde_json::to_value(&input.offset).map_err(|e| SemioError::invalid(e.to_string()))?,
+                        }));
                     }
-                    Ok(KitDiff { kind: self.kind().to_string(), summary: Some(self.kind().to_string()), added: Vec::new(), updated, removed: Vec::new() })
+                    serde_json::Value::Array(rows)
                 }
                 KitOperation::FixPieceInDesign { scope, .. } => {
                     ensure_piece(kit, &scope.design_id, &scope.piece_id).await?;
-                    Ok(single_updated_diff(self.kind(), scope.piece_id.clone(), "piece"))
+                    serde_json::json!([{"kind": "fixPieceInDesign", "designId": scope.design_id, "pieceId": scope.piece_id}])
                 }
-            }
+            };
+            Ok(KitDiff(serde_json::json!({ "__ops": ops })))
         }
 
         /// Pure: read pre-state and return the ordered list of backward operations.
@@ -5128,7 +5267,13 @@ pub mod operation {
                 }
                 KitOperation::RenameTag { scope, .. } => {
                     let tag = ensure_tag(kit, &scope.tag_id).await?;
-                    Ok(vec![KitOperation::RenameTag { scope: scope.clone(), input: RenameTagInput { name: tag.name.read().await.clone() } }])
+                    let name = {
+                        let guard = tag.name.read().await;
+                        guard.clone()
+                    };
+                    drop(tag);
+                    let backwards = KitOperation::RenameTag { scope: scope.clone(), input: RenameTagInput { name } };
+                    Ok(vec![backwards])
                 }
                 KitOperation::CreateConcept { scope, .. } => Ok(vec![KitOperation::DeleteConcept { scope: ConceptScope { concept_id: scope.concept_id.clone() }, input: NoInput }]),
                 KitOperation::DeleteConcept { scope, .. } => {
@@ -5165,19 +5310,30 @@ pub mod operation {
                 }]),
                 KitOperation::DeletePieceInDesign { scope, .. } => {
                     let piece = ensure_piece(kit, &scope.design_id, &scope.piece_id).await?;
+                    let piece_id = piece.id.clone();
                     let blueprint_id = match &*piece.blueprint.read().await {
                         crate::kit::r#type::Blueprint::Type(ty) => ty.id.clone(),
                         crate::kit::r#type::Blueprint::Design(design) => design.id.clone(),
                     };
-                    let attribute_ids = piece.attributes.read().await.iter().map(|attribute| attribute.id.clone()).collect();
-                    Ok(vec![KitOperation::CreateFixedPiece {
-                        scope: CreateFixedPieceScope { design_id: scope.design_id.clone(), piece_id: piece.id.clone(), blueprint_id, attribute_ids },
-                        input: CreateFixedPieceInput {
-                            position: piece.compute_flat_position().await,
-                            name: piece.name.read().await.clone(),
-                            description: piece.description.read().await.clone(),
-                        },
-                    }])
+                    let attribute_ids = {
+                        let guard = piece.attributes.read().await;
+                        guard.iter().map(|attribute| attribute.id.clone()).collect()
+                    };
+                    let position = piece.compute_flat_position().await;
+                    let name = {
+                        let guard = piece.name.read().await;
+                        guard.clone()
+                    };
+                    let description = {
+                        let guard = piece.description.read().await;
+                        guard.clone()
+                    };
+                    drop(piece);
+                    let backwards = KitOperation::CreateFixedPiece {
+                        scope: CreateFixedPieceScope { design_id: scope.design_id.clone(), piece_id, blueprint_id, attribute_ids },
+                        input: CreateFixedPieceInput { position, name, description },
+                    };
+                    Ok(vec![backwards])
                 }
                 KitOperation::DragPieceInDesign { scope, input } => Ok(vec![KitOperation::DragPieceInDesign {
                     scope: scope.clone(),
@@ -5189,7 +5345,12 @@ pub mod operation {
                 }]),
                 KitOperation::FixPieceInDesign { scope, .. } => {
                     let piece = ensure_piece(kit, &scope.design_id, &scope.piece_id).await?;
-                    match *piece.connection_kind.read().await {
+                    let connection_kind = {
+                        let guard = piece.connection_kind.read().await;
+                        *guard
+                    };
+                    drop(piece);
+                    match connection_kind {
                         Some(crate::kit::design::piece::PieceConnectionKind::Fixed) => Ok(Vec::new()),
                         _ => Err(SemioError::invalid("fixPieceInDesign backwards is unsupported for non-fixed pre-state")),
                     }
@@ -5203,26 +5364,6 @@ pub mod operation {
             return Err(SemioError::invalid(format!("attribute id count mismatch: expected {}, got {}", expected, actual.len())));
         }
         Ok(())
-    }
-
-    fn single_updated_diff(kind: &str, id: Id, entity_kind: &str) -> KitDiff {
-        KitDiff {
-            kind: kind.to_string(),
-            summary: Some(kind.to_string()),
-            added: Vec::new(),
-            updated: vec![KitDiffEntity { id, kind: entity_kind.to_string() }],
-            removed: Vec::new(),
-        }
-    }
-
-    fn single_removed_diff(kind: &str, id: Id, entity_kind: &str) -> KitDiff {
-        KitDiff {
-            kind: kind.to_string(),
-            summary: Some(kind.to_string()),
-            added: Vec::new(),
-            updated: Vec::new(),
-            removed: vec![KitDiffEntity { id, kind: entity_kind.to_string() }],
-        }
     }
 
     async fn ensure_tag(kit: &Arc<crate::kit::Kit>, tag_id: &Id) -> Result<Arc<crate::meta::Tag>, SemioError> {
@@ -7106,7 +7247,7 @@ pub mod worker {
 
 pub mod gql {
     //! 🌐 Type-safe static GraphQL schema via `Schema::build` (embedded target SDL string for tooling).
-    use async_graphql::{Context, Object, Schema, Subscription};
+    use async_graphql::{Context, InputObject, Object, Schema, Subscription};
     use async_stream::stream;
     use futures_util::Stream;
     use std::pin::Pin;
@@ -7117,7 +7258,7 @@ pub mod gql {
     use crate::geom::{Offset, Position};
     use crate::id::Id;
     use crate::meta::{ConceptInput, QualityInput, TagInput};
-    use crate::operation::{Command, CommandReceipt, CreateConceptScope, CreateFixedPieceInput, CreateFixedPieceScope, CreateQualityScope, CreateTagScope, CreateTagsInput, CreateTagsScope, DragPieceInput, EntityScope, KitOperation, OperationKind, PieceInDesignScope, PiecesInDesignScope, RenameKitInput, RenameKitScope, RenameTagInput, RenamedKit, TagScope, TagsScope};
+    use crate::operation::{Command, CommandReceipt, CreateConceptScope, CreateFixedPieceInput, CreateFixedPieceScope, CreateQualityScope, CreateTagScope, CreateTagsScope, DragPieceInput, EntityScope, KitOperation, OperationKind, PieceInDesignScope, PiecesInDesignScope, RenameKitScope, RenamedKit, TagScope, TagsScope};
     use crate::vcs::Graph;
     use crate::worker::ParentRuntime;
 
@@ -7184,6 +7325,214 @@ pub mod gql {
         }
     }
 
+    //#region 🪪KitMutationScopeInputs
+    #[derive(InputObject)]
+    pub struct RenameKitScopeInput {
+        #[graphql(name = "draftId")]
+        pub draft_id: Id,
+        #[graphql(name = "transactionId")]
+        pub transaction_id: Id,
+    }
+    #[derive(InputObject)]
+    #[graphql(name = "RenameKitInput")]
+    pub struct RenameKitGqlInput {
+        pub name: String,
+    }
+
+    #[derive(InputObject)]
+    pub struct ChangeDescriptionScopeInput {
+        #[graphql(name = "draftId")]
+        pub draft_id: Id,
+        #[graphql(name = "transactionId")]
+        pub transaction_id: Id,
+        #[graphql(name = "entityId")]
+        pub entity_id: Id,
+    }
+    #[derive(InputObject)]
+    #[graphql(name = "ChangeDescriptionInput")]
+    pub struct ChangeDescriptionGqlInput {
+        pub description: String,
+    }
+
+    #[derive(InputObject)]
+    pub struct CreateTagScopeInput {
+        #[graphql(name = "draftId")]
+        pub draft_id: Id,
+        #[graphql(name = "transactionId")]
+        pub transaction_id: Id,
+        #[graphql(name = "ownerId")]
+        pub owner_id: Id,
+    }
+    #[derive(InputObject)]
+    #[graphql(name = "CreateTagInput")]
+    pub struct CreateTagGqlInput {
+        pub tag: TagInput,
+    }
+
+    #[derive(InputObject)]
+    pub struct CreateTagsScopeInput {
+        #[graphql(name = "draftId")]
+        pub draft_id: Id,
+        #[graphql(name = "transactionId")]
+        pub transaction_id: Id,
+        #[graphql(name = "ownerId")]
+        pub owner_id: Id,
+    }
+    #[derive(InputObject)]
+    #[graphql(name = "CreateTagsInput")]
+    pub struct CreateTagsGqlInput {
+        pub tags: Vec<TagInput>,
+    }
+
+    #[derive(InputObject)]
+    pub struct RenameTagScopeInput {
+        #[graphql(name = "draftId")]
+        pub draft_id: Id,
+        #[graphql(name = "transactionId")]
+        pub transaction_id: Id,
+        #[graphql(name = "tagId")]
+        pub tag_id: Id,
+    }
+    #[derive(InputObject)]
+    #[graphql(name = "RenameTagInput")]
+    pub struct RenameTagGqlInput {
+        pub name: String,
+    }
+
+    #[derive(InputObject)]
+    pub struct DeleteTagScopeInput {
+        #[graphql(name = "draftId")]
+        pub draft_id: Id,
+        #[graphql(name = "transactionId")]
+        pub transaction_id: Id,
+        #[graphql(name = "tagId")]
+        pub tag_id: Id,
+    }
+    #[derive(InputObject)]
+    #[graphql(name = "DeleteTagInput")]
+    pub struct DeleteTagGqlInput {
+        #[graphql(default)]
+        pub has_input: bool,
+    }
+
+    #[derive(InputObject)]
+    pub struct DeleteTagsScopeInput {
+        #[graphql(name = "draftId")]
+        pub draft_id: Id,
+        #[graphql(name = "transactionId")]
+        pub transaction_id: Id,
+        #[graphql(name = "tagIds")]
+        pub tag_ids: Vec<Id>,
+    }
+    #[derive(InputObject)]
+    #[graphql(name = "DeleteTagsInput")]
+    pub struct DeleteTagsGqlInput {
+        #[graphql(default)]
+        pub has_input: bool,
+    }
+
+    #[derive(InputObject)]
+    pub struct CreateConceptScopeInput {
+        #[graphql(name = "draftId")]
+        pub draft_id: Id,
+        #[graphql(name = "transactionId")]
+        pub transaction_id: Id,
+        #[graphql(name = "ownerId")]
+        pub owner_id: Id,
+    }
+    #[derive(InputObject)]
+    #[graphql(name = "CreateConceptInput")]
+    pub struct CreateConceptGqlInput {
+        pub concept: ConceptInput,
+    }
+
+    #[derive(InputObject)]
+    pub struct CreateQualityScopeInput {
+        #[graphql(name = "draftId")]
+        pub draft_id: Id,
+        #[graphql(name = "transactionId")]
+        pub transaction_id: Id,
+        #[graphql(name = "ownerId")]
+        pub owner_id: Id,
+    }
+    #[derive(InputObject)]
+    #[graphql(name = "CreateQualityInput")]
+    pub struct CreateQualityGqlInput {
+        pub quality: QualityInput,
+    }
+
+    #[derive(InputObject)]
+    pub struct AddFixedPieceToDesignScopeInput {
+        #[graphql(name = "draftId")]
+        pub draft_id: Id,
+        #[graphql(name = "transactionId")]
+        pub transaction_id: Id,
+        #[graphql(name = "designId")]
+        pub design_id: Id,
+    }
+    #[derive(InputObject)]
+    #[graphql(name = "AddFixedPieceToDesignInput")]
+    pub struct AddFixedPieceToDesignGqlInput {
+        #[graphql(name = "blueprintId")]
+        pub blueprint_id: Id,
+        pub position: Position,
+        pub name: Option<String>,
+        pub description: Option<String>,
+    }
+
+    #[derive(InputObject)]
+    pub struct FixPieceInDesignScopeInput {
+        #[graphql(name = "draftId")]
+        pub draft_id: Id,
+        #[graphql(name = "transactionId")]
+        pub transaction_id: Id,
+        #[graphql(name = "designId")]
+        pub design_id: Id,
+        #[graphql(name = "pieceId")]
+        pub piece_id: Id,
+    }
+    #[derive(InputObject)]
+    #[graphql(name = "FixPieceInDesignInput")]
+    pub struct FixPieceInDesignGqlInput {
+        #[graphql(default)]
+        pub has_input: bool,
+    }
+
+    #[derive(InputObject)]
+    pub struct DragPieceInDesignScopeInput {
+        #[graphql(name = "draftId")]
+        pub draft_id: Id,
+        #[graphql(name = "transactionId")]
+        pub transaction_id: Id,
+        #[graphql(name = "designId")]
+        pub design_id: Id,
+        #[graphql(name = "pieceId")]
+        pub piece_id: Id,
+    }
+    #[derive(InputObject)]
+    #[graphql(name = "DragPieceInDesignInput")]
+    pub struct DragPieceInDesignGqlInput {
+        pub offset: Offset,
+    }
+
+    #[derive(InputObject)]
+    pub struct DragPiecesInDesignScopeInput {
+        #[graphql(name = "draftId")]
+        pub draft_id: Id,
+        #[graphql(name = "transactionId")]
+        pub transaction_id: Id,
+        #[graphql(name = "designId")]
+        pub design_id: Id,
+        #[graphql(name = "pieceIds")]
+        pub piece_ids: Vec<Id>,
+    }
+    #[derive(InputObject)]
+    #[graphql(name = "DragPiecesInDesignInput")]
+    pub struct DragPiecesInDesignGqlInput {
+        pub offset: Offset,
+    }
+    //#endregion 🪪KitMutationScopeInputs
+
     pub struct Mutation;
 
     #[Object]
@@ -7193,56 +7542,64 @@ pub mod gql {
         pub async fn add_fixed_piece_to_design(
             &self,
             ctx: &Context<'_>,
-            #[graphql(name = "draftId")] draft_id: Id,
-            #[graphql(name = "transactionId")] transaction_id: Id,
-            #[graphql(name = "designId")] design_id: Id,
-            #[graphql(name = "blueprintId")] blueprint_id: Id,
-            position: Position,
+            scope: AddFixedPieceToDesignScopeInput,
+            input: AddFixedPieceToDesignInput,
         ) -> async_graphql::Result<Id> {
             let rt = ctx.data::<Arc<ParentRuntime>>()?;
             let request_id = Id::new().await;
             let piece_id = Id::new().await;
             let cmd = Command::ApplyKitOperation {
                 request_id: request_id.clone(),
-                draft_id,
-                transaction_id,
+                draft_id: scope.draft_id,
+                transaction_id: scope.transaction_id,
                 operation: KitOperation::CreateFixedPiece {
-                    scope: CreateFixedPieceScope { design_id, piece_id, blueprint_id, attribute_ids: Vec::new() },
-                    input: CreateFixedPieceInput { position, name: None, description: None },
+                    scope: CreateFixedPieceScope {
+                        design_id: scope.design_id,
+                        piece_id,
+                        blueprint_id: input.blueprint_id,
+                        attribute_ids: Vec::new(),
+                    },
+                    input: CreateFixedPieceInput {
+                        position: input.position,
+                        name: input.name,
+                        description: input.description,
+                    },
                 },
             };
             Ok(rt.dispatch_wip(cmd).await)
         }
 
         #[graphql(name = "fixPieceInDesign")]
-        pub async fn fix_piece_in_design(
-            &self,
-            ctx: &Context<'_>,
-            #[graphql(name = "draftId")] draft_id: Id,
-            #[graphql(name = "transactionId")] transaction_id: Id,
-            #[graphql(name = "designId")] design_id: Id,
-            #[graphql(name = "pieceId")] piece_id: Id,
-        ) -> async_graphql::Result<Id> {
+        pub async fn fix_piece_in_design(&self, ctx: &Context<'_>, scope: FixPieceInDesignScopeInput, _input: FixPieceInDesignGqlInput) -> async_graphql::Result<Id> {
             let rt = ctx.data::<Arc<ParentRuntime>>()?;
             let request_id = Id::new().await;
             let cmd = Command::ApplyKitOperation {
                 request_id: request_id.clone(),
-                draft_id,
-                transaction_id,
-                operation: KitOperation::FixPieceInDesign { scope: PieceInDesignScope { design_id, piece_id }, input: crate::operation::NoInput },
+                draft_id: scope.draft_id,
+                transaction_id: scope.transaction_id,
+                operation: KitOperation::FixPieceInDesign {
+                    scope: PieceInDesignScope {
+                        design_id: scope.design_id,
+                        piece_id: scope.piece_id,
+                    },
+                    input: crate::operation::NoInput,
+                },
             };
             Ok(rt.dispatch_wip(cmd).await)
         }
 
         #[graphql(name = "renameKit")]
-        pub async fn rename_kit(&self, ctx: &Context<'_>, #[graphql(name = "draftId")] draft_id: Id, #[graphql(name = "transactionId")] transaction_id: Id, name: String) -> async_graphql::Result<Id> {
+        pub async fn rename_kit(&self, ctx: &Context<'_>, scope: RenameKitScopeInput, input: RenameKitGqlInput) -> async_graphql::Result<Id> {
             let rt = ctx.data::<Arc<ParentRuntime>>()?;
             let request_id = Id::new().await;
             let cmd = Command::ApplyKitOperation {
                 request_id: request_id.clone(),
-                draft_id,
-                transaction_id,
-                operation: KitOperation::RenameKit { scope: RenameKitScope, input: RenameKitInput { name } },
+                draft_id: scope.draft_id,
+                transaction_id: scope.transaction_id,
+                operation: KitOperation::RenameKit {
+                    scope: RenameKitScope,
+                    input: crate::operation::RenameKitInput { name: input.name },
+                },
             };
             Ok(rt.dispatch_wip(cmd).await)
         }
@@ -7300,32 +7657,26 @@ pub mod gql {
         }
 
         #[graphql(name = "changeDescription")]
-        pub async fn change_description(
-            &self,
-            ctx: &Context<'_>,
-            #[graphql(name = "draftId")] draft_id: Id,
-            #[graphql(name = "transactionId")] transaction_id: Id,
-            #[graphql(name = "entityId")] entity_id: Id,
-            description: String,
-        ) -> async_graphql::Result<Id> {
+        pub async fn change_description(&self, ctx: &Context<'_>, scope: ChangeDescriptionScopeInput, input: ChangeDescriptionGqlInput) -> async_graphql::Result<Id> {
             let rt = ctx.data::<Arc<ParentRuntime>>()?;
             let request_id = Id::new().await;
             let cmd = Command::ApplyKitOperation {
                 request_id: request_id.clone(),
-                draft_id,
-                transaction_id,
+                draft_id: scope.draft_id,
+                transaction_id: scope.transaction_id,
                 operation: KitOperation::ChangeDescription {
-                    scope: EntityScope { entity_id },
-                    input: crate::operation::ChangeDescriptionInput { description: Some(description) },
+                    scope: EntityScope { entity_id: scope.entity_id },
+                    input: crate::operation::ChangeDescriptionInput { description: Some(input.description) },
                 },
             };
             Ok(rt.dispatch_wip(cmd).await)
         }
 
         #[graphql(name = "createTag")]
-        pub async fn create_tag(&self, ctx: &Context<'_>, #[graphql(name = "draftId")] draft_id: Id, #[graphql(name = "transactionId")] transaction_id: Id, #[graphql(name = "ownerId")] owner_id: Id, tag: TagInput) -> async_graphql::Result<Id> {
+        pub async fn create_tag(&self, ctx: &Context<'_>, scope: CreateTagScopeInput, input: CreateTagGqlInput) -> async_graphql::Result<Id> {
             let rt = ctx.data::<Arc<ParentRuntime>>()?;
             let request_id = Id::new().await;
+            let tag = input.tag;
             let attribute_count = tag.attributes.as_ref().map(|items| items.len()).unwrap_or_default();
             let tag_id = Id::new().await;
             let mut attribute_ids = Vec::with_capacity(attribute_count);
@@ -7334,24 +7685,25 @@ pub mod gql {
             }
             let cmd = Command::ApplyKitOperation {
                 request_id: request_id.clone(),
-                draft_id,
-                transaction_id,
-                operation: KitOperation::CreateTag { scope: CreateTagScope { owner_id, tag_id, attribute_ids }, input: tag },
+                draft_id: scope.draft_id,
+                transaction_id: scope.transaction_id,
+                operation: KitOperation::CreateTag {
+                    scope: CreateTagScope {
+                        owner_id: scope.owner_id,
+                        tag_id,
+                        attribute_ids,
+                    },
+                    input: tag,
+                },
             };
             Ok(rt.dispatch_wip(cmd).await)
         }
 
         #[graphql(name = "createTags")]
-        pub async fn create_tags(
-            &self,
-            ctx: &Context<'_>,
-            #[graphql(name = "draftId")] draft_id: Id,
-            #[graphql(name = "transactionId")] transaction_id: Id,
-            #[graphql(name = "ownerId")] owner_id: Id,
-            tags: Vec<TagInput>,
-        ) -> async_graphql::Result<Id> {
+        pub async fn create_tags(&self, ctx: &Context<'_>, scope: CreateTagsScopeInput, input: CreateTagsGqlInput) -> async_graphql::Result<Id> {
             let rt = ctx.data::<Arc<ParentRuntime>>()?;
             let request_id = Id::new().await;
+            let tags = input.tags;
             let mut tag_ids = Vec::with_capacity(tags.len());
             let mut attribute_ids = Vec::with_capacity(tags.len());
             for tag in &tags {
@@ -7365,63 +7717,73 @@ pub mod gql {
             }
             let cmd = Command::ApplyKitOperation {
                 request_id: request_id.clone(),
-                draft_id,
-                transaction_id,
-                operation: KitOperation::CreateTags { scope: CreateTagsScope { owner_id, tag_ids, attribute_ids }, input: CreateTagsInput { tags } },
+                draft_id: scope.draft_id,
+                transaction_id: scope.transaction_id,
+                operation: KitOperation::CreateTags {
+                    scope: CreateTagsScope {
+                        owner_id: scope.owner_id,
+                        tag_ids,
+                        attribute_ids,
+                    },
+                    input: crate::operation::CreateTagsInput { tags },
+                },
             };
             Ok(rt.dispatch_wip(cmd).await)
         }
 
         #[graphql(name = "renameTag")]
-        pub async fn rename_tag(&self, ctx: &Context<'_>, #[graphql(name = "draftId")] draft_id: Id, #[graphql(name = "transactionId")] transaction_id: Id, #[graphql(name = "tagId")] tag_id: Id, name: String) -> async_graphql::Result<Id> {
+        pub async fn rename_tag(&self, ctx: &Context<'_>, scope: RenameTagScopeInput, input: RenameTagGqlInput) -> async_graphql::Result<Id> {
             let rt = ctx.data::<Arc<ParentRuntime>>()?;
             let request_id = Id::new().await;
             let cmd = Command::ApplyKitOperation {
                 request_id: request_id.clone(),
-                draft_id,
-                transaction_id,
-                operation: KitOperation::RenameTag { scope: TagScope { tag_id }, input: RenameTagInput { name } },
+                draft_id: scope.draft_id,
+                transaction_id: scope.transaction_id,
+                operation: KitOperation::RenameTag {
+                    scope: TagScope { tag_id: scope.tag_id },
+                    input: crate::operation::RenameTagInput { name: input.name },
+                },
             };
             Ok(rt.dispatch_wip(cmd).await)
         }
 
         #[graphql(name = "deleteTag")]
-        pub async fn delete_tag(&self, ctx: &Context<'_>, #[graphql(name = "draftId")] draft_id: Id, #[graphql(name = "transactionId")] transaction_id: Id, #[graphql(name = "tagId")] tag_id: Id) -> async_graphql::Result<Id> {
+        pub async fn delete_tag(&self, ctx: &Context<'_>, scope: DeleteTagScopeInput, _input: DeleteTagGqlInput) -> async_graphql::Result<Id> {
             let rt = ctx.data::<Arc<ParentRuntime>>()?;
             let request_id = Id::new().await;
             let cmd = Command::ApplyKitOperation {
                 request_id: request_id.clone(),
-                draft_id,
-                transaction_id,
-                operation: KitOperation::DeleteTag { scope: TagScope { tag_id }, input: crate::operation::NoInput },
+                draft_id: scope.draft_id,
+                transaction_id: scope.transaction_id,
+                operation: KitOperation::DeleteTag {
+                    scope: TagScope { tag_id: scope.tag_id },
+                    input: crate::operation::NoInput,
+                },
             };
             Ok(rt.dispatch_wip(cmd).await)
         }
 
         #[graphql(name = "deleteTags")]
-        pub async fn delete_tags(&self, ctx: &Context<'_>, #[graphql(name = "draftId")] draft_id: Id, #[graphql(name = "transactionId")] transaction_id: Id, #[graphql(name = "tagIds")] tag_ids: Vec<Id>) -> async_graphql::Result<Id> {
+        pub async fn delete_tags(&self, ctx: &Context<'_>, scope: DeleteTagsScopeInput, _input: DeleteTagsGqlInput) -> async_graphql::Result<Id> {
             let rt = ctx.data::<Arc<ParentRuntime>>()?;
             let request_id = Id::new().await;
             let cmd = Command::ApplyKitOperation {
                 request_id: request_id.clone(),
-                draft_id,
-                transaction_id,
-                operation: KitOperation::DeleteTags { scope: TagsScope { tag_ids }, input: crate::operation::NoInput },
+                draft_id: scope.draft_id,
+                transaction_id: scope.transaction_id,
+                operation: KitOperation::DeleteTags {
+                    scope: TagsScope { tag_ids: scope.tag_ids },
+                    input: crate::operation::NoInput,
+                },
             };
             Ok(rt.dispatch_wip(cmd).await)
         }
 
         #[graphql(name = "createConcept")]
-        pub async fn create_concept(
-            &self,
-            ctx: &Context<'_>,
-            #[graphql(name = "draftId")] draft_id: Id,
-            #[graphql(name = "transactionId")] transaction_id: Id,
-            #[graphql(name = "ownerId")] owner_id: Id,
-            concept: ConceptInput,
-        ) -> async_graphql::Result<Id> {
+        pub async fn create_concept(&self, ctx: &Context<'_>, scope: CreateConceptScopeInput, input: CreateConceptGqlInput) -> async_graphql::Result<Id> {
             let rt = ctx.data::<Arc<ParentRuntime>>()?;
             let request_id = Id::new().await;
+            let concept = input.concept;
             let attribute_count = concept.attributes.as_ref().map(|items| items.len()).unwrap_or_default();
             let concept_id = Id::new().await;
             let mut attribute_ids = Vec::with_capacity(attribute_count);
@@ -7430,24 +7792,25 @@ pub mod gql {
             }
             let cmd = Command::ApplyKitOperation {
                 request_id: request_id.clone(),
-                draft_id,
-                transaction_id,
-                operation: KitOperation::CreateConcept { scope: CreateConceptScope { owner_id, concept_id, attribute_ids }, input: concept },
+                draft_id: scope.draft_id,
+                transaction_id: scope.transaction_id,
+                operation: KitOperation::CreateConcept {
+                    scope: CreateConceptScope {
+                        owner_id: scope.owner_id,
+                        concept_id,
+                        attribute_ids,
+                    },
+                    input: concept,
+                },
             };
             Ok(rt.dispatch_wip(cmd).await)
         }
 
         #[graphql(name = "createQuality")]
-        pub async fn create_quality(
-            &self,
-            ctx: &Context<'_>,
-            #[graphql(name = "draftId")] draft_id: Id,
-            #[graphql(name = "transactionId")] transaction_id: Id,
-            #[graphql(name = "ownerId")] owner_id: Id,
-            quality: QualityInput,
-        ) -> async_graphql::Result<Id> {
+        pub async fn create_quality(&self, ctx: &Context<'_>, scope: CreateQualityScopeInput, input: CreateQualityGqlInput) -> async_graphql::Result<Id> {
             let rt = ctx.data::<Arc<ParentRuntime>>()?;
             let request_id = Id::new().await;
+            let quality = input.quality;
             let attribute_count = quality.attributes.as_ref().map(|items| items.len()).unwrap_or_default();
             let quality_id = Id::new().await;
             let mut attribute_ids = Vec::with_capacity(attribute_count);
@@ -7456,51 +7819,55 @@ pub mod gql {
             }
             let cmd = Command::ApplyKitOperation {
                 request_id: request_id.clone(),
-                draft_id,
-                transaction_id,
-                operation: KitOperation::CreateQuality { scope: CreateQualityScope { owner_id, quality_id, attribute_ids, benchmark_ids: Vec::new() }, input: quality },
+                draft_id: scope.draft_id,
+                transaction_id: scope.transaction_id,
+                operation: KitOperation::CreateQuality {
+                    scope: CreateQualityScope {
+                        owner_id: scope.owner_id,
+                        quality_id,
+                        attribute_ids,
+                        benchmark_ids: Vec::new(),
+                    },
+                    input: quality,
+                },
             };
             Ok(rt.dispatch_wip(cmd).await)
         }
 
         #[graphql(name = "dragPieceInDesign")]
-        pub async fn drag_piece_in_design(
-            &self,
-            ctx: &Context<'_>,
-            #[graphql(name = "draftId")] draft_id: Id,
-            #[graphql(name = "transactionId")] transaction_id: Id,
-            #[graphql(name = "designId")] design_id: Id,
-            #[graphql(name = "pieceId")] piece_id: Id,
-            offset: Offset,
-        ) -> async_graphql::Result<Id> {
+        pub async fn drag_piece_in_design(&self, ctx: &Context<'_>, scope: DragPieceInDesignScopeInput, input: DragPieceInDesignGqlInput) -> async_graphql::Result<Id> {
             let rt = ctx.data::<Arc<ParentRuntime>>()?;
             let request_id = Id::new().await;
             let cmd = Command::ApplyKitOperation {
                 request_id: request_id.clone(),
-                draft_id,
-                transaction_id,
-                operation: KitOperation::DragPieceInDesign { scope: PieceInDesignScope { design_id, piece_id }, input: DragPieceInput { offset } },
+                draft_id: scope.draft_id,
+                transaction_id: scope.transaction_id,
+                operation: KitOperation::DragPieceInDesign {
+                    scope: PieceInDesignScope {
+                        design_id: scope.design_id,
+                        piece_id: scope.piece_id,
+                    },
+                    input: DragPieceInput { offset: input.offset },
+                },
             };
             Ok(rt.dispatch_wip(cmd).await)
         }
 
         #[graphql(name = "dragPiecesInDesign")]
-        pub async fn drag_pieces_in_design(
-            &self,
-            ctx: &Context<'_>,
-            #[graphql(name = "draftId")] draft_id: Id,
-            #[graphql(name = "transactionId")] transaction_id: Id,
-            #[graphql(name = "designId")] design_id: Id,
-            #[graphql(name = "pieceIds")] piece_ids: Vec<Id>,
-            offset: Offset,
-        ) -> async_graphql::Result<Id> {
+        pub async fn drag_pieces_in_design(&self, ctx: &Context<'_>, scope: DragPiecesInDesignScopeInput, input: DragPiecesInDesignGqlInput) -> async_graphql::Result<Id> {
             let rt = ctx.data::<Arc<ParentRuntime>>()?;
             let request_id = Id::new().await;
             let cmd = Command::ApplyKitOperation {
                 request_id: request_id.clone(),
-                draft_id,
-                transaction_id,
-                operation: KitOperation::DragPiecesInDesign { scope: PiecesInDesignScope { design_id, piece_ids }, input: DragPieceInput { offset } },
+                draft_id: scope.draft_id,
+                transaction_id: scope.transaction_id,
+                operation: KitOperation::DragPiecesInDesign {
+                    scope: PiecesInDesignScope {
+                        design_id: scope.design_id,
+                        piece_ids: scope.piece_ids,
+                    },
+                    input: DragPieceInput { offset: input.offset },
+                },
             };
             Ok(rt.dispatch_wip(cmd).await)
         }
@@ -7788,17 +8155,21 @@ mod tests {
 
     fn add_fixed_piece_vars(design_id: &str) -> async_graphql::Value {
         async_graphql::value!({
-            "draftId": "d1",
-            "transactionId": "t1",
-            "designId": design_id,
-            "blueprintId": "bp-new",
-            "position": position_value()
+            "scope": {
+                "draftId": "d1",
+                "transactionId": "t1",
+                "designId": design_id,
+            },
+            "input": {
+                "blueprintId": "bp-new",
+                "position": position_value()
+            }
         })
     }
 
     const ADD_FIXED_PIECE_TO_DESIGN: &str = r#"
-        mutation($draftId: ID!, $transactionId: ID!, $designId: ID!, $blueprintId: ID!, $position: PositionInput!) {
-            addFixedPieceToDesign(draftId: $draftId, transactionId: $transactionId, designId: $designId, blueprintId: $blueprintId, position: $position)
+        mutation($scope: AddFixedPieceToDesignScopeInput!, $input: AddFixedPieceToDesignInput!) {
+            addFixedPieceToDesign(scope: $scope, input: $input)
         }
     "#;
 
@@ -7847,8 +8218,15 @@ mod tests {
             // Open a transaction and rename inside it.
             let res = schema_a.execute(Request::new(r#"mutation($d: ID!) { transactionOpen(draftId: $d) }"#).variables(Variables::from_value(async_graphql::value!({ "d": draft_a.clone() })))).await;
             let tx_a: String = res.data.into_json().unwrap()["transactionOpen"].as_str().expect("tx id").to_string();
-            const RN: &str = r#"mutation($d: Id!, $t: Id!, $n: String!) { renameKit(draftId: $d, transactionId: $t, name: $n) }"#;
-            let res = schema_a.execute(Request::new(RN).variables(Variables::from_value(async_graphql::value!({ "d": draft_a.clone(), "t": tx_a.clone(), "n": "Hello Bundle" })))).await;
+            const RN: &str = r#"mutation($scope: RenameKitScopeInput!, $input: RenameKitInput!) { renameKit(scope: $scope, input: $input) }"#;
+            let res = schema_a
+                .execute(
+                    Request::new(RN).variables(Variables::from_value(async_graphql::value!({
+                        "scope": { "draftId": draft_a.clone(), "transactionId": tx_a.clone() },
+                        "input": { "name": "Hello Bundle" }
+                    }))),
+                )
+                .await;
             assert!(res.errors.is_empty(), "renameKit errors: {:?}", res.errors);
             std::thread::sleep(std::time::Duration::from_millis(150));
 
@@ -7973,15 +8351,17 @@ mod tests {
             let kit_id = schema.execute("{ wip { theKit { id } } }").await.data.into_json().unwrap()["wip"]["theKit"]["id"].as_str().expect("kit id").to_string();
 
             const M: &str = r#"
-                mutation($draftId: ID!, $transactionId: ID!, $ownerId: ID!, $tag: TagInput!) {
-                    createTag(draftId: $draftId, transactionId: $transactionId, ownerId: $ownerId, tag: $tag)
+                mutation($scope: CreateTagScopeInput!, $input: CreateTagInput!) {
+                    createTag(scope: $scope, input: $input)
                 }
             "#;
             let vars = async_graphql::value!({
-                "draftId": "d1",
-                "transactionId": "t1",
-                "ownerId": kit_id,
-                "tag": { "name": "alpha-tag" }
+                "scope": {
+                    "draftId": "d1",
+                    "transactionId": "t1",
+                    "ownerId": kit_id,
+                },
+                "input": { "tag": { "name": "alpha-tag" } }
             });
             let res = schema.execute(Request::new(M).variables(Variables::from_value(vars))).await;
             assert!(res.errors.is_empty(), "createTag errors: {:?}", res.errors);
@@ -8004,15 +8384,17 @@ mod tests {
             let kit_id = schema.execute("{ wip { theKit { id } } }").await.data.into_json().unwrap()["wip"]["theKit"]["id"].as_str().expect("kit id").to_string();
 
             const M: &str = r#"
-                mutation($draftId: ID!, $transactionId: ID!, $ownerId: ID!, $concept: ConceptInput!) {
-                    createConcept(draftId: $draftId, transactionId: $transactionId, ownerId: $ownerId, concept: $concept)
+                mutation($scope: CreateConceptScopeInput!, $input: CreateConceptInput!) {
+                    createConcept(scope: $scope, input: $input)
                 }
             "#;
             let vars = async_graphql::value!({
-                "draftId": "d1",
-                "transactionId": "t1",
-                "ownerId": kit_id,
-                "concept": { "name": "beta-concept" }
+                "scope": {
+                    "draftId": "d1",
+                    "transactionId": "t1",
+                    "ownerId": kit_id,
+                },
+                "input": { "concept": { "name": "beta-concept" } }
             });
             let res = schema.execute(Request::new(M).variables(Variables::from_value(vars))).await;
             assert!(res.errors.is_empty(), "createConcept errors: {:?}", res.errors);
@@ -8035,15 +8417,17 @@ mod tests {
             let kit_id = schema.execute("{ wip { theKit { id } } }").await.data.into_json().unwrap()["wip"]["theKit"]["id"].as_str().expect("kit id").to_string();
 
             const M: &str = r#"
-                mutation($draftId: ID!, $transactionId: ID!, $ownerId: ID!, $quality: QualityInput!) {
-                    createQuality(draftId: $draftId, transactionId: $transactionId, ownerId: $ownerId, quality: $quality)
+                mutation($scope: CreateQualityScopeInput!, $input: CreateQualityInput!) {
+                    createQuality(scope: $scope, input: $input)
                 }
             "#;
             let vars = async_graphql::value!({
-                "draftId": "d1",
-                "transactionId": "t1",
-                "ownerId": kit_id,
-                "quality": { "key": "q1", "value": "v1" }
+                "scope": {
+                    "draftId": "d1",
+                    "transactionId": "t1",
+                    "ownerId": kit_id,
+                },
+                "input": { "quality": { "key": "q1", "value": "v1" } }
             });
             let res = schema.execute(Request::new(M).variables(Variables::from_value(vars))).await;
             assert!(res.errors.is_empty(), "createQuality errors: {:?}", res.errors);
@@ -8465,6 +8849,95 @@ mod tests {
         assert_eq!(flat[0].transaction_id, "tx-y");
         assert_eq!(flat[0].kind, "kit.design.piece.createdFixedPiece");
         assert_eq!(flat[1].kind, "kit.design.piece.deletedFixedPieces");
+    }
+
+    #[test]
+    fn normalized_kit_operation_create_tag_diff_and_backwards_use_scoped_ids() {
+        block_on(async {
+            let graph = crate::vcs::Graph::new().await;
+            let kit = graph.the_kit.clone();
+            let owner_id = kit.workspace_kit_id().await;
+            let tag_id = crate::id::Id::from("tag-scope-1");
+            let attribute_id = crate::id::Id::from("attr-scope-1");
+            let create = crate::operation::KitOperation::CreateTag {
+                scope: crate::operation::CreateTagScope { owner_id: owner_id.clone(), tag_id: tag_id.clone(), attribute_ids: vec![attribute_id.clone()] },
+                input: crate::meta::TagInput {
+                    name: "alpha-tag".to_string(),
+                    description: Some("tag description".to_string()),
+                    icon: Some("tag-icon".to_string()),
+                    order: Some(3),
+                    attributes: Some(vec![crate::meta::AttributeInput {
+                        key: "material".to_string(),
+                        value: Some("steel".to_string()),
+                        definition: Some("visible material".to_string()),
+                    }]),
+                },
+            };
+
+            let diff = create.to_diff(&kit).await.expect("createTag diff");
+            assert_eq!(diff.kind, "createTag");
+            assert!(diff.added.iter().any(|entity| entity.id == tag_id && entity.kind == "tag"));
+            assert!(diff.added.iter().any(|entity| entity.id == attribute_id && entity.kind == "attribute"));
+
+            let crate::operation::KitOperation::CreateTag { scope, input } = create.clone() else {
+                panic!("expected createTag operation");
+            };
+            kit.create_and_register_tag_with_scope(&scope.owner_id, &scope.tag_id, &scope.attribute_ids, input).await.expect("apply createTag");
+
+            let backwards = crate::operation::KitOperation::DeleteTag { scope: crate::operation::TagScope { tag_id: tag_id.clone() }, input: crate::operation::NoInput }
+                .to_backwards(&kit)
+                .await
+                .expect("deleteTag backwards");
+            assert_eq!(backwards.len(), 1);
+            match &backwards[0] {
+                crate::operation::KitOperation::CreateTag { scope, input } => {
+                    assert_eq!(scope.owner_id, owner_id);
+                    assert_eq!(scope.tag_id, tag_id);
+                    assert_eq!(scope.attribute_ids, vec![attribute_id]);
+                    assert_eq!(input.name, "alpha-tag");
+                    assert_eq!(input.description.as_deref(), Some("tag description"));
+                }
+                other => panic!("unexpected backwards operation: {:?}", other),
+            }
+        });
+    }
+
+    #[test]
+    fn normalized_create_fixed_piece_replay_reuses_scoped_piece_id() {
+        block_on(async {
+            let graph = crate::vcs::Graph::new().await;
+            let operation = crate::operation::KitOperation::CreateFixedPiece {
+                scope: crate::operation::CreateFixedPieceScope {
+                    design_id: crate::id::Id::from("design-scoped-1"),
+                    piece_id: crate::id::Id::from("piece-scoped-1"),
+                    blueprint_id: crate::id::Id::from("blueprint-scoped-1"),
+                    attribute_ids: Vec::new(),
+                },
+                input: crate::operation::CreateFixedPieceInput {
+                    position: crate::geom::Position::default(),
+                    name: Some("Scoped Piece".to_string()),
+                    description: Some("Persisted with explicit scope ids".to_string()),
+                },
+            };
+
+            let payload = operation.payload_json().expect("payload json");
+            let applied = crate::kit_graph_engine::apply_semantic_op_json(
+                &graph,
+                &crate::id::Id::from("draft-scoped-1"),
+                &crate::id::Id::from("tx-scoped-1"),
+                operation.kind(),
+                &payload,
+            )
+            .await
+            .expect("apply normalized createFixedPiece");
+
+            let piece = applied.created_piece.expect("created piece");
+            assert_eq!(piece.id, crate::id::Id::from("piece-scoped-1"));
+            assert_eq!(piece.name.read().await.clone().as_deref(), Some("Scoped Piece"));
+
+            let design = graph.the_kit.design_by_external_id(&crate::id::Id::from("design-scoped-1")).await.expect("design exists");
+            assert!(design.piece_by_external_id(&crate::id::Id::from("piece-scoped-1")).await.is_some(), "piece should be addressable by scoped id");
+        });
     }
 }
 

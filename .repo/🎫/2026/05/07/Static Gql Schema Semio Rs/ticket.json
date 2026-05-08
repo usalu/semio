@@ -1,6 +1,6 @@
 {
   "title": "Static Gql Schema Semio Rs",
-  "status": "open",
-  "summary": "Replace dynamic gql_target with Schema::build(Query, Mutation, Subscription); Relay connections on Kit/Design; fix simple_conn hash borrow; wasm sync build_schema_for.",
+  "status": "closed",
+  "summary": "Normalized semio/rs operations around a new scoped KitOperation enum with explicit scope/input structs, structural KitDiff generation, and pure to_backwards helpers. Refactored the command and GraphQL mutation pipeline to construct scoped operations with record-time ids, added explicit-id create/delete helpers in kit/meta/design code, taught semantic replay to accept normalized createFixedPiece payloads, and added focused tests for scoped diff/backward/replay behavior. Focused normalized tests passed once, but broader cargo test validation is currently blocked by unrelated in-progress graph/materialization compile errors already present elsewhere in semio/rs/lib.rs.",
   "goal": "🎯graphqltargetsemiors"
 }
