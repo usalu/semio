@@ -3599,6 +3599,115 @@ pub mod vcs {
             h(&[self.id.as_str()])
         }
 
+        /// @emoji 🌱 Ensure the graph has a seed `Checkpoint` anchored on `the_kit` and a default `Draft`
+        /// hanging off it. Idempotent: if either already exists it's reused. Returns the active default draft.
+        /// Sketchpad calls this through `Mutation.kitStoreInitializeDefaults` when a fresh dev kit (json file)
+        /// is mounted so the on-disk bundle immediately exposes "root + first checkpoint + first draft".
+        pub async fn ensure_default_seed_state(self: &Arc<Self>) -> Arc<Draft> {
+            let checkpoint = {
+                let cps = self.checkpoints.read().await;
+                if let Some(c) = cps.first().cloned() {
+                    c
+                } else {
+                    drop(cps);
+                    let id = Id::new().await;
+                    let cp = Arc::new(Checkpoint {
+                        id,
+                        timestamp: RwLock::new(None),
+                        authors: RwLock::new(Vec::new()),
+                        root: RwLock::new(Some(self.the_kit.clone())),
+                        parent_checkpoint: RwLock::new(Weak::new()),
+                        message: RwLock::new(Some("init".to_string())),
+                        is_release: RwLock::new(false),
+                        change_count: RwLock::new(0),
+                    });
+                    self.checkpoints.write().await.push(cp.clone());
+                    cp
+                }
+            };
+            let draft = {
+                let drafts = self.drafts.read().await;
+                if let Some(d) = drafts.first().cloned() {
+                    d
+                } else {
+                    drop(drafts);
+                    let d = Draft::new().await;
+                    *d.parent_checkpoint.write().await = Arc::downgrade(&checkpoint);
+                    self.drafts.write().await.push(d.clone());
+                    d
+                }
+            };
+            draft
+        }
+
+        /// @emoji 🌱 Fork a new named alternative from the current draft tip checkpoint (`source` `None` = main kit line).
+        pub async fn create_alternative_from_tip(self: &Arc<Self>, name: String, source_alternative_id: Option<&Id>) -> Result<Id, SemioError> {
+            let name = name.trim().to_string();
+            if name.is_empty() {
+                return Err(SemioError::invalid("alternative name required"));
+            }
+
+            self.ensure_default_seed_state().await;
+
+            let source_draft = match source_alternative_id {
+                None => self
+                    .drafts
+                    .read()
+                    .await
+                    .iter()
+                    .find(|d| d.owner_alternative.upgrade().is_none())
+                    .cloned()
+                    .ok_or_else(|| SemioError::invalid("no main-line draft"))?,
+                Some(aid) => {
+                    let alts = self.alternatives.read().await;
+                    let alt = alts
+                        .iter()
+                        .find(|a| &a.id == aid)
+                        .ok_or_else(|| SemioError::not_found("Alternative", aid.as_str()))?
+                        .clone();
+                    drop(alts);
+                    alt.draft.read().await.upgrade().ok_or_else(|| SemioError::invalid("alternative has no draft"))?
+                }
+            };
+
+            let parent_cp = source_draft
+                .parent_checkpoint
+                .read()
+                .await
+                .upgrade()
+                .ok_or_else(|| SemioError::invalid("draft has no parent checkpoint"))?;
+
+            let new_alt_id = Id::new().await;
+            let new_alt = Arc::new(Alternative {
+                id: new_alt_id.clone(),
+                owner_graph: Arc::downgrade(self),
+                name: RwLock::new(name),
+                start: RwLock::new(Arc::downgrade(&parent_cp)),
+                checkpoints: RwLock::new(vec![parent_cp.clone()]),
+                kit: RwLock::new(parent_cp.root.read().await.clone()),
+                draft: RwLock::new(Weak::new()),
+                transaction: RwLock::new(Weak::new()),
+            });
+
+            let new_draft = Arc::new(Draft {
+                id: Id::new().await,
+                owner_alternative: Arc::downgrade(&new_alt),
+                parent_checkpoint: RwLock::new(Arc::downgrade(&parent_cp)),
+                target_alternative: RwLock::new(Weak::new()),
+                open_transaction: RwLock::new(Weak::new()),
+                finalized_transactions: RwLock::new(Vec::new()),
+                redo_transactions: RwLock::new(Vec::new()),
+                transactions: RwLock::new(Vec::new()),
+            });
+
+            *new_alt.draft.write().await = Arc::downgrade(&new_draft);
+
+            self.alternatives.write().await.push(new_alt);
+            self.drafts.write().await.push(new_draft);
+
+            Ok(new_alt_id)
+        }
+
         pub async fn ensure_draft(self: &Arc<Self>, draft_id: &Id) -> Arc<Draft> {
             if let Some(d) = self.drafts.read().await.iter().find(|d| &d.id == draft_id).cloned() {
                 return d;
@@ -5133,17 +5242,23 @@ pub mod kit_graph_engine {
 
 //#region 🗄️ kit backbone persistence (native)
 
-#[cfg(not(target_arch = "wasm32"))]
 pub mod kit_backbone {
     //! @emoji 🗄️ Dev JSON + local `.semio/` kit backbones: atomic single-file writes, multi-db SQLite + blobs dir, replay via [`kit_graph_engine::apply_semantic_op_json`].
+    //! 🌐 The bundle wire format (`KitStoreBundleFile` + DTOs + `from_graph` / `hydrate_into_graph`) is wasm-compatible —
+    //! sketchpad's WASM runtime serializes / hydrates the metabolism-shaped JSON directly. The SQLite + filesystem-IO parts
+    //! (atomic writes, `DevJsonAttached`, `LocalAttached`) are native-only and gated below.
 
-    use std::path::{Path, PathBuf};
     use std::sync::Arc;
 
+    #[cfg(not(target_arch = "wasm32"))]
+    use std::path::{Path, PathBuf};
+
+    #[cfg(not(target_arch = "wasm32"))]
     use rusqlite::Connection;
 
     use crate::error::SemioError;
     use crate::id::Id;
+    #[cfg(not(target_arch = "wasm32"))]
     use crate::op::BackboneStoreKind;
     use crate::vcs::Graph;
 
@@ -5293,6 +5408,69 @@ pub mod kit_backbone {
                 }
             }
             out
+        }
+
+        /// @emoji 📸 Project the live `Graph` into a metabolism-shaped bundle ready for atomic write.
+        /// `wip.id` mirrors the graph id; `wip.root` is the camelCase `KitFullDto` projection of `the_kit`;
+        /// checkpoints / drafts / transactions echo the in-memory state so the on-disk file matches what
+        /// sketchpad is currently editing. The dev who reads the file should see the same shape as
+        /// `semio/assets/semio/metabolism.new.kit.semio.json`.
+        pub async fn from_graph(graph: &crate::vcs::Graph) -> Self {
+            let mut bundle = Self::template();
+            let kit_dto = graph.the_kit.kit_full_snapshot_value().await;
+            let gid = graph.id.as_str().to_string();
+            bundle.wip.id = gid.clone();
+            bundle.authoritative.id = gid.clone();
+            bundle.stage.id = gid;
+            bundle.wip.root = kit_dto;
+
+            // 🪧 Project checkpoints (each anchored on a kit snapshot we currently leave at the placeholder hash).
+            for cp in graph.checkpoints.read().await.iter() {
+                let msg = cp.message.read().await.clone().unwrap_or_default();
+                let ts = cp.timestamp.read().await.clone().map(|t| t.0).unwrap_or_else(|| HASH_PLACEHOLDER.to_string());
+                bundle.wip.checkpoints.items.push(serde_json::json!({
+                    "id": cp.id.as_str(),
+                    "hash": HASH_PLACEHOLDER,
+                    "timestamp": ts,
+                    "message": msg,
+                    "authors": { "hash": HASH_PLACEHOLDER, "items": [] },
+                    "changes": { "hash": HASH_PLACEHOLDER, "items": [] },
+                }));
+            }
+
+            // 📝 Project drafts and the transactions inside them (open + finalized — both visible on disk).
+            for draft in graph.drafts.read().await.iter() {
+                let mut txs: Vec<TransactionDto> = Vec::new();
+                for tx in draft.transactions.read().await.iter() {
+                    txs.push(TransactionDto { id: tx.id.as_str().to_string(), hash: HASH_PLACEHOLDER.to_string(), forwards: BlockHashedListDto::default(), backwards: BlockHashedListDto::default() });
+                }
+                for tx in draft.finalized_transactions.read().await.iter() {
+                    txs.push(TransactionDto { id: tx.id.as_str().to_string(), hash: HASH_PLACEHOLDER.to_string(), forwards: BlockHashedListDto::default(), backwards: BlockHashedListDto::default() });
+                }
+                let parent = draft.parent_checkpoint.read().await.upgrade().map(|c| HashRefDto { id: c.id.as_str().to_string(), hash: HASH_PLACEHOLDER.to_string() });
+                bundle.wip.drafts.items.push(DraftDto {
+                    id: draft.id.as_str().to_string(),
+                    hash: HASH_PLACEHOLDER.to_string(),
+                    checkpoint: parent,
+                    transactions: BlockHashedListDto { hash: HASH_PLACEHOLDER.to_string(), items: txs },
+                });
+            }
+
+            bundle
+        }
+
+        /// @emoji 🩻 Hydrate the live graph from a previously-persisted bundle JSON. Today this only restores
+        /// the kit projection (`wip.root`) into `the_kit`; the draft / transaction structure is preserved on
+        /// disk via `from_graph` round-trip but op replay is owned by the existing semantic-op log path.
+        pub async fn hydrate_into_graph(graph: &std::sync::Arc<crate::vcs::Graph>, json: &str) -> Result<Self, SemioError> {
+            let bundle: Self = serde_json::from_str(json).map_err(|e| SemioError::invalid(format!("bundle parse: {e}")))?;
+            if bundle.schema != KIT_STORE_BUNDLE_SCHEMA {
+                return Err(SemioError::invalid(format!("bundle schema mismatch: {} != {}", bundle.schema, KIT_STORE_BUNDLE_SCHEMA)));
+            }
+            if !bundle.wip.root.is_null() && bundle.wip.root.is_object() {
+                graph.the_kit.hydrate_from_kit_full_snapshot_json(&bundle.wip.root).await?;
+            }
+            Ok(bundle)
         }
 
         /// @emoji 🌱 Initialize an empty bundle with a non-empty `wip` head: empty root projection stamped with `kit_id`,
@@ -5637,9 +5815,6 @@ CREATE TABLE IF NOT EXISTS conflict_stub (
         Ok(out)
     }
 }
-
-#[cfg(target_arch = "wasm32")]
-pub mod kit_backbone {}
 
 //#endregion 🗄️ kit backbone persistence (native)
 
@@ -6095,6 +6270,15 @@ pub mod gql {
             let rt = ctx.data::<Arc<ParentRuntime>>()?;
             Ok(crate::iface::alternative_piece_kind(rt.as_ref(), &piece_id).await)
         }
+
+        /// @emoji 📸 Serialize the live `wip` graph as a metabolism-shaped bundle JSON (matches `semio/assets/semio/metabolism.new.kit.semio.json`).
+        /// Sketchpad calls this after every change and atomically writes the bytes to the dev-kit JSON file via the host adapter.
+        #[graphql(name = "kitStoreBundleJson")]
+        pub async fn kit_store_bundle_json(&self, ctx: &Context<'_>) -> async_graphql::Result<String> {
+            let rt = ctx.data::<Arc<ParentRuntime>>()?;
+            let bundle = crate::kit_backbone::KitStoreBundleFile::from_graph(rt.wip_graph.as_ref()).await;
+            serde_json::to_string_pretty(&bundle).map_err(|e| async_graphql::Error::new(e.to_string()))
+        }
     }
 
     pub struct Mutation;
@@ -6162,6 +6346,43 @@ pub mod gql {
         pub async fn transaction_abort(&self, ctx: &Context<'_>, #[graphql(name = "draftId")] draft_id: Id, #[graphql(name = "transactionId")] transaction_id: Id) -> async_graphql::Result<bool> {
             let rt = ctx.data::<Arc<ParentRuntime>>()?;
             rt.wip_graph.abort_transaction(&draft_id, &transaction_id).await.map_err(|e| async_graphql::Error::new(e.to_string()))?;
+            Ok(true)
+        }
+
+        /// @emoji 🌱 Bootstrap the `wip` graph for a fresh dev kit: ensures a seed checkpoint anchored on `the_kit`
+        /// and a default draft on that checkpoint. Idempotent — returns the active default draft id (existing or new).
+        /// Sketchpad calls this once when a JSON file backbone is mounted so the on-disk bundle immediately
+        /// shows "root + first checkpoint + first draft".
+        #[graphql(name = "kitStoreInitializeDefaults")]
+        pub async fn kit_store_initialize_defaults(&self, ctx: &Context<'_>) -> async_graphql::Result<Id> {
+            let rt = ctx.data::<Arc<ParentRuntime>>()?;
+            let draft = rt.wip_graph.ensure_default_seed_state().await;
+            Ok(draft.id.clone())
+        }
+
+        /// @emoji 🌱 Create a new alternative branch from the current checkpoint tip (`sourceAlternativeId` omitted = fork from the kit main line).
+        #[graphql(name = "createAlternativeFromTip")]
+        pub async fn create_alternative_from_tip(
+            &self,
+            ctx: &Context<'_>,
+            name: String,
+            #[graphql(name = "sourceAlternativeId")] source_alternative_id: Option<Id>,
+        ) -> async_graphql::Result<Id> {
+            let rt = ctx.data::<Arc<ParentRuntime>>()?;
+            let id = rt
+                .wip_graph
+                .create_alternative_from_tip(name, source_alternative_id.as_ref())
+                .await
+                .map_err(|e| async_graphql::Error::new(e.to_string()))?;
+            Ok(id)
+        }
+
+        /// @emoji 🩻 Hydrate the `wip` graph from a previously-persisted metabolism-shaped bundle JSON.
+        /// Restores the kit projection (`wip.root`); future passes also replay drafts / transactions through the op log.
+        #[graphql(name = "kitStoreBundleHydrate")]
+        pub async fn kit_store_bundle_hydrate(&self, ctx: &Context<'_>, json: String) -> async_graphql::Result<bool> {
+            let rt = ctx.data::<Arc<ParentRuntime>>()?;
+            crate::kit_backbone::KitStoreBundleFile::hydrate_into_graph(&rt.wip_graph, &json).await.map_err(|e| async_graphql::Error::new(e.to_string()))?;
             Ok(true)
         }
 
@@ -6613,6 +6834,58 @@ mod tests {
         let needle = concat!("pub async fn ", "emit_event(&self, ev: Event)");
         let count = src.matches(needle).count();
         assert_eq!(count, 1, "expected exactly one canonical emit_event definition in lib.rs, found {}", count);
+    }
+
+    #[test]
+    fn kit_store_bundle_serialize_hydrate_round_trip_via_graphql() {
+        // 📸🩻 Sketchpad path: Mutation.kitStoreInitializeDefaults → Query.kitStoreBundleJson → write to file →
+        // re-mount → Mutation.kitStoreBundleHydrate → Query.kitStoreBundleJson again must yield the same root projection.
+        block_on(async {
+            let schema_a = crate::gql::build_schema().await;
+
+            // Bootstrap defaults on graph A and rename the kit.
+            let res = schema_a.execute(r#"mutation { kitStoreInitializeDefaults }"#).await;
+            assert!(res.errors.is_empty(), "init defaults errors: {:?}", res.errors);
+            let draft_a: String = res.data.into_json().unwrap()["kitStoreInitializeDefaults"].as_str().expect("draft id").to_string();
+            assert!(!draft_a.is_empty());
+
+            // Open a transaction and rename inside it.
+            let res = schema_a.execute(Request::new(r#"mutation($d: ID!) { transactionOpen(draftId: $d) }"#).variables(Variables::from_value(async_graphql::value!({ "d": draft_a.clone() })))).await;
+            let tx_a: String = res.data.into_json().unwrap()["transactionOpen"].as_str().expect("tx id").to_string();
+            const RN: &str = r#"mutation($d: Id!, $t: Id!, $n: String!) { renameKit(draftId: $d, transactionId: $t, name: $n) }"#;
+            let res = schema_a.execute(Request::new(RN).variables(Variables::from_value(async_graphql::value!({ "d": draft_a.clone(), "t": tx_a.clone(), "n": "Hello Bundle" })))).await;
+            assert!(res.errors.is_empty(), "renameKit errors: {:?}", res.errors);
+            std::thread::sleep(std::time::Duration::from_millis(150));
+
+            // Serialize bundle to JSON.
+            let res = schema_a.execute(r#"{ kitStoreBundleJson }"#).await;
+            assert!(res.errors.is_empty(), "serialize errors: {:?}", res.errors);
+            let json_a: String = res.data.into_json().unwrap()["kitStoreBundleJson"].as_str().expect("bundle json").to_string();
+
+            // The serialized bundle has the metabolism-shaped top-level keys.
+            let v: serde_json::Value = serde_json::from_str(&json_a).expect("bundle parses");
+            assert_eq!(v["schema"].as_str().unwrap(), crate::kit_backbone::KIT_STORE_BUNDLE_SCHEMA);
+            for k in ["wip", "authoritative", "stage", "conflicts", "blobs"].iter() {
+                assert!(v.get(*k).is_some(), "missing top-level key {k}");
+            }
+            assert!(v["wip"]["root"].is_object(), "wip.root projects the live kit");
+            assert_eq!(v["wip"]["root"]["name"].as_str().unwrap_or(""), "Hello Bundle");
+            assert!(!v["wip"]["checkpoints"]["items"].as_array().unwrap().is_empty(), "seed checkpoint present");
+            assert!(!v["wip"]["drafts"]["items"].as_array().unwrap().is_empty(), "default draft present");
+
+            // Mount a fresh schema B (simulates re-opening sketchpad on the same file) and hydrate from json_a.
+            let schema_b = crate::gql::build_schema().await;
+            const HY: &str = r#"mutation($j: String!) { kitStoreBundleHydrate(json: $j) }"#;
+            let res = schema_b.execute(Request::new(HY).variables(Variables::from_value(async_graphql::value!({ "j": json_a.clone() })))).await;
+            assert!(res.errors.is_empty(), "hydrate errors: {:?}", res.errors);
+            assert_eq!(res.data.into_json().unwrap()["kitStoreBundleHydrate"], true);
+
+            // Re-serialize on B and check the kit name survived hydration.
+            let res = schema_b.execute(r#"{ kitStoreBundleJson }"#).await;
+            let json_b: String = res.data.into_json().unwrap()["kitStoreBundleJson"].as_str().expect("bundle json b").to_string();
+            let vb: serde_json::Value = serde_json::from_str(&json_b).expect("bundle b parses");
+            assert_eq!(vb["wip"]["root"]["name"].as_str().unwrap_or(""), "Hello Bundle", "kit name survives bundle round-trip");
+        });
     }
 
     #[test]

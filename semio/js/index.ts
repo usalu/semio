@@ -2056,6 +2056,59 @@ export class KitStore {
     return { draftId: opened.draftId, transactionId: opened.transactionId };
   }
 
+  /** @emoji 🌱 One-shot: ensures rs `wip` graph has a seed checkpoint anchored on `the kit` and a default draft on it.
+   *  Sketchpad calls this exactly once when a JSON file backbone is mounted so the on-disk bundle immediately
+   *  shows "root + first checkpoint + first draft". Returns the active default draft id. */
+  async kitStoreInitializeDefaults(): Promise<string> {
+    this.ensureAlive();
+    const data = kitGraphqlData(
+      await this.gqlRun({ query: `mutation { kitStoreInitializeDefaults }` }),
+    ) as { kitStoreInitializeDefaults?: string };
+    const draftId = String(data.kitStoreInitializeDefaults ?? "");
+    if (draftId === "") throw new Error("kitStoreInitializeDefaults: empty draft id");
+    if (!this.kitWriteDraftId) this.kitWriteDraftId = draftId;
+    return draftId;
+  }
+
+  /** @emoji 🌱 GraphQL `createAlternativeFromTip`; notifies subscribers so VCS lists refresh. */
+  async createAlternativeFromTip(name: string, sourceAlternativeId: string | null): Promise<string> {
+    this.ensureAlive();
+    const data = kitGraphqlData(
+      await this.gqlRun({
+        query: `mutation($n: String!, $sid: Id) { createAlternativeFromTip(name: $n, sourceAlternativeId: $sid) }`,
+        variables: { n: name, sid: sourceAlternativeId },
+      }),
+    ) as { createAlternativeFromTip?: string };
+    const id = String(data.createAlternativeFromTip ?? "");
+    if (id === "") throw new Error("createAlternativeFromTip: empty id");
+    try {
+      this.fanout.next({ Changed: null } as KitEvent);
+    } catch {
+      /* ignore */
+    }
+    return id;
+  }
+
+  /** @emoji 📸 Serialize the live `wip` graph into the metabolism-shaped bundle JSON
+   *  (matches `semio/assets/semio/metabolism.new.kit.semio.json`). The bytes are opaque to JS and meant
+   *  to be atomically written to the dev-kit JSON file by the host file adapter. */
+  async serializeKitStoreBundleJson(): Promise<string> {
+    this.ensureAlive();
+    const data = kitGraphqlData(
+      await this.gqlRun({ query: `query { kitStoreBundleJson }` }),
+    ) as { kitStoreBundleJson?: string };
+    return String(data.kitStoreBundleJson ?? "");
+  }
+
+  /** @emoji 🩻 Hydrate the live `wip` graph from a previously-persisted metabolism-shaped bundle JSON. */
+  async hydrateKitStoreBundleJson(json: string): Promise<void> {
+    this.ensureAlive();
+    if (json.trim() === "") return;
+    kitGraphqlData(
+      await this.gqlRun({ query: `mutation($j: String!) { kitStoreBundleHydrate(json: $j) }`, variables: { j: json } }),
+    );
+  }
+
   /** @emoji 🟢 Open a brand-new kit-write transaction on the active draft via rs `transactionOpen`. Sketchpad calls this on input focus. */
   async openKitWriteTransaction(): Promise<{ ok: true; draftId: string; transactionId: string } | { ok: false; error: SetError }> {
     this.ensureAlive();
@@ -3049,6 +3102,8 @@ export type KitStoreClient = SemioKitBridge & {
   subscribeRenameStatus(onChange: () => void): () => void;
   getRenameStatusSnapshot(): KitRenameStatus;
   rename(name: string): Promise<KitRenameResult>;
+  /** @emoji 🌱 Fork a named alternative from the current checkpoint tip (`null` = kit main line). */
+  createAlternativeFromTip(name: string, sourceAlternativeId: string | null): Promise<string>;
   kitGraphql(): LiveKitRoot;
   subscribe(cb: (ev: KitEvent) => void): () => void;
   readPieceFlatPlane(designId: string, pieceId: string): Promise<PlaneDto | null>;
@@ -3563,6 +3618,10 @@ export class WasmKitStoreClient implements KitStoreClient {
   rename(name: string): Promise<KitRenameResult> {
     return this.ks.rename(name);
   }
+
+  createAlternativeFromTip(name: string, sourceAlternativeId: string | null): Promise<string> {
+    return this.ks.createAlternativeFromTip(name, sourceAlternativeId);
+  }
 }
 
 /** @emoji 🧾 Resolves the live {@link KitStore} behind a WASM {@link KitStoreClient}, or null for fallback clients. */
@@ -4075,6 +4134,12 @@ class FallbackKitClient implements KitStoreClient {
   async rename(_name: string): Promise<KitRenameResult> {
     void _name;
     return { ok: false, requestId: "", error: { kind: "NotSupported", message: "rename requires live WASM KitStore" } };
+  }
+
+  async createAlternativeFromTip(_name: string, _sourceAlternativeId: string | null): Promise<string> {
+    void _name;
+    void _sourceAlternativeId;
+    throw new Error("createAlternativeFromTip requires live WASM KitStore");
   }
 
   setKitReadScope(_scope: KitReadScope): void {
@@ -6419,13 +6484,55 @@ export function asKitInstance(input: KitLike): Kit {
 /**
  * @emoji 🧾 Pulls the authoritative DTO from `kitClient` into a host {@link KitHostStore} (no React; call after GQL events).
  */
-/** @emoji 🧾 Minimal bridge surface used when applying WASM snapshots onto a host store. */
+/** @emoji 🧾 Minimal bridge surface used when applying WASM snapshots onto a host store.
+ *  When the host store is bundle-persisting (`JsonFileKitStore` / `FolderKitStore`) we also drive the
+ *  metabolism-shaped JSON file end-to-end: on first call we hydrate rs from the file's bytes (if any) and
+ *  bootstrap the seed checkpoint + draft; after every change we ask rs to serialize the bundle and atomically
+ *  write it back through the host adapter. The file therefore always mirrors `wip.root` + draft / transaction
+ *  state and looks like `semio/assets/semio/metabolism.new.kit.semio.json`. */
+const KIT_BUNDLE_BOOTSTRAPPED = new WeakSet<KitHostStore>();
 export async function applyKitClientSnapshotToLocalStore(kitClient: SemioKitBridge, store: KitHostStore): Promise<void> {
+  // 🌱 First-time wiring for bundle-persisting hosts: hydrate rs from the file (if any), then ensure rs has a seed checkpoint + default draft.
+  if (isKitBundlePersistingStore(store) && !KIT_BUNDLE_BOOTSTRAPPED.has(store)) {
+    KIT_BUNDLE_BOOTSTRAPPED.add(store);
+    const ks = kitStoreFromKitStoreClient(kitClient as unknown as KitStoreClient);
+    if (ks) {
+      const initial = store.initialBundleJson;
+      if (initial.trim() !== "") {
+        try {
+          await ks.hydrateKitStoreBundleJson(initial);
+        } catch {
+          /* keep going — even if hydration fails we still bootstrap defaults so the file becomes a well-formed bundle */
+        }
+      }
+      try {
+        await ks.kitStoreInitializeDefaults();
+      } catch {
+        /* ignore */
+      }
+    }
+  }
+
   try {
     const incoming = await kitClient.fetchFullKit();
     const curJson = store.getSnapshot().kit.toJSON();
-    if (JSON.stringify(incoming) === JSON.stringify(curJson)) return;
-    store.replace(asKitInstance(incoming));
+    const changed = JSON.stringify(incoming) !== JSON.stringify(curJson);
+    if (changed) store.replace(asKitInstance(incoming));
+    // 📤 Always re-serialize the bundle from rs and push it through the host adapter so the file on disk
+    // matches the rs `wip` graph (root + checkpoints + drafts + transactions). Skipped for non-persisting
+    // hosts (in-memory, remote session). The first run also lands on the empty / new file so it becomes
+    // a properly-shaped metabolism bundle even before the user makes any edit.
+    if (isKitBundlePersistingStore(store)) {
+      const ks = kitStoreFromKitStoreClient(kitClient as unknown as KitStoreClient);
+      if (ks) {
+        try {
+          const json = await ks.serializeKitStoreBundleJson();
+          await store.persistBundle(json);
+        } catch {
+          /* host write failures are surfaced on the adapter; keep the in-memory state alive */
+        }
+      }
+    }
   } catch {
     try {
       const incoming = await kitClient.fetchFullKit();
@@ -6500,23 +6607,44 @@ export type KitFolderAdapter = {
   watch?: (callback: () => void) => () => void;
 };
 
-export class JsonFileKitStore implements KitHostStore {
+/** @emoji 🧭 Marker interface for host stores that want the kit client to push the rs-produced bundle bytes
+ *  back to disk. Implementations decide *how* to write (file vs. folder vs. webview postMessage). The bytes
+ *  themselves are produced exclusively by `semio/rs` (`KitStore.serializeKitStoreBundleJson`); JS treats
+ *  them as opaque. */
+export interface KitBundlePersisting {
+  /** @emoji 📥 Bytes the host read off the backing file at mount time (empty string if the file is new / empty). */
+  readonly initialBundleJson: string;
+  /** @emoji 📤 Atomically write the rs-produced bundle JSON to the backing file/folder. */
+  persistBundle(json: string): Promise<void>;
+}
+
+export class JsonFileKitStore implements KitHostStore, KitBundlePersisting {
   private listeners = new Set<() => void>();
   private _kit: Kit;
   /** @internal */
   readonly name = "JsonFileKitStore";
+  /** @emoji 📥 Snapshot of the file at mount time (rs uses it for `kitStoreBundleHydrate`). */
+  readonly initialBundleJson: string;
   private constructor(
     private readonly adapter: KitJsonFileAdapter,
     seed: Kit,
+    initialBundleJson: string,
   ) {
     this._kit = seed;
+    this.initialBundleJson = initialBundleJson;
   }
   static async create(adapter: KitJsonFileAdapter) {
-    // 🚧 Bundle format is Rust-owned. We start from an empty in-memory kit; once Rust
-    // attaches the dev-json backbone it will project the authoritative state back to us.
-    const _json = await adapter.read();
+    // 🚧 Bundle format is Rust-owned. We read the file once to capture the bytes for rs hydration,
+    // but never parse them on the JS side. Rust will project the authoritative state back through
+    // `applyKitClientSnapshotToLocalStore` and persist updates via `persistBundle`.
+    let initialBundleJson = "";
+    try {
+      initialBundleJson = await adapter.read();
+    } catch {
+      initialBundleJson = "";
+    }
     const seed = asKitInstance({ id: id(), name: "Untitled", createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() });
-    return new JsonFileKitStore(adapter, seed);
+    return new JsonFileKitStore(adapter, seed, initialBundleJson);
   }
   getSnapshot(): KitStoreSnapshot {
     return { kit: this._kit, sync: DEFAULT_KIT_SYNC };
@@ -6528,28 +6656,41 @@ export class JsonFileKitStore implements KitHostStore {
     };
   }
   replace(kit: Kit) {
-    // 🚧 No JS-side persistence: file writing is Rust's job (dev-json backbone).
+    // 🚧 No JS-side persistence: bundle writing happens through `persistBundle(rs-json)` driven by the kit client subscription.
     this._kit = kit;
     for (const l of this.listeners) l();
   }
+  async persistBundle(json: string): Promise<void> {
+    if (json.trim() === "") return;
+    await this.adapter.write(json);
+  }
 }
 
-export class FolderKitStore implements KitHostStore {
+export class FolderKitStore implements KitHostStore, KitBundlePersisting {
   private listeners = new Set<() => void>();
   private _kit: Kit;
   /** @internal */
   readonly name = "FolderKitStore";
+  readonly initialBundleJson: string;
   private constructor(
     private readonly adapter: KitFolderAdapter,
     seed: Kit,
+    initialBundleJson: string,
   ) {
     this._kit = seed;
+    this.initialBundleJson = initialBundleJson;
   }
   static async create(adapter: KitFolderAdapter, initial?: KitFullDto) {
-    // 🚧 Bundle format is Rust-owned. We probe the kit byte stream only to keep the adapter
-    // contract alive but never decode it; Rust will project the authoritative state.
-    await adapter.readKit();
-    return new FolderKitStore(adapter, asKitInstance(initial ?? { id: id(), name: "Untitled", createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() }));
+    // 🚧 Bundle format is Rust-owned. Folder host reads the canonical kit bytes once to feed rs hydration;
+    // updates are persisted through `persistBundle` via `adapter.writeKit` after every kit-client change.
+    let initialBundleJson = "";
+    try {
+      const bytes = await adapter.readKit();
+      initialBundleJson = bytes ? new TextDecoder().decode(bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes)) : "";
+    } catch {
+      initialBundleJson = "";
+    }
+    return new FolderKitStore(adapter, asKitInstance(initial ?? { id: id(), name: "Untitled", createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() }), initialBundleJson);
   }
   getSnapshot(): KitStoreSnapshot {
     return { kit: this._kit, sync: DEFAULT_KIT_SYNC };
@@ -6561,10 +6702,19 @@ export class FolderKitStore implements KitHostStore {
     };
   }
   replace(kit: Kit) {
-    // 🚧 No JS-side persistence: folder kit bundle writing is Rust's job (dev-json backbone).
     this._kit = kit;
     for (const l of this.listeners) l();
   }
+  async persistBundle(json: string): Promise<void> {
+    if (json.trim() === "") return;
+    const bytes = new TextEncoder().encode(json);
+    await this.adapter.writeKit(bytes);
+  }
+}
+
+/** @emoji 🧭 True when the host store wants the kit client to drive bundle persistence (read at mount, write after each change). */
+export function isKitBundlePersistingStore(store: KitHostStore): store is KitHostStore & KitBundlePersisting {
+  return typeof (store as Partial<KitBundlePersisting>).persistBundle === "function" && typeof (store as Partial<KitBundlePersisting>).initialBundleJson === "string";
 }
 
 export async function createJsonFileKitStore(adapter: KitJsonFileAdapter) {
