@@ -2377,220 +2377,515 @@ pub mod kit {
             row
         }
 
-        /// @emoji 📦 Single mutation entry: applies [`crate::operation::KitDiff`] envelopes (`__ops`) plus sparse canonical scalar keys.
+        /// @emoji 📦 Single mutation entry: walks canonical [`crate::operation::CanonicalKitDiff`] from [`crate::operation::KitOperation::to_diff`].
         pub async fn apply_diff(self: &Arc<Self>, diff: &crate::operation::KitDiff) -> Result<(), crate::error::SemioError> {
-            let v = &diff.0;
-            if let Some(name) = v.get("name").and_then(|x| x.as_str()) {
-                *self.name.write().await = name.to_string();
+            let d = &diff.0;
+            if let Some(s) = &d.name {
+                *self.name.write().await = s.clone();
             }
-            if let Some(description) = v.get("description") {
-                if !description.is_null() {
-                    *self.description.write().await = description.as_str().map(|s| s.to_string());
+            if let Some(s) = &d.version {
+                *self.version.write().await = Some(s.clone());
+            }
+            if let Some(s) = &d.description {
+                *self.description.write().await = Some(s.clone());
+            }
+            if let Some(s) = &d.icon {
+                *self.icon.write().await = Some(s.clone());
+            }
+            if let Some(s) = &d.image {
+                *self.image.write().await = Some(s.clone());
+            }
+            if let Some(s) = &d.preview {
+                *self.preview.write().await = Some(s.clone());
+            }
+            if let Some(s) = &d.remote {
+                *self.remote.write().await = Some(s.clone());
+            }
+            if let Some(s) = &d.homepage {
+                *self.homepage.write().await = Some(s.clone());
+            }
+            if let Some(s) = &d.license {
+                *self.license.write().await = Some(s.clone());
+            }
+            if let Some(v) = &d.types {
+                self.apply_types_diff_json(v).await?;
+            }
+            if let Some(v) = &d.designs {
+                self.apply_designs_diff_json(v).await?;
+            }
+            if let Some(t) = &d.tags {
+                self.apply_tags_collection_diff(t).await?;
+            }
+            if let Some(c) = &d.concepts {
+                self.apply_concepts_collection_diff(c).await?;
+            }
+            if let Some(q) = &d.qualities {
+                self.apply_qualities_collection_diff(q).await?;
+            }
+            if let Some(v) = &d.files {
+                if Self::json_diff_non_trivial(v) {
+                    return Err(crate::error::SemioError::invalid("kit diff `files` subtree apply not implemented"));
                 }
             }
-            if let Some(ops) = v.get("__ops").and_then(|x| x.as_array()) {
-                for op in ops {
-                    let kind = op.get("kind").and_then(|k| k.as_str()).unwrap_or("");
-                    match kind {
-                        "renameKit" => {
-                            let name = op.get("name").and_then(|x| x.as_str()).ok_or_else(|| crate::error::SemioError::invalid("renameKit name"))?;
-                            *self.name.write().await = name.to_string();
+            if let Some(v) = &d.folders {
+                if Self::json_diff_non_trivial(v) {
+                    return Err(crate::error::SemioError::invalid("kit diff `folders` subtree apply not implemented"));
+                }
+            }
+            if let Some(v) = &d.authors {
+                if Self::json_diff_non_trivial(v) {
+                    return Err(crate::error::SemioError::invalid("kit diff `authors` subtree apply not implemented"));
+                }
+            }
+            self.bump_touch_epoch().await;
+            Ok(())
+        }
+
+        fn json_diff_non_trivial(v: &serde_json::Value) -> bool {
+            match v {
+                serde_json::Value::Null => false,
+                serde_json::Value::Object(m) if m.is_empty() => false,
+                serde_json::Value::Object(m) => m.iter().any(|(_, x)| match x {
+                    serde_json::Value::Array(a) => !a.is_empty(),
+                    serde_json::Value::Object(o) => !o.is_empty(),
+                    serde_json::Value::Null => false,
+                    _ => true,
+                }),
+                serde_json::Value::Array(a) => !a.is_empty(),
+                _ => true,
+            }
+        }
+
+        async fn apply_types_diff_json(self: &Arc<Self>, v: &serde_json::Value) -> Result<(), crate::error::SemioError> {
+            let Some(obj) = v.as_object() else {
+                return Ok(());
+            };
+            if let Some(serde_json::Value::Array(removed)) = obj.get("removed") {
+                for row in removed {
+                    let id: Id = serde_json::from_value(row.get("id").cloned().ok_or_else(|| crate::error::SemioError::invalid("type removed.id"))?)
+                        .map_err(|e| crate::error::SemioError::invalid(e.to_string()))?;
+                    let mut tys = self.types.write().await;
+                    tys.retain(|t| t.id != id);
+                    drop(tys);
+                    self.type_weak_by_id.write().await.remove(&id);
+                }
+            }
+            if let Some(serde_json::Value::Array(modified)) = obj.get("modified") {
+                for row in modified {
+                    let tid: Id = serde_json::from_value(
+                        row.get("type").and_then(|t| t.get("id")).cloned().ok_or_else(|| crate::error::SemioError::invalid("type modified.type.id"))?,
+                    )
+                    .map_err(|e| crate::error::SemioError::invalid(e.to_string()))?;
+                    let Some(ty) = self.type_by_external_id(&tid).await else {
+                        continue;
+                    };
+                    let diff = row.get("diff").cloned().unwrap_or(serde_json::json!({}));
+                    if let Some(s) = diff.get("name").and_then(|x| x.as_str()) {
+                        *ty.name.write().await = s.to_string();
+                    }
+                    if diff.get("description").is_some() {
+                        *ty.description.write().await = diff.get("description").and_then(|x| x.as_str()).map(|s| s.to_string());
+                    }
+                    if diff.get("icon").is_some() {
+                        *ty.icon.write().await = diff.get("icon").and_then(|x| x.as_str()).map(|s| s.to_string());
+                    }
+                    if diff.get("image").is_some() {
+                        *ty.image.write().await = diff.get("image").and_then(|x| x.as_str()).map(|s| s.to_string());
+                    }
+                }
+            }
+            if obj.get("added").and_then(|x| x.as_array()).map(|a| !a.is_empty()).unwrap_or(false) {
+                return Err(crate::error::SemioError::invalid("kit diff `types.added` apply not implemented"));
+            }
+            Ok(())
+        }
+
+        async fn apply_designs_diff_json(self: &Arc<Self>, v: &serde_json::Value) -> Result<(), crate::error::SemioError> {
+            let Some(obj) = v.as_object() else {
+                return Ok(());
+            };
+            if let Some(serde_json::Value::Array(removed)) = obj.get("removed") {
+                for row in removed {
+                    let id: Id = serde_json::from_value(row.get("id").cloned().ok_or_else(|| crate::error::SemioError::invalid("design removed.id"))?)
+                        .map_err(|e| crate::error::SemioError::invalid(e.to_string()))?;
+                    let mut ds = self.designs.write().await;
+                    ds.retain(|d| d.id != id);
+                    drop(ds);
+                    self.design_weak_by_id.write().await.remove(&id);
+                }
+            }
+            if let Some(serde_json::Value::Array(modified)) = obj.get("modified") {
+                for row in modified {
+                    let design_id: Id = serde_json::from_value(
+                        row.get("design").and_then(|d| d.get("id")).cloned().ok_or_else(|| crate::error::SemioError::invalid("design modified.design.id"))?,
+                    )
+                    .map_err(|e| crate::error::SemioError::invalid(e.to_string()))?;
+                    let diff = row.get("diff").cloned().unwrap_or(serde_json::json!({}));
+                    if let Some(design) = self.design_by_external_id(&design_id).await {
+                        if let Some(s) = diff.get("name").and_then(|x| x.as_str()) {
+                            *design.name.write().await = s.to_string();
                         }
-                        "changeDescription" => {
-                            let entity_id: Id = serde_json::from_value(op.get("entityId").cloned().ok_or_else(|| crate::error::SemioError::invalid("entityId"))?)
-                                .map_err(|e| crate::error::SemioError::invalid(e.to_string()))?;
-                            let description = op.get("description").and_then(|d| d.as_str().map(|s| s.to_string()));
-                            let kid = self.workspace_kit_id().await;
-                            if entity_id == kid || entity_id == self.id {
-                                *self.description.write().await = description;
-                            } else if let Some(tag) = self.find_tag(&entity_id).await {
-                                *tag.description.write().await = description;
-                            } else if let Some(concept) = self.find_concept(&entity_id).await {
-                                *concept.description.write().await = description;
-                            } else if let Some(quality) = self.find_quality(&entity_id).await {
-                                *quality.description.write().await = description;
-                            } else if let Some(ty) = self.type_by_external_id(&entity_id).await {
-                                *ty.description.write().await = description;
-                            } else if let Some(design) = self.design_by_external_id(&entity_id).await {
-                                *design.description.write().await = description;
-                            } else {
-                                return Err(crate::error::SemioError::not_found("DescriptionEntity", entity_id.as_str()));
-                            }
+                        if diff.get("description").is_some() {
+                            *design.description.write().await = diff.get("description").and_then(|x| x.as_str()).map(|s| s.to_string());
                         }
-                        "changeIcon" => {
-                            let entity_id: Id = serde_json::from_value(op.get("entityId").cloned().ok_or_else(|| crate::error::SemioError::invalid("entityId"))?)
-                                .map_err(|e| crate::error::SemioError::invalid(e.to_string()))?;
-                            let icon = op.get("icon").and_then(|i| i.as_str().map(|s| s.to_string()));
-                            let kid = self.workspace_kit_id().await;
-                            if entity_id == kid || entity_id == self.id {
-                                *self.icon.write().await = icon;
-                            } else if let Some(tag) = self.find_tag(&entity_id).await {
-                                *tag.icon.write().await = icon;
-                            } else if let Some(concept) = self.find_concept(&entity_id).await {
-                                *concept.icon.write().await = icon;
-                            } else if let Some(quality) = self.find_quality(&entity_id).await {
-                                *quality.icon.write().await = icon;
-                            } else if let Some(ty) = self.type_by_external_id(&entity_id).await {
-                                *ty.icon.write().await = icon;
-                            } else if let Some(design) = self.design_by_external_id(&entity_id).await {
-                                *design.icon.write().await = icon;
-                            } else {
-                                return Err(crate::error::SemioError::not_found("IconEntity", entity_id.as_str()));
-                            }
+                        if diff.get("icon").is_some() {
+                            *design.icon.write().await = diff.get("icon").and_then(|x| x.as_str()).map(|s| s.to_string());
                         }
-                        "changeImage" => {
-                            let entity_id: Id = serde_json::from_value(op.get("entityId").cloned().ok_or_else(|| crate::error::SemioError::invalid("entityId"))?)
-                                .map_err(|e| crate::error::SemioError::invalid(e.to_string()))?;
-                            let image = op.get("image").and_then(|i| i.as_str().map(|s| s.to_string()));
-                            let kid = self.workspace_kit_id().await;
-                            if entity_id == kid || entity_id == self.id {
-                                *self.image.write().await = image;
-                            } else if let Some(ty) = self.type_by_external_id(&entity_id).await {
-                                *ty.image.write().await = image;
-                            } else if let Some(design) = self.design_by_external_id(&entity_id).await {
-                                *design.image.write().await = image;
-                            } else {
-                                return Err(crate::error::SemioError::not_found("ImageEntity", entity_id.as_str()));
-                            }
+                        if diff.get("image").is_some() {
+                            *design.image.write().await = diff.get("image").and_then(|x| x.as_str()).map(|s| s.to_string());
                         }
-                        "createTag" => {
-                            let owner_id: Id = serde_json::from_value(op.get("ownerId").cloned().ok_or_else(|| crate::error::SemioError::invalid("ownerId"))?)
-                                .map_err(|e| crate::error::SemioError::invalid(e.to_string()))?;
-                            let tag_id: Id = serde_json::from_value(op.get("tagId").cloned().ok_or_else(|| crate::error::SemioError::invalid("tagId"))?)
-                                .map_err(|e| crate::error::SemioError::invalid(e.to_string()))?;
-                            let attribute_ids: Vec<Id> = serde_json::from_value(op.get("attributeIds").cloned().unwrap_or(serde_json::json!([])))
-                                .map_err(|e| crate::error::SemioError::invalid(e.to_string()))?;
-                            let input: crate::meta::TagInput = serde_json::from_value(op.get("tag").cloned().ok_or_else(|| crate::error::SemioError::invalid("tag"))?)
-                                .map_err(|e| crate::error::SemioError::invalid(e.to_string()))?;
-                            self.create_and_register_tag_with_scope(&owner_id, &tag_id, &attribute_ids, input).await?;
-                        }
-                        "createTags" => {
-                            let owner_id: Id = serde_json::from_value(op.get("ownerId").cloned().ok_or_else(|| crate::error::SemioError::invalid("ownerId"))?)
-                                .map_err(|e| crate::error::SemioError::invalid(e.to_string()))?;
-                            let tag_ids: Vec<Id> = serde_json::from_value(op.get("tagIds").cloned().ok_or_else(|| crate::error::SemioError::invalid("tagIds"))?)
-                                .map_err(|e| crate::error::SemioError::invalid(e.to_string()))?;
-                            let attribute_ids: Vec<Vec<Id>> =
-                                serde_json::from_value(op.get("attributeIds").cloned().unwrap_or(serde_json::json!([]))).map_err(|e| crate::error::SemioError::invalid(e.to_string()))?;
-                            let tags: Vec<crate::meta::TagInput> = serde_json::from_value(op.get("tags").cloned().ok_or_else(|| crate::error::SemioError::invalid("tags"))?)
-                                .map_err(|e| crate::error::SemioError::invalid(e.to_string()))?;
-                            for (index, tag) in tags.into_iter().enumerate() {
-                                self.create_and_register_tag_with_scope(&owner_id, &tag_ids[index], &attribute_ids[index], tag).await?;
-                            }
-                        }
-                        "deleteTag" => {
-                            let tag_id: Id = serde_json::from_value(op.get("tagId").cloned().ok_or_else(|| crate::error::SemioError::invalid("tagId"))?)
-                                .map_err(|e| crate::error::SemioError::invalid(e.to_string()))?;
-                            self.delete_tag_by_id(&tag_id).await?;
-                        }
-                        "renameTag" => {
-                            let tag_id: Id = serde_json::from_value(op.get("tagId").cloned().ok_or_else(|| crate::error::SemioError::invalid("tagId"))?)
-                                .map_err(|e| crate::error::SemioError::invalid(e.to_string()))?;
-                            let name = op.get("name").and_then(|x| x.as_str()).ok_or_else(|| crate::error::SemioError::invalid("name"))?.to_string();
-                            let tag = self.find_tag(&tag_id).await.ok_or_else(|| crate::error::SemioError::not_found("Tag", tag_id.as_str()))?;
-                            *tag.name.write().await = name;
-                        }
-                        "createConcept" => {
-                            let owner_id: Id = serde_json::from_value(op.get("ownerId").cloned().ok_or_else(|| crate::error::SemioError::invalid("ownerId"))?)
-                                .map_err(|e| crate::error::SemioError::invalid(e.to_string()))?;
-                            let concept_id: Id = serde_json::from_value(op.get("conceptId").cloned().ok_or_else(|| crate::error::SemioError::invalid("conceptId"))?)
-                                .map_err(|e| crate::error::SemioError::invalid(e.to_string()))?;
-                            let attribute_ids: Vec<Id> = serde_json::from_value(op.get("attributeIds").cloned().unwrap_or(serde_json::json!([])))
-                                .map_err(|e| crate::error::SemioError::invalid(e.to_string()))?;
-                            let input: crate::meta::ConceptInput = serde_json::from_value(op.get("concept").cloned().ok_or_else(|| crate::error::SemioError::invalid("concept"))?)
-                                .map_err(|e| crate::error::SemioError::invalid(e.to_string()))?;
-                            let _ = self.create_and_register_concept_with_scope(&owner_id, &concept_id, &attribute_ids, input).await?;
-                        }
-                        "deleteConcept" => {
-                            let concept_id: Id = serde_json::from_value(op.get("conceptId").cloned().ok_or_else(|| crate::error::SemioError::invalid("conceptId"))?)
-                                .map_err(|e| crate::error::SemioError::invalid(e.to_string()))?;
-                            self.delete_concept_by_id(&concept_id).await?;
-                        }
-                        "createQuality" => {
-                            let owner_id: Id = serde_json::from_value(op.get("ownerId").cloned().ok_or_else(|| crate::error::SemioError::invalid("ownerId"))?)
-                                .map_err(|e| crate::error::SemioError::invalid(e.to_string()))?;
-                            let quality_id: Id = serde_json::from_value(op.get("qualityId").cloned().ok_or_else(|| crate::error::SemioError::invalid("qualityId"))?)
-                                .map_err(|e| crate::error::SemioError::invalid(e.to_string()))?;
-                            let attribute_ids: Vec<Id> = serde_json::from_value(op.get("attributeIds").cloned().unwrap_or(serde_json::json!([])))
-                                .map_err(|e| crate::error::SemioError::invalid(e.to_string()))?;
-                            let benchmark_ids: Vec<Id> = serde_json::from_value(op.get("benchmarkIds").cloned().unwrap_or(serde_json::json!([])))
-                                .map_err(|e| crate::error::SemioError::invalid(e.to_string()))?;
-                            let input: crate::meta::QualityInput = serde_json::from_value(op.get("quality").cloned().ok_or_else(|| crate::error::SemioError::invalid("quality"))?)
-                                .map_err(|e| crate::error::SemioError::invalid(e.to_string()))?;
-                            let _ = self.create_and_register_quality_with_scope(&owner_id, &quality_id, &attribute_ids, &benchmark_ids, input).await?;
-                        }
-                        "deleteQuality" => {
-                            let quality_id: Id = serde_json::from_value(op.get("qualityId").cloned().ok_or_else(|| crate::error::SemioError::invalid("qualityId"))?)
-                                .map_err(|e| crate::error::SemioError::invalid(e.to_string()))?;
-                            self.delete_quality_by_id(&quality_id).await?;
-                        }
-                        "createFixedPiece" => {
-                            let design_id: Id = serde_json::from_value(op.get("designId").cloned().ok_or_else(|| crate::error::SemioError::invalid("designId"))?)
-                                .map_err(|e| crate::error::SemioError::invalid(e.to_string()))?;
-                            let piece_id: Id = serde_json::from_value(op.get("pieceId").cloned().ok_or_else(|| crate::error::SemioError::invalid("pieceId"))?)
-                                .map_err(|e| crate::error::SemioError::invalid(e.to_string()))?;
-                            let blueprint_id: Id = serde_json::from_value(op.get("blueprintId").cloned().ok_or_else(|| crate::error::SemioError::invalid("blueprintId"))?)
-                                .map_err(|e| crate::error::SemioError::invalid(e.to_string()))?;
-                            let position: crate::geom::Position = serde_json::from_value(op.get("position").cloned().ok_or_else(|| crate::error::SemioError::invalid("position"))?)
-                                .map_err(|e| crate::error::SemioError::invalid(e.to_string()))?;
-                            let name = op.get("name").and_then(|x| x.as_str()).map(|s| s.to_string());
-                            let description = op.get("description").and_then(|x| x.as_str()).map(|s| s.to_string());
-                            let (_handle, design) = self.bind_external_design_id(&design_id).await;
-                            let blueprint_type = crate::kit::r#type::Type::new(Arc::downgrade(self), format!("type-{}", blueprint_id.as_str())).await;
-                            let blueprint = crate::kit::r#type::Blueprint::Type(blueprint_type);
-                            let piece = crate::kit::design::piece::Piece::new_fixed_with_external_id(piece_id, Arc::downgrade(&design), blueprint, position).await;
-                            piece.set_name(name).await;
-                            piece.set_description(description).await;
-                            let _ = design.insert_piece(piece).await;
-                        }
-                        "deletePieceInDesign" => {
-                            let design_id: Id = serde_json::from_value(op.get("designId").cloned().ok_or_else(|| crate::error::SemioError::invalid("designId"))?)
-                                .map_err(|e| crate::error::SemioError::invalid(e.to_string()))?;
-                            let piece_id: Id = serde_json::from_value(op.get("pieceId").cloned().ok_or_else(|| crate::error::SemioError::invalid("pieceId"))?)
+                    }
+                    if let Some(serde_json::Value::Array(pr)) = diff.get("pieces").and_then(|p| p.get("removed")).and_then(|x| x.as_array()) {
+                        for pr_row in pr {
+                            let piece_id: Id = serde_json::from_value(pr_row.get("id").cloned().ok_or_else(|| crate::error::SemioError::invalid("piece removed.id"))?)
                                 .map_err(|e| crate::error::SemioError::invalid(e.to_string()))?;
                             let design = self.design_by_external_id(&design_id).await.ok_or_else(|| crate::error::SemioError::not_found("Design", design_id.as_str()))?;
                             design.delete_piece_by_external_id(&piece_id).await?;
                         }
-                        "dragPieceInDesign" => {
-                            let design_id: Id = serde_json::from_value(op.get("designId").cloned().ok_or_else(|| crate::error::SemioError::invalid("designId"))?)
-                                .map_err(|e| crate::error::SemioError::invalid(e.to_string()))?;
-                            let piece_id: Id = serde_json::from_value(op.get("pieceId").cloned().ok_or_else(|| crate::error::SemioError::invalid("pieceId"))?)
-                                .map_err(|e| crate::error::SemioError::invalid(e.to_string()))?;
-                            let offset: crate::geom::Offset = serde_json::from_value(op.get("offset").cloned().ok_or_else(|| crate::error::SemioError::invalid("offset"))?)
-                                .map_err(|e| crate::error::SemioError::invalid(e.to_string()))?;
-                            use crate::geom::entity::PositionNode;
-                            let design = self.design_by_external_id(&design_id).await.ok_or_else(|| crate::error::SemioError::not_found("Design", design_id.as_str()))?;
-                            let piece = design.piece_by_external_id(&piece_id).await.ok_or_else(|| crate::error::SemioError::not_found("Piece", piece_id.as_str()))?;
-                            let pos_slot = piece.position.read().await.clone();
-                            if let Some(pos) = pos_slot {
-                                let mut d = pos.data.write().await;
-                                d.center.u += offset.u;
-                                d.center.v += offset.v;
-                                *pos.center.u.write().await = d.center.u;
-                                *pos.center.v.write().await = d.center.v;
-                            } else {
-                                let n = PositionNode::from_position_value(crate::geom::Position::default());
-                                {
-                                    let mut d = n.data.write().await;
-                                    d.center.u += offset.u;
-                                    d.center.v += offset.v;
-                                }
-                                *n.center.u.write().await = n.data.read().await.center.u;
-                                *n.center.v.write().await = n.data.read().await.center.v;
-                                *piece.position.write().await = Some(n);
-                            }
+                    }
+                    if let Some(serde_json::Value::Array(pa)) = diff.get("pieces").and_then(|p| p.get("added")).and_then(|x| x.as_array()) {
+                        for piece_v in pa {
+                            self.apply_design_piece_added_json(&design_id, piece_v).await?;
                         }
-                        "fixPieceInDesign" => {
-                            let design_id: Id = serde_json::from_value(op.get("designId").cloned().ok_or_else(|| crate::error::SemioError::invalid("designId"))?)
-                                .map_err(|e| crate::error::SemioError::invalid(e.to_string()))?;
-                            let piece_id: Id = serde_json::from_value(op.get("pieceId").cloned().ok_or_else(|| crate::error::SemioError::invalid("pieceId"))?)
-                                .map_err(|e| crate::error::SemioError::invalid(e.to_string()))?;
-                            let design = self.design_by_external_id(&design_id).await.ok_or_else(|| crate::error::SemioError::not_found("Design", design_id.as_str()))?;
-                            let piece = design.piece_by_external_id(&piece_id).await.ok_or_else(|| crate::error::SemioError::not_found("Piece", piece_id.as_str()))?;
-                            *piece.connection_kind.write().await = Some(crate::kit::design::piece::PieceConnectionKind::Fixed);
+                    }
+                    if let Some(serde_json::Value::Array(pm)) = diff.get("pieces").and_then(|p| p.get("modified")).and_then(|x| x.as_array()) {
+                        for prow in pm {
+                            let piece_id: Id = serde_json::from_value(
+                                prow.get("piece").and_then(|p| p.get("id")).cloned().ok_or_else(|| crate::error::SemioError::invalid("piece modified.piece.id"))?,
+                            )
+                            .map_err(|e| crate::error::SemioError::invalid(e.to_string()))?;
+                            let pdiff = prow.get("diff").cloned().unwrap_or(serde_json::json!({}));
+                            self.apply_design_piece_modified_json(&design_id, &piece_id, &pdiff).await?;
                         }
-                        other => return Err(crate::error::SemioError::invalid(format!("unknown __ops kind: {other}"))),
                     }
                 }
+            }
+            if let Some(serde_json::Value::Array(added)) = obj.get("added") {
+                for _design_v in added {
+                    return Err(crate::error::SemioError::invalid("kit diff `designs.added` apply not implemented"));
+                }
+            }
+            Ok(())
+        }
+
+        async fn apply_design_piece_added_json(self: &Arc<Self>, design_id: &Id, piece_v: &serde_json::Value) -> Result<(), crate::error::SemioError> {
+            let piece_id: Id = serde_json::from_value(piece_v.get("id").cloned().ok_or_else(|| crate::error::SemioError::invalid("piece.id"))?)
+                .map_err(|e| crate::error::SemioError::invalid(e.to_string()))?;
+            let blueprint_id: Id = piece_v
+                .get("blueprintId")
+                .and_then(|x| x.as_str())
+                .map(Id::from)
+                .unwrap_or_else(|| piece_id.clone());
+            let position: crate::geom::Position = piece_v
+                .get("pose")
+                .map(|p| serde_json::from_value(p.clone()))
+                .transpose()
+                .map_err(|e| crate::error::SemioError::invalid(e.to_string()))?
+                .unwrap_or_default();
+            let name = piece_v.get("name").and_then(|x| x.as_str()).map(|s| s.to_string());
+            let description = piece_v.get("description").and_then(|x| x.as_str()).map(|s| s.to_string());
+            let (_handle, design) = self.bind_external_design_id(design_id).await;
+            let blueprint_type = crate::kit::r#type::Type::new(Arc::downgrade(self), format!("type-{}", blueprint_id.as_str())).await;
+            let blueprint = crate::kit::r#type::Blueprint::Type(blueprint_type);
+            let piece = crate::kit::design::piece::Piece::new_fixed_with_external_id(piece_id, Arc::downgrade(&design), blueprint, position).await;
+            piece.set_name(name).await;
+            piece.set_description(description).await;
+            let _ = design.insert_piece(piece).await;
+            Ok(())
+        }
+
+        async fn apply_design_piece_modified_json(self: &Arc<Self>, design_id: &Id, piece_id: &Id, pdiff: &serde_json::Value) -> Result<(), crate::error::SemioError> {
+            use crate::geom::entity::PositionNode;
+            let design = self.design_by_external_id(design_id).await.ok_or_else(|| crate::error::SemioError::not_found("Design", design_id.as_str()))?;
+            let piece = design.piece_by_external_id(piece_id).await.ok_or_else(|| crate::error::SemioError::not_found("Piece", piece_id.as_str()))?;
+            if let Some(true) = pdiff.get("fixPiece").and_then(|x| x.as_bool()) {
+                *piece.connection_kind.write().await = Some(crate::kit::design::piece::PieceConnectionKind::Fixed);
+                return Ok(());
+            }
+            if let Some(du) = pdiff.get("drag").and_then(|d| d.get("u")).and_then(|x| x.as_f64()) {
+                let dv = pdiff.get("drag").and_then(|d| d.get("v")).and_then(|x| x.as_f64()).unwrap_or(0.0);
+                let offset = crate::geom::Offset { u: du, v: dv };
+                let pos_slot = piece.position.read().await.clone();
+                if let Some(pos) = pos_slot {
+                    let mut d = pos.data.write().await;
+                    d.center.u += offset.u;
+                    d.center.v += offset.v;
+                    *pos.center.u.write().await = d.center.u;
+                    *pos.center.v.write().await = d.center.v;
+                } else {
+                    let n = PositionNode::from_position_value(crate::geom::Position::default());
+                    {
+                        let mut d = n.data.write().await;
+                        d.center.u += offset.u;
+                        d.center.v += offset.v;
+                    }
+                    *n.center.u.write().await = n.data.read().await.center.u;
+                    *n.center.v.write().await = n.data.read().await.center.v;
+                    *piece.position.write().await = Some(n);
+                }
+                return Ok(());
+            }
+            if let Some(pose_v) = pdiff.get("pose") {
+                let position: crate::geom::Position = serde_json::from_value(pose_v.clone()).map_err(|e| crate::error::SemioError::invalid(e.to_string()))?;
+                let n = PositionNode::from_position_value(position);
+                *piece.position.write().await = Some(n);
+                return Ok(());
+            }
+            if let Some(n) = pdiff.get("name").and_then(|x| x.as_str()) {
+                piece.set_name(Some(n.to_string())).await;
+            }
+            if pdiff.get("description").is_some() {
+                let s = pdiff.get("description").and_then(|x| x.as_str()).map(|s| s.to_string());
+                piece.set_description(s).await;
+            }
+            Ok(())
+        }
+
+        async fn apply_tags_collection_diff(self: &Arc<Self>, t: &crate::operation::TagsCollectionDiff) -> Result<(), crate::error::SemioError> {
+            for r in &t.removed {
+                self.delete_tag_by_id(&r.id).await?;
+            }
+            for m in &t.modified {
+                let tag = self.find_tag(&m.tag.id).await.ok_or_else(|| crate::error::SemioError::not_found("Tag", m.tag.id.as_str()))?;
+                if let Some(s) = &m.diff.name {
+                    *tag.name.write().await = s.clone();
+                }
+                if m.diff.description.is_some() {
+                    *tag.description.write().await = m.diff.description.clone();
+                }
+                if m.diff.icon.is_some() {
+                    *tag.icon.write().await = m.diff.icon.clone();
+                }
+            }
+            for row in &t.added {
+                let owner_id: Id = row
+                    .get("ownerId")
+                    .and_then(|x| x.as_str())
+                    .map(Id::from)
+                    .unwrap_or_else(|| self.workspace_kit_id().await);
+                let tag_id: Id = serde_json::from_value(row.get("id").cloned().ok_or_else(|| crate::error::SemioError::invalid("tag added.id"))?)
+                    .map_err(|e| crate::error::SemioError::invalid(e.to_string()))?;
+                let attribute_ids: Vec<Id> = serde_json::from_value(row.get("attributeIds").cloned().unwrap_or(serde_json::json!([])))
+                    .map_err(|e| crate::error::SemioError::invalid(e.to_string()))?;
+                let tag_input: crate::meta::TagInput = serde_json::from_value(serde_json::json!({
+                    "name": row.get("name"),
+                    "description": row.get("description"),
+                    "icon": row.get("icon"),
+                    "order": row.get("order"),
+                    "attributes": row.get("attributes"),
+                }))
+                .map_err(|e| crate::error::SemioError::invalid(e.to_string()))?;
+                self.apply_create_tag_scoped(&owner_id, &tag_id, &attribute_ids, tag_input).await?;
+            }
+            Ok(())
+        }
+
+        async fn apply_concepts_collection_diff(self: &Arc<Self>, c: &crate::operation::ConceptsCollectionDiff) -> Result<(), crate::error::SemioError> {
+            for r in &c.removed {
+                self.delete_concept_by_id(&r.id).await?;
+            }
+            for m in &c.modified {
+                let concept = self.find_concept(&m.concept.id).await.ok_or_else(|| crate::error::SemioError::not_found("Concept", m.concept.id.as_str()))?;
+                if let Some(s) = &m.diff.name {
+                    *concept.name.write().await = s.clone();
+                }
+                if m.diff.description.is_some() {
+                    *concept.description.write().await = m.diff.description.clone();
+                }
+                if m.diff.icon.is_some() {
+                    *concept.icon.write().await = m.diff.icon.clone();
+                }
+            }
+            for row in &c.added {
+                let owner_id: Id = row
+                    .get("ownerId")
+                    .and_then(|x| x.as_str())
+                    .map(Id::from)
+                    .unwrap_or_else(|| self.workspace_kit_id().await);
+                let concept_id: Id = serde_json::from_value(row.get("id").cloned().ok_or_else(|| crate::error::SemioError::invalid("concept added.id"))?)
+                    .map_err(|e| crate::error::SemioError::invalid(e.to_string()))?;
+                let attribute_ids: Vec<Id> = serde_json::from_value(row.get("attributeIds").cloned().unwrap_or(serde_json::json!([])))
+                    .map_err(|e| crate::error::SemioError::invalid(e.to_string()))?;
+                let input: crate::meta::ConceptInput = serde_json::from_value(serde_json::json!({
+                    "name": row.get("name"),
+                    "description": row.get("description"),
+                    "icon": row.get("icon"),
+                    "order": row.get("order"),
+                    "attributes": row.get("attributes"),
+                }))
+                .map_err(|e| crate::error::SemioError::invalid(e.to_string()))?;
+                self.apply_create_concept_scoped(&owner_id, &concept_id, &attribute_ids, input).await?;
+            }
+            Ok(())
+        }
+
+        async fn apply_qualities_collection_diff(self: &Arc<Self>, q: &crate::operation::QualitiesCollectionDiff) -> Result<(), crate::error::SemioError> {
+            for r in &q.removed {
+                self.delete_quality_by_id(&r.id).await?;
+            }
+            for m in &q.modified {
+                let quality = self.find_quality(&m.quality.id).await.ok_or_else(|| crate::error::SemioError::not_found("Quality", m.quality.id.as_str()))?;
+                if m.diff.description.is_some() {
+                    *quality.description.write().await = m.diff.description.clone();
+                }
+                if m.diff.icon.is_some() {
+                    *quality.icon.write().await = m.diff.icon.clone();
+                }
+                if let Some(s) = &m.diff.key {
+                    *quality.key.write().await = s.clone();
+                }
+                if m.diff.value.is_some() {
+                    *quality.value.write().await = m.diff.value.clone();
+                }
+                if m.diff.unit.is_some() {
+                    *quality.unit.write().await = m.diff.unit.clone();
+                }
+                if m.diff.definition.is_some() {
+                    *quality.definition.write().await = m.diff.definition.clone();
+                }
+            }
+            for row in &q.added {
+                let owner_id: Id = row
+                    .get("ownerId")
+                    .and_then(|x| x.as_str())
+                    .map(Id::from)
+                    .unwrap_or_else(|| self.workspace_kit_id().await);
+                let quality_id: Id = serde_json::from_value(row.get("id").cloned().ok_or_else(|| crate::error::SemioError::invalid("quality added.id"))?)
+                    .map_err(|e| crate::error::SemioError::invalid(e.to_string()))?;
+                let attribute_ids: Vec<Id> = serde_json::from_value(row.get("attributeIds").cloned().unwrap_or(serde_json::json!([])))
+                    .map_err(|e| crate::error::SemioError::invalid(e.to_string()))?;
+                let benchmark_ids: Vec<Id> = serde_json::from_value(row.get("benchmarkIds").cloned().unwrap_or(serde_json::json!([])))
+                    .map_err(|e| crate::error::SemioError::invalid(e.to_string()))?;
+                let input: crate::meta::QualityInput = serde_json::from_value(
+                    serde_json::json!({
+                        "key": row.get("key").cloned().unwrap_or(serde_json::json!("")),
+                        "value": row.get("value"),
+                        "unit": row.get("unit"),
+                        "definition": row.get("definition"),
+                        "description": row.get("description"),
+                        "icon": row.get("icon"),
+                        "attributes": row.get("attributes"),
+                    }),
+                )
+                .map_err(|e| crate::error::SemioError::invalid(e.to_string()))?;
+                self.apply_create_quality_scoped(&owner_id, &quality_id, &attribute_ids, &benchmark_ids, input).await?;
+            }
+            Ok(())
+        }
+
+        /// @emoji 🪪 Inlined tag creation for [`Kit::apply_diff`] (no public mutator surface).
+        async fn apply_create_tag_scoped(
+            self: &Arc<Self>,
+            owner_id: &Id,
+            tag_id: &Id,
+            attribute_ids: &[Id],
+            input: crate::meta::TagInput,
+        ) -> Result<(), crate::error::SemioError> {
+            let slot = self.resolve_tag_owner_slot(owner_id).await?;
+            let attrs = crate::meta::attributes_from_inputs_with_ids(input.attributes.clone(), attribute_ids)?;
+            let tag = crate::meta::Tag::new_with_id(slot, tag_id.clone(), input.name, input.description, input.icon, input.order, attrs);
+            self.register_tag(tag.clone()).await;
+            match &*tag.owner.read().await {
+                crate::meta::TagOwnerSlot::Kit(w) => {
+                    if let Some(k) = w.upgrade() {
+                        k.tags.write().await.push(tag.clone());
+                    }
+                }
+                crate::meta::TagOwnerSlot::Type(w) => {
+                    if let Some(t) = w.upgrade() {
+                        t.tags.write().await.push(tag.clone());
+                    }
+                }
+                crate::meta::TagOwnerSlot::Rep(w) => {
+                    if let Some(r) = w.upgrade() {
+                        r.tags.write().await.push(tag.clone());
+                    }
+                }
+                crate::meta::TagOwnerSlot::Unset => {}
+            }
+            Ok(())
+        }
+
+        async fn apply_create_concept_scoped(
+            self: &Arc<Self>,
+            owner_id: &Id,
+            concept_id: &Id,
+            attribute_ids: &[Id],
+            input: crate::meta::ConceptInput,
+        ) -> Result<(), crate::error::SemioError> {
+            let slot = self.resolve_concept_owner_slot(owner_id).await?;
+            let attrs = crate::meta::attributes_from_inputs_with_ids(input.attributes.clone(), attribute_ids)?;
+            let c = crate::meta::Concept::new_with_id(slot, concept_id.clone(), input.name, input.description, input.icon, input.order, attrs);
+            self.register_concept(c.clone()).await;
+            match &*c.owner.read().await {
+                crate::meta::ConceptOwnerSlot::Kit(w) => {
+                    if let Some(k) = w.upgrade() {
+                        k.concepts.write().await.push(c.clone());
+                    }
+                }
+                crate::meta::ConceptOwnerSlot::Type(w) => {
+                    if let Some(t) = w.upgrade() {
+                        t.concepts.write().await.push(c.clone());
+                    }
+                }
+                crate::meta::ConceptOwnerSlot::Unset => {}
+            }
+            Ok(())
+        }
+
+        async fn apply_create_quality_scoped(
+            self: &Arc<Self>,
+            owner_id: &Id,
+            quality_id: &Id,
+            attribute_ids: &[Id],
+            benchmark_ids: &[Id],
+            input: crate::meta::QualityInput,
+        ) -> Result<(), crate::error::SemioError> {
+            let slot = self.resolve_quality_owner_slot(owner_id).await?;
+            if !benchmark_ids.is_empty() {
+                return Err(crate::error::SemioError::invalid("quality benchmark ids are not supported yet"));
+            }
+            let attrs = crate::meta::attributes_from_inputs_with_ids(input.attributes.clone(), attribute_ids)?;
+            let q = crate::meta::Quality::new_with_id(
+                slot,
+                quality_id.clone(),
+                input.key,
+                input.value,
+                input.unit,
+                input.definition,
+                input.description,
+                input.icon,
+                Vec::new(),
+                attrs,
+            );
+            self.register_quality(q.clone()).await;
+            match &*q.owner.read().await {
+                crate::meta::QualityOwnerSlot::Kit(w) => {
+                    if let Some(k) = w.upgrade() {
+                        k.qualities.write().await.push(q.clone());
+                    }
+                }
+                crate::meta::QualityOwnerSlot::Type(w) => {
+                    if let Some(t) = w.upgrade() {
+                        t.qualities.write().await.push(q.clone());
+                    }
+                }
+                crate::meta::QualityOwnerSlot::Rep(w) => {
+                    if let Some(r) = w.upgrade() {
+                        r.qualities.write().await.push(q.clone());
+                    }
+                }
+                crate::meta::QualityOwnerSlot::Conn(w) => {
+                    if let Some(c) = w.upgrade() {
+                        c.qualities.write().await.push(q.clone());
+                    }
+                }
+                crate::meta::QualityOwnerSlot::Design(w) => {
+                    if let Some(d) = w.upgrade() {
+                        d.qualities.write().await.push(q.clone());
+                    }
+                }
+                crate::meta::QualityOwnerSlot::Unset => {}
             }
             Ok(())
         }
@@ -5004,15 +5299,155 @@ pub mod operation {
     }
 
     //#region 🧭 normalized operation contract
-    /// @emoji 📦 Canonical-ish kit transition payload (JSON). Operation replay uses `__ops` envelopes; golden fixtures may use raw camelCase keys from [`semio/assets/semio/metabolism.kit.diff.semio.json`].
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-    pub struct KitDiff(pub serde_json::Value);
+    //#region 🔖 canonical_kit_diff
+    /// @emoji 📦 `Id` reference wrapper matching `{ "id": "…" }` rows in kit diff JSON.
+    #[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
+    pub struct IdRef {
+        pub id: Id,
+    }
 
-    impl Default for KitDiff {
-        fn default() -> Self {
-            Self(serde_json::json!({}))
+    /// @emoji 📦 Sparse `tags` triple (`metabolism.kit.diff.semio.json`).
+    #[derive(Clone, Debug, Default, Serialize, Deserialize, PartialEq)]
+    #[serde(rename_all = "camelCase", default)]
+    pub struct TagsCollectionDiff {
+        pub removed: Vec<IdRef>,
+        pub modified: Vec<TagModifiedRow>,
+        pub added: Vec<serde_json::Value>,
+    }
+
+    #[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
+    #[serde(rename_all = "camelCase")]
+    pub struct TagModifiedRow {
+        pub tag: IdRef,
+        pub diff: TagPatch,
+    }
+
+    #[derive(Clone, Debug, Default, Serialize, Deserialize, PartialEq)]
+    #[serde(rename_all = "camelCase", default)]
+    pub struct TagPatch {
+        pub name: Option<String>,
+        pub description: Option<String>,
+        pub icon: Option<String>,
+    }
+
+    /// @emoji 📦 Sparse `concepts` triple.
+    #[derive(Clone, Debug, Default, Serialize, Deserialize, PartialEq)]
+    #[serde(rename_all = "camelCase", default)]
+    pub struct ConceptsCollectionDiff {
+        pub removed: Vec<IdRef>,
+        pub modified: Vec<ConceptModifiedRow>,
+        pub added: Vec<serde_json::Value>,
+    }
+
+    #[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
+    #[serde(rename_all = "camelCase")]
+    pub struct ConceptModifiedRow {
+        pub concept: IdRef,
+        pub diff: ConceptPatch,
+    }
+
+    #[derive(Clone, Debug, Default, Serialize, Deserialize, PartialEq)]
+    #[serde(rename_all = "camelCase", default)]
+    pub struct ConceptPatch {
+        pub name: Option<String>,
+        pub description: Option<String>,
+        pub icon: Option<String>,
+    }
+
+    /// @emoji 📦 Sparse `qualities` triple (kit-level).
+    #[derive(Clone, Debug, Default, Serialize, Deserialize, PartialEq)]
+    #[serde(rename_all = "camelCase", default)]
+    pub struct QualitiesCollectionDiff {
+        pub removed: Vec<IdRef>,
+        pub modified: Vec<QualityModifiedRow>,
+        pub added: Vec<serde_json::Value>,
+    }
+
+    #[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
+    #[serde(rename_all = "camelCase")]
+    pub struct QualityModifiedRow {
+        pub quality: IdRef,
+        pub diff: QualityPatch,
+    }
+
+    #[derive(Clone, Debug, Default, Serialize, Deserialize, PartialEq)]
+    #[serde(rename_all = "camelCase", default)]
+    pub struct QualityPatch {
+        pub description: Option<String>,
+        pub icon: Option<String>,
+        pub key: Option<String>,
+        pub value: Option<String>,
+        pub unit: Option<String>,
+        pub definition: Option<String>,
+    }
+
+    /// @emoji 📦 Canonical sparse kit diff (camelCase) aligned with [`semio/assets/semio/metabolism.kit.diff.semio.json`]; `types` / `designs` / `files` / `folders` / `authors` keep raw JSON subtrees for full golden round-trip until every subtree has a typed apply path.
+    #[derive(Clone, Debug, Default, Serialize, Deserialize, PartialEq)]
+    #[serde(rename_all = "camelCase", default)]
+    pub struct CanonicalKitDiff {
+        pub name: Option<String>,
+        pub version: Option<String>,
+        pub description: Option<String>,
+        pub icon: Option<String>,
+        pub image: Option<String>,
+        pub remote: Option<String>,
+        pub homepage: Option<String>,
+        pub license: Option<String>,
+        pub preview: Option<String>,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        pub types: Option<serde_json::Value>,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        pub designs: Option<serde_json::Value>,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        pub tags: Option<TagsCollectionDiff>,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        pub concepts: Option<ConceptsCollectionDiff>,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        pub qualities: Option<QualitiesCollectionDiff>,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        pub files: Option<serde_json::Value>,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        pub folders: Option<serde_json::Value>,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        pub authors: Option<serde_json::Value>,
+    }
+
+    /// @emoji 📦 Persisted / replayed kit transition: canonical [`CanonicalKitDiff`] only (no `__ops` envelope).
+    #[derive(Clone, Debug, Default, Serialize, Deserialize, PartialEq)]
+    pub struct KitDiff(pub CanonicalKitDiff);
+
+    impl KitDiff {
+        /// @emoji 🔗 Shallow-merge `other` scalar/collection fields into `self.0` (used when coalescing multi-target diffs).
+        pub fn absorb(&mut self, other: CanonicalKitDiff) {
+            let a = &mut self.0;
+            let b = other;
+            macro_rules! opt {
+                ($field:ident) => {
+                    if b.$field.is_some() {
+                        a.$field = b.$field;
+                    }
+                };
+            }
+            opt!(name);
+            opt!(version);
+            opt!(description);
+            opt!(icon);
+            opt!(image);
+            opt!(remote);
+            opt!(homepage);
+            opt!(license);
+            opt!(preview);
+            opt!(types);
+            opt!(designs);
+            opt!(tags);
+            opt!(concepts);
+            opt!(qualities);
+            opt!(files);
+            opt!(folders);
+            opt!(authors);
         }
     }
+    //#endregion 🔖 canonical_kit_diff
 
     /// @emoji 🚫 Empty payload marker for scope-only operations (serde shape).
     #[derive(Clone, Debug, Default, Serialize, Deserialize)]
@@ -5253,7 +5688,7 @@ pub mod operation {
 
         /// Pure: read pre-state and produce a structural diff without mutating the kit.
         pub async fn to_diff(&self, kit: &Arc<crate::kit::Kit>) -> Result<KitDiff, SemioError> {
-            let ops = match self {
+            match self {
                 KitOperation::RenameKit { scope, input } => {
                     let Scope::Kit = scope else {
                         return Err(SemioError::invalid("renameKit expects Scope::Kit"));
@@ -5264,7 +5699,10 @@ pub mod operation {
                     if name.chars().count() > 256 {
                         return Err(SemioError::invalid(format!("Kit name too long: {} > 256", name.chars().count())));
                     }
-                    serde_json::json!([{"kind": "renameKit", "name": name}])
+                    Ok(KitDiff(CanonicalKitDiff {
+                        name: Some(name.clone()),
+                        ..Default::default()
+                    }))
                 }
                 KitOperation::ChangeDescription { scope, input } => {
                     let Scope::Entity { entity_id } = scope else {
@@ -5274,7 +5712,75 @@ pub mod operation {
                         return Err(SemioError::invalid("changeDescription expects Input::Description"));
                     };
                     entity_description(kit, entity_id).await?;
-                    serde_json::json!([{"kind": "changeDescription", "entityId": entity_id, "description": description}])
+                    let kid = kit.workspace_kit_id().await;
+                    if entity_id == &kid || entity_id == &kit.id {
+                        return Ok(KitDiff(CanonicalKitDiff {
+                            description: description.clone(),
+                            ..Default::default()
+                        }));
+                    }
+                    if kit.find_tag(entity_id).await.is_some() {
+                        return Ok(KitDiff(CanonicalKitDiff {
+                            tags: Some(TagsCollectionDiff {
+                                modified: vec![TagModifiedRow {
+                                    tag: IdRef { id: entity_id.clone() },
+                                    diff: TagPatch {
+                                        description: description.clone(),
+                                        ..Default::default()
+                                    },
+                                }],
+                                ..Default::default()
+                            }),
+                            ..Default::default()
+                        }));
+                    }
+                    if kit.find_concept(entity_id).await.is_some() {
+                        return Ok(KitDiff(CanonicalKitDiff {
+                            concepts: Some(ConceptsCollectionDiff {
+                                modified: vec![ConceptModifiedRow {
+                                    concept: IdRef { id: entity_id.clone() },
+                                    diff: ConceptPatch {
+                                        description: description.clone(),
+                                        ..Default::default()
+                                    },
+                                }],
+                                ..Default::default()
+                            }),
+                            ..Default::default()
+                        }));
+                    }
+                    if kit.find_quality(entity_id).await.is_some() {
+                        return Ok(KitDiff(CanonicalKitDiff {
+                            qualities: Some(QualitiesCollectionDiff {
+                                modified: vec![QualityModifiedRow {
+                                    quality: IdRef { id: entity_id.clone() },
+                                    diff: QualityPatch {
+                                        description: description.clone(),
+                                        ..Default::default()
+                                    },
+                                }],
+                                ..Default::default()
+                            }),
+                            ..Default::default()
+                        }));
+                    }
+                    if kit.type_by_external_id(entity_id).await.is_some() {
+                        return Ok(KitDiff(CanonicalKitDiff {
+                            types: Some(serde_json::json!({
+                                "modified": [{ "type": { "id": entity_id }, "diff": { "description": description } }]
+                            })),
+                            ..Default::default()
+                        }));
+                    }
+                    if kit.design_by_external_id(entity_id).await.is_some() {
+                        return Ok(KitDiff(CanonicalKitDiff {
+                            designs: Some(serde_json::json!({
+                                "modified": [{ "design": { "id": entity_id }, "diff": { "description": description } }]
+                            })),
+                            ..Default::default()
+                        }));
+                    }
+                    Err(SemioError::not_found("DescriptionEntity", entity_id.as_str()))
                 }
                 KitOperation::ChangeIcon { scope, input } => {
                     let Scope::Entity { entity_id } = scope else {
@@ -5284,7 +5790,75 @@ pub mod operation {
                         return Err(SemioError::invalid("changeIcon expects Input::Icon"));
                     };
                     entity_icon(kit, entity_id).await?;
-                    serde_json::json!([{"kind": "changeIcon", "entityId": entity_id, "icon": icon}])
+                    let kid = kit.workspace_kit_id().await;
+                    if entity_id == &kid || entity_id == &kit.id {
+                        return Ok(KitDiff(CanonicalKitDiff {
+                            icon: icon.clone(),
+                            ..Default::default()
+                        }));
+                    }
+                    if kit.find_tag(entity_id).await.is_some() {
+                        return Ok(KitDiff(CanonicalKitDiff {
+                            tags: Some(TagsCollectionDiff {
+                                modified: vec![TagModifiedRow {
+                                    tag: IdRef { id: entity_id.clone() },
+                                    diff: TagPatch {
+                                        icon: icon.clone(),
+                                        ..Default::default()
+                                    },
+                                }],
+                                ..Default::default()
+                            }),
+                            ..Default::default()
+                        }));
+                    }
+                    if kit.find_concept(entity_id).await.is_some() {
+                        return Ok(KitDiff(CanonicalKitDiff {
+                            concepts: Some(ConceptsCollectionDiff {
+                                modified: vec![ConceptModifiedRow {
+                                    concept: IdRef { id: entity_id.clone() },
+                                    diff: ConceptPatch {
+                                        icon: icon.clone(),
+                                        ..Default::default()
+                                    },
+                                }],
+                                ..Default::default()
+                            }),
+                            ..Default::default()
+                        }));
+                    }
+                    if kit.find_quality(entity_id).await.is_some() {
+                        return Ok(KitDiff(CanonicalKitDiff {
+                            qualities: Some(QualitiesCollectionDiff {
+                                modified: vec![QualityModifiedRow {
+                                    quality: IdRef { id: entity_id.clone() },
+                                    diff: QualityPatch {
+                                        icon: icon.clone(),
+                                        ..Default::default()
+                                    },
+                                }],
+                                ..Default::default()
+                            }),
+                            ..Default::default()
+                        }));
+                    }
+                    if kit.type_by_external_id(entity_id).await.is_some() {
+                        return Ok(KitDiff(CanonicalKitDiff {
+                            types: Some(serde_json::json!({
+                                "modified": [{ "type": { "id": entity_id }, "diff": { "icon": icon } }]
+                            })),
+                            ..Default::default()
+                        }));
+                    }
+                    if kit.design_by_external_id(entity_id).await.is_some() {
+                        return Ok(KitDiff(CanonicalKitDiff {
+                            designs: Some(serde_json::json!({
+                                "modified": [{ "design": { "id": entity_id }, "diff": { "icon": icon } }]
+                            })),
+                            ..Default::default()
+                        }));
+                    }
+                    Err(SemioError::not_found("IconEntity", entity_id.as_str()))
                 }
                 KitOperation::ChangeImage { scope, input } => {
                     let Scope::Entity { entity_id } = scope else {
@@ -5294,7 +5868,30 @@ pub mod operation {
                         return Err(SemioError::invalid("changeImage expects Input::Image"));
                     };
                     entity_image(kit, entity_id).await?;
-                    serde_json::json!([{"kind": "changeImage", "entityId": entity_id, "image": image}])
+                    let kid = kit.workspace_kit_id().await;
+                    if entity_id == &kid || entity_id == &kit.id {
+                        return Ok(KitDiff(CanonicalKitDiff {
+                            image: image.clone(),
+                            ..Default::default()
+                        }));
+                    }
+                    if kit.type_by_external_id(entity_id).await.is_some() {
+                        return Ok(KitDiff(CanonicalKitDiff {
+                            types: Some(serde_json::json!({
+                                "modified": [{ "type": { "id": entity_id }, "diff": { "image": image } }]
+                            })),
+                            ..Default::default()
+                        }));
+                    }
+                    if kit.design_by_external_id(entity_id).await.is_some() {
+                        return Ok(KitDiff(CanonicalKitDiff {
+                            designs: Some(serde_json::json!({
+                                "modified": [{ "design": { "id": entity_id }, "diff": { "image": image } }]
+                            })),
+                            ..Default::default()
+                        }));
+                    }
+                    Err(SemioError::not_found("ImageEntity", entity_id.as_str()))
                 }
                 KitOperation::CreateTag { scope, input } => {
                     let Scope::CreateTag { owner_id, tag_id, attribute_ids } = scope else {
@@ -5308,13 +5905,19 @@ pub mod operation {
                         return Err(SemioError::invalid(format!("Tag already exists: {}", tag_id.as_str())));
                     }
                     validate_attribute_ids(tag.attributes.as_ref().map(|items| items.len()).unwrap_or_default(), attribute_ids)?;
-                    serde_json::json!([{
-                        "kind": "createTag",
-                        "ownerId": owner_id,
-                        "tagId": tag_id,
-                        "attributeIds": attribute_ids,
-                        "tag": serde_json::to_value(tag).map_err(|e| SemioError::invalid(e.to_string()))?,
-                    }])
+                    let mut tv = serde_json::to_value(tag).map_err(|e| SemioError::invalid(e.to_string()))?;
+                    if let serde_json::Value::Object(ref mut m) = tv {
+                        m.insert("id".to_string(), serde_json::json!(tag_id.as_str()));
+                        m.insert("ownerId".to_string(), serde_json::json!(owner_id.as_str()));
+                        m.insert("attributeIds".to_string(), serde_json::to_value(attribute_ids).map_err(|e| SemioError::invalid(e.to_string()))?);
+                    }
+                    Ok(KitDiff(CanonicalKitDiff {
+                        tags: Some(TagsCollectionDiff {
+                            added: vec![tv],
+                            ..Default::default()
+                        }),
+                        ..Default::default()
+                    }))
                 }
                 KitOperation::CreateTags { scope, input } => {
                     let Scope::CreateTags { owner_id, tag_ids, attribute_ids } = scope else {
@@ -5327,37 +5930,57 @@ pub mod operation {
                         return Err(SemioError::invalid("createTags scope length mismatch"));
                     }
                     kit.resolve_tag_owner_slot(owner_id).await?;
+                    let mut added = Vec::new();
                     for (index, tag) in tags.iter().enumerate() {
                         if kit.find_tag(&tag_ids[index]).await.is_some() {
                             return Err(SemioError::invalid(format!("Tag already exists: {}", tag_ids[index].as_str())));
                         }
                         validate_attribute_ids(tag.attributes.as_ref().map(|items| items.len()).unwrap_or_default(), &attribute_ids[index])?;
+                        let mut tv = serde_json::to_value(tag).map_err(|e| SemioError::invalid(e.to_string()))?;
+                        if let serde_json::Value::Object(ref mut m) = tv {
+                            m.insert("id".to_string(), serde_json::json!(tag_ids[index].as_str()));
+                            m.insert("ownerId".to_string(), serde_json::json!(owner_id.as_str()));
+                            m.insert("attributeIds".to_string(), serde_json::to_value(&attribute_ids[index]).map_err(|e| SemioError::invalid(e.to_string()))?);
+                        }
+                        added.push(tv);
                     }
-                    serde_json::json!([{
-                        "kind": "createTags",
-                        "ownerId": owner_id,
-                        "tagIds": tag_ids,
-                        "attributeIds": attribute_ids,
-                        "tags": serde_json::to_value(tags).map_err(|e| SemioError::invalid(e.to_string()))?,
-                    }])
+                    Ok(KitDiff(CanonicalKitDiff {
+                        tags: Some(TagsCollectionDiff {
+                            added,
+                            ..Default::default()
+                        }),
+                        ..Default::default()
+                    }))
                 }
                 KitOperation::DeleteTag { scope, .. } => {
                     let Scope::Tag { tag_id } = scope else {
                         return Err(SemioError::invalid("deleteTag expects Scope::Tag"));
                     };
                     ensure_tag(kit, tag_id).await?;
-                    serde_json::json!([{"kind": "deleteTag", "tagId": tag_id}])
+                    Ok(KitDiff(CanonicalKitDiff {
+                        tags: Some(TagsCollectionDiff {
+                            removed: vec![IdRef { id: tag_id.clone() }],
+                            ..Default::default()
+                        }),
+                        ..Default::default()
+                    }))
                 }
                 KitOperation::DeleteTags { scope, .. } => {
                     let Scope::Tags { tag_ids } = scope else {
                         return Err(SemioError::invalid("deleteTags expects Scope::Tags"));
                     };
-                    let mut rows = Vec::new();
+                    let mut removed = Vec::new();
                     for tag_id in tag_ids {
                         ensure_tag(kit, tag_id).await?;
-                        rows.push(serde_json::json!({"kind": "deleteTag", "tagId": tag_id}));
+                        removed.push(IdRef { id: (*tag_id).clone() });
                     }
-                    serde_json::Value::Array(rows)
+                    Ok(KitDiff(CanonicalKitDiff {
+                        tags: Some(TagsCollectionDiff {
+                            removed,
+                            ..Default::default()
+                        }),
+                        ..Default::default()
+                    }))
                 }
                 KitOperation::RenameTag { scope, input } => {
                     let Scope::Tag { tag_id } = scope else {
@@ -5367,7 +5990,19 @@ pub mod operation {
                         return Err(SemioError::invalid("renameTag expects Input::Name"));
                     };
                     ensure_tag(kit, tag_id).await?;
-                    serde_json::json!([{"kind": "renameTag", "tagId": tag_id, "name": name}])
+                    Ok(KitDiff(CanonicalKitDiff {
+                        tags: Some(TagsCollectionDiff {
+                            modified: vec![TagModifiedRow {
+                                tag: IdRef { id: tag_id.clone() },
+                                diff: TagPatch {
+                                    name: Some(name.clone()),
+                                    ..Default::default()
+                                },
+                            }],
+                            ..Default::default()
+                        }),
+                        ..Default::default()
+                    }))
                 }
                 KitOperation::CreateConcept { scope, input } => {
                     let Scope::CreateConcept { owner_id, concept_id, attribute_ids } = scope else {
@@ -5381,20 +6016,32 @@ pub mod operation {
                         return Err(SemioError::invalid(format!("Concept already exists: {}", concept_id.as_str())));
                     }
                     validate_attribute_ids(concept.attributes.as_ref().map(|items| items.len()).unwrap_or_default(), attribute_ids)?;
-                    serde_json::json!([{
-                        "kind": "createConcept",
-                        "ownerId": owner_id,
-                        "conceptId": concept_id,
-                        "attributeIds": attribute_ids,
-                        "concept": serde_json::to_value(concept).map_err(|e| SemioError::invalid(e.to_string()))?,
-                    }])
+                    let mut cv = serde_json::to_value(concept).map_err(|e| SemioError::invalid(e.to_string()))?;
+                    if let serde_json::Value::Object(ref mut m) = cv {
+                        m.insert("id".to_string(), serde_json::json!(concept_id.as_str()));
+                        m.insert("ownerId".to_string(), serde_json::json!(owner_id.as_str()));
+                        m.insert("attributeIds".to_string(), serde_json::to_value(attribute_ids).map_err(|e| SemioError::invalid(e.to_string()))?);
+                    }
+                    Ok(KitDiff(CanonicalKitDiff {
+                        concepts: Some(ConceptsCollectionDiff {
+                            added: vec![cv],
+                            ..Default::default()
+                        }),
+                        ..Default::default()
+                    }))
                 }
                 KitOperation::DeleteConcept { scope, .. } => {
                     let Scope::Concept { concept_id } = scope else {
                         return Err(SemioError::invalid("deleteConcept expects Scope::Concept"));
                     };
                     ensure_concept(kit, concept_id).await?;
-                    serde_json::json!([{"kind": "deleteConcept", "conceptId": concept_id}])
+                    Ok(KitDiff(CanonicalKitDiff {
+                        concepts: Some(ConceptsCollectionDiff {
+                            removed: vec![IdRef { id: concept_id.clone() }],
+                            ..Default::default()
+                        }),
+                        ..Default::default()
+                    }))
                 }
                 KitOperation::CreateQuality { scope, input } => {
                     let Scope::CreateQuality { owner_id, quality_id, attribute_ids, benchmark_ids } = scope else {
@@ -5411,21 +6058,33 @@ pub mod operation {
                     if !benchmark_ids.is_empty() {
                         return Err(SemioError::invalid("quality benchmark ids are not supported yet"));
                     }
-                    serde_json::json!([{
-                        "kind": "createQuality",
-                        "ownerId": owner_id,
-                        "qualityId": quality_id,
-                        "attributeIds": attribute_ids,
-                        "benchmarkIds": benchmark_ids,
-                        "quality": serde_json::to_value(quality).map_err(|e| SemioError::invalid(e.to_string()))?,
-                    }])
+                    let mut qv = serde_json::to_value(quality).map_err(|e| SemioError::invalid(e.to_string()))?;
+                    if let serde_json::Value::Object(ref mut m) = qv {
+                        m.insert("id".to_string(), serde_json::json!(quality_id.as_str()));
+                        m.insert("ownerId".to_string(), serde_json::json!(owner_id.as_str()));
+                        m.insert("attributeIds".to_string(), serde_json::to_value(attribute_ids).map_err(|e| SemioError::invalid(e.to_string()))?);
+                        m.insert("benchmarkIds".to_string(), serde_json::to_value(benchmark_ids).map_err(|e| SemioError::invalid(e.to_string()))?);
+                    }
+                    Ok(KitDiff(CanonicalKitDiff {
+                        qualities: Some(QualitiesCollectionDiff {
+                            added: vec![qv],
+                            ..Default::default()
+                        }),
+                        ..Default::default()
+                    }))
                 }
                 KitOperation::DeleteQuality { scope, .. } => {
                     let Scope::Quality { quality_id } = scope else {
                         return Err(SemioError::invalid("deleteQuality expects Scope::Quality"));
                     };
                     ensure_quality(kit, quality_id).await?;
-                    serde_json::json!([{"kind": "deleteQuality", "qualityId": quality_id}])
+                    Ok(KitDiff(CanonicalKitDiff {
+                        qualities: Some(QualitiesCollectionDiff {
+                            removed: vec![IdRef { id: quality_id.clone() }],
+                            ..Default::default()
+                        }),
+                        ..Default::default()
+                    }))
                 }
                 KitOperation::CreateFixedPiece { scope, input } => {
                     let Scope::CreateFixedPiece { design_id, piece_id, blueprint_id, attribute_ids } = scope else {
@@ -5437,22 +6096,41 @@ pub mod operation {
                     if !attribute_ids.is_empty() {
                         return Err(SemioError::invalid("piece attribute ids are not supported yet"));
                     }
-                    serde_json::json!([{
-                        "kind": "createFixedPiece",
-                        "designId": design_id,
-                        "pieceId": piece_id,
-                        "blueprintId": blueprint_id,
-                        "position": serde_json::to_value(position).map_err(|e| SemioError::invalid(e.to_string()))?,
+                    let pose = serde_json::to_value(position).map_err(|e| SemioError::invalid(e.to_string()))?;
+                    let piece_json = serde_json::json!({
+                        "id": piece_id.as_str(),
+                        "blueprintId": blueprint_id.as_str(),
                         "name": name,
                         "description": description,
-                    }])
+                        "scale": 1.0,
+                        "props": [],
+                        "attributes": [],
+                        "pose": pose,
+                    });
+                    Ok(KitDiff(CanonicalKitDiff {
+                        designs: Some(serde_json::json!({
+                            "modified": [{
+                                "design": { "id": design_id.as_str() },
+                                "diff": { "pieces": { "added": [piece_json] } }
+                            }]
+                        })),
+                        ..Default::default()
+                    }))
                 }
                 KitOperation::DeletePieceInDesign { scope, .. } => {
                     let Scope::PieceInDesign { design_id, piece_id } = scope else {
                         return Err(SemioError::invalid("deletePieceInDesign expects Scope::PieceInDesign"));
                     };
                     ensure_piece(kit, design_id, piece_id).await?;
-                    serde_json::json!([{"kind": "deletePieceInDesign", "designId": design_id, "pieceId": piece_id}])
+                    Ok(KitDiff(CanonicalKitDiff {
+                        designs: Some(serde_json::json!({
+                            "modified": [{
+                                "design": { "id": design_id.as_str() },
+                                "diff": { "pieces": { "removed": [{ "id": piece_id.as_str() }] } }
+                            }]
+                        })),
+                        ..Default::default()
+                    }))
                 }
                 KitOperation::DragPieceInDesign { scope, input } => {
                     let Scope::PieceInDesign { design_id, piece_id } = scope else {
@@ -5462,12 +6140,18 @@ pub mod operation {
                         return Err(SemioError::invalid("dragPieceInDesign expects Input::Offset"));
                     };
                     ensure_piece(kit, design_id, piece_id).await?;
-                    serde_json::json!([{
-                        "kind": "dragPieceInDesign",
-                        "designId": design_id,
-                        "pieceId": piece_id,
-                        "offset": serde_json::to_value(offset).map_err(|e| SemioError::invalid(e.to_string()))?,
-                    }])
+                    Ok(KitDiff(CanonicalKitDiff {
+                        designs: Some(serde_json::json!({
+                            "modified": [{
+                                "design": { "id": design_id.as_str() },
+                                "diff": { "pieces": { "modified": [{
+                                    "piece": { "id": piece_id.as_str() },
+                                    "diff": { "drag": { "u": offset.u, "v": offset.v } }
+                                }] } }
+                            }]
+                        })),
+                        ..Default::default()
+                    }))
                 }
                 KitOperation::DragPiecesInDesign { scope, input } => {
                     let Scope::PiecesInDesign { design_id, piece_ids } = scope else {
@@ -5476,27 +6160,43 @@ pub mod operation {
                     let Input::Offset { offset } = input else {
                         return Err(SemioError::invalid("dragPiecesInDesign expects Input::Offset"));
                     };
-                    let mut rows = Vec::new();
+                    let mut pm = Vec::new();
                     for piece_id in piece_ids {
                         ensure_piece(kit, design_id, piece_id).await?;
-                        rows.push(serde_json::json!({
-                            "kind": "dragPieceInDesign",
-                            "designId": design_id,
-                            "pieceId": piece_id,
-                            "offset": serde_json::to_value(offset).map_err(|e| SemioError::invalid(e.to_string()))?,
+                        pm.push(serde_json::json!({
+                            "piece": { "id": piece_id.as_str() },
+                            "diff": { "drag": { "u": offset.u, "v": offset.v } }
                         }));
                     }
-                    serde_json::Value::Array(rows)
+                    Ok(KitDiff(CanonicalKitDiff {
+                        designs: Some(serde_json::json!({
+                            "modified": [{
+                                "design": { "id": design_id.as_str() },
+                                "diff": { "pieces": { "modified": pm } }
+                            }]
+                        })),
+                        ..Default::default()
+                    }))
                 }
                 KitOperation::FixPieceInDesign { scope, .. } => {
                     let Scope::PieceInDesign { design_id, piece_id } = scope else {
                         return Err(SemioError::invalid("fixPieceInDesign expects Scope::PieceInDesign"));
                     };
                     ensure_piece(kit, design_id, piece_id).await?;
-                    serde_json::json!([{"kind": "fixPieceInDesign", "designId": design_id, "pieceId": piece_id}])
+                    Ok(KitDiff(CanonicalKitDiff {
+                        designs: Some(serde_json::json!({
+                            "modified": [{
+                                "design": { "id": design_id.as_str() },
+                                "diff": { "pieces": { "modified": [{
+                                    "piece": { "id": piece_id.as_str() },
+                                    "diff": { "fixPiece": true }
+                                }] } }
+                            }]
+                        })),
+                        ..Default::default()
+                    }))
                 }
-            };
-            Ok(KitDiff(serde_json::json!({ "__ops": ops })))
+            }
         }
 
         /// Pure: read pre-state and return the ordered list of backward operations.

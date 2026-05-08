@@ -52,9 +52,9 @@ import {
   type KitStoreReadSnap,
   type KitViewCatalogKey,
   type WriteStatus,
-  SCHEMA_HOOK_IDLE_STATUS,
-  SCHEMA_HOOK_READONLY_STATUS,
-  USE_KIT_NAME_PENDING_STATUS,
+  WRITE_STATUS_IDLE,
+  WRITE_STATUS_READONLY,
+  WRITE_STATUS_PENDING,
   writeStatusEquivalent,
   StoreField,
   StoreCommand,
@@ -627,9 +627,9 @@ export function createKitCommandEngine(store: KitHostStore): ReturnType<typeof c
 
 export type { BackboneConfig, BackboneStatusDto, ConflictResolution, KitConflict, KitReadScope, KitWriteScope, SetError, SetResult, WriteStatus } from "@semio/js";
 export {
-  SCHEMA_HOOK_IDLE_STATUS,
-  SCHEMA_HOOK_READONLY_STATUS,
-  USE_KIT_NAME_PENDING_STATUS,
+  WRITE_STATUS_IDLE,
+  WRITE_STATUS_READONLY,
+  WRITE_STATUS_PENDING,
   writeStatusEquivalent,
   StoreField,
   StoreCommand,
@@ -17128,14 +17128,20 @@ if (shouldRunReactEmbeddedTests) {
   };
 
   const createTestKitClient = (store: KitHostStore): KitStoreClient => {
-    const kitNameField = new StoreField<string>(String((kitJsonFromStore(store) as KitFullDto).name ?? ""));
-    const renameKitCmd = new StoreCommand<string>(async (next) => {
-      const v = String(next ?? "").trim();
+    const initialName = String((kitJsonFromStore(store) as KitFullDto).name ?? "");
+    let pushKitName!: (v: string) => void;
+    const kitNameField = new StoreField<string>(initialName, (push) => {
+      pushKitName = push;
+      push(initialName);
+      return () => {};
+    });
+    const renameKitCmd = new StoreCommand<RenameKitCommandArgs>(async (args) => {
+      const v = String(args.input?.name ?? "").trim();
       if (v === "") return { ok: false, error: { kind: "InvalidValue", message: "kit name required" } };
       const kitDto: KitFullDto = JSON.parse(JSON.stringify(kitJsonFromStore(store))) as KitFullDto;
       (kitDto as { name: string }).name = v;
       store.replace(asKitInstance(kitDto));
-      kitNameField.set(v);
+      pushKitName(v);
       return { ok: true };
     });
     return {
@@ -17149,7 +17155,7 @@ if (shouldRunReactEmbeddedTests) {
             const nm = String((c.name as { name?: string }).name ?? "");
             if (nm.trim() === "") return { ok: false, error: { kind: "IllegalName", message: "name cannot be empty" } };
             (kit as { name: string }).name = nm;
-            kitNameField.set(nm);
+            pushKitName(nm);
           }
           if ("description" in c && c.description && typeof c.description === "object")
             (kit as { description?: string }).description =

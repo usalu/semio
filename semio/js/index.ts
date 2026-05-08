@@ -1545,10 +1545,10 @@ export const KIT_SESSION_QUERY_ENTRY = `query { wip { id theKit { id } } }` as c
 /** @emoji 🔗 Root subscription aligned with `Subscription.operationSucceeded` (`semio/graphql/schema.graphql`). */
 export const KIT_EVENT_STREAM_SUBSCRIPTION = `subscription { operationSucceeded { __typename id } }` as const;
 
-/** @emoji 🔗 Kit rename bus: {@link KitStore.renameKit} correlates `requestId` with {@link Subscription.kitRenamed}. GraphQL subscriptions allow only one root field, so {@link Subscription.operationFailed} is wired through {@link KIT_OPERATION_FAILED_SUBSCRIPTION}. */
-export const KIT_RENAME_EVENT_SUBSCRIPTION = `subscription { kitRenamed { requestId kit { name } } }` as const;
+/** @emoji 🔗 Correlates mutation `requestId` with {@link Subscription.commandSucceeded} (`Command.requestId`). */
+export const KIT_COMMAND_SUCCEEDED_SUBSCRIPTION = `subscription { commandSucceeded { requestId kind } }` as const;
 
-/** @emoji 🚨 Failure-side subscription for {@link KitStore.renameKit} (and other request-id-correlated mutations). */
+/** @emoji 🚨 Failure-side subscription for request-id-correlated kit operations ({@link Subscription.operationFailed}). */
 export const KIT_OPERATION_FAILED_SUBSCRIPTION = `subscription { operationFailed { kind message requestId } }` as const;
 
 /**
@@ -1563,7 +1563,7 @@ export type KitGraphqlDataKitScopedFullDto = Readonly<{
 
 //#region 🧱StorePrimitives
 
-/** @emoji 📛 Write lane status for {@link StoreCommand} and schema hooks (stable object identities for triads). */
+/** @emoji 📛 Write lane status for {@link StoreCommand} (stable object identities for triads). */
 export type WriteStatus =
   | { kind: "readonly"; pending: 0; lastError?: SetError }
   | { kind: "idle"; pending: 0; lastError?: SetError }
@@ -1571,11 +1571,11 @@ export type WriteStatus =
   | { kind: "error"; pending: 0; lastError: SetError };
 
 /** @emoji 🧾 Frozen idle — stable identity for `useSyncExternalStore` snapshots. */
-export const SCHEMA_HOOK_IDLE_STATUS: WriteStatus = Object.freeze({ kind: "idle", pending: 0 });
-/** @emoji 🧾 Frozen readonly — stable identity for schema hooks outside kit scope equivalents. */
-export const SCHEMA_HOOK_READONLY_STATUS: WriteStatus = Object.freeze({ kind: "readonly", pending: 0 });
+export const WRITE_STATUS_IDLE: WriteStatus = Object.freeze({ kind: "idle", pending: 0 });
+/** @emoji 🧾 Frozen readonly — stable identity when the lane is read-only. */
+export const WRITE_STATUS_READONLY: WriteStatus = Object.freeze({ kind: "readonly", pending: 0 });
 /** @emoji 🪪 Frozen pending for rs-backed mutations — stable identity while a command is in flight. */
-export const USE_KIT_NAME_PENDING_STATUS: WriteStatus = Object.freeze({ kind: "pending", pending: 1 });
+export const WRITE_STATUS_PENDING: WriteStatus = Object.freeze({ kind: "pending", pending: 1 });
 
 /** @emoji 🪪 Same semantic {@link WriteStatus} → reuse prior reference (avoids React #520 from fresh object identity). */
 export function writeStatusEquivalent(a: WriteStatus, b: WriteStatus): boolean {
@@ -1590,11 +1590,16 @@ export function writeStatusEquivalent(a: WriteStatus, b: WriteStatus): boolean {
   return true;
 }
 
-/** @emoji 📥 Sync mirror of one rs-owned value, fed by the rs event stream. */
+/** @emoji 🧾 Pushes live values into {@link StoreField}; return cleanup unsubscriber. */
+export type StoreFieldSource<T> = (push: (next: T) => void) => Unsubscribe;
+
+/** @emoji 📥 Read-only typed mirror; values enter only through the optional `source` `push` callback. */
 export class StoreField<T> {
   private readonly value$: BehaviorSubject<T>;
-  constructor(initial: T) {
+  private unsubSource: Unsubscribe | null = null;
+  constructor(initial: T, source?: StoreFieldSource<T>) {
     this.value$ = new BehaviorSubject(initial);
+    if (source) this.unsubSource = source((next) => this.value$.next(next));
   }
   subscribe = (h: () => void): Unsubscribe => {
     const s = this.value$.subscribe({ next: () => h() });
@@ -1603,11 +1608,15 @@ export class StoreField<T> {
     };
   };
   getSnapshot = (): T => this.value$.getValue();
-  /** @internal Update from event-stream listeners. */
-  set(next: T): void {
-    this.value$.next(next);
-  }
   dispose(): void {
+    if (this.unsubSource) {
+      try {
+        this.unsubSource();
+      } catch {
+        /* ignore */
+      }
+      this.unsubSource = null;
+    }
     try {
       this.value$.complete();
     } catch {
@@ -1616,24 +1625,30 @@ export class StoreField<T> {
   }
 }
 
-/** @emoji 📝 Async kit-store command with bound runner + render-ready {@link WriteStatus}. */
+/** @emoji 📝 Async side-effect carrier with render-ready {@link WriteStatus} (domain-agnostic). */
 export class StoreCommand<TArgs> {
-  readonly status: StoreField<WriteStatus> = new StoreField<WriteStatus>(SCHEMA_HOOK_IDLE_STATUS);
+  readonly status: StoreField<WriteStatus>;
+  private pushStatus!: (next: WriteStatus) => void;
   private lastError: SetError | null = null;
-  constructor(private readonly exec: (args: TArgs) => Promise<SetResult>) {}
+  constructor(private readonly exec: (args: TArgs) => Promise<SetResult>) {
+    this.status = new StoreField<WriteStatus>(WRITE_STATUS_IDLE, (push) => {
+      this.pushStatus = push;
+      return () => {};
+    });
+  }
   readonly run = async (args: TArgs): Promise<SetResult> => {
-    this.status.set(USE_KIT_NAME_PENDING_STATUS);
+    this.pushStatus(WRITE_STATUS_PENDING);
     const r = await this.exec(args);
     if (r.ok) {
       this.lastError = null;
-      this.status.set(SCHEMA_HOOK_IDLE_STATUS);
+      this.pushStatus(WRITE_STATUS_IDLE);
     } else {
       const cached = this.lastError;
       const lastError = cached && cached.kind === r.error.kind && cached.message === r.error.message ? cached : r.error;
       this.lastError = lastError;
       const cur = this.status.getSnapshot();
       const next: WriteStatus = { kind: "error", pending: 0, lastError };
-      if (!writeStatusEquivalent(cur, next)) this.status.set(next);
+      if (!writeStatusEquivalent(cur, next)) this.pushStatus(next);
     }
     return r;
   };
@@ -1690,38 +1705,10 @@ export class RequestCorrelator {
   }
 }
 
-/** @emoji 🚌 Typed rs operation event envelope for {@link OperationRouter} demux. */
-export interface OperationEvent<P extends JsonObject = JsonObject> {
-  readonly kind: string;
-  readonly requestId: string | null;
-  readonly payload: P;
-}
-
-type OperationListener = (ev: OperationEvent<JsonObject>) => void;
-
-/** @emoji 🚌 Routes typed rs operation events to listeners; one demux for the whole store. */
-export class OperationRouter {
-  private readonly listeners = new Map<string, Set<OperationListener>>();
-  on<P extends JsonObject>(kind: string, l: (ev: OperationEvent<P>) => void): Unsubscribe {
-    let set = this.listeners.get(kind);
-    if (!set) {
-      set = new Set();
-      this.listeners.set(kind, set);
-    }
-    const wrapped = l as unknown as OperationListener;
-    set.add(wrapped);
-    return () => {
-      set!.delete(wrapped);
-    };
-  }
-  emit<P extends JsonObject>(ev: OperationEvent<P>): void {
-    const set = this.listeners.get(ev.kind);
-    if (!set) return;
-    for (const l of set) l(ev as OperationEvent<JsonObject>);
-  }
-}
-
 //#endregion 🧱StorePrimitives
+
+/** @emoji 🧾 Uniform `renameKit` args: `draftId` / `transactionId` are injected by {@link KitStore}. */
+export type RenameKitCommandArgs = { readonly scope: Record<string, never>; readonly input: { readonly name: string } };
 
 /**
  * @emoji 🌐 Single kit control plane: GraphQL strings over one dedicated `Worker` running `semio/rs` WASM (`KitStoreHandle`).
@@ -1730,6 +1717,7 @@ export class KitStore {
   private readonly timeoutMs: number;
   private transport!: WorkerStringTransport | InlineWasmTransport;
   private readonly fanout = new Subject<KitEvent>();
+  private readonly invalidations = new Subject<void>();
   private gqlLoopRunning = false;
   private disposed = false;
   /** @emoji 🧭 VCS anchors for nested `Mutation.session` writes; auto-filled after mutations. */
@@ -1738,18 +1726,18 @@ export class KitStore {
   private kitWriteTransactionId: string | null = null;
 
   private readonly correlator: RequestCorrelator;
-  /** @emoji 🚌 Extensible demux for rs correlation events (see {@link dispatchCorrelationEnvelope}). */
-  readonly router = new OperationRouter();
-  /** @emoji 🪪 Live kit name mirror; fed by rs `kitRenamed` (+ initial DTO seed). */
-  readonly kitName = new StoreField<string>("");
-  /** @emoji 🪪 GraphQL `renameKit` + correlator; status in {@link StoreCommand.status}. */
-  readonly renameKit: StoreCommand<string>;
+  /** @emoji 🪪 Live kit name via GraphQL query + {@link invalidations} refetch (read-only {@link StoreField}). */
+  readonly kitName: StoreField<string>;
+  /** @emoji 🪪 GraphQL `renameKit(scope,input)` + correlator; status in {@link StoreCommand.status}. */
+  readonly renameKit: StoreCommand<RenameKitCommandArgs>;
   private correlationLoopRunning = false;
 
-  private constructor(timeoutMs: number) {
+  private constructor(timeoutMs: number, transport: WorkerStringTransport | InlineWasmTransport) {
     this.timeoutMs = timeoutMs;
+    this.transport = transport;
     this.correlator = new RequestCorrelator(timeoutMs);
-    this.renameKit = new StoreCommand<string>((name) => this.executeRenameKitMutation(name));
+    this.kitName = this.query<string>("wip { theKit { name } }", (data) => String((data as { wip?: { theKit?: { name?: string } | null } | null }).wip?.theKit?.name ?? ""), "");
+    this.renameKit = this.operation<RenameKitCommandArgs["scope"], RenameKitCommandArgs["input"]>("renameKit", "RenameKitScopeInput", "RenameKitInput");
   }
 
   static async open(initialKit: KitFullDto, opts?: KitStoreOpenOptions): Promise<KitStore> {
@@ -1775,9 +1763,7 @@ export class KitStore {
       const wt = new WorkerStringTransport(worker);
       try {
         await wt.init(dto);
-        const ks = new KitStore(timeoutMs);
-        ks.transport = wt;
-        ks.seedFieldsFromDto(dto);
+        const ks = new KitStore(timeoutMs, wt);
         await withTimeout(ks.warmGraphqlRead(), timeoutMs, "graphql");
         void ks.startSubscriptionLoop();
         void ks.startCorrelationSubscriptions();
@@ -1805,9 +1791,7 @@ export class KitStore {
       throw new Error("KitStoreHandle.create did not return an object with execute()");
     }
     const t = new InlineWasmTransport(handle as { execute: WasmExecuteFn; subscribe: WasmSubscribeFn; free?: () => void });
-    const ks = new KitStore(timeoutMs);
-    ks.transport = t;
-    ks.seedFieldsFromDto(dto);
+    const ks = new KitStore(timeoutMs, t);
     await withTimeout(ks.warmGraphqlRead(), timeoutMs, "graphql");
     void ks.startSubscriptionLoop();
     void ks.startCorrelationSubscriptions();
@@ -1879,9 +1863,88 @@ export class KitStore {
 
   //#region 🪪KitNameAndRename
 
-  /** @emoji 🪪 Seeds {@link kitName} from the opening kit DTO (before GraphQL streaming). */
-  seedFieldsFromDto(dto: KitFullDto): void {
-    this.kitName.set(String(dto.name ?? ""));
+  /** @emoji 🧾 GraphQL-backed read; pushes `parse(data)` initially and on each {@link invalidations} tick. */
+  private query<T>(body: string, parse: (data: JsonValue) => T, initial: T): StoreField<T> {
+    return new StoreField<T>(initial, (push) => {
+      const refetch = async () => {
+        try {
+          const data = kitGraphqlData(await this.gqlRun({ query: `query { ${body} }` })) as JsonValue;
+          push(parse(data));
+        } catch {
+          /* keep last value; read errors never leak to UI — only writes carry status */
+        }
+      };
+      void refetch();
+      const sub = this.invalidations.subscribe({ next: () => void refetch() });
+      return () => sub.unsubscribe();
+    });
+  }
+
+  /** @emoji 🧾 Transactional kit SDL operation `<field>(scope: …!, input: …!): Id!` + correlator + finalize. */
+  private operation<TScope extends JsonObject = JsonObject, TInput extends JsonObject = JsonObject>(
+    fieldName: string,
+    scopeTypeName: string,
+    inputTypeName: string,
+  ): StoreCommand<{ scope: TScope; input: TInput }> {
+    return new StoreCommand<{ scope: TScope; input: TInput }>(async ({ scope, input }) => {
+      let draftId: string;
+      let transactionId: string;
+      try {
+        draftId = await this.openDraftForOperation();
+        const opened = await this.openKitWriteTransaction();
+        if (!opened.ok) return opened;
+        transactionId = opened.transactionId;
+      } catch (e) {
+        return { ok: false, error: { kind: "Internal", message: String(e) } };
+      }
+      const scopeGql: JsonObject = { draftId, transactionId, ...scope };
+      try {
+        const data = kitGraphqlData(
+          await this.gqlRun({
+            query: `mutation($scope: ${scopeTypeName}!, $input: ${inputTypeName}!) { ${fieldName}(scope: $scope, input: $input) }`,
+            variables: { scope: scopeGql as JsonValue, input: (input ?? ({} as TInput)) as JsonValue },
+          }),
+        ) as Record<string, string>;
+        const requestId = String(data[fieldName] ?? "");
+        if (requestId === "") throw new Error(`${fieldName}: empty request id`);
+        const result = await this.correlator.await(requestId);
+        await this.finalizeTransaction(draftId, transactionId, result.ok).catch(() => undefined);
+        return result;
+      } catch (e) {
+        await this.finalizeTransaction(draftId, transactionId, false).catch(() => undefined);
+        return { ok: false, error: { kind: "Internal", message: String(e) } };
+      }
+    });
+  }
+
+  /** @emoji 🧾 Ensures {@link kitWriteDraftId} exists (same anchors as legacy lazy transaction open). */
+  private async openDraftForOperation(): Promise<string> {
+    await this.ensureWriteGraph();
+    const d = this.kitWriteDraftId;
+    if (!d) throw new Error("openDraftForOperation: missing draft id");
+    return d;
+  }
+
+  /** @emoji 🧾 Commit or abort a transaction by explicit ids (does not require matching {@link kitWriteTransactionId}). */
+  private async finalizeTransaction(draftId: string, transactionId: string, applied: boolean): Promise<void> {
+    if (applied) {
+      kitGraphqlData(
+        await this.gqlRun({
+          query: `mutation($d: Id!, $t: Id!) { transactionCommit(draftId: $d, transactionId: $t) }`,
+          variables: { d: draftId, t: transactionId },
+        }),
+      );
+    } else {
+      kitGraphqlData(
+        await this.gqlRun({
+          query: `mutation($d: Id!, $t: Id!) { transactionAbort(draftId: $d, transactionId: $t) }`,
+          variables: { d: draftId, t: transactionId },
+        }),
+      );
+    }
+    if (this.kitWriteDraftId === draftId && this.kitWriteTransactionId === transactionId) {
+      this.kitWriteTransactionId = null;
+    }
   }
 
   /** @emoji 🪪 Cacheless Promise read of kit name via GraphQL into rs (does not touch {@link kitName}). */
@@ -1900,59 +1963,39 @@ export class KitStore {
     return { kind: "Internal", message };
   }
 
-  private dispatchCorrelationEnvelope(data: {
-    readonly kitRenamed?: { readonly requestId?: string; readonly kit?: { readonly name?: string } | null } | null;
-    readonly operationFailed?: { readonly kind?: string; readonly message?: string; readonly requestId?: string | null } | null;
-  }): void {
-    const renamed = data.kitRenamed;
-    if (renamed != null && typeof renamed === "object") {
-      const rid = String(renamed.requestId ?? "");
-      const nm = String(renamed.kit?.name ?? "");
-      if (rid !== "") {
-        this.kitName.set(nm);
-        this.router.emit({
-          kind: "kitRenamed",
-          requestId: rid,
-          payload: { kit: renamed.kit } as JsonObject,
-        });
-        this.correlator.resolve(rid, { ok: true });
-        try {
-          this.fanout.next({ Changed: null } as KitEvent);
-        } catch {
-          /* ignore */
-        }
-      }
-    }
-    const failed = data.operationFailed;
-    if (failed != null && typeof failed === "object") {
-      const ridRaw = failed.requestId;
-      const rid = ridRaw != null && String(ridRaw).length > 0 ? String(ridRaw) : "";
-      if (rid !== "") {
-        const err = this.mapOperationFailedToSetError(String(failed.kind ?? "Internal"), String(failed.message ?? "operationFailed"));
-        this.router.emit({
-          kind: "operationFailed",
-          requestId: rid,
-          payload: failed as unknown as JsonObject,
-        });
-        this.correlator.resolve(rid, { ok: false, error: err });
-      }
-    }
+  private dispatchCommandSucceeded(data: { readonly commandSucceeded?: { readonly requestId?: string } | null } | null): void {
+    const row = data?.commandSucceeded;
+    if (row == null || typeof row !== "object") return;
+    const rid = String(row.requestId ?? "");
+    if (rid !== "") this.correlator.resolve(rid, { ok: true });
   }
 
-  /** @emoji 🪪 Two GraphQL subscription loops for rename correlation (one root field per subscription per GraphQL spec). */
+  private dispatchOperationFailed(data: {
+    readonly operationFailed?: { readonly kind?: string; readonly message?: string; readonly requestId?: string | null } | null;
+  }): void {
+    const failed = data.operationFailed;
+    if (failed == null || typeof failed !== "object") return;
+    const ridRaw = failed.requestId;
+    const rid = ridRaw != null && String(ridRaw).length > 0 ? String(ridRaw) : "";
+    if (rid === "") return;
+    const err = this.mapOperationFailedToSetError(String(failed.kind ?? "Internal"), String(failed.message ?? "operationFailed"));
+    this.correlator.resolve(rid, { ok: false, error: err });
+  }
+
+  /** @emoji 🪪 GraphQL subscription loops: {@link KIT_COMMAND_SUCCEEDED_SUBSCRIPTION} + {@link KIT_OPERATION_FAILED_SUBSCRIPTION}. */
   private startCorrelationSubscriptions(): void {
     if (this.correlationLoopRunning) return;
     this.correlationLoopRunning = true;
     void this.transport
-      .subscribe(JSON.stringify({ query: KIT_RENAME_EVENT_SUBSCRIPTION }), (eventJson: string) => {
+      .subscribe(JSON.stringify({ query: KIT_COMMAND_SUCCEEDED_SUBSCRIPTION }), (eventJson: string) => {
         try {
           const msg = parseJsonValue(eventJson) as KitGraphqlResponseEnvelope<{
-            kitRenamed?: { requestId?: string; kit?: { name?: string } };
+            commandSucceeded?: { requestId?: string; kind?: string };
           }>;
           if (msg.errors && Array.isArray(msg.errors) && msg.errors.length) return;
           const row = msg.data;
           if (row == null || typeof row !== "object") return;
-          this.dispatchCorrelationEnvelope(row);
+          this.dispatchCommandSucceeded(row);
         } catch {
           /* ignore */
         }
@@ -1969,7 +2012,7 @@ export class KitStore {
           if (msg.errors && Array.isArray(msg.errors) && msg.errors.length) return;
           const row = msg.data;
           if (row == null || typeof row !== "object") return;
-          this.dispatchCorrelationEnvelope(row);
+          this.dispatchOperationFailed(row);
         } catch {
           /* ignore */
         }
@@ -1977,36 +2020,6 @@ export class KitStore {
       .catch(() => {
         /* ignore */
       });
-  }
-
-  private async executeRenameKitMutation(name: string): Promise<SetResult> {
-    this.ensureAlive();
-    let tx: { draftId: string; transactionId: string };
-    try {
-      tx = await this.ensureOpenKitWriteTransaction();
-    } catch (e) {
-      return { ok: false, error: { kind: "Internal", message: String(e) } };
-    }
-    const query = `mutation RenameKit($draftId: Id!, $transactionId: Id!, $name: String!) {
-      renameKit(draftId: $draftId, transactionId: $transactionId, name: $name)
-    }`;
-    let requestId: string;
-    try {
-      const data = kitGraphqlData(
-        await this.gqlRun({
-          query,
-          variables: { draftId: tx.draftId, transactionId: tx.transactionId, name },
-        }),
-      ) as { renameKit?: string };
-      requestId = String(data.renameKit ?? "");
-      if (requestId === "") throw new Error("renameKit: empty id");
-    } catch (e) {
-      return { ok: false, error: { kind: "Internal", message: String(e) } };
-    }
-    const r = await this.correlator.await(requestId);
-    if (r.ok) await this.finalizeKitWriteTransaction().catch(() => undefined);
-    else await this.abortKitWriteTransaction().catch(() => undefined);
-    return r;
   }
 
   //#endregion 🪪KitNameAndRename
@@ -2024,6 +2037,11 @@ export class KitStore {
           const n = normalizeKitEventFromSubscription(ev);
           if (n) this.fanout.next(n);
           else this.fanout.next(ev as KitEvent);
+          try {
+            this.invalidations.next();
+          } catch {
+            /* ignore */
+          }
         } catch {
           /* ignore */
         }
@@ -2037,9 +2055,14 @@ export class KitStore {
     if (this.disposed) return;
     this.disposed = true;
     this.correlator.disposeAll();
-    this.fanout.complete();
     this.kitName.dispose();
     this.renameKit.dispose();
+    try {
+      this.invalidations.complete();
+    } catch {
+      /* ignore */
+    }
+    this.fanout.complete();
     this.transport.dispose();
   }
 
@@ -3225,7 +3248,7 @@ export type KitStoreClient = SemioKitBridge & {
   syncNow(): Promise<SetResult>;
   /** @emoji 🪪 Live kit name field + async rename (see {@link KitStore.kitName} / {@link KitStore.renameKit}). */
   readonly kitName: StoreField<string>;
-  readonly renameKit: StoreCommand<string>;
+  readonly renameKit: StoreCommand<RenameKitCommandArgs>;
   readKitName(): Promise<string>;
   /** @emoji 🌱 Fork a named alternative from the current checkpoint tip (`null` = kit main line). */
   createAlternativeFromTip(name: string, sourceAlternativeId: string | null): Promise<string>;
@@ -3727,7 +3750,7 @@ export class WasmKitStoreClient implements KitStoreClient {
     return this.ks.kitName;
   }
 
-  get renameKit(): StoreCommand<string> {
+  get renameKit(): StoreCommand<RenameKitCommandArgs> {
     return this.ks.renameKit;
   }
 
@@ -3991,14 +4014,15 @@ class FallbackKitClient implements KitStoreClient {
   /** @emoji 🧭 Read scope label for host hooks (offline client has no live {@link KitStore}). */
   readonly kitReadScope: KitReadScope;
   readonly kitName: StoreField<string>;
-  readonly renameKit: StoreCommand<string>;
+  readonly renameKit: StoreCommand<RenameKitCommandArgs>;
   constructor(
     private readonly kit: KitFullDto,
     readScope: KitReadScope = theKitReadScope,
   ) {
     this.kitReadScope = readScope;
-    this.kitName = new StoreField<string>(String(kit.name ?? ""));
-    this.renameKit = new StoreCommand<string>(async (_name) => ({
+    const initialName = String(kit.name ?? "");
+    this.kitName = new StoreField<string>(initialName);
+    this.renameKit = new StoreCommand<RenameKitCommandArgs>(async () => ({
       ok: false,
       error: { kind: "NotSupported", message: "rename requires live WASM KitStore" },
     }));
