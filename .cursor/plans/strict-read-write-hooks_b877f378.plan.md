@@ -6,7 +6,7 @@ todos:
     content: Open MCP ticket 'Strict Read Write Hooks' under .repo/🎫/26/05/08/strict-read-write-hooks/
     status: pending
   - id: phase1_storefields_storecommands
-    content: "semio/js: add KitStore.query<T>(body, parse, initial) + KitStore.mutation<TArgs>(name, vars, body, toVars) helpers; declare every read as a one-liner query<T>(...) and every write as a one-liner mutation<TArgs>(...); wire operationSucceeded -> correlator + invalidations.next() and operationFailed -> correlator; delete OperationRouter, seedFieldsFromDto, dispatchCorrelationEnvelope typed-kind branch, kitRenamed subscription, fieldCache; privatize submitChangeKitCommands and fetchFullKit; extend embedded tests"
+    content: "semio/js: rebuild StoreField (no public set; values pushed via constructor source callback); rebuild StoreCommand status using same source pattern; add KitStore.query<T>(body, parse, initial) + KitStore.mutation<TArgs>(name, vars, body, toVars) helpers; declare every read as a one-liner query<T>(...) and every write as a one-liner mutation<TArgs>(...) backed by an Operation (RenameKit, DraggedPiece, AddedType, ...); wire operationSucceeded -> correlator + invalidations.next() and operationFailed -> correlator; delete OperationRouter, seedFieldsFromDto, dispatchCorrelationEnvelope typed-kind branch, kitRenamed subscription, fieldCache; privatize submitChangeKitCommands and fetchFullKit; extend embedded tests"
     status: pending
   - id: phase2_react_hooks
     content: "semio/react: rewrite every read hook as useStoreField (static) or useGraphqlField (parameterized, disposes per dep change) and every write hook as useStoreCommand; delete HookTriad/HookRead/useDraft/useOptimistic/useSchemaObjectState/useSchemaFieldState + auto-generated wrappers/useSemioReadSnap/useKitSync/useWriteQueue/useSetErrors; update embedded tests"
@@ -27,9 +27,9 @@ isProject: false
 ```mermaid
 graph LR
   subgraph SemioJs["semio/js KitStore"]
-    Q["query&lt;T&gt;(body, parse, initial)<br/>-&gt; StoreField&lt;T&gt;"]
-    M["mutation&lt;TArgs&gt;(name, vars, body, toVars)<br/>-&gt; StoreCommand&lt;TArgs&gt;"]
-    INVS["invalidations Subject&lt;void&gt;"]
+    Q["query<T>(body, parse, initial)<br/>-> StoreField<T>"]
+    M["mutation<TArgs>(name, vars, body, toVars)<br/>-> StoreCommand<TArgs>"]
+    INVS["invalidations Subject<void>"]
     CORR["RequestCorrelator"]
     Q -- subscribe --> INVS
     M -- await requestId --> CORR
@@ -59,12 +59,12 @@ graph LR
   end
 ```
 
-Two mechanisms only:
-
-- **Read** = one GraphQL query → `StoreField<T>` (no seeding, no event filtering, no JsonObject in the public type; the `parse` callback returns `T`).
-- **Write** = one GraphQL mutation, always wrapped in a draft + transaction → `StoreCommand<TArgs>` (one shared executor; no per-mutation boilerplate).
 
 
+Two mechanisms only, and they cannot be confused:
+
+- **Read** = one GraphQL query → `StoreField<T>`. The field exposes `subscribe` / `getSnapshot` / `dispose` and **nothing else**; there is no public `set`. Values are pushed in by the `query` helper via a constructor-time `source` callback. Reads never have side-effects.
+- **Write** = one GraphQL operation (`RenameKit`, `DraggedPiece`, `AddedType`, ... -- the SDL `union OperationKind`) wrapped in a draft + transaction → `StoreCommand<TArgs>`. A `StoreCommand` is the only thing in the system that produces side-effects; every side-effect is an operation. The shared `mutation<TArgs>` executor is the only place draft / transaction / correlator code exists.
 
 The new contract is:
 
@@ -72,9 +72,7 @@ The new contract is:
 - A write hook returns `[run, WriteStatus]`: `useRenameType(): [(args) => Promise<SetResult>, WriteStatus]`. No value.
 - Read + write of the same field are two separate hooks the consumer composes.
 
-## Existing primitives (already in [semio/js/index.ts](semio/js/index.ts))
-
-The refactor keeps these as-is and removes everything else from `#region 🧱StorePrimitives`:
+## Primitives ([semio/js/index.ts](semio/js/index.ts))
 
 ```ts
 export type WriteStatus =
@@ -83,21 +81,40 @@ export type WriteStatus =
   | { kind: "pending";  pending: number; lastError?: SetError }
   | { kind: "error";    pending: 0; lastError: SetError };
 
+/** @emoji 📥 Read-only typed mirror. Values are pushed in by the `source` callback at construction; consumers cannot mutate. */
 export class StoreField<T> {
-  constructor(initial: T) { /* BehaviorSubject<T> internally */ }
-  subscribe(h: () => void): Unsubscribe;
-  getSnapshot(): T;
-  set(next: T): void;
-  dispose(): void;
+  constructor(initial: T, source: (push: (next: T) => void) => Unsubscribe) {
+    this.subject = new BehaviorSubject<T>(initial);
+    this.unsubSource = source((next) => this.subject.next(next));
+  }
+  subscribe(h: () => void): Unsubscribe { /* BehaviorSubject -> handler */ }
+  getSnapshot(): T { return this.subject.getValue(); }
+  dispose(): void { this.unsubSource(); /* try { this.subject.complete(); } catch {} */ }
+  // NOTE: no `set` method. The only path that writes a value is the `push` closure handed to `source`.
 }
 
+/** @emoji 📝 The only side-effect carrier. Always dispatches a GraphQL operation. */
 export class StoreCommand<TArgs> {
   readonly status: StoreField<WriteStatus>;
-  constructor(exec: (args: TArgs) => Promise<SetResult>);
-  readonly run: (args: TArgs) => Promise<SetResult>;  // sets pending -> idle / error
-  dispose(): void;
+  constructor(exec: (args: TArgs) => Promise<SetResult>) {
+    this.status = new StoreField<WriteStatus>(SCHEMA_HOOK_IDLE_STATUS, (push) => {
+      this.pushStatus = push;
+      return () => {};
+    });
+    this.exec = exec;
+  }
+  readonly run = async (args: TArgs): Promise<SetResult> => {
+    this.pushStatus(USE_KIT_NAME_PENDING_STATUS);
+    const r = await this.exec(args);
+    this.pushStatus(r.ok ? SCHEMA_HOOK_IDLE_STATUS : { kind: "error", pending: 0, lastError: r.error });
+    return r;
+  };
+  dispose(): void { this.status.dispose(); }
+  private pushStatus!: (next: WriteStatus) => void;
+  private readonly exec: (args: TArgs) => Promise<SetResult>;
 }
 
+/** @emoji 🚦 request-id <-> Promise resolver. Used inside the shared mutation executor only. */
 export class RequestCorrelator {
   await(requestId: string): Promise<SetResult>;
   resolve(requestId: string, r: SetResult): void;
@@ -105,10 +122,10 @@ export class RequestCorrelator {
 }
 ```
 
-`OperationRouter`, `OperationEvent`, `KitStore.seedFieldsFromDto`, `KitStore.dispatchCorrelationEnvelope` (the typed-kind branch), and the dedicated `kitRenamed` GraphQL subscription are **removed** in this refactor — they were demuxing typed events onto fields, but in the new model fields just refetch on a single invalidation tick and there is no seeding.
+Deleted in the same `#region 🧱StorePrimitives`: `OperationRouter`, `OperationEvent`, `StoreField.set` (public method gone), `KitStore.seedFieldsFromDto`, `KitStore.dispatchCorrelationEnvelope` (typed-kind branch), the dedicated `kitRenamed` GraphQL subscription, and `KitStore.fieldCache` / `cachedField` if present.
 
 ```tsx
-// React-side primitives (kept).
+// React-side primitives (kept; no surface change).
 export function useStoreField<T>(field: StoreField<T>): T {
   return React.useSyncExternalStore(field.subscribe, field.getSnapshot, field.getSnapshot);
 }
@@ -146,31 +163,32 @@ Two helpers replace every read/write-specific method in `KitStore` and remove al
 
 ### Two helpers + one invalidation tick
 
+`StoreField` has no `set`; the `query<T>` helper only feeds values via the `push` closure handed to the field's constructor. `mutation<TArgs>` is the only thing that calls draft / transaction / correlator code.
+
 ```ts
 // semio/js/index.ts -- inside KitStore.
 import { Subject } from "rxjs";
 
 private readonly invalidations = new Subject<void>();
 
-/** @emoji 🧾 GraphQL-backed read field. Re-runs `body` on every invalidation tick. */
+/** @emoji 🧾 GraphQL-backed read. Pushes `parse(data)` on initial fetch and on every invalidation tick. No public mutator. */
 private query<T>(body: string, parse: (data: JsonValue) => T, initial: T): StoreField<T> {
-  const field = new StoreField<T>(initial);
-  const fetch = async () => {
-    try {
-      const data = kitGraphqlData(await this.gqlRun({ query: `query { ${body} }` })) as JsonValue;
-      field.set(parse(data));
-    } catch {
-      /* keep last value; errors only surface on the write path via WriteStatus */
-    }
-  };
-  const sub = this.invalidations.subscribe({ next: () => void fetch() });
-  const origDispose = field.dispose.bind(field);
-  field.dispose = () => { sub.unsubscribe(); origDispose(); };
-  void fetch();
-  return field;
+  return new StoreField<T>(initial, (push) => {
+    const refetch = async () => {
+      try {
+        const data = kitGraphqlData(await this.gqlRun({ query: `query { ${body} }` })) as JsonValue;
+        push(parse(data));
+      } catch {
+        /* keep last value; read errors never leak to UI -- only writes carry status */
+      }
+    };
+    void refetch();
+    const sub = this.invalidations.subscribe({ next: () => void refetch() });
+    return () => sub.unsubscribe();
+  });
 }
 
-/** @emoji 📝 Transactional mutation. Opens draft + tx, runs the named mutation, awaits correlator, commits / aborts. */
+/** @emoji 📝 Transactional GraphQL operation. The single executor for every side-effect in the system. */
 private mutation<TArgs>(
   fieldName: string,                                          // e.g. "renameKit"
   variableSignatures: string,                                 // e.g. "$name: String!"
@@ -200,6 +218,8 @@ private mutation<TArgs>(
   });
 }
 ```
+
+Every kit-store side-effect is one of the operations in SDL `union OperationKind = CreatedFixedPiece | FixedPiece | DraggedPiece | RenamedKit | ChangedDescription | ...`. Each `StoreCommand` exists only to dispatch the matching mutation through `mutation<TArgs>`. Reads can never trigger an operation; operations can never be issued except through a `StoreCommand`.
 
 `operationSucceeded` and `operationFailed` are the only subscriptions; both call `correlator.resolve(...)` and the success path additionally `invalidations.next()`. No `kitRenamed`-specific subscription, no `OperationRouter`, no `seedFieldsFromDto`, no `dispatchCorrelationEnvelope` typed-kind branch.
 
@@ -384,7 +404,7 @@ Embedded tests in [semio/js/index.ts](semio/js/index.ts) get one new `describe` 
 
 - Keep `useStoreField`, `useStoreCommand`, `useKitName`, `useRenameKit` as primitives.
 - Add `useGraphqlField<T>(make, deps): T` for parameterized reads. The hook memoizes the `StoreField` over `deps` and **disposes** it on dep change / unmount (no caching anywhere else).
-- Delete bulk schema generators (`useActor*`, `useUser*`, ..., `useKitTags`, `useKitVersion`, `useKitId`, `useKitHash` -- all `useSchemaFieldState` / `useSchemaObjectState` callers).
+- Delete bulk schema generators (`useActor`*, `useUser*`, ..., `useKitTags`, `useKitVersion`, `useKitId`, `useKitHash` -- all `useSchemaFieldState` / `useSchemaObjectState` callers).
 - Keep `useWriteIndicator(status)` as the only `WriteStatus` UI helper; reads no longer carry status.
 - Delete `useDraft`, `useOptimistic`, `useSemioReadSnap`, `useSemioStoreSelector`, `useKitSync`, `useWriteQueue`, `useSetErrors` (subsumed by per-command `WriteStatus.lastError`).
 
@@ -485,17 +505,22 @@ it("useDragPieces returns [run, WriteStatus] tuple", async () => {
 
 it("useGraphqlField disposes the previous field on dep change", () => {
   const disposed: string[] = [];
-  const make = (id: string) => {
-    const f = new StoreField<string>(id);
-    const orig = f.dispose.bind(f);
-    f.dispose = () => { disposed.push(id); orig(); };
-    return f;
-  };
-  const { rerender } = renderHook(({ id }: { id: string }) => useGraphqlField(() => make(id), [id]), {
-    initialProps: { id: "a" },
-  });
+  const make = (id: string) =>
+    new StoreField<string>(id, (_push) => () => { disposed.push(id); });
+  const { rerender } = renderHook(
+    ({ id }: { id: string }) => useGraphqlField(() => make(id), [id]),
+    { initialProps: { id: "a" } },
+  );
   rerender({ id: "b" });
   expect(disposed).toEqual(["a"]);
+});
+
+it("StoreField has no public set / mutation surface", () => {
+  const f = new StoreField<number>(0, () => () => {});
+  expect((f as unknown as { set?: unknown }).set).toBeUndefined();
+  expect(typeof f.subscribe).toBe("function");
+  expect(typeof f.getSnapshot).toBe("function");
+  expect(typeof f.dispose).toBe("function");
 });
 ```
 
@@ -626,6 +651,7 @@ if (ks0) doStuff(ks0);
 - `npx tsc --noEmit` in [semio/js](semio/js), [semio/react](semio/react), [semio/sketchpad](semio/sketchpad).
 - `npm test` in [semio/js](semio/js) and [semio/react](semio/react).
 - `rg "HookTriad|HookRead|useDraft|useOptimistic|useSchemaObjectState|useSchemaFieldState|writeKitStoreClientSchemaField|kitReadonlyTriad|useSemioReadSnap|SketchpadTriadInputRow|SketchpadTriadToggleRow|submitChangeKitCommands\b|OperationRouter|OperationEvent|seedFieldsFromDto|dispatchCorrelationEnvelope|fieldCache|cachedField" semio` returns zero matches.
+- `rg "StoreField[^>]*\\.set\\(|\\.kitName\\.set\\(|\\.status\\.set\\(" semio` returns zero matches (no public mutator on `StoreField`).
 - Manual sketchpad smoke run: type a kit name, observe spinner -> success; rename a type; drag pieces; undo / redo.
 
 ## Delivery

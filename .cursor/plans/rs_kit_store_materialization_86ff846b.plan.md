@@ -2,26 +2,29 @@
 name: rs kit store materialization
 overview: "Refactor `semio/rs` so the root kit is structurally immutable: every command (rename, description, drag, createFixedPiece, tag/concept/quality CRUD, etc.) appends forward+backward `KitOperation`s onto the open transaction's `Change`, and the visible kit is always recomputed by deep-cloning the parent checkpoint's frozen root and replaying forward ops from finalized + open transactions, with per-checkpoint snapshot caching and per-draft materialization caching."
 todos:
+  - id: kitdiff_apply
+    content: Define `operation::KitDiff` + `KitDiffStep` (one variant per atomic structural mutation existing today) and `Kit::apply_diff` as the single central mutation entry point; remove every per-field mutator helper on `Kit`/`Design`/`Piece`/...
+    status: pending
   - id: kit_deep_clone
     content: Implement `Kit::deep_clone() -> Arc<Kit>` walking Type/Representation/Connector/Design/Piece/Tag/Concept/Quality/Author/File/Folder/Prop/Attribute/Stat and rebuilding `*_by_id` weak maps.
     status: pending
   - id: kitop_enum
-    content: Define `operation::KitOperation` with one variant per existing Command + `apply_forward(&Arc<Kit>)` + `inverse_against(&Arc<Kit>) -> KitOperation`.
+    content: Define one-way `operation::KitOperation` with one variant per existing Command + pure `to_diff(&Arc<Kit>) -> KitDiff`; add separate `operation::inverse_for(forward, pre)` helper that returns another forward-intent `KitOperation` (no undo state on variants).
     status: pending
   - id: vcs_root_freeze
-    content: "Change `Checkpoint.root` to immutable `frozen_root: Arc<Kit>`; add `Draft.change_seq`; remove `Graph.the_kit` in favour of `parent_root_for_active_draft` + cached `materialized_kit()` + `record_op_in_open_transaction()`."
+    content: Change `Checkpoint.root` to immutable `frozen_root Arc<Kit>`; add `Draft.change_seq`; remove `Graph.the_kit` in favour of `parent_root_for_active_draft` + cached `materialized_kit()` (deep-clone + replay via op->diff->apply_diff) + `record_op_in_open_transaction()`.
     status: pending
   - id: worker_rewrite
-    content: Rewrite `worker::ChildRuntime::apply` so every command computes forward+backward KitOperation, records to open transaction, invalidates cache, then emits the existing OperationKind events from the freshly materialized kit.
+    content: Rewrite `worker::ChildRuntime::apply` so every command builds a forward `KitOperation`, derives a separate forward-intent backward via `inverse_for`, records both onto the open transaction's `Change`, invalidates the materialization cache, then emits the existing `OperationKind` events from the freshly materialized kit. The worker never mutates a `Kit` directly.
     status: pending
   - id: resolvers_switch
     content: Switch every `graph.the_kit.*` access in `gql`, `iface`, `kit_backbone`, and `kit_graph_engine` to `graph.materialized_kit().await`.
     status: pending
   - id: abort_via_invalidation
-    content: Make `Graph::abort_transaction` rely on cache invalidation + dropped change list (no manual undo); keep `Change.backwards` for explicit undo/redo paths.
+    content: Make `Graph::abort_transaction` simply drop the open transaction's `Change` list and invalidate `materialized_cache`; the next `materialized_kit()` re-replays only the surviving finalized ops via op->diff->apply_diff. `Change.backwards` is preserved on disk for explicit undo/redo flows.
     status: pending
   - id: tests_update
-    content: "Update existing tests that reach into `g.the_kit` and add new assertions: root immutability after rename + abort restores prior materialized state."
+    content: Update existing tests that reach into `g.the_kit` and add new assertions; root immutability after rename, abort restores prior materialized state, and `Kit::apply_diff` is the only mutation entry point (grep guard test).
     status: pending
   - id: ticket
     content: Open MCP ticket 'Refactor RS Kit Store To Materialized Reads', close with summary at the end.
@@ -44,69 +47,114 @@ Result: opening a dev kit and renaming it visibly mutates `Checkpoint.root.name`
 
 ## Target architecture
 
+Two-stage pipeline: **operations are intent data**, **diffs are state-transition descriptions**, and **a single central `Kit::apply_diff` is the only thing that mutates a Kit**. Operations themselves never touch a `Kit`.
+
 ```mermaid
 flowchart LR
-  RootKit["Checkpoint.frozen_root<br/>Arc<Kit> (immutable)"] -->|deep_clone + replay| Materialized["Graph.materialized_kit()<br/>Arc<Kit> (cached per draft state)"]
-  OpenTx["Transaction.changes<br/>Change.forwards: Vec<KitOperation><br/>Change.backwards: Vec<KitOperation>"] -->|"replay forwards"| Materialized
-  FinalizedTx["Draft.finalized_transactions"] -->|"replay forwards"| Materialized
-  Cmd["Mutation.renameKit / changeDescription / dragPiece / ..."] -->|append forward+backward| OpenTx
+  RootKit["Checkpoint.frozen_root<br/>Arc<Kit> (immutable)"] -->|deep_clone| Scratch["scratch Arc<Kit>"]
+  Scratch -->|"replay: op.to_diff(scratch); apply_diff(scratch, diff)"| Materialized["Graph.materialized_kit()<br/>Arc<Kit> (cached per draft state)"]
+  OpenTx["Transaction.changes<br/>Change.forwards: Vec<KitOperation><br/>Change.backwards: Vec<KitOperation>"] -->|"forward operations feed into replay"| Scratch
+  FinalizedTx["Draft.finalized_transactions"] -->|"forward operations feed into replay"| Scratch
+  Cmd["Mutation.renameKit / changeDescription / dragPiece / ..."] -->|append forward+backward operations| OpenTx
   Cmd -.->|"invalidate cache"| Materialized
-  Commit["Mutation.checkpointCommit (future)"] -->|compresses| NewCp["Checkpoint.frozen_root = previous Materialized.deep_clone()"]
+  Commit["Mutation.checkpointCommit (future)"] -->|"compresses ops; freezes new root"| NewCp["new Checkpoint.frozen_root = previous Materialized.deep_clone()"]
 ```
 
 
+
+Pipeline per replay step:
+
+1. `let diff: KitDiff = op.to_diff(&kit).await?;` — pure function on the operation; reads pre-state to resolve indices/ids; never mutates.
+2. `kit.apply_diff(&diff).await?;` — the **single** central mutation entry point. All structural edits (set field, add/remove vec entry, update map, …) flow through here.
 
 Invariants:
 
 - `Checkpoint.frozen_root` is set **once** at checkpoint creation from a deep clone and is never written to again.
 - `Graph` no longer owns a live `the_kit`; it owns the active draft and the parent checkpoint of that draft.
-- `Graph.materialized_kit()` = `parent_checkpoint.frozen_root.deep_clone()` then `KitOperation::apply_forward` for every operation in every finalized transaction (in order) and the open transaction.
+- `Graph.materialized_kit()` = `parent_checkpoint.frozen_root.deep_clone()` then for every operation in every finalized transaction and the open transaction (in order): `kit.apply_diff(&op.to_diff(&kit).await?).await?`.
 - Caches: per-`Checkpoint` `frozen_root` is itself the cache; per-`Draft` materialization caches an `Arc<Kit>` keyed by a monotonic `change_seq` bumped on every transaction mutation and reset on commit/abort.
+- **Only** `Kit::apply_diff` mutates a `Kit`. Operations, the worker, resolvers, and replay logic never reach into `Kit` fields directly.
 
 ## Affected regions in [semio/rs/lib.rs](semio/rs/lib.rs)
 
-- `📦 kit` (lines 1148–2833): add `Kit::deep_clone()` walking every sub-entity (Type, Representation, Connector, Design, Piece, Tag, Concept, Quality, Author, File, Folder, Prop, Attribute, Stat, plus all `*_by_id` weak maps re-pointing into the cloned graph). Strip `bump_touch_epoch` from `Kit` (now done at `Graph` level on materialization invalidation).
+- `📦 kit` (lines 1148–2833):
+  - Add `Kit::deep_clone()` walking every sub-entity (Type, Representation, Connector, Design, Piece, Tag, Concept, Quality, Author, File, Folder, Prop, Attribute, Stat, plus all `*_by_id` weak maps re-pointing into the cloned graph).
+  - Add **the single central mutation entry point** `Kit::apply_diff(&self, diff: &KitDiff) -> Result<(), SemioError>`. This is the only public mutator on `Kit`. Internally it pattern-matches every `KitDiff` variant and writes the corresponding `RwLock<…>` slot (or pushes/removes from `Vec`/`HashMap`). Every direct field-mutation in the file that currently reaches into `kit.name.write().await`, `kit.description.write().await`, `kit.tags.write().await.push(...)`, `design.pieces.write().await.push(...)`, etc., is collapsed into this one method.
+  - All existing per-field mutator helpers on `Kit` (e.g. `create_and_register_tag`, `delete_tag_by_id`, `register_tag`, `register_concept`, `register_quality`) are removed; their behaviour is expressed as `KitDiff` fragments produced from operations and applied centrally.
+  - Strip `bump_touch_epoch` from `Kit` (now done at `Graph` level on materialization invalidation).
 - `🌿 vcs` (lines 3089–4156):
   - Replace `Graph.the_kit: Arc<Kit>` with: `parent_root_for_active_draft: RwLock<Arc<Kit>>` (clone of the seed checkpoint's `frozen_root`) and `materialized_cache: RwLock<Option<MaterializedSlot>>` where `MaterializedSlot { change_seq: u64, kit: Arc<Kit> }`.
   - Add `Graph::materialized_kit(&self) -> Arc<Kit>` (deep-clones parent root and replays draft ops; reuses cache when `change_seq` matches).
   - Add `Graph::active_draft()` accessor and `Graph::record_op_in_open_transaction(forward: KitOperation, backward: KitOperation)` that appends to the current `Change`, bumps `Draft.change_seq`, and invalidates the materialization cache.
   - `Checkpoint.root` → `Checkpoint.frozen_root: Arc<Kit>` (no `RwLock`, no `Option`); fixed at construction.
   - `Draft` gains `change_seq: AtomicU64`.
-  - Remove the in-place `the_kit` mutation paths: `Graph::apply_create_fixed_piece`*, `Graph::apply_drag_piece_in_design`, `Graph::apply_drag_pieces_in_design`. Their logic moves into `KitOperation::apply_forward` (see below) operating on a passed-in `&Arc<Kit>`.
-- `⚙️ operation` (lines 4488–5146): introduce
-  ```rust
-  pub enum KitOperation {
-      RenameKit { name: String },
-      ChangeDescription { entity_id: Id, description: Option<String> },
-      ChangeIcon { entity_id: Id, icon: Option<String> },
-      ChangeImage { entity_id: Id, image: Option<String> },
-      // ...one variant per existing Command...
-      CreateFixedPiece { design_id: Id, piece_id: Id, blueprint_id: Id, position: Position, name: Option<String>, description: Option<String> },
-      DeletePieceInDesign { design_id: Id, piece_id: Id },
-      DragPieceInDesign { design_id: Id, piece_id: Id, offset: Offset },
-      FixPieceInDesign { design_id: Id, piece_id: Id },
-      CreateTag { owner_id: Id, tag_id: Id, input: TagInput },
-      DeleteTag { tag_id: Id, restored: TagSnapshot },
-      RenameTag { tag_id: Id, name: String },
-      CreateConcept { owner_id: Id, concept_id: Id, input: ConceptInput },
-      CreateQuality { owner_id: Id, quality_id: Id, input: QualityInput },
-      // ...etc., one per command...
-  }
-  impl KitOperation {
-      pub async fn apply_forward(&self, kit: &Arc<Kit>) -> Result<(), SemioError>;
-      pub async fn inverse_against(&self, kit: &Arc<Kit>) -> Result<KitOperation, SemioError>;
-  }
-  ```
-  Each existing `OperationKind` (`RenamedKit`, `CreatedFixedPiece`, `DraggedPiece`, `ChangedDescription`, `FixedPiece`) is constructed from the corresponding `KitOperation` after replay so the GraphQL operation event stream stays unchanged.
+  - Remove the in-place `the_kit` mutation paths: `Graph::apply_create_fixed_piece`*, `Graph::apply_drag_piece_in_design`, `Graph::apply_drag_pieces_in_design`. Their logic moves into the operation's `to_diff` (see below); structural mutation only happens in `Kit::apply_diff`.
+- `⚙️ operation` (lines 4488–5146):
+  - Introduce a **strictly one-way** semantic op enum. No variant carries undo state; every variant is a pure forward intent.
+    ```rust
+    pub enum KitOperation {
+        RenameKit { name: String },
+        ChangeDescription { entity_id: Id, description: Option<String> },
+        ChangeIcon { entity_id: Id, icon: Option<String> },
+        ChangeImage { entity_id: Id, image: Option<String> },
+        CreateFixedPiece { design_id: Id, piece_id: Id, blueprint_id: Id, position: Position, name: Option<String>, description: Option<String> },
+        DeletePieceInDesign { design_id: Id, piece_id: Id },
+        DragPieceInDesign { design_id: Id, piece_id: Id, offset: Offset },
+        FixPieceInDesign { design_id: Id, piece_id: Id },
+        CreateTag { owner_id: Id, tag_id: Id, input: TagInput },
+        DeleteTag { tag_id: Id },
+        RenameTag { tag_id: Id, name: String },
+        CreateConcept { owner_id: Id, concept_id: Id, input: ConceptInput },
+        CreateQuality { owner_id: Id, quality_id: Id, input: QualityInput },
+        // ...one variant per existing Command, all pure forward...
+    }
+    impl KitOperation {
+        /// Pure: read pre-state, produce a structural `KitDiff`. Never mutates `kit`.
+        pub async fn to_diff(&self, kit: &Arc<Kit>) -> Result<KitDiff, SemioError>;
+    }
+    ```
+  - Introduce **`KitDiff`** — a flat structural state-transition description; the only thing `Kit::apply_diff` accepts:
+    ```rust
+    pub struct KitDiff { pub steps: Vec<KitDiffStep> }
+
+    pub enum KitDiffStep {
+        // Kit-level fields
+        SetKitName(String),
+        SetKitDescription(Option<String>),
+        SetKitIcon(Option<String>),
+        SetKitImage(Option<String>),
+        // Designs / pieces
+        InsertPieceInDesign { design_id: Id, piece: PieceState },
+        RemovePieceInDesign { design_id: Id, piece_id: Id },
+        SetPiecePosition { design_id: Id, piece_id: Id, position: Position },
+        SetPieceConnectionKind { design_id: Id, piece_id: Id, kind: PieceConnectionKind },
+        // Tags / concepts / qualities
+        InsertTag { owner: TagOwnerRef, tag: TagState },
+        RemoveTag { tag_id: Id },
+        SetTagName { tag_id: Id, name: String },
+        InsertConcept { owner: ConceptOwnerRef, concept: ConceptState },
+        InsertQuality { owner: QualityOwnerRef, quality: QualityState },
+        // ...one step per atomic structural mutation existing in the codebase today.
+    }
+    ```
+    Field-level descriptions (`PieceState`, `TagState`, `ConceptState`, `QualityState`, `TagOwnerRef`, ...) are pure data structs that mirror exactly what's needed to construct/replace the corresponding entity. They live in the `operation` region next to `KitDiff`.
+  - Each existing `OperationKind` (`RenamedKit`, `CreatedFixedPiece`, `DraggedPiece`, `ChangedDescription`, `FixedPiece`) is constructed from the corresponding `KitOperation` + post-apply materialized kit so the GraphQL operation event stream stays unchanged.
+- **Inverse computation lives on the recorder, not on the op or the diff.** When the worker accepts a command, it captures the current materialized kit, builds the forward `KitOperation` from the command, and *separately* builds a backward `KitOperation` (also a pure forward-intent op) that, when fed through op → diff → `apply_diff`, restores the prior visible state. Examples:
+  - forward `RenameKit { name: "Bar" }` → backward `RenameKit { name: <pre.name> }`
+  - forward `DeleteTag { tag_id }` → backward `CreateTag { owner_id: <pre.tag.owner>, tag_id, input: <pre.tag input snapshot> }`
+  - forward `CreateTag { owner_id, tag_id, input }` → backward `DeleteTag { tag_id }`
+  - forward `DragPieceInDesign { design_id, piece_id, offset }` → backward `DragPieceInDesign { design_id, piece_id, offset: -offset }`
+  - forward `CreateFixedPiece { design_id, piece_id, … }` → backward `DeletePieceInDesign { design_id, piece_id }`
+  This logic lives in a single `operation::inverse_for(forward: &KitOperation, pre: &Arc<Kit>) -> Result<KitOperation, SemioError>` helper next to the enum, not on the variants. `KitOperation` stays a flat data type with no undo coupling, and `Change.forwards: Vec<KitOperation>` / `Change.backwards: Vec<KitOperation>` are symmetric — both are just lists of one-way ops that go through the same op → diff → `apply_diff` pipeline at replay time.
 - `🧵 worker` (lines 5887–6211): `ChildRuntime::apply` becomes a flat dispatcher per `Command` that:
-  1. Captures `before_kit = self.graph.materialized_kit().await` (used to compute the inverse, e.g. previous name).
+  1. Captures `before_kit = self.graph.materialized_kit().await` (used to derive the inverse op, e.g. previous name / previous tag input snapshot).
   2. Builds the forward `KitOperation` from the command payload.
-  3. Computes `backward = forward.inverse_against(&before_kit).await?`.
-  4. Calls `self.graph.record_op_in_open_transaction(draft_id, transaction_id, forward.clone(), backward).await?` which (a) ensures the open transaction exists, (b) appends to its current (single) `Change.forwards` / `Change.backwards`, (c) bumps `draft.change_seq`, (d) invalidates `materialized_cache`.
-  5. Re-materializes via `self.graph.materialized_kit().await` (single new materialized `Arc<Kit>` for downstream event payload).
+  3. Computes `backward = operation::inverse_for(&forward, &before_kit).await?` — a separate one-way `KitOperation`, no extra state hung off the forward variant.
+  4. Calls `self.graph.record_op_in_open_transaction(draft_id, transaction_id, forward.clone(), backward).await?` which (a) ensures the open transaction exists, (b) appends to its current (single) `Change.forwards` / `Change.backwards`, (c) bumps `draft.change_seq`, (d) invalidates `materialized_cache`. The worker itself never calls `to_diff` or `apply_diff` — those run lazily inside `materialized_kit()` so cancelled (aborted) ops never touch a kit.
+  5. Re-materializes via `self.graph.materialized_kit().await` (which, internally, deep-clones root then for each recorded forward op runs `op.to_diff(&kit) → kit.apply_diff(diff)`).
   6. Builds the existing `OperationKind` (e.g. `RenamedKit { kit: materialized_kit, … }`) and pushes to `op_history` + emits on the bus, exactly as today.
-  - `Graph::abort_transaction` walks `Change.backwards` in reverse and applies them to a scratch materialized kit only as a safety check; since the cache is invalidated and the open transaction's changes are dropped, the next `materialized_kit()` automatically yields the prior state — no manual undo needed.
-- `🌐 gql` (lines 6213–6638): every resolver that calls `graph.the_kit.*` (`Graph::the_kit`, `Graph::projection_fingerprint`, `Graph::root_snapshot_hash`, `Query::node`, `Query::piece_in_design`, `Query::kit_store_bundle_json`, `Mutation::kit_store_bundle_hydrate`, `Mutation::kit_store_initialize_defaults`) switches to `let kit = graph.materialized_kit().await;`.
+  - `Graph::abort_transaction` simply drops the open transaction's `Change` list and invalidates the materialization cache; the next `materialized_kit()` deep-clones root and replays only the surviving (finalized) ops, automatically yielding the pre-transaction state — no manual undo execution needed. `Change.backwards` is preserved on disk for explicit undo/redo flows (future).
+- `🌐 gql` (lines 6213–6638): every resolver that calls `graph.the_kit.`* (`Graph::the_kit`, `Graph::projection_fingerprint`, `Graph::root_snapshot_hash`, `Query::node`, `Query::piece_in_design`, `Query::kit_store_bundle_json`, `Mutation::kit_store_bundle_hydrate`, `Mutation::kit_store_initialize_defaults`) switches to `let kit = graph.materialized_kit().await;`.
 - `🗄️ kit_backbone` (lines 5241–5830):
   - `KitStoreBundleFile::from_graph` serializes from `graph.materialized_kit()` for `wip.root` and from each `Checkpoint.frozen_root.kit_full_snapshot_value()` for the checkpoint list.
   - `KitStoreBundleFile::hydrate_into_graph` materializes a fresh `Arc<Kit>` from the bundle JSON, freezes it as the seed `Checkpoint.frozen_root`, and points `Graph.parent_root_for_active_draft` at a clone of it.
@@ -118,11 +166,13 @@ Invariants:
 
 ## Implementation order (single ticket, no sub-delegation needed since this is one cohesive refactor)
 
-1. `Kit::deep_clone` and `KitOperation` enum + `apply_forward` + `inverse_against` for the existing 15 `Command` variants.
-2. `Checkpoint.frozen_root: Arc<Kit>`, `Draft.change_seq`, `Graph.parent_root_for_active_draft` + `materialized_kit` + `record_op_in_open_transaction`.
-3. Remove `Graph.the_kit`; rewrite `worker::ChildRuntime::apply` using `KitOperation`.
-4. Switch every resolver / backbone path to `materialized_kit()`.
-5. Update `kit_full_snapshot_value` consumers and tests.
+1. `KitDiff` + `KitDiffStep` data types and `Kit::apply_diff` (the single central mutation entry point); deletion of all per-field mutators on `Kit`.
+2. `Kit::deep_clone()` walking every sub-entity and rebuilding `*_by_id` weak maps.
+3. `KitOperation` enum (one-way, `to_diff` only) + `operation::inverse_for` helper covering the existing 15 `Command` variants.
+4. `Checkpoint.frozen_root: Arc<Kit>`, `Draft.change_seq`, `Graph.parent_root_for_active_draft` + `materialized_kit` (deep-clone + replay via op → diff → `apply_diff`) + `record_op_in_open_transaction`.
+5. Remove `Graph.the_kit`; rewrite `worker::ChildRuntime::apply` to record ops only (no mutation; mutation happens inside `materialized_kit()`).
+6. Switch every resolver / backbone path to `materialized_kit()`.
+7. Update `kit_full_snapshot_value` consumers and tests.
 
 ## Validation
 
