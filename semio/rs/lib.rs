@@ -7982,17 +7982,94 @@ pub mod kit_backbone {
                 bundle.wip.drafts.items.push(DraftDto { id: draft.id.as_str().to_string(), hash: HASH_PLACEHOLDER.to_string(), checkpoint: parent, transactions: BlockHashedListDto { hash: HASH_PLACEHOLDER.to_string(), items: txs } });
             }
 
+            Self::hoist_inline_file_blobs_for_storage(&mut bundle);
             bundle
         }
+
+        //#region 📦 bundle file blobs (outside kit graph JSON subtree)
+
+        /// @emoji 📎 Copy [`bundle.blobs`] payloads back onto `wip.root` / checkpoint `frozenRoot` `files[].blob` by file id (`metabolism.new.kit.semio.json` layout).
+        pub fn materialize_bundle_file_blobs_into_roots(bundle: &mut KitStoreBundleFile) {
+            let blobs = bundle.blobs.items.clone();
+            Self::merge_bundle_file_blobs_into_kit_json(&mut bundle.wip.root, &blobs);
+            for cp in bundle.wip.checkpoints.items.iter_mut() {
+                if let Some(fr) = cp.get_mut("frozenRoot") {
+                    Self::merge_bundle_file_blobs_into_kit_json(fr, &blobs);
+                }
+            }
+        }
+
+        /// @emoji 📦 Hoist each `files[].blob` into [`KitStoreBundleFile::blobs`] and strip inline payloads (dedupe by file id across `wip.root` + checkpoints).
+        pub fn hoist_inline_file_blobs_for_storage(bundle: &mut KitStoreBundleFile) {
+            let mut seen = std::collections::HashSet::<String>::new();
+            let mut collected: Vec<serde_json::Value> = Vec::new();
+            Self::take_file_blobs_from_kit_json_into(&mut bundle.wip.root, &mut seen, &mut collected);
+            for cp in bundle.wip.checkpoints.items.iter_mut() {
+                if let Some(fr) = cp.get_mut("frozenRoot") {
+                    Self::take_file_blobs_from_kit_json_into(fr, &mut seen, &mut collected);
+                }
+            }
+            bundle.blobs.items.extend(collected);
+        }
+
+        fn take_file_blobs_from_kit_json_into(kit: &mut serde_json::Value, seen_ids: &mut std::collections::HashSet<String>, out: &mut Vec<serde_json::Value>) {
+            let Some(files) = kit.get_mut("files").and_then(|v| v.as_array_mut()) else {
+                return;
+            };
+            for f in files.iter_mut() {
+                let Some(obj) = f.as_object_mut() else { continue };
+                let Some(blob_v) = obj.remove("blob") else { continue };
+                let id = obj.get("id").and_then(|x| x.as_str()).unwrap_or("").to_string();
+                if id.is_empty() {
+                    continue;
+                }
+                if seen_ids.insert(id.clone()) {
+                    out.push(serde_json::json!({
+                        "id": id,
+                        "hash": HASH_PLACEHOLDER,
+                        "blob": blob_v,
+                    }));
+                }
+            }
+        }
+
+        fn merge_bundle_file_blobs_into_kit_json(kit: &mut serde_json::Value, blobs: &[serde_json::Value]) {
+            if blobs.is_empty() {
+                return;
+            }
+            let mut by_id: std::collections::HashMap<String, serde_json::Value> = std::collections::HashMap::new();
+            for b in blobs {
+                let Some(id) = b.get("id").and_then(|x| x.as_str()) else { continue };
+                if let Some(blob) = b.get("blob") {
+                    by_id.insert(id.to_string(), blob.clone());
+                }
+            }
+            if by_id.is_empty() {
+                return;
+            }
+            let Some(files) = kit.get_mut("files").and_then(|v| v.as_array_mut()) else {
+                return;
+            };
+            for f in files.iter_mut() {
+                let Some(obj) = f.as_object_mut() else { continue };
+                let Some(id) = obj.get("id").and_then(|x| x.as_str()) else { continue };
+                if let Some(blob) = by_id.get(id) {
+                    obj.insert("blob".to_string(), blob.clone());
+                }
+            }
+        }
+
+        //#endregion 📦 bundle file blobs (outside kit graph JSON subtree)
 
         /// @emoji 🩻 Hydrate the live graph from a previously-persisted bundle JSON. Today this only restores
         /// the kit projection (`wip.root`) into `parent_root_for_active_draft`; the draft / transaction structure is preserved on
         /// disk via `from_graph` round-trip but operation replay is owned by the existing semantic-operation log path.
         pub async fn hydrate_into_graph(graph: &std::sync::Arc<crate::vcs::Graph>, json: &str) -> Result<Self, SemioError> {
-            let bundle: Self = serde_json::from_str(json).map_err(|e| SemioError::invalid(format!("bundle parse: {e}")))?;
+            let mut bundle: Self = serde_json::from_str(json).map_err(|e| SemioError::invalid(format!("bundle parse: {e}")))?;
             if bundle.schema != KIT_STORE_BUNDLE_SCHEMA {
                 return Err(SemioError::invalid(format!("bundle schema mismatch: {} != {}", bundle.schema, KIT_STORE_BUNDLE_SCHEMA)));
             }
+            Self::materialize_bundle_file_blobs_into_roots(&mut bundle);
             if !bundle.wip.root.is_null() && bundle.wip.root.is_object() {
                 graph.parent_root_for_active_draft.write().await.hydrate_from_kit_full_snapshot_json(&bundle.wip.root).await?;
             }
@@ -10224,6 +10301,50 @@ mod tests {
             assert!(v[graph_key]["root"].get("types").is_some(), "graph `{graph_key}.root` missing `types`");
             assert!(v[graph_key]["root"].get("designs").is_some(), "graph `{graph_key}.root` missing `designs`");
         }
+    }
+
+    #[cfg(not(target_arch = "wasm32"))]
+    #[test]
+    fn kit_bundle_hoist_and_materialize_file_blobs_round_trip() {
+        let blob_txt = "data:application/octet-stream;base64,QQ==";
+        let mut bundle = crate::kit_backbone::KitStoreBundleFile::template();
+        bundle.wip.root = serde_json::json!({
+            "id": "k-blob",
+            "name": "K",
+            "createdAt": "2020-01-01T00:00:00.000Z",
+            "updatedAt": "2020-01-01T00:00:00.000Z",
+            "files": [{
+                "id": "f-blob",
+                "name": "a.bin",
+                "blob": blob_txt,
+                "createdAt": "2020-01-01T00:00:00.000Z",
+                "updatedAt": "2020-01-01T00:00:00.000Z",
+            }],
+        });
+        bundle
+            .wip
+            .checkpoints
+            .items
+            .push(serde_json::json!({
+                "id": "cp-blob",
+                "frozenRoot": bundle.wip.root.clone(),
+            }));
+        crate::kit_backbone::KitStoreBundleFile::hoist_inline_file_blobs_for_storage(&mut bundle);
+        assert!(bundle.wip.root["files"][0].as_object().expect("file obj").get("blob").is_none());
+        assert!(
+            bundle.wip.checkpoints.items[0]["frozenRoot"]["files"][0]
+                .as_object()
+                .expect("fr file")
+                .get("blob")
+                .is_none()
+        );
+        assert_eq!(bundle.blobs.items.len(), 1);
+        crate::kit_backbone::KitStoreBundleFile::materialize_bundle_file_blobs_into_roots(&mut bundle);
+        assert_eq!(bundle.wip.root["files"][0]["blob"], blob_txt);
+        assert_eq!(
+            bundle.wip.checkpoints.items[0]["frozenRoot"]["files"][0]["blob"].as_str().expect("blob str"),
+            blob_txt
+        );
     }
 
     #[cfg(not(target_arch = "wasm32"))]

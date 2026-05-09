@@ -1339,6 +1339,19 @@ class InlineWasmTransport {
   }
 }
 
+/** @emoji 🧵 `Worker` `error` events are often `ErrorEvent` with empty `message` when a module script fails to load (e.g. Vite down → net::ERR_CONNECTION_REFUSED). */
+function describeWorkerThreadError(ev: Event): string {
+  if (ev instanceof ErrorEvent) {
+    const parts: string[] = [];
+    if (ev.message) parts.push(ev.message);
+    if (ev.error instanceof Error) parts.push(ev.error.message);
+    else if (ev.error) parts.push(String(ev.error));
+    if (ev.filename) parts.push(`at ${ev.filename}:${ev.lineno}:${ev.colno}`);
+    if (parts.length) return parts.join(" — ");
+  }
+  return "worker script or module failed to load (if the Vite dev server stopped, run `npm run dev` in the sketchpad package and hard-refresh)";
+}
+
 class WorkerStringTransport {
   private worker: Worker;
   private nextSerial = 0;
@@ -1369,9 +1382,9 @@ class WorkerStringTransport {
           reject(new Error(`worker init error: ${m.message ?? "unknown"}`));
         }
       };
-      const onError = (ev: ErrorEvent) => {
+      const onError = (ev: Event) => {
         cleanup();
-        reject(new Error(`worker init error: ${ev.message ?? String(ev)}`));
+        reject(new Error(`worker init error: ${describeWorkerThreadError(ev)}`));
       };
       const cleanup = () => {
         clearTimeout(t);
@@ -1728,7 +1741,17 @@ export class KitStore {
       }
     }
 
-    const mod = wasmSpecifier === "@semio/rs-wasm" ? await import("@semio/rs-wasm") : await import(/* @vite-ignore */ wasmSpecifier);
+    let mod: typeof import("@semio/rs-wasm");
+    try {
+      mod = wasmSpecifier === "@semio/rs-wasm" ? await import("@semio/rs-wasm") : await import(/* @vite-ignore */ wasmSpecifier);
+    } catch (e) {
+      const base = e instanceof Error ? e.message : String(e);
+      const net = /Failed to fetch|fetch|ERR_CONNECTION_REFUSED|LOAD_FAILED|network/i.test(base);
+      const hint = net
+        ? " The Vite dev server may have stopped (restore with `npm run dev` in semio/sketchpad, then hard-refresh)."
+        : "";
+      throw new Error(`Failed to load @semio/rs-wasm (inline path): ${base}.${hint}`);
+    }
     if (typeof mod.default === "function") {
       if (wasmBytesPre) await mod.default({ module_or_path: wasmBytesPre });
       else await mod.default();
@@ -3973,7 +3996,11 @@ class FallbackKitClient implements KitStoreClient {
     this.kitName = new StoreField<string>(initialName);
     this.renameKit = new StoreCommand<RenameKitCommandArgs>(async () => ({
       ok: false,
-      error: { kind: "NotSupported", message: "rename requires live WASM KitStore" },
+      error: {
+        kind: "NotSupported",
+        message:
+          "rename needs the real WASM kit store: the @semio/rs-wasm module did not load (e.g. Vite dev server stopped — run `npm run dev` in semio/sketchpad and hard-refresh, then reopen the kit).",
+      },
     }));
   }
 
