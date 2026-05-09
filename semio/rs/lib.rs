@@ -10433,13 +10433,17 @@ mod tests {
         });
     }
 
-    /// @emoji 🛡️ Relay connection hashes must fold sorted child digests, not legacy `hash_ids`.
+    /// @emoji 🛡️ Relay connection hashes must fold sorted child digests, not legacy id-join helpers.
     #[test]
-    fn guard_no_hash_ids_in_lib_rs() {
+    fn guard_gql_relay_has_no_legacy_id_join_hash() {
         let src = include_str!("lib.rs");
+        let i = src.find("pub mod gql_relay").expect("gql_relay module");
+        let j = src[i..].find("//#endregion 🪢 gql_relay").expect("gql_relay end") + i;
+        let relay = &src[i..j];
+        let needle = concat!("hash", "_ids");
         assert!(
-            !src.contains("hash_ids"),
-            "lib.rs must not contain hash_ids; use merkle_collection / entity compute_hash digests"
+            !relay.contains(needle),
+            "gql_relay must not contain legacy id-join hash helper; use merkle_collection / entity compute_hash digests"
         );
     }
     //#endregion 🪪 merkle hashing

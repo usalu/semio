@@ -17789,8 +17789,11 @@ export class SketchpadStore {
       });
 
       if (initialState.kits) {
-        initialState.kits.forEach(({ kit, kind, source }) => {
-          void this.createKit(kit, kind, source, false);
+        const kitsToOpen = initialState.kits.slice();
+        queueMicrotask(() => {
+          kitsToOpen.forEach(({ kit, kind, source }) => {
+            void this.createKit(kit, kind, source, false);
+          });
         });
       }
     }

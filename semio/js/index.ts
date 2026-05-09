@@ -10,60 +10,9 @@ import { z } from "zod";
 
 // #region 🧵InlineWorker
 
-const kitStoreWorkerSource = String.raw`
-let handle = null;
-function post(out) {
-  self.postMessage(JSON.stringify(out));
-}
-self.onmessage = async (ev) => {
-  let msg;
-  try {
-    msg = JSON.parse(ev.data);
-  } catch {
-    post({ op: "error", message: "invalid worker message json" });
-    return;
-  }
-  try {
-    if (msg.op === "init") {
-      const mod = await import("@semio/rs-wasm");
-      if (typeof mod.default === "function") await mod.default();
-      if (typeof mod.boot === "function") mod.boot();
-      const created = mod.KitStoreHandle.create(msg.dto);
-      handle = created instanceof Promise ? await created : created;
-      post({ op: "ready" });
-      return;
-    }
-    if (!handle) {
-      post({ op: "error", reqId: "op" in msg && msg.op !== "init" ? msg.reqId : undefined, message: "worker not initialized" });
-      return;
-    }
-    if (msg.op === "execute") {
-      const json = await handle.execute(msg.body);
-      post({ op: "result", reqId: msg.reqId, json: String(json) });
-      post({ op: "done", reqId: msg.reqId });
-      return;
-    }
-    if (msg.op === "subscribe") {
-      await handle.subscribe(msg.body, (eventJson) => {
-        post({ op: "event", reqId: msg.reqId, json: String(eventJson) });
-      });
-      post({ op: "done", reqId: msg.reqId });
-      return;
-    }
-    post({ op: "error", message: "unrecognized op " + (msg.op ?? "") });
-  } catch (e) {
-    post({ op: "error", reqId: msg?.reqId, message: String(e) });
-  }
-};
-`;
-
-/** @emoji 🧵 Creates the dedicated WASM worker from this file so semio/js has one source entry. */
+/** @emoji 🧵 Bundled worker chunk — Vite resolves `@semio/rs-wasm`; Blob workers cannot import bare specifiers. */
 function createKitStoreWorker(): Worker {
-  const blob = new Blob([kitStoreWorkerSource], { type: "text/javascript" });
-  const url = URL.createObjectURL(blob);
-  const worker = new Worker(url, { type: "module" });
-  URL.revokeObjectURL(url);
-  return worker;
+  return new Worker(new URL("./kit-store.worker.ts", import.meta.url), { type: "module" });
 }
 
 // #endregion 🧵InlineWorker

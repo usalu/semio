@@ -4,28 +4,27 @@ overview: "Replace the partial per-entity hash logic in `semio/rs/lib.rs` with a
 todos:
   - id: hash-helpers
     content: Add merkle + merkle_collection helpers in crate::hash
-    status: pending
+    status: completed
   - id: value-dtos
     content: "Convert value-DTO SimpleObjects to manual #[Object] impls with compute_hash; rename File.hash → File.contentHash"
-    status: pending
+    status: completed
   - id: arc-entities
     content: Rewrite compute_hash for every Arc-backed entity (kit/type/representation/connector/port/design/piece/connection/side/tag/concept/quality/vcs/etc.) to merkle-fold non-computed fields + sorted child hashes
-    status: pending
+    status: completed
   - id: gql-relay
     content: Make gql_relay::*Connection::from_* async and switch hash to sorted child compute_hash; await every call site
-    status: pending
+    status: completed
   - id: geom
     content: "Rewrite geometry #[Object] hash resolvers (Coordinate/Vector/Point/Plane/Position/Offset/Place) to use merkle"
-    status: pending
+    status: completed
   - id: tests
     content: Extend mod tests with five new merkle hashing tests + a no-hash_ids guard; run cargo test -p semio
-    status: pending
+    status: completed
   - id: ticket
     content: Open/reopen the ticket and close it on completion with the touched-files summary
-    status: pending
+    status: cancelled
 isProject: false
 ---
-
 
 # Implement Merkle Hashing For All Entities
 
