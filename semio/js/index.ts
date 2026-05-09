@@ -4721,6 +4721,8 @@ export const FileSchema = z.object({
   mime: z.string().optional(),
   size: z.number().optional(),
   hash: z.string().optional(),
+  /** Content-addressed Blake3 hex referencing [`blobs`] row (`hash`), when payload is stored outside the projection JSON. */
+  blobHash: z.string().optional(),
   description: z.string().optional(),
   blob: z.union([z.string(), z.custom<Blob>((v) => typeof Blob !== "undefined" && v instanceof Blob)]).optional(),
   createdAt: DateProperty(),
@@ -4736,6 +4738,7 @@ export class File implements FileDto {
   mime?: string;
   size?: number;
   hash?: string;
+  blobHash?: string;
   description?: string;
   blob?: string | Blob;
   createdAt?: string;

@@ -13754,9 +13754,17 @@ const AppContent: FC = () => {
 
 /**
  * ErrorBoundary holds the data fields for a ErrorBoundary record.
+ * @emoji 🛡️ Catches subtree render errors; resets only when {@link ErrorBoundaryProps#errorRecoverKey} changes (not `children` identity).
  **/
-class ErrorBoundary extends React.Component<{ children: React.ReactNode; fallback: React.ReactNode }, { hasError: boolean; error: Error | null }> {
-  constructor(props: { children: React.ReactNode; fallback: React.ReactNode }) {
+type ErrorBoundaryProps = {
+  children: React.ReactNode;
+  fallback: React.ReactNode;
+  /** When this value changes after an error, the boundary clears and children render again. Parent re-renders always produce new `children` element identities; never use `children` alone for recovery. */
+  errorRecoverKey?: string;
+};
+
+class ErrorBoundary extends React.Component<ErrorBoundaryProps, { hasError: boolean; error: Error | null }> {
+  constructor(props: ErrorBoundaryProps) {
     super(props);
     this.state = { hasError: false, error: null };
   }
@@ -13765,17 +13773,36 @@ class ErrorBoundary extends React.Component<{ children: React.ReactNode; fallbac
     return { hasError: true, error };
   }
 
-  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {}
+  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+    console.error("[DEBUG] ErrorBoundary caught render error", {
+      message: error?.message,
+      stack: error?.stack,
+      componentStack: errorInfo?.componentStack,
+    });
+  }
 
-  componentDidUpdate(prevProps: { children: React.ReactNode; fallback: React.ReactNode }) {
-    if (prevProps.children !== this.props.children && this.state.hasError) {
+  componentDidUpdate(prevProps: ErrorBoundaryProps) {
+    if (!this.state.hasError) return;
+    const prevKey = prevProps.errorRecoverKey ?? "";
+    const nextKey = this.props.errorRecoverKey ?? "";
+    if (prevKey !== nextKey) {
       this.setState({ hasError: false, error: null });
     }
   }
 
   render() {
     if (this.state.hasError) {
-      return this.props.fallback;
+      const showDevDetails = typeof import.meta !== "undefined" && import.meta.env?.DEV && this.state.error;
+      return (
+        <>
+          {showDevDetails ? (
+            <div className="text-xs text-red-500 px-2 py-1 font-mono border-b border-red-900/40 bg-red-950/20" data-testid="semio.sketchpad.error-boundary-dev-message">
+              {this.state.error.message}
+            </div>
+          ) : null}
+          {this.props.fallback}
+        </>
+      );
     }
     return this.props.children;
   }
@@ -13877,6 +13904,7 @@ function useKitAppYjsToXStateSync() {
  **/
 const KitTableApp: FC = () => {
   useKitAppYjsToXStateSync();
+  const kitId = useKitScope()?.id ?? "";
   const transaction = useKitAppTransaction();
   const { undo, redo, deleteSelected } = useKitAppCommands();
   useHotkeys("ctrl+z", () => undo?.(), { enableOnFormTags: true });
@@ -13886,8 +13914,9 @@ const KitTableApp: FC = () => {
 
   return (
     <ErrorBoundary
+      errorRecoverKey={kitId}
       fallback={
-        <div className="flex items-center justify-center h-full">
+        <div className="flex items-center justify-center h-full" data-testid="semio.sketchpad.kit-app.error-boundary-fallback">
           <p className="text-sm text-muted-foreground">Failed to load kit app</p>
         </div>
       }
@@ -15353,6 +15382,17 @@ const MultiWindowApp: FC = () => {
     return sanitizedLayout;
   }, [storedWindowLayout, defaultLayout]);
 
+  /** @emoji 🧾 When the kit app store has no persisted layout yet, seed the default so Golden Layout and XState stay aligned (avoids empty/mismatch after kit open or rename). */
+  useEffect(() => {
+    if (!store || !kitId) return;
+    if (storedWindowLayout !== undefined && storedWindowLayout !== null) return;
+    try {
+      store.change({ windowLayout: defaultLayout });
+    } catch (error) {
+      console.error("[KitApp] Failed to seed default window layout:", error);
+    }
+  }, [store, kitId, storedWindowLayout, defaultLayout]);
+
   const storedWindowLayoutHash = useMemo(() => (storedWindowLayout === undefined ? "__undefined__" : JSON.stringify(storedWindowLayout)), [storedWindowLayout]);
   const windowLayoutHash = useMemo(() => (windowLayout === undefined ? "__undefined__" : JSON.stringify(windowLayout)), [windowLayout]);
 
@@ -15440,14 +15480,12 @@ const MultiWindowApp: FC = () => {
 
   return (
     <ErrorBoundary
-      fallback={(() => {
-        console.log(`[DEBUG][KitApp] error boundary fallback for kit ${kitId ?? ""}`);
-        return (
-          <div className="flex items-center justify-center h-full">
-            <p className="text-sm text-muted-foreground">Failed to load kit app</p>
-          </div>
-        );
-      })()}
+      errorRecoverKey={kitId ?? ""}
+      fallback={
+        <div className="flex items-center justify-center h-full" data-testid="semio.sketchpad.kit-app.error-boundary-fallback">
+          <p className="text-sm text-muted-foreground">Failed to load kit app</p>
+        </div>
+      }
     >
       <TransactionProvider transaction={transaction}>
         <KitAppFooter />
@@ -22733,7 +22771,8 @@ export const LayoutCanvas: FC<{
             return components;
           };
 
-          components.forEach((item: any) => {
+          const componentsInStack = getAllComponents(stack);
+          componentsInStack.forEach((item: any) => {
             if (item.config?.componentName === activeWindow && stack.setActiveContentItem) {
               stack.setActiveContentItem(item);
             }
@@ -47364,6 +47403,10 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
     return { opened, sections, contentCount };
   }
 
+  async function assertKitAppErrorBoundaryHidden(page: PlaywrightPage): Promise<void> {
+    await expect(page.locator('[data-testid="semio.sketchpad.kit-app.error-boundary-fallback"]')).toHaveCount(0, { timeout: 20000 });
+  }
+
   async function initHome(page: PlaywrightPage) {
     const { errors, warnings, messages } = await initConsole(page);
 
@@ -47390,6 +47433,7 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
       await page.waitForTimeout(2000);
       console.log("[TEST] Navigated to:", page.url());
       expect(page.url()).toMatch(/kits\/.+/);
+      await assertKitAppErrorBoundaryHidden(page);
       return { errors, warnings, messages };
     }
 
