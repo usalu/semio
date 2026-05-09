@@ -19,3 +19,10 @@
 
 - `semio/rs/lib.rs`
 - `.repo/🎫/26/05/09/REFACTOR-RS-KIT-STORE-MATERIALIZED-READS/ticket.md`
+
+## Follow-up (2026-05-09, subagent)
+
+- **CanonicalKitDiff serde:** `TagPatch`, `ConceptPatch`, and `QualityPatch` now use `#[serde(skip_serializing_if = "Option::is_none")]` on optional fields so partial sparse `diff` objects match `metabolism.kit.diff.semio.json` on round-trip (`serde_json::to_value` no longer injects explicit `null` for omitted keys).
+- **Validation:** `cargo test -p semio` — 26 passed, 1 ignored; `canonical_kit_diff_metabolism_fixture_json_round_trip` ok.
+- **Wasm:** `semio/rs/pkg/README.md` has no documented wasm build step — skipped.
+- **Repo MCP:** not available in this agent’s MCP file-system list; goals/search/ticket_close not invoked here.

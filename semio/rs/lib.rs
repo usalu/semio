@@ -210,7 +210,7 @@ pub mod geom {
 
         use async_lock::RwLock;
 
-        use crate::hash::h;
+        use crate::hash::{h, merkle_node_str};
         use crate::id::Id;
 
         use super::{Coordinate, Plane, Point, Position, Vector};
@@ -231,6 +231,13 @@ pub mod geom {
                 let id = weak("coordinate", &[&format!("{:.9}", c.u), &format!("{:.9}", c.v)]);
                 Arc::new(Self { id, u: RwLock::new(c.u), v: RwLock::new(c.v) })
             }
+
+            /// @emoji 🪪 Merkle leaf: id + live u/v (matches [`super::Coordinate`] payload).
+            pub async fn compute_hash(&self) -> String {
+                let u = *self.u.read().await;
+                let v = *self.v.read().await;
+                merkle_node_str(&["semio:geom:Coordinate", self.id.as_str(), &format!("{u:.9}"), &format!("{v:.9}")], Vec::new())
+            }
         }
 
         /// @emoji ↗ Vector WeakEntity data node.
@@ -246,6 +253,17 @@ pub mod geom {
                 let id = weak("vector", &[&format!("{:.9}", v.x), &format!("{:.9}", v.y), &format!("{:.9}", v.z)]);
                 Arc::new(Self { id, x: RwLock::new(v.x), y: RwLock::new(v.y), z: RwLock::new(v.z) })
             }
+
+            /// @emoji 🪪 Merkle leaf: id + live x/y/z.
+            pub async fn compute_hash(&self) -> String {
+                let x = *self.x.read().await;
+                let y = *self.y.read().await;
+                let z = *self.z.read().await;
+                merkle_node_str(
+                    &["semio:geom:Vector", self.id.as_str(), &format!("{x:.9}"), &format!("{y:.9}"), &format!("{z:.9}")],
+                    Vec::new(),
+                )
+            }
         }
 
         /// @emoji ◆ Point WeakEntity data node.
@@ -260,6 +278,17 @@ pub mod geom {
             pub fn from_value(p: Point) -> Arc<Self> {
                 let id = weak("point", &[&format!("{:.9}", p.x), &format!("{:.9}", p.y), &format!("{:.9}", p.z)]);
                 Arc::new(Self { id, x: RwLock::new(p.x), y: RwLock::new(p.y), z: RwLock::new(p.z) })
+            }
+
+            /// @emoji 🪪 Merkle leaf: id + live x/y/z.
+            pub async fn compute_hash(&self) -> String {
+                let x = *self.x.read().await;
+                let y = *self.y.read().await;
+                let z = *self.z.read().await;
+                merkle_node_str(
+                    &["semio:geom:Point", self.id.as_str(), &format!("{x:.9}"), &format!("{y:.9}"), &format!("{z:.9}")],
+                    Vec::new(),
+                )
             }
         }
 
@@ -279,6 +308,13 @@ pub mod geom {
                 let id = weak("plane", &[origin.id.as_str(), x_axis.id.as_str(), y_axis.id.as_str()]);
                 Arc::new(Self { id, origin, x_axis, y_axis })
             }
+
+            /// @emoji 🪪 Merkle node: sorted child digests of origin + axes.
+            pub async fn compute_hash(&self) -> String {
+                let mut ch = vec![self.origin.compute_hash().await, self.x_axis.compute_hash().await, self.y_axis.compute_hash().await];
+                ch.sort();
+                merkle_node_str(&["semio:geom:Plane", self.id.as_str()], ch)
+            }
         }
 
         /// @emoji ↖ WeakEntity-style offset (piece drag input echo).
@@ -292,6 +328,13 @@ pub mod geom {
             pub fn from_value(o: super::Offset) -> Arc<Self> {
                 let id = weak("offset", &[&format!("{:.9}", o.u), &format!("{:.9}", o.v)]);
                 Arc::new(Self { id, u: RwLock::new(o.u), v: RwLock::new(o.v) })
+            }
+
+            /// @emoji 🪪 Merkle leaf: id + live u/v.
+            pub async fn compute_hash(&self) -> String {
+                let u = *self.u.read().await;
+                let v = *self.v.read().await;
+                merkle_node_str(&["semio:geom:Offset", self.id.as_str(), &format!("{u:.9}"), &format!("{v:.9}")], Vec::new())
             }
         }
 
@@ -314,6 +357,28 @@ pub mod geom {
             pub async fn snapshot_value(&self) -> Position {
                 *self.data.read().await
             }
+
+            /// @emoji 🪪 Merkle node: live [`Position`] payload plus sorted digests of center + plane arcs.
+            pub async fn compute_hash(&self) -> String {
+                let p = *self.data.read().await;
+                let flat = format!(
+                    "{:.9}\x1f{:.9}\x1f{:.9}\x1f{:.9}\x1f{:.9}\x1f{:.9}\x1f{:.9}\x1f{:.9}\x1f{:.9}\x1f{:.9}\x1f{:.9}",
+                    p.center.u,
+                    p.center.v,
+                    p.plane.origin.x,
+                    p.plane.origin.y,
+                    p.plane.origin.z,
+                    p.plane.x_axis.x,
+                    p.plane.x_axis.y,
+                    p.plane.x_axis.z,
+                    p.plane.y_axis.x,
+                    p.plane.y_axis.y,
+                    p.plane.y_axis.z,
+                );
+                let mut ch = vec![self.center.compute_hash().await, self.plane.compute_hash().await];
+                ch.sort();
+                merkle_node_str(&["semio:geom:Position", self.id.as_str(), flat.as_str()], ch)
+            }
         }
 
         /// @emoji 🧭 Placeholder StrongEntity shell for `Place` (full meta wiring lands with meta lift).
@@ -325,6 +390,12 @@ pub mod geom {
         impl PlaceNode {
             pub async fn new() -> Arc<Self> {
                 Arc::new(Self { id: Id::new().await, label: RwLock::new(None) })
+            }
+
+            /// @emoji 🪪 Merkle leaf: id + optional label.
+            pub async fn compute_hash(&self) -> String {
+                let lb = self.label.read().await.clone().unwrap_or_default();
+                merkle_node_str(&["semio:geom:Place", self.id.as_str(), lb.as_str()], Vec::new())
             }
         }
 
@@ -385,8 +456,8 @@ pub mod gql_relay {
     use std::sync::Arc;
 
     use async_graphql::SimpleObject;
-    use blake3::Hasher;
 
+    use crate::hash::merkle_collection;
     use crate::id::Id;
     use crate::kit::design::piece::Piece;
     use crate::kit::design::Design;
@@ -396,15 +467,6 @@ pub mod gql_relay {
 
     fn edge_cursor(i: usize) -> String {
         format!("e{i}")
-    }
-
-    fn hash_ids(ids: impl Iterator<Item = impl AsRef<str>>) -> String {
-        let mut hasher = Hasher::new();
-        for id in ids {
-            hasher.update(id.as_ref().as_bytes());
-            hasher.update(b"\x1f");
-        }
-        hasher.finalize().to_hex().to_string()
     }
 
     #[derive(Clone, Debug, Default, SimpleObject)]
@@ -434,8 +496,12 @@ pub mod gql_relay {
     }
 
     impl DesignConnection {
-        pub fn from_designs(rows: Vec<Arc<Design>>) -> Self {
-            let hash = hash_ids(rows.iter().map(|d| d.id.as_str()));
+        pub async fn from_designs(rows: Vec<Arc<Design>>) -> Self {
+            let mut child_hashes = Vec::with_capacity(rows.len());
+            for d in &rows {
+                child_hashes.push(d.compute_hash().await);
+            }
+            let hash = merkle_collection(child_hashes);
             let edges = rows.into_iter().enumerate().map(|(i, d)| DesignEdge { cursor: edge_cursor(i), node: d }).collect();
             Self { edges, page_info: std::sync::Arc::new(PageInfo::default()), hash }
         }
@@ -456,8 +522,12 @@ pub mod gql_relay {
     }
 
     impl PieceConnection {
-        pub fn from_pieces(rows: Vec<Arc<Piece>>) -> Self {
-            let hash = hash_ids(rows.iter().map(|p| p.id.as_str()));
+        pub async fn from_pieces(rows: Vec<Arc<Piece>>) -> Self {
+            let mut child_hashes = Vec::with_capacity(rows.len());
+            for p in &rows {
+                child_hashes.push(p.compute_hash().await);
+            }
+            let hash = merkle_collection(child_hashes);
             let edges = rows.into_iter().enumerate().map(|(i, p)| PieceEdge { cursor: edge_cursor(i), node: p }).collect();
             Self { edges, page_info: std::sync::Arc::new(PageInfo::default()), hash }
         }
@@ -478,8 +548,12 @@ pub mod gql_relay {
     }
 
     impl TypeConnection {
-        pub fn from_types(rows: Vec<Arc<Type>>) -> Self {
-            let hash = hash_ids(rows.iter().map(|t| t.id.as_str()));
+        pub async fn from_types(rows: Vec<Arc<Type>>) -> Self {
+            let mut child_hashes = Vec::with_capacity(rows.len());
+            for t in &rows {
+                child_hashes.push(t.compute_hash().await);
+            }
+            let hash = merkle_collection(child_hashes);
             let edges = rows.into_iter().enumerate().map(|(i, t)| TypeEdge { cursor: edge_cursor(i), node: t }).collect();
             Self { edges, page_info: std::sync::Arc::new(PageInfo::default()), hash }
         }
@@ -500,8 +574,12 @@ pub mod gql_relay {
     }
 
     impl ConflictConnection {
-        pub fn from_conflicts(rows: Vec<Arc<Conflict>>) -> Self {
-            let hash = hash_ids(rows.iter().map(|c| c.id.as_str()));
+        pub async fn from_conflicts(rows: Vec<Arc<Conflict>>) -> Self {
+            let mut child_hashes = Vec::with_capacity(rows.len());
+            for c in &rows {
+                child_hashes.push(c.compute_hash().await);
+            }
+            let hash = merkle_collection(child_hashes);
             let edges = rows.into_iter().enumerate().map(|(i, c)| ConflictEdge { cursor: edge_cursor(i), node: c }).collect();
             Self { edges, page_info: std::sync::Arc::new(PageInfo::default()), hash }
         }
@@ -522,8 +600,12 @@ pub mod gql_relay {
     }
 
     impl AlternativeConnection {
-        pub fn from_alternatives(rows: Vec<Arc<Alternative>>) -> Self {
-            let hash = hash_ids(rows.iter().map(|a| a.id.as_str()));
+        pub async fn from_alternatives(rows: Vec<Arc<Alternative>>) -> Self {
+            let mut child_hashes = Vec::with_capacity(rows.len());
+            for a in &rows {
+                child_hashes.push(a.compute_hash().await);
+            }
+            let hash = merkle_collection(child_hashes);
             let edges = rows.into_iter().enumerate().map(|(i, a)| AlternativeEdge { cursor: edge_cursor(i), node: a }).collect();
             Self { edges, page_info: std::sync::Arc::new(PageInfo::default()), hash }
         }
@@ -544,8 +626,12 @@ pub mod gql_relay {
     }
 
     impl CheckpointConnection {
-        pub fn from_checkpoints(rows: Vec<Arc<Checkpoint>>) -> Self {
-            let hash = hash_ids(rows.iter().map(|c| c.id.as_str()));
+        pub async fn from_checkpoints(rows: Vec<Arc<Checkpoint>>) -> Self {
+            let mut child_hashes = Vec::with_capacity(rows.len());
+            for c in &rows {
+                child_hashes.push(c.compute_hash().await);
+            }
+            let hash = merkle_collection(child_hashes);
             let edges = rows.into_iter().enumerate().map(|(i, c)| CheckpointEdge { cursor: edge_cursor(i), node: c }).collect();
             Self { edges, page_info: std::sync::Arc::new(PageInfo::default()), hash }
         }
@@ -568,15 +654,19 @@ pub mod gql_relay {
     }
 
     impl ConnectionConnection {
-        pub fn from_connections(rows: Vec<Arc<crate::kit::design::connection::Connection>>) -> Self {
-            let hash = hash_ids(rows.iter().map(|c| c.id.as_str()));
+        pub async fn from_connections(rows: Vec<Arc<crate::kit::design::connection::Connection>>) -> Self {
+            let mut child_hashes = Vec::with_capacity(rows.len());
+            for c in &rows {
+                child_hashes.push(c.compute_hash().await);
+            }
+            let hash = merkle_collection(child_hashes);
             let edges = rows.into_iter().enumerate().map(|(i, node)| ConnectionEdge { cursor: edge_cursor(i), node }).collect();
             Self { edges, page_info: std::sync::Arc::new(PageInfo::default()), hash }
         }
     }
 
-    macro_rules! simple_conn {
-        ($Conn:ident, $Edge:ident, $node:ty, $id_closure:expr) => {
+    macro_rules! simple_conn_sync {
+        ($Conn:ident, $Edge:ident, $node:ty, $hash_fn:expr) => {
             #[derive(Clone, SimpleObject)]
             pub struct $Edge {
                 pub cursor: String,
@@ -593,14 +683,11 @@ pub mod gql_relay {
 
             impl $Conn {
                 pub fn from_rows(rows: Vec<$node>) -> Self {
-                    let id_fn = $id_closure;
-                    let mut hasher = Hasher::new();
+                    let mut child_hashes = Vec::with_capacity(rows.len());
                     for r in &rows {
-                        let id = id_fn(r);
-                        hasher.update(id.as_str().as_bytes());
-                        hasher.update(b"\x1f");
+                        child_hashes.push($hash_fn(r));
                     }
-                    let hash = hasher.finalize().to_hex().to_string();
+                    let hash = merkle_collection(child_hashes);
                     let edges = rows.into_iter().enumerate().map(|(i, node)| $Edge { cursor: edge_cursor(i), node }).collect();
                     Self { edges, page_info: std::sync::Arc::new(PageInfo::default()), hash }
                 }
@@ -608,32 +695,62 @@ pub mod gql_relay {
         };
     }
 
-    simple_conn!(FileConnection, FileEdge, File, |f: &File| f.id.clone());
-    simple_conn!(FolderConnection, FolderEdge, Folder, |f: &Folder| f.id.clone());
-    simple_conn!(AuthorConnection, AuthorEdge, Author, |a: &Author| a.id.clone());
-    simple_conn!(ConceptConnection, ConceptEdge, std::sync::Arc<Concept>, |c: &std::sync::Arc<Concept>| c.id.clone());
-    simple_conn!(TagConnection, TagEdge, std::sync::Arc<Tag>, |t: &std::sync::Arc<Tag>| t.id.clone());
-    simple_conn!(QualityConnection, QualityEdge, std::sync::Arc<Quality>, |q: &std::sync::Arc<Quality>| q.id.clone());
-    simple_conn!(BenchmarkConnection, BenchmarkEdge, Benchmark, |b: &Benchmark| b.id.clone());
-    simple_conn!(PropConnection, PropEdge, Prop, |p: &Prop| p.id.clone());
-    simple_conn!(AttributeConnection, AttributeEdge, crate::meta::Attribute, |a: &crate::meta::Attribute| a.id.clone());
-    simple_conn!(StatConnection, StatEdge, Stat, |s: &Stat| s.id.clone());
-    simple_conn!(LayerConnection, LayerEdge, Layer, |l: &Layer| l.id.clone());
-    simple_conn!(GroupConnection, GroupEdge, Group, |g: &Group| g.id.clone());
-    simple_conn!(PositionNodeConnection, PositionNodeEdge, Arc<crate::geom::entity::PositionNode>, |p: &Arc<crate::geom::entity::PositionNode>| p.id.clone());
+    macro_rules! simple_conn_entity {
+        ($Conn:ident, $Edge:ident, $node:ty) => {
+            #[derive(Clone, SimpleObject)]
+            pub struct $Edge {
+                pub cursor: String,
+                pub node: $node,
+            }
 
-    /// @emoji 🪢 `entity_relay!` — delegates to [`simple_conn!`] for `Arc`/value nodes with an id extractor closure.
-    macro_rules! entity_relay {
-        ($Conn:ident, $Edge:ident, $Node:ty, $id_expr:expr) => {
-            simple_conn!($Conn, $Edge, $Node, $id_expr);
+            #[derive(Clone, SimpleObject)]
+            pub struct $Conn {
+                pub edges: Vec<$Edge>,
+                #[graphql(name = "pageInfo")]
+                pub page_info: std::sync::Arc<PageInfo>,
+                pub hash: String,
+            }
+
+            impl $Conn {
+                pub async fn from_rows(rows: Vec<$node>) -> Self {
+                    let mut child_hashes = Vec::with_capacity(rows.len());
+                    for r in &rows {
+                        child_hashes.push(r.compute_hash().await);
+                    }
+                    let hash = merkle_collection(child_hashes);
+                    let edges = rows.into_iter().enumerate().map(|(i, node)| $Edge { cursor: edge_cursor(i), node }).collect();
+                    Self { edges, page_info: std::sync::Arc::new(PageInfo::default()), hash }
+                }
+            }
         };
     }
 
-    entity_relay!(VectorNodeConnection, VectorNodeEdge, Arc<crate::geom::entity::VectorNode>, |v: &Arc<crate::geom::entity::VectorNode>| v.id.clone());
-    entity_relay!(CoordinateNodeConnection, CoordinateNodeEdge, Arc<crate::geom::entity::CoordinateNode>, |c: &Arc<crate::geom::entity::CoordinateNode>| c.id.clone());
-    entity_relay!(PointNodeConnection, PointNodeEdge, Arc<crate::geom::entity::PointNode>, |p: &Arc<crate::geom::entity::PointNode>| p.id.clone());
-    entity_relay!(PlaneNodeConnection, PlaneNodeEdge, Arc<crate::geom::entity::PlaneNode>, |p: &Arc<crate::geom::entity::PlaneNode>| p.id.clone());
-    entity_relay!(OffsetNodeConnection, OffsetNodeEdge, Arc<crate::geom::entity::OffsetNode>, |o: &Arc<crate::geom::entity::OffsetNode>| o.id.clone());
+    simple_conn_sync!(FileConnection, FileEdge, File, |f: &File| f.compute_entity_hash());
+    simple_conn_sync!(FolderConnection, FolderEdge, Folder, |f: &Folder| f.compute_entity_hash());
+    simple_conn_sync!(AuthorConnection, AuthorEdge, Author, |a: &Author| a.compute_entity_hash());
+    simple_conn_entity!(ConceptConnection, ConceptEdge, std::sync::Arc<Concept>);
+    simple_conn_entity!(TagConnection, TagEdge, std::sync::Arc<Tag>);
+    simple_conn_entity!(QualityConnection, QualityEdge, std::sync::Arc<Quality>);
+    simple_conn_sync!(BenchmarkConnection, BenchmarkEdge, Benchmark, |b: &Benchmark| b.compute_entity_hash());
+    simple_conn_sync!(PropConnection, PropEdge, Prop, |p: &Prop| p.compute_entity_hash());
+    simple_conn_sync!(AttributeConnection, AttributeEdge, crate::meta::Attribute, |a: &crate::meta::Attribute| a.compute_entity_hash());
+    simple_conn_sync!(StatConnection, StatEdge, Stat, |s: &Stat| s.compute_entity_hash());
+    simple_conn_sync!(LayerConnection, LayerEdge, Layer, |l: &Layer| l.compute_entity_hash());
+    simple_conn_sync!(GroupConnection, GroupEdge, Group, |g: &Group| g.compute_entity_hash());
+    simple_conn_entity!(PositionNodeConnection, PositionNodeEdge, Arc<crate::geom::entity::PositionNode>);
+
+    /// @emoji 🪢 `entity_relay!` — async Merkle relay for `Arc` geometry nodes.
+    macro_rules! entity_relay {
+        ($Conn:ident, $Edge:ident, $Node:ty) => {
+            simple_conn_entity!($Conn, $Edge, $Node);
+        };
+    }
+
+    entity_relay!(VectorNodeConnection, VectorNodeEdge, Arc<crate::geom::entity::VectorNode>);
+    entity_relay!(CoordinateNodeConnection, CoordinateNodeEdge, Arc<crate::geom::entity::CoordinateNode>);
+    entity_relay!(PointNodeConnection, PointNodeEdge, Arc<crate::geom::entity::PointNode>);
+    entity_relay!(PlaneNodeConnection, PlaneNodeEdge, Arc<crate::geom::entity::PlaneNode>);
+    entity_relay!(OffsetNodeConnection, OffsetNodeEdge, Arc<crate::geom::entity::OffsetNode>);
 
     /// @emoji 🪜 `entity_diffs!` — expands modification / diff / diffs relay ladder (hook for codegen; invoke per entity family).
     macro_rules! entity_diffs {
@@ -647,11 +764,51 @@ pub mod gql_relay {
 
     /// @emoji 🧷 Placeholder `Family` row until the kit family model is lifted into Arc entities.
     #[derive(Clone, Debug, Default, SimpleObject)]
+    #[graphql(complex)]
     pub struct Family {
         pub id: Id,
     }
 
-    simple_conn!(FamilyConnection, FamilyEdge, Family, |f: &Family| f.id.clone());
+    impl Family {
+        /// @emoji 🪪 Stable digest for relay [`FamilyConnection`] (matches GraphQL `Family.hash`).
+        pub fn compute_entity_hash(&self) -> String {
+            crate::hash::merkle_node_str(&["semio:meta:Family", self.id.as_str()], Vec::new())
+        }
+    }
+
+    #[async_graphql::ComplexObject]
+    impl Family {
+        /// @emoji 🪪 Merkle leaf over the placeholder family row (id only until the family graph lands).
+        pub async fn hash(&self) -> String {
+            self.compute_entity_hash()
+        }
+    }
+
+    #[derive(Clone, SimpleObject)]
+    pub struct FamilyEdge {
+        pub cursor: String,
+        pub node: Family,
+    }
+
+    #[derive(Clone, SimpleObject)]
+    pub struct FamilyConnection {
+        pub edges: Vec<FamilyEdge>,
+        #[graphql(name = "pageInfo")]
+        pub page_info: std::sync::Arc<PageInfo>,
+        pub hash: String,
+    }
+
+    impl FamilyConnection {
+        pub fn from_rows(rows: Vec<Family>) -> Self {
+            let mut child_hashes = Vec::with_capacity(rows.len());
+            for f in &rows {
+                child_hashes.push(f.compute_entity_hash());
+            }
+            let hash = merkle_collection(child_hashes);
+            let edges = rows.into_iter().enumerate().map(|(i, node)| FamilyEdge { cursor: edge_cursor(i), node }).collect();
+            Self { edges, page_info: std::sync::Arc::new(PageInfo::default()), hash }
+        }
+    }
 }
 
 //#endregion 🪢 gql_relay
@@ -662,7 +819,7 @@ pub mod meta {
     //! 🏷️ Metadata: DTO [`SimpleObject`] shells plus Arc-backed [`Tag`]/[`Concept`]/[`Quality`] entities (SDL `Entity`).
     use std::sync::{Arc, Weak};
 
-    use async_graphql::{InputObject, Object, SimpleObject};
+    use async_graphql::{ComplexObject, InputObject, Object, SimpleObject};
     use async_lock::RwLock;
     use serde::{Deserialize, Serialize};
 
@@ -764,7 +921,7 @@ pub mod meta {
             self.id.clone()
         }
         pub async fn hash(&self) -> String {
-            crate::hash::h(&[self.id.as_str()])
+            crate::hash::merkle_node_str(&["semio:meta:Location", self.id.as_str()], Vec::new())
         }
         pub async fn owner(&self) -> LocationOwner {
             LocationOwner::Kit(std::sync::Arc::new(crate::kit::Kit::default()))
@@ -801,25 +958,70 @@ pub mod meta {
     }
 
     #[derive(Clone, Debug, Default, Serialize, Deserialize, SimpleObject)]
+    #[graphql(complex)]
     pub struct File {
         pub id: Id,
         pub url: String,
         pub mime: Option<String>,
         pub size: Option<i32>,
-        pub hash: String,
+        #[graphql(name = "contentHash")]
+        #[serde(rename = "hash", alias = "contentHash")]
+        pub content_hash: String,
         pub description: Option<String>,
         pub created: Option<Timestamp>,
         pub updated: Option<Timestamp>,
     }
 
+    impl File {
+        /// @emoji 🌿 Blake3 leaf over every persisted [`File`] column (blob digest stays in [`File::content_hash`]).
+        pub fn compute_entity_hash(&self) -> String {
+            crate::hash::merkle_node_str(
+                &[
+                    "semio:meta:File",
+                    self.id.as_str(),
+                    self.url.as_str(),
+                    self.mime.as_deref().unwrap_or(""),
+                    &self.size.map(|sz| sz.to_string()).unwrap_or_default(),
+                    self.content_hash.as_str(),
+                    self.description.as_deref().unwrap_or(""),
+                    self.created.as_ref().map(|t| t.0.as_str()).unwrap_or(""),
+                    self.updated.as_ref().map(|t| t.0.as_str()).unwrap_or(""),
+                ],
+                Vec::new(),
+            )
+        }
+    }
+
+    #[ComplexObject]
+    impl File {
+        pub async fn hash(&self) -> String {
+            self.compute_entity_hash()
+        }
+    }
+
     #[derive(Clone, Debug, Default, Serialize, Deserialize, SimpleObject)]
+    #[graphql(complex)]
     pub struct Folder {
         pub id: Id,
         pub path: String,
         pub description: Option<String>,
     }
 
+    impl Folder {
+        pub fn compute_entity_hash(&self) -> String {
+            crate::hash::merkle_node_str(&["semio:meta:Folder", self.id.as_str(), self.path.as_str(), self.description.as_deref().unwrap_or("")], Vec::new())
+        }
+    }
+
+    #[ComplexObject]
+    impl Folder {
+        pub async fn hash(&self) -> String {
+            self.compute_entity_hash()
+        }
+    }
+
     #[derive(Clone, Debug, Default, Serialize, Deserialize, SimpleObject)]
+    #[graphql(complex)]
     pub struct Author {
         pub id: Id,
         pub name: String,
@@ -828,12 +1030,42 @@ pub mod meta {
         pub rank: Option<i32>,
     }
 
+    impl Author {
+        pub fn compute_entity_hash(&self) -> String {
+            crate::hash::merkle_node_str(
+                &[
+                    "semio:meta:Author",
+                    self.id.as_str(),
+                    self.name.as_str(),
+                    self.email.as_str(),
+                    self.role.as_deref().unwrap_or(""),
+                    &self.rank.map(|r| r.to_string()).unwrap_or_default(),
+                ],
+                Vec::new(),
+            )
+        }
+    }
+
+    #[ComplexObject]
+    impl Author {
+        pub async fn hash(&self) -> String {
+            self.compute_entity_hash()
+        }
+    }
+
     #[derive(Clone, Debug, Default, Serialize, Deserialize)]
     pub struct Attribute {
         pub id: Id,
         pub key: String,
         pub value: String,
         pub definition: Option<String>,
+    }
+
+    impl Attribute {
+        /// @emoji 🌿 Blake3 leaf over persisted attribute columns (no owner weak refs).
+        pub fn compute_entity_hash(&self) -> String {
+            crate::hash::merkle_node_str(&["semio:meta:Attribute", self.id.as_str(), self.key.as_str(), self.value.as_str(), self.definition.as_deref().unwrap_or("")], Vec::new())
+        }
     }
 
     /// 🏷️ Hand union for `Attribute.owner` (subset of carriers Attribute can hang off of).
@@ -856,7 +1088,7 @@ pub mod meta {
             self.id.clone()
         }
         pub async fn hash(&self) -> String {
-            crate::hash::h(&[self.id.as_str(), self.key.as_str()])
+            self.compute_entity_hash()
         }
         pub async fn owner(&self) -> AttributeOwner {
             AttributeOwner::Kit(std::sync::Arc::new(crate::kit::Kit::default()))
@@ -917,6 +1149,7 @@ pub mod meta {
     }
 
     #[derive(Clone, Debug, Default, Serialize, Deserialize, SimpleObject)]
+    #[graphql(complex)]
     pub struct Benchmark {
         pub id: Id,
         pub name: String,
@@ -928,7 +1161,25 @@ pub mod meta {
         pub max_excluded: Option<bool>,
     }
 
+    impl Benchmark {
+        pub fn compute_entity_hash(&self) -> String {
+            let min = self.min.map(|v| format!("{v:.9}")).unwrap_or_default();
+            let max = self.max.map(|v| format!("{v:.9}")).unwrap_or_default();
+            let minx = self.min_excluded.map(|b| if b { "1" } else { "0" }).unwrap_or_default();
+            let maxx = self.max_excluded.map(|b| if b { "1" } else { "0" }).unwrap_or_default();
+            crate::hash::merkle_node_str(&["semio:meta:Benchmark", self.id.as_str(), self.name.as_str(), min.as_str(), max.as_str(), minx, maxx], Vec::new())
+        }
+    }
+
+    #[ComplexObject]
+    impl Benchmark {
+        pub async fn hash(&self) -> String {
+            self.compute_entity_hash()
+        }
+    }
+
     #[derive(Clone, Debug, Default, Serialize, Deserialize, SimpleObject)]
+    #[graphql(complex)]
     pub struct Prop {
         pub id: Id,
         pub key: String,
@@ -937,6 +1188,19 @@ pub mod meta {
         #[graphql(skip)]
         #[serde(skip)]
         pub quality: Option<std::sync::Arc<Quality>>,
+    }
+
+    impl Prop {
+        pub fn compute_entity_hash(&self) -> String {
+            crate::hash::merkle_node_str(&["semio:meta:Prop", self.id.as_str(), self.key.as_str(), self.value.as_str(), self.unit.as_deref().unwrap_or("")], Vec::new())
+        }
+    }
+
+    #[ComplexObject]
+    impl Prop {
+        pub async fn hash(&self) -> String {
+            self.compute_entity_hash()
+        }
     }
 
     /// @emoji 🪢 Resolved kit/type/representation owner for a [`Tag`] (write path sets exactly one arm).
@@ -978,7 +1242,12 @@ pub mod meta {
         pub async fn compute_hash(&self) -> String {
             let n = self.name.read().await;
             let d = self.description.read().await.clone().unwrap_or_default();
-            crate::hash::h(&[self.id.as_str(), n.as_str(), d.as_str()])
+            let ic = self.icon.read().await.clone().unwrap_or_default();
+            let ord = self.order.read().await.map(|o| o.to_string()).unwrap_or_default();
+            let attrs = self.attributes.read().await;
+            let mut child_hashes: Vec<String> = attrs.iter().map(Attribute::compute_entity_hash).collect();
+            child_hashes.sort();
+            crate::hash::merkle_node_str(&["semio:meta:Tag", self.id.as_str(), n.as_str(), d.as_str(), ic.as_str(), ord.as_str()], child_hashes)
         }
     }
 
@@ -1026,7 +1295,12 @@ pub mod meta {
         pub async fn compute_hash(&self) -> String {
             let n = self.name.read().await;
             let d = self.description.read().await.clone().unwrap_or_default();
-            crate::hash::h(&[self.id.as_str(), n.as_str(), d.as_str()])
+            let ic = self.icon.read().await.clone().unwrap_or_default();
+            let ord = self.order.read().await.map(|o| o.to_string()).unwrap_or_default();
+            let attrs = self.attributes.read().await;
+            let mut child_hashes: Vec<String> = attrs.iter().map(Attribute::compute_entity_hash).collect();
+            child_hashes.sort();
+            crate::hash::merkle_node_str(&["semio:meta:Concept", self.id.as_str(), n.as_str(), d.as_str(), ic.as_str(), ord.as_str()], child_hashes)
         }
     }
 
@@ -1123,7 +1397,16 @@ pub mod meta {
         pub async fn compute_hash(&self) -> String {
             let k = self.key.read().await;
             let v = self.value.read().await.clone().unwrap_or_default();
-            crate::hash::h(&[self.id.as_str(), k.as_str(), v.as_str()])
+            let u = self.unit.read().await.clone().unwrap_or_default();
+            let def = self.definition.read().await.clone().unwrap_or_default();
+            let desc = self.description.read().await.clone().unwrap_or_default();
+            let ic = self.icon.read().await.clone().unwrap_or_default();
+            let bm = self.benchmarks.read().await;
+            let av = self.attributes.read().await;
+            let mut child_hashes: Vec<String> = bm.iter().map(Benchmark::compute_entity_hash).collect();
+            child_hashes.extend(av.iter().map(Attribute::compute_entity_hash));
+            child_hashes.sort();
+            crate::hash::merkle_node_str(&["semio:meta:Quality", self.id.as_str(), k.as_str(), v.as_str(), u.as_str(), def.as_str(), desc.as_str(), ic.as_str()], child_hashes)
         }
     }
 
@@ -1145,6 +1428,7 @@ pub mod meta {
     }
 
     #[derive(Clone, Debug, Default, Serialize, Deserialize, SimpleObject)]
+    #[graphql(complex)]
     pub struct Stat {
         pub id: Id,
         pub key: String,
@@ -1153,7 +1437,24 @@ pub mod meta {
         pub description: Option<String>,
     }
 
+    impl Stat {
+        pub fn compute_entity_hash(&self) -> String {
+            crate::hash::merkle_node_str(
+                &["semio:meta:Stat", self.id.as_str(), self.key.as_str(), self.value.as_str(), self.unit.as_deref().unwrap_or(""), self.description.as_deref().unwrap_or("")],
+                Vec::new(),
+            )
+        }
+    }
+
+    #[ComplexObject]
+    impl Stat {
+        pub async fn hash(&self) -> String {
+            self.compute_entity_hash()
+        }
+    }
+
     #[derive(Clone, Debug, Default, Serialize, Deserialize, SimpleObject)]
+    #[graphql(complex)]
     pub struct Layer {
         pub id: Id,
         pub name: String,
@@ -1164,7 +1465,35 @@ pub mod meta {
         pub locked: Option<bool>,
     }
 
+    impl Layer {
+        pub fn compute_entity_hash(&self) -> String {
+            let vis = self.visible.map(|b| if b { "1" } else { "0" }).unwrap_or_default();
+            let lck = self.locked.map(|b| if b { "1" } else { "0" }).unwrap_or_default();
+            crate::hash::merkle_node_str(
+                &[
+                    "semio:meta:Layer",
+                    self.id.as_str(),
+                    self.name.as_str(),
+                    self.description.as_deref().unwrap_or(""),
+                    self.color.as_deref().unwrap_or(""),
+                    &self.order.map(|o| o.to_string()).unwrap_or_default(),
+                    vis,
+                    lck,
+                ],
+                Vec::new(),
+            )
+        }
+    }
+
+    #[ComplexObject]
+    impl Layer {
+        pub async fn hash(&self) -> String {
+            self.compute_entity_hash()
+        }
+    }
+
     #[derive(Clone, Debug, Default, Serialize, Deserialize, SimpleObject)]
+    #[graphql(complex)]
     pub struct Group {
         pub id: Id,
         pub name: String,
@@ -1174,6 +1503,33 @@ pub mod meta {
         #[graphql(skip)]
         pub piece_ids: Vec<Id>,
     }
+
+    impl Group {
+        pub fn compute_entity_hash(&self) -> String {
+            let mut ids: Vec<String> = self.piece_ids.iter().map(|i| i.as_str().to_string()).collect();
+            ids.sort();
+            let joined = ids.join("\x1e");
+            crate::hash::merkle_node_str(
+                &[
+                    "semio:meta:Group",
+                    self.id.as_str(),
+                    self.name.as_str(),
+                    self.description.as_deref().unwrap_or(""),
+                    self.color.as_deref().unwrap_or(""),
+                    self.icon.as_deref().unwrap_or(""),
+                    joined.as_str(),
+                ],
+                Vec::new(),
+            )
+        }
+    }
+
+    #[ComplexObject]
+    impl Group {
+        pub async fn hash(&self) -> String {
+            self.compute_entity_hash()
+        }
+    }
 }
 
 //#endregion 🏷️ meta
@@ -1181,7 +1537,7 @@ pub mod meta {
 //#region 🪪 hash
 
 pub mod hash {
-    //! 🪪 Stable content hash helper used by every entity's `hash` resolver.
+    //! 🪪 Blake3 Merkle helpers: [`h`] for delimiter-joined parts; [`merkle_node_str`] for ordered own fields plus sorted child digests; [`merkle_collection`] for relay connection hashes.
     use blake3::Hasher;
 
     pub fn h<S: AsRef<[u8]>>(parts: &[S]) -> String {
@@ -1191,6 +1547,26 @@ pub mod hash {
             hasher.update(b"\x1f");
         }
         hasher.finalize().to_hex().to_string()
+    }
+
+    /// @emoji 🌳 Merkle fold: concatenates `own` in order, then **sorted** `children` hex digests (order-independent set hashing).
+    pub fn merkle_node_str(own: &[&str], mut children: Vec<String>) -> String {
+        children.sort();
+        let mut hasher = Hasher::new();
+        for s in own {
+            hasher.update(s.as_bytes());
+            hasher.update(b"\x1f");
+        }
+        for c in &children {
+            hasher.update(c.as_bytes());
+            hasher.update(b"\x1f");
+        }
+        hasher.finalize().to_hex().to_string()
+    }
+
+    /// @emoji 🪢 Relay collection hash: sorted child entity hashes under a stable collection tag.
+    pub fn merkle_collection(children: Vec<String>) -> String {
+        merkle_node_str(&["semio:relay:collection"], children)
     }
 }
 
@@ -1325,7 +1701,7 @@ pub mod kit {
                 self.port.read().await.upgrade()
             }
             pub async fn qualities(&self) -> crate::gql_relay::QualityConnection {
-                crate::gql_relay::QualityConnection::from_rows(self.qualities.read().await.clone())
+                crate::gql_relay::QualityConnection::from_rows(self.qualities.read().await.clone()).await
             }
             pub async fn attributes(&self) -> Vec<Attribute> {
                 self.attributes.read().await.clone()
@@ -1401,10 +1777,10 @@ pub mod kit {
                 self.file.read().await.clone()
             }
             pub async fn tags(&self) -> crate::gql_relay::TagConnection {
-                crate::gql_relay::TagConnection::from_rows(self.tags.read().await.clone())
+                crate::gql_relay::TagConnection::from_rows(self.tags.read().await.clone()).await
             }
             pub async fn qualities(&self) -> crate::gql_relay::QualityConnection {
-                crate::gql_relay::QualityConnection::from_rows(self.qualities.read().await.clone())
+                crate::gql_relay::QualityConnection::from_rows(self.qualities.read().await.clone()).await
             }
             pub async fn attributes(&self) -> Vec<Attribute> {
                 self.attributes.read().await.clone()
@@ -1589,13 +1965,13 @@ pub mod kit {
                 self.authors.read().await.clone()
             }
             pub async fn concepts(&self) -> crate::gql_relay::ConceptConnection {
-                crate::gql_relay::ConceptConnection::from_rows(self.concepts.read().await.clone())
+                crate::gql_relay::ConceptConnection::from_rows(self.concepts.read().await.clone()).await
             }
             pub async fn tags(&self) -> crate::gql_relay::TagConnection {
-                crate::gql_relay::TagConnection::from_rows(self.tags.read().await.clone())
+                crate::gql_relay::TagConnection::from_rows(self.tags.read().await.clone()).await
             }
             pub async fn qualities(&self) -> crate::gql_relay::QualityConnection {
-                crate::gql_relay::QualityConnection::from_rows(self.qualities.read().await.clone())
+                crate::gql_relay::QualityConnection::from_rows(self.qualities.read().await.clone()).await
             }
             pub async fn props(&self) -> Vec<Prop> {
                 self.props.read().await.clone()
@@ -2190,13 +2566,13 @@ pub mod kit {
                 self.updated.read().await.clone()
             }
             pub async fn pieces(&self) -> crate::gql_relay::PieceConnection {
-                crate::gql_relay::PieceConnection::from_pieces(self.pieces.read().await.clone())
+                crate::gql_relay::PieceConnection::from_pieces(self.pieces.read().await.clone()).await
             }
             pub async fn piece(&self, id: Id) -> Option<Arc<piece::Piece>> {
                 self.piece_by_external_id(&id).await
             }
             pub async fn connections(&self) -> crate::gql_relay::ConnectionConnection {
-                crate::gql_relay::ConnectionConnection::from_connections(self.connections.read().await.clone())
+                crate::gql_relay::ConnectionConnection::from_connections(self.connections.read().await.clone()).await
             }
             pub async fn connection(&self, id: Id) -> Option<Arc<connection::Connection>> {
                 self.connections.read().await.iter().find(|c| c.id == id).cloned()
@@ -2211,7 +2587,7 @@ pub mod kit {
                 crate::gql_relay::AuthorConnection::from_rows(self.authors.read().await.clone())
             }
             pub async fn qualities(&self) -> crate::gql_relay::QualityConnection {
-                crate::gql_relay::QualityConnection::from_rows(self.qualities.read().await.clone())
+                crate::gql_relay::QualityConnection::from_rows(self.qualities.read().await.clone()).await
             }
             pub async fn props(&self) -> crate::gql_relay::PropConnection {
                 crate::gql_relay::PropConnection::from_rows(self.props.read().await.clone())
@@ -2238,11 +2614,11 @@ pub mod kit {
             }
 
             pub async fn references(&self) -> crate::gql_relay::DesignConnection {
-                crate::gql_relay::DesignConnection::from_designs(Vec::new())
+                crate::gql_relay::DesignConnection::from_designs(Vec::new()).await
             }
             #[graphql(name = "referencedBy")]
             pub async fn referenced_by(&self) -> crate::gql_relay::PieceConnection {
-                crate::gql_relay::PieceConnection::from_pieces(Vec::new())
+                crate::gql_relay::PieceConnection::from_pieces(Vec::new()).await
             }
         }
         //#endregion 🏘 design
@@ -2535,7 +2911,7 @@ pub mod kit {
                             *design.image.write().await = diff.get("image").and_then(|x| x.as_str()).map(|s| s.to_string());
                         }
                     }
-                    if let Some(serde_json::Value::Array(pr)) = diff.get("pieces").and_then(|p| p.get("removed")).and_then(|x| x.as_array()) {
+                    if let Some(pr) = diff.get("pieces").and_then(|p| p.get("removed")).and_then(|x| x.as_array()) {
                         for pr_row in pr {
                             let piece_id: Id = serde_json::from_value(pr_row.get("id").cloned().ok_or_else(|| crate::error::SemioError::invalid("piece removed.id"))?)
                                 .map_err(|e| crate::error::SemioError::invalid(e.to_string()))?;
@@ -2543,12 +2919,12 @@ pub mod kit {
                             design.delete_piece_by_external_id(&piece_id).await?;
                         }
                     }
-                    if let Some(serde_json::Value::Array(pa)) = diff.get("pieces").and_then(|p| p.get("added")).and_then(|x| x.as_array()) {
+                    if let Some(pa) = diff.get("pieces").and_then(|p| p.get("added")).and_then(|x| x.as_array()) {
                         for piece_v in pa {
                             self.apply_design_piece_added_json(&design_id, piece_v).await?;
                         }
                     }
-                    if let Some(serde_json::Value::Array(pm)) = diff.get("pieces").and_then(|p| p.get("modified")).and_then(|x| x.as_array()) {
+                    if let Some(pm) = diff.get("pieces").and_then(|p| p.get("modified")).and_then(|x| x.as_array()) {
                         for prow in pm {
                             let piece_id: Id = serde_json::from_value(
                                 prow.get("piece").and_then(|p| p.get("id")).cloned().ok_or_else(|| crate::error::SemioError::invalid("piece modified.piece.id"))?,
@@ -2658,11 +3034,10 @@ pub mod kit {
                 }
             }
             for row in &t.added {
-                let owner_id: Id = row
-                    .get("ownerId")
-                    .and_then(|x| x.as_str())
-                    .map(Id::from)
-                    .unwrap_or_else(|| self.workspace_kit_id().await);
+                let owner_id: Id = match row.get("ownerId").and_then(|x| x.as_str()).map(Id::from) {
+                    Some(id) => id,
+                    None => self.workspace_kit_id().await,
+                };
                 let tag_id: Id = serde_json::from_value(row.get("id").cloned().ok_or_else(|| crate::error::SemioError::invalid("tag added.id"))?)
                     .map_err(|e| crate::error::SemioError::invalid(e.to_string()))?;
                 let attribute_ids: Vec<Id> = serde_json::from_value(row.get("attributeIds").cloned().unwrap_or(serde_json::json!([])))
@@ -2697,11 +3072,10 @@ pub mod kit {
                 }
             }
             for row in &c.added {
-                let owner_id: Id = row
-                    .get("ownerId")
-                    .and_then(|x| x.as_str())
-                    .map(Id::from)
-                    .unwrap_or_else(|| self.workspace_kit_id().await);
+                let owner_id: Id = match row.get("ownerId").and_then(|x| x.as_str()).map(Id::from) {
+                    Some(id) => id,
+                    None => self.workspace_kit_id().await,
+                };
                 let concept_id: Id = serde_json::from_value(row.get("id").cloned().ok_or_else(|| crate::error::SemioError::invalid("concept added.id"))?)
                     .map_err(|e| crate::error::SemioError::invalid(e.to_string()))?;
                 let attribute_ids: Vec<Id> = serde_json::from_value(row.get("attributeIds").cloned().unwrap_or(serde_json::json!([])))
@@ -2745,11 +3119,10 @@ pub mod kit {
                 }
             }
             for row in &q.added {
-                let owner_id: Id = row
-                    .get("ownerId")
-                    .and_then(|x| x.as_str())
-                    .map(Id::from)
-                    .unwrap_or_else(|| self.workspace_kit_id().await);
+                let owner_id: Id = match row.get("ownerId").and_then(|x| x.as_str()).map(Id::from) {
+                    Some(id) => id,
+                    None => self.workspace_kit_id().await,
+                };
                 let quality_id: Id = serde_json::from_value(row.get("id").cloned().ok_or_else(|| crate::error::SemioError::invalid("quality added.id"))?)
                     .map_err(|e| crate::error::SemioError::invalid(e.to_string()))?;
                 let attribute_ids: Vec<Id> = serde_json::from_value(row.get("attributeIds").cloned().unwrap_or(serde_json::json!([])))
@@ -3469,14 +3842,14 @@ pub mod kit {
             self.design_by_external_id(&id).await
         }
         pub async fn designs(&self) -> crate::gql_relay::DesignConnection {
-            crate::gql_relay::DesignConnection::from_designs(self.designs.read().await.clone())
+            crate::gql_relay::DesignConnection::from_designs(self.designs.read().await.clone()).await
         }
         #[graphql(name = "type")]
         pub async fn type_(&self, id: Id) -> Option<Arc<r#type::Type>> {
             self.type_by_external_id(&id).await
         }
         pub async fn types(&self) -> crate::gql_relay::TypeConnection {
-            crate::gql_relay::TypeConnection::from_types(self.types.read().await.clone())
+            crate::gql_relay::TypeConnection::from_types(self.types.read().await.clone()).await
         }
         pub async fn files(&self) -> crate::gql_relay::FileConnection {
             crate::gql_relay::FileConnection::from_rows(self.files.read().await.clone())
@@ -3491,13 +3864,13 @@ pub mod kit {
             crate::gql_relay::AuthorConnection::from_rows(self.authors.read().await.clone())
         }
         pub async fn concepts(&self) -> crate::gql_relay::ConceptConnection {
-            crate::gql_relay::ConceptConnection::from_rows(self.concepts.read().await.clone())
+            crate::gql_relay::ConceptConnection::from_rows(self.concepts.read().await.clone()).await
         }
         pub async fn tags(&self) -> crate::gql_relay::TagConnection {
-            crate::gql_relay::TagConnection::from_rows(self.tags.read().await.clone())
+            crate::gql_relay::TagConnection::from_rows(self.tags.read().await.clone()).await
         }
         pub async fn qualities(&self) -> crate::gql_relay::QualityConnection {
-            crate::gql_relay::QualityConnection::from_rows(self.qualities.read().await.clone())
+            crate::gql_relay::QualityConnection::from_rows(self.qualities.read().await.clone()).await
         }
         pub async fn props(&self) -> crate::gql_relay::PropConnection {
             crate::gql_relay::PropConnection::from_rows(self.props.read().await.clone())
@@ -3796,7 +4169,7 @@ pub mod vcs {
     use async_lock::RwLock;
 
     use crate::error::SemioError;
-    use crate::hash::h;
+    use crate::hash::{h, merkle_node_str};
     use crate::id::Id;
     use crate::kit::Kit;
     use crate::meta::Author;
@@ -4085,7 +4458,8 @@ pub mod vcs {
         pub id: Id,
         pub timestamp: RwLock<Option<Timestamp>>,
         pub authors: RwLock<Vec<Author>>,
-        pub root: RwLock<Option<Arc<Kit>>>,
+        /// @emoji 🧊 Immutable kit snapshot taken once at checkpoint creation; never aliased with live [`Graph::parent_root_for_active_draft`].
+        pub frozen_root: Arc<Kit>,
         pub parent_checkpoint: RwLock<Weak<Checkpoint>>,
         pub message: RwLock<Option<String>>,
         pub is_release: RwLock<bool>,
@@ -4098,7 +4472,7 @@ pub mod vcs {
                 id: Id::default(),
                 timestamp: RwLock::new(None),
                 authors: RwLock::new(Vec::new()),
-                root: RwLock::new(Some(Arc::default())),
+                frozen_root: Arc::default(),
                 parent_checkpoint: RwLock::new(Weak::new()),
                 message: RwLock::new(None),
                 is_release: RwLock::new(false),
@@ -4130,13 +4504,13 @@ pub mod vcs {
         pub async fn authors(&self) -> Vec<Author> {
             self.authors.read().await.clone()
         }
-        /// @emoji 🧊 SDL `checkpoint.root` — optional frozen snapshot held under [`Checkpoint::root`].
+        /// @emoji 🧊 SDL `checkpoint.root` — frozen snapshot (same backing as [`Checkpoint::frozen_root`]).
         pub async fn root(&self) -> Option<Arc<Kit>> {
-            self.root.read().await.clone()
+            Some(self.frozen_root.clone())
         }
         #[graphql(name = "frozenRoot")]
         pub async fn frozen_root_gql(&self) -> Option<Arc<Kit>> {
-            self.root.read().await.clone()
+            Some(self.frozen_root.clone())
         }
 
         #[graphql(name = "parentCheckpoint")]
@@ -4492,7 +4866,7 @@ pub mod vcs {
                         id,
                         timestamp: RwLock::new(None),
                         authors: RwLock::new(Vec::new()),
-                        root: RwLock::new(Some(frozen)),
+                        frozen_root: frozen,
                         parent_checkpoint: RwLock::new(Weak::new()),
                         message: RwLock::new(Some("init".to_string())),
                         is_release: RwLock::new(false),
@@ -4540,12 +4914,7 @@ pub mod vcs {
 
             let parent_cp = source_draft.parent_checkpoint.read().await.upgrade().ok_or_else(|| SemioError::invalid("draft has no parent checkpoint"))?;
 
-            let parent_root = parent_cp
-                .root
-                .read()
-                .await
-                .clone()
-                .ok_or_else(|| SemioError::invalid("parent checkpoint has no root kit"))?;
+            let parent_root = parent_cp.frozen_root.clone();
 
             let new_alt_id = Id::new().await;
             let new_alt = Arc::new(Alternative {
@@ -4664,19 +5033,19 @@ pub mod vcs {
             self.alternatives.read().await.iter().find(|a| a.id == id).cloned()
         }
         pub async fn alternatives(&self) -> crate::gql_relay::AlternativeConnection {
-            crate::gql_relay::AlternativeConnection::from_alternatives(self.alternatives.read().await.clone())
+            crate::gql_relay::AlternativeConnection::from_alternatives(self.alternatives.read().await.clone()).await
         }
         pub async fn checkpoint(&self, id: Id) -> Option<Arc<Checkpoint>> {
             self.checkpoints.read().await.iter().find(|c| c.id == id).cloned()
         }
         pub async fn checkpoints(&self) -> crate::gql_relay::CheckpointConnection {
-            crate::gql_relay::CheckpointConnection::from_checkpoints(self.checkpoints.read().await.clone())
+            crate::gql_relay::CheckpointConnection::from_checkpoints(self.checkpoints.read().await.clone()).await
         }
         pub async fn release(&self, id: Id) -> Option<Arc<Checkpoint>> {
             self.releases.read().await.iter().find(|c| c.id == id).cloned()
         }
         pub async fn releases(&self) -> crate::gql_relay::CheckpointConnection {
-            crate::gql_relay::CheckpointConnection::from_checkpoints(self.releases.read().await.clone())
+            crate::gql_relay::CheckpointConnection::from_checkpoints(self.releases.read().await.clone()).await
         }
 
         /// @emoji 📝 Lookup a draft on this graph by id (sketchpad uses this after `transactionOpen` / before `transactionCommit`).
@@ -4785,13 +5154,23 @@ pub mod vcs {
         }
     }
 
+    impl Conflict {
+        /// @emoji 🪪 Merkle leaf: id, optional backbone tip, reason, created-at (relay + GraphQL `Conflict.hash`).
+        pub async fn compute_hash(&self) -> String {
+            let tip = self.backbone_tip.read().await.clone().unwrap_or_default();
+            let reason = self.reason.read().await.clone();
+            let created = self.created_at.read().await.clone();
+            merkle_node_str(&["semio:vcs:Conflict", self.id.as_str(), tip.as_str(), reason.as_str(), created.0.as_str()], Vec::new())
+        }
+    }
+
     #[Object(name = "Conflict")]
     impl Conflict {
         pub async fn id(&self) -> Id {
             self.id.clone()
         }
         pub async fn hash(&self) -> String {
-            crate::hash::h(&[self.id.as_str(), self.reason.read().await.as_str()])
+            self.compute_hash().await
         }
         #[graphql(name = "backboneTip")]
         pub async fn backbone_tip(&self) -> Option<String> {
@@ -4946,6 +5325,7 @@ pub mod iface {
     use async_graphql::{Object, SimpleObject, Union};
 
     use crate::geom::entity::{CoordinateNode, OffsetNode, PlaceNode, PlaneNode, PointNode, PositionNode, VectorNode};
+    use crate::hash::merkle_collection;
     use crate::id::Id;
     use crate::kit::design::piece::Piece;
     use crate::kit::design::Design;
@@ -5002,7 +5382,11 @@ pub mod iface {
 
     impl OwnedEntityConnection {
         pub fn empty() -> Self {
-            Self { edges: Vec::new(), page_info: crate::gql_relay::PageInfo::default(), hash: crate::hash::h(&[""]) }
+            Self {
+                edges: Vec::new(),
+                page_info: crate::gql_relay::PageInfo::default(),
+                hash: merkle_collection(Vec::new()),
+            }
         }
     }
 
@@ -5103,9 +5487,7 @@ pub mod iface {
             self.id.clone()
         }
         pub async fn hash(&self) -> String {
-            let u = *self.u.read().await;
-            let v = *self.v.read().await;
-            crate::hash::h(&[&format!("{u:.9}"), &format!("{v:.9}")])
+            self.compute_hash().await
         }
         pub async fn owner_entity(&self) -> Option<std::sync::Arc<crate::iface::OwnerEntity>> {
             None
@@ -5127,10 +5509,7 @@ pub mod iface {
             self.id.clone()
         }
         pub async fn hash(&self) -> String {
-            let x = *self.x.read().await;
-            let y = *self.y.read().await;
-            let z = *self.z.read().await;
-            crate::hash::h(&[&format!("{x:.9}"), &format!("{y:.9}"), &format!("{z:.9}")])
+            self.compute_hash().await
         }
         pub async fn owner_entity(&self) -> Option<std::sync::Arc<crate::iface::OwnerEntity>> {
             None
@@ -5155,10 +5534,7 @@ pub mod iface {
             self.id.clone()
         }
         pub async fn hash(&self) -> String {
-            let x = *self.x.read().await;
-            let y = *self.y.read().await;
-            let z = *self.z.read().await;
-            crate::hash::h(&[&format!("{x:.9}"), &format!("{y:.9}"), &format!("{z:.9}")])
+            self.compute_hash().await
         }
         pub async fn owner_entity(&self) -> Option<std::sync::Arc<crate::iface::OwnerEntity>> {
             None
@@ -5183,7 +5559,7 @@ pub mod iface {
             self.id.clone()
         }
         pub async fn hash(&self) -> String {
-            crate::hash::h(&[self.origin.id.as_str(), self.x_axis.id.as_str(), self.y_axis.id.as_str()])
+            self.compute_hash().await
         }
         pub async fn owner_entity(&self) -> Option<std::sync::Arc<crate::iface::OwnerEntity>> {
             None
@@ -5210,7 +5586,7 @@ pub mod iface {
             self.id.clone()
         }
         pub async fn hash(&self) -> String {
-            crate::hash::h(&[self.center.id.as_str(), self.plane.id.as_str()])
+            self.compute_hash().await
         }
         pub async fn owner_entity(&self) -> Option<std::sync::Arc<crate::iface::OwnerEntity>> {
             None
@@ -5232,9 +5608,7 @@ pub mod iface {
             self.id.clone()
         }
         pub async fn hash(&self) -> String {
-            let u = *self.u.read().await;
-            let v = *self.v.read().await;
-            crate::hash::h(&[&format!("{u:.9}"), &format!("{v:.9}")])
+            self.compute_hash().await
         }
         pub async fn owner_entity(&self) -> Option<std::sync::Arc<crate::iface::OwnerEntity>> {
             None
@@ -5256,7 +5630,7 @@ pub mod iface {
             self.id.clone()
         }
         pub async fn hash(&self) -> String {
-            crate::hash::h(&[self.id.as_str()])
+            self.compute_hash().await
         }
         pub async fn owner_entity(&self) -> Option<std::sync::Arc<crate::iface::OwnerEntity>> {
             None
@@ -5325,8 +5699,11 @@ pub mod operation {
     #[derive(Clone, Debug, Default, Serialize, Deserialize, PartialEq)]
     #[serde(rename_all = "camelCase", default)]
     pub struct TagPatch {
+        #[serde(skip_serializing_if = "Option::is_none")]
         pub name: Option<String>,
+        #[serde(skip_serializing_if = "Option::is_none")]
         pub description: Option<String>,
+        #[serde(skip_serializing_if = "Option::is_none")]
         pub icon: Option<String>,
     }
 
@@ -5349,8 +5726,11 @@ pub mod operation {
     #[derive(Clone, Debug, Default, Serialize, Deserialize, PartialEq)]
     #[serde(rename_all = "camelCase", default)]
     pub struct ConceptPatch {
+        #[serde(skip_serializing_if = "Option::is_none")]
         pub name: Option<String>,
+        #[serde(skip_serializing_if = "Option::is_none")]
         pub description: Option<String>,
+        #[serde(skip_serializing_if = "Option::is_none")]
         pub icon: Option<String>,
     }
 
@@ -5373,11 +5753,17 @@ pub mod operation {
     #[derive(Clone, Debug, Default, Serialize, Deserialize, PartialEq)]
     #[serde(rename_all = "camelCase", default)]
     pub struct QualityPatch {
+        #[serde(skip_serializing_if = "Option::is_none")]
         pub description: Option<String>,
+        #[serde(skip_serializing_if = "Option::is_none")]
         pub icon: Option<String>,
+        #[serde(skip_serializing_if = "Option::is_none")]
         pub key: Option<String>,
+        #[serde(skip_serializing_if = "Option::is_none")]
         pub value: Option<String>,
+        #[serde(skip_serializing_if = "Option::is_none")]
         pub unit: Option<String>,
+        #[serde(skip_serializing_if = "Option::is_none")]
         pub definition: Option<String>,
     }
 
@@ -5414,6 +5800,7 @@ pub mod operation {
 
     /// @emoji 📦 Persisted / replayed kit transition: canonical [`CanonicalKitDiff`] only (no `__ops` envelope).
     #[derive(Clone, Debug, Default, Serialize, Deserialize, PartialEq)]
+    #[serde(transparent)]
     pub struct KitDiff(pub CanonicalKitDiff);
 
     impl KitDiff {
@@ -7532,6 +7919,7 @@ pub mod kit_backbone {
             for cp in graph.checkpoints.read().await.iter() {
                 let msg = cp.message.read().await.clone().unwrap_or_default();
                 let ts = cp.timestamp.read().await.clone().map(|t| t.0).unwrap_or_else(|| HASH_PLACEHOLDER.to_string());
+                let frozen_dto = cp.frozen_root.kit_full_snapshot_value().await;
                 bundle.wip.checkpoints.items.push(serde_json::json!({
                     "id": cp.id.as_str(),
                     "hash": HASH_PLACEHOLDER,
@@ -7539,6 +7927,7 @@ pub mod kit_backbone {
                     "message": msg,
                     "authors": { "hash": HASH_PLACEHOLDER, "items": [] },
                     "changes": { "hash": HASH_PLACEHOLDER, "items": [] },
+                    "frozenRoot": frozen_dto,
                 }));
             }
 
@@ -8268,7 +8657,7 @@ pub mod gql {
         pub async fn conflicts(&self, ctx: &Context<'_>) -> async_graphql::Result<crate::gql_relay::ConflictConnection> {
             let rt = ctx.data::<Arc<ParentRuntime>>()?;
             let list = rt.conflicts.read().await.clone();
-            Ok(crate::gql_relay::ConflictConnection::from_conflicts(list))
+            Ok(crate::gql_relay::ConflictConnection::from_conflicts(list).await)
         }
 
         /// @emoji 🔎 Relay-style global `node` lookup (WIP + authoritative + sessions + conflicts).
@@ -9948,10 +10337,12 @@ mod tests {
             };
 
             let diff = create.to_diff(&kit).await.expect("createTag diff");
-            let ops = diff.0.get("__ops").and_then(|x| x.as_array()).expect("__ops");
-            assert_eq!(ops.len(), 1);
-            assert_eq!(ops[0].get("kind").and_then(|k| k.as_str()), Some("createTag"));
-            assert_eq!(ops[0].get("tagId").and_then(|v| v.as_str()), Some(tag_id.as_str()));
+            let tags = diff.0.tags.as_ref().expect("tags collection diff");
+            assert_eq!(tags.added.len(), 1, "single added tag row");
+            let row = &tags.added[0];
+            assert_eq!(row.get("id").and_then(|v| v.as_str()), Some(tag_id.as_str()));
+            assert_eq!(row.get("ownerId").and_then(|v| v.as_str()), Some(owner_id.as_str()));
+            assert_eq!(row.get("name").and_then(|v| v.as_str()), Some("alpha-tag"));
 
             let staged = kit.deep_clone().await;
             staged.apply_diff(&diff).await.expect("apply createTag diff on clone");
@@ -9979,6 +10370,79 @@ mod tests {
             }
         });
     }
+
+    /// @emoji 📦 `metabolism.kit.diff.semio.json` deserializes as [`crate::operation::CanonicalKitDiff`] and round-trips through `serde_json::Value` without structural drift.
+    #[test]
+    fn canonical_kit_diff_metabolism_fixture_json_round_trip() {
+        const FIXTURE: &str = include_str!("../assets/semio/metabolism.kit.diff.semio.json");
+        let raw: serde_json::Value = serde_json::from_str(FIXTURE).expect("fixture parses as JSON");
+        let parsed: crate::operation::CanonicalKitDiff = serde_json::from_value(raw.clone()).expect("fixture maps to CanonicalKitDiff");
+        let round = serde_json::to_value(&parsed).expect("CanonicalKitDiff serializes");
+        assert_eq!(round, raw, "canonical kit diff fixture must round-trip through CanonicalKitDiff serde");
+    }
+
+    //#region 🪪 merkle hashing
+    #[test]
+    fn merkle_node_str_sorts_child_digests_for_order_independence() {
+        let a = crate::hash::merkle_node_str(&["semio:test:node", "id-1"], vec!["zzz".into(), "aaa".into(), "mmm".into()]);
+        let b = crate::hash::merkle_node_str(&["semio:test:node", "id-1"], vec!["mmm".into(), "zzz".into(), "aaa".into()]);
+        assert_eq!(a, b, "child digest order must not affect the parent hash");
+    }
+
+    #[test]
+    fn merkle_collection_matches_tagged_empty_node() {
+        let empty_coll = crate::hash::merkle_collection(Vec::new());
+        let tagged = crate::hash::merkle_node_str(&["semio:relay:collection"], Vec::new());
+        assert_eq!(empty_coll, tagged);
+    }
+
+    #[test]
+    fn merkle_collection_is_order_independent() {
+        let x = crate::hash::merkle_collection(vec!["3".into(), "1".into(), "2".into()]);
+        let y = crate::hash::merkle_collection(vec!["2".into(), "3".into(), "1".into()]);
+        assert_eq!(x, y);
+    }
+
+    #[test]
+    fn file_serde_uses_hash_key_for_content_hash() {
+        let v = json!({
+            "id": "019caa00-0000-7000-a000-000000000021",
+            "url": "https://example.com/f",
+            "hash": "sha256:abc",
+            "mime": serde_json::Value::Null,
+            "size": serde_json::Value::Null,
+            "description": serde_json::Value::Null,
+            "created": serde_json::Value::Null,
+            "updated": serde_json::Value::Null
+        });
+        let f: crate::meta::File = serde_json::from_value(v).expect("File from fixture-shaped JSON");
+        assert_eq!(f.content_hash, "sha256:abc");
+        let out = serde_json::to_value(&f).expect("File serde_json::to_value");
+        assert_eq!(out.get("hash").and_then(|x| x.as_str()), Some("sha256:abc"));
+    }
+
+    #[test]
+    fn geom_plane_compute_hash_stable() {
+        block_on(async {
+            let pl = crate::geom::entity::PlaneNode::from_value(crate::geom::Plane {
+                origin: crate::geom::Point { x: 0.0, y: 0.0, z: 0.0 },
+                x_axis: crate::geom::Vector { x: 1.0, y: 0.0, z: 0.0 },
+                y_axis: crate::geom::Vector { x: 0.0, y: 1.0, z: 0.0 },
+            });
+            assert_eq!(pl.compute_hash().await, pl.compute_hash().await);
+        });
+    }
+
+    /// @emoji 🛡️ Relay connection hashes must fold sorted child digests, not legacy `hash_ids`.
+    #[test]
+    fn guard_no_hash_ids_in_lib_rs() {
+        let src = include_str!("lib.rs");
+        assert!(
+            !src.contains("hash_ids"),
+            "lib.rs must not contain hash_ids; use merkle_collection / entity compute_hash digests"
+        );
+    }
+    //#endregion 🪪 merkle hashing
 
     #[test]
     fn normalized_create_fixed_piece_replay_reuses_scoped_piece_id() {

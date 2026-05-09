@@ -7903,9 +7903,11 @@ if (
       expect(sdl).toContain("type Kit");
       expect(sdl).toMatch(/fullSnapshot/s);
       expect(sdl).toMatch(/type Subscription[\s\S]*operationSucceeded/s);
+      expect(sdl).toMatch(/commandSucceeded/s);
       expect(sdl).not.toContain("type KitStoreMutation");
       expect(KIT_SESSION_QUERY_ENTRY).toContain("wip { id theKit");
       expect(KIT_EVENT_STREAM_SUBSCRIPTION).toContain("operationSucceeded");
+      expect(KIT_COMMAND_SUCCEEDED_SUBSCRIPTION).toContain("commandSucceeded");
     });
   });
 

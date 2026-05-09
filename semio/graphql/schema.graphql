@@ -616,13 +616,28 @@ type Location {
 """
 union LocationOwner = Place | Kit | Design
 
+"""
+@emoji 🪪 Scope for `renameKit` (draft + open transaction).
+"""
+input RenameKitScopeInput {
+	draftId: Id!
+	transactionId: Id!
+}
+
+"""
+@emoji 🪪 Payload for `renameKit`.
+"""
+input RenameKitInput {
+	name: String!
+}
+
 type Mutation {
 	"""
 	@emoji ➕ Routes through [`ParentRuntime::dispatch_wip`] → child apply + event bus.
 	"""
 	addFixedPieceToDesign(draftId: Id!, transactionId: Id!, designId: Id!, blueprintId: Id!, position: PositionInput!): Id!
 	fixPieceInDesign(draftId: Id!, transactionId: Id!, designId: Id!, pieceId: Id!): Id!
-	renameKit(draftId: Id!, transactionId: Id!, name: String!): Id!
+	renameKit(scope: RenameKitScopeInput!, input: RenameKitInput!): Id!
 	changeDescription(draftId: Id!, transactionId: Id!, entityId: Id!, description: String!): Id!
 	createTag(draftId: Id!, transactionId: Id!, ownerId: Id!, tag: TagInput!): Id!
 	createTags(draftId: Id!, transactionId: Id!, ownerId: Id!, tags: [TagInput!]!): Id!

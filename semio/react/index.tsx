@@ -625,7 +625,7 @@ export function createKitCommandEngine(store: KitHostStore): ReturnType<typeof c
 }
 // #endregion 🔖KitHostCommandDispatch
 
-export type { BackboneConfig, BackboneStatusDto, ConflictResolution, KitConflict, KitReadScope, KitWriteScope, SetError, SetResult, WriteStatus } from "@semio/js";
+export type { BackboneConfig, BackboneStatusDto, ConflictResolution, KitConflict, KitReadScope, KitWriteScope, RenameKitCommandArgs, SetError, SetResult, WriteStatus } from "@semio/js";
 export {
   WRITE_STATUS_IDLE,
   WRITE_STATUS_READONLY,
@@ -5838,7 +5838,7 @@ function useSchemaObjectState(typeName: string, idValue?: string): HookTriad<any
   const runtime = useKitRuntimeSafe();
   const scope = React.useContext(SchemaScopeContext);
   if (!runtime) {
-    return [undefined, noopAsyncSet, SCHEMA_HOOK_READONLY_STATUS] as const;
+    return [undefined, noopAsyncSet, WRITE_STATUS_READONLY] as const;
   }
   const ref = resolveReference(runtime.state, typeName, idValue, scope);
   const value = ref?.value;
@@ -5850,7 +5850,7 @@ function useSchemaObjectState(typeName: string, idValue?: string): HookTriad<any
     },
     [runtime, typeName, idValue, scope, canWrite],
   );
-  const status: WriteStatus = canWrite ? SCHEMA_HOOK_IDLE_STATUS : SCHEMA_HOOK_READONLY_STATUS;
+  const status: WriteStatus = canWrite ? WRITE_STATUS_IDLE : WRITE_STATUS_READONLY;
   return [value, setValue, status] as const;
 }
 
@@ -5858,7 +5858,7 @@ function useSchemaFieldState(typeName: string, fieldName: string, idValue?: stri
   const runtime = useKitRuntimeSafe();
   const scope = React.useContext(SchemaScopeContext);
   if (!runtime) {
-    return [undefined, noopAsyncSet, SCHEMA_HOOK_READONLY_STATUS] as const;
+    return [undefined, noopAsyncSet, WRITE_STATUS_READONLY] as const;
   }
   const value = readSchemaFieldValue(runtime.state, typeName, fieldName, idValue, scope);
   /** DTO index allows writes when the Rust `submitKitChangeCommands` path does not cover this field. */
@@ -5905,20 +5905,20 @@ function useSchemaFieldState(typeName: string, fieldName: string, idValue?: stri
     [runtime, rustTarget, schemaScanWritable, typeName, fieldName, idValue, scope, value],
   );
 
-  const fieldWriteStatusRef = React.useRef<WriteStatus>(SCHEMA_HOOK_IDLE_STATUS);
+  const fieldWriteStatusRef = React.useRef<WriteStatus>(WRITE_STATUS_IDLE);
   const status = React.useMemo((): WriteStatus => {
     const next: WriteStatus =
       rustTarget && runtime.kitClient
         ? !runtime.canWrite
-          ? SCHEMA_HOOK_READONLY_STATUS
+          ? WRITE_STATUS_READONLY
           : pending > 0
             ? ({ kind: "pending", pending, lastError: lastErr } as WriteStatus)
             : lastErr
               ? ({ kind: "error", pending: 0, lastError: lastErr } as const)
-              : SCHEMA_HOOK_IDLE_STATUS
+              : WRITE_STATUS_IDLE
         : schemaScanWritable
-          ? SCHEMA_HOOK_IDLE_STATUS
-          : SCHEMA_HOOK_READONLY_STATUS;
+          ? WRITE_STATUS_IDLE
+          : WRITE_STATUS_READONLY;
     const prev = fieldWriteStatusRef.current;
     if (writeStatusEquivalent(prev, next)) return prev;
     fieldWriteStatusRef.current = next;
@@ -8945,11 +8945,13 @@ export function useKitName(): string {
   return useStoreField(client.kitName);
 }
 
-/** @emoji 🪪 Rename kit command + {@link WriteStatus} from {@link KitStoreClient.renameKit}. */
+/** @emoji 🪪 Rename kit command + {@link WriteStatus} from {@link KitStoreClient.renameKit} (string arg maps to uniform `scope`/`input`). */
 export function useRenameKit(): readonly [(name: string) => Promise<SetResult>, WriteStatus] {
   const client = useKitStoreClient();
   if (!client) throw new Error("useRenameKit: kit client required inside KitScope");
-  return useStoreCommand(client.renameKit);
+  const [run, st] = useStoreCommand(client.renameKit);
+  const runByName = React.useCallback((name: string) => run({ scope: {}, input: { name } }), [run]);
+  return [runByName, st] as const;
 }
 
 export function useKitRelease(idValue?: string): HookTriad<any> {
@@ -17135,7 +17137,7 @@ if (shouldRunReactEmbeddedTests) {
       push(initialName);
       return () => {};
     });
-    const renameKitCmd = new StoreCommand<RenameKitCommandArgs>(async (args) => {
+    const renameKitCmd = new StoreCommand<import("@semio/js").RenameKitCommandArgs>(async (args) => {
       const v = String(args.input?.name ?? "").trim();
       if (v === "") return { ok: false, error: { kind: "InvalidValue", message: "kit name required" } };
       const kitDto: KitFullDto = JSON.parse(JSON.stringify(kitJsonFromStore(store))) as KitFullDto;
@@ -17645,7 +17647,7 @@ if (shouldRunReactEmbeddedTests) {
         resolveConflict: async () => ({ ok: true } as const),
         syncNow: async () => ({ ok: true } as const),
         kitName: new StoreField<string>(""),
-        renameKit: new StoreCommand<string>(async () => ({
+        renameKit: new StoreCommand<import("@semio/js").RenameKitCommandArgs>(async () => ({
           ok: false,
           error: { kind: "NotSupported", message: "stub" },
         })),
