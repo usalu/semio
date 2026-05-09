@@ -964,16 +964,16 @@ pub mod meta {
         pub url: String,
         pub mime: Option<String>,
         pub size: Option<i32>,
-        #[graphql(name = "contentHash")]
-        #[serde(rename = "hash", alias = "contentHash")]
-        pub content_hash: String,
+        /// @emoji 📎 Blob/content digest on the wire (`hash` in JSON); omitted from GraphQL in favor of entity [`File::hash`] resolver.
+        #[graphql(skip)]
+        pub hash: String,
         pub description: Option<String>,
         pub created: Option<Timestamp>,
         pub updated: Option<Timestamp>,
     }
 
     impl File {
-        /// @emoji 🌿 Blake3 leaf over every persisted [`File`] column (blob digest stays in [`File::content_hash`]).
+        /// @emoji 🌿 Blake3 leaf over every persisted [`File`] column (blob digest in [`File::hash`] JSON field).
         pub fn compute_entity_hash(&self) -> String {
             crate::hash::merkle_node_str(
                 &[
@@ -982,7 +982,7 @@ pub mod meta {
                     self.url.as_str(),
                     self.mime.as_deref().unwrap_or(""),
                     &self.size.map(|sz| sz.to_string()).unwrap_or_default(),
-                    self.content_hash.as_str(),
+                    self.hash.as_str(),
                     self.description.as_deref().unwrap_or(""),
                     self.created.as_ref().map(|t| t.0.as_str()).unwrap_or(""),
                     self.updated.as_ref().map(|t| t.0.as_str()).unwrap_or(""),
@@ -7900,6 +7900,44 @@ pub mod kit_backbone {
             out
         }
 
+        /// @emoji 📸 Flatten [`crate::vcs::Transaction::changes`] into bundle [`TransactionDto`] steps (ordered forwards then paired backwards per [`crate::vcs::Change`]).
+        async fn transaction_dto_from_runtime(tx: &Arc<crate::vcs::Transaction>) -> TransactionDto {
+            let mut forward_items: Vec<TransactionStepDto> = Vec::new();
+            let mut backward_items: Vec<TransactionStepDto> = Vec::new();
+            for ch in tx.changes.read().await.iter() {
+                for op in ch.forwards.read().await.iter() {
+                    forward_items.push(TransactionStepDto {
+                        id: Id::new().await.as_str().to_string(),
+                        hash: HASH_PLACEHOLDER.to_string(),
+                        kind: op.kind().to_string(),
+                        description: None,
+                        input: serde_json::to_value(op).unwrap_or_else(|_| serde_json::json!({})),
+                    });
+                }
+                for op in ch.backwards.read().await.iter() {
+                    backward_items.push(TransactionStepDto {
+                        id: Id::new().await.as_str().to_string(),
+                        hash: HASH_PLACEHOLDER.to_string(),
+                        kind: op.kind().to_string(),
+                        description: None,
+                        input: serde_json::to_value(op).unwrap_or_else(|_| serde_json::json!({})),
+                    });
+                }
+            }
+            TransactionDto {
+                id: tx.id.as_str().to_string(),
+                hash: HASH_PLACEHOLDER.to_string(),
+                forwards: BlockHashedListDto {
+                    hash: HASH_PLACEHOLDER.to_string(),
+                    items: forward_items,
+                },
+                backwards: BlockHashedListDto {
+                    hash: HASH_PLACEHOLDER.to_string(),
+                    items: backward_items,
+                },
+            }
+        }
+
         /// @emoji 📸 Project the live `Graph` into a metabolism-shaped bundle ready for atomic write.
         /// `wip.id` mirrors the graph id; `wip.root` is the camelCase `KitFullDto` projection of `parent_root_for_active_draft`;
         /// checkpoints / drafts / transactions echo the in-memory state so the on-disk file matches what
@@ -7935,10 +7973,10 @@ pub mod kit_backbone {
             for draft in graph.drafts.read().await.iter() {
                 let mut txs: Vec<TransactionDto> = Vec::new();
                 for tx in draft.transactions.read().await.iter() {
-                    txs.push(TransactionDto { id: tx.id.as_str().to_string(), hash: HASH_PLACEHOLDER.to_string(), forwards: BlockHashedListDto::default(), backwards: BlockHashedListDto::default() });
+                    txs.push(Self::transaction_dto_from_runtime(tx).await);
                 }
                 for tx in draft.finalized_transactions.read().await.iter() {
-                    txs.push(TransactionDto { id: tx.id.as_str().to_string(), hash: HASH_PLACEHOLDER.to_string(), forwards: BlockHashedListDto::default(), backwards: BlockHashedListDto::default() });
+                    txs.push(Self::transaction_dto_from_runtime(tx).await);
                 }
                 let parent = draft.parent_checkpoint.read().await.upgrade().map(|c| HashRefDto { id: c.id.as_str().to_string(), hash: HASH_PLACEHOLDER.to_string() });
                 bundle.wip.drafts.items.push(DraftDto { id: draft.id.as_str().to_string(), hash: HASH_PLACEHOLDER.to_string(), checkpoint: parent, transactions: BlockHashedListDto { hash: HASH_PLACEHOLDER.to_string(), items: txs } });
@@ -10404,7 +10442,7 @@ mod tests {
     }
 
     #[test]
-    fn file_serde_uses_hash_key_for_content_hash() {
+    fn file_serde_round_trips_blob_digest_as_hash() {
         let v = json!({
             "id": "019caa00-0000-7000-a000-000000000021",
             "url": "https://example.com/f",
@@ -10415,8 +10453,8 @@ mod tests {
             "created": serde_json::Value::Null,
             "updated": serde_json::Value::Null
         });
-        let f: crate::meta::File = serde_json::from_value(v).expect("File from fixture-shaped JSON");
-        assert_eq!(f.content_hash, "sha256:abc");
+        let f: crate::meta::File = serde_json::from_value(v.clone()).expect("File from JSON");
+        assert_eq!(f.hash, "sha256:abc");
         let out = serde_json::to_value(&f).expect("File serde_json::to_value");
         assert_eq!(out.get("hash").and_then(|x| x.as_str()), Some("sha256:abc"));
     }

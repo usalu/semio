@@ -17790,6 +17790,7 @@ export class SketchpadStore {
 
       if (initialState.kits) {
         const kitsToOpen = initialState.kits.slice();
+        /** Defer so `createKit` → `openKitInRegistry` never runs during React render (registry `bump` would setState on `KitRegistryProvider` while a child is rendering). */
         queueMicrotask(() => {
           kitsToOpen.forEach(({ kit, kind, source }) => {
             void this.createKit(kit, kind, source, false);

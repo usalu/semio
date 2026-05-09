@@ -167,6 +167,8 @@ export default defineConfig(async ({ mode }) => {
       port: 5173,
     },
     build: {
+      /** Workers + wasm-bindgen glue may use syntax older `esbuild` targets cannot downlevel (see vite-plugin-top-level-await). */
+      target: "es2022",
       rollupOptions: {
         external: ["@playwright/test", "node:fs/promises", "node:path", "node:url", "@semio/assets/semio/metabolism.kit.semio.json", "fs", "path", "url"],
       },

@@ -6595,10 +6595,6 @@ export function useFileSize(idValue?: string): HookTriad<any> {
   return useSchemaFieldState("File", "size", idValue);
 }
 
-export function useFileContentHash(idValue?: string): HookTriad<any> {
-  return useSchemaFieldState("File", "contentHash", idValue);
-}
-
 export function useFileBlob(idValue?: string): HookTriad<any> {
   return useSchemaFieldState("File", "blob", idValue);
 }
@@ -6647,10 +6643,6 @@ export function useFileInputSize(idValue?: string): HookTriad<any> {
   return useSchemaFieldState("FileInput", "size", idValue);
 }
 
-export function useFileInputContentHash(idValue?: string): HookTriad<any> {
-  return useSchemaFieldState("FileInput", "contentHash", idValue);
-}
-
 export function useFileInputBlob(idValue?: string): HookTriad<any> {
   return useSchemaFieldState("FileInput", "blob", idValue);
 }
@@ -6693,10 +6685,6 @@ export function useFilePatchInputFolderId(idValue?: string): HookTriad<any> {
 
 export function useFilePatchInputSize(idValue?: string): HookTriad<any> {
   return useSchemaFieldState("FilePatchInput", "size", idValue);
-}
-
-export function useFilePatchInputContentHash(idValue?: string): HookTriad<any> {
-  return useSchemaFieldState("FilePatchInput", "contentHash", idValue);
 }
 
 export function useFilePatchInputBlob(idValue?: string): HookTriad<any> {
