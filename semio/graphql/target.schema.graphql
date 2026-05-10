@@ -13,21 +13,26 @@ scalar Json
 #region General
 
 interface Node {
+  # Node
   id: ID! # data
 }
 
 interface Entity implements Node { # Our own extension ontop of the relay specs
+  # Node
   id: ID! # data
+  # Entity
   hash: String! # cached
   owner: Entity # reference
   owns: EntityConnection # reference
 }
 
 interface EntityEdge {
+  # EntityEdge
   cursor: String! # computed
 }
 
 type PageInfo {
+  # PageInfo
   hasNextPage: Boolean! # computed
   hasPreviousPage: Boolean! # computed
   startCursor: String! # computed // start at this entity
@@ -35,12 +40,14 @@ type PageInfo {
 }
 
 interface EntityConnection {
+  # EntityConnection
   # edges: [ENTITYEdge] # computed
   pageInfo: PageInfo! # computed
   hash: String! # cached // ur own extension ontop of the relay specs
 }
 
 interface WeakEntity implements Entity {
+  # Entity
   id: ID! # computed // hash
   hash: String! # cached
   owner: Entity # reference
@@ -48,6 +55,7 @@ interface WeakEntity implements Entity {
 }
 
 interface StrongEntity implements Entity {
+  # Entity
   id: ID! # data // uuidv7
   hash: String! # cached
   owner: Entity # reference

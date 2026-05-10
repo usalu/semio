@@ -36,9 +36,46 @@ isProject: false
 
 Make [semio/rs/lib.rs](semio/rs/lib.rs) emit SDL that is byte-equal (modulo trailing whitespace) to [semio/graphql/target.schema.graphql](semio/graphql/target.schema.graphql), then propagate the new schema through [semio/js/index.ts](semio/js/index.ts), [semio/react/index.tsx](semio/react/index.tsx), [semio/sketchpad/index.tsx](semio/sketchpad/index.tsx). All seven workers run in parallel via the Task tool on disjoint regions.
 
+## Field-annotation discipline (data vs computed vs cached vs reference)
+
+Every field in [target.schema.graphql](semio/graphql/target.schema.graphql) carries an inline annotation:
+
+- `# data` — **stored**. Persisted in the SQLite/file backend. Owned by the struct holding the field. Hash inputs.
+- `# computed` — **derived**. Implemented as a resolver method, not an owned struct field. Reads other data and the kit-graph engine.
+- `# cached` — derived but memoized. Currently used only for `hash: String!` on every entity/connection. Computed lazily and invalidated when any input `# data` field changes.
+- `# reference` — pointer/relation. Stored as an `Id`/`Hash`, resolved on read. Counts as data when it pins identity, otherwise as computed.
+
+**Most fields are `# computed`.** Only a small per-entity slice is actually stored. The Rust structs and the SQLite schema must reflect this — keeping computed fields off the structs avoids drift between persisted state and derived views, and lets the kit-graph engine remain the single source of truth.
+
+Concrete examples (from the target schema):
+
+- **`Quality` (Artifact, lines 1790-1816)** — stored: `id`, `name`, `description`, `icon`, `key`, `value`, `unit`, `definition`, `benchmarks`. Cached: `hash`. Reference: `owner`, `owns`. Computed: `createdAt`, `createdBy`, `authoredBy`, `changedIn`, `lastChangedAt`, `lastChangedBy`, `lastChangedIn`, `changes`, `edits`, `attributes`.
+- **`QualityDiff` (lines 1829-1848)** — every domain field is `# computed`. The diff struct holds **no owned data**; it's projected from the `Edit.forwards`/`backwards` arrays at resolve time. Cached `hash` only.
+- **`QualityModification` and `QualityModifications` (lines 1861-1903)** — entirely computed/reference; no stored fields. Resolved from the same `Edit` log.
+- **VCS entities** (target schema lines 5226-5417):
+  - **`Edit`** (5226-5241) — stored: `id`, `forwards`, `backwards`, `startedAt`, `finishedAt`, `description`, `origin`. Cached: `hash`. Reference: `owner`, `owns`. Computed: `sequenceNumber`, `finished`.
+  - **`Change`** (5258-5271) — stored: `id`, `edits`, `startedAt`, `finishedAt`, `description`, `origin`. Cached: `hash`. Reference: `owner`, `owns`. Computed: `finished`.
+  - **`Checkpoint`** (5288-5306) — stored: `id`, `timestamp`, `message`, `changes` (the change-set ids). Cached: `hash`. Reference: `owner`, `owns`, `parent`, `authors`. Computed: `ancestors`, `initial`, `kit`, `change(id)`, `edits`, `edit(id)`.
+  - **`Alternative`** (5323-5336) — stored: `id`, `name`, `savedChanges`, `unsavedChanges`. Cached: `hash`. Reference: `owner`, `owns`, `checkpoint`. Computed: `latestWipCheckpointAncestor`, `kit`.
+  - **`Graph`** (5353-5365) — stored: `id`, `alternatives`, `checkpoints`. Cached: `hash`. Reference: `owner`, `owns`. Computed: `theKit`, `alternative(id)`, `checkpoint(id)`, `release(id)`, `releases`.
+  - **`Session`** (5379-5386) — stored: `id`, `startedAt`, `alternatives`. Cached: `hash`. Reference: `owner`, `owns`.
+  - **`Conflict`** (5408-5416) — stored: `id`, `reasons`. Cached: `hash`. Reference: `owner`, `owns`, `authoritativeChange`, `wipChange`.
+- **All `*Edge` types** — only `node` is `# reference`; `cursor` is `# computed`.
+- **All `*Connection` types** — only `hash` is `# cached`; `edges` and `pageInfo` are `# computed`.
+
+### Implementation rules across the workers
+
+1. **Rust structs (Workers A–D)**: only define struct fields for `# data` and `# cached` annotations. Implement `# computed` and reference-as-derived fields as `async fn` resolvers in `#[ComplexObject]` blocks, reading from `kit_graph_engine` / `kit_backbone`. The macro `entity_full_family!` (Worker A) generates only the data fields as struct members; everything else lives in the impl block.
+2. **Persistence layer (Worker D)**: SQLite tables mirror the `# data` slice exactly. No table columns for computed fields. Hash columns are written when a row mutates. Edit/Change rows store the operation log; all `*Diff` / `*Modification` / `*Modifications` views are computed projections.
+3. **Hash invalidation**: any write that mutates a `# data` field on an entity must invalidate its `hash` and propagate up its ownership chain (parent `# cached` hashes recomputed lazily on next read).
+4. **JS DTOs (Worker E)**: separate `*DataDto` (the persistable slice for `KitFullDto` round-trips) from `*Dto` (the full GraphQL response shape including computed fields). Zod schemas have two flavors per entity: `*DataSchema` (strict, input/output for persistence) and `*Schema` (loose, output of full GraphQL reads).
+5. **React hooks (Worker F)**: hooks that drive **mutations** target the `# data` slice via the command builder. Hooks that **read** can project the full GraphQL shape but must not assume computed fields round-trip through writes.
+6. **Sketchpad (Worker G)**: `KitFullDtoSchema.parse(dto)` validates only the `# data` slice; all rendering of `# computed` fields is derived at read time from store snapshots, not from imported JSON.
+7. **Subscription `event` payloads (Worker D)**: serialize only `# data` plus the entity `id`/`hash`. Receivers re-read computed fields via Query when needed. Keeps the wire small and avoids stale computed snapshots.
+
 ## Concrete schema deltas (target vs prior implementation)
 
-### Terminology rename (drop "Scoped" prefix; split Operations vs Commands)
+### Terminology rename (drop "Scoped" prefix; split Operations vs Commands; collapse Wip → Version)
 
 | Prior | Target |
 |---|---|
@@ -53,18 +90,21 @@ Make [semio/rs/lib.rs](semio/rs/lib.rs) emit SDL that is byte-equal (modulo trai
 | `PieceScopedOperationInput` | **`PieceOperationInput`** |
 | `PiecesScopedOperationInput` | **`PiecesOperationInput`** |
 | `SessionScopedCommandInput` | **`SessionCommandInput`** |
-| `WipScopedCommandInput` | **`WipCommandInput`** |
-| `AlternativeScopedCommandInput` | **`AlternativeCommandInput`** |
-| `OpenChangeScopedCommandInput` | **`OpenChangeCommandInput`** |
-| `startNewOpenChange` | **`startNewChange`** |
-| `saveOpenChange` | **`saveChange`** |
-| `openChange(id: ID!)` (navigator on Wip/Alternative) | **`unsavedChange(id: ID!)`** (navigator return type is still `OpenChangeCommandInput!` in current target — see typo fixes) |
+| `WipScopedCommandInput` / `WipCommandInput` | **`VersionCommandInput`** (entered via `SessionCommandInput.theKit`) |
+| `AlternativeScopedCommandInput` / old `AlternativeCommandInput` | **`AlternativeCommandInput`** (drastically simplified — see Command tree below) |
+| `OpenChangeScopedCommandInput` / `OpenChangeCommandInput` | **`UnsavedChangeCommandInput`** |
+| `startNewOpenChange` | **`startNewChange`** (now lives on `VersionCommandInput`) |
+| `saveOpenChange` / `saveChange` | **`save: ID!`** (nested either on `VersionCommandInput` or on `UnsavedChangeCommandInput`) |
+| `openChange(id: ID!)` | **`unsavedChange(id: ID!): UnsavedChangeCommandInput!`** (now on `VersionCommandInput`) |
 | `Alternative.openChanges` | **`Alternative.unsavedChanges`** |
 | `Alternative.store: Kit!` | **`Alternative.kit: Kit!`** |
 | `Conflict.transactionVersion: WriteVersion` | **`Conflict.wipChange: Change`** |
 | `Conflict.reason: String!` | **`Conflict.reasons: [String!]!`** |
 | `Graph.kit` | **`Graph.theKit: Kit`** (distinct from `Alternative.kit: Kit!`) |
 | `Checkpoint.isRelease` | **REMOVED.** Releases live on `Graph.releases: CheckpointConnection!` and `Graph.release(id)` |
+| (none) | **NEW** `SessionCommandInput.login(username, passwordHash, hubUrl): ID!`, **`logout: ID!`**, **`startAlternative(name: String): ID!`** |
+| (none) | **NEW** `VersionCommandInput.createCheckpoint(message: String!): ID!` |
+| (none) | **NEW** `AlternativeCommandInput.version: ID!`, **`integrateIntoTheKit: ID!`** |
 
 The conceptual split: **Operations** = entity-level CRUD scopes (`*OperationInput`); **Commands** = VCS lifecycle scopes (`*CommandInput`). All `*OperationInput` and `*CommandInput` definitions live under [target.schema.graphql](semio/graphql/target.schema.graphql) `#region VCS → #region Commands` (lines 5430–5606). The `interface Operation` itself + `OperationEdge`/`OperationConnection` live in the top-level `#region Kit → #region Operations` (lines 977–1000); concrete `Operation`-implementing types are nested inside each entity's own `#region Operations` (e.g. `#region Quality → #region Operations` lines 1906–2084).
 
@@ -90,23 +130,35 @@ type Mutation { session: SessionScopedCommandInput! }   # NOTE: typo in target f
 type SessionCommandInput {
   start: ID!
   end: ID!
-  wip: WipCommandInput
+  login(username: String!, passwordHash: String!, hubUrl: String): ID!
+  logout: ID!
+  theKit: VersionCommandInput
   alternative(id: ID!): AlternativeCommandInput
+  startAlternative(name: String): ID!
 }
 
-type WipCommandInput {
-  startNewChange: ID!
-  saveChange: ID!
-  unsavedChange(id: ID!): OpenChangeCommandInput!   # NOTE: field renamed to unsavedChange but return type still says OpenChangeCommandInput — to be unified to UnsavedChangeCommandInput by Worker D
+# `VersionCommandInput` replaces the old `WipCommandInput`. Entered via Session.theKit.
+# It exposes the change/checkpoint lifecycle for the kit-version a session is currently editing.
+type VersionCommandInput {
+  startNewChange: ID!                                        # opens a new unsaved Change on theKit
+  unsavedChange(id: ID!): UnsavedChangeCommandInput!          # navigate into an existing unsaved Change to add operations or save
+  save: ID!                                                  # save the current open change at version-level (no id required)
+  createCheckpoint(message: String!): ID!                    # promote the saved-change set to a Checkpoint
 }
 
+type UnsavedChangeCommandInput {
+  kit: KitOperationInput!                                    # navigator into kit operations recorded under this unsaved change
+  save: ID!                                                  # save (close) just this unsaved change
+}
+
+# Alternatives are simpler: they expose a version pointer and an integration verb. All
+# kit-changing operations occur via `Session.theKit` (the session's currently-active kit version).
+# `startAlternative(name)` on Session is the entry point that creates a new alternative and
+# switches `theKit` onto it; `integrateIntoTheKit` merges the alternative's saved changes back.
 type AlternativeCommandInput {
-  startNewChange: ID!
-  saveChange: ID!
-  unsavedChange(id: ID!): OpenChangeCommandInput!
+  version: ID!
+  integrateIntoTheKit: ID!
 }
-
-type OpenChangeCommandInput { kit: KitOperationInput! }   # NOTE: rename the type to UnsavedChangeCommandInput for consistency with the unsavedChange navigator and Alternative.unsavedChanges
 ```
 
 Then `KitOperationInput` / `TagOperationInput` / `ConceptOperationInput` / `QualityOperationInput` / `TypeOperationInput` / `PortOperationInput` / `ConnectorOperationInput` / `DesignOperationInput` / `PieceOperationInput` / `PiecesOperationInput` follow exactly the schema (every leaf returns `ID!` = the resulting `Edit.id`).
@@ -169,13 +221,16 @@ Change lifecycle (replaces Draft/Transaction):
 
 ```mermaid
 flowchart LR
-    wip["wip Graph"] -->|"startNewChange"| openA["Change (unsaved)"]
-    altScope["alternative(id)"] -->|"startNewChange"| openB["Change (unsaved)"]
-    openA -->|"openChange(id).kit.…"| edit1["Edit"]
-    openA -->|"openChange(id).kit.…"| edit2["Edit"]
-    openB -->|"openChange(id).kit.…"| edit3["Edit"]
-    openA -->|"saveChange"| saved["Change (saved) → Checkpoint"]
-    openB -->|"saveChange"| saved
+    session["Session"] -->|"theKit"| version["VersionCommandInput"]
+    session -->|"startAlternative(name)"| altSpawn["new Alternative"]
+    session -->|"alternative(id)"| altScope["AlternativeCommandInput"]
+    altScope -->|"integrateIntoTheKit"| version
+    version -->|"startNewChange"| unsaved["UnsavedChangeCommandInput"]
+    version -->|"unsavedChange(id)"| unsaved
+    unsaved -->|"kit.<op>"| edit["Edit"]
+    unsaved -->|"save"| savedChange["Change (saved)"]
+    version -->|"save"| savedChange
+    savedChange -->|"createCheckpoint(message)"| checkpoint["Checkpoint"]
 ```
 
 ## Worker task split (parallel via Task tool)
@@ -187,23 +242,31 @@ Workers A–D all edit [semio/rs/lib.rs](semio/rs/lib.rs); they own non-overlapp
 - File: [semio/rs/lib.rs](semio/rs/lib.rs).
 - Owned regions: `gql_relay`, `geom`, `iface`, plus a new `gql::interfaces` subregion.
 - Declare async-graphql `#[Interface]`s for `Node`, `Entity`, `EntityEdge`, `EntityConnection`, `WeakEntity`, `StrongEntity`, `Artifact`, `Document`, `Event`, `Diff`, `Modification`, `Operation`, plus `PageInfo`.
-- Extend the existing `entity_relay!` macro (rename to `entity_family!` or add a new `entity_full_family!`) so a single invocation emits all 12 types for a domain entity. Concrete pattern:
+- Extend the existing `entity_relay!` macro (rename to `entity_family!` or add a new `entity_full_family!`) so a single invocation emits all 12 types for a domain entity. The macro respects the `# data` vs `# computed` split from the schema:
 
 ```rust
 macro_rules! entity_full_family {
-    ($entity:ident, $weak_or_strong:ident) => {
-        // 1. Foo (already present)
-        // 2. FooEdge implements EntityEdge { cursor, node: Foo! }
-        // 3. FooConnection implements EntityConnection { edges: [FooEdge!]!, pageInfo, hash }
-        // 4. FooDiff implements Entity { ...optional fields per schema... }
-        // 5. FooDiffEdge / FooDiffConnection
-        // 6. FooModification implements Modification { id, hash, owner, owns, before: Foo!, diff: FooDiff!, after: Foo! }
-        // 7. FooModificationEdge / FooModificationConnection
-        // 8. FooModifications implements Entity { id, hash, owner, owns, removed, modifications: FooModificationConnection, added }
-        // 9. FooModificationsEdge / FooModificationsConnection
+    ($entity:ident, $weak_or_strong:ident, { $( $data_field:ident : $data_ty:ty ),* $(,)? }) => {
+        // 1. struct Foo { id, hash (cached), $( $data_field: $data_ty ),* }
+        //    impl with #[Object]: every # computed and connection field is an async fn resolver,
+        //    not a struct member.
+        // 2. type FooEdge — node: Foo (reference, struct field), cursor: String (computed, resolver).
+        // 3. type FooConnection — hash (cached) struct field; edges/pageInfo are resolvers
+        //    over a paginator that walks the kit-graph engine.
+        // 4. type FooDiff — id (computed = hash), hash (cached). NO struct fields for the
+        //    domain-shape — every `# computed` field on the diff is a resolver that projects
+        //    from the owning Edit's forward/backward op log.
+        // 5. FooDiffEdge / FooDiffConnection — same pattern.
+        // 6. type FooModification — id (computed), hash (cached). before/diff/after are resolvers.
+        // 7. FooModificationEdge / FooModificationConnection — same pattern.
+        // 8. type FooModifications — id (computed), hash (cached). removed/modifications/added
+        //    are resolvers; no owned domain data.
+        // 9. FooModificationsEdge / FooModificationsConnection — same pattern.
     };
 }
 ```
+
+The crucial discipline: `# data` annotations from the schema are the **only** struct fields the macro emits; everything else is a resolver. This matches the semantic split: data is stored in `Edit`/`Change` records (and a small per-entity owned slice), while diff/modification/connection views are projections.
 
 - Apply the macro to: `Vector`, `Point`, `Coordinate`, `Offset`, `Plane`, `Position`, `Location`, `Attribute`. Declare matching GraphQL inputs `VectorInput`, `PointInput`, `CoordinateInput`, `OffsetInput`, `PlaneInput`, `PositionInput`, `LocationInput`.
 - Important: `*Diff` fields are nullable (optional new value) per the `interface Diff` doc-comment — match field-by-field exactly to [semio/graphql/target.schema.graphql](semio/graphql/target.schema.graphql) lines 109–171 and the per-entity sections (e.g. `PlaneDiff` at lines 601–611).
@@ -212,18 +275,30 @@ macro_rules! entity_full_family {
 
 - File: [semio/rs/lib.rs](semio/rs/lib.rs).
 - Owned regions: subregions inside `kit` for `Place`, `Family`, `Folder`, `File`, `Author`, `Prop`, `Benchmark`, `Stat`, `Quality`, `Tag`, `Concept`, `Port` — apply Worker A's macro.
-- Operation pairs (`CreatedQualityInput`+`CreatedQuality` … `DeletedQualities`, same for Tag/Concept/Port). Each operation type is:
+- Operation pairs (`CreatedQualityInput`+`CreatedQuality` … `DeletedQualities`, same for Tag/Concept/Port). The `*Input` types from the schema's per-entity `#region Operations` are all `# data` containers (e.g. `CreatedQualityInput { quality: Quality! }`); their fields are stored on the operation row. The companion `*` Operation type owns only the data it needs (`id`, `hash` cached, `input`); `scope`, `modification`, `owner`, `owns`, and the result-field (`quality: Quality!`) are computed/reference resolvers:
 
 ```rust
-#[derive(SimpleObject)]
-struct CreatedQualityInput { name: String, value: Option<String>, /* … fields per schema lines 1814-1828 */ }
+// Stored data container: lives on the Edit/Change op log.
+pub struct CreatedQualityInput { pub quality_id: Id }   // # data via reference (Quality is read at resolve time)
 
-#[derive(SimpleObject)]
-#[graphql(impl = "Operation")]
-struct CreatedQuality {
-    id: ID, hash: String,
-    owner: Option<EntityRef>, owns: Option<EntityConnectionRef>,
-    scope: KitScopeRef, input: CreatedQualityInput, modification: QualityModificationRef,
+#[derive(Clone)]
+pub struct CreatedQuality {
+    pub id: Id,                                          // # data
+    pub hash: ArcSwap<String>,                           // # cached
+    pub owner_edit_id: Id,                               // # reference // Edit
+    pub input: CreatedQualityInput,                      // # data
+}
+
+#[Object]
+impl CreatedQuality {
+    async fn id(&self) -> Id { self.id.clone() }
+    async fn hash(&self, ctx: &Context<'_>) -> Result<String> { /* lazy */ }
+    async fn owner(&self, ctx: &Context<'_>) -> Option<EntityRef> { /* the owning Edit */ }
+    async fn owns(&self, ctx: &Context<'_>) -> EntityConnection { /* QualityConnection — the created quality */ }
+    async fn scope(&self, ctx: &Context<'_>) -> EntityRef { /* Kit (since CreateQuality scope is Kit per schema line 1918) */ }
+    async fn input(&self) -> &CreatedQualityInput { &self.input }
+    async fn modification(&self, ctx: &Context<'_>) -> Modification { /* QualityModification computed from Edit */ }
+    async fn quality(&self, ctx: &Context<'_>) -> Result<Quality> { /* read by id */ }
 }
 ```
 
@@ -239,41 +314,58 @@ struct CreatedQuality {
 - File: [semio/rs/lib.rs](semio/rs/lib.rs).
 - Owned regions: `vcs`, `event`, `worker`, the `gql` root (Query/Mutation/Subscription + Commands region with all `*OperationInput` and `*CommandInput` types).
 - **Delete** old `Draft`, `Transaction`, `ChangeOwner` union, `forwardSemanticOpRecordIds`/`backwardSemanticOpRecordIds`, `transactionOpen`/`transactionCommit`/`transactionAbort` mutations.
-- **Rename** old `Change` → `Edit`; restructure to:
+- **Rename** old `Change` → `Edit`. The Rust struct holds only the `# data` + `# cached` slice; all relay views (`OperationConnection` / `EditConnection`) and computed flags (`finished`, `sequenceNumber`) are resolvers:
 
 ```rust
-#[derive(SimpleObject)]
-#[graphql(impl = "StrongEntity")]
+#[derive(Clone)]
 pub struct Edit {
-    pub id: ID, pub hash: String,
-    pub owner: Option<EntityRef>, pub owns: Option<EntityConnectionRef>,
-    pub forwards: OperationConnection,
-    pub backwards: OperationConnection,
-    pub sequence_number: i32,
-    pub started_at: Timestamp,
-    pub finished_at: Option<Timestamp>,
-    pub finished: Option<bool>,
-    pub description: String,
-    pub origin: String,
+    pub id: Id,                                      // # data
+    pub hash: ArcSwap<String>,                       // # cached (lazy)
+    pub owner_id: Option<EntityRef>,                 // # reference
+    pub forward_op_ids: Vec<Id>,                     // # data — ordered op ids; OperationConnection is a resolver view
+    pub backward_op_ids: Vec<Id>,                    // # data
+    pub started_at: Timestamp,                       // # data
+    pub finished_at: Option<Timestamp>,              // # data
+    pub description: String,                         // # data
+    pub origin: String,                              // # data
+}
+
+#[Object]
+impl Edit {
+    async fn id(&self) -> Id { self.id.clone() }
+    async fn hash(&self, ctx: &Context<'_>) -> Result<String> { /* read or compute */ }
+    async fn owner(&self, ctx: &Context<'_>) -> Option<EntityRef> { self.owner_id.clone() }
+    async fn owns(&self, ctx: &Context<'_>) -> EntityConnection { /* derived */ }
+    async fn forwards(&self, ctx: &Context<'_>) -> OperationConnection { /* project from forward_op_ids */ }
+    async fn backwards(&self, ctx: &Context<'_>) -> OperationConnection { /* project from backward_op_ids */ }
+    async fn sequence_number(&self, ctx: &Context<'_>) -> i32 { /* computed: index within owning Change */ }
+    async fn started_at(&self) -> Timestamp { self.started_at.clone() }
+    async fn finished_at(&self) -> Option<Timestamp> { self.finished_at.clone() }
+    async fn finished(&self) -> Option<bool> { Some(self.finished_at.is_some()) }   // # computed
+    async fn description(&self) -> &str { &self.description }
+    async fn origin(&self) -> &str { &self.origin }
 }
 ```
 
-- **Add new** `Change` as group of `Edit`s:
+- **Add new** `Change` as group of `Edit`s — same discipline:
 
 ```rust
-#[derive(SimpleObject)]
-#[graphql(impl = "StrongEntity")]
+#[derive(Clone)]
 pub struct Change {
-    pub id: ID, pub hash: String,
-    pub owner: Option<EntityRef>, pub owns: Option<EntityConnectionRef>,
-    pub edits: EditConnection,
-    pub started_at: Timestamp,
-    pub finished_at: Option<Timestamp>,
-    pub finished: Option<bool>,
-    pub description: String,
-    pub origin: String,
+    pub id: Id,                                      // # data
+    pub hash: ArcSwap<String>,                       // # cached
+    pub owner_id: Option<EntityRef>,                 // # reference
+    pub edit_ids: Vec<Id>,                           // # data — EditConnection is a resolver view
+    pub started_at: Timestamp,                       // # data
+    pub finished_at: Option<Timestamp>,              // # data
+    pub description: String,                         // # data
+    pub origin: String,                              // # data
 }
+
+// Resolver impl mirrors Edit's pattern: id/hash/owner from struct; owns/edits/finished computed.
 ```
+
+- VCS entity Rust structs follow the same pattern: only `# data`+`# cached` are owned; all relay connections and computed flags are resolvers reading the kit-graph engine. `*Diff` types own no data fields at all (only `id`/`hash`); `*Modification` and `*Modifications` likewise.
 
 - Rebuild `Checkpoint`, `Alternative`, `Graph`, `Session`, `Conflict` with the field set listed in the **VCS rewrite** table above (all implement `StrongEntity`). `Alternative` exposes `unsavedChanges` and `kit: Kit!` (no `start`, no `store`, no `draft`). `Conflict` carries `authoritativeChange: Change`, `wipChange: Change`, `reasons: [String!]!` — drop `ReadVersion`/`WriteVersion` entirely.
 - Implement the command tree exactly. Concrete async-graphql sketch:
@@ -293,29 +385,40 @@ pub struct SessionCommandInput;
 impl SessionCommandInput {
     async fn start(&self, ctx: &Context<'_>) -> Result<ID> { /* ParentRuntime::start_session */ }
     async fn end(&self, ctx: &Context<'_>) -> Result<ID> { /* ParentRuntime::end_session */ }
-    async fn wip(&self) -> Option<WipCommandInput> { Some(WipCommandInput) }
+    async fn login(&self, ctx: &Context<'_>, username: String, password_hash: String, hub_url: Option<String>) -> Result<ID> { /* hub auth */ }
+    async fn logout(&self, ctx: &Context<'_>) -> Result<ID> { /* hub logout */ }
+    async fn the_kit(&self) -> Option<VersionCommandInput> { Some(VersionCommandInput) }
     async fn alternative(&self, id: ID) -> Option<AlternativeCommandInput> { Some(AlternativeCommandInput { id }) }
+    async fn start_alternative(&self, ctx: &Context<'_>, name: Option<String>) -> Result<ID> { /* spawn alternative, switch theKit onto it */ }
 }
 
-pub struct WipCommandInput;
+pub struct VersionCommandInput;
 
 #[Object]
-impl WipCommandInput {
-    async fn start_new_change(&self, ctx: &Context<'_>) -> Result<ID> { /* opens Change on wip Graph */ }
-    async fn save_change(&self, ctx: &Context<'_>) -> Result<ID> { /* closes the unsaved Change → checkpoint */ }
-    async fn unsaved_change(&self, id: ID) -> UnsavedChangeCommandInput { UnsavedChangeCommandInput { scope: ScopeRef::Wip, change_id: id } }
+impl VersionCommandInput {
+    async fn start_new_change(&self, ctx: &Context<'_>) -> Result<ID> { /* opens unsaved Change on theKit */ }
+    async fn unsaved_change(&self, id: ID) -> UnsavedChangeCommandInput { UnsavedChangeCommandInput { change_id: id } }
+    async fn save(&self, ctx: &Context<'_>) -> Result<ID> { /* save the current open change at version-level */ }
+    async fn create_checkpoint(&self, ctx: &Context<'_>, message: String) -> Result<ID> { /* promote saved-change set to a Checkpoint */ }
 }
 
-// AlternativeCommandInput mirrors WipCommandInput shape with an extra alternative_id field.
-
-pub struct UnsavedChangeCommandInput { scope: ScopeRef, change_id: ID }
+pub struct UnsavedChangeCommandInput { change_id: ID }
 
 #[Object]
 impl UnsavedChangeCommandInput {
-    async fn kit(&self) -> KitOperationInput { KitOperationInput { scope: self.scope, change_id: self.change_id.clone() } }
+    async fn kit(&self) -> KitOperationInput { KitOperationInput { change_id: self.change_id.clone() } }
+    async fn save(&self, ctx: &Context<'_>) -> Result<ID> { /* save just this unsaved change */ }
 }
 
-pub struct KitOperationInput { scope: ScopeRef, change_id: ID }
+pub struct AlternativeCommandInput { id: ID }
+
+#[Object]
+impl AlternativeCommandInput {
+    async fn version(&self, ctx: &Context<'_>) -> Result<ID> { /* return the alternative's version */ }
+    async fn integrate_into_the_kit(&self, ctx: &Context<'_>) -> Result<ID> { /* merge alternative back into theKit */ }
+}
+
+pub struct KitOperationInput { change_id: ID }
 
 #[Object]
 impl KitOperationInput {
@@ -327,7 +430,7 @@ impl KitOperationInput {
 }
 ```
 
-- Important typo fix: `target.schema.graphql` line 5627 has `session: SessionScopedCommandInput!` referencing an undeclared type. Worker D updates the target file to `session: SessionCommandInput!` and emits matching SDL. Also adds `scalar Json` to the target file (declared adjacent to `scalar Timestamp`).
+- Important typo fix: `target.schema.graphql` line 5631 has `session: SessionScopedCommandInput!` referencing an undeclared type. Worker D updates the target file to `session: SessionCommandInput!` and emits matching SDL. Also adds `scalar Json` to the target file (declared adjacent to `scalar Timestamp`). The stale comment at lines 5627-5629 ("session → alternative(id) → transaction(id) → kit → …") must be updated to the new `session → theKit | alternative(id) | startAlternative(name) | …` flow.
 
 Each leaf calls a single helper `apply_op(ctx, scope, op) -> Result<ID>` that funnels into the existing `kit_graph_engine` apply path, records an `Edit` inside the addressed open `Change`, and returns the new `Edit.id` (which is the operation `ID!`).
 
@@ -364,16 +467,19 @@ fn schema_matches_target() {
 
 - File: [semio/js/index.ts](semio/js/index.ts).
 - Owned regions: `JsonGraphQlDtoTypes`, `KitWriteScope`, `ChangeKitCommand`, `GraphqlUtil`, `KitGraphqlReadSelections`, `Transport`, `KitStore`, `KitEntitiesMerged`, `EmbeddedTests`.
-- **`KitWriteScope` rewrite** (drops `Draft`/`Transaction`):
+- **`KitWriteScope` rewrite** (drops `Draft`/`Transaction` and the wip/alternative split — the session always writes via `theKit`):
 
 ```ts
-export type KitWriteScope =
-  | { kind: 'wip'; changeId: ChangeId }
-  | { kind: 'alternative'; alternativeId: AlternativeId; changeId: ChangeId };
+export type KitWriteScope = { changeId: ChangeId };   // theKit's currently-open unsaved change
 
 export interface ChangeLifecycle {
-  startNewChange(scope: { kind: 'wip' | 'alternative'; alternativeId?: AlternativeId }): Promise<ChangeId>;
-  saveChange(scope: { kind: 'wip' | 'alternative'; alternativeId?: AlternativeId }): Promise<ChangeId>;
+  startNewChange(): Promise<ChangeId>;
+  saveChange(changeId?: ChangeId): Promise<Id>;       // omitted = save at version level (Session.theKit.save)
+  createCheckpoint(message: string): Promise<Id>;
+  startAlternative(name?: string): Promise<AlternativeId>;
+  integrateAlternative(alternativeId: AlternativeId): Promise<Id>;
+  login(username: string, passwordHash: string, hubUrl?: string): Promise<Id>;
+  logout(): Promise<Id>;
 }
 ```
 
@@ -387,13 +493,30 @@ export class CommandBuilder {
 
 class SessionCommand {
   start(): Promise<Id>; end(): Promise<Id>;
-  wip(): WipCommand;
-  alternative(id: Id): AlternativeCommand;
+  login(username: string, passwordHash: string, hubUrl?: string): Promise<Id>;
+  logout(): Promise<Id>;
+  theKit(): VersionCommand;                                // navigator into theKit's version command tree
+  alternative(id: AlternativeId): AlternativeCommand;
+  startAlternative(name?: string): Promise<AlternativeId>;
 }
 
-class WipCommand { startNewChange(): Promise<ChangeId>; saveChange(): Promise<ChangeId>; unsavedChange(id: ChangeId): UnsavedChangeCommand; }
-class AlternativeCommand extends WipCommand { /* same shape, parameterized by alternativeId */ }
-class UnsavedChangeCommand { kit(): KitOperation; }
+class VersionCommand {
+  startNewChange(): Promise<ChangeId>;
+  unsavedChange(id: ChangeId): UnsavedChangeCommand;
+  save(): Promise<Id>;                                     // version-level save
+  createCheckpoint(message: string): Promise<Id>;
+}
+
+class UnsavedChangeCommand {
+  kit(): KitOperation;
+  save(): Promise<Id>;                                     // change-level save
+}
+
+class AlternativeCommand {
+  version(): Promise<Id>;
+  integrateIntoTheKit(): Promise<Id>;
+}
+
 class KitOperation {
   rename(newName: string): Promise<Id>;
   changeDescription(newDescription: string): Promise<Id>;
@@ -409,9 +532,19 @@ class KitOperation {
 Each leaf serializes a GraphQL document of the form:
 
 ```graphql
-mutation Op($altId: ID!, $changeId: ID!, $newName: String!) {
-  session { alternative(id: $altId) { unsavedChange(id: $changeId) { kit { design(id: "...") { piece(id: "...") { rename(newName: $newName) } } } } } }
+mutation Op($changeId: ID!, $newName: String!) {
+  session { theKit { unsavedChange(id: $changeId) { kit { design(id: "...") { piece(id: "...") { rename(newName: $newName) } } } } } }
 }
+```
+
+Save the change with:
+
+```graphql
+mutation SaveChange($changeId: ID!) {
+  session { theKit { unsavedChange(id: $changeId) { save } } }
+}
+# or version-level (saves whichever change is currently unsaved):
+# mutation SaveCurrent { session { theKit { save } } }
 ```
 
 - **`KitGraphqlReadSelections`** rewrite: walk the new `wip: Graph`, `authoritative: Graph`, `session: Session` trees. Replace any `draft { … }` / `transaction { … }` field selections with `unsavedChanges { edges { node { id edits { edges { node { id } } } } } }` on the data side; the command-builder navigates via `unsavedChange(id)`. Replace `change { forwards backwards }` reads with `edit { forwards { … } backwards { … } sequenceNumber startedAt finishedAt finished description origin }`. Replace `Alternative.store` reads with `Alternative.kit`. Replace `Graph.kit` reads with `Graph.theKit`. Replace `Conflict.reason` with `Conflict.reasons`. Drop any `Checkpoint.isRelease` reads (use `Graph.releases` instead).
@@ -438,20 +571,32 @@ function dispatchEvent(env: KitEventEnvelope) { /* match env.kind → invoke per
 | `useDraft` / `useDraftCommit` | **REMOVE** |
 | `useTransaction` / `useTransactionOpen` / `useTransactionCommit` / `useTransactionAbort` | **REMOVE** |
 | `useChange` (per-op) | `useEdit` |
-| (none) | `useChange(scope)` returning `{ startNewChange, saveChange, currentChangeId }` (Note: name reused — old `useChange` semantics moved to `useEdit`.) |
+| (none) | `useChange()` returning `{ startNewChange, save, createCheckpoint, currentChangeId }` (drives `Session.theKit`). Name reused — old `useChange` semantics moved to `useEdit`. |
 | `useChangeForwards/Backwards` | `useEditForwards/Backwards` |
-| `useDraftPieces` / `useOpenChanges` | `useUnsavedChanges` (consumes `Alternative.unsavedChanges`) |
+| `useDraftPieces` / `useOpenChanges` | `useUnsavedChanges` (consumes `Alternative.unsavedChanges` or `Session.theKit` reads) |
+| (none) | `useStartAlternative()`, `useIntegrateAlternative(alternativeId)`, `useLogin()`, `useLogout()` |
 
 - **Mutation hooks** wire via the JS builder from Worker E. Pattern:
 
 ```tsx
 function useDragPiece(designId: Id, pieceId: Id) {
   const builder = useCommandBuilder();
-  const { changeId, alternativeId } = useChangeContext();
+  const { changeId } = useChangeContext();
   return useCallback((offset: OffsetInput) =>
-    builder.session().alternative(alternativeId).unsavedChange(changeId)
+    builder.session().theKit().unsavedChange(changeId)
       .kit().design(designId).piece(pieceId).drag(offset),
-    [builder, changeId, alternativeId, designId, pieceId]);
+    [builder, changeId, designId, pieceId]);
+}
+```
+
+Alternatives use a separate hook that drives `Session.alternative(id)`:
+
+```tsx
+function useIntegrateAlternative(alternativeId: AlternativeId) {
+  const builder = useCommandBuilder();
+  return useCallback(() =>
+    builder.session().alternative(alternativeId).integrateIntoTheKit(),
+    [builder, alternativeId]);
 }
 ```
 
@@ -462,11 +607,12 @@ function useDragPiece(designId: Id, pieceId: Id) {
 
 - File: [semio/sketchpad/index.tsx](semio/sketchpad/index.tsx).
 - Owned regions (per TOC slices F/G/H/I/J/K/L/M/O/P): Kit app shell, sketchpad runtime, consolidated apps, entrypoint, Playwright suite.
-- **XState rename**: `TransactionMachineConfig` → `ChangeMachineConfig`, `AppTransactionState` → `AppChangeState`, `transaction` actor → `change` actor. Events become `START_NEW_CHANGE`, `SAVE_CHANGE`, `RUN_OPERATION` instead of `TRANSACTION_OPEN` / `TRANSACTION_COMMIT` / `TRANSACTION_ABORT`. The rollback "abort" semantics map to `discardChange` (a new `WipCommandInput.discardChange: ID!` and `AlternativeCommandInput.discardChange: ID!` may need to be added by Worker D if rollback is required; otherwise expose it via `KitStoreHandle.discardChange`).
-- **Alternatives footer**: drop the `draft` chip; show `Alternative.unsavedChanges.edges.length` and a "save change" button driven by the new builder. Show saved checkpoint count from `Alternative.checkpoint.edges.length`.
+- **XState rename**: `TransactionMachineConfig` → `ChangeMachineConfig`, `AppTransactionState` → `AppChangeState`, `transaction` actor → `change` actor. Events become `START_NEW_CHANGE`, `SAVE_CHANGE`, `CREATE_CHECKPOINT`, `RUN_OPERATION` instead of `TRANSACTION_OPEN` / `TRANSACTION_COMMIT` / `TRANSACTION_ABORT`. New top-level `START_ALTERNATIVE`, `INTEGRATE_ALTERNATIVE`, `LOGIN`, `LOGOUT` events on the sketchpad shell machine. Rollback "abort" semantics map to `discardChange` — Worker D should add `VersionCommandInput.discardChange: ID!` and `UnsavedChangeCommandInput.discard: ID!` if rollback is required; otherwise expose via `KitStoreHandle.discardChange`.
+- **Alternatives footer**: drop the `draft` chip; show `Alternative.unsavedChanges.edges.length` and a "save change" button driven by `Session.theKit.save` / `Session.theKit.unsavedChange(id).save`. Add a "create checkpoint" button (with a message dialog) wired to `Session.theKit.createCheckpoint(message)`. Add a "start alternative" button wired to `Session.startAlternative(name)` and an "integrate alternative" button on each non-current alternative wired to `Session.alternative(id).integrateIntoTheKit`.
+- **Auth UI**: add a login/logout flow in the sketchpad navbar that calls `Session.login(username, passwordHash, hubUrl)` and `Session.logout`.
 - **`KitFullDtoSchema.parse` call sites** (entrypoint + VS Code adapter): re-validate against the new entity DTOs from Worker E.
-- **Imports**: prune removed exports (`Draft`, `Transaction`, `KitWriteScope` with old shape), add `Edit`, new `Change`, `UnsavedChangeCommand*`, `WipCommand*`, `AlternativeCommand*`, `*OperationInput` types.
-- Playwright suite (slice P): update fixtures that referenced `transaction` or `draft` to use `unsavedChanges` (data side) and `unsavedChange(id)` (command side). Behavioural assertions for kit operations remain unchanged.
+- **Imports**: prune removed exports (`Draft`, `Transaction`, `WipCommandInput`, `KitWriteScope` with old shape), add `Edit`, new `Change`, `UnsavedChangeCommand*`, `VersionCommand*`, simplified `AlternativeCommand*`, `*OperationInput` types.
+- Playwright suite (slice P): update fixtures that referenced `transaction` or `draft` to use `unsavedChanges` (data side) and `theKit.unsavedChange(id)` (command side). Add new fixtures covering `startAlternative` / `integrateIntoTheKit` / `createCheckpoint` / `login` / `logout` paths. Behavioural assertions for kit operations remain unchanged.
 
 ## Coordination contracts
 
@@ -475,9 +621,9 @@ function useDragPiece(designId: Id, pieceId: Id) {
 - **Parity test = merge gate**: Worker D's parity test against `target.schema.graphql` must pass before the bundles' tests (E/F/G) are validated.
 - **Stub schema sync for E/F/G**: while Workers A–D land Rust changes, Workers E/F/G can start in parallel using the literal type names from `target.schema.graphql`. They reconcile after the parity test passes.
 - **Schema typo / inconsistency fixes** (owned by Worker D, applied to `target.schema.graphql`):
-  - Line 5627 `session: SessionScopedCommandInput!` → `session: SessionCommandInput!`.
+  - Line 5631 `session: SessionScopedCommandInput!` → `session: SessionCommandInput!`.
   - Add `scalar Json` adjacent to `scalar Timestamp`.
-  - Rename `type OpenChangeCommandInput` → `type UnsavedChangeCommandInput` (lines 5586/5592/5602 currently mix `unsavedChange(id: ID!)` field with an `OpenChangeCommandInput!` return type — pick one vocabulary). The decision: **standardize on `UnsavedChange*`** since the data side is `unsavedChanges`/`unsavedChange` and the conflict side is `wipChange`. So: rename type and update the two return-type references on lines 5586 and 5592.
+  - Update the stale Mutation comment at lines 5627-5629 (still says "session → alternative(id) → transaction(id) → kit → …") to match the new shape: `session → theKit | alternative(id) | startAlternative(name) | start | end | login | logout`.
   - Region label fixes: lines 5284 `#endregion Edits` (under `#region Changes`) → `#endregion Changes`; line 5218 `#endregion Kits` (opened as `#region Kit`) → `#endregion Kit`.
 - **Scope IDs**: every leaf returns `ID!` = the resulting `Edit.id`; the JS builder must propagate this so React hooks can subscribe to operation completion via the `event` subscription.
 - **Operations vs Commands vocabulary**: enforce throughout JS/React/Sketchpad — entity scopes are *Operations*, VCS lifecycle scopes are *Commands*. Builder methods that descend from `Mutation.session` are `*Command` classes; methods on / under `KitOperationInput` and below are `*Operation` classes.
