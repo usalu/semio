@@ -5583,13 +5583,13 @@ type KitOperationInput {
 type WipCommandInput {
   startNewChange: ID!
   saveChange: ID!
-  openChange(id: ID!): OpenChangeCommandInput!
+  unsavedChange(id: ID!): OpenChangeCommandInput!
 }
 
 type AlternativeCommandInput {
   startNewChange: ID!
   saveChange: ID!
-  openChange(id: ID!): OpenChangeCommandInput!
+  unsavedChange(id: ID!): OpenChangeCommandInput!
 }
 
 type SessionCommandInput {
