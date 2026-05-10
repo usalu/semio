@@ -1,21 +1,27 @@
 ---
 name: single subscription endpoint
-overview: "Replace the flat per-event Subscription block with a single `operation: Operation!` endpoint, and add a `FailedOperation` concrete type so async failures travel through the same feed."
+overview: "Introduce a top-level general-purpose `Event` interface that any kind of event can implement (operations are one family among many), make `Operation` a specialization of `Event`, add `FailedOperation` as a sibling event kind, and collapse Subscription to a single `event: Event!` endpoint."
 todos:
-  - id: replace_subscription
-    content: "Replace type Subscription block (L5979-6097) with `Subscription { operation: Operation! }`."
+  - id: add_event_interface
+    content: "Add root-level `interface Event implements Entity` (+ EventEdge + EventConnection) next to Operation."
+    status: pending
+  - id: rebase_operation
+    content: "Re-declare `interface Operation implements Event & Entity`; scope moves up to Event, modification stays on Operation."
     status: pending
   - id: add_failed_operation
-    content: Add FailedOperation type + FailedOperationEdge + FailedOperationConnection implementing Operation/EntityEdge/EntityConnection.
+    content: "Add FailedOperation (+ Edge + Connection) implementing Event & Entity (no modification)."
+    status: pending
+  - id: replace_subscription
+    content: "Replace type Subscription block (L5979-6097) with `Subscription { event: Event! }`."
     status: pending
   - id: drop_orphan_payloads
-    content: Delete unused `type Command` and `type Error`; rename region to OperationPayloads.
+    content: "Delete unused `type Command` and `type Error`; rename region SubscriptionPayloads -> EventPayloads."
     status: pending
   - id: validate
-    content: Run graphql parse + buildSchema; rg sweeps for removed names.
+    content: "Run graphql parse + buildSchema; rg sweeps for removed names and new Event/FailedOperation defs."
     status: pending
   - id: ticket_update
-    content: Append problem/change/verification to .repo/🎫/26/05/10/GRAPHQL-TARGET-MUTATION-CLEANUP/ticket.md.
+    content: "Append problem/change/verification to .repo/🎫/26/05/10/GRAPHQL-TARGET-MUTATION-CLEANUP/ticket.md."
     status: pending
 isProject: false
 ---
@@ -23,41 +29,82 @@ isProject: false
 # Single Subscription Endpoint
 
 ## Why
-With the async command/operation architecture in place, dynamic per-event subscription fields add no expressive power: every concrete operation already implements the `Operation` interface ([semio/graphql/target.schema.graphql L956-964](semio/graphql/target.schema.graphql)), so a single feed plus inline fragments is strictly more flexible than dozens of named fields. The flat block at L5979-6097 is replaced wholesale.
 
-## Schema Changes — `semio/graphql/target.schema.graphql`
+With the async command/operation architecture in place, dynamic per-event subscription fields add no expressive power: a single feed plus inline fragments is strictly more flexible than dozens of named fields. `FailedOperation` cannot implement `Operation` because `Operation`'s `modification: Modification!` (with required `before`/`after`) does not exist for a failure. So both successes and failures sit under a new root-level `Event` interface, and `Subscription` emits that. The flat block at L5979-6097 of [semio/graphql/target.schema.graphql](semio/graphql/target.schema.graphql) is replaced wholesale.
 
-### 1. Replace the entire `type Subscription` block (L5979-6097)
+## Type Hierarchy (after change)
 
-```graphql
-type Subscription {
-  # 📡 Single async feed of every operation produced by any mutation.
-  # Clients discriminate concrete operations (RenamedTag, MovedPiece, FailedOperation, ...) via inline fragments.
-  operation: Operation!
-}
+```mermaid
+graph TD
+  Entity --> Event
+  Event --> Operation
+  Event --> FailedOperation
+  Operation --> RenamedTag
+  Operation --> MovedPiece
+  Operation --> CreatedDesign
+  Operation -.-> Others[... existing concrete ops ...]
 ```
 
-That is the whole block. No `commandSucceeded`, no `operationSucceeded`, no `operationFailed`, no `error`, no per-entity event fields.
+`Event` carries the fields common to every emission: `id`, `hash`, `owner`, `owns`, `scope`. `Operation` adds `modification: Modification!`. `FailedOperation` adds `message: String!`.
 
-### 2. Add `FailedOperation` concrete type in the `#region SubscriptionPayloads` (currently L5764-5774, next to `Command` / `Error`)
+## Schema Changes — [semio/graphql/target.schema.graphql](semio/graphql/target.schema.graphql)
 
-`Operation` is the only payload of the new feed, so failures must implement it to be deliverable:
+### 1. Add `interface Event` next to `interface Operation` (around L956)
 
 ```graphql
-type FailedOperation implements Operation & Entity {
+interface Event implements Entity {
   id: ID! # data // uuidv7
   hash: String! # cached
   owner: Entity # reference // Change
   owns: EntityConnection # reference
-  modification: Modification! # computed
-  scope: Entity! # reference
-  message: String! # data // failure reason
+  scope: Entity! # reference // Entity | Quality | Attribute | Tag | Concept | Port | Type | Connector | Design | Piece | Connection | Kit
+}
+
+type EventEdge implements EntityEdge {
+  cursor: String! # computed
+  node: Event! # reference
+}
+
+type EventConnection implements EntityConnection {
+  edges: [EventEdge!]! # computed
+  pageInfo: PageInfo! # computed
+  hash: String! # cached
 }
 ```
 
-Plus the matching edge/connection pair to follow the schema's `*Edge` / `*Connection` convention used by every other concrete operation:
+### 2. Re-base `interface Operation` to implement `Event` (replace L956-964)
+
+`scope` moves up to `Event`; `Operation` only adds `modification`. All concrete `Renamed*` / `Created*` / `Moved*` / etc. types already redeclare both `scope` and `modification` inline, so they remain structurally unchanged — they just transitively gain `Event` membership.
 
 ```graphql
+interface Operation implements Event & Entity {
+  # Entity
+  id: ID! # data // uuidv7
+  hash: String! # cached
+  owner: Entity # reference // Change
+  owns: EntityConnection # reference
+  # Event
+  scope: Entity! # reference
+  # Operation
+  modification: Modification! # computed
+}
+```
+
+### 3. Add `FailedOperation` (+ edge/connection) implementing `Event` only — in `#region SubscriptionPayloads` (L5764-5774)
+
+```graphql
+type FailedOperation implements Event & Entity {
+  # Entity
+  id: ID! # data // uuidv7
+  hash: String! # cached
+  owner: Entity # reference // Change
+  owns: EntityConnection # reference
+  # Event
+  scope: Entity! # reference
+  # FailedOperation
+  message: String! # data // failure reason
+}
+
 type FailedOperationEdge implements EntityEdge {
   cursor: String! # computed
   node: FailedOperation! # reference
@@ -70,26 +117,42 @@ type FailedOperationConnection implements EntityConnection {
 }
 ```
 
-### 3. Retire payload types that the new endpoint no longer references
+### 4. Replace the entire `type Subscription` block (L5979-6097)
 
-`Command` (L5766-5768) and `Error` (L5770-5772) only existed to feed the now-deleted `commandSucceeded` / `operationFailed` / `error` fields. They are no longer reachable from the schema root. Delete both, and rename `#region SubscriptionPayloads` to `#region OperationPayloads` to reflect that only `FailedOperation` and friends live there.
+```graphql
+type Subscription {
+  # 📡 Single async feed of every event (successes + failures).
+  # Clients discriminate concrete events (RenamedTag, MovedPiece, FailedOperation, ...) via inline fragments.
+  event: Event!
+}
+```
 
-If `grep` finds any remaining references to `Command` or `Error` outside that region, drop those references too — there should be none after the Subscription replacement.
+No other fields. No `commandSucceeded`, `operationSucceeded`, `operationFailed`, `error`, or per-entity event fields.
+
+### 5. Retire orphaned payload types
+
+`Command` (L5766-5768) and `Error` (L5770-5772) only fed the deleted Subscription fields. Delete both, and rename `#region SubscriptionPayloads` → `#region EventPayloads` so only `FailedOperation` (and any future event-only payload) lives there.
 
 ## Out of Scope
-- The four missing concrete operation types (`StartedSession`, `EndedSession`, `RenamedDesign`, `UpdatedDesignDescription`) noted in earlier work. They remain a separate cleanup; the single endpoint does not depend on them existing.
+
+- The four missing concrete operation types (`StartedSession`, `EndedSession`, `RenamedDesign`, `UpdatedDesignDescription`) noted in earlier work — separate cleanup.
 - Resolver / backend wiring. Schema-only change.
 
 ## Verification
+
 - `node -e "require('graphql').parse(require('fs').readFileSync('semio/graphql/target.schema.graphql','utf8'))"` → parse OK
 - `node -e "require('graphql').buildSchema(require('fs').readFileSync('semio/graphql/target.schema.graphql','utf8'))"` → build OK
 - `rg -n "commandSucceeded|operationSucceeded|operationFailed|^\s*error: Error" semio/graphql/target.schema.graphql` → no matches
-- `rg -n "renamedKit|createdTag|addedConnector|movedPiece|deletedDesign" semio/graphql/target.schema.graphql` → only the concrete `Renamed*` / `Created*` / `Added*` / `Moved*` / `Deleted*` operation type definitions, no Subscription field references
+- `rg -n "^\s*(renamedKit|createdTag|addedConnector|movedPiece|deletedDesign)" semio/graphql/target.schema.graphql` → no Subscription field matches
 - `rg -n "^type (Command|Error) " semio/graphql/target.schema.graphql` → no matches
-- `rg -n "FailedOperation" semio/graphql/target.schema.graphql` → type, edge, connection definitions only
+- `rg -n "interface Event\b|type Event(Edge|Connection)\b|FailedOperation" semio/graphql/target.schema.graphql` → new definitions only
+- `rg -n "implements Event" semio/graphql/target.schema.graphql` → at least `Operation` and `FailedOperation`
 
 ## Ticket Update
+
 Append to `.repo/🎫/26/05/10/GRAPHQL-TARGET-MUTATION-CLEANUP/ticket.md`:
-- Problem: flat per-event Subscription duplicates the Operation interface and conflicts with the async architecture.
-- Change: collapse to `Subscription { operation: Operation! }`; add `FailedOperation` (+ edge/connection) implementing `Operation` so failures share the feed; remove now-orphaned `Command` / `Error` payload types.
+
+- Problem: flat per-event Subscription duplicates the Operation interface; `FailedOperation` cannot implement `Operation` (no `modification`/`after`).
+- Change: introduce root `Event` interface (+ edge/connection); `Operation` implements `Event`; add `FailedOperation` implementing `Event` only; collapse Subscription to `event: Event!`; remove orphaned `Command` / `Error`.
 - Verification: parse + build commands above, plus the rg sweeps.
+
