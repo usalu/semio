@@ -17,7 +17,7 @@ interface Node {
   id: ID! # data
 }
 
-interface Entity implements Node { # Our own extension ontop of the relay specs
+interface Entity implements Node { # Our own extension on top of the relay specs
   # Node
   id: ID! # data
   # Entity
@@ -40,10 +40,10 @@ type PageInfo {
 }
 
 interface EntityConnection {
-  # EntityConnection
   # edges: [ENTITYEdge] # computed
+  # EntityConnection
   pageInfo: PageInfo! # computed
-  hash: String! # cached // ur own extension ontop of the relay specs
+  hash: String! # cached // our own extension on top of the relay specs
 }
 
 interface WeakEntity implements Entity {
@@ -107,7 +107,7 @@ interface Document implements Artifact {
 }
 
 interface Event implements WeakEntity {
-  # WeakEnitity
+  # WeakEntity
   id: ID! # computed // hash
   hash: String! # cached
   owner: Entity # reference
@@ -122,6 +122,7 @@ interface Event implements WeakEntity {
 #region Modifications
 
 interface Diff implements WeakEntity {
+  # WeakEntity
   id: ID! # computed // hash
   hash: String! # cached
   owner: Entity # reference
@@ -131,11 +132,14 @@ interface Diff implements WeakEntity {
 }
 
 type DiffEdge implements EntityEdge {
+  # EntityEdge
   cursor: String! # computed
+  # DiffEdge
   node: Diff! # reference
 }
 
 type DiffConnection implements EntityConnection {
+  # EntityConnection
   edges: [DiffEdge!]! # computed
   pageInfo: PageInfo! # computed
   hash: String! # cached
@@ -154,11 +158,14 @@ interface Modification implements WeakEntity {
 }
 
 type ModificationEdge implements EntityEdge {
+  # EntityEdge
   cursor: String! # computed
+  # ModificationEdge
   node: Modification! # reference
 }
 
 type ModificationConnection implements EntityConnection {
+  # EntityConnection
   edges: [ModificationEdge!]! # computed
   pageInfo: PageInfo! # computed
   hash: String! # cached
@@ -176,11 +183,14 @@ type Modifications implements WeakEntity {
 }
 
 type ModificationsEdge implements EntityEdge {
+  # EntityEdge
   cursor: String! # computed
+  # ModificationsEdge
   node: Modifications! # reference
 }
 
 type ModificationsConnection implements EntityConnection {
+  # EntityConnection
   edges: [ModificationsEdge!]! # computed
   pageInfo: PageInfo! # computed
   hash: String! # cached
@@ -191,6 +201,7 @@ type ModificationsConnection implements EntityConnection {
 #region Vector
 
 input VectorInput {
+  # VectorInput
   x: Float! # data
   y: Float! # data
   z: Float! # data
@@ -209,18 +220,21 @@ type Vector implements WeakEntity {
 }
 
 type VectorEdge implements EntityEdge {
+  # EntityEdge
   cursor: String! # computed
+  # VectorEdge
   node: Vector! # reference
 }
 
 type VectorConnection implements EntityConnection {
+  # EntityConnection
   edges: [VectorEdge!]! # computed
   pageInfo: PageInfo! # computed
   hash: String! # cached
 }
 
-type VectorDiff implements Entity {
-  # WeakEntity
+type VectorDiff implements Diff {
+  # Diff
   id: ID! # computed // hash
   hash: String! # cached
   owner: Entity # reference
@@ -232,11 +246,14 @@ type VectorDiff implements Entity {
 }
 
 type VectorDiffEdge implements EntityEdge {
+  # EntityEdge
   cursor: String! # computed
+  # VectorDiffEdge
   node: VectorDiff! # reference
 }
 
 type VectorDiffConnection implements EntityConnection {
+  # EntityConnection
   edges: [VectorDiffEdge!]! # computed
   pageInfo: PageInfo! # computed
   hash: String! # cached
@@ -255,11 +272,14 @@ type VectorModification implements Modification {
 }
 
 type VectorModificationEdge implements EntityEdge {
+  # EntityEdge
   cursor: String! # computed
+  # VectorModificationEdge
   node: VectorModification! # reference
 }
 
 type VectorModificationConnection implements EntityConnection {
+  # EntityConnection
   edges: [VectorModificationEdge!]! # computed
   pageInfo: PageInfo! # computed
   hash: String! # cached
@@ -277,11 +297,14 @@ type VectorModifications implements Entity {
 }
 
 type VectorModificationsEdge implements EntityEdge {
+  # EntityEdge
   cursor: String! # computed
+  # VectorModificationsEdge
   node: VectorModifications! # reference
 }
 
 type VectorModificationsConnection implements EntityConnection {
+  # EntityConnection
   edges: [VectorModificationsEdge!]! # computed
   pageInfo: PageInfo! # computed
   hash: String! # cached
@@ -292,6 +315,7 @@ type VectorModificationsConnection implements EntityConnection {
 #region Point
 
 input PointInput {
+  # PointInput
   x: Float! # data
   y: Float! # data
   z: Float! # data
@@ -309,18 +333,21 @@ type Point implements WeakEntity {
 }
 
 type PointEdge implements EntityEdge {
+  # EntityEdge
   cursor: String! # computed
+  # PointEdge
   node: Point! # reference
 }
 
 type PointConnection implements EntityConnection {
+  # EntityConnection
   edges: [PointEdge!]! # computed
   pageInfo: PageInfo! # computed
   hash: String! # cached
 }
 
-type PointDiff implements Entity {
-  # WeakEntity
+type PointDiff implements Diff {
+  # Diff
   id: ID! # computed // hash
   hash: String! # cached
   owner: Entity # reference
@@ -332,11 +359,14 @@ type PointDiff implements Entity {
 }
 
 type PointDiffEdge implements EntityEdge {
+  # EntityEdge
   cursor: String! # computed
+  # PointDiffEdge
   node: PointDiff! # reference
 }
 
 type PointDiffConnection implements EntityConnection {
+  # EntityConnection
   edges: [PointDiffEdge!]! # computed
   pageInfo: PageInfo! # computed
   hash: String! # cached
@@ -355,11 +385,14 @@ type PointModification implements Modification {
 }
 
 type PointModificationEdge implements EntityEdge {
+  # EntityEdge
   cursor: String! # computed
+  # PointModificationEdge
   node: PointModification! # reference
 }
 
 type PointModificationConnection implements EntityConnection {
+  # EntityConnection
   edges: [PointModificationEdge!]! # computed
   pageInfo: PageInfo! # computed
   hash: String! # cached
@@ -377,11 +410,14 @@ type PointModifications implements Entity {
 }
 
 type PointModificationsEdge implements EntityEdge {
+  # EntityEdge
   cursor: String! # computed
+  # PointModificationsEdge
   node: PointModifications! # reference
 }
 
 type PointModificationsConnection implements EntityConnection {
+  # EntityConnection
   edges: [PointModificationsEdge!]! # computed
   pageInfo: PageInfo! # computed
   hash: String! # cached
@@ -392,6 +428,7 @@ type PointModificationsConnection implements EntityConnection {
 #region Coordinate
 
 input CoordinateInput {
+  # CoordinateInput
   u: Float! # data
   v: Float! # data
 }
@@ -407,18 +444,21 @@ type Coordinate implements WeakEntity {
 }
 
 type CoordinateEdge implements EntityEdge {
+  # EntityEdge
   cursor: String! # computed
+  # CoordinateEdge
   node: Coordinate! # reference
 }
 
 type CoordinateConnection implements EntityConnection {
+  # EntityConnection
   edges: [CoordinateEdge!]! # computed
   pageInfo: PageInfo! # computed
   hash: String! # cached
 }
 
-type CoordinateDiff implements Entity {
-  # WeakEntity
+type CoordinateDiff implements Diff {
+  # Diff
   id: ID! # computed // hash
   hash: String! # cached
   owner: Entity # reference
@@ -429,11 +469,14 @@ type CoordinateDiff implements Entity {
 }
 
 type CoordinateDiffEdge implements EntityEdge {
+  # EntityEdge
   cursor: String! # computed
+  # CoordinateDiffEdge
   node: CoordinateDiff! # reference
 }
 
 type CoordinateDiffConnection implements EntityConnection {
+  # EntityConnection
   edges: [CoordinateDiffEdge!]! # computed
   pageInfo: PageInfo! # computed
   hash: String! # cached
@@ -452,11 +495,14 @@ type CoordinateModification implements Modification {
 }
 
 type CoordinateModificationEdge implements EntityEdge {
+  # EntityEdge
   cursor: String! # computed
+  # CoordinateModificationEdge
   node: CoordinateModification! # reference
 }
 
 type CoordinateModificationConnection implements EntityConnection {
+  # EntityConnection
   edges: [CoordinateModificationEdge!]! # computed
   pageInfo: PageInfo! # computed
   hash: String! # cached
@@ -474,11 +520,14 @@ type CoordinateModifications implements Entity {
 }
 
 type CoordinateModificationsEdge implements EntityEdge {
+  # EntityEdge
   cursor: String! # computed
+  # CoordinateModificationsEdge
   node: CoordinateModifications! # reference
 }
 
 type CoordinateModificationsConnection implements EntityConnection {
+  # EntityConnection
   edges: [CoordinateModificationsEdge!]! # computed
   pageInfo: PageInfo! # computed
   hash: String! # cached
@@ -489,6 +538,7 @@ type CoordinateModificationsConnection implements EntityConnection {
 #region Offset
 
 input OffsetInput {
+  # OffsetInput
   u: Float! # data
   v: Float! # data
 }
@@ -504,18 +554,21 @@ type Offset implements WeakEntity {
 }
 
 type OffsetEdge implements EntityEdge {
+  # EntityEdge
   cursor: String! # computed
+  # OffsetEdge
   node: Offset! # reference
 }
 
 type OffsetConnection implements EntityConnection {
+  # EntityConnection
   edges: [OffsetEdge!]! # computed
   pageInfo: PageInfo! # computed
   hash: String! # cached
 }
 
-type OffsetDiff implements Entity {
-  # WeakEntity
+type OffsetDiff implements Diff {
+  # Diff
   id: ID! # computed // hash
   hash: String! # cached
   owner: Entity # reference
@@ -526,11 +579,14 @@ type OffsetDiff implements Entity {
 }
 
 type OffsetDiffEdge implements EntityEdge {
+  # EntityEdge
   cursor: String! # computed
+  # OffsetDiffEdge
   node: OffsetDiff! # reference
 }
 
 type OffsetDiffConnection implements EntityConnection {
+  # EntityConnection
   edges: [OffsetDiffEdge!]! # computed
   pageInfo: PageInfo! # computed
   hash: String! # cached
@@ -549,11 +605,14 @@ type OffsetModification implements Modification {
 }
 
 type OffsetModificationEdge implements EntityEdge {
+  # EntityEdge
   cursor: String! # computed
+  # OffsetModificationEdge
   node: OffsetModification! # reference
 }
 
 type OffsetModificationConnection implements EntityConnection {
+  # EntityConnection
   edges: [OffsetModificationEdge!]! # computed
   pageInfo: PageInfo! # computed
   hash: String! # cached
@@ -571,11 +630,14 @@ type OffsetModifications implements Entity {
 }
 
 type OffsetModificationsEdge implements EntityEdge {
+  # EntityEdge
   cursor: String! # computed
+  # OffsetModificationsEdge
   node: OffsetModifications! # reference
 }
 
 type OffsetModificationsConnection implements EntityConnection {
+  # EntityConnection
   edges: [OffsetModificationsEdge!]! # computed
   pageInfo: PageInfo! # computed
   hash: String! # cached
@@ -586,6 +648,7 @@ type OffsetModificationsConnection implements EntityConnection {
 #region Plane
 
 input PlaneInput {
+  # PlaneInput
   origin: PointInput! # data
   xAxis: VectorInput! # data
   yAxis: VectorInput! # data
@@ -603,17 +666,20 @@ type Plane implements WeakEntity {
 }
 
 type PlaneEdge implements EntityEdge {
+  # EntityEdge
   cursor: String! # computed
+  # PlaneEdge
   node: Plane! # reference
 }
 
 type PlaneConnection implements EntityConnection {
+  # EntityConnection
   edges: [PlaneEdge!]! # computed
   pageInfo: PageInfo! # computed
   hash: String! # cached
 }
 
-type PlaneDiff implements Entity { # implements Diff
+type PlaneDiff implements Diff {
   # Diff
   id: ID! # computed // hash
   hash: String! # cached
@@ -626,11 +692,14 @@ type PlaneDiff implements Entity { # implements Diff
 }
 
 type PlaneDiffEdge implements EntityEdge {
+  # EntityEdge
   cursor: String! # computed
+  # PlaneDiffEdge
   node: PlaneDiff! # reference
 }
 
 type PlaneDiffConnection implements EntityConnection {
+  # EntityConnection
   edges: [PlaneDiffEdge!]! # computed
   pageInfo: PageInfo! # computed
   hash: String! # cached
@@ -649,11 +718,14 @@ type PlaneModification implements Modification {
 }
 
 type PlaneModificationEdge implements EntityEdge {
+  # EntityEdge
   cursor: String! # computed
+  # PlaneModificationEdge
   node: PlaneModification! # reference
 }
 
 type PlaneModificationConnection implements EntityConnection {
+  # EntityConnection
   edges: [PlaneModificationEdge!]! # computed
   pageInfo: PageInfo! # computed
   hash: String! # cached
@@ -671,11 +743,14 @@ type PlaneModifications implements Entity {
 }
 
 type PlaneModificationsEdge implements EntityEdge {
+  # EntityEdge
   cursor: String! # computed
+  # PlaneModificationsEdge
   node: PlaneModifications! # reference
 }
 
 type PlaneModificationsConnection implements EntityConnection {
+  # EntityConnection
   edges: [PlaneModificationsEdge!]! # computed
   pageInfo: PageInfo! # computed
   hash: String! # cached
@@ -686,6 +761,7 @@ type PlaneModificationsConnection implements EntityConnection {
 #region Position
 
 input PositionInput {
+  # PositionInput
   center: CoordinateInput! # data
   plane: PlaneInput! # data
 }
@@ -701,17 +777,20 @@ type Position implements WeakEntity {
 }
 
 type PositionEdge implements EntityEdge {
+  # EntityEdge
   cursor: String! # computed
+  # PositionEdge
   node: Position! # reference
 }
 
 type PositionConnection implements EntityConnection {
+  # EntityConnection
   edges: [PositionEdge!]! # computed
   pageInfo: PageInfo! # computed
   hash: String! # cached
 }
 
-type PositionDiff implements Entity { # implements Diff
+type PositionDiff implements Diff {
   # Diff
   id: ID! # computed // hash
   hash: String! # cached
@@ -723,11 +802,14 @@ type PositionDiff implements Entity { # implements Diff
 }
 
 type PositionDiffEdge implements EntityEdge {
+  # EntityEdge
   cursor: String! # computed
+  # PositionDiffEdge
   node: PositionDiff! # reference
 }
 
 type PositionDiffConnection implements EntityConnection {
+  # EntityConnection
   edges: [PositionDiffEdge!]! # computed
   pageInfo: PageInfo! # computed
   hash: String! # cached
@@ -746,11 +828,14 @@ type PositionModification implements Modification {
 }
 
 type PositionModificationEdge implements EntityEdge {
+  # EntityEdge
   cursor: String! # computed
+  # PositionModificationEdge
   node: PositionModification! # reference
 }
 
 type PositionModificationConnection implements EntityConnection {
+  # EntityConnection
   edges: [PositionModificationEdge!]! # computed
   pageInfo: PageInfo! # computed
   hash: String! # cached
@@ -768,11 +853,14 @@ type PositionModifications implements Entity {
 }
 
 type PositionModificationsEdge implements EntityEdge {
+  # EntityEdge
   cursor: String! # computed
+  # PositionModificationsEdge
   node: PositionModifications! # reference
 }
 
 type PositionModificationsConnection implements EntityConnection {
+  # EntityConnection
   edges: [PositionModificationsEdge!]! # computed
   pageInfo: PageInfo! # computed
   hash: String! # cached
@@ -783,6 +871,7 @@ type PositionModificationsConnection implements EntityConnection {
 #region Location
 
 input LocationInput {
+  # LocationInput
   longitude: Float! # data
   latitude: Float! # data
   altitude: Float # data
@@ -800,17 +889,20 @@ type Location implements WeakEntity {
 }
 
 type LocationEdge implements EntityEdge {
+  # EntityEdge
   cursor: String! # computed
+  # LocationEdge
   node: Location! # reference
 }
 
 type LocationConnection implements EntityConnection {
+  # EntityConnection
   edges: [LocationEdge!]! # computed
   pageInfo: PageInfo! # computed
   hash: String! # cached
 }
 
-type LocationDiff implements Entity { # implements Diff
+type LocationDiff implements Diff {
   # Diff
   id: ID! # computed // hash
   hash: String! # cached
@@ -823,11 +915,14 @@ type LocationDiff implements Entity { # implements Diff
 }
 
 type LocationDiffEdge implements EntityEdge {
+  # EntityEdge
   cursor: String! # computed
+  # LocationDiffEdge
   node: LocationDiff! # reference
 }
 
 type LocationDiffConnection implements EntityConnection {
+  # EntityConnection
   edges: [LocationDiffEdge!]! # computed
   pageInfo: PageInfo! # computed
   hash: String! # cached
@@ -846,11 +941,14 @@ type LocationModification implements Modification {
 }
 
 type LocationModificationEdge implements EntityEdge {
+  # EntityEdge
   cursor: String! # computed
+  # LocationModificationEdge
   node: LocationModification! # reference
 }
 
 type LocationModificationConnection implements EntityConnection {
+  # EntityConnection
   edges: [LocationModificationEdge!]! # computed
   pageInfo: PageInfo! # computed
   hash: String! # cached
@@ -868,11 +966,14 @@ type LocationModifications implements Entity {
 }
 
 type LocationModificationsEdge implements EntityEdge {
+  # EntityEdge
   cursor: String! # computed
+  # LocationModificationsEdge
   node: LocationModifications! # reference
 }
 
 type LocationModificationsConnection implements EntityConnection {
+  # EntityConnection
   edges: [LocationModificationsEdge!]! # computed
   pageInfo: PageInfo! # computed
   hash: String! # cached
@@ -894,17 +995,20 @@ type Attribute implements WeakEntity {
 }
 
 type AttributeEdge implements EntityEdge {
+  # EntityEdge
   cursor: String! # computed
+  # AttributeEdge
   node: Attribute! # reference
 }
 
 type AttributeConnection implements EntityConnection {
+  # EntityConnection
   edges: [AttributeEdge!]! # computed
   pageInfo: PageInfo! # computed
   hash: String! # cached
 }
 
-type AttributeDiff implements Entity { # implements Diff
+type AttributeDiff implements Diff {
   # Diff
   id: ID! # computed // hash
   hash: String! # cached
@@ -917,11 +1021,14 @@ type AttributeDiff implements Entity { # implements Diff
 }
 
 type AttributeDiffEdge implements EntityEdge {
+  # EntityEdge
   cursor: String! # computed
+  # AttributeDiffEdge
   node: AttributeDiff! # reference
 }
 
 type AttributeDiffConnection implements EntityConnection {
+  # EntityConnection
   edges: [AttributeDiffEdge!]! # computed
   pageInfo: PageInfo! # computed
   hash: String! # cached
@@ -940,17 +1047,21 @@ type AttributeModification implements Modification {
 }
 
 type AttributeModificationEdge implements EntityEdge {
+  # EntityEdge
   cursor: String! # computed
+  # AttributeModificationEdge
   node: AttributeModification! # reference
 }
 
 type AttributeModificationConnection implements EntityConnection {
+  # EntityConnection
   edges: [AttributeModificationEdge!]! # computed
   pageInfo: PageInfo! # computed
   hash: String! # cached
 }
 
 type ModificationAttributesConnection implements EntityConnection {
+  # EntityConnection
   edges: [AttributeEdge!]! # computed
   pageInfo: PageInfo! # computed
   hash: String! # cached
@@ -968,11 +1079,14 @@ type AttributeModifications implements Entity {
 }
 
 type AttributeModificationsEdge implements EntityEdge {
+  # EntityEdge
   cursor: String! # computed
+  # AttributeModificationsEdge
   node: AttributeModifications! # reference
 }
 
 type AttributeModificationsConnection implements EntityConnection {
+  # EntityConnection
   edges: [AttributeModificationsEdge!]! # computed
   pageInfo: PageInfo! # computed
   hash: String! # cached
@@ -995,11 +1109,14 @@ interface Operation implements Entity { # implements StrongEntity
 }
 
 type OperationEdge implements EntityEdge {
+  # EntityEdge
   cursor: String! # computed
+  # OperationEdge
   node: Operation! # reference
 }
 
 type OperationConnection implements EntityConnection {
+  # EntityConnection
   edges: [OperationEdge!]! # computed
   pageInfo: PageInfo! # computed
   hash: String! # cached
@@ -1033,17 +1150,20 @@ type Place implements Artifact {
 }
 
 type PlaceEdge implements EntityEdge {
+  # EntityEdge
   cursor: String! # computed
+  # PlaceEdge
   node: Place! # reference
 }
 
 type PlaceConnection implements EntityConnection {
+  # EntityConnection
   edges: [PlaceEdge!]! # computed
   pageInfo: PageInfo! # computed
   hash: String! # cached
 }
 
-type PlaceDiff implements Entity { # implements Diff
+type PlaceDiff implements Diff {
   # Diff
   id: ID! # computed // hash
   hash: String! # cached
@@ -1057,11 +1177,14 @@ type PlaceDiff implements Entity { # implements Diff
 }
 
 type PlaceDiffEdge implements EntityEdge {
+  # EntityEdge
   cursor: String! # computed
+  # PlaceDiffEdge
   node: PlaceDiff! # reference
 }
 
 type PlaceDiffConnection implements EntityConnection {
+  # EntityConnection
   edges: [PlaceDiffEdge!]! # computed
   pageInfo: PageInfo! # computed
   hash: String! # cached
@@ -1080,11 +1203,14 @@ type PlaceModification implements Modification {
 }
 
 type PlaceModificationEdge implements EntityEdge {
+  # EntityEdge
   cursor: String! # computed
+  # PlaceModificationEdge
   node: PlaceModification! # reference
 }
 
 type PlaceModificationConnection implements EntityConnection {
+  # EntityConnection
   edges: [PlaceModificationEdge!]! # computed
   pageInfo: PageInfo! # computed
   hash: String! # cached
@@ -1102,11 +1228,14 @@ type PlaceModifications implements Entity {
 }
 
 type PlaceModificationsEdge implements EntityEdge {
+  # EntityEdge
   cursor: String! # computed
+  # PlaceModificationsEdge
   node: PlaceModifications! # reference
 }
 
 type PlaceModificationsConnection implements EntityConnection {
+  # EntityConnection
   edges: [PlaceModificationsEdge!]! # computed
   pageInfo: PageInfo! # computed
   hash: String! # cached
@@ -1138,18 +1267,21 @@ type Family implements Artifact {
 }
 
 type FamilyEdge implements EntityEdge {
+  # EntityEdge
   cursor: String! # computed
+  # FamilyEdge
   node: Family! # reference
 }
 
 type FamilyConnection implements EntityConnection {
+  # EntityConnection
   edges: [FamilyEdge!]! # computed
   pageInfo: PageInfo! # computed
   hash: String! # cached
 }
 
-type FamilyDiff implements Entity {
-  # WeakEntity
+type FamilyDiff implements Diff {
+  # Diff
   id: ID! # computed // hash
   hash: String! # cached
   owner: Entity # reference
@@ -1161,11 +1293,14 @@ type FamilyDiff implements Entity {
 }
 
 type FamilyDiffEdge implements EntityEdge {
+  # EntityEdge
   cursor: String! # computed
+  # FamilyDiffEdge
   node: FamilyDiff! # reference
 }
 
 type FamilyDiffConnection implements EntityConnection {
+  # EntityConnection
   edges: [FamilyDiffEdge!]! # computed
   pageInfo: PageInfo! # computed
   hash: String! # cached
@@ -1184,11 +1319,14 @@ type FamilyModification implements Modification {
 }
 
 type FamilyModificationEdge implements EntityEdge {
+  # EntityEdge
   cursor: String! # computed
+  # FamilyModificationEdge
   node: FamilyModification! # reference
 }
 
 type FamilyModificationConnection implements EntityConnection {
+  # EntityConnection
   edges: [FamilyModificationEdge!]! # computed
   pageInfo: PageInfo! # computed
   hash: String! # cached
@@ -1206,11 +1344,14 @@ type FamilyModifications implements Entity {
 }
 
 type FamilyModificationsEdge implements EntityEdge {
+  # EntityEdge
   cursor: String! # computed
+  # FamilyModificationsEdge
   node: FamilyModifications! # reference
 }
 
 type FamilyModificationsConnection implements EntityConnection {
+  # EntityConnection
   edges: [FamilyModificationsEdge!]! # computed
   pageInfo: PageInfo! # computed
   hash: String! # cached
@@ -1249,18 +1390,21 @@ type Folder implements Artifact {
 }
 
 type FolderEdge implements EntityEdge {
+  # EntityEdge
   cursor: String! # computed
+  # FolderEdge
   node: Folder! # reference
 }
 
 type FolderConnection implements EntityConnection {
+  # EntityConnection
   edges: [FolderEdge!]! # computed
   pageInfo: PageInfo! # computed
   hash: String! # cached
 }
 
-type FolderDiff implements Entity {
-  # WeakEntity
+type FolderDiff implements Diff {
+  # Diff
   id: ID! # computed // hash
   hash: String! # cached
   owner: Entity # reference
@@ -1277,11 +1421,14 @@ type FolderDiff implements Entity {
 }
 
 type FolderDiffEdge implements EntityEdge {
+  # EntityEdge
   cursor: String! # computed
+  # FolderDiffEdge
   node: FolderDiff! # reference
 }
 
 type FolderDiffConnection implements EntityConnection {
+  # EntityConnection
   edges: [FolderDiffEdge!]! # computed
   pageInfo: PageInfo! # computed
   hash: String! # cached
@@ -1300,11 +1447,14 @@ type FolderModification implements Modification {
 }
 
 type FolderModificationEdge implements EntityEdge {
+  # EntityEdge
   cursor: String! # computed
+  # FolderModificationEdge
   node: FolderModification! # reference
 }
 
 type FolderModificationConnection implements EntityConnection {
+  # EntityConnection
   edges: [FolderModificationEdge!]! # computed
   pageInfo: PageInfo! # computed
   hash: String! # cached
@@ -1322,11 +1472,14 @@ type FolderModifications implements Entity {
 }
 
 type FolderModificationsEdge implements EntityEdge {
+  # EntityEdge
   cursor: String! # computed
+  # FolderModificationsEdge
   node: FolderModifications! # reference
 }
 
 type FolderModificationsConnection implements EntityConnection {
+  # EntityConnection
   edges: [FolderModificationsEdge!]! # computed
   pageInfo: PageInfo! # computed
   hash: String! # cached
@@ -1361,18 +1514,21 @@ type File implements Artifact {
 }
 
 type FileEdge implements EntityEdge {
+  # EntityEdge
   cursor: String! # computed
+  # FileEdge
   node: File! # reference
 }
 
 type FileConnection implements EntityConnection {
+  # EntityConnection
   edges: [FileEdge!]! # computed
   pageInfo: PageInfo! # computed
   hash: String! # cached
 }
 
-type FileDiff implements Entity {
-  # WeakEntity
+type FileDiff implements Diff {
+  # Diff
   id: ID! # computed // hash
   hash: String! # cached
   owner: Entity # reference
@@ -1398,11 +1554,14 @@ type FileDiff implements Entity {
 }
 
 type FileDiffEdge implements EntityEdge {
+  # EntityEdge
   cursor: String! # computed
+  # FileDiffEdge
   node: FileDiff! # reference
 }
 
 type FileDiffConnection implements EntityConnection {
+  # EntityConnection
   edges: [FileDiffEdge!]! # computed
   pageInfo: PageInfo! # computed
   hash: String! # cached
@@ -1421,11 +1580,14 @@ type FileModification implements Modification {
 }
 
 type FileModificationEdge implements EntityEdge {
+  # EntityEdge
   cursor: String! # computed
+  # FileModificationEdge
   node: FileModification! # reference
 }
 
 type FileModificationConnection implements EntityConnection {
+  # EntityConnection
   edges: [FileModificationEdge!]! # computed
   pageInfo: PageInfo! # computed
   hash: String! # cached
@@ -1443,11 +1605,14 @@ type FileModifications implements Entity {
 }
 
 type FileModificationsEdge implements EntityEdge {
+  # EntityEdge
   cursor: String! # computed
+  # FileModificationsEdge
   node: FileModifications! # reference
 }
 
 type FileModificationsConnection implements EntityConnection {
+  # EntityConnection
   edges: [FileModificationsEdge!]! # computed
   pageInfo: PageInfo! # computed
   hash: String! # cached
@@ -1483,18 +1648,21 @@ type Author implements Artifact {
 }
 
 type AuthorEdge implements EntityEdge {
+  # EntityEdge
   cursor: String! # computed
+  # AuthorEdge
   node: Author! # reference
 }
 
 type AuthorConnection implements EntityConnection {
+  # EntityConnection
   edges: [AuthorEdge!]! # computed
   pageInfo: PageInfo! # computed
   hash: String! # cached
 }
 
-type AuthorDiff implements Entity {
-  # WeakEntity
+type AuthorDiff implements Diff {
+  # Diff
   id: ID! # computed // hash
   hash: String! # cached
   owner: Entity # reference
@@ -1509,11 +1677,14 @@ type AuthorDiff implements Entity {
 }
 
 type AuthorDiffEdge implements EntityEdge {
+  # EntityEdge
   cursor: String! # computed
+  # AuthorDiffEdge
   node: AuthorDiff! # reference
 }
 
 type AuthorDiffConnection implements EntityConnection {
+  # EntityConnection
   edges: [AuthorDiffEdge!]! # computed
   pageInfo: PageInfo! # computed
   hash: String! # cached
@@ -1532,11 +1703,14 @@ type AuthorModification implements Modification {
 }
 
 type AuthorModificationEdge implements EntityEdge {
+  # EntityEdge
   cursor: String! # computed
+  # AuthorModificationEdge
   node: AuthorModification! # reference
 }
 
 type AuthorModificationConnection implements EntityConnection {
+  # EntityConnection
   edges: [AuthorModificationEdge!]! # computed
   pageInfo: PageInfo! # computed
   hash: String! # cached
@@ -1554,11 +1728,14 @@ type AuthorModifications implements Entity {
 }
 
 type AuthorModificationsEdge implements EntityEdge {
+  # EntityEdge
   cursor: String! # computed
+  # AuthorModificationsEdge
   node: AuthorModifications! # reference
 }
 
 type AuthorModificationsConnection implements EntityConnection {
+  # EntityConnection
   edges: [AuthorModificationsEdge!]! # computed
   pageInfo: PageInfo! # computed
   hash: String! # cached
@@ -1595,18 +1772,21 @@ type Prop implements Artifact {
 }
 
 type PropEdge implements EntityEdge {
+  # EntityEdge
   cursor: String! # computed
+  # PropEdge
   node: Prop! # reference
 }
 
 type PropConnection implements EntityConnection {
+  # EntityConnection
   edges: [PropEdge!]! # computed
   pageInfo: PageInfo! # computed
   hash: String! # cached
 }
 
-type PropDiff implements Entity {
-  # WeakEntity
+type PropDiff implements Diff {
+  # Diff
   id: ID! # computed // hash
   hash: String! # cached
   owner: Entity # reference
@@ -1621,11 +1801,14 @@ type PropDiff implements Entity {
 }
 
 type PropDiffEdge implements EntityEdge {
+  # EntityEdge
   cursor: String! # computed
+  # PropDiffEdge
   node: PropDiff! # reference
 }
 
 type PropDiffConnection implements EntityConnection {
+  # EntityConnection
   edges: [PropDiffEdge!]! # computed
   pageInfo: PageInfo! # computed
   hash: String! # cached
@@ -1644,11 +1827,14 @@ type PropModification implements Modification {
 }
 
 type PropModificationEdge implements EntityEdge {
+  # EntityEdge
   cursor: String! # computed
+  # PropModificationEdge
   node: PropModification! # reference
 }
 
 type PropModificationConnection implements EntityConnection {
+  # EntityConnection
   edges: [PropModificationEdge!]! # computed
   pageInfo: PageInfo! # computed
   hash: String! # cached
@@ -1666,11 +1852,14 @@ type PropModifications implements Entity {
 }
 
 type PropModificationsEdge implements EntityEdge {
+  # EntityEdge
   cursor: String! # computed
+  # PropModificationsEdge
   node: PropModifications! # reference
 }
 
 type PropModificationsConnection implements EntityConnection {
+  # EntityConnection
   edges: [PropModificationsEdge!]! # computed
   pageInfo: PageInfo! # computed
   hash: String! # cached
@@ -1707,18 +1896,21 @@ type Benchmark implements Artifact {
 }
 
 type BenchmarkEdge implements EntityEdge {
+  # EntityEdge
   cursor: String! # computed
+  # BenchmarkEdge
   node: Benchmark! # reference
 }
 
 type BenchmarkConnection implements EntityConnection {
+  # EntityConnection
   edges: [BenchmarkEdge!]! # computed
   pageInfo: PageInfo! # computed
   hash: String! # cached
 }
 
-type BenchmarkDiff implements Entity {
-  # WeakEntity
+type BenchmarkDiff implements Diff {
+  # Diff
   id: ID! # computed // hash
   hash: String! # cached
   owner: Entity # reference
@@ -1736,11 +1928,14 @@ type BenchmarkDiff implements Entity {
 }
 
 type BenchmarkDiffEdge implements EntityEdge {
+  # EntityEdge
   cursor: String! # computed
+  # BenchmarkDiffEdge
   node: BenchmarkDiff! # reference
 }
 
 type BenchmarkDiffConnection implements EntityConnection {
+  # EntityConnection
   edges: [BenchmarkDiffEdge!]! # computed
   pageInfo: PageInfo! # computed
   hash: String! # cached
@@ -1759,11 +1954,14 @@ type BenchmarkModification implements Modification {
 }
 
 type BenchmarkModificationEdge implements EntityEdge {
+  # EntityEdge
   cursor: String! # computed
+  # BenchmarkModificationEdge
   node: BenchmarkModification! # reference
 }
 
 type BenchmarkModificationConnection implements EntityConnection {
+  # EntityConnection
   edges: [BenchmarkModificationEdge!]! # computed
   pageInfo: PageInfo! # computed
   hash: String! # cached
@@ -1781,11 +1979,14 @@ type BenchmarkModifications implements Entity {
 }
 
 type BenchmarkModificationsEdge implements EntityEdge {
+  # EntityEdge
   cursor: String! # computed
+  # BenchmarkModificationsEdge
   node: BenchmarkModifications! # reference
 }
 
 type BenchmarkModificationsConnection implements EntityConnection {
+  # EntityConnection
   edges: [BenchmarkModificationsEdge!]! # computed
   pageInfo: PageInfo! # computed
   hash: String! # cached
@@ -1824,18 +2025,21 @@ type Quality implements Artifact {
 }
 
 type QualityEdge implements EntityEdge {
+  # EntityEdge
   cursor: String! # computed
+  # QualityEdge
   node: Quality! # reference
 }
 
 type QualityConnection implements EntityConnection {
+  # EntityConnection
   edges: [QualityEdge!]! # computed
   pageInfo: PageInfo! # computed
   hash: String! # cached
 }
 
-type QualityDiff implements Entity {
-  # WeakEntity
+type QualityDiff implements Diff {
+  # Diff
   id: ID! # computed // hash
   hash: String! # cached
   owner: Entity # reference
@@ -1856,11 +2060,14 @@ type QualityDiff implements Entity {
 }
 
 type QualityDiffEdge implements EntityEdge {
+  # EntityEdge
   cursor: String! # computed
+  # QualityDiffEdge
   node: QualityDiff! # reference
 }
 
 type QualityDiffConnection implements EntityConnection {
+  # EntityConnection
   edges: [QualityDiffEdge!]! # computed
   pageInfo: PageInfo! # computed
   hash: String! # cached
@@ -1879,11 +2086,14 @@ type QualityModification implements Modification {
 }
 
 type QualityModificationEdge implements EntityEdge {
+  # EntityEdge
   cursor: String! # computed
+  # QualityModificationEdge
   node: QualityModification! # reference
 }
 
 type QualityModificationConnection implements EntityConnection {
+  # EntityConnection
   edges: [QualityModificationEdge!]! # computed
   pageInfo: PageInfo! # computed
   hash: String! # cached
@@ -1901,11 +2111,14 @@ type QualityModifications implements Entity {
 }
 
 type QualityModificationsEdge implements EntityEdge {
+  # EntityEdge
   cursor: String! # computed
+  # QualityModificationsEdge
   node: QualityModifications! # reference
 }
 
 type QualityModificationsConnection implements EntityConnection {
+  # EntityConnection
   edges: [QualityModificationsEdge!]! # computed
   pageInfo: PageInfo! # computed
   hash: String! # cached
@@ -1914,6 +2127,7 @@ type QualityModificationsConnection implements EntityConnection {
 #region Operations
 
 type CreatedQualityInput {
+  # CreatedQualityInput
   quality: Quality! # data
 }
 
@@ -1930,6 +2144,7 @@ type CreatedQuality implements Operation {
 }
 
 type CreatedQualitiesInput {
+  # CreatedQualitiesInput
   qualities: QualityConnection! # data
 }
 
@@ -1946,6 +2161,7 @@ type CreatedQualities implements Operation {
 }
 
 type RenamedQualityInput {
+  # RenamedQualityInput
   key: String! # data
 }
 
@@ -1962,6 +2178,7 @@ type RenamedQuality implements Operation {
 }
 
 type UpdatedQualityDescriptionInput {
+  # UpdatedQualityDescriptionInput
   description: String! # data
 }
 
@@ -1978,6 +2195,7 @@ type UpdatedQualityDescription implements Operation {
 }
 
 type UpdatedQualityIconInput {
+  # UpdatedQualityIconInput
   icon: String! # data
 }
 
@@ -1994,6 +2212,7 @@ type UpdatedQualityIcon implements Operation {
 }
 
 type AddedAttributeToQualityInput {
+  # AddedAttributeToQualityInput
   attribute: Attribute! # data
 }
 
@@ -2011,6 +2230,7 @@ type AddedAttributeToQuality implements Operation {
 }
 
 type AddedAttributesToQualityInput {
+  # AddedAttributesToQualityInput
   attributes: AttributeConnection! # data
 }
 
@@ -2028,6 +2248,7 @@ type AddedAttributesToQuality implements Operation {
 }
 
 type RemovedAttributeFromQualityInput {
+  # RemovedAttributeFromQualityInput
   hasInput: Boolean! # computed // false when all operation data is carried by scope
 }
 
@@ -2044,6 +2265,7 @@ type RemovedAttributeFromQuality implements Operation {
 }
 
 type RemovedAttributesFromQualityInput {
+  # RemovedAttributesFromQualityInput
   hasInput: Boolean! # computed // false when all operation data is carried by scope
 }
 
@@ -2060,6 +2282,7 @@ type RemovedAttributesFromQuality implements Operation {
 }
 
 type DeletedQualityInput {
+  # DeletedQualityInput
   hasInput: Boolean! # computed // false when all operation data is carried by scope
 }
 
@@ -2075,6 +2298,7 @@ type DeletedQuality implements Operation {
 }
 
 type DeletedQualitiesInput {
+  # DeletedQualitiesInput
   hasInput: Boolean! # computed // false when all operation data is carried by scope
 }
 
@@ -2120,18 +2344,21 @@ type Tag implements Artifact {
 }
 
 type TagEdge implements EntityEdge {
+  # EntityEdge
   cursor: String! # computed
+  # TagEdge
   node: Tag! # reference
 }
 
 type TagConnection implements EntityConnection {
+  # EntityConnection
   edges: [TagEdge!]! # computed
   pageInfo: PageInfo! # computed
   hash: String! # cached
 }
 
-type TagDiff implements Entity {
-  # WeakEntity
+type TagDiff implements Diff {
+  # Diff
   id: ID! # computed // hash
   hash: String! # cached
   owner: Entity # reference
@@ -2147,11 +2374,14 @@ type TagDiff implements Entity {
 }
 
 type TagDiffEdge implements EntityEdge {
+  # EntityEdge
   cursor: String! # computed
+  # TagDiffEdge
   node: TagDiff! # reference
 }
 
 type TagDiffConnection implements EntityConnection {
+  # EntityConnection
   edges: [TagDiffEdge!]! # computed
   pageInfo: PageInfo! # computed
   hash: String! # cached
@@ -2170,11 +2400,14 @@ type TagModification implements Modification {
 }
 
 type TagModificationEdge implements EntityEdge {
+  # EntityEdge
   cursor: String! # computed
+  # TagModificationEdge
   node: TagModification! # reference
 }
 
 type TagModificationConnection implements EntityConnection {
+  # EntityConnection
   edges: [TagModificationEdge!]! # computed
   pageInfo: PageInfo! # computed
   hash: String! # cached
@@ -2192,11 +2425,14 @@ type TagModifications implements Entity {
 }
 
 type TagModificationsEdge implements EntityEdge {
+  # EntityEdge
   cursor: String! # computed
+  # TagModificationsEdge
   node: TagModifications! # reference
 }
 
 type TagModificationsConnection implements EntityConnection {
+  # EntityConnection
   edges: [TagModificationsEdge!]! # computed
   pageInfo: PageInfo! # computed
   hash: String! # cached
@@ -2205,6 +2441,7 @@ type TagModificationsConnection implements EntityConnection {
 #region Operations
 
 type CreatedTagInput {
+  # CreatedTagInput
   tag: Tag! # data
 }
 
@@ -2221,6 +2458,7 @@ type CreatedTag implements Operation {
 }
 
 type CreatedTagsInput {
+  # CreatedTagsInput
   tags: TagConnection! # data
 }
 
@@ -2237,6 +2475,7 @@ type CreatedTags implements Operation {
 }
 
 type RenamedTagInput {
+  # RenamedTagInput
   name: String! # data
 }
 
@@ -2253,6 +2492,7 @@ type RenamedTag implements Operation {
 }
 
 type UpdatedTagDescriptionInput {
+  # UpdatedTagDescriptionInput
   description: String! # data
 }
 
@@ -2269,6 +2509,7 @@ type UpdatedTagDescription implements Operation {
 }
 
 type UpdatedTagIconInput {
+  # UpdatedTagIconInput
   icon: String! # data
 }
 
@@ -2285,6 +2526,7 @@ type UpdatedTagIcon implements Operation {
 }
 
 type AddedAttributeToTagInput {
+  # AddedAttributeToTagInput
   attribute: Attribute! # data
 }
 
@@ -2302,6 +2544,7 @@ type AddedAttributeToTag implements Operation {
 }
 
 type AddedAttributesToTagInput {
+  # AddedAttributesToTagInput
   attributes: AttributeConnection! # data
 }
 
@@ -2319,6 +2562,7 @@ type AddedAttributesToTag implements Operation {
 }
 
 type RemovedAttributeFromTagInput {
+  # RemovedAttributeFromTagInput
   hasInput: Boolean! # computed // false when all operation data is carried by scope
 }
 
@@ -2335,6 +2579,7 @@ type RemovedAttributeFromTag implements Operation {
 }
 
 type RemovedAttributesFromTagInput {
+  # RemovedAttributesFromTagInput
   hasInput: Boolean! # computed // false when all operation data is carried by scope
 }
 
@@ -2351,6 +2596,7 @@ type RemovedAttributesFromTag implements Operation {
 }
 
 type DeletedTagInput {
+  # DeletedTagInput
   hasInput: Boolean! # computed // false when all operation data is carried by scope
 }
 
@@ -2366,6 +2612,7 @@ type DeletedTag implements Operation {
 }
 
 type DeletedTagsInput {
+  # DeletedTagsInput
   hasInput: Boolean! # computed // false when all operation data is carried by scope
 }
 
@@ -2411,18 +2658,21 @@ type Concept implements Artifact {
 }
 
 type ConceptEdge implements EntityEdge {
+  # EntityEdge
   cursor: String! # computed
+  # ConceptEdge
   node: Concept! # reference
 }
 
 type ConceptConnection implements EntityConnection {
+  # EntityConnection
   edges: [ConceptEdge!]! # computed
   pageInfo: PageInfo! # computed
   hash: String! # cached
 }
 
-type ConceptDiff implements Entity {
-  # WeakEntity
+type ConceptDiff implements Diff {
+  # Diff
   id: ID! # computed // hash
   hash: String! # cached
   owner: Entity # reference
@@ -2438,11 +2688,14 @@ type ConceptDiff implements Entity {
 }
 
 type ConceptDiffEdge implements EntityEdge {
+  # EntityEdge
   cursor: String! # computed
+  # ConceptDiffEdge
   node: ConceptDiff! # reference
 }
 
 type ConceptDiffConnection implements EntityConnection {
+  # EntityConnection
   edges: [ConceptDiffEdge!]! # computed
   pageInfo: PageInfo! # computed
   hash: String! # cached
@@ -2461,11 +2714,14 @@ type ConceptModification implements Modification {
 }
 
 type ConceptModificationEdge implements EntityEdge {
+  # EntityEdge
   cursor: String! # computed
+  # ConceptModificationEdge
   node: ConceptModification! # reference
 }
 
 type ConceptModificationConnection implements EntityConnection {
+  # EntityConnection
   edges: [ConceptModificationEdge!]! # computed
   pageInfo: PageInfo! # computed
   hash: String! # cached
@@ -2483,11 +2739,14 @@ type ConceptModifications implements Entity {
 }
 
 type ConceptModificationsEdge implements EntityEdge {
+  # EntityEdge
   cursor: String! # computed
+  # ConceptModificationsEdge
   node: ConceptModifications! # reference
 }
 
 type ConceptModificationsConnection implements EntityConnection {
+  # EntityConnection
   edges: [ConceptModificationsEdge!]! # computed
   pageInfo: PageInfo! # computed
   hash: String! # cached
@@ -2496,6 +2755,7 @@ type ConceptModificationsConnection implements EntityConnection {
 #region Operations
 
 type CreatedConceptInput {
+  # CreatedConceptInput
   concept: Concept! # data
 }
 
@@ -2512,6 +2772,7 @@ type CreatedConcept implements Operation {
 }
 
 type CreatedConceptsInput {
+  # CreatedConceptsInput
   concepts: ConceptConnection! # data
 }
 
@@ -2528,6 +2789,7 @@ type CreatedConcepts implements Operation {
 }
 
 type RenamedConceptInput {
+  # RenamedConceptInput
   name: String! # data
 }
 
@@ -2544,6 +2806,7 @@ type RenamedConcept implements Operation {
 }
 
 type UpdatedConceptDescriptionInput {
+  # UpdatedConceptDescriptionInput
   description: String! # data
 }
 
@@ -2560,6 +2823,7 @@ type UpdatedConceptDescription implements Operation {
 }
 
 type UpdatedConceptIconInput {
+  # UpdatedConceptIconInput
   icon: String! # data
 }
 
@@ -2576,6 +2840,7 @@ type UpdatedConceptIcon implements Operation {
 }
 
 type AddedAttributeToConceptInput {
+  # AddedAttributeToConceptInput
   attribute: Attribute! # data
 }
 
@@ -2593,6 +2858,7 @@ type AddedAttributeToConcept implements Operation {
 }
 
 type AddedAttributesToConceptInput {
+  # AddedAttributesToConceptInput
   attributes: AttributeConnection! # data
 }
 
@@ -2610,6 +2876,7 @@ type AddedAttributesToConcept implements Operation {
 }
 
 type RemovedAttributeFromConceptInput {
+  # RemovedAttributeFromConceptInput
   hasInput: Boolean! # computed // false when all operation data is carried by scope
 }
 
@@ -2626,6 +2893,7 @@ type RemovedAttributeFromConcept implements Operation {
 }
 
 type RemovedAttributesFromConceptInput {
+  # RemovedAttributesFromConceptInput
   hasInput: Boolean! # computed // false when all operation data is carried by scope
 }
 
@@ -2642,6 +2910,7 @@ type RemovedAttributesFromConcept implements Operation {
 }
 
 type DeletedConceptInput {
+  # DeletedConceptInput
   hasInput: Boolean! # computed // false when all operation data is carried by scope
 }
 
@@ -2657,6 +2926,7 @@ type DeletedConcept implements Operation {
 }
 
 type DeletedConceptsInput {
+  # DeletedConceptsInput
   hasInput: Boolean! # computed // false when all operation data is carried by scope
 }
 
@@ -2703,18 +2973,21 @@ type Stat implements Artifact {
 }
 
 type StatEdge implements EntityEdge {
+  # EntityEdge
   cursor: String! # computed
+  # StatEdge
   node: Stat! # reference
 }
 
 type StatConnection implements EntityConnection {
+  # EntityConnection
   edges: [StatEdge!]! # computed
   pageInfo: PageInfo! # computed
   hash: String! # cached
 }
 
-type StatDiff implements Entity {
-  # WeakEntity
+type StatDiff implements Diff {
+  # Diff
   id: ID! # computed // hash
   hash: String! # cached
   owner: Entity # reference
@@ -2729,11 +3002,14 @@ type StatDiff implements Entity {
 }
 
 type StatDiffEdge implements EntityEdge {
+  # EntityEdge
   cursor: String! # computed
+  # StatDiffEdge
   node: StatDiff! # reference
 }
 
 type StatDiffConnection implements EntityConnection {
+  # EntityConnection
   edges: [StatDiffEdge!]! # computed
   pageInfo: PageInfo! # computed
   hash: String! # cached
@@ -2752,11 +3028,14 @@ type StatModification implements Modification {
 }
 
 type StatModificationEdge implements EntityEdge {
+  # EntityEdge
   cursor: String! # computed
+  # StatModificationEdge
   node: StatModification! # reference
 }
 
 type StatModificationConnection implements EntityConnection {
+  # EntityConnection
   edges: [StatModificationEdge!]! # computed
   pageInfo: PageInfo! # computed
   hash: String! # cached
@@ -2774,11 +3053,14 @@ type StatModifications implements Entity {
 }
 
 type StatModificationsEdge implements EntityEdge {
+  # EntityEdge
   cursor: String! # computed
+  # StatModificationsEdge
   node: StatModifications! # reference
 }
 
 type StatModificationsConnection implements EntityConnection {
+  # EntityConnection
   edges: [StatModificationsEdge!]! # computed
   pageInfo: PageInfo! # computed
   hash: String! # cached
@@ -2815,18 +3097,21 @@ type Port implements Artifact {
 }
 
 type PortEdge implements EntityEdge {
+  # EntityEdge
   cursor: String! # computed
+  # PortEdge
   node: Port! # reference
 }
 
 type PortConnection implements EntityConnection {
+  # EntityConnection
   edges: [PortEdge!]! # computed
   pageInfo: PageInfo! # computed
   hash: String! # cached
 }
 
-type PortDiff implements Entity {
-  # WeakEntity
+type PortDiff implements Diff {
+  # Diff
   id: ID! # computed // hash
   hash: String! # cached
   owner: Entity # reference
@@ -2845,11 +3130,14 @@ type PortDiff implements Entity {
 }
 
 type PortDiffEdge implements EntityEdge {
+  # EntityEdge
   cursor: String! # computed
+  # PortDiffEdge
   node: PortDiff! # reference
 }
 
 type PortDiffConnection implements EntityConnection {
+  # EntityConnection
   edges: [PortDiffEdge!]! # computed
   pageInfo: PageInfo! # computed
   hash: String! # cached
@@ -2868,11 +3156,14 @@ type PortModification implements Modification {
 }
 
 type PortModificationEdge implements EntityEdge {
+  # EntityEdge
   cursor: String! # computed
+  # PortModificationEdge
   node: PortModification! # reference
 }
 
 type PortModificationConnection implements EntityConnection {
+  # EntityConnection
   edges: [PortModificationEdge!]! # computed
   pageInfo: PageInfo! # computed
   hash: String! # cached
@@ -2890,11 +3181,14 @@ type PortModifications implements Entity {
 }
 
 type PortModificationsEdge implements EntityEdge {
+  # EntityEdge
   cursor: String! # computed
+  # PortModificationsEdge
   node: PortModifications! # reference
 }
 
 type PortModificationsConnection implements EntityConnection {
+  # EntityConnection
   edges: [PortModificationsEdge!]! # computed
   pageInfo: PageInfo! # computed
   hash: String! # cached
@@ -2903,6 +3197,7 @@ type PortModificationsConnection implements EntityConnection {
 #region Operations
 
 type CreatedPortInput {
+  # CreatedPortInput
   port: Port! # data
 }
 
@@ -2919,6 +3214,7 @@ type CreatedPort implements Operation {
 }
 
 type CreatedPortsInput {
+  # CreatedPortsInput
   ports: PortConnection! # data
 }
 
@@ -2935,6 +3231,7 @@ type CreatedPorts implements Operation {
 }
 
 type RenamedPortInput {
+  # RenamedPortInput
   code: String! # data
   label: String! # data
 }
@@ -2952,6 +3249,7 @@ type RenamedPort implements Operation {
 }
 
 type UpdatedPortDescriptionInput {
+  # UpdatedPortDescriptionInput
   description: String! # data
 }
 
@@ -2968,6 +3266,7 @@ type UpdatedPortDescription implements Operation {
 }
 
 type UpdatedPortIconInput {
+  # UpdatedPortIconInput
   icon: String! # data
 }
 
@@ -2984,6 +3283,7 @@ type UpdatedPortIcon implements Operation {
 }
 
 type AddedAttributeToPortInput {
+  # AddedAttributeToPortInput
   attribute: Attribute! # data
 }
 
@@ -3001,6 +3301,7 @@ type AddedAttributeToPort implements Operation {
 }
 
 type AddedAttributesToPortInput {
+  # AddedAttributesToPortInput
   attributes: AttributeConnection! # data
 }
 
@@ -3018,6 +3319,7 @@ type AddedAttributesToPort implements Operation {
 }
 
 type RemovedAttributeFromPortInput {
+  # RemovedAttributeFromPortInput
   hasInput: Boolean! # computed // false when all operation data is carried by scope
 }
 
@@ -3034,6 +3336,7 @@ type RemovedAttributeFromPort implements Operation {
 }
 
 type RemovedAttributesFromPortInput {
+  # RemovedAttributesFromPortInput
   hasInput: Boolean! # computed // false when all operation data is carried by scope
 }
 
@@ -3050,6 +3353,7 @@ type RemovedAttributesFromPort implements Operation {
 }
 
 type DeletedPortInput {
+  # DeletedPortInput
   hasInput: Boolean! # computed // false when all operation data is carried by scope
 }
 
@@ -3065,6 +3369,7 @@ type DeletedPort implements Operation {
 }
 
 type DeletedPortsInput {
+  # DeletedPortsInput
   hasInput: Boolean! # computed // false when all operation data is carried by scope
 }
 
@@ -3112,18 +3417,21 @@ type Connector implements Artifact {
 }
 
 type ConnectorEdge implements EntityEdge {
+  # EntityEdge
   cursor: String! # computed
+  # ConnectorEdge
   node: Connector! # reference
 }
 
 type ConnectorConnection implements EntityConnection {
+  # EntityConnection
   edges: [ConnectorEdge!]! # computed
   pageInfo: PageInfo! # computed
   hash: String! # cached
 }
 
-type ConnectorDiff implements Entity {
-  # WeakEntity
+type ConnectorDiff implements Diff {
+  # Diff
   id: ID! # computed // hash
   hash: String! # cached
   owner: Entity # reference
@@ -3139,11 +3447,14 @@ type ConnectorDiff implements Entity {
 }
 
 type ConnectorDiffEdge implements EntityEdge {
+  # EntityEdge
   cursor: String! # computed
+  # ConnectorDiffEdge
   node: ConnectorDiff! # reference
 }
 
 type ConnectorDiffConnection implements EntityConnection {
+  # EntityConnection
   edges: [ConnectorDiffEdge!]! # computed
   pageInfo: PageInfo! # computed
   hash: String! # cached
@@ -3162,11 +3473,14 @@ type ConnectorModification implements Modification {
 }
 
 type ConnectorModificationEdge implements EntityEdge {
+  # EntityEdge
   cursor: String! # computed
+  # ConnectorModificationEdge
   node: ConnectorModification! # reference
 }
 
 type ConnectorModificationConnection implements EntityConnection {
+  # EntityConnection
   edges: [ConnectorModificationEdge!]! # computed
   pageInfo: PageInfo! # computed
   hash: String! # cached
@@ -3184,11 +3498,14 @@ type ConnectorModifications implements Entity {
 }
 
 type ConnectorModificationsEdge implements EntityEdge {
+  # EntityEdge
   cursor: String! # computed
+  # ConnectorModificationsEdge
   node: ConnectorModifications! # reference
 }
 
 type ConnectorModificationsConnection implements EntityConnection {
+  # EntityConnection
   edges: [ConnectorModificationsEdge!]! # computed
   pageInfo: PageInfo! # computed
   hash: String! # cached
@@ -3222,18 +3539,21 @@ type Representation implements Artifact {
 }
 
 type RepresentationEdge implements EntityEdge {
+  # EntityEdge
   cursor: String! # computed
+  # RepresentationEdge
   node: Representation! # reference
 }
 
 type RepresentationConnection implements EntityConnection {
+  # EntityConnection
   edges: [RepresentationEdge!]! # computed
   pageInfo: PageInfo! # computed
   hash: String! # cached
 }
 
-type RepresentationDiff implements Entity {
-  # WeakEntity
+type RepresentationDiff implements Diff {
+  # Diff
   id: ID! # computed // hash
   hash: String! # cached
   owner: Entity # reference
@@ -3247,11 +3567,14 @@ type RepresentationDiff implements Entity {
 }
 
 type RepresentationDiffEdge implements EntityEdge {
+  # EntityEdge
   cursor: String! # computed
+  # RepresentationDiffEdge
   node: RepresentationDiff! # reference
 }
 
 type RepresentationDiffConnection implements EntityConnection {
+  # EntityConnection
   edges: [RepresentationDiffEdge!]! # computed
   pageInfo: PageInfo! # computed
   hash: String! # cached
@@ -3270,11 +3593,14 @@ type RepresentationModification implements Modification {
 }
 
 type RepresentationModificationEdge implements EntityEdge {
+  # EntityEdge
   cursor: String! # computed
+  # RepresentationModificationEdge
   node: RepresentationModification! # reference
 }
 
 type RepresentationModificationConnection implements EntityConnection {
+  # EntityConnection
   edges: [RepresentationModificationEdge!]! # computed
   pageInfo: PageInfo! # computed
   hash: String! # cached
@@ -3292,11 +3618,14 @@ type RepresentationModifications implements Entity {
 }
 
 type RepresentationModificationsEdge implements EntityEdge {
+  # EntityEdge
   cursor: String! # computed
+  # RepresentationModificationsEdge
   node: RepresentationModifications! # reference
 }
 
 type RepresentationModificationsConnection implements EntityConnection {
+  # EntityConnection
   edges: [RepresentationModificationsEdge!]! # computed
   pageInfo: PageInfo! # computed
   hash: String! # cached
@@ -3338,18 +3667,21 @@ type Type implements Artifact {
 }
 
 type TypeEdge implements EntityEdge {
+  # EntityEdge
   cursor: String! # computed
+  # TypeEdge
   node: Type! # reference
 }
 
 type TypeConnection implements EntityConnection {
+  # EntityConnection
   edges: [TypeEdge!]! # computed
   pageInfo: PageInfo! # computed
   hash: String! # cached
 }
 
-type TypeDiff implements Entity {
-  # WeakEntity
+type TypeDiff implements Diff {
+  # Diff
   id: ID! # computed // hash
   hash: String! # cached
   owner: Entity # reference
@@ -3377,11 +3709,14 @@ type TypeDiff implements Entity {
 }
 
 type TypeDiffEdge implements EntityEdge {
+  # EntityEdge
   cursor: String! # computed
+  # TypeDiffEdge
   node: TypeDiff! # reference
 }
 
 type TypeDiffConnection implements EntityConnection {
+  # EntityConnection
   edges: [TypeDiffEdge!]! # computed
   pageInfo: PageInfo! # computed
   hash: String! # cached
@@ -3400,11 +3735,14 @@ type TypeModification implements Modification {
 }
 
 type TypeModificationEdge implements EntityEdge {
+  # EntityEdge
   cursor: String! # computed
+  # TypeModificationEdge
   node: TypeModification! # reference
 }
 
 type TypeModificationConnection implements EntityConnection {
+  # EntityConnection
   edges: [TypeModificationEdge!]! # computed
   pageInfo: PageInfo! # computed
   hash: String! # cached
@@ -3422,11 +3760,14 @@ type TypeModifications implements Entity {
 }
 
 type TypeModificationsEdge implements EntityEdge {
+  # EntityEdge
   cursor: String! # computed
+  # TypeModificationsEdge
   node: TypeModifications! # reference
 }
 
 type TypeModificationsConnection implements EntityConnection {
+  # EntityConnection
   edges: [TypeModificationsEdge!]! # computed
   pageInfo: PageInfo! # computed
   hash: String! # cached
@@ -3435,6 +3776,7 @@ type TypeModificationsConnection implements EntityConnection {
 #region Operations
 
 type CreatedTypeInput {
+  # CreatedTypeInput
   type: Type! # data
 }
 
@@ -3451,6 +3793,7 @@ type CreatedType implements Operation {
 }
 
 type CreatedTypesInput {
+  # CreatedTypesInput
   types: TypeConnection! # data
 }
 
@@ -3467,6 +3810,7 @@ type CreatedTypes implements Operation {
 }
 
 type RenamedTypeInput {
+  # RenamedTypeInput
   name: String! # data
 }
 
@@ -3483,6 +3827,7 @@ type RenamedType implements Operation {
 }
 
 type UpdatedTypeDescriptionInput {
+  # UpdatedTypeDescriptionInput
   description: String! # data
 }
 
@@ -3499,6 +3844,7 @@ type UpdatedTypeDescription implements Operation {
 }
 
 type UpdatedTypeIconInput {
+  # UpdatedTypeIconInput
   icon: String! # data
 }
 
@@ -3515,6 +3861,7 @@ type UpdatedTypeIcon implements Operation {
 }
 
 type AddedAttributeToTypeInput {
+  # AddedAttributeToTypeInput
   attribute: Attribute! # data
 }
 
@@ -3532,6 +3879,7 @@ type AddedAttributeToType implements Operation {
 }
 
 type AddedAttributesToTypeInput {
+  # AddedAttributesToTypeInput
   attributes: AttributeConnection! # data
 }
 
@@ -3549,6 +3897,7 @@ type AddedAttributesToType implements Operation {
 }
 
 type RemovedAttributeFromTypeInput {
+  # RemovedAttributeFromTypeInput
   hasInput: Boolean! # computed // false when all operation data is carried by scope
 }
 
@@ -3565,6 +3914,7 @@ type RemovedAttributeFromType implements Operation {
 }
 
 type RemovedAttributesFromTypeInput {
+  # RemovedAttributesFromTypeInput
   hasInput: Boolean! # computed // false when all operation data is carried by scope
 }
 
@@ -3581,6 +3931,7 @@ type RemovedAttributesFromType implements Operation {
 }
 
 type DeletedTypeInput {
+  # DeletedTypeInput
   hasInput: Boolean! # computed // false when all operation data is carried by scope
 }
 
@@ -3596,6 +3947,7 @@ type DeletedType implements Operation {
 }
 
 type DeletedTypesInput {
+  # DeletedTypesInput
   hasInput: Boolean! # computed // false when all operation data is carried by scope
 }
 
@@ -3613,6 +3965,7 @@ type DeletedTypes implements Operation {
 #region Connector
 
 type AddedConnectorInput {
+  # AddedConnectorInput
   connector: Connector! # data
 }
 
@@ -3630,6 +3983,7 @@ type AddedConnector implements Operation {
 }
 
 type AddedConnectorsInput {
+  # AddedConnectorsInput
   connectors: ConnectorConnection! # data
 }
 
@@ -3647,6 +4001,7 @@ type AddedConnectors implements Operation {
 }
 
 type RenamedConnectorInput {
+  # RenamedConnectorInput
   code: String! # data
 }
 
@@ -3663,6 +4018,7 @@ type RenamedConnector implements Operation {
 }
 
 type UpdatedConnectorDescriptionInput {
+  # UpdatedConnectorDescriptionInput
   description: String! # data
 }
 
@@ -3679,6 +4035,7 @@ type UpdatedConnectorDescription implements Operation {
 }
 
 type UpdatedConnectorIconInput {
+  # UpdatedConnectorIconInput
   icon: String! # data
 }
 
@@ -3695,6 +4052,7 @@ type UpdatedConnectorIcon implements Operation {
 }
 
 type RemovedConnectorInput {
+  # RemovedConnectorInput
   hasInput: Boolean! # computed // false when all operation data is carried by scope
 }
 
@@ -3711,6 +4069,7 @@ type RemovedConnector implements Operation {
 }
 
 type RemovedConnectorsInput {
+  # RemovedConnectorsInput
   hasInput: Boolean! # computed // false when all operation data is carried by scope
 }
 
@@ -3763,18 +4122,21 @@ type Layer implements Artifact {
 }
 
 type LayerEdge implements EntityEdge {
+  # EntityEdge
   cursor: String! # computed
+  # LayerEdge
   node: Layer! # reference
 }
 
 type LayerConnection implements EntityConnection {
+  # EntityConnection
   edges: [LayerEdge!]! # computed
   pageInfo: PageInfo! # computed
   hash: String! # cached
 }
 
-type LayerDiff implements Entity {
-  # WeakEntity
+type LayerDiff implements Diff {
+  # Diff
   id: ID! # computed // hash
   hash: String! # cached
   owner: Entity # reference
@@ -3794,11 +4156,14 @@ type LayerDiff implements Entity {
 }
 
 type LayerDiffEdge implements EntityEdge {
+  # EntityEdge
   cursor: String! # computed
+  # LayerDiffEdge
   node: LayerDiff! # reference
 }
 
 type LayerDiffConnection implements EntityConnection {
+  # EntityConnection
   edges: [LayerDiffEdge!]! # computed
   pageInfo: PageInfo! # computed
   hash: String! # cached
@@ -3817,11 +4182,14 @@ type LayerModification implements Modification {
 }
 
 type LayerModificationEdge implements EntityEdge {
+  # EntityEdge
   cursor: String! # computed
+  # LayerModificationEdge
   node: LayerModification! # reference
 }
 
 type LayerModificationConnection implements EntityConnection {
+  # EntityConnection
   edges: [LayerModificationEdge!]! # computed
   pageInfo: PageInfo! # computed
   hash: String! # cached
@@ -3839,11 +4207,14 @@ type LayerModifications implements Entity {
 }
 
 type LayerModificationsEdge implements EntityEdge {
+  # EntityEdge
   cursor: String! # computed
+  # LayerModificationsEdge
   node: LayerModifications! # reference
 }
 
 type LayerModificationsConnection implements EntityConnection {
+  # EntityConnection
   edges: [LayerModificationsEdge!]! # computed
   pageInfo: PageInfo! # computed
   hash: String! # cached
@@ -3878,11 +4249,14 @@ type Group implements Artifact {
 }
 
 type GroupEdge implements EntityEdge {
+  # EntityEdge
   cursor: String! # computed
+  # GroupEdge
   node: Group! # reference
 }
 
 type GroupConnection implements EntityConnection {
+  # EntityConnection
   edges: [GroupEdge!]! # computed
   pageInfo: PageInfo! # computed
   hash: String! # cached
@@ -3916,11 +4290,14 @@ type GroupDiff implements Artifact {
 }
 
 type GroupDiffEdge implements EntityEdge {
+  # EntityEdge
   cursor: String! # computed
+  # GroupDiffEdge
   node: GroupDiff! # reference
 }
 
 type GroupDiffConnection implements EntityConnection {
+  # EntityConnection
   edges: [GroupDiffEdge!]! # computed
   pageInfo: PageInfo! # computed
   hash: String! # cached
@@ -3939,11 +4316,14 @@ type GroupModification implements Modification {
 }
 
 type GroupModificationEdge implements EntityEdge {
+  # EntityEdge
   cursor: String! # computed
+  # GroupModificationEdge
   node: GroupModification! # reference
 }
 
 type GroupModificationConnection implements EntityConnection {
+  # EntityConnection
   edges: [GroupModificationEdge!]! # computed
   pageInfo: PageInfo! # computed
   hash: String! # cached
@@ -3975,11 +4355,14 @@ type GroupModifications implements Artifact {
 }
 
 type GroupModificationsEdge implements EntityEdge {
+  # EntityEdge
   cursor: String! # computed
+  # GroupModificationsEdge
   node: GroupModifications! # reference
 }
 
 type GroupModificationsConnection implements EntityConnection {
+  # EntityConnection
   edges: [GroupModificationsEdge!]! # computed
   pageInfo: PageInfo! # computed
   hash: String! # cached
@@ -3995,11 +4378,14 @@ enum PieceConnectionKind {
 }
 
 type BlueprintEdge implements EntityEdge {
+  # EntityEdge
   cursor: String! # computed
+  # BlueprintEdge
   node: Entity! # reference // Type | Design
 }
 
 type BlueprintConnection implements EntityConnection {
+  # EntityConnection
   edges: [BlueprintEdge!]! # computed
   pageInfo: PageInfo! # computed
   hash: String! # cached
@@ -4042,11 +4428,14 @@ type Piece implements Artifact {
 }
 
 type PieceEdge implements EntityEdge {
+  # EntityEdge
   cursor: String! # computed
+  # PieceEdge
   node: Piece! # reference
 }
 
 type PieceConnection implements EntityConnection {
+  # EntityConnection
   edges: [PieceEdge!]! # computed
   pageInfo: PageInfo! # computed
   hash: String! # cached
@@ -4084,11 +4473,14 @@ type PieceDiff implements Artifact {
 }
 
 type PieceDiffEdge implements EntityEdge {
+  # EntityEdge
   cursor: String! # computed
+  # PieceDiffEdge
   node: PieceDiff! # reference
 }
 
 type PieceDiffConnection implements EntityConnection {
+  # EntityConnection
   edges: [PieceDiffEdge!]! # computed
   pageInfo: PageInfo! # computed
   hash: String! # cached
@@ -4107,11 +4499,14 @@ type PieceModification implements Modification {
 }
 
 type PieceModificationEdge implements EntityEdge {
+  # EntityEdge
   cursor: String! # computed
+  # PieceModificationEdge
   node: PieceModification! # reference
 }
 
 type PieceModificationConnection implements EntityConnection {
+  # EntityConnection
   edges: [PieceModificationEdge!]! # computed
   pageInfo: PageInfo! # computed
   hash: String! # cached
@@ -4143,11 +4538,14 @@ type PieceModifications implements Artifact {
 }
 
 type PieceModificationsEdge implements EntityEdge {
+  # EntityEdge
   cursor: String! # computed
+  # PieceModificationsEdge
   node: PieceModifications! # reference
 }
 
 type PieceModificationsConnection implements EntityConnection {
+  # EntityConnection
   edges: [PieceModificationsEdge!]! # computed
   pageInfo: PageInfo! # computed
   hash: String! # cached
@@ -4187,18 +4585,21 @@ type Connection implements Artifact {
 }
 
 type ConnectionEdge implements EntityEdge {
+  # EntityEdge
   cursor: String! # computed
+  # ConnectionEdge
   node: Connection! # reference
 }
 
 type ConnectionConnection implements EntityConnection {
+  # EntityConnection
   edges: [ConnectionEdge!]! # computed
   pageInfo: PageInfo! # computed
   hash: String! # cached
 }
 
-type ConnectionDiff implements Entity {
-  # WeakEntity
+type ConnectionDiff implements Diff {
+  # Diff
   id: ID! # computed // hash
   hash: String! # cached
   owner: Entity # reference
@@ -4206,11 +4607,14 @@ type ConnectionDiff implements Entity {
 }
 
 type ConnectionDiffEdge implements EntityEdge {
+  # EntityEdge
   cursor: String! # computed
+  # ConnectionDiffEdge
   node: ConnectionDiff! # reference
 }
 
 type ConnectionDiffConnection implements EntityConnection {
+  # EntityConnection
   edges: [ConnectionDiffEdge!]! # computed
   pageInfo: PageInfo! # computed
   hash: String! # cached
@@ -4229,11 +4633,14 @@ type ConnectionModification implements Modification {
 }
 
 type ConnectionModificationEdge implements EntityEdge {
+  # EntityEdge
   cursor: String! # computed
+  # ConnectionModificationEdge
   node: ConnectionModification! # reference
 }
 
 type ConnectionModificationConnection implements EntityConnection {
+  # EntityConnection
   edges: [ConnectionModificationEdge!]! # computed
   pageInfo: PageInfo! # computed
   hash: String! # cached
@@ -4251,11 +4658,14 @@ type ConnectionModifications implements Entity {
 }
 
 type ConnectionModificationsEdge implements EntityEdge {
+  # EntityEdge
   cursor: String! # computed
+  # ConnectionModificationsEdge
   node: ConnectionModifications! # reference
 }
 
 type ConnectionModificationsConnection implements EntityConnection {
+  # EntityConnection
   edges: [ConnectionModificationsEdge!]! # computed
   pageInfo: PageInfo! # computed
   hash: String! # cached
@@ -4264,6 +4674,7 @@ type ConnectionModificationsConnection implements EntityConnection {
 #region Operations
 
 type AddedFixedPieceInput {
+  # AddedFixedPieceInput
   blueprintId: ID!
   position: Position!
   name: String
@@ -4283,6 +4694,7 @@ type AddedFixedPiece implements Operation {
 }
 
 type FixedPieceInput {
+  # FixedPieceInput
   hasInput: Boolean! # computed // false when all operation data is carried by scope
 }
 
@@ -4299,6 +4711,7 @@ type FixedPiece implements Operation {
 }
 
 type DraggedPiecesInput {
+  # DraggedPiecesInput
   offset: Offset!
 }
 
@@ -4315,6 +4728,7 @@ type DraggedPieces implements Operation {
 }
 
 type DraggedPieceInput {
+  # DraggedPieceInput
   offset: Offset! # data
 }
 
@@ -4331,6 +4745,7 @@ type DraggedPiece implements Operation {
 }
 
 type AddedChildPieceWithParentConnectionInput {
+  # AddedChildPieceWithParentConnectionInput
   piece: Piece! # data
   connection: Connection! # data
 }
@@ -4349,6 +4764,7 @@ type AddedChildPieceWithParentConnection implements Operation {
 }
 
 type AddedChildPiecesWithParentConnectionsInput {
+  # AddedChildPiecesWithParentConnectionsInput
   pieces: PieceConnection! # data
   connections: ConnectionConnection! # data
 }
@@ -4367,6 +4783,7 @@ type AddedChildPiecesWithParentConnections implements Operation {
 }
 
 type AddedHangingChildPieceWithParentConnectionInput {
+  # AddedHangingChildPieceWithParentConnectionInput
   piece: Piece! # data
   connection: Connection! # data
 }
@@ -4385,6 +4802,7 @@ type AddedHangingChildPieceWithParentConnection implements Operation {
 }
 
 type AddedHangingChildPiecesWithParentConnectionsInput {
+  # AddedHangingChildPiecesWithParentConnectionsInput
   pieces: PieceConnection! # data
   connections: ConnectionConnection! # data
 }
@@ -4403,6 +4821,7 @@ type AddedHangingChildPiecesWithParentConnections implements Operation {
 }
 
 type RenamedPieceInput {
+  # RenamedPieceInput
   name: String! # data
 }
 
@@ -4419,6 +4838,7 @@ type RenamedPiece implements Operation {
 }
 
 type UpdatedPieceDescriptionInput {
+  # UpdatedPieceDescriptionInput
   description: String! # data
 }
 
@@ -4435,6 +4855,7 @@ type UpdatedPieceDescription implements Operation {
 }
 
 type MovedPieceInput {
+  # MovedPieceInput
   position: Position! # data
 }
 
@@ -4451,6 +4872,7 @@ type MovedPiece implements Operation {
 }
 
 type MovedPiecesInput {
+  # MovedPiecesInput
   offset: Offset! # data
 }
 
@@ -4467,6 +4889,7 @@ type MovedPieces implements Operation {
 }
 
 type FixedPiecesInput {
+  # FixedPiecesInput
   hasInput: Boolean! # computed // false when all operation data is carried by scope
 }
 
@@ -4483,6 +4906,7 @@ type FixedPieces implements Operation {
 }
 
 type ChangedPieceToTypeInput {
+  # ChangedPieceToTypeInput
   blueprintId: ID! # data
 }
 
@@ -4499,6 +4923,7 @@ type ChangedPieceToType implements Operation {
 }
 
 type ChangedPiecesToTypeInput {
+  # ChangedPiecesToTypeInput
   blueprintId: ID! # data
 }
 
@@ -4515,6 +4940,7 @@ type ChangedPiecesToType implements Operation {
 }
 
 type AddedAttributeToPieceInput {
+  # AddedAttributeToPieceInput
   attribute: Attribute! # data
 }
 
@@ -4532,6 +4958,7 @@ type AddedAttributeToPiece implements Operation {
 }
 
 type AddedAttributesToPieceInput {
+  # AddedAttributesToPieceInput
   attributes: AttributeConnection! # data
 }
 
@@ -4549,6 +4976,7 @@ type AddedAttributesToPiece implements Operation {
 }
 
 type RemovedAttributeFromPieceInput {
+  # RemovedAttributeFromPieceInput
   hasInput: Boolean! # computed // false when all operation data is carried by scope
 }
 
@@ -4565,6 +4993,7 @@ type RemovedAttributeFromPiece implements Operation {
 }
 
 type RemovedAttributesFromPieceInput {
+  # RemovedAttributesFromPieceInput
   hasInput: Boolean! # computed // false when all operation data is carried by scope
 }
 
@@ -4581,6 +5010,7 @@ type RemovedAttributesFromPiece implements Operation {
 }
 
 type DeletedPieceInput {
+  # DeletedPieceInput
   hasInput: Boolean! # computed // false when all operation data is carried by scope
 }
 
@@ -4596,6 +5026,7 @@ type DeletedPiece implements Operation {
 }
 
 type DeletedPiecesInput {
+  # DeletedPiecesInput
   hasInput: Boolean! # computed // false when all operation data is carried by scope
 }
 
@@ -4611,6 +5042,7 @@ type DeletedPieces implements Operation {
 }
 
 type DeletedPiecesAndConnectionsInput {
+  # DeletedPiecesAndConnectionsInput
   hasInput: Boolean! # computed // false when all operation data is carried by scope
 }
 
@@ -4646,18 +5078,21 @@ type Side implements StrongEntity {
 }
 
 type SideEdge implements EntityEdge {
+  # EntityEdge
   cursor: String! # computed
+  # SideEdge
   node: Side! # reference
 }
 
 type SideConnection implements EntityConnection {
+  # EntityConnection
   edges: [SideEdge!]! # computed
   pageInfo: PageInfo! # computed
   hash: String! # cached
 }
 
-type SideDiff implements Entity {
-  # WeakEntity
+type SideDiff implements Diff {
+  # Diff
   id: ID! # computed // hash
   hash: String! # cached
   owner: Entity # reference
@@ -4673,11 +5108,14 @@ type SideDiff implements Entity {
 }
 
 type SideDiffEdge implements EntityEdge {
+  # EntityEdge
   cursor: String! # computed
+  # SideDiffEdge
   node: SideDiff! # reference
 }
 
 type SideDiffConnection implements EntityConnection {
+  # EntityConnection
   edges: [SideDiffEdge!]! # computed
   pageInfo: PageInfo! # computed
   hash: String! # cached
@@ -4696,11 +5134,14 @@ type SideModification implements Modification {
 }
 
 type SideModificationEdge implements EntityEdge {
+  # EntityEdge
   cursor: String! # computed
+  # SideModificationEdge
   node: SideModification! # reference
 }
 
 type SideModificationConnection implements EntityConnection {
+  # EntityConnection
   edges: [SideModificationEdge!]! # computed
   pageInfo: PageInfo! # computed
   hash: String! # cached
@@ -4718,11 +5159,14 @@ type SideModifications implements Entity {
 }
 
 type SideModificationsEdge implements EntityEdge {
+  # EntityEdge
   cursor: String! # computed
+  # SideModificationsEdge
   node: SideModifications! # reference
 }
 
 type SideModificationsConnection implements EntityConnection {
+  # EntityConnection
   edges: [SideModificationsEdge!]! # computed
   pageInfo: PageInfo! # computed
   hash: String! # cached
@@ -4787,11 +5231,14 @@ type Design implements Artifact {
 }
 
 type DesignEdge implements EntityEdge {
+  # EntityEdge
   cursor: String! # computed
+  # DesignEdge
   node: Design! # reference
 }
 
 type DesignConnection implements EntityConnection {
+  # EntityConnection
   edges: [DesignEdge!]! # computed
   pageInfo: PageInfo! # computed
   hash: String! # cached
@@ -4833,11 +5280,14 @@ type DesignDiff implements Artifact {
 }
 
 type DesignDiffEdge implements EntityEdge {
+  # EntityEdge
   cursor: String! # computed
+  # DesignDiffEdge
   node: DesignDiff! # reference
 }
 
 type DesignDiffConnection implements EntityConnection {
+  # EntityConnection
   edges: [DesignDiffEdge!]! # computed
   pageInfo: PageInfo! # computed
   hash: String! # cached
@@ -4856,11 +5306,14 @@ type DesignModification implements Modification {
 }
 
 type DesignModificationEdge implements EntityEdge {
+  # EntityEdge
   cursor: String! # computed
+  # DesignModificationEdge
   node: DesignModification! # reference
 }
 
 type DesignModificationConnection implements EntityConnection {
+  # EntityConnection
   edges: [DesignModificationEdge!]! # computed
   pageInfo: PageInfo! # computed
   hash: String! # cached
@@ -4892,11 +5345,14 @@ type DesignModifications implements Artifact {
 }
 
 type DesignModificationsEdge implements EntityEdge {
+  # EntityEdge
   cursor: String! # computed
+  # DesignModificationsEdge
   node: DesignModifications! # reference
 }
 
 type DesignModificationsConnection implements EntityConnection {
+  # EntityConnection
   edges: [DesignModificationsEdge!]! # computed
   pageInfo: PageInfo! # computed
   hash: String! # cached
@@ -4905,6 +5361,7 @@ type DesignModificationsConnection implements EntityConnection {
 #region Operations
 
 type CreatedDesignInput {
+  # CreatedDesignInput
   design: Design! # data
 }
 
@@ -4921,6 +5378,7 @@ type CreatedDesign implements Operation {
 }
 
 type CreatedDesignsInput {
+  # CreatedDesignsInput
   designs: DesignConnection! # data
 }
 
@@ -4937,6 +5395,7 @@ type CreatedDesigns implements Operation {
 }
 
 type DeletedDesignInput {
+  # DeletedDesignInput
   hasInput: Boolean! # computed // false when all operation data is carried by scope
 }
 
@@ -4952,6 +5411,7 @@ type DeletedDesign implements Operation {
 }
 
 type DeletedDesignsInput {
+  # DeletedDesignsInput
   hasInput: Boolean! # computed // false when all operation data is carried by scope
 }
 
@@ -4967,6 +5427,7 @@ type DeletedDesigns implements Operation {
 }
 
 type FlattenedDesignInput {
+  # FlattenedDesignInput
   hasInput: Boolean! # computed // false when all operation data is carried by scope
 }
 
@@ -4983,6 +5444,7 @@ type FlattenedDesign implements Operation {
 }
 
 type AddedAttributeToDesignInput {
+  # AddedAttributeToDesignInput
   attribute: Attribute! # data
 }
 
@@ -5000,6 +5462,7 @@ type AddedAttributeToDesign implements Operation {
 }
 
 type AddedAttributesToDesignInput {
+  # AddedAttributesToDesignInput
   attributes: AttributeConnection! # data
 }
 
@@ -5017,6 +5480,7 @@ type AddedAttributesToDesign implements Operation {
 }
 
 type RemovedAttributeFromDesignInput {
+  # RemovedAttributeFromDesignInput
   hasInput: Boolean! # computed // false when all operation data is carried by scope
 }
 
@@ -5033,6 +5497,7 @@ type RemovedAttributeFromDesign implements Operation {
 }
 
 type RemovedAttributesFromDesignInput {
+  # RemovedAttributesFromDesignInput
   hasInput: Boolean! # computed // false when all operation data is carried by scope
 }
 
@@ -5095,18 +5560,21 @@ type Kit implements Artifact {
 }
 
 type KitEdge implements EntityEdge {
+  # EntityEdge
   cursor: String! # computed
+  # KitEdge
   node: Kit! # reference
 }
 
 type KitConnection implements EntityConnection {
+  # EntityConnection
   edges: [KitEdge!]! # computed
   pageInfo: PageInfo! # computed
   hash: String! # cached
 }
 
-type KitDiff implements Entity {
-  # WeakEntity
+type KitDiff implements Diff {
+  # Diff
   id: ID! # computed // hash
   hash: String! # cached
   owner: Entity # reference
@@ -5132,11 +5600,14 @@ type KitDiff implements Entity {
 }
 
 type KitDiffEdge implements EntityEdge {
+  # EntityEdge
   cursor: String! # computed
+  # KitDiffEdge
   node: KitDiff! # reference
 }
 
 type KitDiffConnection implements EntityConnection {
+  # EntityConnection
   edges: [KitDiffEdge!]! # computed
   pageInfo: PageInfo! # computed
   hash: String! # cached
@@ -5155,11 +5626,14 @@ type KitModification implements Modification {
 }
 
 type KitModificationEdge implements EntityEdge {
+  # EntityEdge
   cursor: String! # computed
+  # KitModificationEdge
   node: KitModification! # reference
 }
 
 type KitModificationConnection implements EntityConnection {
+  # EntityConnection
   edges: [KitModificationEdge!]! # computed
   pageInfo: PageInfo! # computed
   hash: String! # cached
@@ -5177,11 +5651,14 @@ type KitModifications implements Entity {
 }
 
 type KitModificationsEdge implements EntityEdge {
+  # EntityEdge
   cursor: String! # computed
+  # KitModificationsEdge
   node: KitModifications! # reference
 }
 
 type KitModificationsConnection implements EntityConnection {
+  # EntityConnection
   edges: [KitModificationsEdge!]! # computed
   pageInfo: PageInfo! # computed
   hash: String! # cached
@@ -5190,6 +5667,7 @@ type KitModificationsConnection implements EntityConnection {
 #region Operations
 
 type RenamedKitInput {
+  # RenamedKitInput
   name: String!
 }
 
@@ -5206,6 +5684,7 @@ type RenamedKit implements Operation {
 }
 
 type ChangedDescriptionInput {
+  # ChangedDescriptionInput
   description: String!
 }
 
@@ -5249,11 +5728,14 @@ type Edit implements StrongEntity {
 }
 
 type EditEdge implements EntityEdge {
+  # EntityEdge
   cursor: String! # computed
+  # EditEdge
   node: Edit! # reference
 }
 
 type EditConnection implements EntityConnection {
+  # EntityConnection
   edges: [EditEdge!]! # computed
   pageInfo: PageInfo! # computed
   hash: String! # cached
@@ -5279,11 +5761,14 @@ type Change implements StrongEntity {
 }
 
 type ChangeEdge implements EntityEdge {
+  # EntityEdge
   cursor: String! # computed
+  # ChangeEdge
   node: Change! # reference
 }
 
 type ChangeConnection implements EntityConnection {
+  # EntityConnection
   edges: [ChangeEdge!]! # computed
   pageInfo: PageInfo! # computed
   hash: String! # cached
@@ -5314,11 +5799,14 @@ type Checkpoint implements StrongEntity {
 }
 
 type CheckpointEdge implements EntityEdge {
+  # EntityEdge
   cursor: String! # computed
+  # CheckpointEdge
   node: Checkpoint! # reference
 }
 
 type CheckpointConnection implements EntityConnection {
+  # EntityConnection
   edges: [CheckpointEdge!]! # computed
   pageInfo: PageInfo! # computed
   hash: String! # cached
@@ -5344,11 +5832,14 @@ type Alternative implements StrongEntity {
 }
 
 type AlternativeEdge implements EntityEdge {
+  # EntityEdge
   cursor: String! # computed
+  # AlternativeEdge
   node: Alternative! # reference
 }
 
 type AlternativeConnection implements EntityConnection {
+  # EntityConnection
   edges: [AlternativeEdge!]! # computed
   pageInfo: PageInfo! # computed
   hash: String! # cached
@@ -5374,11 +5865,14 @@ type Graph implements StrongEntity {
 }
 
 type GraphEdge implements EntityEdge {
+  # EntityEdge
   cursor: String! # computed
+  # GraphEdge
   node: Graph! # reference
 }
 
 type GraphConnection implements EntityConnection {
+  # EntityConnection
   edges: [GraphEdge!]! # computed
   pageInfo: PageInfo! # computed
   hash: String! # cached
@@ -5399,11 +5893,14 @@ type Session implements StrongEntity {
 #region Sessions
 
 type SessionEdge implements EntityEdge {
+  # EntityEdge
   cursor: String! # computed
+  # SessionEdge
   node: Session! # reference
 }
 
 type SessionConnection implements EntityConnection {
+  # EntityConnection
   edges: [SessionEdge!]! # computed
   pageInfo: PageInfo! # computed
   hash: String! # cached
@@ -5425,11 +5922,14 @@ type Conflict implements StrongEntity {
 }
 
 type ConflictEdge implements EntityEdge {
+  # EntityEdge
   cursor: String! # computed
+  # ConflictEdge
   node: Conflict! # reference
 }
 
 type ConflictConnection implements EntityConnection {
+  # EntityConnection
   edges: [ConflictEdge!]! # computed
   pageInfo: PageInfo! # computed
   hash: String! # cached
@@ -5546,6 +6046,7 @@ type PieceOperationInput {
 }
 
 type PiecesOperationInput {
+  # PiecesOperationInput
   drag(offset: OffsetInput!): ID!
   move(offset: OffsetInput!): ID!
   fix: ID!
@@ -5589,11 +6090,13 @@ type KitOperationInput {
 }
 
 type UnsavedChangeCommandInput {
+  # UnsavedChangeCommandInput
   kit: KitOperationInput!
   save: ID!
 }
 
 type VersionCommandInput {
+  # VersionCommandInput
   startNewChange: ID!
   unsavedChange(id: ID!): UnsavedChangeCommandInput!
   save: ID!
@@ -5601,11 +6104,13 @@ type VersionCommandInput {
 }
 
 type AlternativeCommandInput {
+  # AlternativeCommandInput
   version: ID!
   integrateIntoTheKit: ID!
 }
 
 type SessionCommandInput {
+  # SessionCommandInput
   start: ID!
   end: ID!
   login(username: String!, passwordHash: String!, hubUrl: String): ID!
@@ -5622,6 +6127,7 @@ type SessionCommandInput {
 #region Schema
 
 type Query {
+  # Query
   session: Session!
   wip: Graph!
   authoritative: Graph
@@ -5636,10 +6142,12 @@ type Query {
 #     `session → alternative(id) → transaction(id) → kit → …`. Leaf fields execute and return the
 #     resulting operation `ID!`; intermediate fields navigate one scope deeper.
 type Mutation {
+  # Mutation
   session: SessionScopedCommandInput!
 }
 
 type Subscription {
+  # Subscription
   event: Json!
 }
 

@@ -66,12 +66,18 @@ Concrete examples (from the target schema):
 ### Implementation rules across the workers
 
 1. **Rust structs (Workers A–D)**: only define struct fields for `# data` and `# cached` annotations. Implement `# computed` and reference-as-derived fields as `async fn` resolvers in `#[ComplexObject]` blocks, reading from `kit_graph_engine` / `kit_backbone`. The macro `entity_full_family!` (Worker A) generates only the data fields as struct members; everything else lives in the impl block.
-2. **Persistence layer (Worker D)**: SQLite tables mirror the `# data` slice exactly. No table columns for computed fields. Hash columns are written when a row mutates. Edit/Change rows store the operation log; all `*Diff` / `*Modification` / `*Modifications` views are computed projections.
-3. **Hash invalidation**: any write that mutates a `# data` field on an entity must invalidate its `hash` and propagate up its ownership chain (parent `# cached` hashes recomputed lazily on next read).
-4. **JS DTOs (Worker E)**: separate `*DataDto` (the persistable slice for `KitFullDto` round-trips) from `*Dto` (the full GraphQL response shape including computed fields). Zod schemas have two flavors per entity: `*DataSchema` (strict, input/output for persistence) and `*Schema` (loose, output of full GraphQL reads).
-5. **React hooks (Worker F)**: hooks that drive **mutations** target the `# data` slice via the command builder. Hooks that **read** can project the full GraphQL shape but must not assume computed fields round-trip through writes.
-6. **Sketchpad (Worker G)**: `KitFullDtoSchema.parse(dto)` validates only the `# data` slice; all rendering of `# computed` fields is derived at read time from store snapshots, not from imported JSON.
-7. **Subscription `event` payloads (Worker D)**: serialize only `# data` plus the entity `id`/`hash`. Receivers re-read computed fields via Query when needed. Keeps the wire small and avoids stale computed snapshots.
+2. **In-memory references are `Arc<T>` pointers — NEVER stored `Id`s.** This is a hard rule (matches the existing `Arc<Self>`-architecture documented in the [lib.rs](semio/rs/lib.rs) header: *"Every entity is one hand-written Rust struct shared as `Arc<Self>` with interior `async_lock::RwLock` per mutable field. GraphQL resolvers take `&self` on the entity (deref'd through the Arc) and return `Arc<Child>` for relationships"*). Concretely:
+   - `# reference` fields hold `Arc<Concrete>` for monomorphic targets (e.g. `Arc<Edit>`, `Arc<Quality>`) and an enum like `Arc<EntityRef>` for heterogeneous interface targets (`Entity`, `EntityConnection`, `Operation`).
+   - `# data` collections of references hold `Vec<Arc<Concrete>>` (not `Vec<Id>`). E.g. `Edit.forwards`/`backwards` is `Vec<Arc<dyn Operation>>` (or `Vec<Arc<OperationRef>>` enum), `Change.edits` is `Vec<Arc<Edit>>`, `Checkpoint.changes` is `Vec<Arc<Change>>`, `Alternative.savedChanges`/`unsavedChanges` are `Vec<Arc<Change>>`.
+   - `Id` lives **only** as the entity's own identity (`pub id: Id` on the entity itself, used for the GraphQL `id: ID!` field, hash inputs, and serde wire format) and as a parameter on resolver methods (e.g. `async fn alternative(&self, id: ID) -> Option<Arc<Alternative>>`).
+   - The lookup-by-id paths (`Query.node(id)`, `Query.entity(hash)`, `Graph.alternative(id)`, `Checkpoint.change(id)`, etc.) live in resolvers that walk an `Arc`-backed index map (`HashMap<Id, Arc<T>>`) maintained by the kit-graph engine, not by chasing stored `Id` foreign keys.
+   - Operation `*Input` types likewise hold `Arc<T>` (e.g. `CreatedQualityInput { quality: Arc<Quality> }`).
+3. **Persistence layer (Worker D)**: when serializing for SQLite/JSON/wire, references are projected to the target's `Id` (the only stable handle that survives round-trip). On rehydrate, the index map is rebuilt and every `Arc` is re-pointed. SQLite tables store ids as foreign keys; the Rust value graph stores `Arc`s. No `Id` is ever **kept** on a struct in place of an `Arc`.
+4. **Hash invalidation**: any write that mutates a `# data` field on an entity must invalidate its `hash` and propagate up its ownership chain (parent `# cached` hashes recomputed lazily on next read). Because cross-references are `Arc`s, the chain is walked by pointer.
+5. **JS DTOs (Worker E)**: TypeScript has no `Arc`; the JS bundle stores **pointers** as direct object references (closure-captured handles) on the live store and **ids** only on the wire DTOs. Two flavors per entity: `*DataDto` (the wire slice with id-based references for round-trip) and `*Dto` (the live GraphQL response with embedded entity references when the query selects them). Zod schemas come in matching `*DataSchema` (id-references) and `*Schema` (embedded references) flavors.
+6. **React hooks (Worker F)**: hooks that drive **mutations** target the `# data` slice via the command builder, passing entity ids as arguments. Hooks that **read** return live entity objects (the JS pointer equivalent of `Arc<T>`) backed by `useSyncExternalStore`.
+7. **Sketchpad (Worker G)**: `KitFullDtoSchema.parse(dto)` validates only the `# data` slice; all rendering of `# computed` fields is derived at read time from store snapshots, not from imported JSON.
+8. **Subscription `event` payloads (Worker D)**: serialize only `# data` plus the entity `id`/`hash`. Receivers re-read computed fields via Query when needed. Keeps the wire small and avoids stale computed snapshots.
 
 ## Concrete schema deltas (target vs prior implementation)
 
@@ -248,6 +254,9 @@ Workers A–D all edit [semio/rs/lib.rs](semio/rs/lib.rs); they own non-overlapp
 macro_rules! entity_full_family {
     ($entity:ident, $weak_or_strong:ident, { $( $data_field:ident : $data_ty:ty ),* $(,)? }) => {
         // 1. struct Foo { id, hash (cached), $( $data_field: $data_ty ),* }
+        //    All `$data_ty` slots holding cross-references MUST be Arc<T> (or
+        //    Vec<Arc<T>> / RwLock<Vec<Arc<T>>>) — never `Id` / `Vec<Id>`. Ids
+        //    appear only as the entity's own `pub id: Id` identity field.
         //    impl with #[Object]: every # computed and connection field is an async fn resolver,
         //    not a struct member.
         // 2. type FooEdge — node: Foo (reference, struct field), cursor: String (computed, resolver).
@@ -275,17 +284,16 @@ The crucial discipline: `# data` annotations from the schema are the **only** st
 
 - File: [semio/rs/lib.rs](semio/rs/lib.rs).
 - Owned regions: subregions inside `kit` for `Place`, `Family`, `Folder`, `File`, `Author`, `Prop`, `Benchmark`, `Stat`, `Quality`, `Tag`, `Concept`, `Port` — apply Worker A's macro.
-- Operation pairs (`CreatedQualityInput`+`CreatedQuality` … `DeletedQualities`, same for Tag/Concept/Port). The `*Input` types from the schema's per-entity `#region Operations` are all `# data` containers (e.g. `CreatedQualityInput { quality: Quality! }`); their fields are stored on the operation row. The companion `*` Operation type owns only the data it needs (`id`, `hash` cached, `input`); `scope`, `modification`, `owner`, `owns`, and the result-field (`quality: Quality!`) are computed/reference resolvers:
+- Operation pairs (`CreatedQualityInput`+`CreatedQuality` … `DeletedQualities`, same for Tag/Concept/Port). The `*Input` types from the schema's per-entity `#region Operations` carry **`Arc` pointers** to the affected entities, never ids. The companion `*` Operation type owns the input + id/hash; everything else is a resolver:
 
 ```rust
-// Stored data container: lives on the Edit/Change op log.
-pub struct CreatedQualityInput { pub quality_id: Id }   // # data via reference (Quality is read at resolve time)
+// Operation input — pointer-based reference.
+pub struct CreatedQualityInput { pub quality: Arc<Quality> }   // # data: pointer, not id
 
-#[derive(Clone)]
 pub struct CreatedQuality {
-    pub id: Id,                                          // # data
+    pub id: Id,                                          // # data — own identity
     pub hash: ArcSwap<String>,                           // # cached
-    pub owner_edit_id: Id,                               // # reference // Edit
+    pub owner: ArcSwap<Arc<Edit>>,                       // # reference — pointer to Edit
     pub input: CreatedQualityInput,                      // # data
 }
 
@@ -293,12 +301,12 @@ pub struct CreatedQuality {
 impl CreatedQuality {
     async fn id(&self) -> Id { self.id.clone() }
     async fn hash(&self, ctx: &Context<'_>) -> Result<String> { /* lazy */ }
-    async fn owner(&self, ctx: &Context<'_>) -> Option<EntityRef> { /* the owning Edit */ }
-    async fn owns(&self, ctx: &Context<'_>) -> EntityConnection { /* QualityConnection — the created quality */ }
-    async fn scope(&self, ctx: &Context<'_>) -> EntityRef { /* Kit (since CreateQuality scope is Kit per schema line 1918) */ }
+    async fn owner(&self) -> Option<Arc<EntityRef>> { Some(Arc::new(EntityRef::Edit(self.owner.load_full()))) }
+    async fn owns(&self) -> EntityConnection { /* QualityConnection wrapping self.input.quality */ }
+    async fn scope(&self, ctx: &Context<'_>) -> Arc<EntityRef> { /* Kit (per schema line 1918) — pointer */ }
     async fn input(&self) -> &CreatedQualityInput { &self.input }
-    async fn modification(&self, ctx: &Context<'_>) -> Modification { /* QualityModification computed from Edit */ }
-    async fn quality(&self, ctx: &Context<'_>) -> Result<Quality> { /* read by id */ }
+    async fn modification(&self) -> Arc<dyn ModificationTrait> { /* QualityModification projected from owning Edit */ }
+    async fn quality(&self) -> Arc<Quality> { self.input.quality.clone() }
 }
 ```
 
@@ -314,58 +322,62 @@ impl CreatedQuality {
 - File: [semio/rs/lib.rs](semio/rs/lib.rs).
 - Owned regions: `vcs`, `event`, `worker`, the `gql` root (Query/Mutation/Subscription + Commands region with all `*OperationInput` and `*CommandInput` types).
 - **Delete** old `Draft`, `Transaction`, `ChangeOwner` union, `forwardSemanticOpRecordIds`/`backwardSemanticOpRecordIds`, `transactionOpen`/`transactionCommit`/`transactionAbort` mutations.
-- **Rename** old `Change` → `Edit`. The Rust struct holds only the `# data` + `# cached` slice; all relay views (`OperationConnection` / `EditConnection`) and computed flags (`finished`, `sequenceNumber`) are resolvers:
+- **Rename** old `Change` → `Edit`. The Rust struct stores `Arc` pointers (never ids) for cross-references; relay views and computed flags are resolvers:
 
 ```rust
-#[derive(Clone)]
 pub struct Edit {
-    pub id: Id,                                      // # data
-    pub hash: ArcSwap<String>,                       // # cached (lazy)
-    pub owner_id: Option<EntityRef>,                 // # reference
-    pub forward_op_ids: Vec<Id>,                     // # data — ordered op ids; OperationConnection is a resolver view
-    pub backward_op_ids: Vec<Id>,                    // # data
-    pub started_at: Timestamp,                       // # data
-    pub finished_at: Option<Timestamp>,              // # data
-    pub description: String,                         // # data
-    pub origin: String,                              // # data
+    pub id: Id,                                              // # data — own identity only
+    pub hash: ArcSwap<String>,                               // # cached
+    pub owner: ArcSwap<Option<Arc<EntityRef>>>,              // # reference (Alternative | Checkpoint)
+    pub forwards: RwLock<Vec<Arc<OperationRef>>>,            // # data (ordered ops, pointers)
+    pub backwards: RwLock<Vec<Arc<OperationRef>>>,           // # data
+    pub started_at: Timestamp,                               // # data
+    pub finished_at: ArcSwap<Option<Timestamp>>,             // # data (mutates on save)
+    pub description: RwLock<String>,                         // # data
+    pub origin: String,                                      // # data
 }
 
 #[Object]
 impl Edit {
     async fn id(&self) -> Id { self.id.clone() }
-    async fn hash(&self, ctx: &Context<'_>) -> Result<String> { /* read or compute */ }
-    async fn owner(&self, ctx: &Context<'_>) -> Option<EntityRef> { self.owner_id.clone() }
-    async fn owns(&self, ctx: &Context<'_>) -> EntityConnection { /* derived */ }
-    async fn forwards(&self, ctx: &Context<'_>) -> OperationConnection { /* project from forward_op_ids */ }
-    async fn backwards(&self, ctx: &Context<'_>) -> OperationConnection { /* project from backward_op_ids */ }
-    async fn sequence_number(&self, ctx: &Context<'_>) -> i32 { /* computed: index within owning Change */ }
+    async fn hash(&self, ctx: &Context<'_>) -> Result<String> { /* lazy compute */ }
+    async fn owner(&self) -> Option<Arc<EntityRef>> { self.owner.load_full().as_ref().clone() }
+    async fn owns(&self, ctx: &Context<'_>) -> EntityConnection { /* derived from forwards */ }
+    async fn forwards(&self) -> OperationConnection { OperationConnection::from_ops(self.forwards.read().await.clone()) }
+    async fn backwards(&self) -> OperationConnection { OperationConnection::from_ops(self.backwards.read().await.clone()) }
+    async fn sequence_number(&self, ctx: &Context<'_>) -> i32 { /* index within owning Change */ }
     async fn started_at(&self) -> Timestamp { self.started_at.clone() }
-    async fn finished_at(&self) -> Option<Timestamp> { self.finished_at.clone() }
-    async fn finished(&self) -> Option<bool> { Some(self.finished_at.is_some()) }   // # computed
-    async fn description(&self) -> &str { &self.description }
+    async fn finished_at(&self) -> Option<Timestamp> { self.finished_at.load_full().as_ref().clone() }
+    async fn finished(&self) -> Option<bool> { Some(self.finished_at.load().is_some()) }
+    async fn description(&self) -> String { self.description.read().await.clone() }
     async fn origin(&self) -> &str { &self.origin }
 }
 ```
 
-- **Add new** `Change` as group of `Edit`s — same discipline:
+- **Add new** `Change` as group of `Edit`s — same `Arc`-only discipline:
 
 ```rust
-#[derive(Clone)]
 pub struct Change {
-    pub id: Id,                                      // # data
-    pub hash: ArcSwap<String>,                       // # cached
-    pub owner_id: Option<EntityRef>,                 // # reference
-    pub edit_ids: Vec<Id>,                           // # data — EditConnection is a resolver view
-    pub started_at: Timestamp,                       // # data
-    pub finished_at: Option<Timestamp>,              // # data
-    pub description: String,                         // # data
-    pub origin: String,                              // # data
+    pub id: Id,                                              // # data
+    pub hash: ArcSwap<String>,                               // # cached
+    pub owner: ArcSwap<Option<Arc<EntityRef>>>,              // # reference
+    pub edits: RwLock<Vec<Arc<Edit>>>,                       // # data — pointers, not ids
+    pub started_at: Timestamp,                               // # data
+    pub finished_at: ArcSwap<Option<Timestamp>>,             // # data
+    pub description: RwLock<String>,                         // # data
+    pub origin: String,                                      // # data
 }
 
-// Resolver impl mirrors Edit's pattern: id/hash/owner from struct; owns/edits/finished computed.
+// Resolver impl mirrors Edit's pattern: id/hash/owner from struct; owns/edits/finished as resolver methods.
 ```
 
-- VCS entity Rust structs follow the same pattern: only `# data`+`# cached` are owned; all relay connections and computed flags are resolvers reading the kit-graph engine. `*Diff` types own no data fields at all (only `id`/`hash`); `*Modification` and `*Modifications` likewise.
+- Other VCS entities, same pattern (pointers everywhere):
+  - `Checkpoint { id, hash, parent: ArcSwap<Option<Arc<Checkpoint>>>, authors: RwLock<Vec<Arc<Author>>>, changes: RwLock<Vec<Arc<Change>>>, timestamp, message, … }`
+  - `Alternative { id, hash, name, checkpoint: RwLock<Vec<Arc<Checkpoint>>>, savedChanges: RwLock<Vec<Arc<Change>>>, unsavedChanges: RwLock<Vec<Arc<Change>>> }`
+  - `Graph { id, hash, alternatives: RwLock<Vec<Arc<Alternative>>>, checkpoints: RwLock<Vec<Arc<Checkpoint>>> }`
+  - `Session { id, hash, startedAt, alternatives: RwLock<Vec<Arc<Alternative>>> }`
+  - `Conflict { id, hash, authoritativeChange: ArcSwap<Option<Arc<Change>>>, wipChange: ArcSwap<Option<Arc<Change>>>, reasons: RwLock<Vec<String>> }`
+- **`*Diff` / `*Modification` / `*Modifications`** types own **no data fields** other than `id` (= hash) and cached `hash`. Their domain fields and `before`/`diff`/`after` references are resolvers that project from the owning `Edit`'s `forwards`/`backwards` `Arc<OperationRef>` lists.
 
 - Rebuild `Checkpoint`, `Alternative`, `Graph`, `Session`, `Conflict` with the field set listed in the **VCS rewrite** table above (all implement `StrongEntity`). `Alternative` exposes `unsavedChanges` and `kit: Kit!` (no `start`, no `store`, no `draft`). `Conflict` carries `authoritativeChange: Change`, `wipChange: Change`, `reasons: [String!]!` — drop `ReadVersion`/`WriteVersion` entirely.
 - Implement the command tree exactly. Concrete async-graphql sketch:
