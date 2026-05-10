@@ -4,6 +4,8 @@
 
 scalar Timestamp
 
+scalar Json
+
 #endregion Scalars
 
 #region Entities
@@ -79,6 +81,8 @@ interface Document implements Artifact {
   owner: Entity # reference
   owns: EntityConnection # reference
   # Artifact
+  name: String! # data
+  description: String! # data
   icon: String! # data
   createdAt: Timestamp # computed
   createdBy: Author # computed
@@ -87,6 +91,7 @@ interface Document implements Artifact {
   lastChangedAt: Timestamp # computed
   lastChangedBy: Author # computed
   lastChangedIn: Checkpoint # computed
+  edits: EditConnection # computed
   # Document
   previewImage: File # reference // preview
 }
@@ -994,13 +999,25 @@ type OperationConnection implements EntityConnection {
 
 #region Place
 
-type Place implements Artifact { # implements StrongEntity
+type Place implements Artifact {
   # StrongEntity
   id: ID! # data // uuidv7
   hash: String! # cached
   owner: Entity # reference // Kit | Checkpoint | Graph
   owns: EntityConnection # reference // Location
+  # Artifact
   name: String! # data
+  description: String! # data
+  icon: String! # data
+  createdAt: Timestamp # computed
+  createdBy: Author # computed
+  authoredBy: AuthorConnection # computed
+  changedIn: CheckpointConnection # computed
+  lastChangedAt: Timestamp # computed
+  lastChangedBy: Author # computed
+  lastChangedIn: Checkpoint # computed
+  edits: EditConnection # computed
+  # Place
   location: Location # data
 }
 
@@ -1094,8 +1111,18 @@ type Family implements Artifact {
   hash: String! # cached
   owner: Entity # reference // Kit
   owns: EntityConnection # reference
+  # Artifact
   name: String! # data
   description: String! # data
+  icon: String! # data
+  createdAt: Timestamp # computed
+  createdBy: Author # computed
+  authoredBy: AuthorConnection # computed
+  changedIn: CheckpointConnection # computed
+  lastChangedAt: Timestamp # computed
+  lastChangedBy: Author # computed
+  lastChangedIn: Checkpoint # computed
+  edits: EditConnection # computed
 }
 
 type FamilyEdge implements EntityEdge {
@@ -1181,15 +1208,26 @@ type FamilyModificationsConnection implements EntityConnection {
 
 #region Folder
 
-type Folder implements Artifact { # implements StrongEntity
+type Folder implements Artifact {
   # StrongEntity
   id: ID! # data // uuidv7
   hash: String! # cached
   owner: Entity # reference // Kit | Folder
   owns: EntityConnection # reference // Folder | File | Design | Type | Family
+  # Artifact
   name: String! # data
-  path: String! # data
   description: String! # data
+  icon: String! # data
+  createdAt: Timestamp # computed
+  createdBy: Author # computed
+  authoredBy: AuthorConnection # computed
+  changedIn: CheckpointConnection # computed
+  lastChangedAt: Timestamp # computed
+  lastChangedBy: Author # computed
+  lastChangedIn: Checkpoint # computed
+  edits: EditConnection # computed
+  # Folder
+  path: String! # data
   files: FileConnection! # data
   subFolders: FolderConnection! # data
   families: FamilyConnection! # data
@@ -1285,16 +1323,16 @@ type FolderModificationsConnection implements EntityConnection {
 
 #region File
 
-type File implements Artifact { # implements StrongEntity
+type File implements Artifact {
   # StrongEntity
   id: ID! # data // uuidv7
   hash: String! # cached
   owner: Entity # reference // Kit | Folder
   owns: EntityConnection # reference
-  url: String! # data
-  mime: String! # data
-  size: Int # data
+  # Artifact
+  name: String! # data
   description: String! # data
+  icon: String! # data
   createdAt: Timestamp # computed
   createdBy: Author # data
   authoredBy: AuthorConnection # data
@@ -1302,6 +1340,11 @@ type File implements Artifact { # implements StrongEntity
   lastChangedAt: Timestamp # computed
   lastChangedBy: Author # data
   lastChangedIn: Checkpoint # data
+  edits: EditConnection # computed
+  # File
+  url: String! # data
+  mime: String! # data
+  size: Int # data
 }
 
 type FileEdge implements EntityEdge {
@@ -1407,7 +1450,19 @@ type Author implements Artifact {
   hash: String! # cached
   owner: Entity # reference // Kit | Checkpoint | Graph | Session
   owns: EntityConnection # reference // Alternative | Transaction | Checkpoint
+  # Artifact
   name: String! # data
+  description: String! # data
+  icon: String! # data
+  createdAt: Timestamp # computed
+  createdBy: Author # computed
+  authoredBy: AuthorConnection # computed
+  changedIn: CheckpointConnection # computed
+  lastChangedAt: Timestamp # computed
+  lastChangedBy: Author # computed
+  lastChangedIn: Checkpoint # computed
+  edits: EditConnection # computed
+  # Author
   email: String! # data
   role: String! # data
   rank: Int # data
@@ -1511,6 +1566,19 @@ type Prop implements Artifact {
   hash: String! # cached
   owner: Entity # reference // Piece | Type | Design | Kit
   owns: EntityConnection # reference
+  # Artifact
+  name: String! # data
+  description: String! # data
+  icon: String! # data
+  createdAt: Timestamp # computed
+  createdBy: Author # computed
+  authoredBy: AuthorConnection # computed
+  changedIn: CheckpointConnection # computed
+  lastChangedAt: Timestamp # computed
+  lastChangedBy: Author # computed
+  lastChangedIn: Checkpoint # computed
+  edits: EditConnection # computed
+  # Prop
   key: String! # data
   value: String! # data
   unit: String! # data
@@ -1609,7 +1677,19 @@ type Benchmark implements Artifact {
   hash: String! # cached
   owner: Entity # reference // Quality
   owns: EntityConnection # reference
+  # Artifact
   name: String! # data
+  description: String! # data
+  icon: String! # data
+  createdAt: Timestamp # computed
+  createdBy: Author # computed
+  authoredBy: AuthorConnection # computed
+  changedIn: CheckpointConnection # computed
+  lastChangedAt: Timestamp # computed
+  lastChangedBy: Author # computed
+  lastChangedIn: Checkpoint # computed
+  edits: EditConnection # computed
+  # Benchmark
   min: Float # data
   max: Float # data
   minExcluded: Boolean # data
@@ -1711,12 +1791,23 @@ type Quality implements Artifact {
   hash: String! # cached
   owner: Entity # reference // Connector | Representation | Type | Design | Kit
   owns: EntityConnection # reference // Benchmark
+  # Artifact
+  name: String! # data
+  description: String! # data
+  icon: String! # data
+  createdAt: Timestamp # computed
+  createdBy: Author # computed
+  authoredBy: AuthorConnection # computed
+  changedIn: CheckpointConnection # computed
+  lastChangedAt: Timestamp # computed
+  lastChangedBy: Author # computed
+  lastChangedIn: Checkpoint # computed
+  edits: EditConnection # computed
+  # Quality
   key: String! # data
   value: String! # data
   unit: String! # data
   definition: String! # data
-  description: String! # data
-  icon: String! # data
   benchmarks: BenchmarkConnection! # data
   attributes: AttributeConnection! # computed
 }
@@ -1816,7 +1907,7 @@ type CreatedQualityInput {
 }
 
 type CreatedQuality implements Operation {
-  # StrongEntity
+  # Operation
   id: ID! # data // uuidv7
   hash: String! # cached
   owner: Entity # reference // Edit
@@ -1832,7 +1923,7 @@ type CreatedQualitiesInput {
 }
 
 type CreatedQualities implements Operation {
-  # StrongEntity
+  # Operation
   id: ID! # data // uuidv7
   hash: String! # cached
   owner: Entity # reference // Edit
@@ -1848,7 +1939,7 @@ type RenamedQualityInput {
 }
 
 type RenamedQuality implements Operation {
-  # StrongEntity
+  # Operation
   id: ID! # data // uuidv7
   hash: String! # cached
   owner: Entity # reference // Edit
@@ -1864,7 +1955,7 @@ type UpdatedQualityDescriptionInput {
 }
 
 type UpdatedQualityDescription implements Operation {
-  # StrongEntity
+  # Operation
   id: ID! # data // uuidv7
   hash: String! # cached
   owner: Entity # reference // Edit
@@ -1880,7 +1971,7 @@ type UpdatedQualityIconInput {
 }
 
 type UpdatedQualityIcon implements Operation {
-  # StrongEntity
+  # Operation
   id: ID! # data // uuidv7
   hash: String! # cached
   owner: Entity # reference // Edit
@@ -1896,7 +1987,7 @@ type AddedAttributeToQualityInput {
 }
 
 type AddedAttributeToQuality implements Operation {
-  # StrongEntity
+  # Operation
   id: ID! # data // uuidv7
   hash: String! # cached
   owner: Entity # reference // Edit
@@ -1913,7 +2004,7 @@ type AddedAttributesToQualityInput {
 }
 
 type AddedAttributesToQuality implements Operation {
-  # StrongEntity
+  # Operation
   id: ID! # data // uuidv7
   hash: String! # cached
   owner: Entity # reference // Edit
@@ -1930,7 +2021,7 @@ type RemovedAttributeFromQualityInput {
 }
 
 type RemovedAttributeFromQuality implements Operation {
-  # StrongEntity
+  # Operation
   id: ID! # data // uuidv7
   hash: String! # cached
   owner: Entity # reference // Edit
@@ -1946,7 +2037,7 @@ type RemovedAttributesFromQualityInput {
 }
 
 type RemovedAttributesFromQuality implements Operation {
-  # StrongEntity
+  # Operation
   id: ID! # data // uuidv7
   hash: String! # cached
   owner: Entity # reference // Edit
@@ -1962,7 +2053,7 @@ type DeletedQualityInput {
 }
 
 type DeletedQuality implements Operation {
-  # StrongEntity
+  # Operation
   id: ID! # data // uuidv7
   hash: String! # cached
   owner: Entity # reference // Edit
@@ -1977,7 +2068,7 @@ type DeletedQualitiesInput {
 }
 
 type DeletedQualities implements Operation {
-  # StrongEntity
+  # Operation
   id: ID! # data // uuidv7
   hash: String! # cached
   owner: Entity # reference // Edit
@@ -1999,9 +2090,19 @@ type Tag implements Artifact {
   hash: String! # cached
   owner: Entity # reference // Kit | Type | Representation
   owns: EntityConnection # reference
+  # Artifact
   name: String! # data
   description: String! # data
   icon: String! # data
+  createdAt: Timestamp # computed
+  createdBy: Author # computed
+  authoredBy: AuthorConnection # computed
+  changedIn: CheckpointConnection # computed
+  lastChangedAt: Timestamp # computed
+  lastChangedBy: Author # computed
+  lastChangedIn: Checkpoint # computed
+  edits: EditConnection # computed
+  # Tag
   order: Int # data
   attributes: AttributeConnection! # computed
 }
@@ -2096,7 +2197,7 @@ type CreatedTagInput {
 }
 
 type CreatedTag implements Operation {
-  # StrongEntity
+  # Operation
   id: ID! # data // uuidv7
   hash: String! # cached
   owner: Entity # reference // Edit
@@ -2112,7 +2213,7 @@ type CreatedTagsInput {
 }
 
 type CreatedTags implements Operation {
-  # StrongEntity
+  # Operation
   id: ID! # data // uuidv7
   hash: String! # cached
   owner: Entity # reference // Edit
@@ -2128,7 +2229,7 @@ type RenamedTagInput {
 }
 
 type RenamedTag implements Operation {
-  # StrongEntity
+  # Operation
   id: ID! # data // uuidv7
   hash: String! # cached
   owner: Entity # reference // Edit
@@ -2144,7 +2245,7 @@ type UpdatedTagDescriptionInput {
 }
 
 type UpdatedTagDescription implements Operation {
-  # StrongEntity
+  # Operation
   id: ID! # data // uuidv7
   hash: String! # cached
   owner: Entity # reference // Edit
@@ -2160,7 +2261,7 @@ type UpdatedTagIconInput {
 }
 
 type UpdatedTagIcon implements Operation {
-  # StrongEntity
+  # Operation
   id: ID! # data // uuidv7
   hash: String! # cached
   owner: Entity # reference // Edit
@@ -2176,7 +2277,7 @@ type AddedAttributeToTagInput {
 }
 
 type AddedAttributeToTag implements Operation {
-  # StrongEntity
+  # Operation
   id: ID! # data // uuidv7
   hash: String! # cached
   owner: Entity # reference // Edit
@@ -2193,7 +2294,7 @@ type AddedAttributesToTagInput {
 }
 
 type AddedAttributesToTag implements Operation {
-  # StrongEntity
+  # Operation
   id: ID! # data // uuidv7
   hash: String! # cached
   owner: Entity # reference // Edit
@@ -2210,7 +2311,7 @@ type RemovedAttributeFromTagInput {
 }
 
 type RemovedAttributeFromTag implements Operation {
-  # StrongEntity
+  # Operation
   id: ID! # data // uuidv7
   hash: String! # cached
   owner: Entity # reference // Edit
@@ -2226,7 +2327,7 @@ type RemovedAttributesFromTagInput {
 }
 
 type RemovedAttributesFromTag implements Operation {
-  # StrongEntity
+  # Operation
   id: ID! # data // uuidv7
   hash: String! # cached
   owner: Entity # reference // Edit
@@ -2242,7 +2343,7 @@ type DeletedTagInput {
 }
 
 type DeletedTag implements Operation {
-  # StrongEntity
+  # Operation
   id: ID! # data // uuidv7
   hash: String! # cached
   owner: Entity # reference // Edit
@@ -2257,7 +2358,7 @@ type DeletedTagsInput {
 }
 
 type DeletedTags implements Operation {
-  # StrongEntity
+  # Operation
   id: ID! # data // uuidv7
   hash: String! # cached
   owner: Entity # reference // Edit
@@ -2279,9 +2380,19 @@ type Concept implements Artifact {
   hash: String! # cached
   owner: Entity # reference // Kit | Type
   owns: EntityConnection # reference
+  # Artifact
   name: String! # data
   description: String! # data
   icon: String! # data
+  createdAt: Timestamp # computed
+  createdBy: Author # computed
+  authoredBy: AuthorConnection # computed
+  changedIn: CheckpointConnection # computed
+  lastChangedAt: Timestamp # computed
+  lastChangedBy: Author # computed
+  lastChangedIn: Checkpoint # computed
+  edits: EditConnection # computed
+  # Concept
   order: Int # data
   attributes: AttributeConnection! # computed
 }
@@ -2376,7 +2487,7 @@ type CreatedConceptInput {
 }
 
 type CreatedConcept implements Operation {
-  # StrongEntity
+  # Operation
   id: ID! # data // uuidv7
   hash: String! # cached
   owner: Entity # reference // Edit
@@ -2392,7 +2503,7 @@ type CreatedConceptsInput {
 }
 
 type CreatedConcepts implements Operation {
-  # StrongEntity
+  # Operation
   id: ID! # data // uuidv7
   hash: String! # cached
   owner: Entity # reference // Edit
@@ -2408,7 +2519,7 @@ type RenamedConceptInput {
 }
 
 type RenamedConcept implements Operation {
-  # StrongEntity
+  # Operation
   id: ID! # data // uuidv7
   hash: String! # cached
   owner: Entity # reference // Edit
@@ -2424,7 +2535,7 @@ type UpdatedConceptDescriptionInput {
 }
 
 type UpdatedConceptDescription implements Operation {
-  # StrongEntity
+  # Operation
   id: ID! # data // uuidv7
   hash: String! # cached
   owner: Entity # reference // Edit
@@ -2440,7 +2551,7 @@ type UpdatedConceptIconInput {
 }
 
 type UpdatedConceptIcon implements Operation {
-  # StrongEntity
+  # Operation
   id: ID! # data // uuidv7
   hash: String! # cached
   owner: Entity # reference // Edit
@@ -2456,7 +2567,7 @@ type AddedAttributeToConceptInput {
 }
 
 type AddedAttributeToConcept implements Operation {
-  # StrongEntity
+  # Operation
   id: ID! # data // uuidv7
   hash: String! # cached
   owner: Entity # reference // Edit
@@ -2473,7 +2584,7 @@ type AddedAttributesToConceptInput {
 }
 
 type AddedAttributesToConcept implements Operation {
-  # StrongEntity
+  # Operation
   id: ID! # data // uuidv7
   hash: String! # cached
   owner: Entity # reference // Edit
@@ -2490,7 +2601,7 @@ type RemovedAttributeFromConceptInput {
 }
 
 type RemovedAttributeFromConcept implements Operation {
-  # StrongEntity
+  # Operation
   id: ID! # data // uuidv7
   hash: String! # cached
   owner: Entity # reference // Edit
@@ -2506,7 +2617,7 @@ type RemovedAttributesFromConceptInput {
 }
 
 type RemovedAttributesFromConcept implements Operation {
-  # StrongEntity
+  # Operation
   id: ID! # data // uuidv7
   hash: String! # cached
   owner: Entity # reference // Edit
@@ -2522,7 +2633,7 @@ type DeletedConceptInput {
 }
 
 type DeletedConcept implements Operation {
-  # StrongEntity
+  # Operation
   id: ID! # data // uuidv7
   hash: String! # cached
   owner: Entity # reference // Edit
@@ -2537,7 +2648,7 @@ type DeletedConceptsInput {
 }
 
 type DeletedConcepts implements Operation {
-  # StrongEntity
+  # Operation
   id: ID! # data // uuidv7
   hash: String! # cached
   owner: Entity # reference // Edit
@@ -2559,10 +2670,22 @@ type Stat implements Artifact {
   hash: String! # cached
   owner: Entity # reference // Kit | Design | Type
   owns: EntityConnection # reference
+  # Artifact
+  name: String! # data
+  description: String! # data
+  icon: String! # data
+  createdAt: Timestamp # computed
+  createdBy: Author # computed
+  authoredBy: AuthorConnection # computed
+  changedIn: CheckpointConnection # computed
+  lastChangedAt: Timestamp # computed
+  lastChangedBy: Author # computed
+  lastChangedIn: Checkpoint # computed
+  edits: EditConnection # computed
+  # Stat
   key: String! # data
   value: String! # data
   unit: String! # data
-  description: String! # data
 }
 
 type StatEdge implements EntityEdge {
@@ -2657,10 +2780,21 @@ type Port implements Artifact {
   hash: String! # cached
   owner: Entity # reference // Type
   owns: EntityConnection # reference
-  code: String! # data
-  label: String! # data
+  # Artifact
+  name: String! # data
   description: String! # data
   icon: String! # data
+  createdAt: Timestamp # computed
+  createdBy: Author # computed
+  authoredBy: AuthorConnection # computed
+  changedIn: CheckpointConnection # computed
+  lastChangedAt: Timestamp # computed
+  lastChangedBy: Author # computed
+  lastChangedIn: Checkpoint # computed
+  edits: EditConnection # computed
+  # Port
+  code: String! # data
+  label: String! # data
   order: Int # data
   attributes: AttributeConnection! # computed
 }
@@ -2758,7 +2892,7 @@ type CreatedPortInput {
 }
 
 type CreatedPort implements Operation {
-  # StrongEntity
+  # Operation
   id: ID! # data // uuidv7
   hash: String! # cached
   owner: Entity # reference // Edit
@@ -2774,7 +2908,7 @@ type CreatedPortsInput {
 }
 
 type CreatedPorts implements Operation {
-  # StrongEntity
+  # Operation
   id: ID! # data // uuidv7
   hash: String! # cached
   owner: Entity # reference // Edit
@@ -2791,7 +2925,7 @@ type RenamedPortInput {
 }
 
 type RenamedPort implements Operation {
-  # StrongEntity
+  # Operation
   id: ID! # data // uuidv7
   hash: String! # cached
   owner: Entity # reference // Edit
@@ -2807,7 +2941,7 @@ type UpdatedPortDescriptionInput {
 }
 
 type UpdatedPortDescription implements Operation {
-  # StrongEntity
+  # Operation
   id: ID! # data // uuidv7
   hash: String! # cached
   owner: Entity # reference // Edit
@@ -2823,7 +2957,7 @@ type UpdatedPortIconInput {
 }
 
 type UpdatedPortIcon implements Operation {
-  # StrongEntity
+  # Operation
   id: ID! # data // uuidv7
   hash: String! # cached
   owner: Entity # reference // Edit
@@ -2839,7 +2973,7 @@ type AddedAttributeToPortInput {
 }
 
 type AddedAttributeToPort implements Operation {
-  # StrongEntity
+  # Operation
   id: ID! # data // uuidv7
   hash: String! # cached
   owner: Entity # reference // Edit
@@ -2856,7 +2990,7 @@ type AddedAttributesToPortInput {
 }
 
 type AddedAttributesToPort implements Operation {
-  # StrongEntity
+  # Operation
   id: ID! # data // uuidv7
   hash: String! # cached
   owner: Entity # reference // Edit
@@ -2873,7 +3007,7 @@ type RemovedAttributeFromPortInput {
 }
 
 type RemovedAttributeFromPort implements Operation {
-  # StrongEntity
+  # Operation
   id: ID! # data // uuidv7
   hash: String! # cached
   owner: Entity # reference // Edit
@@ -2889,7 +3023,7 @@ type RemovedAttributesFromPortInput {
 }
 
 type RemovedAttributesFromPort implements Operation {
-  # StrongEntity
+  # Operation
   id: ID! # data // uuidv7
   hash: String! # cached
   owner: Entity # reference // Edit
@@ -2905,7 +3039,7 @@ type DeletedPortInput {
 }
 
 type DeletedPort implements Operation {
-  # StrongEntity
+  # Operation
   id: ID! # data // uuidv7
   hash: String! # cached
   owner: Entity # reference // Edit
@@ -2920,7 +3054,7 @@ type DeletedPortsInput {
 }
 
 type DeletedPorts implements Operation {
-  # StrongEntity
+  # Operation
   id: ID! # data // uuidv7
   hash: String! # cached
   owner: Entity # reference // Edit
@@ -2942,11 +3076,21 @@ type Connector implements Artifact {
   hash: String! # cached
   owner: Entity # reference // Type
   owns: EntityConnection # reference // Attribute
-  code: String! # data
+  # Artifact
+  name: String! # data
   description: String! # data
   icon: String! # data
+  createdAt: Timestamp # computed
+  createdBy: Author # computed
+  authoredBy: AuthorConnection # computed
+  changedIn: CheckpointConnection # computed
+  lastChangedAt: Timestamp # computed
+  lastChangedBy: Author # computed
+  lastChangedIn: Checkpoint # computed
+  edits: EditConnection # computed
+  # Connector
+  code: String! # data
   port: Port # data
-  # Computed Fields
   qualities: QualityConnection! # computed
   attributes: AttributeConnection! # computed
 }
@@ -3040,10 +3184,21 @@ type Representation implements Artifact {
   hash: String! # cached
   owner: Entity # reference // Type
   owns: EntityConnection # reference // Attribute | File
-  url: String! # data
+  # Artifact
+  name: String! # data
   description: String! # data
+  icon: String! # data
+  createdAt: Timestamp # computed
+  createdBy: Author # computed
+  authoredBy: AuthorConnection # computed
+  changedIn: CheckpointConnection # computed
+  lastChangedAt: Timestamp # computed
+  lastChangedBy: Author # computed
+  lastChangedIn: Checkpoint # computed
+  edits: EditConnection # computed
+  # Representation
+  url: String! # data
   file: File # data
-  # Computed Fields
   tags: TagConnection! # computed
   qualities: QualityConnection! # computed
   attributes: AttributeConnection! # computed
@@ -3136,11 +3291,10 @@ type Type implements Artifact {
   hash: String! # cached
   owner: Entity # reference // Kit
   owns: EntityConnection # reference // Connector | Piece | Port | Representation | Type
+  # Artifact
   name: String! # data
   description: String! # data
   icon: String! # data
-  image: String! # data
-  unit: String! # data
   createdAt: Timestamp # computed
   createdBy: Author # data
   authoredBy: AuthorConnection # data
@@ -3148,7 +3302,10 @@ type Type implements Artifact {
   lastChangedAt: Timestamp # computed
   lastChangedBy: Author # data
   lastChangedIn: Checkpoint # data
-  # Computed Fields
+  edits: EditConnection # computed
+  # Type
+  image: String! # data
+  unit: String! # data
   connectors: ConnectorConnection! # computed
   connector: Connector # computed
   representations: RepresentationConnection! # computed
@@ -3265,7 +3422,7 @@ type CreatedTypeInput {
 }
 
 type CreatedType implements Operation {
-  # StrongEntity
+  # Operation
   id: ID! # data // uuidv7
   hash: String! # cached
   owner: Entity # reference // Edit
@@ -3281,7 +3438,7 @@ type CreatedTypesInput {
 }
 
 type CreatedTypes implements Operation {
-  # StrongEntity
+  # Operation
   id: ID! # data // uuidv7
   hash: String! # cached
   owner: Entity # reference // Edit
@@ -3297,7 +3454,7 @@ type RenamedTypeInput {
 }
 
 type RenamedType implements Operation {
-  # StrongEntity
+  # Operation
   id: ID! # data // uuidv7
   hash: String! # cached
   owner: Entity # reference // Edit
@@ -3313,7 +3470,7 @@ type UpdatedTypeDescriptionInput {
 }
 
 type UpdatedTypeDescription implements Operation {
-  # StrongEntity
+  # Operation
   id: ID! # data // uuidv7
   hash: String! # cached
   owner: Entity # reference // Edit
@@ -3329,7 +3486,7 @@ type UpdatedTypeIconInput {
 }
 
 type UpdatedTypeIcon implements Operation {
-  # StrongEntity
+  # Operation
   id: ID! # data // uuidv7
   hash: String! # cached
   owner: Entity # reference // Edit
@@ -3345,7 +3502,7 @@ type AddedAttributeToTypeInput {
 }
 
 type AddedAttributeToType implements Operation {
-  # StrongEntity
+  # Operation
   id: ID! # data // uuidv7
   hash: String! # cached
   owner: Entity # reference // Edit
@@ -3362,7 +3519,7 @@ type AddedAttributesToTypeInput {
 }
 
 type AddedAttributesToType implements Operation {
-  # StrongEntity
+  # Operation
   id: ID! # data // uuidv7
   hash: String! # cached
   owner: Entity # reference // Edit
@@ -3379,7 +3536,7 @@ type RemovedAttributeFromTypeInput {
 }
 
 type RemovedAttributeFromType implements Operation {
-  # StrongEntity
+  # Operation
   id: ID! # data // uuidv7
   hash: String! # cached
   owner: Entity # reference // Edit
@@ -3395,7 +3552,7 @@ type RemovedAttributesFromTypeInput {
 }
 
 type RemovedAttributesFromType implements Operation {
-  # StrongEntity
+  # Operation
   id: ID! # data // uuidv7
   hash: String! # cached
   owner: Entity # reference // Edit
@@ -3411,7 +3568,7 @@ type DeletedTypeInput {
 }
 
 type DeletedType implements Operation {
-  # StrongEntity
+  # Operation
   id: ID! # data // uuidv7
   hash: String! # cached
   owner: Entity # reference // Edit
@@ -3426,7 +3583,7 @@ type DeletedTypesInput {
 }
 
 type DeletedTypes implements Operation {
-  # StrongEntity
+  # Operation
   id: ID! # data // uuidv7
   hash: String! # cached
   owner: Entity # reference // Edit
@@ -3443,7 +3600,7 @@ type AddedConnectorInput {
 }
 
 type AddedConnector implements Operation {
-  # StrongEntity
+  # Operation
   id: ID! # data // uuidv7
   hash: String! # cached
   owner: Entity # reference // Edit
@@ -3460,7 +3617,7 @@ type AddedConnectorsInput {
 }
 
 type AddedConnectors implements Operation {
-  # StrongEntity
+  # Operation
   id: ID! # data // uuidv7
   hash: String! # cached
   owner: Entity # reference // Edit
@@ -3477,7 +3634,7 @@ type RenamedConnectorInput {
 }
 
 type RenamedConnector implements Operation {
-  # StrongEntity
+  # Operation
   id: ID! # data // uuidv7
   hash: String! # cached
   owner: Entity # reference // Edit
@@ -3493,7 +3650,7 @@ type UpdatedConnectorDescriptionInput {
 }
 
 type UpdatedConnectorDescription implements Operation {
-  # StrongEntity
+  # Operation
   id: ID! # data // uuidv7
   hash: String! # cached
   owner: Entity # reference // Edit
@@ -3509,7 +3666,7 @@ type UpdatedConnectorIconInput {
 }
 
 type UpdatedConnectorIcon implements Operation {
-  # StrongEntity
+  # Operation
   id: ID! # data // uuidv7
   hash: String! # cached
   owner: Entity # reference // Edit
@@ -3525,7 +3682,7 @@ type RemovedConnectorInput {
 }
 
 type RemovedConnector implements Operation {
-  # StrongEntity
+  # Operation
   id: ID! # data // uuidv7
   hash: String! # cached
   owner: Entity # reference // Edit
@@ -3541,7 +3698,7 @@ type RemovedConnectorsInput {
 }
 
 type RemovedConnectors implements Operation {
-  # StrongEntity
+  # Operation
   id: ID! # data // uuidv7
   hash: String! # cached
   owner: Entity # reference // Edit
@@ -3568,8 +3725,19 @@ type Layer implements Artifact {
   hash: String! # cached
   owner: Entity # reference // Design
   owns: EntityConnection # reference
+  # Artifact
   name: String! # data
   description: String! # data
+  icon: String! # data
+  createdAt: Timestamp # computed
+  createdBy: Author # computed
+  authoredBy: AuthorConnection # computed
+  changedIn: CheckpointConnection # computed
+  lastChangedAt: Timestamp # computed
+  lastChangedBy: Author # computed
+  lastChangedIn: Checkpoint # computed
+  edits: EditConnection # computed
+  # Layer
   color: String! # data
   order: Int # data
   visible: Boolean # data
@@ -3673,10 +3841,20 @@ type Group implements Artifact {
   hash: String! # cached
   owner: Entity # reference // Design
   owns: EntityConnection # reference // Piece
+  # Artifact
   name: String! # data
   description: String! # data
-  color: String! # data
   icon: String! # data
+  createdAt: Timestamp # computed
+  createdBy: Author # computed
+  authoredBy: AuthorConnection # computed
+  changedIn: CheckpointConnection # computed
+  lastChangedAt: Timestamp # computed
+  lastChangedBy: Author # computed
+  lastChangedIn: Checkpoint # computed
+  edits: EditConnection # computed
+  # Group
+  color: String! # data
   pieces: PieceConnection! # data
 }
 
@@ -3692,18 +3870,27 @@ type GroupConnection implements EntityConnection {
 }
 
 type GroupDiff implements Artifact {
-  # WeakEntity
+  # StrongEntity
   id: ID! # computed // hash
   hash: String! # cached
   owner: Entity # reference
   owns: EntityConnection # reference
-  # GroupDiff
+  # Artifact
   name: String! # computed
   description: String! # computed
+  icon: String! # computed
+  createdAt: Timestamp # computed
+  createdBy: Author # computed
+  authoredBy: AuthorConnection # computed
+  changedIn: CheckpointConnection # computed
+  lastChangedAt: Timestamp # computed
+  lastChangedBy: Author # computed
+  lastChangedIn: Checkpoint # computed
+  edits: EditConnection # computed
+  # GroupDiff
   removeDescription: Boolean # computed
   color: String! # computed
   removeColor: Boolean # computed
-  icon: String! # computed
   removeIcon: Boolean # computed
   pieces: PieceConnection # computed
 }
@@ -3743,11 +3930,24 @@ type GroupModificationConnection implements EntityConnection {
 }
 
 type GroupModifications implements Artifact {
-  # WeakEntity
+  # StrongEntity
   id: ID! # computed // hash
   hash: String! # cached
   owner: Entity # reference // AddedAttributeToConcept | AddedAttributeToDesign | AddedAttributeToPiece | AddedAttributeToPort | AddedAttributeToQuality | AddedAttributeToTag | AddedAttributeToType | AddedAttributesToConcept | AddedAttributesToDesign | AddedAttributesToPiece | AddedAttributesToPort | AddedAttributesToQuality | AddedAttributesToTag | AddedAttributesToType | AddedChildPieceWithParentConnection | AddedChildPiecesWithParentConnections | AddedConnector | AddedConnectors | AddedFixedPiece | AddedHangingChildPieceWithParentConnection | AddedHangingChildPiecesWithParentConnections | AttributeModification | Edit | ChangedDescription | ChangedPieceToType | ChangedPiecesToType | CreatedConcept | CreatedConcepts | CreatedDesign | CreatedDesigns | CreatedPort | CreatedPorts | CreatedQualities | CreatedQuality | CreatedTag | CreatedTags | CreatedType | CreatedTypes | DeletedConcept | DeletedConcepts | DeletedDesign | DeletedDesigns | DeletedPiece | DeletedPiecesAndConnections | DeletedPieces | DeletedPort | DeletedPorts | DeletedQualities | DeletedQuality | DeletedTag | DeletedTags | DeletedType | DeletedTypes | Modifications | DraggedPiece | DraggedPieces | FixedPiece | FixedPieces | FlattenedDesign | LocationModification | MovedPiece | MovedPieces | PlaceModification | PlaneModification | PositionModification | RemovedAttributeFromConcept | RemovedAttributeFromDesign | RemovedAttributeFromPiece | RemovedAttributeFromPort | RemovedAttributeFromQuality | RemovedAttributeFromTag | RemovedAttributeFromType | RemovedAttributesFromConcept | RemovedAttributesFromDesign | RemovedAttributesFromPiece | RemovedAttributesFromPort | RemovedAttributesFromQuality | RemovedAttributesFromTag | RemovedAttributesFromType | RemovedConnector | RemovedConnectors | RenamedConcept | RenamedConnector | RenamedKit | RenamedPiece | RenamedPort | RenamedQuality | RenamedTag | RenamedType | UpdatedConceptDescription | UpdatedConceptIcon | UpdatedConnectorDescription | UpdatedConnectorIcon | UpdatedPieceDescription | UpdatedPortDescription | UpdatedPortIcon | UpdatedQualityDescription | UpdatedQualityIcon | UpdatedTagDescription | UpdatedTagIcon | UpdatedTypeDescription | UpdatedTypeIcon
   owns: EntityConnection # reference // GroupModifications | GroupModification | PlaneModification | PositionModification | AttributeModification | LocationModification | PlaceModification
+  # Artifact
+  name: String! # data
+  description: String! # data
+  icon: String! # data
+  createdAt: Timestamp # computed
+  createdBy: Author # computed
+  authoredBy: AuthorConnection # computed
+  changedIn: CheckpointConnection # computed
+  lastChangedAt: Timestamp # computed
+  lastChangedBy: Author # computed
+  lastChangedIn: Checkpoint # computed
+  edits: EditConnection # computed
+  # GroupModifications
   removed: EntityConnection # computed
   modifications: GroupModificationConnection # computed
   added: EntityConnection # computed
@@ -3790,14 +3990,24 @@ type Piece implements Artifact {
   hash: String! # cached
   owner: Entity # reference // Type | Design | PieceDiff | Piece
   owns: EntityConnection # reference // Piece | Attribute
+  # Artifact
   name: String! # data
   description: String! # data
+  icon: String! # data
+  createdAt: Timestamp # computed
+  createdBy: Author # computed
+  authoredBy: AuthorConnection # computed
+  changedIn: CheckpointConnection # computed
+  lastChangedAt: Timestamp # computed
+  lastChangedBy: Author # computed
+  lastChangedIn: Checkpoint # computed
+  edits: EditConnection # computed
+  # Piece
   position: Position # data
   scale: Float # data
   blueprint: Entity! # data // Type | Design
   props: PropConnection! # data
   attributes: AttributeConnection! # data
-  # Computed Fields
   connectionKind: PieceConnectionKind # computed
   parentPiece: Piece # computed
   parentConnection: Connection # computed
@@ -3821,15 +4031,25 @@ type PieceConnection implements EntityConnection {
 }
 
 type PieceDiff implements Artifact {
-  # WeakEntity
+  # StrongEntity
   id: ID! # computed // hash
   hash: String! # cached
   owner: Entity # reference
   owns: EntityConnection # reference
-  # PieceDiff
+  # Artifact
   name: String! # computed
-  removeName: Boolean # computed
   description: String! # computed
+  icon: String! # data
+  createdAt: Timestamp # computed
+  createdBy: Author # computed
+  authoredBy: AuthorConnection # computed
+  changedIn: CheckpointConnection # computed
+  lastChangedAt: Timestamp # computed
+  lastChangedBy: Author # computed
+  lastChangedIn: Checkpoint # computed
+  edits: EditConnection # computed
+  # PieceDiff
+  removeName: Boolean # computed
   removeDescription: Boolean # computed
   position: Position # computed
   removePosition: Boolean # computed
@@ -3875,11 +4095,24 @@ type PieceModificationConnection implements EntityConnection {
 }
 
 type PieceModifications implements Artifact {
-  # WeakEntity
+  # StrongEntity
   id: ID! # computed // hash
   hash: String! # cached
   owner: Entity # reference // AddedAttributeToConcept | AddedAttributeToDesign | AddedAttributeToPiece | AddedAttributeToPort | AddedAttributeToQuality | AddedAttributeToTag | AddedAttributeToType | AddedAttributesToConcept | AddedAttributesToDesign | AddedAttributesToPiece | AddedAttributesToPort | AddedAttributesToQuality | AddedAttributesToTag | AddedAttributesToType | AddedChildPieceWithParentConnection | AddedChildPiecesWithParentConnections | AddedConnector | AddedConnectors | AddedFixedPiece | AddedHangingChildPieceWithParentConnection | AddedHangingChildPiecesWithParentConnections | AttributeModification | Edit | ChangedDescription | ChangedPieceToType | ChangedPiecesToType | CreatedConcept | CreatedConcepts | CreatedDesign | CreatedDesigns | CreatedPort | CreatedPorts | CreatedQualities | CreatedQuality | CreatedTag | CreatedTags | CreatedType | CreatedTypes | DeletedConcept | DeletedConcepts | DeletedDesign | DeletedDesigns | DeletedPiece | DeletedPiecesAndConnections | DeletedPieces | DeletedPort | DeletedPorts | DeletedQualities | DeletedQuality | DeletedTag | DeletedTags | DeletedType | DeletedTypes | Modifications | DraggedPiece | DraggedPieces | FixedPiece | FixedPieces | FlattenedDesign | LocationModification | MovedPiece | MovedPieces | PlaceModification | PlaneModification | PositionModification | RemovedAttributeFromConcept | RemovedAttributeFromDesign | RemovedAttributeFromPiece | RemovedAttributeFromPort | RemovedAttributeFromQuality | RemovedAttributeFromTag | RemovedAttributeFromType | RemovedAttributesFromConcept | RemovedAttributesFromDesign | RemovedAttributesFromPiece | RemovedAttributesFromPort | RemovedAttributesFromQuality | RemovedAttributesFromTag | RemovedAttributesFromType | RemovedConnector | RemovedConnectors | RenamedConcept | RenamedConnector | RenamedKit | RenamedPiece | RenamedPort | RenamedQuality | RenamedTag | RenamedType | UpdatedConceptDescription | UpdatedConceptIcon | UpdatedConnectorDescription | UpdatedConnectorIcon | UpdatedPieceDescription | UpdatedPortDescription | UpdatedPortIcon | UpdatedQualityDescription | UpdatedQualityIcon | UpdatedTagDescription | UpdatedTagIcon | UpdatedTypeDescription | UpdatedTypeIcon
   owns: EntityConnection # reference // PieceModifications | PieceModification | PlaneModification | PositionModification | AttributeModification | LocationModification | PlaceModification
+  # Artifact
+  name: String! # data
+  description: String! # data
+  icon: String! # data
+  createdAt: Timestamp # computed
+  createdBy: Author # computed
+  authoredBy: AuthorConnection # computed
+  changedIn: CheckpointConnection # computed
+  lastChangedAt: Timestamp # computed
+  lastChangedBy: Author # computed
+  lastChangedIn: Checkpoint # computed
+  edits: EditConnection # computed
+  # PieceModifications
   removed: EntityConnection # computed
   modifications: PieceModificationConnection # computed
   added: EntityConnection # computed
@@ -3902,6 +4135,19 @@ type Connection implements Artifact {
   hash: String! # cached
   owner: Entity # reference // Design
   owns: EntityConnection # reference // Side | Attribute
+  # Artifact
+  name: String! # data
+  description: String! # data
+  icon: String! # data
+  createdAt: Timestamp # computed
+  createdBy: Author # computed
+  authoredBy: AuthorConnection # computed
+  changedIn: CheckpointConnection # computed
+  lastChangedAt: Timestamp # computed
+  lastChangedBy: Author # computed
+  lastChangedIn: Checkpoint # computed
+  edits: EditConnection # computed
+  # Connection
   connected: Side! # data
   connecting: Side! # data
   gap: Float # data
@@ -3912,7 +4158,6 @@ type Connection implements Artifact {
   tilt: Float # data
   u: Float # data
   v: Float # data
-  description: String! # data
   attributes: AttributeConnection! # data
 }
 
@@ -4001,7 +4246,7 @@ type AddedFixedPieceInput {
 }
 
 type AddedFixedPiece implements Operation {
-  # StrongEntity
+  # Operation
   id: ID! # data // uuidv7
   hash: String! # cached
   owner: Entity # reference // Edit
@@ -4017,7 +4262,7 @@ type FixedPieceInput {
 }
 
 type FixedPiece implements Operation {
-  # StrongEntity
+  # Operation
   id: ID! # data // uuidv7
   hash: String! # cached
   owner: Entity # reference // Edit
@@ -4033,7 +4278,7 @@ type DraggedPiecesInput {
 }
 
 type DraggedPieces implements Operation {
-  # StrongEntity
+  # Operation
   id: ID! # data // uuidv7
   hash: String! # cached
   owner: Entity # reference // Edit
@@ -4049,7 +4294,7 @@ type DraggedPieceInput {
 }
 
 type DraggedPiece implements Operation {
-  # StrongEntity
+  # Operation
   id: ID! # data // uuidv7
   hash: String! # cached
   owner: Entity # reference // Edit
@@ -4066,7 +4311,7 @@ type AddedChildPieceWithParentConnectionInput {
 }
 
 type AddedChildPieceWithParentConnection implements Operation {
-  # StrongEntity
+  # Operation
   id: ID! # data // uuidv7
   hash: String! # cached
   owner: Entity # reference // Edit
@@ -4084,7 +4329,7 @@ type AddedChildPiecesWithParentConnectionsInput {
 }
 
 type AddedChildPiecesWithParentConnections implements Operation {
-  # StrongEntity
+  # Operation
   id: ID! # data // uuidv7
   hash: String! # cached
   owner: Entity # reference // Edit
@@ -4102,7 +4347,7 @@ type AddedHangingChildPieceWithParentConnectionInput {
 }
 
 type AddedHangingChildPieceWithParentConnection implements Operation {
-  # StrongEntity
+  # Operation
   id: ID! # data // uuidv7
   hash: String! # cached
   owner: Entity # reference // Edit
@@ -4120,7 +4365,7 @@ type AddedHangingChildPiecesWithParentConnectionsInput {
 }
 
 type AddedHangingChildPiecesWithParentConnections implements Operation {
-  # StrongEntity
+  # Operation
   id: ID! # data // uuidv7
   hash: String! # cached
   owner: Entity # reference // Edit
@@ -4137,7 +4382,7 @@ type RenamedPieceInput {
 }
 
 type RenamedPiece implements Operation {
-  # StrongEntity
+  # Operation
   id: ID! # data // uuidv7
   hash: String! # cached
   owner: Entity # reference // Edit
@@ -4153,7 +4398,7 @@ type UpdatedPieceDescriptionInput {
 }
 
 type UpdatedPieceDescription implements Operation {
-  # StrongEntity
+  # Operation
   id: ID! # data // uuidv7
   hash: String! # cached
   owner: Entity # reference // Edit
@@ -4169,7 +4414,7 @@ type MovedPieceInput {
 }
 
 type MovedPiece implements Operation {
-  # StrongEntity
+  # Operation
   id: ID! # data // uuidv7
   hash: String! # cached
   owner: Entity # reference // Edit
@@ -4185,7 +4430,7 @@ type MovedPiecesInput {
 }
 
 type MovedPieces implements Operation {
-  # StrongEntity
+  # Operation
   id: ID! # data // uuidv7
   hash: String! # cached
   owner: Entity # reference // Edit
@@ -4201,7 +4446,7 @@ type FixedPiecesInput {
 }
 
 type FixedPieces implements Operation {
-  # StrongEntity
+  # Operation
   id: ID! # data // uuidv7
   hash: String! # cached
   owner: Entity # reference // Edit
@@ -4217,7 +4462,7 @@ type ChangedPieceToTypeInput {
 }
 
 type ChangedPieceToType implements Operation {
-  # StrongEntity
+  # Operation
   id: ID! # data // uuidv7
   hash: String! # cached
   owner: Entity # reference // Edit
@@ -4233,7 +4478,7 @@ type ChangedPiecesToTypeInput {
 }
 
 type ChangedPiecesToType implements Operation {
-  # StrongEntity
+  # Operation
   id: ID! # data // uuidv7
   hash: String! # cached
   owner: Entity # reference // Edit
@@ -4249,7 +4494,7 @@ type AddedAttributeToPieceInput {
 }
 
 type AddedAttributeToPiece implements Operation {
-  # StrongEntity
+  # Operation
   id: ID! # data // uuidv7
   hash: String! # cached
   owner: Entity # reference // Edit
@@ -4266,7 +4511,7 @@ type AddedAttributesToPieceInput {
 }
 
 type AddedAttributesToPiece implements Operation {
-  # StrongEntity
+  # Operation
   id: ID! # data // uuidv7
   hash: String! # cached
   owner: Entity # reference // Edit
@@ -4283,7 +4528,7 @@ type RemovedAttributeFromPieceInput {
 }
 
 type RemovedAttributeFromPiece implements Operation {
-  # StrongEntity
+  # Operation
   id: ID! # data // uuidv7
   hash: String! # cached
   owner: Entity # reference // Edit
@@ -4299,7 +4544,7 @@ type RemovedAttributesFromPieceInput {
 }
 
 type RemovedAttributesFromPiece implements Operation {
-  # StrongEntity
+  # Operation
   id: ID! # data // uuidv7
   hash: String! # cached
   owner: Entity # reference // Edit
@@ -4315,7 +4560,7 @@ type DeletedPieceInput {
 }
 
 type DeletedPiece implements Operation {
-  # StrongEntity
+  # Operation
   id: ID! # data // uuidv7
   hash: String! # cached
   owner: Entity # reference // Edit
@@ -4330,7 +4575,7 @@ type DeletedPiecesInput {
 }
 
 type DeletedPieces implements Operation {
-  # StrongEntity
+  # Operation
   id: ID! # data // uuidv7
   hash: String! # cached
   owner: Entity # reference // Edit
@@ -4345,7 +4590,7 @@ type DeletedPiecesAndConnectionsInput {
 }
 
 type DeletedPiecesAndConnections implements Operation {
-  # StrongEntity
+  # Operation
   id: ID! # data // uuidv7
   hash: String! # cached
   owner: Entity # reference // Edit
@@ -4484,12 +4729,10 @@ type Design implements Artifact {
   hash: String! # cached
   owner: Entity # reference // Kit
   owns: EntityConnection # reference // Piece | Connection | Layer | Group
+  # Artifact
   name: String! # data
   description: String! # data
   icon: String! # data
-  image: String! # data
-  place: Place # data
-  unit: String! # data
   createdAt: Timestamp # computed
   createdBy: Author # data
   authoredBy: AuthorConnection # data
@@ -4497,7 +4740,11 @@ type Design implements Artifact {
   lastChangedAt: Timestamp # computed
   lastChangedBy: Author # data
   lastChangedIn: Checkpoint # data
-  # Computed Fields
+  edits: EditConnection # computed
+  # Design
+  image: String! # data
+  place: Place # data
+  unit: String! # data
   pieces: PieceConnection! # computed
   piece: Piece # computed
   connections: ConnectionConnection! # computed
@@ -4526,16 +4773,25 @@ type DesignConnection implements EntityConnection {
 }
 
 type DesignDiff implements Artifact {
-  # WeakEntity
+  # StrongEntity
   id: ID! # computed // hash
   hash: String! # cached
   owner: Entity # reference
   owns: EntityConnection # reference
-  # DesignDiff
+  # Artifact
   name: String! # computed
   description: String! # computed
-  removeDescription: Boolean # computed
   icon: String! # computed
+  createdAt: Timestamp # computed
+  createdBy: Author # computed
+  authoredBy: AuthorConnection # computed
+  changedIn: CheckpointConnection # computed
+  lastChangedAt: Timestamp # computed
+  lastChangedBy: Author # computed
+  lastChangedIn: Checkpoint # computed
+  edits: EditConnection # computed
+  # DesignDiff
+  removeDescription: Boolean # computed
   removeIcon: Boolean # computed
   image: String! # computed
   removeImage: Boolean # computed
@@ -4543,15 +4799,10 @@ type DesignDiff implements Artifact {
   removePlace: Boolean # computed
   unit: String! # computed
   removeUnit: Boolean # computed
-  createdBy: Author # computed
   removeCreatedBy: Boolean # computed
-  authoredBy: AuthorConnection # computed
   removeAuthoredBy: Boolean # computed
-  changedIn: CheckpointConnection # computed
   removeChangedIn: Boolean # computed
-  lastChangedBy: Author # computed
   removeLastChangedBy: Boolean # computed
-  lastChangedIn: Checkpoint # computed
   removeLastChangedIn: Boolean # computed
 }
 
@@ -4590,11 +4841,24 @@ type DesignModificationConnection implements EntityConnection {
 }
 
 type DesignModifications implements Artifact {
-  # WeakEntity
+  # StrongEntity
   id: ID! # computed // hash
   hash: String! # cached
   owner: Entity # reference // AddedAttributeToConcept | AddedAttributeToDesign | AddedAttributeToPiece | AddedAttributeToPort | AddedAttributeToQuality | AddedAttributeToTag | AddedAttributeToType | AddedAttributesToConcept | AddedAttributesToDesign | AddedAttributesToPiece | AddedAttributesToPort | AddedAttributesToQuality | AddedAttributesToTag | AddedAttributesToType | AddedChildPieceWithParentConnection | AddedChildPiecesWithParentConnections | AddedConnector | AddedConnectors | AddedFixedPiece | AddedHangingChildPieceWithParentConnection | AddedHangingChildPiecesWithParentConnections | AttributeModification | Edit | ChangedDescription | ChangedPieceToType | ChangedPiecesToType | CreatedConcept | CreatedConcepts | CreatedDesign | CreatedDesigns | CreatedPort | CreatedPorts | CreatedQualities | CreatedQuality | CreatedTag | CreatedTags | CreatedType | CreatedTypes | DeletedConcept | DeletedConcepts | DeletedDesign | DeletedDesigns | DeletedPiece | DeletedPiecesAndConnections | DeletedPieces | DeletedPort | DeletedPorts | DeletedQualities | DeletedQuality | DeletedTag | DeletedTags | DeletedType | DeletedTypes | Modifications | DraggedPiece | DraggedPieces | FixedPiece | FixedPieces | FlattenedDesign | LocationModification | MovedPiece | MovedPieces | PlaceModification | PlaneModification | PositionModification | RemovedAttributeFromConcept | RemovedAttributeFromDesign | RemovedAttributeFromPiece | RemovedAttributeFromPort | RemovedAttributeFromQuality | RemovedAttributeFromTag | RemovedAttributeFromType | RemovedAttributesFromConcept | RemovedAttributesFromDesign | RemovedAttributesFromPiece | RemovedAttributesFromPort | RemovedAttributesFromQuality | RemovedAttributesFromTag | RemovedAttributesFromType | RemovedConnector | RemovedConnectors | RenamedConcept | RenamedConnector | RenamedKit | RenamedPiece | RenamedPort | RenamedQuality | RenamedTag | RenamedType | UpdatedConceptDescription | UpdatedConceptIcon | UpdatedConnectorDescription | UpdatedConnectorIcon | UpdatedPieceDescription | UpdatedPortDescription | UpdatedPortIcon | UpdatedQualityDescription | UpdatedQualityIcon | UpdatedTagDescription | UpdatedTagIcon | UpdatedTypeDescription | UpdatedTypeIcon
   owns: EntityConnection # reference // DesignModifications | DesignModification | PlaneModification | PositionModification | AttributeModification | LocationModification | PlaceModification
+  # Artifact
+  name: String! # data
+  description: String! # data
+  icon: String! # data
+  createdAt: Timestamp # computed
+  createdBy: Author # computed
+  authoredBy: AuthorConnection # computed
+  changedIn: CheckpointConnection # computed
+  lastChangedAt: Timestamp # computed
+  lastChangedBy: Author # computed
+  lastChangedIn: Checkpoint # computed
+  edits: EditConnection # computed
+  # DesignModifications
   removed: EntityConnection # computed
   modifications: DesignModificationConnection # computed
   added: EntityConnection # computed
@@ -4618,7 +4882,7 @@ type CreatedDesignInput {
 }
 
 type CreatedDesign implements Operation {
-  # StrongEntity
+  # Operation
   id: ID! # data // uuidv7
   hash: String! # cached
   owner: Entity # reference // Edit
@@ -4634,7 +4898,7 @@ type CreatedDesignsInput {
 }
 
 type CreatedDesigns implements Operation {
-  # StrongEntity
+  # Operation
   id: ID! # data // uuidv7
   hash: String! # cached
   owner: Entity # reference // Edit
@@ -4650,7 +4914,7 @@ type DeletedDesignInput {
 }
 
 type DeletedDesign implements Operation {
-  # StrongEntity
+  # Operation
   id: ID! # data // uuidv7
   hash: String! # cached
   owner: Entity # reference // Edit
@@ -4665,7 +4929,7 @@ type DeletedDesignsInput {
 }
 
 type DeletedDesigns implements Operation {
-  # StrongEntity
+  # Operation
   id: ID! # data // uuidv7
   hash: String! # cached
   owner: Entity # reference // Edit
@@ -4680,7 +4944,7 @@ type FlattenedDesignInput {
 }
 
 type FlattenedDesign implements Operation {
-  # StrongEntity
+  # Operation
   id: ID! # data // uuidv7
   hash: String! # cached
   owner: Entity # reference // Edit
@@ -4696,7 +4960,7 @@ type AddedAttributeToDesignInput {
 }
 
 type AddedAttributeToDesign implements Operation {
-  # StrongEntity
+  # Operation
   id: ID! # data // uuidv7
   hash: String! # cached
   owner: Entity # reference // Edit
@@ -4713,7 +4977,7 @@ type AddedAttributesToDesignInput {
 }
 
 type AddedAttributesToDesign implements Operation {
-  # StrongEntity
+  # Operation
   id: ID! # data // uuidv7
   hash: String! # cached
   owner: Entity # reference // Edit
@@ -4730,7 +4994,7 @@ type RemovedAttributeFromDesignInput {
 }
 
 type RemovedAttributeFromDesign implements Operation {
-  # StrongEntity
+  # Operation
   id: ID! # data // uuidv7
   hash: String! # cached
   owner: Entity # reference // Edit
@@ -4746,7 +5010,7 @@ type RemovedAttributesFromDesignInput {
 }
 
 type RemovedAttributesFromDesign implements Operation {
-  # StrongEntity
+  # Operation
   id: ID! # data // uuidv7
   hash: String! # cached
   owner: Entity # reference // Edit
@@ -4767,19 +5031,28 @@ type Kit implements Artifact {
   hash: String! # cached
   owner: Entity # reference // Graph | Checkpoint | Alternative
   owns: EntityConnection # reference // Design | Type | File | Folder | Author | Place | Kit | Concept | Tag | Family | Quality | Prop | Stat
-  checkpoint: Checkpoint # data
-  alternative: Alternative # data
-  transaction: Transaction # data
+  # Artifact
   name: String! # data
   description: String! # data
   icon: String! # data
+  createdAt: Timestamp # computed
+  createdBy: Author # computed
+  authoredBy: AuthorConnection # computed
+  changedIn: CheckpointConnection # computed
+  lastChangedAt: Timestamp # computed
+  lastChangedBy: Author # computed
+  lastChangedIn: Checkpoint # computed
+  edits: EditConnection # computed
+  # Kit
+  checkpoint: Checkpoint # data
+  alternative: Alternative # data
+  transaction: Transaction # data
   image: String! # data
   preview: String! # data
   remote: String! # data
   homepage: String! # data
   license: String! # data
   uri: String! # data
-  # Computed Fields
   design: Design # computed
   designs: DesignConnection! # computed
   type: Type # computed
@@ -4794,13 +5067,6 @@ type Kit implements Artifact {
   props: PropConnection! # computed
   attributes: AttributeConnection! # computed
   stats: StatConnection! # computed
-  createdAt: Timestamp # computed
-  createdBy: Author # computed
-  authoredBy: AuthorConnection # computed
-  changedIn: CheckpointConnection # computed
-  lastChangedAt: Timestamp # computed
-  lastChangedBy: Author # computed
-  lastChangedIn: Checkpoint # computed
 }
 
 type KitEdge implements EntityEdge {
@@ -4909,7 +5175,7 @@ type RenamedKitInput {
 }
 
 type RenamedKit implements Operation {
-  # StrongEntity
+  # Operation
   id: ID! # data // uuidv7
   hash: String! # cached
   owner: Entity # reference // Edit
@@ -4925,7 +5191,7 @@ type ChangedDescriptionInput {
 }
 
 type ChangedDescription implements Operation {
-  # StrongEntity
+  # Operation
   id: ID! # data // uuidv7
   hash: String! # cached
   owner: Entity # reference // Edit
