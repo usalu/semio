@@ -244,21 +244,21 @@ export function kitReadPointToGqlVariables(p: KitReadPoint): JsonObject {
   }
   if ("checkpoint" in p) {
     const c = p.checkpoint;
-    const o: JsonObject = { checkpointId: c.checkpointId };
+    const o: { [k: string]: JsonValue } = { checkpointId: c.checkpointId };
     if (c.changeId != null && c.changeId !== "") o["checkpointChangeId"] = c.changeId;
     if (c.operationId != null && c.operationId !== "") o["checkpointOperationId"] = c.operationId;
-    return o;
+    return o as JsonObject;
   }
   if ("alternative" in p) {
     return { alternativeId: p.alternative.alternativeId } as JsonObject;
   }
   if ("draft" in p) {
     const d = p.draft;
-    const o: JsonObject = { draftAlternativeId: d.alternativeId, draftId: d.draftId };
+    const o: { [k: string]: JsonValue } = { draftAlternativeId: d.alternativeId, draftId: d.draftId };
     if (d.changeId != null && d.changeId !== "") o["draftChangeId"] = d.changeId;
     if (d.transactionId != null && d.transactionId !== "") o["draftTransactionId"] = d.transactionId;
     if (d.operationId != null && d.operationId !== "") o["draftOperationId"] = d.operationId;
-    return o;
+    return o as JsonObject;
   }
   return {} as JsonObject;
 }
@@ -4130,7 +4130,7 @@ export function getSemioKitShallowListReadStore(c: KitStoreClient): SemioKitShal
 
 /** @emoji 🧾 Approximate `wip.theKit` JSON for offline {@link FallbackKitClient} (subset of GraphQL kit shape). */
 function syntheticKitFragmentFromDto(kit: KitFullDto, innerOnKit: string, extra: GraphQlVariables): JsonObject {
-  const out: JsonObject = {};
+  const out: { [k: string]: JsonValue } = {};
   const ko = kit as unknown as JsonObject;
   const scalarKeys = ["name", "description", "icon", "image", "preview", "homepage", "license", "remote", "version", "release"] as const;
   for (const k of scalarKeys) {
@@ -4143,15 +4143,15 @@ function syntheticKitFragmentFromDto(kit: KitFullDto, innerOnKit: string, extra:
   if (typeId != null && innerOnKit.includes("type(")) {
     const types = Array.isArray(ko["types"]) ? (ko["types"] as JsonObject[]) : [];
     const row = types.find((t) => String(t["id"] ?? "") === String(typeId));
-    out["type"] = row ?? null;
+    out["type"] = (row ?? null) as JsonValue;
   }
   const designId = extra["designId"] ?? extra["did"];
   if (designId != null && innerOnKit.includes("design(")) {
     const designs = Array.isArray(ko["designs"]) ? (ko["designs"] as JsonObject[]) : [];
     const row = designs.find((t) => String(t["id"] ?? "") === String(designId));
-    out["design"] = row ?? null;
+    out["design"] = (row ?? null) as JsonValue;
   }
-  return out;
+  return out as JsonObject;
 }
 
 class FallbackKitClient implements KitStoreClient {

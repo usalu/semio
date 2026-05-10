@@ -155,6 +155,7 @@ import {
   useUpdateAuthor,
   useUpdateDesign,
   useUpdateType,
+  usePatchKit,
   useWriteIndicator,
   Vector,
   type KitFieldBinding,
@@ -15696,22 +15697,25 @@ function formatTypeParentRefForInput(value: unknown): string {
   return "";
 }
 
+// #region 🔖SegregatedFieldRows
+
 /**
- * @emoji 🧾 Reusable “kit name” row: {@link KitFieldBinding} + {@link useWriteIndicator} (spinner + inline error).
+ * @emoji 📥📝 Read+write segregated text row: explicit `value` (read lane) and `commit`+`status` (write lane).
+ * Eliminates the legacy `[value, setter, status]` triadic prop shape.
  */
-function SketchpadTriadInputRow(props: {
-  triad: KitFieldBinding<any>;
+function SketchpadInputRow(props: {
+  value: string | null | undefined;
+  commit: (next: unknown) => Promise<unknown>;
+  status: WriteStatus;
   id: string;
   placeholder?: string;
   placeholderId?: string;
   readOnly?: boolean;
-  /** Map commit string (e.g. empty → `null` for optional kit fields). */
   mapCommit?: (raw: string) => unknown;
 }): React.ReactElement {
-  const { triad, id, placeholder, placeholderId, readOnly, mapCommit } = props;
-  const [raw, setValue, status] = triad;
+  const { value, commit, status, id, placeholder, placeholderId, readOnly, mapCommit } = props;
   const { spinning, error, disabled } = useWriteIndicator(status);
-  const value = raw == null ? "" : typeof raw === "string" ? raw : String(raw);
+  const display = value == null ? "" : typeof value === "string" ? value : String(value);
   const isReadOnly = readOnly === true || disabled;
   return (
     <TreeRow>
@@ -15721,11 +15725,11 @@ function SketchpadTriadInputRow(props: {
             <Input
               lazy
               id={id}
-              value={value}
+              value={display}
               readOnly={isReadOnly}
               placeholder={placeholder}
               placeholderId={placeholderId}
-              onLazyChange={isReadOnly ? undefined : (v) => void setValue((mapCommit != null ? mapCommit(v) : v) as any)}
+              onLazyChange={isReadOnly ? undefined : (v) => void commit(mapCommit != null ? mapCommit(v) : v)}
               showLabel
             />
           </div>
@@ -15737,21 +15741,20 @@ function SketchpadTriadInputRow(props: {
   );
 }
 
-/**
- * @emoji 🧾 Same as {@link SketchpadTriadInputRow} for multiline fields.
- */
-function SketchpadTriadTextareaRow(props: {
-  triad: KitFieldBinding<any>;
+/** @emoji 📥📝 Multiline counterpart to {@link SketchpadInputRow} (same segregated value+command shape). */
+function SketchpadTextareaRow(props: {
+  value: string | null | undefined;
+  commit: (next: unknown) => Promise<unknown>;
+  status: WriteStatus;
   id: string;
   placeholder?: string;
   placeholderId?: string;
   readOnly?: boolean;
   mapCommit?: (raw: string) => unknown;
 }): React.ReactElement {
-  const { triad, id, placeholder, placeholderId, readOnly, mapCommit } = props;
-  const [raw, setValue, status] = triad;
+  const { value, commit, status, id, placeholder, placeholderId, readOnly, mapCommit } = props;
   const { spinning, error, disabled } = useWriteIndicator(status);
-  const value = raw == null ? "" : typeof raw === "string" ? raw : String(raw);
+  const display = value == null ? "" : typeof value === "string" ? value : String(value);
   const isReadOnly = readOnly === true || disabled;
   return (
     <TreeRow>
@@ -15761,11 +15764,11 @@ function SketchpadTriadTextareaRow(props: {
             <Textarea
               lazy
               id={id}
-              value={value}
+              value={display}
               readOnly={isReadOnly}
               placeholder={placeholder}
               placeholderId={placeholderId}
-              onLazyChange={isReadOnly ? undefined : (v) => void setValue((mapCommit != null ? mapCommit(v) : v) as any)}
+              onLazyChange={isReadOnly ? undefined : (v) => void commit(mapCommit != null ? mapCommit(v) : v)}
               showLabel
             />
           </div>
@@ -15776,6 +15779,35 @@ function SketchpadTriadTextareaRow(props: {
     </TreeRow>
   );
 }
+
+/** @internal Legacy triadic adapter — composes a `KitFieldBinding<any>` into the new {@link SketchpadInputRow}. Use the segregated row directly in new code. */
+function SketchpadTriadInputRow(props: {
+  triad: KitFieldBinding<any>;
+  id: string;
+  placeholder?: string;
+  placeholderId?: string;
+  readOnly?: boolean;
+  mapCommit?: (raw: string) => unknown;
+}): React.ReactElement {
+  const { triad, ...rest } = props;
+  const [raw, setValue, status] = triad;
+  return <SketchpadInputRow value={raw == null ? "" : String(raw)} commit={setValue as (n: unknown) => Promise<unknown>} status={status} {...rest} />;
+}
+
+/** @internal Legacy triadic adapter — composes a `KitFieldBinding<any>` into the new {@link SketchpadTextareaRow}. */
+function SketchpadTriadTextareaRow(props: {
+  triad: KitFieldBinding<any>;
+  id: string;
+  placeholder?: string;
+  placeholderId?: string;
+  readOnly?: boolean;
+  mapCommit?: (raw: string) => unknown;
+}): React.ReactElement {
+  const { triad, ...rest } = props;
+  const [raw, setValue, status] = triad;
+  return <SketchpadTextareaRow value={raw == null ? "" : String(raw)} commit={setValue as (n: unknown) => Promise<unknown>} status={status} {...rest} />;
+}
+// #endregion 🔖SegregatedFieldRows
 
 /**
  * @emoji 🧾 Triad-backed toggle row (e.g. type abstract flag).
@@ -15821,12 +15853,15 @@ const KitSectionForm: FC = () => {
   const materializedKitName = kit?.name ?? "";
   const [renameKit, renameKitStatus] = useRenameKit();
   const { spinning, error, disabled } = useWriteIndicator(renameKitStatus);
-  const releaseTriad = useKitRelease();
-  const descriptionTriad = useKitDescription();
-  const iconTriad = useKitIcon();
-  const imageTriad = useKitImage();
-  const homepageTriad = useKitHomepage();
-  const licenseTriad = useKitLicense();
+  // 📥 Read lane — value-only hooks materialize from `wip.theKit(at: …)` per `useKitReadPoint`.
+  const release = useKitRelease();
+  const description = useKitDescription();
+  const icon = useKitIcon();
+  const image = useKitImage();
+  const homepage = useKitHomepage();
+  const license = useKitLicense();
+  // 📝 Write lane — single mutation hook for batched root `Kit` field patches.
+  const { run: patchKit, status: patchKitStatus } = usePatchKit();
   const notAvailableLabel = useLabel("semio.sketchpad.app.kit.notAvailable");
   const versionPlaceholder = useLabel("semio.sketchpad.app.kit.versionPlaceholder.label");
   const descriptionPlaceholder = useLabel("semio.sketchpad.app.kit.descriptionPlaceholder.label");
@@ -15835,6 +15870,7 @@ const KitSectionForm: FC = () => {
   const homepagePlaceholder = useLabel("semio.sketchpad.app.kit.homepagePlaceholder.label");
   const licensePlaceholder = useLabel("semio.sketchpad.app.kit.licensePlaceholder.label");
   const optionalKitText = useCallback((value: string) => (value.trim() === "" ? null : value), []);
+  const commitKitField = useCallback((field: string) => (value: unknown) => patchKit({ [field]: value }), [patchKit]);
 
   if (!kit) {
     return (
@@ -15864,12 +15900,12 @@ const KitSectionForm: FC = () => {
           {error?.message ? <p className="pl-tiny text-xs text-destructive">{error.message}</p> : null}
         </div>
       </TreeRow>
-      <SketchpadTriadInputRow triad={releaseTriad} id="semio.sketchpad.app.kit.panel.details.section.kit.version" placeholder={versionPlaceholder} mapCommit={optionalKitText} />
-      <SketchpadTriadTextareaRow triad={descriptionTriad} id="semio.sketchpad.app.kit.panel.details.section.kit.description" placeholder={descriptionPlaceholder} mapCommit={optionalKitText} />
-      <SketchpadTriadInputRow triad={iconTriad} id="semio.sketchpad.app.kit.panel.details.section.kit.icon" placeholder={iconPlaceholder} mapCommit={optionalKitText} />
-      <SketchpadTriadInputRow triad={imageTriad} id="semio.sketchpad.app.kit.panel.details.section.kit.image" placeholder={imagePlaceholder} mapCommit={optionalKitText} />
-      <SketchpadTriadInputRow triad={homepageTriad} id="semio.sketchpad.app.kit.panel.details.section.kit.homepage" placeholder={homepagePlaceholder} mapCommit={optionalKitText} />
-      <SketchpadTriadInputRow triad={licenseTriad} id="semio.sketchpad.app.kit.panel.details.section.kit.license" placeholder={licensePlaceholder} mapCommit={optionalKitText} />
+      <SketchpadInputRow value={release} commit={commitKitField("release")} status={patchKitStatus} id="semio.sketchpad.app.kit.panel.details.section.kit.version" placeholder={versionPlaceholder} mapCommit={optionalKitText} />
+      <SketchpadTextareaRow value={description} commit={commitKitField("description")} status={patchKitStatus} id="semio.sketchpad.app.kit.panel.details.section.kit.description" placeholder={descriptionPlaceholder} mapCommit={optionalKitText} />
+      <SketchpadInputRow value={icon} commit={commitKitField("icon")} status={patchKitStatus} id="semio.sketchpad.app.kit.panel.details.section.kit.icon" placeholder={iconPlaceholder} mapCommit={optionalKitText} />
+      <SketchpadInputRow value={image} commit={commitKitField("image")} status={patchKitStatus} id="semio.sketchpad.app.kit.panel.details.section.kit.image" placeholder={imagePlaceholder} mapCommit={optionalKitText} />
+      <SketchpadInputRow value={homepage} commit={commitKitField("homepage")} status={patchKitStatus} id="semio.sketchpad.app.kit.panel.details.section.kit.homepage" placeholder={homepagePlaceholder} mapCommit={optionalKitText} />
+      <SketchpadInputRow value={license} commit={commitKitField("license")} status={patchKitStatus} id="semio.sketchpad.app.kit.panel.details.section.kit.license" placeholder={licensePlaceholder} mapCommit={optionalKitText} />
     </>
   );
 };
@@ -15891,13 +15927,17 @@ export const TypeSection: FC = () => {
 /**
  **/
 const SingleTypeSection: FC<{ typeId: string }> = ({ typeId }) => {
-  const nameTriad = useTypeName(typeId);
-  const descriptionTriad = useTypeDescription(typeId);
-  const iconTriad = useTypeIcon(typeId);
-  const imageTriad = useTypeImage(typeId);
+  // 📥 Read lane — value-only field hooks materialize from `wip.theKit.type(id:)`.
+  const name = useTypeName(typeId);
+  const description = useTypeDescription(typeId);
+  const icon = useTypeIcon(typeId);
+  const image = useTypeImage(typeId);
+  const isAbstract = useTypeIsAbstract(typeId);
+  const unit = useTypeUnit(typeId);
   const parentTriad = useTypeParent(typeId);
-  const abstractTriad = useTypeIsAbstract(typeId);
-  const unitTriad = useTypeUnit(typeId);
+  // 📝 Write lane — single mutation hook batches `Type` field patches.
+  const { run: updateType, status: updateTypeStatus } = useUpdateType();
+  const commitTypeField = useCallback((field: string) => (value: unknown) => updateType(typeId, { [field]: value }), [updateType, typeId]);
 
   const parentDisplay = formatTypeParentRefForInput(parentTriad[0]);
   const parentIndicator = useWriteIndicator(parentTriad[2]);
@@ -15909,10 +15949,10 @@ const SingleTypeSection: FC<{ typeId: string }> = ({ typeId }) => {
 
   return (
     <>
-      <SketchpadTriadInputRow triad={nameTriad} id="semio.sketchpad.app.type.panel.details.section.type.name" />
-      <SketchpadTriadTextareaRow triad={descriptionTriad} id="semio.sketchpad.app.type.panel.details.section.type.description" placeholderId="semio.sketchpad.app.type.descriptionPlaceholder.label" />
-      <SketchpadTriadInputRow triad={iconTriad} id="semio.sketchpad.app.type.panel.details.section.type.icon" placeholderId="semio.sketchpad.app.type.iconPlaceholder.label" />
-      <SketchpadTriadInputRow triad={imageTriad} id="semio.sketchpad.app.type.panel.details.section.type.image" placeholderId="semio.sketchpad.app.type.imagePlaceholder.label" />
+      <SketchpadInputRow value={name} commit={commitTypeField("name")} status={updateTypeStatus} id="semio.sketchpad.app.type.panel.details.section.type.name" />
+      <SketchpadTextareaRow value={description} commit={commitTypeField("description")} status={updateTypeStatus} id="semio.sketchpad.app.type.panel.details.section.type.description" placeholderId="semio.sketchpad.app.type.descriptionPlaceholder.label" />
+      <SketchpadInputRow value={icon} commit={commitTypeField("icon")} status={updateTypeStatus} id="semio.sketchpad.app.type.panel.details.section.type.icon" placeholderId="semio.sketchpad.app.type.iconPlaceholder.label" />
+      <SketchpadInputRow value={image} commit={commitTypeField("image")} status={updateTypeStatus} id="semio.sketchpad.app.type.panel.details.section.type.image" placeholderId="semio.sketchpad.app.type.imagePlaceholder.label" />
       <TreeRow>
         <div className="flex min-w-0 w-full flex-col gap-tiny">
           <div className="flex min-w-0 w-full items-center gap-single">
@@ -15924,8 +15964,8 @@ const SingleTypeSection: FC<{ typeId: string }> = ({ typeId }) => {
           {parentIndicator.error?.message ? <p className="pl-tiny text-xs text-destructive">{parentIndicator.error.message}</p> : null}
         </div>
       </TreeRow>
-      <SketchpadTriadToggleRow triad={abstractTriad} id="semio.sketchpad.app.type.panel.details.section.type.abstract" icon={<CheckIcon />} />
-      {type.unit !== undefined ? <SketchpadTriadInputRow triad={unitTriad} id="semio.sketchpad.app.type.panel.details.section.type.unit" /> : null}
+      <SketchpadTriadToggleRow triad={[isAbstract, ((v: unknown) => commitTypeField("isAbstract")(v)) as any, updateTypeStatus]} id="semio.sketchpad.app.type.panel.details.section.type.abstract" icon={<CheckIcon />} />
+      {type.unit !== undefined ? <SketchpadInputRow value={unit} commit={commitTypeField("unit")} status={updateTypeStatus} id="semio.sketchpad.app.type.panel.details.section.type.unit" /> : null}
     </>
   );
 };

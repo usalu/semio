@@ -13088,15 +13088,12 @@ type Query {
   conflicts: ConflictConnection! # computed
   node: Node # reference
   entity(id: ID!): Entity
-  pieceInDesign(designId: ID!, pieceId: ID!): Piece
-  alternativePieceKind(designId: ID!, pieceId: ID!): Blueprint
 }
 
 #region MutationInputs
 
 input RenameKitScopeInput {
   draftId: ID!
-  transactionId: ID!
 }
 
 input RenameKitInput {
@@ -13105,7 +13102,6 @@ input RenameKitInput {
 
 input ChangeDescriptionScopeInput {
   draftId: ID!
-  transactionId: ID!
   entityId: ID!
 }
 
@@ -13115,27 +13111,16 @@ input ChangeDescriptionInput {
 
 input CreateTagScopeInput {
   draftId: ID!
-  transactionId: ID!
   ownerId: ID!
-}
-
-input CreateTagInput {
-  tag: TagInput!
 }
 
 input CreateTagsScopeInput {
   draftId: ID!
-  transactionId: ID!
   ownerId: ID!
-}
-
-input CreateTagsInput {
-  tags: [TagInput!]!
 }
 
 input RenameTagScopeInput {
   draftId: ID!
-  transactionId: ID!
   tagId: ID!
 }
 
@@ -13145,7 +13130,6 @@ input RenameTagInput {
 
 input UpdateTagDescriptionScopeInput {
   draftId: ID!
-  transactionId: ID!
   tagId: ID!
 }
 
@@ -13155,7 +13139,6 @@ input UpdateTagDescriptionInput {
 
 input UpdateTagIconScopeInput {
   draftId: ID!
-  transactionId: ID!
   tagId: ID!
 }
 
@@ -13165,89 +13148,48 @@ input UpdateTagIconInput {
 
 input AddAttributeToTagScopeInput {
   draftId: ID!
-  transactionId: ID!
   tagId: ID!
-}
-
-input AddAttributeToTagInput {
-  attribute: AttributeInput!
 }
 
 input AddAttributesToTagScopeInput {
   draftId: ID!
-  transactionId: ID!
   tagId: ID!
-}
-
-input AddAttributesToTagInput {
-  attributes: [AttributeInput!]!
 }
 
 input RemoveAttributeFromTagScopeInput {
   draftId: ID!
-  transactionId: ID!
   tagId: ID!
   attributeId: ID!
 }
 
-input RemoveAttributeFromTagInput {
-  hasInput: Boolean = false
-}
-
 input RemoveAttributesFromTagScopeInput {
   draftId: ID!
-  transactionId: ID!
   tagId: ID!
   attributeIds: [ID!]!
 }
 
-input RemoveAttributesFromTagInput {
-  hasInput: Boolean = false
-}
-
 input DeleteTagScopeInput {
   draftId: ID!
-  transactionId: ID!
   tagId: ID!
-}
-
-input DeleteTagInput {
-  hasInput: Boolean = false
 }
 
 input DeleteTagsScopeInput {
   draftId: ID!
-  transactionId: ID!
   tagIds: [ID!]!
-}
-
-input DeleteTagsInput {
-  hasInput: Boolean = false
 }
 
 input CreateConceptScopeInput {
   draftId: ID!
-  transactionId: ID!
   ownerId: ID!
-}
-
-input CreateConceptInput {
-  concept: ConceptInput!
 }
 
 input CreateConceptsScopeInput {
   draftId: ID!
-  transactionId: ID!
   ownerId: ID!
-}
-
-input CreateConceptsInput {
-  concepts: [ConceptInput!]!
 }
 
 input RenameConceptScopeInput {
   draftId: ID!
-  transactionId: ID!
   conceptId: ID!
 }
 
@@ -13257,7 +13199,6 @@ input RenameConceptInput {
 
 input UpdateConceptDescriptionScopeInput {
   draftId: ID!
-  transactionId: ID!
   conceptId: ID!
 }
 
@@ -13267,7 +13208,6 @@ input UpdateConceptDescriptionInput {
 
 input UpdateConceptIconScopeInput {
   draftId: ID!
-  transactionId: ID!
   conceptId: ID!
 }
 
@@ -13277,89 +13217,48 @@ input UpdateConceptIconInput {
 
 input AddAttributeToConceptScopeInput {
   draftId: ID!
-  transactionId: ID!
   conceptId: ID!
-}
-
-input AddAttributeToConceptInput {
-  attribute: AttributeInput!
 }
 
 input AddAttributesToConceptScopeInput {
   draftId: ID!
-  transactionId: ID!
   conceptId: ID!
-}
-
-input AddAttributesToConceptInput {
-  attributes: [AttributeInput!]!
 }
 
 input RemoveAttributeFromConceptScopeInput {
   draftId: ID!
-  transactionId: ID!
   conceptId: ID!
   attributeId: ID!
 }
 
-input RemoveAttributeFromConceptInput {
-  hasInput: Boolean = false
-}
-
 input RemoveAttributesFromConceptScopeInput {
   draftId: ID!
-  transactionId: ID!
   conceptId: ID!
   attributeIds: [ID!]!
 }
 
-input RemoveAttributesFromConceptInput {
-  hasInput: Boolean = false
-}
-
 input DeleteConceptScopeInput {
   draftId: ID!
-  transactionId: ID!
   conceptId: ID!
-}
-
-input DeleteConceptInput {
-  hasInput: Boolean = false
 }
 
 input DeleteConceptsScopeInput {
   draftId: ID!
-  transactionId: ID!
   conceptIds: [ID!]!
-}
-
-input DeleteConceptsInput {
-  hasInput: Boolean = false
 }
 
 input CreatePortScopeInput {
   draftId: ID!
-  transactionId: ID!
   ownerId: ID!
-}
-
-input CreatePortInput {
-  port: PortInput!
 }
 
 input CreatePortsScopeInput {
   draftId: ID!
-  transactionId: ID!
   ownerId: ID!
-}
-
-input CreatePortsInput {
-  ports: [PortInput!]!
 }
 
 input RenamePortScopeInput {
   draftId: ID!
-  transactionId: ID!
   portId: ID!
 }
 
@@ -13370,7 +13269,6 @@ input RenamePortInput {
 
 input UpdatePortDescriptionScopeInput {
   draftId: ID!
-  transactionId: ID!
   portId: ID!
 }
 
@@ -13380,7 +13278,6 @@ input UpdatePortDescriptionInput {
 
 input UpdatePortIconScopeInput {
   draftId: ID!
-  transactionId: ID!
   portId: ID!
 }
 
@@ -13390,89 +13287,48 @@ input UpdatePortIconInput {
 
 input AddAttributeToPortScopeInput {
   draftId: ID!
-  transactionId: ID!
   portId: ID!
-}
-
-input AddAttributeToPortInput {
-  attribute: AttributeInput!
 }
 
 input AddAttributesToPortScopeInput {
   draftId: ID!
-  transactionId: ID!
   portId: ID!
-}
-
-input AddAttributesToPortInput {
-  attributes: [AttributeInput!]!
 }
 
 input RemoveAttributeFromPortScopeInput {
   draftId: ID!
-  transactionId: ID!
   portId: ID!
   attributeId: ID!
 }
 
-input RemoveAttributeFromPortInput {
-  hasInput: Boolean = false
-}
-
 input RemoveAttributesFromPortScopeInput {
   draftId: ID!
-  transactionId: ID!
   portId: ID!
   attributeIds: [ID!]!
 }
 
-input RemoveAttributesFromPortInput {
-  hasInput: Boolean = false
-}
-
 input DeletePortScopeInput {
   draftId: ID!
-  transactionId: ID!
   portId: ID!
-}
-
-input DeletePortInput {
-  hasInput: Boolean = false
 }
 
 input DeletePortsScopeInput {
   draftId: ID!
-  transactionId: ID!
   portIds: [ID!]!
-}
-
-input DeletePortsInput {
-  hasInput: Boolean = false
 }
 
 input CreateQualityScopeInput {
   draftId: ID!
-  transactionId: ID!
   ownerId: ID!
-}
-
-input CreateQualityInput {
-  quality: QualityInput!
 }
 
 input CreateQualitiesScopeInput {
   draftId: ID!
-  transactionId: ID!
   ownerId: ID!
-}
-
-input CreateQualitiesInput {
-  qualities: [QualityInput!]!
 }
 
 input RenameQualityScopeInput {
   draftId: ID!
-  transactionId: ID!
   qualityId: ID!
 }
 
@@ -13482,7 +13338,6 @@ input RenameQualityInput {
 
 input UpdateQualityDescriptionScopeInput {
   draftId: ID!
-  transactionId: ID!
   qualityId: ID!
 }
 
@@ -13492,7 +13347,6 @@ input UpdateQualityDescriptionInput {
 
 input UpdateQualityIconScopeInput {
   draftId: ID!
-  transactionId: ID!
   qualityId: ID!
 }
 
@@ -13502,89 +13356,48 @@ input UpdateQualityIconInput {
 
 input AddAttributeToQualityScopeInput {
   draftId: ID!
-  transactionId: ID!
   qualityId: ID!
-}
-
-input AddAttributeToQualityInput {
-  attribute: AttributeInput!
 }
 
 input AddAttributesToQualityScopeInput {
   draftId: ID!
-  transactionId: ID!
   qualityId: ID!
-}
-
-input AddAttributesToQualityInput {
-  attributes: [AttributeInput!]!
 }
 
 input RemoveAttributeFromQualityScopeInput {
   draftId: ID!
-  transactionId: ID!
   qualityId: ID!
   attributeId: ID!
 }
 
-input RemoveAttributeFromQualityInput {
-  hasInput: Boolean = false
-}
-
 input RemoveAttributesFromQualityScopeInput {
   draftId: ID!
-  transactionId: ID!
   qualityId: ID!
   attributeIds: [ID!]!
 }
 
-input RemoveAttributesFromQualityInput {
-  hasInput: Boolean = false
-}
-
 input DeleteQualityScopeInput {
   draftId: ID!
-  transactionId: ID!
   qualityId: ID!
-}
-
-input DeleteQualityInput {
-  hasInput: Boolean = false
 }
 
 input DeleteQualitiesScopeInput {
   draftId: ID!
-  transactionId: ID!
   qualityIds: [ID!]!
-}
-
-input DeleteQualitiesInput {
-  hasInput: Boolean = false
 }
 
 input CreateTypeScopeInput {
   draftId: ID!
-  transactionId: ID!
   ownerId: ID!
-}
-
-input CreateTypeInput {
-  type: TypeInput!
 }
 
 input CreateTypesScopeInput {
   draftId: ID!
-  transactionId: ID!
   ownerId: ID!
-}
-
-input CreateTypesInput {
-  types: [TypeInput!]!
 }
 
 input RenameTypeScopeInput {
   draftId: ID!
-  transactionId: ID!
   typeId: ID!
 }
 
@@ -13594,7 +13407,6 @@ input RenameTypeInput {
 
 input UpdateTypeDescriptionScopeInput {
   draftId: ID!
-  transactionId: ID!
   typeId: ID!
 }
 
@@ -13604,7 +13416,6 @@ input UpdateTypeDescriptionInput {
 
 input UpdateTypeIconScopeInput {
   draftId: ID!
-  transactionId: ID!
   typeId: ID!
 }
 
@@ -13614,89 +13425,48 @@ input UpdateTypeIconInput {
 
 input AddAttributeToTypeScopeInput {
   draftId: ID!
-  transactionId: ID!
   typeId: ID!
-}
-
-input AddAttributeToTypeInput {
-  attribute: AttributeInput!
 }
 
 input AddAttributesToTypeScopeInput {
   draftId: ID!
-  transactionId: ID!
   typeId: ID!
-}
-
-input AddAttributesToTypeInput {
-  attributes: [AttributeInput!]!
 }
 
 input RemoveAttributeFromTypeScopeInput {
   draftId: ID!
-  transactionId: ID!
   typeId: ID!
   attributeId: ID!
 }
 
-input RemoveAttributeFromTypeInput {
-  hasInput: Boolean = false
-}
-
 input RemoveAttributesFromTypeScopeInput {
   draftId: ID!
-  transactionId: ID!
   typeId: ID!
   attributeIds: [ID!]!
 }
 
-input RemoveAttributesFromTypeInput {
-  hasInput: Boolean = false
-}
-
 input DeleteTypeScopeInput {
   draftId: ID!
-  transactionId: ID!
   typeId: ID!
-}
-
-input DeleteTypeInput {
-  hasInput: Boolean = false
 }
 
 input DeleteTypesScopeInput {
   draftId: ID!
-  transactionId: ID!
   typeIds: [ID!]!
-}
-
-input DeleteTypesInput {
-  hasInput: Boolean = false
 }
 
 input AddConnectorToTypeScopeInput {
   draftId: ID!
-  transactionId: ID!
   typeId: ID!
-}
-
-input AddConnectorToTypeInput {
-  connector: ConnectorInput!
 }
 
 input AddConnectorsToTypeScopeInput {
   draftId: ID!
-  transactionId: ID!
   typeId: ID!
-}
-
-input AddConnectorsToTypeInput {
-  connectors: [ConnectorInput!]!
 }
 
 input RenameConnectorInTypeScopeInput {
   draftId: ID!
-  transactionId: ID!
   connectorId: ID!
 }
 
@@ -13706,7 +13476,6 @@ input RenameConnectorInTypeInput {
 
 input UpdateConnectorDescriptionInTypeScopeInput {
   draftId: ID!
-  transactionId: ID!
   connectorId: ID!
 }
 
@@ -13716,7 +13485,6 @@ input UpdateConnectorDescriptionInTypeInput {
 
 input UpdateConnectorIconInTypeScopeInput {
   draftId: ID!
-  transactionId: ID!
   connectorId: ID!
 }
 
@@ -13726,119 +13494,63 @@ input UpdateConnectorIconInTypeInput {
 
 input RemoveConnectorFromTypeScopeInput {
   draftId: ID!
-  transactionId: ID!
   connectorId: ID!
-}
-
-input RemoveConnectorFromTypeInput {
-  hasInput: Boolean = false
 }
 
 input RemoveConnectorsFromTypeScopeInput {
   draftId: ID!
-  transactionId: ID!
   connectorIds: [ID!]!
-}
-
-input RemoveConnectorsFromTypeInput {
-  hasInput: Boolean = false
 }
 
 input CreateDesignScopeInput {
   draftId: ID!
-  transactionId: ID!
   ownerId: ID!
-}
-
-input CreateDesignInput {
-  design: DesignInput!
 }
 
 input CreateDesignsScopeInput {
   draftId: ID!
-  transactionId: ID!
   ownerId: ID!
-}
-
-input CreateDesignsInput {
-  designs: [DesignInput!]!
 }
 
 input DeleteDesignScopeInput {
   draftId: ID!
-  transactionId: ID!
   designId: ID!
-}
-
-input DeleteDesignInput {
-  hasInput: Boolean = false
 }
 
 input DeleteDesignsScopeInput {
   draftId: ID!
-  transactionId: ID!
   designIds: [ID!]!
-}
-
-input DeleteDesignsInput {
-  hasInput: Boolean = false
 }
 
 input FlattenDesignScopeInput {
   draftId: ID!
-  transactionId: ID!
   designId: ID!
-}
-
-input FlattenDesignInput {
-  hasInput: Boolean = false
 }
 
 input AddAttributeToDesignScopeInput {
   draftId: ID!
-  transactionId: ID!
   designId: ID!
-}
-
-input AddAttributeToDesignInput {
-  attribute: AttributeInput!
 }
 
 input AddAttributesToDesignScopeInput {
   draftId: ID!
-  transactionId: ID!
   designId: ID!
-}
-
-input AddAttributesToDesignInput {
-  attributes: [AttributeInput!]!
 }
 
 input RemoveAttributeFromDesignScopeInput {
   draftId: ID!
-  transactionId: ID!
   designId: ID!
   attributeId: ID!
 }
 
-input RemoveAttributeFromDesignInput {
-  hasInput: Boolean = false
-}
-
 input RemoveAttributesFromDesignScopeInput {
   draftId: ID!
-  transactionId: ID!
   designId: ID!
   attributeIds: [ID!]!
 }
 
-input RemoveAttributesFromDesignInput {
-  hasInput: Boolean = false
-}
-
 input AddFixedPieceToDesignScopeInput {
   draftId: ID!
-  transactionId: ID!
   designId: ID!
 }
 
@@ -13851,47 +13563,26 @@ input AddFixedPieceToDesignInput {
 
 input AddChildPieceWithParentConnectionToDesignScopeInput {
   draftId: ID!
-  transactionId: ID!
   designId: ID!
-}
-
-input AddChildPieceWithParentConnectionToDesignInput {
-  child: ChildPieceWithParentConnectionInput!
 }
 
 input AddChildPiecesWithParentConnectionsToDesignScopeInput {
   draftId: ID!
-  transactionId: ID!
   designId: ID!
-}
-
-input AddChildPiecesWithParentConnectionsToDesignInput {
-  children: [ChildPieceWithParentConnectionInput!]!
 }
 
 input AddHangingChildPieceWithParentConnectionToDesignScopeInput {
   draftId: ID!
-  transactionId: ID!
   designId: ID!
-}
-
-input AddHangingChildPieceWithParentConnectionToDesignInput {
-  child: HangingChildPieceWithParentConnectionInput!
 }
 
 input AddHangingChildPiecesWithParentConnectionsToDesignScopeInput {
   draftId: ID!
-  transactionId: ID!
   designId: ID!
-}
-
-input AddHangingChildPiecesWithParentConnectionsToDesignInput {
-  children: [HangingChildPieceWithParentConnectionInput!]!
 }
 
 input RenamePieceInDesignScopeInput {
   draftId: ID!
-  transactionId: ID!
   pieceId: ID!
 }
 
@@ -13901,7 +13592,6 @@ input RenamePieceInDesignInput {
 
 input UpdatePieceDescriptionInDesignScopeInput {
   draftId: ID!
-  transactionId: ID!
   pieceId: ID!
 }
 
@@ -13911,73 +13601,42 @@ input UpdatePieceDescriptionInDesignInput {
 
 input DragPieceInDesignScopeInput {
   draftId: ID!
-  transactionId: ID!
   designId: ID!
   pieceId: ID!
-}
-
-input DragPieceInDesignInput {
-  offset: OffsetInput!
 }
 
 input DragPiecesInDesignScopeInput {
   draftId: ID!
-  transactionId: ID!
   designId: ID!
   pieceIds: [ID!]!
-}
-
-input DragPiecesInDesignInput {
-  offset: OffsetInput!
 }
 
 input MovePieceInDesignScopeInput {
   draftId: ID!
-  transactionId: ID!
   designId: ID!
   pieceId: ID!
-}
-
-input MovePieceInDesignInput {
-  position: PositionInput!
 }
 
 input MovePiecesInDesignScopeInput {
   draftId: ID!
-  transactionId: ID!
   designId: ID!
   pieceIds: [ID!]!
-}
-
-input MovePiecesInDesignInput {
-  offset: OffsetInput!
 }
 
 input FixPieceInDesignScopeInput {
   draftId: ID!
-  transactionId: ID!
   designId: ID!
   pieceId: ID!
 }
 
-input FixPieceInDesignInput {
-  hasInput: Boolean = false
-}
-
 input FixPiecesInDesignScopeInput {
   draftId: ID!
-  transactionId: ID!
   designId: ID!
   pieceIds: [ID!]!
 }
 
-input FixPiecesInDesignInput {
-  hasInput: Boolean = false
-}
-
 input ChangePieceToTypeInDesignScopeInput {
   draftId: ID!
-  transactionId: ID!
   pieceId: ID!
 }
 
@@ -13987,7 +13646,6 @@ input ChangePieceToTypeInDesignInput {
 
 input ChangePiecesToTypeInDesignScopeInput {
   draftId: ID!
-  transactionId: ID!
   pieceIds: [ID!]!
 }
 
@@ -13997,78 +13655,43 @@ input ChangePiecesToTypeInDesignInput {
 
 input AddAttributeToPieceScopeInput {
   draftId: ID!
-  transactionId: ID!
   pieceId: ID!
-}
-
-input AddAttributeToPieceInput {
-  attribute: AttributeInput!
 }
 
 input AddAttributesToPieceScopeInput {
   draftId: ID!
-  transactionId: ID!
   pieceId: ID!
-}
-
-input AddAttributesToPieceInput {
-  attributes: [AttributeInput!]!
 }
 
 input RemoveAttributeFromPieceScopeInput {
   draftId: ID!
-  transactionId: ID!
   pieceId: ID!
   attributeId: ID!
 }
 
-input RemoveAttributeFromPieceInput {
-  hasInput: Boolean = false
-}
-
 input RemoveAttributesFromPieceScopeInput {
   draftId: ID!
-  transactionId: ID!
   pieceId: ID!
   attributeIds: [ID!]!
 }
 
-input RemoveAttributesFromPieceInput {
-  hasInput: Boolean = false
-}
-
 input DeletePieceInDesignScopeInput {
   draftId: ID!
-  transactionId: ID!
   designId: ID!
   pieceId: ID!
 }
 
-input DeletePieceInDesignInput {
-  hasInput: Boolean = false
-}
-
 input DeletePiecesInDesignScopeInput {
   draftId: ID!
-  transactionId: ID!
   designId: ID!
   pieceIds: [ID!]!
-}
-
-input DeletePiecesInDesignInput {
-  hasInput: Boolean = false
 }
 
 input DeletePiecesAndConnectionsInDesignScopeInput {
   draftId: ID!
-  transactionId: ID!
   designId: ID!
   pieceIds: [ID!]!
   connectionIds: [ID!]!
-}
-
-input DeletePiecesAndConnectionsInDesignInput {
-  hasInput: Boolean = false
 }
 
 #endregion MutationInputs
@@ -14195,117 +13818,117 @@ type Subscription {
   error: Error!
 
   # Kit
-  kitRenamed: RenamedKit!
-  descriptionChanged: ChangedDescription!
+  renamedKit: RenamedKit!
+  changedDescription: ChangedDescription!
 
   # Tag
-  tagCreated: CreatedTag!
-  tagsCreated: CreatedTags!
-  tagRenamed: RenamedTag!
-  tagDescriptionUpdated: UpdatedTagDescription!
-  tagIconUpdated: UpdatedTagIcon!
-  attributeAddedToTag: AddedAttributeToTag!
-  attributesAddedToTag: AddedAttributesToTag!
-  attributeRemovedFromTag: RemovedAttributeFromTag!
-  attributesRemovedFromTag: RemovedAttributesFromTag!
-  tagDeleted: DeletedTag!
-  tagsDeleted: DeletedTags!
+  createdTag: CreatedTag!
+  createdTags: CreatedTags!
+  renamedTag: RenamedTag!
+  updatedTagDescription: UpdatedTagDescription!
+  updatedTagIcon: UpdatedTagIcon!
+  addedAttributeToTag: AddedAttributeToTag!
+  addedAttributesToTag: AddedAttributesToTag!
+  removedAttributeFromTag: RemovedAttributeFromTag!
+  removedAttributesFromTag: RemovedAttributesFromTag!
+  deletedTag: DeletedTag!
+  deletedTags: DeletedTags!
 
   # Concept
-  conceptCreated: CreatedConcept!
-  conceptsCreated: CreatedConcepts!
-  conceptRenamed: RenamedConcept!
-  conceptDescriptionUpdated: UpdatedConceptDescription!
-  conceptIconUpdated: UpdatedConceptIcon!
-  attributeAddedToConcept: AddedAttributeToConcept!
-  attributesAddedToConcept: AddedAttributesToConcept!
-  attributeRemovedFromConcept: RemovedAttributeFromConcept!
-  attributesRemovedFromConcept: RemovedAttributesFromConcept!
-  conceptDeleted: DeletedConcept!
-  conceptsDeleted: DeletedConcepts!
+  createdConcept: CreatedConcept!
+  createdConcepts: CreatedConcepts!
+  renamedConcept: RenamedConcept!
+  updatedConceptDescription: UpdatedConceptDescription!
+  updatedConceptIcon: UpdatedConceptIcon!
+  addedAttributeToConcept: AddedAttributeToConcept!
+  addedAttributesToConcept: AddedAttributesToConcept!
+  removedAttributeFromConcept: RemovedAttributeFromConcept!
+  removedAttributesFromConcept: RemovedAttributesFromConcept!
+  deletedConcept: DeletedConcept!
+  deletedConcepts: DeletedConcepts!
 
   # Port
-  portCreated: CreatedPort!
-  portsCreated: CreatedPorts!
-  portRenamed: RenamedPort!
-  portDescriptionUpdated: UpdatedPortDescription!
-  portIconUpdated: UpdatedPortIcon!
-  attributeAddedToPort: AddedAttributeToPort!
-  attributesAddedToPort: AddedAttributesToPort!
-  attributeRemovedFromPort: RemovedAttributeFromPort!
-  attributesRemovedFromPort: RemovedAttributesFromPort!
-  portDeleted: DeletedPort!
-  portsDeleted: DeletedPorts!
+  createdPort: CreatedPort!
+  createdPorts: CreatedPorts!
+  renamedPort: RenamedPort!
+  updatedPortDescription: UpdatedPortDescription!
+  updatedPortIcon: UpdatedPortIcon!
+  addedAttributeToPort: AddedAttributeToPort!
+  addedAttributesToPort: AddedAttributesToPort!
+  removedAttributeFromPort: RemovedAttributeFromPort!
+  removedAttributesFromPort: RemovedAttributesFromPort!
+  deletedPort: DeletedPort!
+  deletedPorts: DeletedPorts!
 
   # Quality
-  qualityCreated: CreatedQuality!
-  qualitiesCreated: CreatedQualities!
-  qualityRenamed: RenamedQuality!
-  qualityDescriptionUpdated: UpdatedQualityDescription!
-  qualityIconUpdated: UpdatedQualityIcon!
-  attributeAddedToQuality: AddedAttributeToQuality!
-  attributesAddedToQuality: AddedAttributesToQuality!
-  attributeRemovedFromQuality: RemovedAttributeFromQuality!
-  attributesRemovedFromQuality: RemovedAttributesFromQuality!
-  qualityDeleted: DeletedQuality!
-  qualitiesDeleted: DeletedQualities!
+  createdQuality: CreatedQuality!
+  createdQualities: CreatedQualities!
+  renamedQuality: RenamedQuality!
+  updatedQualityDescription: UpdatedQualityDescription!
+  updatedQualityIcon: UpdatedQualityIcon!
+  addedAttributeToQuality: AddedAttributeToQuality!
+  addedAttributesToQuality: AddedAttributesToQuality!
+  removedAttributeFromQuality: RemovedAttributeFromQuality!
+  removedAttributesFromQuality: RemovedAttributesFromQuality!
+  deletedQuality: DeletedQuality!
+  deletedQualities: DeletedQualities!
 
   # Type
-  typeCreated: CreatedType!
-  typesCreated: CreatedTypes!
-  typeRenamed: RenamedType!
-  typeDescriptionUpdated: UpdatedTypeDescription!
-  typeIconUpdated: UpdatedTypeIcon!
-  attributeAddedToType: AddedAttributeToType!
-  attributesAddedToType: AddedAttributesToType!
-  attributeRemovedFromType: RemovedAttributeFromType!
-  attributesRemovedFromType: RemovedAttributesFromType!
-  typeDeleted: DeletedType!
-  typesDeleted: DeletedTypes!
+  createdType: CreatedType!
+  createdTypes: CreatedTypes!
+  renamedType: RenamedType!
+  updatedTypeDescription: UpdatedTypeDescription!
+  updatedTypeIcon: UpdatedTypeIcon!
+  addedAttributeToType: AddedAttributeToType!
+  addedAttributesToType: AddedAttributesToType!
+  removedAttributeFromType: RemovedAttributeFromType!
+  removedAttributesFromType: RemovedAttributesFromType!
+  deletedType: DeletedType!
+  deletedTypes: DeletedTypes!
 
   # Connector
-  connectorAddedToType: AddedConnectorToType!
-  connectorsAddedToType: AddedConnectorsToType!
-  connectorRenamedInType: RenamedConnectorInType!
-  connectorDescriptionUpdatedInType: UpdatedConnectorDescriptionInType!
-  connectorIconUpdatedInType: UpdatedConnectorIconInType!
-  connectorRemovedFromType: RemovedConnectorFromType!
-  connectorsRemovedFromType: RemovedConnectorsFromType!
+  addedConnectorToType: AddedConnectorToType!
+  addedConnectorsToType: AddedConnectorsToType!
+  renamedConnectorInType: RenamedConnectorInType!
+  updatedConnectorDescriptionInType: UpdatedConnectorDescriptionInType!
+  updatedConnectorIconInType: UpdatedConnectorIconInType!
+  removedConnectorFromType: RemovedConnectorFromType!
+  removedConnectorsFromType: RemovedConnectorsFromType!
 
   # Design
-  designCreated: CreatedDesign!
-  designsCreated: CreatedDesigns!
-  designDeleted: DeletedDesign!
-  designsDeleted: DeletedDesigns!
-  designFlattened: FlattenedDesign!
-  attributeAddedToDesign: AddedAttributeToDesign!
-  attributesAddedToDesign: AddedAttributesToDesign!
-  attributeRemovedFromDesign: RemovedAttributeFromDesign!
-  attributesRemovedFromDesign: RemovedAttributesFromDesign!
+  createdDesign: CreatedDesign!
+  createdDesigns: CreatedDesigns!
+  deletedDesign: DeletedDesign!
+  deletedDesigns: DeletedDesigns!
+  flattenedDesign: FlattenedDesign!
+  addedAttributeToDesign: AddedAttributeToDesign!
+  addedAttributesToDesign: AddedAttributesToDesign!
+  removedAttributeFromDesign: RemovedAttributeFromDesign!
+  removedAttributesFromDesign: RemovedAttributesFromDesign!
 
   # Piece
-  fixedPieceAddedToDesign: AddedFixedPieceToDesign!
-  childPieceWithParentConnectionAddedToDesign: AddedChildPieceWithParentConnectionToDesign!
-  childPiecesWithParentConnectionsAddedToDesign: AddedChildPiecesWithParentConnectionsToDesign!
-  hangingChildPieceWithParentConnectionAddedToDesign: AddedHangingChildPieceWithParentConnectionToDesign!
-  hangingChildPiecesWithParentConnectionsAddedToDesign: AddedHangingChildPiecesWithParentConnectionsToDesign!
-  pieceRenamedInDesign: RenamedPieceInDesign!
-  pieceDescriptionUpdatedInDesign: UpdatedPieceDescriptionInDesign!
-  pieceDraggedInDesign: DraggedPieceInDesign!
-  piecesDraggedInDesign: DraggedPiecesInDesign!
-  pieceMovedInDesign: MovedPieceInDesign!
-  piecesMovedInDesign: MovedPiecesInDesign!
-  pieceFixedInDesign: FixedPieceInDesign!
-  piecesFixedInDesign: FixedPiecesInDesign!
-  pieceChangedToTypeInDesign: ChangedPieceToTypeInDesign!
-  piecesChangedToTypeInDesign: ChangedPiecesToTypeInDesign!
-  attributeAddedToPiece: AddedAttributeToPiece!
-  attributesAddedToPiece: AddedAttributesToPiece!
-  attributeRemovedFromPiece: RemovedAttributeFromPiece!
-  attributesRemovedFromPiece: RemovedAttributesFromPiece!
-  pieceDeletedInDesign: DeletedPieceInDesign!
-  piecesDeletedInDesign: DeletedPiecesInDesign!
-  piecesAndConnectionsDeletedInDesign: DeletedPiecesAndConnectionsInDesign!
+  addedFixedPieceToDesign: AddedFixedPieceToDesign!
+  addedChildPieceWithParentConnectionToDesign: AddedChildPieceWithParentConnectionToDesign!
+  addedChildPiecesWithParentConnectionsToDesign: AddedChildPiecesWithParentConnectionsToDesign!
+  addedHangingChildPieceWithParentConnectionToDesign: AddedHangingChildPieceWithParentConnectionToDesign!
+  addedHangingChildPiecesWithParentConnectionsToDesign: AddedHangingChildPiecesWithParentConnectionsToDesign!
+  renamedPieceInDesign: RenamedPieceInDesign!
+  updatedPieceDescriptionInDesign: UpdatedPieceDescriptionInDesign!
+  draggedPieceInDesign: DraggedPieceInDesign!
+  draggedPiecesInDesign: DraggedPiecesInDesign!
+  movedPieceInDesign: MovedPieceInDesign!
+  movedPiecesInDesign: MovedPiecesInDesign!
+  fixedPieceInDesign: FixedPieceInDesign!
+  fixedPiecesInDesign: FixedPiecesInDesign!
+  changedPieceToTypeInDesign: ChangedPieceToTypeInDesign!
+  changedPiecesToTypeInDesign: ChangedPiecesToTypeInDesign!
+  addedAttributeToPiece: AddedAttributeToPiece!
+  addedAttributesToPiece: AddedAttributesToPiece!
+  removedAttributeFromPiece: RemovedAttributeFromPiece!
+  removedAttributesFromPiece: RemovedAttributesFromPiece!
+  deletedPieceInDesign: DeletedPieceInDesign!
+  deletedPiecesInDesign: DeletedPiecesInDesign!
+  deletedPiecesAndConnectionsInDesign: DeletedPiecesAndConnectionsInDesign!
 }
 
 schema {

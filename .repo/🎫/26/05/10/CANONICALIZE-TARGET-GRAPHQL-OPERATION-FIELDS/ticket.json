@@ -1,0 +1,11 @@
+{
+  "title": "Canonicalize Target Graphql Operation Fields",
+  "emoji": "🔗",
+  "status": "closed",
+  "description": "Clean semio/graphql/target.schema.graphql operation field names so operation API names are action-first, e.g. createdDesign instead of designCreated.",
+  "summary": "Canonicalized semio/graphql/target.schema.graphql subscription operation event fields to action-first lower camel case, matching payload type names such as CreatedDesign -\u003e createdDesign.",
+  "goal": "🎯r2602🎯runningsketchpad",
+  "sessions": [
+    "⚪a1e3a60454d84391ba2f0dfb1bb9c240"
+  ]
+}

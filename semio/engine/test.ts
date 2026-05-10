@@ -33,45 +33,33 @@ const graphqlSchema = readFileSync(join(__dirname, "..", "graphql", "schema.grap
 const disallowed = "leg" + "acy";
 assertSchema(!graphqlSchema.includes(disallowed), "semio GraphQL schema MUST NOT add compatibility-only field names in identifiers or generated descriptions");
 for (const definition of [
-  "type KitStore",
+  "type Graph",
+  "type Kit",
   "type Query",
   "type Mutation",
   "type Subscription",
-  "type TypeStore",
-  "type DesignStore",
-  "type PieceStore",
-  "type ConnectionStore",
+  "type Type",
+  "type Design",
+  "type Piece",
+  "type Connection",
+  "input KitReadPointInput",
 ]) {
   definitionBody(definition);
 }
-const queryBody = definitionBody("type Query");
 const graphBody = definitionBody("type Graph");
 assertSchema(
   graphBody.includes("theKit(at: KitReadPointInput): Kit") && !graphBody.includes("kitReadScope"),
-  "Graph MUST expose theKit(at:) materialized reads",
+  "Graph MUST expose theKit(at:) materialized reads gated by KitReadPointInput",
 );
+const kitReadPointBody = definitionBody("input KitReadPointInput");
+for (const field of ["theKit:", "checkpointId:", "checkpointChangeId:", "checkpointOperationId:", "alternativeId:", "draftAlternativeId:", "draftId:", "draftChangeId:", "draftTransactionId:", "draftOperationId:"]) {
+  assertSchema(kitReadPointBody.includes(field), `KitReadPointInput MUST expose ${field}`);
+}
 const mutationBody = definitionBody("type Mutation");
-assertSchema(mutationBody.includes("kitStore: KitStoreMutation!"), "Mutation MUST expose nested kit store mutations");
-const kitStoreMutationBody = definitionBody("type KitStoreMutation");
-assertSchema(kitStoreMutationBody.includes("batch(input: KitStoreInput!): KitStorePayload!"), "KitStoreMutation MUST expose batched scoped kit writes");
+assertSchema(mutationBody.includes("renameKit("), "Mutation MUST expose renameKit");
+assertSchema(mutationBody.includes("addFixedPieceToDesign(") && mutationBody.includes("dragPieceInDesign("), "Mutation MUST expose flat draft/transaction-scoped kit mutators");
 const subscriptionBody = definitionBody("type Subscription");
-assertSchema(subscriptionBody.includes("eventStream: KitEvent!"), "Subscription MUST expose the Rust event stream");
-const kitBody = definitionBody("type KitStore");
-assertSchema(
-  kitBody.includes("fullDto: KitFullSnapshot!") && kitBody.includes("typeByDtoId(id: String!): TypeStore") && kitBody.includes("designByDtoId(id: String!): DesignStore"),
-  "KitStore MUST expose the current semio/rs live graph API",
-);
-const typeBody = definitionBody("type TypeStore");
-assertSchema(
-  typeBody.includes("connectors: [ConnectorStore!]!") && typeBody.includes("representations: [RepresentationStore!]!"),
-  "TypeStore MUST expose the Rust catalog handles",
-);
-const designBody = definitionBody("type DesignStore");
-assertSchema(
-  designBody.includes("clusterableGroups(selection: [String!]!): [[String!]!]!") && designBody.includes("replaceableCatalog(selection: [String!]!): ReplaceableCatalogStore!"),
-  "DesignStore MUST expose computed semio/rs graph operations",
-);
-assertSchema(graphqlSchema.includes("input KitReadPointInput @oneOf"), "semio GraphQL schema MUST expose Rust read points as one-of input");
+assertSchema(subscriptionBody.includes("commandSucceeded: Command!") && subscriptionBody.includes("operationSucceeded: OperationKind!"), "Subscription MUST expose Rust command/operation streams");
 
 execFileSync(pythonCommand, ["-c", "from pathlib import Path; from ariadne import gql, make_executable_schema; s=Path('../graphql/schema.graphql').read_text(encoding='utf-8'); make_executable_schema(gql(s))"], {
   cwd: __dirname,

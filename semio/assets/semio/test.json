@@ -1,0 +1,159 @@
+{
+  "schema": "🎆26🌙06⬆️1",
+  "wip": {
+    "id": "019e124a-ce3c-7fd3-b6fa-010427a2ad98",
+    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
+    "authors": {
+      "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
+      "items": []
+    },
+    "root": {
+      "authors": [],
+      "concepts": [],
+      "createdAt": "2020-01-01T00:00:00.000Z",
+      "designs": [],
+      "files": [],
+      "folders": [],
+      "groups": [],
+      "id": "76ae325b-cf02-41c9-a179-908cb0af154b",
+      "layers": [],
+      "name": "Untitled",
+      "props": [],
+      "qualities": [],
+      "stats": [],
+      "tags": [],
+      "types": [],
+      "updatedAt": "2020-01-01T00:00:00.000Z"
+    },
+    "checkpoints": {
+      "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
+      "items": [
+        {
+          "authors": {
+            "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
+            "items": []
+          },
+          "changes": {
+            "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
+            "items": []
+          },
+          "frozenRoot": {
+            "authors": [],
+            "concepts": [],
+            "createdAt": "2020-01-01T00:00:00.000Z",
+            "designs": [],
+            "files": [],
+            "folders": [],
+            "groups": [],
+            "id": "76ae325b-cf02-41c9-a179-908cb0af154b",
+            "layers": [],
+            "name": "Untitled",
+            "props": [],
+            "qualities": [],
+            "stats": [],
+            "tags": [],
+            "types": [],
+            "updatedAt": "2020-01-01T00:00:00.000Z"
+          },
+          "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
+          "id": "019e124a-ce3f-7870-8de0-e436af11382e",
+          "message": "init",
+          "timestamp": "2020-01-01T00:00:00.000Z"
+        }
+      ]
+    },
+    "alternatives": {
+      "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
+      "items": []
+    },
+    "drafts": {
+      "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
+      "items": [
+        {
+          "id": "019e124a-ce3f-7870-8de0-e45bf277da2a",
+          "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
+          "checkpoint": {
+            "id": "019e124a-ce3f-7870-8de0-e436af11382e",
+            "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+          },
+          "transactions": {
+            "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
+            "items": []
+          }
+        }
+      ]
+    }
+  },
+  "authoritative": {
+    "id": "019e124a-ce3c-7fd3-b6fa-010427a2ad98",
+    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
+    "authors": {
+      "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
+      "items": []
+    },
+    "root": {
+      "designs": {
+        "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
+        "items": []
+      },
+      "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
+      "name": "",
+      "types": {
+        "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
+        "items": []
+      }
+    },
+    "checkpoints": {
+      "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
+      "items": []
+    },
+    "alternatives": {
+      "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
+      "items": []
+    },
+    "drafts": {
+      "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
+      "items": []
+    }
+  },
+  "stage": {
+    "id": "019e124a-ce3c-7fd3-b6fa-010427a2ad98",
+    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
+    "authors": {
+      "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
+      "items": []
+    },
+    "root": {
+      "designs": {
+        "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
+        "items": []
+      },
+      "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
+      "name": "",
+      "types": {
+        "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
+        "items": []
+      }
+    },
+    "checkpoints": {
+      "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
+      "items": []
+    },
+    "alternatives": {
+      "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
+      "items": []
+    },
+    "drafts": {
+      "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
+      "items": []
+    }
+  },
+  "conflicts": {
+    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
+    "items": []
+  },
+  "blobs": {
+    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
+    "items": []
+  }
+}

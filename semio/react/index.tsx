@@ -45,6 +45,7 @@ import {
   kitStoreClientRemovePiece,
   kitStoreClientUpdateConnection,
   kitStoreClientUpdatePiece,
+  type JsonObject,
   type JsonValue,
   type KitDesignReadKind,
   type KitFullDto,
@@ -1435,16 +1436,16 @@ export function useSemioKitScopedView(): SemioKitScopedView | null {
 /**
  * @emoji 🧭 Active {@link KitReadPoint} for read hooks: {@link SemioKitScopedViewContext} when inside {@link KitScope}, else this default (main line).
  */
-export const KitDataScopeContext = React.createContext<KitReadPoint>(theKitReadPoint);
-export function useKitDataScope(): KitReadPoint {
+export const KitReadPointContext = React.createContext<KitReadPoint>(theKitReadPoint);
+export function useKitReadPoint(): KitReadPoint {
   const s = React.useContext(SemioKitScopedViewContext);
   if (s) return s.kitReadPoint;
-  return React.useContext(KitDataScopeContext);
+  return React.useContext(KitReadPointContext);
 }
 
-/** @internal Dependency token so read hooks re-subscribe when {@link KitDataScopeContext} changes. */
-function useKitDataScopeKey(): string {
-  return kitReadPointKey(useKitDataScope());
+/** @internal Dependency token so read hooks re-subscribe when {@link KitReadPointContext} changes. */
+function useKitReadPointKey(): string {
+  return kitReadPointKey(useKitReadPoint());
 }
 /** @emoji 📌 Current {@link SchemaScope} from nearest entity scope provider (TypeScope, DesignScope, …). */
 export const SchemaScopeContext = React.createContext<SchemaScope | null>(null);
@@ -1992,7 +1993,7 @@ export function useIsInKitScope(): boolean {
 export function useKitStoreSnapshot(explicitKitId?: string): KitHostStoreSnapshot | null {
   const runtime = useKitRuntimeSafe();
   const effectiveKitId = useResolvedKitIdentifier(explicitKitId);
-  const scopeKey = useKitDataScopeKey();
+  const scopeKey = useKitReadPointKey();
   const snapshotRef = React.useRef<KitHostStoreSnapshot | null>(null);
   const storeRef = React.useRef<KitHostStore | null>(null);
   const subscribe = React.useCallback(
@@ -2096,8 +2097,8 @@ const EMPTY_KIT_READ_SNAP_ZERO: KitStoreReadSnap = Object.freeze({ version: 0, d
 export function useTypesIds(explicitKitId?: string): KitFieldBinding<readonly string[]> {
   const runtime = useKitRuntime();
   const resolved = useResolvedKitIdentifier(explicitKitId);
-  const scopeKey = useKitDataScopeKey();
-  const readPoint = useKitDataScope();
+  const scopeKey = useKitReadPointKey();
+  const readPoint = useKitReadPoint();
   const key = `k-tids:${scopeKey}`;
   const subscribe = React.useCallback(
     (onChange: () => void) => {
@@ -2138,8 +2139,8 @@ export function useTypesIds(explicitKitId?: string): KitFieldBinding<readonly st
 export function useTypesMetadata(explicitKitId?: string): KitFieldBinding<readonly unknown[]> {
   const runtime = useKitRuntime();
   const resolved = useResolvedKitIdentifier(explicitKitId);
-  const scopeKey = useKitDataScopeKey();
-  const readPoint = useKitDataScope();
+  const scopeKey = useKitReadPointKey();
+  const readPoint = useKitReadPoint();
   const key = `k-tmeta:${scopeKey}`;
   const subscribe = React.useCallback(
     (onChange: () => void) => {
@@ -2180,8 +2181,8 @@ export function useTypesMetadata(explicitKitId?: string): KitFieldBinding<readon
 export function useDesignsIds(explicitKitId?: string): KitFieldBinding<readonly string[]> {
   const runtime = useKitRuntime();
   const resolved = useResolvedKitIdentifier(explicitKitId);
-  const scopeKey = useKitDataScopeKey();
-  const readPoint = useKitDataScope();
+  const scopeKey = useKitReadPointKey();
+  const readPoint = useKitReadPoint();
   const key = `k-dids:${scopeKey}`;
   const subscribe = React.useCallback(
     (onChange: () => void) => {
@@ -2222,8 +2223,8 @@ export function useDesignsIds(explicitKitId?: string): KitFieldBinding<readonly 
 export function useDesignsMetadata(explicitKitId?: string): KitFieldBinding<readonly unknown[]> {
   const runtime = useKitRuntime();
   const resolved = useResolvedKitIdentifier(explicitKitId);
-  const scopeKey = useKitDataScopeKey();
-  const readPoint = useKitDataScope();
+  const scopeKey = useKitReadPointKey();
+  const readPoint = useKitReadPoint();
   const key = `k-dmeta-res:${scopeKey}:${resolved ?? ""}`;
   const subscribe = React.useCallback(
     (onChange: () => void) => {
@@ -2266,8 +2267,8 @@ const EMPTY_KIT_ENTITY_LIST: any[] = [];
 export function useTypesFull(explicitKitId?: string): KitFieldBinding<any[]> {
   const runtime = useKitRuntime();
   const resolved = useResolvedKitIdentifier(explicitKitId);
-  const scopeKey = useKitDataScopeKey();
-  const readPoint = useKitDataScope();
+  const scopeKey = useKitReadPointKey();
+  const readPoint = useKitReadPoint();
   const key = `k-types-full:${scopeKey}:${resolved ?? ""}`;
   const subscribe = React.useCallback(
     (onChange: () => void) => {
@@ -2313,8 +2314,8 @@ export function useTypesFull(explicitKitId?: string): KitFieldBinding<any[]> {
 export function useDesignsFull(explicitKitId?: string): KitFieldBinding<any[]> {
   const runtime = useKitRuntime();
   const resolved = useResolvedKitIdentifier(explicitKitId);
-  const scopeKey = useKitDataScopeKey();
-  const readPoint = useKitDataScope();
+  const scopeKey = useKitReadPointKey();
+  const readPoint = useKitReadPoint();
   const key = `k-designs-full:${scopeKey}:${resolved ?? ""}`;
   const subscribe = React.useCallback(
     (onChange: () => void) => {
@@ -2360,8 +2361,8 @@ export function useDesignsFull(explicitKitId?: string): KitFieldBinding<any[]> {
 export function useFilesFull(explicitKitId?: string): KitFieldBinding<any[]> {
   const runtime = useKitRuntime();
   const resolved = useResolvedKitIdentifier(explicitKitId);
-  const scopeKey = useKitDataScopeKey();
-  const readPoint = useKitDataScope();
+  const scopeKey = useKitReadPointKey();
+  const readPoint = useKitReadPoint();
   const key = `k-files-full:${scopeKey}:${resolved ?? ""}`;
   const subscribe = React.useCallback(
     (onChange: () => void) => {
@@ -2407,8 +2408,8 @@ export function useFilesFull(explicitKitId?: string): KitFieldBinding<any[]> {
 export function useTagsFull(explicitKitId?: string): KitFieldBinding<any[]> {
   const runtime = useKitRuntime();
   const resolved = useResolvedKitIdentifier(explicitKitId);
-  const scopeKey = useKitDataScopeKey();
-  const readPoint = useKitDataScope();
+  const scopeKey = useKitReadPointKey();
+  const readPoint = useKitReadPoint();
   const key = `k-tags-full:${scopeKey}:${resolved ?? ""}`;
   const subscribe = React.useCallback(
     (onChange: () => void) => {
@@ -3790,6 +3791,41 @@ export const useUpdateAuthor = (): {
 
 export const useCreateType = () => useKitAddToKit("Type");
 export const useDeleteType = () => useKitRemoveFromKit("Type");
+
+/** @emoji 🧾 Patch root {@link Kit} fields via `submitKitChangeCommands` (value lane separate from reads). */
+export const usePatchKit = (): {
+  run: (patch: Record<string, unknown>) => Promise<SetResult>;
+  status: WriteStatus;
+} => {
+  const runtime = useKitRuntime();
+  const kitId = String(runtime.snapshot.kit?.id ?? "");
+  const [status, setStatus] = React.useState<WriteStatus>({ kind: "idle", pending: 0 });
+  const run = React.useCallback(
+    async (patch: Record<string, unknown>) => {
+      if (!runtime.kitClient || !runtime.canWrite || kitId === "") {
+        const e: SetError = { kind: "Readonly", message: "read-only or no kit client" };
+        setStatus({ kind: "error", pending: 0, lastError: e });
+        return { ok: false, error: e } as const;
+      }
+      setStatus({ kind: "pending", pending: 1 });
+      for (const [field, value] of Object.entries(patch)) {
+        const cmds = buildSchemaEntityChangeCommands("Kit", kitId, field, value, null);
+        if (!cmds.length) continue;
+        const r = await submitKitChangeCommands(runtime.kitClient, cmds);
+        if (!r.ok) {
+          runtime.pushSetRejection(r.error);
+          setStatus({ kind: "error", pending: 0, lastError: r.error });
+          return r;
+        }
+      }
+      setStatus({ kind: "idle", pending: 0 });
+      return { ok: true } as const;
+    },
+    [runtime, kitId],
+  );
+  return { run, status };
+};
+
 export const useUpdateType = (): {
   run: (typeId: string, patch: Record<string, unknown>) => Promise<SetResult>;
   status: WriteStatus;
@@ -4546,7 +4582,7 @@ function __semioPiecesPlacementMapFromReadSnap(data: unknown): ReadonlyMap<strin
 /** Piece hierarchy + flat pose map from the Rust GraphQL worker (`getPiecesMetadata`) via {@link DesignStore.readPiecesPlacementMetadataMap}. */
 export function usePiecesMetadataMap(designId?: string): HookRead<ReadonlyMap<string, PiecePlacementRowDto>> {
   const runtime = useKitRuntime();
-  const readPoint = useKitDataScope();
+  const readPoint = useKitReadPoint();
   const key = `pmd:${designId ?? ""}:${kitReadPointKey(readPoint)}`;
   const subscribe = React.useCallback(
     (onChange: () => void) => {
@@ -4586,7 +4622,7 @@ export function usePiecesMetadataMap(designId?: string): HookRead<ReadonlyMap<st
 /** @emoji 📌 Piece DTO rows for a design via {@link DesignStore.readPiecesFullRows}. */
 export function useKitPieces(designId?: string): HookRead<any[]> {
   const runtime = useKitRuntime();
-  const readPoint = useKitDataScope();
+  const readPoint = useKitReadPoint();
   const key = `k-pieces:${designId ?? ""}:${kitReadPointKey(readPoint)}`;
   const subscribe = React.useCallback(
     (onChange: () => void) => {
@@ -4626,7 +4662,7 @@ export function useKitPieces(designId?: string): HookRead<any[]> {
 /** @emoji 📌 Connection DTO rows for a design via {@link DesignStore.readConnectionsFullRows}. */
 export function useKitConnections(designId?: string): HookRead<any[]> {
   const runtime = useKitRuntime();
-  const readPoint = useKitDataScope();
+  const readPoint = useKitReadPoint();
   const key = `k-conns:${designId ?? ""}:${kitReadPointKey(readPoint)}`;
   const subscribe = React.useCallback(
     (onChange: () => void) => {
@@ -4666,7 +4702,7 @@ export function useKitConnections(designId?: string): HookRead<any[]> {
 /** @emoji 📌 Shallow design catalog rows via {@link KitStore.getDesigns}. */
 export function useKitDesignsShallow(): HookRead<any[]> {
   const runtime = useKitRuntime();
-  const readPoint = useKitDataScope();
+  const readPoint = useKitReadPoint();
   const key = `k-dshallow:${kitReadPointKey(readPoint)}`;
   const subscribe = React.useCallback(
     (onChange: () => void) => {
@@ -4705,7 +4741,7 @@ export function useKitDesignsShallow(): HookRead<any[]> {
 /** @emoji 📌 Shallow kind catalog rows via {@link KitStore.getTypes}. */
 export function useKitTypesShallow(): HookRead<any[]> {
   const runtime = useKitRuntime();
-  const readPoint = useKitDataScope();
+  const readPoint = useKitReadPoint();
   const key = `k-tshallow:${kitReadPointKey(readPoint)}`;
   const subscribe = React.useCallback(
     (onChange: () => void) => {
@@ -4744,7 +4780,7 @@ export function useKitTypesShallow(): HookRead<any[]> {
 /** @emoji 📌 Shallow author rows via {@link KitStore.getAuthors}. */
 export function useKitAuthorsShallow(): HookRead<any[]> {
   const runtime = useKitRuntime();
-  const readPoint = useKitDataScope();
+  const readPoint = useKitReadPoint();
   const key = `k-ashallow:${kitReadPointKey(readPoint)}`;
   const subscribe = React.useCallback(
     (onChange: () => void) => {
@@ -4940,7 +4976,7 @@ export function usePieceMetadata(designId?: string, pieceId?: string): HookRead<
  */
 export function usePieceFlatPlane(designId?: string, pieceId?: string): HookRead<any> {
   const runtime = useKitRuntime();
-  const readPoint = useKitDataScope();
+  const readPoint = useKitReadPoint();
   const key = `pfp:${designId ?? ""}:${pieceId ?? ""}:${kitReadPointKey(readPoint)}`;
   const subscribe = React.useCallback(
     (onChange: () => void) => {
@@ -4980,7 +5016,7 @@ export function usePieceFlatPlane(designId?: string, pieceId?: string): HookRead
 /** Flattened piece center from {@link PieceStore.readFlatCenter} (`readPieceFlatCenterCommand`). */
 export function usePieceFlatCenter(designId?: string, pieceId?: string): HookRead<any> {
   const runtime = useKitRuntime();
-  const readPoint = useKitDataScope();
+  const readPoint = useKitReadPoint();
   const key = `pfc:${designId ?? ""}:${pieceId ?? ""}:${kitReadPointKey(readPoint)}`;
   const subscribe = React.useCallback(
     (onChange: () => void) => {
@@ -5043,7 +5079,7 @@ export function useParentPieceId(designId?: string, pieceId?: string): HookRead<
 
 export function usePieceParentConnection(designId?: string, pieceId?: string): HookRead<any | undefined> {
   const runtime = useKitRuntime();
-  const readPoint = useKitDataScope();
+  const readPoint = useKitReadPoint();
   const key = `ppc:${designId ?? ""}:${pieceId ?? ""}:${kitReadPointKey(readPoint)}`;
   const subscribe = React.useCallback(
     (onChange: () => void) => {
@@ -5082,7 +5118,7 @@ export function usePieceParentConnection(designId?: string, pieceId?: string): H
 
 export function useIncludedDesigns(designId?: string): HookRead<any[]> {
   const runtime = useKitRuntime();
-  const readPoint = useKitDataScope();
+  const readPoint = useKitReadPoint();
   const key = `inc:${designId ?? ""}:${kitReadPointKey(readPoint)}`;
   const subscribe = React.useCallback(
     (onChange: () => void) => {
@@ -5124,7 +5160,7 @@ export function useIncludedDesigns(designId?: string): HookRead<any[]> {
  */
 export function useDesignClusterableGroups(designId?: string, selection?: ReadonlyArray<string>): HookRead<ReadonlyArray<ReadonlyArray<{ readonly id: string }>>> {
   const runtime = useKitRuntime();
-  const readPoint = useKitDataScope();
+  const readPoint = useKitReadPoint();
   const selectionDep = React.useMemo(() => JSON.stringify(selection ?? []), [selection]);
   const key = `clu:${designId ?? ""}:${selectionDep}:${kitReadPointKey(readPoint)}`;
   const subscribe = React.useCallback(
@@ -5166,7 +5202,7 @@ export function useDesignClusterableGroups(designId?: string, selection?: Readon
 /** Sum of prop values linked to `qualityId` in the design (`readDesignQualitySumCommand`). */
 export function useDesignQualitySum(designId?: string, qualityId?: string): HookRead<number> {
   const runtime = useKitRuntime();
-  const readPoint = useKitDataScope();
+  const readPoint = useKitReadPoint();
   const key = `dqs:${designId ?? ""}:${qualityId ?? ""}:${kitReadPointKey(readPoint)}`;
   const subscribe = React.useCallback(
     (onChange: () => void) => {
@@ -5210,7 +5246,7 @@ export function useDesignQualitySum(designId?: string, qualityId?: string): Hook
  */
 export function useTypeBestRepresentation(typeId?: string, tagIds?: ReadonlyArray<string>): HookRead<unknown> {
   const runtime = useKitRuntime();
-  const readPoint = useKitDataScope();
+  const readPoint = useKitReadPoint();
   const tagDep = React.useMemo(() => JSON.stringify(tagIds ?? []), [tagIds]);
   const tags = tagIds ?? [];
   const key = `tbr:${typeId ?? ""}:${tagDep}:${kitReadPointKey(readPoint)}`;
@@ -5285,7 +5321,7 @@ export function useKitColoredConnectors(): HookRead<ReadonlyArray<unknown>> {
 
 export function useReplacableTypes(designId?: string, pieceIds?: string[]): HookRead<string[]> {
   const runtime = useKitRuntime();
-  const readPoint = useKitDataScope();
+  const readPoint = useKitReadPoint();
   const pieceKey = pieceIds?.join("\u0000") ?? "";
   const key = `rpt:${designId ?? ""}:${pieceKey}:${kitReadPointKey(readPoint)}`;
   const subscribe = React.useCallback(
@@ -5327,7 +5363,7 @@ export function useReplacableTypes(designId?: string, pieceIds?: string[]): Hook
 
 export function useReplacableDesigns(designId?: string, pieceIds?: string[]): HookRead<string[]> {
   const runtime = useKitRuntime();
-  const readPoint = useKitDataScope();
+  const readPoint = useKitReadPoint();
   const pieceKey = pieceIds?.join("\u0000") ?? "";
   const key = `rpd:${designId ?? ""}:${pieceKey}:${kitReadPointKey(readPoint)}`;
   const subscribe = React.useCallback(
@@ -5369,7 +5405,7 @@ export function useReplacableDesigns(designId?: string, pieceIds?: string[]): Ho
 
 export function useExplodeableDesignNodes(designId?: string): HookRead<string[]> {
   const runtime = useKitRuntime();
-  const readPoint = useKitDataScope();
+  const readPoint = useKitReadPoint();
   const key = `exd:${designId ?? ""}:${kitReadPointKey(readPoint)}`;
   const subscribe = React.useCallback(
     (onChange: () => void) => {
@@ -5408,10 +5444,13 @@ export function useExplodeableDesignNodes(designId?: string): HookRead<string[]>
 
 // #endregion 🎛️KitStoreClient command hooks
 
-export function useKitHostStore(): KitHostStore | null {
+/** @emoji 📥 Read-only host store handle for the active kit scope (value, no setter, no status). */
+export function useKitStore(): KitHostStore | null {
   const runtime = useKitRuntimeSafe();
   return runtime?.store ?? null;
 }
+/** @internal Alias retained for narrow internal call sites that distinguished the host store from the WASM store. */
+export const useKitHostStore = useKitStore;
 
 /** @emoji 📌 Full kit store snapshot (read-only); prefer over tuple wrappers. */
 export function useKitSnapshot(): KitHostStoreSnapshot | null {
@@ -5828,53 +5867,73 @@ export const useConnectionById = useConnectionTriad;
 export const usePieceById = usePieceTriad;
 export const useDesignById = useDesignTriad;
 
-function useSchemaObjectState(typeName: string, idValue?: string): KitFieldBinding<any> {
+// #region 🔖SchemaReadWriteSegregation
+/**
+ * @emoji 📥 Read-only schema object value (no setter, no status). Returns `undefined` outside {@link KitScope}.
+ */
+export function useSchemaObjectValue(typeName: string, idValue?: string): unknown {
   const runtime = useKitRuntimeSafe();
   const scope = React.useContext(SchemaScopeContext);
-  if (!runtime) {
-    return [undefined, noopAsyncSet, WRITE_STATUS_READONLY] as const;
-  }
+  if (!runtime) return undefined;
   const ref = resolveReference(runtime.state, typeName, idValue, scope);
-  const value = ref?.value;
-  const canWrite = runtime.canWrite && !!ref;
-  const setValue = React.useCallback(
-    async (next: SetStateAction<any>) => {
-      if (!canWrite) return { ok: false, error: { kind: "Readonly" as const, message: "read-only" } };
-      return await runtime.setObjectValue(typeName, next, idValue, scope);
+  return ref?.value;
+}
+
+/**
+ * @emoji 📥 Read-only schema field value (no setter, no status). Returns `undefined` outside {@link KitScope}.
+ */
+export function useSchemaFieldValue(typeName: string, fieldName: string, idValue?: string): unknown {
+  const runtime = useKitRuntimeSafe();
+  const scope = React.useContext(SchemaScopeContext);
+  if (!runtime) return undefined;
+  return readSchemaFieldValue(runtime.state, typeName, fieldName, idValue, scope);
+}
+
+/**
+ * @emoji 📝 Schema object mutation `[run, status]` (no reads). Returns no-op outside {@link KitScope}.
+ */
+export function useSchemaObjectMutation(typeName: string, idValue?: string): readonly [(next: unknown) => Promise<SetResult>, WriteStatus] {
+  const runtime = useKitRuntimeSafe();
+  const scope = React.useContext(SchemaScopeContext);
+  const canWrite = !!runtime && runtime.canWrite && !!resolveReference(runtime.state, typeName, idValue, scope);
+  const run = React.useCallback(
+    async (next: unknown): Promise<SetResult> => {
+      if (!runtime) return { ok: false, error: { kind: "Readonly", message: "no kit scope" } };
+      if (!canWrite) return { ok: false, error: { kind: "Readonly", message: "read-only" } };
+      return await runtime.setObjectValue(typeName, next as SetStateAction<any>, idValue, scope);
     },
     [runtime, typeName, idValue, scope, canWrite],
   );
   const status: WriteStatus = canWrite ? WRITE_STATUS_IDLE : WRITE_STATUS_READONLY;
-  return [value, setValue, status] as const;
+  return [run, status] as const;
 }
 
-function useSchemaFieldState(typeName: string, fieldName: string, idValue?: string): KitFieldBinding<any> {
+/**
+ * @emoji 📝 Schema field mutation `[run, status]` (no reads). Routes through Rust `submitKitChangeCommands` when supported, falls back to host store DTO writes.
+ */
+export function useSchemaFieldMutation(typeName: string, fieldName: string, idValue?: string): readonly [(next: unknown) => Promise<SetResult>, WriteStatus] {
   const runtime = useKitRuntimeSafe();
   const scope = React.useContext(SchemaScopeContext);
-  if (!runtime) {
-    return [undefined, noopAsyncSet, WRITE_STATUS_READONLY] as const;
-  }
-  const value = readSchemaFieldValue(runtime.state, typeName, fieldName, idValue, scope);
-  /** DTO index allows writes when the Rust `submitKitChangeCommands` path does not cover this field. */
-  const schemaScanWritable = runtime.canWrite && isWritableField(runtime.state, typeName, fieldName, idValue, scope);
-  const rustTarget = React.useMemo(() => resolveRustFieldTarget(runtime, typeName, fieldName, idValue, scope), [runtime.kitClient, runtime.snapshot.kit.id, runtime.canWrite, typeName, fieldName, idValue, scope]);
+  const schemaScanWritable = !!runtime && runtime.canWrite && isWritableField(runtime.state, typeName, fieldName, idValue, scope);
+  const rustTarget = React.useMemo(
+    () => (runtime ? resolveRustFieldTarget(runtime, typeName, fieldName, idValue, scope) : null),
+    [runtime?.kitClient, runtime?.snapshot.kit.id, runtime?.canWrite, typeName, fieldName, idValue, scope],
+  );
   const [pending, setPending] = React.useState(0);
   const [lastErr, setLastErr] = React.useState<SetError | undefined>(undefined);
 
-  const setValue = React.useCallback(
-    async (next: SetStateAction<any>) => {
-      const resolved = typeof next === "function" ? (next as (p: any) => any)(value) : next;
+  const run = React.useCallback(
+    async (next: unknown): Promise<SetResult> => {
+      if (!runtime) return { ok: false, error: { kind: "Readonly", message: "no kit scope" } };
       if (rustTarget && runtime.kitClient) {
-        if (!runtime.canWrite) {
-          return { ok: false, error: { kind: "Readonly" as const, message: "read-only" } };
-        }
+        if (!runtime.canWrite) return { ok: false, error: { kind: "Readonly", message: "read-only" } };
         setPending((p) => p + 1);
         setLastErr(undefined);
         let designId: string | null = null;
         if (rustTarget.kind === "Piece" || rustTarget.kind === "ConnectionStore") {
           designId = await resolveDesignIdForPieceOrConnection(runtime.kitClient, rustTarget.kind, rustTarget.id);
         }
-        const cmds = buildSchemaEntityChangeCommands(rustTarget.kind, rustTarget.id, rustTarget.field, resolved, designId);
+        const cmds = buildSchemaEntityChangeCommands(rustTarget.kind, rustTarget.id, rustTarget.field, next, designId);
         if (!cmds.length) {
           setPending((p) => p - 1);
           const e: SetError = { kind: "NotSupported", message: `${rustTarget.kind}.${rustTarget.field}` };
@@ -5891,18 +5950,16 @@ function useSchemaFieldState(typeName: string, fieldName: string, idValue?: stri
         }
         return r;
       }
-      if (!schemaScanWritable) {
-        return { ok: false, error: { kind: "Readonly" as const, message: "read-only" } };
-      }
-      return await runtime.setFieldValue(typeName, fieldName, resolved, idValue, scope);
+      if (!schemaScanWritable) return { ok: false, error: { kind: "Readonly", message: "read-only" } };
+      return await runtime.setFieldValue(typeName, fieldName, next as SetStateAction<any>, idValue, scope);
     },
-    [runtime, rustTarget, schemaScanWritable, typeName, fieldName, idValue, scope, value],
+    [runtime, rustTarget, schemaScanWritable, typeName, fieldName, idValue, scope],
   );
 
   const fieldWriteStatusRef = React.useRef<WriteStatus>(WRITE_STATUS_IDLE);
   const status = React.useMemo((): WriteStatus => {
     const next: WriteStatus =
-      rustTarget && runtime.kitClient
+      rustTarget && runtime?.kitClient
         ? !runtime.canWrite
           ? WRITE_STATUS_READONLY
           : pending > 0
@@ -5917,8 +5974,37 @@ function useSchemaFieldState(typeName: string, fieldName: string, idValue?: stri
     if (writeStatusEquivalent(prev, next)) return prev;
     fieldWriteStatusRef.current = next;
     return next;
-  }, [rustTarget, runtime.kitClient, runtime.canWrite, pending, lastErr, schemaScanWritable]);
+  }, [rustTarget, runtime?.kitClient, runtime?.canWrite, pending, lastErr, schemaScanWritable]);
 
+  return [run, status] as const;
+}
+// #endregion 🔖SchemaReadWriteSegregation
+
+/** @internal Compatibility shim — composes {@link useSchemaObjectValue} + {@link useSchemaObjectMutation} into the legacy triadic shape. */
+function useSchemaObjectState(typeName: string, idValue?: string): KitFieldBinding<any> {
+  const value = useSchemaObjectValue(typeName, idValue);
+  const [run, status] = useSchemaObjectMutation(typeName, idValue);
+  const setValue = React.useCallback(
+    async (next: SetStateAction<any>) => {
+      const resolved = typeof next === "function" ? (next as (p: any) => any)(value) : next;
+      return run(resolved);
+    },
+    [run, value],
+  );
+  return [value, setValue, status] as const;
+}
+
+/** @internal Compatibility shim — composes {@link useSchemaFieldValue} + {@link useSchemaFieldMutation} into the legacy triadic shape. */
+function useSchemaFieldState(typeName: string, fieldName: string, idValue?: string): KitFieldBinding<any> {
+  const value = useSchemaFieldValue(typeName, fieldName, idValue);
+  const [run, status] = useSchemaFieldMutation(typeName, fieldName, idValue);
+  const setValue = React.useCallback(
+    async (next: SetStateAction<any>) => {
+      const resolved = typeof next === "function" ? (next as (p: any) => any)(value) : next;
+      return run(resolved);
+    },
+    [run, value],
+  );
   return [value, setValue, status] as const;
 }
 
@@ -7641,20 +7727,36 @@ export function useTypeKit(idValue?: string): KitFieldBinding<any> {
   return useSchemaFieldState("Type", "kit", idValue);
 }
 
-export function useTypeName(idValue?: string): KitFieldBinding<any> {
-  return useSchemaFieldState("Type", "name", idValue);
+export function useTypeName(idValue?: string): string {
+  const client = useKitStoreClient();
+  if (!client || !idValue) return "";
+  const tid = String(idValue);
+  const field = client.materializedKitStoreField<string>(`type:${tid}:name`, {
+    extraVariableDecl: `$typeId: Id!`,
+    extraVariables: { typeId: tid },
+    innerOnKit: `type(id: $typeId) { name }`,
+    parse: (frag) => String((frag["type"] as JsonObject | undefined)?.["name"] ?? ""),
+    initial: "",
+  });
+  return React.useSyncExternalStore(field.subscribe, field.getSnapshot, field.getSnapshot);
 }
 
-export function useTypeParent(idValue?: string): KitFieldBinding<any> {
-  return useSchemaFieldState("Type", "parent", idValue);
+export function useTypeParent(idValue?: string): unknown {
+  const runtime = useKitRuntimeSafe();
+  const scope = React.useContext(SchemaScopeContext);
+  if (!runtime) return undefined;
+  return readSchemaFieldValue(runtime.state, "Type", "parent", idValue, scope);
 }
 
 export function useTypeChildren(idValue?: string): KitFieldBinding<any> {
   return useSchemaFieldState("Type", "children", idValue);
 }
 
-export function useTypeIsAbstract(idValue?: string): KitFieldBinding<any> {
-  return useSchemaFieldState("Type", "isAbstract", idValue);
+export function useTypeIsAbstract(idValue?: string): boolean {
+  const runtime = useKitRuntimeSafe();
+  const scope = React.useContext(SchemaScopeContext);
+  if (!runtime) return false;
+  return Boolean(readSchemaFieldValue(runtime.state, "Type", "isAbstract", idValue, scope));
 }
 
 export function useTypeFolder(idValue?: string): KitFieldBinding<any> {
@@ -7681,8 +7783,18 @@ export function useTypeVirtual(idValue?: string): KitFieldBinding<any> {
   return useSchemaFieldState("Type", "virtual", idValue);
 }
 
-export function useTypeUnit(idValue?: string): KitFieldBinding<any> {
-  return useSchemaFieldState("Type", "unit", idValue);
+export function useTypeUnit(idValue?: string): string {
+  const client = useKitStoreClient();
+  if (!client || !idValue) return "";
+  const tid = String(idValue);
+  const field = client.materializedKitStoreField<string>(`type:${tid}:unit`, {
+    extraVariableDecl: `$typeId: Id!`,
+    extraVariables: { typeId: tid },
+    innerOnKit: `type(id: $typeId) { unit }`,
+    parse: (frag) => String((frag["type"] as JsonObject | undefined)?.["unit"] ?? ""),
+    initial: "",
+  });
+  return React.useSyncExternalStore(field.subscribe, field.getSnapshot, field.getSnapshot);
 }
 
 export function useTypeCreatedAt(idValue?: string): KitFieldBinding<any> {
@@ -7705,16 +7817,46 @@ export function useTypeConcepts(idValue?: string): KitFieldBinding<any> {
   return useSchemaFieldState("Type", "concepts", idValue);
 }
 
-export function useTypeIcon(idValue?: string): KitFieldBinding<any> {
-  return useSchemaFieldState("Type", "icon", idValue);
+export function useTypeIcon(idValue?: string): string {
+  const client = useKitStoreClient();
+  if (!client || !idValue) return "";
+  const tid = String(idValue);
+  const field = client.materializedKitStoreField<string>(`type:${tid}:icon`, {
+    extraVariableDecl: `$typeId: Id!`,
+    extraVariables: { typeId: tid },
+    innerOnKit: `type(id: $typeId) { icon }`,
+    parse: (frag) => String((frag["type"] as JsonObject | undefined)?.["icon"] ?? ""),
+    initial: "",
+  });
+  return React.useSyncExternalStore(field.subscribe, field.getSnapshot, field.getSnapshot);
 }
 
-export function useTypeImage(idValue?: string): KitFieldBinding<any> {
-  return useSchemaFieldState("Type", "image", idValue);
+export function useTypeImage(idValue?: string): string {
+  const client = useKitStoreClient();
+  if (!client || !idValue) return "";
+  const tid = String(idValue);
+  const field = client.materializedKitStoreField<string>(`type:${tid}:image`, {
+    extraVariableDecl: `$typeId: Id!`,
+    extraVariables: { typeId: tid },
+    innerOnKit: `type(id: $typeId) { image }`,
+    parse: (frag) => String((frag["type"] as JsonObject | undefined)?.["image"] ?? ""),
+    initial: "",
+  });
+  return React.useSyncExternalStore(field.subscribe, field.getSnapshot, field.getSnapshot);
 }
 
-export function useTypeDescription(idValue?: string): KitFieldBinding<any> {
-  return useSchemaFieldState("Type", "description", idValue);
+export function useTypeDescription(idValue?: string): string {
+  const client = useKitStoreClient();
+  if (!client || !idValue) return "";
+  const tid = String(idValue);
+  const field = client.materializedKitStoreField<string>(`type:${tid}:description`, {
+    extraVariableDecl: `$typeId: Id!`,
+    extraVariables: { typeId: tid },
+    innerOnKit: `type(id: $typeId) { description }`,
+    parse: (frag) => String((frag["type"] as JsonObject | undefined)?.["description"] ?? ""),
+    initial: "",
+  });
+  return React.useSyncExternalStore(field.subscribe, field.getSnapshot, field.getSnapshot);
 }
 
 export function useTypeAttributes(idValue?: string): KitFieldBinding<any> {
@@ -8936,12 +9078,21 @@ export function useRenameKit(): readonly [(name: string) => Promise<SetResult>, 
   return [runByName, st] as const;
 }
 
-export function useKitRelease(idValue?: string): KitFieldBinding<any> {
-  return useSchemaFieldState("Kit", "release", idValue);
+/** @emoji 🪪 Kit `version` string from materialized `wip.theKit` (legacy name {@link useKitRelease}). */
+export function useKitRelease(_idValue?: string): string {
+  void _idValue;
+  const client = useKitStoreClient();
+  if (!client) return "";
+  const field = client.materializedKitStoreField<string>("kit:version", {
+    innerOnKit: "version",
+    parse: (frag) => String(frag["version"] ?? ""),
+    initial: "",
+  });
+  return React.useSyncExternalStore(field.subscribe, field.getSnapshot, field.getSnapshot);
 }
 
-export function useKitVersion(idValue?: string): KitFieldBinding<any> {
-  return useSchemaFieldState("Kit", "release", idValue);
+export function useKitVersion(_idValue?: string): string {
+  return useKitRelease(_idValue);
 }
 
 export function useKitTags(explicitKitId?: string): KitFieldBinding<any> {
@@ -8980,28 +9131,68 @@ export function useKitRemote(idValue?: string): KitFieldBinding<any> {
   return useSchemaFieldState("Kit", "remote", idValue);
 }
 
-export function useKitHomepage(idValue?: string): KitFieldBinding<any> {
-  return useSchemaFieldState("Kit", "homepage", idValue);
+export function useKitHomepage(_idValue?: string): string {
+  void _idValue;
+  const client = useKitStoreClient();
+  if (!client) return "";
+  const field = client.materializedKitStoreField<string>("kit:homepage", {
+    innerOnKit: "homepage",
+    parse: (frag) => String(frag["homepage"] ?? ""),
+    initial: "",
+  });
+  return React.useSyncExternalStore(field.subscribe, field.getSnapshot, field.getSnapshot);
 }
 
-export function useKitLicense(idValue?: string): KitFieldBinding<any> {
-  return useSchemaFieldState("Kit", "license", idValue);
+export function useKitLicense(_idValue?: string): string {
+  void _idValue;
+  const client = useKitStoreClient();
+  if (!client) return "";
+  const field = client.materializedKitStoreField<string>("kit:license", {
+    innerOnKit: "license",
+    parse: (frag) => String(frag["license"] ?? ""),
+    initial: "",
+  });
+  return React.useSyncExternalStore(field.subscribe, field.getSnapshot, field.getSnapshot);
 }
 
 export function useKitPreview(idValue?: string): KitFieldBinding<any> {
   return useSchemaFieldState("Kit", "preview", idValue);
 }
 
-export function useKitIcon(idValue?: string): KitFieldBinding<any> {
-  return useSchemaFieldState("Kit", "icon", idValue);
+export function useKitIcon(_idValue?: string): string {
+  void _idValue;
+  const client = useKitStoreClient();
+  if (!client) return "";
+  const field = client.materializedKitStoreField<string>("kit:icon", {
+    innerOnKit: "icon",
+    parse: (frag) => String(frag["icon"] ?? ""),
+    initial: "",
+  });
+  return React.useSyncExternalStore(field.subscribe, field.getSnapshot, field.getSnapshot);
 }
 
-export function useKitImage(idValue?: string): KitFieldBinding<any> {
-  return useSchemaFieldState("Kit", "image", idValue);
+export function useKitImage(_idValue?: string): string {
+  void _idValue;
+  const client = useKitStoreClient();
+  if (!client) return "";
+  const field = client.materializedKitStoreField<string>("kit:image", {
+    innerOnKit: "image",
+    parse: (frag) => String(frag["image"] ?? ""),
+    initial: "",
+  });
+  return React.useSyncExternalStore(field.subscribe, field.getSnapshot, field.getSnapshot);
 }
 
-export function useKitDescription(idValue?: string): KitFieldBinding<any> {
-  return useSchemaFieldState("Kit", "description", idValue);
+export function useKitDescription(_idValue?: string): string {
+  void _idValue;
+  const client = useKitStoreClient();
+  if (!client) return "";
+  const field = client.materializedKitStoreField<string>("kit:description", {
+    innerOnKit: "description",
+    parse: (frag) => String(frag["description"] ?? ""),
+    initial: "",
+  });
+  return React.useSyncExternalStore(field.subscribe, field.getSnapshot, field.getSnapshot);
 }
 
 export function useKitAttributes(idValue?: string): KitFieldBinding<any> {
@@ -17277,7 +17468,7 @@ if (shouldRunReactEmbeddedTests) {
       expect(typeof c.readDesignReplaceableCatalogTypes).toBe("function");
     });
 
-    it("kit metadata hooks write through the kit client", async () => {
+    it("kit metadata hooks write through the kit client (segregated read+mutation pattern)", async () => {
       const kit = asKitInstance({
         id: "k1",
         name: "K",
@@ -17286,40 +17477,25 @@ if (shouldRunReactEmbeddedTests) {
       });
       const store = new InMemoryKitStore(kit);
       const kitClient = createTestKitClient(store);
-      let setName: ((v: any) => Promise<any>) | undefined;
-      let setRelease: ((v: any) => Promise<any>) | undefined;
-      let setDescription: ((v: any) => Promise<any>) | undefined;
-      let setIcon: ((v: any) => Promise<any>) | undefined;
-      let setImage: ((v: any) => Promise<any>) | undefined;
-      let setHomepage: ((v: any) => Promise<any>) | undefined;
-      let setLicense: ((v: any) => Promise<any>) | undefined;
+      let setName: ((v: string) => Promise<any>) | undefined;
+      let patchKit: ((p: Record<string, unknown>) => Promise<any>) | undefined;
       let client: KitStoreClient | null = null;
 
       function Probe() {
         setName = useRenameKit()[0];
-        setRelease = useKitRelease()[1];
-        setDescription = useKitDescription()[1];
-        setIcon = useKitIcon()[1];
-        setImage = useKitImage()[1];
-        setHomepage = useKitHomepage()[1];
-        setLicense = useKitLicense()[1];
+        patchKit = usePatchKit().run;
         client = useKitStoreClient();
         return null;
       }
 
       render(React.createElement(KitScope, { store, kitClient, children: React.createElement(Probe) }));
       await waitFor(() => {
-        expect(setLicense).toBeDefined();
+        expect(patchKit).toBeDefined();
         expect(client).not.toBeNull();
       });
 
       expect((await setName!("Renamed Kit")).ok).toBe(true);
-      expect((await setRelease!("1.2.3")).ok).toBe(true);
-      expect((await setDescription!("Updated description")).ok).toBe(true);
-      expect((await setIcon!("spark")).ok).toBe(true);
-      expect((await setImage!("kit.png")).ok).toBe(true);
-      expect((await setHomepage!("https://semio.example")).ok).toBe(true);
-      expect((await setLicense!("LGPL-3.0-or-later")).ok).toBe(true);
+      expect((await patchKit!({ release: "1.2.3", description: "Updated description", icon: "spark", image: "kit.png", homepage: "https://semio.example", license: "LGPL-3.0-or-later" })).ok).toBe(true);
 
       await waitFor(() => {
         const next = store.getSnapshot().kit.toJSON();
@@ -17668,7 +17844,7 @@ if (shouldRunReactEmbeddedTests) {
   });
 
   describe("kit data scope", () => {
-    it("KitScope kitReadPoint prop drives setKitReadPoint and useKitDataScope (checkpoint line)", async () => {
+    it("KitScope kitReadPoint prop drives setKitReadPoint and useKitReadPoint (checkpoint line)", async () => {
       const log: string[] = [];
       const kit = asKitInstance({
         id: "k1",
@@ -17689,7 +17865,7 @@ if (shouldRunReactEmbeddedTests) {
       const ck: KitReadPoint = { checkpoint: { checkpointId: "cpx" } };
       let got: KitReadPoint | null = null;
       function Leaf() {
-        got = useKitDataScope();
+        got = useKitReadPoint();
         return null;
       }
       const tree = React.createElement(KitScope, {
@@ -17732,7 +17908,7 @@ if (shouldRunReactEmbeddedTests) {
         React.useEffect(() => {
           setAlt("alt-7");
         }, [setAlt]);
-        useKitDataScope();
+        useKitReadPoint();
         return null;
       }
       const tree = React.createElement(KitAlternativeSelectionProvider, {
