@@ -1795,10 +1795,6 @@ type QualityModificationsConnection implements EntityConnection {
 
 #region Operations
 
-type CreatedQualityScope {
-  ownerId: ID! # data
-}
-
 type CreatedQualityInput {
   quality: Quality! # data
 }
@@ -1813,10 +1809,6 @@ type CreatedQuality implements Operation {
   input: CreatedQualityInput! # data
   modification: Modification! # computed
   quality: Quality! # data
-}
-
-type CreatedQualitiesScope {
-  ownerId: ID! # data
 }
 
 type CreatedQualitiesInput {
@@ -1835,10 +1827,6 @@ type CreatedQualities implements Operation {
   qualities: QualityConnection! # data
 }
 
-type RenamedQualityScope {
-  qualityId: ID! # data
-}
-
 type RenamedQualityInput {
   key: String! # data
 }
@@ -1853,10 +1841,6 @@ type RenamedQuality implements Operation {
   input: RenamedQualityInput! # data
   modification: Modification! # computed
   quality: Quality! # data
-}
-
-type UpdatedQualityDescriptionScope {
-  qualityId: ID! # data
 }
 
 type UpdatedQualityDescriptionInput {
@@ -1875,10 +1859,6 @@ type UpdatedQualityDescription implements Operation {
   quality: Quality! # data
 }
 
-type UpdatedQualityIconScope {
-  qualityId: ID! # data
-}
-
 type UpdatedQualityIconInput {
   icon: String! # data
 }
@@ -1893,10 +1873,6 @@ type UpdatedQualityIcon implements Operation {
   input: UpdatedQualityIconInput! # data
   modification: Modification! # computed
   quality: Quality! # data
-}
-
-type AddedAttributeToQualityScope {
-  qualityId: ID! # data
 }
 
 type AddedAttributeToQualityInput {
@@ -1916,10 +1892,6 @@ type AddedAttributeToQuality implements Operation {
   attribute: Attribute! # data
 }
 
-type AddedAttributesToQualityScope {
-  qualityId: ID! # data
-}
-
 type AddedAttributesToQualityInput {
   attributes: AttributeConnection! # data
 }
@@ -1935,11 +1907,6 @@ type AddedAttributesToQuality implements Operation {
   modification: Modification! # computed
   quality: Quality! # data
   attributes: AttributeConnection! # data
-}
-
-type RemovedAttributeFromQualityScope {
-  qualityId: ID! # data
-  attributeId: ID! # data
 }
 
 type RemovedAttributeFromQualityInput {
@@ -1958,11 +1925,6 @@ type RemovedAttributeFromQuality implements Operation {
   quality: Quality! # data
 }
 
-type RemovedAttributesFromQualityScope {
-  qualityId: ID! # data
-  attributeIds: [ID!]! # data
-}
-
 type RemovedAttributesFromQualityInput {
   hasInput: Boolean! # computed // false when all operation data is carried by scope
 }
@@ -1979,10 +1941,6 @@ type RemovedAttributesFromQuality implements Operation {
   quality: Quality! # data
 }
 
-type DeletedQualityScope {
-  qualityId: ID! # data
-}
-
 type DeletedQualityInput {
   hasInput: Boolean! # computed // false when all operation data is carried by scope
 }
@@ -1996,10 +1954,6 @@ type DeletedQuality implements Operation {
   scope: Entity! # reference // Quality
   input: DeletedQualityInput! # data
   modification: Modification! # computed
-}
-
-type DeletedQualitiesScope {
-  qualityIds: [ID!]! # data
 }
 
 type DeletedQualitiesInput {
@@ -2121,10 +2075,6 @@ type TagModificationsConnection implements EntityConnection {
 
 #region Operations
 
-type CreatedTagScope {
-  ownerId: ID! # data
-}
-
 type CreatedTagInput {
   tag: Tag! # data
 }
@@ -2139,10 +2089,6 @@ type CreatedTag implements Operation {
   input: CreatedTagInput! # data
   modification: Modification! # computed
   tag: Tag! # data
-}
-
-type CreatedTagsScope {
-  ownerId: ID! # data
 }
 
 type CreatedTagsInput {
@@ -2161,10 +2107,6 @@ type CreatedTags implements Operation {
   tags: TagConnection! # data
 }
 
-type RenamedTagScope {
-  tagId: ID! # data
-}
-
 type RenamedTagInput {
   name: String! # data
 }
@@ -2179,10 +2121,6 @@ type RenamedTag implements Operation {
   input: RenamedTagInput! # data
   modification: Modification! # computed
   tag: Tag! # data
-}
-
-type UpdatedTagDescriptionScope {
-  tagId: ID! # data
 }
 
 type UpdatedTagDescriptionInput {
@@ -2201,10 +2139,6 @@ type UpdatedTagDescription implements Operation {
   tag: Tag! # data
 }
 
-type UpdatedTagIconScope {
-  tagId: ID! # data
-}
-
 type UpdatedTagIconInput {
   icon: String! # data
 }
@@ -2219,10 +2153,6 @@ type UpdatedTagIcon implements Operation {
   input: UpdatedTagIconInput! # data
   modification: Modification! # computed
   tag: Tag! # data
-}
-
-type AddedAttributeToTagScope {
-  tagId: ID! # data
 }
 
 type AddedAttributeToTagInput {
@@ -2242,10 +2172,6 @@ type AddedAttributeToTag implements Operation {
   attribute: Attribute! # data
 }
 
-type AddedAttributesToTagScope {
-  tagId: ID! # data
-}
-
 type AddedAttributesToTagInput {
   attributes: AttributeConnection! # data
 }
@@ -2261,11 +2187,6 @@ type AddedAttributesToTag implements Operation {
   modification: Modification! # computed
   tag: Tag! # data
   attributes: AttributeConnection! # data
-}
-
-type RemovedAttributeFromTagScope {
-  tagId: ID! # data
-  attributeId: ID! # data
 }
 
 type RemovedAttributeFromTagInput {
@@ -2284,11 +2205,6 @@ type RemovedAttributeFromTag implements Operation {
   tag: Tag! # data
 }
 
-type RemovedAttributesFromTagScope {
-  tagId: ID! # data
-  attributeIds: [ID!]! # data
-}
-
 type RemovedAttributesFromTagInput {
   hasInput: Boolean! # computed // false when all operation data is carried by scope
 }
@@ -2305,10 +2221,6 @@ type RemovedAttributesFromTag implements Operation {
   tag: Tag! # data
 }
 
-type DeletedTagScope {
-  tagId: ID! # data
-}
-
 type DeletedTagInput {
   hasInput: Boolean! # computed // false when all operation data is carried by scope
 }
@@ -2322,10 +2234,6 @@ type DeletedTag implements Operation {
   scope: Entity! # reference // Tag
   input: DeletedTagInput! # data
   modification: Modification! # computed
-}
-
-type DeletedTagsScope {
-  tagIds: [ID!]! # data
 }
 
 type DeletedTagsInput {
@@ -2447,10 +2355,6 @@ type ConceptModificationsConnection implements EntityConnection {
 
 #region Operations
 
-type CreatedConceptScope {
-  ownerId: ID! # data
-}
-
 type CreatedConceptInput {
   concept: Concept! # data
 }
@@ -2465,10 +2369,6 @@ type CreatedConcept implements Operation {
   input: CreatedConceptInput! # data
   modification: Modification! # computed
   concept: Concept! # data
-}
-
-type CreatedConceptsScope {
-  ownerId: ID! # data
 }
 
 type CreatedConceptsInput {
@@ -2487,10 +2387,6 @@ type CreatedConcepts implements Operation {
   concepts: ConceptConnection! # data
 }
 
-type RenamedConceptScope {
-  conceptId: ID! # data
-}
-
 type RenamedConceptInput {
   name: String! # data
 }
@@ -2505,10 +2401,6 @@ type RenamedConcept implements Operation {
   input: RenamedConceptInput! # data
   modification: Modification! # computed
   concept: Concept! # data
-}
-
-type UpdatedConceptDescriptionScope {
-  conceptId: ID! # data
 }
 
 type UpdatedConceptDescriptionInput {
@@ -2527,10 +2419,6 @@ type UpdatedConceptDescription implements Operation {
   concept: Concept! # data
 }
 
-type UpdatedConceptIconScope {
-  conceptId: ID! # data
-}
-
 type UpdatedConceptIconInput {
   icon: String! # data
 }
@@ -2545,10 +2433,6 @@ type UpdatedConceptIcon implements Operation {
   input: UpdatedConceptIconInput! # data
   modification: Modification! # computed
   concept: Concept! # data
-}
-
-type AddedAttributeToConceptScope {
-  conceptId: ID! # data
 }
 
 type AddedAttributeToConceptInput {
@@ -2568,10 +2452,6 @@ type AddedAttributeToConcept implements Operation {
   attribute: Attribute! # data
 }
 
-type AddedAttributesToConceptScope {
-  conceptId: ID! # data
-}
-
 type AddedAttributesToConceptInput {
   attributes: AttributeConnection! # data
 }
@@ -2587,11 +2467,6 @@ type AddedAttributesToConcept implements Operation {
   modification: Modification! # computed
   concept: Concept! # data
   attributes: AttributeConnection! # data
-}
-
-type RemovedAttributeFromConceptScope {
-  conceptId: ID! # data
-  attributeId: ID! # data
 }
 
 type RemovedAttributeFromConceptInput {
@@ -2610,11 +2485,6 @@ type RemovedAttributeFromConcept implements Operation {
   concept: Concept! # data
 }
 
-type RemovedAttributesFromConceptScope {
-  conceptId: ID! # data
-  attributeIds: [ID!]! # data
-}
-
 type RemovedAttributesFromConceptInput {
   hasInput: Boolean! # computed // false when all operation data is carried by scope
 }
@@ -2631,10 +2501,6 @@ type RemovedAttributesFromConcept implements Operation {
   concept: Concept! # data
 }
 
-type DeletedConceptScope {
-  conceptId: ID! # data
-}
-
 type DeletedConceptInput {
   hasInput: Boolean! # computed // false when all operation data is carried by scope
 }
@@ -2648,10 +2514,6 @@ type DeletedConcept implements Operation {
   scope: Entity! # reference // Concept
   input: DeletedConceptInput! # data
   modification: Modification! # computed
-}
-
-type DeletedConceptsScope {
-  conceptIds: [ID!]! # data
 }
 
 type DeletedConceptsInput {
@@ -2875,10 +2737,6 @@ type PortModificationsConnection implements EntityConnection {
 
 #region Operations
 
-type CreatedPortScope {
-  ownerId: ID! # data
-}
-
 type CreatedPortInput {
   port: Port! # data
 }
@@ -2895,10 +2753,6 @@ type CreatedPort implements Operation {
   port: Port! # data
 }
 
-type CreatedPortsScope {
-  ownerId: ID! # data
-}
-
 type CreatedPortsInput {
   ports: PortConnection! # data
 }
@@ -2913,10 +2767,6 @@ type CreatedPorts implements Operation {
   input: CreatedPortsInput! # data
   modification: Modification! # computed
   ports: PortConnection! # data
-}
-
-type RenamedPortScope {
-  portId: ID! # data
 }
 
 type RenamedPortInput {
@@ -2936,10 +2786,6 @@ type RenamedPort implements Operation {
   port: Port! # data
 }
 
-type UpdatedPortDescriptionScope {
-  portId: ID! # data
-}
-
 type UpdatedPortDescriptionInput {
   description: String! # data
 }
@@ -2956,10 +2802,6 @@ type UpdatedPortDescription implements Operation {
   port: Port! # data
 }
 
-type UpdatedPortIconScope {
-  portId: ID! # data
-}
-
 type UpdatedPortIconInput {
   icon: String! # data
 }
@@ -2974,10 +2816,6 @@ type UpdatedPortIcon implements Operation {
   input: UpdatedPortIconInput! # data
   modification: Modification! # computed
   port: Port! # data
-}
-
-type AddedAttributeToPortScope {
-  portId: ID! # data
 }
 
 type AddedAttributeToPortInput {
@@ -2997,10 +2835,6 @@ type AddedAttributeToPort implements Operation {
   attribute: Attribute! # data
 }
 
-type AddedAttributesToPortScope {
-  portId: ID! # data
-}
-
 type AddedAttributesToPortInput {
   attributes: AttributeConnection! # data
 }
@@ -3016,11 +2850,6 @@ type AddedAttributesToPort implements Operation {
   modification: Modification! # computed
   port: Port! # data
   attributes: AttributeConnection! # data
-}
-
-type RemovedAttributeFromPortScope {
-  portId: ID! # data
-  attributeId: ID! # data
 }
 
 type RemovedAttributeFromPortInput {
@@ -3039,11 +2868,6 @@ type RemovedAttributeFromPort implements Operation {
   port: Port! # data
 }
 
-type RemovedAttributesFromPortScope {
-  portId: ID! # data
-  attributeIds: [ID!]! # data
-}
-
 type RemovedAttributesFromPortInput {
   hasInput: Boolean! # computed // false when all operation data is carried by scope
 }
@@ -3060,10 +2884,6 @@ type RemovedAttributesFromPort implements Operation {
   port: Port! # data
 }
 
-type DeletedPortScope {
-  portId: ID! # data
-}
-
 type DeletedPortInput {
   hasInput: Boolean! # computed // false when all operation data is carried by scope
 }
@@ -3077,10 +2897,6 @@ type DeletedPort implements Operation {
   scope: Entity! # reference // Port
   input: DeletedPortInput! # data
   modification: Modification! # computed
-}
-
-type DeletedPortsScope {
-  portIds: [ID!]! # data
 }
 
 type DeletedPortsInput {
@@ -3428,10 +3244,6 @@ type TypeModificationsConnection implements EntityConnection {
 
 #region Operations
 
-type CreatedTypeScope {
-  ownerId: ID! # data
-}
-
 type CreatedTypeInput {
   type: Type! # data
 }
@@ -3446,10 +3258,6 @@ type CreatedType implements Operation {
   input: CreatedTypeInput! # data
   modification: Modification! # computed
   type: Type! # data
-}
-
-type CreatedTypesScope {
-  ownerId: ID! # data
 }
 
 type CreatedTypesInput {
@@ -3468,10 +3276,6 @@ type CreatedTypes implements Operation {
   types: TypeConnection! # data
 }
 
-type RenamedTypeScope {
-  typeId: ID! # data
-}
-
 type RenamedTypeInput {
   name: String! # data
 }
@@ -3486,10 +3290,6 @@ type RenamedType implements Operation {
   input: RenamedTypeInput! # data
   modification: Modification! # computed
   type: Type! # data
-}
-
-type UpdatedTypeDescriptionScope {
-  typeId: ID! # data
 }
 
 type UpdatedTypeDescriptionInput {
@@ -3508,10 +3308,6 @@ type UpdatedTypeDescription implements Operation {
   type: Type! # data
 }
 
-type UpdatedTypeIconScope {
-  typeId: ID! # data
-}
-
 type UpdatedTypeIconInput {
   icon: String! # data
 }
@@ -3526,10 +3322,6 @@ type UpdatedTypeIcon implements Operation {
   input: UpdatedTypeIconInput! # data
   modification: Modification! # computed
   type: Type! # data
-}
-
-type AddedAttributeToTypeScope {
-  typeId: ID! # data
 }
 
 type AddedAttributeToTypeInput {
@@ -3549,10 +3341,6 @@ type AddedAttributeToType implements Operation {
   attribute: Attribute! # data
 }
 
-type AddedAttributesToTypeScope {
-  typeId: ID! # data
-}
-
 type AddedAttributesToTypeInput {
   attributes: AttributeConnection! # data
 }
@@ -3568,11 +3356,6 @@ type AddedAttributesToType implements Operation {
   modification: Modification! # computed
   type: Type! # data
   attributes: AttributeConnection! # data
-}
-
-type RemovedAttributeFromTypeScope {
-  typeId: ID! # data
-  attributeId: ID! # data
 }
 
 type RemovedAttributeFromTypeInput {
@@ -3591,11 +3374,6 @@ type RemovedAttributeFromType implements Operation {
   type: Type! # data
 }
 
-type RemovedAttributesFromTypeScope {
-  typeId: ID! # data
-  attributeIds: [ID!]! # data
-}
-
 type RemovedAttributesFromTypeInput {
   hasInput: Boolean! # computed // false when all operation data is carried by scope
 }
@@ -3612,10 +3390,6 @@ type RemovedAttributesFromType implements Operation {
   type: Type! # data
 }
 
-type DeletedTypeScope {
-  typeId: ID! # data
-}
-
 type DeletedTypeInput {
   hasInput: Boolean! # computed // false when all operation data is carried by scope
 }
@@ -3629,10 +3403,6 @@ type DeletedType implements Operation {
   scope: Entity! # reference // Type
   input: DeletedTypeInput! # data
   modification: Modification! # computed
-}
-
-type DeletedTypesScope {
-  typeIds: [ID!]! # data
 }
 
 type DeletedTypesInput {
@@ -3652,10 +3422,6 @@ type DeletedTypes implements Operation {
 
 #region Connector
 
-type AddedConnectorScope {
-  typeId: ID! # data
-}
-
 type AddedConnectorInput {
   connector: Connector! # data
 }
@@ -3671,10 +3437,6 @@ type AddedConnector implements Operation {
   modification: Modification! # computed
   type: Type! # data
   connector: Connector! # data
-}
-
-type AddedConnectorsScope {
-  typeId: ID! # data
 }
 
 type AddedConnectorsInput {
@@ -3694,10 +3456,6 @@ type AddedConnectors implements Operation {
   connectors: ConnectorConnection! # data
 }
 
-type RenamedConnectorScope {
-  connectorId: ID! # data
-}
-
 type RenamedConnectorInput {
   code: String! # data
 }
@@ -3712,10 +3470,6 @@ type RenamedConnector implements Operation {
   input: RenamedConnectorInput! # data
   modification: Modification! # computed
   connector: Connector! # data
-}
-
-type UpdatedConnectorDescriptionScope {
-  connectorId: ID! # data
 }
 
 type UpdatedConnectorDescriptionInput {
@@ -3734,10 +3488,6 @@ type UpdatedConnectorDescription implements Operation {
   connector: Connector! # data
 }
 
-type UpdatedConnectorIconScope {
-  connectorId: ID! # data
-}
-
 type UpdatedConnectorIconInput {
   icon: String! # data
 }
@@ -3754,10 +3504,6 @@ type UpdatedConnectorIcon implements Operation {
   connector: Connector! # data
 }
 
-type RemovedConnectorScope {
-  connectorId: ID! # data
-}
-
 type RemovedConnectorInput {
   hasInput: Boolean! # computed // false when all operation data is carried by scope
 }
@@ -3772,10 +3518,6 @@ type RemovedConnector implements Operation {
   input: RemovedConnectorInput! # data
   modification: Modification! # computed
   type: Type! # data
-}
-
-type RemovedConnectorsScope {
-  connectorIds: [ID!]! # data
 }
 
 type RemovedConnectorsInput {
@@ -4235,10 +3977,6 @@ type ConnectionModificationsConnection implements EntityConnection {
 
 #region Operations
 
-type AddedFixedPieceScope {
-  designId: ID!
-}
-
 type AddedFixedPieceInput {
   blueprintId: ID!
   position: Position!
@@ -4258,11 +3996,6 @@ type AddedFixedPiece implements Operation {
   piece: Piece! # data
 }
 
-type FixedPieceScope {
-  designId: ID!
-  pieceId: ID!
-}
-
 type FixedPieceInput {
   hasInput: Boolean! # computed // false when all operation data is carried by scope
 }
@@ -4277,11 +4010,6 @@ type FixedPiece implements Operation {
   input: FixedPieceInput! # data
   modification: Modification! # computed
   piece: Piece! # data
-}
-
-type DraggedPiecesScope {
-  designId: ID!
-  pieceIds: [ID!]!
 }
 
 type DraggedPiecesInput {
@@ -4300,11 +4028,6 @@ type DraggedPieces implements Operation {
   pieces: PieceConnection! # data
 }
 
-type DraggedPieceScope {
-  designId: ID! # data
-  pieceId: ID! # data
-}
-
 type DraggedPieceInput {
   offset: Offset! # data
 }
@@ -4319,10 +4042,6 @@ type DraggedPiece implements Operation {
   input: DraggedPieceInput! # data
   modification: Modification! # computed
   piece: Piece! # data
-}
-
-type AddedChildPieceWithParentConnectionScope {
-  designId: ID! # data
 }
 
 type AddedChildPieceWithParentConnectionInput {
@@ -4343,10 +4062,6 @@ type AddedChildPieceWithParentConnection implements Operation {
   connection: Connection! # data
 }
 
-type AddedChildPiecesWithParentConnectionsScope {
-  designId: ID! # data
-}
-
 type AddedChildPiecesWithParentConnectionsInput {
   pieces: PieceConnection! # data
   connections: ConnectionConnection! # data
@@ -4363,10 +4078,6 @@ type AddedChildPiecesWithParentConnections implements Operation {
   modification: Modification! # computed
   pieces: PieceConnection! # data
   connections: ConnectionConnection! # data
-}
-
-type AddedHangingChildPieceWithParentConnectionScope {
-  designId: ID! # data
 }
 
 type AddedHangingChildPieceWithParentConnectionInput {
@@ -4387,10 +4098,6 @@ type AddedHangingChildPieceWithParentConnection implements Operation {
   connection: Connection! # data
 }
 
-type AddedHangingChildPiecesWithParentConnectionsScope {
-  designId: ID! # data
-}
-
 type AddedHangingChildPiecesWithParentConnectionsInput {
   pieces: PieceConnection! # data
   connections: ConnectionConnection! # data
@@ -4409,10 +4116,6 @@ type AddedHangingChildPiecesWithParentConnections implements Operation {
   connections: ConnectionConnection! # data
 }
 
-type RenamedPieceScope {
-  pieceId: ID! # data
-}
-
 type RenamedPieceInput {
   name: String! # data
 }
@@ -4427,10 +4130,6 @@ type RenamedPiece implements Operation {
   input: RenamedPieceInput! # data
   modification: Modification! # computed
   piece: Piece! # data
-}
-
-type UpdatedPieceDescriptionScope {
-  pieceId: ID! # data
 }
 
 type UpdatedPieceDescriptionInput {
@@ -4449,11 +4148,6 @@ type UpdatedPieceDescription implements Operation {
   piece: Piece! # data
 }
 
-type MovedPieceScope {
-  designId: ID! # data
-  pieceId: ID! # data
-}
-
 type MovedPieceInput {
   position: Position! # data
 }
@@ -4468,11 +4162,6 @@ type MovedPiece implements Operation {
   input: MovedPieceInput! # data
   modification: Modification! # computed
   piece: Piece! # data
-}
-
-type MovedPiecesScope {
-  designId: ID! # data
-  pieceIds: [ID!]! # data
 }
 
 type MovedPiecesInput {
@@ -4491,11 +4180,6 @@ type MovedPieces implements Operation {
   pieces: PieceConnection! # data
 }
 
-type FixedPiecesScope {
-  designId: ID! # data
-  pieceIds: [ID!]! # data
-}
-
 type FixedPiecesInput {
   hasInput: Boolean! # computed // false when all operation data is carried by scope
 }
@@ -4510,10 +4194,6 @@ type FixedPieces implements Operation {
   input: FixedPiecesInput! # data
   modification: Modification! # computed
   pieces: PieceConnection! # data
-}
-
-type ChangedPieceToTypeScope {
-  pieceId: ID! # data
 }
 
 type ChangedPieceToTypeInput {
@@ -4532,10 +4212,6 @@ type ChangedPieceToType implements Operation {
   piece: Piece! # data
 }
 
-type ChangedPiecesToTypeScope {
-  pieceIds: [ID!]! # data
-}
-
 type ChangedPiecesToTypeInput {
   blueprintId: ID! # data
 }
@@ -4550,10 +4226,6 @@ type ChangedPiecesToType implements Operation {
   input: ChangedPiecesToTypeInput! # data
   modification: Modification! # computed
   pieces: PieceConnection! # data
-}
-
-type AddedAttributeToPieceScope {
-  pieceId: ID! # data
 }
 
 type AddedAttributeToPieceInput {
@@ -4573,10 +4245,6 @@ type AddedAttributeToPiece implements Operation {
   attribute: Attribute! # data
 }
 
-type AddedAttributesToPieceScope {
-  pieceId: ID! # data
-}
-
 type AddedAttributesToPieceInput {
   attributes: AttributeConnection! # data
 }
@@ -4592,11 +4260,6 @@ type AddedAttributesToPiece implements Operation {
   modification: Modification! # computed
   piece: Piece! # data
   attributes: AttributeConnection! # data
-}
-
-type RemovedAttributeFromPieceScope {
-  pieceId: ID! # data
-  attributeId: ID! # data
 }
 
 type RemovedAttributeFromPieceInput {
@@ -4615,11 +4278,6 @@ type RemovedAttributeFromPiece implements Operation {
   piece: Piece! # data
 }
 
-type RemovedAttributesFromPieceScope {
-  pieceId: ID! # data
-  attributeIds: [ID!]! # data
-}
-
 type RemovedAttributesFromPieceInput {
   hasInput: Boolean! # computed // false when all operation data is carried by scope
 }
@@ -4634,11 +4292,6 @@ type RemovedAttributesFromPiece implements Operation {
   input: RemovedAttributesFromPieceInput! # data
   modification: Modification! # computed
   piece: Piece! # data
-}
-
-type DeletedPieceScope {
-  designId: ID! # data
-  pieceId: ID! # data
 }
 
 type DeletedPieceInput {
@@ -4656,11 +4309,6 @@ type DeletedPiece implements Operation {
   modification: Modification! # computed
 }
 
-type DeletedPiecesScope {
-  designId: ID! # data
-  pieceIds: [ID!]! # data
-}
-
 type DeletedPiecesInput {
   hasInput: Boolean! # computed // false when all operation data is carried by scope
 }
@@ -4674,12 +4322,6 @@ type DeletedPieces implements Operation {
   scope: Entity! # reference // Design | Piece
   input: DeletedPiecesInput! # data
   modification: Modification! # computed
-}
-
-type DeletedPiecesAndConnectionsScope {
-  designId: ID! # data
-  pieceIds: [ID!]! # data
-  connectionIds: [ID!]! # data
 }
 
 type DeletedPiecesAndConnectionsInput {
@@ -4955,10 +4597,6 @@ type DesignModificationsConnection implements EntityConnection {
 
 #region Operations
 
-type CreatedDesignScope {
-  ownerId: ID! # data
-}
-
 type CreatedDesignInput {
   design: Design! # data
 }
@@ -4973,10 +4611,6 @@ type CreatedDesign implements Operation {
   input: CreatedDesignInput! # data
   modification: Modification! # computed
   design: Design! # data
-}
-
-type CreatedDesignsScope {
-  ownerId: ID! # data
 }
 
 type CreatedDesignsInput {
@@ -4995,10 +4629,6 @@ type CreatedDesigns implements Operation {
   designs: DesignConnection! # data
 }
 
-type DeletedDesignScope {
-  designId: ID! # data
-}
-
 type DeletedDesignInput {
   hasInput: Boolean! # computed // false when all operation data is carried by scope
 }
@@ -5012,10 +4642,6 @@ type DeletedDesign implements Operation {
   scope: Entity! # reference // Design
   input: DeletedDesignInput! # data
   modification: Modification! # computed
-}
-
-type DeletedDesignsScope {
-  designIds: [ID!]! # data
 }
 
 type DeletedDesignsInput {
@@ -5033,10 +4659,6 @@ type DeletedDesigns implements Operation {
   modification: Modification! # computed
 }
 
-type FlattenedDesignScope {
-  designId: ID! # data
-}
-
 type FlattenedDesignInput {
   hasInput: Boolean! # computed // false when all operation data is carried by scope
 }
@@ -5051,10 +4673,6 @@ type FlattenedDesign implements Operation {
   input: FlattenedDesignInput! # data
   modification: Modification! # computed
   design: Design! # data
-}
-
-type AddedAttributeToDesignScope {
-  designId: ID! # data
 }
 
 type AddedAttributeToDesignInput {
@@ -5074,10 +4692,6 @@ type AddedAttributeToDesign implements Operation {
   attribute: Attribute! # data
 }
 
-type AddedAttributesToDesignScope {
-  designId: ID! # data
-}
-
 type AddedAttributesToDesignInput {
   attributes: AttributeConnection! # data
 }
@@ -5095,11 +4709,6 @@ type AddedAttributesToDesign implements Operation {
   attributes: AttributeConnection! # data
 }
 
-type RemovedAttributeFromDesignScope {
-  designId: ID! # data
-  attributeId: ID! # data
-}
-
 type RemovedAttributeFromDesignInput {
   hasInput: Boolean! # computed // false when all operation data is carried by scope
 }
@@ -5114,11 +4723,6 @@ type RemovedAttributeFromDesign implements Operation {
   input: RemovedAttributeFromDesignInput! # data
   modification: Modification! # computed
   design: Design! # data
-}
-
-type RemovedAttributesFromDesignScope {
-  designId: ID! # data
-  attributeIds: [ID!]! # data
 }
 
 type RemovedAttributesFromDesignInput {
@@ -5284,10 +4888,6 @@ type KitModificationsConnection implements EntityConnection {
 
 #region Operations
 
-type RenamedKitScope {
-  kitId: ID! # data
-}
-
 type RenamedKitInput {
   name: String!
 }
@@ -5302,10 +4902,6 @@ type RenamedKit implements Operation {
   input: RenamedKitInput! # data
   modification: Modification! # computed
   kit: Kit! # data
-}
-
-type ChangedDescriptionScope {
-  entityId: ID!
 }
 
 type ChangedDescriptionInput {
