@@ -9,6 +9,7 @@
 3. Mutation `input` arguments wrapped existing `input` GraphQL types in single-field `*Input` wrappers (e.g. `CreateTagInput { tag: TagInput! }`, `AddAttributeToTagInput { attribute: AttributeInput! }`). Only operation GraphQL types (with primitive operation-specific fields like `RenameKitInput { name: String! }`) MUST keep `input` wrappers.
 4. Several mutations had `*Input { hasInput: Boolean = false }` placeholder wrappers (delete/remove/flatten/fix) — they MUST disappear; the inlined args already carry the data.
 5. Every entity type duplicated the general interface fields `ownerEntity: OwnerEntity` / `ownedEntities: OwnedEntityConnection` with narrow-typed projections (`owner: VectorOwner!`, `planeOwner: Plane`, `planeDiffOwner: PlaneDiff`, …) and spine references (`ownerModifications: Modifications`, `changeOwner: Change`, `operationOwner: Operation`, …). Only the general interface fields MUST remain.
+6. The schema carried 393 narrow `union` declarations (`OwnerEntity`, `OwnedEntityConnection`, `VectorOwner`, `Scope`, `Input`, `Blueprint`, etc.) that are no longer necessary now that fields are typed against the general interfaces (`Entity`, `EntityConnection`). All unions MUST be removed; union-typed fields MUST be retyped to the general interface and document the previous union members in a trailing `// Member1 | Member2 | …` comment.
 
 ## Changes
 
@@ -26,6 +27,13 @@
   - Removed the placeholder doc comments `# owner: ENTITY # reference`, `# ENTITYOwner: ENTITYOwner # computed`, `# owns: ENTITYConnection # computed` from the interfaces.
   - Kept the general fields `ownerEntity: OwnerEntity # computed` and `ownedEntities: OwnedEntityConnection # computed` everywhere.
   - Total: **807 narrow-typed lines removed**. Every entity type/interface now has only `id`, `hash`, `ownerEntity`, `ownedEntities`, plus its own data fields. The narrow `*Owner` / `*Owned` unions are kept as documentation referenced from the `# computed // <X>Owner` comments.
+- `semio/graphql/target.schema.graphql` — removed every `union` declaration and retyped every union-typed field:
+  - **Removed all 393 unions** (5561 lines): `OwnerEntity`, `OwnedEntityConnection`, `EntityConnection` (the union, not the interface), `VectorOwner`, `VectorOwned`, `VectorDiffOwner`, every `*Owner` / `*Owned` / `*DiffOwner` / `*ModificationOwner` / `*ModificationsOwner` narrow union, plus `Scope`, `Input`, `Blueprint`.
+  - **Renamed `interface EntityConnectionInterface` → `interface EntityConnection`**, since the union previously holding that name has been removed.
+  - **Rewrote `ownerEntity: OwnerEntity # computed [// X]` → `owner: Entity # reference [// Member1 | Member2 | …]`** on 265 fields. Where the original line carried a narrow union annotation (e.g. `// VectorOwner`), the trailing comment now lists the union's members (`// Plane | PlaneDiff`). Where the original line referred only to the global `OwnerEntity` (no narrow annotation), the trailing comment is omitted to avoid noise — the field type `Entity` already conveys the meaning.
+  - **Rewrote `ownedEntities: OwnedEntityConnection # computed [// X]` → `owned: EntityConnection # reference [// Member1 | Member2 | …]`** on 265 fields, same rule.
+  - **Narrowed `scope: Scope!` and `input: Input!`** on every concrete operation type to its operation-specific concrete `*Scope!` / `*Input!` (95 + 95 fields). On `interface Operation` the fields are dropped entirely (each implementation now declares its own narrow scope/input).
+  - **Rewrote `blueprint: Blueprint(!)?` → `blueprint: Entity(!)? # … // Type | Design`** (2 fields) and `node: Blueprint! # reference` → `node: Entity! # reference // Type | Design` on `BlueprintEdge`.
 
 ## Verification
 
@@ -39,6 +47,10 @@
 - `rg "^  ownerEntity: OwnerEntity" semio/graphql/target.schema.graphql` → 265 matches (the general interface field is intact on every type and interface).
 - Sample entity (`type Vector implements WeakEntity`) now has only `id`, `hash`, `ownerEntity`, `ownedEntities`, `x`, `y`, `z`.
 - The owner-field cleanup adds 4 new `BUILD ERR` lines (`Renamed`, `AddedIcon`, `ChangedIcon`, `RemovedIcon`) — verified pre-existing in HEAD; not introduced by this ticket.
+- After the union removal: `parse OK`. The only `BUILD ERR`s are the 7 pre-existing unknown stub types (`Renamed`, `AddedIcon`, `ChangedIcon`, `RemovedIcon`, `AddedPreviewImage`, `ChangedPreviewImage`, `RemovedPreviewImage`) — verified present in HEAD; out of scope for this ticket.
+- `rg "^union\s" semio/graphql/target.schema.graphql` → 0 matches.
+- `rg "\bOwnerEntity\b|\bOwnedEntityConnection\b|\bEntityConnectionInterface\b" semio/graphql/target.schema.graphql` → 0 matches.
+- File size went from 12 198 → 5 828 lines (-52%). The schema now has 0 unions, narrow-typed scope/input on every concrete operation, and clean general-interface fields on every entity.
 
 ## Status
 
