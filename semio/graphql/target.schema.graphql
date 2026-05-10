@@ -71,6 +71,7 @@ interface Artifact implements StrongEntity {
   lastChangedAt: Timestamp # computed
   lastChangedBy: Author # computed
   lastChangedIn: Checkpoint # computed
+  changes: ChangeConnection # computed
   edits: EditConnection # computed
 }
 
@@ -91,6 +92,7 @@ interface Document implements Artifact {
   lastChangedAt: Timestamp # computed
   lastChangedBy: Author # computed
   lastChangedIn: Checkpoint # computed
+  changes: ChangeConnection # computed
   edits: EditConnection # computed
   # Document
   previewImage: File # reference // preview
@@ -136,7 +138,7 @@ interface Modification implements WeakEntity {
   id: ID! # computed // hash
   hash: String! # cached
   owner: Entity # reference // AddedAttributeToConcept | AddedAttributeToDesign | AddedAttributeToPiece | AddedAttributeToPort | AddedAttributeToQuality | AddedAttributeToTag | AddedAttributeToType | AddedAttributesToConcept | AddedAttributesToDesign | AddedAttributesToPiece | AddedAttributesToPort | AddedAttributesToQuality | AddedAttributesToTag | AddedAttributesToType | AddedChildPieceWithParentConnection | AddedChildPiecesWithParentConnections | AddedConnector | AddedConnectors | AddedFixedPiece | AddedHangingChildPieceWithParentConnection | AddedHangingChildPiecesWithParentConnections | Edit | ChangedDescription | ChangedPieceToType | ChangedPiecesToType | CreatedConcept | CreatedConcepts | CreatedDesign | CreatedDesigns | CreatedPort | CreatedPorts | CreatedQualities | CreatedQuality | CreatedTag | CreatedTags | CreatedType | CreatedTypes | DeletedConcept | DeletedConcepts | DeletedDesign | DeletedDesigns | DeletedPiece | DeletedPiecesAndConnections | DeletedPieces | DeletedPort | DeletedPorts | DeletedQualities | DeletedQuality | DeletedTag | DeletedTags | DeletedType | DeletedTypes | Modifications | DraggedPiece | DraggedPieces | FixedPiece | FixedPieces | FlattenedDesign | MovedPiece | MovedPieces | RemovedAttributeFromConcept | RemovedAttributeFromDesign | RemovedAttributeFromPiece | RemovedAttributeFromPort | RemovedAttributeFromQuality | RemovedAttributeFromTag | RemovedAttributeFromType | RemovedAttributesFromConcept | RemovedAttributesFromDesign | RemovedAttributesFromPiece | RemovedAttributesFromPort | RemovedAttributesFromQuality | RemovedAttributesFromTag | RemovedAttributesFromType | RemovedConnector | RemovedConnectors | RenamedConcept | RenamedConnector | RenamedKit | RenamedPiece | RenamedPort | RenamedQuality | RenamedTag | RenamedType | UpdatedConceptDescription | UpdatedConceptIcon | UpdatedConnectorDescription | UpdatedConnectorIcon | UpdatedPieceDescription | UpdatedPortDescription | UpdatedPortIcon | UpdatedQualityDescription | UpdatedQualityIcon | UpdatedTagDescription | UpdatedTagIcon | UpdatedTypeDescription | UpdatedTypeIcon
-  owns: EntityConnection # reference // AlternativeModification | AttributeModification | AuthorModification | BenchmarkModification | EditModification | CheckpointModification | ConceptModification | ConflictModification | ConnectionModification | ConnectorModification | CoordinateModification | DesignModification | AlternativeModification | FamilyModification | FileModification | FolderModification | GraphModification | GroupModification | KitModification | LayerModification | LocationModification | OffsetModification | PieceModification | PlaceModification | PointModification | PortModification | PositionModification | PropModification | QualityModification | ReadVersionModification | RepresentationModification | SessionModification | SideModification | StatModification | TagModification | TransactionModification | TypeModification | VectorModification | WriteVersionModification
+  owns: EntityConnection # reference // AlternativeModification | AttributeModification | AuthorModification | BenchmarkModification | EditModification | CheckpointModification | ConceptModification | ConflictModification | ConnectionModification | ConnectorModification | CoordinateModification | DesignModification | AlternativeModification | FamilyModification | FileModification | FolderModification | GraphModification | GroupModification | KitModification | LayerModification | LocationModification | OffsetModification | PieceModification | PlaceModification | PointModification | PortModification | PositionModification | PropModification | QualityModification | RepresentationModification | SessionModification | SideModification | StatModification | TypeModification | VectorModification | WriteVersionModification
   # Modification
   before: Entity! # reference // modification
   diff: Diff! # reference // modification
@@ -159,7 +161,7 @@ type Modifications implements WeakEntity {
   id: ID! # computed // hash
   hash: String! # cached
   owner: Entity # reference // AddedAttributeToConcept | AddedAttributeToDesign | AddedAttributeToPiece | AddedAttributeToPort | AddedAttributeToQuality | AddedAttributeToTag | AddedAttributeToType | AddedAttributesToConcept | AddedAttributesToDesign | AddedAttributesToPiece | AddedAttributesToPort | AddedAttributesToQuality | AddedAttributesToTag | AddedAttributesToType | AddedChildPieceWithParentConnection | AddedChildPiecesWithParentConnections | AddedConnector | AddedConnectors | AddedFixedPiece | AddedHangingChildPieceWithParentConnection | AddedHangingChildPiecesWithParentConnections | AttributeModification | Edit | ChangedDescription | ChangedPieceToType | ChangedPiecesToType | CreatedConcept | CreatedConcepts | CreatedDesign | CreatedDesigns | CreatedPort | CreatedPorts | CreatedQualities | CreatedQuality | CreatedTag | CreatedTags | CreatedType | CreatedTypes | DeletedConcept | DeletedConcepts | DeletedDesign | DeletedDesigns | DeletedPiece | DeletedPiecesAndConnections | DeletedPieces | DeletedPort | DeletedPorts | DeletedQualities | DeletedQuality | DeletedTag | DeletedTags | DeletedType | DeletedTypes | Modifications | DraggedPiece | DraggedPieces | FixedPiece | FixedPieces | FlattenedDesign | LocationModification | MovedPiece | MovedPieces | PlaceModification | PlaneModification | PositionModification | RemovedAttributeFromConcept | RemovedAttributeFromDesign | RemovedAttributeFromPiece | RemovedAttributeFromPort | RemovedAttributeFromQuality | RemovedAttributeFromTag | RemovedAttributeFromType | RemovedAttributesFromConcept | RemovedAttributesFromDesign | RemovedAttributesFromPiece | RemovedAttributesFromPort | RemovedAttributesFromQuality | RemovedAttributesFromTag | RemovedAttributesFromType | RemovedConnector | RemovedConnectors | RenamedConcept | RenamedConnector | RenamedKit | RenamedPiece | RenamedPort | RenamedQuality | RenamedTag | RenamedType | UpdatedConceptDescription | UpdatedConceptIcon | UpdatedConnectorDescription | UpdatedConnectorIcon | UpdatedPieceDescription | UpdatedPortDescription | UpdatedPortIcon | UpdatedQualityDescription | UpdatedQualityIcon | UpdatedTagDescription | UpdatedTagIcon | UpdatedTypeDescription | UpdatedTypeIcon
-  owns: EntityConnection # reference // AlternativeModification | AttributeModification | AuthorModification | BenchmarkModification | EditModification | CheckpointModification | ConceptModification | ConflictModification | ConnectionModification | ConnectorModification | CoordinateModification | DesignModification | AlternativeModification | FamilyModification | FileModification | FolderModification | GraphModification | GroupModification | KitModification | LayerModification | LocationModification | OffsetModification | PieceModification | PlaceModification | PointModification | PortModification | PositionModification | PropModification | QualityModification | ReadVersionModification | RepresentationModification | SessionModification | SideModification | StatModification | TagModification | TransactionModification | TypeModification | VectorModification | WriteVersionModification
+  owns: EntityConnection # reference // AlternativeModification | AttributeModification | AuthorModification | BenchmarkModification | EditModification | CheckpointModification | ConceptModification | ConflictModification | ConnectionModification | ConnectorModification | CoordinateModification | DesignModification | AlternativeModification | FamilyModification | FileModification | FolderModification | GraphModification | GroupModification | KitModification | LayerModification | LocationModification | OffsetModification | PieceModification | PlaceModification | PointModification | PortModification | PositionModification | PropModification | QualityModification | RepresentationModification | SessionModification | SideModification | StatModification | TypeModification | VectorModification | WriteVersionModification
   removed: EntityConnection # data
   modifications: ModificationConnection # data
   added: EntityConnection # data
@@ -237,7 +239,7 @@ type VectorModification implements Modification {
   id: ID! # computed // hash
   hash: String! # cached
   owner: Entity # reference // AddedAttributeToConcept | AddedAttributeToDesign | AddedAttributeToPiece | AddedAttributeToPort | AddedAttributeToQuality | AddedAttributeToTag | AddedAttributeToType | AddedAttributesToConcept | AddedAttributesToDesign | AddedAttributesToPiece | AddedAttributesToPort | AddedAttributesToQuality | AddedAttributesToTag | AddedAttributesToType | AddedChildPieceWithParentConnection | AddedChildPiecesWithParentConnections | AddedConnector | AddedConnectors | AddedFixedPiece | AddedHangingChildPieceWithParentConnection | AddedHangingChildPiecesWithParentConnections | Edit | ChangedDescription | ChangedPieceToType | ChangedPiecesToType | CreatedConcept | CreatedConcepts | CreatedDesign | CreatedDesigns | CreatedPort | CreatedPorts | CreatedQualities | CreatedQuality | CreatedTag | CreatedTags | CreatedType | CreatedTypes | DeletedConcept | DeletedConcepts | DeletedDesign | DeletedDesigns | DeletedPiece | DeletedPiecesAndConnections | DeletedPieces | DeletedPort | DeletedPorts | DeletedQualities | DeletedQuality | DeletedTag | DeletedTags | DeletedType | DeletedTypes | Modifications | DraggedPiece | DraggedPieces | FixedPiece | FixedPieces | FlattenedDesign | MovedPiece | MovedPieces | RemovedAttributeFromConcept | RemovedAttributeFromDesign | RemovedAttributeFromPiece | RemovedAttributeFromPort | RemovedAttributeFromQuality | RemovedAttributeFromTag | RemovedAttributeFromType | RemovedAttributesFromConcept | RemovedAttributesFromDesign | RemovedAttributesFromPiece | RemovedAttributesFromPort | RemovedAttributesFromQuality | RemovedAttributesFromTag | RemovedAttributesFromType | RemovedConnector | RemovedConnectors | RenamedConcept | RenamedConnector | RenamedKit | RenamedPiece | RenamedPort | RenamedQuality | RenamedTag | RenamedType | UpdatedConceptDescription | UpdatedConceptIcon | UpdatedConnectorDescription | UpdatedConnectorIcon | UpdatedPieceDescription | UpdatedPortDescription | UpdatedPortIcon | UpdatedQualityDescription | UpdatedQualityIcon | UpdatedTagDescription | UpdatedTagIcon | UpdatedTypeDescription | UpdatedTypeIcon
-  owns: EntityConnection # reference // AlternativeModification | AttributeModification | AuthorModification | BenchmarkModification | EditModification | CheckpointModification | ConceptModification | ConflictModification | ConnectionModification | ConnectorModification | CoordinateModification | DesignModification | AlternativeModification | FamilyModification | FileModification | FolderModification | GraphModification | GroupModification | KitModification | LayerModification | LocationModification | OffsetModification | PieceModification | PlaceModification | PointModification | PortModification | PositionModification | PropModification | QualityModification | ReadVersionModification | RepresentationModification | SessionModification | SideModification | StatModification | TagModification | TransactionModification | TypeModification | VectorModification | WriteVersionModification
+  owns: EntityConnection # reference // AlternativeModification | AttributeModification | AuthorModification | BenchmarkModification | EditModification | CheckpointModification | ConceptModification | ConflictModification | ConnectionModification | ConnectorModification | CoordinateModification | DesignModification | AlternativeModification | FamilyModification | FileModification | FolderModification | GraphModification | GroupModification | KitModification | LayerModification | LocationModification | OffsetModification | PieceModification | PlaceModification | PointModification | PortModification | PositionModification | PropModification | QualityModification | RepresentationModification | SessionModification | SideModification | StatModification | TypeModification | VectorModification | WriteVersionModification
   # Modification
   before: Entity! # reference // modification
   diff: Diff! # reference // modification
@@ -337,7 +339,7 @@ type PointModification implements Modification {
   id: ID! # computed // hash
   hash: String! # cached
   owner: Entity # reference // AddedAttributeToConcept | AddedAttributeToDesign | AddedAttributeToPiece | AddedAttributeToPort | AddedAttributeToQuality | AddedAttributeToTag | AddedAttributeToType | AddedAttributesToConcept | AddedAttributesToDesign | AddedAttributesToPiece | AddedAttributesToPort | AddedAttributesToQuality | AddedAttributesToTag | AddedAttributesToType | AddedChildPieceWithParentConnection | AddedChildPiecesWithParentConnections | AddedConnector | AddedConnectors | AddedFixedPiece | AddedHangingChildPieceWithParentConnection | AddedHangingChildPiecesWithParentConnections | Edit | ChangedDescription | ChangedPieceToType | ChangedPiecesToType | CreatedConcept | CreatedConcepts | CreatedDesign | CreatedDesigns | CreatedPort | CreatedPorts | CreatedQualities | CreatedQuality | CreatedTag | CreatedTags | CreatedType | CreatedTypes | DeletedConcept | DeletedConcepts | DeletedDesign | DeletedDesigns | DeletedPiece | DeletedPiecesAndConnections | DeletedPieces | DeletedPort | DeletedPorts | DeletedQualities | DeletedQuality | DeletedTag | DeletedTags | DeletedType | DeletedTypes | Modifications | DraggedPiece | DraggedPieces | FixedPiece | FixedPieces | FlattenedDesign | MovedPiece | MovedPieces | RemovedAttributeFromConcept | RemovedAttributeFromDesign | RemovedAttributeFromPiece | RemovedAttributeFromPort | RemovedAttributeFromQuality | RemovedAttributeFromTag | RemovedAttributeFromType | RemovedAttributesFromConcept | RemovedAttributesFromDesign | RemovedAttributesFromPiece | RemovedAttributesFromPort | RemovedAttributesFromQuality | RemovedAttributesFromTag | RemovedAttributesFromType | RemovedConnector | RemovedConnectors | RenamedConcept | RenamedConnector | RenamedKit | RenamedPiece | RenamedPort | RenamedQuality | RenamedTag | RenamedType | UpdatedConceptDescription | UpdatedConceptIcon | UpdatedConnectorDescription | UpdatedConnectorIcon | UpdatedPieceDescription | UpdatedPortDescription | UpdatedPortIcon | UpdatedQualityDescription | UpdatedQualityIcon | UpdatedTagDescription | UpdatedTagIcon | UpdatedTypeDescription | UpdatedTypeIcon
-  owns: EntityConnection # reference // AlternativeModification | AttributeModification | AuthorModification | BenchmarkModification | EditModification | CheckpointModification | ConceptModification | ConflictModification | ConnectionModification | ConnectorModification | CoordinateModification | DesignModification | AlternativeModification | FamilyModification | FileModification | FolderModification | GraphModification | GroupModification | KitModification | LayerModification | LocationModification | OffsetModification | PieceModification | PlaceModification | PointModification | PortModification | PositionModification | PropModification | QualityModification | ReadVersionModification | RepresentationModification | SessionModification | SideModification | StatModification | TagModification | TransactionModification | TypeModification | VectorModification | WriteVersionModification
+  owns: EntityConnection # reference // AlternativeModification | AttributeModification | AuthorModification | BenchmarkModification | EditModification | CheckpointModification | ConceptModification | ConflictModification | ConnectionModification | ConnectorModification | CoordinateModification | DesignModification | AlternativeModification | FamilyModification | FileModification | FolderModification | GraphModification | GroupModification | KitModification | LayerModification | LocationModification | OffsetModification | PieceModification | PlaceModification | PointModification | PortModification | PositionModification | PropModification | QualityModification | RepresentationModification | SessionModification | SideModification | StatModification | TypeModification | VectorModification | WriteVersionModification
   # Modification
   before: Entity! # reference // modification
   diff: Diff! # reference // modification
@@ -434,7 +436,7 @@ type CoordinateModification implements Modification {
   id: ID! # computed // hash
   hash: String! # cached
   owner: Entity # reference // AddedAttributeToConcept | AddedAttributeToDesign | AddedAttributeToPiece | AddedAttributeToPort | AddedAttributeToQuality | AddedAttributeToTag | AddedAttributeToType | AddedAttributesToConcept | AddedAttributesToDesign | AddedAttributesToPiece | AddedAttributesToPort | AddedAttributesToQuality | AddedAttributesToTag | AddedAttributesToType | AddedChildPieceWithParentConnection | AddedChildPiecesWithParentConnections | AddedConnector | AddedConnectors | AddedFixedPiece | AddedHangingChildPieceWithParentConnection | AddedHangingChildPiecesWithParentConnections | Edit | ChangedDescription | ChangedPieceToType | ChangedPiecesToType | CreatedConcept | CreatedConcepts | CreatedDesign | CreatedDesigns | CreatedPort | CreatedPorts | CreatedQualities | CreatedQuality | CreatedTag | CreatedTags | CreatedType | CreatedTypes | DeletedConcept | DeletedConcepts | DeletedDesign | DeletedDesigns | DeletedPiece | DeletedPiecesAndConnections | DeletedPieces | DeletedPort | DeletedPorts | DeletedQualities | DeletedQuality | DeletedTag | DeletedTags | DeletedType | DeletedTypes | Modifications | DraggedPiece | DraggedPieces | FixedPiece | FixedPieces | FlattenedDesign | MovedPiece | MovedPieces | RemovedAttributeFromConcept | RemovedAttributeFromDesign | RemovedAttributeFromPiece | RemovedAttributeFromPort | RemovedAttributeFromQuality | RemovedAttributeFromTag | RemovedAttributeFromType | RemovedAttributesFromConcept | RemovedAttributesFromDesign | RemovedAttributesFromPiece | RemovedAttributesFromPort | RemovedAttributesFromQuality | RemovedAttributesFromTag | RemovedAttributesFromType | RemovedConnector | RemovedConnectors | RenamedConcept | RenamedConnector | RenamedKit | RenamedPiece | RenamedPort | RenamedQuality | RenamedTag | RenamedType | UpdatedConceptDescription | UpdatedConceptIcon | UpdatedConnectorDescription | UpdatedConnectorIcon | UpdatedPieceDescription | UpdatedPortDescription | UpdatedPortIcon | UpdatedQualityDescription | UpdatedQualityIcon | UpdatedTagDescription | UpdatedTagIcon | UpdatedTypeDescription | UpdatedTypeIcon
-  owns: EntityConnection # reference // AlternativeModification | AttributeModification | AuthorModification | BenchmarkModification | EditModification | CheckpointModification | ConceptModification | ConflictModification | ConnectionModification | ConnectorModification | CoordinateModification | DesignModification | AlternativeModification | FamilyModification | FileModification | FolderModification | GraphModification | GroupModification | KitModification | LayerModification | LocationModification | OffsetModification | PieceModification | PlaceModification | PointModification | PortModification | PositionModification | PropModification | QualityModification | ReadVersionModification | RepresentationModification | SessionModification | SideModification | StatModification | TagModification | TransactionModification | TypeModification | VectorModification | WriteVersionModification
+  owns: EntityConnection # reference // AlternativeModification | AttributeModification | AuthorModification | BenchmarkModification | EditModification | CheckpointModification | ConceptModification | ConflictModification | ConnectionModification | ConnectorModification | CoordinateModification | DesignModification | AlternativeModification | FamilyModification | FileModification | FolderModification | GraphModification | GroupModification | KitModification | LayerModification | LocationModification | OffsetModification | PieceModification | PlaceModification | PointModification | PortModification | PositionModification | PropModification | QualityModification | RepresentationModification | SessionModification | SideModification | StatModification | TypeModification | VectorModification | WriteVersionModification
   # Modification
   before: Entity! # reference // modification
   diff: Diff! # reference // modification
@@ -531,7 +533,7 @@ type OffsetModification implements Modification {
   id: ID! # computed // hash
   hash: String! # cached
   owner: Entity # reference // AddedAttributeToConcept | AddedAttributeToDesign | AddedAttributeToPiece | AddedAttributeToPort | AddedAttributeToQuality | AddedAttributeToTag | AddedAttributeToType | AddedAttributesToConcept | AddedAttributesToDesign | AddedAttributesToPiece | AddedAttributesToPort | AddedAttributesToQuality | AddedAttributesToTag | AddedAttributesToType | AddedChildPieceWithParentConnection | AddedChildPiecesWithParentConnections | AddedConnector | AddedConnectors | AddedFixedPiece | AddedHangingChildPieceWithParentConnection | AddedHangingChildPiecesWithParentConnections | Edit | ChangedDescription | ChangedPieceToType | ChangedPiecesToType | CreatedConcept | CreatedConcepts | CreatedDesign | CreatedDesigns | CreatedPort | CreatedPorts | CreatedQualities | CreatedQuality | CreatedTag | CreatedTags | CreatedType | CreatedTypes | DeletedConcept | DeletedConcepts | DeletedDesign | DeletedDesigns | DeletedPiece | DeletedPiecesAndConnections | DeletedPieces | DeletedPort | DeletedPorts | DeletedQualities | DeletedQuality | DeletedTag | DeletedTags | DeletedType | DeletedTypes | Modifications | DraggedPiece | DraggedPieces | FixedPiece | FixedPieces | FlattenedDesign | MovedPiece | MovedPieces | RemovedAttributeFromConcept | RemovedAttributeFromDesign | RemovedAttributeFromPiece | RemovedAttributeFromPort | RemovedAttributeFromQuality | RemovedAttributeFromTag | RemovedAttributeFromType | RemovedAttributesFromConcept | RemovedAttributesFromDesign | RemovedAttributesFromPiece | RemovedAttributesFromPort | RemovedAttributesFromQuality | RemovedAttributesFromTag | RemovedAttributesFromType | RemovedConnector | RemovedConnectors | RenamedConcept | RenamedConnector | RenamedKit | RenamedPiece | RenamedPort | RenamedQuality | RenamedTag | RenamedType | UpdatedConceptDescription | UpdatedConceptIcon | UpdatedConnectorDescription | UpdatedConnectorIcon | UpdatedPieceDescription | UpdatedPortDescription | UpdatedPortIcon | UpdatedQualityDescription | UpdatedQualityIcon | UpdatedTagDescription | UpdatedTagIcon | UpdatedTypeDescription | UpdatedTypeIcon
-  owns: EntityConnection # reference // AlternativeModification | AttributeModification | AuthorModification | BenchmarkModification | EditModification | CheckpointModification | ConceptModification | ConflictModification | ConnectionModification | ConnectorModification | CoordinateModification | DesignModification | AlternativeModification | FamilyModification | FileModification | FolderModification | GraphModification | GroupModification | KitModification | LayerModification | LocationModification | OffsetModification | PieceModification | PlaceModification | PointModification | PortModification | PositionModification | PropModification | QualityModification | ReadVersionModification | RepresentationModification | SessionModification | SideModification | StatModification | TagModification | TransactionModification | TypeModification | VectorModification | WriteVersionModification
+  owns: EntityConnection # reference // AlternativeModification | AttributeModification | AuthorModification | BenchmarkModification | EditModification | CheckpointModification | ConceptModification | ConflictModification | ConnectionModification | ConnectorModification | CoordinateModification | DesignModification | AlternativeModification | FamilyModification | FileModification | FolderModification | GraphModification | GroupModification | KitModification | LayerModification | LocationModification | OffsetModification | PieceModification | PlaceModification | PointModification | PortModification | PositionModification | PropModification | QualityModification | RepresentationModification | SessionModification | SideModification | StatModification | TypeModification | VectorModification | WriteVersionModification
   # Modification
   before: Entity! # reference // modification
   diff: Diff! # reference // modification
@@ -631,7 +633,7 @@ type PlaneModification implements Modification {
   id: ID! # computed // hash
   hash: String! # cached
   owner: Entity # reference // AddedAttributeToConcept | AddedAttributeToDesign | AddedAttributeToPiece | AddedAttributeToPort | AddedAttributeToQuality | AddedAttributeToTag | AddedAttributeToType | AddedAttributesToConcept | AddedAttributesToDesign | AddedAttributesToPiece | AddedAttributesToPort | AddedAttributesToQuality | AddedAttributesToTag | AddedAttributesToType | AddedChildPieceWithParentConnection | AddedChildPiecesWithParentConnections | AddedConnector | AddedConnectors | AddedFixedPiece | AddedHangingChildPieceWithParentConnection | AddedHangingChildPiecesWithParentConnections | Edit | ChangedDescription | ChangedPieceToType | ChangedPiecesToType | CreatedConcept | CreatedConcepts | CreatedDesign | CreatedDesigns | CreatedPort | CreatedPorts | CreatedQualities | CreatedQuality | CreatedTag | CreatedTags | CreatedType | CreatedTypes | DeletedConcept | DeletedConcepts | DeletedDesign | DeletedDesigns | DeletedPiece | DeletedPiecesAndConnections | DeletedPieces | DeletedPort | DeletedPorts | DeletedQualities | DeletedQuality | DeletedTag | DeletedTags | DeletedType | DeletedTypes | Modifications | DraggedPiece | DraggedPieces | FixedPiece | FixedPieces | FlattenedDesign | MovedPiece | MovedPieces | RemovedAttributeFromConcept | RemovedAttributeFromDesign | RemovedAttributeFromPiece | RemovedAttributeFromPort | RemovedAttributeFromQuality | RemovedAttributeFromTag | RemovedAttributeFromType | RemovedAttributesFromConcept | RemovedAttributesFromDesign | RemovedAttributesFromPiece | RemovedAttributesFromPort | RemovedAttributesFromQuality | RemovedAttributesFromTag | RemovedAttributesFromType | RemovedConnector | RemovedConnectors | RenamedConcept | RenamedConnector | RenamedKit | RenamedPiece | RenamedPort | RenamedQuality | RenamedTag | RenamedType | UpdatedConceptDescription | UpdatedConceptIcon | UpdatedConnectorDescription | UpdatedConnectorIcon | UpdatedPieceDescription | UpdatedPortDescription | UpdatedPortIcon | UpdatedQualityDescription | UpdatedQualityIcon | UpdatedTagDescription | UpdatedTagIcon | UpdatedTypeDescription | UpdatedTypeIcon
-  owns: EntityConnection # reference // AlternativeModification | AttributeModification | AuthorModification | BenchmarkModification | EditModification | CheckpointModification | ConceptModification | ConflictModification | ConnectionModification | ConnectorModification | CoordinateModification | DesignModification | AlternativeModification | FamilyModification | FileModification | FolderModification | GraphModification | GroupModification | KitModification | LayerModification | LocationModification | OffsetModification | PieceModification | PlaceModification | PointModification | PortModification | PositionModification | PropModification | QualityModification | ReadVersionModification | RepresentationModification | SessionModification | SideModification | StatModification | TagModification | TransactionModification | TypeModification | VectorModification | WriteVersionModification
+  owns: EntityConnection # reference // AlternativeModification | AttributeModification | AuthorModification | BenchmarkModification | EditModification | CheckpointModification | ConceptModification | ConflictModification | ConnectionModification | ConnectorModification | CoordinateModification | DesignModification | AlternativeModification | FamilyModification | FileModification | FolderModification | GraphModification | GroupModification | KitModification | LayerModification | LocationModification | OffsetModification | PieceModification | PlaceModification | PointModification | PortModification | PositionModification | PropModification | QualityModification | RepresentationModification | SessionModification | SideModification | StatModification | TypeModification | VectorModification | WriteVersionModification
   # Modification
   before: Entity! # reference // modification
   diff: Diff! # reference // modification
@@ -728,7 +730,7 @@ type PositionModification implements Modification {
   id: ID! # computed // hash
   hash: String! # cached
   owner: Entity # reference // AddedAttributeToConcept | AddedAttributeToDesign | AddedAttributeToPiece | AddedAttributeToPort | AddedAttributeToQuality | AddedAttributeToTag | AddedAttributeToType | AddedAttributesToConcept | AddedAttributesToDesign | AddedAttributesToPiece | AddedAttributesToPort | AddedAttributesToQuality | AddedAttributesToTag | AddedAttributesToType | AddedChildPieceWithParentConnection | AddedChildPiecesWithParentConnections | AddedConnector | AddedConnectors | AddedFixedPiece | AddedHangingChildPieceWithParentConnection | AddedHangingChildPiecesWithParentConnections | Edit | ChangedDescription | ChangedPieceToType | ChangedPiecesToType | CreatedConcept | CreatedConcepts | CreatedDesign | CreatedDesigns | CreatedPort | CreatedPorts | CreatedQualities | CreatedQuality | CreatedTag | CreatedTags | CreatedType | CreatedTypes | DeletedConcept | DeletedConcepts | DeletedDesign | DeletedDesigns | DeletedPiece | DeletedPiecesAndConnections | DeletedPieces | DeletedPort | DeletedPorts | DeletedQualities | DeletedQuality | DeletedTag | DeletedTags | DeletedType | DeletedTypes | Modifications | DraggedPiece | DraggedPieces | FixedPiece | FixedPieces | FlattenedDesign | MovedPiece | MovedPieces | RemovedAttributeFromConcept | RemovedAttributeFromDesign | RemovedAttributeFromPiece | RemovedAttributeFromPort | RemovedAttributeFromQuality | RemovedAttributeFromTag | RemovedAttributeFromType | RemovedAttributesFromConcept | RemovedAttributesFromDesign | RemovedAttributesFromPiece | RemovedAttributesFromPort | RemovedAttributesFromQuality | RemovedAttributesFromTag | RemovedAttributesFromType | RemovedConnector | RemovedConnectors | RenamedConcept | RenamedConnector | RenamedKit | RenamedPiece | RenamedPort | RenamedQuality | RenamedTag | RenamedType | UpdatedConceptDescription | UpdatedConceptIcon | UpdatedConnectorDescription | UpdatedConnectorIcon | UpdatedPieceDescription | UpdatedPortDescription | UpdatedPortIcon | UpdatedQualityDescription | UpdatedQualityIcon | UpdatedTagDescription | UpdatedTagIcon | UpdatedTypeDescription | UpdatedTypeIcon
-  owns: EntityConnection # reference // AlternativeModification | AttributeModification | AuthorModification | BenchmarkModification | EditModification | CheckpointModification | ConceptModification | ConflictModification | ConnectionModification | ConnectorModification | CoordinateModification | DesignModification | AlternativeModification | FamilyModification | FileModification | FolderModification | GraphModification | GroupModification | KitModification | LayerModification | LocationModification | OffsetModification | PieceModification | PlaceModification | PointModification | PortModification | PositionModification | PropModification | QualityModification | ReadVersionModification | RepresentationModification | SessionModification | SideModification | StatModification | TagModification | TransactionModification | TypeModification | VectorModification | WriteVersionModification
+  owns: EntityConnection # reference // AlternativeModification | AttributeModification | AuthorModification | BenchmarkModification | EditModification | CheckpointModification | ConceptModification | ConflictModification | ConnectionModification | ConnectorModification | CoordinateModification | DesignModification | AlternativeModification | FamilyModification | FileModification | FolderModification | GraphModification | GroupModification | KitModification | LayerModification | LocationModification | OffsetModification | PieceModification | PlaceModification | PointModification | PortModification | PositionModification | PropModification | QualityModification | RepresentationModification | SessionModification | SideModification | StatModification | TypeModification | VectorModification | WriteVersionModification
   # Modification
   before: Entity! # reference // modification
   diff: Diff! # reference // modification
@@ -828,7 +830,7 @@ type LocationModification implements Modification {
   id: ID! # computed // hash
   hash: String! # cached
   owner: Entity # reference // AddedAttributeToConcept | AddedAttributeToDesign | AddedAttributeToPiece | AddedAttributeToPort | AddedAttributeToQuality | AddedAttributeToTag | AddedAttributeToType | AddedAttributesToConcept | AddedAttributesToDesign | AddedAttributesToPiece | AddedAttributesToPort | AddedAttributesToQuality | AddedAttributesToTag | AddedAttributesToType | AddedChildPieceWithParentConnection | AddedChildPiecesWithParentConnections | AddedConnector | AddedConnectors | AddedFixedPiece | AddedHangingChildPieceWithParentConnection | AddedHangingChildPiecesWithParentConnections | Edit | ChangedDescription | ChangedPieceToType | ChangedPiecesToType | CreatedConcept | CreatedConcepts | CreatedDesign | CreatedDesigns | CreatedPort | CreatedPorts | CreatedQualities | CreatedQuality | CreatedTag | CreatedTags | CreatedType | CreatedTypes | DeletedConcept | DeletedConcepts | DeletedDesign | DeletedDesigns | DeletedPiece | DeletedPiecesAndConnections | DeletedPieces | DeletedPort | DeletedPorts | DeletedQualities | DeletedQuality | DeletedTag | DeletedTags | DeletedType | DeletedTypes | Modifications | DraggedPiece | DraggedPieces | FixedPiece | FixedPieces | FlattenedDesign | MovedPiece | MovedPieces | RemovedAttributeFromConcept | RemovedAttributeFromDesign | RemovedAttributeFromPiece | RemovedAttributeFromPort | RemovedAttributeFromQuality | RemovedAttributeFromTag | RemovedAttributeFromType | RemovedAttributesFromConcept | RemovedAttributesFromDesign | RemovedAttributesFromPiece | RemovedAttributesFromPort | RemovedAttributesFromQuality | RemovedAttributesFromTag | RemovedAttributesFromType | RemovedConnector | RemovedConnectors | RenamedConcept | RenamedConnector | RenamedKit | RenamedPiece | RenamedPort | RenamedQuality | RenamedTag | RenamedType | UpdatedConceptDescription | UpdatedConceptIcon | UpdatedConnectorDescription | UpdatedConnectorIcon | UpdatedPieceDescription | UpdatedPortDescription | UpdatedPortIcon | UpdatedQualityDescription | UpdatedQualityIcon | UpdatedTagDescription | UpdatedTagIcon | UpdatedTypeDescription | UpdatedTypeIcon
-  owns: EntityConnection # reference // AlternativeModification | AttributeModification | AuthorModification | BenchmarkModification | EditModification | CheckpointModification | ConceptModification | ConflictModification | ConnectionModification | ConnectorModification | CoordinateModification | DesignModification | AlternativeModification | FamilyModification | FileModification | FolderModification | GraphModification | GroupModification | KitModification | LayerModification | LocationModification | OffsetModification | PieceModification | PlaceModification | PointModification | PortModification | PositionModification | PropModification | QualityModification | ReadVersionModification | RepresentationModification | SessionModification | SideModification | StatModification | TagModification | TransactionModification | TypeModification | VectorModification | WriteVersionModification
+  owns: EntityConnection # reference // AlternativeModification | AttributeModification | AuthorModification | BenchmarkModification | EditModification | CheckpointModification | ConceptModification | ConflictModification | ConnectionModification | ConnectorModification | CoordinateModification | DesignModification | AlternativeModification | FamilyModification | FileModification | FolderModification | GraphModification | GroupModification | KitModification | LayerModification | LocationModification | OffsetModification | PieceModification | PlaceModification | PointModification | PortModification | PositionModification | PropModification | QualityModification | RepresentationModification | SessionModification | SideModification | StatModification | TypeModification | VectorModification | WriteVersionModification
   # Modification
   before: Entity! # reference // modification
   diff: Diff! # reference // modification
@@ -922,7 +924,7 @@ type AttributeModification implements Modification {
   id: ID! # computed // hash
   hash: String! # cached
   owner: Entity # reference // AddedAttributeToConcept | AddedAttributeToDesign | AddedAttributeToPiece | AddedAttributeToPort | AddedAttributeToQuality | AddedAttributeToTag | AddedAttributeToType | AddedAttributesToConcept | AddedAttributesToDesign | AddedAttributesToPiece | AddedAttributesToPort | AddedAttributesToQuality | AddedAttributesToTag | AddedAttributesToType | AddedChildPieceWithParentConnection | AddedChildPiecesWithParentConnections | AddedConnector | AddedConnectors | AddedFixedPiece | AddedHangingChildPieceWithParentConnection | AddedHangingChildPiecesWithParentConnections | Edit | ChangedDescription | ChangedPieceToType | ChangedPiecesToType | CreatedConcept | CreatedConcepts | CreatedDesign | CreatedDesigns | CreatedPort | CreatedPorts | CreatedQualities | CreatedQuality | CreatedTag | CreatedTags | CreatedType | CreatedTypes | DeletedConcept | DeletedConcepts | DeletedDesign | DeletedDesigns | DeletedPiece | DeletedPiecesAndConnections | DeletedPieces | DeletedPort | DeletedPorts | DeletedQualities | DeletedQuality | DeletedTag | DeletedTags | DeletedType | DeletedTypes | Modifications | DraggedPiece | DraggedPieces | FixedPiece | FixedPieces | FlattenedDesign | MovedPiece | MovedPieces | RemovedAttributeFromConcept | RemovedAttributeFromDesign | RemovedAttributeFromPiece | RemovedAttributeFromPort | RemovedAttributeFromQuality | RemovedAttributeFromTag | RemovedAttributeFromType | RemovedAttributesFromConcept | RemovedAttributesFromDesign | RemovedAttributesFromPiece | RemovedAttributesFromPort | RemovedAttributesFromQuality | RemovedAttributesFromTag | RemovedAttributesFromType | RemovedConnector | RemovedConnectors | RenamedConcept | RenamedConnector | RenamedKit | RenamedPiece | RenamedPort | RenamedQuality | RenamedTag | RenamedType | UpdatedConceptDescription | UpdatedConceptIcon | UpdatedConnectorDescription | UpdatedConnectorIcon | UpdatedPieceDescription | UpdatedPortDescription | UpdatedPortIcon | UpdatedQualityDescription | UpdatedQualityIcon | UpdatedTagDescription | UpdatedTagIcon | UpdatedTypeDescription | UpdatedTypeIcon
-  owns: EntityConnection # reference // AlternativeModification | AttributeModification | AuthorModification | BenchmarkModification | EditModification | CheckpointModification | ConceptModification | ConflictModification | ConnectionModification | ConnectorModification | CoordinateModification | DesignModification | AlternativeModification | FamilyModification | FileModification | FolderModification | GraphModification | GroupModification | KitModification | LayerModification | LocationModification | OffsetModification | PieceModification | PlaceModification | PointModification | PortModification | PositionModification | PropModification | QualityModification | ReadVersionModification | RepresentationModification | SessionModification | SideModification | StatModification | TagModification | TransactionModification | TypeModification | VectorModification | WriteVersionModification
+  owns: EntityConnection # reference // AlternativeModification | AttributeModification | AuthorModification | BenchmarkModification | EditModification | CheckpointModification | ConceptModification | ConflictModification | ConnectionModification | ConnectorModification | CoordinateModification | DesignModification | AlternativeModification | FamilyModification | FileModification | FolderModification | GraphModification | GroupModification | KitModification | LayerModification | LocationModification | OffsetModification | PieceModification | PlaceModification | PointModification | PortModification | PositionModification | PropModification | QualityModification | RepresentationModification | SessionModification | SideModification | StatModification | TypeModification | VectorModification | WriteVersionModification
   # Modification
   before: Entity! # reference // modification
   diff: Diff! # reference // modification
@@ -1016,6 +1018,7 @@ type Place implements Artifact {
   lastChangedAt: Timestamp # computed
   lastChangedBy: Author # computed
   lastChangedIn: Checkpoint # computed
+  changes: ChangeConnection # computed
   edits: EditConnection # computed
   # Place
   location: Location # data
@@ -1061,7 +1064,7 @@ type PlaceModification implements Modification {
   id: ID! # computed // hash
   hash: String! # cached
   owner: Entity # reference // AddedAttributeToConcept | AddedAttributeToDesign | AddedAttributeToPiece | AddedAttributeToPort | AddedAttributeToQuality | AddedAttributeToTag | AddedAttributeToType | AddedAttributesToConcept | AddedAttributesToDesign | AddedAttributesToPiece | AddedAttributesToPort | AddedAttributesToQuality | AddedAttributesToTag | AddedAttributesToType | AddedChildPieceWithParentConnection | AddedChildPiecesWithParentConnections | AddedConnector | AddedConnectors | AddedFixedPiece | AddedHangingChildPieceWithParentConnection | AddedHangingChildPiecesWithParentConnections | Edit | ChangedDescription | ChangedPieceToType | ChangedPiecesToType | CreatedConcept | CreatedConcepts | CreatedDesign | CreatedDesigns | CreatedPort | CreatedPorts | CreatedQualities | CreatedQuality | CreatedTag | CreatedTags | CreatedType | CreatedTypes | DeletedConcept | DeletedConcepts | DeletedDesign | DeletedDesigns | DeletedPiece | DeletedPiecesAndConnections | DeletedPieces | DeletedPort | DeletedPorts | DeletedQualities | DeletedQuality | DeletedTag | DeletedTags | DeletedType | DeletedTypes | Modifications | DraggedPiece | DraggedPieces | FixedPiece | FixedPieces | FlattenedDesign | MovedPiece | MovedPieces | RemovedAttributeFromConcept | RemovedAttributeFromDesign | RemovedAttributeFromPiece | RemovedAttributeFromPort | RemovedAttributeFromQuality | RemovedAttributeFromTag | RemovedAttributeFromType | RemovedAttributesFromConcept | RemovedAttributesFromDesign | RemovedAttributesFromPiece | RemovedAttributesFromPort | RemovedAttributesFromQuality | RemovedAttributesFromTag | RemovedAttributesFromType | RemovedConnector | RemovedConnectors | RenamedConcept | RenamedConnector | RenamedKit | RenamedPiece | RenamedPort | RenamedQuality | RenamedTag | RenamedType | UpdatedConceptDescription | UpdatedConceptIcon | UpdatedConnectorDescription | UpdatedConnectorIcon | UpdatedPieceDescription | UpdatedPortDescription | UpdatedPortIcon | UpdatedQualityDescription | UpdatedQualityIcon | UpdatedTagDescription | UpdatedTagIcon | UpdatedTypeDescription | UpdatedTypeIcon
-  owns: EntityConnection # reference // AlternativeModification | AttributeModification | AuthorModification | BenchmarkModification | EditModification | CheckpointModification | ConceptModification | ConflictModification | ConnectionModification | ConnectorModification | CoordinateModification | DesignModification | AlternativeModification | FamilyModification | FileModification | FolderModification | GraphModification | GroupModification | KitModification | LayerModification | LocationModification | OffsetModification | PieceModification | PlaceModification | PointModification | PortModification | PositionModification | PropModification | QualityModification | ReadVersionModification | RepresentationModification | SessionModification | SideModification | StatModification | TagModification | TransactionModification | TypeModification | VectorModification | WriteVersionModification
+  owns: EntityConnection # reference // AlternativeModification | AttributeModification | AuthorModification | BenchmarkModification | EditModification | CheckpointModification | ConceptModification | ConflictModification | ConnectionModification | ConnectorModification | CoordinateModification | DesignModification | AlternativeModification | FamilyModification | FileModification | FolderModification | GraphModification | GroupModification | KitModification | LayerModification | LocationModification | OffsetModification | PieceModification | PlaceModification | PointModification | PortModification | PositionModification | PropModification | QualityModification | RepresentationModification | SessionModification | SideModification | StatModification | TypeModification | VectorModification | WriteVersionModification
   # Modification
   before: Entity! # reference // modification
   diff: Diff! # reference // modification
@@ -1122,6 +1125,7 @@ type Family implements Artifact {
   lastChangedAt: Timestamp # computed
   lastChangedBy: Author # computed
   lastChangedIn: Checkpoint # computed
+  changes: ChangeConnection # computed
   edits: EditConnection # computed
 }
 
@@ -1164,7 +1168,7 @@ type FamilyModification implements Modification {
   id: ID! # computed // hash
   hash: String! # cached
   owner: Entity # reference // AddedAttributeToConcept | AddedAttributeToDesign | AddedAttributeToPiece | AddedAttributeToPort | AddedAttributeToQuality | AddedAttributeToTag | AddedAttributeToType | AddedAttributesToConcept | AddedAttributesToDesign | AddedAttributesToPiece | AddedAttributesToPort | AddedAttributesToQuality | AddedAttributesToTag | AddedAttributesToType | AddedChildPieceWithParentConnection | AddedChildPiecesWithParentConnections | AddedConnector | AddedConnectors | AddedFixedPiece | AddedHangingChildPieceWithParentConnection | AddedHangingChildPiecesWithParentConnections | Edit | ChangedDescription | ChangedPieceToType | ChangedPiecesToType | CreatedConcept | CreatedConcepts | CreatedDesign | CreatedDesigns | CreatedPort | CreatedPorts | CreatedQualities | CreatedQuality | CreatedTag | CreatedTags | CreatedType | CreatedTypes | DeletedConcept | DeletedConcepts | DeletedDesign | DeletedDesigns | DeletedPiece | DeletedPiecesAndConnections | DeletedPieces | DeletedPort | DeletedPorts | DeletedQualities | DeletedQuality | DeletedTag | DeletedTags | DeletedType | DeletedTypes | Modifications | DraggedPiece | DraggedPieces | FixedPiece | FixedPieces | FlattenedDesign | MovedPiece | MovedPieces | RemovedAttributeFromConcept | RemovedAttributeFromDesign | RemovedAttributeFromPiece | RemovedAttributeFromPort | RemovedAttributeFromQuality | RemovedAttributeFromTag | RemovedAttributeFromType | RemovedAttributesFromConcept | RemovedAttributesFromDesign | RemovedAttributesFromPiece | RemovedAttributesFromPort | RemovedAttributesFromQuality | RemovedAttributesFromTag | RemovedAttributesFromType | RemovedConnector | RemovedConnectors | RenamedConcept | RenamedConnector | RenamedKit | RenamedPiece | RenamedPort | RenamedQuality | RenamedTag | RenamedType | UpdatedConceptDescription | UpdatedConceptIcon | UpdatedConnectorDescription | UpdatedConnectorIcon | UpdatedPieceDescription | UpdatedPortDescription | UpdatedPortIcon | UpdatedQualityDescription | UpdatedQualityIcon | UpdatedTagDescription | UpdatedTagIcon | UpdatedTypeDescription | UpdatedTypeIcon
-  owns: EntityConnection # reference // AlternativeModification | AttributeModification | AuthorModification | BenchmarkModification | EditModification | CheckpointModification | ConceptModification | ConflictModification | ConnectionModification | ConnectorModification | CoordinateModification | DesignModification | AlternativeModification | FamilyModification | FileModification | FolderModification | GraphModification | GroupModification | KitModification | LayerModification | LocationModification | OffsetModification | PieceModification | PlaceModification | PointModification | PortModification | PositionModification | PropModification | QualityModification | ReadVersionModification | RepresentationModification | SessionModification | SideModification | StatModification | TagModification | TransactionModification | TypeModification | VectorModification | WriteVersionModification
+  owns: EntityConnection # reference // AlternativeModification | AttributeModification | AuthorModification | BenchmarkModification | EditModification | CheckpointModification | ConceptModification | ConflictModification | ConnectionModification | ConnectorModification | CoordinateModification | DesignModification | AlternativeModification | FamilyModification | FileModification | FolderModification | GraphModification | GroupModification | KitModification | LayerModification | LocationModification | OffsetModification | PieceModification | PlaceModification | PointModification | PortModification | PositionModification | PropModification | QualityModification | RepresentationModification | SessionModification | SideModification | StatModification | TypeModification | VectorModification | WriteVersionModification
   # Modification
   before: Entity! # reference // modification
   diff: Diff! # reference // modification
@@ -1225,6 +1229,7 @@ type Folder implements Artifact {
   lastChangedAt: Timestamp # computed
   lastChangedBy: Author # computed
   lastChangedIn: Checkpoint # computed
+  changes: ChangeConnection # computed
   edits: EditConnection # computed
   # Folder
   path: String! # data
@@ -1279,7 +1284,7 @@ type FolderModification implements Modification {
   id: ID! # computed // hash
   hash: String! # cached
   owner: Entity # reference // AddedAttributeToConcept | AddedAttributeToDesign | AddedAttributeToPiece | AddedAttributeToPort | AddedAttributeToQuality | AddedAttributeToTag | AddedAttributeToType | AddedAttributesToConcept | AddedAttributesToDesign | AddedAttributesToPiece | AddedAttributesToPort | AddedAttributesToQuality | AddedAttributesToTag | AddedAttributesToType | AddedChildPieceWithParentConnection | AddedChildPiecesWithParentConnections | AddedConnector | AddedConnectors | AddedFixedPiece | AddedHangingChildPieceWithParentConnection | AddedHangingChildPiecesWithParentConnections | Edit | ChangedDescription | ChangedPieceToType | ChangedPiecesToType | CreatedConcept | CreatedConcepts | CreatedDesign | CreatedDesigns | CreatedPort | CreatedPorts | CreatedQualities | CreatedQuality | CreatedTag | CreatedTags | CreatedType | CreatedTypes | DeletedConcept | DeletedConcepts | DeletedDesign | DeletedDesigns | DeletedPiece | DeletedPiecesAndConnections | DeletedPieces | DeletedPort | DeletedPorts | DeletedQualities | DeletedQuality | DeletedTag | DeletedTags | DeletedType | DeletedTypes | Modifications | DraggedPiece | DraggedPieces | FixedPiece | FixedPieces | FlattenedDesign | MovedPiece | MovedPieces | RemovedAttributeFromConcept | RemovedAttributeFromDesign | RemovedAttributeFromPiece | RemovedAttributeFromPort | RemovedAttributeFromQuality | RemovedAttributeFromTag | RemovedAttributeFromType | RemovedAttributesFromConcept | RemovedAttributesFromDesign | RemovedAttributesFromPiece | RemovedAttributesFromPort | RemovedAttributesFromQuality | RemovedAttributesFromTag | RemovedAttributesFromType | RemovedConnector | RemovedConnectors | RenamedConcept | RenamedConnector | RenamedKit | RenamedPiece | RenamedPort | RenamedQuality | RenamedTag | RenamedType | UpdatedConceptDescription | UpdatedConceptIcon | UpdatedConnectorDescription | UpdatedConnectorIcon | UpdatedPieceDescription | UpdatedPortDescription | UpdatedPortIcon | UpdatedQualityDescription | UpdatedQualityIcon | UpdatedTagDescription | UpdatedTagIcon | UpdatedTypeDescription | UpdatedTypeIcon
-  owns: EntityConnection # reference // AlternativeModification | AttributeModification | AuthorModification | BenchmarkModification | EditModification | CheckpointModification | ConceptModification | ConflictModification | ConnectionModification | ConnectorModification | CoordinateModification | DesignModification | AlternativeModification | FamilyModification | FileModification | FolderModification | GraphModification | GroupModification | KitModification | LayerModification | LocationModification | OffsetModification | PieceModification | PlaceModification | PointModification | PortModification | PositionModification | PropModification | QualityModification | ReadVersionModification | RepresentationModification | SessionModification | SideModification | StatModification | TagModification | TransactionModification | TypeModification | VectorModification | WriteVersionModification
+  owns: EntityConnection # reference // AlternativeModification | AttributeModification | AuthorModification | BenchmarkModification | EditModification | CheckpointModification | ConceptModification | ConflictModification | ConnectionModification | ConnectorModification | CoordinateModification | DesignModification | AlternativeModification | FamilyModification | FileModification | FolderModification | GraphModification | GroupModification | KitModification | LayerModification | LocationModification | OffsetModification | PieceModification | PlaceModification | PointModification | PortModification | PositionModification | PropModification | QualityModification | RepresentationModification | SessionModification | SideModification | StatModification | TypeModification | VectorModification | WriteVersionModification
   # Modification
   before: Entity! # reference // modification
   diff: Diff! # reference // modification
@@ -1400,7 +1405,7 @@ type FileModification implements Modification {
   id: ID! # computed // hash
   hash: String! # cached
   owner: Entity # reference // AddedAttributeToConcept | AddedAttributeToDesign | AddedAttributeToPiece | AddedAttributeToPort | AddedAttributeToQuality | AddedAttributeToTag | AddedAttributeToType | AddedAttributesToConcept | AddedAttributesToDesign | AddedAttributesToPiece | AddedAttributesToPort | AddedAttributesToQuality | AddedAttributesToTag | AddedAttributesToType | AddedChildPieceWithParentConnection | AddedChildPiecesWithParentConnections | AddedConnector | AddedConnectors | AddedFixedPiece | AddedHangingChildPieceWithParentConnection | AddedHangingChildPiecesWithParentConnections | Edit | ChangedDescription | ChangedPieceToType | ChangedPiecesToType | CreatedConcept | CreatedConcepts | CreatedDesign | CreatedDesigns | CreatedPort | CreatedPorts | CreatedQualities | CreatedQuality | CreatedTag | CreatedTags | CreatedType | CreatedTypes | DeletedConcept | DeletedConcepts | DeletedDesign | DeletedDesigns | DeletedPiece | DeletedPiecesAndConnections | DeletedPieces | DeletedPort | DeletedPorts | DeletedQualities | DeletedQuality | DeletedTag | DeletedTags | DeletedType | DeletedTypes | Modifications | DraggedPiece | DraggedPieces | FixedPiece | FixedPieces | FlattenedDesign | MovedPiece | MovedPieces | RemovedAttributeFromConcept | RemovedAttributeFromDesign | RemovedAttributeFromPiece | RemovedAttributeFromPort | RemovedAttributeFromQuality | RemovedAttributeFromTag | RemovedAttributeFromType | RemovedAttributesFromConcept | RemovedAttributesFromDesign | RemovedAttributesFromPiece | RemovedAttributesFromPort | RemovedAttributesFromQuality | RemovedAttributesFromTag | RemovedAttributesFromType | RemovedConnector | RemovedConnectors | RenamedConcept | RenamedConnector | RenamedKit | RenamedPiece | RenamedPort | RenamedQuality | RenamedTag | RenamedType | UpdatedConceptDescription | UpdatedConceptIcon | UpdatedConnectorDescription | UpdatedConnectorIcon | UpdatedPieceDescription | UpdatedPortDescription | UpdatedPortIcon | UpdatedQualityDescription | UpdatedQualityIcon | UpdatedTagDescription | UpdatedTagIcon | UpdatedTypeDescription | UpdatedTypeIcon
-  owns: EntityConnection # reference // AlternativeModification | AttributeModification | AuthorModification | BenchmarkModification | EditModification | CheckpointModification | ConceptModification | ConflictModification | ConnectionModification | ConnectorModification | CoordinateModification | DesignModification | AlternativeModification | FamilyModification | FileModification | FolderModification | GraphModification | GroupModification | KitModification | LayerModification | LocationModification | OffsetModification | PieceModification | PlaceModification | PointModification | PortModification | PositionModification | PropModification | QualityModification | ReadVersionModification | RepresentationModification | SessionModification | SideModification | StatModification | TagModification | TransactionModification | TypeModification | VectorModification | WriteVersionModification
+  owns: EntityConnection # reference // AlternativeModification | AttributeModification | AuthorModification | BenchmarkModification | EditModification | CheckpointModification | ConceptModification | ConflictModification | ConnectionModification | ConnectorModification | CoordinateModification | DesignModification | AlternativeModification | FamilyModification | FileModification | FolderModification | GraphModification | GroupModification | KitModification | LayerModification | LocationModification | OffsetModification | PieceModification | PlaceModification | PointModification | PortModification | PositionModification | PropModification | QualityModification | RepresentationModification | SessionModification | SideModification | StatModification | TypeModification | VectorModification | WriteVersionModification
   # Modification
   before: Entity! # reference // modification
   diff: Diff! # reference // modification
@@ -1449,7 +1454,7 @@ type Author implements Artifact {
   id: ID! # data // uuidv7
   hash: String! # cached
   owner: Entity # reference // Kit | Checkpoint | Graph | Session
-  owns: EntityConnection # reference // Alternative | Transaction | Checkpoint
+  owns: EntityConnection # reference // Alternative | Checkpoint
   # Artifact
   name: String! # data
   description: String! # data
@@ -1461,14 +1466,12 @@ type Author implements Artifact {
   lastChangedAt: Timestamp # computed
   lastChangedBy: Author # computed
   lastChangedIn: Checkpoint # computed
+  changes: ChangeConnection # computed
   edits: EditConnection # computed
   # Author
   email: String! # data
   role: String! # data
   rank: Int # data
-  alternatives: AlternativeConnection! # data
-  transactions: TransactionConnection! # data
-  checkpoints: CheckpointConnection! # data
 }
 
 type AuthorEdge implements EntityEdge {
@@ -1495,9 +1498,6 @@ type AuthorDiff implements Entity {
   removeRole: Boolean # computed
   rank: Int # computed
   removeRank: Boolean # computed
-  alternatives: AlternativeConnection # computed
-  transactions: TransactionConnection # computed
-  checkpoints: CheckpointConnection # computed
 }
 
 type AuthorDiffEdge implements EntityEdge {
@@ -1516,7 +1516,7 @@ type AuthorModification implements Modification {
   id: ID! # computed // hash
   hash: String! # cached
   owner: Entity # reference // AddedAttributeToConcept | AddedAttributeToDesign | AddedAttributeToPiece | AddedAttributeToPort | AddedAttributeToQuality | AddedAttributeToTag | AddedAttributeToType | AddedAttributesToConcept | AddedAttributesToDesign | AddedAttributesToPiece | AddedAttributesToPort | AddedAttributesToQuality | AddedAttributesToTag | AddedAttributesToType | AddedChildPieceWithParentConnection | AddedChildPiecesWithParentConnections | AddedConnector | AddedConnectors | AddedFixedPiece | AddedHangingChildPieceWithParentConnection | AddedHangingChildPiecesWithParentConnections | Edit | ChangedDescription | ChangedPieceToType | ChangedPiecesToType | CreatedConcept | CreatedConcepts | CreatedDesign | CreatedDesigns | CreatedPort | CreatedPorts | CreatedQualities | CreatedQuality | CreatedTag | CreatedTags | CreatedType | CreatedTypes | DeletedConcept | DeletedConcepts | DeletedDesign | DeletedDesigns | DeletedPiece | DeletedPiecesAndConnections | DeletedPieces | DeletedPort | DeletedPorts | DeletedQualities | DeletedQuality | DeletedTag | DeletedTags | DeletedType | DeletedTypes | Modifications | DraggedPiece | DraggedPieces | FixedPiece | FixedPieces | FlattenedDesign | MovedPiece | MovedPieces | RemovedAttributeFromConcept | RemovedAttributeFromDesign | RemovedAttributeFromPiece | RemovedAttributeFromPort | RemovedAttributeFromQuality | RemovedAttributeFromTag | RemovedAttributeFromType | RemovedAttributesFromConcept | RemovedAttributesFromDesign | RemovedAttributesFromPiece | RemovedAttributesFromPort | RemovedAttributesFromQuality | RemovedAttributesFromTag | RemovedAttributesFromType | RemovedConnector | RemovedConnectors | RenamedConcept | RenamedConnector | RenamedKit | RenamedPiece | RenamedPort | RenamedQuality | RenamedTag | RenamedType | UpdatedConceptDescription | UpdatedConceptIcon | UpdatedConnectorDescription | UpdatedConnectorIcon | UpdatedPieceDescription | UpdatedPortDescription | UpdatedPortIcon | UpdatedQualityDescription | UpdatedQualityIcon | UpdatedTagDescription | UpdatedTagIcon | UpdatedTypeDescription | UpdatedTypeIcon
-  owns: EntityConnection # reference // AlternativeModification | AttributeModification | AuthorModification | BenchmarkModification | EditModification | CheckpointModification | ConceptModification | ConflictModification | ConnectionModification | ConnectorModification | CoordinateModification | DesignModification | AlternativeModification | FamilyModification | FileModification | FolderModification | GraphModification | GroupModification | KitModification | LayerModification | LocationModification | OffsetModification | PieceModification | PlaceModification | PointModification | PortModification | PositionModification | PropModification | QualityModification | ReadVersionModification | RepresentationModification | SessionModification | SideModification | StatModification | TagModification | TransactionModification | TypeModification | VectorModification | WriteVersionModification
+  owns: EntityConnection # reference // AlternativeModification | AttributeModification | AuthorModification | BenchmarkModification | EditModification | CheckpointModification | ConceptModification | ConflictModification | ConnectionModification | ConnectorModification | CoordinateModification | DesignModification | AlternativeModification | FamilyModification | FileModification | FolderModification | GraphModification | GroupModification | KitModification | LayerModification | LocationModification | OffsetModification | PieceModification | PlaceModification | PointModification | PortModification | PositionModification | PropModification | QualityModification | RepresentationModification | SessionModification | SideModification | StatModification | TypeModification | VectorModification | WriteVersionModification
   # Modification
   before: Entity! # reference // modification
   diff: Diff! # reference // modification
@@ -1577,6 +1577,7 @@ type Prop implements Artifact {
   lastChangedAt: Timestamp # computed
   lastChangedBy: Author # computed
   lastChangedIn: Checkpoint # computed
+  changes: ChangeConnection # computed
   edits: EditConnection # computed
   # Prop
   key: String! # data
@@ -1627,7 +1628,7 @@ type PropModification implements Modification {
   id: ID! # computed // hash
   hash: String! # cached
   owner: Entity # reference // AddedAttributeToConcept | AddedAttributeToDesign | AddedAttributeToPiece | AddedAttributeToPort | AddedAttributeToQuality | AddedAttributeToTag | AddedAttributeToType | AddedAttributesToConcept | AddedAttributesToDesign | AddedAttributesToPiece | AddedAttributesToPort | AddedAttributesToQuality | AddedAttributesToTag | AddedAttributesToType | AddedChildPieceWithParentConnection | AddedChildPiecesWithParentConnections | AddedConnector | AddedConnectors | AddedFixedPiece | AddedHangingChildPieceWithParentConnection | AddedHangingChildPiecesWithParentConnections | Edit | ChangedDescription | ChangedPieceToType | ChangedPiecesToType | CreatedConcept | CreatedConcepts | CreatedDesign | CreatedDesigns | CreatedPort | CreatedPorts | CreatedQualities | CreatedQuality | CreatedTag | CreatedTags | CreatedType | CreatedTypes | DeletedConcept | DeletedConcepts | DeletedDesign | DeletedDesigns | DeletedPiece | DeletedPiecesAndConnections | DeletedPieces | DeletedPort | DeletedPorts | DeletedQualities | DeletedQuality | DeletedTag | DeletedTags | DeletedType | DeletedTypes | Modifications | DraggedPiece | DraggedPieces | FixedPiece | FixedPieces | FlattenedDesign | MovedPiece | MovedPieces | RemovedAttributeFromConcept | RemovedAttributeFromDesign | RemovedAttributeFromPiece | RemovedAttributeFromPort | RemovedAttributeFromQuality | RemovedAttributeFromTag | RemovedAttributeFromType | RemovedAttributesFromConcept | RemovedAttributesFromDesign | RemovedAttributesFromPiece | RemovedAttributesFromPort | RemovedAttributesFromQuality | RemovedAttributesFromTag | RemovedAttributesFromType | RemovedConnector | RemovedConnectors | RenamedConcept | RenamedConnector | RenamedKit | RenamedPiece | RenamedPort | RenamedQuality | RenamedTag | RenamedType | UpdatedConceptDescription | UpdatedConceptIcon | UpdatedConnectorDescription | UpdatedConnectorIcon | UpdatedPieceDescription | UpdatedPortDescription | UpdatedPortIcon | UpdatedQualityDescription | UpdatedQualityIcon | UpdatedTagDescription | UpdatedTagIcon | UpdatedTypeDescription | UpdatedTypeIcon
-  owns: EntityConnection # reference // AlternativeModification | AttributeModification | AuthorModification | BenchmarkModification | EditModification | CheckpointModification | ConceptModification | ConflictModification | ConnectionModification | ConnectorModification | CoordinateModification | DesignModification | AlternativeModification | FamilyModification | FileModification | FolderModification | GraphModification | GroupModification | KitModification | LayerModification | LocationModification | OffsetModification | PieceModification | PlaceModification | PointModification | PortModification | PositionModification | PropModification | QualityModification | ReadVersionModification | RepresentationModification | SessionModification | SideModification | StatModification | TagModification | TransactionModification | TypeModification | VectorModification | WriteVersionModification
+  owns: EntityConnection # reference // AlternativeModification | AttributeModification | AuthorModification | BenchmarkModification | EditModification | CheckpointModification | ConceptModification | ConflictModification | ConnectionModification | ConnectorModification | CoordinateModification | DesignModification | AlternativeModification | FamilyModification | FileModification | FolderModification | GraphModification | GroupModification | KitModification | LayerModification | LocationModification | OffsetModification | PieceModification | PlaceModification | PointModification | PortModification | PositionModification | PropModification | QualityModification | RepresentationModification | SessionModification | SideModification | StatModification | TypeModification | VectorModification | WriteVersionModification
   # Modification
   before: Entity! # reference // modification
   diff: Diff! # reference // modification
@@ -1688,6 +1689,7 @@ type Benchmark implements Artifact {
   lastChangedAt: Timestamp # computed
   lastChangedBy: Author # computed
   lastChangedIn: Checkpoint # computed
+  changes: ChangeConnection # computed
   edits: EditConnection # computed
   # Benchmark
   min: Float # data
@@ -1741,7 +1743,7 @@ type BenchmarkModification implements Modification {
   id: ID! # computed // hash
   hash: String! # cached
   owner: Entity # reference // AddedAttributeToConcept | AddedAttributeToDesign | AddedAttributeToPiece | AddedAttributeToPort | AddedAttributeToQuality | AddedAttributeToTag | AddedAttributeToType | AddedAttributesToConcept | AddedAttributesToDesign | AddedAttributesToPiece | AddedAttributesToPort | AddedAttributesToQuality | AddedAttributesToTag | AddedAttributesToType | AddedChildPieceWithParentConnection | AddedChildPiecesWithParentConnections | AddedConnector | AddedConnectors | AddedFixedPiece | AddedHangingChildPieceWithParentConnection | AddedHangingChildPiecesWithParentConnections | Edit | ChangedDescription | ChangedPieceToType | ChangedPiecesToType | CreatedConcept | CreatedConcepts | CreatedDesign | CreatedDesigns | CreatedPort | CreatedPorts | CreatedQualities | CreatedQuality | CreatedTag | CreatedTags | CreatedType | CreatedTypes | DeletedConcept | DeletedConcepts | DeletedDesign | DeletedDesigns | DeletedPiece | DeletedPiecesAndConnections | DeletedPieces | DeletedPort | DeletedPorts | DeletedQualities | DeletedQuality | DeletedTag | DeletedTags | DeletedType | DeletedTypes | Modifications | DraggedPiece | DraggedPieces | FixedPiece | FixedPieces | FlattenedDesign | MovedPiece | MovedPieces | RemovedAttributeFromConcept | RemovedAttributeFromDesign | RemovedAttributeFromPiece | RemovedAttributeFromPort | RemovedAttributeFromQuality | RemovedAttributeFromTag | RemovedAttributeFromType | RemovedAttributesFromConcept | RemovedAttributesFromDesign | RemovedAttributesFromPiece | RemovedAttributesFromPort | RemovedAttributesFromQuality | RemovedAttributesFromTag | RemovedAttributesFromType | RemovedConnector | RemovedConnectors | RenamedConcept | RenamedConnector | RenamedKit | RenamedPiece | RenamedPort | RenamedQuality | RenamedTag | RenamedType | UpdatedConceptDescription | UpdatedConceptIcon | UpdatedConnectorDescription | UpdatedConnectorIcon | UpdatedPieceDescription | UpdatedPortDescription | UpdatedPortIcon | UpdatedQualityDescription | UpdatedQualityIcon | UpdatedTagDescription | UpdatedTagIcon | UpdatedTypeDescription | UpdatedTypeIcon
-  owns: EntityConnection # reference // AlternativeModification | AttributeModification | AuthorModification | BenchmarkModification | EditModification | CheckpointModification | ConceptModification | ConflictModification | ConnectionModification | ConnectorModification | CoordinateModification | DesignModification | AlternativeModification | FamilyModification | FileModification | FolderModification | GraphModification | GroupModification | KitModification | LayerModification | LocationModification | OffsetModification | PieceModification | PlaceModification | PointModification | PortModification | PositionModification | PropModification | QualityModification | ReadVersionModification | RepresentationModification | SessionModification | SideModification | StatModification | TagModification | TransactionModification | TypeModification | VectorModification | WriteVersionModification
+  owns: EntityConnection # reference // AlternativeModification | AttributeModification | AuthorModification | BenchmarkModification | EditModification | CheckpointModification | ConceptModification | ConflictModification | ConnectionModification | ConnectorModification | CoordinateModification | DesignModification | AlternativeModification | FamilyModification | FileModification | FolderModification | GraphModification | GroupModification | KitModification | LayerModification | LocationModification | OffsetModification | PieceModification | PlaceModification | PointModification | PortModification | PositionModification | PropModification | QualityModification | RepresentationModification | SessionModification | SideModification | StatModification | TypeModification | VectorModification | WriteVersionModification
   # Modification
   before: Entity! # reference // modification
   diff: Diff! # reference // modification
@@ -1802,6 +1804,7 @@ type Quality implements Artifact {
   lastChangedAt: Timestamp # computed
   lastChangedBy: Author # computed
   lastChangedIn: Checkpoint # computed
+  changes: ChangeConnection # computed
   edits: EditConnection # computed
   # Quality
   key: String! # data
@@ -1860,7 +1863,7 @@ type QualityModification implements Modification {
   id: ID! # computed // hash
   hash: String! # cached
   owner: Entity # reference // AddedAttributeToConcept | AddedAttributeToDesign | AddedAttributeToPiece | AddedAttributeToPort | AddedAttributeToQuality | AddedAttributeToTag | AddedAttributeToType | AddedAttributesToConcept | AddedAttributesToDesign | AddedAttributesToPiece | AddedAttributesToPort | AddedAttributesToQuality | AddedAttributesToTag | AddedAttributesToType | AddedChildPieceWithParentConnection | AddedChildPiecesWithParentConnections | AddedConnector | AddedConnectors | AddedFixedPiece | AddedHangingChildPieceWithParentConnection | AddedHangingChildPiecesWithParentConnections | Edit | ChangedDescription | ChangedPieceToType | ChangedPiecesToType | CreatedConcept | CreatedConcepts | CreatedDesign | CreatedDesigns | CreatedPort | CreatedPorts | CreatedQualities | CreatedQuality | CreatedTag | CreatedTags | CreatedType | CreatedTypes | DeletedConcept | DeletedConcepts | DeletedDesign | DeletedDesigns | DeletedPiece | DeletedPiecesAndConnections | DeletedPieces | DeletedPort | DeletedPorts | DeletedQualities | DeletedQuality | DeletedTag | DeletedTags | DeletedType | DeletedTypes | Modifications | DraggedPiece | DraggedPieces | FixedPiece | FixedPieces | FlattenedDesign | MovedPiece | MovedPieces | RemovedAttributeFromConcept | RemovedAttributeFromDesign | RemovedAttributeFromPiece | RemovedAttributeFromPort | RemovedAttributeFromQuality | RemovedAttributeFromTag | RemovedAttributeFromType | RemovedAttributesFromConcept | RemovedAttributesFromDesign | RemovedAttributesFromPiece | RemovedAttributesFromPort | RemovedAttributesFromQuality | RemovedAttributesFromTag | RemovedAttributesFromType | RemovedConnector | RemovedConnectors | RenamedConcept | RenamedConnector | RenamedKit | RenamedPiece | RenamedPort | RenamedQuality | RenamedTag | RenamedType | UpdatedConceptDescription | UpdatedConceptIcon | UpdatedConnectorDescription | UpdatedConnectorIcon | UpdatedPieceDescription | UpdatedPortDescription | UpdatedPortIcon | UpdatedQualityDescription | UpdatedQualityIcon | UpdatedTagDescription | UpdatedTagIcon | UpdatedTypeDescription | UpdatedTypeIcon
-  owns: EntityConnection # reference // AlternativeModification | AttributeModification | AuthorModification | BenchmarkModification | EditModification | CheckpointModification | ConceptModification | ConflictModification | ConnectionModification | ConnectorModification | CoordinateModification | DesignModification | AlternativeModification | FamilyModification | FileModification | FolderModification | GraphModification | GroupModification | KitModification | LayerModification | LocationModification | OffsetModification | PieceModification | PlaceModification | PointModification | PortModification | PositionModification | PropModification | QualityModification | ReadVersionModification | RepresentationModification | SessionModification | SideModification | StatModification | TagModification | TransactionModification | TypeModification | VectorModification | WriteVersionModification
+  owns: EntityConnection # reference // AlternativeModification | AttributeModification | AuthorModification | BenchmarkModification | EditModification | CheckpointModification | ConceptModification | ConflictModification | ConnectionModification | ConnectorModification | CoordinateModification | DesignModification | AlternativeModification | FamilyModification | FileModification | FolderModification | GraphModification | GroupModification | KitModification | LayerModification | LocationModification | OffsetModification | PieceModification | PlaceModification | PointModification | PortModification | PositionModification | PropModification | QualityModification | RepresentationModification | SessionModification | SideModification | StatModification | TypeModification | VectorModification | WriteVersionModification
   # Modification
   before: Entity! # reference // modification
   diff: Diff! # reference // modification
@@ -2101,6 +2104,7 @@ type Tag implements Artifact {
   lastChangedAt: Timestamp # computed
   lastChangedBy: Author # computed
   lastChangedIn: Checkpoint # computed
+  changes: ChangeConnection # computed
   edits: EditConnection # computed
   # Tag
   order: Int # data
@@ -2150,7 +2154,7 @@ type TagModification implements Modification {
   id: ID! # computed // hash
   hash: String! # cached
   owner: Entity # reference // AddedAttributeToConcept | AddedAttributeToDesign | AddedAttributeToPiece | AddedAttributeToPort | AddedAttributeToQuality | AddedAttributeToTag | AddedAttributeToType | AddedAttributesToConcept | AddedAttributesToDesign | AddedAttributesToPiece | AddedAttributesToPort | AddedAttributesToQuality | AddedAttributesToTag | AddedAttributesToType | AddedChildPieceWithParentConnection | AddedChildPiecesWithParentConnections | AddedConnector | AddedConnectors | AddedFixedPiece | AddedHangingChildPieceWithParentConnection | AddedHangingChildPiecesWithParentConnections | Edit | ChangedDescription | ChangedPieceToType | ChangedPiecesToType | CreatedConcept | CreatedConcepts | CreatedDesign | CreatedDesigns | CreatedPort | CreatedPorts | CreatedQualities | CreatedQuality | CreatedTag | CreatedTags | CreatedType | CreatedTypes | DeletedConcept | DeletedConcepts | DeletedDesign | DeletedDesigns | DeletedPiece | DeletedPiecesAndConnections | DeletedPieces | DeletedPort | DeletedPorts | DeletedQualities | DeletedQuality | DeletedTag | DeletedTags | DeletedType | DeletedTypes | Modifications | DraggedPiece | DraggedPieces | FixedPiece | FixedPieces | FlattenedDesign | MovedPiece | MovedPieces | RemovedAttributeFromConcept | RemovedAttributeFromDesign | RemovedAttributeFromPiece | RemovedAttributeFromPort | RemovedAttributeFromQuality | RemovedAttributeFromTag | RemovedAttributeFromType | RemovedAttributesFromConcept | RemovedAttributesFromDesign | RemovedAttributesFromPiece | RemovedAttributesFromPort | RemovedAttributesFromQuality | RemovedAttributesFromTag | RemovedAttributesFromType | RemovedConnector | RemovedConnectors | RenamedConcept | RenamedConnector | RenamedKit | RenamedPiece | RenamedPort | RenamedQuality | RenamedTag | RenamedType | UpdatedConceptDescription | UpdatedConceptIcon | UpdatedConnectorDescription | UpdatedConnectorIcon | UpdatedPieceDescription | UpdatedPortDescription | UpdatedPortIcon | UpdatedQualityDescription | UpdatedQualityIcon | UpdatedTagDescription | UpdatedTagIcon | UpdatedTypeDescription | UpdatedTypeIcon
-  owns: EntityConnection # reference // AlternativeModification | AttributeModification | AuthorModification | BenchmarkModification | EditModification | CheckpointModification | ConceptModification | ConflictModification | ConnectionModification | ConnectorModification | CoordinateModification | DesignModification | AlternativeModification | FamilyModification | FileModification | FolderModification | GraphModification | GroupModification | KitModification | LayerModification | LocationModification | OffsetModification | PieceModification | PlaceModification | PointModification | PortModification | PositionModification | PropModification | QualityModification | ReadVersionModification | RepresentationModification | SessionModification | SideModification | StatModification | TagModification | TransactionModification | TypeModification | VectorModification | WriteVersionModification
+  owns: EntityConnection # reference // AlternativeModification | AttributeModification | AuthorModification | BenchmarkModification | EditModification | CheckpointModification | ConceptModification | ConflictModification | ConnectionModification | ConnectorModification | CoordinateModification | DesignModification | AlternativeModification | FamilyModification | FileModification | FolderModification | GraphModification | GroupModification | KitModification | LayerModification | LocationModification | OffsetModification | PieceModification | PlaceModification | PointModification | PortModification | PositionModification | PropModification | QualityModification | RepresentationModification | SessionModification | SideModification | StatModification | TypeModification | VectorModification | WriteVersionModification
   # Modification
   before: Entity! # reference // modification
   diff: Diff! # reference // modification
@@ -2173,7 +2177,7 @@ type TagModifications implements Entity {
   id: ID! # computed // hash
   hash: String! # cached
   owner: Entity # reference // AddedAttributeToConcept | AddedAttributeToDesign | AddedAttributeToPiece | AddedAttributeToPort | AddedAttributeToQuality | AddedAttributeToTag | AddedAttributeToType | AddedAttributesToConcept | AddedAttributesToDesign | AddedAttributesToPiece | AddedAttributesToPort | AddedAttributesToQuality | AddedAttributesToTag | AddedAttributesToType | AddedChildPieceWithParentConnection | AddedChildPiecesWithParentConnections | AddedConnector | AddedConnectors | AddedFixedPiece | AddedHangingChildPieceWithParentConnection | AddedHangingChildPiecesWithParentConnections | AttributeModification | Edit | ChangedDescription | ChangedPieceToType | ChangedPiecesToType | CreatedConcept | CreatedConcepts | CreatedDesign | CreatedDesigns | CreatedPort | CreatedPorts | CreatedQualities | CreatedQuality | CreatedTag | CreatedTags | CreatedType | CreatedTypes | DeletedConcept | DeletedConcepts | DeletedDesign | DeletedDesigns | DeletedPiece | DeletedPiecesAndConnections | DeletedPieces | DeletedPort | DeletedPorts | DeletedQualities | DeletedQuality | DeletedTag | DeletedTags | DeletedType | DeletedTypes | Modifications | DraggedPiece | DraggedPieces | FixedPiece | FixedPieces | FlattenedDesign | LocationModification | MovedPiece | MovedPieces | PlaceModification | PlaneModification | PositionModification | RemovedAttributeFromConcept | RemovedAttributeFromDesign | RemovedAttributeFromPiece | RemovedAttributeFromPort | RemovedAttributeFromQuality | RemovedAttributeFromTag | RemovedAttributeFromType | RemovedAttributesFromConcept | RemovedAttributesFromDesign | RemovedAttributesFromPiece | RemovedAttributesFromPort | RemovedAttributesFromQuality | RemovedAttributesFromTag | RemovedAttributesFromType | RemovedConnector | RemovedConnectors | RenamedConcept | RenamedConnector | RenamedKit | RenamedPiece | RenamedPort | RenamedQuality | RenamedTag | RenamedType | UpdatedConceptDescription | UpdatedConceptIcon | UpdatedConnectorDescription | UpdatedConnectorIcon | UpdatedPieceDescription | UpdatedPortDescription | UpdatedPortIcon | UpdatedQualityDescription | UpdatedQualityIcon | UpdatedTagDescription | UpdatedTagIcon | UpdatedTypeDescription | UpdatedTypeIcon
-  owns: EntityConnection # reference // TagModifications | TagModification | PlaneModification | PositionModification | AttributeModification | LocationModification | PlaceModification
+  owns: EntityConnection # reference // TagModifications | PlaneModification | PositionModification | AttributeModification | LocationModification | PlaceModification
   removed: EntityConnection # computed
   modifications: TagModificationConnection # computed
   added: EntityConnection # computed
@@ -2391,6 +2395,7 @@ type Concept implements Artifact {
   lastChangedAt: Timestamp # computed
   lastChangedBy: Author # computed
   lastChangedIn: Checkpoint # computed
+  changes: ChangeConnection # computed
   edits: EditConnection # computed
   # Concept
   order: Int # data
@@ -2440,7 +2445,7 @@ type ConceptModification implements Modification {
   id: ID! # computed // hash
   hash: String! # cached
   owner: Entity # reference // AddedAttributeToConcept | AddedAttributeToDesign | AddedAttributeToPiece | AddedAttributeToPort | AddedAttributeToQuality | AddedAttributeToTag | AddedAttributeToType | AddedAttributesToConcept | AddedAttributesToDesign | AddedAttributesToPiece | AddedAttributesToPort | AddedAttributesToQuality | AddedAttributesToTag | AddedAttributesToType | AddedChildPieceWithParentConnection | AddedChildPiecesWithParentConnections | AddedConnector | AddedConnectors | AddedFixedPiece | AddedHangingChildPieceWithParentConnection | AddedHangingChildPiecesWithParentConnections | Edit | ChangedDescription | ChangedPieceToType | ChangedPiecesToType | CreatedConcept | CreatedConcepts | CreatedDesign | CreatedDesigns | CreatedPort | CreatedPorts | CreatedQualities | CreatedQuality | CreatedTag | CreatedTags | CreatedType | CreatedTypes | DeletedConcept | DeletedConcepts | DeletedDesign | DeletedDesigns | DeletedPiece | DeletedPiecesAndConnections | DeletedPieces | DeletedPort | DeletedPorts | DeletedQualities | DeletedQuality | DeletedTag | DeletedTags | DeletedType | DeletedTypes | Modifications | DraggedPiece | DraggedPieces | FixedPiece | FixedPieces | FlattenedDesign | MovedPiece | MovedPieces | RemovedAttributeFromConcept | RemovedAttributeFromDesign | RemovedAttributeFromPiece | RemovedAttributeFromPort | RemovedAttributeFromQuality | RemovedAttributeFromTag | RemovedAttributeFromType | RemovedAttributesFromConcept | RemovedAttributesFromDesign | RemovedAttributesFromPiece | RemovedAttributesFromPort | RemovedAttributesFromQuality | RemovedAttributesFromTag | RemovedAttributesFromType | RemovedConnector | RemovedConnectors | RenamedConcept | RenamedConnector | RenamedKit | RenamedPiece | RenamedPort | RenamedQuality | RenamedTag | RenamedType | UpdatedConceptDescription | UpdatedConceptIcon | UpdatedConnectorDescription | UpdatedConnectorIcon | UpdatedPieceDescription | UpdatedPortDescription | UpdatedPortIcon | UpdatedQualityDescription | UpdatedQualityIcon | UpdatedTagDescription | UpdatedTagIcon | UpdatedTypeDescription | UpdatedTypeIcon
-  owns: EntityConnection # reference // AlternativeModification | AttributeModification | AuthorModification | BenchmarkModification | EditModification | CheckpointModification | ConceptModification | ConflictModification | ConnectionModification | ConnectorModification | CoordinateModification | DesignModification | AlternativeModification | FamilyModification | FileModification | FolderModification | GraphModification | GroupModification | KitModification | LayerModification | LocationModification | OffsetModification | PieceModification | PlaceModification | PointModification | PortModification | PositionModification | PropModification | QualityModification | ReadVersionModification | RepresentationModification | SessionModification | SideModification | StatModification | TagModification | TransactionModification | TypeModification | VectorModification | WriteVersionModification
+  owns: EntityConnection # reference // AlternativeModification | AttributeModification | AuthorModification | BenchmarkModification | EditModification | CheckpointModification | ConceptModification | ConflictModification | ConnectionModification | ConnectorModification | CoordinateModification | DesignModification | AlternativeModification | FamilyModification | FileModification | FolderModification | GraphModification | GroupModification | KitModification | LayerModification | LocationModification | OffsetModification | PieceModification | PlaceModification | PointModification | PortModification | PositionModification | PropModification | QualityModification | RepresentationModification | SessionModification | SideModification | StatModification | TypeModification | VectorModification | WriteVersionModification
   # Modification
   before: Entity! # reference // modification
   diff: Diff! # reference // modification
@@ -2681,6 +2686,7 @@ type Stat implements Artifact {
   lastChangedAt: Timestamp # computed
   lastChangedBy: Author # computed
   lastChangedIn: Checkpoint # computed
+  changes: ChangeConnection # computed
   edits: EditConnection # computed
   # Stat
   key: String! # data
@@ -2730,7 +2736,7 @@ type StatModification implements Modification {
   id: ID! # computed // hash
   hash: String! # cached
   owner: Entity # reference // AddedAttributeToConcept | AddedAttributeToDesign | AddedAttributeToPiece | AddedAttributeToPort | AddedAttributeToQuality | AddedAttributeToTag | AddedAttributeToType | AddedAttributesToConcept | AddedAttributesToDesign | AddedAttributesToPiece | AddedAttributesToPort | AddedAttributesToQuality | AddedAttributesToTag | AddedAttributesToType | AddedChildPieceWithParentConnection | AddedChildPiecesWithParentConnections | AddedConnector | AddedConnectors | AddedFixedPiece | AddedHangingChildPieceWithParentConnection | AddedHangingChildPiecesWithParentConnections | Edit | ChangedDescription | ChangedPieceToType | ChangedPiecesToType | CreatedConcept | CreatedConcepts | CreatedDesign | CreatedDesigns | CreatedPort | CreatedPorts | CreatedQualities | CreatedQuality | CreatedTag | CreatedTags | CreatedType | CreatedTypes | DeletedConcept | DeletedConcepts | DeletedDesign | DeletedDesigns | DeletedPiece | DeletedPiecesAndConnections | DeletedPieces | DeletedPort | DeletedPorts | DeletedQualities | DeletedQuality | DeletedTag | DeletedTags | DeletedType | DeletedTypes | Modifications | DraggedPiece | DraggedPieces | FixedPiece | FixedPieces | FlattenedDesign | MovedPiece | MovedPieces | RemovedAttributeFromConcept | RemovedAttributeFromDesign | RemovedAttributeFromPiece | RemovedAttributeFromPort | RemovedAttributeFromQuality | RemovedAttributeFromTag | RemovedAttributeFromType | RemovedAttributesFromConcept | RemovedAttributesFromDesign | RemovedAttributesFromPiece | RemovedAttributesFromPort | RemovedAttributesFromQuality | RemovedAttributesFromTag | RemovedAttributesFromType | RemovedConnector | RemovedConnectors | RenamedConcept | RenamedConnector | RenamedKit | RenamedPiece | RenamedPort | RenamedQuality | RenamedTag | RenamedType | UpdatedConceptDescription | UpdatedConceptIcon | UpdatedConnectorDescription | UpdatedConnectorIcon | UpdatedPieceDescription | UpdatedPortDescription | UpdatedPortIcon | UpdatedQualityDescription | UpdatedQualityIcon | UpdatedTagDescription | UpdatedTagIcon | UpdatedTypeDescription | UpdatedTypeIcon
-  owns: EntityConnection # reference // AlternativeModification | AttributeModification | AuthorModification | BenchmarkModification | EditModification | CheckpointModification | ConceptModification | ConflictModification | ConnectionModification | ConnectorModification | CoordinateModification | DesignModification | AlternativeModification | FamilyModification | FileModification | FolderModification | GraphModification | GroupModification | KitModification | LayerModification | LocationModification | OffsetModification | PieceModification | PlaceModification | PointModification | PortModification | PositionModification | PropModification | QualityModification | ReadVersionModification | RepresentationModification | SessionModification | SideModification | StatModification | TagModification | TransactionModification | TypeModification | VectorModification | WriteVersionModification
+  owns: EntityConnection # reference // AlternativeModification | AttributeModification | AuthorModification | BenchmarkModification | EditModification | CheckpointModification | ConceptModification | ConflictModification | ConnectionModification | ConnectorModification | CoordinateModification | DesignModification | AlternativeModification | FamilyModification | FileModification | FolderModification | GraphModification | GroupModification | KitModification | LayerModification | LocationModification | OffsetModification | PieceModification | PlaceModification | PointModification | PortModification | PositionModification | PropModification | QualityModification | RepresentationModification | SessionModification | SideModification | StatModification | TypeModification | VectorModification | WriteVersionModification
   # Modification
   before: Entity! # reference // modification
   diff: Diff! # reference // modification
@@ -2791,6 +2797,7 @@ type Port implements Artifact {
   lastChangedAt: Timestamp # computed
   lastChangedBy: Author # computed
   lastChangedIn: Checkpoint # computed
+  changes: ChangeConnection # computed
   edits: EditConnection # computed
   # Port
   code: String! # data
@@ -2845,7 +2852,7 @@ type PortModification implements Modification {
   id: ID! # computed // hash
   hash: String! # cached
   owner: Entity # reference // AddedAttributeToConcept | AddedAttributeToDesign | AddedAttributeToPiece | AddedAttributeToPort | AddedAttributeToQuality | AddedAttributeToTag | AddedAttributeToType | AddedAttributesToConcept | AddedAttributesToDesign | AddedAttributesToPiece | AddedAttributesToPort | AddedAttributesToQuality | AddedAttributesToTag | AddedAttributesToType | AddedChildPieceWithParentConnection | AddedChildPiecesWithParentConnections | AddedConnector | AddedConnectors | AddedFixedPiece | AddedHangingChildPieceWithParentConnection | AddedHangingChildPiecesWithParentConnections | Edit | ChangedDescription | ChangedPieceToType | ChangedPiecesToType | CreatedConcept | CreatedConcepts | CreatedDesign | CreatedDesigns | CreatedPort | CreatedPorts | CreatedQualities | CreatedQuality | CreatedTag | CreatedTags | CreatedType | CreatedTypes | DeletedConcept | DeletedConcepts | DeletedDesign | DeletedDesigns | DeletedPiece | DeletedPiecesAndConnections | DeletedPieces | DeletedPort | DeletedPorts | DeletedQualities | DeletedQuality | DeletedTag | DeletedTags | DeletedType | DeletedTypes | Modifications | DraggedPiece | DraggedPieces | FixedPiece | FixedPieces | FlattenedDesign | MovedPiece | MovedPieces | RemovedAttributeFromConcept | RemovedAttributeFromDesign | RemovedAttributeFromPiece | RemovedAttributeFromPort | RemovedAttributeFromQuality | RemovedAttributeFromTag | RemovedAttributeFromType | RemovedAttributesFromConcept | RemovedAttributesFromDesign | RemovedAttributesFromPiece | RemovedAttributesFromPort | RemovedAttributesFromQuality | RemovedAttributesFromTag | RemovedAttributesFromType | RemovedConnector | RemovedConnectors | RenamedConcept | RenamedConnector | RenamedKit | RenamedPiece | RenamedPort | RenamedQuality | RenamedTag | RenamedType | UpdatedConceptDescription | UpdatedConceptIcon | UpdatedConnectorDescription | UpdatedConnectorIcon | UpdatedPieceDescription | UpdatedPortDescription | UpdatedPortIcon | UpdatedQualityDescription | UpdatedQualityIcon | UpdatedTagDescription | UpdatedTagIcon | UpdatedTypeDescription | UpdatedTypeIcon
-  owns: EntityConnection # reference // AlternativeModification | AttributeModification | AuthorModification | BenchmarkModification | EditModification | CheckpointModification | ConceptModification | ConflictModification | ConnectionModification | ConnectorModification | CoordinateModification | DesignModification | AlternativeModification | FamilyModification | FileModification | FolderModification | GraphModification | GroupModification | KitModification | LayerModification | LocationModification | OffsetModification | PieceModification | PlaceModification | PointModification | PortModification | PositionModification | PropModification | QualityModification | ReadVersionModification | RepresentationModification | SessionModification | SideModification | StatModification | TagModification | TransactionModification | TypeModification | VectorModification | WriteVersionModification
+  owns: EntityConnection # reference // AlternativeModification | AttributeModification | AuthorModification | BenchmarkModification | EditModification | CheckpointModification | ConceptModification | ConflictModification | ConnectionModification | ConnectorModification | CoordinateModification | DesignModification | AlternativeModification | FamilyModification | FileModification | FolderModification | GraphModification | GroupModification | KitModification | LayerModification | LocationModification | OffsetModification | PieceModification | PlaceModification | PointModification | PortModification | PositionModification | PropModification | QualityModification | RepresentationModification | SessionModification | SideModification | StatModification | TypeModification | VectorModification | WriteVersionModification
   # Modification
   before: Entity! # reference // modification
   diff: Diff! # reference // modification
@@ -3087,6 +3094,7 @@ type Connector implements Artifact {
   lastChangedAt: Timestamp # computed
   lastChangedBy: Author # computed
   lastChangedIn: Checkpoint # computed
+  changes: ChangeConnection # computed
   edits: EditConnection # computed
   # Connector
   code: String! # data
@@ -3138,7 +3146,7 @@ type ConnectorModification implements Modification {
   id: ID! # computed // hash
   hash: String! # cached
   owner: Entity # reference // AddedAttributeToConcept | AddedAttributeToDesign | AddedAttributeToPiece | AddedAttributeToPort | AddedAttributeToQuality | AddedAttributeToTag | AddedAttributeToType | AddedAttributesToConcept | AddedAttributesToDesign | AddedAttributesToPiece | AddedAttributesToPort | AddedAttributesToQuality | AddedAttributesToTag | AddedAttributesToType | AddedChildPieceWithParentConnection | AddedChildPiecesWithParentConnections | AddedConnector | AddedConnectors | AddedFixedPiece | AddedHangingChildPieceWithParentConnection | AddedHangingChildPiecesWithParentConnections | Edit | ChangedDescription | ChangedPieceToType | ChangedPiecesToType | CreatedConcept | CreatedConcepts | CreatedDesign | CreatedDesigns | CreatedPort | CreatedPorts | CreatedQualities | CreatedQuality | CreatedTag | CreatedTags | CreatedType | CreatedTypes | DeletedConcept | DeletedConcepts | DeletedDesign | DeletedDesigns | DeletedPiece | DeletedPiecesAndConnections | DeletedPieces | DeletedPort | DeletedPorts | DeletedQualities | DeletedQuality | DeletedTag | DeletedTags | DeletedType | DeletedTypes | Modifications | DraggedPiece | DraggedPieces | FixedPiece | FixedPieces | FlattenedDesign | MovedPiece | MovedPieces | RemovedAttributeFromConcept | RemovedAttributeFromDesign | RemovedAttributeFromPiece | RemovedAttributeFromPort | RemovedAttributeFromQuality | RemovedAttributeFromTag | RemovedAttributeFromType | RemovedAttributesFromConcept | RemovedAttributesFromDesign | RemovedAttributesFromPiece | RemovedAttributesFromPort | RemovedAttributesFromQuality | RemovedAttributesFromTag | RemovedAttributesFromType | RemovedConnector | RemovedConnectors | RenamedConcept | RenamedConnector | RenamedKit | RenamedPiece | RenamedPort | RenamedQuality | RenamedTag | RenamedType | UpdatedConceptDescription | UpdatedConceptIcon | UpdatedConnectorDescription | UpdatedConnectorIcon | UpdatedPieceDescription | UpdatedPortDescription | UpdatedPortIcon | UpdatedQualityDescription | UpdatedQualityIcon | UpdatedTagDescription | UpdatedTagIcon | UpdatedTypeDescription | UpdatedTypeIcon
-  owns: EntityConnection # reference // AlternativeModification | AttributeModification | AuthorModification | BenchmarkModification | EditModification | CheckpointModification | ConceptModification | ConflictModification | ConnectionModification | ConnectorModification | CoordinateModification | DesignModification | AlternativeModification | FamilyModification | FileModification | FolderModification | GraphModification | GroupModification | KitModification | LayerModification | LocationModification | OffsetModification | PieceModification | PlaceModification | PointModification | PortModification | PositionModification | PropModification | QualityModification | ReadVersionModification | RepresentationModification | SessionModification | SideModification | StatModification | TagModification | TransactionModification | TypeModification | VectorModification | WriteVersionModification
+  owns: EntityConnection # reference // AlternativeModification | AttributeModification | AuthorModification | BenchmarkModification | EditModification | CheckpointModification | ConceptModification | ConflictModification | ConnectionModification | ConnectorModification | CoordinateModification | DesignModification | AlternativeModification | FamilyModification | FileModification | FolderModification | GraphModification | GroupModification | KitModification | LayerModification | LocationModification | OffsetModification | PieceModification | PlaceModification | PointModification | PortModification | PositionModification | PropModification | QualityModification | RepresentationModification | SessionModification | SideModification | StatModification | TypeModification | VectorModification | WriteVersionModification
   # Modification
   before: Entity! # reference // modification
   diff: Diff! # reference // modification
@@ -3195,6 +3203,7 @@ type Representation implements Artifact {
   lastChangedAt: Timestamp # computed
   lastChangedBy: Author # computed
   lastChangedIn: Checkpoint # computed
+  changes: ChangeConnection # computed
   edits: EditConnection # computed
   # Representation
   url: String! # data
@@ -3245,7 +3254,7 @@ type RepresentationModification implements Modification {
   id: ID! # computed // hash
   hash: String! # cached
   owner: Entity # reference // AddedAttributeToConcept | AddedAttributeToDesign | AddedAttributeToPiece | AddedAttributeToPort | AddedAttributeToQuality | AddedAttributeToTag | AddedAttributeToType | AddedAttributesToConcept | AddedAttributesToDesign | AddedAttributesToPiece | AddedAttributesToPort | AddedAttributesToQuality | AddedAttributesToTag | AddedAttributesToType | AddedChildPieceWithParentConnection | AddedChildPiecesWithParentConnections | AddedConnector | AddedConnectors | AddedFixedPiece | AddedHangingChildPieceWithParentConnection | AddedHangingChildPiecesWithParentConnections | Edit | ChangedDescription | ChangedPieceToType | ChangedPiecesToType | CreatedConcept | CreatedConcepts | CreatedDesign | CreatedDesigns | CreatedPort | CreatedPorts | CreatedQualities | CreatedQuality | CreatedTag | CreatedTags | CreatedType | CreatedTypes | DeletedConcept | DeletedConcepts | DeletedDesign | DeletedDesigns | DeletedPiece | DeletedPiecesAndConnections | DeletedPieces | DeletedPort | DeletedPorts | DeletedQualities | DeletedQuality | DeletedTag | DeletedTags | DeletedType | DeletedTypes | Modifications | DraggedPiece | DraggedPieces | FixedPiece | FixedPieces | FlattenedDesign | MovedPiece | MovedPieces | RemovedAttributeFromConcept | RemovedAttributeFromDesign | RemovedAttributeFromPiece | RemovedAttributeFromPort | RemovedAttributeFromQuality | RemovedAttributeFromTag | RemovedAttributeFromType | RemovedAttributesFromConcept | RemovedAttributesFromDesign | RemovedAttributesFromPiece | RemovedAttributesFromPort | RemovedAttributesFromQuality | RemovedAttributesFromTag | RemovedAttributesFromType | RemovedConnector | RemovedConnectors | RenamedConcept | RenamedConnector | RenamedKit | RenamedPiece | RenamedPort | RenamedQuality | RenamedTag | RenamedType | UpdatedConceptDescription | UpdatedConceptIcon | UpdatedConnectorDescription | UpdatedConnectorIcon | UpdatedPieceDescription | UpdatedPortDescription | UpdatedPortIcon | UpdatedQualityDescription | UpdatedQualityIcon | UpdatedTagDescription | UpdatedTagIcon | UpdatedTypeDescription | UpdatedTypeIcon
-  owns: EntityConnection # reference // AlternativeModification | AttributeModification | AuthorModification | BenchmarkModification | EditModification | CheckpointModification | ConceptModification | ConflictModification | ConnectionModification | ConnectorModification | CoordinateModification | DesignModification | AlternativeModification | FamilyModification | FileModification | FolderModification | GraphModification | GroupModification | KitModification | LayerModification | LocationModification | OffsetModification | PieceModification | PlaceModification | PointModification | PortModification | PositionModification | PropModification | QualityModification | ReadVersionModification | RepresentationModification | SessionModification | SideModification | StatModification | TagModification | TransactionModification | TypeModification | VectorModification | WriteVersionModification
+  owns: EntityConnection # reference // AlternativeModification | AttributeModification | AuthorModification | BenchmarkModification | EditModification | CheckpointModification | ConceptModification | ConflictModification | ConnectionModification | ConnectorModification | CoordinateModification | DesignModification | AlternativeModification | FamilyModification | FileModification | FolderModification | GraphModification | GroupModification | KitModification | LayerModification | LocationModification | OffsetModification | PieceModification | PlaceModification | PointModification | PortModification | PositionModification | PropModification | QualityModification | RepresentationModification | SessionModification | SideModification | StatModification | TypeModification | VectorModification | WriteVersionModification
   # Modification
   before: Entity! # reference // modification
   diff: Diff! # reference // modification
@@ -3375,7 +3384,7 @@ type TypeModification implements Modification {
   id: ID! # computed // hash
   hash: String! # cached
   owner: Entity # reference // AddedAttributeToConcept | AddedAttributeToDesign | AddedAttributeToPiece | AddedAttributeToPort | AddedAttributeToQuality | AddedAttributeToTag | AddedAttributeToType | AddedAttributesToConcept | AddedAttributesToDesign | AddedAttributesToPiece | AddedAttributesToPort | AddedAttributesToQuality | AddedAttributesToTag | AddedAttributesToType | AddedChildPieceWithParentConnection | AddedChildPiecesWithParentConnections | AddedConnector | AddedConnectors | AddedFixedPiece | AddedHangingChildPieceWithParentConnection | AddedHangingChildPiecesWithParentConnections | Edit | ChangedDescription | ChangedPieceToType | ChangedPiecesToType | CreatedConcept | CreatedConcepts | CreatedDesign | CreatedDesigns | CreatedPort | CreatedPorts | CreatedQualities | CreatedQuality | CreatedTag | CreatedTags | CreatedType | CreatedTypes | DeletedConcept | DeletedConcepts | DeletedDesign | DeletedDesigns | DeletedPiece | DeletedPiecesAndConnections | DeletedPieces | DeletedPort | DeletedPorts | DeletedQualities | DeletedQuality | DeletedTag | DeletedTags | DeletedType | DeletedTypes | Modifications | DraggedPiece | DraggedPieces | FixedPiece | FixedPieces | FlattenedDesign | MovedPiece | MovedPieces | RemovedAttributeFromConcept | RemovedAttributeFromDesign | RemovedAttributeFromPiece | RemovedAttributeFromPort | RemovedAttributeFromQuality | RemovedAttributeFromTag | RemovedAttributeFromType | RemovedAttributesFromConcept | RemovedAttributesFromDesign | RemovedAttributesFromPiece | RemovedAttributesFromPort | RemovedAttributesFromQuality | RemovedAttributesFromTag | RemovedAttributesFromType | RemovedConnector | RemovedConnectors | RenamedConcept | RenamedConnector | RenamedKit | RenamedPiece | RenamedPort | RenamedQuality | RenamedTag | RenamedType | UpdatedConceptDescription | UpdatedConceptIcon | UpdatedConnectorDescription | UpdatedConnectorIcon | UpdatedPieceDescription | UpdatedPortDescription | UpdatedPortIcon | UpdatedQualityDescription | UpdatedQualityIcon | UpdatedTagDescription | UpdatedTagIcon | UpdatedTypeDescription | UpdatedTypeIcon
-  owns: EntityConnection # reference // AlternativeModification | AttributeModification | AuthorModification | BenchmarkModification | EditModification | CheckpointModification | ConceptModification | ConflictModification | ConnectionModification | ConnectorModification | CoordinateModification | DesignModification | AlternativeModification | FamilyModification | FileModification | FolderModification | GraphModification | GroupModification | KitModification | LayerModification | LocationModification | OffsetModification | PieceModification | PlaceModification | PointModification | PortModification | PositionModification | PropModification | QualityModification | ReadVersionModification | RepresentationModification | SessionModification | SideModification | StatModification | TagModification | TransactionModification | TypeModification | VectorModification | WriteVersionModification
+  owns: EntityConnection # reference // AlternativeModification | AttributeModification | AuthorModification | BenchmarkModification | EditModification | CheckpointModification | ConceptModification | ConflictModification | ConnectionModification | ConnectorModification | CoordinateModification | DesignModification | AlternativeModification | FamilyModification | FileModification | FolderModification | GraphModification | GroupModification | KitModification | LayerModification | LocationModification | OffsetModification | PieceModification | PlaceModification | PointModification | PortModification | PositionModification | PropModification | QualityModification | RepresentationModification | SessionModification | SideModification | StatModification | TypeModification | VectorModification | WriteVersionModification
   # Modification
   before: Entity! # reference // modification
   diff: Diff! # reference // modification
@@ -3736,6 +3745,7 @@ type Layer implements Artifact {
   lastChangedAt: Timestamp # computed
   lastChangedBy: Author # computed
   lastChangedIn: Checkpoint # computed
+  changes: ChangeConnection # computed
   edits: EditConnection # computed
   # Layer
   color: String! # data
@@ -3791,7 +3801,7 @@ type LayerModification implements Modification {
   id: ID! # computed // hash
   hash: String! # cached
   owner: Entity # reference // AddedAttributeToConcept | AddedAttributeToDesign | AddedAttributeToPiece | AddedAttributeToPort | AddedAttributeToQuality | AddedAttributeToTag | AddedAttributeToType | AddedAttributesToConcept | AddedAttributesToDesign | AddedAttributesToPiece | AddedAttributesToPort | AddedAttributesToQuality | AddedAttributesToTag | AddedAttributesToType | AddedChildPieceWithParentConnection | AddedChildPiecesWithParentConnections | AddedConnector | AddedConnectors | AddedFixedPiece | AddedHangingChildPieceWithParentConnection | AddedHangingChildPiecesWithParentConnections | Edit | ChangedDescription | ChangedPieceToType | ChangedPiecesToType | CreatedConcept | CreatedConcepts | CreatedDesign | CreatedDesigns | CreatedPort | CreatedPorts | CreatedQualities | CreatedQuality | CreatedTag | CreatedTags | CreatedType | CreatedTypes | DeletedConcept | DeletedConcepts | DeletedDesign | DeletedDesigns | DeletedPiece | DeletedPiecesAndConnections | DeletedPieces | DeletedPort | DeletedPorts | DeletedQualities | DeletedQuality | DeletedTag | DeletedTags | DeletedType | DeletedTypes | Modifications | DraggedPiece | DraggedPieces | FixedPiece | FixedPieces | FlattenedDesign | MovedPiece | MovedPieces | RemovedAttributeFromConcept | RemovedAttributeFromDesign | RemovedAttributeFromPiece | RemovedAttributeFromPort | RemovedAttributeFromQuality | RemovedAttributeFromTag | RemovedAttributeFromType | RemovedAttributesFromConcept | RemovedAttributesFromDesign | RemovedAttributesFromPiece | RemovedAttributesFromPort | RemovedAttributesFromQuality | RemovedAttributesFromTag | RemovedAttributesFromType | RemovedConnector | RemovedConnectors | RenamedConcept | RenamedConnector | RenamedKit | RenamedPiece | RenamedPort | RenamedQuality | RenamedTag | RenamedType | UpdatedConceptDescription | UpdatedConceptIcon | UpdatedConnectorDescription | UpdatedConnectorIcon | UpdatedPieceDescription | UpdatedPortDescription | UpdatedPortIcon | UpdatedQualityDescription | UpdatedQualityIcon | UpdatedTagDescription | UpdatedTagIcon | UpdatedTypeDescription | UpdatedTypeIcon
-  owns: EntityConnection # reference // AlternativeModification | AttributeModification | AuthorModification | BenchmarkModification | EditModification | CheckpointModification | ConceptModification | ConflictModification | ConnectionModification | ConnectorModification | CoordinateModification | DesignModification | AlternativeModification | FamilyModification | FileModification | FolderModification | GraphModification | GroupModification | KitModification | LayerModification | LocationModification | OffsetModification | PieceModification | PlaceModification | PointModification | PortModification | PositionModification | PropModification | QualityModification | ReadVersionModification | RepresentationModification | SessionModification | SideModification | StatModification | TagModification | TransactionModification | TypeModification | VectorModification | WriteVersionModification
+  owns: EntityConnection # reference // AlternativeModification | AttributeModification | AuthorModification | BenchmarkModification | EditModification | CheckpointModification | ConceptModification | ConflictModification | ConnectionModification | ConnectorModification | CoordinateModification | DesignModification | AlternativeModification | FamilyModification | FileModification | FolderModification | GraphModification | GroupModification | KitModification | LayerModification | LocationModification | OffsetModification | PieceModification | PlaceModification | PointModification | PortModification | PositionModification | PropModification | QualityModification | RepresentationModification | SessionModification | SideModification | StatModification | TypeModification | VectorModification | WriteVersionModification
   # Modification
   before: Entity! # reference // modification
   diff: Diff! # reference // modification
@@ -3852,6 +3862,7 @@ type Group implements Artifact {
   lastChangedAt: Timestamp # computed
   lastChangedBy: Author # computed
   lastChangedIn: Checkpoint # computed
+  changes: ChangeConnection # computed
   edits: EditConnection # computed
   # Group
   color: String! # data
@@ -3886,6 +3897,7 @@ type GroupDiff implements Artifact {
   lastChangedAt: Timestamp # computed
   lastChangedBy: Author # computed
   lastChangedIn: Checkpoint # computed
+  changes: ChangeConnection # computed
   edits: EditConnection # computed
   # GroupDiff
   removeDescription: Boolean # computed
@@ -3911,7 +3923,7 @@ type GroupModification implements Modification {
   id: ID! # computed // hash
   hash: String! # cached
   owner: Entity # reference // AddedAttributeToConcept | AddedAttributeToDesign | AddedAttributeToPiece | AddedAttributeToPort | AddedAttributeToQuality | AddedAttributeToTag | AddedAttributeToType | AddedAttributesToConcept | AddedAttributesToDesign | AddedAttributesToPiece | AddedAttributesToPort | AddedAttributesToQuality | AddedAttributesToTag | AddedAttributesToType | AddedChildPieceWithParentConnection | AddedChildPiecesWithParentConnections | AddedConnector | AddedConnectors | AddedFixedPiece | AddedHangingChildPieceWithParentConnection | AddedHangingChildPiecesWithParentConnections | Edit | ChangedDescription | ChangedPieceToType | ChangedPiecesToType | CreatedConcept | CreatedConcepts | CreatedDesign | CreatedDesigns | CreatedPort | CreatedPorts | CreatedQualities | CreatedQuality | CreatedTag | CreatedTags | CreatedType | CreatedTypes | DeletedConcept | DeletedConcepts | DeletedDesign | DeletedDesigns | DeletedPiece | DeletedPiecesAndConnections | DeletedPieces | DeletedPort | DeletedPorts | DeletedQualities | DeletedQuality | DeletedTag | DeletedTags | DeletedType | DeletedTypes | Modifications | DraggedPiece | DraggedPieces | FixedPiece | FixedPieces | FlattenedDesign | MovedPiece | MovedPieces | RemovedAttributeFromConcept | RemovedAttributeFromDesign | RemovedAttributeFromPiece | RemovedAttributeFromPort | RemovedAttributeFromQuality | RemovedAttributeFromTag | RemovedAttributeFromType | RemovedAttributesFromConcept | RemovedAttributesFromDesign | RemovedAttributesFromPiece | RemovedAttributesFromPort | RemovedAttributesFromQuality | RemovedAttributesFromTag | RemovedAttributesFromType | RemovedConnector | RemovedConnectors | RenamedConcept | RenamedConnector | RenamedKit | RenamedPiece | RenamedPort | RenamedQuality | RenamedTag | RenamedType | UpdatedConceptDescription | UpdatedConceptIcon | UpdatedConnectorDescription | UpdatedConnectorIcon | UpdatedPieceDescription | UpdatedPortDescription | UpdatedPortIcon | UpdatedQualityDescription | UpdatedQualityIcon | UpdatedTagDescription | UpdatedTagIcon | UpdatedTypeDescription | UpdatedTypeIcon
-  owns: EntityConnection # reference // AlternativeModification | AttributeModification | AuthorModification | BenchmarkModification | EditModification | CheckpointModification | ConceptModification | ConflictModification | ConnectionModification | ConnectorModification | CoordinateModification | DesignModification | AlternativeModification | FamilyModification | FileModification | FolderModification | GraphModification | GroupModification | KitModification | LayerModification | LocationModification | OffsetModification | PieceModification | PlaceModification | PointModification | PortModification | PositionModification | PropModification | QualityModification | ReadVersionModification | RepresentationModification | SessionModification | SideModification | StatModification | TagModification | TransactionModification | TypeModification | VectorModification | WriteVersionModification
+  owns: EntityConnection # reference // AlternativeModification | AttributeModification | AuthorModification | BenchmarkModification | EditModification | CheckpointModification | ConceptModification | ConflictModification | ConnectionModification | ConnectorModification | CoordinateModification | DesignModification | AlternativeModification | FamilyModification | FileModification | FolderModification | GraphModification | GroupModification | KitModification | LayerModification | LocationModification | OffsetModification | PieceModification | PlaceModification | PointModification | PortModification | PositionModification | PropModification | QualityModification | RepresentationModification | SessionModification | SideModification | StatModification | TypeModification | VectorModification | WriteVersionModification
   # Modification
   before: Entity! # reference // modification
   diff: Diff! # reference // modification
@@ -3946,6 +3958,7 @@ type GroupModifications implements Artifact {
   lastChangedAt: Timestamp # computed
   lastChangedBy: Author # computed
   lastChangedIn: Checkpoint # computed
+  changes: ChangeConnection # computed
   edits: EditConnection # computed
   # GroupModifications
   removed: EntityConnection # computed
@@ -4001,6 +4014,7 @@ type Piece implements Artifact {
   lastChangedAt: Timestamp # computed
   lastChangedBy: Author # computed
   lastChangedIn: Checkpoint # computed
+  changes: ChangeConnection # computed
   edits: EditConnection # computed
   # Piece
   position: Position # data
@@ -4047,6 +4061,7 @@ type PieceDiff implements Artifact {
   lastChangedAt: Timestamp # computed
   lastChangedBy: Author # computed
   lastChangedIn: Checkpoint # computed
+  changes: ChangeConnection # computed
   edits: EditConnection # computed
   # PieceDiff
   removeName: Boolean # computed
@@ -4076,7 +4091,7 @@ type PieceModification implements Modification {
   id: ID! # computed // hash
   hash: String! # cached
   owner: Entity # reference // AddedAttributeToConcept | AddedAttributeToDesign | AddedAttributeToPiece | AddedAttributeToPort | AddedAttributeToQuality | AddedAttributeToTag | AddedAttributeToType | AddedAttributesToConcept | AddedAttributesToDesign | AddedAttributesToPiece | AddedAttributesToPort | AddedAttributesToQuality | AddedAttributesToTag | AddedAttributesToType | AddedChildPieceWithParentConnection | AddedChildPiecesWithParentConnections | AddedConnector | AddedConnectors | AddedFixedPiece | AddedHangingChildPieceWithParentConnection | AddedHangingChildPiecesWithParentConnections | Edit | ChangedDescription | ChangedPieceToType | ChangedPiecesToType | CreatedConcept | CreatedConcepts | CreatedDesign | CreatedDesigns | CreatedPort | CreatedPorts | CreatedQualities | CreatedQuality | CreatedTag | CreatedTags | CreatedType | CreatedTypes | DeletedConcept | DeletedConcepts | DeletedDesign | DeletedDesigns | DeletedPiece | DeletedPiecesAndConnections | DeletedPieces | DeletedPort | DeletedPorts | DeletedQualities | DeletedQuality | DeletedTag | DeletedTags | DeletedType | DeletedTypes | Modifications | DraggedPiece | DraggedPieces | FixedPiece | FixedPieces | FlattenedDesign | MovedPiece | MovedPieces | RemovedAttributeFromConcept | RemovedAttributeFromDesign | RemovedAttributeFromPiece | RemovedAttributeFromPort | RemovedAttributeFromQuality | RemovedAttributeFromTag | RemovedAttributeFromType | RemovedAttributesFromConcept | RemovedAttributesFromDesign | RemovedAttributesFromPiece | RemovedAttributesFromPort | RemovedAttributesFromQuality | RemovedAttributesFromTag | RemovedAttributesFromType | RemovedConnector | RemovedConnectors | RenamedConcept | RenamedConnector | RenamedKit | RenamedPiece | RenamedPort | RenamedQuality | RenamedTag | RenamedType | UpdatedConceptDescription | UpdatedConceptIcon | UpdatedConnectorDescription | UpdatedConnectorIcon | UpdatedPieceDescription | UpdatedPortDescription | UpdatedPortIcon | UpdatedQualityDescription | UpdatedQualityIcon | UpdatedTagDescription | UpdatedTagIcon | UpdatedTypeDescription | UpdatedTypeIcon
-  owns: EntityConnection # reference // AlternativeModification | AttributeModification | AuthorModification | BenchmarkModification | EditModification | CheckpointModification | ConceptModification | ConflictModification | ConnectionModification | ConnectorModification | CoordinateModification | DesignModification | AlternativeModification | FamilyModification | FileModification | FolderModification | GraphModification | GroupModification | KitModification | LayerModification | LocationModification | OffsetModification | PieceModification | PlaceModification | PointModification | PortModification | PositionModification | PropModification | QualityModification | ReadVersionModification | RepresentationModification | SessionModification | SideModification | StatModification | TagModification | TransactionModification | TypeModification | VectorModification | WriteVersionModification
+  owns: EntityConnection # reference // AlternativeModification | AttributeModification | AuthorModification | BenchmarkModification | EditModification | CheckpointModification | ConceptModification | ConflictModification | ConnectionModification | ConnectorModification | CoordinateModification | DesignModification | AlternativeModification | FamilyModification | FileModification | FolderModification | GraphModification | GroupModification | KitModification | LayerModification | LocationModification | OffsetModification | PieceModification | PlaceModification | PointModification | PortModification | PositionModification | PropModification | QualityModification | RepresentationModification | SessionModification | SideModification | StatModification | TypeModification | VectorModification | WriteVersionModification
   # Modification
   before: Entity! # reference // modification
   diff: Diff! # reference // modification
@@ -4111,6 +4126,7 @@ type PieceModifications implements Artifact {
   lastChangedAt: Timestamp # computed
   lastChangedBy: Author # computed
   lastChangedIn: Checkpoint # computed
+  changes: ChangeConnection # computed
   edits: EditConnection # computed
   # PieceModifications
   removed: EntityConnection # computed
@@ -4146,6 +4162,7 @@ type Connection implements Artifact {
   lastChangedAt: Timestamp # computed
   lastChangedBy: Author # computed
   lastChangedIn: Checkpoint # computed
+  changes: ChangeConnection # computed
   edits: EditConnection # computed
   # Connection
   connected: Side! # data
@@ -4196,7 +4213,7 @@ type ConnectionModification implements Modification {
   id: ID! # computed // hash
   hash: String! # cached
   owner: Entity # reference // AddedAttributeToConcept | AddedAttributeToDesign | AddedAttributeToPiece | AddedAttributeToPort | AddedAttributeToQuality | AddedAttributeToTag | AddedAttributeToType | AddedAttributesToConcept | AddedAttributesToDesign | AddedAttributesToPiece | AddedAttributesToPort | AddedAttributesToQuality | AddedAttributesToTag | AddedAttributesToType | AddedChildPieceWithParentConnection | AddedChildPiecesWithParentConnections | AddedConnector | AddedConnectors | AddedFixedPiece | AddedHangingChildPieceWithParentConnection | AddedHangingChildPiecesWithParentConnections | Edit | ChangedDescription | ChangedPieceToType | ChangedPiecesToType | CreatedConcept | CreatedConcepts | CreatedDesign | CreatedDesigns | CreatedPort | CreatedPorts | CreatedQualities | CreatedQuality | CreatedTag | CreatedTags | CreatedType | CreatedTypes | DeletedConcept | DeletedConcepts | DeletedDesign | DeletedDesigns | DeletedPiece | DeletedPiecesAndConnections | DeletedPieces | DeletedPort | DeletedPorts | DeletedQualities | DeletedQuality | DeletedTag | DeletedTags | DeletedType | DeletedTypes | Modifications | DraggedPiece | DraggedPieces | FixedPiece | FixedPieces | FlattenedDesign | MovedPiece | MovedPieces | RemovedAttributeFromConcept | RemovedAttributeFromDesign | RemovedAttributeFromPiece | RemovedAttributeFromPort | RemovedAttributeFromQuality | RemovedAttributeFromTag | RemovedAttributeFromType | RemovedAttributesFromConcept | RemovedAttributesFromDesign | RemovedAttributesFromPiece | RemovedAttributesFromPort | RemovedAttributesFromQuality | RemovedAttributesFromTag | RemovedAttributesFromType | RemovedConnector | RemovedConnectors | RenamedConcept | RenamedConnector | RenamedKit | RenamedPiece | RenamedPort | RenamedQuality | RenamedTag | RenamedType | UpdatedConceptDescription | UpdatedConceptIcon | UpdatedConnectorDescription | UpdatedConnectorIcon | UpdatedPieceDescription | UpdatedPortDescription | UpdatedPortIcon | UpdatedQualityDescription | UpdatedQualityIcon | UpdatedTagDescription | UpdatedTagIcon | UpdatedTypeDescription | UpdatedTypeIcon
-  owns: EntityConnection # reference // AlternativeModification | AttributeModification | AuthorModification | BenchmarkModification | EditModification | CheckpointModification | ConceptModification | ConflictModification | ConnectionModification | ConnectorModification | CoordinateModification | DesignModification | AlternativeModification | FamilyModification | FileModification | FolderModification | GraphModification | GroupModification | KitModification | LayerModification | LocationModification | OffsetModification | PieceModification | PlaceModification | PointModification | PortModification | PositionModification | PropModification | QualityModification | ReadVersionModification | RepresentationModification | SessionModification | SideModification | StatModification | TagModification | TransactionModification | TypeModification | VectorModification | WriteVersionModification
+  owns: EntityConnection # reference // AlternativeModification | AttributeModification | AuthorModification | BenchmarkModification | EditModification | CheckpointModification | ConceptModification | ConflictModification | ConnectionModification | ConnectorModification | CoordinateModification | DesignModification | AlternativeModification | FamilyModification | FileModification | FolderModification | GraphModification | GroupModification | KitModification | LayerModification | LocationModification | OffsetModification | PieceModification | PlaceModification | PointModification | PortModification | PositionModification | PropModification | QualityModification | RepresentationModification | SessionModification | SideModification | StatModification | TypeModification | VectorModification | WriteVersionModification
   # Modification
   before: Entity! # reference // modification
   diff: Diff! # reference // modification
@@ -4608,7 +4625,7 @@ type DeletedPiecesAndConnections implements Operation {
 
 #region Side
 
-type Side implements Entity {
+type Side implements StrongEntity {
   # StrongEntity
   id: ID! # data // uuidv7
   hash: String! # cached
@@ -4663,7 +4680,7 @@ type SideModification implements Modification {
   id: ID! # computed // hash
   hash: String! # cached
   owner: Entity # reference // AddedAttributeToConcept | AddedAttributeToDesign | AddedAttributeToPiece | AddedAttributeToPort | AddedAttributeToQuality | AddedAttributeToTag | AddedAttributeToType | AddedAttributesToConcept | AddedAttributesToDesign | AddedAttributesToPiece | AddedAttributesToPort | AddedAttributesToQuality | AddedAttributesToTag | AddedAttributesToType | AddedChildPieceWithParentConnection | AddedChildPiecesWithParentConnections | AddedConnector | AddedConnectors | AddedFixedPiece | AddedHangingChildPieceWithParentConnection | AddedHangingChildPiecesWithParentConnections | Edit | ChangedDescription | ChangedPieceToType | ChangedPiecesToType | CreatedConcept | CreatedConcepts | CreatedDesign | CreatedDesigns | CreatedPort | CreatedPorts | CreatedQualities | CreatedQuality | CreatedTag | CreatedTags | CreatedType | CreatedTypes | DeletedConcept | DeletedConcepts | DeletedDesign | DeletedDesigns | DeletedPiece | DeletedPiecesAndConnections | DeletedPieces | DeletedPort | DeletedPorts | DeletedQualities | DeletedQuality | DeletedTag | DeletedTags | DeletedType | DeletedTypes | Modifications | DraggedPiece | DraggedPieces | FixedPiece | FixedPieces | FlattenedDesign | MovedPiece | MovedPieces | RemovedAttributeFromConcept | RemovedAttributeFromDesign | RemovedAttributeFromPiece | RemovedAttributeFromPort | RemovedAttributeFromQuality | RemovedAttributeFromTag | RemovedAttributeFromType | RemovedAttributesFromConcept | RemovedAttributesFromDesign | RemovedAttributesFromPiece | RemovedAttributesFromPort | RemovedAttributesFromQuality | RemovedAttributesFromTag | RemovedAttributesFromType | RemovedConnector | RemovedConnectors | RenamedConcept | RenamedConnector | RenamedKit | RenamedPiece | RenamedPort | RenamedQuality | RenamedTag | RenamedType | UpdatedConceptDescription | UpdatedConceptIcon | UpdatedConnectorDescription | UpdatedConnectorIcon | UpdatedPieceDescription | UpdatedPortDescription | UpdatedPortIcon | UpdatedQualityDescription | UpdatedQualityIcon | UpdatedTagDescription | UpdatedTagIcon | UpdatedTypeDescription | UpdatedTypeIcon
-  owns: EntityConnection # reference // AlternativeModification | AttributeModification | AuthorModification | BenchmarkModification | EditModification | CheckpointModification | ConceptModification | ConflictModification | ConnectionModification | ConnectorModification | CoordinateModification | DesignModification | AlternativeModification | FamilyModification | FileModification | FolderModification | GraphModification | GroupModification | KitModification | LayerModification | LocationModification | OffsetModification | PieceModification | PlaceModification | PointModification | PortModification | PositionModification | PropModification | QualityModification | ReadVersionModification | RepresentationModification | SessionModification | SideModification | StatModification | TagModification | TransactionModification | TypeModification | VectorModification | WriteVersionModification
+  owns: EntityConnection # reference // AlternativeModification | AttributeModification | AuthorModification | BenchmarkModification | EditModification | CheckpointModification | ConceptModification | ConflictModification | ConnectionModification | ConnectorModification | CoordinateModification | DesignModification | AlternativeModification | FamilyModification | FileModification | FolderModification | GraphModification | GroupModification | KitModification | LayerModification | LocationModification | OffsetModification | PieceModification | PlaceModification | PointModification | PortModification | PositionModification | PropModification | QualityModification | RepresentationModification | SessionModification | SideModification | StatModification | TypeModification | VectorModification | WriteVersionModification
   # Modification
   before: Entity! # reference // modification
   diff: Diff! # reference // modification
@@ -4789,6 +4806,7 @@ type DesignDiff implements Artifact {
   lastChangedAt: Timestamp # computed
   lastChangedBy: Author # computed
   lastChangedIn: Checkpoint # computed
+  changes: ChangeConnection # computed
   edits: EditConnection # computed
   # DesignDiff
   removeDescription: Boolean # computed
@@ -4822,7 +4840,7 @@ type DesignModification implements Modification {
   id: ID! # computed // hash
   hash: String! # cached
   owner: Entity # reference // AddedAttributeToConcept | AddedAttributeToDesign | AddedAttributeToPiece | AddedAttributeToPort | AddedAttributeToQuality | AddedAttributeToTag | AddedAttributeToType | AddedAttributesToConcept | AddedAttributesToDesign | AddedAttributesToPiece | AddedAttributesToPort | AddedAttributesToQuality | AddedAttributesToTag | AddedAttributesToType | AddedChildPieceWithParentConnection | AddedChildPiecesWithParentConnections | AddedConnector | AddedConnectors | AddedFixedPiece | AddedHangingChildPieceWithParentConnection | AddedHangingChildPiecesWithParentConnections | Edit | ChangedDescription | ChangedPieceToType | ChangedPiecesToType | CreatedConcept | CreatedConcepts | CreatedDesign | CreatedDesigns | CreatedPort | CreatedPorts | CreatedQualities | CreatedQuality | CreatedTag | CreatedTags | CreatedType | CreatedTypes | DeletedConcept | DeletedConcepts | DeletedDesign | DeletedDesigns | DeletedPiece | DeletedPiecesAndConnections | DeletedPieces | DeletedPort | DeletedPorts | DeletedQualities | DeletedQuality | DeletedTag | DeletedTags | DeletedType | DeletedTypes | Modifications | DraggedPiece | DraggedPieces | FixedPiece | FixedPieces | FlattenedDesign | MovedPiece | MovedPieces | RemovedAttributeFromConcept | RemovedAttributeFromDesign | RemovedAttributeFromPiece | RemovedAttributeFromPort | RemovedAttributeFromQuality | RemovedAttributeFromTag | RemovedAttributeFromType | RemovedAttributesFromConcept | RemovedAttributesFromDesign | RemovedAttributesFromPiece | RemovedAttributesFromPort | RemovedAttributesFromQuality | RemovedAttributesFromTag | RemovedAttributesFromType | RemovedConnector | RemovedConnectors | RenamedConcept | RenamedConnector | RenamedKit | RenamedPiece | RenamedPort | RenamedQuality | RenamedTag | RenamedType | UpdatedConceptDescription | UpdatedConceptIcon | UpdatedConnectorDescription | UpdatedConnectorIcon | UpdatedPieceDescription | UpdatedPortDescription | UpdatedPortIcon | UpdatedQualityDescription | UpdatedQualityIcon | UpdatedTagDescription | UpdatedTagIcon | UpdatedTypeDescription | UpdatedTypeIcon
-  owns: EntityConnection # reference // AlternativeModification | AttributeModification | AuthorModification | BenchmarkModification | EditModification | CheckpointModification | ConceptModification | ConflictModification | ConnectionModification | ConnectorModification | CoordinateModification | DesignModification | AlternativeModification | FamilyModification | FileModification | FolderModification | GraphModification | GroupModification | KitModification | LayerModification | LocationModification | OffsetModification | PieceModification | PlaceModification | PointModification | PortModification | PositionModification | PropModification | QualityModification | ReadVersionModification | RepresentationModification | SessionModification | SideModification | StatModification | TagModification | TransactionModification | TypeModification | VectorModification | WriteVersionModification
+  owns: EntityConnection # reference // AlternativeModification | AttributeModification | AuthorModification | BenchmarkModification | EditModification | CheckpointModification | ConceptModification | ConflictModification | ConnectionModification | ConnectorModification | CoordinateModification | DesignModification | AlternativeModification | FamilyModification | FileModification | FolderModification | GraphModification | GroupModification | KitModification | LayerModification | LocationModification | OffsetModification | PieceModification | PlaceModification | PointModification | PortModification | PositionModification | PropModification | QualityModification | RepresentationModification | SessionModification | SideModification | StatModification | TypeModification | VectorModification | WriteVersionModification
   # Modification
   before: Entity! # reference // modification
   diff: Diff! # reference // modification
@@ -4857,6 +4875,7 @@ type DesignModifications implements Artifact {
   lastChangedAt: Timestamp # computed
   lastChangedBy: Author # computed
   lastChangedIn: Checkpoint # computed
+  changes: ChangeConnection # computed
   edits: EditConnection # computed
   # DesignModifications
   removed: EntityConnection # computed
@@ -5042,11 +5061,9 @@ type Kit implements Artifact {
   lastChangedAt: Timestamp # computed
   lastChangedBy: Author # computed
   lastChangedIn: Checkpoint # computed
+  changes: ChangeConnection # computed
   edits: EditConnection # computed
   # Kit
-  checkpoint: Checkpoint # data
-  alternative: Alternative # data
-  transaction: Transaction # data
   image: String! # data
   preview: String! # data
   remote: String! # data
@@ -5087,12 +5104,6 @@ type KitDiff implements Entity {
   owner: Entity # reference
   owns: EntityConnection # reference
   # KitDiff
-  checkpoint: Checkpoint # computed
-  removeCheckpoint: Boolean # computed
-  alternative: Alternative # computed
-  removeAlternative: Boolean # computed
-  transaction: Transaction # computed
-  removeTransaction: Boolean # computed
   name: String! # computed
   description: String! # computed
   removeDescription: Boolean # computed
@@ -5128,7 +5139,7 @@ type KitModification implements Modification {
   id: ID! # computed // hash
   hash: String! # cached
   owner: Entity # reference // AddedAttributeToConcept | AddedAttributeToDesign | AddedAttributeToPiece | AddedAttributeToPort | AddedAttributeToQuality | AddedAttributeToTag | AddedAttributeToType | AddedAttributesToConcept | AddedAttributesToDesign | AddedAttributesToPiece | AddedAttributesToPort | AddedAttributesToQuality | AddedAttributesToTag | AddedAttributesToType | AddedChildPieceWithParentConnection | AddedChildPiecesWithParentConnections | AddedConnector | AddedConnectors | AddedFixedPiece | AddedHangingChildPieceWithParentConnection | AddedHangingChildPiecesWithParentConnections | Edit | ChangedDescription | ChangedPieceToType | ChangedPiecesToType | CreatedConcept | CreatedConcepts | CreatedDesign | CreatedDesigns | CreatedPort | CreatedPorts | CreatedQualities | CreatedQuality | CreatedTag | CreatedTags | CreatedType | CreatedTypes | DeletedConcept | DeletedConcepts | DeletedDesign | DeletedDesigns | DeletedPiece | DeletedPiecesAndConnections | DeletedPieces | DeletedPort | DeletedPorts | DeletedQualities | DeletedQuality | DeletedTag | DeletedTags | DeletedType | DeletedTypes | Modifications | DraggedPiece | DraggedPieces | FixedPiece | FixedPieces | FlattenedDesign | MovedPiece | MovedPieces | RemovedAttributeFromConcept | RemovedAttributeFromDesign | RemovedAttributeFromPiece | RemovedAttributeFromPort | RemovedAttributeFromQuality | RemovedAttributeFromTag | RemovedAttributeFromType | RemovedAttributesFromConcept | RemovedAttributesFromDesign | RemovedAttributesFromPiece | RemovedAttributesFromPort | RemovedAttributesFromQuality | RemovedAttributesFromTag | RemovedAttributesFromType | RemovedConnector | RemovedConnectors | RenamedConcept | RenamedConnector | RenamedKit | RenamedPiece | RenamedPort | RenamedQuality | RenamedTag | RenamedType | UpdatedConceptDescription | UpdatedConceptIcon | UpdatedConnectorDescription | UpdatedConnectorIcon | UpdatedPieceDescription | UpdatedPortDescription | UpdatedPortIcon | UpdatedQualityDescription | UpdatedQualityIcon | UpdatedTagDescription | UpdatedTagIcon | UpdatedTypeDescription | UpdatedTypeIcon
-  owns: EntityConnection # reference // AlternativeModification | AttributeModification | AuthorModification | BenchmarkModification | EditModification | CheckpointModification | ConceptModification | ConflictModification | ConnectionModification | ConnectorModification | CoordinateModification | DesignModification | AlternativeModification | FamilyModification | FileModification | FolderModification | GraphModification | GroupModification | KitModification | LayerModification | LocationModification | OffsetModification | PieceModification | PlaceModification | PointModification | PortModification | PositionModification | PropModification | QualityModification | ReadVersionModification | RepresentationModification | SessionModification | SideModification | StatModification | TagModification | TransactionModification | TypeModification | VectorModification | WriteVersionModification
+  owns: EntityConnection # reference // AlternativeModification | AttributeModification | AuthorModification | BenchmarkModification | EditModification | CheckpointModification | ConceptModification | ConflictModification | ConnectionModification | ConnectorModification | CoordinateModification | DesignModification | AlternativeModification | FamilyModification | FileModification | FolderModification | GraphModification | GroupModification | KitModification | LayerModification | LocationModification | OffsetModification | PieceModification | PlaceModification | PointModification | PortModification | PositionModification | PropModification | QualityModification | RepresentationModification | SessionModification | SideModification | StatModification | TypeModification | VectorModification | WriteVersionModification
   # Modification
   before: Entity! # reference // modification
   diff: Diff! # reference // modification
@@ -5212,11 +5223,11 @@ type ChangedDescription implements Operation {
 
 #region Edits
 
-type Edit implements Entity {
+type Edit implements StrongEntity {
   # StrongEntity
   id: ID! # data // uuidv7
   hash: String! # cached
-  owner: Entity # reference // Transaction | Alternative | Checkpoint
+  owner: Entity # reference // Alternative | Checkpoint
   owns: EntityConnection # reference // AddedAttributeToConcept | AddedAttributeToDesign | AddedAttributeToPiece | AddedAttributeToPort | AddedAttributeToQuality | AddedAttributeToTag | AddedAttributeToType | AddedAttributesToConcept | AddedAttributesToDesign | AddedAttributesToPiece | AddedAttributesToPort | AddedAttributesToQuality | AddedAttributesToTag | AddedAttributesToType | AddedChildPieceWithParentConnection | AddedChildPiecesWithParentConnections | AddedConnector | AddedConnectors | AddedFixedPiece | AddedHangingChildPieceWithParentConnection | AddedHangingChildPiecesWithParentConnections | ChangedDescription | ChangedPieceToType | ChangedPiecesToType | CreatedConcept | CreatedConcepts | CreatedDesign | CreatedDesigns | CreatedPort | CreatedPorts | CreatedQualities | CreatedQuality | CreatedTag | CreatedTags | CreatedType | CreatedTypes | DeletedConcept | DeletedConcepts | DeletedDesign | DeletedDesigns | DeletedPiece | DeletedPiecesAndConnections | DeletedPieces | DeletedPort | DeletedPorts | DeletedQualities | DeletedQuality | DeletedTag | DeletedTags | DeletedType | DeletedTypes | DraggedPiece | DraggedPieces | FixedPiece | FixedPieces | FlattenedDesign | MovedPiece | MovedPieces | RemovedAttributeFromConcept | RemovedAttributeFromDesign | RemovedAttributeFromPiece | RemovedAttributeFromPort | RemovedAttributeFromQuality | RemovedAttributeFromTag | RemovedAttributeFromType | RemovedAttributesFromConcept | RemovedAttributesFromDesign | RemovedAttributesFromPiece | RemovedAttributesFromPort | RemovedAttributesFromQuality | RemovedAttributesFromTag | RemovedAttributesFromType | RemovedConnector | RemovedConnectors | RenamedConcept | RenamedConnector | RenamedKit | RenamedPiece | RenamedPort | RenamedQuality | RenamedTag | RenamedType | UpdatedConceptDescription | UpdatedConceptIcon | UpdatedConnectorDescription | UpdatedConnectorIcon | UpdatedPieceDescription | UpdatedPortDescription | UpdatedPortIcon | UpdatedQualityDescription | UpdatedQualityIcon | UpdatedTagDescription | UpdatedTagIcon | UpdatedTypeDescription | UpdatedTypeIcon
   # Edit
   forwards: OperationConnection! # data
@@ -5244,11 +5255,11 @@ type EditConnection implements EntityConnection {
 
 #region Changes
 
-type Change implements Entity {
+type Change implements StrongEntity {
   # StrongEntity
   id: ID! # data // uuidv7
   hash: String! # cached
-  owner: Entity # reference // Transaction | Alternative | Checkpoint
+  owner: Entity # reference // Alternative | Checkpoint
   owns: EntityConnection # reference // AddedAttributeToConcept | AddedAttributeToDesign | AddedAttributeToPiece | AddedAttributeToPort | AddedAttributeToQuality | AddedAttributeToTag | AddedAttributeToType | AddedAttributesToConcept | AddedAttributesToDesign | AddedAttributesToPiece | AddedAttributesToPort | AddedAttributesToQuality | AddedAttributesToTag | AddedAttributesToType | AddedChildPieceWithParentConnection | AddedChildPiecesWithParentConnections | AddedConnector | AddedConnectors | AddedFixedPiece | AddedHangingChildPieceWithParentConnection | AddedHangingChildPiecesWithParentConnections | ChangedDescription | ChangedPieceToType | ChangedPiecesToType | CreatedConcept | CreatedConcepts | CreatedDesign | CreatedDesigns | CreatedPort | CreatedPorts | CreatedQualities | CreatedQuality | CreatedTag | CreatedTags | CreatedType | CreatedTypes | DeletedConcept | DeletedConcepts | DeletedDesign | DeletedDesigns | DeletedPiece | DeletedPiecesAndConnections | DeletedPieces | DeletedPort | DeletedPorts | DeletedQualities | DeletedQuality | DeletedTag | DeletedTags | DeletedType | DeletedTypes | DraggedPiece | DraggedPieces | FixedPiece | FixedPieces | FlattenedDesign | MovedPiece | MovedPieces | RemovedAttributeFromConcept | RemovedAttributeFromDesign | RemovedAttributeFromPiece | RemovedAttributeFromPort | RemovedAttributeFromQuality | RemovedAttributeFromTag | RemovedAttributeFromType | RemovedAttributesFromConcept | RemovedAttributesFromDesign | RemovedAttributesFromPiece | RemovedAttributesFromPort | RemovedAttributesFromQuality | RemovedAttributesFromTag | RemovedAttributesFromType | RemovedConnector | RemovedConnectors | RenamedConcept | RenamedConnector | RenamedKit | RenamedPiece | RenamedPort | RenamedQuality | RenamedTag | RenamedType | UpdatedConceptDescription | UpdatedConceptIcon | UpdatedConnectorDescription | UpdatedConnectorIcon | UpdatedPieceDescription | UpdatedPortDescription | UpdatedPortIcon | UpdatedQualityDescription | UpdatedQualityIcon | UpdatedTagDescription | UpdatedTagIcon | UpdatedTypeDescription | UpdatedTypeIcon
   # Change
   edits: EditConnection! # data
@@ -5274,7 +5285,7 @@ type ChangeConnection implements EntityConnection {
 
 #region Checkpoints
 
-type Checkpoint implements Entity {
+type Checkpoint implements StrongEntity {
   # StrongEntity
   id: ID! # data // uuidv7
   hash: String! # cached
@@ -5284,7 +5295,6 @@ type Checkpoint implements Entity {
   timestamp: Timestamp # data
   message: String! # data
   authors: AuthorConnection! # reference
-  isRelease: Boolean! # data
   parent: Checkpoint # reference
   ancestors: [Checkpoint!]! # computed
   initial: Kit # computed
@@ -5310,20 +5320,19 @@ type CheckpointConnection implements EntityConnection {
 
 #region Alternatives
 
-type Alternative implements Entity {
+type Alternative implements StrongEntity {
   # StrongEntity
   id: ID! # data // uuidv7
   hash: String! # cached
   owner: Entity # reference // Graph
-  owns: EntityConnection # reference // Edit | Transaction | Checkpoint
+  owns: EntityConnection # reference // Edit | Checkpoint
   # Alternative
   name: String! # data
   checkpoint: CheckpointConnection! # reference
   latestWipCheckpointAncestor: Checkpoint # computed
   savedChanges: ChangeConnection! # data
-  openChanges: ChangeConnection! # data
-  start: Checkpoint! # reference
-  store: Kit! # computed
+  unsavedChanges: ChangeConnection! # data
+  kit: Kit! # computed
 }
 
 type AlternativeEdge implements EntityEdge {
@@ -5341,7 +5350,7 @@ type AlternativeConnection implements EntityConnection {
 
 #region Graphs
 
-type Graph implements Entity {
+type Graph implements StrongEntity {
   # StrongEntity
   id: ID! # data // uuidv7
   hash: String! # cached
@@ -5367,7 +5376,7 @@ type GraphConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type Session implements Entity {
+type Session implements StrongEntity {
   # StrongEntity
   id: ID! # data // uuidv7
   hash: String! # cached
@@ -5396,15 +5405,15 @@ type SessionConnection implements EntityConnection {
 
 #region Conflicts
 
-type Conflict implements Entity {
+type Conflict implements StrongEntity {
   # StrongEntity
   id: ID! # data // uuidv7
   hash: String! # cached
-  owner: Entity # reference // Session | Graph
-  owns: EntityConnection # reference // ReadVersion | WriteVersion
-  authoritativeChange: ReadVersion # data
-  transactionVersion: WriteVersion # data
-  reason: String! # data
+  owner: Entity # reference // Session
+  owns: EntityConnection # reference // Nothing
+  authoritativeChange: Change # reference
+  wipChange: Change # reference
+  reasons: [String!]! # data
 }
 
 type ConflictEdge implements EntityEdge {
@@ -5418,92 +5427,9 @@ type ConflictConnection implements EntityConnection {
   hash: String! # cached
 }
 
-#endregion VCS
+#region Commands
 
-#region Schema
-
-type Query {
-  session: Session!
-  wip: Graph!
-  authoritative: Graph
-  conflicts: ConflictConnection! # computed
-  node(id: ID!): Node # reference
-  entity(hash: ID!): Entity
-}
-
-#region ScopedCommands
-
-# 🎬 Single initial for every kit-changing operation. Resolves into a chain of scope objects:
-#     `session → alternative(id) → transaction(id) → kit → …`. Leaf fields execute and return the
-#     resulting operation `ID!`; intermediate fields navigate one scope deeper.
-type Mutation {
-  session: SessionScopedCommandInput!
-}
-
-type WipScopedCommandInput {
-  startNewOpenChange: ID!
-  saveOpenChange: ID!
-  openChange(id: ID!): OpenChangeScopedCommandInput!
-}
-
-type AlternativeScopedCommandInput {
-  startNewOpenChange: ID!
-  saveOpenChange: ID!
-  openChange(id: ID!): OpenChangeScopedCommandInput!
-}
-
-type SessionScopedCommandInput {
-  start: ID!
-  end: ID!
-  wip: WipScopedCommandInput
-  alternative(id: ID!): AlternativeScopedCommandInput
-}
-
-type OpenChangeScopedCommandInput {
-  kit: KitScopedOperationInput!
-}
-
-# 🧰 Kit scope. Owns tags, concepts, qualities, types and designs. Every create takes the
-#     entity's primitive fields directly — no input wrappers, no array bulk variants. Bulk
-#     creation is achieved by chaining aliased single-create selections within one transaction.
-type KitScopedOperationInput {
-  # Artifact
-  rename(newName: String!): ID!
-  changeDescription(newDescription: String!): ID!
-
-  # Tags
-  createTag(name: String!, description: String, icon: String, order: Int): ID!
-  tag(id: ID!): TagScopedOperationInput!
-  deleteTag(id: ID!): ID!
-  deleteTags(ids: [ID!]!): ID!
-
-  # Concepts
-  createConcept(name: String!, description: String, icon: String, order: Int): ID!
-  concept(id: ID!): ConceptScopedOperationInput!
-  deleteConcept(id: ID!): ID!
-  deleteConcepts(ids: [ID!]!): ID!
-
-  # Qualities
-  createQuality(key: String!, value: String, unit: String, definition: String, description: String, icon: String): ID!
-  quality(id: ID!): QualityScopedOperationInput!
-  deleteQuality(id: ID!): ID!
-  deleteQualities(ids: [ID!]!): ID!
-
-  # Types
-  createType(name: String!, description: String, icon: String, image: String, unit: String): ID!
-  type(id: ID!): TypeScopedOperationInput!
-  deleteType(id: ID!): ID!
-  deleteTypes(ids: [ID!]!): ID!
-
-  # Designs
-  createDesign(name: String!, description: String, icon: String, image: String, unit: String): ID!
-  design(id: ID!): DesignScopedOperationInput!
-  deleteDesign(id: ID!): ID!
-  deleteDesigns(ids: [ID!]!): ID!
-}
-
-# 🏷️ Tag scope. Artifact + attributes.
-type TagScopedOperationInput {
+type TagOperationInput {
   # Artifact
   rename(newName: String!): ID!
   changeDescription(newDescription: String!): ID!
@@ -5514,8 +5440,7 @@ type TagScopedOperationInput {
   removeAttributes(ids: [ID!]!): ID!
 }
 
-# 💡 Concept scope. Artifact + attributes.
-type ConceptScopedOperationInput {
+type ConceptOperationInput {
   # Artifact
   rename(newName: String!): ID!
   changeDescription(newDescription: String!): ID!
@@ -5526,8 +5451,7 @@ type ConceptScopedOperationInput {
   removeAttributes(ids: [ID!]!): ID!
 }
 
-# 📐 Quality scope. Renamed by `key`; artifact + attributes otherwise.
-type QualityScopedOperationInput {
+type QualityOperationInput {
   # Artifact
   rename(newKey: String!): ID!
   changeDescription(newDescription: String!): ID!
@@ -5538,8 +5462,7 @@ type QualityScopedOperationInput {
   removeAttributes(ids: [ID!]!): ID!
 }
 
-# 🏗️ Type scope. Owns ports & connectors, plus artifact + attributes.
-type TypeScopedOperationInput {
+type TypeOperationInput {
   # Artifact
   rename(newName: String!): ID!
   changeDescription(newDescription: String!): ID!
@@ -5550,18 +5473,17 @@ type TypeScopedOperationInput {
   removeAttributes(ids: [ID!]!): ID!
   # Ports
   createPort(code: String, label: String, description: String, icon: String, order: Int): ID!
-  port(id: ID!): PortScopedOperationInput!
+  port(id: ID!): PortOperationInput!
   deletePort(id: ID!): ID!
   deletePorts(ids: [ID!]!): ID!
   # Connectors
   addConnector(code: String!, description: String, icon: String, portId: ID): ID!
-  connector(id: ID!): ConnectorScopedOperationInput!
+  connector(id: ID!): ConnectorOperationInput!
   removeConnector(id: ID!): ID!
   removeConnectors(ids: [ID!]!): ID!
 }
 
-# 🔌 Port scope. Renamed by `code` + optional `label`; artifact + attributes otherwise.
-type PortScopedOperationInput {
+type PortOperationInput {
   # Artifact
   rename(newCode: String!, newLabel: String): ID!
   changeDescription(newDescription: String!): ID!
@@ -5572,16 +5494,14 @@ type PortScopedOperationInput {
   removeAttributes(ids: [ID!]!): ID!
 }
 
-# 🪢 Connector scope. Renamed by `code`; no attributes.
-type ConnectorScopedOperationInput {
+type ConnectorOperationInput {
   # Artifact
   rename(newCode: String!): ID!
   changeDescription(newDescription: String!): ID!
   changeIcon(newIcon: String!): ID!
 }
 
-# 🏛️ Design scope. Owns pieces, plus artifact + attributes + flatten.
-type DesignScopedOperationInput {
+type DesignOperationInput {
   # Artifact
   rename(newName: String!): ID!
   changeDescription(newDescription: String!): ID!
@@ -5595,15 +5515,14 @@ type DesignScopedOperationInput {
   addFixedPiece(blueprintId: ID!, position: PositionInput!, name: String, description: String): ID!
   addChildPieceWithParentConnection(blueprintId: ID!, parentPieceId: ID!, parentConnector: String!, childConnector: String!, name: String, description: String, position: PositionInput, scale: Float): ID!
   addHangingChildPieceWithParentConnection(blueprintId: ID!, parentPieceId: ID!, parentConnector: String!, childConnector: String!, position: PositionInput!, name: String, description: String, scale: Float): ID!
-  piece(id: ID!): PieceScopedOperationInput!
-  pieces(ids: [ID!]!): PiecesScopedOperationInput!
+  piece(id: ID!): PieceOperationInput!
+  pieces(ids: [ID!]!): PiecesOperationInput!
   deletePiece(id: ID!): ID!
   deletePieces(ids: [ID!]!): ID!
   deletePiecesAndConnections(pieceIds: [ID!]!, connectionIds: [ID!]!): ID!
 }
 
-# 🧩 Piece scope. Per-piece artifact + transforms + attributes.
-type PieceScopedOperationInput {
+type PieceOperationInput {
   # Artifact
   rename(newName: String!): ID!
   changeDescription(newDescription: String!): ID!
@@ -5618,15 +5537,95 @@ type PieceScopedOperationInput {
   removeAttributes(ids: [ID!]!): ID!
 }
 
-# 🧩📚 Multi-piece scope (`movePieces`/`dragPieces`/`fixPieces`/`editPiecesToType`).
-type PiecesScopedOperationInput {
+type PiecesOperationInput {
   drag(offset: OffsetInput!): ID!
   move(offset: OffsetInput!): ID!
   fix: ID!
   changeBlueprint(blueprintId: ID!): ID!
 }
 
-#endregion ScopedCommands
+type KitOperationInput {
+  # Artifact
+  rename(newName: String!): ID!
+  changeDescription(newDescription: String!): ID!
+
+  # Tags
+  createTag(name: String!, description: String, icon: String, order: Int): ID!
+  tag(id: ID!): TagOperationInput!
+  deleteTag(id: ID!): ID!
+  deleteTags(ids: [ID!]!): ID!
+
+  # Concepts
+  createConcept(name: String!, description: String, icon: String, order: Int): ID!
+  concept(id: ID!): ConceptOperationInput!
+  deleteConcept(id: ID!): ID!
+  deleteConcepts(ids: [ID!]!): ID!
+
+  # Qualities
+  createQuality(key: String!, value: String, unit: String, definition: String, description: String, icon: String): ID!
+  quality(id: ID!): QualityOperationInput!
+  deleteQuality(id: ID!): ID!
+  deleteQualities(ids: [ID!]!): ID!
+
+  # Types
+  createType(name: String!, description: String, icon: String, image: String, unit: String): ID!
+  type(id: ID!): TypeOperationInput!
+  deleteType(id: ID!): ID!
+  deleteTypes(ids: [ID!]!): ID!
+
+  # Designs
+  createDesign(name: String!, description: String, icon: String, image: String, unit: String): ID!
+  design(id: ID!): DesignOperationInput!
+  deleteDesign(id: ID!): ID!
+  deleteDesigns(ids: [ID!]!): ID!
+}
+
+type WipCommandInput {
+  startNewChange: ID!
+  saveChange: ID!
+  openChange(id: ID!): OpenChangeCommandInput!
+}
+
+type AlternativeCommandInput {
+  startNewChange: ID!
+  saveChange: ID!
+  openChange(id: ID!): OpenChangeCommandInput!
+}
+
+type SessionCommandInput {
+  start: ID!
+  end: ID!
+  wip: WipCommandInput
+  alternative(id: ID!): AlternativeCommandInput
+}
+
+type OpenChangeCommandInput {
+  kit: KitOperationInput!
+}
+
+#endregion Commands
+
+#endregion VCS
+
+#region Schema
+
+type Query {
+  session: Session!
+  wip: Graph!
+  authoritative: Graph
+  conflicts: ConflictConnection!
+  node(id: ID!): Node
+  entity(hash: ID!): Entity
+}
+
+#region ScopedCommands
+
+# 🎬 Single initial for every kit-changing operation. Resolves into a chain of scope objects:
+#     `session → alternative(id) → transaction(id) → kit → …`. Leaf fields execute and return the
+#     resulting operation `ID!`; intermediate fields navigate one scope deeper.
+type Mutation {
+  session: SessionScopedCommandInput!
+}
 
 type Subscription {
   event: Json!
