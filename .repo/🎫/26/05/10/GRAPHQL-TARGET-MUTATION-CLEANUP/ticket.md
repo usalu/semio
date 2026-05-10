@@ -13,7 +13,8 @@
 
 - `semio/graphql/target.schema.graphql` — refactored `#region MutationInputs` and `type Mutation`:
   - Removed every `*ScopeInput` (`RenameKitScopeInput`, `CreateTagScopeInput`, `AddAttributeToTagScopeInput`, `RemoveAttributesFromTagScopeInput`, `DeletePiecesInDesignScopeInput`, …) and inlined the entity-id scope fields directly as named mutation arguments (`ownerId: ID!`, `tagId: ID!`, `attributeId: ID!`, `attributeIds: [ID!]!`, `pieceIds: [ID!]!`, …).
-  - Added a single shared `input TransactionScopeInput { draftId: ID!, transactionId: ID! }` and made it the **first** argument of every mutation endpoint (`transactionScope: TransactionScopeInput!`). All draft + transaction routing flows through this one wrapper instead of duplicating the two ids on every per-operation `*ScopeInput`.
+  - Added a single shared `input TransactionScopeInput { draftId: ID!, transactionId: ID! }`.
+  - Introduced a root-level namespacing mutation `change(transactionScope: TransactionScopeInput!): KitChange!` and moved every kit-changing operation onto the new `type KitChange { … }`. The transaction scope is supplied **once** at the root; nested operations carry only their own entity-id args and operation `input`. One `change` call thus batches multiple selected operations under a single transaction scope.
   - Removed every entity-input wrapper (`Create*Input`/`Add*Input`/`Add*sInput`) and inlined the wrapped GraphQL `input` types as named arguments (`tag: TagInput!`, `tags: [TagInput!]!`, `attribute: AttributeInput!`, `attributes: [AttributeInput!]!`, `concept`, `concepts`, `port`, `ports`, `quality`, `qualities`, `type`, `types`, `connector`, `connectors`, `design`, `designs`, `child`, `children`, `offset: OffsetInput!`, `position: PositionInput!`).
   - Removed every `*Input { hasInput: Boolean = false }` placeholder wrapper from the schema and from the mutation signature.
   - Kept operation GraphQL `input` wrappers carrying real operation-specific fields: `RenameKitInput`, `ChangeDescriptionInput`, every `Rename*Input` / `Update*DescriptionInput` / `Update*IconInput`, `RenamePortInput { code, label }`, `RenameQualityInput { key }`, `RenameConnectorInTypeInput`, `Rename/UpdatePieceDescriptionInDesignInput`, `AddFixedPieceToDesignInput { blueprintId, position, name, description }`, `ChangePiece(s)ToTypeInDesignInput { blueprintId }`.
@@ -24,7 +25,8 @@
 - All `Unknown type` errors that existed before refactoring are gone (`CreateTagInput`, `AddAttributeToTagInput`, `RemoveAttributeFromTagInput`, `DeleteTagInput`, …).
 - `rg "ScopeInput|^.*draftId" semio/graphql/target.schema.graphql` → 1 match: the `draftId: ID!` field inside `TransactionScopeInput`.
 - `rg transactionId semio/graphql/target.schema.graphql` → 1 match: the `transactionId: ID!` field inside `TransactionScopeInput`.
-- Every mutation now begins with `transactionScope: TransactionScopeInput!` as its first argument (95 endpoints).
+- `rg transactionScope semio/graphql/target.schema.graphql` → 1 match: the `change(transactionScope: TransactionScopeInput!): KitChange!` field on `Mutation`.
+- `type Mutation` exposes a single field `change`. `type KitChange` exposes 95 operations (`renameKit`, `createTag`, …, `deletePiecesAndConnectionsInDesign`).
 
 ## Status
 
