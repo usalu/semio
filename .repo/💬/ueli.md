@@ -1102,6 +1102,10 @@ semio/rs:
 
 ---
 
+The target graphql has significantly changed. Make sure to refactor  to exactly yield this schema and refactor downstream  semio/js, semio/react, semio/sketchpad.   
+
+---
+
 Pieces MUST not have plane and center directly but have optional pose {center, plane} and always computed and cached flatPose.
 
 ---

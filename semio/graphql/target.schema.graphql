@@ -69,6 +69,7 @@ interface Artifact implements StrongEntity {
   lastChangedAt: Timestamp # computed
   lastChangedBy: Author # computed
   lastChangedIn: Checkpoint # computed
+  edits: EditConnection # computed
 }
 
 interface Document implements Artifact {
@@ -964,6 +965,10 @@ type AttributeModificationsConnection implements EntityConnection {
 
 #endregion Attribute
 
+#region Kit
+
+#region Operations
+
 interface Operation implements Entity { # implements StrongEntity
   # StrongEntity
   id: ID! # data // uuidv7
@@ -985,11 +990,11 @@ type OperationConnection implements EntityConnection {
   hash: String! # cached
 }
 
-#region Kit
+#endregion Operations
 
 #region Place
 
-type Place implements Entity { # implements StrongEntity
+type Place implements Artifact { # implements StrongEntity
   # StrongEntity
   id: ID! # data // uuidv7
   hash: String! # cached
@@ -1083,7 +1088,7 @@ type PlaceModificationsConnection implements EntityConnection {
 
 #region Family
 
-type Family implements Entity {
+type Family implements Artifact {
   # StrongEntity
   id: ID! # data // uuidv7
   hash: String! # cached
@@ -1176,7 +1181,7 @@ type FamilyModificationsConnection implements EntityConnection {
 
 #region Folder
 
-type Folder implements Entity { # implements StrongEntity
+type Folder implements Artifact { # implements StrongEntity
   # StrongEntity
   id: ID! # data // uuidv7
   hash: String! # cached
@@ -1280,7 +1285,7 @@ type FolderModificationsConnection implements EntityConnection {
 
 #region File
 
-type File implements Entity { # implements StrongEntity
+type File implements Artifact { # implements StrongEntity
   # StrongEntity
   id: ID! # data // uuidv7
   hash: String! # cached
@@ -1396,7 +1401,7 @@ type FileModificationsConnection implements EntityConnection {
 
 #region Author
 
-type Author implements Entity {
+type Author implements Artifact {
   # StrongEntity
   id: ID! # data // uuidv7
   hash: String! # cached
@@ -1500,7 +1505,7 @@ type AuthorModificationsConnection implements EntityConnection {
 
 #region Prop
 
-type Prop implements Entity {
+type Prop implements Artifact {
   # StrongEntity
   id: ID! # data // uuidv7
   hash: String! # cached
@@ -1598,7 +1603,7 @@ type PropModificationsConnection implements EntityConnection {
 
 #region Benchmark
 
-type Benchmark implements Entity {
+type Benchmark implements Artifact {
   # StrongEntity
   id: ID! # data // uuidv7
   hash: String! # cached
@@ -1700,7 +1705,7 @@ type BenchmarkModificationsConnection implements EntityConnection {
 
 #region Quality
 
-type Quality implements Entity {
+type Quality implements Artifact {
   # StrongEntity
   id: ID! # data // uuidv7
   hash: String! # cached
@@ -1988,7 +1993,7 @@ type DeletedQualities implements Operation {
 
 #region Tag
 
-type Tag implements Entity {
+type Tag implements Artifact {
   # StrongEntity
   id: ID! # data // uuidv7
   hash: String! # cached
@@ -2268,7 +2273,7 @@ type DeletedTags implements Operation {
 
 #region Concept
 
-type Concept implements Entity {
+type Concept implements Artifact {
   # StrongEntity
   id: ID! # data // uuidv7
   hash: String! # cached
@@ -2548,7 +2553,7 @@ type DeletedConcepts implements Operation {
 
 #region Stat
 
-type Stat implements Entity {
+type Stat implements Artifact {
   # StrongEntity
   id: ID! # data // uuidv7
   hash: String! # cached
@@ -2646,7 +2651,7 @@ type StatModificationsConnection implements EntityConnection {
 
 #region Port
 
-type Port implements Entity {
+type Port implements Artifact {
   # StrongEntity
   id: ID! # data // uuidv7
   hash: String! # cached
@@ -2931,7 +2936,7 @@ type DeletedPorts implements Operation {
 
 #region Type
 
-type Connector implements Entity {
+type Connector implements Artifact {
   # StrongEntity
   id: ID! # data // uuidv7
   hash: String! # cached
@@ -3029,7 +3034,7 @@ type ConnectorModificationsConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type Representation implements Entity {
+type Representation implements Artifact {
   # StrongEntity
   id: ID! # data // uuidv7
   hash: String! # cached
@@ -3125,7 +3130,7 @@ type RepresentationModificationsConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type Type implements Entity {
+type Type implements Artifact {
   # StrongEntity
   id: ID! # data // uuidv7
   hash: String! # cached
@@ -3557,7 +3562,7 @@ type RemovedConnectors implements Operation {
 
 #region Layer
 
-type Layer implements Entity {
+type Layer implements Artifact {
   # StrongEntity
   id: ID! # data // uuidv7
   hash: String! # cached
@@ -3662,7 +3667,7 @@ type LayerModificationsConnection implements EntityConnection {
 
 #region Group
 
-type Group implements Entity {
+type Group implements Artifact {
   # StrongEntity
   id: ID! # data // uuidv7
   hash: String! # cached
@@ -3686,7 +3691,7 @@ type GroupConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type GroupDiff implements Entity {
+type GroupDiff implements Artifact {
   # WeakEntity
   id: ID! # computed // hash
   hash: String! # cached
@@ -3737,7 +3742,7 @@ type GroupModificationConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type GroupModifications implements Entity {
+type GroupModifications implements Artifact {
   # WeakEntity
   id: ID! # computed // hash
   hash: String! # cached
@@ -3779,7 +3784,7 @@ type BlueprintConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type Piece implements Entity {
+type Piece implements Artifact {
   # StrongEntity
   id: ID! # data // uuidv7
   hash: String! # cached
@@ -3815,7 +3820,7 @@ type PieceConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type PieceDiff implements Entity {
+type PieceDiff implements Artifact {
   # WeakEntity
   id: ID! # computed // hash
   hash: String! # cached
@@ -3869,7 +3874,7 @@ type PieceModificationConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type PieceModifications implements Entity {
+type PieceModifications implements Artifact {
   # WeakEntity
   id: ID! # computed // hash
   hash: String! # cached
@@ -3891,7 +3896,7 @@ type PieceModificationsConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type Connection implements Entity {
+type Connection implements Artifact {
   # StrongEntity
   id: ID! # data // uuidv7
   hash: String! # cached
@@ -4473,7 +4478,7 @@ type Clump implements WeakEntity {
 
 #endregion Clump
 
-type Design implements Entity {
+type Design implements Artifact {
   # StrongEntity
   id: ID! # data // uuidv7
   hash: String! # cached
@@ -4520,7 +4525,7 @@ type DesignConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type DesignDiff implements Entity {
+type DesignDiff implements Artifact {
   # WeakEntity
   id: ID! # computed // hash
   hash: String! # cached
@@ -4584,7 +4589,7 @@ type DesignModificationConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type DesignModifications implements Entity {
+type DesignModifications implements Artifact {
   # WeakEntity
   id: ID! # computed // hash
   hash: String! # cached
@@ -4756,7 +4761,7 @@ type RemovedAttributesFromDesign implements Operation {
 
 #endregion Design
 
-type Kit implements Entity {
+type Kit implements Artifact {
   # StrongEntity
   id: ID! # data // uuidv7
   hash: String! # cached
@@ -5049,8 +5054,8 @@ type Alternative implements Entity {
   name: String! # data
   checkpoint: CheckpointConnection! # reference
   latestWipCheckpointAncestor: Checkpoint # computed
-  approvedChanges: ChangeConnection! # data
-  pendingChanges: ChangeConnection! # data
+  savedChanges: ChangeConnection! # data
+  openChanges: ChangeConnection! # data
   start: Checkpoint! # reference
   store: Kit! # computed
 }
@@ -5123,64 +5128,6 @@ type SessionConnection implements EntityConnection {
 
 #endregion Sessions
 
-#region Versions
-
-#region Read
-
-type ReadVersion implements Entity {
-  # WeakEntity
-  id: ID! # computed // hash
-  hash: String! # cached
-  owner: Entity # reference // Conflict
-  owns: EntityConnection # reference
-  checkpoint: Checkpoint # data
-  edit: Edit # data
-  operation: Operation # data
-}
-
-type ReadVersionEdge implements EntityEdge {
-  cursor: String! # computed
-  node: ReadVersion! # reference
-}
-
-type ReadVersionConnection implements EntityConnection {
-  edges: [ReadVersionEdge!]! # computed
-  pageInfo: PageInfo! # computed
-  hash: String! # cached
-}
-
-#endregion Read
-
-#region Write
-
-type WriteVersion implements Entity {
-  # WeakEntity
-  id: ID! # computed // hash
-  hash: String! # cached
-  owner: Entity # reference // Conflict
-  owns: EntityConnection # reference
-  alternative: Alternative # data
-  transaction: Transaction # data
-  checkpoint: Checkpoint # data
-  edit: Edit # data
-  operation: Operation # data
-}
-
-type WriteVersionEdge implements EntityEdge {
-  cursor: String! # computed
-  node: WriteVersion! # reference
-}
-
-type WriteVersionConnection implements EntityConnection {
-  edges: [WriteVersionEdge!]! # computed
-  pageInfo: PageInfo! # computed
-  hash: String! # cached
-}
-
-#endregion Write
-
-#endregion Versions
-
 #region Conflicts
 
 type Conflict implements Entity {
@@ -5189,16 +5136,9 @@ type Conflict implements Entity {
   hash: String! # cached
   owner: Entity # reference // Session | Graph
   owns: EntityConnection # reference // ReadVersion | WriteVersion
-  authoritativeVersion: ReadVersion # data
+  authoritativeChange: ReadVersion # data
   transactionVersion: WriteVersion # data
   reason: String! # data
-  createdAt: Timestamp # computed
-  createdBy: Author # data
-  authoredBy: AuthorConnection # data
-  changedIn: CheckpointConnection # data
-  lastChangedAt: Timestamp # computed
-  lastChangedBy: Author # data
-  lastChangedIn: Checkpoint # data
 }
 
 type ConflictEdge implements EntityEdge {
@@ -5212,153 +5152,7 @@ type ConflictConnection implements EntityConnection {
   hash: String! # cached
 }
 
-# Stubs: referenced by OwnerEntity / aggregates but missing from earlier regions (semio/rs dynamic schema build).
-type ConflictDiff implements Entity {
-  id: ID!
-  hash: String!
-  owner: Entity # reference
-  owns: EntityConnection # reference
-}
-
-type ConflictModification implements Modification {
-  id: ID!
-  hash: String!
-  owner: Entity # reference
-  owns: EntityConnection # reference
-  before: Entity!
-  diff: Diff!
-  after: Entity!
-}
-
-type ConflictModifications implements Entity {
-  id: ID!
-  hash: String!
-  owner: Entity # reference
-  owns: EntityConnection # reference
-}
-
-type ReadVersionDiff implements Entity {
-  id: ID!
-  hash: String!
-  owner: Entity # reference
-  owns: EntityConnection # reference
-}
-
-type ReadVersionModification implements Modification {
-  id: ID!
-  hash: String!
-  owner: Entity # reference
-  owns: EntityConnection # reference
-  before: Entity!
-  diff: Diff!
-  after: Entity!
-}
-
-type ReadVersionModifications implements Entity {
-  id: ID!
-  hash: String!
-  owner: Entity # reference
-  owns: EntityConnection # reference
-}
-
-type WriteVersionDiff implements Entity {
-  id: ID!
-  hash: String!
-  owner: Entity # reference
-  owns: EntityConnection # reference
-}
-
-type WriteVersionModification implements Modification {
-  id: ID!
-  hash: String!
-  owner: Entity # reference
-  owns: EntityConnection # reference
-  before: Entity!
-  diff: Diff!
-  after: Entity!
-}
-
-type WriteVersionModifications implements Entity {
-  id: ID!
-  hash: String!
-  owner: Entity # reference
-  owns: EntityConnection # reference
-}
-
-type SessionDiff implements Entity {
-  id: ID!
-  hash: String!
-  owner: Entity # reference
-  owns: EntityConnection # reference
-}
-
-type SessionModification implements Modification {
-  id: ID!
-  hash: String!
-  owner: Entity # reference
-  owns: EntityConnection # reference
-  before: Entity!
-  diff: Diff!
-  after: Entity!
-}
-
-type SessionModifications implements Entity {
-  id: ID!
-  hash: String!
-  owner: Entity # reference
-  owns: EntityConnection # reference
-}
-
-type ConflictDiffEdge implements EntityEdge {
-  cursor: String!
-  node: ConflictDiff!
-}
-
-type ConflictDiffConnection implements EntityConnection {
-  edges: [ConflictDiffEdge!]!
-  pageInfo: PageInfo!
-  hash: String!
-}
-
-type ConflictModificationEdge implements EntityEdge {
-  cursor: String!
-  node: ConflictModification!
-}
-
-type ConflictModificationConnection implements EntityConnection {
-  edges: [ConflictModificationEdge!]!
-  pageInfo: PageInfo!
-  hash: String!
-}
-
-type ConflictModificationsEdge implements EntityEdge {
-  cursor: String!
-  node: ConflictModifications!
-}
-
-type ConflictModificationsConnection implements EntityConnection {
-  edges: [ConflictModificationsEdge!]!
-  pageInfo: PageInfo!
-  hash: String!
-}
-
 #endregion VCS
-
-#region Unions
-
-#endregion Unions
-
-#region SubscriptionPayloads
-
-type Command {
-  id: ID! # computed // hash
-}
-
-type Error {
-  message: String!
-}
-
-#endregion SubscriptionPayloads
 
 #region Schema
 
@@ -5380,21 +5174,26 @@ type Mutation {
   session: SessionScopedCommandInput!
 }
 
-# 🎬 Top-level command scope. `start`/`end` open and close the session; `alternative` enters one.
-type SessionScopedCommandInput {
-  start: ID! # data
-  end: ID! # data
-  alternative(id: ID!): AlternativeScopedCommandInput!
+type WipScopedCommandInput {
+  startNewOpenChange: ID!
+  saveOpenChange: ID!
+  openChange(id: ID!): OpenChangeScopedCommandInput!
 }
 
-# 📑 Alternative scope. `transaction` enters (or opens) the alternative's open transaction.
 type AlternativeScopedCommandInput {
-  transaction(id: ID!): TransactionScopedCommandInput!
+  startNewOpenChange: ID!
+  saveOpenChange: ID!
+  openChange(id: ID!): OpenChangeScopedCommandInput!
 }
 
-# 💼 Transaction scope. Currently every kit-changing operation lives under `kit`. Multiple
-#     leaf operations can be chained inside one transaction via aliased GraphQL selections.
-type TransactionScopedCommandInput {
+type SessionScopedCommandInput {
+  start: ID!
+  end: ID!
+  wip: WipScopedCommandInput
+  alternative(id: ID!): AlternativeScopedCommandInput
+}
+
+type OpenChangeScopedCommandInput {
   kit: KitScopedOperationInput!
 }
 
