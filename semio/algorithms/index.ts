@@ -8,7 +8,7 @@
 /// <reference types="vite/client" />
 
 // #region 📥Imports
-import { KitStore, theKitReadScope, type DesignFlattenMapEntryDto, type KitFullDto as WasmKitFullDto } from "@semio/js";
+import { KitStore, theKitReadPoint, type DesignFlattenMapEntryDto, type KitFullDto as WasmKitFullDto } from "@semio/js";
 import type {
   CoordinatePlain as Coordinate,
   Design,
@@ -43,7 +43,7 @@ async function openWasmKit(kit: Kit): Promise<KitStore> {
 }
 
 async function readFlattenRows(ks: KitStore, designId: string): Promise<readonly DesignFlattenMapEntryDto[]> {
-  return ks.readDesignFlattenMap(theKitReadScope, designId);
+  return ks.readDesignFlattenMap(theKitReadPoint, designId);
 }
 
 function piecesDiffFromFlattenRows(rows: readonly DesignFlattenMapEntryDto[]): NonNullable<DesignDiff["pieces"]> {

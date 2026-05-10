@@ -4034,7 +4034,7 @@ pub mod vcs {
     use std::sync::{Arc, Weak};
 
     use async_graphql::types::Json;
-    use async_graphql::{Object, Union};
+    use async_graphql::{InputObject, Object, Union};
     use async_lock::RwLock;
 
     use crate::error::SemioError;
@@ -4529,6 +4529,32 @@ pub mod vcs {
         }
     }
 
+    /// @emoji 🧭 GraphQL input matching `@semio/js` `KitReadPoint` — selects which materialized kit snapshot `Graph.theKit` resolves.
+    #[derive(InputObject)]
+    #[graphql(name = "KitReadPointInput")]
+    pub struct KitReadPointInput {
+        #[graphql(name = "theKit")]
+        pub the_kit: Option<bool>,
+        #[graphql(name = "checkpointId")]
+        pub checkpoint_id: Option<Id>,
+        #[graphql(name = "checkpointChangeId")]
+        pub checkpoint_change_id: Option<Id>,
+        #[graphql(name = "checkpointOperationId")]
+        pub checkpoint_operation_id: Option<Id>,
+        #[graphql(name = "alternativeId")]
+        pub alternative_id: Option<Id>,
+        #[graphql(name = "draftAlternativeId")]
+        pub draft_alternative_id: Option<Id>,
+        #[graphql(name = "draftId")]
+        pub draft_id: Option<Id>,
+        #[graphql(name = "draftChangeId")]
+        pub draft_change_id: Option<Id>,
+        #[graphql(name = "draftTransactionId")]
+        pub draft_transaction_id: Option<Id>,
+        #[graphql(name = "draftOperationId")]
+        pub draft_operation_id: Option<Id>,
+    }
+
     impl Graph {
         /// 🆕 Build a brand-new Graph; seeds [`Graph::parent_root_for_active_draft`] from a deep-cloned empty [`Kit`] so checkpoint roots never alias live mutation.
         pub async fn new() -> Arc<Self> {
@@ -4846,6 +4872,39 @@ pub mod vcs {
             self.invalidate_materialized_cache().await;
             Ok(())
         }
+
+        /// @emoji 📍 Materialized [`Kit`] at any readable `wip` anchor (main line, checkpoint root, alternative draft tip, explicit draft).
+        pub async fn materialized_kit_at_point(self: &Arc<Self>, p: KitReadPointInput) -> Result<Arc<Kit>, SemioError> {
+            if p.the_kit == Some(true) {
+                return Ok(self.materialized_head_kit().await);
+            }
+            if let Some(cid) = p.checkpoint_id.clone() {
+                let _ = (p.checkpoint_change_id.clone(), p.checkpoint_operation_id.clone());
+                let cps = self.checkpoints.read().await;
+                let cp = cps.iter().find(|c| c.id == cid).cloned().ok_or_else(|| SemioError::not_found("Checkpoint", cid.as_str()))?;
+                return Ok(cp.frozen_root.clone());
+            }
+            if let Some(aid) = p.alternative_id.clone() {
+                let alts = self.alternatives.read().await;
+                let alt = alts.iter().find(|a| a.id == aid).cloned().ok_or_else(|| SemioError::not_found("Alternative", aid.as_str()))?;
+                let draft = alt.draft.read().await.upgrade().ok_or_else(|| SemioError::invalid("alternative has no draft"))?;
+                let _ = (p.draft_transaction_id.clone(), p.draft_operation_id.clone(), p.draft_change_id.clone());
+                return Ok(self.materialized_kit_for_draft(&draft.id).await);
+            }
+            if let Some(did) = p.draft_id.clone() {
+                let draft = self.drafts.read().await.iter().find(|d| d.id == did).cloned().ok_or_else(|| SemioError::not_found("Draft", did.as_str()))?;
+                if let Some(exp_alt) = p.draft_alternative_id.clone() {
+                    let owner = draft.owner_alternative.upgrade();
+                    let oid = owner.map(|a| a.id.clone());
+                    if oid.as_ref() != Some(&exp_alt) {
+                        return Err(SemioError::invalid("draft alternative mismatch"));
+                    }
+                }
+                let _ = (p.draft_transaction_id.clone(), p.draft_operation_id.clone(), p.draft_change_id.clone());
+                return Ok(self.materialized_kit_for_draft(&draft.id).await);
+            }
+            Ok(self.materialized_head_kit().await)
+        }
     }
 
     #[Object(name = "Graph")]
@@ -4868,8 +4927,15 @@ pub mod vcs {
             self.owner_session.read().await.upgrade()
         }
         #[graphql(name = "theKit")]
-        pub async fn the_kit(&self) -> Option<Arc<Kit>> {
-            Some(self.materialized_head_kit_from_ref().await)
+        pub async fn the_kit(&self, #[graphql(name = "at")] at: Option<KitReadPointInput>) -> Option<Arc<Kit>> {
+            let g = self.arc_here();
+            match at {
+                None => Some(g.materialized_head_kit_from_ref().await),
+                Some(p) => match g.materialized_kit_at_point(p).await {
+                    Ok(k) => Some(k),
+                    Err(_) => None,
+                },
+            }
         }
         pub async fn alternative(&self, id: Id) -> Option<Arc<Alternative>> {
             self.alternatives.read().await.iter().find(|a| a.id == id).cloned()

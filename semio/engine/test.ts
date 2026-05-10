@@ -45,9 +45,10 @@ for (const definition of [
   definitionBody(definition);
 }
 const queryBody = definitionBody("type Query");
+const graphBody = definitionBody("type Graph");
 assertSchema(
-  queryBody.includes("kit(scope: KitReadScopeInput!): KitStore!") && !queryBody.includes("kitReadScope"),
-  "Query MUST expose kit(scope:) root read",
+  graphBody.includes("theKit(at: KitReadPointInput): Kit") && !graphBody.includes("kitReadScope"),
+  "Graph MUST expose theKit(at:) materialized reads",
 );
 const mutationBody = definitionBody("type Mutation");
 assertSchema(mutationBody.includes("kitStore: KitStoreMutation!"), "Mutation MUST expose nested kit store mutations");
@@ -70,7 +71,7 @@ assertSchema(
   designBody.includes("clusterableGroups(selection: [String!]!): [[String!]!]!") && designBody.includes("replaceableCatalog(selection: [String!]!): ReplaceableCatalogStore!"),
   "DesignStore MUST expose computed semio/rs graph operations",
 );
-assertSchema(graphqlSchema.includes("input KitReadScopeInput @oneOf"), "semio GraphQL schema MUST expose Rust read scopes as one-of input");
+assertSchema(graphqlSchema.includes("input KitReadPointInput @oneOf"), "semio GraphQL schema MUST expose Rust read points as one-of input");
 
 execFileSync(pythonCommand, ["-c", "from pathlib import Path; from ariadne import gql, make_executable_schema; s=Path('../graphql/schema.graphql').read_text(encoding='utf-8'); make_executable_schema(gql(s))"], {
   cwd: __dirname,

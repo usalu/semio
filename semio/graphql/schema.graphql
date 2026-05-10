@@ -467,12 +467,28 @@ type FolderEdge {
 """
 union GqlNode = Graph | Kit | Design | Piece | Session | Conflict | Tag | Concept | Quality
 
+"""
+@emoji 🧭 Selects which materialized kit snapshot `Graph.theKit` resolves (main line, checkpoint root, alternative draft tip, or explicit draft).
+"""
+input KitReadPointInput {
+	theKit: Boolean
+	checkpointId: Id
+	checkpointChangeId: Id
+	checkpointOperationId: Id
+	alternativeId: Id
+	draftAlternativeId: Id
+	draftId: Id
+	draftChangeId: Id
+	draftTransactionId: Id
+	draftOperationId: Id
+}
+
 type Graph {
 	id: Id!
 	hash: String!
 	owner: GraphOwner!
 	sessionOwner: Session
-	theKit: Kit
+	theKit(at: KitReadPointInput): Kit
 	alternative(id: Id!): Alternative
 	alternatives: AlternativeConnection!
 	checkpoint(id: Id!): Checkpoint
