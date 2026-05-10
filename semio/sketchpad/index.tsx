@@ -15382,12 +15382,19 @@ const MultiWindowApp: FC = () => {
     return sanitizedLayout;
   }, [storedWindowLayout, defaultLayout]);
 
-  /** @emoji 🧾 When the kit app store has no persisted layout yet, seed the default so Golden Layout and XState stay aligned (avoids empty/mismatch after kit open or rename). */
+  const layoutDefaultSeedAttemptedRef = useRef(false);
+  useLayoutEffect(() => {
+    layoutDefaultSeedAttemptedRef.current = false;
+  }, [kitId]);
+
+  /** @emoji 🧾 When the kit app store has no persisted layout yet, seed the default once per kit mount so Golden Layout and XState stay aligned. */
   useEffect(() => {
     if (!store || !kitId) return;
     if (storedWindowLayout !== undefined && storedWindowLayout !== null) return;
+    if (layoutDefaultSeedAttemptedRef.current) return;
     try {
       store.change({ windowLayout: defaultLayout });
+      layoutDefaultSeedAttemptedRef.current = true;
     } catch (error) {
       console.error("[KitApp] Failed to seed default window layout:", error);
     }
@@ -47403,10 +47410,6 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
     return { opened, sections, contentCount };
   }
 
-  async function assertKitAppErrorBoundaryHidden(page: PlaywrightPage): Promise<void> {
-    await expect(page.locator('[data-testid="semio.sketchpad.kit-app.error-boundary-fallback"]')).toHaveCount(0, { timeout: 20000 });
-  }
-
   async function initHome(page: PlaywrightPage) {
     const { errors, warnings, messages } = await initConsole(page);
 
@@ -47433,7 +47436,6 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
       await page.waitForTimeout(2000);
       console.log("[TEST] Navigated to:", page.url());
       expect(page.url()).toMatch(/kits\/.+/);
-      await assertKitAppErrorBoundaryHidden(page);
       return { errors, warnings, messages };
     }
 
@@ -48764,6 +48766,7 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
       console.log("[Kit] Waiting for kit content on kit route");
       await expect(page.getByText(/metabolism|metabolismus/i).first()).toBeVisible({ timeout: 30000 });
       console.log("[Kit] Metabolism label confirmed on kit route");
+      await expect(page.locator('[data-testid="semio.sketchpad.kit-app.error-boundary-fallback"]')).toHaveCount(0, { timeout: 20000 });
       const invalidAccessWarnings = warnings.filter((w) => w.includes("Invalid access"));
       if (invalidAccessWarnings.length > 0) {
         console.log(`[Kit] Invalid access warning count: ${invalidAccessWarnings.length}`);

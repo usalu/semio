@@ -2452,7 +2452,7 @@ pub mod kit {
                     pcs.clear();
                 }
                 *des.piece_weak_by_external_id.write().await = HashMap::new();
-                let plist = d_json.get("pieces").and_then(|p| p.as_array()).cloned().unwrap_or_default();
+                let plist = d_json.get("pieces").and_then(crate::kit_backbone::json_array_or_block_items_ref).cloned().unwrap_or_default();
                 let owner_des = Arc::downgrade(des);
                 for pj in plist {
                     let pid = pj.get("id").and_then(|x| x.as_str()).ok_or_else(|| crate::error::SemioError::invalid("design piece missing id"))?;
@@ -3519,7 +3519,7 @@ pub mod kit {
                 let mut tw = self.type_weak_by_id.write().await;
                 tys.clear();
                 tw.clear();
-                let types_arr = dto.get("types").and_then(|v| v.as_array()).cloned().unwrap_or_default();
+                let types_arr = dto.get("types").and_then(crate::kit_backbone::json_array_or_block_items_ref).cloned().unwrap_or_default();
                 let owner = Arc::downgrade(self);
                 for t in &types_arr {
                     let Some(ts) = t.get("id").and_then(|x| x.as_str()) else { continue };
@@ -3531,7 +3531,7 @@ pub mod kit {
             }
 
             let owner = Arc::downgrade(self);
-            let design_arr_owned = dto.get("designs").and_then(|v| v.as_array()).cloned().unwrap_or_default();
+            let design_arr_owned = dto.get("designs").and_then(crate::kit_backbone::json_array_or_block_items_ref).cloned().unwrap_or_default();
             let mut appended: Vec<Arc<design::Design>> = Vec::new();
             for d in &design_arr_owned {
                 let Some(ds) = d.get("id").and_then(|x| x.as_str()) else { continue };
@@ -7410,6 +7410,24 @@ pub mod kit_backbone {
     /// @emoji 🚧 Block-merkle hash sentinel reused everywhere until real hashing is wired (matches the literal `"…"` placeholders in the metabolism fixture).
     pub const HASH_PLACEHOLDER: &str = "…";
 
+    /// @emoji 📎 Resolve kit snapshot collection slices whether serialized as a legacy JSON array or a `{ hash, items }` block (`metabolism.new.kit.semio.json`).
+    pub(crate) fn json_array_or_block_items_ref(v: &serde_json::Value) -> Option<&Vec<serde_json::Value>> {
+        match v {
+            serde_json::Value::Array(a) => Some(a),
+            serde_json::Value::Object(o) => o.get("items").and_then(|x| x.as_array()),
+            _ => None,
+        }
+    }
+
+    /// @emoji 📎 Mutable slice for hydrate / blob merge paths that must accept block lists or legacy arrays.
+    pub(crate) fn json_array_or_block_items_mut(v: &mut serde_json::Value) -> Option<&mut Vec<serde_json::Value>> {
+        match v {
+            serde_json::Value::Array(a) => Some(a),
+            serde_json::Value::Object(o) => o.get_mut("items").and_then(|x| x.as_array_mut()),
+            _ => None,
+        }
+    }
+
     /// @emoji 📜 `{hash, items: [T]}` envelope — the universal "block-hashed list" reused in every nested collection of the bundle.
     #[derive(Clone, Debug, serde::Deserialize, serde::Serialize)]
     pub struct BlockHashedListDto<T> {
@@ -7666,7 +7684,10 @@ pub mod kit_backbone {
         }
 
         fn collect_blob_hashes_from_kit_projection(kit: &serde_json::Value, out: &mut std::collections::HashSet<String>) {
-            let Some(files) = kit.get("files").and_then(|v| v.as_array()) else {
+            let Some(files_val) = kit.get("files") else {
+                return;
+            };
+            let Some(files) = crate::kit_backbone::json_array_or_block_items_ref(files_val) else {
                 return;
             };
             for f in files {
@@ -7678,7 +7699,10 @@ pub mod kit_backbone {
         }
 
         fn take_file_blobs_from_kit_json_into(kit: &mut serde_json::Value, seen_digest: &mut std::collections::HashSet<String>, out: &mut Vec<serde_json::Value>) {
-            let Some(files) = kit.get_mut("files").and_then(|v| v.as_array_mut()) else {
+            let Some(files_holder) = kit.get_mut("files") else {
+                return;
+            };
+            let Some(files) = crate::kit_backbone::json_array_or_block_items_mut(files_holder) else {
                 return;
             };
             for f in files.iter_mut() {
@@ -7714,7 +7738,10 @@ pub mod kit_backbone {
             if by_digest.is_empty() {
                 return;
             }
-            let Some(files) = kit.get_mut("files").and_then(|v| v.as_array_mut()) else {
+            let Some(files_holder) = kit.get_mut("files") else {
+                return;
+            };
+            let Some(files) = crate::kit_backbone::json_array_or_block_items_mut(files_holder) else {
                 return;
             };
             for f in files.iter_mut() {
@@ -9847,6 +9874,17 @@ mod tests {
             assert!(v[graph_key]["root"].get("types").is_some(), "graph `{graph_key}.root` missing `types`");
             assert!(v[graph_key]["root"].get("designs").is_some(), "graph `{graph_key}.root` missing `designs`");
         }
+    }
+
+    #[cfg(not(target_arch = "wasm32"))]
+    #[test]
+    fn json_array_or_block_items_helpers_accept_legacy_or_block_lists() {
+        let flat = serde_json::json!([{"id":"a"}]);
+        let block = serde_json::json!({"hash":"…","items":[{"id":"b"}]});
+        assert_eq!(crate::kit_backbone::json_array_or_block_items_ref(&flat).unwrap().len(), 1);
+        assert_eq!(crate::kit_backbone::json_array_or_block_items_ref(&block).unwrap()[0]["id"], "b");
+        let mut m = block.clone();
+        assert!(crate::kit_backbone::json_array_or_block_items_mut(&mut m).unwrap()[0].get("id").is_some());
     }
 
     #[cfg(not(target_arch = "wasm32"))]

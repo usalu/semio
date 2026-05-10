@@ -1881,6 +1881,14 @@ export class KitStore {
         if (requestId === "") throw new Error(`${fieldName}: empty request id`);
         const result = await this.correlator.await(requestId);
         await this.finalizeTransaction(draftId, transactionId, result.ok).catch(() => undefined);
+        /** Refetch {@link kitName} and other {@link query}-backed fields: correlator resolves from `commandSucceeded`, while {@link startSubscriptionLoop} invalidations depend on the separate operation stream — mutations could succeed without that stream firing. */
+        if (result.ok) {
+          try {
+            this.invalidations.next();
+          } catch {
+            /* ignore */
+          }
+        }
         return result;
       } catch (e) {
         await this.finalizeTransaction(draftId, transactionId, false).catch(() => undefined);
