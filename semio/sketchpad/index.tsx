@@ -16604,8 +16604,36 @@ const SketchpadSettingsContent: FC = () => {
 /** @emoji 🌱 Sentinel option value for the main kit line (Radix Select rejects empty string). */
 const SEMIO_SKETCHPAD_THE_KIT_ALT_VALUE = "__semio_sketchpad_the_kit__";
 
+/** @emoji 🧾 Counts unsaved changes on an alternative wire node (`unsavedChanges` relay, legacy `openTransaction` / draft flags). */
+function __unsavedChangesCountFromAltWire(node: unknown): number {
+  if (node == null || typeof node !== "object") return 0;
+  const n = node as Record<string, unknown>;
+  const uc = n["unsavedChanges"];
+  if (uc != null && typeof uc === "object") {
+    const edges = (uc as { edges?: unknown }).edges;
+    if (Array.isArray(edges)) return edges.filter(Boolean).length;
+  }
+  const ot = n["openTransaction"];
+  if (ot != null && typeof ot === "object" && String((ot as { id?: unknown }).id ?? "").trim() !== "") return 1;
+  const draft = n["draft"];
+  if (draft != null && typeof draft === "object" && ((draft as { u1?: unknown }).u1 === true || (draft as { canUndo?: unknown }).canUndo === true)) return 1;
+  return 0;
+}
+
+/** @emoji 🧾 Flattens `wip.alternatives` from {@link KitStore} `vcsState()` into concrete alternative nodes. */
+function __wipAlternativeNodesFromVcs(vcs: unknown): unknown[] {
+  if (vcs == null || typeof vcs !== "object") return [];
+  const wip = (vcs as { wip?: { alternatives?: unknown } }).wip;
+  const altRaw = wip?.alternatives;
+  if (altRaw == null) return [];
+  if (Array.isArray(altRaw)) return altRaw;
+  const edges = (altRaw as { edges?: readonly { node?: unknown }[] | null }).edges;
+  if (!Array.isArray(edges)) return [];
+  return edges.map((e) => e?.node).filter(Boolean);
+}
+
 /**
- * @emoji 🌱 Registers the left-most footer dropdown: `the kit` vs rs alternatives (draft scope follows {@link KitAlternativeSelectionProvider}).
+ * @emoji 🌱 Registers the left-most footer dropdown: `the kit` vs rs alternatives; shows unsaved change count from `Alternative.unsavedChanges` when present on the wire.
  **/
 const KitAlternativeFooterSelector: FC = () => {
   const addFooterItem = useAddFooterItem();
@@ -16617,6 +16645,10 @@ const KitAlternativeFooterSelector: FC = () => {
   const kitClient = kitRuntime?.kitClient ?? null;
   const newAltInputRef = useRef<HTMLInputElement>(null);
   const [creatingAlt, setCreatingAlt] = useState(false);
+  const [unsavedCount, setUnsavedCount] = useState(0);
+  const [hubUser, setHubUser] = useState("");
+  const [hubPass, setHubPass] = useState("");
+  const [hubUrl, setHubUrl] = useState("");
 
   const handleCreateAlternative = useCallback(async () => {
     const name = newAltInputRef.current?.value?.trim() ?? "";
@@ -16644,6 +16676,37 @@ const KitAlternativeFooterSelector: FC = () => {
   }, [kitClient, creatingAlt, selectedAlternativeId, setSelectedAlternativeId]);
 
   useEffect(() => {
+    if (!kitClient) {
+      setUnsavedCount(0);
+      return;
+    }
+    const ks = kitStoreFromKitStoreClient(kitClient) as { vcsState?: () => Promise<unknown> } | null;
+    if (!ks || typeof ks.vcsState !== "function") {
+      setUnsavedCount(0);
+      return;
+    }
+    let cancelled = false;
+    const pull = async () => {
+      try {
+        const v = await ks.vcsState();
+        if (cancelled) return;
+        const nodes = __wipAlternativeNodesFromVcs(v);
+        const sid = selectedAlternativeId;
+        const node = sid == null ? null : nodes.find((raw) => String((raw as { id?: unknown })?.id ?? "") === sid);
+        setUnsavedCount(node ? __unsavedChangesCountFromAltWire(node) : 0);
+      } catch {
+        if (!cancelled) setUnsavedCount(0);
+      }
+    };
+    void pull();
+    const off = kitClient.subscribe(() => void pull());
+    return () => {
+      cancelled = true;
+      off();
+    };
+  }, [kitClient, selectedAlternativeId]);
+
+  useEffect(() => {
     if (appType !== "kit" && appType !== "design" && appType !== "type") return;
     const value = selectedAlternativeId ?? SEMIO_SKETCHPAD_THE_KIT_ALT_VALUE;
     const altStamp = alternatives.map((a) => a.id).join(",");
@@ -16653,7 +16716,7 @@ const KitAlternativeFooterSelector: FC = () => {
       order: -1000,
       className: footerEquivClass,
       content: (
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-1 flex-wrap">
           <Select
             id="semio.sketchpad.footer.alternative.select"
             value={value}
@@ -16672,6 +16735,11 @@ const KitAlternativeFooterSelector: FC = () => {
               ))}
             </SelectContent>
           </Select>
+          {unsavedCount > 0 ? (
+            <span className="text-xs tabular-nums rounded border border-amber-600/50 px-1.5 py-0.5 text-amber-700 dark:text-amber-300" title="Unsaved changes on the selected alternative">
+              {unsavedCount} unsaved
+            </span>
+          ) : null}
           <Input
             ref={newAltInputRef}
             className="h-8 min-w-[7rem] max-w-[12rem] text-xs"
@@ -16693,6 +16761,64 @@ const KitAlternativeFooterSelector: FC = () => {
           >
             +
           </Button>
+          <Input
+            className="h-8 min-w-[6rem] max-w-[9rem] text-xs"
+            placeholder="hub user"
+            value={hubUser}
+            onChange={(e) => setHubUser(e.target.value)}
+            aria-label="Hub username"
+          />
+          <Input
+            className="h-8 min-w-[6rem] max-w-[9rem] text-xs"
+            type="password"
+            placeholder="password hash"
+            value={hubPass}
+            onChange={(e) => setHubPass(e.target.value)}
+            aria-label="Hub password hash"
+          />
+          <Input
+            className="h-8 min-w-[6rem] max-w-[10rem] text-xs"
+            placeholder="hub url (opt)"
+            value={hubUrl}
+            onChange={(e) => setHubUrl(e.target.value)}
+            aria-label="Hub base URL"
+          />
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            className="h-8 px-2 text-xs"
+            disabled={!kitClient}
+            onClick={() => {
+              const ext = kitClient as unknown as Record<string, unknown>;
+              const fn = ext["login"];
+              if (typeof fn !== "function") {
+                console.warn("[DEBUG] kitClient has no login(); wire Session.login after js builder lands");
+                return;
+              }
+              void Promise.resolve((fn as (u: string, p: string, h?: string) => Promise<unknown>)(hubUser, hubPass, hubUrl || undefined)).catch((e) => console.warn("[DEBUG] login failed", e));
+            }}
+          >
+            login
+          </Button>
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            className="h-8 px-2 text-xs"
+            disabled={!kitClient}
+            onClick={() => {
+              const ext = kitClient as unknown as Record<string, unknown>;
+              const fn = ext["logout"];
+              if (typeof fn !== "function") {
+                console.warn("[DEBUG] kitClient has no logout(); wire Session.logout after js builder lands");
+                return;
+              }
+              void Promise.resolve((fn as () => Promise<unknown>)()).catch((e) => console.warn("[DEBUG] logout failed", e));
+            }}
+          >
+            logout
+          </Button>
         </div>
       ),
     });
@@ -16707,6 +16833,10 @@ const KitAlternativeFooterSelector: FC = () => {
     kitClient,
     creatingAlt,
     handleCreateAlternative,
+    unsavedCount,
+    hubUser,
+    hubPass,
+    hubUrl,
   ]);
 
   return null;
@@ -27964,19 +28094,19 @@ export function useDesignAppRemoveRepresentationTagFromAllTypes(): ActionHookRes
 }
 
 /**
- * Interface for transaction action callbacks including start, finalize, and abort.
+ * @emoji 🧾 Local change-batch callbacks for the Design app shell (delegates to {@link semio.designApp.startNewChange} commands).
  **/
-export interface TransactionActions {
+export interface ChangeActions {
   start: () => void;
   finalize: () => void;
   abort: () => void;
 }
 
 /**
- * Returns the Design app transaction controller.
- *MUST provide start, finalize, and abort transaction actions.
+ * Returns the Design app change-batch controller.
+ *MUST provide start, finalize, and abort actions mapped to kit store commands.
  **/
-export function useDesignAppTransaction(): [TransactionActions | undefined, boolean] {
+export function useDesignAppChange(): [ChangeActions | undefined, boolean] {
   const store = useDesignStore() as DesignStore | null;
   const getOrigin = useOrigin();
   const canTransact = !!store;
@@ -27992,12 +28122,11 @@ export function useDesignAppTransaction(): [TransactionActions | undefined, bool
 }
 
 /**
- * Provider component that establishes Design app transaction context.
- *MUST wrap children with the Design app transaction provider.
+ * Provider component that establishes Design app change-batch context for {@link TransactionProvider}.
  **/
-export const DesignAppTransactionProvider: FC<{ children: ReactNode }> = ({ children }) => {
-  const [transaction] = useDesignAppTransaction();
-  return <TransactionProvider transaction={transaction}>{children}</TransactionProvider>;
+export const DesignAppChangeProvider: FC<{ children: ReactNode }> = ({ children }) => {
+  const [changeBatch] = useDesignAppChange();
+  return <TransactionProvider transaction={changeBatch}>{children}</TransactionProvider>;
 };
 
 /**
@@ -29833,7 +29962,7 @@ const DesignSectionForm: FC = () => {
   const { t } = useTranslation();
   const tooltip = useTooltip();
   const location = useLocation();
-  const [transaction] = useDesignAppTransaction();
+  const [transaction] = useDesignAppChange();
   const { run: runUpdateDesign } = useUpdateDesign();
   const kitScope = useKitScope();
   const designScope = useDesignScope();
@@ -30241,7 +30370,7 @@ export const PiecesSection: FC = () => {
  **/
 const PiecesSectionForm: FC = () => {
   const { t } = useTranslation();
-  const [transaction] = useDesignAppTransaction();
+  const [transaction] = useDesignAppChange();
   const [updatePiece] = useDesignAppUpdatePiece();
   const [updatePieces] = useDesignAppUpdatePieces();
   const design = useDesign() as Design;
@@ -31435,7 +31564,7 @@ const ConnectionsSectionForm: FC<{
   connections: Connection[];
   sectionLabel?: string;
 }> = ({ connections, sectionLabel }) => {
-  const [transaction] = useDesignAppTransaction();
+  const [transaction] = useDesignAppChange();
   const [updateConnections] = useDesignAppUpdateConnections();
   const isSingle = connections.length === 1;
   const connection = isSingle ? connections[0] : null;
@@ -33420,7 +33549,7 @@ interface DesignDiagramProps {
  * DesignDiagram holds the data fields for a DesignDiagram record.
  **/
 const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
-  const [transaction] = useDesignAppTransaction();
+  const [transaction] = useDesignAppChange();
   const [addPiece] = useDesignAppAddPiece();
   const [updatePieces] = useDesignAppUpdatePieces();
   const [addConnection] = useDesignAppAddConnection();
@@ -35643,7 +35772,7 @@ const RepresentationPiece: FC<RepresentationPieceProps> = () => {
 /**
  **/
 const RepresentationDesign: FC = () => {
-  const [transaction] = useDesignAppTransaction();
+  const [transaction] = useDesignAppChange();
   const [updatePiece] = useDesignAppUpdatePiece();
   const [selection] = useDesignAppSelection();
   const [others] = useDesignAppOthers();
@@ -35776,7 +35905,7 @@ const SceneContextBridge: FC<{
 };
 
 const DesignAppScene: FC = () => {
-  const [transaction] = useDesignAppTransaction();
+  const [transaction] = useDesignAppChange();
   const [addPiece] = useDesignAppAddPiece();
   const [deselectAll] = useDesignAppDeselectAll();
   const [toggleAccesslFullscreen] = useDesignAppToggleAccesslFullscreen();
@@ -36025,7 +36154,7 @@ const DesignWindowApp: FC<AppProps> = () => {
   useDesignAppInitialize();
 
   const { t } = useTranslation();
-  const [transaction] = useDesignAppTransaction();
+  const [transaction] = useDesignAppChange();
   const [deleteSelected] = useDesignAppDeleteSelected();
   const [undo] = useDesignAppUndo();
   const [redo] = useDesignAppRedo();
@@ -36967,9 +37096,9 @@ const DesignApp: FC = () => {
 
   return (
     <DesignFilterProvider>
-      <DesignAppTransactionProvider>
+      <DesignAppChangeProvider>
         <DesignWindowApp />
-      </DesignAppTransactionProvider>
+      </DesignAppChangeProvider>
     </DesignFilterProvider>
   );
 };
@@ -42907,7 +43036,7 @@ const QualityApp: FC<QualityAppProps> = () => {
           connectNodes("semio.sketchpad.app.quality.drag", parentId, node.id);
         }
 
-        finalizeTransaction("semio.sketchpad.app.quality.drag");
+        saveChange("semio.sketchpad.app.quality.drag");
       }
     }
   };

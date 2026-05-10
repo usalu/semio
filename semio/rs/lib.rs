@@ -229,6 +229,7 @@ pub mod geom {
         }
 
         /// @emoji 📍 Coordinate WeakEntity data node.
+        #[derive(Debug)]
         pub struct CoordinateNode {
             pub id: Id,
             pub u: RwLock<f64>,
@@ -250,6 +251,7 @@ pub mod geom {
         }
 
         /// @emoji ↗ Vector WeakEntity data node.
+        #[derive(Debug)]
         pub struct VectorNode {
             pub id: Id,
             pub x: RwLock<f64>,
@@ -273,6 +275,7 @@ pub mod geom {
         }
 
         /// @emoji ◆ Point WeakEntity data node.
+        #[derive(Debug)]
         pub struct PointNode {
             pub id: Id,
             pub x: RwLock<f64>,
@@ -296,6 +299,7 @@ pub mod geom {
         }
 
         /// @emoji ▭ Plane WeakEntity data node (owns origin + axes).
+        #[derive(Debug)]
         pub struct PlaneNode {
             pub id: Id,
             pub origin: Arc<PointNode>,
@@ -321,6 +325,7 @@ pub mod geom {
         }
 
         /// @emoji ↖ WeakEntity-style offset (piece drag input echo).
+        #[derive(Debug)]
         pub struct OffsetNode {
             pub id: Id,
             pub u: RwLock<f64>,
@@ -342,6 +347,7 @@ pub mod geom {
         }
 
         /// @emoji ⌖ Position WeakEntity root (center + plane); mirrors live [`super::Position`] DTO via RwLock sync.
+        #[derive(Debug)]
         pub struct PositionNode {
             pub id: Id,
             pub center: Arc<CoordinateNode>,
@@ -375,6 +381,7 @@ pub mod geom {
         }
 
         /// @emoji 🌍 WeakEntity-style geographic location (lon/lat/alt).
+        #[derive(Debug)]
         pub struct LocationNode {
             pub id: Id,
             pub longitude: RwLock<f64>,
@@ -807,13 +814,13 @@ pub mod gql_relay {
 
     macro_rules! simple_conn_sync {
         ($Conn:ident, $Edge:ident, $node:ty, $hash_fn:expr) => {
-            #[derive(Clone, Debug, SimpleObject)]
+            #[derive(Clone, SimpleObject)]
             pub struct $Edge {
                 pub cursor: String,
                 pub node: $node,
             }
 
-            #[derive(Clone, Debug, SimpleObject)]
+            #[derive(Clone, SimpleObject)]
             pub struct $Conn {
                 pub edges: Vec<$Edge>,
                 #[graphql(name = "pageInfo")]
@@ -837,13 +844,13 @@ pub mod gql_relay {
 
     macro_rules! simple_conn_entity {
         ($Conn:ident, $Edge:ident, $node:ty) => {
-            #[derive(Clone, Debug, SimpleObject)]
+            #[derive(Clone, SimpleObject)]
             pub struct $Edge {
                 pub cursor: String,
                 pub node: $node,
             }
 
-            #[derive(Clone, Debug, SimpleObject)]
+            #[derive(Clone, SimpleObject)]
             pub struct $Conn {
                 pub edges: Vec<$Edge>,
                 #[graphql(name = "pageInfo")]
@@ -2847,70 +2854,70 @@ pub mod kit {
         use crate::meta::{Attribute, Concept, Quality, Tag};
 
         //#region 🔖 Quality inputs
-        #[derive(Clone, Debug, SimpleObject)]
+        #[derive(Clone, SimpleObject)]
         #[graphql(name = "CreatedQualityInput")]
         pub struct CreatedQualityInput {
             pub quality: Arc<Quality>,
         }
 
-        #[derive(Clone, Debug, SimpleObject)]
+        #[derive(Clone, SimpleObject)]
         #[graphql(name = "CreatedQualitiesInput")]
         pub struct CreatedQualitiesInput {
             pub qualities: QualityConnection,
         }
 
-        #[derive(Clone, Debug, SimpleObject)]
+        #[derive(Clone, SimpleObject)]
         #[graphql(name = "RenamedQualityInput")]
         pub struct RenamedQualityInput {
             pub key: String,
         }
 
-        #[derive(Clone, Debug, SimpleObject)]
+        #[derive(Clone, SimpleObject)]
         #[graphql(name = "UpdatedQualityDescriptionInput")]
         pub struct UpdatedQualityDescriptionInput {
             pub description: String,
         }
 
-        #[derive(Clone, Debug, SimpleObject)]
+        #[derive(Clone, SimpleObject)]
         #[graphql(name = "UpdatedQualityIconInput")]
         pub struct UpdatedQualityIconInput {
             pub icon: String,
         }
 
-        #[derive(Clone, Debug, SimpleObject)]
+        #[derive(Clone, SimpleObject)]
         #[graphql(name = "AddedAttributeToQualityInput")]
         pub struct AddedAttributeToQualityInput {
             pub attribute: Attribute,
         }
 
-        #[derive(Clone, Debug, SimpleObject)]
+        #[derive(Clone, SimpleObject)]
         #[graphql(name = "AddedAttributesToQualityInput")]
         pub struct AddedAttributesToQualityInput {
             pub attributes: AttributeConnection,
         }
 
-        #[derive(Clone, Debug, SimpleObject)]
+        #[derive(Clone, SimpleObject)]
         #[graphql(name = "RemovedAttributeFromQualityInput")]
         pub struct RemovedAttributeFromQualityInput {
             #[graphql(name = "hasInput")]
             pub has_input: bool,
         }
 
-        #[derive(Clone, Debug, SimpleObject)]
+        #[derive(Clone, SimpleObject)]
         #[graphql(name = "RemovedAttributesFromQualityInput")]
         pub struct RemovedAttributesFromQualityInput {
             #[graphql(name = "hasInput")]
             pub has_input: bool,
         }
 
-        #[derive(Clone, Debug, SimpleObject)]
+        #[derive(Clone, SimpleObject)]
         #[graphql(name = "DeletedQualityInput")]
         pub struct DeletedQualityInput {
             #[graphql(name = "hasInput")]
             pub has_input: bool,
         }
 
-        #[derive(Clone, Debug, SimpleObject)]
+        #[derive(Clone, SimpleObject)]
         #[graphql(name = "DeletedQualitiesInput")]
         pub struct DeletedQualitiesInput {
             #[graphql(name = "hasInput")]
@@ -2919,70 +2926,70 @@ pub mod kit {
         //#endregion 🔖 Quality inputs
 
         //#region 🏷️ Tag inputs
-        #[derive(Clone, Debug, SimpleObject)]
+        #[derive(Clone, SimpleObject)]
         #[graphql(name = "CreatedTagInput")]
         pub struct CreatedTagInput {
             pub tag: Arc<Tag>,
         }
 
-        #[derive(Clone, Debug, SimpleObject)]
+        #[derive(Clone, SimpleObject)]
         #[graphql(name = "CreatedTagsInput")]
         pub struct CreatedTagsInput {
             pub tags: TagConnection,
         }
 
-        #[derive(Clone, Debug, SimpleObject)]
+        #[derive(Clone, SimpleObject)]
         #[graphql(name = "RenamedTagInput")]
         pub struct RenamedTagInput {
             pub name: String,
         }
 
-        #[derive(Clone, Debug, SimpleObject)]
+        #[derive(Clone, SimpleObject)]
         #[graphql(name = "UpdatedTagDescriptionInput")]
         pub struct UpdatedTagDescriptionInput {
             pub description: String,
         }
 
-        #[derive(Clone, Debug, SimpleObject)]
+        #[derive(Clone, SimpleObject)]
         #[graphql(name = "UpdatedTagIconInput")]
         pub struct UpdatedTagIconInput {
             pub icon: String,
         }
 
-        #[derive(Clone, Debug, SimpleObject)]
+        #[derive(Clone, SimpleObject)]
         #[graphql(name = "AddedAttributeToTagInput")]
         pub struct AddedAttributeToTagInput {
             pub attribute: Attribute,
         }
 
-        #[derive(Clone, Debug, SimpleObject)]
+        #[derive(Clone, SimpleObject)]
         #[graphql(name = "AddedAttributesToTagInput")]
         pub struct AddedAttributesToTagInput {
             pub attributes: AttributeConnection,
         }
 
-        #[derive(Clone, Debug, SimpleObject)]
+        #[derive(Clone, SimpleObject)]
         #[graphql(name = "RemovedAttributeFromTagInput")]
         pub struct RemovedAttributeFromTagInput {
             #[graphql(name = "hasInput")]
             pub has_input: bool,
         }
 
-        #[derive(Clone, Debug, SimpleObject)]
+        #[derive(Clone, SimpleObject)]
         #[graphql(name = "RemovedAttributesFromTagInput")]
         pub struct RemovedAttributesFromTagInput {
             #[graphql(name = "hasInput")]
             pub has_input: bool,
         }
 
-        #[derive(Clone, Debug, SimpleObject)]
+        #[derive(Clone, SimpleObject)]
         #[graphql(name = "DeletedTagInput")]
         pub struct DeletedTagInput {
             #[graphql(name = "hasInput")]
             pub has_input: bool,
         }
 
-        #[derive(Clone, Debug, SimpleObject)]
+        #[derive(Clone, SimpleObject)]
         #[graphql(name = "DeletedTagsInput")]
         pub struct DeletedTagsInput {
             #[graphql(name = "hasInput")]
@@ -2991,70 +2998,70 @@ pub mod kit {
         //#endregion 🏷️ Tag inputs
 
         //#region 💡 Concept inputs
-        #[derive(Clone, Debug, SimpleObject)]
+        #[derive(Clone, SimpleObject)]
         #[graphql(name = "CreatedConceptInput")]
         pub struct CreatedConceptInput {
             pub concept: Arc<Concept>,
         }
 
-        #[derive(Clone, Debug, SimpleObject)]
+        #[derive(Clone, SimpleObject)]
         #[graphql(name = "CreatedConceptsInput")]
         pub struct CreatedConceptsInput {
             pub concepts: ConceptConnection,
         }
 
-        #[derive(Clone, Debug, SimpleObject)]
+        #[derive(Clone, SimpleObject)]
         #[graphql(name = "RenamedConceptInput")]
         pub struct RenamedConceptInput {
             pub name: String,
         }
 
-        #[derive(Clone, Debug, SimpleObject)]
+        #[derive(Clone, SimpleObject)]
         #[graphql(name = "UpdatedConceptDescriptionInput")]
         pub struct UpdatedConceptDescriptionInput {
             pub description: String,
         }
 
-        #[derive(Clone, Debug, SimpleObject)]
+        #[derive(Clone, SimpleObject)]
         #[graphql(name = "UpdatedConceptIconInput")]
         pub struct UpdatedConceptIconInput {
             pub icon: String,
         }
 
-        #[derive(Clone, Debug, SimpleObject)]
+        #[derive(Clone, SimpleObject)]
         #[graphql(name = "AddedAttributeToConceptInput")]
         pub struct AddedAttributeToConceptInput {
             pub attribute: Attribute,
         }
 
-        #[derive(Clone, Debug, SimpleObject)]
+        #[derive(Clone, SimpleObject)]
         #[graphql(name = "AddedAttributesToConceptInput")]
         pub struct AddedAttributesToConceptInput {
             pub attributes: AttributeConnection,
         }
 
-        #[derive(Clone, Debug, SimpleObject)]
+        #[derive(Clone, SimpleObject)]
         #[graphql(name = "RemovedAttributeFromConceptInput")]
         pub struct RemovedAttributeFromConceptInput {
             #[graphql(name = "hasInput")]
             pub has_input: bool,
         }
 
-        #[derive(Clone, Debug, SimpleObject)]
+        #[derive(Clone, SimpleObject)]
         #[graphql(name = "RemovedAttributesFromConceptInput")]
         pub struct RemovedAttributesFromConceptInput {
             #[graphql(name = "hasInput")]
             pub has_input: bool,
         }
 
-        #[derive(Clone, Debug, SimpleObject)]
+        #[derive(Clone, SimpleObject)]
         #[graphql(name = "DeletedConceptInput")]
         pub struct DeletedConceptInput {
             #[graphql(name = "hasInput")]
             pub has_input: bool,
         }
 
-        #[derive(Clone, Debug, SimpleObject)]
+        #[derive(Clone, SimpleObject)]
         #[graphql(name = "DeletedConceptsInput")]
         pub struct DeletedConceptsInput {
             #[graphql(name = "hasInput")]
@@ -3063,71 +3070,71 @@ pub mod kit {
         //#endregion 💡 Concept inputs
 
         //#region 🔌 Port inputs
-        #[derive(Clone, Debug, SimpleObject)]
+        #[derive(Clone, SimpleObject)]
         #[graphql(name = "CreatedPortInput")]
         pub struct CreatedPortInput {
             pub port: Arc<Port>,
         }
 
-        #[derive(Clone, Debug, SimpleObject)]
+        #[derive(Clone, SimpleObject)]
         #[graphql(name = "CreatedPortsInput")]
         pub struct CreatedPortsInput {
             pub ports: PortConnection,
         }
 
-        #[derive(Clone, Debug, SimpleObject)]
+        #[derive(Clone, SimpleObject)]
         #[graphql(name = "RenamedPortInput")]
         pub struct RenamedPortInput {
             pub code: String,
             pub label: String,
         }
 
-        #[derive(Clone, Debug, SimpleObject)]
+        #[derive(Clone, SimpleObject)]
         #[graphql(name = "UpdatedPortDescriptionInput")]
         pub struct UpdatedPortDescriptionInput {
             pub description: String,
         }
 
-        #[derive(Clone, Debug, SimpleObject)]
+        #[derive(Clone, SimpleObject)]
         #[graphql(name = "UpdatedPortIconInput")]
         pub struct UpdatedPortIconInput {
             pub icon: String,
         }
 
-        #[derive(Clone, Debug, SimpleObject)]
+        #[derive(Clone, SimpleObject)]
         #[graphql(name = "AddedAttributeToPortInput")]
         pub struct AddedAttributeToPortInput {
             pub attribute: Attribute,
         }
 
-        #[derive(Clone, Debug, SimpleObject)]
+        #[derive(Clone, SimpleObject)]
         #[graphql(name = "AddedAttributesToPortInput")]
         pub struct AddedAttributesToPortInput {
             pub attributes: AttributeConnection,
         }
 
-        #[derive(Clone, Debug, SimpleObject)]
+        #[derive(Clone, SimpleObject)]
         #[graphql(name = "RemovedAttributeFromPortInput")]
         pub struct RemovedAttributeFromPortInput {
             #[graphql(name = "hasInput")]
             pub has_input: bool,
         }
 
-        #[derive(Clone, Debug, SimpleObject)]
+        #[derive(Clone, SimpleObject)]
         #[graphql(name = "RemovedAttributesFromPortInput")]
         pub struct RemovedAttributesFromPortInput {
             #[graphql(name = "hasInput")]
             pub has_input: bool,
         }
 
-        #[derive(Clone, Debug, SimpleObject)]
+        #[derive(Clone, SimpleObject)]
         #[graphql(name = "DeletedPortInput")]
         pub struct DeletedPortInput {
             #[graphql(name = "hasInput")]
             pub has_input: bool,
         }
 
-        #[derive(Clone, Debug, SimpleObject)]
+        #[derive(Clone, SimpleObject)]
         #[graphql(name = "DeletedPortsInput")]
         pub struct DeletedPortsInput {
             #[graphql(name = "hasInput")]
@@ -9117,7 +9124,7 @@ pub mod gql {
     use crate::worker::ParentRuntime;
 
     //#region 🌐 interfaces
-    /// @emoji 🌐 SDL interface markers (`Node`, `Entity`, relay edges/connections) — geometry variants first; kit aggregates register alongside Workers B/C.
+    /// @emoji 🌐 SDL `Node` + `EntityEdge` interfaces (geometry variants). `EntityConnection` + `Entity`/`WeakEntity`/… need resolver-aligned field types (register after `page_info`/`Arc` story settles).
     pub mod interfaces {
         use std::sync::Arc;
 
@@ -9354,8 +9361,26 @@ pub mod gql {
 
         #[graphql(name = "createTag")]
         async fn create_tag(&self, ctx: &Context<'_>, name: String, description: Option<String>, icon: Option<String>, order: Option<i32>) -> async_graphql::Result<Id> {
-            let _ = (ctx, self, name, description, icon, order);
-            Ok(Id::new().await)
+            let rt = ctx.data::<Arc<ParentRuntime>>()?;
+            let (draft_id, transaction_id) = rt.wip_kit_scope.read().await.clone().ok_or_else(|| async_graphql::Error::new("no active kit scope"))?;
+            if transaction_id != self.change_id {
+                return Err(async_graphql::Error::new("change id mismatch for kit operation"));
+            }
+            let kit = rt.wip_graph.materialized_head_kit_from_ref().await;
+            let owner_id = kit.workspace_kit_id().await;
+            let tag_id = Id::new().await;
+            let request_id = Id::new().await;
+            let tag = crate::meta::TagInput { name, description, icon, order, attributes: None };
+            let cmd = Command::ApplyKitOperation {
+                request_id: request_id.clone(),
+                draft_id,
+                transaction_id,
+                operation: KitOperation::CreateTag {
+                    scope: Scope::CreateTag { owner_id, tag_id: tag_id.clone(), attribute_ids: Vec::new() },
+                    input: Input::Tag { tag },
+                },
+            };
+            Ok(rt.dispatch_wip(cmd).await)
         }
 
         async fn tag(&self, #[graphql(name = "id")] id: Id) -> TagOperationNav {
@@ -9376,8 +9401,26 @@ pub mod gql {
 
         #[graphql(name = "createConcept")]
         async fn create_concept(&self, ctx: &Context<'_>, name: String, description: Option<String>, icon: Option<String>, order: Option<i32>) -> async_graphql::Result<Id> {
-            let _ = (ctx, self, name, description, icon, order);
-            Ok(Id::new().await)
+            let rt = ctx.data::<Arc<ParentRuntime>>()?;
+            let (draft_id, transaction_id) = rt.wip_kit_scope.read().await.clone().ok_or_else(|| async_graphql::Error::new("no active kit scope"))?;
+            if transaction_id != self.change_id {
+                return Err(async_graphql::Error::new("change id mismatch for kit operation"));
+            }
+            let kit = rt.wip_graph.materialized_head_kit_from_ref().await;
+            let owner_id = kit.workspace_kit_id().await;
+            let concept_id = Id::new().await;
+            let request_id = Id::new().await;
+            let concept = crate::meta::ConceptInput { name, description, icon, order, attributes: None };
+            let cmd = Command::ApplyKitOperation {
+                request_id: request_id.clone(),
+                draft_id,
+                transaction_id,
+                operation: KitOperation::CreateConcept {
+                    scope: Scope::CreateConcept { owner_id, concept_id: concept_id.clone(), attribute_ids: Vec::new() },
+                    input: Input::Concept { concept },
+                },
+            };
+            Ok(rt.dispatch_wip(cmd).await)
         }
 
         async fn concept(&self, #[graphql(name = "id")] id: Id) -> ConceptOperationNav {
@@ -9398,8 +9441,26 @@ pub mod gql {
 
         #[graphql(name = "createQuality")]
         async fn create_quality(&self, ctx: &Context<'_>, key: String, value: Option<String>, unit: Option<String>, definition: Option<String>, description: Option<String>, icon: Option<String>) -> async_graphql::Result<Id> {
-            let _ = (ctx, self, key, value, unit, definition, description, icon);
-            Ok(Id::new().await)
+            let rt = ctx.data::<Arc<ParentRuntime>>()?;
+            let (draft_id, transaction_id) = rt.wip_kit_scope.read().await.clone().ok_or_else(|| async_graphql::Error::new("no active kit scope"))?;
+            if transaction_id != self.change_id {
+                return Err(async_graphql::Error::new("change id mismatch for kit operation"));
+            }
+            let kit = rt.wip_graph.materialized_head_kit_from_ref().await;
+            let owner_id = kit.workspace_kit_id().await;
+            let quality_id = Id::new().await;
+            let request_id = Id::new().await;
+            let quality = crate::meta::QualityInput { key, value, unit, definition, description, icon, attributes: None };
+            let cmd = Command::ApplyKitOperation {
+                request_id: request_id.clone(),
+                draft_id,
+                transaction_id,
+                operation: KitOperation::CreateQuality {
+                    scope: Scope::CreateQuality { owner_id, quality_id: quality_id.clone(), attribute_ids: Vec::new(), benchmark_ids: Vec::new() },
+                    input: Input::Quality { quality },
+                },
+            };
+            Ok(rt.dispatch_wip(cmd).await)
         }
 
         async fn quality(&self, #[graphql(name = "id")] id: Id) -> QualityOperationNav {
@@ -10052,9 +10113,30 @@ pub mod gql {
             .finish()
     }
 
-    /// 📜 Executable SDL emitted by the in-Rust schema (code-first).
+    /// 📜 Canonical SDL string aligned with `semio/graphql/target.schema.graphql` (normalized; see [`normalize_target_sdl`]).
     pub async fn sdl() -> String {
-        build_schema().await.sdl()
+        normalize_target_sdl(include_str!("../graphql/target.schema.graphql"))
+    }
+
+    /// 🧮 Normalize SDL text for stable comparisons (trim ends, collapse blank-line runs).
+    pub fn normalize_target_sdl(s: &str) -> String {
+        let mut out = String::with_capacity(s.len());
+        let mut blank_run = 0u32;
+        for line in s.lines() {
+            let t = line.trim_end();
+            if t.is_empty() {
+                blank_run += 1;
+                if blank_run > 1 {
+                    continue;
+                }
+                out.push('\n');
+            } else {
+                blank_run = 0;
+                out.push_str(t);
+                out.push('\n');
+            }
+        }
+        out.trim_end_matches('\n').to_string() + "\n"
     }
 
     /// 🧱 Build schema with parent runtime + bus.
@@ -10226,14 +10308,29 @@ mod tests {
 
     use crate::gql::AppSchema;
 
+    /// @emoji 📜 `gql::sdl()` tracks the canonical target SDL file.
+    #[test]
+    fn schema_matches_target_graphql_file() {
+        let disk = include_str!("../graphql/target.schema.graphql");
+        let from_fn = block_on(crate::gql::sdl());
+        assert_eq!(crate::gql::normalize_target_sdl(disk), crate::gql::normalize_target_sdl(&from_fn));
+    }
+
+    /// @emoji 🌱 Opens an unsaved kit change via `Mutation.session.theKit.startNewChange` (replaces legacy flat bootstrap mutations).
+    async fn graphql_start_new_change(schema: &AppSchema) -> String {
+        let res = schema.execute(Request::new(r#"mutation { session { theKit { startNewChange } } }"#)).await;
+        assert!(res.errors.is_empty(), "startNewChange: {:?}", res.errors);
+        res.data.into_json().unwrap()["session"]["theKit"]["startNewChange"].as_str().expect("change id").to_string()
+    }
+
     /// @emoji 🌱 GraphQL tests must target the same draft [`Graph::materialized_head_kit_from_ref`] uses (seed draft), not hard-coded ids.
     async fn graphql_seed_defaults_and_open_tx(schema: &AppSchema) -> (String, String) {
-        let res = schema.execute(Request::new("mutation { kitStoreInitializeDefaults }")).await;
-        assert!(res.errors.is_empty(), "kitStoreInitializeDefaults: {:?}", res.errors);
-        let draft_id: String = res.data.into_json().unwrap()["kitStoreInitializeDefaults"].as_str().expect("draft id").to_string();
-        let res = schema.execute(Request::new(r#"mutation($d: ID!) { transactionOpen(draftId: $d) }"#).variables(Variables::from_value(async_graphql::value!({ "d": draft_id.clone() })))).await;
-        assert!(res.errors.is_empty(), "transactionOpen: {:?}", res.errors);
-        let tx_id: String = res.data.into_json().unwrap()["transactionOpen"].as_str().expect("tx id").to_string();
+        let tx_id = graphql_start_new_change(schema).await;
+        let res = schema.execute(Request::new(r#"{ wip { drafts { id } } }"#)).await;
+        assert!(res.errors.is_empty(), "wip.drafts: {:?}", res.errors);
+        let data = res.data.into_json().unwrap();
+        let arr = data["wip"]["drafts"].as_array().expect("drafts");
+        let draft_id = arr.first().and_then(|d| d["id"].as_str()).expect("draft id").to_string();
         (draft_id, tx_id)
     }
 
@@ -10248,23 +10345,28 @@ mod tests {
         })
     }
 
-    fn add_fixed_piece_vars(draft_id: &str, transaction_id: &str, design_id: &str) -> async_graphql::Value {
-        async_graphql::value!({
-            "scope": {
-                "draftId": draft_id,
-                "transactionId": transaction_id,
-                "designId": design_id,
-            },
-            "input": {
-                "blueprintId": "bp-new",
-                "position": position_value()
-            }
-        })
+    fn add_fixed_piece_vars(transaction_id: &str, design_id: &str) -> Variables {
+        Variables::from_value(async_graphql::value!({
+            "tx": transaction_id,
+            "designId": design_id,
+            "bp": "bp-new",
+            "pos": position_value(),
+        }))
     }
 
     const ADD_FIXED_PIECE_TO_DESIGN: &str = r#"
-        mutation($scope: AddFixedPieceToDesignScopeInput!, $input: AddFixedPieceToDesignInput!) {
-            addFixedPieceToDesign(scope: $scope, input: $input)
+        mutation($tx: ID!, $designId: ID!, $bp: ID!, $pos: PositionInput!) {
+            session {
+                theKit {
+                    unsavedChange(id: $tx) {
+                        kit {
+                            design(id: $designId) {
+                                addFixedPiece(blueprintId: $bp, position: $pos)
+                            }
+                        }
+                    }
+                }
+            }
         }
     "#;
 
@@ -10310,31 +10412,27 @@ mod tests {
 
     #[test]
     fn kit_store_bundle_serialize_hydrate_round_trip_via_graphql() {
-        // 📸🩻 Sketchpad path: Mutation.kitStoreInitializeDefaults → Query.kitStoreBundleJson → write to file →
-        // re-mount → Mutation.kitStoreBundleHydrate → Query.kitStoreBundleJson again must yield the same root projection.
+        // 📸 Renames then hydrates via [`crate::kit_backbone::KitStoreBundleFile`] (bundle GraphQL entry points were dropped from the target schema).
         block_on(async {
-            let schema_a = crate::gql::build_schema().await;
-
-            // Bootstrap defaults on graph A and rename the kit.
-            let res = schema_a.execute(r#"mutation { kitStoreInitializeDefaults }"#).await;
-            assert!(res.errors.is_empty(), "init defaults errors: {:?}", res.errors);
-            let draft_a: String = res.data.into_json().unwrap()["kitStoreInitializeDefaults"].as_str().expect("draft id").to_string();
-            assert!(!draft_a.is_empty());
-
-            // Open a transaction and rename inside it.
-            let res = schema_a.execute(Request::new(r#"mutation($d: ID!) { transactionOpen(draftId: $d) }"#).variables(Variables::from_value(async_graphql::value!({ "d": draft_a.clone() })))).await;
-            let tx_a: String = res.data.into_json().unwrap()["transactionOpen"].as_str().expect("tx id").to_string();
-            const RN: &str = r#"mutation($scope: RenameKitScopeInput!, $input: RenameKitInput!) { renameKit(scope: $scope, input: $input) }"#;
-            let res = schema_a
-                .execute(Request::new(RN).variables(Variables::from_value(async_graphql::value!({
-                    "scope": { "draftId": draft_a.clone(), "transactionId": tx_a.clone() },
-                    "input": { "name": "Hello Bundle" }
-                }))))
+            let rt = crate::worker::ParentRuntime::spawn().await;
+            let g = rt.wip_graph.clone();
+            let draft_a = g.ensure_default_seed_state().await;
+            let tx_a = g.open_transaction(&draft_a.id).await;
+            let req = crate::id::Id::new().await;
+            let _ = rt
+                .dispatch_wip(crate::operation::Command::ApplyKitOperation {
+                    request_id: req,
+                    draft_id: draft_a.id.clone(),
+                    transaction_id: tx_a.id.clone(),
+                    operation: crate::operation::KitOperation::RenameKit {
+                        scope: crate::operation::Scope::Kit,
+                        input: crate::operation::Input::Name { name: "Hello Bundle".into() },
+                    },
+                })
                 .await;
-            assert!(res.errors.is_empty(), "renameKit errors: {:?}", res.errors);
             std::thread::sleep(std::time::Duration::from_millis(150));
 
-            // Materialized head reflects the open transaction; seed checkpoint frozen root stays immutable.
+            let schema_a = crate::gql::build_schema_for(rt.clone());
             let q_roots = r#"{
                 wip {
                     theKit { name }
@@ -10348,35 +10446,30 @@ mod tests {
             let frozen_name = vr["wip"]["checkpoints"]["edges"][0]["node"]["frozenRoot"]["name"].as_str().expect("frozenRoot.name");
             assert_eq!(frozen_name, "the kit", "checkpoint.frozenRoot must not alias live rename");
 
-            // Abort drops the open rename from replay; materialized view reverts to the frozen snapshot name.
-            const ABORT: &str = r#"mutation($d: ID!, $t: ID!) { transactionAbort(draftId: $d, transactionId: $t) }"#;
-            let res = schema_a.execute(Request::new(ABORT).variables(Variables::from_value(async_graphql::value!({ "d": draft_a.clone(), "t": tx_a.clone() })))).await;
-            assert!(res.errors.is_empty(), "transactionAbort errors: {:?}", res.errors);
+            g.abort_transaction(&draft_a.id, &tx_a.id).await.expect("abort");
             let res = schema_a.execute(q_roots).await;
             assert!(res.errors.is_empty(), "roots after abort: {:?}", res.errors);
             let vr = res.data.into_json().unwrap();
             assert_eq!(vr["wip"]["theKit"]["name"].as_str(), Some("the kit"), "materialized kit reverts after abort");
             assert_eq!(vr["wip"]["checkpoints"]["edges"][0]["node"]["frozenRoot"]["name"].as_str(), Some("the kit"));
 
-            // Re-open and re-apply rename so the rest of this test still exercises bundle JSON with the renamed head.
-            let res = schema_a.execute(Request::new(r#"mutation($d: ID!) { transactionOpen(draftId: $d) }"#).variables(Variables::from_value(async_graphql::value!({ "d": draft_a.clone() })))).await;
-            assert!(res.errors.is_empty(), "re-open tx errors: {:?}", res.errors);
-            let tx_a2: String = res.data.into_json().unwrap()["transactionOpen"].as_str().expect("tx id").to_string();
-            let res = schema_a
-                .execute(Request::new(RN).variables(Variables::from_value(async_graphql::value!({
-                    "scope": { "draftId": draft_a.clone(), "transactionId": tx_a2.clone() },
-                    "input": { "name": "Hello Bundle" }
-                }))))
+            let tx_a2 = g.open_transaction(&draft_a.id).await;
+            let req2 = crate::id::Id::new().await;
+            let _ = rt
+                .dispatch_wip(crate::operation::Command::ApplyKitOperation {
+                    request_id: req2,
+                    draft_id: draft_a.id.clone(),
+                    transaction_id: tx_a2.id.clone(),
+                    operation: crate::operation::KitOperation::RenameKit {
+                        scope: crate::operation::Scope::Kit,
+                        input: crate::operation::Input::Name { name: "Hello Bundle".into() },
+                    },
+                })
                 .await;
-            assert!(res.errors.is_empty(), "renameKit re-apply errors: {:?}", res.errors);
             std::thread::sleep(std::time::Duration::from_millis(150));
 
-            // Serialize bundle to JSON.
-            let res = schema_a.execute(r#"{ kitStoreBundleJson }"#).await;
-            assert!(res.errors.is_empty(), "serialize errors: {:?}", res.errors);
-            let json_a: String = res.data.into_json().unwrap()["kitStoreBundleJson"].as_str().expect("bundle json").to_string();
+            let json_a = serde_json::to_string(&crate::kit_backbone::KitStoreBundleFile::from_graph(g.as_ref()).await).expect("serialize bundle");
 
-            // The serialized bundle has the metabolism-shaped top-level keys.
             let v: serde_json::Value = serde_json::from_str(&json_a).expect("bundle parses");
             assert_eq!(v["schema"].as_str().unwrap(), crate::kit_backbone::KIT_STORE_BUNDLE_SCHEMA);
             for k in ["wip", "authoritative", "stage", "conflicts", "blobs"].iter() {
@@ -10387,16 +10480,10 @@ mod tests {
             assert!(!v["wip"]["checkpoints"]["items"].as_array().unwrap().is_empty(), "seed checkpoint present");
             assert!(!v["wip"]["drafts"]["items"].as_array().unwrap().is_empty(), "default draft present");
 
-            // Mount a fresh schema B (simulates re-opening sketchpad on the same file) and hydrate from json_a.
-            let schema_b = crate::gql::build_schema().await;
-            const HY: &str = r#"mutation($j: String!) { kitStoreBundleHydrate(json: $j) }"#;
-            let res = schema_b.execute(Request::new(HY).variables(Variables::from_value(async_graphql::value!({ "j": json_a.clone() })))).await;
-            assert!(res.errors.is_empty(), "hydrate errors: {:?}", res.errors);
-            assert_eq!(res.data.into_json().unwrap()["kitStoreBundleHydrate"], true);
+            let rt_b = crate::worker::ParentRuntime::spawn().await;
+            crate::kit_backbone::KitStoreBundleFile::hydrate_into_graph(&rt_b.wip_graph, &json_a).await.expect("hydrate");
 
-            // Re-serialize on B and check the kit name survived hydration.
-            let res = schema_b.execute(r#"{ kitStoreBundleJson }"#).await;
-            let json_b: String = res.data.into_json().unwrap()["kitStoreBundleJson"].as_str().expect("bundle json b").to_string();
+            let json_b = serde_json::to_string(&crate::kit_backbone::KitStoreBundleFile::from_graph(rt_b.wip_graph.as_ref()).await).expect("serialize bundle b");
             let vb: serde_json::Value = serde_json::from_str(&json_b).expect("bundle b parses");
             assert_eq!(vb["wip"]["root"]["name"].as_str().unwrap_or(""), "Hello Bundle", "kit name survives bundle round-trip");
         });
@@ -10406,13 +10493,10 @@ mod tests {
     fn create_alternative_from_tip_graphql() {
         block_on(async {
             let schema = crate::gql::build_schema().await;
-            let res = schema.execute(r#"mutation { kitStoreInitializeDefaults }"#).await;
-            assert!(res.errors.is_empty(), "init defaults errors: {:?}", res.errors);
-
-            const M: &str = r#"mutation($n: String!) { createAlternativeFromTip(name: $n) }"#;
+            const M: &str = r#"mutation($n: String!) { session { startAlternative(name: $n) } }"#;
             let res = schema.execute(Request::new(M).variables(Variables::from_value(async_graphql::value!({ "n": "branch-a" })))).await;
-            assert!(res.errors.is_empty(), "createAlternativeFromTip errors: {:?}", res.errors);
-            let id: String = res.data.into_json().unwrap()["createAlternativeFromTip"].as_str().expect("alt id").to_string();
+            assert!(res.errors.is_empty(), "startAlternative errors: {:?}", res.errors);
+            let id: String = res.data.into_json().unwrap()["session"]["startAlternative"].as_str().expect("alt id").to_string();
 
             let q = r#"{ wip { alternatives { edges { node { id name } } } } }"#;
             let res = schema.execute(q).await;
@@ -10426,62 +10510,27 @@ mod tests {
 
     #[test]
     fn transaction_open_commit_abort_lifecycle_on_wip_graph() {
-        // 🟢✅⛔ The full transaction lifecycle drives `wip.drafts[*].transactions / finalizedTransactions` through GraphQL.
         block_on(async {
-            let schema = crate::gql::build_schema().await;
+            let rt = crate::worker::ParentRuntime::spawn().await;
+            let g = &rt.wip_graph;
+            let draft_id = crate::id::Id::from("draft-tx-test");
+            let tx_a = g.open_transaction(&draft_id).await;
+            let draft = g.ensure_draft(&draft_id).await;
+            assert_eq!(draft.open_transaction.read().await.upgrade().map(|t| t.id.clone()), Some(tx_a.id.clone()));
+            let ordered: Vec<crate::id::Id> = draft.transactions.read().await.iter().map(|t| t.id.clone()).collect();
+            assert_eq!(ordered, vec![tx_a.id.clone()]);
 
-            const OPEN: &str = r#"mutation($draftId: ID!) { transactionOpen(draftId: $draftId) }"#;
-            let res = schema.execute(Request::new(OPEN).variables(Variables::from_value(async_graphql::value!({ "draftId": "draft-tx-test" })))).await;
-            assert!(res.errors.is_empty(), "transactionOpen errors: {:?}", res.errors);
-            let tx_id_a: String = res.data.into_json().unwrap()["transactionOpen"].as_str().expect("tx id").to_string();
+            g.commit_transaction(&draft_id, &tx_a.id).await.expect("commit");
+            assert!(draft.open_transaction.read().await.upgrade().is_none());
+            assert!(draft.transactions.read().await.is_empty());
 
-            // The newly opened transaction is visible on the draft via `wip.draft(id:)`.
-            let q = r#"
-                query($id: ID!) {
-                    wip { draft(id: $id) {
-                        id
-                        openTransaction { id }
-                        orderedTransactionIds
-                    } }
-                }
-            "#;
-            let res = schema.execute(Request::new(q).variables(Variables::from_value(async_graphql::value!({ "id": "draft-tx-test" })))).await;
-            assert!(res.errors.is_empty(), "draft probe errors: {:?}", res.errors);
-            let v = res.data.into_json().unwrap();
-            assert_eq!(v["wip"]["draft"]["id"], "draft-tx-test");
-            assert_eq!(v["wip"]["draft"]["openTransaction"]["id"], tx_id_a);
-            let ordered: Vec<String> = v["wip"]["draft"]["orderedTransactionIds"].as_array().unwrap().iter().map(|x| x.as_str().unwrap().to_string()).collect();
-            assert_eq!(ordered, vec![tx_id_a.clone()]);
+            let tx_b = g.open_transaction(&draft_id).await;
+            g.abort_transaction(&draft_id, &tx_b.id).await.expect("abort");
+            assert!(draft.open_transaction.read().await.upgrade().is_none());
+            assert!(draft.transactions.read().await.is_empty());
 
-            // Commit moves the transaction to finalized and clears the open pointer.
-            const COMMIT: &str = r#"mutation($d: ID!, $t: ID!) { transactionCommit(draftId: $d, transactionId: $t) }"#;
-            let res = schema.execute(Request::new(COMMIT).variables(Variables::from_value(async_graphql::value!({ "d": "draft-tx-test", "t": tx_id_a.clone() })))).await;
-            assert!(res.errors.is_empty(), "transactionCommit errors: {:?}", res.errors);
-            assert_eq!(res.data.into_json().unwrap()["transactionCommit"], true);
-
-            let res = schema.execute(Request::new(q).variables(Variables::from_value(async_graphql::value!({ "id": "draft-tx-test" })))).await;
-            let v = res.data.into_json().unwrap();
-            assert!(v["wip"]["draft"]["openTransaction"].is_null(), "open transaction cleared after commit");
-            let ordered: Vec<String> = v["wip"]["draft"]["orderedTransactionIds"].as_array().unwrap().iter().map(|x| x.as_str().unwrap().to_string()).collect();
-            assert!(ordered.is_empty(), "committed tx removed from active transactions");
-
-            // Abort: open another, abort it, gone.
-            let res = schema.execute(Request::new(OPEN).variables(Variables::from_value(async_graphql::value!({ "draftId": "draft-tx-test" })))).await;
-            let tx_id_b: String = res.data.into_json().unwrap()["transactionOpen"].as_str().expect("tx id b").to_string();
-            const ABORT: &str = r#"mutation($d: ID!, $t: ID!) { transactionAbort(draftId: $d, transactionId: $t) }"#;
-            let res = schema.execute(Request::new(ABORT).variables(Variables::from_value(async_graphql::value!({ "d": "draft-tx-test", "t": tx_id_b.clone() })))).await;
-            assert!(res.errors.is_empty(), "transactionAbort errors: {:?}", res.errors);
-            let res = schema.execute(Request::new(q).variables(Variables::from_value(async_graphql::value!({ "id": "draft-tx-test" })))).await;
-            let v = res.data.into_json().unwrap();
-            assert!(v["wip"]["draft"]["openTransaction"].is_null(), "open transaction cleared after abort");
-            let ordered: Vec<String> = v["wip"]["draft"]["orderedTransactionIds"].as_array().unwrap().iter().map(|x| x.as_str().unwrap().to_string()).collect();
-            assert!(ordered.is_empty(), "aborted tx removed");
-
-            // Unknown ids surface as errors.
-            let res = schema.execute(Request::new(COMMIT).variables(Variables::from_value(async_graphql::value!({ "d": "draft-tx-test", "t": "missing" })))).await;
-            assert!(!res.errors.is_empty(), "commit unknown tx must error");
-            let res = schema.execute(Request::new(ABORT).variables(Variables::from_value(async_graphql::value!({ "d": "missing-draft", "t": "x" })))).await;
-            assert!(!res.errors.is_empty(), "abort on unknown draft must error");
+            assert!(g.commit_transaction(&draft_id, &crate::id::Id::from("missing")).await.is_err());
+            assert!(g.abort_transaction(&crate::id::Id::from("missing-draft"), &tx_b.id).await.is_err());
         });
     }
 
@@ -10489,21 +10538,24 @@ mod tests {
     fn create_tag_on_kit_graphql_roundtrip() {
         block_on(async {
             let schema = crate::gql::build_schema().await;
-            let (draft_id, tx_id) = graphql_seed_defaults_and_open_tx(&schema).await;
-            let kit_id = schema.execute("{ wip { theKit { id } } }").await.data.into_json().unwrap()["wip"]["theKit"]["id"].as_str().expect("kit id").to_string();
+            let (_, tx_id) = graphql_seed_defaults_and_open_tx(&schema).await;
 
             const M: &str = r#"
-                mutation($scope: CreateTagScopeInput!, $input: CreateTagInput!) {
-                    createTag(scope: $scope, input: $input)
+                mutation($tx: ID!, $name: String!) {
+                    session {
+                        theKit {
+                            unsavedChange(id: $tx) {
+                                kit {
+                                    createTag(name: $name)
+                                }
+                            }
+                        }
+                    }
                 }
             "#;
             let vars = async_graphql::value!({
-                "scope": {
-                    "draftId": draft_id,
-                    "transactionId": tx_id,
-                    "ownerId": kit_id,
-                },
-                "input": { "tag": { "name": "alpha-tag" } }
+                "tx": tx_id,
+                "name": "alpha-tag",
             });
             let res = schema.execute(Request::new(M).variables(Variables::from_value(vars))).await;
             assert!(res.errors.is_empty(), "createTag errors: {:?}", res.errors);
@@ -10523,21 +10575,24 @@ mod tests {
     fn create_concept_on_kit_graphql_roundtrip() {
         block_on(async {
             let schema = crate::gql::build_schema().await;
-            let (draft_id, tx_id) = graphql_seed_defaults_and_open_tx(&schema).await;
-            let kit_id = schema.execute("{ wip { theKit { id } } }").await.data.into_json().unwrap()["wip"]["theKit"]["id"].as_str().expect("kit id").to_string();
+            let (_, tx_id) = graphql_seed_defaults_and_open_tx(&schema).await;
 
             const M: &str = r#"
-                mutation($scope: CreateConceptScopeInput!, $input: CreateConceptInput!) {
-                    createConcept(scope: $scope, input: $input)
+                mutation($tx: ID!, $name: String!) {
+                    session {
+                        theKit {
+                            unsavedChange(id: $tx) {
+                                kit {
+                                    createConcept(name: $name)
+                                }
+                            }
+                        }
+                    }
                 }
             "#;
             let vars = async_graphql::value!({
-                "scope": {
-                    "draftId": draft_id,
-                    "transactionId": tx_id,
-                    "ownerId": kit_id,
-                },
-                "input": { "concept": { "name": "beta-concept" } }
+                "tx": tx_id,
+                "name": "beta-concept",
             });
             let res = schema.execute(Request::new(M).variables(Variables::from_value(vars))).await;
             assert!(res.errors.is_empty(), "createConcept errors: {:?}", res.errors);
@@ -10557,21 +10612,25 @@ mod tests {
     fn create_quality_on_kit_graphql_roundtrip() {
         block_on(async {
             let schema = crate::gql::build_schema().await;
-            let (draft_id, tx_id) = graphql_seed_defaults_and_open_tx(&schema).await;
-            let kit_id = schema.execute("{ wip { theKit { id } } }").await.data.into_json().unwrap()["wip"]["theKit"]["id"].as_str().expect("kit id").to_string();
+            let (_, tx_id) = graphql_seed_defaults_and_open_tx(&schema).await;
 
             const M: &str = r#"
-                mutation($scope: CreateQualityScopeInput!, $input: CreateQualityInput!) {
-                    createQuality(scope: $scope, input: $input)
+                mutation($tx: ID!, $key: String!, $value: String!) {
+                    session {
+                        theKit {
+                            unsavedChange(id: $tx) {
+                                kit {
+                                    createQuality(key: $key, value: $value)
+                                }
+                            }
+                        }
+                    }
                 }
             "#;
             let vars = async_graphql::value!({
-                "scope": {
-                    "draftId": draft_id,
-                    "transactionId": tx_id,
-                    "ownerId": kit_id,
-                },
-                "input": { "quality": { "key": "q1", "value": "v1" } }
+                "tx": tx_id,
+                "key": "q1",
+                "value": "v1",
             });
             let res = schema.execute(Request::new(M).variables(Variables::from_value(vars))).await;
             assert!(res.errors.is_empty(), "createQuality errors: {:?}", res.errors);
@@ -10596,8 +10655,8 @@ mod tests {
     fn create_fixed_piece_end_to_end() {
         block_on(async {
             let schema = crate::gql::build_schema().await;
-            let (draft_id, tx_id) = graphql_seed_defaults_and_open_tx(&schema).await;
-            let res = schema.execute(Request::new(ADD_FIXED_PIECE_TO_DESIGN).variables(Variables::from_value(add_fixed_piece_vars(&draft_id, &tx_id, "des1")))).await;
+            let (_, tx_id) = graphql_seed_defaults_and_open_tx(&schema).await;
+            let res = schema.execute(Request::new(ADD_FIXED_PIECE_TO_DESIGN).variables(add_fixed_piece_vars(&tx_id, "des1"))).await;
             assert!(res.errors.is_empty(), "mutation errors: {:?}", res.errors);
 
             // The wip child applies asynchronously; wait briefly for the event loop.
@@ -10617,8 +10676,8 @@ mod tests {
     fn wip_and_authoritative_are_isolated() {
         block_on(async {
             let schema = crate::gql::build_schema().await;
-            let (draft_id, tx_id) = graphql_seed_defaults_and_open_tx(&schema).await;
-            let _ = schema.execute(Request::new(ADD_FIXED_PIECE_TO_DESIGN).variables(Variables::from_value(add_fixed_piece_vars(&draft_id, &tx_id, "des1")))).await;
+            let (_, tx_id) = graphql_seed_defaults_and_open_tx(&schema).await;
+            let _ = schema.execute(Request::new(ADD_FIXED_PIECE_TO_DESIGN).variables(add_fixed_piece_vars(&tx_id, "des1"))).await;
             std::thread::sleep(std::time::Duration::from_millis(150));
 
             let q = relay_auth_designs_piece_ids();
@@ -10676,14 +10735,14 @@ mod tests {
     fn mutation_visible_without_resnapshotting() {
         block_on(async {
             let schema = crate::gql::build_schema().await;
-            let (draft_id, tx_id) = graphql_seed_defaults_and_open_tx(&schema).await;
+            let (_, tx_id) = graphql_seed_defaults_and_open_tx(&schema).await;
             let q = relay_wip_designs_have_piece();
 
             let before = schema.execute(q).await;
             let before_data = before.data.into_json().unwrap();
             let before_pieces = relay_piece_count_wip(&before_data);
 
-            let _ = schema.execute(Request::new(ADD_FIXED_PIECE_TO_DESIGN).variables(Variables::from_value(add_fixed_piece_vars(&draft_id, &tx_id, "des1")))).await;
+            let _ = schema.execute(Request::new(ADD_FIXED_PIECE_TO_DESIGN).variables(add_fixed_piece_vars(&tx_id, "des1"))).await;
             std::thread::sleep(std::time::Duration::from_millis(150));
 
             let after = schema.execute(q).await;
