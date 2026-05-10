@@ -5264,8 +5264,8 @@ type Change implements StrongEntity {
   # Change
   edits: EditConnection! # data
   startedAt: Timestamp! # data
-  finishedAt: Timestamp # data
-  finished: Boolean # computed
+  savedAt: Timestamp # data
+  saved: Boolean # computed
   description: String! # data
   origin: String! # data
 }
@@ -5580,27 +5580,31 @@ type KitOperationInput {
   deleteDesigns(ids: [ID!]!): ID!
 }
 
-type WipCommandInput {
+type UnsavedChangeCommandInput {
+  kit: KitOperationInput!
+  save: ID!
+}
+
+type VersionCommandInput {
   startNewChange: ID!
-  saveChange: ID!
-  unsavedChange(id: ID!): OpenChangeCommandInput!
+  unsavedChange(id: ID!): UnsavedChangeCommandInput!
+  save: ID!
+  createCheckpoint(message: String!): ID!
 }
 
 type AlternativeCommandInput {
-  startNewChange: ID!
-  saveChange: ID!
-  unsavedChange(id: ID!): OpenChangeCommandInput!
+  version: ID!
+  integrateIntoTheKit: ID!
 }
 
 type SessionCommandInput {
   start: ID!
   end: ID!
-  wip: WipCommandInput
+  login(username: String!, passwordHash: String!, hubUrl: String): ID!
+  logout: ID!
+  theKit: VersionCommandInput
   alternative(id: ID!): AlternativeCommandInput
-}
-
-type OpenChangeCommandInput {
-  kit: KitOperationInput!
+  startAlternative(name: String): ID!
 }
 
 #endregion Commands

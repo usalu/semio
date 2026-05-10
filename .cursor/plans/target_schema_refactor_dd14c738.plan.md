@@ -58,8 +58,13 @@ Make [semio/rs/lib.rs](semio/rs/lib.rs) emit SDL that is byte-equal (modulo trai
 | `OpenChangeScopedCommandInput` | **`OpenChangeCommandInput`** |
 | `startNewOpenChange` | **`startNewChange`** |
 | `saveOpenChange` | **`saveChange`** |
+| `openChange(id: ID!)` (navigator on Wip/Alternative) | **`unsavedChange(id: ID!)`** (navigator return type is still `OpenChangeCommandInput!` in current target — see typo fixes) |
 | `Alternative.openChanges` | **`Alternative.unsavedChanges`** |
 | `Alternative.store: Kit!` | **`Alternative.kit: Kit!`** |
+| `Conflict.transactionVersion: WriteVersion` | **`Conflict.wipChange: Change`** |
+| `Conflict.reason: String!` | **`Conflict.reasons: [String!]!`** |
+| `Graph.kit` | **`Graph.theKit: Kit`** (distinct from `Alternative.kit: Kit!`) |
+| `Checkpoint.isRelease` | **REMOVED.** Releases live on `Graph.releases: CheckpointConnection!` and `Graph.release(id)` |
 
 The conceptual split: **Operations** = entity-level CRUD scopes (`*OperationInput`); **Commands** = VCS lifecycle scopes (`*CommandInput`). All `*OperationInput` and `*CommandInput` definitions live under [target.schema.graphql](semio/graphql/target.schema.graphql) `#region VCS → #region Commands` (lines 5430–5606). The `interface Operation` itself + `OperationEdge`/`OperationConnection` live in the top-level `#region Kit → #region Operations` (lines 977–1000); concrete `Operation`-implementing types are nested inside each entity's own `#region Operations` (e.g. `#region Quality → #region Operations` lines 1906–2084).
 
@@ -92,16 +97,16 @@ type SessionCommandInput {
 type WipCommandInput {
   startNewChange: ID!
   saveChange: ID!
-  openChange(id: ID!): OpenChangeCommandInput!
+  unsavedChange(id: ID!): OpenChangeCommandInput!   # NOTE: field renamed to unsavedChange but return type still says OpenChangeCommandInput — to be unified to UnsavedChangeCommandInput by Worker D
 }
 
 type AlternativeCommandInput {
   startNewChange: ID!
   saveChange: ID!
-  openChange(id: ID!): OpenChangeCommandInput!
+  unsavedChange(id: ID!): OpenChangeCommandInput!
 }
 
-type OpenChangeCommandInput { kit: KitOperationInput! }
+type OpenChangeCommandInput { kit: KitOperationInput! }   # NOTE: rename the type to UnsavedChangeCommandInput for consistency with the unsavedChange navigator and Alternative.unsavedChanges
 ```
 
 Then `KitOperationInput` / `TagOperationInput` / `ConceptOperationInput` / `QualityOperationInput` / `TypeOperationInput` / `PortOperationInput` / `ConnectorOperationInput` / `DesignOperationInput` / `PieceOperationInput` / `PiecesOperationInput` follow exactly the schema (every leaf returns `ID!` = the resulting `Edit.id`).
@@ -144,6 +149,8 @@ Result-field naming follows the entity affected (`quality`, `qualities`, `kit`, 
 - `scalar Json` is referenced by `Subscription.event` but not declared in `target.schema.graphql`. Worker D adds `scalar Json` to the emitted SDL **and** patches `target.schema.graphql` to declare it (so the file is internally valid).
 - The `Mutation.session: SessionScopedCommandInput!` field references an undeclared type (`SessionScopedCommandInput`). Worker D fixes this in the target file to `SessionCommandInput!` and emits matching SDL.
 - VCS entities (`Edit`, `Change`, `Checkpoint`, `Alternative`, `Graph`, `Session`, `Conflict`) `implement StrongEntity` (not `Entity`).
+- **`interface Artifact` gains** `changes: ChangeConnection # computed` and `edits: EditConnection # computed` (lines 74-75); same on `interface Document` (lines 95-96). Every `*: Artifact`-implementing type (`Place`, `Family`, `Folder`, `File`, `Author`, `Prop`, `Benchmark`, `Quality`, `Tag`, `Concept`, `Port`, `Connector`, `Representation`, `Type`, `Layer`, `Group`, `Piece`, `Connection`, `Design`, `Kit`) re-declares these fields and Worker B/C must include them. Resolvers should query the per-entity edit/change indexes maintained by `kit_graph_engine`.
+- `interface Modification.owner` documentation now lists `Edit` (no longer `EditModification`) confirming that operations are owned by `Edit` records.
 - 12-type families (`Foo` / `FooEdge` / `FooConnection` / `FooDiff` / `FooDiffEdge` / `FooDiffConnection` / `FooModification` / `FooModificationEdge` / `FooModificationConnection` / `FooModifications` / `FooModificationsEdge` / `FooModificationsConnection`) for: Vector, Point, Coordinate, Offset, Plane, Position, Location, Attribute, Place, Family, Folder, File, Author, Prop, Benchmark, Quality, Tag, Concept, Stat, Port, Connector, Representation, Type, Layer, Group, Piece, Connection, Side, Design, Kit. Plus `Clump implements WeakEntity` and `BlueprintEdge` / `BlueprintConnection` and `enum PieceConnectionKind { FIXED, CONNECTED }`.
 - `interface Operation` lives in the top-level `#region Kit → #region Operations`; concrete `Operation`-implementing types are nested inside each entity's `#region Operations` (e.g. `Quality`, `Tag`, `Concept`, `Port`, `Type`, `Connector`, `Piece`, `Design`, `Kit`).
 
@@ -295,16 +302,16 @@ pub struct WipCommandInput;
 #[Object]
 impl WipCommandInput {
     async fn start_new_change(&self, ctx: &Context<'_>) -> Result<ID> { /* opens Change on wip Graph */ }
-    async fn save_change(&self, ctx: &Context<'_>) -> Result<ID> { /* closes the open Change → checkpoint */ }
-    async fn open_change(&self, id: ID) -> OpenChangeCommandInput { OpenChangeCommandInput { scope: ScopeRef::Wip, change_id: id } }
+    async fn save_change(&self, ctx: &Context<'_>) -> Result<ID> { /* closes the unsaved Change → checkpoint */ }
+    async fn unsaved_change(&self, id: ID) -> UnsavedChangeCommandInput { UnsavedChangeCommandInput { scope: ScopeRef::Wip, change_id: id } }
 }
 
 // AlternativeCommandInput mirrors WipCommandInput shape with an extra alternative_id field.
 
-pub struct OpenChangeCommandInput { scope: ScopeRef, change_id: ID }
+pub struct UnsavedChangeCommandInput { scope: ScopeRef, change_id: ID }
 
 #[Object]
-impl OpenChangeCommandInput {
+impl UnsavedChangeCommandInput {
     async fn kit(&self) -> KitOperationInput { KitOperationInput { scope: self.scope, change_id: self.change_id.clone() } }
 }
 
@@ -384,9 +391,9 @@ class SessionCommand {
   alternative(id: Id): AlternativeCommand;
 }
 
-class WipCommand { startNewChange(): Promise<ChangeId>; saveChange(): Promise<ChangeId>; openChange(id: ChangeId): OpenChangeCommand; }
+class WipCommand { startNewChange(): Promise<ChangeId>; saveChange(): Promise<ChangeId>; unsavedChange(id: ChangeId): UnsavedChangeCommand; }
 class AlternativeCommand extends WipCommand { /* same shape, parameterized by alternativeId */ }
-class OpenChangeCommand { kit(): KitOperation; }
+class UnsavedChangeCommand { kit(): KitOperation; }
 class KitOperation {
   rename(newName: string): Promise<Id>;
   changeDescription(newDescription: string): Promise<Id>;
@@ -403,11 +410,11 @@ Each leaf serializes a GraphQL document of the form:
 
 ```graphql
 mutation Op($altId: ID!, $changeId: ID!, $newName: String!) {
-  session { alternative(id: $altId) { openChange(id: $changeId) { kit { design(id: "...") { piece(id: "...") { rename(newName: $newName) } } } } } }
+  session { alternative(id: $altId) { unsavedChange(id: $changeId) { kit { design(id: "...") { piece(id: "...") { rename(newName: $newName) } } } } } }
 }
 ```
 
-- **`KitGraphqlReadSelections`** rewrite: walk the new `wip: Graph`, `authoritative: Graph`, `session: Session` trees. Replace any `draft { … }` / `transaction { … }` field selections with `unsavedChanges { edges { node { id edits { edges { node { id } } } } } }` on the data side; the command-builder uses `openChange(id)` for navigation. Replace `change { forwards backwards }` reads with `edit { forwards { … } backwards { … } sequenceNumber startedAt finishedAt finished description origin }`. Replace `Alternative.store` reads with `Alternative.kit`.
+- **`KitGraphqlReadSelections`** rewrite: walk the new `wip: Graph`, `authoritative: Graph`, `session: Session` trees. Replace any `draft { … }` / `transaction { … }` field selections with `unsavedChanges { edges { node { id edits { edges { node { id } } } } } }` on the data side; the command-builder navigates via `unsavedChange(id)`. Replace `change { forwards backwards }` reads with `edit { forwards { … } backwards { … } sequenceNumber startedAt finishedAt finished description origin }`. Replace `Alternative.store` reads with `Alternative.kit`. Replace `Graph.kit` reads with `Graph.theKit`. Replace `Conflict.reason` with `Conflict.reasons`. Drop any `Checkpoint.isRelease` reads (use `Graph.releases` instead).
 - **Subscription rewrite**: a single `subscription { event }` plus a JSON dispatcher:
 
 ```ts
@@ -442,7 +449,7 @@ function useDragPiece(designId: Id, pieceId: Id) {
   const builder = useCommandBuilder();
   const { changeId, alternativeId } = useChangeContext();
   return useCallback((offset: OffsetInput) =>
-    builder.session().alternative(alternativeId).openChange(changeId)
+    builder.session().alternative(alternativeId).unsavedChange(changeId)
       .kit().design(designId).piece(pieceId).drag(offset),
     [builder, changeId, alternativeId, designId, pieceId]);
 }
@@ -458,8 +465,8 @@ function useDragPiece(designId: Id, pieceId: Id) {
 - **XState rename**: `TransactionMachineConfig` → `ChangeMachineConfig`, `AppTransactionState` → `AppChangeState`, `transaction` actor → `change` actor. Events become `START_NEW_CHANGE`, `SAVE_CHANGE`, `RUN_OPERATION` instead of `TRANSACTION_OPEN` / `TRANSACTION_COMMIT` / `TRANSACTION_ABORT`. The rollback "abort" semantics map to `discardChange` (a new `WipCommandInput.discardChange: ID!` and `AlternativeCommandInput.discardChange: ID!` may need to be added by Worker D if rollback is required; otherwise expose it via `KitStoreHandle.discardChange`).
 - **Alternatives footer**: drop the `draft` chip; show `Alternative.unsavedChanges.edges.length` and a "save change" button driven by the new builder. Show saved checkpoint count from `Alternative.checkpoint.edges.length`.
 - **`KitFullDtoSchema.parse` call sites** (entrypoint + VS Code adapter): re-validate against the new entity DTOs from Worker E.
-- **Imports**: prune removed exports (`Draft`, `Transaction`, `KitWriteScope` with old shape), add `Edit`, new `Change`, `OpenChangeCommand*`, `WipCommand*`, `AlternativeCommand*`, `*OperationInput` types.
-- Playwright suite (slice P): update fixtures that referenced `transaction` or `draft` to use `unsavedChanges` (data side) and `openChange` (command side). Behavioural assertions for kit operations remain unchanged.
+- **Imports**: prune removed exports (`Draft`, `Transaction`, `KitWriteScope` with old shape), add `Edit`, new `Change`, `UnsavedChangeCommand*`, `WipCommand*`, `AlternativeCommand*`, `*OperationInput` types.
+- Playwright suite (slice P): update fixtures that referenced `transaction` or `draft` to use `unsavedChanges` (data side) and `unsavedChange(id)` (command side). Behavioural assertions for kit operations remain unchanged.
 
 ## Coordination contracts
 
@@ -470,6 +477,7 @@ function useDragPiece(designId: Id, pieceId: Id) {
 - **Schema typo / inconsistency fixes** (owned by Worker D, applied to `target.schema.graphql`):
   - Line 5627 `session: SessionScopedCommandInput!` → `session: SessionCommandInput!`.
   - Add `scalar Json` adjacent to `scalar Timestamp`.
+  - Rename `type OpenChangeCommandInput` → `type UnsavedChangeCommandInput` (lines 5586/5592/5602 currently mix `unsavedChange(id: ID!)` field with an `OpenChangeCommandInput!` return type — pick one vocabulary). The decision: **standardize on `UnsavedChange*`** since the data side is `unsavedChanges`/`unsavedChange` and the conflict side is `wipChange`. So: rename type and update the two return-type references on lines 5586 and 5592.
   - Region label fixes: lines 5284 `#endregion Edits` (under `#region Changes`) → `#endregion Changes`; line 5218 `#endregion Kits` (opened as `#region Kit`) → `#endregion Kit`.
 - **Scope IDs**: every leaf returns `ID!` = the resulting `Edit.id`; the JS builder must propagate this so React hooks can subscribe to operation completion via the `event` subscription.
 - **Operations vs Commands vocabulary**: enforce throughout JS/React/Sketchpad — entity scopes are *Operations*, VCS lifecycle scopes are *Commands*. Builder methods that descend from `Mutation.session` are `*Command` classes; methods on / under `KitOperationInput` and below are `*Operation` classes.
