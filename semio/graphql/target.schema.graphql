@@ -1,4 +1,4 @@
-# Custom semio extension of the [relay specs](https://relay.dev/docs/guides/graphql-server-specification)
+# Custom semio merkle-tree extension of the [relay specs](https://relay.dev/docs/guides/graphql-server-specification)
 
 #region Scalars
 
@@ -13092,174 +13092,41 @@ type Query {
 
 #region MutationInputs
 
-input RenameKitScopeInput {
+input TransactionScopeInput {
   draftId: ID!
+  transactionId: ID!
 }
 
 input RenameKitInput {
   name: String!
 }
 
-input ChangeDescriptionScopeInput {
-  draftId: ID!
-  entityId: ID!
-}
-
 input ChangeDescriptionInput {
   description: String!
-}
-
-input CreateTagScopeInput {
-  draftId: ID!
-  ownerId: ID!
-}
-
-input CreateTagsScopeInput {
-  draftId: ID!
-  ownerId: ID!
-}
-
-input RenameTagScopeInput {
-  draftId: ID!
-  tagId: ID!
 }
 
 input RenameTagInput {
   name: String!
 }
 
-input UpdateTagDescriptionScopeInput {
-  draftId: ID!
-  tagId: ID!
-}
-
 input UpdateTagDescriptionInput {
   description: String!
-}
-
-input UpdateTagIconScopeInput {
-  draftId: ID!
-  tagId: ID!
 }
 
 input UpdateTagIconInput {
   icon: String!
 }
 
-input AddAttributeToTagScopeInput {
-  draftId: ID!
-  tagId: ID!
-}
-
-input AddAttributesToTagScopeInput {
-  draftId: ID!
-  tagId: ID!
-}
-
-input RemoveAttributeFromTagScopeInput {
-  draftId: ID!
-  tagId: ID!
-  attributeId: ID!
-}
-
-input RemoveAttributesFromTagScopeInput {
-  draftId: ID!
-  tagId: ID!
-  attributeIds: [ID!]!
-}
-
-input DeleteTagScopeInput {
-  draftId: ID!
-  tagId: ID!
-}
-
-input DeleteTagsScopeInput {
-  draftId: ID!
-  tagIds: [ID!]!
-}
-
-input CreateConceptScopeInput {
-  draftId: ID!
-  ownerId: ID!
-}
-
-input CreateConceptsScopeInput {
-  draftId: ID!
-  ownerId: ID!
-}
-
-input RenameConceptScopeInput {
-  draftId: ID!
-  conceptId: ID!
-}
-
 input RenameConceptInput {
   name: String!
-}
-
-input UpdateConceptDescriptionScopeInput {
-  draftId: ID!
-  conceptId: ID!
 }
 
 input UpdateConceptDescriptionInput {
   description: String!
 }
 
-input UpdateConceptIconScopeInput {
-  draftId: ID!
-  conceptId: ID!
-}
-
 input UpdateConceptIconInput {
   icon: String!
-}
-
-input AddAttributeToConceptScopeInput {
-  draftId: ID!
-  conceptId: ID!
-}
-
-input AddAttributesToConceptScopeInput {
-  draftId: ID!
-  conceptId: ID!
-}
-
-input RemoveAttributeFromConceptScopeInput {
-  draftId: ID!
-  conceptId: ID!
-  attributeId: ID!
-}
-
-input RemoveAttributesFromConceptScopeInput {
-  draftId: ID!
-  conceptId: ID!
-  attributeIds: [ID!]!
-}
-
-input DeleteConceptScopeInput {
-  draftId: ID!
-  conceptId: ID!
-}
-
-input DeleteConceptsScopeInput {
-  draftId: ID!
-  conceptIds: [ID!]!
-}
-
-input CreatePortScopeInput {
-  draftId: ID!
-  ownerId: ID!
-}
-
-input CreatePortsScopeInput {
-  draftId: ID!
-  ownerId: ID!
-}
-
-input RenamePortScopeInput {
-  draftId: ID!
-  portId: ID!
 }
 
 input RenamePortInput {
@@ -13267,291 +13134,48 @@ input RenamePortInput {
   label: String
 }
 
-input UpdatePortDescriptionScopeInput {
-  draftId: ID!
-  portId: ID!
-}
-
 input UpdatePortDescriptionInput {
   description: String!
-}
-
-input UpdatePortIconScopeInput {
-  draftId: ID!
-  portId: ID!
 }
 
 input UpdatePortIconInput {
   icon: String!
 }
 
-input AddAttributeToPortScopeInput {
-  draftId: ID!
-  portId: ID!
-}
-
-input AddAttributesToPortScopeInput {
-  draftId: ID!
-  portId: ID!
-}
-
-input RemoveAttributeFromPortScopeInput {
-  draftId: ID!
-  portId: ID!
-  attributeId: ID!
-}
-
-input RemoveAttributesFromPortScopeInput {
-  draftId: ID!
-  portId: ID!
-  attributeIds: [ID!]!
-}
-
-input DeletePortScopeInput {
-  draftId: ID!
-  portId: ID!
-}
-
-input DeletePortsScopeInput {
-  draftId: ID!
-  portIds: [ID!]!
-}
-
-input CreateQualityScopeInput {
-  draftId: ID!
-  ownerId: ID!
-}
-
-input CreateQualitiesScopeInput {
-  draftId: ID!
-  ownerId: ID!
-}
-
-input RenameQualityScopeInput {
-  draftId: ID!
-  qualityId: ID!
-}
-
 input RenameQualityInput {
   key: String!
-}
-
-input UpdateQualityDescriptionScopeInput {
-  draftId: ID!
-  qualityId: ID!
 }
 
 input UpdateQualityDescriptionInput {
   description: String!
 }
 
-input UpdateQualityIconScopeInput {
-  draftId: ID!
-  qualityId: ID!
-}
-
 input UpdateQualityIconInput {
   icon: String!
-}
-
-input AddAttributeToQualityScopeInput {
-  draftId: ID!
-  qualityId: ID!
-}
-
-input AddAttributesToQualityScopeInput {
-  draftId: ID!
-  qualityId: ID!
-}
-
-input RemoveAttributeFromQualityScopeInput {
-  draftId: ID!
-  qualityId: ID!
-  attributeId: ID!
-}
-
-input RemoveAttributesFromQualityScopeInput {
-  draftId: ID!
-  qualityId: ID!
-  attributeIds: [ID!]!
-}
-
-input DeleteQualityScopeInput {
-  draftId: ID!
-  qualityId: ID!
-}
-
-input DeleteQualitiesScopeInput {
-  draftId: ID!
-  qualityIds: [ID!]!
-}
-
-input CreateTypeScopeInput {
-  draftId: ID!
-  ownerId: ID!
-}
-
-input CreateTypesScopeInput {
-  draftId: ID!
-  ownerId: ID!
-}
-
-input RenameTypeScopeInput {
-  draftId: ID!
-  typeId: ID!
 }
 
 input RenameTypeInput {
   name: String!
 }
 
-input UpdateTypeDescriptionScopeInput {
-  draftId: ID!
-  typeId: ID!
-}
-
 input UpdateTypeDescriptionInput {
   description: String!
-}
-
-input UpdateTypeIconScopeInput {
-  draftId: ID!
-  typeId: ID!
 }
 
 input UpdateTypeIconInput {
   icon: String!
 }
 
-input AddAttributeToTypeScopeInput {
-  draftId: ID!
-  typeId: ID!
-}
-
-input AddAttributesToTypeScopeInput {
-  draftId: ID!
-  typeId: ID!
-}
-
-input RemoveAttributeFromTypeScopeInput {
-  draftId: ID!
-  typeId: ID!
-  attributeId: ID!
-}
-
-input RemoveAttributesFromTypeScopeInput {
-  draftId: ID!
-  typeId: ID!
-  attributeIds: [ID!]!
-}
-
-input DeleteTypeScopeInput {
-  draftId: ID!
-  typeId: ID!
-}
-
-input DeleteTypesScopeInput {
-  draftId: ID!
-  typeIds: [ID!]!
-}
-
-input AddConnectorToTypeScopeInput {
-  draftId: ID!
-  typeId: ID!
-}
-
-input AddConnectorsToTypeScopeInput {
-  draftId: ID!
-  typeId: ID!
-}
-
-input RenameConnectorInTypeScopeInput {
-  draftId: ID!
-  connectorId: ID!
-}
-
 input RenameConnectorInTypeInput {
   code: String!
-}
-
-input UpdateConnectorDescriptionInTypeScopeInput {
-  draftId: ID!
-  connectorId: ID!
 }
 
 input UpdateConnectorDescriptionInTypeInput {
   description: String!
 }
 
-input UpdateConnectorIconInTypeScopeInput {
-  draftId: ID!
-  connectorId: ID!
-}
-
 input UpdateConnectorIconInTypeInput {
   icon: String!
-}
-
-input RemoveConnectorFromTypeScopeInput {
-  draftId: ID!
-  connectorId: ID!
-}
-
-input RemoveConnectorsFromTypeScopeInput {
-  draftId: ID!
-  connectorIds: [ID!]!
-}
-
-input CreateDesignScopeInput {
-  draftId: ID!
-  ownerId: ID!
-}
-
-input CreateDesignsScopeInput {
-  draftId: ID!
-  ownerId: ID!
-}
-
-input DeleteDesignScopeInput {
-  draftId: ID!
-  designId: ID!
-}
-
-input DeleteDesignsScopeInput {
-  draftId: ID!
-  designIds: [ID!]!
-}
-
-input FlattenDesignScopeInput {
-  draftId: ID!
-  designId: ID!
-}
-
-input AddAttributeToDesignScopeInput {
-  draftId: ID!
-  designId: ID!
-}
-
-input AddAttributesToDesignScopeInput {
-  draftId: ID!
-  designId: ID!
-}
-
-input RemoveAttributeFromDesignScopeInput {
-  draftId: ID!
-  designId: ID!
-  attributeId: ID!
-}
-
-input RemoveAttributesFromDesignScopeInput {
-  draftId: ID!
-  designId: ID!
-  attributeIds: [ID!]!
-}
-
-input AddFixedPieceToDesignScopeInput {
-  draftId: ID!
-  designId: ID!
 }
 
 input AddFixedPieceToDesignInput {
@@ -13561,254 +13185,137 @@ input AddFixedPieceToDesignInput {
   description: String
 }
 
-input AddChildPieceWithParentConnectionToDesignScopeInput {
-  draftId: ID!
-  designId: ID!
-}
-
-input AddChildPiecesWithParentConnectionsToDesignScopeInput {
-  draftId: ID!
-  designId: ID!
-}
-
-input AddHangingChildPieceWithParentConnectionToDesignScopeInput {
-  draftId: ID!
-  designId: ID!
-}
-
-input AddHangingChildPiecesWithParentConnectionsToDesignScopeInput {
-  draftId: ID!
-  designId: ID!
-}
-
-input RenamePieceInDesignScopeInput {
-  draftId: ID!
-  pieceId: ID!
-}
-
 input RenamePieceInDesignInput {
   name: String!
-}
-
-input UpdatePieceDescriptionInDesignScopeInput {
-  draftId: ID!
-  pieceId: ID!
 }
 
 input UpdatePieceDescriptionInDesignInput {
   description: String!
 }
 
-input DragPieceInDesignScopeInput {
-  draftId: ID!
-  designId: ID!
-  pieceId: ID!
-}
-
-input DragPiecesInDesignScopeInput {
-  draftId: ID!
-  designId: ID!
-  pieceIds: [ID!]!
-}
-
-input MovePieceInDesignScopeInput {
-  draftId: ID!
-  designId: ID!
-  pieceId: ID!
-}
-
-input MovePiecesInDesignScopeInput {
-  draftId: ID!
-  designId: ID!
-  pieceIds: [ID!]!
-}
-
-input FixPieceInDesignScopeInput {
-  draftId: ID!
-  designId: ID!
-  pieceId: ID!
-}
-
-input FixPiecesInDesignScopeInput {
-  draftId: ID!
-  designId: ID!
-  pieceIds: [ID!]!
-}
-
-input ChangePieceToTypeInDesignScopeInput {
-  draftId: ID!
-  pieceId: ID!
-}
-
 input ChangePieceToTypeInDesignInput {
   blueprintId: ID!
-}
-
-input ChangePiecesToTypeInDesignScopeInput {
-  draftId: ID!
-  pieceIds: [ID!]!
 }
 
 input ChangePiecesToTypeInDesignInput {
   blueprintId: ID!
 }
 
-input AddAttributeToPieceScopeInput {
-  draftId: ID!
-  pieceId: ID!
-}
-
-input AddAttributesToPieceScopeInput {
-  draftId: ID!
-  pieceId: ID!
-}
-
-input RemoveAttributeFromPieceScopeInput {
-  draftId: ID!
-  pieceId: ID!
-  attributeId: ID!
-}
-
-input RemoveAttributesFromPieceScopeInput {
-  draftId: ID!
-  pieceId: ID!
-  attributeIds: [ID!]!
-}
-
-input DeletePieceInDesignScopeInput {
-  draftId: ID!
-  designId: ID!
-  pieceId: ID!
-}
-
-input DeletePiecesInDesignScopeInput {
-  draftId: ID!
-  designId: ID!
-  pieceIds: [ID!]!
-}
-
-input DeletePiecesAndConnectionsInDesignScopeInput {
-  draftId: ID!
-  designId: ID!
-  pieceIds: [ID!]!
-  connectionIds: [ID!]!
-}
-
 #endregion MutationInputs
 
 type Mutation {
   # Kit
-  renameKit(scope: RenameKitScopeInput!, input: RenameKitInput!): ID!
-  changeDescription(scope: ChangeDescriptionScopeInput!, input: ChangeDescriptionInput!): ID!
+  renameKit(transactionScope: TransactionScopeInput!, input: RenameKitInput!): ID!
+  changeDescription(transactionScope: TransactionScopeInput!, entityId: ID!, input: ChangeDescriptionInput!): ID!
 
   # Tag
-  createTag(scope: CreateTagScopeInput!, input: CreateTagInput!): ID!
-  createTags(scope: CreateTagsScopeInput!, input: CreateTagsInput!): ID!
-  renameTag(scope: RenameTagScopeInput!, input: RenameTagInput!): ID!
-  updateTagDescription(scope: UpdateTagDescriptionScopeInput!, input: UpdateTagDescriptionInput!): ID!
-  updateTagIcon(scope: UpdateTagIconScopeInput!, input: UpdateTagIconInput!): ID!
-  addAttributeToTag(scope: AddAttributeToTagScopeInput!, input: AddAttributeToTagInput!): ID!
-  addAttributesToTag(scope: AddAttributesToTagScopeInput!, input: AddAttributesToTagInput!): ID!
-  removeAttributeFromTag(scope: RemoveAttributeFromTagScopeInput!, input: RemoveAttributeFromTagInput!): ID!
-  removeAttributesFromTag(scope: RemoveAttributesFromTagScopeInput!, input: RemoveAttributesFromTagInput!): ID!
-  deleteTag(scope: DeleteTagScopeInput!, input: DeleteTagInput!): ID!
-  deleteTags(scope: DeleteTagsScopeInput!, input: DeleteTagsInput!): ID!
+  createTag(transactionScope: TransactionScopeInput!, ownerId: ID!, tag: TagInput!): ID!
+  createTags(transactionScope: TransactionScopeInput!, ownerId: ID!, tags: [TagInput!]!): ID!
+  renameTag(transactionScope: TransactionScopeInput!, tagId: ID!, input: RenameTagInput!): ID!
+  changedTagDescription(transactionScope: TransactionScopeInput!, tagId: ID!, input: UpdateTagDescriptionInput!): ID!
+  changedTagIcon(transactionScope: TransactionScopeInput!, tagId: ID!, input: UpdateTagIconInput!): ID!
+  addAttributeToTag(transactionScope: TransactionScopeInput!, tagId: ID!, attribute: AttributeInput!): ID!
+  addAttributesToTag(transactionScope: TransactionScopeInput!, tagId: ID!, attributes: [AttributeInput!]!): ID!
+  removeAttributeFromTag(transactionScope: TransactionScopeInput!, tagId: ID!, attributeId: ID!): ID!
+  removeAttributesFromTag(transactionScope: TransactionScopeInput!, tagId: ID!, attributeIds: [ID!]!): ID!
+  deleteTag(transactionScope: TransactionScopeInput!, tagId: ID!): ID!
+  deleteTags(transactionScope: TransactionScopeInput!, tagIds: [ID!]!): ID!
 
   # Concept
-  createConcept(scope: CreateConceptScopeInput!, input: CreateConceptInput!): ID!
-  createConcepts(scope: CreateConceptsScopeInput!, input: CreateConceptsInput!): ID!
-  renameConcept(scope: RenameConceptScopeInput!, input: RenameConceptInput!): ID!
-  updateConceptDescription(scope: UpdateConceptDescriptionScopeInput!, input: UpdateConceptDescriptionInput!): ID!
-  updateConceptIcon(scope: UpdateConceptIconScopeInput!, input: UpdateConceptIconInput!): ID!
-  addAttributeToConcept(scope: AddAttributeToConceptScopeInput!, input: AddAttributeToConceptInput!): ID!
-  addAttributesToConcept(scope: AddAttributesToConceptScopeInput!, input: AddAttributesToConceptInput!): ID!
-  removeAttributeFromConcept(scope: RemoveAttributeFromConceptScopeInput!, input: RemoveAttributeFromConceptInput!): ID!
-  removeAttributesFromConcept(scope: RemoveAttributesFromConceptScopeInput!, input: RemoveAttributesFromConceptInput!): ID!
-  deleteConcept(scope: DeleteConceptScopeInput!, input: DeleteConceptInput!): ID!
-  deleteConcepts(scope: DeleteConceptsScopeInput!, input: DeleteConceptsInput!): ID!
+  createConcept(transactionScope: TransactionScopeInput!, ownerId: ID!, concept: ConceptInput!): ID!
+  createConcepts(transactionScope: TransactionScopeInput!, ownerId: ID!, concepts: [ConceptInput!]!): ID!
+  renameConcept(transactionScope: TransactionScopeInput!, conceptId: ID!, input: RenameConceptInput!): ID!
+  changedConceptDescription(transactionScope: TransactionScopeInput!, conceptId: ID!, input: UpdateConceptDescriptionInput!): ID!
+  changedConceptIcon(transactionScope: TransactionScopeInput!, conceptId: ID!, input: UpdateConceptIconInput!): ID!
+  addAttributeToConcept(transactionScope: TransactionScopeInput!, conceptId: ID!, attribute: AttributeInput!): ID!
+  addAttributesToConcept(transactionScope: TransactionScopeInput!, conceptId: ID!, attributes: [AttributeInput!]!): ID!
+  removeAttributeFromConcept(transactionScope: TransactionScopeInput!, conceptId: ID!, attributeId: ID!): ID!
+  removeAttributesFromConcept(transactionScope: TransactionScopeInput!, conceptId: ID!, attributeIds: [ID!]!): ID!
+  deleteConcept(transactionScope: TransactionScopeInput!, conceptId: ID!): ID!
+  deleteConcepts(transactionScope: TransactionScopeInput!, conceptIds: [ID!]!): ID!
 
   # Port
-  createPort(scope: CreatePortScopeInput!, input: CreatePortInput!): ID!
-  createPorts(scope: CreatePortsScopeInput!, input: CreatePortsInput!): ID!
-  renamePort(scope: RenamePortScopeInput!, input: RenamePortInput!): ID!
-  updatePortDescription(scope: UpdatePortDescriptionScopeInput!, input: UpdatePortDescriptionInput!): ID!
-  updatePortIcon(scope: UpdatePortIconScopeInput!, input: UpdatePortIconInput!): ID!
-  addAttributeToPort(scope: AddAttributeToPortScopeInput!, input: AddAttributeToPortInput!): ID!
-  addAttributesToPort(scope: AddAttributesToPortScopeInput!, input: AddAttributesToPortInput!): ID!
-  removeAttributeFromPort(scope: RemoveAttributeFromPortScopeInput!, input: RemoveAttributeFromPortInput!): ID!
-  removeAttributesFromPort(scope: RemoveAttributesFromPortScopeInput!, input: RemoveAttributesFromPortInput!): ID!
-  deletePort(scope: DeletePortScopeInput!, input: DeletePortInput!): ID!
-  deletePorts(scope: DeletePortsScopeInput!, input: DeletePortsInput!): ID!
+  createPort(transactionScope: TransactionScopeInput!, port: PortInput!): ID!
+  createPorts(transactionScope: TransactionScopeInput!, ports: [PortInput!]!): ID!
+  renamePort(transactionScope: TransactionScopeInput!, portId: ID!, input: RenamePortInput!): ID!
+  changedPortDescription(transactionScope: TransactionScopeInput!, portId: ID!, input: UpdatePortDescriptionInput!): ID!
+  changedPortIcon(transactionScope: TransactionScopeInput!, portId: ID!, input: UpdatePortIconInput!): ID!
+  addAttributeToPort(transactionScope: TransactionScopeInput!, portId: ID!, attribute: AttributeInput!): ID!
+  addAttributesToPort(transactionScope: TransactionScopeInput!, portId: ID!, attributes: [AttributeInput!]!): ID!
+  removeAttributeFromPort(transactionScope: TransactionScopeInput!, portId: ID!, attributeId: ID!): ID!
+  removeAttributesFromPort(transactionScope: TransactionScopeInput!, portId: ID!, attributeIds: [ID!]!): ID!
+  deletePort(transactionScope: TransactionScopeInput!, portId: ID!): ID!
+  deletePorts(transactionScope: TransactionScopeInput!, portIds: [ID!]!): ID!
 
   # Quality
-  createQuality(scope: CreateQualityScopeInput!, input: CreateQualityInput!): ID!
-  createQualities(scope: CreateQualitiesScopeInput!, input: CreateQualitiesInput!): ID!
-  renameQuality(scope: RenameQualityScopeInput!, input: RenameQualityInput!): ID!
-  updateQualityDescription(scope: UpdateQualityDescriptionScopeInput!, input: UpdateQualityDescriptionInput!): ID!
-  updateQualityIcon(scope: UpdateQualityIconScopeInput!, input: UpdateQualityIconInput!): ID!
-  addAttributeToQuality(scope: AddAttributeToQualityScopeInput!, input: AddAttributeToQualityInput!): ID!
-  addAttributesToQuality(scope: AddAttributesToQualityScopeInput!, input: AddAttributesToQualityInput!): ID!
-  removeAttributeFromQuality(scope: RemoveAttributeFromQualityScopeInput!, input: RemoveAttributeFromQualityInput!): ID!
-  removeAttributesFromQuality(scope: RemoveAttributesFromQualityScopeInput!, input: RemoveAttributesFromQualityInput!): ID!
-  deleteQuality(scope: DeleteQualityScopeInput!, input: DeleteQualityInput!): ID!
-  deleteQualities(scope: DeleteQualitiesScopeInput!, input: DeleteQualitiesInput!): ID!
+  createQuality(transactionScope: TransactionScopeInput!, quality: QualityInput!): ID!
+  createQualities(transactionScope: TransactionScopeInput!, qualities: [QualityInput!]!): ID!
+  renameQuality(transactionScope: TransactionScopeInput!, qualityId: ID!, input: RenameQualityInput!): ID!
+  changedQualityDescription(transactionScope: TransactionScopeInput!, qualityId: ID!, input: UpdateQualityDescriptionInput!): ID!
+  changedQualityIcon(transactionScope: TransactionScopeInput!, qualityId: ID!, input: UpdateQualityIconInput!): ID!
+  addAttributeToQuality(transactionScope: TransactionScopeInput!, qualityId: ID!, attribute: AttributeInput!): ID!
+  addAttributesToQuality(transactionScope: TransactionScopeInput!, qualityId: ID!, attributes: [AttributeInput!]!): ID!
+  removeAttributeFromQuality(transactionScope: TransactionScopeInput!, qualityId: ID!, attributeId: ID!): ID!
+  removeAttributesFromQuality(transactionScope: TransactionScopeInput!, qualityId: ID!, attributeIds: [ID!]!): ID!
+  deleteQuality(transactionScope: TransactionScopeInput!, qualityId: ID!): ID!
+  deleteQualities(transactionScope: TransactionScopeInput!, qualityIds: [ID!]!): ID!
 
   # Type
-  createType(scope: CreateTypeScopeInput!, input: CreateTypeInput!): ID!
-  createTypes(scope: CreateTypesScopeInput!, input: CreateTypesInput!): ID!
-  renameType(scope: RenameTypeScopeInput!, input: RenameTypeInput!): ID!
-  updateTypeDescription(scope: UpdateTypeDescriptionScopeInput!, input: UpdateTypeDescriptionInput!): ID!
-  updateTypeIcon(scope: UpdateTypeIconScopeInput!, input: UpdateTypeIconInput!): ID!
-  addAttributeToType(scope: AddAttributeToTypeScopeInput!, input: AddAttributeToTypeInput!): ID!
-  addAttributesToType(scope: AddAttributesToTypeScopeInput!, input: AddAttributesToTypeInput!): ID!
-  removeAttributeFromType(scope: RemoveAttributeFromTypeScopeInput!, input: RemoveAttributeFromTypeInput!): ID!
-  removeAttributesFromType(scope: RemoveAttributesFromTypeScopeInput!, input: RemoveAttributesFromTypeInput!): ID!
-  deleteType(scope: DeleteTypeScopeInput!, input: DeleteTypeInput!): ID!
-  deleteTypes(scope: DeleteTypesScopeInput!, input: DeleteTypesInput!): ID!
+  createType(transactionScope: TransactionScopeInput!, type: TypeInput!): ID!
+  createTypes(transactionScope: TransactionScopeInput!, types: [TypeInput!]!): ID!
+  renameType(transactionScope: TransactionScopeInput!, typeId: ID!, input: RenameTypeInput!): ID!
+  changedTypeDescription(transactionScope: TransactionScopeInput!, typeId: ID!, input: UpdateTypeDescriptionInput!): ID!
+  changedTypeIcon(transactionScope: TransactionScopeInput!, typeId: ID!, input: UpdateTypeIconInput!): ID!
+  addAttributeToType(transactionScope: TransactionScopeInput!, typeId: ID!, attribute: AttributeInput!): ID!
+  addAttributesToType(transactionScope: TransactionScopeInput!, typeId: ID!, attributes: [AttributeInput!]!): ID!
+  removeAttributeFromType(transactionScope: TransactionScopeInput!, typeId: ID!, attributeId: ID!): ID!
+  removeAttributesFromType(transactionScope: TransactionScopeInput!, typeId: ID!, attributeIds: [ID!]!): ID!
+  deleteType(transactionScope: TransactionScopeInput!, typeId: ID!): ID!
+  deleteTypes(transactionScope: TransactionScopeInput!, typeIds: [ID!]!): ID!
 
   # Connector
-  addConnectorToType(scope: AddConnectorToTypeScopeInput!, input: AddConnectorToTypeInput!): ID!
-  addConnectorsToType(scope: AddConnectorsToTypeScopeInput!, input: AddConnectorsToTypeInput!): ID!
-  renameConnectorInType(scope: RenameConnectorInTypeScopeInput!, input: RenameConnectorInTypeInput!): ID!
-  updateConnectorDescriptionInType(scope: UpdateConnectorDescriptionInTypeScopeInput!, input: UpdateConnectorDescriptionInTypeInput!): ID!
-  updateConnectorIconInType(scope: UpdateConnectorIconInTypeScopeInput!, input: UpdateConnectorIconInTypeInput!): ID!
-  removeConnectorFromType(scope: RemoveConnectorFromTypeScopeInput!, input: RemoveConnectorFromTypeInput!): ID!
-  removeConnectorsFromType(scope: RemoveConnectorsFromTypeScopeInput!, input: RemoveConnectorsFromTypeInput!): ID!
+  addConnectorToType(transactionScope: TransactionScopeInput!, typeId: ID!, connector: ConnectorInput!): ID!
+  addConnectorsToType(transactionScope: TransactionScopeInput!, typeId: ID!, connectors: [ConnectorInput!]!): ID!
+  renameConnectorInType(transactionScope: TransactionScopeInput!, connectorId: ID!, input: RenameConnectorInTypeInput!): ID!
+  changedConnectorDescriptionInType(transactionScope: TransactionScopeInput!, connectorId: ID!, input: UpdateConnectorDescriptionInTypeInput!): ID!
+  changedConnectorIconInType(transactionScope: TransactionScopeInput!, connectorId: ID!, input: UpdateConnectorIconInTypeInput!): ID!
+  removeConnectorFromType(transactionScope: TransactionScopeInput!, connectorId: ID!): ID!
+  removeConnectorsFromType(transactionScope: TransactionScopeInput!, connectorIds: [ID!]!): ID!
 
   # Design
-  createDesign(scope: CreateDesignScopeInput!, input: CreateDesignInput!): ID!
-  createDesigns(scope: CreateDesignsScopeInput!, input: CreateDesignsInput!): ID!
-  deleteDesign(scope: DeleteDesignScopeInput!, input: DeleteDesignInput!): ID!
-  deleteDesigns(scope: DeleteDesignsScopeInput!, input: DeleteDesignsInput!): ID!
-  flattenDesign(scope: FlattenDesignScopeInput!, input: FlattenDesignInput!): ID!
-  addAttributeToDesign(scope: AddAttributeToDesignScopeInput!, input: AddAttributeToDesignInput!): ID!
-  addAttributesToDesign(scope: AddAttributesToDesignScopeInput!, input: AddAttributesToDesignInput!): ID!
-  removeAttributeFromDesign(scope: RemoveAttributeFromDesignScopeInput!, input: RemoveAttributeFromDesignInput!): ID!
-  removeAttributesFromDesign(scope: RemoveAttributesFromDesignScopeInput!, input: RemoveAttributesFromDesignInput!): ID!
+  createDesign(transactionScope: TransactionScopeInput!, design: DesignInput!): ID!
+  createDesigns(transactionScope: TransactionScopeInput!, designs: [DesignInput!]!): ID!
+  deleteDesign(transactionScope: TransactionScopeInput!, designId: ID!): ID!
+  deleteDesigns(transactionScope: TransactionScopeInput!, designIds: [ID!]!): ID!
+  flattenDesign(transactionScope: TransactionScopeInput!, designId: ID!): ID!
+  addAttributeToDesign(transactionScope: TransactionScopeInput!, designId: ID!, attribute: AttributeInput!): ID!
+  addAttributesToDesign(transactionScope: TransactionScopeInput!, designId: ID!, attributes: [AttributeInput!]!): ID!
+  removeAttributeFromDesign(transactionScope: TransactionScopeInput!, designId: ID!, attributeId: ID!): ID!
+  removeAttributesFromDesign(transactionScope: TransactionScopeInput!, designId: ID!, attributeIds: [ID!]!): ID!
 
   # Piece
-  addFixedPieceToDesign(scope: AddFixedPieceToDesignScopeInput!, input: AddFixedPieceToDesignInput!): ID!
-  addChildPieceWithParentConnectionToDesign(scope: AddChildPieceWithParentConnectionToDesignScopeInput!, input: AddChildPieceWithParentConnectionToDesignInput!): ID!
-  addChildPiecesWithParentConnectionsToDesign(scope: AddChildPiecesWithParentConnectionsToDesignScopeInput!, input: AddChildPiecesWithParentConnectionsToDesignInput!): ID!
-  addHangingChildPieceWithParentConnectionToDesign(scope: AddHangingChildPieceWithParentConnectionToDesignScopeInput!, input: AddHangingChildPieceWithParentConnectionToDesignInput!): ID!
-  addHangingChildPiecesWithParentConnectionsToDesign(scope: AddHangingChildPiecesWithParentConnectionsToDesignScopeInput!, input: AddHangingChildPiecesWithParentConnectionsToDesignInput!): ID!
-  renamePieceInDesign(scope: RenamePieceInDesignScopeInput!, input: RenamePieceInDesignInput!): ID!
-  updatePieceDescriptionInDesign(scope: UpdatePieceDescriptionInDesignScopeInput!, input: UpdatePieceDescriptionInDesignInput!): ID!
-  dragPieceInDesign(scope: DragPieceInDesignScopeInput!, input: DragPieceInDesignInput!): ID!
-  dragPiecesInDesign(scope: DragPiecesInDesignScopeInput!, input: DragPiecesInDesignInput!): ID!
-  movePieceInDesign(scope: MovePieceInDesignScopeInput!, input: MovePieceInDesignInput!): ID!
-  movePiecesInDesign(scope: MovePiecesInDesignScopeInput!, input: MovePiecesInDesignInput!): ID!
-  fixPieceInDesign(scope: FixPieceInDesignScopeInput!, input: FixPieceInDesignInput!): ID!
-  fixPiecesInDesign(scope: FixPiecesInDesignScopeInput!, input: FixPiecesInDesignInput!): ID!
-  changePieceToTypeInDesign(scope: ChangePieceToTypeInDesignScopeInput!, input: ChangePieceToTypeInDesignInput!): ID!
-  changePiecesToTypeInDesign(scope: ChangePiecesToTypeInDesignScopeInput!, input: ChangePiecesToTypeInDesignInput!): ID!
-  addAttributeToPiece(scope: AddAttributeToPieceScopeInput!, input: AddAttributeToPieceInput!): ID!
-  addAttributesToPiece(scope: AddAttributesToPieceScopeInput!, input: AddAttributesToPieceInput!): ID!
-  removeAttributeFromPiece(scope: RemoveAttributeFromPieceScopeInput!, input: RemoveAttributeFromPieceInput!): ID!
-  removeAttributesFromPiece(scope: RemoveAttributesFromPieceScopeInput!, input: RemoveAttributesFromPieceInput!): ID!
-  deletePieceInDesign(scope: DeletePieceInDesignScopeInput!, input: DeletePieceInDesignInput!): ID!
-  deletePiecesInDesign(scope: DeletePiecesInDesignScopeInput!, input: DeletePiecesInDesignInput!): ID!
-  deletePiecesAndConnectionsInDesign(scope: DeletePiecesAndConnectionsInDesignScopeInput!, input: DeletePiecesAndConnectionsInDesignInput!): ID!
+  addFixedPieceToDesign(transactionScope: TransactionScopeInput!, designId: ID!, input: AddFixedPieceToDesignInput!): ID!
+  addChildPieceWithParentConnectionToDesign(transactionScope: TransactionScopeInput!, designId: ID!, child: ChildPieceWithParentConnectionInput!): ID!
+  addChildPiecesWithParentConnectionsToDesign(transactionScope: TransactionScopeInput!, designId: ID!, children: [ChildPieceWithParentConnectionInput!]!): ID!
+  addHangingChildPieceWithParentConnectionToDesign(transactionScope: TransactionScopeInput!, designId: ID!, child: HangingChildPieceWithParentConnectionInput!): ID!
+  addHangingChildPiecesWithParentConnectionsToDesign(transactionScope: TransactionScopeInput!, designId: ID!, children: [HangingChildPieceWithParentConnectionInput!]!): ID!
+  renamePieceInDesign(transactionScope: TransactionScopeInput!, pieceId: ID!, input: RenamePieceInDesignInput!): ID!
+  changedPieceDescriptionInDesign(transactionScope: TransactionScopeInput!, pieceId: ID!, input: UpdatePieceDescriptionInDesignInput!): ID!
+  dragPieceInDesign(transactionScope: TransactionScopeInput!, designId: ID!, pieceId: ID!, offset: OffsetInput!): ID!
+  dragPiecesInDesign(transactionScope: TransactionScopeInput!, designId: ID!, pieceIds: [ID!]!, offset: OffsetInput!): ID!
+  movePieceInDesign(transactionScope: TransactionScopeInput!, designId: ID!, pieceId: ID!, position: PositionInput!): ID!
+  movePiecesInDesign(transactionScope: TransactionScopeInput!, designId: ID!, pieceIds: [ID!]!, offset: OffsetInput!): ID!
+  fixPieceInDesign(transactionScope: TransactionScopeInput!, designId: ID!, pieceId: ID!): ID!
+  fixPiecesInDesign(transactionScope: TransactionScopeInput!, designId: ID!, pieceIds: [ID!]!): ID!
+  changePieceToTypeInDesign(transactionScope: TransactionScopeInput!, pieceId: ID!, input: ChangePieceToTypeInDesignInput!): ID!
+  changePiecesToTypeInDesign(transactionScope: TransactionScopeInput!, pieceIds: [ID!]!, input: ChangePiecesToTypeInDesignInput!): ID!
+  addAttributeToPiece(transactionScope: TransactionScopeInput!, pieceId: ID!, attribute: AttributeInput!): ID!
+  addAttributesToPiece(transactionScope: TransactionScopeInput!, pieceId: ID!, attributes: [AttributeInput!]!): ID!
+  removeAttributeFromPiece(transactionScope: TransactionScopeInput!, pieceId: ID!, attributeId: ID!): ID!
+  removeAttributesFromPiece(transactionScope: TransactionScopeInput!, pieceId: ID!, attributeIds: [ID!]!): ID!
+  deletePieceInDesign(transactionScope: TransactionScopeInput!, designId: ID!, pieceId: ID!): ID!
+  deletePiecesInDesign(transactionScope: TransactionScopeInput!, designId: ID!, pieceIds: [ID!]!): ID!
+  deletePiecesAndConnectionsInDesign(transactionScope: TransactionScopeInput!, designId: ID!, pieceIds: [ID!]!, connectionIds: [ID!]!): ID!
 }
 
 type Subscription {
@@ -13825,8 +13332,8 @@ type Subscription {
   createdTag: CreatedTag!
   createdTags: CreatedTags!
   renamedTag: RenamedTag!
-  updatedTagDescription: UpdatedTagDescription!
-  updatedTagIcon: UpdatedTagIcon!
+  changeddTagDescription: UpdatedTagDescription!
+  changeddTagIcon: UpdatedTagIcon!
   addedAttributeToTag: AddedAttributeToTag!
   addedAttributesToTag: AddedAttributesToTag!
   removedAttributeFromTag: RemovedAttributeFromTag!
@@ -13838,8 +13345,8 @@ type Subscription {
   createdConcept: CreatedConcept!
   createdConcepts: CreatedConcepts!
   renamedConcept: RenamedConcept!
-  updatedConceptDescription: UpdatedConceptDescription!
-  updatedConceptIcon: UpdatedConceptIcon!
+  changeddConceptDescription: UpdatedConceptDescription!
+  changeddConceptIcon: UpdatedConceptIcon!
   addedAttributeToConcept: AddedAttributeToConcept!
   addedAttributesToConcept: AddedAttributesToConcept!
   removedAttributeFromConcept: RemovedAttributeFromConcept!
@@ -13851,8 +13358,8 @@ type Subscription {
   createdPort: CreatedPort!
   createdPorts: CreatedPorts!
   renamedPort: RenamedPort!
-  updatedPortDescription: UpdatedPortDescription!
-  updatedPortIcon: UpdatedPortIcon!
+  changeddPortDescription: UpdatedPortDescription!
+  changeddPortIcon: UpdatedPortIcon!
   addedAttributeToPort: AddedAttributeToPort!
   addedAttributesToPort: AddedAttributesToPort!
   removedAttributeFromPort: RemovedAttributeFromPort!
@@ -13864,8 +13371,8 @@ type Subscription {
   createdQuality: CreatedQuality!
   createdQualities: CreatedQualities!
   renamedQuality: RenamedQuality!
-  updatedQualityDescription: UpdatedQualityDescription!
-  updatedQualityIcon: UpdatedQualityIcon!
+  changeddQualityDescription: UpdatedQualityDescription!
+  changeddQualityIcon: UpdatedQualityIcon!
   addedAttributeToQuality: AddedAttributeToQuality!
   addedAttributesToQuality: AddedAttributesToQuality!
   removedAttributeFromQuality: RemovedAttributeFromQuality!
@@ -13877,8 +13384,8 @@ type Subscription {
   createdType: CreatedType!
   createdTypes: CreatedTypes!
   renamedType: RenamedType!
-  updatedTypeDescription: UpdatedTypeDescription!
-  updatedTypeIcon: UpdatedTypeIcon!
+  changeddTypeDescription: UpdatedTypeDescription!
+  changeddTypeIcon: UpdatedTypeIcon!
   addedAttributeToType: AddedAttributeToType!
   addedAttributesToType: AddedAttributesToType!
   removedAttributeFromType: RemovedAttributeFromType!
@@ -13890,8 +13397,8 @@ type Subscription {
   addedConnectorToType: AddedConnectorToType!
   addedConnectorsToType: AddedConnectorsToType!
   renamedConnectorInType: RenamedConnectorInType!
-  updatedConnectorDescriptionInType: UpdatedConnectorDescriptionInType!
-  updatedConnectorIconInType: UpdatedConnectorIconInType!
+  changeddConnectorDescriptionInType: UpdatedConnectorDescriptionInType!
+  changeddConnectorIconInType: UpdatedConnectorIconInType!
   removedConnectorFromType: RemovedConnectorFromType!
   removedConnectorsFromType: RemovedConnectorsFromType!
 
@@ -13913,7 +13420,7 @@ type Subscription {
   addedHangingChildPieceWithParentConnectionToDesign: AddedHangingChildPieceWithParentConnectionToDesign!
   addedHangingChildPiecesWithParentConnectionsToDesign: AddedHangingChildPiecesWithParentConnectionsToDesign!
   renamedPieceInDesign: RenamedPieceInDesign!
-  updatedPieceDescriptionInDesign: UpdatedPieceDescriptionInDesign!
+  changeddPieceDescriptionInDesign: UpdatedPieceDescriptionInDesign!
   draggedPieceInDesign: DraggedPieceInDesign!
   draggedPiecesInDesign: DraggedPiecesInDesign!
   movedPieceInDesign: MovedPieceInDesign!
