@@ -11,6 +11,7 @@
 5. Every entity type duplicated the general interface fields `ownerEntity: OwnerEntity` / `ownedEntities: OwnedEntityConnection` with narrow-typed projections (`owner: VectorOwner!`, `planeOwner: Plane`, `planeDiffOwner: PlaneDiff`, …) and spine references (`ownerModifications: Modifications`, `changeOwner: Change`, `operationOwner: Operation`, …). Only the general interface fields MUST remain.
 6. The schema carried 393 narrow `union` declarations (`OwnerEntity`, `OwnedEntityConnection`, `VectorOwner`, `Scope`, `Input`, `Blueprint`, etc.) that are no longer necessary now that fields are typed against the general interfaces (`Entity`, `EntityConnection`). All unions MUST be removed; union-typed fields MUST be retyped to the general interface and document the previous union members in a trailing `// Member1 | Member2 | …` comment.
 7. The mutation API still exposed a flat `KitChange` namespace with redundant `*Id` arguments (`tagId`, `conceptId`, `designId`, `pieceId`, …) and per-operation `*Input` wrappers (`RenameTagInput`, `UpdateTagDescriptionInput`, `UpdateTagIconInput`, …). The transaction-scope was passed once as an `input TransactionScopeInput` argument. The mutation API MUST be refactored into a hierarchical scoped command tree where each scope is entered via a navigation field (`session → draft(id) → transaction(id) → kit → tag(id)/concept(id)/…`), every leaf field executes and returns `ID!`, and the per-operation single-field `*Input` wrappers MUST disappear (`rename(newName: String!): ID!`, `changeDescription(newDescription: String!): ID!`, …).
+8. Command leaves still accepted entity data wrappers as input (e.g. `createDesign(design: DesignInput!)`, `createTag(tag: TagInput!)`, `addAttribute(attribute: AttributeInput!)`, `addChildPieceWithParentConnection(child: ChildPieceWithParentConnectionInput!)`, `addFixedPiece(input: AddFixedPieceInput!)`). Command inputs MUST be lean — every field of an entity wrapper MUST be inlined as a primitive argument. Plural variants that require array-of-record inputs (`createTags(tags: [TagInput!]!)`, `addAttributes(attributes: [AttributeInput!]!)`, `addChildPiecesWithParentConnections(children: …)`, …) MUST be removed; bulk creation is achieved by chaining aliased single-create selections within one transaction.
 
 ## Changes
 
@@ -45,6 +46,22 @@
     - `Tag`/`Concept`/`Quality`/`Type`/`Port`/`Connector`/`Design`/`Piece`/`Pieces` ScopedOperationInput — each carries the operations that belong to that entity kind (Artifact + Attributes + entity-specific operations like `flatten`, `drag`, `move`, `fix`, `changeToType`, …).
   - **Inlined per-operation primitive args** as named field arguments: `rename(newName: String!)`, `changeDescription(newDescription: String!)`, `changeIcon(newIcon: String!)`, `rename(newCode: String!, newLabel: String)` for `Port`, `rename(newKey: String!)` for `Quality`, `changeToType(blueprintId: ID!)`, `drag(offset: OffsetInput!)`, `move(position: PositionInput!)`, `move(offset: OffsetInput!)` for `Pieces`, `fix: ID!`, `flatten: ID!`.
   - **No more `*Id: ID!` arguments at the leaf** — entity ids are carried by the scope-navigation chain (`design(id: ID!)` → `piece(id: ID!).drag(offset)`).
+- `semio/graphql/target.schema.graphql` — leaned every command argument:
+  - **Deleted every entity-data input type**: `TagInput`, `ConceptInput`, `QualityInput`, `TypeInput`, `PortInput`, `ConnectorInput`, `DesignInput`, `AttributeInput`, `ChildPieceWithParentConnectionInput`, `HangingChildPieceWithParentConnectionInput`, `AddFixedPieceInput`. Only structural value-type `input`s remain in the schema: `VectorInput`, `PointInput`, `CoordinateInput`, `OffsetInput`, `PlaneInput`, `PositionInput`, `LocationInput`.
+  - **Inlined every primitive entity field as a named command argument**:
+    - `createTag(name: String!, description: String, icon: String, order: Int): ID!`
+    - `createConcept(name: String!, description: String, icon: String, order: Int): ID!`
+    - `createQuality(key: String!, value: String, unit: String, definition: String, description: String, icon: String): ID!`
+    - `createType(name: String!, description: String, icon: String, image: String, unit: String): ID!`
+    - `createDesign(name: String!, description: String, icon: String, image: String, unit: String): ID!`
+    - `createPort(code: String, label: String, description: String, icon: String, order: Int): ID!`
+    - `addConnector(code: String!, description: String, icon: String, portId: ID): ID!`
+    - `addAttribute(key: String!, value: String!, definition: String!): ID!` (every entity-attribute scope)
+    - `addFixedPiece(blueprintId: ID!, position: PositionInput!, name: String, description: String): ID!`
+    - `addChildPieceWithParentConnection(blueprintId, parentPieceId, parentConnector, childConnector, name, description, position, scale)`
+    - `addHangingChildPieceWithParentConnection(blueprintId, parentPieceId, parentConnector, childConnector, position, name, description, scale)`
+  - **Dropped every plural that required an array-of-record**: `createTags`, `createConcepts`, `createQualities`, `createTypes`, `createPorts`, `addConnectors`, `createDesigns`, `addAttributes`, `addChildPiecesWithParentConnections`, `addHangingChildPiecesWithParentConnections`. Bulk creation is now expressed via chained aliased selections inside a single `transaction(id) { kit { … } }` execution. Delete plurals (`deleteTags(ids: [ID!]!)`, …) stay because `[ID!]!` is primitive.
+  - **Kept structural value-type inputs as command arguments**: `OffsetInput`, `PositionInput` (and the `CoordinateInput`/`PlaneInput` they wrap) — these encode arithmetic 3D primitives, not entity data, so they remain across scopes (`drag(offset: OffsetInput!)`, `move(position: PositionInput!)`, `addFixedPiece(…, position: PositionInput!)`).
 
 ## Verification
 
@@ -66,6 +83,10 @@
 - `rg "^input TransactionScopeInput|^input Rename|^input Update|^input ChangeDescription|^input ChangePiece" semio/graphql/target.schema.graphql` → 0 matches.
 - `rg "^type KitChange\b" semio/graphql/target.schema.graphql` → 0 matches; `rg "^type Mutation\b" …` → 1 match.
 - `type Mutation` exposes a single field `session: SessionScopedCommandInput!`. The hierarchy `session → draft(id) → transaction(id) → kit → {tag,concept,quality,type,design,…}(id)` is the only path to every kit-changing operation; every leaf returns `ID!`.
+- After the lean-input refactor: `parse OK` and **`build OK`** (no errors at all).
+- `rg "^input (TagInput|ConceptInput|QualityInput|TypeInput|PortInput|ConnectorInput|DesignInput|AttributeInput|ChildPieceWithParentConnectionInput|HangingChildPieceWithParentConnectionInput|AddFixedPieceInput)\b" semio/graphql/target.schema.graphql` → 0 matches.
+- `rg "^input \w+" …` → 7 matches: `VectorInput`, `PointInput`, `CoordinateInput`, `OffsetInput`, `PlaneInput`, `PositionInput`, `LocationInput` — all structural value types, no entity-data wrappers.
+- Every command leaf argument is either a primitive scalar (`String!`, `String`, `Int`, `ID!`, `Float`, `[ID!]!`) or a structural value type (`OffsetInput!`, `PositionInput!`, `PositionInput`).
 
 ## Status
 

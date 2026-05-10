@@ -3,10 +3,11 @@
   "emoji": "🔗",
   "status": "closed",
   "description": "Clean semio/graphql/target.schema.graphql operation field names so operation API names are action-first, e.g. createdDesign instead of designCreated.",
-  "summary": "Removed implicit design/type context suffixes from semio/graphql/target.schema.graphql operation API names, preserving explicit disambiguators like changePieceToType and attribute owner names. Restored the valid KitChange mutation payload shape and removed undefined artifact/document subscription references so the SDL builds.",
+  "summary": "Changed every Operation.scope field in semio/graphql/target.schema.graphql to Entity references with # reference comments listing allowed scope entity kinds. Operation interface now documents the broad scope set; concrete operations document narrowed references.",
   "goal": "🎯r2602🎯runningsketchpad",
   "sessions": [
     "⚪a1e3a60454d84391ba2f0dfb1bb9c240",
-    "⚪febf1e57068544ea80ef9245c4a35a0e"
+    "⚪febf1e57068544ea80ef9245c4a35a0e",
+    "⚪9f41b4a0d5114ed4b806eed4ba1a96c8"
   ]
 }
