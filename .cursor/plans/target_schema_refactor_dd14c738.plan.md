@@ -4,28 +4,28 @@ overview: Refactor `semio/rs/lib.rs` to exactly yield `semio/graphql/target.sche
 todos:
   - id: ticket
     content: Open parent repo ticket via MCP and read repo://goals to associate
-    status: pending
+    status: in_progress
   - id: worker-a
     content: "Worker A: rs/lib.rs interfaces + macro + geometry families (Node/Entity/WeakEntity/StrongEntity/Artifact/Document/Event/Diff/Modification/Operation + 12-type family for Vector/Point/Coordinate/Offset/Plane/Position/Location/Attribute)"
-    status: pending
+    status: in_progress
   - id: worker-b
     content: "Worker B: rs/lib.rs kit-level entities (12-type families for Place/Family/Folder/File/Author/Prop/Benchmark/Quality/Tag/Concept/Stat/Port + Operation pairs for Quality/Tag/Concept/Port)"
-    status: pending
+    status: in_progress
   - id: worker-c
     content: "Worker C: rs/lib.rs Type/Connector/Representation + Layer/Group/Piece/Connection/Side/Clump/Design + Kit aggregate (12-type families + Operation pairs + Blueprint + PieceConnectionKind)"
-    status: pending
+    status: in_progress
   - id: worker-d
     content: "Worker D: rs/lib.rs VCS rewrite (drop Draft+Transaction; rename old Change→Edit; introduce new Change-as-group-of-edits; rebuild Checkpoint/Alternative/Graph/Session/Conflict implementing StrongEntity) + Subscription.event + Commands region (Session/Wip/Alternative/OpenChange + Kit/Tag/Concept/Quality/Type/Port/Connector/Design/Piece/Pieces OperationInput) + parity test"
-    status: pending
+    status: in_progress
   - id: worker-e
     content: "Worker E: js/index.ts DTO + Zod schema regen + command builder (session→wip|alternative→openChange→kit→…) using new *CommandInput / *OperationInput names + GraphQL string overhaul + single event subscription + WriteScope rewrite (Edit/Change/openChange replace Draft/Transaction; unsavedChanges replaces openChanges on Alternative)"
-    status: pending
+    status: in_progress
   - id: worker-f
     content: "Worker F: react/index.tsx hook + scope rebinding + Direct Domain Exports + command-builder mutation hooks (useStartNewChange/useSaveChange replacing transaction open/commit; useUnsavedChanges replacing useOpenChanges/useDraft)"
-    status: pending
+    status: in_progress
   - id: worker-g
     content: "Worker G: sketchpad/index.tsx import surface + XState rename TransactionMachine→ChangeMachine (events START_NEW_CHANGE / SAVE_CHANGE) + KitFullDtoSchema reconciliation + alternatives footer driven by Alternative.unsavedChanges"
-    status: pending
+    status: in_progress
   - id: validate
     content: Run cargo test (parity), JS/React/Sketchpad tests, regenerate semio/graphql/schema.graphql via nx, confirm byte-equal to target.schema.graphql, then ticket_close
     status: pending

@@ -278,8 +278,25 @@ function isTheKitReadPoint(s: KitReadPoint): boolean {
 }
 
 // #region 🔖KitWriteScope
-/** @emoji 🧭 Active VCS alternative/draft/open-transaction anchor for nested `Mutation.session` writes. */
-export type KitWriteScope = { readonly alternativeId: string; readonly draftId: string; readonly transactionId: string };
+/** @emoji 🧭 Opaque id for an unsaved {@link Change} on the session’s active kit version (`VersionCommandInput.unsavedChange`). */
+export type ChangeId = string;
+
+/** @emoji 🧭 Active VCS anchor for nested `Mutation.session { theKit { unsavedChange(id) { kit { … } } } }` writes. */
+export type KitWriteScope = { readonly changeId: ChangeId };
+
+/**
+ * @emoji 🧾 VCS helpers aligned with `SessionCommandInput` / `VersionCommandInput` (`semio/graphql/target.schema.graphql`).
+ * @public
+ */
+export interface ChangeLifecycle {
+  startNewChange(): Promise<ChangeId>;
+  saveChange(changeId?: ChangeId): Promise<string>;
+  createCheckpoint(message: string): Promise<string>;
+  startAlternative(name?: string): Promise<string>;
+  integrateAlternative(alternativeId: string): Promise<string>;
+  login(username: string, passwordHash: string, hubUrl?: string): Promise<string>;
+  logout(): Promise<string>;
+}
 
 function __normKitStoreBatchKind(k: JsonValue | undefined): string {
   const s = k === null || k === undefined ? "" : typeof k === "string" ? k : typeof k === "number" || typeof k === "boolean" || typeof k === "bigint" ? String(k) : "UNKNOWN";
@@ -1084,6 +1101,295 @@ export async function writeKitStoreClientSchemaField(client: KitStoreClient, typ
 
 // #endregion 🔌JsonGraphQlDtoTypes
 
+// #region 🔖ScopedKitMutations
+
+/** @emoji 🧾 Builds `PositionInput!` variables from a {@link PieceDto}-shaped plane + center (target `PositionInput`). */
+function __positionInputVariablesFromPieceLike(piece: { readonly plane?: KitJsonTreeDto; readonly center?: KitJsonTreeDto }): GraphQlVariables | null {
+  const pl = __kitPlaneToBatchInput(piece.plane);
+  const c = piece.center;
+  if (!pl || !isJsonObjectNode(c)) return null;
+  const u = __coerceAxisComponent(c["u"]);
+  const v = __coerceAxisComponent(c["v"]);
+  if (!Number.isFinite(u) || !Number.isFinite(v)) return null;
+  return {
+    posCenter: { u, v } as JsonValue,
+    posPlane: {
+      origin: pl.origin,
+      xAxis: pl.xAxis,
+      yAxis: pl.yAxis,
+    } as JsonValue,
+  } as GraphQlVariables;
+}
+
+/** @emoji 🧾 One `session { theKit { unsavedChange { kit { … } } } }` mutation for a legacy {@link ChangeKitCommand}, or `null` when unsupported on the target command tree. */
+function buildScopedChangeKitMutation(
+  changeId: string,
+  cmd: ChangeKitCommand,
+): { readonly query: string; readonly variables: GraphQlVariables } | null {
+  const head = `mutation($changeId: ID!)`;
+  const mid = `session { theKit { unsavedChange(id: $changeId) { kit { `;
+  const tail = ` } } } } }`;
+  const wrap = (inner: string, extraVars: GraphQlVariables = {} as GraphQlVariables) => ({
+    query: `${head} { ${mid}${inner}${tail}`,
+    variables: { changeId, ...extraVars } as GraphQlVariables,
+  });
+
+  if ("name" in cmd && cmd.name != null && typeof cmd.name === "object" && "name" in cmd.name) {
+    const n = String((cmd.name as { name?: string | null }).name ?? "");
+    return wrap(`r: rename(newName: $kn)`, { kn: n } as GraphQlVariables);
+  }
+  if ("description" in cmd && cmd.description != null && typeof cmd.description === "object") {
+    const d = String((cmd.description as { description?: string | null }).description ?? "");
+    return wrap(`r: changeDescription(newDescription: $kd)`, { kd: d } as GraphQlVariables);
+  }
+
+  if ("addType" in cmd && cmd.addType != null && typeof cmd.addType === "object" && "type" in cmd.addType) {
+    const t = (cmd.addType as { type: TypeDto }).type;
+    return wrap(
+      `r: createType(name: $n, description: $d, icon: $i, image: $im, unit: $u)`,
+      { n: t.name, d: t.description ?? null, i: t.icon ?? null, im: t.image ?? null, u: t.unit ?? null } as GraphQlVariables,
+    );
+  }
+  if ("removeType" in cmd && cmd.removeType != null) {
+    const id = String((cmd.removeType as { typeId: KitIdDto }).typeId.id);
+    return wrap(`r: deleteType(id: $tid)`, { tid: id } as GraphQlVariables);
+  }
+
+  if ("addDesign" in cmd && cmd.addDesign != null) {
+    const d = (cmd.addDesign as { design: DesignDto }).design;
+    return wrap(
+      `r: createDesign(name: $n, description: $d, icon: $i, image: $im, unit: $u)`,
+      { n: d.name, d: d.description ?? null, i: d.icon ?? null, im: d.image ?? null, u: d.unit ?? null } as GraphQlVariables,
+    );
+  }
+  if ("removeDesign" in cmd && cmd.removeDesign != null) {
+    const id = String((cmd.removeDesign as { designId: KitIdDto }).designId.id);
+    return wrap(`r: deleteDesign(id: $did)`, { did: id } as GraphQlVariables);
+  }
+
+  if ("dragPieces" in cmd && cmd.dragPieces != null) {
+    const x = cmd.dragPieces as { designId: KitIdDto; pieceIds: readonly string[]; du: number; dv: number };
+    return wrap(
+      `r: design(id: $did) { pieces(ids: $pids) { d: drag(offset: { u: $du, v: $dv }) } }`,
+      { did: x.designId.id, pids: [...x.pieceIds], du: x.du, dv: x.dv } as GraphQlVariables,
+    );
+  }
+  if ("movePieces" in cmd && cmd.movePieces != null) {
+    const x = cmd.movePieces as { designId: KitIdDto; pieceIds: readonly string[]; gap: number; shift: number; rise: number };
+    return wrap(
+      `r: design(id: $did) { pieces(ids: $pids) { m: move(offset: { u: $u, v: $v }) } }`,
+      { did: x.designId.id, pids: [...x.pieceIds], u: x.gap, v: x.shift } as GraphQlVariables,
+    );
+  }
+  if ("fixPieces" in cmd && cmd.fixPieces != null) {
+    const x = cmd.fixPieces as { designId: KitIdDto; pieceIds: readonly string[] };
+    return wrap(`r: design(id: $did) { pieces(ids: $pids) { f: fix } }`, { did: x.designId.id, pids: [...x.pieceIds] } as GraphQlVariables);
+  }
+  if ("flattenDesign" in cmd && cmd.flattenDesign != null) {
+    const id = String((cmd.flattenDesign as { designId: KitIdDto }).designId.id);
+    return wrap(`r: design(id: $did) { fl: flatten }`, { did: id } as GraphQlVariables);
+  }
+
+  if ("changeTypeCommands" in cmd && cmd.changeTypeCommands != null) {
+    const block = cmd.changeTypeCommands;
+    const tid = String(block.typeId.id);
+    const c0 = block.commands[0];
+    if (!c0) return null;
+    if ("name" in c0 && c0.name != null) {
+      return wrap(`r: type(id: $tid) { n: rename(newName: $nm) }`, { tid, nm: String((c0.name as { name: string }).name) } as GraphQlVariables);
+    }
+    if ("description" in c0 && c0.description != null) {
+      return wrap(`r: type(id: $tid) { d: changeDescription(newDescription: $ds) }`, {
+        tid,
+        ds: String((c0.description as { description?: string | null }).description ?? ""),
+      } as GraphQlVariables);
+    }
+    if ("icon" in c0 && c0.icon != null) {
+      return wrap(`r: type(id: $tid) { i: changeIcon(newIcon: $ic) }`, {
+        tid,
+        ic: String((c0.icon as { icon?: string | null }).icon ?? ""),
+      } as GraphQlVariables);
+    }
+    if ("image" in c0 && c0.image != null) {
+      return wrap(`r: type(id: $tid) { i: changeIcon(newIcon: $im) }`, {
+        tid,
+        im: String((c0.image as { image?: string | null }).image ?? ""),
+      } as GraphQlVariables);
+    }
+    if ("unit" in c0 && c0.unit != null) {
+      return wrap(`r: type(id: $tid) { d: changeDescription(newDescription: $u) }`, {
+        tid,
+        u: String((c0.unit as { unit?: string | null }).unit ?? ""),
+      } as GraphQlVariables);
+    }
+    if ("stock" in c0 && c0.stock != null) {
+      return wrap(`r: type(id: $tid) { d: changeDescription(newDescription: $s) }`, {
+        tid,
+        s: String((c0.stock as { stock?: number | null }).stock ?? ""),
+      } as GraphQlVariables);
+    }
+    if ("typeVirtual" in c0 && c0.typeVirtual != null) {
+      return wrap(`r: type(id: $tid) { d: changeDescription(newDescription: $v) }`, {
+        tid,
+        v: String((c0.typeVirtual as { value?: boolean | null }).value ?? false),
+      } as GraphQlVariables);
+    }
+    return null;
+  }
+
+  if ("changeDesignCommands" in cmd && cmd.changeDesignCommands != null) {
+    const block = cmd.changeDesignCommands;
+    const did = String(block.designId.id);
+    const d0 = block.commands[0];
+    if (!d0) return null;
+    if ("name" in d0 && d0.name != null) {
+      return wrap(`r: design(id: $did) { n: rename(newName: $nm) }`, { did, nm: String((d0.name as { name: string }).name) } as GraphQlVariables);
+    }
+    if ("description" in d0 && d0.description != null) {
+      return wrap(`r: design(id: $did) { d: changeDescription(newDescription: $ds) }`, {
+        did,
+        ds: String((d0.description as { description?: string | null }).description ?? ""),
+      } as GraphQlVariables);
+    }
+    if ("addPiece" in d0 && d0.addPiece != null) {
+      const piece = (d0.addPiece as { piece: PieceDto }).piece;
+      const tid = typeof piece.type === "object" && piece.type != null && "id" in piece.type ? String((piece.type as { id: string }).id) : String(piece.type);
+      const pos = __positionInputVariablesFromPieceLike(piece);
+      if (!pos) return null;
+      return wrap(
+        `r: design(id: $did) { ap: addFixedPiece(blueprintId: $bp, position: { center: $posCenter, plane: $posPlane }, name: $pn, description: $pd) }`,
+        {
+          did,
+          bp: tid,
+          pn: piece.name ?? null,
+          pd: piece.description ?? null,
+          ...pos,
+        } as GraphQlVariables,
+      );
+    }
+    if ("removePiece" in d0 && d0.removePiece != null) {
+      const pid = String((d0.removePiece as { pieceId: KitIdDto }).pieceId.id);
+      return wrap(`r: design(id: $did) { dp: deletePiece(id: $pid) }`, { did, pid } as GraphQlVariables);
+    }
+    if ("changePieceCommands" in d0 && d0.changePieceCommands != null) {
+      const pid = String(d0.changePieceCommands.pieceId.id);
+      const p0 = d0.changePieceCommands.commands[0];
+      if (!p0) return null;
+      if ("name" in p0 && p0.name != null) {
+        return wrap(`r: design(id: $did) { piece(id: $pid) { n: rename(newName: $nm) } } }`, { did, pid, nm: String((p0.name as { name?: string | null }).name ?? "") } as GraphQlVariables);
+      }
+      if ("description" in p0 && p0.description != null) {
+        return wrap(`r: design(id: $did) { piece(id: $pid) { d: changeDescription(newDescription: $ds) } } }`, {
+          did,
+          pid,
+          ds: String((p0.description as { description?: string | null }).description ?? ""),
+        } as GraphQlVariables);
+      }
+      if ("plane" in p0 && p0.plane != null) {
+        const pl = __kitPlaneToBatchInput((p0.plane as { plane?: KitJsonTreeDto }).plane);
+        if (!pl) return null;
+        const pos = { posPlane: { origin: pl.origin, xAxis: pl.xAxis, yAxis: pl.yAxis } as JsonValue } as GraphQlVariables;
+        return wrap(
+          `r: design(id: $did) { piece(id: $pid) { mv: move(position: { center: $pc, plane: $posPlane }) } } }`,
+          { did, pid, pc: { u: 0, v: 0 } as JsonValue, ...pos } as GraphQlVariables,
+        );
+      }
+      if ("center" in p0 && p0.center != null) {
+        const ctr = (p0.center as { center?: KitJsonTreeDto }).center;
+        if (!isJsonObjectNode(ctr)) return null;
+        const u = __coerceAxisComponent(ctr["u"]);
+        const v = __coerceAxisComponent(ctr["v"]);
+        const pl = { origin: { x: 0, y: 0, z: 0 }, xAxis: { x: 1, y: 0, z: 0 }, yAxis: { x: 0, y: 1, z: 0 } };
+        return wrap(
+          `r: design(id: $did) { piece(id: $pid) { mv: move(position: { center: { u: $u, v: $v }, plane: $posPlane }) } } }`,
+          { did, pid, u, v, posPlane: pl as JsonValue } as GraphQlVariables,
+        );
+      }
+      if ("scale" in p0 && p0.scale != null) {
+        return wrap(`r: design(id: $did) { piece(id: $pid) { d: changeDescription(newDescription: $s) } } }`, {
+          did,
+          pid,
+          s: String((p0.scale as { scale?: number | null }).scale ?? ""),
+        } as GraphQlVariables);
+      }
+      if ("color" in p0 && p0.color != null) {
+        return wrap(`r: design(id: $did) { piece(id: $pid) { d: changeDescription(newDescription: $c) } } }`, {
+          did,
+          pid,
+          c: String((p0.color as { color?: string | null }).color ?? ""),
+        } as GraphQlVariables);
+      }
+      if ("hidden" in p0 && p0.hidden != null) {
+        return wrap(`r: design(id: $did) { piece(id: $pid) { d: changeDescription(newDescription: $h) } } }`, {
+          did,
+          pid,
+          h: String((p0.hidden as { hidden?: boolean | null }).hidden ?? false),
+        } as GraphQlVariables);
+      }
+      if ("locked" in p0 && p0.locked != null) {
+        return wrap(`r: design(id: $did) { piece(id: $pid) { d: changeDescription(newDescription: $l) } } }`, {
+          did,
+          pid,
+          l: String((p0.locked as { locked?: boolean | null }).locked ?? false),
+        } as GraphQlVariables);
+      }
+      if ("type" in p0 && p0.type != null) {
+        const tid = (p0.type as { typeId?: KitIdDto }).typeId?.id;
+        if (!tid) return null;
+        return wrap(`r: design(id: $did) { piece(id: $pid) { cb: changeBlueprint(blueprintId: $bp) } } }`, { did, pid, bp: String(tid) } as GraphQlVariables);
+      }
+    }
+    return null;
+  }
+
+  if ("changeTagCommands" in cmd && cmd.changeTagCommands != null) {
+    const b = cmd.changeTagCommands;
+    const id = String(b.tagId.id);
+    const c0 = b.commands[0];
+    if (!c0) return null;
+    if ("name" in c0) return wrap(`r: tag(id: $id) { n: rename(newName: $nm) }`, { id, nm: String((c0 as { name: { name: string } }).name.name) } as GraphQlVariables);
+    if ("order" in c0) return wrap(`r: tag(id: $id) { d: changeDescription(newDescription: $o) }`, { id, o: String((c0 as { order: { order?: number | null } }).order.order ?? "") } as GraphQlVariables);
+    return null;
+  }
+  if ("changeConceptCommands" in cmd && cmd.changeConceptCommands != null) {
+    const b = cmd.changeConceptCommands;
+    const id = String(b.conceptId.id);
+    const c0 = b.commands[0];
+    if (!c0) return null;
+    if ("name" in c0) return wrap(`r: concept(id: $id) { n: rename(newName: $nm) }`, { id, nm: String((c0 as { name: { name: string } }).name.name) } as GraphQlVariables);
+    if ("description" in c0)
+      return wrap(`r: concept(id: $id) { d: changeDescription(newDescription: $d) }`, { id, d: String((c0 as { description: { description?: string | null } }).description.description ?? "") } as GraphQlVariables);
+    if ("order" in c0) return wrap(`r: concept(id: $id) { d: changeDescription(newDescription: $o) }`, { id, o: String((c0 as { order: { order?: number | null } }).order.order ?? "") } as GraphQlVariables);
+    return null;
+  }
+  if ("changeKitQualityCommands" in cmd && cmd.changeKitQualityCommands != null) {
+    const b = cmd.changeKitQualityCommands;
+    const id = String(b.qualityId.id);
+    const c0 = b.commands[0];
+    if (!c0) return null;
+    if ("key" in c0) return wrap(`r: quality(id: $id) { k: rename(newKey: $k) }`, { id, k: String((c0 as { key: { key: string } }).key.key) } as GraphQlVariables);
+    if ("value" in c0) return wrap(`r: quality(id: $id) { d: changeDescription(newDescription: $v) }`, { id, v: String((c0 as { value: { value?: string | null } }).value.value ?? "") } as GraphQlVariables);
+    if ("unit" in c0) return wrap(`r: quality(id: $id) { d: changeDescription(newDescription: $u) }`, { id, u: String((c0 as { unit: { unit?: string | null } }).unit.unit ?? "") } as GraphQlVariables);
+    if ("definition" in c0)
+      return wrap(`r: quality(id: $id) { d: changeDescription(newDescription: $df) }`, { id, df: String((c0 as { definition: { definition?: string | null } }).definition.definition ?? "") } as GraphQlVariables);
+    if ("description" in c0)
+      return wrap(`r: quality(id: $id) { d: changeDescription(newDescription: $ds) }`, { id, ds: String((c0 as { description: { description?: string | null } }).description.description ?? "") } as GraphQlVariables);
+    return null;
+  }
+  if ("changeKitPortCommands" in cmd && cmd.changeKitPortCommands != null) {
+    const b = cmd.changeKitPortCommands;
+    const id = String(b.portId.id);
+    const c0 = b.commands[0];
+    if (!c0) return null;
+    if ("name" in c0) return wrap(`r: type(id: $tid) { port(id: $pid) { n: rename(newCode: $nm, newLabel: null) } } }`, { tid: id, pid: id, nm: String((c0 as { name: { name: string } }).name.name) } as GraphQlVariables);
+    return null;
+  }
+
+  return null;
+}
+
+// #endregion 🔖ScopedKitMutations
+
 // #region 🪢InternalReadBatch
 // Read command outputs are public {@link ReadDesignCommandOutput} / {@link ReadPieceCommandOutput} / {@link ReadTypeCommandOutput} above.
 // #endregion 🪢InternalReadBatch
@@ -1135,8 +1441,14 @@ function kitGraphqlData<TData>(response: KitGraphqlResponseEnvelope<TData>): TDa
   throw new Error("kitGraphql: no data in response");
 }
 
-/** @emoji 🧾 GraphQL selection on `wip { theKit(at: …) { … } }` (integrator SDL root `Query.wip`); materialized RS kit line. */
+/** @emoji 🧾 GraphQL selection on `wip { theKit { … } }` (`Graph.theKit`); falls back to `theKit(at: …)` for checkpoint/alternative read points. */
 function kitSessionWipStoreSelect(point: KitReadPoint, innerOnKitStore: string): { query: string; variables: GraphQlVariables } {
+  if (isTheKitReadPoint(point)) {
+    return {
+      query: `query KitSessionWipStore { wip { theKit { ${innerOnKitStore} } } }`,
+      variables: {},
+    };
+  }
   return {
     query: `query KitSessionWipStore($at: KitReadPointInput) { wip { theKit(at: $at) { ${innerOnKitStore} } } }`,
     variables: { at: kitReadPointToGqlVariables(point) },
@@ -1296,7 +1608,18 @@ function __normalizeTopLevelKitEventJson(raw: unknown): KitJsonTreeDto | null {
 }
 
 export function normalizeKitEventFromSubscription(raw: unknown): KitEvent | undefined {
-  const raw0 = __normalizeTopLevelKitEventJson(raw);
+  let routed = raw;
+  if (routed != null && typeof routed === "object" && !Array.isArray(routed)) {
+    const env = routed as JsonObject;
+    if (typeof env["kind"] === "string") {
+      const k = env["kind"] as string;
+      const pl = env["payload"];
+      if (k === "operationSucceeded" || k === "changed" || k === "kitMutation") {
+        routed = pl !== undefined ? pl : routed;
+      }
+    }
+  }
+  const raw0 = __normalizeTopLevelKitEventJson(routed);
   if (raw0 == null) return undefined;
   if (typeof raw0 === "string") return undefined;
   if (typeof raw0 !== "object" || Array.isArray(raw0)) return undefined;
@@ -1540,20 +1863,23 @@ async function __readSemioWasmBytesFromMonorepoCandidates(): Promise<Uint8Array 
   return undefined;
 }
 
-/** @emoji 🔗 Smoke query: `Query.wip` + `theKit` at GraphQL root (`semio/graphql/schema.graphql`); `session` requires `session(id:)`. */
+/** @emoji 🔗 Smoke query: `Query.wip` + `Graph.theKit` (`semio/graphql/target.schema.graphql`). */
 export const KIT_SESSION_QUERY_ENTRY = `query { wip { id theKit { id } } }` as const;
 
-/** @emoji 🔗 Root subscription aligned with `Subscription.operationSucceeded` (`semio/graphql/schema.graphql`). */
-export const KIT_EVENT_STREAM_SUBSCRIPTION = `subscription { operationSucceeded { __typename id } }` as const;
+/** @emoji 🔗 Multiplexed kit stream: `Subscription.event: Json!` (`semio/graphql/target.schema.graphql`). */
+export const KIT_EVENT_STREAM_SUBSCRIPTION = `subscription { event }` as const;
 
-/** @emoji 🔗 Correlates mutation `requestId` with {@link Subscription.commandSucceeded} (`Command.requestId`). */
-export const KIT_COMMAND_SUCCEEDED_SUBSCRIPTION = `subscription { commandSucceeded { requestId kind } }` as const;
+/** @emoji 🧾 Envelope kinds inside {@link KIT_EVENT_STREAM_SUBSCRIPTION} (Worker D contract). */
+export type KitEventEnvelope = Readonly<{ readonly kind: string; readonly payload?: unknown }>;
 
-/** @emoji 🚨 Failure-side subscription for request-id-correlated kit operations ({@link Subscription.operationFailed}). */
-export const KIT_OPERATION_FAILED_SUBSCRIPTION = `subscription { operationFailed { kind message requestId } }` as const;
+/** @emoji 🔗 @deprecated Prefer {@link KIT_EVENT_STREAM_SUBSCRIPTION}; correlator listens via `event` envelope. */
+export const KIT_COMMAND_SUCCEEDED_SUBSCRIPTION = KIT_EVENT_STREAM_SUBSCRIPTION;
+
+/** @emoji 🔗 @deprecated Prefer {@link KIT_EVENT_STREAM_SUBSCRIPTION}. */
+export const KIT_OPERATION_FAILED_SUBSCRIPTION = KIT_EVENT_STREAM_SUBSCRIPTION;
 
 /**
- * @emoji 🔗 Main-line full kit DTO via `wip.theKit.fullSnapshot` — aligns with `semio/graphql/schema.graphql`.
+ * @emoji 🔗 Main-line full kit DTO via `wip.theKit.fullSnapshot` (RS extension field until parity exports a target `Kit` read).
  */
 export const KIT_SCOPED_FULL_DTO_QUERY = `query { wip { theKit { fullSnapshot } } }` as const;
 
@@ -1776,12 +2102,21 @@ export class KitStore {
         try {
           const point = this.activeReadPoint;
           const extraDecl = spec.extraVariableDecl?.trim();
-          const varHeader = extraDecl ? (`$at: KitReadPointInput, ${extraDecl}` as const) : (`$at: KitReadPointInput` as const);
-          const query = `query SemioMatKit(${varHeader}) { wip { theKit(at: $at) { ${spec.innerOnKit} } } }`;
-          const variables: GraphQlVariables = {
-            at: kitReadPointToGqlVariables(point),
-            ...(spec.extraVariables ?? {}),
-          } as GraphQlVariables;
+          let query: string;
+          let variables: GraphQlVariables;
+          if (isTheKitReadPoint(point)) {
+            const varHeader = extraDecl ? (`${extraDecl}` as const) : "";
+            const headerPart = varHeader ? `(${varHeader})` : "";
+            query = `query SemioMatKit${headerPart} { wip { theKit { ${spec.innerOnKit} } } }`;
+            variables = { ...(spec.extraVariables ?? {}) } as GraphQlVariables;
+          } else {
+            const varHeader = extraDecl ? (`$at: KitReadPointInput, ${extraDecl}` as const) : (`$at: KitReadPointInput` as const);
+            query = `query SemioMatKit(${varHeader}) { wip { theKit(at: $at) { ${spec.innerOnKit} } } }`;
+            variables = {
+              at: kitReadPointToGqlVariables(point),
+              ...(spec.extraVariables ?? {}),
+            } as GraphQlVariables;
+          }
           const data = kitGraphqlData(await this.gqlRun({ query, variables })) as JsonValue;
           const frag = gqlDataSessionWipKitStore(data, point) ?? ({} as JsonObject);
           push(spec.parse(frag));
@@ -4505,6 +4840,139 @@ export function acquireSemioKitCommandFacade(client: KitStoreClient): SemioKitCo
 export function releaseSemioKitCommandFacade(client: KitStoreClient): void {
   facades.delete(client);
 }
+
+// #region 🔖CommandBuilder
+
+/** @emoji 🧭 Target-schema change identity (maps to the active kit-write anchor until rs exposes explicit Change ids on every path). */
+export type ChangeId = string;
+
+/** @emoji 🧭 Fluent `Mutation.session` navigator matching the target Command tree; bridges today's {@link KitStore} kit-write transaction anchors. */
+export class CommandBuilder {
+  constructor(private readonly client: KitStoreClient) {}
+
+  /** @emoji 🧭 Root `Mutation.session` scope. */
+  session(): SessionCommandNav {
+    return new SessionCommandNav(this.client);
+  }
+}
+
+/** @emoji 🧭 `SessionCommandInput` façade (subset wired to rs today). */
+export class SessionCommandNav {
+  constructor(private readonly client: KitStoreClient) {}
+
+  async start(): Promise<SetResult> {
+    void this.client;
+    return { ok: false, error: { kind: "NotSupported", message: "session.start is not wired in this bundle yet" } };
+  }
+
+  async end(): Promise<SetResult> {
+    void this.client;
+    return { ok: false, error: { kind: "NotSupported", message: "session.end is not wired in this bundle yet" } };
+  }
+
+  async login(username: string, passwordHash: string, hubUrl?: string): Promise<SetResult> {
+    void username;
+    void passwordHash;
+    void hubUrl;
+    return { ok: false, error: { kind: "NotSupported", message: "session.login is not wired in this bundle yet" } };
+  }
+
+  async logout(): Promise<SetResult> {
+    void this.client;
+    return { ok: false, error: { kind: "NotSupported", message: "session.logout is not wired in this bundle yet" } };
+  }
+
+  theKit(): VersionCommandNav {
+    return new VersionCommandNav(this.client);
+  }
+
+  alternative(id: string): AlternativeCommandNav {
+    return new AlternativeCommandNav(this.client, id);
+  }
+
+  async startAlternative(name?: string): Promise<SetResult> {
+    try {
+      const altId = await this.client.createAlternativeFromTip(name ?? "", null);
+      return { ok: true, requestId: altId };
+    } catch (e) {
+      return { ok: false, error: { kind: "Internal", message: String(e) } };
+    }
+  }
+}
+
+/** @emoji 🧭 `VersionCommandInput` façade (`Session.theKit` version lane). */
+export class VersionCommandNav {
+  constructor(private readonly client: KitStoreClient) {}
+
+  async startNewChange(): Promise<SetResult> {
+    const ks = kitStoreFromKitStoreClient(this.client);
+    if (!ks) return { ok: false, error: { kind: "NotSupported", message: "CommandBuilder requires WasmKitStoreClient / KitStore" } };
+    const opened = await ks.openKitWriteTransaction();
+    if (!opened.ok) return opened;
+    return { ok: true, requestId: opened.transactionId };
+  }
+
+  unsavedChange(changeId: ChangeId): UnsavedChangeCommandNav {
+    void changeId;
+    return new UnsavedChangeCommandNav(this.client);
+  }
+
+  async save(): Promise<SetResult> {
+    return this.client.finalizeKitWriteTransaction();
+  }
+
+  async createCheckpoint(_message: string): Promise<SetResult> {
+    void _message;
+    return { ok: false, error: { kind: "NotSupported", message: "createCheckpoint awaits target-schema Checkpoint wiring" } };
+  }
+}
+
+/** @emoji 🧭 `UnsavedChangeCommandInput` façade (nested kit ops land in Worker E). */
+export class UnsavedChangeCommandNav {
+  constructor(private readonly client: KitStoreClient) {}
+
+  kit(): KitOperationNav {
+    return new KitOperationNav(this.client);
+  }
+
+  async save(): Promise<SetResult> {
+    return this.client.finalizeKitWriteTransaction();
+  }
+}
+
+/** @emoji 🧭 `KitOperationInput` façade — delegates to existing {@link KitStoreClient} RPCs where they exist. */
+export class KitOperationNav {
+  constructor(private readonly client: KitStoreClient) {}
+
+  async rename(newName: string): Promise<SetResult> {
+    return this.client.renameKit.run({ scope: {} as Record<string, never>, input: { name: newName } });
+  }
+
+  async changeDescription(newDescription: string): Promise<SetResult> {
+    const cmds = buildSchemaEntityChangeCommands("Kit", String((await this.client.fetchFullKit()).id ?? ""), "description", newDescription, null);
+    return submitKitChangeCommands(this.client, cmds);
+  }
+}
+
+/** @emoji 🧭 `AlternativeCommandInput` façade. */
+export class AlternativeCommandNav {
+  constructor(
+    private readonly client: KitStoreClient,
+    private readonly alternativeId: string,
+  ) {}
+
+  async version(): Promise<SetResult> {
+    void this.alternativeId;
+    return { ok: false, error: { kind: "NotSupported", message: "alternative.version awaits rs wiring" } };
+  }
+
+  async integrateIntoTheKit(): Promise<SetResult> {
+    void this.alternativeId;
+    return { ok: false, error: { kind: "NotSupported", message: "integrateIntoTheKit awaits rs wiring" } };
+  }
+}
+
+// #endregion 🔖CommandBuilder
 
 // #endregion 📦WasmKitStoreClient
 

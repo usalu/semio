@@ -5702,7 +5702,7 @@ type ChangedDescription implements Operation {
 
 #endregion Operations
 
-#endregion Kits
+#endregion Kit
 
 #endregion Entities
 
@@ -5774,7 +5774,7 @@ type ChangeConnection implements EntityConnection {
   hash: String! # cached
 }
 
-#endregion Edits
+#endregion Changes
 
 #region Checkpoints
 
@@ -6138,12 +6138,13 @@ type Query {
 
 #region ScopedCommands
 
-# 🎬 Single initial for every kit-changing operation. Resolves into a chain of scope objects:
-#     `session → alternative(id) → transaction(id) → kit → …`. Leaf fields execute and return the
-#     resulting operation `ID!`; intermediate fields navigate one scope deeper.
+# 🎬 Kit-changing operations resolve through command scopes:
+#     `session → theKit | alternative(id) | startAlternative(name) | start | end | login | logout`,
+#     then `theKit → startNewChange | unsavedChange(id) | save | createCheckpoint`,
+#     then `unsavedChange(id) → kit → …`. Leaf fields return the resulting operation `ID!`.
 type Mutation {
   # Mutation
-  session: SessionScopedCommandInput!
+  session: SessionCommandInput!
 }
 
 type Subscription {

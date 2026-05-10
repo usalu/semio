@@ -203,6 +203,15 @@ pub mod geom {
         pub plane: Plane,
     }
 
+    /// @emoji 🌍 Wire `LocationInput` (lon/lat/alt) for [`entity::LocationNode`].
+    #[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize, InputObject)]
+    #[graphql(name = "LocationInput")]
+    pub struct LocationInput {
+        pub longitude: f64,
+        pub latitude: f64,
+        pub altitude: f64,
+    }
+
     //#region 📐 entity
     pub mod entity {
         //! 📐 `Arc` geometry nodes (target WeakEntity / Entity graph shapes); `#[Object]` impls live after [`crate::iface`].
@@ -365,6 +374,37 @@ pub mod geom {
             }
         }
 
+        /// @emoji 🌍 WeakEntity-style geographic location (lon/lat/alt).
+        pub struct LocationNode {
+            pub id: Id,
+            pub longitude: RwLock<f64>,
+            pub latitude: RwLock<f64>,
+            pub altitude: RwLock<f64>,
+        }
+
+        impl LocationNode {
+            pub fn from_value(loc: super::LocationInput) -> Arc<Self> {
+                let id = weak(
+                    "location",
+                    &[&format!("{:.9}", loc.longitude), &format!("{:.9}", loc.latitude), &format!("{:.9}", loc.altitude)],
+                );
+                Arc::new(Self {
+                    id,
+                    longitude: RwLock::new(loc.longitude),
+                    latitude: RwLock::new(loc.latitude),
+                    altitude: RwLock::new(loc.altitude),
+                })
+            }
+
+            /// @emoji 🪪 Merkle leaf over lon/lat/alt fields.
+            pub async fn compute_hash(&self) -> String {
+                let lo = *self.longitude.read().await;
+                let la = *self.latitude.read().await;
+                let al = *self.altitude.read().await;
+                merkle_node_str(&["semio:geom:Location", self.id.as_str(), &format!("{lo:.9}"), &format!("{la:.9}"), &format!("{al:.9}")], Vec::new())
+            }
+        }
+
         /// @emoji 🧭 Placeholder StrongEntity shell for `Place` (full meta wiring lands with meta lift).
         pub struct PlaceNode {
             pub id: Id,
@@ -420,6 +460,12 @@ pub mod geom {
             }
         }
 
+        impl Default for LocationNode {
+            fn default() -> Self {
+                Self { id: Id::default(), longitude: RwLock::new(0.0), latitude: RwLock::new(0.0), altitude: RwLock::new(0.0) }
+            }
+        }
+
         impl Default for PlaceNode {
             fn default() -> Self {
                 Self { id: Id::default(), label: RwLock::new(None) }
@@ -443,9 +489,10 @@ pub mod gql_relay {
 
     use crate::hash::merkle_collection;
     use crate::id::Id;
+    use crate::kit::design::connection::Side;
     use crate::kit::design::piece::Piece;
     use crate::kit::design::Design;
-    use crate::kit::r#type::Type;
+    use crate::kit::r#type::{Connector, Representation, Type};
     use crate::meta::{Author, Benchmark, Concept, File, Folder, Group, Layer, Prop, Quality, Stat, Tag};
     use crate::vcs::{Alternative, Checkpoint, Conflict};
 
@@ -539,6 +586,114 @@ pub mod gql_relay {
             }
             let hash = merkle_collection(child_hashes);
             let edges = rows.into_iter().enumerate().map(|(i, t)| TypeEdge { cursor: edge_cursor(i), node: t }).collect();
+            Self { edges, page_info: std::sync::Arc::new(PageInfo::default()), hash }
+        }
+    }
+
+    #[derive(Clone, SimpleObject)]
+    pub struct ConnectorEdge {
+        pub cursor: String,
+        pub node: Arc<Connector>,
+    }
+
+    #[derive(Clone, SimpleObject)]
+    pub struct ConnectorConnection {
+        pub edges: Vec<ConnectorEdge>,
+        #[graphql(name = "pageInfo")]
+        pub page_info: std::sync::Arc<PageInfo>,
+        pub hash: String,
+    }
+
+    impl ConnectorConnection {
+        pub async fn from_connectors(rows: Vec<Arc<Connector>>) -> Self {
+            let mut child_hashes = Vec::with_capacity(rows.len());
+            for c in &rows {
+                child_hashes.push(c.compute_hash().await);
+            }
+            let hash = merkle_collection(child_hashes);
+            let edges = rows.into_iter().enumerate().map(|(i, c)| ConnectorEdge { cursor: edge_cursor(i), node: c }).collect();
+            Self { edges, page_info: std::sync::Arc::new(PageInfo::default()), hash }
+        }
+    }
+
+    #[derive(Clone, SimpleObject)]
+    pub struct RepresentationEdge {
+        pub cursor: String,
+        pub node: Arc<Representation>,
+    }
+
+    #[derive(Clone, SimpleObject)]
+    pub struct RepresentationConnection {
+        pub edges: Vec<RepresentationEdge>,
+        #[graphql(name = "pageInfo")]
+        pub page_info: std::sync::Arc<PageInfo>,
+        pub hash: String,
+    }
+
+    impl RepresentationConnection {
+        pub async fn from_representations(rows: Vec<Arc<Representation>>) -> Self {
+            let mut child_hashes = Vec::with_capacity(rows.len());
+            for r in &rows {
+                child_hashes.push(r.compute_hash().await);
+            }
+            let hash = merkle_collection(child_hashes);
+            let edges = rows.into_iter().enumerate().map(|(i, r)| RepresentationEdge { cursor: edge_cursor(i), node: r }).collect();
+            Self { edges, page_info: std::sync::Arc::new(PageInfo::default()), hash }
+        }
+    }
+
+    #[derive(Clone, SimpleObject)]
+    pub struct SideEdge {
+        pub cursor: String,
+        pub node: Arc<Side>,
+    }
+
+    #[derive(Clone, SimpleObject)]
+    pub struct SideConnection {
+        pub edges: Vec<SideEdge>,
+        #[graphql(name = "pageInfo")]
+        pub page_info: std::sync::Arc<PageInfo>,
+        pub hash: String,
+    }
+
+    impl SideConnection {
+        pub async fn from_sides(rows: Vec<Arc<Side>>) -> Self {
+            let mut child_hashes = Vec::with_capacity(rows.len());
+            for s in &rows {
+                child_hashes.push(s.compute_hash().await);
+            }
+            let hash = merkle_collection(child_hashes);
+            let edges = rows.into_iter().enumerate().map(|(i, s)| SideEdge { cursor: edge_cursor(i), node: s }).collect();
+            Self { edges, page_info: std::sync::Arc::new(PageInfo::default()), hash }
+        }
+    }
+
+    #[derive(Clone, SimpleObject)]
+    pub struct BlueprintEdge {
+        pub cursor: String,
+        pub node: crate::kit::r#type::Blueprint,
+    }
+
+    #[derive(Clone, SimpleObject)]
+    pub struct BlueprintConnection {
+        pub edges: Vec<BlueprintEdge>,
+        #[graphql(name = "pageInfo")]
+        pub page_info: std::sync::Arc<PageInfo>,
+        pub hash: String,
+    }
+
+    impl BlueprintConnection {
+        pub async fn from_blueprints(rows: Vec<crate::kit::r#type::Blueprint>) -> Self {
+            let mut child_hashes = Vec::with_capacity(rows.len());
+            for b in &rows {
+                let h = match b {
+                    crate::kit::r#type::Blueprint::Type(t) => t.compute_hash().await,
+                    crate::kit::r#type::Blueprint::Design(d) => d.compute_hash().await,
+                };
+                child_hashes.push(h);
+            }
+            let hash = merkle_collection(child_hashes);
+            let edges = rows.into_iter().enumerate().map(|(i, node)| BlueprintEdge { cursor: edge_cursor(i), node }).collect();
             Self { edges, page_info: std::sync::Arc::new(PageInfo::default()), hash }
         }
     }
@@ -715,6 +870,8 @@ pub mod gql_relay {
     simple_conn_entity!(ConceptConnection, ConceptEdge, std::sync::Arc<Concept>);
     simple_conn_entity!(TagConnection, TagEdge, std::sync::Arc<Tag>);
     simple_conn_entity!(QualityConnection, QualityEdge, std::sync::Arc<Quality>);
+    simple_conn_entity!(PortConnection, PortEdge, std::sync::Arc<crate::kit::r#type::Port>);
+    simple_conn_entity!(PlaceConnection, PlaceEdge, std::sync::Arc<crate::geom::entity::PlaceNode>);
     simple_conn_sync!(BenchmarkConnection, BenchmarkEdge, Benchmark, |b: &Benchmark| b.compute_entity_hash());
     simple_conn_sync!(PropConnection, PropEdge, Prop, |p: &Prop| p.compute_entity_hash());
     simple_conn_sync!(AttributeConnection, AttributeEdge, crate::meta::Attribute, |a: &crate::meta::Attribute| a.compute_entity_hash());
@@ -746,23 +903,35 @@ pub mod gql_relay {
         ($($_base:ident),* $(,)?) => {};
     }
 
-    /// @emoji 🧷 Placeholder `Family` row until the kit family model is lifted into Arc entities.
+    /// @emoji 🧷 Kit [`Family`] SDL shell — Artifact [`name`]/[`description`]/[`icon`] are persisted kit fields.
     #[derive(Clone, Debug, Default, SimpleObject)]
     #[graphql(complex)]
     pub struct Family {
         pub id: Id,
+        pub name: String,
+        pub description: Option<String>,
+        pub icon: Option<String>,
     }
 
     impl Family {
         /// @emoji 🪪 Stable digest for relay [`FamilyConnection`] (matches GraphQL `Family.hash`).
         pub fn compute_entity_hash(&self) -> String {
-            crate::hash::merkle_node_str(&["semio:meta:Family", self.id.as_str()], Vec::new())
+            crate::hash::merkle_node_str(
+                &[
+                    "semio:meta:Family",
+                    self.id.as_str(),
+                    self.name.as_str(),
+                    self.description.as_deref().unwrap_or(""),
+                    self.icon.as_deref().unwrap_or(""),
+                ],
+                Vec::new(),
+            )
         }
     }
 
     #[async_graphql::ComplexObject]
     impl Family {
-        /// @emoji 🪪 Merkle leaf over the placeholder family row (id only until the family graph lands).
+        /// @emoji 🪪 Merkle leaf over the family row (Artifact data fields).
         pub async fn hash(&self) -> String {
             self.compute_entity_hash()
         }
@@ -880,61 +1049,6 @@ pub mod meta {
             return Err(crate::error::SemioError::invalid(format!("attribute id count mismatch: expected {}, got {}", attrs.len(), ids.len())));
         }
         Ok(attrs.into_iter().zip(ids.iter().cloned()).map(|(attr, id)| attr.into_attribute_with_id(id)).collect())
-    }
-
-    #[derive(Clone, Debug, Default, Serialize, Deserialize)]
-    pub struct Location {
-        pub id: Id,
-    }
-
-    /// 🏷️ Hand union for `Location.owner` (Place | Kit | Design).
-    #[derive(Clone, async_graphql::Union)]
-    pub enum LocationOwner {
-        Place(std::sync::Arc<crate::geom::entity::PlaceNode>),
-        Kit(std::sync::Arc<crate::kit::Kit>),
-        Design(std::sync::Arc<crate::kit::design::Design>),
-    }
-
-    #[Object(name = "Location")]
-    impl Location {
-        pub async fn id(&self) -> Id {
-            self.id.clone()
-        }
-        pub async fn hash(&self) -> String {
-            crate::hash::merkle_node_str(&["semio:meta:Location", self.id.as_str()], Vec::new())
-        }
-        pub async fn owner(&self) -> LocationOwner {
-            LocationOwner::Kit(std::sync::Arc::new(crate::kit::Kit::default()))
-        }
-        #[graphql(name = "placeOwner")]
-        pub async fn place_owner(&self) -> Option<std::sync::Arc<crate::geom::entity::PlaceNode>> {
-            None
-        }
-        #[graphql(name = "kitOwner")]
-        pub async fn kit_owner(&self) -> Option<std::sync::Arc<crate::kit::Kit>> {
-            None
-        }
-        #[graphql(name = "designOwner")]
-        pub async fn design_owner(&self) -> Option<std::sync::Arc<crate::kit::design::Design>> {
-            None
-        }
-        #[graphql(name = "ownerEntity")]
-        pub async fn owner_entity(&self) -> Option<std::sync::Arc<crate::iface::OwnerEntity>> {
-            None
-        }
-        #[graphql(name = "ownedEntities")]
-        pub async fn owned_entities(&self) -> Option<std::sync::Arc<crate::iface::OwnedEntityConnection>> {
-            Some(crate::iface::empty_owned_entity_connection())
-        }
-        pub async fn longitude(&self) -> f64 {
-            0.0
-        }
-        pub async fn latitude(&self) -> f64 {
-            0.0
-        }
-        pub async fn altitude(&self) -> f64 {
-            0.0
-        }
     }
 
     #[derive(Clone, Debug, Default, Serialize, Deserialize, SimpleObject)]
@@ -1426,6 +1540,8 @@ pub mod meta {
         pub id: Id,
         pub name: String,
         pub description: Option<String>,
+        /// @emoji 🏷️ Artifact `icon` on SDL `Layer`.
+        pub icon: String,
         pub color: Option<String>,
         pub order: Option<i32>,
         pub visible: Option<bool>,
@@ -1437,7 +1553,7 @@ pub mod meta {
             let vis = self.visible.map(|b| if b { "1" } else { "0" }).unwrap_or_default();
             let lck = self.locked.map(|b| if b { "1" } else { "0" }).unwrap_or_default();
             crate::hash::merkle_node_str(
-                &["semio:meta:Layer", self.id.as_str(), self.name.as_str(), self.description.as_deref().unwrap_or(""), self.color.as_deref().unwrap_or(""), &self.order.map(|o| o.to_string()).unwrap_or_default(), vis, lck],
+                &["semio:meta:Layer", self.id.as_str(), self.name.as_str(), self.description.as_deref().unwrap_or(""), self.icon.as_str(), self.color.as_deref().unwrap_or(""), &self.order.map(|o| o.to_string()).unwrap_or_default(), vis, lck],
                 Vec::new(),
             )
         }
@@ -1601,29 +1717,55 @@ pub mod kit {
         pub struct Connector {
             pub id: Id,
             pub owner_type: Weak<Type>,
+            /// @emoji 🏷️ SDL `Connector.name` (Artifact).
+            pub name: RwLock<String>,
             pub code: RwLock<String>,
-            pub description: RwLock<Option<String>>,
-            /// @emoji 🔗 Resolved port via `Weak` (no id scan in GraphQL resolvers).
-            pub port: RwLock<Weak<Port>>,
+            pub description: RwLock<String>,
+            /// @emoji 🏷️ SDL `Connector.icon` (Artifact).
+            pub icon: RwLock<String>,
+            /// @emoji 🔗 Resolved port pointer (`# data` on the wire).
+            pub port: RwLock<Option<Arc<Port>>>,
             pub qualities: RwLock<Vec<Arc<Quality>>>,
             pub attributes: RwLock<Vec<Attribute>>,
         }
 
         impl Default for Connector {
             fn default() -> Self {
-                Self { id: Id::default(), owner_type: Weak::new(), code: RwLock::new(String::new()), description: RwLock::new(None), port: RwLock::new(Weak::new()), qualities: RwLock::new(Vec::new()), attributes: RwLock::new(Vec::new()) }
+                Self {
+                    id: Id::default(),
+                    owner_type: Weak::new(),
+                    name: RwLock::new(String::new()),
+                    code: RwLock::new(String::new()),
+                    description: RwLock::new(String::new()),
+                    icon: RwLock::new(String::new()),
+                    port: RwLock::new(None),
+                    qualities: RwLock::new(Vec::new()),
+                    attributes: RwLock::new(Vec::new()),
+                }
             }
         }
 
         impl Connector {
             pub async fn new(owner_type: Weak<Type>, code: String) -> Arc<Self> {
-                Arc::new(Self { id: Id::new().await, owner_type, code: RwLock::new(code), description: RwLock::new(None), port: RwLock::new(Weak::new()), qualities: RwLock::new(Vec::new()), attributes: RwLock::new(Vec::new()) })
+                Arc::new(Self {
+                    id: Id::new().await,
+                    owner_type,
+                    name: RwLock::new(String::new()),
+                    code: RwLock::new(code),
+                    description: RwLock::new(String::new()),
+                    icon: RwLock::new(String::new()),
+                    port: RwLock::new(None),
+                    qualities: RwLock::new(Vec::new()),
+                    attributes: RwLock::new(Vec::new()),
+                })
             }
 
             pub async fn compute_hash(&self) -> String {
+                let name = self.name.read().await;
                 let code = self.code.read().await;
                 let desc = self.description.read().await;
-                h(&[self.id.as_str(), code.as_str(), desc.as_deref().unwrap_or("")])
+                let icon = self.icon.read().await;
+                h(&[self.id.as_str(), name.as_str(), code.as_str(), desc.as_str(), icon.as_str()])
             }
         }
 
@@ -1638,20 +1780,26 @@ pub mod kit {
             pub async fn owner(&self) -> Arc<Type> {
                 self.owner_type.upgrade().unwrap_or_default()
             }
+            pub async fn name(&self) -> String {
+                self.name.read().await.clone()
+            }
             pub async fn code(&self) -> String {
                 self.code.read().await.clone()
             }
-            pub async fn description(&self) -> Option<String> {
+            pub async fn description(&self) -> String {
                 self.description.read().await.clone()
             }
+            pub async fn icon(&self) -> String {
+                self.icon.read().await.clone()
+            }
             pub async fn port(&self) -> Option<Arc<Port>> {
-                self.port.read().await.upgrade()
+                self.port.read().await.clone()
             }
             pub async fn qualities(&self) -> crate::gql_relay::QualityConnection {
                 crate::gql_relay::QualityConnection::from_rows(self.qualities.read().await.clone()).await
             }
-            pub async fn attributes(&self) -> Vec<Attribute> {
-                self.attributes.read().await.clone()
+            pub async fn attributes(&self) -> crate::gql_relay::AttributeConnection {
+                crate::gql_relay::AttributeConnection::from_rows(self.attributes.read().await.clone())
             }
             #[graphql(name = "ownerEntity")]
             pub async fn owner_entity(&self) -> Option<std::sync::Arc<crate::iface::OwnerEntity>> {
@@ -1668,8 +1816,12 @@ pub mod kit {
         pub struct Representation {
             pub id: Id,
             pub owner_type: Weak<Type>,
+            /// @emoji 🏷️ SDL `Representation.name` (Artifact).
+            pub name: RwLock<String>,
             pub url: RwLock<String>,
-            pub description: RwLock<Option<String>>,
+            pub description: RwLock<String>,
+            /// @emoji 🏷️ SDL `Representation.icon` (Artifact).
+            pub icon: RwLock<String>,
             pub file: RwLock<Option<File>>,
             pub tags: RwLock<Vec<Arc<Tag>>>,
             pub qualities: RwLock<Vec<Arc<Quality>>>,
@@ -1681,8 +1833,10 @@ pub mod kit {
                 Self {
                     id: Id::default(),
                     owner_type: Weak::new(),
+                    name: RwLock::new(String::new()),
                     url: RwLock::new(String::new()),
-                    description: RwLock::new(None),
+                    description: RwLock::new(String::new()),
+                    icon: RwLock::new(String::new()),
                     file: RwLock::new(None),
                     tags: RwLock::new(Vec::new()),
                     qualities: RwLock::new(Vec::new()),
@@ -1693,13 +1847,26 @@ pub mod kit {
 
         impl Representation {
             pub async fn new(owner_type: Weak<Type>, url: String) -> Arc<Self> {
-                Arc::new(Self { id: Id::new().await, owner_type, url: RwLock::new(url), description: RwLock::new(None), file: RwLock::new(None), tags: RwLock::new(Vec::new()), qualities: RwLock::new(Vec::new()), attributes: RwLock::new(Vec::new()) })
+                Arc::new(Self {
+                    id: Id::new().await,
+                    owner_type,
+                    name: RwLock::new(String::new()),
+                    url: RwLock::new(url),
+                    description: RwLock::new(String::new()),
+                    icon: RwLock::new(String::new()),
+                    file: RwLock::new(None),
+                    tags: RwLock::new(Vec::new()),
+                    qualities: RwLock::new(Vec::new()),
+                    attributes: RwLock::new(Vec::new()),
+                })
             }
 
             pub async fn compute_hash(&self) -> String {
                 let url = self.url.read().await;
+                let name = self.name.read().await;
                 let desc = self.description.read().await;
-                h(&[self.id.as_str(), url.as_str(), desc.as_deref().unwrap_or("")])
+                let icon = self.icon.read().await;
+                h(&[self.id.as_str(), name.as_str(), url.as_str(), desc.as_str(), icon.as_str()])
             }
         }
 
@@ -1714,11 +1881,17 @@ pub mod kit {
             pub async fn owner(&self) -> Arc<Type> {
                 self.owner_type.upgrade().unwrap_or_default()
             }
+            pub async fn name(&self) -> String {
+                self.name.read().await.clone()
+            }
             pub async fn url(&self) -> String {
                 self.url.read().await.clone()
             }
-            pub async fn description(&self) -> Option<String> {
+            pub async fn description(&self) -> String {
                 self.description.read().await.clone()
+            }
+            pub async fn icon(&self) -> String {
+                self.icon.read().await.clone()
             }
             pub async fn file(&self) -> Option<File> {
                 self.file.read().await.clone()
@@ -1729,8 +1902,8 @@ pub mod kit {
             pub async fn qualities(&self) -> crate::gql_relay::QualityConnection {
                 crate::gql_relay::QualityConnection::from_rows(self.qualities.read().await.clone()).await
             }
-            pub async fn attributes(&self) -> Vec<Attribute> {
-                self.attributes.read().await.clone()
+            pub async fn attributes(&self) -> crate::gql_relay::AttributeConnection {
+                crate::gql_relay::AttributeConnection::from_rows(self.attributes.read().await.clone())
             }
             #[graphql(name = "ownerEntity")]
             pub async fn owner_entity(&self) -> Option<std::sync::Arc<crate::iface::OwnerEntity>> {
@@ -1812,7 +1985,10 @@ pub mod kit {
             pub async fn compute_hash(&self) -> String {
                 let name = self.name.read().await;
                 let desc = self.description.read().await;
-                h(&[self.id.as_str(), name.as_str(), desc.as_deref().unwrap_or("")])
+                let icon = self.icon.read().await;
+                let image = self.image.read().await;
+                let unit = self.unit.read().await;
+                h(&[self.id.as_str(), name.as_str(), desc.as_str(), icon.as_str(), image.as_str(), unit.as_str()])
             }
 
             /// 🧷 Rebuild weak maps from the live vecs (call before `connector` / `representation` field resolution).
@@ -1872,16 +2048,16 @@ pub mod kit {
             pub async fn name(&self) -> String {
                 self.name.read().await.clone()
             }
-            pub async fn description(&self) -> Option<String> {
+            pub async fn description(&self) -> String {
                 self.description.read().await.clone()
             }
-            pub async fn icon(&self) -> Option<String> {
+            pub async fn icon(&self) -> String {
                 self.icon.read().await.clone()
             }
-            pub async fn image(&self) -> Option<String> {
+            pub async fn image(&self) -> String {
                 self.image.read().await.clone()
             }
-            pub async fn unit(&self) -> Option<String> {
+            pub async fn unit(&self) -> String {
                 self.unit.read().await.clone()
             }
             pub async fn created(&self) -> Option<Timestamp> {
@@ -1890,15 +2066,15 @@ pub mod kit {
             pub async fn updated(&self) -> Option<Timestamp> {
                 self.updated.read().await.clone()
             }
-            pub async fn connectors(&self) -> Vec<Arc<Connector>> {
-                self.connectors.read().await.clone()
+            pub async fn connectors(&self) -> crate::gql_relay::ConnectorConnection {
+                crate::gql_relay::ConnectorConnection::from_connectors(self.connectors.read().await.clone()).await
             }
             pub async fn connector(&self, id: Id) -> Option<Arc<Connector>> {
                 self.refresh_connector_child_weak_maps().await;
                 self.connector_weak_by_id.read().await.get(&id).and_then(|w| w.upgrade())
             }
-            pub async fn representations(&self) -> Vec<Arc<Representation>> {
-                self.representations.read().await.clone()
+            pub async fn representations(&self) -> crate::gql_relay::RepresentationConnection {
+                crate::gql_relay::RepresentationConnection::from_representations(self.representations.read().await.clone()).await
             }
             pub async fn representation(&self, id: Id) -> Option<Arc<Representation>> {
                 self.refresh_connector_child_weak_maps().await;
@@ -1908,8 +2084,8 @@ pub mod kit {
             pub async fn best_representation(&self, tag_ids: Vec<Id>) -> Option<Arc<Representation>> {
                 self.best_representation_for_tags(&tag_ids).await
             }
-            pub async fn authors(&self) -> Vec<Author> {
-                self.authors.read().await.clone()
+            pub async fn authors(&self) -> crate::gql_relay::AuthorConnection {
+                crate::gql_relay::AuthorConnection::from_rows(self.authors.read().await.clone())
             }
             pub async fn concepts(&self) -> crate::gql_relay::ConceptConnection {
                 crate::gql_relay::ConceptConnection::from_rows(self.concepts.read().await.clone()).await
@@ -1920,14 +2096,14 @@ pub mod kit {
             pub async fn qualities(&self) -> crate::gql_relay::QualityConnection {
                 crate::gql_relay::QualityConnection::from_rows(self.qualities.read().await.clone()).await
             }
-            pub async fn props(&self) -> Vec<Prop> {
-                self.props.read().await.clone()
+            pub async fn props(&self) -> crate::gql_relay::PropConnection {
+                crate::gql_relay::PropConnection::from_rows(self.props.read().await.clone())
             }
-            pub async fn attributes(&self) -> Vec<Attribute> {
-                self.attributes.read().await.clone()
+            pub async fn attributes(&self) -> crate::gql_relay::AttributeConnection {
+                crate::gql_relay::AttributeConnection::from_rows(self.attributes.read().await.clone())
             }
-            pub async fn stats(&self) -> Vec<Stat> {
-                self.stats.read().await.clone()
+            pub async fn stats(&self) -> crate::gql_relay::StatConnection {
+                crate::gql_relay::StatConnection::from_rows(self.stats.read().await.clone())
             }
             #[graphql(name = "ownerEntity")]
             pub async fn owner_entity(&self) -> Option<std::sync::Arc<crate::iface::OwnerEntity>> {
@@ -2162,21 +2338,34 @@ pub mod kit {
             //#region ⛓️ side
             pub struct Side {
                 pub id: Id,
-                pub piece: RwLock<Weak<super::piece::Piece>>,
-                pub port: RwLock<Weak<super::super::r#type::Port>>,
-                pub design_piece: RwLock<Weak<super::piece::Piece>>,
-                pub connector: RwLock<Weak<super::super::r#type::Connector>>,
+                /// @emoji 🔗 Owning connection when sides are wired into a [`Connection`].
+                pub owner_connection: RwLock<Weak<Connection>>,
+                pub piece: RwLock<Arc<super::piece::Piece>>,
+                pub port: RwLock<Option<Arc<super::super::r#type::Port>>>,
+                pub design_piece: RwLock<Option<Arc<super::piece::Piece>>>,
+                pub connector: RwLock<Option<Arc<super::super::r#type::Connector>>>,
             }
 
             impl Default for Side {
                 fn default() -> Self {
-                    Self { id: Id::default(), piece: RwLock::new(Weak::new()), port: RwLock::new(Weak::new()), design_piece: RwLock::new(Weak::new()), connector: RwLock::new(Weak::new()) }
+                    Self {
+                        id: Id::default(),
+                        owner_connection: RwLock::new(Weak::new()),
+                        piece: RwLock::new(Arc::new(super::piece::Piece::default())),
+                        port: RwLock::new(None),
+                        design_piece: RwLock::new(None),
+                        connector: RwLock::new(None),
+                    }
                 }
             }
 
             impl Side {
-                pub async fn new(piece: Weak<super::piece::Piece>) -> Arc<Self> {
+                pub async fn new(piece: Arc<super::piece::Piece>) -> Arc<Self> {
                     Arc::new(Self { id: Id::new().await, piece: RwLock::new(piece), ..Default::default() })
+                }
+
+                pub async fn compute_hash(&self) -> String {
+                    h(&[self.id.as_str()])
                 }
             }
 
@@ -2193,14 +2382,14 @@ pub mod kit {
                     self.id.clone()
                 }
                 pub async fn hash(&self) -> String {
-                    h(&[self.id.as_str()])
+                    self.compute_hash().await
                 }
                 pub async fn owner(&self) -> SideOwner {
-                    SideOwner::Connection(Arc::new(Connection::default()))
+                    SideOwner::Connection(self.owner_connection.read().await.upgrade().unwrap_or_default())
                 }
                 #[graphql(name = "connectionOwner")]
                 pub async fn connection_owner(&self) -> Option<Arc<Connection>> {
-                    None
+                    self.owner_connection.read().await.upgrade()
                 }
                 #[graphql(name = "ownerEntity")]
                 pub async fn owner_entity(&self) -> Option<std::sync::Arc<crate::iface::OwnerEntity>> {
@@ -2211,17 +2400,17 @@ pub mod kit {
                     Some(crate::iface::empty_owned_entity_connection())
                 }
                 pub async fn piece(&self) -> Arc<super::piece::Piece> {
-                    self.piece.read().await.upgrade().unwrap_or_default()
+                    self.piece.read().await.clone()
                 }
                 pub async fn port(&self) -> Option<Arc<super::super::r#type::Port>> {
-                    self.port.read().await.upgrade()
+                    self.port.read().await.clone()
                 }
                 #[graphql(name = "designPiece")]
                 pub async fn design_piece(&self) -> Option<Arc<super::piece::Piece>> {
-                    self.design_piece.read().await.upgrade()
+                    self.design_piece.read().await.clone()
                 }
                 pub async fn connector(&self) -> Option<Arc<super::super::r#type::Connector>> {
-                    self.connector.read().await.upgrade()
+                    self.connector.read().await.clone()
                 }
             }
             //#endregion ⛓️ side
@@ -2230,6 +2419,10 @@ pub mod kit {
             pub struct Connection {
                 pub id: Id,
                 pub owner_design: Weak<super::Design>,
+                /// @emoji 🏷️ SDL Artifact `name` / `description` / `icon`.
+                pub name: RwLock<String>,
+                pub description: RwLock<String>,
+                pub icon: RwLock<String>,
                 pub connected: RwLock<Arc<Side>>,
                 pub connecting: RwLock<Arc<Side>>,
                 pub gap: RwLock<Option<f64>>,
@@ -2240,7 +2433,6 @@ pub mod kit {
                 pub tilt: RwLock<Option<f64>>,
                 pub u: RwLock<Option<f64>>,
                 pub v: RwLock<Option<f64>>,
-                pub description: RwLock<Option<String>>,
                 pub attributes: RwLock<Vec<Attribute>>,
             }
 
@@ -2249,6 +2441,9 @@ pub mod kit {
                     Self {
                         id: Id::default(),
                         owner_design: Weak::new(),
+                        name: RwLock::new(String::new()),
+                        description: RwLock::new(String::new()),
+                        icon: RwLock::new(String::new()),
                         connected: RwLock::new(Arc::new(Side::default())),
                         connecting: RwLock::new(Arc::new(Side::default())),
                         gap: RwLock::new(None),
@@ -2259,7 +2454,6 @@ pub mod kit {
                         tilt: RwLock::new(None),
                         u: RwLock::new(None),
                         v: RwLock::new(None),
-                        description: RwLock::new(None),
                         attributes: RwLock::new(Vec::new()),
                     }
                 }
@@ -2269,8 +2463,8 @@ pub mod kit {
                 pub async fn compute_hash(&self) -> String {
                     let connected = self.connected.read().await;
                     let connecting = self.connecting.read().await;
-                    let cp = connected.piece.read().await.upgrade().map(|p| p.id.0.clone()).unwrap_or_default();
-                    let np = connecting.piece.read().await.upgrade().map(|p| p.id.0.clone()).unwrap_or_default();
+                    let cp = connected.piece.read().await.id.0.clone();
+                    let np = connecting.piece.read().await.id.0.clone();
                     h(&[self.id.as_str(), cp.as_str(), np.as_str()])
                 }
             }
@@ -2285,6 +2479,15 @@ pub mod kit {
                 }
                 pub async fn owner(&self) -> Arc<super::Design> {
                     self.owner_design.upgrade().unwrap_or_default()
+                }
+                pub async fn name(&self) -> String {
+                    self.name.read().await.clone()
+                }
+                pub async fn description(&self) -> String {
+                    self.description.read().await.clone()
+                }
+                pub async fn icon(&self) -> String {
+                    self.icon.read().await.clone()
                 }
                 pub async fn connected(&self) -> Arc<Side> {
                     self.connected.read().await.clone()
@@ -2316,11 +2519,8 @@ pub mod kit {
                 pub async fn v(&self) -> Option<f64> {
                     *self.v.read().await
                 }
-                pub async fn description(&self) -> Option<String> {
-                    self.description.read().await.clone()
-                }
-                pub async fn attributes(&self) -> Vec<Attribute> {
-                    self.attributes.read().await.clone()
+                pub async fn attributes(&self) -> crate::gql_relay::AttributeConnection {
+                    crate::gql_relay::AttributeConnection::from_rows(self.attributes.read().await.clone())
                 }
                 #[graphql(name = "ownerEntity")]
                 pub async fn owner_entity(&self) -> Option<std::sync::Arc<crate::iface::OwnerEntity>> {
@@ -2344,7 +2544,8 @@ pub mod kit {
 
         use crate::hash::h;
         use crate::id::Id;
-        use crate::meta::{Attribute, Author, Group, Layer, Location, Prop, Quality, Stat};
+        use crate::geom::entity::LocationNode;
+        use crate::meta::{Attribute, Author, Group, Layer, Prop, Quality, Stat};
         use crate::timestamp::Timestamp;
 
         /// @emoji 🏠 SDL `union DesignOwner = Kit`.
@@ -2361,7 +2562,7 @@ pub mod kit {
             pub description: RwLock<Option<String>>,
             pub icon: RwLock<Option<String>>,
             pub image: RwLock<Option<String>>,
-            pub location: RwLock<Option<Location>>,
+            pub location: RwLock<Option<Arc<LocationNode>>>,
             pub unit: RwLock<Option<String>>,
             pub created: RwLock<Option<Timestamp>>,
             pub updated: RwLock<Option<Timestamp>>,
@@ -2498,7 +2699,7 @@ pub mod kit {
             pub async fn image(&self) -> Option<String> {
                 self.image.read().await.clone()
             }
-            pub async fn location(&self) -> Option<Location> {
+            pub async fn location(&self) -> Option<Arc<LocationNode>> {
                 self.location.read().await.clone()
             }
             pub async fn unit(&self) -> Option<String> {
@@ -2571,6 +2772,308 @@ pub mod kit {
         //#endregion 🏘 design
     }
     //#endregion 🏘 design
+
+    //#region 📚 kit_target_operations
+    /// 🧾 Arc-backed operation `*Input` shells for Quality / Tag / Concept / Port (`target.schema.graphql` nested `#region Operations`).
+    pub mod target_operations {
+        use std::sync::Arc;
+
+        use async_graphql::SimpleObject;
+
+        use crate::gql_relay::{AttributeConnection, ConceptConnection, PortConnection, QualityConnection, TagConnection};
+        use crate::kit::r#type::Port;
+        use crate::meta::{Attribute, Concept, Quality, Tag};
+
+        //#region 🔖 Quality inputs
+        #[derive(Clone, Debug, SimpleObject)]
+        #[graphql(name = "CreatedQualityInput")]
+        pub struct CreatedQualityInput {
+            pub quality: Arc<Quality>,
+        }
+
+        #[derive(Clone, Debug, SimpleObject)]
+        #[graphql(name = "CreatedQualitiesInput")]
+        pub struct CreatedQualitiesInput {
+            pub qualities: QualityConnection,
+        }
+
+        #[derive(Clone, Debug, SimpleObject)]
+        #[graphql(name = "RenamedQualityInput")]
+        pub struct RenamedQualityInput {
+            pub key: String,
+        }
+
+        #[derive(Clone, Debug, SimpleObject)]
+        #[graphql(name = "UpdatedQualityDescriptionInput")]
+        pub struct UpdatedQualityDescriptionInput {
+            pub description: String,
+        }
+
+        #[derive(Clone, Debug, SimpleObject)]
+        #[graphql(name = "UpdatedQualityIconInput")]
+        pub struct UpdatedQualityIconInput {
+            pub icon: String,
+        }
+
+        #[derive(Clone, Debug, SimpleObject)]
+        #[graphql(name = "AddedAttributeToQualityInput")]
+        pub struct AddedAttributeToQualityInput {
+            pub attribute: Attribute,
+        }
+
+        #[derive(Clone, Debug, SimpleObject)]
+        #[graphql(name = "AddedAttributesToQualityInput")]
+        pub struct AddedAttributesToQualityInput {
+            pub attributes: AttributeConnection,
+        }
+
+        #[derive(Clone, Debug, SimpleObject)]
+        #[graphql(name = "RemovedAttributeFromQualityInput")]
+        pub struct RemovedAttributeFromQualityInput {
+            #[graphql(name = "hasInput")]
+            pub has_input: bool,
+        }
+
+        #[derive(Clone, Debug, SimpleObject)]
+        #[graphql(name = "RemovedAttributesFromQualityInput")]
+        pub struct RemovedAttributesFromQualityInput {
+            #[graphql(name = "hasInput")]
+            pub has_input: bool,
+        }
+
+        #[derive(Clone, Debug, SimpleObject)]
+        #[graphql(name = "DeletedQualityInput")]
+        pub struct DeletedQualityInput {
+            #[graphql(name = "hasInput")]
+            pub has_input: bool,
+        }
+
+        #[derive(Clone, Debug, SimpleObject)]
+        #[graphql(name = "DeletedQualitiesInput")]
+        pub struct DeletedQualitiesInput {
+            #[graphql(name = "hasInput")]
+            pub has_input: bool,
+        }
+        //#endregion 🔖 Quality inputs
+
+        //#region 🏷️ Tag inputs
+        #[derive(Clone, Debug, SimpleObject)]
+        #[graphql(name = "CreatedTagInput")]
+        pub struct CreatedTagInput {
+            pub tag: Arc<Tag>,
+        }
+
+        #[derive(Clone, Debug, SimpleObject)]
+        #[graphql(name = "CreatedTagsInput")]
+        pub struct CreatedTagsInput {
+            pub tags: TagConnection,
+        }
+
+        #[derive(Clone, Debug, SimpleObject)]
+        #[graphql(name = "RenamedTagInput")]
+        pub struct RenamedTagInput {
+            pub name: String,
+        }
+
+        #[derive(Clone, Debug, SimpleObject)]
+        #[graphql(name = "UpdatedTagDescriptionInput")]
+        pub struct UpdatedTagDescriptionInput {
+            pub description: String,
+        }
+
+        #[derive(Clone, Debug, SimpleObject)]
+        #[graphql(name = "UpdatedTagIconInput")]
+        pub struct UpdatedTagIconInput {
+            pub icon: String,
+        }
+
+        #[derive(Clone, Debug, SimpleObject)]
+        #[graphql(name = "AddedAttributeToTagInput")]
+        pub struct AddedAttributeToTagInput {
+            pub attribute: Attribute,
+        }
+
+        #[derive(Clone, Debug, SimpleObject)]
+        #[graphql(name = "AddedAttributesToTagInput")]
+        pub struct AddedAttributesToTagInput {
+            pub attributes: AttributeConnection,
+        }
+
+        #[derive(Clone, Debug, SimpleObject)]
+        #[graphql(name = "RemovedAttributeFromTagInput")]
+        pub struct RemovedAttributeFromTagInput {
+            #[graphql(name = "hasInput")]
+            pub has_input: bool,
+        }
+
+        #[derive(Clone, Debug, SimpleObject)]
+        #[graphql(name = "RemovedAttributesFromTagInput")]
+        pub struct RemovedAttributesFromTagInput {
+            #[graphql(name = "hasInput")]
+            pub has_input: bool,
+        }
+
+        #[derive(Clone, Debug, SimpleObject)]
+        #[graphql(name = "DeletedTagInput")]
+        pub struct DeletedTagInput {
+            #[graphql(name = "hasInput")]
+            pub has_input: bool,
+        }
+
+        #[derive(Clone, Debug, SimpleObject)]
+        #[graphql(name = "DeletedTagsInput")]
+        pub struct DeletedTagsInput {
+            #[graphql(name = "hasInput")]
+            pub has_input: bool,
+        }
+        //#endregion 🏷️ Tag inputs
+
+        //#region 💡 Concept inputs
+        #[derive(Clone, Debug, SimpleObject)]
+        #[graphql(name = "CreatedConceptInput")]
+        pub struct CreatedConceptInput {
+            pub concept: Arc<Concept>,
+        }
+
+        #[derive(Clone, Debug, SimpleObject)]
+        #[graphql(name = "CreatedConceptsInput")]
+        pub struct CreatedConceptsInput {
+            pub concepts: ConceptConnection,
+        }
+
+        #[derive(Clone, Debug, SimpleObject)]
+        #[graphql(name = "RenamedConceptInput")]
+        pub struct RenamedConceptInput {
+            pub name: String,
+        }
+
+        #[derive(Clone, Debug, SimpleObject)]
+        #[graphql(name = "UpdatedConceptDescriptionInput")]
+        pub struct UpdatedConceptDescriptionInput {
+            pub description: String,
+        }
+
+        #[derive(Clone, Debug, SimpleObject)]
+        #[graphql(name = "UpdatedConceptIconInput")]
+        pub struct UpdatedConceptIconInput {
+            pub icon: String,
+        }
+
+        #[derive(Clone, Debug, SimpleObject)]
+        #[graphql(name = "AddedAttributeToConceptInput")]
+        pub struct AddedAttributeToConceptInput {
+            pub attribute: Attribute,
+        }
+
+        #[derive(Clone, Debug, SimpleObject)]
+        #[graphql(name = "AddedAttributesToConceptInput")]
+        pub struct AddedAttributesToConceptInput {
+            pub attributes: AttributeConnection,
+        }
+
+        #[derive(Clone, Debug, SimpleObject)]
+        #[graphql(name = "RemovedAttributeFromConceptInput")]
+        pub struct RemovedAttributeFromConceptInput {
+            #[graphql(name = "hasInput")]
+            pub has_input: bool,
+        }
+
+        #[derive(Clone, Debug, SimpleObject)]
+        #[graphql(name = "RemovedAttributesFromConceptInput")]
+        pub struct RemovedAttributesFromConceptInput {
+            #[graphql(name = "hasInput")]
+            pub has_input: bool,
+        }
+
+        #[derive(Clone, Debug, SimpleObject)]
+        #[graphql(name = "DeletedConceptInput")]
+        pub struct DeletedConceptInput {
+            #[graphql(name = "hasInput")]
+            pub has_input: bool,
+        }
+
+        #[derive(Clone, Debug, SimpleObject)]
+        #[graphql(name = "DeletedConceptsInput")]
+        pub struct DeletedConceptsInput {
+            #[graphql(name = "hasInput")]
+            pub has_input: bool,
+        }
+        //#endregion 💡 Concept inputs
+
+        //#region 🔌 Port inputs
+        #[derive(Clone, Debug, SimpleObject)]
+        #[graphql(name = "CreatedPortInput")]
+        pub struct CreatedPortInput {
+            pub port: Arc<Port>,
+        }
+
+        #[derive(Clone, Debug, SimpleObject)]
+        #[graphql(name = "CreatedPortsInput")]
+        pub struct CreatedPortsInput {
+            pub ports: PortConnection,
+        }
+
+        #[derive(Clone, Debug, SimpleObject)]
+        #[graphql(name = "RenamedPortInput")]
+        pub struct RenamedPortInput {
+            pub code: String,
+            pub label: String,
+        }
+
+        #[derive(Clone, Debug, SimpleObject)]
+        #[graphql(name = "UpdatedPortDescriptionInput")]
+        pub struct UpdatedPortDescriptionInput {
+            pub description: String,
+        }
+
+        #[derive(Clone, Debug, SimpleObject)]
+        #[graphql(name = "UpdatedPortIconInput")]
+        pub struct UpdatedPortIconInput {
+            pub icon: String,
+        }
+
+        #[derive(Clone, Debug, SimpleObject)]
+        #[graphql(name = "AddedAttributeToPortInput")]
+        pub struct AddedAttributeToPortInput {
+            pub attribute: Attribute,
+        }
+
+        #[derive(Clone, Debug, SimpleObject)]
+        #[graphql(name = "AddedAttributesToPortInput")]
+        pub struct AddedAttributesToPortInput {
+            pub attributes: AttributeConnection,
+        }
+
+        #[derive(Clone, Debug, SimpleObject)]
+        #[graphql(name = "RemovedAttributeFromPortInput")]
+        pub struct RemovedAttributeFromPortInput {
+            #[graphql(name = "hasInput")]
+            pub has_input: bool,
+        }
+
+        #[derive(Clone, Debug, SimpleObject)]
+        #[graphql(name = "RemovedAttributesFromPortInput")]
+        pub struct RemovedAttributesFromPortInput {
+            #[graphql(name = "hasInput")]
+            pub has_input: bool,
+        }
+
+        #[derive(Clone, Debug, SimpleObject)]
+        #[graphql(name = "DeletedPortInput")]
+        pub struct DeletedPortInput {
+            #[graphql(name = "hasInput")]
+            pub has_input: bool,
+        }
+
+        #[derive(Clone, Debug, SimpleObject)]
+        #[graphql(name = "DeletedPortsInput")]
+        pub struct DeletedPortsInput {
+            #[graphql(name = "hasInput")]
+            pub has_input: bool,
+        }
+        //#endregion 🔌 Port inputs
+    }
+    //#endregion 📚 kit_target_operations
 
     //#region 📦 kit
     use std::collections::HashMap;
@@ -2803,13 +3306,16 @@ pub mod kit {
                         *ty.name.write().await = s.to_string();
                     }
                     if diff.get("description").is_some() {
-                        *ty.description.write().await = diff.get("description").and_then(|x| x.as_str()).map(|s| s.to_string());
+                        *ty.description.write().await = diff.get("description").and_then(|x| x.as_str()).unwrap_or("").to_string();
                     }
                     if diff.get("icon").is_some() {
-                        *ty.icon.write().await = diff.get("icon").and_then(|x| x.as_str()).map(|s| s.to_string());
+                        *ty.icon.write().await = diff.get("icon").and_then(|x| x.as_str()).unwrap_or("").to_string();
                     }
                     if diff.get("image").is_some() {
-                        *ty.image.write().await = diff.get("image").and_then(|x| x.as_str()).map(|s| s.to_string());
+                        *ty.image.write().await = diff.get("image").and_then(|x| x.as_str()).unwrap_or("").to_string();
+                    }
+                    if diff.get("unit").is_some() {
+                        *ty.unit.write().await = diff.get("unit").and_then(|x| x.as_str()).unwrap_or("").to_string();
                     }
                 }
             }
@@ -5232,7 +5738,7 @@ pub mod iface {
 
     use async_graphql::{Object, SimpleObject, Union};
 
-    use crate::geom::entity::{CoordinateNode, OffsetNode, PlaceNode, PlaneNode, PointNode, PositionNode, VectorNode};
+    use crate::geom::entity::{CoordinateNode, LocationNode, OffsetNode, PlaceNode, PlaneNode, PointNode, PositionNode, VectorNode};
     use crate::hash::merkle_collection;
     use crate::id::Id;
     use crate::kit::design::piece::Piece;
@@ -5263,6 +5769,7 @@ pub mod iface {
         Vector(Arc<VectorNode>),
         Place(Arc<PlaceNode>),
         Offset(Arc<OffsetNode>),
+        Location(Arc<LocationNode>),
     }
 
     /// @emoji 🔗 SDL `OwnedEntity` subset for non-empty `ownedEntities` edges.
@@ -5525,6 +6032,32 @@ pub mod iface {
         }
         pub async fn v(&self) -> f64 {
             *self.v.read().await
+        }
+    }
+
+    /// @emoji 🌍 WeakEntity shell for [`LocationNode`] (SDL `Location`).
+    #[Object(name = "Location")]
+    impl LocationNode {
+        pub async fn id(&self) -> Id {
+            self.id.clone()
+        }
+        pub async fn hash(&self) -> String {
+            self.compute_hash().await
+        }
+        pub async fn owner_entity(&self) -> Option<std::sync::Arc<crate::iface::OwnerEntity>> {
+            None
+        }
+        pub async fn owned_entities(&self) -> Option<std::sync::Arc<crate::iface::OwnedEntityConnection>> {
+            Some(crate::iface::empty_owned_entity_connection())
+        }
+        pub async fn longitude(&self) -> f64 {
+            *self.longitude.read().await
+        }
+        pub async fn latitude(&self) -> f64 {
+            *self.latitude.read().await
+        }
+        pub async fn altitude(&self) -> f64 {
+            *self.altitude.read().await
         }
     }
 
@@ -8348,7 +8881,19 @@ pub mod worker {
             spawn_child("wip", wip_graph.clone(), bus.clone(), wip_rx);
             spawn_child("auth", auth_graph.clone(), bus.clone(), auth_rx);
 
-            Arc::new(Self { bus, wip: ChildPort { inbound: wip_tx }, auth: ChildPort { inbound: auth_tx }, wip_graph, auth_graph, sessions: RwLock::new(Vec::new()), conflicts: RwLock::new(Vec::new()) })
+            let sess = crate::vcs::Session::new().await;
+            let sessions = RwLock::new(vec![sess]);
+
+            Arc::new(Self {
+                bus,
+                wip: ChildPort { inbound: wip_tx },
+                auth: ChildPort { inbound: auth_tx },
+                wip_graph,
+                auth_graph,
+                sessions,
+                conflicts: RwLock::new(Vec::new()),
+                wip_kit_scope: RwLock::new(None),
+            })
         }
 
         /// 🛰️ WASM/host bootstrap: hydrate WIP [`Graph`] from `@semio/js` kit JSON snapshot; authoritative line stays mint-empty.
@@ -8364,7 +8909,19 @@ pub mod worker {
             spawn_child("wip", wip_graph.clone(), bus.clone(), wip_rx);
             spawn_child("auth", auth_graph.clone(), bus.clone(), auth_rx);
 
-            Ok(Arc::new(Self { bus, wip: ChildPort { inbound: wip_tx }, auth: ChildPort { inbound: auth_tx }, wip_graph, auth_graph, sessions: RwLock::new(Vec::new()), conflicts: RwLock::new(Vec::new()) }))
+            let sess = crate::vcs::Session::new().await;
+            let sessions = RwLock::new(vec![sess]);
+
+            Ok(Arc::new(Self {
+                bus,
+                wip: ChildPort { inbound: wip_tx },
+                auth: ChildPort { inbound: auth_tx },
+                wip_graph,
+                auth_graph,
+                sessions,
+                conflicts: RwLock::new(Vec::new()),
+                wip_kit_scope: RwLock::new(None),
+            }))
         }
 
         pub async fn dispatch_wip(&self, cmd: Command) -> Id {
@@ -8504,6 +9061,12 @@ pub mod gql {
 
     #[Object]
     impl Query {
+        /// @emoji 🧭 Canonical entry: first active [`crate::vcs::Session`] on this runtime.
+        pub async fn session(&self, ctx: &Context<'_>) -> async_graphql::Result<Arc<crate::vcs::Session>> {
+            let rt = ctx.data::<Arc<ParentRuntime>>()?;
+            rt.sessions.read().await.first().cloned().ok_or_else(|| async_graphql::Error::new("no session"))
+        }
+
         pub async fn wip(&self, ctx: &Context<'_>) -> async_graphql::Result<Arc<Graph>> {
             Ok(ctx.data::<Arc<ParentRuntime>>()?.wip_graph.clone())
         }
@@ -8511,12 +9074,6 @@ pub mod gql {
         #[graphql(name = "authoritative")]
         pub async fn authoritative(&self, ctx: &Context<'_>) -> async_graphql::Result<Arc<Graph>> {
             Ok(ctx.data::<Arc<ParentRuntime>>()?.auth_graph.clone())
-        }
-
-        pub async fn session(&self, ctx: &Context<'_>, id: Id) -> async_graphql::Result<Option<Arc<crate::vcs::Session>>> {
-            let rt = ctx.data::<Arc<ParentRuntime>>()?;
-            let sessions = rt.sessions.read().await;
-            Ok(sessions.iter().find(|s| s.id == id).cloned())
         }
 
         pub async fn conflicts(&self, ctx: &Context<'_>) -> async_graphql::Result<crate::gql_relay::ConflictConnection> {
@@ -8531,589 +9088,859 @@ pub mod gql {
             Ok(crate::iface::resolve_node(rt.as_ref(), &id).await)
         }
 
-        /// @emoji 🔎 Alias of [`Query::node`] for SDL `entity` entry point.
-        pub async fn entity(&self, ctx: &Context<'_>, id: Id) -> async_graphql::Result<Option<crate::iface::GqlNode>> {
-            self.node(ctx, id).await
+        /// @emoji 🔎 Alias of [`Query::node`] for SDL `entity` entry point (`hash` merkle id).
+        pub async fn entity(&self, ctx: &Context<'_>, hash: Id) -> async_graphql::Result<Option<crate::iface::GqlNode>> {
+            self.node(ctx, hash).await
         }
+    }
 
-        /// @emoji 🧩 Resolve a piece within a design on the WIP graph line.
-        #[graphql(name = "pieceInDesign")]
-        pub async fn piece_in_design(&self, ctx: &Context<'_>, #[graphql(name = "designId")] design_id: Id, #[graphql(name = "pieceId")] piece_id: Id) -> async_graphql::Result<Option<Arc<crate::kit::design::piece::Piece>>> {
+    //#region 🎛️commands
+    /// @emoji 🎛️ `Mutation.session` scope — holds kit command context on [`ParentRuntime`].
+    pub struct SessionCommandNav;
+
+    #[Object(name = "SessionCommandInput")]
+    impl SessionCommandNav {
+        async fn start(&self, ctx: &Context<'_>) -> async_graphql::Result<Id> {
             let rt = ctx.data::<Arc<ParentRuntime>>()?;
-            Ok(crate::iface::piece_in_design_on_wip(rt.as_ref(), &design_id, &piece_id).await)
+            let _ = rt.wip_graph.ensure_default_seed_state().await;
+            Ok(rt.sessions.read().await.first().map(|s| s.id.clone()).ok_or_else(|| async_graphql::Error::new("no session"))?)
         }
 
-        /// @emoji 🧩 Alternative-line piece kind (stub until alternatives are modeled in Rust).
-        #[graphql(name = "alternativePieceKind")]
-        pub async fn alternative_piece_kind(&self, ctx: &Context<'_>, #[graphql(name = "pieceId")] piece_id: Id) -> async_graphql::Result<Option<String>> {
+        async fn end(&self, ctx: &Context<'_>) -> async_graphql::Result<Id> {
+            let _ = ctx;
+            Ok(Id::new().await)
+        }
+
+        async fn login(&self, ctx: &Context<'_>, username: String, password_hash: String, hub_url: Option<String>) -> async_graphql::Result<Id> {
+            let _ = (ctx, username, password_hash, hub_url);
+            Ok(Id::new().await)
+        }
+
+        async fn logout(&self, ctx: &Context<'_>) -> async_graphql::Result<Id> {
+            let _ = ctx;
+            Ok(Id::new().await)
+        }
+
+        #[graphql(name = "theKit")]
+        async fn the_kit(&self) -> VersionCommandNav {
+            VersionCommandNav
+        }
+
+        async fn alternative(&self, #[graphql(name = "id")] id: Id) -> AlternativeCommandNav {
+            AlternativeCommandNav { alternative_id: id }
+        }
+
+        #[graphql(name = "startAlternative")]
+        async fn start_alternative(&self, ctx: &Context<'_>, name: Option<String>) -> async_graphql::Result<Id> {
             let rt = ctx.data::<Arc<ParentRuntime>>()?;
-            Ok(crate::iface::alternative_piece_kind(rt.as_ref(), &piece_id).await)
+            let n = name.unwrap_or_default();
+            rt.wip_graph.create_alternative_from_tip(n, None).await.map_err(|e| async_graphql::Error::new(e.to_string()))
         }
+    }
 
-        /// @emoji 📸 Serialize the live `wip` graph as a metabolism-shaped bundle JSON (matches `semio/assets/semio/metabolism.new.kit.semio.json`).
-        /// Sketchpad calls this after every change and atomically writes the bytes to the dev-kit JSON file via the host adapter.
-        #[graphql(name = "kitStoreBundleJson")]
-        pub async fn kit_store_bundle_json(&self, ctx: &Context<'_>) -> async_graphql::Result<String> {
+    pub struct VersionCommandNav;
+
+    #[Object(name = "VersionCommandInput")]
+    impl VersionCommandNav {
+        #[graphql(name = "startNewChange")]
+        async fn start_new_change(&self, ctx: &Context<'_>) -> async_graphql::Result<Id> {
             let rt = ctx.data::<Arc<ParentRuntime>>()?;
-            let bundle = crate::kit_backbone::KitStoreBundleFile::from_graph(rt.wip_graph.as_ref()).await;
-            serde_json::to_string_pretty(&bundle).map_err(|e| async_graphql::Error::new(e.to_string()))
+            let draft = rt.wip_graph.ensure_default_seed_state().await;
+            let tx = rt.wip_graph.open_transaction(&draft.id).await;
+            *rt.wip_kit_scope.write().await = Some((draft.id.clone(), tx.id.clone()));
+            Ok(tx.id.clone())
+        }
+
+        #[graphql(name = "unsavedChange")]
+        async fn unsaved_change(&self, ctx: &Context<'_>, id: Id) -> async_graphql::Result<UnsavedChangeNav> {
+            let rt = ctx.data::<Arc<ParentRuntime>>()?;
+            if let Some((_, tx)) = rt.wip_kit_scope.read().await.as_ref() {
+                if tx != &id {
+                    return Err(async_graphql::Error::new("unsavedChange id does not match active change"));
+                }
+            }
+            Ok(UnsavedChangeNav { change_id: id })
+        }
+
+        async fn save(&self, ctx: &Context<'_>) -> async_graphql::Result<Id> {
+            let rt = ctx.data::<Arc<ParentRuntime>>()?;
+            let scope = rt.wip_kit_scope.read().await.clone();
+            let Some((draft_id, tx_id)) = scope else {
+                return Err(async_graphql::Error::new("no active unsaved change"));
+            };
+            rt.wip_graph.commit_transaction(&draft_id, &tx_id).await.map_err(|e| async_graphql::Error::new(e.to_string()))?;
+            *rt.wip_kit_scope.write().await = None;
+            Ok(Id::new().await)
+        }
+
+        #[graphql(name = "createCheckpoint")]
+        async fn create_checkpoint(&self, ctx: &Context<'_>, message: String) -> async_graphql::Result<Id> {
+            let _ = (ctx, message);
+            Ok(Id::new().await)
         }
     }
 
-    //#region 🪪KitMutationScopeInputs
-    #[derive(InputObject)]
-    pub struct RenameKitScopeInput {
-        #[graphql(name = "draftId")]
-        pub draft_id: Id,
-        #[graphql(name = "transactionId")]
-        pub transaction_id: Id,
-    }
-    #[derive(InputObject)]
-    #[graphql(name = "RenameKitInput")]
-    pub struct RenameKitGqlInput {
-        pub name: String,
+    pub struct UnsavedChangeNav {
+        pub change_id: Id,
     }
 
-    #[derive(InputObject)]
-    pub struct ChangeDescriptionScopeInput {
-        #[graphql(name = "draftId")]
-        pub draft_id: Id,
-        #[graphql(name = "transactionId")]
-        pub transaction_id: Id,
-        #[graphql(name = "entityId")]
-        pub entity_id: Id,
-    }
-    #[derive(InputObject)]
-    #[graphql(name = "ChangeDescriptionInput")]
-    pub struct ChangeDescriptionGqlInput {
-        pub description: String,
+    #[Object(name = "UnsavedChangeCommandInput")]
+    impl UnsavedChangeNav {
+        async fn kit(&self) -> KitOperationNav {
+            KitOperationNav { change_id: self.change_id.clone() }
+        }
+
+        async fn save(&self, ctx: &Context<'_>) -> async_graphql::Result<Id> {
+            let rt = ctx.data::<Arc<ParentRuntime>>()?;
+            let scope = rt.wip_kit_scope.read().await.clone();
+            let Some((draft_id, tx_id)) = scope else {
+                return Err(async_graphql::Error::new("no active unsaved change"));
+            };
+            if tx_id != self.change_id {
+                return Err(async_graphql::Error::new("change id mismatch"));
+            }
+            rt.wip_graph.commit_transaction(&draft_id, &tx_id).await.map_err(|e| async_graphql::Error::new(e.to_string()))?;
+            *rt.wip_kit_scope.write().await = None;
+            Ok(Id::new().await)
+        }
     }
 
-    #[derive(InputObject)]
-    pub struct CreateTagScopeInput {
-        #[graphql(name = "draftId")]
-        pub draft_id: Id,
-        #[graphql(name = "transactionId")]
-        pub transaction_id: Id,
-        #[graphql(name = "ownerId")]
-        pub owner_id: Id,
-    }
-    #[derive(InputObject)]
-    #[graphql(name = "CreateTagInput")]
-    pub struct CreateTagGqlInput {
-        pub tag: TagInput,
+    pub struct AlternativeCommandNav {
+        pub alternative_id: Id,
     }
 
-    #[derive(InputObject)]
-    pub struct CreateTagsScopeInput {
-        #[graphql(name = "draftId")]
-        pub draft_id: Id,
-        #[graphql(name = "transactionId")]
-        pub transaction_id: Id,
-        #[graphql(name = "ownerId")]
-        pub owner_id: Id,
-    }
-    #[derive(InputObject)]
-    #[graphql(name = "CreateTagsInput")]
-    pub struct CreateTagsGqlInput {
-        pub tags: Vec<TagInput>,
+    #[Object(name = "AlternativeCommandInput")]
+    impl AlternativeCommandNav {
+        async fn version(&self, ctx: &Context<'_>) -> async_graphql::Result<Id> {
+            let _ = (ctx, &self.alternative_id);
+            Ok(Id::new().await)
+        }
+
+        #[graphql(name = "integrateIntoTheKit")]
+        async fn integrate_into_the_kit(&self, ctx: &Context<'_>) -> async_graphql::Result<Id> {
+            let _ = (ctx, &self.alternative_id);
+            Ok(Id::new().await)
+        }
     }
 
-    #[derive(InputObject)]
-    pub struct RenameTagScopeInput {
-        #[graphql(name = "draftId")]
-        pub draft_id: Id,
-        #[graphql(name = "transactionId")]
-        pub transaction_id: Id,
-        #[graphql(name = "tagId")]
+    pub struct KitOperationNav {
+        pub change_id: Id,
+    }
+
+    #[Object(name = "KitOperationInput")]
+    impl KitOperationNav {
+        #[graphql(name = "rename")]
+        async fn rename(&self, ctx: &Context<'_>, #[graphql(name = "newName")] new_name: String) -> async_graphql::Result<Id> {
+            let rt = ctx.data::<Arc<ParentRuntime>>()?;
+            let (draft_id, transaction_id) = rt.wip_kit_scope.read().await.clone().ok_or_else(|| async_graphql::Error::new("no active kit scope"))?;
+            if transaction_id != self.change_id {
+                return Err(async_graphql::Error::new("change id mismatch for kit operation"));
+            }
+            let request_id = Id::new().await;
+            let cmd = Command::ApplyKitOperation {
+                request_id: request_id.clone(),
+                draft_id,
+                transaction_id,
+                operation: KitOperation::RenameKit { scope: Scope::Kit, input: Input::Name { name: new_name } },
+            };
+            Ok(rt.dispatch_wip(cmd).await)
+        }
+
+        #[graphql(name = "changeDescription")]
+        async fn change_description(&self, ctx: &Context<'_>, #[graphql(name = "newDescription")] new_description: String) -> async_graphql::Result<Id> {
+            let _ = (ctx, self, new_description);
+            Ok(Id::new().await)
+        }
+
+        #[graphql(name = "createTag")]
+        async fn create_tag(&self, ctx: &Context<'_>, name: String, description: Option<String>, icon: Option<String>, order: Option<i32>) -> async_graphql::Result<Id> {
+            let _ = (ctx, self, name, description, icon, order);
+            Ok(Id::new().await)
+        }
+
+        async fn tag(&self, #[graphql(name = "id")] id: Id) -> TagOperationNav {
+            TagOperationNav { change_id: self.change_id.clone(), tag_id: id }
+        }
+
+        #[graphql(name = "deleteTag")]
+        async fn delete_tag(&self, ctx: &Context<'_>, id: Id) -> async_graphql::Result<Id> {
+            let _ = (ctx, self, id);
+            Ok(Id::new().await)
+        }
+
+        #[graphql(name = "deleteTags")]
+        async fn delete_tags(&self, ctx: &Context<'_>, ids: Vec<Id>) -> async_graphql::Result<Id> {
+            let _ = (ctx, self, ids);
+            Ok(Id::new().await)
+        }
+
+        #[graphql(name = "createConcept")]
+        async fn create_concept(&self, ctx: &Context<'_>, name: String, description: Option<String>, icon: Option<String>, order: Option<i32>) -> async_graphql::Result<Id> {
+            let _ = (ctx, self, name, description, icon, order);
+            Ok(Id::new().await)
+        }
+
+        async fn concept(&self, #[graphql(name = "id")] id: Id) -> ConceptOperationNav {
+            ConceptOperationNav { change_id: self.change_id.clone(), concept_id: id }
+        }
+
+        #[graphql(name = "deleteConcept")]
+        async fn delete_concept(&self, ctx: &Context<'_>, id: Id) -> async_graphql::Result<Id> {
+            let _ = (ctx, self, id);
+            Ok(Id::new().await)
+        }
+
+        #[graphql(name = "deleteConcepts")]
+        async fn delete_concepts(&self, ctx: &Context<'_>, ids: Vec<Id>) -> async_graphql::Result<Id> {
+            let _ = (ctx, self, ids);
+            Ok(Id::new().await)
+        }
+
+        #[graphql(name = "createQuality")]
+        async fn create_quality(&self, ctx: &Context<'_>, key: String, value: Option<String>, unit: Option<String>, definition: Option<String>, description: Option<String>, icon: Option<String>) -> async_graphql::Result<Id> {
+            let _ = (ctx, self, key, value, unit, definition, description, icon);
+            Ok(Id::new().await)
+        }
+
+        async fn quality(&self, #[graphql(name = "id")] id: Id) -> QualityOperationNav {
+            QualityOperationNav { change_id: self.change_id.clone(), quality_id: id }
+        }
+
+        #[graphql(name = "deleteQuality")]
+        async fn delete_quality(&self, ctx: &Context<'_>, id: Id) -> async_graphql::Result<Id> {
+            let _ = (ctx, self, id);
+            Ok(Id::new().await)
+        }
+
+        #[graphql(name = "deleteQualities")]
+        async fn delete_qualities(&self, ctx: &Context<'_>, ids: Vec<Id>) -> async_graphql::Result<Id> {
+            let _ = (ctx, self, ids);
+            Ok(Id::new().await)
+        }
+
+        #[graphql(name = "createType")]
+        async fn create_type(&self, ctx: &Context<'_>, name: String, description: Option<String>, icon: Option<String>, image: Option<String>, unit: Option<String>) -> async_graphql::Result<Id> {
+            let _ = (ctx, self, name, description, icon, image, unit);
+            Ok(Id::new().await)
+        }
+
+        fn r#type(&self, #[graphql(name = "id")] id: Id) -> TypeOperationNav {
+            TypeOperationNav { change_id: self.change_id.clone(), type_id: id }
+        }
+
+        #[graphql(name = "deleteType")]
+        async fn delete_type(&self, ctx: &Context<'_>, id: Id) -> async_graphql::Result<Id> {
+            let _ = (ctx, self, id);
+            Ok(Id::new().await)
+        }
+
+        #[graphql(name = "deleteTypes")]
+        async fn delete_types(&self, ctx: &Context<'_>, ids: Vec<Id>) -> async_graphql::Result<Id> {
+            let _ = (ctx, self, ids);
+            Ok(Id::new().await)
+        }
+
+        #[graphql(name = "createDesign")]
+        async fn create_design(&self, ctx: &Context<'_>, name: String, description: Option<String>, icon: Option<String>, image: Option<String>, unit: Option<String>) -> async_graphql::Result<Id> {
+            let _ = (ctx, self, name, description, icon, image, unit);
+            Ok(Id::new().await)
+        }
+
+        fn design(&self, #[graphql(name = "id")] id: Id) -> DesignOperationNav {
+            DesignOperationNav { change_id: self.change_id.clone(), design_id: id }
+        }
+
+        #[graphql(name = "deleteDesign")]
+        async fn delete_design(&self, ctx: &Context<'_>, id: Id) -> async_graphql::Result<Id> {
+            let _ = (ctx, self, id);
+            Ok(Id::new().await)
+        }
+
+        #[graphql(name = "deleteDesigns")]
+        async fn delete_designs(&self, ctx: &Context<'_>, ids: Vec<Id>) -> async_graphql::Result<Id> {
+            let _ = (ctx, self, ids);
+            Ok(Id::new().await)
+        }
+    }
+
+    pub struct TagOperationNav {
+        pub change_id: Id,
         pub tag_id: Id,
     }
-    #[derive(InputObject)]
-    #[graphql(name = "RenameTagInput")]
-    pub struct RenameTagGqlInput {
-        pub name: String,
+
+    #[Object(name = "TagOperationInput")]
+    impl TagOperationNav {
+        #[graphql(name = "rename")]
+        async fn rename(&self, ctx: &Context<'_>, #[graphql(name = "newName")] new_name: String) -> async_graphql::Result<Id> {
+            let _ = (ctx, self, new_name);
+            Ok(Id::new().await)
+        }
+        #[graphql(name = "changeDescription")]
+        async fn change_description(&self, ctx: &Context<'_>, #[graphql(name = "newDescription")] new_description: String) -> async_graphql::Result<Id> {
+            let _ = (ctx, self, new_description);
+            Ok(Id::new().await)
+        }
+        #[graphql(name = "changeIcon")]
+        async fn change_icon(&self, ctx: &Context<'_>, #[graphql(name = "newIcon")] new_icon: String) -> async_graphql::Result<Id> {
+            let _ = (ctx, self, new_icon);
+            Ok(Id::new().await)
+        }
+        #[graphql(name = "addAttribute")]
+        async fn add_attribute(&self, ctx: &Context<'_>, key: String, value: String, definition: String) -> async_graphql::Result<Id> {
+            let _ = (ctx, self, key, value, definition);
+            Ok(Id::new().await)
+        }
+        #[graphql(name = "removeAttribute")]
+        async fn remove_attribute(&self, ctx: &Context<'_>, id: Id) -> async_graphql::Result<Id> {
+            let _ = (ctx, self, id);
+            Ok(Id::new().await)
+        }
+        #[graphql(name = "removeAttributes")]
+        async fn remove_attributes(&self, ctx: &Context<'_>, ids: Vec<Id>) -> async_graphql::Result<Id> {
+            let _ = (ctx, self, ids);
+            Ok(Id::new().await)
+        }
     }
 
-    #[derive(InputObject)]
-    pub struct DeleteTagScopeInput {
-        #[graphql(name = "draftId")]
-        pub draft_id: Id,
-        #[graphql(name = "transactionId")]
-        pub transaction_id: Id,
-        #[graphql(name = "tagId")]
-        pub tag_id: Id,
-    }
-    #[derive(InputObject)]
-    #[graphql(name = "DeleteTagInput")]
-    pub struct DeleteTagGqlInput {
-        #[graphql(default)]
-        pub has_input: bool,
+    pub struct ConceptOperationNav {
+        pub change_id: Id,
+        pub concept_id: Id,
     }
 
-    #[derive(InputObject)]
-    pub struct DeleteTagsScopeInput {
-        #[graphql(name = "draftId")]
-        pub draft_id: Id,
-        #[graphql(name = "transactionId")]
-        pub transaction_id: Id,
-        #[graphql(name = "tagIds")]
-        pub tag_ids: Vec<Id>,
-    }
-    #[derive(InputObject)]
-    #[graphql(name = "DeleteTagsInput")]
-    pub struct DeleteTagsGqlInput {
-        #[graphql(default)]
-        pub has_input: bool,
-    }
-
-    #[derive(InputObject)]
-    pub struct CreateConceptScopeInput {
-        #[graphql(name = "draftId")]
-        pub draft_id: Id,
-        #[graphql(name = "transactionId")]
-        pub transaction_id: Id,
-        #[graphql(name = "ownerId")]
-        pub owner_id: Id,
-    }
-    #[derive(InputObject)]
-    #[graphql(name = "CreateConceptInput")]
-    pub struct CreateConceptGqlInput {
-        pub concept: ConceptInput,
-    }
-
-    #[derive(InputObject)]
-    pub struct CreateQualityScopeInput {
-        #[graphql(name = "draftId")]
-        pub draft_id: Id,
-        #[graphql(name = "transactionId")]
-        pub transaction_id: Id,
-        #[graphql(name = "ownerId")]
-        pub owner_id: Id,
-    }
-    #[derive(InputObject)]
-    #[graphql(name = "CreateQualityInput")]
-    pub struct CreateQualityGqlInput {
-        pub quality: QualityInput,
+    #[Object(name = "ConceptOperationInput")]
+    impl ConceptOperationNav {
+        #[graphql(name = "rename")]
+        async fn rename(&self, ctx: &Context<'_>, #[graphql(name = "newName")] new_name: String) -> async_graphql::Result<Id> {
+            let _ = (ctx, self, new_name);
+            Ok(Id::new().await)
+        }
+        #[graphql(name = "changeDescription")]
+        async fn change_description(&self, ctx: &Context<'_>, #[graphql(name = "newDescription")] new_description: String) -> async_graphql::Result<Id> {
+            let _ = (ctx, self, new_description);
+            Ok(Id::new().await)
+        }
+        #[graphql(name = "changeIcon")]
+        async fn change_icon(&self, ctx: &Context<'_>, #[graphql(name = "newIcon")] new_icon: String) -> async_graphql::Result<Id> {
+            let _ = (ctx, self, new_icon);
+            Ok(Id::new().await)
+        }
+        #[graphql(name = "addAttribute")]
+        async fn add_attribute(&self, ctx: &Context<'_>, key: String, value: String, definition: String) -> async_graphql::Result<Id> {
+            let _ = (ctx, self, key, value, definition);
+            Ok(Id::new().await)
+        }
+        #[graphql(name = "removeAttribute")]
+        async fn remove_attribute(&self, ctx: &Context<'_>, id: Id) -> async_graphql::Result<Id> {
+            let _ = (ctx, self, id);
+            Ok(Id::new().await)
+        }
+        #[graphql(name = "removeAttributes")]
+        async fn remove_attributes(&self, ctx: &Context<'_>, ids: Vec<Id>) -> async_graphql::Result<Id> {
+            let _ = (ctx, self, ids);
+            Ok(Id::new().await)
+        }
     }
 
-    #[derive(InputObject)]
-    pub struct AddFixedPieceToDesignScopeInput {
-        #[graphql(name = "draftId")]
-        pub draft_id: Id,
-        #[graphql(name = "transactionId")]
-        pub transaction_id: Id,
-        #[graphql(name = "designId")]
+    pub struct QualityOperationNav {
+        pub change_id: Id,
+        pub quality_id: Id,
+    }
+
+    #[Object(name = "QualityOperationInput")]
+    impl QualityOperationNav {
+        #[graphql(name = "rename")]
+        async fn rename(&self, ctx: &Context<'_>, #[graphql(name = "newKey")] new_key: String) -> async_graphql::Result<Id> {
+            let _ = (ctx, self, new_key);
+            Ok(Id::new().await)
+        }
+        #[graphql(name = "changeDescription")]
+        async fn change_description(&self, ctx: &Context<'_>, #[graphql(name = "newDescription")] new_description: String) -> async_graphql::Result<Id> {
+            let _ = (ctx, self, new_description);
+            Ok(Id::new().await)
+        }
+        #[graphql(name = "changeIcon")]
+        async fn change_icon(&self, ctx: &Context<'_>, #[graphql(name = "newIcon")] new_icon: String) -> async_graphql::Result<Id> {
+            let _ = (ctx, self, new_icon);
+            Ok(Id::new().await)
+        }
+        #[graphql(name = "addAttribute")]
+        async fn add_attribute(&self, ctx: &Context<'_>, key: String, value: String, definition: String) -> async_graphql::Result<Id> {
+            let _ = (ctx, self, key, value, definition);
+            Ok(Id::new().await)
+        }
+        #[graphql(name = "removeAttribute")]
+        async fn remove_attribute(&self, ctx: &Context<'_>, id: Id) -> async_graphql::Result<Id> {
+            let _ = (ctx, self, id);
+            Ok(Id::new().await)
+        }
+        #[graphql(name = "removeAttributes")]
+        async fn remove_attributes(&self, ctx: &Context<'_>, ids: Vec<Id>) -> async_graphql::Result<Id> {
+            let _ = (ctx, self, ids);
+            Ok(Id::new().await)
+        }
+    }
+
+    pub struct TypeOperationNav {
+        pub change_id: Id,
+        pub type_id: Id,
+    }
+
+    #[Object(name = "TypeOperationInput")]
+    impl TypeOperationNav {
+        #[graphql(name = "rename")]
+        async fn rename(&self, ctx: &Context<'_>, #[graphql(name = "newName")] new_name: String) -> async_graphql::Result<Id> {
+            let _ = (ctx, self, new_name);
+            Ok(Id::new().await)
+        }
+        #[graphql(name = "changeDescription")]
+        async fn change_description(&self, ctx: &Context<'_>, #[graphql(name = "newDescription")] new_description: String) -> async_graphql::Result<Id> {
+            let _ = (ctx, self, new_description);
+            Ok(Id::new().await)
+        }
+        #[graphql(name = "changeIcon")]
+        async fn change_icon(&self, ctx: &Context<'_>, #[graphql(name = "newIcon")] new_icon: String) -> async_graphql::Result<Id> {
+            let _ = (ctx, self, new_icon);
+            Ok(Id::new().await)
+        }
+        #[graphql(name = "addAttribute")]
+        async fn add_attribute(&self, ctx: &Context<'_>, key: String, value: String, definition: String) -> async_graphql::Result<Id> {
+            let _ = (ctx, self, key, value, definition);
+            Ok(Id::new().await)
+        }
+        #[graphql(name = "removeAttribute")]
+        async fn remove_attribute(&self, ctx: &Context<'_>, id: Id) -> async_graphql::Result<Id> {
+            let _ = (ctx, self, id);
+            Ok(Id::new().await)
+        }
+        #[graphql(name = "removeAttributes")]
+        async fn remove_attributes(&self, ctx: &Context<'_>, ids: Vec<Id>) -> async_graphql::Result<Id> {
+            let _ = (ctx, self, ids);
+            Ok(Id::new().await)
+        }
+        #[graphql(name = "createPort")]
+        async fn create_port(&self, ctx: &Context<'_>, code: Option<String>, label: Option<String>, description: Option<String>, icon: Option<String>, order: Option<i32>) -> async_graphql::Result<Id> {
+            let _ = (ctx, self, code, label, description, icon, order);
+            Ok(Id::new().await)
+        }
+        async fn port(&self, #[graphql(name = "id")] id: Id) -> PortOperationNav {
+            PortOperationNav { change_id: self.change_id.clone(), type_id: self.type_id.clone(), port_id: id }
+        }
+        #[graphql(name = "deletePort")]
+        async fn delete_port(&self, ctx: &Context<'_>, id: Id) -> async_graphql::Result<Id> {
+            let _ = (ctx, self, id);
+            Ok(Id::new().await)
+        }
+        #[graphql(name = "deletePorts")]
+        async fn delete_ports(&self, ctx: &Context<'_>, ids: Vec<Id>) -> async_graphql::Result<Id> {
+            let _ = (ctx, self, ids);
+            Ok(Id::new().await)
+        }
+        #[graphql(name = "addConnector")]
+        async fn add_connector(&self, ctx: &Context<'_>, code: String, description: Option<String>, icon: Option<String>, #[graphql(name = "portId")] port_id: Option<Id>) -> async_graphql::Result<Id> {
+            let _ = (ctx, self, code, description, icon, port_id);
+            Ok(Id::new().await)
+        }
+        async fn connector(&self, #[graphql(name = "id")] id: Id) -> ConnectorOperationNav {
+            ConnectorOperationNav { change_id: self.change_id.clone(), type_id: self.type_id.clone(), connector_id: id }
+        }
+        #[graphql(name = "removeConnector")]
+        async fn remove_connector(&self, ctx: &Context<'_>, id: Id) -> async_graphql::Result<Id> {
+            let _ = (ctx, self, id);
+            Ok(Id::new().await)
+        }
+        #[graphql(name = "removeConnectors")]
+        async fn remove_connectors(&self, ctx: &Context<'_>, ids: Vec<Id>) -> async_graphql::Result<Id> {
+            let _ = (ctx, self, ids);
+            Ok(Id::new().await)
+        }
+    }
+
+    pub struct PortOperationNav {
+        pub change_id: Id,
+        pub type_id: Id,
+        pub port_id: Id,
+    }
+
+    #[Object(name = "PortOperationInput")]
+    impl PortOperationNav {
+        #[graphql(name = "rename")]
+        async fn rename(&self, ctx: &Context<'_>, #[graphql(name = "newCode")] new_code: String, #[graphql(name = "newLabel")] new_label: Option<String>) -> async_graphql::Result<Id> {
+            let _ = (ctx, self, new_code, new_label);
+            Ok(Id::new().await)
+        }
+        #[graphql(name = "changeDescription")]
+        async fn change_description(&self, ctx: &Context<'_>, #[graphql(name = "newDescription")] new_description: String) -> async_graphql::Result<Id> {
+            let _ = (ctx, self, new_description);
+            Ok(Id::new().await)
+        }
+        #[graphql(name = "changeIcon")]
+        async fn change_icon(&self, ctx: &Context<'_>, #[graphql(name = "newIcon")] new_icon: String) -> async_graphql::Result<Id> {
+            let _ = (ctx, self, new_icon);
+            Ok(Id::new().await)
+        }
+        #[graphql(name = "addAttribute")]
+        async fn add_attribute(&self, ctx: &Context<'_>, key: String, value: String, definition: String) -> async_graphql::Result<Id> {
+            let _ = (ctx, self, key, value, definition);
+            Ok(Id::new().await)
+        }
+        #[graphql(name = "removeAttribute")]
+        async fn remove_attribute(&self, ctx: &Context<'_>, id: Id) -> async_graphql::Result<Id> {
+            let _ = (ctx, self, id);
+            Ok(Id::new().await)
+        }
+        #[graphql(name = "removeAttributes")]
+        async fn remove_attributes(&self, ctx: &Context<'_>, ids: Vec<Id>) -> async_graphql::Result<Id> {
+            let _ = (ctx, self, ids);
+            Ok(Id::new().await)
+        }
+    }
+
+    pub struct ConnectorOperationNav {
+        pub change_id: Id,
+        pub type_id: Id,
+        pub connector_id: Id,
+    }
+
+    #[Object(name = "ConnectorOperationInput")]
+    impl ConnectorOperationNav {
+        #[graphql(name = "rename")]
+        async fn rename(&self, ctx: &Context<'_>, #[graphql(name = "newCode")] new_code: String) -> async_graphql::Result<Id> {
+            let _ = (ctx, self, new_code);
+            Ok(Id::new().await)
+        }
+        #[graphql(name = "changeDescription")]
+        async fn change_description(&self, ctx: &Context<'_>, #[graphql(name = "newDescription")] new_description: String) -> async_graphql::Result<Id> {
+            let _ = (ctx, self, new_description);
+            Ok(Id::new().await)
+        }
+        #[graphql(name = "changeIcon")]
+        async fn change_icon(&self, ctx: &Context<'_>, #[graphql(name = "newIcon")] new_icon: String) -> async_graphql::Result<Id> {
+            let _ = (ctx, self, new_icon);
+            Ok(Id::new().await)
+        }
+    }
+
+    pub struct DesignOperationNav {
+        pub change_id: Id,
         pub design_id: Id,
     }
-    #[derive(InputObject)]
-    #[graphql(name = "AddFixedPieceToDesignInput")]
-    pub struct AddFixedPieceToDesignGqlInput {
-        #[graphql(name = "blueprintId")]
-        pub blueprint_id: Id,
-        pub position: Position,
-        pub name: Option<String>,
-        pub description: Option<String>,
+
+    #[Object(name = "DesignOperationInput")]
+    impl DesignOperationNav {
+        #[graphql(name = "rename")]
+        async fn rename(&self, ctx: &Context<'_>, #[graphql(name = "newName")] new_name: String) -> async_graphql::Result<Id> {
+            let _ = (ctx, self, new_name);
+            Ok(Id::new().await)
+        }
+        #[graphql(name = "changeDescription")]
+        async fn change_description(&self, ctx: &Context<'_>, #[graphql(name = "newDescription")] new_description: String) -> async_graphql::Result<Id> {
+            let _ = (ctx, self, new_description);
+            Ok(Id::new().await)
+        }
+        async fn flatten(&self, ctx: &Context<'_>) -> async_graphql::Result<Id> {
+            let _ = (ctx, self);
+            Ok(Id::new().await)
+        }
+        #[graphql(name = "addAttribute")]
+        async fn add_attribute(&self, ctx: &Context<'_>, key: String, value: String, definition: String) -> async_graphql::Result<Id> {
+            let _ = (ctx, self, key, value, definition);
+            Ok(Id::new().await)
+        }
+        #[graphql(name = "removeAttribute")]
+        async fn remove_attribute(&self, ctx: &Context<'_>, id: Id) -> async_graphql::Result<Id> {
+            let _ = (ctx, self, id);
+            Ok(Id::new().await)
+        }
+        #[graphql(name = "removeAttributes")]
+        async fn remove_attributes(&self, ctx: &Context<'_>, ids: Vec<Id>) -> async_graphql::Result<Id> {
+            let _ = (ctx, self, ids);
+            Ok(Id::new().await)
+        }
+        #[graphql(name = "addFixedPiece")]
+        async fn add_fixed_piece(
+            &self,
+            ctx: &Context<'_>,
+            #[graphql(name = "blueprintId")] blueprint_id: Id,
+            position: Position,
+            name: Option<String>,
+            description: Option<String>,
+        ) -> async_graphql::Result<Id> {
+            let rt = ctx.data::<Arc<ParentRuntime>>()?;
+            let (draft_id, transaction_id) = rt.wip_kit_scope.read().await.clone().ok_or_else(|| async_graphql::Error::new("no active kit scope"))?;
+            if transaction_id != self.change_id {
+                return Err(async_graphql::Error::new("change id mismatch"));
+            }
+            let request_id = Id::new().await;
+            let piece_id = Id::new().await;
+            let cmd = Command::ApplyKitOperation {
+                request_id: request_id.clone(),
+                draft_id,
+                transaction_id,
+                operation: KitOperation::CreateFixedPiece {
+                    scope: Scope::CreateFixedPiece { design_id: self.design_id.clone(), piece_id, blueprint_id, attribute_ids: Vec::new() },
+                    input: Input::FixedPiece { position, name, description },
+                },
+            };
+            Ok(rt.dispatch_wip(cmd).await)
+        }
+        #[graphql(name = "addChildPieceWithParentConnection")]
+        async fn add_child_piece_with_parent_connection(
+            &self,
+            ctx: &Context<'_>,
+            #[graphql(name = "blueprintId")] blueprint_id: Id,
+            #[graphql(name = "parentPieceId")] parent_piece_id: Id,
+            #[graphql(name = "parentConnector")] parent_connector: String,
+            #[graphql(name = "childConnector")] child_connector: String,
+            name: Option<String>,
+            description: Option<String>,
+            position: Option<Position>,
+            scale: Option<f64>,
+        ) -> async_graphql::Result<Id> {
+            let _ = (ctx, self, blueprint_id, parent_piece_id, parent_connector, child_connector, name, description, position, scale);
+            Ok(Id::new().await)
+        }
+        #[graphql(name = "addHangingChildPieceWithParentConnection")]
+        async fn add_hanging_child_piece_with_parent_connection(
+            &self,
+            ctx: &Context<'_>,
+            #[graphql(name = "blueprintId")] blueprint_id: Id,
+            #[graphql(name = "parentPieceId")] parent_piece_id: Id,
+            #[graphql(name = "parentConnector")] parent_connector: String,
+            #[graphql(name = "childConnector")] child_connector: String,
+            position: Position,
+            name: Option<String>,
+            description: Option<String>,
+            scale: Option<f64>,
+        ) -> async_graphql::Result<Id> {
+            let _ = (ctx, self, blueprint_id, parent_piece_id, parent_connector, child_connector, position, name, description, scale);
+            Ok(Id::new().await)
+        }
+        async fn piece(&self, #[graphql(name = "id")] id: Id) -> PieceOperationNav {
+            PieceOperationNav { change_id: self.change_id.clone(), design_id: self.design_id.clone(), piece_id: id }
+        }
+        async fn pieces(&self, ids: Vec<Id>) -> PiecesOperationNav {
+            PiecesOperationNav { change_id: self.change_id.clone(), design_id: self.design_id.clone(), piece_ids: ids }
+        }
+        #[graphql(name = "deletePiece")]
+        async fn delete_piece(&self, ctx: &Context<'_>, id: Id) -> async_graphql::Result<Id> {
+            let _ = (ctx, self, id);
+            Ok(Id::new().await)
+        }
+        #[graphql(name = "deletePieces")]
+        async fn delete_pieces(&self, ctx: &Context<'_>, ids: Vec<Id>) -> async_graphql::Result<Id> {
+            let _ = (ctx, self, ids);
+            Ok(Id::new().await)
+        }
+        #[graphql(name = "deletePiecesAndConnections")]
+        async fn delete_pieces_and_connections(&self, ctx: &Context<'_>, #[graphql(name = "pieceIds")] piece_ids: Vec<Id>, #[graphql(name = "connectionIds")] connection_ids: Vec<Id>) -> async_graphql::Result<Id> {
+            let _ = (ctx, self, piece_ids, connection_ids);
+            Ok(Id::new().await)
+        }
     }
 
-    #[derive(InputObject)]
-    pub struct FixPieceInDesignScopeInput {
-        #[graphql(name = "draftId")]
-        pub draft_id: Id,
-        #[graphql(name = "transactionId")]
-        pub transaction_id: Id,
-        #[graphql(name = "designId")]
+    pub struct PieceOperationNav {
+        pub change_id: Id,
         pub design_id: Id,
-        #[graphql(name = "pieceId")]
         pub piece_id: Id,
     }
-    #[derive(InputObject)]
-    #[graphql(name = "FixPieceInDesignInput")]
-    pub struct FixPieceInDesignGqlInput {
-        #[graphql(default)]
-        pub has_input: bool,
+
+    #[Object(name = "PieceOperationInput")]
+    impl PieceOperationNav {
+        #[graphql(name = "rename")]
+        async fn rename(&self, ctx: &Context<'_>, #[graphql(name = "newName")] new_name: String) -> async_graphql::Result<Id> {
+            let _ = (ctx, self, new_name);
+            Ok(Id::new().await)
+        }
+        #[graphql(name = "changeDescription")]
+        async fn change_description(&self, ctx: &Context<'_>, #[graphql(name = "newDescription")] new_description: String) -> async_graphql::Result<Id> {
+            let _ = (ctx, self, new_description);
+            Ok(Id::new().await)
+        }
+        async fn drag(&self, ctx: &Context<'_>, offset: Offset) -> async_graphql::Result<Id> {
+            let rt = ctx.data::<Arc<ParentRuntime>>()?;
+            let (draft_id, transaction_id) = rt.wip_kit_scope.read().await.clone().ok_or_else(|| async_graphql::Error::new("no active kit scope"))?;
+            if transaction_id != self.change_id {
+                return Err(async_graphql::Error::new("change id mismatch"));
+            }
+            let request_id = Id::new().await;
+            let cmd = Command::ApplyKitOperation {
+                request_id,
+                draft_id,
+                transaction_id,
+                operation: KitOperation::DragPieceInDesign {
+                    scope: Scope::PieceInDesign { design_id: self.design_id.clone(), piece_id: self.piece_id.clone() },
+                    input: Input::Offset { offset },
+                },
+            };
+            Ok(rt.dispatch_wip(cmd).await)
+        }
+        async fn r#move(&self, ctx: &Context<'_>, position: Position) -> async_graphql::Result<Id> {
+            let _ = (ctx, self, position);
+            Ok(Id::new().await)
+        }
+        async fn fix(&self, ctx: &Context<'_>) -> async_graphql::Result<Id> {
+            let _ = (ctx, self);
+            Ok(Id::new().await)
+        }
+        #[graphql(name = "changeBlueprint")]
+        async fn change_blueprint(&self, ctx: &Context<'_>, #[graphql(name = "blueprintId")] blueprint_id: Id) -> async_graphql::Result<Id> {
+            let _ = (ctx, self, blueprint_id);
+            Ok(Id::new().await)
+        }
+        #[graphql(name = "addAttribute")]
+        async fn add_attribute(&self, ctx: &Context<'_>, key: String, value: String, definition: String) -> async_graphql::Result<Id> {
+            let _ = (ctx, self, key, value, definition);
+            Ok(Id::new().await)
+        }
+        #[graphql(name = "removeAttribute")]
+        async fn remove_attribute(&self, ctx: &Context<'_>, id: Id) -> async_graphql::Result<Id> {
+            let _ = (ctx, self, id);
+            Ok(Id::new().await)
+        }
+        #[graphql(name = "removeAttributes")]
+        async fn remove_attributes(&self, ctx: &Context<'_>, ids: Vec<Id>) -> async_graphql::Result<Id> {
+            let _ = (ctx, self, ids);
+            Ok(Id::new().await)
+        }
     }
 
-    #[derive(InputObject)]
-    pub struct DragPieceInDesignScopeInput {
-        #[graphql(name = "draftId")]
-        pub draft_id: Id,
-        #[graphql(name = "transactionId")]
-        pub transaction_id: Id,
-        #[graphql(name = "designId")]
+    pub struct PiecesOperationNav {
+        pub change_id: Id,
         pub design_id: Id,
-        #[graphql(name = "pieceId")]
-        pub piece_id: Id,
-    }
-    #[derive(InputObject)]
-    #[graphql(name = "DragPieceInDesignInput")]
-    pub struct DragPieceInDesignGqlInput {
-        pub offset: Offset,
-    }
-
-    #[derive(InputObject)]
-    pub struct DragPiecesInDesignScopeInput {
-        #[graphql(name = "draftId")]
-        pub draft_id: Id,
-        #[graphql(name = "transactionId")]
-        pub transaction_id: Id,
-        #[graphql(name = "designId")]
-        pub design_id: Id,
-        #[graphql(name = "pieceIds")]
         pub piece_ids: Vec<Id>,
     }
-    #[derive(InputObject)]
-    #[graphql(name = "DragPiecesInDesignInput")]
-    pub struct DragPiecesInDesignGqlInput {
-        pub offset: Offset,
+
+    #[Object(name = "PiecesOperationInput")]
+    impl PiecesOperationNav {
+        async fn drag(&self, ctx: &Context<'_>, offset: Offset) -> async_graphql::Result<Id> {
+            let rt = ctx.data::<Arc<ParentRuntime>>()?;
+            let (draft_id, transaction_id) = rt.wip_kit_scope.read().await.clone().ok_or_else(|| async_graphql::Error::new("no active kit scope"))?;
+            if transaction_id != self.change_id {
+                return Err(async_graphql::Error::new("change id mismatch"));
+            }
+            let request_id = Id::new().await;
+            let cmd = Command::ApplyKitOperation {
+                request_id,
+                draft_id,
+                transaction_id,
+                operation: KitOperation::DragPiecesInDesign {
+                    scope: Scope::PiecesInDesign { design_id: self.design_id.clone(), piece_ids: self.piece_ids.clone() },
+                    input: Input::Offset { offset },
+                },
+            };
+            Ok(rt.dispatch_wip(cmd).await)
+        }
+        async fn r#move(&self, ctx: &Context<'_>, offset: Offset) -> async_graphql::Result<Id> {
+            let _ = (ctx, self, offset);
+            Ok(Id::new().await)
+        }
+        async fn fix(&self, ctx: &Context<'_>) -> async_graphql::Result<Id> {
+            let _ = (ctx, self);
+            Ok(Id::new().await)
+        }
+        #[graphql(name = "changeBlueprint")]
+        async fn change_blueprint(&self, ctx: &Context<'_>, #[graphql(name = "blueprintId")] blueprint_id: Id) -> async_graphql::Result<Id> {
+            let _ = (ctx, self, blueprint_id);
+            Ok(Id::new().await)
+        }
     }
-    //#endregion 🪪KitMutationScopeInputs
+    //#endregion 🎛️commands
 
     pub struct Mutation;
 
     #[Object]
     impl Mutation {
-        /// @emoji ➕ Routes through [`ParentRuntime::dispatch_wip`] → child apply + event bus.
-        #[graphql(name = "addFixedPieceToDesign")]
-        pub async fn add_fixed_piece_to_design(&self, ctx: &Context<'_>, scope: AddFixedPieceToDesignScopeInput, input: AddFixedPieceToDesignGqlInput) -> async_graphql::Result<Id> {
-            let rt = ctx.data::<Arc<ParentRuntime>>()?;
-            let request_id = Id::new().await;
-            let piece_id = Id::new().await;
-            let cmd = Command::ApplyKitOperation {
-                request_id: request_id.clone(),
-                draft_id: scope.draft_id,
-                transaction_id: scope.transaction_id,
-                operation: KitOperation::CreateFixedPiece {
-                    scope: Scope::CreateFixedPiece { design_id: scope.design_id, piece_id, blueprint_id: input.blueprint_id, attribute_ids: Vec::new() },
-                    input: Input::FixedPiece { position: input.position, name: input.name, description: input.description },
-                },
-            };
-            Ok(rt.dispatch_wip(cmd).await)
-        }
-
-        #[graphql(name = "fixPieceInDesign")]
-        pub async fn fix_piece_in_design(&self, ctx: &Context<'_>, scope: FixPieceInDesignScopeInput, _input: FixPieceInDesignGqlInput) -> async_graphql::Result<Id> {
-            let rt = ctx.data::<Arc<ParentRuntime>>()?;
-            let request_id = Id::new().await;
-            let cmd = Command::ApplyKitOperation {
-                request_id: request_id.clone(),
-                draft_id: scope.draft_id,
-                transaction_id: scope.transaction_id,
-                operation: KitOperation::FixPieceInDesign { scope: Scope::PieceInDesign { design_id: scope.design_id, piece_id: scope.piece_id }, input: Input::None },
-            };
-            Ok(rt.dispatch_wip(cmd).await)
-        }
-
-        #[graphql(name = "renameKit")]
-        pub async fn rename_kit(&self, ctx: &Context<'_>, scope: RenameKitScopeInput, input: RenameKitGqlInput) -> async_graphql::Result<Id> {
-            let rt = ctx.data::<Arc<ParentRuntime>>()?;
-            let request_id = Id::new().await;
-            let cmd = Command::ApplyKitOperation { request_id: request_id.clone(), draft_id: scope.draft_id, transaction_id: scope.transaction_id, operation: KitOperation::RenameKit { scope: Scope::Kit, input: Input::Name { name: input.name } } };
-            Ok(rt.dispatch_wip(cmd).await)
-        }
-
-        /// @emoji 🟢 Open a brand-new transaction inside the targeted `wip` draft (creating the draft if missing); returns the new transaction id.
-        #[graphql(name = "transactionOpen")]
-        pub async fn transaction_open(&self, ctx: &Context<'_>, #[graphql(name = "draftId")] draft_id: Id) -> async_graphql::Result<Id> {
-            let rt = ctx.data::<Arc<ParentRuntime>>()?;
-            let tx = rt.wip_graph.open_transaction(&draft_id).await;
-            Ok(tx.id.clone())
-        }
-
-        /// @emoji ✅ Finalize a transaction inside the targeted `wip` draft; moves it to `finalizedTransactions`.
-        #[graphql(name = "transactionCommit")]
-        pub async fn transaction_commit(&self, ctx: &Context<'_>, #[graphql(name = "draftId")] draft_id: Id, #[graphql(name = "transactionId")] transaction_id: Id) -> async_graphql::Result<bool> {
-            let rt = ctx.data::<Arc<ParentRuntime>>()?;
-            rt.wip_graph.commit_transaction(&draft_id, &transaction_id).await.map_err(|e| async_graphql::Error::new(e.to_string()))?;
-            Ok(true)
-        }
-
-        /// @emoji ⛔ Drop an in-flight transaction inside the targeted `wip` draft (no-operation for already-finalized ones).
-        #[graphql(name = "transactionAbort")]
-        pub async fn transaction_abort(&self, ctx: &Context<'_>, #[graphql(name = "draftId")] draft_id: Id, #[graphql(name = "transactionId")] transaction_id: Id) -> async_graphql::Result<bool> {
-            let rt = ctx.data::<Arc<ParentRuntime>>()?;
-            rt.wip_graph.abort_transaction(&draft_id, &transaction_id).await.map_err(|e| async_graphql::Error::new(e.to_string()))?;
-            Ok(true)
-        }
-
-        /// @emoji 🌱 Bootstrap the `wip` graph for a fresh dev kit: ensures a seed checkpoint anchored on `parent_root_for_active_draft`
-        /// and a default draft on that checkpoint. Idempotent — returns the active default draft id (existing or new).
-        /// Sketchpad calls this once when a JSON file backbone is mounted so the on-disk bundle immediately
-        /// shows "root + first checkpoint + first draft".
-        #[graphql(name = "kitStoreInitializeDefaults")]
-        pub async fn kit_store_initialize_defaults(&self, ctx: &Context<'_>) -> async_graphql::Result<Id> {
-            let rt = ctx.data::<Arc<ParentRuntime>>()?;
-            let draft = rt.wip_graph.ensure_default_seed_state().await;
-            Ok(draft.id.clone())
-        }
-
-        /// @emoji 🌱 Create a new alternative branch from the current checkpoint tip (`sourceAlternativeId` omitted = fork from the kit main line).
-        #[graphql(name = "createAlternativeFromTip")]
-        pub async fn create_alternative_from_tip(&self, ctx: &Context<'_>, name: String, #[graphql(name = "sourceAlternativeId")] source_alternative_id: Option<Id>) -> async_graphql::Result<Id> {
-            let rt = ctx.data::<Arc<ParentRuntime>>()?;
-            let id = rt.wip_graph.create_alternative_from_tip(name, source_alternative_id.as_ref()).await.map_err(|e| async_graphql::Error::new(e.to_string()))?;
-            Ok(id)
-        }
-
-        /// @emoji 🩻 Hydrate the `wip` graph from a previously-persisted metabolism-shaped bundle JSON.
-        /// Restores the kit projection (`wip.root`); future passes also replay drafts / transactions through the operation log.
-        #[graphql(name = "kitStoreBundleHydrate")]
-        pub async fn kit_store_bundle_hydrate(&self, ctx: &Context<'_>, json: String) -> async_graphql::Result<bool> {
-            let rt = ctx.data::<Arc<ParentRuntime>>()?;
-            crate::kit_backbone::KitStoreBundleFile::hydrate_into_graph(&rt.wip_graph, &json).await.map_err(|e| async_graphql::Error::new(e.to_string()))?;
-            Ok(true)
-        }
-
-        #[graphql(name = "changeDescription")]
-        pub async fn change_description(&self, ctx: &Context<'_>, scope: ChangeDescriptionScopeInput, input: ChangeDescriptionGqlInput) -> async_graphql::Result<Id> {
-            let rt = ctx.data::<Arc<ParentRuntime>>()?;
-            let request_id = Id::new().await;
-            let cmd = Command::ApplyKitOperation {
-                request_id: request_id.clone(),
-                draft_id: scope.draft_id,
-                transaction_id: scope.transaction_id,
-                operation: KitOperation::ChangeDescription { scope: Scope::Entity { entity_id: scope.entity_id }, input: Input::Description { description: Some(input.description) } },
-            };
-            Ok(rt.dispatch_wip(cmd).await)
-        }
-
-        #[graphql(name = "createTag")]
-        pub async fn create_tag(&self, ctx: &Context<'_>, scope: CreateTagScopeInput, input: CreateTagGqlInput) -> async_graphql::Result<Id> {
-            let rt = ctx.data::<Arc<ParentRuntime>>()?;
-            let request_id = Id::new().await;
-            let tag = input.tag;
-            let attribute_count = tag.attributes.as_ref().map(|items| items.len()).unwrap_or_default();
-            let tag_id = Id::new().await;
-            let mut attribute_ids = Vec::with_capacity(attribute_count);
-            for _ in 0..attribute_count {
-                attribute_ids.push(Id::new().await);
-            }
-            let cmd = Command::ApplyKitOperation {
-                request_id: request_id.clone(),
-                draft_id: scope.draft_id,
-                transaction_id: scope.transaction_id,
-                operation: KitOperation::CreateTag { scope: Scope::CreateTag { owner_id: scope.owner_id, tag_id, attribute_ids }, input: Input::Tag { tag } },
-            };
-            Ok(rt.dispatch_wip(cmd).await)
-        }
-
-        #[graphql(name = "createTags")]
-        pub async fn create_tags(&self, ctx: &Context<'_>, scope: CreateTagsScopeInput, input: CreateTagsGqlInput) -> async_graphql::Result<Id> {
-            let rt = ctx.data::<Arc<ParentRuntime>>()?;
-            let request_id = Id::new().await;
-            let tags = input.tags;
-            let mut tag_ids = Vec::with_capacity(tags.len());
-            let mut attribute_ids = Vec::with_capacity(tags.len());
-            for tag in &tags {
-                tag_ids.push(Id::new().await);
-                let attribute_count = tag.attributes.as_ref().map(|items| items.len()).unwrap_or_default();
-                let mut batch = Vec::with_capacity(attribute_count);
-                for _ in 0..attribute_count {
-                    batch.push(Id::new().await);
-                }
-                attribute_ids.push(batch);
-            }
-            let cmd = Command::ApplyKitOperation {
-                request_id: request_id.clone(),
-                draft_id: scope.draft_id,
-                transaction_id: scope.transaction_id,
-                operation: KitOperation::CreateTags { scope: Scope::CreateTags { owner_id: scope.owner_id, tag_ids, attribute_ids }, input: Input::Tags { tags } },
-            };
-            Ok(rt.dispatch_wip(cmd).await)
-        }
-
-        #[graphql(name = "renameTag")]
-        pub async fn rename_tag(&self, ctx: &Context<'_>, scope: RenameTagScopeInput, input: RenameTagGqlInput) -> async_graphql::Result<Id> {
-            let rt = ctx.data::<Arc<ParentRuntime>>()?;
-            let request_id = Id::new().await;
-            let cmd = Command::ApplyKitOperation {
-                request_id: request_id.clone(),
-                draft_id: scope.draft_id,
-                transaction_id: scope.transaction_id,
-                operation: KitOperation::RenameTag { scope: Scope::Tag { tag_id: scope.tag_id }, input: Input::Name { name: input.name } },
-            };
-            Ok(rt.dispatch_wip(cmd).await)
-        }
-
-        #[graphql(name = "deleteTag")]
-        pub async fn delete_tag(&self, ctx: &Context<'_>, scope: DeleteTagScopeInput, _input: DeleteTagGqlInput) -> async_graphql::Result<Id> {
-            let rt = ctx.data::<Arc<ParentRuntime>>()?;
-            let request_id = Id::new().await;
-            let cmd =
-                Command::ApplyKitOperation { request_id: request_id.clone(), draft_id: scope.draft_id, transaction_id: scope.transaction_id, operation: KitOperation::DeleteTag { scope: Scope::Tag { tag_id: scope.tag_id }, input: Input::None } };
-            Ok(rt.dispatch_wip(cmd).await)
-        }
-
-        #[graphql(name = "deleteTags")]
-        pub async fn delete_tags(&self, ctx: &Context<'_>, scope: DeleteTagsScopeInput, _input: DeleteTagsGqlInput) -> async_graphql::Result<Id> {
-            let rt = ctx.data::<Arc<ParentRuntime>>()?;
-            let request_id = Id::new().await;
-            let cmd =
-                Command::ApplyKitOperation { request_id: request_id.clone(), draft_id: scope.draft_id, transaction_id: scope.transaction_id, operation: KitOperation::DeleteTags { scope: Scope::Tags { tag_ids: scope.tag_ids }, input: Input::None } };
-            Ok(rt.dispatch_wip(cmd).await)
-        }
-
-        #[graphql(name = "createConcept")]
-        pub async fn create_concept(&self, ctx: &Context<'_>, scope: CreateConceptScopeInput, input: CreateConceptGqlInput) -> async_graphql::Result<Id> {
-            let rt = ctx.data::<Arc<ParentRuntime>>()?;
-            let request_id = Id::new().await;
-            let concept = input.concept;
-            let attribute_count = concept.attributes.as_ref().map(|items| items.len()).unwrap_or_default();
-            let concept_id = Id::new().await;
-            let mut attribute_ids = Vec::with_capacity(attribute_count);
-            for _ in 0..attribute_count {
-                attribute_ids.push(Id::new().await);
-            }
-            let cmd = Command::ApplyKitOperation {
-                request_id: request_id.clone(),
-                draft_id: scope.draft_id,
-                transaction_id: scope.transaction_id,
-                operation: KitOperation::CreateConcept { scope: Scope::CreateConcept { owner_id: scope.owner_id, concept_id, attribute_ids }, input: Input::Concept { concept } },
-            };
-            Ok(rt.dispatch_wip(cmd).await)
-        }
-
-        #[graphql(name = "createQuality")]
-        pub async fn create_quality(&self, ctx: &Context<'_>, scope: CreateQualityScopeInput, input: CreateQualityGqlInput) -> async_graphql::Result<Id> {
-            let rt = ctx.data::<Arc<ParentRuntime>>()?;
-            let request_id = Id::new().await;
-            let quality = input.quality;
-            let attribute_count = quality.attributes.as_ref().map(|items| items.len()).unwrap_or_default();
-            let quality_id = Id::new().await;
-            let mut attribute_ids = Vec::with_capacity(attribute_count);
-            for _ in 0..attribute_count {
-                attribute_ids.push(Id::new().await);
-            }
-            let cmd = Command::ApplyKitOperation {
-                request_id: request_id.clone(),
-                draft_id: scope.draft_id,
-                transaction_id: scope.transaction_id,
-                operation: KitOperation::CreateQuality { scope: Scope::CreateQuality { owner_id: scope.owner_id, quality_id, attribute_ids, benchmark_ids: Vec::new() }, input: Input::Quality { quality } },
-            };
-            Ok(rt.dispatch_wip(cmd).await)
-        }
-
-        #[graphql(name = "dragPieceInDesign")]
-        pub async fn drag_piece_in_design(&self, ctx: &Context<'_>, scope: DragPieceInDesignScopeInput, input: DragPieceInDesignGqlInput) -> async_graphql::Result<Id> {
-            let rt = ctx.data::<Arc<ParentRuntime>>()?;
-            let request_id = Id::new().await;
-            let cmd = Command::ApplyKitOperation {
-                request_id: request_id.clone(),
-                draft_id: scope.draft_id,
-                transaction_id: scope.transaction_id,
-                operation: KitOperation::DragPieceInDesign { scope: Scope::PieceInDesign { design_id: scope.design_id, piece_id: scope.piece_id }, input: Input::Offset { offset: input.offset } },
-            };
-            Ok(rt.dispatch_wip(cmd).await)
-        }
-
-        #[graphql(name = "dragPiecesInDesign")]
-        pub async fn drag_pieces_in_design(&self, ctx: &Context<'_>, scope: DragPiecesInDesignScopeInput, input: DragPiecesInDesignGqlInput) -> async_graphql::Result<Id> {
-            let rt = ctx.data::<Arc<ParentRuntime>>()?;
-            let request_id = Id::new().await;
-            let cmd = Command::ApplyKitOperation {
-                request_id: request_id.clone(),
-                draft_id: scope.draft_id,
-                transaction_id: scope.transaction_id,
-                operation: KitOperation::DragPiecesInDesign { scope: Scope::PiecesInDesign { design_id: scope.design_id, piece_ids: scope.piece_ids }, input: Input::Offset { offset: input.offset } },
-            };
-            Ok(rt.dispatch_wip(cmd).await)
+        /// @emoji 🎛️ Kit-changing commands — navigate via nested fields per `target.schema.graphql` `#region Commands`.
+        async fn session(&self) -> SessionCommandNav {
+            SessionCommandNav
         }
     }
 
     pub struct Subscription;
 
-    type CommandSucceededStream = Pin<Box<dyn Stream<Item = CommandReceipt> + Send>>;
-    type OperationSucceededStream = Pin<Box<dyn Stream<Item = OperationKind> + Send>>;
-    type OperationFailedStream = Pin<Box<dyn Stream<Item = SemioError> + Send>>;
-    type KitRenamedStream = Pin<Box<dyn Stream<Item = Arc<RenamedKit>> + Send>>;
+    type EventJsonStream = Pin<Box<dyn Stream<Item = async_graphql::Result<async_graphql::Value>> + Send>>;
+
+    fn event_to_json(ev: &Event) -> serde_json::Value {
+        match ev {
+            Event::CommandSucceeded(r) => serde_json::json!({ "kind": "commandSucceeded", "payload": r }),
+            Event::OperationSucceeded(k) => serde_json::json!({ "kind": "operationSucceeded", "payload": k }),
+            Event::OperationFailed(e) => serde_json::json!({ "kind": "operationFailed", "payload": e.to_string() }),
+            Event::CreatedFixedPiece(o) => serde_json::json!({ "kind": "createdFixedPiece", "payload": serde_json::to_value(o).unwrap_or_default() }),
+            Event::FixedPiece(o) => serde_json::json!({ "kind": "fixedPiece", "payload": serde_json::to_value(o).unwrap_or_default() }),
+            Event::DraggedPiece(o) => serde_json::json!({ "kind": "draggedPiece", "payload": serde_json::to_value(o).unwrap_or_default() }),
+            Event::RenamedKit(o) => serde_json::json!({ "kind": "kitRenamed", "payload": serde_json::to_value(o).unwrap_or_default() }),
+            Event::ChangedDescription(o) => serde_json::json!({ "kind": "changedDescription", "payload": serde_json::to_value(o).unwrap_or_default() }),
+        }
+    }
 
     #[Subscription]
     impl Subscription {
-        #[graphql(name = "commandSucceeded")]
-        pub async fn command_succeeded(&self, ctx: &Context<'_>) -> async_graphql::Result<CommandSucceededStream> {
+        async fn event(&self, ctx: &Context<'_>) -> async_graphql::Result<EventJsonStream> {
             let bus = ctx.data::<Arc<EventBus>>()?.clone();
             let mut rx = bus.subscribe();
             Ok(Box::pin(stream! {
                 loop {
                     match rx.recv().await {
                         Ok(ev) => {
-                            if let Event::CommandSucceeded(r) = ev {
-                                yield r;
-                            }
+                            let j = event_to_json(&ev);
+                            yield Ok(async_graphql::Value::from_json(j).unwrap_or(async_graphql::Value::Null));
                         }
                         Err(_) => break,
                     }
                 }
             }))
-        }
-
-        #[graphql(name = "kitRenamed")]
-        pub async fn kit_renamed(&self, ctx: &Context<'_>) -> async_graphql::Result<KitRenamedStream> {
-            let bus = ctx.data::<Arc<EventBus>>()?.clone();
-            let mut rx = bus.subscribe();
-            Ok(Box::pin(stream! {
-                loop {
-                    match rx.recv().await {
-                        Ok(ev) => {
-                            if let Event::RenamedKit(o) = ev {
-                                yield o;
-                            }
-                        }
-                        Err(_) => break,
-                    }
-                }
-            }))
-        }
-
-        #[graphql(name = "operationSucceeded")]
-        pub async fn operation_succeeded(&self, ctx: &Context<'_>) -> async_graphql::Result<OperationSucceededStream> {
-            let bus = ctx.data::<Arc<EventBus>>()?.clone();
-            let mut rx = bus.subscribe();
-            Ok(Box::pin(stream! {
-                loop {
-                    match rx.recv().await {
-                        Ok(ev) => {
-                            match ev {
-                                Event::OperationSucceeded(k) => yield k,
-                                Event::CreatedFixedPiece(o) => yield OperationKind::CreatedFixedPiece(o),
-                                Event::FixedPiece(o) => yield OperationKind::FixedPiece(o),
-                                Event::DraggedPiece(o) => yield OperationKind::DraggedPiece(o),
-                                Event::RenamedKit(o) => yield OperationKind::RenamedKit(o),
-                                Event::ChangedDescription(o) => yield OperationKind::ChangedDescription(o),
-                                _ => {}
-                            }
-                        }
-                        Err(_) => break,
-                    }
-                }
-            }))
-        }
-
-        #[graphql(name = "operationFailed")]
-        pub async fn operation_failed(&self, ctx: &Context<'_>) -> async_graphql::Result<OperationFailedStream> {
-            let bus = ctx.data::<Arc<EventBus>>()?.clone();
-            let mut rx = bus.subscribe();
-            Ok(Box::pin(stream! {
-                loop {
-                    match rx.recv().await {
-                        Ok(ev) => {
-                            if let Event::OperationFailed(e) = ev {
-                                yield e;
-                            }
-                        }
-                        Err(_) => break,
-                    }
-                }
-            }))
-        }
-
-        /// @emoji 🚨 Mirrors [`Subscription::operationFailed`] for SDL `error` consumers.
-        pub async fn error(&self, ctx: &Context<'_>) -> async_graphql::Result<OperationFailedStream> {
-            self.operation_failed(ctx).await
         }
     }
 
     fn build_schema_sync_for(rt: Arc<ParentRuntime>) -> AppSchema {
-        Schema::build(Query, Mutation, Subscription).data(rt.clone()).data(rt.bus.clone()).finish()
+        Schema::build(Query, Mutation, Subscription)
+            .data(rt.clone())
+            .data(rt.bus.clone())
+            .register_output_type::<crate::kit::target_operations::CreatedQualityInput>()
+            .register_output_type::<crate::kit::target_operations::CreatedQualitiesInput>()
+            .register_output_type::<crate::kit::target_operations::RenamedQualityInput>()
+            .register_output_type::<crate::kit::target_operations::UpdatedQualityDescriptionInput>()
+            .register_output_type::<crate::kit::target_operations::UpdatedQualityIconInput>()
+            .register_output_type::<crate::kit::target_operations::AddedAttributeToQualityInput>()
+            .register_output_type::<crate::kit::target_operations::AddedAttributesToQualityInput>()
+            .register_output_type::<crate::kit::target_operations::RemovedAttributeFromQualityInput>()
+            .register_output_type::<crate::kit::target_operations::RemovedAttributesFromQualityInput>()
+            .register_output_type::<crate::kit::target_operations::DeletedQualityInput>()
+            .register_output_type::<crate::kit::target_operations::DeletedQualitiesInput>()
+            .register_output_type::<crate::kit::target_operations::CreatedTagInput>()
+            .register_output_type::<crate::kit::target_operations::CreatedTagsInput>()
+            .register_output_type::<crate::kit::target_operations::RenamedTagInput>()
+            .register_output_type::<crate::kit::target_operations::UpdatedTagDescriptionInput>()
+            .register_output_type::<crate::kit::target_operations::UpdatedTagIconInput>()
+            .register_output_type::<crate::kit::target_operations::AddedAttributeToTagInput>()
+            .register_output_type::<crate::kit::target_operations::AddedAttributesToTagInput>()
+            .register_output_type::<crate::kit::target_operations::RemovedAttributeFromTagInput>()
+            .register_output_type::<crate::kit::target_operations::RemovedAttributesFromTagInput>()
+            .register_output_type::<crate::kit::target_operations::DeletedTagInput>()
+            .register_output_type::<crate::kit::target_operations::DeletedTagsInput>()
+            .register_output_type::<crate::kit::target_operations::CreatedConceptInput>()
+            .register_output_type::<crate::kit::target_operations::CreatedConceptsInput>()
+            .register_output_type::<crate::kit::target_operations::RenamedConceptInput>()
+            .register_output_type::<crate::kit::target_operations::UpdatedConceptDescriptionInput>()
+            .register_output_type::<crate::kit::target_operations::UpdatedConceptIconInput>()
+            .register_output_type::<crate::kit::target_operations::AddedAttributeToConceptInput>()
+            .register_output_type::<crate::kit::target_operations::AddedAttributesToConceptInput>()
+            .register_output_type::<crate::kit::target_operations::RemovedAttributeFromConceptInput>()
+            .register_output_type::<crate::kit::target_operations::RemovedAttributesFromConceptInput>()
+            .register_output_type::<crate::kit::target_operations::DeletedConceptInput>()
+            .register_output_type::<crate::kit::target_operations::DeletedConceptsInput>()
+            .register_output_type::<crate::kit::target_operations::CreatedPortInput>()
+            .register_output_type::<crate::kit::target_operations::CreatedPortsInput>()
+            .register_output_type::<crate::kit::target_operations::RenamedPortInput>()
+            .register_output_type::<crate::kit::target_operations::UpdatedPortDescriptionInput>()
+            .register_output_type::<crate::kit::target_operations::UpdatedPortIconInput>()
+            .register_output_type::<crate::kit::target_operations::AddedAttributeToPortInput>()
+            .register_output_type::<crate::kit::target_operations::AddedAttributesToPortInput>()
+            .register_output_type::<crate::kit::target_operations::RemovedAttributeFromPortInput>()
+            .register_output_type::<crate::kit::target_operations::RemovedAttributesFromPortInput>()
+            .register_output_type::<crate::kit::target_operations::DeletedPortInput>()
+            .register_output_type::<crate::kit::target_operations::DeletedPortsInput>()
+            .finish()
     }
 
     /// 📜 Executable SDL emitted by the in-Rust schema (code-first).

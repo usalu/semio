@@ -2340,9 +2340,9 @@ export interface AppMachineContext<TSelection = any> extends StoreSyncContext {
  * Union of all events an app machine can receive.
  **/
 export type AppMachineEvent<TSelectionDiff = any, TDiff = any> =
-  | { type: "START_TRANSACTION" }
-  | { type: "FINALIZE_TRANSACTION" }
-  | { type: "ABORT_TRANSACTION" }
+  | { type: "START_NEW_CHANGE" }
+  | { type: "SAVE_CHANGE" }
+  | { type: "DISCARD_CHANGE" }
   | { type: "UNDO" }
   | { type: "REDO" }
   | { type: "TOGGLE_PANEL"; panel: keyof PanelVisibility }
@@ -2460,9 +2460,9 @@ export interface KitDiffAppMachineInput extends AppMachineInput {
 }
 
 /**
- * Configuration for transaction handling with apply and inverse functions.
+ * @emoji 🧾 Configuration for local batched kit UI edits (maps to VCS “change” lifecycle naming).
  **/
-export interface TransactionMachineConfig<TEdit = any> {
+export interface ChangeMachineConfig<TEdit = any> {
   applySelectionDiff: (selectionDiff: any) => void;
 
   inverseSelectionDiff: (selection: any, diff: any) => any;
@@ -3622,23 +3622,23 @@ export function registerSingleKeyAppEventHandlers<TAppKey extends string, TAppSt
 
 // #endregion 🏆App Event Handler Factories
 
-// #region 🌪️Transaction Handler Factory
-// MUST provide factory functions for creating undo/redo transaction event handlers.
+// #region 🌪️Change Handler Factory
+// MUST register undo/redo batch handlers keyed by app scope (local UI batching; distinct from persisted Yjs sync keys).
 
 /**
- * Configuration for keyed transaction handlers with namespace, app key, key fields, and default state.
+ * Configuration for keyed change handlers with namespace, app key, key fields, and default state.
  **/
-export interface KeyedTransactionHandlerConfig {
+export interface KeyedChangeHandlerConfig {
   namespace: string;
   appKey: string;
   keyFields: [string, string];
-  createDefaultState: () => { transaction: AppTransactionState };
+  createDefaultState: () => { change: AppChangeState };
 }
 
 /**
- * Transaction state with active flag, current stack, past stack, and redo stack.
+ * @emoji 🧾 Local UI batch state mirrored into XState (field names align with legacy sync doc keys).
  **/
-export interface AppTransactionState<TEdit = any> {
+export interface AppChangeState<TEdit = any> {
   isTransactionActive: boolean;
   currentTransactionStack: TEdit[];
   pastTransactionStack: TEdit[];
@@ -3646,201 +3646,199 @@ export interface AppTransactionState<TEdit = any> {
 }
 
 /**
- * Registers all transaction event handlers for keyed app state.
- * MUST register start, commit, abort, undo, redo, and record edit handlers for keyed state.
+ * Registers keyed change handlers (start/save/discard/undo/redo/run operation) for app state slices.
  **/
-export function createKeyedTransactionHandlers(config: KeyedTransactionHandlerConfig): void {
+export function createKeyedChangeHandlers(config: KeyedChangeHandlerConfig): void {
   const { namespace, appKey, keyFields, createDefaultState } = config;
   const [keyField1, keyField2] = keyFields;
 
-  registerEventHandler(`${namespace}.TRANSACTION.START`, {
+  registerEventHandler(`${namespace}.CHANGE.START_NEW_CHANGE`, {
     action: (context: any, event: any) => {
       const key = `${event[keyField1]}:${event[keyField2]}`;
       const app = context[appKey][key] || createDefaultState();
-      const tx = app.transaction;
+      const tx = app.change;
       if (tx.isTransactionActive) {
         const pastStack = [...tx.pastTransactionStack];
         if (tx.currentTransactionStack.length > 0) {
           const merged = tx.currentTransactionStack.length === 1 ? tx.currentTransactionStack[0] : { do: tx.currentTransactionStack[tx.currentTransactionStack.length - 1].do, undo: tx.currentTransactionStack[0].undo };
           pastStack.push(merged);
         }
-        return { [appKey]: { ...context[appKey], [key]: { ...app, transaction: { isTransactionActive: true, currentTransactionStack: [], pastTransactionStack: pastStack, redoStack: [] } } } };
+        return { [appKey]: { ...context[appKey], [key]: { ...app, change: { isTransactionActive: true, currentTransactionStack: [], pastTransactionStack: pastStack, redoStack: [] } } } };
       }
-      return { [appKey]: { ...context[appKey], [key]: { ...app, transaction: { ...tx, isTransactionActive: true, currentTransactionStack: [] } } } };
+      return { [appKey]: { ...context[appKey], [key]: { ...app, change: { ...tx, isTransactionActive: true, currentTransactionStack: [] } } } };
     },
   });
 
-  registerEventHandler(`${namespace}.TRANSACTION.COMMIT`, {
+  registerEventHandler(`${namespace}.CHANGE.SAVE_CHANGE`, {
     action: (context: any, event: any) => {
       const key = `${event[keyField1]}:${event[keyField2]}`;
       const app = context[appKey][key];
-      if (!app || !app.transaction.isTransactionActive) return {};
-      const tx = app.transaction;
+      if (!app || !app.change.isTransactionActive) return {};
+      const tx = app.change;
       const pastStack = [...tx.pastTransactionStack];
       if (tx.currentTransactionStack.length > 0) {
         const merged = tx.currentTransactionStack.length === 1 ? tx.currentTransactionStack[0] : { do: tx.currentTransactionStack[tx.currentTransactionStack.length - 1].do, undo: tx.currentTransactionStack[0].undo };
         pastStack.push(merged);
       }
-      return { [appKey]: { ...context[appKey], [key]: { ...app, transaction: { isTransactionActive: false, currentTransactionStack: [], pastTransactionStack: pastStack, redoStack: [] } } } };
+      return { [appKey]: { ...context[appKey], [key]: { ...app, change: { isTransactionActive: false, currentTransactionStack: [], pastTransactionStack: pastStack, redoStack: [] } } } };
     },
   });
 
-  registerEventHandler(`${namespace}.TRANSACTION.ABORT`, {
+  registerEventHandler(`${namespace}.CHANGE.DISCARD_CHANGE`, {
     action: (context: any, event: any) => {
       const key = `${event[keyField1]}:${event[keyField2]}`;
       const app = context[appKey][key];
-      if (!app || !app.transaction.isTransactionActive) return {};
-      return { [appKey]: { ...context[appKey], [key]: { ...app, transaction: { ...app.transaction, isTransactionActive: false, currentTransactionStack: [] } } } };
+      if (!app || !app.change.isTransactionActive) return {};
+      return { [appKey]: { ...context[appKey], [key]: { ...app, change: { ...app.change, isTransactionActive: false, currentTransactionStack: [] } } } };
     },
   });
 
-  registerEventHandler(`${namespace}.TRANSACTION.UNDO`, {
+  registerEventHandler(`${namespace}.CHANGE.UNDO`, {
     action: (context: any, event: any) => {
       const key = `${event[keyField1]}:${event[keyField2]}`;
       const app = context[appKey][key];
       if (!app) return {};
-      const tx = app.transaction;
+      const tx = app.change;
       if (tx.isTransactionActive && tx.currentTransactionStack.length > 0) {
         const currentStack = [...tx.currentTransactionStack];
         currentStack.pop();
-        return { [appKey]: { ...context[appKey], [key]: { ...app, transaction: { ...tx, currentTransactionStack: currentStack } } } };
+        return { [appKey]: { ...context[appKey], [key]: { ...app, change: { ...tx, currentTransactionStack: currentStack } } } };
       } else if (!tx.isTransactionActive && tx.pastTransactionStack.length > 0) {
         const pastStack = [...tx.pastTransactionStack];
         const edit = pastStack.pop()!;
         const redoStack = [...tx.redoStack, edit];
-        return { [appKey]: { ...context[appKey], [key]: { ...app, transaction: { ...tx, pastTransactionStack: pastStack, redoStack } } } };
+        return { [appKey]: { ...context[appKey], [key]: { ...app, change: { ...tx, pastTransactionStack: pastStack, redoStack } } } };
       }
       return {};
     },
   });
 
-  registerEventHandler(`${namespace}.TRANSACTION.REDO`, {
+  registerEventHandler(`${namespace}.CHANGE.REDO`, {
     action: (context: any, event: any) => {
       const key = `${event[keyField1]}:${event[keyField2]}`;
       const app = context[appKey][key];
-      if (!app || app.transaction.isTransactionActive || app.transaction.redoStack.length === 0) return {};
-      const tx = app.transaction;
+      if (!app || app.change.isTransactionActive || app.change.redoStack.length === 0) return {};
+      const tx = app.change;
       const redoStack = [...tx.redoStack];
       const edit = redoStack.pop()!;
       const pastStack = [...tx.pastTransactionStack, edit];
-      return { [appKey]: { ...context[appKey], [key]: { ...app, transaction: { ...tx, pastTransactionStack: pastStack, redoStack } } } };
+      return { [appKey]: { ...context[appKey], [key]: { ...app, change: { ...tx, pastTransactionStack: pastStack, redoStack } } } };
     },
   });
 
-  registerEventHandler(`${namespace}.TRANSACTION.RECORD_EDIT`, {
+  registerEventHandler(`${namespace}.CHANGE.RUN_OPERATION`, {
     action: (context: any, event: any) => {
       const key = `${event[keyField1]}:${event[keyField2]}`;
       const app = context[appKey][key];
-      if (!app || !app.transaction.isTransactionActive) return {};
-      const currentStack = [...app.transaction.currentTransactionStack, event.edit];
-      return { [appKey]: { ...context[appKey], [key]: { ...app, transaction: { ...app.transaction, currentTransactionStack: currentStack, redoStack: [] } } } };
+      if (!app || !app.change.isTransactionActive) return {};
+      const currentStack = [...app.change.currentTransactionStack, event.edit];
+      return { [appKey]: { ...context[appKey], [key]: { ...app, change: { ...app.change, currentTransactionStack: currentStack, redoStack: [] } } } };
     },
   });
 }
 
 /**
- * Configuration for single-key transaction handlers with namespace, app key, key field, and default state.
+ * Configuration for single-key change handlers with namespace, app key, key field, and default state.
  **/
-export interface SingleKeyTransactionHandlerConfig {
+export interface SingleKeyChangeHandlerConfig {
   namespace: string;
   appKey: string;
   keyField: string;
-  createDefaultState: () => { transaction: AppTransactionState };
+  createDefaultState: () => { change: AppChangeState };
 }
 
 /**
- * Registers all transaction event handlers for single-key app state.
- * MUST register start, commit, abort, undo, redo, and record edit handlers for single-key state.
+ * Registers single-key change handlers for kit app state.
  **/
-export function createSingleKeyTransactionHandlers(config: SingleKeyTransactionHandlerConfig): void {
+export function createSingleKeyChangeHandlers(config: SingleKeyChangeHandlerConfig): void {
   const { namespace, appKey, keyField, createDefaultState } = config;
 
-  registerEventHandler(`${namespace}.TRANSACTION.START`, {
+  registerEventHandler(`${namespace}.CHANGE.START_NEW_CHANGE`, {
     action: (context: any, event: any) => {
       const key = event[keyField];
       const app = context[appKey][key] || createDefaultState();
-      const tx = app.transaction;
+      const tx = app.change;
       if (tx.isTransactionActive) {
         const pastStack = [...tx.pastTransactionStack];
         if (tx.currentTransactionStack.length > 0) {
           const merged = tx.currentTransactionStack.length === 1 ? tx.currentTransactionStack[0] : { do: tx.currentTransactionStack[tx.currentTransactionStack.length - 1].do, undo: tx.currentTransactionStack[0].undo };
           pastStack.push(merged);
         }
-        return { [appKey]: { ...context[appKey], [key]: { ...app, transaction: { isTransactionActive: true, currentTransactionStack: [], pastTransactionStack: pastStack, redoStack: [] } } } };
+        return { [appKey]: { ...context[appKey], [key]: { ...app, change: { isTransactionActive: true, currentTransactionStack: [], pastTransactionStack: pastStack, redoStack: [] } } } };
       }
-      return { [appKey]: { ...context[appKey], [key]: { ...app, transaction: { ...tx, isTransactionActive: true, currentTransactionStack: [] } } } };
+      return { [appKey]: { ...context[appKey], [key]: { ...app, change: { ...tx, isTransactionActive: true, currentTransactionStack: [] } } } };
     },
   });
 
-  registerEventHandler(`${namespace}.TRANSACTION.COMMIT`, {
+  registerEventHandler(`${namespace}.CHANGE.SAVE_CHANGE`, {
     action: (context: any, event: any) => {
       const key = event[keyField];
       const app = context[appKey][key];
-      if (!app || !app.transaction.isTransactionActive) return {};
-      const tx = app.transaction;
+      if (!app || !app.change.isTransactionActive) return {};
+      const tx = app.change;
       const pastStack = [...tx.pastTransactionStack];
       if (tx.currentTransactionStack.length > 0) {
         const merged = tx.currentTransactionStack.length === 1 ? tx.currentTransactionStack[0] : { do: tx.currentTransactionStack[tx.currentTransactionStack.length - 1].do, undo: tx.currentTransactionStack[0].undo };
         pastStack.push(merged);
       }
-      return { [appKey]: { ...context[appKey], [key]: { ...app, transaction: { isTransactionActive: false, currentTransactionStack: [], pastTransactionStack: pastStack, redoStack: [] } } } };
+      return { [appKey]: { ...context[appKey], [key]: { ...app, change: { isTransactionActive: false, currentTransactionStack: [], pastTransactionStack: pastStack, redoStack: [] } } } };
     },
   });
 
-  registerEventHandler(`${namespace}.TRANSACTION.ABORT`, {
+  registerEventHandler(`${namespace}.CHANGE.DISCARD_CHANGE`, {
     action: (context: any, event: any) => {
       const key = event[keyField];
       const app = context[appKey][key];
-      if (!app || !app.transaction.isTransactionActive) return {};
-      return { [appKey]: { ...context[appKey], [key]: { ...app, transaction: { ...app.transaction, isTransactionActive: false, currentTransactionStack: [] } } } };
+      if (!app || !app.change.isTransactionActive) return {};
+      return { [appKey]: { ...context[appKey], [key]: { ...app, change: { ...app.change, isTransactionActive: false, currentTransactionStack: [] } } } };
     },
   });
 
-  registerEventHandler(`${namespace}.TRANSACTION.UNDO`, {
+  registerEventHandler(`${namespace}.CHANGE.UNDO`, {
     action: (context: any, event: any) => {
       const key = event[keyField];
       const app = context[appKey][key];
       if (!app) return {};
-      const tx = app.transaction;
+      const tx = app.change;
       if (tx.isTransactionActive && tx.currentTransactionStack.length > 0) {
         const currentStack = [...tx.currentTransactionStack];
         currentStack.pop();
-        return { [appKey]: { ...context[appKey], [key]: { ...app, transaction: { ...tx, currentTransactionStack: currentStack } } } };
+        return { [appKey]: { ...context[appKey], [key]: { ...app, change: { ...tx, currentTransactionStack: currentStack } } } };
       } else if (!tx.isTransactionActive && tx.pastTransactionStack.length > 0) {
         const pastStack = [...tx.pastTransactionStack];
         const edit = pastStack.pop()!;
         const redoStack = [...tx.redoStack, edit];
-        return { [appKey]: { ...context[appKey], [key]: { ...app, transaction: { ...tx, pastTransactionStack: pastStack, redoStack } } } };
+        return { [appKey]: { ...context[appKey], [key]: { ...app, change: { ...tx, pastTransactionStack: pastStack, redoStack } } } };
       }
       return {};
     },
   });
 
-  registerEventHandler(`${namespace}.TRANSACTION.REDO`, {
+  registerEventHandler(`${namespace}.CHANGE.REDO`, {
     action: (context: any, event: any) => {
       const key = event[keyField];
       const app = context[appKey][key];
-      if (!app || app.transaction.isTransactionActive || app.transaction.redoStack.length === 0) return {};
-      const tx = app.transaction;
+      if (!app || app.change.isTransactionActive || app.change.redoStack.length === 0) return {};
+      const tx = app.change;
       const redoStack = [...tx.redoStack];
       const edit = redoStack.pop()!;
       const pastStack = [...tx.pastTransactionStack, edit];
-      return { [appKey]: { ...context[appKey], [key]: { ...app, transaction: { ...tx, pastTransactionStack: pastStack, redoStack } } } };
+      return { [appKey]: { ...context[appKey], [key]: { ...app, change: { ...tx, pastTransactionStack: pastStack, redoStack } } } };
     },
   });
 
-  registerEventHandler(`${namespace}.TRANSACTION.RECORD_EDIT`, {
+  registerEventHandler(`${namespace}.CHANGE.RUN_OPERATION`, {
     action: (context: any, event: any) => {
       const key = event[keyField];
       const app = context[appKey][key];
-      if (!app || !app.transaction.isTransactionActive) return {};
-      const currentStack = [...app.transaction.currentTransactionStack, event.edit];
-      return { [appKey]: { ...context[appKey], [key]: { ...app, transaction: { ...app.transaction, currentTransactionStack: currentStack, redoStack: [] } } } };
+      if (!app || !app.change.isTransactionActive) return {};
+      const currentStack = [...app.change.currentTransactionStack, event.edit];
+      return { [appKey]: { ...context[appKey], [key]: { ...app, change: { ...app.change, currentTransactionStack: currentStack, redoStack: [] } } } };
     },
   });
 }
 
-// #endregion 🌪️Transaction Handler Factory
+// #endregion 🌪️Change Handler Factory
 
 // #region 🧿Selector Factory Pattern
 // MUST provide factory functions for creating property selectors with app key scoping.
@@ -7852,9 +7850,9 @@ function applyDiff(syncDoc: SyncDoc, syncSketchpad: SyncMap<any>, diff: Sketchpa
 }
 
 /**
- * Creates the default empty transaction state.
+ * Creates the default empty local change batch state for XState app slices.
  **/
-export function createDefaultTransactionState(): AppTransactionState {
+export function createDefaultChangeState(): AppChangeState {
   return {
     isTransactionActive: false,
     currentTransactionStack: [],
@@ -7878,7 +7876,7 @@ export function createDefaultDesignAppState(): DesignAppState {
     camera: undefined,
     activeTool: undefined,
     fullscreenWindow: undefined,
-    transaction: createDefaultTransactionState(),
+    change: createDefaultChangeState(),
   };
 }
 
@@ -7897,7 +7895,7 @@ export function createDefaultTypeAppState(): TypeAppState {
     selectedRepresentationId: undefined,
     camera: undefined,
     windowLayout: undefined,
-    transaction: createDefaultTransactionState(),
+    change: createDefaultChangeState(),
   };
 }
 
@@ -7917,7 +7915,7 @@ export function createDefaultKitAppState(): KitAppState {
     sortColumn: undefined,
     sortDirection: undefined,
     diagramForce: { ...defaultDiagramForceSettings },
-    transaction: createDefaultTransactionState(),
+    change: createDefaultChangeState(),
   };
 }
 
@@ -7930,7 +7928,7 @@ export function createDefaultQualityAppState(): QualityAppState {
     selection: undefined,
     hover: undefined,
     expandedBenchmarks: new Set<string>(),
-    transaction: createDefaultTransactionState(),
+    change: createDefaultChangeState(),
   };
 }
 

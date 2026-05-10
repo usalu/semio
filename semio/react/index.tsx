@@ -61,6 +61,7 @@ import {
   StoreCommand,
   writeKitStoreClientSchemaField,
   getSemioKitLiveReadStore,
+  CommandBuilder,
 } from "@semio/js";
 import {
   asKitInstance,
@@ -141,6 +142,7 @@ import type {
   KitReadPoint,
   KitStoreClient,
   KitWriteScope,
+  ChangeId,
   PieceDiff,
   PieceIdDto,
   PiecePlain,
@@ -787,9 +789,9 @@ const ROOT_COLLECTION_TYPE_BY_KEY: Record<string, string> = {
   pendingCandidates: "KitChangeCandidate",
   activeConflicts: "KitConflict",
   activeTransactions: "KitTransaction",
-  changes: "KitChange",
-  undoStack: "KitChange",
-  redoStack: "KitChange",
+  changes: "Edit",
+  undoStack: "Edit",
+  redoStack: "Edit",
   votes: "KitCandidateVote",
   requestedFrom: "KitSession",
   actions: "SessionWarningAction",
@@ -838,7 +840,7 @@ const NESTED_TYPE_BY_KEY: Record<string, string> = {
   validation: "KitValidationResult",
   candidate: "KitChangeCandidate",
   conflict: "KitConflict",
-  change: "KitChange",
+  change: "Edit",
   transaction: "KitTransaction",
   store: "KitStore",
   history: "KitHistory",
@@ -3332,23 +3334,24 @@ export function useOptimistic<T>(triad: KitFieldBinding<T>): {
 }
 
 /**
- * Local draft over a {@link KitFieldBinding}: mirror server value, edit locally, {@link commit} async-writes;
- * on rejection the draft is kept; {@link status} comes from the triad for {@link useWriteIndicator}.
+ * Local pending value over a {@link KitFieldBinding}: mirror server value, edit locally, {@link commit} async-writes;
+ * on rejection the pending value is kept; {@link status} comes from the triad for {@link useWriteIndicator}.
+ * @emoji 🧾 Replaces the confusing `useDraft` name (conflicted with removed Draft entity semantics).
  */
-export function useDraft<T>(triad: KitFieldBinding<T>): {
+export function usePendingTriad<T>(triad: KitFieldBinding<T>): {
   value: T;
-  setDraft: (next: SetStateAction<T>) => void;
+  setPending: (next: SetStateAction<T>) => void;
   commit: () => Promise<SetResult>;
   reset: () => void;
   status: WriteStatus;
   error: SetError | undefined;
 } {
   const [server, setServer, status] = triad;
-  const [draft, setDraft] = React.useState<T | undefined>(undefined);
-  const value = (draft !== undefined ? draft : server) as T;
-  const setDraftFn = React.useCallback(
+  const [pending, setPendingLocal] = React.useState<T | undefined>(undefined);
+  const value = (pending !== undefined ? pending : server) as T;
+  const setPendingFn = React.useCallback(
     (next: SetStateAction<T>) => {
-      setDraft((d) => {
+      setPendingLocal((d) => {
         const base = (d !== undefined ? d : server) as T;
         return typeof next === "function" ? (next as (p: T) => T)(base) : next;
       });
@@ -3356,14 +3359,14 @@ export function useDraft<T>(triad: KitFieldBinding<T>): {
     [server],
   );
   const commit = React.useCallback(async () => {
-    if (draft === undefined) return { ok: true } as const;
-    const r = await setServer(draft);
-    if (r.ok) setDraft(undefined);
+    if (pending === undefined) return { ok: true } as const;
+    const r = await setServer(pending);
+    if (r.ok) setPendingLocal(undefined);
     return r;
-  }, [draft, setServer]);
-  const reset = React.useCallback(() => setDraft(undefined), []);
+  }, [pending, setServer]);
+  const reset = React.useCallback(() => setPendingLocal(undefined), []);
   const error = status.kind === "error" ? status.lastError : undefined;
-  return { value, setDraft: setDraftFn, commit, reset, status, error };
+  return { value, setPending: setPendingFn, commit, reset, status, error };
 }
 
 // #region 🎛️KitStoreClient command hooks (WASM / worker RPCs)
@@ -3632,6 +3635,156 @@ export function useRedo(): { run: () => Promise<SetResult>; status: WriteStatus 
   }, [runtime.kitClient, runtime.canWrite, runtime.pushSetRejection]);
   return { run, status };
 }
+
+// #region 🔖ChangeLifecycleAndCommandBuilder
+
+/** @emoji 🧭 Stable {@link CommandBuilder} for nested `Mutation.session` writes (see `@semio/js` implementation). */
+export function useCommandBuilder(): CommandBuilder | null {
+  const client = useKitStoreClient();
+  return React.useMemo(() => (client ? new CommandBuilder(client) : null), [client]);
+}
+
+/**
+ * @emoji 🧭 Target-schema **Change** lifecycle façade (`Session.theKit`): maps today's kit-write transaction anchors.
+ * When rs exposes explicit Change ids on {@link KitWriteScope}, wire {@link currentChangeId} there instead of `transactionId`.
+ */
+export function useChange(): {
+  startNewChange: () => Promise<SetResult>;
+  save: (changeId?: ChangeId) => Promise<SetResult>;
+  createCheckpoint: (message: string) => Promise<SetResult>;
+  currentChangeId: ChangeId | null;
+} {
+  const client = useKitStoreClient();
+  const builder = React.useMemo(() => (client ? new CommandBuilder(client) : null), [client]);
+  const currentChangeId = (client?.getKitWriteScope()?.transactionId ?? null) as ChangeId | null;
+  const startNewChange = React.useCallback(async () => {
+    if (!builder) return { ok: false, error: { kind: "Readonly", message: "no kit client" } } as const;
+    return builder.session().theKit().startNewChange();
+  }, [builder]);
+  const save = React.useCallback(
+    async (_changeId?: ChangeId) => {
+      void _changeId;
+      if (!builder) return { ok: false, error: { kind: "Readonly", message: "no kit client" } } as const;
+      return builder.session().theKit().save();
+    },
+    [builder],
+  );
+  const createCheckpoint = React.useCallback(
+    async (message: string) => {
+      if (!builder) return { ok: false, error: { kind: "Readonly", message: "no kit client" } } as const;
+      return builder.session().theKit().createCheckpoint(message);
+    },
+    [builder],
+  );
+  return { startNewChange, save, createCheckpoint, currentChangeId };
+}
+
+/** @emoji 🧭 Opens a new kit-write transaction (`VersionCommandInput.startNewChange`). */
+export function useStartNewChange(): { run: () => Promise<SetResult>; status: WriteStatus } {
+  const { startNewChange } = useChange();
+  const [status, setStatus] = React.useState<WriteStatus>(WRITE_STATUS_IDLE);
+  const run = React.useCallback(async () => {
+    setStatus(WRITE_STATUS_PENDING);
+    const r = await startNewChange();
+    if (!r.ok) setStatus({ kind: "error", pending: 0, lastError: r.error });
+    else setStatus(WRITE_STATUS_IDLE);
+    return r;
+  }, [startNewChange]);
+  return { run, status };
+}
+
+/** @emoji 🧭 Saves the active unsaved change (`VersionCommandInput.save` / `UnsavedChangeCommandInput.save`). */
+export function useSaveChange(): { run: (changeId?: ChangeId) => Promise<SetResult>; status: WriteStatus } {
+  const { save } = useChange();
+  const [status, setStatus] = React.useState<WriteStatus>(WRITE_STATUS_IDLE);
+  const run = React.useCallback(
+    async (changeId?: ChangeId) => {
+      setStatus(WRITE_STATUS_PENDING);
+      const r = await save(changeId);
+      if (!r.ok) setStatus({ kind: "error", pending: 0, lastError: r.error });
+      else setStatus(WRITE_STATUS_IDLE);
+      return r;
+    },
+    [save],
+  );
+  return { run, status };
+}
+
+/** @emoji 🧭 Placeholder until {@link Alternative.unsavedChanges} live-read selection lands in Worker E. */
+export function useUnsavedChanges(): KitFieldBinding<readonly unknown[]> {
+  return kitReadonlyTriad([]);
+}
+
+/** @emoji 🧭 Session hub auth (stub until rs hub mutations are wired). */
+export function useLogin(): {
+  run: (username: string, passwordHash: string, hubUrl?: string) => Promise<SetResult>;
+  status: WriteStatus;
+} {
+  const b = useCommandBuilder();
+  const [status, setStatus] = React.useState<WriteStatus>(WRITE_STATUS_IDLE);
+  const run = React.useCallback(
+    async (username: string, passwordHash: string, hubUrl?: string) => {
+      if (!b) return { ok: false, error: { kind: "Readonly", message: "no kit client" } } as const;
+      setStatus(WRITE_STATUS_PENDING);
+      const r = await b.session().login(username, passwordHash, hubUrl);
+      if (!r.ok) setStatus({ kind: "error", pending: 0, lastError: r.error });
+      else setStatus(WRITE_STATUS_IDLE);
+      return r;
+    },
+    [b],
+  );
+  return { run, status };
+}
+
+/** @emoji 🧭 Session hub logout (stub until rs hub mutations are wired). */
+export function useLogout(): { run: () => Promise<SetResult>; status: WriteStatus } {
+  const b = useCommandBuilder();
+  const [status, setStatus] = React.useState<WriteStatus>(WRITE_STATUS_IDLE);
+  const run = React.useCallback(async () => {
+    if (!b) return { ok: false, error: { kind: "Readonly", message: "no kit client" } } as const;
+    setStatus(WRITE_STATUS_PENDING);
+    const r = await b.session().logout();
+    if (!r.ok) setStatus({ kind: "error", pending: 0, lastError: r.error });
+    else setStatus(WRITE_STATUS_IDLE);
+    return r;
+  }, [b]);
+  return { run, status };
+}
+
+/** @emoji 🧭 `Session.startAlternative` wrapper around {@link KitStoreClient.createAlternativeFromTip}. */
+export function useStartAlternative(): { run: (name?: string) => Promise<SetResult>; status: WriteStatus } {
+  const b = useCommandBuilder();
+  const [status, setStatus] = React.useState<WriteStatus>(WRITE_STATUS_IDLE);
+  const run = React.useCallback(
+    async (name?: string) => {
+      if (!b) return { ok: false, error: { kind: "Readonly", message: "no kit client" } } as const;
+      setStatus(WRITE_STATUS_PENDING);
+      const r = await b.session().startAlternative(name);
+      if (!r.ok) setStatus({ kind: "error", pending: 0, lastError: r.error });
+      else setStatus(WRITE_STATUS_IDLE);
+      return r;
+    },
+    [b],
+  );
+  return { run, status };
+}
+
+/** @emoji 🧭 `AlternativeCommandInput.integrateIntoTheKit` (stub until rs merges alternatives). */
+export function useIntegrateAlternative(alternativeId: string): { run: () => Promise<SetResult>; status: WriteStatus } {
+  const b = useCommandBuilder();
+  const [status, setStatus] = React.useState<WriteStatus>(WRITE_STATUS_IDLE);
+  const run = React.useCallback(async () => {
+    if (!b) return { ok: false, error: { kind: "Readonly", message: "no kit client" } } as const;
+    setStatus(WRITE_STATUS_PENDING);
+    const r = await b.session().alternative(alternativeId).integrateIntoTheKit();
+    if (!r.ok) setStatus({ kind: "error", pending: 0, lastError: r.error });
+    else setStatus(WRITE_STATUS_IDLE);
+    return r;
+  }, [b, alternativeId]);
+  return { run, status };
+}
+
+// #endregion 🔖ChangeLifecycleAndCommandBuilder
 
 export function useCanUndo(): KitFieldBinding<boolean> {
   const runtime = useKitRuntime();
@@ -9883,60 +10036,61 @@ export function useKitCommandDescriptorDescription(idValue?: string): KitFieldBi
   return useSchemaFieldState("KitCommandDescriptor", "description", idValue);
 }
 
-export function useKitChange(idValue?: string): KitFieldBinding<any> {
-  return useSchemaObjectState("KitChange", idValue);
+/** @emoji 📝 GraphQL **Edit** (`StrongEntity`) — single-operation record with forward/backward op lists (target schema VCS). */
+export function useEdit(idValue?: string): KitFieldBinding<any> {
+  return useSchemaObjectState("Edit", idValue);
 }
 
-export function useKitChangeHash(idValue?: string): KitFieldBinding<any> {
-  return useSchemaFieldState("KitChange", "hash", idValue);
+export function useEditHash(idValue?: string): KitFieldBinding<any> {
+  return useSchemaFieldState("Edit", "hash", idValue);
 }
 
-export function useKitChangeId(idValue?: string): KitFieldBinding<any> {
-  return useSchemaFieldState("KitChange", "id", idValue);
+export function useEditId(idValue?: string): KitFieldBinding<any> {
+  return useSchemaFieldState("Edit", "id", idValue);
 }
 
-export function useKitChangeKind(idValue?: string): KitFieldBinding<any> {
-  return useSchemaFieldState("KitChange", "kind", idValue);
+export function useEditKind(idValue?: string): KitFieldBinding<any> {
+  return useSchemaFieldState("Edit", "kind", idValue);
 }
 
-export function useKitChangeSummary(idValue?: string): KitFieldBinding<any> {
-  return useSchemaFieldState("KitChange", "summary", idValue);
+export function useEditSummary(idValue?: string): KitFieldBinding<any> {
+  return useSchemaFieldState("Edit", "summary", idValue);
 }
 
-export function useKitChangeOrigin(idValue?: string): KitFieldBinding<any> {
-  return useSchemaFieldState("KitChange", "origin", idValue);
+export function useEditOrigin(idValue?: string): KitFieldBinding<any> {
+  return useSchemaFieldState("Edit", "origin", idValue);
 }
 
-export function useKitChangeActor(idValue?: string): KitFieldBinding<any> {
-  return useSchemaFieldState("KitChange", "actor", idValue);
+export function useEditActor(idValue?: string): KitFieldBinding<any> {
+  return useSchemaFieldState("Edit", "actor", idValue);
 }
 
-export function useKitChangeSession(idValue?: string): KitFieldBinding<any> {
-  return useSchemaFieldState("KitChange", "session", idValue);
+export function useEditSession(idValue?: string): KitFieldBinding<any> {
+  return useSchemaFieldState("Edit", "session", idValue);
 }
 
-export function useKitChangeTransaction(idValue?: string): KitFieldBinding<any> {
-  return useSchemaFieldState("KitChange", "transaction", idValue);
+export function useEditTransaction(idValue?: string): KitFieldBinding<any> {
+  return useSchemaFieldState("Edit", "transaction", idValue);
 }
 
-export function useKitChangeForward(idValue?: string): KitFieldBinding<any> {
-  return useSchemaFieldState("KitChange", "forward", idValue);
+export function useEditForward(idValue?: string): KitFieldBinding<any> {
+  return useSchemaFieldState("Edit", "forward", idValue);
 }
 
-export function useKitChangeBackward(idValue?: string): KitFieldBinding<any> {
-  return useSchemaFieldState("KitChange", "backward", idValue);
+export function useEditBackward(idValue?: string): KitFieldBinding<any> {
+  return useSchemaFieldState("Edit", "backward", idValue);
 }
 
-export function useKitChangeValidation(idValue?: string): KitFieldBinding<any> {
-  return useSchemaFieldState("KitChange", "validation", idValue);
+export function useEditValidation(idValue?: string): KitFieldBinding<any> {
+  return useSchemaFieldState("Edit", "validation", idValue);
 }
 
-export function useKitChangeCreatedAt(idValue?: string): KitFieldBinding<any> {
-  return useSchemaFieldState("KitChange", "createdAt", idValue);
+export function useEditCreatedAt(idValue?: string): KitFieldBinding<any> {
+  return useSchemaFieldState("Edit", "createdAt", idValue);
 }
 
-export function useKitChangeAppliedAt(idValue?: string): KitFieldBinding<any> {
-  return useSchemaFieldState("KitChange", "appliedAt", idValue);
+export function useEditAppliedAt(idValue?: string): KitFieldBinding<any> {
+  return useSchemaFieldState("Edit", "appliedAt", idValue);
 }
 
 export function useKitCandidateStatus(idValue?: string): KitFieldBinding<any> {
@@ -16753,6 +16907,20 @@ export function useKitStoreEventTransaction(idValue?: string): KitFieldBinding<a
 
 export const schemaHooks = Object.freeze({
   useJSON,
+  useEdit,
+  useEditHash,
+  useEditId,
+  useEditKind,
+  useEditSummary,
+  useEditOrigin,
+  useEditActor,
+  useEditSession,
+  useEditTransaction,
+  useEditForward,
+  useEditBackward,
+  useEditValidation,
+  useEditCreatedAt,
+  useEditAppliedAt,
   useActorKind,
   useActor,
   useActorId,
@@ -17926,7 +18094,7 @@ if (shouldRunReactEmbeddedTests) {
     });
   });
 
-  describe("useDraft", () => {
+  describe("usePendingTriad", () => {
     it("keeps local draft and does not clear it when commit rejects", async () => {
       const triad: KitFieldBinding<string> = [
         "server",
@@ -17937,15 +18105,15 @@ if (shouldRunReactEmbeddedTests) {
         },
         { kind: "idle", pending: 0 },
       ];
-      let snap: ReturnType<typeof useDraft<string>> | null = null;
+      let snap: ReturnType<typeof usePendingTriad<string>> | null = null;
       function P() {
-        snap = useDraft(triad);
+        snap = usePendingTriad(triad);
         return null;
       }
       render(React.createElement(P));
       await waitFor(() => expect(snap).not.toBeNull());
       await act(async () => {
-        snap!.setDraft("reject");
+        snap!.setPending("reject");
       });
       const r = await act(async () => snap!.commit());
       expect(r.ok).toBe(false);
@@ -17961,15 +18129,15 @@ if (shouldRunReactEmbeddedTests) {
         },
         { kind: "idle", pending: 0 },
       ];
-      let snap: ReturnType<typeof useDraft<string>> | null = null;
+      let snap: ReturnType<typeof usePendingTriad<string>> | null = null;
       function P() {
-        snap = useDraft(triad);
+        snap = usePendingTriad(triad);
         return null;
       }
       render(React.createElement(P));
       await waitFor(() => expect(snap).not.toBeNull());
       await act(async () => {
-        snap!.setDraft("edited");
+        snap!.setPending("edited");
       });
       expect(snap!.value).toBe("edited");
       const r = await act(async () => snap!.commit());
@@ -17977,21 +18145,21 @@ if (shouldRunReactEmbeddedTests) {
       expect(snap!.value).toBe("server");
     });
 
-    it("two useDraft instances do not share draft state", async () => {
+    it("two usePendingTriad instances do not share pending state", async () => {
       const triadA: KitFieldBinding<string> = ["a", async () => ({ ok: true }) as const, { kind: "idle", pending: 0 }];
       const triadB: KitFieldBinding<string> = ["b", async () => ({ ok: true }) as const, { kind: "idle", pending: 0 }];
-      let sa: ReturnType<typeof useDraft<string>> | null = null;
-      let sb: ReturnType<typeof useDraft<string>> | null = null;
+      let sa: ReturnType<typeof usePendingTriad<string>> | null = null;
+      let sb: ReturnType<typeof usePendingTriad<string>> | null = null;
       function P() {
-        sa = useDraft(triadA);
-        sb = useDraft(triadB);
+        sa = usePendingTriad(triadA);
+        sb = usePendingTriad(triadB);
         return null;
       }
       render(React.createElement(P));
       await waitFor(() => expect(sa && sb).toBeTruthy());
       await act(async () => {
-        sa!.setDraft("only-a");
-        sb!.setDraft("only-b");
+        sa!.setPending("only-a");
+        sb!.setPending("only-b");
       });
       expect(sa!.value).toBe("only-a");
       expect(sb!.value).toBe("only-b");
