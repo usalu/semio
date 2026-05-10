@@ -7646,26 +7646,26 @@ export type SketchpadEvent =
   | { type: "DESIGN.SET_CAMERA"; kitId: Id; designId: Id; camera: any }
   | { type: "DESIGN.SELECT_ALL"; kitId: Id; designId: Id }
   | { type: "DESIGN.DELETE_SELECTED"; kitId: Id; designId: Id }
-  // Design transaction events (scoped to design app)
-  | { type: "DESIGN.TRANSACTION.START"; kitId: Id; designId: Id }
-  | { type: "DESIGN.TRANSACTION.COMMIT"; kitId: Id; designId: Id }
-  | { type: "DESIGN.TRANSACTION.ABORT"; kitId: Id; designId: Id }
-  | { type: "DESIGN.TRANSACTION.UNDO"; kitId: Id; designId: Id }
-  | { type: "DESIGN.TRANSACTION.REDO"; kitId: Id; designId: Id }
-  | { type: "DESIGN.TRANSACTION.RECORD_EDIT"; kitId: Id; designId: Id; edit: any }
-  // Type transaction events (scoped to type app)
-  | { type: "TYPE.TRANSACTION.START"; kitId: Id; typeId: Id }
-  | { type: "TYPE.TRANSACTION.COMMIT"; kitId: Id; typeId: Id }
-  | { type: "TYPE.TRANSACTION.ABORT"; kitId: Id; typeId: Id }
-  | { type: "TYPE.TRANSACTION.UNDO"; kitId: Id; typeId: Id }
-  | { type: "TYPE.TRANSACTION.REDO"; kitId: Id; typeId: Id }
-  | { type: "TYPE.TRANSACTION.RECORD_EDIT"; kitId: Id; typeId: Id; edit: any }
-  // Kit transaction events (scoped to kit app)
-  | { type: "KIT.TRANSACTION.START"; kitId: Id }
-  | { type: "KIT.TRANSACTION.COMMIT"; kitId: Id }
-  | { type: "KIT.TRANSACTION.ABORT"; kitId: Id }
-  | { type: "KIT.TRANSACTION.REDO"; kitId: Id }
-  | { type: "KIT.TRANSACTION.RECORD_EDIT"; kitId: Id; edit: any }
+  // Design change batch events (scoped to design app)
+  | { type: "DESIGN.CHANGE.START_NEW_CHANGE"; kitId: Id; designId: Id }
+  | { type: "DESIGN.CHANGE.SAVE_CHANGE"; kitId: Id; designId: Id }
+  | { type: "DESIGN.CHANGE.DISCARD_CHANGE"; kitId: Id; designId: Id }
+  | { type: "DESIGN.CHANGE.UNDO"; kitId: Id; designId: Id }
+  | { type: "DESIGN.CHANGE.REDO"; kitId: Id; designId: Id }
+  | { type: "DESIGN.CHANGE.RUN_OPERATION"; kitId: Id; designId: Id; edit: any }
+  // Type change batch events (scoped to type app)
+  | { type: "TYPE.CHANGE.START_NEW_CHANGE"; kitId: Id; typeId: Id }
+  | { type: "TYPE.CHANGE.SAVE_CHANGE"; kitId: Id; typeId: Id }
+  | { type: "TYPE.CHANGE.DISCARD_CHANGE"; kitId: Id; typeId: Id }
+  | { type: "TYPE.CHANGE.UNDO"; kitId: Id; typeId: Id }
+  | { type: "TYPE.CHANGE.REDO"; kitId: Id; typeId: Id }
+  | { type: "TYPE.CHANGE.RUN_OPERATION"; kitId: Id; typeId: Id; edit: any }
+  // Kit change batch events (scoped to kit app)
+  | { type: "KIT.CHANGE.START_NEW_CHANGE"; kitId: Id }
+  | { type: "KIT.CHANGE.SAVE_CHANGE"; kitId: Id }
+  | { type: "KIT.CHANGE.DISCARD_CHANGE"; kitId: Id }
+  | { type: "KIT.CHANGE.REDO"; kitId: Id }
+  | { type: "KIT.CHANGE.RUN_OPERATION"; kitId: Id; edit: any }
   // Background operation events (for async operations that continue when navigating away)
   | { type: "BACKGROUND.START"; operationId: string; operationType: string }
   | { type: "BACKGROUND.COMPLETE"; operationId: string }
@@ -9308,31 +9308,31 @@ export const selectSketchpadNavigationHistoryIndex = (state: { context: Sketchpa
  **/
 export const selectSketchpadSettings = (state: { context: SketchpadContext }) => state.context.sketchpad.settings || createDefaultSketchpadState().settings;
 
-/** getAppTransaction holds the data fields for a getAppTransaction record.
+/** getAppChange holds the data fields for a getAppChange record.
  **/
 /**
  **/
-const getAppTransaction = (context: SketchpadContext, appKey: string): AppTransactionState | undefined => {
+const getAppChange = (context: SketchpadContext, appKey: string): AppChangeState | undefined => {
   const parts = appKey.split("-");
   if (parts[0] === "design" && parts.length >= 3) {
     const key = `${parts[1]}:${parts.slice(2).join("-")}`;
-    return context.designApps[key]?.transaction;
+    return context.designApps[key]?.change;
   }
   if (parts[0] === "type" && parts.length >= 3) {
     const key = `${parts[1]}:${parts.slice(2).join("-")}`;
-    return context.typeApps[key]?.transaction;
+    return context.typeApps[key]?.change;
   }
   if (parts[0] === "kit" && parts.length >= 2) {
-    return context.kitApps[parts[1]]?.transaction;
+    return context.kitApps[parts[1]]?.change;
   }
   return undefined;
 };
 
-/** defaultTransactionState holds the data fields for a defaultTransactionState record.
+/** defaultChangeState holds the data fields for a defaultChangeState record.
  **/
 /**
  **/
-const defaultTransactionState: AppTransactionState = {
+const defaultChangeState: AppChangeState = {
   isTransactionActive: false,
   currentTransactionStack: [],
   pastTransactionStack: [],
@@ -9340,20 +9340,20 @@ const defaultTransactionState: AppTransactionState = {
 };
 
 /**
- * Creates a selector for the transaction state of a given app key.
+ * Creates a selector for the local change batch state of a given app key.
  **/
-export const createTransactionSelector = (appKey: string) => (state: { context: SketchpadContext }) => getAppTransaction(state.context, appKey) || defaultTransactionState;
+export const createChangeSelector = (appKey: string) => (state: { context: SketchpadContext }) => getAppChange(state.context, appKey) || defaultChangeState;
 
 /**
- * Creates a selector returning whether a transaction is active.
+ * Creates a selector returning whether a local change batch is active.
  **/
-export const createTransactionIsActiveSelector = (appKey: string) => (state: { context: SketchpadContext }) => getAppTransaction(state.context, appKey)?.isTransactionActive ?? false;
+export const createChangeIsActiveSelector = (appKey: string) => (state: { context: SketchpadContext }) => getAppChange(state.context, appKey)?.isTransactionActive ?? false;
 
 /**
  * Creates a selector returning whether an undo operation is available.
  **/
-export const createTransactionCanUndoSelector = (appKey: string) => (state: { context: SketchpadContext }) => {
-  const tx = getAppTransaction(state.context, appKey);
+export const createChangeCanUndoSelector = (appKey: string) => (state: { context: SketchpadContext }) => {
+  const tx = getAppChange(state.context, appKey);
   if (!tx) return false;
   return tx.isTransactionActive ? tx.currentTransactionStack.length > 0 : tx.pastTransactionStack.length > 0;
 };
@@ -9361,8 +9361,8 @@ export const createTransactionCanUndoSelector = (appKey: string) => (state: { co
 /**
  * Creates a selector returning whether a redo operation is available.
  **/
-export const createTransactionCanRedoSelector = (appKey: string) => (state: { context: SketchpadContext }) => {
-  const tx = getAppTransaction(state.context, appKey);
+export const createChangeCanRedoSelector = (appKey: string) => (state: { context: SketchpadContext }) => {
+  const tx = getAppChange(state.context, appKey);
   if (!tx) return false;
   return !tx.isTransactionActive && tx.redoStack.length > 0;
 };
@@ -25113,7 +25113,7 @@ if (typeof window !== "undefined") {
     },
   });
 
-  createSingleKeyTransactionHandlers({
+  createSingleKeyChangeHandlers({
     namespace: "KIT",
     appKey: "kitApps",
     keyField: "kitId",
@@ -25376,7 +25376,7 @@ export function useKitAppExpandedRows(): HookNoSetResult<Set<string>> {
  * Returns the Kit app transaction controller with start, finalize, and abort.
  *MUST provide transaction actions dispatching to the XState actor.
  **/
-export function useKitAppTransaction(): TransactionCallbacks {
+export function useKitAppChange(): TransactionCallbacks {
   const actor = useSketchpadActor();
   const kitScope = useKitScope();
   const kitId = kitScope?.id ?? "";
@@ -25385,9 +25385,9 @@ export function useKitAppTransaction(): TransactionCallbacks {
     return {};
   }
   return {
-    start: () => actor.send({ type: "KIT.TRANSACTION.START", kitId }),
-    finalize: () => actor.send({ type: "KIT.TRANSACTION.COMMIT", kitId }),
-    abort: () => actor.send({ type: "KIT.TRANSACTION.ABORT", kitId }),
+    start: () => actor.send({ type: "KIT.CHANGE.START_NEW_CHANGE", kitId }),
+    finalize: () => actor.send({ type: "KIT.CHANGE.SAVE_CHANGE", kitId }),
+    abort: () => actor.send({ type: "KIT.CHANGE.DISCARD_CHANGE", kitId }),
   };
 }
 
@@ -27119,7 +27119,7 @@ if (typeof window !== "undefined") {
     },
   });
 
-  createKeyedTransactionHandlers({
+  createKeyedChangeHandlers({
     namespace: "DESIGN",
     appKey: "designApps",
     keyFields: ["kitId", "designId"],
@@ -37325,7 +37325,8 @@ if (typeof window !== "undefined") {
       return { typeApps: { ...apps, [key]: { ...app, selection: undefined } } };
     },
   });
-  createKeyedTransactionHandlers({
+  createKeyedChangeHandlers({
+    namespace: "TYPE",
     appKey: "typeApps",
     keyFields: ["kitId", "typeId"],
     createDefaultState: createDefaultTypeAppState,
@@ -37587,11 +37588,11 @@ export function useTypeAppCommands(id?: TypeAppId) {
     }
 
     return {
-      startTransaction: () => actor.send({ type: "TYPE.TRANSACTION.START", kitId, typeId }),
-      finalizeTransaction: () => actor.send({ type: "TYPE.TRANSACTION.COMMIT", kitId, typeId }),
-      abortTransaction: () => actor.send({ type: "TYPE.TRANSACTION.ABORT", kitId, typeId }),
-      undo: () => actor.send({ type: "TYPE.TRANSACTION.UNDO", kitId, typeId }),
-      redo: () => actor.send({ type: "TYPE.TRANSACTION.REDO", kitId, typeId }),
+      startTransaction: () => actor.send({ type: "TYPE.CHANGE.START_NEW_CHANGE", kitId, typeId }),
+      finalizeTransaction: () => actor.send({ type: "TYPE.CHANGE.SAVE_CHANGE", kitId, typeId }),
+      abortTransaction: () => actor.send({ type: "TYPE.CHANGE.DISCARD_CHANGE", kitId, typeId }),
+      undo: () => actor.send({ type: "TYPE.CHANGE.UNDO", kitId, typeId }),
+      redo: () => actor.send({ type: "TYPE.CHANGE.REDO", kitId, typeId }),
       selectAll: () => actor.send({ type: "TYPE.SELECT_ALL", kitId, typeId }),
       deselectAll: () => actor.send({ type: "TYPE.DESELECT_ALL", kitId, typeId }),
       togglePanel: (_origin: string, panelKey: keyof PanelVisibility) => actor.send({ type: "TYPE.TOGGLE_PANEL", kitId, typeId, panel: panelKey }),
@@ -40125,8 +40126,8 @@ export const TypeHistorySettings: FC = () => {
   const { undo, redo } = useTypeAppCommands();
   const kitId = kitScope?.id ?? "";
   const typeId = typeScope?.id ?? "";
-  const canUndo = useSelector(actor, (snapshot) => snapshot.can({ type: "TYPE.TRANSACTION.UNDO", kitId, typeId }));
-  const canRedo = useSelector(actor, (snapshot) => snapshot.can({ type: "TYPE.TRANSACTION.REDO", kitId, typeId }));
+  const canUndo = useSelector(actor, (snapshot) => snapshot.can({ type: "TYPE.CHANGE.UNDO", kitId, typeId }));
+  const canRedo = useSelector(actor, (snapshot) => snapshot.can({ type: "TYPE.CHANGE.REDO", kitId, typeId }));
   return (
     <ToolbarGroup>
       <ToolbarCommandButton id="semio.sketchpad.app.type.history.undo" icon={<SkipBackIcon className="size-tiny" />} text="Undo" disabled={!canUndo} onClick={() => undo?.()} />

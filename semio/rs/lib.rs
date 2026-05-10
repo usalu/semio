@@ -878,20 +878,34 @@ pub mod gql_relay {
     simple_conn_sync!(StatConnection, StatEdge, Stat, |s: &Stat| s.compute_entity_hash());
     simple_conn_sync!(LayerConnection, LayerEdge, Layer, |l: &Layer| l.compute_entity_hash());
     simple_conn_sync!(GroupConnection, GroupEdge, Group, |g: &Group| g.compute_entity_hash());
-    simple_conn_entity!(PositionNodeConnection, PositionNodeEdge, Arc<crate::geom::entity::PositionNode>);
 
-    /// @emoji 🪢 `entity_relay!` — async Merkle relay for `Arc` geometry nodes.
+    /// @emoji 🪢 `entity_full_family!` — relay Edge/Connection for geometry (`VectorEdge`…`LocationEdge`). Diff/modification ladders extend here toward full 12-type families.
+    macro_rules! entity_full_family {
+        (
+            $base:ident,
+            $node:ty,
+            relay = ($conn:ident, $edge:ident)
+        ) => {
+            paste::paste! {
+                simple_conn_entity!($conn, $edge, $node);
+            }
+        };
+    }
+
+    entity_full_family!(Vector, Arc<crate::geom::entity::VectorNode>, relay = (VectorConnection, VectorEdge));
+    entity_full_family!(Point, Arc<crate::geom::entity::PointNode>, relay = (PointConnection, PointEdge));
+    entity_full_family!(Coordinate, Arc<crate::geom::entity::CoordinateNode>, relay = (CoordinateConnection, CoordinateEdge));
+    entity_full_family!(Offset, Arc<crate::geom::entity::OffsetNode>, relay = (OffsetConnection, OffsetEdge));
+    entity_full_family!(Plane, Arc<crate::geom::entity::PlaneNode>, relay = (PlaneConnection, PlaneEdge));
+    entity_full_family!(Position, Arc<crate::geom::entity::PositionNode>, relay = (PositionConnection, PositionEdge));
+    entity_full_family!(Location, Arc<crate::geom::entity::LocationNode>, relay = (LocationConnection, LocationEdge));
+
+    /// @emoji 🪢 `entity_relay!` — forwards to [`simple_conn_entity!`] for non-geometry relay shells.
     macro_rules! entity_relay {
         ($Conn:ident, $Edge:ident, $Node:ty) => {
             simple_conn_entity!($Conn, $Edge, $Node);
         };
     }
-
-    entity_relay!(VectorNodeConnection, VectorNodeEdge, Arc<crate::geom::entity::VectorNode>);
-    entity_relay!(CoordinateNodeConnection, CoordinateNodeEdge, Arc<crate::geom::entity::CoordinateNode>);
-    entity_relay!(PointNodeConnection, PointNodeEdge, Arc<crate::geom::entity::PointNode>);
-    entity_relay!(PlaneNodeConnection, PlaneNodeEdge, Arc<crate::geom::entity::PlaneNode>);
-    entity_relay!(OffsetNodeConnection, OffsetNodeEdge, Arc<crate::geom::entity::OffsetNode>);
 
     /// @emoji 🪜 `entity_diffs!` — expands modification / diff / diffs relay ladder (hook for codegen; invoke per entity family).
     macro_rules! entity_diffs {
@@ -1921,10 +1935,10 @@ pub mod kit {
             pub id: Id,
             pub owner_kit: Weak<crate::kit::Kit>,
             pub name: RwLock<String>,
-            pub description: RwLock<Option<String>>,
-            pub icon: RwLock<Option<String>>,
-            pub image: RwLock<Option<String>>,
-            pub unit: RwLock<Option<String>>,
+            pub description: RwLock<String>,
+            pub icon: RwLock<String>,
+            pub image: RwLock<String>,
+            pub unit: RwLock<String>,
             pub created: RwLock<Option<Timestamp>>,
             pub updated: RwLock<Option<Timestamp>>,
             pub connectors: RwLock<Vec<Arc<Connector>>>,
@@ -1949,10 +1963,10 @@ pub mod kit {
                     id: Id::default(),
                     owner_kit: Weak::new(),
                     name: RwLock::new(String::new()),
-                    description: RwLock::new(None),
-                    icon: RwLock::new(None),
-                    image: RwLock::new(None),
-                    unit: RwLock::new(None),
+                    description: RwLock::new(String::new()),
+                    icon: RwLock::new(String::new()),
+                    image: RwLock::new(String::new()),
+                    unit: RwLock::new(String::new()),
                     created: RwLock::new(None),
                     updated: RwLock::new(None),
                     connectors: RwLock::new(Vec::new()),
@@ -1988,7 +2002,14 @@ pub mod kit {
                 let icon = self.icon.read().await;
                 let image = self.image.read().await;
                 let unit = self.unit.read().await;
-                h(&[self.id.as_str(), name.as_str(), desc.as_str(), icon.as_str(), image.as_str(), unit.as_str()])
+                h(&[
+                    self.id.as_str(),
+                    name.as_str(),
+                    desc.as_deref().unwrap_or(""),
+                    icon.as_deref().unwrap_or(""),
+                    image.as_deref().unwrap_or(""),
+                    unit.as_deref().unwrap_or(""),
+                ])
             }
 
             /// 🧷 Rebuild weak maps from the live vecs (call before `connector` / `representation` field resolution).
@@ -2048,16 +2069,16 @@ pub mod kit {
             pub async fn name(&self) -> String {
                 self.name.read().await.clone()
             }
-            pub async fn description(&self) -> String {
+            pub async fn description(&self) -> Option<String> {
                 self.description.read().await.clone()
             }
-            pub async fn icon(&self) -> String {
+            pub async fn icon(&self) -> Option<String> {
                 self.icon.read().await.clone()
             }
-            pub async fn image(&self) -> String {
+            pub async fn image(&self) -> Option<String> {
                 self.image.read().await.clone()
             }
-            pub async fn unit(&self) -> String {
+            pub async fn unit(&self) -> Option<String> {
                 self.unit.read().await.clone()
             }
             pub async fn created(&self) -> Option<Timestamp> {
@@ -8865,6 +8886,7 @@ pub mod worker {
         pub auth_graph: Arc<Graph>,
         pub sessions: RwLock<Vec<Arc<Session>>>,
         pub conflicts: RwLock<Vec<Arc<Conflict>>>,
+        pub wip_kit_scope: RwLock<Option<(Id, Id)>>,
     }
 
     impl ParentRuntime {
@@ -9039,20 +9061,168 @@ pub mod worker {
 
 pub mod gql {
     //! 🌐 Type-safe static GraphQL schema via `Schema::build` (embedded target SDL string for tooling).
-    use async_graphql::{Context, InputObject, Object, Schema, Subscription};
+    use async_graphql::{Context, Object, Schema, Subscription};
+    use async_graphql::types::Json;
     use async_stream::stream;
     use futures_util::Stream;
     use std::pin::Pin;
     use std::sync::Arc;
 
-    use crate::error::SemioError;
     use crate::event::{Event, EventBus};
     use crate::geom::{Offset, Position};
     use crate::id::Id;
-    use crate::meta::{ConceptInput, QualityInput, TagInput};
-    use crate::operation::{Command, CommandReceipt, Input, KitOperation, OperationKind, RenamedKit, Scope};
+    use crate::operation::{Command, Input, KitOperation, Scope};
     use crate::vcs::Graph;
     use crate::worker::ParentRuntime;
+
+    //#region 🌐 interfaces
+    /// @emoji 🌐 SDL interface markers (`Node`, `Entity`, relay edges/connections) — geometry variants first; kit aggregates register alongside Workers B/C.
+    pub mod interfaces {
+        use std::sync::Arc;
+
+        use async_graphql::Interface;
+
+        use crate::geom::entity::{CoordinateNode, LocationNode, OffsetNode, PlaneNode, PointNode, PositionNode, VectorNode};
+        use crate::gql_relay::{
+            CoordinateConnection, CoordinateEdge, LocationConnection, LocationEdge, OffsetConnection, OffsetEdge, PlaneConnection, PlaneEdge, PointConnection,
+            PointEdge, PositionConnection, PositionEdge, VectorConnection, VectorEdge,
+        };
+
+        #[derive(Clone, Interface)]
+        #[graphql(name = "Node", field(name = "id", ty = "crate::id::Id"))]
+        pub enum NodeIface {
+            Vector(Arc<VectorNode>),
+            Point(Arc<PointNode>),
+            Coordinate(Arc<CoordinateNode>),
+            Offset(Arc<OffsetNode>),
+            Plane(Arc<PlaneNode>),
+            Position(Arc<PositionNode>),
+            Location(Arc<LocationNode>),
+        }
+
+        #[derive(Clone, Interface)]
+        #[graphql(name = "EntityEdge", field(name = "cursor", ty = "String"))]
+        pub enum EntityEdgeIface {
+            Vector(VectorEdge),
+            Point(PointEdge),
+            Coordinate(CoordinateEdge),
+            Offset(OffsetEdge),
+            Plane(PlaneEdge),
+            Position(PositionEdge),
+            Location(LocationEdge),
+        }
+
+        #[derive(Clone, Interface)]
+        #[graphql(
+            name = "EntityConnection",
+            field(name = "pageInfo", ty = "std::sync::Arc<crate::gql_relay::PageInfo>"),
+            field(name = "hash", ty = "String"),
+        )]
+        pub enum EntityConnectionIface {
+            Vector(VectorConnection),
+            Point(PointConnection),
+            Coordinate(CoordinateConnection),
+            Offset(OffsetConnection),
+            Plane(PlaneConnection),
+            Position(PositionConnection),
+            Location(LocationConnection),
+        }
+
+        #[derive(Clone, Interface)]
+        #[graphql(
+            name = "Entity",
+            implements(NodeIface),
+            field(name = "id", ty = "crate::id::Id"),
+            field(name = "hash", ty = "String"),
+            field(name = "owner", ty = "Option<std::sync::Arc<EntityIface>>"),
+            field(name = "owns", ty = "Option<std::sync::Arc<EntityConnectionIface>>"),
+        )]
+        pub enum EntityIface {
+            Vector(Arc<VectorNode>),
+            Point(Arc<PointNode>),
+            Coordinate(Arc<CoordinateNode>),
+            Offset(Arc<OffsetNode>),
+            Plane(Arc<PlaneNode>),
+            Position(Arc<PositionNode>),
+            Location(Arc<LocationNode>),
+        }
+
+        #[derive(Clone, Interface)]
+        #[graphql(name = "WeakEntity", implements(EntityIface))]
+        pub enum WeakEntityIface {
+            Vector(Arc<VectorNode>),
+            Point(Arc<PointNode>),
+            Coordinate(Arc<CoordinateNode>),
+            Offset(Arc<OffsetNode>),
+            Plane(Arc<PlaneNode>),
+            Position(Arc<PositionNode>),
+            Location(Arc<LocationNode>),
+        }
+
+        #[derive(Clone, Interface)]
+        #[graphql(
+            name = "StrongEntity",
+            implements(EntityIface),
+            field(name = "id", ty = "crate::id::Id"),
+            field(name = "hash", ty = "String"),
+            field(name = "owner", ty = "Option<std::sync::Arc<EntityIface>>"),
+            field(name = "owns", ty = "Option<std::sync::Arc<EntityConnectionIface>>"),
+        )]
+        pub enum StrongEntityIface {
+            Kit(Arc<crate::kit::Kit>),
+        }
+
+        #[derive(Clone, Interface)]
+        #[graphql(
+            name = "Artifact",
+            implements(StrongEntityIface),
+            field(name = "id", ty = "crate::id::Id"),
+            field(name = "hash", ty = "String"),
+            field(name = "owner", ty = "Option<std::sync::Arc<EntityIface>>"),
+            field(name = "owns", ty = "Option<std::sync::Arc<EntityConnectionIface>>"),
+            field(name = "name", ty = "String"),
+            field(name = "description", ty = "String"),
+            field(name = "icon", ty = "String"),
+        )]
+        pub enum ArtifactIface {
+            Kit(Arc<crate::kit::Kit>),
+        }
+
+        #[derive(Clone, Interface)]
+        #[graphql(
+            name = "Document",
+            implements(ArtifactIface),
+            field(name = "id", ty = "crate::id::Id"),
+            field(name = "hash", ty = "String"),
+            field(name = "owner", ty = "Option<std::sync::Arc<EntityIface>>"),
+            field(name = "owns", ty = "Option<std::sync::Arc<EntityConnectionIface>>"),
+            field(name = "name", ty = "String"),
+            field(name = "description", ty = "String"),
+            field(name = "icon", ty = "String"),
+        )]
+        pub enum DocumentIface {
+            Kit(Arc<crate::kit::Kit>),
+        }
+
+        #[derive(Clone, Interface)]
+        #[graphql(name = "Event", implements(WeakEntityIface), field(name = "timestamp", ty = "crate::timestamp::Timestamp"))]
+        pub enum EventIface {
+            Kit(Arc<crate::kit::Kit>),
+        }
+
+        #[derive(Clone, Interface)]
+        #[graphql(name = "Diff", implements(WeakEntityIface))]
+        pub enum DiffIface {
+            Vector(Arc<VectorNode>),
+        }
+
+        #[derive(Clone, Interface)]
+        #[graphql(name = "Modification", implements(WeakEntityIface))]
+        pub enum ModificationIface {
+            Vector(Arc<VectorNode>),
+        }
+    }
+    //#endregion 🌐 interfaces
 
     /// @emoji 🧩 Executable schema (`Query`, `Mutation`, `Subscription`).
     pub type AppSchema = Schema<Query, Mutation, Subscription>;
@@ -9324,7 +9494,7 @@ pub mod gql {
             Ok(Id::new().await)
         }
 
-        fn r#type(&self, #[graphql(name = "id")] id: Id) -> TypeOperationNav {
+        async fn r#type(&self, #[graphql(name = "id")] id: Id) -> TypeOperationNav {
             TypeOperationNav { change_id: self.change_id.clone(), type_id: id }
         }
 
@@ -9346,7 +9516,7 @@ pub mod gql {
             Ok(Id::new().await)
         }
 
-        fn design(&self, #[graphql(name = "id")] id: Id) -> DesignOperationNav {
+        async fn design(&self, #[graphql(name = "id")] id: Id) -> DesignOperationNav {
             DesignOperationNav { change_id: self.change_id.clone(), design_id: id }
         }
 
@@ -9858,19 +10028,26 @@ pub mod gql {
 
     pub struct Subscription;
 
-    type EventJsonStream = Pin<Box<dyn Stream<Item = async_graphql::Result<async_graphql::Value>> + Send>>;
+    type EventJsonStream = Pin<Box<dyn Stream<Item = async_graphql::Result<Json<serde_json::Value>>> + Send>>;
 
     fn event_to_json(ev: &Event) -> serde_json::Value {
-        match ev {
-            Event::CommandSucceeded(r) => serde_json::json!({ "kind": "commandSucceeded", "payload": r }),
-            Event::OperationSucceeded(k) => serde_json::json!({ "kind": "operationSucceeded", "payload": k }),
-            Event::OperationFailed(e) => serde_json::json!({ "kind": "operationFailed", "payload": e.to_string() }),
-            Event::CreatedFixedPiece(o) => serde_json::json!({ "kind": "createdFixedPiece", "payload": serde_json::to_value(o).unwrap_or_default() }),
-            Event::FixedPiece(o) => serde_json::json!({ "kind": "fixedPiece", "payload": serde_json::to_value(o).unwrap_or_default() }),
-            Event::DraggedPiece(o) => serde_json::json!({ "kind": "draggedPiece", "payload": serde_json::to_value(o).unwrap_or_default() }),
-            Event::RenamedKit(o) => serde_json::json!({ "kind": "kitRenamed", "payload": serde_json::to_value(o).unwrap_or_default() }),
-            Event::ChangedDescription(o) => serde_json::json!({ "kind": "changedDescription", "payload": serde_json::to_value(o).unwrap_or_default() }),
-        }
+        let kind = match ev {
+            Event::CommandSucceeded(_) => "commandSucceeded",
+            Event::OperationSucceeded(_) => "operationSucceeded",
+            Event::OperationFailed(_) => "operationFailed",
+            Event::CreatedFixedPiece(_) => "createdFixedPiece",
+            Event::FixedPiece(_) => "fixedPiece",
+            Event::DraggedPiece(_) => "draggedPiece",
+            Event::RenamedKit(_) => "kitRenamed",
+            Event::ChangedDescription(_) => "changedDescription",
+        };
+        let payload = match ev {
+            Event::CommandSucceeded(r) => serde_json::to_value(r).unwrap_or(serde_json::Value::Null),
+            Event::OperationSucceeded(_) => serde_json::Value::Null,
+            Event::OperationFailed(e) => serde_json::Value::String(e.to_string()),
+            _ => serde_json::Value::Null,
+        };
+        serde_json::json!({ "kind": kind, "payload": payload })
     }
 
     #[Subscription]
@@ -9883,7 +10060,7 @@ pub mod gql {
                     match rx.recv().await {
                         Ok(ev) => {
                             let j = event_to_json(&ev);
-                            yield Ok(async_graphql::Value::from_json(j).unwrap_or(async_graphql::Value::Null));
+                            yield Ok(Json(j));
                         }
                         Err(_) => break,
                     }
@@ -11106,6 +11283,11 @@ mod tests {
             let design = mat.design_by_external_id(&crate::id::Id::from("design-scoped-1")).await.expect("design exists");
             assert!(design.piece_by_external_id(&crate::id::Id::from("piece-scoped-1")).await.is_some(), "piece should be addressable by scoped id");
         });
+    }
+}
+
+//#endregion 🧪 tests
+);
     }
 }
 

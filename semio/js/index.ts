@@ -278,11 +278,11 @@ function isTheKitReadPoint(s: KitReadPoint): boolean {
 }
 
 // #region 🔖KitWriteScope
-/** @emoji 🧭 Opaque id for an unsaved {@link Change} on the session’s active kit version (`VersionCommandInput.unsavedChange`). */
+/** @emoji 🧭 Target-schema unsaved **Change** handle — during migration equals {@link KitWriteScope.transactionId}. */
 export type ChangeId = string;
 
-/** @emoji 🧭 Active VCS anchor for nested `Mutation.session { theKit { unsavedChange(id) { kit { … } } } }` writes. */
-export type KitWriteScope = { readonly changeId: ChangeId };
+/** @emoji 🧭 Active VCS anchor for nested `Mutation.session` writes (draft + transaction ids until rs exposes pure Change ids). */
+export type KitWriteScope = { readonly alternativeId: string; readonly draftId: string; readonly transactionId: string };
 
 /**
  * @emoji 🧾 VCS helpers aligned with `SessionCommandInput` / `VersionCommandInput` (`semio/graphql/target.schema.graphql`).
@@ -1103,91 +1103,83 @@ export async function writeKitStoreClientSchemaField(client: KitStoreClient, typ
 
 // #region 🔖ScopedKitMutations
 
-/** @emoji 🧾 Builds `PositionInput!` variables from a {@link PieceDto}-shaped plane + center (target `PositionInput`). */
-function __positionInputVariablesFromPieceLike(piece: { readonly plane?: KitJsonTreeDto; readonly center?: KitJsonTreeDto }): GraphQlVariables | null {
-  const pl = __kitPlaneToBatchInput(piece.plane);
-  const c = piece.center;
-  if (!pl || !isJsonObjectNode(c)) return null;
-  const u = __coerceAxisComponent(c["u"]);
-  const v = __coerceAxisComponent(c["v"]);
-  if (!Number.isFinite(u) || !Number.isFinite(v)) return null;
-  return {
-    posCenter: { u, v } as JsonValue,
-    posPlane: {
-      origin: pl.origin,
-      xAxis: pl.xAxis,
-      yAxis: pl.yAxis,
-    } as JsonValue,
-  } as GraphQlVariables;
+/** @emoji 🧾 GraphQL string literal (escaped). */
+function __gqlStr(s: string): string {
+  return JSON.stringify(s);
 }
 
-/** @emoji 🧾 One `session { theKit { unsavedChange { kit { … } } } }` mutation for a legacy {@link ChangeKitCommand}, or `null` when unsupported on the target command tree. */
+/** @emoji 🧾 Inline `[ID!]!` list. */
+function __gqlIds(ids: readonly string[]): string {
+  return `[${ids.map((x) => __gqlStr(x)).join(",")}]`;
+}
+
+/** @emoji 🧾 Wraps kit selection under `unsavedChange` + `theKit` (target command tree). */
+function __scopedKitMutationBody(changeId: string, kitSelection: string): { readonly query: string; readonly variables: GraphQlVariables } {
+  return {
+    query: `mutation($changeId: ID!) { session { theKit { unsavedChange(id: $changeId) { kit { ${kitSelection} } } } } }`,
+    variables: { changeId },
+  };
+}
+
+/** @emoji 🧾 One scoped mutation for a legacy {@link ChangeKitCommand}, or `null` when unsupported on `KitOperationInput`. */
 function buildScopedChangeKitMutation(
   changeId: string,
   cmd: ChangeKitCommand,
 ): { readonly query: string; readonly variables: GraphQlVariables } | null {
-  const head = `mutation($changeId: ID!)`;
-  const mid = `session { theKit { unsavedChange(id: $changeId) { kit { `;
-  const tail = ` } } } } }`;
-  const wrap = (inner: string, extraVars: GraphQlVariables = {} as GraphQlVariables) => ({
-    query: `${head} { ${mid}${inner}${tail}`,
-    variables: { changeId, ...extraVars } as GraphQlVariables,
-  });
-
   if ("name" in cmd && cmd.name != null && typeof cmd.name === "object" && "name" in cmd.name) {
     const n = String((cmd.name as { name?: string | null }).name ?? "");
-    return wrap(`r: rename(newName: $kn)`, { kn: n } as GraphQlVariables);
+    return __scopedKitMutationBody(changeId, `r: rename(newName: ${__gqlStr(n)})`);
   }
   if ("description" in cmd && cmd.description != null && typeof cmd.description === "object") {
     const d = String((cmd.description as { description?: string | null }).description ?? "");
-    return wrap(`r: changeDescription(newDescription: $kd)`, { kd: d } as GraphQlVariables);
+    return __scopedKitMutationBody(changeId, `r: changeDescription(newDescription: ${__gqlStr(d)})`);
   }
 
   if ("addType" in cmd && cmd.addType != null && typeof cmd.addType === "object" && "type" in cmd.addType) {
     const t = (cmd.addType as { type: TypeDto }).type;
-    return wrap(
-      `r: createType(name: $n, description: $d, icon: $i, image: $im, unit: $u)`,
-      { n: t.name, d: t.description ?? null, i: t.icon ?? null, im: t.image ?? null, u: t.unit ?? null } as GraphQlVariables,
+    return __scopedKitMutationBody(
+      changeId,
+      `r: createType(name: ${__gqlStr(t.name)}, description: ${__gqlStr(t.description ?? "")}, icon: ${__gqlStr(t.icon ?? "")}, image: ${__gqlStr(t.image ?? "")}, unit: ${__gqlStr(t.unit ?? "")})`,
     );
   }
   if ("removeType" in cmd && cmd.removeType != null) {
     const id = String((cmd.removeType as { typeId: KitIdDto }).typeId.id);
-    return wrap(`r: deleteType(id: $tid)`, { tid: id } as GraphQlVariables);
+    return __scopedKitMutationBody(changeId, `r: deleteType(id: ${__gqlStr(id)})`);
   }
 
   if ("addDesign" in cmd && cmd.addDesign != null) {
     const d = (cmd.addDesign as { design: DesignDto }).design;
-    return wrap(
-      `r: createDesign(name: $n, description: $d, icon: $i, image: $im, unit: $u)`,
-      { n: d.name, d: d.description ?? null, i: d.icon ?? null, im: d.image ?? null, u: d.unit ?? null } as GraphQlVariables,
+    return __scopedKitMutationBody(
+      changeId,
+      `r: createDesign(name: ${__gqlStr(d.name)}, description: ${__gqlStr(d.description ?? "")}, icon: ${__gqlStr(d.icon ?? "")}, image: ${__gqlStr(d.image ?? "")}, unit: ${__gqlStr(d.unit ?? "")})`,
     );
   }
   if ("removeDesign" in cmd && cmd.removeDesign != null) {
     const id = String((cmd.removeDesign as { designId: KitIdDto }).designId.id);
-    return wrap(`r: deleteDesign(id: $did)`, { did: id } as GraphQlVariables);
+    return __scopedKitMutationBody(changeId, `r: deleteDesign(id: ${__gqlStr(id)})`);
   }
 
   if ("dragPieces" in cmd && cmd.dragPieces != null) {
     const x = cmd.dragPieces as { designId: KitIdDto; pieceIds: readonly string[]; du: number; dv: number };
-    return wrap(
-      `r: design(id: $did) { pieces(ids: $pids) { d: drag(offset: { u: $du, v: $dv }) } }`,
-      { did: x.designId.id, pids: [...x.pieceIds], du: x.du, dv: x.dv } as GraphQlVariables,
+    return __scopedKitMutationBody(
+      changeId,
+      `r: design(id: ${__gqlStr(x.designId.id)}) { pieces(ids: ${__gqlIds(x.pieceIds)}) { d: drag(offset: { u: ${x.du}, v: ${x.dv} }) } }`,
     );
   }
   if ("movePieces" in cmd && cmd.movePieces != null) {
     const x = cmd.movePieces as { designId: KitIdDto; pieceIds: readonly string[]; gap: number; shift: number; rise: number };
-    return wrap(
-      `r: design(id: $did) { pieces(ids: $pids) { m: move(offset: { u: $u, v: $v }) } }`,
-      { did: x.designId.id, pids: [...x.pieceIds], u: x.gap, v: x.shift } as GraphQlVariables,
+    return __scopedKitMutationBody(
+      changeId,
+      `r: design(id: ${__gqlStr(x.designId.id)}) { pieces(ids: ${__gqlIds(x.pieceIds)}) { m: move(offset: { u: ${x.gap}, v: ${x.shift} }) } }`,
     );
   }
   if ("fixPieces" in cmd && cmd.fixPieces != null) {
     const x = cmd.fixPieces as { designId: KitIdDto; pieceIds: readonly string[] };
-    return wrap(`r: design(id: $did) { pieces(ids: $pids) { f: fix } }`, { did: x.designId.id, pids: [...x.pieceIds] } as GraphQlVariables);
+    return __scopedKitMutationBody(changeId, `r: design(id: ${__gqlStr(x.designId.id)}) { pieces(ids: ${__gqlIds(x.pieceIds)}) { f: fix } }`);
   }
   if ("flattenDesign" in cmd && cmd.flattenDesign != null) {
     const id = String((cmd.flattenDesign as { designId: KitIdDto }).designId.id);
-    return wrap(`r: design(id: $did) { fl: flatten }`, { did: id } as GraphQlVariables);
+    return __scopedKitMutationBody(changeId, `r: design(id: ${__gqlStr(id)}) { fl: flatten }`);
   }
 
   if ("changeTypeCommands" in cmd && cmd.changeTypeCommands != null) {
@@ -1196,43 +1188,43 @@ function buildScopedChangeKitMutation(
     const c0 = block.commands[0];
     if (!c0) return null;
     if ("name" in c0 && c0.name != null) {
-      return wrap(`r: type(id: $tid) { n: rename(newName: $nm) }`, { tid, nm: String((c0.name as { name: string }).name) } as GraphQlVariables);
+      return __scopedKitMutationBody(changeId, `r: type(id: ${__gqlStr(tid)}) { n: rename(newName: ${__gqlStr(String((c0.name as { name: string }).name))}) }`);
     }
     if ("description" in c0 && c0.description != null) {
-      return wrap(`r: type(id: $tid) { d: changeDescription(newDescription: $ds) }`, {
-        tid,
-        ds: String((c0.description as { description?: string | null }).description ?? ""),
-      } as GraphQlVariables);
+      return __scopedKitMutationBody(
+        changeId,
+        `r: type(id: ${__gqlStr(tid)}) { d: changeDescription(newDescription: ${__gqlStr(String((c0.description as { description?: string | null }).description ?? ""))}) }`,
+      );
     }
     if ("icon" in c0 && c0.icon != null) {
-      return wrap(`r: type(id: $tid) { i: changeIcon(newIcon: $ic) }`, {
-        tid,
-        ic: String((c0.icon as { icon?: string | null }).icon ?? ""),
-      } as GraphQlVariables);
+      return __scopedKitMutationBody(
+        changeId,
+        `r: type(id: ${__gqlStr(tid)}) { i: changeIcon(newIcon: ${__gqlStr(String((c0.icon as { icon?: string | null }).icon ?? ""))}) }`,
+      );
     }
     if ("image" in c0 && c0.image != null) {
-      return wrap(`r: type(id: $tid) { i: changeIcon(newIcon: $im) }`, {
-        tid,
-        im: String((c0.image as { image?: string | null }).image ?? ""),
-      } as GraphQlVariables);
+      return __scopedKitMutationBody(
+        changeId,
+        `r: type(id: ${__gqlStr(tid)}) { i: changeIcon(newIcon: ${__gqlStr(String((c0.image as { image?: string | null }).image ?? ""))}) }`,
+      );
     }
     if ("unit" in c0 && c0.unit != null) {
-      return wrap(`r: type(id: $tid) { d: changeDescription(newDescription: $u) }`, {
-        tid,
-        u: String((c0.unit as { unit?: string | null }).unit ?? ""),
-      } as GraphQlVariables);
+      return __scopedKitMutationBody(
+        changeId,
+        `r: type(id: ${__gqlStr(tid)}) { d: changeDescription(newDescription: ${__gqlStr(String((c0.unit as { unit?: string | null }).unit ?? ""))}) }`,
+      );
     }
     if ("stock" in c0 && c0.stock != null) {
-      return wrap(`r: type(id: $tid) { d: changeDescription(newDescription: $s) }`, {
-        tid,
-        s: String((c0.stock as { stock?: number | null }).stock ?? ""),
-      } as GraphQlVariables);
+      return __scopedKitMutationBody(
+        changeId,
+        `r: type(id: ${__gqlStr(tid)}) { d: changeDescription(newDescription: ${__gqlStr(String((c0.stock as { stock?: number | null }).stock ?? ""))}) }`,
+      );
     }
     if ("typeVirtual" in c0 && c0.typeVirtual != null) {
-      return wrap(`r: type(id: $tid) { d: changeDescription(newDescription: $v) }`, {
-        tid,
-        v: String((c0.typeVirtual as { value?: boolean | null }).value ?? false),
-      } as GraphQlVariables);
+      return __scopedKitMutationBody(
+        changeId,
+        `r: type(id: ${__gqlStr(tid)}) { d: changeDescription(newDescription: ${__gqlStr(String((c0.typeVirtual as { value?: boolean | null }).value ?? false))}) }`,
+      );
     }
     return null;
   }
@@ -1243,100 +1235,93 @@ function buildScopedChangeKitMutation(
     const d0 = block.commands[0];
     if (!d0) return null;
     if ("name" in d0 && d0.name != null) {
-      return wrap(`r: design(id: $did) { n: rename(newName: $nm) }`, { did, nm: String((d0.name as { name: string }).name) } as GraphQlVariables);
+      return __scopedKitMutationBody(changeId, `r: design(id: ${__gqlStr(did)}) { n: rename(newName: ${__gqlStr(String((d0.name as { name: string }).name))}) }`);
     }
     if ("description" in d0 && d0.description != null) {
-      return wrap(`r: design(id: $did) { d: changeDescription(newDescription: $ds) }`, {
-        did,
-        ds: String((d0.description as { description?: string | null }).description ?? ""),
-      } as GraphQlVariables);
+      return __scopedKitMutationBody(
+        changeId,
+        `r: design(id: ${__gqlStr(did)}) { d: changeDescription(newDescription: ${__gqlStr(String((d0.description as { description?: string | null }).description ?? ""))}) }`,
+      );
     }
     if ("addPiece" in d0 && d0.addPiece != null) {
       const piece = (d0.addPiece as { piece: PieceDto }).piece;
-      const tid = typeof piece.type === "object" && piece.type != null && "id" in piece.type ? String((piece.type as { id: string }).id) : String(piece.type);
-      const pos = __positionInputVariablesFromPieceLike(piece);
-      if (!pos) return null;
-      return wrap(
-        `r: design(id: $did) { ap: addFixedPiece(blueprintId: $bp, position: { center: $posCenter, plane: $posPlane }, name: $pn, description: $pd) }`,
-        {
-          did,
-          bp: tid,
-          pn: piece.name ?? null,
-          pd: piece.description ?? null,
-          ...pos,
-        } as GraphQlVariables,
+      const bp =
+        typeof piece.type === "object" && piece.type != null && "id" in piece.type ? String((piece.type as { id: string }).id) : String(piece.type);
+      const pl = __kitPlaneToBatchInput(piece.plane);
+      const c = piece.center;
+      if (!pl || !isJsonObjectNode(c)) return null;
+      const u = __coerceAxisComponent(c["u"]);
+      const v = __coerceAxisComponent(c["v"]);
+      if (!Number.isFinite(u) || !Number.isFinite(v)) return null;
+      const posInl = `{ center: { u: ${u}, v: ${v} }, plane: { origin: { x: ${pl.origin.x}, y: ${pl.origin.y}, z: ${pl.origin.z} }, xAxis: { x: ${pl.xAxis.x}, y: ${pl.xAxis.y}, z: ${pl.xAxis.z} }, yAxis: { x: ${pl.yAxis.x}, y: ${pl.yAxis.y}, z: ${pl.yAxis.z} } } }`;
+      return __scopedKitMutationBody(
+        changeId,
+        `r: design(id: ${__gqlStr(did)}) { ap: addFixedPiece(blueprintId: ${__gqlStr(bp)}, position: ${posInl}, name: ${piece.name != null ? __gqlStr(String(piece.name)) : "null"}, description: ${piece.description != null ? __gqlStr(String(piece.description)) : "null"}) }`,
       );
     }
     if ("removePiece" in d0 && d0.removePiece != null) {
       const pid = String((d0.removePiece as { pieceId: KitIdDto }).pieceId.id);
-      return wrap(`r: design(id: $did) { dp: deletePiece(id: $pid) }`, { did, pid } as GraphQlVariables);
+      return __scopedKitMutationBody(changeId, `r: design(id: ${__gqlStr(did)}) { dp: deletePiece(id: ${__gqlStr(pid)}) }`);
     }
     if ("changePieceCommands" in d0 && d0.changePieceCommands != null) {
       const pid = String(d0.changePieceCommands.pieceId.id);
       const p0 = d0.changePieceCommands.commands[0];
       if (!p0) return null;
       if ("name" in p0 && p0.name != null) {
-        return wrap(`r: design(id: $did) { piece(id: $pid) { n: rename(newName: $nm) } } }`, { did, pid, nm: String((p0.name as { name?: string | null }).name ?? "") } as GraphQlVariables);
+        return __scopedKitMutationBody(
+          changeId,
+          `r: design(id: ${__gqlStr(did)}) { piece(id: ${__gqlStr(pid)}) { n: rename(newName: ${__gqlStr(String((p0.name as { name?: string | null }).name ?? ""))}) } }`,
+        );
       }
       if ("description" in p0 && p0.description != null) {
-        return wrap(`r: design(id: $did) { piece(id: $pid) { d: changeDescription(newDescription: $ds) } } }`, {
-          did,
-          pid,
-          ds: String((p0.description as { description?: string | null }).description ?? ""),
-        } as GraphQlVariables);
+        return __scopedKitMutationBody(
+          changeId,
+          `r: design(id: ${__gqlStr(did)}) { piece(id: ${__gqlStr(pid)}) { d: changeDescription(newDescription: ${__gqlStr(String((p0.description as { description?: string | null }).description ?? ""))}) } }`,
+        );
       }
       if ("plane" in p0 && p0.plane != null) {
         const pl = __kitPlaneToBatchInput((p0.plane as { plane?: KitJsonTreeDto }).plane);
         if (!pl) return null;
-        const pos = { posPlane: { origin: pl.origin, xAxis: pl.xAxis, yAxis: pl.yAxis } as JsonValue } as GraphQlVariables;
-        return wrap(
-          `r: design(id: $did) { piece(id: $pid) { mv: move(position: { center: $pc, plane: $posPlane }) } } }`,
-          { did, pid, pc: { u: 0, v: 0 } as JsonValue, ...pos } as GraphQlVariables,
-        );
+        const posInl = `{ center: { u: 0, v: 0 }, plane: { origin: { x: ${pl.origin.x}, y: ${pl.origin.y}, z: ${pl.origin.z} }, xAxis: { x: ${pl.xAxis.x}, y: ${pl.xAxis.y}, z: ${pl.xAxis.z} }, yAxis: { x: ${pl.yAxis.x}, y: ${pl.yAxis.y}, z: ${pl.yAxis.z} } } }`;
+        return __scopedKitMutationBody(changeId, `r: design(id: ${__gqlStr(did)}) { piece(id: ${__gqlStr(pid)}) { mv: move(position: ${posInl}) } }`);
       }
       if ("center" in p0 && p0.center != null) {
         const ctr = (p0.center as { center?: KitJsonTreeDto }).center;
         if (!isJsonObjectNode(ctr)) return null;
         const u = __coerceAxisComponent(ctr["u"]);
         const v = __coerceAxisComponent(ctr["v"]);
-        const pl = { origin: { x: 0, y: 0, z: 0 }, xAxis: { x: 1, y: 0, z: 0 }, yAxis: { x: 0, y: 1, z: 0 } };
-        return wrap(
-          `r: design(id: $did) { piece(id: $pid) { mv: move(position: { center: { u: $u, v: $v }, plane: $posPlane }) } } }`,
-          { did, pid, u, v, posPlane: pl as JsonValue } as GraphQlVariables,
-        );
+        if (!Number.isFinite(u) || !Number.isFinite(v)) return null;
+        const posInl = `{ center: { u: ${u}, v: ${v} }, plane: { origin: { x: 0, y: 0, z: 0 }, xAxis: { x: 1, y: 0, z: 0 }, yAxis: { x: 0, y: 1, z: 0 } } }`;
+        return __scopedKitMutationBody(changeId, `r: design(id: ${__gqlStr(did)}) { piece(id: ${__gqlStr(pid)}) { mv: move(position: ${posInl}) } }`);
       }
       if ("scale" in p0 && p0.scale != null) {
-        return wrap(`r: design(id: $did) { piece(id: $pid) { d: changeDescription(newDescription: $s) } } }`, {
-          did,
-          pid,
-          s: String((p0.scale as { scale?: number | null }).scale ?? ""),
-        } as GraphQlVariables);
+        return __scopedKitMutationBody(
+          changeId,
+          `r: design(id: ${__gqlStr(did)}) { piece(id: ${__gqlStr(pid)}) { d: changeDescription(newDescription: ${__gqlStr(String((p0.scale as { scale?: number | null }).scale ?? ""))}) } }`,
+        );
       }
       if ("color" in p0 && p0.color != null) {
-        return wrap(`r: design(id: $did) { piece(id: $pid) { d: changeDescription(newDescription: $c) } } }`, {
-          did,
-          pid,
-          c: String((p0.color as { color?: string | null }).color ?? ""),
-        } as GraphQlVariables);
+        return __scopedKitMutationBody(
+          changeId,
+          `r: design(id: ${__gqlStr(did)}) { piece(id: ${__gqlStr(pid)}) { d: changeDescription(newDescription: ${__gqlStr(String((p0.color as { color?: string | null }).color ?? ""))}) } }`,
+        );
       }
       if ("hidden" in p0 && p0.hidden != null) {
-        return wrap(`r: design(id: $did) { piece(id: $pid) { d: changeDescription(newDescription: $h) } } }`, {
-          did,
-          pid,
-          h: String((p0.hidden as { hidden?: boolean | null }).hidden ?? false),
-        } as GraphQlVariables);
+        return __scopedKitMutationBody(
+          changeId,
+          `r: design(id: ${__gqlStr(did)}) { piece(id: ${__gqlStr(pid)}) { d: changeDescription(newDescription: ${__gqlStr(String((p0.hidden as { hidden?: boolean | null }).hidden ?? false))}) } }`,
+        );
       }
       if ("locked" in p0 && p0.locked != null) {
-        return wrap(`r: design(id: $did) { piece(id: $pid) { d: changeDescription(newDescription: $l) } } }`, {
-          did,
-          pid,
-          l: String((p0.locked as { locked?: boolean | null }).locked ?? false),
-        } as GraphQlVariables);
+        return __scopedKitMutationBody(
+          changeId,
+          `r: design(id: ${__gqlStr(did)}) { piece(id: ${__gqlStr(pid)}) { d: changeDescription(newDescription: ${__gqlStr(String((p0.locked as { locked?: boolean | null }).locked ?? false))}) } }`,
+        );
       }
       if ("type" in p0 && p0.type != null) {
-        const tid = (p0.type as { typeId?: KitIdDto }).typeId?.id;
-        if (!tid) return null;
-        return wrap(`r: design(id: $did) { piece(id: $pid) { cb: changeBlueprint(blueprintId: $bp) } } }`, { did, pid, bp: String(tid) } as GraphQlVariables);
+        const t = (p0.type as { typeId?: KitIdDto }).typeId?.id;
+        if (!t) return null;
+        return __scopedKitMutationBody(changeId, `r: design(id: ${__gqlStr(did)}) { piece(id: ${__gqlStr(pid)}) { cb: changeBlueprint(blueprintId: ${__gqlStr(String(t))}) } }`);
       }
     }
     return null;
@@ -1347,8 +1332,12 @@ function buildScopedChangeKitMutation(
     const id = String(b.tagId.id);
     const c0 = b.commands[0];
     if (!c0) return null;
-    if ("name" in c0) return wrap(`r: tag(id: $id) { n: rename(newName: $nm) }`, { id, nm: String((c0 as { name: { name: string } }).name.name) } as GraphQlVariables);
-    if ("order" in c0) return wrap(`r: tag(id: $id) { d: changeDescription(newDescription: $o) }`, { id, o: String((c0 as { order: { order?: number | null } }).order.order ?? "") } as GraphQlVariables);
+    if ("name" in c0) return __scopedKitMutationBody(changeId, `r: tag(id: ${__gqlStr(id)}) { n: rename(newName: ${__gqlStr(String((c0 as { name: { name: string } }).name.name))}) }`);
+    if ("order" in c0)
+      return __scopedKitMutationBody(
+        changeId,
+        `r: tag(id: ${__gqlStr(id)}) { d: changeDescription(newDescription: ${__gqlStr(String((c0 as { order: { order?: number | null } }).order.order ?? ""))}) }`,
+      );
     return null;
   }
   if ("changeConceptCommands" in cmd && cmd.changeConceptCommands != null) {
@@ -1356,10 +1345,17 @@ function buildScopedChangeKitMutation(
     const id = String(b.conceptId.id);
     const c0 = b.commands[0];
     if (!c0) return null;
-    if ("name" in c0) return wrap(`r: concept(id: $id) { n: rename(newName: $nm) }`, { id, nm: String((c0 as { name: { name: string } }).name.name) } as GraphQlVariables);
+    if ("name" in c0) return __scopedKitMutationBody(changeId, `r: concept(id: ${__gqlStr(id)}) { n: rename(newName: ${__gqlStr(String((c0 as { name: { name: string } }).name.name))}) }`);
     if ("description" in c0)
-      return wrap(`r: concept(id: $id) { d: changeDescription(newDescription: $d) }`, { id, d: String((c0 as { description: { description?: string | null } }).description.description ?? "") } as GraphQlVariables);
-    if ("order" in c0) return wrap(`r: concept(id: $id) { d: changeDescription(newDescription: $o) }`, { id, o: String((c0 as { order: { order?: number | null } }).order.order ?? "") } as GraphQlVariables);
+      return __scopedKitMutationBody(
+        changeId,
+        `r: concept(id: ${__gqlStr(id)}) { d: changeDescription(newDescription: ${__gqlStr(String((c0 as { description: { description?: string | null } }).description.description ?? ""))}) }`,
+      );
+    if ("order" in c0)
+      return __scopedKitMutationBody(
+        changeId,
+        `r: concept(id: ${__gqlStr(id)}) { d: changeDescription(newDescription: ${__gqlStr(String((c0 as { order: { order?: number | null } }).order.order ?? ""))}) }`,
+      );
     return null;
   }
   if ("changeKitQualityCommands" in cmd && cmd.changeKitQualityCommands != null) {
@@ -1367,21 +1363,27 @@ function buildScopedChangeKitMutation(
     const id = String(b.qualityId.id);
     const c0 = b.commands[0];
     if (!c0) return null;
-    if ("key" in c0) return wrap(`r: quality(id: $id) { k: rename(newKey: $k) }`, { id, k: String((c0 as { key: { key: string } }).key.key) } as GraphQlVariables);
-    if ("value" in c0) return wrap(`r: quality(id: $id) { d: changeDescription(newDescription: $v) }`, { id, v: String((c0 as { value: { value?: string | null } }).value.value ?? "") } as GraphQlVariables);
-    if ("unit" in c0) return wrap(`r: quality(id: $id) { d: changeDescription(newDescription: $u) }`, { id, u: String((c0 as { unit: { unit?: string | null } }).unit.unit ?? "") } as GraphQlVariables);
+    if ("key" in c0) return __scopedKitMutationBody(changeId, `r: quality(id: ${__gqlStr(id)}) { k: rename(newKey: ${__gqlStr(String((c0 as { key: { key: string } }).key.key))}) }`);
+    if ("value" in c0)
+      return __scopedKitMutationBody(
+        changeId,
+        `r: quality(id: ${__gqlStr(id)}) { d: changeDescription(newDescription: ${__gqlStr(String((c0 as { value: { value?: string | null } }).value.value ?? ""))}) }`,
+      );
+    if ("unit" in c0)
+      return __scopedKitMutationBody(
+        changeId,
+        `r: quality(id: ${__gqlStr(id)}) { d: changeDescription(newDescription: ${__gqlStr(String((c0 as { unit: { unit?: string | null } }).unit.unit ?? ""))}) }`,
+      );
     if ("definition" in c0)
-      return wrap(`r: quality(id: $id) { d: changeDescription(newDescription: $df) }`, { id, df: String((c0 as { definition: { definition?: string | null } }).definition.definition ?? "") } as GraphQlVariables);
+      return __scopedKitMutationBody(
+        changeId,
+        `r: quality(id: ${__gqlStr(id)}) { d: changeDescription(newDescription: ${__gqlStr(String((c0 as { definition: { definition?: string | null } }).definition.definition ?? ""))}) }`,
+      );
     if ("description" in c0)
-      return wrap(`r: quality(id: $id) { d: changeDescription(newDescription: $ds) }`, { id, ds: String((c0 as { description: { description?: string | null } }).description.description ?? "") } as GraphQlVariables);
-    return null;
-  }
-  if ("changeKitPortCommands" in cmd && cmd.changeKitPortCommands != null) {
-    const b = cmd.changeKitPortCommands;
-    const id = String(b.portId.id);
-    const c0 = b.commands[0];
-    if (!c0) return null;
-    if ("name" in c0) return wrap(`r: type(id: $tid) { port(id: $pid) { n: rename(newCode: $nm, newLabel: null) } } }`, { tid: id, pid: id, nm: String((c0 as { name: { name: string } }).name.name) } as GraphQlVariables);
+      return __scopedKitMutationBody(
+        changeId,
+        `r: quality(id: ${__gqlStr(id)}) { d: changeDescription(newDescription: ${__gqlStr(String((c0 as { description: { description?: string | null } }).description.description ?? ""))}) }`,
+      );
     return null;
   }
 
@@ -2034,7 +2036,7 @@ export class RequestCorrelator {
 
 //#endregion 🧱StorePrimitives
 
-/** @emoji 🧾 Uniform `renameKit` args: `draftId` / `transactionId` are injected by {@link KitStore}. */
+/** @emoji 🧾 Uniform `renameKit` args; scope is unused (session `theKit` path). */
 export type RenameKitCommandArgs = { readonly scope: Record<string, never>; readonly input: { readonly name: string } };
 
 /**
@@ -2047,10 +2049,8 @@ export class KitStore {
   private readonly invalidations = new Subject<void>();
   private gqlLoopRunning = false;
   private disposed = false;
-  /** @emoji 🧭 VCS anchors for nested `Mutation.session` writes; auto-filled after mutations. */
-  private kitWriteAlternativeId: string | null = null;
-  private kitWriteDraftId: string | null = null;
-  private kitWriteTransactionId: string | null = null;
+  /** @emoji 🧭 Active unsaved {@link Change} id for `VersionCommandInput.unsavedChange(id)`. */
+  private kitWriteChangeId: string | null = null;
 
   /** @emoji 🧭 Active {@link KitReadPoint} for materialized `wip.theKit(at:)` reads (see {@link WasmKitStoreClient.setKitReadPoint}). */
   private activeReadPoint: KitReadPoint = theKitReadPoint;
@@ -2059,15 +2059,30 @@ export class KitStore {
   private readonly materializedKitStoreFields = new Map<string, StoreField<unknown>>();
 
   private readonly correlator: RequestCorrelator;
-  /** @emoji 🪪 GraphQL `renameKit(scope,input)` + correlator; status in {@link StoreCommand.status}. */
+  /** @emoji 🪪 Scoped `session { theKit { unsavedChange { kit { rename } } } }` + version-level save. */
   readonly renameKit: StoreCommand<RenameKitCommandArgs>;
-  private correlationLoopRunning = false;
+  private subscriptionLoopStarted = false;
 
   private constructor(timeoutMs: number, transport: WorkerStringTransport | InlineWasmTransport) {
     this.timeoutMs = timeoutMs;
     this.transport = transport;
     this.correlator = new RequestCorrelator(timeoutMs);
-    this.renameKit = this.operation<RenameKitCommandArgs["scope"], RenameKitCommandArgs["input"]>("renameKit", "RenameKitScopeInput", "RenameKitInput");
+    this.renameKit = new StoreCommand<RenameKitCommandArgs>(async ({ input }) => {
+      try {
+        const changeId = await this.ensureKitWriteChangeId();
+        const body = __scopedKitMutationBody(changeId, `r: rename(newName: ${__gqlStr(input.name)})`);
+        kitGraphqlData(await this.gqlRun(body));
+        await this.apiTheKitSave();
+        try {
+          this.invalidations.next();
+        } catch {
+          /* ignore */
+        }
+        return { ok: true };
+      } catch (e) {
+        return { ok: false, error: { kind: "Internal", message: String(e) } };
+      }
+    });
   }
 
   /** @emoji 🪪 Live kit name via {@link materializedKitStoreField}. */

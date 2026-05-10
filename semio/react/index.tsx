@@ -6209,7 +6209,15 @@ export {
   Vector,
 } from "@semio/js";
 export { KitStore } from "@semio/js";
-export type { ReadBatch, ReadBatchResult, ReadBatchItem } from "@semio/js";
+export type { ChangeId } from "@semio/js";
+export {
+  AlternativeCommandNav,
+  CommandBuilder,
+  KitOperationNav,
+  SessionCommandNav,
+  UnsavedChangeCommandNav,
+  VersionCommandNav,
+} from "@semio/js";
 export type {
   AuthorIdDto,
   ConnectionDiff,
