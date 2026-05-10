@@ -184,23 +184,46 @@ pub mod geom {
         pub v: f64,
     }
 
-    #[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize, InputObject)]
+    #[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize, InputObject)]
     #[graphql(name = "PlaneInput")]
     pub struct Plane {
+        #[serde(default)]
         pub origin: Point,
         #[graphql(name = "xAxis")]
-        #[serde(alias = "xAxis")]
+        #[serde(alias = "xAxis", default)]
         pub x_axis: Vector,
         #[graphql(name = "yAxis")]
-        #[serde(alias = "yAxis")]
+        #[serde(alias = "yAxis", default)]
         pub y_axis: Vector,
     }
 
-    #[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize, InputObject)]
+    impl Default for Plane {
+        /// @emoji ◭ World XY plane through origin; hydrates kit JSON that omits plane axes.
+        fn default() -> Self {
+            Self {
+                origin: Point::default(),
+                x_axis: Vector { x: 1.0, y: 0.0, z: 0.0 },
+                y_axis: Vector { x: 0.0, y: 1.0, z: 0.0 },
+            }
+        }
+    }
+
+    #[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize, InputObject)]
     #[graphql(name = "PositionInput")]
     pub struct Position {
+        #[serde(default)]
         pub center: Coordinate,
+        #[serde(default)]
         pub plane: Plane,
+    }
+
+    impl Default for Position {
+        fn default() -> Self {
+            Self {
+                center: Coordinate::default(),
+                plane: Plane::default(),
+            }
+        }
     }
 
     /// @emoji 🌍 Wire `LocationInput` (lon/lat/alt) for [`entity::LocationNode`].

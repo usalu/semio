@@ -34,6 +34,7 @@ import {
   createFolderKitStore,
   createJsonFileKitStore,
   createVscodeWebviewSketchpadFileKitStoreFactory,
+  decodeKitSemioEnvelopeToFullDtoFromValue,
   InMemoryKitStore,
   Design,
   DesignDiff,
@@ -617,11 +618,10 @@ export async function importKit(data: ArrayBuffer | Blob | File | string): Promi
   if (bytes.length >= 2 && bytes[0] === 0x1f && bytes[1] === 0x8b) {
     bytes = gunzipSync(bytes);
   }
-  // 🚧 The on-disk kit-store bundle envelope (`{schema, wip:{...}}` from `*.kit.semio.json`)
-  // is owned by `semio/rs`. Sketchpad MUST NOT decode that envelope here — it accepts only
-  // the flat `KitFullDto` form. Wrapped files must reach the host through the Rust backbone.
+  // 🚧 The on-disk kit-store bundle envelope (`{schema, wip:{...}, root}` from `*.kit.semio.json`)
+  // is decoded here to flat {@link KitFullDto} for in-browser memory kits (WASM hydrate).
   const text = new TextDecoder().decode(bytes);
-  const plain = KitFullDtoSchema.parse(JSON.parse(text));
+  const plain = decodeKitSemioEnvelopeToFullDtoFromValue(JSON.parse(text));
   return { kit: asKitInstance(Kit.fromPlain(plain)) };
 }
 
@@ -11800,7 +11800,7 @@ const AppContent: FC = () => {
   const { run: runUpdateDesign } = useUpdateDesign();
   const { run: runUpdateType } = useUpdateType();
   const getOrigin = useOrigin();
-  const [kitStore] = useKitStore();
+  const kitStore = useKitStore();
   const sketchpadCommands = useSketchpadCommands();
   const kitAppCommands = useKitAppCommands();
   const isMobile = useIsMobile();
@@ -15649,7 +15649,7 @@ export const KitToolbarHistory: FC = () => {
 export const KitToolbarReset: FC = () => {
   const ks0 = useKitStoreSnapshot();
   const kit = ks0?.kit as Kit | undefined;
-  const [kitStore] = useKitStore();
+  const kitStore = useKitStore();
   const getOrigin = useOrigin();
   const resetLabel = useLabel("semio.sketchpad.app.kit.toolbar.reset");
   const remoteUrl = kit?.remote;
@@ -40431,7 +40431,7 @@ const TypeWindowApp: FC = () => {
   }, [addSection, removeSection, appType, selection]);
 
   const type = useType() as Type | undefined;
-  const [kitStore] = useKitStore();
+  const kitStore = useKitStore();
   const getOrigin = useOrigin();
   const { run: runUpdateType } = useUpdateType();
   const [setSelectedRepresentation] = useTypeAppSetSelectedRepresentation();
@@ -47167,7 +47167,7 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
       }
     }
 
-    return JSON.parse(cachedMetabolismKitFixtureJson);
+    return decodeKitSemioEnvelopeToFullDtoFromValue(JSON.parse(cachedMetabolismKitFixtureJson));
   }
 
   /**
@@ -55200,7 +55200,7 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
         undefined,
       );
 
-      await new Promise((resolve) => setTimeout(resolve, 0));
+      await new Promise((resolve) => setTimeout(resolve, 50));
 
       expect(folderFactoryCalls).toEqual(["C:/kits/metabolism"]);
       expect(fileFactoryCallCount).toBe(0);

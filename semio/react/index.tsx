@@ -6180,6 +6180,8 @@ export {
   createJsonFileKitStore,
   createKitFileObjectUrl,
   createSessionKitStore,
+  decodeKitSemioEnvelopeBytesToFullDto,
+  decodeKitSemioEnvelopeToFullDtoFromValue,
   Design,
   DiffStatus,
   Folder,
@@ -17871,6 +17873,54 @@ if (shouldRunReactEmbeddedTests) {
       });
       unmount();
       await waitFor(() => expect(getKitRegistryBridge()).toBeNull());
+    });
+  });
+
+  describe("executeSemioKitCommand moveToFolder", () => {
+    it("updates quality folder on InMemoryKitStore", async () => {
+      const t = new Date().toISOString();
+      const kit = asKitInstance({
+        id: "drag-kit",
+        name: "Drag Kit",
+        createdAt: t,
+        updatedAt: t,
+        folders: [
+          { id: "folder-a", name: "Folder A" },
+          { id: "folder-b", name: "Folder B" },
+          { id: "folder-c", name: "Folder C", parent: { id: "folder-a" } },
+        ],
+        types: [{ id: "type-a", name: "Type A", folder: "folder-a", createdAt: t, updatedAt: t }],
+        designs: [{ id: "design-a", name: "Design A", folder: "folder-a", pieces: [], connections: [], createdAt: t, updatedAt: t }],
+        qualities: [{ id: "quality-a", name: "Quality A", key: "quality.a", folder: "folder-a" }],
+        files: [{ id: "file-a", name: "mesh.glb", folder: { id: "folder-a" }, createdAt: t, updatedAt: t }],
+      });
+      const store = new InMemoryKitStore(kit);
+      await executeSemioKitCommand(store, "semio.kit.moveToFolder", "test.moveToFolder.quality", "quality-a", "quality", "folder-b");
+      const q = store.getSnapshot().kit.qualities?.find((x) => x.id === "quality-a");
+      expect(q?.folder).toBe("folder-b");
+    });
+
+    it("updates quality folder with sketchpad drag-kit shape (no per-type or per-design createdAt)", async () => {
+      const t = new Date().toISOString();
+      const kit = asKitInstance({
+        id: "drag-kit",
+        name: "Drag Kit",
+        createdAt: t,
+        updatedAt: t,
+        folders: [
+          { id: "folder-a", name: "Folder A" },
+          { id: "folder-b", name: "Folder B" },
+          { id: "folder-c", name: "Folder C", parent: { id: "folder-a" } },
+        ],
+        types: [{ id: "type-a", name: "Type A", folder: "folder-a" }],
+        designs: [{ id: "design-a", name: "Design A", folder: "folder-a", pieces: [], connections: [] }],
+        qualities: [{ id: "quality-a", name: "Quality A", key: "quality.a", folder: "folder-a" }],
+        files: [{ id: "file-a", name: "mesh.glb", folder: { id: "folder-a" }, createdAt: t, updatedAt: t }],
+      });
+      const store = new InMemoryKitStore(kit);
+      await executeSemioKitCommand(store, "semio.kit.moveToFolder", "test.moveToFolder.quality", "quality-a", "quality", "folder-b");
+      const q = store.getSnapshot().kit.qualities?.find((x) => x.id === "quality-a");
+      expect(q?.folder).toBe("folder-b");
     });
   });
 

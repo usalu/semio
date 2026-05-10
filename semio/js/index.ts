@@ -1521,7 +1521,12 @@ function kitGraphqlJsonToReadonlyArray(v: JsonValue | KitJsonTreeDto | null | un
     }
   }
   if (typeof v === "object" && !Array.isArray(v)) {
-    const edges = (v as JsonObject)["edges"];
+    const jo = v as JsonObject;
+    const items = jo["items"];
+    if (Array.isArray(items)) {
+      return items as readonly KitJsonTreeDto[];
+    }
+    const edges = jo["edges"];
     if (Array.isArray(edges)) {
       const out: KitJsonTreeDto[] = [];
       for (const e of edges) {
@@ -7347,7 +7352,18 @@ export class JsonFileKitStore implements KitHostStore, KitBundlePersisting {
     } catch {
       initialBundleJson = "";
     }
-    const seed = asKitInstance({ id: id(), name: "Untitled", createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() });
+    let seed = asKitInstance({ id: id(), name: "Untitled", createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() });
+    if (initialBundleJson.trim() !== "") {
+      try {
+        const parsed: unknown = JSON.parse(initialBundleJson);
+        const flat = KitFullDtoSchema.safeParse(parsed);
+        if (flat.success) {
+          seed = Kit.fromDto(flat.data);
+        }
+      } catch {
+        /* keep Untitled — opaque rs bundle or invalid JSON */
+      }
+    }
     return new JsonFileKitStore(adapter, seed, initialBundleJson);
   }
   getSnapshot(): KitStoreSnapshot {
@@ -7616,12 +7632,56 @@ export type KitDiff = ReadonlyDto<z.infer<typeof KitDiffSchema>>;
 // #endregion Kit
 
 // #region KitImportHelpers
-/** @emoji 🧾 Decode kit bytes as a flat `KitFullDto`. The on-disk bundle/wip envelope is Rust-owned;
- *           if you receive a wrapped file, hand it to Rust instead of unwrapping in JS. */
-export function importKitToDto(buf: ArrayBuffer | Uint8Array): KitFullDto {
+/** @emoji 🧾 Recursively turns `{ items: [...] }` / Relay `{ edges: [{ node }] }` containers into plain JSON arrays for Zod DTO parsing. */
+function semioDenormalizeBundleValue(v: unknown): unknown {
+  if (v == null || typeof v !== "object") return v;
+  if (Array.isArray(v)) return v.map(semioDenormalizeBundleValue);
+  const o = v as JsonObject;
+  if (Array.isArray(o.items)) {
+    return (o.items as unknown[]).map(semioDenormalizeBundleValue);
+  }
+  if (Array.isArray(o.edges)) {
+    const out: unknown[] = [];
+    for (const e of o.edges) {
+      if (e != null && typeof e === "object" && !Array.isArray(e) && "node" in e) {
+        out.push(semioDenormalizeBundleValue((e as JsonObject).node));
+      }
+    }
+    return out;
+  }
+  const out: JsonObject = {};
+  for (const [k, val] of Object.entries(o)) {
+    out[k] = semioDenormalizeBundleValue(val) as JsonValue;
+  }
+  return out;
+}
+
+/** @emoji 🧾 Lifts `*.kit.semio.json` envelope (`root` / `wip.root`) and flattens bundle `items` lists to {@link KitFullDto}. */
+export function decodeKitSemioEnvelopeToFullDtoFromValue(v: unknown): KitFullDto {
+  let inner: unknown = v;
+  if (inner && typeof inner === "object" && !Array.isArray(inner)) {
+    const top = inner as JsonObject;
+    if (top.root != null && typeof top.root === "object" && !Array.isArray(top.root)) {
+      inner = top.root;
+    } else if (top.wip != null && typeof top.wip === "object" && !Array.isArray(top.wip)) {
+      const wr = (top.wip as JsonObject).root;
+      if (wr != null && typeof wr === "object" && !Array.isArray(wr)) inner = wr;
+    }
+  }
+  const flat = semioDenormalizeBundleValue(inner);
+  return KitFullDtoSchema.parse(flat as KitJsonTreeDto);
+}
+
+/** @emoji 🧾 Decode UTF-8 kit JSON bytes (flat or `*.kit.semio.json` envelope) to {@link KitFullDto}. */
+export function decodeKitSemioEnvelopeBytesToFullDto(buf: ArrayBuffer | Uint8Array): KitFullDto {
   const u8 = buf instanceof Uint8Array ? buf : new Uint8Array(buf);
   const text = new TextDecoder().decode(u8);
-  return KitFullDtoSchema.parse(JSON.parse(text));
+  return decodeKitSemioEnvelopeToFullDtoFromValue(JSON.parse(text));
+}
+
+/** @emoji 🧾 Decode kit bytes as a flat `KitFullDto` (accepts plain kit JSON or semio bundle envelope with `root` / relay `items`). */
+export function importKitToDto(buf: ArrayBuffer | Uint8Array): KitFullDto {
+  return decodeKitSemioEnvelopeBytesToFullDto(buf);
 }
 // #endregion KitImportHelpers
 
@@ -8239,6 +8299,24 @@ if (
       expect(kitReadPointKey(theKitReadPoint)).toBe(JSON.stringify(theKitReadPoint));
     });
 
+    it("JsonFileKitStore.create seeds in-memory kit from flat KitFullDto JSON (dev JSON adapters)", async () => {
+      const t = "2020-01-01T00:00:00.000Z";
+      const dto: KitFullDto = {
+        id: "json-seed-kit",
+        name: "Json Seed",
+        createdAt: t,
+        updatedAt: t,
+        qualities: [{ id: "q1", key: "k1", folder: "fa" }],
+      };
+      const adapter: KitJsonFileAdapter = {
+        read: async () => JSON.stringify(dto),
+        write: async () => {},
+      };
+      const store = await JsonFileKitStore.create(adapter);
+      expect(store.getSnapshot().kit.id).toBe("json-seed-kit");
+      expect(store.getSnapshot().kit.qualities?.map((q) => q.id)).toEqual(["q1"]);
+    });
+
     it("kitChangeSemanticKindToGraphQl maps GraphQL enum + other label", () => {
       expect(kitChangeSemanticKindToGraphQl("ADD_PIECE", null)).toBe("addPiece");
       expect(kitChangeSemanticKindToGraphQl("OTHER", "addFamily")).toEqual({ other: "addFamily" });
@@ -8619,6 +8697,37 @@ if (
       } as unknown as KitStoreClient;
       await kitStoreClientUpdatePiece(client, "d1", "p1", { name: "N" });
       expect(last?.length).toBe(1);
+    });
+
+    it("decodeKitSemioEnvelopeToFullDtoFromValue unwraps root and flattens bundle items", () => {
+      const dto = decodeKitSemioEnvelopeToFullDtoFromValue({
+        schema: "s",
+        root: {
+          id: "kit-1",
+          name: "Kit",
+          createdAt: "2020-01-01T00:00:00.000Z",
+          updatedAt: "2020-01-01T00:00:00.000Z",
+          types: {
+            hash: "h",
+            items: [
+              {
+                id: "t1",
+                name: "T",
+                createdAt: "2020-01-01T00:00:00.000Z",
+                updatedAt: "2020-01-01T00:00:00.000Z",
+                families: { items: [{ id: "f1" }] },
+                connectors: [],
+                representations: [],
+              },
+            ],
+          },
+          designs: { items: [] },
+        },
+      });
+      expect(dto.id).toBe("kit-1");
+      expect(Array.isArray(dto.types)).toBe(true);
+      expect(dto.types?.[0]?.id).toBe("t1");
+      expect(Array.isArray(dto.types?.[0]?.families)).toBe(true);
     });
   });
 }
