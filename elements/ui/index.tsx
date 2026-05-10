@@ -13038,6 +13038,8 @@ function Input({ className, type, lazy, value: externalValue, onChange, onLazyCh
   const [isEditing, setIsEditing] = React.useState(false);
   const [isFocused, setIsFocused] = React.useState(false);
   const inputRef = React.useRef<HTMLInputElement>(null);
+  /** @emoji 🧾 Enter key already runs {@link onLazyChange} + blur; skip duplicate commit on the subsequent blur event. */
+  const skipLazyBlurCommitRef = React.useRef(false);
   const commands = useInteractionCommands();
   const setActiveInteraction = commands?.setActiveInteraction;
   const placeholderLabel = useLabel(placeholderId || "");
@@ -13077,6 +13079,11 @@ function Input({ className, type, lazy, value: externalValue, onChange, onLazyCh
     if (interactionId && setActiveInteraction) setActiveInteraction(id, undefined);
     if (lazy) {
       setIsEditing(false);
+      if (skipLazyBlurCommitRef.current) {
+        skipLazyBlurCommitRef.current = false;
+        props.onBlur?.(e);
+        return;
+      }
       onLazyChange?.(localValue);
       transaction?.finalize?.();
     }
@@ -13088,6 +13095,7 @@ function Input({ className, type, lazy, value: externalValue, onChange, onLazyCh
       if (e.key === "Enter") {
         if (interactionId && setActiveInteraction) setActiveInteraction(id, undefined);
         setIsEditing(false);
+        skipLazyBlurCommitRef.current = true;
         onLazyChange?.(localValue);
         transaction?.finalize?.();
         (e.target as HTMLInputElement).blur();

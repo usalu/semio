@@ -7407,8 +7407,10 @@ pub mod kit_backbone {
     /// @emoji 🪪 On-disk schema marker stamped at the bundle root; matches `semio/assets/semio/metabolism.new.kit.semio.json`.
     pub const KIT_STORE_BUNDLE_SCHEMA: &str = "🎆26🌙06⬆️1";
 
-    /// @emoji 🚧 Block-merkle hash sentinel reused everywhere until real hashing is wired (matches the literal `"…"` placeholders in the metabolism fixture).
-    pub const HASH_PLACEHOLDER: &str = "…";
+    /// @emoji 🧾 Blake3 hex (empty-input digest) used on the wire until per-row merkle is filled.
+    pub const KIT_BUNDLE_HASH_STUB: &str = "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262";
+    /// @emoji 🧾 ISO timestamp used when a checkpoint has no persisted time yet.
+    pub const KIT_BUNDLE_CHECKPOINT_TIMESTAMP_STUB: &str = "2020-01-01T00:00:00.000Z";
 
     /// @emoji 📎 Resolve kit snapshot collection slices whether serialized as a legacy JSON array or a `{ hash, items }` block (`metabolism.new.kit.semio.json`).
     pub(crate) fn json_array_or_block_items_ref(v: &serde_json::Value) -> Option<&Vec<serde_json::Value>> {
@@ -7437,7 +7439,7 @@ pub mod kit_backbone {
 
     impl<T> Default for BlockHashedListDto<T> {
         fn default() -> Self {
-            Self { hash: HASH_PLACEHOLDER.to_string(), items: Vec::new() }
+            Self { hash: KIT_BUNDLE_HASH_STUB.to_string(), items: Vec::new() }
         }
     }
 
@@ -7515,10 +7517,10 @@ pub mod kit_backbone {
     /// @emoji 🌱 Empty `root` projection placeholder used until [`Kit`] dumps a real metabolism-shaped root.
     fn empty_root_value() -> serde_json::Value {
         serde_json::json!({
-            "hash": HASH_PLACEHOLDER,
+            "hash": KIT_BUNDLE_HASH_STUB,
             "name": "",
-            "types": { "hash": HASH_PLACEHOLDER, "items": [] },
-            "designs": { "hash": HASH_PLACEHOLDER, "items": [] },
+            "types": { "hash": KIT_BUNDLE_HASH_STUB, "items": [] },
+            "designs": { "hash": KIT_BUNDLE_HASH_STUB, "items": [] },
         })
     }
 
@@ -7527,7 +7529,7 @@ pub mod kit_backbone {
         pub fn empty(kit_id: &str) -> Self {
             Self {
                 id: kit_id.to_string(),
-                hash: HASH_PLACEHOLDER.to_string(),
+                hash: KIT_BUNDLE_HASH_STUB.to_string(),
                 authors: BlockHashedListDto::default(),
                 root: empty_root_value(),
                 checkpoints: BlockHashedListDto::default(),
@@ -7571,7 +7573,7 @@ pub mod kit_backbone {
                 for op in ch.forwards.read().await.iter() {
                     forward_items.push(TransactionStepDto {
                         id: Id::new().await.as_str().to_string(),
-                        hash: HASH_PLACEHOLDER.to_string(),
+                        hash: KIT_BUNDLE_HASH_STUB.to_string(),
                         kind: op.kind().to_string(),
                         description: None,
                         input: serde_json::to_value(op).unwrap_or_else(|_| serde_json::json!({})),
@@ -7580,7 +7582,7 @@ pub mod kit_backbone {
                 for op in ch.backwards.read().await.iter() {
                     backward_items.push(TransactionStepDto {
                         id: Id::new().await.as_str().to_string(),
-                        hash: HASH_PLACEHOLDER.to_string(),
+                        hash: KIT_BUNDLE_HASH_STUB.to_string(),
                         kind: op.kind().to_string(),
                         description: None,
                         input: serde_json::to_value(op).unwrap_or_else(|_| serde_json::json!({})),
@@ -7589,9 +7591,9 @@ pub mod kit_backbone {
             }
             TransactionDto {
                 id: tx.id.as_str().to_string(),
-                hash: HASH_PLACEHOLDER.to_string(),
-                forwards: BlockHashedListDto { hash: HASH_PLACEHOLDER.to_string(), items: forward_items },
-                backwards: BlockHashedListDto { hash: HASH_PLACEHOLDER.to_string(), items: backward_items },
+                hash: KIT_BUNDLE_HASH_STUB.to_string(),
+                forwards: BlockHashedListDto { hash: KIT_BUNDLE_HASH_STUB.to_string(), items: forward_items },
+                backwards: BlockHashedListDto { hash: KIT_BUNDLE_HASH_STUB.to_string(), items: backward_items },
             }
         }
 
@@ -7613,15 +7615,15 @@ pub mod kit_backbone {
             // 🪧 Project checkpoints (each anchored on a kit snapshot we currently leave at the placeholder hash).
             for cp in graph.checkpoints.read().await.iter() {
                 let msg = cp.message.read().await.clone().unwrap_or_default();
-                let ts = cp.timestamp.read().await.clone().map(|t| t.0).unwrap_or_else(|| HASH_PLACEHOLDER.to_string());
+                let ts = cp.timestamp.read().await.clone().map(|t| t.0).unwrap_or_else(|| KIT_BUNDLE_CHECKPOINT_TIMESTAMP_STUB.to_string());
                 let frozen_dto = cp.frozen_root.kit_full_snapshot_value().await;
                 bundle.wip.checkpoints.items.push(serde_json::json!({
                     "id": cp.id.as_str(),
-                    "hash": HASH_PLACEHOLDER,
+                    "hash": KIT_BUNDLE_HASH_STUB,
                     "timestamp": ts,
                     "message": msg,
-                    "authors": { "hash": HASH_PLACEHOLDER, "items": [] },
-                    "changes": { "hash": HASH_PLACEHOLDER, "items": [] },
+                    "authors": { "hash": KIT_BUNDLE_HASH_STUB, "items": [] },
+                    "changes": { "hash": KIT_BUNDLE_HASH_STUB, "items": [] },
                     "frozenRoot": frozen_dto,
                 }));
             }
@@ -7635,8 +7637,8 @@ pub mod kit_backbone {
                 for tx in draft.finalized_transactions.read().await.iter() {
                     txs.push(Self::transaction_dto_from_runtime(tx).await);
                 }
-                let parent = draft.parent_checkpoint.read().await.upgrade().map(|c| HashRefDto { id: c.id.as_str().to_string(), hash: HASH_PLACEHOLDER.to_string() });
-                bundle.wip.drafts.items.push(DraftDto { id: draft.id.as_str().to_string(), hash: HASH_PLACEHOLDER.to_string(), checkpoint: parent, transactions: BlockHashedListDto { hash: HASH_PLACEHOLDER.to_string(), items: txs } });
+                let parent = draft.parent_checkpoint.read().await.upgrade().map(|c| HashRefDto { id: c.id.as_str().to_string(), hash: KIT_BUNDLE_HASH_STUB.to_string() });
+                bundle.wip.drafts.items.push(DraftDto { id: draft.id.as_str().to_string(), hash: KIT_BUNDLE_HASH_STUB.to_string(), checkpoint: parent, transactions: BlockHashedListDto { hash: KIT_BUNDLE_HASH_STUB.to_string(), items: txs } });
             }
 
             Self::hoist_inline_file_blobs_for_storage(&mut bundle);
@@ -7782,17 +7784,17 @@ pub mod kit_backbone {
             // 🪧 First checkpoint anchors the kit at its initial empty projection (no changes yet).
             bundle.wip.checkpoints.items.push(serde_json::json!({
                 "id": checkpoint_id,
-                "hash": HASH_PLACEHOLDER,
-                "timestamp": HASH_PLACEHOLDER,
+                "hash": KIT_BUNDLE_HASH_STUB,
+                "timestamp": KIT_BUNDLE_CHECKPOINT_TIMESTAMP_STUB,
                 "message": "init",
-                "authors": { "hash": HASH_PLACEHOLDER, "items": [] },
-                "changes": { "hash": HASH_PLACEHOLDER, "items": [] },
+                "authors": { "hash": KIT_BUNDLE_HASH_STUB, "items": [] },
+                "changes": { "hash": KIT_BUNDLE_HASH_STUB, "items": [] },
             }));
             // 📝 Active draft on the seed checkpoint (no transactions yet).
             bundle.wip.drafts.items.push(DraftDto {
                 id: draft_id.to_string(),
-                hash: HASH_PLACEHOLDER.to_string(),
-                checkpoint: Some(HashRefDto { id: checkpoint_id.to_string(), hash: HASH_PLACEHOLDER.to_string() }),
+                hash: KIT_BUNDLE_HASH_STUB.to_string(),
+                checkpoint: Some(HashRefDto { id: checkpoint_id.to_string(), hash: KIT_BUNDLE_HASH_STUB.to_string() }),
                 transactions: BlockHashedListDto::default(),
             });
             bundle
@@ -7809,12 +7811,12 @@ pub mod kit_backbone {
             let draft_idx = match drafts.iter().position(|d| d.id == draft_id) {
                 Some(i) => i,
                 None => {
-                    drafts.push(DraftDto { id: draft_id.to_string(), hash: HASH_PLACEHOLDER.to_string(), checkpoint: None, transactions: BlockHashedListDto::default() });
+                    drafts.push(DraftDto { id: draft_id.to_string(), hash: KIT_BUNDLE_HASH_STUB.to_string(), checkpoint: None, transactions: BlockHashedListDto::default() });
                     drafts.len() - 1
                 }
             };
             let tx_id = uuid::Uuid::now_v7().to_string();
-            drafts[draft_idx].transactions.items.push(TransactionDto { id: tx_id.clone(), hash: HASH_PLACEHOLDER.to_string(), forwards: BlockHashedListDto::default(), backwards: BlockHashedListDto::default() });
+            drafts[draft_idx].transactions.items.push(TransactionDto { id: tx_id.clone(), hash: KIT_BUNDLE_HASH_STUB.to_string(), forwards: BlockHashedListDto::default(), backwards: BlockHashedListDto::default() });
             tx_id
         }
 
@@ -7846,7 +7848,7 @@ pub mod kit_backbone {
             let draft_idx = match drafts.iter().position(|d| d.id == draft_id) {
                 Some(i) => i,
                 None => {
-                    drafts.push(DraftDto { id: draft_id.to_string(), hash: HASH_PLACEHOLDER.to_string(), checkpoint: None, transactions: BlockHashedListDto::default() });
+                    drafts.push(DraftDto { id: draft_id.to_string(), hash: KIT_BUNDLE_HASH_STUB.to_string(), checkpoint: None, transactions: BlockHashedListDto::default() });
                     drafts.len() - 1
                 }
             };
@@ -7854,11 +7856,11 @@ pub mod kit_backbone {
             let tx_idx = match txs.iter().position(|t| t.id == transaction_id) {
                 Some(i) => i,
                 None => {
-                    txs.push(TransactionDto { id: transaction_id.to_string(), hash: HASH_PLACEHOLDER.to_string(), forwards: BlockHashedListDto::default(), backwards: BlockHashedListDto::default() });
+                    txs.push(TransactionDto { id: transaction_id.to_string(), hash: KIT_BUNDLE_HASH_STUB.to_string(), forwards: BlockHashedListDto::default(), backwards: BlockHashedListDto::default() });
                     txs.len() - 1
                 }
             };
-            txs[tx_idx].forwards.items.push(TransactionStepDto { id: uuid::Uuid::now_v7().to_string(), hash: HASH_PLACEHOLDER.to_string(), kind: kind.to_string(), description: None, input });
+            txs[tx_idx].forwards.items.push(TransactionStepDto { id: uuid::Uuid::now_v7().to_string(), hash: KIT_BUNDLE_HASH_STUB.to_string(), kind: kind.to_string(), description: None, input });
         }
 
         /// @emoji 🪪 Build a metabolism-shaped bundle from a flat ordered semantic operation log (used by golden test fixtures and import paths).
@@ -9880,7 +9882,7 @@ mod tests {
     #[test]
     fn json_array_or_block_items_helpers_accept_legacy_or_block_lists() {
         let flat = serde_json::json!([{"id":"a"}]);
-        let block = serde_json::json!({"hash":"…","items":[{"id":"b"}]});
+        let block = serde_json::json!({"hash": crate::kit_backbone::KIT_BUNDLE_HASH_STUB,"items":[{"id":"b"}]});
         assert_eq!(crate::kit_backbone::json_array_or_block_items_ref(&flat).unwrap().len(), 1);
         assert_eq!(crate::kit_backbone::json_array_or_block_items_ref(&block).unwrap()[0]["id"], "b");
         let mut m = block.clone();

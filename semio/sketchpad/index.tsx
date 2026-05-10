@@ -115,7 +115,6 @@ import {
   useKitIcon,
   useKitImage,
   useKitLicense,
-  useKitName,
   useRenameKit,
   useKitRegistrySafe,
   useKitRelease,
@@ -15818,7 +15817,8 @@ export const KitSection: FC = () => {
 const KitSectionForm: FC = () => {
   const [ksKit] = useKitSnapshotTriad();
   const kit = ksKit?.kit as Kit | undefined;
-  const kitName = useKitName();
+  /** @emoji 🧾 Label reads {@link Kit} materialized into the host store (respects footer read scope); not the unscoped GraphQL `kitName` field. */
+  const materializedKitName = kit?.name ?? "";
   const [renameKit, renameKitStatus] = useRenameKit();
   const { spinning, error, disabled } = useWriteIndicator(renameKitStatus);
   const releaseTriad = useKitRelease();
@@ -15853,7 +15853,7 @@ const KitSectionForm: FC = () => {
               <Input
                 lazy
                 id="semio.sketchpad.app.kit.panel.details.section.kit.name"
-                value={kitName}
+                value={materializedKitName}
                 readOnly={disabled}
                 onLazyChange={disabled ? undefined : (v) => void renameKit(v)}
                 showLabel
