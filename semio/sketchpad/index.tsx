@@ -13844,7 +13844,7 @@ function useKitAppYjsToXStateSync() {
         ...initialState,
         activeTool: initialState.activeTool ?? ToolKind.SELECTION_NORMAL,
         expandedRows: new Set(initialState.expandedRows || []),
-        transaction: {
+        change: {
           isTransactionActive: false,
           currentTransactionStack: [],
           pastTransactionStack: [],
@@ -13857,7 +13857,7 @@ function useKitAppYjsToXStateSync() {
         panelVisibility: defaultPanelVisibility,
         activeTool: ToolKind.SELECTION_NORMAL,
         expandedRows: new Set(),
-        transaction: {
+        change: {
           isTransactionActive: false,
           currentTransactionStack: [],
           pastTransactionStack: [],
@@ -13903,7 +13903,7 @@ function useKitAppYjsToXStateSync() {
 const KitTableApp: FC = () => {
   useKitAppYjsToXStateSync();
   const kitId = useKitScope()?.id ?? "";
-  const transaction = useKitAppTransaction();
+  const transaction = useKitAppChange();
   const { undo, redo, deleteSelected } = useKitAppCommands();
   useHotkeys("ctrl+z", () => undo?.(), { enableOnFormTags: true });
   useHotkeys("ctrl+y", () => redo?.(), { enableOnFormTags: true });
@@ -15141,7 +15141,7 @@ KitDiagramWindow.displayName = "KitDiagramWindow";
  **/
 const MultiWindowApp: FC = () => {
   useKitAppYjsToXStateSync();
-  const transaction = useKitAppTransaction();
+  const transaction = useKitAppChange();
   const actor = useSketchpadActor();
   const sketchpadStore = useSketchpadStore();
   const kitId = useKitScope()?.id;
@@ -24675,7 +24675,7 @@ class KitAppStoreImpl extends KitDiffAppStore<KitAppState, KitAppDiff, KitAppSel
       sortDirection: this.sortDirection,
       windowLayout: this.windowLayout,
       diagramForce: this.diagramForce,
-      transaction: {
+      change: {
         isTransactionActive: this.isTransactionActive,
         currentTransactionStack: this.currentTransactionStack,
         pastTransactionStack: this.pastTransactionsStack,
@@ -24936,15 +24936,15 @@ class KitAppStoreImpl extends KitDiffAppStore<KitAppState, KitAppDiff, KitAppSel
       rest = args;
     }
 
-    if (command === "semio.kitApp.startTransaction") {
+    if (command === "semio.kitApp.startNewChange") {
       this.startTransaction();
       return {} as T;
     }
-    if (command === "semio.kitApp.finalizeTransaction") {
+    if (command === "semio.kitApp.saveChange") {
       this.finalizeTransaction();
       return {} as T;
     }
-    if (command === "semio.kitApp.abortTransaction") {
+    if (command === "semio.kitApp.discardChange") {
       this.abortTransaction();
       return {} as T;
     }
@@ -26873,15 +26873,15 @@ export class DesignStore extends PlainKitDiffAppStore<DesignAppState, DesignAppD
       rest = args;
     }
 
-    if (command === "semio.designApp.startTransaction") {
+    if (command === "semio.designApp.startNewChange") {
       this.startTransaction();
       return {} as T;
     }
-    if (command === "semio.designApp.finalizeTransaction") {
+    if (command === "semio.designApp.saveChange") {
       this.finalizeTransaction();
       return {} as T;
     }
-    if (command === "semio.designApp.abortTransaction") {
+    if (command === "semio.designApp.discardChange") {
       this.abortTransaction();
       return {} as T;
     }
@@ -27182,7 +27182,7 @@ function useDesignAppInitialize() {
         camera: undefined,
         fullscreenWindow: DesignAppFullscreenWindow.None,
         selectedRepresentationTags: {},
-        transaction: {
+        change: {
           isTransactionActive: false,
           currentTransactionStack: [],
           pastTransactionStack: [],
@@ -27983,9 +27983,9 @@ export function useDesignAppTransaction(): [TransactionActions | undefined, bool
   const actions = useMemo(() => {
     if (!store) return undefined;
     return {
-      start: () => store.execute("semio.designApp.startTransaction", getOrigin()),
-      finalize: () => store.execute("semio.designApp.finalizeTransaction", getOrigin()),
-      abort: () => store.execute("semio.designApp.abortTransaction", getOrigin()),
+      start: () => store.execute("semio.designApp.startNewChange", getOrigin()),
+      finalize: () => store.execute("semio.designApp.saveChange", getOrigin()),
+      abort: () => store.execute("semio.designApp.discardChange", getOrigin()),
     };
   }, [store, getOrigin]);
   return [actions, canTransact];
@@ -28257,9 +28257,9 @@ export function useDesignAppExpandDesign(): ActionHookResult<[designId: Id]> {
 const EMPTY_COMMANDS = {
   togglePanel: () => {},
   execute: () => {},
-  startTransaction: () => {},
-  finalizeTransaction: () => {},
-  abortTransaction: () => {},
+  startNewChange: () => {},
+  saveChange: () => {},
+  discardChange: () => {},
   undo: () => {},
   redo: () => {},
   selectAll: () => {},
@@ -28326,9 +28326,9 @@ export function useDesignAppCommands(id?: DesignAppId) {
       return EMPTY_COMMANDS;
     }
     return {
-      startTransaction: (origin: string) => store.execute("semio.designApp.startTransaction", origin),
-      finalizeTransaction: (origin: string) => store.execute("semio.designApp.finalizeTransaction", origin),
-      abortTransaction: (origin: string) => store.execute("semio.designApp.abortTransaction", origin),
+      startNewChange: (origin: string) => store.execute("semio.designApp.startNewChange", origin),
+      saveChange: (origin: string) => store.execute("semio.designApp.saveChange", origin),
+      discardChange: (origin: string) => store.execute("semio.designApp.discardChange", origin),
       undo: (origin: string) => store.execute("semio.designApp.undo", origin),
       redo: (origin: string) => store.execute("semio.designApp.redo", origin),
       selectAll: (_origin: string) => actor.send({ type: "DESIGN.SELECT_ALL", kitId, designId }),
@@ -37530,17 +37530,25 @@ interface TransactionCallbacks {
 }
 
 /**
- * Returns a transaction object with start, finalize, and abort methods.
- * Stub until type-app VCS / XState is wired; graph-level `beginTx`/`commitTx` is removed.
- **/
-export function useTypeAppTransaction(_id?: TypeAppId): TransactionCallbacks {
+ * Returns local change-batch controls for the Type app (maps to {@link TYPE.CHANGE} events).
+ */
+export function useTypeAppChange(id?: TypeAppId): TransactionCallbacks {
+  const actor = useSketchpadActor();
+  const kitScope = useKitScope();
+  const typeScope = useTypeScope();
+  const kitId = kitScope?.id ?? id?.kit ?? "";
+  const typeId = typeScope?.id ?? id?.type ?? "";
+
   return useMemo(
-    () => ({
-      start: () => {},
-      finalize: () => {},
-      abort: () => {},
-    }),
-    [],
+    () =>
+      !kitId || !typeId
+        ? {}
+        : {
+            start: () => actor.send({ type: "TYPE.CHANGE.START_NEW_CHANGE", kitId, typeId }),
+            finalize: () => actor.send({ type: "TYPE.CHANGE.SAVE_CHANGE", kitId, typeId }),
+            abort: () => actor.send({ type: "TYPE.CHANGE.DISCARD_CHANGE", kitId, typeId }),
+          },
+    [actor, kitId, typeId],
   );
 }
 
@@ -37559,9 +37567,9 @@ export function useTypeAppCommands(id?: TypeAppId) {
     const noOp = () => {};
     if (!kitId || !typeId) {
       return {
-        startTransaction: noOp,
-        finalizeTransaction: noOp,
-        abortTransaction: noOp,
+        startNewChange: noOp,
+        saveChange: noOp,
+        discardChange: noOp,
         undo: noOp,
         redo: noOp,
         selectAll: noOp,
@@ -37588,9 +37596,9 @@ export function useTypeAppCommands(id?: TypeAppId) {
     }
 
     return {
-      startTransaction: () => actor.send({ type: "TYPE.CHANGE.START_NEW_CHANGE", kitId, typeId }),
-      finalizeTransaction: () => actor.send({ type: "TYPE.CHANGE.SAVE_CHANGE", kitId, typeId }),
-      abortTransaction: () => actor.send({ type: "TYPE.CHANGE.DISCARD_CHANGE", kitId, typeId }),
+      startNewChange: () => actor.send({ type: "TYPE.CHANGE.START_NEW_CHANGE", kitId, typeId }),
+      saveChange: () => actor.send({ type: "TYPE.CHANGE.SAVE_CHANGE", kitId, typeId }),
+      discardChange: () => actor.send({ type: "TYPE.CHANGE.DISCARD_CHANGE", kitId, typeId }),
       undo: () => actor.send({ type: "TYPE.CHANGE.UNDO", kitId, typeId }),
       redo: () => actor.send({ type: "TYPE.CHANGE.REDO", kitId, typeId }),
       selectAll: () => actor.send({ type: "TYPE.SELECT_ALL", kitId, typeId }),
@@ -40636,7 +40644,7 @@ const TypeApp: FC = () => {
 
   useTypeAppInitialize();
 
-  const transaction = useTypeAppTransaction();
+  const transaction = useTypeAppChange();
   return (
     <TransactionProvider transaction={transaction}>
       <TypeWindowApp />
@@ -40672,7 +40680,7 @@ function useTypeAppInitialize() {
         activeTool: ToolKind.SELECTION_NORMAL,
         fullscreenWindow: TypeAppFullscreenWindow.None,
         selectedRepresentationTags: [],
-        transaction: {
+        change: {
           isTransactionActive: false,
           currentTransactionStack: [],
           pastTransactionStack: [],
@@ -41502,15 +41510,15 @@ class QualityAppStore extends PlainKitDiffAppStore<QualityAppState, QualityAppDi
       rest = args;
     }
 
-    if (command === "semio.qualityApp.startTransaction") {
+    if (command === "semio.qualityApp.startNewChange") {
       this.startTransaction();
       return {} as T;
     }
-    if (command === "semio.qualityApp.finalizeTransaction") {
+    if (command === "semio.qualityApp.saveChange") {
       this.finalizeTransaction();
       return {} as T;
     }
-    if (command === "semio.qualityApp.abortTransaction") {
+    if (command === "semio.qualityApp.discardChange") {
       this.abortTransaction();
       return {} as T;
     }
@@ -41675,9 +41683,9 @@ export function useQualityAppCommands(id?: QualityAppId) {
   const store = useQualityAppStore(undefined, id) as QualityAppStore | null;
   if (!store) {
     return {
-      startTransaction: () => {},
-      finalizeTransaction: () => {},
-      abortTransaction: () => {},
+      startNewChange: () => {},
+      saveChange: () => {},
+      discardChange: () => {},
       undo: () => {},
       redo: () => {},
       toggleFormulaFullscreen: () => Promise.resolve(),
@@ -41695,10 +41703,10 @@ export function useQualityAppCommands(id?: QualityAppId) {
       execute: (_origin: string, _command: string, ..._args: any[]) => Promise.resolve(),
     };
   }
-  return {
-    startTransaction: (origin: string) => store.startTransaction(),
-    finalizeTransaction: (origin: string) => store.finalizeTransaction(),
-    abortTransaction: (origin: string) => store.abortTransaction(),
+    return {
+      startNewChange: (origin: string) => void store.execute("semio.qualityApp.startNewChange", origin),
+      saveChange: (origin: string) => void store.execute("semio.qualityApp.saveChange", origin),
+      discardChange: (origin: string) => void store.execute("semio.qualityApp.discardChange", origin),
     undo: (origin: string) => store.undo(),
     redo: (origin: string) => store.redo(),
     toggleFormulaFullscreen: (origin: string) => store.execute("semio.qualityApp.toggleFormulaFullscreen", origin),
@@ -42694,7 +42702,7 @@ const QualityApp: FC<QualityAppProps> = () => {
   const [toggleFormulaFullscreen] = useQualityAppToggleFormulaFullscreen();
   const [toggleDiagramFullscreen] = useQualityAppToggleDiagramFullscreen();
   const [togglePanel] = useQualityAppTogglePanel();
-  const { undo, redo, addFormulaNode, connectNodes, startTransaction, finalizeTransaction } = useQualityAppCommands();
+  const { undo, redo, addFormulaNode, connectNodes, startNewChange, saveChange } = useQualityAppCommands();
   const quality = useQuality() as Quality | undefined;
   const appType = useAppType();
   const [activeTool, setActiveTool] = useQualityAppActiveTool();
@@ -42854,7 +42862,7 @@ const QualityApp: FC<QualityAppProps> = () => {
       const dragData = active.data.current as any;
 
       if (dragData) {
-        startTransaction("semio.sketchpad.app.quality.drag");
+        startNewChange("semio.sketchpad.app.quality.drag");
 
         const targetNode = reactFlowInstanceRef.current.getNodes().find((n) => {
           const nodeBounds = {
@@ -42889,7 +42897,7 @@ const QualityApp: FC<QualityAppProps> = () => {
             y: isPlaceholder ? 0 : y,
           };
         } else {
-          finalizeTransaction("semio.sketchpad.app.quality.drag");
+          saveChange("semio.sketchpad.app.quality.drag");
           return;
         }
 

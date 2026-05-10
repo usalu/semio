@@ -1387,6 +1387,14 @@ function buildScopedChangeKitMutation(
     return null;
   }
 
+  if ("changePieceKind" in cmd && cmd.changePieceKind != null) {
+    const x = cmd.changePieceKind as { designId: KitIdDto; pieceId: KitIdDto; newTypeId: KitIdDto };
+    return __scopedKitMutationBody(
+      changeId,
+      `r: design(id: ${__gqlStr(x.designId.id)}) { piece(id: ${__gqlStr(x.pieceId.id)}) { cb: changeBlueprint(blueprintId: ${__gqlStr(x.newTypeId.id)}) } }`,
+    );
+  }
+
   return null;
 }
 
@@ -2051,6 +2059,10 @@ export class KitStore {
   private disposed = false;
   /** @emoji 🧭 Active unsaved {@link Change} id for `VersionCommandInput.unsavedChange(id)`. */
   private kitWriteChangeId: string | null = null;
+  /** @emoji 🧭 Legacy VCS anchors retained until rs removes draft/transaction nesting entirely. */
+  private kitWriteAlternativeId: string | null = null;
+  private kitWriteDraftId: string | null = null;
+  private kitWriteTransactionId: string | null = null;
 
   /** @emoji 🧭 Active {@link KitReadPoint} for materialized `wip.theKit(at:)` reads (see {@link WasmKitStoreClient.setKitReadPoint}). */
   private activeReadPoint: KitReadPoint = theKitReadPoint;
@@ -2173,7 +2185,6 @@ export class KitStore {
         const ks = new KitStore(timeoutMs, wt);
         await withTimeout(ks.warmGraphqlRead(), timeoutMs, "graphql");
         void ks.startSubscriptionLoop();
-        void ks.startCorrelationSubscriptions();
         return ks;
       } catch (workerErr) {
         /** @emoji 🧵 Blob worker can't resolve `@semio/rs-wasm` bare specifier → fall back to inline WASM on the main thread (still real rust authority). */
@@ -2211,7 +2222,6 @@ export class KitStore {
     const ks = new KitStore(timeoutMs, t);
     await withTimeout(ks.warmGraphqlRead(), timeoutMs, "graphql");
     void ks.startSubscriptionLoop();
-    void ks.startCorrelationSubscriptions();
     return ks;
   }
 
@@ -2308,79 +2318,21 @@ export class KitStore {
     });
   }
 
-  /** @emoji 🧾 Transactional kit SDL operation `<field>(scope: …!, input: …!): Id!` + correlator + finalize. */
-  private operation<TScope extends JsonObject = JsonObject, TInput extends JsonObject = JsonObject>(
-    fieldName: string,
-    scopeTypeName: string,
-    inputTypeName: string,
-  ): StoreCommand<{ scope: TScope; input: TInput }> {
-    return new StoreCommand<{ scope: TScope; input: TInput }>(async ({ scope, input }) => {
-      let draftId: string;
-      let transactionId: string;
-      try {
-        draftId = await this.openDraftForOperation();
-        const opened = await this.openKitWriteTransaction();
-        if (!opened.ok) return opened;
-        transactionId = opened.transactionId;
-      } catch (e) {
-        return { ok: false, error: { kind: "Internal", message: String(e) } };
-      }
-      const scopeGql: JsonObject = { draftId, transactionId, ...scope };
-      try {
-        const data = kitGraphqlData(
-          await this.gqlRun({
-            query: `mutation($scope: ${scopeTypeName}!, $input: ${inputTypeName}!) { ${fieldName}(scope: $scope, input: $input) }`,
-            variables: { scope: scopeGql as JsonValue, input: (input ?? ({} as TInput)) as JsonValue },
-          }),
-        ) as Record<string, string>;
-        const requestId = String(data[fieldName] ?? "");
-        if (requestId === "") throw new Error(`${fieldName}: empty request id`);
-        const result = await this.correlator.await(requestId);
-        await this.finalizeTransaction(draftId, transactionId, result.ok).catch(() => undefined);
-        /** Refetch {@link kitName} and other {@link query}-backed fields: correlator resolves from `commandSucceeded`, while {@link startSubscriptionLoop} invalidations depend on the separate operation stream — mutations could succeed without that stream firing. */
-        if (result.ok) {
-          try {
-            this.invalidations.next();
-          } catch {
-            /* ignore */
-          }
-        }
-        return result;
-      } catch (e) {
-        await this.finalizeTransaction(draftId, transactionId, false).catch(() => undefined);
-        return { ok: false, error: { kind: "Internal", message: String(e) } };
-      }
-    });
+  private async apiTheKitSave(): Promise<void> {
+    kitGraphqlData(await this.gqlRun({ query: `mutation { session { theKit { save } } }` }));
+    this.kitWriteChangeId = null;
   }
 
-  /** @emoji 🧾 Ensures {@link kitWriteDraftId} exists (same anchors as legacy lazy transaction open). */
-  private async openDraftForOperation(): Promise<string> {
-    await this.ensureWriteGraph();
-    const d = this.kitWriteDraftId;
-    if (!d) throw new Error("openDraftForOperation: missing draft id");
-    return d;
-  }
-
-  /** @emoji 🧾 Commit or abort a transaction by explicit ids (does not require matching {@link kitWriteTransactionId}). */
-  private async finalizeTransaction(draftId: string, transactionId: string, applied: boolean): Promise<void> {
-    if (applied) {
-      kitGraphqlData(
-        await this.gqlRun({
-          query: `mutation($d: Id!, $t: Id!) { transactionCommit(draftId: $d, transactionId: $t) }`,
-          variables: { d: draftId, t: transactionId },
-        }),
-      );
-    } else {
-      kitGraphqlData(
-        await this.gqlRun({
-          query: `mutation($d: Id!, $t: Id!) { transactionAbort(draftId: $d, transactionId: $t) }`,
-          variables: { d: draftId, t: transactionId },
-        }),
-      );
-    }
-    if (this.kitWriteDraftId === draftId && this.kitWriteTransactionId === transactionId) {
-      this.kitWriteTransactionId = null;
-    }
+  /** @emoji 🧾 Ensures {@link kitWriteChangeId} via `VersionCommandInput.startNewChange`. */
+  private async ensureKitWriteChangeId(): Promise<string> {
+    if (this.kitWriteChangeId) return this.kitWriteChangeId;
+    const data = kitGraphqlData(await this.gqlRun({ query: `mutation { session { theKit { startNewChange } } }` })) as JsonObject;
+    const sess = data["session"] as JsonObject | undefined;
+    const tk = sess?.["theKit"] as JsonObject | undefined;
+    const cid = String(tk?.["startNewChange"] ?? "");
+    if (cid === "") throw new Error("startNewChange: empty change id");
+    this.kitWriteChangeId = cid;
+    return cid;
   }
 
   /** @emoji 🪪 Cacheless Promise read of kit name via GraphQL into rs (honours {@link activeReadPoint}). */
@@ -2400,11 +2352,14 @@ export class KitStore {
     return { kind: "Internal", message };
   }
 
-  private dispatchCommandSucceeded(data: { readonly commandSucceeded?: { readonly requestId?: string } | null } | null): void {
-    const row = data?.commandSucceeded;
-    if (row == null || typeof row !== "object") return;
-    const rid = String(row.requestId ?? "");
+  private dispatchCommandSucceededPayload(payload: unknown): void {
+    if (payload == null || typeof payload !== "object" || Array.isArray(payload)) return;
+    const rid = String((payload as JsonObject)["requestId"] ?? "");
     if (rid !== "") this.correlator.resolve(rid, { ok: true });
+  }
+
+  private dispatchCommandSucceeded(data: { readonly commandSucceeded?: { readonly requestId?: string } | null } | null): void {
+    this.dispatchCommandSucceededPayload(data?.commandSucceeded ?? null);
   }
 
   private dispatchOperationFailed(data: {
@@ -2419,44 +2374,59 @@ export class KitStore {
     this.correlator.resolve(rid, { ok: false, error: err });
   }
 
-  /** @emoji 🪪 GraphQL subscription loops: {@link KIT_COMMAND_SUCCEEDED_SUBSCRIPTION} + {@link KIT_OPERATION_FAILED_SUBSCRIPTION}. */
-  private startCorrelationSubscriptions(): void {
-    if (this.correlationLoopRunning) return;
-    this.correlationLoopRunning = true;
-    void this.transport
-      .subscribe(JSON.stringify({ query: KIT_COMMAND_SUCCEEDED_SUBSCRIPTION }), (eventJson: string) => {
+  private dispatchSubscriptionGraphqlData(data: JsonObject | null | undefined): void {
+    if (data == null) return;
+    if (data["event"] !== undefined) {
+      this.dispatchMultiplexedSubscriptionEvent(data["event"] as JsonValue);
+      return;
+    }
+    if (data["commandSucceeded"] !== undefined) {
+      this.dispatchCommandSucceededPayload(data["commandSucceeded"]);
+    }
+    if (data["operationFailed"] !== undefined) {
+      this.dispatchOperationFailed({ operationFailed: data["operationFailed"] as { kind?: string; message?: string; requestId?: string | null } });
+    }
+    const legacyOp = data["operationSucceeded"];
+    if (legacyOp !== undefined) {
+      this.dispatchMultiplexedSubscriptionEvent(legacyOp as JsonValue);
+    }
+  }
+
+  /** @emoji 🧾 `Subscription.event` JSON envelope (`kind` + `payload`) or legacy stream rows. */
+  private dispatchMultiplexedSubscriptionEvent(ev: JsonValue): void {
+    if (ev != null && typeof ev === "object" && !Array.isArray(ev) && typeof (ev as JsonObject)["kind"] === "string") {
+      const o = ev as JsonObject;
+      const k = o["kind"] as string;
+      const pl = o["payload"];
+      if (k === "commandSucceeded") {
+        this.dispatchCommandSucceededPayload(pl);
+        return;
+      }
+      if (k === "operationFailed") {
+        this.dispatchOperationFailed({ operationFailed: pl as { kind?: string; message?: string; requestId?: string | null } });
+        return;
+      }
+      if (k === "operationSucceeded" || k === "changed" || k === "kitMutation") {
+        const inner = pl !== undefined ? pl : ev;
+        const n = normalizeKitEventFromSubscription(inner);
+        if (n) this.fanout.next(n);
+        else this.fanout.next(inner as KitEvent);
         try {
-          const msg = parseJsonValue(eventJson) as KitGraphqlResponseEnvelope<{
-            commandSucceeded?: { requestId?: string; kind?: string };
-          }>;
-          if (msg.errors && Array.isArray(msg.errors) && msg.errors.length) return;
-          const row = msg.data;
-          if (row == null || typeof row !== "object") return;
-          this.dispatchCommandSucceeded(row);
+          this.invalidations.next();
         } catch {
           /* ignore */
         }
-      })
-      .catch(() => {
-        this.correlationLoopRunning = false;
-      });
-    void this.transport
-      .subscribe(JSON.stringify({ query: KIT_OPERATION_FAILED_SUBSCRIPTION }), (eventJson: string) => {
-        try {
-          const msg = parseJsonValue(eventJson) as KitGraphqlResponseEnvelope<{
-            operationFailed?: { kind?: string; message?: string; requestId?: string | null };
-          }>;
-          if (msg.errors && Array.isArray(msg.errors) && msg.errors.length) return;
-          const row = msg.data;
-          if (row == null || typeof row !== "object") return;
-          this.dispatchOperationFailed(row);
-        } catch {
-          /* ignore */
-        }
-      })
-      .catch(() => {
-        /* ignore */
-      });
+        return;
+      }
+    }
+    const n = normalizeKitEventFromSubscription(ev);
+    if (n) this.fanout.next(n);
+    else this.fanout.next(ev as KitEvent);
+    try {
+      this.invalidations.next();
+    } catch {
+      /* ignore */
+    }
   }
 
   //#endregion 🪪KitNameAndRename
@@ -2467,18 +2437,11 @@ export class KitStore {
     void this.transport
       .subscribe(JSON.stringify({ query: KIT_EVENT_STREAM_SUBSCRIPTION }), (eventJson: string) => {
         try {
-          const msg = parseJsonValue(eventJson) as KitGraphqlResponseEnvelope<{ operationSucceeded?: JsonValue | null }>;
+          const msg = parseJsonValue(eventJson) as KitGraphqlResponseEnvelope<JsonObject>;
           if (msg.errors && Array.isArray(msg.errors) && msg.errors.length) return;
-          const ev: JsonValue | null | undefined = msg.data?.operationSucceeded;
-          if (ev === undefined) return;
-          const n = normalizeKitEventFromSubscription(ev);
-          if (n) this.fanout.next(n);
-          else this.fanout.next(ev as KitEvent);
-          try {
-            this.invalidations.next();
-          } catch {
-            /* ignore */
-          }
+          const row = msg.data;
+          if (row == null || typeof row !== "object") return;
+          this.dispatchSubscriptionGraphqlData(row as JsonObject);
         } catch {
           /* ignore */
         }
@@ -2544,7 +2507,7 @@ export class KitStore {
   async vcsState(): Promise<JsonObject> {
     const data = kitGraphqlData(
       await this.gqlRun({
-        query: `query { wip { id theKit { id } checkpoints { edges { node { id message isRelease changeCount parentCheckpoint { id } } } } alternatives { edges { node { id name draft { id u1: canUndo(steps:1) r1: canRedo(steps:1) openTransaction { id } } } } } } }`,
+        query: `query { wip { id theKit { id } checkpoints { edges { node { id message parent { id } } } } alternatives { edges { node { id name unsavedChanges { edges { node { id } } } kit { id } } } } } } }`,
       }),
     ) as JsonValue;
     const wipRaw = (data as { wip?: JsonObject | null }).wip;
@@ -2552,27 +2515,15 @@ export class KitStore {
     return { wip } as JsonObject;
   }
 
-  /** @emoji 🧾 True when any alternative draft reports `canUndo` (VCS draft/transaction stack). */
+  /** @emoji 🧾 Undo stack is owned by `semio/rs` edit log; JS does not read a draft cursor on the target schema. */
   async canUndo(): Promise<boolean> {
-    const v = await this.vcsState();
-    const wip = v["wip"] as { alternatives?: readonly { draft?: { u1?: boolean } | null }[] } | undefined;
-    const alts = wip?.alternatives;
-    if (!Array.isArray(alts)) return false;
-    for (const a of alts) {
-      if (a?.draft?.u1) return true;
-    }
+    void (await this.vcsState());
     return false;
   }
 
-  /** @emoji 🧾 True when any alternative draft reports `canRedo`. */
+  /** @emoji 🧾 Redo stack is owned by `semio/rs` edit log; JS does not read a draft cursor on the target schema. */
   async canRedo(): Promise<boolean> {
-    const v = await this.vcsState();
-    const wip = v["wip"] as { alternatives?: readonly { draft?: { r1?: boolean } | null }[] } | undefined;
-    const alts = wip?.alternatives;
-    if (!Array.isArray(alts)) return false;
-    for (const a of alts) {
-      if (a?.draft?.r1) return true;
-    }
+    void (await this.vcsState());
     return false;
   }
 
@@ -4857,9 +4808,6 @@ export function releaseSemioKitCommandFacade(client: KitStoreClient): void {
 }
 
 // #region 🔖CommandBuilder
-
-/** @emoji 🧭 Target-schema change identity (maps to the active kit-write anchor until rs exposes explicit Change ids on every path). */
-export type ChangeId = string;
 
 /** @emoji 🧭 Fluent `Mutation.session` navigator matching the target Command tree; bridges today's {@link KitStore} kit-write transaction anchors. */
 export class CommandBuilder {

@@ -3,19 +3,7 @@
   "wip": {
     "id": "f042c2a4-3ba5-44b0-b22c-0ae8f568aacc",
     "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
-    "authors": {
-      "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
-      "items": [
-        {
-          "id": "…",
-          "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
-          "alias": "…",
-          "name": "…",
-          "email": "…"
-        }
-      ]
-    },
-    "initial": {
+    "theKit": {
       "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
       "name": "Metabolism",
       "description": "🏗 Everything for metabolistic architecture.",
@@ -45,7 +33,10 @@
                   "file": {
                     "id": "457d2061-ac4b-4317-8563-ba41afffd149",
                     "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
-                  }
+                  },
+                  "description": "",
+                  "icon": "",
+                  "url": ""
                 },
                 {
                   "id": "c2aded58-7995-4ea5-b990-91bd44482bcb",
@@ -67,7 +58,10 @@
                   "file": {
                     "id": "77e02ef4-e37e-41dd-80f6-00889cfcabb4",
                     "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
-                  }
+                  },
+                  "description": "",
+                  "icon": "",
+                  "url": ""
                 },
                 {
                   "id": "b45711c9-1c03-4180-9f5c-7c52f6ac1e8d",
@@ -89,7 +83,10 @@
                   "file": {
                     "id": "97262145-c4e5-48e1-8495-6a1142413430",
                     "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
-                  }
+                  },
+                  "description": "",
+                  "icon": "",
+                  "url": ""
                 },
                 {
                   "id": "6a931c90-4157-4207-9052-18cbb60e7e5c",
@@ -119,7 +116,10 @@
                   "file": {
                     "id": "580a4d9d-9289-4a5d-a356-810f63d7c7f0",
                     "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
-                  }
+                  },
+                  "description": "",
+                  "icon": "",
+                  "url": ""
                 },
                 {
                   "id": "806935d7-79b0-49d8-94a1-8aaf2eb11420",
@@ -149,7 +149,10 @@
                   "file": {
                     "id": "4bc08213-a92c-4765-901b-129ffdb1a773",
                     "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
-                  }
+                  },
+                  "description": "",
+                  "icon": "",
+                  "url": ""
                 },
                 {
                   "id": "6f6f705a-c893-4d60-8bf4-61b5c348f958",
@@ -166,12 +169,11 @@
                         "id": "7181512a-ee78-493d-963f-d224ba8b2b91",
                         "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
                       }
-                    ],
-                    "file": {
-                      "id": "abba142d-f36a-44d9-a7f8-59fe103fd8f2",
-                      "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
-                    }
-                  }
+                    ]
+                  },
+                  "description": "",
+                  "icon": "",
+                  "url": ""
                 }
               ]
             },
@@ -182,34 +184,19 @@
                   "id": "c5465220-19ba-4443-8f1d-617c832dd13c",
                   "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
                   "name": "c0",
-                  "t": -0.125,
-                  "point": {
-                    "x": -7.5,
-                    "y": -7.7,
-                    "z": 7.5
-                  },
-                  "direction": {
-                    "x": 0,
-                    "y": 0,
-                    "z": 1
-                  },
                   "description": "🪠 The center of the east rectangular core (an elevator and a staircase around it).",
                   "port": {
                     "id": "019ab243-21f3-7380-93c6-a04a8b137527",
                     "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
                   },
-                  "mandatory": false,
-                  "props": {
+                  "icon": "",
+                  "code": "c0",
+                  "qualities": {
                     "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
                     "items": [
                       {
-                        "id": "43555719-0b24-4069-bd92-20f3539f1577",
-                        "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
-                        "quality": {
-                          "id": "acfbe1bc-a5a4-5779-827a-d169f4a2fa1d",
-                          "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
-                        },
-                        "value": "east"
+                        "id": "acfbe1bc-a5a4-5779-827a-d169f4a2fa1d",
+                        "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
                       }
                     ]
                   }
@@ -218,34 +205,22 @@
                   "id": "d25a91ed-b124-4e5b-8e7e-af832541c953",
                   "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
                   "name": "c1",
-                  "t": 0.125,
-                  "point": {
-                    "x": -18.6,
-                    "y": -7.7,
-                    "z": 7.5
-                  },
-                  "direction": {
-                    "x": 0,
-                    "y": 0,
-                    "z": 1
-                  },
                   "description": "🧹 The center of the west rectangular core (an elevator and a staircase around it).",
                   "port": {
                     "id": "019ab243-21f3-7380-93c6-a04a8b137527",
                     "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
                   },
-                  "mandatory": false,
-                  "props": [
-                    {
-                      "id": "bcda3e1b-3c45-400e-8048-9701257c987f",
-                      "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
-                      "quality": {
+                  "icon": "",
+                  "code": "c1",
+                  "qualities": {
+                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
+                    "items": [
+                      {
                         "id": "acfbe1bc-a5a4-5779-827a-d169f4a2fa1d",
                         "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
-                      },
-                      "value": "west"
-                    }
-                  ]
+                      }
+                    ]
+                  }
                 }
               ]
             },
@@ -259,7 +234,12 @@
                     "id": "c1c756ba-a1ac-53ce-a87d-9d69bc4b34cb",
                     "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
                   },
-                  "value": "2"
+                  "value": "2",
+                  "description": "",
+                  "icon": "",
+                  "name": "c1c756ba-a1ac-53ce-a87d-9d69bc4b34cb",
+                  "key": "c1c756ba-a1ac-53ce-a87d-9d69bc4b34cb",
+                  "unit": ""
                 },
                 {
                   "id": "d1929d72-af63-4116-820e-174e850cb262",
@@ -269,7 +249,11 @@
                     "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
                   },
                   "value": "3.5",
-                  "unit": "m"
+                  "unit": "m",
+                  "description": "",
+                  "icon": "",
+                  "name": "32349526-a576-53e0-af16-f878b0def4ec",
+                  "key": "32349526-a576-53e0-af16-f878b0def4ec"
                 },
                 {
                   "id": "893abeaf-17cc-44a4-a47a-4a1586c7e6ee",
@@ -279,7 +263,11 @@
                     "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
                   },
                   "value": "4",
-                  "unit": "m"
+                  "unit": "m",
+                  "description": "",
+                  "icon": "",
+                  "name": "39e02526-7bab-55db-ac15-a09a55bd23d1",
+                  "key": "39e02526-7bab-55db-ac15-a09a55bd23d1"
                 },
                 {
                   "id": "b6ac915c-ff43-49c9-a39d-d0b1b28def8b",
@@ -288,7 +276,12 @@
                     "id": "857420e0-ca2b-575c-9de8-f00ebbc7037c",
                     "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
                   },
-                  "value": "2"
+                  "value": "2",
+                  "description": "",
+                  "icon": "",
+                  "name": "857420e0-ca2b-575c-9de8-f00ebbc7037c",
+                  "key": "857420e0-ca2b-575c-9de8-f00ebbc7037c",
+                  "unit": ""
                 },
                 {
                   "id": "7ab87aec-d58f-443c-9ff2-9886a4e2390b",
@@ -298,7 +291,11 @@
                     "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
                   },
                   "value": "5.5",
-                  "unit": "m"
+                  "unit": "m",
+                  "description": "",
+                  "icon": "",
+                  "name": "7ae421f1-0fae-5abc-9d12-418cc2554466",
+                  "key": "7ae421f1-0fae-5abc-9d12-418cc2554466"
                 },
                 {
                   "id": "4de94232-b930-477d-9fb4-5736102e5bf2",
@@ -308,7 +305,11 @@
                     "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
                   },
                   "value": "5.5",
-                  "unit": "m"
+                  "unit": "m",
+                  "description": "",
+                  "icon": "",
+                  "name": "7bddbd10-d23b-52fa-a4c3-7a666113c906",
+                  "key": "7bddbd10-d23b-52fa-a4c3-7a666113c906"
                 },
                 {
                   "id": "7fb7e5db-4eb9-4db0-82c2-a4410c744228",
@@ -318,7 +319,11 @@
                     "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
                   },
                   "value": "519.37",
-                  "unit": "m²"
+                  "unit": "m²",
+                  "description": "",
+                  "icon": "",
+                  "name": "7cfe065b-c0da-5e2c-8789-9f7a860773c2",
+                  "key": "7cfe065b-c0da-5e2c-8789-9f7a860773c2"
                 },
                 {
                   "id": "63951292-1192-4d83-8555-cfad64fcd20c",
@@ -328,7 +333,11 @@
                     "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
                   },
                   "value": "2856480",
-                  "unit": "€"
+                  "unit": "€",
+                  "description": "",
+                  "icon": "",
+                  "name": "c3326230-4951-5e08-9752-d934dbc5a88f",
+                  "key": "c3326230-4951-5e08-9752-d934dbc5a88f"
                 },
                 {
                   "id": "8cda3ff1-9eae-4013-a020-483ceb8f7d27",
@@ -338,7 +347,11 @@
                     "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
                   },
                   "value": "12984",
-                  "unit": "kWh/a"
+                  "unit": "kWh/a",
+                  "description": "",
+                  "icon": "",
+                  "name": "64cc900f-72ec-5e7b-91af-78251b681bde",
+                  "key": "64cc900f-72ec-5e7b-91af-78251b681bde"
                 },
                 {
                   "id": "d0235adf-4190-47f5-8492-8e38b3ccb0d0",
@@ -348,7 +361,11 @@
                     "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
                   },
                   "value": "18178",
-                  "unit": "kWh/a"
+                  "unit": "kWh/a",
+                  "description": "",
+                  "icon": "",
+                  "name": "81444a2f-b7a1-5990-9a12-d6a6bfa79591",
+                  "key": "81444a2f-b7a1-5990-9a12-d6a6bfa79591"
                 },
                 {
                   "id": "c401968b-8c86-4abb-a542-a31cf55afc41",
@@ -358,7 +375,11 @@
                     "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
                   },
                   "value": "20774",
-                  "unit": "kWh/a"
+                  "unit": "kWh/a",
+                  "description": "",
+                  "icon": "",
+                  "name": "dba0671e-04a8-5545-a083-eb28b44d3453",
+                  "key": "dba0671e-04a8-5545-a083-eb28b44d3453"
                 },
                 {
                   "id": "1445d70d-ff49-4a5b-8afd-18b46339ade5",
@@ -368,7 +389,11 @@
                     "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
                   },
                   "value": "467424",
-                  "unit": "€/a"
+                  "unit": "€/a",
+                  "description": "",
+                  "icon": "",
+                  "name": "207308ce-22f5-5338-bc24-6ddf10b14a3a",
+                  "key": "207308ce-22f5-5338-bc24-6ddf10b14a3a"
                 },
                 {
                   "id": "d15584c8-3101-4ae8-8bab-179615760a5e",
@@ -378,7 +403,11 @@
                     "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
                   },
                   "value": "46742",
-                  "unit": "€/a"
+                  "unit": "€/a",
+                  "description": "",
+                  "icon": "",
+                  "name": "8ba1a60d-25af-52f0-8dca-515239be5c77",
+                  "key": "8ba1a60d-25af-52f0-8dca-515239be5c77"
                 },
                 {
                   "id": "aea2eede-67d3-4de2-b5db-48e2e02e67f7",
@@ -388,40 +417,59 @@
                     "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
                   },
                   "value": "415488",
-                  "unit": "kgCO2e"
+                  "unit": "kgCO2e",
+                  "description": "",
+                  "icon": "",
+                  "name": "7ed15c6b-b191-5da7-94a8-4443649d3593",
+                  "key": "7ed15c6b-b191-5da7-94a8-4443649d3593"
                 }
-              ],
-              "stock": 2147483647,
-              "virtual": false,
-              "unit": "m",
-              "createdAt": "2025-11-23T01:10:21.034Z",
-              "updatedAt": "2025-11-23T01:10:21.034Z",
-              "authors": {
-                "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
-                "items": [
-                  {
-                    "id": "e3d5369e-b103-42a8-960a-7960c75f0f88",
-                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
-                  }
-                ]
-              },
-              "icon": "icons/base.svg",
-              "image": "images/base.png",
-              "description": "🏠 A polygonal two storey office building with an entrance hall and access to the staircases and elevators of the rectangular cores on the groundfloor. It has a setback and a colonade towards the street. On the second floor are the office rooms.",
-              "families": {
-                "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
-                "items": [
-                  {
-                    "id": "92b5a4d5-1b88-41e4-84b8-32b0e174aec4",
-                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
-                  }
-                ]
-              }
-            }
+              ]
+            },
+            "unit": "m",
+            "createdAt": "2025-11-23T01:10:21.034Z",
+            "updatedAt": "2025-11-23T01:10:21.034Z",
+            "authors": {
+              "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
+              "items": [
+                {
+                  "id": "e3d5369e-b103-42a8-960a-7960c75f0f88",
+                  "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                }
+              ]
+            },
+            "icon": "icons/base.svg",
+            "image": "images/base.png",
+            "description": "🏠 A polygonal two storey office building with an entrance hall and access to the staircases and elevators of the rectangular cores on the groundfloor. It has a setback and a colonade towards the street. On the second floor are the office rooms."
           }
         ]
       },
-      "…": "…"
+      "icon": "",
+      "id": "f042c2a4-3ba5-44b0-b22c-0ae8f568aacc",
+      "image": "",
+      "preview": "",
+      "remote": "",
+      "homepage": "",
+      "license": "",
+      "uri": ""
+    },
+    "alternatives": {
+      "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
+      "items": [
+        {
+          "id": "…",
+          "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
+          "name": "…",
+          "checkpoint": {
+            "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
+            "items": [
+              {
+                "id": "…",
+                "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+              }
+            ]
+          }
+        }
+      ]
     },
     "checkpoints": {
       "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
@@ -448,159 +496,110 @@
                 "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
                 "description": "…",
                 "origin": "…",
-                "forwards": {
+                "icon": "",
+                "name": "",
+                "edits": {
                   "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
                   "items": [
                     {
                       "id": "…",
                       "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
-                      "kind": "kit.design.piece.createdFixedPiece",
-                      "description": "…",
-                      "input": {
+                      "forwards": {
                         "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
-                        "position": {
-                          "center": {
-                            "u": 1.5,
-                            "v": -7.7
-                          },
-                          "plane": {
-                            "origin": {
-                              "x": 0.4,
-                              "y": 1.2,
-                              "z": 5
-                            },
-                            "xAxis": {
-                              "x": 0,
-                              "y": 1,
-                              "z": 0
-                            },
-                            "yAxis": {
-                              "x": 0,
-                              "y": 0,
-                              "z": 1
-                            }
-                          }
-                        }
-                      }
-                    },
-                    {
-                      "id": "…",
-                      "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
-                      "kind": "kit.design.piece.createdFixedPiece",
-                      "description": "…",
-                      "input": {
-                        "position": {
-                          "center": {
-                            "u": -1,
-                            "v": 5
-                          },
-                          "plane": {
-                            "origin": {
-                              "x": 0,
-                              "y": -2,
-                              "z": 3
-                            },
-                            "xAxis": {
-                              "x": 0,
-                              "y": 0,
-                              "z": 1
-                            },
-                            "yAxis": {
-                              "x": 1,
-                              "y": 0,
-                              "z": 0
-                            }
-                          }
-                        }
-                      }
-                    }
-                  ]
-                },
-                "backwards": {
-                  "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
-                  "items": [
-                    {
-                      "id": "…",
-                      "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
-                      "kind": "kit.design.piece.deletedFixedPieces",
-                      "description": "…",
-                      "input": {
-                        "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
-                        "pieceIds": [
+                        "items": [
                           {
                             "id": "…",
-                            "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                            "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
+                            "kind": "kit.design.piece.createdFixedPiece",
+                            "description": "…",
+                            "input": {
+                              "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
+                              "position": {
+                                "center": {
+                                  "u": 1.5,
+                                  "v": -7.7
+                                },
+                                "plane": {
+                                  "origin": {
+                                    "x": 0.4,
+                                    "y": 1.2,
+                                    "z": 5
+                                  },
+                                  "xAxis": {
+                                    "x": 0,
+                                    "y": 1,
+                                    "z": 0
+                                  },
+                                  "yAxis": {
+                                    "x": 0,
+                                    "y": 0,
+                                    "z": 1
+                                  }
+                                }
+                              }
+                            }
                           },
                           {
                             "id": "…",
-                            "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                            "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
+                            "kind": "kit.design.piece.createdFixedPiece",
+                            "description": "…",
+                            "input": {
+                              "position": {
+                                "center": {
+                                  "u": -1,
+                                  "v": 5
+                                },
+                                "plane": {
+                                  "origin": {
+                                    "x": 0,
+                                    "y": -2,
+                                    "z": 3
+                                  },
+                                  "xAxis": {
+                                    "x": 0,
+                                    "y": 0,
+                                    "z": 1
+                                  },
+                                  "yAxis": {
+                                    "x": 1,
+                                    "y": 0,
+                                    "z": 0
+                                  }
+                                }
+                              }
+                            }
                           }
                         ]
-                      }
-                    }
-                  ]
-                }
-              }
-            ]
-          }
-        }
-      ]
-    },
-    "alternatives": {
-      "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
-      "items": [
-        {
-          "id": "…",
-          "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
-          "name": "…",
-          "createdAt": "…",
-          "createdBy": {
-            "id": "…",
-            "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
-          },
-          "checkpoints": {
-            "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
-            "items": [
-              {
-                "id": "…",
-                "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
-              }
-            ]
-          }
-        }
-      ]
-    },
-    "drafts": {
-      "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
-      "items:": [
-        {
-          "id": "…",
-          "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
-          "checkpoint": {
-            "id": "…",
-            "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
-          },
-          "transactions": {
-            "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
-            "items": [
-              {
-                "id": "…",
-                "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
-                "forwards": {
-                  "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
-                  "items": [
-                    {
-                      "id": "…",
-                      "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
-                    }
-                  ]
-                },
-                "backwards": {
-                  "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
-                  "items": [
-                    {
-                      "id": "…",
-                      "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                      },
+                      "backwards": {
+                        "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
+                        "items": [
+                          {
+                            "id": "…",
+                            "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
+                            "kind": "kit.design.piece.deletedFixedPieces",
+                            "description": "…",
+                            "input": {
+                              "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
+                              "pieceIds": [
+                                {
+                                  "id": "…",
+                                  "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                                },
+                                {
+                                  "id": "…",
+                                  "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                                }
+                              ]
+                            }
+                          }
+                        ]
+                      },
+                      "startedAt": "…",
+                      "finishedAt": "…",
+                      "description": "…",
+                      "origin": "…"
                     }
                   ]
                 }
@@ -614,19 +613,7 @@
   "authoritative": {
     "id": "f042c2a4-3ba5-44b0-b22c-0ae8f568aacc",
     "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
-    "authors": {
-      "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
-      "items": [
-        {
-          "id": "…",
-          "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
-          "alias": "…",
-          "name": "…",
-          "email": "…"
-        }
-      ]
-    },
-    "initial": {
+    "theKit": {
       "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
       "name": "Metabolism",
       "description": "🏗 Everything for metabolistic architecture.",
@@ -656,7 +643,10 @@
                   "file": {
                     "id": "457d2061-ac4b-4317-8563-ba41afffd149",
                     "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
-                  }
+                  },
+                  "description": "",
+                  "icon": "",
+                  "url": ""
                 },
                 {
                   "id": "c2aded58-7995-4ea5-b990-91bd44482bcb",
@@ -678,7 +668,10 @@
                   "file": {
                     "id": "77e02ef4-e37e-41dd-80f6-00889cfcabb4",
                     "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
-                  }
+                  },
+                  "description": "",
+                  "icon": "",
+                  "url": ""
                 },
                 {
                   "id": "b45711c9-1c03-4180-9f5c-7c52f6ac1e8d",
@@ -700,7 +693,10 @@
                   "file": {
                     "id": "97262145-c4e5-48e1-8495-6a1142413430",
                     "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
-                  }
+                  },
+                  "description": "",
+                  "icon": "",
+                  "url": ""
                 },
                 {
                   "id": "6a931c90-4157-4207-9052-18cbb60e7e5c",
@@ -730,7 +726,10 @@
                   "file": {
                     "id": "580a4d9d-9289-4a5d-a356-810f63d7c7f0",
                     "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
-                  }
+                  },
+                  "description": "",
+                  "icon": "",
+                  "url": ""
                 },
                 {
                   "id": "806935d7-79b0-49d8-94a1-8aaf2eb11420",
@@ -760,7 +759,10 @@
                   "file": {
                     "id": "4bc08213-a92c-4765-901b-129ffdb1a773",
                     "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
-                  }
+                  },
+                  "description": "",
+                  "icon": "",
+                  "url": ""
                 },
                 {
                   "id": "6f6f705a-c893-4d60-8bf4-61b5c348f958",
@@ -777,12 +779,11 @@
                         "id": "7181512a-ee78-493d-963f-d224ba8b2b91",
                         "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
                       }
-                    ],
-                    "file": {
-                      "id": "abba142d-f36a-44d9-a7f8-59fe103fd8f2",
-                      "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
-                    }
-                  }
+                    ]
+                  },
+                  "description": "",
+                  "icon": "",
+                  "url": ""
                 }
               ]
             },
@@ -793,34 +794,19 @@
                   "id": "c5465220-19ba-4443-8f1d-617c832dd13c",
                   "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
                   "name": "c0",
-                  "t": -0.125,
-                  "point": {
-                    "x": -7.5,
-                    "y": -7.7,
-                    "z": 7.5
-                  },
-                  "direction": {
-                    "x": 0,
-                    "y": 0,
-                    "z": 1
-                  },
                   "description": "🪠 The center of the east rectangular core (an elevator and a staircase around it).",
                   "port": {
                     "id": "019ab243-21f3-7380-93c6-a04a8b137527",
                     "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
                   },
-                  "mandatory": false,
-                  "props": {
+                  "icon": "",
+                  "code": "c0",
+                  "qualities": {
                     "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
                     "items": [
                       {
-                        "id": "43555719-0b24-4069-bd92-20f3539f1577",
-                        "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
-                        "quality": {
-                          "id": "acfbe1bc-a5a4-5779-827a-d169f4a2fa1d",
-                          "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
-                        },
-                        "value": "east"
+                        "id": "acfbe1bc-a5a4-5779-827a-d169f4a2fa1d",
+                        "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
                       }
                     ]
                   }
@@ -829,34 +815,22 @@
                   "id": "d25a91ed-b124-4e5b-8e7e-af832541c953",
                   "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
                   "name": "c1",
-                  "t": 0.125,
-                  "point": {
-                    "x": -18.6,
-                    "y": -7.7,
-                    "z": 7.5
-                  },
-                  "direction": {
-                    "x": 0,
-                    "y": 0,
-                    "z": 1
-                  },
                   "description": "🧹 The center of the west rectangular core (an elevator and a staircase around it).",
                   "port": {
                     "id": "019ab243-21f3-7380-93c6-a04a8b137527",
                     "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
                   },
-                  "mandatory": false,
-                  "props": [
-                    {
-                      "id": "bcda3e1b-3c45-400e-8048-9701257c987f",
-                      "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
-                      "quality": {
+                  "icon": "",
+                  "code": "c1",
+                  "qualities": {
+                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
+                    "items": [
+                      {
                         "id": "acfbe1bc-a5a4-5779-827a-d169f4a2fa1d",
                         "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
-                      },
-                      "value": "west"
-                    }
-                  ]
+                      }
+                    ]
+                  }
                 }
               ]
             },
@@ -870,7 +844,12 @@
                     "id": "c1c756ba-a1ac-53ce-a87d-9d69bc4b34cb",
                     "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
                   },
-                  "value": "2"
+                  "value": "2",
+                  "description": "",
+                  "icon": "",
+                  "name": "c1c756ba-a1ac-53ce-a87d-9d69bc4b34cb",
+                  "key": "c1c756ba-a1ac-53ce-a87d-9d69bc4b34cb",
+                  "unit": ""
                 },
                 {
                   "id": "d1929d72-af63-4116-820e-174e850cb262",
@@ -880,7 +859,11 @@
                     "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
                   },
                   "value": "3.5",
-                  "unit": "m"
+                  "unit": "m",
+                  "description": "",
+                  "icon": "",
+                  "name": "32349526-a576-53e0-af16-f878b0def4ec",
+                  "key": "32349526-a576-53e0-af16-f878b0def4ec"
                 },
                 {
                   "id": "893abeaf-17cc-44a4-a47a-4a1586c7e6ee",
@@ -890,7 +873,11 @@
                     "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
                   },
                   "value": "4",
-                  "unit": "m"
+                  "unit": "m",
+                  "description": "",
+                  "icon": "",
+                  "name": "39e02526-7bab-55db-ac15-a09a55bd23d1",
+                  "key": "39e02526-7bab-55db-ac15-a09a55bd23d1"
                 },
                 {
                   "id": "b6ac915c-ff43-49c9-a39d-d0b1b28def8b",
@@ -899,7 +886,12 @@
                     "id": "857420e0-ca2b-575c-9de8-f00ebbc7037c",
                     "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
                   },
-                  "value": "2"
+                  "value": "2",
+                  "description": "",
+                  "icon": "",
+                  "name": "857420e0-ca2b-575c-9de8-f00ebbc7037c",
+                  "key": "857420e0-ca2b-575c-9de8-f00ebbc7037c",
+                  "unit": ""
                 },
                 {
                   "id": "7ab87aec-d58f-443c-9ff2-9886a4e2390b",
@@ -909,7 +901,11 @@
                     "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
                   },
                   "value": "5.5",
-                  "unit": "m"
+                  "unit": "m",
+                  "description": "",
+                  "icon": "",
+                  "name": "7ae421f1-0fae-5abc-9d12-418cc2554466",
+                  "key": "7ae421f1-0fae-5abc-9d12-418cc2554466"
                 },
                 {
                   "id": "4de94232-b930-477d-9fb4-5736102e5bf2",
@@ -919,7 +915,11 @@
                     "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
                   },
                   "value": "5.5",
-                  "unit": "m"
+                  "unit": "m",
+                  "description": "",
+                  "icon": "",
+                  "name": "7bddbd10-d23b-52fa-a4c3-7a666113c906",
+                  "key": "7bddbd10-d23b-52fa-a4c3-7a666113c906"
                 },
                 {
                   "id": "7fb7e5db-4eb9-4db0-82c2-a4410c744228",
@@ -929,7 +929,11 @@
                     "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
                   },
                   "value": "519.37",
-                  "unit": "m²"
+                  "unit": "m²",
+                  "description": "",
+                  "icon": "",
+                  "name": "7cfe065b-c0da-5e2c-8789-9f7a860773c2",
+                  "key": "7cfe065b-c0da-5e2c-8789-9f7a860773c2"
                 },
                 {
                   "id": "63951292-1192-4d83-8555-cfad64fcd20c",
@@ -939,7 +943,11 @@
                     "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
                   },
                   "value": "2856480",
-                  "unit": "€"
+                  "unit": "€",
+                  "description": "",
+                  "icon": "",
+                  "name": "c3326230-4951-5e08-9752-d934dbc5a88f",
+                  "key": "c3326230-4951-5e08-9752-d934dbc5a88f"
                 },
                 {
                   "id": "8cda3ff1-9eae-4013-a020-483ceb8f7d27",
@@ -949,7 +957,11 @@
                     "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
                   },
                   "value": "12984",
-                  "unit": "kWh/a"
+                  "unit": "kWh/a",
+                  "description": "",
+                  "icon": "",
+                  "name": "64cc900f-72ec-5e7b-91af-78251b681bde",
+                  "key": "64cc900f-72ec-5e7b-91af-78251b681bde"
                 },
                 {
                   "id": "d0235adf-4190-47f5-8492-8e38b3ccb0d0",
@@ -959,7 +971,11 @@
                     "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
                   },
                   "value": "18178",
-                  "unit": "kWh/a"
+                  "unit": "kWh/a",
+                  "description": "",
+                  "icon": "",
+                  "name": "81444a2f-b7a1-5990-9a12-d6a6bfa79591",
+                  "key": "81444a2f-b7a1-5990-9a12-d6a6bfa79591"
                 },
                 {
                   "id": "c401968b-8c86-4abb-a542-a31cf55afc41",
@@ -969,7 +985,11 @@
                     "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
                   },
                   "value": "20774",
-                  "unit": "kWh/a"
+                  "unit": "kWh/a",
+                  "description": "",
+                  "icon": "",
+                  "name": "dba0671e-04a8-5545-a083-eb28b44d3453",
+                  "key": "dba0671e-04a8-5545-a083-eb28b44d3453"
                 },
                 {
                   "id": "1445d70d-ff49-4a5b-8afd-18b46339ade5",
@@ -979,7 +999,11 @@
                     "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
                   },
                   "value": "467424",
-                  "unit": "€/a"
+                  "unit": "€/a",
+                  "description": "",
+                  "icon": "",
+                  "name": "207308ce-22f5-5338-bc24-6ddf10b14a3a",
+                  "key": "207308ce-22f5-5338-bc24-6ddf10b14a3a"
                 },
                 {
                   "id": "d15584c8-3101-4ae8-8bab-179615760a5e",
@@ -989,7 +1013,11 @@
                     "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
                   },
                   "value": "46742",
-                  "unit": "€/a"
+                  "unit": "€/a",
+                  "description": "",
+                  "icon": "",
+                  "name": "8ba1a60d-25af-52f0-8dca-515239be5c77",
+                  "key": "8ba1a60d-25af-52f0-8dca-515239be5c77"
                 },
                 {
                   "id": "aea2eede-67d3-4de2-b5db-48e2e02e67f7",
@@ -999,40 +1027,59 @@
                     "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
                   },
                   "value": "415488",
-                  "unit": "kgCO2e"
+                  "unit": "kgCO2e",
+                  "description": "",
+                  "icon": "",
+                  "name": "7ed15c6b-b191-5da7-94a8-4443649d3593",
+                  "key": "7ed15c6b-b191-5da7-94a8-4443649d3593"
                 }
-              ],
-              "stock": 2147483647,
-              "virtual": false,
-              "unit": "m",
-              "createdAt": "2025-11-23T01:10:21.034Z",
-              "updatedAt": "2025-11-23T01:10:21.034Z",
-              "authors": {
-                "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
-                "items": [
-                  {
-                    "id": "e3d5369e-b103-42a8-960a-7960c75f0f88",
-                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
-                  }
-                ]
-              },
-              "icon": "icons/base.svg",
-              "image": "images/base.png",
-              "description": "🏠 A polygonal two storey office building with an entrance hall and access to the staircases and elevators of the rectangular cores on the groundfloor. It has a setback and a colonade towards the street. On the second floor are the office rooms.",
-              "families": {
-                "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
-                "items": [
-                  {
-                    "id": "92b5a4d5-1b88-41e4-84b8-32b0e174aec4",
-                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
-                  }
-                ]
-              }
-            }
+              ]
+            },
+            "unit": "m",
+            "createdAt": "2025-11-23T01:10:21.034Z",
+            "updatedAt": "2025-11-23T01:10:21.034Z",
+            "authors": {
+              "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
+              "items": [
+                {
+                  "id": "e3d5369e-b103-42a8-960a-7960c75f0f88",
+                  "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                }
+              ]
+            },
+            "icon": "icons/base.svg",
+            "image": "images/base.png",
+            "description": "🏠 A polygonal two storey office building with an entrance hall and access to the staircases and elevators of the rectangular cores on the groundfloor. It has a setback and a colonade towards the street. On the second floor are the office rooms."
           }
         ]
       },
-      "…": "…"
+      "icon": "",
+      "id": "f042c2a4-3ba5-44b0-b22c-0ae8f568aacc",
+      "image": "",
+      "preview": "",
+      "remote": "",
+      "homepage": "",
+      "license": "",
+      "uri": ""
+    },
+    "alternatives": {
+      "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
+      "items": [
+        {
+          "id": "…",
+          "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
+          "name": "…",
+          "checkpoint": {
+            "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
+            "items": [
+              {
+                "id": "…",
+                "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+              }
+            ]
+          }
+        }
+      ]
     },
     "checkpoints": {
       "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
@@ -1059,770 +1106,110 @@
                 "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
                 "description": "…",
                 "origin": "…",
-                "forwards": {
+                "icon": "",
+                "name": "",
+                "edits": {
                   "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
                   "items": [
                     {
                       "id": "…",
                       "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
-                      "kind": "kit.design.piece.createdFixedPiece",
-                      "description": "…",
-                      "input": {
+                      "forwards": {
                         "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
-                        "position": {
-                          "center": {
-                            "u": 1.5,
-                            "v": -7.7
-                          },
-                          "plane": {
-                            "origin": {
-                              "x": 0.4,
-                              "y": 1.2,
-                              "z": 5
-                            },
-                            "xAxis": {
-                              "x": 0,
-                              "y": 1,
-                              "z": 0
-                            },
-                            "yAxis": {
-                              "x": 0,
-                              "y": 0,
-                              "z": 1
-                            }
-                          }
-                        }
-                      }
-                    },
-                    {
-                      "id": "…",
-                      "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
-                      "kind": "kit.design.piece.createdFixedPiece",
-                      "description": "…",
-                      "input": {
-                        "position": {
-                          "center": {
-                            "u": -1,
-                            "v": 5
-                          },
-                          "plane": {
-                            "origin": {
-                              "x": 0,
-                              "y": -2,
-                              "z": 3
-                            },
-                            "xAxis": {
-                              "x": 0,
-                              "y": 0,
-                              "z": 1
-                            },
-                            "yAxis": {
-                              "x": 1,
-                              "y": 0,
-                              "z": 0
-                            }
-                          }
-                        }
-                      }
-                    }
-                  ]
-                },
-                "backwards": {
-                  "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
-                  "items": [
-                    {
-                      "id": "…",
-                      "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
-                      "kind": "kit.design.piece.deletedFixedPieces",
-                      "description": "…",
-                      "input": {
-                        "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
-                        "pieceIds": [
+                        "items": [
                           {
                             "id": "…",
-                            "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                            "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
+                            "kind": "kit.design.piece.createdFixedPiece",
+                            "description": "…",
+                            "input": {
+                              "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
+                              "position": {
+                                "center": {
+                                  "u": 1.5,
+                                  "v": -7.7
+                                },
+                                "plane": {
+                                  "origin": {
+                                    "x": 0.4,
+                                    "y": 1.2,
+                                    "z": 5
+                                  },
+                                  "xAxis": {
+                                    "x": 0,
+                                    "y": 1,
+                                    "z": 0
+                                  },
+                                  "yAxis": {
+                                    "x": 0,
+                                    "y": 0,
+                                    "z": 1
+                                  }
+                                }
+                              }
+                            }
                           },
                           {
                             "id": "…",
-                            "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                            "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
+                            "kind": "kit.design.piece.createdFixedPiece",
+                            "description": "…",
+                            "input": {
+                              "position": {
+                                "center": {
+                                  "u": -1,
+                                  "v": 5
+                                },
+                                "plane": {
+                                  "origin": {
+                                    "x": 0,
+                                    "y": -2,
+                                    "z": 3
+                                  },
+                                  "xAxis": {
+                                    "x": 0,
+                                    "y": 0,
+                                    "z": 1
+                                  },
+                                  "yAxis": {
+                                    "x": 1,
+                                    "y": 0,
+                                    "z": 0
+                                  }
+                                }
+                              }
+                            }
                           }
                         ]
-                      }
-                    }
-                  ]
-                }
-              }
-            ]
-          }
-        }
-      ]
-    },
-    "alternatives": {
-      "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
-      "items": [
-        {
-          "id": "…",
-          "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
-          "name": "…",
-          "createdAt": "…",
-          "createdBy": {
-            "id": "…",
-            "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
-          },
-          "checkpoints": {
-            "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
-            "items": [
-              {
-                "id": "…",
-                "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
-              }
-            ]
-          }
-        }
-      ]
-    },
-    "drafts": {
-      "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
-      "items:": [
-        {
-          "id": "…",
-          "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
-          "checkpoint": {
-            "id": "…",
-            "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
-          },
-          "transactions": {
-            "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
-            "items": [
-              {
-                "id": "…",
-                "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
-                "forwards": {
-                  "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
-                  "items": [
-                    {
-                      "id": "…",
-                      "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
-                    }
-                  ]
-                },
-                "backwards": {
-                  "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
-                  "items": [
-                    {
-                      "id": "…",
-                      "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
-                    }
-                  ]
-                }
-              }
-            ]
-          }
-        }
-      ]
-    }
-  },
-  "stage": {
-    "id": "f042c2a4-3ba5-44b0-b22c-0ae8f568aacc",
-    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
-    "authors": {
-      "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
-      "items": [
-        {
-          "id": "…",
-          "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
-          "alias": "…",
-          "name": "…",
-          "email": "…"
-        }
-      ]
-    },
-    "initial": {
-      "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
-      "name": "Metabolism",
-      "description": "🏗 Everything for metabolistic architecture.",
-      "types": {
-        "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
-        "items": [
-          {
-            "id": "277768b5-9220-4312-bf0d-ab82d9fb6a73",
-            "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
-            "name": "Base",
-            "representations": {
-              "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
-              "items": [
-                {
-                  "id": "c1b9624e-51ed-459c-8f9c-497e39768cc3",
-                  "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
-                  "name": "base",
-                  "tags": {
-                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
-                    "items": [
-                      {
-                        "id": "212dec6a-b3ba-42e9-a624-b097176dbaa6",
-                        "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
-                      }
-                    ]
-                  },
-                  "file": {
-                    "id": "457d2061-ac4b-4317-8563-ba41afffd149",
-                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
-                  }
-                },
-                {
-                  "id": "c2aded58-7995-4ea5-b990-91bd44482bcb",
-                  "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
-                  "name": "base_1to500",
-                  "tags": {
-                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
-                    "items": [
-                      {
-                        "id": "348efbfa-e275-4dda-9f66-229917c6b4ab",
-                        "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
                       },
-                      {
-                        "id": "0ad9e8a0-03d1-4a8b-b32d-a402daab76e6",
-                        "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
-                      }
-                    ]
-                  },
-                  "file": {
-                    "id": "77e02ef4-e37e-41dd-80f6-00889cfcabb4",
-                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
-                  }
-                },
-                {
-                  "id": "b45711c9-1c03-4180-9f5c-7c52f6ac1e8d",
-                  "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
-                  "name": "base_1to200",
-                  "tags": {
-                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
-                    "items": [
-                      {
-                        "id": "348efbfa-e275-4dda-9f66-229917c6b4ab",
-                        "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
-                      },
-                      {
-                        "id": "14c03d58-6241-48e8-9ffe-89fc268124d2",
-                        "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
-                      }
-                    ]
-                  },
-                  "file": {
-                    "id": "97262145-c4e5-48e1-8495-6a1142413430",
-                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
-                  }
-                },
-                {
-                  "id": "6a931c90-4157-4207-9052-18cbb60e7e5c",
-                  "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
-                  "name": "e5267da44d",
-                  "tags": {
-                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
-                    "items": [
-                      {
-                        "id": "34b6308b-0600-4a8e-aff6-a70b9f27caac",
-                        "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
-                      },
-                      {
-                        "id": "7ac3ae3a-6a4d-4824-8c40-d315755fbb66",
-                        "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
-                      },
-                      {
-                        "id": "348efbfa-e275-4dda-9f66-229917c6b4ab",
-                        "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
-                      },
-                      {
-                        "id": "0ad9e8a0-03d1-4a8b-b32d-a402daab76e6",
-                        "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
-                      }
-                    ]
-                  },
-                  "file": {
-                    "id": "580a4d9d-9289-4a5d-a356-810f63d7c7f0",
-                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
-                  }
-                },
-                {
-                  "id": "806935d7-79b0-49d8-94a1-8aaf2eb11420",
-                  "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
-                  "name": "b394acfd5c",
-                  "tags": {
-                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
-                    "items": [
-                      {
-                        "id": "34b6308b-0600-4a8e-aff6-a70b9f27caac",
-                        "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
-                      },
-                      {
-                        "id": "7ac3ae3a-6a4d-4824-8c40-d315755fbb66",
-                        "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
-                      },
-                      {
-                        "id": "348efbfa-e275-4dda-9f66-229917c6b4ab",
-                        "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
-                      },
-                      {
-                        "id": "14c03d58-6241-48e8-9ffe-89fc268124d2",
-                        "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
-                      }
-                    ]
-                  },
-                  "file": {
-                    "id": "4bc08213-a92c-4765-901b-129ffdb1a773",
-                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
-                  }
-                },
-                {
-                  "id": "6f6f705a-c893-4d60-8bf4-61b5c348f958",
-                  "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
-                  "name": "base_collider",
-                  "tags": {
-                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
-                    "items": [
-                      {
-                        "id": "212dec6a-b3ba-42e9-a624-b097176dbaa6",
-                        "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
-                      },
-                      {
-                        "id": "7181512a-ee78-493d-963f-d224ba8b2b91",
-                        "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
-                      }
-                    ],
-                    "file": {
-                      "id": "abba142d-f36a-44d9-a7f8-59fe103fd8f2",
-                      "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
-                    }
-                  }
-                }
-              ]
-            },
-            "connectors": {
-              "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
-              "items": [
-                {
-                  "id": "c5465220-19ba-4443-8f1d-617c832dd13c",
-                  "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
-                  "name": "c0",
-                  "t": -0.125,
-                  "point": {
-                    "x": -7.5,
-                    "y": -7.7,
-                    "z": 7.5
-                  },
-                  "direction": {
-                    "x": 0,
-                    "y": 0,
-                    "z": 1
-                  },
-                  "description": "🪠 The center of the east rectangular core (an elevator and a staircase around it).",
-                  "port": {
-                    "id": "019ab243-21f3-7380-93c6-a04a8b137527",
-                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
-                  },
-                  "mandatory": false,
-                  "props": {
-                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
-                    "items": [
-                      {
-                        "id": "43555719-0b24-4069-bd92-20f3539f1577",
+                      "backwards": {
                         "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
-                        "quality": {
-                          "id": "acfbe1bc-a5a4-5779-827a-d169f4a2fa1d",
-                          "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
-                        },
-                        "value": "east"
-                      }
-                    ]
-                  }
-                },
-                {
-                  "id": "d25a91ed-b124-4e5b-8e7e-af832541c953",
-                  "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
-                  "name": "c1",
-                  "t": 0.125,
-                  "point": {
-                    "x": -18.6,
-                    "y": -7.7,
-                    "z": 7.5
-                  },
-                  "direction": {
-                    "x": 0,
-                    "y": 0,
-                    "z": 1
-                  },
-                  "description": "🧹 The center of the west rectangular core (an elevator and a staircase around it).",
-                  "port": {
-                    "id": "019ab243-21f3-7380-93c6-a04a8b137527",
-                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
-                  },
-                  "mandatory": false,
-                  "props": [
-                    {
-                      "id": "bcda3e1b-3c45-400e-8048-9701257c987f",
-                      "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
-                      "quality": {
-                        "id": "acfbe1bc-a5a4-5779-827a-d169f4a2fa1d",
-                        "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
-                      },
-                      "value": "west"
-                    }
-                  ]
-                }
-              ]
-            },
-            "props": {
-              "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
-              "items": [
-                {
-                  "id": "d177f31d-7bc7-418a-8cfd-3b0f8fb15160",
-                  "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
-                  "quality": {
-                    "id": "c1c756ba-a1ac-53ce-a87d-9d69bc4b34cb",
-                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
-                  },
-                  "value": "2"
-                },
-                {
-                  "id": "d1929d72-af63-4116-820e-174e850cb262",
-                  "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
-                  "quality": {
-                    "id": "32349526-a576-53e0-af16-f878b0def4ec",
-                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
-                  },
-                  "value": "3.5",
-                  "unit": "m"
-                },
-                {
-                  "id": "893abeaf-17cc-44a4-a47a-4a1586c7e6ee",
-                  "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
-                  "quality": {
-                    "id": "39e02526-7bab-55db-ac15-a09a55bd23d1",
-                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
-                  },
-                  "value": "4",
-                  "unit": "m"
-                },
-                {
-                  "id": "b6ac915c-ff43-49c9-a39d-d0b1b28def8b",
-                  "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
-                  "quality": {
-                    "id": "857420e0-ca2b-575c-9de8-f00ebbc7037c",
-                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
-                  },
-                  "value": "2"
-                },
-                {
-                  "id": "7ab87aec-d58f-443c-9ff2-9886a4e2390b",
-                  "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
-                  "quality": {
-                    "id": "7ae421f1-0fae-5abc-9d12-418cc2554466",
-                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
-                  },
-                  "value": "5.5",
-                  "unit": "m"
-                },
-                {
-                  "id": "4de94232-b930-477d-9fb4-5736102e5bf2",
-                  "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
-                  "quality": {
-                    "id": "7bddbd10-d23b-52fa-a4c3-7a666113c906",
-                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
-                  },
-                  "value": "5.5",
-                  "unit": "m"
-                },
-                {
-                  "id": "7fb7e5db-4eb9-4db0-82c2-a4410c744228",
-                  "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
-                  "quality": {
-                    "id": "7cfe065b-c0da-5e2c-8789-9f7a860773c2",
-                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
-                  },
-                  "value": "519.37",
-                  "unit": "m²"
-                },
-                {
-                  "id": "63951292-1192-4d83-8555-cfad64fcd20c",
-                  "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
-                  "quality": {
-                    "id": "c3326230-4951-5e08-9752-d934dbc5a88f",
-                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
-                  },
-                  "value": "2856480",
-                  "unit": "€"
-                },
-                {
-                  "id": "8cda3ff1-9eae-4013-a020-483ceb8f7d27",
-                  "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
-                  "quality": {
-                    "id": "64cc900f-72ec-5e7b-91af-78251b681bde",
-                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
-                  },
-                  "value": "12984",
-                  "unit": "kWh/a"
-                },
-                {
-                  "id": "d0235adf-4190-47f5-8492-8e38b3ccb0d0",
-                  "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
-                  "quality": {
-                    "id": "81444a2f-b7a1-5990-9a12-d6a6bfa79591",
-                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
-                  },
-                  "value": "18178",
-                  "unit": "kWh/a"
-                },
-                {
-                  "id": "c401968b-8c86-4abb-a542-a31cf55afc41",
-                  "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
-                  "quality": {
-                    "id": "dba0671e-04a8-5545-a083-eb28b44d3453",
-                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
-                  },
-                  "value": "20774",
-                  "unit": "kWh/a"
-                },
-                {
-                  "id": "1445d70d-ff49-4a5b-8afd-18b46339ade5",
-                  "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
-                  "quality": {
-                    "id": "207308ce-22f5-5338-bc24-6ddf10b14a3a",
-                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
-                  },
-                  "value": "467424",
-                  "unit": "€/a"
-                },
-                {
-                  "id": "d15584c8-3101-4ae8-8bab-179615760a5e",
-                  "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
-                  "quality": {
-                    "id": "8ba1a60d-25af-52f0-8dca-515239be5c77",
-                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
-                  },
-                  "value": "46742",
-                  "unit": "€/a"
-                },
-                {
-                  "id": "aea2eede-67d3-4de2-b5db-48e2e02e67f7",
-                  "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
-                  "quality": {
-                    "id": "7ed15c6b-b191-5da7-94a8-4443649d3593",
-                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
-                  },
-                  "value": "415488",
-                  "unit": "kgCO2e"
-                }
-              ],
-              "stock": 2147483647,
-              "virtual": false,
-              "unit": "m",
-              "createdAt": "2025-11-23T01:10:21.034Z",
-              "updatedAt": "2025-11-23T01:10:21.034Z",
-              "authors": {
-                "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
-                "items": [
-                  {
-                    "id": "e3d5369e-b103-42a8-960a-7960c75f0f88",
-                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
-                  }
-                ]
-              },
-              "icon": "icons/base.svg",
-              "image": "images/base.png",
-              "description": "🏠 A polygonal two storey office building with an entrance hall and access to the staircases and elevators of the rectangular cores on the groundfloor. It has a setback and a colonade towards the street. On the second floor are the office rooms.",
-              "families": {
-                "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
-                "items": [
-                  {
-                    "id": "92b5a4d5-1b88-41e4-84b8-32b0e174aec4",
-                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
-                  }
-                ]
-              }
-            }
-          }
-        ]
-      },
-      "…": "…"
-    },
-    "checkpoints": {
-      "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
-      "items": [
-        {
-          "id": "…",
-          "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
-          "timestamp": "…",
-          "message": "…",
-          "authors": {
-            "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
-            "items": [
-              {
-                "id": "…",
-                "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
-              }
-            ]
-          },
-          "changes": {
-            "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
-            "items": [
-              {
-                "id": "…",
-                "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
-                "description": "…",
-                "origin": "…",
-                "forwards": {
-                  "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
-                  "items": [
-                    {
-                      "id": "…",
-                      "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
-                      "kind": "kit.design.piece.createdFixedPiece",
-                      "description": "…",
-                      "input": {
-                        "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
-                        "position": {
-                          "center": {
-                            "u": 1.5,
-                            "v": -7.7
-                          },
-                          "plane": {
-                            "origin": {
-                              "x": 0.4,
-                              "y": 1.2,
-                              "z": 5
-                            },
-                            "xAxis": {
-                              "x": 0,
-                              "y": 1,
-                              "z": 0
-                            },
-                            "yAxis": {
-                              "x": 0,
-                              "y": 0,
-                              "z": 1
-                            }
-                          }
-                        }
-                      }
-                    },
-                    {
-                      "id": "…",
-                      "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
-                      "kind": "kit.design.piece.createdFixedPiece",
-                      "description": "…",
-                      "input": {
-                        "position": {
-                          "center": {
-                            "u": -1,
-                            "v": 5
-                          },
-                          "plane": {
-                            "origin": {
-                              "x": 0,
-                              "y": -2,
-                              "z": 3
-                            },
-                            "xAxis": {
-                              "x": 0,
-                              "y": 0,
-                              "z": 1
-                            },
-                            "yAxis": {
-                              "x": 1,
-                              "y": 0,
-                              "z": 0
-                            }
-                          }
-                        }
-                      }
-                    }
-                  ]
-                },
-                "backwards": {
-                  "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
-                  "items": [
-                    {
-                      "id": "…",
-                      "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
-                      "kind": "kit.design.piece.deletedFixedPieces",
-                      "description": "…",
-                      "input": {
-                        "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
-                        "pieceIds": [
+                        "items": [
                           {
                             "id": "…",
-                            "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
-                          },
-                          {
-                            "id": "…",
-                            "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                            "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
+                            "kind": "kit.design.piece.deletedFixedPieces",
+                            "description": "…",
+                            "input": {
+                              "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
+                              "pieceIds": [
+                                {
+                                  "id": "…",
+                                  "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                                },
+                                {
+                                  "id": "…",
+                                  "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                                }
+                              ]
+                            }
                           }
                         ]
-                      }
-                    }
-                  ]
-                }
-              }
-            ]
-          }
-        }
-      ]
-    },
-    "alternatives": {
-      "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
-      "items": [
-        {
-          "id": "…",
-          "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
-          "name": "…",
-          "createdAt": "…",
-          "createdBy": {
-            "id": "…",
-            "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
-          },
-          "checkpoints": {
-            "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
-            "items": [
-              {
-                "id": "…",
-                "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
-              }
-            ]
-          }
-        }
-      ]
-    },
-    "drafts": {
-      "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
-      "items:": [
-        {
-          "id": "…",
-          "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
-          "checkpoint": {
-            "id": "…",
-            "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
-          },
-          "transactions": {
-            "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
-            "items": [
-              {
-                "id": "…",
-                "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
-                "forwards": {
-                  "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
-                  "items": [
-                    {
-                      "id": "…",
-                      "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
-                    }
-                  ]
-                },
-                "backwards": {
-                  "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
-                  "items": [
-                    {
-                      "id": "…",
-                      "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                      },
+                      "startedAt": "…",
+                      "finishedAt": "…",
+                      "description": "…",
+                      "origin": "…"
                     }
                   ]
                 }
@@ -1838,8 +1225,7 @@
     "items": [
       {
         "id": "…",
-        "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
-        "…": "…"
+        "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
       }
     ]
   },

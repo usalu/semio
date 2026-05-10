@@ -2070,6 +2070,7 @@ const EMPTY_KIT_TYPE_IDS: readonly string[] = [];
 const EMPTY_KIT_TYPES_METADATA: readonly unknown[] = [];
 const EMPTY_KIT_DESIGN_IDS: readonly string[] = [];
 const EMPTY_KIT_DESIGNS_METADATA: readonly unknown[] = [];
+const EMPTY_UNSAVED_CHANGES_LIST: readonly unknown[] = [];
 
 /** 🧾 Stable {@link KitStoreReadSnap} identities for {@link useSemioReadSnap} idle branches (avoid React #520). */
 const EMPTY_KIT_READ_SNAP_WITH_TYPE_IDS: KitStoreReadSnap = Object.freeze({
@@ -3712,7 +3713,7 @@ export function useSaveChange(): { run: (changeId?: ChangeId) => Promise<SetResu
 
 /** @emoji 🧭 Placeholder until {@link Alternative.unsavedChanges} live-read selection lands in Worker E. */
 export function useUnsavedChanges(): KitFieldBinding<readonly unknown[]> {
-  return kitReadonlyTriad([]);
+  return kitReadonlyTriad(EMPTY_UNSAVED_CHANGES_LIST);
 }
 
 /** @emoji 🧭 Session hub auth (stub until rs hub mutations are wired). */

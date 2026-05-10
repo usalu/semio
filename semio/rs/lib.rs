@@ -406,6 +406,7 @@ pub mod geom {
         }
 
         /// @emoji 🧭 Placeholder StrongEntity shell for `Place` (full meta wiring lands with meta lift).
+        #[derive(Debug)]
         pub struct PlaceNode {
             pub id: Id,
             pub label: RwLock<Option<String>>,
@@ -806,13 +807,13 @@ pub mod gql_relay {
 
     macro_rules! simple_conn_sync {
         ($Conn:ident, $Edge:ident, $node:ty, $hash_fn:expr) => {
-            #[derive(Clone, SimpleObject)]
+            #[derive(Clone, Debug, SimpleObject)]
             pub struct $Edge {
                 pub cursor: String,
                 pub node: $node,
             }
 
-            #[derive(Clone, SimpleObject)]
+            #[derive(Clone, Debug, SimpleObject)]
             pub struct $Conn {
                 pub edges: Vec<$Edge>,
                 #[graphql(name = "pageInfo")]
@@ -836,13 +837,13 @@ pub mod gql_relay {
 
     macro_rules! simple_conn_entity {
         ($Conn:ident, $Edge:ident, $node:ty) => {
-            #[derive(Clone, SimpleObject)]
+            #[derive(Clone, Debug, SimpleObject)]
             pub struct $Edge {
                 pub cursor: String,
                 pub node: $node,
             }
 
-            #[derive(Clone, SimpleObject)]
+            #[derive(Clone, Debug, SimpleObject)]
             pub struct $Conn {
                 pub edges: Vec<$Edge>,
                 #[graphql(name = "pageInfo")]
@@ -1669,6 +1670,7 @@ pub mod kit {
 
         //#region 🛟 port
         /// 🔌 Kit-level named attachment point; referenced by [`Connector`] and [`super::connection::Side`].
+        #[derive(Debug)]
         pub struct Port {
             pub id: Id,
             pub owner_type: Weak<Type>,
@@ -2002,14 +2004,7 @@ pub mod kit {
                 let icon = self.icon.read().await;
                 let image = self.image.read().await;
                 let unit = self.unit.read().await;
-                h(&[
-                    self.id.as_str(),
-                    name.as_str(),
-                    desc.as_deref().unwrap_or(""),
-                    icon.as_deref().unwrap_or(""),
-                    image.as_deref().unwrap_or(""),
-                    unit.as_deref().unwrap_or(""),
-                ])
+                h(&[self.id.as_str(), name.as_str(), desc.as_str(), icon.as_str(), image.as_str(), unit.as_str()])
             }
 
             /// 🧷 Rebuild weak maps from the live vecs (call before `connector` / `representation` field resolution).
@@ -2069,16 +2064,16 @@ pub mod kit {
             pub async fn name(&self) -> String {
                 self.name.read().await.clone()
             }
-            pub async fn description(&self) -> Option<String> {
+            pub async fn description(&self) -> String {
                 self.description.read().await.clone()
             }
-            pub async fn icon(&self) -> Option<String> {
+            pub async fn icon(&self) -> String {
                 self.icon.read().await.clone()
             }
-            pub async fn image(&self) -> Option<String> {
+            pub async fn image(&self) -> String {
                 self.image.read().await.clone()
             }
-            pub async fn unit(&self) -> Option<String> {
+            pub async fn unit(&self) -> String {
                 self.unit.read().await.clone()
             }
             pub async fn created(&self) -> Option<Timestamp> {
@@ -2298,9 +2293,9 @@ pub mod kit {
                     }
                     PositionNode::from_position_value(Position::default())
                 }
-                #[graphql(name = "replaceableBlueprint")]
-                pub async fn replaceable_blueprint(&self) -> Vec<super::super::r#type::Blueprint> {
-                    Vec::new()
+                #[graphql(name = "replaceableBlueprints")]
+                pub async fn replaceable_blueprints(&self) -> crate::gql_relay::BlueprintConnection {
+                    crate::gql_relay::BlueprintConnection::from_blueprints(Vec::new()).await
                 }
                 #[graphql(name = "parentConnection")]
                 pub async fn parent_connection(&self) -> Option<Arc<super::connection::Connection>> {
@@ -2568,6 +2563,52 @@ pub mod kit {
         use crate::geom::entity::LocationNode;
         use crate::meta::{Attribute, Author, Group, Layer, Prop, Quality, Stat};
         use crate::timestamp::Timestamp;
+
+        //#region 🧱 clump
+        /// @emoji 🧱 SDL `Clump` — connected-component bucket for layout (`WeakEntity` projection hook).
+        pub struct Clump {
+            pub id: Id,
+            pub owner_design: Weak<Design>,
+        }
+
+        impl Default for Clump {
+            fn default() -> Self {
+                Self { id: Id::default(), owner_design: Weak::new() }
+            }
+        }
+
+        #[Object(name = "Clump")]
+        impl Clump {
+            pub async fn id(&self) -> Id {
+                self.id.clone()
+            }
+            pub async fn hash(&self) -> String {
+                h(&[self.id.as_str()])
+            }
+            pub async fn owner(&self) -> Arc<Design> {
+                self.owner_design.upgrade().unwrap_or_default()
+            }
+            #[graphql(name = "ownerEntity")]
+            pub async fn owner_entity(&self) -> Option<std::sync::Arc<crate::iface::OwnerEntity>> {
+                None
+            }
+            #[graphql(name = "ownedEntities")]
+            pub async fn owned_entities(&self) -> Option<std::sync::Arc<crate::iface::OwnedEntityConnection>> {
+                Some(crate::iface::empty_owned_entity_connection())
+            }
+            #[graphql(name = "fixedPiece")]
+            pub async fn fixed_piece(&self) -> Option<Arc<piece::Piece>> {
+                None
+            }
+            #[graphql(name = "connectedPieces")]
+            pub async fn connected_pieces(&self) -> crate::gql_relay::PieceConnection {
+                crate::gql_relay::PieceConnection::from_pieces(Vec::new()).await
+            }
+            pub async fn pieces(&self) -> crate::gql_relay::PieceConnection {
+                crate::gql_relay::PieceConnection::from_pieces(Vec::new()).await
+            }
+        }
+        //#endregion 🧱 clump
 
         /// @emoji 🏠 SDL `union DesignOwner = Kit`.
         #[derive(Clone, Union)]
@@ -7158,7 +7199,7 @@ pub mod operation {
             return Ok(quality.description.read().await.clone());
         }
         if let Some(ty) = kit.type_by_external_id(entity_id).await {
-            return Ok(ty.description.read().await.clone());
+            return Ok(Some(ty.description.read().await.clone()));
         }
         if let Some(design) = kit.design_by_external_id(entity_id).await {
             return Ok(design.description.read().await.clone());
@@ -7181,7 +7222,7 @@ pub mod operation {
             return Ok(quality.icon.read().await.clone());
         }
         if let Some(ty) = kit.type_by_external_id(entity_id).await {
-            return Ok(ty.icon.read().await.clone());
+            return Ok(Some(ty.icon.read().await.clone()));
         }
         if let Some(design) = kit.design_by_external_id(entity_id).await {
             return Ok(design.icon.read().await.clone());
@@ -7195,7 +7236,7 @@ pub mod operation {
             return Ok(kit.image.read().await.clone());
         }
         if let Some(ty) = kit.type_by_external_id(entity_id).await {
-            return Ok(ty.image.read().await.clone());
+            return Ok(Some(ty.image.read().await.clone()));
         }
         if let Some(design) = kit.design_by_external_id(entity_id).await {
             return Ok(design.image.read().await.clone());
@@ -9084,8 +9125,7 @@ pub mod gql {
 
         use crate::geom::entity::{CoordinateNode, LocationNode, OffsetNode, PlaneNode, PointNode, PositionNode, VectorNode};
         use crate::gql_relay::{
-            CoordinateConnection, CoordinateEdge, LocationConnection, LocationEdge, OffsetConnection, OffsetEdge, PlaneConnection, PlaneEdge, PointConnection,
-            PointEdge, PositionConnection, PositionEdge, VectorConnection, VectorEdge,
+            CoordinateEdge, LocationEdge, OffsetEdge, PlaneEdge, PointEdge, PositionEdge, VectorEdge,
         };
 
         #[derive(Clone, Interface)]
@@ -9110,116 +9150,6 @@ pub mod gql {
             Plane(PlaneEdge),
             Position(PositionEdge),
             Location(LocationEdge),
-        }
-
-        #[derive(Clone, Interface)]
-        #[graphql(
-            name = "EntityConnection",
-            field(name = "pageInfo", ty = "std::sync::Arc<crate::gql_relay::PageInfo>"),
-            field(name = "hash", ty = "String"),
-        )]
-        pub enum EntityConnectionIface {
-            Vector(VectorConnection),
-            Point(PointConnection),
-            Coordinate(CoordinateConnection),
-            Offset(OffsetConnection),
-            Plane(PlaneConnection),
-            Position(PositionConnection),
-            Location(LocationConnection),
-        }
-
-        #[derive(Clone, Interface)]
-        #[graphql(
-            name = "Entity",
-            implements(NodeIface),
-            field(name = "id", ty = "crate::id::Id"),
-            field(name = "hash", ty = "String"),
-            field(name = "owner", ty = "Option<std::sync::Arc<EntityIface>>"),
-            field(name = "owns", ty = "Option<std::sync::Arc<EntityConnectionIface>>"),
-        )]
-        pub enum EntityIface {
-            Vector(Arc<VectorNode>),
-            Point(Arc<PointNode>),
-            Coordinate(Arc<CoordinateNode>),
-            Offset(Arc<OffsetNode>),
-            Plane(Arc<PlaneNode>),
-            Position(Arc<PositionNode>),
-            Location(Arc<LocationNode>),
-        }
-
-        #[derive(Clone, Interface)]
-        #[graphql(name = "WeakEntity", implements(EntityIface))]
-        pub enum WeakEntityIface {
-            Vector(Arc<VectorNode>),
-            Point(Arc<PointNode>),
-            Coordinate(Arc<CoordinateNode>),
-            Offset(Arc<OffsetNode>),
-            Plane(Arc<PlaneNode>),
-            Position(Arc<PositionNode>),
-            Location(Arc<LocationNode>),
-        }
-
-        #[derive(Clone, Interface)]
-        #[graphql(
-            name = "StrongEntity",
-            implements(EntityIface),
-            field(name = "id", ty = "crate::id::Id"),
-            field(name = "hash", ty = "String"),
-            field(name = "owner", ty = "Option<std::sync::Arc<EntityIface>>"),
-            field(name = "owns", ty = "Option<std::sync::Arc<EntityConnectionIface>>"),
-        )]
-        pub enum StrongEntityIface {
-            Kit(Arc<crate::kit::Kit>),
-        }
-
-        #[derive(Clone, Interface)]
-        #[graphql(
-            name = "Artifact",
-            implements(StrongEntityIface),
-            field(name = "id", ty = "crate::id::Id"),
-            field(name = "hash", ty = "String"),
-            field(name = "owner", ty = "Option<std::sync::Arc<EntityIface>>"),
-            field(name = "owns", ty = "Option<std::sync::Arc<EntityConnectionIface>>"),
-            field(name = "name", ty = "String"),
-            field(name = "description", ty = "String"),
-            field(name = "icon", ty = "String"),
-        )]
-        pub enum ArtifactIface {
-            Kit(Arc<crate::kit::Kit>),
-        }
-
-        #[derive(Clone, Interface)]
-        #[graphql(
-            name = "Document",
-            implements(ArtifactIface),
-            field(name = "id", ty = "crate::id::Id"),
-            field(name = "hash", ty = "String"),
-            field(name = "owner", ty = "Option<std::sync::Arc<EntityIface>>"),
-            field(name = "owns", ty = "Option<std::sync::Arc<EntityConnectionIface>>"),
-            field(name = "name", ty = "String"),
-            field(name = "description", ty = "String"),
-            field(name = "icon", ty = "String"),
-        )]
-        pub enum DocumentIface {
-            Kit(Arc<crate::kit::Kit>),
-        }
-
-        #[derive(Clone, Interface)]
-        #[graphql(name = "Event", implements(WeakEntityIface), field(name = "timestamp", ty = "crate::timestamp::Timestamp"))]
-        pub enum EventIface {
-            Kit(Arc<crate::kit::Kit>),
-        }
-
-        #[derive(Clone, Interface)]
-        #[graphql(name = "Diff", implements(WeakEntityIface))]
-        pub enum DiffIface {
-            Vector(Arc<VectorNode>),
-        }
-
-        #[derive(Clone, Interface)]
-        #[graphql(name = "Modification", implements(WeakEntityIface))]
-        pub enum ModificationIface {
-            Vector(Arc<VectorNode>),
         }
     }
     //#endregion 🌐 interfaces
@@ -10117,6 +10047,8 @@ pub mod gql {
             .register_output_type::<crate::kit::target_operations::RemovedAttributesFromPortInput>()
             .register_output_type::<crate::kit::target_operations::DeletedPortInput>()
             .register_output_type::<crate::kit::target_operations::DeletedPortsInput>()
+            .register_output_type::<crate::gql::interfaces::NodeIface>()
+            .register_output_type::<crate::gql::interfaces::EntityEdgeIface>()
             .finish()
     }
 
@@ -11283,11 +11215,6 @@ mod tests {
             let design = mat.design_by_external_id(&crate::id::Id::from("design-scoped-1")).await.expect("design exists");
             assert!(design.piece_by_external_id(&crate::id::Id::from("piece-scoped-1")).await.is_some(), "piece should be addressable by scoped id");
         });
-    }
-}
-
-//#endregion 🧪 tests
-);
     }
 }
 
