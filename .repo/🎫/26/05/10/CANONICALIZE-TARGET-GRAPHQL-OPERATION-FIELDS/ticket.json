@@ -1,9 +1,9 @@
 {
   "title": "Canonicalize Target Graphql Operation Fields",
   "emoji": "🔗",
-  "status": "open",
+  "status": "closed",
   "description": "Clean semio/graphql/target.schema.graphql operation field names so operation API names are action-first, e.g. createdDesign instead of designCreated.",
-  "summary": "Canonicalized semio/graphql/target.schema.graphql subscription operation event fields to action-first lower camel case, matching payload type names such as CreatedDesign -\u003e createdDesign.",
+  "summary": "Removed implicit design/type context suffixes from semio/graphql/target.schema.graphql operation API names, preserving explicit disambiguators like changePieceToType and attribute owner names. Restored the valid KitChange mutation payload shape and removed undefined artifact/document subscription references so the SDL builds.",
   "goal": "🎯r2602🎯runningsketchpad",
   "sessions": [
     "⚪a1e3a60454d84391ba2f0dfb1bb9c240",

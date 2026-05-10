@@ -6281,92 +6281,7 @@ type Query {
 
 #region MutationInputs
 
-input TransactionScopeInput {
-  draftId: ID!
-  transactionId: ID!
-}
-
-input RenameKitInput {
-  name: String!
-}
-
-input ChangeDescriptionInput {
-  description: String!
-}
-
-input RenameTagInput {
-  name: String!
-}
-
-input UpdateTagDescriptionInput {
-  description: String!
-}
-
-input UpdateTagIconInput {
-  icon: String!
-}
-
-input RenameConceptInput {
-  name: String!
-}
-
-input UpdateConceptDescriptionInput {
-  description: String!
-}
-
-input UpdateConceptIconInput {
-  icon: String!
-}
-
-input RenamePortInput {
-  code: String!
-  label: String
-}
-
-input UpdatePortDescriptionInput {
-  description: String!
-}
-
-input UpdatePortIconInput {
-  icon: String!
-}
-
-input RenameQualityInput {
-  key: String!
-}
-
-input UpdateQualityDescriptionInput {
-  description: String!
-}
-
-input UpdateQualityIconInput {
-  icon: String!
-}
-
-input RenameTypeInput {
-  name: String!
-}
-
-input UpdateTypeDescriptionInput {
-  description: String!
-}
-
-input UpdateTypeIconInput {
-  icon: String!
-}
-
-input RenameConnectorInput {
-  code: String!
-}
-
-input UpdateConnectorDescriptionInput {
-  description: String!
-}
-
-input UpdateConnectorIconInput {
-  icon: String!
-}
-
+# 🧩 Multi-field input that does not collapse into inline `arg(name: type)` form on the scoped command API.
 input AddFixedPieceInput {
   blueprintId: ID!
   position: PositionInput!
@@ -6374,142 +6289,212 @@ input AddFixedPieceInput {
   description: String
 }
 
-input RenamePieceInput {
-  name: String!
-}
-
-input UpdatePieceDescriptionInput {
-  description: String!
-}
-
-input ChangePieceToTypeInput {
-  blueprintId: ID!
-}
-
-input ChangePiecesToTypeInput {
-  blueprintId: ID!
-}
-
 #endregion MutationInputs
 
+#region ScopedCommands
+
+# 🎬 Single root for every kit-changing operation. Resolves into a chain of scope objects:
+#     `session → draft(id) → transaction(id) → kit → …`. Leaf fields execute and return the
+#     resulting operation `ID!`; intermediate fields navigate one scope deeper.
 type Mutation {
-  change(transactionScope: TransactionScopeInput!): KitChange!
+  session: SessionScopedCommandInput!
 }
 
-type KitChange {
-  # Kit
-  renameKit(input: RenameKitInput!): ID!
-  changeDescription(entityId: ID!, input: ChangeDescriptionInput!): ID!
+# 🎬 Top-level command scope. `start`/`end` open and close the session; `draft` enters one.
+type SessionScopedCommandInput {
+  start: ID! # data
+  end: ID! # data
+  draft(id: ID!): DraftScopedCommandInput!
+}
 
-  # Tag
-  createTag(ownerId: ID!, tag: TagInput!): ID!
-  createTags(ownerId: ID!, tags: [TagInput!]!): ID!
-  renameTag(tagId: ID!, input: RenameTagInput!): ID!
-  changedTagDescription(tagId: ID!, input: UpdateTagDescriptionInput!): ID!
-  changedTagIcon(tagId: ID!, input: UpdateTagIconInput!): ID!
-  addAttributeToTag(tagId: ID!, attribute: AttributeInput!): ID!
-  addAttributesToTag(tagId: ID!, attributes: [AttributeInput!]!): ID!
-  removeAttributeFromTag(tagId: ID!, attributeId: ID!): ID!
-  removeAttributesFromTag(tagId: ID!, attributeIds: [ID!]!): ID!
-  deleteTag(tagId: ID!): ID!
-  deleteTags(tagIds: [ID!]!): ID!
+# 📑 Draft scope. `transaction` enters (or opens) the draft's open transaction.
+type DraftScopedCommandInput {
+  transaction(id: ID!): TransactionScopedCommandInput!
+}
 
-  # Concept
-  createConcept(ownerId: ID!, concept: ConceptInput!): ID!
-  createConcepts(ownerId: ID!, concepts: [ConceptInput!]!): ID!
-  renameConcept(conceptId: ID!, input: RenameConceptInput!): ID!
-  changedConceptDescription(conceptId: ID!, input: UpdateConceptDescriptionInput!): ID!
-  changedConceptIcon(conceptId: ID!, input: UpdateConceptIconInput!): ID!
-  addAttributeToConcept(conceptId: ID!, attribute: AttributeInput!): ID!
-  addAttributesToConcept(conceptId: ID!, attributes: [AttributeInput!]!): ID!
-  removeAttributeFromConcept(conceptId: ID!, attributeId: ID!): ID!
-  removeAttributesFromConcept(conceptId: ID!, attributeIds: [ID!]!): ID!
-  deleteConcept(conceptId: ID!): ID!
-  deleteConcepts(conceptIds: [ID!]!): ID!
+# 💼 Transaction scope. Currently every kit-changing operation lives under `kit`.
+type TransactionScopedCommandInput {
+  kit: KitScopedOperationInput!
+}
 
-  # Port
-  createPort(port: PortInput!): ID!
-  createPorts(ports: [PortInput!]!): ID!
-  renamePort(portId: ID!, input: RenamePortInput!): ID!
-  changedPortDescription(portId: ID!, input: UpdatePortDescriptionInput!): ID!
-  changedPortIcon(portId: ID!, input: UpdatePortIconInput!): ID!
-  addAttributeToPort(portId: ID!, attribute: AttributeInput!): ID!
-  addAttributesToPort(portId: ID!, attributes: [AttributeInput!]!): ID!
-  removeAttributeFromPort(portId: ID!, attributeId: ID!): ID!
-  removeAttributesFromPort(portId: ID!, attributeIds: [ID!]!): ID!
-  deletePort(portId: ID!): ID!
-  deletePorts(portIds: [ID!]!): ID!
+# 🧰 Kit scope. Owns tags, concepts, qualities, types and designs.
+type KitScopedOperationInput {
+  # Artifact
+  rename(newName: String!): ID!
+  changeDescription(newDescription: String!): ID!
 
-  # Quality
+  # Tags
+  createTag(tag: TagInput!): ID!
+  createTags(tags: [TagInput!]!): ID!
+  tag(id: ID!): TagScopedOperationInput!
+  deleteTag(id: ID!): ID!
+  deleteTags(ids: [ID!]!): ID!
+
+  # Concepts
+  createConcept(concept: ConceptInput!): ID!
+  createConcepts(concepts: [ConceptInput!]!): ID!
+  concept(id: ID!): ConceptScopedOperationInput!
+  deleteConcept(id: ID!): ID!
+  deleteConcepts(ids: [ID!]!): ID!
+
+  # Qualities
   createQuality(quality: QualityInput!): ID!
   createQualities(qualities: [QualityInput!]!): ID!
-  renameQuality(qualityId: ID!, input: RenameQualityInput!): ID!
-  changedQualityDescription(qualityId: ID!, input: UpdateQualityDescriptionInput!): ID!
-  changedQualityIcon(qualityId: ID!, input: UpdateQualityIconInput!): ID!
-  addAttributeToQuality(qualityId: ID!, attribute: AttributeInput!): ID!
-  addAttributesToQuality(qualityId: ID!, attributes: [AttributeInput!]!): ID!
-  removeAttributeFromQuality(qualityId: ID!, attributeId: ID!): ID!
-  removeAttributesFromQuality(qualityId: ID!, attributeIds: [ID!]!): ID!
-  deleteQuality(qualityId: ID!): ID!
-  deleteQualities(qualityIds: [ID!]!): ID!
+  quality(id: ID!): QualityScopedOperationInput!
+  deleteQuality(id: ID!): ID!
+  deleteQualities(ids: [ID!]!): ID!
 
-  # Type
+  # Types
   createType(type: TypeInput!): ID!
   createTypes(types: [TypeInput!]!): ID!
-  renameType(typeId: ID!, input: RenameTypeInput!): ID!
-  changedTypeDescription(typeId: ID!, input: UpdateTypeDescriptionInput!): ID!
-  changedTypeIcon(typeId: ID!, input: UpdateTypeIconInput!): ID!
-  addAttributeToType(typeId: ID!, attribute: AttributeInput!): ID!
-  addAttributesToType(typeId: ID!, attributes: [AttributeInput!]!): ID!
-  removeAttributeFromType(typeId: ID!, attributeId: ID!): ID!
-  removeAttributesFromType(typeId: ID!, attributeIds: [ID!]!): ID!
-  deleteType(typeId: ID!): ID!
-  deleteTypes(typeIds: [ID!]!): ID!
+  type(id: ID!): TypeScopedOperationInput!
+  deleteType(id: ID!): ID!
+  deleteTypes(ids: [ID!]!): ID!
 
-  # Connector
-  addConnector(typeId: ID!, connector: ConnectorInput!): ID!
-  addConnectors(typeId: ID!, connectors: [ConnectorInput!]!): ID!
-  renameConnector(connectorId: ID!, input: RenameConnectorInput!): ID!
-  changedConnectorDescription(connectorId: ID!, input: UpdateConnectorDescriptionInput!): ID!
-  changedConnectorIcon(connectorId: ID!, input: UpdateConnectorIconInput!): ID!
-  removeConnector(connectorId: ID!): ID!
-  removeConnectors(connectorIds: [ID!]!): ID!
-
-  # Design
+  # Designs
   createDesign(design: DesignInput!): ID!
   createDesigns(designs: [DesignInput!]!): ID!
-  deleteDesign(designId: ID!): ID!
-  deleteDesigns(designIds: [ID!]!): ID!
-  flattenDesign(designId: ID!): ID!
-  addAttributeToDesign(designId: ID!, attribute: AttributeInput!): ID!
-  addAttributesToDesign(designId: ID!, attributes: [AttributeInput!]!): ID!
-  removeAttributeFromDesign(designId: ID!, attributeId: ID!): ID!
-  removeAttributesFromDesign(designId: ID!, attributeIds: [ID!]!): ID!
-
-  # Piece
-  addFixedPiece(designId: ID!, input: AddFixedPieceInput!): ID!
-  addChildPieceWithParentConnection(designId: ID!, child: ChildPieceWithParentConnectionInput!): ID!
-  addChildPiecesWithParentConnections(designId: ID!, children: [ChildPieceWithParentConnectionInput!]!): ID!
-  addHangingChildPieceWithParentConnection(designId: ID!, child: HangingChildPieceWithParentConnectionInput!): ID!
-  addHangingChildPiecesWithParentConnections(designId: ID!, children: [HangingChildPieceWithParentConnectionInput!]!): ID!
-  renamePiece(pieceId: ID!, input: RenamePieceInput!): ID!
-  changedPieceDescription(pieceId: ID!, input: UpdatePieceDescriptionInput!): ID!
-  dragPiece(designId: ID!, pieceId: ID!, offset: OffsetInput!): ID!
-  dragPieces(designId: ID!, pieceIds: [ID!]!, offset: OffsetInput!): ID!
-  movePiece(designId: ID!, pieceId: ID!, position: PositionInput!): ID!
-  movePieces(designId: ID!, pieceIds: [ID!]!, offset: OffsetInput!): ID!
-  fixPiece(designId: ID!, pieceId: ID!): ID!
-  fixPieces(designId: ID!, pieceIds: [ID!]!): ID!
-  changePieceToType(pieceId: ID!, input: ChangePieceToTypeInput!): ID!
-  changePiecesToType(pieceIds: [ID!]!, input: ChangePiecesToTypeInput!): ID!
-  addAttributeToPiece(pieceId: ID!, attribute: AttributeInput!): ID!
-  addAttributesToPiece(pieceId: ID!, attributes: [AttributeInput!]!): ID!
-  removeAttributeFromPiece(pieceId: ID!, attributeId: ID!): ID!
-  removeAttributesFromPiece(pieceId: ID!, attributeIds: [ID!]!): ID!
-  deletePiece(designId: ID!, pieceId: ID!): ID!
-  deletePieces(designId: ID!, pieceIds: [ID!]!): ID!
-  deletePiecesAndConnections(designId: ID!, pieceIds: [ID!]!, connectionIds: [ID!]!): ID!
+  design(id: ID!): DesignScopedOperationInput!
+  deleteDesign(id: ID!): ID!
+  deleteDesigns(ids: [ID!]!): ID!
 }
+
+# 🏷️ Tag scope. Artifact + attributes.
+type TagScopedOperationInput {
+  # Artifact
+  rename(newName: String!): ID!
+  changeDescription(newDescription: String!): ID!
+  changeIcon(newIcon: String!): ID!
+  # Attributes
+  addAttribute(attribute: AttributeInput!): ID!
+  addAttributes(attributes: [AttributeInput!]!): ID!
+  removeAttribute(id: ID!): ID!
+  removeAttributes(ids: [ID!]!): ID!
+}
+
+# 💡 Concept scope. Artifact + attributes.
+type ConceptScopedOperationInput {
+  # Artifact
+  rename(newName: String!): ID!
+  changeDescription(newDescription: String!): ID!
+  changeIcon(newIcon: String!): ID!
+  # Attributes
+  addAttribute(attribute: AttributeInput!): ID!
+  addAttributes(attributes: [AttributeInput!]!): ID!
+  removeAttribute(id: ID!): ID!
+  removeAttributes(ids: [ID!]!): ID!
+}
+
+# 📐 Quality scope. Renamed by `key`; artifact + attributes otherwise.
+type QualityScopedOperationInput {
+  # Artifact
+  rename(newKey: String!): ID!
+  changeDescription(newDescription: String!): ID!
+  changeIcon(newIcon: String!): ID!
+  # Attributes
+  addAttribute(attribute: AttributeInput!): ID!
+  addAttributes(attributes: [AttributeInput!]!): ID!
+  removeAttribute(id: ID!): ID!
+  removeAttributes(ids: [ID!]!): ID!
+}
+
+# 🏗️ Type scope. Owns ports & connectors, plus artifact + attributes.
+type TypeScopedOperationInput {
+  # Artifact
+  rename(newName: String!): ID!
+  changeDescription(newDescription: String!): ID!
+  changeIcon(newIcon: String!): ID!
+  # Attributes
+  addAttribute(attribute: AttributeInput!): ID!
+  addAttributes(attributes: [AttributeInput!]!): ID!
+  removeAttribute(id: ID!): ID!
+  removeAttributes(ids: [ID!]!): ID!
+  # Ports
+  createPort(port: PortInput!): ID!
+  createPorts(ports: [PortInput!]!): ID!
+  port(id: ID!): PortScopedOperationInput!
+  deletePort(id: ID!): ID!
+  deletePorts(ids: [ID!]!): ID!
+  # Connectors
+  addConnector(connector: ConnectorInput!): ID!
+  addConnectors(connectors: [ConnectorInput!]!): ID!
+  connector(id: ID!): ConnectorScopedOperationInput!
+  removeConnector(id: ID!): ID!
+  removeConnectors(ids: [ID!]!): ID!
+}
+
+# 🔌 Port scope. Renamed by `code` + optional `label`; artifact + attributes otherwise.
+type PortScopedOperationInput {
+  # Artifact
+  rename(newCode: String!, newLabel: String): ID!
+  changeDescription(newDescription: String!): ID!
+  changeIcon(newIcon: String!): ID!
+  # Attributes
+  addAttribute(attribute: AttributeInput!): ID!
+  addAttributes(attributes: [AttributeInput!]!): ID!
+  removeAttribute(id: ID!): ID!
+  removeAttributes(ids: [ID!]!): ID!
+}
+
+# 🪢 Connector scope. Renamed by `code`; no attributes.
+type ConnectorScopedOperationInput {
+  # Artifact
+  rename(newCode: String!): ID!
+  changeDescription(newDescription: String!): ID!
+  changeIcon(newIcon: String!): ID!
+}
+
+# 🏛️ Design scope. Owns pieces, plus artifact + attributes + flatten.
+type DesignScopedOperationInput {
+  # Artifact
+  rename(newName: String!): ID!
+  changeDescription(newDescription: String!): ID!
+  # Design
+  flatten: ID!
+  # Attributes
+  addAttribute(attribute: AttributeInput!): ID!
+  addAttributes(attributes: [AttributeInput!]!): ID!
+  removeAttribute(id: ID!): ID!
+  removeAttributes(ids: [ID!]!): ID!
+  # Pieces
+  addFixedPiece(input: AddFixedPieceInput!): ID!
+  addChildPieceWithParentConnection(child: ChildPieceWithParentConnectionInput!): ID!
+  addChildPiecesWithParentConnections(children: [ChildPieceWithParentConnectionInput!]!): ID!
+  addHangingChildPieceWithParentConnection(child: HangingChildPieceWithParentConnectionInput!): ID!
+  addHangingChildPiecesWithParentConnections(children: [HangingChildPieceWithParentConnectionInput!]!): ID!
+  piece(id: ID!): PieceScopedOperationInput!
+  pieces(ids: [ID!]!): PiecesScopedOperationInput!
+  deletePiece(id: ID!): ID!
+  deletePieces(ids: [ID!]!): ID!
+  deletePiecesAndConnections(pieceIds: [ID!]!, connectionIds: [ID!]!): ID!
+}
+
+# 🧩 Piece scope. Per-piece artifact + transforms + attributes.
+type PieceScopedOperationInput {
+  # Artifact
+  rename(newName: String!): ID!
+  changeDescription(newDescription: String!): ID!
+  # Piece
+  drag(offset: OffsetInput!): ID!
+  move(position: PositionInput!): ID!
+  fix: ID!
+  changeToType(blueprintId: ID!): ID!
+  # Attributes
+  addAttribute(attribute: AttributeInput!): ID!
+  addAttributes(attributes: [AttributeInput!]!): ID!
+  removeAttribute(id: ID!): ID!
+  removeAttributes(ids: [ID!]!): ID!
+}
+
+# 🧩📚 Multi-piece scope (`movePieces`/`dragPieces`/`fixPieces`/`changePiecesToType`).
+type PiecesScopedOperationInput {
+  drag(offset: OffsetInput!): ID!
+  move(offset: OffsetInput!): ID!
+  fix: ID!
+  changeToType(blueprintId: ID!): ID!
+}
+
+#endregion ScopedCommands
 
 type Subscription {
   commandSucceeded: Command!
@@ -6517,17 +6502,9 @@ type Subscription {
   operationFailed: Error!
   error: Error!
 
-  # Artifact
-  renamed: Renamed!
+  # Kit
+  renamedKit: RenamedKit!
   changedDescription: ChangedDescription!
-  addedIcon: AddedIcon!
-  changedIcon: ChangedIcon!
-  removedIcon: RemovedIcon!
-
-  # Document
-  addedPreviewImage: AddedPreviewImage
-  changedPreviewImage: ChangedPreviewImage
-  removedPreviewImage: RemovedPreviewImage
 
   # Tag
   createdTag: CreatedTag!

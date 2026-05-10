@@ -10,6 +10,7 @@
 4. Several mutations had `*Input { hasInput: Boolean = false }` placeholder wrappers (delete/remove/flatten/fix) — they MUST disappear; the inlined args already carry the data.
 5. Every entity type duplicated the general interface fields `ownerEntity: OwnerEntity` / `ownedEntities: OwnedEntityConnection` with narrow-typed projections (`owner: VectorOwner!`, `planeOwner: Plane`, `planeDiffOwner: PlaneDiff`, …) and spine references (`ownerModifications: Modifications`, `changeOwner: Change`, `operationOwner: Operation`, …). Only the general interface fields MUST remain.
 6. The schema carried 393 narrow `union` declarations (`OwnerEntity`, `OwnedEntityConnection`, `VectorOwner`, `Scope`, `Input`, `Blueprint`, etc.) that are no longer necessary now that fields are typed against the general interfaces (`Entity`, `EntityConnection`). All unions MUST be removed; union-typed fields MUST be retyped to the general interface and document the previous union members in a trailing `// Member1 | Member2 | …` comment.
+7. The mutation API still exposed a flat `KitChange` namespace with redundant `*Id` arguments (`tagId`, `conceptId`, `designId`, `pieceId`, …) and per-operation `*Input` wrappers (`RenameTagInput`, `UpdateTagDescriptionInput`, `UpdateTagIconInput`, …). The transaction-scope was passed once as an `input TransactionScopeInput` argument. The mutation API MUST be refactored into a hierarchical scoped command tree where each scope is entered via a navigation field (`session → draft(id) → transaction(id) → kit → tag(id)/concept(id)/…`), every leaf field executes and returns `ID!`, and the per-operation single-field `*Input` wrappers MUST disappear (`rename(newName: String!): ID!`, `changeDescription(newDescription: String!): ID!`, …).
 
 ## Changes
 
@@ -34,6 +35,16 @@
   - **Rewrote `ownedEntities: OwnedEntityConnection # computed [// X]` → `owned: EntityConnection # reference [// Member1 | Member2 | …]`** on 265 fields, same rule.
   - **Narrowed `scope: Scope!` and `input: Input!`** on every concrete operation type to its operation-specific concrete `*Scope!` / `*Input!` (95 + 95 fields). On `interface Operation` the fields are dropped entirely (each implementation now declares its own narrow scope/input).
   - **Rewrote `blueprint: Blueprint(!)?` → `blueprint: Entity(!)? # … // Type | Design`** (2 fields) and `node: Blueprint! # reference` → `node: Entity! # reference // Type | Design` on `BlueprintEdge`.
+- `semio/graphql/target.schema.graphql` — replaced `#region MutationInputs` and `type Mutation { change(transactionScope) … }` + `type KitChange { … }` with a hierarchical scoped command API:
+  - **Removed `input TransactionScopeInput`** plus every per-operation single-field `*Input` wrapper (`RenameKitInput`, `RenameTagInput`, `RenameConceptInput`, `RenamePortInput`, `RenameQualityInput`, `RenameTypeInput`, `RenameConnectorInput`, `RenamePieceInput`, every `Update*DescriptionInput`, every `Update*IconInput`, `ChangeDescriptionInput`, `ChangePieceToTypeInput`, `ChangePiecesToTypeInput`). Only the multi-field `AddFixedPieceInput { blueprintId, position, name, description }` remains.
+  - **Replaced the flat `type Mutation { change(transactionScope): KitChange! }`** with `type Mutation { session: SessionScopedCommandInput! }`. The full hierarchy is:
+    - `SessionScopedCommandInput { start: ID!, end: ID!, draft(id: ID!): DraftScopedCommandInput! }`
+    - `DraftScopedCommandInput { transaction(id: ID!): TransactionScopedCommandInput! }`
+    - `TransactionScopedCommandInput { kit: KitScopedOperationInput! }`
+    - `KitScopedOperationInput` — Artifact (`rename`/`changeDescription`) + scoped owns: `tag`/`concept`/`quality`/`type`/`design` navigation + bulk create/delete.
+    - `Tag`/`Concept`/`Quality`/`Type`/`Port`/`Connector`/`Design`/`Piece`/`Pieces` ScopedOperationInput — each carries the operations that belong to that entity kind (Artifact + Attributes + entity-specific operations like `flatten`, `drag`, `move`, `fix`, `changeToType`, …).
+  - **Inlined per-operation primitive args** as named field arguments: `rename(newName: String!)`, `changeDescription(newDescription: String!)`, `changeIcon(newIcon: String!)`, `rename(newCode: String!, newLabel: String)` for `Port`, `rename(newKey: String!)` for `Quality`, `changeToType(blueprintId: ID!)`, `drag(offset: OffsetInput!)`, `move(position: PositionInput!)`, `move(offset: OffsetInput!)` for `Pieces`, `fix: ID!`, `flatten: ID!`.
+  - **No more `*Id: ID!` arguments at the leaf** — entity ids are carried by the scope-navigation chain (`design(id: ID!)` → `piece(id: ID!).drag(offset)`).
 
 ## Verification
 
@@ -51,6 +62,10 @@
 - `rg "^union\s" semio/graphql/target.schema.graphql` → 0 matches.
 - `rg "\bOwnerEntity\b|\bOwnedEntityConnection\b|\bEntityConnectionInterface\b" semio/graphql/target.schema.graphql` → 0 matches.
 - File size went from 12 198 → 5 828 lines (-52%). The schema now has 0 unions, narrow-typed scope/input on every concrete operation, and clean general-interface fields on every entity.
+- After the scoped command refactor: `parse OK` and **`build OK`** (no errors at all).
+- `rg "^input TransactionScopeInput|^input Rename|^input Update|^input ChangeDescription|^input ChangePiece" semio/graphql/target.schema.graphql` → 0 matches.
+- `rg "^type KitChange\b" semio/graphql/target.schema.graphql` → 0 matches; `rg "^type Mutation\b" …` → 1 match.
+- `type Mutation` exposes a single field `session: SessionScopedCommandInput!`. The hierarchy `session → draft(id) → transaction(id) → kit → {tag,concept,quality,type,design,…}(id)` is the only path to every kit-changing operation; every leaf returns `ID!`.
 
 ## Status
 
