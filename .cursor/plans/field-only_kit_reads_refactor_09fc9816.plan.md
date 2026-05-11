@@ -18,10 +18,13 @@ todos:
     content: Delete from semio/js/index.ts every non-class export — KitStore (merged), all *Schema/zod, all *Dto / *MetadataDto / *Shallow types, KitFullDto, KitHostStore + InMemoryKitStore + JsonFileKitStore + FolderKitStore + applyKitClientSnapshotToLocalStore, all Read*Command types, SemioKitLiveReadStore + KitDesignReadStore + KitShallowListStore + KitViewCatalogStore, kitStoreClientAdd/Update/Remove* free functions, submitKitChangeCommands, buildSchemaEntityChangeCommands, writeKitStoreClientSchemaField, KitChangeKind / KitChangeSemanticKindGql, kitChangeSemanticKindToGraphQl, KitJson* helpers, kit-store.worker.ts JSON DTO plumbing
     status: pending
   - id: react-rewire
-    content: In semio/react/index.tsx point the kept bulk + identity hooks at the new entity classes; rewrite usePieceName / usePiecePlane / usePieceFlatPlane / usePieceFlatCenter / etc. to bind the class field-cache through useSyncExternalStore
+    content: In semio/react/index.tsx make useKit/useDesign/useType/usePiece/useConnection/useAuthor/useQuality return the class instances; resolution is `idValue` arg first, then the matching scope context (KitScope/DesignScope/TypeScope/PortScope/ConnectorScope/PieceScope/ConnectionScope/AuthorScope/QualityScope/TagScope/ConceptScope)
+    status: pending
+  - id: react-field-hooks
+    content: Rewrite every per-field hook (usePieceName / usePiecePlane / usePieceFlatPlane / usePieceFlatCenter / usePieceCenter / usePieceScale / useTypeName / useDesignName / useConnectionGap / ...) to compose useDesign().piece(id) (or useKit().type(id), useType().port(id), etc.) and bind the resulting class field via useSyncExternalStore (subscribe = entity.on<Event>(cb), getSnapshot = entity.fieldSync())
     status: pending
   - id: react-deletes
-    content: Delete public exports from semio/react/index.tsx for whole-object triads, generic schema readers, snapshot accessors, *Input / *PatchInput whole-object hooks, and whole-snapshot file/binary helpers; demote required helpers to non-exported internals
+    content: Delete public exports from semio/react/index.tsx for whole-object triads, generic schema readers, snapshot accessors, *Input / *PatchInput whole-object hooks, useResolved* helpers, and whole-snapshot file/binary helpers; demote required helpers to non-exported internals
     status: pending
   - id: missing-field-hooks
     content: Add any missing per-field hooks sketchpad needs (e.g. useDesignPieceIds, useTypeRepresentationIds, useTypePortIds, useConnectionGap), each a thin wrapper over the relevant class field
@@ -175,41 +178,115 @@ Delete entirely (full list — these were the bulk of the current 7715-line file
 
 The `kit-store.worker.ts` worker is rewritten to host only the GraphQL transport (`async-graphql` over WASM) and to forward `subscription { event }` payloads to the main thread; no DTO marshaling.
 
-## 4. Deletions in `semio/react/index.tsx` (public-API only)
+## 4. `semio/react/index.tsx` shape
 
-Keep all of these as exports of `@semio/react`, now backed by the entity classes:
+### Resolution rules (every hook)
 
-- Entity-identity selectors: `useKit`, `useDesign`, `useType`, `usePiece`, `useConnection`, `useAuthor`, `useQuality` (and the `*ById` aliases). Each returns the matching class instance.
-- Bulk / list / aggregate / metadata / shallow hooks: `useTypes`, `useDesigns`, `usePieces`, `useConnections`, `useAuthors`, `useTypesIds`, `useDesignsIds`, `useTypesMetadata`, `useDesignsMetadata`, `useTypesFull`, `useDesignsFull`, `useFilesFull`, `useTagsFull`, `useKitDesignsShallow`, `useKitTypesShallow`, `useKitAuthorsShallow`, `useKitPieces`, `useKitConnections`, `usePiecesMetadataMap`, `usePieceMetadata`, `useIncludedDesigns`, `useDesignClusterableGroups`, `useDesignQualitySum`, `useTypeBestRepresentation`, `useKitColoredConnectors`, `useReplacableTypes`, `useReplacableDesigns`, `useExplodeableDesignNodes`, `useOpenKitGuids`, `useActiveKitGuid`, `useOpenKitShallows`, `useRegistryHasKit`, `useRegistryKitPersistenceKind`, `useKitAlternatives`, `useKitAlternativeSelection`. Each composes a list-id field hook plus per-id reads.
-- Per-field schema hooks: every `use<Entity><Field>` that maps to a class field method. Implementation per hook is a thin wrapper:
+- Every read / mutation hook accepts a single optional argument `idValue?: string`. When `idValue` is omitted the hook reads the matching scope context (`KitScope`, `DesignScope`, `TypeScope`, `PortScope`, `ConnectorScope`, `PieceScope`, `ConnectionScope`, `AuthorScope`, `QualityScope`, `TagScope`, `ConceptScope`, …). When `idValue` is provided it wins over the scope.
+- There are no `useResolved*` helpers. Resolution is the explicit composition `useKit()` → `kit.<child>(id)`, `useDesign()` → `design.<child>(id)`, `useType()` → `type.<child>(id)`, `useDesign().piece(id)` → `Piece`, `useDesign().connection(id)` → `Connection`, `useType().port(id)` → `Port`, `useType().connector(id)` → `Connector`, etc. Inside the per-field hook body the chain is written out.
+- The entity-identity selectors return the class instance from §2, never a DTO. Their union signatures are:
 
   ```ts
-  export function usePieceName(idValue?: string): KitFieldBinding<string> {
-    const piece = useResolvedPiece(idValue);
-    const subscribe = React.useCallback(
-      (cb: () => void) => piece?.onRenamed(() => cb()) ?? noop,
-      [piece],
-    );
-    const getSnap = React.useCallback(() => piece?.nameSync(), [piece]);
-    const value = React.useSyncExternalStore(subscribe, getSnap, getSnap);
-    const run = React.useCallback(
-      async (next: string) => piece ? piece.rename(next) : { ok: false, error: { kind: "Readonly", message: "no piece" } } as const,
-      [piece],
-    );
-    return [value, run, piece ? WRITE_STATUS_IDLE : WRITE_STATUS_READONLY] as const;
-  }
+  export function useKit(): Kit | null;
+  export function useDesign(idValue?: string): Design | null;       // useKit().design(id ?? useDesignScope()?.id)
+  export function useType(idValue?: string): Type | null;           // useKit().type(id ?? useTypeScope()?.id)
+  export function usePiece(idValue?: string): Piece | null;         // useDesign().piece(id ?? usePieceScope()?.id)
+  export function useConnection(idValue?: string): Connection | null; // useDesign().connection(id ?? useConnectionScope()?.id)
+  export function useAuthor(idValue?: string): Author | null;       // useKit().author(id ?? useAuthorScope()?.id)
+  export function useQuality(idValue?: string): Quality | null;     // useKit().quality(id ?? useQualityScope()?.id)
   ```
 
-- Scopes + scope hooks, command hooks, backbone hooks, diagnostics — same as the previous plan iteration; each command hook now calls a class method instead of the deleted free-standing helpers.
+  `Connection`, `Author`, `Quality` get matching navigation methods on `Design` / `Kit` (`design.connection(id)`, `kit.author(id)`, `kit.quality(id)`) so the chain composes cleanly.
 
-Delete from the public surface:
+### Per-field hook pattern
+
+Every `use<Entity><Field>(idValue?: string)` walks the same chain and binds the field through `useSyncExternalStore`. Sample implementations (this is the *only* pattern used):
+
+```ts
+export function usePieceName(idValue?: string): KitFieldBinding<string> {
+  const design = useDesign();
+  const id = idValue ?? React.useContext(PieceScopeContext)?.id;
+  const piece = design && id ? design.piece(id) : null;
+  const subscribe = React.useCallback(
+    (cb: () => void) => piece?.onRenamed(() => cb()) ?? noop,
+    [piece],
+  );
+  const getSnap = React.useCallback(() => piece?.nameSync(), [piece]);
+  const value = React.useSyncExternalStore(subscribe, getSnap, getSnap);
+  const run = React.useCallback(
+    async (next: string) =>
+      piece ? piece.rename(next) : ({ ok: false, error: { kind: "Readonly", message: "no piece" } } as const),
+    [piece],
+  );
+  return [value, run, piece ? WRITE_STATUS_IDLE : WRITE_STATUS_READONLY] as const;
+}
+
+export function usePiecePlane(idValue?: string): KitFieldBinding<Plane> {
+  const design = useDesign();
+  const id = idValue ?? React.useContext(PieceScopeContext)?.id;
+  const piece = design && id ? design.piece(id) : null;
+  const subscribe = React.useCallback(
+    (cb: () => void) => piece?.onPlaneChanged(() => cb()) ?? noop,
+    [piece],
+  );
+  const getSnap = React.useCallback(() => piece?.planeSync(), [piece]); // stable Plane reference until the event fires
+  const value = React.useSyncExternalStore(subscribe, getSnap, getSnap);
+  const run = React.useCallback(
+    async (next: PlaneInput) =>
+      piece ? piece.move({ plane: next, center: piece.centerSync() ?? { u: 0, v: 0 } }) : ({ ok: false, error: { kind: "Readonly", message: "no piece" } } as const),
+    [piece],
+  );
+  return [value, run, piece ? WRITE_STATUS_IDLE : WRITE_STATUS_READONLY] as const;
+}
+
+export function usePieceFlatPlane(idValue?: string): HookRead<Plane> {
+  const design = useDesign();
+  const id = idValue ?? React.useContext(PieceScopeContext)?.id;
+  const piece = design && id ? design.piece(id) : null;
+  const subscribe = React.useCallback(
+    (cb: () => void) => piece?.onFlatPlaneChanged(() => cb()) ?? noop,
+    [piece],
+  );
+  const getSnap = React.useCallback(() => piece?.flatPlaneSync(), [piece]);
+  const value = React.useSyncExternalStore(subscribe, getSnap, getSnap);
+  return [value, piece ? WRITE_STATUS_IDLE : WRITE_STATUS_READONLY] as const;
+}
+
+export function usePieceFlatCenter(idValue?: string): HookRead<Coordinate> {
+  const design = useDesign();
+  const id = idValue ?? React.useContext(PieceScopeContext)?.id;
+  const piece = design && id ? design.piece(id) : null;
+  const subscribe = React.useCallback(
+    (cb: () => void) => piece?.onFlatCenterChanged(() => cb()) ?? noop,
+    [piece],
+  );
+  const getSnap = React.useCallback(() => piece?.flatCenterSync(), [piece]);
+  const value = React.useSyncExternalStore(subscribe, getSnap, getSnap);
+  return [value, piece ? WRITE_STATUS_IDLE : WRITE_STATUS_READONLY] as const;
+}
+```
+
+Hooks for `Type` fields use `useKit()` → `kit.type(id ?? useTypeScope()?.id)`. Hooks for `Port` fields use `useType().port(id ?? usePortScope()?.id)`. Hooks for `Connector` fields use `useType().connector(id ?? useConnectorScope()?.id)`. Hooks for `Connection` fields use `useDesign().connection(id ?? useConnectionScope()?.id)`. Hooks for `Author` / `Quality` / `Tag` / `Concept` fields use `useKit().author(id?)` / `kit.quality(id?)` / `kit.tag(id?)` / `kit.concept(id?)`.
+
+### Kept exports
+
+- Entity-identity selectors (return class instances): `useKit`, `useDesign`, `useType`, `usePiece`, `useConnection`, `useAuthor`, `useQuality` (plus the `*ById` aliases).
+- Bulk / list / aggregate / metadata / shallow hooks: `useTypes`, `useDesigns`, `usePieces`, `useConnections`, `useAuthors`, `useTypesIds`, `useDesignsIds`, `useTypesMetadata`, `useDesignsMetadata`, `useTypesFull`, `useDesignsFull`, `useFilesFull`, `useTagsFull`, `useKitDesignsShallow`, `useKitTypesShallow`, `useKitAuthorsShallow`, `useKitPieces`, `useKitConnections`, `usePiecesMetadataMap`, `usePieceMetadata`, `useIncludedDesigns`, `useDesignClusterableGroups`, `useDesignQualitySum`, `useTypeBestRepresentation`, `useKitColoredConnectors`, `useReplacableTypes`, `useReplacableDesigns`, `useExplodeableDesignNodes`, `useOpenKitGuids`, `useActiveKitGuid`, `useOpenKitShallows`, `useRegistryHasKit`, `useRegistryKitPersistenceKind`, `useKitAlternatives`, `useKitAlternativeSelection`. Each is a thin composition of a list-id field hook plus per-id reads, all on top of the class instances (e.g. `useTypes` = `useKit()` + `kit.typeIdsSync()` + per-id `kit.type(id)` mapping).
+- Per-field hooks following the pattern above.
+- Scope components + scope hooks: `KitScope`, `DesignScope`, `TypeScope`, `PortScope`, `ConnectorScope`, `PieceScope`, `ConnectionScope`, `AuthorScope`, `QualityScope`, `TagScope`, `ConceptScope`, plus their `use*Scope`, `useIs*Scope`, `useResolvedKitIdentifier`. The user wrote `<PieceContext id>` informally — that maps to the existing `<PieceScope id="...">` component.
+- Command hooks (`useUndo`, `useRedo`, `useDeletePiece`, `useUpdatePiece`, `useFlattenDesign`, …) — each implemented as a thin wrapper that calls a class method on the resolved entity instance.
+- Backbone hooks (`useBackboneStatus`, `useAttachBackbone`, `useDetachBackbone`, `useListConflicts`, `useResolveConflict`, `useSyncNow`) — each calls the matching `Kit` method.
+- Diagnostics: `useWriteIndicator`, `useWriteQueue`, `useSchemaEvents`, `useSetErrors`, `useKitSync`, `useOptimistic`, `usePendingTriad`.
+
+### Deleted exports
 
 - Whole-object triads: `usePieceTriad`, `useDesignTriad`, `useTypeTriad`, `useAuthorTriad`, `useQualityTriad`, `useConnectionTriad`.
 - Whole-object accessors: `useFolder`, `useFile`, `useTag`, `useConcept`, `useFamily`, `useGroup`, `usePort`, `useProp`, `useStat`, `useBenchmark`, `useCoordinate`, `usePoint`, `useVector`, `usePlane`, `useCamera`, `useAttribute`, `useLocation`, `useRepresentation`, `useConnector`, `useActor`, `useUser`, `useAgent`, `useSessionActorInput`, every `*Input` and `*PatchInput` whole-object hook (their per-field versions remain).
-- Snapshot exports: `useKitSnapshot`, `useKitStoreSnapshot`, `useKitHostStore`, `useKitStore`, `useSemioStoreSelector`, `useSemioReadSnap`, `useSemioKitScopedView`. (`useKitStoreClient` is removed entirely — the worker handle is now `Kit`; consumers call `useKit()`.)
-- Generic schema readers: `useSchemaObjectState`, `useSchemaObjectMutation`, `useSchemaObjectValue`, `useSchemaFieldValue`, `useSchemaFieldMutation`, `useSchemaFieldState`, `useSchemaScope`, `useKitRuntimeSafe`, `useKitRegistry`, `useKitRegistrySafe`. The `IndexedSchemaState` / `resolveReference` / `readSchemaFieldValue` / `KitRuntimeContext` machinery is also deleted (the new runtime context simply carries a `Kit` instance).
+- Snapshot exports: `useKitSnapshot`, `useKitStoreSnapshot`, `useKitHostStore`, `useKitStore`, `useSemioStoreSelector`, `useSemioReadSnap`, `useSemioKitScopedView`. `useKitStoreClient` is removed entirely — the worker handle is now `Kit`; consumers call `useKit()`.
+- Generic schema readers: `useSchemaObjectState`, `useSchemaObjectMutation`, `useSchemaObjectValue`, `useSchemaFieldValue`, `useSchemaFieldMutation`, `useSchemaFieldState`, `useSchemaScope`, `useKitRuntimeSafe`, `useKitRegistry`, `useKitRegistrySafe`. The `IndexedSchemaState` / `resolveReference` / `readSchemaFieldValue` / `KitRuntimeContext` machinery is deleted (the new runtime context simply carries a `Kit` instance).
+- Helper hooks that pre-resolved an entity from selectors: any `useResolved<Entity>` (e.g. `useResolvedPiece`, `useResolvedDesign`) — the per-field hooks now spell out `useDesign().piece(id)` etc. directly.
 - Whole-snapshot file/binary helpers: `useKitFileBlobUrl`, `useKitStoredFileUrls`, `useFileUrls`, `useKitFileState`, `useKitPersistenceKind`, `useKitPersistenceSource`, `useKitBinary`, `useEmbedKitFile`, `useKitFileUrl`. Re-introduce later as field hooks if a use case appears.
-- Re-exports of deleted js symbols (`asKitInstance`, `Kit`-class static helpers, `KitEntityStore`, `*Store` legacy aliases, `KitFileState`, etc.).
+- Re-exports of deleted js symbols (`asKitInstance`, `Kit`-class static helpers, `KitEntityStore`, `*Store` legacy aliases, `KitFileState`, …).
 
 ## 5. Sketchpad migration ([semio/sketchpad/index.tsx](semio/sketchpad/index.tsx))
 
