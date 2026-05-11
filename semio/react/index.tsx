@@ -197,7 +197,7 @@ function __kitFolderChainPath(dto: KitFullDto, folderId: string | undefined): st
   return segs.join("/");
 }
 
-/** @emoji 🪪 Relative folder path for adapter I/O (prefer materialized `path` from {@link normalizeKitFullDtoFolderPaths}). */
+/** @emoji 🪪 Relative folder path for adapter I/O (prefer resolved `path` from {@link normalizeKitFullDtoFolderPaths}). */
 function __kitFolderStorageRelPath(dto: KitFullDto, folderId: string | undefined): string {
   if (!folderId) return "";
   const folders = (dto.folders ?? []) as Array<{ id?: string; path?: string; name?: string; parent?: { id?: string } }>;
@@ -1418,7 +1418,7 @@ function inferPersistenceFromInit(init: { backbone?: KitBackboneConfig; store?: 
 const KitRuntimeContext = React.createContext<KitRuntimeContextValue | null>(null);
 
 /**
- * @emoji 🧭 One bridge: host kit id, materialized read scope, and optional VCS write anchors (set by {@link KitScope}).
+ * @emoji 🧭 One bridge: host kit id, active read scope, and optional VCS write anchors (set by {@link KitScope}).
  */
 export type SemioKitScopedView = {
   kitId: string;
@@ -3637,7 +3637,7 @@ export function useCommandBuilder(): CommandBuilder | null {
 }
 
 /**
- * @emoji 🧭 Target-schema **Change** lifecycle façade (`Session.theKit`): maps today's kit-write transaction anchors.
+ * @emoji 🧭 **Change** lifecycle façade for the current kit write scope.
  * Uses the active RS unsaved-change id exposed by {@link KitWriteScope}.
  */
 export function useChange(): {
@@ -5430,7 +5430,7 @@ export function useTypeBestRepresentation(typeId?: string, tagIds?: ReadonlyArra
   return [snap.data, status] as const;
 }
 
-/** Colored connector rows from `session.wip` materialized store `types { connectors { color { css } } }`. */
+/** Colored connector rows from the active kit read model. */
 export function useKitColoredConnectors(): HookRead<ReadonlyArray<unknown>> {
   const runtime = useKitRuntime();
   const key = "kcc";
@@ -7886,7 +7886,7 @@ export function useTypeName(idValue?: string): string {
   const client = useKitStoreClient();
   if (!client || !idValue) return "";
   const tid = String(idValue);
-  const field = client.materializedKitStoreField<string>(`type:${tid}:name`, {
+  const field = client.kitField<string>(`type:${tid}:name`, {
     extraVariableDecl: `$typeId: Id!`,
     extraVariables: { typeId: tid },
     innerOnKit: `type(id: $typeId) { name }`,
@@ -7942,7 +7942,7 @@ export function useTypeUnit(idValue?: string): string {
   const client = useKitStoreClient();
   if (!client || !idValue) return "";
   const tid = String(idValue);
-  const field = client.materializedKitStoreField<string>(`type:${tid}:unit`, {
+  const field = client.kitField<string>(`type:${tid}:unit`, {
     extraVariableDecl: `$typeId: Id!`,
     extraVariables: { typeId: tid },
     innerOnKit: `type(id: $typeId) { unit }`,
@@ -7976,7 +7976,7 @@ export function useTypeIcon(idValue?: string): string {
   const client = useKitStoreClient();
   if (!client || !idValue) return "";
   const tid = String(idValue);
-  const field = client.materializedKitStoreField<string>(`type:${tid}:icon`, {
+  const field = client.kitField<string>(`type:${tid}:icon`, {
     extraVariableDecl: `$typeId: Id!`,
     extraVariables: { typeId: tid },
     innerOnKit: `type(id: $typeId) { icon }`,
@@ -7990,7 +7990,7 @@ export function useTypeImage(idValue?: string): string {
   const client = useKitStoreClient();
   if (!client || !idValue) return "";
   const tid = String(idValue);
-  const field = client.materializedKitStoreField<string>(`type:${tid}:image`, {
+  const field = client.kitField<string>(`type:${tid}:image`, {
     extraVariableDecl: `$typeId: Id!`,
     extraVariables: { typeId: tid },
     innerOnKit: `type(id: $typeId) { image }`,
@@ -8004,7 +8004,7 @@ export function useTypeDescription(idValue?: string): string {
   const client = useKitStoreClient();
   if (!client || !idValue) return "";
   const tid = String(idValue);
-  const field = client.materializedKitStoreField<string>(`type:${tid}:description`, {
+  const field = client.kitField<string>(`type:${tid}:description`, {
     extraVariableDecl: `$typeId: Id!`,
     extraVariables: { typeId: tid },
     innerOnKit: `type(id: $typeId) { description }`,
@@ -9233,12 +9233,12 @@ export function useRenameKit(): readonly [(name: string) => Promise<SetResult>, 
   return [runByName, st] as const;
 }
 
-/** @emoji 🪪 Kit `version` string from materialized `wip.theKit` (legacy name {@link useKitRelease}). */
+/** @emoji 🪪 Kit `version` string from the active kit snapshot (legacy name {@link useKitRelease}). */
 export function useKitRelease(_idValue?: string): string {
   void _idValue;
   const client = useKitStoreClient();
   if (!client) return "";
-  const field = client.materializedKitStoreField<string>("kit:version", {
+  const field = client.kitField<string>("kit:version", {
     innerOnKit: "version",
     parse: (frag) => String(frag["version"] ?? ""),
     initial: "",
@@ -9290,7 +9290,7 @@ export function useKitHomepage(_idValue?: string): string {
   void _idValue;
   const client = useKitStoreClient();
   if (!client) return "";
-  const field = client.materializedKitStoreField<string>("kit:homepage", {
+  const field = client.kitField<string>("kit:homepage", {
     innerOnKit: "homepage",
     parse: (frag) => String(frag["homepage"] ?? ""),
     initial: "",
@@ -9302,7 +9302,7 @@ export function useKitLicense(_idValue?: string): string {
   void _idValue;
   const client = useKitStoreClient();
   if (!client) return "";
-  const field = client.materializedKitStoreField<string>("kit:license", {
+  const field = client.kitField<string>("kit:license", {
     innerOnKit: "license",
     parse: (frag) => String(frag["license"] ?? ""),
     initial: "",
@@ -9318,7 +9318,7 @@ export function useKitIcon(_idValue?: string): string {
   void _idValue;
   const client = useKitStoreClient();
   if (!client) return "";
-  const field = client.materializedKitStoreField<string>("kit:icon", {
+  const field = client.kitField<string>("kit:icon", {
     innerOnKit: "icon",
     parse: (frag) => String(frag["icon"] ?? ""),
     initial: "",
@@ -9330,7 +9330,7 @@ export function useKitImage(_idValue?: string): string {
   void _idValue;
   const client = useKitStoreClient();
   if (!client) return "";
-  const field = client.materializedKitStoreField<string>("kit:image", {
+  const field = client.kitField<string>("kit:image", {
     innerOnKit: "image",
     parse: (frag) => String(frag["image"] ?? ""),
     initial: "",
@@ -9342,7 +9342,7 @@ export function useKitDescription(_idValue?: string): string {
   void _idValue;
   const client = useKitStoreClient();
   if (!client) return "";
-  const field = client.materializedKitStoreField<string>("kit:description", {
+  const field = client.kitField<string>("kit:description", {
     innerOnKit: "description",
     parse: (frag) => String(frag["description"] ?? ""),
     initial: "",
@@ -10038,7 +10038,7 @@ export function useKitCommandDescriptorDescription(idValue?: string): KitFieldBi
   return useSchemaFieldState("KitCommandDescriptor", "description", idValue);
 }
 
-/** @emoji 📝 GraphQL **Edit** (`StrongEntity`) — single-operation record with forward/backward op lists (target schema VCS). */
+/** @emoji 📝 **Edit** record with forward/backward operation lists. */
 export function useEdit(idValue?: string): KitFieldBinding<any> {
   return useSchemaObjectState("Edit", idValue);
 }

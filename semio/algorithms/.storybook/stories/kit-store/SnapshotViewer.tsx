@@ -1,5 +1,5 @@
 // #region 🧲Header
-// semio-algorithms: snapshot() vs theKitDto() vs materializeAt
+// semio-algorithms: snapshot() vs theKitDto() vs readAt
 // #endregion
 
 import ReactJson from "@microlink/react-json-view";
@@ -24,7 +24,7 @@ function readHandleValue(handle: KitStoreHandle, tab: Tab, matAt: string): unkno
   if (tab === "theKit") return cloneSnapshotValue(handle.theKitDto());
   if (tab === "mat") {
     const at = matAt.trim();
-    return cloneSnapshotValue(handle.materializeAt(at.length ? at : null));
+    return cloneSnapshotValue(handle.readAt(at.length ? at : null));
   }
   return cloneSnapshotValue(handle.vcsState());
 }
@@ -69,7 +69,7 @@ export const SnapshotViewer: React.FC<{
           [
             ["live", "live snapshot()"],
             ["theKit", "theKitDto()"],
-            ["mat", "materializeAt"],
+            ["mat", "readAt"],
             ["vcs", "vcsState()"],
           ] as const
         ).map(([k, lab]) => (
@@ -95,7 +95,7 @@ export const SnapshotViewer: React.FC<{
       {tab === "mat" ? (
         <div className="space-y-1">
           <p className="text-muted-foreground m-0 text-[10px] leading-snug">
-            Read-only: materialized <code className="bg-muted-foreground/10 rounded px-0.5">KitFullDto</code> at the checkpoint (or initial when empty). Does not change the live store.
+            Read-only: <code className="bg-muted-foreground/10 rounded px-0.5">KitFullDto</code> at the checkpoint (or initial when empty). Does not change the live store.
             Use <span className="text-foreground font-medium">VCS → Preview @ cp</span> to jump here from a selected checkpoint.
           </p>
           <label className="text-muted-foreground flex items-center gap-1 text-[10px]">
@@ -163,7 +163,7 @@ if (snapshotViewerVitest) {
       const handle = {
         snapshot: () => live,
         theKitDto: () => ({ source: "theKit" }),
-        materializeAt: (at: string | null) => ({ at }),
+        readAt: (at: string | null) => ({ at }),
         vcsState: () => ({ head: "cp-1" }),
       } as unknown as KitStoreHandle;
 

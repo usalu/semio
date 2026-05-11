@@ -1,30 +1,24 @@
 ---
 name: field-only kit reads refactor
-overview: Refactor `semio/js/index.ts` and `semio/react/index.tsx` so the only kit reads are GraphQL-schema-driven per-field hooks (`use<Entity><FieldPath>(idValue?)`). Delete every aggregate snapshot, entity DTO class, entity-identity selector, list/metadata hook, and host store snapshot path. Migrate `semio/sketchpad/index.tsx` to compose exclusively those field-level hooks.
+overview: Sketchpad must consume kit data only through schema-driven per-field hooks (`use<Entity><FieldPath>(idValue?)`) defined from `semio/graphql/target.schema.graphql`. Keep the bulk / list / aggregate / metadata / shallow hooks and the named entity-identity selectors (`useKit`, `useDesign`, `useType`, `usePiece`, `useConnection`, `useAuthor`, `useQuality`) in the `@semio/react` API; just make sure sketchpad does not use them. Delete every other "general" hook / snapshot from the public surface of `semio/js/index.ts` and `semio/react/index.tsx`.
 todos:
   - id: ticket
-    content: Open / reopen the field-only kit reads refactor ticket via repo MCP and place all temp artifacts under it
-    status: pending
-  - id: js-primitive
-    content: In semio/js/index.ts add KitFieldStream + KitFieldKey + getKitFieldStream wired to the worker GraphQL bridge
-    status: pending
-  - id: js-deletes
-    content: Delete entity classes (Kit/Design/Type/Piece/Connection/Author/Quality/...), all *Schema/*Dto, KitHostStore family, aggregate read stores, and applyKitClientSnapshotToLocalStore from semio/js/index.ts
-    status: pending
-  - id: react-surface
-    content: In semio/react/index.tsx generate use<Entity><FieldPath> hooks from target.schema.graphql (flattening Position/Plane/Coordinate/Point/Vector/Side, ids for connections/FKs)
+    content: Open / reopen the field-only kit reads ticket via repo MCP and keep temp artifacts inside it
     status: pending
   - id: react-deletes
-    content: Delete useKit/useDesign/useType/usePiece/useConnection/useAuthor/useQuality, every *Triad, every snapshot/aggregate/list hook, useSchemaObjectState/Value/Mutation, IndexedSchemaState plumbing, and whole-snapshot file helpers
+    content: In semio/react/index.tsx delete public exports for whole-object triads, generic schema readers, snapshot accessors, *Input / *PatchInput whole-object hooks, and whole-snapshot file/binary helpers; demote required helpers to non-exported internals so kept hooks still compile
     status: pending
-  - id: react-mutations
-    content: Rewire mutations / command hooks on top of KitFieldStream (no snapshot reads); keep KitScope/DesignScope/TypeScope/PieceScope/ConnectionScope/AuthorScope/QualityScope and command/backbone hooks
+  - id: js-deletes
+    content: In semio/js/index.ts delete public re-exports for KitHostStoreSnapshot / KitStoreSnapshot / KitSyncSnapshot / DEFAULT_KIT_SYNC and the aggregate-graph getSnapshot entrypoints; keep the host-store family and entity DTO classes as internal backing for the kept hooks
     status: pending
   - id: sketchpad-migrate
-    content: Replace all 64 banned-hook usages in semio/sketchpad/index.tsx with per-field hook compositions; fan out into per-id child components
+    content: Replace all 64 banned-hook usages in semio/sketchpad/index.tsx (useKit/useDesign/useType/usePiece/useConnection/useAuthor/useQuality + bulk hooks + deleted hooks) with per-field hook compositions; fan out into per-id child components
+    status: pending
+  - id: missing-field-hooks
+    content: Add any missing per-field hooks (e.g. useDesignPieceIds, useTypeRepresentationIds) that sketchpad needs, following the existing useSchemaFieldState pattern
     status: pending
   - id: tests
-    content: Update inline vitest blocks in semio/js/index.ts and semio/react/index.tsx to test field streams and field hooks; remove tests that asserted aggregate snapshots
+    content: Update inline vitest blocks in semio/js/index.ts and semio/react/index.tsx for the deleted exports; add an inline negative-grep test in semio/sketchpad/index.tsx asserting zero matches for the banned hooks
     status: pending
   - id: validate
     content: Run npm run depcruise:layers, typecheck for semio/js + semio/react + semio/sketchpad, run inline tests, manual sketchpad smoke
@@ -37,124 +31,100 @@ isProject: false
 
 ## 1. Direction
 
-The only authority for kit data becomes a per-`(entityKind, id, fieldPath)` GraphQL field stream over the `KitStoreClient` worker. There is no `Kit`, `Design`, `Type`, `Piece`, `Connection`, `Author`, `Quality` (etc.) DTO graph in the JS client, no `KitHostStoreSnapshot`, no list/triad/aggregate hook, and no general selector. Every reachable field path in [semio/graphql/target.schema.graphql](semio/graphql/target.schema.graphql) becomes one hook. Mutations keep going through the existing `submitKitChangeCommands` / `writeKitStoreClientSchemaField` write path.
+Sketchpad is allowed to read kit data only through schema-driven per-field hooks (`use<Entity><FieldPath>(idValue?)`) defined from [semio/graphql/target.schema.graphql](semio/graphql/target.schema.graphql).
+
+The `@semio/react` API still exposes the named entity-identity selectors (`useKit`, `useDesign`, `useType`, `usePiece`, `useConnection`, `useAuthor`, `useQuality`) and the bulk / list / aggregate / metadata / shallow hooks for other consumers; sketchpad just must not import them. Everything else that is "general" (whole-object triads, generic schema readers, snapshot hooks, snapshot consumers in `@semio/js`, whole-object `*Input`/`*PatchInput` hooks, whole-snapshot file/binary helpers) gets deleted from the public surface.
 
 ```mermaid
 flowchart LR
   Schema["target.schema.graphql"]
   subgraph js["semio/js/index.ts (after)"]
-    Worker["KitStoreClient worker bridge"]
-    Field["KitFieldStream(entityKind,id,path)"]
+    Worker["KitStoreClient + worker"]
+    Stores["KitHostStore family (kept; powers identity + bulk hooks)"]
+    Reads["per-field reads + bulk/list reads"]
     Writes["submitKitChangeCommands / kitStoreClientUpdate*"]
-    Worker --> Field
+    Worker --> Stores
+    Worker --> Reads
     Worker --> Writes
   end
   subgraph react["semio/react/index.tsx (after)"]
-    Reg["KitFieldStreamRegistry"]
-    Hooks["use<Entity><FieldPath>(id?)"]
-    Reg --> Hooks
+    FieldHooks["use<Entity><FieldPath>(id?)"]
+    IdentityHooks["useKit / useDesign / useType / usePiece / useConnection / useAuthor / useQuality"]
+    BulkHooks["useTypes / useDesigns / useKitDesignsShallow / useTypesIds / ..."]
+    Stores --> IdentityHooks
+    Stores --> BulkHooks
+    Reads --> FieldHooks
   end
-  Schema -. "drives field hook surface" .-> Hooks
-  Field --> Reg
-  Hooks --> Writes
-  Sketchpad["semio/sketchpad/index.tsx"] --> Hooks
+  Schema -. "drives field hook surface" .-> FieldHooks
+  Sketchpad["semio/sketchpad/index.tsx (only field hooks)"] --> FieldHooks
 ```
 
+## 2. Kept in the public API
 
+Keep all of these as exports of `@semio/react`:
 
-## 2. New JS primitive (replaces snapshots)
+- Entity-identity selectors named in the original message: `useKit`, `useDesign`, `useType`, `usePiece`, `useConnection`, `useAuthor`, `useQuality` (and the `*ById` aliases).
+- Bulk / list / aggregate / metadata / shallow hooks: `useTypes`, `useDesigns`, `usePieces`, `useConnections`, `useAuthors`, `useTypesIds`, `useDesignsIds`, `useTypesMetadata`, `useDesignsMetadata`, `useTypesFull`, `useDesignsFull`, `useFilesFull`, `useTagsFull`, `useKitDesignsShallow`, `useKitTypesShallow`, `useKitAuthorsShallow`, `useKitPieces`, `useKitConnections`, `usePiecesMetadataMap`, `usePieceMetadata`, `useIncludedDesigns`, `useDesignClusterableGroups`, `useDesignQualitySum`, `useTypeBestRepresentation`, `useKitColoredConnectors`, `useReplacableTypes`, `useReplacableDesigns`, `useExplodeableDesignNodes`, `useOpenKitGuids`, `useActiveKitGuid`, `useOpenKitShallows`, `useRegistryHasKit`, `useRegistryKitPersistenceKind`, `useKitAlternatives`, `useKitAlternativeSelection`.
+- Per-field schema hooks: every existing `use<Entity><Field>` (e.g. `usePieceName`, `usePiecePlane`, `usePieceFlatCenter`, `usePieceFlatPlane`, `useTypeName`, `useDesignName`, …).
+- Scopes + scope hooks: `KitScope`, `DesignScope`, `TypeScope`, `AuthorScope`, `QualityScope`, `PieceScope`, `ConnectionScope`, `useKitScope`, `useDesignScope`, `useTypeScope`, `useAuthorScope`, `useQualityScope`, `usePieceScope`, `useConnectionScope`, `useIs*Scope`, `useResolvedKitIdentifier`.
+- Command hooks: `useUndo`, `useRedo`, `useCreate*`, `useDelete*`, `useUpdate*`, `useDeletePiece`, `useUpdatePiece`, `useUpdateConnection`, `useFlattenDesign`, `useExpandDesign`, `useChangePieceType`, `useClusterPieces`, `useDragPieces`, `useMovePieces`, `useFixPieces`, `useDeleteConnection`, `useAddConnections`, `useRemoveConnections`, `useDeselectAll`, `useDeleteSelected`, `usePasteDesignSelection`, `useCreateHangingPieces`, `useCreateConnectedPiece`, `useCreateFixedPiece`, `useStartNewChange`, `useSaveChange`, `useUnsavedChanges`, `useStartAlternative`, `useIntegrateAlternative`, `useImportKit`, `useExportKit`, `useMoveToFolder`, `useMoveKitArtifactToFolder`, `useChange`, `useCommandBuilder`, `useLogin`, `useLogout`, `useCanUndo`, `useCanRedo`, …
+- Backbone hooks: `useBackboneStatus`, `useAttachBackbone`, `useDetachBackbone`, `useListConflicts`, `useResolveConflict`, `useSyncNow`.
+- Diagnostics: `useWriteIndicator`, `useWriteQueue`, `useSchemaEvents`, `useSetErrors`, `useKitSync`, `useOptimistic`, `usePendingTriad`.
 
-In [semio/js/index.ts](semio/js/index.ts) introduce one read primitive (regions `🔖KitFieldStream` / `🔖KitFieldRegistry`):
+In [semio/js/index.ts](semio/js/index.ts), keep `KitStoreClient`, the worker plumbing, the GraphQL transport, the write helpers, the entity DTO classes (`Kit`, `Design`, `Type`, `Piece`, `Connection`, `Author`, `Quality`, `Tag`, `Concept`, `Family`, `File`, `Folder`, `Layer`, `Group`, `Stat`, `Prop`, `Attribute`, `Representation`, `Connector`, `Plane`, `Coordinate`, `Point`, `Vector`, `Camera`, `Side`, `Benchmark`) and their schemas, and the `KitHostStore` family (`InMemoryKitStore`, `createSessionKitStore`, `createJsonFileKitStore`, `createFolderKitStore`, `applyKitClientSnapshotToLocalStore`, plus the `IndexedSchemaState` / `resolveReference` / `readSchemaFieldValue` machinery in react). They back the kept hooks.
 
-```ts
-export type KitFieldKey = { entityKind: string; id: string; path: readonly string[] };
-export type KitFieldSnap<T = unknown> = { value: T | undefined; pending: number; error?: SetError };
-export interface KitFieldStream<T = unknown> {
-  getSnapshot(): KitFieldSnap<T>;
-  subscribe(onChange: () => void): () => void;
-}
-export function getKitFieldStream<T>(client: KitStoreClient, key: KitFieldKey): KitFieldStream<T>;
-```
+## 3. Deletions in `semio/react/index.tsx` (public-API only)
 
-`getKitFieldStream` opens (or reuses) a GraphQL subscription (or polling read) keyed exactly by `(entityKind, id, path)`. No client-side materialization of parent objects; parents are decomposed into independent leaf streams. Connection-typed fields stream a `readonly string[]` of edge node ids.
+Delete these exported symbols (their internal helpers may stay un-exported when the kept hooks rely on them):
 
-## 3. Deletions in `semio/js/index.ts`
+- Whole-object triads: `usePieceTriad`, `useDesignTriad`, `useTypeTriad`, `useAuthorTriad`, `useQualityTriad`, `useConnectionTriad` (the named identity selectors `useKit/useDesign/useType/usePiece/useConnection/useAuthor/useQuality` survive and absorb the role).
+- Whole-object accessors that materialize generic objects: `useFolder`, `useFile`, `useTag`, `useConcept`, `useFamily`, `useGroup`, `usePort`, `useProp`, `useStat`, `useBenchmark`, `useCoordinate`, `usePoint`, `useVector`, `usePlane`, `useCamera`, `useAttribute`, `useLocation`, `useRepresentation`, `useConnector`, `useActor`, `useUser`, `useAgent`, `useSessionActorInput`, `useFolderInput`, `useFolderPatchInput`, every `*Input` and `*PatchInput` whole-object hook (their per-field versions remain).
+- Snapshot exports: `useKitSnapshot`, `useKitStoreSnapshot`, `useKitHostStore`, `useKitStore`, `useSemioStoreSelector`, `useSemioReadSnap`, `useSemioKitScopedView`. (`useKitStoreClient` stays — it returns the worker handle, not a snapshot.)
+- Generic schema readers: `useSchemaObjectState`, `useSchemaObjectMutation`, `useSchemaObjectValue`, `useSchemaFieldValue`, `useSchemaFieldMutation`, `useSchemaFieldState` (the field-state composer is moved to a non-exported internal helper that `usePieceName` etc. still call), and the public `useSchemaScope` / `useKitRuntimeSafe` / `useKitRegistry` / `useKitRegistrySafe` aggregate accessors.
+- Whole-snapshot file/binary helpers: `useKitFileBlobUrl`, `useKitStoredFileUrls`, `useFileUrls`, `useKitFileState`, `useKitPersistenceKind`, `useKitPersistenceSource`, `useKitBinary`, `useEmbedKitFile`, `useKitFileUrl`. Re-introduce later only as field hooks if a use case appears.
 
-Delete entirely (with their schemas, ID dtos, diff dtos, and helpers):
+## 4. Deletions in `semio/js/index.ts`
 
-- Entity classes / DTO graphs: `Kit`, `Design`, `Type`, `Piece`, `Connection`, `Author`, `Quality`, `Tag`, `Concept`, `Family`, `File`, `Folder`, `Layer`, `Group`, `Stat`, `Prop`, `Attribute`, `Representation`, `Connector`, `Plane`, `Coordinate`, `Point`, `Vector`, `Camera`, `Side`, `Benchmark`, plus their `*Schema`, `*Dto`, `*ShallowSchema`, `*MetadataDtoSchema`, `*DiffSchema`, `KitFullDto`, `asKitInstance`, `Kit.fromDto/toDto/findDesign/findType/findChildrenPiecesInDesign/flattenDesignCachedOp/...`, `Design.applyDiff/previewWithDiff/dragBySelection/...`, `Type.pickBestRepresentation`.
-- Snapshot/host stores: `KitHostStore`, `KitHostStoreSnapshot`, `KitStoreSnapshot`, `KitSyncSnapshot`, `DEFAULT_KIT_SYNC`, `InMemoryKitStore`, `createSessionKitStore`, `createJsonFileKitStore`, `createFolderKitStore`, `applyKitClientSnapshotToLocalStore`, `KitBundlePersistingStore`, `KIT_BUNDLE_BOOTSTRAPPED`, every `*.getSnapshot(): { kit, sync }` path.
-- Aggregate read stores: `SemioKitLiveReadStore` (the bulk `getSnapshot(key)` entrypoint stays only as the per-leaf field stream — keep its subscription transport, drop its `Kit`/`Design`-graph reads), `KitDesignReadStore`, `KitShallowListStore`, `KitViewCatalogStore`, plus their `getSnapshot` methods.
-- Bulk/aggregate read commands in `ReadKitCommand` / `ReadDesignCommand` / `ReadPieceCommand` / `ReadTypeCommand` that materialize whole entities (e.g. `readDesignPiecesFullCommand`, `readDesignConnectionsFullCommand`, `readDesignIncludedDesignsCommand`, `readTypeBestRepresentationCommand`); keep only field-leaf reads expressible as `(entityKind, id, path)`.
+Delete these (the user explicitly named `Kit.getSnapshot()` / `Design.getSnapshot()` — i.e. snapshot-of-the-whole-graph paths):
 
-Keep: `KitStoreClient`, GraphQL transport, write helpers (`submitKitChangeCommands`, `kitStoreClientAddPiece/Connection/...`, `kitStoreClientUpdate*`, `kitStoreClientRemove*`, `writeKitStoreClientSchemaField`, `buildSchemaEntityChangeCommands`), `KitChangeKind`, `KitEvent`, `SetError`, `SetResult`, `WriteStatus`, `BackboneConfig`, `KitConflict`, `KitCommandLifecycleEvent`, the worker plumbing.
+- Public re-exports of snapshot types: `KitHostStoreSnapshot`, `KitStoreSnapshot`, `KitSyncSnapshot`, `DEFAULT_KIT_SYNC` — these become un-exported internals consumed only inside the kept host-store family. `KitHostStore.getSnapshot()` itself stays as an internal method; no consumer outside `semio/js` and `semio/react` internals may import the snapshot type.
+- Aggregate read entrypoints that materialize whole entity graphs: `SemioKitLiveReadStore.getSnapshot`, `KitDesignReadStore.getSnapshot`, `KitShallowListStore.getSnapshot`, `KitViewCatalogStore.getSnapshot` are demoted to internal-only (still used to back the kept bulk hooks; they leave the public surface).
+- Bulk-graph read commands that hand back full DTO subtrees survive only as private building blocks for the kept bulk hooks; their public-type aliases (`ReadDesignCommand`, `ReadKitCommand`, `ReadPieceCommand`, `ReadTypeCommand`) drop their whole-entity variants.
+- Public `Kit.toJSON` / `Kit.toDto` / `Design.toDto` / `Type.toDto` / etc. as **public methods** are removed from the public type exports; the classes themselves remain for internal serialization in writes.
+- `applyKitClientSnapshotToLocalStore` stays (used to bootstrap host stores) but its return + arguments are not re-imported in sketchpad.
 
-## 4. Deletions in `semio/react/index.tsx`
+## 5. Sketchpad migration ([semio/sketchpad/index.tsx](semio/sketchpad/index.tsx))
 
-Delete every export that is not a single-field schema hook. Concretely, remove:
+Sketchpad must compile without importing any of:
 
-- Entity-identity selectors named by the user: `useKit`, `useDesign`, `useType`, `usePiece`, `useConnection`, `useAuthor`, `useQuality` (and aliases `useAuthorById`, `useQualityById`, `useTypeById`, `useConnectionById`, `usePieceById`, `useDesignById`).
-- Whole-object triads: `usePieceTriad`, `useDesignTriad`, `useTypeTriad`, `useAuthorTriad`, `useQualityTriad`, `useConnectionTriad`, `useFolder`, `useFile`, `useTag`, `useConcept`, `useFamily`, `useGroup`, `usePort`, `useProp`, `useStat`, `useBenchmark`, `useCoordinate`, `usePoint`, `useVector`, `usePlane`, `useCamera`, `useAttribute`, `useLocation`, `useRepresentation`, `useConnector`, plus every `*Input` and `*PatchInput` whole-object hook (only their leaf field hooks remain).
-- Snapshots: `useKitSnapshot`, `useKitStoreSnapshot`, `useKitHostStore`, `useKitStore`, `useSemioStoreSelector`, `useSemioReadSnap`.
-- Bulk / list / aggregate / metadata / shallow: `useTypes`, `useDesigns`, `usePieces`, `useConnections`, `useAuthors`, `useTypesIds`, `useDesignsIds`, `useTypesMetadata`, `useDesignsMetadata`, `useTypesFull`, `useDesignsFull`, `useFilesFull`, `useTagsFull`, `useKitDesignsShallow`, `useKitTypesShallow`, `useKitAuthorsShallow`, `useKitPieces`, `useKitConnections`, `usePiecesMetadataMap`, `usePieceMetadata`, `useIncludedDesigns`, `useDesignClusterableGroups`, `useDesignQualitySum`, `useTypeBestRepresentation`, `useKitColoredConnectors`, `useReplacableTypes`, `useReplacableDesigns`, `useExplodeableDesignNodes`, `useOpenKitGuids`, `useActiveKitGuid`, `useOpenKitShallows`, `useRegistryHasKit`, `useRegistryKitPersistenceKind`, `useKitAlternatives`, `useKitAlternativeSelection`.
-- Generic schema readers: `useSchemaObjectState`, `useSchemaObjectMutation`, `useSchemaObjectValue`, `useSchemaFieldValue` (replaced by `useKitFieldValue` field-stream-bound primitive used internally by every generated hook), the `IndexedSchemaState` / `resolveReference` / `readSchemaFieldValue` machinery, and `KitRuntimeContextValue.{snapshot,state}`.
-- Whole-snapshot file/binary helpers: `useKitFileBlobUrl`, `useKitStoredFileUrls`, `useFileUrls`, `useKitFileState`, `useKitPersistenceKind`, `useKitPersistenceSource`, `useKitBinary`, `useEmbedKitFile`, `useKitFileUrl` (re-add as thin wrappers later if needed, but only over specific File field hooks like `useFileBlob`).
+- the named entity-identity selectors `useKit`, `useDesign`, `useType`, `usePiece`, `useConnection`, `useAuthor`, `useQuality` (and their `*ById` aliases),
+- any bulk / list / aggregate / metadata / shallow hook from §2 (e.g. `useTypes`, `useDesigns`, `usePieces`, `useConnections`, `useTypesIds`, `useDesignsIds`, `useKitDesignsShallow`, `useTypesFull`, …),
+- any deleted hook from §3,
+- any DTO class (`Kit`, `Design`, `Type`, `Piece`, `Connection`, `Author`, `Quality`) used as a runtime read carrier.
 
-Keep & realign: `KitScope`, `DesignScope`, `TypeScope`, `AuthorScope`, `QualityScope`, `PieceScope`, `ConnectionScope`, `useKitScope`, `useDesignScope`, `useTypeScope`, `useAuthorScope`, `useQualityScope`, `usePieceScope`, `useConnectionScope`, `useIs*Scope`, `useResolvedKitIdentifier`, all command hooks (`useUndo`, `useRedo`, `useDeletePiece`, `useUpdatePiece`, `useUpdateConnection`, `useCreate*`, `useDelete*`, `useUpdate*`, `useFlattenDesign`, `useExpandDesign`, `useChangePieceType`, etc.), backbone hooks (`useBackboneStatus`, `useAttachBackbone`, `useDetachBackbone`, `useListConflicts`, `useResolveConflict`, `useSyncNow`), `useWriteIndicator`, `useWriteQueue`, `useSchemaEvents`, `useSetErrors`. Each command hook reads its inputs only via field hooks.
+Per call site (64 currently identified by `\b(useKit|useDesign|useType|usePiece|useConnection|useAuthor|useQuality)\b`), identify which fields the JSX downstream actually reads and replace with explicit per-field hooks:
 
-## 5. Field-hook surface (schema-driven)
-
-In [semio/react/index.tsx](semio/react/index.tsx) emit exactly one exported hook per reachable field path in [semio/graphql/target.schema.graphql](semio/graphql/target.schema.graphql), wrapping a single `KitFieldStream`. Path flattening rules:
-
-- `Piece.name` → `usePieceName(pieceId?)` → `string | undefined`.
-- `Piece.position.plane` → `usePiecePlane(pieceId?)` (existing name; from `Position.plane`).
-- `Piece.position.center` → `usePieceCenter(pieceId?)`.
-- `Piece.flatPosition.plane` → `usePieceFlatPlane(pieceId?)`.
-- `Piece.flatPosition.center` → `usePieceFlatCenter(pieceId?)`.
-- Connection-typed fields (`Design.pieces: PieceConnection!`) → `useDesignPieceIds(designId?)` returning `readonly string[]` of edge node ids; never the full Piece graph.
-- FK-typed fields (`Piece.parentPiece: Piece`) → `usePieceParentPieceId(pieceId?)` returning `string | undefined`.
-- `Position`, `Plane`, `Coordinate`, `Point`, `Vector`, `Side` are flattened until a scalar is reached; no compound-object hook is exported (e.g. `usePiecePlaneOrigin`, `usePiecePlaneOriginX`, `usePiecePlaneXAxis`, `usePiecePlaneXAxisX`).
-
-Each hook signature is `function use<Entity><FieldPath>(idValue?: string): KitFieldBinding<T>` reading id from the matching scope context when `idValue` is omitted. Implementation:
-
-```ts
-function makeFieldHook<T>(entityKind: string, path: readonly string[]) {
-  return function useField(idValue?: string): KitFieldBinding<T> {
-    const id = useResolvedScopeId(entityKind, idValue);
-    const client = useKitStoreClient();
-    const stream = React.useMemo(() => (client && id ? getKitFieldStream<T>(client, { entityKind, id, path }) : null), [client, id]);
-    const snap = useSemioFieldSnap(stream);
-    const [run, status] = useKitFieldMutation<T>(entityKind, path, id);
-    return [snap.value, run, status] as const;
-  };
-}
-```
-
-## 6. Sketchpad migration ([semio/sketchpad/index.tsx](semio/sketchpad/index.tsx))
-
-Rewrite all 64 sites that use `useKit/useDesign/useType/usePiece/useConnection/useAuthor/useQuality`. Per call site, identify the fields actually consumed downstream and replace with explicit per-field hooks:
-
-- `const piece = usePiece() as Piece` → `const id = usePieceScope()?.id; const [name] = usePieceName(id); const [plane] = usePiecePlane(id); …` reading only what that JSX actually uses.
-- `const type = useType(undefined, undefined, true) as Type` → `useTypeName(typeId)`, `useTypeRepresentationIds(typeId)` + per-representation field hooks, `useTypeConnectorIds(typeId)` + per-connector hooks, etc.
+- `const piece = usePiece() as Piece` → `const id = usePieceScope()?.id; const [name] = usePieceName(id); const [plane] = usePiecePlane(id); …` reading only what is rendered.
+- `const type = useType(undefined, undefined, true) as Type` → `useTypeName(typeId)`, `useTypeRepresentationIds(typeId)` + per-representation field hooks, `useTypeConnectorIds(typeId)` + per-connector hooks.
 - `const connection = useConnection() as Connection` → `useConnectionConnectedPieceId(id)`, `useConnectionConnectingPieceId(id)`, `useConnectionGap(id)`, etc.
 - `const design = useDesign() as Design` → `useDesignName(designId)`, `useDesignPieceIds(designId)`, then iterate ids and render child components reading per-piece fields.
 
-Resulting components fan out into per-id child components (`<PieceFields pieceId=... />`) so reactivity is field-scoped.
+Where a list of children is needed, sketchpad calls a per-entity list-id field hook (e.g. `useDesignPieceIds(designId)` returning `readonly string[]`) and renders one child component per id. The bulk hooks like `useTypes` stay in the API but sketchpad does not call them.
 
-## 7. Validation
+If a missing field hook is needed (e.g. `useTypeRepresentationIds`, `useDesignPieceIds`), add it to [semio/react/index.tsx](semio/react/index.tsx) following the existing `useSchemaFieldState`-backed pattern; do not pull from `useKit` / `useDesign` / etc.
 
-- `npm run depcruise:layers` — confirm no rebuilt graph crosses layer boundaries.
+## 6. Validation
+
+- `npm run depcruise:layers` for the relevant packages.
 - `npm run typecheck` for `semio/js`, `semio/react`, `semio/sketchpad` (see each `tsconfig.json`).
-- Run inline vitest blocks (the test cases currently embedded in [semio/js/index.ts](semio/js/index.ts)). Every test that asserts `store.getSnapshot().kit.id` must be rewritten to assert through `getKitFieldStream(client, { entityKind: "Kit", id, path: ["id"] })`.
-- Add per-field hook tests directly in `semio/react/index.tsx` (`if (import.meta.vitest)`) covering `usePieceName`, `usePiecePlane`, `usePieceFlatCenter`, `usePieceFlatPlane`, plus list-id hooks and FK hooks.
-- Manual: launch sketchpad, open a kit, drag a piece, confirm only the affected piece's field hooks rerender (`[DEBUG]` console traces).
+- Run the inline vitest blocks embedded in [semio/js/index.ts](semio/js/index.ts) and [semio/react/index.tsx](semio/react/index.tsx). Update tests that asserted on deleted exports (`useKitSnapshot`, `useSchemaObjectState`, …).
+- Add an inline negative test in `semio/sketchpad/index.tsx` test region that grep-asserts the file source contains zero matches for the banned hooks listed in §5.
+- Manual: launch sketchpad, open a kit, drag a piece, confirm rendering still works using only field hooks (`[DEBUG]` console traces on hook subscriptions).
 
-## 8. Ticket + execution
+## 7. Ticket + execution
 
-- Reopen / open one ticket (slug `field-only-kit-reads-refactor`) under the existing kit-data SSOT goal; keep all temporary scripts in the ticket folder.
-- Delegate three parallel hour-scale subagents:
-  - **A**: rewrite [semio/js/index.ts](semio/js/index.ts) — introduce `KitFieldStream`/registry, delete entity classes, delete host-store family, delete aggregate read stores, keep writes + worker + transport.
-  - **B**: rewrite [semio/react/index.tsx](semio/react/index.tsx) — generate the field-hook surface from [semio/graphql/target.schema.graphql](semio/graphql/target.schema.graphql), delete every banned hook, rewire mutations on top of `KitFieldStream`.
-  - **C**: rewrite [semio/sketchpad/index.tsx](semio/sketchpad/index.tsx) — replace all 64 banned-hook usages with per-field compositions.
-- Coordinator (this agent) integrates, runs typecheck/depcruise/tests, fixes fallout, closes the ticket with a summary.
-
+- Open ticket (slug `field-only-kit-reads-in-sketchpad`) under the existing kit-data SSOT goal via the repo MCP; place all temporary scripts in its folder.
+- Delegate two hour-scale subagents in parallel:
+  - **A** ([semio/react/index.tsx](semio/react/index.tsx) + [semio/js/index.ts](semio/js/index.ts)): delete the public symbols listed in §3 and §4, demote any required helpers to non-exported internals, keep the kept symbols functioning, and add any field hook §5 needs.
+  - **B** ([semio/sketchpad/index.tsx](semio/sketchpad/index.tsx)): rewrite all 64 banned-hook usages with per-field hook compositions, fan out to per-id child components, and add the negative-grep inline test.
+- Coordinator (this agent) integrates, runs typecheck / depcruise / tests, fixes fallout, closes the ticket with a per-file summary.

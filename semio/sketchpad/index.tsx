@@ -15823,11 +15823,11 @@ export const KitSection: FC = () => {
 const KitSectionForm: FC = () => {
   const ksKit = useKitStoreSnapshot();
   const kit = ksKit?.kit as Kit | undefined;
-  /** @emoji 🧾 Label reads {@link Kit} materialized into the host store (respects footer read scope); not the unscoped GraphQL `kitName` field. */
-  const materializedKitName = kit?.name ?? "";
+  /** @emoji 🧾 Label reads the current {@link Kit} snapshot from the host store (respects footer read scope). */
+  const kitNameValue = kit?.name ?? "";
   const [renameKit, renameKitStatus] = useRenameKit();
   const { spinning, error, disabled } = useWriteIndicator(renameKitStatus);
-  // 📥 Read lane — value-only hooks materialize from `wip.theKit(at: …)` per `useKitReadPoint`.
+  // 📥 Read lane — value-only hooks follow the active kit read scope.
   const release = useKitRelease();
   const description = useKitDescription();
   const icon = useKitIcon();
@@ -15860,7 +15860,7 @@ const KitSectionForm: FC = () => {
         <div className="flex min-w-0 w-full flex-col gap-tiny">
           <div className="flex min-w-0 w-full items-center gap-single">
             <div className="min-w-0 flex-1">
-              <Input lazy id="semio.sketchpad.app.kit.panel.details.section.kit.name" value={materializedKitName} readOnly={disabled} onLazyChange={disabled ? undefined : (v) => void renameKit(v)} showLabel />
+              <Input lazy id="semio.sketchpad.app.kit.panel.details.section.kit.name" value={kitNameValue} readOnly={disabled} onLazyChange={disabled ? undefined : (v) => void renameKit(v)} showLabel />
             </div>
             {spinning ? <Spinner size="small" className="text-muted-foreground shrink-0" /> : null}
           </div>
@@ -15894,7 +15894,7 @@ export const TypeSection: FC = () => {
 /**
  **/
 const SingleTypeSection: FC<{ typeId: string }> = ({ typeId }) => {
-  // 📥 Read lane — value-only field hooks materialize from `wip.theKit.type(id:)`.
+  // 📥 Read lane — value-only field hooks follow the active kit read scope.
   const name = useTypeName(typeId);
   const description = useTypeDescription(typeId);
   const icon = useTypeIcon(typeId);

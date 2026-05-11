@@ -246,7 +246,7 @@ export function kitReadPointToGqlVariables(p: KitReadPoint): JsonObject {
   return {} as JsonObject;
 }
 
-/** @emoji 🧭 Read point used for materialized GraphQL reads on a {@link KitStoreClient}. */
+/** @emoji 🧭 Read point used for scoped kit reads on a {@link KitStoreClient}. */
 export function getKitClientReadPoint(client: { readonly kitReadPoint?: KitReadPoint }): KitReadPoint {
   return client.kitReadPoint ?? theKitReadPoint;
 }
@@ -340,7 +340,7 @@ export type PiecePlacementRowDto = Readonly<{
   readonly path: readonly string[];
 }>;
 
-/** @emoji 🧾 Connector color row from `types { connectors { color { css } } }` on the materialized kit store. */
+/** @emoji 🧾 Connector color row from the live kit read model. */
 export type KitColoredConnectorRowDto = Readonly<{
   readonly typeId: TypeIdDto;
   readonly connectorId: ConnectorIdDto;
@@ -1038,7 +1038,7 @@ export async function submitKitChangeCommands(client: KitStoreClient, commands: 
   return client.submitChangeKitCommands(commands);
 }
 
-/** @emoji 🧾 Locates the parent design id for a piece or connection via the materialized kit snapshot. */
+/** @emoji 🧾 Locates the parent design id for a piece or connection via the current kit snapshot. */
 export async function resolveDesignIdForPieceOrConnection(client: KitStoreClient, entityKind: string, entityId: string): Promise<string | null> {
   const snap = await client.fetchFullKit();
   if (entityKind === "Piece") return __findDesignIdForPieceInKitDto(snap, entityId);
@@ -1483,7 +1483,7 @@ function kitSessionWipStoreSelect(point: KitReadPoint, innerOnKitStore: string):
   };
 }
 
-/** @emoji 🧾 Extract `Kit` JSON from `Query.wip` for a {@link KitReadPoint} (RS `fullSnapshot` + nested reads). */
+/** @emoji 🧾 Extract the scoped `Kit` JSON payload for a {@link KitReadPoint}. */
 function gqlDataSessionWipKitStore(d: JsonValue | null | undefined, point: KitReadPoint): JsonObject | null {
   if (d == null || typeof d !== "object" || Array.isArray(d)) return null;
   const wip = (d as { wip?: JsonObject | null }).wip;
@@ -1926,11 +1926,11 @@ export const KIT_COMMAND_SUCCEEDED_SUBSCRIPTION = KIT_EVENT_STREAM_SUBSCRIPTION;
 export const KIT_OPERATION_FAILED_SUBSCRIPTION = KIT_EVENT_STREAM_SUBSCRIPTION;
 
 /**
- * @emoji 🔗 Main-line full kit DTO via `wip.theKit.kit.fullSnapshot`.
+ * @emoji 🔗 Main-line full kit DTO query.
  */
 export const KIT_SCOPED_FULL_DTO_QUERY = `query { wip { theKit { kit { fullSnapshot } } } }` as const;
 
-/** @emoji 🧾 Typed `data` shape for {@link KIT_SCOPED_FULL_DTO_QUERY} on {@link theKitReadPoint} (after {@link kitGraphqlData}). */
+/** @emoji 🧾 Typed `data` shape for {@link KIT_SCOPED_FULL_DTO_QUERY} on {@link theKitReadPoint}. */
 export type KitGraphqlDataKitScopedFullDto = Readonly<{
   readonly wip: Readonly<{ readonly theKit: Readonly<{ readonly kit: Readonly<{ readonly fullSnapshot: KitJsonTreeDto }> | null }> | null }> | null;
 }>;
@@ -2097,11 +2097,11 @@ export class KitStore {
   /** @emoji 🧭 Active unsaved {@link Change} id for `VersionCommandInput.unsavedChange(id)`. */
   private kitWriteChangeId: string | null = null;
 
-  /** @emoji 🧭 Active {@link KitReadPoint} for materialized `wip.theKit(at:)` reads (see {@link WasmKitStoreClient.setKitReadPoint}). */
+  /** @emoji 🧭 Active {@link KitReadPoint} for scoped kit reads (see {@link WasmKitStoreClient.setKitReadPoint}). */
   private activeReadPoint: KitReadPoint = theKitReadPoint;
 
   /** @emoji 🧾 Cached {@link StoreField}s for {@link kitField} (disposed with store). */
-  private readonly materializedKitStoreFields = new Map<string, StoreField<unknown>>();
+  private readonly kitFields = new Map<string, StoreField<unknown>>();
 
   private readonly correlator: RequestCorrelator;
   /** @emoji 🪪 Scoped `session { theKit { unsavedChange { kit { rename } } } }` + version-level save. */
@@ -2155,7 +2155,7 @@ export class KitStore {
     },
   ): StoreField<T> {
     this.ensureAlive();
-    const hit = this.materializedKitStoreFields.get(cacheKey);
+    const hit = this.kitFields.get(cacheKey);
     if (hit) return hit as StoreField<T>;
     const sf = new StoreField<T>(spec.initial, (push) => {
       const refetch = async () => {
@@ -2187,7 +2187,7 @@ export class KitStore {
       const sub = this.invalidations.subscribe({ next: () => void refetch() });
       return () => sub.unsubscribe();
     });
-    this.materializedKitStoreFields.set(cacheKey, sf as StoreField<unknown>);
+    this.kitFields.set(cacheKey, sf as StoreField<unknown>);
     return sf;
   }
 
@@ -2487,14 +2487,14 @@ export class KitStore {
     if (this.disposed) return;
     this.disposed = true;
     this.correlator.disposeAll();
-    for (const f of this.materializedKitStoreFields.values()) {
+    for (const f of this.kitFields.values()) {
       try {
         f.dispose();
       } catch {
         /* ignore */
       }
     }
-    this.materializedKitStoreFields.clear();
+    this.kitFields.clear();
     this.renameKit.dispose();
     try {
       this.invalidations.complete();
@@ -3559,7 +3559,7 @@ export type SemioKitBridge = { fetchFullKit(): Promise<KitFullDto> };
 
 /** @emoji 🧾 Browser / test kit RPC surface used by React hooks (wraps {@link KitStore}). */
 export type KitStoreClient = SemioKitBridge & {
-  /** @emoji 🧾 Materialized read scope (see {@link WasmKitStoreClient#kitReadPoint} / {@link getKitClientReadPoint}). */
+  /** @emoji 🧾 Scoped read point (see {@link WasmKitStoreClient#kitReadPoint} / {@link getKitClientReadPoint}). */
   readonly kitReadPoint: KitReadPoint;
   getKitWriteScope(): KitWriteScope | null;
   setKitWriteScope(scope: KitWriteScope | null): void;
@@ -3599,8 +3599,8 @@ export type KitStoreClient = SemioKitBridge & {
   readonly kitName: StoreField<string>;
   readonly renameKit: StoreCommand<RenameKitCommandArgs>;
   readKitName(): Promise<string>;
-  /** @emoji 🧾 Materialized `wip.theKit(at:)` selection (see {@link KitStore.kitField}). */
-  materializedKitStoreField<T>(
+  /** @emoji 🧾 Live scoped kit field selection (see {@link KitStore.kitField}). */
+  kitField<T>(
     cacheKey: string,
     spec: {
       extraVariableDecl?: string;
@@ -3625,7 +3625,7 @@ export type KitStoreClient = SemioKitBridge & {
   readDesignReplaceableCatalogTypes(designId: string, selection: readonly string[]): Promise<readonly string[]>;
   readDesignReplaceableCatalogDesigns(designId: string, selection: readonly string[]): Promise<readonly string[]>;
   readDesignIncludedDesignIds(designId: string): Promise<readonly string[]>;
-  /** @emoji 🧭 Switch materialized read DTO / GraphQL root (matches {@link WasmKitStoreClient.setKitReadPoint}). */
+  /** @emoji 🧭 Switch scoped kit read root (matches {@link WasmKitStoreClient.setKitReadPoint}). */
   setKitReadPoint(scope: KitReadPoint): void;
   dispose(): void;
 };
@@ -4104,7 +4104,7 @@ export class WasmKitStoreClient implements KitStoreClient {
     return this.ks.syncNow();
   }
 
-  materializedKitStoreField<T>(
+  kitField<T>(
     cacheKey: string,
     spec: {
       extraVariableDecl?: string;
@@ -7912,7 +7912,7 @@ if (
       expect(KIT_SCOPED_FULL_DTO_QUERY).toContain("wip { theKit { kit { fullSnapshot");
     });
 
-    it("KitStore has no JS snapshot() full-read method (use theKit / materialized GraphQL only)", () => {
+    it("KitStore has no JS snapshot() full-read method (use theKit / scoped reads only)", () => {
       type Snap = { snapshot?: () => unknown };
       const snap: Snap = KitStore.prototype as unknown as Snap;
       expect(snap.snapshot).toBeUndefined();
@@ -8122,7 +8122,7 @@ if (
       await ks.dispose();
     });
 
-    it("theKit, vcsState, materializeAt root, and undo/redo flags round-trip", async () => {
+    it("theKit, vcsState, readAt root, and undo/redo flags round-trip", async () => {
       const minimalKit: KitFullDto = {
         id: "vcs-kit",
         name: "V",

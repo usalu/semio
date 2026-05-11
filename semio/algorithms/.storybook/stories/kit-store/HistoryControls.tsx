@@ -113,7 +113,7 @@ export const HistoryControls: React.FC<{
   onAltId: (s: string) => void;
   msg: string;
   onMsg: (s: string) => void;
-  /** Pushes checkpoint into Snapshot window `materializeAt` for read-only DTO (empty string = initial). */
+  /** Pushes checkpoint into Snapshot window `readAt` for read-only DTO (empty string = initial). */
   onInspectCheckpoint?: (checkpointId: string) => void;
 }> = ({ handle, initErr, onLog, sessionId, onSessionId, onDraftId, onTxId, draftId, txId, cpId, onCpId, altId, onAltId, msg, onMsg, onInspectCheckpoint }) => {
   const gqlHandle = (): StorybookKitGraphqlHandle => {
@@ -183,7 +183,7 @@ export const HistoryControls: React.FC<{
         Pick a checkpoint and optional alt in <span className="text-foreground font-medium">Kit tree</span> (or paste ids). <span className="text-foreground">New draft</span> uses
         <code className="bg-muted-foreground/10 rounded px-0.5">checkpoint</code> + <code className="bg-muted-foreground/10 rounded px-0.5">alt</code>; on the main line, cp defaults to
         theKit HEAD. Read-only at any cp: <span className="text-foreground">Preview @ cp</span> → open <span className="text-foreground">Snapshot / theKit</span> →
-        <code className="bg-muted-foreground/10 rounded px-0.5">materializeAt</code>. To commit: use <span className="text-foreground">Close tx</span> first (no open tx), then{" "}
+        <code className="bg-muted-foreground/10 rounded px-0.5">readAt</code>. To commit: use <span className="text-foreground">Close tx</span> first (no open tx), then{" "}
         <span className="text-foreground">Finalize → cp</span>.
       </p>
       <div className="grid grid-cols-2 gap-1">
@@ -251,7 +251,7 @@ export const HistoryControls: React.FC<{
             }
             onInspectCheckpoint(cpId.trim());
             onLog(
-              `Snapshot window: "materializeAt" → ${cpId.trim() ? `checkpoint ${cpId.trim()}` : "empty = initial"}. Open that tab and click refresh.`,
+              `Snapshot window: "readAt" → ${cpId.trim() ? `checkpoint ${cpId.trim()}` : "empty = initial"}. Open that tab and click refresh.`,
             );
           }}
           disabled={!canVcs}
