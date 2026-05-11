@@ -2,38 +2,44 @@
 name: Macro-Driven Entity Family Refactor
 overview: Replace ~7,000 lines of hand-rolled GraphQL schema and ~3,000 lines of repetitive Rust shell code with a single `entity_family!` macro per entity that emits the full 12-type ladder (entity + Edge/Connection + Diff/DiffEdge/DiffConnection + Modification/ModificationEdge/ModificationConnection + Modifications/ModificationsEdge/ModificationsConnection) as real Rust types with hashing, owner unions, Object impls, and SDL fragments. Make `gql::sdl()` truly code-first and regenerate `target.schema.graphql` as a golden. Fix all schema inconsistencies along the way.
 todos:
-  - id: ticket-bootstrap
-    content: Read `repo://goals`, open ticket via repo MCP `ticket_open` titled 'Macro-Driven Entity Family Refactor' under the closest goal.
+  - id: bootstrap
+    content: "Coordinator: read `repo://goals`, open ticket via repo MCP `ticket_open`, snapshot baseline `cargo check`, inject `//#region 🧬 entity_dsl` and `//#region 🤖 W1`..`//#region 🤖 W8` markers into [semio/rs/lib.rs](semio/rs/lib.rs)."
     status: pending
-  - id: phase1-macros
-    content: Carve `//#region 🧬 entity_dsl` in [semio/rs/lib.rs](semio/rs/lib.rs); add `entity_family!`, `operation_family!`, `command_nav!`, `entity_input!`, `entity_owner_unions!`, `entity_interface_enums!`, `relay_collection!`, `kit_operation_enum!`, `scope_enum!`, `input_enum!`, `register_entities!`, `register_operations!` plus all `__*` helpers from blueprints §1-§14; rewrite `gql::sdl()` as real code-first concat; delete the legacy `simple_conn_*` / `entity_full_family!` / `entity_relay!` / `entity_diffs!` / `entity_owner!` macros.
+  - id: w0-foundation
+    content: "W0 (serial, ~60 min): fill `entity_dsl` region with all macros from blueprints §1-§14 + `__autoresolved_owner!` covering every entity in the roster; rewrite `gql::sdl()` per §14; delete legacy `simple_conn_*` / `entity_full_family!` / `entity_relay!` / `entity_diffs!` / `entity_owner!`."
     status: pending
-  - id: phase2a-geom
-    content: Convert geometry entities (Vector/Point/Coordinate/Offset/Plane/Position/Location/Place) to `entity_family!` + `entity_input!`; delete hand-written `*Node` structs and the iface-mod `#[Object]` impls (`6273:6457:semio/rs/lib.rs`).
+  - id: w1-geometry
+    content: "W1 (parallel wave 2, ~45 min): convert geometry entities (Vector/Point/Coordinate/Offset/Plane/Position/Location/Place) to `entity_family!` + `entity_input!`; delete hand-written `*Node` structs in `pub mod geom::entity` AND the iface-mod `#[Object]` impls (`6273:6457:semio/rs/lib.rs`)."
     status: pending
-  - id: phase2b-meta
-    content: Convert meta entities (Attribute/Author/File/Folder/Prop/Benchmark/Quality/Tag/Concept/Stat/Layer/Group/Family) to `entity_family!` + `entity_input!`; collapse all `compute_entity_hash` impls and the long `#[Object]` shells for `Tag`/`Concept`/`Quality`.
+  - id: w2-meta
+    content: "W2 (parallel wave 2, ~60 min): convert meta entities (Attribute/Author/File/Folder/Prop/Benchmark/Quality/Tag/Concept/Stat/Layer/Group/Family) to `entity_family!` + `entity_input!`; collapse `Tag`/`Concept`/`Quality` Object impls and all `compute_entity_hash` impls."
     status: pending
-  - id: phase3-kit
-    content: Convert kit-graph entities (Type/Port/Connector/Representation/Design/Piece/Side/Connection/Clump/Kit) to `entity_family!` + `entity_input!`.
+  - id: w3-type-tree
+    content: "W3 (parallel wave 2, ~45 min): convert type-tree entities (Type/Port/Connector/Representation) to `entity_family!` + `entity_input!`."
     status: pending
-  - id: phase4-vcs
-    content: Convert VCS entities (Edit/Change/Checkpoint/TheKit/Alternative/Graph/Session/Conflict) to `entity_family!`.
+  - id: w4-design-tree
+    content: "W4 (parallel wave 2, ~45 min): convert design-tree entities (Design/Piece/Side/Connection/Clump) to `entity_family!` + `entity_input!`."
     status: pending
-  - id: phase5-operations
-    content: Apply `kit_operation_enum!` / `scope_enum!` / `input_enum!` to derive the central `KitOperation`/`OperationKind`/`OperationIface`/`Scope`/`Input` enums; convert every operation (CreatedDesign, RenamedKit, MovedPiece/MovedPieces, AddedAttributeTo*, RemovedAttributeFrom*, Deleted*, FixedPiece/FixedPieces, FlattenedDesign, AddedChildPieceWithParentConnection*, …) to `operation_family!` blocks; replace the hand-written per-op `apply_to(kit)` skeletons with the unified arm-per-variant pattern.
+  - id: w5-kit-root
+    content: "W5 (parallel wave 2, ~30 min): convert Kit root struct to `entity_family!` + `entity_input!`; remove hand-rolled Kit relay shells."
     status: pending
-  - id: phase6-command-navs
-    content: Replace every `*OperationNav` struct + `#[Object]` block (`9499:9700:semio/rs/lib.rs` and `Tag`/`Concept`/`Quality`/`Type`/`Port`/`Connector`/`Design`/`Piece`/`Pieces` navs) with `command_nav!` invocations.
+  - id: w6-vcs
+    content: "W6 (parallel wave 2, ~60 min): convert VCS entities (Edit/Change/Checkpoint/TheKit/Alternative/Graph/Session/Conflict) to `entity_family!`."
     status: pending
-  - id: phase7-schema-fixes
-    content: "Apply schema fixes via macro inputs (delete duplicate Clump/TheKit pairs, fill missing operation ladders for Stat/Layer/Group/Connection/Kit/Representation, fill ClumpDiff/Modification ladder, normalize `Modifications.owns` comment, always emit `input: Input`, add `FixedPiecesInput`, fill `ConnectionDiff` body); regenerate [semio/graphql/target.schema.graphql](semio/graphql/target.schema.graphql) via `cargo test export_semio_graphql_schema_file -- --ignored`."
+  - id: w7-operations
+    content: "W7 (serial wave 3, ~90 min, depends on W1-W6): apply `kit_operation_enum!` / `scope_enum!` / `input_enum!` to derive the central `KitOperation`/`OperationKind`/`OperationIface`/`Scope`/`Input` enums; convert every operation (CreatedDesign, RenamedKit, MovedPiece/MovedPieces, AddedAttributeTo*, RemovedAttributeFrom*, Deleted*, FixedPiece/FixedPieces, FlattenedDesign, AddedChildPieceWithParentConnection*, …) to `operation_family!` blocks; replace hand-written per-op `apply_to(kit)` skeletons."
     status: pending
-  - id: phase8-test-sweep
-    content: Run full `cargo test` (37 tests); fix any field-name/resolver regressions; verify `schema_matches_target_graphql_file` passes the real round-trip; verify WASM build (`cargo check --target wasm32-unknown-unknown`); run guardrail greps to confirm no hand-rolled Edge/Connection/Default/compute_*hash blocks survive outside the `entity_dsl` region.
+  - id: w8-command-navs
+    content: "W8 (serial wave 4, ~45 min, depends on W7): replace every `*OperationNav` struct + `#[Object]` block (`9499:9700:semio/rs/lib.rs` and `Tag`/`Concept`/`Quality`/`Type`/`Port`/`Connector`/`Design`/`Piece`/`Pieces` navs) with `command_nav!` invocations."
+    status: pending
+  - id: integrate
+    content: "Integrator (coordinator, ~30 min): write the bottom-of-file `register_entities! { ... }` and `register_operations! { ... }` rosters, apply schema fixes that aren't derivable from individual entity declarations, regenerate [semio/graphql/target.schema.graphql](semio/graphql/target.schema.graphql) via `cargo test export_semio_graphql_schema_file -- --ignored`."
+    status: pending
+  - id: sweep
+    content: "Coordinator (~30 min): run full `cargo test` (37 tests); fix any field-name/resolver regressions; verify `schema_matches_target_graphql_file` passes the real round-trip; verify WASM build (`cargo check --target wasm32-unknown-unknown`); run global grep guardrails."
     status: pending
   - id: ticket-close
-    content: Close ticket with `ticket_close` summarizing changed files and net LOC delta (~−3,000 lines in lib.rs, schema fully derived).
+    content: "Coordinator: `ticket_close` summarizing changed files and net LOC delta (~−3,000 lines in lib.rs, schema fully derived)."
     status: pending
 isProject: false
 ---
@@ -2055,6 +2061,204 @@ fn export_semio_graphql_schema_file() {
   - `pub fn compute_entity_hash` and `pub async fn compute_hash` for entities (emitted by the macro).
   - `#[Object\(name = "\w+"\)] impl crate::meta::` for meta entities (emitted by the macro).
 
+## Parallel execution plan
+
+Workspace rule: simultaneous editing of [semio/rs/lib.rs](semio/rs/lib.rs) is expected and explicitly allowed. The refactor splits across **one coordinator + up to 8 generalist subagents** working in parallel on disjoint regions of the same file. Each region is delimited by `//#region 🆔` markers so subagents never collide on the same byte range.
+
+### Worker DAG
+
+```mermaid
+flowchart TD
+    Coord["Coordinator (this agent)"]
+    Bootstrap["bootstrap: ticket_open + repo://goals + region scaffolding"]
+    Foundation["W0 foundation: entity_dsl macros + sdl_registry + real gql::sdl()"]
+
+    Geom["W1 geometry: Vector/Point/Coordinate/Offset/Plane/Position/Location/Place"]
+    Meta["W2 meta: Attribute/Author/File/Folder/Prop/Benchmark/Quality/Tag/Concept/Stat/Layer/Group/Family"]
+    TypeTree["W3 type tree: Type/Port/Connector/Representation"]
+    DesignTree["W4 design tree: Design/Piece/Side/Connection/Clump"]
+    Root["W5 kit root: Kit"]
+    Vcs["W6 vcs: Edit/Change/Checkpoint/TheKit/Alternative/Graph/Session/Conflict"]
+
+    Ops["W7 operations: kit_operation_enum + 50 operation_family invocations + apply_to skeletons"]
+    Navs["W8 command navs: ~10 command_nav invocations"]
+
+    Integrate["Integrator (coordinator): roster, mega-unions, schema-fix args, golden regen"]
+    Sweep["Test sweep + grep guardrails + WASM check"]
+    Close["ticket_close"]
+
+    Coord --> Bootstrap --> Foundation
+    Foundation --> Geom
+    Foundation --> Meta
+    Foundation --> TypeTree
+    Foundation --> DesignTree
+    Foundation --> Root
+    Foundation --> Vcs
+
+    Geom --> Ops
+    Meta --> Ops
+    TypeTree --> Ops
+    DesignTree --> Ops
+    Root --> Ops
+    Vcs --> Ops
+
+    Ops --> Navs
+    Navs --> Integrate
+    Integrate --> Sweep --> Close
+```
+
+### Worker manifest
+
+| ID | Role | Region in [semio/rs/lib.rs](semio/rs/lib.rs) | Wave | Depends on | Est. budget |
+|---|---|---|---|---|---|
+| W0 | Foundation | new `//#region 🧬 entity_dsl` (top of file, after `pub mod hash`) | 1 | bootstrap | 60 min |
+| W1 | Geometry  | `pub mod geom` (`150:510`) + iface-mod geom Object impls (`6273:6457`) | 2 | W0 | 45 min |
+| W2 | Meta      | `pub mod meta` (`1101:1730`) + meta-graphql block (`4472:4638`) | 2 | W0 | 60 min |
+| W3 | Type tree | `pub mod kit::r#type` inside `pub mod kit` | 2 | W0 | 45 min |
+| W4 | Design tree | `pub mod kit::design` inside `pub mod kit` | 2 | W0 | 45 min |
+| W5 | Kit root  | `pub mod kit` root structs (Kit + KitOperationInput receivers) | 2 | W0, W2, W3, W4 (soft) | 30 min |
+| W6 | VCS       | `pub mod vcs` (`4726:6110`) | 2 | W0 | 60 min |
+| W7 | Operations | `pub mod operation` (`6462:8224`) | 3 | W1-W6 | 90 min |
+| W8 | Command navs | `pub mod gql` mutation region (`9497:9700` and below) | 4 | W7 | 45 min |
+| Integrator | (coordinator) | bottom-of-file `register_entities!` + `register_operations!` + golden regen | 5 | W8 | 30 min |
+| Sweep | (coordinator) | tests + WASM check | 6 | Integrator | 30 min |
+
+Total wall-clock with 6-way parallelism in wave 2: roughly 60 + 60 + 90 + 45 + 30 + 30 = **~5 hours**, vs ~10 hours sequential.
+
+### Region partitioning rules
+
+- Each worker gets a **single contiguous region** of `lib.rs` to mutate. Workers MUST NOT touch any byte outside their region except:
+  - One append-only `register_entities! { ... }` line at the bottom (delegated to the integrator only).
+  - One append-only `register_operations! { ... }` line at the bottom (delegated to the integrator only).
+- Foundation worker (W0) is the sole exception: it inserts the `//#region 🧬 entity_dsl` block above all other regions, plus rewrites `gql::sdl()` in `pub mod gql`. W0 finishes before any wave-2 worker starts.
+- Each worker prepends a `//#region 🤖 W<id> in progress` and appends `//#endregion 🤖 W<id> in progress` marker around any in-flight scratch code; the integrator removes them at integration time.
+- Hand-rolled blocks slated for deletion are **deleted in-place** by the owning worker — there is no shim phase. Workspace rule: no backwards compat.
+
+### Subagent prompt template
+
+Coordinator launches each wave-2 worker with this prompt skeleton (filled per worker):
+
+```text
+You are W<id>, a senior Rust generalist. Read the plan at
+`.cursor/plans/macro-driven_entity_family_refactor_e6121b3c.plan.md` end-to-end before starting.
+
+Scope (yours, do not touch anything outside):
+  - File: semio/rs/lib.rs
+  - Region: <line range or `//#region` name>
+  - Entities to convert: <comma-separated list>
+
+Required deliverables:
+  1. For each entity in your scope, replace hand-rolled struct/Default/Object/relay/hash
+     code with one `entity_family! { ... }` invocation (see plan §2 + §15) and one
+     `entity_input! { ... }` invocation (see plan §11) where the SDL declares an Input.
+  2. Delete every hand-rolled `XEdge` / `XConnection` / `XOwnerSlot` / `XOwnerUnion` /
+     `compute_hash` / `compute_entity_hash` / `#[Object]` shell / `Default` impl that the
+     macro now emits.
+  3. Touch nothing outside your region. Do not modify `register_entities!` or
+     `register_operations!` — the integrator owns those.
+  4. After your edits, run from semio/rs/:
+        cargo check --message-format=short 2>&1 | tee .repo/<ticket-id>/W<id>.check.log
+     The file MUST compile (warnings allowed, errors not). If a downstream entity in
+     another worker's region is referenced and not yet macroized, use the existing
+     hand-rolled type path for now (it stays valid until that worker lands).
+  5. Run the grep guardrails for your region only and paste the output:
+        rg -n 'pub struct \w+(Edge|Connection)|impl Default for|fn compute_(entity_)?hash' \
+           semio/rs/lib.rs --line-number > .repo/<ticket-id>/W<id>.grep.log
+     The file should show ZERO hits in your region after your work.
+
+Context to load:
+  - Plan §1-§19 macro blueprints
+  - Plan §15-§17 sample invocations (use these as templates)
+  - The owning region's current code (already in the file)
+
+Hard rules:
+  - Do not create any new files. All code goes into the existing region.
+  - Do not modify any non-Rust file except your scratch log under `.repo/<ticket-id>/`.
+  - Do not run any modifying git command (workspace rule).
+  - Use sub-regions (`//#region 🔖<sub>`) for grouping inside your region.
+  - Stop and report if you discover a missing macro feature; do not invent macro extensions.
+
+When done, return:
+  - List of entities converted
+  - Net LOC delta within your region (lines removed - lines added)
+  - Any blockers requiring W0 to extend a macro (cite specific entity + reason)
+```
+
+### Coordination contract
+
+1. **Bootstrap (coordinator, serial).**
+   - Open a single ticket via repo MCP `ticket_open` titled "Macro-Driven Entity Family Refactor".
+   - Read `repo://goals` and link to the closest goal.
+   - Inject the empty `//#region 🧬 entity_dsl` and `//#region 🤖 W1`..`//#region 🤖 W8` markers into [semio/rs/lib.rs](semio/rs/lib.rs) so subagents have unambiguous landing zones.
+   - Snapshot `cargo check` output as the baseline at `.repo/<ticket-id>/baseline.check.log`.
+
+2. **Foundation wave (W0, serial, ~60 min).**
+   - Coordinator launches W0 with `subagent_type: generalPurpose`, `run_in_background: false`.
+   - W0 fills the `entity_dsl` region with all macros from blueprint §1-§14.
+   - W0 rewrites `gql::sdl()` per blueprint §14.
+   - Coordinator runs `cargo check` after W0 returns. Must pass with zero errors.
+
+3. **Conversion wave (W1-W6, parallel, ~60 min wall clock).**
+   - Coordinator launches W1-W6 in **one message with 6 parallel `Task` tool calls** (`run_in_background: true` each).
+   - Each subagent edits only its region. Workspace rule allows simultaneous edits because regions are disjoint and the integrator owns the bottom-of-file roster.
+   - Coordinator polls completion notifications. As each finishes, it scans the worker's `.grep.log` for residual hand-rolled blocks; if non-empty, it resumes that subagent with `resume: <agent_id>` and the failing greps.
+   - After all six return, coordinator runs `cargo check`. It is OK for some references to other workers' types to be temporarily broken if both edits crossed; coordinator does a single 2-minute reconciliation pass to fix any cross-region path imports.
+
+4. **Operations wave (W7, serial, ~90 min).**
+   - W7 starts only after W1-W6 are all green. It depends on every entity being macroized so the `kit_operation_enum!` arms can reference real `Scope::*` and `Input::*` shapes.
+   - W7 emits the central `KitOperation` / `OperationKind` / `OperationIface` / `Scope` / `Input` enums via `scope_enum!` / `input_enum!` / `kit_operation_enum!` from blueprint §7, plus ~50 `operation_family!` blocks from blueprint §16.
+   - Coordinator runs `cargo check` after W7.
+
+5. **Command-nav wave (W8, serial, ~45 min).**
+   - W8 starts after W7. It depends on every operation being declared.
+   - W8 replaces every `*OperationNav` block with `command_nav!` from blueprint §17.
+   - Coordinator runs `cargo check` after W8.
+
+6. **Integration (coordinator, serial, ~30 min).**
+   - Coordinator writes the bottom-of-file `register_entities! { ... }` and `register_operations! { ... }` rosters listing every name that landed.
+   - Coordinator applies any cross-cutting schema fixes that are not derivable from individual entity declarations (e.g. interface comment normalization, `FixedPiecesInput` symmetry).
+   - Coordinator runs `cargo test export_semio_graphql_schema_file -- --ignored` to regenerate [semio/graphql/target.schema.graphql](semio/graphql/target.schema.graphql).
+
+7. **Sweep (coordinator, serial, ~30 min).**
+   - Coordinator runs full `cargo test` (37 tests).
+   - Coordinator runs `cargo check --target wasm32-unknown-unknown`.
+   - Coordinator runs the global grep guardrails from Phase 8.
+   - Coordinator runs `ticket_close` summarizing changed files and net LOC delta.
+
+### Concurrency safety rules
+
+- **Disjoint regions**: each worker writes to one contiguous byte range delimited by `//#region 🤖 W<id>` markers. Re-greps after each wave detect any out-of-region writes.
+- **Append-only roster**: the bottom-of-file `register_entities!` and `register_operations!` are coordinator-only. Workers never touch them.
+- **No git mutations**: per workspace rule, no `git commit` / `git stash` / `git checkout` from any agent. The shared working copy stays under the user's control.
+- **Idempotent macro invocations**: every `entity_family!` / `operation_family!` / `command_nav!` declaration is order-independent. Workers can land in any order within a wave.
+- **Failure isolation**: if a worker fails or hangs, the coordinator kills only that worker (`AwaitShell` on its task id, then resume with corrected prompt). Other workers in the same wave continue.
+- **Ticket sub-folders**: each worker writes its logs to `.repo/<ticket-id>/W<id>.{check,grep,notes}.log`. Coordinator inspects these on completion.
+- **No new files**: workspace rule. All code stays in `lib.rs`. All scratch goes under `.repo/<ticket-id>/`.
+
+### Cross-region references during partial completion
+
+During the conversion wave, workers reference each other's types (e.g. `Tag` references `Attribute`, `Piece` references `Plane`). To avoid a coupling deadlock:
+
+- The `__owner_ty!` macro in W0 ships with a fallback arm `($x:ident) => { $crate::__autoresolved_owner!($x) };`.
+- W0 also generates `__autoresolved_owner!` arms for **every** entity name in the full roster (looked up from this plan), pointing to the existing pre-refactor module path. So a worker that converts `Tag` early can cite `Attribute` even if the meta worker hasn't re-emitted `Attribute` yet, because the macro resolves through the original `crate::meta::Attribute` until it's replaced.
+- After all wave-2 workers complete, the integrator removes the explicit fallback arms (the new entities now occupy the canonical paths).
+
+### Conflict resolution
+
+If two workers' edits accidentally land on overlapping byte ranges (despite the region partitioning):
+
+1. Coordinator detects the conflict by `cargo check` failure mentioning duplicate definitions.
+2. Coordinator identifies the smaller diff and asks that worker (`resume: <id>`) to retract its edit and re-apply within its region only.
+3. If the conflict is structural (e.g. both workers emit the same `EntityOwnerUnion` arm), the coordinator decides which worker's variant wins and asks the other to drop it.
+4. As a last resort, coordinator runs the conversion serially for the conflicting region.
+
+### Resume / interrupt protocol
+
+- Workers run with `run_in_background: true`. Coordinator continues planning the next wave while wave-2 workers execute.
+- Coordinator polls completion notifications, not via `AwaitShell` (workers are subagent tasks, not shell commands).
+- If a worker reports a missing macro feature, coordinator interrupts the affected worker (`interrupt: true`), extends the macro inside W0's region (or asks W0 to re-resume with the extension), then resumes the worker with the new macro available.
+- A worker that doesn't report progress within 2× its budget is killed and re-spawned with a refined prompt narrowing its scope.
+
 ## Schema fixes (from inconsistency scan)
 
 Hard duplicates (delete the second copy):
@@ -2096,6 +2300,10 @@ Out of scope (intentionally not changed):
 - `**OwnerEntity` / `OwnedEntity` unions** in `pub mod iface` are partial. Macros will register variants automatically into a generated mega-union via `inventory`-style collection or, as fallback, a single hand-curated `entity_owner_unions!` invocation that lists all entities once.
 - **The schema test guard** (`single_emit_event_in_codebase`) does substring checks on `lib.rs`. Won't break unless we touch `emit_event`.
 - **WASM build** must keep working (`#[cfg(target_arch = "wasm32")]` paths). Macros must not introduce native-only deps.
+- **Wave-2 cross-region duplicate definitions**: two parallel workers might both emit `impl Owns<X> for Y`. Mitigation: `__autoresolved_owner!` fallback table emitted by W0 + integrator's pass that drops fallback arms only after every wave-2 worker has landed.
+- **Subagent context drift**: a worker may invent macro extensions instead of stopping. Mitigation: subagent prompt template's hard rule "Stop and report if you discover a missing macro feature; do not invent macro extensions"; coordinator extends macro inside W0's region instead.
+- **Coordinator I/O bottleneck**: with 6 wave-2 workers running, completion notifications may pile up. Mitigation: coordinator handles them strictly in arrival order; integration is single-threaded by design.
+- **Compile-error fan-out from W0 mistakes**: a typo in a wave-1 macro breaks every wave-2 worker. Mitigation: coordinator runs a full `cargo check` after W0 completes and BEFORE launching wave 2; treats this gate as unbreakable.
 
 ## Tickets
 
@@ -2125,6 +2333,12 @@ Macro definitions added: ~1,200 lines under `//#region 🧬 entity_dsl` (one-tim
 Net delta: **roughly −3,000 lines** in [semio/rs/lib.rs](semio/rs/lib.rs), with strict uniformity across every entity / operation / command nav.
 
 Schema delta in [semio/graphql/target.schema.graphql](semio/graphql/target.schema.graphql): regeneration is mechanical; total size stays in the ~7K-line range but every byte is derived from one Rust declaration, so duplicates and drift become impossible.
+
+Wall-clock delta from parallelism:
+
+- Sequential (1 generalist, all 8 phases): roughly 10 hours.
+- Parallel (1 coordinator + W0 serial + W1-W6 in parallel + W7-W8 serial + integration + sweep): **roughly 5 hours**, dominated by W7 (operations, 90 min) which cannot start until wave 2 finishes.
+- Critical path: bootstrap (10 min) -> W0 (60 min) -> max(W1..W6) ≈ W2/W6 (60 min) -> W7 (90 min) -> W8 (45 min) -> integrate (30 min) -> sweep (30 min) ≈ **5h 5m**.
 
 New behaviors:
 
