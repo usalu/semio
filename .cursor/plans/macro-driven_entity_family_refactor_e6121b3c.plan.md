@@ -27,7 +27,7 @@ todos:
     content: Replace every `*OperationNav` struct + `#[Object]` block (`9499:9700:semio/rs/lib.rs` and `Tag`/`Concept`/`Quality`/`Type`/`Port`/`Connector`/`Design`/`Piece`/`Pieces` navs) with `command_nav!` invocations.
     status: pending
   - id: phase7-schema-fixes
-    content: Apply schema fixes via macro inputs (delete duplicate Clump/TheKit pairs, fill missing operation ladders for Stat/Layer/Group/Connection/Kit/Representation, fill ClumpDiff/Modification ladder, normalize `Modifications.owns` comment, always emit `input: Input`, add `FixedPiecesInput`, fill `ConnectionDiff` body); regenerate [semio/graphql/target.schema.graphql](semio/graphql/target.schema.graphql) via `cargo test export_semio_graphql_schema_file -- --ignored`.
+    content: "Apply schema fixes via macro inputs (delete duplicate Clump/TheKit pairs, fill missing operation ladders for Stat/Layer/Group/Connection/Kit/Representation, fill ClumpDiff/Modification ladder, normalize `Modifications.owns` comment, always emit `input: Input`, add `FixedPiecesInput`, fill `ConnectionDiff` body); regenerate [semio/graphql/target.schema.graphql](semio/graphql/target.schema.graphql) via `cargo test export_semio_graphql_schema_file -- --ignored`."
     status: pending
   - id: phase8-test-sweep
     content: Run full `cargo test` (37 tests); fix any field-name/resolver regressions; verify `schema_matches_target_graphql_file` passes the real round-trip; verify WASM build (`cargo check --target wasm32-unknown-unknown`); run guardrail greps to confirm no hand-rolled Edge/Connection/Default/compute_*hash blocks survive outside the `entity_dsl` region.
@@ -197,6 +197,34 @@ macro_rules! register_entities {
 }
 ```
 
+**Example.** A roster invocation:
+
+```rust
+register_entities! {
+    geom: [Vector, Point, Coordinate],
+    meta: [Tag, Concept, Quality],
+    vcs:  [Edit, Change, Checkpoint],
+}
+```
+
+expands to:
+
+```rust
+pub(crate) fn push_all_fragments(out: &mut Vec<&'static str>) {
+    out.push(<Vector     as crate::sdl_registry::HasSdlFragment>::SDL_FRAGMENT);
+    out.push(<Point      as crate::sdl_registry::HasSdlFragment>::SDL_FRAGMENT);
+    out.push(<Coordinate as crate::sdl_registry::HasSdlFragment>::SDL_FRAGMENT);
+    out.push(<Tag        as crate::sdl_registry::HasSdlFragment>::SDL_FRAGMENT);
+    out.push(<Concept    as crate::sdl_registry::HasSdlFragment>::SDL_FRAGMENT);
+    out.push(<Quality    as crate::sdl_registry::HasSdlFragment>::SDL_FRAGMENT);
+    out.push(<Edit       as crate::sdl_registry::HasSdlFragment>::SDL_FRAGMENT);
+    out.push(<Change     as crate::sdl_registry::HasSdlFragment>::SDL_FRAGMENT);
+    out.push(<Checkpoint as crate::sdl_registry::HasSdlFragment>::SDL_FRAGMENT);
+}
+entity_owner_unions!  { Vector, Point, Coordinate, Tag, Concept, Quality, Edit, Change, Checkpoint }
+entity_interface_enums!{ Vector, Point, Coordinate, Tag, Concept, Quality, Edit, Change, Checkpoint }
+```
+
 ### 2. The workhorse: `entity_family!`
 
 ```rust
@@ -343,6 +371,70 @@ macro_rules! entity_family {
         }
     };
 }
+```
+
+**Example.** A minimal `Coordinate` invocation:
+
+```rust
+entity_family! {
+    name: Coordinate,
+    kind: weak,
+    sdl_implements: "WeakEntity",
+    owners: [Position, PositionDiff],
+    owns:   [],
+    fields: { u: f64 @data, v: f64 @data },
+    hash_tag: "semio:geom:Coordinate",
+}
+```
+
+expands to (sketch):
+
+```rust
+pub enum CoordinateOwnerSlot { Unset, Position(Weak<Position>), PositionDiff(Weak<PositionDiff>) }
+impl Default for CoordinateOwnerSlot { fn default() -> Self { Self::Unset } }
+
+#[derive(Clone, async_graphql::Union)]
+pub enum CoordinateOwnerUnion {
+    Position(Arc<Position>),
+    PositionDiff(Arc<PositionDiff>),
+}
+
+pub struct Coordinate {
+    pub id: Id,
+    pub owner: RwLock<CoordinateOwnerSlot>,
+    pub u: RwLock<f64>,
+    pub v: RwLock<f64>,
+}
+
+impl Coordinate {
+    pub async fn new(owner: CoordinateOwnerSlot, u: f64, v: f64) -> Arc<Self> { /* … */ }
+    pub fn new_with_id(owner: CoordinateOwnerSlot, id: Id, u: f64, v: f64) -> Arc<Self> { /* … */ }
+    pub async fn compute_hash(&self) -> String {
+        let own = vec!["semio:geom:Coordinate".into(), self.id.0.clone(),
+                       format!("{:.9}", *self.u.read().await),
+                       format!("{:.9}", *self.v.read().await)];
+        crate::hash::merkle_node_str(&own.iter().map(String::as_str).collect::<Vec<_>>(), Vec::new())
+    }
+}
+
+#[async_graphql::Object(name = "Coordinate")]
+impl Coordinate {
+    pub async fn id(&self) -> Id { self.id.clone() }
+    pub async fn hash(&self) -> String { self.compute_hash().await }
+    pub async fn owner(&self) -> async_graphql::Result<CoordinateOwnerUnion> { /* … */ }
+    #[graphql(name = "positionOwner")]      pub async fn position_owner(&self)      -> Option<Arc<Position>>     { /* … */ }
+    #[graphql(name = "positionDiffOwner")]  pub async fn position_diff_owner(&self) -> Option<Arc<PositionDiff>> { /* … */ }
+    #[graphql(name = "ownerEntity")]        pub async fn owner_entity(&self) -> Option<Arc<OwnerEntity>> { /* … */ }
+    #[graphql(name = "ownedEntities")]      pub async fn owned_entities(&self) -> Option<Arc<OwnedEntityConnection>> { /* … */ }
+    pub async fn u(&self) -> f64 { *self.u.read().await }
+    pub async fn v(&self) -> f64 { *self.v.read().await }
+}
+
+// + CoordinateEdge, CoordinateConnection (via __entity_relay!)
+// + CoordinateDiff, CoordinateDiffEdge, CoordinateDiffConnection (via __entity_diff!)
+// + CoordinateModification, CoordinateModificationEdge, CoordinateModificationConnection (via __entity_modification!)
+// + CoordinateModifications, CoordinateModificationsEdge, CoordinateModificationsConnection (via __entity_modifications!)
+// + impl HasSdlFragment for Coordinate { const SDL_FRAGMENT: &str = "type Coordinate implements WeakEntity { … }" }
 ```
 
 ### 3. Helper macros: relay / diff / modification / modifications
@@ -502,6 +594,62 @@ macro_rules! __simple_relay {
 }
 ```
 
+**Examples (helper macros).**
+
+`__entity_relay!(Tag);` produces:
+
+```rust
+pub struct TagEdge      { pub cursor: String, pub node: Arc<Tag> }
+pub struct TagConnection {
+    pub edges: Vec<TagEdge>,
+    #[graphql(name = "pageInfo")] pub page_info: Arc<PageInfo>,
+    pub hash: String,
+}
+impl TagConnection {
+    pub async fn from_rows(rows: Vec<Arc<Tag>>) -> Self { /* hashes children, builds edges */ }
+    pub fn empty() -> Self { /* … */ }
+}
+```
+
+`__entity_diff!(Tag, "semio:meta:Tag", { name: String @data, order: Option<i32> @data, attributes: Vec<Attribute> @children(AttributeConnection) });` produces:
+
+```rust
+pub struct TagDiff {
+    pub id: Id,
+    pub name:        Option<String>,
+    pub order:       Option<i32>,
+    pub attributes:  Option<AttributeConnection>,
+}
+#[ComplexObject] impl TagDiff {
+    pub async fn hash(&self) -> String { /* merkle leaf "semio:meta:Tag:Diff" + id */ }
+    /* + ownerEntity / ownedEntities */
+}
+__simple_relay!(TagDiffEdge, TagDiffConnection, TagDiff);
+```
+
+`__entity_modification!(Tag, "semio:meta:Tag");` produces:
+
+```rust
+pub struct TagModification { pub id: Id, pub before: Arc<Tag>, pub diff: Arc<TagDiff>, pub after: Arc<Tag> }
+#[ComplexObject] impl TagModification { pub async fn hash(&self) -> String { /* merkle of before+diff+after */ } }
+__simple_relay!(TagModificationEdge, TagModificationConnection, TagModification);
+```
+
+`__entity_modifications!(Tag, "semio:meta:Tag");` produces:
+
+```rust
+pub struct TagModifications {
+    pub id: Id,
+    pub removed:       Arc<TagConnection>,
+    pub modifications: Arc<TagModificationConnection>,
+    pub added:         Arc<TagConnection>,
+}
+#[ComplexObject] impl TagModifications { pub async fn hash(&self) -> String { /* merkle of three sub-conn hashes */ } }
+__simple_relay!(TagModificationsEdge, TagModificationsConnection, TagModifications);
+```
+
+`__simple_relay!(MyFooEdge, MyFooConnection, MyFoo);` produces a 2-struct `Edge` + `Connection` pair (no `from_rows` constructor — that's an entity-relay concern).
+
 ### 4. Field DSL — accessor + hash + diff dispatchers
 
 The `@class` annotation per field controls what's emitted:
@@ -619,6 +767,56 @@ macro_rules! __owner_ty {
     ($other:ident)   => { $crate::__autoresolved_owner!($other) };
 }
 ```
+
+**Examples (field DSL).**
+
+`__entity_field_resolver!(Tag, name: String @data);` produces:
+
+```rust
+pub async fn name(&self) -> String { self.name.read().await.clone() }
+```
+
+`__entity_field_resolver!(Tag, attributes: Vec<Attribute> @children(AttributeConnection));` produces:
+
+```rust
+pub async fn attributes(&self) -> crate::gql_relay::AttributeConnection {
+    crate::gql_relay::AttributeConnection::from_rows(self.attributes.read().await.clone()).await
+}
+```
+
+`__entity_field_to_hash!(self, own, children, name: String @data);` expands to:
+
+```rust
+own.push(self.name.read().await.clone());
+```
+
+`__entity_field_to_hash!(self, own, children, attributes: Vec<Attribute> @children(AttributeConnection));` expands to:
+
+```rust
+{
+    let rows = self.attributes.read().await;
+    let mut h: Vec<String> = Vec::with_capacity(rows.len());
+    for r in rows.iter() { h.push(r.compute_entity_hash()); }
+    h.sort();
+    children.extend(h);
+}
+```
+
+`__diff_field_ty!(String @ data)` evaluates to the type token `Option<String>`; `__diff_field_ty!(Vec<Attribute> @ children(AttributeConnection))` evaluates to `Option<crate::gql_relay::AttributeConnection>`.
+
+`__typed_owner_resolver!(Tag, Kit);` produces:
+
+```rust
+#[graphql(name = "kitOwner")]
+pub async fn kit_owner(&self) -> Option<std::sync::Arc<crate::kit::Kit>> {
+    match &*self.owner.read().await {
+        TagOwnerSlot::Kit(w) => w.upgrade(),
+        _ => None,
+    }
+}
+```
+
+`__owner_ty!(Connector)` evaluates to the type path `crate::kit::r#type::Connector`. The fallback `($other:ident)` arm exists so freshly added entities with no explicit arm route through `__autoresolved_owner!`, which (as a sibling generated by `register_entities!`) provides `($EntityName) => { crate::path::to::EntityName }` arms for every entity in the roster.
 
 ### 5. SDL fragment builder
 
@@ -755,6 +953,49 @@ macro_rules! __sdl_mods_block {
 }
 ```
 
+**Examples (SDL builders).**
+
+`__sdl_field_line!(name: String @data)` evaluates to the literal:
+
+```text
+  name: String!
+```
+
+`__sdl_field_line!(attributes: Vec<Attribute> @children(AttributeConnection))` evaluates to:
+
+```text
+  attributes: AttributeConnection!
+```
+
+`__sdl_diff_field_line!(name: String @data)` evaluates to:
+
+```text
+  name: String
+```
+
+(All diff fields drop the `!` — the diff carries an `Option`.)
+
+`__sdl_relay_block!(Tag)` evaluates to:
+
+```text
+type TagEdge implements EntityEdge {
+  cursor: String!
+  node: Tag!
+}
+
+type TagConnection implements EntityConnection {
+  edges: [TagEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
+}
+```
+
+`__sdl_mod_block!(Tag)` evaluates to the `TagModification`/`TagModificationEdge`/`TagModificationConnection` SDL trio (see §18 for the full Tag fragment).
+
+`__sdl_mods_block!(Tag)` evaluates to the `TagModifications`/`TagModificationsEdge`/`TagModificationsConnection` SDL trio.
+
+`__build_sdl_fragment!(Tag, "Artifact", { name: String @data, description: Option<String> @data, attributes: Vec<Attribute> @children(AttributeConnection) })` glues `__sdl_field_line!` × N + `__sdl_relay_block!` + `__sdl_diff_block!` + `__sdl_mod_block!` + `__sdl_mods_block!` into one `&'static str` — the canonical Tag fragment shown verbatim in §18.
+
 ### 6. Operations: `operation_family!`
 
 ```rust
@@ -822,6 +1063,54 @@ macro_rules! operation_family {
             }
         }
     };
+}
+```
+
+**Example.** A single-input op:
+
+```rust
+operation_family! {
+    name: RenamedTag,
+    scope_kind: Tag,
+    owns: [RenamedTagInput],
+    input: { new_name: String @data },
+    output: { tag: std::sync::Arc<Tag> @entity },
+    hash_tag: "semio:op:RenamedTag",
+}
+```
+
+expands to:
+
+```rust
+pub struct RenamedTagInput { pub id: Id, pub hash: String, pub new_name: String }
+impl RenamedTagInput {
+    pub fn compute_hash(&self) -> String { merkle_node_str(&["semio:op:RenamedTag:Input", self.id.0.as_str()], vec![]) }
+}
+impl HasSdlFragment for RenamedTagInput {
+    const SDL_FRAGMENT: &str = "type RenamedTagInput implements Input { … new_name: String! }";
+}
+
+pub struct RenamedTag {
+    pub id: Id,
+    pub hash: String,
+    pub scope: Arc<OwnerEntity>,
+    pub input: Option<Arc<RenamedTagInput>>,
+    pub modification: Arc<OperationModification>,
+    pub tag: Arc<Tag>,
+}
+impl RenamedTag {
+    pub async fn apply_to(&self, _kit: &Arc<Kit>) -> Result<()> { Ok(()) /* overridden via kit_op_apply! */ }
+}
+__simple_relay!(RenamedTagEdge, RenamedTagConnection, RenamedTag);
+impl HasSdlFragment for RenamedTag { const SDL_FRAGMENT: &str = "type RenamedTag implements Operation { … }"; }
+```
+
+A no-input op (`output` only) keeps the same shape but skips the `XInput` struct and renders `input: null` at runtime:
+
+```rust
+operation_family! {
+    name: DeletedTag, scope_kind: Tag, owns: [], output: { },
+    hash_tag: "semio:op:DeletedTag",
 }
 ```
 
@@ -901,6 +1190,58 @@ macro_rules! input_enum {
 }
 ```
 
+**Examples (central enums).**
+
+`kit_operation_enum! { RenamedTag { scope: Tag, input: Tag }, DeletedTag { scope: Tag, input: Empty } }` produces:
+
+```rust
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(tag = "kind")]
+pub enum KitOperation {
+    RenamedTag { scope: Scope, input: Input },
+    DeletedTag { scope: Scope, input: Input },
+}
+
+#[derive(Copy, Enum)]
+pub enum OperationKind { RenamedTag, DeletedTag }
+
+impl KitOperation {
+    pub fn kind(&self) -> OperationKind { match self { Self::RenamedTag {..} => OperationKind::RenamedTag, Self::DeletedTag {..} => OperationKind::DeletedTag } }
+    pub fn to_diff(&self) -> SemanticDiff { match self {
+        Self::RenamedTag { scope, input } => crate::operation::diff_for::RenamedTag(scope, input),
+        Self::DeletedTag { scope, input } => crate::operation::diff_for::DeletedTag(scope, input),
+    }}
+}
+
+#[derive(Clone, Interface)]
+#[graphql(name = "Operation", field(name = "id", ty = "Id"), …)]
+pub enum OperationIface { RenamedTag(Arc<RenamedTag>), DeletedTag(Arc<DeletedTag>) }
+```
+
+`scope_enum! { Kit, Tag { tag_id: Id }, CreateTag { owner_id: Id, tag_id: Id, attribute_ids: Vec<Id> } }` produces:
+
+```rust
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(tag = "scope")]
+pub enum Scope {
+    Kit,
+    Tag { tag_id: Id },
+    CreateTag { owner_id: Id, tag_id: Id, attribute_ids: Vec<Id> },
+}
+```
+
+`input_enum! { Name { name: String }, Tag { tag: TagInput }, Empty {} }` produces:
+
+```rust
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(tag = "input")]
+pub enum Input {
+    Name { name: String },
+    Tag  { tag: TagInput },
+    Empty {},
+}
+```
+
 ### 8. Mutation command nav: `command_nav!`
 
 Today every artifact has its own hand-rolled `XOperationNav` struct + `#[Object]` impl with the same change-id routing pattern (`9626:9700:semio/rs/lib.rs` shows `KitOperationNav`, with similar blocks for `TagOperationNav`, `ConceptOperationNav`, etc.). Replace with:
@@ -943,6 +1284,25 @@ macro_rules! command_nav {
     };
 }
 
+// Example (the macro itself): see §17 for full TagOperationNav / ConceptOperationNav / QualityOperationNav blocks.
+// A minimal `command_nav!` invocation:
+//
+//   command_nav! {
+//       name: PortOperationNav,  sdl_name: "PortOperationInput",
+//       artifact: Port,           owner_id_field: port_id,
+//       methods: [ rename(new_code: String, new_label: String -> RenamedPort) ],
+//   }
+//
+// expands to:
+//
+//   pub struct PortOperationNav { pub change_id: Id, pub port_id: Id }
+//   #[async_graphql::Object(name = "PortOperationInput")]
+//   impl PortOperationNav {
+//       async fn rename(&self, ctx: &Context<'_>, new_code: String, new_label: String) -> Result<Id> {
+//           /* dispatch_wip with KitOperation::RenamedPort { scope: Scope::Port { port_id: self.port_id }, input: Input::RenamedPort { new_code, new_label } } */
+//       }
+//   }
+
 #[doc(hidden)]
 #[macro_export]
 macro_rules! __nav_method {
@@ -974,6 +1334,41 @@ macro_rules! __nav_method {
     };
 }
 ```
+
+**Example.** A single nav method:
+
+```rust
+__nav_method!(Tag, tag_id, rename(new_name: String -> RenamedTag));
+```
+
+expands to:
+
+```rust
+async fn rename(
+    &self,
+    ctx: &async_graphql::Context<'_>,
+    new_name: String,
+) -> async_graphql::Result<Id> {
+    let rt = ctx.data::<Arc<ParentRuntime>>()?;
+    let (draft_id, transaction_id) = rt.wip_kit_scope.read().await.clone()
+        .ok_or_else(|| async_graphql::Error::new("no active kit scope"))?;
+    if transaction_id != self.change_id {
+        return Err(async_graphql::Error::new("change id mismatch for kit operation"));
+    }
+    let request_id = Id::new().await;
+    let cmd = Command::ApplyKitOperation {
+        request_id: request_id.clone(),
+        draft_id, transaction_id,
+        operation: KitOperation::RenamedTag {
+            scope: Scope::Tag { tag_id: self.tag_id.clone() },
+            input: Input::RenamedTag { new_name },
+        },
+    };
+    Ok(rt.dispatch_wip(cmd).await)
+}
+```
+
+A full `command_nav!` invocation collapses what's today ~80 lines of hand-rolled `TagOperationNav` into a single declaration (see §17).
 
 ### 9. Owner / OwnedEntity unions
 
@@ -1012,6 +1407,38 @@ macro_rules! entity_owner_unions {
     };
 }
 ```
+
+**Example.** Given the roster `Vector, Tag, Kit`:
+
+```rust
+entity_owner_unions! { Vector, Tag, Kit }
+```
+
+expands to:
+
+```rust
+#[derive(Clone, async_graphql::Union)]
+pub enum OwnerEntity {
+    Vector(Arc<Vector>),
+    Tag(Arc<Tag>),
+    Kit(Arc<Kit>),
+}
+
+#[derive(Clone, async_graphql::Union)]
+pub enum OwnedEntity {
+    Vector(Arc<Vector>),
+    Tag(Arc<Tag>),
+    Kit(Arc<Kit>),
+}
+
+__simple_relay!(OwnedEntityEdge, OwnedEntityConnection, OwnedEntity);
+
+impl OwnedEntityConnection { pub fn empty() -> Arc<Self> { /* … */ } }
+pub fn empty_owned_entity_connection() -> Arc<OwnedEntityConnection> { OwnedEntityConnection::empty() }
+pub fn owner_entity_arc(e: OwnerEntity) -> Arc<OwnerEntity> { Arc::new(e) }
+```
+
+The full roster (~40 entities) yields a single 40-arm union, eliminating today's drift between `iface::OwnerEntity` (`6128:6151:semio/rs/lib.rs`) and the actual live entities.
 
 ### 10. Interface enums
 
@@ -1059,7 +1486,37 @@ macro_rules! entity_interface_enums {
 }
 ```
 
-`WeakEntity`/`StrongEntity`/`RichStrongEntity`/`Artifact`/`Document`/`Event`/`Version`/`Input`/`Diff`/`Modification` get the same treatment, parameterized by which entities `kind:` matches.
+**Example.** Given the roster `Vector, Tag, Kit`:
+
+```rust
+entity_interface_enums! { Vector, Tag, Kit }
+```
+
+expands to (sketch — only `NodeIface` shown in full):
+
+```rust
+#[derive(Clone, async_graphql::Interface)]
+#[graphql(name = "Node", field(name = "id", ty = "Id"))]
+pub enum NodeIface {
+    Vector(Arc<Vector>),
+    Tag(Arc<Tag>),
+    Kit(Arc<Kit>),
+}
+
+#[derive(Clone, Interface)]
+#[graphql(name = "Entity", field(name = "id", ty = "Id"), field(name = "hash", ty = "String"), …)]
+pub enum EntityIface { Vector(Arc<Vector>), Tag(Arc<Tag>), Kit(Arc<Kit>) }
+
+#[derive(Clone, Interface)]
+#[graphql(name = "EntityEdge", field(name = "cursor", ty = "String"))]
+pub enum EntityEdgeIface { Vector(VectorEdge), Tag(TagEdge), Kit(KitEdge) }
+
+#[derive(Clone, Interface)]
+#[graphql(name = "EntityConnection", field(name = "pageInfo", ty = "Arc<PageInfo>"), field(name = "hash", ty = "String"))]
+pub enum EntityConnectionIface { Vector(VectorConnection), Tag(TagConnection), Kit(KitConnection) }
+```
+
+`WeakEntity`/`StrongEntity`/`RichStrongEntity`/`Artifact`/`Document`/`Event`/`Version`/`Input`/`Diff`/`Modification`/`Operation` get the same treatment, parameterized by which entities the `kind:` field matches (companion macros `entity_interface_enums_weak!`, `entity_interface_enums_strong!`, etc., emitted alongside).
 
 ### 11. Inputs: `entity_input!`
 
@@ -1120,6 +1577,65 @@ macro_rules! __input_field_unwrap {
         for x in $self.$f.unwrap_or_default() { out.push(paste::paste!{ x.[<into_ $c:snake>]() }.await); }
         out
     }};
+}
+```
+
+**Examples (inputs).**
+
+```rust
+entity_input! {
+    name: Tag,
+    fields: {
+        name:        String          @data,
+        description: Option<String>  @data,
+        icon:        Option<String>  @data,
+        order:       Option<i32>     @data,
+        attributes:  Vec<Attribute>  @children(AttributeConnection),
+    },
+}
+```
+
+expands to:
+
+```rust
+#[derive(Clone, Default, Serialize, Deserialize, async_graphql::InputObject)]
+pub struct TagInput {
+    pub name:        String,
+    pub description: Option<String>,
+    pub icon:        Option<String>,
+    pub order:       Option<i32>,
+    pub attributes:  Option<Vec<AttributeInput>>,
+}
+
+impl TagInput {
+    pub async fn into_tag(self) -> Tag {
+        Tag {
+            id: Id::new().await,
+            owner: RwLock::new(Default::default()),
+            name:        RwLock::new(self.name),
+            description: RwLock::new(self.description),
+            icon:        RwLock::new(self.icon),
+            order:       RwLock::new(self.order),
+            attributes:  RwLock::new({
+                let mut out = Vec::new();
+                for x in self.attributes.unwrap_or_default() { out.push(x.into_attribute().await); }
+                out
+            }),
+        }
+    }
+    pub fn into_tag_with_id(self, id: Id) -> Tag { /* same body, no `Id::new` */ }
+}
+```
+
+`__input_field_ty!(Vec<Attribute> @ children(AttributeConnection))` evaluates to the type token `Option<Vec<AttributeInput>>`.
+
+`__input_field_unwrap!(self, attributes: Vec<Attribute> @ children(AttributeConnection))` evaluates to the block:
+
+```rust
+{
+    let mut out = Vec::new();
+    for x in self.attributes.unwrap_or_default() { out.push(x.into_attribute().await); }
+    out
 }
 ```
 
@@ -1188,6 +1704,29 @@ relay_collection! {
     },
 }
 ```
+
+**Examples (other relay-collection invocations).**
+
+```rust
+relay_collection! {
+    name: Operation,
+    node: std::sync::Arc<crate::operation::OperationIface>,
+    hash_arm: |o| crate::hash::h(&[o.row_id().as_str()]),
+}
+
+relay_collection! {
+    name: OwnedEntity,
+    node: crate::iface::OwnedEntity,
+    hash_arm: |e| match e {
+        crate::iface::OwnedEntity::Tag(t)         => t.compute_hash().await,
+        crate::iface::OwnedEntity::Concept(c)     => c.compute_hash().await,
+        crate::iface::OwnedEntity::Quality(q)     => q.compute_hash().await,
+        /* … one arm per OwnedEntity variant … */
+    },
+}
+```
+
+The first replaces the hand-written `OperationEdge` / `OperationConnection` at `844:868:semio/rs/lib.rs`; the second replaces the hand-written shells in `iface` mod (`6163:6181:semio/rs/lib.rs`).
 
 ### 14. Real `gql::sdl()`
 
@@ -1543,7 +2082,7 @@ Operation interface conformance:
 
 Naming normalization:
 
-- `Created`* reserved for "new artifact creation"; `Added*` reserved for "adding existing entity to a collection"; `Removed*` for collection removal; `Deleted*` for artifact deletion. `AddedConnector` stays (adds existing connector to type), `CreatedPort` stays (creates new port). `FixedPieces` gains `FixedPiecesInput` for symmetry with `MovedPieces`.
+- `Created`* reserved for "new artifact creation"; `Added`* reserved for "adding existing entity to a collection"; `Removed*` for collection removal; `Deleted*` for artifact deletion. `AddedConnector` stays (adds existing connector to type), `CreatedPort` stays (creates new port). `FixedPieces` gains `FixedPiecesInput` for symmetry with `MovedPieces`.
 - Long names like `AddedHangingChildPiecesWithParentConnectionsConnection` are unavoidable given the operation name pattern; left as-is.
 
 Out of scope (intentionally not changed):
