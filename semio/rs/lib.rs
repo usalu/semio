@@ -518,7 +518,7 @@ pub mod gql_relay {
 
     use async_graphql::SimpleObject;
 
-    use crate::hash::merkle_collection;
+    use crate::hash::{h, merkle_collection};
     use crate::id::Id;
     use crate::kit::design::connection::Side;
     use crate::kit::design::piece::Piece;
@@ -803,6 +803,63 @@ pub mod gql_relay {
             }
             let hash = merkle_collection(child_hashes);
             let edges = rows.into_iter().enumerate().map(|(i, c)| ChangeEdge { cursor: edge_cursor(i), node: c }).collect();
+            Self { edges, page_info: std::sync::Arc::new(PageInfo::default()), hash }
+        }
+
+        pub fn empty() -> Self {
+            Self { edges: Vec::new(), page_info: std::sync::Arc::new(PageInfo::default()), hash: merkle_collection(Vec::new()) }
+        }
+    }
+
+    #[derive(Clone, SimpleObject)]
+    pub struct EditEdge {
+        pub cursor: String,
+        pub node: Arc<crate::vcs::Edit>,
+    }
+
+    #[derive(Clone, SimpleObject)]
+    pub struct EditConnection {
+        pub edges: Vec<EditEdge>,
+        #[graphql(name = "pageInfo")]
+        pub page_info: std::sync::Arc<PageInfo>,
+        pub hash: String,
+    }
+
+    impl EditConnection {
+        pub async fn from_edits(rows: Vec<Arc<crate::vcs::Edit>>) -> Self {
+            let mut child_hashes = Vec::with_capacity(rows.len());
+            for e in &rows {
+                child_hashes.push(e.compute_hash().await);
+            }
+            let hash = merkle_collection(child_hashes);
+            let edges = rows.into_iter().enumerate().map(|(i, e)| EditEdge { cursor: edge_cursor(i), node: e }).collect();
+            Self { edges, page_info: std::sync::Arc::new(PageInfo::default()), hash }
+        }
+
+        pub fn empty() -> Self {
+            Self { edges: Vec::new(), page_info: std::sync::Arc::new(PageInfo::default()), hash: merkle_collection(Vec::new()) }
+        }
+    }
+
+    #[derive(Clone, SimpleObject)]
+    pub struct OperationEdge {
+        pub cursor: String,
+        pub node: Arc<crate::operation::OperationIface>,
+    }
+
+    #[derive(Clone, SimpleObject)]
+    pub struct OperationConnection {
+        pub edges: Vec<OperationEdge>,
+        #[graphql(name = "pageInfo")]
+        pub page_info: std::sync::Arc<PageInfo>,
+        pub hash: String,
+    }
+
+    impl OperationConnection {
+        pub fn from_iface_rows(rows: Vec<Arc<crate::operation::OperationIface>>) -> Self {
+            let child_hashes: Vec<String> = rows.iter().map(|o| h(&[o.row_id().as_str()])).collect();
+            let hash = merkle_collection(child_hashes);
+            let edges = rows.into_iter().enumerate().map(|(i, o)| OperationEdge { cursor: edge_cursor(i), node: o }).collect();
             Self { edges, page_info: std::sync::Arc::new(PageInfo::default()), hash }
         }
 
@@ -4309,12 +4366,6 @@ pub mod kit {
         pub async fn checkpoint(&self) -> Option<Arc<crate::vcs::Checkpoint>> {
             None
         }
-        pub async fn draft(&self) -> Option<Arc<crate::vcs::Draft>> {
-            None
-        }
-        pub async fn transaction(&self) -> Option<Arc<crate::vcs::Edit>> {
-            None
-        }
         pub async fn name(&self) -> String {
             self.name.read().await.clone()
         }
@@ -4679,7 +4730,6 @@ pub mod vcs {
     use std::sync::atomic::{AtomicU64, Ordering};
     use std::sync::{Arc, Weak};
 
-    use async_graphql::types::Json;
     use async_graphql::{InputObject, Object, Union};
     use async_lock::RwLock;
 
@@ -4695,23 +4745,37 @@ pub mod vcs {
     pub struct Change {
         pub id: Id,
         pub owner: RwLock<Option<ChangeOwnerRef>>,
+        pub parent_edit: RwLock<Weak<Edit>>,
+        pub started_at: RwLock<Option<Timestamp>>,
+        pub saved_at: RwLock<Option<Timestamp>>,
+        pub description: RwLock<String>,
+        pub origin: RwLock<String>,
         /// @emoji 📜 Forward [`crate::operation::KitOperation`] steps (materialized via `Kit::apply_diff`).
         pub forwards: RwLock<Vec<operation::KitOperation>>,
         /// @emoji 📜 Backward companion ops for explicit undo/redo (same materialization pipeline).
         pub backwards: RwLock<Vec<operation::KitOperation>>,
     }
 
-    /// 🔗 Untyped reference to one of the variants of the [`ChangeOwnerUnion`].
+    /// 🔗 Weak owner lane matching SDL `Alternative | Checkpoint` for persisted [`Change`] rows.
     #[derive(Clone)]
     pub enum ChangeOwnerRef {
-        Edit(Weak<Edit>),
-        Draft(Weak<Draft>),
+        Alternative(Weak<Alternative>),
         Checkpoint(Weak<Checkpoint>),
     }
 
     impl Default for Change {
         fn default() -> Self {
-            Self { id: Id::default(), owner: RwLock::new(None), forwards: RwLock::new(Vec::new()), backwards: RwLock::new(Vec::new()) }
+            Self {
+                id: Id::default(),
+                owner: RwLock::new(None),
+                parent_edit: RwLock::new(Weak::new()),
+                started_at: RwLock::new(None),
+                saved_at: RwLock::new(None),
+                description: RwLock::new(String::new()),
+                origin: RwLock::new(String::new()),
+                forwards: RwLock::new(Vec::new()),
+                backwards: RwLock::new(Vec::new()),
+            }
         }
     }
 
@@ -4734,17 +4798,36 @@ pub mod vcs {
         }
         pub async fn owner(&self) -> ChangeOwnerUnion {
             match self.owner.read().await.clone() {
-                Some(ChangeOwnerRef::Edit(w)) => ChangeOwnerUnion::Edit(w.upgrade().unwrap_or_default()),
-                Some(ChangeOwnerRef::Draft(w)) => ChangeOwnerUnion::Draft(w.upgrade().unwrap_or_default()),
+                Some(ChangeOwnerRef::Alternative(w)) => ChangeOwnerUnion::Alternative(w.upgrade().unwrap_or_default()),
                 Some(ChangeOwnerRef::Checkpoint(w)) => ChangeOwnerUnion::Checkpoint(w.upgrade().unwrap_or_default()),
-                None => ChangeOwnerUnion::Edit(Arc::default()),
+                None => ChangeOwnerUnion::Checkpoint(Arc::default()),
             }
         }
-        pub async fn forwards(&self) -> Vec<Json<serde_json::Value>> {
-            self.forwards.read().await.iter().filter_map(|operation| serde_json::to_value(operation).ok().map(Json)).collect()
+
+        pub async fn edits(&self) -> crate::gql_relay::EditConnection {
+            if let Some(ed) = self.parent_edit.read().await.upgrade() {
+                crate::gql_relay::EditConnection::from_edits(vec![ed]).await
+            } else {
+                crate::gql_relay::EditConnection::empty()
+            }
         }
-        pub async fn backwards(&self) -> Vec<Json<serde_json::Value>> {
-            self.backwards.read().await.iter().filter_map(|operation| serde_json::to_value(operation).ok().map(Json)).collect()
+
+        #[graphql(name = "startedAt")]
+        pub async fn started_at(&self) -> Timestamp {
+            self.started_at.read().await.clone().unwrap_or_default()
+        }
+        #[graphql(name = "savedAt")]
+        pub async fn saved_at(&self) -> Option<Timestamp> {
+            self.saved_at.read().await.clone()
+        }
+        pub async fn saved(&self) -> bool {
+            self.saved_at.read().await.is_some()
+        }
+        pub async fn description(&self) -> String {
+            self.description.read().await.clone()
+        }
+        pub async fn origin(&self) -> String {
+            self.origin.read().await.clone()
         }
 
         /// @emoji 🔗 Ordered semantic operation record ids constituting the forwards side (bundle `semanticOpLog` ids) when persisted.
@@ -4770,10 +4853,16 @@ pub mod vcs {
     }
 
     #[derive(Clone, Union)]
+    #[graphql(name = "EditOwner")]
+    pub enum EditOwnerUnion {
+        Alternative(Arc<Alternative>),
+        Checkpoint(Arc<Checkpoint>),
+    }
+
+    #[derive(Clone, Union)]
     #[graphql(name = "ChangeOwner")]
     pub enum ChangeOwnerUnion {
-        Edit(Arc<Edit>),
-        Draft(Arc<Draft>),
+        Alternative(Arc<Alternative>),
         Checkpoint(Arc<Checkpoint>),
     }
     //#endregion 🪪 change
@@ -4783,20 +4872,49 @@ pub mod vcs {
         pub id: Id,
         pub owner_draft: Weak<Draft>,
         pub changes: RwLock<Vec<Arc<Change>>>,
+        pub forward_iface_ops: RwLock<Vec<Arc<operation::OperationIface>>>,
+        pub backward_iface_ops: RwLock<Vec<Arc<operation::OperationIface>>>,
+        pub sequence_number: RwLock<i32>,
+        pub started_at: RwLock<Option<Timestamp>>,
+        pub finished_at: RwLock<Option<Timestamp>>,
+        pub description: RwLock<String>,
+        pub origin: RwLock<String>,
     }
 
     impl Default for Edit {
         fn default() -> Self {
-            Self { id: Id::default(), owner_draft: Weak::new(), changes: RwLock::new(Vec::new()) }
+            Self {
+                id: Id::default(),
+                owner_draft: Weak::new(),
+                changes: RwLock::new(Vec::new()),
+                forward_iface_ops: RwLock::new(Vec::new()),
+                backward_iface_ops: RwLock::new(Vec::new()),
+                sequence_number: RwLock::new(0),
+                started_at: RwLock::new(None),
+                finished_at: RwLock::new(None),
+                description: RwLock::new(String::new()),
+                origin: RwLock::new(String::new()),
+            }
         }
     }
 
     impl Edit {
         pub async fn new(owner_draft: Weak<Draft>) -> Arc<Self> {
-            Arc::new(Self { id: Id::new().await, owner_draft, changes: RwLock::new(Vec::new()) })
+            Self::with_id(owner_draft, Id::new().await, 0).await
         }
-        pub async fn with_id(owner_draft: Weak<Draft>, id: Id) -> Arc<Self> {
-            Arc::new(Self { id, owner_draft, changes: RwLock::new(Vec::new()) })
+        pub async fn with_id(owner_draft: Weak<Draft>, id: Id, sequence_number: i32) -> Arc<Self> {
+            Arc::new(Self {
+                id,
+                owner_draft,
+                changes: RwLock::new(Vec::new()),
+                forward_iface_ops: RwLock::new(Vec::new()),
+                backward_iface_ops: RwLock::new(Vec::new()),
+                sequence_number: RwLock::new(sequence_number),
+                started_at: RwLock::new(Some(Timestamp::default())),
+                finished_at: RwLock::new(None),
+                description: RwLock::new(String::new()),
+                origin: RwLock::new(String::new()),
+            })
         }
         pub async fn compute_hash(&self) -> String {
             h(&[self.id.as_str()])
@@ -4823,8 +4941,39 @@ pub mod vcs {
         pub async fn hash(&self) -> String {
             self.compute_hash().await
         }
-        pub async fn owner(&self) -> Option<Arc<Draft>> {
-            self.owner_draft.upgrade()
+        pub async fn owner(&self) -> Option<EditOwnerUnion> {
+            let d = self.owner_draft.upgrade()?;
+            if let Some(a) = d.owner_alternative.upgrade() {
+                return Some(EditOwnerUnion::Alternative(a));
+            }
+            d.parent_checkpoint.read().await.upgrade().map(EditOwnerUnion::Checkpoint)
+        }
+        pub async fn forwards(&self) -> crate::gql_relay::OperationConnection {
+            crate::gql_relay::OperationConnection::from_iface_rows(self.forward_iface_ops.read().await.clone())
+        }
+        pub async fn backwards(&self) -> crate::gql_relay::OperationConnection {
+            crate::gql_relay::OperationConnection::from_iface_rows(self.backward_iface_ops.read().await.clone())
+        }
+        #[graphql(name = "sequenceNumber")]
+        pub async fn sequence_number(&self) -> i32 {
+            *self.sequence_number.read().await
+        }
+        #[graphql(name = "startedAt")]
+        pub async fn started_at(&self) -> Timestamp {
+            self.started_at.read().await.clone().unwrap_or_default()
+        }
+        #[graphql(name = "finishedAt")]
+        pub async fn finished_at(&self) -> Option<Timestamp> {
+            self.finished_at.read().await.clone()
+        }
+        pub async fn finished(&self) -> Option<bool> {
+            Some(self.finished_at.read().await.is_some())
+        }
+        pub async fn description(&self) -> String {
+            self.description.read().await.clone()
+        }
+        pub async fn origin(&self) -> String {
+            self.origin.read().await.clone()
         }
         pub async fn changes(&self) -> Vec<Arc<Change>> {
             self.changes.read().await.clone()
@@ -4894,75 +5043,11 @@ pub mod vcs {
                 *self.open_transaction.write().await = Arc::downgrade(&t);
                 return t;
             }
-            let t = Edit::with_id(Arc::downgrade(self), id.clone()).await;
+            let seq = self.transactions.read().await.len() as i32;
+            let t = Edit::with_id(Arc::downgrade(self), id.clone(), seq).await;
             self.transactions.write().await.push(t.clone());
             *self.open_transaction.write().await = Arc::downgrade(&t);
             t
-        }
-    }
-
-    #[Object(name = "Draft")]
-    impl Draft {
-        pub async fn id(&self) -> Id {
-            self.id.clone()
-        }
-        pub async fn hash(&self) -> String {
-            self.compute_hash().await
-        }
-        pub async fn owner(&self) -> Option<Arc<Alternative>> {
-            self.owner_alternative.upgrade()
-        }
-        #[graphql(name = "parentCheckpoint")]
-        pub async fn parent_checkpoint(&self) -> Option<Arc<Checkpoint>> {
-            self.parent_checkpoint.read().await.upgrade()
-        }
-        #[graphql(name = "targetAlternative")]
-        pub async fn target_alternative(&self) -> Option<Arc<Alternative>> {
-            self.target_alternative.read().await.upgrade()
-        }
-        #[graphql(name = "openTransaction")]
-        pub async fn open_transaction(&self) -> Option<Arc<Edit>> {
-            self.open_transaction.read().await.upgrade()
-        }
-        #[graphql(name = "finalizedTransactions")]
-        pub async fn finalized_transactions(&self) -> Vec<Arc<Edit>> {
-            self.finalized_transactions.read().await.clone()
-        }
-        #[graphql(name = "redoTransactions")]
-        pub async fn redo_transactions(&self) -> Vec<Arc<Edit>> {
-            self.redo_transactions.read().await.clone()
-        }
-        pub async fn changes(&self) -> Vec<Arc<Change>> {
-            let mut out = Vec::new();
-            for t in self.transactions.read().await.iter() {
-                for c in t.changes.read().await.iter() {
-                    out.push(c.clone());
-                }
-            }
-            out
-        }
-        #[graphql(name = "canUndo")]
-        pub async fn can_undo(&self, _steps: i32) -> bool {
-            !self.finalized_transactions.read().await.is_empty()
-        }
-        #[graphql(name = "canRedo")]
-        pub async fn can_redo(&self, _steps: i32) -> bool {
-            !self.redo_transactions.read().await.is_empty()
-        }
-
-        /// @emoji 🔗 Stable transaction open order on this draft (bundle `histories.draft`).
-        #[graphql(name = "orderedTransactionIds")]
-        pub async fn ordered_transaction_ids(&self) -> Vec<Id> {
-            self.transactions.read().await.iter().map(|t| t.id.clone()).collect()
-        }
-
-        #[graphql(name = "ownerEntity")]
-        pub async fn owner_entity(&self) -> Option<std::sync::Arc<crate::iface::OwnerEntity>> {
-            None
-        }
-        #[graphql(name = "ownedEntities")]
-        pub async fn owned_entities(&self) -> Option<std::sync::Arc<crate::iface::OwnedEntityConnection>> {
-            Some(crate::iface::empty_owned_entity_connection())
         }
     }
     //#endregion 📝 draft
@@ -5212,12 +5297,6 @@ pub mod vcs {
         }
         pub async fn store(&self) -> Arc<Kit> {
             self.kit.read().await.clone().unwrap_or_default()
-        }
-        pub async fn draft(&self) -> Option<Arc<Draft>> {
-            self.draft.read().await.upgrade()
-        }
-        pub async fn transaction(&self) -> Option<Arc<Edit>> {
-            self.transaction.read().await.upgrade()
         }
         pub async fn checkpoint(&self) -> crate::gql_relay::CheckpointConnection {
             crate::gql_relay::CheckpointConnection::from_checkpoints(self.checkpoints.read().await.clone()).await
@@ -5520,6 +5599,15 @@ pub mod vcs {
                     c
                 }
             };
+            *change.parent_edit.write().await = Arc::downgrade(&tx);
+            let lane_owner = if let Some(alt) = draft.owner_alternative.upgrade() {
+                Some(ChangeOwnerRef::Alternative(Arc::downgrade(&alt)))
+            } else if let Some(cp) = draft.parent_checkpoint.read().await.upgrade() {
+                Some(ChangeOwnerRef::Checkpoint(Arc::downgrade(&cp)))
+            } else {
+                None
+            };
+            *change.owner.write().await = lane_owner;
             change.forwards.write().await.push(forward);
             change.backwards.write().await.extend(backwards);
             draft.change_seq.fetch_add(1, Ordering::Relaxed);
@@ -5638,7 +5726,8 @@ pub mod vcs {
         pub async fn open_transaction(self: &Arc<Self>, draft_id: &Id) -> Arc<Edit> {
             let draft = self.ensure_draft(draft_id).await;
             let tx_id = Id::new().await;
-            let tx = Edit::with_id(Arc::downgrade(&draft), tx_id).await;
+            let seq = draft.transactions.read().await.len() as i32;
+            let tx = Edit::with_id(Arc::downgrade(&draft), tx_id, seq).await;
             draft.transactions.write().await.push(tx.clone());
             *draft.open_transaction.write().await = Arc::downgrade(&tx);
             tx
@@ -5760,16 +5849,6 @@ pub mod vcs {
         }
         pub async fn releases(&self) -> crate::gql_relay::CheckpointConnection {
             crate::gql_relay::CheckpointConnection::from_checkpoints(self.releases.read().await.clone()).await
-        }
-
-        /// @emoji 📝 Lookup a draft on this graph by id (sketchpad uses this after `transactionOpen` / before `transactionCommit`).
-        pub async fn draft(&self, id: Id) -> Option<Arc<Draft>> {
-            self.drafts.read().await.iter().find(|d| d.id == id).cloned()
-        }
-
-        /// @emoji 📝 Internal draft list used by the current command engine; not part of the target version wire shape.
-        pub async fn drafts(&self) -> Vec<Arc<Draft>> {
-            self.drafts.read().await.clone()
         }
 
         /// @emoji 📜 Ordered semantic operation log for this graph line (persisted bundle field); empty until store wiring lands.
@@ -7732,10 +7811,6 @@ pub mod operation {
         pub async fn owner(&self) -> Arc<OperationOwner> {
             Arc::new(OperationOwner::Edit(self.owner_edit.upgrade().unwrap_or_default()))
         }
-        #[graphql(name = "changeOwner")]
-        pub async fn change_owner(&self) -> Option<Arc<Edit>> {
-            self.owner_edit.upgrade()
-        }
         #[graphql(name = "ownerEntity")]
         pub async fn owner_entity(&self) -> Option<Arc<OwnerEntity>> {
             None
@@ -7774,10 +7849,6 @@ pub mod operation {
         pub async fn owner(&self) -> Arc<OperationOwner> {
             Arc::new(OperationOwner::Edit(self.owner_edit.upgrade().unwrap_or_default()))
         }
-        #[graphql(name = "changeOwner")]
-        pub async fn change_owner(&self) -> Option<Arc<Edit>> {
-            self.owner_edit.upgrade()
-        }
         #[graphql(name = "ownerEntity")]
         pub async fn owner_entity(&self) -> Option<Arc<OwnerEntity>> {
             None
@@ -7815,10 +7886,6 @@ pub mod operation {
         }
         pub async fn owner(&self) -> Arc<OperationOwner> {
             Arc::new(OperationOwner::Edit(self.owner_edit.upgrade().unwrap_or_default()))
-        }
-        #[graphql(name = "changeOwner")]
-        pub async fn change_owner(&self) -> Option<Arc<Edit>> {
-            self.owner_edit.upgrade()
         }
         #[graphql(name = "ownerEntity")]
         pub async fn owner_entity(&self) -> Option<Arc<OwnerEntity>> {
@@ -7864,10 +7931,6 @@ pub mod operation {
         pub async fn owner(&self) -> Arc<OperationOwner> {
             Arc::new(OperationOwner::Edit(self.owner_edit.upgrade().unwrap_or_default()))
         }
-        #[graphql(name = "changeOwner")]
-        pub async fn change_owner(&self) -> Option<Arc<Edit>> {
-            self.owner_edit.upgrade()
-        }
         #[graphql(name = "ownerEntity")]
         pub async fn owner_entity(&self) -> Option<Arc<OwnerEntity>> {
             None
@@ -7906,10 +7969,6 @@ pub mod operation {
         pub async fn owner(&self) -> Arc<OperationOwner> {
             Arc::new(OperationOwner::Edit(self.owner_edit.upgrade().unwrap_or_default()))
         }
-        #[graphql(name = "changeOwner")]
-        pub async fn change_owner(&self) -> Option<Arc<Edit>> {
-            self.owner_edit.upgrade()
-        }
         #[graphql(name = "ownerEntity")]
         pub async fn owner_entity(&self) -> Option<Arc<OwnerEntity>> {
             None
@@ -7941,7 +8000,6 @@ pub mod operation {
         field(name = "id", ty = "crate::id::Id"),
         field(name = "hash", ty = "String"),
         field(name = "owner", ty = "std::sync::Arc<crate::operation::OperationOwner>"),
-        field(name = "changeOwner", method = "change_owner", ty = "Option<std::sync::Arc<crate::vcs::Edit>>"),
         field(name = "ownerEntity", method = "owner_entity", ty = "Option<std::sync::Arc<crate::iface::OwnerEntity>>"),
         field(name = "ownedEntities", method = "owned_entities", ty = "Option<std::sync::Arc<crate::iface::OwnedEntityConnection>>")
     )]
@@ -7956,6 +8014,19 @@ pub mod operation {
     impl Default for OperationIface {
         fn default() -> Self {
             Self::CreatedFixedPiece(Arc::new(CreatedFixedPiece::default()))
+        }
+    }
+
+    impl OperationIface {
+        /// @emoji 🪪 Stable row id for relay operation edges / merkle shells.
+        pub fn row_id(&self) -> Id {
+            match self {
+                OperationIface::CreatedFixedPiece(o) => o.id.clone(),
+                OperationIface::FixedPiece(o) => o.id.clone(),
+                OperationIface::DraggedPiece(o) => o.id.clone(),
+                OperationIface::RenamedKit(o) => o.id.clone(),
+                OperationIface::ChangedDescription(o) => o.id.clone(),
+            }
         }
     }
 
@@ -9363,6 +9434,11 @@ pub mod worker {
             graph.record_op_in_open_transaction(&draft_id, &transaction_id, forward, backwards).await?;
             let after_kit = graph.materialized_kit_for_draft(&draft_id).await;
 
+            let tx_edit = {
+                let d = graph.drafts.read().await.iter().find(|d| d.id == draft_id).cloned().ok_or_else(|| SemioError::not_found("Draft", draft_id.as_str()))?;
+                d.transactions.read().await.iter().find(|t| t.id == transaction_id).cloned().ok_or_else(|| SemioError::not_found("Edit", transaction_id.as_str()))?
+            };
+
             match &operation {
                 KitOperation::RenameKit { input, .. } => {
                     let Input::Name { name } = input else {
@@ -9371,8 +9447,10 @@ pub mod worker {
                     let mut diff = SemanticDiff::default();
                     diff.id = Id::new().await;
                     diff.summary = Some("renameKit".to_string());
-                    let op_evt = Arc::new(RenamedKit { id: Id::new().await, request_id, owner_edit: Weak::new(), input: OperationRenamedKitInput { name: name.clone() }, diff, kit: after_kit.clone() });
-                    graph.op_history.write().await.push(Arc::new(OperationIface::RenamedKit(op_evt.clone())));
+                    let op_evt = Arc::new(RenamedKit { id: Id::new().await, request_id, owner_edit: Arc::downgrade(&tx_edit), input: OperationRenamedKitInput { name: name.clone() }, diff, kit: after_kit.clone() });
+                    let iface = Arc::new(OperationIface::RenamedKit(op_evt.clone()));
+                    graph.op_history.write().await.push(iface.clone());
+                    tx_edit.forward_iface_ops.write().await.push(iface);
                     self.bus.emit_event(Event::RenamedKit(op_evt)).await;
                 }
                 KitOperation::CreateFixedPiece { scope, input } => {
@@ -9391,9 +9469,11 @@ pub mod worker {
                     let fp_after = crate::kit_graph_engine::projection_fingerprint_for_kit(after_kit.as_ref()).await;
                     let diff = crate::kit_graph_engine::deterministic_semantic_diff("createFixedPiece", &payload_json, &fp_before, &fp_after);
                     let created_input = CreatedFixedPieceInput { design_id: design_id.clone(), blueprint_id: blueprint_id.clone(), position: position.clone(), name: name.clone(), description: description.clone() };
-                    let op_iface = CreatedFixedPiece::new(created_input, piece, diff).await;
-                    graph.op_history.write().await.push(Arc::new(OperationIface::CreatedFixedPiece(op_iface.clone())));
-                    self.bus.emit_event(Event::CreatedFixedPiece(op_iface)).await;
+                    let op_evt = Arc::new(CreatedFixedPiece { id: Id::new().await, owner_edit: Arc::downgrade(&tx_edit), input: created_input, diff, piece });
+                    let iface = Arc::new(OperationIface::CreatedFixedPiece(op_evt.clone()));
+                    graph.op_history.write().await.push(iface.clone());
+                    tx_edit.forward_iface_ops.write().await.push(iface);
+                    self.bus.emit_event(Event::CreatedFixedPiece(op_evt)).await;
                 }
                 _ => {}
             }
