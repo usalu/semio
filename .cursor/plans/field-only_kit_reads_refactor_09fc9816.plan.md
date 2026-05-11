@@ -18,7 +18,7 @@ todos:
     content: Delete from semio/js/index.ts every non-class export — KitStore (merged), all *Schema/zod, all *Dto / *MetadataDto / *Shallow types, KitFullDto, KitHostStore + InMemoryKitStore + JsonFileKitStore + FolderKitStore + applyKitClientSnapshotToLocalStore, all Read*Command types, SemioKitLiveReadStore + KitDesignReadStore + KitShallowListStore + KitViewCatalogStore, kitStoreClientAdd/Update/Remove* free functions, submitKitChangeCommands, buildSchemaEntityChangeCommands, writeKitStoreClientSchemaField, KitChangeKind / KitChangeSemanticKindGql, kitChangeSemanticKindToGraphQl, KitJson* helpers, kit-store.worker.ts JSON DTO plumbing
     status: pending
   - id: react-rewire
-    content: In semio/react/index.tsx make useKit/useDesign/useType/usePiece/useConnection/useAuthor/useQuality return the class instances; resolution is `idValue` arg first, then the matching scope context (KitScope/DesignScope/TypeScope/PortScope/ConnectorScope/PieceScope/ConnectionScope/AuthorScope/QualityScope/TagScope/ConceptScope)
+    content: Rename every *Scope* symbol to *Context* (KitContext, DesignContext, TypeContext, PortContext, ConnectorContext, PieceContext, ConnectionContext, AuthorContext, QualityContext, TagContext, ConceptContext, useKitContext/...); make useKit/useDesign/useType/usePiece/useConnection/useAuthor/useQuality return the class instances with resolution = `idValue` arg first, then the matching context
     status: pending
   - id: react-field-hooks
     content: Rewrite every per-field hook (usePieceName / usePiecePlane / usePieceFlatPlane / usePieceFlatCenter / usePieceCenter / usePieceScale / useTypeName / useDesignName / useConnectionGap / ...) to compose useDesign().piece(id) (or useKit().type(id), useType().port(id), etc.) and bind the resulting class field via useSyncExternalStore (subscribe = entity.on<Event>(cb), getSnapshot = entity.fieldSync())
@@ -182,21 +182,30 @@ The `kit-store.worker.ts` worker is rewritten to host only the GraphQL transport
 
 ### Resolution rules (every hook)
 
-- Every read / mutation hook accepts a single optional argument `idValue?: string`. When `idValue` is omitted the hook reads the matching scope context (`KitScope`, `DesignScope`, `TypeScope`, `PortScope`, `ConnectorScope`, `PieceScope`, `ConnectionScope`, `AuthorScope`, `QualityScope`, `TagScope`, `ConceptScope`, …). When `idValue` is provided it wins over the scope.
+- Every read / mutation hook accepts a single optional argument `idValue?: string`. When `idValue` is omitted the hook reads the matching context (`KitContext`, `DesignContext`, `TypeContext`, `PortContext`, `ConnectorContext`, `PieceContext`, `ConnectionContext`, `AuthorContext`, `QualityContext`, `TagContext`, `ConceptContext`, …). When `idValue` is provided it wins over the context.
 - There are no `useResolved*` helpers. Resolution is the explicit composition `useKit()` → `kit.<child>(id)`, `useDesign()` → `design.<child>(id)`, `useType()` → `type.<child>(id)`, `useDesign().piece(id)` → `Piece`, `useDesign().connection(id)` → `Connection`, `useType().port(id)` → `Port`, `useType().connector(id)` → `Connector`, etc. Inside the per-field hook body the chain is written out.
 - The entity-identity selectors return the class instance from §2, never a DTO. Their union signatures are:
 
   ```ts
   export function useKit(): Kit | null;
-  export function useDesign(idValue?: string): Design | null;       // useKit().design(id ?? useDesignScope()?.id)
-  export function useType(idValue?: string): Type | null;           // useKit().type(id ?? useTypeScope()?.id)
-  export function usePiece(idValue?: string): Piece | null;         // useDesign().piece(id ?? usePieceScope()?.id)
-  export function useConnection(idValue?: string): Connection | null; // useDesign().connection(id ?? useConnectionScope()?.id)
-  export function useAuthor(idValue?: string): Author | null;       // useKit().author(id ?? useAuthorScope()?.id)
-  export function useQuality(idValue?: string): Quality | null;     // useKit().quality(id ?? useQualityScope()?.id)
+  export function useDesign(idValue?: string): Design | null;       // useKit().design(id ?? useDesignContext()?.id)
+  export function useType(idValue?: string): Type | null;           // useKit().type(id ?? useTypeContext()?.id)
+  export function usePiece(idValue?: string): Piece | null;         // useDesign().piece(id ?? usePieceContext()?.id)
+  export function useConnection(idValue?: string): Connection | null; // useDesign().connection(id ?? useConnectionContext()?.id)
+  export function useAuthor(idValue?: string): Author | null;       // useKit().author(id ?? useAuthorContext()?.id)
+  export function useQuality(idValue?: string): Quality | null;     // useKit().quality(id ?? useQualityContext()?.id)
   ```
 
   `Connection`, `Author`, `Quality` get matching navigation methods on `Design` / `Kit` (`design.connection(id)`, `kit.author(id)`, `kit.quality(id)`) so the chain composes cleanly.
+
+### Naming
+
+All `*Scope*` symbols are renamed to `*Context*` across the public API:
+
+- Components: `KitScope` → `KitContext`, `DesignScope` → `DesignContext`, `TypeScope` → `TypeContext`, `PortScope` → `PortContext`, `ConnectorScope` → `ConnectorContext`, `PieceScope` → `PieceContext`, `ConnectionScope` → `ConnectionContext`, `AuthorScope` → `AuthorContext`, `QualityScope` → `QualityContext`, `TagScope` → `TagContext`, `ConceptScope` → `ConceptContext`. Each is a JSX provider component used as `<PieceContext id="p1">…</PieceContext>` (writing `<PieceContext id>` shorthand for `<PieceContext id={id}>`).
+- React contexts: `PieceScopeContext` → `PieceContext` (the React.Context object), and the same for every other entity. The provider component shares the entity's context name.
+- Hooks: `useKitScope` → `useKitContext`, `useDesignScope` → `useDesignContext`, `useTypeScope` → `useTypeContext`, `usePortScope` → `usePortContext`, `useConnectorScope` → `useConnectorContext`, `usePieceScope` → `usePieceContext`, `useConnectionScope` → `useConnectionContext`, `useAuthorScope` → `useAuthorContext`, `useQualityScope` → `useQualityContext`, `useTagScope` → `useTagContext`, `useConceptScope` → `useConceptContext`. The `useIs*Scope` helpers go away (a context check is a one-liner inside callers); equivalently rename to `useIsIn*Context` only if a sketchpad call site needs them.
+- Other "scope" symbols are renamed too: `KitWriteScope` → `KitWriteContext`, `SchemaScope` → deleted (per §"Generic schema readers"), `useResolvedKitIdentifier` keeps its name (no "scope" in it).
 
 ### Per-field hook pattern
 
@@ -205,7 +214,7 @@ Every `use<Entity><Field>(idValue?: string)` walks the same chain and binds the 
 ```ts
 export function usePieceName(idValue?: string): KitFieldBinding<string> {
   const design = useDesign();
-  const id = idValue ?? React.useContext(PieceScopeContext)?.id;
+  const id = idValue ?? React.useContext(PieceContext)?.id;
   const piece = design && id ? design.piece(id) : null;
   const subscribe = React.useCallback(
     (cb: () => void) => piece?.onRenamed(() => cb()) ?? noop,
@@ -223,7 +232,7 @@ export function usePieceName(idValue?: string): KitFieldBinding<string> {
 
 export function usePiecePlane(idValue?: string): KitFieldBinding<Plane> {
   const design = useDesign();
-  const id = idValue ?? React.useContext(PieceScopeContext)?.id;
+  const id = idValue ?? React.useContext(PieceContext)?.id;
   const piece = design && id ? design.piece(id) : null;
   const subscribe = React.useCallback(
     (cb: () => void) => piece?.onPlaneChanged(() => cb()) ?? noop,
@@ -241,7 +250,7 @@ export function usePiecePlane(idValue?: string): KitFieldBinding<Plane> {
 
 export function usePieceFlatPlane(idValue?: string): HookRead<Plane> {
   const design = useDesign();
-  const id = idValue ?? React.useContext(PieceScopeContext)?.id;
+  const id = idValue ?? React.useContext(PieceContext)?.id;
   const piece = design && id ? design.piece(id) : null;
   const subscribe = React.useCallback(
     (cb: () => void) => piece?.onFlatPlaneChanged(() => cb()) ?? noop,
@@ -254,7 +263,7 @@ export function usePieceFlatPlane(idValue?: string): HookRead<Plane> {
 
 export function usePieceFlatCenter(idValue?: string): HookRead<Coordinate> {
   const design = useDesign();
-  const id = idValue ?? React.useContext(PieceScopeContext)?.id;
+  const id = idValue ?? React.useContext(PieceContext)?.id;
   const piece = design && id ? design.piece(id) : null;
   const subscribe = React.useCallback(
     (cb: () => void) => piece?.onFlatCenterChanged(() => cb()) ?? noop,
@@ -266,14 +275,14 @@ export function usePieceFlatCenter(idValue?: string): HookRead<Coordinate> {
 }
 ```
 
-Hooks for `Type` fields use `useKit()` → `kit.type(id ?? useTypeScope()?.id)`. Hooks for `Port` fields use `useType().port(id ?? usePortScope()?.id)`. Hooks for `Connector` fields use `useType().connector(id ?? useConnectorScope()?.id)`. Hooks for `Connection` fields use `useDesign().connection(id ?? useConnectionScope()?.id)`. Hooks for `Author` / `Quality` / `Tag` / `Concept` fields use `useKit().author(id?)` / `kit.quality(id?)` / `kit.tag(id?)` / `kit.concept(id?)`.
+Hooks for `Type` fields use `useKit()` → `kit.type(id ?? useTypeContext()?.id)`. Hooks for `Port` fields use `useType().port(id ?? usePortContext()?.id)`. Hooks for `Connector` fields use `useType().connector(id ?? useConnectorContext()?.id)`. Hooks for `Connection` fields use `useDesign().connection(id ?? useConnectionContext()?.id)`. Hooks for `Author` / `Quality` / `Tag` / `Concept` fields use `useKit().author(id ?? useAuthorContext()?.id)` / `kit.quality(id ?? useQualityContext()?.id)` / `kit.tag(id ?? useTagContext()?.id)` / `kit.concept(id ?? useConceptContext()?.id)`.
 
 ### Kept exports
 
 - Entity-identity selectors (return class instances): `useKit`, `useDesign`, `useType`, `usePiece`, `useConnection`, `useAuthor`, `useQuality` (plus the `*ById` aliases).
 - Bulk / list / aggregate / metadata / shallow hooks: `useTypes`, `useDesigns`, `usePieces`, `useConnections`, `useAuthors`, `useTypesIds`, `useDesignsIds`, `useTypesMetadata`, `useDesignsMetadata`, `useTypesFull`, `useDesignsFull`, `useFilesFull`, `useTagsFull`, `useKitDesignsShallow`, `useKitTypesShallow`, `useKitAuthorsShallow`, `useKitPieces`, `useKitConnections`, `usePiecesMetadataMap`, `usePieceMetadata`, `useIncludedDesigns`, `useDesignClusterableGroups`, `useDesignQualitySum`, `useTypeBestRepresentation`, `useKitColoredConnectors`, `useReplacableTypes`, `useReplacableDesigns`, `useExplodeableDesignNodes`, `useOpenKitGuids`, `useActiveKitGuid`, `useOpenKitShallows`, `useRegistryHasKit`, `useRegistryKitPersistenceKind`, `useKitAlternatives`, `useKitAlternativeSelection`. Each is a thin composition of a list-id field hook plus per-id reads, all on top of the class instances (e.g. `useTypes` = `useKit()` + `kit.typeIdsSync()` + per-id `kit.type(id)` mapping).
 - Per-field hooks following the pattern above.
-- Scope components + scope hooks: `KitScope`, `DesignScope`, `TypeScope`, `PortScope`, `ConnectorScope`, `PieceScope`, `ConnectionScope`, `AuthorScope`, `QualityScope`, `TagScope`, `ConceptScope`, plus their `use*Scope`, `useIs*Scope`, `useResolvedKitIdentifier`. The user wrote `<PieceContext id>` informally — that maps to the existing `<PieceScope id="...">` component.
+- Context components + context hooks: `KitContext`, `DesignContext`, `TypeContext`, `PortContext`, `ConnectorContext`, `PieceContext`, `ConnectionContext`, `AuthorContext`, `QualityContext`, `TagContext`, `ConceptContext`, plus their `use*Context` accessors and `useResolvedKitIdentifier`. The user wrote `<PieceContext id>` — that is exactly this component.
 - Command hooks (`useUndo`, `useRedo`, `useDeletePiece`, `useUpdatePiece`, `useFlattenDesign`, …) — each implemented as a thin wrapper that calls a class method on the resolved entity instance.
 - Backbone hooks (`useBackboneStatus`, `useAttachBackbone`, `useDetachBackbone`, `useListConflicts`, `useResolveConflict`, `useSyncNow`) — each calls the matching `Kit` method.
 - Diagnostics: `useWriteIndicator`, `useWriteQueue`, `useSchemaEvents`, `useSetErrors`, `useKitSync`, `useOptimistic`, `usePendingTriad`.
