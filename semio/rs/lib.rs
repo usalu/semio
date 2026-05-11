@@ -4312,7 +4312,7 @@ pub mod kit {
         pub async fn draft(&self) -> Option<Arc<crate::vcs::Draft>> {
             None
         }
-        pub async fn transaction(&self) -> Option<Arc<crate::vcs::Transaction>> {
+        pub async fn transaction(&self) -> Option<Arc<crate::vcs::Edit>> {
             None
         }
         pub async fn name(&self) -> String {
@@ -4675,7 +4675,7 @@ impl crate::meta::Quality {
 //#region 🌿 vcs
 
 pub mod vcs {
-    //! 🌿 Version-control entities — change/transaction/draft/checkpoint/alternative/graph/session/conflict.
+    //! 🌿 Version-control entities — change, edit, draft, checkpoint, alternative, graph, session, conflict.
     use std::sync::atomic::{AtomicU64, Ordering};
     use std::sync::{Arc, Weak};
 
@@ -4704,7 +4704,7 @@ pub mod vcs {
     /// 🔗 Untyped reference to one of the variants of the [`ChangeOwnerUnion`].
     #[derive(Clone)]
     pub enum ChangeOwnerRef {
-        Transaction(Weak<Transaction>),
+        Edit(Weak<Edit>),
         Draft(Weak<Draft>),
         Checkpoint(Weak<Checkpoint>),
     }
@@ -4734,10 +4734,10 @@ pub mod vcs {
         }
         pub async fn owner(&self) -> ChangeOwnerUnion {
             match self.owner.read().await.clone() {
-                Some(ChangeOwnerRef::Transaction(w)) => ChangeOwnerUnion::Transaction(w.upgrade().unwrap_or_default()),
+                Some(ChangeOwnerRef::Edit(w)) => ChangeOwnerUnion::Edit(w.upgrade().unwrap_or_default()),
                 Some(ChangeOwnerRef::Draft(w)) => ChangeOwnerUnion::Draft(w.upgrade().unwrap_or_default()),
                 Some(ChangeOwnerRef::Checkpoint(w)) => ChangeOwnerUnion::Checkpoint(w.upgrade().unwrap_or_default()),
-                None => ChangeOwnerUnion::Transaction(Arc::default()),
+                None => ChangeOwnerUnion::Edit(Arc::default()),
             }
         }
         pub async fn forwards(&self) -> Vec<Json<serde_json::Value>> {
@@ -4772,26 +4772,26 @@ pub mod vcs {
     #[derive(Clone, Union)]
     #[graphql(name = "ChangeOwner")]
     pub enum ChangeOwnerUnion {
-        Transaction(Arc<Transaction>),
+        Edit(Arc<Edit>),
         Draft(Arc<Draft>),
         Checkpoint(Arc<Checkpoint>),
     }
     //#endregion 🪪 change
 
-    //#region 💼 transaction
-    pub struct Transaction {
+    //#region 💼 edit
+    pub struct Edit {
         pub id: Id,
         pub owner_draft: Weak<Draft>,
         pub changes: RwLock<Vec<Arc<Change>>>,
     }
 
-    impl Default for Transaction {
+    impl Default for Edit {
         fn default() -> Self {
             Self { id: Id::default(), owner_draft: Weak::new(), changes: RwLock::new(Vec::new()) }
         }
     }
 
-    impl Transaction {
+    impl Edit {
         pub async fn new(owner_draft: Weak<Draft>) -> Arc<Self> {
             Arc::new(Self { id: Id::new().await, owner_draft, changes: RwLock::new(Vec::new()) })
         }
@@ -4807,16 +4807,16 @@ pub mod vcs {
     }
 
     /// @emoji 🧾 Flatten write-session records into target-schema `ChangeConnection` rows for a version lane.
-    async fn changes_from_transactions(transactions: Vec<Arc<Transaction>>) -> Vec<Arc<Change>> {
+    async fn changes_from_edits(edits: Vec<Arc<Edit>>) -> Vec<Arc<Change>> {
         let mut out = Vec::new();
-        for tx in transactions {
-            out.extend(tx.changes.read().await.iter().cloned());
+        for ed in edits {
+            out.extend(ed.changes.read().await.iter().cloned());
         }
         out
     }
 
-    #[Object(name = "Transaction")]
-    impl Transaction {
+    #[Object(name = "Edit")]
+    impl Edit {
         pub async fn id(&self) -> Id {
             self.id.clone()
         }
@@ -4830,7 +4830,7 @@ pub mod vcs {
             self.changes.read().await.clone()
         }
 
-        /// @emoji 🔗 Transaction forwards operation sequence as `semanticOpLog` ids (see `histories.transaction`).
+        /// @emoji 🔗 Edit forwards operation sequence as `semanticOpLog` ids (see `histories.edit`).
         #[graphql(name = "semanticOpRecordIds")]
         pub async fn semantic_op_record_ids(&self) -> Vec<Id> {
             Vec::new()
@@ -4845,7 +4845,7 @@ pub mod vcs {
             Some(crate::iface::empty_owned_entity_connection())
         }
     }
-    //#endregion 💼 transaction
+    //#endregion 💼 edit
 
     //#region 📝 draft
     pub struct Draft {
@@ -4853,10 +4853,10 @@ pub mod vcs {
         pub owner_alternative: Weak<Alternative>,
         pub parent_checkpoint: RwLock<Weak<Checkpoint>>,
         pub target_alternative: RwLock<Weak<Alternative>>,
-        pub open_transaction: RwLock<Weak<Transaction>>,
-        pub finalized_transactions: RwLock<Vec<Arc<Transaction>>>,
-        pub redo_transactions: RwLock<Vec<Arc<Transaction>>>,
-        pub transactions: RwLock<Vec<Arc<Transaction>>>,
+        pub open_transaction: RwLock<Weak<Edit>>,
+        pub finalized_transactions: RwLock<Vec<Arc<Edit>>>,
+        pub redo_transactions: RwLock<Vec<Arc<Edit>>>,
+        pub transactions: RwLock<Vec<Arc<Edit>>>,
         /// @emoji 🔢 Bumped on every recorded op; drives [`Graph::materialized_cache`] invalidation.
         pub change_seq: AtomicU64,
     }
@@ -4889,12 +4889,12 @@ pub mod vcs {
         }
 
         /// 🆕 Look up (or open) the transaction matching `id` and stash it as the open transaction.
-        pub async fn ensure_transaction(self: &Arc<Self>, id: &Id) -> Arc<Transaction> {
+        pub async fn ensure_transaction(self: &Arc<Self>, id: &Id) -> Arc<Edit> {
             if let Some(t) = self.transactions.read().await.iter().find(|t| &t.id == id).cloned() {
                 *self.open_transaction.write().await = Arc::downgrade(&t);
                 return t;
             }
-            let t = Transaction::with_id(Arc::downgrade(self), id.clone()).await;
+            let t = Edit::with_id(Arc::downgrade(self), id.clone()).await;
             self.transactions.write().await.push(t.clone());
             *self.open_transaction.write().await = Arc::downgrade(&t);
             t
@@ -4921,15 +4921,15 @@ pub mod vcs {
             self.target_alternative.read().await.upgrade()
         }
         #[graphql(name = "openTransaction")]
-        pub async fn open_transaction(&self) -> Option<Arc<Transaction>> {
+        pub async fn open_transaction(&self) -> Option<Arc<Edit>> {
             self.open_transaction.read().await.upgrade()
         }
         #[graphql(name = "finalizedTransactions")]
-        pub async fn finalized_transactions(&self) -> Vec<Arc<Transaction>> {
+        pub async fn finalized_transactions(&self) -> Vec<Arc<Edit>> {
             self.finalized_transactions.read().await.clone()
         }
         #[graphql(name = "redoTransactions")]
-        pub async fn redo_transactions(&self) -> Vec<Arc<Transaction>> {
+        pub async fn redo_transactions(&self) -> Vec<Arc<Edit>> {
             self.redo_transactions.read().await.clone()
         }
         pub async fn changes(&self) -> Vec<Arc<Change>> {
@@ -5165,7 +5165,7 @@ pub mod vcs {
         pub checkpoints: RwLock<Vec<Arc<Checkpoint>>>,
         pub kit: RwLock<Option<Arc<Kit>>>,
         pub draft: RwLock<Weak<Draft>>,
-        pub transaction: RwLock<Weak<Transaction>>,
+        pub transaction: RwLock<Weak<Edit>>,
     }
 
     impl Default for Alternative {
@@ -5216,7 +5216,7 @@ pub mod vcs {
         pub async fn draft(&self) -> Option<Arc<Draft>> {
             self.draft.read().await.upgrade()
         }
-        pub async fn transaction(&self) -> Option<Arc<Transaction>> {
+        pub async fn transaction(&self) -> Option<Arc<Edit>> {
             self.transaction.read().await.upgrade()
         }
         pub async fn checkpoint(&self) -> crate::gql_relay::CheckpointConnection {
@@ -5229,14 +5229,14 @@ pub mod vcs {
         #[graphql(name = "savedChanges")]
         pub async fn saved_changes(&self) -> crate::gql_relay::ChangeConnection {
             match self.draft.read().await.upgrade() {
-                Some(d) => crate::gql_relay::ChangeConnection::from_changes(changes_from_transactions(d.finalized_transactions.read().await.clone()).await).await,
+                Some(d) => crate::gql_relay::ChangeConnection::from_changes(changes_from_edits(d.finalized_transactions.read().await.clone()).await).await,
                 None => crate::gql_relay::ChangeConnection::empty(),
             }
         }
         #[graphql(name = "unsavedChanges")]
         pub async fn unsaved_changes(&self) -> crate::gql_relay::ChangeConnection {
             match self.draft.read().await.upgrade() {
-                Some(d) => crate::gql_relay::ChangeConnection::from_changes(changes_from_transactions(d.transactions.read().await.clone()).await).await,
+                Some(d) => crate::gql_relay::ChangeConnection::from_changes(changes_from_edits(d.transactions.read().await.clone()).await).await,
                 None => crate::gql_relay::ChangeConnection::empty(),
             }
         }
@@ -5492,7 +5492,7 @@ pub mod vcs {
                 let guard = draft.finalized_transactions.read().await;
                 guard.clone()
             };
-            crate::gql_relay::ChangeConnection::from_changes(changes_from_transactions(transactions).await).await
+            crate::gql_relay::ChangeConnection::from_changes(changes_from_edits(transactions).await).await
         }
 
         /// @emoji 🧾 Unsaved changes on the main kit version, projected from open internal write sessions.
@@ -5502,14 +5502,14 @@ pub mod vcs {
                 let guard = draft.transactions.read().await;
                 guard.clone()
             };
-            crate::gql_relay::ChangeConnection::from_changes(changes_from_transactions(transactions).await).await
+            crate::gql_relay::ChangeConnection::from_changes(changes_from_edits(transactions).await).await
         }
 
         /// @emoji 📝 Append one forward op plus backward ops onto the open transaction's tail [`Change`], bumping draft `change_seq`.
         pub async fn record_op_in_open_transaction(self: &Arc<Self>, draft_id: &Id, transaction_id: &Id, forward: crate::operation::KitOperation, backwards: Vec<crate::operation::KitOperation>) -> Result<(), SemioError> {
             let draft = self.ensure_draft(draft_id).await;
             let _ = draft.ensure_transaction(transaction_id).await;
-            let tx = draft.transactions.read().await.iter().find(|t| &t.id == transaction_id).cloned().ok_or_else(|| SemioError::not_found("Transaction", transaction_id.as_str()))?;
+            let tx = draft.transactions.read().await.iter().find(|t| &t.id == transaction_id).cloned().ok_or_else(|| SemioError::not_found("Edit", transaction_id.as_str()))?;
             let change = {
                 let mut chs = tx.changes.write().await;
                 if let Some(last) = chs.last() {
@@ -5635,10 +5635,10 @@ pub mod vcs {
         }
 
         /// @emoji 🟢 Open a brand-new transaction inside `draft_id` (draft is created on demand) and mark it as the draft's open transaction.
-        pub async fn open_transaction(self: &Arc<Self>, draft_id: &Id) -> Arc<Transaction> {
+        pub async fn open_transaction(self: &Arc<Self>, draft_id: &Id) -> Arc<Edit> {
             let draft = self.ensure_draft(draft_id).await;
             let tx_id = Id::new().await;
-            let tx = Transaction::with_id(Arc::downgrade(&draft), tx_id).await;
+            let tx = Edit::with_id(Arc::downgrade(&draft), tx_id).await;
             draft.transactions.write().await.push(tx.clone());
             *draft.open_transaction.write().await = Arc::downgrade(&tx);
             tx
@@ -5649,7 +5649,7 @@ pub mod vcs {
             let draft = self.drafts.read().await.iter().find(|d| &d.id == draft_id).cloned().ok_or_else(|| SemioError::not_found("Draft", draft_id.as_str()))?;
             let tx = {
                 let mut txs = draft.transactions.write().await;
-                let pos = txs.iter().position(|t| &t.id == transaction_id).ok_or_else(|| SemioError::not_found("Transaction", transaction_id.as_str()))?;
+                let pos = txs.iter().position(|t| &t.id == transaction_id).ok_or_else(|| SemioError::not_found("Edit", transaction_id.as_str()))?;
                 txs.remove(pos)
             };
             draft.finalized_transactions.write().await.push(tx);
@@ -5668,7 +5668,7 @@ pub mod vcs {
             let draft = self.drafts.read().await.iter().find(|d| &d.id == draft_id).cloned().ok_or_else(|| SemioError::not_found("Draft", draft_id.as_str()))?;
             {
                 let mut txs = draft.transactions.write().await;
-                let pos = txs.iter().position(|t| &t.id == transaction_id).ok_or_else(|| SemioError::not_found("Transaction", transaction_id.as_str()))?;
+                let pos = txs.iter().position(|t| &t.id == transaction_id).ok_or_else(|| SemioError::not_found("Edit", transaction_id.as_str()))?;
                 txs.remove(pos);
             }
             let open = draft.open_transaction.read().await.upgrade();
@@ -5976,7 +5976,7 @@ pub mod vcs {
         pub id: Id,
         pub owner_conflict: Weak<Conflict>,
         pub draft: RwLock<Option<Arc<Draft>>>,
-        pub transaction: RwLock<Option<Arc<Transaction>>>,
+        pub transaction: RwLock<Option<Arc<Edit>>>,
         pub checkpoint: RwLock<Option<Arc<Checkpoint>>>,
         pub change: RwLock<Option<Arc<Change>>>,
         pub operation: RwLock<Option<Arc<crate::operation::OperationIface>>>,
@@ -6012,7 +6012,7 @@ pub mod vcs {
         pub async fn draft(&self) -> Option<Arc<Draft>> {
             self.draft.read().await.clone()
         }
-        pub async fn transaction(&self) -> Option<Arc<Transaction>> {
+        pub async fn transaction(&self) -> Option<Arc<Edit>> {
             self.transaction.read().await.clone()
         }
         pub async fn checkpoint(&self) -> Option<Arc<Checkpoint>> {
@@ -6395,17 +6395,17 @@ pub mod operation {
     use crate::id::Id;
     use crate::iface::{empty_owned_entity_connection, OwnedEntityConnection, OwnerEntity};
     use crate::meta::{ConceptInput, QualityInput, TagInput};
-    use crate::vcs::Change;
+    use crate::vcs::Edit;
 
-    /// 🏷️ Hand union for `Operation.owner` (every operation is owned by a `Change`).
+    /// 🏷️ Hand union for `Operation.owner` (every operation is owned by an `Edit`).
     #[derive(Clone, Union)]
     pub enum OperationOwner {
-        Change(Arc<Change>),
+        Edit(Arc<Edit>),
     }
 
     impl Default for OperationOwner {
         fn default() -> Self {
-            Self::Change(Arc::default())
+            Self::Edit(Arc::default())
         }
     }
 
@@ -7703,7 +7703,7 @@ pub mod operation {
     //#region 🪄 operations
     pub struct CreatedFixedPiece {
         pub id: Id,
-        pub owner_change: Weak<Change>,
+        pub owner_edit: Weak<Edit>,
         pub input: CreatedFixedPieceInput,
         pub diff: SemanticDiff,
         pub piece: Arc<crate::kit::design::piece::Piece>,
@@ -7711,13 +7711,13 @@ pub mod operation {
 
     impl CreatedFixedPiece {
         pub async fn new(input: CreatedFixedPieceInput, piece: Arc<crate::kit::design::piece::Piece>, diff: SemanticDiff) -> Arc<Self> {
-            Arc::new(Self { id: Id::new().await, owner_change: Weak::new(), input, diff, piece })
+            Arc::new(Self { id: Id::new().await, owner_edit: Weak::new(), input, diff, piece })
         }
     }
 
     impl Default for CreatedFixedPiece {
         fn default() -> Self {
-            Self { id: Id::default(), owner_change: Weak::new(), input: CreatedFixedPieceInput::default(), diff: SemanticDiff::default(), piece: Arc::default() }
+            Self { id: Id::default(), owner_edit: Weak::new(), input: CreatedFixedPieceInput::default(), diff: SemanticDiff::default(), piece: Arc::default() }
         }
     }
 
@@ -7730,11 +7730,11 @@ pub mod operation {
             crate::hash::h(&[self.id.as_str()])
         }
         pub async fn owner(&self) -> Arc<OperationOwner> {
-            Arc::new(OperationOwner::Change(self.owner_change.upgrade().unwrap_or_default()))
+            Arc::new(OperationOwner::Edit(self.owner_edit.upgrade().unwrap_or_default()))
         }
         #[graphql(name = "changeOwner")]
-        pub async fn change_owner(&self) -> Option<Arc<Change>> {
-            self.owner_change.upgrade()
+        pub async fn change_owner(&self) -> Option<Arc<Edit>> {
+            self.owner_edit.upgrade()
         }
         #[graphql(name = "ownerEntity")]
         pub async fn owner_entity(&self) -> Option<Arc<OwnerEntity>> {
@@ -7751,7 +7751,7 @@ pub mod operation {
 
     pub struct FixedPiece {
         pub id: Id,
-        pub owner_change: Weak<Change>,
+        pub owner_edit: Weak<Edit>,
         pub input: FixedPieceInput,
         pub diff: SemanticDiff,
         pub piece: Arc<crate::kit::design::piece::Piece>,
@@ -7759,7 +7759,7 @@ pub mod operation {
 
     impl Default for FixedPiece {
         fn default() -> Self {
-            Self { id: Id::default(), owner_change: Weak::new(), input: FixedPieceInput::default(), diff: SemanticDiff::default(), piece: Arc::default() }
+            Self { id: Id::default(), owner_edit: Weak::new(), input: FixedPieceInput::default(), diff: SemanticDiff::default(), piece: Arc::default() }
         }
     }
 
@@ -7772,11 +7772,11 @@ pub mod operation {
             crate::hash::h(&[self.id.as_str()])
         }
         pub async fn owner(&self) -> Arc<OperationOwner> {
-            Arc::new(OperationOwner::Change(self.owner_change.upgrade().unwrap_or_default()))
+            Arc::new(OperationOwner::Edit(self.owner_edit.upgrade().unwrap_or_default()))
         }
         #[graphql(name = "changeOwner")]
-        pub async fn change_owner(&self) -> Option<Arc<Change>> {
-            self.owner_change.upgrade()
+        pub async fn change_owner(&self) -> Option<Arc<Edit>> {
+            self.owner_edit.upgrade()
         }
         #[graphql(name = "ownerEntity")]
         pub async fn owner_entity(&self) -> Option<Arc<OwnerEntity>> {
@@ -7793,7 +7793,7 @@ pub mod operation {
 
     pub struct DraggedPiece {
         pub id: Id,
-        pub owner_change: Weak<Change>,
+        pub owner_edit: Weak<Edit>,
         pub input: DraggedPieceInput,
         pub diff: SemanticDiff,
         pub pieces: Vec<Arc<crate::kit::design::piece::Piece>>,
@@ -7801,7 +7801,7 @@ pub mod operation {
 
     impl Default for DraggedPiece {
         fn default() -> Self {
-            Self { id: Id::default(), owner_change: Weak::new(), input: DraggedPieceInput::default(), diff: SemanticDiff::default(), pieces: Vec::new() }
+            Self { id: Id::default(), owner_edit: Weak::new(), input: DraggedPieceInput::default(), diff: SemanticDiff::default(), pieces: Vec::new() }
         }
     }
 
@@ -7814,11 +7814,11 @@ pub mod operation {
             crate::hash::h(&[self.id.as_str()])
         }
         pub async fn owner(&self) -> Arc<OperationOwner> {
-            Arc::new(OperationOwner::Change(self.owner_change.upgrade().unwrap_or_default()))
+            Arc::new(OperationOwner::Edit(self.owner_edit.upgrade().unwrap_or_default()))
         }
         #[graphql(name = "changeOwner")]
-        pub async fn change_owner(&self) -> Option<Arc<Change>> {
-            self.owner_change.upgrade()
+        pub async fn change_owner(&self) -> Option<Arc<Edit>> {
+            self.owner_edit.upgrade()
         }
         #[graphql(name = "ownerEntity")]
         pub async fn owner_entity(&self) -> Option<Arc<OwnerEntity>> {
@@ -7837,7 +7837,7 @@ pub mod operation {
         pub id: Id,
         /// @emoji Correlates with the `renameKit` mutation return value and `CommandReceipt.requestId`.
         pub request_id: Id,
-        pub owner_change: Weak<Change>,
+        pub owner_edit: Weak<Edit>,
         pub input: RenamedKitInput,
         pub diff: SemanticDiff,
         pub kit: Arc<crate::kit::Kit>,
@@ -7845,7 +7845,7 @@ pub mod operation {
 
     impl Default for RenamedKit {
         fn default() -> Self {
-            Self { id: Id::default(), request_id: Id::default(), owner_change: Weak::new(), input: RenamedKitInput::default(), diff: SemanticDiff::default(), kit: Arc::default() }
+            Self { id: Id::default(), request_id: Id::default(), owner_edit: Weak::new(), input: RenamedKitInput::default(), diff: SemanticDiff::default(), kit: Arc::default() }
         }
     }
 
@@ -7862,11 +7862,11 @@ pub mod operation {
             crate::hash::h(&[self.id.as_str()])
         }
         pub async fn owner(&self) -> Arc<OperationOwner> {
-            Arc::new(OperationOwner::Change(self.owner_change.upgrade().unwrap_or_default()))
+            Arc::new(OperationOwner::Edit(self.owner_edit.upgrade().unwrap_or_default()))
         }
         #[graphql(name = "changeOwner")]
-        pub async fn change_owner(&self) -> Option<Arc<Change>> {
-            self.owner_change.upgrade()
+        pub async fn change_owner(&self) -> Option<Arc<Edit>> {
+            self.owner_edit.upgrade()
         }
         #[graphql(name = "ownerEntity")]
         pub async fn owner_entity(&self) -> Option<Arc<OwnerEntity>> {
@@ -7883,7 +7883,7 @@ pub mod operation {
 
     pub struct ChangedDescription {
         pub id: Id,
-        pub owner_change: Weak<Change>,
+        pub owner_edit: Weak<Edit>,
         pub input: ChangedDescriptionInput,
         pub diff: SemanticDiff,
         pub entity: Arc<crate::kit::Kit>,
@@ -7891,7 +7891,7 @@ pub mod operation {
 
     impl Default for ChangedDescription {
         fn default() -> Self {
-            Self { id: Id::default(), owner_change: Weak::new(), input: ChangedDescriptionInput::default(), diff: SemanticDiff::default(), entity: Arc::default() }
+            Self { id: Id::default(), owner_edit: Weak::new(), input: ChangedDescriptionInput::default(), diff: SemanticDiff::default(), entity: Arc::default() }
         }
     }
 
@@ -7904,11 +7904,11 @@ pub mod operation {
             crate::hash::h(&[self.id.as_str()])
         }
         pub async fn owner(&self) -> Arc<OperationOwner> {
-            Arc::new(OperationOwner::Change(self.owner_change.upgrade().unwrap_or_default()))
+            Arc::new(OperationOwner::Edit(self.owner_edit.upgrade().unwrap_or_default()))
         }
         #[graphql(name = "changeOwner")]
-        pub async fn change_owner(&self) -> Option<Arc<Change>> {
-            self.owner_change.upgrade()
+        pub async fn change_owner(&self) -> Option<Arc<Edit>> {
+            self.owner_edit.upgrade()
         }
         #[graphql(name = "ownerEntity")]
         pub async fn owner_entity(&self) -> Option<Arc<OwnerEntity>> {
@@ -7941,7 +7941,7 @@ pub mod operation {
         field(name = "id", ty = "crate::id::Id"),
         field(name = "hash", ty = "String"),
         field(name = "owner", ty = "std::sync::Arc<crate::operation::OperationOwner>"),
-        field(name = "changeOwner", method = "change_owner", ty = "Option<std::sync::Arc<crate::vcs::Change>>"),
+        field(name = "changeOwner", method = "change_owner", ty = "Option<std::sync::Arc<crate::vcs::Edit>>"),
         field(name = "ownerEntity", method = "owner_entity", ty = "Option<std::sync::Arc<crate::iface::OwnerEntity>>"),
         field(name = "ownedEntities", method = "owned_entities", ty = "Option<std::sync::Arc<crate::iface::OwnedEntityConnection>>")
     )]
@@ -8554,7 +8554,7 @@ pub mod kit_backbone {
         }
 
         /// @emoji 📸 Project one live write session into a version change with edits.
-        async fn change_dto_from_runtime_transaction(tx: &Arc<crate::vcs::Transaction>, saved: bool) -> VersionChangeDto {
+        async fn change_dto_from_runtime_edit(tx: &Arc<crate::vcs::Edit>, saved: bool) -> VersionChangeDto {
             let mut edits = Vec::new();
             for (idx, ch) in tx.changes.read().await.iter().enumerate() {
                 edits.push(Self::edit_dto_from_runtime_change(ch, (idx + 1) as i32).await);
@@ -8574,10 +8574,10 @@ pub mod kit_backbone {
             let mut saved = BlockHashedListDto::default();
             let mut unsaved = BlockHashedListDto::default();
             for tx in draft.finalized_transactions.read().await.iter() {
-                saved.items.push(Self::change_dto_from_runtime_transaction(tx, true).await);
+                saved.items.push(Self::change_dto_from_runtime_edit(tx, true).await);
             }
             for tx in draft.transactions.read().await.iter() {
-                unsaved.items.push(Self::change_dto_from_runtime_transaction(tx, false).await);
+                unsaved.items.push(Self::change_dto_from_runtime_edit(tx, false).await);
             }
             (saved, unsaved)
         }
@@ -9371,7 +9371,7 @@ pub mod worker {
                     let mut diff = SemanticDiff::default();
                     diff.id = Id::new().await;
                     diff.summary = Some("renameKit".to_string());
-                    let op_evt = Arc::new(RenamedKit { id: Id::new().await, request_id, owner_change: Weak::new(), input: OperationRenamedKitInput { name: name.clone() }, diff, kit: after_kit.clone() });
+                    let op_evt = Arc::new(RenamedKit { id: Id::new().await, request_id, owner_edit: Weak::new(), input: OperationRenamedKitInput { name: name.clone() }, diff, kit: after_kit.clone() });
                     graph.op_history.write().await.push(Arc::new(OperationIface::RenamedKit(op_evt.clone())));
                     self.bus.emit_event(Event::RenamedKit(op_evt)).await;
                 }

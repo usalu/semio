@@ -1,0 +1,15 @@
+{
+  "title": "Align Lib Rs To Target Schema",
+  "emoji": "🦀",
+  "status": "open",
+  "description": "Complete align_lib.rs_to_target_schema plan: interfaces, entities, vcs (Draft→Alternative), diffs, modifications, inputs, operations, entrypoints, tests. Single file semio/rs/lib.rs only.",
+  "goal": "🎯r2602",
+  "plan": {
+    "client": "cursor",
+    "id": "2b129619",
+    "source": "c:\\git\\semio\\.cursor\\plans\\align_lib.rs_to_target_schema_2b129619.plan.md"
+  },
+  "sessions": [
+    "⚪e1b725d9fa8545f19578ccadbd2b4d9e"
+  ]
+}

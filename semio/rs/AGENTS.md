@@ -27,15 +27,6 @@ Consumers talk to this bundle only through the **GraphQL control plane** (WASM `
 - You MUST use an **outbound event stream** for lifecycle + data (including command outcomes).
 - You MUST NOT depend on OS-only async runtimes where the target is `wasm32` (no tokio on wasm paths).
 
-### Command / diff contract (target)
-
-- **External** kit mutations MUST be expressed only as **semantic kit change commands** (no ad-hoc field surgery from clients).
-- Each change command MUST define:
-  1. A pure **forward** function: concrete parameters → **`KitDiff`** (or typed fragment) describing the state transition.
-  2. A pure **inverse** function: ordered list of concrete commands → inverse **`KitDiff`** (or stack of inverse commands) so undo is data-defined.
-- **Internal** application MUST be central: apply diffs to the live graph, invalidate caches, emit events — **commands MUST NOT** scatter direct `KitGraph` edits outside the central apply path.
-- **Async command surface (target)**: accepting a command returns only an **execution / request id**; success, merged DTOs, and errors are delivered on the **event stream** so clients correlate by id. (Transitional GraphQL helpers that return immediate receipts MUST converge on this model.)
-
 ## 🕸️ Systems
 
 ## 🧮 Algorithms
