@@ -1,6 +1,6 @@
 ---
 name: field-only kit reads refactor
-overview: Collapse `semio/js/index.ts` to only export entity classes (`Kit`, `Design`, `Type`, `Piece`, `Connection`, `Author`, `Quality`, ...); merge `Kit` and `KitStore` into one `Kit` class. The classes are stateless GraphQL clients over the schema in `semio/rs/lib.rs` (`Query` / `Mutation` / `Subscription`) — there is no in-class cache, no optimistic apply, no reconciliation logic anywhere in `semio/js`, `semio/react`, or `semio/sketchpad`. The Rust server is in-memory and authoritative for every read. Each field exposes two methods: `field(): Promise<T>` (one GraphQL `Query`) and `on<Event>(cb: (next: T) => void): Unsubscribe` (subscription event routed through an `EventBus`, where `next` comes from the server's event payload or a refetch — the class never stores it). Commands map 1:1 to leaves of the `*OperationInput` types in `semio/graphql/target.schema.graphql` and each ships as a single async method `op(...): Promise<SetResult>` that just dispatches the GraphQL mutation and awaits the server. `semio/react/index.tsx` adds nothing beyond the schema; every hook is 1:1 with one schema field (read) or one `*OperationInput` leaf (write). Read hooks back themselves with `useState` + `useEffect` (fetch on mount, replace on each subscription event) and return `T | undefined` lean / class instance(s) bulky. Operation hooks return `readonly [run, status]`. The `status` discriminated union has a *general* part (`idle` / `pending` / `successful` / `timeout` / `failed`) shared by every operation, plus per-op *extras* declared by the schema's `SetError` kinds for that specific operation — e.g. only the rename/changeDescription/changeIcon/addAttribute family adds `tooLong`, while `useDragPiece` / `useFixPiece` / `useDeletePiece` carry only the general union. The TypeScript type per hook reflects exactly those kinds. No sub-selection, no derivation, no aggregate / metadata / shallow / view hooks. Sketchpad obeys the same rule and inlines every sub-selection at the call site.
+overview: Collapse `semio/js/index.ts` to only export entity classes (`Kit`, `Design`, `Type`, `Piece`, `Connection`, `Author`, `Quality`, ...); merge `Kit` and `KitStore` into one `Kit` class. The classes are stateless GraphQL clients over the schema in `semio/rs/lib.rs` (`Query` / `Mutation` / `Subscription`) — there is no in-class cache, no optimistic apply, no reconciliation logic anywhere in `semio/js`, `semio/react`, or `semio/sketchpad`. The Rust server is in-memory and authoritative for every read. Each field exposes two methods: `field(): Promise<T>` (one GraphQL `Query`) and `on<Event>(cb: (next: T) => void): Unsubscribe` (subscription event routed through an `EventBus`, where `next` comes from the server's event payload or a refetch — the class never stores it). Commands map 1:1 to leaves of the `*OperationInput` types in `semio/graphql/target.schema.graphql` and each ships as a single async method `op(...): Promise<SetResult>` that just dispatches the GraphQL mutation and awaits the server. `semio/react/index.tsx` adds nothing beyond the schema; every hook is 1:1 with one schema field (read) or one `*OperationInput` leaf (write). Read hooks back themselves with `useState` + `useEffect` (fetch on mount, replace on each subscription event) and return `T | undefined` lean / class instance(s) bulky. Operation hooks return `readonly [run, status]`. The `status` discriminated union has a *general* part (`idle` / `pending` / `successful` / `timeout` / `failed`) shared by every operation, plus per-operation *extras* declared by the schema's `SetError` kinds for that specific operation — e.g. only the rename/changeDescription/changeIcon/addAttribute family adds `tooLong`, while `useDragPiece` / `useFixPiece` / `useDeletePiece` carry only the general union. The TypeScript type per hook reflects exactly those kinds. No sub-selection, no derivation, no aggregate / metadata / shallow / view hooks. Sketchpad obeys the same rule and inlines every sub-selection at the call site.
 todos:
  - id: ticket
    content: Open / reopen the field-only kit reads ticket via repo MCP and keep temp artifacts inside it
@@ -27,7 +27,7 @@ todos:
    content: Declare every per-field read hook as a one-liner using create<Entity>FieldHook(getSnap, subscribe). Covers usePieceName / usePiecePlane / usePieceFlatPlane / usePieceFlatCenter / usePieceCenter / usePieceScale / usePieceAttributes / useTypeName / useTypePortIds / useTypeConnectorIds / useDesignName / useDesignPieceIds / useDesignConnectionIds / useConnectionGap / useConnectionShift / useConnectionRotation / useConnectorCode / etc. Each returns T | undefined.
    status: pending
  - id: react-operation-hooks
-   content: Declare every per-operation write hook as a one-liner using create<Entity>OpHook(call, mapError?). Exactly one declaration per *OperationInput leaf — use<Op><Entity> calling entity.operation(...) and returning a stable readonly [run, status] tuple where run(...args) → Promise<SetResult> and status is a discriminated union tracked by the factory via React.useState. The general part is shared by every op — idle | pending | successful | timeout | failed. Per-op extras come from the optional mapError argument, which converts a SetError into an extra status kind (e.g. mapTooLong returns { kind: "tooLong", error } only for ops whose schema input has a length/range bound). Status mapping in factory order: ok:true → "successful"; SetError.kind === "Timeout" → "timeout"; mapError(error) returns extra → that extra kind; otherwise → "failed". No *Sync hooks. Per-op surface — rename/changeDescription/changeIcon/addAttribute family carries general + tooLong; pure-numeric / no-arg ops (useDragPiece, useFixPiece, useDeletePiece, useDeletePieces, useFlattenDesign, useStartNewChange, useSaveUnsavedChange, useCreateCheckpoint, useStartAlternative, useIntegrateAlternative, ...) carry only the general union. Covers useDragPiece, useFixPiece, useRenamePiece (+tooLong), useMovePiece, useChangePieceBlueprint, useAddFixedPiece, useDeletePiece, useDeletePieces, useFlattenDesign, useCreateType (+tooLong), useCreatePort (+tooLong), useAddConnector (+tooLong), useStartNewChange, useSaveUnsavedChange, useCreateCheckpoint (+tooLong on message), useStartAlternative, useIntegrateAlternative, useRenameKit (+tooLong), useChangeKitDescription (+tooLong), etc.
+   content: Declare every per-operation write hook as a one-liner using create<Entity>OpHook(call, mapError?). Exactly one declaration per *OperationInput leaf — use<Op><Entity> calling entity.operation(...) and returning a stable readonly [run, status] tuple where run(...args) → Promise<SetResult> and status is a discriminated union tracked by the factory via React.useState. The general part is shared by every operation — idle | pending | successful | timeout | failed. Per-operation extras come from the optional mapError argument, which converts a SetError into an extra status kind (e.g. mapTooLong returns { kind: "tooLong", error } only for ops whose schema input has a length/range bound). Status mapping in factory order: ok:true → "successful"; SetError.kind === "Timeout" → "timeout"; mapError(error) returns extra → that extra kind; otherwise → "failed". No *Sync hooks. Per-operation surface — rename/changeDescription/changeIcon/addAttribute family carries general + tooLong; pure-numeric / no-arg ops (useDragPiece, useFixPiece, useDeletePiece, useDeletePieces, useFlattenDesign, useStartNewChange, useSaveUnsavedChange, useCreateCheckpoint, useStartAlternative, useIntegrateAlternative, ...) carry only the general union. Covers useDragPiece, useFixPiece, useRenamePiece (+tooLong), useMovePiece, useChangePieceBlueprint, useAddFixedPiece, useDeletePiece, useDeletePieces, useFlattenDesign, useCreateType (+tooLong), useCreatePort (+tooLong), useAddConnector (+tooLong), useStartNewChange, useSaveUnsavedChange, useCreateCheckpoint (+tooLong on message), useStartAlternative, useIntegrateAlternative, useRenameKit (+tooLong), useChangeKitDescription (+tooLong), etc.
    status: pending
  - id: react-deletes
    content: Enforce the schema-1:1 invariant — delete every export from semio/react/index.tsx that is not 1:1 with a target.schema.graphql field or *OperationInput leaf. Includes KitFieldBinding/HookRead/WriteStatus wrappers; sub-selection hooks (useDesignPieceIds/useDesignConnectionIds/useType*Ids/useKit*Ids/useConnection*PieceId/usePieceCenterU/usePieceIsHidden/etc.); aggregate/metadata/shallow/view hooks (useTypesIds/useDesignsIds/useTypesMetadata/useTypesFull/useKitDesignsShallow/usePieceMetadata/useDesignQualitySum/useTypeBestRepresentation/useKitColoredConnectors/useReplacableTypes/useExplodeableDesignNodes/etc.); registry/shell hooks (useOpenKitGuids/useActiveKitGuid/useOpenKitShallows/useRegistryHasKit/useKitAlternatives); whole-object triads; generic schema readers; snapshot accessors; *Input/*PatchInput whole-object hooks; useResolved* helpers; useUndo/useRedo/useChange/useCommandBuilder/useWriteIndicator/useWriteQueue/useOptimistic/usePendingTriad; whole-snapshot file/binary helpers. Demote helpers to non-exported internals.
@@ -36,10 +36,10 @@ todos:
    content: Add the bulky-list 1:1 hooks sketchpad needs (each a one-liner via create<Entity>FieldHook returning class instances) — useKitTypes, useKitDesigns, useKitAuthors, useKitQualities, useKitTags, useKitConcepts, useDesignPieces, useDesignConnections, useTypePorts, useTypeConnectors, useTypeRepresentations, useConnectionConnected, useConnectionConnecting. NO sub-selection (no useDesignPieceIds, no useTypePortIds — callers map class .id inline). Anything not in target.schema.graphql is rejected and either added to the schema first or computed inline in the consumer.
    status: pending
  - id: sketchpad-migrate
-   content: Replace all 64 banned-hook usages in semio/sketchpad/index.tsx with schema-1:1 reads + ops from @semio/react. Reads and writes strictly separate. Delete every sub-selection / tuple sketchpad hook (usePieceCenterU/usePieceCenterV/sketchpad's tuple usePieceScale/usePieceIsHidden/usePieceIsLocked/useConnectionGapValue/useConnectionShiftValue/useConnectionRiseValue/useConnectionRotationValue/useConnectionTurnValue/useConnectionTiltValue/useDesignPieceIds/useDesignConnectionIds/all *Metadata/*Shallow/*Full derivations) — no replacement hook, callers inline destructuring at the call site (const center = usePieceCenter(); const u = center?.u). Replace every commands.update*/applyKitDiff with the matching use<Op><Entity> destructured as const [op, opStatus] = use<Op><Entity>(); … void op(...). Render saving / tooLong / timeout / failed UI off opStatus.kind. Drop the useDesignAppCommands indirection entirely. Fan list rendering through the bulky list hook (useDesignPieces, useTypePorts, …) plus inline .map((x) => <Context id={x.id}>).
+   content: Replace all 64 banned-hook usages in semio/sketchpad/index.tsx with schema-1:1 reads + ops from @semio/react. Reads and writes strictly separate. Delete every sub-selection / tuple sketchpad hook (usePieceCenterU/usePieceCenterV/sketchpad's tuple usePieceScale/usePieceIsHidden/usePieceIsLocked/useConnectionGapValue/useConnectionShiftValue/useConnectionRiseValue/useConnectionRotationValue/useConnectionTurnValue/useConnectionTiltValue/useDesignPieceIds/useDesignConnectionIds/all *Metadata/*Shallow/*Full derivations) — no replacement hook, callers inline destructuring at the call site (const center = usePieceCenter(); const u = center?.u). Replace every commands.update*/applyKitDiff with the matching use<Op><Entity> destructured as const [op, opStatus] = use<Op><Entity>(); … void op(...). Render saving / timeout / failed UI off opStatus.kind for every op; render tooLong UI only on the ops that carry the tooLong extra (rename / changeDescription / changeIcon / changeBlueprint / addAttribute / createX family) — for general ops (drag / move / fix / delete / flatten / startNewChange / save / startAlternative / integrateAlternative) `opStatus.kind === "tooLong"` is a static type error and must not appear. Drop the useDesignAppCommands indirection entirely. Fan list rendering through the bulky list hook (useDesignPieces, useTypePorts, …) plus inline .map((x) => <Context id={x.id}>).
    status: pending
  - id: tests
-   content: Update inline vitest blocks in semio/js/index.ts and semio/react/index.tsx for the new stateless-client shape — field() round-trips against a stub GqlTransport, on<Event>(cb) delivers the new value when the EventBus emits, op(...) dispatches a single mutation and awaits, OperationStatus transitions (idle → pending → successful | tooLong | timeout | failed) for hooks like useDragPiece / useRenameKit, usePieceCenter rerender on event delivery; remove tests asserting on deleted exports or on optimistic-apply / cache reconciliation behaviour; add an inline negative-grep test in semio/sketchpad/index.tsx asserting zero matches for the banned hooks (no `*Sync` op hook names, no banned read hooks, no `applyKitDiff`, no manual cache code).
+   content: Update inline vitest blocks in semio/js/index.ts and semio/react/index.tsx for the new stateless-client shape — field() round-trips against a stub GqlTransport, on<Event>(cb) delivers the new value when the EventBus emits, op(...) dispatches a single mutation and awaits, OperationStatus transitions through the GENERAL kinds (idle → pending → successful | timeout | failed) for general-only hooks (useDragPiece, useFixPiece, useDeletePiece, useFlattenDesign, …) and through general + tooLong for the +tooLong family (useRenameKit, useRenamePiece, useChangePieceDescription, useChangeConnectorDescription, useCreateType, useCreatePort, useAddConnector, useCreateCheckpoint, …). Add expectTypeOf assertions: dragPieceStatus.kind === "tooLong" must be a TypeScript error; renameKitStatus.kind === "tooLong" must compile. Verify usePieceCenter rerender on event delivery; remove tests asserting on deleted exports or on optimistic-apply / cache reconciliation behaviour; add an inline negative-grep test in semio/sketchpad/index.tsx asserting zero matches for the banned hooks (no `*Sync` operation hook names, no banned read hooks, no `applyKitDiff`, no manual cache code).
    status: pending
  - id: validate
    content: Run npm run depcruise:layers, typecheck for semio/js + semio/react + semio/sketchpad, run inline tests, manual sketchpad smoke
@@ -102,12 +102,12 @@ Each class has three things:
 
 1. **Reads** — two methods per field from the schema's data/computed fields:
    - `field(): Promise<T>` — one-off GraphQL `Query` against [semio/rs/lib.rs](semio/rs/lib.rs). Always hits the server. There is no synchronous companion (`fieldSync` is gone) because there is nothing to read from synchronously.
-   - `on<Event>(cb: (next: T) => void): Unsubscribe` — subscribe to the routed event channel. The `next` argument is delivered by the unified `subscription { event }` stream — either taken directly from the server's event payload when the schema embeds the new value, or fetched once by the JS class via the same `field()` query and broadcast to all listeners. Either way the class never *stores* `next`; it just relays it. Event names follow the schema's Edit/Modification union (`onRenamed`, `onDescriptionChanged`, `onMoved`, `onDragged`, `onFixed`, `onFlattened`, `onPlaneChanged`, `onCenterChanged`, `onAttributeAdded`, `onAttributeRemoved`, `onPieceAdded`, `onPieceDeleted`, `onConnectionAdded`, `onConnectionDeleted`, `onPortCreated`, `onPortDeleted`, `onConnectorAdded`, `onConnectorRemoved`, `onTagCreated`, `onTagDeleted`, `onConceptCreated`, `onConceptDeleted`, `onQualityCreated`, `onQualityDeleted`, `onTypeCreated`, `onTypeDeleted`, `onDesignCreated`, `onDesignDeleted`, `onCheckpointCreated`, …).
+   - `on<Event>(cb: (next: T) => void): Unsubscribe` — subscribe to the routed event channel. The `next` argument is delivered by the unified `subscription { event }` stream — either taken directly from the server's event payload when the schema embeds the new value, or fetched once by the JS class via the same `field()` query and broadcast to all listeners. Either way the class never _stores_ `next`; it just relays it. Event names follow the schema's Edit/Modification union (`onRenamed`, `onDescriptionChanged`, `onMoved`, `onDragged`, `onFixed`, `onFlattened`, `onPlaneChanged`, `onCenterChanged`, `onAttributeAdded`, `onAttributeRemoved`, `onPieceAdded`, `onPieceDeleted`, `onConnectionAdded`, `onConnectionDeleted`, `onPortCreated`, `onPortDeleted`, `onConnectorAdded`, `onConnectorRemoved`, `onTagCreated`, `onTagDeleted`, `onConceptCreated`, `onConceptDeleted`, `onQualityCreated`, `onQualityDeleted`, `onTypeCreated`, `onTypeDeleted`, `onDesignCreated`, `onDesignDeleted`, `onCheckpointCreated`, …).
 
 2. **Operations** — exactly **one** method per leaf command in the matching `*OperationInput` from §`#region Commands`. Method signatures mirror the schema (same names, same args, same nullability) and return `Promise<SetResult>`:
    - `operation(...args): Promise<SetResult>` — single async path. Builds a `mutation { session { ... } }`, dispatches it through `GqlTransport` against [semio/rs/lib.rs](semio/rs/lib.rs), and resolves with the server's response. **Nothing** is mutated locally — the JS class does not touch any cache, does not pre-fire `on<Event>` callbacks, does not reconcile anything. UI updates flow exclusively from the subscription event(s) that the server emits in response to the mutation.
    - `SetResult` is `{ ok: true; id: ID }` on success, or `{ ok: false; error: SetError }` on rejection. `SetError` is the discriminated union enumerated in [target.schema.graphql](semio/graphql/target.schema.graphql) (e.g. `Readonly`, `TooLong`, `Validation`, `Conflict`, `Rejected`). Network timeouts surface as `{ kind: "Timeout"; message }` from the transport.
-   - Callers that want fire-and-forget simply drop the `Promise` (the React op hook tracks status independently — see §4).
+   - Callers that want fire-and-forget simply drop the `Promise` (the React operation hook tracks status independently — see §4).
 
 3. **Navigation methods** — for command-input fields that nest into another scoped command input, the class returns the matching child class instance. E.g. `design.piece(id) → Piece`, `design.pieces(ids) → PiecesOperations`, `kit.type(id) → Type`, `type.port(id) → Port`, `type.connector(id) → Connector`, etc. Because these wrappers are stateless, memoizing them by id is purely an ergonomic identity helper (so `design.piece("p1") === design.piece("p1")`); it is not value caching.
 
@@ -147,12 +147,7 @@ abstract class Entity {
 
 // internal helpers attached at class-definition time. Each returns a small object describing the
 // field/operation so defineFields/defineOperations can install named methods on the prototype.
-const defineField = <T>(spec: {
- key: string;
- query: GqlDoc;
- pickQuery: (data: any) => T;
- event: string;
-}) => spec;
+const defineField = <T>(spec: { key: string; query: GqlDoc; pickQuery: (data: any) => T; event: string }) => spec;
 
 const defineOperation = <Args extends any[]>(spec: {
  name: string; // matches the *OperationInput leaf name
@@ -188,15 +183,15 @@ export class Piece extends Entity {
  // Operations — defineOperations installs exactly one async method per leaf. No applyToCache:
  // there is no cache. Each method just builds the GraphQL input and awaits the server.
  static operations = [
-  defineOperation({ name: "rename",            buildInput: (newName: string)               => ({ rename:            { newName } }) }),
-  defineOperation({ name: "changeDescription", buildInput: (newDescription: string)        => ({ changeDescription: { newDescription } }) }),
-  defineOperation({ name: "drag",              buildInput: (offset: OffsetInput)            => ({ drag:              { offset } }) }),
-  defineOperation({ name: "move",              buildInput: (position: PositionInput)        => ({ move:              { position } }) }),
-  defineOperation({ name: "fix",               buildInput: ()                               => ({ fix: true }) }),
-  defineOperation({ name: "changeBlueprint",   buildInput: (blueprintId: string)            => ({ changeBlueprint:   { blueprintId } }) }),
-  defineOperation({ name: "addAttribute",      buildInput: (key: string, value: string, definition: string) => ({ addAttribute:    { key, value, definition } }) }),
-  defineOperation({ name: "removeAttribute",   buildInput: (id: string)                     => ({ removeAttribute:   { id } }) }),
-  defineOperation({ name: "removeAttributes",  buildInput: (ids: readonly string[])         => ({ removeAttributes:  { ids } }) }),
+  defineOperation({ name: "rename", buildInput: (newName: string) => ({ rename: { newName } }) }),
+  defineOperation({ name: "changeDescription", buildInput: (newDescription: string) => ({ changeDescription: { newDescription } }) }),
+  defineOperation({ name: "drag", buildInput: (offset: OffsetInput) => ({ drag: { offset } }) }),
+  defineOperation({ name: "move", buildInput: (position: PositionInput) => ({ move: { position } }) }),
+  defineOperation({ name: "fix", buildInput: () => ({ fix: true }) }),
+  defineOperation({ name: "changeBlueprint", buildInput: (blueprintId: string) => ({ changeBlueprint: { blueprintId } }) }),
+  defineOperation({ name: "addAttribute", buildInput: (key: string, value: string, definition: string) => ({ addAttribute: { key, value, definition } }) }),
+  defineOperation({ name: "removeAttribute", buildInput: (id: string) => ({ removeAttribute: { id } }) }),
+  defineOperation({ name: "removeAttributes", buildInput: (ids: readonly string[]) => ({ removeAttributes: { ids } }) }),
  ];
 }
 
@@ -205,7 +200,7 @@ defineFields(Piece, Piece.fields);
 defineOperations(Piece, Piece.operations);
 ```
 
-`defineFields(C, specs)` installs **two** methods per spec on `C.prototype`: `<key>(): Promise<T>` (calls `Entity.fieldQuery` — one GraphQL `Query` per call) and `on<Event>(cb): Unsubscribe` (calls `Entity.subscribeField` — relays subscription events from the unified stream). `defineOperations(C, specs)` installs **exactly one** method per spec: `<name>(...args): Promise<SetResult>` (calls `Entity.dispatch` — one GraphQL `Mutation` per call, awaits the server's reply, never touches local state). There is no `<key>Sync` field method, no `<name>Sync` op method, no `applyToCache`, no reconciliation. Same recipe for `Kit`, `Design`, `Type`, `Port`, `Connector`, `Connection`, `Author`, `Quality`, `Tag`, `Concept`, etc. — each class is mostly two static arrays plus optional navigation methods.
+`defineFields(C, specs)` installs **two** methods per spec on `C.prototype`: `<key>(): Promise<T>` (calls `Entity.fieldQuery` — one GraphQL `Query` per call) and `on<Event>(cb): Unsubscribe` (calls `Entity.subscribeField` — relays subscription events from the unified stream). `defineOperations(C, specs)` installs **exactly one** method per spec: `<name>(...args): Promise<SetResult>` (calls `Entity.dispatch` — one GraphQL `Mutation` per call, awaits the server's reply, never touches local state). There is no `<key>Sync` field method, no `<name>Sync` operation method, no `applyToCache`, no reconciliation. Same recipe for `Kit`, `Design`, `Type`, `Port`, `Connector`, `Connection`, `Author`, `Quality`, `Tag`, `Concept`, etc. — each class is mostly two static arrays plus optional navigation methods.
 
 The full operation surface per class (mirrors [semio/graphql/target.schema.graphql](semio/graphql/target.schema.graphql) exactly):
 
@@ -220,7 +215,7 @@ The full operation surface per class (mirrors [semio/graphql/target.schema.graph
 - **`Piece`** (mirrors `PieceOperationInput`): see snippet above.
 - **`Connection`**, **`Author`**: both implement `Artifact` (bulky) so they are classes with the full read API (one `field()` + `on<Event>(cb)` pair per schema field). The schema currently does not declare a dedicated `*OperationInput` for either, so the class only carries reads; their commands (e.g. add/remove connection, addAuthor) live on the parent `Design` / `Kit` per the schema. If the schema later grows `ConnectionOperationInput` / `AuthorOperationInput`, the matching methods are added then.
 
-`Plane`, `Coordinate`, `Position`, `Point`, `Vector`, `Side`, `Attribute` (every `WeakEntity` per [target.schema.graphql](semio/graphql/target.schema.graphql) lines 51–67) are **not classes**. They are plain TypeScript record types that mirror the schema 1:1 (e.g. `interface Plane { origin: Point; xAxis: Vector; yAxis: Vector }`). They are returned by-value from owner methods (`piece.plane(): Promise<Plane>`, `piece.flatPlane(): Promise<Plane>`, `connection.side(): Promise<Side>`, `piece.attributes(): Promise<readonly Attribute[]>`, …). Each call hits the server fresh; no in-class cache holds them. There is no `class Plane`, no `class Coordinate`, no `class Attribute`. There are no `*Scope` / `*Context` providers, no entity-identity hooks, and no `field()` / `on<Event>` API anchored to a weak-entity id — those values appear *only* as field results inside their owning Artifact class.
+`Plane`, `Coordinate`, `Position`, `Point`, `Vector`, `Side`, `Attribute` (every `WeakEntity` per [target.schema.graphql](semio/graphql/target.schema.graphql) lines 51–67) are **not classes**. They are plain TypeScript record types that mirror the schema 1:1 (e.g. `interface Plane { origin: Point; xAxis: Vector; yAxis: Vector }`). They are returned by-value from owner methods (`piece.plane(): Promise<Plane>`, `piece.flatPlane(): Promise<Plane>`, `connection.side(): Promise<Side>`, `piece.attributes(): Promise<readonly Attribute[]>`, …). Each call hits the server fresh; no in-class cache holds them. There is no `class Plane`, no `class Coordinate`, no `class Attribute`. There are no `*Scope` / `*Context` providers, no entity-identity hooks, and no `field()` / `on<Event>` API anchored to a weak-entity id — those values appear _only_ as field results inside their owning Artifact class.
 
 Every command method translates to one `mutation { session { ... } }` GraphQL request. The session/version/change scoping (`session.theKit.unsavedChange(activeChangeId).kit.<…>`, or `session.alternative(…)`, or `session.theKit.…` for save / checkpoint flows) is encapsulated by `Kit`; child classes hold a reference to their owning `Kit` and route their own command through it.
 
@@ -267,8 +262,8 @@ The same rule applies to writes — every write hook is a 1:1 wrapper around one
 
 ### Strict separation of reads and writes
 
-- **Reads** are pure plain-data hooks. `use<Entity><Field>(id?)` returns just the value (`T | undefined` for lean, `Entity | null` / `readonly Entity[] | undefined` for bulky). The hook backs itself with `useState` + `useEffect`: on mount (or whenever the resolved entity changes) it calls `entity.field()` once and stores the result; on every `entity.on<Event>(cb)` callback it replaces the stored value with the new one. The hook does *not* keep an external cache, does *not* dedupe across components, does *not* try to optimize equality. The Rust server is in-memory and fast — every component pays for its own fetch and that's fine. While the first fetch is in flight the hook returns `undefined`. No tuple, no setter, no status, no `KitFieldBinding`, no `HookRead`.
-- **Writes** are operation hooks. `use<Operation><Entity>(id?)` returns a stable `readonly [run, status]` tuple where `run(...args): Promise<SetResult>` is bound to that entity + operation and `status: OperationStatus<SetSuccess, Extra>` is a discriminated-union snapshot. The `general` part is shared by every op (`idle` / `pending` / `successful` / `timeout` / `failed`); each op may extend it with `Extra` kinds declared by the schema's `SetError` for that specific operation (e.g. only the rename / changeDescription / changeIcon / addAttribute / changeBlueprint family adds `tooLong`). See §"Operation hook pattern". There is no `*Sync` variant, no embedded read fallback, no optimistic apply. `run` simply awaits the GraphQL mutation; any UI update that must follow the write arrives through the subscription events the server emits. Callers compose a read hook and a write hook independently.
+- **Reads** are pure plain-data hooks. `use<Entity><Field>(id?)` returns just the value (`T | undefined` for lean, `Entity | null` / `readonly Entity[] | undefined` for bulky). The hook backs itself with `useState` + `useEffect`: on mount (or whenever the resolved entity changes) it calls `entity.field()` once and stores the result; on every `entity.on<Event>(cb)` callback it replaces the stored value with the new one. The hook does _not_ keep an external cache, does _not_ dedupe across components, does _not_ try to optimize equality. The Rust server is in-memory and fast — every component pays for its own fetch and that's fine. While the first fetch is in flight the hook returns `undefined`. No tuple, no setter, no status, no `KitFieldBinding`, no `HookRead`.
+- **Writes** are operation hooks. `use<Operation><Entity>(id?)` returns a stable `readonly [run, status]` tuple where `run(...args): Promise<SetResult>` is bound to that entity + operation and `status: OperationStatus<SetSuccess, Extra>` is a discriminated-union snapshot. The `general` part is shared by every operation (`idle` / `pending` / `successful` / `timeout` / `failed`); each operation may extend it with `Extra` kinds declared by the schema's `SetError` for that specific operation (e.g. only the rename / changeDescription / changeIcon / addAttribute / changeBlueprint family adds `tooLong`). See §"Operation hook pattern". There is no `*Sync` variant, no embedded read fallback, no optimistic apply. `run` simply awaits the GraphQL mutation; any UI update that must follow the write arrives through the subscription events the server emits. Callers compose a read hook and a write hook independently.
 - The kit can only be modified through these operation hooks. Operation hooks map 1:1 to leaves of the `*OperationInput` types in [target.schema.graphql](semio/graphql/target.schema.graphql).
 
 ### Resolution rules (every hook)
@@ -394,7 +389,7 @@ Operation hooks called outside any provider must take an explicit `id` (otherwis
 
 ### Sketchpad target
 
-Sketchpad obeys the same schema-1:1 rule: it never re-implements a `usePieceCenterU` / `usePieceIsHidden` / `useConnectionGapValue`-style hook either. Every existing `HookResult<T>` style sketchpad hook is **deleted entirely**. Slicing a lean value (e.g. picking `u` from a `Coordinate`) or picking a class `id` from a list happens *inline at the call site*, in the component body that needs it. Reads come from `@semio/react`'s schema-1:1 read hooks; writes come from `@semio/react`'s schema-1:1 op hooks.
+Sketchpad obeys the same schema-1:1 rule: it never re-implements a `usePieceCenterU` / `usePieceIsHidden` / `useConnectionGapValue`-style hook either. Every existing `HookResult<T>` style sketchpad hook is **deleted entirely**. Slicing a lean value (e.g. picking `u` from a `Coordinate`) or picking a class `id` from a list happens _inline at the call site_, in the component body that needs it. Reads come from `@semio/react`'s schema-1:1 read hooks; writes come from `@semio/react`'s schema-1:1 operation hooks.
 
 ```ts
 // Before — semio/sketchpad/index.tsx around line 16888
@@ -404,12 +399,7 @@ export function usePieceCenterU(): HookResult<number> {
  const commands = useDesignAppCommands();
  const setter = useCallback(
   (value: number) => {
-   if (pieceScope && piece)
-    commands.updatePiece(
-     "semio.sketchpad.app.design.panel.details.section.piece.center.u",
-     pieceScope.id,
-     { center: { u: value, v: piece.center?.v ?? 0 } },
-    );
+   if (pieceScope && piece) commands.updatePiece("semio.sketchpad.app.design.panel.details.section.piece.center.u", pieceScope.id, { center: { u: value, v: piece.center?.v ?? 0 } });
   },
   [pieceScope, piece, commands],
  );
@@ -420,7 +410,7 @@ export function usePieceCenterU(): HookResult<number> {
 ```tsx
 // After — usePieceCenterU does NOT exist anywhere. The component inlines reads and writes.
 function PieceCenterUInput() {
- const center = usePieceCenter();                           // Coordinate | undefined — schema-1:1 read
+ const center = usePieceCenter(); // Coordinate | undefined — schema-1:1 read
  // useMovePiece carries only the GENERAL status union — `tooLong` is not in the type because the
  // schema's MovePieceInput is purely numeric. TypeScript would reject `movePieceStatus.kind === "tooLong"`.
  const [movePiece, movePieceStatus] = useMovePiece();
@@ -428,19 +418,17 @@ function PieceCenterUInput() {
  return (
   <NumberInput
    value={u}
-   onCommit={(next) => { if (center) void movePiece({ center: { u: next, v: center.v } }); }}
+   onCommit={(next) => {
+    if (center) void movePiece({ center: { u: next, v: center.v } });
+   }}
    saving={movePieceStatus.kind === "pending"}
-   error={
-    movePieceStatus.kind === "timeout" ? "Server slow, retrying" :
-    movePieceStatus.kind === "failed"  ? movePieceStatus.error.message :
-    null
-   }
+   error={movePieceStatus.kind === "timeout" ? "Server slow, retrying" : movePieceStatus.kind === "failed" ? movePieceStatus.error.message : null}
   />
  );
 }
 ```
 
-The same rule deletes (in sketchpad and `@semio/react`) every other tuple/sub-selection hook and replaces it with inline destructuring + 1:1 op calls:
+The same rule deletes (in sketchpad and `@semio/react`) every other tuple/sub-selection hook and replaces it with inline destructuring + 1:1 operation calls:
 
 - `usePieceCenterV` — gone. Component inlines `usePieceCenter()?.v` for read and `const [movePiece] = useMovePiece(); … void movePiece({ center: { u, v: next } })` for write.
 - sketchpad's tuple `usePieceScale` — gone. Component uses `@semio/react`'s `usePieceScale()` (returns `number | undefined`) plus `const [movePiece, movePieceStatus] = useMovePiece()` for write.
@@ -451,11 +439,11 @@ List rendering follows the same rule — never ask for ids; ask for the bulky li
 
 ```tsx
 // Before
-const ids = useDesignPieceIds(designId);                // sub-selection — gone
+const ids = useDesignPieceIds(designId); // sub-selection — gone
 return ids?.map((id) => <PieceCard key={id} pieceId={id} />);
 
 // After
-const pieces = useDesignPieces(designId);               // bulky → readonly Piece[] | undefined
+const pieces = useDesignPieces(designId); // bulky → readonly Piece[] | undefined
 return pieces?.map((p) => <PieceCard key={p.id} pieceId={p.id} />);
 ```
 
@@ -482,12 +470,13 @@ const [dragPiece, dragPieceStatus] = useDragPiece(id);
 // onPointerMove={(offset) => void dragPiece(offset)}        // dispatches one mutation, awaits server
 // dragPieceStatus.kind === "pending" while the GraphQL mutation is in flight
 // usePieceCenter rerenders ONLY when the server emits the `CenterChanged` subscription event
-// dragPieceStatus.kind === "successful" | "tooLong" | "timeout" | "failed" once the mutation resolves
+// dragPieceStatus.kind === "successful" | "timeout" | "failed" once the mutation resolves
+//   (no `tooLong` because DragPieceInput is purely numeric — TypeScript rejects the comparison statically)
 ```
 
 Pointer-move drag responsiveness comes entirely from the in-memory Rust server: `piece.drag(offset)` is a single GraphQL mutation hop, the server applies the change in-place, the subscription emits `CenterChanged`, the bound `usePieceCenter` hook receives the new value and rerenders. There is no optimistic shortcut anywhere on the JS / React / sketchpad side.
 
-Net effect: every banned `useKit` / `useDesign` / `useType` / `usePiece` / `useConnection` / `useAuthor` / `useQuality` import disappears from sketchpad, every sub-selection / tuple sketchpad hook (`usePieceCenterU`, `usePieceCenterV`, `usePieceScale` (sketchpad version), `usePieceIsHidden`, `usePieceIsLocked`, `useConnectionGapValue`, `useConnectionShiftValue`, `useConnectionRiseValue`, `useConnectionRotationValue`, `useConnectionTurnValue`, `useConnectionTiltValue`, `useDesignPieceIds`, `useDesignConnectionIds`, …) is *deleted* (no rename, no replacement hook), every `commands.updatePiece` / `updateConnection` / `updateType` / `updateDesign` / `applyKitDiff` call becomes a `const [op, opStatus] = use<Op><Entity>(); … void op(...)` pair, and every read uses a schema-1:1 field hook from `@semio/react` plus inline destructuring at the call site. The `useDesignAppCommands` indirection itself is deleted — sketchpad calls the operation hooks directly. No optimistic-apply layer is reintroduced anywhere.
+Net effect: every banned `useKit` / `useDesign` / `useType` / `usePiece` / `useConnection` / `useAuthor` / `useQuality` import disappears from sketchpad, every sub-selection / tuple sketchpad hook (`usePieceCenterU`, `usePieceCenterV`, `usePieceScale` (sketchpad version), `usePieceIsHidden`, `usePieceIsLocked`, `useConnectionGapValue`, `useConnectionShiftValue`, `useConnectionRiseValue`, `useConnectionRotationValue`, `useConnectionTurnValue`, `useConnectionTiltValue`, `useDesignPieceIds`, `useDesignConnectionIds`, …) is _deleted_ (no rename, no replacement hook), every `commands.updatePiece` / `updateConnection` / `updateType` / `updateDesign` / `applyKitDiff` call becomes a `const [op, opStatus] = use<Op><Entity>(); … void op(...)` pair, and every read uses a schema-1:1 field hook from `@semio/react` plus inline destructuring at the call site. The `useDesignAppCommands` indirection itself is deleted — sketchpad calls the operation hooks directly. No optimistic-apply layer is reintroduced anywhere.
 
 ### Generic mechanisms (React side)
 
@@ -499,11 +488,7 @@ const READONLY: SetResult = { ok: false, error: { kind: "Readonly", message: "no
 
 // Pure pull-based bridge. No cache. Uses useState + useEffect; never useSyncExternalStore (there
 // is nothing to take a stable synchronous snapshot of — the source of truth lives in semio/rs).
-function bindFieldToReact<E, T>(
- entity: E | null,
- fetch: (e: E) => Promise<T>,
- subscribe: (e: E, cb: (next: T) => void) => Unsubscribe,
-): T | undefined {
+function bindFieldToReact<E, T>(entity: E | null, fetch: (e: E) => Promise<T>, subscribe: (e: E, cb: (next: T) => void) => Unsubscribe): T | undefined {
  const [value, setValue] = React.useState<T | undefined>(undefined);
  React.useEffect(() => {
   if (!entity) {
@@ -530,13 +515,13 @@ type GeneralOperationStatus<T = SetSuccess> =
  | { readonly kind: "idle" }
  | { readonly kind: "pending"; readonly startedAt: number }
  | { readonly kind: "successful"; readonly value: T; readonly finishedAt: number }
- | { readonly kind: "timeout"; readonly startedAt: number }                    // SetError.kind === "Timeout" (transport / server gave up)
- | { readonly kind: "failed"; readonly error: SetError; readonly finishedAt: number }; // any other rejection that has no per-op extra mapping
+ | { readonly kind: "timeout"; readonly startedAt: number } // SetError.kind === "Timeout" (transport / server gave up)
+ | { readonly kind: "failed"; readonly error: SetError; readonly finishedAt: number }; // any other rejection that has no per-operation extra mapping
 
 // Extras are op-specific. The rename / changeDescription / changeIcon / addAttribute family adds tooLong.
 type TooLongStatus = { readonly kind: "tooLong"; readonly error: SetError; readonly finishedAt: number };
 
-// Per-op status type = general ∪ extras declared for that op.
+// Per-operation status type = general ∪ extras declared for that op.
 type OperationStatus<T = SetSuccess, Extra extends { kind: string } = never> = GeneralOperationStatus<T> | Extra;
 
 const IDLE: GeneralOperationStatus = { kind: "idle" };
@@ -546,8 +531,7 @@ const IDLE: GeneralOperationStatus = { kind: "idle" };
 type OpErrorMapper<Extra extends { kind: string }> = (error: SetError, finishedAt: number) => Extra | null;
 
 // Reusable mapper for the rename / description / icon / attribute family.
-const mapTooLong: OpErrorMapper<TooLongStatus> = (error, finishedAt) =>
- error.kind === "TooLong" ? { kind: "tooLong", error, finishedAt } : null;
+const mapTooLong: OpErrorMapper<TooLongStatus> = (error, finishedAt) => (error.kind === "TooLong" ? { kind: "tooLong", error, finishedAt } : null);
 
 function bindOpToReact<E, Args extends any[], Extra extends { kind: string } = never>(
  entity: E | null,
@@ -596,10 +580,7 @@ function bindOpToReact<E, Args extends any[], Extra extends { kind: string } = n
 //   Quality   — useKit().quality(id ?? QualityContext)
 //   Tag       — useKit().tag(id ?? TagContext)
 //   Concept   — useKit().concept(id ?? ConceptContext)
-const createPieceFieldHook = <T>(
- fetch: (p: Piece) => Promise<T>,
- subscribe: (p: Piece, cb: (next: T) => void) => Unsubscribe,
-): ((id?: string) => T | undefined) =>
+const createPieceFieldHook = <T>(fetch: (p: Piece) => Promise<T>, subscribe: (p: Piece, cb: (next: T) => void) => Unsubscribe): ((id?: string) => T | undefined) =>
  function usePieceField(id?: string): T | undefined {
   const design = useDesign();
   const pieceId = id ?? React.useContext(PieceContext)?.id;
@@ -638,32 +619,95 @@ Every per-field read hook is a one-line application of the matching `create<Enti
 
 ```ts
 // Lean fields → return value verbatim (string / number / WeakEntity / list of WeakEntity)
-export const usePieceName        = createPieceFieldHook((p) => p.name(),        (p, cb) => p.onRenamed(cb));
-export const usePieceDescription = createPieceFieldHook((p) => p.description(), (p, cb) => p.onDescriptionChanged(cb));
-export const usePiecePlane       = createPieceFieldHook((p) => p.plane(),       (p, cb) => p.onPlaneChanged(cb));
-export const usePieceCenter      = createPieceFieldHook((p) => p.center(),      (p, cb) => p.onCenterChanged(cb));
-export const usePieceFlatPlane   = createPieceFieldHook((p) => p.flatPlane(),   (p, cb) => p.onFlatPlaneChanged(cb));
-export const usePieceFlatCenter  = createPieceFieldHook((p) => p.flatCenter(),  (p, cb) => p.onFlatCenterChanged(cb));
-export const usePieceScale       = createPieceFieldHook((p) => p.scale(),       (p, cb) => p.onScaleChanged(cb));
-export const usePieceAttributes  = createPieceFieldHook((p) => p.attributes(),  (p, cb) => p.onAttributesChanged(cb));
+export const usePieceName = createPieceFieldHook(
+ (p) => p.name(),
+ (p, cb) => p.onRenamed(cb),
+);
+export const usePieceDescription = createPieceFieldHook(
+ (p) => p.description(),
+ (p, cb) => p.onDescriptionChanged(cb),
+);
+export const usePiecePlane = createPieceFieldHook(
+ (p) => p.plane(),
+ (p, cb) => p.onPlaneChanged(cb),
+);
+export const usePieceCenter = createPieceFieldHook(
+ (p) => p.center(),
+ (p, cb) => p.onCenterChanged(cb),
+);
+export const usePieceFlatPlane = createPieceFieldHook(
+ (p) => p.flatPlane(),
+ (p, cb) => p.onFlatPlaneChanged(cb),
+);
+export const usePieceFlatCenter = createPieceFieldHook(
+ (p) => p.flatCenter(),
+ (p, cb) => p.onFlatCenterChanged(cb),
+);
+export const usePieceScale = createPieceFieldHook(
+ (p) => p.scale(),
+ (p, cb) => p.onScaleChanged(cb),
+);
+export const usePieceAttributes = createPieceFieldHook(
+ (p) => p.attributes(),
+ (p, cb) => p.onAttributesChanged(cb),
+);
 
 // Bulky fields → return class instance(s)
-export const usePieceParentPiece      = createPieceFieldHook((p) => p.parentPiece(),      (p, cb) => p.onParentPieceChanged(cb));      // Piece | null
-export const usePieceParentConnection = createPieceFieldHook((p) => p.parentConnection(), (p, cb) => p.onParentConnectionChanged(cb)); // Connection | null
-export const usePieceChildPieces      = createPieceFieldHook((p) => p.childPieces(),      (p, cb) => p.onChildPiecesChanged(cb));      // readonly Piece[]
-export const usePieceChildConnections = createPieceFieldHook((p) => p.childConnections(), (p, cb) => p.onChildConnectionsChanged(cb)); // readonly Connection[]
+export const usePieceParentPiece = createPieceFieldHook(
+ (p) => p.parentPiece(),
+ (p, cb) => p.onParentPieceChanged(cb),
+); // Piece | null
+export const usePieceParentConnection = createPieceFieldHook(
+ (p) => p.parentConnection(),
+ (p, cb) => p.onParentConnectionChanged(cb),
+); // Connection | null
+export const usePieceChildPieces = createPieceFieldHook(
+ (p) => p.childPieces(),
+ (p, cb) => p.onChildPiecesChanged(cb),
+); // readonly Piece[]
+export const usePieceChildConnections = createPieceFieldHook(
+ (p) => p.childConnections(),
+ (p, cb) => p.onChildConnectionsChanged(cb),
+); // readonly Connection[]
 
-export const useDesignName        = createDesignFieldHook((d) => d.name(),        (d, cb) => d.onRenamed(cb));
-export const useDesignPieces      = createDesignFieldHook((d) => d.pieces(),      (d, cb) => d.onPiecesChanged(cb));      // readonly Piece[] (bulky)
-export const useDesignConnections = createDesignFieldHook((d) => d.connections(), (d, cb) => d.onConnectionsChanged(cb)); // readonly Connection[]
+export const useDesignName = createDesignFieldHook(
+ (d) => d.name(),
+ (d, cb) => d.onRenamed(cb),
+);
+export const useDesignPieces = createDesignFieldHook(
+ (d) => d.pieces(),
+ (d, cb) => d.onPiecesChanged(cb),
+); // readonly Piece[] (bulky)
+export const useDesignConnections = createDesignFieldHook(
+ (d) => d.connections(),
+ (d, cb) => d.onConnectionsChanged(cb),
+); // readonly Connection[]
 
-export const useTypeName        = createTypeFieldHook((t) => t.name(),            (t, cb) => t.onRenamed(cb));
-export const useTypePorts       = createTypeFieldHook((t) => t.ports(),           (t, cb) => t.onPortsChanged(cb));         // readonly Port[]
-export const useTypeConnectors  = createTypeFieldHook((t) => t.connectors(),      (t, cb) => t.onConnectorsChanged(cb));    // readonly Connector[]
-export const useTypeRepresentations = createTypeFieldHook((t) => t.representations(), (t, cb) => t.onRepresentationsChanged(cb));
+export const useTypeName = createTypeFieldHook(
+ (t) => t.name(),
+ (t, cb) => t.onRenamed(cb),
+);
+export const useTypePorts = createTypeFieldHook(
+ (t) => t.ports(),
+ (t, cb) => t.onPortsChanged(cb),
+); // readonly Port[]
+export const useTypeConnectors = createTypeFieldHook(
+ (t) => t.connectors(),
+ (t, cb) => t.onConnectorsChanged(cb),
+); // readonly Connector[]
+export const useTypeRepresentations = createTypeFieldHook(
+ (t) => t.representations(),
+ (t, cb) => t.onRepresentationsChanged(cb),
+);
 
-export const useConnectionGap   = createConnectionFieldHook((c) => c.gap(),       (c, cb) => c.onGapChanged(cb));
-export const useConnectionShift = createConnectionFieldHook((c) => c.shift(),     (c, cb) => c.onShiftChanged(cb));
+export const useConnectionGap = createConnectionFieldHook(
+ (c) => c.gap(),
+ (c, cb) => c.onGapChanged(cb),
+);
+export const useConnectionShift = createConnectionFieldHook(
+ (c) => c.shift(),
+ (c, cb) => c.onShiftChanged(cb),
+);
 // …one hook per schema field on every Artifact entity (Kit / Design / Type / Piece / Connection / Port / Connector / Representation / Author / Quality / Tag / Concept).
 ```
 
@@ -680,109 +724,114 @@ export function usePieceIsHidden(): boolean { … }
 export function useDesignQualitySum(): number { … }
 ```
 
-Each call to `<entity>.field()` is one fresh GraphQL `Query` against [semio/rs/lib.rs](semio/rs/lib.rs); each `<entity>.on<Event>(cb)` callback fires once per matching subscription event. `bindFieldToReact` calls `field()` exactly once per `entity` change (mount or resolved-id change) and replaces the cached *React state* on each event payload — there is no JS-side cache, no equality short-circuit, and no `useSyncExternalStore`. The Rust server is in-memory and authoritative, so even a busy view re-fetching once per event is acceptable.
+Each call to `<entity>.field()` is one fresh GraphQL `Query` against [semio/rs/lib.rs](semio/rs/lib.rs); each `<entity>.on<Event>(cb)` callback fires once per matching subscription event. `bindFieldToReact` calls `field()` exactly once per `entity` change (mount or resolved-id change) and replaces the cached _React state_ on each event payload — there is no JS-side cache, no equality short-circuit, and no `useSyncExternalStore`. The Rust server is in-memory and authoritative, so even a busy view re-fetching once per event is acceptable.
 
 ### Operation hook pattern
 
-Every per-operation write hook is a one-line application of the matching `create<Entity>OpHook`. There are **no `*Sync` op hooks** and **no optimistic local apply** anywhere in `semio/js` / `semio/react` / `semio/sketchpad`. Each hook returns a stable `readonly [run, status]` tuple:
+Every per-operation write hook is a one-line application of the matching `create<Entity>OpHook`. There are **no `*Sync` operation hooks** and **no optimistic local apply** anywhere in `semio/js` / `semio/react` / `semio/sketchpad`. Each hook returns a stable `readonly [run, status]` tuple:
 
 - `run(...args): Promise<SetResult>` — invokes the underlying class method (`piece.drag(offset)`, …). The class method dispatches a single GraphQL mutation against [semio/rs/lib.rs](semio/rs/lib.rs) and awaits the server's reply. The promise resolves with `{ ok: true; id }` or `{ ok: false; error }`. Any bound `usePieceCenter` / `usePiecePlane` / … rerender only when the server emits the corresponding subscription event in response to the mutation; the JS side never updates state ahead of the server.
-- `status: OperationStatus<SetSuccess, Extra>` — discriminated union snapshot of the most recent invocation, kept in React state by the factory. The shape is `general ∪ per-op extras`:
+- `status: OperationStatus<SetSuccess, Extra>` — discriminated union snapshot of the most recent invocation, kept in React state by the factory. The shape is `general ∪ per-operation extras`:
+
   ```ts
   // GENERAL — every operation hook carries these.
   type GeneralOperationStatus<T = SetSuccess> =
-    | { readonly kind: "idle" }
-    | { readonly kind: "pending"; readonly startedAt: number }
-    | { readonly kind: "successful"; readonly value: T; readonly finishedAt: number }
-    | { readonly kind: "timeout"; readonly startedAt: number }                            // SetError.kind === "Timeout"
-    | { readonly kind: "failed"; readonly error: SetError; readonly finishedAt: number }; // every rejection without a declared extra
+   | { readonly kind: "idle" }
+   | { readonly kind: "pending"; readonly startedAt: number }
+   | { readonly kind: "successful"; readonly value: T; readonly finishedAt: number }
+   | { readonly kind: "timeout"; readonly startedAt: number } // SetError.kind === "Timeout"
+   | { readonly kind: "failed"; readonly error: SetError; readonly finishedAt: number }; // every rejection without a declared extra
 
   // EXTRAS — declared per family of operations. Ops that take a length/range-bounded string input add tooLong.
   type TooLongStatus = { readonly kind: "tooLong"; readonly error: SetError; readonly finishedAt: number };
 
-  // The per-op status type is general ∪ that op's extras.
+  // The per-operation status type is general ∪ that op's extras.
   type OperationStatus<T = SetSuccess, Extra extends { kind: string } = never> = GeneralOperationStatus<T> | Extra;
   ```
+
   - The general kinds (`idle`, `pending`, `successful`, `timeout`, `failed`) appear on **every** operation hook.
-  - Extras are opt-in per operation via the factory's `mapError` argument. The schema's `SetError` discriminated union lists every possible failure kind (`Readonly`, `Timeout`, `TooLong`, `Validation`, `Conflict`, `Rejected`, …). Each operation only ever produces a *subset* of those; the per-op declaration enumerates the subset that should be exposed as a top-level `status.kind`. Anything not listed lands in `failed` with the raw `SetError` so consumers can still pattern-match on `error.kind` if needed.
-  - This keeps the typing tight: `useDragPiece(id)` yields `OperationStatus<SetSuccess>` (pure general — no `tooLong` because dragging takes a numeric `offset` and the server can't reject it as "too long"), while `useRenamePiece(id)` yields `OperationStatus<SetSuccess, TooLongStatus>` (general + `tooLong` because the schema declares a max length on the new name). `dragPieceStatus.kind === "tooLong"` is a *static* type error; `renamePieceStatus.kind === "tooLong"` is valid.
+  - Extras are opt-in per operation via the factory's `mapError` argument. The schema's `SetError` discriminated union lists every possible failure kind (`Readonly`, `Timeout`, `TooLong`, `Validation`, `Conflict`, `Rejected`, …). Each operation only ever produces a _subset_ of those; the per-operation declaration enumerates the subset that should be exposed as a top-level `status.kind`. Anything not listed lands in `failed` with the raw `SetError` so consumers can still pattern-match on `error.kind` if needed.
+  - This keeps the typing tight: `useDragPiece(id)` yields `OperationStatus<SetSuccess>` (pure general — no `tooLong` because dragging takes a numeric `offset` and the server can't reject it as "too long"), while `useRenamePiece(id)` yields `OperationStatus<SetSuccess, TooLongStatus>` (general + `tooLong` because the schema declares a max length on the new name). `dragPieceStatus.kind === "tooLong"` is a _static_ type error; `renamePieceStatus.kind === "tooLong"` is valid.
   - Once a call resolves, the next call resets `status` to `pending` for the new attempt — the previous final state is replaced, not stacked.
 
 The factory invokes `useState` once internally to track the latest status; the returned `[run, status]` tuple is stable as long as the resolved entity/id doesn't change.
 
 ```ts
 // Reusable error→extra mapper for the rename / description / icon / attribute family.
-const mapTooLong: OpErrorMapper<TooLongStatus> = (error, finishedAt) =>
- error.kind === "TooLong" ? { kind: "tooLong", error, finishedAt } : null;
+const mapTooLong: OpErrorMapper<TooLongStatus> = (error, finishedAt) => (error.kind === "TooLong" ? { kind: "tooLong", error, finishedAt } : null);
 
 // Hooks whose schema input has a length/range bound — pass mapTooLong so SetError.kind === "TooLong" surfaces as status.kind === "tooLong".
-export const useRenameKit              = createKitOpHook    ((k, newName: string)             => k.rename(newName), mapTooLong);
-export const useChangeKitDescription   = createKitOpHook    ((k, newDescription: string)      => k.changeDescription(newDescription), mapTooLong);
-export const useRenamePiece            = createPieceOpHook  ((p, newName: string)             => p.rename(newName), mapTooLong);
-export const useChangePieceDescription = createPieceOpHook  ((p, newDescription: string)      => p.changeDescription(newDescription), mapTooLong);
-export const useChangePieceBlueprint   = createPieceOpHook  ((p, blueprintId: string)         => p.changeBlueprint(blueprintId), mapTooLong);
-export const useAddPieceAttribute      = createPieceOpHook  ((p, key, value, definition)      => p.addAttribute(key, value, definition), mapTooLong);
-export const useCreateType             = createKitOpHook    ((k, name: string, opts?: CreateTypeOpts) => k.createType(name, opts), mapTooLong);
-export const useCreatePort             = createTypeOpHook   ((t, code: string, opts?)         => t.createPort(code, opts), mapTooLong);
-export const useAddConnector           = createTypeOpHook   ((t, code: string, opts?)         => t.addConnector(code, opts), mapTooLong);
-export const useRenameConnector        = createConnectorOpHook((c, newCode: string)           => c.rename(newCode), mapTooLong);
-export const useChangeConnectorDescription = createConnectorOpHook((c, d: string)             => c.changeDescription(d), mapTooLong);
-export const useCreateCheckpoint       = createKitOpHook    ((k, message: string)             => k.createCheckpoint(message), mapTooLong);
+export const useRenameKit = createKitOpHook((k, newName: string) => k.rename(newName), mapTooLong);
+export const useChangeKitDescription = createKitOpHook((k, newDescription: string) => k.changeDescription(newDescription), mapTooLong);
+export const useRenamePiece = createPieceOpHook((p, newName: string) => p.rename(newName), mapTooLong);
+export const useChangePieceDescription = createPieceOpHook((p, newDescription: string) => p.changeDescription(newDescription), mapTooLong);
+export const useChangePieceBlueprint = createPieceOpHook((p, blueprintId: string) => p.changeBlueprint(blueprintId), mapTooLong);
+export const useAddPieceAttribute = createPieceOpHook((p, key, value, definition) => p.addAttribute(key, value, definition), mapTooLong);
+export const useCreateType = createKitOpHook((k, name: string, opts?: CreateTypeOpts) => k.createType(name, opts), mapTooLong);
+export const useCreatePort = createTypeOpHook((t, code: string, opts?) => t.createPort(code, opts), mapTooLong);
+export const useAddConnector = createTypeOpHook((t, code: string, opts?) => t.addConnector(code, opts), mapTooLong);
+export const useRenameConnector = createConnectorOpHook((c, newCode: string) => c.rename(newCode), mapTooLong);
+export const useChangeConnectorDescription = createConnectorOpHook((c, d: string) => c.changeDescription(d), mapTooLong);
+export const useCreateCheckpoint = createKitOpHook((k, message: string) => k.createCheckpoint(message), mapTooLong);
 // …every rename / changeDescription / changeIcon / addAttribute / changeBlueprint / createX hook follows the same one-liner with mapTooLong.
 
 // Hooks with no length/range-bounded input — only general statuses (idle | pending | successful | timeout | failed).
-export const useDragPiece              = createPieceOpHook  ((p, offset: OffsetInput)         => p.drag(offset));
-export const useMovePiece              = createPieceOpHook  ((p, position: PositionInput)     => p.move(position));
-export const useFixPiece               = createPieceOpHook  ((p)                              => p.fix());
-export const useDragPieces             = createPiecesOpHook ((ops, offset: OffsetInput)       => ops.drag(offset));
-export const useDeletePiece            = createDesignOpHook ((d, pieceId: string)             => d.deletePiece(pieceId));
-export const useDeletePieces           = createDesignOpHook ((d, pieceIds: readonly string[]) => d.deletePieces(pieceIds));
-export const useFlattenDesign          = createDesignOpHook ((d)                              => d.flatten());
-export const useStartNewChange         = createKitOpHook    ((k)                              => k.startNewChange());
-export const useSaveUnsavedChange      = createKitOpHook    ((k)                              => k.save());
-export const useStartAlternative       = createKitOpHook    ((k)                              => k.startAlternative());
-export const useIntegrateAlternative   = createKitOpHook    ((k, altId: string)               => k.integrateAlternative(altId));
-// …every other purely-numeric / no-arg / id-only op follows the same one-liner without mapError.
+export const useDragPiece = createPieceOpHook((p, offset: OffsetInput) => p.drag(offset));
+export const useMovePiece = createPieceOpHook((p, position: PositionInput) => p.move(position));
+export const useFixPiece = createPieceOpHook((p) => p.fix());
+export const useDragPieces = createPiecesOpHook((ops, offset: OffsetInput) => ops.drag(offset));
+export const useDeletePiece = createDesignOpHook((d, pieceId: string) => d.deletePiece(pieceId));
+export const useDeletePieces = createDesignOpHook((d, pieceIds: readonly string[]) => d.deletePieces(pieceIds));
+export const useFlattenDesign = createDesignOpHook((d) => d.flatten());
+export const useStartNewChange = createKitOpHook((k) => k.startNewChange());
+export const useSaveUnsavedChange = createKitOpHook((k) => k.save());
+export const useStartAlternative = createKitOpHook((k) => k.startAlternative());
+export const useIntegrateAlternative = createKitOpHook((k, altId: string) => k.integrateAlternative(altId));
+// …every other purely-numeric / no-arg / id-only operation follows the same one-liner without mapError.
 ```
 
-Usage at the call site is uniform — every op hook destructures into `[run, status]`:
+Usage at the call site is uniform — every operation hook destructures into `[run, status]`:
 
 ```tsx
 function PieceDragHandle({ id }: { id: string }) {
-  // useDragPiece carries only the GENERAL union — no `tooLong`. TypeScript would reject `dragPieceStatus.kind === "tooLong"`.
-  const [dragPiece, dragPieceStatus] = useDragPiece(id);
-  return (
-    <DragSurface
-      onDrag={(offset) => { void dragPiece(offset); }}
-      saving={dragPieceStatus.kind === "pending"}
-      timedOut={dragPieceStatus.kind === "timeout"}
-      failureMessage={dragPieceStatus.kind === "failed" ? dragPieceStatus.error.message : null}
-    />
-  );
+ // useDragPiece carries only the GENERAL union — no `tooLong`. TypeScript would reject `dragPieceStatus.kind === "tooLong"`.
+ const [dragPiece, dragPieceStatus] = useDragPiece(id);
+ return (
+  <DragSurface
+   onDrag={(offset) => {
+    void dragPiece(offset);
+   }}
+   saving={dragPieceStatus.kind === "pending"}
+   timedOut={dragPieceStatus.kind === "timeout"}
+   failureMessage={dragPieceStatus.kind === "failed" ? dragPieceStatus.error.message : null}
+  />
+ );
 }
 
 function KitNameField() {
-  const name = useKitName();
-  // useRenameKit carries general + tooLong because the schema's RenameKitInput.newName has a max length.
-  const [renameKit, renameKitStatus] = useRenameKit();
-  return (
-    <NameInput
-      value={name ?? ""}
-      onCommit={(next) => { void renameKit(next); }}
-      saving={renameKitStatus.kind === "pending"}
-      message={
-        renameKitStatus.kind === "tooLong"
-          ? "Name is too long"
-          : renameKitStatus.kind === "timeout"
-            ? "Server took too long, retrying"
-            : renameKitStatus.kind === "failed"
-              ? renameKitStatus.error.message
-              : renameKitStatus.kind === "successful"
-                ? "Saved"
-                : null
-      }
-    />
-  );
+ const name = useKitName();
+ // useRenameKit carries general + tooLong because the schema's RenameKitInput.newName has a max length.
+ const [renameKit, renameKitStatus] = useRenameKit();
+ return (
+  <NameInput
+   value={name ?? ""}
+   onCommit={(next) => {
+    void renameKit(next);
+   }}
+   saving={renameKitStatus.kind === "pending"}
+   message={
+    renameKitStatus.kind === "tooLong"
+     ? "Name is too long"
+     : renameKitStatus.kind === "timeout"
+       ? "Server took too long, retrying"
+       : renameKitStatus.kind === "failed"
+         ? renameKitStatus.error.message
+         : renameKitStatus.kind === "successful"
+           ? "Saved"
+           : null
+   }
+  />
+ );
 }
 ```
 
@@ -790,7 +839,7 @@ Because [semio/rs/lib.rs](semio/rs/lib.rs) is in-memory, the round-trip `run(...
 
 ### Operation hook surface (1:1 with [target.schema.graphql](semio/graphql/target.schema.graphql))
 
-Every entry below is a single async hook (no `*Sync` variants). The hook signature is `(id?: string) => readonly [run: (...args) => Promise<SetResult>, status: OperationStatus<SetSuccess, Extra>]`, where `Extra` is the per-op extra status union determined by the schema's `SetError` kinds for that operation. Annotation legend:
+Every entry below is a single async hook (no `*Sync` variants). The hook signature is `(id?: string) => readonly [run: (...args) => Promise<SetResult>, status: OperationStatus<SetSuccess, Extra>]`, where `Extra` is the per-operation extra status union determined by the schema's `SetError` kinds for that operation. Annotation legend:
 
 - `(general)` — only `idle | pending | successful | timeout | failed`.
 - `(+tooLong)` — extends with `tooLong` (server can reject because an input string violates a length / range constraint declared in the schema).
@@ -810,7 +859,7 @@ Every entry below is a single async hook (no `*Sync` variants). The hook signatu
 - **`ConceptOperationInput`** → `useRenameConcept` (+tooLong), `useChangeConceptDescription` (+tooLong), `useChangeConceptIcon` (+tooLong), `useAddConceptAttribute` (+tooLong), `useRemoveConceptAttribute` (general), `useRemoveConceptAttributes` (general).
 - **`QualityOperationInput`** → `useRenameQuality` (+tooLong), `useChangeQualityDescription` (+tooLong), `useChangeQualityIcon` (+tooLong), `useAddQualityAttribute` (+tooLong), `useRemoveQualityAttribute` (general), `useRemoveQualityAttributes` (general).
 
-If [target.schema.graphql](semio/graphql/target.schema.graphql) later declares additional `SetError` kinds for specific operations (e.g. `OutOfRange` for numeric drag offsets, `DuplicateKey` for `useCreateTag`, …), the per-op declaration adds the matching mapper and the corresponding extra status kind appears at the top level. Until then, those rejections continue to land in `failed`.
+If [target.schema.graphql](semio/graphql/target.schema.graphql) later declares additional `SetError` kinds for specific operations (e.g. `OutOfRange` for numeric drag offsets, `DuplicateKey` for `useCreateTag`, …), the per-operation declaration adds the matching mapper and the corresponding extra status kind appears at the top level. Until then, those rejections continue to land in `failed`.
 
 ### Kept exports
 
@@ -821,7 +870,7 @@ If [target.schema.graphql](semio/graphql/target.schema.graphql) later declares a
 - **Per-field read hooks** — one per (Artifact type) × (schema field), generated by `create<Entity>FieldHook` (see read hook pattern above). Lean fields return the value, bulky fields return the class instance(s).
 - **Per-operation write hooks** — exactly one async hook per leaf of every `*OperationInput`, generated by `create<Entity>OpHook`. Each returns the `readonly [run, status]` tuple described above. No `*Sync` variants.
 - **Context providers + context hooks** — one per Artifact type that takes an `id` prop: `KitContext`, `DesignContext`, `TypeContext`, `PortContext`, `ConnectorContext`, `PieceContext`, `ConnectionContext`, `AuthorContext`, `QualityContext`, `TagContext`, `ConceptContext`, `RepresentationContext`. Each pairs with a `use<Entity>Context()` accessor that returns `{ id: string } | null`. No `*Scope` / `*ScopeContext` / `*ScopeProvider` aliases.
-- **Runtime / shell hooks** — minimal surface for binding the React tree to a `Kit` instance and reporting its sync/error status. These are *not* schema fields; they wrap the `Kit` class's runtime control APIs so React components can render their state. Each is 1:1 with one `Kit` runtime method (no derivation):
+- **Runtime / shell hooks** — minimal surface for binding the React tree to a `Kit` instance and reporting its sync/error status. These are _not_ schema fields; they wrap the `Kit` class's runtime control APIs so React components can render their state. Each is 1:1 with one `Kit` runtime method (no derivation):
   - `useKitConnectionStatus(): "disconnected" | "connecting" | "ready" | "error"` (binds `kit.connectionStatusSync()` + `kit.onConnectionStatusChanged`),
   - `useKitErrors(): readonly KitError[] | undefined` (binds `kit.errorsSync()` + `kit.onErrorsChanged`),
   - `useKitSync(): KitSyncSnapshot | undefined` (binds `kit.syncSync()` + `kit.onSyncChanged`).
@@ -831,14 +880,14 @@ If [target.schema.graphql](semio/graphql/target.schema.graphql) later declares a
 The following are deleted because they violate the schema-1:1 invariant or the strict read/write split:
 
 - **Sub-selection / derived hooks**: every `useTypesIds`, `useDesignsIds`, `useKitTypeIds`, `useKitDesignIds`, `useKitAuthorIds`, `useKitQualityIds`, `useDesignPieceIds`, `useDesignConnectionIds`, `useTypePortIds`, `useTypeConnectorIds`, `useTypeRepresentationIds`, `useConnectionConnectedPieceId`, `useConnectionConnectingPieceId`, `usePieceCenterU`/`V`, `usePieceIsHidden`, `usePieceIsLocked`. Callers destructure the lean value or read the class `id` getter inline.
-- **Aggregate / metadata / shallow / view hooks**: `useTypesMetadata`, `useDesignsMetadata`, `useTypesFull`, `useDesignsFull`, `useFilesFull`, `useTagsFull`, `useKitDesignsShallow`, `useKitTypesShallow`, `useKitAuthorsShallow`, `useKitPieces`, `useKitConnections`, `usePiecesMetadataMap`, `usePieceMetadata`, `useIncludedDesigns`, `useDesignClusterableGroups`, `useDesignQualitySum`, `useTypeBestRepresentation`, `useKitColoredConnectors`, `useReplacableTypes`, `useReplacableDesigns`, `useExplodeableDesignNodes`. Each is reintroduced as a 1:1 hook *only if* the corresponding field is added to [target.schema.graphql](semio/graphql/target.schema.graphql) as a computed field (e.g. `Design.qualitySum: Float!`, `Type.bestRepresentation: Representation`, `Kit.coloredConnectors: [Connector!]!`, …).
+- **Aggregate / metadata / shallow / view hooks**: `useTypesMetadata`, `useDesignsMetadata`, `useTypesFull`, `useDesignsFull`, `useFilesFull`, `useTagsFull`, `useKitDesignsShallow`, `useKitTypesShallow`, `useKitAuthorsShallow`, `useKitPieces`, `useKitConnections`, `usePiecesMetadataMap`, `usePieceMetadata`, `useIncludedDesigns`, `useDesignClusterableGroups`, `useDesignQualitySum`, `useTypeBestRepresentation`, `useKitColoredConnectors`, `useReplacableTypes`, `useReplacableDesigns`, `useExplodeableDesignNodes`. Each is reintroduced as a 1:1 hook _only if_ the corresponding field is added to [target.schema.graphql](semio/graphql/target.schema.graphql) as a computed field (e.g. `Design.qualitySum: Float!`, `Type.bestRepresentation: Representation`, `Kit.coloredConnectors: [Connector!]!`, …).
 - **Registry / shell-state hooks**: `useOpenKitGuids`, `useActiveKitGuid`, `useOpenKitShallows`, `useRegistryHasKit`, `useRegistryKitPersistenceKind`, `useKitAlternatives`, `useKitAlternativeSelection`. The runtime kit registry is not in `target.schema.graphql`; consumers that need cross-kit shell state import the registry from the host application directly (sketchpad). `@semio/react` exposes only the active `Kit` (via `useKit()` / `KitContext`) and the operation hooks for `SessionCommandInput` / `AlternativeCommandInput`.
 - **Backbone hooks**: same rule — only kept if `target.schema.graphql` declares the corresponding fields/operations. Otherwise dropped, and consumers call the host transport directly.
 - **All `KitFieldBinding`, `HookRead`, `WriteStatus`, `WRITE_STATUS_IDLE`, `WRITE_STATUS_READONLY`, `WRITE_STATUS_PENDING`, `writeStatusEquivalent`** types and helpers.
-- **Old freeform command hooks**: `useUndo`, `useRedo`, `useDeselectAll`, `useDeleteSelected`, `usePasteDesignSelection`, `useChange`, `useCommandBuilder`, `useWriteIndicator`, `useWriteQueue`, `useOptimistic`, `usePendingTriad`. Replaced by the schema-1:1 operation hooks (`use<Op><Entity>` returning `readonly [run, status]`, 1:1 with `*OperationInput` leaves). Sketchpad's existing pending-write indicator now reads `status.kind === "pending"` off whichever op hook is in flight (see §4 examples).
+- **Old freeform command hooks**: `useUndo`, `useRedo`, `useDeselectAll`, `useDeleteSelected`, `usePasteDesignSelection`, `useChange`, `useCommandBuilder`, `useWriteIndicator`, `useWriteQueue`, `useOptimistic`, `usePendingTriad`. Replaced by the schema-1:1 operation hooks (`use<Op><Entity>` returning `readonly [run, status]`, 1:1 with `*OperationInput` leaves). Sketchpad's existing pending-write indicator now reads `status.kind === "pending"` off whichever operation hook is in flight (see §4 examples).
 - **Old per-entity `useCreate*`/`useDelete*`/`useUpdate*`** legacy shapes (replaced by operation hooks).
 - **Whole-object triads**: `usePieceTriad`, `useDesignTriad`, `useTypeTriad`, `useAuthorTriad`, `useQualityTriad`, `useConnectionTriad`.
-- **Whole-object accessors**: `useFolder`, `useFile`, `useTag` (DTO), `useConcept` (DTO), `useFamily`, `useGroup`, `usePort` (DTO), `useProp`, `useStat`, `useBenchmark`, `useCoordinate`, `usePoint`, `useVector`, `usePlane`, `useCamera`, `useAttribute`, `useLocation`, `useRepresentation` (DTO), `useConnector` (DTO), `useActor`, `useUser`, `useAgent`, `useSessionActorInput`, every `*Input` and `*PatchInput` whole-object hook. (Note: there is *no* `usePort` returning a DTO; the entity-identity `usePort(id?)` returning `Port | null` does survive — same for `useConnector`, `useTag`, `useConcept`, `useRepresentation`.)
+- **Whole-object accessors**: `useFolder`, `useFile`, `useTag` (DTO), `useConcept` (DTO), `useFamily`, `useGroup`, `usePort` (DTO), `useProp`, `useStat`, `useBenchmark`, `useCoordinate`, `usePoint`, `useVector`, `usePlane`, `useCamera`, `useAttribute`, `useLocation`, `useRepresentation` (DTO), `useConnector` (DTO), `useActor`, `useUser`, `useAgent`, `useSessionActorInput`, every `*Input` and `*PatchInput` whole-object hook. (Note: there is _no_ `usePort` returning a DTO; the entity-identity `usePort(id?)` returning `Port | null` does survive — same for `useConnector`, `useTag`, `useConcept`, `useRepresentation`.)
 - **Snapshot exports**: `useKitSnapshot`, `useKitStoreSnapshot`, `useKitHostStore`, `useKitStore`, `useSemioStoreSelector`, `useSemioReadSnap`, `useSemioKitScopedView`. `useKitStoreClient` is removed entirely.
 - **Generic schema readers**: `useSchemaObjectState`, `useSchemaObjectMutation`, `useSchemaObjectValue`, `useSchemaFieldValue`, `useSchemaFieldMutation`, `useSchemaFieldState`, `useSchemaScope`, `useKitRuntimeSafe`, `useKitRegistry`, `useKitRegistrySafe`. The `IndexedSchemaState` / `resolveReference` / `readSchemaFieldValue` / `KitRuntimeContext` machinery is deleted.
 - **`useResolved<Entity>`** helpers.
@@ -854,19 +903,19 @@ Sketchpad must compile without importing any of:
 - any deleted hook from §4,
 - any entity class as a runtime read carrier (`Piece`, `Design`, `Type`, `Connection`, `Author`, `Quality`, `Kit`).
 
-Sketchpad obeys the same schema-1:1 invariant as `@semio/react` — it *adds nothing* beyond the schema either. Every existing `HookResult<T>` tuple sketchpad hook (`usePieceCenterU`, `usePieceCenterV`, sketchpad's tuple `usePieceScale`, `usePieceIsHidden`, `usePieceIsLocked`, `useConnectionGapValue`, `useConnectionShiftValue`, `useConnectionRiseValue`, `useConnectionRotationValue`, `useConnectionTurnValue`, `useConnectionTiltValue`, `useDesignPieceIds`, `useDesignConnectionIds`, every `useType*Ids` / `useKit*Ids`, every `*Metadata` / `*Shallow` / `*Full` derivation) is **deleted entirely** with no replacement hook. Slicing a lean value or picking class ids happens *inline at the call site* (see §4 "Sketchpad target" for examples).
+Sketchpad obeys the same schema-1:1 invariant as `@semio/react` — it _adds nothing_ beyond the schema either. Every existing `HookResult<T>` tuple sketchpad hook (`usePieceCenterU`, `usePieceCenterV`, sketchpad's tuple `usePieceScale`, `usePieceIsHidden`, `usePieceIsLocked`, `useConnectionGapValue`, `useConnectionShiftValue`, `useConnectionRiseValue`, `useConnectionRotationValue`, `useConnectionTurnValue`, `useConnectionTiltValue`, `useDesignPieceIds`, `useDesignConnectionIds`, every `useType*Ids` / `useKit*Ids`, every `*Metadata` / `*Shallow` / `*Full` derivation) is **deleted entirely** with no replacement hook. Slicing a lean value or picking class ids happens _inline at the call site_ (see §4 "Sketchpad target" for examples).
 
 Per call site (64 currently identified by `\b(useKit|useDesign|useType|usePiece|useConnection|useAuthor|useQuality)\b`), inspect what fields the JSX actually reads and what mutations it performs, then replace with schema-1:1 hooks from `@semio/react`. Reads and writes are spelled out independently (no tuple shape, no setter inside a read hook, no read inside a write hook, no sub-selection wrapper):
 
 - `const piece = usePiece() as Piece` (read-only JSX) → use the schema-1:1 hooks `usePieceName(id)`, `usePiecePlane(id)`, `usePieceCenter(id)`, `usePieceFlatPlane(id)`, … and destructure (`const center = usePieceCenter(id); const u = center?.u`) at the call site.
-- A drag handler that called `piece.drag(offset)` → `const [dragPiece, dragPieceStatus] = useDragPiece(id); … onDrag={(offset) => void dragPiece(offset)}`. The optimistic local apply happens synchronously inside `dragPiece` (so `usePieceCenter` rerenders the same tick); `dragPieceStatus.kind` switches to `pending` while the network is in flight and to `successful` / `tooLong` / `timeout` / `failed` once it resolves. Components that need to await confirmation can `await dragPiece(offset)`.
+- A drag handler that called `piece.drag(offset)` → `const [dragPiece, dragPieceStatus] = useDragPiece(id); … onDrag={(offset) => void dragPiece(offset)}`. `dragPiece` dispatches one GraphQL mutation against the in-memory Rust server and awaits its reply; the bound `usePieceCenter` rerenders only once the server emits the matching `CenterChanged` subscription event. `dragPieceStatus.kind` is `OperationStatus<SetSuccess>` (general only — no `tooLong`, since `DragPieceInput` is purely numeric) and switches `idle → pending → successful | timeout | failed`. Components that need to await confirmation can `await dragPiece(offset)`.
 - `const type = useType() as Type` → `useTypeName(typeId)` + `useTypeRepresentations(typeId)` (returns `readonly Representation[] | undefined`, JSX maps to `<RepresentationContext id={r.id}>` children) + `useTypePorts(typeId)` (same pattern). Mutations like `type.createPort(...)` become `const [createPort, createPortStatus] = useCreatePort(typeId); … void createPort(...)`.
 - `const connection = useConnection() as Connection` → `useConnectionConnected(id)` (returns `Side`), `useConnectionConnecting(id)` (returns `Side`), `useConnectionGap(id)`, `useConnectionShift(id)`, `useConnectionRise(id)`, `useConnectionRotation(id)`, `useConnectionTurn(id)`, `useConnectionTilt(id)`. Component picks `side.piece.id` inline when it needs the piece id.
 - `const design = useDesign() as Design` → `useDesignName(designId)`, `useDesignPieces(designId)` (returns `readonly Piece[] | undefined`, JSX maps to `<PieceContext id={p.id}>` children), `useDesignConnections(designId)` (returns `readonly Connection[] | undefined`). Mutations like `design.deletePiece(id)` become `const [deletePiece, deletePieceStatus] = useDeletePiece(designId); … void deletePiece(pieceId)`.
 
 Where a list of children is needed, sketchpad calls the bulky list hook (`useDesignPieces`, `useDesignConnections`, `useTypePorts`, `useTypeConnectors`, `useTypeRepresentations`, `useKitTypes`, `useKitDesigns`, `useKitAuthors`, `useKitQualities`, `useKitTags`, `useKitConcepts`) and reads `id` off each class instance.
 
-Missing per-field hooks that sketchpad needs are added to [semio/react/index.tsx](semio/react/index.tsx) **only if** they correspond to existing schema fields (one method on the matching class, one hook in react). Likely additions, all schema-direct: `useDesignPieces`, `useDesignConnections`, `useTypeRepresentations`, `useTypePorts`, `useTypeConnectors`, `useConnectionConnected`, `useConnectionConnecting`, `useKitTypes`, `useKitDesigns`, `useKitAuthors`, `useKitQualities`, `useKitTags`, `useKitConcepts`. Anything sketchpad needs that is *not* in the schema (e.g. `Design.qualitySum`, `Type.bestRepresentation`, `Piece.isHidden`) is either added to the schema first (so the auto-generated 1:1 hook appears) or computed inline in the sketchpad component.
+Missing per-field hooks that sketchpad needs are added to [semio/react/index.tsx](semio/react/index.tsx) **only if** they correspond to existing schema fields (one method on the matching class, one hook in react). Likely additions, all schema-direct: `useDesignPieces`, `useDesignConnections`, `useTypeRepresentations`, `useTypePorts`, `useTypeConnectors`, `useConnectionConnected`, `useConnectionConnecting`, `useKitTypes`, `useKitDesigns`, `useKitAuthors`, `useKitQualities`, `useKitTags`, `useKitConcepts`. Anything sketchpad needs that is _not_ in the schema (e.g. `Design.qualitySum`, `Type.bestRepresentation`, `Piece.isHidden`) is either added to the schema first (so the auto-generated 1:1 hook appears) or computed inline in the sketchpad component.
 
 ## 6. Validation
 
@@ -877,9 +926,9 @@ Missing per-field hooks that sketchpad needs are added to [semio/react/index.tsx
   - `Piece.drag(offset)` issues exactly one mutation through a stub `GqlTransport`, awaits the stub reply, and resolves the `Promise<SetResult>`. Verify that the JS class never touches any local state — assert the class instance has no fields beyond the constructor parameters and that `usePieceCenter` consumers do not rerender until the stub `EventBus` emits the matching `CenterChanged` event.
   - `Piece.drag(offset)` followed by a stub `EventBus` emit of `CenterChanged { newCenter }` triggers exactly one `onCenterChanged` callback per registered subscriber and exactly one rerender per bound `usePieceCenter` consumer.
   - `usePieceName(id)` performs one `entity.name()` fetch on mount, sets `value` from the resolved promise, then replaces `value` once per `Renamed` event the EventBus delivers. Assert no `useSyncExternalStore` import is used by `bindFieldToReact`.
-  - `useDragPiece` returns a stable `[run, status]` tuple. After `run(offset)`, `status.kind` flips through `idle → pending → successful` (stub `{ ok: true }`), `idle → pending → tooLong` (stub `{ ok: false; error: { kind: "TooLong" } }`), `idle → pending → timeout` (stub transport timeout), and `idle → pending → failed` (stub `{ ok: false; error: { kind: "Conflict" } }`).
-  - `useRenameKit()(tooLongName)` produces `status.kind === "tooLong"` carrying the server's `SetError`.
-- Add an inline negative test in `semio/sketchpad/index.tsx` test region that grep-asserts the file source contains zero matches for the banned hooks listed in §5, plus zero matches for `applyKitDiff`, `useDesignAppCommands`, `useSyncExternalStore` (sketchpad), and any `*Sync` op hook name.
+  - `useDragPiece` returns a stable `[run, status]` tuple typed as `OperationStatus<SetSuccess>` (general only). After `run(offset)`, `status.kind` flips through `idle → pending → successful` (stub `{ ok: true }`), `idle → pending → timeout` (stub transport timeout), and `idle → pending → failed` (stub `{ ok: false; error: { kind: "Conflict" } }` — and also stub `{ ok: false; error: { kind: "TooLong" } }`, which falls through to `failed` because `useDragPiece` declares no extras). Add an `expectTypeOf` assertion that `status.kind === "tooLong"` is a TypeScript error.
+  - `useRenameKit` returns `OperationStatus<SetSuccess, TooLongStatus>`. `useRenameKit()(tooLongName)` against a stub server emitting `{ ok: false; error: { kind: "TooLong" } }` produces `status.kind === "tooLong"` carrying the raw `SetError`. Other `SetError` kinds (`Conflict`, `Validation`, …) still land in `failed`. `expectTypeOf(status.kind).toEqualTypeOf<"idle"|"pending"|"successful"|"timeout"|"failed"|"tooLong">()`.
+- Add an inline negative test in `semio/sketchpad/index.tsx` test region that grep-asserts the file source contains zero matches for the banned hooks listed in §5, plus zero matches for `applyKitDiff`, `useDesignAppCommands`, `useSyncExternalStore` (sketchpad), and any `*Sync` operation hook name.
 - Add an inline negative test in `semio/js/index.ts` and `semio/react/index.tsx` that grep-asserts the source contains zero matches for `applyToCache`, `dispatchSync`, `fieldSync`, `KitStoreSnapshot`, `KitHostStore`, `optimistic`, and `reconcil`.
 - Manual: launch sketchpad, open a kit, drag a piece, confirm rendering still works using only field hooks (`[DEBUG]` console traces on hook subscriptions, plus the GraphQL transport log to confirm one mutation + one subscription event per drag).
 
