@@ -4,31 +4,31 @@ overview: "Fix a coherent batch of inconsistencies in `semio/graphql/target.sche
 todos:
   - id: ghost_tokens
     content: Strip ghost names, dupe `AlternativeModification`, and wrong-direction `Edit` from every `owner`/`owns` union comment
-    status: pending
+    status: completed
   - id: implements_fixes
     content: Fix `implements` on `GroupDiff`, `PieceDiff`, `DesignDiff` (-> Diff), `GroupModifications`, `PieceModifications`, `DesignModifications` (-> Entity), `interface Operation` (-> StrongEntity), all `XModifications` (-> WeakEntity); prune the Artifact fields on the six retyped Diff/Modifications types
-    status: pending
+    status: completed
   - id: artifact_completeness
     content: "Add `changes: ChangeConnection # computed` and retag `createdBy`/`authoredBy`/`changedIn`/`lastChangedBy`/`lastChangedIn` to `# computed` on `File`, `Type`, `Design`"
-    status: pending
+    status: completed
   - id: missing_edges
     content: Add `ClumpEdge`/`ClumpConnection`, `TheKitEdge`/`TheKitConnection`; delete `ModificationAttributesConnection` and replace usages with `AttributeConnection`; annotate `BlueprintEdge` polymorphism
-    status: pending
+    status: completed
   - id: per_op_edges
     content: Generate `<Op>Edge` and `<Op>Connection` for every concrete `type X implements Operation` (~85 types) via a helper script in the existing ticket folder
-    status: pending
+    status: completed
   - id: narrow_unions
     content: Replace giant copy-pasted `owner` unions on every `XModification`/`XModifications` with narrow per-type unions; clear `XModification.owns` to bare `# reference`; fix drift on `TagModifications`/`PositionModifications`/`LocationModifications`/`PlaceModifications` `owns`
-    status: pending
+    status: completed
   - id: tag_fixes
     content: Add missing `# data`/`# reference`/`# computed` tags; retag `PieceDiff.icon` to `# computed`; retag `type Modifications` `removed`/`modifications`/`added` to `# computed`
-    status: pending
+    status: completed
   - id: banner_normalization
     content: Insert correct `# <InterfaceName>` banners before every group of inherited fields on EVERY type (not just Operation) so each field is attributed to the interface that introduces it
-    status: pending
+    status: completed
   - id: regions
     content: Move `#endregion Entities` after `#endregion VCS`, rename `#region Kit` -> `#region Kit Entities`, reorder `Design` to before nested `#region Clump`
-    status: pending
+    status: completed
 isProject: false
 ---
 
