@@ -34,13 +34,13 @@ todos:
     status: pending
   - id: integrate
     content: "Integrator (coordinator, ~30 min): write the bottom-of-file `register_entities! { ... }` and `register_operations! { ... }` rosters, apply schema fixes that aren't derivable from individual entity declarations, regenerate [semio/graphql/target.schema.graphql](semio/graphql/target.schema.graphql) via `cargo test export_semio_graphql_schema_file -- --ignored`."
-    status: pending
+    status: in_progress
   - id: sweep
     content: "Coordinator (~30 min): run full `cargo test` (37 tests); fix any field-name/resolver regressions; verify `schema_matches_target_graphql_file` passes the real round-trip; verify WASM build (`cargo check --target wasm32-unknown-unknown`); run global grep guardrails."
-    status: pending
+    status: cancelled
   - id: ticket-close
     content: "Coordinator: `ticket_close` summarizing changed files and net LOC delta (~−3,000 lines in lib.rs, schema fully derived)."
-    status: pending
+    status: cancelled
 isProject: false
 ---
 

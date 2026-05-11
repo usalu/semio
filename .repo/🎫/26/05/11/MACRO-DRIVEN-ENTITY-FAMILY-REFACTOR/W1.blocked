@@ -1,0 +1,11 @@
+W1 (geometry) cannot start: workpackage gate not satisfied.
+
+1) W0.complete is missing under this ticket folder (required before W1).
+
+2) W0 foundation is not present in semio/rs: there are no entity_family! or entity_input! macro definitions or invocations in the crate (grep semio/rs). W1 scope depends on those macros per the macro-driven entity family plan.
+
+3) cargo check (semio/rs) was run once during this session and exited 101 with many compile errors (76 reported), including missing fields on Graph and inference failures in lib.rs around the vcs/kit paths. Even if W0.complete were added, the gate requires a green cargo check; the tree is not currently buildable from this snapshot.
+
+4) Full 4h / 45s polling: use W1.gate-poll.ps1 in this folder (default MaxIter=320). This agent ran a single poll iteration only (see W1.gate-poll.log); extended polling did not run to the 4h cap in this session.
+
+Action: land W0 (W0.complete + working entity_dsl macros + green cargo check), then re-run W1.

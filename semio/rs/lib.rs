@@ -19,6 +19,166 @@
 #![allow(clippy::too_many_arguments)]
 #![allow(dead_code)]
 
+//#region 🧬 entity_dsl
+
+/// 📜 SDL fragment registry: each entity family implements [`HasSdlFragment`] (W1+); W0 keeps the hook + static golden tail.
+pub mod sdl_registry {
+    /// @emoji 📜 One collected `type` / `interface` / `input` SDL block per registered entity or operation group.
+    pub trait HasSdlFragment {
+        const SDL_FRAGMENT: &'static str;
+    }
+
+    /// 📜 Ordered list of static fragments (empty until entity families emit `SDL_FRAGMENT` constants).
+    pub fn all_fragments() -> Vec<&'static str> {
+        let mut v = Vec::new();
+        crate::push_all_fragments(&mut v);
+        crate::push_operation_fragments(&mut v);
+        v
+    }
+}
+
+/// @emoji 🧬 Roster: records entity families for `push_all_fragments` and later owner/interface codegen (bodies are macro-only per AGENTS).
+macro_rules! register_entities {
+    ( $( $region:ident : [ $( $name:ident ),* $(,)? ] ),* $(,)? ) => {
+        pub(crate) fn push_all_fragments(out: &mut Vec<&'static str>) {
+            let _ = out;
+            $( $(
+                let _ = stringify!($name);
+            )* )*
+        }
+    };
+}
+
+macro_rules! register_operations {
+    ( $( $artifact:ident : [ $( $name:ident ),* $(,)? ] ),* $(,)? ) => {
+        pub(crate) fn push_operation_fragments(out: &mut Vec<&'static str>) {
+            let _ = out;
+            $( $(
+                let _ = stringify!($name);
+            )* )*
+        }
+    };
+}
+
+register_entities! {
+    geom:   [Vector, Point, Coordinate, Offset, Plane, Position, Location, Place],
+    meta:   [Attribute, Author, File, Folder, Prop, Benchmark, Quality, Tag, Concept, Stat, Layer, Group, Family],
+    type_:  [Type, Port, Connector, Representation],
+    design: [Design, Piece, Side, Connection, Clump],
+    root:   [Kit],
+    vcs:    [Edit, Change, Checkpoint, TheKit, Alternative, Graph, Session, Conflict],
+}
+
+register_operations! {
+    tag:        [CreatedTag, CreatedTags, RenamedTag, UpdatedTagDescription, UpdatedTagIcon, AddedAttributeToTag, AddedAttributesToTag, RemovedAttributeFromTag, RemovedAttributesFromTag, DeletedTag, DeletedTags],
+    concept:    [CreatedConcept, RenamedConcept, UpdatedConceptDescription, UpdatedConceptIcon, AddedAttributeToConcept, AddedAttributesToConcept, RemovedAttributeFromConcept, RemovedAttributesFromConcept, DeletedConcept, DeletedConcepts],
+    quality:    [CreatedQuality, RenamedQuality, UpdatedQualityDescription, UpdatedQualityIcon, AddedAttributeToQuality, AddedAttributesToQuality, RemovedAttributeFromQuality, RemovedAttributesFromQuality, DeletedQuality, DeletedQualities],
+    port:       [CreatedPort, CreatedPorts, RenamedPort, UpdatedPortDescription, UpdatedPortIcon, AddedAttributeToPort, AddedAttributesToPort, RemovedAttributeFromPort, RemovedAttributesFromPort, DeletedPort, DeletedPorts],
+    type_:      [CreatedType, RenamedType],
+    design:     [CreatedDesign, CreatedDesigns, DeletedDesign, DeletedDesigns, FlattenedDesign, AddedAttributeToDesign, AddedAttributesToDesign, RemovedAttributeFromDesign, RemovedAttributesFromDesign],
+    piece:      [CreatedFixedPiece, FixedPiece, FixedPieces, DraggedPieces, DraggedPiece, AddedChildPieceWithParentConnection, AddedChildPiecesWithParentConnections, AddedHangingChildPieceWithParentConnection, AddedHangingChildPiecesWithParentConnections, RenamedPiece, UpdatedPieceDescription, MovedPiece, MovedPieces, ChangedPieceToType, ChangedPiecesToType, AddedAttributeToPiece, AddedAttributesToPiece, RemovedAttributeFromPiece, RemovedAttributesFromPiece, DeletedPiece, DeletedPieces, DeletedPiecesAndConnections],
+    kit:        [RenamedKit, ChangedDescription],
+    connector:  [AddedConnector, AddedConnectors, RenamedConnector, UpdatedConnectorDescription, UpdatedConnectorIcon, RemovedConnector, RemovedConnectors],
+}
+
+#[macro_export]
+macro_rules! simple_conn_sync {
+    ($Conn:ident, $Edge:ident, $node:ty, $hash_fn:expr) => {
+        #[derive(Clone, async_graphql::SimpleObject)]
+        pub struct $Edge {
+            pub cursor: String,
+            pub node: $node,
+        }
+
+        #[derive(Clone, async_graphql::SimpleObject)]
+        pub struct $Conn {
+            pub edges: Vec<$Edge>,
+            #[graphql(name = "pageInfo")]
+            pub page_info: std::sync::Arc<$crate::gql_relay::PageInfo>,
+            pub hash: String,
+        }
+
+        impl $Conn {
+            pub fn from_rows(rows: Vec<$node>) -> Self {
+                let mut child_hashes = Vec::with_capacity(rows.len());
+                for r in &rows {
+                    child_hashes.push($hash_fn(r));
+                }
+                let hash = $crate::hash::merkle_collection(child_hashes);
+                let edges = rows.into_iter().enumerate().map(|(i, node)| $Edge { cursor: $crate::gql_relay::edge_cursor(i), node }).collect();
+                Self { edges, page_info: std::sync::Arc::new($crate::gql_relay::PageInfo::default()), hash }
+            }
+        }
+    };
+}
+
+#[macro_export]
+macro_rules! simple_conn_entity {
+    ($Conn:ident, $Edge:ident, $node:ty) => {
+        #[derive(Clone, async_graphql::SimpleObject)]
+        pub struct $Edge {
+            pub cursor: String,
+            pub node: $node,
+        }
+
+        #[derive(Clone, async_graphql::SimpleObject)]
+        pub struct $Conn {
+            pub edges: Vec<$Edge>,
+            #[graphql(name = "pageInfo")]
+            pub page_info: std::sync::Arc<$crate::gql_relay::PageInfo>,
+            pub hash: String,
+        }
+
+        impl $Conn {
+            pub async fn from_rows(rows: Vec<$node>) -> Self {
+                let mut child_hashes = Vec::with_capacity(rows.len());
+                for r in &rows {
+                    child_hashes.push(r.compute_hash().await);
+                }
+                let hash = $crate::hash::merkle_collection(child_hashes);
+                let edges = rows.into_iter().enumerate().map(|(i, node)| $Edge { cursor: $crate::gql_relay::edge_cursor(i), node }).collect();
+                Self { edges, page_info: std::sync::Arc::new($crate::gql_relay::PageInfo::default()), hash }
+            }
+        }
+    };
+}
+
+/// @emoji 🪢 `entity_full_family!` — relay Edge/Connection for geometry (`VectorEdge`…`LocationEdge`).
+#[macro_export]
+macro_rules! entity_full_family {
+    (
+        $base:ident,
+        $node:ty,
+        relay = ($conn:ident, $edge:ident)
+    ) => {
+        paste::paste! {
+            simple_conn_entity!($conn, $edge, $node);
+        }
+    };
+}
+
+/// @emoji 🪢 `entity_relay!` — forwards to [`simple_conn_entity!`] for non-geometry relay shells.
+#[macro_export]
+macro_rules! entity_relay {
+    ($Conn:ident, $Edge:ident, $Node:ty) => {
+        simple_conn_entity!($Conn, $Edge, $Node);
+    };
+}
+
+/// @emoji 🪜 `entity_diffs!` — expands modification / diff relay ladder (filled when diff families migrate).
+#[macro_export]
+macro_rules! entity_diffs {
+    ($($_base:ident),* $(,)?) => {};
+}
+
+/// @emoji 🪢 `entity_owner!` — expands owner/owned union shells (filled when mega-unions derive from roster).
+#[macro_export]
+macro_rules! entity_owner {
+    ($($_base:ident),* $(,)?) => {};
+}
+
+//#endregion 🧬 entity_dsl
+
 //#region 🆔 id
 
 pub mod id {
@@ -907,118 +1067,28 @@ pub mod gql_relay {
         }
     }
 
-    macro_rules! simple_conn_sync {
-        ($Conn:ident, $Edge:ident, $node:ty, $hash_fn:expr) => {
-            #[derive(Clone, SimpleObject)]
-            pub struct $Edge {
-                pub cursor: String,
-                pub node: $node,
-            }
+    crate::simple_conn_sync!(FileConnection, FileEdge, File, |f: &File| f.compute_entity_hash());
+    crate::simple_conn_sync!(FolderConnection, FolderEdge, Folder, |f: &Folder| f.compute_entity_hash());
+    crate::simple_conn_sync!(AuthorConnection, AuthorEdge, Author, |a: &Author| a.compute_entity_hash());
+    crate::simple_conn_entity!(ConceptConnection, ConceptEdge, std::sync::Arc<Concept>);
+    crate::simple_conn_entity!(TagConnection, TagEdge, std::sync::Arc<Tag>);
+    crate::simple_conn_entity!(QualityConnection, QualityEdge, std::sync::Arc<Quality>);
+    crate::simple_conn_entity!(PortConnection, PortEdge, std::sync::Arc<crate::kit::r#type::Port>);
+    crate::simple_conn_entity!(PlaceConnection, PlaceEdge, std::sync::Arc<crate::geom::entity::PlaceNode>);
+    crate::simple_conn_sync!(BenchmarkConnection, BenchmarkEdge, Benchmark, |b: &Benchmark| b.compute_entity_hash());
+    crate::simple_conn_sync!(PropConnection, PropEdge, Prop, |p: &Prop| p.compute_entity_hash());
+    crate::simple_conn_sync!(AttributeConnection, AttributeEdge, crate::meta::Attribute, |a: &crate::meta::Attribute| a.compute_entity_hash());
+    crate::simple_conn_sync!(StatConnection, StatEdge, Stat, |s: &Stat| s.compute_entity_hash());
+    crate::simple_conn_sync!(LayerConnection, LayerEdge, Layer, |l: &Layer| l.compute_entity_hash());
+    crate::simple_conn_sync!(GroupConnection, GroupEdge, Group, |g: &Group| g.compute_entity_hash());
 
-            #[derive(Clone, SimpleObject)]
-            pub struct $Conn {
-                pub edges: Vec<$Edge>,
-                #[graphql(name = "pageInfo")]
-                pub page_info: std::sync::Arc<PageInfo>,
-                pub hash: String,
-            }
-
-            impl $Conn {
-                pub fn from_rows(rows: Vec<$node>) -> Self {
-                    let mut child_hashes = Vec::with_capacity(rows.len());
-                    for r in &rows {
-                        child_hashes.push($hash_fn(r));
-                    }
-                    let hash = merkle_collection(child_hashes);
-                    let edges = rows.into_iter().enumerate().map(|(i, node)| $Edge { cursor: edge_cursor(i), node }).collect();
-                    Self { edges, page_info: std::sync::Arc::new(PageInfo::default()), hash }
-                }
-            }
-        };
-    }
-
-    macro_rules! simple_conn_entity {
-        ($Conn:ident, $Edge:ident, $node:ty) => {
-            #[derive(Clone, SimpleObject)]
-            pub struct $Edge {
-                pub cursor: String,
-                pub node: $node,
-            }
-
-            #[derive(Clone, SimpleObject)]
-            pub struct $Conn {
-                pub edges: Vec<$Edge>,
-                #[graphql(name = "pageInfo")]
-                pub page_info: std::sync::Arc<PageInfo>,
-                pub hash: String,
-            }
-
-            impl $Conn {
-                pub async fn from_rows(rows: Vec<$node>) -> Self {
-                    let mut child_hashes = Vec::with_capacity(rows.len());
-                    for r in &rows {
-                        child_hashes.push(r.compute_hash().await);
-                    }
-                    let hash = merkle_collection(child_hashes);
-                    let edges = rows.into_iter().enumerate().map(|(i, node)| $Edge { cursor: edge_cursor(i), node }).collect();
-                    Self { edges, page_info: std::sync::Arc::new(PageInfo::default()), hash }
-                }
-            }
-        };
-    }
-
-    simple_conn_sync!(FileConnection, FileEdge, File, |f: &File| f.compute_entity_hash());
-    simple_conn_sync!(FolderConnection, FolderEdge, Folder, |f: &Folder| f.compute_entity_hash());
-    simple_conn_sync!(AuthorConnection, AuthorEdge, Author, |a: &Author| a.compute_entity_hash());
-    simple_conn_entity!(ConceptConnection, ConceptEdge, std::sync::Arc<Concept>);
-    simple_conn_entity!(TagConnection, TagEdge, std::sync::Arc<Tag>);
-    simple_conn_entity!(QualityConnection, QualityEdge, std::sync::Arc<Quality>);
-    simple_conn_entity!(PortConnection, PortEdge, std::sync::Arc<crate::kit::r#type::Port>);
-    simple_conn_entity!(PlaceConnection, PlaceEdge, std::sync::Arc<crate::geom::entity::PlaceNode>);
-    simple_conn_sync!(BenchmarkConnection, BenchmarkEdge, Benchmark, |b: &Benchmark| b.compute_entity_hash());
-    simple_conn_sync!(PropConnection, PropEdge, Prop, |p: &Prop| p.compute_entity_hash());
-    simple_conn_sync!(AttributeConnection, AttributeEdge, crate::meta::Attribute, |a: &crate::meta::Attribute| a.compute_entity_hash());
-    simple_conn_sync!(StatConnection, StatEdge, Stat, |s: &Stat| s.compute_entity_hash());
-    simple_conn_sync!(LayerConnection, LayerEdge, Layer, |l: &Layer| l.compute_entity_hash());
-    simple_conn_sync!(GroupConnection, GroupEdge, Group, |g: &Group| g.compute_entity_hash());
-
-    /// @emoji 🪢 `entity_full_family!` — relay Edge/Connection for geometry (`VectorEdge`…`LocationEdge`). Diff/modification ladders extend here toward full 12-type families.
-    macro_rules! entity_full_family {
-        (
-            $base:ident,
-            $node:ty,
-            relay = ($conn:ident, $edge:ident)
-        ) => {
-            paste::paste! {
-                simple_conn_entity!($conn, $edge, $node);
-            }
-        };
-    }
-
-    entity_full_family!(Vector, Arc<crate::geom::entity::VectorNode>, relay = (VectorConnection, VectorEdge));
-    entity_full_family!(Point, Arc<crate::geom::entity::PointNode>, relay = (PointConnection, PointEdge));
-    entity_full_family!(Coordinate, Arc<crate::geom::entity::CoordinateNode>, relay = (CoordinateConnection, CoordinateEdge));
-    entity_full_family!(Offset, Arc<crate::geom::entity::OffsetNode>, relay = (OffsetConnection, OffsetEdge));
-    entity_full_family!(Plane, Arc<crate::geom::entity::PlaneNode>, relay = (PlaneConnection, PlaneEdge));
-    entity_full_family!(Position, Arc<crate::geom::entity::PositionNode>, relay = (PositionConnection, PositionEdge));
-    entity_full_family!(Location, Arc<crate::geom::entity::LocationNode>, relay = (LocationConnection, LocationEdge));
-
-    /// @emoji 🪢 `entity_relay!` — forwards to [`simple_conn_entity!`] for non-geometry relay shells.
-    macro_rules! entity_relay {
-        ($Conn:ident, $Edge:ident, $Node:ty) => {
-            simple_conn_entity!($Conn, $Edge, $Node);
-        };
-    }
-
-    /// @emoji 🪜 `entity_diffs!` — expands modification / diff / diffs relay ladder (hook for codegen; invoke per entity family).
-    macro_rules! entity_diffs {
-        ($($_base:ident),* $(,)?) => {};
-    }
-
-    /// @emoji 🪢 `entity_owner!` — expands owner/owned union shells (hook for codegen).
-    macro_rules! entity_owner {
-        ($($_base:ident),* $(,)?) => {};
-    }
+    crate::entity_full_family!(Vector, Arc<crate::geom::entity::VectorNode>, relay = (VectorConnection, VectorEdge));
+    crate::entity_full_family!(Point, Arc<crate::geom::entity::PointNode>, relay = (PointConnection, PointEdge));
+    crate::entity_full_family!(Coordinate, Arc<crate::geom::entity::CoordinateNode>, relay = (CoordinateConnection, CoordinateEdge));
+    crate::entity_full_family!(Offset, Arc<crate::geom::entity::OffsetNode>, relay = (OffsetConnection, OffsetEdge));
+    crate::entity_full_family!(Plane, Arc<crate::geom::entity::PlaneNode>, relay = (PlaneConnection, PlaneEdge));
+    crate::entity_full_family!(Position, Arc<crate::geom::entity::PositionNode>, relay = (PositionConnection, PositionEdge));
+    crate::entity_full_family!(Location, Arc<crate::geom::entity::LocationNode>, relay = (LocationConnection, LocationEdge));
 
     /// @emoji 🧷 Kit [`Family`] SDL shell — Artifact [`name`]/[`description`]/[`icon`] are persisted kit fields.
     #[derive(Clone, Debug, Default, SimpleObject)]
@@ -4721,6 +4791,78 @@ pub mod vcs {
     }
     //#endregion 📝 draft
 
+    //#region 📍 kit read point
+    /// @emoji 📍 GraphQL input for [`Graph::materialized_kit_at_point`] (wip anchors).
+    #[derive(Clone, Debug, InputObject)]
+    #[graphql(name = "KitReadPointInput")]
+    pub struct KitReadPointInput {
+        #[graphql(name = "theKit")]
+        pub the_kit: Option<bool>,
+        #[graphql(name = "checkpointId")]
+        pub checkpoint_id: Option<Id>,
+        #[graphql(name = "checkpointChangeId")]
+        pub checkpoint_change_id: Option<Id>,
+        #[graphql(name = "checkpointOperationId")]
+        pub checkpoint_operation_id: Option<Id>,
+        #[graphql(name = "alternativeId")]
+        pub alternative_id: Option<Id>,
+        #[graphql(name = "draftId")]
+        pub draft_id: Option<Id>,
+        #[graphql(name = "draftAlternativeId")]
+        pub draft_alternative_id: Option<Id>,
+        #[graphql(name = "draftTransactionId")]
+        pub draft_transaction_id: Option<Id>,
+        #[graphql(name = "draftOperationId")]
+        pub draft_operation_id: Option<Id>,
+        #[graphql(name = "draftChangeId")]
+        pub draft_change_id: Option<Id>,
+    }
+    //#endregion 📍 kit read point
+
+    //#region 📖 read write version
+    /// @emoji 📖 Placeholder version entity for `OwnerEntity` (`ReadVersion` SDL lane).
+    pub struct ReadVersion {
+        pub id: Id,
+    }
+
+    impl ReadVersion {
+        pub async fn compute_hash(&self) -> String {
+            h(&["semio:vcs:ReadVersion", self.id.as_str()])
+        }
+    }
+
+    #[Object(name = "ReadVersion")]
+    impl ReadVersion {
+        pub async fn id(&self) -> Id {
+            self.id.clone()
+        }
+        pub async fn hash(&self) -> String {
+            self.compute_hash().await
+        }
+    }
+
+    /// @emoji 📖 Placeholder version entity for `OwnerEntity` (`WriteVersion` SDL lane).
+    pub struct WriteVersion {
+        pub id: Id,
+    }
+
+    impl WriteVersion {
+        pub async fn compute_hash(&self) -> String {
+            h(&["semio:vcs:WriteVersion", self.id.as_str()])
+        }
+    }
+
+    #[Object(name = "WriteVersion")]
+    impl WriteVersion {
+        pub async fn id(&self) -> Id {
+            self.id.clone()
+        }
+        pub async fn hash(&self) -> String {
+            self.compute_hash().await
+        }
+    }
+    //#endregion 📖 read write version
+
     //#region 🪧 checkpoint
     pub struct Checkpoint {
         pub id: Id,
@@ -4999,10 +5141,14 @@ pub mod vcs {
         pub owner_session: RwLock<Weak<Session>>,
         pub self_weak: std::sync::Mutex<std::sync::Weak<Graph>>,
         pub initial_kit: RwLock<Arc<Kit>>,
+        /// @emoji 🏗️ Mutable kit root replayed through [`Graph::materialized_kit_for_draft`].
+        pub parent_root_for_active_draft: RwLock<Arc<Kit>>,
         pub materialized_cache: RwLock<Option<MaterializedSlot>>,
         pub alternatives: RwLock<Vec<Arc<Alternative>>>,
         pub checkpoints: RwLock<Vec<Arc<Checkpoint>>>,
         pub releases: RwLock<Vec<Arc<Checkpoint>>>,
+        pub drafts: RwLock<Vec<Arc<Draft>>>,
+        pub op_history: RwLock<Vec<Arc<crate::operation::OperationIface>>>,
     }
 
     impl Default for Graph {
@@ -5012,10 +5158,13 @@ pub mod vcs {
                 owner_session: RwLock::new(Weak::new()),
                 self_weak: std::sync::Mutex::new(Weak::new()),
                 initial_kit: RwLock::new(Arc::default()),
+                parent_root_for_active_draft: RwLock::new(Arc::default()),
                 materialized_cache: RwLock::new(None),
                 alternatives: RwLock::new(Vec::new()),
                 checkpoints: RwLock::new(Vec::new()),
                 releases: RwLock::new(Vec::new()),
+                drafts: RwLock::new(Vec::new()),
+                op_history: RwLock::new(Vec::new()),
             }
         }
     }
@@ -5031,14 +5180,18 @@ pub mod vcs {
                     owner_session: RwLock::new(Weak::new()),
                     self_weak: std::sync::Mutex::new(weak_self.clone()),
                     initial_kit: RwLock::new(Arc::default()),
+                    parent_root_for_active_draft: RwLock::new(kit.clone()),
                     materialized_cache: RwLock::new(None),
                     alternatives: RwLock::new(Vec::new()),
                     checkpoints: RwLock::new(Vec::new()),
                     releases: RwLock::new(Vec::new()),
+                    drafts: RwLock::new(Vec::new()),
+                    op_history: RwLock::new(Vec::new()),
                 }
             });
-            let initial_snap = frozen.deep_clone().await;
-            *g.initial_kit.write().await = initial_snap;
+            let baseline = g.parent_root_for_active_draft.read().await.clone().deep_clone().await;
+            *g.initial_kit.write().await = baseline.clone();
+            *g.parent_root_for_active_draft.write().await = baseline;
             g
         }
 
@@ -5089,6 +5242,13 @@ pub mod vcs {
             *self.materialized_cache.write().await = None;
         }
 
+        /// @emoji 🧾 Saved changes on the main kit version (`finalized_transactions` only).
+        pub async fn saved_change_connection_for_main_line(self: &Arc<Self>) -> crate::gql_relay::ChangeConnection {
+            let draft = self.ensure_default_seed_state().await;
+            let txs = draft.finalized_transactions.read().await.clone();
+            crate::gql_relay::ChangeConnection::from_changes(changes_from_edits(txs).await).await
+        }
+
         /// @emoji 🧾 Unsaved changes on the main kit version, projected from open internal write sessions.
         pub async fn unsaved_change_connection_for_main_line(self: &Arc<Self>) -> crate::gql_relay::ChangeConnection {
             let draft = self.ensure_default_seed_state().await;
@@ -5097,6 +5257,42 @@ pub mod vcs {
                 guard.clone()
             };
             crate::gql_relay::ChangeConnection::from_changes(changes_from_edits(transactions).await).await
+        }
+
+        /// @emoji 📦 Deterministic materialized [`Kit`] for `draft_id`: clone [`Graph::parent_root_for_active_draft`] and replay recorded [`KitOperation`] forwards.
+        pub async fn materialized_kit_for_draft(self: &Arc<Self>, draft_id: &Id) -> Arc<Kit> {
+            let draft = self.ensure_draft(draft_id).await;
+            let seq = draft.change_seq.load(Ordering::Relaxed);
+            {
+                let cache = self.materialized_cache.read().await;
+                if let Some(slot) = cache.as_ref() {
+                    if slot.draft_id == *draft_id && slot.change_seq == seq {
+                        return slot.kit.clone();
+                    }
+                }
+            }
+            let base = self.parent_root_for_active_draft.read().await.clone();
+            let mat = base.deep_clone().await;
+            let mut edits: Vec<Arc<Edit>> = Vec::new();
+            edits.extend(draft.finalized_transactions.read().await.clone());
+            edits.extend(draft.transactions.read().await.clone());
+            for ed in edits {
+                let changes = ed.changes.read().await.clone();
+                for ch in changes {
+                    let forwards = ch.forwards.read().await.clone();
+                    for op in forwards {
+                        let diff = match op.to_diff(&mat).await {
+                            Ok(d) => d,
+                            Err(_) => continue,
+                        };
+                        if mat.apply_diff(&diff).await.is_err() {
+                            continue;
+                        }
+                    }
+                }
+            }
+            *self.materialized_cache.write().await = Some(MaterializedSlot { draft_id: draft_id.clone(), change_seq: seq, kit: mat.clone() });
+            mat
         }
 
         /// @emoji 📝 Append one forward operation plus backward operations onto the open transaction's tail [`Change`], bumping draft `change_seq`.
@@ -5317,6 +5513,41 @@ pub mod vcs {
                 return Ok(self.materialized_kit_for_draft(&draft.id).await);
             }
             Ok(self.materialized_head_kit().await)
+        }
+
+        /// @emoji 🔧 Apply `createFixedPiece` via [`Graph::record_op_in_open_transaction`] (tests / golden replay).
+        pub async fn apply_create_fixed_piece(
+            self: &Arc<Self>,
+            draft_id: Id,
+            transaction_id: Id,
+            design_id: Id,
+            blueprint_id: Id,
+            position: crate::geom::Position,
+            name: Option<String>,
+            description: Option<String>,
+        ) -> Result<(Arc<crate::kit::design::piece::Piece>,), SemioError> {
+            let piece_id = Id::new().await;
+            let forward = crate::operation::KitOperation::CreateFixedPiece {
+                scope: crate::operation::Scope::CreateFixedPiece {
+                    design_id,
+                    piece_id: piece_id.clone(),
+                    blueprint_id,
+                    attribute_ids: Vec::new(),
+                },
+                input: crate::operation::Input::FixedPiece { position, name, description },
+            };
+            let before = self.materialized_kit_for_draft(&draft_id).await;
+            let backwards = forward.to_backwards(&before).await?;
+            self.record_op_in_open_transaction(&draft_id, &transaction_id, forward, backwards).await?;
+            let after = self.materialized_kit_for_draft(&draft_id).await;
+            let piece = after
+                .design_by_external_id(&design_id)
+                .await
+                .ok_or_else(|| SemioError::not_found("Design", design_id.as_str()))?
+                .piece_by_external_id(&piece_id)
+                .await
+                .ok_or_else(|| SemioError::not_found("Piece", piece_id.as_str()))?;
+            Ok((piece,))
         }
     }
 
@@ -9807,9 +10038,15 @@ pub mod gql {
             .finish()
     }
 
-    /// 📜 Canonical SDL string aligned with `semio/graphql/target.schema.graphql` (normalized; see [`normalize_target_sdl`]).
+    /// 📜 Canonical SDL: static fragments from [`crate::sdl_registry`] plus embedded executable golden (`semio/graphql/target.schema.graphql`).
     pub async fn sdl() -> String {
-        normalize_target_sdl(include_str!("../graphql/target.schema.graphql"))
+        let mut acc = String::new();
+        for frag in crate::sdl_registry::all_fragments() {
+            acc.push_str(frag);
+            acc.push('\n');
+        }
+        acc.push_str(include_str!("../graphql/target.schema.graphql"));
+        normalize_target_sdl(&acc)
     }
 
     /// 🧮 Normalize SDL text for stable comparisons (trim ends, collapse blank-line runs).

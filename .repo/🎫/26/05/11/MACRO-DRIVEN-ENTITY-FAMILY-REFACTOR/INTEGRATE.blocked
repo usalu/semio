@@ -1,0 +1,3 @@
+Gate: W8.complete missing; W8 deliverables incomplete (no command_nav! in semio/rs/lib.rs; *OperationNav structs still present).
+cargo check (semio/rs): passed on 2026-05-11 after poll.
+Integrator-only tasks (register_entities!, register_operations!, golden schema regen, full cargo test, wasm check, Phase 8 greps) were not executed because the gate failed.
