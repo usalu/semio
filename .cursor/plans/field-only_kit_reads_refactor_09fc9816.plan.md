@@ -11,9 +11,9 @@ todos:
  - id: js-base
    content: Add an internal Entity base with the field-cache machinery (stable object identity for object-typed fields, dirty/version tracking, getSnapshot per field key) and the on<Event>(cb) routing
    status: pending
- - id: js-classes
-   content: Reshape Kit (merged with KitStore), Design, Type, Port, Connector, Piece, PiecesOps, Connection, Author, Quality, Tag, Concept, Family, File, Folder, Layer, Group, Stat, Prop, Attribute, Representation, Plane, Coordinate, Point, Vector, Camera, Side, Benchmark, Position, Place, Location into CQRS classes; per field expose field()/fieldSync()/on<Event>(); per leaf in *OperationInput expose a 1:1 command method (kit.createDesign, design.addFixedPiece, design.piece(id).fix, design.pieces(ids).drag, type.createPort, type.port(id).rename, type.addConnector, etc.); navigation methods (kit.design(id), kit.type(id), design.piece(id), design.pieces(ids), type.port(id), type.connector(id)) return cached child class instances
-   status: pending
+  - id: js-classes
+    content: Reshape Kit (merged with KitStore), Design, Type, Port, Connector, Piece, PiecesOps, Connection, Author, Quality, Tag, Concept, Family, File, Folder, Layer, Group, Stat, Prop, Attribute, Representation, Plane, Coordinate, Point, Vector, Camera, Side, Benchmark, Position, Place, Location into CQRS classes; per field expose field()/fieldSync()/on<Event>(); per leaf in *OperationInput expose two command methods — async op(...) returning Promise<SetResult> and sync opSync(...) returning SetResult (optimistic local apply + background dispatch). Covers kit.createDesign(/Sync), design.addFixedPiece(/Sync), design.piece(id).fix(/Sync), design.pieces(ids).drag(/Sync), type.createPort(/Sync), type.port(id).rename(/Sync), type.addConnector(/Sync), etc. Navigation methods (kit.design(id), kit.type(id), design.piece(id), design.pieces(ids), type.port(id), type.connector(id)) return cached child class instances.
+    status: pending
  - id: js-deletes
    content: Delete from semio/js/index.ts every non-class export — KitStore (merged), all *Schema/zod, all *Dto / *MetadataDto / *Shallow types, KitFullDto, KitHostStore + InMemoryKitStore + JsonFileKitStore + FolderKitStore + applyKitClientSnapshotToLocalStore, all Read*Command types, SemioKitLiveReadStore + KitDesignReadStore + KitShallowListStore + KitViewCatalogStore, kitStoreClientAdd/Update/Remove* free functions, submitKitChangeCommands, buildSchemaEntityChangeCommands, writeKitStoreClientSchemaField, KitChangeKind / KitChangeSemanticKindGql, kitChangeSemanticKindToGraphQl, KitJson* helpers, kit-store.worker.ts JSON DTO plumbing
    status: pending
@@ -23,9 +23,9 @@ todos:
  - id: react-field-hooks
    content: Rewrite every per-field read hook (usePieceName / usePiecePlane / usePieceFlatPlane / usePieceFlatCenter / usePieceCenter / usePieceScale / useTypeName / useDesignName / useConnectionGap / ...) to compose useDesign().piece(id) (or useKit().type(id), useType().port(id), etc.) and bind the resulting class field via useSyncExternalStore (subscribe = entity.on<Event>(cb), getSnapshot = entity.fieldSync()). Each read hook returns the value directly (T | undefined) — no setter, no tuple, no status, no KitFieldBinding.
    status: pending
- - id: react-op-hooks
-   content: Add one operation hook per leaf in *OperationInput from target.schema.graphql (useDragPiece, useFixPiece, useRenamePiece, useMovePiece, useChangePieceBlueprint, useAddFixedPiece, useDeletePiece, useDeletePieces, useFlattenDesign, useCreateType, useCreatePort, useAddConnector, useStartNewChange, useSaveUnsavedChange, useCreateCheckpoint, useStartAlternative, useIntegrateAlternative, etc.). Each returns a single function bound to the resolved class instance.
-   status: pending
+  - id: react-op-hooks
+    content: Add two operation hooks per leaf in *OperationInput from target.schema.graphql — async useOpEntity returning (...args) => Promise<SetResult>, and sync useOpEntitySync returning (...args) => SetResult (optimistic local apply + background dispatch). Covers useDragPiece(/Sync), useFixPiece(/Sync), useRenamePiece(/Sync), useMovePiece(/Sync), useChangePieceBlueprint(/Sync), useAddFixedPiece(/Sync), useDeletePiece(/Sync), useDeletePieces(/Sync), useFlattenDesign(/Sync), useCreateType(/Sync), useCreatePort(/Sync), useAddConnector(/Sync), useStartNewChange(/Sync), useSaveUnsavedChange(/Sync), useCreateCheckpoint(/Sync), useStartAlternative(/Sync), useIntegrateAlternative(/Sync), etc.
+    status: pending
  - id: react-deletes
    content: Delete public exports from semio/react/index.tsx for KitFieldBinding/HookRead/WriteStatus wrappers, whole-object triads, generic schema readers, snapshot accessors, *Input / *PatchInput whole-object hooks, useResolved* helpers, useUndo/useRedo/useChange/useCommandBuilder/useWriteIndicator/useWriteQueue/useOptimistic/usePendingTriad, and whole-snapshot file/binary helpers; demote required helpers to non-exported internals
    status: pending
@@ -200,7 +200,8 @@ The transport speaks only GraphQL:
 
 - Reads: a single `GqlTransport.query(doc, vars)` per field method (typed `Query` selection with the right `node(id)` lookup).
 - Subscriptions: one persistent `subscription { event }` per `Kit` instance; the `EventBus` deserializes each `Json` event, looks up its kind + entity id + field affinity, and pushes typed values into all registered channels.
-- Commands: one `mutation { session { ... } }` per command; the resulting `ID!` is stored locally as the active change id when needed.
+- Commands (async `op(...)`): one `mutation { session { ... } }` per command; the resulting `ID!` is stored locally as the active change id when needed. The promise resolves after server confirmation.
+- Commands (sync `opSync(...)`): an in-class reducer mutates the cache deterministically using the same logic the server applies for the matching event, fires the matching `on<Event>` callbacks synchronously so React `useSyncExternalStore` rerenders in the same tick, and returns a local `SetResult` (with the optimistic id). The same `mutation { session { ... } }` is enqueued through `Kit`'s background dispatch queue; the subscription event from the server later reconciles the cache (no-op if the optimistic state already matches, or a corrective re-emit if the server diverged). Background mutation failures surface through `Kit.errors` (consumed by `useSetErrors`).
 
 ## 3. Public exports of `semio/js/index.ts`
 
@@ -260,12 +261,10 @@ All `*Scope*` symbols are renamed to `*Context*` across the public API:
 
 ### Context usage
 
-Every entity has a JSX provider component that puts an id into the matching React context. Hooks omit their `id` argument to bind to the context. Providers nest naturally.
+Every entity has a JSX provider component that puts an id into the matching React context. Each provider takes a single `id` prop (mirrors the existing `*Scope` shape — `KitScope` already takes `id`, the live `Kit` instance is resolved from the registry inside the provider). Hooks omit their `id` argument to bind to the context. Providers nest naturally.
 
 ```tsx
-// Bind the whole tree to a Kit instance
-<KitContext kit={kit}>
- // Bind to a specific design; useDesignName() reads from this provider
+<KitContext id={kitId}>
  <DesignContext id={designId}>
   <DesignNameLabel /> {/* uses useDesignName() */}
   <DesignPieceList /> {/* uses useDesignPieceIds() then maps to <PieceContext id={...}> */}
@@ -293,18 +292,17 @@ function DesignPieceList() {
 }
 
 function PieceCard() {
- // All four hooks omit the id and pick it up from PieceContext
- const name = usePieceName();
+ const name = usePieceName(); // PieceContext-bound
  const center = usePieceFlatCenter();
  const plane = usePiecePlane();
- const dragPiece = useDragPiece(); // op hook, also bound to PieceContext id
+ const dragPieceSync = useDragPieceSync(); // live UI update
  const fixPiece = useFixPiece();
  return (
   <Card title={name}>
    <Plane plane={plane} />
    <Coord center={center} />
    <button onClick={() => fixPiece()}>Fix</button>
-   <DragHandle onDrag={(offset) => dragPiece(offset)} />
+   <DragHandle onDrag={(offset) => dragPieceSync(offset)} />
   </Card>
  );
 }
@@ -314,20 +312,18 @@ The `id` argument always wins over the surrounding context, so a single provider
 
 ```tsx
 function PieceCompare({ otherId }: { otherId: string }) {
- // Reads piece center from PieceContext (current piece)
- const myCenter = usePieceFlatCenter();
- // Reads piece center for a *different* piece without changing the provider
- const otherCenter = usePieceFlatCenter(otherId);
+ const myCenter = usePieceFlatCenter(); // current PieceContext
+ const otherCenter = usePieceFlatCenter(otherId); // explicit id
  return <Compare a={myCenter} b={otherCenter} />;
 }
 ```
 
-Composed entity contexts mirror the schema's nesting. A connector inspector binds to a `Type` and a specific `Connector`:
+A connector editor binds inside a `Type` and a specific `Connector` and uses one of the operation hooks that *does* exist (`ConnectorOperationInput` declares `rename` / `changeDescription` / `changeIcon`):
 
 ```tsx
 <TypeContext id={typeId}>
  <ConnectorContext id={connectorId}>
-  <ConnectorRow /> {/* uses useConnectorCode(), useConnectorIcon(), useRenameConnector() */}
+  <ConnectorRow />
  </ConnectorContext>
 </TypeContext>;
 
@@ -335,30 +331,105 @@ function ConnectorRow() {
  const code = useConnectorCode();
  const description = useConnectorDescription();
  const icon = useConnectorIcon();
- const renameConnector = useRenameConnector();
- return <Row code={code} description={description} icon={icon} onRename={renameConnector} />;
+ const renameConnectorSync = useRenameConnectorSync();
+ return <Row code={code} description={description} icon={icon} onRename={renameConnectorSync} />;
 }
 ```
 
-A connection editor binds inside the design and reads its own fields:
+`Connection`, `Author` and the value-object classes do not have a `*OperationInput` in [target.schema.graphql](semio/graphql/target.schema.graphql), so they only get read hooks — no `useSet*` / `use<Op>*` hooks for them. Mutating a connection happens through the parent `Design`'s ops (e.g. `useAddChildPieceWithParentConnection(designId)`), and connection-field reads are still per-field hooks (`useConnectionGap`, `useConnectionShift`, `useConnectionRotation`, …).
+
+Operation hooks called outside any provider must take an explicit `id` (otherwise the returned function reports a `Readonly` error).
+
+### Sketchpad target
+
+Today sketchpad re-implements piece- and connection-field hooks that internally call the now-banned `usePiece() as Piece | null` / `useConnection() as Connection | null` and mutate through `useDesignAppCommands().updatePiece(...)` / `.updateConnection(...)`. After the migration each of those sketchpad hooks becomes a thin composition of `@semio/react` field reads + sync ops, with no entity-class read carrier.
+
+```ts
+// Before — semio/sketchpad/index.tsx around line 16888
+export function usePieceCenterU(): HookResult<number> {
+ const pieceScope = usePieceScope();
+ const piece = usePiece() as Piece | null;
+ const commands = useDesignAppCommands();
+ const setter = useCallback(
+  (value: number) => {
+   if (pieceScope && piece)
+    commands.updatePiece(
+     "semio.sketchpad.app.design.panel.details.section.piece.center.u",
+     pieceScope.id,
+     { center: { u: value, v: piece.center?.v ?? 0 } },
+    );
+  },
+  [pieceScope, piece, commands],
+ );
+ return conditionalHookResult(!!pieceScope && !!piece, piece?.center?.u ?? 0, setter);
+}
+```
+
+```ts
+// After
+export function usePieceCenterU(): HookResult<number> {
+ const center = usePieceCenter(); // Coordinate | undefined, PieceContext-bound
+ const movePieceSync = useMovePieceSync(); // (position) => SetResult
+ const setter = useCallback(
+  (value: number) => movePieceSync({ center: { u: value, v: center?.v ?? 0 } }),
+  [movePieceSync, center?.v],
+ );
+ return conditionalHookResult(center !== undefined, center?.u ?? 0, setter);
+}
+```
+
+The same shape replaces `usePieceCenterV` (uses `useMovePieceSync({ center: { u: center?.u ?? 0, v: value } })`), `usePieceScale` (composes `usePieceScale` from `@semio/react` plus `useMovePieceSync` since the schema models scale through `PositionInput.scale`), `usePieceIsHidden` / `usePieceIsLocked` (compose `usePieceAttributes` plus `useAddPieceAttributeSync` / `useRemovePieceAttributeSync` since `isHidden` / `isLocked` are stored as attributes per the schema). Each sketchpad hook keeps its name and `HookResult` return shape — only the body changes from "snapshot read + commands.updatePiece" to "field read + opSync".
+
+Connection-field hooks migrate even though `Connection` has no operation input — gap / shift / rotation reads stay as direct field hooks, and any mutation that previously called `commands.updateConnection(...)` is rerouted to the parent `Design`'s ops (the schema only mutates connections through `Design.addChildPieceWithParentConnection` / `Design.deletePiecesAndConnections` today, so sketchpad's "edit connection gap" UI either disappears or is gated until `ConnectionOperationInput` is added):
+
+```ts
+// Before
+export function useConnectionGapValue(): HookResult<number> {
+ const connectionScope = useConnectionScope();
+ const connection = useConnection() as Connection | null;
+ const commands = useDesignAppCommands();
+ const setter = useCallback(
+  (value: number) => {
+   if (connectionScope) commands.updateConnection("…", connectionScope.id, { gap: value });
+  },
+  [connectionScope, commands],
+ );
+ return conditionalHookResult(!!connection, connection?.gap ?? 0, setter);
+}
+```
+
+```ts
+// After
+export function useConnectionGapValue(): number | undefined {
+ return useConnectionGap(); // read-only until ConnectionOperationInput.gap exists
+}
+```
+
+Drag interaction (canvas pointer move) collapses to a single sync op per piece:
 
 ```tsx
-<DesignContext id={designId}>
- <ConnectionContext id={connectionId}>
-  <ConnectionEditor />
- </ConnectionContext>
-</DesignContext>;
-
-function ConnectionEditor() {
- const gap = useConnectionGap();
- const shift = useConnectionShift();
- const rotation = useConnectionRotation();
- const setGap = useSetConnectionGap(); // operation hook bound to ConnectionContext id
- return <Editor gap={gap} shift={shift} rotation={rotation} onGap={setGap} />;
+// Before — snapshot-driven optimistic diff applied through commands.applyKitDiff(...)
+function useDraggingPiece(id: string) {
+ const piece = usePiece(undefined, id) as Piece | null;
+ const commands = useDesignAppCommands();
+ return useCallback(
+  (offset: OffsetInput) => {
+   if (!piece) return;
+   commands.applyKitDiff(buildDragDiff(piece, offset));
+  },
+  [piece, commands],
+ );
 }
 ```
 
-Operation hooks called outside any provider must take an explicit `id` (otherwise they no-op and the returned function reports a `Readonly` error). Reading the `Kit` instance is always available through `useKit()` and through the parent `KitContext` provider used at app boot.
+```tsx
+// After
+function useDraggingPiece(id: string) {
+ return useDragPieceSync(id); // (offset) => SetResult
+}
+```
+
+Net effect: every banned `useKit` / `useDesign` / `useType` / `usePiece` / `useConnection` / `useAuthor` / `useQuality` import disappears from sketchpad, every `commands.updatePiece` / `updateConnection` / `updateType` / `updateDesign` / `applyKitDiff` call becomes a `use<Op><Entity>Sync` call (or a no-op when the schema has no matching operation), and every read becomes a per-field hook bound to the matching `*Context`. The `useDesignAppCommands` indirection itself is deleted — sketchpad calls the operation hooks directly.
 
 ### Read hook pattern
 
@@ -407,32 +478,60 @@ Hooks for `Type` fields use `useKit()` → `kit.type(id ?? useTypeContext()?.id)
 
 ### Operation hook pattern
 
-`use<Operation><Entity>(id?: string)` returns a function that performs that operation against the resolved class instance. Body:
+Each operation gets two hooks, mirroring the read side's `field` / `fieldSync` split:
+
+- `use<Operation><Entity>(id?: string): (...args) => Promise<SetResult>` — async; awaits server confirmation.
+- `use<Operation><Entity>Sync(id?: string): (...args) => SetResult` — sync; applies optimistically against the in-class cache, fires `on<Event>` callbacks in the same tick (so `useSyncExternalStore` rerenders synchronously), and dispatches the GraphQL mutation in the background.
 
 ```ts
 export function useDragPiece(id?: string): (offset: OffsetInput) => Promise<SetResult> {
  const design = useDesign();
- const id = id ?? React.useContext(PieceContext)?.id;
- const piece = design && id ? design.piece(id) : null;
+ const pieceId = id ?? React.useContext(PieceContext)?.id;
+ const piece = design && pieceId ? design.piece(pieceId) : null;
  return React.useCallback(async (offset: OffsetInput) => (piece ? piece.drag(offset) : ({ ok: false, error: { kind: "Readonly", message: "no piece" } } as const)), [piece]);
+}
+
+export function useDragPieceSync(id?: string): (offset: OffsetInput) => SetResult {
+ const design = useDesign();
+ const pieceId = id ?? React.useContext(PieceContext)?.id;
+ const piece = design && pieceId ? design.piece(pieceId) : null;
+ return React.useCallback((offset: OffsetInput) => (piece ? piece.dragSync(offset) : ({ ok: false, error: { kind: "Readonly", message: "no piece" } } as const)), [piece]);
 }
 
 export function useFixPiece(id?: string): () => Promise<SetResult> {
  const design = useDesign();
- const id = id ?? React.useContext(PieceContext)?.id;
- const piece = design && id ? design.piece(id) : null;
+ const pieceId = id ?? React.useContext(PieceContext)?.id;
+ const piece = design && pieceId ? design.piece(pieceId) : null;
  return React.useCallback(async () => (piece ? piece.fix() : ({ ok: false, error: { kind: "Readonly", message: "no piece" } } as const)), [piece]);
+}
+
+export function useFixPieceSync(id?: string): () => SetResult {
+ const design = useDesign();
+ const pieceId = id ?? React.useContext(PieceContext)?.id;
+ const piece = design && pieceId ? design.piece(pieceId) : null;
+ return React.useCallback(() => (piece ? piece.fixSync() : ({ ok: false, error: { kind: "Readonly", message: "no piece" } } as const)), [piece]);
 }
 
 export function useRenamePiece(id?: string): (newName: string) => Promise<SetResult> {
  const design = useDesign();
- const id = id ?? React.useContext(PieceContext)?.id;
- const piece = design && id ? design.piece(id) : null;
+ const pieceId = id ?? React.useContext(PieceContext)?.id;
+ const piece = design && pieceId ? design.piece(pieceId) : null;
  return React.useCallback(async (newName: string) => (piece ? piece.rename(newName) : ({ ok: false, error: { kind: "Readonly", message: "no piece" } } as const)), [piece]);
+}
+
+export function useRenamePieceSync(id?: string): (newName: string) => SetResult {
+ const design = useDesign();
+ const pieceId = id ?? React.useContext(PieceContext)?.id;
+ const piece = design && pieceId ? design.piece(pieceId) : null;
+ return React.useCallback((newName: string) => (piece ? piece.renameSync(newName) : ({ ok: false, error: { kind: "Readonly", message: "no piece" } } as const)), [piece]);
 }
 ```
 
+Use the **sync** variant for high-frequency UI feedback (`onDrag`, `onPointerMove`, slider inputs, …) so the local cache and `useSyncExternalStore` rerenders happen in the same tick as the user input. Use the **async** variant when the caller needs to await server confirmation (e.g. before navigating, before showing a toast, …).
+
 ### Operation hook surface (1:1 with [target.schema.graphql](semio/graphql/target.schema.graphql))
+
+Every entry below ships in two flavours: `use<Op><Entity>` returning `(...args) => Promise<SetResult>`, and `use<Op><Entity>Sync` returning `(...args) => SetResult`. Only the base names are listed.
 
 - **`KitOperationInput`** → `useRenameKit`, `useChangeKitDescription`, `useCreateTag`, `useDeleteTag`, `useDeleteTags`, `useCreateConcept`, `useDeleteConcept`, `useDeleteConcepts`, `useCreateQuality`, `useDeleteQuality`, `useDeleteQualities`, `useCreateType`, `useDeleteType`, `useDeleteTypes`, `useCreateDesign`, `useDeleteDesign`, `useDeleteDesigns`.
 - **`VersionCommandInput` / `UnsavedChangeCommandInput`** → `useStartNewChange`, `useSaveUnsavedChange`, `useCreateCheckpoint`, `useSaveVersion`.
@@ -454,7 +553,7 @@ export function useRenamePiece(id?: string): (newName: string) => Promise<SetRes
 - Bulk / list / aggregate / metadata / shallow hooks: `useTypes`, `useDesigns`, `usePieces`, `useConnections`, `useAuthors`, `useTypesIds`, `useDesignsIds`, `useTypesMetadata`, `useDesignsMetadata`, `useTypesFull`, `useDesignsFull`, `useFilesFull`, `useTagsFull`, `useKitDesignsShallow`, `useKitTypesShallow`, `useKitAuthorsShallow`, `useKitPieces`, `useKitConnections`, `usePiecesMetadataMap`, `usePieceMetadata`, `useIncludedDesigns`, `useDesignClusterableGroups`, `useDesignQualitySum`, `useTypeBestRepresentation`, `useKitColoredConnectors`, `useReplacableTypes`, `useReplacableDesigns`, `useExplodeableDesignNodes`, `useOpenKitGuids`, `useActiveKitGuid`, `useOpenKitShallows`, `useRegistryHasKit`, `useRegistryKitPersistenceKind`, `useKitAlternatives`, `useKitAlternativeSelection`. Each returns plain data (lists or scalars) — no tuple wrapping. Implementations compose list-id field hooks plus per-id reads, all on top of the class instances (e.g. `useTypesIds(): readonly string[] | undefined`, `useTypes(): readonly Type[] | undefined`).
 - Per-field read hooks (above) and per-operation write hooks (above).
 - Context components + context hooks: `KitContext`, `DesignContext`, `TypeContext`, `PortContext`, `ConnectorContext`, `PieceContext`, `ConnectionContext`, `AuthorContext`, `QualityContext`, `TagContext`, `ConceptContext`, plus their `use*Context` accessors and `useResolvedKitIdentifier`.
-- Backbone read hooks return plain data (`useBackboneStatus(): BackboneStatusDto | undefined`, `useListConflicts(): readonly KitConflict[] | undefined`); backbone operations follow the operation hook pattern (`useAttachBackbone(): (cfg: BackboneConfig) => Promise<SetResult>`, `useDetachBackbone(): () => Promise<SetResult>`, `useResolveConflict(): (id: string, strategy: ConflictResolution) => Promise<SetResult>`, `useSyncNow(): () => Promise<SetResult>`).
+- Backbone read hooks return plain data (`useBackboneStatus(): BackboneStatusDto | undefined`, `useListConflicts(): readonly KitConflict[] | undefined`); backbone operations follow the operation hook pattern, each shipped in async + sync flavours (`useAttachBackbone` / `useAttachBackboneSync`, `useDetachBackbone` / `useDetachBackboneSync`, `useResolveConflict` / `useResolveConflictSync`, `useSyncNow` / `useSyncNowSync`).
 - Diagnostics: `useSchemaEvents(filter?)`, `useSetErrors(filter?)`, `useKitSync(): { status, lastError } | undefined`. `useWriteIndicator`, `useWriteQueue`, `useOptimistic`, `usePendingTriad` are deleted (they belong to the old `KitFieldBinding` pending model).
 
 ### Deleted exports
@@ -483,7 +582,7 @@ Sketchpad must compile without importing any of:
 Per call site (64 currently identified by `\b(useKit|useDesign|useType|usePiece|useConnection|useAuthor|useQuality)\b`), inspect what fields the JSX actually reads and what mutations it performs, then replace with explicit per-field read hooks and per-operation write hooks. Reads and writes are spelled out independently (no tuple shape):
 
 - `const piece = usePiece() as Piece` (read-only JSX) → `const { id } = usePieceContext() ?? {}; const name = usePieceName(id); const plane = usePiecePlane(id); const center = usePieceCenter(id); …`
-- A drag handler that called `piece.drag(offset)` → `const dragPiece = useDragPiece(id); … onDrag={offset => dragPiece(offset)}`. A rename input → `const renamePiece = useRenamePiece(id); … onCommit={name => renamePiece(name)}`.
+- A drag handler that called `piece.drag(offset)` → use the **sync** variant for live drag (cache + UI update in the same tick): `const dragPieceSync = useDragPieceSync(id); … onDrag={offset => dragPieceSync(offset)}`. Use the async variant only when awaiting server confirmation matters: `const dragPiece = useDragPiece(id); await dragPiece(offset);`. A rename input commit similarly: `const renamePieceSync = useRenamePieceSync(id); … onCommit={name => renamePieceSync(name)}`.
 - `const type = useType(undefined, undefined, true) as Type` → `useTypeName(typeId)` + `useTypeRepresentationIds(typeId)` (then per-representation field hooks) + `useTypePortIds(typeId)` (then per-port field hooks). Mutations like `type.createPort(...)` become `useCreatePort(typeId)(...)`.
 - `const connection = useConnection() as Connection` → `useConnectionConnectedPieceId(id)`, `useConnectionConnectingPieceId(id)`, `useConnectionGap(id)`, `useConnectionShift(id)`, `useConnectionRise(id)`, `useConnectionRotation(id)`, `useConnectionTurn(id)`, `useConnectionTilt(id)`, …
 - `const design = useDesign() as Design` → `useDesignName(designId)`, `useDesignPieceIds(designId)`, then iterate ids and render child components reading per-piece fields. Mutations like `design.deletePiece(id)` become `useDeletePiece(designId)(pieceId)`.
@@ -499,6 +598,9 @@ Missing per-field hooks that sketchpad needs are added to [semio/react/index.tsx
 - Run the inline vitest blocks embedded in [semio/js/index.ts](semio/js/index.ts) and [semio/react/index.tsx](semio/react/index.tsx). Update tests that asserted on deleted exports (`useKitSnapshot`, `useSchemaObjectState`, `KitFullDto`, `Kit.toJSON`, `store.getSnapshot().kit.id`, …). Add tests:
   - `Piece` class: `nameSync`/`name()`/`onRenamed` round-trip after a `rename` mutation on a stub transport.
   - `Piece.planeSync()` returns the same object reference until a `Moved`/`PlaneChanged` event fires.
+  - `Piece.dragSync(offset)` mutates `centerSync()` synchronously, fires `onCenterChanged` in the same tick, and a stub `GqlTransport` records the queued background mutation. The matching subscription event arriving later is a no-op (cache already matches).
+  - `Piece.dragSync(offset)` followed by a server-emitted *contradicting* `PlaneChanged` event reconciles the cache to the server value and fires `onPlaneChanged` once.
+  - `useDragPiece` resolves with a `SetResult` after a stub server confirmation; `useDragPieceSync` returns synchronously and produces exactly one rerender for the bound `usePieceCenter` consumer.
   - `usePieceName`/`usePiecePlane`/`usePieceFlatPlane`/`usePieceFlatCenter` rerender exactly once when the matching event fires (use a fake `EventBus`).
 - Add an inline negative test in `semio/sketchpad/index.tsx` test region that grep-asserts the file source contains zero matches for the banned hooks listed in §5.
 - Manual: launch sketchpad, open a kit, drag a piece, confirm rendering still works using only field hooks (`[DEBUG]` console traces on hook subscriptions).
