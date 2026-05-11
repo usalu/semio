@@ -525,7 +525,7 @@ pub mod gql_relay {
     use crate::kit::design::Design;
     use crate::kit::r#type::{Connector, Representation, Type};
     use crate::meta::{Author, Benchmark, Concept, File, Folder, Group, Layer, Prop, Quality, Stat, Tag};
-    use crate::vcs::{Alternative, Checkpoint, Conflict};
+    use crate::vcs::{Alternative, Change, Checkpoint, Conflict};
 
     fn edge_cursor(i: usize) -> String {
         format!("e{i}")
@@ -778,6 +778,36 @@ pub mod gql_relay {
             let hash = merkle_collection(child_hashes);
             let edges = rows.into_iter().enumerate().map(|(i, a)| AlternativeEdge { cursor: edge_cursor(i), node: a }).collect();
             Self { edges, page_info: std::sync::Arc::new(PageInfo::default()), hash }
+        }
+    }
+
+    #[derive(Clone, SimpleObject)]
+    pub struct ChangeEdge {
+        pub cursor: String,
+        pub node: Arc<Change>,
+    }
+
+    #[derive(Clone, SimpleObject)]
+    pub struct ChangeConnection {
+        pub edges: Vec<ChangeEdge>,
+        #[graphql(name = "pageInfo")]
+        pub page_info: std::sync::Arc<PageInfo>,
+        pub hash: String,
+    }
+
+    impl ChangeConnection {
+        pub async fn from_changes(rows: Vec<Arc<Change>>) -> Self {
+            let mut child_hashes = Vec::with_capacity(rows.len());
+            for c in &rows {
+                child_hashes.push(c.compute_hash().await);
+            }
+            let hash = merkle_collection(child_hashes);
+            let edges = rows.into_iter().enumerate().map(|(i, c)| ChangeEdge { cursor: edge_cursor(i), node: c }).collect();
+            Self { edges, page_info: std::sync::Arc::new(PageInfo::default()), hash }
+        }
+
+        pub fn empty() -> Self {
+            Self { edges: Vec::new(), page_info: std::sync::Arc::new(PageInfo::default()), hash: merkle_collection(Vec::new()) }
         }
     }
 
@@ -4776,6 +4806,15 @@ pub mod vcs {
         }
     }
 
+    /// @emoji 🧾 Flatten write-session records into target-schema `ChangeConnection` rows for a version lane.
+    async fn changes_from_transactions(transactions: Vec<Arc<Transaction>>) -> Vec<Arc<Change>> {
+        let mut out = Vec::new();
+        for tx in transactions {
+            out.extend(tx.changes.read().await.iter().cloned());
+        }
+        out
+    }
+
     #[Object(name = "Transaction")]
     impl Transaction {
         pub async fn id(&self) -> Id {
@@ -5022,6 +5061,85 @@ pub mod vcs {
     }
     //#endregion 🪧 checkpoint
 
+    //#region 🧭 the kit version
+    pub struct TheKit {
+        pub owner_graph: Weak<Graph>,
+    }
+
+    impl TheKit {
+        /// @emoji 🧭 Main kit version wrapper; exposes `kit` plus version change lanes without making `Kit` itself a version.
+        pub fn new(owner_graph: Weak<Graph>) -> Arc<Self> {
+            Arc::new(Self { owner_graph })
+        }
+
+        pub async fn compute_hash(&self) -> String {
+            match self.owner_graph.upgrade() {
+                Some(g) => h(&["the-kit", g.id.as_str()]),
+                None => h(&["the-kit"]),
+            }
+        }
+
+        async fn graph(&self) -> Option<Arc<Graph>> {
+            self.owner_graph.upgrade()
+        }
+    }
+
+    #[Object(name = "TheKit")]
+    impl TheKit {
+        pub async fn id(&self) -> Id {
+            self.graph().await.map(|g| g.id.clone()).unwrap_or_default()
+        }
+        pub async fn hash(&self) -> String {
+            self.compute_hash().await
+        }
+        pub async fn owner(&self) -> Option<Arc<Graph>> {
+            self.graph().await
+        }
+        pub async fn checkpoint(&self) -> crate::gql_relay::CheckpointConnection {
+            match self.graph().await {
+                Some(g) => crate::gql_relay::CheckpointConnection::from_checkpoints(g.checkpoints.read().await.clone()).await,
+                None => crate::gql_relay::CheckpointConnection::from_checkpoints(Vec::new()).await,
+            }
+        }
+        #[graphql(name = "latestWipCheckpointAncestor")]
+        pub async fn latest_wip_checkpoint_ancestor(&self) -> Option<Arc<Checkpoint>> {
+            let g = self.graph().await?;
+            let checkpoints = g.checkpoints.read().await;
+            checkpoints.last().cloned()
+        }
+        #[graphql(name = "savedChanges")]
+        pub async fn saved_changes(&self) -> crate::gql_relay::ChangeConnection {
+            match self.graph().await {
+                Some(g) => g.saved_change_connection_for_main_line().await,
+                None => crate::gql_relay::ChangeConnection::empty(),
+            }
+        }
+        #[graphql(name = "unsavedChanges")]
+        pub async fn unsaved_changes(&self) -> crate::gql_relay::ChangeConnection {
+            match self.graph().await {
+                Some(g) => g.unsaved_change_connection_for_main_line().await,
+                None => crate::gql_relay::ChangeConnection::empty(),
+            }
+        }
+        pub async fn kit(&self) -> Arc<Kit> {
+            match self.graph().await {
+                Some(g) => g.materialized_head_kit().await,
+                None => Arc::default(),
+            }
+        }
+
+        #[graphql(name = "ownerEntity")]
+        pub async fn owner_entity(&self) -> Option<std::sync::Arc<crate::iface::OwnerEntity>> {
+            crate::iface::owner_entity_arc_opt(self.graph().await.map(crate::iface::OwnerEntity::Graph))
+        }
+
+        #[graphql(name = "ownedEntities")]
+        pub async fn owned_entities(&self) -> Option<std::sync::Arc<crate::iface::OwnedEntityConnection>> {
+            Some(crate::iface::empty_owned_entity_connection())
+        }
+    }
+    //#endregion 🧭 the kit version
+
     //#region 🌱 alternative
     pub struct Alternative {
         pub id: Id,
@@ -5084,6 +5202,36 @@ pub mod vcs {
         }
         pub async fn transaction(&self) -> Option<Arc<Transaction>> {
             self.transaction.read().await.upgrade()
+        }
+        pub async fn checkpoint(&self) -> crate::gql_relay::CheckpointConnection {
+            crate::gql_relay::CheckpointConnection::from_checkpoints(self.checkpoints.read().await.clone()).await
+        }
+        #[graphql(name = "latestWipCheckpointAncestor")]
+        pub async fn latest_wip_checkpoint_ancestor(&self) -> Option<Arc<Checkpoint>> {
+            self.checkpoints.read().await.last().cloned()
+        }
+        #[graphql(name = "savedChanges")]
+        pub async fn saved_changes(&self) -> crate::gql_relay::ChangeConnection {
+            match self.draft.read().await.upgrade() {
+                Some(d) => crate::gql_relay::ChangeConnection::from_changes(changes_from_transactions(d.finalized_transactions.read().await.clone()).await).await,
+                None => crate::gql_relay::ChangeConnection::empty(),
+            }
+        }
+        #[graphql(name = "unsavedChanges")]
+        pub async fn unsaved_changes(&self) -> crate::gql_relay::ChangeConnection {
+            match self.draft.read().await.upgrade() {
+                Some(d) => crate::gql_relay::ChangeConnection::from_changes(changes_from_transactions(d.transactions.read().await.clone()).await).await,
+                None => crate::gql_relay::ChangeConnection::empty(),
+            }
+        }
+        pub async fn kit(&self) -> Arc<Kit> {
+            match self.owner_graph.upgrade() {
+                Some(g) => match self.draft.read().await.upgrade() {
+                    Some(d) => g.materialized_kit_for_draft(&d.id).await,
+                    None => self.kit.read().await.clone().unwrap_or_default(),
+                },
+                None => self.kit.read().await.clone().unwrap_or_default(),
+            }
         }
 
         #[graphql(name = "ownerEntity")]
@@ -5309,6 +5457,26 @@ pub mod vcs {
             }
             *self.materialized_cache.write().await = Some(MaterializedSlot { draft_id: draft_id.clone(), change_seq: seq, kit: kit.clone() });
             kit
+        }
+
+        /// @emoji 🧾 Saved changes on the main kit version, projected from finalized internal write sessions.
+        pub async fn saved_change_connection_for_main_line(self: &Arc<Self>) -> crate::gql_relay::ChangeConnection {
+            let draft = self.ensure_default_seed_state().await;
+            let transactions = {
+                let guard = draft.finalized_transactions.read().await;
+                guard.clone()
+            };
+            crate::gql_relay::ChangeConnection::from_changes(changes_from_transactions(transactions).await).await
+        }
+
+        /// @emoji 🧾 Unsaved changes on the main kit version, projected from open internal write sessions.
+        pub async fn unsaved_change_connection_for_main_line(self: &Arc<Self>) -> crate::gql_relay::ChangeConnection {
+            let draft = self.ensure_default_seed_state().await;
+            let transactions = {
+                let guard = draft.transactions.read().await;
+                guard.clone()
+            };
+            crate::gql_relay::ChangeConnection::from_changes(changes_from_transactions(transactions).await).await
         }
 
         /// @emoji 📝 Append one forward op plus backward ops onto the open transaction's tail [`Change`], bumping draft `change_seq`.
@@ -5543,15 +5711,8 @@ pub mod vcs {
             self.owner_session.read().await.upgrade()
         }
         #[graphql(name = "theKit")]
-        pub async fn the_kit(&self, #[graphql(name = "at")] at: Option<KitReadPointInput>) -> Option<Arc<Kit>> {
-            let g = self.arc_here();
-            match at {
-                None => Some(g.materialized_head_kit_from_ref().await),
-                Some(p) => match g.materialized_kit_at_point(p).await {
-                    Ok(k) => Some(k),
-                    Err(_) => None,
-                },
-            }
+        pub async fn the_kit(&self) -> crate::gql::interfaces::VersionIface {
+            crate::gql::interfaces::VersionIface::TheKit(TheKit::new(Arc::downgrade(&self.arc_here())))
         }
         pub async fn alternative(&self, id: Id) -> Option<Arc<Alternative>> {
             self.alternatives.read().await.iter().find(|a| a.id == id).cloned()
@@ -8285,9 +8446,10 @@ pub mod kit_backbone {
         pub fn wip_semantic_ops(&self) -> Vec<StoredSemanticOp> {
             let mut out = Vec::new();
             for change in self.wip.saved_changes.items.iter().chain(self.wip.unsaved_changes.items.iter()) {
+                let draft_id = change.origin.clone().unwrap_or_else(|| "the-kit".to_string());
                 for edit in &change.edits.items {
                     for step in &edit.forwards.items {
-                        out.push(StoredSemanticOp { draft_id: "the-kit".to_string(), transaction_id: change.id.clone(), kind: step.kind.clone(), input: step.input.clone() });
+                        out.push(StoredSemanticOp { draft_id: draft_id.clone(), transaction_id: change.id.clone(), kind: step.kind.clone(), input: step.input.clone() });
                     }
                 }
             }
@@ -8551,6 +8713,11 @@ pub mod kit_backbone {
 
         /// @emoji ➕ Append a single forward operation to an unsaved version change (creating the change/edit if absent).
         pub fn append_unsaved_edit(&mut self, change_id: &str, kind: &str, input: serde_json::Value) {
+            self.append_unsaved_edit_with_origin(change_id, None, kind, input);
+        }
+
+        /// @emoji ➕ Append a forward operation to an unsaved version change and keep an optional replay origin anchor.
+        pub fn append_unsaved_edit_with_origin(&mut self, change_id: &str, origin: Option<String>, kind: &str, input: serde_json::Value) {
             let changes = &mut self.wip.unsaved_changes.items;
             let change_idx = match changes.iter().position(|c| c.id == change_id) {
                 Some(i) => i,
@@ -8562,7 +8729,7 @@ pub mod kit_backbone {
                         started_at: KIT_BUNDLE_CHECKPOINT_TIMESTAMP_STUB.to_string(),
                         saved_at: None,
                         description: None,
-                        origin: None,
+                        origin,
                     });
                     changes.len() - 1
                 }
@@ -8587,7 +8754,7 @@ pub mod kit_backbone {
         pub fn from_stored_semantic_ops(ops: &[StoredSemanticOp]) -> Self {
             let mut bundle = Self::template();
             for operation in ops {
-                bundle.append_unsaved_edit(&operation.transaction_id, &operation.kind, operation.input.clone());
+                bundle.append_unsaved_edit_with_origin(&operation.transaction_id, Some(operation.draft_id.clone()), &operation.kind, operation.input.clone());
             }
             bundle
         }
@@ -9210,6 +9377,22 @@ pub mod gql {
             Plane(PlaneEdge),
             Position(PositionEdge),
             Location(LocationEdge),
+        }
+
+        #[derive(Clone, Interface)]
+        #[graphql(
+            name = "Version",
+            field(name = "id", ty = "crate::id::Id"),
+            field(name = "hash", ty = "String"),
+            field(name = "checkpoint", ty = "crate::gql_relay::CheckpointConnection"),
+            field(name = "latestWipCheckpointAncestor", method = "latest_wip_checkpoint_ancestor", ty = "Option<Arc<crate::vcs::Checkpoint>>"),
+            field(name = "savedChanges", method = "saved_changes", ty = "crate::gql_relay::ChangeConnection"),
+            field(name = "unsavedChanges", method = "unsaved_changes", ty = "crate::gql_relay::ChangeConnection"),
+            field(name = "kit", ty = "Arc<crate::kit::Kit>")
+        )]
+        pub enum VersionIface {
+            TheKit(Arc<crate::vcs::TheKit>),
+            Alternative(Arc<crate::vcs::Alternative>),
         }
     }
     //#endregion 🌐 interfaces
@@ -10179,6 +10362,7 @@ pub mod gql {
             .register_output_type::<crate::kit::target_operations::DeletedPortsInput>()
             .register_output_type::<crate::gql::interfaces::NodeIface>()
             .register_output_type::<crate::gql::interfaces::EntityEdgeIface>()
+            .register_output_type::<crate::gql::interfaces::VersionIface>()
             .finish()
     }
 
@@ -10435,11 +10619,11 @@ mod tests {
     "#;
 
     fn relay_wip_designs_have_piece() -> &'static str {
-        "{ wip { theKit { designs { edges { node { id pieces { edges { node { id position { center { u v } } } } } } } } } } }"
+        "{ wip { theKit { kit { designs { edges { node { id pieces { edges { node { id position { center { u v } } } } } } } } } } } }"
     }
 
     fn relay_auth_designs_piece_ids() -> &'static str {
-        "{ authoritative { theKit { designs { edges { node { pieces { edges { node { id } } } } } } } } }"
+        "{ authoritative { theKit { kit { designs { edges { node { pieces { edges { node { id } } } } } } } } } }"
     }
 
     /// 📤 Writes the executable schema's SDL to `SEMIO_GRAPHQL_SCHEMA_OUT`; run via `npx nx build semio/graphql`.
@@ -10499,14 +10683,14 @@ mod tests {
             let schema_a = crate::gql::build_schema_for(rt.clone());
             let q_roots = r#"{
                 wip {
-                    theKit { name }
+                    theKit { kit { name } }
                     checkpoints { edges { node { frozenRoot { name } } } }
                 }
             }"#;
             let res = schema_a.execute(q_roots).await;
             assert!(res.errors.is_empty(), "roots query errors: {:?}", res.errors);
             let vr = res.data.into_json().unwrap();
-            assert_eq!(vr["wip"]["theKit"]["name"].as_str(), Some("Hello Bundle"), "materialized wip.theKit");
+            assert_eq!(vr["wip"]["theKit"]["kit"]["name"].as_str(), Some("Hello Bundle"), "materialized wip.theKit.kit");
             let frozen_name = vr["wip"]["checkpoints"]["edges"][0]["node"]["frozenRoot"]["name"].as_str().expect("frozenRoot.name");
             assert_eq!(frozen_name, "the kit", "checkpoint.frozenRoot must not alias live rename");
 
@@ -10514,7 +10698,7 @@ mod tests {
             let res = schema_a.execute(q_roots).await;
             assert!(res.errors.is_empty(), "roots after abort: {:?}", res.errors);
             let vr = res.data.into_json().unwrap();
-            assert_eq!(vr["wip"]["theKit"]["name"].as_str(), Some("the kit"), "materialized kit reverts after abort");
+            assert_eq!(vr["wip"]["theKit"]["kit"]["name"].as_str(), Some("the kit"), "materialized kit reverts after abort");
             assert_eq!(vr["wip"]["checkpoints"]["edges"][0]["node"]["frozenRoot"]["name"].as_str(), Some("the kit"));
 
             let tx_a2 = g.open_transaction(&draft_a.id).await;
@@ -10628,11 +10812,11 @@ mod tests {
 
             std::thread::sleep(std::time::Duration::from_millis(150));
 
-            let q = "{ wip { theKit { tags { edges { node { name } } } } } }";
+            let q = "{ wip { theKit { kit { tags { edges { node { name } } } } } } }";
             let res = schema.execute(q).await;
             assert!(res.errors.is_empty(), "query errors: {:?}", res.errors);
             let data = res.data.into_json().unwrap();
-            let names: Vec<String> = data["wip"]["theKit"]["tags"]["edges"].as_array().unwrap().iter().filter_map(|e| e["node"]["name"].as_str().map(String::from)).collect();
+            let names: Vec<String> = data["wip"]["theKit"]["kit"]["tags"]["edges"].as_array().unwrap().iter().filter_map(|e| e["node"]["name"].as_str().map(String::from)).collect();
             assert!(names.iter().any(|n| n == "alpha-tag"), "tags missing new name: {:?}", names);
         });
     }
@@ -10665,11 +10849,11 @@ mod tests {
 
             std::thread::sleep(std::time::Duration::from_millis(150));
 
-            let q = "{ wip { theKit { concepts { edges { node { name } } } } } }";
+            let q = "{ wip { theKit { kit { concepts { edges { node { name } } } } } } }";
             let res = schema.execute(q).await;
             assert!(res.errors.is_empty(), "query errors: {:?}", res.errors);
             let data = res.data.into_json().unwrap();
-            let names: Vec<String> = data["wip"]["theKit"]["concepts"]["edges"].as_array().unwrap().iter().filter_map(|e| e["node"]["name"].as_str().map(String::from)).collect();
+            let names: Vec<String> = data["wip"]["theKit"]["kit"]["concepts"]["edges"].as_array().unwrap().iter().filter_map(|e| e["node"]["name"].as_str().map(String::from)).collect();
             assert!(names.iter().any(|n| n == "beta-concept"), "concepts missing new name: {:?}", names);
         });
     }
@@ -10703,11 +10887,11 @@ mod tests {
 
             std::thread::sleep(std::time::Duration::from_millis(150));
 
-            let q = "{ wip { theKit { qualities { edges { node { key value } } } } } }";
+            let q = "{ wip { theKit { kit { qualities { edges { node { key value } } } } } } }";
             let res = schema.execute(q).await;
             assert!(res.errors.is_empty(), "query errors: {:?}", res.errors);
             let data = res.data.into_json().unwrap();
-            let keys: Vec<String> = data["wip"]["theKit"]["qualities"]["edges"].as_array().unwrap().iter().filter_map(|e| e["node"]["key"].as_str().map(String::from)).collect();
+            let keys: Vec<String> = data["wip"]["theKit"]["kit"]["qualities"]["edges"].as_array().unwrap().iter().filter_map(|e| e["node"]["key"].as_str().map(String::from)).collect();
             assert!(keys.iter().any(|k| k == "q1"), "qualities missing new key: {:?}", keys);
         });
     }
@@ -10732,7 +10916,7 @@ mod tests {
             let res = schema.execute(q).await;
             assert!(res.errors.is_empty(), "query errors: {:?}", res.errors);
             let data = res.data.into_json().unwrap();
-            let edges = data["wip"]["theKit"]["designs"]["edges"].as_array().expect("design edges");
+            let edges = data["wip"]["theKit"]["kit"]["designs"]["edges"].as_array().expect("design edges");
             let any_piece = edges.iter().any(|e| e["node"]["pieces"]["edges"].as_array().map(|pe| pe.iter().any(|_| true)).unwrap_or(false));
             assert!(any_piece, "expected at least one piece in wip; got: {}", serde_json::to_string_pretty(&data).unwrap());
         });
@@ -10749,7 +10933,7 @@ mod tests {
             let q = relay_auth_designs_piece_ids();
             let res = schema.execute(q).await;
             let data = res.data.into_json().unwrap();
-            let edges = data["authoritative"]["theKit"]["designs"]["edges"].as_array().expect("auth design edges");
+            let edges = data["authoritative"]["theKit"]["kit"]["designs"]["edges"].as_array().expect("auth design edges");
             let all_empty = edges.iter().all(|e| e["node"]["pieces"]["edges"].as_array().map(|pe| pe.is_empty()).unwrap_or(true));
             assert!(all_empty, "authoritative leaked pieces: {}", serde_json::to_string_pretty(&data).unwrap());
         });
@@ -10789,7 +10973,7 @@ mod tests {
     }
 
     fn relay_piece_count_wip(data: &serde_json::Value) -> usize {
-        let Some(edges) = data["wip"]["theKit"]["designs"]["edges"].as_array() else {
+        let Some(edges) = data["wip"]["theKit"]["kit"]["designs"]["edges"].as_array() else {
             return 0;
         };
         edges.iter().map(|e| e["node"]["pieces"]["edges"].as_array().map(|pe| pe.len()).unwrap_or(0)).sum()
@@ -10928,8 +11112,7 @@ mod tests {
             let g = crate::vcs::Graph::new().await;
             crate::kit_backbone::AttachedBackbone::mount_and_replay(&norm, crate::operation::BackboneStoreKind::DevJson, "wip", &g).await.expect("dev json mount+replay");
 
-            let draft_id = crate::id::Id::from(golden_ops["draftId"].as_str().expect("draftId"));
-            let fp = stable_projection_fingerprint(&g.materialized_kit_for_draft(&draft_id).await).await;
+            let fp = stable_projection_fingerprint(&g.materialized_head_kit().await).await;
             let exp_fp = exp["projectionFingerprint"].as_str().expect("projectionFingerprint");
             assert_eq!(fp, exp_fp, "dev-json backbone replay must match US-001 golden fingerprint");
         });
