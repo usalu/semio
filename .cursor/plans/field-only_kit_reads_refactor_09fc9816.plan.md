@@ -9,7 +9,7 @@ todos:
    content: In semio/js/index.ts add a single GqlTransport (Query/Mutation/Subscription over worker/HTTP) plus an EventBus that fans the unified `subscription { event }` JSON stream into typed per-entity channels keyed by entity kind + id + field
    status: pending
  - id: js-base
-   content: Add an internal Entity base + defineField/defineOp/defineFields/defineOperations factory helpers. Entity owns the field-cache machinery (stable object identity for object-typed fields, dirty/version tracking, fieldSync per key), the on<Event>(cb) routing, the async dispatch (Promise<SetResult>), and the sync dispatchSync (deterministic optimistic apply + background dispatch). Each entity class is then declared as two static arrays (fields + ops) that defineFields/defineOperations install onto the prototype as named methods.
+   content: Add an internal Entity base + defineField/defineOperation/defineFields/defineOperations factory helpers. Entity owns the field-cache machinery (stable object identity for object-typed fields, dirty/version tracking, fieldSync per key), the on<Event>(cb) routing, the async dispatch (Promise<SetResult>), and the sync dispatchSync (deterministic optimistic apply + background dispatch). Each entity class is then declared as two static arrays (fields + operations) that defineFields/defineOperations install onto the prototype as named methods.
    status: pending
   - id: js-classes
     content: Reshape Kit (merged with KitStore), Design, Type, Port, Connector, Piece, PiecesOperations, Connection, Author, Quality, Tag, Concept, Family, File, Folder, Layer, Group, Stat, Prop, Attribute, Representation, Plane, Coordinate, Point, Vector, Camera, Side, Benchmark, Position, Place, Location into CQRS classes; per field expose field()/fieldSync()/on<Event>(); per leaf in *OperationInput expose two command methods — async operation(...) returning Promise<SetResult> and sync opSync(...) returning SetResult (optimistic local apply + background dispatch). Covers kit.createDesign(/Sync), design.addFixedPiece(/Sync), design.piece(id).fix(/Sync), design.pieces(ids).drag(/Sync), type.createPort(/Sync), type.port(id).rename(/Sync), type.addConnector(/Sync), etc. Navigation methods (kit.design(id), kit.type(id), design.piece(id), design.pieces(ids), type.port(id), type.connector(id)) return cached child class instances.
@@ -140,7 +140,7 @@ abstract class Entity {
 // field/operation so the constructor can install methods on the prototype with one call to defineFields/defineOperations.
 const defineField = <E extends Entity, T>(spec: { key: string; query: GqlDoc; pickQuery: (data: any) => T; event: string }) => spec;
 
-const defineOp = <E extends Entity, Args extends any[]>(spec: {
+const defineOperation = <E extends Entity, Args extends any[]>(spec: {
  name: string; // matches the *OperationInput leaf name
  buildInput: (...args: Args) => GqlOpInput;
  applyToCache: (cache: E["cache"], ...args: Args) => void;
@@ -173,29 +173,29 @@ export class Piece extends Entity {
  ];
 
  // Operations — defineOperations installs both operation(...) and opSync(...).
- static ops = [
-  defineOp({
+ static operations = [
+  defineOperation({
    name: "rename",
    buildInput: (newName: string) => ({ rename: { newName } }),
    applyToCache: (c, newName: string) => {
     c.name = newName;
    },
   }),
-  defineOp({
+  defineOperation({
    name: "changeDescription",
    buildInput: (newDescription: string) => ({ changeDescription: { newDescription } }),
    applyToCache: (c, d: string) => {
     c.description = d;
    },
   }),
-  defineOp({
+  defineOperation({
    name: "drag",
    buildInput: (offset: OffsetInput) => ({ drag: { offset } }),
    applyToCache: (c, offset: OffsetInput) => {
     c.center = applyOffsetToCenter(c.center, offset);
    },
   }),
-  defineOp({
+  defineOperation({
    name: "move",
    buildInput: (position: PositionInput) => ({ move: { position } }),
    applyToCache: (c, position: PositionInput) => {
@@ -203,35 +203,35 @@ export class Piece extends Entity {
     c.plane = position.plane;
    },
   }),
-  defineOp({
+  defineOperation({
    name: "fix",
    buildInput: () => ({ fix: true }),
    applyToCache: (c) => {
     c.fixed = true;
    },
   }),
-  defineOp({
+  defineOperation({
    name: "changeBlueprint",
    buildInput: (blueprintId: string) => ({ changeBlueprint: { blueprintId } }),
    applyToCache: (c, id) => {
     c.blueprintId = id;
    },
   }),
-  defineOp({
+  defineOperation({
    name: "addAttribute",
    buildInput: (key: string, value: string, definition: string) => ({ addAttribute: { key, value, definition } }),
    applyToCache: (c, k, v, def) => {
     c.attributes = [...c.attributes, { key: k, value: v, definition: def }];
    },
   }),
-  defineOp({
+  defineOperation({
    name: "removeAttribute",
    buildInput: (id: string) => ({ removeAttribute: { id } }),
    applyToCache: (c, id) => {
     c.attributes = c.attributes.filter((a) => a.id !== id);
    },
   }),
-  defineOp({
+  defineOperation({
    name: "removeAttributes",
    buildInput: (ids: readonly string[]) => ({ removeAttributes: { ids } }),
    applyToCache: (c, ids) => {
@@ -246,7 +246,7 @@ export class Piece extends Entity {
 
 // One call per class wires every defined field/operation into prototype methods named exactly as in the schema.
 defineFields(Piece, Piece.fields);
-defineOperations(Piece, Piece.ops);
+defineOperations(Piece, Piece.operations);
 ```
 
 `defineFields(C, specs)` installs three methods per spec on `C.prototype`: `<key>(): Promise<T>` (calls `Entity.fieldQuery`), `<key>Sync(): T | undefined` (calls `Entity.fieldSync`), and `on<Event>(cb): Unsubscribe` (calls `Entity.subscribeField`). `defineOperations(C, specs)` installs two methods per spec: `<name>(...args): Promise<SetResult>` (calls `Entity.dispatch`) and `<name>Sync(...args): SetResult` (calls `Entity.dispatchSync`). Same recipe for `Kit`, `Design`, `Type`, `Port`, `Connector`, `Connection`, `Author`, `Quality`, `Tag`, `Concept`, etc. — each class is mostly two static arrays.
@@ -256,14 +256,15 @@ The full operation surface per class (mirrors [semio/graphql/target.schema.graph
 - **`Kit`** (merged with `KitStore`; mirrors `KitOperationInput`): owns `GqlTransport` + `EventBus`. Operations: `rename(newName)`, `changeDescription(newDescription)`, `createTag(name, description?, icon?, order?)`, `tag(id) → Tag`, `deleteTag(id)`, `deleteTags(ids)`, `createConcept(name, description?, icon?, order?)`, `concept(id) → Concept`, `deleteConcept(id)`, `deleteConcepts(ids)`, `createQuality(key, value?, unit?, definition?, description?, icon?)`, `quality(id) → Quality`, `deleteQuality(id)`, `deleteQualities(ids)`, `createType(name, description?, icon?, image?, unit?)`, `type(id) → Type`, `deleteType(id)`, `deleteTypes(ids)`. Plus version/session control: `startNewChange()`, `save()`, `createCheckpoint(message)`, `unsavedChange(id) → Kit` scope helper, `startAlternative(name?)`, `alternative(id)`, `integrateAlternative(id)`, `start()`, `end()`, `login(username, passwordHash, hubUrl?)`, `logout()`, `hydrateBundleJson(json)`.
 - **`Design`** (mirrors `DesignOperationInput`): `rename(newName)`, `changeDescription(newDescription)`, `flatten()`, `addAttribute`, `removeAttribute(id)`, `removeAttributes(ids)`, `addFixedPiece(blueprintId, position, name?, description?)`, `addChildPieceWithParentConnection(blueprintId, parentPieceId, parentConnector, childConnector, name?, description?, position?, scale?)`, `addHangingChildPieceWithParentConnection(blueprintId, parentPieceId, parentConnector, childConnector, position, name?, description?, scale?)`, `piece(id) → Piece`, `pieces(ids) → PiecesOperations`, `deletePiece(id)`, `deletePieces(ids)`, `deletePiecesAndConnections(pieceIds, connectionIds)`.
 - **`PiecesOperations`** (small helper returned by `design.pieces(ids)`; mirrors `PiecesOperationInput`): `drag(offset)`, `move(offset)`, `fix()`, `changeBlueprint(blueprintId)`. Has no reads — it's a pure command scope.
-- **`Type`** (mirrors `TypeOperationInput`): `rename(newName)`, `changeDescription(newDescription)`, `changeIcon(newIcon)`, attributes ops, `createPort(code?, label?, description?, icon?, order?)`, `port(id) → Port`, `deletePort(id)`, `deletePorts(ids)`, `addConnector(code, description?, icon?, portId?)`, `connector(id) → Connector`, `removeConnector(id)`, `removeConnectors(ids)`.
-- **`Port`** (mirrors `PortOperationInput`): `rename(newCode, newLabel?)`, `changeDescription(newDescription)`, `changeIcon(newIcon)`, attributes ops.
+- **`Type`** (mirrors `TypeOperationInput`): `rename(newName)`, `changeDescription(newDescription)`, `changeIcon(newIcon)`, attributes operations, `createPort(code?, label?, description?, icon?, order?)`, `port(id) → Port`, `deletePort(id)`, `deletePorts(ids)`, `addConnector(code, description?, icon?, portId?)`, `connector(id) → Connector`, `removeConnector(id)`, `removeConnectors(ids)`.
+- **`Port`** (mirrors `PortOperationInput`): `rename(newCode, newLabel?)`, `changeDescription(newDescription)`, `changeIcon(newIcon)`, attributes operations.
 - **`Connector`** (mirrors `ConnectorOperationInput`): `rename(newCode)`, `changeDescription(newDescription)`, `changeIcon(newIcon)`.
-- **`Tag`** / **`Concept`** (mirror `TagOperationInput` / `ConceptOperationInput`): `rename(newName)`, `changeDescription(newDescription)`, `changeIcon(newIcon)`, attributes ops.
-- **`Quality`** (mirrors `QualityOperationInput`): `rename(newKey)`, `changeDescription(newDescription)`, `changeIcon(newIcon)`, attributes ops.
+- **`Tag`** / **`Concept`** (mirror `TagOperationInput` / `ConceptOperationInput`): `rename(newName)`, `changeDescription(newDescription)`, `changeIcon(newIcon)`, attributes operations.
+- **`Quality`** (mirrors `QualityOperationInput`): `rename(newKey)`, `changeDescription(newDescription)`, `changeIcon(newIcon)`, attributes operations.
 - **`Piece`** (mirrors `PieceOperationInput`): see snippet above.
-- **`Connection`**, **`Author`**: per the connection / author fields the schema currently does not declare a dedicated `*OperationInput` for these, so the JS class only carries the read API; their commands (e.g. add/remove connection, addAuthor) live on the parent `Design` / `Kit` per the schema. If the schema later grows `ConnectionOperationInput` / `AuthorOperationInput`, the matching methods are added then.
-- **Value-object classes** (`Plane`, `Coordinate`, `Position`, `Point`, `Vector`, `Side`, `Place`, `Location`, `Camera`, `Stat`, `Prop`, `Attribute`, `Representation`, `Family`, `File`, `Folder`, `Layer`, `Group`, `Benchmark`): the schema does not expose dedicated `*OperationInput`s for them either. They are read-only classes with the same `field()` / `fieldSync()` / `on<Event>(cb)` triple per field, but no command methods. They are mutated through their owners (Kit/Design/Piece/Connection/Type/Port).
+- **`Connection`**, **`Author`**: both implement `Artifact` (bulky) so they are classes with the full read API (one `field()` / `fieldSync()` / `on<Event>(cb)` triple per schema field). The schema currently does not declare a dedicated `*OperationInput` for either, so the class only carries reads; their commands (e.g. add/remove connection, addAuthor) live on the parent `Design` / `Kit` per the schema. If the schema later grows `ConnectionOperationInput` / `AuthorOperationInput`, the matching methods are added then.
+
+`Plane`, `Coordinate`, `Position`, `Point`, `Vector`, `Side`, `Attribute` (every `WeakEntity` per [target.schema.graphql](semio/graphql/target.schema.graphql) lines 51–67) are **not classes**. They are plain TypeScript record types that mirror the schema 1:1 (e.g. `interface Plane { origin: Point; xAxis: Vector; yAxis: Vector }`). They are returned by-value from owner methods (`piece.planeSync()`, `piece.flatPlaneSync()`, `connection.sideSync()`, `piece.attributesSync()`, …). The owning `Entity`'s cache holds a stable reference per logical value, so `fieldSync()` returns the same object instance until the field changes. There is no `class Plane`, no `class Coordinate`, no `class Attribute`. There are no `*Scope` / `*Context` providers, no entity-identity hooks, and no `field()` / `fieldSync()` / `on<Event>` API anchored to a weak-entity id — those values appear _only_ as field results inside their owning Artifact class.
 
 Every command method translates to one `mutation { session { ... } }` GraphQL request. The session/version/change scoping (`session.theKit.unsavedChange(activeChangeId).kit.<…>`, or `session.alternative(…)`, or `session.theKit.…` for save / checkpoint flows) is encapsulated by `Kit`; child classes hold a reference to their owning `Kit` and route their own command through it.
 
@@ -297,11 +298,23 @@ The `kit-store.worker.ts` worker is rewritten to host only the GraphQL transport
 
 ## 4. `semio/react/index.tsx` shape
 
+### Schema-1:1 invariant
+
+[semio/react/index.tsx](semio/react/index.tsx) adds **nothing** beyond [target.schema.graphql](semio/graphql/target.schema.graphql). Every exported hook corresponds to exactly one schema field (read) or one `*OperationInput` leaf (write). No sub-selection. No derivation. No aggregation. No metadata, shallow, or "view" hooks unless the schema itself exposes them as computed fields.
+
+Per-field read hooks follow the schema's lean/bulky split (lines 51–105 of the schema):
+
+- **Lean fields** — return type is a scalar (`String`, `Int`, `Float`, `Boolean`, `ID`, `Timestamp`, an enum, a JSON value), a `WeakEntity` (`Plane`, `Coordinate`, `Position`, `Point`, `Vector`, `Side`, `Attribute`), or a list of those. Hook returns the value verbatim (`T | undefined`).
+- **Bulky fields** — return type is an `Artifact` / `StrongEntity` (`Kit`, `Design`, `Type`, `Piece`, `Connection`, `Port`, `Connector`, `Representation`, `Author`, `Quality`, `Tag`, `Concept`) or a list of those. Hook returns the matching JS class instance (or array of class instances). Class navigation through the parent class (`design.piece(id)`, `kit.type(id)`, …) provides stable per-id instance identity.
+- **Never anything in between**: a hook does not slice a `Plane` into `usePiecePlaneOriginX`, does not flatten a `Position` into `usePieceCenterU`, does not project a `[Piece!]!` list into `useDesignPieceIds`. Consumers that need a sub-field destructure the lean value at the call site (`usePieceCenter()?.u`) or read the synchronous `id` getter on the class instance (`pieces?.map((p) => p.id)`).
+
+The same rule applies to writes — every write hook is a 1:1 wrapper around one `*OperationInput` leaf. Sketchpad and any other consumer obey the same rule (see §5).
+
 ### Strict separation of reads and writes
 
-- **Reads** are pure plain-data hooks. `use<Entity><Field>(id?)` returns just the value (`T | undefined`). No tuple, no setter, no status, no `KitFieldBinding`, no `HookRead`. If the entity / kit / field is not yet resolved the hook returns `undefined`.
-- **Writes** are operation hooks. `use<Operation><Entity>(id?)` returns a single function bound to that entity instance and that operation. The function takes the operation arguments and returns `Promise<SetResult>`. There is no read fallback embedded; callers compose a read hook and a write hook independently.
-- The kit can only be modified through these operation hooks. Operation hooks map 1:1 to leaves of the `*OperationInput` types in [semio/graphql/target.schema.graphql](semio/graphql/target.schema.graphql).
+- **Reads** are pure plain-data hooks. `use<Entity><Field>(id?)` returns just the value (`T | undefined` for lean, `Entity | null` / `readonly Entity[] | undefined` for bulky). No tuple, no setter, no status, no `KitFieldBinding`, no `HookRead`. If the entity / kit / field is not yet resolved the hook returns `undefined` / `null`.
+- **Writes** are operation hooks. `use<Operation><Entity>(id?)` returns a single function bound to that entity instance and that operation. The function takes the operation arguments and returns `Promise<SetResult>` (async flavour) or `SetResult` (sync flavour). There is no read fallback embedded; callers compose a read hook and a write hook independently.
+- The kit can only be modified through these operation hooks. Operation hooks map 1:1 to leaves of the `*OperationInput` types in [target.schema.graphql](semio/graphql/target.schema.graphql).
 
 ### Resolution rules (every hook)
 
@@ -407,7 +420,7 @@ function ConnectorRow() {
 }
 ```
 
-`Connection`, `Author` and the value-object classes do not have a `*OperationInput` in [target.schema.graphql](semio/graphql/target.schema.graphql), so they only get read hooks — no `useSet*` / `use<Op>*` hooks for them. Mutating a connection happens through the parent `Design`'s ops (e.g. `useAddChildPieceWithParentConnection(designId)`), and connection-field reads are still per-field hooks (`useConnectionGap`, `useConnectionShift`, `useConnectionRotation`, …).
+`Connection`, `Author` and the value-object classes do not have a `*OperationInput` in [target.schema.graphql](semio/graphql/target.schema.graphql), so they only get read hooks — no `useSet*` / `use<Op>*` hooks for them. Mutating a connection happens through the parent `Design`'s operations (e.g. `useAddChildPieceWithParentConnection(designId)`), and connection-field reads are still per-field hooks (`useConnectionGap`, `useConnectionShift`, `useConnectionRotation`, …).
 
 Operation hooks called outside any provider must take an explicit `id` (otherwise the returned function reports a `Readonly` error).
 
@@ -550,80 +563,53 @@ const createPieceOpHook = <Args extends any[], R>(call: (p: Piece, ...args: Args
 
 ### Read hook pattern
 
-Every per-field read hook is a one-line application of the matching `create<Entity>FieldHook`. The factory returns `(id?: string) => T | undefined`.
+Every per-field read hook is a one-line application of the matching `create<Entity>FieldHook`. The factory returns `(id?: string) => T | undefined` for lean fields, and `(id?: string) => Entity | null` / `(id?: string) => readonly Entity[] | undefined` for bulky fields. There is one hook per schema field — never less, never more, never sliced.
 
 ```ts
-export const usePieceName = createPieceFieldHook(
- (p) => p.nameSync(),
- (p, s) => p.onRenamed(s),
-);
-export const usePieceDescription = createPieceFieldHook(
- (p) => p.descriptionSync(),
- (p, s) => p.onDescriptionChanged(s),
-);
-export const usePiecePlane = createPieceFieldHook(
- (p) => p.planeSync(),
- (p, s) => p.onPlaneChanged(s),
-);
-export const usePieceCenter = createPieceFieldHook(
- (p) => p.centerSync(),
- (p, s) => p.onCenterChanged(s),
-);
-export const usePieceFlatPlane = createPieceFieldHook(
- (p) => p.flatPlaneSync(),
- (p, s) => p.onFlatPlaneChanged(s),
-);
-export const usePieceFlatCenter = createPieceFieldHook(
- (p) => p.flatCenterSync(),
- (p, s) => p.onFlatCenterChanged(s),
-);
-export const usePieceScale = createPieceFieldHook(
- (p) => p.scaleSync(),
- (p, s) => p.onScaleChanged(s),
-);
-export const usePieceAttributes = createPieceFieldHook(
- (p) => p.attributesSync(),
- (p, s) => p.onAttributesChanged(s),
-);
+// Lean fields → return value verbatim (string / number / WeakEntity / list of WeakEntity)
+export const usePieceName        = createPieceFieldHook((p) => p.nameSync(),        (p, s) => p.onRenamed(s));
+export const usePieceDescription = createPieceFieldHook((p) => p.descriptionSync(), (p, s) => p.onDescriptionChanged(s));
+export const usePiecePlane       = createPieceFieldHook((p) => p.planeSync(),       (p, s) => p.onPlaneChanged(s));
+export const usePieceCenter      = createPieceFieldHook((p) => p.centerSync(),      (p, s) => p.onCenterChanged(s));
+export const usePieceFlatPlane   = createPieceFieldHook((p) => p.flatPlaneSync(),   (p, s) => p.onFlatPlaneChanged(s));
+export const usePieceFlatCenter  = createPieceFieldHook((p) => p.flatCenterSync(),  (p, s) => p.onFlatCenterChanged(s));
+export const usePieceScale       = createPieceFieldHook((p) => p.scaleSync(),       (p, s) => p.onScaleChanged(s));
+export const usePieceAttributes  = createPieceFieldHook((p) => p.attributesSync(),  (p, s) => p.onAttributesChanged(s));
 
-export const useDesignName = createDesignFieldHook(
- (d) => d.nameSync(),
- (d, s) => d.onRenamed(s),
-);
-export const useDesignPieceIds = createDesignFieldHook(
- (d) => d.pieceIdsSync(),
- (d, s) => d.onPiecesChanged(s),
-);
-export const useDesignConnectionIds = createDesignFieldHook(
- (d) => d.connectionIdsSync(),
- (d, s) => d.onConnectionsChanged(s),
-);
+// Bulky fields → return class instance(s)
+export const usePieceParentPiece      = createPieceFieldHook((p) => p.parentPieceSync(),      (p, s) => p.onParentPieceChanged(s));      // Piece | null
+export const usePieceParentConnection = createPieceFieldHook((p) => p.parentConnectionSync(), (p, s) => p.onParentConnectionChanged(s)); // Connection | null
+export const usePieceChildPieces      = createPieceFieldHook((p) => p.childPiecesSync(),      (p, s) => p.onChildPiecesChanged(s));      // readonly Piece[]
+export const usePieceChildConnections = createPieceFieldHook((p) => p.childConnectionsSync(), (p, s) => p.onChildConnectionsChanged(s)); // readonly Connection[]
 
-export const useTypeName = createTypeFieldHook(
- (t) => t.nameSync(),
- (t, s) => t.onRenamed(s),
-);
-export const useTypePortIds = createTypeFieldHook(
- (t) => t.portIdsSync(),
- (t, s) => t.onPortsChanged(s),
-);
-export const useTypeConnectorIds = createTypeFieldHook(
- (t) => t.connectorIdsSync(),
- (t, s) => t.onConnectorsChanged(s),
-);
+export const useDesignName        = createDesignFieldHook((d) => d.nameSync(),        (d, s) => d.onRenamed(s));
+export const useDesignPieces      = createDesignFieldHook((d) => d.piecesSync(),      (d, s) => d.onPiecesChanged(s));      // readonly Piece[] (bulky)
+export const useDesignConnections = createDesignFieldHook((d) => d.connectionsSync(), (d, s) => d.onConnectionsChanged(s)); // readonly Connection[]
 
-export const useConnectionGap = createConnectionFieldHook(
- (c) => c.gapSync(),
- (c, s) => c.onGapChanged(s),
-);
-export const useConnectionShift = createConnectionFieldHook(
- (c) => c.shiftSync(),
- (c, s) => c.onShiftChanged(s),
-);
-// …every other field on every entity follows the same one-liner.
+export const useTypeName        = createTypeFieldHook((t) => t.nameSync(),         (t, s) => t.onRenamed(s));
+export const useTypePorts       = createTypeFieldHook((t) => t.portsSync(),        (t, s) => t.onPortsChanged(s));        // readonly Port[]
+export const useTypeConnectors  = createTypeFieldHook((t) => t.connectorsSync(),   (t, s) => t.onConnectorsChanged(s));   // readonly Connector[]
+export const useTypeRepresentations = createTypeFieldHook((t) => t.representationsSync(), (t, s) => t.onRepresentationsChanged(s));
+
+export const useConnectionGap   = createConnectionFieldHook((c) => c.gapSync(),     (c, s) => c.onGapChanged(s));
+export const useConnectionShift = createConnectionFieldHook((c) => c.shiftSync(),   (c, s) => c.onShiftChanged(s));
+// …one hook per schema field on every Artifact entity (Kit / Design / Type / Piece / Connection / Port / Connector / Representation / Author / Quality / Tag / Concept).
 ```
 
-Object-typed fields (`Plane`, `Coordinate`, `Position`, `Side`, …) get the same one-liner because `<entity>Sync()` is guaranteed by §2 to return the same reference until the matching event fires — `bindFieldToReact` simply forwards that to `useSyncExternalStore`.
+Forbidden examples (sub-selection / derivation):
+
+```ts
+// NO — slices a Coordinate. Caller does usePieceCenter()?.u inline.
+export function usePieceCenterU(): number { return usePieceCenter()?.u ?? 0; }
+// NO — projects a list. Caller does useDesignPieces()?.map((p) => p.id) inline.
+export function useDesignPieceIds(): readonly string[] | undefined { … }
+// NO — derives from attributes. Caller does usePieceAttributes()?.find(…) inline.
+export function usePieceIsHidden(): boolean { … }
+// NO — derives a sum. Caller does the math inline (or the schema adds Design.qualitySum: Float! and the hook becomes useDesignQualitySum 1:1).
+export function useDesignQualitySum(): number { … }
+```
+
+For both lean and bulky fields, `<entity>Sync()` is guaranteed by §2 to return the same reference until the matching event fires — `bindFieldToReact` simply forwards that to `useSyncExternalStore` so React rerenders only on real changes.
 
 ### Operation hook pattern
 
@@ -645,8 +631,8 @@ export const useFixPieceSync = createPieceOpHook((p) => p.fixSync());
 export const useChangePieceBlueprint = createPieceOpHook((p, id: string) => p.changeBlueprint(id));
 export const useChangePieceBlueprintSync = createPieceOpHook((p, id: string) => p.changeBlueprintSync(id));
 
-export const useDragPieces = createPiecesOpHook((ops, offset: OffsetInput) => ops.drag(offset));
-export const useDragPiecesSync = createPiecesOpHook((ops, offset: OffsetInput) => ops.dragSync(offset));
+export const useDragPieces = createPiecesOpHook((operations, offset: OffsetInput) => operations.drag(offset));
+export const useDragPiecesSync = createPiecesOpHook((operations, offset: OffsetInput) => operations.dragSync(offset));
 
 export const useDeletePiece = createDesignOpHook((d, pieceId: string) => d.deletePiece(pieceId));
 export const useDeletePieceSync = createDesignOpHook((d, pieceId: string) => d.deletePieceSync(pieceId));
