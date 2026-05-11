@@ -4,7 +4,7 @@ overview: Replace ~7,000 lines of hand-rolled GraphQL schema and ~3,000 lines of
 todos:
   - id: bootstrap
     content: "Coordinator: read `repo://goals`, open ticket via repo MCP `ticket_open`, snapshot baseline `cargo check`, inject `//#region 🧬 entity_dsl` and `//#region 🤖 W1`..`//#region 🤖 W8` markers into [semio/rs/lib.rs](semio/rs/lib.rs)."
-    status: pending
+    status: completed
   - id: w0-foundation
     content: "W0 (serial, ~60 min): fill `entity_dsl` region with all macros from blueprints §1-§14 + `__autoresolved_owner!` covering every entity in the roster; rewrite `gql::sdl()` per §14; delete legacy `simple_conn_*` / `entity_full_family!` / `entity_relay!` / `entity_diffs!` / `entity_owner!`."
     status: pending
