@@ -3,6 +3,7 @@
   "cli": {
     "packageManager": "bun"
   },
+  "useDaemonProcess": false,
   "defaultBase": "⛳wip",
   "workspaceLayout": {
     "appsDir": "semio",

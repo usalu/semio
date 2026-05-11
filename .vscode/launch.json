@@ -212,6 +212,9 @@
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx dev @semio/sketchpad",
+      "env": {
+        "NX_WORKSPACE_DATA_DIRECTORY": "${workspaceFolder}/.nx/workspace-data-terminal"
+      },
       "isBackground": true,
       "problemMatcher": {
         "owner": "custom",

@@ -154,7 +154,36 @@ interface Version implements StrongEntity {
   kit: Kit! # computed
 }
 
-#region Modifications
+#region Inputs
+
+interface Input implements WeakEntity {
+  # Node
+  id: ID! # computed // hash
+  # Entity
+  hash: String! # cached
+  owner: Entity # reference // Operation
+  owns: EntityConnection # reference
+  # Input
+  # ARGUMENT: ARGUMENTTYPE
+}
+
+type InputEdge implements EntityEdge {
+  # EntityEdge
+  cursor: String! # computed
+  # InputEdge
+  node: Input! # reference
+}
+
+type InputConnection implements EntityConnection {
+  # EntityConnection
+  edges: [InputEdge!]! # computed
+  pageInfo: PageInfo! # computed
+  hash: String! # cached
+}
+
+#endregion Inputs
+
+#region Diffs
 
 interface Diff implements WeakEntity {
   # Node
@@ -181,6 +210,10 @@ type DiffConnection implements EntityConnection {
   pageInfo: PageInfo! # computed
   hash: String! # cached
 }
+
+#endregion Diffs
+
+#region Modifications
 
 interface Modification implements WeakEntity {
   # Node
@@ -246,11 +279,11 @@ interface Operation implements Entity { # implements StrongEntity
   # Entity
   hash: String! # cached
   owner: Entity # reference // Edit
-  owns: EntityConnection # reference
+  owns: EntityConnection # reference // Input | <output entities>
   # Operation
-  input: Input # data
-  modification: Modification! # computed
   scope: Entity! # reference // Entity | Quality | Attribute | Tag | Concept | Port | Type | Connector | Design | Piece | Connection | Kit
+  input: Input # data // null when all operation data is carried by scope
+  modification: Modification! # computed
   # Operation Output
 }
 
@@ -2266,8 +2299,15 @@ type QualityModificationsConnection implements EntityConnection {
 
 #region Operations
 
-type CreatedQualityInput {
-  # CreatedQualityInput
+type CreatedQualityInput implements Input {
+  # Node
+  id: ID! # computed // hash
+  # Entity
+  hash: String! # cached
+  owner: Entity # reference // CreatedQuality
+  owns: EntityConnection # reference
+  # Input
+  # Arguments
   quality: Quality! # data
 }
 
@@ -2276,15 +2316,22 @@ type CreatedQuality implements Operation {
   id: ID! # data // uuidv7
   hash: String! # cached
   owner: Entity # reference // Edit
-  owns: EntityConnection # reference // Quality
+  owns: EntityConnection # reference // CreatedQualityInput | Quality
   scope: Entity! # reference // Entity
   input: CreatedQualityInput! # data
   modification: Modification! # computed
   quality: Quality! # data
 }
 
-type CreatedQualitiesInput {
-  # CreatedQualitiesInput
+type CreatedQualitiesInput implements Input {
+  # Node
+  id: ID! # computed // hash
+  # Entity
+  hash: String! # cached
+  owner: Entity # reference // CreatedQualities
+  owns: EntityConnection # reference
+  # Input
+  # Arguments
   qualities: QualityConnection! # data
 }
 
@@ -2293,15 +2340,22 @@ type CreatedQualities implements Operation {
   id: ID! # data // uuidv7
   hash: String! # cached
   owner: Entity # reference // Edit
-  owns: EntityConnection # reference // Quality
+  owns: EntityConnection # reference // CreatedQualitiesInput | Quality
   scope: Entity! # reference // Entity
   input: CreatedQualitiesInput! # data
   modification: Modification! # computed
   qualities: QualityConnection! # data
 }
 
-type RenamedQualityInput {
-  # RenamedQualityInput
+type RenamedQualityInput implements Input {
+  # Node
+  id: ID! # computed // hash
+  # Entity
+  hash: String! # cached
+  owner: Entity # reference // RenamedQuality
+  owns: EntityConnection # reference
+  # Input
+  # Arguments
   key: String! # data
 }
 
@@ -2310,15 +2364,22 @@ type RenamedQuality implements Operation {
   id: ID! # data // uuidv7
   hash: String! # cached
   owner: Entity # reference // Edit
-  owns: EntityConnection # reference // Quality
+  owns: EntityConnection # reference // RenamedQualityInput | Quality
   scope: Entity! # reference // Quality
   input: RenamedQualityInput! # data
   modification: Modification! # computed
   quality: Quality! # data
 }
 
-type UpdatedQualityDescriptionInput {
-  # UpdatedQualityDescriptionInput
+type UpdatedQualityDescriptionInput implements Input {
+  # Node
+  id: ID! # computed // hash
+  # Entity
+  hash: String! # cached
+  owner: Entity # reference // UpdatedQualityDescription
+  owns: EntityConnection # reference
+  # Input
+  # Arguments
   description: String! # data
 }
 
@@ -2327,15 +2388,22 @@ type UpdatedQualityDescription implements Operation {
   id: ID! # data // uuidv7
   hash: String! # cached
   owner: Entity # reference // Edit
-  owns: EntityConnection # reference // Quality
+  owns: EntityConnection # reference // UpdatedQualityDescriptionInput | Quality
   scope: Entity! # reference // Quality
   input: UpdatedQualityDescriptionInput! # data
   modification: Modification! # computed
   quality: Quality! # data
 }
 
-type UpdatedQualityIconInput {
-  # UpdatedQualityIconInput
+type UpdatedQualityIconInput implements Input {
+  # Node
+  id: ID! # computed // hash
+  # Entity
+  hash: String! # cached
+  owner: Entity # reference // UpdatedQualityIcon
+  owns: EntityConnection # reference
+  # Input
+  # Arguments
   icon: String! # data
 }
 
@@ -2344,15 +2412,22 @@ type UpdatedQualityIcon implements Operation {
   id: ID! # data // uuidv7
   hash: String! # cached
   owner: Entity # reference // Edit
-  owns: EntityConnection # reference // Quality
+  owns: EntityConnection # reference // UpdatedQualityIconInput | Quality
   scope: Entity! # reference // Quality
   input: UpdatedQualityIconInput! # data
   modification: Modification! # computed
   quality: Quality! # data
 }
 
-type AddedAttributeToQualityInput {
-  # AddedAttributeToQualityInput
+type AddedAttributeToQualityInput implements Input {
+  # Node
+  id: ID! # computed // hash
+  # Entity
+  hash: String! # cached
+  owner: Entity # reference // AddedAttributeToQuality
+  owns: EntityConnection # reference
+  # Input
+  # Arguments
   attribute: Attribute! # data
 }
 
@@ -2361,7 +2436,7 @@ type AddedAttributeToQuality implements Operation {
   id: ID! # data // uuidv7
   hash: String! # cached
   owner: Entity # reference // Edit
-  owns: EntityConnection # reference // Attribute
+  owns: EntityConnection # reference // AddedAttributeToQualityInput | Attribute
   scope: Entity! # reference // Quality
   input: AddedAttributeToQualityInput! # data
   modification: Modification! # computed
@@ -2369,8 +2444,15 @@ type AddedAttributeToQuality implements Operation {
   attribute: Attribute! # data
 }
 
-type AddedAttributesToQualityInput {
-  # AddedAttributesToQualityInput
+type AddedAttributesToQualityInput implements Input {
+  # Node
+  id: ID! # computed // hash
+  # Entity
+  hash: String! # cached
+  owner: Entity # reference // AddedAttributesToQuality
+  owns: EntityConnection # reference
+  # Input
+  # Arguments
   attributes: AttributeConnection! # data
 }
 
@@ -2379,17 +2461,12 @@ type AddedAttributesToQuality implements Operation {
   id: ID! # data // uuidv7
   hash: String! # cached
   owner: Entity # reference // Edit
-  owns: EntityConnection # reference // Attribute
+  owns: EntityConnection # reference // AddedAttributesToQualityInput | Attribute
   scope: Entity! # reference // Quality
   input: AddedAttributesToQualityInput! # data
   modification: Modification! # computed
   quality: Quality! # data
   attributes: AttributeConnection! # data
-}
-
-type RemovedAttributeFromQualityInput {
-  # RemovedAttributeFromQualityInput
-  hasInput: Boolean! # computed // false when all operation data is carried by scope
 }
 
 type RemovedAttributeFromQuality implements Operation {
@@ -2399,14 +2476,8 @@ type RemovedAttributeFromQuality implements Operation {
   owner: Entity # reference // Edit
   owns: EntityConnection # reference
   scope: Entity! # reference // Quality | Attribute
-  input: RemovedAttributeFromQualityInput! # data
   modification: Modification! # computed
   quality: Quality! # data
-}
-
-type RemovedAttributesFromQualityInput {
-  # RemovedAttributesFromQualityInput
-  hasInput: Boolean! # computed // false when all operation data is carried by scope
 }
 
 type RemovedAttributesFromQuality implements Operation {
@@ -2416,14 +2487,8 @@ type RemovedAttributesFromQuality implements Operation {
   owner: Entity # reference // Edit
   owns: EntityConnection # reference
   scope: Entity! # reference // Quality | Attribute
-  input: RemovedAttributesFromQualityInput! # data
   modification: Modification! # computed
   quality: Quality! # data
-}
-
-type DeletedQualityInput {
-  # DeletedQualityInput
-  hasInput: Boolean! # computed // false when all operation data is carried by scope
 }
 
 type DeletedQuality implements Operation {
@@ -2433,13 +2498,7 @@ type DeletedQuality implements Operation {
   owner: Entity # reference // Edit
   owns: EntityConnection # reference
   scope: Entity! # reference // Quality
-  input: DeletedQualityInput! # data
   modification: Modification! # computed
-}
-
-type DeletedQualitiesInput {
-  # DeletedQualitiesInput
-  hasInput: Boolean! # computed // false when all operation data is carried by scope
 }
 
 type DeletedQualities implements Operation {
@@ -2449,7 +2508,6 @@ type DeletedQualities implements Operation {
   owner: Entity # reference // Edit
   owns: EntityConnection # reference
   scope: Entity! # reference // Quality
-  input: DeletedQualitiesInput! # data
   modification: Modification! # computed
 }
 
@@ -2586,8 +2644,15 @@ type TagModificationsConnection implements EntityConnection {
 
 #region Operations
 
-type CreatedTagInput {
-  # CreatedTagInput
+type CreatedTagInput implements Input {
+  # Node
+  id: ID! # computed // hash
+  # Entity
+  hash: String! # cached
+  owner: Entity # reference // CreatedTag
+  owns: EntityConnection # reference
+  # Input
+  # Arguments
   tag: Tag! # data
 }
 
@@ -2596,15 +2661,22 @@ type CreatedTag implements Operation {
   id: ID! # data // uuidv7
   hash: String! # cached
   owner: Entity # reference // Edit
-  owns: EntityConnection # reference // Tag
+  owns: EntityConnection # reference // CreatedTagInput | Tag
   scope: Entity! # reference // Entity
   input: CreatedTagInput! # data
   modification: Modification! # computed
   tag: Tag! # data
 }
 
-type CreatedTagsInput {
-  # CreatedTagsInput
+type CreatedTagsInput implements Input {
+  # Node
+  id: ID! # computed // hash
+  # Entity
+  hash: String! # cached
+  owner: Entity # reference // CreatedTags
+  owns: EntityConnection # reference
+  # Input
+  # Arguments
   tags: TagConnection! # data
 }
 
@@ -2613,15 +2685,22 @@ type CreatedTags implements Operation {
   id: ID! # data // uuidv7
   hash: String! # cached
   owner: Entity # reference // Edit
-  owns: EntityConnection # reference // Tag
+  owns: EntityConnection # reference // CreatedTagsInput | Tag
   scope: Entity! # reference // Entity
   input: CreatedTagsInput! # data
   modification: Modification! # computed
   tags: TagConnection! # data
 }
 
-type RenamedTagInput {
-  # RenamedTagInput
+type RenamedTagInput implements Input {
+  # Node
+  id: ID! # computed // hash
+  # Entity
+  hash: String! # cached
+  owner: Entity # reference // RenamedTag
+  owns: EntityConnection # reference
+  # Input
+  # Arguments
   name: String! # data
 }
 
@@ -2630,15 +2709,22 @@ type RenamedTag implements Operation {
   id: ID! # data // uuidv7
   hash: String! # cached
   owner: Entity # reference // Edit
-  owns: EntityConnection # reference // Tag
+  owns: EntityConnection # reference // RenamedTagInput | Tag
   scope: Entity! # reference // Tag
   input: RenamedTagInput! # data
   modification: Modification! # computed
   tag: Tag! # data
 }
 
-type UpdatedTagDescriptionInput {
-  # UpdatedTagDescriptionInput
+type UpdatedTagDescriptionInput implements Input {
+  # Node
+  id: ID! # computed // hash
+  # Entity
+  hash: String! # cached
+  owner: Entity # reference // UpdatedTagDescription
+  owns: EntityConnection # reference
+  # Input
+  # Arguments
   description: String! # data
 }
 
@@ -2647,15 +2733,22 @@ type UpdatedTagDescription implements Operation {
   id: ID! # data // uuidv7
   hash: String! # cached
   owner: Entity # reference // Edit
-  owns: EntityConnection # reference // Tag
+  owns: EntityConnection # reference // UpdatedTagDescriptionInput | Tag
   scope: Entity! # reference // Tag
   input: UpdatedTagDescriptionInput! # data
   modification: Modification! # computed
   tag: Tag! # data
 }
 
-type UpdatedTagIconInput {
-  # UpdatedTagIconInput
+type UpdatedTagIconInput implements Input {
+  # Node
+  id: ID! # computed // hash
+  # Entity
+  hash: String! # cached
+  owner: Entity # reference // UpdatedTagIcon
+  owns: EntityConnection # reference
+  # Input
+  # Arguments
   icon: String! # data
 }
 
@@ -2664,15 +2757,22 @@ type UpdatedTagIcon implements Operation {
   id: ID! # data // uuidv7
   hash: String! # cached
   owner: Entity # reference // Edit
-  owns: EntityConnection # reference // Tag
+  owns: EntityConnection # reference // UpdatedTagIconInput | Tag
   scope: Entity! # reference // Tag
   input: UpdatedTagIconInput! # data
   modification: Modification! # computed
   tag: Tag! # data
 }
 
-type AddedAttributeToTagInput {
-  # AddedAttributeToTagInput
+type AddedAttributeToTagInput implements Input {
+  # Node
+  id: ID! # computed // hash
+  # Entity
+  hash: String! # cached
+  owner: Entity # reference // AddedAttributeToTag
+  owns: EntityConnection # reference
+  # Input
+  # Arguments
   attribute: Attribute! # data
 }
 
@@ -2681,7 +2781,7 @@ type AddedAttributeToTag implements Operation {
   id: ID! # data // uuidv7
   hash: String! # cached
   owner: Entity # reference // Edit
-  owns: EntityConnection # reference // Attribute
+  owns: EntityConnection # reference // AddedAttributeToTagInput | Attribute
   scope: Entity! # reference // Tag
   input: AddedAttributeToTagInput! # data
   modification: Modification! # computed
@@ -2689,8 +2789,15 @@ type AddedAttributeToTag implements Operation {
   attribute: Attribute! # data
 }
 
-type AddedAttributesToTagInput {
-  # AddedAttributesToTagInput
+type AddedAttributesToTagInput implements Input {
+  # Node
+  id: ID! # computed // hash
+  # Entity
+  hash: String! # cached
+  owner: Entity # reference // AddedAttributesToTag
+  owns: EntityConnection # reference
+  # Input
+  # Arguments
   attributes: AttributeConnection! # data
 }
 
@@ -2699,17 +2806,12 @@ type AddedAttributesToTag implements Operation {
   id: ID! # data // uuidv7
   hash: String! # cached
   owner: Entity # reference // Edit
-  owns: EntityConnection # reference // Attribute
+  owns: EntityConnection # reference // AddedAttributesToTagInput | Attribute
   scope: Entity! # reference // Tag
   input: AddedAttributesToTagInput! # data
   modification: Modification! # computed
   tag: Tag! # data
   attributes: AttributeConnection! # data
-}
-
-type RemovedAttributeFromTagInput {
-  # RemovedAttributeFromTagInput
-  hasInput: Boolean! # computed // false when all operation data is carried by scope
 }
 
 type RemovedAttributeFromTag implements Operation {
@@ -2719,14 +2821,8 @@ type RemovedAttributeFromTag implements Operation {
   owner: Entity # reference // Edit
   owns: EntityConnection # reference
   scope: Entity! # reference // Tag | Attribute
-  input: RemovedAttributeFromTagInput! # data
   modification: Modification! # computed
   tag: Tag! # data
-}
-
-type RemovedAttributesFromTagInput {
-  # RemovedAttributesFromTagInput
-  hasInput: Boolean! # computed // false when all operation data is carried by scope
 }
 
 type RemovedAttributesFromTag implements Operation {
@@ -2736,14 +2832,8 @@ type RemovedAttributesFromTag implements Operation {
   owner: Entity # reference // Edit
   owns: EntityConnection # reference
   scope: Entity! # reference // Tag | Attribute
-  input: RemovedAttributesFromTagInput! # data
   modification: Modification! # computed
   tag: Tag! # data
-}
-
-type DeletedTagInput {
-  # DeletedTagInput
-  hasInput: Boolean! # computed // false when all operation data is carried by scope
 }
 
 type DeletedTag implements Operation {
@@ -2753,13 +2843,7 @@ type DeletedTag implements Operation {
   owner: Entity # reference // Edit
   owns: EntityConnection # reference
   scope: Entity! # reference // Tag
-  input: DeletedTagInput! # data
   modification: Modification! # computed
-}
-
-type DeletedTagsInput {
-  # DeletedTagsInput
-  hasInput: Boolean! # computed // false when all operation data is carried by scope
 }
 
 type DeletedTags implements Operation {
@@ -2769,7 +2853,6 @@ type DeletedTags implements Operation {
   owner: Entity # reference // Edit
   owns: EntityConnection # reference
   scope: Entity! # reference // Tag
-  input: DeletedTagsInput! # data
   modification: Modification! # computed
 }
 
@@ -2906,8 +2989,15 @@ type ConceptModificationsConnection implements EntityConnection {
 
 #region Operations
 
-type CreatedConceptInput {
-  # CreatedConceptInput
+type CreatedConceptInput implements Input {
+  # Node
+  id: ID! # computed // hash
+  # Entity
+  hash: String! # cached
+  owner: Entity # reference // CreatedConcept
+  owns: EntityConnection # reference
+  # Input
+  # Arguments
   concept: Concept! # data
 }
 
@@ -2916,15 +3006,22 @@ type CreatedConcept implements Operation {
   id: ID! # data // uuidv7
   hash: String! # cached
   owner: Entity # reference // Edit
-  owns: EntityConnection # reference // Concept
+  owns: EntityConnection # reference // CreatedConceptInput | Concept
   scope: Entity! # reference // Entity
   input: CreatedConceptInput! # data
   modification: Modification! # computed
   concept: Concept! # data
 }
 
-type CreatedConceptsInput {
-  # CreatedConceptsInput
+type CreatedConceptsInput implements Input {
+  # Node
+  id: ID! # computed // hash
+  # Entity
+  hash: String! # cached
+  owner: Entity # reference // CreatedConcepts
+  owns: EntityConnection # reference
+  # Input
+  # Arguments
   concepts: ConceptConnection! # data
 }
 
@@ -2933,15 +3030,22 @@ type CreatedConcepts implements Operation {
   id: ID! # data // uuidv7
   hash: String! # cached
   owner: Entity # reference // Edit
-  owns: EntityConnection # reference // Concept
+  owns: EntityConnection # reference // CreatedConceptsInput | Concept
   scope: Entity! # reference // Entity
   input: CreatedConceptsInput! # data
   modification: Modification! # computed
   concepts: ConceptConnection! # data
 }
 
-type RenamedConceptInput {
-  # RenamedConceptInput
+type RenamedConceptInput implements Input {
+  # Node
+  id: ID! # computed // hash
+  # Entity
+  hash: String! # cached
+  owner: Entity # reference // RenamedConcept
+  owns: EntityConnection # reference
+  # Input
+  # Arguments
   name: String! # data
 }
 
@@ -2950,15 +3054,22 @@ type RenamedConcept implements Operation {
   id: ID! # data // uuidv7
   hash: String! # cached
   owner: Entity # reference // Edit
-  owns: EntityConnection # reference // Concept
+  owns: EntityConnection # reference // RenamedConceptInput | Concept
   scope: Entity! # reference // Concept
   input: RenamedConceptInput! # data
   modification: Modification! # computed
   concept: Concept! # data
 }
 
-type UpdatedConceptDescriptionInput {
-  # UpdatedConceptDescriptionInput
+type UpdatedConceptDescriptionInput implements Input {
+  # Node
+  id: ID! # computed // hash
+  # Entity
+  hash: String! # cached
+  owner: Entity # reference // UpdatedConceptDescription
+  owns: EntityConnection # reference
+  # Input
+  # Arguments
   description: String! # data
 }
 
@@ -2967,15 +3078,22 @@ type UpdatedConceptDescription implements Operation {
   id: ID! # data // uuidv7
   hash: String! # cached
   owner: Entity # reference // Edit
-  owns: EntityConnection # reference // Concept
+  owns: EntityConnection # reference // UpdatedConceptDescriptionInput | Concept
   scope: Entity! # reference // Concept
   input: UpdatedConceptDescriptionInput! # data
   modification: Modification! # computed
   concept: Concept! # data
 }
 
-type UpdatedConceptIconInput {
-  # UpdatedConceptIconInput
+type UpdatedConceptIconInput implements Input {
+  # Node
+  id: ID! # computed // hash
+  # Entity
+  hash: String! # cached
+  owner: Entity # reference // UpdatedConceptIcon
+  owns: EntityConnection # reference
+  # Input
+  # Arguments
   icon: String! # data
 }
 
@@ -2984,15 +3102,22 @@ type UpdatedConceptIcon implements Operation {
   id: ID! # data // uuidv7
   hash: String! # cached
   owner: Entity # reference // Edit
-  owns: EntityConnection # reference // Concept
+  owns: EntityConnection # reference // UpdatedConceptIconInput | Concept
   scope: Entity! # reference // Concept
   input: UpdatedConceptIconInput! # data
   modification: Modification! # computed
   concept: Concept! # data
 }
 
-type AddedAttributeToConceptInput {
-  # AddedAttributeToConceptInput
+type AddedAttributeToConceptInput implements Input {
+  # Node
+  id: ID! # computed // hash
+  # Entity
+  hash: String! # cached
+  owner: Entity # reference // AddedAttributeToConcept
+  owns: EntityConnection # reference
+  # Input
+  # Arguments
   attribute: Attribute! # data
 }
 
@@ -3001,7 +3126,7 @@ type AddedAttributeToConcept implements Operation {
   id: ID! # data // uuidv7
   hash: String! # cached
   owner: Entity # reference // Edit
-  owns: EntityConnection # reference // Attribute
+  owns: EntityConnection # reference // AddedAttributeToConceptInput | Attribute
   scope: Entity! # reference // Concept
   input: AddedAttributeToConceptInput! # data
   modification: Modification! # computed
@@ -3009,8 +3134,15 @@ type AddedAttributeToConcept implements Operation {
   attribute: Attribute! # data
 }
 
-type AddedAttributesToConceptInput {
-  # AddedAttributesToConceptInput
+type AddedAttributesToConceptInput implements Input {
+  # Node
+  id: ID! # computed // hash
+  # Entity
+  hash: String! # cached
+  owner: Entity # reference // AddedAttributesToConcept
+  owns: EntityConnection # reference
+  # Input
+  # Arguments
   attributes: AttributeConnection! # data
 }
 
@@ -3019,17 +3151,12 @@ type AddedAttributesToConcept implements Operation {
   id: ID! # data // uuidv7
   hash: String! # cached
   owner: Entity # reference // Edit
-  owns: EntityConnection # reference // Attribute
+  owns: EntityConnection # reference // AddedAttributesToConceptInput | Attribute
   scope: Entity! # reference // Concept
   input: AddedAttributesToConceptInput! # data
   modification: Modification! # computed
   concept: Concept! # data
   attributes: AttributeConnection! # data
-}
-
-type RemovedAttributeFromConceptInput {
-  # RemovedAttributeFromConceptInput
-  hasInput: Boolean! # computed // false when all operation data is carried by scope
 }
 
 type RemovedAttributeFromConcept implements Operation {
@@ -3039,14 +3166,8 @@ type RemovedAttributeFromConcept implements Operation {
   owner: Entity # reference // Edit
   owns: EntityConnection # reference
   scope: Entity! # reference // Concept | Attribute
-  input: RemovedAttributeFromConceptInput! # data
   modification: Modification! # computed
   concept: Concept! # data
-}
-
-type RemovedAttributesFromConceptInput {
-  # RemovedAttributesFromConceptInput
-  hasInput: Boolean! # computed // false when all operation data is carried by scope
 }
 
 type RemovedAttributesFromConcept implements Operation {
@@ -3056,14 +3177,8 @@ type RemovedAttributesFromConcept implements Operation {
   owner: Entity # reference // Edit
   owns: EntityConnection # reference
   scope: Entity! # reference // Concept | Attribute
-  input: RemovedAttributesFromConceptInput! # data
   modification: Modification! # computed
   concept: Concept! # data
-}
-
-type DeletedConceptInput {
-  # DeletedConceptInput
-  hasInput: Boolean! # computed // false when all operation data is carried by scope
 }
 
 type DeletedConcept implements Operation {
@@ -3073,13 +3188,7 @@ type DeletedConcept implements Operation {
   owner: Entity # reference // Edit
   owns: EntityConnection # reference
   scope: Entity! # reference // Concept
-  input: DeletedConceptInput! # data
   modification: Modification! # computed
-}
-
-type DeletedConceptsInput {
-  # DeletedConceptsInput
-  hasInput: Boolean! # computed // false when all operation data is carried by scope
 }
 
 type DeletedConcepts implements Operation {
@@ -3089,7 +3198,6 @@ type DeletedConcepts implements Operation {
   owner: Entity # reference // Edit
   owns: EntityConnection # reference
   scope: Entity! # reference // Concept
-  input: DeletedConceptsInput! # data
   modification: Modification! # computed
 }
 
@@ -3360,8 +3468,15 @@ type PortModificationsConnection implements EntityConnection {
 
 #region Operations
 
-type CreatedPortInput {
-  # CreatedPortInput
+type CreatedPortInput implements Input {
+  # Node
+  id: ID! # computed // hash
+  # Entity
+  hash: String! # cached
+  owner: Entity # reference // CreatedPort
+  owns: EntityConnection # reference
+  # Input
+  # Arguments
   port: Port! # data
 }
 
@@ -3370,15 +3485,22 @@ type CreatedPort implements Operation {
   id: ID! # data // uuidv7
   hash: String! # cached
   owner: Entity # reference // Edit
-  owns: EntityConnection # reference // Port
+  owns: EntityConnection # reference // CreatedPortInput | Port
   scope: Entity! # reference // Entity
   input: CreatedPortInput! # data
   modification: Modification! # computed
   port: Port! # data
 }
 
-type CreatedPortsInput {
-  # CreatedPortsInput
+type CreatedPortsInput implements Input {
+  # Node
+  id: ID! # computed // hash
+  # Entity
+  hash: String! # cached
+  owner: Entity # reference // CreatedPorts
+  owns: EntityConnection # reference
+  # Input
+  # Arguments
   ports: PortConnection! # data
 }
 
@@ -3387,15 +3509,22 @@ type CreatedPorts implements Operation {
   id: ID! # data // uuidv7
   hash: String! # cached
   owner: Entity # reference // Edit
-  owns: EntityConnection # reference // Port
+  owns: EntityConnection # reference // CreatedPortsInput | Port
   scope: Entity! # reference // Entity
   input: CreatedPortsInput! # data
   modification: Modification! # computed
   ports: PortConnection! # data
 }
 
-type RenamedPortInput {
-  # RenamedPortInput
+type RenamedPortInput implements Input {
+  # Node
+  id: ID! # computed // hash
+  # Entity
+  hash: String! # cached
+  owner: Entity # reference // RenamedPort
+  owns: EntityConnection # reference
+  # Input
+  # Arguments
   code: String! # data
   label: String! # data
 }
@@ -3405,15 +3534,22 @@ type RenamedPort implements Operation {
   id: ID! # data // uuidv7
   hash: String! # cached
   owner: Entity # reference // Edit
-  owns: EntityConnection # reference // Port
+  owns: EntityConnection # reference // RenamedPortInput | Port
   scope: Entity! # reference // Port
   input: RenamedPortInput! # data
   modification: Modification! # computed
   port: Port! # data
 }
 
-type UpdatedPortDescriptionInput {
-  # UpdatedPortDescriptionInput
+type UpdatedPortDescriptionInput implements Input {
+  # Node
+  id: ID! # computed // hash
+  # Entity
+  hash: String! # cached
+  owner: Entity # reference // UpdatedPortDescription
+  owns: EntityConnection # reference
+  # Input
+  # Arguments
   description: String! # data
 }
 
@@ -3422,15 +3558,22 @@ type UpdatedPortDescription implements Operation {
   id: ID! # data // uuidv7
   hash: String! # cached
   owner: Entity # reference // Edit
-  owns: EntityConnection # reference // Port
+  owns: EntityConnection # reference // UpdatedPortDescriptionInput | Port
   scope: Entity! # reference // Port
   input: UpdatedPortDescriptionInput! # data
   modification: Modification! # computed
   port: Port! # data
 }
 
-type UpdatedPortIconInput {
-  # UpdatedPortIconInput
+type UpdatedPortIconInput implements Input {
+  # Node
+  id: ID! # computed // hash
+  # Entity
+  hash: String! # cached
+  owner: Entity # reference // UpdatedPortIcon
+  owns: EntityConnection # reference
+  # Input
+  # Arguments
   icon: String! # data
 }
 
@@ -3439,15 +3582,22 @@ type UpdatedPortIcon implements Operation {
   id: ID! # data // uuidv7
   hash: String! # cached
   owner: Entity # reference // Edit
-  owns: EntityConnection # reference // Port
+  owns: EntityConnection # reference // UpdatedPortIconInput | Port
   scope: Entity! # reference // Port
   input: UpdatedPortIconInput! # data
   modification: Modification! # computed
   port: Port! # data
 }
 
-type AddedAttributeToPortInput {
-  # AddedAttributeToPortInput
+type AddedAttributeToPortInput implements Input {
+  # Node
+  id: ID! # computed // hash
+  # Entity
+  hash: String! # cached
+  owner: Entity # reference // AddedAttributeToPort
+  owns: EntityConnection # reference
+  # Input
+  # Arguments
   attribute: Attribute! # data
 }
 
@@ -3456,7 +3606,7 @@ type AddedAttributeToPort implements Operation {
   id: ID! # data // uuidv7
   hash: String! # cached
   owner: Entity # reference // Edit
-  owns: EntityConnection # reference // Attribute
+  owns: EntityConnection # reference // AddedAttributeToPortInput | Attribute
   scope: Entity! # reference // Port
   input: AddedAttributeToPortInput! # data
   modification: Modification! # computed
@@ -3464,8 +3614,15 @@ type AddedAttributeToPort implements Operation {
   attribute: Attribute! # data
 }
 
-type AddedAttributesToPortInput {
-  # AddedAttributesToPortInput
+type AddedAttributesToPortInput implements Input {
+  # Node
+  id: ID! # computed // hash
+  # Entity
+  hash: String! # cached
+  owner: Entity # reference // AddedAttributesToPort
+  owns: EntityConnection # reference
+  # Input
+  # Arguments
   attributes: AttributeConnection! # data
 }
 
@@ -3474,17 +3631,12 @@ type AddedAttributesToPort implements Operation {
   id: ID! # data // uuidv7
   hash: String! # cached
   owner: Entity # reference // Edit
-  owns: EntityConnection # reference // Attribute
+  owns: EntityConnection # reference // AddedAttributesToPortInput | Attribute
   scope: Entity! # reference // Port
   input: AddedAttributesToPortInput! # data
   modification: Modification! # computed
   port: Port! # data
   attributes: AttributeConnection! # data
-}
-
-type RemovedAttributeFromPortInput {
-  # RemovedAttributeFromPortInput
-  hasInput: Boolean! # computed // false when all operation data is carried by scope
 }
 
 type RemovedAttributeFromPort implements Operation {
@@ -3494,14 +3646,8 @@ type RemovedAttributeFromPort implements Operation {
   owner: Entity # reference // Edit
   owns: EntityConnection # reference
   scope: Entity! # reference // Port | Attribute
-  input: RemovedAttributeFromPortInput! # data
   modification: Modification! # computed
   port: Port! # data
-}
-
-type RemovedAttributesFromPortInput {
-  # RemovedAttributesFromPortInput
-  hasInput: Boolean! # computed // false when all operation data is carried by scope
 }
 
 type RemovedAttributesFromPort implements Operation {
@@ -3511,14 +3657,8 @@ type RemovedAttributesFromPort implements Operation {
   owner: Entity # reference // Edit
   owns: EntityConnection # reference
   scope: Entity! # reference // Port | Attribute
-  input: RemovedAttributesFromPortInput! # data
   modification: Modification! # computed
   port: Port! # data
-}
-
-type DeletedPortInput {
-  # DeletedPortInput
-  hasInput: Boolean! # computed // false when all operation data is carried by scope
 }
 
 type DeletedPort implements Operation {
@@ -3528,13 +3668,7 @@ type DeletedPort implements Operation {
   owner: Entity # reference // Edit
   owns: EntityConnection # reference
   scope: Entity! # reference // Port
-  input: DeletedPortInput! # data
   modification: Modification! # computed
-}
-
-type DeletedPortsInput {
-  # DeletedPortsInput
-  hasInput: Boolean! # computed // false when all operation data is carried by scope
 }
 
 type DeletedPorts implements Operation {
@@ -3544,7 +3678,6 @@ type DeletedPorts implements Operation {
   owner: Entity # reference // Edit
   owns: EntityConnection # reference
   scope: Entity! # reference // Port
-  input: DeletedPortsInput! # data
   modification: Modification! # computed
 }
 
@@ -3956,8 +4089,15 @@ type TypeModificationsConnection implements EntityConnection {
 
 #region Operations
 
-type CreatedTypeInput {
-  # CreatedTypeInput
+type CreatedTypeInput implements Input {
+  # Node
+  id: ID! # computed // hash
+  # Entity
+  hash: String! # cached
+  owner: Entity # reference // CreatedType
+  owns: EntityConnection # reference
+  # Input
+  # Arguments
   type: Type! # data
 }
 
@@ -3966,15 +4106,22 @@ type CreatedType implements Operation {
   id: ID! # data // uuidv7
   hash: String! # cached
   owner: Entity # reference // Edit
-  owns: EntityConnection # reference // Type
+  owns: EntityConnection # reference // CreatedTypeInput | Type
   scope: Entity! # reference // Entity
   input: CreatedTypeInput! # data
   modification: Modification! # computed
   type: Type! # data
 }
 
-type CreatedTypesInput {
-  # CreatedTypesInput
+type CreatedTypesInput implements Input {
+  # Node
+  id: ID! # computed // hash
+  # Entity
+  hash: String! # cached
+  owner: Entity # reference // CreatedTypes
+  owns: EntityConnection # reference
+  # Input
+  # Arguments
   types: TypeConnection! # data
 }
 
@@ -3983,15 +4130,22 @@ type CreatedTypes implements Operation {
   id: ID! # data // uuidv7
   hash: String! # cached
   owner: Entity # reference // Edit
-  owns: EntityConnection # reference // Type
+  owns: EntityConnection # reference // CreatedTypesInput | Type
   scope: Entity! # reference // Entity
   input: CreatedTypesInput! # data
   modification: Modification! # computed
   types: TypeConnection! # data
 }
 
-type RenamedTypeInput {
-  # RenamedTypeInput
+type RenamedTypeInput implements Input {
+  # Node
+  id: ID! # computed // hash
+  # Entity
+  hash: String! # cached
+  owner: Entity # reference // RenamedType
+  owns: EntityConnection # reference
+  # Input
+  # Arguments
   name: String! # data
 }
 
@@ -4000,15 +4154,22 @@ type RenamedType implements Operation {
   id: ID! # data // uuidv7
   hash: String! # cached
   owner: Entity # reference // Edit
-  owns: EntityConnection # reference // Type
+  owns: EntityConnection # reference // RenamedTypeInput | Type
   scope: Entity! # reference // Type
   input: RenamedTypeInput! # data
   modification: Modification! # computed
   type: Type! # data
 }
 
-type UpdatedTypeDescriptionInput {
-  # UpdatedTypeDescriptionInput
+type UpdatedTypeDescriptionInput implements Input {
+  # Node
+  id: ID! # computed // hash
+  # Entity
+  hash: String! # cached
+  owner: Entity # reference // UpdatedTypeDescription
+  owns: EntityConnection # reference
+  # Input
+  # Arguments
   description: String! # data
 }
 
@@ -4017,15 +4178,22 @@ type UpdatedTypeDescription implements Operation {
   id: ID! # data // uuidv7
   hash: String! # cached
   owner: Entity # reference // Edit
-  owns: EntityConnection # reference // Type
+  owns: EntityConnection # reference // UpdatedTypeDescriptionInput | Type
   scope: Entity! # reference // Type
   input: UpdatedTypeDescriptionInput! # data
   modification: Modification! # computed
   type: Type! # data
 }
 
-type UpdatedTypeIconInput {
-  # UpdatedTypeIconInput
+type UpdatedTypeIconInput implements Input {
+  # Node
+  id: ID! # computed // hash
+  # Entity
+  hash: String! # cached
+  owner: Entity # reference // UpdatedTypeIcon
+  owns: EntityConnection # reference
+  # Input
+  # Arguments
   icon: String! # data
 }
 
@@ -4034,15 +4202,22 @@ type UpdatedTypeIcon implements Operation {
   id: ID! # data // uuidv7
   hash: String! # cached
   owner: Entity # reference // Edit
-  owns: EntityConnection # reference // Type
+  owns: EntityConnection # reference // UpdatedTypeIconInput | Type
   scope: Entity! # reference // Type
   input: UpdatedTypeIconInput! # data
   modification: Modification! # computed
   type: Type! # data
 }
 
-type AddedAttributeToTypeInput {
-  # AddedAttributeToTypeInput
+type AddedAttributeToTypeInput implements Input {
+  # Node
+  id: ID! # computed // hash
+  # Entity
+  hash: String! # cached
+  owner: Entity # reference // AddedAttributeToType
+  owns: EntityConnection # reference
+  # Input
+  # Arguments
   attribute: Attribute! # data
 }
 
@@ -4051,7 +4226,7 @@ type AddedAttributeToType implements Operation {
   id: ID! # data // uuidv7
   hash: String! # cached
   owner: Entity # reference // Edit
-  owns: EntityConnection # reference // Attribute
+  owns: EntityConnection # reference // AddedAttributeToTypeInput | Attribute
   scope: Entity! # reference // Type
   input: AddedAttributeToTypeInput! # data
   modification: Modification! # computed
@@ -4059,8 +4234,15 @@ type AddedAttributeToType implements Operation {
   attribute: Attribute! # data
 }
 
-type AddedAttributesToTypeInput {
-  # AddedAttributesToTypeInput
+type AddedAttributesToTypeInput implements Input {
+  # Node
+  id: ID! # computed // hash
+  # Entity
+  hash: String! # cached
+  owner: Entity # reference // AddedAttributesToType
+  owns: EntityConnection # reference
+  # Input
+  # Arguments
   attributes: AttributeConnection! # data
 }
 
@@ -4069,17 +4251,12 @@ type AddedAttributesToType implements Operation {
   id: ID! # data // uuidv7
   hash: String! # cached
   owner: Entity # reference // Edit
-  owns: EntityConnection # reference // Attribute
+  owns: EntityConnection # reference // AddedAttributesToTypeInput | Attribute
   scope: Entity! # reference // Type
   input: AddedAttributesToTypeInput! # data
   modification: Modification! # computed
   type: Type! # data
   attributes: AttributeConnection! # data
-}
-
-type RemovedAttributeFromTypeInput {
-  # RemovedAttributeFromTypeInput
-  hasInput: Boolean! # computed // false when all operation data is carried by scope
 }
 
 type RemovedAttributeFromType implements Operation {
@@ -4089,14 +4266,8 @@ type RemovedAttributeFromType implements Operation {
   owner: Entity # reference // Edit
   owns: EntityConnection # reference
   scope: Entity! # reference // Type | Attribute
-  input: RemovedAttributeFromTypeInput! # data
   modification: Modification! # computed
   type: Type! # data
-}
-
-type RemovedAttributesFromTypeInput {
-  # RemovedAttributesFromTypeInput
-  hasInput: Boolean! # computed // false when all operation data is carried by scope
 }
 
 type RemovedAttributesFromType implements Operation {
@@ -4106,14 +4277,8 @@ type RemovedAttributesFromType implements Operation {
   owner: Entity # reference // Edit
   owns: EntityConnection # reference
   scope: Entity! # reference // Type | Attribute
-  input: RemovedAttributesFromTypeInput! # data
   modification: Modification! # computed
   type: Type! # data
-}
-
-type DeletedTypeInput {
-  # DeletedTypeInput
-  hasInput: Boolean! # computed // false when all operation data is carried by scope
 }
 
 type DeletedType implements Operation {
@@ -4123,13 +4288,7 @@ type DeletedType implements Operation {
   owner: Entity # reference // Edit
   owns: EntityConnection # reference
   scope: Entity! # reference // Type
-  input: DeletedTypeInput! # data
   modification: Modification! # computed
-}
-
-type DeletedTypesInput {
-  # DeletedTypesInput
-  hasInput: Boolean! # computed // false when all operation data is carried by scope
 }
 
 type DeletedTypes implements Operation {
@@ -4139,14 +4298,20 @@ type DeletedTypes implements Operation {
   owner: Entity # reference // Edit
   owns: EntityConnection # reference
   scope: Entity! # reference // Type
-  input: DeletedTypesInput! # data
   modification: Modification! # computed
 }
 
 #region Connector
 
-type AddedConnectorInput {
-  # AddedConnectorInput
+type AddedConnectorInput implements Input {
+  # Node
+  id: ID! # computed // hash
+  # Entity
+  hash: String! # cached
+  owner: Entity # reference // AddedConnector
+  owns: EntityConnection # reference
+  # Input
+  # Arguments
   connector: Connector! # data
 }
 
@@ -4155,7 +4320,7 @@ type AddedConnector implements Operation {
   id: ID! # data // uuidv7
   hash: String! # cached
   owner: Entity # reference // Edit
-  owns: EntityConnection # reference // Connector
+  owns: EntityConnection # reference // AddedConnectorInput | Connector
   scope: Entity! # reference // Type
   input: AddedConnectorInput! # data
   modification: Modification! # computed
@@ -4163,8 +4328,15 @@ type AddedConnector implements Operation {
   connector: Connector! # data
 }
 
-type AddedConnectorsInput {
-  # AddedConnectorsInput
+type AddedConnectorsInput implements Input {
+  # Node
+  id: ID! # computed // hash
+  # Entity
+  hash: String! # cached
+  owner: Entity # reference // AddedConnectors
+  owns: EntityConnection # reference
+  # Input
+  # Arguments
   connectors: ConnectorConnection! # data
 }
 
@@ -4173,7 +4345,7 @@ type AddedConnectors implements Operation {
   id: ID! # data // uuidv7
   hash: String! # cached
   owner: Entity # reference // Edit
-  owns: EntityConnection # reference // Connector
+  owns: EntityConnection # reference // AddedConnectorsInput | Connector
   scope: Entity! # reference // Type
   input: AddedConnectorsInput! # data
   modification: Modification! # computed
@@ -4181,8 +4353,15 @@ type AddedConnectors implements Operation {
   connectors: ConnectorConnection! # data
 }
 
-type RenamedConnectorInput {
-  # RenamedConnectorInput
+type RenamedConnectorInput implements Input {
+  # Node
+  id: ID! # computed // hash
+  # Entity
+  hash: String! # cached
+  owner: Entity # reference // RenamedConnector
+  owns: EntityConnection # reference
+  # Input
+  # Arguments
   code: String! # data
 }
 
@@ -4191,15 +4370,22 @@ type RenamedConnector implements Operation {
   id: ID! # data // uuidv7
   hash: String! # cached
   owner: Entity # reference // Edit
-  owns: EntityConnection # reference // Connector
+  owns: EntityConnection # reference // RenamedConnectorInput | Connector
   scope: Entity! # reference // Connector
   input: RenamedConnectorInput! # data
   modification: Modification! # computed
   connector: Connector! # data
 }
 
-type UpdatedConnectorDescriptionInput {
-  # UpdatedConnectorDescriptionInput
+type UpdatedConnectorDescriptionInput implements Input {
+  # Node
+  id: ID! # computed // hash
+  # Entity
+  hash: String! # cached
+  owner: Entity # reference // UpdatedConnectorDescription
+  owns: EntityConnection # reference
+  # Input
+  # Arguments
   description: String! # data
 }
 
@@ -4208,15 +4394,22 @@ type UpdatedConnectorDescription implements Operation {
   id: ID! # data // uuidv7
   hash: String! # cached
   owner: Entity # reference // Edit
-  owns: EntityConnection # reference // Connector
+  owns: EntityConnection # reference // UpdatedConnectorDescriptionInput | Connector
   scope: Entity! # reference // Connector
   input: UpdatedConnectorDescriptionInput! # data
   modification: Modification! # computed
   connector: Connector! # data
 }
 
-type UpdatedConnectorIconInput {
-  # UpdatedConnectorIconInput
+type UpdatedConnectorIconInput implements Input {
+  # Node
+  id: ID! # computed // hash
+  # Entity
+  hash: String! # cached
+  owner: Entity # reference // UpdatedConnectorIcon
+  owns: EntityConnection # reference
+  # Input
+  # Arguments
   icon: String! # data
 }
 
@@ -4225,16 +4418,11 @@ type UpdatedConnectorIcon implements Operation {
   id: ID! # data // uuidv7
   hash: String! # cached
   owner: Entity # reference // Edit
-  owns: EntityConnection # reference // Connector
+  owns: EntityConnection # reference // UpdatedConnectorIconInput | Connector
   scope: Entity! # reference // Connector
   input: UpdatedConnectorIconInput! # data
   modification: Modification! # computed
   connector: Connector! # data
-}
-
-type RemovedConnectorInput {
-  # RemovedConnectorInput
-  hasInput: Boolean! # computed // false when all operation data is carried by scope
 }
 
 type RemovedConnector implements Operation {
@@ -4244,14 +4432,8 @@ type RemovedConnector implements Operation {
   owner: Entity # reference // Edit
   owns: EntityConnection # reference
   scope: Entity! # reference // Connector
-  input: RemovedConnectorInput! # data
   modification: Modification! # computed
   type: Type! # data
-}
-
-type RemovedConnectorsInput {
-  # RemovedConnectorsInput
-  hasInput: Boolean! # computed // false when all operation data is carried by scope
 }
 
 type RemovedConnectors implements Operation {
@@ -4261,7 +4443,6 @@ type RemovedConnectors implements Operation {
   owner: Entity # reference // Edit
   owns: EntityConnection # reference
   scope: Entity! # reference // Connector
-  input: RemovedConnectorsInput! # data
   modification: Modification! # computed
   type: Type! # data
 }
@@ -4881,7 +5062,14 @@ type ConnectionModificationsConnection implements EntityConnection {
 #region Operations
 
 type CreatedFixedPieceInput implements Input {
-  # CreatedFixedPieceInput
+  # Node
+  id: ID! # computed // hash
+  # Entity
+  hash: String! # cached
+  owner: Entity # reference // CreatedFixedPiece
+  owns: EntityConnection # reference
+  # Input
+  # Arguments
   blueprintId: ID!
   position: Position!
   name: String
@@ -4894,18 +5082,13 @@ type CreatedFixedPiece implements Operation {
   # Entity
   hash: String! # cached
   owner: Entity # reference // Edit
-  owns: EntityConnection # reference // Piece
+  owns: EntityConnection # reference // CreatedFixedPieceInput | Piece
   # Operation
   scope: Entity! # reference // Design
   input: CreatedFixedPieceInput! # data
   modification: Modification! # computed
   # Operation Output
   piece: Piece! # computed
-}
-
-type FixedPieceInput {
-  # FixedPieceInput
-  hasInput: Boolean! # computed // false when all operation data is carried by scope
 }
 
 type FixedPiece implements Operation {
@@ -4915,13 +5098,19 @@ type FixedPiece implements Operation {
   owner: Entity # reference // Edit
   owns: EntityConnection # reference // Piece
   scope: Entity! # reference // Design | Piece
-  input: FixedPieceInput! # data
   modification: Modification! # computed
   piece: Piece! # data
 }
 
-type DraggedPiecesInput {
-  # DraggedPiecesInput
+type DraggedPiecesInput implements Input {
+  # Node
+  id: ID! # computed // hash
+  # Entity
+  hash: String! # cached
+  owner: Entity # reference // DraggedPieces
+  owns: EntityConnection # reference
+  # Input
+  # Arguments
   offset: Offset!
 }
 
@@ -4930,15 +5119,22 @@ type DraggedPieces implements Operation {
   id: ID! # data // uuidv7
   hash: String! # cached
   owner: Entity # reference // Edit
-  owns: EntityConnection # reference // Piece
+  owns: EntityConnection # reference // DraggedPiecesInput | Piece
   scope: Entity! # reference // Design | Piece
   input: DraggedPiecesInput! # data
   modification: Modification! # computed
   pieces: PieceConnection! # data
 }
 
-type DraggedPieceInput {
-  # DraggedPieceInput
+type DraggedPieceInput implements Input {
+  # Node
+  id: ID! # computed // hash
+  # Entity
+  hash: String! # cached
+  owner: Entity # reference // DraggedPiece
+  owns: EntityConnection # reference
+  # Input
+  # Arguments
   offset: Offset! # data
 }
 
@@ -4947,15 +5143,22 @@ type DraggedPiece implements Operation {
   id: ID! # data // uuidv7
   hash: String! # cached
   owner: Entity # reference // Edit
-  owns: EntityConnection # reference // Piece
+  owns: EntityConnection # reference // DraggedPieceInput | Piece
   scope: Entity! # reference // Design | Piece
   input: DraggedPieceInput! # data
   modification: Modification! # computed
   piece: Piece! # data
 }
 
-type AddedChildPieceWithParentConnectionInput {
-  # AddedChildPieceWithParentConnectionInput
+type AddedChildPieceWithParentConnectionInput implements Input {
+  # Node
+  id: ID! # computed // hash
+  # Entity
+  hash: String! # cached
+  owner: Entity # reference // AddedChildPieceWithParentConnection
+  owns: EntityConnection # reference
+  # Input
+  # Arguments
   piece: Piece! # data
   connection: Connection! # data
 }
@@ -4965,7 +5168,7 @@ type AddedChildPieceWithParentConnection implements Operation {
   id: ID! # data // uuidv7
   hash: String! # cached
   owner: Entity # reference // Edit
-  owns: EntityConnection # reference // Piece | Connection
+  owns: EntityConnection # reference // AddedChildPieceWithParentConnectionInput | Piece | Connection
   scope: Entity! # reference // Design
   input: AddedChildPieceWithParentConnectionInput! # data
   modification: Modification! # computed
@@ -4973,8 +5176,15 @@ type AddedChildPieceWithParentConnection implements Operation {
   connection: Connection! # data
 }
 
-type AddedChildPiecesWithParentConnectionsInput {
-  # AddedChildPiecesWithParentConnectionsInput
+type AddedChildPiecesWithParentConnectionsInput implements Input {
+  # Node
+  id: ID! # computed // hash
+  # Entity
+  hash: String! # cached
+  owner: Entity # reference // AddedChildPiecesWithParentConnections
+  owns: EntityConnection # reference
+  # Input
+  # Arguments
   pieces: PieceConnection! # data
   connections: ConnectionConnection! # data
 }
@@ -4984,7 +5194,7 @@ type AddedChildPiecesWithParentConnections implements Operation {
   id: ID! # data // uuidv7
   hash: String! # cached
   owner: Entity # reference // Edit
-  owns: EntityConnection # reference // Piece | Connection
+  owns: EntityConnection # reference // AddedChildPiecesWithParentConnectionsInput | Piece | Connection
   scope: Entity! # reference // Design
   input: AddedChildPiecesWithParentConnectionsInput! # data
   modification: Modification! # computed
@@ -4992,8 +5202,15 @@ type AddedChildPiecesWithParentConnections implements Operation {
   connections: ConnectionConnection! # data
 }
 
-type AddedHangingChildPieceWithParentConnectionInput {
-  # AddedHangingChildPieceWithParentConnectionInput
+type AddedHangingChildPieceWithParentConnectionInput implements Input {
+  # Node
+  id: ID! # computed // hash
+  # Entity
+  hash: String! # cached
+  owner: Entity # reference // AddedHangingChildPieceWithParentConnection
+  owns: EntityConnection # reference
+  # Input
+  # Arguments
   piece: Piece! # data
   connection: Connection! # data
 }
@@ -5003,7 +5220,7 @@ type AddedHangingChildPieceWithParentConnection implements Operation {
   id: ID! # data // uuidv7
   hash: String! # cached
   owner: Entity # reference // Edit
-  owns: EntityConnection # reference // Piece | Connection
+  owns: EntityConnection # reference // AddedHangingChildPieceWithParentConnectionInput | Piece | Connection
   scope: Entity! # reference // Design
   input: AddedHangingChildPieceWithParentConnectionInput! # data
   modification: Modification! # computed
@@ -5011,8 +5228,15 @@ type AddedHangingChildPieceWithParentConnection implements Operation {
   connection: Connection! # data
 }
 
-type AddedHangingChildPiecesWithParentConnectionsInput {
-  # AddedHangingChildPiecesWithParentConnectionsInput
+type AddedHangingChildPiecesWithParentConnectionsInput implements Input {
+  # Node
+  id: ID! # computed // hash
+  # Entity
+  hash: String! # cached
+  owner: Entity # reference // AddedHangingChildPiecesWithParentConnections
+  owns: EntityConnection # reference
+  # Input
+  # Arguments
   pieces: PieceConnection! # data
   connections: ConnectionConnection! # data
 }
@@ -5022,7 +5246,7 @@ type AddedHangingChildPiecesWithParentConnections implements Operation {
   id: ID! # data // uuidv7
   hash: String! # cached
   owner: Entity # reference // Edit
-  owns: EntityConnection # reference // Piece | Connection
+  owns: EntityConnection # reference // AddedHangingChildPiecesWithParentConnectionsInput | Piece | Connection
   scope: Entity! # reference // Design
   input: AddedHangingChildPiecesWithParentConnectionsInput! # data
   modification: Modification! # computed
@@ -5030,8 +5254,15 @@ type AddedHangingChildPiecesWithParentConnections implements Operation {
   connections: ConnectionConnection! # data
 }
 
-type RenamedPieceInput {
-  # RenamedPieceInput
+type RenamedPieceInput implements Input {
+  # Node
+  id: ID! # computed // hash
+  # Entity
+  hash: String! # cached
+  owner: Entity # reference // RenamedPiece
+  owns: EntityConnection # reference
+  # Input
+  # Arguments
   name: String! # data
 }
 
@@ -5040,15 +5271,22 @@ type RenamedPiece implements Operation {
   id: ID! # data // uuidv7
   hash: String! # cached
   owner: Entity # reference // Edit
-  owns: EntityConnection # reference // Piece
+  owns: EntityConnection # reference // RenamedPieceInput | Piece
   scope: Entity! # reference // Piece
   input: RenamedPieceInput! # data
   modification: Modification! # computed
   piece: Piece! # data
 }
 
-type UpdatedPieceDescriptionInput {
-  # UpdatedPieceDescriptionInput
+type UpdatedPieceDescriptionInput implements Input {
+  # Node
+  id: ID! # computed // hash
+  # Entity
+  hash: String! # cached
+  owner: Entity # reference // UpdatedPieceDescription
+  owns: EntityConnection # reference
+  # Input
+  # Arguments
   description: String! # data
 }
 
@@ -5057,15 +5295,22 @@ type UpdatedPieceDescription implements Operation {
   id: ID! # data // uuidv7
   hash: String! # cached
   owner: Entity # reference // Edit
-  owns: EntityConnection # reference // Piece
+  owns: EntityConnection # reference // UpdatedPieceDescriptionInput | Piece
   scope: Entity! # reference // Piece
   input: UpdatedPieceDescriptionInput! # data
   modification: Modification! # computed
   piece: Piece! # data
 }
 
-type MovedPieceInput {
-  # MovedPieceInput
+type MovedPieceInput implements Input {
+  # Node
+  id: ID! # computed // hash
+  # Entity
+  hash: String! # cached
+  owner: Entity # reference // MovedPiece
+  owns: EntityConnection # reference
+  # Input
+  # Arguments
   position: Position! # data
 }
 
@@ -5074,15 +5319,22 @@ type MovedPiece implements Operation {
   id: ID! # data // uuidv7
   hash: String! # cached
   owner: Entity # reference // Edit
-  owns: EntityConnection # reference // Piece
+  owns: EntityConnection # reference // MovedPieceInput | Piece
   scope: Entity! # reference // Design | Piece
   input: MovedPieceInput! # data
   modification: Modification! # computed
   piece: Piece! # data
 }
 
-type MovedPiecesInput {
-  # MovedPiecesInput
+type MovedPiecesInput implements Input {
+  # Node
+  id: ID! # computed // hash
+  # Entity
+  hash: String! # cached
+  owner: Entity # reference // MovedPieces
+  owns: EntityConnection # reference
+  # Input
+  # Arguments
   offset: Offset! # data
 }
 
@@ -5091,16 +5343,11 @@ type MovedPieces implements Operation {
   id: ID! # data // uuidv7
   hash: String! # cached
   owner: Entity # reference // Edit
-  owns: EntityConnection # reference // Piece
+  owns: EntityConnection # reference // MovedPiecesInput | Piece
   scope: Entity! # reference // Design | Piece
   input: MovedPiecesInput! # data
   modification: Modification! # computed
   pieces: PieceConnection! # data
-}
-
-type FixedPiecesInput {
-  # FixedPiecesInput
-  hasInput: Boolean! # computed // false when all operation data is carried by scope
 }
 
 type FixedPieces implements Operation {
@@ -5110,13 +5357,19 @@ type FixedPieces implements Operation {
   owner: Entity # reference // Edit
   owns: EntityConnection # reference // Piece
   scope: Entity! # reference // Design | Piece
-  input: FixedPiecesInput! # data
   modification: Modification! # computed
   pieces: PieceConnection! # data
 }
 
-type ChangedPieceToTypeInput {
-  # ChangedPieceToTypeInput
+type ChangedPieceToTypeInput implements Input {
+  # Node
+  id: ID! # computed // hash
+  # Entity
+  hash: String! # cached
+  owner: Entity # reference // ChangedPieceToType
+  owns: EntityConnection # reference
+  # Input
+  # Arguments
   blueprintId: ID! # data
 }
 
@@ -5125,15 +5378,22 @@ type ChangedPieceToType implements Operation {
   id: ID! # data // uuidv7
   hash: String! # cached
   owner: Entity # reference // Edit
-  owns: EntityConnection # reference // Piece
+  owns: EntityConnection # reference // ChangedPieceToTypeInput | Piece
   scope: Entity! # reference // Piece
   input: ChangedPieceToTypeInput! # data
   modification: Modification! # computed
   piece: Piece! # data
 }
 
-type ChangedPiecesToTypeInput {
-  # ChangedPiecesToTypeInput
+type ChangedPiecesToTypeInput implements Input {
+  # Node
+  id: ID! # computed // hash
+  # Entity
+  hash: String! # cached
+  owner: Entity # reference // ChangedPiecesToType
+  owns: EntityConnection # reference
+  # Input
+  # Arguments
   blueprintId: ID! # data
 }
 
@@ -5142,15 +5402,22 @@ type ChangedPiecesToType implements Operation {
   id: ID! # data // uuidv7
   hash: String! # cached
   owner: Entity # reference // Edit
-  owns: EntityConnection # reference // Piece
+  owns: EntityConnection # reference // ChangedPiecesToTypeInput | Piece
   scope: Entity! # reference // Piece
   input: ChangedPiecesToTypeInput! # data
   modification: Modification! # computed
   pieces: PieceConnection! # data
 }
 
-type AddedAttributeToPieceInput {
-  # AddedAttributeToPieceInput
+type AddedAttributeToPieceInput implements Input {
+  # Node
+  id: ID! # computed // hash
+  # Entity
+  hash: String! # cached
+  owner: Entity # reference // AddedAttributeToPiece
+  owns: EntityConnection # reference
+  # Input
+  # Arguments
   attribute: Attribute! # data
 }
 
@@ -5159,7 +5426,7 @@ type AddedAttributeToPiece implements Operation {
   id: ID! # data // uuidv7
   hash: String! # cached
   owner: Entity # reference // Edit
-  owns: EntityConnection # reference // Attribute
+  owns: EntityConnection # reference // AddedAttributeToPieceInput | Attribute
   scope: Entity! # reference // Piece
   input: AddedAttributeToPieceInput! # data
   modification: Modification! # computed
@@ -5167,8 +5434,15 @@ type AddedAttributeToPiece implements Operation {
   attribute: Attribute! # data
 }
 
-type AddedAttributesToPieceInput {
-  # AddedAttributesToPieceInput
+type AddedAttributesToPieceInput implements Input {
+  # Node
+  id: ID! # computed // hash
+  # Entity
+  hash: String! # cached
+  owner: Entity # reference // AddedAttributesToPiece
+  owns: EntityConnection # reference
+  # Input
+  # Arguments
   attributes: AttributeConnection! # data
 }
 
@@ -5177,17 +5451,12 @@ type AddedAttributesToPiece implements Operation {
   id: ID! # data // uuidv7
   hash: String! # cached
   owner: Entity # reference // Edit
-  owns: EntityConnection # reference // Attribute
+  owns: EntityConnection # reference // AddedAttributesToPieceInput | Attribute
   scope: Entity! # reference // Piece
   input: AddedAttributesToPieceInput! # data
   modification: Modification! # computed
   piece: Piece! # data
   attributes: AttributeConnection! # data
-}
-
-type RemovedAttributeFromPieceInput {
-  # RemovedAttributeFromPieceInput
-  hasInput: Boolean! # computed // false when all operation data is carried by scope
 }
 
 type RemovedAttributeFromPiece implements Operation {
@@ -5197,14 +5466,8 @@ type RemovedAttributeFromPiece implements Operation {
   owner: Entity # reference // Edit
   owns: EntityConnection # reference
   scope: Entity! # reference // Piece | Attribute
-  input: RemovedAttributeFromPieceInput! # data
   modification: Modification! # computed
   piece: Piece! # data
-}
-
-type RemovedAttributesFromPieceInput {
-  # RemovedAttributesFromPieceInput
-  hasInput: Boolean! # computed // false when all operation data is carried by scope
 }
 
 type RemovedAttributesFromPiece implements Operation {
@@ -5214,14 +5477,8 @@ type RemovedAttributesFromPiece implements Operation {
   owner: Entity # reference // Edit
   owns: EntityConnection # reference
   scope: Entity! # reference // Piece | Attribute
-  input: RemovedAttributesFromPieceInput! # data
   modification: Modification! # computed
   piece: Piece! # data
-}
-
-type DeletedPieceInput {
-  # DeletedPieceInput
-  hasInput: Boolean! # computed // false when all operation data is carried by scope
 }
 
 type DeletedPiece implements Operation {
@@ -5231,13 +5488,7 @@ type DeletedPiece implements Operation {
   owner: Entity # reference // Edit
   owns: EntityConnection # reference
   scope: Entity! # reference // Design | Piece
-  input: DeletedPieceInput! # data
   modification: Modification! # computed
-}
-
-type DeletedPiecesInput {
-  # DeletedPiecesInput
-  hasInput: Boolean! # computed // false when all operation data is carried by scope
 }
 
 type DeletedPieces implements Operation {
@@ -5247,13 +5498,7 @@ type DeletedPieces implements Operation {
   owner: Entity # reference // Edit
   owns: EntityConnection # reference
   scope: Entity! # reference // Design | Piece
-  input: DeletedPiecesInput! # data
   modification: Modification! # computed
-}
-
-type DeletedPiecesAndConnectionsInput {
-  # DeletedPiecesAndConnectionsInput
-  hasInput: Boolean! # computed // false when all operation data is carried by scope
 }
 
 type DeletedPiecesAndConnections implements Operation {
@@ -5263,7 +5508,6 @@ type DeletedPiecesAndConnections implements Operation {
   owner: Entity # reference // Edit
   owns: EntityConnection # reference
   scope: Entity! # reference // Design | Piece | Connection
-  input: DeletedPiecesAndConnectionsInput! # data
   modification: Modification! # computed
 }
 
@@ -5583,8 +5827,15 @@ type DesignModificationsConnection implements EntityConnection {
 
 #region Operations
 
-type CreatedDesignInput {
-  # CreatedDesignInput
+type CreatedDesignInput implements Input {
+  # Node
+  id: ID! # computed // hash
+  # Entity
+  hash: String! # cached
+  owner: Entity # reference // CreatedDesign
+  owns: EntityConnection # reference
+  # Input
+  # Arguments
   design: Design! # data
 }
 
@@ -5593,15 +5844,22 @@ type CreatedDesign implements Operation {
   id: ID! # data // uuidv7
   hash: String! # cached
   owner: Entity # reference // Edit
-  owns: EntityConnection # reference // Design
+  owns: EntityConnection # reference // CreatedDesignInput | Design
   scope: Entity! # reference // Entity
   input: CreatedDesignInput! # data
   modification: Modification! # computed
   design: Design! # data
 }
 
-type CreatedDesignsInput {
-  # CreatedDesignsInput
+type CreatedDesignsInput implements Input {
+  # Node
+  id: ID! # computed // hash
+  # Entity
+  hash: String! # cached
+  owner: Entity # reference // CreatedDesigns
+  owns: EntityConnection # reference
+  # Input
+  # Arguments
   designs: DesignConnection! # data
 }
 
@@ -5610,16 +5868,11 @@ type CreatedDesigns implements Operation {
   id: ID! # data // uuidv7
   hash: String! # cached
   owner: Entity # reference // Edit
-  owns: EntityConnection # reference // Design
+  owns: EntityConnection # reference // CreatedDesignsInput | Design
   scope: Entity! # reference // Entity
   input: CreatedDesignsInput! # data
   modification: Modification! # computed
   designs: DesignConnection! # data
-}
-
-type DeletedDesignInput {
-  # DeletedDesignInput
-  hasInput: Boolean! # computed // false when all operation data is carried by scope
 }
 
 type DeletedDesign implements Operation {
@@ -5629,13 +5882,7 @@ type DeletedDesign implements Operation {
   owner: Entity # reference // Edit
   owns: EntityConnection # reference
   scope: Entity! # reference // Design
-  input: DeletedDesignInput! # data
   modification: Modification! # computed
-}
-
-type DeletedDesignsInput {
-  # DeletedDesignsInput
-  hasInput: Boolean! # computed // false when all operation data is carried by scope
 }
 
 type DeletedDesigns implements Operation {
@@ -5645,13 +5892,7 @@ type DeletedDesigns implements Operation {
   owner: Entity # reference // Edit
   owns: EntityConnection # reference
   scope: Entity! # reference // Design
-  input: DeletedDesignsInput! # data
   modification: Modification! # computed
-}
-
-type FlattenedDesignInput {
-  # FlattenedDesignInput
-  hasInput: Boolean! # computed // false when all operation data is carried by scope
 }
 
 type FlattenedDesign implements Operation {
@@ -5661,13 +5902,19 @@ type FlattenedDesign implements Operation {
   owner: Entity # reference // Edit
   owns: EntityConnection # reference // Design
   scope: Entity! # reference // Design
-  input: FlattenedDesignInput! # data
   modification: Modification! # computed
   design: Design! # data
 }
 
-type AddedAttributeToDesignInput {
-  # AddedAttributeToDesignInput
+type AddedAttributeToDesignInput implements Input {
+  # Node
+  id: ID! # computed // hash
+  # Entity
+  hash: String! # cached
+  owner: Entity # reference // AddedAttributeToDesign
+  owns: EntityConnection # reference
+  # Input
+  # Arguments
   attribute: Attribute! # data
 }
 
@@ -5676,7 +5923,7 @@ type AddedAttributeToDesign implements Operation {
   id: ID! # data // uuidv7
   hash: String! # cached
   owner: Entity # reference // Edit
-  owns: EntityConnection # reference // Attribute
+  owns: EntityConnection # reference // AddedAttributeToDesignInput | Attribute
   scope: Entity! # reference // Design
   input: AddedAttributeToDesignInput! # data
   modification: Modification! # computed
@@ -5684,8 +5931,15 @@ type AddedAttributeToDesign implements Operation {
   attribute: Attribute! # data
 }
 
-type AddedAttributesToDesignInput {
-  # AddedAttributesToDesignInput
+type AddedAttributesToDesignInput implements Input {
+  # Node
+  id: ID! # computed // hash
+  # Entity
+  hash: String! # cached
+  owner: Entity # reference // AddedAttributesToDesign
+  owns: EntityConnection # reference
+  # Input
+  # Arguments
   attributes: AttributeConnection! # data
 }
 
@@ -5694,17 +5948,12 @@ type AddedAttributesToDesign implements Operation {
   id: ID! # data // uuidv7
   hash: String! # cached
   owner: Entity # reference // Edit
-  owns: EntityConnection # reference // Attribute
+  owns: EntityConnection # reference // AddedAttributesToDesignInput | Attribute
   scope: Entity! # reference // Design
   input: AddedAttributesToDesignInput! # data
   modification: Modification! # computed
   design: Design! # data
   attributes: AttributeConnection! # data
-}
-
-type RemovedAttributeFromDesignInput {
-  # RemovedAttributeFromDesignInput
-  hasInput: Boolean! # computed // false when all operation data is carried by scope
 }
 
 type RemovedAttributeFromDesign implements Operation {
@@ -5714,14 +5963,8 @@ type RemovedAttributeFromDesign implements Operation {
   owner: Entity # reference // Edit
   owns: EntityConnection # reference
   scope: Entity! # reference // Design | Attribute
-  input: RemovedAttributeFromDesignInput! # data
   modification: Modification! # computed
   design: Design! # data
-}
-
-type RemovedAttributesFromDesignInput {
-  # RemovedAttributesFromDesignInput
-  hasInput: Boolean! # computed // false when all operation data is carried by scope
 }
 
 type RemovedAttributesFromDesign implements Operation {
@@ -5731,7 +5974,6 @@ type RemovedAttributesFromDesign implements Operation {
   owner: Entity # reference // Edit
   owns: EntityConnection # reference
   scope: Entity! # reference // Design | Attribute
-  input: RemovedAttributesFromDesignInput! # data
   modification: Modification! # computed
   design: Design! # data
 }
@@ -5895,8 +6137,15 @@ type KitModificationsConnection implements EntityConnection {
 
 #region Operations
 
-type RenamedKitInput {
-  # RenamedKitInput
+type RenamedKitInput implements Input {
+  # Node
+  id: ID! # computed // hash
+  # Entity
+  hash: String! # cached
+  owner: Entity # reference // RenamedKit
+  owns: EntityConnection # reference
+  # Input
+  # Arguments
   name: String!
 }
 
@@ -5905,15 +6154,22 @@ type RenamedKit implements Operation {
   id: ID! # data // uuidv7
   hash: String! # cached
   owner: Entity # reference // Edit
-  owns: EntityConnection # reference // Kit
+  owns: EntityConnection # reference // RenamedKitInput | Kit
   scope: Entity! # reference // Kit
   input: RenamedKitInput! # data
   modification: Modification! # computed
   kit: Kit! # data
 }
 
-type ChangedDescriptionInput {
-  # ChangedDescriptionInput
+type ChangedDescriptionInput implements Input {
+  # Node
+  id: ID! # computed // hash
+  # Entity
+  hash: String! # cached
+  owner: Entity # reference // ChangedDescription
+  owns: EntityConnection # reference
+  # Input
+  # Arguments
   description: String!
 }
 
