@@ -2,45 +2,48 @@
 name: field-only kit reads refactor
 overview: Collapse `semio/js/index.ts` to only export entity classes (`Kit`, `Design`, `Type`, `Piece`, `Connection`, `Author`, `Quality`, ...); merge `Kit` and `KitStore` into one `Kit` class. Every class is CQRS event-sourced over the GraphQL schema in `semio/rs/lib.rs` (`Query` / `Mutation` / `Subscription`). Each field exposes three methods (`field()` async query, `fieldSync()` cached, `on<Event>(cb)` subscription), with stable object identity in the cache so React `useSyncExternalStore` works. Commands map 1:1 to the scoped command inputs in `semio/graphql/target.schema.graphql`. In `semio/react/index.tsx` keep the bulk/list/aggregate/metadata/shallow hooks and the named entity-identity selectors (`useKit`, `useDesign`, `useType`, `usePiece`, `useConnection`, `useAuthor`, `useQuality`); delete every other "general" hook. Sketchpad uses only per-field hooks.
 todos:
-  - id: ticket
-    content: Open / reopen the field-only kit reads ticket via repo MCP and keep temp artifacts inside it
-    status: pending
-  - id: js-transport
-    content: In semio/js/index.ts add a single GqlTransport (Query/Mutation/Subscription over worker/HTTP) plus an EventBus that fans the unified `subscription { event }` JSON stream into typed per-entity channels keyed by entity kind + id + field
-    status: pending
-  - id: js-base
-    content: Add an internal Entity base with the field-cache machinery (stable object identity for object-typed fields, dirty/version tracking, getSnapshot per field key) and the on<Event>(cb) routing
-    status: pending
-  - id: js-classes
-    content: Reshape Kit (merged with KitStore), Design, Type, Port, Connector, Piece, PiecesOps, Connection, Author, Quality, Tag, Concept, Family, File, Folder, Layer, Group, Stat, Prop, Attribute, Representation, Plane, Coordinate, Point, Vector, Camera, Side, Benchmark, Position, Place, Location into CQRS classes; per field expose field()/fieldSync()/on<Event>(); per leaf in *OperationInput expose a 1:1 command method (kit.createDesign, design.addFixedPiece, design.piece(id).fix, design.pieces(ids).drag, type.createPort, type.port(id).rename, type.addConnector, etc.); navigation methods (kit.design(id), kit.type(id), design.piece(id), design.pieces(ids), type.port(id), type.connector(id)) return cached child class instances
-    status: pending
-  - id: js-deletes
-    content: Delete from semio/js/index.ts every non-class export — KitStore (merged), all *Schema/zod, all *Dto / *MetadataDto / *Shallow types, KitFullDto, KitHostStore + InMemoryKitStore + JsonFileKitStore + FolderKitStore + applyKitClientSnapshotToLocalStore, all Read*Command types, SemioKitLiveReadStore + KitDesignReadStore + KitShallowListStore + KitViewCatalogStore, kitStoreClientAdd/Update/Remove* free functions, submitKitChangeCommands, buildSchemaEntityChangeCommands, writeKitStoreClientSchemaField, KitChangeKind / KitChangeSemanticKindGql, kitChangeSemanticKindToGraphQl, KitJson* helpers, kit-store.worker.ts JSON DTO plumbing
-    status: pending
-  - id: react-rewire
-    content: Rename every *Scope* symbol to *Context* (KitContext, DesignContext, TypeContext, PortContext, ConnectorContext, PieceContext, ConnectionContext, AuthorContext, QualityContext, TagContext, ConceptContext, useKitContext/...); make useKit/useDesign/useType/usePiece/useConnection/useAuthor/useQuality return the class instances with resolution = `idValue` arg first, then the matching context
-    status: pending
-  - id: react-field-hooks
-    content: Rewrite every per-field hook (usePieceName / usePiecePlane / usePieceFlatPlane / usePieceFlatCenter / usePieceCenter / usePieceScale / useTypeName / useDesignName / useConnectionGap / ...) to compose useDesign().piece(id) (or useKit().type(id), useType().port(id), etc.) and bind the resulting class field via useSyncExternalStore (subscribe = entity.on<Event>(cb), getSnapshot = entity.fieldSync())
-    status: pending
-  - id: react-deletes
-    content: Delete public exports from semio/react/index.tsx for whole-object triads, generic schema readers, snapshot accessors, *Input / *PatchInput whole-object hooks, useResolved* helpers, and whole-snapshot file/binary helpers; demote required helpers to non-exported internals
-    status: pending
-  - id: missing-field-hooks
-    content: Add any missing per-field hooks sketchpad needs (e.g. useDesignPieceIds, useTypeRepresentationIds, useTypePortIds, useConnectionGap), each a thin wrapper over the relevant class field
-    status: pending
-  - id: sketchpad-migrate
-    content: Replace all 64 banned-hook usages in semio/sketchpad/index.tsx (useKit/useDesign/useType/usePiece/useConnection/useAuthor/useQuality + bulk hooks + deleted hooks) with per-field hook compositions; fan out into per-id child components
-    status: pending
-  - id: tests
-    content: Update inline vitest blocks in semio/js/index.ts and semio/react/index.tsx for the new class shape; add an inline negative-grep test in semio/sketchpad/index.tsx asserting zero matches for the banned hooks
-    status: pending
-  - id: validate
-    content: Run npm run depcruise:layers, typecheck for semio/js + semio/react + semio/sketchpad, run inline tests, manual sketchpad smoke
-    status: pending
-  - id: close
-    content: Close the ticket with summary listing every file touched
-    status: pending
+ - id: ticket
+   content: Open / reopen the field-only kit reads ticket via repo MCP and keep temp artifacts inside it
+   status: pending
+ - id: js-transport
+   content: In semio/js/index.ts add a single GqlTransport (Query/Mutation/Subscription over worker/HTTP) plus an EventBus that fans the unified `subscription { event }` JSON stream into typed per-entity channels keyed by entity kind + id + field
+   status: pending
+ - id: js-base
+   content: Add an internal Entity base with the field-cache machinery (stable object identity for object-typed fields, dirty/version tracking, getSnapshot per field key) and the on<Event>(cb) routing
+   status: pending
+ - id: js-classes
+   content: Reshape Kit (merged with KitStore), Design, Type, Port, Connector, Piece, PiecesOps, Connection, Author, Quality, Tag, Concept, Family, File, Folder, Layer, Group, Stat, Prop, Attribute, Representation, Plane, Coordinate, Point, Vector, Camera, Side, Benchmark, Position, Place, Location into CQRS classes; per field expose field()/fieldSync()/on<Event>(); per leaf in *OperationInput expose a 1:1 command method (kit.createDesign, design.addFixedPiece, design.piece(id).fix, design.pieces(ids).drag, type.createPort, type.port(id).rename, type.addConnector, etc.); navigation methods (kit.design(id), kit.type(id), design.piece(id), design.pieces(ids), type.port(id), type.connector(id)) return cached child class instances
+   status: pending
+ - id: js-deletes
+   content: Delete from semio/js/index.ts every non-class export — KitStore (merged), all *Schema/zod, all *Dto / *MetadataDto / *Shallow types, KitFullDto, KitHostStore + InMemoryKitStore + JsonFileKitStore + FolderKitStore + applyKitClientSnapshotToLocalStore, all Read*Command types, SemioKitLiveReadStore + KitDesignReadStore + KitShallowListStore + KitViewCatalogStore, kitStoreClientAdd/Update/Remove* free functions, submitKitChangeCommands, buildSchemaEntityChangeCommands, writeKitStoreClientSchemaField, KitChangeKind / KitChangeSemanticKindGql, kitChangeSemanticKindToGraphQl, KitJson* helpers, kit-store.worker.ts JSON DTO plumbing
+   status: pending
+ - id: react-rewire
+   content: Rename every *Scope* symbol to *Context* (KitContext, DesignContext, TypeContext, PortContext, ConnectorContext, PieceContext, ConnectionContext, AuthorContext, QualityContext, TagContext, ConceptContext, useKitContext/...); make useKit/useDesign/useType/usePiece/useConnection/useAuthor/useQuality return the class instances with resolution = `id` arg first, then the matching context
+   status: pending
+ - id: react-field-hooks
+   content: Rewrite every per-field read hook (usePieceName / usePiecePlane / usePieceFlatPlane / usePieceFlatCenter / usePieceCenter / usePieceScale / useTypeName / useDesignName / useConnectionGap / ...) to compose useDesign().piece(id) (or useKit().type(id), useType().port(id), etc.) and bind the resulting class field via useSyncExternalStore (subscribe = entity.on<Event>(cb), getSnapshot = entity.fieldSync()). Each read hook returns the value directly (T | undefined) — no setter, no tuple, no status, no KitFieldBinding.
+   status: pending
+ - id: react-op-hooks
+   content: Add one operation hook per leaf in *OperationInput from target.schema.graphql (useDragPiece, useFixPiece, useRenamePiece, useMovePiece, useChangePieceBlueprint, useAddFixedPiece, useDeletePiece, useDeletePieces, useFlattenDesign, useCreateType, useCreatePort, useAddConnector, useStartNewChange, useSaveUnsavedChange, useCreateCheckpoint, useStartAlternative, useIntegrateAlternative, etc.). Each returns a single function bound to the resolved class instance.
+   status: pending
+ - id: react-deletes
+   content: Delete public exports from semio/react/index.tsx for KitFieldBinding/HookRead/WriteStatus wrappers, whole-object triads, generic schema readers, snapshot accessors, *Input / *PatchInput whole-object hooks, useResolved* helpers, useUndo/useRedo/useChange/useCommandBuilder/useWriteIndicator/useWriteQueue/useOptimistic/usePendingTriad, and whole-snapshot file/binary helpers; demote required helpers to non-exported internals
+   status: pending
+ - id: missing-field-hooks
+   content: Add any missing per-field hooks sketchpad needs (e.g. useDesignPieceIds, useTypeRepresentationIds, useTypePortIds, useConnectionGap), each a thin wrapper over the relevant class field
+   status: pending
+ - id: sketchpad-migrate
+   content: Replace all 64 banned-hook usages in semio/sketchpad/index.tsx (useKit/useDesign/useType/usePiece/useConnection/useAuthor/useQuality + bulk hooks + deleted hooks) with per-field hook compositions; fan out into per-id child components
+   status: pending
+ - id: tests
+   content: Update inline vitest blocks in semio/js/index.ts and semio/react/index.tsx for the new class shape; add an inline negative-grep test in semio/sketchpad/index.tsx asserting zero matches for the banned hooks
+   status: pending
+ - id: validate
+   content: Run npm run depcruise:layers, typecheck for semio/js + semio/react + semio/sketchpad, run inline tests, manual sketchpad smoke
+   status: pending
+ - id: close
+   content: Close the ticket with summary listing every file touched
+   status: pending
 isProject: false
 ---
 
@@ -97,42 +100,83 @@ Each class has three things, all driven by [semio/graphql/target.schema.graphql]
    - `fieldSync(): T | undefined` — synchronous read from the in-class cache. For object-typed fields (`Plane`, `Coordinate`, `Position`, `Side`, …) the cache holds the same instance reference until the field changes, so React `useSyncExternalStore.getSnapshot` returns a stable reference and skips rerenders.
    - `on<Event>(cb: (next: T) => void): Unsubscribe` — subscribe to the routed event channel. Event names follow the schema's Edit/Modification union (`onRenamed`, `onDescriptionChanged`, `onMoved`, `onDragged`, `onFixed`, `onFlattened`, `onPlaneChanged`, `onCenterChanged`, `onAttributeAdded`, `onAttributeRemoved`, `onPieceAdded`, `onPieceDeleted`, `onConnectionAdded`, `onConnectionDeleted`, `onPortCreated`, `onPortDeleted`, `onConnectorAdded`, `onConnectorRemoved`, `onTagCreated`, `onTagDeleted`, `onConceptCreated`, `onConceptDeleted`, `onQualityCreated`, `onQualityDeleted`, `onTypeCreated`, `onTypeDeleted`, `onDesignCreated`, `onDesignDeleted`, `onCheckpointCreated`, …).
 
-2. **Operations** — one method per leaf command in the matching `*OperationInput` from §`#region Commands`. Method signatures mirror the schema (same names, same args, same nullability). Returns `Promise<SetResult>` whose `ok` payload includes the operation `ID!`.
+2. **Operations** — two methods per leaf command in the matching `*OperationInput` from §`#region Commands`. Method signatures mirror the schema (same names, same args, same nullability):
+   - `op(...args): Promise<SetResult>` — async. Sends the GraphQL `mutation { session { ... } }` and resolves once the server confirms; the resulting `ID!` is in `ok.id`. Cache and `on<Event>` subscribers are updated when the matching subscription event arrives.
+   - `opSync(...args): SetResult` — sync. Applies the operation optimistically to the in-class cache *immediately*, fires the matching `on<Event>` callbacks synchronously, returns the locally-derived `SetResult` (with the optimistic `id`), and dispatches the GraphQL mutation in the background. If the server later rejects (or returns a conflicting state), the reconciliation comes through the unified subscription stream and rolls the cache back; errors surface via `useSetErrors` (and via the rejected `Promise` of an internal background dispatch tracked by `Kit`).
 
 3. **Navigation methods** — for command-input fields that nest into another scoped command input, the class returns the matching child class instance (lazy, cached by id). E.g. `design.piece(id) → Piece`, `design.pieces(ids) → PiecesOps`, `kit.type(id) → Type`, `type.port(id) → Port`, `type.connector(id) → Connector`, etc.
 
 ```ts
 class Piece {
-  constructor(transport: GqlTransport, bus: EventBus, id: string) { /* ... */ }
-  get id(): string;
-  // reads (one of each set per Piece field in target.schema.graphql)
-  name(): Promise<string>;             nameSync(): string | undefined;             onRenamed(cb): Unsubscribe;
-  description(): Promise<string>;      descriptionSync(): string | undefined;      onDescriptionChanged(cb): Unsubscribe;
-  position(): Promise<Position>;       positionSync(): Position | undefined;        onPositionChanged(cb): Unsubscribe;
-  plane(): Promise<Plane>;             planeSync(): Plane | undefined;             onPlaneChanged(cb): Unsubscribe;
-  center(): Promise<Coordinate>;       centerSync(): Coordinate | undefined;       onCenterChanged(cb): Unsubscribe;
-  scale(): Promise<number>;            scaleSync(): number | undefined;            onScaleChanged(cb): Unsubscribe;
-  blueprint(): Promise<Type | Design>; blueprintSync(): Type | Design | undefined; onBlueprintChanged(cb): Unsubscribe;
-  flatPosition(): Promise<Position>;   flatPositionSync(): Position | undefined;   onFlatPositionChanged(cb): Unsubscribe;
-  flatPlane(): Promise<Plane>;         flatPlaneSync(): Plane | undefined;         onFlatPlaneChanged(cb): Unsubscribe;
-  flatCenter(): Promise<Coordinate>;   flatCenterSync(): Coordinate | undefined;   onFlatCenterChanged(cb): Unsubscribe;
-  parentPiece(): Promise<Piece | undefined>; parentPieceSync(): Piece | undefined;  onParentPieceChanged(cb): Unsubscribe;
-  parentConnection(): Promise<Connection | undefined>; parentConnectionSync(): Connection | undefined; onParentConnectionChanged(cb): Unsubscribe;
-  childPieces(): Promise<readonly Piece[]>; childPiecesSync(): readonly Piece[] | undefined; onChildPiecesChanged(cb): Unsubscribe;
-  childConnections(): Promise<readonly Connection[]>; childConnectionsSync(): readonly Connection[] | undefined; onChildConnectionsChanged(cb): Unsubscribe;
-  depth(): Promise<number>;            depthSync(): number | undefined;            onDepthChanged(cb): Unsubscribe;
-  connectionKind(): Promise<PieceConnectionKind | undefined>; connectionKindSync(): PieceConnectionKind | undefined; onConnectionKindChanged(cb): Unsubscribe;
-  attributes(): Promise<readonly Attribute[]>; attributesSync(): readonly Attribute[] | undefined; onAttributesChanged(cb): Unsubscribe;
-  // operations — 1:1 with PieceOperationInput
-  rename(newName: string): Promise<SetResult>;
+ constructor(transport: GqlTransport, bus: EventBus, id: string) {
+  /* ... */
+ }
+ get id(): string;
+ // reads (one of each set per Piece field in target.schema.graphql)
+ name(): Promise<string>;
+ nameSync(): string | undefined;
+ onRenamed(cb): Unsubscribe;
+ description(): Promise<string>;
+ descriptionSync(): string | undefined;
+ onDescriptionChanged(cb): Unsubscribe;
+ position(): Promise<Position>;
+ positionSync(): Position | undefined;
+ onPositionChanged(cb): Unsubscribe;
+ plane(): Promise<Plane>;
+ planeSync(): Plane | undefined;
+ onPlaneChanged(cb): Unsubscribe;
+ center(): Promise<Coordinate>;
+ centerSync(): Coordinate | undefined;
+ onCenterChanged(cb): Unsubscribe;
+ scale(): Promise<number>;
+ scaleSync(): number | undefined;
+ onScaleChanged(cb): Unsubscribe;
+ blueprint(): Promise<Type | Design>;
+ blueprintSync(): Type | Design | undefined;
+ onBlueprintChanged(cb): Unsubscribe;
+ flatPosition(): Promise<Position>;
+ flatPositionSync(): Position | undefined;
+ onFlatPositionChanged(cb): Unsubscribe;
+ flatPlane(): Promise<Plane>;
+ flatPlaneSync(): Plane | undefined;
+ onFlatPlaneChanged(cb): Unsubscribe;
+ flatCenter(): Promise<Coordinate>;
+ flatCenterSync(): Coordinate | undefined;
+ onFlatCenterChanged(cb): Unsubscribe;
+ parentPiece(): Promise<Piece | undefined>;
+ parentPieceSync(): Piece | undefined;
+ onParentPieceChanged(cb): Unsubscribe;
+ parentConnection(): Promise<Connection | undefined>;
+ parentConnectionSync(): Connection | undefined;
+ onParentConnectionChanged(cb): Unsubscribe;
+ childPieces(): Promise<readonly Piece[]>;
+ childPiecesSync(): readonly Piece[] | undefined;
+ onChildPiecesChanged(cb): Unsubscribe;
+ childConnections(): Promise<readonly Connection[]>;
+ childConnectionsSync(): readonly Connection[] | undefined;
+ onChildConnectionsChanged(cb): Unsubscribe;
+ depth(): Promise<number>;
+ depthSync(): number | undefined;
+ onDepthChanged(cb): Unsubscribe;
+ connectionKind(): Promise<PieceConnectionKind | undefined>;
+ connectionKindSync(): PieceConnectionKind | undefined;
+ onConnectionKindChanged(cb): Unsubscribe;
+ attributes(): Promise<readonly Attribute[]>;
+ attributesSync(): readonly Attribute[] | undefined;
+ onAttributesChanged(cb): Unsubscribe;
+  // operations — 1:1 with PieceOperationInput; each leaf has an async op + a sync op
+  rename(newName: string): Promise<SetResult>;             renameSync(newName: string): SetResult;
   changeDescription(newDescription: string): Promise<SetResult>;
-  drag(offset: OffsetInput): Promise<SetResult>;
-  move(position: PositionInput): Promise<SetResult>;
-  fix(): Promise<SetResult>;
-  changeBlueprint(blueprintId: string): Promise<SetResult>;
+                                                            changeDescriptionSync(newDescription: string): SetResult;
+  drag(offset: OffsetInput): Promise<SetResult>;            dragSync(offset: OffsetInput): SetResult;
+  move(position: PositionInput): Promise<SetResult>;        moveSync(position: PositionInput): SetResult;
+  fix(): Promise<SetResult>;                                fixSync(): SetResult;
+  changeBlueprint(blueprintId: string): Promise<SetResult>; changeBlueprintSync(blueprintId: string): SetResult;
   addAttribute(key: string, value: string, definition: string): Promise<SetResult>;
-  removeAttribute(id: string): Promise<SetResult>;
+                                                            addAttributeSync(key: string, value: string, definition: string): SetResult;
+  removeAttribute(id: string): Promise<SetResult>;          removeAttributeSync(id: string): SetResult;
   removeAttributes(ids: readonly string[]): Promise<SetResult>;
+                                                            removeAttributesSync(ids: readonly string[]): SetResult;
 }
 ```
 
@@ -153,6 +197,7 @@ The full operation surface per class (mirrors [semio/graphql/target.schema.graph
 Every command method translates to one `mutation { session { ... } }` GraphQL request. The session/version/change scoping (`session.theKit.unsavedChange(activeChangeId).kit.<…>`, or `session.alternative(…)`, or `session.theKit.…` for save / checkpoint flows) is encapsulated by `Kit`; child classes hold a reference to their owning `Kit` and route their own command through it.
 
 The transport speaks only GraphQL:
+
 - Reads: a single `GqlTransport.query(doc, vars)` per field method (typed `Query` selection with the right `node(id)` lookup).
 - Subscriptions: one persistent `subscription { event }` per `Kit` instance; the `EventBus` deserializes each `Json` event, looks up its kind + entity id + field affinity, and pushes typed values into all registered channels.
 - Commands: one `mutation { session { ... } }` per command; the resulting `ID!` is stored locally as the active change id when needed.
@@ -180,20 +225,26 @@ The `kit-store.worker.ts` worker is rewritten to host only the GraphQL transport
 
 ## 4. `semio/react/index.tsx` shape
 
+### Strict separation of reads and writes
+
+- **Reads** are pure plain-data hooks. `use<Entity><Field>(id?)` returns just the value (`T | undefined`). No tuple, no setter, no status, no `KitFieldBinding`, no `HookRead`. If the entity / kit / field is not yet resolved the hook returns `undefined`.
+- **Writes** are operation hooks. `use<Operation><Entity>(id?)` returns a single function bound to that entity instance and that operation. The function takes the operation arguments and returns `Promise<SetResult>`. There is no read fallback embedded; callers compose a read hook and a write hook independently.
+- The kit can only be modified through these operation hooks. Operation hooks map 1:1 to leaves of the `*OperationInput` types in [semio/graphql/target.schema.graphql](semio/graphql/target.schema.graphql).
+
 ### Resolution rules (every hook)
 
-- Every read / mutation hook accepts a single optional argument `idValue?: string`. When `idValue` is omitted the hook reads the matching context (`KitContext`, `DesignContext`, `TypeContext`, `PortContext`, `ConnectorContext`, `PieceContext`, `ConnectionContext`, `AuthorContext`, `QualityContext`, `TagContext`, `ConceptContext`, …). When `idValue` is provided it wins over the context.
+- Every read / write hook accepts a single optional argument `id?: string`. When `id` is omitted the hook reads the matching context (`KitContext`, `DesignContext`, `TypeContext`, `PortContext`, `ConnectorContext`, `PieceContext`, `ConnectionContext`, `AuthorContext`, `QualityContext`, `TagContext`, `ConceptContext`, …). When `id` is provided it wins over the context.
 - There are no `useResolved*` helpers. Resolution is the explicit composition `useKit()` → `kit.<child>(id)`, `useDesign()` → `design.<child>(id)`, `useType()` → `type.<child>(id)`, `useDesign().piece(id)` → `Piece`, `useDesign().connection(id)` → `Connection`, `useType().port(id)` → `Port`, `useType().connector(id)` → `Connector`, etc. Inside the per-field hook body the chain is written out.
 - The entity-identity selectors return the class instance from §2, never a DTO. Their union signatures are:
 
   ```ts
   export function useKit(): Kit | null;
-  export function useDesign(idValue?: string): Design | null;       // useKit().design(id ?? useDesignContext()?.id)
-  export function useType(idValue?: string): Type | null;           // useKit().type(id ?? useTypeContext()?.id)
-  export function usePiece(idValue?: string): Piece | null;         // useDesign().piece(id ?? usePieceContext()?.id)
-  export function useConnection(idValue?: string): Connection | null; // useDesign().connection(id ?? useConnectionContext()?.id)
-  export function useAuthor(idValue?: string): Author | null;       // useKit().author(id ?? useAuthorContext()?.id)
-  export function useQuality(idValue?: string): Quality | null;     // useKit().quality(id ?? useQualityContext()?.id)
+  export function useDesign(id?: string): Design | null; // useKit().design(id ?? useDesignContext()?.id)
+  export function useType(id?: string): Type | null; // useKit().type(id ?? useTypeContext()?.id)
+  export function usePiece(id?: string): Piece | null; // useDesign().piece(id ?? usePieceContext()?.id)
+  export function useConnection(id?: string): Connection | null; // useDesign().connection(id ?? useConnectionContext()?.id)
+  export function useAuthor(id?: string): Author | null; // useKit().author(id ?? useAuthorContext()?.id)
+  export function useQuality(id?: string): Quality | null; // useKit().quality(id ?? useQualityContext()?.id)
   ```
 
   `Connection`, `Author`, `Quality` get matching navigation methods on `Design` / `Kit` (`design.connection(id)`, `kit.author(id)`, `kit.quality(id)`) so the chain composes cleanly.
@@ -204,97 +255,220 @@ All `*Scope*` symbols are renamed to `*Context*` across the public API:
 
 - Components: `KitScope` → `KitContext`, `DesignScope` → `DesignContext`, `TypeScope` → `TypeContext`, `PortScope` → `PortContext`, `ConnectorScope` → `ConnectorContext`, `PieceScope` → `PieceContext`, `ConnectionScope` → `ConnectionContext`, `AuthorScope` → `AuthorContext`, `QualityScope` → `QualityContext`, `TagScope` → `TagContext`, `ConceptScope` → `ConceptContext`. Each is a JSX provider component used as `<PieceContext id="p1">…</PieceContext>` (writing `<PieceContext id>` shorthand for `<PieceContext id={id}>`).
 - React contexts: `PieceScopeContext` → `PieceContext` (the React.Context object), and the same for every other entity. The provider component shares the entity's context name.
-- Hooks: `useKitScope` → `useKitContext`, `useDesignScope` → `useDesignContext`, `useTypeScope` → `useTypeContext`, `usePortScope` → `usePortContext`, `useConnectorScope` → `useConnectorContext`, `usePieceScope` → `usePieceContext`, `useConnectionScope` → `useConnectionContext`, `useAuthorScope` → `useAuthorContext`, `useQualityScope` → `useQualityContext`, `useTagScope` → `useTagContext`, `useConceptScope` → `useConceptContext`. The `useIs*Scope` helpers go away (a context check is a one-liner inside callers); equivalently rename to `useIsIn*Context` only if a sketchpad call site needs them.
+- Hooks: `useKitScope` → `useKitContext`, `useDesignScope` → `useDesignContext`, `useTypeScope` → `useTypeContext`, `usePortScope` → `usePortContext`, `useConnectorScope` → `useConnectorContext`, `usePieceScope` → `usePieceContext`, `useConnectionScope` → `useConnectionContext`, `useAuthorScope` → `useAuthorContext`, `useQualityScope` → `useQualityContext`, `useTagScope` → `useTagContext`, `useConceptScope` → `useConceptContext`. The `useIs*Scope` helpers go away.
 - Other "scope" symbols are renamed too: `KitWriteScope` → `KitWriteContext`, `SchemaScope` → deleted (per §"Generic schema readers"), `useResolvedKitIdentifier` keeps its name (no "scope" in it).
 
-### Per-field hook pattern
+### Context usage
 
-Every `use<Entity><Field>(idValue?: string)` walks the same chain and binds the field through `useSyncExternalStore`. Sample implementations (this is the *only* pattern used):
+Every entity has a JSX provider component that puts an id into the matching React context. Hooks omit their `id` argument to bind to the context. Providers nest naturally.
+
+```tsx
+// Bind the whole tree to a Kit instance
+<KitContext kit={kit}>
+ // Bind to a specific design; useDesignName() reads from this provider
+ <DesignContext id={designId}>
+  <DesignNameLabel /> {/* uses useDesignName() */}
+  <DesignPieceList /> {/* uses useDesignPieceIds() then maps to <PieceContext id={...}> */}
+  <DesignControls /> {/* uses useFlattenDesign() / useAddFixedPiece() */}
+ </DesignContext>
+</KitContext>;
+
+function DesignNameLabel() {
+ const name = useDesignName(); // omits id → reads DesignContext
+ return <span>{name ?? "…"}</span>;
+}
+
+function DesignPieceList() {
+ const pieceIds = useDesignPieceIds(); // omits id → reads DesignContext
+ if (!pieceIds) return null;
+ return (
+  <>
+   {pieceIds.map((id) => (
+    <PieceContext id={id} key={id}>
+     <PieceCard /> {/* uses usePieceName(), usePiecePlane(), etc. */}
+    </PieceContext>
+   ))}
+  </>
+ );
+}
+
+function PieceCard() {
+ // All four hooks omit the id and pick it up from PieceContext
+ const name = usePieceName();
+ const center = usePieceFlatCenter();
+ const plane = usePiecePlane();
+ const dragPiece = useDragPiece(); // op hook, also bound to PieceContext id
+ const fixPiece = useFixPiece();
+ return (
+  <Card title={name}>
+   <Plane plane={plane} />
+   <Coord center={center} />
+   <button onClick={() => fixPiece()}>Fix</button>
+   <DragHandle onDrag={(offset) => dragPiece(offset)} />
+  </Card>
+ );
+}
+```
+
+The `id` argument always wins over the surrounding context, so a single provider tree can read sibling entities by passing ids explicitly:
+
+```tsx
+function PieceCompare({ otherId }: { otherId: string }) {
+ // Reads piece center from PieceContext (current piece)
+ const myCenter = usePieceFlatCenter();
+ // Reads piece center for a *different* piece without changing the provider
+ const otherCenter = usePieceFlatCenter(otherId);
+ return <Compare a={myCenter} b={otherCenter} />;
+}
+```
+
+Composed entity contexts mirror the schema's nesting. A connector inspector binds to a `Type` and a specific `Connector`:
+
+```tsx
+<TypeContext id={typeId}>
+ <ConnectorContext id={connectorId}>
+  <ConnectorRow /> {/* uses useConnectorCode(), useConnectorIcon(), useRenameConnector() */}
+ </ConnectorContext>
+</TypeContext>;
+
+function ConnectorRow() {
+ const code = useConnectorCode();
+ const description = useConnectorDescription();
+ const icon = useConnectorIcon();
+ const renameConnector = useRenameConnector();
+ return <Row code={code} description={description} icon={icon} onRename={renameConnector} />;
+}
+```
+
+A connection editor binds inside the design and reads its own fields:
+
+```tsx
+<DesignContext id={designId}>
+ <ConnectionContext id={connectionId}>
+  <ConnectionEditor />
+ </ConnectionContext>
+</DesignContext>;
+
+function ConnectionEditor() {
+ const gap = useConnectionGap();
+ const shift = useConnectionShift();
+ const rotation = useConnectionRotation();
+ const setGap = useSetConnectionGap(); // operation hook bound to ConnectionContext id
+ return <Editor gap={gap} shift={shift} rotation={rotation} onGap={setGap} />;
+}
+```
+
+Operation hooks called outside any provider must take an explicit `id` (otherwise they no-op and the returned function reports a `Readonly` error). Reading the `Kit` instance is always available through `useKit()` and through the parent `KitContext` provider used at app boot.
+
+### Read hook pattern
+
+`use<Entity><Field>(id?: string)` returns `T | undefined`. Body:
 
 ```ts
-export function usePieceName(idValue?: string): KitFieldBinding<string> {
-  const design = useDesign();
-  const id = idValue ?? React.useContext(PieceContext)?.id;
-  const piece = design && id ? design.piece(id) : null;
-  const subscribe = React.useCallback(
-    (cb: () => void) => piece?.onRenamed(() => cb()) ?? noop,
-    [piece],
-  );
-  const getSnap = React.useCallback(() => piece?.nameSync(), [piece]);
-  const value = React.useSyncExternalStore(subscribe, getSnap, getSnap);
-  const run = React.useCallback(
-    async (next: string) =>
-      piece ? piece.rename(next) : ({ ok: false, error: { kind: "Readonly", message: "no piece" } } as const),
-    [piece],
-  );
-  return [value, run, piece ? WRITE_STATUS_IDLE : WRITE_STATUS_READONLY] as const;
+export function usePieceName(id?: string): string | undefined {
+ const design = useDesign();
+ const id = id ?? React.useContext(PieceContext)?.id;
+ const piece = design && id ? design.piece(id) : null;
+ const subscribe = React.useCallback((cb: () => void) => piece?.onRenamed(() => cb()) ?? noop, [piece]);
+ const getSnap = React.useCallback(() => piece?.nameSync(), [piece]);
+ return React.useSyncExternalStore(subscribe, getSnap, getSnap);
 }
 
-export function usePiecePlane(idValue?: string): KitFieldBinding<Plane> {
-  const design = useDesign();
-  const id = idValue ?? React.useContext(PieceContext)?.id;
-  const piece = design && id ? design.piece(id) : null;
-  const subscribe = React.useCallback(
-    (cb: () => void) => piece?.onPlaneChanged(() => cb()) ?? noop,
-    [piece],
-  );
-  const getSnap = React.useCallback(() => piece?.planeSync(), [piece]); // stable Plane reference until the event fires
-  const value = React.useSyncExternalStore(subscribe, getSnap, getSnap);
-  const run = React.useCallback(
-    async (next: PlaneInput) =>
-      piece ? piece.move({ plane: next, center: piece.centerSync() ?? { u: 0, v: 0 } }) : ({ ok: false, error: { kind: "Readonly", message: "no piece" } } as const),
-    [piece],
-  );
-  return [value, run, piece ? WRITE_STATUS_IDLE : WRITE_STATUS_READONLY] as const;
+export function usePiecePlane(id?: string): Plane | undefined {
+ const design = useDesign();
+ const id = id ?? React.useContext(PieceContext)?.id;
+ const piece = design && id ? design.piece(id) : null;
+ const subscribe = React.useCallback((cb: () => void) => piece?.onPlaneChanged(() => cb()) ?? noop, [piece]);
+ // planeSync() returns the same Plane reference until onPlaneChanged fires
+ const getSnap = React.useCallback(() => piece?.planeSync(), [piece]);
+ return React.useSyncExternalStore(subscribe, getSnap, getSnap);
 }
 
-export function usePieceFlatPlane(idValue?: string): HookRead<Plane> {
-  const design = useDesign();
-  const id = idValue ?? React.useContext(PieceContext)?.id;
-  const piece = design && id ? design.piece(id) : null;
-  const subscribe = React.useCallback(
-    (cb: () => void) => piece?.onFlatPlaneChanged(() => cb()) ?? noop,
-    [piece],
-  );
-  const getSnap = React.useCallback(() => piece?.flatPlaneSync(), [piece]);
-  const value = React.useSyncExternalStore(subscribe, getSnap, getSnap);
-  return [value, piece ? WRITE_STATUS_IDLE : WRITE_STATUS_READONLY] as const;
+export function usePieceFlatPlane(id?: string): Plane | undefined {
+ const design = useDesign();
+ const id = id ?? React.useContext(PieceContext)?.id;
+ const piece = design && id ? design.piece(id) : null;
+ const subscribe = React.useCallback((cb: () => void) => piece?.onFlatPlaneChanged(() => cb()) ?? noop, [piece]);
+ const getSnap = React.useCallback(() => piece?.flatPlaneSync(), [piece]);
+ return React.useSyncExternalStore(subscribe, getSnap, getSnap);
 }
 
-export function usePieceFlatCenter(idValue?: string): HookRead<Coordinate> {
-  const design = useDesign();
-  const id = idValue ?? React.useContext(PieceContext)?.id;
-  const piece = design && id ? design.piece(id) : null;
-  const subscribe = React.useCallback(
-    (cb: () => void) => piece?.onFlatCenterChanged(() => cb()) ?? noop,
-    [piece],
-  );
-  const getSnap = React.useCallback(() => piece?.flatCenterSync(), [piece]);
-  const value = React.useSyncExternalStore(subscribe, getSnap, getSnap);
-  return [value, piece ? WRITE_STATUS_IDLE : WRITE_STATUS_READONLY] as const;
+export function usePieceFlatCenter(id?: string): Coordinate | undefined {
+ const design = useDesign();
+ const id = id ?? React.useContext(PieceContext)?.id;
+ const piece = design && id ? design.piece(id) : null;
+ const subscribe = React.useCallback((cb: () => void) => piece?.onFlatCenterChanged(() => cb()) ?? noop, [piece]);
+ const getSnap = React.useCallback(() => piece?.flatCenterSync(), [piece]);
+ return React.useSyncExternalStore(subscribe, getSnap, getSnap);
 }
 ```
 
 Hooks for `Type` fields use `useKit()` → `kit.type(id ?? useTypeContext()?.id)`. Hooks for `Port` fields use `useType().port(id ?? usePortContext()?.id)`. Hooks for `Connector` fields use `useType().connector(id ?? useConnectorContext()?.id)`. Hooks for `Connection` fields use `useDesign().connection(id ?? useConnectionContext()?.id)`. Hooks for `Author` / `Quality` / `Tag` / `Concept` fields use `useKit().author(id ?? useAuthorContext()?.id)` / `kit.quality(id ?? useQualityContext()?.id)` / `kit.tag(id ?? useTagContext()?.id)` / `kit.concept(id ?? useConceptContext()?.id)`.
 
+### Operation hook pattern
+
+`use<Operation><Entity>(id?: string)` returns a function that performs that operation against the resolved class instance. Body:
+
+```ts
+export function useDragPiece(id?: string): (offset: OffsetInput) => Promise<SetResult> {
+ const design = useDesign();
+ const id = id ?? React.useContext(PieceContext)?.id;
+ const piece = design && id ? design.piece(id) : null;
+ return React.useCallback(async (offset: OffsetInput) => (piece ? piece.drag(offset) : ({ ok: false, error: { kind: "Readonly", message: "no piece" } } as const)), [piece]);
+}
+
+export function useFixPiece(id?: string): () => Promise<SetResult> {
+ const design = useDesign();
+ const id = id ?? React.useContext(PieceContext)?.id;
+ const piece = design && id ? design.piece(id) : null;
+ return React.useCallback(async () => (piece ? piece.fix() : ({ ok: false, error: { kind: "Readonly", message: "no piece" } } as const)), [piece]);
+}
+
+export function useRenamePiece(id?: string): (newName: string) => Promise<SetResult> {
+ const design = useDesign();
+ const id = id ?? React.useContext(PieceContext)?.id;
+ const piece = design && id ? design.piece(id) : null;
+ return React.useCallback(async (newName: string) => (piece ? piece.rename(newName) : ({ ok: false, error: { kind: "Readonly", message: "no piece" } } as const)), [piece]);
+}
+```
+
+### Operation hook surface (1:1 with [target.schema.graphql](semio/graphql/target.schema.graphql))
+
+- **`KitOperationInput`** → `useRenameKit`, `useChangeKitDescription`, `useCreateTag`, `useDeleteTag`, `useDeleteTags`, `useCreateConcept`, `useDeleteConcept`, `useDeleteConcepts`, `useCreateQuality`, `useDeleteQuality`, `useDeleteQualities`, `useCreateType`, `useDeleteType`, `useDeleteTypes`, `useCreateDesign`, `useDeleteDesign`, `useDeleteDesigns`.
+- **`VersionCommandInput` / `UnsavedChangeCommandInput`** → `useStartNewChange`, `useSaveUnsavedChange`, `useCreateCheckpoint`, `useSaveVersion`.
+- **`SessionCommandInput` / `AlternativeCommandInput`** → `useStartSession`, `useEndSession`, `useLogin`, `useLogout`, `useStartAlternative`, `useIntegrateAlternative`.
+- **`Mutation` root extras** → `useHydrateKitStoreBundleJson`.
+- **`DesignOperationInput`** → `useRenameDesign`, `useChangeDesignDescription`, `useFlattenDesign`, `useAddDesignAttribute`, `useRemoveDesignAttribute`, `useRemoveDesignAttributes`, `useAddFixedPiece`, `useAddChildPieceWithParentConnection`, `useAddHangingChildPieceWithParentConnection`, `useDeletePiece`, `useDeletePieces`, `useDeletePiecesAndConnections`.
+- **`PieceOperationInput`** → `useRenamePiece`, `useChangePieceDescription`, `useDragPiece`, `useMovePiece`, `useFixPiece`, `useChangePieceBlueprint`, `useAddPieceAttribute`, `useRemovePieceAttribute`, `useRemovePieceAttributes`.
+- **`PiecesOperationInput`** (batch on `design.pieces(ids)`) → `useDragPieces`, `useMovePieces`, `useFixPieces`, `useChangePiecesBlueprint`. Each takes `(ids: readonly string[], …args)`.
+- **`TypeOperationInput`** → `useRenameType`, `useChangeTypeDescription`, `useChangeTypeIcon`, `useAddTypeAttribute`, `useRemoveTypeAttribute`, `useRemoveTypeAttributes`, `useCreatePort`, `useDeletePort`, `useDeletePorts`, `useAddConnector`, `useRemoveConnector`, `useRemoveConnectors`.
+- **`PortOperationInput`** → `useRenamePort`, `useChangePortDescription`, `useChangePortIcon`, `useAddPortAttribute`, `useRemovePortAttribute`, `useRemovePortAttributes`.
+- **`ConnectorOperationInput`** → `useRenameConnector`, `useChangeConnectorDescription`, `useChangeConnectorIcon`.
+- **`TagOperationInput`** → `useRenameTag`, `useChangeTagDescription`, `useChangeTagIcon`, `useAddTagAttribute`, `useRemoveTagAttribute`, `useRemoveTagAttributes`.
+- **`ConceptOperationInput`** → `useRenameConcept`, `useChangeConceptDescription`, `useChangeConceptIcon`, `useAddConceptAttribute`, `useRemoveConceptAttribute`, `useRemoveConceptAttributes`.
+- **`QualityOperationInput`** → `useRenameQuality`, `useChangeQualityDescription`, `useChangeQualityIcon`, `useAddQualityAttribute`, `useRemoveQualityAttribute`, `useRemoveQualityAttributes`.
+
 ### Kept exports
 
 - Entity-identity selectors (return class instances): `useKit`, `useDesign`, `useType`, `usePiece`, `useConnection`, `useAuthor`, `useQuality` (plus the `*ById` aliases).
-- Bulk / list / aggregate / metadata / shallow hooks: `useTypes`, `useDesigns`, `usePieces`, `useConnections`, `useAuthors`, `useTypesIds`, `useDesignsIds`, `useTypesMetadata`, `useDesignsMetadata`, `useTypesFull`, `useDesignsFull`, `useFilesFull`, `useTagsFull`, `useKitDesignsShallow`, `useKitTypesShallow`, `useKitAuthorsShallow`, `useKitPieces`, `useKitConnections`, `usePiecesMetadataMap`, `usePieceMetadata`, `useIncludedDesigns`, `useDesignClusterableGroups`, `useDesignQualitySum`, `useTypeBestRepresentation`, `useKitColoredConnectors`, `useReplacableTypes`, `useReplacableDesigns`, `useExplodeableDesignNodes`, `useOpenKitGuids`, `useActiveKitGuid`, `useOpenKitShallows`, `useRegistryHasKit`, `useRegistryKitPersistenceKind`, `useKitAlternatives`, `useKitAlternativeSelection`. Each is a thin composition of a list-id field hook plus per-id reads, all on top of the class instances (e.g. `useTypes` = `useKit()` + `kit.typeIdsSync()` + per-id `kit.type(id)` mapping).
-- Per-field hooks following the pattern above.
-- Context components + context hooks: `KitContext`, `DesignContext`, `TypeContext`, `PortContext`, `ConnectorContext`, `PieceContext`, `ConnectionContext`, `AuthorContext`, `QualityContext`, `TagContext`, `ConceptContext`, plus their `use*Context` accessors and `useResolvedKitIdentifier`. The user wrote `<PieceContext id>` — that is exactly this component.
-- Command hooks (`useUndo`, `useRedo`, `useDeletePiece`, `useUpdatePiece`, `useFlattenDesign`, …) — each implemented as a thin wrapper that calls a class method on the resolved entity instance.
-- Backbone hooks (`useBackboneStatus`, `useAttachBackbone`, `useDetachBackbone`, `useListConflicts`, `useResolveConflict`, `useSyncNow`) — each calls the matching `Kit` method.
-- Diagnostics: `useWriteIndicator`, `useWriteQueue`, `useSchemaEvents`, `useSetErrors`, `useKitSync`, `useOptimistic`, `usePendingTriad`.
+- Bulk / list / aggregate / metadata / shallow hooks: `useTypes`, `useDesigns`, `usePieces`, `useConnections`, `useAuthors`, `useTypesIds`, `useDesignsIds`, `useTypesMetadata`, `useDesignsMetadata`, `useTypesFull`, `useDesignsFull`, `useFilesFull`, `useTagsFull`, `useKitDesignsShallow`, `useKitTypesShallow`, `useKitAuthorsShallow`, `useKitPieces`, `useKitConnections`, `usePiecesMetadataMap`, `usePieceMetadata`, `useIncludedDesigns`, `useDesignClusterableGroups`, `useDesignQualitySum`, `useTypeBestRepresentation`, `useKitColoredConnectors`, `useReplacableTypes`, `useReplacableDesigns`, `useExplodeableDesignNodes`, `useOpenKitGuids`, `useActiveKitGuid`, `useOpenKitShallows`, `useRegistryHasKit`, `useRegistryKitPersistenceKind`, `useKitAlternatives`, `useKitAlternativeSelection`. Each returns plain data (lists or scalars) — no tuple wrapping. Implementations compose list-id field hooks plus per-id reads, all on top of the class instances (e.g. `useTypesIds(): readonly string[] | undefined`, `useTypes(): readonly Type[] | undefined`).
+- Per-field read hooks (above) and per-operation write hooks (above).
+- Context components + context hooks: `KitContext`, `DesignContext`, `TypeContext`, `PortContext`, `ConnectorContext`, `PieceContext`, `ConnectionContext`, `AuthorContext`, `QualityContext`, `TagContext`, `ConceptContext`, plus their `use*Context` accessors and `useResolvedKitIdentifier`.
+- Backbone read hooks return plain data (`useBackboneStatus(): BackboneStatusDto | undefined`, `useListConflicts(): readonly KitConflict[] | undefined`); backbone operations follow the operation hook pattern (`useAttachBackbone(): (cfg: BackboneConfig) => Promise<SetResult>`, `useDetachBackbone(): () => Promise<SetResult>`, `useResolveConflict(): (id: string, strategy: ConflictResolution) => Promise<SetResult>`, `useSyncNow(): () => Promise<SetResult>`).
+- Diagnostics: `useSchemaEvents(filter?)`, `useSetErrors(filter?)`, `useKitSync(): { status, lastError } | undefined`. `useWriteIndicator`, `useWriteQueue`, `useOptimistic`, `usePendingTriad` are deleted (they belong to the old `KitFieldBinding` pending model).
 
 ### Deleted exports
 
+- All `KitFieldBinding`, `HookRead`, `WriteStatus`, `WRITE_STATUS_IDLE`, `WRITE_STATUS_READONLY`, `WRITE_STATUS_PENDING`, `writeStatusEquivalent` types and helpers — reads return data directly, writes return functions.
+- Old combined "`run + status`" hooks: `useUndo`, `useRedo`, `useDeselectAll`, `useDeleteSelected`, `usePasteDesignSelection`, `useStartNewChange`/`useSaveChange`/`useUnsavedChanges`/`useStartAlternative`/`useIntegrateAlternative` legacy shapes (replaced by the operation hooks above which return plain functions). `useChange`, `useCommandBuilder` are deleted (no `CommandBuilder` in `@semio/js`).
+- Old per-entity `useCreate*`/`useDelete*`/`useUpdate*` legacy hooks (replaced by operation hooks above).
+- `useWriteIndicator`, `useWriteQueue`, `useOptimistic`, `usePendingTriad`.
 - Whole-object triads: `usePieceTriad`, `useDesignTriad`, `useTypeTriad`, `useAuthorTriad`, `useQualityTriad`, `useConnectionTriad`.
-- Whole-object accessors: `useFolder`, `useFile`, `useTag`, `useConcept`, `useFamily`, `useGroup`, `usePort`, `useProp`, `useStat`, `useBenchmark`, `useCoordinate`, `usePoint`, `useVector`, `usePlane`, `useCamera`, `useAttribute`, `useLocation`, `useRepresentation`, `useConnector`, `useActor`, `useUser`, `useAgent`, `useSessionActorInput`, every `*Input` and `*PatchInput` whole-object hook (their per-field versions remain).
-- Snapshot exports: `useKitSnapshot`, `useKitStoreSnapshot`, `useKitHostStore`, `useKitStore`, `useSemioStoreSelector`, `useSemioReadSnap`, `useSemioKitScopedView`. `useKitStoreClient` is removed entirely — the worker handle is now `Kit`; consumers call `useKit()`.
-- Generic schema readers: `useSchemaObjectState`, `useSchemaObjectMutation`, `useSchemaObjectValue`, `useSchemaFieldValue`, `useSchemaFieldMutation`, `useSchemaFieldState`, `useSchemaScope`, `useKitRuntimeSafe`, `useKitRegistry`, `useKitRegistrySafe`. The `IndexedSchemaState` / `resolveReference` / `readSchemaFieldValue` / `KitRuntimeContext` machinery is deleted (the new runtime context simply carries a `Kit` instance).
-- Helper hooks that pre-resolved an entity from selectors: any `useResolved<Entity>` (e.g. `useResolvedPiece`, `useResolvedDesign`) — the per-field hooks now spell out `useDesign().piece(id)` etc. directly.
-- Whole-snapshot file/binary helpers: `useKitFileBlobUrl`, `useKitStoredFileUrls`, `useFileUrls`, `useKitFileState`, `useKitPersistenceKind`, `useKitPersistenceSource`, `useKitBinary`, `useEmbedKitFile`, `useKitFileUrl`. Re-introduce later as field hooks if a use case appears.
+- Whole-object accessors: `useFolder`, `useFile`, `useTag`, `useConcept`, `useFamily`, `useGroup`, `usePort`, `useProp`, `useStat`, `useBenchmark`, `useCoordinate`, `usePoint`, `useVector`, `usePlane`, `useCamera`, `useAttribute`, `useLocation`, `useRepresentation`, `useConnector`, `useActor`, `useUser`, `useAgent`, `useSessionActorInput`, every `*Input` and `*PatchInput` whole-object hook.
+- Snapshot exports: `useKitSnapshot`, `useKitStoreSnapshot`, `useKitHostStore`, `useKitStore`, `useSemioStoreSelector`, `useSemioReadSnap`, `useSemioKitScopedView`. `useKitStoreClient` is removed entirely.
+- Generic schema readers: `useSchemaObjectState`, `useSchemaObjectMutation`, `useSchemaObjectValue`, `useSchemaFieldValue`, `useSchemaFieldMutation`, `useSchemaFieldState`, `useSchemaScope`, `useKitRuntimeSafe`, `useKitRegistry`, `useKitRegistrySafe`. The `IndexedSchemaState` / `resolveReference` / `readSchemaFieldValue` / `KitRuntimeContext` machinery is deleted.
+- `useResolved<Entity>` helpers.
+- Whole-snapshot file/binary helpers: `useKitFileBlobUrl`, `useKitStoredFileUrls`, `useFileUrls`, `useKitFileState`, `useKitPersistenceKind`, `useKitPersistenceSource`, `useKitBinary`, `useEmbedKitFile`, `useKitFileUrl`.
 - Re-exports of deleted js symbols (`asKitInstance`, `Kit`-class static helpers, `KitEntityStore`, `*Store` legacy aliases, `KitFileState`, …).
 
 ## 5. Sketchpad migration ([semio/sketchpad/index.tsx](semio/sketchpad/index.tsx))
@@ -306,14 +480,15 @@ Sketchpad must compile without importing any of:
 - any deleted hook from §4,
 - any entity class as a runtime read carrier (`Piece`, `Design`, `Type`, `Connection`, `Author`, `Quality`, `Kit`).
 
-Per call site (64 currently identified by `\b(useKit|useDesign|useType|usePiece|useConnection|useAuthor|useQuality)\b`), inspect what fields the JSX actually reads and replace with explicit per-field hooks:
+Per call site (64 currently identified by `\b(useKit|useDesign|useType|usePiece|useConnection|useAuthor|useQuality)\b`), inspect what fields the JSX actually reads and what mutations it performs, then replace with explicit per-field read hooks and per-operation write hooks. Reads and writes are spelled out independently (no tuple shape):
 
-- `const piece = usePiece() as Piece` → `const id = usePieceScope()?.id; const [name] = usePieceName(id); const [plane] = usePiecePlane(id); …`
-- `const type = useType(undefined, undefined, true) as Type` → `useTypeName(typeId)` + `useTypeRepresentationIds(typeId)` (then per-representation field hooks) + `useTypePortIds(typeId)` (then per-port field hooks).
+- `const piece = usePiece() as Piece` (read-only JSX) → `const { id } = usePieceContext() ?? {}; const name = usePieceName(id); const plane = usePiecePlane(id); const center = usePieceCenter(id); …`
+- A drag handler that called `piece.drag(offset)` → `const dragPiece = useDragPiece(id); … onDrag={offset => dragPiece(offset)}`. A rename input → `const renamePiece = useRenamePiece(id); … onCommit={name => renamePiece(name)}`.
+- `const type = useType(undefined, undefined, true) as Type` → `useTypeName(typeId)` + `useTypeRepresentationIds(typeId)` (then per-representation field hooks) + `useTypePortIds(typeId)` (then per-port field hooks). Mutations like `type.createPort(...)` become `useCreatePort(typeId)(...)`.
 - `const connection = useConnection() as Connection` → `useConnectionConnectedPieceId(id)`, `useConnectionConnectingPieceId(id)`, `useConnectionGap(id)`, `useConnectionShift(id)`, `useConnectionRise(id)`, `useConnectionRotation(id)`, `useConnectionTurn(id)`, `useConnectionTilt(id)`, …
-- `const design = useDesign() as Design` → `useDesignName(designId)`, `useDesignPieceIds(designId)`, then iterate ids and render child components reading per-piece fields.
+- `const design = useDesign() as Design` → `useDesignName(designId)`, `useDesignPieceIds(designId)`, then iterate ids and render child components reading per-piece fields. Mutations like `design.deletePiece(id)` become `useDeletePiece(designId)(pieceId)`.
 
-Where a list of children is needed, sketchpad calls a per-entity list-id field hook (e.g. `useDesignPieceIds(designId)` returning `readonly string[]`) and renders one child component per id. Bulk hooks like `useTypes` stay in the API but sketchpad does not call them.
+Where a list of children is needed, sketchpad calls a per-entity list-id field hook (e.g. `useDesignPieceIds(designId)` returning `readonly string[] | undefined`) and renders one child component per id. Bulk hooks like `useTypes` stay in the API but sketchpad does not call them.
 
 Missing per-field hooks that sketchpad needs are added to [semio/react/index.tsx](semio/react/index.tsx) following the pattern in §4 (one method on the matching class, one hook in react). Likely additions: `useDesignPieceIds`, `useDesignConnectionIds`, `useTypeRepresentationIds`, `useTypePortIds`, `useTypeConnectorIds`, `useConnectionConnectedPieceId`, `useConnectionConnectingPieceId`, `useKitTypeIds`, `useKitDesignIds`, `useKitAuthorIds`, `useKitQualityIds`.
 
@@ -333,6 +508,6 @@ Missing per-field hooks that sketchpad needs are added to [semio/react/index.tsx
 - Open ticket (slug `field-only-kit-reads-cqrs-classes`) under the existing kit-data SSOT goal via the repo MCP; place all temporary scripts in its folder.
 - Delegate three hour-scale subagents in parallel:
   - **A** ([semio/js/index.ts](semio/js/index.ts) + [semio/js/kit-store.worker.ts](semio/js/kit-store.worker.ts)): introduce `GqlTransport` + `EventBus` + Entity base, reshape every entity class into the CQRS pattern (3 read methods per field, command methods 1:1 with the schema's scoped command inputs), merge `KitStore` into `Kit`, delete every non-class export listed in §3.
-  - **B** ([semio/react/index.tsx](semio/react/index.tsx)): rewire the kept bulk + identity hooks onto the new classes, rewrite per-field hooks to bind class fields through `useSyncExternalStore`, delete the public symbols listed in §4, add the missing field hooks listed in §5.
+  - **B** ([semio/react/index.tsx](semio/react/index.tsx)): rewire the kept bulk + identity hooks onto the new classes, rewrite per-field read hooks (returning `T | undefined`) to bind class fields through `useSyncExternalStore`, add per-operation write hooks (each returning a single bound function), delete the public symbols listed in §4 (including `KitFieldBinding`/`HookRead`/`WriteStatus`), add the missing field hooks listed in §5.
   - **C** ([semio/sketchpad/index.tsx](semio/sketchpad/index.tsx)): rewrite all 64 banned-hook usages with per-field hook compositions, fan out to per-id child components, and add the negative-grep inline test.
 - Coordinator (this agent) integrates, runs typecheck / depcruise / tests, fixes fallout, closes the ticket with a per-file summary.
