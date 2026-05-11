@@ -6,28 +6,34 @@ todos:
     content: Read `repo://goals`, open ticket via repo MCP `ticket_open` titled 'Macro-Driven Entity Family Refactor' under the closest goal.
     status: pending
   - id: phase1-macros
-    content: Carve `//#region 🧬 entity_dsl` in [semio/rs/lib.rs](semio/rs/lib.rs); add `entity_family!`, `operation_family!`, `entity_interface!`, `relay_collection!` macros and SDL fragment registry; make `gql::sdl()` real (concat fragments + executable schema SDL).
+    content: Carve `//#region 🧬 entity_dsl` in [semio/rs/lib.rs](semio/rs/lib.rs); add `entity_family!`, `operation_family!`, `command_nav!`, `entity_input!`, `entity_owner_unions!`, `entity_interface_enums!`, `relay_collection!`, `kit_operation_enum!`, `scope_enum!`, `input_enum!`, `register_entities!`, `register_operations!` plus all `__*` helpers from blueprints §1-§14; rewrite `gql::sdl()` as real code-first concat; delete the legacy `simple_conn_*` / `entity_full_family!` / `entity_relay!` / `entity_diffs!` / `entity_owner!` macros.
     status: pending
   - id: phase2a-geom
-    content: Convert geometry entities (Vector/Point/Coordinate/Offset/Plane/Position/Location/Place) to `entity_family!` invocations; remove hand-written *Node Object impls in `iface` mod.
+    content: Convert geometry entities (Vector/Point/Coordinate/Offset/Plane/Position/Location/Place) to `entity_family!` + `entity_input!`; delete hand-written `*Node` structs and the iface-mod `#[Object]` impls (`6273:6457:semio/rs/lib.rs`).
     status: pending
   - id: phase2b-meta
-    content: Convert meta entities (Attribute/Author/File/Folder/Prop/Benchmark/Quality/Tag/Concept/Stat/Layer/Group/Family) to `entity_family!`; collapse `Tag`/`Concept`/`Quality` Object impls (~200 lines each).
+    content: Convert meta entities (Attribute/Author/File/Folder/Prop/Benchmark/Quality/Tag/Concept/Stat/Layer/Group/Family) to `entity_family!` + `entity_input!`; collapse all `compute_entity_hash` impls and the long `#[Object]` shells for `Tag`/`Concept`/`Quality`.
     status: pending
   - id: phase3-kit
-    content: Convert kit-graph entities (Type/Port/Connector/Representation/Design/Piece/Side/Connection/Clump/Kit) to `entity_family!`.
+    content: Convert kit-graph entities (Type/Port/Connector/Representation/Design/Piece/Side/Connection/Clump/Kit) to `entity_family!` + `entity_input!`.
     status: pending
-  - id: phase4-vcs-ops
-    content: Convert VCS entities (Edit/Change/Checkpoint/TheKit/Alternative/Graph/Session/Conflict) and ALL operation types (CreatedDesign, RenamedKit, MovedPiece, AddedAttributeToX, RemovedAttributeFromX, Deleted*, etc.) to `entity_family!` / `operation_family!`.
+  - id: phase4-vcs
+    content: Convert VCS entities (Edit/Change/Checkpoint/TheKit/Alternative/Graph/Session/Conflict) to `entity_family!`.
     status: pending
-  - id: phase5-schema-fixes
-    content: Apply schema fixes via macro inputs (delete duplicate Clump/TheKit pairs, fill missing operation ladders for Stat/Layer/Group/Connection/Kit/Representation, fill ClumpDiff/Modification ladder, fix `Modifications.owns` comments, normalize operation `input` field, add `FixedPiecesInput`, fill `ConnectionDiff` body); regenerate [semio/graphql/target.schema.graphql](semio/graphql/target.schema.graphql) via `cargo test export_semio_graphql_schema_file -- --ignored`.
+  - id: phase5-operations
+    content: Apply `kit_operation_enum!` / `scope_enum!` / `input_enum!` to derive the central `KitOperation`/`OperationKind`/`OperationIface`/`Scope`/`Input` enums; convert every operation (CreatedDesign, RenamedKit, MovedPiece/MovedPieces, AddedAttributeTo*, RemovedAttributeFrom*, Deleted*, FixedPiece/FixedPieces, FlattenedDesign, AddedChildPieceWithParentConnection*, …) to `operation_family!` blocks; replace the hand-written per-op `apply_to(kit)` skeletons with the unified arm-per-variant pattern.
     status: pending
-  - id: phase6-test-sweep
-    content: Run full `cargo test`; fix any field-name/resolver regressions; verify `schema_matches_target_graphql_file` passes against the regenerated golden; verify WASM build (`cargo check --target wasm32-unknown-unknown`).
+  - id: phase6-command-navs
+    content: Replace every `*OperationNav` struct + `#[Object]` block (`9499:9700:semio/rs/lib.rs` and `Tag`/`Concept`/`Quality`/`Type`/`Port`/`Connector`/`Design`/`Piece`/`Pieces` navs) with `command_nav!` invocations.
+    status: pending
+  - id: phase7-schema-fixes
+    content: Apply schema fixes via macro inputs (delete duplicate Clump/TheKit pairs, fill missing operation ladders for Stat/Layer/Group/Connection/Kit/Representation, fill ClumpDiff/Modification ladder, normalize `Modifications.owns` comment, always emit `input: Input`, add `FixedPiecesInput`, fill `ConnectionDiff` body); regenerate [semio/graphql/target.schema.graphql](semio/graphql/target.schema.graphql) via `cargo test export_semio_graphql_schema_file -- --ignored`.
+    status: pending
+  - id: phase8-test-sweep
+    content: Run full `cargo test` (37 tests); fix any field-name/resolver regressions; verify `schema_matches_target_graphql_file` passes the real round-trip; verify WASM build (`cargo check --target wasm32-unknown-unknown`); run guardrail greps to confirm no hand-rolled Edge/Connection/Default/compute_*hash blocks survive outside the `entity_dsl` region.
     status: pending
   - id: ticket-close
-    content: Close ticket with `ticket_close` summarizing changed files and net LOC delta.
+    content: Close ticket with `ticket_close` summarizing changed files and net LOC delta (~−3,000 lines in lib.rs, schema fully derived).
     status: pending
 isProject: false
 ---
@@ -43,21 +49,42 @@ isProject: false
 
 ```mermaid
 flowchart TD
-    DSL["entity_family!(X { fields, owners, hash_kind })"] --> Types["X struct + Object impl"]
-    DSL --> Edge["XEdge / XConnection (relay)"]
-    DSL --> Diff["XDiff / XDiffEdge / XDiffConnection"]
-    DSL --> Mod["XModification / XModificationEdge / XModificationConnection"]
-    DSL --> Mods["XModifications / XModificationsEdge / XModificationsConnection"]
-    DSL --> Owner["XOwnerSlot enum + XOwnerUnion"]
-    DSL --> SDL["static SDL fragment registered"]
+    EntityDsl["entity_family! { name, kind, owners, owns, fields, hash_tag }"]
+    OpDsl["operation_family! { name, scope_kind, input?, output, hash_tag }"]
+    NavDsl["command_nav! { name, artifact, owner_id_field, methods }"]
+    InputDsl["entity_input! { name, fields }"]
+    Roster["register_entities! / register_operations!"]
 
-    SDLReg["LazyLock<Vec<&'static str>> SDL_FRAGMENTS"] --> SdlFn["gql::sdl()"]
-    SDL --> SDLReg
-    OpDsl["operation_family!(CreatedX, scope, input, output)"] --> OpTypes["CreatedX + CreatedXInput + CreatedXEdge/Connection"]
+    EntityDsl --> Struct["X struct + Default + Constructors"]
+    EntityDsl --> Object["#[Object] impl X { id, hash, owner, ownerEntity, ownedEntities, fields }"]
+    EntityDsl --> OwnerSlot["XOwnerSlot enum + XOwnerUnion"]
+    EntityDsl --> Relay["XEdge / XConnection"]
+    EntityDsl --> Diff["XDiff / XDiffEdge / XDiffConnection"]
+    EntityDsl --> Mod["XModification / Edge / Connection"]
+    EntityDsl --> Mods["XModifications / Edge / Connection"]
+    EntityDsl --> Hash["compute_hash() with sorted child digests"]
+
+    OpDsl --> OpStruct["X (Operation) + XInput? + XEdge + XConnection"]
+    OpDsl --> KitOp["KitOperation::X variant + Scope arm + Input arm"]
+    OpDsl --> Apply["apply_to(kit) skeleton"]
+
+    NavDsl --> NavStruct["XOperationNav struct + Object impl + dispatch_wip plumbing"]
+
+    InputDsl --> InputStruct["XInput InputObject + into_x() + into_x_with_id()"]
+
+    Roster --> OwnerUnions["entity_owner_unions! generates OwnerEntity / OwnedEntity / OwnedEntityConnection"]
+    Roster --> IfaceEnums["entity_interface_enums! generates Node / Entity / WeakEntity / StrongEntity / Artifact / Diff / Modification / Operation / EntityEdge / EntityConnection ifaces"]
+    Roster --> Push["push_all_fragments(out)"]
+
+    EntityDsl --> SDLReg["sdl_registry::all_fragments()"]
     OpDsl --> SDLReg
+    NavDsl --> SDLReg
+    IfaceEnums --> SDLReg
+    OwnerUnions --> SDLReg
 
-    SdlFn --> Golden["semio/graphql/target.schema.graphql (regenerated)"]
-    SdlFn --> Test["schema_matches_target_graphql_file (real check)"]
+    SDLReg --> SdlFn["gql::sdl()"]
+    SdlFn --> Golden["semio/graphql/target.schema.graphql (regenerated golden)"]
+    SdlFn --> Test["schema_matches_target_graphql_file (real round-trip)"]
 ```
 
 
@@ -479,19 +506,21 @@ macro_rules! __simple_relay {
 
 The `@class` annotation per field controls what's emitted:
 
-| Annotation | GraphQL type | Hash contribution | Resolver |
-|---|---|---|---|
-| `String @data` | `String!` | raw value | `read().await.clone()` |
-| `Option<String> @data` | `String` | unwrap_or_default | `read().await.clone()` |
-| `i32 @data` | `Int!` | `to_string()` | `*read().await` |
-| `Option<i32> @data` | `Int` | `map.to_string` | `*read().await` |
-| `f64 @data` | `Float!` | `format!("{:.9}")` | `*read().await` |
-| `bool @data` | `Boolean!` | `"1"/"0"` | `*read().await` |
-| `Timestamp @data` | `Timestamp` | inner string | clone |
-| `Vec<X> @children(XConnection)` | `XConnection!` | sorted child hashes | `XConnection::from_rows(read().await.clone()).await` |
-| `Arc<X> @entity` | `X!` | child `compute_hash().await` | clone Arc |
-| `Option<Arc<X>> @entity` | `X` | child hash if present | clone Arc |
-| `Vec<Id> @ids` | `[ID!]!` | sorted id strings | clone |
+
+| Annotation                      | GraphQL type   | Hash contribution            | Resolver                                             |
+| ------------------------------- | -------------- | ---------------------------- | ---------------------------------------------------- |
+| `String @data`                  | `String!`      | raw value                    | `read().await.clone()`                               |
+| `Option<String> @data`          | `String`       | unwrap_or_default            | `read().await.clone()`                               |
+| `i32 @data`                     | `Int!`         | `to_string()`                | `*read().await`                                      |
+| `Option<i32> @data`             | `Int`          | `map.to_string`              | `*read().await`                                      |
+| `f64 @data`                     | `Float!`       | `format!("{:.9}")`           | `*read().await`                                      |
+| `bool @data`                    | `Boolean!`     | `"1"/"0"`                    | `*read().await`                                      |
+| `Timestamp @data`               | `Timestamp`    | inner string                 | clone                                                |
+| `Vec<X> @children(XConnection)` | `XConnection!` | sorted child hashes          | `XConnection::from_rows(read().await.clone()).await` |
+| `Arc<X> @entity`                | `X!`           | child `compute_hash().await` | clone Arc                                            |
+| `Option<Arc<X>> @entity`        | `X`            | child hash if present        | clone Arc                                            |
+| `Vec<Id> @ids`                  | `[ID!]!`       | sorted id strings            | clone                                                |
+
 
 ```rust
 #[doc(hidden)]
@@ -1514,7 +1543,7 @@ Operation interface conformance:
 
 Naming normalization:
 
-- `Created*` reserved for "new artifact creation"; `Added*` reserved for "adding existing entity to a collection"; `Removed*` for collection removal; `Deleted*` for artifact deletion. `AddedConnector` stays (adds existing connector to type), `CreatedPort` stays (creates new port). `FixedPieces` gains `FixedPiecesInput` for symmetry with `MovedPieces`.
+- `Created`* reserved for "new artifact creation"; `Added*` reserved for "adding existing entity to a collection"; `Removed*` for collection removal; `Deleted*` for artifact deletion. `AddedConnector` stays (adds existing connector to type), `CreatedPort` stays (creates new port). `FixedPieces` gains `FixedPiecesInput` for symmetry with `MovedPieces`.
 - Long names like `AddedHangingChildPiecesWithParentConnectionsConnection` are unavoidable given the operation name pattern; left as-is.
 
 Out of scope (intentionally not changed):
@@ -1542,7 +1571,7 @@ Per workspace rule, before any code change:
 Per-area Rust LOC delta in [semio/rs/lib.rs](semio/rs/lib.rs):
 
 - Hand-rolled Edge/Connection structs (`531:910:semio/rs/lib.rs`): −~400, replaced by 1 `__entity_relay!` per entity (auto-emitted inside `entity_family!`).
-- Hand-rolled `compute_*hash` impls (~30 occurrences across `pub mod geom`, `pub mod meta`, `pub mod kit`, `pub mod vcs`): −~600, replaced by `__entity_field_to_hash!` dispatch from one `compute_hash` per macro.
+- Hand-rolled `compute_*hash` impls (~~30 occurrences across `pub mod geom`, `pub mod meta`, `pub mod kit`, `pub mod vcs`): −~~600, replaced by `__entity_field_to_hash!` dispatch from one `compute_hash` per macro.
 - Hand-rolled `#[Object]` shells (geometry `iface` block + `Tag`/`Concept`/`Quality` + others): −~1,200, replaced by the `Object` impl emitted by `entity_family!`.
 - Hand-rolled `Default` impls for entities: −~150, no per-entity Default needed.
 - Hand-rolled GraphQL `InputObject` types (`TagInput`/`ConceptInput`/`QualityInput`/`AttributeInput`): −~80, replaced by `entity_input!`.
