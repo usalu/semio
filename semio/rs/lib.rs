@@ -4533,15 +4533,6 @@ pub mod vcs {
         pub async fn backward_semantic_op_record_ids(&self) -> Vec<Id> {
             Vec::new()
         }
-
-        #[graphql(name = "ownerEntity")]
-        pub async fn owner_entity(&self) -> Option<std::sync::Arc<crate::iface::OwnerEntity>> {
-            None
-        }
-        #[graphql(name = "ownedEntities")]
-        pub async fn owned_entities(&self) -> Option<std::sync::Arc<crate::iface::OwnedEntityConnection>> {
-            Some(crate::iface::empty_owned_entity_connection())
-        }
     }
 
     #[derive(Clone, Union)]
@@ -4670,21 +4661,6 @@ pub mod vcs {
         }
         pub async fn changes(&self) -> Vec<Arc<Change>> {
             self.changes.read().await.clone()
-        }
-
-        /// @emoji 🔗 Edit forwards operation sequence as `semanticOpLog` ids (see `histories.edit`).
-        #[graphql(name = "semanticOpRecordIds")]
-        pub async fn semantic_op_record_ids(&self) -> Vec<Id> {
-            Vec::new()
-        }
-
-        #[graphql(name = "ownerEntity")]
-        pub async fn owner_entity(&self) -> Option<std::sync::Arc<crate::iface::OwnerEntity>> {
-            None
-        }
-        #[graphql(name = "ownedEntities")]
-        pub async fn owned_entities(&self) -> Option<std::sync::Arc<crate::iface::OwnedEntityConnection>> {
-            Some(crate::iface::empty_owned_entity_connection())
         }
     }
     //#endregion 💼 edit
@@ -4842,16 +4818,6 @@ pub mod vcs {
         pub async fn message(&self) -> String {
             self.message.read().await.clone().unwrap_or_default()
         }
-
-        #[graphql(name = "ownerEntity")]
-        pub async fn owner_entity(&self) -> Option<std::sync::Arc<crate::iface::OwnerEntity>> {
-            None
-        }
-
-        #[graphql(name = "ownedEntities")]
-        pub async fn owned_entities(&self) -> Option<std::sync::Arc<crate::iface::OwnedEntityConnection>> {
-            Some(crate::iface::empty_owned_entity_connection())
-        }
     }
     //#endregion 🪧 checkpoint
 
@@ -4920,16 +4886,6 @@ pub mod vcs {
                 Some(g) => g.materialized_head_kit().await,
                 None => Arc::default(),
             }
-        }
-
-        #[graphql(name = "ownerEntity")]
-        pub async fn owner_entity(&self) -> Option<std::sync::Arc<crate::iface::OwnerEntity>> {
-            crate::iface::owner_entity_arc_opt(self.graph().await.map(crate::iface::OwnerEntity::Graph))
-        }
-
-        #[graphql(name = "ownedEntities")]
-        pub async fn owned_entities(&self) -> Option<std::sync::Arc<crate::iface::OwnedEntityConnection>> {
-            Some(crate::iface::empty_owned_entity_connection())
         }
     }
     //#endregion 🧭 the kit version
@@ -5021,16 +4977,6 @@ pub mod vcs {
                 None => self.kit.read().await.clone().unwrap_or_default(),
             }
         }
-
-        #[graphql(name = "ownerEntity")]
-        pub async fn owner_entity(&self) -> Option<std::sync::Arc<crate::iface::OwnerEntity>> {
-            crate::iface::owner_entity_arc_opt(self.owner_graph.upgrade().map(crate::iface::OwnerEntity::Graph))
-        }
-
-        #[graphql(name = "ownedEntities")]
-        pub async fn owned_entities(&self) -> Option<std::sync::Arc<crate::iface::OwnedEntityConnection>> {
-            Some(crate::iface::empty_owned_entity_connection())
-        }
     }
     //#endregion 🌱 alternative
 
@@ -5082,32 +5028,6 @@ pub mod vcs {
                 op_history: RwLock::new(Vec::new()),
             }
         }
-    }
-
-    /// @emoji 🧭 GraphQL input matching `@semio/js` `KitReadPoint` — selects which materialized kit snapshot `Graph.theKit` resolves.
-    #[derive(InputObject)]
-    #[graphql(name = "KitReadPointInput")]
-    pub struct KitReadPointInput {
-        #[graphql(name = "theKit")]
-        pub the_kit: Option<bool>,
-        #[graphql(name = "checkpointId")]
-        pub checkpoint_id: Option<Id>,
-        #[graphql(name = "checkpointChangeId")]
-        pub checkpoint_change_id: Option<Id>,
-        #[graphql(name = "checkpointOperationId")]
-        pub checkpoint_operation_id: Option<Id>,
-        #[graphql(name = "alternativeId")]
-        pub alternative_id: Option<Id>,
-        #[graphql(name = "draftAlternativeId")]
-        pub draft_alternative_id: Option<Id>,
-        #[graphql(name = "draftId")]
-        pub draft_id: Option<Id>,
-        #[graphql(name = "draftChangeId")]
-        pub draft_change_id: Option<Id>,
-        #[graphql(name = "draftTransactionId")]
-        pub draft_transaction_id: Option<Id>,
-        #[graphql(name = "draftOperationId")]
-        pub draft_operation_id: Option<Id>,
     }
 
     impl Graph {
@@ -5513,16 +5433,12 @@ pub mod vcs {
                 None => GraphOwner::Session(Arc::new(Session::default())),
             }
         }
-        #[graphql(name = "sessionOwner")]
-        pub async fn session_owner(&self) -> Option<Arc<Session>> {
-            self.owner_session.read().await.upgrade()
-        }
         #[graphql(name = "theKit")]
         pub async fn the_kit(&self) -> crate::gql::interfaces::VersionIface {
             crate::gql::interfaces::VersionIface::TheKit(TheKit::new(Arc::downgrade(&self.arc_here())))
         }
         #[graphql(name = "initialKit")]
-        pub async fn initial_kit_gql(&self) -> Option<Arc<Kit>> {
+        pub async fn initial_kit(&self) -> Option<Arc<Kit>> {
             Some(self.initial_kit.read().await.clone())
         }
         pub async fn alternative(&self, id: Id) -> Option<Arc<Alternative>> {
@@ -5542,39 +5458,6 @@ pub mod vcs {
         }
         pub async fn releases(&self) -> crate::gql_relay::CheckpointConnection {
             crate::gql_relay::CheckpointConnection::from_checkpoints(self.releases.read().await.clone()).await
-        }
-
-        /// @emoji 📜 Ordered semantic operation log for this graph line (persisted bundle field); empty until store wiring lands.
-        /// **Memoization:** none — each field resolution recomputes from current graph/backbone state once wired. **Invalidate:** backbone attach/replay, bundle tips, or any writer appending to the log (no stale cached slice).
-        #[graphql(name = "semanticOpLog")]
-        pub async fn semantic_op_log(&self, #[graphql(name = "limit")] limit: Option<i32>) -> Vec<operation::SemanticOpRecord> {
-            let _ = limit;
-            Vec::new()
-        }
-
-        /// @emoji 🔢 Stable `projectionFingerprint` (sorted piece centers via [`crate::kit_graph_engine::projection_fingerprint_for_kit`]).
-        /// **Memoization:** none — derived on every read from live piece centers. **Invalidate:** any semantic operation or mutation changing piece geometry on this graph line.
-        #[graphql(name = "projectionFingerprint")]
-        pub async fn projection_fingerprint(&self) -> String {
-            let kit = self.materialized_head_kit_from_ref().await;
-            crate::kit_graph_engine::projection_fingerprint_for_kit(kit.as_ref()).await
-        }
-
-        /// @emoji 📸 Hash of the materialized root kit aggregate for this graph head.
-        /// **Memoization:** none — recomputed per request from the current [`Kit`] graph. **Invalidate:** any structural or identity change the kit hash subscribes to (mutations, replay).
-        #[graphql(name = "rootSnapshotHash")]
-        pub async fn root_snapshot_hash(&self) -> String {
-            self.materialized_head_kit_from_ref().await.compute_hash().await
-        }
-
-        #[graphql(name = "ownerEntity")]
-        pub async fn owner_entity(&self) -> Option<std::sync::Arc<crate::iface::OwnerEntity>> {
-            crate::iface::owner_entity_arc_opt(self.owner_session.read().await.upgrade().map(crate::iface::OwnerEntity::Session))
-        }
-
-        #[graphql(name = "ownedEntities")]
-        pub async fn owned_entities(&self) -> Option<std::sync::Arc<crate::iface::OwnedEntityConnection>> {
-            Some(crate::iface::empty_owned_entity_connection())
         }
     }
     //#endregion 🌐 graph
@@ -5609,16 +5492,6 @@ pub mod vcs {
         #[graphql(name = "startedAt")]
         pub async fn started_at(&self) -> Option<Timestamp> {
             self.started_at.read().await.clone()
-        }
-
-        #[graphql(name = "ownerEntity")]
-        pub async fn owner_entity(&self) -> Option<std::sync::Arc<crate::iface::OwnerEntity>> {
-            None
-        }
-
-        #[graphql(name = "ownedEntities")]
-        pub async fn owned_entities(&self) -> Option<std::sync::Arc<crate::iface::OwnedEntityConnection>> {
-            Some(crate::iface::empty_owned_entity_connection())
         }
     }
     //#endregion 👤 session
@@ -5666,138 +5539,9 @@ pub mod vcs {
         pub async fn created_at(&self) -> Timestamp {
             self.created_at.read().await.clone()
         }
-
-        #[graphql(name = "ownerEntity")]
-        pub async fn owner_entity(&self) -> Option<std::sync::Arc<crate::iface::OwnerEntity>> {
-            None
-        }
-
-        #[graphql(name = "ownedEntities")]
-        pub async fn owned_entities(&self) -> Option<std::sync::Arc<crate::iface::OwnedEntityConnection>> {
-            Some(crate::iface::empty_owned_entity_connection())
-        }
     }
     //#endregion ⚠️ conflict
-
-    //#region 📖 read-write version
-    /// @emoji 📖 SDL `ReadVersionOwner = Conflict`.
-    #[derive(Clone, Union)]
-    #[graphql(name = "ReadVersionOwner")]
-    pub enum ReadVersionOwner {
-        Conflict(Arc<Conflict>),
-    }
-
-    /// @emoji 📖 Read-side version marker on a [`Conflict`].
-    pub struct ReadVersion {
-        pub id: Id,
-        pub owner_conflict: Weak<Conflict>,
-        pub checkpoint: RwLock<Option<Arc<Checkpoint>>>,
-        pub change: RwLock<Option<Arc<Change>>>,
-        pub operation: RwLock<Option<Arc<crate::operation::OperationIface>>>,
-    }
-
-    impl Default for ReadVersion {
-        fn default() -> Self {
-            Self { id: Id::default(), owner_conflict: Weak::new(), checkpoint: RwLock::new(None), change: RwLock::new(None), operation: RwLock::new(None) }
-        }
-    }
-
-    #[Object(name = "ReadVersion")]
-    impl ReadVersion {
-        pub async fn id(&self) -> Id {
-            self.id.clone()
-        }
-        pub async fn hash(&self) -> String {
-            h(&[self.id.as_str()])
-        }
-        pub async fn owner(&self) -> ReadVersionOwner {
-            ReadVersionOwner::Conflict(self.owner_conflict.upgrade().unwrap_or_default())
-        }
-        #[graphql(name = "conflictOwner")]
-        pub async fn conflict_owner(&self) -> Option<Arc<Conflict>> {
-            self.owner_conflict.upgrade()
-        }
-        pub async fn owner_entity(&self) -> Option<std::sync::Arc<crate::iface::OwnerEntity>> {
-            crate::iface::owner_entity_arc_opt(self.owner_conflict.upgrade().map(crate::iface::OwnerEntity::Conflict))
-        }
-        pub async fn owned_entities(&self) -> Option<std::sync::Arc<crate::iface::OwnedEntityConnection>> {
-            Some(crate::iface::empty_owned_entity_connection())
-        }
-        pub async fn checkpoint(&self) -> Option<Arc<Checkpoint>> {
-            self.checkpoint.read().await.clone()
-        }
-        pub async fn change(&self) -> Option<Arc<Change>> {
-            self.change.read().await.clone()
-        }
-        pub async fn operation(&self) -> Option<Arc<crate::operation::OperationIface>> {
-            self.operation.read().await.clone()
-        }
-    }
-
-    #[derive(Clone, Union)]
-    #[graphql(name = "WriteVersionOwner")]
-    pub enum WriteVersionOwner {
-        Conflict(Arc<Conflict>),
-    }
-
-    /// @emoji ✏️ Write-side version marker on a [`Conflict`].
-    pub struct WriteVersion {
-        pub id: Id,
-        pub owner_conflict: Weak<Conflict>,
-        pub draft: RwLock<Option<Arc<Draft>>>,
-        pub transaction: RwLock<Option<Arc<Edit>>>,
-        pub checkpoint: RwLock<Option<Arc<Checkpoint>>>,
-        pub change: RwLock<Option<Arc<Change>>>,
-        pub operation: RwLock<Option<Arc<crate::operation::OperationIface>>>,
-    }
-
-    impl Default for WriteVersion {
-        fn default() -> Self {
-            Self { id: Id::default(), owner_conflict: Weak::new(), draft: RwLock::new(None), transaction: RwLock::new(None), checkpoint: RwLock::new(None), change: RwLock::new(None), operation: RwLock::new(None) }
-        }
-    }
-
-    #[Object(name = "WriteVersion")]
-    impl WriteVersion {
-        pub async fn id(&self) -> Id {
-            self.id.clone()
-        }
-        pub async fn hash(&self) -> String {
-            h(&[self.id.as_str()])
-        }
-        pub async fn owner(&self) -> WriteVersionOwner {
-            WriteVersionOwner::Conflict(self.owner_conflict.upgrade().unwrap_or_default())
-        }
-        #[graphql(name = "conflictOwner")]
-        pub async fn conflict_owner(&self) -> Option<Arc<Conflict>> {
-            self.owner_conflict.upgrade()
-        }
-        pub async fn owner_entity(&self) -> Option<std::sync::Arc<crate::iface::OwnerEntity>> {
-            crate::iface::owner_entity_arc_opt(self.owner_conflict.upgrade().map(crate::iface::OwnerEntity::Conflict))
-        }
-        pub async fn owned_entities(&self) -> Option<std::sync::Arc<crate::iface::OwnedEntityConnection>> {
-            Some(crate::iface::empty_owned_entity_connection())
-        }
-        #[graphql(name = "draftId")]
-        pub async fn draft_id(&self) -> Option<Id> {
-            self.draft.read().await.as_ref().map(|d| d.id.clone())
-        }
-        pub async fn transaction(&self) -> Option<Arc<Edit>> {
-            self.transaction.read().await.clone()
-        }
-        pub async fn checkpoint(&self) -> Option<Arc<Checkpoint>> {
-            self.checkpoint.read().await.clone()
-        }
-        pub async fn change(&self) -> Option<Arc<Change>> {
-            self.change.read().await.clone()
-        }
-        pub async fn operation(&self) -> Option<Arc<crate::operation::OperationIface>> {
-            self.operation.read().await.clone()
-        }
-    }
-    //#endregion 📖 read-write version
 }
-
 //#endregion 🌿 vcs
 
 //#region 🧷 iface
