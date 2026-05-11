@@ -1,6 +1,6 @@
 ---
 name: field-only kit reads refactor
-overview: Collapse `semio/js/index.ts` to only export entity classes (`Kit`, `Design`, `Type`, `Piece`, `Connection`, `Author`, `Quality`, ...); merge `Kit` and `KitStore` into one `Kit` class. Every class is CQRS event-sourced over the GraphQL schema in `semio/rs/lib.rs` (`Query` / `Mutation` / `Subscription`). Each field exposes three methods (`field()` async query, `fieldSync()` cached, `on<Event>(cb)` subscription), with stable object identity in the cache so React `useSyncExternalStore` works. Commands map 1:1 to leaves of the `*OperationInput` types in `semio/graphql/target.schema.graphql`. Each command is a single async method `op(...): Promise<SetResult>` that performs the optimistic local apply synchronously (firing the matching `on<Event>` callbacks in the same tick) and then awaits server confirmation — there are no `*Sync` companion methods. `semio/react/index.tsx` adds nothing beyond the schema — every hook is 1:1 with one schema field (read) or one `*OperationInput` leaf (write). Read hooks return just the value (`T | undefined` lean, class instance(s) bulky). Operation hooks return a `readonly [run, status]` tuple where `status` is a discriminated union (`idle` / `pending` / `successful` / `tooLong` / `timeout` / `failed`). No sub-selection, no derivation, no aggregate / metadata / shallow / view hooks. Sketchpad obeys the same rule and inlines every sub-selection at the call site.
+overview: Collapse `semio/js/index.ts` to only export entity classes (`Kit`, `Design`, `Type`, `Piece`, `Connection`, `Author`, `Quality`, ...); merge `Kit` and `KitStore` into one `Kit` class. The classes are stateless GraphQL clients over the schema in `semio/rs/lib.rs` (`Query` / `Mutation` / `Subscription`) — there is no in-class cache, no optimistic apply, no reconciliation logic anywhere in `semio/js`, `semio/react`, or `semio/sketchpad`. The Rust server is in-memory and authoritative for every read. Each field exposes two methods: `field(): Promise<T>` (one GraphQL `Query`) and `on<Event>(cb: (next: T) => void): Unsubscribe` (subscription event routed through an `EventBus`, where `next` comes from the server's event payload or a refetch — the class never stores it). Commands map 1:1 to leaves of the `*OperationInput` types in `semio/graphql/target.schema.graphql` and each ships as a single async method `op(...): Promise<SetResult>` that just dispatches the GraphQL mutation and awaits the server. `semio/react/index.tsx` adds nothing beyond the schema; every hook is 1:1 with one schema field (read) or one `*OperationInput` leaf (write). Read hooks back themselves with `useState` + `useEffect` (fetch on mount, replace on each subscription event) and return `T | undefined` lean / class instance(s) bulky. Operation hooks return `readonly [run, status]` where `status` is the discriminated union (`idle` / `pending` / `successful` / `tooLong` / `timeout` / `failed`). No sub-selection, no derivation, no aggregate / metadata / shallow / view hooks. Sketchpad obeys the same rule and inlines every sub-selection at the call site.
 todos:
  - id: ticket
    content: Open / reopen the field-only kit reads ticket via repo MCP and keep temp artifacts inside it
@@ -9,10 +9,10 @@ todos:
    content: In semio/js/index.ts add a single GqlTransport (Query/Mutation/Subscription over worker/HTTP) plus an EventBus that fans the unified `subscription { event }` JSON stream into typed per-entity channels keyed by entity kind + id + field
    status: pending
  - id: js-base
-   content: Add an internal Entity base + defineField/defineOperation/defineFields/defineOperations factory helpers. Entity owns the field-cache machinery (stable object identity for object-typed fields, dirty/version tracking, fieldSync per key), the on<Event>(cb) routing, and a single async dispatch path (Promise<SetResult>) that performs the deterministic optimistic local apply synchronously (fires on<Event> callbacks in the same tick) and then awaits the GraphQL mutation. There is no separate sync dispatch — the optimistic apply is part of the single async path. Each entity class is then declared as two static arrays (fields + operations) that defineFields/defineOperations install onto the prototype as named methods.
+   content: Add an internal Entity base + defineField/defineOperation/defineFields/defineOperations factory helpers. Entity owns only GraphQL plumbing — per-field query routing (Promise<T>), on<Event>(cb) routing through the EventBus (cb receives the new value from the server's event payload or a single refetch; nothing is stored), and async dispatch for mutations (Promise<SetResult>; pure relay, no cache write, no optimistic apply, no reconciliation). There is no in-class cache, no fieldSync, no dispatchSync. Each entity class is then declared as two static arrays (fields + operations) that defineFields/defineOperations install onto the prototype as named methods.
    status: pending
   - id: js-classes
-    content: Reshape Kit (merged with KitStore), Design, Type, Port, Connector, Piece, PiecesOperations, Connection, Author, Quality, Tag, Concept, Family, File, Folder, Layer, Group, Stat, Prop, Attribute, Representation, Plane, Coordinate, Point, Vector, Camera, Side, Benchmark, Position, Place, Location into CQRS classes; per field expose field()/fieldSync()/on<Event>(); per leaf in *OperationInput expose exactly one async command method — operation(...) returning Promise<SetResult>. The single method performs the optimistic local apply synchronously (mutates the cache, fires on<Event> callbacks in the same tick) and then awaits the GraphQL mutation; no opSync companions. Covers kit.createDesign, design.addFixedPiece, design.piece(id).fix, design.pieces(ids).drag, type.createPort, type.port(id).rename, type.addConnector, etc. Navigation methods (kit.design(id), kit.type(id), design.piece(id), design.pieces(ids), type.port(id), type.connector(id)) return cached child class instances.
+    content: Reshape Kit (merged with KitStore), Design, Type, Port, Connector, Piece, PiecesOperations, Connection, Author, Quality, Tag, Concept, Family, File, Folder, Layer, Group, Stat, Prop, Attribute, Representation, Plane, Coordinate, Point, Vector, Camera, Side, Benchmark, Position, Place, Location into stateless GraphQL clients. Per field expose two methods — field() returning Promise<T> (one GraphQL Query) and on<Event>(cb: (next: T) => void) returning Unsubscribe (subscription event routed through the EventBus). No fieldSync, no cache, no stable-identity machinery. Per leaf in *OperationInput expose exactly one async command method — operation(...) returning Promise<SetResult> that just dispatches the GraphQL mutation and awaits the server; no optimistic apply, no opSync companions. Covers kit.createDesign, design.addFixedPiece, design.piece(id).fix, design.pieces(ids).drag, type.createPort, type.port(id).rename, type.addConnector, etc. Navigation methods (kit.design(id), kit.type(id), design.piece(id), design.pieces(ids), type.port(id), type.connector(id)) return per-id Piece/Design/... instances; the wrappers themselves are stateless so memoizing them by id is purely an ergonomic identity helper, not value caching.
     status: pending
  - id: js-deletes
    content: Delete from semio/js/index.ts every non-class export — KitStore (merged), all *Schema/zod, all *Dto / *MetadataDto / *Shallow types, KitFullDto, KitHostStore + InMemoryKitStore + JsonFileKitStore + FolderKitStore + applyKitClientSnapshotToLocalStore, all Read*Command types, SemioKitLiveReadStore + KitDesignReadStore + KitShallowListStore + KitViewCatalogStore, kitStoreClientAdd/Update/Remove* free functions, submitKitChangeCommands, buildSchemaEntityChangeCommands, writeKitStoreClientSchemaField, KitChangeKind / KitChangeSemanticKindGql, kitChangeSemanticKindToGraphQl, KitJson* helpers, kit-store.worker.ts JSON DTO plumbing
@@ -21,7 +21,7 @@ todos:
    content: Rename every *Scope* symbol to *Context* (KitContext, DesignContext, TypeContext, PortContext, ConnectorContext, PieceContext, ConnectionContext, AuthorContext, QualityContext, TagContext, ConceptContext, useKitContext/...); make useKit/useDesign/useType/usePiece/useConnection/useAuthor/useQuality return the class instances with resolution = `id` arg first, then the matching context
    status: pending
  - id: react-factories
-   content: Add bindFieldToReact + bindOpToReact internal bridges and one create<Entity>FieldHook + create<Entity>OpHook factory per entity (Kit, Design, Type, Port, Connector, Piece, Pieces, Connection (read-only), Author (read-only), Quality, Tag, Concept). Each factory encapsulates context resolution (id arg → matching *Context → parent class navigation) and returns a hook function. Connection / Author have no operation factory until the schema grows their *OperationInput.
+   content: Add bindFieldToReact + bindOpToReact internal bridges and one create<Entity>FieldHook + create<Entity>OpHook factory per entity (Kit, Design, Type, Port, Connector, Piece, Pieces, Connection (read-only), Author (read-only), Quality, Tag, Concept). bindFieldToReact uses React.useState + React.useEffect (no useSyncExternalStore, no in-hook cache beyond the per-component-instance state slot) to fetch on mount via field() and replace the value on each on<Event> callback. Each factory encapsulates context resolution (id arg → matching *Context → parent class navigation). Connection / Author have no operation factory until the schema grows their *OperationInput.
    status: pending
  - id: react-field-hooks
    content: Declare every per-field read hook as a one-liner using create<Entity>FieldHook(getSnap, subscribe). Covers usePieceName / usePiecePlane / usePieceFlatPlane / usePieceFlatCenter / usePieceCenter / usePieceScale / usePieceAttributes / useTypeName / useTypePortIds / useTypeConnectorIds / useDesignName / useDesignPieceIds / useDesignConnectionIds / useConnectionGap / useConnectionShift / useConnectionRotation / useConnectorCode / etc. Each returns T | undefined.
@@ -39,7 +39,7 @@ todos:
    content: Replace all 64 banned-hook usages in semio/sketchpad/index.tsx with schema-1:1 reads + ops from @semio/react. Reads and writes strictly separate. Delete every sub-selection / tuple sketchpad hook (usePieceCenterU/usePieceCenterV/sketchpad's tuple usePieceScale/usePieceIsHidden/usePieceIsLocked/useConnectionGapValue/useConnectionShiftValue/useConnectionRiseValue/useConnectionRotationValue/useConnectionTurnValue/useConnectionTiltValue/useDesignPieceIds/useDesignConnectionIds/all *Metadata/*Shallow/*Full derivations) — no replacement hook, callers inline destructuring at the call site (const center = usePieceCenter(); const u = center?.u). Replace every commands.update*/applyKitDiff with the matching use<Op><Entity> destructured as const [op, opStatus] = use<Op><Entity>(); … void op(...). Render saving / tooLong / timeout / failed UI off opStatus.kind. Drop the useDesignAppCommands indirection entirely. Fan list rendering through the bulky list hook (useDesignPieces, useTypePorts, …) plus inline .map((x) => <Context id={x.id}>).
    status: pending
  - id: tests
-   content: Update inline vitest blocks in semio/js/index.ts and semio/react/index.tsx for the new class shape — entity field round-trips, optimistic-apply-then-confirm path of operation()s, OperationStatus transitions (idle → pending → successful | tooLong | timeout | failed) for hooks like useDragPiece / useRenameKit, single-rerender guarantee for usePieceCenter; remove tests asserting on deleted exports; add an inline negative-grep test in semio/sketchpad/index.tsx asserting zero matches for the banned hooks (no `*Sync` op hook names, no banned read hooks).
+   content: Update inline vitest blocks in semio/js/index.ts and semio/react/index.tsx for the new stateless-client shape — field() round-trips against a stub GqlTransport, on<Event>(cb) delivers the new value when the EventBus emits, op(...) dispatches a single mutation and awaits, OperationStatus transitions (idle → pending → successful | tooLong | timeout | failed) for hooks like useDragPiece / useRenameKit, usePieceCenter rerender on event delivery; remove tests asserting on deleted exports or on optimistic-apply / cache reconciliation behaviour; add an inline negative-grep test in semio/sketchpad/index.tsx asserting zero matches for the banned hooks (no `*Sync` op hook names, no banned read hooks, no `applyKitDiff`, no manual cache code).
    status: pending
  - id: validate
    content: Run npm run depcruise:layers, typecheck for semio/js + semio/react + semio/sketchpad, run inline tests, manual sketchpad smoke
@@ -94,28 +94,29 @@ flowchart LR
   Sketchpad["semio/sketchpad/index.tsx (only field hooks)"] --> FieldHooks
 ```
 
-## 2. CQRS surface on every entity class
+## 2. Stateless GraphQL client on every entity class
 
-Each class has three things, all driven by [semio/graphql/target.schema.graphql](semio/graphql/target.schema.graphql):
+Every entity class is a thin, stateless wrapper around the GraphQL surface in [semio/graphql/target.schema.graphql](semio/graphql/target.schema.graphql). There is **no in-class cache, no optimistic apply, no reconciliation** anywhere in [semio/js/index.ts](semio/js/index.ts) — [semio/rs/lib.rs](semio/rs/lib.rs) is in-memory and authoritative for every read.
 
-1. **Reads** — three methods per field from the schema's data/computed fields:
-   - `field(): Promise<T>` — one-off GraphQL `Query` against [semio/rs/lib.rs](semio/rs/lib.rs).
-   - `fieldSync(): T | undefined` — synchronous read from the in-class cache. For object-typed fields (`Plane`, `Coordinate`, `Position`, `Side`, …) the cache holds the same instance reference until the field changes, so React `useSyncExternalStore.getSnapshot` returns a stable reference and skips rerenders.
-   - `on<Event>(cb: (next: T) => void): Unsubscribe` — subscribe to the routed event channel. Event names follow the schema's Edit/Modification union (`onRenamed`, `onDescriptionChanged`, `onMoved`, `onDragged`, `onFixed`, `onFlattened`, `onPlaneChanged`, `onCenterChanged`, `onAttributeAdded`, `onAttributeRemoved`, `onPieceAdded`, `onPieceDeleted`, `onConnectionAdded`, `onConnectionDeleted`, `onPortCreated`, `onPortDeleted`, `onConnectorAdded`, `onConnectorRemoved`, `onTagCreated`, `onTagDeleted`, `onConceptCreated`, `onConceptDeleted`, `onQualityCreated`, `onQualityDeleted`, `onTypeCreated`, `onTypeDeleted`, `onDesignCreated`, `onDesignDeleted`, `onCheckpointCreated`, …).
+Each class has three things:
 
-2. **Operations** — exactly **one** method per leaf command in the matching `*OperationInput` from §`#region Commands`. There are no `opSync(...)` companions. Method signatures mirror the schema (same names, same args, same nullability) and return `Promise<SetResult>`:
-   - `operation(...args): Promise<SetResult>` — single async path. Applies the operation optimistically to the in-class cache *immediately* (synchronous side-effect that fires the matching `on<Event>` callbacks in the same tick so React `useSyncExternalStore` rerenders without waiting for the network), dispatches the matching `mutation { session { ... } }` against [semio/rs/lib.rs](semio/rs/lib.rs), and resolves when the server confirms or rejects. The unified subscription stream then reconciles the cache: a no-op when the optimistic state already matches, a corrective re-emit when the server diverged, or a rollback when the server rejected the mutation.
+1. **Reads** — two methods per field from the schema's data/computed fields:
+   - `field(): Promise<T>` — one-off GraphQL `Query` against [semio/rs/lib.rs](semio/rs/lib.rs). Always hits the server. There is no synchronous companion (`fieldSync` is gone) because there is nothing to read from synchronously.
+   - `on<Event>(cb: (next: T) => void): Unsubscribe` — subscribe to the routed event channel. The `next` argument is delivered by the unified `subscription { event }` stream — either taken directly from the server's event payload when the schema embeds the new value, or fetched once by the JS class via the same `field()` query and broadcast to all listeners. Either way the class never *stores* `next`; it just relays it. Event names follow the schema's Edit/Modification union (`onRenamed`, `onDescriptionChanged`, `onMoved`, `onDragged`, `onFixed`, `onFlattened`, `onPlaneChanged`, `onCenterChanged`, `onAttributeAdded`, `onAttributeRemoved`, `onPieceAdded`, `onPieceDeleted`, `onConnectionAdded`, `onConnectionDeleted`, `onPortCreated`, `onPortDeleted`, `onConnectorAdded`, `onConnectorRemoved`, `onTagCreated`, `onTagDeleted`, `onConceptCreated`, `onConceptDeleted`, `onQualityCreated`, `onQualityDeleted`, `onTypeCreated`, `onTypeDeleted`, `onDesignCreated`, `onDesignDeleted`, `onCheckpointCreated`, …).
+
+2. **Operations** — exactly **one** method per leaf command in the matching `*OperationInput` from §`#region Commands`. Method signatures mirror the schema (same names, same args, same nullability) and return `Promise<SetResult>`:
+   - `operation(...args): Promise<SetResult>` — single async path. Builds a `mutation { session { ... } }`, dispatches it through `GqlTransport` against [semio/rs/lib.rs](semio/rs/lib.rs), and resolves with the server's response. **Nothing** is mutated locally — the JS class does not touch any cache, does not pre-fire `on<Event>` callbacks, does not reconcile anything. UI updates flow exclusively from the subscription event(s) that the server emits in response to the mutation.
    - `SetResult` is `{ ok: true; id: ID }` on success, or `{ ok: false; error: SetError }` on rejection. `SetError` is the discriminated union enumerated in [target.schema.graphql](semio/graphql/target.schema.graphql) (e.g. `Readonly`, `TooLong`, `Validation`, `Conflict`, `Rejected`). Network timeouts surface as `{ kind: "Timeout"; message }` from the transport.
-   - Callers that want fire-and-forget simply drop the `Promise`; the optimistic apply has already happened.
+   - Callers that want fire-and-forget simply drop the `Promise` (the React op hook tracks status independently — see §4).
 
-3. **Navigation methods** — for command-input fields that nest into another scoped command input, the class returns the matching child class instance (lazy, cached by id). E.g. `design.piece(id) → Piece`, `design.pieces(ids) → PiecesOperations`, `kit.type(id) → Type`, `type.port(id) → Port`, `type.connector(id) → Connector`, etc.
+3. **Navigation methods** — for command-input fields that nest into another scoped command input, the class returns the matching child class instance. E.g. `design.piece(id) → Piece`, `design.pieces(ids) → PiecesOperations`, `kit.type(id) → Type`, `type.port(id) → Port`, `type.connector(id) → Connector`, etc. Because these wrappers are stateless, memoizing them by id is purely an ergonomic identity helper (so `design.piece("p1") === design.piece("p1")`); it is not value caching.
 
 ### Generic mechanisms (JS side)
 
 Every entity class is built from the same internal `Entity` base + a tiny set of factory helpers, so per-field / per-operation declarations are one-liners. The factories are private to [semio/js/index.ts](semio/js/index.ts); only the resulting classes are exported.
 
 ```ts
-// internal — shared by every entity class
+// internal — shared by every entity class. Stateless; carries no value cache.
 abstract class Entity {
  constructor(
   protected readonly transport: GqlTransport,
@@ -124,34 +125,38 @@ abstract class Entity {
   public readonly id: string,
  ) {}
 
- /** Read the cached value for `key`. Object-typed values are stored with stable identity. */
- protected fieldSync<T>(key: string): T | undefined;
- /** Async query for `key` using the GraphQL document and select function `selector`. */
+ /** One-off GraphQL Query for `key`. Always hits semio/rs/lib.rs; never reads from a local store. */
  protected fieldQuery<T>(key: string, selector: (data: any) => T, doc: GqlDoc): Promise<T>;
- /** Subscribe to the named event channel for this entity. */
- protected subscribeField(eventName: string, cb: () => void): Unsubscribe;
 
  /**
-  * Single async dispatch path. Applies the deterministic local cache mutation synchronously
-  * via applyToCache, fires the matching on<Event> callbacks in the same tick, then awaits the
-  * GraphQL mutation. Resolves with the server-confirmed SetResult (or a rejection that triggers
-  * a cache rollback). There is no separate sync dispatch — optimistic apply is part of this method.
+  * Subscribe to the named subscription event channel for (entity-kind, this.id, eventName).
+  * `cb` receives the new value sourced from the server's event payload (or, when the schema
+  * doesn't embed it, from a single shared refetch the EventBus performs once per event and
+  * broadcasts to all listeners). Nothing is cached.
   */
- protected dispatch<Args extends any[]>(
-  operation: GqlOpInput,
-  applyToCache: (cache: this["cache"], ...args: Args) => void,
-  args: Args,
- ): Promise<SetResult>;
+ protected subscribeField<T>(eventName: string, cb: (next: T) => void): Unsubscribe;
+
+ /**
+  * Single async dispatch path. Builds and sends one `mutation { session { ... } }` to
+  * semio/rs/lib.rs and resolves with the server's SetResult. Does not touch any local state,
+  * does not pre-fire on<Event> callbacks, does not reconcile anything. UI updates come from
+  * the subscription event(s) the server emits in response.
+  */
+ protected dispatch(operation: GqlOpInput): Promise<SetResult>;
 }
 
 // internal helpers attached at class-definition time. Each returns a small object describing the
-// field/operation so the constructor can install methods on the prototype with one call to defineFields/defineOperations.
-const defineField = <E extends Entity, T>(spec: { key: string; query: GqlDoc; pickQuery: (data: any) => T; event: string }) => spec;
+// field/operation so defineFields/defineOperations can install named methods on the prototype.
+const defineField = <T>(spec: {
+ key: string;
+ query: GqlDoc;
+ pickQuery: (data: any) => T;
+ event: string;
+}) => spec;
 
-const defineOperation = <E extends Entity, Args extends any[]>(spec: {
+const defineOperation = <Args extends any[]>(spec: {
  name: string; // matches the *OperationInput leaf name
  buildInput: (...args: Args) => GqlOpInput;
- applyToCache: (cache: E["cache"], ...args: Args) => void;
 }) => spec;
 ```
 
@@ -159,7 +164,7 @@ Class definitions then read like a schema bundle, one line per leaf. Example for
 
 ```ts
 export class Piece extends Entity {
- // Reads — defineFields installs name() / nameSync() / onRenamed(), and so on for every field.
+ // Reads — defineFields installs name(): Promise<string> + onRenamed(cb): Unsubscribe, and so on per field.
  static fields = [
   defineField({ key: "name", query: PIECE_NAME_QUERY, pickQuery: (d) => d.node.name, event: "Renamed" }),
   defineField({ key: "description", query: PIECE_DESCRIPTION_QUERY, pickQuery: (d) => d.node.description, event: "DescriptionChanged" }),
@@ -180,76 +185,19 @@ export class Piece extends Entity {
   defineField({ key: "attributes", query: PIECE_ATTRIBUTES_QUERY, pickQuery: (d) => d.node.attributes, event: "AttributesChanged" }),
  ];
 
- // Operations — defineOperations installs exactly one async method per leaf (no Sync companions).
+ // Operations — defineOperations installs exactly one async method per leaf. No applyToCache:
+ // there is no cache. Each method just builds the GraphQL input and awaits the server.
  static operations = [
-  defineOperation({
-   name: "rename",
-   buildInput: (newName: string) => ({ rename: { newName } }),
-   applyToCache: (c, newName: string) => {
-    c.name = newName;
-   },
-  }),
-  defineOperation({
-   name: "changeDescription",
-   buildInput: (newDescription: string) => ({ changeDescription: { newDescription } }),
-   applyToCache: (c, d: string) => {
-    c.description = d;
-   },
-  }),
-  defineOperation({
-   name: "drag",
-   buildInput: (offset: OffsetInput) => ({ drag: { offset } }),
-   applyToCache: (c, offset: OffsetInput) => {
-    c.center = applyOffsetToCenter(c.center, offset);
-   },
-  }),
-  defineOperation({
-   name: "move",
-   buildInput: (position: PositionInput) => ({ move: { position } }),
-   applyToCache: (c, position: PositionInput) => {
-    c.center = position.center;
-    c.plane = position.plane;
-   },
-  }),
-  defineOperation({
-   name: "fix",
-   buildInput: () => ({ fix: true }),
-   applyToCache: (c) => {
-    c.fixed = true;
-   },
-  }),
-  defineOperation({
-   name: "changeBlueprint",
-   buildInput: (blueprintId: string) => ({ changeBlueprint: { blueprintId } }),
-   applyToCache: (c, id) => {
-    c.blueprintId = id;
-   },
-  }),
-  defineOperation({
-   name: "addAttribute",
-   buildInput: (key: string, value: string, definition: string) => ({ addAttribute: { key, value, definition } }),
-   applyToCache: (c, k, v, def) => {
-    c.attributes = [...c.attributes, { key: k, value: v, definition: def }];
-   },
-  }),
-  defineOperation({
-   name: "removeAttribute",
-   buildInput: (id: string) => ({ removeAttribute: { id } }),
-   applyToCache: (c, id) => {
-    c.attributes = c.attributes.filter((a) => a.id !== id);
-   },
-  }),
-  defineOperation({
-   name: "removeAttributes",
-   buildInput: (ids: readonly string[]) => ({ removeAttributes: { ids } }),
-   applyToCache: (c, ids) => {
-    const set = new Set(ids);
-    c.attributes = c.attributes.filter((a) => !set.has(a.id));
-   },
-  }),
+  defineOperation({ name: "rename",            buildInput: (newName: string)               => ({ rename:            { newName } }) }),
+  defineOperation({ name: "changeDescription", buildInput: (newDescription: string)        => ({ changeDescription: { newDescription } }) }),
+  defineOperation({ name: "drag",              buildInput: (offset: OffsetInput)            => ({ drag:              { offset } }) }),
+  defineOperation({ name: "move",              buildInput: (position: PositionInput)        => ({ move:              { position } }) }),
+  defineOperation({ name: "fix",               buildInput: ()                               => ({ fix: true }) }),
+  defineOperation({ name: "changeBlueprint",   buildInput: (blueprintId: string)            => ({ changeBlueprint:   { blueprintId } }) }),
+  defineOperation({ name: "addAttribute",      buildInput: (key: string, value: string, definition: string) => ({ addAttribute:    { key, value, definition } }) }),
+  defineOperation({ name: "removeAttribute",   buildInput: (id: string)                     => ({ removeAttribute:   { id } }) }),
+  defineOperation({ name: "removeAttributes",  buildInput: (ids: readonly string[])         => ({ removeAttributes:  { ids } }) }),
  ];
-
- // Navigation — Piece has no scoped child entities; Design/Type/Kit override this with cached children.
 }
 
 // One call per class wires every defined field/operation into prototype methods named exactly as in the schema.
@@ -257,7 +205,7 @@ defineFields(Piece, Piece.fields);
 defineOperations(Piece, Piece.operations);
 ```
 
-`defineFields(C, specs)` installs three methods per spec on `C.prototype`: `<key>(): Promise<T>` (calls `Entity.fieldQuery`), `<key>Sync(): T | undefined` (calls `Entity.fieldSync`), and `on<Event>(cb): Unsubscribe` (calls `Entity.subscribeField`). `defineOperations(C, specs)` installs **exactly one** method per spec: `<name>(...args): Promise<SetResult>` (calls `Entity.dispatch`, which performs the optimistic local apply via `applyToCache`, fires `on<Event>` callbacks, sends the GraphQL mutation, and resolves with the server-confirmed `SetResult`). There is no `<name>Sync` companion — the optimistic path is *part of* the single async method, not a separate one. Same recipe for `Kit`, `Design`, `Type`, `Port`, `Connector`, `Connection`, `Author`, `Quality`, `Tag`, `Concept`, etc. — each class is mostly two static arrays.
+`defineFields(C, specs)` installs **two** methods per spec on `C.prototype`: `<key>(): Promise<T>` (calls `Entity.fieldQuery` — one GraphQL `Query` per call) and `on<Event>(cb): Unsubscribe` (calls `Entity.subscribeField` — relays subscription events from the unified stream). `defineOperations(C, specs)` installs **exactly one** method per spec: `<name>(...args): Promise<SetResult>` (calls `Entity.dispatch` — one GraphQL `Mutation` per call, awaits the server's reply, never touches local state). There is no `<key>Sync` field method, no `<name>Sync` op method, no `applyToCache`, no reconciliation. Same recipe for `Kit`, `Design`, `Type`, `Port`, `Connector`, `Connection`, `Author`, `Quality`, `Tag`, `Concept`, etc. — each class is mostly two static arrays plus optional navigation methods.
 
 The full operation surface per class (mirrors [semio/graphql/target.schema.graphql](semio/graphql/target.schema.graphql) exactly):
 
@@ -270,17 +218,17 @@ The full operation surface per class (mirrors [semio/graphql/target.schema.graph
 - **`Tag`** / **`Concept`** (mirror `TagOperationInput` / `ConceptOperationInput`): `rename(newName)`, `changeDescription(newDescription)`, `changeIcon(newIcon)`, attributes operations.
 - **`Quality`** (mirrors `QualityOperationInput`): `rename(newKey)`, `changeDescription(newDescription)`, `changeIcon(newIcon)`, attributes operations.
 - **`Piece`** (mirrors `PieceOperationInput`): see snippet above.
-- **`Connection`**, **`Author`**: both implement `Artifact` (bulky) so they are classes with the full read API (one `field()` / `fieldSync()` / `on<Event>(cb)` triple per schema field). The schema currently does not declare a dedicated `*OperationInput` for either, so the class only carries reads; their commands (e.g. add/remove connection, addAuthor) live on the parent `Design` / `Kit` per the schema. If the schema later grows `ConnectionOperationInput` / `AuthorOperationInput`, the matching methods are added then.
+- **`Connection`**, **`Author`**: both implement `Artifact` (bulky) so they are classes with the full read API (one `field()` + `on<Event>(cb)` pair per schema field). The schema currently does not declare a dedicated `*OperationInput` for either, so the class only carries reads; their commands (e.g. add/remove connection, addAuthor) live on the parent `Design` / `Kit` per the schema. If the schema later grows `ConnectionOperationInput` / `AuthorOperationInput`, the matching methods are added then.
 
-`Plane`, `Coordinate`, `Position`, `Point`, `Vector`, `Side`, `Attribute` (every `WeakEntity` per [target.schema.graphql](semio/graphql/target.schema.graphql) lines 51–67) are **not classes**. They are plain TypeScript record types that mirror the schema 1:1 (e.g. `interface Plane { origin: Point; xAxis: Vector; yAxis: Vector }`). They are returned by-value from owner methods (`piece.planeSync()`, `piece.flatPlaneSync()`, `connection.sideSync()`, `piece.attributesSync()`, …). The owning `Entity`'s cache holds a stable reference per logical value, so `fieldSync()` returns the same object instance until the field changes. There is no `class Plane`, no `class Coordinate`, no `class Attribute`. There are no `*Scope` / `*Context` providers, no entity-identity hooks, and no `field()` / `fieldSync()` / `on<Event>` API anchored to a weak-entity id — those values appear _only_ as field results inside their owning Artifact class.
+`Plane`, `Coordinate`, `Position`, `Point`, `Vector`, `Side`, `Attribute` (every `WeakEntity` per [target.schema.graphql](semio/graphql/target.schema.graphql) lines 51–67) are **not classes**. They are plain TypeScript record types that mirror the schema 1:1 (e.g. `interface Plane { origin: Point; xAxis: Vector; yAxis: Vector }`). They are returned by-value from owner methods (`piece.plane(): Promise<Plane>`, `piece.flatPlane(): Promise<Plane>`, `connection.side(): Promise<Side>`, `piece.attributes(): Promise<readonly Attribute[]>`, …). Each call hits the server fresh; no in-class cache holds them. There is no `class Plane`, no `class Coordinate`, no `class Attribute`. There are no `*Scope` / `*Context` providers, no entity-identity hooks, and no `field()` / `on<Event>` API anchored to a weak-entity id — those values appear *only* as field results inside their owning Artifact class.
 
 Every command method translates to one `mutation { session { ... } }` GraphQL request. The session/version/change scoping (`session.theKit.unsavedChange(activeChangeId).kit.<…>`, or `session.alternative(…)`, or `session.theKit.…` for save / checkpoint flows) is encapsulated by `Kit`; child classes hold a reference to their owning `Kit` and route their own command through it.
 
 The transport speaks only GraphQL:
 
-- Reads: a single `GqlTransport.query(doc, vars)` per field method (typed `Query` selection with the right `node(id)` lookup).
-- Subscriptions: one persistent `subscription { event }` per `Kit` instance; the `EventBus` deserializes each `Json` event, looks up its kind + entity id + field affinity, and pushes typed values into all registered channels.
-- Commands: a single async path per leaf in `*OperationInput`. `operation(...)` first runs the in-class reducer (mutates the cache deterministically using the same logic the server applies for the matching event, and fires `on<Event>` callbacks in the same tick so React `useSyncExternalStore` rerenders without waiting for the network), then dispatches the `mutation { session { ... } }`. The returned `Promise<SetResult>` resolves with the server's confirmation (or rejection). The subscription event arriving later reconciles the cache (no-operation if the optimistic state already matches, corrective re-emit if the server diverged, rollback on rejection). Background reconciliation/dispatch failures surface through `Kit.errors` (consumed by `useKitErrors`); the rejecting `SetResult` itself is delivered to the caller's `Promise` and therefore to the React op hook's `status` (§4).
+- Reads: a single `GqlTransport.query(doc, vars)` per `field()` call (typed `Query` selection with the right `node(id)` lookup). No memoization, no deduplication of in-flight requests across components — the in-memory Rust server is fast enough that the JS layer never needs to be clever.
+- Subscriptions: one persistent `subscription { event }` per `Kit` instance; the `EventBus` deserializes each event, looks up its kind + entity id + field affinity, and pushes typed values into all registered `on<Event>` callbacks. The `next` value carried into the callback comes either from the server's event payload directly, or — when the schema doesn't embed it — from one shared refetch the EventBus performs per event. The bus broadcasts that fetch result; it does not store it.
+- Commands: a single async path per leaf in `*OperationInput`. `operation(...)` builds the GraphQL input and calls `GqlTransport.mutate(doc, vars)`. The returned `Promise<SetResult>` resolves with the server's response (`{ ok: true; id }` or `{ ok: false; error }`). The JS class does not read or write any local state — UI updates flow exclusively from the subscription event(s) the server emits in response. Transport-level timeouts are surfaced as `{ ok: false; error: { kind: "Timeout", … } }`; transport disconnects surface through `Kit.errors` (consumed by `useKitErrors`).
 
 ## 3. Public exports of `semio/js/index.ts`
 
@@ -319,8 +267,8 @@ The same rule applies to writes — every write hook is a 1:1 wrapper around one
 
 ### Strict separation of reads and writes
 
-- **Reads** are pure plain-data hooks. `use<Entity><Field>(id?)` returns just the value (`T | undefined` for lean, `Entity | null` / `readonly Entity[] | undefined` for bulky). No tuple, no setter, no status, no `KitFieldBinding`, no `HookRead`. If the entity / kit / field is not yet resolved the hook returns `undefined` / `null`.
-- **Writes** are operation hooks. `use<Operation><Entity>(id?)` returns a stable `readonly [run, status]` tuple where `run(...args): Promise<SetResult>` is bound to that entity + operation and `status: OperationStatus<SetSuccess>` is a discriminated-union snapshot (`idle` / `pending` / `successful` / `tooLong` / `timeout` / `failed`) — see §"Operation hook pattern". There is no `*Sync` variant, no embedded read fallback; callers compose a read hook and a write hook independently. The optimistic local apply that keeps drag/slider UX single-tick lives inside the underlying class method, not inside a separate hook.
+- **Reads** are pure plain-data hooks. `use<Entity><Field>(id?)` returns just the value (`T | undefined` for lean, `Entity | null` / `readonly Entity[] | undefined` for bulky). The hook backs itself with `useState` + `useEffect`: on mount (or whenever the resolved entity changes) it calls `entity.field()` once and stores the result; on every `entity.on<Event>(cb)` callback it replaces the stored value with the new one. The hook does *not* keep an external cache, does *not* dedupe across components, does *not* try to optimize equality. The Rust server is in-memory and fast — every component pays for its own fetch and that's fine. While the first fetch is in flight the hook returns `undefined`. No tuple, no setter, no status, no `KitFieldBinding`, no `HookRead`.
+- **Writes** are operation hooks. `use<Operation><Entity>(id?)` returns a stable `readonly [run, status]` tuple where `run(...args): Promise<SetResult>` is bound to that entity + operation and `status: OperationStatus<SetSuccess>` is a discriminated-union snapshot (`idle` / `pending` / `successful` / `tooLong` / `timeout` / `failed`) — see §"Operation hook pattern". There is no `*Sync` variant, no embedded read fallback, no optimistic apply. `run` simply awaits the GraphQL mutation; any UI update that must follow the write arrives through the subscription events the server emits. Callers compose a read hook and a write hook independently.
 - The kit can only be modified through these operation hooks. Operation hooks map 1:1 to leaves of the `*OperationInput` types in [target.schema.graphql](semio/graphql/target.schema.graphql).
 
 ### Resolution rules (every hook)
@@ -527,16 +475,17 @@ function useDraggingPiece(id: string) {
 ```
 
 ```tsx
-// After — pure write, schema-1:1, single async path with status feedback.
+// After — pure write, schema-1:1, single async path with status feedback. No optimistic apply.
 const [dragPiece, dragPieceStatus] = useDragPiece(id);
-// onPointerMove={(offset) => void dragPiece(offset)}        // optimistic apply happens synchronously inside dragPiece
-// dragPieceStatus.kind === "pending" while awaiting confirmation
-// dragPieceStatus.kind === "successful" | "tooLong" | "timeout" | "failed" once resolved
+// onPointerMove={(offset) => void dragPiece(offset)}        // dispatches one mutation, awaits server
+// dragPieceStatus.kind === "pending" while the GraphQL mutation is in flight
+// usePieceCenter rerenders ONLY when the server emits the `CenterChanged` subscription event
+// dragPieceStatus.kind === "successful" | "tooLong" | "timeout" | "failed" once the mutation resolves
 ```
 
-Optimistic UI feedback during pointer-move drags is unaffected: `piece.drag(offset)` mutates the cache + fires `onCenterChanged` synchronously *before* it awaits the network, so any `usePieceCenter` consumer rerenders in the same tick the pointer event was handled. The promise then resolves a moment later and updates `dragPieceStatus` to `successful` / `tooLong` / `timeout` / `failed`.
+Pointer-move drag responsiveness comes entirely from the in-memory Rust server: `piece.drag(offset)` is a single GraphQL mutation hop, the server applies the change in-place, the subscription emits `CenterChanged`, the bound `usePieceCenter` hook receives the new value and rerenders. There is no optimistic shortcut anywhere on the JS / React / sketchpad side.
 
-Net effect: every banned `useKit` / `useDesign` / `useType` / `usePiece` / `useConnection` / `useAuthor` / `useQuality` import disappears from sketchpad, every sub-selection / tuple sketchpad hook (`usePieceCenterU`, `usePieceCenterV`, `usePieceScale` (sketchpad version), `usePieceIsHidden`, `usePieceIsLocked`, `useConnectionGapValue`, `useConnectionShiftValue`, `useConnectionRiseValue`, `useConnectionRotationValue`, `useConnectionTurnValue`, `useConnectionTiltValue`, `useDesignPieceIds`, `useDesignConnectionIds`, …) is *deleted* (no rename, no replacement hook), every `commands.updatePiece` / `updateConnection` / `updateType` / `updateDesign` / `applyKitDiff` call becomes a `const [op, opStatus] = use<Op><Entity>(); … void op(...)` pair, and every read uses a schema-1:1 field hook from `@semio/react` plus inline destructuring at the call site. The `useDesignAppCommands` indirection itself is deleted — sketchpad calls the operation hooks directly.
+Net effect: every banned `useKit` / `useDesign` / `useType` / `usePiece` / `useConnection` / `useAuthor` / `useQuality` import disappears from sketchpad, every sub-selection / tuple sketchpad hook (`usePieceCenterU`, `usePieceCenterV`, `usePieceScale` (sketchpad version), `usePieceIsHidden`, `usePieceIsLocked`, `useConnectionGapValue`, `useConnectionShiftValue`, `useConnectionRiseValue`, `useConnectionRotationValue`, `useConnectionTurnValue`, `useConnectionTiltValue`, `useDesignPieceIds`, `useDesignConnectionIds`, …) is *deleted* (no rename, no replacement hook), every `commands.updatePiece` / `updateConnection` / `updateType` / `updateDesign` / `applyKitDiff` call becomes a `const [op, opStatus] = use<Op><Entity>(); … void op(...)` pair, and every read uses a schema-1:1 field hook from `@semio/react` plus inline destructuring at the call site. The `useDesignAppCommands` indirection itself is deleted — sketchpad calls the operation hooks directly. No optimistic-apply layer is reintroduced anywhere.
 
 ### Generic mechanisms (React side)
 
@@ -546,10 +495,32 @@ Every per-field and per-operation hook in [semio/react/index.tsx](semio/react/in
 // internal — hidden from the public API
 const READONLY: SetResult = { ok: false, error: { kind: "Readonly", message: "no entity" } };
 
-function bindFieldToReact<E, T>(entity: E | null, getSnap: (e: E) => T | undefined, subscribe: (e: E, listener: () => void) => Unsubscribe): T | undefined {
- const sub = React.useCallback((cb: () => void) => (entity ? subscribe(entity, cb) : noop), [entity, subscribe]);
- const get = React.useCallback(() => (entity ? getSnap(entity) : undefined), [entity, getSnap]);
- return React.useSyncExternalStore(sub, get, get);
+// Pure pull-based bridge. No cache. Uses useState + useEffect; never useSyncExternalStore (there
+// is nothing to take a stable synchronous snapshot of — the source of truth lives in semio/rs).
+function bindFieldToReact<E, T>(
+ entity: E | null,
+ fetch: (e: E) => Promise<T>,
+ subscribe: (e: E, cb: (next: T) => void) => Unsubscribe,
+): T | undefined {
+ const [value, setValue] = React.useState<T | undefined>(undefined);
+ React.useEffect(() => {
+  if (!entity) {
+   setValue(undefined);
+   return;
+  }
+  let alive = true;
+  fetch(entity).then((v) => {
+   if (alive) setValue(v);
+  });
+  const unsubscribe = subscribe(entity, (next) => {
+   if (alive) setValue(next);
+  });
+  return () => {
+   alive = false;
+   unsubscribe();
+  };
+ }, [entity]);
+ return value;
 }
 
 type OperationStatus<T = SetSuccess> =
@@ -606,12 +577,15 @@ function bindOpToReact<E, Args extends any[]>(entity: E | null, call: (e: E, ...
 //   Quality   — useKit().quality(id ?? QualityContext)
 //   Tag       — useKit().tag(id ?? TagContext)
 //   Concept   — useKit().concept(id ?? ConceptContext)
-const createPieceFieldHook = <T>(getSnap: (p: Piece) => T | undefined, subscribe: (p: Piece, listener: () => void) => Unsubscribe): ((id?: string) => T | undefined) =>
+const createPieceFieldHook = <T>(
+ fetch: (p: Piece) => Promise<T>,
+ subscribe: (p: Piece, cb: (next: T) => void) => Unsubscribe,
+): ((id?: string) => T | undefined) =>
  function usePieceField(id?: string): T | undefined {
   const design = useDesign();
   const pieceId = id ?? React.useContext(PieceContext)?.id;
   const piece = design && pieceId ? design.piece(pieceId) : null;
-  return bindFieldToReact(piece, getSnap, subscribe);
+  return bindFieldToReact(piece, fetch, subscribe);
  };
 
 const createPieceOpHook = <Args extends any[]>(call: (p: Piece, ...args: Args) => Promise<SetResult>): ((id?: string) => readonly [(...args: Args) => Promise<SetResult>, OperationStatus]) =>
@@ -642,32 +616,32 @@ Every per-field read hook is a one-line application of the matching `create<Enti
 
 ```ts
 // Lean fields → return value verbatim (string / number / WeakEntity / list of WeakEntity)
-export const usePieceName        = createPieceFieldHook((p) => p.nameSync(),        (p, s) => p.onRenamed(s));
-export const usePieceDescription = createPieceFieldHook((p) => p.descriptionSync(), (p, s) => p.onDescriptionChanged(s));
-export const usePiecePlane       = createPieceFieldHook((p) => p.planeSync(),       (p, s) => p.onPlaneChanged(s));
-export const usePieceCenter      = createPieceFieldHook((p) => p.centerSync(),      (p, s) => p.onCenterChanged(s));
-export const usePieceFlatPlane   = createPieceFieldHook((p) => p.flatPlaneSync(),   (p, s) => p.onFlatPlaneChanged(s));
-export const usePieceFlatCenter  = createPieceFieldHook((p) => p.flatCenterSync(),  (p, s) => p.onFlatCenterChanged(s));
-export const usePieceScale       = createPieceFieldHook((p) => p.scaleSync(),       (p, s) => p.onScaleChanged(s));
-export const usePieceAttributes  = createPieceFieldHook((p) => p.attributesSync(),  (p, s) => p.onAttributesChanged(s));
+export const usePieceName        = createPieceFieldHook((p) => p.name(),        (p, cb) => p.onRenamed(cb));
+export const usePieceDescription = createPieceFieldHook((p) => p.description(), (p, cb) => p.onDescriptionChanged(cb));
+export const usePiecePlane       = createPieceFieldHook((p) => p.plane(),       (p, cb) => p.onPlaneChanged(cb));
+export const usePieceCenter      = createPieceFieldHook((p) => p.center(),      (p, cb) => p.onCenterChanged(cb));
+export const usePieceFlatPlane   = createPieceFieldHook((p) => p.flatPlane(),   (p, cb) => p.onFlatPlaneChanged(cb));
+export const usePieceFlatCenter  = createPieceFieldHook((p) => p.flatCenter(),  (p, cb) => p.onFlatCenterChanged(cb));
+export const usePieceScale       = createPieceFieldHook((p) => p.scale(),       (p, cb) => p.onScaleChanged(cb));
+export const usePieceAttributes  = createPieceFieldHook((p) => p.attributes(),  (p, cb) => p.onAttributesChanged(cb));
 
 // Bulky fields → return class instance(s)
-export const usePieceParentPiece      = createPieceFieldHook((p) => p.parentPieceSync(),      (p, s) => p.onParentPieceChanged(s));      // Piece | null
-export const usePieceParentConnection = createPieceFieldHook((p) => p.parentConnectionSync(), (p, s) => p.onParentConnectionChanged(s)); // Connection | null
-export const usePieceChildPieces      = createPieceFieldHook((p) => p.childPiecesSync(),      (p, s) => p.onChildPiecesChanged(s));      // readonly Piece[]
-export const usePieceChildConnections = createPieceFieldHook((p) => p.childConnectionsSync(), (p, s) => p.onChildConnectionsChanged(s)); // readonly Connection[]
+export const usePieceParentPiece      = createPieceFieldHook((p) => p.parentPiece(),      (p, cb) => p.onParentPieceChanged(cb));      // Piece | null
+export const usePieceParentConnection = createPieceFieldHook((p) => p.parentConnection(), (p, cb) => p.onParentConnectionChanged(cb)); // Connection | null
+export const usePieceChildPieces      = createPieceFieldHook((p) => p.childPieces(),      (p, cb) => p.onChildPiecesChanged(cb));      // readonly Piece[]
+export const usePieceChildConnections = createPieceFieldHook((p) => p.childConnections(), (p, cb) => p.onChildConnectionsChanged(cb)); // readonly Connection[]
 
-export const useDesignName        = createDesignFieldHook((d) => d.nameSync(),        (d, s) => d.onRenamed(s));
-export const useDesignPieces      = createDesignFieldHook((d) => d.piecesSync(),      (d, s) => d.onPiecesChanged(s));      // readonly Piece[] (bulky)
-export const useDesignConnections = createDesignFieldHook((d) => d.connectionsSync(), (d, s) => d.onConnectionsChanged(s)); // readonly Connection[]
+export const useDesignName        = createDesignFieldHook((d) => d.name(),        (d, cb) => d.onRenamed(cb));
+export const useDesignPieces      = createDesignFieldHook((d) => d.pieces(),      (d, cb) => d.onPiecesChanged(cb));      // readonly Piece[] (bulky)
+export const useDesignConnections = createDesignFieldHook((d) => d.connections(), (d, cb) => d.onConnectionsChanged(cb)); // readonly Connection[]
 
-export const useTypeName        = createTypeFieldHook((t) => t.nameSync(),         (t, s) => t.onRenamed(s));
-export const useTypePorts       = createTypeFieldHook((t) => t.portsSync(),        (t, s) => t.onPortsChanged(s));        // readonly Port[]
-export const useTypeConnectors  = createTypeFieldHook((t) => t.connectorsSync(),   (t, s) => t.onConnectorsChanged(s));   // readonly Connector[]
-export const useTypeRepresentations = createTypeFieldHook((t) => t.representationsSync(), (t, s) => t.onRepresentationsChanged(s));
+export const useTypeName        = createTypeFieldHook((t) => t.name(),            (t, cb) => t.onRenamed(cb));
+export const useTypePorts       = createTypeFieldHook((t) => t.ports(),           (t, cb) => t.onPortsChanged(cb));         // readonly Port[]
+export const useTypeConnectors  = createTypeFieldHook((t) => t.connectors(),      (t, cb) => t.onConnectorsChanged(cb));    // readonly Connector[]
+export const useTypeRepresentations = createTypeFieldHook((t) => t.representations(), (t, cb) => t.onRepresentationsChanged(cb));
 
-export const useConnectionGap   = createConnectionFieldHook((c) => c.gapSync(),     (c, s) => c.onGapChanged(s));
-export const useConnectionShift = createConnectionFieldHook((c) => c.shiftSync(),   (c, s) => c.onShiftChanged(s));
+export const useConnectionGap   = createConnectionFieldHook((c) => c.gap(),       (c, cb) => c.onGapChanged(cb));
+export const useConnectionShift = createConnectionFieldHook((c) => c.shift(),     (c, cb) => c.onShiftChanged(cb));
 // …one hook per schema field on every Artifact entity (Kit / Design / Type / Piece / Connection / Port / Connector / Representation / Author / Quality / Tag / Concept).
 ```
 
@@ -684,13 +658,13 @@ export function usePieceIsHidden(): boolean { … }
 export function useDesignQualitySum(): number { … }
 ```
 
-For both lean and bulky fields, `<entity>Sync()` is guaranteed by §2 to return the same reference until the matching event fires — `bindFieldToReact` simply forwards that to `useSyncExternalStore` so React rerenders only on real changes.
+Each call to `<entity>.field()` is one fresh GraphQL `Query` against [semio/rs/lib.rs](semio/rs/lib.rs); each `<entity>.on<Event>(cb)` callback fires once per matching subscription event. `bindFieldToReact` calls `field()` exactly once per `entity` change (mount or resolved-id change) and replaces the cached *React state* on each event payload — there is no JS-side cache, no equality short-circuit, and no `useSyncExternalStore`. The Rust server is in-memory and authoritative, so even a busy view re-fetching once per event is acceptable.
 
 ### Operation hook pattern
 
-Every per-operation write hook is a one-line application of the matching `create<Entity>OpHook`. There are **no `*Sync` op hooks** — the optimistic local apply is already part of the single async class method (§2). Each hook returns a stable `readonly [run, status]` tuple:
+Every per-operation write hook is a one-line application of the matching `create<Entity>OpHook`. There are **no `*Sync` op hooks** and **no optimistic local apply** anywhere in `semio/js` / `semio/react` / `semio/sketchpad`. Each hook returns a stable `readonly [run, status]` tuple:
 
-- `run(...args): Promise<SetResult>` — invokes the underlying class method (`piece.drag(offset)`, …). The class method applies the change optimistically to the cache (so any bound `usePieceCenter` etc. rerender in the same tick), then awaits the GraphQL mutation. The promise resolves with `{ ok: true; id }` or `{ ok: false; error }`.
+- `run(...args): Promise<SetResult>` — invokes the underlying class method (`piece.drag(offset)`, …). The class method dispatches a single GraphQL mutation against [semio/rs/lib.rs](semio/rs/lib.rs) and awaits the server's reply. The promise resolves with `{ ok: true; id }` or `{ ok: false; error }`. Any bound `usePieceCenter` / `usePiecePlane` / … rerender only when the server emits the corresponding subscription event in response to the mutation; the JS side never updates state ahead of the server.
 - `status: OperationStatus<SetSuccess>` — discriminated union snapshot of the most recent invocation, kept in sync via React state inside the factory:
   ```ts
   type OperationStatus<T = SetSuccess> =
@@ -758,7 +732,7 @@ function KitNameField() {
 }
 ```
 
-Because the optimistic apply happens *inside* `run`, drag/slider feedback stays single-tick responsive even though the hook surface is async. Callers that don't want to track status simply ignore the second tuple slot (`const [dragPiece] = useDragPiece(id);`) — the read fields they bind via `usePieceCenter` etc. still update synchronously.
+Because [semio/rs/lib.rs](semio/rs/lib.rs) is in-memory, the round-trip `run(...)` → server processes mutation → server emits subscription event → bound read hooks rerender takes a single GraphQL hop, which is what keeps drag/slider feedback responsive. The hook surface is async on purpose: the JS side never guesses the post-mutation state, it always waits for the server to tell it. Callers that don't care about status simply ignore the second tuple slot (`const [dragPiece] = useDragPiece(id);`).
 
 ### Operation hook surface (1:1 with [target.schema.graphql](semio/graphql/target.schema.graphql))
 
