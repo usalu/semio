@@ -9,12 +9,12 @@
 // Main sketchpad container managing app tabs, panels and window layout.
 
 // #endregion 🧲Header
+// #region 🎨Sketchpad
 // #region ⛩️Imports
 // External and internal module imports.
 
 // #region ⛩️Imports
 
-import { kitStoreFromKitStoreClient } from "@semio/js";
 import type { Connector, KitCommandContext, KitFolderAdapter, KitHostGraphOperation, KitHostStore, KitJsonFileAdapter, KitRegistryValue, Port, SketchpadKitKindAvailability, SketchpadKitStoreFactory } from "@semio/react";
 import {
   applyKitHostGraphOperation,
@@ -55,6 +55,7 @@ import {
   KitFullDtoSchema,
   kitHostRedo,
   kitHostUndo,
+  kitStoreFromKitStoreClient,
   KitScope,
   KitScopeContext,
   KitShallowDto,
@@ -88,6 +89,15 @@ import {
   useCreatePort,
   useCreateQuality,
   useCreateType,
+  useConnectionDescription as useSchemaConnectionDescription,
+  useConnectionGap as useSchemaConnectionGap,
+  useConnectionRise as useSchemaConnectionRise,
+  useConnectionRotation as useSchemaConnectionRotation,
+  useConnectionShift as useSchemaConnectionShift,
+  useConnectionTilt as useSchemaConnectionTilt,
+  useConnectionTurn as useSchemaConnectionTurn,
+  useConnectionU as useSchemaConnectionU,
+  useConnectionV as useSchemaConnectionV,
   useDesign,
   useDesignClusterableGroups,
   useDesignDescription,
@@ -128,10 +138,17 @@ import {
   useParentPieceId as useParentPieceIdFromKit,
   usePatchKit,
   usePiece,
+  usePieceCenter as useSchemaPieceCenter,
+  usePieceColor as useSchemaPieceColor,
   usePieceDepth as usePieceDepthFromKit,
+  usePieceDescription as useSchemaPieceDescription,
   usePieceFlatPlane,
+  usePieceIsHidden as useSchemaPieceIsHidden,
+  usePieceIsLocked as useSchemaPieceIsLocked,
   usePieceMetadata as usePieceMetadataFromKit,
+  usePieceName as useSchemaPieceName,
   usePieceParentConnection as usePieceParentConnectionFromKit,
+  usePieceScale as useSchemaPieceScale,
   usePieces,
   usePieceScope,
   usePiecesMetadataMap as usePiecesMetadataRecordFromKit,
