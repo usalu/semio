@@ -8372,10 +8372,37 @@ pub mod kit_backbone {
         /// @emoji 📦 Wire key `initialKit` — persisted kit seed for this snapshot (GraphQL `Graph.theKit` is the live materialization, not this JSON name).
         #[serde(rename = "initialKit", default = "empty_root_value")]
         pub root: serde_json::Value,
+        #[serde(rename = "theKit", default)]
+        pub the_kit: TheKitVersionDto,
         #[serde(default)]
         pub checkpoints: BlockHashedListDto<serde_json::Value>,
         #[serde(default)]
-        pub alternatives: BlockHashedListDto<serde_json::Value>,
+        pub alternatives: BlockHashedListDto<AlternativeVersionDto>,
+    }
+
+    /// @emoji 🧭 Main kit version row; version-scoped changes live here, not on the graph snapshot.
+    #[derive(Clone, Debug, serde::Deserialize, serde::Serialize)]
+    pub struct TheKitVersionDto {
+        pub id: String,
+        pub hash: String,
+        #[serde(rename = "savedChanges", default)]
+        pub saved_changes: BlockHashedListDto<VersionChangeDto>,
+        #[serde(rename = "unsavedChanges", default)]
+        pub unsaved_changes: BlockHashedListDto<VersionChangeDto>,
+    }
+
+    impl Default for TheKitVersionDto {
+        fn default() -> Self {
+            Self { id: "the-kit".to_string(), hash: KIT_BUNDLE_HASH_STUB.to_string(), saved_changes: BlockHashedListDto::default(), unsaved_changes: BlockHashedListDto::default() }
+        }
+    }
+
+    /// @emoji 🌿 Alternative version row; each alternative owns its own version-scoped changes.
+    #[derive(Clone, Debug, serde::Deserialize, serde::Serialize)]
+    pub struct AlternativeVersionDto {
+        pub id: String,
+        pub hash: String,
+        pub name: String,
         #[serde(rename = "savedChanges", default)]
         pub saved_changes: BlockHashedListDto<VersionChangeDto>,
         #[serde(rename = "unsavedChanges", default)]
@@ -8450,10 +8477,9 @@ pub mod kit_backbone {
                 hash: KIT_BUNDLE_HASH_STUB.to_string(),
                 authors: BlockHashedListDto::default(),
                 root: empty_root_value(),
+                the_kit: TheKitVersionDto::default(),
                 checkpoints: BlockHashedListDto::default(),
                 alternatives: BlockHashedListDto::default(),
-                saved_changes: BlockHashedListDto::default(),
-                unsaved_changes: BlockHashedListDto::default(),
             }
         }
     }
@@ -8474,15 +8500,22 @@ pub mod kit_backbone {
         /// @emoji 🔁 Flatten every recorded `wip` version edit into ordered [`StoredSemanticOp`] records ready for replay.
         pub fn wip_semantic_ops(&self) -> Vec<StoredSemanticOp> {
             let mut out = Vec::new();
-            for change in self.wip.saved_changes.items.iter().chain(self.wip.unsaved_changes.items.iter()) {
-                let draft_id = change.origin.clone().unwrap_or_else(|| "the-kit".to_string());
+            Self::push_semantic_ops_from_version_changes(&mut out, self.wip.the_kit.saved_changes.items.iter().chain(self.wip.the_kit.unsaved_changes.items.iter()), "the-kit");
+            for alternative in &self.wip.alternatives.items {
+                Self::push_semantic_ops_from_version_changes(&mut out, alternative.saved_changes.items.iter().chain(alternative.unsaved_changes.items.iter()), alternative.id.as_str());
+            }
+            out
+        }
+
+        fn push_semantic_ops_from_version_changes<'a>(out: &mut Vec<StoredSemanticOp>, changes: impl Iterator<Item = &'a VersionChangeDto>, fallback_draft_id: &str) {
+            for change in changes {
+                let draft_id = change.origin.clone().unwrap_or_else(|| fallback_draft_id.to_string());
                 for edit in &change.edits.items {
                     for step in &edit.forwards.items {
                         out.push(StoredSemanticOp { draft_id: draft_id.clone(), transaction_id: change.id.clone(), kind: step.kind.clone(), input: step.input.clone() });
                     }
                 }
             }
-            out
         }
 
         /// @emoji 📸 Project one live semantic change into a bundle edit.
@@ -8537,6 +8570,18 @@ pub mod kit_backbone {
             }
         }
 
+        async fn change_lists_from_draft(draft: &Arc<crate::vcs::Draft>) -> (BlockHashedListDto<VersionChangeDto>, BlockHashedListDto<VersionChangeDto>) {
+            let mut saved = BlockHashedListDto::default();
+            let mut unsaved = BlockHashedListDto::default();
+            for tx in draft.finalized_transactions.read().await.iter() {
+                saved.items.push(Self::change_dto_from_runtime_transaction(tx, true).await);
+            }
+            for tx in draft.transactions.read().await.iter() {
+                unsaved.items.push(Self::change_dto_from_runtime_transaction(tx, false).await);
+            }
+            (saved, unsaved)
+        }
+
         /// @emoji 📸 Project the live `Graph` into a metabolism-shaped bundle ready for atomic write.
         /// `wip.id` mirrors the graph id; `wip.initialKit` is the immutable [`Graph::initial_kit`] baseline (SDL `Graph.initialKit`); head materialization stays on `theKit.kit` / version changes.
         pub async fn from_graph(graph: &crate::vcs::Graph) -> Self {
@@ -8546,7 +8591,10 @@ pub mod kit_backbone {
             let gid = graph.id.as_str().to_string();
             bundle.wip.id = gid.clone();
             bundle.authoritative.id = gid.clone();
-            bundle.stage.id = gid;
+            bundle.stage.id = gid.clone();
+            bundle.wip.the_kit.id = gid.clone();
+            bundle.authoritative.the_kit.id = gid.clone();
+            bundle.stage.the_kit.id = gid;
             bundle.wip.root = initial_dto.clone();
             bundle.authoritative.root = initial_dto.clone();
             bundle.stage.root = initial_dto;
@@ -8565,14 +8613,26 @@ pub mod kit_backbone {
                 }));
             }
 
-            // 🧾 Project version changes and edits directly on the wip version.
+            // 🧾 Project version changes and edits directly on the wip version rows.
             for draft in graph.drafts.read().await.iter() {
-                for tx in draft.transactions.read().await.iter() {
-                    bundle.wip.unsaved_changes.items.push(Self::change_dto_from_runtime_transaction(tx, false).await);
+                if draft.owner_alternative.upgrade().is_none() {
+                    let (saved, unsaved) = Self::change_lists_from_draft(draft).await;
+                    bundle.wip.the_kit.saved_changes.items.extend(saved.items);
+                    bundle.wip.the_kit.unsaved_changes.items.extend(unsaved.items);
                 }
-                for tx in draft.finalized_transactions.read().await.iter() {
-                    bundle.wip.saved_changes.items.push(Self::change_dto_from_runtime_transaction(tx, true).await);
-                }
+            }
+            for alternative in graph.alternatives.read().await.iter() {
+                let (saved_changes, unsaved_changes) = match alternative.draft.read().await.upgrade() {
+                    Some(draft) => Self::change_lists_from_draft(&draft).await,
+                    None => (BlockHashedListDto::default(), BlockHashedListDto::default()),
+                };
+                bundle.wip.alternatives.items.push(AlternativeVersionDto {
+                    id: alternative.id.as_str().to_string(),
+                    hash: KIT_BUNDLE_HASH_STUB.to_string(),
+                    name: alternative.name.read().await.clone(),
+                    saved_changes,
+                    unsaved_changes,
+                });
             }
 
             Self::hoist_inline_file_blobs_for_storage(&mut bundle);
@@ -8705,6 +8765,9 @@ pub mod kit_backbone {
             bundle.wip.id = kit_id.to_string();
             bundle.authoritative.id = kit_id.to_string();
             bundle.stage.id = kit_id.to_string();
+            bundle.wip.the_kit.id = kit_id.to_string();
+            bundle.authoritative.the_kit.id = kit_id.to_string();
+            bundle.stage.the_kit.id = kit_id.to_string();
             // 🪧 First checkpoint anchors the kit at its initial empty projection (no changes yet).
             bundle.wip.checkpoints.items.push(serde_json::json!({
                 "id": checkpoint_id,
@@ -8715,7 +8778,7 @@ pub mod kit_backbone {
                 "changes": { "hash": KIT_BUNDLE_HASH_STUB, "items": [] },
             }));
             // 🧾 Initial unsaved change on the version; edits are added when user actions run.
-            bundle.wip.unsaved_changes.items.push(VersionChangeDto {
+            bundle.wip.the_kit.unsaved_changes.items.push(VersionChangeDto {
                 id: change_id.to_string(),
                 hash: KIT_BUNDLE_HASH_STUB.to_string(),
                 edits: BlockHashedListDto::default(),
@@ -8734,7 +8797,7 @@ pub mod kit_backbone {
 
         /// @emoji ➕ Append a forward operation to an unsaved version change and keep an optional replay origin anchor.
         pub fn append_unsaved_edit_with_origin(&mut self, change_id: &str, origin: Option<String>, kind: &str, input: serde_json::Value) {
-            let changes = &mut self.wip.unsaved_changes.items;
+            let changes = &mut self.wip.the_kit.unsaved_changes.items;
             let change_idx = match changes.iter().position(|c| c.id == change_id) {
                 Some(i) => i,
                 None => {
@@ -10747,7 +10810,9 @@ mod tests {
             assert!(!v["wip"]["checkpoints"]["items"].as_array().unwrap().is_empty(), "seed checkpoint present");
             assert!(v["wip"].get("drafts").is_none(), "bundle must not persist drafts");
             assert!(v["wip"].get("transactions").is_none(), "bundle must not persist transactions");
-            assert!(!v["wip"]["unsavedChanges"]["items"].as_array().unwrap().is_empty(), "default unsaved change present");
+            assert!(v["wip"].get("savedChanges").is_none(), "graph must not persist savedChanges");
+            assert!(v["wip"].get("unsavedChanges").is_none(), "graph must not persist unsavedChanges");
+            assert!(!v["wip"]["theKit"]["unsavedChanges"]["items"].as_array().unwrap().is_empty(), "default unsaved change present on the kit version");
 
             let rt_b = crate::worker::ParentRuntime::spawn().await;
             crate::kit_backbone::KitStoreBundleFile::hydrate_into_graph(&rt_b.wip_graph, &json_a).await.expect("hydrate");
@@ -11200,9 +11265,13 @@ mod tests {
         }
         assert_eq!(v["schema"], crate::kit_backbone::KIT_STORE_BUNDLE_SCHEMA);
         for graph_key in ["wip", "authoritative", "stage"] {
-            for inner in ["id", "hash", "authors", "initialKit", "checkpoints", "alternatives", "savedChanges", "unsavedChanges"] {
+            for inner in ["id", "hash", "authors", "initialKit", "theKit", "checkpoints", "alternatives"] {
                 assert!(v[graph_key].get(inner).is_some(), "graph `{graph_key}` missing `{inner}`");
             }
+            assert!(v[graph_key].get("savedChanges").is_none(), "graph `{graph_key}` must not own savedChanges");
+            assert!(v[graph_key].get("unsavedChanges").is_none(), "graph `{graph_key}` must not own unsavedChanges");
+            assert!(v[graph_key]["theKit"].get("savedChanges").is_some(), "graph `{graph_key}.theKit` missing `savedChanges`");
+            assert!(v[graph_key]["theKit"].get("unsavedChanges").is_some(), "graph `{graph_key}.theKit` missing `unsavedChanges`");
             assert!(v[graph_key]["initialKit"].get("types").is_some(), "graph `{graph_key}.initialKit` missing `types`");
             assert!(v[graph_key]["initialKit"].get("designs").is_some(), "graph `{graph_key}.initialKit` missing `designs`");
         }
@@ -11276,9 +11345,9 @@ mod tests {
         assert_eq!(bundle.wip.checkpoints.items.len(), 1, "first checkpoint anchored on root");
         assert_eq!(bundle.wip.checkpoints.items[0]["id"], "ckpt-1");
         assert_eq!(bundle.wip.checkpoints.items[0]["message"], "init");
-        assert!(bundle.wip.saved_changes.items.is_empty(), "no saved changes at bootstrap");
-        assert_eq!(bundle.wip.unsaved_changes.items.len(), 1, "one active unsaved change on the version");
-        let change = &bundle.wip.unsaved_changes.items[0];
+        assert!(bundle.wip.the_kit.saved_changes.items.is_empty(), "no saved changes at bootstrap");
+        assert_eq!(bundle.wip.the_kit.unsaved_changes.items.len(), 1, "one active unsaved change on the kit version");
+        let change = &bundle.wip.the_kit.unsaved_changes.items[0];
         assert_eq!(change.id, "change-1");
         assert!(change.edits.items.is_empty(), "no edits recorded yet");
     }
@@ -11307,7 +11376,8 @@ mod tests {
             assert_eq!(v["schema"], crate::kit_backbone::KIT_STORE_BUNDLE_SCHEMA);
             assert!(v["wip"].get("drafts").is_none(), "bundle must not persist drafts");
             assert!(v["wip"].get("transactions").is_none(), "bundle must not persist transactions");
-            let changes = v["wip"]["unsavedChanges"]["items"].as_array().expect("wip unsavedChanges items array");
+            assert!(v["wip"].get("unsavedChanges").is_none(), "graph must not own unsavedChanges");
+            let changes = v["wip"]["theKit"]["unsavedChanges"]["items"].as_array().expect("wip.theKit unsavedChanges items array");
             assert_eq!(changes.len(), 1, "single unsaved change on disk");
             assert_eq!(changes[0]["id"], "tx-rs-1");
             let edits = changes[0]["edits"]["items"].as_array().expect("edit items");
@@ -11322,11 +11392,11 @@ mod tests {
     #[cfg(not(target_arch = "wasm32"))]
     #[test]
     fn kit_store_bundle_append_unsaved_edit_creates_change_and_edit_paths() {
-        // ➕ Appending to a fresh template materialises wip.unsavedChanges[0].edits[0].forwards[0] without touching authoritative/stage.
+        // ➕ Appending to a fresh template materialises wip.theKit.unsavedChanges[0].edits[0].forwards[0] without touching authoritative/stage.
         let mut bundle = crate::kit_backbone::KitStoreBundleFile::template();
         bundle.append_unsaved_edit("change-y", "kit.design.piece.createdFixedPiece", serde_json::json!({"hello": "world"}));
-        assert_eq!(bundle.wip.unsaved_changes.items.len(), 1, "wip unsaved change created");
-        let change = &bundle.wip.unsaved_changes.items[0];
+        assert_eq!(bundle.wip.the_kit.unsaved_changes.items.len(), 1, "wip.theKit unsaved change created");
+        let change = &bundle.wip.the_kit.unsaved_changes.items[0];
         assert_eq!(change.id, "change-y");
         assert_eq!(change.edits.items.len(), 1, "edit created under change");
         let edit = &change.edits.items[0];
@@ -11334,14 +11404,14 @@ mod tests {
         let step = &edit.forwards.items[0];
         assert_eq!(step.kind, "kit.design.piece.createdFixedPiece");
         assert_eq!(step.input["hello"], "world");
-        assert!(bundle.authoritative.unsaved_changes.items.is_empty(), "authoritative untouched");
-        assert!(bundle.stage.unsaved_changes.items.is_empty(), "stage untouched");
+        assert!(bundle.authoritative.the_kit.unsaved_changes.items.is_empty(), "authoritative untouched");
+        assert!(bundle.stage.the_kit.unsaved_changes.items.is_empty(), "stage untouched");
 
         // Appending another step into the same change grows the same edit.
         bundle.append_unsaved_edit("change-y", "kit.design.piece.deletedFixedPieces", serde_json::json!({"pieceIds": []}));
-        assert_eq!(bundle.wip.unsaved_changes.items.len(), 1, "no extra change");
-        assert_eq!(bundle.wip.unsaved_changes.items[0].edits.items.len(), 1, "no extra edit");
-        assert_eq!(bundle.wip.unsaved_changes.items[0].edits.items[0].forwards.items.len(), 2, "two forward steps");
+        assert_eq!(bundle.wip.the_kit.unsaved_changes.items.len(), 1, "no extra change");
+        assert_eq!(bundle.wip.the_kit.unsaved_changes.items[0].edits.items.len(), 1, "no extra edit");
+        assert_eq!(bundle.wip.the_kit.unsaved_changes.items[0].edits.items[0].forwards.items.len(), 2, "two forward steps");
 
         // Flatten replays everything in order from wip version changes.
         let flat = bundle.wip_semantic_ops();
@@ -11350,6 +11420,25 @@ mod tests {
         assert_eq!(flat[0].transaction_id, "change-y");
         assert_eq!(flat[0].kind, "kit.design.piece.createdFixedPiece");
         assert_eq!(flat[1].kind, "kit.design.piece.deletedFixedPieces");
+    }
+
+    #[cfg(not(target_arch = "wasm32"))]
+    #[test]
+    fn kit_store_bundle_projects_alternative_version_change_lanes() {
+        block_on(async {
+            let graph = crate::vcs::Graph::new().await;
+            let alt_id = graph.create_alternative_from_tip("branch-a".to_string(), None).await.expect("alternative");
+            let bundle = crate::kit_backbone::KitStoreBundleFile::from_graph(graph.as_ref()).await;
+            assert!(bundle.wip.the_kit.saved_changes.items.is_empty());
+            let alt = bundle.wip.alternatives.items.iter().find(|a| a.id == alt_id.as_str()).expect("alternative dto");
+            assert_eq!(alt.name, "branch-a");
+            assert!(alt.saved_changes.items.is_empty(), "alternative owns savedChanges");
+            assert!(alt.unsaved_changes.items.is_empty(), "alternative owns unsavedChanges");
+            let raw = serde_json::to_value(&bundle).expect("bundle json");
+            assert!(raw["wip"].get("savedChanges").is_none(), "graph must not own savedChanges");
+            assert!(raw["wip"]["alternatives"]["items"][0].get("savedChanges").is_some(), "alternative must own savedChanges");
+            assert!(raw["wip"]["alternatives"]["items"][0].get("unsavedChanges").is_some(), "alternative must own unsavedChanges");
+        });
     }
 
     #[test]

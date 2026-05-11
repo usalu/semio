@@ -9,9 +9,9 @@
     ".": "./index.tsx"
   },
   "scripts": {
-    "predev": "node ../rs/scripts/build-wasm.mjs",
+    "predev": "npx nx run @semio/rs:build-wasm",
     "dev": "vite",
-    "prebuild": "node ../rs/scripts/build-wasm.mjs",
+    "prebuild": "npx nx run @semio/rs:build-wasm",
     "build": "vite build",
     "test": "cross-env SEMIO_SKETCHPAD_RUN_EMBEDDED_TESTS=1 node --import ./pw-loader.mjs ../../node_modules/playwright/cli.js test",
     "publish": "vite build && npm publish"

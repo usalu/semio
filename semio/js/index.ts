@@ -8552,7 +8552,10 @@ if (
       expect((((wip["checkpoints"] as JsonObject)["items"] as readonly unknown[]) ?? []).length).toBe(1);
       expect(wip["drafts"]).toBeUndefined();
       expect(wip["transactions"]).toBeUndefined();
-      const changes = ((wip["unsavedChanges"] as JsonObject)["items"] as readonly JsonObject[]) ?? [];
+      expect(wip["savedChanges"]).toBeUndefined();
+      expect(wip["unsavedChanges"]).toBeUndefined();
+      const theKit = wip["theKit"] as JsonObject;
+      const changes = ((theKit["unsavedChanges"] as JsonObject)["items"] as readonly JsonObject[]) ?? [];
       expect(changes.length).toBe(1);
       const edits = ((changes[0]["edits"] as JsonObject)["items"] as readonly unknown[]) ?? [];
       expect(edits.length).toBe(0);
@@ -8574,7 +8577,10 @@ if (
       expect(((bundle["wip"] as JsonObject)["initialKit"] as JsonObject)["name"]).toBe("the kit");
       expect((((bundle["wip"] as JsonObject)["checkpoints"] as JsonObject)["items"] as readonly unknown[]).length).toBe(1);
       expect((bundle["wip"] as JsonObject)["drafts"]).toBeUndefined();
-      const changes = ((((bundle["wip"] as JsonObject)["unsavedChanges"] as JsonObject)["items"] as readonly JsonObject[]) ?? []);
+      expect((bundle["wip"] as JsonObject)["savedChanges"]).toBeUndefined();
+      expect((bundle["wip"] as JsonObject)["unsavedChanges"]).toBeUndefined();
+      const theKit = (bundle["wip"] as JsonObject)["theKit"] as JsonObject;
+      const changes = (((theKit["unsavedChanges"] as JsonObject)["items"] as readonly JsonObject[]) ?? []);
       expect(changes).toHaveLength(1);
       expect(((changes[0]["edits"] as JsonObject)["items"] as readonly unknown[])).toHaveLength(0);
       client.dispose();
@@ -8640,7 +8646,7 @@ if (
       const here = dirname(fileURLToPath(import.meta.url));
       const b = JSON.parse(readFileSync(resolve(here, "../assets/semio/metabolism.new.kit.semio.json"), "utf8")) as {
         schema: string;
-        wip: { id: string; initialKit?: unknown; checkpoints?: { items: unknown[] }; savedChanges?: { items: unknown[] }; unsavedChanges?: { items: unknown[] } };
+        wip: { id: string; initialKit?: unknown; theKit?: { savedChanges?: { items: unknown[] }; unsavedChanges?: { items: unknown[] } }; checkpoints?: { items: unknown[] } };
         authoritative: { id: string };
         stage: { id: string };
         conflicts: { items: unknown[] };

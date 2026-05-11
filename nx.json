@@ -43,6 +43,24 @@
       ],
       "cache": true
     },
+    "build-wasm": {
+      "inputs": [
+        "{projectRoot}/Cargo.toml",
+        "{projectRoot}/Cargo.lock",
+        "{projectRoot}/lib.rs",
+        "{projectRoot}/package.json",
+        "{projectRoot}/.cargo/**/*",
+        "{projectRoot}/scripts/build-wasm.mjs",
+        "{workspaceRoot}/package.json",
+        "{workspaceRoot}/package-lock.json",
+        "{workspaceRoot}/Cargo.toml",
+        "{workspaceRoot}/Cargo.lock"
+      ],
+      "outputs": [
+        "{projectRoot}/pkg"
+      ],
+      "cache": true
+    },
     "dev": {
       "cache": false
     },

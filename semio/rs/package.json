@@ -5,6 +5,7 @@
   "sourceRoot": "semio/rs",
   "projectType": "library",
   "scripts": {
+    "build-wasm": "node scripts/build-wasm.mjs",
     "build": "cargo build --release",
     "test": "cargo test"
   },
