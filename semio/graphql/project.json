@@ -7,7 +7,7 @@
       "cache": false,
       "options": {
         "cwd": "semio/graphql",
-        "command": "node -e \"const cp=require('child_process');const path=require('path');const cwd=process.cwd();cp.execFileSync('cargo',['test','--manifest-path',path.join(cwd,'..','rs','Cargo.toml'),'export_semio_graphql_schema_file','--','--ignored','--nocapture'],{stdio:'inherit',env:{...process.env,SEMIO_GRAPHQL_SCHEMA_OUT:path.join(cwd,'schema.graphql')}});\""
+        "command": "bun scripts/export-schema.ts"
       }
     }
   }

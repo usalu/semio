@@ -11,6 +11,27 @@
           "id": "2a6bb3e8-4adb-44a3-bc87-3314b77b40f7"
         },
         "design": null,
+        "plane": {
+          "origin": {
+            "x": -18.6,
+            "y": -7.7,
+            "z": 10.25
+          },
+          "xAxis": {
+            "x": 6.123233995736766E-17,
+            "y": -1.0,
+            "z": 0.0
+          },
+          "yAxis": {
+            "x": 1.0,
+            "y": 6.123233995736766E-17,
+            "z": 0.0
+          }
+        },
+        "center": {
+          "u": 1.907067,
+          "v": 5.867067
+        },
         "scale": null,
         "mirrorPlane": null,
         "isHidden": false,
@@ -27,33 +48,10 @@
           {
             "id": "",
             "key": "semio.plane",
-            "value": "{\"origin\":{\"x\":-18.6,\"y\":-7.7,\"z\":10.25},\"xAxis\":{\"x\":6.1230317691118863E-17,\"y\":-1.0,\"z\":0.0},\"yAxis\":{\"x\":1.0,\"y\":6.1230317691118863E-17,\"z\":0.0}}",
+            "value": "{\"origin\":{\"x\":-18.6,\"y\":-7.7,\"z\":10.25},\"xAxis\":{\"x\":6.123233995736766E-17,\"y\":-1.0,\"z\":0.0},\"yAxis\":{\"x\":1.0,\"y\":6.123233995736766E-17,\"z\":0.0}}",
             "definition": null
           }
-        ],
-        "pose": {
-          "plane": {
-            "origin": {
-              "x": -18.6,
-              "y": -7.7,
-              "z": 10.25
-            },
-            "xAxis": {
-              "x": 6.123031769111886e-17,
-              "y": -1.0,
-              "z": 0.0
-            },
-            "yAxis": {
-              "x": 1.0,
-              "y": 6.123031769111886e-17,
-              "z": 0.0
-            }
-          },
-          "center": {
-            "u": 1.907067,
-            "v": 5.867067
-          }
-        }
+        ]
       },
       {
         "id": "3b0444ad-2307-442e-972a-7f1c2cc7dcb9",
@@ -63,6 +61,8 @@
           "id": "818f2a23-569b-47cb-a69c-147694beb815"
         },
         "design": null,
+        "plane": null,
+        "center": null,
         "scale": null,
         "mirrorPlane": null,
         "isHidden": false,
@@ -79,6 +79,8 @@
           "id": "cb25017e-5505-4677-a71e-cccbc7a5be7d"
         },
         "design": null,
+        "plane": null,
+        "center": null,
         "scale": null,
         "mirrorPlane": null,
         "isHidden": false,
@@ -95,6 +97,8 @@
           "id": "214a30f8-adfc-40de-840b-151d9f7e17dd"
         },
         "design": null,
+        "plane": null,
+        "center": null,
         "scale": null,
         "mirrorPlane": null,
         "isHidden": false,
@@ -104,45 +108,6 @@
         "attributes": []
       },
       {
-        "id": "7dc5b737-3b6b-4068-b315-b7bacc91c2e1",
-        "name": "b",
-        "description": "",
-        "type": {
-          "id": "277768b5-9220-4312-bf0d-ab82d9fb6a73"
-        },
-        "design": null,
-        "scale": null,
-        "mirrorPlane": null,
-        "isHidden": false,
-        "isLocked": false,
-        "color": null,
-        "props": null,
-        "attributes": [],
-        "pose": {
-          "plane": {
-            "origin": {
-              "x": 0.0,
-              "y": 0.0,
-              "z": 0.0
-            },
-            "xAxis": {
-              "x": 1.0,
-              "y": 0.0,
-              "z": 0.0
-            },
-            "yAxis": {
-              "x": 0.0,
-              "y": 1.0,
-              "z": 0.0
-            }
-          },
-          "center": {
-            "u": 0.0,
-            "v": 0.0
-          }
-        }
-      },
-      {
         "id": "7ef59b73-e757-47a6-a5dd-a8d1dbd59c8e",
         "name": "cs_sl0_d3_t_f2_b_c1",
         "description": "",
@@ -150,6 +115,8 @@
           "id": "2c10fcf7-aca6-4ae6-803f-b72cd1baf9b5"
         },
         "design": null,
+        "plane": null,
+        "center": null,
         "scale": null,
         "mirrorPlane": null,
         "isHidden": false,
@@ -166,6 +133,8 @@
           "id": "357b841f-b121-463c-88a6-153d7cbf272f"
         },
         "design": null,
+        "plane": null,
+        "center": null,
         "scale": null,
         "mirrorPlane": null,
         "isHidden": false,
@@ -182,6 +151,8 @@
           "id": "2a6bb3e8-4adb-44a3-bc87-3314b77b40f7"
         },
         "design": null,
+        "plane": null,
+        "center": null,
         "scale": null,
         "mirrorPlane": null,
         "isHidden": false,
@@ -198,6 +169,8 @@
           "id": "cb25017e-5505-4677-a71e-cccbc7a5be7d"
         },
         "design": null,
+        "plane": null,
+        "center": null,
         "scale": null,
         "mirrorPlane": null,
         "isHidden": false,
@@ -214,6 +187,8 @@
           "id": "6ed26ed1-dffa-40d3-b405-d49b35a90fcd"
         },
         "design": null,
+        "plane": null,
+        "center": null,
         "scale": null,
         "mirrorPlane": null,
         "isHidden": false,

@@ -1,0 +1,54 @@
+{
+  "name": "repo",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "targets": {
+    "dev": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "repo/vscode",
+        "command": "vite build --watch",
+        "forwardAllArgs": true
+      }
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "repo/vscode",
+        "command": "vscode-test",
+        "forwardAllArgs": true
+      }
+    },
+    "build": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "repo/vscode",
+        "command": "vite build && vite build --config vite.test.config.ts",
+        "forwardAllArgs": true
+      }
+    },
+    "lint": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "repo/vscode",
+        "command": "bunx eslint --max-warnings 0 --config eslint.config.ts .",
+        "forwardAllArgs": true
+      }
+    },
+    "package": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "repo/vscode",
+        "command": "bunx vsce package --no-dependencies --out repo.vsix",
+        "forwardAllArgs": true
+      }
+    },
+    "vscode-prepublish": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "{workspaceRoot}",
+        "command": "bun nx run repo:build",
+        "forwardAllArgs": true
+      }
+    }
+  }
+}

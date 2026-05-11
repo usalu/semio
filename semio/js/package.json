@@ -4,15 +4,6 @@
   "name": "@semio/js",
   "version": "0.1.0",
   "type": "module",
-  "scripts": {
-    "pretest": "node ../rs/scripts/build-wasm.mjs",
-    "pretest:unit": "node ../rs/scripts/build-wasm.mjs",
-    "prebuild": "node ../rs/scripts/build-wasm.mjs",
-    "build": "tsc --noEmit",
-    "test": "cross-env SEMIO_JS_RUN_EMBEDDED_TESTS=1 vitest run",
-    "test:unit": "cross-env SEMIO_JS_RUN_EMBEDDED_TESTS=1 vitest run",
-    "test:coverage": "vitest run --coverage"
-  },
   "dependencies": {
     "rxjs": "^7.8.2",
     "zod": "^4.3.5"

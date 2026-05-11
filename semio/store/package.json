@@ -4,10 +4,6 @@
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": ".",
   "projectType": "application",
-  "scripts": {
-    "build": "cargo build --release -p semio-store",
-    "test": "cargo test -p semio-store"
-  },
   "author": {
     "name": "Ueli Saluz",
     "email": "ueli@semio-tech.com",

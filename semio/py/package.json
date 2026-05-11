@@ -4,10 +4,6 @@
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "semio/py",
   "projectType": "library",
-  "scripts": {
-    "build": "uv build",
-    "test": "uv run pytest"
-  },
   "author": {
     "name": "Ueli Saluz",
     "email": "ueli@semio-tech.com",

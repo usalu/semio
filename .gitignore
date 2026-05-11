@@ -28,6 +28,7 @@ repo/server/main
 #--------------------------------------NX--------------------------------------
 .nx/cache
 .nx/workspace-data
+.nx/workspace-data-terminal
 #--------------------------------------JAVASCRIPT--------------------------------------
 node_modules
 .env

@@ -1,0 +1,48 @@
+{
+  "name": "@semio/js",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "targets": {
+    "build": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["@semio/rs:build-wasm"],
+      "options": {
+        "cwd": "semio/js",
+        "command": "bunx tsc --noEmit",
+        "forwardAllArgs": true
+      }
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["@semio/rs:build-wasm"],
+      "options": {
+        "cwd": "semio/js",
+        "command": "bunx vitest run",
+        "forwardAllArgs": true,
+        "env": {
+          "SEMIO_JS_RUN_EMBEDDED_TESTS": "1"
+        }
+      }
+    },
+    "test-unit": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["@semio/rs:build-wasm"],
+      "options": {
+        "cwd": "semio/js",
+        "command": "bunx vitest run",
+        "forwardAllArgs": true,
+        "env": {
+          "SEMIO_JS_RUN_EMBEDDED_TESTS": "1"
+        }
+      }
+    },
+    "test-coverage": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["@semio/rs:build-wasm"],
+      "options": {
+        "cwd": "semio/js",
+        "command": "bunx vitest run --coverage",
+        "forwardAllArgs": true
+      }
+    }
+  }
+}

@@ -4,10 +4,6 @@
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "coda/assistant",
   "projectType": "application",
-  "scripts": {
-    "dev": "uv run main.py",
-    "build:mcp-app": "npx vite build --config vite.mcp-app.config.ts"
-  },
   "targets": {
     "update": {
       "executor": "@nxlv/python:update"

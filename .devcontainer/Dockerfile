@@ -65,6 +65,11 @@ RUN curl -LsSf https://astral.sh/uv/install.sh | UV_INSTALL_DIR=/usr/local/bin s
 
 USER vscode
 
+ENV BUN_INSTALL=/home/vscode/.bun
+RUN curl -fsSL https://bun.sh/install | bash
+ENV PATH=/home/vscode/.bun/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+ENV NX_WORKSPACE_DATA_DIRECTORY=/workspaces/semio/.nx/workspace-data-terminal
+
 RUN mkdir -p /home/vscode/.local/bin \
     /home/vscode/.gitkraken \
     /home/vscode/.local/share/GitKrakenCLI \

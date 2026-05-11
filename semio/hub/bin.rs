@@ -920,7 +920,7 @@ pub async fn create_pool(database_url: &str) -> PgPool {
     PgPoolOptions::new().max_connections(20).connect(database_url).await.expect("failed to connect to PostgreSQL")
 }
 
-fn session_kit_id(kit_json: &serde_json::Value) -> Result<Uuid, SessionError> {
+pub fn session_kit_id(kit_json: &serde_json::Value) -> Result<Uuid, SessionError> {
     let id = kit_json
         .get("id")
         .and_then(|value| value.as_str())
@@ -2340,7 +2340,7 @@ async fn handler_create_session(
     let session_id = Uuid::now_v7();
     let kit_id = Uuid::now_v7();
     let owner_token = create_session(&state.pool, session_id, kit_id, &req.kit_name, req.kit.as_ref()).await?;
-    let response_kit_id = req.kit.as_ref().map(session_kit_id).transpose()?.unwrap_or(kit_id);
+    let response_kit_id = req.kit.as_ref().map(crate::persistence::session_kit_id).transpose()?.unwrap_or(kit_id);
     Ok(Json(CreateSessionResponse { session_id, kit_id: response_kit_id, owner_token }))
 }
 

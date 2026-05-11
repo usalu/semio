@@ -1,0 +1,41 @@
+{
+  "name": "@semio/algorithms",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "targets": {
+    "dev": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "semio/algorithms",
+        "command": "bun ../../scripts/run-storybook-dev.ts",
+        "env": {
+          "STORYBOOK_PORT": "6007"
+        },
+        "forwardAllArgs": true
+      }
+    },
+    "build": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "semio/algorithms",
+        "command": "bunx storybook build",
+        "forwardAllArgs": true
+      }
+    },
+    "lint": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "semio/algorithms",
+        "command": "bunx eslint --max-warnings 0 --config eslint.config.ts .",
+        "forwardAllArgs": true
+      }
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "semio/algorithms",
+        "command": "bunx vitest run --passWithNoTests --config ../../elements/ui/vitest.config.ts",
+        "forwardAllArgs": true
+      }
+    }
+  }
+}

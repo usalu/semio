@@ -1,4 +1,4 @@
-// Root ESLint flat config for pnpm lint (library entrypoints; non-type-checked for green CI).
+// Root ESLint flat config for Bun/Nx lint (library entrypoints; non-type-checked for green CI).
 import eslint from "@eslint/js";
 import reactHooks from "eslint-plugin-react-hooks";
 import tseslint from "typescript-eslint";

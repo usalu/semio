@@ -1,0 +1,22 @@
+{
+  "name": "@semio/net",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "targets": {
+    "build": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "semio/net/Semio",
+        "command": "bun ./build.ts",
+        "forwardAllArgs": true
+      }
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "semio/net/Semio",
+        "command": "dotnet test ../Semio.Tests/Semio.Tests.csproj",
+        "forwardAllArgs": true
+      }
+    }
+  }
+}

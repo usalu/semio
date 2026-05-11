@@ -4,9 +4,6 @@
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "semio/assets/icons",
   "projectType": "library",
-  "scripts": {
-    "build": "echo 'icons build not yet migrated to TypeScript'"
-  },
   "devDependencies": {
     "@semio/logo": "*"
   },

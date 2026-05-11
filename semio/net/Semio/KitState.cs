@@ -33,6 +33,6 @@ public static class KitState
         target.Types = source.Types;
         target.Designs = source.Designs;
         target.CreatedAt = source.CreatedAt;
-        target.UpdatedAt = source.UpdatedAt;
+        target.ModificationdAt = source.ModificationdAt;
     }
 }

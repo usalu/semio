@@ -1,0 +1,38 @@
+{
+  "name": "@repo/client",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "targets": {
+    "dev": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "repo/client",
+        "command": "go run ../mcp",
+        "forwardAllArgs": true
+      }
+    },
+    "build": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "repo/client",
+        "command": "bun scripts/build-cli.ts",
+        "forwardAllArgs": true
+      }
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "repo/client",
+        "command": "go test -timeout 120s -count=1 -v ./...",
+        "forwardAllArgs": true
+      }
+    },
+    "test-quick": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "repo/client",
+        "command": "go test -short -timeout 120s -count=1 -v ./...",
+        "forwardAllArgs": true
+      }
+    }
+  }
+}

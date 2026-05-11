@@ -325,6 +325,72 @@ public static class Utility
 
     public static T? Deserialize<T>(string json) => JsonConvert.DeserializeObject<T>(json, new JsonSerializerSettings { ContractResolver = new CamelCasePropertyNamesContractResolver(), ObjectCreationHandling = ObjectCreationHandling.Replace });
 
+    #region 🧬KitDocumentJson
+
+    /// <summary>📦 Flattens persisted kit workspace JSON (<c>wip.initialKit</c>, <c>{ hash, items }</c> buckets, <c>updatedAt</c>) into the JSON shape <see cref="Kit"/> bindings expect.</summary>
+    public static string NormalizeKitDocumentJson(string json)
+    {
+        var root = JToken.Parse(json) as JObject ?? throw new JsonSerializationException("Kit JSON root must be an object.");
+        var kitPayload = root["wip"]?["initialKit"] as JObject ?? root;
+        while (UnwrapHashItemCollections(kitPayload)) { }
+        RenameUpdatedAtToModificationdAt(kitPayload);
+        return kitPayload.ToString(Formatting.None);
+    }
+
+    /// <summary>📦 Deserializes a <see cref="Kit"/> after <see cref="NormalizeKitDocumentJson"/>.</summary>
+    public static Kit? DeserializeKit(string json) => Deserialize<Kit>(NormalizeKitDocumentJson(json));
+
+    private static bool UnwrapHashItemCollections(JToken node)
+    {
+        switch (node)
+        {
+            case JArray arr:
+                var arrChanged = false;
+                foreach (var child in arr)
+                    arrChanged |= UnwrapHashItemCollections(child);
+                return arrChanged;
+            case JObject obj:
+                var objChanged = false;
+                foreach (var prop in obj.Properties().ToList())
+                {
+                    if (prop.Value is JObject vo && vo["hash"] != null && vo["items"] is JArray ja)
+                    {
+                        prop.Value = ja;
+                        objChanged = true;
+                        foreach (var child in ja)
+                            objChanged |= UnwrapHashItemCollections(child);
+                    }
+                    else
+                        objChanged |= UnwrapHashItemCollections(prop.Value);
+                }
+                return objChanged;
+            default:
+                return false;
+        }
+    }
+
+    private static void RenameUpdatedAtToModificationdAt(JToken node)
+    {
+        switch (node)
+        {
+            case JArray arr:
+                foreach (var child in arr)
+                    RenameUpdatedAtToModificationdAt(child);
+                return;
+            case JObject obj:
+                if (obj["updatedAt"] != null && obj["modificationdAt"] == null)
+                {
+                    obj["modificationdAt"] = obj["updatedAt"];
+                    obj.Remove("updatedAt");
+                }
+                foreach (var prop in obj.Properties())
+                    RenameUpdatedAtToModificationdAt(prop.Value);
+                return;
+        }
+    }
+
+    #endregion 🧬KitDocumentJson
+
     public static string GenerateRandomId(int seed)
     {
         var adjectives = Utility.Deserialize<List<string>>(Resources.adjectives);
@@ -12980,7 +13046,7 @@ public static class ZipRoundtrip
             {
                 var onlyJson = Path.Combine(tempDir, "kit.json");
                 if (System.IO.File.Exists(onlyJson))
-                    result.Kit = Utility.Deserialize<Kit>(System.IO.File.ReadAllText(onlyJson))!;
+                    result.Kit = Utility.DeserializeKit(System.IO.File.ReadAllText(onlyJson))!;
                 else
                     throw new FileNotFoundException("semio-store binary missing (build with cargo build -p semio-store --release) and the zip has no root kit.json.");
             }
@@ -13036,13 +13102,13 @@ public class TransportKit
         Json = json;
     }
 
-    public Kit ToKit() => Utility.Deserialize<Kit>(Json)!;
+    public Kit ToKit() => Utility.DeserializeKit(Json)!;
 
     public static TransportKit FromKit(Kit kit) => new(Utility.Serialize(kit));
 
     public static Kit EditTransportKit(Kit kit, KitDiff diff)
     {
-        var clone = Utility.Deserialize<Kit>(Utility.Serialize(kit))!;
+        var clone = Utility.DeserializeKit(Utility.Serialize(kit))!;
         KitInPlaceDiff.ApplyKitDiff(clone, diff);
         return clone;
     }
@@ -13102,7 +13168,7 @@ public class DevKit : ISyncKit
 
     public void Close() { }
 
-    public static DevKit FromJson(string json) => new(Utility.Deserialize<Kit>(json)!);
+    public static DevKit FromJson(string json) => new(Utility.DeserializeKit(json)!);
 
     public static Kit Import(string path) => FileKit.Import(path);
 
@@ -13375,7 +13441,7 @@ public class RemoteKit : ISyncKit
         }
 
         var json = Encoding.UTF8.GetString(bytes);
-        return new KitImportResult { Kit = Utility.Deserialize<Kit>(json)! };
+        return new KitImportResult { Kit = Utility.DeserializeKit(json)! };
     }
 
     public static Kit Edit(string url, KitDiff diff)
@@ -13399,7 +13465,7 @@ public static class TemporaryKit
 {
     public static Kit Edit(Kit kit, KitDiff diff)
     {
-        var clone = Utility.Deserialize<Kit>(Utility.Serialize(kit))!;
+        var clone = Utility.DeserializeKit(Utility.Serialize(kit))!;
         KitInPlaceDiff.ApplyKitDiff(clone, diff);
         return clone;
     }

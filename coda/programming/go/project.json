@@ -1,0 +1,14 @@
+{
+  "name": "coda-programming-go",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "projectType": "library",
+  "targets": {
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "coda/programming/go",
+        "command": "go test ./..."
+      }
+    }
+  }
+}

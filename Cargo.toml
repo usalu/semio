@@ -2,6 +2,7 @@
 members = [
     "semio/rs",
     "semio/store",
+    "semio/hub",
 ]
 
 resolver = "2"

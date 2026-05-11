@@ -4,11 +4,6 @@
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "semio/3dm/Semio.Rhino",
   "projectType": "application",
-  "scripts": {
-    "build": "dotnet build",
-    "dev": "dotnet build",
-    "test": "dotnet test ../Semio.Rhino.Tests/Semio.Rhino.Tests.csproj"
-  },
   "devDependencies": {
     "@semio/net": "*"
   },

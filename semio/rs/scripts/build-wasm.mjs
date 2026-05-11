@@ -1,4 +1,4 @@
-#!/usr/bin/env node
+#!/usr/bin/env bun
 // 🦀➡️🌐 Cross-platform "always-rebuild rs WASM before vite starts" helper.
 //
 // Why this exists:
@@ -31,10 +31,9 @@ if (process.env.SEMIO_SKIP_WASM_BUILD === "1") {
 } else {
   console.log("[semio/rs] wasm-pack build --release --target web --out-dir pkg --no-pack");
   const t0 = Date.now();
-  const res = spawnSync("npx", ["wasm-pack", "build", "--release", "--target", "web", "--out-dir", "pkg", "--no-pack"], {
+  const res = spawnSync("bun", ["x", "wasm-pack", "build", "--release", "--target", "web", "--out-dir", "pkg", "--no-pack"], {
     cwd: rsDir,
     stdio: "inherit",
-    shell: true,
   });
   if (res.status !== 0) {
     console.error("[semio/rs] wasm-pack build failed");

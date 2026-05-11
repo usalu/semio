@@ -1,0 +1,100 @@
+{
+  "name": "workspace",
+  "$schema": "node_modules/nx/schemas/project-schema.json",
+  "projectType": "application",
+  "sourceRoot": ".",
+  "targets": {
+    "setup": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun scripts/workspace-setup.ts"
+      }
+    },
+    "lint": {
+      "executor": "nx:run-commands",
+      "dependsOn": [],
+      "options": {
+        "command": "bun nx run-many -t lint --all --exclude workspace"
+      }
+    },
+    "format": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bunx prettier -w ."
+      }
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "dependsOn": [],
+      "options": {
+        "command": "bun nx run-many -t test --all --exclude workspace"
+      }
+    },
+    "build": {
+      "executor": "nx:run-commands",
+      "dependsOn": [],
+      "options": {
+        "command": "bun nx run-many -t build --all --exclude workspace"
+      }
+    },
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "dependsOn": [],
+      "options": {
+        "command": "bun nx run-many -t build -p @semio/js @semio/react && bun nx run semio/graphql:build"
+      }
+    },
+    "git-setup": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun scripts/git-setup.ts"
+      }
+    },
+    "pre-commit-install": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "pre-commit install"
+      }
+    },
+    "pre-commit": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "pre-commit run --all-files"
+      }
+    },
+    "mcp-inspector": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "commands": ["bun nx run @semio/engine:build-mcp-app", "bun scripts/mcp-inspector-engine.ts"],
+        "parallel": false
+      }
+    },
+    "mcp-inspector-repo": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun scripts/mcp-inspector-repo.ts"
+      }
+    },
+    "depcruise": {
+      "executor": "nx:run-commands",
+      "cache": true,
+      "options": {
+        "command": "bunx dependency-cruiser@16 semio/js semio/react semio/sketchpad --config .dependency-cruiser.cjs --output-type err"
+      }
+    },
+    "install-native": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "powershell -NoProfile -ExecutionPolicy Bypass -File .devcontainer/install-native.ps1"
+      }
+    }
+  }
+}

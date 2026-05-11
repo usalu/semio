@@ -22,7 +22,6 @@ $ErrorActionPreference = "Stop"
 
 #region 🎯Targets
 $script:PythonKind = "3.14"
-$script:NodePackageManager = "npm@11.7.0"
 #endregion 🎯Targets
 
 #region 🔧Helpers
@@ -215,7 +214,9 @@ function Install-EditorExtensions {
     $recommendations = (Get-Content $extensionsPath -Raw | ConvertFrom-Json).recommendations
     $vsixPath = Join-Path $RepoRoot "repo\vscode\repo.vsix"
 
-    Invoke-RepoCommand -FilePath "npm.cmd" -ArgumentList @("--workspace", "repo/vscode", "run", "package") -WorkingDirectory $RepoRoot
+    $bunPathLocal = Get-CommandPathOrThrow -Label "bun" -Candidates @("bun.exe", "bun")
+    Invoke-RepoCommand -FilePath $bunPathLocal -ArgumentList @("nx", "run", "repo:build") -WorkingDirectory $RepoRoot
+    Invoke-RepoCommand -FilePath $bunPathLocal -ArgumentList @("nx", "run", "repo:package") -WorkingDirectory $RepoRoot
 
     foreach ($editorCli in $EditorCliPaths) {
         foreach ($extension in $recommendations) {
@@ -322,6 +323,9 @@ function Stop-RepoPythonProcesses {
 
 $repoRoot = Get-RepoRoot
 Set-Location $repoRoot
+$nxWorkspaceDataTerminal = Join-Path $repoRoot ".nx\workspace-data-terminal"
+Ensure-Directory -Path $nxWorkspaceDataTerminal
+$env:NX_WORKSPACE_DATA_DIRECTORY = $nxWorkspaceDataTerminal
 Refresh-CurrentProcessPath
 
 #region 🧰MachineInstall
@@ -332,7 +336,7 @@ if (-not $SkipMachineInstall) {
     Sync-WingetPackage -Id "BurntSushi.ripgrep.MSVC" -Label "ripgrep"
     Sync-WingetPackage -Id "jqlang.jq" -Label "jq"
     Sync-WingetPackage -Id "SQLite.SQLite" -Label "SQLite"
-    Sync-WingetPackage -Id "OpenJS.NodeJS.LTS" -Label "Node.js 24 LTS"
+    Sync-WingetPackage -Id "Oven-sh.Bun" -Label "Bun"
     Sync-WingetPackage -Id "GoLang.Go" -Label "Go"
     Sync-WingetPackage -Id "Python.Python.3.14" -Label "Python 3.14"
     Sync-WingetPackage -Id "astral-sh.uv" -Label "uv"
@@ -391,11 +395,11 @@ Set-UserEnvironmentVariable -Name "EDITOR" -Value "code --wait"
 #region 🌐GlobalCliInstall
 if (-not $SkipGlobalCliInstall) {
     Refresh-CurrentProcessPath
-    $npmPath = Get-CommandPathOrThrow -Label "npm" -Candidates @("npm.cmd")
+    $bunPath = Get-CommandPathOrThrow -Label "bun" -Candidates @("bun.exe", "bun")
     $rustupPath = Get-CommandPathOrThrow -Label "rustup" -Candidates @("rustup.exe")
     $uvPath = Get-CommandPathOrThrow -Label "uv" -Candidates @("uv.exe")
 
-    Invoke-RepoCommand -FilePath $npmPath -ArgumentList @("install", "-g", $script:NodePackageManager, "@google/gemini-cli", "typescript-language-server", "typescript", "pyright") -WorkingDirectory $repoRoot
+    Invoke-RepoCommand -FilePath $bunPath -ArgumentList @("add", "--global", "@google/gemini-cli", "typescript-language-server", "typescript", "pyright") -WorkingDirectory $repoRoot
     Install-UvTool -ToolName "ruff" -UvPath $uvPath
     Invoke-RepoCommand -FilePath $rustupPath -ArgumentList @("target", "add", "wasm32-unknown-unknown") -WorkingDirectory $repoRoot
     $cargoConfigPath = Join-HomePath @(".cargo", "config.toml")
@@ -409,20 +413,12 @@ rustflags = ["--cfg", "getrandom_backend=wasm_js"]
 #region 🧱RepoBootstrap
 if (-not $SkipRepoBootstrap) {
     Refresh-CurrentProcessPath
-    $npmPath = Get-CommandPathOrThrow -Label "npm" -Candidates @("npm.cmd")
-    $uvPath = Get-CommandPathOrThrow -Label "uv" -Candidates @("uv.exe")
-    $goPath = Get-CommandPathOrThrow -Label "go" -Candidates @("go.exe")
-    $dotnetPath = Get-CommandPathOrThrow -Label "dotnet" -Candidates @("dotnet.exe")
+    $bunPath = Get-CommandPathOrThrow -Label "bun" -Candidates @("bun.exe", "bun")
 
     Configure-GitSafeDirectories -RepoRoot $repoRoot
     Stop-RepoPythonProcesses -RepoRoot $repoRoot
-    Invoke-RepoCommand -FilePath $npmPath -ArgumentList @("install") -WorkingDirectory $repoRoot
-    Invoke-RepoCommand -FilePath $uvPath -ArgumentList @("sync", "--all-packages", "--all-groups", "--python", $script:PythonKind) -WorkingDirectory $repoRoot
-    Invoke-RepoCommand -FilePath $uvPath -ArgumentList @("sync", "--python", $script:PythonKind) -WorkingDirectory (Join-Path $repoRoot "coda\assistant")
-    Invoke-RepoCommand -FilePath $goPath -ArgumentList @("build", "-o", (Join-Path $repoRoot "repo\client\client.exe"), "./repo/mcp") -WorkingDirectory $repoRoot
-    Invoke-RepoCommand -FilePath $dotnetPath -ArgumentList @("restore", "Monorepo.sln") -WorkingDirectory $repoRoot
-    Invoke-RepoCommand -FilePath $npmPath -ArgumentList @("run", "git:setup") -WorkingDirectory $repoRoot
-    Invoke-RepoCommand -FilePath $goPath -ArgumentList @("run", "./repo/mcp", "configure", "--repo", $repoRoot) -WorkingDirectory $repoRoot
+    Invoke-RepoCommand -FilePath $bunPath -ArgumentList @("install") -WorkingDirectory $repoRoot
+    Invoke-RepoCommand -FilePath $bunPath -ArgumentList @("nx", "run", "workspace:setup") -WorkingDirectory $repoRoot
     Configure-GitKrakenWorkspace -RepoRoot $repoRoot
 }
 #endregion 🧱RepoBootstrap
@@ -443,8 +439,8 @@ if (-not $SkipEditorInstall) {
 #region 🎬Playwright
 if (-not $SkipPlaywrightInstall) {
     Refresh-CurrentProcessPath
-    $npxPath = Get-CommandPathOrThrow -Label "npx" -Candidates @("npx.cmd")
-    Invoke-RepoCommand -FilePath $npxPath -ArgumentList @("playwright", "install", "chromium") -WorkingDirectory $repoRoot
+    $bunPath = Get-CommandPathOrThrow -Label "bun" -Candidates @("bun.exe", "bun")
+    Invoke-RepoCommand -FilePath $bunPath -ArgumentList @("x", "playwright", "install", "chromium") -WorkingDirectory $repoRoot
 }
 #endregion 🎬Playwright
 

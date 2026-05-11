@@ -4,20 +4,6 @@
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "semio/engine",
   "projectType": "application",
-  "scripts": {
-    "dev": "cross-env UV_PROJECT_ENVIRONMENT=.venv uv run main.py",
-    "build": "tsx ./build.ts",
-    "build:mcp-app": "npx vite build --config vite.mcp-app.config.ts",
-    "test": "tsx ./test.ts"
-  },
-  "targets": {
-    "update": {
-      "executor": "@nxlv/python:update"
-    },
-    "lock": {
-      "executor": "@nxlv/python:lock"
-    }
-  },
   "devDependencies": {
     "@semio/assets": "*",
     "@semio/ui": "*",

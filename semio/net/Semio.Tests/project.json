@@ -1,0 +1,14 @@
+{
+  "name": "semio-net-tests",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "projectType": "library",
+  "targets": {
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "semio/net/Semio.Tests",
+        "command": "dotnet test Semio.Tests.csproj"
+      }
+    }
+  }
+}

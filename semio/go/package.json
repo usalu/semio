@@ -4,10 +4,6 @@
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "semio/go",
   "projectType": "library",
-  "scripts": {
-    "build": "go build ./...",
-    "test": "go test -v ./..."
-  },
   "author": {
     "name": "Ueli Saluz",
     "email": "ueli@semio-tech.com",

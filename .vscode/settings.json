@@ -9,7 +9,16 @@
     "PWDEBUG": "console"
   },
   "eslint.useFlatConfig": true,
-  "eslint.packageManager": "npm",
+  "eslint.packageManager": "bun",
+  "terminal.integrated.env.windows": {
+    "NX_WORKSPACE_DATA_DIRECTORY": "${workspaceFolder}/.nx/workspace-data-terminal"
+  },
+  "terminal.integrated.env.linux": {
+    "NX_WORKSPACE_DATA_DIRECTORY": "${workspaceFolder}/.nx/workspace-data-terminal"
+  },
+  "terminal.integrated.env.osx": {
+    "NX_WORKSPACE_DATA_DIRECTORY": "${workspaceFolder}/.nx/workspace-data-terminal"
+  },
   "eslint.validate": ["javascript", "javascriptreact", "typescript", "typescriptreact"],
   "eslint.workingDirectories": [
     {

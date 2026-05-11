@@ -5,11 +5,6 @@
   "version": "1.0.0",
   "description": "Electron desktop app for visualizing and interacting with coda (ACC design assistant)",
   "main": ".vite/build/main.js",
-  "scripts": {
-    "dev": "cross-env ELECTRON_DISABLE_SANDBOX=1 electron-forge start",
-    "build": "cross-env NODE_OPTIONS=--max-old-space-size=8192 electron-forge make",
-    "publish": "electron-forge publish"
-  },
   "dependencies": {
     "@electron/fuses": "^2.0.0",
     "@elements/ui": "file:../../elements/ui",

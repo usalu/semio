@@ -1,4 +1,4 @@
-#!/usr/bin/env tsx
+#!/usr/bin/env bun
 // #region 🧲Header
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
@@ -71,7 +71,7 @@ const args = [
 execSync(`uv run pyinstaller ${args.join(" ")}`, { cwd, env, stdio: "inherit" });
 
 if (!process.argv.includes("--skip-post-build")) {
-  execSync("tsx ./post-build.ts", { cwd, stdio: "inherit" });
+  execSync("bun ./post-build.ts", { cwd, stdio: "inherit" });
 }
 
 console.log("✅ Build complete");

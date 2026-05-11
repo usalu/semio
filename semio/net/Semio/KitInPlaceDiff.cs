@@ -21,8 +21,8 @@ public static class KitInPlaceDiff
         if (diff.ShouldSerializeRemote()) kit.Remote = diff.Remote;
         if (diff.ShouldSerializeHomepage()) kit.Homepage = diff.Homepage;
         if (diff.ShouldSerializeLicense()) kit.License = diff.License;
-        if (diff.ShouldSerializeCreatedAt()) kit.CreatedAt = diff.CreatedAt;
-        if (diff.ShouldSerializeUpdatedAt()) kit.UpdatedAt = diff.UpdatedAt;
+        if (diff.ShouldSerializeCreatedAt()) kit.CreatedAt = diff.CreatedAt ?? kit.CreatedAt;
+        if (diff.ShouldSerializeModificationdAt()) kit.ModificationdAt = diff.ModificationdAt ?? kit.ModificationdAt;
 
         if (diff.Types != null)
         {
@@ -84,9 +84,9 @@ public static class KitInPlaceDiff
         if (diff.Removed != null)
             tags.RemoveAll(t => diff.Removed.Any(r => r.Id == t.Id));
 
-        if (diff.Updated != null)
+        if (diff.Modified != null)
         {
-            foreach (var update in diff.Updated)
+            foreach (var update in diff.Modified)
             {
                 var tag = tags.FirstOrDefault(t => t.Id == update.Tag.Id);
                 if (tag != null && update.Diff != null)
@@ -107,9 +107,9 @@ public static class KitInPlaceDiff
         if (diff.Removed != null)
             folders.RemoveAll(f => diff.Removed.Any(r => r.Id == f.Id));
 
-        if (diff.Updated != null)
+        if (diff.Modified != null)
         {
-            foreach (var update in diff.Updated)
+            foreach (var update in diff.Modified)
             {
                 var folder = folders.FirstOrDefault(f => f.Id == update.Folder.Id);
                 if (folder != null && update.Diff != null)
@@ -130,9 +130,9 @@ public static class KitInPlaceDiff
         if (diff.Removed != null)
             ports.RemoveAll(p => diff.Removed.Any(r => r.Id == p.Id));
 
-        if (diff.Updated != null)
+        if (diff.Modified != null)
         {
-            foreach (var update in diff.Updated)
+            foreach (var update in diff.Modified)
             {
                 var port = ports.FirstOrDefault(p => p.Id == update.Port.Id);
                 if (port != null && update.Diff != null)
@@ -154,9 +154,9 @@ public static class KitInPlaceDiff
         if (diff.Removed != null)
             concepts.RemoveAll(c => diff.Removed.Any(r => r.Id == c.Id));
 
-        if (diff.Updated != null)
+        if (diff.Modified != null)
         {
-            foreach (var update in diff.Updated)
+            foreach (var update in diff.Modified)
             {
                 var concept = concepts.FirstOrDefault(c => c.Id == update.Concept.Id);
                 if (concept != null && update.Diff != null)
@@ -177,9 +177,9 @@ public static class KitInPlaceDiff
         if (diff.Removed != null)
             files.RemoveAll(f => diff.Removed.Any(r => r.Id == f.Id));
 
-        if (diff.Updated != null)
+        if (diff.Modified != null)
         {
-            foreach (var update in diff.Updated)
+            foreach (var update in diff.Modified)
             {
                 var file = files.FirstOrDefault(f => f.Id == update.File.Id);
                 if (file != null && update.Diff != null)
@@ -200,9 +200,9 @@ public static class KitInPlaceDiff
         if (diff.Removed != null)
             authors.RemoveAll(a => diff.Removed.Any(r => r.Id == a.Id));
 
-        if (diff.Updated != null)
+        if (diff.Modified != null)
         {
-            foreach (var update in diff.Updated)
+            foreach (var update in diff.Modified)
             {
                 var author = authors.FirstOrDefault(a => a.Id == update.Author.Id);
                 if (author != null && update.Diff != null)
@@ -222,9 +222,9 @@ public static class KitInPlaceDiff
         if (diff.Removed != null)
             attributes.RemoveAll(a => diff.Removed.Any(r => r.Id == a.Id));
 
-        if (diff.Updated != null)
+        if (diff.Modified != null)
         {
-            foreach (var update in diff.Updated)
+            foreach (var update in diff.Modified)
             {
                 var attr = attributes.FirstOrDefault(a => a.Id == update.Attribute.Id);
                 if (attr != null && update.Diff != null)
@@ -244,9 +244,9 @@ public static class KitInPlaceDiff
         if (diff.Removed != null)
             types.RemoveAll(t => diff.Removed.Any(r => r.Id == t.Id));
 
-        if (diff.Updated != null)
+        if (diff.Modified != null)
         {
-            foreach (var update in diff.Updated)
+            foreach (var update in diff.Modified)
             {
                 var type = types.FirstOrDefault(t => t.Id == update.Type.Id);
                 if (type != null && update.Diff != null)
@@ -292,9 +292,9 @@ public static class KitInPlaceDiff
         if (diff.Removed != null)
             connectors.RemoveAll(c => diff.Removed.Any(r => r.Id == c.Id));
 
-        if (diff.Updated != null)
+        if (diff.Modified != null)
         {
-            foreach (var update in diff.Updated)
+            foreach (var update in diff.Modified)
             {
                 var connector = connectors.FirstOrDefault(c => c.Id == update.Connector.Id);
                 if (connector != null && update.Diff != null)
@@ -334,9 +334,9 @@ public static class KitInPlaceDiff
         if (diff.Removed != null)
             representations.RemoveAll(m => diff.Removed.Any(r => r.Id == m.Id));
 
-        if (diff.Updated != null)
+        if (diff.Modified != null)
         {
-            foreach (var update in diff.Updated)
+            foreach (var update in diff.Modified)
             {
                 var representation = representations.FirstOrDefault(m => m.Id == update.Representation.Id);
                 if (representation != null && update.Diff != null)
@@ -363,9 +363,9 @@ public static class KitInPlaceDiff
         if (diff.Removed != null)
             designs.RemoveAll(d => diff.Removed.Any(r => r.Id == d.Id));
 
-        if (diff.Updated != null)
+        if (diff.Modified != null)
         {
-            foreach (var update in diff.Updated)
+            foreach (var update in diff.Modified)
             {
                 var design = designs.FirstOrDefault(d => d.Id == update.Design.Id);
                 if (design != null && update.Diff != null)
@@ -412,9 +412,9 @@ public static class KitInPlaceDiff
         if (diff.Removed != null)
             pieces.RemoveAll(p => diff.Removed.Any(r => r.Id == p.Id));
 
-        if (diff.Updated != null)
+        if (diff.Modified != null)
         {
-            foreach (var update in diff.Updated)
+            foreach (var update in diff.Modified)
             {
                 var piece = pieces.FirstOrDefault(p => p.Id == update.Piece.Id);
                 if (piece != null && update.Diff != null)
@@ -448,9 +448,9 @@ public static class KitInPlaceDiff
         if (diff.Removed != null)
             connections.RemoveAll(c => diff.Removed.Any(r => r.Id == c.Id));
 
-        if (diff.Updated != null)
+        if (diff.Modified != null)
         {
-            foreach (var update in diff.Updated)
+            foreach (var update in diff.Modified)
             {
                 var connection = connections.FirstOrDefault(c => c.Id == update.Connection.Id);
                 if (connection != null && update.Diff != null)

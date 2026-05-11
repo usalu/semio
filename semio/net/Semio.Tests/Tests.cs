@@ -51,6 +51,8 @@ public class Tests
         var path = Path.Combine(AssetsPath, filename);
         if (!System.IO.File.Exists(path)) throw new FileNotFoundException($"Asset not found at {Path.GetFullPath(path)}");
         var json = System.IO.File.ReadAllText(path);
+        if (typeof(T) == typeof(Kit))
+            return (T)(object)Utility.DeserializeKit(json)!;
         return Utility.Deserialize<T>(json)!;
     }
 
@@ -93,10 +95,10 @@ public class Tests
             Name = "Workflow Kit",
             Version = "1.0.0",
             CreatedAt = "2026-01-01T00:00:00Z",
-            UpdatedAt = "2026-01-01T00:00:00Z",
+            ModificationdAt = "2026-01-01T00:00:00Z",
             Folders = new List<Folder>
             {
-                new() { Id = "folder-id", Name = "docs", CreatedAt = "2026-01-01T00:00:00Z", UpdatedAt = "2026-01-01T00:00:00Z" }
+                new() { Id = "folder-id", Name = "docs", CreatedAt = "2026-01-01T00:00:00Z", ModificationdAt = "2026-01-01T00:00:00Z" }
             },
             Files = new List<File>
             {
@@ -108,12 +110,12 @@ public class Tests
                     Size = Encoding.UTF8.GetByteCount("hello workflow"),
                     Blob = blob,
                     CreatedAt = DateTime.Parse("2026-01-01T00:00:00Z", null, DateTimeStyles.RoundtripKind),
-                    UpdatedAt = DateTime.Parse("2026-01-01T00:00:00Z", null, DateTimeStyles.RoundtripKind),
+                    ModificationdAt = DateTime.Parse("2026-01-01T00:00:00Z", null, DateTimeStyles.RoundtripKind),
                 }
             },
             Types = new List<Type>
             {
-                new() { Id = "type-id", Name = "Wall", CreatedAt = DateTime.Parse("2026-01-01T00:00:00Z", null, DateTimeStyles.RoundtripKind), UpdatedAt = DateTime.Parse("2026-01-01T00:00:00Z", null, DateTimeStyles.RoundtripKind) }
+                new() { Id = "type-id", Name = "Wall", CreatedAt = DateTime.Parse("2026-01-01T00:00:00Z", null, DateTimeStyles.RoundtripKind), ModificationdAt = DateTime.Parse("2026-01-01T00:00:00Z", null, DateTimeStyles.RoundtripKind) }
             }
         };
     }
@@ -362,7 +364,7 @@ public class Tests
 
             var kit = Tests.LoadAsset<Kit>("metabolism.kit.semio.json");
             var json = Utility.Serialize(kit);
-            var deserializedKit = Utility.Deserialize<Kit>(json);
+            var deserializedKit = Utility.DeserializeKit(json);
             Assert.Equal(Utility.Serialize(kit), Utility.Serialize(deserializedKit!));
 
 
@@ -517,7 +519,7 @@ public class Tests
             JObject.Parse(System.IO.File.ReadAllText(Path.Combine(Tests.AssetsPath, "flatten-merkle.cases.semio.json")));
 
         private static JObject LoadKitJson(string kitFile) =>
-            JObject.Parse(System.IO.File.ReadAllText(Path.Combine(Tests.AssetsPath, kitFile)));
+            JObject.Parse(Utility.NormalizeKitDocumentJson(System.IO.File.ReadAllText(Path.Combine(Tests.AssetsPath, kitFile))));
 
         private static JObject FindDesignJsonByPath(JObject kitJson, IReadOnlyList<string> designPath)
         {
@@ -613,7 +615,7 @@ public class Tests
         {
             var designJson = FindDesignJsonByPath(kitJson, designPath);
             var designId = (string?)designJson["id"] ?? "";
-            var kit = Utility.Deserialize<Kit>(kitJson.ToString(Formatting.None))
+            var kit = Utility.DeserializeKit(kitJson.ToString(Formatting.None))
                       ?? throw new Exception("Failed to deserialize kit");
             return (kit, designId);
         }
@@ -732,11 +734,11 @@ public class Tests
             var kitDiffInverted = Tests.LoadAsset<KitDiff>("metabolism.kit.diff.inverted.semio.json");
             var kitDiffed = Tests.LoadAsset<Kit>("metabolism.kit.diffed.semio.json");
 
-            var appliedForward = Utility.Deserialize<Kit>(Utility.Serialize(kitOriginal))!;
+            var appliedForward = Utility.DeserializeKit(Utility.Serialize(kitOriginal))!;
             KitInPlaceDiff.ApplyKitDiff(appliedForward, kitDiff);
             Assert.True(SemioDiff.AreKitsEqual(appliedForward, kitDiffed), "ApplyKitDiff forward: applied kit doesn't match expected diffed kit");
 
-            var appliedInverse = Utility.Deserialize<Kit>(Utility.Serialize(kitDiffed))!;
+            var appliedInverse = Utility.DeserializeKit(Utility.Serialize(kitDiffed))!;
             KitInPlaceDiff.ApplyKitDiff(appliedInverse, kitDiffInverted);
             Assert.True(SemioDiff.AreKitsEqual(appliedInverse, kitOriginal), "ApplyKitDiff inverse: applied inverse kit doesn't match original kit");
         }
@@ -793,7 +795,7 @@ public class Tests
             var r = SemioDiff.ValidateKitDiff(asset.TinyKit, bad!, true);
             Assert.NotNull(r.Diff);
             var d = r.Diff!;
-            Assert.True(d.Designs == null || d.Designs.Updated == null || d.Designs.Updated.Count == 0,
+            Assert.True(d.Designs == null || d.Designs.Modified == null || d.Designs.Modified.Count == 0,
                 "heal should drop invalid design update");
         }
     }
@@ -880,9 +882,9 @@ public class Tests
             var expectedDiff = Tests.LoadAsset<DesignDiff>("drag/diff.design.semio.json");
             var computedDiff = Design.DragPiecesInDesign(design, pieces, offset);
             Assert.NotNull(computedDiff.Pieces);
-            Assert.Equal(expectedDiff.Pieces!.Updated.Count, computedDiff.Pieces!.Updated.Count);
-            var expectedPieceMap = expectedDiff.Pieces.Updated.ToDictionary(u => u.Piece.Id, u => u.Diff);
-            foreach (var u in computedDiff.Pieces.Updated)
+            Assert.Equal(expectedDiff.Pieces!.Modified.Count, computedDiff.Pieces!.Modified.Count);
+            var expectedPieceMap = expectedDiff.Pieces.Modified.ToDictionary(u => u.Piece.Id, u => u.Diff);
+            foreach (var u in computedDiff.Pieces.Modified)
             {
                 Assert.True(expectedPieceMap.ContainsKey(u.Piece.Id), $"Unexpected piece update for {u.Piece.Id}");
                 var expected = expectedPieceMap[u.Piece.Id];
@@ -892,9 +894,9 @@ public class Tests
                 Assert.Equal(expected.Center.V, u.Diff.Center.V, 3);
             }
             Assert.NotNull(computedDiff.Connections);
-            Assert.Equal(expectedDiff.Connections!.Updated.Count, computedDiff.Connections!.Updated.Count);
-            var expectedConnMap = expectedDiff.Connections.Updated.ToDictionary(u => u.Connection.Id, u => u.Diff);
-            foreach (var u in computedDiff.Connections.Updated)
+            Assert.Equal(expectedDiff.Connections!.Modified.Count, computedDiff.Connections!.Modified.Count);
+            var expectedConnMap = expectedDiff.Connections.Modified.ToDictionary(u => u.Connection.Id, u => u.Diff);
+            foreach (var u in computedDiff.Connections.Modified)
             {
                 Assert.True(expectedConnMap.ContainsKey(u.Connection.Id), $"Unexpected connection update for {u.Connection.Id}");
                 var expected = expectedConnMap[u.Connection.Id];
@@ -916,9 +918,9 @@ public class Tests
             var expectedDiff = Tests.LoadAsset<DesignDiff>("move/diff.design.semio.json");
             var computedDiff = Design.MovePiecesInDesign(kit, design, pieces, vector);
             Assert.NotNull(computedDiff.Pieces);
-            Assert.Equal(expectedDiff.Pieces!.Updated.Count, computedDiff.Pieces!.Updated.Count);
-            var expectedPieceMap = expectedDiff.Pieces.Updated.ToDictionary(u => u.Piece.Id, u => u.Diff);
-            foreach (var u in computedDiff.Pieces.Updated)
+            Assert.Equal(expectedDiff.Pieces!.Modified.Count, computedDiff.Pieces!.Modified.Count);
+            var expectedPieceMap = expectedDiff.Pieces.Modified.ToDictionary(u => u.Piece.Id, u => u.Diff);
+            foreach (var u in computedDiff.Pieces.Modified)
             {
                 Assert.True(expectedPieceMap.ContainsKey(u.Piece.Id), $"Unexpected piece update for {u.Piece.Id}");
                 var expected = expectedPieceMap[u.Piece.Id];
@@ -929,9 +931,9 @@ public class Tests
                 Assert.Equal(expected.Plane.Origin.Z, u.Diff.Plane!.Origin.Z, 3);
             }
             Assert.NotNull(computedDiff.Connections);
-            Assert.Equal(expectedDiff.Connections!.Updated.Count, computedDiff.Connections!.Updated.Count);
-            var expectedConnMap = expectedDiff.Connections.Updated.ToDictionary(u => u.Connection.Id, u => u.Diff);
-            foreach (var u in computedDiff.Connections.Updated)
+            Assert.Equal(expectedDiff.Connections!.Modified.Count, computedDiff.Connections!.Modified.Count);
+            var expectedConnMap = expectedDiff.Connections.Modified.ToDictionary(u => u.Connection.Id, u => u.Diff);
+            foreach (var u in computedDiff.Connections.Modified)
             {
                 Assert.True(expectedConnMap.ContainsKey(u.Connection.Id), $"Unexpected connection update for {u.Connection.Id}");
                 var expected = expectedConnMap[u.Connection.Id];
@@ -966,9 +968,9 @@ public class Tests
                 Assert.True(expectedRemovedPieces.Contains(r.Id), $"Unexpected removed piece {r.Id}");
 
             // Verify updated (fixed) pieces
-            Assert.Equal(expectedDiff.Pieces.Updated.Count, computedDiff.Pieces.Updated.Count);
-            var expectedUpdatedMap = expectedDiff.Pieces.Updated.ToDictionary(u => u.Piece.Id, u => u.Diff);
-            foreach (var u in computedDiff.Pieces.Updated)
+            Assert.Equal(expectedDiff.Pieces.Modified.Count, computedDiff.Pieces.Modified.Count);
+            var expectedUpdatedMap = expectedDiff.Pieces.Modified.ToDictionary(u => u.Piece.Id, u => u.Diff);
+            foreach (var u in computedDiff.Pieces.Modified)
             {
                 Assert.True(expectedUpdatedMap.ContainsKey(u.Piece.Id), $"Unexpected piece update for {u.Piece.Id}");
                 var expected = expectedUpdatedMap[u.Piece.Id];
@@ -1404,7 +1406,7 @@ public class Tests
             Assert.Equal(type.Uri, meta.Uri);
             Assert.Equal(type.Unit, meta.Unit);
             Assert.Equal(type.CreatedAt, meta.CreatedAt);
-            Assert.Equal(type.UpdatedAt, meta.UpdatedAt);
+            Assert.Equal(type.ModificationdAt, meta.ModificationdAt);
         }
 
         [Fact]
@@ -1454,7 +1456,7 @@ public class Tests
             Assert.Equal(design.CanScale, meta.CanScale);
             Assert.Equal(design.CanMirror, meta.CanMirror);
             Assert.Equal(design.CreatedAt, meta.CreatedAt);
-            Assert.Equal(design.UpdatedAt, meta.UpdatedAt);
+            Assert.Equal(design.ModificationdAt, meta.ModificationdAt);
         }
 
         [Fact]
@@ -1500,7 +1502,7 @@ public class Tests
             Assert.Equal(kit.License, meta.License);
             Assert.Equal(kit.Preview, meta.Preview);
             Assert.Equal(kit.CreatedAt, meta.CreatedAt);
-            Assert.Equal(kit.UpdatedAt, meta.UpdatedAt);
+            Assert.Equal(kit.ModificationdAt, meta.ModificationdAt);
         }
 
         [Fact]
@@ -1849,7 +1851,7 @@ public class Tests
                 },
             };
             var json = Utility.Serialize(kit);
-            var restored = Utility.Deserialize<Kit>(json)!;
+            var restored = Utility.DeserializeKit(json)!;
             Assert.Equal(3, restored.Ports![0].MaxChildren);
             Assert.Equal(5, restored.Types![0].Connectors![0].MaxChildren);
         }

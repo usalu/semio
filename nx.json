@@ -1,46 +1,73 @@
 {
   "$schema": "./node_modules/nx/schemas/nx-schema.json",
+  "cli": {
+    "packageManager": "bun"
+  },
   "defaultBase": "⛳wip",
   "workspaceLayout": {
     "appsDir": "semio",
     "libsDir": "semio"
   },
   "namedInputs": {
-    "default": [
-      "{projectRoot}/**/*",
-      "sharedGlobals"
-    ],
+    "default": ["{projectRoot}/**/*", "sharedGlobals"],
     "sharedGlobals": [
       "{workspaceRoot}/package.json",
-      "{workspaceRoot}/package-lock.json",
+      "{workspaceRoot}/bun.lock",
+      "{workspaceRoot}/bunfig.toml",
       "{workspaceRoot}/nx.json",
-      "{workspaceRoot}/tsconfig.json"
+      "{workspaceRoot}/tsconfig.json",
+      "{workspaceRoot}/Cargo.toml",
+      "{workspaceRoot}/Cargo.lock",
+      "{workspaceRoot}/rustfmt.toml",
+      "{workspaceRoot}/go.work",
+      "{workspaceRoot}/go.work.sum",
+      "{workspaceRoot}/pyproject.toml",
+      "{workspaceRoot}/uv.lock",
+      "{workspaceRoot}/Monorepo.sln",
+      "{workspaceRoot}/eslint.config.mjs",
+      "{workspaceRoot}/.dependency-cruiser.cjs"
     ],
     "production": [
       "default",
       "!{projectRoot}/**/?(*.)+(spec|test|e2e|integration|stories|story|mdx).[cmjtshx]?([sx])?(.snap)?",
       "!{projectRoot}/.storybook/**"
+    ],
+    "cargo": [
+      "{projectRoot}/**/*.rs",
+      "{projectRoot}/Cargo.toml",
+      "{workspaceRoot}/Cargo.lock"
+    ],
+    "go": [
+      "{projectRoot}/**/*.go",
+      "{projectRoot}/go.mod",
+      "{projectRoot}/go.sum",
+      "{workspaceRoot}/go.work",
+      "{workspaceRoot}/go.work.sum"
+    ],
+    "uv": [
+      "{projectRoot}/**/*.py",
+      "{projectRoot}/pyproject.toml",
+      "{workspaceRoot}/uv.lock"
+    ],
+    "dotnet": [
+      "{projectRoot}/**/*.cs",
+      "{projectRoot}/**/*.csproj",
+      "{workspaceRoot}/Monorepo.sln"
     ]
   },
   "targetDefaults": {
+    "setup": {
+      "inputs": ["sharedGlobals"],
+      "cache": true
+    },
     "lint": {
-      "dependsOn": [
-        "^lint"
-      ],
-      "inputs": [
-        "default",
-        "^default"
-      ],
+      "dependsOn": ["^lint"],
+      "inputs": ["default", "^default"],
       "cache": true
     },
     "build": {
-      "dependsOn": [
-        "^build"
-      ],
-      "inputs": [
-        "production",
-        "^production"
-      ],
+      "dependsOn": ["^build"],
+      "inputs": ["production", "^production"],
       "cache": true
     },
     "build-wasm": {
@@ -52,60 +79,54 @@
         "{projectRoot}/.cargo/**/*",
         "{projectRoot}/scripts/build-wasm.mjs",
         "{workspaceRoot}/package.json",
-        "{workspaceRoot}/package-lock.json",
+        "{workspaceRoot}/bun.lock",
         "{workspaceRoot}/Cargo.toml",
         "{workspaceRoot}/Cargo.lock"
       ],
-      "outputs": [
-        "{projectRoot}/pkg"
-      ],
+      "outputs": ["{projectRoot}/pkg"],
       "cache": true
     },
     "dev": {
       "cache": false
     },
     "test": {
-      "dependsOn": [
-        "^test"
-      ],
-      "inputs": [
-        "default",
-        "^default"
-      ],
+      "dependsOn": ["^test"],
+      "inputs": ["default", "^default"],
       "cache": true
     },
     "publish:test": {
-      "dependsOn": [
-        "^publish:test"
-      ],
-      "inputs": [
-        "default",
-        "^default"
-      ],
+      "dependsOn": ["^publish:test"],
+      "inputs": ["default", "^default"],
       "cache": true
     },
     "publish": {
-      "dependsOn": [
-        "^publish"
-      ],
-      "inputs": [
-        "default",
-        "^default"
-      ],
+      "dependsOn": ["^publish"],
+      "inputs": ["default", "^default"],
       "cache": true
     },
     "update": {
-      "dependsOn": [
-        "^update"
-      ],
-      "inputs": [
-        "default",
-        "^default"
-      ],
+      "dependsOn": ["^update"],
+      "inputs": ["default", "^default"],
       "cache": true
+    },
+    "clean": {
+      "cache": false
+    }
+  },
+  "pluginsConfig": {
+    "@nx/js": {
+      "analyzePackageJson": true,
+      "analyzeSourceFiles": false
     }
   },
   "plugins": [
+    {
+      "plugin": "@nx/js",
+      "options": {
+        "analyzePackageJson": true,
+        "analyzeSourceFiles": false
+      }
+    },
     {
       "plugin": "@nxlv/python",
       "options": {}

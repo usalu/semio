@@ -92,7 +92,7 @@
       "name": "🛠️dev👤semio🖱️3dm",
       "type": "node-terminal",
       "request": "launch",
-      "command": "npx nx dev @semio/3dm-ui",
+      "command": "bun nx dev @semio/3dm-ui",
       "isBackground": true,
       "problemMatcher": {
         "owner": "custom",
@@ -148,7 +148,7 @@
       "name": "🛠️dev👤semio📚engine🤖mcp",
       "type": "node-terminal",
       "request": "launch",
-      "command": "npm run mcp:inspector",
+      "command": "bun nx run workspace:mcp-inspector",
       "isBackground": true,
       "options": {
         "cwd": "${workspaceFolder}"
@@ -211,7 +211,7 @@
       "name": "🛠️dev👤semio🖱️sketchpad",
       "type": "node-terminal",
       "request": "launch",
-      "command": "npx nx dev @semio/sketchpad",
+      "command": "bun nx dev @semio/sketchpad",
       "isBackground": true,
       "problemMatcher": {
         "owner": "custom",
@@ -262,7 +262,7 @@
       "name": "🛠️dev👤semio⌨️vscode (integrated)",
       "type": "node-terminal",
       "request": "launch",
-      "command": "npx nx dev @semio/vscode",
+      "command": "bun nx dev @semio/vscode",
       "isBackground": true,
       "problemMatcher": {
         "owner": "typescript",
@@ -318,7 +318,7 @@
       "name": "🛠️dev🔬coda🤖mcp (with inspector)",
       "type": "node-terminal",
       "request": "launch",
-      "command": "npm run mcp:inspector",
+      "command": "bun nx run workspace:mcp-inspector",
       "isBackground": true,
       "options": {
         "cwd": "${workspaceFolder}",
@@ -379,7 +379,7 @@
       "name": "🛠️dev🧰repo⌨️vscode (integrated)",
       "type": "node-terminal",
       "request": "launch",
-      "command": "npx nx dev repo",
+      "command": "bun nx dev repo",
       "isBackground": true,
       "problemMatcher": {
         "owner": "typescript",
@@ -446,7 +446,7 @@
       "name": "📦build👤semio🔗graphql",
       "type": "node-terminal",
       "request": "launch",
-      "command": "npx nx build semio/graphql",
+      "command": "bun nx run semio/graphql:build",
       "cwd": "${workspaceFolder}"
     },
     {

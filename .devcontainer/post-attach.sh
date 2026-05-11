@@ -412,7 +412,7 @@ if [ "${#IDE_CLIS[@]}" -gt 0 ]; then
     fi
     if [ -n "$needs_rebuild" ]; then
       echo "🔨 Building semio VSCode extension..."
-      if (cd repo/vscode && npm run package); then
+      if (bun nx run repo:build && bun nx run repo:package); then
         echo "✅ Extension build completed."
       else
         echo "⚠️  Extension build failed, continuing without extension install."
@@ -422,8 +422,8 @@ if [ "${#IDE_CLIS[@]}" -gt 0 ]; then
       fi
     fi
     if [ -f "repo/vscode/package.json" ]; then
-      EXTENSION_PUBLISHER=$(node -p "require('./repo/vscode/package.json').publisher" 2>/dev/null || echo "")
-      EXTENSION_NAME=$(node -p "require('./repo/vscode/package.json').name" 2>/dev/null || echo "")
+      EXTENSION_PUBLISHER=$(bun -e "console.log(require('./repo/vscode/package.json').publisher)" 2>/dev/null || echo "")
+      EXTENSION_NAME=$(bun -e "console.log(require('./repo/vscode/package.json').name)" 2>/dev/null || echo "")
     fi
     if [ -n "$EXTENSION_PUBLISHER" ] && [ -n "$EXTENSION_NAME" ]; then
       EXTENSION_ID="${EXTENSION_PUBLISHER}.${EXTENSION_NAME}"

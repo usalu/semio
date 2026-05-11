@@ -1,0 +1,59 @@
+{
+  "name": "@semio/sketchpad",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "targets": {
+    "setup-playwright": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "semio/sketchpad",
+        "command": "bunx playwright install --with-deps chromium",
+        "env": {
+          "PLAYWRIGHT_BROWSERS_PATH": "../../node_modules/.cache/ms-playwright"
+        }
+      }
+    },
+    "dev": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["@semio/rs:build-wasm"],
+      "options": {
+        "cwd": "semio/sketchpad",
+        "command": "vite",
+        "forwardAllArgs": true,
+        "env": {
+          "WATCHPACK_POLLING": "true",
+          "CHOKIDAR_USEPOLLING": "true"
+        }
+      }
+    },
+    "build": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["@semio/rs:build-wasm"],
+      "options": {
+        "cwd": "semio/sketchpad",
+        "command": "vite build",
+        "forwardAllArgs": true
+      }
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "semio/sketchpad",
+        "command": "bun --import ./pw-loader.mjs ../../node_modules/playwright/cli.js test",
+        "forwardAllArgs": true,
+        "env": {
+          "SEMIO_SKETCHPAD_RUN_EMBEDDED_TESTS": "1"
+        }
+      }
+    },
+    "publish": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["build"],
+      "options": {
+        "cwd": "semio/sketchpad",
+        "commands": ["vite build", "bun publish"],
+        "parallel": false
+      }
+    }
+  }
+}

@@ -43,11 +43,6 @@
       }
     ]
   },
-  "scripts": {
-    "build": "vite build && vite build --mode webview",
-    "dev": "concurrently \"vite build --watch\" \"vite build --watch --mode webview\"",
-    "test": "echo 'no tests yet'"
-  },
   "dependencies": {
     "@semio/sketchpad": "*",
     "@semio/react": "*",

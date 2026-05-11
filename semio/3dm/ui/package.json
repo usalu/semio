@@ -5,10 +5,6 @@
   "version": "0.1.0",
   "description": "semio · 3dm ui",
   "type": "module",
-  "scripts": {
-    "dev": "node -e \"const h=process.env.DEVCONTAINER==='true'?'0.0.0.0':'127.0.0.1';require('child_process').spawn('npx',['vite','--port','5174','--host',h],{stdio:'inherit',shell:true}).on('exit',c=>process.exit(c||0))\"",
-    "build": "vite build"
-  },
   "dependencies": {
     "@elements/ui": "*",
     "@semio/js": "*",

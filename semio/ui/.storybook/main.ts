@@ -7,6 +7,7 @@
 // #endregion 🧲Header
 
 import type { StorybookConfig } from "@storybook/react-vite";
+import { mergeConfig } from "vite";
 import { createRequire } from "node:module";
 import { fileURLToPath } from "node:url";
 import { dirname, join, resolve } from "path";
@@ -24,6 +25,7 @@ const semioUiEntryPath = resolve(__dirname, "../index.tsx");
 const elementsUiDir = resolve(__dirname, "../../../elements/ui");
 const elementsUiEntryPath = resolve(elementsUiDir, "index.tsx");
 const semioJsEntryPath = resolve(__dirname, "../../js/index.ts");
+const semioRsWasmEntryPath = resolve(__dirname, "../../rs/pkg/semio.js");
 
 function getAbsolutePath(value: string): string {
   try {
@@ -55,6 +57,7 @@ const config: StorybookConfig = {
       "@elements/ui/elements": elementsUiEntryPath,
       "@elements/ui": elementsUiDir,
       "@semio/js": semioJsEntryPath,
+      "@semio/rs-wasm": semioRsWasmEntryPath,
     };
     config.server = config.server || {};
     config.server.fs = {
@@ -116,13 +119,22 @@ const config: StorybookConfig = {
       target: "es2022",
     };
 
+    config.build = config.build || {};
+    config.build.target = "es2022";
+
     config.mode = "development";
     config.define = {
       ...config.define,
       "process.env.NODE_ENV": JSON.stringify("development"),
     };
 
-    return config;
+    // @semio/js uses `new Worker(..., { type: "module" })`; Vite defaults to worker.format=iife which
+    // breaks Rollup when the worker graph is code-split. mergeConfig keeps Storybook's worker.plugins.
+    return mergeConfig(config, {
+      worker: {
+        format: "es",
+      },
+    });
   },
 };
 

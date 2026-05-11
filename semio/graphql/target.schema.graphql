@@ -154,7 +154,22 @@ interface Version implements StrongEntity {
   kit: Kit! # computed
 }
 
-#region Modifications
+#region Inputs
+
+interface Input implements WeakEntity {
+  # Node
+  id: ID! # computed // hash
+  # Entity
+  hash: String! # cached
+  owner: Entity # reference
+  owns: EntityConnection # reference
+  # Input
+  # ARGUMENT: ARGUMENTTYPE
+}
+
+#endregion Inputs
+
+#region Diffs
 
 interface Diff implements WeakEntity {
   # Node
@@ -181,6 +196,10 @@ type DiffConnection implements EntityConnection {
   pageInfo: PageInfo! # computed
   hash: String! # cached
 }
+
+#endregion Diffs
+
+#region Modifications
 
 interface Modification implements WeakEntity {
   # Node
@@ -237,6 +256,38 @@ type ModificationsConnection implements EntityConnection {
 }
 
 #endregion Modifications
+
+#region Operations
+
+interface Operation implements Entity { # implements StrongEntity
+  # Node
+  id: ID! # data // uuidv7
+  # Entity
+  hash: String! # cached
+  owner: Entity # reference // Edit
+  owns: EntityConnection # reference
+  # Operation
+  input: Input # data
+  modification: Modification! # computed
+  scope: Entity! # reference // Entity | Quality | Attribute | Tag | Concept | Port | Type | Connector | Design | Piece | Connection | Kit
+  # Operation Output
+}
+
+type OperationEdge implements EntityEdge {
+  # EntityEdge
+  cursor: String! # computed
+  # OperationEdge
+  node: Operation! # reference
+}
+
+type OperationConnection implements EntityConnection {
+  # EntityConnection
+  edges: [OperationEdge!]! # computed
+  pageInfo: PageInfo! # computed
+  hash: String! # cached
+}
+
+#endregion Operations
 
 #endregion General
 
@@ -1184,36 +1235,6 @@ type AttributeModificationsConnection implements EntityConnection {
 #endregion Attribute
 
 #region Kit
-
-#region Operations
-
-interface Operation implements Entity { # implements StrongEntity
-  # Node
-  id: ID! # data // uuidv7
-  # Entity
-  hash: String! # cached
-  owner: Entity # reference // Edit
-  owns: EntityConnection # reference
-  # Operation
-  modification: Modification! # computed
-  scope: Entity! # reference // Entity | Quality | Attribute | Tag | Concept | Port | Type | Connector | Design | Piece | Connection | Kit
-}
-
-type OperationEdge implements EntityEdge {
-  # EntityEdge
-  cursor: String! # computed
-  # OperationEdge
-  node: Operation! # reference
-}
-
-type OperationConnection implements EntityConnection {
-  # EntityConnection
-  edges: [OperationEdge!]! # computed
-  pageInfo: PageInfo! # computed
-  hash: String! # cached
-}
-
-#endregion Operations
 
 #region Place
 
@@ -4878,8 +4899,15 @@ type ConnectionModificationsConnection implements EntityConnection {
 
 #region Operations
 
-type CreatedFixedPieceInput {
-  # CreatedFixedPieceInput
+type CreatedFixedPieceInput implements Input {
+  # Node
+  id: ID! # data // uuidv7
+  # Entity
+  hash: String! # cached
+  owner: Entity # reference // Edit
+  owns: EntityConnection # reference // Piece
+  # Input
+  # Arguments
   blueprintId: ID!
   position: Position!
   name: String
@@ -4887,15 +4915,18 @@ type CreatedFixedPieceInput {
 }
 
 type CreatedFixedPiece implements Operation {
-  # Operation
+  # Node
   id: ID! # data // uuidv7
+  # Entity
   hash: String! # cached
   owner: Entity # reference // Edit
   owns: EntityConnection # reference // Piece
+  # Operation
   scope: Entity! # reference // Design
   input: CreatedFixedPieceInput! # data
   modification: Modification! # computed
-  piece: Piece! # data
+  # Operation Output
+  piece: Piece! # computed
 }
 
 type FixedPieceInput {

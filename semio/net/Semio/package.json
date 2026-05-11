@@ -4,10 +4,6 @@
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "semio/net/Semio",
   "projectType": "library",
-  "scripts": {
-    "build": "tsx ./build.ts",
-    "test": "dotnet test ../Semio.Tests/Semio.Tests.csproj"
-  },
   "devDependencies": {
     "@semio/assets": "*"
   },

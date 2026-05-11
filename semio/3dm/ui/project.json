@@ -1,0 +1,22 @@
+{
+  "name": "@semio/3dm-ui",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "targets": {
+    "dev": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "semio/3dm/ui",
+        "command": "bun ../../../scripts/run-vite-dev.ts --port 5174",
+        "forwardAllArgs": true
+      }
+    },
+    "build": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "semio/3dm/ui",
+        "command": "vite build",
+        "forwardAllArgs": true
+      }
+    }
+  }
+}

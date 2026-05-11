@@ -4,37 +4,37 @@ overview: Migrate the polyglot monorepo to Bun as the single Node package manage
 todos:
   - id: ticket
     content: Open ticket .repo/🎫/26/05/11/bun-nx-monorepo-setup via repo/client/client
-    status: in_progress
+    status: completed
   - id: bun-swap
     content: Swap npm/pnpm → Bun in root package.json, delete package-lock.json + .npmrc, add bunfig.toml, run bun install
-    status: pending
+    status: completed
   - id: scripts-rewrite
     content: Replace every npm/pnpm/npx call (root + 32 workspaces + devcontainer + CI + .vscode) with bun/bunx; replace inline `node -e` blobs with bun TS scripts under each scripts/ folder
-    status: pending
+    status: completed
   - id: drop-helpers
     content: Drop cross-env, tsx, jiti, concurrently from devDeps; verify nothing else needs them
-    status: pending
+    status: completed
   - id: project-jsons
     content: "Add/align project.json for all buildable units: 32 Node workspaces, semio/hub crate, 9 Go modules, 4 .NET test/benchmark csprojs"
-    status: pending
+    status: completed
   - id: workspace-project
     content: Add root `workspace` project.json with setup/lint/format/test/build/mcp-inspector/git-setup/depcruise targets
-    status: pending
+    status: completed
   - id: nx-json
     content: "Refine nx.json: cli.packageManager=bun, per-toolchain namedInputs (cargo/go/uv/dotnet), targetDefaults caching for setup/build/test/lint/publish, outputs per project"
-    status: pending
+    status: completed
   - id: devcontainer
     content: Shrink .devcontainer/post-create.sh, post-attach.sh, install-native.ps1 to OS prereqs + bun install + `bun nx run workspace:setup`; swap Node feature for Bun in Dockerfile
-    status: pending
+    status: completed
   - id: ci
     content: Update .github/workflows/playwright.yml + gh-pages.yml to oven-sh/setup-bun + bun nx affected/run; add lockfile-keyed Nx cache
-    status: pending
+    status: completed
   - id: verify
     content: "Cold bootstrap on Linux + Windows: rm caches, run `bun nx run workspace:setup`, then `bun nx run-many -t build/test`, confirm second run hits Nx cache everywhere"
-    status: pending
+    status: completed
   - id: close-ticket
     content: Close ticket via repo/client/client with summary + file list
-    status: pending
+    status: completed
 isProject: false
 ---
 

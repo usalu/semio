@@ -36,64 +36,27 @@
     "semio/ui"
   ],
   "engines": {
-    "node": ">=22.13.1"
+    "bun": ">=1.2.0"
   },
-  "packageManager": "pnpm@9.15.9",
+  "packageManager": "bun@1.2.5",
   "scripts": {
-    "typecheck": "pnpm --filter @semio/js run build && pnpm --filter @semio/react run build && pnpm exec nx build semio/graphql",
-    "lint": "eslint semio/js/index.ts semio/react/index.tsx --max-warnings 0",
-    "install:native": "powershell -NoProfile -ExecutionPolicy Bypass -File .devcontainer/install-native.ps1",
-    "git:setup": "node -e \"const cp=require('child_process');const fs=require('fs');const path=require('path');const root=process.cwd();const source='AGENTS.md';const aliases=['CLAUDE.md','GEMINI.md'];const run=(cmd,args)=>cp.execFileSync(cmd,args,{stdio:'inherit'});run('git',['config','--local','core.symlinks','true']);const repoClientCandidates=[path.join(root,'repo','client','client.exe'),path.join(root,'repo','client','client')];const repoClientPath=repoClientCandidates.find(candidate=>fs.existsSync(candidate));const repoClient=repoClientPath?{cmd:repoClientPath,args:['configure']}:{cmd:'go',args:['run','./repo/mcp','configure']};run(repoClient.cmd,repoClient.args);for(const alias of aliases){const aliasPath=path.join(root,alias);if(fs.existsSync(aliasPath))fs.rmSync(aliasPath,{force:true});try{fs.symlinkSync(source,aliasPath,'file');}catch(error){if(process.platform!=='win32')throw error;fs.linkSync(path.join(root,source),aliasPath);}}\"",
-    "pre-commit:install": "pre-commit install",
-    "pre-commit": "pre-commit run --all-files",
-    "premcp:inspector": "npm --workspace @semio/engine run build:mcp-app",
-    "mcp:inspector": "node -e \"const h=process.env.DEVCONTAINER==='true'?'0.0.0.0':'127.0.0.1';require('child_process').spawn('npx',['-y','@mcpjam/inspector@latest','uv','--directory',require('path').resolve('semio/engine'),'run','main.py','--mcp-stdio'],{stdio:'inherit',env:Object.assign({},process.env,{HOST:h}),shell:true}).on('exit',c=>process.exit(c||0))\"",
-    "mcp:inspector:repo": "node -e \"const h=process.env.DEVCONTAINER==='true'?'0.0.0.0':'127.0.0.1';require('child_process').spawn('npx',['-y','@modelcontextprotocol/inspector','--config','.cursor/mcp.json','--server','repo'],{stdio:'inherit',env:Object.assign({},process.env,{HOST:h}),shell:true}).on('exit',c=>process.exit(c||0))\"",
-    "dev:elements:ui:storybook": "cross-env WATCHPACK_POLLING=true CHOKIDAR_USEPOLLING=true npx nx dev @elements/ui",
-    "dev:js:sketchpad": "cross-env WATCHPACK_POLLING=true CHOKIDAR_USEPOLLING=true npx nx dev:sketchpad @semio/js",
-    "dev:3dm:ui": "cross-env WATCHPACK_POLLING=true CHOKIDAR_USEPOLLING=true npx nx dev @semio/3dm-ui",
-    "dev:sites:play": "cross-env WATCHPACK_POLLING=true CHOKIDAR_USEPOLLING=true npx nx dev @semio/play",
-    "dev:sites:docs": "cross-env WATCHPACK_POLLING=true CHOKIDAR_USEPOLLING=true npx nx dev @semio/docs",
-    "dev:desktop": "cross-env WATCHPACK_POLLING=true CHOKIDAR_USEPOLLING=true npx nx dev @semio/desktop",
-    "dev:ui": "cross-env WATCHPACK_POLLING=true CHOKIDAR_USEPOLLING=true npx nx dev @semio/ui",
-    "dev:algorithms": "cross-env WATCHPACK_POLLING=true CHOKIDAR_USEPOLLING=true npx nx dev @semio/algorithms",
-    "dev:sketchpad": "cross-env WATCHPACK_POLLING=true CHOKIDAR_USEPOLLING=true npx nx dev @semio/sketchpad",
-    "dev:coda-desktop": "cross-env WATCHPACK_POLLING=true CHOKIDAR_USEPOLLING=true npx nx dev @coda/desktop",
-    "build:engine": "npx nx build @semio/engine",
-    "build:sites": "cross-env NODE_OPTIONS=--max-old-space-size=8192 npx nx run-many -t build -p @semio/docs @semio/play",
-    "build:desktop": "npx nx build @semio/desktop",
-    "build:3dm": "cross-env NODE_OPTIONS=--max-old-space-size=8192 npx nx run-many -t build -p @semio/rhino @semio/3dm-ui",
-    "build:assets": "npm --workspace @semio/assets run build",
-    "build:repo-cli": "npm run build:repo-client",
-    "build:repo-client": "npx nx build @repo/client",
-    "build:repo-server": "npx nx build @repo/server",
-    "build:repo-vscode": "npx nx build repo",
-    "build:coda-desktop": "npx nx build @coda/desktop",
-    "publish:docs": "npx nx publish @semio/docs",
-    "publish:play": "npx nx publish @semio/play",
-    "publish:sketchpad": "npx nx publish @semio/sketchpad",
-    "publish:desktop": "npx nx publish @semio/desktop",
-    "publish:coda-desktop": "npx nx publish @coda/desktop",
-    "postinstall": "node -e \"const cp=require('child_process');const fs=require('fs');const path=require('path');const pkgPath=path.join(process.cwd(),'node_modules','lightningcss','package.json');if(!fs.existsSync(pkgPath))process.exit(0);const version=require(pkgPath).version;const report=process.report?.getReport?.();const libc=process.platform==='linux'?(report?.header?.glibcVersionRuntime?'gnu':'musl'):'';const key=[process.platform,process.arch,libc].filter(Boolean).join('/');const pkgByKey={'win32/x64':'lightningcss-win32-x64-msvc','win32/arm64':'lightningcss-win32-arm64-msvc','darwin/x64':'lightningcss-darwin-x64','darwin/arm64':'lightningcss-darwin-arm64','linux/x64/gnu':'lightningcss-linux-x64-gnu','linux/x64/musl':'lightningcss-linux-x64-musl','linux/arm64/gnu':'lightningcss-linux-arm64-gnu','linux/arm64/musl':'lightningcss-linux-arm64-musl'};const platformPkg=pkgByKey[key];if(!platformPkg)process.exit(0);if(fs.existsSync(path.join(process.cwd(),'node_modules',platformPkg)))process.exit(0);if(process.platform==='win32'){cp.execFileSync(process.env.ComSpec||'C:\\\\Windows\\\\System32\\\\cmd.exe',['/d','/s','/c','npm install --no-save '+platformPkg+'@'+version],{stdio:'inherit'});}else{cp.execFileSync('npm',['install','--no-save',platformPkg+'@'+version],{stdio:'inherit'});}\"",
-    "depcruise:layers": "npx -y dependency-cruiser@16 semio/js semio/react semio/sketchpad --config .dependency-cruiser.cjs --output-type err"
+    "setup": "bun nx run workspace:setup",
+    "postinstall": "bun scripts/postinstall-lightningcss.ts"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "@modelcontextprotocol/ext-apps": "^1.3.2",
+    "@nx/js": "21.4.1",
     "@nxlv/python": "^21.2.3",
     "@types/node": "^22.19.6",
     "@types/react": "^19.2.8",
-    "concurrently": "^9.2.1",
-    "cross-env": "^10.1.0",
     "eslint": "^10.0.1",
     "eslint-plugin-react-hooks": "^7.1.1",
     "globals": "^16.4.0",
-    "jiti": "^2.4.2",
     "lint-staged": "^16.2.7",
     "nx": "^21.4.1",
     "react": "^19.2.3",
     "react-dom": "^19.2.3",
-    "tsx": "^4.21.0",
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.50.1",
     "vite-plugin-singlefile": "^2.3.2",
@@ -133,13 +96,9 @@
   "dependencies": {
     "esbuild": "^0.27.2"
   },
-  "pnpm": {
-    "overrides": {
-      "@semio/assets": "workspace:*",
-      "@semio/js": "workspace:*"
-    }
-  },
   "overrides": {
+    "@semio/assets": "workspace:*",
+    "@semio/js": "workspace:*",
     "diff": "^8.0.3",
     "tmp": "^0.2.5"
   }

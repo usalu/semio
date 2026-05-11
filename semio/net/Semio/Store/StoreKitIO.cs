@@ -15,7 +15,7 @@ public static class StoreKitIO
     public static JObject KitToJObject(Kit kit) => JObject.Parse(Utility.Serialize(kit));
 
     private static Kit SnapshotToKit(JToken tok) =>
-        Utility.Deserialize<Kit>(tok.ToString(Formatting.None))!;
+        Utility.DeserializeKit(tok.ToString(Formatting.None))!;
 
     public static bool KitsEqual(Kit a, Kit b)
     {

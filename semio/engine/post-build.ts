@@ -1,4 +1,4 @@
-#!/usr/bin/env tsx
+#!/usr/bin/env bun
 // #region 🧲Header
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
