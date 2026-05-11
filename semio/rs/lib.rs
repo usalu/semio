@@ -2568,14 +2568,6 @@ pub mod kit {
             pub async fn owner(&self) -> Arc<Design> {
                 self.owner_design.upgrade().unwrap_or_default()
             }
-            #[graphql(name = "ownerEntity")]
-            pub async fn owner_entity(&self) -> Option<std::sync::Arc<crate::iface::OwnerEntity>> {
-                None
-            }
-            #[graphql(name = "ownedEntities")]
-            pub async fn owned_entities(&self) -> Option<std::sync::Arc<crate::iface::OwnedEntityConnection>> {
-                Some(crate::iface::empty_owned_entity_connection())
-            }
             #[graphql(name = "fixedPiece")]
             pub async fn fixed_piece(&self) -> Option<Arc<piece::Piece>> {
                 None
@@ -2798,16 +2790,6 @@ pub mod kit {
             #[graphql(name = "qualitySum")]
             pub async fn quality_sum(&self, _quality_id: Id) -> f64 {
                 0.0
-            }
-
-            #[graphql(name = "ownerEntity")]
-            pub async fn owner_entity(&self) -> Option<std::sync::Arc<crate::iface::OwnerEntity>> {
-                crate::iface::owner_entity_arc_opt(self.owner_kit.upgrade().map(crate::iface::OwnerEntity::Kit))
-            }
-
-            #[graphql(name = "ownedEntities")]
-            pub async fn owned_entities(&self) -> Option<std::sync::Arc<crate::iface::OwnedEntityConnection>> {
-                Some(crate::iface::empty_owned_entity_connection())
             }
 
             pub async fn references(&self) -> crate::gql_relay::DesignConnection {
@@ -4196,24 +4178,11 @@ pub mod kit {
         pub async fn hash(&self) -> String {
             self.compute_hash().await
         }
-        /// Owner [`crate::vcs::Graph`] is set by [`crate::worker::ChildRuntime::new`] via Weak.
         pub async fn owner(&self) -> KitOwner {
             match self.owner_graph.upgrade() {
                 Some(g) => KitOwner::Graph(g),
                 None => KitOwner::Graph(Arc::new(crate::vcs::Graph::default())),
             }
-        }
-        #[graphql(name = "graphOwner")]
-        pub async fn graph_owner(&self) -> Option<Arc<crate::vcs::Graph>> {
-            self.owner_graph.upgrade()
-        }
-        #[graphql(name = "checkpointOwner")]
-        pub async fn checkpoint_owner(&self) -> Option<Arc<crate::vcs::Checkpoint>> {
-            None
-        }
-        #[graphql(name = "alternativeOwner")]
-        pub async fn alternative_owner(&self) -> Option<Arc<crate::vcs::Alternative>> {
-            None
         }
         pub async fn checkpoint(&self) -> Option<Arc<crate::vcs::Checkpoint>> {
             None
@@ -4299,22 +4268,6 @@ pub mod kit {
         pub async fn stats(&self) -> crate::gql_relay::StatConnection {
             crate::gql_relay::StatConnection::from_rows(self.stats.read().await.clone())
         }
-
-        #[graphql(name = "ownerEntity")]
-        pub async fn owner_entity(&self) -> Option<std::sync::Arc<crate::iface::OwnerEntity>> {
-            crate::iface::owner_entity_arc_opt(self.owner_graph.upgrade().map(crate::iface::OwnerEntity::Graph))
-        }
-
-        #[graphql(name = "ownedEntities")]
-        pub async fn owned_entities(&self) -> Option<std::sync::Arc<crate::iface::OwnedEntityConnection>> {
-            Some(crate::iface::empty_owned_entity_connection())
-        }
-
-        /// @emoji 📸 JSON string projection of `@semio/js` KitFullDto (camelCase ids + ordered pieces); WASM + Node pull this via GraphQL (`wip.theKit`).
-        #[graphql(name = "fullSnapshot")]
-        pub async fn full_snapshot(&self) -> String {
-            serde_json::to_string(&self.kit_full_snapshot_value().await).unwrap_or_else(|_| "{}".to_string())
-        }
     }
     //#endregion 📦 kit
 }
@@ -4367,41 +4320,6 @@ impl crate::meta::Tag {
             crate::meta::TagOwnerSlot::Unset => Err(async_graphql::Error::new("Tag.owner unset")),
         }
     }
-    #[graphql(name = "kitOwner")]
-    pub async fn kit_owner(&self) -> Option<std::sync::Arc<crate::kit::Kit>> {
-        match &*self.owner.read().await {
-            crate::meta::TagOwnerSlot::Kit(w) => w.upgrade(),
-            _ => None,
-        }
-    }
-    #[graphql(name = "typeOwner")]
-    pub async fn type_owner(&self) -> Option<std::sync::Arc<crate::kit::r#type::Type>> {
-        match &*self.owner.read().await {
-            crate::meta::TagOwnerSlot::Type(w) => w.upgrade(),
-            _ => None,
-        }
-    }
-    #[graphql(name = "representationOwner")]
-    pub async fn representation_owner(&self) -> Option<std::sync::Arc<crate::kit::r#type::Representation>> {
-        match &*self.owner.read().await {
-            crate::meta::TagOwnerSlot::Rep(w) => w.upgrade(),
-            _ => None,
-        }
-    }
-    #[graphql(name = "ownerEntity")]
-    pub async fn owner_entity(&self) -> Option<std::sync::Arc<crate::iface::OwnerEntity>> {
-        let raw = match &*self.owner.read().await {
-            crate::meta::TagOwnerSlot::Kit(w) => w.upgrade().map(crate::iface::OwnerEntity::Kit),
-            crate::meta::TagOwnerSlot::Type(w) => w.upgrade().map(crate::iface::OwnerEntity::Type),
-            crate::meta::TagOwnerSlot::Rep(w) => w.upgrade().map(crate::iface::OwnerEntity::Representation),
-            crate::meta::TagOwnerSlot::Unset => None,
-        };
-        raw.map(crate::iface::owner_entity_arc)
-    }
-    #[graphql(name = "ownedEntities")]
-    pub async fn owned_entities(&self) -> Option<std::sync::Arc<crate::iface::OwnedEntityConnection>> {
-        Some(crate::iface::empty_owned_entity_connection())
-    }
     pub async fn name(&self) -> String {
         self.name.read().await.clone()
     }
@@ -4433,33 +4351,6 @@ impl crate::meta::Concept {
             crate::meta::ConceptOwnerSlot::Type(w) => w.upgrade().ok_or_else(|| async_graphql::Error::new("Concept.type owner dropped")).map(ConceptOwnerUnion::Type),
             crate::meta::ConceptOwnerSlot::Unset => Err(async_graphql::Error::new("Concept.owner unset")),
         }
-    }
-    #[graphql(name = "kitOwner")]
-    pub async fn kit_owner(&self) -> Option<std::sync::Arc<crate::kit::Kit>> {
-        match &*self.owner.read().await {
-            crate::meta::ConceptOwnerSlot::Kit(w) => w.upgrade(),
-            _ => None,
-        }
-    }
-    #[graphql(name = "typeOwner")]
-    pub async fn type_owner(&self) -> Option<std::sync::Arc<crate::kit::r#type::Type>> {
-        match &*self.owner.read().await {
-            crate::meta::ConceptOwnerSlot::Type(w) => w.upgrade(),
-            _ => None,
-        }
-    }
-    #[graphql(name = "ownerEntity")]
-    pub async fn owner_entity(&self) -> Option<std::sync::Arc<crate::iface::OwnerEntity>> {
-        let raw = match &*self.owner.read().await {
-            crate::meta::ConceptOwnerSlot::Kit(w) => w.upgrade().map(crate::iface::OwnerEntity::Kit),
-            crate::meta::ConceptOwnerSlot::Type(w) => w.upgrade().map(crate::iface::OwnerEntity::Type),
-            crate::meta::ConceptOwnerSlot::Unset => None,
-        };
-        raw.map(crate::iface::owner_entity_arc)
-    }
-    #[graphql(name = "ownedEntities")]
-    pub async fn owned_entities(&self) -> Option<std::sync::Arc<crate::iface::OwnedEntityConnection>> {
-        Some(crate::iface::empty_owned_entity_connection())
     }
     pub async fn name(&self) -> String {
         self.name.read().await.clone()
@@ -4495,57 +4386,6 @@ impl crate::meta::Quality {
             crate::meta::QualityOwnerSlot::Design(w) => w.upgrade().ok_or_else(|| async_graphql::Error::new("Quality.design owner dropped")).map(QualityOwnerUnion::Design),
             crate::meta::QualityOwnerSlot::Unset => Err(async_graphql::Error::new("Quality.owner unset")),
         }
-    }
-    #[graphql(name = "connectorOwner")]
-    pub async fn connector_owner(&self) -> Option<std::sync::Arc<crate::kit::r#type::Connector>> {
-        match &*self.owner.read().await {
-            crate::meta::QualityOwnerSlot::Conn(w) => w.upgrade(),
-            _ => None,
-        }
-    }
-    #[graphql(name = "representationOwner")]
-    pub async fn representation_owner(&self) -> Option<std::sync::Arc<crate::kit::r#type::Representation>> {
-        match &*self.owner.read().await {
-            crate::meta::QualityOwnerSlot::Rep(w) => w.upgrade(),
-            _ => None,
-        }
-    }
-    #[graphql(name = "typeOwner")]
-    pub async fn type_owner(&self) -> Option<std::sync::Arc<crate::kit::r#type::Type>> {
-        match &*self.owner.read().await {
-            crate::meta::QualityOwnerSlot::Type(w) => w.upgrade(),
-            _ => None,
-        }
-    }
-    #[graphql(name = "designOwner")]
-    pub async fn design_owner(&self) -> Option<std::sync::Arc<crate::kit::design::Design>> {
-        match &*self.owner.read().await {
-            crate::meta::QualityOwnerSlot::Design(w) => w.upgrade(),
-            _ => None,
-        }
-    }
-    #[graphql(name = "kitOwner")]
-    pub async fn kit_owner(&self) -> Option<std::sync::Arc<crate::kit::Kit>> {
-        match &*self.owner.read().await {
-            crate::meta::QualityOwnerSlot::Kit(w) => w.upgrade(),
-            _ => None,
-        }
-    }
-    #[graphql(name = "ownerEntity")]
-    pub async fn owner_entity(&self) -> Option<std::sync::Arc<crate::iface::OwnerEntity>> {
-        let raw = match &*self.owner.read().await {
-            crate::meta::QualityOwnerSlot::Kit(w) => w.upgrade().map(crate::iface::OwnerEntity::Kit),
-            crate::meta::QualityOwnerSlot::Design(w) => w.upgrade().map(crate::iface::OwnerEntity::Design),
-            crate::meta::QualityOwnerSlot::Type(w) => w.upgrade().map(crate::iface::OwnerEntity::Type),
-            crate::meta::QualityOwnerSlot::Rep(w) => w.upgrade().map(crate::iface::OwnerEntity::Representation),
-            crate::meta::QualityOwnerSlot::Conn(w) => w.upgrade().map(crate::iface::OwnerEntity::Connector),
-            crate::meta::QualityOwnerSlot::Unset => None,
-        };
-        raw.map(crate::iface::owner_entity_arc)
-    }
-    #[graphql(name = "ownedEntities")]
-    pub async fn owned_entities(&self) -> Option<std::sync::Arc<crate::iface::OwnedEntityConnection>> {
-        Some(crate::iface::empty_owned_entity_connection())
     }
     pub async fn key(&self) -> String {
         self.key.read().await.clone()
