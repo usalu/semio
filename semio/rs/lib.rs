@@ -5577,7 +5577,7 @@ pub mod vcs {
             self.drafts.read().await.iter().find(|d| d.id == id).cloned()
         }
 
-        /// @emoji 📝 All drafts currently open on this graph (sketchpad probes `wip.drafts` to know which ones to commit / abort on close).
+        /// @emoji 📝 Internal draft list used by the current command engine; not part of the target version wire shape.
         pub async fn drafts(&self) -> Vec<Arc<Draft>> {
             self.drafts.read().await.clone()
         }
@@ -10392,15 +10392,10 @@ mod tests {
         res.data.into_json().unwrap()["session"]["theKit"]["startNewChange"].as_str().expect("change id").to_string()
     }
 
-    /// @emoji 🌱 GraphQL tests must target the same draft [`Graph::materialized_head_kit_from_ref`] uses (seed draft), not hard-coded ids.
+    /// @emoji 🌱 GraphQL tests open a target-schema unsaved change; the internal draft anchor stays hidden.
     async fn graphql_seed_defaults_and_open_tx(schema: &AppSchema) -> (String, String) {
         let tx_id = graphql_start_new_change(schema).await;
-        let res = schema.execute(Request::new(r#"{ wip { drafts { id } } }"#)).await;
-        assert!(res.errors.is_empty(), "wip.drafts: {:?}", res.errors);
-        let data = res.data.into_json().unwrap();
-        let arr = data["wip"]["drafts"].as_array().expect("drafts");
-        let draft_id = arr.first().and_then(|d| d["id"].as_str()).expect("draft id").to_string();
-        (draft_id, tx_id)
+        ("the-kit".to_string(), tx_id)
     }
 
     fn position_value() -> serde_json::Value {

@@ -223,16 +223,7 @@ export type KitReadPoint =
         readonly operationId?: string;
       };
     }
-  | { readonly alternative: { readonly alternativeId: string } }
-  | {
-      readonly draft: {
-        readonly alternativeId: string;
-        readonly draftId: string;
-        readonly changeId?: string;
-        readonly transactionId?: string;
-        readonly operationId?: string;
-      };
-    };
+  | { readonly alternative: { readonly alternativeId: string } };
 
 /** @emoji 🧭 Main committed kit line (default read point). */
 export const theKitReadPoint: KitReadPoint = { theKit: null };
@@ -251,14 +242,6 @@ export function kitReadPointToGqlVariables(p: KitReadPoint): JsonObject {
   }
   if ("alternative" in p) {
     return { alternativeId: p.alternative.alternativeId } as JsonObject;
-  }
-  if ("draft" in p) {
-    const d = p.draft;
-    const o: { [k: string]: JsonValue } = { draftAlternativeId: d.alternativeId, draftId: d.draftId };
-    if (d.changeId != null && d.changeId !== "") o["draftChangeId"] = d.changeId;
-    if (d.transactionId != null && d.transactionId !== "") o["draftTransactionId"] = d.transactionId;
-    if (d.operationId != null && d.operationId !== "") o["draftOperationId"] = d.operationId;
-    return o as JsonObject;
   }
   return {} as JsonObject;
 }
@@ -635,8 +618,7 @@ export type KitStoreBatchResultRow = Readonly<{
   kind: string;
   ok?: boolean | null;
   sessionId?: string | null;
-  draftId?: string | null;
-  transactionId?: string | null;
+  changeId?: string | null;
   changeKind?: KitChangeSemanticKindGql | null;
   changeKindOther?: string | null;
   inverse?: readonly ChangeKitCommand[] | null;
@@ -2983,7 +2965,7 @@ export class KitStore {
     return out;
   }
 
-  /** @emoji 🧾 Apply typed `ChangeKitCommand` batch inside the active session draft transaction (`kitStore.batch`). */
+  /** @emoji 🧾 Apply typed `ChangeKitCommand` batch inside the active unsaved version change (`kitStore.batch`). */
   async submitChangeKitCommands(commands: readonly ChangeKitCommand[]): Promise<SetResult> {
     try {
       const rows = await this.runScopedTransactionBatch([{ changeKitCommands: { commands: [...commands] } } as JsonObject]);
@@ -3538,7 +3520,7 @@ export type KitStoreExecuteResult = { ok: true; result: JsonValue } | { ok: fals
 export type KitCommandContext = JsonObject;
 export type KitCommandResult = JsonObject;
 
-/** @emoji 🧾 Typed kit mutation envelope for React facades (`kitStore.batch` transaction `changeKitCommands`). */
+/** @emoji 🧾 Typed kit mutation envelope for React facades (`kitStore.batch` version change `changeKitCommands`). */
 type KitTypedChangeKitCommandsBatch = { readonly kind: "changeKitCommands"; readonly commands: readonly ChangeKitCommand[] };
 
 /** @emoji 🧾 Typed `changeKitCommands` batch facade for React (opaque to string command routers). */
