@@ -662,6 +662,7 @@ pub mod gql_relay {
     use std::sync::Arc;
 
     use async_graphql::SimpleObject;
+    use serde::{Deserialize, Serialize};
 
     use crate::hash::{h, merkle_collection};
     use crate::id::Id;
@@ -1090,56 +1091,23 @@ pub mod gql_relay {
     crate::entity_full_family!(Position, Arc<crate::geom::entity::PositionNode>, relay = (PositionConnection, PositionEdge));
     crate::entity_full_family!(Location, Arc<crate::geom::entity::LocationNode>, relay = (LocationConnection, LocationEdge));
 
-    /// @emoji 🧷 Kit [`Family`] SDL shell — Artifact [`name`]/[`description`]/[`icon`] are persisted kit fields.
-    #[derive(Clone, Debug, Default, SimpleObject)]
-    #[graphql(complex)]
-    pub struct Family {
-        pub id: Id,
-        pub name: String,
-        pub description: Option<String>,
-        pub icon: Option<String>,
-    }
-
-    impl Family {
-        /// @emoji 🪪 Stable digest for relay [`FamilyConnection`] (matches GraphQL `Family.hash`).
-        pub fn compute_entity_hash(&self) -> String {
-            crate::hash::merkle_node_str(&["semio:meta:Family", self.id.as_str(), self.name.as_str(), self.description.as_deref().unwrap_or(""), self.icon.as_deref().unwrap_or("")], Vec::new())
+    crate::entity_family! {
+        /// @emoji 🧷 Kit [`Family`] SDL shell — Artifact [`name`]/[`description`]/[`icon`] are persisted kit fields.
+        pub struct Family {
+            pub id: Id,
+            pub name: String,
+            pub description: Option<String>,
+            pub icon: Option<String>,
+        }
+        hash = |this| {
+            crate::hash::merkle_node_str(
+                &["semio:meta:Family", this.id.as_str(), this.name.as_str(), this.description.as_deref().unwrap_or(""), this.icon.as_deref().unwrap_or("")],
+                Vec::new(),
+            )
         }
     }
 
-    #[async_graphql::ComplexObject]
-    impl Family {
-        /// @emoji 🪪 Merkle leaf over the family row (Artifact data fields).
-        pub async fn hash(&self) -> String {
-            self.compute_entity_hash()
-        }
-    }
-
-    #[derive(Clone, SimpleObject)]
-    pub struct FamilyEdge {
-        pub cursor: String,
-        pub node: Family,
-    }
-
-    #[derive(Clone, SimpleObject)]
-    pub struct FamilyConnection {
-        pub edges: Vec<FamilyEdge>,
-        #[graphql(name = "pageInfo")]
-        pub page_info: std::sync::Arc<PageInfo>,
-        pub hash: String,
-    }
-
-    impl FamilyConnection {
-        pub fn from_rows(rows: Vec<Family>) -> Self {
-            let mut child_hashes = Vec::with_capacity(rows.len());
-            for f in &rows {
-                child_hashes.push(f.compute_entity_hash());
-            }
-            let hash = merkle_collection(child_hashes);
-            let edges = rows.into_iter().enumerate().map(|(i, node)| FamilyEdge { cursor: edge_cursor(i), node }).collect();
-            Self { edges, page_info: std::sync::Arc::new(PageInfo::default()), hash }
-        }
-    }
+    crate::simple_conn_sync!(FamilyConnection, FamilyEdge, Family, |f: &Family| f.compute_entity_hash());
 }
 
 //#endregion 🪢 gql_relay
@@ -1158,44 +1126,48 @@ pub mod meta {
     use crate::timestamp::Timestamp;
 
     //#region 🧾 graphql inputs
-    /// @emoji 🧾 SDL `AttributeInput` — instantiates [`Attribute`] rows on entity create/update paths.
-    #[derive(Clone, Debug, Default, Serialize, Deserialize, InputObject)]
-    pub struct AttributeInput {
-        pub key: String,
-        pub value: Option<String>,
-        pub definition: Option<String>,
+    crate::entity_input! {
+        /// @emoji 🧾 SDL `AttributeInput` — instantiates [`Attribute`] rows on entity create/update paths.
+        pub struct AttributeInput as "AttributeInput" {
+            pub key: String,
+            pub value: Option<String>,
+            pub definition: Option<String>,
+        }
     }
 
-    /// @emoji 🧾 SDL `TagInput`.
-    #[derive(Clone, Debug, Default, Serialize, Deserialize, InputObject)]
-    pub struct TagInput {
-        pub name: String,
-        pub description: Option<String>,
-        pub icon: Option<String>,
-        pub order: Option<i32>,
-        pub attributes: Option<Vec<AttributeInput>>,
+    crate::entity_input! {
+        /// @emoji 🧾 SDL `TagInput`.
+        pub struct TagInput as "TagInput" {
+            pub name: String,
+            pub description: Option<String>,
+            pub icon: Option<String>,
+            pub order: Option<i32>,
+            pub attributes: Option<Vec<AttributeInput>>,
+        }
     }
 
-    /// @emoji 🧾 SDL `ConceptInput`.
-    #[derive(Clone, Debug, Default, Serialize, Deserialize, InputObject)]
-    pub struct ConceptInput {
-        pub name: String,
-        pub description: Option<String>,
-        pub icon: Option<String>,
-        pub order: Option<i32>,
-        pub attributes: Option<Vec<AttributeInput>>,
+    crate::entity_input! {
+        /// @emoji 🧾 SDL `ConceptInput`.
+        pub struct ConceptInput as "ConceptInput" {
+            pub name: String,
+            pub description: Option<String>,
+            pub icon: Option<String>,
+            pub order: Option<i32>,
+            pub attributes: Option<Vec<AttributeInput>>,
+        }
     }
 
-    /// @emoji 🧾 SDL `QualityInput` (subset aligned to persisted kit fields).
-    #[derive(Clone, Debug, Default, Serialize, Deserialize, InputObject)]
-    pub struct QualityInput {
-        pub key: String,
-        pub value: Option<String>,
-        pub unit: Option<String>,
-        pub definition: Option<String>,
-        pub description: Option<String>,
-        pub icon: Option<String>,
-        pub attributes: Option<Vec<AttributeInput>>,
+    crate::entity_input! {
+        /// @emoji 🧾 SDL `QualityInput` (subset aligned to persisted kit fields).
+        pub struct QualityInput as "QualityInput" {
+            pub key: String,
+            pub value: Option<String>,
+            pub unit: Option<String>,
+            pub definition: Option<String>,
+            pub description: Option<String>,
+            pub icon: Option<String>,
+            pub attributes: Option<Vec<AttributeInput>>,
+        }
     }
     //#endregion 🧾 graphql inputs
 
@@ -1229,89 +1201,68 @@ pub mod meta {
         Ok(attrs.into_iter().zip(ids.iter().cloned()).map(|(attr, id)| attr.into_attribute_with_id(id)).collect())
     }
 
-    #[derive(Clone, Debug, Default, Serialize, Deserialize, SimpleObject)]
-    #[graphql(complex)]
-    pub struct File {
-        pub id: Id,
-        pub url: String,
-        pub mime: Option<String>,
-        pub size: Option<i32>,
-        /// @emoji 📎 Blob/content digest on the wire (`hash` in JSON); omitted from GraphQL in favor of entity [`File::hash`] resolver.
-        #[graphql(skip)]
-        pub hash: String,
-        pub description: Option<String>,
-        pub created: Option<Timestamp>,
-        pub updated: Option<Timestamp>,
-    }
-
-    impl File {
-        /// @emoji 🌿 Blake3 leaf over every persisted [`File`] column (blob digest in [`File::hash`] JSON field).
-        pub fn compute_entity_hash(&self) -> String {
+    crate::entity_family! {
+        pub struct File {
+            pub id: Id,
+            pub url: String,
+            pub mime: Option<String>,
+            pub size: Option<i32>,
+            /// @emoji 📎 Blob/content digest on the wire (`hash` in JSON); omitted from GraphQL in favor of entity [`File::hash`] resolver.
+            #[graphql(skip)]
+            pub hash: String,
+            pub description: Option<String>,
+            pub created: Option<Timestamp>,
+            pub updated: Option<Timestamp>,
+        }
+        hash = |this| {
             crate::hash::merkle_node_str(
                 &[
                     "semio:meta:File",
-                    self.id.as_str(),
-                    self.url.as_str(),
-                    self.mime.as_deref().unwrap_or(""),
-                    &self.size.map(|sz| sz.to_string()).unwrap_or_default(),
-                    self.hash.as_str(),
-                    self.description.as_deref().unwrap_or(""),
-                    self.created.as_ref().map(|t| t.0.as_str()).unwrap_or(""),
-                    self.updated.as_ref().map(|t| t.0.as_str()).unwrap_or(""),
+                    this.id.as_str(),
+                    this.url.as_str(),
+                    this.mime.as_deref().unwrap_or(""),
+                    &this.size.map(|sz| sz.to_string()).unwrap_or_default(),
+                    this.hash.as_str(),
+                    this.description.as_deref().unwrap_or(""),
+                    this.created.as_ref().map(|t| t.0.as_str()).unwrap_or(""),
+                    this.updated.as_ref().map(|t| t.0.as_str()).unwrap_or(""),
                 ],
                 Vec::new(),
             )
         }
     }
 
-    #[ComplexObject]
-    impl File {
-        pub async fn hash(&self) -> String {
-            self.compute_entity_hash()
+    crate::entity_family! {
+        pub struct Folder {
+            pub id: Id,
+            pub path: String,
+            pub description: Option<String>,
+        }
+        hash = |this| {
+            crate::hash::merkle_node_str(&["semio:meta:Folder", this.id.as_str(), this.path.as_str(), this.description.as_deref().unwrap_or("")], Vec::new())
         }
     }
 
-    #[derive(Clone, Debug, Default, Serialize, Deserialize, SimpleObject)]
-    #[graphql(complex)]
-    pub struct Folder {
-        pub id: Id,
-        pub path: String,
-        pub description: Option<String>,
-    }
-
-    impl Folder {
-        pub fn compute_entity_hash(&self) -> String {
-            crate::hash::merkle_node_str(&["semio:meta:Folder", self.id.as_str(), self.path.as_str(), self.description.as_deref().unwrap_or("")], Vec::new())
+    crate::entity_family! {
+        pub struct Author {
+            pub id: Id,
+            pub name: String,
+            pub email: String,
+            pub role: Option<String>,
+            pub rank: Option<i32>,
         }
-    }
-
-    #[ComplexObject]
-    impl Folder {
-        pub async fn hash(&self) -> String {
-            self.compute_entity_hash()
-        }
-    }
-
-    #[derive(Clone, Debug, Default, Serialize, Deserialize, SimpleObject)]
-    #[graphql(complex)]
-    pub struct Author {
-        pub id: Id,
-        pub name: String,
-        pub email: String,
-        pub role: Option<String>,
-        pub rank: Option<i32>,
-    }
-
-    impl Author {
-        pub fn compute_entity_hash(&self) -> String {
-            crate::hash::merkle_node_str(&["semio:meta:Author", self.id.as_str(), self.name.as_str(), self.email.as_str(), self.role.as_deref().unwrap_or(""), &self.rank.map(|r| r.to_string()).unwrap_or_default()], Vec::new())
-        }
-    }
-
-    #[ComplexObject]
-    impl Author {
-        pub async fn hash(&self) -> String {
-            self.compute_entity_hash()
+        hash = |this| {
+            crate::hash::merkle_node_str(
+                &[
+                    "semio:meta:Author",
+                    this.id.as_str(),
+                    this.name.as_str(),
+                    this.email.as_str(),
+                    this.role.as_deref().unwrap_or(""),
+                    &this.rank.map(|r| r.to_string()).unwrap_or_default(),
+                ],
+                Vec::new(),
+            )
         }
     }
 
@@ -1366,58 +1317,38 @@ pub mod meta {
         }
     }
 
-    #[derive(Clone, Debug, Default, Serialize, Deserialize, SimpleObject)]
-    #[graphql(complex)]
-    pub struct Benchmark {
-        pub id: Id,
-        pub name: String,
-        pub min: Option<f64>,
-        pub max: Option<f64>,
-        #[graphql(name = "minExcluded")]
-        pub min_excluded: Option<bool>,
-        #[graphql(name = "maxExcluded")]
-        pub max_excluded: Option<bool>,
-    }
-
-    impl Benchmark {
-        pub fn compute_entity_hash(&self) -> String {
-            let min = self.min.map(|v| format!("{v:.9}")).unwrap_or_default();
-            let max = self.max.map(|v| format!("{v:.9}")).unwrap_or_default();
-            let minx = self.min_excluded.map(|b| if b { "1" } else { "0" }).unwrap_or_default();
-            let maxx = self.max_excluded.map(|b| if b { "1" } else { "0" }).unwrap_or_default();
-            crate::hash::merkle_node_str(&["semio:meta:Benchmark", self.id.as_str(), self.name.as_str(), min.as_str(), max.as_str(), minx, maxx], Vec::new())
+    crate::entity_family! {
+        pub struct Benchmark {
+            pub id: Id,
+            pub name: String,
+            pub min: Option<f64>,
+            pub max: Option<f64>,
+            #[graphql(name = "minExcluded")]
+            pub min_excluded: Option<bool>,
+            #[graphql(name = "maxExcluded")]
+            pub max_excluded: Option<bool>,
+        }
+        hash = |this| {
+            let min = this.min.map(|v| format!("{v:.9}")).unwrap_or_default();
+            let max = this.max.map(|v| format!("{v:.9}")).unwrap_or_default();
+            let minx = this.min_excluded.map(|b| if b { "1" } else { "0" }).unwrap_or_default();
+            let maxx = this.max_excluded.map(|b| if b { "1" } else { "0" }).unwrap_or_default();
+            crate::hash::merkle_node_str(&["semio:meta:Benchmark", this.id.as_str(), this.name.as_str(), min.as_str(), max.as_str(), minx, maxx], Vec::new())
         }
     }
 
-    #[ComplexObject]
-    impl Benchmark {
-        pub async fn hash(&self) -> String {
-            self.compute_entity_hash()
+    crate::entity_family! {
+        pub struct Prop {
+            pub id: Id,
+            pub key: String,
+            pub value: String,
+            pub unit: Option<String>,
+            #[graphql(skip)]
+            #[serde(skip)]
+            pub quality: Option<std::sync::Arc<Quality>>,
         }
-    }
-
-    #[derive(Clone, Debug, Default, Serialize, Deserialize, SimpleObject)]
-    #[graphql(complex)]
-    pub struct Prop {
-        pub id: Id,
-        pub key: String,
-        pub value: String,
-        pub unit: Option<String>,
-        #[graphql(skip)]
-        #[serde(skip)]
-        pub quality: Option<std::sync::Arc<Quality>>,
-    }
-
-    impl Prop {
-        pub fn compute_entity_hash(&self) -> String {
-            crate::hash::merkle_node_str(&["semio:meta:Prop", self.id.as_str(), self.key.as_str(), self.value.as_str(), self.unit.as_deref().unwrap_or("")], Vec::new())
-        }
-    }
-
-    #[ComplexObject]
-    impl Prop {
-        pub async fn hash(&self) -> String {
-            self.compute_entity_hash()
+        hash = |this| {
+            crate::hash::merkle_node_str(&["semio:meta:Prop", this.id.as_str(), this.key.as_str(), this.value.as_str(), this.unit.as_deref().unwrap_or("")], Vec::new())
         }
     }
 
@@ -1437,43 +1368,7 @@ pub mod meta {
     }
 
     /// @emoji 🏷️ SDL `Tag` — Arc-shared entity with interior mutability (GraphQL `#[Object]` in `meta_objects` region).
-    #[derive(Debug)]
-    pub struct Tag {
-        pub id: Id,
-        pub owner: RwLock<TagOwnerSlot>,
-        pub name: RwLock<String>,
-        pub description: RwLock<Option<String>>,
-        pub icon: RwLock<Option<String>>,
-        pub order: RwLock<Option<i32>>,
-        pub attributes: RwLock<Vec<Attribute>>,
-    }
-
-    impl Tag {
-        pub async fn new(owner: TagOwnerSlot, name: String, description: Option<String>, icon: Option<String>, order: Option<i32>, attributes: Vec<Attribute>) -> Arc<Self> {
-            Arc::new(Self { id: Id::new().await, owner: RwLock::new(owner), name: RwLock::new(name), description: RwLock::new(description), icon: RwLock::new(icon), order: RwLock::new(order), attributes: RwLock::new(attributes) })
-        }
-
-        pub fn new_with_id(owner: TagOwnerSlot, id: Id, name: String, description: Option<String>, icon: Option<String>, order: Option<i32>, attributes: Vec<Attribute>) -> Arc<Self> {
-            Arc::new(Self { id, owner: RwLock::new(owner), name: RwLock::new(name), description: RwLock::new(description), icon: RwLock::new(icon), order: RwLock::new(order), attributes: RwLock::new(attributes) })
-        }
-
-        pub async fn compute_hash(&self) -> String {
-            let n = self.name.read().await;
-            let d = self.description.read().await.clone().unwrap_or_default();
-            let ic = self.icon.read().await.clone().unwrap_or_default();
-            let ord = self.order.read().await.map(|o| o.to_string()).unwrap_or_default();
-            let attrs = self.attributes.read().await;
-            let mut child_hashes: Vec<String> = attrs.iter().map(Attribute::compute_entity_hash).collect();
-            child_hashes.sort();
-            crate::hash::merkle_node_str(&["semio:meta:Tag", self.id.as_str(), n.as_str(), d.as_str(), ic.as_str(), ord.as_str()], child_hashes)
-        }
-    }
-
-    impl Default for Tag {
-        fn default() -> Self {
-            Self { id: Id::default(), owner: RwLock::new(TagOwnerSlot::default()), name: RwLock::new(String::new()), description: RwLock::new(None), icon: RwLock::new(None), order: RwLock::new(None), attributes: RwLock::new(Vec::new()) }
-        }
-    }
+    crate::meta_arc_titled_entity!(Tag, TagOwnerSlot, "semio:meta:Tag");
 
     /// @emoji 🪢 Resolved kit/type owner for a [`Concept`].
     #[derive(Debug)]
@@ -1490,43 +1385,7 @@ pub mod meta {
     }
 
     /// @emoji 🏷️ SDL `Concept` entity.
-    #[derive(Debug)]
-    pub struct Concept {
-        pub id: Id,
-        pub owner: RwLock<ConceptOwnerSlot>,
-        pub name: RwLock<String>,
-        pub description: RwLock<Option<String>>,
-        pub icon: RwLock<Option<String>>,
-        pub order: RwLock<Option<i32>>,
-        pub attributes: RwLock<Vec<Attribute>>,
-    }
-
-    impl Concept {
-        pub async fn new(owner: ConceptOwnerSlot, name: String, description: Option<String>, icon: Option<String>, order: Option<i32>, attributes: Vec<Attribute>) -> Arc<Self> {
-            Arc::new(Self { id: Id::new().await, owner: RwLock::new(owner), name: RwLock::new(name), description: RwLock::new(description), icon: RwLock::new(icon), order: RwLock::new(order), attributes: RwLock::new(attributes) })
-        }
-
-        pub fn new_with_id(owner: ConceptOwnerSlot, id: Id, name: String, description: Option<String>, icon: Option<String>, order: Option<i32>, attributes: Vec<Attribute>) -> Arc<Self> {
-            Arc::new(Self { id, owner: RwLock::new(owner), name: RwLock::new(name), description: RwLock::new(description), icon: RwLock::new(icon), order: RwLock::new(order), attributes: RwLock::new(attributes) })
-        }
-
-        pub async fn compute_hash(&self) -> String {
-            let n = self.name.read().await;
-            let d = self.description.read().await.clone().unwrap_or_default();
-            let ic = self.icon.read().await.clone().unwrap_or_default();
-            let ord = self.order.read().await.map(|o| o.to_string()).unwrap_or_default();
-            let attrs = self.attributes.read().await;
-            let mut child_hashes: Vec<String> = attrs.iter().map(Attribute::compute_entity_hash).collect();
-            child_hashes.sort();
-            crate::hash::merkle_node_str(&["semio:meta:Concept", self.id.as_str(), n.as_str(), d.as_str(), ic.as_str(), ord.as_str()], child_hashes)
-        }
-    }
-
-    impl Default for Concept {
-        fn default() -> Self {
-            Self { id: Id::default(), owner: RwLock::new(ConceptOwnerSlot::default()), name: RwLock::new(String::new()), description: RwLock::new(None), icon: RwLock::new(None), order: RwLock::new(None), attributes: RwLock::new(Vec::new()) }
-        }
-    }
+    crate::meta_arc_titled_entity!(Concept, ConceptOwnerSlot, "semio:meta:Concept");
 
     /// @emoji 🪢 Resolved multi-parent owner for [`Quality`] (connector/representation/type/design/kit).
     #[derive(Debug)]
@@ -1545,186 +1404,74 @@ pub mod meta {
         }
     }
 
-    /// @emoji 🏷️ SDL `Quality` entity (benchmarks stay value-typed [`Benchmark`] rows).
-    #[derive(Debug)]
-    pub struct Quality {
-        pub id: Id,
-        pub owner: RwLock<QualityOwnerSlot>,
-        pub key: RwLock<String>,
-        pub value: RwLock<Option<String>>,
-        pub unit: RwLock<Option<String>>,
-        pub definition: RwLock<Option<String>>,
-        pub description: RwLock<Option<String>>,
-        pub icon: RwLock<Option<String>>,
-        pub benchmarks: RwLock<Vec<Benchmark>>,
-        pub attributes: RwLock<Vec<Attribute>>,
-    }
+    crate::meta_quality_entity!();
 
-    impl Quality {
-        pub async fn new(
-            owner: QualityOwnerSlot,
-            key: String,
-            value: Option<String>,
-            unit: Option<String>,
-            definition: Option<String>,
-            description: Option<String>,
-            icon: Option<String>,
-            benchmarks: Vec<Benchmark>,
-            attributes: Vec<Attribute>,
-        ) -> Arc<Self> {
-            Arc::new(Self {
-                id: Id::new().await,
-                owner: RwLock::new(owner),
-                key: RwLock::new(key),
-                value: RwLock::new(value),
-                unit: RwLock::new(unit),
-                definition: RwLock::new(definition),
-                description: RwLock::new(description),
-                icon: RwLock::new(icon),
-                benchmarks: RwLock::new(benchmarks),
-                attributes: RwLock::new(attributes),
-            })
+    crate::entity_family! {
+        pub struct Stat {
+            pub id: Id,
+            pub key: String,
+            pub value: String,
+            pub unit: Option<String>,
+            pub description: Option<String>,
         }
-
-        pub fn new_with_id(
-            owner: QualityOwnerSlot,
-            id: Id,
-            key: String,
-            value: Option<String>,
-            unit: Option<String>,
-            definition: Option<String>,
-            description: Option<String>,
-            icon: Option<String>,
-            benchmarks: Vec<Benchmark>,
-            attributes: Vec<Attribute>,
-        ) -> Arc<Self> {
-            Arc::new(Self {
-                id,
-                owner: RwLock::new(owner),
-                key: RwLock::new(key),
-                value: RwLock::new(value),
-                unit: RwLock::new(unit),
-                definition: RwLock::new(definition),
-                description: RwLock::new(description),
-                icon: RwLock::new(icon),
-                benchmarks: RwLock::new(benchmarks),
-                attributes: RwLock::new(attributes),
-            })
-        }
-
-        pub async fn compute_hash(&self) -> String {
-            let k = self.key.read().await;
-            let v = self.value.read().await.clone().unwrap_or_default();
-            let u = self.unit.read().await.clone().unwrap_or_default();
-            let def = self.definition.read().await.clone().unwrap_or_default();
-            let desc = self.description.read().await.clone().unwrap_or_default();
-            let ic = self.icon.read().await.clone().unwrap_or_default();
-            let bm = self.benchmarks.read().await;
-            let av = self.attributes.read().await;
-            let mut child_hashes: Vec<String> = bm.iter().map(Benchmark::compute_entity_hash).collect();
-            child_hashes.extend(av.iter().map(Attribute::compute_entity_hash));
-            child_hashes.sort();
-            crate::hash::merkle_node_str(&["semio:meta:Quality", self.id.as_str(), k.as_str(), v.as_str(), u.as_str(), def.as_str(), desc.as_str(), ic.as_str()], child_hashes)
-        }
-    }
-
-    impl Default for Quality {
-        fn default() -> Self {
-            Self {
-                id: Id::default(),
-                owner: RwLock::new(QualityOwnerSlot::default()),
-                key: RwLock::new(String::new()),
-                value: RwLock::new(None),
-                unit: RwLock::new(None),
-                definition: RwLock::new(None),
-                description: RwLock::new(None),
-                icon: RwLock::new(None),
-                benchmarks: RwLock::new(Vec::new()),
-                attributes: RwLock::new(Vec::new()),
-            }
-        }
-    }
-
-    #[derive(Clone, Debug, Default, Serialize, Deserialize, SimpleObject)]
-    #[graphql(complex)]
-    pub struct Stat {
-        pub id: Id,
-        pub key: String,
-        pub value: String,
-        pub unit: Option<String>,
-        pub description: Option<String>,
-    }
-
-    impl Stat {
-        pub fn compute_entity_hash(&self) -> String {
-            crate::hash::merkle_node_str(&["semio:meta:Stat", self.id.as_str(), self.key.as_str(), self.value.as_str(), self.unit.as_deref().unwrap_or(""), self.description.as_deref().unwrap_or("")], Vec::new())
-        }
-    }
-
-    #[ComplexObject]
-    impl Stat {
-        pub async fn hash(&self) -> String {
-            self.compute_entity_hash()
-        }
-    }
-
-    #[derive(Clone, Debug, Default, Serialize, Deserialize, SimpleObject)]
-    #[graphql(complex)]
-    pub struct Layer {
-        pub id: Id,
-        pub name: String,
-        pub description: Option<String>,
-        /// @emoji 🏷️ Artifact `icon` on SDL `Layer`.
-        pub icon: String,
-        pub color: Option<String>,
-        pub order: Option<i32>,
-        pub visible: Option<bool>,
-        pub locked: Option<bool>,
-    }
-
-    impl Layer {
-        pub fn compute_entity_hash(&self) -> String {
-            let vis = self.visible.map(|b| if b { "1" } else { "0" }).unwrap_or_default();
-            let lck = self.locked.map(|b| if b { "1" } else { "0" }).unwrap_or_default();
+        hash = |this| {
             crate::hash::merkle_node_str(
-                &["semio:meta:Layer", self.id.as_str(), self.name.as_str(), self.description.as_deref().unwrap_or(""), self.icon.as_str(), self.color.as_deref().unwrap_or(""), &self.order.map(|o| o.to_string()).unwrap_or_default(), vis, lck],
+                &["semio:meta:Stat", this.id.as_str(), this.key.as_str(), this.value.as_str(), this.unit.as_deref().unwrap_or(""), this.description.as_deref().unwrap_or("")],
                 Vec::new(),
             )
         }
     }
 
-    #[ComplexObject]
-    impl Layer {
-        pub async fn hash(&self) -> String {
-            self.compute_entity_hash()
+    crate::entity_family! {
+        pub struct Layer {
+            pub id: Id,
+            pub name: String,
+            pub description: Option<String>,
+            /// @emoji 🏷️ Artifact `icon` on SDL `Layer`.
+            pub icon: String,
+            pub color: Option<String>,
+            pub order: Option<i32>,
+            pub visible: Option<bool>,
+            pub locked: Option<bool>,
+        }
+        hash = |this| {
+            let vis = this.visible.map(|b| if b { "1" } else { "0" }).unwrap_or_default();
+            let lck = this.locked.map(|b| if b { "1" } else { "0" }).unwrap_or_default();
+            crate::hash::merkle_node_str(
+                &[
+                    "semio:meta:Layer",
+                    this.id.as_str(),
+                    this.name.as_str(),
+                    this.description.as_deref().unwrap_or(""),
+                    this.icon.as_str(),
+                    this.color.as_deref().unwrap_or(""),
+                    &this.order.map(|o| o.to_string()).unwrap_or_default(),
+                    vis,
+                    lck,
+                ],
+                Vec::new(),
+            )
         }
     }
 
-    #[derive(Clone, Debug, Default, Serialize, Deserialize, SimpleObject)]
-    #[graphql(complex)]
-    pub struct Group {
-        pub id: Id,
-        pub name: String,
-        pub description: Option<String>,
-        pub color: Option<String>,
-        pub icon: Option<String>,
-        #[graphql(skip)]
-        pub piece_ids: Vec<Id>,
-    }
-
-    impl Group {
-        pub fn compute_entity_hash(&self) -> String {
-            let mut ids: Vec<String> = self.piece_ids.iter().map(|i| i.as_str().to_string()).collect();
+    crate::entity_family! {
+        pub struct Group {
+            pub id: Id,
+            pub name: String,
+            pub description: Option<String>,
+            pub color: Option<String>,
+            pub icon: Option<String>,
+            #[graphql(skip)]
+            pub piece_ids: Vec<Id>,
+        }
+        hash = |this| {
+            let mut ids: Vec<String> = this.piece_ids.iter().map(|i| i.as_str().to_string()).collect();
             ids.sort();
             let joined = ids.join("\x1e");
-            crate::hash::merkle_node_str(&["semio:meta:Group", self.id.as_str(), self.name.as_str(), self.description.as_deref().unwrap_or(""), self.color.as_deref().unwrap_or(""), self.icon.as_deref().unwrap_or(""), joined.as_str()], Vec::new())
-        }
-    }
-
-    #[ComplexObject]
-    impl Group {
-        pub async fn hash(&self) -> String {
-            self.compute_entity_hash()
+            crate::hash::merkle_node_str(
+                &["semio:meta:Group", this.id.as_str(), this.name.as_str(), this.description.as_deref().unwrap_or(""), this.color.as_deref().unwrap_or(""), this.icon.as_deref().unwrap_or(""), joined.as_str()],
+                Vec::new(),
+            )
         }
     }
 }
@@ -5529,7 +5276,7 @@ pub mod vcs {
             let piece_id = Id::new().await;
             let forward = crate::operation::KitOperation::CreateFixedPiece {
                 scope: crate::operation::Scope::CreateFixedPiece {
-                    design_id,
+                    design_id: design_id.clone(),
                     piece_id: piece_id.clone(),
                     blueprint_id,
                     attribute_ids: Vec::new(),
