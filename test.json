@@ -1,0 +1,233 @@
+{
+  "schema": "🎆26🌙06⬆️1",
+  "wip": {
+    "id": "019e1827-ec31-7270-8289-af597c435d2d",
+    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
+    "authors": {
+      "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
+      "items": []
+    },
+    "initialKit": {
+      "authors": [],
+      "concepts": [],
+      "createdAt": "2020-01-01T00:00:00.000Z",
+      "designs": [],
+      "files": [],
+      "folders": [],
+      "groups": [],
+      "id": "93154f9b-c2d9-40f9-a601-a9241e33a82d",
+      "layers": [],
+      "name": "the kit",
+      "props": [],
+      "qualities": [],
+      "stats": [],
+      "tags": [],
+      "types": [],
+      "updatedAt": "2020-01-01T00:00:00.000Z"
+    },
+    "theKit": {
+      "id": "019e1827-ec31-7270-8289-af597c435d2d",
+      "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
+      "savedChanges": {
+        "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
+        "items": [
+          {
+            "id": "019e1828-107e-7c13-9800-3b56c105a0db",
+            "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
+            "edits": {
+              "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
+              "items": [
+                {
+                  "id": "019e1828-1097-7f90-8b9b-4206af3b2b3b",
+                  "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
+                  "forwards": {
+                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
+                    "items": [
+                      {
+                        "id": "019e1828-1126-7eb0-8e42-4986eeae8f05",
+                        "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
+                        "kind": "renameKit",
+                        "input": {
+                          "RenameKit": {
+                            "input": {
+                              "Name": {
+                                "name": "a"
+                              }
+                            },
+                            "scope": "Kit"
+                          }
+                        }
+                      }
+                    ]
+                  },
+                  "backwards": {
+                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
+                    "items": [
+                      {
+                        "id": "019e1828-1126-7eb0-8e42-499f1c94806f",
+                        "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
+                        "kind": "renameKit",
+                        "input": {
+                          "RenameKit": {
+                            "input": {
+                              "Name": {
+                                "name": "the kit"
+                              }
+                            },
+                            "scope": "Kit"
+                          }
+                        }
+                      }
+                    ]
+                  },
+                  "sequenceNumber": 1,
+                  "startedAt": "2020-01-01T00:00:00.000Z",
+                  "finishedAt": "2020-01-01T00:00:00.000Z"
+                }
+              ]
+            },
+            "startedAt": "2020-01-01T00:00:00.000Z",
+            "savedAt": "2020-01-01T00:00:00.000Z"
+          }
+        ]
+      },
+      "unsavedChanges": {
+        "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
+        "items": [
+          {
+            "id": "019e1827-ec37-7b90-bf89-7db2afa529cf",
+            "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
+            "edits": {
+              "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
+              "items": []
+            },
+            "startedAt": "2020-01-01T00:00:00.000Z"
+          }
+        ]
+      }
+    },
+    "checkpoints": {
+      "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
+      "items": [
+        {
+          "authors": {
+            "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
+            "items": []
+          },
+          "changes": {
+            "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
+            "items": []
+          },
+          "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
+          "id": "019e1827-ec34-7e41-8917-d196ae3b1e44",
+          "message": "init",
+          "timestamp": "2020-01-01T00:00:00.000Z"
+        }
+      ]
+    },
+    "alternatives": {
+      "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
+      "items": []
+    }
+  },
+  "authoritative": {
+    "id": "019e1827-ec31-7270-8289-af597c435d2d",
+    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
+    "authors": {
+      "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
+      "items": []
+    },
+    "initialKit": {
+      "authors": [],
+      "concepts": [],
+      "createdAt": "2020-01-01T00:00:00.000Z",
+      "designs": [],
+      "files": [],
+      "folders": [],
+      "groups": [],
+      "id": "93154f9b-c2d9-40f9-a601-a9241e33a82d",
+      "layers": [],
+      "name": "the kit",
+      "props": [],
+      "qualities": [],
+      "stats": [],
+      "tags": [],
+      "types": [],
+      "updatedAt": "2020-01-01T00:00:00.000Z"
+    },
+    "theKit": {
+      "id": "019e1827-ec31-7270-8289-af597c435d2d",
+      "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
+      "savedChanges": {
+        "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
+        "items": []
+      },
+      "unsavedChanges": {
+        "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
+        "items": []
+      }
+    },
+    "checkpoints": {
+      "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
+      "items": []
+    },
+    "alternatives": {
+      "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
+      "items": []
+    }
+  },
+  "stage": {
+    "id": "019e1827-ec31-7270-8289-af597c435d2d",
+    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
+    "authors": {
+      "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
+      "items": []
+    },
+    "initialKit": {
+      "authors": [],
+      "concepts": [],
+      "createdAt": "2020-01-01T00:00:00.000Z",
+      "designs": [],
+      "files": [],
+      "folders": [],
+      "groups": [],
+      "id": "93154f9b-c2d9-40f9-a601-a9241e33a82d",
+      "layers": [],
+      "name": "the kit",
+      "props": [],
+      "qualities": [],
+      "stats": [],
+      "tags": [],
+      "types": [],
+      "updatedAt": "2020-01-01T00:00:00.000Z"
+    },
+    "theKit": {
+      "id": "019e1827-ec31-7270-8289-af597c435d2d",
+      "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
+      "savedChanges": {
+        "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
+        "items": []
+      },
+      "unsavedChanges": {
+        "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
+        "items": []
+      }
+    },
+    "checkpoints": {
+      "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
+      "items": []
+    },
+    "alternatives": {
+      "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
+      "items": []
+    }
+  },
+  "conflicts": {
+    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
+    "items": []
+  },
+  "blobs": {
+    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
+    "items": []
+  }
+}
