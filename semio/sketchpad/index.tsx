@@ -1047,6 +1047,20 @@ export function conditionalHookResult<T>(canSet: boolean, value: T, setter: ((va
   return [value, canSet ? setter : undefined, canSet] as const;
 }
 
+// #region 🎨Sketchpad 🛠️PropertiesSchemaBridge
+/**
+ * @emoji 🛠️ Bridges `@semio/react` schema 1:1 {@link KitFieldBinding} into sketchpad {@link HookResult} for property panels (write lane ≠ `readonly`).
+ */
+function kitFieldBindingToHookResult<T>(scopeId: string | undefined, binding: KitFieldBinding<T>): HookResult<T> {
+  const [value, setAsync, writeStatus] = binding;
+  const canSet = Boolean(scopeId) && writeStatus.kind !== "readonly";
+  const setter = (next: T) => {
+    void setAsync(next);
+  };
+  return conditionalHookResult(canSet, value as T, setter);
+}
+// #endregion 🎨Sketchpad 🛠️PropertiesSchemaBridge
+
 /**
  * A reactive field with a value, canSet flag, and setter function.
  **/
@@ -16904,15 +16918,15 @@ export function useDiffedPiece<T>(selector?: (piece: Piece) => T, id?: string, d
  **/
 export function usePieceCenterU(): HookResult<number> {
   const pieceScope = usePieceScope();
-  const piece = usePiece() as Piece | null;
-  const commands = useDesignAppCommands();
-  const setter = useCallback(
-    (value: number) => {
-      if (pieceScope && piece) commands.updatePiece("semio.sketchpad.app.design.panel.details.section.piece.center.u", pieceScope.id, { center: { u: value, v: piece.center?.v ?? 0 } });
-    },
-    [pieceScope, piece, commands],
-  );
-  return conditionalHookResult(!!pieceScope && !!piece, piece?.center?.u ?? 0, setter);
+  const id = pieceScope?.id;
+  const [center, setCenter, ws] = useSchemaPieceCenter(id);
+  const u = (center as { u?: number } | undefined)?.u ?? 0;
+  const v = (center as { v?: number } | undefined)?.v ?? 0;
+  const canSet = Boolean(id) && ws.kind !== "readonly";
+  const setter = (nu: number) => {
+    void setCenter({ ...(center && typeof center === "object" ? (center as object) : {}), u: nu, v } as any);
+  };
+  return conditionalHookResult(canSet, u, setter);
 }
 
 /**
@@ -16920,15 +16934,15 @@ export function usePieceCenterU(): HookResult<number> {
  **/
 export function usePieceCenterV(): HookResult<number> {
   const pieceScope = usePieceScope();
-  const piece = usePiece() as Piece | null;
-  const commands = useDesignAppCommands();
-  const setter = useCallback(
-    (value: number) => {
-      if (pieceScope && piece) commands.updatePiece("semio.sketchpad.app.design.panel.details.section.piece.center.v", pieceScope.id, { center: { u: piece.center?.u ?? 0, v: value } });
-    },
-    [pieceScope, piece, commands],
-  );
-  return conditionalHookResult(!!pieceScope && !!piece, piece?.center?.v ?? 0, setter);
+  const id = pieceScope?.id;
+  const [center, setCenter, ws] = useSchemaPieceCenter(id);
+  const u = (center as { u?: number } | undefined)?.u ?? 0;
+  const v = (center as { v?: number } | undefined)?.v ?? 0;
+  const canSet = Boolean(id) && ws.kind !== "readonly";
+  const setter = (nv: number) => {
+    void setCenter({ ...(center && typeof center === "object" ? (center as object) : {}), u, v: nv } as any);
+  };
+  return conditionalHookResult(canSet, v, setter);
 }
 
 /**
@@ -16936,15 +16950,14 @@ export function usePieceCenterV(): HookResult<number> {
  **/
 export function usePieceScale(): HookResult<number> {
   const pieceScope = usePieceScope();
-  const piece = usePiece() as Piece | null;
-  const commands = useDesignAppCommands();
-  const setter = useCallback(
-    (value: number) => {
-      if (pieceScope) commands.updatePiece("semio.sketchpad.app.design.panel.details.section.piece.scale", pieceScope.id, { scale: value });
-    },
-    [pieceScope, commands],
-  );
-  return conditionalHookResult(!!pieceScope && !!piece, piece?.scale ?? 1, setter);
+  const binding = useSchemaPieceScale(pieceScope?.id);
+  const [raw, setAsync, ws] = binding;
+  const value = (raw as number | undefined) ?? 1;
+  const canSet = Boolean(pieceScope?.id) && ws.kind !== "readonly";
+  const setter = (next: number) => {
+    void setAsync(next);
+  };
+  return conditionalHookResult(canSet, value, setter);
 }
 
 /**
@@ -16952,15 +16965,14 @@ export function usePieceScale(): HookResult<number> {
  **/
 export function usePieceIsHidden(): HookResult<boolean> {
   const pieceScope = usePieceScope();
-  const piece = usePiece() as Piece | null;
-  const commands = useDesignAppCommands();
-  const setter = useCallback(
-    (value: boolean) => {
-      if (pieceScope) commands.updatePiece("semio.sketchpad.app.design.panel.details.section.piece.isHidden", pieceScope.id, { isHidden: value });
-    },
-    [pieceScope, commands],
-  );
-  return conditionalHookResult(!!pieceScope && !!piece, piece?.isHidden ?? false, setter);
+  const binding = useSchemaPieceIsHidden(pieceScope?.id);
+  const [raw, setAsync, ws] = binding;
+  const value = Boolean(raw);
+  const canSet = Boolean(pieceScope?.id) && ws.kind !== "readonly";
+  const setter = (next: boolean) => {
+    void setAsync(next);
+  };
+  return conditionalHookResult(canSet, value, setter);
 }
 
 /**
@@ -16968,15 +16980,14 @@ export function usePieceIsHidden(): HookResult<boolean> {
  **/
 export function usePieceIsLocked(): HookResult<boolean> {
   const pieceScope = usePieceScope();
-  const piece = usePiece() as Piece | null;
-  const commands = useDesignAppCommands();
-  const setter = useCallback(
-    (value: boolean) => {
-      if (pieceScope) commands.updatePiece("semio.sketchpad.app.design.panel.details.section.piece.isLocked", pieceScope.id, { isLocked: value });
-    },
-    [pieceScope, commands],
-  );
-  return conditionalHookResult(!!pieceScope && !!piece, piece?.isLocked ?? false, setter);
+  const binding = useSchemaPieceIsLocked(pieceScope?.id);
+  const [raw, setAsync, ws] = binding;
+  const value = Boolean(raw);
+  const canSet = Boolean(pieceScope?.id) && ws.kind !== "readonly";
+  const setter = (next: boolean) => {
+    void setAsync(next);
+  };
+  return conditionalHookResult(canSet, value, setter);
 }
 
 /**
@@ -16984,15 +16995,7 @@ export function usePieceIsLocked(): HookResult<boolean> {
  **/
 export function usePieceColor(): HookResult<string | undefined> {
   const pieceScope = usePieceScope();
-  const piece = usePiece() as Piece | null;
-  const commands = useDesignAppCommands();
-  const setter = useCallback(
-    (value: string | undefined) => {
-      if (pieceScope) commands.updatePiece("semio.sketchpad.app.design.panel.details.section.piece.color", pieceScope.id, { color: value });
-    },
-    [pieceScope, commands],
-  );
-  return conditionalHookResult(!!pieceScope && !!piece, piece?.color, setter);
+  return kitFieldBindingToHookResult(pieceScope?.id, useSchemaPieceColor(pieceScope?.id));
 }
 
 /**
@@ -17000,15 +17003,7 @@ export function usePieceColor(): HookResult<string | undefined> {
  **/
 export function usePieceDescription(): HookResult<string | undefined> {
   const pieceScope = usePieceScope();
-  const piece = usePiece() as Piece | null;
-  const commands = useDesignAppCommands();
-  const setter = useCallback(
-    (value: string | undefined) => {
-      if (pieceScope) commands.updatePiece("semio.sketchpad.app.design.panel.details.section.piece.description", pieceScope.id, { description: value });
-    },
-    [pieceScope, commands],
-  );
-  return conditionalHookResult(!!pieceScope && !!piece, piece?.description, setter);
+  return kitFieldBindingToHookResult(pieceScope?.id, useSchemaPieceDescription(pieceScope?.id));
 }
 
 /**
@@ -17016,15 +17011,7 @@ export function usePieceDescription(): HookResult<string | undefined> {
  **/
 export function usePieceName(): HookResult<string | undefined> {
   const pieceScope = usePieceScope();
-  const piece = usePiece() as Piece | null;
-  const commands = useDesignAppCommands();
-  const setter = useCallback(
-    (value: string | undefined) => {
-      if (pieceScope) commands.updatePiece("semio.sketchpad.app.design.panel.details.section.piece.name", pieceScope.id, { name: value });
-    },
-    [pieceScope, commands],
-  );
-  return conditionalHookResult(!!pieceScope && !!piece, piece?.name, setter);
+  return kitFieldBindingToHookResult(pieceScope?.id, useSchemaPieceName(pieceScope?.id));
 }
 
 /**
@@ -17087,15 +17074,11 @@ export function useConnectionStatus(): DiffStatus {
  **/
 export function useConnectionGap(): HookResult<number> {
   const connectionScope = useConnectionScope();
-  const connection = useConnection() as Connection | null;
-  const commands = useDesignAppCommands();
-  const setter = useCallback(
-    (value: number) => {
-      if (connectionScope) commands.updateConnection("semio.sketchpad.app.design.panel.details.section.connection.gap", connectionScope.id, { gap: value });
-    },
-    [connectionScope, commands],
-  );
-  return conditionalHookResult(!!connectionScope && !!connection, connection?.gap ?? 0, setter);
+  const binding = useSchemaConnectionGap(connectionScope?.id);
+  const [raw, setAsync, ws] = binding;
+  const value = (raw as number | undefined) ?? 0;
+  const canSet = Boolean(connectionScope?.id) && ws.kind !== "readonly";
+  return conditionalHookResult(canSet, value, (nv) => void setAsync(nv));
 }
 
 /**
@@ -17103,15 +17086,11 @@ export function useConnectionGap(): HookResult<number> {
  **/
 export function useConnectionShift(): HookResult<number> {
   const connectionScope = useConnectionScope();
-  const connection = useConnection() as Connection | null;
-  const commands = useDesignAppCommands();
-  const setter = useCallback(
-    (value: number) => {
-      if (connectionScope) commands.updateConnection("semio.sketchpad.app.design.panel.details.section.connection.shift", connectionScope.id, { shift: value });
-    },
-    [connectionScope, commands],
-  );
-  return conditionalHookResult(!!connectionScope && !!connection, connection?.shift ?? 0, setter);
+  const binding = useSchemaConnectionShift(connectionScope?.id);
+  const [raw, setAsync, ws] = binding;
+  const value = (raw as number | undefined) ?? 0;
+  const canSet = Boolean(connectionScope?.id) && ws.kind !== "readonly";
+  return conditionalHookResult(canSet, value, (nv) => void setAsync(nv));
 }
 
 /**
@@ -17119,15 +17098,11 @@ export function useConnectionShift(): HookResult<number> {
  **/
 export function useConnectionRise(): HookResult<number> {
   const connectionScope = useConnectionScope();
-  const connection = useConnection() as Connection | null;
-  const commands = useDesignAppCommands();
-  const setter = useCallback(
-    (value: number) => {
-      if (connectionScope) commands.updateConnection("semio.sketchpad.app.design.panel.details.section.connection.rise", connectionScope.id, { rise: value });
-    },
-    [connectionScope, commands],
-  );
-  return conditionalHookResult(!!connectionScope && !!connection, connection?.rise ?? 0, setter);
+  const binding = useSchemaConnectionRise(connectionScope?.id);
+  const [raw, setAsync, ws] = binding;
+  const value = (raw as number | undefined) ?? 0;
+  const canSet = Boolean(connectionScope?.id) && ws.kind !== "readonly";
+  return conditionalHookResult(canSet, value, (nv) => void setAsync(nv));
 }
 
 /**
@@ -17135,15 +17110,11 @@ export function useConnectionRise(): HookResult<number> {
  **/
 export function useConnectionRotation(): HookResult<number> {
   const connectionScope = useConnectionScope();
-  const connection = useConnection() as Connection | null;
-  const commands = useDesignAppCommands();
-  const setter = useCallback(
-    (value: number) => {
-      if (connectionScope) commands.updateConnection("semio.sketchpad.app.design.panel.details.section.connection.rotation", connectionScope.id, { rotation: value });
-    },
-    [connectionScope, commands],
-  );
-  return conditionalHookResult(!!connectionScope && !!connection, connection?.rotation ?? 0, setter);
+  const binding = useSchemaConnectionRotation(connectionScope?.id);
+  const [raw, setAsync, ws] = binding;
+  const value = (raw as number | undefined) ?? 0;
+  const canSet = Boolean(connectionScope?.id) && ws.kind !== "readonly";
+  return conditionalHookResult(canSet, value, (nv) => void setAsync(nv));
 }
 
 /**
@@ -17151,15 +17122,11 @@ export function useConnectionRotation(): HookResult<number> {
  **/
 export function useConnectionTurn(): HookResult<number> {
   const connectionScope = useConnectionScope();
-  const connection = useConnection() as Connection | null;
-  const commands = useDesignAppCommands();
-  const setter = useCallback(
-    (value: number) => {
-      if (connectionScope) commands.updateConnection("semio.sketchpad.app.design.panel.details.section.connection.turn", connectionScope.id, { turn: value });
-    },
-    [connectionScope, commands],
-  );
-  return conditionalHookResult(!!connectionScope && !!connection, connection?.turn ?? 0, setter);
+  const binding = useSchemaConnectionTurn(connectionScope?.id);
+  const [raw, setAsync, ws] = binding;
+  const value = (raw as number | undefined) ?? 0;
+  const canSet = Boolean(connectionScope?.id) && ws.kind !== "readonly";
+  return conditionalHookResult(canSet, value, (nv) => void setAsync(nv));
 }
 
 /**
@@ -17167,15 +17134,11 @@ export function useConnectionTurn(): HookResult<number> {
  **/
 export function useConnectionTilt(): HookResult<number> {
   const connectionScope = useConnectionScope();
-  const connection = useConnection() as Connection | null;
-  const commands = useDesignAppCommands();
-  const setter = useCallback(
-    (value: number) => {
-      if (connectionScope) commands.updateConnection("semio.sketchpad.app.design.panel.details.section.connection.tilt", connectionScope.id, { tilt: value });
-    },
-    [connectionScope, commands],
-  );
-  return conditionalHookResult(!!connectionScope && !!connection, connection?.tilt ?? 0, setter);
+  const binding = useSchemaConnectionTilt(connectionScope?.id);
+  const [raw, setAsync, ws] = binding;
+  const value = (raw as number | undefined) ?? 0;
+  const canSet = Boolean(connectionScope?.id) && ws.kind !== "readonly";
+  return conditionalHookResult(canSet, value, (nv) => void setAsync(nv));
 }
 
 /**
