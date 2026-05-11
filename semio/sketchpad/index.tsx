@@ -9,13 +9,13 @@
 // Main sketchpad container managing app tabs, panels and window layout.
 
 // #endregion 🧲Header
-// @ts-nocheck — kit-hooks-only plan: allow incremental removal of `SketchpadStore` kit surface; restore strict check after purge.
 // #region ⛩️Imports
 // External and internal module imports.
 
 // #region ⛩️Imports
 
-import type { Connector, KitCommandContext, KitFolderAdapter, KitJsonFileAdapter, KitFullDto, KitHostGraphOp, KitHostStore, KitRegistryValue, Port, SketchpadKitKindAvailability, SketchpadKitStoreFactory } from "@semio/react";
+import { kitStoreFromKitStoreClient } from "@semio/js";
+import type { Connector, KitCommandContext, KitFolderAdapter, KitHostGraphOp, KitHostStore, KitJsonFileAdapter, KitRegistryValue, Port, SketchpadKitKindAvailability, SketchpadKitStoreFactory } from "@semio/react";
 import {
   applyKitHostGraphOp,
   asKitInstance,
@@ -35,30 +35,31 @@ import {
   createJsonFileKitStore,
   createVscodeWebviewSketchpadFileKitStoreFactory,
   decodeKitSemioEnvelopeToFullDtoFromValue,
-  InMemoryKitStore,
   Design,
   DesignDiff,
   DesignScopeProvider,
   DesignShallowDto,
   DiffStatus,
   executeSemioKitCommand,
-  kitHostRedo,
-  kitHostUndo,
   Folder,
   getKitPorts,
   getKitRegistryBridge,
   getOrCreateKitFileState,
   ICON_WIDTH,
   id,
+  InMemoryKitStore,
   Kit,
   KitAlternativeSelectionProvider,
   KitDiff,
+  type KitFieldBinding,
   KitFullDtoSchema,
-  KitStoreProvider,
+  kitHostRedo,
+  kitHostUndo,
   KitScope,
   KitScopeContext,
   KitShallowDto,
   KitShellScopeProvider,
+  KitStoreProvider,
   Piece,
   PieceDiff,
   PieceId,
@@ -88,15 +89,15 @@ import {
   useCreateQuality,
   useCreateType,
   useDesign,
+  useDesignClusterableGroups,
   useDesignDescription,
   useDesignIcon,
   useDesignImage,
   useDesignName,
-  useDesignUnit,
-  useDesignClusterableGroups,
   useDesigns,
   useDesignScope,
   useDesignsFull,
+  useDesignUnit,
   useExplodeableDesignNodes as useExplodeableDesignNodeIdsFromKit,
   useFilesFull,
   useKitStoredFileUrls as useFileUrls,
@@ -106,8 +107,8 @@ import {
   useIsInDesignScope,
   useIsInKitScope,
   useIsInTypeScope,
-  useKitAlternativeSelection,
   useKitAlternatives,
+  useKitAlternativeSelection,
   useKitCommandEngineExplicitOrigin,
   useKitDescription,
   useKitFileBlobUrl,
@@ -116,16 +117,16 @@ import {
   useKitIcon,
   useKitImage,
   useKitLicense,
-  useRenameKit,
   useKitRegistrySafe,
   useKitRelease,
   useKitRuntimeSafe,
   useKitScope,
-  useKitStoreSnapshot,
   useKitStore,
+  useKitStoreSnapshot,
   useMoveKitArtifactToFolder,
   useOpenKitShallows,
   useParentPieceId as useParentPieceIdFromKit,
+  usePatchKit,
   usePiece,
   usePieceDepth as usePieceDepthFromKit,
   usePieceFlatPlane,
@@ -138,6 +139,7 @@ import {
   useQualityScope,
   useRegistryHasKit,
   useRegistryKitPersistenceKind,
+  useRenameKit,
   useReplacableDesigns as useReplacableDesignIdsFromKit,
   useReplacableTypes as useReplacableTypeIdsFromKit,
   useResolvedKitIdentifier,
@@ -149,19 +151,16 @@ import {
   useTypeIsAbstract,
   useTypeName,
   useTypeParent,
-  useTypeUnit,
   useTypes,
   useTypeScope,
   useTypesFull,
+  useTypeUnit,
   useUpdateAuthor,
   useUpdateDesign,
   useUpdateType,
-  usePatchKit,
   useWriteIndicator,
   Vector,
-  type KitFieldBinding,
 } from "@semio/react";
-import { kitStoreFromKitStoreClient } from "@semio/js";
 import { gunzipSync } from "fflate";
 
 import type {
@@ -492,10 +491,17 @@ export function arePortsCompatible(kit: Kit, a: Port, b: Port): boolean {
   if (b.compatiblePorts?.length && b.compatiblePorts.some((x) => x.id === a.id)) return true;
   const af = a.compatibleFamilies?.map((x) => x.id) ?? [];
   const bf = b.compatibleFamilies?.map((x) => x.id) ?? [];
-  for (const fam of kit.families ?? []) for (const p of fam.ports ?? []) {
-    if (p.id === a.id) for (const id of bf) { if (fam.id === id) return true; }
-    if (p.id === b.id) for (const id of af) { if (fam.id === id) return true; }
-  }
+  for (const fam of kit.families ?? [])
+    for (const p of fam.ports ?? []) {
+      if (p.id === a.id)
+        for (const id of bf) {
+          if (fam.id === id) return true;
+        }
+      if (p.id === b.id)
+        for (const id of af) {
+          if (fam.id === id) return true;
+        }
+    }
   return false;
 }
 
@@ -512,7 +518,11 @@ export function getIncludedDesigns(kit: Kit, design: Design): Design[] {
     out.push(d);
     for (const p of (d as any).pieces || []) {
       const ins = (p as any).includedInDesigns as string[] | undefined;
-      if (ins) for (const id of ins) { const d2 = findDesignInKit(kit, id); if (d2) visit(d2); }
+      if (ins)
+        for (const id of ins) {
+          const d2 = findDesignInKit(kit, id);
+          if (d2) visit(d2);
+        }
     }
   };
   visit(design);
@@ -528,7 +538,10 @@ export function sumQualityInDesign(design: Design): number {
 export function generateUniqueName(base: string, used: string[] | Set<string>) {
   const u = used instanceof Set ? used : new Set(used);
   if (!u.has(base)) return base;
-  for (let i = 2; i < 1_000_000; i++) { const c = `${base} (${i})`; if (!u.has(c)) return c; }
+  for (let i = 2; i < 1_000_000; i++) {
+    const c = `${base} (${i})`;
+    if (!u.has(c)) return c;
+  }
   return `${base}-${Date.now()}`;
 }
 
@@ -566,11 +579,7 @@ export function buildFileTree(folders: Folder[], files: SemioFile[]): FileTreeNo
   return nodes;
 }
 
-export function flattenFileTree(
-  tree: FileTreeNode[],
-  level: number,
-  expandedRows: string[],
-): FileTreeNode[] {
+export function flattenFileTree(tree: FileTreeNode[], level: number, expandedRows: string[]): FileTreeNode[] {
   const out: FileTreeNode[] = [];
   for (const n of tree) {
     const isExpanded = expandedRows.includes(n.path) || n.isExpanded;
@@ -6365,7 +6374,7 @@ export abstract class AppStore<TState, TDiff extends AppDiff<TSelectionDiff>, TS
   finalizeTransaction(): void {
     if (this.isTransactionActive) {
       this.transact(() => {
-        let redoStack = this.syncMap.get("redoStack") as SyncArray<any>;
+        const redoStack = this.syncMap.get("redoStack") as SyncArray<any>;
         if (redoStack && redoStack.length > 0) {
           redoStack.delete(0, redoStack.length);
         }
@@ -6454,7 +6463,7 @@ export abstract class AppStore<TState, TDiff extends AppDiff<TSelectionDiff>, TS
 
   protected recordEdit(result: TCommandResult): void {
     if (this.isTransactionActive && result.diff) {
-      let redoStack = this.syncMap.get("redoStack") as SyncArray<any>;
+      const redoStack = this.syncMap.get("redoStack") as SyncArray<any>;
       if (redoStack && redoStack.length > 0) {
         redoStack.delete(0, redoStack.length);
       }
@@ -6612,7 +6621,7 @@ export abstract class KitDiffAppStore<TState, TDiff extends AppDiff<TSelectionDi
 
   protected recordEdit(result: TCommandResult): void {
     if (this.isTransactionActive && (result.diff || result.kitCommandApplied)) {
-      let redoStack = this.syncMap.get("redoStack") as SyncArray<any>;
+      const redoStack = this.syncMap.get("redoStack") as SyncArray<any>;
       if (redoStack && redoStack.length > 0) {
         redoStack.delete(0, redoStack.length);
       }
@@ -15284,8 +15293,7 @@ const MultiWindowApp: FC = () => {
   const hasKit = useHasKit(kitId || "");
 
   /** @emoji 🧾 Must not memoize only on `kitId`: {@link SketchpadStore#createKitApp} can appear between renders without store ref changing. */
-  const store =
-    kitId && sketchpadStore?.hasKitApp?.({ kit: kitId }) ? sketchpadStore.kitApp(kitId) : null;
+  const store = kitId && sketchpadStore?.hasKitApp?.({ kit: kitId }) ? sketchpadStore.kitApp(kitId) : null;
   const addSidePanelTab = useAddSidePanelTab();
   const removeSidePanelTab = useRemoveSidePanelTab();
 
@@ -15720,16 +15728,7 @@ function SketchpadInputRow(props: {
       <div className="flex min-w-0 w-full flex-col gap-tiny">
         <div className="flex min-w-0 w-full items-center gap-single">
           <div className="min-w-0 flex-1">
-            <Input
-              lazy
-              id={id}
-              value={display}
-              readOnly={isReadOnly}
-              placeholder={placeholder}
-              placeholderId={placeholderId}
-              onLazyChange={isReadOnly ? undefined : (v) => void commit(mapCommit != null ? mapCommit(v) : v)}
-              showLabel
-            />
+            <Input lazy id={id} value={display} readOnly={isReadOnly} placeholder={placeholder} placeholderId={placeholderId} onLazyChange={isReadOnly ? undefined : (v) => void commit(mapCommit != null ? mapCommit(v) : v)} showLabel />
           </div>
           {spinning ? <Spinner size="small" className="text-muted-foreground shrink-0" /> : null}
         </div>
@@ -15759,16 +15758,7 @@ function SketchpadTextareaRow(props: {
       <div className="flex min-w-0 w-full flex-col gap-tiny">
         <div className="flex min-w-0 w-full items-center gap-single">
           <div className="min-w-0 flex-1">
-            <Textarea
-              lazy
-              id={id}
-              value={display}
-              readOnly={isReadOnly}
-              placeholder={placeholder}
-              placeholderId={placeholderId}
-              onLazyChange={isReadOnly ? undefined : (v) => void commit(mapCommit != null ? mapCommit(v) : v)}
-              showLabel
-            />
+            <Textarea lazy id={id} value={display} readOnly={isReadOnly} placeholder={placeholder} placeholderId={placeholderId} onLazyChange={isReadOnly ? undefined : (v) => void commit(mapCommit != null ? mapCommit(v) : v)} showLabel />
           </div>
           {spinning ? <Spinner size="small" className="text-muted-foreground shrink-0" /> : null}
         </div>
@@ -15779,28 +15769,14 @@ function SketchpadTextareaRow(props: {
 }
 
 /** @internal Legacy triadic adapter — composes a `KitFieldBinding<any>` into the new {@link SketchpadInputRow}. Use the segregated row directly in new code. */
-function SketchpadTriadInputRow(props: {
-  triad: KitFieldBinding<any>;
-  id: string;
-  placeholder?: string;
-  placeholderId?: string;
-  readOnly?: boolean;
-  mapCommit?: (raw: string) => unknown;
-}): React.ReactElement {
+function SketchpadTriadInputRow(props: { triad: KitFieldBinding<any>; id: string; placeholder?: string; placeholderId?: string; readOnly?: boolean; mapCommit?: (raw: string) => unknown }): React.ReactElement {
   const { triad, ...rest } = props;
   const [raw, setValue, status] = triad;
   return <SketchpadInputRow value={raw == null ? "" : String(raw)} commit={setValue as (n: unknown) => Promise<unknown>} status={status} {...rest} />;
 }
 
 /** @internal Legacy triadic adapter — composes a `KitFieldBinding<any>` into the new {@link SketchpadTextareaRow}. */
-function SketchpadTriadTextareaRow(props: {
-  triad: KitFieldBinding<any>;
-  id: string;
-  placeholder?: string;
-  placeholderId?: string;
-  readOnly?: boolean;
-  mapCommit?: (raw: string) => unknown;
-}): React.ReactElement {
+function SketchpadTriadTextareaRow(props: { triad: KitFieldBinding<any>; id: string; placeholder?: string; placeholderId?: string; readOnly?: boolean; mapCommit?: (raw: string) => unknown }): React.ReactElement {
   const { triad, ...rest } = props;
   const [raw, setValue, status] = triad;
   return <SketchpadTextareaRow value={raw == null ? "" : String(raw)} commit={setValue as (n: unknown) => Promise<unknown>} status={status} {...rest} />;
@@ -15884,14 +15860,7 @@ const KitSectionForm: FC = () => {
         <div className="flex min-w-0 w-full flex-col gap-tiny">
           <div className="flex min-w-0 w-full items-center gap-single">
             <div className="min-w-0 flex-1">
-              <Input
-                lazy
-                id="semio.sketchpad.app.kit.panel.details.section.kit.name"
-                value={materializedKitName}
-                readOnly={disabled}
-                onLazyChange={disabled ? undefined : (v) => void renameKit(v)}
-                showLabel
-              />
+              <Input lazy id="semio.sketchpad.app.kit.panel.details.section.kit.name" value={materializedKitName} readOnly={disabled} onLazyChange={disabled ? undefined : (v) => void renameKit(v)} showLabel />
             </div>
             {spinning ? <Spinner size="small" className="text-muted-foreground shrink-0" /> : null}
           </div>
@@ -15948,7 +15917,13 @@ const SingleTypeSection: FC<{ typeId: string }> = ({ typeId }) => {
   return (
     <>
       <SketchpadInputRow value={name} commit={commitTypeField("name")} status={updateTypeStatus} id="semio.sketchpad.app.type.panel.details.section.type.name" />
-      <SketchpadTextareaRow value={description} commit={commitTypeField("description")} status={updateTypeStatus} id="semio.sketchpad.app.type.panel.details.section.type.description" placeholderId="semio.sketchpad.app.type.descriptionPlaceholder.label" />
+      <SketchpadTextareaRow
+        value={description}
+        commit={commitTypeField("description")}
+        status={updateTypeStatus}
+        id="semio.sketchpad.app.type.panel.details.section.type.description"
+        placeholderId="semio.sketchpad.app.type.descriptionPlaceholder.label"
+      />
       <SketchpadInputRow value={icon} commit={commitTypeField("icon")} status={updateTypeStatus} id="semio.sketchpad.app.type.panel.details.section.type.icon" placeholderId="semio.sketchpad.app.type.iconPlaceholder.label" />
       <SketchpadInputRow value={image} commit={commitTypeField("image")} status={updateTypeStatus} id="semio.sketchpad.app.type.panel.details.section.type.image" placeholderId="semio.sketchpad.app.type.imagePlaceholder.label" />
       <TreeRow>
@@ -16717,12 +16692,7 @@ const KitAlternativeFooterSelector: FC = () => {
       className: footerEquivClass,
       content: (
         <div className="flex items-center gap-1 flex-wrap">
-          <Select
-            id="semio.sketchpad.footer.alternative.select"
-            value={value}
-            onValueChange={(v: string) => setSelectedAlternativeId(v === SEMIO_SKETCHPAD_THE_KIT_ALT_VALUE ? null : v)}
-            showLabel={false}
-          >
+          <Select id="semio.sketchpad.footer.alternative.select" value={value} onValueChange={(v: string) => setSelectedAlternativeId(v === SEMIO_SKETCHPAD_THE_KIT_ALT_VALUE ? null : v)} showLabel={false}>
             <SelectTrigger className="min-w-[10rem]">
               <SelectValue placeholder="the kit" />
             </SelectTrigger>
@@ -16750,39 +16720,12 @@ const KitAlternativeFooterSelector: FC = () => {
               if (e.key === "Enter") void handleCreateAlternative();
             }}
           />
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            className="h-8 min-w-8 px-2"
-            disabled={!kitClient || creatingAlt}
-            aria-label="Create alternative from current checkpoint"
-            onClick={() => void handleCreateAlternative()}
-          >
+          <Button type="button" variant="outline" size="sm" className="h-8 min-w-8 px-2" disabled={!kitClient || creatingAlt} aria-label="Create alternative from current checkpoint" onClick={() => void handleCreateAlternative()}>
             +
           </Button>
-          <Input
-            className="h-8 min-w-[6rem] max-w-[9rem] text-xs"
-            placeholder="hub user"
-            value={hubUser}
-            onChange={(e) => setHubUser(e.target.value)}
-            aria-label="Hub username"
-          />
-          <Input
-            className="h-8 min-w-[6rem] max-w-[9rem] text-xs"
-            type="password"
-            placeholder="password hash"
-            value={hubPass}
-            onChange={(e) => setHubPass(e.target.value)}
-            aria-label="Hub password hash"
-          />
-          <Input
-            className="h-8 min-w-[6rem] max-w-[10rem] text-xs"
-            placeholder="hub url (opt)"
-            value={hubUrl}
-            onChange={(e) => setHubUrl(e.target.value)}
-            aria-label="Hub base URL"
-          />
+          <Input className="h-8 min-w-[6rem] max-w-[9rem] text-xs" placeholder="hub user" value={hubUser} onChange={(e) => setHubUser(e.target.value)} aria-label="Hub username" />
+          <Input className="h-8 min-w-[6rem] max-w-[9rem] text-xs" type="password" placeholder="password hash" value={hubPass} onChange={(e) => setHubPass(e.target.value)} aria-label="Hub password hash" />
+          <Input className="h-8 min-w-[6rem] max-w-[10rem] text-xs" placeholder="hub url (opt)" value={hubUrl} onChange={(e) => setHubUrl(e.target.value)} aria-label="Hub base URL" />
           <Button
             type="button"
             variant="ghost"
@@ -16823,21 +16766,7 @@ const KitAlternativeFooterSelector: FC = () => {
       ),
     });
     return () => removeFooterItem("semio.sketchpad.footer.alternative");
-  }, [
-    appType,
-    addFooterItem,
-    removeFooterItem,
-    selectedAlternativeId,
-    alternatives,
-    setSelectedAlternativeId,
-    kitClient,
-    creatingAlt,
-    handleCreateAlternative,
-    unsavedCount,
-    hubUser,
-    hubPass,
-    hubUrl,
-  ]);
+  }, [appType, addFooterItem, removeFooterItem, selectedAlternativeId, alternatives, setSelectedAlternativeId, kitClient, creatingAlt, handleCreateAlternative, unsavedCount, hubUser, hubPass, hubUrl]);
 
   return null;
 };
@@ -18011,7 +17940,6 @@ export class SketchpadStore {
         });
       }
     }
-
   }
 
   setActor = (actor: SketchpadActorRef) => {
@@ -18204,12 +18132,7 @@ export class SketchpadStore {
   };
 
   /** @emoji 🔗 Open via {@link KitRegistryValue}; prefer `backbone` / built-in `openJsonFile` over passing a pre-built host store. */
-  private openKitInRegistry = async (
-    kitId: string,
-    init: Parameters<KitRegistryValue["open"]>[1],
-    kind: KitKind,
-    source?: InitialStateKit["source"],
-  ): Promise<void> => {
+  private openKitInRegistry = async (kitId: string, init: Parameters<KitRegistryValue["open"]>[1], kind: KitKind, source?: InitialStateKit["source"]): Promise<void> => {
     const reg = getKitRegistryBridge();
     if (!reg) {
       throw new Error("[sketchpad] KitStoreProvider / KitRegistryProvider required (getKitRegistryBridge is null).");
@@ -18230,12 +18153,7 @@ export class SketchpadStore {
     this.wireRegistryKitStore(row.store, kind, source);
   };
 
-  private openJsonFileInRegistry = async (
-    kitId: string,
-    adapter: KitJsonFileAdapter,
-    kind: KitKind,
-    source?: InitialStateKit["source"],
-  ): Promise<void> => {
+  private openJsonFileInRegistry = async (kitId: string, adapter: KitJsonFileAdapter, kind: KitKind, source?: InitialStateKit["source"]): Promise<void> => {
     const reg = getKitRegistryBridge();
     if (!reg) {
       throw new Error("[sketchpad] KitStoreProvider / KitRegistryProvider required (getKitRegistryBridge is null).");
@@ -24007,21 +23925,21 @@ const LayoutWrapper: FC = () => {
                             {orderedToolbarGroupIds
                               .filter((groupId) => groupId !== "history")
                               .map((groupId) => {
-                              if (!toolbarGroups[groupId]) return null;
-                              const isActive = activeToolbarGroup === groupId;
+                                if (!toolbarGroups[groupId]) return null;
+                                const isActive = activeToolbarGroup === groupId;
 
-                              return (
-                                <Toggle
-                                  key={groupId}
-                                  kind="single"
-                                  id={`semio.sketchpad.toolbar.group.${groupId}`}
-                                  pressed={isActive}
-                                  onPressedChange={() => toggleToolbarGroup(groupId)}
-                                  icon={getGroupIcon(groupId)}
-                                  text={resolveTranslationLabel(i18n.t(`semio.sketchpad.toolbar.parent.${groupId}`))}
-                                />
-                              );
-                            })}
+                                return (
+                                  <Toggle
+                                    key={groupId}
+                                    kind="single"
+                                    id={`semio.sketchpad.toolbar.group.${groupId}`}
+                                    pressed={isActive}
+                                    onPressedChange={() => toggleToolbarGroup(groupId)}
+                                    icon={getGroupIcon(groupId)}
+                                    text={resolveTranslationLabel(i18n.t(`semio.sketchpad.toolbar.parent.${groupId}`))}
+                                  />
+                                );
+                              })}
                           </ToolbarZone>
                         </LevelProvider>
                       </div>
@@ -24916,7 +24834,7 @@ class KitAppStoreImpl extends KitDiffAppStore<KitAppState, KitAppDiff, KitAppSel
     }
 
     if (selectionDiff.types) {
-      let types = (selection.get("types") as SyncArray<string>) || this.syncDoc.createArray<string>();
+      const types = (selection.get("types") as SyncArray<string>) || this.syncDoc.createArray<string>();
       if (!selection.has("types")) {
         selection.set("types", types);
       }
@@ -24939,7 +24857,7 @@ class KitAppStoreImpl extends KitDiffAppStore<KitAppState, KitAppDiff, KitAppSel
     }
 
     if (selectionDiff.designs) {
-      let designs = (selection.get("designs") as SyncArray<string>) || this.syncDoc.createArray<string>();
+      const designs = (selection.get("designs") as SyncArray<string>) || this.syncDoc.createArray<string>();
       if (!selection.has("designs")) {
         selection.set("designs", designs);
       }
@@ -24962,7 +24880,7 @@ class KitAppStoreImpl extends KitDiffAppStore<KitAppState, KitAppDiff, KitAppSel
     }
 
     if (selectionDiff.qualities) {
-      let qualities = (selection.get("qualities") as SyncArray<string>) || this.syncDoc.createArray<string>();
+      const qualities = (selection.get("qualities") as SyncArray<string>) || this.syncDoc.createArray<string>();
       if (!selection.has("qualities")) {
         selection.set("qualities", qualities);
       }
@@ -24985,7 +24903,7 @@ class KitAppStoreImpl extends KitDiffAppStore<KitAppState, KitAppDiff, KitAppSel
     }
 
     if (selectionDiff.files) {
-      let files = (selection.get("files") as SyncArray<string>) || this.syncDoc.createArray<string>();
+      const files = (selection.get("files") as SyncArray<string>) || this.syncDoc.createArray<string>();
       if (!selection.has("files")) {
         selection.set("files", files);
       }
@@ -25008,7 +24926,7 @@ class KitAppStoreImpl extends KitDiffAppStore<KitAppState, KitAppDiff, KitAppSel
     }
 
     if (selectionDiff.folders) {
-      let folders = (selection.get("folders") as SyncArray<string>) || this.syncDoc.createArray<string>();
+      const folders = (selection.get("folders") as SyncArray<string>) || this.syncDoc.createArray<string>();
       if (!selection.has("folders")) {
         selection.set("folders", folders);
       }
@@ -25031,7 +24949,7 @@ class KitAppStoreImpl extends KitDiffAppStore<KitAppState, KitAppDiff, KitAppSel
     }
 
     if (selectionDiff.authors) {
-      let authors = (selection.get("authors") as SyncArray<string>) || this.syncDoc.createArray<string>();
+      const authors = (selection.get("authors") as SyncArray<string>) || this.syncDoc.createArray<string>();
       if (!selection.has("authors")) {
         selection.set("authors", authors);
       }
@@ -34371,7 +34289,7 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
 
         if (altPressed) {
           const EQUAL_DISTANCE_THRESHOLD = 15;
-          let equalDistanceHelperLines: HelperLine[] = [];
+          const equalDistanceHelperLines: HelperLine[] = [];
           const displayedDistances = new Set<number>();
 
           for (let i = 0; i < nonSelectedNodes.length; i++) {
@@ -41832,10 +41750,10 @@ export function useQualityAppCommands(id?: QualityAppId) {
       execute: (_origin: string, _command: string, ..._args: any[]) => Promise.resolve(),
     };
   }
-    return {
-      startNewChange: (origin: string) => void store.execute("semio.qualityApp.startNewChange", origin),
-      saveChange: (origin: string) => void store.execute("semio.qualityApp.saveChange", origin),
-      discardChange: (origin: string) => void store.execute("semio.qualityApp.discardChange", origin),
+  return {
+    startNewChange: (origin: string) => void store.execute("semio.qualityApp.startNewChange", origin),
+    saveChange: (origin: string) => void store.execute("semio.qualityApp.saveChange", origin),
+    discardChange: (origin: string) => void store.execute("semio.qualityApp.discardChange", origin),
     undo: (origin: string) => store.undo(),
     redo: (origin: string) => store.redo(),
     toggleFormulaFullscreen: (origin: string) => store.execute("semio.qualityApp.toggleFormulaFullscreen", origin),
@@ -47621,7 +47539,10 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
     console.log("[TEST] Waiting for imported kit row or metabolism label…");
     const kitRow = page.locator(`tr[data-row-id="${importedKitId}"]`).first();
     await kitRow.waitFor({ state: "visible", timeout: 60000 }).catch(async () => {
-      await page.getByText(/metabolism|metabolismus/i).first().waitFor({ state: "visible", timeout: 30000 });
+      await page
+        .getByText(/metabolism|metabolismus/i)
+        .first()
+        .waitFor({ state: "visible", timeout: 30000 });
     });
     console.log("[TEST] Kit table or metabolism label visible");
 
@@ -48095,7 +48016,7 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
       const designIdMatch = url.match(/\/designs\/([^/]+)/);
       const designIdFromUrl = designIdMatch?.[1];
       const resolvedDesignId = targetDesignId ?? designIdFromUrl;
-      let design = resolvedDesignId ? designs.find((d: any) => d.id === resolvedDesignId) : designs[designs.length - 1];
+      const design = resolvedDesignId ? designs.find((d: any) => d.id === resolvedDesignId) : designs[designs.length - 1];
       if (!design) return [];
       const pieces = design.pieces ?? [];
       return pieces.map((piece: any) => ({
@@ -48887,9 +48808,7 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
 
       const metabolismRowById = page.locator(`[data-row-id="${importedKitId}"]`).first();
       const metabolismRowByLabel = page.getByRole("row", { name: /metabolism|metabolismus/i }).first();
-      const isRowVisible =
-        (await metabolismRowById.isVisible({ timeout: 15000 }).catch(() => false)) ||
-        (await metabolismRowByLabel.isVisible({ timeout: 5000 }).catch(() => false));
+      const isRowVisible = (await metabolismRowById.isVisible({ timeout: 15000 }).catch(() => false)) || (await metabolismRowByLabel.isVisible({ timeout: 5000 }).catch(() => false));
       const metabolismRow = (await metabolismRowById.isVisible().catch(() => false)) ? metabolismRowById : metabolismRowByLabel;
       console.log("[Home] Metabolism row visible:", isRowVisible);
 
@@ -54536,7 +54455,10 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
         .first()
         .waitFor({ state: "visible", timeout: 60000 })
         .catch(async () => {
-          await page.getByText(/metabolism|metabolismus/i).first().waitFor({ state: "visible", timeout: 30000 });
+          await page
+            .getByText(/metabolism|metabolismus/i)
+            .first()
+            .waitFor({ state: "visible", timeout: 30000 });
         });
       await page.waitForTimeout(1000);
 

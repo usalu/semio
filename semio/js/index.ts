@@ -2100,7 +2100,7 @@ export class KitStore {
   /** @emoji 🧭 Active {@link KitReadPoint} for materialized `wip.theKit(at:)` reads (see {@link WasmKitStoreClient.setKitReadPoint}). */
   private activeReadPoint: KitReadPoint = theKitReadPoint;
 
-  /** @emoji 🧾 Cached {@link StoreField}s for {@link materializedKitStoreField} (disposed with store). */
+  /** @emoji 🧾 Cached {@link StoreField}s for {@link kitField} (disposed with store). */
   private readonly materializedKitStoreFields = new Map<string, StoreField<unknown>>();
 
   private readonly correlator: RequestCorrelator;
@@ -2130,9 +2130,9 @@ export class KitStore {
     });
   }
 
-  /** @emoji 🪪 Live kit name via {@link materializedKitStoreField}. */
+  /** @emoji 🪪 Live kit name via {@link kitField}. */
   get kitName(): StoreField<string> {
-    return this.materializedKitStoreField<string>("kit:name", {
+    return this.kitField<string>("kit:name", {
       innerOnKit: "name",
       parse: (frag) => String(frag["name"] ?? ""),
       initial: "",
@@ -2143,7 +2143,7 @@ export class KitStore {
    * @emoji 🧾 Live {@link StoreField} over `Query.wip.theKit(at:)` + `innerOnKit` GraphQL selection (cache keyed by {@link cacheKey}).
    * Invalidates with {@link invalidations}; reads {@link activeReadPoint} each fetch.
    */
-  materializedKitStoreField<T>(
+  kitField<T>(
     cacheKey: string,
     spec: {
       /** Declarations after `$at`, e.g. `$typeId: Id!` (omit when selection uses only `$at`). */
@@ -2507,11 +2507,11 @@ export class KitStore {
 
   /** @internal One `Query.wip.theKit { kit { fullSnapshot } }` read to verify GraphQL after WASM init (no local kit cache). */
   private async warmGraphqlRead(): Promise<void> {
-    await this.materializedLiveJsonForReadPoint(theKitReadPoint);
+    await this.readKitSnapshotForReadPoint(theKitReadPoint);
   }
 
   /** @emoji 🧾 Full DTO for a {@link KitReadPoint} via target-schema version `kit.fullSnapshot`; sole full-kit read path (no WASM `snapshot` fallback). */
-  async materializedLiveJsonForReadPoint(scope: KitReadPoint): Promise<KitFullDto> {
+  async readKitSnapshotForReadPoint(scope: KitReadPoint): Promise<KitFullDto> {
     this.ensureAlive();
     const { query, variables } = kitSessionWipStoreSelect(scope, "fullSnapshot");
     const data = kitGraphqlData(
@@ -2527,13 +2527,13 @@ export class KitStore {
 
   /** @emoji 🧾 Main-line live kit DTO from `Query.wip.theKit.kit` (`fullSnapshot` / materialized JSON). */
   async theKit(): Promise<KitFullDto> {
-    return this.materializedLiveJsonForReadPoint(theKitReadPoint);
+    return this.readKitSnapshotForReadPoint(theKitReadPoint);
   }
 
-  async materializeAt(checkpointId: string): Promise<KitFullDto> {
+  async readAt(checkpointId: string): Promise<KitFullDto> {
     const idArg = checkpointId.trim();
-    if (idArg === "") return this.materializedLiveJsonForReadPoint(theKitReadPoint);
-    return this.materializedLiveJsonForReadPoint({ checkpoint: { checkpointId: idArg } });
+    if (idArg === "") return this.readKitSnapshotForReadPoint(theKitReadPoint);
+    return this.readKitSnapshotForReadPoint({ checkpoint: { checkpointId: idArg } });
   }
 
   async vcsState(): Promise<JsonObject> {
@@ -3002,7 +3002,7 @@ export class KitStore {
 
   private async mapReadCommand(scope: KitReadPoint, c: ReadKitCommand): Promise<ReadKitCommandOutput> {
     if ("readKitFullCommand" in c && c.readKitFullCommand === null) {
-      const d = await this.materializedLiveJsonForReadPoint(scope);
+      const d = await this.readKitSnapshotForReadPoint(scope);
       return { readKitFullCommand: { full: d } };
     }
     if ("readKitShallowCommand" in c && c.readKitShallowCommand === null) {
@@ -3096,12 +3096,12 @@ export class KitStore {
 
   private async mapDesignRead(scope: KitReadPoint, designId: string, cmd: ReadDesignCommand): Promise<ReadDesignCommandOutput> {
     if ("readDesignPiecesFullCommand" in cmd && cmd.readDesignPiecesFullCommand === null) {
-      const kit = await this.materializedLiveJsonForReadPoint(scope);
+      const kit = await this.readKitSnapshotForReadPoint(scope);
       const des = (kit.designs ?? []).find((x) => x.id === designId);
       return { readDesignPiecesFullCommand: { pieces: des?.pieces ?? [] } };
     }
     if ("readDesignConnectionsFullCommand" in cmd && cmd.readDesignConnectionsFullCommand === null) {
-      const kit = await this.materializedLiveJsonForReadPoint(scope);
+      const kit = await this.readKitSnapshotForReadPoint(scope);
       const des = (kit.designs ?? []).find((x) => x.id === designId);
       return { readDesignConnectionsFullCommand: { connections: des?.connections ?? [] } };
     }
@@ -3599,7 +3599,7 @@ export type KitStoreClient = SemioKitBridge & {
   readonly kitName: StoreField<string>;
   readonly renameKit: StoreCommand<RenameKitCommandArgs>;
   readKitName(): Promise<string>;
-  /** @emoji 🧾 Materialized `wip.theKit(at:)` selection (see {@link KitStore.materializedKitStoreField}). */
+  /** @emoji 🧾 Materialized `wip.theKit(at:)` selection (see {@link KitStore.kitField}). */
   materializedKitStoreField<T>(
     cacheKey: string,
     spec: {
@@ -3625,7 +3625,7 @@ export type KitStoreClient = SemioKitBridge & {
   readDesignReplaceableCatalogTypes(designId: string, selection: readonly string[]): Promise<readonly string[]>;
   readDesignReplaceableCatalogDesigns(designId: string, selection: readonly string[]): Promise<readonly string[]>;
   readDesignIncludedDesignIds(designId: string): Promise<readonly string[]>;
-  /** @emoji 🧭 Switch materialized read DTO / GraphQL root (matches {@link WasmKitStoreClient.setKitReadPoint}; no-op in fallback). */
+  /** @emoji 🧭 Switch materialized read DTO / GraphQL root (matches {@link WasmKitStoreClient.setKitReadPoint}). */
   setKitReadPoint(scope: KitReadPoint): void;
   dispose(): void;
 };
@@ -3904,7 +3904,7 @@ export class WasmKitStoreClient implements KitStoreClient {
 
   /** @emoji 🧾 Authoritative full kit from `semio/rs` via GraphQL (no local DTO cache). */
   fetchFullKit(): Promise<KitFullDto> {
-    return this.ks.materializedLiveJsonForReadPoint(this.kitReadPoint);
+    return this.ks.readKitSnapshotForReadPoint(this.kitReadPoint);
   }
 
   subscribe(cb: (ev: KitEvent) => void): () => void {
@@ -4114,7 +4114,7 @@ export class WasmKitStoreClient implements KitStoreClient {
       initial: T;
     },
   ): StoreField<T> {
-    return this.ks.materializedKitStoreField(cacheKey, spec);
+    return this.ks.kitField(cacheKey, spec);
   }
 
   get kitName(): StoreField<string> {
@@ -4134,7 +4134,7 @@ export class WasmKitStoreClient implements KitStoreClient {
   }
 }
 
-/** @emoji 🧾 Resolves the live {@link KitStore} behind a WASM {@link KitStoreClient}, or null for fallback clients. */
+/** @emoji 🧾 Resolves the live {@link KitStore} behind a {@link KitStoreClient}, or `null` for non-WASM bridges. */
 export function kitStoreFromKitStoreClient(client: KitStoreClient): KitStore | null {
   if (client instanceof WasmKitStoreClient) return client.internalKs();
   const probe = client as { internalKs?: () => KitStore };
@@ -4380,358 +4380,7 @@ export function getSemioKitShallowListReadStore(c: KitStoreClient): SemioKitShal
 
 // #endregion 🪜SemioKitLiveReadHub
 
-/** @emoji 🧾 Approximate `wip.theKit` JSON for offline {@link FallbackKitClient} (subset of GraphQL kit shape). */
-function syntheticKitFragmentFromDto(kit: KitFullDto, innerOnKit: string, extra: GraphQlVariables): JsonObject {
-  const out: { [k: string]: JsonValue } = {};
-  const ko = kit as unknown as JsonObject;
-  const scalarKeys = ["name", "description", "icon", "image", "preview", "homepage", "license", "remote", "version", "release"] as const;
-  for (const k of scalarKeys) {
-    if (innerOnKit.includes(k)) {
-      const v = ko[k];
-      if (v !== undefined) out[k] = v as JsonValue;
-    }
-  }
-  const typeId = extra["typeId"] ?? extra["tid"];
-  if (typeId != null && innerOnKit.includes("type(")) {
-    const types = Array.isArray(ko["types"]) ? (ko["types"] as JsonObject[]) : [];
-    const row = types.find((t) => String(t["id"] ?? "") === String(typeId));
-    out["type"] = (row ?? null) as JsonValue;
-  }
-  const designId = extra["designId"] ?? extra["did"];
-  if (designId != null && innerOnKit.includes("design(")) {
-    const designs = Array.isArray(ko["designs"]) ? (ko["designs"] as JsonObject[]) : [];
-    const row = designs.find((t) => String(t["id"] ?? "") === String(designId));
-    out["design"] = (row ?? null) as JsonValue;
-  }
-  return out as JsonObject;
-}
-
-class FallbackKitClient implements KitStoreClient {
-  private readonly listeners = new Set<(ev: KitEvent) => void>();
-  /** @emoji 🧭 Read scope label for host hooks (offline client has no live {@link KitStore}). */
-  readonly kitReadPoint: KitReadPoint;
-  readonly renameKit: StoreCommand<RenameKitCommandArgs>;
-  private readonly fallbackMatFields = new Map<string, StoreField<unknown>>();
-  constructor(
-    private readonly kit: KitFullDto,
-    readPoint: KitReadPoint = theKitReadPoint,
-  ) {
-    this.kitReadPoint = readPoint;
-    this.renameKit = new StoreCommand<RenameKitCommandArgs>(async () => ({
-      ok: false,
-      error: {
-        kind: "NotSupported",
-        message:
-          "rename needs the real WASM kit store: the @semio/rs-wasm module did not load (e.g. Vite dev server stopped — run `npm run dev` in semio/sketchpad and hard-refresh, then reopen the kit).",
-      },
-    }));
-  }
-
-  materializedKitStoreField<T>(
-    cacheKey: string,
-    spec: {
-      extraVariableDecl?: string;
-      extraVariables?: GraphQlVariables;
-      innerOnKit: string;
-      parse: (kitFragment: JsonObject) => T;
-      initial: T;
-    },
-  ): StoreField<T> {
-    void spec.extraVariableDecl;
-    const hit = this.fallbackMatFields.get(cacheKey);
-    if (hit) return hit as StoreField<T>;
-    const frag = syntheticKitFragmentFromDto(this.kit, spec.innerOnKit, spec.extraVariables ?? ({} as GraphQlVariables));
-    let initial = spec.initial;
-    try {
-      initial = spec.parse(frag);
-    } catch {
-      /* keep */
-    }
-    const sf = new StoreField<T>(initial);
-    this.fallbackMatFields.set(cacheKey, sf as StoreField<unknown>);
-    return sf;
-  }
-
-  get kitName(): StoreField<string> {
-    return this.materializedKitStoreField<string>("kit:name", {
-      innerOnKit: "name",
-      parse: (frag) => String(frag["name"] ?? ""),
-      initial: "",
-    });
-  }
-
-  fetchFullKit(): Promise<KitFullDto> {
-    return Promise.resolve(this.kit);
-  }
-
-  subscribe(cb: (ev: KitEvent) => void): () => void {
-    this.listeners.add(cb);
-    return () => {
-      this.listeners.delete(cb);
-    };
-  }
-
-  dispose(): void {
-    this.listeners.clear();
-    for (const f of this.fallbackMatFields.values()) {
-      try {
-        f.dispose();
-      } catch {
-        /* ignore */
-      }
-    }
-    this.fallbackMatFields.clear();
-    this.renameKit.dispose();
-  }
-
-  kitGraphql(): LiveKitRoot {
-    throw new Error("kitGraphql unavailable in fallback kit client");
-  }
-
-  private notify(): void {
-    const ev = { Changed: null } as KitEvent;
-    for (const l of this.listeners) l(ev);
-  }
-
-  readPieceFlatPlane(_designId: string, _pieceId: string): Promise<PlaneDto | null> {
-    void _designId;
-    void _pieceId;
-    return Promise.resolve(null);
-  }
-  readPieceFlatCenter(_designId: string, _pieceId: string): Promise<CoordinateDto | null> {
-    void _designId;
-    void _pieceId;
-    return Promise.resolve(null);
-  }
-  readPieceParentConnectionFull(_designId: string, _pieceId: string): Promise<ConnectionDto | null> {
-    void _designId;
-    void _pieceId;
-    return Promise.resolve(null);
-  }
-  readDesignIncludedDesigns(_designId: string): Promise<readonly IncludedDesignInfoDto[]> {
-    void _designId;
-    return Promise.resolve([]);
-  }
-  readDesignClusterableGroups(_designId: string, _selection: readonly string[]): Promise<readonly (readonly KitIdDto[])[]> {
-    void _designId;
-    void _selection;
-    return Promise.resolve([]);
-  }
-  readDesignQualitySum(_designId: string, _qualityId: string): Promise<number> {
-    void _designId;
-    void _qualityId;
-    return Promise.resolve(0);
-  }
-  readTypeBestRepresentation(_typeId: string, _tagIds: readonly string[]): Promise<RepresentationDto | null> {
-    void _typeId;
-    void _tagIds;
-    return Promise.resolve(null);
-  }
-  readColoredConnectors(): Promise<readonly KitColoredConnectorRowDto[]> {
-    return Promise.resolve([]);
-  }
-  readDesignReplaceableCatalogTypes(_designId: string, _selection: readonly string[]): Promise<readonly string[]> {
-    void _designId;
-    void _selection;
-    return Promise.resolve([]);
-  }
-  readDesignReplaceableCatalogDesigns(_designId: string, _selection: readonly string[]): Promise<readonly string[]> {
-    void _designId;
-    void _selection;
-    return Promise.resolve([]);
-  }
-  readDesignIncludedDesignIds(_designId: string): Promise<readonly string[]> {
-    void _designId;
-    return Promise.resolve([]);
-  }
-
-  async submitChangeKitCommands(_commands: readonly ChangeKitCommand[]): Promise<SetResult> {
-    void _commands;
-    this.notify();
-    return { ok: true };
-  }
-
-  async clusterPieces(_designId: string, _pieceIds: readonly string[], _clusterName: string): Promise<SetResult> {
-    void _designId;
-    void _pieceIds;
-    void _clusterName;
-    this.notify();
-    return { ok: true };
-  }
-  async dragPieces(_designId: string, _pieceIds: readonly string[], _du: number, _dv: number): Promise<SetResult> {
-    void _designId;
-    void _pieceIds;
-    void _du;
-    void _dv;
-    this.notify();
-    return { ok: true };
-  }
-  async movePieces(_designId: string, _pieceIds: readonly string[], _gap: number, _shift: number, _rise: number): Promise<SetResult> {
-    void _designId;
-    void _pieceIds;
-    void _gap;
-    void _shift;
-    void _rise;
-    this.notify();
-    return { ok: true };
-  }
-  async fixPieces(_designId: string, _pieceIds: readonly string[]): Promise<SetResult> {
-    void _designId;
-    void _pieceIds;
-    this.notify();
-    return { ok: true };
-  }
-  async flattenDesign(_designId: string): Promise<SetResult> {
-    void _designId;
-    this.notify();
-    return { ok: true };
-  }
-  async expandDesign(_parentDesignId: string, _nestedDesignId: string): Promise<SetResult> {
-    void _parentDesignId;
-    void _nestedDesignId;
-    this.notify();
-    return { ok: true };
-  }
-  async deleteConnection(_designId: string, _connectionId: string): Promise<SetResult> {
-    void _designId;
-    void _connectionId;
-    this.notify();
-    return { ok: true };
-  }
-  async changePieceType(_designId: string, _pieceId: string, _newTypeId: string): Promise<SetResult> {
-    void _designId;
-    void _pieceId;
-    void _newTypeId;
-    this.notify();
-    return { ok: true };
-  }
-  async pasteDesignSelection(_designId: string, _selection: KitJsonTreeDto, _plane: PlaneDto | null): Promise<SetResult> {
-    void _designId;
-    void _selection;
-    void _plane;
-    this.notify();
-    return { ok: true };
-  }
-  async createHangingPieces(_designId: string, _typeIds: readonly string[], _plane: PlaneDto): Promise<SetResult> {
-    void _designId;
-    void _typeIds;
-    void _plane;
-    this.notify();
-    return { ok: true };
-  }
-  async createConnectedPiece(_designId: string, _parentPiece: string, _parentPort: string, _childType: string, _childPort: string): Promise<SetResult> {
-    void _designId;
-    void _parentPiece;
-    void _parentPort;
-    void _childType;
-    void _childPort;
-    this.notify();
-    return { ok: true };
-  }
-  async createFixedPiece(_designId: string, _typeId: string, _plane: PlaneDto): Promise<SetResult> {
-    void _designId;
-    void _typeId;
-    void _plane;
-    this.notify();
-    return { ok: true };
-  }
-  async undo(): Promise<SetResult> {
-    this.notify();
-    return { ok: true };
-  }
-  async redo(): Promise<SetResult> {
-    this.notify();
-    return { ok: true };
-  }
-  async canUndo(): Promise<boolean> {
-    return false;
-  }
-  async canRedo(): Promise<boolean> {
-    return false;
-  }
-  async getPiecesMetadata(_designId: string): Promise<ReadonlyMap<string, PiecePlacementRowDto>> {
-    void _designId;
-    return new Map();
-  }
-  async getPieces(_designId: string): Promise<readonly PieceDto[]> {
-    void _designId;
-    return [];
-  }
-  async getConnections(_designId: string): Promise<readonly ConnectionDto[]> {
-    void _designId;
-    return [];
-  }
-  async getDesigns(): Promise<readonly DesignShallow[]> {
-    return [];
-  }
-  async getTypes(): Promise<readonly TypeShallow[]> {
-    return [];
-  }
-  async getAuthors(): Promise<readonly AuthorMetadataDto[]> {
-    return [];
-  }
-  async getKitMetadata(): Promise<KitMetadataDto | null> {
-    return null;
-  }
-  async backboneStatus(): Promise<BackboneStatusDto> {
-    return { attached: false, kind: null, backboneTip: null, pendingWipCheckpoints: 0 };
-  }
-  async attachBackbone(_cfg: BackboneConfig): Promise<SetResult> {
-    void _cfg;
-    this.notify();
-    return { ok: true };
-  }
-  async detachBackbone(): Promise<SetResult> {
-    this.notify();
-    return { ok: true };
-  }
-  async listConflicts(): Promise<KitConflict[]> {
-    return [];
-  }
-  async resolveConflict(_id: string, _strategy: ConflictResolution): Promise<SetResult> {
-    void _id;
-    void _strategy;
-    this.notify();
-    return { ok: true };
-  }
-  async syncNow(): Promise<SetResult> {
-    this.notify();
-    return { ok: true };
-  }
-
-  readKitName(): Promise<string> {
-    return Promise.resolve(this.kitName.getSnapshot());
-  }
-
-  async createAlternativeFromTip(_name: string, _sourceAlternativeId: string | null): Promise<string> {
-    void _name;
-    void _sourceAlternativeId;
-    throw new Error("createAlternativeFromTip requires live WASM KitStore");
-  }
-
-  setKitReadPoint(_scope: KitReadPoint): void {
-    void _scope;
-  }
-
-  getKitWriteScope(): KitWriteScope | null {
-    return null;
-  }
-
-  setKitWriteScope(_scope: KitWriteScope | null): void {
-    void _scope;
-  }
-
-  async finalizeKitWriteTransaction(): Promise<SetResult> {
-    return { ok: false, error: { kind: "NotSupported", message: "finalizeKitWriteTransaction: fallback client" } };
-  }
-
-  async abortKitWriteTransaction(): Promise<SetResult> {
-    return { ok: false, error: { kind: "NotSupported", message: "abortKitWriteTransaction: fallback client" } };
-  }
-}
-
-export async function createKitStoreClient(opts: { initialKit: KitFullDto; forceFallback?: boolean; readPoint?: KitReadPoint }): Promise<KitStoreClient> {
-  if (opts.forceFallback) return new FallbackKitClient(opts.initialKit);
+export async function createKitStoreClient(opts: { initialKit: KitFullDto; readPoint?: KitReadPoint }): Promise<KitStoreClient> {
   const ks = await KitStore.open(opts.initialKit);
   const c = new WasmKitStoreClient(ks, opts.readPoint);
   await c.fetchFullKit();
@@ -7213,11 +6862,11 @@ export function asKitInstance(input: KitLike): Kit {
  *  write it back through the host adapter. The file therefore always mirrors `wip.initialKit` + version changes / edits
  *  state and looks like `semio/assets/semio/metabolism.new.kit.semio.json`. */
 const KIT_BUNDLE_BOOTSTRAPPED = new WeakSet<KitHostStore>();
-export async function applyKitClientSnapshotToLocalStore(kitClient: SemioKitBridge, store: KitHostStore): Promise<void> {
+export async function applyKitClientSnapshotToLocalStore(kitClient: KitStoreClient, store: KitHostStore): Promise<void> {
+  const ks = kitStoreFromKitStoreClient(kitClient);
   // 🌱 First-time wiring for bundle-persisting hosts: hydrate rs from the file (if any), then ensure rs has a seed checkpoint + default unsaved change.
   if (isKitBundlePersistingStore(store) && !KIT_BUNDLE_BOOTSTRAPPED.has(store)) {
     KIT_BUNDLE_BOOTSTRAPPED.add(store);
-    const ks = kitStoreFromKitStoreClient(kitClient as unknown as KitStoreClient);
     if (ks) {
       const initial = store.initialBundleJson;
       if (initial.trim() !== "") {
@@ -7240,28 +6889,14 @@ export async function applyKitClientSnapshotToLocalStore(kitClient: SemioKitBrid
     const curJson = store.getSnapshot().kit.toJSON();
     const changed = JSON.stringify(incoming) !== JSON.stringify(curJson);
     if (changed) store.replace(asKitInstance(incoming));
-    // 📤 Always re-serialize the bundle from rs and push it through the host adapter so the file on disk
-    // matches the rs `wip` graph (root + checkpoints + changes + edits). Skipped for non-persisting
-    // hosts (in-memory, remote session). The first run also lands on the empty / new file so it becomes
-    // a properly-shaped metabolism bundle even before the user makes any edit.
-    if (isKitBundlePersistingStore(store)) {
-      const ks = kitStoreFromKitStoreClient(kitClient as unknown as KitStoreClient);
-      if (ks) {
-        try {
-          const json = await ks.serializeKitStoreBundleJson();
-          await store.persistBundle(json);
-        } catch {
-          /* host write failures are surfaced on the adapter; keep the in-memory state alive */
-        }
+    if (isKitBundlePersistingStore(store) && ks) {
+      const json = await ks.serializeKitStoreBundleJson();
+      if (json.trim() !== "") {
+        await store.persistBundle(json);
       }
     }
   } catch {
-    try {
-      const incoming = await kitClient.fetchFullKit();
-      store.replace(asKitInstance(incoming));
-    } catch {
-      /* ignore */
-    }
+    /* ignore */
   }
 }
 
@@ -7781,7 +7416,7 @@ export class DesignStore {
 
   /** @emoji 🧾 Full design DTO from a kit snapshot (rs materialized truth). */
   async full(): Promise<DesignDto> {
-    const kit = (await this.root.materializedLiveJsonForReadPoint(this.readPoint)) as KitFullDto;
+    const kit = (await this.root.readKitSnapshotForReadPoint(this.readPoint)) as KitFullDto;
     const raw = (kit.designs ?? []).find((d) => d.id === this.id);
     if (!raw) throw new Error(`design not found: ${this.id}`);
     return DesignSchema.parse(raw);
@@ -7956,7 +7591,7 @@ export class TypeStore {
   }
 
   async full(): Promise<TypeDto> {
-    const kit = (await this.root.materializedLiveJsonForReadPoint(this.readPoint)) as KitFullDto;
+    const kit = (await this.root.readKitSnapshotForReadPoint(this.readPoint)) as KitFullDto;
     const raw = (kit.types ?? []).find((t) => t.id === this.id);
     if (!raw) throw new Error(`kind not found: ${this.id}`);
     return TypeSchema.parse(raw);
@@ -8166,7 +7801,7 @@ export class FamilyStore {
   }
 
   async full(): Promise<FamilyDto> {
-    const kit = (await this.root.materializedLiveJsonForReadPoint(this.readPoint)) as KitFullDto;
+    const kit = (await this.root.readKitSnapshotForReadPoint(this.readPoint)) as KitFullDto;
     const raw = (kit.families ?? []).find((f) => f.id === this.id);
     if (!raw) throw new Error(`family not found: ${this.id}`);
     return FamilySchema.parse(raw);
@@ -8205,7 +7840,7 @@ export class FileStore {
   }
 
   async full(): Promise<FileDto> {
-    const kit = (await this.root.materializedLiveJsonForReadPoint(this.readPoint)) as KitFullDto;
+    const kit = (await this.root.readKitSnapshotForReadPoint(this.readPoint)) as KitFullDto;
     const raw = (kit.files ?? []).find((f) => f.id === this.id);
     if (!raw) throw new Error(`file not found: ${this.id}`);
     return FileSchema.parse(raw);
@@ -8246,7 +7881,7 @@ export class FolderStore {
   }
 
   async full(): Promise<FolderDto> {
-    const kit = (await this.root.materializedLiveJsonForReadPoint(this.readPoint)) as KitFullDto;
+    const kit = (await this.root.readKitSnapshotForReadPoint(this.readPoint)) as KitFullDto;
     const raw = (kit.folders ?? []).find((f) => f.id === this.id);
     if (!raw) throw new Error(`folder not found: ${this.id}`);
     return FolderSchema.parse(raw);
@@ -8502,7 +8137,7 @@ if (
       expect(snap2.id).toBe(snap.id);
       const vcs = await ks.vcsState();
       expect(vcs != null && typeof vcs === "object").toBe(true);
-      const mat = await ks.materializeAt("");
+      const mat = await ks.readAt("");
       expect(mat.id).toBe(snap.id);
       expect(typeof (await ks.canUndo())).toBe("boolean");
       expect(typeof (await ks.canRedo())).toBe("boolean");
@@ -8585,6 +8220,7 @@ if (
       expect(((changes[0]["edits"] as JsonObject)["items"] as readonly unknown[])).toHaveLength(0);
       client.dispose();
     });
+
     });
 
     it("compile-time: KitStore public surface excludes rxjs-style stream fields", () => {

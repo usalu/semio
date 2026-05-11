@@ -1682,20 +1682,10 @@ export function KitRegistryProvider({ children }: { children: ReactNode }): Reac
               throw toJsonErr instanceof Error ? toJsonErr : new Error(String(toJsonErr));
             }
           }
-          try {
-            kitClient = await createKitStoreClient({
-              initialKit: initialDto,
-              forceFallback: shouldForceKitClientFallback(),
-              readPoint: init.readPoint,
-            });
-          } catch (wasmErr) {
-            console.warn("[semio/react] createKitStoreClient (wasm) failed; retrying with in-memory fallback client", wasmErr);
-            kitClient = await createKitStoreClient({
-              initialKit: initialDto,
-              forceFallback: true,
-              readPoint: init.readPoint,
-            });
-          }
+          kitClient = await createKitStoreClient({
+            initialKit: initialDto,
+            readPoint: init.readPoint,
+          });
         }
         (store as any).__semioKitBridge = kitClient;
         if (init.readPoint) {
@@ -1920,12 +1910,6 @@ function useKitRuntime(): KitRuntimeContextValue {
   const runtime = React.useContext(KitRuntimeContext);
   if (!runtime) throw new Error("semio/react hooks must be used inside <KitScope>.");
   return runtime;
-}
-
-function shouldForceKitClientFallback(): boolean {
-  if ((import.meta as any)?.env?.MODE === "test") return true;
-  if (typeof process !== "undefined" && (process as { env?: Record<string, string | undefined> }).env?.SEMIO_SKETCHPAD_RUN_EMBEDDED_TESTS === "1") return true;
-  return false;
 }
 
 /** Like {@link useKitRuntime} but returns `null` outside {@link KitScope} (no throw). */
@@ -2523,14 +2507,20 @@ export function KitScope({
     if (!st) return;
     let cancelled = false;
     let client: KitStoreClient | null = null;
-    void createKitStoreClient({ initialKit: st.getSnapshot().kit.toJSON(), forceFallback: shouldForceKitClientFallback(), readPoint: effectiveKitReadPoint }).then((c) => {
-      if (cancelled) {
-        c.dispose();
-        return;
-      }
-      client = c;
-      setKitClientState(c);
-    });
+    void createKitStoreClient({ initialKit: st.getSnapshot().kit.toJSON(), readPoint: effectiveKitReadPoint })
+      .then((c) => {
+        if (cancelled) {
+          c.dispose();
+          return;
+        }
+        client = c;
+        setKitClientState(c);
+      })
+      .catch((err) => {
+        if (cancelled) return;
+        console.error("[semio/react] createKitStoreClient failed", err);
+        setKitClientState(null);
+      });
     return () => {
       cancelled = true;
       if (client) {

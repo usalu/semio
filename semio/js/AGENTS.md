@@ -9,11 +9,10 @@ bundle:
 
 # 🧾 Specification
 
-`semio/js` is a **thin GraphQL client** to `semio/rs` (`KitStoreHandle` over a dedicated Worker, or inline handle in Node tests). It exposes **`KitStore`**, **`openKit`**, plus wire types required for method signatures.
+`semio/js` is a **thin GraphQL client** to `semio/rs` (`KitStoreHandle` over a dedicated Worker). It exposes **`KitStore`**, **`openKit`**, plus wire types required for method signatures.
 
-The root **`@semio/js`** entry holds the WASM transport plus zod/UI DTO helpers consumed by **`@semio/react`**; keep this as one source file unless a runtime entry boundary is unavoidable.
+The root **`@semio/js`** entry holds the WASM transport plus zod/UI DTO helpers consumed by **`@semio/react`**;
 
-You MUST export **`KitStore`**, **`openKit`**, **per-entity kit stores** (`DesignStore`, `TypeStore`, `PieceStore`, `ConnectionStore`, `FamilyStore`, `FileStore`, `FolderStore`, `KitEntityStore`), **`kitEventTouches*`** predicates used by those stores, and the types needed for the public API from the root entry.
 You MUST NOT store authoritative kit data.
 You MUST NOT cache kit graph data locally (DTO snapshots returned from `snapshot` / reads are rs materializations, not a second source of truth).
 
@@ -25,7 +24,7 @@ You MUST NOT cache kit graph data locally (DTO snapshots returned from `snapshot
 ## Bidirectional actor model
 
 - **Inbound**: async `KitStore` methods → GraphQL `query` / `mutation` / command shell payloads → rs execute.
-- **Outbound**: persistent GraphQL **subscription** → callback-based `subscribe` / `subscribeFiltered` (RxJS is an **internal** implementation detail; it MUST NOT leak into the public `.d.ts`).
+- **Outbound**: persistent GraphQL **subscription** → callback-based `subscribe` (RxJS is an **internal** implementation detail; it MUST NOT leak into the public `.d.ts`).
 
 ## 🕸️ Systems
 
@@ -37,4 +36,4 @@ You MUST NOT cache kit graph data locally (DTO snapshots returned from `snapshot
 
 ### KitStore
 
-Every argument of every public method MUST be typesafe (no `any`; prefer wire DTOs and opaque `ReadWireBatch` for rs-owned read shapes).
+Every argument of every public method MUST be typesafe (no generic `any` or `json`).

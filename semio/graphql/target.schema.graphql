@@ -4,6 +4,8 @@
 
 scalar Timestamp
 
+scalar Color
+
 scalar Json
 
 #endregion Scalars
@@ -1220,7 +1222,6 @@ type AttributeModificationConnection implements EntityConnection {
   hash: String! # cached
 }
 
-
 type AttributeModifications implements WeakEntity {
   # Node
   id: ID! # computed // hash
@@ -2351,7 +2352,6 @@ type CreatedQualityConnection implements EntityConnection {
   hash: String! # cached
 }
 
-
 type CreatedQualitiesInput implements Input {
   # Node
   id: ID! # computed // hash
@@ -2392,7 +2392,6 @@ type CreatedQualitiesConnection implements EntityConnection {
   pageInfo: PageInfo! # computed
   hash: String! # cached
 }
-
 
 type RenamedQualityInput implements Input {
   # Node
@@ -2435,7 +2434,6 @@ type RenamedQualityConnection implements EntityConnection {
   hash: String! # cached
 }
 
-
 type UpdatedQualityDescriptionInput implements Input {
   # Node
   id: ID! # computed // hash
@@ -2477,7 +2475,6 @@ type UpdatedQualityDescriptionConnection implements EntityConnection {
   hash: String! # cached
 }
 
-
 type UpdatedQualityIconInput implements Input {
   # Node
   id: ID! # computed // hash
@@ -2518,7 +2515,6 @@ type UpdatedQualityIconConnection implements EntityConnection {
   pageInfo: PageInfo! # computed
   hash: String! # cached
 }
-
 
 type AddedAttributeToQualityInput implements Input {
   # Node
@@ -2562,7 +2558,6 @@ type AddedAttributeToQualityConnection implements EntityConnection {
   hash: String! # cached
 }
 
-
 type AddedAttributesToQualityInput implements Input {
   # Node
   id: ID! # computed // hash
@@ -2605,8 +2600,6 @@ type AddedAttributesToQualityConnection implements EntityConnection {
   hash: String! # cached
 }
 
-
-
 type RemovedAttributeFromQuality implements Operation {
   # Node
   id: ID! # data // uuidv7
@@ -2634,8 +2627,6 @@ type RemovedAttributeFromQualityConnection implements EntityConnection {
   pageInfo: PageInfo! # computed
   hash: String! # cached
 }
-
-
 
 type RemovedAttributesFromQuality implements Operation {
   # Node
@@ -2665,8 +2656,6 @@ type RemovedAttributesFromQualityConnection implements EntityConnection {
   hash: String! # cached
 }
 
-
-
 type DeletedQuality implements Operation {
   # Node
   id: ID! # data // uuidv7
@@ -2693,8 +2682,6 @@ type DeletedQualityConnection implements EntityConnection {
   hash: String! # cached
 }
 
-
-
 type DeletedQualities implements Operation {
   # Node
   id: ID! # data // uuidv7
@@ -2720,7 +2707,6 @@ type DeletedQualitiesConnection implements EntityConnection {
   pageInfo: PageInfo! # computed
   hash: String! # cached
 }
-
 
 #endregion Operations
 
@@ -2897,7 +2883,6 @@ type CreatedTagConnection implements EntityConnection {
   hash: String! # cached
 }
 
-
 type CreatedTagsInput implements Input {
   # Node
   id: ID! # computed // hash
@@ -2938,7 +2923,6 @@ type CreatedTagsConnection implements EntityConnection {
   pageInfo: PageInfo! # computed
   hash: String! # cached
 }
-
 
 type RenamedTagInput implements Input {
   # Node
@@ -2981,7 +2965,6 @@ type RenamedTagConnection implements EntityConnection {
   hash: String! # cached
 }
 
-
 type UpdatedTagDescriptionInput implements Input {
   # Node
   id: ID! # computed // hash
@@ -3023,7 +3006,6 @@ type UpdatedTagDescriptionConnection implements EntityConnection {
   hash: String! # cached
 }
 
-
 type UpdatedTagIconInput implements Input {
   # Node
   id: ID! # computed // hash
@@ -3064,7 +3046,6 @@ type UpdatedTagIconConnection implements EntityConnection {
   pageInfo: PageInfo! # computed
   hash: String! # cached
 }
-
 
 type AddedAttributeToTagInput implements Input {
   # Node
@@ -3108,7 +3089,6 @@ type AddedAttributeToTagConnection implements EntityConnection {
   hash: String! # cached
 }
 
-
 type AddedAttributesToTagInput implements Input {
   # Node
   id: ID! # computed // hash
@@ -3151,8 +3131,6 @@ type AddedAttributesToTagConnection implements EntityConnection {
   hash: String! # cached
 }
 
-
-
 type RemovedAttributeFromTag implements Operation {
   # Node
   id: ID! # data // uuidv7
@@ -3180,8 +3158,6 @@ type RemovedAttributeFromTagConnection implements EntityConnection {
   pageInfo: PageInfo! # computed
   hash: String! # cached
 }
-
-
 
 type RemovedAttributesFromTag implements Operation {
   # Node
@@ -3211,8 +3187,6 @@ type RemovedAttributesFromTagConnection implements EntityConnection {
   hash: String! # cached
 }
 
-
-
 type DeletedTag implements Operation {
   # Node
   id: ID! # data // uuidv7
@@ -3239,8 +3213,6 @@ type DeletedTagConnection implements EntityConnection {
   hash: String! # cached
 }
 
-
-
 type DeletedTags implements Operation {
   # Node
   id: ID! # data // uuidv7
@@ -3266,7 +3238,6 @@ type DeletedTagsConnection implements EntityConnection {
   pageInfo: PageInfo! # computed
   hash: String! # cached
 }
-
 
 #endregion Operations
 
@@ -3443,7 +3414,6 @@ type CreatedConceptConnection implements EntityConnection {
   hash: String! # cached
 }
 
-
 type CreatedConceptsInput implements Input {
   # Node
   id: ID! # computed // hash
@@ -3484,7 +3454,6 @@ type CreatedConceptsConnection implements EntityConnection {
   pageInfo: PageInfo! # computed
   hash: String! # cached
 }
-
 
 type RenamedConceptInput implements Input {
   # Node
@@ -3527,7 +3496,6 @@ type RenamedConceptConnection implements EntityConnection {
   hash: String! # cached
 }
 
-
 type UpdatedConceptDescriptionInput implements Input {
   # Node
   id: ID! # computed // hash
@@ -3569,7 +3537,6 @@ type UpdatedConceptDescriptionConnection implements EntityConnection {
   hash: String! # cached
 }
 
-
 type UpdatedConceptIconInput implements Input {
   # Node
   id: ID! # computed // hash
@@ -3610,7 +3577,6 @@ type UpdatedConceptIconConnection implements EntityConnection {
   pageInfo: PageInfo! # computed
   hash: String! # cached
 }
-
 
 type AddedAttributeToConceptInput implements Input {
   # Node
@@ -3654,7 +3620,6 @@ type AddedAttributeToConceptConnection implements EntityConnection {
   hash: String! # cached
 }
 
-
 type AddedAttributesToConceptInput implements Input {
   # Node
   id: ID! # computed // hash
@@ -3697,8 +3662,6 @@ type AddedAttributesToConceptConnection implements EntityConnection {
   hash: String! # cached
 }
 
-
-
 type RemovedAttributeFromConcept implements Operation {
   # Node
   id: ID! # data // uuidv7
@@ -3726,8 +3689,6 @@ type RemovedAttributeFromConceptConnection implements EntityConnection {
   pageInfo: PageInfo! # computed
   hash: String! # cached
 }
-
-
 
 type RemovedAttributesFromConcept implements Operation {
   # Node
@@ -3757,8 +3718,6 @@ type RemovedAttributesFromConceptConnection implements EntityConnection {
   hash: String! # cached
 }
 
-
-
 type DeletedConcept implements Operation {
   # Node
   id: ID! # data // uuidv7
@@ -3785,8 +3744,6 @@ type DeletedConceptConnection implements EntityConnection {
   hash: String! # cached
 }
 
-
-
 type DeletedConcepts implements Operation {
   # Node
   id: ID! # data // uuidv7
@@ -3812,7 +3769,6 @@ type DeletedConceptsConnection implements EntityConnection {
   pageInfo: PageInfo! # computed
   hash: String! # cached
 }
-
 
 #endregion Operations
 
@@ -3972,10 +3928,9 @@ type Port implements Artifact {
   changes: ChangeConnection # computed
   edits: EditConnection # computed
   # Port
-  code: String! # data
-  label: String! # data
-  order: Int # data
-  attributes: AttributeConnection! # computed
+  copatibleWith: PortConnection # computed
+  color: Color # computed
+  attributes: AttributeConnection! # data
 }
 
 type PortEdge implements EntityEdge {
@@ -4001,16 +3956,10 @@ type PortDiff implements Diff {
   owns: EntityConnection # reference
   # Diff
   # PortDiff
-  code: String! # computed
-  removeCode: Boolean # computed
-  label: String! # computed
-  removeLabel: Boolean # computed
   description: String! # computed
   removeDescription: Boolean # computed
   icon: String! # computed
   removeIcon: Boolean # computed
-  order: Int # computed
-  removeOrder: Boolean # computed
 }
 
 type PortDiffEdge implements EntityEdge {
@@ -4124,7 +4073,6 @@ type CreatedPortConnection implements EntityConnection {
   hash: String! # cached
 }
 
-
 type CreatedPortsInput implements Input {
   # Node
   id: ID! # computed // hash
@@ -4165,7 +4113,6 @@ type CreatedPortsConnection implements EntityConnection {
   pageInfo: PageInfo! # computed
   hash: String! # cached
 }
-
 
 type RenamedPortInput implements Input {
   # Node
@@ -4209,7 +4156,6 @@ type RenamedPortConnection implements EntityConnection {
   hash: String! # cached
 }
 
-
 type UpdatedPortDescriptionInput implements Input {
   # Node
   id: ID! # computed // hash
@@ -4251,7 +4197,6 @@ type UpdatedPortDescriptionConnection implements EntityConnection {
   hash: String! # cached
 }
 
-
 type UpdatedPortIconInput implements Input {
   # Node
   id: ID! # computed // hash
@@ -4292,7 +4237,6 @@ type UpdatedPortIconConnection implements EntityConnection {
   pageInfo: PageInfo! # computed
   hash: String! # cached
 }
-
 
 type AddedAttributeToPortInput implements Input {
   # Node
@@ -4336,7 +4280,6 @@ type AddedAttributeToPortConnection implements EntityConnection {
   hash: String! # cached
 }
 
-
 type AddedAttributesToPortInput implements Input {
   # Node
   id: ID! # computed // hash
@@ -4379,8 +4322,6 @@ type AddedAttributesToPortConnection implements EntityConnection {
   hash: String! # cached
 }
 
-
-
 type RemovedAttributeFromPort implements Operation {
   # Node
   id: ID! # data // uuidv7
@@ -4408,8 +4349,6 @@ type RemovedAttributeFromPortConnection implements EntityConnection {
   pageInfo: PageInfo! # computed
   hash: String! # cached
 }
-
-
 
 type RemovedAttributesFromPort implements Operation {
   # Node
@@ -4439,8 +4378,6 @@ type RemovedAttributesFromPortConnection implements EntityConnection {
   hash: String! # cached
 }
 
-
-
 type DeletedPort implements Operation {
   # Node
   id: ID! # data // uuidv7
@@ -4467,8 +4404,6 @@ type DeletedPortConnection implements EntityConnection {
   hash: String! # cached
 }
 
-
-
 type DeletedPorts implements Operation {
   # Node
   id: ID! # data // uuidv7
@@ -4494,7 +4429,6 @@ type DeletedPortsConnection implements EntityConnection {
   pageInfo: PageInfo! # computed
   hash: String! # cached
 }
-
 
 #endregion Operations
 
@@ -4949,7 +4883,6 @@ type CreatedTypeConnection implements EntityConnection {
   hash: String! # cached
 }
 
-
 type CreatedTypesInput implements Input {
   # Node
   id: ID! # computed // hash
@@ -4990,7 +4923,6 @@ type CreatedTypesConnection implements EntityConnection {
   pageInfo: PageInfo! # computed
   hash: String! # cached
 }
-
 
 type RenamedTypeInput implements Input {
   # Node
@@ -5033,7 +4965,6 @@ type RenamedTypeConnection implements EntityConnection {
   hash: String! # cached
 }
 
-
 type UpdatedTypeDescriptionInput implements Input {
   # Node
   id: ID! # computed // hash
@@ -5075,7 +5006,6 @@ type UpdatedTypeDescriptionConnection implements EntityConnection {
   hash: String! # cached
 }
 
-
 type UpdatedTypeIconInput implements Input {
   # Node
   id: ID! # computed // hash
@@ -5116,7 +5046,6 @@ type UpdatedTypeIconConnection implements EntityConnection {
   pageInfo: PageInfo! # computed
   hash: String! # cached
 }
-
 
 type AddedAttributeToTypeInput implements Input {
   # Node
@@ -5160,7 +5089,6 @@ type AddedAttributeToTypeConnection implements EntityConnection {
   hash: String! # cached
 }
 
-
 type AddedAttributesToTypeInput implements Input {
   # Node
   id: ID! # computed // hash
@@ -5203,8 +5131,6 @@ type AddedAttributesToTypeConnection implements EntityConnection {
   hash: String! # cached
 }
 
-
-
 type RemovedAttributeFromType implements Operation {
   # Node
   id: ID! # data // uuidv7
@@ -5232,8 +5158,6 @@ type RemovedAttributeFromTypeConnection implements EntityConnection {
   pageInfo: PageInfo! # computed
   hash: String! # cached
 }
-
-
 
 type RemovedAttributesFromType implements Operation {
   # Node
@@ -5263,8 +5187,6 @@ type RemovedAttributesFromTypeConnection implements EntityConnection {
   hash: String! # cached
 }
 
-
-
 type DeletedType implements Operation {
   # Node
   id: ID! # data // uuidv7
@@ -5291,8 +5213,6 @@ type DeletedTypeConnection implements EntityConnection {
   hash: String! # cached
 }
 
-
-
 type DeletedTypes implements Operation {
   # Node
   id: ID! # data // uuidv7
@@ -5318,7 +5238,6 @@ type DeletedTypesConnection implements EntityConnection {
   pageInfo: PageInfo! # computed
   hash: String! # cached
 }
-
 
 #region Connector
 
@@ -5364,7 +5283,6 @@ type AddedConnectorConnection implements EntityConnection {
   hash: String! # cached
 }
 
-
 type AddedConnectorsInput implements Input {
   # Node
   id: ID! # computed // hash
@@ -5407,7 +5325,6 @@ type AddedConnectorsConnection implements EntityConnection {
   hash: String! # cached
 }
 
-
 type RenamedConnectorInput implements Input {
   # Node
   id: ID! # computed // hash
@@ -5448,7 +5365,6 @@ type RenamedConnectorConnection implements EntityConnection {
   pageInfo: PageInfo! # computed
   hash: String! # cached
 }
-
 
 type UpdatedConnectorDescriptionInput implements Input {
   # Node
@@ -5491,7 +5407,6 @@ type UpdatedConnectorDescriptionConnection implements EntityConnection {
   hash: String! # cached
 }
 
-
 type UpdatedConnectorIconInput implements Input {
   # Node
   id: ID! # computed // hash
@@ -5533,8 +5448,6 @@ type UpdatedConnectorIconConnection implements EntityConnection {
   hash: String! # cached
 }
 
-
-
 type RemovedConnector implements Operation {
   # Node
   id: ID! # data // uuidv7
@@ -5563,8 +5476,6 @@ type RemovedConnectorConnection implements EntityConnection {
   hash: String! # cached
 }
 
-
-
 type RemovedConnectors implements Operation {
   # Node
   id: ID! # data // uuidv7
@@ -5592,7 +5503,6 @@ type RemovedConnectorsConnection implements EntityConnection {
   pageInfo: PageInfo! # computed
   hash: String! # cached
 }
-
 
 #endregion Connector
 
@@ -6200,8 +6110,6 @@ type CreatedFixedPieceConnection implements EntityConnection {
   hash: String! # cached
 }
 
-
-
 type FixedPiece implements Operation {
   # Node
   id: ID! # data // uuidv7
@@ -6229,7 +6137,6 @@ type FixedPieceConnection implements EntityConnection {
   pageInfo: PageInfo! # computed
   hash: String! # cached
 }
-
 
 type DraggedPiecesInput implements Input {
   # Node
@@ -6272,7 +6179,6 @@ type DraggedPiecesConnection implements EntityConnection {
   hash: String! # cached
 }
 
-
 type DraggedPieceInput implements Input {
   # Node
   id: ID! # computed // hash
@@ -6313,7 +6219,6 @@ type DraggedPieceConnection implements EntityConnection {
   pageInfo: PageInfo! # computed
   hash: String! # cached
 }
-
 
 type AddedChildPieceWithParentConnectionInput implements Input {
   # Node
@@ -6358,7 +6263,6 @@ type AddedChildPieceWithParentConnectionConnection implements EntityConnection {
   hash: String! # cached
 }
 
-
 type AddedChildPiecesWithParentConnectionsInput implements Input {
   # Node
   id: ID! # computed // hash
@@ -6401,7 +6305,6 @@ type AddedChildPiecesWithParentConnectionsConnection implements EntityConnection
   pageInfo: PageInfo! # computed
   hash: String! # cached
 }
-
 
 type AddedHangingChildPieceWithParentConnectionInput implements Input {
   # Node
@@ -6446,7 +6349,6 @@ type AddedHangingChildPieceWithParentConnectionConnection implements EntityConne
   hash: String! # cached
 }
 
-
 type AddedHangingChildPiecesWithParentConnectionsInput implements Input {
   # Node
   id: ID! # computed // hash
@@ -6490,7 +6392,6 @@ type AddedHangingChildPiecesWithParentConnectionsConnection implements EntityCon
   hash: String! # cached
 }
 
-
 type RenamedPieceInput implements Input {
   # Node
   id: ID! # computed // hash
@@ -6531,7 +6432,6 @@ type RenamedPieceConnection implements EntityConnection {
   pageInfo: PageInfo! # computed
   hash: String! # cached
 }
-
 
 type UpdatedPieceDescriptionInput implements Input {
   # Node
@@ -6574,7 +6474,6 @@ type UpdatedPieceDescriptionConnection implements EntityConnection {
   hash: String! # cached
 }
 
-
 type MovedPieceInput implements Input {
   # Node
   id: ID! # computed // hash
@@ -6615,7 +6514,6 @@ type MovedPieceConnection implements EntityConnection {
   pageInfo: PageInfo! # computed
   hash: String! # cached
 }
-
 
 type MovedPiecesInput implements Input {
   # Node
@@ -6658,8 +6556,6 @@ type MovedPiecesConnection implements EntityConnection {
   hash: String! # cached
 }
 
-
-
 type FixedPieces implements Operation {
   # Node
   id: ID! # data // uuidv7
@@ -6687,7 +6583,6 @@ type FixedPiecesConnection implements EntityConnection {
   pageInfo: PageInfo! # computed
   hash: String! # cached
 }
-
 
 type ChangedPieceToTypeInput implements Input {
   # Node
@@ -6730,7 +6625,6 @@ type ChangedPieceToTypeConnection implements EntityConnection {
   hash: String! # cached
 }
 
-
 type ChangedPiecesToTypeInput implements Input {
   # Node
   id: ID! # computed // hash
@@ -6771,7 +6665,6 @@ type ChangedPiecesToTypeConnection implements EntityConnection {
   pageInfo: PageInfo! # computed
   hash: String! # cached
 }
-
 
 type AddedAttributeToPieceInput implements Input {
   # Node
@@ -6815,7 +6708,6 @@ type AddedAttributeToPieceConnection implements EntityConnection {
   hash: String! # cached
 }
 
-
 type AddedAttributesToPieceInput implements Input {
   # Node
   id: ID! # computed // hash
@@ -6858,8 +6750,6 @@ type AddedAttributesToPieceConnection implements EntityConnection {
   hash: String! # cached
 }
 
-
-
 type RemovedAttributeFromPiece implements Operation {
   # Node
   id: ID! # data // uuidv7
@@ -6887,8 +6777,6 @@ type RemovedAttributeFromPieceConnection implements EntityConnection {
   pageInfo: PageInfo! # computed
   hash: String! # cached
 }
-
-
 
 type RemovedAttributesFromPiece implements Operation {
   # Node
@@ -6918,8 +6806,6 @@ type RemovedAttributesFromPieceConnection implements EntityConnection {
   hash: String! # cached
 }
 
-
-
 type DeletedPiece implements Operation {
   # Node
   id: ID! # data // uuidv7
@@ -6945,8 +6831,6 @@ type DeletedPieceConnection implements EntityConnection {
   pageInfo: PageInfo! # computed
   hash: String! # cached
 }
-
-
 
 type DeletedPieces implements Operation {
   # Node
@@ -6974,8 +6858,6 @@ type DeletedPiecesConnection implements EntityConnection {
   hash: String! # cached
 }
 
-
-
 type DeletedPiecesAndConnections implements Operation {
   # Node
   id: ID! # data // uuidv7
@@ -7001,7 +6883,6 @@ type DeletedPiecesAndConnectionsConnection implements EntityConnection {
   pageInfo: PageInfo! # computed
   hash: String! # cached
 }
-
 
 #endregion Operations
 
@@ -7289,7 +7170,6 @@ type Clump implements WeakEntity {
   pieces: PieceConnection # computed
 }
 
-
 type ClumpEdge implements EntityEdge {
   # EntityEdge
   cursor: String! # computed
@@ -7303,7 +7183,6 @@ type ClumpConnection implements EntityConnection {
   pageInfo: PageInfo! # computed
   hash: String! # cached
 }
-
 
 type ClumpEdge implements EntityEdge {
   # EntityEdge
@@ -7320,7 +7199,6 @@ type ClumpConnection implements EntityConnection {
 }
 
 #endregion Clump
-
 
 #region Operations
 
@@ -7365,7 +7243,6 @@ type CreatedDesignConnection implements EntityConnection {
   hash: String! # cached
 }
 
-
 type CreatedDesignsInput implements Input {
   # Node
   id: ID! # computed // hash
@@ -7407,8 +7284,6 @@ type CreatedDesignsConnection implements EntityConnection {
   hash: String! # cached
 }
 
-
-
 type DeletedDesign implements Operation {
   # Node
   id: ID! # data // uuidv7
@@ -7435,8 +7310,6 @@ type DeletedDesignConnection implements EntityConnection {
   hash: String! # cached
 }
 
-
-
 type DeletedDesigns implements Operation {
   # Node
   id: ID! # data // uuidv7
@@ -7462,8 +7335,6 @@ type DeletedDesignsConnection implements EntityConnection {
   pageInfo: PageInfo! # computed
   hash: String! # cached
 }
-
-
 
 type FlattenedDesign implements Operation {
   # Node
@@ -7492,7 +7363,6 @@ type FlattenedDesignConnection implements EntityConnection {
   pageInfo: PageInfo! # computed
   hash: String! # cached
 }
-
 
 type AddedAttributeToDesignInput implements Input {
   # Node
@@ -7536,7 +7406,6 @@ type AddedAttributeToDesignConnection implements EntityConnection {
   hash: String! # cached
 }
 
-
 type AddedAttributesToDesignInput implements Input {
   # Node
   id: ID! # computed // hash
@@ -7579,8 +7448,6 @@ type AddedAttributesToDesignConnection implements EntityConnection {
   hash: String! # cached
 }
 
-
-
 type RemovedAttributeFromDesign implements Operation {
   # Node
   id: ID! # data // uuidv7
@@ -7609,8 +7476,6 @@ type RemovedAttributeFromDesignConnection implements EntityConnection {
   hash: String! # cached
 }
 
-
-
 type RemovedAttributesFromDesign implements Operation {
   # Node
   id: ID! # data // uuidv7
@@ -7638,7 +7503,6 @@ type RemovedAttributesFromDesignConnection implements EntityConnection {
   pageInfo: PageInfo! # computed
   hash: String! # cached
 }
-
 
 #endregion Operations
 
@@ -7841,7 +7705,6 @@ type RenamedKitConnection implements EntityConnection {
   hash: String! # cached
 }
 
-
 type ChangedDescriptionInput implements Input {
   # Node
   id: ID! # computed // hash
@@ -7883,11 +7746,9 @@ type ChangedDescriptionConnection implements EntityConnection {
   hash: String! # cached
 }
 
-
 #endregion Operations
 
 #endregion Kit
-
 
 #region VCS
 
@@ -8021,7 +7882,6 @@ type TheKit implements Version {
 
 #region Alternatives
 
-
 type TheKitEdge implements EntityEdge {
   # EntityEdge
   cursor: String! # computed
@@ -8035,7 +7895,6 @@ type TheKitConnection implements EntityConnection {
   pageInfo: PageInfo! # computed
   hash: String! # cached
 }
-
 
 type TheKitEdge implements EntityEdge {
   # EntityEdge

@@ -1,14 +1,14 @@
 ---
 name: semio
-description: Interacts with the semio monorepo.
-argument-hint: The task to perform in the semio monorepo.
+description: Interacts with `./semio` technology.
+argument-hint: The task to perform.
 tools:
  [
   vscode/runCommand,
   vscode/askQuestions,
-  vscode/toolSearch,
   execute/getTerminalOutput,
   execute/killTerminal,
+  execute/sendToTerminal,
   execute/createAndRunTask,
   execute/runInTerminal,
   execute/runTests,
@@ -17,14 +17,20 @@ tools:
   read/readFile,
   read/terminalSelection,
   read/terminalLastCommand,
-  agent,
+  agent/runSubagent,
   edit/createDirectory,
   edit/createFile,
   edit/editFiles,
   edit/rename,
-  search,
+  search/changes,
+  search/codebase,
+  search/fileSearch,
+  search/listDirectory,
+  search/searchResults,
+  search/textSearch,
+  search/usages,
   web/fetch,
-  browser,
+  browser/openBrowserPage,
   repo/search,
   todo,
  ]
