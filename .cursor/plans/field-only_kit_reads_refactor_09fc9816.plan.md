@@ -1,6 +1,6 @@
 ---
 name: field-only kit reads refactor
-overview: Collapse `semio/js/index.ts` to only export entity classes (`Kit`, `Design`, `Type`, `Piece`, `Connection`, `Author`, `Quality`, ...); merge `Kit` and `KitStore` into one `Kit` class. Every class is CQRS event-sourced over the GraphQL schema in `semio/rs/lib.rs` (`Query` / `Mutation` / `Subscription`). Each field exposes three methods (`field()` async query, `fieldSync()` cached, `on<Event>(cb)` subscription), with stable object identity in the cache so React `useSyncExternalStore` works. Commands map 1:1 to leaves of the `*OperationInput` types in `semio/graphql/target.schema.graphql`, each shipped as both async (`op(...)`) and sync (`opSync(...)`, optimistic local apply + background dispatch) flavours. `semio/react/index.tsx` adds nothing beyond the schema — every hook is 1:1 with one schema field (read) or one `*OperationInput` leaf (write). No sub-selection, no derivation, no aggregate / metadata / shallow / view hooks. Lean fields → return value verbatim; bulky fields → return class instance(s). Sketchpad obeys the same rule and inlines every sub-selection at the call site.
+overview: Collapse `semio/js/index.ts` to only export entity classes (`Kit`, `Design`, `Type`, `Piece`, `Connection`, `Author`, `Quality`, ...); merge `Kit` and `KitStore` into one `Kit` class. Every class is CQRS event-sourced over the GraphQL schema in `semio/rs/lib.rs` (`Query` / `Mutation` / `Subscription`). Each field exposes three methods (`field()` async query, `fieldSync()` cached, `on<Event>(cb)` subscription), with stable object identity in the cache so React `useSyncExternalStore` works. Commands map 1:1 to leaves of the `*OperationInput` types in `semio/graphql/target.schema.graphql`. Each command is a single async method `op(...): Promise<SetResult>` that performs the optimistic local apply synchronously (firing the matching `on<Event>` callbacks in the same tick) and then awaits server confirmation — there are no `*Sync` companion methods. `semio/react/index.tsx` adds nothing beyond the schema — every hook is 1:1 with one schema field (read) or one `*OperationInput` leaf (write). Read hooks return just the value (`T | undefined` lean, class instance(s) bulky). Operation hooks return a `readonly [run, status]` tuple where `status` is a discriminated union (`idle` / `pending` / `successful` / `tooLong` / `timeout` / `failed`). No sub-selection, no derivation, no aggregate / metadata / shallow / view hooks. Sketchpad obeys the same rule and inlines every sub-selection at the call site.
 todos:
  - id: ticket
    content: Open / reopen the field-only kit reads ticket via repo MCP and keep temp artifacts inside it
@@ -9,10 +9,10 @@ todos:
    content: In semio/js/index.ts add a single GqlTransport (Query/Mutation/Subscription over worker/HTTP) plus an EventBus that fans the unified `subscription { event }` JSON stream into typed per-entity channels keyed by entity kind + id + field
    status: pending
  - id: js-base
-   content: Add an internal Entity base + defineField/defineOperation/defineFields/defineOperations factory helpers. Entity owns the field-cache machinery (stable object identity for object-typed fields, dirty/version tracking, fieldSync per key), the on<Event>(cb) routing, the async dispatch (Promise<SetResult>), and the sync dispatchSync (deterministic optimistic apply + background dispatch). Each entity class is then declared as two static arrays (fields + operations) that defineFields/defineOperations install onto the prototype as named methods.
+   content: Add an internal Entity base + defineField/defineOperation/defineFields/defineOperations factory helpers. Entity owns the field-cache machinery (stable object identity for object-typed fields, dirty/version tracking, fieldSync per key), the on<Event>(cb) routing, and a single async dispatch path (Promise<SetResult>) that performs the deterministic optimistic local apply synchronously (fires on<Event> callbacks in the same tick) and then awaits the GraphQL mutation. There is no separate sync dispatch — the optimistic apply is part of the single async path. Each entity class is then declared as two static arrays (fields + operations) that defineFields/defineOperations install onto the prototype as named methods.
    status: pending
   - id: js-classes
-    content: Reshape Kit (merged with KitStore), Design, Type, Port, Connector, Piece, PiecesOperations, Connection, Author, Quality, Tag, Concept, Family, File, Folder, Layer, Group, Stat, Prop, Attribute, Representation, Plane, Coordinate, Point, Vector, Camera, Side, Benchmark, Position, Place, Location into CQRS classes; per field expose field()/fieldSync()/on<Event>(); per leaf in *OperationInput expose two command methods — async operation(...) returning Promise<SetResult> and sync opSync(...) returning SetResult (optimistic local apply + background dispatch). Covers kit.createDesign(/Sync), design.addFixedPiece(/Sync), design.piece(id).fix(/Sync), design.pieces(ids).drag(/Sync), type.createPort(/Sync), type.port(id).rename(/Sync), type.addConnector(/Sync), etc. Navigation methods (kit.design(id), kit.type(id), design.piece(id), design.pieces(ids), type.port(id), type.connector(id)) return cached child class instances.
+    content: Reshape Kit (merged with KitStore), Design, Type, Port, Connector, Piece, PiecesOperations, Connection, Author, Quality, Tag, Concept, Family, File, Folder, Layer, Group, Stat, Prop, Attribute, Representation, Plane, Coordinate, Point, Vector, Camera, Side, Benchmark, Position, Place, Location into CQRS classes; per field expose field()/fieldSync()/on<Event>(); per leaf in *OperationInput expose exactly one async command method — operation(...) returning Promise<SetResult>. The single method performs the optimistic local apply synchronously (mutates the cache, fires on<Event> callbacks in the same tick) and then awaits the GraphQL mutation; no opSync companions. Covers kit.createDesign, design.addFixedPiece, design.piece(id).fix, design.pieces(ids).drag, type.createPort, type.port(id).rename, type.addConnector, etc. Navigation methods (kit.design(id), kit.type(id), design.piece(id), design.pieces(ids), type.port(id), type.connector(id)) return cached child class instances.
     status: pending
  - id: js-deletes
    content: Delete from semio/js/index.ts every non-class export — KitStore (merged), all *Schema/zod, all *Dto / *MetadataDto / *Shallow types, KitFullDto, KitHostStore + InMemoryKitStore + JsonFileKitStore + FolderKitStore + applyKitClientSnapshotToLocalStore, all Read*Command types, SemioKitLiveReadStore + KitDesignReadStore + KitShallowListStore + KitViewCatalogStore, kitStoreClientAdd/Update/Remove* free functions, submitKitChangeCommands, buildSchemaEntityChangeCommands, writeKitStoreClientSchemaField, KitChangeKind / KitChangeSemanticKindGql, kitChangeSemanticKindToGraphQl, KitJson* helpers, kit-store.worker.ts JSON DTO plumbing
@@ -27,7 +27,7 @@ todos:
    content: Declare every per-field read hook as a one-liner using create<Entity>FieldHook(getSnap, subscribe). Covers usePieceName / usePiecePlane / usePieceFlatPlane / usePieceFlatCenter / usePieceCenter / usePieceScale / usePieceAttributes / useTypeName / useTypePortIds / useTypeConnectorIds / useDesignName / useDesignPieceIds / useDesignConnectionIds / useConnectionGap / useConnectionShift / useConnectionRotation / useConnectorCode / etc. Each returns T | undefined.
    status: pending
  - id: react-operation-hooks
-   content: Declare every per-operation write hook as a one-liner using create<Entity>OpHook(call). Two declarations per *OperationInput leaf — async use<Op><Entity> calling entity.operation(...) and sync use<Op><Entity>Sync calling entity.opSync(...). Covers useDragPiece(/Sync), useFixPiece(/Sync), useRenamePiece(/Sync), useMovePiece(/Sync), useChangePieceBlueprint(/Sync), useAddFixedPiece(/Sync), useDeletePiece(/Sync), useDeletePieces(/Sync), useFlattenDesign(/Sync), useCreateType(/Sync), useCreatePort(/Sync), useAddConnector(/Sync), useStartNewChange(/Sync), useSaveUnsavedChange(/Sync), useCreateCheckpoint(/Sync), useStartAlternative(/Sync), useIntegrateAlternative(/Sync), etc.
+   content: Declare every per-operation write hook as a one-liner using create<Entity>OpHook(call). Exactly one declaration per *OperationInput leaf — use<Op><Entity> calling entity.operation(...) and returning a stable readonly [run, status] tuple where run(...args) → Promise<SetResult> and status is a discriminated union (idle | pending | successful | tooLong | timeout | failed) tracked by the factory via React.useState. Status mapping — server SetError.kind === "TooLong" → status.kind === "tooLong"; transport timeout → status.kind === "timeout"; ok:true → "successful"; everything else → "failed". No *Sync hooks. Covers useDragPiece, useFixPiece, useRenamePiece, useMovePiece, useChangePieceBlueprint, useAddFixedPiece, useDeletePiece, useDeletePieces, useFlattenDesign, useCreateType, useCreatePort, useAddConnector, useStartNewChange, useSaveUnsavedChange, useCreateCheckpoint, useStartAlternative, useIntegrateAlternative, useRenameKit, useChangeKitDescription, etc.
    status: pending
  - id: react-deletes
    content: Enforce the schema-1:1 invariant — delete every export from semio/react/index.tsx that is not 1:1 with a target.schema.graphql field or *OperationInput leaf. Includes KitFieldBinding/HookRead/WriteStatus wrappers; sub-selection hooks (useDesignPieceIds/useDesignConnectionIds/useType*Ids/useKit*Ids/useConnection*PieceId/usePieceCenterU/usePieceIsHidden/etc.); aggregate/metadata/shallow/view hooks (useTypesIds/useDesignsIds/useTypesMetadata/useTypesFull/useKitDesignsShallow/usePieceMetadata/useDesignQualitySum/useTypeBestRepresentation/useKitColoredConnectors/useReplacableTypes/useExplodeableDesignNodes/etc.); registry/shell hooks (useOpenKitGuids/useActiveKitGuid/useOpenKitShallows/useRegistryHasKit/useKitAlternatives); whole-object triads; generic schema readers; snapshot accessors; *Input/*PatchInput whole-object hooks; useResolved* helpers; useUndo/useRedo/useChange/useCommandBuilder/useWriteIndicator/useWriteQueue/useOptimistic/usePendingTriad; whole-snapshot file/binary helpers. Demote helpers to non-exported internals.
@@ -36,10 +36,10 @@ todos:
    content: Add the bulky-list 1:1 hooks sketchpad needs (each a one-liner via create<Entity>FieldHook returning class instances) — useKitTypes, useKitDesigns, useKitAuthors, useKitQualities, useKitTags, useKitConcepts, useDesignPieces, useDesignConnections, useTypePorts, useTypeConnectors, useTypeRepresentations, useConnectionConnected, useConnectionConnecting. NO sub-selection (no useDesignPieceIds, no useTypePortIds — callers map class .id inline). Anything not in target.schema.graphql is rejected and either added to the schema first or computed inline in the consumer.
    status: pending
  - id: sketchpad-migrate
-   content: Replace all 64 banned-hook usages in semio/sketchpad/index.tsx with schema-1:1 reads + ops from @semio/react. Reads and writes strictly separate. Delete every sub-selection / tuple sketchpad hook (usePieceCenterU/usePieceCenterV/sketchpad's tuple usePieceScale/usePieceIsHidden/usePieceIsLocked/useConnectionGapValue/useConnectionShiftValue/useConnectionRiseValue/useConnectionRotationValue/useConnectionTurnValue/useConnectionTiltValue/useDesignPieceIds/useDesignConnectionIds/all *Metadata/*Shallow/*Full derivations) — no replacement hook, callers inline destructuring at the call site (const center = usePieceCenter(); const u = center?.u). Replace every commands.update*/applyKitDiff with the matching use<Op><Entity>Sync. Drop the useDesignAppCommands indirection entirely. Fan list rendering through the bulky list hook (useDesignPieces, useTypePorts, …) plus inline .map((x) => <Context id={x.id}>).
+   content: Replace all 64 banned-hook usages in semio/sketchpad/index.tsx with schema-1:1 reads + ops from @semio/react. Reads and writes strictly separate. Delete every sub-selection / tuple sketchpad hook (usePieceCenterU/usePieceCenterV/sketchpad's tuple usePieceScale/usePieceIsHidden/usePieceIsLocked/useConnectionGapValue/useConnectionShiftValue/useConnectionRiseValue/useConnectionRotationValue/useConnectionTurnValue/useConnectionTiltValue/useDesignPieceIds/useDesignConnectionIds/all *Metadata/*Shallow/*Full derivations) — no replacement hook, callers inline destructuring at the call site (const center = usePieceCenter(); const u = center?.u). Replace every commands.update*/applyKitDiff with the matching use<Op><Entity> destructured as const [op, opStatus] = use<Op><Entity>(); … void op(...). Render saving / tooLong / timeout / failed UI off opStatus.kind. Drop the useDesignAppCommands indirection entirely. Fan list rendering through the bulky list hook (useDesignPieces, useTypePorts, …) plus inline .map((x) => <Context id={x.id}>).
    status: pending
  - id: tests
-   content: Update inline vitest blocks in semio/js/index.ts and semio/react/index.tsx for the new class shape; add an inline negative-grep test in semio/sketchpad/index.tsx asserting zero matches for the banned hooks
+   content: Update inline vitest blocks in semio/js/index.ts and semio/react/index.tsx for the new class shape — entity field round-trips, optimistic-apply-then-confirm path of operation()s, OperationStatus transitions (idle → pending → successful | tooLong | timeout | failed) for hooks like useDragPiece / useRenameKit, single-rerender guarantee for usePieceCenter; remove tests asserting on deleted exports; add an inline negative-grep test in semio/sketchpad/index.tsx asserting zero matches for the banned hooks (no `*Sync` op hook names, no banned read hooks).
    status: pending
  - id: validate
    content: Run npm run depcruise:layers, typecheck for semio/js + semio/react + semio/sketchpad, run inline tests, manual sketchpad smoke
@@ -103,9 +103,10 @@ Each class has three things, all driven by [semio/graphql/target.schema.graphql]
    - `fieldSync(): T | undefined` — synchronous read from the in-class cache. For object-typed fields (`Plane`, `Coordinate`, `Position`, `Side`, …) the cache holds the same instance reference until the field changes, so React `useSyncExternalStore.getSnapshot` returns a stable reference and skips rerenders.
    - `on<Event>(cb: (next: T) => void): Unsubscribe` — subscribe to the routed event channel. Event names follow the schema's Edit/Modification union (`onRenamed`, `onDescriptionChanged`, `onMoved`, `onDragged`, `onFixed`, `onFlattened`, `onPlaneChanged`, `onCenterChanged`, `onAttributeAdded`, `onAttributeRemoved`, `onPieceAdded`, `onPieceDeleted`, `onConnectionAdded`, `onConnectionDeleted`, `onPortCreated`, `onPortDeleted`, `onConnectorAdded`, `onConnectorRemoved`, `onTagCreated`, `onTagDeleted`, `onConceptCreated`, `onConceptDeleted`, `onQualityCreated`, `onQualityDeleted`, `onTypeCreated`, `onTypeDeleted`, `onDesignCreated`, `onDesignDeleted`, `onCheckpointCreated`, …).
 
-2. **Operations** — two methods per leaf command in the matching `*OperationInput` from §`#region Commands`. Method signatures mirror the schema (same names, same args, same nullability):
-   - `operation(...args): Promise<SetResult>` — async. Sends the GraphQL `mutation { session { ... } }` and resolves once the server confirms; the resulting `ID!` is in `ok.id`. Cache and `on<Event>` subscribers are updated when the matching subscription event arrives.
-   - `opSync(...args): SetResult` — sync. Applies the operation optimistically to the in-class cache _immediately_, fires the matching `on<Event>` callbacks synchronously, returns the locally-derived `SetResult` (with the optimistic `id`), and dispatches the GraphQL mutation in the background. If the server later rejects (or returns a conflicting state), the reconciliation comes through the unified subscription stream and rolls the cache back; errors surface via `useSetErrors` (and via the rejected `Promise` of an internal background dispatch tracked by `Kit`).
+2. **Operations** — exactly **one** method per leaf command in the matching `*OperationInput` from §`#region Commands`. There are no `opSync(...)` companions. Method signatures mirror the schema (same names, same args, same nullability) and return `Promise<SetResult>`:
+   - `operation(...args): Promise<SetResult>` — single async path. Applies the operation optimistically to the in-class cache *immediately* (synchronous side-effect that fires the matching `on<Event>` callbacks in the same tick so React `useSyncExternalStore` rerenders without waiting for the network), dispatches the matching `mutation { session { ... } }` against [semio/rs/lib.rs](semio/rs/lib.rs), and resolves when the server confirms or rejects. The unified subscription stream then reconciles the cache: a no-op when the optimistic state already matches, a corrective re-emit when the server diverged, or a rollback when the server rejected the mutation.
+   - `SetResult` is `{ ok: true; id: ID }` on success, or `{ ok: false; error: SetError }` on rejection. `SetError` is the discriminated union enumerated in [target.schema.graphql](semio/graphql/target.schema.graphql) (e.g. `Readonly`, `TooLong`, `Validation`, `Conflict`, `Rejected`). Network timeouts surface as `{ kind: "Timeout"; message }` from the transport.
+   - Callers that want fire-and-forget simply drop the `Promise`; the optimistic apply has already happened.
 
 3. **Navigation methods** — for command-input fields that nest into another scoped command input, the class returns the matching child class instance (lazy, cached by id). E.g. `design.piece(id) → Piece`, `design.pieces(ids) → PiecesOperations`, `kit.type(id) → Type`, `type.port(id) → Port`, `type.connector(id) → Connector`, etc.
 
@@ -130,10 +131,17 @@ abstract class Entity {
  /** Subscribe to the named event channel for this entity. */
  protected subscribeField(eventName: string, cb: () => void): Unsubscribe;
 
- /** Send an async mutation (await server confirmation); returns Promise<SetResult>. */
- protected dispatch(operation: GqlOpInput): Promise<SetResult>;
- /** Apply a deterministic local cache mutation, fire matching events, queue background dispatch; returns SetResult. */
- protected dispatchSync(operation: GqlOpInput, applyToCache: (cache: this["cache"]) => void): SetResult;
+ /**
+  * Single async dispatch path. Applies the deterministic local cache mutation synchronously
+  * via applyToCache, fires the matching on<Event> callbacks in the same tick, then awaits the
+  * GraphQL mutation. Resolves with the server-confirmed SetResult (or a rejection that triggers
+  * a cache rollback). There is no separate sync dispatch — optimistic apply is part of this method.
+  */
+ protected dispatch<Args extends any[]>(
+  operation: GqlOpInput,
+  applyToCache: (cache: this["cache"], ...args: Args) => void,
+  args: Args,
+ ): Promise<SetResult>;
 }
 
 // internal helpers attached at class-definition time. Each returns a small object describing the
@@ -172,7 +180,7 @@ export class Piece extends Entity {
   defineField({ key: "attributes", query: PIECE_ATTRIBUTES_QUERY, pickQuery: (d) => d.node.attributes, event: "AttributesChanged" }),
  ];
 
- // Operations — defineOperations installs both operation(...) and opSync(...).
+ // Operations — defineOperations installs exactly one async method per leaf (no Sync companions).
  static operations = [
   defineOperation({
    name: "rename",
@@ -249,7 +257,7 @@ defineFields(Piece, Piece.fields);
 defineOperations(Piece, Piece.operations);
 ```
 
-`defineFields(C, specs)` installs three methods per spec on `C.prototype`: `<key>(): Promise<T>` (calls `Entity.fieldQuery`), `<key>Sync(): T | undefined` (calls `Entity.fieldSync`), and `on<Event>(cb): Unsubscribe` (calls `Entity.subscribeField`). `defineOperations(C, specs)` installs two methods per spec: `<name>(...args): Promise<SetResult>` (calls `Entity.dispatch`) and `<name>Sync(...args): SetResult` (calls `Entity.dispatchSync`). Same recipe for `Kit`, `Design`, `Type`, `Port`, `Connector`, `Connection`, `Author`, `Quality`, `Tag`, `Concept`, etc. — each class is mostly two static arrays.
+`defineFields(C, specs)` installs three methods per spec on `C.prototype`: `<key>(): Promise<T>` (calls `Entity.fieldQuery`), `<key>Sync(): T | undefined` (calls `Entity.fieldSync`), and `on<Event>(cb): Unsubscribe` (calls `Entity.subscribeField`). `defineOperations(C, specs)` installs **exactly one** method per spec: `<name>(...args): Promise<SetResult>` (calls `Entity.dispatch`, which performs the optimistic local apply via `applyToCache`, fires `on<Event>` callbacks, sends the GraphQL mutation, and resolves with the server-confirmed `SetResult`). There is no `<name>Sync` companion — the optimistic path is *part of* the single async method, not a separate one. Same recipe for `Kit`, `Design`, `Type`, `Port`, `Connector`, `Connection`, `Author`, `Quality`, `Tag`, `Concept`, etc. — each class is mostly two static arrays.
 
 The full operation surface per class (mirrors [semio/graphql/target.schema.graphql](semio/graphql/target.schema.graphql) exactly):
 
@@ -272,8 +280,7 @@ The transport speaks only GraphQL:
 
 - Reads: a single `GqlTransport.query(doc, vars)` per field method (typed `Query` selection with the right `node(id)` lookup).
 - Subscriptions: one persistent `subscription { event }` per `Kit` instance; the `EventBus` deserializes each `Json` event, looks up its kind + entity id + field affinity, and pushes typed values into all registered channels.
-- Commands (async `operation(...)`): one `mutation { session { ... } }` per command; the resulting `ID!` is stored locally as the active change id when needed. The promise resolves after server confirmation.
-- Commands (sync `opSync(...)`): an in-class reducer mutates the cache deterministically using the same logic the server applies for the matching event, fires the matching `on<Event>` callbacks synchronously so React `useSyncExternalStore` rerenders in the same tick, and returns a local `SetResult` (with the optimistic id). The same `mutation { session { ... } }` is enqueued through `Kit`'s background dispatch queue; the subscription event from the server later reconciles the cache (no-operation if the optimistic state already matches, or a corrective re-emit if the server diverged). Background mutation failures surface through `Kit.errors` (consumed by `useSetErrors`).
+- Commands: a single async path per leaf in `*OperationInput`. `operation(...)` first runs the in-class reducer (mutates the cache deterministically using the same logic the server applies for the matching event, and fires `on<Event>` callbacks in the same tick so React `useSyncExternalStore` rerenders without waiting for the network), then dispatches the `mutation { session { ... } }`. The returned `Promise<SetResult>` resolves with the server's confirmation (or rejection). The subscription event arriving later reconciles the cache (no-operation if the optimistic state already matches, corrective re-emit if the server diverged, rollback on rejection). Background reconciliation/dispatch failures surface through `Kit.errors` (consumed by `useKitErrors`); the rejecting `SetResult` itself is delivered to the caller's `Promise` and therefore to the React op hook's `status` (§4).
 
 ## 3. Public exports of `semio/js/index.ts`
 
@@ -313,7 +320,7 @@ The same rule applies to writes — every write hook is a 1:1 wrapper around one
 ### Strict separation of reads and writes
 
 - **Reads** are pure plain-data hooks. `use<Entity><Field>(id?)` returns just the value (`T | undefined` for lean, `Entity | null` / `readonly Entity[] | undefined` for bulky). No tuple, no setter, no status, no `KitFieldBinding`, no `HookRead`. If the entity / kit / field is not yet resolved the hook returns `undefined` / `null`.
-- **Writes** are operation hooks. `use<Operation><Entity>(id?)` returns a single function bound to that entity instance and that operation. The function takes the operation arguments and returns `Promise<SetResult>` (async flavour) or `SetResult` (sync flavour). There is no read fallback embedded; callers compose a read hook and a write hook independently.
+- **Writes** are operation hooks. `use<Operation><Entity>(id?)` returns a stable `readonly [run, status]` tuple where `run(...args): Promise<SetResult>` is bound to that entity + operation and `status: OperationStatus<SetSuccess>` is a discriminated-union snapshot (`idle` / `pending` / `successful` / `tooLong` / `timeout` / `failed`) — see §"Operation hook pattern". There is no `*Sync` variant, no embedded read fallback; callers compose a read hook and a write hook independently. The optimistic local apply that keeps drag/slider UX single-tick lives inside the underlying class method, not inside a separate hook.
 - The kit can only be modified through these operation hooks. Operation hooks map 1:1 to leaves of the `*OperationInput` types in [target.schema.graphql](semio/graphql/target.schema.graphql).
 
 ### Resolution rules (every hook)
@@ -376,17 +383,19 @@ function DesignPieceList() {
 }
 
 function PieceCard() {
- const name = usePieceName(); // PieceContext-bound
+ const name = usePieceName(); // PieceContext-bound, schema-1:1 read
  const center = usePieceFlatCenter();
  const plane = usePiecePlane();
- const dragPieceSync = useDragPieceSync(); // live UI update
- const fixPiece = useFixPiece();
+ const [dragPiece, dragPieceStatus] = useDragPiece(); // op tuple [run, status]
+ const [fixPiece, fixPieceStatus] = useFixPiece();
  return (
-  <Card title={name}>
+  <Card title={name} saving={dragPieceStatus.kind === "pending" || fixPieceStatus.kind === "pending"}>
    <Plane plane={plane} />
    <Coord center={center} />
-   <button onClick={() => fixPiece()}>Fix</button>
-   <DragHandle onDrag={(offset) => dragPieceSync(offset)} />
+   <button onClick={() => void fixPiece()}>Fix</button>
+   <DragHandle onDrag={(offset) => void dragPiece(offset)} />
+   {dragPieceStatus.kind === "tooLong" && <Hint>Value out of range</Hint>}
+   {dragPieceStatus.kind === "timeout" && <Hint>Server slow, retrying…</Hint>}
   </Card>
  );
 }
@@ -415,8 +424,18 @@ function ConnectorRow() {
  const code = useConnectorCode();
  const description = useConnectorDescription();
  const icon = useConnectorIcon();
- const renameConnectorSync = useRenameConnectorSync();
- return <Row code={code} description={description} icon={icon} onRename={renameConnectorSync} />;
+ const [renameConnector, renameConnectorStatus] = useRenameConnector();
+ return (
+  <Row
+   code={code}
+   description={description}
+   icon={icon}
+   onRename={(next) => void renameConnector(next)}
+   saving={renameConnectorStatus.kind === "pending"}
+   tooLong={renameConnectorStatus.kind === "tooLong"}
+   timedOut={renameConnectorStatus.kind === "timeout"}
+  />
+ );
 }
 ```
 
@@ -452,13 +471,20 @@ export function usePieceCenterU(): HookResult<number> {
 ```tsx
 // After — usePieceCenterU does NOT exist anywhere. The component inlines reads and writes.
 function PieceCenterUInput() {
- const center = usePieceCenter();              // Coordinate | undefined — schema-1:1 read
- const movePieceSync = useMovePieceSync();     // schema-1:1 write
+ const center = usePieceCenter();                           // Coordinate | undefined — schema-1:1 read
+ const [movePiece, movePieceStatus] = useMovePiece();       // schema-1:1 write returns [run, status]
  const u = center?.u ?? 0;
  return (
   <NumberInput
    value={u}
-   onCommit={(next) => center && movePieceSync({ center: { u: next, v: center.v } })}
+   onCommit={(next) => { if (center) void movePiece({ center: { u: next, v: center.v } }); }}
+   saving={movePieceStatus.kind === "pending"}
+   error={
+    movePieceStatus.kind === "tooLong" ? "Value out of range" :
+    movePieceStatus.kind === "timeout"  ? "Server slow, retrying" :
+    movePieceStatus.kind === "failed"   ? movePieceStatus.error.message :
+    null
+   }
   />
  );
 }
@@ -466,9 +492,9 @@ function PieceCenterUInput() {
 
 The same rule deletes (in sketchpad and `@semio/react`) every other tuple/sub-selection hook and replaces it with inline destructuring + 1:1 op calls:
 
-- `usePieceCenterV` — gone. Component inlines `usePieceCenter()?.v` for read and `useMovePieceSync()` for write.
-- sketchpad's tuple `usePieceScale` — gone. Component uses `@semio/react`'s `usePieceScale()` (returns `number | undefined`) plus `useMovePieceSync()` for write.
-- `usePieceIsHidden` / `usePieceIsLocked` — gone. The schema does not expose `Piece.isHidden` / `Piece.isLocked` as direct fields today; until the schema grows `Piece.isHidden: Boolean!` + `PieceOperationInput.changeIsHidden` (and the matching `usePieceIsHidden` / `useChangePieceIsHiddenSync` auto-generated 1:1 hooks appear in `@semio/react`), the component reads `usePieceAttributes()?.find((a) => a.key === "isHidden")?.value === "true"` inline and writes through `useAddPieceAttributeSync` / `useRemovePieceAttributeSync`.
+- `usePieceCenterV` — gone. Component inlines `usePieceCenter()?.v` for read and `const [movePiece] = useMovePiece(); … void movePiece({ center: { u, v: next } })` for write.
+- sketchpad's tuple `usePieceScale` — gone. Component uses `@semio/react`'s `usePieceScale()` (returns `number | undefined`) plus `const [movePiece, movePieceStatus] = useMovePiece()` for write.
+- `usePieceIsHidden` / `usePieceIsLocked` — gone. The schema does not expose `Piece.isHidden` / `Piece.isLocked` as direct fields today; until the schema grows `Piece.isHidden: Boolean!` + `PieceOperationInput.changeIsHidden` (and the matching `usePieceIsHidden` / `useChangePieceIsHidden` auto-generated 1:1 hooks appear in `@semio/react`), the component reads `usePieceAttributes()?.find((a) => a.key === "isHidden")?.value === "true"` inline and writes through `const [addPieceAttribute] = useAddPieceAttribute()` / `const [removePieceAttribute] = useRemovePieceAttribute()`.
 - `useConnectionGapValue` / `useConnectionShiftValue` / `useConnectionRotationValue` / `useConnectionRiseValue` / `useConnectionTurnValue` / `useConnectionTiltValue` — gone. Component uses `useConnectionGap()`, `useConnectionShift()`, `useConnectionRotation()`, `useConnectionRise()`, `useConnectionTurn()`, `useConnectionTilt()` (each schema-1:1) for read. Writes are unavailable until `ConnectionOperationInput` is added to the schema.
 
 List rendering follows the same rule — never ask for ids; ask for the bulky list and read `id` from the class instance:
@@ -501,12 +527,16 @@ function useDraggingPiece(id: string) {
 ```
 
 ```tsx
-// After — pure write, schema-1:1
-const dragPieceSync = useDragPieceSync(id);
-// onPointerMove={(offset) => dragPieceSync(offset)}
+// After — pure write, schema-1:1, single async path with status feedback.
+const [dragPiece, dragPieceStatus] = useDragPiece(id);
+// onPointerMove={(offset) => void dragPiece(offset)}        // optimistic apply happens synchronously inside dragPiece
+// dragPieceStatus.kind === "pending" while awaiting confirmation
+// dragPieceStatus.kind === "successful" | "tooLong" | "timeout" | "failed" once resolved
 ```
 
-Net effect: every banned `useKit` / `useDesign` / `useType` / `usePiece` / `useConnection` / `useAuthor` / `useQuality` import disappears from sketchpad, every sub-selection / tuple sketchpad hook (`usePieceCenterU`, `usePieceCenterV`, `usePieceScale` (sketchpad version), `usePieceIsHidden`, `usePieceIsLocked`, `useConnectionGapValue`, `useConnectionShiftValue`, `useConnectionRiseValue`, `useConnectionRotationValue`, `useConnectionTurnValue`, `useConnectionTiltValue`, `useDesignPieceIds`, `useDesignConnectionIds`, …) is *deleted* (no rename, no replacement hook), every `commands.updatePiece` / `updateConnection` / `updateType` / `updateDesign` / `applyKitDiff` call becomes a `use<Op><Entity>Sync` call, and every read uses a schema-1:1 field hook from `@semio/react` plus inline destructuring at the call site. The `useDesignAppCommands` indirection itself is deleted — sketchpad calls the operation hooks directly.
+Optimistic UI feedback during pointer-move drags is unaffected: `piece.drag(offset)` mutates the cache + fires `onCenterChanged` synchronously *before* it awaits the network, so any `usePieceCenter` consumer rerenders in the same tick the pointer event was handled. The promise then resolves a moment later and updates `dragPieceStatus` to `successful` / `tooLong` / `timeout` / `failed`.
+
+Net effect: every banned `useKit` / `useDesign` / `useType` / `usePiece` / `useConnection` / `useAuthor` / `useQuality` import disappears from sketchpad, every sub-selection / tuple sketchpad hook (`usePieceCenterU`, `usePieceCenterV`, `usePieceScale` (sketchpad version), `usePieceIsHidden`, `usePieceIsLocked`, `useConnectionGapValue`, `useConnectionShiftValue`, `useConnectionRiseValue`, `useConnectionRotationValue`, `useConnectionTurnValue`, `useConnectionTiltValue`, `useDesignPieceIds`, `useDesignConnectionIds`, …) is *deleted* (no rename, no replacement hook), every `commands.updatePiece` / `updateConnection` / `updateType` / `updateDesign` / `applyKitDiff` call becomes a `const [op, opStatus] = use<Op><Entity>(); … void op(...)` pair, and every read uses a schema-1:1 field hook from `@semio/react` plus inline destructuring at the call site. The `useDesignAppCommands` indirection itself is deleted — sketchpad calls the operation hooks directly.
 
 ### Generic mechanisms (React side)
 
@@ -522,8 +552,46 @@ function bindFieldToReact<E, T>(entity: E | null, getSnap: (e: E) => T | undefin
  return React.useSyncExternalStore(sub, get, get);
 }
 
-function bindOpToReact<E, Args extends any[], R>(entity: E | null, call: (e: E, ...args: Args) => R): (...args: Args) => R | SetResult {
- return React.useCallback((...args: Args) => (entity ? call(entity, ...args) : (READONLY as R | SetResult)), [entity, call]);
+type OperationStatus<T = SetSuccess> =
+ | { kind: "idle" }
+ | { kind: "pending"; startedAt: number }
+ | { kind: "successful"; value: T; finishedAt: number }
+ | { kind: "tooLong"; error: SetError; finishedAt: number }
+ | { kind: "timeout"; startedAt: number }
+ | { kind: "failed"; error: SetError; finishedAt: number };
+
+const IDLE: OperationStatus = { kind: "idle" };
+
+function bindOpToReact<E, Args extends any[]>(entity: E | null, call: (e: E, ...args: Args) => Promise<SetResult>): readonly [(...args: Args) => Promise<SetResult>, OperationStatus] {
+ const [status, setStatus] = React.useState<OperationStatus>(IDLE);
+ const run = React.useCallback(
+  async (...args: Args): Promise<SetResult> => {
+   if (!entity) return READONLY;
+   const startedAt = performance.now();
+   setStatus({ kind: "pending", startedAt });
+   try {
+    const result = await call(entity, ...args);
+    const finishedAt = performance.now();
+    if (result.ok) {
+     setStatus({ kind: "successful", value: result, finishedAt });
+    } else if (result.error.kind === "TooLong") {
+     setStatus({ kind: "tooLong", error: result.error, finishedAt });
+    } else if (result.error.kind === "Timeout") {
+     setStatus({ kind: "timeout", startedAt });
+    } else {
+     setStatus({ kind: "failed", error: result.error, finishedAt });
+    }
+    return result;
+   } catch (e) {
+    const finishedAt = performance.now();
+    const error: SetError = { kind: "Rejected", message: String(e) };
+    setStatus({ kind: "failed", error, finishedAt });
+    return { ok: false, error };
+   }
+  },
+  [entity, call],
+ );
+ return [run, status] as const;
 }
 
 // One field-hook factory per entity. Each one knows the context chain it needs to resolve the entity:
@@ -546,7 +614,7 @@ const createPieceFieldHook = <T>(getSnap: (p: Piece) => T | undefined, subscribe
   return bindFieldToReact(piece, getSnap, subscribe);
  };
 
-const createPieceOpHook = <Args extends any[], R>(call: (p: Piece, ...args: Args) => R): ((id?: string) => (...args: Args) => R | SetResult) =>
+const createPieceOpHook = <Args extends any[]>(call: (p: Piece, ...args: Args) => Promise<SetResult>): ((id?: string) => readonly [(...args: Args) => Promise<SetResult>, OperationStatus]) =>
  function usePieceOp(id?: string) {
   const design = useDesign();
   const pieceId = id ?? React.useContext(PieceContext)?.id;
@@ -620,46 +688,81 @@ For both lean and bulky fields, `<entity>Sync()` is guaranteed by §2 to return 
 
 ### Operation hook pattern
 
-Every per-operation write hook is a one-line application of the matching `create<Entity>OpHook`. The factory returns `(id?: string) => (...args) => SetResult | Promise<SetResult>` (the return type follows whatever `call` returns, so the same factory produces both async and sync flavours).
+Every per-operation write hook is a one-line application of the matching `create<Entity>OpHook`. There are **no `*Sync` op hooks** — the optimistic local apply is already part of the single async class method (§2). Each hook returns a stable `readonly [run, status]` tuple:
+
+- `run(...args): Promise<SetResult>` — invokes the underlying class method (`piece.drag(offset)`, …). The class method applies the change optimistically to the cache (so any bound `usePieceCenter` etc. rerender in the same tick), then awaits the GraphQL mutation. The promise resolves with `{ ok: true; id }` or `{ ok: false; error }`.
+- `status: OperationStatus<SetSuccess>` — discriminated union snapshot of the most recent invocation, kept in sync via React state inside the factory:
+  ```ts
+  type OperationStatus<T = SetSuccess> =
+    | { kind: "idle" }
+    | { kind: "pending"; startedAt: number }
+    | { kind: "successful"; value: T; finishedAt: number }
+    | { kind: "tooLong"; error: SetError; finishedAt: number }   // input violates a length / range constraint (validation rejection)
+    | { kind: "timeout"; startedAt: number }                      // transport gave up before the server responded
+    | { kind: "failed"; error: SetError; finishedAt: number };    // any other server-side rejection (Readonly, Conflict, Validation, …)
+  ```
+  `tooLong` is the dedicated kind for the "name/value too long" family of validation errors (the schema's `SetError.kind === "TooLong"`). `timeout` is the dedicated kind for transport timeouts. Every other rejection lands as `failed` with the raw `SetError`. Once a call resolves the next call resets `status` to `pending` for the new attempt — the previous final state is replaced, not stacked.
+
+The factory invokes `useState` once internally to track the latest status; the returned `[run, status]` tuple is stable as long as the resolved entity/id doesn't change.
 
 ```ts
-export const useRenamePiece = createPieceOpHook((p, newName: string) => p.rename(newName));
-export const useRenamePieceSync = createPieceOpHook((p, newName: string) => p.renameSync(newName));
-
-export const useDragPiece = createPieceOpHook((p, offset: OffsetInput) => p.drag(offset));
-export const useDragPieceSync = createPieceOpHook((p, offset: OffsetInput) => p.dragSync(offset));
-
-export const useMovePiece = createPieceOpHook((p, position: PositionInput) => p.move(position));
-export const useMovePieceSync = createPieceOpHook((p, position: PositionInput) => p.moveSync(position));
-
-export const useFixPiece = createPieceOpHook((p) => p.fix());
-export const useFixPieceSync = createPieceOpHook((p) => p.fixSync());
-
-export const useChangePieceBlueprint = createPieceOpHook((p, id: string) => p.changeBlueprint(id));
-export const useChangePieceBlueprintSync = createPieceOpHook((p, id: string) => p.changeBlueprintSync(id));
-
-export const useDragPieces = createPiecesOpHook((operations, offset: OffsetInput) => operations.drag(offset));
-export const useDragPiecesSync = createPiecesOpHook((operations, offset: OffsetInput) => operations.dragSync(offset));
-
-export const useDeletePiece = createDesignOpHook((d, pieceId: string) => d.deletePiece(pieceId));
-export const useDeletePieceSync = createDesignOpHook((d, pieceId: string) => d.deletePieceSync(pieceId));
-
-export const useFlattenDesign = createDesignOpHook((d) => d.flatten());
-export const useFlattenDesignSync = createDesignOpHook((d) => d.flattenSync());
-
-export const useCreateType = createKitOpHook((k, name: string, opts?: CreateTypeOpts) => k.createType(name, opts));
-export const useCreateTypeSync = createKitOpHook((k, name: string, opts?: CreateTypeOpts) => k.createTypeSync(name, opts));
-
-export const useStartNewChange = createKitOpHook((k) => k.startNewChange());
-export const useStartNewChangeSync = createKitOpHook((k) => k.startNewChangeSync());
-// …every other operation on every entity follows the same one-liner.
+// Async-only; status mirrors the lifecycle.
+export const useRenameKit              = createKitOpHook((k, newName: string) => k.rename(newName));
+export const useRenamePiece            = createPieceOpHook((p, newName: string) => p.rename(newName));
+export const useDragPiece              = createPieceOpHook((p, offset: OffsetInput) => p.drag(offset));
+export const useMovePiece              = createPieceOpHook((p, position: PositionInput) => p.move(position));
+export const useFixPiece               = createPieceOpHook((p) => p.fix());
+export const useChangePieceBlueprint   = createPieceOpHook((p, id: string) => p.changeBlueprint(id));
+export const useDragPieces             = createPiecesOpHook((ops, offset: OffsetInput) => ops.drag(offset));
+export const useDeletePiece            = createDesignOpHook((d, pieceId: string) => d.deletePiece(pieceId));
+export const useFlattenDesign          = createDesignOpHook((d) => d.flatten());
+export const useCreateType             = createKitOpHook((k, name: string, opts?: CreateTypeOpts) => k.createType(name, opts));
+export const useStartNewChange         = createKitOpHook((k) => k.startNewChange());
+// …every other operation on every entity follows the same one-liner. None of them has a *Sync variant.
 ```
 
-Use the **sync** variant for high-frequency UI feedback (`onDrag`, `onPointerMove`, slider inputs, …) so the local cache and `useSyncExternalStore` rerenders happen in the same tick as the user input. Use the **async** variant when the caller needs to await server confirmation (e.g. before navigating, before showing a toast, …).
+Usage at the call site is uniform — every op hook destructures into `[run, status]`:
+
+```tsx
+function PieceDragHandle({ id }: { id: string }) {
+  const [dragPiece, dragPieceStatus] = useDragPiece(id);
+  return (
+    <DragSurface
+      onDrag={(offset) => { void dragPiece(offset); }}
+      saving={dragPieceStatus.kind === "pending"}
+      tooLong={dragPieceStatus.kind === "tooLong"}
+      timedOut={dragPieceStatus.kind === "timeout"}
+    />
+  );
+}
+
+function KitNameField() {
+  const name = useKitName();
+  const [renameKit, renameKitStatus] = useRenameKit();
+  return (
+    <NameInput
+      value={name ?? ""}
+      onCommit={(next) => { void renameKit(next); }}
+      saving={renameKitStatus.kind === "pending"}
+      message={
+        renameKitStatus.kind === "tooLong"
+          ? "Name is too long"
+          : renameKitStatus.kind === "timeout"
+            ? "Server took too long, retrying"
+            : renameKitStatus.kind === "successful"
+              ? "Saved"
+              : null
+      }
+    />
+  );
+}
+```
+
+Because the optimistic apply happens *inside* `run`, drag/slider feedback stays single-tick responsive even though the hook surface is async. Callers that don't want to track status simply ignore the second tuple slot (`const [dragPiece] = useDragPiece(id);`) — the read fields they bind via `usePieceCenter` etc. still update synchronously.
 
 ### Operation hook surface (1:1 with [target.schema.graphql](semio/graphql/target.schema.graphql))
 
-Every entry below ships in two flavours: `use<Op><Entity>` returning `(...args) => Promise<SetResult>`, and `use<Op><Entity>Sync` returning `(...args) => SetResult`. Only the base names are listed.
+Every entry below is a single async hook (no `*Sync` variants). The hook signature is `(id?: string) => readonly [run: (...args) => Promise<SetResult>, status: OperationStatus<SetSuccess>]`. Only the base names are listed.
 
 - **`KitOperationInput`** → `useRenameKit`, `useChangeKitDescription`, `useCreateTag`, `useDeleteTag`, `useDeleteTags`, `useCreateConcept`, `useDeleteConcept`, `useDeleteConcepts`, `useCreateQuality`, `useDeleteQuality`, `useDeleteQualities`, `useCreateType`, `useDeleteType`, `useDeleteTypes`, `useCreateDesign`, `useDeleteDesign`, `useDeleteDesigns`.
 - **`VersionCommandInput` / `UnsavedChangeCommandInput`** → `useStartNewChange`, `useSaveUnsavedChange`, `useCreateCheckpoint`, `useSaveVersion`.
@@ -682,7 +785,7 @@ Every entry below ships in two flavours: `use<Op><Entity>` returning `(...args) 
   - `useDesign(id?: string): Design | null` (= `useKit()?.design(id ?? useDesignContext()?.id)`),
   - `useType(id?: string): Type | null`, `usePiece(id?: string): Piece | null`, `useConnection(id?: string): Connection | null`, `useAuthor(id?: string): Author | null`, `useQuality(id?: string): Quality | null`, `usePort(id?: string): Port | null`, `useConnector(id?: string): Connector | null`, `useTag(id?: string): Tag | null`, `useConcept(id?: string): Concept | null`, `useRepresentation(id?: string): Representation | null`.
 - **Per-field read hooks** — one per (Artifact type) × (schema field), generated by `create<Entity>FieldHook` (see read hook pattern above). Lean fields return the value, bulky fields return the class instance(s).
-- **Per-operation write hooks** — async + sync per leaf of every `*OperationInput`, generated by `create<Entity>OpHook` (see operation hook surface above).
+- **Per-operation write hooks** — exactly one async hook per leaf of every `*OperationInput`, generated by `create<Entity>OpHook`. Each returns the `readonly [run, status]` tuple described above. No `*Sync` variants.
 - **Context providers + context hooks** — one per Artifact type that takes an `id` prop: `KitContext`, `DesignContext`, `TypeContext`, `PortContext`, `ConnectorContext`, `PieceContext`, `ConnectionContext`, `AuthorContext`, `QualityContext`, `TagContext`, `ConceptContext`, `RepresentationContext`. Each pairs with a `use<Entity>Context()` accessor that returns `{ id: string } | null`. No `*Scope` / `*ScopeContext` / `*ScopeProvider` aliases.
 - **Runtime / shell hooks** — minimal surface for binding the React tree to a `Kit` instance and reporting its sync/error status. These are *not* schema fields; they wrap the `Kit` class's runtime control APIs so React components can render their state. Each is 1:1 with one `Kit` runtime method (no derivation):
   - `useKitConnectionStatus(): "disconnected" | "connecting" | "ready" | "error"` (binds `kit.connectionStatusSync()` + `kit.onConnectionStatusChanged`),
@@ -698,7 +801,7 @@ The following are deleted because they violate the schema-1:1 invariant or the s
 - **Registry / shell-state hooks**: `useOpenKitGuids`, `useActiveKitGuid`, `useOpenKitShallows`, `useRegistryHasKit`, `useRegistryKitPersistenceKind`, `useKitAlternatives`, `useKitAlternativeSelection`. The runtime kit registry is not in `target.schema.graphql`; consumers that need cross-kit shell state import the registry from the host application directly (sketchpad). `@semio/react` exposes only the active `Kit` (via `useKit()` / `KitContext`) and the operation hooks for `SessionCommandInput` / `AlternativeCommandInput`.
 - **Backbone hooks**: same rule — only kept if `target.schema.graphql` declares the corresponding fields/operations. Otherwise dropped, and consumers call the host transport directly.
 - **All `KitFieldBinding`, `HookRead`, `WriteStatus`, `WRITE_STATUS_IDLE`, `WRITE_STATUS_READONLY`, `WRITE_STATUS_PENDING`, `writeStatusEquivalent`** types and helpers.
-- **Old combined "`run + status`" hooks**: `useUndo`, `useRedo`, `useDeselectAll`, `useDeleteSelected`, `usePasteDesignSelection`, `useChange`, `useCommandBuilder`, `useWriteIndicator`, `useWriteQueue`, `useOptimistic`, `usePendingTriad`. Replaced by the operation hooks (which are 1:1 with `*OperationInput` leaves).
+- **Old freeform command hooks**: `useUndo`, `useRedo`, `useDeselectAll`, `useDeleteSelected`, `usePasteDesignSelection`, `useChange`, `useCommandBuilder`, `useWriteIndicator`, `useWriteQueue`, `useOptimistic`, `usePendingTriad`. Replaced by the schema-1:1 operation hooks (`use<Op><Entity>` returning `readonly [run, status]`, 1:1 with `*OperationInput` leaves). Sketchpad's existing pending-write indicator now reads `status.kind === "pending"` off whichever op hook is in flight (see §4 examples).
 - **Old per-entity `useCreate*`/`useDelete*`/`useUpdate*`** legacy shapes (replaced by operation hooks).
 - **Whole-object triads**: `usePieceTriad`, `useDesignTriad`, `useTypeTriad`, `useAuthorTriad`, `useQualityTriad`, `useConnectionTriad`.
 - **Whole-object accessors**: `useFolder`, `useFile`, `useTag` (DTO), `useConcept` (DTO), `useFamily`, `useGroup`, `usePort` (DTO), `useProp`, `useStat`, `useBenchmark`, `useCoordinate`, `usePoint`, `useVector`, `usePlane`, `useCamera`, `useAttribute`, `useLocation`, `useRepresentation` (DTO), `useConnector` (DTO), `useActor`, `useUser`, `useAgent`, `useSessionActorInput`, every `*Input` and `*PatchInput` whole-object hook. (Note: there is *no* `usePort` returning a DTO; the entity-identity `usePort(id?)` returning `Port | null` does survive — same for `useConnector`, `useTag`, `useConcept`, `useRepresentation`.)
@@ -722,10 +825,10 @@ Sketchpad obeys the same schema-1:1 invariant as `@semio/react` — it *adds not
 Per call site (64 currently identified by `\b(useKit|useDesign|useType|usePiece|useConnection|useAuthor|useQuality)\b`), inspect what fields the JSX actually reads and what mutations it performs, then replace with schema-1:1 hooks from `@semio/react`. Reads and writes are spelled out independently (no tuple shape, no setter inside a read hook, no read inside a write hook, no sub-selection wrapper):
 
 - `const piece = usePiece() as Piece` (read-only JSX) → use the schema-1:1 hooks `usePieceName(id)`, `usePiecePlane(id)`, `usePieceCenter(id)`, `usePieceFlatPlane(id)`, … and destructure (`const center = usePieceCenter(id); const u = center?.u`) at the call site.
-- A drag handler that called `piece.drag(offset)` → `const dragPieceSync = useDragPieceSync(id); … onDrag={(offset) => dragPieceSync(offset)}` (sync for live drag). Async only when awaiting confirmation matters: `const dragPiece = useDragPiece(id); await dragPiece(offset);`.
-- `const type = useType() as Type` → `useTypeName(typeId)` + `useTypeRepresentations(typeId)` (returns `readonly Representation[] | undefined`, JSX maps to `<RepresentationContext id={r.id}>` children) + `useTypePorts(typeId)` (same pattern). Mutations like `type.createPort(...)` become `useCreatePort(typeId)(...)`.
+- A drag handler that called `piece.drag(offset)` → `const [dragPiece, dragPieceStatus] = useDragPiece(id); … onDrag={(offset) => void dragPiece(offset)}`. The optimistic local apply happens synchronously inside `dragPiece` (so `usePieceCenter` rerenders the same tick); `dragPieceStatus.kind` switches to `pending` while the network is in flight and to `successful` / `tooLong` / `timeout` / `failed` once it resolves. Components that need to await confirmation can `await dragPiece(offset)`.
+- `const type = useType() as Type` → `useTypeName(typeId)` + `useTypeRepresentations(typeId)` (returns `readonly Representation[] | undefined`, JSX maps to `<RepresentationContext id={r.id}>` children) + `useTypePorts(typeId)` (same pattern). Mutations like `type.createPort(...)` become `const [createPort, createPortStatus] = useCreatePort(typeId); … void createPort(...)`.
 - `const connection = useConnection() as Connection` → `useConnectionConnected(id)` (returns `Side`), `useConnectionConnecting(id)` (returns `Side`), `useConnectionGap(id)`, `useConnectionShift(id)`, `useConnectionRise(id)`, `useConnectionRotation(id)`, `useConnectionTurn(id)`, `useConnectionTilt(id)`. Component picks `side.piece.id` inline when it needs the piece id.
-- `const design = useDesign() as Design` → `useDesignName(designId)`, `useDesignPieces(designId)` (returns `readonly Piece[] | undefined`, JSX maps to `<PieceContext id={p.id}>` children), `useDesignConnections(designId)` (returns `readonly Connection[] | undefined`). Mutations like `design.deletePiece(id)` become `useDeletePiece(designId)(pieceId)`.
+- `const design = useDesign() as Design` → `useDesignName(designId)`, `useDesignPieces(designId)` (returns `readonly Piece[] | undefined`, JSX maps to `<PieceContext id={p.id}>` children), `useDesignConnections(designId)` (returns `readonly Connection[] | undefined`). Mutations like `design.deletePiece(id)` become `const [deletePiece, deletePieceStatus] = useDeletePiece(designId); … void deletePiece(pieceId)`.
 
 Where a list of children is needed, sketchpad calls the bulky list hook (`useDesignPieces`, `useDesignConnections`, `useTypePorts`, `useTypeConnectors`, `useTypeRepresentations`, `useKitTypes`, `useKitDesigns`, `useKitAuthors`, `useKitQualities`, `useKitTags`, `useKitConcepts`) and reads `id` off each class instance.
 
@@ -738,10 +841,11 @@ Missing per-field hooks that sketchpad needs are added to [semio/react/index.tsx
 - Run the inline vitest blocks embedded in [semio/js/index.ts](semio/js/index.ts) and [semio/react/index.tsx](semio/react/index.tsx). Update tests that asserted on deleted exports (`useKitSnapshot`, `useSchemaObjectState`, `KitFullDto`, `Kit.toJSON`, `store.getSnapshot().kit.id`, …). Add tests:
   - `Piece` class: `nameSync`/`name()`/`onRenamed` round-trip after a `rename` mutation on a stub transport.
   - `Piece.planeSync()` returns the same object reference until a `Moved`/`PlaneChanged` event fires.
-  - `Piece.dragSync(offset)` mutates `centerSync()` synchronously, fires `onCenterChanged` in the same tick, and a stub `GqlTransport` records the queued background mutation. The matching subscription event arriving later is a no-operation (cache already matches).
-  - `Piece.dragSync(offset)` followed by a server-emitted _contradicting_ `PlaneChanged` event reconciles the cache to the server value and fires `onPlaneChanged` once.
-  - `useDragPiece` resolves with a `SetResult` after a stub server confirmation; `useDragPieceSync` returns synchronously and produces exactly one rerender for the bound `usePieceCenter` consumer.
+  - `Piece.drag(offset)` mutates `centerSync()` synchronously *before* its returned `Promise<SetResult>` resolves, fires `onCenterChanged` in the same tick, and a stub `GqlTransport` records exactly one queued mutation. The matching subscription event arriving later is a no-operation (cache already matches).
+  - `Piece.drag(offset)` followed by a server-emitted *contradicting* `PlaneChanged` event reconciles the cache to the server value and fires `onPlaneChanged` once. The pending `Promise<SetResult>` still resolves with the server's `SetResult`.
+  - `useDragPiece` returns a stable `[run, status]` tuple. After `run(offset)`: (1) the bound `usePieceCenter` consumer rerenders exactly once synchronously (optimistic apply), (2) `status.kind` flips through `idle → pending → successful` (stub success), `idle → pending → tooLong` (stub `SetError.kind === "TooLong"`), `idle → pending → timeout` (stub transport timeout), and `idle → pending → failed` (stub `SetError.kind === "Conflict"`).
   - `usePieceName`/`usePiecePlane`/`usePieceFlatPlane`/`usePieceFlatCenter` rerender exactly once when the matching event fires (use a fake `EventBus`).
+  - `useRenameKit()(tooLongName)` produces `status.kind === "tooLong"` carrying the server's `SetError`.
 - Add an inline negative test in `semio/sketchpad/index.tsx` test region that grep-asserts the file source contains zero matches for the banned hooks listed in §5.
 - Manual: launch sketchpad, open a kit, drag a piece, confirm rendering still works using only field hooks (`[DEBUG]` console traces on hook subscriptions).
 
@@ -750,6 +854,6 @@ Missing per-field hooks that sketchpad needs are added to [semio/react/index.tsx
 - Open ticket (slug `field-only-kit-reads-cqrs-classes`) under the existing kit-data SSOT goal via the repo MCP; place all temporary scripts in its folder.
 - Delegate three hour-scale subagents in parallel:
   - **A** ([semio/js/index.ts](semio/js/index.ts) + [semio/js/kit-store.worker.ts](semio/js/kit-store.worker.ts)): introduce `GqlTransport` + `EventBus` + Entity base, reshape every entity class into the CQRS pattern (3 read methods per field, command methods 1:1 with the schema's scoped command inputs), merge `KitStore` into `Kit`, delete every non-class export listed in §3.
-  - **B** ([semio/react/index.tsx](semio/react/index.tsx)): add `bindFieldToReact` / `bindOpToReact` bridges + the `create<Entity>FieldHook` / `create<Entity>OpHook` factory family; declare every per-field read hook and every per-operation write hook (async + sync) as one-liners on top of the factories; rewire the kept bulk + identity hooks onto the new classes; delete the public symbols listed in §4 (including `KitFieldBinding`/`HookRead`/`WriteStatus`); add the missing field hooks listed in §5.
+  - **B** ([semio/react/index.tsx](semio/react/index.tsx)): add `bindFieldToReact` / `bindOpToReact` bridges + the `OperationStatus` discriminated union + the `create<Entity>FieldHook` / `create<Entity>OpHook` factory family; declare every per-field read hook and every per-operation write hook as one-liners on top of the factories (no `*Sync` flavours; op hooks return `readonly [run, status]`); rewire the kept bulk + identity hooks onto the new classes; delete the public symbols listed in §4 (including `KitFieldBinding`/`HookRead`/`WriteStatus`); add the missing field hooks listed in §5.
   - **C** ([semio/sketchpad/index.tsx](semio/sketchpad/index.tsx)): rewrite all 64 banned-hook usages with per-field hook compositions, fan out to per-id child components, and add the negative-grep inline test.
 - Coordinator (this agent) integrates, runs typecheck / depcruise / tests, fixes fallout, closes the ticket with a per-file summary.
