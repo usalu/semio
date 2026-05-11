@@ -452,6 +452,7 @@
       "license": "",
       "uri": ""
     },
+    "theKit": {},
     "alternatives": {
       "hash": "…",
       "items": [
@@ -510,10 +511,17 @@
                           {
                             "id": "…",
                             "hash": "…",
-                            "kind": "kit.design.piece.createdFixedPiece",
+                            "kind": "kit.design.createdFixedPiece",
                             "description": "…",
                             "input": {
                               "hash": "…",
+                              "blueprint": {
+                                "hash": "…",
+                                "type": {
+                                  "id": "…",
+                                  "hash": "…"
+                                }
+                              },
                               "position": {
                                 "center": {
                                   "u": 1.5,
