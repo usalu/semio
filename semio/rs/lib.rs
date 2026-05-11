@@ -200,11 +200,7 @@ pub mod geom {
     impl Default for Plane {
         /// @emoji ◭ World XY plane through origin; hydrates kit JSON that omits plane axes.
         fn default() -> Self {
-            Self {
-                origin: Point::default(),
-                x_axis: Vector { x: 1.0, y: 0.0, z: 0.0 },
-                y_axis: Vector { x: 0.0, y: 1.0, z: 0.0 },
-            }
+            Self { origin: Point::default(), x_axis: Vector { x: 1.0, y: 0.0, z: 0.0 }, y_axis: Vector { x: 0.0, y: 1.0, z: 0.0 } }
         }
     }
 
@@ -219,10 +215,7 @@ pub mod geom {
 
     impl Default for Position {
         fn default() -> Self {
-            Self {
-                center: Coordinate::default(),
-                plane: Plane::default(),
-            }
+            Self { center: Coordinate::default(), plane: Plane::default() }
         }
     }
 
@@ -414,16 +407,8 @@ pub mod geom {
 
         impl LocationNode {
             pub fn from_value(loc: super::LocationInput) -> Arc<Self> {
-                let id = weak(
-                    "location",
-                    &[&format!("{:.9}", loc.longitude), &format!("{:.9}", loc.latitude), &format!("{:.9}", loc.altitude)],
-                );
-                Arc::new(Self {
-                    id,
-                    longitude: RwLock::new(loc.longitude),
-                    latitude: RwLock::new(loc.latitude),
-                    altitude: RwLock::new(loc.altitude),
-                })
+                let id = weak("location", &[&format!("{:.9}", loc.longitude), &format!("{:.9}", loc.latitude), &format!("{:.9}", loc.altitude)]);
+                Arc::new(Self { id, longitude: RwLock::new(loc.longitude), latitude: RwLock::new(loc.latitude), altitude: RwLock::new(loc.altitude) })
             }
 
             /// @emoji 🪪 Merkle leaf over lon/lat/alt fields.
@@ -1048,16 +1033,7 @@ pub mod gql_relay {
     impl Family {
         /// @emoji 🪪 Stable digest for relay [`FamilyConnection`] (matches GraphQL `Family.hash`).
         pub fn compute_entity_hash(&self) -> String {
-            crate::hash::merkle_node_str(
-                &[
-                    "semio:meta:Family",
-                    self.id.as_str(),
-                    self.name.as_str(),
-                    self.description.as_deref().unwrap_or(""),
-                    self.icon.as_deref().unwrap_or(""),
-                ],
-                Vec::new(),
-            )
+            crate::hash::merkle_node_str(&["semio:meta:Family", self.id.as_str(), self.name.as_str(), self.description.as_deref().unwrap_or(""), self.icon.as_deref().unwrap_or("")], Vec::new())
         }
     }
 
@@ -1308,50 +1284,6 @@ pub mod meta {
         }
         pub async fn owner(&self) -> AttributeOwner {
             AttributeOwner::Kit(std::sync::Arc::new(crate::kit::Kit::default()))
-        }
-        #[graphql(name = "pieceOwner")]
-        pub async fn piece_owner(&self) -> Option<std::sync::Arc<crate::kit::design::piece::Piece>> {
-            None
-        }
-        #[graphql(name = "connectorOwner")]
-        pub async fn connector_owner(&self) -> Option<std::sync::Arc<crate::kit::r#type::Connector>> {
-            None
-        }
-        #[graphql(name = "representationOwner")]
-        pub async fn representation_owner(&self) -> Option<std::sync::Arc<crate::kit::r#type::Representation>> {
-            None
-        }
-        #[graphql(name = "connectionOwner")]
-        pub async fn connection_owner(&self) -> Option<std::sync::Arc<crate::kit::design::connection::Connection>> {
-            None
-        }
-        #[graphql(name = "kitOwner")]
-        pub async fn kit_owner(&self) -> Option<std::sync::Arc<crate::kit::Kit>> {
-            None
-        }
-        #[graphql(name = "designOwner")]
-        pub async fn design_owner(&self) -> Option<std::sync::Arc<crate::kit::design::Design>> {
-            None
-        }
-        #[graphql(name = "typeOwner")]
-        pub async fn type_owner(&self) -> Option<std::sync::Arc<crate::kit::r#type::Type>> {
-            None
-        }
-        #[graphql(name = "conceptOwner")]
-        pub async fn concept_owner(&self) -> Option<std::sync::Arc<crate::meta::Concept>> {
-            None
-        }
-        #[graphql(name = "tagOwner")]
-        pub async fn tag_owner(&self) -> Option<std::sync::Arc<crate::meta::Tag>> {
-            None
-        }
-        #[graphql(name = "ownerEntity")]
-        pub async fn owner_entity(&self) -> Option<std::sync::Arc<crate::iface::OwnerEntity>> {
-            None
-        }
-        #[graphql(name = "ownedEntities")]
-        pub async fn owned_entities(&self) -> Option<std::sync::Arc<crate::iface::OwnedEntityConnection>> {
-            Some(crate::iface::empty_owned_entity_connection())
         }
         pub async fn key(&self) -> String {
             self.key.clone()
@@ -1835,14 +1767,6 @@ pub mod kit {
             pub async fn order(&self) -> Option<i32> {
                 *self.order.read().await
             }
-            #[graphql(name = "ownerEntity")]
-            pub async fn owner_entity(&self) -> Option<std::sync::Arc<crate::iface::OwnerEntity>> {
-                None
-            }
-            #[graphql(name = "ownedEntities")]
-            pub async fn owned_entities(&self) -> Option<std::sync::Arc<crate::iface::OwnedEntityConnection>> {
-                Some(crate::iface::empty_owned_entity_connection())
-            }
         }
         //#endregion 🛟 port
 
@@ -1933,14 +1857,6 @@ pub mod kit {
             }
             pub async fn attributes(&self) -> crate::gql_relay::AttributeConnection {
                 crate::gql_relay::AttributeConnection::from_rows(self.attributes.read().await.clone())
-            }
-            #[graphql(name = "ownerEntity")]
-            pub async fn owner_entity(&self) -> Option<std::sync::Arc<crate::iface::OwnerEntity>> {
-                None
-            }
-            #[graphql(name = "ownedEntities")]
-            pub async fn owned_entities(&self) -> Option<std::sync::Arc<crate::iface::OwnedEntityConnection>> {
-                Some(crate::iface::empty_owned_entity_connection())
             }
         }
         //#endregion ⚓ connector
@@ -2037,14 +1953,6 @@ pub mod kit {
             }
             pub async fn attributes(&self) -> crate::gql_relay::AttributeConnection {
                 crate::gql_relay::AttributeConnection::from_rows(self.attributes.read().await.clone())
-            }
-            #[graphql(name = "ownerEntity")]
-            pub async fn owner_entity(&self) -> Option<std::sync::Arc<crate::iface::OwnerEntity>> {
-                None
-            }
-            #[graphql(name = "ownedEntities")]
-            pub async fn owned_entities(&self) -> Option<std::sync::Arc<crate::iface::OwnedEntityConnection>> {
-                Some(crate::iface::empty_owned_entity_connection())
             }
         }
         //#endregion 💾 representation
@@ -2237,14 +2145,6 @@ pub mod kit {
             }
             pub async fn stats(&self) -> crate::gql_relay::StatConnection {
                 crate::gql_relay::StatConnection::from_rows(self.stats.read().await.clone())
-            }
-            #[graphql(name = "ownerEntity")]
-            pub async fn owner_entity(&self) -> Option<std::sync::Arc<crate::iface::OwnerEntity>> {
-                None
-            }
-            #[graphql(name = "ownedEntities")]
-            pub async fn owned_entities(&self) -> Option<std::sync::Arc<crate::iface::OwnedEntityConnection>> {
-                Some(crate::iface::empty_owned_entity_connection())
             }
         }
         //#endregion 🏠 type
@@ -2442,16 +2342,6 @@ pub mod kit {
                 pub async fn attributes(&self) -> Vec<Attribute> {
                     self.attributes.read().await.clone()
                 }
-
-                #[graphql(name = "ownerEntity")]
-                pub async fn owner_entity(&self) -> Option<std::sync::Arc<crate::iface::OwnerEntity>> {
-                    None
-                }
-
-                #[graphql(name = "ownedEntities")]
-                pub async fn owned_entities(&self) -> Option<std::sync::Arc<crate::iface::OwnedEntityConnection>> {
-                    Some(crate::iface::empty_owned_entity_connection())
-                }
             }
         }
         //#endregion ⭕ piece
@@ -2481,14 +2371,7 @@ pub mod kit {
 
             impl Default for Side {
                 fn default() -> Self {
-                    Self {
-                        id: Id::default(),
-                        owner_connection: RwLock::new(Weak::new()),
-                        piece: RwLock::new(Arc::new(super::piece::Piece::default())),
-                        port: RwLock::new(None),
-                        design_piece: RwLock::new(None),
-                        connector: RwLock::new(None),
-                    }
+                    Self { id: Id::default(), owner_connection: RwLock::new(Weak::new()), piece: RwLock::new(Arc::new(super::piece::Piece::default())), port: RwLock::new(None), design_piece: RwLock::new(None), connector: RwLock::new(None) }
                 }
             }
 
@@ -2519,18 +2402,6 @@ pub mod kit {
                 }
                 pub async fn owner(&self) -> SideOwner {
                     SideOwner::Connection(self.owner_connection.read().await.upgrade().unwrap_or_default())
-                }
-                #[graphql(name = "connectionOwner")]
-                pub async fn connection_owner(&self) -> Option<Arc<Connection>> {
-                    self.owner_connection.read().await.upgrade()
-                }
-                #[graphql(name = "ownerEntity")]
-                pub async fn owner_entity(&self) -> Option<std::sync::Arc<crate::iface::OwnerEntity>> {
-                    None
-                }
-                #[graphql(name = "ownedEntities")]
-                pub async fn owned_entities(&self) -> Option<std::sync::Arc<crate::iface::OwnedEntityConnection>> {
-                    Some(crate::iface::empty_owned_entity_connection())
                 }
                 pub async fn piece(&self) -> Arc<super::piece::Piece> {
                     self.piece.read().await.clone()
@@ -2655,14 +2526,6 @@ pub mod kit {
                 pub async fn attributes(&self) -> crate::gql_relay::AttributeConnection {
                     crate::gql_relay::AttributeConnection::from_rows(self.attributes.read().await.clone())
                 }
-                #[graphql(name = "ownerEntity")]
-                pub async fn owner_entity(&self) -> Option<std::sync::Arc<crate::iface::OwnerEntity>> {
-                    None
-                }
-                #[graphql(name = "ownedEntities")]
-                pub async fn owned_entities(&self) -> Option<std::sync::Arc<crate::iface::OwnedEntityConnection>> {
-                    Some(crate::iface::empty_owned_entity_connection())
-                }
             }
             //#endregion 🔗 connection
         }
@@ -2675,9 +2538,9 @@ pub mod kit {
         use async_graphql::{Object, Union};
         use async_lock::RwLock;
 
+        use crate::geom::entity::LocationNode;
         use crate::hash::h;
         use crate::id::Id;
-        use crate::geom::entity::LocationNode;
         use crate::meta::{Attribute, Author, Group, Layer, Prop, Quality, Stat};
         use crate::timestamp::Timestamp;
 
@@ -2838,26 +2701,15 @@ pub mod kit {
                     let pid = pj.get("id").and_then(|x| x.as_str()).ok_or_else(|| crate::error::SemioError::invalid("design piece missing id"))?;
                     let type_id_raw = match pj.get("type") {
                         Some(serde_json::Value::String(s)) => s.as_str(),
-                        Some(serde_json::Value::Object(map)) => map
-                            .get("id")
-                            .and_then(|x| x.as_str())
-                            .ok_or_else(|| crate::error::SemioError::invalid("design piece type object missing id"))?,
+                        Some(serde_json::Value::Object(map)) => map.get("id").and_then(|x| x.as_str()).ok_or_else(|| crate::error::SemioError::invalid("design piece type object missing id"))?,
                         _ => {
                             return Err(crate::error::SemioError::invalid("design piece missing type (string id or { id })"));
                         }
                     };
                     let ty = kit.types.read().await.iter().find(|t| t.id.as_str() == type_id_raw).cloned().ok_or_else(|| crate::error::SemioError::not_found("Type", type_id_raw))?;
                     let pose = pj.get("pose");
-                    let plane_val = pj
-                        .get("plane")
-                        .cloned()
-                        .or_else(|| pose.and_then(|p| p.get("plane")).cloned())
-                        .unwrap_or_else(|| serde_json::json!({}));
-                    let center_val = pj
-                        .get("center")
-                        .cloned()
-                        .or_else(|| pose.and_then(|p| p.get("center")).cloned())
-                        .unwrap_or_else(|| serde_json::json!({"u":0.0,"v":0.0}));
+                    let plane_val = pj.get("plane").cloned().or_else(|| pose.and_then(|p| p.get("plane")).cloned()).unwrap_or_else(|| serde_json::json!({}));
+                    let center_val = pj.get("center").cloned().or_else(|| pose.and_then(|p| p.get("center")).cloned()).unwrap_or_else(|| serde_json::json!({"u":0.0,"v":0.0}));
                     let position: crate::geom::Position = serde_json::from_value(serde_json::json!({"plane": plane_val, "center": center_val})).map_err(|e| crate::error::SemioError::invalid(format!("piece position serde: {}", e)))?;
                     let scale = pj.get("scale").and_then(|s| s.as_f64()).unwrap_or(1.0);
                     let nm_opt = pj.get("name").and_then(|x| x.as_str());
@@ -4946,7 +4798,8 @@ pub mod vcs {
             if let Some(a) = d.owner_alternative.upgrade() {
                 return Some(EditOwnerUnion::Alternative(a));
             }
-            d.parent_checkpoint.read().await.upgrade().map(EditOwnerUnion::Checkpoint)
+            let cp = { d.parent_checkpoint.read().await.upgrade() };
+            cp.map(EditOwnerUnion::Checkpoint)
         }
         pub async fn forwards(&self) -> crate::gql_relay::OperationConnection {
             crate::gql_relay::OperationConnection::from_iface_rows(self.forward_iface_ops.read().await.clone())
@@ -5917,9 +5770,6 @@ pub mod vcs {
         pub async fn started_at(&self) -> Option<Timestamp> {
             self.started_at.read().await.clone()
         }
-        pub async fn drafts(&self) -> Vec<Arc<Draft>> {
-            self.drafts.read().await.clone()
-        }
 
         #[graphql(name = "ownerEntity")]
         pub async fn owner_entity(&self) -> Option<std::sync::Arc<crate::iface::OwnerEntity>> {
@@ -6088,8 +5938,9 @@ pub mod vcs {
         pub async fn owned_entities(&self) -> Option<std::sync::Arc<crate::iface::OwnedEntityConnection>> {
             Some(crate::iface::empty_owned_entity_connection())
         }
-        pub async fn draft(&self) -> Option<Arc<Draft>> {
-            self.draft.read().await.clone()
+        #[graphql(name = "draftId")]
+        pub async fn draft_id(&self) -> Option<Id> {
+            self.draft.read().await.as_ref().map(|d| d.id.clone())
         }
         pub async fn transaction(&self) -> Option<Arc<Edit>> {
             self.transaction.read().await.clone()
@@ -8697,13 +8548,7 @@ pub mod kit_backbone {
                     Some(draft) => Self::change_lists_from_draft(&draft).await,
                     None => (BlockHashedListDto::default(), BlockHashedListDto::default()),
                 };
-                bundle.wip.alternatives.items.push(AlternativeVersionDto {
-                    id: alternative.id.as_str().to_string(),
-                    hash: KIT_BUNDLE_HASH_STUB.to_string(),
-                    name: alternative.name.read().await.clone(),
-                    saved_changes,
-                    unsaved_changes,
-                });
+                bundle.wip.alternatives.items.push(AlternativeVersionDto { id: alternative.id.as_str().to_string(), hash: KIT_BUNDLE_HASH_STUB.to_string(), name: alternative.name.read().await.clone(), saved_changes, unsaved_changes });
             }
 
             Self::hoist_inline_file_blobs_for_storage(&mut bundle);
@@ -9200,7 +9045,7 @@ pub mod worker {
     //!
     //! Native: both children are spawned on `std::thread + futures-lite::block_on`.
     //! Wasm: each child lives in a dedicated [`web_sys::Worker`]; messages cross via [`crate::wasm_bridge`].
-    use std::sync::{Arc, Weak};
+    use std::sync::Arc;
 
     use async_channel::{Receiver, Sender};
     use async_lock::RwLock;
@@ -9324,16 +9169,7 @@ pub mod worker {
             let sess = crate::vcs::Session::new().await;
             let sessions = RwLock::new(vec![sess]);
 
-            Arc::new(Self {
-                bus,
-                wip: ChildPort { inbound: wip_tx },
-                auth: ChildPort { inbound: auth_tx },
-                wip_graph,
-                auth_graph,
-                sessions,
-                conflicts: RwLock::new(Vec::new()),
-                wip_kit_scope: RwLock::new(None),
-            })
+            Arc::new(Self { bus, wip: ChildPort { inbound: wip_tx }, auth: ChildPort { inbound: auth_tx }, wip_graph, auth_graph, sessions, conflicts: RwLock::new(Vec::new()), wip_kit_scope: RwLock::new(None) })
         }
 
         /// 🛰️ WASM/host bootstrap: hydrate WIP [`Graph`] from `@semio/js` kit JSON snapshot; authoritative line stays mint-empty.
@@ -9352,16 +9188,7 @@ pub mod worker {
             let sess = crate::vcs::Session::new().await;
             let sessions = RwLock::new(vec![sess]);
 
-            Ok(Arc::new(Self {
-                bus,
-                wip: ChildPort { inbound: wip_tx },
-                auth: ChildPort { inbound: auth_tx },
-                wip_graph,
-                auth_graph,
-                sessions,
-                conflicts: RwLock::new(Vec::new()),
-                wip_kit_scope: RwLock::new(None),
-            }))
+            Ok(Arc::new(Self { bus, wip: ChildPort { inbound: wip_tx }, auth: ChildPort { inbound: auth_tx }, wip_graph, auth_graph, sessions, conflicts: RwLock::new(Vec::new()), wip_kit_scope: RwLock::new(None) }))
         }
 
         pub async fn dispatch_wip(&self, cmd: Command) -> Id {
@@ -9436,7 +9263,8 @@ pub mod worker {
 
             let tx_edit = {
                 let d = graph.drafts.read().await.iter().find(|d| d.id == draft_id).cloned().ok_or_else(|| SemioError::not_found("Draft", draft_id.as_str()))?;
-                d.transactions.read().await.iter().find(|t| t.id == transaction_id).cloned().ok_or_else(|| SemioError::not_found("Edit", transaction_id.as_str()))?
+                let txs = d.transactions.read().await.clone();
+                txs.into_iter().find(|t| t.id == transaction_id).ok_or_else(|| SemioError::not_found("Edit", transaction_id.as_str()))?
             };
 
             match &operation {
@@ -9488,8 +9316,8 @@ pub mod worker {
 
 pub mod gql {
     //! 🌐 Type-safe static GraphQL schema via `Schema::build` (embedded target SDL string for tooling).
-    use async_graphql::{Context, Object, Schema, Subscription};
     use async_graphql::types::Json;
+    use async_graphql::{Context, Object, Schema, Subscription};
     use async_stream::stream;
     use futures_util::Stream;
     use std::pin::Pin;
@@ -9510,9 +9338,7 @@ pub mod gql {
         use async_graphql::Interface;
 
         use crate::geom::entity::{CoordinateNode, LocationNode, OffsetNode, PlaneNode, PointNode, PositionNode, VectorNode};
-        use crate::gql_relay::{
-            CoordinateEdge, LocationEdge, OffsetEdge, PlaneEdge, PointEdge, PositionEdge, VectorEdge,
-        };
+        use crate::gql_relay::{CoordinateEdge, LocationEdge, OffsetEdge, PlaneEdge, PointEdge, PositionEdge, VectorEdge};
 
         #[derive(Clone, Interface)]
         #[graphql(name = "Node", field(name = "id", ty = "crate::id::Id"))]
@@ -9747,12 +9573,7 @@ pub mod gql {
                 return Err(async_graphql::Error::new("change id mismatch for kit operation"));
             }
             let request_id = Id::new().await;
-            let cmd = Command::ApplyKitOperation {
-                request_id: request_id.clone(),
-                draft_id,
-                transaction_id,
-                operation: KitOperation::RenameKit { scope: Scope::Kit, input: Input::Name { name: new_name } },
-            };
+            let cmd = Command::ApplyKitOperation { request_id: request_id.clone(), draft_id, transaction_id, operation: KitOperation::RenameKit { scope: Scope::Kit, input: Input::Name { name: new_name } } };
             Ok(rt.dispatch_wip(cmd).await)
         }
 
@@ -9778,10 +9599,7 @@ pub mod gql {
                 request_id: request_id.clone(),
                 draft_id,
                 transaction_id,
-                operation: KitOperation::CreateTag {
-                    scope: Scope::CreateTag { owner_id, tag_id: tag_id.clone(), attribute_ids: Vec::new() },
-                    input: Input::Tag { tag },
-                },
+                operation: KitOperation::CreateTag { scope: Scope::CreateTag { owner_id, tag_id: tag_id.clone(), attribute_ids: Vec::new() }, input: Input::Tag { tag } },
             };
             Ok(rt.dispatch_wip(cmd).await)
         }
@@ -9818,10 +9636,7 @@ pub mod gql {
                 request_id: request_id.clone(),
                 draft_id,
                 transaction_id,
-                operation: KitOperation::CreateConcept {
-                    scope: Scope::CreateConcept { owner_id, concept_id: concept_id.clone(), attribute_ids: Vec::new() },
-                    input: Input::Concept { concept },
-                },
+                operation: KitOperation::CreateConcept { scope: Scope::CreateConcept { owner_id, concept_id: concept_id.clone(), attribute_ids: Vec::new() }, input: Input::Concept { concept } },
             };
             Ok(rt.dispatch_wip(cmd).await)
         }
@@ -9858,10 +9673,7 @@ pub mod gql {
                 request_id: request_id.clone(),
                 draft_id,
                 transaction_id,
-                operation: KitOperation::CreateQuality {
-                    scope: Scope::CreateQuality { owner_id, quality_id: quality_id.clone(), attribute_ids: Vec::new(), benchmark_ids: Vec::new() },
-                    input: Input::Quality { quality },
-                },
+                operation: KitOperation::CreateQuality { scope: Scope::CreateQuality { owner_id, quality_id: quality_id.clone(), attribute_ids: Vec::new(), benchmark_ids: Vec::new() }, input: Input::Quality { quality } },
             };
             Ok(rt.dispatch_wip(cmd).await)
         }
@@ -10221,14 +10033,7 @@ pub mod gql {
             Ok(Id::new().await)
         }
         #[graphql(name = "addFixedPiece")]
-        async fn add_fixed_piece(
-            &self,
-            ctx: &Context<'_>,
-            #[graphql(name = "blueprintId")] blueprint_id: Id,
-            position: Position,
-            name: Option<String>,
-            description: Option<String>,
-        ) -> async_graphql::Result<Id> {
+        async fn add_fixed_piece(&self, ctx: &Context<'_>, #[graphql(name = "blueprintId")] blueprint_id: Id, position: Position, name: Option<String>, description: Option<String>) -> async_graphql::Result<Id> {
             let rt = ctx.data::<Arc<ParentRuntime>>()?;
             let (draft_id, transaction_id) = rt.wip_kit_scope.read().await.clone().ok_or_else(|| async_graphql::Error::new("no active kit scope"))?;
             if transaction_id != self.change_id {
@@ -10240,10 +10045,7 @@ pub mod gql {
                 request_id: request_id.clone(),
                 draft_id,
                 transaction_id,
-                operation: KitOperation::CreateFixedPiece {
-                    scope: Scope::CreateFixedPiece { design_id: self.design_id.clone(), piece_id, blueprint_id, attribute_ids: Vec::new() },
-                    input: Input::FixedPiece { position, name, description },
-                },
+                operation: KitOperation::CreateFixedPiece { scope: Scope::CreateFixedPiece { design_id: self.design_id.clone(), piece_id, blueprint_id, attribute_ids: Vec::new() }, input: Input::FixedPiece { position, name, description } },
             };
             Ok(rt.dispatch_wip(cmd).await)
         }
@@ -10331,10 +10133,7 @@ pub mod gql {
                 request_id,
                 draft_id,
                 transaction_id,
-                operation: KitOperation::DragPieceInDesign {
-                    scope: Scope::PieceInDesign { design_id: self.design_id.clone(), piece_id: self.piece_id.clone() },
-                    input: Input::Offset { offset },
-                },
+                operation: KitOperation::DragPieceInDesign { scope: Scope::PieceInDesign { design_id: self.design_id.clone(), piece_id: self.piece_id.clone() }, input: Input::Offset { offset } },
             };
             Ok(rt.dispatch_wip(cmd).await)
         }
@@ -10387,10 +10186,7 @@ pub mod gql {
                 request_id,
                 draft_id,
                 transaction_id,
-                operation: KitOperation::DragPiecesInDesign {
-                    scope: Scope::PiecesInDesign { design_id: self.design_id.clone(), piece_ids: self.piece_ids.clone() },
-                    input: Input::Offset { offset },
-                },
+                operation: KitOperation::DragPiecesInDesign { scope: Scope::PiecesInDesign { design_id: self.design_id.clone(), piece_ids: self.piece_ids.clone() }, input: Input::Offset { offset } },
             };
             Ok(rt.dispatch_wip(cmd).await)
         }
@@ -10831,10 +10627,7 @@ mod tests {
                     request_id: req,
                     draft_id: draft_a.id.clone(),
                     transaction_id: tx_a.id.clone(),
-                    operation: crate::operation::KitOperation::RenameKit {
-                        scope: crate::operation::Scope::Kit,
-                        input: crate::operation::Input::Name { name: "Hello Bundle".into() },
-                    },
+                    operation: crate::operation::KitOperation::RenameKit { scope: crate::operation::Scope::Kit, input: crate::operation::Input::Name { name: "Hello Bundle".into() } },
                 })
                 .await;
             std::thread::sleep(std::time::Duration::from_millis(150));
@@ -10870,10 +10663,7 @@ mod tests {
                     request_id: req2,
                     draft_id: draft_a.id.clone(),
                     transaction_id: tx_a2.id.clone(),
-                    operation: crate::operation::KitOperation::RenameKit {
-                        scope: crate::operation::Scope::Kit,
-                        input: crate::operation::Input::Name { name: "Hello Bundle".into() },
-                    },
+                    operation: crate::operation::KitOperation::RenameKit { scope: crate::operation::Scope::Kit, input: crate::operation::Input::Name { name: "Hello Bundle".into() } },
                 })
                 .await;
             std::thread::sleep(std::time::Duration::from_millis(150));
