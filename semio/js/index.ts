@@ -2672,16 +2672,25 @@ export class KitStore {
     return altId;
   }
 
-  /** @emoji 📸 Bundle JSON persistence is not exposed on the target `Mutation` root; returns an empty object until rs adds a field. */
+  /** @emoji 📸 Serialize the RS-owned kit store bundle (`schema`, three graphs, checkpoints, drafts, transactions). */
   async serializeKitStoreBundleJson(): Promise<string> {
     this.ensureAlive();
-    return "{}";
+    const data = kitGraphqlData(await this.gqlRun({ query: `query { kitStoreBundleJson }` })) as JsonObject;
+    const json = String(data["kitStoreBundleJson"] ?? "");
+    if (json.trim() === "") throw new Error("kitStoreBundleJson: empty response");
+    return json;
   }
 
-  /** @emoji 🩻 No-op: target schema has no `kitStoreBundleHydrate` root field. */
+  /** @emoji 🩻 Hydrate the RS graph from a metabolism-shaped bundle read by the host adapter. */
   async hydrateKitStoreBundleJson(json: string): Promise<void> {
-    void json;
     this.ensureAlive();
+    if (json.trim() === "") return;
+    kitGraphqlData(await this.gqlRun({ query: `mutation($json: String!) { hydrateKitStoreBundleJson(json: $json) }`, variables: { json } }));
+    try {
+      this.invalidations.next();
+    } catch {
+      /* ignore */
+    }
   }
 
   /** @emoji 🟢 Starts a fresh unsaved change (`startNewChange`); sketchpad may call this on input focus. */
@@ -7197,7 +7206,7 @@ export function asKitInstance(input: KitLike): Kit {
  *  When the host store is bundle-persisting (`JsonFileKitStore` / `FolderKitStore`) we also drive the
  *  metabolism-shaped JSON file end-to-end: on first call we hydrate rs from the file's bytes (if any) and
  *  bootstrap the seed checkpoint + draft; after every change we ask rs to serialize the bundle and atomically
- *  write it back through the host adapter. The file therefore always mirrors `wip.root` + draft / transaction
+ *  write it back through the host adapter. The file therefore always mirrors `wip.initialKit` + draft / transaction
  *  state and looks like `semio/assets/semio/metabolism.new.kit.semio.json`. */
 const KIT_BUNDLE_BOOTSTRAPPED = new WeakSet<KitHostStore>();
 export async function applyKitClientSnapshotToLocalStore(kitClient: SemioKitBridge, store: KitHostStore): Promise<void> {
@@ -7352,7 +7361,7 @@ export class JsonFileKitStore implements KitHostStore, KitBundlePersisting {
     } catch {
       initialBundleJson = "";
     }
-    let seed = asKitInstance({ id: id(), name: "Untitled", createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() });
+    let seed = asKitInstance({ id: id(), name: "the kit", createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() });
     if (initialBundleJson.trim() !== "") {
       try {
         const parsed: unknown = JSON.parse(initialBundleJson);
@@ -7649,22 +7658,22 @@ function semioDenormalizeBundleValue(v: unknown): unknown {
     }
     return out;
   }
-  const out: JsonObject = {};
+  const out: { [key: string]: JsonValue } = {};
   for (const [k, val] of Object.entries(o)) {
     out[k] = semioDenormalizeBundleValue(val) as JsonValue;
   }
   return out;
 }
 
-/** @emoji 🧾 Lifts `*.kit.semio.json` envelope (`root` / `wip.root`) and flattens bundle `items` lists to {@link KitFullDto}. */
+/** @emoji 🧾 Lifts `*.kit.semio.json` envelope (`initialKit` / `wip.initialKit`) and flattens bundle `items` lists to {@link KitFullDto}. */
 export function decodeKitSemioEnvelopeToFullDtoFromValue(v: unknown): KitFullDto {
   let inner: unknown = v;
   if (inner && typeof inner === "object" && !Array.isArray(inner)) {
     const top = inner as JsonObject;
-    if (top.root != null && typeof top.root === "object" && !Array.isArray(top.root)) {
-      inner = top.root;
+    if (top.initialKit != null && typeof top.initialKit === "object" && !Array.isArray(top.initialKit)) {
+      inner = top.initialKit;
     } else if (top.wip != null && typeof top.wip === "object" && !Array.isArray(top.wip)) {
-      const wr = (top.wip as JsonObject).root;
+      const wr = (top.wip as JsonObject).initialKit;
       if (wr != null && typeof wr === "object" && !Array.isArray(wr)) inner = wr;
     }
   }
@@ -7679,7 +7688,7 @@ export function decodeKitSemioEnvelopeBytesToFullDto(buf: ArrayBuffer | Uint8Arr
   return decodeKitSemioEnvelopeToFullDtoFromValue(JSON.parse(text));
 }
 
-/** @emoji 🧾 Decode kit bytes as a flat `KitFullDto` (accepts plain kit JSON or semio bundle envelope with `root` / relay `items`). */
+/** @emoji 🧾 Decode kit bytes as a flat `KitFullDto` (accepts plain kit JSON or semio bundle envelope with `initialKit` / relay `items`). */
 export function importKitToDto(buf: ArrayBuffer | Uint8Array): KitFullDto {
   return decodeKitSemioEnvelopeBytesToFullDto(buf);
 }
@@ -8516,6 +8525,51 @@ if (
       expect((alts as readonly { id?: string }[]).some((a) => String(a?.id) === aid)).toBe(true);
       await ks.dispose();
     });
+
+    it("serializes a fresh dev-json bundle with three graphs, a seed checkpoint, and an open unsaved change", async () => {
+      const minimalKit: KitFullDto = {
+        id: "dev-json-kit",
+        name: "the kit",
+        createdAt: "2020-01-01T00:00:00.000Z",
+        updatedAt: "2020-01-01T00:00:00.000Z",
+        types: [],
+        designs: [],
+      };
+      const ks = await KitStore.open(minimalKit);
+      await ks.kitStoreInitializeDefaults();
+      const raw = await ks.serializeKitStoreBundleJson();
+      const bundle = JSON.parse(raw) as JsonObject;
+      expect(bundle["schema"]).toBe("🎆26🌙06⬆️1");
+      for (const key of ["wip", "authoritative", "stage"]) {
+        expect(bundle[key] != null && typeof bundle[key] === "object").toBe(true);
+        expect(((bundle[key] as JsonObject)["initialKit"] as JsonObject | undefined)?.["name"]).toBe("the kit");
+      }
+      const wip = bundle["wip"] as JsonObject;
+      expect((((wip["checkpoints"] as JsonObject)["items"] as readonly unknown[]) ?? []).length).toBe(1);
+      const drafts = ((wip["drafts"] as JsonObject)["items"] as readonly JsonObject[]) ?? [];
+      expect(drafts.length).toBe(1);
+      const txs = ((drafts[0]["transactions"] as JsonObject)["items"] as readonly unknown[]) ?? [];
+      expect(txs.length).toBe(1);
+      await ks.dispose();
+    });
+
+    it("persists the initial RS bundle into an empty JsonFileKitStore", async () => {
+      let fileJson = "";
+      const store = await createJsonFileKitStore({
+        read: async () => fileJson,
+        write: async (nextJson: string) => {
+          fileJson = nextJson;
+        },
+      });
+      const client = await createKitStoreClient({ initialKit: store.getSnapshot().kit.toJSON() });
+      await applyKitClientSnapshotToLocalStore(client, store);
+      const bundle = JSON.parse(fileJson) as JsonObject;
+      expect(bundle["schema"]).toBe("🎆26🌙06⬆️1");
+      expect(((bundle["wip"] as JsonObject)["initialKit"] as JsonObject)["name"]).toBe("the kit");
+      expect((((bundle["wip"] as JsonObject)["checkpoints"] as JsonObject)["items"] as readonly unknown[]).length).toBe(1);
+      expect(((((bundle["wip"] as JsonObject)["drafts"] as JsonObject)["items"] as readonly JsonObject[])[0]["transactions"] as JsonObject)["items"]).toHaveLength(1);
+      client.dispose();
+    });
     });
 
     it("compile-time: KitStore public surface excludes rxjs-style stream fields", () => {
@@ -8577,7 +8631,7 @@ if (
       const here = dirname(fileURLToPath(import.meta.url));
       const b = JSON.parse(readFileSync(resolve(here, "../assets/semio/metabolism.new.kit.semio.json"), "utf8")) as {
         schema: string;
-        wip: { id: string; theKit?: unknown; root?: unknown; checkpoints?: { items: unknown[] }; drafts?: { items: unknown[] } };
+        wip: { id: string; initialKit?: unknown; checkpoints?: { items: unknown[] }; drafts?: { items: unknown[] } };
         authoritative: { id: string };
         stage: { id: string };
         conflicts: { items: unknown[] };
@@ -8588,7 +8642,7 @@ if (
         expect(b[k]).toBeTruthy();
       }
       expect(typeof b.wip.id).toBe("string");
-      expect(b.wip.theKit ?? b.wip.root).toBeTruthy();
+      expect(b.wip.initialKit).toBeTruthy();
     });
 
     it("dev JSON backbone wire shape documents semanticOpLog + persistence hints (US-004)", async () => {
@@ -8699,10 +8753,10 @@ if (
       expect(last?.length).toBe(1);
     });
 
-    it("decodeKitSemioEnvelopeToFullDtoFromValue unwraps root and flattens bundle items", () => {
+    it("decodeKitSemioEnvelopeToFullDtoFromValue unwraps initialKit and flattens bundle items", () => {
       const dto = decodeKitSemioEnvelopeToFullDtoFromValue({
         schema: "s",
-        root: {
+        initialKit: {
           id: "kit-1",
           name: "Kit",
           createdAt: "2020-01-01T00:00:00.000Z",

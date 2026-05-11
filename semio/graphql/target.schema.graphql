@@ -5855,7 +5855,7 @@ type Graph implements StrongEntity {
   hash: String! # cached
   owner: Entity # reference // Session
   owns: EntityConnection # reference // Kit | Alternative | Checkpoint | Session
-  theKit: Kit # computed
+  theKit: Kit # computed — persisted `*.kit.semio.json` graphs store the seed snapshot under `initialKit`, not this field name
   alternative(id: ID!): Alternative # data
   alternatives: AlternativeConnection! # data
   checkpoint(id: ID!): Checkpoint # computed
@@ -6134,6 +6134,7 @@ type Query {
   conflicts: ConflictConnection!
   node(id: ID!): Node
   entity(hash: ID!): Entity
+  kitStoreBundleJson: String!
 }
 
 #region ScopedCommands
@@ -6145,6 +6146,7 @@ type Query {
 type Mutation {
   # Mutation
   session: SessionCommandInput!
+  hydrateKitStoreBundleJson(json: String!): ID!
 }
 
 type Subscription {

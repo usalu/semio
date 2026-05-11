@@ -2749,10 +2749,28 @@ pub mod kit {
                 let owner_des = Arc::downgrade(des);
                 for pj in plist {
                     let pid = pj.get("id").and_then(|x| x.as_str()).ok_or_else(|| crate::error::SemioError::invalid("design piece missing id"))?;
-                    let type_id_raw = pj.get("type").and_then(|t| t.get("id")).and_then(|x| x.as_str()).ok_or_else(|| crate::error::SemioError::invalid("design piece missing type.id"))?;
+                    let type_id_raw = match pj.get("type") {
+                        Some(serde_json::Value::String(s)) => s.as_str(),
+                        Some(serde_json::Value::Object(map)) => map
+                            .get("id")
+                            .and_then(|x| x.as_str())
+                            .ok_or_else(|| crate::error::SemioError::invalid("design piece type object missing id"))?,
+                        _ => {
+                            return Err(crate::error::SemioError::invalid("design piece missing type (string id or { id })"));
+                        }
+                    };
                     let ty = kit.types.read().await.iter().find(|t| t.id.as_str() == type_id_raw).cloned().ok_or_else(|| crate::error::SemioError::not_found("Type", type_id_raw))?;
-                    let plane_val = pj.get("plane").cloned().unwrap_or_else(|| serde_json::json!({}));
-                    let center_val = pj.get("center").cloned().unwrap_or_else(|| serde_json::json!({"u":0.0,"v":0.0}));
+                    let pose = pj.get("pose");
+                    let plane_val = pj
+                        .get("plane")
+                        .cloned()
+                        .or_else(|| pose.and_then(|p| p.get("plane")).cloned())
+                        .unwrap_or_else(|| serde_json::json!({}));
+                    let center_val = pj
+                        .get("center")
+                        .cloned()
+                        .or_else(|| pose.and_then(|p| p.get("center")).cloned())
+                        .unwrap_or_else(|| serde_json::json!({"u":0.0,"v":0.0}));
                     let position: crate::geom::Position = serde_json::from_value(serde_json::json!({"plane": plane_val, "center": center_val})).map_err(|e| crate::error::SemioError::invalid(format!("piece position serde: {}", e)))?;
                     let scale = pj.get("scale").and_then(|s| s.as_f64()).unwrap_or(1.0);
                     let nm_opt = pj.get("name").and_then(|x| x.as_str());
@@ -8141,7 +8159,7 @@ pub mod kit_backbone {
         pub hash: String,
     }
 
-    /// @emoji 📦 Top-level on-disk kit store bundle (mirrors `metabolism.new.kit.semio.json`: `schema / wip / authoritative / stage / conflicts / blobs`).
+    /// @emoji 📦 Top-level on-disk kit store bundle (mirrors `metabolism.new.kit.semio.json`: `schema / wip / authoritative / stage / conflicts / blobs`; each graph snapshot holds kit seed JSON under `initialKit`).
     #[derive(Clone, Debug, serde::Deserialize, serde::Serialize)]
     pub struct KitStoreBundleFile {
         pub schema: String,
@@ -8161,7 +8179,8 @@ pub mod kit_backbone {
         pub hash: String,
         #[serde(default)]
         pub authors: BlockHashedListDto<HashRefDto>,
-        #[serde(default = "empty_root_value")]
+        /// @emoji 📦 Wire key `initialKit` — persisted kit seed for this snapshot (GraphQL `Graph.theKit` is the live materialization, not this JSON name).
+        #[serde(rename = "initialKit", default = "empty_root_value")]
         pub root: serde_json::Value,
         #[serde(default)]
         pub checkpoints: BlockHashedListDto<serde_json::Value>,
@@ -8289,7 +8308,7 @@ pub mod kit_backbone {
         }
 
         /// @emoji 📸 Project the live `Graph` into a metabolism-shaped bundle ready for atomic write.
-        /// `wip.id` mirrors the graph id; `wip.root` is the camelCase `KitFullDto` projection of `parent_root_for_active_draft`;
+        /// `wip.id` mirrors the graph id; `wip.initialKit` on disk / `wip.root` in Rust is the camelCase `KitFullDto` projection of `parent_root_for_active_draft`;
         /// checkpoints / drafts / transactions echo the in-memory state so the on-disk file matches what
         /// sketchpad is currently editing. The dev who reads the file should see the same shape as
         /// `semio/assets/semio/metabolism.new.kit.semio.json`.
@@ -8301,7 +8320,9 @@ pub mod kit_backbone {
             bundle.wip.id = gid.clone();
             bundle.authoritative.id = gid.clone();
             bundle.stage.id = gid;
-            bundle.wip.root = kit_dto;
+            bundle.wip.root = kit_dto.clone();
+            bundle.authoritative.root = kit_dto.clone();
+            bundle.stage.root = kit_dto;
 
             // 🪧 Project checkpoints (each anchored on a kit snapshot we currently leave at the placeholder hash).
             for cp in graph.checkpoints.read().await.iter() {
@@ -8343,7 +8364,7 @@ pub mod kit_backbone {
             blake3::hash(wire.as_bytes()).to_hex().to_string()
         }
 
-        /// @emoji 📦 Hoist each `files[].blob` into [`KitStoreBundleFile::blobs`] keyed by [`digest_kit_blob_wire`], set `files[].blobHash`, strip inline payload (shared digest dedupes across `wip.root` + checkpoints).
+        /// @emoji 📦 Hoist each `files[].blob` into [`KitStoreBundleFile::blobs`] keyed by [`digest_kit_blob_wire`], set `files[].blobHash`, strip inline payload (shared digest dedupes across `wip.initialKit` + checkpoints).
         pub fn hoist_inline_file_blobs_for_storage(bundle: &mut KitStoreBundleFile) {
             let mut seen_digest = std::collections::HashSet::<String>::new();
             let mut collected: Vec<serde_json::Value> = Vec::new();
@@ -8357,7 +8378,7 @@ pub mod kit_backbone {
             Self::purge_unreferenced_blobs(bundle);
         }
 
-        /// @emoji 🧹 Drop [`blobs`] rows whose digest is not referenced by any `files[].blobHash` on `wip` / `authoritative` / `stage` roots or checkpoint `frozenRoot` projections.
+        /// @emoji 🧹 Drop [`blobs`] rows whose digest is not referenced by any `files[].blobHash` on `wip` / `authoritative` / `stage` `initialKit` snapshots or checkpoint `frozenRoot` projections.
         pub fn purge_unreferenced_blobs(bundle: &mut KitStoreBundleFile) {
             let refs = Self::referenced_blob_hashes_from_bundle(bundle);
             bundle.blobs.items.retain(|b| b.get("hash").and_then(|x| x.as_str()).map(|h| refs.contains(h)).unwrap_or(false));
@@ -8449,7 +8470,7 @@ pub mod kit_backbone {
         //#endregion 📦 bundle file blobs (content-addressed outside kit projection JSON)
 
         /// @emoji 🩻 Hydrate the live graph from a previously-persisted bundle JSON. Today this only restores
-        /// the kit projection (`wip.root`) into `parent_root_for_active_draft`; the draft / transaction structure is preserved on
+        /// the kit projection (`wip.initialKit` on disk) into `parent_root_for_active_draft`; the draft / transaction structure is preserved on
         /// disk via `from_graph` round-trip but operation replay is owned by the existing semantic-operation log path.
         pub async fn hydrate_into_graph(graph: &std::sync::Arc<crate::vcs::Graph>, json: &str) -> Result<Self, SemioError> {
             let bundle: Self = serde_json::from_str(json).map_err(|e| SemioError::invalid(format!("bundle parse: {e}")))?;
@@ -9221,6 +9242,14 @@ pub mod gql {
         /// @emoji 🔎 Alias of [`Query::node`] for SDL `entity` entry point (`hash` merkle id).
         pub async fn entity(&self, ctx: &Context<'_>, hash: Id) -> async_graphql::Result<Option<crate::iface::GqlNode>> {
             self.node(ctx, hash).await
+        }
+
+        #[graphql(name = "kitStoreBundleJson")]
+        pub async fn kit_store_bundle_json(&self, ctx: &Context<'_>) -> async_graphql::Result<String> {
+            let rt = ctx.data::<Arc<ParentRuntime>>()?;
+            rt.wip_graph.ensure_default_seed_state().await;
+            let bundle = crate::kit_backbone::KitStoreBundleFile::from_graph(rt.wip_graph.as_ref()).await;
+            serde_json::to_string_pretty(&bundle).map_err(|e| async_graphql::Error::new(e.to_string()))
         }
     }
 
@@ -10038,6 +10067,14 @@ pub mod gql {
         async fn session(&self) -> SessionCommandNav {
             SessionCommandNav
         }
+
+        #[graphql(name = "hydrateKitStoreBundleJson")]
+        async fn hydrate_kit_store_bundle_json(&self, ctx: &Context<'_>, json: String) -> async_graphql::Result<Id> {
+            let rt = ctx.data::<Arc<ParentRuntime>>()?;
+            crate::kit_backbone::KitStoreBundleFile::hydrate_into_graph(&rt.wip_graph, &json).await.map_err(|e| async_graphql::Error::new(e.to_string()))?;
+            rt.wip_graph.ensure_default_seed_state().await;
+            Ok(rt.wip_graph.id.clone())
+        }
     }
 
     pub struct Subscription;
@@ -10498,8 +10535,8 @@ mod tests {
             for k in ["wip", "authoritative", "stage", "conflicts", "blobs"].iter() {
                 assert!(v.get(*k).is_some(), "missing top-level key {k}");
             }
-            assert!(v["wip"]["root"].is_object(), "wip.root projects the live kit");
-            assert_eq!(v["wip"]["root"]["name"].as_str().unwrap_or(""), "Hello Bundle");
+            assert!(v["wip"]["initialKit"].is_object(), "wip.initialKit projects the live kit");
+            assert_eq!(v["wip"]["initialKit"]["name"].as_str().unwrap_or(""), "Hello Bundle");
             assert!(!v["wip"]["checkpoints"]["items"].as_array().unwrap().is_empty(), "seed checkpoint present");
             assert!(!v["wip"]["drafts"]["items"].as_array().unwrap().is_empty(), "default draft present");
 
@@ -10508,7 +10545,7 @@ mod tests {
 
             let json_b = serde_json::to_string(&crate::kit_backbone::KitStoreBundleFile::from_graph(rt_b.wip_graph.as_ref()).await).expect("serialize bundle b");
             let vb: serde_json::Value = serde_json::from_str(&json_b).expect("bundle b parses");
-            assert_eq!(vb["wip"]["root"]["name"].as_str().unwrap_or(""), "Hello Bundle", "kit name survives bundle round-trip");
+            assert_eq!(vb["wip"]["initialKit"]["name"].as_str().unwrap_or(""), "Hello Bundle", "kit name survives bundle round-trip");
         });
     }
 
@@ -10954,11 +10991,11 @@ mod tests {
         }
         assert_eq!(v["schema"], crate::kit_backbone::KIT_STORE_BUNDLE_SCHEMA);
         for graph_key in ["wip", "authoritative", "stage"] {
-            for inner in ["id", "hash", "authors", "root", "checkpoints", "alternatives", "drafts"] {
+            for inner in ["id", "hash", "authors", "initialKit", "checkpoints", "alternatives", "drafts"] {
                 assert!(v[graph_key].get(inner).is_some(), "graph `{graph_key}` missing `{inner}`");
             }
-            assert!(v[graph_key]["root"].get("types").is_some(), "graph `{graph_key}.root` missing `types`");
-            assert!(v[graph_key]["root"].get("designs").is_some(), "graph `{graph_key}.root` missing `designs`");
+            assert!(v[graph_key]["initialKit"].get("types").is_some(), "graph `{graph_key}.initialKit` missing `types`");
+            assert!(v[graph_key]["initialKit"].get("designs").is_some(), "graph `{graph_key}.initialKit` missing `designs`");
         }
     }
 
