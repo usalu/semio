@@ -15,9 +15,9 @@
 // #region ⛩️Imports
 
 import { kitStoreFromKitStoreClient } from "@semio/js";
-import type { Connector, KitCommandContext, KitFolderAdapter, KitHostGraphOp, KitHostStore, KitJsonFileAdapter, KitRegistryValue, Port, SketchpadKitKindAvailability, SketchpadKitStoreFactory } from "@semio/react";
+import type { Connector, KitCommandContext, KitFolderAdapter, KitHostGraphOperation, KitHostStore, KitJsonFileAdapter, KitRegistryValue, Port, SketchpadKitKindAvailability, SketchpadKitStoreFactory } from "@semio/react";
 import {
-  applyKitHostGraphOp,
+  applyKitHostGraphOperation,
   asKitInstance,
   attachSketchpadKitReadShell,
   Author,
@@ -1975,7 +1975,7 @@ export type SketchpadScope = { id: string; remote?: RemoteProviders; desktop?: D
 // #endregion 📹Sketchpad State
 
 // #region 💧Commands
-// Sketchpad command context/result; kit I/O is `@semio/react` (`KitCommandContext`, `KitCommandResult`, `applyKitHostGraphOp`, `executeSemioKitCommand` → `@semio/js` / rs).
+// Sketchpad command context/result; kit I/O is `@semio/react` (`KitCommandContext`, `KitCommandResult`, `applyKitHostGraphOperation`, `executeSemioKitCommand` → `@semio/js` / rs).
 
 /**
  * Context for sketchpad commands including sketchpad state and origin.
@@ -2067,10 +2067,10 @@ export interface KitDiffAppEdit<TSelectionDiff = any> {
 }
 
 /**
- * @emoji 🧾 Command result: optional typed {@link KitHostGraphOp} runs through {@link applyKitHostGraphOp} (`@semio/react` → `@semio/js` → `semio/rs`).
+ * @emoji 🧾 Command result: optional typed {@link KitHostGraphOperation} runs through {@link applyKitHostGraphOperation} (`@semio/react` → `@semio/js` → `semio/rs`).
  **/
 export interface KitDiffAppCommandResult<TDiff = any> extends AppCommandResult<TDiff> {
-  kitGraph?: KitHostGraphOp;
+  kitGraph?: KitHostGraphOperation;
   kitCommandApplied?: boolean;
 }
 
@@ -25022,7 +25022,7 @@ class KitAppStoreImpl extends KitDiffAppStore<KitAppState, KitAppDiff, KitAppSel
       this.change(result.diff);
     }
     if (result.kitGraph) {
-      const kitRes = await applyKitHostGraphOp(kitData, result.kitGraph);
+      const kitRes = await applyKitHostGraphOperation(kitData, result.kitGraph);
       if (kitRes.ok) {
         (result as any).kitCommandApplied = true;
       }
@@ -26974,7 +26974,7 @@ export class DesignStore extends PlainKitDiffAppStore<DesignAppState, DesignAppD
       this.change(result.diff);
     }
     if (result.kitGraph) {
-      const kitRes = await applyKitHostGraphOp(kitStore, result.kitGraph);
+      const kitRes = await applyKitHostGraphOperation(kitStore, result.kitGraph);
       if (kitRes.ok) {
         (result as any).kitCommandApplied = true;
       }

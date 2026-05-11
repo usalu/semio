@@ -4582,15 +4582,15 @@ pub mod vcs {
             self.origin.read().await.clone()
         }
 
-        /// @emoji 🔗 Ordered  operation record ids constituting the forwards side (bundle `OpLog` ids) when persisted.
-        #[graphql(name = "forwardOpRecordIds")]
-        pub async fn forward__op_record_ids(&self) -> Vec<Id> {
+        /// @emoji 🔗 Ordered  operation record ids constituting the forwards side (bundle `OperationLog` ids) when persisted.
+        #[graphql(name = "forwardOperationRecordIds")]
+        pub async fn forward__operation_record_ids(&self) -> Vec<Id> {
             Vec::new()
         }
 
         /// @emoji 🔗 Ordered  operation record ids for backwards / inverse application when persisted separately from `OperationKind`.
-        #[graphql(name = "backwardOpRecordIds")]
-        pub async fn backward__op_record_ids(&self) -> Vec<Id> {
+        #[graphql(name = "backwardOperationRecordIds")]
+        pub async fn backward__operation_record_ids(&self) -> Vec<Id> {
             Vec::new()
         }
     }
@@ -7317,11 +7317,11 @@ pub mod operation {
     //#region 📜  operation record (kit bundle / operation log contract)
     /// @emoji 📜 One persisted  operation: stable id, kind string, JSON payload, monotonic sequence index.
     #[derive(Clone, Debug, Default, async_graphql::SimpleObject)]
-    #[graphql(name = "OpRecord")]
-    pub struct OpRecord {
+    #[graphql(name = "OperationRecord")]
+    pub struct OperationRecord {
         pub id: Id,
-        #[graphql(name = "opKind")]
-        pub op_kind: String,
+        #[graphql(name = "operationKind")]
+        pub operation_kind: String,
         #[graphql(name = "payloadJson")]
         pub payload_json: String,
         pub sequence: i32,

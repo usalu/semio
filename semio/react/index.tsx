@@ -233,7 +233,7 @@ function __kitHostBridge(store: KitHostStore): KitStoreClient | undefined {
  * @emoji 📣 Typed kit graph side-effect for kit/design apps (replaces string `kitWire`).
  * Sketchpad MUST use this shape instead of `{ command: string; args: unknown[] }`.
  */
-export type KitHostGraphOp =
+export type KitHostGraphOperation =
   | { op: "deleteKitSelection"; typeIds: readonly TypeIdDto[]; designIds: readonly DesignIdDto[] }
   | { op: "addKitChildType"; body: TypePlain }
   | { op: "addKitChildTypes"; bodies: readonly TypePlain[] }
@@ -262,10 +262,10 @@ export type KitHostGraphOp =
   | { op: "expandDesign"; parentDesignId: DesignIdDto; nestedDesignId: DesignIdDto }
   | { op: "removeDesignPiecesAndConnections"; designId: DesignIdDto; pieceIds: readonly PieceIdDto[]; connectionIds: readonly ConnectionIdDto[] };
 
-/** @emoji 🧾 Applies {@link KitHostGraphOp} through the live {@link KitStoreClient} bridge. */
-export async function applyKitHostGraphOp(host: KitHostStore, op: KitHostGraphOp): Promise<SetResult> {
+/** @emoji 🧾 Applies {@link KitHostGraphOperation} through the live {@link KitStoreClient} bridge. */
+export async function applyKitHostGraphOperation(host: KitHostStore, op: KitHostGraphOperation): Promise<SetResult> {
   const bridge = __kitHostBridge(host);
-  if (!bridge) return { ok: false, error: { kind: "Internal", message: "applyKitHostGraphOp: no kit bridge" } };
+  if (!bridge) return { ok: false, error: { kind: "Internal", message: "applyKitHostGraphOperation: no kit bridge" } };
   switch (op.op) {
     case "deleteKitSelection": {
       for (const t of op.typeIds) {
@@ -425,7 +425,7 @@ export async function applyKitHostGraphOp(host: KitHostStore, op: KitHostGraphOp
       return { ok: true };
     }
   }
-  return { ok: false, error: { kind: "Internal", message: "applyKitHostGraphOp: unreachable" } };
+  return { ok: false, error: { kind: "Internal", message: "applyKitHostGraphOperation: unreachable" } };
 }
 
 /** @emoji 🧾 VCS undo via the optional {@link KitStoreClient} bridge (typed alternative to `executeSemioKitCommand` undo). */
@@ -442,7 +442,7 @@ export async function kitHostRedo(store: KitHostStore): Promise<SetResult> {
   return bridge.redo();
 }
 
-/** @emoji 🧾 String-command entry retained for sketchpad host flows; prefer {@link applyKitHostGraphOp} for graph edits. */
+/** @emoji 🧾 String-command entry retained for sketchpad host flows; prefer {@link applyKitHostGraphOperation} for graph edits. */
 export async function executeSemioKitCommand(store: KitHostStore, command: string, _origin: string, ...args: unknown[]): Promise<unknown> {
   const bridge = __kitHostBridge(store);
   if (command === "semio.kit.undo") {
@@ -5922,7 +5922,7 @@ export function useActiveKitGuid(): string | undefined {
 }
 
 /**
- * @emoji 🪝 Attach read-only `snapshot` / `fileUrls` on {@link KitHostStore} for legacy design-store selectors; graph mutations use {@link applyKitHostGraphOp} / {@link executeSemioKitCommand}.
+ * @emoji 🪝 Attach read-only `snapshot` / `fileUrls` on {@link KitHostStore} for legacy design-store selectors; graph mutations use {@link applyKitHostGraphOperation} / {@link executeSemioKitCommand}.
  */
 export function attachSketchpadKitReadShell(kitStore: KitHostStore): void {
   const s = kitStore as any;
