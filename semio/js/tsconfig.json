@@ -35,7 +35,8 @@
     "types": [
       "node",
       "react",
-      "react-dom"
+      "react-dom",
+      "vitest/globals"
     ],
     "baseUrl": ".",
     "paths": {

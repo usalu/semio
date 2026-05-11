@@ -18194,3 +18194,5 @@ if (shouldRunReactEmbeddedTests) {
   });
 }
 // #endregion ⚛️Embedded tests
+
+// [BLOCKED] §7.1.2 schema hooks + Scope→Context migration: see .repo/🎫/26/05/12/field-only-kit-reads-cqrs-classes/react-blocker.json (JS export / tsc parity required first).

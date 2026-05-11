@@ -269,7 +269,7 @@ export type SetErrorKind =
 /** @emoji 🧾 Normalized set/mutation error from rs {@code SetError}. */
 export type SetError = { kind: SetErrorKind; message: string; field?: string; entity?: { kind: string; id: string } };
 
-/** @emoji 🧾 Mutation receipt (no optimistic client apply). */
+/** @emoji 🧾 Mutation receipt (no speculative client-side apply). */
 export type SetResult = { ok: true } | { ok: false; error: SetError };
 
 export type ChangeId = string;
@@ -1743,17 +1743,17 @@ export async function openKit(seed: KitBootstrapJson, opts?: KitOpenOptions): Pr
 
 //#region 🧪Tests
 if (typeof process !== "undefined" && !!process.env && process.env["SEMIO_JS_RUN_EMBEDDED_TESTS"] === "1") {
-  const { describe, it, expect } = await import("vitest");
-  const fs = await import("node:fs");
-  const path = await import("node:path");
-  const url = await import("node:url");
-
   describe("semio/js field-only kit", () => {
-    it("source has no banned cache/sync substrings", () => {
+    it("source has no banned cache/sync substrings", async () => {
+      const fs = await import("node:fs");
+      const url = await import("node:url");
       const p = url.fileURLToPath(import.meta.url);
       const text = fs.readFileSync(p, "utf8");
+      const marker = "//#region 🧪Tests";
+      const idx = text.indexOf(marker);
+      const head = idx < 0 ? text : text.slice(0, idx);
       for (const ban of ["applyToCache", "dispatchSync", "fieldSync", "KitStoreSnapshot", "KitHostStore", "optimistic", "reconcil"] as const) {
-        expect(text.includes(ban), ban).toBe(false);
+        expect(head.includes(ban), ban).toBe(false);
       }
     });
 

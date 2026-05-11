@@ -16913,6 +16913,7 @@ export function useDiffedPiece<T>(selector?: (piece: Piece) => T, id?: string, d
   return selector ? selector(originalPiece) : originalPiece;
 }
 
+// #region 🎨Sketchpad 🛠️Properties
 /**
  * Hook returning the piece center U coordinate with setter.
  **/
@@ -17173,6 +17174,8 @@ export function useConnectionDescription(): HookResult<string> {
   const canSet = Boolean(connectionScope?.id) && ws.kind !== "readonly";
   return conditionalHookResult(canSet, text, (nv) => void setAsync(nv));
 }
+
+// #endregion 🎨Sketchpad 🛠️Properties
 
 /**
  * Clusterable piece groups for the current design (rs-backed via GraphQL `kitStore.designForId.clusterableGroups`).
@@ -48505,6 +48508,18 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
       expect(viteConfig.server?.port).toBe(5173);
     });
 
+    // #region 🎨Sketchpad 🧪NegativeGrep
+    test("NegativeGrep sketchpad has no direct @semio/js import specifiers", async () => {
+      const { readFileSync } = await import("node:fs");
+      const { dirname, join } = await import("node:path");
+      const { fileURLToPath } = await import("node:url");
+      const here = dirname(fileURLToPath(import.meta.url));
+      const src = readFileSync(join(here, "index.tsx"), "utf8");
+      expect(src).not.toMatch(/from\s+["']@semio\/js["']/);
+      expect(src).not.toMatch(/from\s+["']@semio\/js\//);
+    });
+    // #endregion 🎨Sketchpad 🧪NegativeGrep
+
     test("Startup Fallback Prevents Blank Root", async ({ page }) => {
       test.setTimeout(120000);
       await page.goto("/", { waitUntil: "commit" });
@@ -55230,26 +55245,4 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
   });
 }
 //#endregion 📐Tests
-
-// #region 🎨Sketchpad 🧪NegativeGrep
-if (import.meta.vitest) {
-  const { describe, expect, test } = import.meta.vitest;
-  describe("sketchpad index banned import patterns", () => {
-    test("no direct @semio/js module specifier", async () => {
-      const { readFileSync } = await import("node:fs");
-      const { fileURLToPath } = await import("node:url");
-      const selfPath = fileURLToPath(import.meta.url);
-      const src = readFileSync(selfPath, "utf8");
-      expect(src).not.toMatch(/from\s+["']@semio\/js["']/);
-    });
-    test("no semio/js subpath import", async () => {
-      const { readFileSync } = await import("node:fs");
-      const { fileURLToPath } = await import("node:url");
-      const selfPath = fileURLToPath(import.meta.url);
-      const src = readFileSync(selfPath, "utf8");
-      expect(src).not.toMatch(/from\s+["']@semio\/js\//);
-    });
-  });
-}
-// #endregion 🎨Sketchpad 🧪NegativeGrep
 // #endregion 🎨Sketchpad
