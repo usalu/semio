@@ -3333,7 +3333,7 @@ pub mod kit {
             *g = g.saturating_add(1);
         }
 
-        /// @emoji 🧬 Deep-clone this kit graph (snapshot JSON round-trip) for immutable checkpoint roots / materialization bases.
+        /// @emoji 🧬 Deep-clone this kit graph (snapshot JSON round-trip) for immutable graph `initialKit` baselines / replay scratch kits.
         pub async fn deep_clone(self: &Arc<Self>) -> Arc<Kit> {
             let snap = self.kit_full_snapshot_value().await;
             let owner = self.owner_graph.clone();
@@ -4972,8 +4972,8 @@ pub mod vcs {
         pub id: Id,
         pub timestamp: RwLock<Option<Timestamp>>,
         pub authors: RwLock<Vec<Author>>,
-        /// @emoji 🧊 Immutable kit snapshot taken once at checkpoint creation; never aliased with live [`Graph::parent_root_for_active_draft`].
-        pub frozen_root: Arc<Kit>,
+        /// @emoji 🔗 Owning graph for [`Checkpoint::initial`] / [`Checkpoint::kit`] (single [`Graph::initial_kit`] baseline, not per-checkpoint kit storage).
+        pub owner_graph: Weak<Graph>,
         pub parent_checkpoint: RwLock<Weak<Checkpoint>>,
         pub message: RwLock<Option<String>>,
         pub is_release: RwLock<bool>,
@@ -4986,7 +4986,7 @@ pub mod vcs {
                 id: Id::default(),
                 timestamp: RwLock::new(None),
                 authors: RwLock::new(Vec::new()),
-                frozen_root: Arc::default(),
+                owner_graph: Weak::new(),
                 parent_checkpoint: RwLock::new(Weak::new()),
                 message: RwLock::new(None),
                 is_release: RwLock::new(false),
@@ -5015,38 +5015,54 @@ pub mod vcs {
         pub async fn timestamp(&self) -> Option<Timestamp> {
             self.timestamp.read().await.clone()
         }
-        pub async fn authors(&self) -> Vec<Author> {
-            self.authors.read().await.clone()
-        }
-        /// @emoji 🧊 SDL `checkpoint.root` — frozen snapshot (same backing as [`Checkpoint::frozen_root`]).
-        pub async fn root(&self) -> Option<Arc<Kit>> {
-            Some(self.frozen_root.clone())
-        }
-        #[graphql(name = "frozenRoot")]
-        pub async fn frozen_root_gql(&self) -> Option<Arc<Kit>> {
-            Some(self.frozen_root.clone())
+        pub async fn authors(&self) -> crate::gql_relay::AuthorConnection {
+            crate::gql_relay::AuthorConnection::from_rows(self.authors.read().await.clone())
         }
 
-        #[graphql(name = "parentCheckpoint")]
-        pub async fn parent_checkpoint(&self) -> Option<Arc<Checkpoint>> {
+        /// @emoji 🔗 SDL `Checkpoint.parent` — prior checkpoint in the spine (none for the seed checkpoint).
+        pub async fn parent(&self) -> Option<Arc<Checkpoint>> {
             self.parent_checkpoint.read().await.upgrade()
         }
-        pub async fn message(&self) -> Option<String> {
-            self.message.read().await.clone()
-        }
-        #[graphql(name = "isRelease")]
-        pub async fn is_release(&self) -> bool {
-            *self.is_release.read().await
-        }
-        #[graphql(name = "changeCount")]
-        pub async fn change_count(&self) -> i32 {
-            *self.change_count.read().await
+
+        /// @emoji 🔗 SDL `Checkpoint.ancestors` — ordered walk up `parent` (immediate parent first).
+        pub async fn ancestors(&self) -> Vec<Arc<Checkpoint>> {
+            let mut out = Vec::new();
+            let mut cur = self.parent_checkpoint.read().await.upgrade();
+            while let Some(c) = cur {
+                let next = c.parent_checkpoint.read().await.upgrade();
+                out.push(c);
+                cur = next;
+            }
+            out
         }
 
-        /// @emoji 🔗 Checkpoint-scoped semantic operation ids (`histories.checkpoint` wraps operation log ids without duplicating kit trees).
-        #[graphql(name = "semanticOpRecordIds")]
-        pub async fn semantic_op_record_ids(&self) -> Vec<Id> {
-            Vec::new()
+        /// @emoji 🌱 SDL `Checkpoint.initial` — graph-level [`Graph::initial_kit`] baseline (saved once per graph, not duplicated on each checkpoint).
+        pub async fn initial(&self) -> Option<Arc<Kit>> {
+            match self.owner_graph.upgrade() {
+                Some(g) => Some(g.initial_kit.read().await.clone()),
+                None => None,
+            }
+        }
+
+        /// @emoji 📦 SDL `Checkpoint.kit` — materialized kit at this checkpoint; until checkpoint-owned `changes` are wired, matches `initial`.
+        pub async fn kit(&self) -> Option<Arc<Kit>> {
+            match self.owner_graph.upgrade() {
+                Some(g) => Some(g.initial_kit.read().await.clone()),
+                None => None,
+            }
+        }
+
+        pub async fn changes(&self) -> crate::gql_relay::ChangeConnection {
+            crate::gql_relay::ChangeConnection::empty()
+        }
+
+        pub async fn change(&self, id: Id) -> Option<Arc<Change>> {
+            let _ = id;
+            None
+        }
+
+        pub async fn message(&self) -> String {
+            self.message.read().await.clone().unwrap_or_default()
         }
 
         #[graphql(name = "ownerEntity")]
@@ -5265,6 +5281,8 @@ pub mod vcs {
         pub owner_session: RwLock<Weak<Session>>,
         /// @emoji 🔗 Weak back-reference so `&Graph` resolvers upgrade to [`Arc`] for materialization.
         pub self_weak: std::sync::Mutex<std::sync::Weak<Graph>>,
+        /// @emoji 🌱 SDL `Graph.initialKit` — immutable kit baseline persisted once per graph (not duplicated on checkpoints).
+        pub initial_kit: RwLock<Arc<Kit>>,
         /// @emoji 🧊 Live WIP kit line (materialized root); mutations target this [`Arc<Kit>`].
         pub parent_root_for_active_draft: RwLock<Arc<Kit>>,
         pub materialized_cache: RwLock<Option<MaterializedSlot>>,
@@ -5282,6 +5300,7 @@ pub mod vcs {
                 id: Id::default(),
                 owner_session: RwLock::new(Weak::new()),
                 self_weak: std::sync::Mutex::new(Weak::new()),
+                initial_kit: RwLock::new(Arc::default()),
                 parent_root_for_active_draft: RwLock::new(Arc::default()),
                 materialized_cache: RwLock::new(None),
                 alternatives: RwLock::new(Vec::new()),
@@ -5329,6 +5348,7 @@ pub mod vcs {
                     id,
                     owner_session: RwLock::new(Weak::new()),
                     self_weak: std::sync::Mutex::new(weak_self.clone()),
+                    initial_kit: RwLock::new(Arc::default()),
                     parent_root_for_active_draft: RwLock::new(kit),
                     materialized_cache: RwLock::new(None),
                     alternatives: RwLock::new(Vec::new()),
@@ -5340,7 +5360,9 @@ pub mod vcs {
             });
             let base = g.parent_root_for_active_draft.read().await.clone();
             let frozen = base.deep_clone().await;
+            let initial_snap = frozen.deep_clone().await;
             *g.parent_root_for_active_draft.write().await = frozen;
+            *g.initial_kit.write().await = initial_snap;
             g
         }
 
@@ -5374,6 +5396,10 @@ pub mod vcs {
                 }
                 let cloned = slot.deep_clone().await;
                 *slot = cloned;
+            }
+            {
+                let ini = g.parent_root_for_active_draft.read().await.deep_clone().await;
+                *g.initial_kit.write().await = ini;
             }
             Ok(g)
         }
@@ -5501,7 +5527,7 @@ pub mod vcs {
             Ok(())
         }
 
-        /// @emoji 🌱 Ensure the graph has a seed `Checkpoint` anchored on [`Graph::parent_root_for_active_draft`] and a default `Draft`
+        /// @emoji 🌱 Ensure the graph has a seed `Checkpoint` on the main spine and a default `Draft`
         /// hanging off it. Idempotent: if either already exists it's reused. Returns the active default draft.
         /// Sketchpad calls this through `Mutation.kitStoreInitializeDefaults` when a fresh dev kit (json file)
         /// is mounted so the on-disk bundle immediately exposes "root + first checkpoint + first draft".
@@ -5513,12 +5539,11 @@ pub mod vcs {
                 } else {
                     drop(cps);
                     let id = Id::new().await;
-                    let frozen = self.parent_root_for_active_draft.read().await.deep_clone().await;
                     let cp = Arc::new(Checkpoint {
                         id,
                         timestamp: RwLock::new(None),
                         authors: RwLock::new(Vec::new()),
-                        frozen_root: frozen,
+                        owner_graph: Arc::downgrade(self),
                         parent_checkpoint: RwLock::new(Weak::new()),
                         message: RwLock::new(Some("init".to_string())),
                         is_release: RwLock::new(false),
@@ -5566,7 +5591,7 @@ pub mod vcs {
 
             let parent_cp = source_draft.parent_checkpoint.read().await.upgrade().ok_or_else(|| SemioError::invalid("draft has no parent checkpoint"))?;
 
-            let parent_root = parent_cp.frozen_root.clone();
+            let parent_root = self.initial_kit.read().await.clone();
 
             let new_alt_id = Id::new().await;
             let new_alt = Arc::new(Alternative {
@@ -5665,8 +5690,8 @@ pub mod vcs {
             if let Some(cid) = p.checkpoint_id.clone() {
                 let _ = (p.checkpoint_change_id.clone(), p.checkpoint_operation_id.clone());
                 let cps = self.checkpoints.read().await;
-                let cp = cps.iter().find(|c| c.id == cid).cloned().ok_or_else(|| SemioError::not_found("Checkpoint", cid.as_str()))?;
-                return Ok(cp.frozen_root.clone());
+                let _cp = cps.iter().find(|c| c.id == cid).cloned().ok_or_else(|| SemioError::not_found("Checkpoint", cid.as_str()))?;
+                return Ok(self.initial_kit.read().await.clone());
             }
             if let Some(aid) = p.alternative_id.clone() {
                 let alts = self.alternatives.read().await;
@@ -5713,6 +5738,10 @@ pub mod vcs {
         #[graphql(name = "theKit")]
         pub async fn the_kit(&self) -> crate::gql::interfaces::VersionIface {
             crate::gql::interfaces::VersionIface::TheKit(TheKit::new(Arc::downgrade(&self.arc_here())))
+        }
+        #[graphql(name = "initialKit")]
+        pub async fn initial_kit_gql(&self) -> Option<Arc<Kit>> {
+            Some(self.initial_kit.read().await.clone())
         }
         pub async fn alternative(&self, id: Id) -> Option<Arc<Alternative>> {
             self.alternatives.read().await.iter().find(|a| a.id == id).cloned()
@@ -8509,27 +8538,23 @@ pub mod kit_backbone {
         }
 
         /// @emoji 📸 Project the live `Graph` into a metabolism-shaped bundle ready for atomic write.
-        /// `wip.id` mirrors the graph id; `wip.initialKit` on disk / `wip.root` in Rust is the camelCase `KitFullDto` projection of `parent_root_for_active_draft`;
-        /// checkpoints / changes / edits echo the in-memory state so the on-disk file matches what
-        /// sketchpad is currently editing. The dev who reads the file should see the same shape as
-        /// `semio/assets/semio/metabolism.new.kit.semio.json`.
+        /// `wip.id` mirrors the graph id; `wip.initialKit` is the immutable [`Graph::initial_kit`] baseline (SDL `Graph.initialKit`); head materialization stays on `theKit.kit` / version changes.
         pub async fn from_graph(graph: &crate::vcs::Graph) -> Self {
             let mut bundle = Self::template();
             let g = graph.arc_here();
-            let kit_dto = g.materialized_head_kit().await.kit_full_snapshot_value().await;
+            let initial_dto = g.initial_kit.read().await.kit_full_snapshot_value().await;
             let gid = graph.id.as_str().to_string();
             bundle.wip.id = gid.clone();
             bundle.authoritative.id = gid.clone();
             bundle.stage.id = gid;
-            bundle.wip.root = kit_dto.clone();
-            bundle.authoritative.root = kit_dto.clone();
-            bundle.stage.root = kit_dto;
+            bundle.wip.root = initial_dto.clone();
+            bundle.authoritative.root = initial_dto.clone();
+            bundle.stage.root = initial_dto;
 
-            // 🪧 Project checkpoints (each anchored on a kit snapshot we currently leave at the placeholder hash).
+            // 🪧 Project checkpoints (metadata only; kit baselines live on `Graph.initialKit`).
             for cp in graph.checkpoints.read().await.iter() {
                 let msg = cp.message.read().await.clone().unwrap_or_default();
                 let ts = cp.timestamp.read().await.clone().map(|t| t.0).unwrap_or_else(|| KIT_BUNDLE_CHECKPOINT_TIMESTAMP_STUB.to_string());
-                let frozen_dto = cp.frozen_root.kit_full_snapshot_value().await;
                 bundle.wip.checkpoints.items.push(serde_json::json!({
                     "id": cp.id.as_str(),
                     "hash": KIT_BUNDLE_HASH_STUB,
@@ -8537,7 +8562,6 @@ pub mod kit_backbone {
                     "message": msg,
                     "authors": { "hash": KIT_BUNDLE_HASH_STUB, "items": [] },
                     "changes": { "hash": KIT_BUNDLE_HASH_STUB, "items": [] },
-                    "frozenRoot": frozen_dto,
                 }));
             }
 
@@ -8562,21 +8586,16 @@ pub mod kit_backbone {
             blake3::hash(wire.as_bytes()).to_hex().to_string()
         }
 
-        /// @emoji 📦 Hoist each `files[].blob` into [`KitStoreBundleFile::blobs`] keyed by [`digest_kit_blob_wire`], set `files[].blobHash`, strip inline payload (shared digest dedupes across `wip.initialKit` + checkpoints).
+        /// @emoji 📦 Hoist each `files[].blob` into [`KitStoreBundleFile::blobs`] keyed by [`digest_kit_blob_wire`], set `files[].blobHash`, strip inline payload (shared digest dedupes across graph `initialKit` projections).
         pub fn hoist_inline_file_blobs_for_storage(bundle: &mut KitStoreBundleFile) {
             let mut seen_digest = std::collections::HashSet::<String>::new();
             let mut collected: Vec<serde_json::Value> = Vec::new();
             Self::take_file_blobs_from_kit_json_into(&mut bundle.wip.root, &mut seen_digest, &mut collected);
-            for cp in bundle.wip.checkpoints.items.iter_mut() {
-                if let Some(fr) = cp.get_mut("frozenRoot") {
-                    Self::take_file_blobs_from_kit_json_into(fr, &mut seen_digest, &mut collected);
-                }
-            }
             bundle.blobs.items.extend(collected);
             Self::purge_unreferenced_blobs(bundle);
         }
 
-        /// @emoji 🧹 Drop [`blobs`] rows whose digest is not referenced by any `files[].blobHash` on `wip` / `authoritative` / `stage` `initialKit` snapshots or checkpoint `frozenRoot` projections.
+        /// @emoji 🧹 Drop [`blobs`] rows whose digest is not referenced by any `files[].blobHash` on `wip` / `authoritative` / `stage` `initialKit` snapshots.
         pub fn purge_unreferenced_blobs(bundle: &mut KitStoreBundleFile) {
             let refs = Self::referenced_blob_hashes_from_bundle(bundle);
             bundle.blobs.items.retain(|b| b.get("hash").and_then(|x| x.as_str()).map(|h| refs.contains(h)).unwrap_or(false));
@@ -8585,11 +8604,6 @@ pub mod kit_backbone {
         fn referenced_blob_hashes_from_bundle(bundle: &KitStoreBundleFile) -> std::collections::HashSet<String> {
             let mut s = std::collections::HashSet::new();
             Self::collect_blob_hashes_from_kit_projection(&bundle.wip.root, &mut s);
-            for cp in &bundle.wip.checkpoints.items {
-                if let Some(fr) = cp.get("frozenRoot") {
-                    Self::collect_blob_hashes_from_kit_projection(fr, &mut s);
-                }
-            }
             Self::collect_blob_hashes_from_kit_projection(&bundle.authoritative.root, &mut s);
             Self::collect_blob_hashes_from_kit_projection(&bundle.stage.root, &mut s);
             s
@@ -8677,6 +8691,8 @@ pub mod kit_backbone {
             Self::merge_bundle_file_blobs_into_kit_json(&mut wip_root, &bundle.blobs.items);
             if !wip_root.is_null() && wip_root.is_object() {
                 graph.parent_root_for_active_draft.write().await.hydrate_from_kit_full_snapshot_json(&wip_root).await?;
+                let ini = graph.parent_root_for_active_draft.read().await.deep_clone().await;
+                *graph.initial_kit.write().await = ini;
             }
             Ok(bundle)
         }
@@ -10681,25 +10697,28 @@ mod tests {
             std::thread::sleep(std::time::Duration::from_millis(150));
 
             let schema_a = crate::gql::build_schema_for(rt.clone());
-            let q_roots = r#"{
+            let q_baseline = r#"{
                 wip {
+                    initialKit { name }
                     theKit { kit { name } }
-                    checkpoints { edges { node { frozenRoot { name } } } }
+                    checkpoints { edges { node { initial { name } kit { name } } } }
                 }
             }"#;
-            let res = schema_a.execute(q_roots).await;
-            assert!(res.errors.is_empty(), "roots query errors: {:?}", res.errors);
+            let res = schema_a.execute(q_baseline).await;
+            assert!(res.errors.is_empty(), "baseline query errors: {:?}", res.errors);
             let vr = res.data.into_json().unwrap();
             assert_eq!(vr["wip"]["theKit"]["kit"]["name"].as_str(), Some("Hello Bundle"), "materialized wip.theKit.kit");
-            let frozen_name = vr["wip"]["checkpoints"]["edges"][0]["node"]["frozenRoot"]["name"].as_str().expect("frozenRoot.name");
-            assert_eq!(frozen_name, "the kit", "checkpoint.frozenRoot must not alias live rename");
+            assert_eq!(vr["wip"]["initialKit"]["name"].as_str(), Some("the kit"), "graph.initialKit stays immutable");
+            let cp_initial = vr["wip"]["checkpoints"]["edges"][0]["node"]["initial"]["name"].as_str().expect("checkpoint.initial.name");
+            assert_eq!(cp_initial, "the kit", "checkpoint.initial must not alias live rename");
 
             g.abort_transaction(&draft_a.id, &tx_a.id).await.expect("abort");
-            let res = schema_a.execute(q_roots).await;
-            assert!(res.errors.is_empty(), "roots after abort: {:?}", res.errors);
+            let res = schema_a.execute(q_baseline).await;
+            assert!(res.errors.is_empty(), "baseline after abort: {:?}", res.errors);
             let vr = res.data.into_json().unwrap();
             assert_eq!(vr["wip"]["theKit"]["kit"]["name"].as_str(), Some("the kit"), "materialized kit reverts after abort");
-            assert_eq!(vr["wip"]["checkpoints"]["edges"][0]["node"]["frozenRoot"]["name"].as_str(), Some("the kit"));
+            assert_eq!(vr["wip"]["initialKit"]["name"].as_str(), Some("the kit"));
+            assert_eq!(vr["wip"]["checkpoints"]["edges"][0]["node"]["initial"]["name"].as_str(), Some("the kit"));
 
             let tx_a2 = g.open_transaction(&draft_a.id).await;
             let req2 = crate::id::Id::new().await;
@@ -10724,7 +10743,7 @@ mod tests {
                 assert!(v.get(*k).is_some(), "missing top-level key {k}");
             }
             assert!(v["wip"]["initialKit"].is_object(), "wip.initialKit projects the live kit");
-            assert_eq!(v["wip"]["initialKit"]["name"].as_str().unwrap_or(""), "Hello Bundle");
+            assert_eq!(v["wip"]["initialKit"]["name"].as_str().unwrap_or(""), "the kit");
             assert!(!v["wip"]["checkpoints"]["items"].as_array().unwrap().is_empty(), "seed checkpoint present");
             assert!(v["wip"].get("drafts").is_none(), "bundle must not persist drafts");
             assert!(v["wip"].get("transactions").is_none(), "bundle must not persist transactions");
@@ -10735,7 +10754,7 @@ mod tests {
 
             let json_b = serde_json::to_string(&crate::kit_backbone::KitStoreBundleFile::from_graph(rt_b.wip_graph.as_ref()).await).expect("serialize bundle b");
             let vb: serde_json::Value = serde_json::from_str(&json_b).expect("bundle b parses");
-            assert_eq!(vb["wip"]["initialKit"]["name"].as_str().unwrap_or(""), "Hello Bundle", "kit name survives bundle round-trip");
+            assert_eq!(vb["wip"]["initialKit"]["name"].as_str().unwrap_or(""), "the kit", "immutable baseline survives bundle round-trip");
         });
     }
 
@@ -11112,7 +11131,8 @@ mod tests {
             let g = crate::vcs::Graph::new().await;
             crate::kit_backbone::AttachedBackbone::mount_and_replay(&norm, crate::operation::BackboneStoreKind::DevJson, "wip", &g).await.expect("dev json mount+replay");
 
-            let fp = stable_projection_fingerprint(&g.materialized_head_kit().await).await;
+            let draft_id = crate::id::Id::from(golden_ops["draftId"].as_str().expect("draftId"));
+            let fp = stable_projection_fingerprint(&g.materialized_kit_for_draft(&draft_id).await).await;
             let exp_fp = exp["projectionFingerprint"].as_str().expect("projectionFingerprint");
             assert_eq!(fp, exp_fp, "dev-json backbone replay must match US-001 golden fingerprint");
         });
@@ -11234,15 +11254,9 @@ mod tests {
                 "updatedAt": "2020-01-01T00:00:00.000Z",
             }],
         });
-        bundle.wip.checkpoints.items.push(serde_json::json!({
-            "id": "cp-blob",
-            "frozenRoot": bundle.wip.root.clone(),
-        }));
         crate::kit_backbone::KitStoreBundleFile::hoist_inline_file_blobs_for_storage(&mut bundle);
         assert!(bundle.wip.root["files"][0].as_object().expect("file obj").get("blob").is_none());
         assert_eq!(bundle.wip.root["files"][0]["blobHash"].as_str().expect("blobHash"), dig);
-        assert!(bundle.wip.checkpoints.items[0]["frozenRoot"]["files"][0].as_object().expect("fr file").get("blob").is_none());
-        assert_eq!(bundle.wip.checkpoints.items[0]["frozenRoot"]["files"][0]["blobHash"].as_str().expect("fr blobHash"), dig);
         assert_eq!(bundle.blobs.items.len(), 1);
         assert_eq!(bundle.blobs.items[0]["hash"].as_str().expect("blob row hash"), dig);
         let mut merged = bundle.wip.root.clone();

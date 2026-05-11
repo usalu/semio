@@ -212,7 +212,7 @@ export type ReadKitCommand =
   | { readonly readKitTypeCommands: { readonly id: KitIdDto; readonly commands: ReadonlyArray<ReadTypeCommand> } };
 
 /**
- * @emoji 🧭 Materialization anchor for `Query.wip.theKit(at: …)` — callers pass explicit ids only through React context; UI never branches on shape.
+ * @emoji 🧭 Materialization anchor for target-schema versions (`wip.theKit.kit`, checkpoints, or alternatives).
  */
 export type KitReadPoint =
   | { readonly theKit: null }
@@ -1457,27 +1457,50 @@ function kitGraphqlData<TData>(response: KitGraphqlResponseEnvelope<TData>): TDa
   throw new Error("kitGraphql: no data in response");
 }
 
-/** @emoji 🧾 GraphQL selection on `wip { theKit { … } }` (`Graph.theKit`); falls back to `theKit(at: …)` for checkpoint/alternative read points. */
+/** @emoji 🧾 GraphQL selection on a target-schema version's nested `kit` (`wip.theKit.kit`, checkpoint root, or alternative kit). */
 function kitSessionWipStoreSelect(point: KitReadPoint, innerOnKitStore: string): { query: string; variables: GraphQlVariables } {
   if (isTheKitReadPoint(point)) {
     return {
-      query: `query KitSessionWipStore { wip { theKit { ${innerOnKitStore} } } }`,
+      query: `query KitSessionWipStore { wip { theKit { kit { ${innerOnKitStore} } } } }`,
       variables: {},
     };
   }
+  if ("checkpoint" in point) {
+    return {
+      query: `query KitSessionWipStore($checkpointId: ID!) { wip { checkpoint(id: $checkpointId) { frozenRoot { ${innerOnKitStore} } } } }`,
+      variables: { checkpointId: point.checkpoint.checkpointId },
+    };
+  }
+  if ("alternative" in point) {
+    return {
+      query: `query KitSessionWipStore($alternativeId: ID!) { wip { alternative(id: $alternativeId) { kit { ${innerOnKitStore} } } } }`,
+      variables: { alternativeId: point.alternative.alternativeId },
+    };
+  }
   return {
-    query: `query KitSessionWipStore($at: KitReadPointInput) { wip { theKit(at: $at) { ${innerOnKitStore} } } }`,
-    variables: { at: kitReadPointToGqlVariables(point) },
+    query: `query KitSessionWipStore { wip { theKit { kit { ${innerOnKitStore} } } } }`,
+    variables: {},
   };
 }
 
 /** @emoji 🧾 Extract `Kit` JSON from `Query.wip` for a {@link KitReadPoint} (RS `fullSnapshot` + nested reads). */
-function gqlDataSessionWipKitStore(d: JsonValue | null | undefined, _point: KitReadPoint): JsonObject | null {
+function gqlDataSessionWipKitStore(d: JsonValue | null | undefined, point: KitReadPoint): JsonObject | null {
   if (d == null || typeof d !== "object" || Array.isArray(d)) return null;
   const wip = (d as { wip?: JsonObject | null }).wip;
   if (!wip || typeof wip !== "object" || Array.isArray(wip)) return null;
+  if ("checkpoint" in point) {
+    const cp = wip["checkpoint"];
+    const root = cp != null && typeof cp === "object" && !Array.isArray(cp) ? (cp as JsonObject)["frozenRoot"] : null;
+    return root != null && typeof root === "object" && !Array.isArray(root) ? (root as JsonObject) : null;
+  }
+  if ("alternative" in point) {
+    const alt = wip["alternative"];
+    const kit = alt != null && typeof alt === "object" && !Array.isArray(alt) ? (alt as JsonObject)["kit"] : null;
+    return kit != null && typeof kit === "object" && !Array.isArray(kit) ? (kit as JsonObject) : null;
+  }
   const tk = wip["theKit"];
-  return tk != null && typeof tk === "object" && !Array.isArray(tk) ? (tk as JsonObject) : null;
+  const kit = tk != null && typeof tk === "object" && !Array.isArray(tk) ? (tk as JsonObject)["kit"] : null;
+  return kit != null && typeof kit === "object" && !Array.isArray(kit) ? (kit as JsonObject) : null;
 }
 
 /** @emoji 🧾 Flattens Relay `*Connection` lists on `Query.wip` for VCS helpers (`canUndo`, tests). */
@@ -1903,13 +1926,13 @@ export const KIT_COMMAND_SUCCEEDED_SUBSCRIPTION = KIT_EVENT_STREAM_SUBSCRIPTION;
 export const KIT_OPERATION_FAILED_SUBSCRIPTION = KIT_EVENT_STREAM_SUBSCRIPTION;
 
 /**
- * @emoji 🔗 Main-line full kit DTO via `wip.theKit.fullSnapshot` (RS extension field until parity exports a target `Kit` read).
+ * @emoji 🔗 Main-line full kit DTO via `wip.theKit.kit.fullSnapshot`.
  */
-export const KIT_SCOPED_FULL_DTO_QUERY = `query { wip { theKit { fullSnapshot } } }` as const;
+export const KIT_SCOPED_FULL_DTO_QUERY = `query { wip { theKit { kit { fullSnapshot } } } }` as const;
 
 /** @emoji 🧾 Typed `data` shape for {@link KIT_SCOPED_FULL_DTO_QUERY} on {@link theKitReadPoint} (after {@link kitGraphqlData}). */
 export type KitGraphqlDataKitScopedFullDto = Readonly<{
-  readonly wip: Readonly<{ readonly theKit: Readonly<{ readonly fullSnapshot: KitJsonTreeDto }> | null }> | null;
+  readonly wip: Readonly<{ readonly theKit: Readonly<{ readonly kit: Readonly<{ readonly fullSnapshot: KitJsonTreeDto }> | null }> | null }> | null;
 }>;
 
 //#region 🧱StorePrimitives
@@ -2144,15 +2167,14 @@ export class KitStore {
           if (isTheKitReadPoint(point)) {
             const varHeader = extraDecl ? (`${extraDecl}` as const) : "";
             const headerPart = varHeader ? `(${varHeader})` : "";
-            query = `query SemioMatKit${headerPart} { wip { theKit { ${spec.innerOnKit} } } }`;
+            query = `query SemioMatKit${headerPart} { wip { theKit { kit { ${spec.innerOnKit} } } } }`;
             variables = { ...(spec.extraVariables ?? {}) } as GraphQlVariables;
           } else {
-            const varHeader = extraDecl ? (`$at: KitReadPointInput, ${extraDecl}` as const) : (`$at: KitReadPointInput` as const);
-            query = `query SemioMatKit(${varHeader}) { wip { theKit(at: $at) { ${spec.innerOnKit} } } }`;
-            variables = {
-              at: kitReadPointToGqlVariables(point),
-              ...(spec.extraVariables ?? {}),
-            } as GraphQlVariables;
+            const varHeader = extraDecl ? (`${extraDecl}` as const) : "";
+            const headerPart = varHeader ? `(${varHeader})` : "";
+            const selected = kitSessionWipStoreSelect(point, spec.innerOnKit);
+            query = extraDecl ? selected.query.replace("query KitSessionWipStore", `query SemioMatKit${headerPart}`) : selected.query.replace("query KitSessionWipStore", "query SemioMatKit");
+            variables = { ...selected.variables, ...(spec.extraVariables ?? {}) } as GraphQlVariables;
           }
           const data = kitGraphqlData(await this.gqlRun({ query, variables })) as JsonValue;
           const frag = gqlDataSessionWipKitStore(data, point) ?? ({} as JsonObject);
@@ -2483,12 +2505,12 @@ export class KitStore {
     this.transport.dispose();
   }
 
-  /** @internal One `Query.wip.theKit { fullSnapshot }` read to verify GraphQL after WASM init (no local kit cache). */
+  /** @internal One `Query.wip.theKit { kit { fullSnapshot } }` read to verify GraphQL after WASM init (no local kit cache). */
   private async warmGraphqlRead(): Promise<void> {
     await this.materializedLiveJsonForReadPoint(theKitReadPoint);
   }
 
-  /** @emoji 🧾 Full DTO for a {@link KitReadPoint} via `Query.wip.theKit` (`fullSnapshot` scalar); sole full-kit read path (no WASM `snapshot` fallback). */
+  /** @emoji 🧾 Full DTO for a {@link KitReadPoint} via target-schema version `kit.fullSnapshot`; sole full-kit read path (no WASM `snapshot` fallback). */
   async materializedLiveJsonForReadPoint(scope: KitReadPoint): Promise<KitFullDto> {
     this.ensureAlive();
     const { query, variables } = kitSessionWipStoreSelect(scope, "fullSnapshot");
@@ -2503,7 +2525,7 @@ export class KitStore {
     return semioCoerceKitFullDtoFromJson(j as KitJsonTreeDto);
   }
 
-  /** @emoji 🧾 Main-line live kit DTO from `Query.wip.theKit` (`fullSnapshot` / materialized JSON). */
+  /** @emoji 🧾 Main-line live kit DTO from `Query.wip.theKit.kit` (`fullSnapshot` / materialized JSON). */
   async theKit(): Promise<KitFullDto> {
     return this.materializedLiveJsonForReadPoint(theKitReadPoint);
   }
@@ -2517,7 +2539,7 @@ export class KitStore {
   async vcsState(): Promise<JsonObject> {
     const data = kitGraphqlData(
       await this.gqlRun({
-        query: `query { wip { id theKit { id } checkpoints { edges { node { id message } } } alternatives { edges { node { id name } } } } }`,
+        query: `query { wip { id theKit { id kit { id } } checkpoints { edges { node { id message } } } alternatives { edges { node { id name } } } } }`,
       }),
     ) as JsonValue;
     const wipRaw = (data as { wip?: JsonObject | null }).wip;
@@ -8251,8 +8273,8 @@ if (
   const { describe, it, expect } = await import("vitest");
 
   describe("semio-js KitStore", () => {
-    it("KIT_SCOPED_FULL_DTO_QUERY matches wip.theKit { fullSnapshot }", () => {
-      expect(KIT_SCOPED_FULL_DTO_QUERY).toContain("wip { theKit { fullSnapshot");
+    it("KIT_SCOPED_FULL_DTO_QUERY matches wip.theKit { kit { fullSnapshot } }", () => {
+      expect(KIT_SCOPED_FULL_DTO_QUERY).toContain("wip { theKit { kit { fullSnapshot");
     });
 
     it("KitStore has no JS snapshot() full-read method (use theKit / materialized GraphQL only)", () => {

@@ -2945,6 +2945,50 @@
         }
       },
       "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "e4f2dbaea2d3b07ac264570709af9d2b9f9febe8",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.ended",
+        "second": "2026-05-11T10:32:03Z",
+        "session": "662ed1a3-814e-4fca-9fb1-3c4daafde164",
+        "transcript": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\662ed1a3-814e-4fca-9fb1-3c4daafde164.jsonl"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-05-11T10:32:02.760Z",
+          "hook_event_name": "Stop",
+          "session_id": "662ed1a3-814e-4fca-9fb1-3c4daafde164",
+          "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\662ed1a3-814e-4fca-9fb1-3c4daafde164.jsonl",
+          "stop_hook_active": false,
+          "cwd": "c:\\git\\semio"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "e4f2dbaea2d3b07ac264570709af9d2b9f9febe8",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.ended",
+        "second": "2026-05-11T10:32:05Z",
+        "session": "662ed1a3-814e-4fca-9fb1-3c4daafde164",
+        "transcript": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\662ed1a3-814e-4fca-9fb1-3c4daafde164.jsonl"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-05-11T10:32:02.760Z",
+          "hook_event_name": "Stop",
+          "session_id": "662ed1a3-814e-4fca-9fb1-3c4daafde164",
+          "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\662ed1a3-814e-4fca-9fb1-3c4daafde164.jsonl",
+          "stop_hook_active": false,
+          "cwd": "c:\\git\\semio"
+        }
+      },
+      "response": {}
     }
   ]
 }
