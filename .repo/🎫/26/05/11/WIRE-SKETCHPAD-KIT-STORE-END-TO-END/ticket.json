@@ -1,11 +1,12 @@
 {
   "title": "Wire Sketchpad Kit Store End To End",
   "emoji": "🧭",
-  "status": "closed",
+  "status": "open",
   "description": "Refactor CQRS event sourcing flow so sketchpad dev JSON kit opening initializes the RS-backed kit store end-to-end with three graphs, initial kit snapshot, initial checkpoint, and initial unsaved change on the kit. Renaming must start a semantic change and save it when complete. State must come only from semio/rs.",
   "summary": "Wired dev JSON bundle persistence through semio/rs: added GraphQL serialize/hydrate fields, made semio/js persist the RS bundle instead of '{}', bootstrapped empty JSON kits as 'the kit' with seed checkpoint and open unsaved change, and made the React registry apply/persist the initial RS snapshot on open. Verified Rust schema/bundle tests, JS embedded tests/build, React build, and Sketchpad build.",
   "goal": "🎯r2602🎯runningsketchpad🎯runningsketchpadapps🎯runningkitapp",
   "sessions": [
-    "⚪b147371bb10149d3979e357fa9aa62dd"
+    "⚪b147371bb10149d3979e357fa9aa62dd",
+    "⚪d3428b038018455f807b599a693b8bb7"
   ]
 }

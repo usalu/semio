@@ -2672,7 +2672,7 @@ export class KitStore {
     return altId;
   }
 
-  /** @emoji 📸 Serialize the RS-owned kit store bundle (`schema`, three graphs, checkpoints, drafts, transactions). */
+  /** @emoji 📸 Serialize the RS-owned kit store bundle (`schema`, three graphs, checkpoints, changes, edits). */
   async serializeKitStoreBundleJson(): Promise<string> {
     this.ensureAlive();
     const data = kitGraphqlData(await this.gqlRun({ query: `query { kitStoreBundleJson }` })) as JsonObject;
@@ -7205,12 +7205,12 @@ export function asKitInstance(input: KitLike): Kit {
 /** @emoji 🧾 Minimal bridge surface used when applying WASM snapshots onto a host store.
  *  When the host store is bundle-persisting (`JsonFileKitStore` / `FolderKitStore`) we also drive the
  *  metabolism-shaped JSON file end-to-end: on first call we hydrate rs from the file's bytes (if any) and
- *  bootstrap the seed checkpoint + draft; after every change we ask rs to serialize the bundle and atomically
- *  write it back through the host adapter. The file therefore always mirrors `wip.initialKit` + draft / transaction
+ *  bootstrap the seed checkpoint + unsaved change; after every change we ask rs to serialize the bundle and atomically
+ *  write it back through the host adapter. The file therefore always mirrors `wip.initialKit` + version changes / edits
  *  state and looks like `semio/assets/semio/metabolism.new.kit.semio.json`. */
 const KIT_BUNDLE_BOOTSTRAPPED = new WeakSet<KitHostStore>();
 export async function applyKitClientSnapshotToLocalStore(kitClient: SemioKitBridge, store: KitHostStore): Promise<void> {
-  // 🌱 First-time wiring for bundle-persisting hosts: hydrate rs from the file (if any), then ensure rs has a seed checkpoint + default draft.
+  // 🌱 First-time wiring for bundle-persisting hosts: hydrate rs from the file (if any), then ensure rs has a seed checkpoint + default unsaved change.
   if (isKitBundlePersistingStore(store) && !KIT_BUNDLE_BOOTSTRAPPED.has(store)) {
     KIT_BUNDLE_BOOTSTRAPPED.add(store);
     const ks = kitStoreFromKitStoreClient(kitClient as unknown as KitStoreClient);
@@ -7237,7 +7237,7 @@ export async function applyKitClientSnapshotToLocalStore(kitClient: SemioKitBrid
     const changed = JSON.stringify(incoming) !== JSON.stringify(curJson);
     if (changed) store.replace(asKitInstance(incoming));
     // 📤 Always re-serialize the bundle from rs and push it through the host adapter so the file on disk
-    // matches the rs `wip` graph (root + checkpoints + drafts + transactions). Skipped for non-persisting
+    // matches the rs `wip` graph (root + checkpoints + changes + edits). Skipped for non-persisting
     // hosts (in-memory, remote session). The first run also lands on the empty / new file so it becomes
     // a properly-shaped metabolism bundle even before the user makes any edit.
     if (isKitBundlePersistingStore(store)) {
@@ -8546,10 +8546,12 @@ if (
       }
       const wip = bundle["wip"] as JsonObject;
       expect((((wip["checkpoints"] as JsonObject)["items"] as readonly unknown[]) ?? []).length).toBe(1);
-      const drafts = ((wip["drafts"] as JsonObject)["items"] as readonly JsonObject[]) ?? [];
-      expect(drafts.length).toBe(1);
-      const txs = ((drafts[0]["transactions"] as JsonObject)["items"] as readonly unknown[]) ?? [];
-      expect(txs.length).toBe(1);
+      expect(wip["drafts"]).toBeUndefined();
+      expect(wip["transactions"]).toBeUndefined();
+      const changes = ((wip["unsavedChanges"] as JsonObject)["items"] as readonly JsonObject[]) ?? [];
+      expect(changes.length).toBe(1);
+      const edits = ((changes[0]["edits"] as JsonObject)["items"] as readonly unknown[]) ?? [];
+      expect(edits.length).toBe(0);
       await ks.dispose();
     });
 
@@ -8567,7 +8569,10 @@ if (
       expect(bundle["schema"]).toBe("🎆26🌙06⬆️1");
       expect(((bundle["wip"] as JsonObject)["initialKit"] as JsonObject)["name"]).toBe("the kit");
       expect((((bundle["wip"] as JsonObject)["checkpoints"] as JsonObject)["items"] as readonly unknown[]).length).toBe(1);
-      expect(((((bundle["wip"] as JsonObject)["drafts"] as JsonObject)["items"] as readonly JsonObject[])[0]["transactions"] as JsonObject)["items"]).toHaveLength(1);
+      expect((bundle["wip"] as JsonObject)["drafts"]).toBeUndefined();
+      const changes = ((((bundle["wip"] as JsonObject)["unsavedChanges"] as JsonObject)["items"] as readonly JsonObject[]) ?? []);
+      expect(changes).toHaveLength(1);
+      expect(((changes[0]["edits"] as JsonObject)["items"] as readonly unknown[])).toHaveLength(0);
       client.dispose();
     });
     });
@@ -8631,7 +8636,7 @@ if (
       const here = dirname(fileURLToPath(import.meta.url));
       const b = JSON.parse(readFileSync(resolve(here, "../assets/semio/metabolism.new.kit.semio.json"), "utf8")) as {
         schema: string;
-        wip: { id: string; initialKit?: unknown; checkpoints?: { items: unknown[] }; drafts?: { items: unknown[] } };
+        wip: { id: string; initialKit?: unknown; checkpoints?: { items: unknown[] }; savedChanges?: { items: unknown[] }; unsavedChanges?: { items: unknown[] } };
         authoritative: { id: string };
         stage: { id: string };
         conflicts: { items: unknown[] };

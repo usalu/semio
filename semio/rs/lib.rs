@@ -8186,35 +8186,53 @@ pub mod kit_backbone {
         pub checkpoints: BlockHashedListDto<serde_json::Value>,
         #[serde(default)]
         pub alternatives: BlockHashedListDto<serde_json::Value>,
-        #[serde(default)]
-        pub drafts: BlockHashedListDto<DraftDto>,
+        #[serde(rename = "savedChanges", default)]
+        pub saved_changes: BlockHashedListDto<VersionChangeDto>,
+        #[serde(rename = "unsavedChanges", default)]
+        pub unsaved_changes: BlockHashedListDto<VersionChangeDto>,
     }
 
-    /// @emoji 📝 Draft record: pointer to a checkpoint plus ordered transactions of forward / backward semantic ops.
+    /// @emoji 🧾 Version change record containing ordered edits directly on `the kit` or an alternative.
     #[derive(Clone, Debug, serde::Deserialize, serde::Serialize)]
-    pub struct DraftDto {
+    pub struct VersionChangeDto {
         pub id: String,
         pub hash: String,
+        #[serde(default)]
+        pub edits: BlockHashedListDto<VersionEditDto>,
+        #[serde(rename = "startedAt")]
+        pub started_at: String,
+        #[serde(rename = "savedAt", default, skip_serializing_if = "Option::is_none")]
+        pub saved_at: Option<String>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub checkpoint: Option<HashRefDto>,
-        #[serde(default)]
-        pub transactions: BlockHashedListDto<TransactionDto>,
+        pub description: Option<String>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        pub origin: Option<String>,
     }
 
-    /// @emoji 💼 Transaction = ordered forward + backward semantic operation steps (mirrors `Transaction.forwards` / `.backwards` in the bundle).
+    /// @emoji ✏️ Version edit record with forward and backward semantic operation steps.
     #[derive(Clone, Debug, serde::Deserialize, serde::Serialize)]
-    pub struct TransactionDto {
+    pub struct VersionEditDto {
         pub id: String,
         pub hash: String,
         #[serde(default)]
-        pub forwards: BlockHashedListDto<TransactionStepDto>,
+        pub forwards: BlockHashedListDto<OperationStepDto>,
         #[serde(default)]
-        pub backwards: BlockHashedListDto<TransactionStepDto>,
+        pub backwards: BlockHashedListDto<OperationStepDto>,
+        #[serde(rename = "sequenceNumber")]
+        pub sequence_number: i32,
+        #[serde(rename = "startedAt")]
+        pub started_at: String,
+        #[serde(rename = "finishedAt", default, skip_serializing_if = "Option::is_none")]
+        pub finished_at: Option<String>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        pub description: Option<String>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        pub origin: Option<String>,
     }
 
-    /// @emoji 🪡 One semantic operation step inside a transaction (id, operation `kind`, optional human description, payload `input`).
+    /// @emoji 🪡 One semantic operation step inside an edit.
     #[derive(Clone, Debug, serde::Deserialize, serde::Serialize)]
-    pub struct TransactionStepDto {
+    pub struct OperationStepDto {
         pub id: String,
         pub hash: String,
         pub kind: String,
@@ -8244,7 +8262,8 @@ pub mod kit_backbone {
                 root: empty_root_value(),
                 checkpoints: BlockHashedListDto::default(),
                 alternatives: BlockHashedListDto::default(),
-                drafts: BlockHashedListDto::default(),
+                saved_changes: BlockHashedListDto::default(),
+                unsaved_changes: BlockHashedListDto::default(),
             }
         }
     }
@@ -8262,54 +8281,74 @@ pub mod kit_backbone {
             }
         }
 
-        /// @emoji 🔁 Flatten every recorded `wip` draft transaction into ordered [`StoredSemanticOp`] records ready for replay.
+        /// @emoji 🔁 Flatten every recorded `wip` version edit into ordered [`StoredSemanticOp`] records ready for replay.
         pub fn wip_semantic_ops(&self) -> Vec<StoredSemanticOp> {
             let mut out = Vec::new();
-            for draft in &self.wip.drafts.items {
-                for tx in &draft.transactions.items {
-                    for step in &tx.forwards.items {
-                        out.push(StoredSemanticOp { draft_id: draft.id.clone(), transaction_id: tx.id.clone(), kind: step.kind.clone(), input: step.input.clone() });
+            for change in self.wip.saved_changes.items.iter().chain(self.wip.unsaved_changes.items.iter()) {
+                for edit in &change.edits.items {
+                    for step in &edit.forwards.items {
+                        out.push(StoredSemanticOp { draft_id: "the-kit".to_string(), transaction_id: change.id.clone(), kind: step.kind.clone(), input: step.input.clone() });
                     }
                 }
             }
             out
         }
 
-        /// @emoji 📸 Flatten [`crate::vcs::Transaction::changes`] into bundle [`TransactionDto`] steps (ordered forwards then paired backwards per [`crate::vcs::Change`]).
-        async fn transaction_dto_from_runtime(tx: &Arc<crate::vcs::Transaction>) -> TransactionDto {
-            let mut forward_items: Vec<TransactionStepDto> = Vec::new();
-            let mut backward_items: Vec<TransactionStepDto> = Vec::new();
-            for ch in tx.changes.read().await.iter() {
-                for op in ch.forwards.read().await.iter() {
-                    forward_items.push(TransactionStepDto {
-                        id: Id::new().await.as_str().to_string(),
-                        hash: KIT_BUNDLE_HASH_STUB.to_string(),
-                        kind: op.kind().to_string(),
-                        description: None,
-                        input: serde_json::to_value(op).unwrap_or_else(|_| serde_json::json!({})),
-                    });
-                }
-                for op in ch.backwards.read().await.iter() {
-                    backward_items.push(TransactionStepDto {
-                        id: Id::new().await.as_str().to_string(),
-                        hash: KIT_BUNDLE_HASH_STUB.to_string(),
-                        kind: op.kind().to_string(),
-                        description: None,
-                        input: serde_json::to_value(op).unwrap_or_else(|_| serde_json::json!({})),
-                    });
-                }
+        /// @emoji 📸 Project one live semantic change into a bundle edit.
+        async fn edit_dto_from_runtime_change(ch: &Arc<crate::vcs::Change>, sequence_number: i32) -> VersionEditDto {
+            let mut forward_items: Vec<OperationStepDto> = Vec::new();
+            let mut backward_items: Vec<OperationStepDto> = Vec::new();
+            for op in ch.forwards.read().await.iter() {
+                forward_items.push(OperationStepDto {
+                    id: Id::new().await.as_str().to_string(),
+                    hash: KIT_BUNDLE_HASH_STUB.to_string(),
+                    kind: op.kind().to_string(),
+                    description: None,
+                    input: serde_json::to_value(op).unwrap_or_else(|_| serde_json::json!({})),
+                });
             }
-            TransactionDto {
-                id: tx.id.as_str().to_string(),
+            for op in ch.backwards.read().await.iter() {
+                backward_items.push(OperationStepDto {
+                    id: Id::new().await.as_str().to_string(),
+                    hash: KIT_BUNDLE_HASH_STUB.to_string(),
+                    kind: op.kind().to_string(),
+                    description: None,
+                    input: serde_json::to_value(op).unwrap_or_else(|_| serde_json::json!({})),
+                });
+            }
+            VersionEditDto {
+                id: ch.id.as_str().to_string(),
                 hash: KIT_BUNDLE_HASH_STUB.to_string(),
                 forwards: BlockHashedListDto { hash: KIT_BUNDLE_HASH_STUB.to_string(), items: forward_items },
                 backwards: BlockHashedListDto { hash: KIT_BUNDLE_HASH_STUB.to_string(), items: backward_items },
+                sequence_number,
+                started_at: KIT_BUNDLE_CHECKPOINT_TIMESTAMP_STUB.to_string(),
+                finished_at: Some(KIT_BUNDLE_CHECKPOINT_TIMESTAMP_STUB.to_string()),
+                description: None,
+                origin: None,
+            }
+        }
+
+        /// @emoji 📸 Project one live write session into a version change with edits.
+        async fn change_dto_from_runtime_transaction(tx: &Arc<crate::vcs::Transaction>, saved: bool) -> VersionChangeDto {
+            let mut edits = Vec::new();
+            for (idx, ch) in tx.changes.read().await.iter().enumerate() {
+                edits.push(Self::edit_dto_from_runtime_change(ch, (idx + 1) as i32).await);
+            }
+            VersionChangeDto {
+                id: tx.id.as_str().to_string(),
+                hash: KIT_BUNDLE_HASH_STUB.to_string(),
+                edits: BlockHashedListDto { hash: KIT_BUNDLE_HASH_STUB.to_string(), items: edits },
+                started_at: KIT_BUNDLE_CHECKPOINT_TIMESTAMP_STUB.to_string(),
+                saved_at: if saved { Some(KIT_BUNDLE_CHECKPOINT_TIMESTAMP_STUB.to_string()) } else { None },
+                description: None,
+                origin: None,
             }
         }
 
         /// @emoji 📸 Project the live `Graph` into a metabolism-shaped bundle ready for atomic write.
         /// `wip.id` mirrors the graph id; `wip.initialKit` on disk / `wip.root` in Rust is the camelCase `KitFullDto` projection of `parent_root_for_active_draft`;
-        /// checkpoints / drafts / transactions echo the in-memory state so the on-disk file matches what
+        /// checkpoints / changes / edits echo the in-memory state so the on-disk file matches what
         /// sketchpad is currently editing. The dev who reads the file should see the same shape as
         /// `semio/assets/semio/metabolism.new.kit.semio.json`.
         pub async fn from_graph(graph: &crate::vcs::Graph) -> Self {
@@ -8340,17 +8379,14 @@ pub mod kit_backbone {
                 }));
             }
 
-            // 📝 Project drafts and the transactions inside them (open + finalized — both visible on disk).
+            // 🧾 Project version changes and edits directly on the wip version.
             for draft in graph.drafts.read().await.iter() {
-                let mut txs: Vec<TransactionDto> = Vec::new();
                 for tx in draft.transactions.read().await.iter() {
-                    txs.push(Self::transaction_dto_from_runtime(tx).await);
+                    bundle.wip.unsaved_changes.items.push(Self::change_dto_from_runtime_transaction(tx, false).await);
                 }
                 for tx in draft.finalized_transactions.read().await.iter() {
-                    txs.push(Self::transaction_dto_from_runtime(tx).await);
+                    bundle.wip.saved_changes.items.push(Self::change_dto_from_runtime_transaction(tx, true).await);
                 }
-                let parent = draft.parent_checkpoint.read().await.upgrade().map(|c| HashRefDto { id: c.id.as_str().to_string(), hash: KIT_BUNDLE_HASH_STUB.to_string() });
-                bundle.wip.drafts.items.push(DraftDto { id: draft.id.as_str().to_string(), hash: KIT_BUNDLE_HASH_STUB.to_string(), checkpoint: parent, transactions: BlockHashedListDto { hash: KIT_BUNDLE_HASH_STUB.to_string(), items: txs } });
             }
 
             Self::hoist_inline_file_blobs_for_storage(&mut bundle);
@@ -8469,9 +8505,7 @@ pub mod kit_backbone {
 
         //#endregion 📦 bundle file blobs (content-addressed outside kit projection JSON)
 
-        /// @emoji 🩻 Hydrate the live graph from a previously-persisted bundle JSON. Today this only restores
-        /// the kit projection (`wip.initialKit` on disk) into `parent_root_for_active_draft`; the draft / transaction structure is preserved on
-        /// disk via `from_graph` round-trip but operation replay is owned by the existing semantic-operation log path.
+        /// @emoji 🩻 Hydrate the live graph from a previously-persisted bundle JSON and keep version changes available for semantic replay.
         pub async fn hydrate_into_graph(graph: &std::sync::Arc<crate::vcs::Graph>, json: &str) -> Result<Self, SemioError> {
             let bundle: Self = serde_json::from_str(json).map_err(|e| SemioError::invalid(format!("bundle parse: {e}")))?;
             if bundle.schema != KIT_STORE_BUNDLE_SCHEMA {
@@ -8486,9 +8520,9 @@ pub mod kit_backbone {
         }
 
         /// @emoji 🌱 Initialize an empty bundle with a non-empty `wip` head: empty root projection stamped with `kit_id`,
-        /// a single seed checkpoint anchored on the empty kit, and a single empty draft pointing at that checkpoint.
+        /// a single seed checkpoint anchored on the empty kit, and one empty unsaved change directly on the version.
         /// This is the "create dev kit" bootstrap state that sketchpad sees the moment a JSON file is opened/created.
-        pub fn initialize_with_active_draft(kit_id: &str, draft_id: &str, checkpoint_id: &str) -> Self {
+        pub fn initialize_with_unsaved_change(kit_id: &str, change_id: &str, checkpoint_id: &str) -> Self {
             let mut bundle = Self::template();
             bundle.wip.id = kit_id.to_string();
             bundle.authoritative.id = kit_id.to_string();
@@ -8502,84 +8536,58 @@ pub mod kit_backbone {
                 "authors": { "hash": KIT_BUNDLE_HASH_STUB, "items": [] },
                 "changes": { "hash": KIT_BUNDLE_HASH_STUB, "items": [] },
             }));
-            // 📝 Active draft on the seed checkpoint (no transactions yet).
-            bundle.wip.drafts.items.push(DraftDto {
-                id: draft_id.to_string(),
+            // 🧾 Initial unsaved change on the version; edits are added when user actions run.
+            bundle.wip.unsaved_changes.items.push(VersionChangeDto {
+                id: change_id.to_string(),
                 hash: KIT_BUNDLE_HASH_STUB.to_string(),
-                checkpoint: Some(HashRefDto { id: checkpoint_id.to_string(), hash: KIT_BUNDLE_HASH_STUB.to_string() }),
-                transactions: BlockHashedListDto::default(),
+                edits: BlockHashedListDto::default(),
+                started_at: KIT_BUNDLE_CHECKPOINT_TIMESTAMP_STUB.to_string(),
+                saved_at: None,
+                description: None,
+                origin: None,
             });
             bundle
         }
 
-        /// @emoji 🪪 Locate the wip draft mutably (returns `Err` if not present).
-        fn wip_draft_mut(&mut self, draft_id: &str) -> Result<&mut DraftDto, SemioError> {
-            self.wip.drafts.items.iter_mut().find(|d| d.id == draft_id).ok_or_else(|| SemioError::not_found("Draft", draft_id))
-        }
-
-        /// @emoji 🟢 Open a new (empty) transaction inside the targeted `wip` draft and return its id; the draft is created if absent.
-        pub fn open_transaction(&mut self, draft_id: &str) -> String {
-            let drafts = &mut self.wip.drafts.items;
-            let draft_idx = match drafts.iter().position(|d| d.id == draft_id) {
+        /// @emoji ➕ Append a single forward operation to an unsaved version change (creating the change/edit if absent).
+        pub fn append_unsaved_edit(&mut self, change_id: &str, kind: &str, input: serde_json::Value) {
+            let changes = &mut self.wip.unsaved_changes.items;
+            let change_idx = match changes.iter().position(|c| c.id == change_id) {
                 Some(i) => i,
                 None => {
-                    drafts.push(DraftDto { id: draft_id.to_string(), hash: KIT_BUNDLE_HASH_STUB.to_string(), checkpoint: None, transactions: BlockHashedListDto::default() });
-                    drafts.len() - 1
+                    changes.push(VersionChangeDto {
+                        id: change_id.to_string(),
+                        hash: KIT_BUNDLE_HASH_STUB.to_string(),
+                        edits: BlockHashedListDto::default(),
+                        started_at: KIT_BUNDLE_CHECKPOINT_TIMESTAMP_STUB.to_string(),
+                        saved_at: None,
+                        description: None,
+                        origin: None,
+                    });
+                    changes.len() - 1
                 }
             };
-            let tx_id = uuid::Uuid::now_v7().to_string();
-            drafts[draft_idx].transactions.items.push(TransactionDto { id: tx_id.clone(), hash: KIT_BUNDLE_HASH_STUB.to_string(), forwards: BlockHashedListDto::default(), backwards: BlockHashedListDto::default() });
-            tx_id
-        }
-
-        /// @emoji ✅ Mark a transaction as finalized inside its draft. Until checkpointing lands the row stays in
-        /// `wip.drafts[*].transactions[*]`; the call is a no-operation except for validating that the (draft, tx) pair exists.
-        pub fn commit_transaction(&mut self, draft_id: &str, transaction_id: &str) -> Result<(), SemioError> {
-            let draft = self.wip_draft_mut(draft_id)?;
-            if draft.transactions.items.iter().any(|t| t.id == transaction_id) {
-                Ok(())
-            } else {
-                Err(SemioError::not_found("Transaction", transaction_id))
+            if changes[change_idx].edits.items.is_empty() {
+                changes[change_idx].edits.items.push(VersionEditDto {
+                    id: uuid::Uuid::now_v7().to_string(),
+                    hash: KIT_BUNDLE_HASH_STUB.to_string(),
+                    forwards: BlockHashedListDto::default(),
+                    backwards: BlockHashedListDto::default(),
+                    sequence_number: 1,
+                    started_at: KIT_BUNDLE_CHECKPOINT_TIMESTAMP_STUB.to_string(),
+                    finished_at: Some(KIT_BUNDLE_CHECKPOINT_TIMESTAMP_STUB.to_string()),
+                    description: None,
+                    origin: None,
+                });
             }
-        }
-
-        /// @emoji ⛔ Drop a transaction (and all its steps) from the targeted draft.
-        pub fn abort_transaction(&mut self, draft_id: &str, transaction_id: &str) -> Result<(), SemioError> {
-            let draft = self.wip_draft_mut(draft_id)?;
-            let before = draft.transactions.items.len();
-            draft.transactions.items.retain(|t| t.id != transaction_id);
-            if draft.transactions.items.len() == before {
-                return Err(SemioError::not_found("Transaction", transaction_id));
-            }
-            Ok(())
-        }
-
-        /// @emoji ➕ Append a single forward step to the targeted draft / transaction in `wip` (creating either if absent).
-        pub fn append_wip_step(&mut self, draft_id: &str, transaction_id: &str, kind: &str, input: serde_json::Value) {
-            let drafts = &mut self.wip.drafts.items;
-            let draft_idx = match drafts.iter().position(|d| d.id == draft_id) {
-                Some(i) => i,
-                None => {
-                    drafts.push(DraftDto { id: draft_id.to_string(), hash: KIT_BUNDLE_HASH_STUB.to_string(), checkpoint: None, transactions: BlockHashedListDto::default() });
-                    drafts.len() - 1
-                }
-            };
-            let txs = &mut drafts[draft_idx].transactions.items;
-            let tx_idx = match txs.iter().position(|t| t.id == transaction_id) {
-                Some(i) => i,
-                None => {
-                    txs.push(TransactionDto { id: transaction_id.to_string(), hash: KIT_BUNDLE_HASH_STUB.to_string(), forwards: BlockHashedListDto::default(), backwards: BlockHashedListDto::default() });
-                    txs.len() - 1
-                }
-            };
-            txs[tx_idx].forwards.items.push(TransactionStepDto { id: uuid::Uuid::now_v7().to_string(), hash: KIT_BUNDLE_HASH_STUB.to_string(), kind: kind.to_string(), description: None, input });
+            changes[change_idx].edits.items[0].forwards.items.push(OperationStepDto { id: uuid::Uuid::now_v7().to_string(), hash: KIT_BUNDLE_HASH_STUB.to_string(), kind: kind.to_string(), description: None, input });
         }
 
         /// @emoji 🪪 Build a metabolism-shaped bundle from a flat ordered semantic operation log (used by golden test fixtures and import paths).
         pub fn from_stored_semantic_ops(ops: &[StoredSemanticOp]) -> Self {
             let mut bundle = Self::template();
             for operation in ops {
-                bundle.append_wip_step(&operation.draft_id, &operation.transaction_id, &operation.kind, operation.input.clone());
+                bundle.append_unsaved_edit(&operation.transaction_id, &operation.kind, operation.input.clone());
             }
             bundle
         }
@@ -8704,10 +8712,11 @@ CREATE TABLE IF NOT EXISTS conflict_stub (
             read_or_init_bundle(&self.path)
         }
 
-        /// @emoji ➕ Append a forward semantic operation step into the targeted `wip` draft / transaction and atomically rewrite the bundle.
+        /// @emoji ➕ Append a forward semantic operation step into the targeted unsaved version change and atomically rewrite the bundle.
         pub fn append_op(&mut self, draft_id: &Id, transaction_id: &Id, kind: &str, input: &serde_json::Value) -> Result<(), SemioError> {
             let mut doc = self.read_bundle()?;
-            doc.append_wip_step(draft_id.as_str(), transaction_id.as_str(), kind, input.clone());
+            let _ = draft_id;
+            doc.append_unsaved_edit(transaction_id.as_str(), kind, input.clone());
             atomic_write_bundle(&self.path, &doc)
         }
     }
@@ -10538,7 +10547,9 @@ mod tests {
             assert!(v["wip"]["initialKit"].is_object(), "wip.initialKit projects the live kit");
             assert_eq!(v["wip"]["initialKit"]["name"].as_str().unwrap_or(""), "Hello Bundle");
             assert!(!v["wip"]["checkpoints"]["items"].as_array().unwrap().is_empty(), "seed checkpoint present");
-            assert!(!v["wip"]["drafts"]["items"].as_array().unwrap().is_empty(), "default draft present");
+            assert!(v["wip"].get("drafts").is_none(), "bundle must not persist drafts");
+            assert!(v["wip"].get("transactions").is_none(), "bundle must not persist transactions");
+            assert!(!v["wip"]["unsavedChanges"]["items"].as_array().unwrap().is_empty(), "default unsaved change present");
 
             let rt_b = crate::worker::ParentRuntime::spawn().await;
             crate::kit_backbone::KitStoreBundleFile::hydrate_into_graph(&rt_b.wip_graph, &json_a).await.expect("hydrate");
@@ -10991,7 +11002,7 @@ mod tests {
         }
         assert_eq!(v["schema"], crate::kit_backbone::KIT_STORE_BUNDLE_SCHEMA);
         for graph_key in ["wip", "authoritative", "stage"] {
-            for inner in ["id", "hash", "authors", "initialKit", "checkpoints", "alternatives", "drafts"] {
+            for inner in ["id", "hash", "authors", "initialKit", "checkpoints", "alternatives", "savedChanges", "unsavedChanges"] {
                 assert!(v[graph_key].get(inner).is_some(), "graph `{graph_key}` missing `{inner}`");
             }
             assert!(v[graph_key]["initialKit"].get("types").is_some(), "graph `{graph_key}.initialKit` missing `types`");
@@ -11063,9 +11074,9 @@ mod tests {
 
     #[cfg(not(target_arch = "wasm32"))]
     #[test]
-    fn kit_store_bundle_initialize_with_active_draft_seeds_root_checkpoint_and_draft() {
-        // 🌱 Bundle bootstrap matches sketchpad "create dev kit (json)": one root, one checkpoint, one draft on that checkpoint.
-        let bundle = crate::kit_backbone::KitStoreBundleFile::initialize_with_active_draft("kit-id-1", "draft-1", "ckpt-1");
+    fn kit_store_bundle_initialize_with_unsaved_change_seeds_root_checkpoint_and_change() {
+        // 🌱 Bundle bootstrap matches sketchpad "create dev kit (json)": one root, one checkpoint, one unsaved change on the version.
+        let bundle = crate::kit_backbone::KitStoreBundleFile::initialize_with_unsaved_change("kit-id-1", "change-1", "ckpt-1");
         assert_eq!(bundle.schema, crate::kit_backbone::KIT_STORE_BUNDLE_SCHEMA);
         assert_eq!(bundle.wip.id, "kit-id-1");
         assert_eq!(bundle.authoritative.id, "kit-id-1");
@@ -11073,53 +11084,17 @@ mod tests {
         assert_eq!(bundle.wip.checkpoints.items.len(), 1, "first checkpoint anchored on root");
         assert_eq!(bundle.wip.checkpoints.items[0]["id"], "ckpt-1");
         assert_eq!(bundle.wip.checkpoints.items[0]["message"], "init");
-        assert_eq!(bundle.wip.drafts.items.len(), 1, "one active draft on the seed checkpoint");
-        let draft = &bundle.wip.drafts.items[0];
-        assert_eq!(draft.id, "draft-1");
-        assert_eq!(draft.checkpoint.as_ref().expect("draft anchored on checkpoint").id, "ckpt-1");
-        assert!(draft.transactions.items.is_empty(), "no transactions opened yet");
-    }
-
-    #[cfg(not(target_arch = "wasm32"))]
-    #[test]
-    fn kit_store_bundle_open_commit_abort_transaction_lifecycle() {
-        // 🟢✅⛔ Full transaction lifecycle on an initialized bundle (no rs ↔ js round-trip yet, just data-shape level).
-        let mut bundle = crate::kit_backbone::KitStoreBundleFile::initialize_with_active_draft("kit-1", "draft-1", "ckpt-1");
-
-        // Open: draft already exists — adds a fresh transaction.
-        let tx_a = bundle.open_transaction("draft-1");
-        assert!(!tx_a.is_empty(), "open_transaction returns a non-empty id");
-        assert_eq!(bundle.wip.drafts.items[0].transactions.items.len(), 1);
-        assert_eq!(bundle.wip.drafts.items[0].transactions.items[0].id, tx_a);
-
-        // Open second transaction on same draft.
-        let tx_b = bundle.open_transaction("draft-1");
-        assert_ne!(tx_a, tx_b, "transaction ids are unique");
-        assert_eq!(bundle.wip.drafts.items[0].transactions.items.len(), 2);
-
-        // Append a forward step into tx_b.
-        bundle.append_wip_step("draft-1", &tx_b, "kit.renamedKit", serde_json::json!({"name": "Hello"}));
-        assert_eq!(bundle.wip.drafts.items[0].transactions.items[1].forwards.items.len(), 1);
-
-        // Commit tx_a: stays in draft (no checkpoint move yet).
-        bundle.commit_transaction("draft-1", &tx_a).expect("commit known tx");
-        assert_eq!(bundle.wip.drafts.items[0].transactions.items.len(), 2, "commit keeps tx in draft pre-checkpointing");
-
-        // Abort tx_b: removed from draft.
-        bundle.abort_transaction("draft-1", &tx_b).expect("abort known tx");
-        assert_eq!(bundle.wip.drafts.items[0].transactions.items.len(), 1);
-        assert_eq!(bundle.wip.drafts.items[0].transactions.items[0].id, tx_a);
-
-        // Commit / abort errors are surfaced for unknown ids / drafts.
-        assert!(bundle.commit_transaction("draft-1", "tx-missing").is_err());
-        assert!(bundle.abort_transaction("draft-1", "tx-missing").is_err());
-        assert!(bundle.commit_transaction("draft-missing", &tx_a).is_err());
+        assert!(bundle.wip.saved_changes.items.is_empty(), "no saved changes at bootstrap");
+        assert_eq!(bundle.wip.unsaved_changes.items.len(), 1, "one active unsaved change on the version");
+        let change = &bundle.wip.unsaved_changes.items[0];
+        assert_eq!(change.id, "change-1");
+        assert!(change.edits.items.is_empty(), "no edits recorded yet");
     }
 
     #[cfg(not(target_arch = "wasm32"))]
     #[test]
     fn dev_json_backbone_round_trip_persists_metabolism_shape_on_disk() {
-        // 🔁 Mount (no file) → append operation via attached backbone → re-read on-disk JSON → confirm metabolism top-level + drafts path.
+        // 🔁 Mount (no file) → append operation via attached backbone → re-read on-disk JSON → confirm metabolism top-level + version change path.
         block_on(async {
             let dir = tempfile::tempdir().expect("temp dir");
             let path = dir.path().join("dev-kit.json");
@@ -11138,13 +11113,14 @@ mod tests {
                 assert!(v.get(k).is_some(), "on-disk bundle missing `{k}` after append");
             }
             assert_eq!(v["schema"], crate::kit_backbone::KIT_STORE_BUNDLE_SCHEMA);
-            let drafts = v["wip"]["drafts"]["items"].as_array().expect("wip drafts items array");
-            assert_eq!(drafts.len(), 1, "single draft on disk");
-            assert_eq!(drafts[0]["id"], "draft-rs-1");
-            let txs = drafts[0]["transactions"]["items"].as_array().expect("tx items");
-            assert_eq!(txs.len(), 1, "single transaction on disk");
-            assert_eq!(txs[0]["id"], "tx-rs-1");
-            let fwd = txs[0]["forwards"]["items"].as_array().expect("forwards items");
+            assert!(v["wip"].get("drafts").is_none(), "bundle must not persist drafts");
+            assert!(v["wip"].get("transactions").is_none(), "bundle must not persist transactions");
+            let changes = v["wip"]["unsavedChanges"]["items"].as_array().expect("wip unsavedChanges items array");
+            assert_eq!(changes.len(), 1, "single unsaved change on disk");
+            assert_eq!(changes[0]["id"], "tx-rs-1");
+            let edits = changes[0]["edits"]["items"].as_array().expect("edit items");
+            assert_eq!(edits.len(), 1, "single edit on disk");
+            let fwd = edits[0]["forwards"]["items"].as_array().expect("forwards items");
             assert_eq!(fwd.len(), 1, "single forward step on disk");
             assert_eq!(fwd[0]["kind"], "kit.design.piece.createdFixedPiece");
             assert_eq!(fwd[0]["input"]["designId"], "d-1");
@@ -11153,34 +11129,33 @@ mod tests {
 
     #[cfg(not(target_arch = "wasm32"))]
     #[test]
-    fn kit_store_bundle_append_wip_step_creates_draft_and_transaction_paths() {
-        // ➕ Appending to a fresh template materialises wip.drafts[0].transactions[0].forwards[0] without touching authoritative/stage.
+    fn kit_store_bundle_append_unsaved_edit_creates_change_and_edit_paths() {
+        // ➕ Appending to a fresh template materialises wip.unsavedChanges[0].edits[0].forwards[0] without touching authoritative/stage.
         let mut bundle = crate::kit_backbone::KitStoreBundleFile::template();
-        bundle.append_wip_step("draft-x", "tx-y", "kit.design.piece.createdFixedPiece", serde_json::json!({"hello": "world"}));
-        assert_eq!(bundle.wip.drafts.items.len(), 1, "wip draft created");
-        let draft = &bundle.wip.drafts.items[0];
-        assert_eq!(draft.id, "draft-x");
-        assert_eq!(draft.transactions.items.len(), 1, "transaction created under draft");
-        let tx = &draft.transactions.items[0];
-        assert_eq!(tx.id, "tx-y");
-        assert_eq!(tx.forwards.items.len(), 1, "single forward step appended");
-        let step = &tx.forwards.items[0];
+        bundle.append_unsaved_edit("change-y", "kit.design.piece.createdFixedPiece", serde_json::json!({"hello": "world"}));
+        assert_eq!(bundle.wip.unsaved_changes.items.len(), 1, "wip unsaved change created");
+        let change = &bundle.wip.unsaved_changes.items[0];
+        assert_eq!(change.id, "change-y");
+        assert_eq!(change.edits.items.len(), 1, "edit created under change");
+        let edit = &change.edits.items[0];
+        assert_eq!(edit.forwards.items.len(), 1, "single forward step appended");
+        let step = &edit.forwards.items[0];
         assert_eq!(step.kind, "kit.design.piece.createdFixedPiece");
         assert_eq!(step.input["hello"], "world");
-        assert!(bundle.authoritative.drafts.items.is_empty(), "authoritative untouched");
-        assert!(bundle.stage.drafts.items.is_empty(), "stage untouched");
+        assert!(bundle.authoritative.unsaved_changes.items.is_empty(), "authoritative untouched");
+        assert!(bundle.stage.unsaved_changes.items.is_empty(), "stage untouched");
 
-        // Appending another step into the same draft+tx grows the same transaction.
-        bundle.append_wip_step("draft-x", "tx-y", "kit.design.piece.deletedFixedPieces", serde_json::json!({"pieceIds": []}));
-        assert_eq!(bundle.wip.drafts.items.len(), 1, "no extra draft");
-        assert_eq!(bundle.wip.drafts.items[0].transactions.items.len(), 1, "no extra transaction");
-        assert_eq!(bundle.wip.drafts.items[0].transactions.items[0].forwards.items.len(), 2, "two forward steps");
+        // Appending another step into the same change grows the same edit.
+        bundle.append_unsaved_edit("change-y", "kit.design.piece.deletedFixedPieces", serde_json::json!({"pieceIds": []}));
+        assert_eq!(bundle.wip.unsaved_changes.items.len(), 1, "no extra change");
+        assert_eq!(bundle.wip.unsaved_changes.items[0].edits.items.len(), 1, "no extra edit");
+        assert_eq!(bundle.wip.unsaved_changes.items[0].edits.items[0].forwards.items.len(), 2, "two forward steps");
 
-        // Flatten replays everything in order from wip drafts.
+        // Flatten replays everything in order from wip version changes.
         let flat = bundle.wip_semantic_ops();
         assert_eq!(flat.len(), 2);
-        assert_eq!(flat[0].draft_id, "draft-x");
-        assert_eq!(flat[0].transaction_id, "tx-y");
+        assert_eq!(flat[0].draft_id, "the-kit");
+        assert_eq!(flat[0].transaction_id, "change-y");
         assert_eq!(flat[0].kind, "kit.design.piece.createdFixedPiece");
         assert_eq!(flat[1].kind, "kit.design.piece.deletedFixedPieces");
     }
