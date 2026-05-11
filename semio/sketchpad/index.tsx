@@ -17146,15 +17146,11 @@ export function useConnectionTilt(): HookResult<number> {
  **/
 export function useConnectionU(): HookResult<number> {
   const connectionScope = useConnectionScope();
-  const connection = useConnection() as Connection | null;
-  const commands = useDesignAppCommands();
-  const setter = useCallback(
-    (value: number) => {
-      if (connectionScope) commands.updateConnection("semio.sketchpad.app.design.panel.details.section.connection.u", connectionScope.id, { u: value });
-    },
-    [connectionScope, commands],
-  );
-  return conditionalHookResult(!!connectionScope && !!connection, connection?.u ?? 0, setter);
+  const binding = useSchemaConnectionU(connectionScope?.id);
+  const [raw, setAsync, ws] = binding;
+  const value = (raw as number | undefined) ?? 0;
+  const canSet = Boolean(connectionScope?.id) && ws.kind !== "readonly";
+  return conditionalHookResult(canSet, value, (nv) => void setAsync(nv));
 }
 
 /**
@@ -17162,28 +17158,20 @@ export function useConnectionU(): HookResult<number> {
  **/
 export function useConnectionV(): HookResult<number> {
   const connectionScope = useConnectionScope();
-  const connection = useConnection() as Connection | null;
-  const commands = useDesignAppCommands();
-  const setter = useCallback(
-    (value: number) => {
-      if (connectionScope) commands.updateConnection("semio.sketchpad.app.design.panel.details.section.connection.v", connectionScope.id, { v: value });
-    },
-    [connectionScope, commands],
-  );
-  return conditionalHookResult(!!connectionScope && !!connection, connection?.v ?? 0, setter);
+  const binding = useSchemaConnectionV(connectionScope?.id);
+  const [raw, setAsync, ws] = binding;
+  const value = (raw as number | undefined) ?? 0;
+  const canSet = Boolean(connectionScope?.id) && ws.kind !== "readonly";
+  return conditionalHookResult(canSet, value, (nv) => void setAsync(nv));
 }
 
 export function useConnectionDescription(): HookResult<string> {
   const connectionScope = useConnectionScope();
-  const connection = useConnection() as Connection | null;
-  const commands = useDesignAppCommands();
-  const setter = useCallback(
-    (value: string) => {
-      if (connectionScope) commands.updateConnection("semio.sketchpad.app.design.panel.details.section.connection.description", connectionScope.id, { description: value || undefined });
-    },
-    [connectionScope, commands],
-  );
-  return conditionalHookResult(!!connectionScope && !!connection, connection?.description ?? "", setter);
+  const binding = useSchemaConnectionDescription(connectionScope?.id);
+  const [raw, setAsync, ws] = binding;
+  const text = (raw as string | undefined) ?? "";
+  const canSet = Boolean(connectionScope?.id) && ws.kind !== "readonly";
+  return conditionalHookResult(canSet, text, (nv) => void setAsync(nv));
 }
 
 /**
@@ -55242,3 +55230,26 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
   });
 }
 //#endregion 📐Tests
+
+// #region 🎨Sketchpad 🧪NegativeGrep
+if (import.meta.vitest) {
+  const { describe, expect, test } = import.meta.vitest;
+  describe("sketchpad index banned import patterns", () => {
+    test("no direct @semio/js module specifier", async () => {
+      const { readFileSync } = await import("node:fs");
+      const { fileURLToPath } = await import("node:url");
+      const selfPath = fileURLToPath(import.meta.url);
+      const src = readFileSync(selfPath, "utf8");
+      expect(src).not.toMatch(/from\s+["']@semio\/js["']/);
+    });
+    test("no semio/js subpath import", async () => {
+      const { readFileSync } = await import("node:fs");
+      const { fileURLToPath } = await import("node:url");
+      const selfPath = fileURLToPath(import.meta.url);
+      const src = readFileSync(selfPath, "utf8");
+      expect(src).not.toMatch(/from\s+["']@semio\/js\//);
+    });
+  });
+}
+// #endregion 🎨Sketchpad 🧪NegativeGrep
+// #endregion 🎨Sketchpad
