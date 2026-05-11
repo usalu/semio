@@ -1,6 +1,6 @@
 ---
 name: field-only kit reads refactor
-overview: Collapse `semio/js/index.ts` to only export entity classes (`Kit`, `Design`, `Type`, `Piece`, `Connection`, `Author`, `Quality`, ...); merge `Kit` and `KitStore` into one `Kit` class. Every class is CQRS event-sourced over the GraphQL schema in `semio/rs/lib.rs` (`Query` / `Mutation` / `Subscription`). Each field exposes three methods (`field()` async query, `fieldSync()` cached, `on<Event>(cb)` subscription), with stable object identity in the cache so React `useSyncExternalStore` works. Commands map 1:1 to the scoped command inputs in `semio/graphql/target.schema.graphql`. In `semio/react/index.tsx` keep the bulk/list/aggregate/metadata/shallow hooks and the named entity-identity selectors (`useKit`, `useDesign`, `useType`, `usePiece`, `useConnection`, `useAuthor`, `useQuality`); delete every other "general" hook. Sketchpad uses only per-field hooks.
+overview: Collapse `semio/js/index.ts` to only export entity classes (`Kit`, `Design`, `Type`, `Piece`, `Connection`, `Author`, `Quality`, ...); merge `Kit` and `KitStore` into one `Kit` class. Every class is CQRS event-sourced over the GraphQL schema in `semio/rs/lib.rs` (`Query` / `Mutation` / `Subscription`). Each field exposes three methods (`field()` async query, `fieldSync()` cached, `on<Event>(cb)` subscription), with stable object identity in the cache so React `useSyncExternalStore` works. Commands map 1:1 to leaves of the `*OperationInput` types in `semio/graphql/target.schema.graphql`, each shipped as both async (`op(...)`) and sync (`opSync(...)`, optimistic local apply + background dispatch) flavours. `semio/react/index.tsx` adds nothing beyond the schema — every hook is 1:1 with one schema field (read) or one `*OperationInput` leaf (write). No sub-selection, no derivation, no aggregate / metadata / shallow / view hooks. Lean fields → return value verbatim; bulky fields → return class instance(s). Sketchpad obeys the same rule and inlines every sub-selection at the call site.
 todos:
  - id: ticket
    content: Open / reopen the field-only kit reads ticket via repo MCP and keep temp artifacts inside it
@@ -30,13 +30,13 @@ todos:
    content: Declare every per-operation write hook as a one-liner using create<Entity>OpHook(call). Two declarations per *OperationInput leaf — async use<Op><Entity> calling entity.operation(...) and sync use<Op><Entity>Sync calling entity.opSync(...). Covers useDragPiece(/Sync), useFixPiece(/Sync), useRenamePiece(/Sync), useMovePiece(/Sync), useChangePieceBlueprint(/Sync), useAddFixedPiece(/Sync), useDeletePiece(/Sync), useDeletePieces(/Sync), useFlattenDesign(/Sync), useCreateType(/Sync), useCreatePort(/Sync), useAddConnector(/Sync), useStartNewChange(/Sync), useSaveUnsavedChange(/Sync), useCreateCheckpoint(/Sync), useStartAlternative(/Sync), useIntegrateAlternative(/Sync), etc.
    status: pending
  - id: react-deletes
-   content: Delete public exports from semio/react/index.tsx for KitFieldBinding/HookRead/WriteStatus wrappers, whole-object triads, generic schema readers, snapshot accessors, *Input / *PatchInput whole-object hooks, useResolved* helpers, useUndo/useRedo/useChange/useCommandBuilder/useWriteIndicator/useWriteQueue/useOptimistic/usePendingTriad, and whole-snapshot file/binary helpers; demote required helpers to non-exported internals
+   content: Enforce the schema-1:1 invariant — delete every export from semio/react/index.tsx that is not 1:1 with a target.schema.graphql field or *OperationInput leaf. Includes KitFieldBinding/HookRead/WriteStatus wrappers; sub-selection hooks (useDesignPieceIds/useDesignConnectionIds/useType*Ids/useKit*Ids/useConnection*PieceId/usePieceCenterU/usePieceIsHidden/etc.); aggregate/metadata/shallow/view hooks (useTypesIds/useDesignsIds/useTypesMetadata/useTypesFull/useKitDesignsShallow/usePieceMetadata/useDesignQualitySum/useTypeBestRepresentation/useKitColoredConnectors/useReplacableTypes/useExplodeableDesignNodes/etc.); registry/shell hooks (useOpenKitGuids/useActiveKitGuid/useOpenKitShallows/useRegistryHasKit/useKitAlternatives); whole-object triads; generic schema readers; snapshot accessors; *Input/*PatchInput whole-object hooks; useResolved* helpers; useUndo/useRedo/useChange/useCommandBuilder/useWriteIndicator/useWriteQueue/useOptimistic/usePendingTriad; whole-snapshot file/binary helpers. Demote helpers to non-exported internals.
    status: pending
  - id: missing-field-hooks
-   content: Add any missing per-field hooks sketchpad needs (e.g. useDesignPieceIds, useTypeRepresentationIds, useTypePortIds, useConnectionGap), each a thin wrapper over the relevant class field
+   content: Add the bulky-list 1:1 hooks sketchpad needs (each a one-liner via create<Entity>FieldHook returning class instances) — useKitTypes, useKitDesigns, useKitAuthors, useKitQualities, useKitTags, useKitConcepts, useDesignPieces, useDesignConnections, useTypePorts, useTypeConnectors, useTypeRepresentations, useConnectionConnected, useConnectionConnecting. NO sub-selection (no useDesignPieceIds, no useTypePortIds — callers map class .id inline). Anything not in target.schema.graphql is rejected and either added to the schema first or computed inline in the consumer.
    status: pending
  - id: sketchpad-migrate
-   content: Replace all 64 banned-hook usages in semio/sketchpad/index.tsx with per-field hook compositions (fan out into per-id child components). Strictly separate reads from writes everywhere — delete every HookResult<T> tuple hook (usePieceCenterU/usePieceCenterV/usePieceScale/usePieceIsHidden/usePieceIsLocked/useConnectionGapValue/useConnectionShiftValue/useConnectionRotationValue/etc.) and replace each with a pair: a pure-read hook returning the value (no setter, no operation call) and a separate pure-write hook returning a function (no read, no value). Drop the useDesignAppCommands indirection entirely.
+   content: Replace all 64 banned-hook usages in semio/sketchpad/index.tsx with schema-1:1 reads + ops from @semio/react. Reads and writes strictly separate. Delete every sub-selection / tuple sketchpad hook (usePieceCenterU/usePieceCenterV/sketchpad's tuple usePieceScale/usePieceIsHidden/usePieceIsLocked/useConnectionGapValue/useConnectionShiftValue/useConnectionRiseValue/useConnectionRotationValue/useConnectionTurnValue/useConnectionTiltValue/useDesignPieceIds/useDesignConnectionIds/all *Metadata/*Shallow/*Full derivations) — no replacement hook, callers inline destructuring at the call site (const center = usePieceCenter(); const u = center?.u). Replace every commands.update*/applyKitDiff with the matching use<Op><Entity>Sync. Drop the useDesignAppCommands indirection entirely. Fan list rendering through the bulky list hook (useDesignPieces, useTypePorts, …) plus inline .map((x) => <Context id={x.id}>).
    status: pending
  - id: tests
    content: Update inline vitest blocks in semio/js/index.ts and semio/react/index.tsx for the new class shape; add an inline negative-grep test in semio/sketchpad/index.tsx asserting zero matches for the banned hooks
@@ -426,12 +426,7 @@ Operation hooks called outside any provider must take an explicit `id` (otherwis
 
 ### Sketchpad target
 
-Reads and writes stay strictly separate inside sketchpad too. Every existing `HookResult<T>` style hook (`[value, setter]` tuple) is split into two single-purpose hooks:
-
-- `usePiece<Field>` / `useConnection<Field>` / `useType<Field>` etc. — **pure read**, returns the value, calls _no_ operation methods.
-- `useMove<Field>` / `useSet<Field>` etc. — **pure write**, returns a function that calls one `entity.opSync(...)` (or `entity.operation(...)`) and _does not read the field_.
-
-Sketchpad's existing per-field tuple hooks (e.g. `usePieceCenterU`, `usePieceCenterV`, `usePieceScale`, `usePieceIsHidden`, `usePieceIsLocked`, `useConnectionGapValue`, …) are deleted in their old shape and replaced by these two single-purpose hooks. Components that previously did `const [u, setU] = usePieceCenterU()` now do `const u = usePieceCenterU()` plus `const movePieceSync = useMovePieceSync()` (or a sketchpad-local `useSetPieceCenterUSync()` if the call site wants the convenience, see below).
+Sketchpad obeys the same schema-1:1 rule: it never re-implements a `usePieceCenterU` / `usePieceIsHidden` / `useConnectionGapValue`-style hook either. Every existing `HookResult<T>` style sketchpad hook is **deleted entirely**. Slicing a lean value (e.g. picking `u` from a `Coordinate`) or picking a class `id` from a list happens *inline at the call site*, in the component body that needs it. Reads come from `@semio/react`'s schema-1:1 read hooks; writes come from `@semio/react`'s schema-1:1 op hooks.
 
 ```ts
 // Before — semio/sketchpad/index.tsx around line 16888
@@ -441,7 +436,12 @@ export function usePieceCenterU(): HookResult<number> {
  const commands = useDesignAppCommands();
  const setter = useCallback(
   (value: number) => {
-   if (pieceScope && piece) commands.updatePiece("semio.sketchpad.app.design.panel.details.section.piece.center.u", pieceScope.id, { center: { u: value, v: piece.center?.v ?? 0 } });
+   if (pieceScope && piece)
+    commands.updatePiece(
+     "semio.sketchpad.app.design.panel.details.section.piece.center.u",
+     pieceScope.id,
+     { center: { u: value, v: piece.center?.v ?? 0 } },
+    );
   },
   [pieceScope, piece, commands],
  );
@@ -449,32 +449,39 @@ export function usePieceCenterU(): HookResult<number> {
 }
 ```
 
-```ts
-// After — pure read, returns number, calls no operation methods
-export function usePieceCenterU(): number {
- return usePieceCenter()?.u ?? 0;
+```tsx
+// After — usePieceCenterU does NOT exist anywhere. The component inlines reads and writes.
+function PieceCenterUInput() {
+ const center = usePieceCenter();              // Coordinate | undefined — schema-1:1 read
+ const movePieceSync = useMovePieceSync();     // schema-1:1 write
+ const u = center?.u ?? 0;
+ return (
+  <NumberInput
+   value={u}
+   onCommit={(next) => center && movePieceSync({ center: { u: next, v: center.v } })}
+  />
+ );
 }
 ```
 
-If a caller wants the matching write packaged in a hook (instead of inlining `useMovePieceSync` in the JSX), it lives in a _separate_, write-only hook with no read coupled to it. The `v` coordinate it needs is read fresh at call time via `pieceCenterSync(id)` on the resolved class instance — never read inside the hook body, so the hook itself stays stateless and never re-renders the caller:
+The same rule deletes (in sketchpad and `@semio/react`) every other tuple/sub-selection hook and replaces it with inline destructuring + 1:1 op calls:
 
-```ts
-// Optional convenience — a separate write-only hook. Never reads, never returns a value.
-export function useSetPieceCenterUSync(id?: string): (u: number) => SetResult {
- const design = useDesign();
- const pieceId = id ?? usePieceContext()?.id;
- const piece = design && pieceId ? design.piece(pieceId) : null;
- return useCallback((u: number) => (piece ? piece.moveSync({ center: { u, v: piece.centerSync()?.v ?? 0 } }) : ({ ok: false, error: { kind: "Readonly", message: "no piece" } } as const)), [piece]);
-}
+- `usePieceCenterV` — gone. Component inlines `usePieceCenter()?.v` for read and `useMovePieceSync()` for write.
+- sketchpad's tuple `usePieceScale` — gone. Component uses `@semio/react`'s `usePieceScale()` (returns `number | undefined`) plus `useMovePieceSync()` for write.
+- `usePieceIsHidden` / `usePieceIsLocked` — gone. The schema does not expose `Piece.isHidden` / `Piece.isLocked` as direct fields today; until the schema grows `Piece.isHidden: Boolean!` + `PieceOperationInput.changeIsHidden` (and the matching `usePieceIsHidden` / `useChangePieceIsHiddenSync` auto-generated 1:1 hooks appear in `@semio/react`), the component reads `usePieceAttributes()?.find((a) => a.key === "isHidden")?.value === "true"` inline and writes through `useAddPieceAttributeSync` / `useRemovePieceAttributeSync`.
+- `useConnectionGapValue` / `useConnectionShiftValue` / `useConnectionRotationValue` / `useConnectionRiseValue` / `useConnectionTurnValue` / `useConnectionTiltValue` — gone. Component uses `useConnectionGap()`, `useConnectionShift()`, `useConnectionRotation()`, `useConnectionRise()`, `useConnectionTurn()`, `useConnectionTilt()` (each schema-1:1) for read. Writes are unavailable until `ConnectionOperationInput` is added to the schema.
+
+List rendering follows the same rule — never ask for ids; ask for the bulky list and read `id` from the class instance:
+
+```tsx
+// Before
+const ids = useDesignPieceIds(designId);                // sub-selection — gone
+return ids?.map((id) => <PieceCard key={id} pieceId={id} />);
+
+// After
+const pieces = useDesignPieces(designId);               // bulky → readonly Piece[] | undefined
+return pieces?.map((p) => <PieceCard key={p.id} pieceId={p.id} />);
 ```
-
-The same recipe replaces every other tuple-shaped sketchpad hook:
-
-- `usePieceCenterV(): number` → `usePieceCenter()?.v ?? 0`. Write: `useSetPieceCenterVSync` mirrors the U variant.
-- `usePieceScale(): number` → re-export of `@semio/react`'s `usePieceScale` (which already returns `number | undefined`) wrapped to default to 1. Write: `useSetPieceScaleSync` calls `piece.moveSync({ scale })` (the schema models scale through `PositionInput.scale`).
-- `usePieceIsHidden(): boolean` → derived from `usePieceAttributes()` (looks for the `isHidden` attribute key). Write: `useSetPieceIsHiddenSync` is a write-only hook that calls `useAddPieceAttributeSync` / `useRemovePieceAttributeSync` with no embedded read.
-- `usePieceIsLocked(): boolean` / `useSetPieceIsLockedSync(): (b: boolean) => SetResult` — same pattern via the `isLocked` attribute.
-- `useConnectionGapValue(): number` → `useConnectionGap() ?? 0`. There is _no_ setter hook — `Connection` has no `*OperationInput` in [target.schema.graphql](semio/graphql/target.schema.graphql), so the connection gap UI is read-only until the schema grows `ConnectionOperationInput.changeGap`. The same applies to `useConnectionShiftValue`, `useConnectionRiseValue`, `useConnectionRotationValue`, `useConnectionTurnValue`, `useConnectionTiltValue`.
 
 Drag interaction (canvas pointer move) is already pure-write and stays a one-liner:
 
@@ -494,12 +501,12 @@ function useDraggingPiece(id: string) {
 ```
 
 ```tsx
-// After — pure write
+// After — pure write, schema-1:1
 const dragPieceSync = useDragPieceSync(id);
 // onPointerMove={(offset) => dragPieceSync(offset)}
 ```
 
-Net effect: every banned `useKit` / `useDesign` / `useType` / `usePiece` / `useConnection` / `useAuthor` / `useQuality` import disappears from sketchpad, every `HookResult<T>` tuple hook is replaced by a pair of single-purpose hooks (`use<Field>` returning the value, `useSet<Field>Sync` returning a writer), every `commands.updatePiece` / `updateConnection` / `updateType` / `updateDesign` / `applyKitDiff` call becomes a `use<Op><Entity>Sync` call (or is dropped when the schema has no matching operation), and every read becomes a per-field hook bound to the matching `*Context`. The `useDesignAppCommands` indirection itself is deleted — sketchpad calls the operation hooks directly.
+Net effect: every banned `useKit` / `useDesign` / `useType` / `usePiece` / `useConnection` / `useAuthor` / `useQuality` import disappears from sketchpad, every sub-selection / tuple sketchpad hook (`usePieceCenterU`, `usePieceCenterV`, `usePieceScale` (sketchpad version), `usePieceIsHidden`, `usePieceIsLocked`, `useConnectionGapValue`, `useConnectionShiftValue`, `useConnectionRiseValue`, `useConnectionRotationValue`, `useConnectionTurnValue`, `useConnectionTiltValue`, `useDesignPieceIds`, `useDesignConnectionIds`, …) is *deleted* (no rename, no replacement hook), every `commands.updatePiece` / `updateConnection` / `updateType` / `updateDesign` / `applyKitDiff` call becomes a `use<Op><Entity>Sync` call, and every read uses a schema-1:1 field hook from `@semio/react` plus inline destructuring at the call site. The `useDesignAppCommands` indirection itself is deleted — sketchpad calls the operation hooks directly.
 
 ### Generic mechanisms (React side)
 
@@ -670,26 +677,36 @@ Every entry below ships in two flavours: `use<Op><Entity>` returning `(...args) 
 
 ### Kept exports
 
-- Entity-identity selectors (return class instances): `useKit`, `useDesign`, `useType`, `usePiece`, `useConnection`, `useAuthor`, `useQuality` (plus the `*ById` aliases).
-- Bulk / list / aggregate / metadata / shallow hooks: `useTypes`, `useDesigns`, `usePieces`, `useConnections`, `useAuthors`, `useTypesIds`, `useDesignsIds`, `useTypesMetadata`, `useDesignsMetadata`, `useTypesFull`, `useDesignsFull`, `useFilesFull`, `useTagsFull`, `useKitDesignsShallow`, `useKitTypesShallow`, `useKitAuthorsShallow`, `useKitPieces`, `useKitConnections`, `usePiecesMetadataMap`, `usePieceMetadata`, `useIncludedDesigns`, `useDesignClusterableGroups`, `useDesignQualitySum`, `useTypeBestRepresentation`, `useKitColoredConnectors`, `useReplacableTypes`, `useReplacableDesigns`, `useExplodeableDesignNodes`, `useOpenKitGuids`, `useActiveKitGuid`, `useOpenKitShallows`, `useRegistryHasKit`, `useRegistryKitPersistenceKind`, `useKitAlternatives`, `useKitAlternativeSelection`. Each returns plain data (lists or scalars) — no tuple wrapping. Implementations compose list-id field hooks plus per-id reads, all on top of the class instances (e.g. `useTypesIds(): readonly string[] | undefined`, `useTypes(): readonly Type[] | undefined`).
-- Per-field read hooks (above) and per-operation write hooks (above).
-- Context components + context hooks: `KitContext`, `DesignContext`, `TypeContext`, `PortContext`, `ConnectorContext`, `PieceContext`, `ConnectionContext`, `AuthorContext`, `QualityContext`, `TagContext`, `ConceptContext`, plus their `use*Context` accessors and `useResolvedKitIdentifier`.
-- Backbone read hooks return plain data (`useBackboneStatus(): BackboneStatusDto | undefined`, `useListConflicts(): readonly KitConflict[] | undefined`); backbone operations follow the operation hook pattern, each shipped in async + sync flavours (`useAttachBackbone` / `useAttachBackboneSync`, `useDetachBackbone` / `useDetachBackboneSync`, `useResolveConflict` / `useResolveConflictSync`, `useSyncNow` / `useSyncNowSync`).
-- Diagnostics: `useSchemaEvents(filter?)`, `useSetErrors(filter?)`, `useKitSync(): { status, lastError } | undefined`. `useWriteIndicator`, `useWriteQueue`, `useOptimistic`, `usePendingTriad` are deleted (they belong to the old `KitFieldBinding` pending model).
+- **Entity-identity selectors** — class navigation, returning `Entity | null`. Each is the React surface for the class navigation methods on the JS classes (no schema-level derivation):
+  - `useKit(): Kit | null` (resolves the active kit from the runtime),
+  - `useDesign(id?: string): Design | null` (= `useKit()?.design(id ?? useDesignContext()?.id)`),
+  - `useType(id?: string): Type | null`, `usePiece(id?: string): Piece | null`, `useConnection(id?: string): Connection | null`, `useAuthor(id?: string): Author | null`, `useQuality(id?: string): Quality | null`, `usePort(id?: string): Port | null`, `useConnector(id?: string): Connector | null`, `useTag(id?: string): Tag | null`, `useConcept(id?: string): Concept | null`, `useRepresentation(id?: string): Representation | null`.
+- **Per-field read hooks** — one per (Artifact type) × (schema field), generated by `create<Entity>FieldHook` (see read hook pattern above). Lean fields return the value, bulky fields return the class instance(s).
+- **Per-operation write hooks** — async + sync per leaf of every `*OperationInput`, generated by `create<Entity>OpHook` (see operation hook surface above).
+- **Context providers + context hooks** — one per Artifact type that takes an `id` prop: `KitContext`, `DesignContext`, `TypeContext`, `PortContext`, `ConnectorContext`, `PieceContext`, `ConnectionContext`, `AuthorContext`, `QualityContext`, `TagContext`, `ConceptContext`, `RepresentationContext`. Each pairs with a `use<Entity>Context()` accessor that returns `{ id: string } | null`. No `*Scope` / `*ScopeContext` / `*ScopeProvider` aliases.
+- **Runtime / shell hooks** — minimal surface for binding the React tree to a `Kit` instance and reporting its sync/error status. These are *not* schema fields; they wrap the `Kit` class's runtime control APIs so React components can render their state. Each is 1:1 with one `Kit` runtime method (no derivation):
+  - `useKitConnectionStatus(): "disconnected" | "connecting" | "ready" | "error"` (binds `kit.connectionStatusSync()` + `kit.onConnectionStatusChanged`),
+  - `useKitErrors(): readonly KitError[] | undefined` (binds `kit.errorsSync()` + `kit.onErrorsChanged`),
+  - `useKitSync(): KitSyncSnapshot | undefined` (binds `kit.syncSync()` + `kit.onSyncChanged`).
 
 ### Deleted exports
 
-- All `KitFieldBinding`, `HookRead`, `WriteStatus`, `WRITE_STATUS_IDLE`, `WRITE_STATUS_READONLY`, `WRITE_STATUS_PENDING`, `writeStatusEquivalent` types and helpers — reads return data directly, writes return functions.
-- Old combined "`run + status`" hooks: `useUndo`, `useRedo`, `useDeselectAll`, `useDeleteSelected`, `usePasteDesignSelection`, `useStartNewChange`/`useSaveChange`/`useUnsavedChanges`/`useStartAlternative`/`useIntegrateAlternative` legacy shapes (replaced by the operation hooks above which return plain functions). `useChange`, `useCommandBuilder` are deleted (no `CommandBuilder` in `@semio/js`).
-- Old per-entity `useCreate*`/`useDelete*`/`useUpdate*` legacy hooks (replaced by operation hooks above).
-- `useWriteIndicator`, `useWriteQueue`, `useOptimistic`, `usePendingTriad`.
-- Whole-object triads: `usePieceTriad`, `useDesignTriad`, `useTypeTriad`, `useAuthorTriad`, `useQualityTriad`, `useConnectionTriad`.
-- Whole-object accessors: `useFolder`, `useFile`, `useTag`, `useConcept`, `useFamily`, `useGroup`, `usePort`, `useProp`, `useStat`, `useBenchmark`, `useCoordinate`, `usePoint`, `useVector`, `usePlane`, `useCamera`, `useAttribute`, `useLocation`, `useRepresentation`, `useConnector`, `useActor`, `useUser`, `useAgent`, `useSessionActorInput`, every `*Input` and `*PatchInput` whole-object hook.
-- Snapshot exports: `useKitSnapshot`, `useKitStoreSnapshot`, `useKitHostStore`, `useKitStore`, `useSemioStoreSelector`, `useSemioReadSnap`, `useSemioKitScopedView`. `useKitStoreClient` is removed entirely.
-- Generic schema readers: `useSchemaObjectState`, `useSchemaObjectMutation`, `useSchemaObjectValue`, `useSchemaFieldValue`, `useSchemaFieldMutation`, `useSchemaFieldState`, `useSchemaScope`, `useKitRuntimeSafe`, `useKitRegistry`, `useKitRegistrySafe`. The `IndexedSchemaState` / `resolveReference` / `readSchemaFieldValue` / `KitRuntimeContext` machinery is deleted.
-- `useResolved<Entity>` helpers.
-- Whole-snapshot file/binary helpers: `useKitFileBlobUrl`, `useKitStoredFileUrls`, `useFileUrls`, `useKitFileState`, `useKitPersistenceKind`, `useKitPersistenceSource`, `useKitBinary`, `useEmbedKitFile`, `useKitFileUrl`.
-- Re-exports of deleted js symbols (`asKitInstance`, `Kit`-class static helpers, `KitEntityStore`, `*Store` legacy aliases, `KitFileState`, …).
+The following are deleted because they violate the schema-1:1 invariant or the strict read/write split:
+
+- **Sub-selection / derived hooks**: every `useTypesIds`, `useDesignsIds`, `useKitTypeIds`, `useKitDesignIds`, `useKitAuthorIds`, `useKitQualityIds`, `useDesignPieceIds`, `useDesignConnectionIds`, `useTypePortIds`, `useTypeConnectorIds`, `useTypeRepresentationIds`, `useConnectionConnectedPieceId`, `useConnectionConnectingPieceId`, `usePieceCenterU`/`V`, `usePieceIsHidden`, `usePieceIsLocked`. Callers destructure the lean value or read the class `id` getter inline.
+- **Aggregate / metadata / shallow / view hooks**: `useTypesMetadata`, `useDesignsMetadata`, `useTypesFull`, `useDesignsFull`, `useFilesFull`, `useTagsFull`, `useKitDesignsShallow`, `useKitTypesShallow`, `useKitAuthorsShallow`, `useKitPieces`, `useKitConnections`, `usePiecesMetadataMap`, `usePieceMetadata`, `useIncludedDesigns`, `useDesignClusterableGroups`, `useDesignQualitySum`, `useTypeBestRepresentation`, `useKitColoredConnectors`, `useReplacableTypes`, `useReplacableDesigns`, `useExplodeableDesignNodes`. Each is reintroduced as a 1:1 hook *only if* the corresponding field is added to [target.schema.graphql](semio/graphql/target.schema.graphql) as a computed field (e.g. `Design.qualitySum: Float!`, `Type.bestRepresentation: Representation`, `Kit.coloredConnectors: [Connector!]!`, …).
+- **Registry / shell-state hooks**: `useOpenKitGuids`, `useActiveKitGuid`, `useOpenKitShallows`, `useRegistryHasKit`, `useRegistryKitPersistenceKind`, `useKitAlternatives`, `useKitAlternativeSelection`. The runtime kit registry is not in `target.schema.graphql`; consumers that need cross-kit shell state import the registry from the host application directly (sketchpad). `@semio/react` exposes only the active `Kit` (via `useKit()` / `KitContext`) and the operation hooks for `SessionCommandInput` / `AlternativeCommandInput`.
+- **Backbone hooks**: same rule — only kept if `target.schema.graphql` declares the corresponding fields/operations. Otherwise dropped, and consumers call the host transport directly.
+- **All `KitFieldBinding`, `HookRead`, `WriteStatus`, `WRITE_STATUS_IDLE`, `WRITE_STATUS_READONLY`, `WRITE_STATUS_PENDING`, `writeStatusEquivalent`** types and helpers.
+- **Old combined "`run + status`" hooks**: `useUndo`, `useRedo`, `useDeselectAll`, `useDeleteSelected`, `usePasteDesignSelection`, `useChange`, `useCommandBuilder`, `useWriteIndicator`, `useWriteQueue`, `useOptimistic`, `usePendingTriad`. Replaced by the operation hooks (which are 1:1 with `*OperationInput` leaves).
+- **Old per-entity `useCreate*`/`useDelete*`/`useUpdate*`** legacy shapes (replaced by operation hooks).
+- **Whole-object triads**: `usePieceTriad`, `useDesignTriad`, `useTypeTriad`, `useAuthorTriad`, `useQualityTriad`, `useConnectionTriad`.
+- **Whole-object accessors**: `useFolder`, `useFile`, `useTag` (DTO), `useConcept` (DTO), `useFamily`, `useGroup`, `usePort` (DTO), `useProp`, `useStat`, `useBenchmark`, `useCoordinate`, `usePoint`, `useVector`, `usePlane`, `useCamera`, `useAttribute`, `useLocation`, `useRepresentation` (DTO), `useConnector` (DTO), `useActor`, `useUser`, `useAgent`, `useSessionActorInput`, every `*Input` and `*PatchInput` whole-object hook. (Note: there is *no* `usePort` returning a DTO; the entity-identity `usePort(id?)` returning `Port | null` does survive — same for `useConnector`, `useTag`, `useConcept`, `useRepresentation`.)
+- **Snapshot exports**: `useKitSnapshot`, `useKitStoreSnapshot`, `useKitHostStore`, `useKitStore`, `useSemioStoreSelector`, `useSemioReadSnap`, `useSemioKitScopedView`. `useKitStoreClient` is removed entirely.
+- **Generic schema readers**: `useSchemaObjectState`, `useSchemaObjectMutation`, `useSchemaObjectValue`, `useSchemaFieldValue`, `useSchemaFieldMutation`, `useSchemaFieldState`, `useSchemaScope`, `useKitRuntimeSafe`, `useKitRegistry`, `useKitRegistrySafe`. The `IndexedSchemaState` / `resolveReference` / `readSchemaFieldValue` / `KitRuntimeContext` machinery is deleted.
+- **`useResolved<Entity>`** helpers.
+- **Whole-snapshot file/binary helpers**: `useKitFileBlobUrl`, `useKitStoredFileUrls`, `useFileUrls`, `useKitFileState`, `useKitPersistenceKind`, `useKitPersistenceSource`, `useKitBinary`, `useEmbedKitFile`, `useKitFileUrl`. If the schema later adds `File.url` / `File.blob` as computed fields, the matching 1:1 hook reappears.
+- **Re-exports of deleted js symbols** (`asKitInstance`, `Kit`-class static helpers, `KitEntityStore`, `*Store` legacy aliases, `KitFileState`, …).
 
 ## 5. Sketchpad migration ([semio/sketchpad/index.tsx](semio/sketchpad/index.tsx))
 
@@ -700,19 +717,19 @@ Sketchpad must compile without importing any of:
 - any deleted hook from §4,
 - any entity class as a runtime read carrier (`Piece`, `Design`, `Type`, `Connection`, `Author`, `Quality`, `Kit`).
 
-Sketchpad must also delete every `HookResult<T>` style sketchpad hook (the `[value, setter]` tuple) and replace each with a _pair_ of single-purpose hooks: a pure-read hook that returns the value (and calls no operation methods) plus a separate pure-write hook that returns a function (and reads no field). Components that previously did `const [u, setU] = usePieceCenterU()` now do `const u = usePieceCenterU()` and (separately) `const setU = useSetPieceCenterUSync()`. See §4 "Sketchpad target" for the full recipe.
+Sketchpad obeys the same schema-1:1 invariant as `@semio/react` — it *adds nothing* beyond the schema either. Every existing `HookResult<T>` tuple sketchpad hook (`usePieceCenterU`, `usePieceCenterV`, sketchpad's tuple `usePieceScale`, `usePieceIsHidden`, `usePieceIsLocked`, `useConnectionGapValue`, `useConnectionShiftValue`, `useConnectionRiseValue`, `useConnectionRotationValue`, `useConnectionTurnValue`, `useConnectionTiltValue`, `useDesignPieceIds`, `useDesignConnectionIds`, every `useType*Ids` / `useKit*Ids`, every `*Metadata` / `*Shallow` / `*Full` derivation) is **deleted entirely** with no replacement hook. Slicing a lean value or picking class ids happens *inline at the call site* (see §4 "Sketchpad target" for examples).
 
-Per call site (64 currently identified by `\b(useKit|useDesign|useType|usePiece|useConnection|useAuthor|useQuality)\b`), inspect what fields the JSX actually reads and what mutations it performs, then replace with explicit per-field read hooks and per-operation write hooks. Reads and writes are spelled out independently (no tuple shape, no setter inside a read hook, no read inside a write hook):
+Per call site (64 currently identified by `\b(useKit|useDesign|useType|usePiece|useConnection|useAuthor|useQuality)\b`), inspect what fields the JSX actually reads and what mutations it performs, then replace with schema-1:1 hooks from `@semio/react`. Reads and writes are spelled out independently (no tuple shape, no setter inside a read hook, no read inside a write hook, no sub-selection wrapper):
 
-- `const piece = usePiece() as Piece` (read-only JSX) → `const { id } = usePieceContext() ?? {}; const name = usePieceName(id); const plane = usePiecePlane(id); const center = usePieceCenter(id); …`
-- A drag handler that called `piece.drag(offset)` → use the **sync** variant for live drag (cache + UI update in the same tick): `const dragPieceSync = useDragPieceSync(id); … onDrag={offset => dragPieceSync(offset)}`. Use the async variant only when awaiting server confirmation matters: `const dragPiece = useDragPiece(id); await dragPiece(offset);`. A rename input commit similarly: `const renamePieceSync = useRenamePieceSync(id); … onCommit={name => renamePieceSync(name)}`.
-- `const type = useType(undefined, undefined, true) as Type` → `useTypeName(typeId)` + `useTypeRepresentationIds(typeId)` (then per-representation field hooks) + `useTypePortIds(typeId)` (then per-port field hooks). Mutations like `type.createPort(...)` become `useCreatePort(typeId)(...)`.
-- `const connection = useConnection() as Connection` → `useConnectionConnectedPieceId(id)`, `useConnectionConnectingPieceId(id)`, `useConnectionGap(id)`, `useConnectionShift(id)`, `useConnectionRise(id)`, `useConnectionRotation(id)`, `useConnectionTurn(id)`, `useConnectionTilt(id)`, …
-- `const design = useDesign() as Design` → `useDesignName(designId)`, `useDesignPieceIds(designId)`, then iterate ids and render child components reading per-piece fields. Mutations like `design.deletePiece(id)` become `useDeletePiece(designId)(pieceId)`.
+- `const piece = usePiece() as Piece` (read-only JSX) → use the schema-1:1 hooks `usePieceName(id)`, `usePiecePlane(id)`, `usePieceCenter(id)`, `usePieceFlatPlane(id)`, … and destructure (`const center = usePieceCenter(id); const u = center?.u`) at the call site.
+- A drag handler that called `piece.drag(offset)` → `const dragPieceSync = useDragPieceSync(id); … onDrag={(offset) => dragPieceSync(offset)}` (sync for live drag). Async only when awaiting confirmation matters: `const dragPiece = useDragPiece(id); await dragPiece(offset);`.
+- `const type = useType() as Type` → `useTypeName(typeId)` + `useTypeRepresentations(typeId)` (returns `readonly Representation[] | undefined`, JSX maps to `<RepresentationContext id={r.id}>` children) + `useTypePorts(typeId)` (same pattern). Mutations like `type.createPort(...)` become `useCreatePort(typeId)(...)`.
+- `const connection = useConnection() as Connection` → `useConnectionConnected(id)` (returns `Side`), `useConnectionConnecting(id)` (returns `Side`), `useConnectionGap(id)`, `useConnectionShift(id)`, `useConnectionRise(id)`, `useConnectionRotation(id)`, `useConnectionTurn(id)`, `useConnectionTilt(id)`. Component picks `side.piece.id` inline when it needs the piece id.
+- `const design = useDesign() as Design` → `useDesignName(designId)`, `useDesignPieces(designId)` (returns `readonly Piece[] | undefined`, JSX maps to `<PieceContext id={p.id}>` children), `useDesignConnections(designId)` (returns `readonly Connection[] | undefined`). Mutations like `design.deletePiece(id)` become `useDeletePiece(designId)(pieceId)`.
 
-Where a list of children is needed, sketchpad calls a per-entity list-id field hook (e.g. `useDesignPieceIds(designId)` returning `readonly string[] | undefined`) and renders one child component per id. Bulk hooks like `useTypes` stay in the API but sketchpad does not call them.
+Where a list of children is needed, sketchpad calls the bulky list hook (`useDesignPieces`, `useDesignConnections`, `useTypePorts`, `useTypeConnectors`, `useTypeRepresentations`, `useKitTypes`, `useKitDesigns`, `useKitAuthors`, `useKitQualities`, `useKitTags`, `useKitConcepts`) and reads `id` off each class instance.
 
-Missing per-field hooks that sketchpad needs are added to [semio/react/index.tsx](semio/react/index.tsx) following the pattern in §4 (one method on the matching class, one hook in react). Likely additions: `useDesignPieceIds`, `useDesignConnectionIds`, `useTypeRepresentationIds`, `useTypePortIds`, `useTypeConnectorIds`, `useConnectionConnectedPieceId`, `useConnectionConnectingPieceId`, `useKitTypeIds`, `useKitDesignIds`, `useKitAuthorIds`, `useKitQualityIds`.
+Missing per-field hooks that sketchpad needs are added to [semio/react/index.tsx](semio/react/index.tsx) **only if** they correspond to existing schema fields (one method on the matching class, one hook in react). Likely additions, all schema-direct: `useDesignPieces`, `useDesignConnections`, `useTypeRepresentations`, `useTypePorts`, `useTypeConnectors`, `useConnectionConnected`, `useConnectionConnecting`, `useKitTypes`, `useKitDesigns`, `useKitAuthors`, `useKitQualities`, `useKitTags`, `useKitConcepts`. Anything sketchpad needs that is *not* in the schema (e.g. `Design.qualitySum`, `Type.bestRepresentation`, `Piece.isHidden`) is either added to the schema first (so the auto-generated 1:1 hook appears) or computed inline in the sketchpad component.
 
 ## 6. Validation
 
