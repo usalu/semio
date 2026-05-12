@@ -921,6 +921,26 @@ export class Kit {
     return new Stat(this, id);
   }
 
+  /** @emoji 🌐 WIP {@link Graph} ({@code Query.wip}). */
+  wip(): Graph {
+    return new Graph(this, "wip");
+  }
+
+  /** @emoji 🌐 Authoritative {@link Graph} when the server exposes it ({@code Query.authoritative}). */
+  authoritative(): Graph {
+    return new Graph(this, "authoritative");
+  }
+
+  /** @emoji 🗂️ Root {@link Session} ({@code Query.session}). */
+  session(): Session {
+    return new Session(this);
+  }
+
+  /** @emoji ⚔️ {@link Conflict} via {@code node(id:)}. */
+  conflict(id: string): Conflict {
+    return new Conflict(this, id);
+  }
+
   async rename(newName: string): Promise<SetResult> {
     const cid = await this.ensureChangeId();
     return this.mutateScoped(cid, `rn: rename(newName: ${__gqlStr(newName)})`);
@@ -1091,6 +1111,158 @@ export class Kit {
   }
 }
 //#endregion 🎒Kit
+
+//#region 🧬VcsEntities
+/** @emoji 🌐 WIP or authoritative {@code Graph} root from {@code Query}. */
+export type GraphRootKind = "wip" | "authoritative";
+
+/** @emoji 🌐 VCS graph: {@code wip} / {@code authoritative} selections on {@link Kit}. */
+export class Graph extends Entity {
+  constructor(kit: Kit, root: GraphRootKind) {
+    super(kit, root);
+  }
+
+  get root(): GraphRootKind {
+    return this.id as GraphRootKind;
+  }
+
+  /** @emoji 🏛 {@code graph { theKit }} handle. */
+  theKit(): TheKit {
+    return new TheKit(this.kit, this.root);
+  }
+
+  checkpoint(checkpointId: string): Checkpoint {
+    return new Checkpoint(this.kit, this.root, checkpointId);
+  }
+
+  alternative(alternativeId: string): Alternative {
+    return new Alternative(this.kit, { parent: "graph", root: this.root }, alternativeId);
+  }
+
+  async readId(): Promise<string> {
+    const q = this.root === "wip" ? `query { wip { id } }` : `query { authoritative { id } }`;
+    const data = kitGraphqlData(await this.kit.gqlRun({ query: q })) as JsonObject;
+    const node = data[this.root] as JsonObject | null | undefined;
+    return node == null ? "" : String(node["id"] ?? "");
+  }
+}
+
+/** @emoji 🗂️ {@code Query.session} singleton anchor. */
+export class Session extends Entity {
+  constructor(kit: Kit) {
+    super(kit, "session");
+  }
+
+  alternative(alternativeId: string): Alternative {
+    return new Alternative(this.kit, { parent: "session" }, alternativeId);
+  }
+
+  async readId(): Promise<string> {
+    const data = kitGraphqlData(await this.kit.gqlRun({ query: `query { session { id } }` })) as JsonObject;
+    const s = data["session"] as JsonObject | undefined;
+    return String(s?.["id"] ?? "");
+  }
+}
+
+/** @emoji 🧭 Parent scope for {@link Alternative} navigation. */
+export type AlternativeParent = { readonly parent: "graph"; readonly root: GraphRootKind } | { readonly parent: "session" };
+
+/** @emoji 🔀 {@code Alternative} under {@link Graph} or {@link Session}. */
+export class Alternative extends Entity {
+  constructor(
+    kit: Kit,
+    private readonly ap: AlternativeParent,
+    id: string,
+  ) {
+    super(kit, id);
+  }
+
+  async readName(): Promise<string> {
+    const q =
+      this.ap.parent === "graph"
+        ? `query { ${this.ap.root} { alternative(id: ${__gqlStr(this.id)}) { name } } }`
+        : `query { session { alternative(id: ${__gqlStr(this.id)}) { name } } }`;
+    const data = kitGraphqlData(await this.kit.gqlRun({ query: q })) as JsonObject;
+    const first =
+      this.ap.parent === "graph" ? (data[this.ap.root] as JsonObject | undefined) : (data["session"] as JsonObject | undefined);
+    const alt = first?.["alternative"] as JsonObject | undefined;
+    return String(alt?.["name"] ?? "");
+  }
+}
+
+/** @emoji 🏛 {@code TheKit} under {@code wip}/{@code authoritative}. */
+export class TheKit extends Entity {
+  constructor(kit: Kit, private readonly graphRoot: GraphRootKind) {
+    super(kit, `theKit:${graphRoot}`);
+  }
+
+  async readId(): Promise<string> {
+    const q = `query { ${this.graphRoot} { theKit { id } } }`;
+    const data = kitGraphqlData(await this.kit.gqlRun({ query: q })) as JsonObject;
+    const rootNode = data[this.graphRoot] as JsonObject | undefined;
+    const tk = rootNode?.["theKit"] as JsonObject | undefined;
+    return String(tk?.["id"] ?? "");
+  }
+}
+
+/** @emoji 🏁 {@code Checkpoint} under {@link Graph}. */
+export class Checkpoint extends Entity {
+  constructor(kit: Kit, private readonly graphRoot: GraphRootKind, checkpointId: string) {
+    super(kit, checkpointId);
+  }
+
+  change(changeId: string): Change {
+    return new Change(this.kit, this.graphRoot, this.id, changeId);
+  }
+
+  edit(editId: string): Edit {
+    return new Edit(this.kit, this.graphRoot, this.id, editId);
+  }
+
+  async readMessage(): Promise<string> {
+    const q = `query { ${this.graphRoot} { checkpoint(id: ${__gqlStr(this.id)}) { message } } }`;
+    const data = kitGraphqlData(await this.kit.gqlRun({ query: q })) as JsonObject;
+    const rootNode = data[this.graphRoot] as JsonObject | undefined;
+    const cp = rootNode?.["checkpoint"] as JsonObject | undefined;
+    return String(cp?.["message"] ?? "");
+  }
+}
+
+/** @emoji 🔀 {@code Change} scoped to a {@link Checkpoint} (navigation shell; expand with field reads). */
+export class Change extends Entity {
+  constructor(kit: Kit, private readonly graphRoot: GraphRootKind, private readonly checkpointId: string, changeId: string) {
+    super(kit, changeId);
+  }
+}
+
+/** @emoji ✏️ {@code Edit} scoped to a {@link Checkpoint} (navigation shell; expand with field reads). */
+export class Edit extends Entity {
+  constructor(kit: Kit, private readonly graphRoot: GraphRootKind, private readonly checkpointId: string, editId: string) {
+    super(kit, editId);
+  }
+}
+
+/** @emoji ⚔️ {@code Conflict} via {@code node(id:)}. */
+export class Conflict extends Entity {
+  constructor(kit: Kit, id: string) {
+    super(kit, id);
+  }
+
+  async readReasons(): Promise<readonly string[]> {
+    const data = kitGraphqlData(
+      await this.kit.gqlRun({ query: `query($id: ID!) { node(id: $id) { ... on Conflict { reasons } } }`, variables: { id: this.id } }),
+    ) as JsonObject;
+    const n = data["node"] as JsonObject | undefined;
+    const raw = n?.["reasons"] as readonly JsonValue[] | undefined;
+    if (!Array.isArray(raw)) return [];
+    return raw.map((x) => String(x));
+  }
+}
+
+/** @emoji 🧬 Abstract {@code Operation}; concrete operation subclasses follow the plan roster. */
+export abstract class Operation extends Entity {}
+
+//#endregion 🧬VcsEntities
 
 //#region 📐Design
 export class Design extends Entity {

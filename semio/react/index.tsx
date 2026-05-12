@@ -14,6 +14,7 @@ import type {
   Coordinate,
   Entity,
   FieldSpec,
+  GraphRootKind,
   Kit,
   KitReadPoint,
   OffsetInput,
@@ -25,8 +26,12 @@ import type {
   SetResult,
 } from "@semio/js";
 import {
+  Alternative,
   Author,
+  Change,
+  Checkpoint,
   Concept,
+  Conflict,
   Connection,
   Connector,
   createKitStoreWorker,
@@ -37,10 +42,12 @@ import {
   Design,
   DESIGN_ARTIFACT_FIELD_SPECS,
   DESIGN_OPERATION_SPECS,
+  Edit,
   EventBus,
   Family,
   File,
   Folder,
+  Graph,
   Group,
   KIT_ARTIFACT_FIELD_SPECS,
   KIT_EVENT_STREAM_SUBSCRIPTION,
@@ -48,15 +55,18 @@ import {
   kitReadPointKey,
   Layer,
   openKit,
+  Operation,
   Piece,
   PiecesOperations,
   Port,
   Prop,
   Quality,
   Representation,
+  Session,
   Stat,
   Tag,
   theKitReadPoint,
+  TheKit,
   Type,
 } from "@semio/js";
 import type { ReactNode } from "react";
@@ -65,8 +75,12 @@ import * as React from "react";
 
 // #region 🧷JsPublicExports
 export {
+  Alternative,
   Author,
+  Change,
+  Checkpoint,
   Concept,
+  Conflict,
   Connection,
   Connector,
   createKitStoreWorker,
@@ -77,10 +91,12 @@ export {
   Design,
   DESIGN_ARTIFACT_FIELD_SPECS,
   DESIGN_OPERATION_SPECS,
+  Edit,
   EventBus,
   Family,
   File,
   Folder,
+  Graph,
   Group,
   Kit,
   KIT_ARTIFACT_FIELD_SPECS,
@@ -89,17 +105,21 @@ export {
   kitReadPointKey,
   Layer,
   openKit,
+  Operation,
   Piece,
   PiecesOperations,
   Port,
   Prop,
   Quality,
   Representation,
+  Session,
   Stat,
   Tag,
   theKitReadPoint,
+  TheKit,
   Type,
 };
+export type { GraphRootKind };
 // #endregion 🧷JsPublicExports
 
 // #region 🪝FieldBind
@@ -376,14 +396,7 @@ export function bindKitOperationToReact<Args extends unknown[] = []>(impl: (kit:
 
 // #region 🎭Contexts
 // #region 🎒Kit
-/** @emoji 🎒 React runtime bag: {@link Kit} instance + materialization read point (mirrors {@link Kit#setReadPoint}). */
-export type KitRuntimeValue = Readonly<{
-  kit: Kit;
-  readPoint: KitReadPoint;
-  setReadPoint: (next: KitReadPoint) => void;
-}>;
-
-const KitRuntimeContext = React.createContext<KitRuntimeValue | null>(null);
+const KitContext = React.createContext<Kit | null>(null);
 
 export type KitContextProviderProps = Readonly<{
   kit: Kit;
@@ -391,27 +404,62 @@ export type KitContextProviderProps = Readonly<{
   children: ReactNode;
 }>;
 
-/** @emoji 🧭 Provides {@link Kit} + materialization {@link KitReadPoint} for descendant hooks. */
+/** @emoji 🧭 Provides {@link Kit}; keeps {@link KitReadPoint} in React state and applies it with {@link Kit#setReadPoint}. */
 export function KitContextProvider(props: KitContextProviderProps): React.ReactElement {
   const [readPoint, setReadPointState] = React.useState<KitReadPoint>(props.initialReadPoint ?? theKitReadPoint);
   React.useEffect(() => {
     props.kit.setReadPoint(readPoint);
   }, [props.kit, readPoint]);
-  const setReadPoint = React.useCallback((next: KitReadPoint) => {
-    setReadPointState(next);
-  }, []);
-  const value = React.useMemo<KitRuntimeValue>(() => ({ kit: props.kit, readPoint, setReadPoint }), [props.kit, readPoint, setReadPoint]);
-  return React.createElement(KitRuntimeContext.Provider, { value }, props.children);
+  return React.createElement(KitContext.Provider, { value: props.kit }, props.children);
 }
 
-/** @emoji 🧭 Requires {@link KitContextProvider}; returns the {@link Kit} handle (stable reference for the session). */
+/** @emoji 🧭 Requires {@link KitContextProvider}; returns the GraphQL {@link Kit} handle. */
 export function useKit(): Kit {
-  const v = React.useContext(KitRuntimeContext);
-  if (v == null) throw new Error("semio/react: useKit requires <KitContextProvider>.");
-  return v.kit;
+  const k = React.useContext(KitContext);
+  if (k == null) throw new Error("semio/react: useKit requires <KitContextProvider>.");
+  return k;
+}
+
+/** @emoji 🌐 WIP {@link Graph} from {@link Kit#wip} (no extra provider). */
+export function useWipGraph(): Graph {
+  const kit = useKit();
+  return React.useMemo(() => kit.wip(), [kit]);
+}
+
+/** @emoji 🌐 Authoritative {@link Graph} from {@link Kit#authoritative}. */
+export function useAuthoritativeGraph(): Graph {
+  const kit = useKit();
+  return React.useMemo(() => kit.authoritative(), [kit]);
+}
+
+/** @emoji 🗂️ Root {@link Session} from {@link Kit#session}. */
+export function useSession(): Session {
+  const kit = useKit();
+  return React.useMemo(() => kit.session(), [kit]);
 }
 
 // #endregion 🎒Kit
+
+// #region 🌐GraphContext
+export type GraphContextValue = Readonly<{ root: GraphRootKind }>;
+
+const GraphRootContext = React.createContext<GraphContextValue | null>(null);
+
+/** @emoji 🌐 Binds {@link GraphRootKind} for {@link useGraph}. */
+export function GraphContextProvider(props: { root: GraphRootKind; children: ReactNode }): React.ReactElement {
+  const v = React.useMemo<GraphContextValue>(() => ({ root: props.root }), [props.root]);
+  return React.createElement(GraphRootContext.Provider, { value: v }, props.children);
+}
+
+/** @emoji 🌐 {@link Graph} for the current {@link GraphContextProvider} {@code root}. */
+export function useGraph(): Graph {
+  const kit = useKit();
+  const ctx = React.useContext(GraphRootContext);
+  if (ctx == null) throw new Error("semio/react: useGraph requires <GraphContextProvider root=\"wip\"|\"authoritative\">.");
+  return React.useMemo(() => new Graph(kit, ctx.root), [kit, ctx.root]);
+}
+
+// #endregion 🌐GraphContext
 
 // #region 📐Design
 export type DesignContext = Readonly<{ designId: string }>;

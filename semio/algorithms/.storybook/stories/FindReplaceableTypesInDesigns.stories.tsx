@@ -5,7 +5,7 @@
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 // #endregion 🧲Header
 
-import { getKitPorts, Kit as KitRuntime, type Design } from "@semio/react";
+import { getKitPorts, Kit, type Design } from "../../index";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import * as React from "react";
 
@@ -88,7 +88,7 @@ const CompatibleTypesAndDesignsWindow: React.FC = () => {
   const allTypes = (kit.types ?? []) as { id: string; name?: string }[];
   const allDesigns = (kit.designs ?? []) as Design[];
   const allPorts = React.useMemo(() => getKitPorts(kit as any), [kit]);
-  const result = React.useMemo(() => KitRuntime.ensure(kit).findReplaceableTypesInDesignsForPiecesInDesignOp(design, allDesigns, kit.types ?? [], allPorts, { pieces: selectedPieceIds }), [allDesigns, allPorts, design, kit, selectedPieceIds]);
+  const result = React.useMemo(() => Kit.ensure(kit).findReplaceableTypesInDesignsForPiecesInDesignOp(design, allDesigns, kit.types ?? [], allPorts, { pieces: selectedPieceIds }), [allDesigns, allPorts, design, kit, selectedPieceIds]);
   const typeById = React.useMemo(() => new Map(allTypes.map((nextType) => [nextType.id, nextType] as const)), [allTypes]);
   const visibleDesignIds = React.useMemo(() => new Set(result.designs), [result.designs]);
   const designForest = React.useMemo(() => buildCompatibleDesignTree(allDesigns, visibleDesignIds), [allDesigns, visibleDesignIds]);
