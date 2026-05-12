@@ -20,7 +20,8 @@
     "types": [
       "react",
       "react-dom",
-      "vitest/importMeta"
+      "vitest/importMeta",
+      "vitest/globals"
     ],
     "baseUrl": ".",
     "paths": {

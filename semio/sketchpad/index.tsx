@@ -3932,7 +3932,7 @@ export function getOrCreateAppState<TState>(context: Record<string, Record<strin
 // MUST manage registration and retrieval of design and kit app hook implementations.
 
 /**
- * Interface for design app hook functions including commands, diff, hover, and selection.
+ * Interface for design app hook functions including diff, hover, and selection.
  **/
 export interface DesignAppHooks {
   useDesignAppDiff: () => any;
@@ -28267,206 +28267,6 @@ export function useDesignAppExpandDesign(): ActionHookResult<[designId: Id]> {
 // #endregion 🎖️Action Hooks
 
 /**
- * EMPTY_COMMANDS holds the data fields for a EMPTY_COMMANDS record.
- **/
-const EMPTY_COMMANDS = {
-  togglePanel: () => {},
-  execute: () => {},
-  startNewChange: () => {},
-  saveChange: () => {},
-  discardChange: () => {},
-  undo: () => {},
-  redo: () => {},
-  selectAll: () => {},
-  deselectAll: () => {},
-  selectPiece: () => {},
-  selectPieces: () => {},
-  addPieceToSelection: () => {},
-  removePieceFromSelection: () => {},
-  selectConnection: () => {},
-  addConnectionToSelection: () => {},
-  removeConnectionFromSelection: () => {},
-  selectPiecePort: () => {},
-  deselectPiecePort: () => {},
-  deleteSelected: () => {},
-  toggleDiagramFullscreen: () => {},
-  toggleAccesslFullscreen: () => {},
-  setActiveTool: () => {},
-  addPiece: () => {},
-  addPieces: () => {},
-  removePiece: () => {},
-  removePieces: () => {},
-  addConnection: () => {},
-  addConnections: () => {},
-  removeConnection: () => {},
-  removeConnections: () => {},
-  updatePiece: () => {},
-  updatePieces: () => {},
-  updateConnection: () => {},
-  updateConnections: () => {},
-  setCamera: () => {},
-  focusPiece: () => {},
-  clearFocus: () => {},
-  setDiagramCenter: () => {},
-  setDiagramScale: () => {},
-  hoverPiece: () => {},
-  hoverPieces: () => {},
-  hoverConnection: () => {},
-  hoverConnections: () => {},
-  hoverPort: () => {},
-  hoverType: () => {},
-  hoverTypes: () => {},
-  hoverDesign: () => {},
-  hoverDesigns: () => {},
-  clearHover: () => {},
-  setRepresentationTagsForType: () => {},
-  addRepresentationTagForAllTypes: () => {},
-  removeRepresentationTagFromAllTypes: () => {},
-} as any;
-
-/**
- * Returns the full Design app commands API for programmatic access.
- *MUST expose all Design app commands through the store controller.
- **/
-export function useDesignAppCommands(id?: DesignAppId) {
-  const store = useDesignStore(undefined, id) as DesignStore | null;
-  const actor = useSketchpadActorSafe();
-  const kitScope = useKitScope();
-  const designScope = useDesignScope();
-  const kitId = kitScope?.id ?? id?.kit ?? "";
-  const designId = designScope?.id ?? id?.design ?? "";
-
-  return useMemo(() => {
-    if (!store || !actor) {
-      return EMPTY_COMMANDS;
-    }
-    return {
-      startNewChange: (origin: string) => store.execute("semio.designApp.startNewChange", origin),
-      saveChange: (origin: string) => store.execute("semio.designApp.saveChange", origin),
-      discardChange: (origin: string) => store.execute("semio.designApp.discardChange", origin),
-      undo: (origin: string) => store.execute("semio.designApp.undo", origin),
-      redo: (origin: string) => store.execute("semio.designApp.redo", origin),
-      selectAll: (_origin: string) => actor.send({ type: "DESIGN.SELECT_ALL", kitId, designId }),
-      deselectAll: (_origin: string) => actor.send({ type: "DESIGN.CLEAR_SELECTION", kitId, designId }),
-      selectPiece: (_origin: string, id: Id) => actor.send({ type: "DESIGN.SELECT_PIECE", kitId, designId, pieceId: id }),
-      selectPieces: (_origin: string, ids: Id[]) => ids.forEach((g) => actor.send({ type: "DESIGN.SELECT_PIECE", kitId, designId, pieceId: g })),
-      addPieceToSelection: (_origin: string, id: Id) => actor.send({ type: "DESIGN.SELECT_PIECE", kitId, designId, pieceId: id }),
-      removePieceFromSelection: (_origin: string, id: Id) => actor.send({ type: "DESIGN.DESELECT_PIECE", kitId, designId, pieceId: id }),
-      selectConnection: (_origin: string, connectionId: Id) => actor.send({ type: "DESIGN.SELECT_CONNECTION", kitId, designId, connectionId }),
-      addConnectionToSelection: (_origin: string, connectionId: Id) => actor.send({ type: "DESIGN.SELECT_CONNECTION", kitId, designId, connectionId }),
-      removeConnectionFromSelection: (_origin: string, connectionId: Id) => actor.send({ type: "DESIGN.DESELECT_CONNECTION", kitId, designId, connectionId }),
-      selectPiecePort: (_origin: string, piece: Id, connector: Id) => {
-        actor.send({ type: "DESIGN.SET_SELECTION", kitId, designId, selection: createDesignConnectorSelection(piece, connector) });
-      },
-      deselectPiecePort: (_origin: string) => {
-        const current = store.snapshot().selection || {};
-        actor.send({ type: "DESIGN.SET_SELECTION", kitId, designId, selection: stripDesignConnectorSelection(current) });
-      },
-      deleteSelected: (origin: string) => store.execute("semio.designApp.deleteSelected", origin),
-      toggleDiagramFullscreen: (_origin: string) => {
-        const current = store.snapshot().fullscreenWindow;
-        actor.send({ type: "DESIGN.SET_FULLSCREEN", kitId, designId, window: current === DesignAppFullscreenWindow.Diagram ? DesignAppFullscreenWindow.None : DesignAppFullscreenWindow.Diagram });
-      },
-      toggleAccesslFullscreen: (_origin: string) => {
-        const current = store.snapshot().fullscreenWindow;
-        actor.send({ type: "DESIGN.SET_FULLSCREEN", kitId, designId, window: current === DesignAppFullscreenWindow.Accessl ? DesignAppFullscreenWindow.None : DesignAppFullscreenWindow.Accessl });
-      },
-      setActiveTool: (_origin: string, tool: ToolKind) => actor.send({ type: "DESIGN.SET_ACTIVE_TOOL", kitId, designId, tool }),
-      addPiece: (origin: string, piece: Piece) => store.execute("semio.designApp.addPiece", origin, piece),
-      addPieces: (origin: string, pieces: Piece[]) => store.execute("semio.designApp.addPieces", origin, pieces),
-      removePiece: (origin: string, piece: Id) => store.execute("semio.designApp.removePiece", origin, piece),
-      removePieces: (origin: string, pieces: Id[]) => store.execute("semio.designApp.removePieces", origin, pieces),
-      addConnection: (origin: string, connection: Connection) => store.execute("semio.designApp.addConnection", origin, connection),
-      addConnections: (origin: string, connections: Connection[]) => store.execute("semio.designApp.addConnections", origin, connections),
-      removeConnection: (origin: string, connection: Id) => store.execute("semio.designApp.removeConnection", origin, connection),
-      removeConnections: (origin: string, connections: Id[]) => store.execute("semio.designApp.removeConnections", origin, connections),
-      updatePiece: (origin: string, piece: Id, pieceDiff: PieceDiff) => store.execute("semio.designApp.updatePiece", origin, piece, pieceDiff),
-      updatePieces: (origin: string, updates: { id: Id; diff: PieceDiff }[]) => store.execute("semio.designApp.updatePieces", origin, updates),
-      updateConnection: (origin: string, connection: Id, connectionDiff: ConnectionDiff) => store.execute("semio.designApp.updateConnection", origin, connection, connectionDiff),
-      updateConnections: (origin: string, updates: { id: Id; diff: ConnectionDiff }[]) => store.execute("semio.designApp.updateConnections", origin, updates),
-      setCamera: (_origin: string, camera: Camera) => actor.send({ type: "DESIGN.SET_CAMERA", kitId, designId, camera }),
-      focusPiece: (_origin: string, pieceId: Id) => actor.send({ type: "DESIGN.FOCUS_PIECE", kitId, designId, pieceId }),
-      clearFocus: (_origin: string) => actor.send({ type: "DESIGN.FOCUS_PIECE", kitId, designId, pieceId: undefined }),
-      setDiagramCenter: (_origin: string, center: Coordinate) => actor.send({ type: "DESIGN.SET_DIAGRAM_CENTER", kitId, designId, center: { x: center.u, y: center.v } }),
-      setDiagramScale: (_origin: string, scale: number) => actor.send({ type: "DESIGN.SET_DIAGRAM_SCALE", kitId, designId, scale }),
-      hoverPiece: (_origin: string, id: Id) => {
-        const hover: DesignAppHover = { pieces: [id] };
-        store.change({ hover });
-        queueMicrotask(() => actor.send({ type: "DESIGN.SET_HOVER", kitId, designId, hover }));
-      },
-      hoverPieces: (_origin: string, ids: Id[]) => {
-        const hover: DesignAppHover = { pieces: ids };
-        store.change({ hover });
-        queueMicrotask(() => actor.send({ type: "DESIGN.SET_HOVER", kitId, designId, hover }));
-      },
-      hoverConnection: (_origin: string, id: Id) => {
-        const hover: DesignAppHover = { connections: [id] };
-        store.change({ hover });
-        queueMicrotask(() => actor.send({ type: "DESIGN.SET_HOVER", kitId, designId, hover }));
-      },
-      hoverConnections: (_origin: string, ids: Id[]) => {
-        const hover: DesignAppHover = { connections: ids };
-        store.change({ hover });
-        queueMicrotask(() => actor.send({ type: "DESIGN.SET_HOVER", kitId, designId, hover }));
-      },
-      hoverPort: (_origin: string, pieceId: Id, connectorId: Id) => {
-        const hover: DesignAppHover = { connectors: [{ piece: pieceId, connector: connectorId }] };
-        store.change({ hover });
-        queueMicrotask(() => actor.send({ type: "DESIGN.SET_HOVER", kitId, designId, hover }));
-      },
-      hoverType: (_origin: string, id: Id) => {
-        const hover: DesignAppHover = { types: [id] };
-        store.change({ hover });
-        queueMicrotask(() => actor.send({ type: "DESIGN.SET_HOVER", kitId, designId, hover }));
-      },
-      hoverTypes: (_origin: string, ids: Id[]) => {
-        const hover: DesignAppHover = { types: ids };
-        store.change({ hover });
-        queueMicrotask(() => actor.send({ type: "DESIGN.SET_HOVER", kitId, designId, hover }));
-      },
-      hoverDesign: (_origin: string, id: Id) => {
-        const hover: DesignAppHover = { designs: [id] };
-        store.change({ hover });
-        queueMicrotask(() => actor.send({ type: "DESIGN.SET_HOVER", kitId, designId, hover }));
-      },
-      hoverDesigns: (_origin: string, ids: Id[]) => {
-        const hover: DesignAppHover = { designs: ids };
-        store.change({ hover });
-        queueMicrotask(() => actor.send({ type: "DESIGN.SET_HOVER", kitId, designId, hover }));
-      },
-      clearHover: (_origin: string) => {
-        store.change({ hover: {} });
-        queueMicrotask(() => actor.send({ type: "DESIGN.CLEAR_HOVER", kitId, designId }));
-      },
-      togglePanel: (_origin: string, panelKey: keyof PanelVisibility) => actor.send({ type: "DESIGN.TOGGLE_PANEL", kitId, designId, panel: panelKey }),
-      setRepresentationTagsForType: (_origin: string, typeId: Id, tags: string[]) => {
-        const current = store.snapshot().selectedRepresentationTags ?? {};
-        actor.send({ type: "DESIGN.SYNC", kitId, designId, state: { selectedRepresentationTags: { ...current, [typeId]: tags } } });
-      },
-      addRepresentationTagForAllTypes: (_origin: string, tagId: string, typeIds: Id[]) => {
-        const current = store.snapshot().selectedRepresentationTags ?? {};
-        const updated: Record<Id, string[]> = { ...current };
-        typeIds.forEach((typeId) => {
-          const existing = updated[typeId] ?? [];
-          if (!existing.includes(tagId)) updated[typeId] = [...existing, tagId];
-        });
-        actor.send({ type: "DESIGN.SYNC", kitId, designId, state: { selectedRepresentationTags: updated } });
-      },
-      removeRepresentationTagFromAllTypes: (_origin: string, tagId: string, typeIds: Id[]) => {
-        const current = store.snapshot().selectedRepresentationTags ?? {};
-        const updated: Record<Id, string[]> = { ...current };
-        typeIds.forEach((typeId) => {
-          const existing = updated[typeId] ?? [];
-          updated[typeId] = existing.filter((t) => t !== tagId);
-        });
-        actor.send({ type: "DESIGN.SYNC", kitId, designId, state: { selectedRepresentationTags: updated } });
-      },
-      execute: (origin: string, command: string, ...args: any[]) => store.execute(command, origin, ...args),
-    };
-  }, [store, actor, kitId, designId]);
-}
-
-/**
  * Synchronizes Y.js document changes to XState Design app state.
  *MUST observe Y.js map changes and dispatch corresponding XState events.
  **/
@@ -29568,11 +29368,12 @@ export const DesignHistorySettings: FC = () => {
     tick();
     return store.onChangedDeep(tick);
   }, [store]);
-  const { undo, redo } = useDesignAppCommands();
+  const [undoOp, undoOpReady] = useDesignAppUndo();
+  const [redoOp, redoOpReady] = useDesignAppRedo();
   return (
     <ToolbarGroup>
-      <ToolbarCommandButton id="semio.sketchpad.app.design.history.undo" icon={<SkipBackIcon className="size-tiny" />} text="Undo" disabled={!canUndo} onClick={() => undo?.()} />
-      <ToolbarCommandButton id="semio.sketchpad.app.design.history.redo" icon={<SkipForwardIcon className="size-tiny" />} text="Redo" disabled={!canRedo} onClick={() => redo?.()} />
+      <ToolbarCommandButton id="semio.sketchpad.app.design.history.undo" icon={<SkipBackIcon className="size-tiny" />} text="Undo" disabled={!canUndo || !undoOpReady} onClick={() => undoOp?.()} />
+      <ToolbarCommandButton id="semio.sketchpad.app.design.history.redo" icon={<SkipForwardIcon className="size-tiny" />} text="Redo" disabled={!canRedo || !redoOpReady} onClick={() => redoOp?.()} />
     </ToolbarGroup>
   );
 };
@@ -32190,16 +31991,9 @@ const ConnectorHandle: React.FC<ConnectorHandleProps> = ({ connector, pieceId, s
   );
 };
 
-/**
- * sharedCommandsRef holds the data fields for a sharedCommandsRef record.
- **/
-let sharedCommandsRef: ReturnType<typeof useDesignAppCommands> | null = null;
 let suppressNextSelectionChangeRef = false;
 
-/** pieceNodeAreEqual holds the data fields for a pieceNodeAreEqual record.
- **/
-/**
- **/
+/** pieceNodeAreEqual holds equality predicate for PieceNode memo. **/
 const pieceNodeAreEqual = (prevProps: NodeProps<PieceNode>, nextProps: NodeProps<PieceNode>) => {
   if (prevProps.id !== nextProps.id) return false;
   const prevData = prevProps.data as PieceNodeProps;
@@ -32235,26 +32029,30 @@ const PieceNodeComponent: React.FC<NodeProps<PieceNode>> = React.memo(({ id, dat
   const diff = (attributes?.find((q) => q.key === "semio.diffStatus")?.value as DiffStatus) || DiffStatus.Unchanged;
   const isDesignPiece = !!piece.design;
 
-  const commands = sharedCommandsRef!;
+  const [selectPiecePortOp] = useDesignAppSelectPiecePort();
+  const [deselectPiecePortOp] = useDesignAppDeselectPiecePort();
+  const [addConnectionOp] = useDesignAppAddConnection();
+  const [hoverPieceOp] = useDesignAppHoverPiece();
+  const [clearHoverOp] = useDesignAppClearHover();
   const { hoverClearTimeoutRef, currentHoveredPieceIdRef, isPanningRef, isDraggingNodeRef } = useHoverIntent();
 
   const selectPiecePort = useCallback(
     (piece: Id, connector: Id) => {
       suppressNextSelectionChangeRef = true;
-      commands.selectPiecePort("semio.sketchpad.app.design.canvas.diagram.pieceNode", piece, connector);
+      selectPiecePortOp?.(piece, connector);
     },
-    [commands],
+    [selectPiecePortOp],
   );
 
   const deselectPiecePort = useCallback(() => {
-    commands.deselectPiecePort("semio.sketchpad.app.design.canvas.diagram.pieceNode");
-  }, [commands]);
+    deselectPiecePortOp?.();
+  }, [deselectPiecePortOp]);
 
   const addConnection = useCallback(
     (connection: SemioConnection) => {
-      commands.addConnection(connection);
+      addConnectionOp?.(connection);
     },
-    [commands],
+    [addConnectionOp],
   );
 
   const handleMouseEnter = useCallback(
@@ -32266,10 +32064,10 @@ const PieceNodeComponent: React.FC<NodeProps<PieceNode>> = React.memo(({ id, dat
       if (isPanningRef.current || isDraggingNodeRef.current || event.buttons !== 0) return;
       if (currentHoveredPieceIdRef.current !== pieceId) {
         currentHoveredPieceIdRef.current = pieceId;
-        commands.hoverPiece("semio.sketchpad.app.design.canvas.diagram.pieceNode.handleMouseEnter", pieceId);
+        hoverPieceOp?.(pieceId);
       }
     },
-    [pieceId, commands, hoverClearTimeoutRef, isPanningRef, isDraggingNodeRef, currentHoveredPieceIdRef],
+    [pieceId, hoverPieceOp, hoverClearTimeoutRef, isPanningRef, isDraggingNodeRef, currentHoveredPieceIdRef],
   );
 
   const handleMouseLeave = useCallback(
@@ -32281,13 +32079,13 @@ const PieceNodeComponent: React.FC<NodeProps<PieceNode>> = React.memo(({ id, dat
       const pieceIdAtLeave = pieceId;
       hoverClearTimeoutRef.current = setTimeout(() => {
         if (currentHoveredPieceIdRef.current === pieceIdAtLeave) {
-          commands.clearHover("semio.sketchpad.app.design.canvas.diagram.pieceNode.handleMouseLeave");
+          clearHoverOp?.();
           currentHoveredPieceIdRef.current = null;
         }
         hoverClearTimeoutRef.current = null;
       }, 50);
     },
-    [pieceId, commands, hoverClearTimeoutRef, isPanningRef, isDraggingNodeRef, currentHoveredPieceIdRef],
+    [pieceId, clearHoverOp, hoverClearTimeoutRef, isPanningRef, isDraggingNodeRef, currentHoveredPieceIdRef],
   );
 
   return (
@@ -33480,9 +33278,6 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
 
   const design = useDesign(undefined, undefined, true) as Design | null;
   const metadata = usePiecesMetadataMap();
-
-  const commands = useDesignAppCommands();
-  sharedCommandsRef = commands;
 
   const selectedConnector = getPrimaryDesignConnectorSelection(selection);
   const selectedConnectorPortId = useMemo(() => {

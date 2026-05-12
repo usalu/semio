@@ -1,0 +1,12 @@
+{
+  "completedAt": "2026-05-12",
+  "goal": "r26-02 / Running Sketchpad / Kit App (field-only kit reads)",
+  "verification": {
+    "tsc": "npx tsc -p semio/react/tsconfig.json --noEmit",
+    "tscExitCode": 0,
+    "vitest": "npx vitest run --config semio/react/vite.config.ts",
+    "vitestSummary": "1 file, 1 test passed"
+  },
+  "summary": "Replaced legacy KitStore-backed semio/react/index.tsx (~18k lines) with a stateless Kit adapter: KitContextProvider/useKit, bindFieldToReact/bindDefinedFieldToReact/bindOpToReact, OperationStatus, mapTooLong, entity *Context* providers (renamed from *Scope*), preset field hooks, re-exports aligned to semio/js. Added vitest/globals to semio/react/tsconfig.json so embedded semio/js vitest blocks typecheck when pulled via path mapping.",
+  "touchedPaths": ["semio/react/index.tsx", "semio/react/tsconfig.json", ".repo/🎫/26/05/12/FIELD-ONLY-KIT-READS-CQRS-CLASSES/react-phase-done.json"]
+}

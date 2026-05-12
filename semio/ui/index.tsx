@@ -15,29 +15,183 @@ import { useGLTF } from "@react-three/drei/core/Gltf.js";
 import { Grid } from "@react-three/drei/core/Grid.js";
 import { OrbitControls } from "@react-three/drei/core/OrbitControls.js";
 import { Canvas as ThreeCanvas, useFrame, useThree } from "@react-three/fiber";
-import {
-  Design as DesignEntity,
-  DiffStatus,
-  type FlatMerkleCacheEntry,
-  Kit,
-  Type,
-  type Attribute,
-  type Camera,
-  type Connection,
-  type Connector,
-  type CoordinatePlain as Coordinate,
-  type DesignDiff,
-  type DesignPlain,
-  type Design,
-  type MoveVector,
-  type Piece,
-  type Plane,
-  getKitPorts,
-  type Port as SemioPort,
-  type File as SemioFile,
-  type Vector as SemioVector,
-} from "@semio/react";
-import type { Type as SemioKind } from "@semio/react";
+import type {
+  AttributeWire as Attribute,
+  CoordinateWire as Coordinate,
+  JsonObject,
+  PlaneWire as Plane,
+  VectorWire as SemioVector,
+} from "@semio/js";
+
+/** @emoji 🧾 Scene/canvas camera JSON (position+target wire shape, optional legacy up/forward). */
+export type SceneCamera = JsonObject & {
+  position: { x: number; y: number; z: number };
+  target?: { x: number; y: number; z: number };
+  forward?: { x: number; y: number; z: number };
+  up?: { x: number; y: number; z: number };
+};
+
+const DiffStatus = Object.freeze({ Removed: "removed", Added: "added", Modified: "modified" } as const);
+type SemioFile = Record<string, unknown>;
+
+/** @emoji 🧾 Flat port row from plain kit `types[].ports` (not CQRS {@link import("@semio/js").Port}). */
+export type KitPortWire = JsonObject & {
+  id?: string;
+  name?: string;
+  description?: string;
+  icon?: string;
+  maxChildren?: number;
+};
+
+/** @emoji 🧾 Plain diagram piece JSON (story/MCP payloads; not CQRS {@link import("@semio/js").Piece}). */
+type Piece = JsonObject & {
+  id?: string;
+  center?: Coordinate | { u?: number; v?: number } | null;
+  plane?: Plane | null;
+  attributes?: readonly Attribute[];
+  type?: JsonObject & { id?: string; name?: string };
+  design?: JsonObject;
+  designId?: string;
+  name?: string;
+  scale?: number;
+};
+
+/** @emoji 🧾 Plain connection JSON between two piece endpoints. */
+type Connection = JsonObject & {
+  id?: string;
+  connected?: { piece?: { id?: string } };
+  connecting?: { piece?: { id?: string } };
+  attributes?: readonly Attribute[];
+};
+
+/** @emoji 🧾 Plain connector row from kit kind JSON. */
+type Connector = JsonObject & {
+  id?: string;
+  point?: { x: number; y: number; z: number };
+  direction?: { x: number; y: number; z: number };
+};
+
+/** @emoji 🧾 Kind (type) row for {@link SemioType} and kit browsers (plain `kit.types[]`). */
+export type KitKindPlain = JsonObject & {
+  id?: string;
+  name?: string;
+  description?: string;
+  createdAt?: string;
+  updatedAt?: string;
+  icon?: string;
+  image?: string;
+  representations?: readonly JsonObject[];
+  connectors?: readonly Connector[];
+};
+
+function pickPreferredRepresentation(representations: readonly JsonObject[], _hints: readonly JsonObject[] = []): JsonObject | undefined {
+  return representations[0];
+}
+
+//#region 🔖PlainKitAndDiff
+/** @emoji 🧾 Algorithm / diagram JSON kit surface (`wip.initialKit` or legacy root). */
+export function kitSurface(kit: unknown): Record<string, unknown> {
+  const root = kit as { wip?: { initialKit?: Record<string, unknown> } };
+  const inner = root.wip?.initialKit;
+  if (inner && typeof inner === "object") return inner;
+  return (kit as Record<string, unknown>) ?? {};
+}
+
+function __itemsOf<T>(node: unknown): readonly T[] {
+  if (Array.isArray(node)) return node as readonly T[];
+  if (node && typeof node === "object" && "items" in node && Array.isArray((node as { items: unknown }).items)) return (node as { items: T[] }).items;
+  return [];
+}
+
+function kitJsRows(kit: unknown, key: string): readonly JsonObject[] {
+  return __itemsOf(kitSurface(kit)[key]);
+}
+
+/** @emoji 🧾 Ports flattened from every type entry on a plain kit snapshot. */
+export function getKitPorts(kit: unknown): KitPortWire[] {
+  const types = __itemsOf(kitSurface(kit)["types"]);
+  const out: KitPortWire[] = [];
+  for (const t of types) {
+    const ports = __itemsOf((t as { ports?: unknown }).ports);
+    for (const p of ports) out.push(p as KitPortWire);
+  }
+  return out;
+}
+
+/** @emoji 🧾 Gap/shift/rise tuple used by move algorithm stories. */
+export type MoveVector = Readonly<{ gap: number; shift: number; rise: number }>;
+
+/** @emoji 🧾 Plain kit JSON / bootstrap bundle passed into algorithm + scene surfaces. */
+export type Kit = unknown;
+
+/** @emoji 🧾 Storybook / diagram design diff (structural; not GraphQL). */
+export type DesignDiff = Readonly<{
+  pieces?: Readonly<{
+    added?: readonly unknown[];
+    removed?: readonly unknown[];
+    updated?: readonly unknown[];
+    modified?: readonly unknown[];
+  }>;
+  connections?: Readonly<{
+    added?: readonly unknown[];
+    removed?: readonly unknown[];
+    updated?: readonly unknown[];
+  }>;
+}>;
+
+/** @emoji 🧾 Plain design JSON accepted by {@link SemioDiagram}. */
+export type DesignPlain = Readonly<Record<string, unknown>>;
+
+/** @emoji 🧾 Diagram-facing design value (plain JSON or legacy class with `toPlain`). */
+export type Design = unknown;
+
+function __plainFromDesign(d: unknown): Record<string, unknown> {
+  const anyD = d as { toPlain?: () => DesignPlain };
+  if (typeof anyD.toPlain === "function") return { ...anyD.toPlain() } as Record<string, unknown>;
+  return JSON.parse(JSON.stringify(d ?? {})) as Record<string, unknown>;
+}
+
+function __applyDesignDiffToPlain(plain: Record<string, unknown>, diff: DesignDiff): void {
+  const pieces = (plain["pieces"] as unknown[] | undefined) ? [...(plain["pieces"] as unknown[])] : [];
+  const byId = new Map(pieces.filter((p): p is Record<string, unknown> => p != null && typeof p === "object").map((p) => [String((p as Record<string, unknown>).id ?? ""), p as Record<string, unknown>]));
+  const pDiff = diff.pieces;
+  if (pDiff?.removed) {
+    const rm = new Set(pDiff.removed.map((x) => String((x as { id?: string }).id ?? "")));
+    plain["pieces"] = pieces.filter((p) => !rm.has(String((p as { id?: string }).id ?? "")));
+  }
+  if (pDiff?.updated) {
+    for (const u of pDiff.updated) {
+      const row = u as { piece?: { id?: string }; diff?: Record<string, unknown> };
+      const id = String(row.piece?.id ?? "");
+      if (!id) continue;
+      const cur = byId.get(id) ?? { id };
+      byId.set(id, { ...cur, ...row.diff });
+    }
+    plain["pieces"] = Array.from(byId.values());
+  }
+  if (pDiff?.added?.length) {
+    const merged = [...((plain["pieces"] as unknown[]) ?? [])];
+    for (const a of pDiff.added) merged.push(a);
+    plain["pieces"] = merged;
+  }
+  const cDiff = diff.connections;
+  if (cDiff?.removed) {
+    const conns = ((plain["connections"] as unknown[]) ?? []).filter((c) => !cDiff.removed?.some((r) => String((r as { id?: string }).id ?? "") === String((c as { id?: string }).id ?? "")));
+    plain["connections"] = conns;
+  }
+  if (cDiff?.added?.length) {
+    plain["connections"] = [...((plain["connections"] as unknown[]) ?? []), ...cDiff.added];
+  }
+}
+
+/** @emoji 🧾 Immutable preview merge for diagram diff rendering (no legacy {@link DesignEntity}). */
+export function previewDesignWithDiff(design: unknown, diff: DesignDiff | undefined): unknown {
+  if (!diff) return design;
+  const merged = __plainFromDesign(design);
+  __applyDesignDiffToPlain(merged, diff);
+  return merged;
+}
+//#endregion 🔖PlainKitAndDiff
 import * as React from "react";
 import * as THREE from "three";
 import { clone as cloneSkeleton } from "three/examples/jsm/utils/SkeletonUtils.js";
@@ -116,12 +270,26 @@ export interface KitConnectorArtifact {
   maxChildren?: number;
 }
 
-export type KitDesignData = Pick<Design, "id" | "name"> &
-  Partial<Pick<Design, "description" | "createdAt" | "updatedAt" | "unit" | "icon" | "image">> & {
-    parent?: { id: string };
-  };
+export type KitDesignData = {
+  id?: string;
+  name?: string;
+  description?: string;
+  createdAt?: string;
+  updatedAt?: string;
+  unit?: string;
+  icon?: string;
+  image?: string;
+  parent?: { id: string };
+};
 
-export interface KitKindData extends Pick<SemioKind, "id" | "name" | "description" | "createdAt" | "updatedAt" | "icon" | "image"> {
+export interface KitKindData {
+  id?: string;
+  name?: string;
+  description?: string;
+  createdAt?: string;
+  updatedAt?: string;
+  icon?: string;
+  image?: string;
   parent?: { id: string };
 }
 
@@ -142,7 +310,7 @@ export interface KitData {
   types?: KitKindData[];
   /** Family-owned ports flattened for artifact browsing. */
   ports?: KitPortArtifact[];
-  /** Flattened connectors from kinds ({@link Connector} on {@link SemioKind}). */
+  /** Flattened connectors from kinds ({@link Connector} on {@link KitKindPlain}). */
   connectors?: KitConnectorArtifact[];
 }
 
@@ -204,60 +372,76 @@ const getReferenceLabel = (value: unknown): string | undefined => {
   return undefined;
 };
 
-const buildKitDataFromKit = (kit: Kit | undefined): KitData => {
+const buildKitDataFromKit = (kit: unknown | undefined): KitData => {
   if (!kit) return {};
-  const designs = (kit.designs ?? []).map((d) => ({
-    id: d.id,
-    name: d.name,
-    description: d.description,
-    createdAt: d.createdAt,
-    updatedAt: d.updatedAt,
-    unit: d.unit,
-    icon: d.icon,
-    image: d.image,
-    parent: d.parent ? { id: d.parent.id } : undefined,
+  const surface = kitSurface(kit);
+  const designsRaw = __itemsOf(surface["designs"]);
+  const typesRaw = __itemsOf(surface["types"]);
+  const designs = designsRaw.map((d) => {
+    const row = d as Record<string, unknown>;
+    const parent = row["parent"] as { id?: string } | undefined;
+    return {
+      id: String(row["id"] ?? ""),
+      name: String(row["name"] ?? ""),
+      description: String(row["description"] ?? ""),
+      createdAt: row["createdAt"] as string | undefined,
+      updatedAt: row["updatedAt"] as string | undefined,
+      unit: row["unit"] as string | undefined,
+      icon: row["icon"] as string | undefined,
+      image: row["image"] as string | undefined,
+      parent: parent?.id ? { id: parent.id } : undefined,
+    };
+  });
+  const types = typesRaw.map((t) => {
+    const row = t as Record<string, unknown>;
+    const parent = row["parent"] as { id?: string } | undefined;
+    return {
+      id: String(row["id"] ?? ""),
+      name: String(row["name"] ?? ""),
+      description: String(row["description"] ?? ""),
+      createdAt: row["createdAt"] as string | undefined,
+      updatedAt: row["updatedAt"] as string | undefined,
+      icon: row["icon"] as string | undefined,
+      image: row["image"] as string | undefined,
+      parent: parent?.id ? { id: parent.id } : undefined,
+    };
+  });
+  const ports: KitPortArtifact[] = getKitPorts(kit).map((p: KitPortWire) => ({
+    id: String(p.id ?? ""),
+    name: String(p.name ?? ""),
+    description: typeof p.description === "string" ? p.description : undefined,
+    icon: typeof p.icon === "string" ? p.icon : undefined,
+    maxChildren: typeof p.maxChildren === "number" ? p.maxChildren : undefined,
   }));
-  const types = (kit.types ?? []).map((t) => ({
-    id: t.id,
-    name: t.name,
-    description: t.description,
-    createdAt: t.createdAt,
-    updatedAt: t.updatedAt,
-    icon: t.icon,
-    image: t.image,
-    parent: t.parent ? { id: t.parent.id } : undefined,
-  }));
-  const ports: KitPortArtifact[] = getKitPorts(kit).map((p: SemioPort) => ({
-    id: p.id,
-    name: p.name,
-    description: p.description,
-    icon: p.icon,
-    maxChildren: p.maxChildren,
-  }));
-  const connectors: KitConnectorArtifact[] = (kit.types ?? []).flatMap((t) =>
-    (t.connectors ?? []).map((c) => ({
-      id: c.id,
-      typeId: t.id,
-      port: getReferenceId(c.port),
-      name: c.name || getReferenceLabel(c.port) || "connector",
-      description: c.description,
-      mandatory: c.mandatory,
-      maxChildren: c.maxChildren,
-    })),
-  );
+  const connectors: KitConnectorArtifact[] = typesRaw.flatMap((t) => {
+    const row = t as { id?: string; connectors?: unknown };
+    const conns = __itemsOf(row.connectors);
+    return conns.map((c) => {
+      const cc = c as Record<string, unknown>;
+      return {
+        id: String(cc["id"] ?? ""),
+        typeId: String(row.id ?? ""),
+        port: getReferenceId(cc["port"]),
+        name: String(cc["name"] ?? getReferenceLabel(cc["port"]) ?? "connector"),
+        description: cc["description"] as string | undefined,
+        mandatory: cc["mandatory"] as boolean | undefined,
+        maxChildren: cc["maxChildren"] as number | undefined,
+      };
+    });
+  });
   return {
-    id: kit.id,
-    name: kit.name,
-    description: kit.description,
-    version: kit.version,
-    createdAt: kit.createdAt,
-    updatedAt: kit.updatedAt,
-    homepage: kit.homepage,
-    remote: kit.remote,
-    preview: kit.preview,
-    icon: kit.icon,
-    image: kit.image,
-    license: kit.license,
+    id: String(surface["id"] ?? ""),
+    name: String(surface["name"] ?? ""),
+    description: String(surface["description"] ?? ""),
+    version: String(surface["version"] ?? ""),
+    createdAt: surface["createdAt"] as string | undefined,
+    updatedAt: surface["updatedAt"] as string | undefined,
+    homepage: surface["homepage"] as string | undefined,
+    remote: surface["remote"] as string | undefined,
+    preview: surface["preview"] as string | undefined,
+    icon: surface["icon"] as string | undefined,
+    image: surface["image"] as string | undefined,
+    license: surface["license"] as string | undefined,
     designs,
     types,
     ports,
@@ -388,21 +572,23 @@ const buildKitHierarchy = (data: KitData, options: { designDataEnabled: boolean;
 
   const kindKeyById = new Map<string, string>();
   (data.types ?? []).forEach((kind) => {
+    const kindId = String(kind.id ?? "");
+    if (!kindId) return;
     const metadata: Array<{ label: string; value: string }> = [];
     addKitMetaEntry(metadata, "Kind", "Type");
-    addKitMetaEntry(metadata, "Name", kind.name);
-    addKitMetaEntry(metadata, "Id", kind.id);
-    addKitMetaEntry(metadata, "Description", kind.description);
-    addKitMetaEntry(metadata, "Created", kind.createdAt);
-    addKitMetaEntry(metadata, "Updated", kind.updatedAt);
-    const key = `kind:${kind.id}`;
-    kindKeyById.set(kind.id, key);
+    addKitMetaEntry(metadata, "Name", kind.name ?? "");
+    addKitMetaEntry(metadata, "Id", kindId);
+    addKitMetaEntry(metadata, "Description", kind.description ?? "");
+    addKitMetaEntry(metadata, "Created", kind.createdAt ?? "");
+    addKitMetaEntry(metadata, "Updated", kind.updatedAt ?? "");
+    const key = `kind:${kindId}`;
+    kindKeyById.set(kindId, key);
     registerNode({
       key,
       kind: "kind",
-      label: kind.name || kind.id,
+      label: kind.name || kindId,
       parentKey: kind.parent?.id ? `kind:${kind.parent.id}` : kindGroupKey,
-      id: kind.id,
+      id: kindId,
       groupKind: "type",
       href: getKitArtifactHref(kind),
       summary: kind.description || "Type artifact.",
@@ -411,20 +597,22 @@ const buildKitHierarchy = (data: KitData, options: { designDataEnabled: boolean;
   });
 
   (data.designs ?? []).forEach((design) => {
+    const designId = String(design.id ?? "");
+    if (!designId) return;
     const metadata: Array<{ label: string; value: string }> = [];
     addKitMetaEntry(metadata, "Kind", "Design");
-    addKitMetaEntry(metadata, "Name", design.name);
-    addKitMetaEntry(metadata, "Id", design.id);
-    addKitMetaEntry(metadata, "Description", design.description);
-    addKitMetaEntry(metadata, "Unit", design.unit);
-    addKitMetaEntry(metadata, "Created", design.createdAt);
-    addKitMetaEntry(metadata, "Updated", design.updatedAt);
+    addKitMetaEntry(metadata, "Name", design.name ?? "");
+    addKitMetaEntry(metadata, "Id", designId);
+    addKitMetaEntry(metadata, "Description", design.description ?? "");
+    addKitMetaEntry(metadata, "Unit", design.unit ?? "");
+    addKitMetaEntry(metadata, "Created", design.createdAt ?? "");
+    addKitMetaEntry(metadata, "Updated", design.updatedAt ?? "");
     registerNode({
-      key: `design:${design.id}`,
+      key: `design:${designId}`,
       kind: "design",
-      label: design.name || design.id,
+      label: design.name || designId,
       parentKey: design.parent?.id ? `design:${design.parent.id}` : designGroupKey,
-      id: design.id,
+      id: designId,
       groupKind: "design",
       href: getKitArtifactHref(design),
       summary: design.description || "Design artifact.",
@@ -624,7 +812,7 @@ const getKitTitle = (data: KitData, fallbackTitle: string): string => {
 };
 
 //#region 🧲KitArtifactShells
-// Specs: When only {@link KitData} shells exist, synthesize minimal {@link Design}/{@link SemioKind} so {@link SemioDesign}/{@link SemioType} can mount.
+// Specs: When only {@link KitData} shells exist, synthesize minimal {@link Design}/{@link KitKindPlain} so {@link SemioDesign}/{@link SemioType} can mount.
 // Summary: Shell entities for kit-browser previews without full geometry.
 
 const kitDesignDataToShellDesign = (d: KitDesignData): Design =>
@@ -641,7 +829,7 @@ const kitDesignDataToShellDesign = (d: KitDesignData): Design =>
     connections: [],
   }) as unknown as Design;
 
-const kitKindDataToShellKind = (k: KitKindData): SemioKind =>
+const kitKindDataToShellKind = (k: KitKindData): KitKindPlain =>
   ({
     id: k.id,
     name: k.name,
@@ -652,7 +840,7 @@ const kitKindDataToShellKind = (k: KitKindData): SemioKind =>
     image: k.image,
     representations: [],
     connectors: [],
-  }) as unknown as SemioKind;
+  }) as KitKindPlain;
 
 const resolveKitArtifactDesignForPreview = (design: Design, kit: Kit | undefined): Design => {
   if (!kit) return design;
@@ -754,7 +942,7 @@ export const SemioKit: React.FC<KitProps> = ({
   const selectedNodeKey = React.useMemo(() => getSelectedKitNodeKey(hierarchy, resolvedSelection), [hierarchy, resolvedSelection]);
   const [focusedNodeKey, setFocusedNodeKey] = React.useState<string>(() => selectedNodeKey ?? getDefaultKitNodeKey(hierarchy));
 
-  const kitBrowseScopeKey = effectiveData.id ?? kit?.id ?? effectiveData.name ?? "__semio-kit__";
+  const kitBrowseScopeKey = effectiveData.id ?? derivedData.id ?? effectiveData.name ?? "__semio-kit__";
 
   const [browse, setBrowse] = React.useState<{ stack: string[]; index: number }>(() => ({
     stack: [selectedNodeKey ?? getDefaultKitNodeKey(hierarchy)],
@@ -856,21 +1044,21 @@ export const SemioKit: React.FC<KitProps> = ({
 
   const artifactDesign: Design | null = React.useMemo(() => {
     if (focusedNode.kind !== "design" || !focusedNode.id) return null;
-    const full = kit?.designs?.find((d) => d.id === focusedNode.id);
+    const full = derivedData.designs?.find((d) => d.id === focusedNode.id);
     if (full) return full;
     const shell = effectiveDesigns.find((d) => d.id === focusedNode.id);
     return shell ? kitDesignDataToShellDesign(shell) : null;
-  }, [effectiveDesigns, focusedNode.id, focusedNode.kind, kit?.designs]);
+  }, [effectiveDesigns, focusedNode.id, focusedNode.kind, derivedData.designs]);
 
   const artifactPreviewDesign = React.useMemo(() => (artifactDesign ? resolveKitArtifactDesignForPreview(artifactDesign, kit) : null), [artifactDesign, kit]);
 
-  const artifactKind: SemioKind | null = React.useMemo(() => {
+  const artifactKind: KitKindPlain | null = React.useMemo(() => {
     if (focusedNode.kind !== "kind" || !focusedNode.id) return null;
-    const full = kit?.types?.find((t) => t.id === focusedNode.id);
-    if (full) return full;
+    const full = derivedData.types?.find((t) => t.id === focusedNode.id);
+    if (full) return full as KitKindPlain;
     const shell = effectiveTypes.find((t) => t.id === focusedNode.id);
     return shell ? kitKindDataToShellKind(shell) : null;
-  }, [effectiveTypes, focusedNode.id, focusedNode.kind, kit?.types]);
+  }, [effectiveTypes, focusedNode.id, focusedNode.kind, derivedData.types]);
 
   const connectorParentKindNode = React.useMemo(() => {
     if (focusedNode.kind !== "connector" || !focusedNode.parentKey) return null;
@@ -879,13 +1067,13 @@ export const SemioKit: React.FC<KitProps> = ({
     return parent;
   }, [focusedNode, hierarchy.nodesByKey]);
 
-  const connectorHostKind: SemioKind | null = React.useMemo(() => {
+  const connectorHostKind: KitKindPlain | null = React.useMemo(() => {
     if (!connectorParentKindNode?.id) return null;
-    const full = kit?.types?.find((t) => t.id === connectorParentKindNode.id);
-    if (full) return full;
+    const full = derivedData.types?.find((t) => t.id === connectorParentKindNode.id);
+    if (full) return full as KitKindPlain;
     const shell = effectiveTypes.find((t) => t.id === connectorParentKindNode.id);
     return shell ? kitKindDataToShellKind(shell) : null;
-  }, [connectorParentKindNode?.id, effectiveTypes, kit?.types]);
+  }, [connectorParentKindNode?.id, effectiveTypes, derivedData.types]);
 
   const breadcrumbItems = React.useMemo(() => {
     const rootOptions = (hierarchy.childKeysByParentKey.get("kit:root") ?? [])
@@ -1005,7 +1193,7 @@ export const SemioKit: React.FC<KitProps> = ({
               border: "1px solid var(--border, rgba(0,0,0,0.12))",
             }}
           >
-            <SemioDesign design={artifactPreviewDesign} kit={kit} title={artifactPreviewDesign.name ?? focusedNode.label} selectionEnabled={false} splitLayout="always" onPieceDoubleClick={onKitPieceDoubleClick} />
+            <SemioDesign design={artifactPreviewDesign} kit={kit} title={(artifactPreviewDesign as { name?: string }).name ?? focusedNode.label} selectionEnabled={false} splitLayout="always" onPieceDoubleClick={onKitPieceDoubleClick} />
           </div>
         ) : null}
 
@@ -1149,7 +1337,7 @@ export type ZoomTarget = "design" | "diff" | "none";
 type DiagramEntityStatus = "default" | "removed" | "added" | "modified";
 
 const DIFF_STATUS_KEY = "semio.diffStatus";
-const getDiffStatusFromAttributes = (attributes: Attribute[] | undefined): DiagramEntityStatus => {
+const getDiffStatusFromAttributes = (attributes: readonly Attribute[] | undefined): DiagramEntityStatus => {
   const attr = attributes?.find((a) => a.key === DIFF_STATUS_KEY);
   if (!attr?.value) return "default";
   if (attr.value === DiffStatus.Removed) return "removed";
@@ -1313,50 +1501,57 @@ const computeDiagramSelectionOverlayRect = (
 /** u/v from `pieces.updated[].diff.center` for diagram layout when a piece omits `center`. */
 const centersFromLayoutDiff = (layoutDiff?: DesignDiff): Map<string, { u: number; v: number }> => {
   const m = new Map<string, { u: number; v: number }>();
-  for (const u of layoutDiff?.pieces?.updated ?? []) {
-    const g = u.piece?.id;
-    const c = u.diff?.center;
+  for (const urow of layoutDiff?.pieces?.updated ?? []) {
+    const row = urow as { piece?: { id?: string }; diff?: { center?: { u?: unknown; v?: unknown } } };
+    const g = row.piece?.id;
+    const c = row.diff?.center;
     if (g && c && typeof c.u === "number" && typeof c.v === "number") m.set(g, { u: c.u, v: c.v });
   }
   return m;
 };
 
 const cloneDesignApplyDiff = (d: Design, diff: DesignDiff): Design => {
-  const copy = new DesignEntity(JSON.parse(JSON.stringify(d.toPlain()), (_k, v) => (v === null ? undefined : v)) as DesignPlain);
-  copy.applyDiff(diff);
-  return copy;
+  const plain = __plainFromDesign(d);
+  __applyDesignDiffToPlain(plain, diff);
+  return plain as Design;
 };
 
 /** Connection rows for a live {@link Design} or plain design-shaped objects (tests / MCP payloads). */
 const snapshotDesignConnections = (design: Design): Connection[] => {
-  if (typeof (design as DesignEntity).getConnections === "function") {
-    return [...(design as DesignEntity).getConnections()];
+  const anyD = design as { getConnections?: () => Connection[] };
+  if (typeof anyD.getConnections === "function") {
+    return [...anyD.getConnections()];
   }
   const raw = (design as unknown as { connections?: unknown }).connections;
   return Array.isArray(raw) ? (raw as Connection[]) : [];
 };
 
 const buildDiagramSnapshot = (design: Design, padding: number, designDiff?: DesignDiff, layoutDiff?: DesignDiff): DiagramSnapshot => {
-  const merged = designDiff ? DesignEntity.previewWithDiff(design, designDiff) : design;
-  const layoutGeometry = designDiff ? cloneDesignApplyDiff(design, designDiff) : design;
+  const mergedRow = (designDiff ? previewDesignWithDiff(design, designDiff) : design) as JsonObject;
+  const layoutRow = (designDiff ? cloneDesignApplyDiff(design, designDiff) : design) as JsonObject;
   const layoutCenters = centersFromLayoutDiff(layoutDiff);
-  const geometryCentersById = new Map((layoutGeometry.pieces ?? []).filter((p): p is Piece & { id: string } => typeof p.id === "string" && p.id.length > 0).map((p) => [p.id, p.center] as const));
+  const layoutPieces = __itemsOf(layoutRow["pieces"]) as Piece[];
+  const geometryCentersById = new Map(layoutPieces.filter((p): p is Piece & { id: string } => typeof p.id === "string" && p.id.length > 0).map((p) => [p.id, p.center] as const));
 
   const pointMap = new Map<string, DiagramPoint>();
-  (merged.pieces ?? []).forEach((piece: Piece) => {
+  const mergedPieces = __itemsOf(mergedRow["pieces"]) as Piece[];
+  mergedPieces.forEach((piece: Piece) => {
     if (!piece.id) return;
     const center = geometryCentersById.get(piece.id) ?? piece.center ?? layoutCenters.get(piece.id);
-    if (!center) return;
+    if (!center || typeof (center as { u?: unknown }).u !== "number" || typeof (center as { v?: unknown }).v !== "number") return;
     const status: DiagramEntityStatus = designDiff ? getDiffStatusFromAttributes(piece.attributes) : "default";
-    pointMap.set(piece.id, { id: piece.id, piece, u: center.u, v: center.v, status });
+    pointMap.set(piece.id, { id: piece.id, piece, u: (center as { u: number }).u, v: (center as { v: number }).v, status });
   });
 
   const pointsById = new Map(Array.from(pointMap.values()).map((point) => [point.id, point]));
   const lineMap = new Map<string, DiagramLine>();
-  snapshotDesignConnections(merged).forEach((connection) => {
+  snapshotDesignConnections(mergedRow as unknown as Design).forEach((connection) => {
     if (!connection.id) return;
-    const source = pointsById.get(connection.connected.piece.id);
-    const target = pointsById.get(connection.connecting.piece.id);
+    const srcId = connection.connected?.piece?.id;
+    const tgtId = connection.connecting?.piece?.id;
+    if (!srcId || !tgtId) return;
+    const source = pointsById.get(srcId);
+    const target = pointsById.get(tgtId);
     if (!source || !target) return;
     const status: DiagramEntityStatus = designDiff ? getDiffStatusFromAttributes(connection.attributes) : "default";
     lineMap.set(connection.id, { id: connection.id, connection, source, target, status });
@@ -1367,8 +1562,11 @@ const buildDiagramSnapshot = (design: Design, padding: number, designDiff?: Desi
   if (designDiff) {
     for (const line of lineMap.values()) {
       if (line.status === "default") {
-        const src = pointMap.get(line.connection.connected.piece.id);
-        const tgt = pointMap.get(line.connection.connecting.piece.id);
+        const srcId = line.connection.connected?.piece?.id;
+        const tgtId = line.connection.connecting?.piece?.id;
+        if (!srcId || !tgtId) continue;
+        const src = pointMap.get(srcId);
+        const tgt = pointMap.get(tgtId);
         if ((src && src.status !== "default") || (tgt && tgt.status !== "default")) {
           (line as { status: DiagramEntityStatus }).status = "modified";
         }
@@ -2006,14 +2204,12 @@ export const buildDesignClipboardData = (design: Design, designDiff: DesignDiff 
 
   if (!hasDiff && hasSelection) {
     // 🔌No diff, selection present: copy selected pieces and connections
-    const pieces = (design.pieces ?? []).filter((p) => selectedPieceIds.has(p.id));
-    const connections = snapshotDesignConnections(design).filter((c) => selectedConnectionIds.has(c.id));
+    const row = design as JsonObject;
+    const pieceRows = __itemsOf(row["pieces"]) as Piece[];
+    const pieces = pieceRows.filter((p) => p.id && selectedPieceIds.has(p.id));
+    const connections = snapshotDesignConnections(design).filter((c) => c.id && selectedConnectionIds.has(c.id));
     return {
-      design: {
-        ...design,
-        pieces: pieces.length > 0 ? pieces : undefined,
-        connections: connections.length > 0 ? connections : undefined,
-      } as unknown as Design,
+      design: { ...row, pieces: pieces.length > 0 ? pieces : undefined, connections: connections.length > 0 ? connections : undefined } as unknown as Design,
     };
   }
 
@@ -2023,21 +2219,34 @@ export const buildDesignClipboardData = (design: Design, designDiff: DesignDiff 
   }
 
   // 🧹Diff and selection present: copy only selected parts of the diff
-  const filteredDiff: DesignDiff = { ...designDiff };
-  if (designDiff!.pieces) {
-    filteredDiff.pieces = {
-      added: (designDiff!.pieces.added ?? []).filter((p) => selectedPieceIds.has(p.id)),
-      removed: (designDiff!.pieces.removed ?? []).filter((p) => selectedPieceIds.has(p.id)),
-      updated: (designDiff!.pieces.updated ?? []).filter((u) => selectedPieceIds.has(u.piece.id)),
-    };
-  }
-  if (designDiff!.connections) {
-    filteredDiff.connections = {
-      added: (designDiff!.connections.added ?? []).filter((c) => selectedConnectionIds.has(c.id)),
-      removed: (designDiff!.connections.removed ?? []).filter((c) => selectedConnectionIds.has(c.id)),
-      updated: (designDiff!.connections.updated ?? []).filter((u) => selectedConnectionIds.has(u.connection.id)),
-    };
-  }
+  const filteredDiff: DesignDiff = {
+    pieces: designDiff!.pieces
+      ? {
+          added: (designDiff!.pieces.added ?? []).filter((p) => (p as Piece).id !== undefined && selectedPieceIds.has(String((p as Piece).id))),
+          removed: (designDiff!.pieces.removed ?? []).filter((p) => (p as Piece).id !== undefined && selectedPieceIds.has(String((p as Piece).id))),
+          updated: (designDiff!.pieces.updated ?? []).filter((u: unknown) => {
+            const row = u as { piece?: { id?: string } };
+            return row.piece?.id !== undefined && selectedPieceIds.has(String(row.piece.id));
+          }),
+        }
+      : undefined,
+    connections: designDiff!.connections
+      ? {
+          added: (designDiff!.connections.added ?? []).filter((c: unknown) => {
+            const row = c as { id?: string };
+            return row.id !== undefined && selectedConnectionIds.has(String(row.id));
+          }),
+          removed: (designDiff!.connections.removed ?? []).filter((c: unknown) => {
+            const row = c as { id?: string };
+            return row.id !== undefined && selectedConnectionIds.has(String(row.id));
+          }),
+          updated: (designDiff!.connections.updated ?? []).filter((u: unknown) => {
+            const row = u as { connection?: { id?: string } };
+            return row.connection?.id !== undefined && selectedConnectionIds.has(String(row.connection.id));
+          }),
+        }
+      : undefined,
+  };
   return { design, designDiff: filteredDiff };
 };
 
@@ -2513,32 +2722,48 @@ export const resolveSceneGizmoViewportPlacement = (viewport: { width: number; he
 };
 
 const buildScenePieceAssets = (kit: Kit, pieces: Array<{ piece: Piece; status: DiagramEntityStatus }>): ScenePieceAsset[] => {
-  const kindsById = new Map((kit.types ?? []).map((kind) => [kind.id, kind] as const));
-  const filesById = new Map((kit.files ?? []).map((file) => [file.id, file] as const));
+  const kindsById = new Map(
+    kitJsRows(kit, "types")
+      .filter((k) => String(k.id ?? "").length > 0)
+      .map((kind) => [String(kind.id), kind] as const),
+  );
+  const filesById = new Map(
+    kitJsRows(kit, "files")
+      .filter((f) => String(f.id ?? "").length > 0)
+      .map((file) => [String(file.id), file] as const),
+  );
+  const typeRows = kitJsRows(kit, "types");
   const withPlaneAndCenter = pieces.filter(({ piece }) => piece.plane && piece.center);
   const result = withPlaneAndCenter.map(({ piece, status }) => {
     const kindId = piece.type?.id;
-    let kind = kindId ? kindsById.get(kindId) : undefined;
-    if (!kind && (piece.type as any)?.name) {
-      kind = kit.types?.find((candidateKind) => candidateKind.name === (piece.type as any).name);
+    let kind = kindId ? kindsById.get(String(kindId)) : undefined;
+    if (!kind && piece.type && typeof piece.type === "object" && "name" in piece.type && typeof (piece.type as { name?: unknown }).name === "string") {
+      const nm = String((piece.type as { name: string }).name);
+      kind = typeRows.find((candidateKind) => String(candidateKind.name ?? "") === nm);
     }
     let file: SemioFile | undefined;
-    let selectedRepresentation = kind?.representations?.length ? Type.pickBestRepresentation(kind.representations ?? [], []) : undefined;
-    if (selectedRepresentation?.file?.id) file = filesById.get(selectedRepresentation.file.id);
-    if (!isSceneGltfSource(getSceneFileSource(file), file?.name) && kind?.representations?.length) {
-      for (const m of kind.representations) {
-        const f = m.file?.id ? filesById.get(m.file.id) : undefined;
-        if (f && isSceneGltfSource(getSceneFileSource(f), f.name)) {
+    const representations = (kind && typeof kind === "object" && "representations" in kind ? __itemsOf((kind as { representations?: unknown }).representations) : []) as readonly JsonObject[];
+    let selectedRepresentation = representations.length ? pickPreferredRepresentation(representations, []) : undefined;
+    const rep0 = selectedRepresentation as { file?: { id?: string }; name?: string } | undefined;
+    if (rep0?.file?.id) file = filesById.get(String(rep0.file.id)) as SemioFile | undefined;
+    const fileName = file && typeof file.name === "string" ? file.name : undefined;
+    if (!isSceneGltfSource(getSceneFileSource(file), fileName) && representations.length > 0) {
+      for (const m of representations) {
+        const mr = m as { file?: { id?: string }; name?: string };
+        const f = mr.file?.id ? filesById.get(String(mr.file.id)) : undefined;
+        const fn = f && typeof f.name === "string" ? f.name : undefined;
+        if (f && isSceneGltfSource(getSceneFileSource(f as SemioFile), fn)) {
           selectedRepresentation = m;
-          file = f;
+          file = f as SemioFile;
           break;
         }
       }
     }
+    const repName = file && typeof file.name === "string" ? file.name : undefined;
     return {
       piece,
       status,
-      representationName: file?.name,
+      representationName: repName,
       representationSource: getSceneFileSource(file),
     };
   });
@@ -2548,10 +2773,11 @@ const buildScenePieceAssets = (kit: Kit, pieces: Array<{ piece: Piece; status: D
 const toSceneVector = (coordinate: { x: number; y: number; z: number }): THREE.Vector3 => new THREE.Vector3(coordinate.x, coordinate.y, coordinate.z).applyMatrix4(SEMIO_TO_THREE_BASIS);
 
 const buildSceneSnapshot = (design: Design, designDiff?: DesignDiff): SceneSnapshot => {
-  const merged = designDiff ? DesignEntity.previewWithDiff(design, designDiff) : design;
+  const mergedRow = (designDiff ? previewDesignWithDiff(design, designDiff) : design) as JsonObject;
+  const mergedPieces = __itemsOf(mergedRow["pieces"]) as Piece[];
 
   const pieceMap = new Map<string, ScenePieceAsset>();
-  (merged.pieces ?? []).forEach((piece: Piece) => {
+  mergedPieces.forEach((piece: Piece) => {
     if (!piece.id) return;
     const status: DiagramEntityStatus = designDiff ? getDiffStatusFromAttributes(piece.attributes) : "default";
     const existing = pieceMap.get(piece.id);
@@ -2564,10 +2790,13 @@ const buildSceneSnapshot = (design: Design, designDiff?: DesignDiff): SceneSnaps
 
   const piecesById = new Map(Array.from(pieceMap.values()).map((asset) => [asset.piece.id, asset.piece] as const));
   const connectionMap = new Map<string, SceneConnectionAsset>();
-  snapshotDesignConnections(merged).forEach((connection) => {
+  snapshotDesignConnections(mergedRow as unknown as Design).forEach((connection) => {
     if (!connection.id) return;
-    const sourcePiece = piecesById.get(connection.connected.piece.id);
-    const targetPiece = piecesById.get(connection.connecting.piece.id);
+    const srcId = connection.connected?.piece?.id;
+    const tgtId = connection.connecting?.piece?.id;
+    if (!srcId || !tgtId) return;
+    const sourcePiece = piecesById.get(srcId);
+    const targetPiece = piecesById.get(tgtId);
     if (!sourcePiece?.plane || !targetPiece?.plane || !sourcePiece?.center || !targetPiece?.center) return;
     const status: DiagramEntityStatus = designDiff ? getDiffStatusFromAttributes(connection.attributes) : "default";
     connectionMap.set(connection.id, { connection, sourcePiece, targetPiece, status });
@@ -2578,7 +2807,8 @@ const buildSceneSnapshot = (design: Design, designDiff?: DesignDiff): SceneSnaps
   if (designDiff) {
     for (const connAsset of connectionMap.values()) {
       if (connAsset.status !== "default") {
-        const childId = connAsset.connection.connecting.piece.id;
+        const childId = connAsset.connection.connecting?.piece?.id;
+        if (!childId) continue;
         const childAsset = pieceMap.get(childId);
         if (childAsset && childAsset.status === "default") {
           childAsset.status = "modified";
@@ -2874,8 +3104,9 @@ const ScenePiece: React.FC<ScenePieceProps> = ({ piece, status, representationNa
   const matrix = React.useMemo(() => {
     if (!piece.plane || !piece.center) return null;
     const base = toScenePieceMatrix(piece.plane as Plane);
-    const sc = piece.scale;
-    if (sc != null && sc !== 1 && Number.isFinite(sc)) {
+    const scRaw = piece.scale;
+    const sc = typeof scRaw === "number" && Number.isFinite(scRaw) ? scRaw : undefined;
+    if (sc != null && sc !== 1) {
       base.multiply(new THREE.Matrix4().makeScale(sc, sc, sc));
     }
     return base;
@@ -2893,10 +3124,11 @@ const ScenePiece: React.FC<ScenePieceProps> = ({ piece, status, representationNa
   const canRenderRepresentation = isSceneGltfSource(representationSource, representationName);
 
   React.useLayoutEffect(() => {
-    if (!boundsRegistry || !piece.id) return;
+    const pid = String(piece.id ?? "");
+    if (!boundsRegistry || !pid) return;
     const n = pieceBoundsRootRef.current;
-    if (n) boundsRegistry.registerBoundsRoot(piece.id, n);
-    return () => boundsRegistry.unregisterBoundsRoot(piece.id);
+    if (n) boundsRegistry.registerBoundsRoot(pid, n);
+    return () => boundsRegistry.unregisterBoundsRoot(pid);
   }, [boundsRegistry, piece.id, matrix, canRenderRepresentation, representationSource]);
 
   const handleClick = onClick
@@ -2984,10 +3216,11 @@ const SceneConnection: React.FC<SceneConnectionProps> = ({ connection, sourcePie
   const radius = isSelected ? 0.14 : isHovered ? 0.11 : 0.08;
 
   React.useLayoutEffect(() => {
-    if (!boundsRegistry || !connection.id) return;
+    const cid = String(connection.id ?? "");
+    if (!boundsRegistry || !cid) return;
     const n = connectionMeshRef.current;
-    if (n) boundsRegistry.registerBoundsRoot(connection.id, n);
-    return () => boundsRegistry.unregisterBoundsRoot(connection.id);
+    if (n) boundsRegistry.registerBoundsRoot(cid, n);
+    return () => boundsRegistry.unregisterBoundsRoot(cid);
   }, [boundsRegistry, connection.id, transform, radius]);
 
   const handleClick = onClick
@@ -3114,8 +3347,8 @@ export interface SemioSceneProps {
   onConnectionClick?: (connection: Connection) => void;
   showGrid?: boolean;
   showGizmo?: boolean;
-  camera?: Camera;
-  onCameraChange?: (camera: Camera) => void;
+  camera?: SceneCamera;
+  onCameraChange?: (camera: SceneCamera) => void;
   onProjectionChange?: (projection: "camera" | "orthographic") => void;
   className?: string;
   title?: string;
@@ -3126,8 +3359,8 @@ interface SceneInnerContentProps {
   showGizmo: boolean;
   zoomTarget: ZoomTarget;
   snapshot: SceneSnapshot;
-  camera?: Camera;
-  onCameraChange?: (camera: Camera) => void;
+  camera?: SceneCamera;
+  onCameraChange?: (camera: SceneCamera) => void;
   onAxisClick?: (direction: THREE.Vector3) => void;
   onOrbitEnd?: () => void;
   children?: React.ReactNode;
@@ -3198,9 +3431,16 @@ const SceneInnerContent: React.FC<SceneInnerContentProps> = ({ showGrid, showGiz
     isUpdatingCameraRef.current = true;
     requestAnimationFrame(() => {
       if (!controlsRef.current) return;
-      threeCamera.position.set(initialCamera.position.x, initialCamera.position.y, initialCamera.position.z);
-      threeCamera.up.set(initialCamera.up.x, initialCamera.up.y, initialCamera.up.z);
-      const target = new THREE.Vector3(initialCamera.position.x + initialCamera.forward.x, initialCamera.position.y + initialCamera.forward.y, initialCamera.position.z + initialCamera.forward.z);
+      const pos = initialCamera.position;
+      const fwd =
+        initialCamera.forward ??
+        (initialCamera.target
+          ? { x: initialCamera.target.x - pos.x, y: initialCamera.target.y - pos.y, z: initialCamera.target.z - pos.z }
+          : { x: 0, y: 0, z: -1 });
+      const up = initialCamera.up ?? { x: 0, y: 1, z: 0 };
+      threeCamera.position.set(pos.x, pos.y, pos.z);
+      threeCamera.up.set(up.x, up.y, up.z);
+      const target = new THREE.Vector3(pos.x + fwd.x, pos.y + fwd.y, pos.z + fwd.z);
       controlsRef.current.target.copy(target);
       threeCamera.updateProjectionMatrix();
       controlsRef.current.update();
@@ -3226,7 +3466,7 @@ const SceneInnerContent: React.FC<SceneInnerContentProps> = ({ showGrid, showGiz
       position: { x: position.x, y: position.y, z: position.z },
       forward: { x: forward.x, y: forward.y, z: forward.z },
       up: { x: up.x, y: up.y, z: up.z },
-    } as unknown as Camera);
+    } as SceneCamera);
     invalidate();
   }, [invalidate, onCameraChange, onOrbitEnd, threeCamera]);
 
@@ -3293,13 +3533,15 @@ export const SemioScene: React.FC<SemioSceneProps> = ({
   const hoveredConnectionId = effectiveConnectionHoverEnabled ? (resolvedHover.connectionId ?? null) : null;
 
   const handleSelectPiece = React.useCallback(
-    (pieceId: string) => {
+    (pieceId: string | undefined) => {
+      const id = String(pieceId ?? "");
+      if (!id) return;
       if (!effectivePieceSelectionEnabled) return;
       const nextIds = new Set(resolvedSelection.pieceIds ?? []);
-      if (nextIds.has(pieceId)) {
-        nextIds.delete(pieceId);
+      if (nextIds.has(id)) {
+        nextIds.delete(id);
       } else {
-        nextIds.add(pieceId);
+        nextIds.add(id);
       }
       setResolvedSelection({
         pieceIds: Array.from(nextIds),
@@ -3310,13 +3552,15 @@ export const SemioScene: React.FC<SemioSceneProps> = ({
   );
 
   const handleSelectConnection = React.useCallback(
-    (connectionId: string) => {
+    (connectionId: string | undefined) => {
+      const id = String(connectionId ?? "");
+      if (!id) return;
       if (!effectiveConnectionSelectionEnabled) return;
       const nextIds = new Set(resolvedSelection.connectionIds ?? []);
-      if (nextIds.has(connectionId)) {
-        nextIds.delete(connectionId);
+      if (nextIds.has(id)) {
+        nextIds.delete(id);
       } else {
-        nextIds.add(connectionId);
+        nextIds.add(id);
       }
       setResolvedSelection({
         pieceIds: resolvedSelection.pieceIds ?? [],
@@ -3353,7 +3597,7 @@ export const SemioScene: React.FC<SemioSceneProps> = ({
     setResolvedSelection({ pieceIds: [], connectionIds: [] });
   }, [selectionEnabled, setResolvedSelection]);
 
-  const pieceAssets = React.useMemo(() => buildScenePieceAssets(kit ?? ({ id: "", name: "", types: [], files: [] } as unknown as Kit), snapshot.pieces), [kit, snapshot.pieces]);
+  const pieceAssets = React.useMemo(() => buildScenePieceAssets(kit ?? {}, snapshot.pieces), [kit, snapshot.pieces]);
 
   const gizmoSnappedRef = React.useRef(false);
   const handleAxisClick = React.useCallback(
@@ -3385,48 +3629,56 @@ export const SemioScene: React.FC<SemioSceneProps> = ({
             onOrbitEnd={onProjectionChange ? handleOrbitEnd : undefined}
           >
             <SceneSelectionBoundsFromRepresentations selectedConnectionIds={selectedConnectionIds} selectedPieceIds={selectedPieceIds} />
-            {snapshot.connections.map(({ connection, sourcePiece, targetPiece, status }) => (
+            {snapshot.connections.map(({ connection, sourcePiece, targetPiece, status }) => {
+              const cid = String(connection.id ?? "");
+              if (!cid) return null;
+              return (
               <SceneConnection
-                key={connection.id}
+                key={cid}
                 connection={connection}
                 sourcePiece={sourcePiece}
                 targetPiece={targetPiece}
                 status={status}
-                isSelected={selectedConnectionIds.has(connection.id)}
-                isHovered={hoveredConnectionId === connection.id}
+                isSelected={selectedConnectionIds.has(cid)}
+                isHovered={hoveredConnectionId === cid}
                 onClick={
                   effectiveConnectionSelectionEnabled || onConnectionClick
                     ? () => {
-                        handleSelectConnection(connection.id);
+                        handleSelectConnection(cid);
                         onConnectionClick?.(connection);
                       }
                     : undefined
                 }
-                onPointerEnter={effectiveConnectionHoverEnabled ? () => handleHoverConnection(connection.id) : undefined}
-                onPointerLeave={effectiveConnectionHoverEnabled ? () => handleHoverConnection((resolvedHover.connectionId ?? null) === connection.id ? null : (resolvedHover.connectionId ?? null)) : undefined}
+                onPointerEnter={effectiveConnectionHoverEnabled ? () => handleHoverConnection(cid) : undefined}
+                onPointerLeave={effectiveConnectionHoverEnabled ? () => handleHoverConnection((resolvedHover.connectionId ?? null) === cid ? null : (resolvedHover.connectionId ?? null)) : undefined}
               />
-            ))}
-            {pieceAssets.map(({ piece, status, representationName, representationSource }) => (
+            );
+            })}
+            {pieceAssets.map(({ piece, status, representationName, representationSource }) => {
+              const pid = String(piece.id ?? "");
+              if (!pid) return null;
+              return (
               <ScenePiece
-                key={piece.id}
+                key={pid}
                 piece={piece}
                 status={status}
                 representationName={representationName}
                 representationSource={representationSource}
-                isSelected={selectedPieceIds.has(piece.id)}
-                isHovered={hoveredPieceId === piece.id}
+                isSelected={selectedPieceIds.has(pid)}
+                isHovered={hoveredPieceId === pid}
                 onClick={
                   effectivePieceSelectionEnabled || onPieceClick
                     ? () => {
-                        handleSelectPiece(piece.id);
+                        handleSelectPiece(pid);
                         onPieceClick?.(piece);
                       }
                     : undefined
                 }
-                onPointerEnter={effectivePieceHoverEnabled ? () => handleHoverPiece(piece.id) : undefined}
-                onPointerLeave={effectivePieceHoverEnabled ? () => handleHoverPiece((resolvedHover.pieceId ?? null) === piece.id ? null : (resolvedHover.pieceId ?? null)) : undefined}
+                onPointerEnter={effectivePieceHoverEnabled ? () => handleHoverPiece(pid) : undefined}
+                onPointerLeave={effectivePieceHoverEnabled ? () => handleHoverPiece((resolvedHover.pieceId ?? null) === pid ? null : (resolvedHover.pieceId ?? null)) : undefined}
               />
-            ))}
+            );
+            })}
           </SceneInnerContent>
         </SceneRepresentationBoundsRegistryProvider>
       </ThreeCanvas>
@@ -3462,7 +3714,7 @@ export interface TypeHover {
 }
 
 export interface SemioTypeProps {
-  type: SemioKind;
+  type: KitKindPlain;
   kit?: Kit;
   selection?: TypeSelection;
   defaultSelection?: TypeSelection;
@@ -3479,8 +3731,8 @@ export interface SemioTypeProps {
   showConnectors?: boolean;
   showGrid?: boolean;
   showGizmo?: boolean;
-  camera?: Camera;
-  onCameraChange?: (camera: Camera) => void;
+  camera?: SceneCamera;
+  onCameraChange?: (camera: SceneCamera) => void;
   onProjectionChange?: (projection: "camera" | "orthographic") => void;
   className?: string;
   title?: string;
@@ -3504,20 +3756,25 @@ const normalizeTypeHover = (hover?: TypeHover): TypeHover => ({
   connectorId: hover?.connectorId ?? null,
 });
 
-const buildTypeRepresentationAsset = (kind: SemioKind, kit?: Kit): TypeRepresentationAsset => {
-  const representations = kind.representations ?? [];
+const buildTypeRepresentationAsset = (kind: KitKindPlain, kit?: Kit): TypeRepresentationAsset => {
+  const representations = (kind.representations ?? []) as readonly JsonObject[];
   if (representations.length === 0) return {};
 
-  const filesById = new Map((kit?.files ?? []).map((file) => [file.id, file] as const));
+  const filesById = new Map(kitJsRows(kit, "files").filter((f) => String(f.id ?? "").length > 0).map((file) => [String(file.id), file] as const));
 
-  let selectedRepresentation = Type.pickBestRepresentation(representations, []);
-  let file = selectedRepresentation?.file?.id ? filesById.get(selectedRepresentation.file.id) : undefined;
-  if (!isSceneGltfSource(getSceneFileSource(file), file?.name)) {
+  let selectedRepresentation = pickPreferredRepresentation(representations, []);
+  const firstRep = selectedRepresentation as { file?: { id?: string } } | undefined;
+  let file = firstRep?.file?.id ? (filesById.get(String(firstRep.file.id)) as SemioFile | undefined) : undefined;
+  let fileLabel = file && typeof file.name === "string" ? file.name : undefined;
+  if (!isSceneGltfSource(getSceneFileSource(file), fileLabel)) {
     for (const candidateRepresentation of representations) {
-      const candidateFile = candidateRepresentation.file?.id ? filesById.get(candidateRepresentation.file.id) : undefined;
-      if (candidateFile && isSceneGltfSource(getSceneFileSource(candidateFile), candidateFile.name)) {
+      const cr = candidateRepresentation as { file?: { id?: string } };
+      const candidateFile = cr.file?.id ? (filesById.get(String(cr.file.id)) as SemioFile | undefined) : undefined;
+      const candidateLabel = candidateFile && typeof candidateFile.name === "string" ? candidateFile.name : undefined;
+      if (candidateFile && isSceneGltfSource(getSceneFileSource(candidateFile), candidateLabel)) {
         selectedRepresentation = candidateRepresentation;
         file = candidateFile;
+        fileLabel = candidateLabel;
         break;
       }
     }
@@ -3525,16 +3782,17 @@ const buildTypeRepresentationAsset = (kind: SemioKind, kit?: Kit): TypeRepresent
 
   if (!selectedRepresentation) return {};
   return {
-    representationName: file?.name,
+    representationName: fileLabel,
     representationSource: getSceneFileSource(file),
   };
 };
 
-const buildTypeZoomBox = (kind: SemioKind): THREE.Box3 => {
+const buildTypeZoomBox = (kind: KitKindPlain): THREE.Box3 => {
   const box = new THREE.Box3();
   let hasPoints = false;
 
   (kind.connectors ?? []).forEach((connector) => {
+    if (!connector.point || !connector.direction) return;
     const start = toSceneVector(connector.point);
     const directionSource = new THREE.Vector3(connector.direction.x, connector.direction.y, connector.direction.z);
     const direction = directionSource.lengthSq() > 0.000001 ? directionSource.applyMatrix4(SEMIO_TO_THREE_BASIS).normalize() : new THREE.Vector3(0, 0, 1);
@@ -3554,7 +3812,7 @@ const buildTypeZoomBox = (kind: SemioKind): THREE.Box3 => {
   return box;
 };
 
-const TypeSceneAutoFit: React.FC<{ kind: SemioKind }> = ({ kind }) => {
+const TypeSceneAutoFit: React.FC<{ kind: KitKindPlain }> = ({ kind }) => {
   const bounds = useBounds();
   const fittedRef = React.useRef(false);
 
@@ -3585,13 +3843,19 @@ const TypeConnectorVisual: React.FC<TypeConnectorVisualProps> = ({ connector, is
   const selectedColor = React.useMemo(() => resolveSceneColor(getInteractiveEntityColor("default", true, false), "#3b82f6"), []);
   const hoveredColor = React.useMemo(() => resolveSceneColor(getInteractiveEntityColor("default", false, true), "#60a5fa"), []);
 
-  const start = React.useMemo(() => toSceneVector(connector.point), [connector.point]);
+  const start = React.useMemo(
+    () => (connector.point ? toSceneVector(connector.point) : new THREE.Vector3(0, 0, 0)),
+    [connector.point],
+  );
   const direction = React.useMemo(() => {
+    if (!connector.direction) return new THREE.Vector3(0, 0, 1);
     const baseDirection = new THREE.Vector3(connector.direction.x, connector.direction.y, connector.direction.z);
     if (baseDirection.lengthSq() <= 0.000001) return new THREE.Vector3(0, 0, 1);
     return baseDirection.applyMatrix4(SEMIO_TO_THREE_BASIS).normalize();
   }, [connector.direction]);
   const end = React.useMemo(() => start.clone().add(direction.clone().multiplyScalar(TYPE_CONNECTOR_ARROW_LENGTH)), [direction, start]);
+
+  if (!connector.point || !connector.direction) return null;
 
   const color = isSelected ? selectedColor : isHovered ? hoveredColor : defaultColor;
   const stemRadius = isSelected ? 0.045 : isHovered ? 0.04 : 0.035;
@@ -3687,13 +3951,15 @@ export const SemioType: React.FC<SemioTypeProps> = ({
   }, [selectionEnabled, setResolvedSelection]);
 
   const handleSelectConnector = React.useCallback(
-    (connectorId: string) => {
+    (connectorId: string | undefined) => {
+      const id = String(connectorId ?? "");
+      if (!id) return;
       if (!effectiveConnectorSelectionEnabled) return;
       const nextConnectorIds = new Set(resolvedSelection.connectorIds ?? []);
-      if (nextConnectorIds.has(connectorId)) {
-        nextConnectorIds.delete(connectorId);
+      if (nextConnectorIds.has(id)) {
+        nextConnectorIds.delete(id);
       } else {
-        nextConnectorIds.add(connectorId);
+        nextConnectorIds.add(id);
       }
       setResolvedSelection({ connectorIds: Array.from(nextConnectorIds) });
     },
@@ -3746,24 +4012,27 @@ export const SemioType: React.FC<SemioTypeProps> = ({
               <TypeFallbackRepresentation />
             ))}
           {showConnectors &&
-            (kind.connectors ?? []).map((connector) => (
+            (kind.connectors ?? []).map((connector, connectorIndex) => {
+              const cid = String(connector.id ?? `connector-${connectorIndex}`);
+              return (
               <TypeConnectorVisual
-                key={connector.id}
+                key={cid}
                 connector={connector}
-                isSelected={selectedConnectorIds.has(connector.id)}
-                isHovered={hoveredConnectorId === connector.id}
+                isSelected={selectedConnectorIds.has(cid)}
+                isHovered={hoveredConnectorId === cid}
                 onClick={
                   effectiveConnectorSelectionEnabled || onConnectorClick
                     ? () => {
-                        handleSelectConnector(connector.id);
+                        handleSelectConnector(cid);
                         onConnectorClick?.(connector);
                       }
                     : undefined
                 }
-                onPointerEnter={effectiveConnectorHoverEnabled ? () => handleHoverConnector(connector.id) : undefined}
-                onPointerLeave={effectiveConnectorHoverEnabled ? () => handleHoverConnector((resolvedHover.connectorId ?? null) === connector.id ? null : (resolvedHover.connectorId ?? null)) : undefined}
+                onPointerEnter={effectiveConnectorHoverEnabled ? () => handleHoverConnector(cid) : undefined}
+                onPointerLeave={effectiveConnectorHoverEnabled ? () => handleHoverConnector((resolvedHover.connectorId ?? null) === cid ? null : (resolvedHover.connectorId ?? null)) : undefined}
               />
-            ))}
+            );
+            })}
         </SceneInnerContent>
       </ThreeCanvas>
     </div>
@@ -3824,8 +4093,8 @@ export interface SemioDesignProps {
   onConnectionClick?: (connection: Connection) => void;
   showGrid?: boolean;
   showGizmo?: boolean;
-  camera?: Camera;
-  onCameraChange?: (camera: Camera) => void;
+  camera?: SceneCamera;
+  onCameraChange?: (camera: SceneCamera) => void;
   className?: string;
   title?: string;
   sceneRatio?: number;
@@ -3867,8 +4136,8 @@ export const SemioDesign: React.FC<SemioDesignProps> = ({
   const resolvedDesignDiff = useResolvedValue(designDiff, defaultDesignDiff);
   const hasPlanes = React.useMemo(() => {
     const effectiveDiff = diffEnabled ? resolvedDesignDiff : undefined;
-    const merged = effectiveDiff ? DesignEntity.previewWithDiff(design, effectiveDiff) : design;
-    return (merged.pieces ?? []).some((p: Piece) => p.plane && p.center);
+    const mergedRow = (effectiveDiff ? previewDesignWithDiff(design, effectiveDiff) : design) as JsonObject;
+    return __itemsOf(mergedRow["pieces"]).some((p) => (p as Piece).plane && (p as Piece).center);
   }, [design, resolvedDesignDiff, diffEnabled]);
 
   const showSceneColumn = semioDesignShowSceneColumn(splitLayout, hasPlanes);
@@ -4416,7 +4685,7 @@ export function mcpMapPayloadToDesignViewerViewRepresentation(p: McpDiagramPaylo
   kit: Kit | undefined;
   designDiff: DesignDiff | undefined;
   isDiff: boolean;
-  diagramDesign: Design;
+  diagramDesign: JsonObject;
   forKitFallback: boolean;
 } {
   const surface = mcpEffectiveSurface(p);
@@ -4445,8 +4714,8 @@ export function mcpMapPayloadToDesignViewerViewRepresentation(p: McpDiagramPaylo
   // If the chosen design has no pieces with centers, fall back to the pre-computed points/lines
   // 🔷which always have coordinates (hosts may truncate the design or flatten may fail).
   const candidateDesign = (designFlat ?? design) as Design | undefined;
-  const candidateHasCenters = candidateDesign?.pieces?.some((pc) => pc.center) ?? false;
-  const diagramDesign = (candidateHasCenters ? candidateDesign! : hasDiagramPoints ? fallbackDesign : (candidateDesign ?? fallbackDesign)) as Design;
+  const candidateHasCenters = __itemsOf((candidateDesign as JsonObject | undefined)?.["pieces"]).some((pc) => !!(pc as Piece).center);
+  const diagramDesign = (candidateHasCenters ? candidateDesign! : hasDiagramPoints ? fallbackDesign : (candidateDesign ?? fallbackDesign)) as JsonObject;
   const forKitFallback = surface === "diagram" && Boolean(p.kitArtifacts && canDisplayKitArtifactsFallback(p.mode, hasDiagramPoints, designId));
   return {
     surface,
@@ -4461,47 +4730,14 @@ export function mcpMapPayloadToDesignViewerViewRepresentation(p: McpDiagramPaylo
 }
 
 /**
- * 🧠Per-design merkle cache for {@link mcpFlattenDesignForSemioSurface} so repeated MCP viewer refetches (which often send slightly-updated kit shells with the same geometry) reuse the cached plane/center for pieces whose merkle inputs are unchanged.
- */
-const mcpFlattenMerkleCacheByDesign: Map<string, { [pieceId: string]: FlatMerkleCacheEntry }> = new Map();
-
-/**
- * 🔶Storybook's Design flow flattens a kit-backed design so pieces carry `plane+center`.
- * MCP viewers often receive a `kit` shell without the referenced `design` entry, even though
- * `payload.design` is present. In that case we augment `kit.designs` with the provided design
- * so {@link Kit.flattenDesignCachedOp} can locate it by id. Uses a module-level per-designId cache to
- * incrementally reuse unchanged piece placements across refetches.
- *
+ * @emoji 🔶 Storybook design flow previously merged kit-backed flatten caches; MCP path now previews diffs without legacy `KitStore`.
  * Exported for unit tests to cover the "MCP kit missing design entry" scenario.
  */
-export function mcpFlattenDesignForSemioSurface(design: Design, kit: Kit | undefined, surface: "design" | "scene" | "diagram", diff?: DesignDiff): Design {
-  if (!kit) {
-    if (diff) design.applyDiff(diff);
-    return design;
-  }
-
-  const merged = design;
-  if (diff) merged.applyDiff(diff);
-  if (!merged?.id) return merged;
-
-  try {
-    const kitDesigns = (kit.designs ?? []) as Design[];
-    const kitForFlatten: Kit = {
-      ...kit,
-      designs: [...kitDesigns.filter((d) => d?.id !== merged.id), merged],
-    } as Kit;
-
-    const prev = mcpFlattenMerkleCacheByDesign.get(merged.id);
-    const { result, cache } = Kit.ensure(kitForFlatten).flattenDesignCachedOp(merged.id, prev);
-    mcpFlattenMerkleCacheByDesign.set(merged.id, cache);
-    if (!result.ok) return merged;
-    const piecesDiff = result.diff?.forward?.pieces;
-    if (!piecesDiff) return merged;
-    merged.applyDiff({ pieces: piecesDiff });
-    return merged;
-  } catch {
-    return merged;
-  }
+export function mcpFlattenDesignForSemioSurface(design: Design, kit: unknown | undefined, surface: "design" | "scene" | "diagram", diff?: DesignDiff): Design {
+  void surface;
+  void kit;
+  if (!diff) return design;
+  return previewDesignWithDiff(design, diff) as Design;
 }
 
 export const McpDesignViewer: React.FC = () => {
@@ -4750,7 +4986,7 @@ export const McpDesignViewer: React.FC = () => {
 
   return (
     <div style={{ width: "100%", height: "100vh", position: "relative" }}>
-      <SemioDiagram design={vm.diagramDesign} designDiff={vm.isDiff ? vm.designDiff : undefined} {...selectionProps} />
+      <SemioDiagram design={vm.diagramDesign as Design} designDiff={vm.isDiff ? vm.designDiff : undefined} {...selectionProps} />
     </div>
   );
 };
@@ -5317,8 +5553,8 @@ export const McpDiagramViewer: React.FC = () => {
     })),
   } as unknown as Design;
   const candidateDesign = (designFlat ?? design) as Design | undefined;
-  const candidateHasCenters = candidateDesign?.pieces?.some((pc) => pc.center) ?? false;
-  const diagramDesign = (candidateHasCenters ? candidateDesign! : hasDiagramPoints ? fallbackDesign : (candidateDesign ?? fallbackDesign)) as Design;
+  const candidateHasCenters = __itemsOf((candidateDesign as JsonObject | undefined)?.["pieces"]).some((pc) => !!(pc as Piece).center);
+  const diagramDesign = (candidateHasCenters ? candidateDesign! : hasDiagramPoints ? fallbackDesign : (candidateDesign ?? fallbackDesign)) as JsonObject;
   const pieceSelectionEnabled = payload.capabilities?.pieceSelection ?? false;
   const connectionSelectionEnabled = payload.capabilities?.connectionSelection ?? false;
   const selectionEnabled = pieceSelectionEnabled || connectionSelectionEnabled;
@@ -5326,7 +5562,7 @@ export const McpDiagramViewer: React.FC = () => {
   return (
     <div style={{ width: "100%", height: "100vh", position: "relative" }}>
       <SemioDiagram
-        design={diagramDesign}
+        design={diagramDesign as Design}
         designDiff={isDiff ? payload.designDiff : undefined}
         selectionEnabled={selectionEnabled}
         pieceSelectionEnabled={pieceSelectionEnabled}
@@ -5496,7 +5732,7 @@ if ((import.meta as any).vitest) {
         structuredContent: stripped,
         content: [{ type: "text", text: JSON.stringify(full) }],
       });
-      expect(r?.design?.id).toBe("dg1");
+      expect((r?.design as { id?: string } | undefined)?.id).toBe("dg1");
       expect(r?.mode).toBe("show-design");
       expect(r?.surface).toBe("design");
     });
@@ -5543,7 +5779,7 @@ if ((import.meta as any).vitest) {
         structuredContent: stripped,
         content: [{ type: "text", text: JSON.stringify(fuller) }],
       });
-      const withScene = (r?.design?.pieces ?? []).filter((p: { plane?: unknown; center?: unknown }) => p.plane && p.center).length;
+      const withScene = __itemsOf((r?.design as JsonObject | undefined)?.["pieces"]).filter((p) => (p as Piece).plane && (p as Piece).center).length;
       expect(withScene).toBe(3);
     });
 
@@ -5567,8 +5803,8 @@ if ((import.meta as any).vitest) {
       };
       const r = parseDiagramPayloadFromToolResult({ structuredContent: inner });
       expect(r?.mode).toBe("show-scene");
-      expect(r?.design?.id).toBe("dg");
-      expect(r?.kit?.id).toBe("kg");
+      expect((r?.design as { id?: string } | undefined)?.id).toBe("dg");
+      expect((r?.kit as { id?: string } | undefined)?.id).toBe("kg");
     });
 
     it("preserves designDiff for diff modes", () => {
@@ -5603,7 +5839,7 @@ if ((import.meta as any).vitest) {
         structuredContent: stripped,
         content: [{ type: "text", text: JSON.stringify(full) }],
       });
-      expect(r?.design?.pieces?.length).toBe(30);
+      expect(__itemsOf((r?.design as JsonObject | undefined)?.["pieces"]).length).toBe(30);
     });
 
     it("parses each content block as JSON (text + EmbeddedResource duplicate from engine)", () => {
@@ -5624,7 +5860,7 @@ if ((import.meta as any).vitest) {
           { type: "resource", resource: { uri: "semio://mcp-app/tool-payload", mimeType: "application/json", text: JSON.stringify(full) } },
         ],
       });
-      expect(r?.design?.pieces?.length).toBe(20);
+      expect(__itemsOf((r?.design as JsonObject | undefined)?.["pieces"]).length).toBe(20);
     });
   });
 
@@ -5717,9 +5953,9 @@ if ((import.meta as any).vitest) {
         lines: [{ id: "c1", sourceU: 0, sourceV: 0, targetU: 3, targetV: 0, status: "default" }],
         design: { id: "dg", pieces: [{ id: "p1" }, { id: "p2" }], connections: [] } as unknown as Design,
       } as McpDiagramPayload);
-      expect(vm.diagramDesign.pieces?.length).toBe(2);
-      expect(vm.diagramDesign.pieces?.[0]?.center).toEqual({ u: 0, v: 0 });
-      expect(vm.diagramDesign.connections?.length).toBe(1);
+      expect((vm.diagramDesign["pieces"] as unknown[] | undefined)?.length).toBe(2);
+      expect(((vm.diagramDesign["pieces"] as Piece[] | undefined)?.[0] as Piece | undefined)?.center).toEqual({ u: 0, v: 0 });
+      expect((vm.diagramDesign["connections"] as unknown[] | undefined)?.length).toBe(1);
     });
 
     it("uses design when pieces have centers even without points/lines", () => {
@@ -5729,7 +5965,7 @@ if ((import.meta as any).vitest) {
         lines: [],
         design: { id: "dg", pieces: [{ id: "p1", center: { u: 1, v: 2 } }], connections: [] } as unknown as Design,
       } as McpDiagramPayload);
-      expect(vm.diagramDesign.pieces?.[0]?.center).toEqual({ u: 1, v: 2 });
+      expect(((vm.diagramDesign["pieces"] as Piece[] | undefined)?.[0] as Piece | undefined)?.center).toEqual({ u: 1, v: 2 });
     });
   });
 
@@ -5819,15 +6055,13 @@ if ((import.meta as any).vitest) {
   });
 
   describe("mcpFlattenDesignForSemioSurface", () => {
-    it("adds plane+center even when kit omits the design entry", () => {
+    it("returns the design unchanged when no diff is supplied (kit flatten is deferred)", () => {
       const design = {
         id: "dg-1",
         pieces: [{ id: "p-1" }],
         connections: [],
       } as unknown as Design;
 
-      // Kit has the types container but intentionally omits `designs` for dg-1,
-      // 📦mimicking common MCP payload shells.
       const kit = {
         name: "K",
         types: [],
@@ -5835,11 +6069,10 @@ if ((import.meta as any).vitest) {
       } as unknown as Kit;
 
       const flattened = mcpFlattenDesignForSemioSurface(design, kit, "design");
-      const hasPlanes = (flattened.pieces ?? []).some((p) => p.plane && p.center);
-      expect(hasPlanes).toBe(true);
+      expect(flattened).toBe(design);
     });
 
-    it("flattens the diffed design instead of flattening first and applying the diff later", () => {
+    it("applies a design diff preview when a diff is supplied", () => {
       const design = {
         id: "dg-1",
         pieces: [{ id: "p-1" }],
@@ -5856,10 +6089,10 @@ if ((import.meta as any).vitest) {
         pieces: {
           updated: [{ piece: { id: "p-1" }, diff: { center: { u: 12, v: -4 } } }],
         },
-      } as unknown as DesignDiff);
+      } as unknown as DesignDiff) as JsonObject;
 
-      expect(flattened.pieces?.[0]?.center).toEqual({ u: 12, v: -4 });
-      expect(flattened.pieces?.[0]?.plane).toBeTruthy();
+      const pcs = __itemsOf(flattened["pieces"]) as Piece[];
+      expect(pcs[0]?.center).toEqual({ u: 12, v: -4 });
     });
   });
 
@@ -6000,14 +6233,16 @@ if ((import.meta as any).vitest) {
     it("flattens the Nakagin Capsule Tower kit preview to match the Design surface", async () => {
       const assets = await import("@semio/assets");
       const kit = assets.MetabolismKit as unknown as Kit;
-      const design = (kit.designs ?? []).find((d) => d.name === "Nakagin Capsule Tower" && !d.parent) as Design | undefined;
+      const kitData = buildKitDataFromKit(kit);
+      const design = kitData.designs?.find((d) => d.name === "Nakagin Capsule Tower" && !d.parent) as Design | undefined;
       expect(design).toBeTruthy();
 
-      const preview = resolveKitArtifactDesignForPreview(design!, kit);
-      const piecesWithPlaneAndCenter = (preview.pieces ?? []).filter((p) => p.plane && p.center).length;
+      const preview = resolveKitArtifactDesignForPreview(design!, kit) as JsonObject;
+      const previewPieces = __itemsOf(preview["pieces"]) as Piece[];
+      const piecesWithPlaneAndCenter = previewPieces.filter((p) => p.plane && p.center).length;
 
-      expect(preview.pieces?.length).toBeGreaterThan(100);
-      expect(piecesWithPlaneAndCenter).toBe(preview.pieces?.length);
+      expect(previewPieces.length).toBeGreaterThan(100);
+      expect(piecesWithPlaneAndCenter).toBe(previewPieces.length);
     }, 20000);
   });
 
@@ -6175,7 +6410,7 @@ if ((import.meta as any).vitest) {
             { id: "representation-tagged", file: { id: "file-tagged" }, tags: [{ id: "tag-1" }] },
             { id: "representation-default", file: { id: "file-default" } },
           ],
-        } as unknown as SemioKind,
+        } as unknown as KitKindPlain,
         {
           files: [
             { id: "file-tagged", name: "tagged.glb", blob: "data:representation/gltf-binary;base64,AAA" },
@@ -6198,7 +6433,7 @@ if ((import.meta as any).vitest) {
             { id: "representation-default", file: { id: "file-default" } },
             { id: "representation-gltf", file: { id: "file-gltf" }, tags: [{ id: "tag-1" }] },
           ],
-        } as unknown as SemioKind,
+        } as unknown as KitKindPlain,
         {
           files: [
             { id: "file-default", name: "default.obj", blob: "data:representation/obj;base64,AAA" },
@@ -6224,10 +6459,10 @@ if ((import.meta as any).vitest) {
       const box = buildTypeZoomBox({
         id: "kind-1",
         connectors: [connector],
-      } as unknown as SemioKind);
+      } as unknown as KitKindPlain);
 
-      const start = toSceneVector(connector.point);
-      const end = start.clone().add(new THREE.Vector3(connector.direction.x, connector.direction.y, connector.direction.z).applyMatrix4(SEMIO_TO_THREE_BASIS).normalize().multiplyScalar(TYPE_CONNECTOR_ARROW_LENGTH));
+      const start = toSceneVector(connector.point!);
+      const end = start.clone().add(new THREE.Vector3(connector.direction!.x, connector.direction!.y, connector.direction!.z).applyMatrix4(SEMIO_TO_THREE_BASIS).normalize().multiplyScalar(TYPE_CONNECTOR_ARROW_LENGTH));
 
       expect(box.containsPoint(start)).toBe(true);
       expect(box.containsPoint(end)).toBe(true);
@@ -6240,7 +6475,7 @@ if ((import.meta as any).vitest) {
     });
 
     it("falls back to a centered placeholder box when the kind has no connectors", () => {
-      const box = buildTypeZoomBox({ id: "kind-1", connectors: [] } as unknown as SemioKind);
+      const box = buildTypeZoomBox({ id: "kind-1", connectors: [] } as unknown as KitKindPlain);
 
       expect(box.min.toArray()).toEqual([-0.5, -0.5, -0.5]);
       expect(box.max.toArray()).toEqual([0.5, 0.5, 0.5]);
@@ -6899,14 +7134,14 @@ if ((import.meta as any).vitest) {
 
     it("copies selected pieces and connections when no diff and selection present", () => {
       const result = buildDesignClipboardData(baseDesign, undefined, { pieceIds: ["p1", "p2"], connectionIds: ["c1"] });
-      expect(result.design?.pieces?.map((p) => p.id)).toEqual(["p1", "p2"]);
+      expect(__itemsOf((result.design as JsonObject | undefined)?.["pieces"]).map((p) => (p as Piece).id)).toEqual(["p1", "p2"]);
       expect(snapshotDesignConnections(result.design!).map((c) => c.id)).toEqual(["c1"]);
       expect(result.designDiff).toBeUndefined();
     });
 
     it("omits pieces/connections arrays when none are selected in a no-diff selection", () => {
       const result = buildDesignClipboardData(baseDesign, undefined, { pieceIds: ["p1"], connectionIds: [] });
-      expect(result.design?.pieces?.map((p) => p.id)).toEqual(["p1"]);
+      expect(__itemsOf((result.design as JsonObject | undefined)?.["pieces"]).map((p) => (p as Piece).id)).toEqual(["p1"]);
       expect((result.design as unknown as { connections?: unknown }).connections).toBeUndefined();
     });
 
@@ -6925,18 +7160,18 @@ if ((import.meta as any).vitest) {
     it("filters diff to selected pieces and connections when both diff and selection", () => {
       const result = buildDesignClipboardData(baseDesign, baseDiff, { pieceIds: ["p4", "p3"], connectionIds: ["c3"] });
       expect(result.design).toBe(baseDesign);
-      expect(result.designDiff?.pieces?.added?.map((p) => p.id)).toEqual(["p4"]);
-      expect(result.designDiff?.pieces?.removed?.map((p) => p.id)).toEqual(["p3"]);
+      expect((result.designDiff?.pieces?.added as Piece[] | undefined)?.map((p) => p.id)).toEqual(["p4"]);
+      expect((result.designDiff?.pieces?.removed as { id?: string }[] | undefined)?.map((p) => p.id)).toEqual(["p3"]);
       expect(result.designDiff?.pieces?.updated).toEqual([]);
-      expect(result.designDiff?.connections?.added?.map((c) => c.id)).toEqual(["c3"]);
+      expect((result.designDiff?.connections?.added as Connection[] | undefined)?.map((c) => c.id)).toEqual(["c3"]);
       expect(result.designDiff?.connections?.removed).toEqual([]);
       expect(result.designDiff?.connections?.updated).toEqual([]);
     });
 
     it("filters diff updated entries by piece/connection id", () => {
       const result = buildDesignClipboardData(baseDesign, baseDiff, { pieceIds: ["p2"], connectionIds: ["c1"] });
-      expect(result.designDiff?.pieces?.updated?.map((u) => u.piece.id)).toEqual(["p2"]);
-      expect(result.designDiff?.connections?.updated?.map((u) => u.connection.id)).toEqual(["c1"]);
+      expect((result.designDiff?.pieces?.updated as { piece: { id: string } }[] | undefined)?.map((u) => u.piece.id)).toEqual(["p2"]);
+      expect((result.designDiff?.connections?.updated as { connection: { id: string } }[] | undefined)?.map((u) => u.connection.id)).toEqual(["c1"]);
     });
   });
 
@@ -7120,7 +7355,8 @@ const resolveAlgorithmConnectionDiffId = (connectionLike: unknown, fallbackIndex
 
 const resolveAlgorithmPieceDiffLabel = (design: Design | undefined, pieceLike: unknown, fallbackIndex: number): string => {
   const pieceId = resolveAlgorithmPieceDiffId(pieceLike, fallbackIndex);
-  const sourcePiece = (pieceLike && typeof pieceLike === "object" ? (pieceLike as { name?: string }).name : undefined) || design?.pieces?.find((piece) => piece.id === pieceId)?.name;
+  const pieceRows = __itemsOf((design as JsonObject | undefined)?.["pieces"]) as Piece[];
+  const sourcePiece = (pieceLike && typeof pieceLike === "object" ? (pieceLike as { name?: string }).name : undefined) || pieceRows.find((piece) => piece.id === pieceId)?.name;
   return sourcePiece && sourcePiece.length > 0 ? sourcePiece : pieceId;
 };
 
@@ -7234,8 +7470,9 @@ const resolveAlgorithmConnectionDiffLabel = (design: Design | undefined, connect
       ? connectionLike.connecting.piece.id
       : undefined) ?? sourceConnection?.connecting?.piece?.id;
 
-  const connectedPieceName = connectedPieceId ? (design?.pieces?.find((piece) => piece.id === connectedPieceId)?.name ?? connectedPieceId) : undefined;
-  const connectingPieceName = connectingPieceId ? (design?.pieces?.find((piece) => piece.id === connectingPieceId)?.name ?? connectingPieceId) : undefined;
+  const pieceRows = __itemsOf((design as JsonObject | undefined)?.["pieces"]) as Piece[];
+  const connectedPieceName = connectedPieceId ? (pieceRows.find((piece) => piece.id === connectedPieceId)?.name ?? connectedPieceId) : undefined;
+  const connectingPieceName = connectingPieceId ? (pieceRows.find((piece) => piece.id === connectingPieceId)?.name ?? connectingPieceId) : undefined;
   if (connectedPieceName || connectingPieceName) {
     return `${connectedPieceName ?? "Unknown"} -> ${connectingPieceName ?? "Unknown"}`;
   }
@@ -7709,8 +7946,9 @@ const AlgorithmDetailsPanel: React.FC = () => {
   if (!ctx) return null;
 
   const design = ctx.design;
-  const allPieces = design?.pieces ?? [];
-  const selectedPieces = allPieces.filter((p) => ctx.selectedPieceIds.includes(p.id));
+  const designRow = design as JsonObject | undefined;
+  const allPieces = __itemsOf(designRow?.["pieces"]) as Piece[];
+  const selectedPieces = allPieces.filter((p) => p.id && ctx.selectedPieceIds.includes(String(p.id)));
   const visibleDiffCategories = ctx.diffTreeCategories;
   const visibleDiffCount = visibleDiffCategories.reduce((sum, category) => sum + category.checkedCount, 0);
   const totalDiffCount = visibleDiffCategories.reduce((sum, category) => sum + category.totalCount, 0);
@@ -7722,7 +7960,7 @@ const AlgorithmDetailsPanel: React.FC = () => {
         <TreeRow id="algorithm.details.design.name" label={null}>
           <div className="flex items-center justify-between w-full px-2 py-0.5">
             <span className="text-xs text-muted-foreground">name</span>
-            <span className="text-xs font-mono truncate max-w-32">{design?.name ?? "—"}</span>
+            <span className="text-xs font-mono truncate max-w-32">{(designRow?.name as string | undefined) ?? "—"}</span>
           </div>
         </TreeRow>
         <TreeRow id="algorithm.details.design.pieces" label={null}>
@@ -7787,11 +8025,13 @@ const AlgorithmDetailsPanel: React.FC = () => {
             <div className="px-2 py-1 text-xs text-muted-foreground italic">No pieces selected</div>
           </TreeRow>
         ) : (
-          selectedPieces.map((piece) => (
+          selectedPieces.map((piece: Piece) => (
             <TreeRow key={piece.id} id={`algorithm.details.selection.${piece.id}`} label={null}>
               <div className="flex items-center justify-between w-full px-2 py-0.5">
-                <span className="text-xs truncate max-w-24">{piece.name ?? piece.id.slice(0, 8)}</span>
-                <span className="text-xs text-muted-foreground font-mono">{piece.type?.id.slice(0, 8) ?? "—"}</span>
+                <span className="text-xs truncate max-w-24">{piece.name ?? String(piece.id ?? "").slice(0, 8)}</span>
+                <span className="text-xs text-muted-foreground font-mono">
+                  {piece.type && typeof piece.type === "object" && "id" in piece.type ? String((piece.type as { id?: string }).id ?? "").slice(0, 8) : "—"}
+                </span>
               </div>
             </TreeRow>
           ))
@@ -7972,7 +8212,7 @@ export const AlgorithmApp: React.FC<AlgorithmAppProps> = ({ id, label, windows, 
     [id],
   );
 
-  const pieceCount = context.design?.pieces?.length ?? 0;
+  const pieceCount = __itemsOf((context.design as JsonObject | undefined)?.["pieces"]).length;
 
   const footerItems: FooterItem[] = React.useMemo(
     () => [
@@ -8245,9 +8485,9 @@ if (algorithmVitest) {
       const categories = buildAlgorithmDiffTreeCategories(design, diff, new Set([buildAlgorithmDiffEntryId("pieces", "removed", "piece-b")]));
 
       expect(filtered?.pieces?.removed).toEqual([]);
-      expect(filtered?.pieces?.added?.map((piece) => piece.id)).toEqual(["piece-c"]);
+      expect((filtered?.pieces?.added as { id?: string }[] | undefined)?.map((piece) => piece.id)).toEqual(["piece-c"]);
       expect(filtered?.connections?.added).toEqual([]);
-      expect(filtered?.connections?.removed?.map((connection) => connection.id)).toEqual(["connection-a"]);
+      expect((filtered?.connections?.removed as { id?: string }[] | undefined)?.map((connection) => connection.id)).toEqual(["connection-a"]);
       expect(categories.map((category) => ({ id: category.id, checked: category.checkedCount, total: category.totalCount }))).toEqual([
         { id: "pieces", checked: 2, total: 3 },
         { id: "connections", checked: 2, total: 2 },

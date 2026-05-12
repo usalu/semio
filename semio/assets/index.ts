@@ -13,6 +13,22 @@
 
 import MetabolismKitData from "./semio/metabolism.kit.semio.json";
 export * from "./icons";
+
+//#region 🔖KitBootstrapHelpers
+/** @emoji 🧾 Normalizes list-or-{items} shapes found on `wip.initialKit` DTOs. */
+function __itemsOf<T>(node: unknown): readonly T[] {
+  if (Array.isArray(node)) return node as readonly T[];
+  if (node && typeof node === "object" && "items" in node && Array.isArray((node as { items: unknown }).items)) return (node as { items: T[] }).items;
+  return [];
+}
+
+/** @emoji 🧾 Resolves the materialized kit payload (legacy root vs `wip.initialKit`). */
+function __metabolismKitInner(): Record<string, unknown> {
+  const root = MetabolismKitData as { wip?: { initialKit?: Record<string, unknown> } };
+  const inner = root.wip?.initialKit;
+  return (inner && typeof inner === "object" ? inner : (MetabolismKitData as unknown as Record<string, unknown>)) ?? {};
+}
+//#endregion 🔖KitBootstrapHelpers
 export { default as DragDesign } from "./semio/drag/design.semio.json";
 export { default as DragDiffDesignFree } from "./semio/drag/diff.design.free.semio.json";
 export { default as DragDiffDesign } from "./semio/drag/diff.design.semio.json";
@@ -60,47 +76,47 @@ export { MetabolismKitData as MetabolismKit };
 /**
  * Metabolism kit types array
  **/
-export const MetabolismKitTypes = MetabolismKitData.types ?? [];
+export const MetabolismKitTypes = __itemsOf(__metabolismKitInner()["types"]);
 /**
  * Metabolism kit designs array
  **/
-export const MetabolismKitDesigns = MetabolismKitData.designs ?? [];
+export const MetabolismKitDesigns = __itemsOf(__metabolismKitInner()["designs"]);
 /**
  * Metabolism kit families array
  **/
-export const MetabolismKitFamilies = (MetabolismKitData as { families?: unknown[] }).families ?? [];
+export const MetabolismKitFamilies = __itemsOf(__metabolismKitInner()["families"]);
 /**
  * Metabolism kit qualities array
  **/
-export const MetabolismKitQualities = (MetabolismKitData as { qualities?: unknown[] }).qualities ?? [];
+export const MetabolismKitQualities = __itemsOf(__metabolismKitInner()["qualities"]);
 /**
  * Metabolism kit files array
  **/
-export const MetabolismKitFiles = MetabolismKitData.files ?? [];
+export const MetabolismKitFiles = __itemsOf(__metabolismKitInner()["files"]);
 /**
  * Metabolism kit folders array
  **/
-export const MetabolismKitFolders = MetabolismKitData.folders ?? [];
+export const MetabolismKitFolders = __itemsOf(__metabolismKitInner()["folders"]);
 /**
  * Metabolism kit authors array
  **/
-export const MetabolismKitAuthors = MetabolismKitData.authors ?? [];
+export const MetabolismKitAuthors = __itemsOf(__metabolismKitInner()["authors"]);
 /**
  * Metabolism kit tags array
  **/
-export const MetabolismKitTags = MetabolismKitData.tags ?? [];
+export const MetabolismKitTags = __itemsOf(__metabolismKitInner()["tags"]);
 /**
  * Metabolism kit concepts array
  **/
-export const MetabolismKitConcepts = MetabolismKitData.concepts ?? [];
+export const MetabolismKitConcepts = __itemsOf(__metabolismKitInner()["concepts"]);
 /**
  * Metabolism kit attributes array
  **/
-export const MetabolismKitAttributes = (MetabolismKitData as { attributes?: unknown[] }).attributes ?? [];
+export const MetabolismKitAttributes = __itemsOf(__metabolismKitInner()["attributes"]);
 /**
  * Metabolism kit Nakagin Capsule Tower designs subset
  **/
-export const MetabolismKitNakaginCapsuleTowerDesigns = MetabolismKitDesigns.filter((design) => design.name === "Nakagin Capsule Tower") ?? [];
+export const MetabolismKitNakaginCapsuleTowerDesigns = MetabolismKitDesigns.filter((design) => String((design as { name?: string }).name ?? "") === "Nakagin Capsule Tower") ?? [];
 
 /**
  * Builds id and name lookup maps from an item array
@@ -108,7 +124,7 @@ export const MetabolismKitNakaginCapsuleTowerDesigns = MetabolismKitDesigns.filt
  * Callers MUST provide an array of objects with optional id and name fields
  * buildLookup holds the data fields for a buildLookup record.
  **/
-const buildLookup = (items: any[] = []) => {
+const buildLookup = (items: readonly any[] = []) => {
   const byId: Record<string, any> = {};
   const byName: Record<string, any> = {};
   items.forEach((item) => {
@@ -159,16 +175,18 @@ export const MetabolismKitFamiliesByName = familyLookup.byName;
 /**
  * nakaginCapsuleTowerDesign holds the data fields for a nakaginCapsuleTowerDesign record.
  **/
-const nakaginCapsuleTowerDesign = MetabolismKitDesigns.find((d) => d.name === "Nakagin Capsule Tower");
+const nakaginCapsuleTowerDesign = MetabolismKitDesigns.find((d) => String((d as { name?: string }).name ?? "") === "Nakagin Capsule Tower");
 /**
  * nakaginCapsuleTowerFlatDesign holds the data fields for a nakaginCapsuleTowerFlatDesign record.
  **/
-const nakaginCapsuleTowerFlatDesign = MetabolismKitDesigns.find((d) => d.name === "Flat" && (d as any).parent?.id === nakaginCapsuleTowerDesign?.id);
+const nakaginCapsuleTowerFlatDesign = MetabolismKitDesigns.find(
+  (d) => String((d as { name?: string }).name ?? "") === "Flat" && String((d as { parent?: { id?: string } }).parent?.id ?? "") === String((nakaginCapsuleTowerDesign as { id?: string } | undefined)?.id ?? ""),
+);
 /**
  * Nakagin Capsule Tower Flat variant piece data with plane and center
  **/
 export const MetabolismKitNakaginCapsuleTowerFlatPieces =
-  nakaginCapsuleTowerFlatDesign?.pieces?.map((p) => ({
+  ((nakaginCapsuleTowerFlatDesign as { pieces?: { name?: string; plane?: unknown; center?: unknown }[] } | undefined)?.pieces ?? []).map((p) => ({
     name: p.name,
     plane: p.plane,
     center: p.center,

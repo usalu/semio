@@ -14,6 +14,6 @@
 // Tailwind CSS configuration re-exporting the shared elements ui preset.
 // Configuration MUST re-export the tailwindConfig from @elements/ui.
 
-export { tailwindConfig, tailwindConfig as default } from "@elements/ui";
+export { tailwindConfig, tailwindConfig as default } from "../../elements/ui/tailwind.config";
 
 // #endregion 🗄️Configuration

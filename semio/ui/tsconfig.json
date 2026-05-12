@@ -20,7 +20,8 @@
     "types": [
       "react",
       "react-dom",
-      "vitest/importMeta"
+      "vitest/importMeta",
+      "vitest/globals"
     ],
     "baseUrl": ".",
     "paths": {
@@ -50,6 +51,12 @@
       ],
       "@semio/assets/*": [
         "../assets/*"
+      ],
+      "@semio/rs-wasm": [
+        "../rs/pkg"
+      ],
+      "@semio/rs-wasm/*": [
+        "../rs/pkg/*"
       ]
     }
   },
