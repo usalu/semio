@@ -15,7 +15,7 @@
 
 // #region ⛩️Imports
 
-import type { Connector, KitCommandContext, KitFolderAdapter, KitHostGraphOperation, KitHostStore, KitJsonFileAdapter, KitRegistryValue, Port, SketchpadKitKindAvailability, SketchpadKitStoreFactory } from "@semio/react";
+import type { Connector, KitCommandContext, KitFolderAdapter, KitHostGraphOperation, KitHostStore, KitJsonFileAdapter, KitRegistryValue, Port, SketchpadKitKindAvailability, SketchpadKitStoreFactory } from "@semio/react/host";
 import {
   applyKitHostGraphOperation,
   asKitInstance,
@@ -177,7 +177,7 @@ import {
   useUpdateType,
   useWriteIndicator,
   Vector,
-} from "@semio/react";
+} from "@semio/react/host";
 import { gunzipSync } from "fflate";
 
 import type {
@@ -7166,7 +7166,7 @@ const clearDomRoot = (element: HTMLElement, root: Root): void => {
   }
 };
 
-export type { SketchpadKitKindAvailability, SketchpadKitStoreFactory } from "@semio/react";
+export type { SketchpadKitKindAvailability, SketchpadKitStoreFactory } from "@semio/react/host";
 
 // #region 🥈Entity Hooks
 // Sketchpad kit snapshot helpers; entity scopes and entity reads live in `@semio/react`.
@@ -7208,7 +7208,7 @@ export {
   useTypesFull,
   useTypesIds,
   useTypesMetadata,
-} from "@semio/react";
+} from "@semio/react/host";
 
 // #region 🎆Piece Derived Hooks
 

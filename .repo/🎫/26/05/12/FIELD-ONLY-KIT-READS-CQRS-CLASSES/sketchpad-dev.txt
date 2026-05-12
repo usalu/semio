@@ -1,23 +1,6 @@
-Sketchpad dev (repo root)
+Sketchpad Vite (nx run @semio/sketchpad:dev) after @semio/react/host + @semio/js/legacy-host bridge:
 
-Command:
-  npx nx run @semio/sketchpad:dev
+Local: http://localhost:5176/
+(5173–5175 were busy from prior dev servers.)
 
-Nx runs dependency @semio/rs:build-wasm then `vite` with cwd semio/sketchpad.
-
-Observed Vite URLs (this run; port 5173 was already in use):
-  http://localhost:5174/
-  http://127.0.0.1:5174/
-  Default configured port in semio/sketchpad/vite.config.ts: 5173
-
-NegativeGrep guard (Playwright, same loader as CI):
-  cd semio/sketchpad
-  set SEMIO_SKETCHPAD_RUN_EMBEDDED_TESTS=1
-  bun --import ./pw-loader.mjs ../../node_modules/playwright/cli.js test --grep "NegativeGrep"
-  Exit code: 0
-
-React package typecheck at work time (still failing; other agents aligning @semio/react to @semio/js):
-  npx tsc -p c:\git\semio\semio\react\tsconfig.json --noEmit
-  Polled at 0s and +45s; exit code 2 (missing @semio/js exports / js test globals in compilation graph).
-
-Vite logged dependency pre-bundle scan errors: many imports from @semio/react not found on ../react/index.tsx until packages are aligned.
+No esbuild "No matching export" scan failure observed in this run.

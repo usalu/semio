@@ -5,7 +5,7 @@
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 // #endregion 🧲Header
 
-import type { Kit as SemioKit } from "@semio/react";
+import type { Kit as SemioKit } from "@semio/react/host";
 import { SemioKit as Kit } from "@semio/ui";
 import type { Meta, StoryObj } from "@storybook/react";
 import * as React from "react";

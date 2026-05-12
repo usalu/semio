@@ -10,8 +10,10 @@
       "@semio/ui": ["../ui"],
       "@semio/ui/*": ["../ui/*"],
       "@semio/assets": ["../assets"],
-      "@semio/assets/*": ["../assets/*"]
+      "@semio/assets/*": ["../assets/*"],
+      "@semio/rs-wasm": ["../rs/pkg/semio.d.ts"],
+      "@semio/rs-wasm/*": ["../rs/pkg/*"]
     },
-    "types": ["react", "react-dom", "vite/client"]
+    "types": ["node", "react", "react-dom", "vite/client", "vitest/globals"]
   }
 }

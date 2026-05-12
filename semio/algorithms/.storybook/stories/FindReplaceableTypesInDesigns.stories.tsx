@@ -5,7 +5,7 @@
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 // #endregion 🧲Header
 
-import { getKitPorts, Kit as KitRuntime, type Design } from "@semio/react";
+import { getKitPorts, Kit as KitRuntime, type Design } from "@semio/react/host";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import * as React from "react";
 
