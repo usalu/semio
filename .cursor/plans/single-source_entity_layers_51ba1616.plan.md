@@ -39,7 +39,25 @@ todos:
     content: "JS: define EntityRef discriminated union covering all 282 canonical types; resolveEntityRef(kit, json) returns the kit-cached instance keyed by __typename + id."
     status: pending
   - id: js-drop-fieldspecs
-    content: "JS: remove KIT_*_FIELD_SPECS/defineFields/defineOperations indirection; remove @ts-nocheck."
+    content: "JS: purge the legacy KIT_*_FIELD_SPECS specs (KitStoreSnapshot/KitHostStore graph references) and the per-old-store dispatcher path; KEEP the defineField/defineOperation/defineFields/defineOperations factory mechanism (it is the general factory pattern); remove @ts-nocheck."
+    status: pending
+  - id: js-entity-base
+    content: "JS: ensure semio/js/index.ts has the canonical Entity base + defineField/defineOperation/defineFields/defineOperations factories under //#region 🧬Entity (file-local). Every entity class is mostly two static arrays (fields/operations) wired through the factories; navigation methods cache child instances by id (strong) or role (weak)."
+    status: pending
+  - id: rust-macros
+    content: "Rust: every entity_family!/operation_family!/command_nav!/entity_input! block in //#region 🧬 entity_dsl is the SOURCE for its entity / operation / command nav / input. Add the missing entity_family! / operation_family! / command_nav! invocations for VCS (Edit/Change/Checkpoint/TheKit/Alternative/Graph/Session/Conflict), Stat/Representation/Layer/Group/Connection/Kit operation ladders, ClumpDiff ladder, and 95 + 30 + 30 + 30 + 61 change-algebra subtypes. Roster lines append to register_entities! / register_operations! at file bottom."
+    status: pending
+  - id: rust-sdl-roundtrip
+    content: "Rust: code-first gql::sdl() (header + sdl_registry::all_fragments() + Query/Mutation/Subscription extraction). Run cargo test schema_matches_target_graphql_file (round-trip). Run cargo test export_semio_graphql_schema_file -- --ignored to regen target.schema.graphql. Eliminate the duplicate ClumpEdge/ClumpConnection (lines 7293-7305 vs 7308-7320) and TheKitEdge/TheKitConnection (lines 8025-8037 vs 8040-8052) by removing the hand-rolled twins from any worker region."
+    status: pending
+  - id: react-bridges
+    content: "React: place bindFieldToReact/useFieldRead/useStableChild/useIdStableList/bindOpToReact/OperationStatus/GeneralOperationStatus/TooLongStatus/OpErrorMapper/mapTooLong/IDLE/READONLY in //#region 🌉Bridges (file-local). Strict invariant: NO useSyncExternalStore (rationale: source of truth is async semio/rs; no synchronous snapshot exists)."
+    status: pending
+  - id: react-naming-context
+    content: "React: rename every *Scope export to *Context (KitScope→KitContext, DesignScope→DesignContext, ..., RepresentationScope→RepresentationContext); rename useKitScope→useKitContext etc.; drop useIs*Scope helpers. Hooks omit id to bind to the matching React.Context; explicit id wins over context."
+    status: pending
+  - id: schema-1to1-invariant
+    content: "React+sketchpad: enforce schema-1:1 invariant. Inline-grep negative tests under //#region 🧪Tests assert zero matches for: useSyncExternalStore, applyKitDiff, useDesignAppCommands, *Sync operation hooks, KitStoreSnapshot, KitHostStore, applyToCache, dispatchSync, fieldSync, optimistic, reconcil, usePieceCenterU/usePieceCenterV-style derivations, useTypesIds/useDesignPieceIds-style sub-selections, useKitSnapshot/useSchemaObjectState-style snapshot/registry readers, KitFieldBinding/HookRead/WriteStatus types. Sketchpad call sites slice lean values inline (usePieceCenter()?.u) and pick class ids inline (pieces.map(p=>p.id))."
     status: pending
   - id: js-purge-json
     content: "JS: make JsonValue/JsonObject/parseJsonValue/KitGraphqlResponseEnvelope/GqlTransport/EventBus private (file-local); 293 -> 0 public JsonValue references; every public method returns typed values."
@@ -66,7 +84,7 @@ todos:
     content: "React: useAttachBackbone/useDetachBackbone/useBackboneSyncNow/useBackboneStatus over the new GraphQL backbone command surface; no JSON in any signature."
     status: pending
   - id: verification
-    content: Verify cargo check + tsc --noEmit + sample subscription validate; smoke `useCoordinateU` with [DEBUG] log; extend existing test files only.
+    content: "Verify cargo check (native + wasm32), schema_matches_target_graphql_file round-trip, full cargo test, tsc --noEmit, depcruise:layers, inline negative-grep vitest blocks, useCoordinateU [DEBUG] smoke, useDragPiece/useRenamePiece OperationStatus smoke (incl. expectTypeOf static error for `dragPieceStatus.kind === \"tooLong\"`); extend existing test files only."
     status: pending
   - id: ticket
     content: Open repo MCP ticket under goal r2602/runningsketchpad with this plan id; close with file list and verification summary.
@@ -171,14 +189,172 @@ flowchart LR
   parent <--> remote
 ```
 
+
+
 **Hard invariants** the rest of the plan must enforce:
 
 1. **Only one external surface**: the wire format described by [target.schema.graphql](semio/graphql/target.schema.graphql). Every read/write between layers crosses this surface. No JSON-RPC, no out-of-band kit-DTO blobs, no parallel HTTP routes.
 2. **Only one persistent serializer**: `DevBackbone` reads/writes a single JSON file. `LocalBackbone` uses a folder layout (`.semio/kit.db` SQLite + file blobs - **not** JSON). `RemoteBackbone` uses a WebSocket frame protocol (binary or compact text - **not** JSON-DTO snapshots). All three are **internal** to `semio/rs` and never appear in `semio/js` / `semio/react` / `semio/sketchpad`.
 3. **Backbone attach goes through GraphQL**: a new `Mutation.session.backbone.attach(uri: String!)` (or analogous root) replaces the today-internal `Command::BackboneAttach`. The URI scheme dispatches the backend kind (`dev:///path/to.json`, `local:///path/to/folder`, `remote://wss://hub.semio.tech/...`).
 4. **No general-purpose JSON helpers in `semio/js` public surface**: `JsonValue` / `JsonObject` / `parseJsonValue` / `KitGraphqlResponseEnvelope` become **private** wire helpers (file-local types not re-exported). The public API is class methods returning typed values. **293** current `JsonValue`/`JsonObject` references in [semio/js/index.ts](semio/js/index.ts) collapse to a small private wire layer.
-5. **`Kit.open(uri)` interprets `uri` as a real URI**: today (line 795) it parses `uri` as a JSON kit-DTO string. After this plan, `uri` is a backbone URI (`dev:///...`, `local:///...`, `remote://...`) and the WASM `KitStoreHandle.create(uri)` boots an empty graph + dispatches an internal `BackboneAttach` command keyed by URI scheme. There is **no** browser-side JSON-DTO upload path.
+5. `**Kit.open(uri)` interprets `uri` as a real URI**: today (line 795) it parses `uri` as a JSON kit-DTO string. After this plan, `uri` is a backbone URI (`dev:///...`, `local:///...`, `remote://...`) and the WASM `KitStoreHandle.create(uri)` boots an empty graph + dispatches an internal `BackboneAttach` command keyed by URI scheme. There is **no** browser-side JSON-DTO upload path.
 6. **Remove `Mutation.hydrateKitStoreBundleJson`** ([target.schema.graphql] - currently outside the schema but exposed in [lib.rs](semio/rs/lib.rs#L10111)). The only way to populate a kit is via the backbone attach + change pipeline.
+
+## Strict invariants (carried forward from `field-only_kit_reads_refactor` + `macro-driven_entity_family_refactor`)
+
+Both prior plans encode rules that this plan inherits and tightens. Listing them explicitly so no worker re-introduces a banned pattern:
+
+1. **Schema-1:1 invariant**. Every exported hook in [semio/react/index.tsx](semio/react/index.tsx) corresponds to **exactly one** schema field (read) or **exactly one** `*OperationInput` leaf (write). No derivation, no aggregation, no metadata, no shallow / view / triad / accessor / `*Input`-whole-object hooks. Slicing happens **inline at the call site** (e.g. `usePieceCenter()?.u` instead of a `usePieceCenterU()` derived hook). Banned: `useTypesIds`, `useDesignPieceIds`, `usePieceCenterU`, `usePieceIsHidden`, `useDesignQualitySum`, `useTypeBestRepresentation`, every `*Metadata` / `*Shallow` / `*Full` / `*Triad` / DTO whole-object accessor.
+2. **No `*Sync` operation hooks, no `*Sync` field methods**. Reads are `async () => Promise<T>` + `subscribe<Field>(cb)`; writes are `async (...args) => Promise<SetResult>`. The JS classes never store the latest read value (no in-class cache); `bindFieldToReact` keeps the React state via `useState` only.
+3. **No `useSyncExternalStore` anywhere in [semio/react/index.tsx](semio/react/index.tsx)**. The source of truth lives in [semio/rs/lib.rs](semio/rs/lib.rs) and every read crosses the GraphQL boundary asynchronously — there is **no synchronous snapshot to take**, so the React tear-free guarantees of `useSyncExternalStore` would force a fake sync getter that always returned `undefined` until the first fetch resolved. The `bindFieldToReact` bridge uses `useState` + `useEffect` + cleanup. This **supersedes** the older guidance in [semio/AGENTS.md L15](semio/AGENTS.md#L15) and [semio/react/AGENTS.md L21](semio/react/AGENTS.md#L21) (those rules date from the `KitStoreClient` / `KitStore` / `getSnapshot` era which this refactor removes; AGENTS.md will catch up only after this plan lands, per workspace rule "do not edit AGENTS.md files").
+4. **No `*Entity` suffix on JS class names**. `FileEntity` / `FolderEntity` / `LayerEntity` / `GroupEntity` / `StatEntity` / `PropEntity` rename to `File` / `Folder` / `Layer` / `Group` / `Stat` / `Prop`. They are ES-module exports — no DOM-global collision.
+5. **`*Scope` → `*Context` rename across the public API** (matches `field-only_kit_reads_refactor` §4 "Naming"). Provider components: `KitScope` → `KitContext`, `DesignScope` → `DesignContext`, ..., `RepresentationScope` → `RepresentationContext`. Each takes a single `id` prop. Hooks: `useKitScope` → `useKitContext`, ..., `useTagScope` → `useTagContext`. Every `<XScope id={...}>` JSX site becomes `<XContext id={...}>`. `useIs<X>Scope` helpers go away. The earlier examples in this plan that say `<DesignScope>` / `useDesignScope` are renamed to `<DesignContext>` / `useDesignContext`.
+6. **One asynchronous `read*()` + one `subscribe*(cb)` per schema field on every entity class**. No synchronous getter besides `id` (and `hash`, since hashes are deterministically derived).
+7. **Naming normalization for operations** (matches `macro-driven_entity_family_refactor` §"Schema fixes"):
+  - `Created*` for **new artifact creation** (`CreatedTag`, `CreatedDesign`, `CreatedPort`).
+  - `Added*` for **adding an existing entity to a collection** (`AddedConnector`, `AddedAttributeToTag`, `AddedChildPieceWithParentConnection`).
+  - `Removed*` for **collection removal** (`RemovedAttributeFromTag`, `RemovedConnector`).
+  - `Deleted*` for **artifact deletion** (`DeletedTag`, `DeletedDesigns`).
+  - The corresponding hooks (`useCreateType`, `useAddConnector`, `useRemoveConnector`, `useDeleteType`) and JS class methods follow the same pattern.
+
+## Macro-driven Rust definitions ([semio/rs/lib.rs](semio/rs/lib.rs))
+
+[semio/rs/lib.rs](semio/rs/lib.rs) already has the in-progress macro suite from [.repo/🎫/26/05/11/MACRO-DRIVEN-ENTITY-FAMILY-REFACTOR/macro-driven_entity_family_refactor_e6121b3c.plan.md](.repo/🎫/26/05/11/MACRO-DRIVEN-ENTITY-FAMILY-REFACTOR/macro-driven_entity_family_refactor_e6121b3c.plan.md). This plan **uses** that macro suite; it does **not** re-roll the entity structs by hand. Every entity in the inventory above (28 strong primary + 95 operations + 8 weak primary + 30 Diff + 30 Modification + 30 Modifications + 61 Input = 282 canonical types) is exactly one declarative block in the `//#region 🧬 entity_dsl` area, plus one line in the bottom-of-file `register_entities!` / `register_operations!` rosters.
+
+```rust
+//#region 🧬 entity_dsl  // already exists; this plan extends it
+
+// Weak entity — Coordinate is one block, not 6 hand-rolled hand-stitched types.
+entity_family! {
+    name: Coordinate,
+    kind: weak,
+    sdl_implements: "WeakEntity",
+    owners: [Position, PositionDiff],
+    owns:   [],
+    fields: { u: f64 @data, v: f64 @data },
+    hash_tag: "semio:geom:Coordinate",
+}
+
+// VCS strong entity.
+entity_family! {
+    name: Checkpoint,
+    kind: strong,
+    sdl_implements: "StrongEntity",
+    owners: [Graph, TheKit, Alternative],
+    owns:   [Change, Session],
+    fields: {
+        message:    String                                @data,
+        kit:        std::sync::Arc<Kit>                   @entity,
+        initial:    Option<std::sync::Arc<Kit>>           @entity,
+        changes:    Vec<std::sync::Arc<Change>>           @children(ChangeConnection),
+        ancestors:  Vec<std::sync::Arc<Checkpoint>>       @children(CheckpointConnection),
+    },
+    hash_tag: "semio:vcs:Checkpoint",
+}
+
+// Operation — RenamedKit is one block, not a hand-coded #[Object] + apply_to skeleton.
+operation_family! {
+    name: RenamedKit,
+    scope_kind: Kit,
+    owns: [RenamedKitInput],
+    input: { new_name: String @data },
+    output: { kit: std::sync::Arc<Kit> @entity },
+    hash_tag: "semio:op:RenamedKit",
+}
+
+// Mutation nav — TagOperationInput collapses ~80 hand-rolled lines.
+command_nav! {
+    name: TagOperationNav,    sdl_name: "TagOperationInput",
+    artifact: Tag,             owner_id_field: tag_id,
+    methods: [
+        rename            (new_name: String                                            -> RenamedTag),
+        change_description(new_description: String                                     -> UpdatedTagDescription),
+        change_icon       (new_icon: String                                            -> UpdatedTagIcon),
+        add_attribute     (key: String, value: String, definition: String              -> AddedAttributeToTag),
+        remove_attribute  (id: Id                                                      -> RemovedAttributeFromTag),
+        remove_attributes (ids: Vec<Id>                                                -> RemovedAttributesFromTag),
+    ],
+}
+
+// Bottom-of-file roster — single source for OwnerEntity / OwnedEntity unions and SDL fragment registry.
+register_entities! {
+    geom:   [Vector, Point, Coordinate, Offset, Plane, Position, Location, Place],
+    meta:   [Attribute, Author, File, Folder, Prop, Benchmark, Quality, Tag, Concept, Stat, Layer, Group, Family],
+    type_:  [Type, Port, Connector, Representation],
+    design: [Design, Piece, Side, Connection, Clump],
+    root:   [Kit],
+    vcs:    [Edit, Change, Checkpoint, TheKit, Alternative, Graph, Session, Conflict],
+}
+
+register_operations! {
+    kit:        [RenamedKit, ChangedDescription],
+    tag:        [CreatedTag, CreatedTags, RenamedTag, UpdatedTagDescription, UpdatedTagIcon, AddedAttributeToTag, AddedAttributesToTag, RemovedAttributeFromTag, RemovedAttributesFromTag, DeletedTag, DeletedTags],
+    concept:    [/* parallel */],
+    quality:    [/* parallel */],
+    port:       [/* parallel */],
+    connector:  [AddedConnector, AddedConnectors, RenamedConnector, UpdatedConnectorDescription, UpdatedConnectorIcon, RemovedConnector, RemovedConnectors],
+    type_:      [/* parallel */],
+    design:     [CreatedDesign, CreatedDesigns, DeletedDesign, DeletedDesigns, FlattenedDesign, AddedAttributeToDesign, AddedAttributesToDesign, RemovedAttributeFromDesign, RemovedAttributesFromDesign],
+    piece:      [CreatedFixedPiece, FixedPiece, FixedPieces, DraggedPieces, DraggedPiece, AddedChildPieceWithParentConnection, AddedChildPiecesWithParentConnections, AddedHangingChildPieceWithParentConnection, AddedHangingChildPiecesWithParentConnections, RenamedPiece, UpdatedPieceDescription, MovedPiece, MovedPieces, ChangedPieceToType, ChangedPiecesToType, AddedAttributeToPiece, AddedAttributesToPiece, RemovedAttributeFromPiece, RemovedAttributesFromPiece, DeletedPiece, DeletedPieces, DeletedPiecesAndConnections],
+}
+```
+
+What the `entity_family!` macro emits per entity (12-type ladder per the macro plan §2):
+
+- The **entity struct** with `id`, `owner: RwLock<XOwnerSlot>`, one `RwLock<T>` per field. `Default` impl. `new(...)`/`new_with_id(...)` constructors. `compute_hash()` walking RwLocks + child hashes.
+- The **`#[Object]` impl** with `id`, `hash`, `owner`, `ownerEntity`, `ownedEntities`, one typed owner resolver per owner variant, one resolver per data field, one resolver per child collection.
+- The **owner slot enum** (`XOwnerSlot::Unset | Variant(Weak<...>)`) + **owner async-graphql Union**.
+- **Edge / Connection** relay shells, **Diff / DiffEdge / DiffConnection**, **Modification / Edge / Connection**, **Modifications / Edge / Connection**.
+- **`SDL_FRAGMENT: &'static str`** (the static SDL slice the registry concatenates).
+
+What the `operation_family!` macro emits (per macro plan §6):
+
+- The optional **`XInput`** struct (typed input fields, hash, GraphQL `SimpleObject` impl, `SDL_FRAGMENT`).
+- The **operation entity** (`id`, `hash`, `scope: Arc<OwnerEntity>`, optional `input: Arc<XInput>`, `modification: Arc<OperationModification>`, output fields).
+- **Edge / Connection** relay shells.
+- A default `apply_to(kit)` skeleton (overridden via `kit_op_apply!` per concrete op).
+- `SDL_FRAGMENT`.
+
+What the `register_entities!` / `register_operations!` rosters auto-grow:
+
+- **`OwnerEntity` / `OwnedEntity` mega-unions** (every entity gets a variant; eliminates today's drift between `iface::OwnerEntity` and the live entities).
+- **`NodeIface` / `EntityIface` / `EntityEdgeIface` / `EntityConnectionIface`** auto-populated from the roster, plus the kind-specific `WeakEntity` / `StrongEntity` / `RichStrongEntity` / `Artifact` / `Document` / `Event` / `Version` / `Input` / `Diff` / `Modification` / `Operation` interface enums (parameterized by `kind:` and `sdl_implements:`).
+- **`push_all_fragments(out)`** that the new code-first **`gql::sdl()`** uses to emit the canonical SDL string (replacing today's tautological `include_str!`).
+
+Implication for this plan's todos — none of `rust-weak-collapse` / `rust-vcs-canonical` / `rust-change-algebra-canonical` are hand-rolled struct edits. They are:
+
+1. Add the missing `entity_family!` (and `entity_input!`) blocks in `//#region 🧬 entity_dsl`.
+2. Add the missing roster lines in `register_entities!` / `register_operations!`.
+3. Delete every hand-rolled twin (`*Node`, `*Dto`, `*OwnerSlot`, `*OwnerUnion`, `*Edge`, `*Connection`, `*Diff`, `*Modification`, `*Modifications`, `compute_*hash`, `Default`, `#[Object]` shell) the macro now emits.
+4. Run `cargo test export_semio_graphql_schema_file -- --ignored` to regenerate [target.schema.graphql](semio/graphql/target.schema.graphql) from the macros (the new `gql::sdl()` is code-first; the schema file is a regenerated golden).
+5. Run `cargo test schema_matches_target_graphql_file` (round-trip invariant).
+
+This collapses **~3,000 LOC** of hand-rolled Rust per the macro plan's estimate, while making "add a new entity" be one `entity_family!` block + one roster line.
+
+## Schema fixes (rolled into the entity declarations)
+
+These mirror the catalog in [.repo/🎫/26/05/11/MACRO-DRIVEN-ENTITY-FAMILY-REFACTOR/macro-driven_entity_family_refactor_e6121b3c.plan.md §"Schema fixes"](.repo/🎫/26/05/11/MACRO-DRIVEN-ENTITY-FAMILY-REFACTOR/macro-driven_entity_family_refactor_e6121b3c.plan.md). Every fix is a side-effect of rolling the entity declarations through `entity_family!` — the macro can only emit one ladder per entity.
+
+Hard duplicates the regenerated SDL eliminates:
+
+- `ClumpEdge` / `ClumpConnection` duplicated at lines 7293-7305 vs 7308-7320 in [target.schema.graphql](semio/graphql/target.schema.graphql).
+- `TheKitEdge` / `TheKitConnection` duplicated at 8025-8037 vs 8040-8052; also misplaced under `#region Alternatives` instead of `#region TheKit`.
+
+Missing operation ladders the roster fills uniformly:
+
+- `Stat`, `Representation`, `Layer`, `Group`, `Connection` (artifact), `Kit` get the full `Created/Renamed/Updated/AddedAttribute/RemovedAttribute/Deleted` operation family to match `Quality`/`Tag`/`Concept`.
+- `Clump` gets the missing `ClumpDiff` / `ClumpModification` / `ClumpModifications` ladder.
+
+Comment / structure fixes:
+
+- `Modifications.owns` reference list missing `TagModification`; `*Modifications.owns` for `Position` / `Location` / `Place` repeat their own modification name. The macro emits a deterministic, alphabetically-sorted owns comment.
+- `Operation.scope` interface comment gets all `*Modifications` containers added.
+- `RepresentationModification.owner` and other modification owner comments normalized.
+- `GroupDiff.owner` comment aligned with `GroupModification.owner`.
+- `GroupModifications` heading normalized to `# GroupModifications` (currently `# Modifications`).
+- `ConnectionDiff` body filled with substantive diff fields (currently scaffold only).
+
+Operation interface conformance — every concrete `Operation` always emits `input: Input` (nullable), so async_graphql interface validation passes. Operations with no input render `input: null`.
 
 ## Phase A - Rust unification ([semio/rs/lib.rs](semio/rs/lib.rs))
 
@@ -205,7 +381,6 @@ Goal: one struct per entity in `semio/rs`; live-query subscription emits per-ent
   }
   ```
 - **Bundle / snapshot fold**: remove standalone `KitStoreBundleFile` (line 8170), `GraphSnapshotDto` (line 8183), `AlternativeVersionDto` (line 8218), `KitGraphWorkspace` (line 7486), `DesignHandle` (line 7990). The replacement is **not** a generic `to_json/from_json` on entities - it is **DevBackbone-only** serialization. The `serde_json` plumbing now lives entirely inside `kit_backbone::DevBackbone` (the canonical home). Other backbones do not call into JSON.
-
   ```rust
   // semio/rs/lib.rs - only DevBackbone touches JSON
   pub mod kit_backbone {
@@ -242,9 +417,7 @@ Goal: one struct per entity in `semio/rs`; live-query subscription emits per-ent
       }
   }
   ```
-
 - **Backbone kind enum** (replace today's `BackboneStoreKind { DevJson, LocalDotSemio }` at [lib.rs L7496](semio/rs/lib.rs#L7496)):
-
   ```rust
   pub enum BackboneKind {
       Dev,    // dev:///path.json  - single JSON file (the only JSON path)
@@ -255,11 +428,8 @@ Goal: one struct per entity in `semio/rs`; live-query subscription emits per-ent
       pub fn from_uri(uri: &str) -> Result<(Self, &str), SemioError> { /* match scheme */ }
   }
   ```
-
 - **Drop `Mutation.hydrateKitStoreBundleJson`** ([lib.rs L10111](semio/rs/lib.rs#L10111)) and `ParentRuntime::spawn_wip_overlay_from_kit_dto(serde_json::Value)` ([lib.rs L9070](semio/rs/lib.rs#L9070)). They are the JSON-DTO entry path the user wants gone.
-
 - **Add `Mutation.session.backbone.attach(uri: String!)` resolver** so the only way to hydrate a kit is the GraphQL surface; the resolver dispatches `BackboneKind::from_uri(uri)?` to the right internal backbone. Schema delta in [target.schema.graphql L8269](semio/graphql/target.schema.graphql#L8269):
-
   ```graphql
   type SessionCommandInput {
     start: ID!
@@ -279,11 +449,9 @@ Goal: one struct per entity in `semio/rs`; live-query subscription emits per-ent
     syncNow: ID!
   }
   ```
-
 - **Confine `serde_json::Value` to two callsites**:
   1. The GraphQL request decoder in `gql.rs` and `wasm_bridge.rs` (`Request::variables` parsing - unavoidable wire JSON).
   2. The `DevBackbone` reader/writer (single JSON file, the canonical bundle format).
-
   Every other current `serde_json::Value` use (`payload_json`, `bundle.to_json`, etc.) becomes typed Rust structs that the GraphQL `#[Object]` derive emits to the wire. No bare `serde_json::Value` flows between modules.
 - **Subscription per-field invalidation**: in `gql::Subscription` (line 10120-10238) the current implementation re-emits the full subtree on every `EventBus` tick. Replace with selection-aware filtering:
   ```rust
@@ -307,6 +475,81 @@ Goal: one struct per entity in `semio/rs`; live-query subscription emits per-ent
   - Per-collection subscriptions use the **id-list** path (`...:designs`), not the per-design fields, so adding/removing a design re-emits while a design rename does not (matching the K7 contract).
 - **Per-entity events**: emit one variant per kit operation (`Event::RenamedKit`, `Event::CreatedDesign`, `Event::DeletedDesign`, `Event::RenamedDesign`, ...). Each variant has a `fn touched_paths(&self, runtime_root: &Path) -> Vec<String>` returning the canonical path strings.
 - **Verify** every entity in the schema has exactly one canonical struct in `semio/rs/lib.rs` (rg the schema entity list against `pub struct` declarations).
+
+## JS general mechanisms (Entity base + factories)
+
+Borrowed from `field-only_kit_reads_refactor` §"Generic mechanisms (JS side)". Every entity class is built from one shared `Entity` base + a tiny set of factory helpers, so per-field / per-operation declarations are one-liners. Factories live under `//#region 🧬Entity` in [semio/js/index.ts](semio/js/index.ts) and are **private** (file-local). Only the resulting classes are exported.
+
+```ts
+//#region 🧬Entity
+abstract class Entity {
+  constructor(
+    protected readonly transport: GqlTransport,    // file-local; not exported
+    protected readonly bus: EventBus,              // file-local; not exported
+    protected readonly kit: Kit,
+    public readonly id: string,
+  ) {}
+
+  /** One-off GraphQL Query for `key`. Always hits semio/rs/lib.rs; no in-class cache. */
+  protected fieldQuery<T>(key: string, selector: (data: unknown) => T, doc: GqlDoc): Promise<T>;
+
+  /**
+   * Subscribe to (entity-kind, this.id, eventName). `cb` receives `next` from the server's
+   * event payload, or from one shared refetch the EventBus performs per event when the schema
+   * doesn't embed the new value. Nothing is cached on the JS side.
+   */
+  protected subscribeField<T>(eventName: string, cb: (next: T) => void): Unsubscribe;
+
+  /**
+   * Single async dispatch path — one mutation, awaits server, returns SetResult. Never touches
+   * any local state, never pre-fires on<Event> callbacks, never reconciles. UI updates flow
+   * exclusively from subscription events the server emits in response.
+   */
+  protected dispatch(operation: GqlOpInput): Promise<SetResult>;
+}
+
+const defineField = <T>(spec: { key: string; query: GqlDoc; pickQuery: (data: unknown) => T; event: string }) => spec;
+
+const defineOperation = <Args extends readonly unknown[]>(spec: {
+  name: string;                               // matches the *OperationInput leaf name
+  buildInput: (...args: Args) => GqlOpInput;
+}) => spec;
+//#endregion
+```
+
+Class definitions then read like a schema bundle, one line per leaf. Example for `Piece`:
+
+```ts
+export class Piece extends Entity {
+  static fields = [
+    defineField({ key: "name",        query: PIECE_NAME_QUERY,        pickQuery: (d) => d.node.name,        event: "Renamed" }),
+    defineField({ key: "description", query: PIECE_DESCRIPTION_QUERY, pickQuery: (d) => d.node.description, event: "DescriptionChanged" }),
+    defineField({ key: "position",    query: PIECE_POSITION_QUERY,    pickQuery: (d) => d.node.position,    event: "PositionChanged" }),
+    defineField({ key: "plane",       query: PIECE_PLANE_QUERY,       pickQuery: (d) => d.node.plane,       event: "PlaneChanged" }),
+    defineField({ key: "center",      query: PIECE_CENTER_QUERY,      pickQuery: (d) => d.node.center,      event: "CenterChanged" }),
+    defineField({ key: "scale",       query: PIECE_SCALE_QUERY,       pickQuery: (d) => d.node.scale,       event: "ScaleChanged" }),
+    defineField({ key: "blueprint",   query: PIECE_BLUEPRINT_QUERY,   pickQuery: (d) => d.node.blueprint,   event: "BlueprintChanged" }),
+    /* ... 17 fields total per the Piece SDL ... */
+  ];
+  static operations = [
+    defineOperation({ name: "rename",            buildInput: (newName: string) => ({ rename: { newName } }) }),
+    defineOperation({ name: "changeDescription", buildInput: (newDescription: string) => ({ changeDescription: { newDescription } }) }),
+    defineOperation({ name: "drag",              buildInput: (offset: OffsetInput) => ({ drag: { offset } }) }),
+    defineOperation({ name: "move",              buildInput: (position: PositionInput) => ({ move: { position } }) }),
+    defineOperation({ name: "fix",               buildInput: () => ({ fix: true }) }),
+    defineOperation({ name: "changeBlueprint",   buildInput: (blueprintId: string) => ({ changeBlueprint: { blueprintId } }) }),
+    defineOperation({ name: "addAttribute",      buildInput: (key: string, value: string, definition: string) => ({ addAttribute: { key, value, definition } }) }),
+    defineOperation({ name: "removeAttribute",   buildInput: (id: string) => ({ removeAttribute: { id } }) }),
+    defineOperation({ name: "removeAttributes",  buildInput: (ids: readonly string[]) => ({ removeAttributes: { ids } }) }),
+  ];
+}
+defineFields(Piece, Piece.fields);
+defineOperations(Piece, Piece.operations);
+```
+
+`defineFields(C, specs)` installs **two** methods per spec on `C.prototype`: `<key>(): Promise<T>` (calls `Entity.fieldQuery` — one GraphQL `Query` per call) and `on<Event>(cb): Unsubscribe` (calls `Entity.subscribeField`). `defineOperations(C, specs)` installs **exactly one** method per spec: `<name>(...args): Promise<SetResult>` (calls `Entity.dispatch`). There is no `<key>Sync` field method, no `<name>Sync` operation method, no `applyToCache`, no reconciliation. Same recipe for `Kit`, `Design`, `Type`, `Port`, `Connector`, `Connection`, `Author`, `Quality`, `Tag`, `Concept`, plus the 95 + 30 + 30 + 30 + 61 change-algebra subclasses (whose `static fields` arrays are mechanical from the schema).
+
+Why this matters here — my plan's earlier note "remove KIT_*_FIELD_SPECS / defineFields / defineOperations indirection; remove @ts-nocheck" is **wrong** in spirit. The right move (per `field-only_kit_reads_refactor`) is the opposite: **keep** the `defineField` / `defineOperation` factory pattern (it is the general mechanism), purge only the **legacy `KIT_*_FIELD_SPECS`** specs that referenced the old `KitStoreSnapshot` / `KitHostStore` graph and the per-old-store dispatcher path. Drop `@ts-nocheck`. The factories themselves stay.
 
 ## Phase B - JS class layer ([semio/js/index.ts](semio/js/index.ts))
 
@@ -455,9 +698,7 @@ Goal: one `export class` per schema entity; thin GraphQL wrapper, no client-side
   }
   ```
 - Drop the legacy `KIT_*_FIELD_SPECS` / `defineFields` / `defineOperations` indirection (lines 426-550) - the canonical class methods are the only API. Drop the `@ts-nocheck` at line 6 once classes typecheck.
-
 - **Purge general JSON helpers from public API** (currently 293 `JsonValue`/`JsonObject` references in [semio/js/index.ts](semio/js/index.ts)):
-
   ```ts
   // BEFORE - public, exported
   export type JsonValue  = string | number | boolean | null | readonly JsonValue[] | JsonObject;
@@ -471,12 +712,9 @@ Goal: one `export class` per schema entity; thin GraphQL wrapper, no client-side
   // GqlTransport, EventBus, parseJsonValue, kitGraphqlData, gqlDataSessionWipKitStore all
   // become NON-EXPORTED file-local helpers. The public API is class methods returning typed values.
   ```
-
   - Every `read*` method on every entity class returns the **typed** value (`Promise<string>`, `Promise<readonly Design[]>`, `Promise<Position>`, etc.). `JsonValue`/`JsonObject` never appear in any public type signature.
   - `Kit.runGraphql(body)` (today line 687) is removed; nobody outside `semio/js` runs raw GraphQL. The 95 operations are reached through `kit.<operation>(args)` methods.
-
 - **Rework `Kit.open(uri)`** (today line 795 misuses `uri` as a JSON kit-DTO string):
-
   ```ts
   /**
    * @emoji 🚪 Open a kit by backbone URI:
@@ -492,13 +730,9 @@ Goal: one `export class` per schema entity; thin GraphQL wrapper, no client-side
     return kit;
   }
   ```
-
   No JSON DTO ingestion path. The only browser-supported scheme is `dev://` (fetched URL); `local://` and `remote://` are native-only and the WASM bridge returns `NotSupported` for those.
-
 - **Subscription wire decoder stays private**: the JSON parsing of GraphQL responses inside `Kit.startSubscriptionLoop` and `gqlRun` is internal and not exported. Listener callbacks receive typed instances or scalars, never `JsonValue`.
-
 - **Add backbone command methods on `Kit`** (the GraphQL surface from Phase A):
-
   ```ts
   export class Kit {
     async attachBackbone(uri: string): Promise<SetResult> {
@@ -515,10 +749,10 @@ Goal: one `export class` per schema entity; thin GraphQL wrapper, no client-side
 Goal: one ref hook per entity (stable, never updates) + one hook per field per entity.
 
 - **Strong-entity ref hooks** via React context. One per primary strong entity:
-  `useKit`, `useDesign`, `useType`, `usePiece`, `useConnection`, `usePort`, `useConnector`, `useRepresentation`, `useTag`, `useConcept`, `useQuality`, `useAuthor`, `useFile`, `useFolder`, `useLayer`, `useGroup`, `useStat`, `useProp`, `usePlace`, `useFamily`, `useBenchmark`, `useEdit`, `useChange`, `useCheckpoint`, `useAlternative`, `useTheKit`, `useGraph`, `useSession`, `useConflict`.
-  Plus one per concrete operation strong entity (95 hooks):
-  `useRenamedKit`, `useChangedDescription`, `useCreatedQuality`, `useCreatedQualities`, `useRenamedQuality`, `useUpdatedQualityDescription`, `useUpdatedQualityIcon`, `useAddedAttributeToQuality`, `useAddedAttributesToQuality`, `useRemovedAttributeFromQuality`, `useRemovedAttributesFromQuality`, `useDeletedQuality`, `useDeletedQualities`, `useCreatedTag`, `useCreatedTags`, `useRenamedTag`, ..., `useCreatedFixedPiece`, `useAddedChildPieceWithParentConnection`, `useAddedHangingChildPieceWithParentConnection`, `useChangedPieceToType`, `useDraggedPiece`, `useDraggedPieces`, `useFixedPiece`, `useFixedPieces`, `useMovedPiece`, `useMovedPieces`, `useDeletedPiece`, `useDeletedPieces`, `useDeletedPiecesAndConnections`, `useFlattenedDesign`, etc. (one per concrete `Operation` subclass).
-  Each memoizes on `[kit, id]`:
+`useKit`, `useDesign`, `useType`, `usePiece`, `useConnection`, `usePort`, `useConnector`, `useRepresentation`, `useTag`, `useConcept`, `useQuality`, `useAuthor`, `useFile`, `useFolder`, `useLayer`, `useGroup`, `useStat`, `useProp`, `usePlace`, `useFamily`, `useBenchmark`, `useEdit`, `useChange`, `useCheckpoint`, `useAlternative`, `useTheKit`, `useGraph`, `useSession`, `useConflict`.
+Plus one per concrete operation strong entity (95 hooks):
+`useRenamedKit`, `useChangedDescription`, `useCreatedQuality`, `useCreatedQualities`, `useRenamedQuality`, `useUpdatedQualityDescription`, `useUpdatedQualityIcon`, `useAddedAttributeToQuality`, `useAddedAttributesToQuality`, `useRemovedAttributeFromQuality`, `useRemovedAttributesFromQuality`, `useDeletedQuality`, `useDeletedQualities`, `useCreatedTag`, `useCreatedTags`, `useRenamedTag`, ..., `useCreatedFixedPiece`, `useAddedChildPieceWithParentConnection`, `useAddedHangingChildPieceWithParentConnection`, `useChangedPieceToType`, `useDraggedPiece`, `useDraggedPieces`, `useFixedPiece`, `useFixedPieces`, `useMovedPiece`, `useMovedPieces`, `useDeletedPiece`, `useDeletedPieces`, `useDeletedPiecesAndConnections`, `useFlattenedDesign`, etc. (one per concrete `Operation` subclass).
+Each memoizes on `[kit, id]`:
   ```tsx
   export function useDesign(): Design {
     const kit = useKit();
@@ -666,9 +900,7 @@ Goal: one ref hook per entity (stable, never updates) + one hook per field per e
   // ... mechanical from schema for every Input
   ```
 - **Weak entity hooks** take the weak instance as the first argument (`useCoordinateU(c)`, `usePositionCenter(p)`). No `<PositionScope>` context - weak entities are addressed by the path threaded through the JS class instance, which the hook captures via the argument. Same shape for `Diff`/`Modification`/`Modifications`/`Input`/`Event` weak families: hooks take the instance as first argument since the path is threaded through the JS instance.
-
 - **Backbone-attach hooks** mirror the new GraphQL surface, never expose JSON:
-
   ```tsx
   export function useAttachBackbone():  readonly [(uri: string) => Promise<SetResult>, OperationStatus] {
     const kit = useKit();
@@ -678,7 +910,6 @@ Goal: one ref hook per entity (stable, never updates) + one hook per field per e
   export function useBackboneSyncNow(): readonly [() => Promise<SetResult>, OperationStatus] { /* ... */ }
   export function useBackboneStatus():  FieldReadState<BackboneStatus>  { /* K1 typed, no JsonValue */ }
   ```
-
   No `useHydrateKitStoreBundleJson` / `useKitStoreBundleJson` - those go away with the mutation.
 - **Owned-collection re-render rule**: `useDesigns` only re-renders when a `Design` is added or removed (the id-list path tick). A `useDesignName` change re-renders only the components that mounted *that* hook; sibling components mounted on the parent collection do not re-render. This is enforced by `subscribePath` matching only the canonical leaf path of the changed event, so K7/K8/K9 hooks never receive sibling-field events.
 
@@ -1114,49 +1345,269 @@ export function useRenameKit() {
 // returns: readonly [(newName: string) => Promise<SetResult>, OperationStatus]
 ```
 
-## Generic React primitives (defined once, reused for every K-kind)
+## Generic React primitives (defined once under `//#region 🌉Bridges`)
+
+All bridges live under `//#region 🌉Bridges` in [semio/react/index.tsx](semio/react/index.tsx) and are file-local (not exported). Every concrete hook (`useKitName`, `useDesigns`, `useTypePorts`, `useCheckpointAncestors`, `useCoordinateU`, `useRenameKit`, `useDragPiece`, ...) is a **one-liner** over these primitives.
+
+### Read bridges
 
 ```tsx
-// K1, K2: primitive scalar field
+//#region 🌉Bridges
+const READONLY: SetResult = { ok: false, error: { kind: "Readonly", message: "no entity" } };
+
+/**
+ * @emoji 🪝 Pure pull-based bridge for primitive / weak fields. No cache. No `useSyncExternalStore`
+ * (there is no synchronous snapshot to grab — the source of truth lives in semio/rs/lib.rs and
+ * every read is async over GraphQL). On `entity` change: one `read(entity)` then live `subscribe`
+ * replacements. While the first read is in flight returns `undefined`.
+ */
 function useFieldRead<E, T>(
   entity: E | null,
   read: (e: E) => Promise<T>,
   subscribe: (e: E) => (cb: (t: T) => void) => Unsubscribe,
-): FieldReadState<T> { /* useState + useEffect + cleanup */ }
+): FieldReadState<T> {
+  const [value, setValue] = React.useState<T | undefined>(undefined);
+  React.useEffect(() => {
+    if (!entity) { setValue(undefined); return; }
+    let alive = true;
+    void read(entity).then((v) => { if (alive) setValue(v); });
+    const unsubscribe = subscribe(entity)((next) => { if (alive) setValue(next); });
+    return () => { alive = false; unsubscribe(); };
+  }, [entity]);
+  return value;
+}
 
-// K3, K4: stable non-primitive child
+/** @emoji 🧷 K3 / K4 — stable non-primitive child instance, never re-renders. */
 function useStableChild<E, C>(entity: E | null, accessor: (e: E) => C): C | null {
   return React.useMemo(() => (entity ? accessor(entity) : null), [entity]);
 }
 
-// K7, K8, K9: id-list-stable owned collection
+/**
+ * @emoji 📋 K7 / K8 / K9 — id-list-stable owned collection. The underlying `read` already guarantees
+ * reference-equality on no-membership-change (id-list cache in JS), so the bridge is structurally
+ * identical to `useFieldRead`; it exists as a separate helper purely for type clarity.
+ */
 function useIdStableList<E, C>(
   entity: E | null,
   read: (e: E) => Promise<readonly C[]>,
   subscribe: (e: E) => (cb: (cs: readonly C[]) => void) => Unsubscribe,
-): FieldReadState<readonly C[]> { /* same as useFieldRead, but the underlying `read` already guarantees ref-equality on no-membership-change */ }
+): FieldReadState<readonly C[]> {
+  return useFieldRead(entity, read, subscribe);
+}
 ```
 
-Every concrete hook (`useKitName`, `useDesigns`, `useTypePorts`, `useCheckpointAncestors`, `useCoordinateU`, ...) is a one-liner over these three primitives.
+### Operation status discriminated union
+
+```tsx
+/** General kinds — every operation hook carries these. */
+type GeneralOperationStatus<T = SetSuccess> =
+  | { readonly kind: "idle" }
+  | { readonly kind: "pending"; readonly startedAt: number }
+  | { readonly kind: "successful"; readonly value: T; readonly finishedAt: number }
+  | { readonly kind: "timeout"; readonly startedAt: number }                              // SetError.kind === "Timeout"
+  | { readonly kind: "failed"; readonly error: SetError; readonly finishedAt: number };   // every rejection without a declared extra
+
+/** Per-op extras — opt-in. Length / range bounded inputs add `tooLong`. */
+type TooLongStatus = { readonly kind: "tooLong"; readonly error: SetError; readonly finishedAt: number };
+
+type OperationStatus<T = SetSuccess, Extra extends { kind: string } = never> =
+  | GeneralOperationStatus<T>
+  | Extra;
+
+const IDLE: GeneralOperationStatus = { kind: "idle" };
+
+type OpErrorMapper<Extra extends { kind: string }> =
+  (error: SetError, finishedAt: number) => Extra | null;
+
+/** Reusable mapper for the rename / changeDescription / changeIcon / addAttribute / changeBlueprint family. */
+const mapTooLong: OpErrorMapper<TooLongStatus> = (error, finishedAt) =>
+  (error.kind === "TooLong" ? { kind: "tooLong", error, finishedAt } : null);
+```
+
+### Operation bridge
+
+```tsx
+/**
+ * @emoji ✍️ Generic write-hook bridge — returns `[run, status]`. Status flips
+ *   `idle → pending → (successful | timeout | failed | <extra>)` per call.
+ * `mapError` declares which `SetError` kinds bubble up as top-level extras (e.g. `tooLong`);
+ * everything else lands in `failed` with the raw `SetError`.
+ */
+function bindOpToReact<E, Args extends readonly unknown[], Extra extends { kind: string } = never>(
+  entity: E | null,
+  call: (e: E, ...args: Args) => Promise<SetResult>,
+  mapError?: OpErrorMapper<Extra>,
+): readonly [(...args: Args) => Promise<SetResult>, OperationStatus<SetSuccess, Extra>] {
+  const [status, setStatus] = React.useState<OperationStatus<SetSuccess, Extra>>(IDLE);
+  const run = React.useCallback(async (...args: Args): Promise<SetResult> => {
+    if (!entity) return READONLY;
+    const startedAt = performance.now();
+    setStatus({ kind: "pending", startedAt });
+    try {
+      const result = await call(entity, ...args);
+      const finishedAt = performance.now();
+      if (result.ok) {
+        setStatus({ kind: "successful", value: result, finishedAt });
+      } else if (result.error.kind === "Timeout") {
+        setStatus({ kind: "timeout", startedAt });
+      } else {
+        const extra = mapError?.(result.error, finishedAt);
+        setStatus(extra ?? { kind: "failed", error: result.error, finishedAt });
+      }
+      return result;
+    } catch (e) {
+      const finishedAt = performance.now();
+      const error: SetError = { kind: "Rejected", message: String(e) };
+      setStatus({ kind: "failed", error, finishedAt });
+      return { ok: false, error };
+    }
+  }, [entity, call, mapError]);
+  return [run, status] as const;
+}
+//#endregion
+```
+
+### Per-entity factories (same shape per entity)
+
+```ts
+// One factory per entity that knows its context-resolution chain.
+// Each yields `(id?: string) => T | undefined` for fields, `(id?: string) => readonly [run, status]` for ops.
+const createKitFieldHook        = /* fieldQuery + onEvent against useKit() */;
+const createDesignFieldHook     = /* uses useKit().design(id ?? useDesignContext()?.id) */;
+const createTypeFieldHook       = /* uses useKit().type(id ?? useTypeContext()?.id) */;
+const createPortFieldHook       = /* uses useType().port(id ?? usePortContext()?.id) */;
+const createConnectorFieldHook  = /* uses useType().connector(id ?? useConnectorContext()?.id) */;
+const createPieceFieldHook      = /* uses useDesign().piece(id ?? usePieceContext()?.id) */;
+const createConnectionFieldHook = /* uses useDesign().connection(id ?? useConnectionContext()?.id) */;
+const createAuthorFieldHook     = /* uses useKit().author(id ?? useAuthorContext()?.id) */;
+const createQualityFieldHook    = /* uses useKit().quality(id ?? useQualityContext()?.id) */;
+const createTagFieldHook        = /* uses useKit().tag(id ?? useTagContext()?.id) */;
+const createConceptFieldHook    = /* uses useKit().concept(id ?? useConceptContext()?.id) */;
+// + parallel createXOpHook factories for the writable entities.
+
+// Concrete hooks become one-liners (the per-K1..K11 examples above):
+export const usePieceName        = createPieceFieldHook((p) => p.name(),        (p, cb) => p.onRenamed(cb));
+export const usePieceCenter      = createPieceFieldHook((p) => p.center(),      (p, cb) => p.onCenterChanged(cb));
+export const useDragPiece        = createPieceOpHook((p, offset: OffsetInput) => p.drag(offset));                         // general only — no `tooLong`
+export const useRenamePiece      = createPieceOpHook((p, newName: string) => p.rename(newName), mapTooLong);              // general + `tooLong`
+export const useChangeBlueprint  = createPieceOpHook((p, blueprintId: string) => p.changeBlueprint(blueprintId), mapTooLong);
+```
+
+Every per-operation hook returns `readonly [run, status]`. Hooks called outside any provider must take an explicit `id` (otherwise `run` returns `READONLY`). `useDragPiece` yields `OperationStatus<SetSuccess>` (general only), so `dragPieceStatus.kind === "tooLong"` is a **static TypeScript error**. `useRenamePiece` yields `OperationStatus<SetSuccess, TooLongStatus>` so `renamePieceStatus.kind === "tooLong"` compiles.
+
+### Region structure (parallel-work fault lines)
+
+[semio/js/index.ts](semio/js/index.ts):
+
+```ts
+//#region 🌐Transport            // GqlTransport / EventBus / wire helpers (file-local)
+//#region 🧬Entity                // Entity base + defineField / defineOperation / defineFields / defineOperations
+  //#region 🛠️Base
+  //#region 🏭Factories
+//#region 🧱Classes                // one subregion per entity, one worker per subregion
+  //#region 🎒Kit / 📐Design / 🧰Type / 🔘Port / 🔗Connector / 🧩Piece / 🪢PiecesOperations
+  //#region ⛓️Connection / ✍️Author / 💎Quality / 🏷️Tag / 💡Concept / 🎨Representation
+  //#region 👨‍👩‍👦Family / 📄File / 📁Folder / 🪟Layer / 👥Group / 📊Stat / 🎚️Prop
+  //#region 📚VCS               // 📝Edit / 🔀Change / 🚩Checkpoint / 🌿Alternative / 🪪TheKit / 🕸️Graph / 🪟Session / ⚔️Conflict
+  //#region 🧬OperationVariants  // 95 concrete Operation subclasses
+  //#region 🧬DiffVariants       // 30 concrete Diff subclasses
+  //#region 🧬ModificationVariants
+  //#region 🧬ModificationsVariants
+  //#region 🧬InputVariants      // 61 concrete Input subclasses
+//#region 🪶WeakEntities          // 📐Plane / 📍Coordinate / 🔵Point / ➡️Vector / ↔️Side / 📌Position / 🌍Place / 🗺️Location / 📷Camera / 🏁Benchmark / 🪪Attribute
+//#region 🚀PublicAPI             // openKit factory only
+//#region 🧪Tests                 // each entity worker owns the matching subregion
+```
+
+[semio/react/index.tsx](semio/react/index.tsx):
+
+```ts
+//#region 🌉Bridges                // bindFieldToReact / bindOpToReact / OperationStatus / mapTooLong / READONLY / IDLE
+//#region 🎭Contexts               // KitContext / DesignContext / .../ ConnectionContext (provider components + use<X>Context)
+//#region 🪝Hooks                  // one subregion per entity, exclusive owner
+  //#region 🎒Kit
+    //#region 🛡️Selectors          // useKit
+    //#region 📖Reads              // useKitName / useKitDesigns / useKitTypes / ...
+    //#region ✍️Writes             // useRenameKit / useChangeKitDescription / ...
+    //#region 🛠️Runtime            // useKitErrors / useKitConnectionStatus / useKitSync / useAttachBackbone / ...
+  //#region 📐Design / 🧰Type / 🔘Port / 🔗Connector / 🧩Piece / 🪢Pieces / ⛓️Connection / ✍️Author / 💎Quality
+  //#region 🏷️Tag / 💡Concept / 🎨Representation
+  //#region 📚VCS                  // useEdit / useChange / useCheckpoint / ... + per-K1..K11 hooks per entity
+  //#region 🧬OperationHooks       // useRenamedKit / useCreatedFixedPiece / ... 95 ref hooks + 95 input/scope/modification field hooks
+  //#region 🧬DiffHooks
+  //#region 🧬ModificationHooks
+  //#region 🧬ModificationsHooks
+  //#region 🧬InputHooks
+//#region 🧪Tests
+```
+
+Sibling region emojis are unique per parent (per `AGENTS.md`). Two workers can hold [semio/js/index.ts](semio/js/index.ts) or [semio/react/index.tsx](semio/react/index.tsx) simultaneously as long as their regions are disjoint.
+
+### Inline negative-grep vitest tests (rolled into 🧪Tests subregions)
+
+Every file gets a small in-file vitest block that grep-asserts banned symbols are absent. These run as part of the verification step.
+
+```ts
+// semio/react/index.tsx — under //#region 🧪Tests
+test("react/index.tsx contains no banned imports", async () => {
+  const src = await fs.readFile(path.resolve(__dirname, "index.tsx"), "utf8");
+  for (const pattern of [
+    /\buseSyncExternalStore\b/,                      // banned — see invariant 3
+    /\buseDesignAppCommands\b/,                      // legacy command bus
+    /\bapplyKitDiff\b/,                              // optimistic apply gone
+    /\buseKitSnapshot\b|\buseKitHostStore\b/,         // snapshot machinery gone
+    /\buseSchemaObjectState\b|\buseSchemaFieldValue\b/, // generic schema readers gone
+    /\buse\w+Sync\b/,                                // no `*Sync` operation hooks
+    /\busePieceCenterU\b|\bsuseDesignPieceIds\b|\busePieceIsHidden\b/, // sub-selection / derivation gone
+    /\bKitFieldBinding\b|\bHookRead\b|\bWriteStatus\b/, // legacy types gone
+  ]) expect(src).not.toMatch(pattern);
+});
+
+// semio/js/index.ts — same shape, different banned set:
+//   /\bapplyToCache\b|\bdispatchSync\b|\bfieldSync\b/
+//   /\bKitStoreSnapshot\b|\bKitHostStore\b/
+//   /\boptimistic\b|\breconcil/
+//   /\bKitStoreClient\b|\bWasmKitStoreClient\b/
+
+// semio/sketchpad/index.tsx — banned set covers
+//   /\b(useKit|useDesign|useType|usePiece|useConnection|useAuthor|useQuality)\b/   // bare entity-identity selectors only used inside the schema-1:1 hooks
+//   /\buseDesignAppCommands\b|\bapplyKitDiff\b/
+//   /\buseSyncExternalStore\b/
+```
 
 ## Phase D - Verification
 
-- `cargo check -p semio-rs` (lib.rs builds wasm32 + native).
-- `bunx tsc --noEmit` in `semio/js` and `semio/react` (no `@ts-nocheck`).
-- Smoke graphql validate the example doc `subscription { wip { alternative(id: $alt) { kit { design(id: $des) { piece(id: $piece) { flatPosition { center { u } } } } } } } }` against the live schema (already exists from prior ticket; re-run).
-- Mount one `useCoordinateU` in the sketchpad runtime path; verify console log emits primitive value updates only when `u` changes (`[DEBUG]` prefix).
-- Existing test files in [semio/js](semio/js/index.ts), [semio/react](semio/react/index.tsx), and [semio/rs](semio/rs/lib.rs) are extended in place to cover the new shape.
+- **Rust native build**: `cargo check -p semio-rs` from [semio/rs](semio/rs).
+- **Rust WASM build**: `cargo check --target wasm32-unknown-unknown -p semio-rs`. Macros must not introduce native-only deps; subscription gating must be `#[cfg]`-portable.
+- **Schema golden round-trip**: `cargo test schema_matches_target_graphql_file` (real round-trip — the new code-first `gql::sdl()` is concatenated from `entity_family!` / `operation_family!` / `command_nav!` SDL fragments + the executable schema's Query / Mutation / Subscription roots, then compared against the on-disk [target.schema.graphql](semio/graphql/target.schema.graphql)).
+- **Schema regen helper**: `cargo test export_semio_graphql_schema_file -- --ignored` regenerates [target.schema.graphql](semio/graphql/target.schema.graphql) from the macros (run when the canonical SDL drifts from the macros).
+- **Full Rust test sweep**: `cargo test` (37 tests today, growing as new entity_family blocks land); fix any field-name / resolver regressions.
+- **TypeScript**: `bunx tsc --noEmit` in [semio/js](semio/js/tsconfig.json), [semio/react](semio/react/tsconfig.json), [semio/sketchpad](semio/sketchpad/tsconfig.json). The `@ts-nocheck` at [semio/js/index.ts L6](semio/js/index.ts#L6) is removed.
+- **Layer guard**: `npm run depcruise:layers`.
+- **Inline vitest negative-greps**: confirm the in-file blocks under each `🧪Tests` subregion all green (zero matches for `useSyncExternalStore`, `applyKitDiff`, `useDesignAppCommands`, `*Sync` operation hooks, `KitStoreSnapshot`, `KitHostStore`, `applyToCache`, `dispatchSync`, `fieldSync`, `optimistic`, `reconcil`, `usePieceCenterU`-style derivations, `useTypesIds` / `useDesignPieceIds`-style sub-selections, `useKitSnapshot` / `useSchemaObjectState`-style snapshot readers, `KitFieldBinding` / `HookRead` / `WriteStatus`).
+- **Live subscription smoke**: GraphQL-validate the example doc `subscription { wip { alternative(id: $alt) { kit { design(id: $des) { piece(id: $piece) { flatPosition { center { u } } } } } } } }` against the regenerated schema.
+- **Field-gating smoke**: in the sketchpad runtime path, mount `useCoordinateU(c)` next to `usePieceFlatCenter()` next to `useDesigns()`; with `[DEBUG]` console traces on each `subscribePath` callback, verify (a) editing `Coordinate.u` re-renders only the `u` consumer, (b) editing `Piece.center` re-renders the center consumer, (c) renaming a sibling design does **not** re-render any of the three (id-list-stable rule), (d) creating a design does re-render `useDesigns` only.
+- **`bindOpToReact` smoke**: drive `useDragPiece` and `useRenamePiece` end-to-end; assert (a) `dragPieceStatus` flips `idle → pending → successful` on `{ ok: true }`, `idle → pending → timeout` on `Timeout`, `idle → pending → failed` on `Conflict`, and (b) `renamePieceStatus` flips `idle → pending → tooLong` on `{ kind: "TooLong" }`. Add an `expectTypeOf<DragPieceStatus["kind"]>` assertion that `"tooLong"` is a TS error.
+- **Existing test files only** in [semio/js](semio/js/index.ts), [semio/react](semio/react/index.tsx), [semio/rs](semio/rs/lib.rs), [semio/sketchpad](semio/sketchpad/index.tsx) get extended (workspace rule: no new test files).
 
 ## Delegation
 
-Seven independent generalists. Phase A* run in parallel; Phase B* run in parallel after A is stable; Phase C runs after B's exports are typed; I drive Phase D and the ticket lifecycle.
+Eight independent generalists + a foundation worker (W0). Phase 0 (W0) is sequential; Phase A* run in parallel after W0; Phase B* run in parallel after A is stable; Phase C runs after B's exports are typed; I drive Phase D and the ticket lifecycle. All workers obey the region exclusivity contract (siblings of `//#region` markers, see "Region structure" sections above) so multiple workers can hold [semio/rs/lib.rs](semio/rs/lib.rs), [semio/js/index.ts](semio/js/index.ts), or [semio/react/index.tsx](semio/react/index.tsx) concurrently without colliding on byte ranges (workspace rule: "You MUST work simultaneously with others on the same files").
 
-- **Generalist 1 - Rust primary** (Phase A1): `semio/rs/lib.rs` weak-entity collapse (`Position`/`Coordinate`/`Plane`/`Point`/`Vector`/`Offset`/`Location`/`Attribute`), per-field subscription gating.
-- **Generalist 2 - Rust VCS** (Phase A2): `semio/rs/lib.rs` canonicalize Edit/Change/Checkpoint/Alternative/TheKit/Graph/Session/Conflict (remove twins, ensure single source).
-- **Generalist 3 - Rust change algebra** (Phase A3): `semio/rs/lib.rs` one canonical struct per concrete Operation (95), Diff (30), Modification (30), Modifications (30), Input (61); each gets its own `#[Object]` impl emitting the schema fields.
-- **Generalist 4 - Rust backbones + JSON purge** (Phase A4): `semio/rs/lib.rs` rename `BackboneStoreKind` -> `BackboneKind {Dev,Local,Remote}`, implement DevBackbone (only JSON site), LocalBackbone (SQLite + blobs), RemoteBackbone (websocket); add `Mutation.session.backbone.*` to schema + resolvers; delete `KitStoreBundleFile`/`hydrateKitStoreBundleJson`/`spawn_wip_overlay_from_kit_dto`; confine `serde_json::Value` to GraphQL decoder + DevBackbone.
-- **Generalist 5 - JS primary + JSON purge** (Phase B1): `semio/js/index.ts` weak-as-class, `*Entity`-suffix purge, instance cache, EntityRef union, primary strong + VCS classes; rework `Kit.open(uri)` to backbone URI; make `JsonValue`/`JsonObject`/`GqlTransport`/`EventBus` private file-locals; add `attachBackbone`/`detachBackbone`/`backboneSyncNow`/`backboneStatus` methods.
-- **Generalist 6 - JS change algebra** (Phase B2): `semio/js/index.ts` `//#region 🧬OperationVariants`, `🧬DiffVariants`, `🧬ModificationVariants`, `🧬InputVariants` (95 + 30 + 30 + 30 + 61 mechanical subclasses) under abstract bases.
-- **Generalist 7 - React** (Phase C): `semio/react/index.tsx` rewrite of `useKit`, all 123 ref hooks (28 primary + 95 operation), all field hooks for primary + VCS + change-algebra families per K1..K11, stable owned-collection rule, `useAttachBackbone`/`useDetachBackbone`/`useBackboneSyncNow`/`useBackboneStatus`.
+- **W0 - Foundation** (sequential, must finish before A* / B* start):
+  - In [semio/rs/lib.rs](semio/rs/lib.rs): confirm `//#region 🧬 entity_dsl` macro suite (`entity_family!` / `operation_family!` / `command_nav!` / `entity_input!` / `register_entities!` / `register_operations!` / `__owner_ty!` / `__autoresolved_owner!` / `entity_owner_unions!` / `entity_interface_enums!` / `relay_collection!`) is in place per the macro plan §1-§14. Code-first `gql::sdl()` per §14.
+  - In [semio/js/index.ts](semio/js/index.ts): place `//#region 🌐Transport`, `//#region 🧬Entity` (Entity base + factories), `//#region 🚀PublicAPI`. Carve empty `//#region 🧱Classes/<entity>`, `//#region 🪶WeakEntities/<entity>`, `//#region 🧬OperationVariants` / `🧬DiffVariants` / `🧬ModificationVariants` / `🧬ModificationsVariants` / `🧬InputVariants` regions for the per-entity workers.
+  - In [semio/react/index.tsx](semio/react/index.tsx): place `//#region 🌉Bridges` (`bindFieldToReact`, `useFieldRead`, `useStableChild`, `useIdStableList`, `bindOpToReact`, `OperationStatus`, `mapTooLong`, `READONLY`, `IDLE`). Carve empty `//#region 🎭Contexts`, `//#region 🪝Hooks/<entity>/{🛡️Selectors,📖Reads,✍️Writes,🛠️Runtime}`, `//#region 🧪Tests`.
+  - In [semio/sketchpad/index.tsx](semio/sketchpad/index.tsx): carve `//#region 🎨Sketchpad/{🖼️Canvas,🗂️Catalog,🪟Outliner,🛠️Properties,📋ContextMenu,🧪NegativeGrep}` so Phase C/D workers have unambiguous landing zones.
+  - Cache schema introspection map (entity → fields → events → SDL fragment idents) under `.repo/<ticket>/phase-0.json` so per-entity workers don't reread the schema.
 
-I drive Phase D and the ticket lifecycle (`ticket_open` under goal `r2602/runningsketchpad`, `ticket_close` with the file list).
+- **Generalist 1 - Rust primary** (Phase A1, parallel after W0): in [semio/rs/lib.rs](semio/rs/lib.rs) `//#region 🧬 entity_dsl` add the missing `entity_family!` / `entity_input!` blocks for the **8 weak primaries** (`Position`, `Coordinate`, `Plane`, `Point`, `Vector`, `Offset`, `Location`, `Attribute`). Delete every hand-rolled `*Node` + DTO twin + `#[Object]` shell. Per-field subscription gating extension to `EventBus::subscribe_paths`. Append to `register_entities!`.
+- **Generalist 2 - Rust VCS** (Phase A2, parallel after W0): `entity_family!` blocks for `Edit`, `Change`, `Checkpoint`, `TheKit`, `Alternative`, `Graph`, `Session`, `Conflict` (remove `AlternativeVersionDto` and any other legacy twin). Append to `register_entities!`.
+- **Generalist 3 - Rust change algebra** (Phase A3, parallel after W0): one `entity_family!` per concrete `Diff` (30), `Modification` (30), `Modifications` (30), `Input` (61) — most are mechanical from the schema. `operation_family!` for the 95 concrete `Operation` subtypes. Append to `register_operations!`. Confirm `kit_operation_enum!` / `scope_enum!` / `input_enum!` cover every variant.
+- **Generalist 4 - Rust backbones + JSON purge** (Phase A4, parallel after W0): `BackboneStoreKind` → `BackboneKind { Dev, Local, Remote }`; implement `DevBackbone` (only JSON site), `LocalBackbone` (SQLite + blobs), `RemoteBackbone` (websocket). Add `BackboneCommandInput` to schema + `Mutation.session.backbone.attach/detach/status/setActiveCheckpoint/syncNow` resolvers. Delete `KitStoreBundleFile` / `hydrateKitStoreBundleJson` / `spawn_wip_overlay_from_kit_dto` / `GraphSnapshotDto` / `AlternativeVersionDto` / `KitGraphWorkspace` / `DesignHandle`. Confine `serde_json::Value` to GraphQL request decoder + `DevBackbone` reader/writer.
+- **Generalist 5 - JS primary + JSON purge** (Phase B1, parallel after A* stable): in [semio/js/index.ts](semio/js/index.ts) `//#region 🧱Classes/*`: weak-as-class (Plane / Coordinate / Point / Vector / Offset / Location / Attribute / Side / Place / Camera / Benchmark each carrying parent + role), `*Entity`-suffix purge (FileEntity → File etc), instance cache, `EntityRef` union, primary strong (Kit, Design, Type, Port, Connector, Piece, Connection, Author, Quality, Tag, Concept, File, Folder, Layer, Group, Stat, Prop, Family, Place, Benchmark, Representation) + VCS classes (Edit, Change, Checkpoint, Alternative, TheKit, Graph, Session, Conflict). Each class is `static fields` + `static operations` + navigation methods, wired through `defineFields` / `defineOperations`. Rework `Kit.open(uri)` to backbone URI; add `attachBackbone` / `detachBackbone` / `backboneSyncNow` / `backboneStatus` methods. Make `JsonValue` / `JsonObject` / `GqlTransport` / `EventBus` / `parseJsonValue` / `KitGraphqlResponseEnvelope` private file-locals.
+- **Generalist 6 - JS change algebra** (Phase B2, parallel after A3): in [semio/js/index.ts](semio/js/index.ts) `//#region 🧬OperationVariants` / `🧬DiffVariants` / `🧬ModificationVariants` / `🧬ModificationsVariants` / `🧬InputVariants`: 95 + 30 + 30 + 30 + 61 mechanical subclasses under abstract `Operation` / `Diff` / `Modification` / `Input` / `Event` bases. Each is a small `static fields` + `static operations` array driven by the factories.
+- **Generalist 7 - React core** (Phase C1, after B1+B2): in [semio/react/index.tsx](semio/react/index.tsx) `//#region 🎭Contexts` + `//#region 🪝Hooks/<entity>` for the 28 primary strong entities. Per-entity factory (`createKitFieldHook` / `createDesignFieldHook` / .../ `createConnectionFieldHook` / `createAuthorFieldHook` / `createQualityFieldHook` / `createTagFieldHook` / `createConceptFieldHook` / `createPortFieldHook` / `createConnectorFieldHook` / `createRepresentationFieldHook` / `createPieceFieldHook` / `createPiecesOpHook`) + every per-field read hook + every per-operation write hook (one-liners). `useKit` returns the bare `Kit`. `useType` deduplicated. `*Scope` → `*Context` rename across the public API. Every operation hook wired via `bindOpToReact`; rename / changeDescription / changeIcon / addAttribute / changeBlueprint / createX family pass `mapTooLong`. Backbone hooks: `useAttachBackbone` / `useDetachBackbone` / `useBackboneSyncNow` / `useBackboneStatus` (no JSON in any signature). Runtime hooks: `useKitErrors` / `useKitConnectionStatus` / `useKitSync`.
+- **Generalist 8 - React VCS + change algebra hooks** (Phase C2, after B1+B2 alongside C1): in [semio/react/index.tsx](semio/react/index.tsx) `//#region 🪝Hooks/📚VCS` + `//#region 🪝Hooks/🧬OperationHooks` / `🧬DiffHooks` / `🧬ModificationHooks` / `🧬ModificationsHooks` / `🧬InputHooks`. The 95 concrete operation ref hooks (`useRenamedKit`, `useCreatedFixedPiece`, ...) + per-K1..K11 field hooks for every Edit / Change / Checkpoint / Alternative / TheKit / Graph / Session / Conflict and every concrete Diff / Modification / Modifications / Input subtype.
+
+I drive Phase D and the ticket lifecycle (`ticket_open` under goal `r2602/runningsketchpad`, `ticket_close` with the file list and per-region LOC delta + verification summary).
