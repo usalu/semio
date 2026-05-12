@@ -39,12 +39,20 @@ pub mod sdl_registry {
 
 /// @emoji 🧬 Roster: records entity families for `push_all_fragments` and later owner/interface codegen (bodies are macro-only per AGENTS).
 macro_rules! register_entities {
-    ( $( $region:ident : [ $( $name:ident ),* $(,)? ] ),* $(,)? ) => {
+    ( $( $region:ident : [ $( $ty:ty ),* $(,)? ] ),* $(,)? ) => {
+        $(
+            $(
+                impl crate::sdl_registry::HasSdlFragment for $ty {
+                    const SDL_FRAGMENT: &'static str = "";
+                }
+            )*
+        )*
         pub(crate) fn push_all_fragments(out: &mut Vec<&'static str>) {
-            let _ = out;
-            $( $(
-                let _ = stringify!($name);
-            )* )*
+            $(
+                $(
+                    out.push(<$ty as crate::sdl_registry::HasSdlFragment>::SDL_FRAGMENT);
+                )*
+            )*
         }
     };
 }
@@ -61,12 +69,55 @@ macro_rules! register_operations {
 }
 
 register_entities! {
-    geom:   [Vector, Point, Coordinate, Offset, Plane, Position, Location, Place],
-    meta:   [Attribute, Author, File, Folder, Prop, Benchmark, Quality, Tag, Concept, Stat, Layer, Group, Family],
-    type_:  [Type, Port, Connector, Representation],
-    design: [Design, Piece, Side, Connection, Clump],
-    root:   [Kit],
-    vcs:    [Edit, Change, Checkpoint, TheKit, Alternative, Graph, Session, Conflict],
+    geom: [
+        crate::geom::entity::Vector,
+        crate::geom::entity::Point,
+        crate::geom::entity::Coordinate,
+        crate::geom::entity::Offset,
+        crate::geom::entity::Plane,
+        crate::geom::entity::Position,
+        crate::geom::entity::Location,
+        crate::geom::entity::Place,
+    ],
+    meta: [
+        crate::meta::Attribute,
+        crate::meta::Author,
+        crate::meta::File,
+        crate::meta::Folder,
+        crate::meta::Prop,
+        crate::meta::Benchmark,
+        crate::meta::Quality,
+        crate::meta::Tag,
+        crate::meta::Concept,
+        crate::meta::Stat,
+        crate::meta::Layer,
+        crate::meta::Group,
+        crate::gql_relay::Family,
+    ],
+    type_: [
+        crate::kit::r#type::Type,
+        crate::kit::r#type::Port,
+        crate::kit::r#type::Connector,
+        crate::kit::r#type::Representation,
+    ],
+    design: [
+        crate::kit::design::Design,
+        crate::kit::design::Piece,
+        crate::kit::design::connection::Side,
+        crate::kit::design::connection::Connection,
+        crate::kit::design::Clump,
+    ],
+    root: [crate::kit::Kit],
+    vcs: [
+        crate::vcs::Edit,
+        crate::vcs::Change,
+        crate::vcs::Checkpoint,
+        crate::vcs::TheKit,
+        crate::vcs::Alternative,
+        crate::vcs::Graph,
+        crate::vcs::Session,
+        crate::vcs::Conflict,
+    ],
 }
 
 register_operations! {
@@ -636,7 +687,7 @@ pub mod geom {
 
     //#region 📐 entity
     pub mod entity {
-        //! 📐 `Arc` geometry nodes (target WeakEntity / Entity graph shapes); `#[Object]` impls live after [`crate::iface`].
+        //! 📐 `Arc` geometry nodes (target WeakEntity / Entity graph shapes); `#[Object]` impls live after [`crate::interface`].
         use std::sync::Arc;
 
         use async_lock::RwLock;
@@ -797,14 +848,7 @@ pub mod geom {
                 let yx = *self.plane.y_axis.x.read().await;
                 let yy = *self.plane.y_axis.y.read().await;
                 let yz = *self.plane.y_axis.z.read().await;
-                PositionInput {
-                    center: CoordinateInput { u, v },
-                    plane: PlaneInput {
-                        origin: PointInput { x: ox, y: oy, z: oz },
-                        x_axis: VectorInput { x: xx, y: xy, z: xz },
-                        y_axis: VectorInput { x: yx, y: yy, z: yz },
-                    },
-                }
+                PositionInput { center: CoordinateInput { u, v }, plane: PlaneInput { origin: PointInput { x: ox, y: oy, z: oz }, x_axis: VectorInput { x: xx, y: xy, z: xz }, y_axis: VectorInput { x: yx, y: yy, z: yz } } }
             }
 
             /// @emoji 🪪 Merkle node: live position scalars plus sorted digests of center + plane arcs.
@@ -1253,7 +1297,7 @@ pub mod gql_relay {
     #[derive(Clone, SimpleObject)]
     pub struct OperationEdge {
         pub cursor: String,
-        pub node: Arc<crate::operation::OperationIface>,
+        pub node: Arc<crate::operation::OperationInterface>,
     }
 
     #[derive(Clone, SimpleObject)]
@@ -1265,7 +1309,7 @@ pub mod gql_relay {
     }
 
     impl OperationConnection {
-        pub fn from_iface_rows(rows: Vec<Arc<crate::operation::OperationIface>>) -> Self {
+        pub fn from_interface_rows(rows: Vec<Arc<crate::operation::OperationInterface>>) -> Self {
             let child_hashes: Vec<String> = rows.iter().map(|o| h(&[o.row_id().as_str()])).collect();
             let hash = merkle_collection(child_hashes);
             let edges = rows.into_iter().enumerate().map(|(i, o)| OperationEdge { cursor: edge_cursor(i), node: o }).collect();
@@ -2889,7 +2933,6 @@ pub mod kit {
             pub async fn piece_by_external_id(&self, id: &Id) -> Option<Arc<piece::Piece>> {
                 self.piece_weak_by_external_id.read().await.get(id).and_then(|w| w.upgrade())
             }
-
         }
 
         #[Object(name = "Design")]
@@ -3563,8 +3606,8 @@ pub mod kit {
                 }
                 if let Some(pm) = diff.get("pieces").and_then(|p| p.get("modified")).and_then(|x| x.as_array()) {
                     for prow in pm {
-                        let piece_id: Id = serde_json::from_value(prow.get("piece").and_then(|p| p.get("id")).cloned().ok_or_else(|| crate::error::SemioError::invalid("piece modified.piece.id"))?)
-                            .map_err(|e| crate::error::SemioError::invalid(e.to_string()))?;
+                        let piece_id: Id =
+                            serde_json::from_value(prow.get("piece").and_then(|p| p.get("id")).cloned().ok_or_else(|| crate::error::SemioError::invalid("piece modified.piece.id"))?).map_err(|e| crate::error::SemioError::invalid(e.to_string()))?;
                         let pdiff = prow.get("diff").cloned().unwrap_or(serde_json::json!({}));
                         self.apply_design_piece_modified_json(&design_id, &piece_id, &pdiff).await?;
                     }
@@ -3601,9 +3644,7 @@ pub mod kit {
                 return Ok(());
             }
             if let Some(drag_v) = pdiff.get("drag") {
-                if let Some(off) = serde_json::from_value::<Option<crate::geom::OffsetInput>>(drag_v.clone())
-                    .map_err(|e| crate::error::SemioError::invalid(e.to_string()))?
-                {
+                if let Some(off) = serde_json::from_value::<Option<crate::geom::OffsetInput>>(drag_v.clone()).map_err(|e| crate::error::SemioError::invalid(e.to_string()))? {
                     let du = off.u;
                     let dv = off.v;
                     let pos_slot = piece.position.read().await.clone();
@@ -3622,9 +3663,7 @@ pub mod kit {
                 }
             }
             if let Some(pose_v) = pdiff.get("pose") {
-                if let Some(position) = serde_json::from_value::<Option<crate::geom::PositionInput>>(pose_v.clone())
-                    .map_err(|e| crate::error::SemioError::invalid(e.to_string()))?
-                {
+                if let Some(position) = serde_json::from_value::<Option<crate::geom::PositionInput>>(pose_v.clone()).map_err(|e| crate::error::SemioError::invalid(e.to_string()))? {
                     let n = GeomPosition::from_position_input(position);
                     *piece.position.write().await = Some(n);
                     return Ok(());
@@ -4198,7 +4237,6 @@ pub mod kit {
                 design.piece_weak_by_external_id.write().await.clear();
             }
         }
-
     }
 
     #[Object(name = "Kit")]
@@ -4639,8 +4677,8 @@ pub mod vcs {
         pub id: Id,
         pub owner_draft: Weak<Draft>,
         pub changes: RwLock<Vec<Arc<Change>>>,
-        pub forward_iface_operations: RwLock<Vec<Arc<operation::OperationIface>>>,
-        pub backward_iface_operations: RwLock<Vec<Arc<operation::OperationIface>>>,
+        pub forward_interface_operations: RwLock<Vec<Arc<operation::OperationInterface>>>,
+        pub backward_interface_operations: RwLock<Vec<Arc<operation::OperationInterface>>>,
         pub sequence_number: RwLock<i32>,
         pub started_at: RwLock<Option<Timestamp>>,
         pub finished_at: RwLock<Option<Timestamp>>,
@@ -4654,8 +4692,8 @@ pub mod vcs {
                 id: Id::default(),
                 owner_draft: Weak::new(),
                 changes: RwLock::new(Vec::new()),
-                forward_iface_operations: RwLock::new(Vec::new()),
-                backward_iface_operations: RwLock::new(Vec::new()),
+                forward_interface_operations: RwLock::new(Vec::new()),
+                backward_interface_operations: RwLock::new(Vec::new()),
                 sequence_number: RwLock::new(0),
                 started_at: RwLock::new(None),
                 finished_at: RwLock::new(None),
@@ -4674,8 +4712,8 @@ pub mod vcs {
                 id,
                 owner_draft,
                 changes: RwLock::new(Vec::new()),
-                forward_iface_operations: RwLock::new(Vec::new()),
-                backward_iface_operations: RwLock::new(Vec::new()),
+                forward_interface_operations: RwLock::new(Vec::new()),
+                backward_interface_operations: RwLock::new(Vec::new()),
                 sequence_number: RwLock::new(sequence_number),
                 started_at: RwLock::new(Some(Timestamp::default())),
                 finished_at: RwLock::new(None),
@@ -4717,10 +4755,10 @@ pub mod vcs {
             cp.map(EditOwnerUnion::Checkpoint)
         }
         pub async fn forwards(&self) -> crate::gql_relay::OperationConnection {
-            crate::gql_relay::OperationConnection::from_iface_rows(self.forward_iface_operations.read().await.clone())
+            crate::gql_relay::OperationConnection::from_interface_rows(self.forward_interface_operations.read().await.clone())
         }
         pub async fn backwards(&self) -> crate::gql_relay::OperationConnection {
-            crate::gql_relay::OperationConnection::from_iface_rows(self.backward_iface_operations.read().await.clone())
+            crate::gql_relay::OperationConnection::from_interface_rows(self.backward_interface_operations.read().await.clone())
         }
         #[graphql(name = "sequenceNumber")]
         pub async fn sequence_number(&self) -> i32 {
@@ -5171,7 +5209,7 @@ pub mod vcs {
         pub checkpoints: RwLock<Vec<Arc<Checkpoint>>>,
         pub releases: RwLock<Vec<Arc<Checkpoint>>>,
         pub drafts: RwLock<Vec<Arc<Draft>>>,
-        pub op_history: RwLock<Vec<Arc<crate::operation::OperationIface>>>,
+        pub op_history: RwLock<Vec<Arc<crate::operation::OperationInterface>>>,
     }
 
     impl Default for Graph {
@@ -5562,8 +5600,8 @@ pub mod vcs {
             }
         }
         #[graphql(name = "theKit")]
-        pub async fn the_kit(&self) -> crate::gql::interfaces::VersionIface {
-            crate::gql::interfaces::VersionIface::TheKit(TheKit::new(Arc::downgrade(&self.arc_here())))
+        pub async fn the_kit(&self) -> crate::gql::interfaces::VersionInterface {
+            crate::gql::interfaces::VersionInterface::TheKit(TheKit::new(Arc::downgrade(&self.arc_here())))
         }
         #[graphql(name = "initialKit")]
         pub async fn initial_kit(&self) -> Option<Arc<Kit>> {
@@ -5635,9 +5673,9 @@ pub mod vcs {
         }
 
         #[graphql(name = "theKit")]
-        pub async fn the_kit(&self, ctx: &Context<'_>) -> async_graphql::Result<crate::gql::interfaces::VersionIface> {
+        pub async fn the_kit(&self, ctx: &Context<'_>) -> async_graphql::Result<crate::gql::interfaces::VersionInterface> {
             let rt = ctx.data::<Arc<crate::worker::ParentRuntime>>()?;
-            Ok(crate::gql::interfaces::VersionIface::TheKit(TheKit::new(Arc::downgrade(&rt.wip_graph.arc_here()))))
+            Ok(crate::gql::interfaces::VersionInterface::TheKit(TheKit::new(Arc::downgrade(&rt.wip_graph.arc_here()))))
         }
     }
     //#endregion 👤 session
@@ -5690,10 +5728,10 @@ pub mod vcs {
 }
 //#endregion 🌿 vcs
 
-//#region 🧷 iface
+//#region 🧷 interface
 
 /// 🧷 Cross-cutting GraphQL `OwnerEntity` / `OwnedEntity` unions and empty Relay shells (expanded as more entities register).
-pub mod iface {
+pub mod interface {
     use std::sync::Arc;
 
     use async_graphql::{Object, SimpleObject, Union};
@@ -5732,7 +5770,7 @@ pub mod iface {
         Location(Arc<Location>),
     }
 
-    /// @emoji 🔗 SDL `OwnedEntity` subset for non-empty `ownedEntities` edges.
+    /// @emoji 🔗 SDL `OwnedEntity` subset for non-empty `owns` edges.
     #[derive(Clone, Union)]
     pub enum OwnedEntity {
         Kit(Arc<Kit>),
@@ -5762,12 +5800,12 @@ pub mod iface {
     }
 
     /// 🏷️ Wrap an [`OwnerEntity`] in `Arc` (resolver convenience).
-    pub fn owner_entity_arc(e: OwnerEntity) -> Arc<OwnerEntity> {
+    pub fn owner_arc(e: OwnerEntity) -> Arc<OwnerEntity> {
         Arc::new(e)
     }
 
     /// 🏷️ Map an `Option<OwnerEntity>` resolver value into the `Arc<OwnerEntity>` shape.
-    pub fn owner_entity_arc_opt(o: Option<OwnerEntity>) -> Option<Arc<OwnerEntity>> {
+    pub fn owner_arc_opt(o: Option<OwnerEntity>) -> Option<Arc<OwnerEntity>> {
         o.map(Arc::new)
     }
 
@@ -5860,11 +5898,11 @@ pub mod iface {
         pub async fn hash(&self) -> String {
             self.compute_hash().await
         }
-        pub async fn owner_entity(&self) -> Option<std::sync::Arc<crate::iface::OwnerEntity>> {
+        pub async fn owner(&self) -> Option<std::sync::Arc<crate::interface::OwnerEntity>> {
             None
         }
-        pub async fn owned_entities(&self) -> Option<std::sync::Arc<crate::iface::OwnedEntityConnection>> {
-            Some(crate::iface::empty_owned_entity_connection())
+        pub async fn owns(&self) -> Option<std::sync::Arc<crate::interface::OwnedEntityConnection>> {
+            Some(crate::interface::empty_owned_entity_connection())
         }
         pub async fn u(&self) -> f64 {
             *self.u.read().await
@@ -5882,11 +5920,11 @@ pub mod iface {
         pub async fn hash(&self) -> String {
             self.compute_hash().await
         }
-        pub async fn owner_entity(&self) -> Option<std::sync::Arc<crate::iface::OwnerEntity>> {
+        pub async fn owner(&self) -> Option<std::sync::Arc<crate::interface::OwnerEntity>> {
             None
         }
-        pub async fn owned_entities(&self) -> Option<std::sync::Arc<crate::iface::OwnedEntityConnection>> {
-            Some(crate::iface::empty_owned_entity_connection())
+        pub async fn owns(&self) -> Option<std::sync::Arc<crate::interface::OwnedEntityConnection>> {
+            Some(crate::interface::empty_owned_entity_connection())
         }
         pub async fn x(&self) -> f64 {
             *self.x.read().await
@@ -5907,11 +5945,11 @@ pub mod iface {
         pub async fn hash(&self) -> String {
             self.compute_hash().await
         }
-        pub async fn owner_entity(&self) -> Option<std::sync::Arc<crate::iface::OwnerEntity>> {
+        pub async fn owner(&self) -> Option<std::sync::Arc<crate::interface::OwnerEntity>> {
             None
         }
-        pub async fn owned_entities(&self) -> Option<std::sync::Arc<crate::iface::OwnedEntityConnection>> {
-            Some(crate::iface::empty_owned_entity_connection())
+        pub async fn owns(&self) -> Option<std::sync::Arc<crate::interface::OwnedEntityConnection>> {
+            Some(crate::interface::empty_owned_entity_connection())
         }
         pub async fn x(&self) -> f64 {
             *self.x.read().await
@@ -5932,11 +5970,11 @@ pub mod iface {
         pub async fn hash(&self) -> String {
             self.compute_hash().await
         }
-        pub async fn owner_entity(&self) -> Option<std::sync::Arc<crate::iface::OwnerEntity>> {
+        pub async fn owner(&self) -> Option<std::sync::Arc<crate::interface::OwnerEntity>> {
             None
         }
-        pub async fn owned_entities(&self) -> Option<std::sync::Arc<crate::iface::OwnedEntityConnection>> {
-            Some(crate::iface::empty_owned_entity_connection())
+        pub async fn owns(&self) -> Option<std::sync::Arc<crate::interface::OwnedEntityConnection>> {
+            Some(crate::interface::empty_owned_entity_connection())
         }
         pub async fn origin(&self) -> Arc<Point> {
             self.origin.clone()
@@ -5959,11 +5997,11 @@ pub mod iface {
         pub async fn hash(&self) -> String {
             self.compute_hash().await
         }
-        pub async fn owner_entity(&self) -> Option<std::sync::Arc<crate::iface::OwnerEntity>> {
+        pub async fn owner(&self) -> Option<std::sync::Arc<crate::interface::OwnerEntity>> {
             None
         }
-        pub async fn owned_entities(&self) -> Option<std::sync::Arc<crate::iface::OwnedEntityConnection>> {
-            Some(crate::iface::empty_owned_entity_connection())
+        pub async fn owns(&self) -> Option<std::sync::Arc<crate::interface::OwnedEntityConnection>> {
+            Some(crate::interface::empty_owned_entity_connection())
         }
         pub async fn center(&self) -> Arc<Coordinate> {
             self.center.clone()
@@ -5981,11 +6019,11 @@ pub mod iface {
         pub async fn hash(&self) -> String {
             self.compute_hash().await
         }
-        pub async fn owner_entity(&self) -> Option<std::sync::Arc<crate::iface::OwnerEntity>> {
+        pub async fn owner(&self) -> Option<std::sync::Arc<crate::interface::OwnerEntity>> {
             None
         }
-        pub async fn owned_entities(&self) -> Option<std::sync::Arc<crate::iface::OwnedEntityConnection>> {
-            Some(crate::iface::empty_owned_entity_connection())
+        pub async fn owns(&self) -> Option<std::sync::Arc<crate::interface::OwnedEntityConnection>> {
+            Some(crate::interface::empty_owned_entity_connection())
         }
         pub async fn u(&self) -> f64 {
             *self.u.read().await
@@ -6004,11 +6042,11 @@ pub mod iface {
         pub async fn hash(&self) -> String {
             self.compute_hash().await
         }
-        pub async fn owner_entity(&self) -> Option<std::sync::Arc<crate::iface::OwnerEntity>> {
+        pub async fn owner(&self) -> Option<std::sync::Arc<crate::interface::OwnerEntity>> {
             None
         }
-        pub async fn owned_entities(&self) -> Option<std::sync::Arc<crate::iface::OwnedEntityConnection>> {
-            Some(crate::iface::empty_owned_entity_connection())
+        pub async fn owns(&self) -> Option<std::sync::Arc<crate::interface::OwnedEntityConnection>> {
+            Some(crate::interface::empty_owned_entity_connection())
         }
         pub async fn longitude(&self) -> f64 {
             *self.longitude.read().await
@@ -6029,16 +6067,16 @@ pub mod iface {
         pub async fn hash(&self) -> String {
             self.compute_hash().await
         }
-        pub async fn owner_entity(&self) -> Option<std::sync::Arc<crate::iface::OwnerEntity>> {
+        pub async fn owner(&self) -> Option<std::sync::Arc<crate::interface::OwnerEntity>> {
             None
         }
-        pub async fn owned_entities(&self) -> Option<std::sync::Arc<crate::iface::OwnedEntityConnection>> {
-            Some(crate::iface::empty_owned_entity_connection())
+        pub async fn owns(&self) -> Option<std::sync::Arc<crate::interface::OwnedEntityConnection>> {
+            Some(crate::interface::empty_owned_entity_connection())
         }
     }
 }
 
-//#endregion 🧷 iface
+//#endregion 🧷 interface
 
 //#region ⚙️ operation
 
@@ -6053,7 +6091,7 @@ pub mod operation {
     use crate::error::SemioError;
     use crate::geom::{OffsetInput, PositionInput};
     use crate::id::Id;
-    use crate::iface::{empty_owned_entity_connection, OwnedEntityConnection, OwnerEntity};
+    use crate::interface::{empty_owned_entity_connection, OwnedEntityConnection, OwnerEntity};
     use crate::meta::{ConceptInput, QualityInput, TagInput};
     use crate::vcs::Edit;
 
@@ -6561,25 +6599,13 @@ pub mod operation {
                     }
                     if kit.type_by_external_id(entity_id).await.is_some() {
                         return Ok(KitDiff(CanonicalKitDiff {
-                            types: Some(TypesCollectionDiff {
-                                modified: vec![TypeModifiedRow {
-                                    type_ref: IdRef { id: entity_id.clone() },
-                                    diff: serde_json::json!({ "description": description }),
-                                }],
-                                ..Default::default()
-                            }),
+                            types: Some(TypesCollectionDiff { modified: vec![TypeModifiedRow { type_ref: IdRef { id: entity_id.clone() }, diff: serde_json::json!({ "description": description }) }], ..Default::default() }),
                             ..Default::default()
                         }));
                     }
                     if kit.design_by_external_id(entity_id).await.is_some() {
                         return Ok(KitDiff(CanonicalKitDiff {
-                            designs: Some(DesignsCollectionDiff {
-                                modified: vec![DesignModifiedRow {
-                                    design: IdRef { id: entity_id.clone() },
-                                    diff: serde_json::json!({ "description": description }),
-                                }],
-                                ..Default::default()
-                            }),
+                            designs: Some(DesignsCollectionDiff { modified: vec![DesignModifiedRow { design: IdRef { id: entity_id.clone() }, diff: serde_json::json!({ "description": description }) }], ..Default::default() }),
                             ..Default::default()
                         }));
                     }
@@ -6617,25 +6643,13 @@ pub mod operation {
                     }
                     if kit.type_by_external_id(entity_id).await.is_some() {
                         return Ok(KitDiff(CanonicalKitDiff {
-                            types: Some(TypesCollectionDiff {
-                                modified: vec![TypeModifiedRow {
-                                    type_ref: IdRef { id: entity_id.clone() },
-                                    diff: serde_json::json!({ "icon": icon }),
-                                }],
-                                ..Default::default()
-                            }),
+                            types: Some(TypesCollectionDiff { modified: vec![TypeModifiedRow { type_ref: IdRef { id: entity_id.clone() }, diff: serde_json::json!({ "icon": icon }) }], ..Default::default() }),
                             ..Default::default()
                         }));
                     }
                     if kit.design_by_external_id(entity_id).await.is_some() {
                         return Ok(KitDiff(CanonicalKitDiff {
-                            designs: Some(DesignsCollectionDiff {
-                                modified: vec![DesignModifiedRow {
-                                    design: IdRef { id: entity_id.clone() },
-                                    diff: serde_json::json!({ "icon": icon }),
-                                }],
-                                ..Default::default()
-                            }),
+                            designs: Some(DesignsCollectionDiff { modified: vec![DesignModifiedRow { design: IdRef { id: entity_id.clone() }, diff: serde_json::json!({ "icon": icon }) }], ..Default::default() }),
                             ..Default::default()
                         }));
                     }
@@ -6655,25 +6669,13 @@ pub mod operation {
                     }
                     if kit.type_by_external_id(entity_id).await.is_some() {
                         return Ok(KitDiff(CanonicalKitDiff {
-                            types: Some(TypesCollectionDiff {
-                                modified: vec![TypeModifiedRow {
-                                    type_ref: IdRef { id: entity_id.clone() },
-                                    diff: serde_json::json!({ "image": image }),
-                                }],
-                                ..Default::default()
-                            }),
+                            types: Some(TypesCollectionDiff { modified: vec![TypeModifiedRow { type_ref: IdRef { id: entity_id.clone() }, diff: serde_json::json!({ "image": image }) }], ..Default::default() }),
                             ..Default::default()
                         }));
                     }
                     if kit.design_by_external_id(entity_id).await.is_some() {
                         return Ok(KitDiff(CanonicalKitDiff {
-                            designs: Some(DesignsCollectionDiff {
-                                modified: vec![DesignModifiedRow {
-                                    design: IdRef { id: entity_id.clone() },
-                                    diff: serde_json::json!({ "image": image }),
-                                }],
-                                ..Default::default()
-                            }),
+                            designs: Some(DesignsCollectionDiff { modified: vec![DesignModifiedRow { design: IdRef { id: entity_id.clone() }, diff: serde_json::json!({ "image": image }) }], ..Default::default() }),
                             ..Default::default()
                         }));
                     }
@@ -6837,13 +6839,7 @@ pub mod operation {
                         "pose": pose,
                     });
                     Ok(KitDiff(CanonicalKitDiff {
-                        designs: Some(DesignsCollectionDiff {
-                            modified: vec![DesignModifiedRow {
-                                design: IdRef { id: design_id.clone() },
-                                diff: serde_json::json!({ "pieces": { "added": [piece_json] } }),
-                            }],
-                            ..Default::default()
-                        }),
+                        designs: Some(DesignsCollectionDiff { modified: vec![DesignModifiedRow { design: IdRef { id: design_id.clone() }, diff: serde_json::json!({ "pieces": { "added": [piece_json] } }) }], ..Default::default() }),
                         ..Default::default()
                     }))
                 }
@@ -6853,13 +6849,7 @@ pub mod operation {
                     };
                     ensure_piece(kit, design_id, piece_id).await?;
                     Ok(KitDiff(CanonicalKitDiff {
-                        designs: Some(DesignsCollectionDiff {
-                            modified: vec![DesignModifiedRow {
-                                design: IdRef { id: design_id.clone() },
-                                diff: serde_json::json!({ "pieces": { "removed": [{ "id": piece_id.as_str() }] } }),
-                            }],
-                            ..Default::default()
-                        }),
+                        designs: Some(DesignsCollectionDiff { modified: vec![DesignModifiedRow { design: IdRef { id: design_id.clone() }, diff: serde_json::json!({ "pieces": { "removed": [{ "id": piece_id.as_str() }] } }) }], ..Default::default() }),
                         ..Default::default()
                     }))
                 }
@@ -6909,13 +6899,7 @@ pub mod operation {
                         }));
                     }
                     Ok(KitDiff(CanonicalKitDiff {
-                        designs: Some(DesignsCollectionDiff {
-                            modified: vec![DesignModifiedRow {
-                                design: IdRef { id: design_id.clone() },
-                                diff: serde_json::json!({ "pieces": { "modified": pm } }),
-                            }],
-                            ..Default::default()
-                        }),
+                        designs: Some(DesignsCollectionDiff { modified: vec![DesignModifiedRow { design: IdRef { id: design_id.clone() }, diff: serde_json::json!({ "pieces": { "modified": pm } }) }], ..Default::default() }),
                         ..Default::default()
                     }))
                 }
@@ -7424,9 +7408,7 @@ pub mod operation {
             if let Some(rest) = u.strip_prefix("remote://") {
                 return Ok((Self::Remote, rest.trim().to_string()));
             }
-            Err(crate::error::SemioError::invalid(
-                "backbone uri must start with dev://, local://, remote://, or file://",
-            ))
+            Err(crate::error::SemioError::invalid("backbone uri must start with dev://, local://, remote://, or file://"))
         }
     }
     //#endregion 🧭 graph workspace + backbone store kind (readable/writable selectors)
@@ -7486,12 +7468,12 @@ pub mod operation {
         pub async fn owner(&self) -> Arc<OperationOwner> {
             Arc::new(OperationOwner::Edit(self.owner_edit.upgrade().unwrap_or_default()))
         }
-        #[graphql(name = "ownerEntity")]
-        pub async fn owner_entity(&self) -> Option<Arc<OwnerEntity>> {
+        #[graphql(name = "owner")]
+        pub async fn owner(&self) -> Option<Arc<OwnerEntity>> {
             None
         }
-        #[graphql(name = "ownedEntities")]
-        pub async fn owned_entities(&self) -> Option<Arc<OwnedEntityConnection>> {
+        #[graphql(name = "owns")]
+        pub async fn owns(&self) -> Option<Arc<OwnedEntityConnection>> {
             Some(empty_owned_entity_connection())
         }
         pub async fn piece(&self) -> Arc<crate::kit::design::piece::Piece> {
@@ -7524,12 +7506,12 @@ pub mod operation {
         pub async fn owner(&self) -> Arc<OperationOwner> {
             Arc::new(OperationOwner::Edit(self.owner_edit.upgrade().unwrap_or_default()))
         }
-        #[graphql(name = "ownerEntity")]
-        pub async fn owner_entity(&self) -> Option<Arc<OwnerEntity>> {
+        #[graphql(name = "owner")]
+        pub async fn owner(&self) -> Option<Arc<OwnerEntity>> {
             None
         }
-        #[graphql(name = "ownedEntities")]
-        pub async fn owned_entities(&self) -> Option<Arc<OwnedEntityConnection>> {
+        #[graphql(name = "owns")]
+        pub async fn owns(&self) -> Option<Arc<OwnedEntityConnection>> {
             Some(empty_owned_entity_connection())
         }
         pub async fn piece(&self) -> Arc<crate::kit::design::piece::Piece> {
@@ -7562,12 +7544,12 @@ pub mod operation {
         pub async fn owner(&self) -> Arc<OperationOwner> {
             Arc::new(OperationOwner::Edit(self.owner_edit.upgrade().unwrap_or_default()))
         }
-        #[graphql(name = "ownerEntity")]
-        pub async fn owner_entity(&self) -> Option<Arc<OwnerEntity>> {
+        #[graphql(name = "owner")]
+        pub async fn owner(&self) -> Option<Arc<OwnerEntity>> {
             None
         }
-        #[graphql(name = "ownedEntities")]
-        pub async fn owned_entities(&self) -> Option<Arc<OwnedEntityConnection>> {
+        #[graphql(name = "owns")]
+        pub async fn owns(&self) -> Option<Arc<OwnedEntityConnection>> {
             Some(empty_owned_entity_connection())
         }
         pub async fn pieces(&self) -> Vec<Arc<crate::kit::design::piece::Piece>> {
@@ -7606,12 +7588,12 @@ pub mod operation {
         pub async fn owner(&self) -> Arc<OperationOwner> {
             Arc::new(OperationOwner::Edit(self.owner_edit.upgrade().unwrap_or_default()))
         }
-        #[graphql(name = "ownerEntity")]
-        pub async fn owner_entity(&self) -> Option<Arc<OwnerEntity>> {
+        #[graphql(name = "owner")]
+        pub async fn owner(&self) -> Option<Arc<OwnerEntity>> {
             None
         }
-        #[graphql(name = "ownedEntities")]
-        pub async fn owned_entities(&self) -> Option<Arc<OwnedEntityConnection>> {
+        #[graphql(name = "owns")]
+        pub async fn owns(&self) -> Option<Arc<OwnedEntityConnection>> {
             Some(empty_owned_entity_connection())
         }
         pub async fn kit(&self) -> Arc<crate::kit::Kit> {
@@ -7644,12 +7626,12 @@ pub mod operation {
         pub async fn owner(&self) -> Arc<OperationOwner> {
             Arc::new(OperationOwner::Edit(self.owner_edit.upgrade().unwrap_or_default()))
         }
-        #[graphql(name = "ownerEntity")]
-        pub async fn owner_entity(&self) -> Option<Arc<OwnerEntity>> {
+        #[graphql(name = "owner")]
+        pub async fn owner(&self) -> Option<Arc<OwnerEntity>> {
             None
         }
-        #[graphql(name = "ownedEntities")]
-        pub async fn owned_entities(&self) -> Option<Arc<OwnedEntityConnection>> {
+        #[graphql(name = "owns")]
+        pub async fn owns(&self) -> Option<Arc<OwnedEntityConnection>> {
             Some(empty_owned_entity_connection())
         }
         pub async fn entity(&self) -> Arc<crate::kit::Kit> {
@@ -7675,10 +7657,10 @@ pub mod operation {
         field(name = "id", ty = "crate::id::Id"),
         field(name = "hash", ty = "String"),
         field(name = "owner", ty = "std::sync::Arc<crate::operation::OperationOwner>"),
-        field(name = "ownerEntity", method = "owner_entity", ty = "Option<std::sync::Arc<crate::iface::OwnerEntity>>"),
-        field(name = "ownedEntities", method = "owned_entities", ty = "Option<std::sync::Arc<crate::iface::OwnedEntityConnection>>")
+        field(name = "owner", method = "owner", ty = "Option<std::sync::Arc<crate::interface::OwnerEntity>>"),
+        field(name = "owns", method = "owns", ty = "Option<std::sync::Arc<crate::interface::OwnedEntityConnection>>")
     )]
-    pub enum OperationIface {
+    pub enum OperationInterface {
         CreatedFixedPiece(Arc<CreatedFixedPiece>),
         FixedPiece(Arc<FixedPiece>),
         DraggedPiece(Arc<DraggedPiece>),
@@ -7686,21 +7668,21 @@ pub mod operation {
         ChangedDescription(Arc<ChangedDescription>),
     }
 
-    impl Default for OperationIface {
+    impl Default for OperationInterface {
         fn default() -> Self {
             Self::CreatedFixedPiece(Arc::new(CreatedFixedPiece::default()))
         }
     }
 
-    impl OperationIface {
+    impl OperationInterface {
         /// @emoji 🪪 Stable row id for relay operation edges / merkle shells.
         pub fn row_id(&self) -> Id {
             match self {
-                OperationIface::CreatedFixedPiece(o) => o.id.clone(),
-                OperationIface::FixedPiece(o) => o.id.clone(),
-                OperationIface::DraggedPiece(o) => o.id.clone(),
-                OperationIface::RenamedKit(o) => o.id.clone(),
-                OperationIface::ChangedDescription(o) => o.id.clone(),
+                OperationInterface::CreatedFixedPiece(o) => o.id.clone(),
+                OperationInterface::FixedPiece(o) => o.id.clone(),
+                OperationInterface::DraggedPiece(o) => o.id.clone(),
+                OperationInterface::RenamedKit(o) => o.id.clone(),
+                OperationInterface::ChangedDescription(o) => o.id.clone(),
             }
         }
     }
@@ -8191,11 +8173,7 @@ pub mod kit_backbone {
     }
 
     /// @emoji 🪢 Hydrates [`crate::kit::design::Design`] pieces from one `designs[]` row (`pieces` block or array).
-    pub(crate) async fn hydrate_design_pieces_from_snapshot_value(
-        des: &std::sync::Arc<crate::kit::design::Design>,
-        kit: &std::sync::Arc<crate::kit::Kit>,
-        d_json: &serde_json::Value,
-    ) -> Result<(), crate::error::SemioError> {
+    pub(crate) async fn hydrate_design_pieces_from_snapshot_value(des: &std::sync::Arc<crate::kit::design::Design>, kit: &std::sync::Arc<crate::kit::Kit>, d_json: &serde_json::Value) -> Result<(), crate::error::SemioError> {
         use std::collections::HashMap;
         {
             let mut pcs = des.pieces.write().await;
@@ -8978,10 +8956,7 @@ CREATE TABLE IF NOT EXISTS conflict_stub (
 
     /// @emoji 📑 US-001 golden JSON: top-level `operations` array, or legacy key `ops` (see `kit-store.golden.ops.semio.json`).
     pub fn golden_operation_records_ref(src: &serde_json::Value) -> Result<&Vec<serde_json::Value>, SemioError> {
-        src.get("operations")
-            .and_then(|v| v.as_array())
-            .or_else(|| src.get("ops").and_then(|v| v.as_array()))
-            .ok_or_else(|| SemioError::invalid("golden operations missing `operations` or `ops` array"))
+        src.get("operations").and_then(|v| v.as_array()).or_else(|| src.get("ops").and_then(|v| v.as_array())).ok_or_else(|| SemioError::invalid("golden operations missing `operations` or `ops` array"))
     }
 
     /// @emoji 🧪 Build [`StoredOperation`] rows from `kit-store.golden.ops.semio.json` (US-001 fixture) for persistence tests.
@@ -9051,12 +9026,7 @@ pub mod event {
                 Self::RenamedKit(_) => vec!["wip:theKit:kit:name".into(), "authoritative:theKit:kit:name".into()],
                 Self::ChangedDescription(_) => vec!["wip:theKit:kit:description".into(), "authoritative:theKit:kit:description".into()],
                 Self::CreatedFixedPiece(_) | Self::FixedPiece(_) | Self::DraggedPiece(_) => {
-                    vec![
-                        "wip:theKit:kit".into(),
-                        "wip:theKit:kit:designs".into(),
-                        "authoritative:theKit:kit".into(),
-                        "authoritative:theKit:kit:designs".into(),
-                    ]
+                    vec!["wip:theKit:kit".into(), "wip:theKit:kit:designs".into(), "authoritative:theKit:kit".into(), "authoritative:theKit:kit:designs".into()]
                 }
             }
         }
@@ -9122,7 +9092,7 @@ pub mod worker {
     use crate::error::SemioError;
     use crate::event::{Event, EventBus};
     use crate::id::Id;
-    use crate::operation::{Command, CommandReceipt, CreatedFixedPiece, CreatedFixedPieceInput, Diff, Input, KitOperation, OperationIface, RenamedKit, RenamedKitInput as OperationRenamedKitInput, Scope};
+    use crate::operation::{Command, CommandReceipt, CreatedFixedPiece, CreatedFixedPieceInput, Diff, Input, KitOperation, OperationInterface, RenamedKit, RenamedKitInput as OperationRenamedKitInput, Scope};
     use crate::vcs::{Conflict, Graph, Session};
 
     //#region 🗄️ backbone slot
@@ -9345,9 +9315,9 @@ pub mod worker {
                     diff.id = Id::new().await;
                     diff.summary = Some("renameKit".to_string());
                     let op_evt = Arc::new(RenamedKit { id: Id::new().await, request_id, owner_edit: Arc::downgrade(&tx_edit), input: OperationRenamedKitInput { name: name.clone() }, diff, kit: after_kit.clone() });
-                    let iface = Arc::new(OperationIface::RenamedKit(op_evt.clone()));
-                    graph.op_history.write().await.push(iface.clone());
-                    tx_edit.forward_iface_operations.write().await.push(iface);
+                    let interface = Arc::new(OperationInterface::RenamedKit(op_evt.clone()));
+                    graph.op_history.write().await.push(interface.clone());
+                    tx_edit.forward_interface_operations.write().await.push(interface);
                     self.bus.emit_event(Event::RenamedKit(op_evt)).await;
                 }
                 KitOperation::CreateFixedPiece { scope, input } => {
@@ -9367,9 +9337,9 @@ pub mod worker {
                     let diff = crate::kit_graph_engine::deterministic__diff("createFixedPiece", &payload_json, &fp_before, &fp_after);
                     let created_input = CreatedFixedPieceInput { design_id: design_id.clone(), blueprint_id: blueprint_id.clone(), position: position.clone(), name: name.clone(), description: description.clone() };
                     let op_evt = Arc::new(CreatedFixedPiece { id: Id::new().await, owner_edit: Arc::downgrade(&tx_edit), input: created_input, diff, piece });
-                    let iface = Arc::new(OperationIface::CreatedFixedPiece(op_evt.clone()));
-                    graph.op_history.write().await.push(iface.clone());
-                    tx_edit.forward_iface_operations.write().await.push(iface);
+                    let interface = Arc::new(OperationInterface::CreatedFixedPiece(op_evt.clone()));
+                    graph.op_history.write().await.push(interface.clone());
+                    tx_edit.forward_interface_operations.write().await.push(interface);
                     self.bus.emit_event(Event::CreatedFixedPiece(op_evt)).await;
                 }
                 _ => {}
@@ -9440,7 +9410,7 @@ pub mod gql {
 
         #[derive(Clone, Interface)]
         #[graphql(name = "Node", field(name = "id", ty = "crate::id::Id"))]
-        pub enum NodeIface {
+        pub enum NodeInterface {
             Vector(Arc<Vector>),
             Point(Arc<Point>),
             Coordinate(Arc<Coordinate>),
@@ -9452,7 +9422,7 @@ pub mod gql {
 
         #[derive(Clone, Interface)]
         #[graphql(name = "EntityEdge", field(name = "cursor", ty = "String"))]
-        pub enum EntityEdgeIface {
+        pub enum EntityEdgeInterface {
             Vector(VectorEdge),
             Point(PointEdge),
             Coordinate(CoordinateEdge),
@@ -9473,7 +9443,7 @@ pub mod gql {
             field(name = "unsavedChanges", method = "unsaved_changes", ty = "crate::gql_relay::ChangeConnection"),
             field(name = "kit", ty = "Arc<crate::kit::Kit>")
         )]
-        pub enum VersionIface {
+        pub enum VersionInterface {
             TheKit(Arc<crate::vcs::TheKit>),
             Alternative(Arc<crate::vcs::Alternative>),
         }
@@ -9509,13 +9479,13 @@ pub mod gql {
         }
 
         /// @emoji 🔎 Relay-style global `node` lookup (WIP + authoritative + sessions + conflicts).
-        pub async fn node(&self, ctx: &Context<'_>, id: Id) -> async_graphql::Result<Option<crate::iface::GqlNode>> {
+        pub async fn node(&self, ctx: &Context<'_>, id: Id) -> async_graphql::Result<Option<crate::interface::GqlNode>> {
             let rt = ctx.data::<Arc<ParentRuntime>>()?;
-            Ok(crate::iface::resolve_node(rt.as_ref(), &id).await)
+            Ok(crate::interface::resolve_node(rt.as_ref(), &id).await)
         }
 
         /// @emoji 🔎 Alias of [`Query::node`] for SDL `entity` entry point (`hash` merkle id).
-        pub async fn entity(&self, ctx: &Context<'_>, hash: Id) -> async_graphql::Result<Option<crate::iface::GqlNode>> {
+        pub async fn entity(&self, ctx: &Context<'_>, hash: Id) -> async_graphql::Result<Option<crate::interface::GqlNode>> {
             self.node(ctx, hash).await
         }
 
@@ -9533,7 +9503,7 @@ pub mod gql {
     pub struct SessionCommandNav;
 
     #[Object(name = "SessionCommandInput")]
-    impl SessionCommandNav {
+    impl SessionCommand {
         async fn start(&self, ctx: &Context<'_>) -> async_graphql::Result<Id> {
             let rt = ctx.data::<Arc<ParentRuntime>>()?;
             let _ = rt.wip_graph.ensure_default_seed_state().await;
@@ -9555,17 +9525,17 @@ pub mod gql {
             Ok(Id::new().await)
         }
 
-        async fn backbone(&self) -> BackboneCommandNav {
+        async fn backbone(&self) -> BackboneCommand {
             BackboneCommandNav
         }
 
         #[graphql(name = "theKit")]
-        async fn the_kit(&self) -> VersionCommandNav {
+        async fn the_kit(&self) -> VersionCommand {
             VersionCommandNav
         }
 
-        async fn alternative(&self, #[graphql(name = "id")] id: Id) -> AlternativeCommandNav {
-            AlternativeCommandNav { alternative_id: id }
+        async fn alternative(&self, #[graphql(name = "id")] id: Id) -> AlternativeCommand {
+            AlternativeCommand { alternative_id: id }
         }
 
         #[graphql(name = "startAlternative")]
@@ -9588,7 +9558,7 @@ pub mod gql {
     }
 
     #[Object(name = "BackboneCommandInput")]
-    impl BackboneCommandNav {
+    impl BackboneCommand {
         async fn attach(&self, ctx: &Context<'_>, uri: String) -> async_graphql::Result<Id> {
             let _ = crate::operation::BackboneKind::from_uri(&uri).map_err(|e| async_graphql::Error::new(e.message))?;
             let rt = ctx.data::<Arc<ParentRuntime>>()?;
@@ -9623,7 +9593,7 @@ pub mod gql {
     pub struct VersionCommandNav;
 
     #[Object(name = "VersionCommandInput")]
-    impl VersionCommandNav {
+    impl VersionCommand {
         #[graphql(name = "startNewChange")]
         async fn start_new_change(&self, ctx: &Context<'_>) -> async_graphql::Result<Id> {
             let rt = ctx.data::<Arc<ParentRuntime>>()?;
@@ -9641,7 +9611,7 @@ pub mod gql {
                     return Err(async_graphql::Error::new("unsavedChange id does not match active change"));
                 }
             }
-            Ok(UnsavedChangeNav { change_id: id })
+            Ok(UnsavedChange { change_id: id })
         }
 
         async fn save(&self, ctx: &Context<'_>) -> async_graphql::Result<Id> {
@@ -9662,14 +9632,14 @@ pub mod gql {
         }
     }
 
-    pub struct UnsavedChangeNav {
+    pub struct UnsavedChange {
         pub change_id: Id,
     }
 
     #[Object(name = "UnsavedChangeCommandInput")]
-    impl UnsavedChangeNav {
-        async fn kit(&self) -> KitOperationNav {
-            KitOperationNav { change_id: self.change_id.clone() }
+    impl UnsavedChange {
+        async fn kit(&self) -> KitOperation {
+            KitOperation { change_id: self.change_id.clone() }
         }
 
         async fn save(&self, ctx: &Context<'_>) -> async_graphql::Result<Id> {
@@ -9687,12 +9657,12 @@ pub mod gql {
         }
     }
 
-    pub struct AlternativeCommandNav {
+    pub struct AlternativeCommand {
         pub alternative_id: Id,
     }
 
     #[Object(name = "AlternativeCommandInput")]
-    impl AlternativeCommandNav {
+    impl AlternativeCommand {
         async fn version(&self, ctx: &Context<'_>) -> async_graphql::Result<Id> {
             let _ = (ctx, &self.alternative_id);
             Ok(Id::new().await)
@@ -9705,12 +9675,12 @@ pub mod gql {
         }
     }
 
-    pub struct KitOperationNav {
+    pub struct KitOperation {
         pub change_id: Id,
     }
 
     #[Object(name = "KitOperationInput")]
-    impl KitOperationNav {
+    impl KitOperation {
         #[graphql(name = "rename")]
         async fn rename(&self, ctx: &Context<'_>, #[graphql(name = "newName")] new_name: String) -> async_graphql::Result<Id> {
             let rt = ctx.data::<Arc<ParentRuntime>>()?;
@@ -9750,8 +9720,8 @@ pub mod gql {
             Ok(rt.dispatch_wip(cmd).await)
         }
 
-        async fn tag(&self, #[graphql(name = "id")] id: Id) -> TagOperationNav {
-            TagOperationNav { change_id: self.change_id.clone(), tag_id: id }
+        async fn tag(&self, #[graphql(name = "id")] id: Id) -> TagOperation {
+            TagOperation { change_id: self.change_id.clone(), tag_id: id }
         }
 
         #[graphql(name = "deleteTag")]
@@ -9787,8 +9757,8 @@ pub mod gql {
             Ok(rt.dispatch_wip(cmd).await)
         }
 
-        async fn concept(&self, #[graphql(name = "id")] id: Id) -> ConceptOperationNav {
-            ConceptOperationNav { change_id: self.change_id.clone(), concept_id: id }
+        async fn concept(&self, #[graphql(name = "id")] id: Id) -> ConceptOperation {
+            ConceptOperation { change_id: self.change_id.clone(), concept_id: id }
         }
 
         #[graphql(name = "deleteConcept")]
@@ -9824,8 +9794,8 @@ pub mod gql {
             Ok(rt.dispatch_wip(cmd).await)
         }
 
-        async fn quality(&self, #[graphql(name = "id")] id: Id) -> QualityOperationNav {
-            QualityOperationNav { change_id: self.change_id.clone(), quality_id: id }
+        async fn quality(&self, #[graphql(name = "id")] id: Id) -> QualityOperation {
+            QualityOperation { change_id: self.change_id.clone(), quality_id: id }
         }
 
         #[graphql(name = "deleteQuality")]
@@ -9846,8 +9816,8 @@ pub mod gql {
             Ok(Id::new().await)
         }
 
-        async fn r#type(&self, #[graphql(name = "id")] id: Id) -> TypeOperationNav {
-            TypeOperationNav { change_id: self.change_id.clone(), type_id: id }
+        async fn r#type(&self, #[graphql(name = "id")] id: Id) -> TypeOperation {
+            TypeOperation { change_id: self.change_id.clone(), type_id: id }
         }
 
         #[graphql(name = "deleteType")]
@@ -9868,8 +9838,8 @@ pub mod gql {
             Ok(Id::new().await)
         }
 
-        async fn design(&self, #[graphql(name = "id")] id: Id) -> DesignOperationNav {
-            DesignOperationNav { change_id: self.change_id.clone(), design_id: id }
+        async fn design(&self, #[graphql(name = "id")] id: Id) -> DesignOperation {
+            DesignOperation { change_id: self.change_id.clone(), design_id: id }
         }
 
         #[graphql(name = "deleteDesign")]
@@ -9885,13 +9855,13 @@ pub mod gql {
         }
     }
 
-    pub struct TagOperationNav {
+    pub struct TagOperation {
         pub change_id: Id,
         pub tag_id: Id,
     }
 
     #[Object(name = "TagOperationInput")]
-    impl TagOperationNav {
+    impl TagOperation {
         #[graphql(name = "rename")]
         async fn rename(&self, ctx: &Context<'_>, #[graphql(name = "newName")] new_name: String) -> async_graphql::Result<Id> {
             let _ = (ctx, self, new_name);
@@ -9924,13 +9894,13 @@ pub mod gql {
         }
     }
 
-    pub struct ConceptOperationNav {
+    pub struct ConceptOperation {
         pub change_id: Id,
         pub concept_id: Id,
     }
 
     #[Object(name = "ConceptOperationInput")]
-    impl ConceptOperationNav {
+    impl ConceptOperation {
         #[graphql(name = "rename")]
         async fn rename(&self, ctx: &Context<'_>, #[graphql(name = "newName")] new_name: String) -> async_graphql::Result<Id> {
             let _ = (ctx, self, new_name);
@@ -9963,13 +9933,13 @@ pub mod gql {
         }
     }
 
-    pub struct QualityOperationNav {
+    pub struct QualityOperation {
         pub change_id: Id,
         pub quality_id: Id,
     }
 
     #[Object(name = "QualityOperationInput")]
-    impl QualityOperationNav {
+    impl QualityOperation {
         #[graphql(name = "rename")]
         async fn rename(&self, ctx: &Context<'_>, #[graphql(name = "newKey")] new_key: String) -> async_graphql::Result<Id> {
             let _ = (ctx, self, new_key);
@@ -10002,13 +9972,13 @@ pub mod gql {
         }
     }
 
-    pub struct TypeOperationNav {
+    pub struct TypeOperation {
         pub change_id: Id,
         pub type_id: Id,
     }
 
     #[Object(name = "TypeOperationInput")]
-    impl TypeOperationNav {
+    impl TypeOperation {
         #[graphql(name = "rename")]
         async fn rename(&self, ctx: &Context<'_>, #[graphql(name = "newName")] new_name: String) -> async_graphql::Result<Id> {
             let _ = (ctx, self, new_name);
@@ -10044,8 +10014,8 @@ pub mod gql {
             let _ = (ctx, self, code, label, description, icon, order);
             Ok(Id::new().await)
         }
-        async fn port(&self, #[graphql(name = "id")] id: Id) -> PortOperationNav {
-            PortOperationNav { change_id: self.change_id.clone(), type_id: self.type_id.clone(), port_id: id }
+        async fn port(&self, #[graphql(name = "id")] id: Id) -> PortOperation {
+            PortOperation { change_id: self.change_id.clone(), type_id: self.type_id.clone(), port_id: id }
         }
         #[graphql(name = "deletePort")]
         async fn delete_port(&self, ctx: &Context<'_>, id: Id) -> async_graphql::Result<Id> {
@@ -10062,8 +10032,8 @@ pub mod gql {
             let _ = (ctx, self, code, description, icon, port_id);
             Ok(Id::new().await)
         }
-        async fn connector(&self, #[graphql(name = "id")] id: Id) -> ConnectorOperationNav {
-            ConnectorOperationNav { change_id: self.change_id.clone(), type_id: self.type_id.clone(), connector_id: id }
+        async fn connector(&self, #[graphql(name = "id")] id: Id) -> ConnectorOperation {
+            ConnectorOperation { change_id: self.change_id.clone(), type_id: self.type_id.clone(), connector_id: id }
         }
         #[graphql(name = "removeConnector")]
         async fn remove_connector(&self, ctx: &Context<'_>, id: Id) -> async_graphql::Result<Id> {
@@ -10077,14 +10047,14 @@ pub mod gql {
         }
     }
 
-    pub struct PortOperationNav {
+    pub struct PortOperation {
         pub change_id: Id,
         pub type_id: Id,
         pub port_id: Id,
     }
 
     #[Object(name = "PortOperationInput")]
-    impl PortOperationNav {
+    impl PortOperation {
         #[graphql(name = "rename")]
         async fn rename(&self, ctx: &Context<'_>, #[graphql(name = "newCode")] new_code: String, #[graphql(name = "newLabel")] new_label: Option<String>) -> async_graphql::Result<Id> {
             let _ = (ctx, self, new_code, new_label);
@@ -10117,14 +10087,14 @@ pub mod gql {
         }
     }
 
-    pub struct ConnectorOperationNav {
+    pub struct ConnectorOperation {
         pub change_id: Id,
         pub type_id: Id,
         pub connector_id: Id,
     }
 
     #[Object(name = "ConnectorOperationInput")]
-    impl ConnectorOperationNav {
+    impl ConnectorOperation {
         #[graphql(name = "rename")]
         async fn rename(&self, ctx: &Context<'_>, #[graphql(name = "newCode")] new_code: String) -> async_graphql::Result<Id> {
             let _ = (ctx, self, new_code);
@@ -10142,13 +10112,13 @@ pub mod gql {
         }
     }
 
-    pub struct DesignOperationNav {
+    pub struct DesignOperation {
         pub change_id: Id,
         pub design_id: Id,
     }
 
     #[Object(name = "DesignOperationInput")]
-    impl DesignOperationNav {
+    impl DesignOperation {
         #[graphql(name = "rename")]
         async fn rename(&self, ctx: &Context<'_>, #[graphql(name = "newName")] new_name: String) -> async_graphql::Result<Id> {
             let _ = (ctx, self, new_name);
@@ -10227,11 +10197,11 @@ pub mod gql {
             let _ = (ctx, self, blueprint_id, parent_piece_id, parent_connector, child_connector, position, name, description, scale);
             Ok(Id::new().await)
         }
-        async fn piece(&self, #[graphql(name = "id")] id: Id) -> PieceOperationNav {
-            PieceOperationNav { change_id: self.change_id.clone(), design_id: self.design_id.clone(), piece_id: id }
+        async fn piece(&self, #[graphql(name = "id")] id: Id) -> PieceOperation {
+            PieceOperation { change_id: self.change_id.clone(), design_id: self.design_id.clone(), piece_id: id }
         }
-        async fn pieces(&self, ids: Vec<Id>) -> PiecesOperationNav {
-            PiecesOperationNav { change_id: self.change_id.clone(), design_id: self.design_id.clone(), piece_ids: ids }
+        async fn pieces(&self, ids: Vec<Id>) -> PiecesOperation {
+            PiecesOperation { change_id: self.change_id.clone(), design_id: self.design_id.clone(), piece_ids: ids }
         }
         #[graphql(name = "deletePiece")]
         async fn delete_piece(&self, ctx: &Context<'_>, id: Id) -> async_graphql::Result<Id> {
@@ -10250,14 +10220,14 @@ pub mod gql {
         }
     }
 
-    pub struct PieceOperationNav {
+    pub struct PieceOperation {
         pub change_id: Id,
         pub design_id: Id,
         pub piece_id: Id,
     }
 
     #[Object(name = "PieceOperationInput")]
-    impl PieceOperationNav {
+    impl PieceOperation {
         #[graphql(name = "rename")]
         async fn rename(&self, ctx: &Context<'_>, #[graphql(name = "newName")] new_name: String) -> async_graphql::Result<Id> {
             let _ = (ctx, self, new_name);
@@ -10313,14 +10283,14 @@ pub mod gql {
         }
     }
 
-    pub struct PiecesOperationNav {
+    pub struct PiecesOperation {
         pub change_id: Id,
         pub design_id: Id,
         pub piece_ids: Vec<Id>,
     }
 
     #[Object(name = "PiecesOperationInput")]
-    impl PiecesOperationNav {
+    impl PiecesOperation {
         async fn drag(&self, ctx: &Context<'_>, offset: OffsetInput) -> async_graphql::Result<Id> {
             let rt = ctx.data::<Arc<ParentRuntime>>()?;
             let (draft_id, transaction_id) = rt.wip_kit_scope.read().await.clone().ok_or_else(|| async_graphql::Error::new("no active kit scope"))?;
@@ -10357,22 +10327,22 @@ pub mod gql {
     #[Object]
     impl Mutation {
         /// @emoji 🎛️ Kit-changing commands — navigate via nested fields per `target.schema.graphql` `#region Commands`.
-        async fn session(&self) -> SessionCommandNav {
+        async fn session(&self) -> SessionCommand {
             SessionCommandNav
         }
     }
 
     pub struct Subscription;
 
-    type SessStream = Pin<Box<dyn Stream<Item = async_graphql::Result<Arc<crate::vcs::Session>>> + Send>>;
+    type SessionStream = Pin<Box<dyn Stream<Item = async_graphql::Result<Arc<crate::vcs::Session>>> + Send>>;
     type GraphStream = Pin<Box<dyn Stream<Item = async_graphql::Result<Arc<Graph>>> + Send>>;
-    type ConfStream = Pin<Box<dyn Stream<Item = async_graphql::Result<crate::gql_relay::ConflictConnection>> + Send>>;
-    type NodeStream = Pin<Box<dyn Stream<Item = async_graphql::Result<Option<crate::iface::GqlNode>>> + Send>>;
+    type ConflictStream = Pin<Box<dyn Stream<Item = async_graphql::Result<crate::gql_relay::ConflictConnection>> + Send>>;
+    type NodeStream = Pin<Box<dyn Stream<Item = async_graphql::Result<Option<crate::interface::GqlNode>>> + Send>>;
 
     #[Subscription]
     impl Subscription {
         /// @emoji 📡 Live-query mirror of [`Query::session`] — re-emits on each outbound [`EventBus`] tick.
-        async fn session(&self, ctx: &Context<'_>) -> async_graphql::Result<SessStream> {
+        async fn session(&self, ctx: &Context<'_>) -> async_graphql::Result<SessionStream> {
             let rt = ctx.data::<Arc<ParentRuntime>>()?.clone();
             let bus = ctx.data::<Arc<EventBus>>()?.clone();
             let watched = collect_subscription_field_paths("session", ctx);
@@ -10464,7 +10434,7 @@ pub mod gql {
         }
 
         /// @emoji 📡 Live-query mirror of [`Query::conflicts`].
-        async fn conflicts(&self, ctx: &Context<'_>) -> async_graphql::Result<ConfStream> {
+        async fn conflicts(&self, ctx: &Context<'_>) -> async_graphql::Result<ConflictStream> {
             let rt = ctx.data::<Arc<ParentRuntime>>()?.clone();
             let bus = ctx.data::<Arc<EventBus>>()?.clone();
             let watched = collect_subscription_field_paths("conflicts", ctx);
@@ -10503,7 +10473,7 @@ pub mod gql {
                 let mut broadcast_rx = if filtered { None } else { Some(bus.subscribe()) };
                 let path_rx = if filtered { Some(bus.subscribe_paths(&watched)) } else { None };
                 loop {
-                    let out = crate::iface::resolve_node(rt.as_ref(), &id_capture).await;
+                    let out = crate::interface::resolve_node(rt.as_ref(), &id_capture).await;
                     yield Ok(out);
                     if let Some(ref prx) = path_rx {
                         if prx.recv().await.is_err() {
@@ -10532,7 +10502,7 @@ pub mod gql {
                 let mut broadcast_rx = if filtered { None } else { Some(bus.subscribe()) };
                 let path_rx = if filtered { Some(bus.subscribe_paths(&watched)) } else { None };
                 loop {
-                    let out = crate::iface::resolve_node(rt.as_ref(), &hash_capture).await;
+                    let out = crate::interface::resolve_node(rt.as_ref(), &hash_capture).await;
                     yield Ok(out);
                     if let Some(ref prx) = path_rx {
                         if prx.recv().await.is_err() {
@@ -10599,9 +10569,9 @@ pub mod gql {
             .register_output_type::<crate::kit::target_operations::RemovedAttributesFromPortInput>()
             .register_output_type::<crate::kit::target_operations::DeletedPortInput>()
             .register_output_type::<crate::kit::target_operations::DeletedPortsInput>()
-            .register_output_type::<crate::gql::interfaces::NodeIface>()
-            .register_output_type::<crate::gql::interfaces::EntityEdgeIface>()
-            .register_output_type::<crate::gql::interfaces::VersionIface>()
+            .register_output_type::<crate::gql::interfaces::NodeInterface>()
+            .register_output_type::<crate::gql::interfaces::EntityEdgeInterface>()
+            .register_output_type::<crate::gql::interfaces::VersionInterface>()
             .register_output_type::<crate::gql::BackboneStatus>()
             .finish()
     }
@@ -10678,9 +10648,7 @@ pub mod wasm_bridge {
         if !resp.ok() {
             return Err(crate::error::SemioError::invalid(format!("http {}", resp.status())));
         }
-        let text = JsFuture::from(resp.text().map_err(|e| crate::error::SemioError::invalid(format!("text(): {e:?}")))?)
-            .await
-            .map_err(|e| crate::error::SemioError::invalid(format!("text await: {e:?}")))?;
+        let text = JsFuture::from(resp.text().map_err(|e| crate::error::SemioError::invalid(format!("text(): {e:?}")))?).await.map_err(|e| crate::error::SemioError::invalid(format!("text await: {e:?}")))?;
         Ok(text.as_string().unwrap_or_default())
     }
 
@@ -10701,9 +10669,7 @@ pub mod wasm_bridge {
             return Ok(ParentRuntime::spawn().await);
         }
         if let Some(b64) = u.strip_prefix("dev+json:") {
-            let bytes = base64::engine::general_purpose::STANDARD
-                .decode(b64.trim())
-                .map_err(|e| crate::error::SemioError::invalid(format!("base64: {e}")))?;
+            let bytes = base64::engine::general_purpose::STANDARD.decode(b64.trim()).map_err(|e| crate::error::SemioError::invalid(format!("base64: {e}")))?;
             let v: serde_json::Value = serde_json::from_slice(&bytes).map_err(|e| crate::error::SemioError::invalid(e.to_string()))?;
             return bootstrap_runtime_from_json_value(v).await;
         }
@@ -10714,9 +10680,7 @@ pub mod wasm_bridge {
             let v: serde_json::Value = serde_json::from_str(&txt).map_err(|e| crate::error::SemioError::invalid(e.to_string()))?;
             return bootstrap_runtime_from_json_value(v).await;
         }
-        Err(crate::error::SemioError::invalid(
-            "KitStoreHandle.create: use dev://empty, dev+json:<standard-base64>, or dev://<http(s)|blob-url> returning kit or bundle JSON",
-        ))
+        Err(crate::error::SemioError::invalid("KitStoreHandle.create: use dev://empty, dev+json:<standard-base64>, or dev://<http(s)|blob-url> returning kit or bundle JSON"))
     }
 
     #[derive(Deserialize)]
@@ -11759,12 +11723,11 @@ mod tests {
     #[test]
     fn geom_plane_compute_hash_stable() {
         block_on(async {
-            let pl =
-                crate::geom::entity::Plane::from_input(crate::geom::PlaneInput {
-                    origin: crate::geom::PointInput { x: 0.0, y: 0.0, z: 0.0 },
-                    x_axis: crate::geom::VectorInput { x: 1.0, y: 0.0, z: 0.0 },
-                    y_axis: crate::geom::VectorInput { x: 0.0, y: 1.0, z: 0.0 },
-                });
+            let pl = crate::geom::entity::Plane::from_input(crate::geom::PlaneInput {
+                origin: crate::geom::PointInput { x: 0.0, y: 0.0, z: 0.0 },
+                x_axis: crate::geom::VectorInput { x: 1.0, y: 0.0, z: 0.0 },
+                y_axis: crate::geom::VectorInput { x: 0.0, y: 1.0, z: 0.0 },
+            });
             assert_eq!(pl.compute_hash().await, pl.compute_hash().await);
         });
     }
