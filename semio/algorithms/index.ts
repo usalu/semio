@@ -79,9 +79,6 @@ export class AlgorithmKitFacade {
     };
   }
 }
-
-/** @emoji 🧰 Alias for stories that import `Kit as KitRuntime`. */
-export const KitRuntime = AlgorithmKitFacade;
 // #endregion 🧰StoryKitFacade
 
 // #region 🧱PlainDesignModel

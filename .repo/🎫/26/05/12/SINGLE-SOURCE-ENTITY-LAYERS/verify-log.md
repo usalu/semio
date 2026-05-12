@@ -1,12 +1,21 @@
-# Verification (2026-05-12, follow-up)
+# Verification — directive pass (2026-05-12)
 
-## Commands (exit 0 unless noted)
+## Constraint applied (user)
 
-- `cargo check -p semio --target-dir target-ssel` — **ok** (after fixing `BackboneStatus` Copy, `BackboneAttach` `&connection_uri`, wasm `bootstrap_runtime_from_open_uri` `Ok(...)`).
-- `cargo check -p semio --target wasm32-unknown-unknown --target-dir target-ssel-wasm` — **ok** (same fixes).
-- `cargo test -p semio --target-dir target-ssel schema_matches_target_graphql_file -- --nocapture` — **ok** (1 test).
-- `bunx tsc --noEmit` in `semio/react` — **exit 2**: many pre-existing errors (duplicate `usePiece` / `Kit` type shadow vs `@semio/js` `Kit`, missing `@semio/js` exports for embedded-test-only symbols, missing `PositionInput`, etc.). Not fully cleared in this pass.
+- **No** `KitRuntime` / embed-host umbrella in React: context holds **`Kit` only**; `useKit()` returns **`Kit`**. Materialization read point stays in provider state and is applied via **`Kit#setReadPoint`** (not exposed as a synthetic runtime object).
+- **JS**: VCS navigation uses **entity classes** aligned with the plan: `Graph`, `Session`, `TheKit`, `Checkpoint`, `Alternative`, `Change`, `Edit`, `Conflict`, abstract **`Operation`**, plus **`Kit#wip` / `#authoritative` / `#session` / `#conflict`**.
+- **React**: **`useWipGraph`**, **`useAuthoritativeGraph`**, **`useSession`** (no shim). Optional **`GraphContextProvider` + `useGraph()`** when a subtree must bind `GraphRootKind` explicitly.
+- **Algorithms story**: `FindReplaceableTypesInDesigns` now imports **`Kit` from `../../index`** (algorithms façade `Kit.ensure`) — not `@semio/react` — removed **`Kit as KitRuntime`** pattern.
 
-## Notes
+## Commands (this pass)
 
-- Isolated `CARGO_TARGET_DIR` avoids the concurrent default `target/` lock called out in the prior log.
+- `bunx tsc --noEmit` in `semio/js` — **exit 0**
+- `bunx tsc --noEmit` in `semio/react` — **exit 0**
+- `bunx tsc --noEmit` in `semio/sketchpad` — **exit 0** (note: sketchpad `tsconfig` inherits `include` from `semio/js`; giant `index.tsx` may be outside default program — treat as smoke only until sketchpad tsconfig includes app entry)
+
+## Remaining plan (for follow-up)
+
+- Rust: geom weak single-struct collapse; serde_json confinement; exhaustive `Event::canonical_touched_paths`.
+- JS: weak **classes** (`Position`, …), full operation roster, `EntityRef`, purge `KIT_*` specs, private Json surface.
+- React: full field-hook inventory; vitest negative-greps vs plan list; migrate **sketchpad** off legacy `useKitRuntimeSafe` / `useKitScope` imports (still present in source).
+- `npm run depcruise:layers`; `cargo check` / `cargo test` matrix with isolated `--target-dir`.

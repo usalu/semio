@@ -556,7 +556,7 @@ pub mod error {
 //#region 📐 geom
 
 pub mod geom {
-    //! 📐 Geometry: `values` (Copy DTOs for serde / kit engine) + `entity` (`Arc` graph nodes, WeakEntity-style ids).
+    //! 📐 Geometry: Copy wire structs (serde / kit inputs) + `entity` (`Arc` graph nodes). Live [`entity::PositionNode`] state is only in child locks; [`Position`] snapshots are derived on read.
     use async_graphql::InputObject;
     use serde::{Deserialize, Serialize};
 
@@ -768,13 +768,12 @@ pub mod geom {
             }
         }
 
-        /// @emoji ⌖ Position WeakEntity root (center + plane); mirrors live [`super::Position`] DTO via RwLock sync.
+        /// @emoji ⌖ Position WeakEntity root (center + plane); canonical live state lives only in child nodes (no duplicate Copy payload).
         #[derive(Debug)]
         pub struct PositionNode {
             pub id: Id,
             pub center: Arc<CoordinateNode>,
             pub plane: Arc<PlaneNode>,
-            pub data: RwLock<Position>,
         }
 
         impl PositionNode {
@@ -782,16 +781,35 @@ pub mod geom {
                 let center = CoordinateNode::from_value(value.center);
                 let plane = PlaneNode::from_value(value.plane);
                 let id = weak("position", &[center.id.as_str(), plane.id.as_str()]);
-                Arc::new(Self { id, center, plane, data: RwLock::new(value) })
+                Arc::new(Self { id, center, plane })
             }
 
+            /// @emoji 📸 Assembles the wire [`super::Position`] snapshot from live center + plane child locks (single source of truth).
             pub async fn snapshot_value(&self) -> Position {
-                *self.data.read().await
+                let u = *self.center.u.read().await;
+                let v = *self.center.v.read().await;
+                let ox = *self.plane.origin.x.read().await;
+                let oy = *self.plane.origin.y.read().await;
+                let oz = *self.plane.origin.z.read().await;
+                let xx = *self.plane.x_axis.x.read().await;
+                let xy = *self.plane.x_axis.y.read().await;
+                let xz = *self.plane.x_axis.z.read().await;
+                let yx = *self.plane.y_axis.x.read().await;
+                let yy = *self.plane.y_axis.y.read().await;
+                let yz = *self.plane.y_axis.z.read().await;
+                Position {
+                    center: Coordinate { u, v },
+                    plane: Plane {
+                        origin: Point { x: ox, y: oy, z: oz },
+                        x_axis: Vector { x: xx, y: xy, z: xz },
+                        y_axis: Vector { x: yx, y: yy, z: yz },
+                    },
+                }
             }
 
-            /// @emoji 🪪 Merkle node: live [`Position`] payload plus sorted digests of center + plane arcs.
+            /// @emoji 🪪 Merkle node: live position scalars plus sorted digests of center + plane arcs.
             pub async fn compute_hash(&self) -> String {
-                let p = *self.data.read().await;
+                let p = self.snapshot_value().await;
                 let flat = format!(
                     "{:.9}\x1f{:.9}\x1f{:.9}\x1f{:.9}\x1f{:.9}\x1f{:.9}\x1f{:.9}\x1f{:.9}\x1f{:.9}\x1f{:.9}\x1f{:.9}",
                     p.center.u, p.center.v, p.plane.origin.x, p.plane.origin.y, p.plane.origin.z, p.plane.x_axis.x, p.plane.x_axis.y, p.plane.x_axis.z, p.plane.y_axis.x, p.plane.y_axis.y, p.plane.y_axis.z,
@@ -878,7 +896,7 @@ pub mod geom {
 
         impl Default for PositionNode {
             fn default() -> Self {
-                Self { id: Id::default(), center: Arc::new(CoordinateNode::default()), plane: Arc::new(PlaneNode::default()), data: RwLock::new(Position::default()) }
+                Self { id: Id::default(), center: Arc::new(CoordinateNode::default()), plane: Arc::new(PlaneNode::default()) }
             }
         }
 
@@ -3702,20 +3720,14 @@ pub mod kit {
                 let offset = crate::geom::Offset { u: du, v: dv };
                 let pos_slot = piece.position.read().await.clone();
                 if let Some(pos) = pos_slot {
-                    let mut d = pos.data.write().await;
-                    d.center.u += offset.u;
-                    d.center.v += offset.v;
-                    *pos.center.u.write().await = d.center.u;
-                    *pos.center.v.write().await = d.center.v;
+                    let u = *pos.center.u.read().await + offset.u;
+                    let v = *pos.center.v.read().await + offset.v;
+                    *pos.center.u.write().await = u;
+                    *pos.center.v.write().await = v;
                 } else {
                     let n = PositionNode::from_position_value(crate::geom::Position::default());
-                    {
-                        let mut d = n.data.write().await;
-                        d.center.u += offset.u;
-                        d.center.v += offset.v;
-                    }
-                    *n.center.u.write().await = n.data.read().await.center.u;
-                    *n.center.v.write().await = n.data.read().await.center.v;
+                    *n.center.u.write().await = offset.u;
+                    *n.center.v.write().await = offset.v;
                     *piece.position.write().await = Some(n);
                 }
                 return Ok(());
