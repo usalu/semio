@@ -218,7 +218,7 @@ export class GqlTransport {
 
 export type Unsubscribe = () => void;
 
-/** @emoji 📡 Demultiplexes {@code Subscription.event} JSON into listener fan-out (no client cache). */
+/** @emoji 📡 Demultiplexes live subscription `data` roots + legacy `event` JSON into listener fan-out (no client cache). */
 export class EventBus {
   private readonly listeners = new Set<(ev: JsonValue) => void>();
 
@@ -247,7 +247,17 @@ export class EventBus {
   }
 }
 
-export const KIT_EVENT_STREAM_SUBSCRIPTION = `subscription { event }` as const;
+/** @emoji 📡 Live-query mirror of root {@code Query.wip} — ticks {@link Kit#bus} on each WIP emission (replaces {@code Subscription.event}). */
+export const KIT_EVENT_STREAM_SUBSCRIPTION = `subscription { wip { id hash } }` as const;
+
+/** @emoji 📡 Alias for correlators that previously reused the same subscription document as the kit event stream. */
+export const KIT_COMMAND_SUCCEEDED_SUBSCRIPTION = KIT_EVENT_STREAM_SUBSCRIPTION;
+
+/** @emoji 🧭 Session entry query fragment aligned with {@code target.schema.graphql} (WIP head + {@code theKit} id). */
+export const KIT_SESSION_QUERY_ENTRY = `query KitStoreEntry { wip { id theKit { id } } }` as const;
+
+/** @emoji 🧾 Full kit DTO read (materialized {@code kit { fullSnapshot }} under WIP main line). */
+export const KIT_SCOPED_FULL_DTO_QUERY = `query { wip { theKit { kit { fullSnapshot } } } }` as const;
 
 //#endregion 🌐Transport
 
@@ -631,6 +641,17 @@ export class Kit {
     if (data == null) return;
     if (data["event"] !== undefined) {
       this.bus.emit(data["event"] as JsonValue);
+      return;
+    }
+    if (data["wip"] !== undefined) {
+      // Coarse invalidation: live-query WIP tick → same bus kinds as legacy semantic events + command correlator.
+      this.bus.emit({ kind: "kitRenamed", payload: undefined } as unknown as JsonValue);
+      this.bus.emit({ kind: "changedDescription", payload: undefined } as unknown as JsonValue);
+      this.bus.emit({ kind: "commandSucceeded", payload: undefined } as unknown as JsonValue);
+      return;
+    }
+    if (data["session"] !== undefined) {
+      this.bus.emit({ kind: "commandSucceeded", payload: undefined } as unknown as JsonValue);
       return;
     }
     if (data["commandSucceeded"] !== undefined) this.bus.emit({ kind: "commandSucceeded", payload: data["commandSucceeded"] });
@@ -3081,12 +3102,13 @@ if (
       expect(sdl).toContain("type Session");
       expect(sdl).toContain("type Kit");
       expect(sdl).toMatch(/type Kit[\s\S]*designs:/s);
-      expect(sdl).toMatch(/type Subscription[\s\S]*\bevent\b/s);
+      expect(sdl).toMatch(/type Subscription[\s\S]*\bwip\b/s);
+      expect(sdl).not.toMatch(/^\s*event:\s*Json!/m);
       expect(sdl).toContain("type Mutation");
       expect(sdl).toContain("session: SessionCommandInput!");
       expect(sdl).not.toContain("type KitStoreMutation");
       expect(KIT_SESSION_QUERY_ENTRY).toContain("wip { id theKit");
-      expect(KIT_EVENT_STREAM_SUBSCRIPTION).toContain("event");
+      expect(KIT_EVENT_STREAM_SUBSCRIPTION).toContain("wip");
       expect(KIT_COMMAND_SUCCEEDED_SUBSCRIPTION).toBe(KIT_EVENT_STREAM_SUBSCRIPTION);
     });
   });

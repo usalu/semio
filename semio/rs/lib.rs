@@ -1477,6 +1477,19 @@ pub mod meta {
         }
     }
 
+    #[async_graphql::ComplexObject]
+    impl File {
+        pub async fn tag(&self, #[graphql(name = "id")] _id: Id) -> Option<std::sync::Arc<Tag>> {
+            None
+        }
+        pub async fn quality(&self, #[graphql(name = "id")] _id: Id) -> Option<std::sync::Arc<Quality>> {
+            None
+        }
+        pub async fn attribute(&self, #[graphql(name = "id")] _id: Id) -> Option<Attribute> {
+            None
+        }
+    }
+
     crate::entity_family! {
         pub struct Folder {
             pub id: Id,
@@ -1485,6 +1498,27 @@ pub mod meta {
         }
         hash = |this| {
             crate::hash::merkle_node_str(&["semio:meta:Folder", this.id.as_str(), this.path.as_str(), this.description.as_deref().unwrap_or("")], Vec::new())
+        }
+    }
+
+    #[async_graphql::ComplexObject]
+    impl Folder {
+        pub async fn file(&self, #[graphql(name = "id")] _id: Id) -> Option<File> {
+            None
+        }
+        #[graphql(name = "subFolder")]
+        pub async fn sub_folder(&self, #[graphql(name = "id")] _id: Id) -> Option<Folder> {
+            None
+        }
+        pub async fn family(&self, #[graphql(name = "id")] _id: Id) -> Option<Family> {
+            None
+        }
+        #[graphql(name = "type")]
+        pub async fn type_(&self, #[graphql(name = "id")] _id: Id) -> Option<std::sync::Arc<crate::kit::r#type::Type>> {
+            None
+        }
+        pub async fn design(&self, #[graphql(name = "id")] _id: Id) -> Option<std::sync::Arc<crate::kit::design::Design>> {
+            None
         }
     }
 
@@ -1597,6 +1631,14 @@ pub mod meta {
         }
     }
 
+    #[async_graphql::ComplexObject]
+    impl Prop {
+        /// @emoji 🔎 SDL `Prop.attribute(id)` — props carry no attribute bag yet; reserved for kit snapshots.
+        pub async fn attribute(&self, #[graphql(name = "id")] _id: Id) -> Option<Attribute> {
+            None
+        }
+    }
+
     /// @emoji 🪢 Resolved kit/type/representation owner for a [`Tag`] (write path sets exactly one arm).
     #[derive(Debug)]
     pub enum TagOwnerSlot {
@@ -1665,6 +1707,14 @@ pub mod meta {
         }
     }
 
+    #[async_graphql::ComplexObject]
+    impl Stat {
+        /// @emoji 🔎 SDL `Stat.attribute(id)` — stats carry no attribute bag yet; reserved for kit snapshots.
+        pub async fn attribute(&self, #[graphql(name = "id")] _id: Id) -> Option<Attribute> {
+            None
+        }
+    }
+
     crate::entity_family! {
         pub struct Layer {
             pub id: Id,
@@ -1715,6 +1765,16 @@ pub mod meta {
                 &["semio:meta:Group", this.id.as_str(), this.name.as_str(), this.description.as_deref().unwrap_or(""), this.color.as_deref().unwrap_or(""), this.icon.as_deref().unwrap_or(""), joined.as_str()],
                 Vec::new(),
             )
+        }
+    }
+
+    #[async_graphql::ComplexObject]
+    impl Group {
+        pub async fn pieces(&self) -> crate::gql_relay::PieceConnection {
+            crate::gql_relay::PieceConnection::from_pieces(Vec::new()).await
+        }
+        pub async fn piece(&self, #[graphql(name = "id")] _id: Id) -> Option<std::sync::Arc<crate::kit::design::piece::Piece>> {
+            None
         }
     }
 }
@@ -1827,6 +1887,10 @@ pub mod kit {
             pub async fn order(&self) -> Option<i32> {
                 *self.order.read().await
             }
+
+            pub async fn attribute(&self, #[graphql(name = "id")] _id: Id) -> Option<crate::meta::Attribute> {
+                None
+            }
         }
         //#endregion 🛟 port
 
@@ -1917,6 +1981,14 @@ pub mod kit {
             }
             pub async fn attributes(&self) -> crate::gql_relay::AttributeConnection {
                 crate::gql_relay::AttributeConnection::from_rows(self.attributes.read().await.clone())
+            }
+
+            pub async fn quality(&self, id: Id) -> Option<Arc<Quality>> {
+                self.qualities.read().await.iter().find(|q| q.id == id).cloned()
+            }
+
+            pub async fn attribute(&self, id: Id) -> Option<Attribute> {
+                self.attributes.read().await.iter().find(|a| a.id == id).cloned()
             }
         }
         //#endregion ⚓ connector
@@ -2013,6 +2085,18 @@ pub mod kit {
             }
             pub async fn attributes(&self) -> crate::gql_relay::AttributeConnection {
                 crate::gql_relay::AttributeConnection::from_rows(self.attributes.read().await.clone())
+            }
+
+            pub async fn tag(&self, id: Id) -> Option<Arc<Tag>> {
+                self.tags.read().await.iter().find(|t| t.id == id).cloned()
+            }
+
+            pub async fn quality(&self, id: Id) -> Option<Arc<Quality>> {
+                self.qualities.read().await.iter().find(|q| q.id == id).cloned()
+            }
+
+            pub async fn attribute(&self, id: Id) -> Option<Attribute> {
+                self.attributes.read().await.iter().find(|a| a.id == id).cloned()
             }
         }
         //#endregion 💾 representation
@@ -2170,6 +2254,13 @@ pub mod kit {
             pub async fn connectors(&self) -> crate::gql_relay::ConnectorConnection {
                 crate::gql_relay::ConnectorConnection::from_connectors(self.connectors.read().await.clone()).await
             }
+            pub async fn ports(&self) -> crate::gql_relay::PortConnection {
+                crate::gql_relay::PortConnection::from_rows(self.ports.read().await.clone()).await
+            }
+            pub async fn port(&self, id: Id) -> Option<Arc<Port>> {
+                self.refresh_connector_child_weak_maps().await;
+                self.port_weak_by_id.read().await.get(&id).and_then(|w| w.upgrade())
+            }
             pub async fn connector(&self, id: Id) -> Option<Arc<Connector>> {
                 self.refresh_connector_child_weak_maps().await;
                 self.connector_weak_by_id.read().await.get(&id).and_then(|w| w.upgrade())
@@ -2205,6 +2296,34 @@ pub mod kit {
             }
             pub async fn stats(&self) -> crate::gql_relay::StatConnection {
                 crate::gql_relay::StatConnection::from_rows(self.stats.read().await.clone())
+            }
+
+            pub async fn author(&self, id: Id) -> Option<Author> {
+                self.authors.read().await.iter().find(|a| a.id == id).cloned()
+            }
+
+            pub async fn concept(&self, id: Id) -> Option<Arc<Concept>> {
+                self.concepts.read().await.iter().find(|c| c.id == id).cloned()
+            }
+
+            pub async fn tag(&self, id: Id) -> Option<Arc<Tag>> {
+                self.tags.read().await.iter().find(|t| t.id == id).cloned()
+            }
+
+            pub async fn quality(&self, id: Id) -> Option<Arc<Quality>> {
+                self.qualities.read().await.iter().find(|q| q.id == id).cloned()
+            }
+
+            pub async fn prop(&self, id: Id) -> Option<Prop> {
+                self.props.read().await.iter().find(|p| p.id == id).cloned()
+            }
+
+            pub async fn attribute(&self, id: Id) -> Option<Attribute> {
+                self.attributes.read().await.iter().find(|a| a.id == id).cloned()
+            }
+
+            pub async fn stat(&self, id: Id) -> Option<Stat> {
+                self.stats.read().await.iter().find(|s| s.id == id).cloned()
             }
         }
         //#endregion 🏠 type
@@ -2399,8 +2518,27 @@ pub mod kit {
                 pub async fn props(&self) -> Vec<Prop> {
                     self.props.read().await.clone()
                 }
+
+                pub async fn prop(&self, id: Id) -> Option<Prop> {
+                    self.props.read().await.iter().find(|p| p.id == id).cloned()
+                }
+
                 pub async fn attributes(&self) -> Vec<Attribute> {
                     self.attributes.read().await.clone()
+                }
+
+                pub async fn attribute(&self, id: Id) -> Option<Attribute> {
+                    self.attributes.read().await.iter().find(|a| a.id == id).cloned()
+                }
+
+                #[graphql(name = "childConnection")]
+                pub async fn child_connection(&self, id: Id) -> Option<Arc<super::connection::Connection>> {
+                    self.child_connections.read().await.iter().find(|c| c.id == id).cloned()
+                }
+
+                #[graphql(name = "childPiece")]
+                pub async fn child_piece(&self, id: Id) -> Option<Arc<Piece>> {
+                    self.child_pieces.read().await.iter().find(|p| p.id == id).cloned()
                 }
             }
         }
@@ -2585,6 +2723,10 @@ pub mod kit {
                 }
                 pub async fn attributes(&self) -> crate::gql_relay::AttributeConnection {
                     crate::gql_relay::AttributeConnection::from_rows(self.attributes.read().await.clone())
+                }
+
+                pub async fn attribute(&self, id: Id) -> Option<Attribute> {
+                    self.attributes.read().await.iter().find(|a| a.id == id).cloned()
                 }
             }
             //#endregion 🔗 connection
@@ -4328,6 +4470,47 @@ pub mod kit {
         pub async fn stats(&self) -> crate::gql_relay::StatConnection {
             crate::gql_relay::StatConnection::from_rows(self.stats.read().await.clone())
         }
+
+        pub async fn file(&self, id: Id) -> Option<File> {
+            self.files.read().await.iter().find(|f| f.id == id).cloned()
+        }
+
+        pub async fn folder(&self, id: Id) -> Option<Folder> {
+            self.folders.read().await.iter().find(|f| f.id == id).cloned()
+        }
+
+        pub async fn family(&self, id: Id) -> Option<crate::meta::Family> {
+            let _ = id;
+            None
+        }
+
+        pub async fn author(&self, id: Id) -> Option<Author> {
+            self.authors.read().await.iter().find(|a| a.id == id).cloned()
+        }
+
+        pub async fn concept(&self, id: Id) -> Option<Arc<Concept>> {
+            self.concept_by_id.read().await.get(&id).cloned()
+        }
+
+        pub async fn tag(&self, id: Id) -> Option<Arc<Tag>> {
+            self.tag_by_id.read().await.get(&id).cloned()
+        }
+
+        pub async fn quality(&self, id: Id) -> Option<Arc<Quality>> {
+            self.quality_by_id.read().await.get(&id).cloned()
+        }
+
+        pub async fn prop(&self, id: Id) -> Option<Prop> {
+            self.props.read().await.iter().find(|p| p.id == id).cloned()
+        }
+
+        pub async fn attribute(&self, id: Id) -> Option<Attribute> {
+            self.attributes.read().await.iter().find(|a| a.id == id).cloned()
+        }
+
+        pub async fn stat(&self, id: Id) -> Option<Stat> {
+            self.stats.read().await.iter().find(|s| s.id == id).cloned()
+        }
     }
     //#endregion 📦 kit
 }
@@ -4395,6 +4578,10 @@ impl crate::meta::Tag {
     pub async fn attributes(&self) -> crate::gql_relay::AttributeConnection {
         crate::gql_relay::AttributeConnection::from_rows(self.attributes.read().await.clone())
     }
+
+    pub async fn attribute(&self, id: Id) -> Option<Attribute> {
+        self.attributes.read().await.iter().find(|a| a.id == id).cloned()
+    }
 }
 
 #[async_graphql::Object(name = "Concept")]
@@ -4426,6 +4613,10 @@ impl crate::meta::Concept {
     }
     pub async fn attributes(&self) -> crate::gql_relay::AttributeConnection {
         crate::gql_relay::AttributeConnection::from_rows(self.attributes.read().await.clone())
+    }
+
+    pub async fn attribute(&self, id: Id) -> Option<Attribute> {
+        self.attributes.read().await.iter().find(|a| a.id == id).cloned()
     }
 }
 
@@ -4471,6 +4662,10 @@ impl crate::meta::Quality {
     pub async fn attributes(&self) -> crate::gql_relay::AttributeConnection {
         crate::gql_relay::AttributeConnection::from_rows(self.attributes.read().await.clone())
     }
+
+    pub async fn attribute(&self, id: Id) -> Option<Attribute> {
+        self.attributes.read().await.iter().find(|a| a.id == id).cloned()
+    }
 }
 
 //#endregion 🏷️ meta graphql
@@ -4482,7 +4677,7 @@ pub mod vcs {
     use std::sync::atomic::{AtomicU64, Ordering};
     use std::sync::{Arc, Weak};
 
-    use async_graphql::{InputObject, Object, Union};
+    use async_graphql::{Context, InputObject, Object, Union};
     use async_lock::RwLock;
 
     use crate::error::SemioError;
@@ -4943,6 +5138,15 @@ pub mod vcs {
         }
 
         pub async fn change(&self, id: Id) -> Option<Arc<Change>> {
+            let _ = id;
+            None
+        }
+
+        pub async fn edits(&self) -> crate::gql_relay::EditConnection {
+            crate::gql_relay::EditConnection::empty()
+        }
+
+        pub async fn edit(&self, id: Id) -> Option<Arc<Edit>> {
             let _ = id;
             None
         }
@@ -5615,6 +5819,23 @@ pub mod vcs {
         #[graphql(name = "startedAt")]
         pub async fn started_at(&self) -> Option<Timestamp> {
             self.started_at.read().await.clone()
+        }
+
+        /// @emoji 🌐 Same navigation as WIP [`Graph`] — resolved via [`crate::gql::ParentRuntime::wip_graph`] for the active runtime.
+        pub async fn alternatives(&self, ctx: &Context<'_>) -> async_graphql::Result<crate::gql_relay::AlternativeConnection> {
+            let rt = ctx.data::<Arc<crate::gql::ParentRuntime>>()?;
+            Ok(crate::gql_relay::AlternativeConnection::from_alternatives(rt.wip_graph.alternatives.read().await.clone()).await)
+        }
+
+        pub async fn alternative(&self, ctx: &Context<'_>, id: Id) -> async_graphql::Result<Option<Arc<Alternative>>> {
+            let rt = ctx.data::<Arc<crate::gql::ParentRuntime>>()?;
+            Ok(rt.wip_graph.alternative(id).await)
+        }
+
+        #[graphql(name = "theKit")]
+        pub async fn the_kit(&self, ctx: &Context<'_>) -> async_graphql::Result<crate::gql::interfaces::VersionIface> {
+            let rt = ctx.data::<Arc<crate::gql::ParentRuntime>>()?;
+            Ok(rt.wip_graph.the_kit().await)
         }
     }
     //#endregion 👤 session
@@ -9023,14 +9244,13 @@ pub mod worker {
 
 pub mod gql {
     //! 🌐 Type-safe static GraphQL schema via `Schema::build` (embedded target SDL string for tooling).
-    use async_graphql::types::Json;
     use async_graphql::{Context, Object, Schema, Subscription};
     use async_stream::stream;
     use futures_util::Stream;
     use std::pin::Pin;
     use std::sync::Arc;
 
-    use crate::event::{Event, EventBus};
+    use crate::event::EventBus;
     use crate::geom::{Offset, Position};
     use crate::id::Id;
     use crate::operation::{Command, Input, KitOperation, Scope};
@@ -9933,40 +10153,118 @@ pub mod gql {
 
     pub struct Subscription;
 
-    type EventJsonStream = Pin<Box<dyn Stream<Item = async_graphql::Result<Json<serde_json::Value>>> + Send>>;
-
-    fn event_to_json(ev: &Event) -> serde_json::Value {
-        let kind = match ev {
-            Event::CommandSucceeded(_) => "commandSucceeded",
-            Event::OperationSucceeded(_) => "operationSucceeded",
-            Event::OperationFailed(_) => "operationFailed",
-            Event::CreatedFixedPiece(_) => "createdFixedPiece",
-            Event::FixedPiece(_) => "fixedPiece",
-            Event::DraggedPiece(_) => "draggedPiece",
-            Event::RenamedKit(_) => "kitRenamed",
-            Event::ChangedDescription(_) => "changedDescription",
-        };
-        let payload = match ev {
-            Event::CommandSucceeded(r) => serde_json::to_value(r).unwrap_or(serde_json::Value::Null),
-            Event::OperationSucceeded(_) => serde_json::Value::Null,
-            Event::OperationFailed(e) => serde_json::Value::String(e.to_string()),
-            _ => serde_json::Value::Null,
-        };
-        serde_json::json!({ "kind": kind, "payload": payload })
-    }
+    type SessStream = Pin<Box<dyn Stream<Item = async_graphql::Result<Arc<crate::vcs::Session>>> + Send>>;
+    type GraphStream = Pin<Box<dyn Stream<Item = async_graphql::Result<Arc<Graph>>> + Send>>;
+    type ConfStream = Pin<Box<dyn Stream<Item = async_graphql::Result<crate::gql_relay::ConflictConnection>> + Send>>;
+    type NodeStream = Pin<Box<dyn Stream<Item = async_graphql::Result<Option<crate::iface::GqlNode>>> + Send>>;
 
     #[Subscription]
     impl Subscription {
-        async fn event(&self, ctx: &Context<'_>) -> async_graphql::Result<EventJsonStream> {
+        /// @emoji 📡 Live-query mirror of [`Query::session`] — re-emits on each outbound [`EventBus`] tick.
+        async fn session(&self, ctx: &Context<'_>) -> async_graphql::Result<SessStream> {
+            let rt = ctx.data::<Arc<ParentRuntime>>()?.clone();
             let bus = ctx.data::<Arc<EventBus>>()?.clone();
             let mut rx = bus.subscribe();
             Ok(Box::pin(stream! {
                 loop {
-                    match rx.recv().await {
-                        Ok(ev) => {
-                            let j = event_to_json(&ev);
-                            yield Ok(Json(j));
+                    let out = {
+                        let g = rt.sessions.read().await;
+                        g.first().cloned().ok_or_else(|| async_graphql::Error::new("no session"))
+                    };
+                    match out {
+                        Ok(s) => yield Ok(s),
+                        Err(e) => {
+                            yield Err(e);
+                            break;
                         }
+                    }
+                    match rx.recv().await {
+                        Ok(_) => {}
+                        Err(_) => break,
+                    }
+                }
+            }))
+        }
+
+        /// @emoji 📡 Live-query mirror of [`Query::wip`].
+        async fn wip(&self, ctx: &Context<'_>) -> async_graphql::Result<GraphStream> {
+            let rt = ctx.data::<Arc<ParentRuntime>>()?.clone();
+            let bus = ctx.data::<Arc<EventBus>>()?.clone();
+            let mut rx = bus.subscribe();
+            Ok(Box::pin(stream! {
+                loop {
+                    yield Ok(rt.wip_graph.clone());
+                    match rx.recv().await {
+                        Ok(_) => {}
+                        Err(_) => break,
+                    }
+                }
+            }))
+        }
+
+        /// @emoji 📡 Live-query mirror of [`Query::authoritative`].
+        #[graphql(name = "authoritative")]
+        async fn authoritative(&self, ctx: &Context<'_>) -> async_graphql::Result<GraphStream> {
+            let rt = ctx.data::<Arc<ParentRuntime>>()?.clone();
+            let bus = ctx.data::<Arc<EventBus>>()?.clone();
+            let mut rx = bus.subscribe();
+            Ok(Box::pin(stream! {
+                loop {
+                    yield Ok(rt.auth_graph.clone());
+                    match rx.recv().await {
+                        Ok(_) => {}
+                        Err(_) => break,
+                    }
+                }
+            }))
+        }
+
+        /// @emoji 📡 Live-query mirror of [`Query::conflicts`].
+        async fn conflicts(&self, ctx: &Context<'_>) -> async_graphql::Result<ConfStream> {
+            let rt = ctx.data::<Arc<ParentRuntime>>()?.clone();
+            let bus = ctx.data::<Arc<EventBus>>()?.clone();
+            let mut rx = bus.subscribe();
+            Ok(Box::pin(stream! {
+                loop {
+                    let list = rt.conflicts.read().await.clone();
+                    let row = crate::gql_relay::ConflictConnection::from_conflicts(list).await;
+                    yield Ok(row);
+                    match rx.recv().await {
+                        Ok(_) => {}
+                        Err(_) => break,
+                    }
+                }
+            }))
+        }
+
+        /// @emoji 📡 Live-query mirror of [`Query::node`].
+        async fn node(&self, ctx: &Context<'_>, id: Id) -> async_graphql::Result<NodeStream> {
+            let rt = ctx.data::<Arc<ParentRuntime>>()?.clone();
+            let bus = ctx.data::<Arc<EventBus>>()?.clone();
+            let mut rx = bus.subscribe();
+            Ok(Box::pin(stream! {
+                loop {
+                    let out = crate::iface::resolve_node(rt.as_ref(), &id).await;
+                    yield Ok(out);
+                    match rx.recv().await {
+                        Ok(_) => {}
+                        Err(_) => break,
+                    }
+                }
+            }))
+        }
+
+        /// @emoji 📡 Live-query mirror of [`Query::entity`].
+        async fn entity(&self, ctx: &Context<'_>, hash: Id) -> async_graphql::Result<NodeStream> {
+            let rt = ctx.data::<Arc<ParentRuntime>>()?.clone();
+            let bus = ctx.data::<Arc<EventBus>>()?.clone();
+            let mut rx = bus.subscribe();
+            Ok(Box::pin(stream! {
+                loop {
+                    let out = crate::iface::resolve_node(rt.as_ref(), &hash).await;
+                    yield Ok(out);
+                    match rx.recv().await {
+                        Ok(_) => {}
                         Err(_) => break,
                     }
                 }

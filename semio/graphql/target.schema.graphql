@@ -1530,10 +1530,15 @@ type Folder implements Artifact {
   # Folder
   path: String! # data
   files: FileConnection! # data
+  file(id: ID!): File # computed
   subFolders: FolderConnection! # data
+  subFolder(id: ID!): Folder # computed
   families: FamilyConnection! # data
+  family(id: ID!): Family # computed
   types: TypeConnection! # data
+  type(id: ID!): Type # computed
   designs: DesignConnection! # data
+  design(id: ID!): Design # computed
 }
 
 type FolderEdge implements EntityEdge {
@@ -1665,6 +1670,9 @@ type File implements Artifact {
   url: String! # data
   mime: String! # data
   size: Int # data
+  tag(id: ID!): Tag # computed
+  quality(id: ID!): Quality # computed
+  attribute(id: ID!): Attribute # computed
 }
 
 type FileEdge implements EntityEdge {
@@ -1937,6 +1945,7 @@ type Prop implements Artifact {
   value: String! # data
   unit: String! # data
   quality: Quality # data
+  attribute(id: ID!): Attribute # computed
 }
 
 type PropEdge implements EntityEdge {
@@ -2204,6 +2213,7 @@ type Quality implements Artifact {
   definition: String! # data
   benchmarks: BenchmarkConnection! # data
   attributes: AttributeConnection! # computed
+  attribute(id: ID!): Attribute # computed
 }
 
 type QualityEdge implements EntityEdge {
@@ -2740,6 +2750,7 @@ type Tag implements Artifact {
   # Tag
   order: Int # data
   attributes: AttributeConnection! # computed
+  attribute(id: ID!): Attribute # computed
 }
 
 type TagEdge implements EntityEdge {
@@ -3271,6 +3282,7 @@ type Concept implements Artifact {
   # Concept
   order: Int # data
   attributes: AttributeConnection! # computed
+  attribute(id: ID!): Attribute # computed
 }
 
 type ConceptEdge implements EntityEdge {
@@ -3803,6 +3815,7 @@ type Stat implements Artifact {
   key: String! # data
   value: String! # data
   unit: String! # data
+  attribute(id: ID!): Attribute # computed
 }
 
 type StatEdge implements EntityEdge {
@@ -3933,6 +3946,7 @@ type Port implements Artifact {
   copatibleWith: PortConnection # computed
   color: Color # computed
   attributes: AttributeConnection! # data
+  attribute(id: ID!): Attribute # computed
 }
 
 type PortEdge implements EntityEdge {
@@ -4463,7 +4477,9 @@ type Connector implements Artifact {
   code: String! # data
   port: Port # data
   qualities: QualityConnection! # computed
+  quality(id: ID!): Quality # computed
   attributes: AttributeConnection! # computed
+  attribute(id: ID!): Attribute # computed
 }
 
 type ConnectorEdge implements EntityEdge {
@@ -4591,8 +4607,11 @@ type Representation implements Artifact {
   url: String! # data
   file: File # data
   tags: TagConnection! # computed
+  tag(id: ID!): Tag # computed
   qualities: QualityConnection! # computed
+  quality(id: ID!): Quality # computed
   attributes: AttributeConnection! # computed
+  attribute(id: ID!): Attribute # computed
 }
 
 type RepresentationEdge implements EntityEdge {
@@ -4716,18 +4735,27 @@ type Type implements Artifact {
   # Type
   image: String! # data
   unit: String! # data
+  ports: PortConnection! # computed
+  port(id: ID!): Port # computed
   connectors: ConnectorConnection! # computed
-  connector: Connector # computed
+  connector(id: ID!): Connector # computed
   representations: RepresentationConnection! # computed
-  representation: Representation # computed
+  representation(id: ID!): Representation # computed
   bestRepresentation: Representation # computed
   authors: AuthorConnection! # computed
+  author(id: ID!): Author # computed
   concepts: ConceptConnection! # computed
+  concept(id: ID!): Concept # computed
   tags: TagConnection! # computed
+  tag(id: ID!): Tag # computed
   qualities: QualityConnection! # computed
+  quality(id: ID!): Quality # computed
   props: PropConnection! # computed
+  prop(id: ID!): Prop # computed
   attributes: AttributeConnection! # computed
+  attribute(id: ID!): Attribute # computed
   stats: StatConnection! # computed
+  stat(id: ID!): Stat # computed
 }
 
 type TypeEdge implements EntityEdge {
@@ -5676,6 +5704,7 @@ type Group implements Artifact {
   # Group
   color: String! # data
   pieces: PieceConnection! # data
+  piece(id: ID!): Piece # computed
 }
 
 type GroupEdge implements EntityEdge {
@@ -5826,12 +5855,16 @@ type Piece implements Artifact {
   scale: Float # data
   blueprint: Entity! # data // Type | Design
   props: PropConnection! # data
+  prop(id: ID!): Prop # computed
   attributes: AttributeConnection! # data
+  attribute(id: ID!): Attribute # computed
   connectionKind: PieceConnectionKind # computed
   parentPiece: Piece # computed
   parentConnection: Connection # computed
   childConnections: ConnectionConnection! # computed
+  childConnection(id: ID!): Connection # computed
   childPieces: PieceConnection! # computed
+  childPiece(id: ID!): Piece # computed
   path: PieceConnection! # computed
   depth: Int! # computed
   flatPosition: Position! # computed
@@ -5973,6 +6006,7 @@ type Connection implements Artifact {
   u: Float # data
   v: Float # data
   attributes: AttributeConnection! # data
+  attribute(id: ID!): Attribute # computed
 }
 
 type ConnectionEdge implements EntityEdge {
@@ -7037,16 +7071,23 @@ type Design implements Artifact {
   place: Place # data
   unit: String! # data
   pieces: PieceConnection! # computed
-  piece: Piece # computed
+  piece(id: ID!): Piece # computed
   connections: ConnectionConnection! # computed
-  connection: Connection # computed
+  connection(id: ID!): Connection # computed
   layers: LayerConnection! # computed
+  layer(id: ID!): Layer # computed
   groups: GroupConnection! # computed
+  group(id: ID!): Group # computed
   authors: AuthorConnection! # computed
+  author(id: ID!): Author # computed
   qualities: QualityConnection! # computed
+  quality(id: ID!): Quality # computed
   props: PropConnection! # computed
+  prop(id: ID!): Prop # computed
   attributes: AttributeConnection! # computed
+  attribute(id: ID!): Attribute # computed
   stats: StatConnection! # computed
+  stat(id: ID!): Stat # computed
   qualitySum: Float! # computed
   references: DesignConnection! # computed
   referencedBy: PieceConnection! # computed
@@ -7538,20 +7579,30 @@ type Kit implements Artifact {
   homepage: String! # data
   license: String! # data
   uri: String! # data
-  design: Design # computed
+  design(id: ID!): Design # computed
   designs: DesignConnection! # computed
-  type: Type # computed
+  type(id: ID!): Type # computed
   types: TypeConnection! # computed
   files: FileConnection! # computed
+  file(id: ID!): File # computed
   folders: FolderConnection! # computed
+  folder(id: ID!): Folder # computed
   families: FamilyConnection! # computed
+  family(id: ID!): Family # computed
   authors: AuthorConnection! # computed
+  author(id: ID!): Author # computed
   concepts: ConceptConnection! # computed
+  concept(id: ID!): Concept # computed
   tags: TagConnection! # computed
+  tag(id: ID!): Tag # computed
   qualities: QualityConnection! # computed
+  quality(id: ID!): Quality # computed
   props: PropConnection! # computed
+  prop(id: ID!): Prop # computed
   attributes: AttributeConnection! # computed
+  attribute(id: ID!): Attribute # computed
   stats: StatConnection! # computed
+  stat(id: ID!): Stat # computed
 }
 
 type KitEdge implements EntityEdge {
@@ -7842,9 +7893,9 @@ type Checkpoint implements StrongEntity {
   initial: Kit # computed
   kit: Kit # computed
   changes: [Change!]! # data
-  change(id: ID): Change # computed
+  change(id: ID!): Change # computed
   edits: EditConnection! # computed
-  edit(id: ID): Edit # computed
+  edit(id: ID!): Edit # computed
 }
 
 type CheckpointEdge implements EntityEdge {
@@ -7924,6 +7975,7 @@ type Alternative implements Version {
   latestWipCheckpointAncestor: Checkpoint # computed
   savedChanges: ChangeConnection! # data
   unsavedChanges: ChangeConnection! # data
+  change(id: ID!): Change # computed
   kit: Kit! # computed
   # Alternative
   name: String! # data
@@ -7989,6 +8041,8 @@ type Session implements StrongEntity {
   # Session
   startedAt: Timestamp # data
   alternatives: AlternativeConnection! # data
+  alternative(id: ID!): Alternative # computed
+  theKit: Version # computed
 }
 
 #endregion Graphs
@@ -8255,9 +8309,17 @@ type Mutation {
   hydrateKitStoreBundleJson(json: String!): ID!
 }
 
+# 🔴 Live subscription: mirrors `Query`. The server emits the resolved selection on subscribe
+# and re-emits whenever any selected field changes (live-query). Selecting a single leaf scalar
+# limits emissions to updates of that scalar.
 type Subscription {
   # Subscription
-  event: Json!
+  session: Session!
+  wip: Graph!
+  authoritative: Graph
+  conflicts: ConflictConnection!
+  node(id: ID!): Node
+  entity(hash: ID!): Entity
 }
 
 schema {
