@@ -54473,7 +54473,7 @@
                                                     {
                                                         "id": "…",
                                                         "hash": "…",
-                                                        "kind": "kit.design.createdFixedPiece",
+                                                        "kind": "kit.design.createFixedPiece",
                                                         "description": "…",
                                                         "input": {
                                                             "hash": "…",
@@ -54512,7 +54512,7 @@
                                                     {
                                                         "id": "…",
                                                         "hash": "…",
-                                                        "kind": "kit.design.piece.createdFixedPiece",
+                                                        "kind": "kit.design.piece.createFixedPiece",
                                                         "description": "…",
                                                         "input": {
                                                             "position": {
@@ -54579,15 +54579,29 @@
                 }
             ]
         },
-        "theKit": {},
+        "theKit": {
+            "hash": "…",
+            "savedChanges": [],
+            "unsavedChanges": []
+        },
         "alternatives": {
             "hash": "…",
-            "items": []
+            "items": [
+                {
+                    "hash": "…",
+                    "savedChanges": [],
+                    "unsavedChanges": []
+                }
+            ]
         }
     },
     "authoritative": {},
     "stage": {},
     "conflicts": {
+        "hash": "…",
+        "items": []
+    },
+    "blobs": {
         "hash": "…",
         "items": []
     }

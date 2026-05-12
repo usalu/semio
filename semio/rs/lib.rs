@@ -5380,21 +5380,21 @@ pub mod vcs {
             self.started_at.read().await.clone()
         }
 
-        /// @emoji 🌐 Same navigation as WIP [`Graph`] — resolved via [`crate::worker::ParentRuntime::wip_graph`] for the active runtime.
+        /// @emoji 🌐 Same navigation as WIP [`Graph`] — resolved via [`crate::worker::ParentStore::wip_graph`] for the active runtime.
         pub async fn alternatives(&self, ctx: &Context<'_>) -> async_graphql::Result<crate::gql_relay::AlternativeConnection> {
-            let rt = ctx.data::<Arc<crate::worker::ParentRuntime>>()?;
+            let rt = ctx.data::<Arc<crate::worker::ParentStore>>()?;
             Ok(crate::gql_relay::AlternativeConnection::from_alternatives(rt.wip_graph.alternatives.read().await.clone()).await)
         }
 
         pub async fn alternative(&self, ctx: &Context<'_>, id: Id) -> async_graphql::Result<Option<Arc<Alternative>>> {
-            let rt = ctx.data::<Arc<crate::worker::ParentRuntime>>()?;
+            let rt = ctx.data::<Arc<crate::worker::ParentStore>>()?;
             let alts = rt.wip_graph.alternatives.read().await;
             Ok(alts.iter().find(|a| a.id == id).cloned())
         }
 
         #[graphql(name = "theKit")]
         pub async fn the_kit(&self, ctx: &Context<'_>) -> async_graphql::Result<crate::gql::interfaces::VersionInterface> {
-            let rt = ctx.data::<Arc<crate::worker::ParentRuntime>>()?;
+            let rt = ctx.data::<Arc<crate::worker::ParentStore>>()?;
             Ok(crate::gql::interfaces::VersionInterface::TheKit(TheKit::new(Arc::downgrade(&rt.wip_graph.arc_here()))))
         }
     }
@@ -5550,7 +5550,7 @@ pub mod interface {
     }
 
     /// @emoji 🔎 Resolve a global id against WIP + authoritative graphs, sessions, and conflicts.
-    pub async fn resolve_node(rt: &crate::worker::ParentRuntime, id: &Id) -> Option<GqlNode> {
+    pub async fn resolve_node(rt: &crate::worker::ParentStore, id: &Id) -> Option<GqlNode> {
         for g in [&rt.wip_graph, &rt.auth_graph] {
             if &g.id == id {
                 return Some(GqlNode::Graph(g.clone()));
@@ -5598,7 +5598,7 @@ pub mod interface {
     }
 
     /// @emoji 📍 Resolve `pieceInDesign` on the WIP graph line.
-    pub async fn piece_in_design_on_wip(rt: &crate::worker::ParentRuntime, design_id: &Id, piece_id: &Id) -> Option<Arc<Piece>> {
+    pub async fn piece_in_design_on_wip(rt: &crate::worker::ParentStore, design_id: &Id, piece_id: &Id) -> Option<Arc<Piece>> {
         let g = &rt.wip_graph;
         let kit = g.parent_root_for_active_draft.read().await.clone();
         let des = kit.design_by_external_id(design_id).await?;
@@ -5606,7 +5606,7 @@ pub mod interface {
     }
 
     /// @emoji 📍 `alternativePieceKind` stub (returns `None` until alternative graph model is wired).
-    pub async fn alternative_piece_kind(_rt: &crate::worker::ParentRuntime, _piece_id: &Id) -> Option<String> {
+    pub async fn alternative_piece_kind(_rt: &crate::worker::ParentStore, _piece_id: &Id) -> Option<String> {
         None
     }
 
@@ -9603,7 +9603,7 @@ pub mod worker {
     }
 
     /// 🛰️ Parent runtime hosting the GraphQL schema + routing logic.
-    pub struct ParentRuntime {
+    pub struct ParentStore {
         pub bus: Arc<EventBus>,
         pub wip: ChildPort,
         pub auth: ChildPort,
@@ -9614,7 +9614,7 @@ pub mod worker {
         pub wip_kit_scope: RwLock<Option<(Id, Id)>>,
     }
 
-    impl ParentRuntime {
+    impl ParentStore {
         /// 🛰️ Spawn parent + two child runtimes (in-process on native).
         pub async fn spawn() -> Arc<Self> {
             let bus = EventBus::new(1024);
@@ -9667,7 +9667,7 @@ pub mod worker {
     }
 
     fn spawn_child(label: &'static str, graph: Arc<Graph>, bus: Arc<EventBus>, inbox: Receiver<Command>) {
-        let fut = async move { ChildRuntime { label, graph, bus, inbox, backbone: BackboneNativeCell::new() }.run().await };
+        let fut = async move { ChildStore { label, graph, bus, inbox, backbone: BackboneNativeCell::new() }.run().await };
         #[cfg(target_arch = "wasm32")]
         {
             wasm_bindgen_futures::spawn_local(fut);
@@ -9679,7 +9679,7 @@ pub mod worker {
     }
 
     /// 🧵 In-worker actor: drains the inbox, applies, emits.
-    pub struct ChildRuntime {
+    pub struct ChildStore {
         pub label: &'static str,
         pub graph: Arc<Graph>,
         pub bus: Arc<EventBus>,
@@ -9687,7 +9687,7 @@ pub mod worker {
         pub backbone: BackboneNativeCell,
     }
 
-    impl ChildRuntime {
+    impl ChildStore {
         pub async fn run(self) {
             while let Ok(cmd) = self.inbox.recv().await {
                 let request_id = cmd.request_id().clone();
@@ -9790,7 +9790,7 @@ pub mod gql {
     use crate::id::Id;
     use crate::operation::{Command, Input, Scope};
     use crate::vcs::Graph;
-    use crate::worker::ParentRuntime;
+    use crate::worker::ParentStore;
 
     //#region 📡 subscription_paths
     /// @emoji 📡 Flattens subscription selection into canonical `root:field:...` strings for [`crate::event::Event::matches_watched_paths`].
@@ -9884,24 +9884,24 @@ pub mod gql {
     impl Store {
         /// @emoji 🧭 First active [`crate::vcs::Session`] on this runtime.
         pub async fn session(&self, ctx: &Context<'_>) -> async_graphql::Result<Arc<crate::vcs::Session>> {
-            let rt = ctx.data::<Arc<ParentRuntime>>()?;
+            let rt = ctx.data::<Arc<ParentStore>>()?;
             rt.sessions.read().await.first().cloned().ok_or_else(|| async_graphql::Error::new("no session"))
         }
 
         /// @emoji 🌐 Writable in-progress graph head.
         pub async fn wip(&self, ctx: &Context<'_>) -> async_graphql::Result<Arc<Graph>> {
-            Ok(ctx.data::<Arc<ParentRuntime>>()?.wip_graph.clone())
+            Ok(ctx.data::<Arc<ParentStore>>()?.wip_graph.clone())
         }
 
         /// @emoji 🧾 Authoritative graph head when available.
         #[graphql(name = "authoritative")]
         pub async fn authoritative(&self, ctx: &Context<'_>) -> async_graphql::Result<Option<Arc<Graph>>> {
-            Ok(Some(ctx.data::<Arc<ParentRuntime>>()?.auth_graph.clone()))
+            Ok(Some(ctx.data::<Arc<ParentStore>>()?.auth_graph.clone()))
         }
 
         /// @emoji ⚔️ Current conflict registry as a relay connection.
         pub async fn conflicts(&self, ctx: &Context<'_>) -> async_graphql::Result<crate::gql_relay::ConflictConnection> {
-            let rt = ctx.data::<Arc<ParentRuntime>>()?;
+            let rt = ctx.data::<Arc<ParentStore>>()?;
             let list = rt.conflicts.read().await.clone();
             Ok(crate::gql_relay::ConflictConnection::from_conflicts(list).await)
         }
@@ -9918,7 +9918,7 @@ pub mod gql {
 
         /// @emoji 🔎 Relay-style global `node` lookup (WIP + authoritative + sessions + conflicts).
         pub async fn node(&self, ctx: &Context<'_>, id: Id) -> async_graphql::Result<Option<crate::interface::GqlNode>> {
-            let rt = ctx.data::<Arc<ParentRuntime>>()?;
+            let rt = ctx.data::<Arc<ParentStore>>()?;
             Ok(crate::interface::resolve_node(rt.as_ref(), &id).await)
         }
 
@@ -9929,13 +9929,13 @@ pub mod gql {
     }
 
     //#region 🎛️commands
-    /// @emoji 🎛️ `Mutation.session` scope — holds kit command context on [`ParentRuntime`].
+    /// @emoji 🎛️ `Mutation.session` scope — holds kit command context on [`ParentStore`].
     pub struct SessionCommand;
 
     #[Object(name = "SessionCommand")]
     impl SessionCommand {
         async fn start(&self, ctx: &Context<'_>) -> async_graphql::Result<Id> {
-            let rt = ctx.data::<Arc<ParentRuntime>>()?;
+            let rt = ctx.data::<Arc<ParentStore>>()?;
             let _ = rt.wip_graph.ensure_default_seed_state().await;
             Ok(rt.sessions.read().await.first().map(|s| s.id.clone()).ok_or_else(|| async_graphql::Error::new("no session"))?)
         }
@@ -9970,7 +9970,7 @@ pub mod gql {
 
         #[graphql(name = "startAlternative")]
         async fn start_alternative(&self, ctx: &Context<'_>, name: Option<String>) -> async_graphql::Result<Id> {
-            let rt = ctx.data::<Arc<ParentRuntime>>()?;
+            let rt = ctx.data::<Arc<ParentStore>>()?;
             let n = name.unwrap_or_default();
             rt.wip_graph.create_alternative_from_tip(n, None).await.map_err(|e| async_graphql::Error::new(e.to_string()))
         }
@@ -9991,13 +9991,13 @@ pub mod gql {
     impl BackboneCommand {
         async fn attach(&self, ctx: &Context<'_>, uri: String) -> async_graphql::Result<Id> {
             let _ = crate::operation::BackboneKind::from_uri(&uri).map_err(|e| async_graphql::Error::new(e.message))?;
-            let rt = ctx.data::<Arc<ParentRuntime>>()?;
+            let rt = ctx.data::<Arc<ParentStore>>()?;
             let request_id = Id::new().await;
             Ok(rt.dispatch_wip(Command::BackboneAttach { request_id, connection_uri: uri }).await)
         }
 
         async fn detach(&self, ctx: &Context<'_>, uri: String) -> async_graphql::Result<Id> {
-            let rt = ctx.data::<Arc<ParentRuntime>>()?;
+            let rt = ctx.data::<Arc<ParentStore>>()?;
             let request_id = Id::new().await;
             Ok(rt.dispatch_wip(Command::BackboneDetach { request_id, connection_uri: uri }).await)
         }
@@ -10026,7 +10026,7 @@ pub mod gql {
     impl VersionCommand {
         #[graphql(name = "startNewChange")]
         async fn start_new_change(&self, ctx: &Context<'_>) -> async_graphql::Result<Id> {
-            let rt = ctx.data::<Arc<ParentRuntime>>()?;
+            let rt = ctx.data::<Arc<ParentStore>>()?;
             let draft = rt.wip_graph.ensure_default_seed_state().await;
             let tx = rt.wip_graph.open_transaction(&draft.id).await;
             *rt.wip_kit_scope.write().await = Some((draft.id.clone(), tx.id.clone()));
@@ -10035,7 +10035,7 @@ pub mod gql {
 
         #[graphql(name = "unsavedChange")]
         async fn unsaved_change(&self, ctx: &Context<'_>, id: Id) -> async_graphql::Result<UnsavedChangeCommand> {
-            let rt = ctx.data::<Arc<ParentRuntime>>()?;
+            let rt = ctx.data::<Arc<ParentStore>>()?;
             if let Some((_, tx)) = rt.wip_kit_scope.read().await.as_ref() {
                 if tx != &id {
                     return Err(async_graphql::Error::new("unsavedChange id does not match active change"));
@@ -10045,7 +10045,7 @@ pub mod gql {
         }
 
         async fn save(&self, ctx: &Context<'_>) -> async_graphql::Result<Id> {
-            let rt = ctx.data::<Arc<ParentRuntime>>()?;
+            let rt = ctx.data::<Arc<ParentStore>>()?;
             let scope = rt.wip_kit_scope.read().await.clone();
             let Some((draft_id, tx_id)) = scope else {
                 return Err(async_graphql::Error::new("no active unsaved change"));
@@ -10073,7 +10073,7 @@ pub mod gql {
         }
 
         async fn save(&self, ctx: &Context<'_>) -> async_graphql::Result<Id> {
-            let rt = ctx.data::<Arc<ParentRuntime>>()?;
+            let rt = ctx.data::<Arc<ParentStore>>()?;
             let scope = rt.wip_kit_scope.read().await.clone();
             let Some((draft_id, tx_id)) = scope else {
                 return Err(async_graphql::Error::new("no active unsaved change"));
@@ -10113,7 +10113,7 @@ pub mod gql {
     impl KitOperationInput {
         #[graphql(name = "rename")]
         async fn rename(&self, ctx: &Context<'_>, #[graphql(name = "newName")] new_name: String) -> async_graphql::Result<Id> {
-            let rt = ctx.data::<Arc<ParentRuntime>>()?;
+            let rt = ctx.data::<Arc<ParentStore>>()?;
             let (draft_id, transaction_id) = rt.wip_kit_scope.read().await.clone().ok_or_else(|| async_graphql::Error::new("no active kit scope"))?;
             if transaction_id != self.change_id {
                 return Err(async_graphql::Error::new("change id mismatch for kit operation"));
@@ -10131,7 +10131,7 @@ pub mod gql {
 
         #[graphql(name = "createTag")]
         async fn create_tag(&self, ctx: &Context<'_>, name: String, description: Option<String>, icon: Option<String>, order: Option<i32>) -> async_graphql::Result<Id> {
-            let rt = ctx.data::<Arc<ParentRuntime>>()?;
+            let rt = ctx.data::<Arc<ParentStore>>()?;
             let (draft_id, transaction_id) = rt.wip_kit_scope.read().await.clone().ok_or_else(|| async_graphql::Error::new("no active kit scope"))?;
             if transaction_id != self.change_id {
                 return Err(async_graphql::Error::new("change id mismatch for kit operation"));
@@ -10168,7 +10168,7 @@ pub mod gql {
 
         #[graphql(name = "createConcept")]
         async fn create_concept(&self, ctx: &Context<'_>, name: String, description: Option<String>, icon: Option<String>, order: Option<i32>) -> async_graphql::Result<Id> {
-            let rt = ctx.data::<Arc<ParentRuntime>>()?;
+            let rt = ctx.data::<Arc<ParentStore>>()?;
             let (draft_id, transaction_id) = rt.wip_kit_scope.read().await.clone().ok_or_else(|| async_graphql::Error::new("no active kit scope"))?;
             if transaction_id != self.change_id {
                 return Err(async_graphql::Error::new("change id mismatch for kit operation"));
@@ -10205,7 +10205,7 @@ pub mod gql {
 
         #[graphql(name = "createQuality")]
         async fn create_quality(&self, ctx: &Context<'_>, key: String, value: Option<String>, unit: Option<String>, definition: Option<String>, description: Option<String>, icon: Option<String>) -> async_graphql::Result<Id> {
-            let rt = ctx.data::<Arc<ParentRuntime>>()?;
+            let rt = ctx.data::<Arc<ParentStore>>()?;
             let (draft_id, transaction_id) = rt.wip_kit_scope.read().await.clone().ok_or_else(|| async_graphql::Error::new("no active kit scope"))?;
             if transaction_id != self.change_id {
                 return Err(async_graphql::Error::new("change id mismatch for kit operation"));
@@ -10580,7 +10580,7 @@ pub mod gql {
         }
         #[graphql(name = "addFixedPiece")]
         async fn add_fixed_piece(&self, ctx: &Context<'_>, #[graphql(name = "blueprintId")] blueprint_id: Id, position: PositionInput, name: Option<String>, description: Option<String>) -> async_graphql::Result<Id> {
-            let rt = ctx.data::<Arc<ParentRuntime>>()?;
+            let rt = ctx.data::<Arc<ParentStore>>()?;
             let (draft_id, transaction_id) = rt.wip_kit_scope.read().await.clone().ok_or_else(|| async_graphql::Error::new("no active kit scope"))?;
             if transaction_id != self.change_id {
                 return Err(async_graphql::Error::new("change id mismatch"));
@@ -10672,7 +10672,7 @@ pub mod gql {
             Ok(Id::new().await)
         }
         async fn drag(&self, ctx: &Context<'_>, offset: OffsetInput) -> async_graphql::Result<Id> {
-            let rt = ctx.data::<Arc<ParentRuntime>>()?;
+            let rt = ctx.data::<Arc<ParentStore>>()?;
             let (draft_id, transaction_id) = rt.wip_kit_scope.read().await.clone().ok_or_else(|| async_graphql::Error::new("no active kit scope"))?;
             if transaction_id != self.change_id {
                 return Err(async_graphql::Error::new("change id mismatch"));
@@ -10725,7 +10725,7 @@ pub mod gql {
     #[Object(name = "PiecesOperationInput")]
     impl PiecesOperationInput {
         async fn drag(&self, ctx: &Context<'_>, offset: OffsetInput) -> async_graphql::Result<Id> {
-            let rt = ctx.data::<Arc<ParentRuntime>>()?;
+            let rt = ctx.data::<Arc<ParentStore>>()?;
             let (draft_id, transaction_id) = rt.wip_kit_scope.read().await.clone().ok_or_else(|| async_graphql::Error::new("no active kit scope"))?;
             if transaction_id != self.change_id {
                 return Err(async_graphql::Error::new("change id mismatch"));
@@ -10803,7 +10803,7 @@ pub mod gql {
 
         /// @emoji 📡 Live-query mirror of [`Query::session`] — re-emits on each outbound [`EventBus`] tick.
         async fn session(&self, ctx: &Context<'_>) -> async_graphql::Result<SessionStream> {
-            let rt = ctx.data::<Arc<ParentRuntime>>()?.clone();
+            let rt = ctx.data::<Arc<ParentStore>>()?.clone();
             let bus = ctx.data::<Arc<EventBus>>()?.clone();
             let watched = collect_subscription_field_paths("session", ctx);
             let filtered = !watched.is_empty();
@@ -10840,7 +10840,7 @@ pub mod gql {
 
         /// @emoji 📡 Live-query mirror of [`Query::wip`].
         async fn wip(&self, ctx: &Context<'_>) -> async_graphql::Result<GraphStream> {
-            let rt = ctx.data::<Arc<ParentRuntime>>()?.clone();
+            let rt = ctx.data::<Arc<ParentStore>>()?.clone();
             let bus = ctx.data::<Arc<EventBus>>()?.clone();
             let watched = collect_subscription_field_paths("wip", ctx);
             let filtered = !watched.is_empty();
@@ -10868,7 +10868,7 @@ pub mod gql {
         /// @emoji 📡 Live-query mirror of [`Query::authoritative`].
         #[graphql(name = "authoritative")]
         async fn authoritative(&self, ctx: &Context<'_>) -> async_graphql::Result<GraphStream> {
-            let rt = ctx.data::<Arc<ParentRuntime>>()?.clone();
+            let rt = ctx.data::<Arc<ParentStore>>()?.clone();
             let bus = ctx.data::<Arc<EventBus>>()?.clone();
             let watched = collect_subscription_field_paths("authoritative", ctx);
             let filtered = !watched.is_empty();
@@ -10895,7 +10895,7 @@ pub mod gql {
 
         /// @emoji 📡 Live-query mirror of [`Query::conflicts`].
         async fn conflicts(&self, ctx: &Context<'_>) -> async_graphql::Result<ConflictStream> {
-            let rt = ctx.data::<Arc<ParentRuntime>>()?.clone();
+            let rt = ctx.data::<Arc<ParentStore>>()?.clone();
             let bus = ctx.data::<Arc<EventBus>>()?.clone();
             let watched = collect_subscription_field_paths("conflicts", ctx);
             let filtered = !watched.is_empty();
@@ -10924,7 +10924,7 @@ pub mod gql {
 
         /// @emoji 📡 Live-query mirror of [`Query::node`].
         async fn node(&self, ctx: &Context<'_>, id: Id) -> async_graphql::Result<NodeStream> {
-            let rt = ctx.data::<Arc<ParentRuntime>>()?.clone();
+            let rt = ctx.data::<Arc<ParentStore>>()?.clone();
             let bus = ctx.data::<Arc<EventBus>>()?.clone();
             let id_capture = id.clone();
             let watched = collect_subscription_field_paths("node", ctx);
@@ -10953,7 +10953,7 @@ pub mod gql {
 
         /// @emoji 📡 Live-query mirror of [`Query::entity`].
         async fn entity(&self, ctx: &Context<'_>, hash: Id) -> async_graphql::Result<NodeStream> {
-            let rt = ctx.data::<Arc<ParentRuntime>>()?.clone();
+            let rt = ctx.data::<Arc<ParentStore>>()?.clone();
             let bus = ctx.data::<Arc<EventBus>>()?.clone();
             let hash_capture = hash.clone();
             let watched = collect_subscription_field_paths("entity", ctx);
@@ -10981,7 +10981,7 @@ pub mod gql {
         }
     }
 
-    fn build_schema_sync_for(rt: Arc<ParentRuntime>) -> AppSchema {
+    fn build_schema_sync_for(rt: Arc<ParentStore>) -> AppSchema {
         Schema::build(Query, Mutation, Subscription)
             .data(rt.clone())
             .data(rt.bus.clone())
@@ -11072,13 +11072,13 @@ pub mod gql {
     }
 
     /// 🧱 Build schema with parent runtime + bus.
-    pub fn build_schema_for(rt: Arc<ParentRuntime>) -> AppSchema {
+    pub fn build_schema_for(rt: Arc<ParentStore>) -> AppSchema {
         build_schema_sync_for(rt)
     }
 
     /// 🧱 Default schema (fresh runtime).
     pub async fn build_schema() -> AppSchema {
-        build_schema_sync_for(ParentRuntime::spawn().await)
+        build_schema_sync_for(ParentStore::spawn().await)
     }
 }
 
@@ -11088,7 +11088,7 @@ pub mod gql {
 
 #[cfg(target_arch = "wasm32")]
 pub mod wasm_bridge {
-    //! 🌐 `KitStoreHandle`: GraphQL executor + subscriptions over seeded [`crate::worker::ParentRuntime`] (WASM build).
+    //! 🌐 `KitStoreHandle`: GraphQL executor + subscriptions over seeded [`crate::worker::ParentStore`] (WASM build).
     use std::sync::Arc;
     use std::sync::Mutex;
 
@@ -11101,7 +11101,7 @@ pub mod wasm_bridge {
     use web_sys::Response;
 
     use crate::gql::{build_schema_for, AppSchema};
-    use crate::worker::ParentRuntime;
+    use crate::worker::ParentStore;
 
     async fn fetch_text_url(url: &str) -> Result<String, crate::error::SemioError> {
         let win = web_sys::window().ok_or_else(|| crate::error::SemioError::invalid("no window"))?;
@@ -11114,21 +11114,21 @@ pub mod wasm_bridge {
         Ok(text.as_string().unwrap_or_default())
     }
 
-    async fn bootstrap_runtime_from_json_value(v: serde_json::Value) -> Result<Arc<ParentRuntime>, crate::error::SemioError> {
+    async fn bootstrap_runtime_from_json_value(v: serde_json::Value) -> Result<Arc<ParentStore>, crate::error::SemioError> {
         if v.get("schema").and_then(|s| s.as_str()) == Some(crate::kit_backbone::KIT_STORE_BUNDLE_SCHEMA) {
-            let rt = ParentRuntime::spawn().await;
+            let rt = ParentStore::spawn().await;
             let s = serde_json::to_string(&v).map_err(|e| crate::error::SemioError::invalid(e.to_string()))?;
             crate::kit_backbone::DevBackboneBundleDoc::hydrate_into_graph(&rt.wip_graph, &s).await?;
             Ok(rt)
         } else {
-            ParentRuntime::spawn_wip_overlay_from_initial_kit_projection_json(v).await
+            ParentStore::spawn_wip_overlay_from_initial_kit_projection_json(v).await
         }
     }
 
-    async fn bootstrap_runtime_from_open_uri(uri: &str) -> Result<Arc<ParentRuntime>, crate::error::SemioError> {
+    async fn bootstrap_runtime_from_open_uri(uri: &str) -> Result<Arc<ParentStore>, crate::error::SemioError> {
         let u = uri.trim();
         if u.is_empty() || u == "dev://empty" {
-            return Ok(ParentRuntime::spawn().await);
+            return Ok(ParentStore::spawn().await);
         }
         if let Some(b64) = u.strip_prefix("dev+json:") {
             let bytes = base64::engine::general_purpose::STANDARD.decode(b64.trim()).map_err(|e| crate::error::SemioError::invalid(format!("base64: {e}")))?;
@@ -11180,7 +11180,7 @@ pub mod wasm_bridge {
     #[wasm_bindgen(js_name = parent_boot)]
     pub fn parent_boot() -> js_sys::Promise {
         future_to_promise(async move {
-            let _rt: Arc<ParentRuntime> = ParentRuntime::spawn().await;
+            let _rt: Arc<ParentStore> = ParentStore::spawn().await;
             Ok(JsValue::TRUE)
         })
     }
@@ -11188,7 +11188,7 @@ pub mod wasm_bridge {
     /// 🌐 Stateful GraphQL façade for `@semio/js` embedded worker + inline WASM.
     #[wasm_bindgen]
     pub struct KitStoreHandle {
-        rt: Arc<ParentRuntime>,
+        rt: Arc<ParentStore>,
         schema_mtx: Arc<Mutex<Option<AppSchema>>>,
     }
 
@@ -11364,22 +11364,22 @@ mod tests {
         assert_eq!(count, 1, "expected exactly one canonical emit_event definition in lib.rs, found {}", count);
     }
 
-    /// 🛡️ [`crate::worker::ChildRuntime`] must record operations and rely on materialization replay (`Kit::apply_diff` inside `Graph::materialized_kit_for_draft`); it must not replace `parent_root_for_active_draft` or call `apply_diff` directly.
+    /// 🛡️ [`crate::worker::ChildStore`] must record operations and rely on materialization replay (`Kit::apply_diff` inside `Graph::materialized_kit_for_draft`); it must not replace `parent_root_for_active_draft` or call `apply_diff` directly.
     #[test]
     fn worker_child_runtime_guard_no_direct_root_or_apply_diff() {
         let src = include_str!("lib.rs");
-        let i = src.find("impl ChildRuntime").expect("ChildRuntime impl");
+        let i = src.find("impl ChildStore").expect("ChildStore impl");
         let j = src[i..].find("//#endregion 🧵 worker").expect("worker end marker") + i;
         let worker = &src[i..j];
-        assert!(!worker.contains("parent_root_for_active_draft.write()"), "ChildRuntime must not assign Graph::parent_root_for_active_draft");
-        assert!(!worker.contains("apply_diff"), "ChildRuntime must not call Kit::apply_diff; use record_op_in_open_transaction + materialized_kit_for_draft");
+        assert!(!worker.contains("parent_root_for_active_draft.write()"), "ChildStore must not assign Graph::parent_root_for_active_draft");
+        assert!(!worker.contains("apply_diff"), "ChildStore must not call Kit::apply_diff; use record_op_in_open_transaction + materialized_kit_for_draft");
     }
 
     #[test]
     fn kit_store_bundle_serialize_hydrate_round_trip_via_graphql() {
         // 📸 Renames then hydrates via [`crate::kit_backbone::DevBackboneBundleDoc`] (bundle GraphQL entry points were dropped from the target schema).
         block_on(async {
-            let rt = crate::worker::ParentRuntime::spawn().await;
+            let rt = crate::worker::ParentStore::spawn().await;
             let g = rt.wip_graph.clone();
             let draft_a = g.ensure_default_seed_state().await;
             let tx_a = g.open_transaction(&draft_a.id).await;
@@ -11452,7 +11452,7 @@ mod tests {
             let kd = fwd0.get("kitDiff").expect("bundle must persist kitDiff beside operation input");
             assert_eq!(kd["name"].as_str(), Some("Hello Bundle"), "renameKit kitDiff wire carries new name");
 
-            let rt_b = crate::worker::ParentRuntime::spawn().await;
+            let rt_b = crate::worker::ParentStore::spawn().await;
             crate::kit_backbone::DevBackboneBundleDoc::hydrate_into_graph(&rt_b.wip_graph, &json_a).await.expect("hydrate");
 
             let json_b = serde_json::to_string(&crate::kit_backbone::DevBackboneBundleDoc::from_graph(rt_b.wip_graph.as_ref()).await).expect("serialize bundle b");
@@ -11483,7 +11483,7 @@ mod tests {
     #[test]
     fn transaction_open_commit_abort_lifecycle_on_wip_graph() {
         block_on(async {
-            let rt = crate::worker::ParentRuntime::spawn().await;
+            let rt = crate::worker::ParentStore::spawn().await;
             let g = &rt.wip_graph;
             let draft_id = crate::id::Id::from("draft-tx-test");
             let tx_a = g.open_transaction(&draft_id).await;
@@ -11667,7 +11667,7 @@ mod tests {
     #[test]
     fn no_deep_clone_on_traversal() {
         block_on(async {
-            let rt = crate::worker::ParentRuntime::spawn().await;
+            let rt = crate::worker::ParentStore::spawn().await;
             let schema = crate::gql::build_schema_for(rt.clone());
 
             let draft = rt.wip_graph.ensure_default_seed_state().await;
