@@ -398,10 +398,7 @@ macro_rules! meta_quality_entity {
                 let mut child_hashes: Vec<String> = bm.iter().map(crate::meta::Benchmark::compute_entity_hash).collect();
                 child_hashes.extend(av.iter().map(crate::meta::Attribute::compute_entity_hash));
                 child_hashes.sort();
-                crate::hash::merkle_node_str(
-                    &["semio:meta:Quality", self.id.as_str(), k.as_str(), v.as_str(), u.as_str(), def.as_str(), desc.as_str(), ic.as_str()],
-                    child_hashes,
-                )
+                crate::hash::merkle_node_str(&["semio:meta:Quality", self.id.as_str(), k.as_str(), v.as_str(), u.as_str(), def.as_str(), desc.as_str(), ic.as_str()], child_hashes)
             }
         }
 
@@ -4293,83 +4290,6 @@ pub mod kit {
 
             Ok(())
         }
-
-        /// 🧾 Canonical JSON snapshot consumed by `@semio/js` `fullSnapshot` (single RS truth projected to DTO-shaped JSON).
-        pub async fn kit_full_snapshot_value(&self) -> serde_json::Value {
-            let id = self.workspace_kit_id().await;
-            let name = self.name.read().await.clone();
-            let created = self.created.read().await.as_ref().map(|t| t.0.clone());
-            let updated = self.updated.read().await.as_ref().map(|t| t.0.clone());
-
-            let types = {
-                let tys = self.types.read().await;
-                let mut out = Vec::<serde_json::Value>::with_capacity(tys.len());
-                for t in tys.iter() {
-                    let tid = t.id.clone();
-                    let nm = t.name.read().await.clone();
-                    out.push(serde_json::json!({"id": tid.as_str(), "name": nm, "connectors": []}));
-                }
-                serde_json::Value::Array(out)
-            };
-
-            let mut designs_arr = Vec::<serde_json::Value>::new();
-            {
-                let dz = self.designs.read().await;
-                for d in dz.iter() {
-                    let mut pieces_arr = Vec::<serde_json::Value>::new();
-                    let plist = d.pieces.read().await;
-                    for p in plist.iter() {
-                        let pv = if let Some(n) = p.position.read().await.as_ref() { n.snapshot_value().await } else { crate::geom::Position::default() };
-                        let tid = match p.blueprint.read().await.clone() {
-                            crate::kit::r#type::Blueprint::Type(ty) => ty.id.clone(),
-                            crate::kit::r#type::Blueprint::Design(_) => continue,
-                        };
-                        let pname = (*p.name.read().await).clone().unwrap_or_default();
-                        let pl = pv.plane;
-                        pieces_arr.push(serde_json::json!({
-                          "id": p.id.as_str(),
-                          "name": pname,
-                          "type": { "id": tid.as_str() },
-                          "plane": {
-                            "origin": { "x": pl.origin.x, "y": pl.origin.y, "z": pl.origin.z },
-                            "xAxis": { "x": pl.x_axis.x, "y": pl.x_axis.y, "z": pl.x_axis.z },
-                            "yAxis": { "x": pl.y_axis.x, "y": pl.y_axis.y, "z": pl.y_axis.z },
-                          },
-                          "center": { "u": pv.center.u, "v": pv.center.v },
-                          "scale": p.scale.read().await.unwrap_or(1.0),
-                          "color": "#000000",
-                          "props": [],
-                          "attributes": [],
-                        }));
-                    }
-                    designs_arr.push(serde_json::json!({
-                       "id": d.id.as_str(),
-                       "name": d.name.read().await.clone(),
-                       "pieces": pieces_arr,
-                       "connections": [],
-                    }));
-                }
-            }
-
-            serde_json::json!({
-                "id": id.as_str(),
-                "name": name,
-                "createdAt": created.unwrap_or_else(|| "2020-01-01T00:00:00.000Z".to_string()),
-                "updatedAt": updated.unwrap_or_else(|| "2020-01-01T00:00:00.000Z".to_string()),
-                "types": types,
-                "designs": designs_arr,
-                "authors": [],
-                "concepts": [],
-                "qualities": [],
-                "tags": [],
-                "props": [],
-                "folders": [],
-                "files": [],
-                "layers": [],
-                "stats": [],
-                "groups": [],
-            })
-        }
     }
 
     #[Object(name = "Kit")]
@@ -5722,25 +5642,14 @@ pub mod vcs {
         ) -> Result<(Arc<crate::kit::design::piece::Piece>,), SemioError> {
             let piece_id = Id::new().await;
             let forward = crate::operation::KitOperation::CreateFixedPiece {
-                scope: crate::operation::Scope::CreateFixedPiece {
-                    design_id: design_id.clone(),
-                    piece_id: piece_id.clone(),
-                    blueprint_id,
-                    attribute_ids: Vec::new(),
-                },
+                scope: crate::operation::Scope::CreateFixedPiece { design_id: design_id.clone(), piece_id: piece_id.clone(), blueprint_id, attribute_ids: Vec::new() },
                 input: crate::operation::Input::FixedPiece { position, name, description },
             };
             let before = self.materialized_kit_for_draft(&draft_id).await;
             let backwards = forward.to_backwards(&before).await?;
             self.record_op_in_open_transaction(&draft_id, &transaction_id, forward, backwards).await?;
             let after = self.materialized_kit_for_draft(&draft_id).await;
-            let piece = after
-                .design_by_external_id(&design_id)
-                .await
-                .ok_or_else(|| SemioError::not_found("Design", design_id.as_str()))?
-                .piece_by_external_id(&piece_id)
-                .await
-                .ok_or_else(|| SemioError::not_found("Piece", piece_id.as_str()))?;
+            let piece = after.design_by_external_id(&design_id).await.ok_or_else(|| SemioError::not_found("Design", design_id.as_str()))?.piece_by_external_id(&piece_id).await.ok_or_else(|| SemioError::not_found("Piece", piece_id.as_str()))?;
             Ok((piece,))
         }
     }
