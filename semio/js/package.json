@@ -32,7 +32,6 @@
   },
   "bundleKind": "library",
   "exports": {
-    ".": "./index.ts",
-    "./legacy-host": "./index.legacy-host.ts"
+    ".": "./index.ts"
   }
 }

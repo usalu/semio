@@ -6,8 +6,7 @@
   "type": "module",
   "description": "semio · react",
   "exports": {
-    ".": "./index.tsx",
-    "./host": "./index.host.tsx"
+    ".": "./index.tsx"
   },
   "dependencies": {
     "@semio/js": "*",

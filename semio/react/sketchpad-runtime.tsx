@@ -6,117 +6,16 @@
 
 // #region ⚛️Imports
 
-import {
-  applyKitClientSnapshotToLocalStore,
-  AuthorSchema,
-  buildSchemaEntityChangeCommands,
-  ConceptSchema,
-  ConnectionSchema,
-  ConnectorSchema,
-  createFolderKitStore,
-  createJsonFileKitStore,
-  createKitStoreClient,
-  createSessionKitStore,
-  getKitClientReadPoint,
-  kitReadPointKey,
-  kitStoreFromKitStoreClient,
-  normalizeKitFullDtoFolderPaths,
-  theKitReadPoint,
-  DesignMetadataDtoSchema,
-  DesignSchema,
-  DesignShallowSchema,
-  FamilySchema,
-  FileSchema,
-  FolderSchema,
-  isKitCommandLifecycleEvent,
-  kitEventAffectsCanUndoRedo,
-  kitEventAffectsDesignQualitySumRead,
-  kitEventAffectsKitColoredConnectorsRead,
-  kitEventAffectsPieceLiveRead,
-  kitEventAffectsReplaceableCatalogRead,
-  kitEventAffectsTypeScopedRead,
-  kitEventTouchesDesign,
-  resolveDesignIdForPieceOrConnection,
-  submitKitChangeCommands,
-  kitStoreClientAddChildByKind,
-  kitStoreClientAddConnection,
-  kitStoreClientAddPiece,
-  kitStoreClientRemoveChildByKind,
-  kitStoreClientRemovePiece,
-  kitStoreClientUpdateConnection,
-  kitStoreClientUpdatePiece,
-  type JsonObject,
-  type JsonValue,
-  type KitDesignReadKind,
-  type KitFullDto,
-  type KitShallowListKind,
-  type KitStoreReadSnap,
-  type KitViewCatalogKey,
-  type WriteStatus,
-  WRITE_STATUS_IDLE,
-  WRITE_STATUS_READONLY,
-  WRITE_STATUS_PENDING,
-  writeStatusEquivalent,
-  StoreField,
-  StoreCommand,
-  writeKitStoreClientSchemaField,
-  getSemioKitLiveReadStore,
-  CommandBuilder,
-} from "@semio/js/legacy-host";
-import {
-  asKitInstance,
-  Attribute,
-  Author,
-  Camera,
-  Concept,
-  Connection,
-  ConnectionStore,
-  Coordinate,
-  createKitFileObjectUrl,
-  Design,
-  DesignStore,
-  DiffStatus,
-  FamilyStore,
-  fetchReadableKitFileBlob,
-  File,
-  File as SemioFile,
-  FileStore,
-  Folder,
-  FolderStore,
-  getExistingKitFileProvider,
-  getKitFileProvider,
-  getKitFileStoragePath,
-  getKitPorts,
-  getOrCreateKitFileState,
-  getReadableKitFileUrl,
-  getStoredKitFileUrls,
-  ICON_WIDTH,
-  id,
-  InMemoryKitStore,
-  isBrowserReadableFileUrl,
-  Kit,
-  KitEntityStore,
-  Piece,
-  PieceSchema,
-  PieceStore,
-  Plane,
-  Point,
-  PropSchema,
-  Quality,
-  QualitySchema,
-  Representation,
-  RepresentationSchema,
-  Tag,
-  TagSchema,
-  TOLERANCE,
-  Type,
-  TypeMetadataDtoSchema,
-  TypeSchema,
-  TypeShallowSchema,
-  TypeStore,
-  Vector,
-} from "@semio/js/legacy-host";
+import { WasmGraph } from "@semio/js";
 import type {
+  JsonObject,
+  JsonValue,
+  KitDesignReadKind,
+  KitFullDto,
+  KitShallowListKind,
+  KitStoreReadSnap,
+  KitViewCatalogKey,
+  WriteStatus,
   BackboneConfig,
   BackboneStatusDto,
   ChangeKitCommand,
@@ -156,7 +55,111 @@ import type {
   TypeMetadataDto,
   TypePlain,
   TypeShallow,
-} from "@semio/js/legacy-host";
+} from "@semio/js";
+
+const {
+  applyKitClientSnapshotToLocalStore,
+  AuthorSchema,
+  buildSchemaEntityChangeCommands,
+  ConceptSchema,
+  ConnectionSchema,
+  ConnectorSchema,
+  createFolderKitStore,
+  createJsonFileKitStore,
+  createKitStoreClient,
+  createSessionKitStore,
+  getKitClientReadPoint,
+  kitReadPointKey,
+  kitStoreFromKitStoreClient,
+  normalizeKitFullDtoFolderPaths,
+  theKitReadPoint,
+  DesignMetadataDtoSchema,
+  DesignSchema,
+  DesignShallowSchema,
+  FamilySchema,
+  FileSchema,
+  FolderSchema,
+  isKitCommandLifecycleEvent,
+  kitEventAffectsCanUndoRedo,
+  kitEventAffectsDesignQualitySumRead,
+  kitEventAffectsKitColoredConnectorsRead,
+  kitEventAffectsPieceLiveRead,
+  kitEventAffectsReplaceableCatalogRead,
+  kitEventAffectsTypeScopedRead,
+  kitEventTouchesDesign,
+  resolveDesignIdForPieceOrConnection,
+  submitKitChangeCommands,
+  kitStoreClientAddChildByKind,
+  kitStoreClientAddConnection,
+  kitStoreClientAddPiece,
+  kitStoreClientRemoveChildByKind,
+  kitStoreClientRemovePiece,
+  kitStoreClientUpdateConnection,
+  kitStoreClientUpdatePiece,
+  WRITE_STATUS_IDLE,
+  WRITE_STATUS_READONLY,
+  WRITE_STATUS_PENDING,
+  writeStatusEquivalent,
+  StoreField,
+  StoreCommand,
+  writeKitStoreClientSchemaField,
+  getSemioKitLiveReadStore,
+  CommandBuilder,
+} = WasmGraph;
+
+const {
+  asKitInstance,
+  Attribute,
+  Author,
+  Camera,
+  Concept,
+  Connection,
+  ConnectionStore,
+  Coordinate,
+  createKitFileObjectUrl,
+  Design,
+  DesignStore,
+  DiffStatus,
+  FamilyStore,
+  fetchReadableKitFileBlob,
+  File,
+  File: SemioFile,
+  FileStore,
+  Folder,
+  FolderStore,
+  getExistingKitFileProvider,
+  getKitFileProvider,
+  getKitFileStoragePath,
+  getKitPorts,
+  getOrCreateKitFileState,
+  getReadableKitFileUrl,
+  getStoredKitFileUrls,
+  ICON_WIDTH,
+  id,
+  InMemoryKitStore,
+  isBrowserReadableFileUrl,
+  Kit,
+  KitEntityStore,
+  Piece,
+  PieceSchema,
+  PieceStore,
+  Plane,
+  Point,
+  PropSchema,
+  Quality,
+  QualitySchema,
+  Representation,
+  RepresentationSchema,
+  Tag,
+  TagSchema,
+  TOLERANCE,
+  Type,
+  TypeMetadataDtoSchema,
+  TypeSchema,
+  TypeShallowSchema,
+  TypeStore,
+  Vector,
+} = WasmGraph;
 import type { ReactNode, SetStateAction } from "react";
 import * as React from "react";
 
@@ -628,7 +631,7 @@ export function createKitCommandEngine(store: KitHostStore): ReturnType<typeof c
 }
 // #endregion 🔖KitHostCommandDispatch
 
-export type { BackboneConfig, BackboneStatusDto, ConflictResolution, KitConflict, KitReadPoint, KitWriteScope, RenameKitCommandArgs, SetError, SetResult, WriteStatus } from "@semio/js/legacy-host";
+export type { BackboneConfig, BackboneStatusDto, ConflictResolution, KitConflict, KitReadPoint, KitWriteScope, RenameKitCommandArgs, SetError, SetResult, WriteStatus } from "@semio/js";
 export {
   WRITE_STATUS_IDLE,
   WRITE_STATUS_READONLY,
@@ -636,18 +639,18 @@ export {
   writeStatusEquivalent,
   StoreField,
   StoreCommand,
-} from "@semio/js/legacy-host";
-export { getKitClientReadPoint, kitReadPointKey, kitStoreFromKitStoreClient, theKitReadPoint } from "@semio/js/legacy-host";
-export type { KitBinaryStore, KitFileState } from "@semio/js/legacy-host";
-export type { KitHostStore, KitHostStoreSnapshot } from "@semio/js/legacy-host";
+} from "@semio/js";
+export { getKitClientReadPoint, kitReadPointKey, kitStoreFromKitStoreClient, theKitReadPoint } from "@semio/js";
+export type { KitBinaryStore, KitFileState } from "@semio/js";
+export type { KitHostStore, KitHostStoreSnapshot } from "@semio/js";
 export type {
   KitStoreExecuteResult,
   KitDesignReadKind,
   KitShallowListKind,
   KitStoreReadSnap,
   KitViewCatalogKey,
-} from "@semio/js/legacy-host";
-export { DesignStore, TypeStore, PieceStore, ConnectionStore, FamilyStore, FileStore, FolderStore, KitEntityStore } from "@semio/js/legacy-host";
+} from "@semio/js";
+export { DesignStore, TypeStore, PieceStore, ConnectionStore, FamilyStore, FileStore, FolderStore, KitEntityStore } from "@semio/js";
 export {
   SemioKitDesignReadStore,
   SemioKitLiveReadStore,
@@ -657,7 +660,7 @@ export {
   getSemioKitLiveReadStore,
   getSemioKitShallowListReadStore,
   getSemioKitViewStore,
-} from "@semio/js/legacy-host";
+} from "@semio/js";
 
 // #region ⚛️Types
 
@@ -6162,10 +6165,10 @@ export {
   applyKitClientSnapshotToLocalStore,
   asKitInstance,
   Attribute,
-  Author,
+  AuthorGraphDto as Author,
   Camera,
-  Concept,
-  Connection,
+  ConceptGraphDto as Concept,
+  ConnectionGraphDto as Connection,
   Coordinate,
   createFolderKitStore,
   createJsonFileKitStore,
@@ -6173,7 +6176,7 @@ export {
   createSessionKitStore,
   decodeKitSemioEnvelopeBytesToFullDto,
   decodeKitSemioEnvelopeToFullDtoFromValue,
-  Design,
+  DesignGraphDto as Design,
   DiffStatus,
   Folder,
   fetchReadableKitFileBlob,
@@ -6188,22 +6191,22 @@ export {
   id,
   InMemoryKitStore,
   isBrowserReadableFileUrl,
-  Kit,
+  KitGraphDto as Kit,
   KitFullDtoSchema,
-  Piece,
+  PieceGraphDto as Piece,
   Plane,
   Point,
-  Quality,
-  Representation,
+  QualityGraphDto as Quality,
+  RepresentationGraphDto as Representation,
   File,
   File as SemioFile,
-  Tag,
+  TagGraphDto as Tag,
   TOLERANCE,
-  Type,
+  TypeGraphDto as Type,
   Vector,
-} from "@semio/js/legacy-host";
-export { KitStore } from "@semio/js/legacy-host";
-export type { ChangeId } from "@semio/js/legacy-host";
+} from "@semio/js";
+export { KitStore } from "@semio/js";
+export type { ChangeId } from "@semio/js";
 export {
   AlternativeCommandNav,
   CommandBuilder,
@@ -6211,12 +6214,12 @@ export {
   SessionCommandNav,
   UnsavedChangeCommandNav,
   VersionCommandNav,
-} from "@semio/js/legacy-host";
+} from "@semio/js";
 export type {
   AuthorIdDto,
   ConnectionDiff,
   ConnectionIdDto,
-  Connector,
+  ConnectorGraphDto as Connector,
   CoordinatePlain,
   DesignDiff,
   DesignMetadataDto,
@@ -6233,14 +6236,14 @@ export type {
   OperationResult,
   PieceDiff,
   PieceIdDto,
-  Port,
+  PortGraphDto as Port,
   QualityDiff,
   TypeDiff,
   TypeShallow,
   TypeMetadataDto,
-} from "@semio/js/legacy-host";
-export { normalizeDesignCopyResult, normalizeDesignDiffResult, normalizeDesignFlattenResult } from "@semio/js/legacy-host";
-export type { KitCommandContext, KitCommandResult } from "@semio/js/legacy-host";
+} from "@semio/js";
+export { normalizeDesignCopyResult, normalizeDesignDiffResult, normalizeDesignFlattenResult } from "@semio/js";
+export type { KitCommandContext, KitCommandResult } from "@semio/js";
 
 export function useJSON(idValue?: string): KitFieldBinding<any> {
   return useSchemaObjectState("JSON", idValue);
@@ -17464,7 +17467,7 @@ const shouldRunReactEmbeddedTests =
 if (shouldRunReactEmbeddedTests) {
   const { describe, expect, it } = await import("vitest");
   const { act, cleanup, render, waitFor } = await import("@testing-library/react");
-  const { InMemoryKitStore, asKitInstance, kitReadPointKey, theKitReadPoint, StoreField, StoreCommand } = await import("@semio/js/legacy-host");
+  const { InMemoryKitStore, asKitInstance, kitReadPointKey, theKitReadPoint, StoreField, StoreCommand } = await import("@semio/js");
 
   const kitJsonFromStore = (store: KitHostStore) => {
     const host = store as KitHostStore & { _kit?: { toJSON: () => unknown } };
@@ -17480,7 +17483,7 @@ if (shouldRunReactEmbeddedTests) {
       push(initialName);
       return () => {};
     });
-    const renameKitCmd = new StoreCommand<import("@semio/js/legacy-host").RenameKitCommandArgs>(async (args) => {
+    const renameKitCmd = new StoreCommand<import("@semio/js").RenameKitCommandArgs>(async (args) => {
       const v = String(args.input?.name ?? "").trim();
       if (v === "") return { ok: false, error: { kind: "InvalidValue", message: "kit name required" } };
       const kitDto: KitFullDto = JSON.parse(JSON.stringify(kitJsonFromStore(store))) as KitFullDto;
@@ -17574,7 +17577,7 @@ if (shouldRunReactEmbeddedTests) {
       finalizeKitWriteTransaction: async () => ({ ok: true }),
       abortKitWriteTransaction: async () => ({ ok: true }),
       subscribe: (cb: (ev: any) => void) => store.subscribe(() => cb({ kind: "test" })),
-      setKitReadPoint: (_s: import("@semio/js/legacy-host").KitReadPoint) => {},
+      setKitReadPoint: (_s: import("@semio/js").KitReadPoint) => {},
       dispose: () => {
         kitNameField.dispose();
         renameKitCmd.dispose();
@@ -17687,7 +17690,7 @@ if (shouldRunReactEmbeddedTests) {
         updatedAt: new Date().toISOString(),
       });
       const store = new InMemoryKitStore(kit);
-      const listeners = new Set<(ev: import("@semio/js/legacy-host").KitEvent) => void>();
+      const listeners = new Set<(ev: import("@semio/js").KitEvent) => void>();
       const mockKs = {
         piece(d: string, p: string, _scope: unknown) {
           void _scope;
@@ -17697,8 +17700,8 @@ if (shouldRunReactEmbeddedTests) {
         },
       };
       const kitClient = createTestKitClient(store) as KitStoreClient & { internalKs?: () => unknown };
-      kitClient.internalKs = () => mockKs as unknown as import("@semio/js/legacy-host").KitStore;
-      kitClient.subscribe = (cb: (ev: import("@semio/js/legacy-host").KitEvent) => void) => {
+      kitClient.internalKs = () => mockKs as unknown as import("@semio/js").KitStore;
+      kitClient.subscribe = (cb: (ev: import("@semio/js").KitEvent) => void) => {
         listeners.add(cb);
         return () => {
           listeners.delete(cb);
@@ -17733,7 +17736,7 @@ if (shouldRunReactEmbeddedTests) {
       const afterIdle = { p1: renders.p1, p2: renders.p2 };
 
       await act(async () => {
-        const ev = { FlattenInvalidated: { design: "d1", pieces: ["p1"] } } as import("@semio/js/legacy-host").KitEvent;
+        const ev = { FlattenInvalidated: { design: "d1", pieces: ["p1"] } } as import("@semio/js").KitEvent;
         for (const l of [...listeners]) l(ev);
       });
 
@@ -18000,7 +18003,7 @@ if (shouldRunReactEmbeddedTests) {
         resolveConflict: async () => ({ ok: true } as const),
         syncNow: async () => ({ ok: true } as const),
         kitName: new StoreField<string>(""),
-        renameKit: new StoreCommand<import("@semio/js/legacy-host").RenameKitCommandArgs>(async () => ({
+        renameKit: new StoreCommand<import("@semio/js").RenameKitCommandArgs>(async () => ({
           ok: false,
           error: { kind: "NotSupported", message: "stub" },
         })),
