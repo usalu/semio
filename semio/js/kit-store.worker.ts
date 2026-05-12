@@ -20,7 +20,7 @@ function post(out: unknown): void {
 self.onmessage = async (ev: MessageEvent<string>) => {
   let msg: {
     op?: string;
-    dto?: unknown;
+    uri?: string;
     body?: string;
     reqId?: string;
   };
@@ -35,7 +35,8 @@ self.onmessage = async (ev: MessageEvent<string>) => {
       const mod = await import("@semio/rs-wasm");
       if (typeof mod.default === "function") await mod.default();
       if (typeof mod.boot === "function") mod.boot();
-      const created = (mod as { KitStoreHandle: { create: (dto: unknown) => WasmKitHandle | Promise<WasmKitHandle> } }).KitStoreHandle.create(msg.dto);
+      const uri = typeof msg.uri === "string" ? msg.uri : "";
+      const created = (mod as { KitStoreHandle: { create: (uri: string) => WasmKitHandle | Promise<WasmKitHandle> } }).KitStoreHandle.create(uri);
       handle = created instanceof Promise ? await created : created;
       post({ op: "ready" });
       return;

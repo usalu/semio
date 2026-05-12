@@ -98,7 +98,7 @@ class WorkerStringTransport {
   private nextSerial = 0;
   constructor(private readonly worker: Worker) { }
 
-  init(dto: KitBootstrapJson): Promise<void> {
+  init(uri: string): Promise<void> {
     return new Promise((resolve, reject) => {
       const t = setTimeout(() => {
         cleanup();
@@ -130,7 +130,7 @@ class WorkerStringTransport {
       };
       this.worker.addEventListener("message", onMessage);
       this.worker.addEventListener("error", onError as EventListener);
-      this.worker.postMessage(JSON.stringify({ op: "init", dto }));
+      this.worker.postMessage(JSON.stringify({ op: "init", uri }));
     });
   }
 
@@ -575,6 +575,18 @@ function parseAttributeConnectionUnder(owner: JsonObject | null | undefined): re
 
 
 //#region 🎒Kit
+/** @emoji 🔗 Map `Kit.open` input: inline JSON becomes `dev+json:` base64 for the WASM bootstrap URI. */
+function backboneBootstrapUriForKitOpen(raw: string): string {
+  const t = raw.trim();
+  if (t.startsWith("{") || t.startsWith("[")) {
+    const bytes = new TextEncoder().encode(t);
+    let bin = "";
+    for (let i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]!);
+    return `dev+json:${btoa(bin)}`;
+  }
+  return t;
+}
+
 /** @emoji 📑 Same wire as {@link FieldSpec} but declared before {@link Entity} so {@link Kit#fieldRead} stays self-contained. */
 export type KitFieldReadSpec<T> = Readonly<{
   eventKind?: string;
@@ -781,9 +793,15 @@ export class Kit {
     return gqlOkFromEnvelope(env);
   }
 
-  async hydrateKitStoreBundleJson(json: string): Promise<SetResult> {
+  async attachBackbone(uri: string): Promise<SetResult> {
     this.ensureAlive();
-    const env = await this.gqlRun({ query: `mutation { hydrateKitStoreBundleJson(json: ${__gqlStr(json)}) }` });
+    const env = await this.gqlRun({ query: `mutation { session { backbone { attach(uri: ${__gqlStr(uri)}) } } }` });
+    return gqlOkFromEnvelope(env);
+  }
+
+  async detachBackbone(uri: string): Promise<SetResult> {
+    this.ensureAlive();
+    const env = await this.gqlRun({ query: `mutation { session { backbone { detach(uri: ${__gqlStr(uri)}) } } }` });
     return gqlOkFromEnvelope(env);
   }
 
@@ -808,18 +826,13 @@ export class Kit {
     const wasmBytesPre = await __readSemioBytesFromMonorepoCandidates();
     const useDedicatedWorker = typeof Worker !== "undefined" && !preferInlineInVitest && wasmBytesPre == null;
 
-    let dto: JsonValue;
-    try {
-      dto = parseJsonValue(uri);
-    } catch {
-      throw new Error("Kit.open: `uri` must be a JSON string of the initial kit DTO");
-    }
+    const bootstrapUri = backboneBootstrapUriForKitOpen(uri);
 
     if (useDedicatedWorker) {
       const worker = opts?.workerFactory?.() ?? createKitStoreWorker();
       const wt = new WorkerStringTransport(worker);
       try {
-        await wt.init(dto);
+        await wt.init(bootstrapUri);
         const k = new Kit(timeoutMs, wt);
         await withTimeout(k.warmGraphqlRead(), timeoutMs, "graphql");
         void k.startSubscriptionLoop();
@@ -846,7 +859,7 @@ export class Kit {
       else await mod.default();
     } else await mod.default();
     if (typeof mod.boot === "function") mod.boot();
-    const handleUnknown = mod.KitStoreHandle.create(dto as object);
+    const handleUnknown = mod.KitStoreHandle.create(bootstrapUri);
     const wasmHandle = handleUnknown instanceof Promise ? await handleUnknown : handleUnknown;
     if (wasmHandle == null || typeof (wasmHandle as { execute?: unknown }).execute !== "function") {
       throw new Error("KitStoreHandle.create did not return execute()");

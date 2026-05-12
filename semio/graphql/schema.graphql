@@ -8255,7 +8255,6 @@ type Query {
 type Mutation {
   # Mutation
   session: SessionCommandInput!
-  hydrateKitStoreBundleJson(json: String!): ID!
 }
 
 type Subscription {

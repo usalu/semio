@@ -7,7 +7,7 @@
 // #endregion 🧷JsReexports
 
 // #region ⚛️Imports
-import type { Attribute, Benchmark, ConnectionSide, Coordinate, FieldSpec, Kit, KitReadPoint, PieceBlueprint, Plane, Position, SetError, SetResult } from "@semio/js";
+import type { Attribute, Benchmark, ConnectionSide, Coordinate, Entity, FieldSpec, Kit, KitReadPoint, PieceBlueprint, Plane, Position, SetError, SetResult } from "@semio/js";
 import {
   Author,
   Concept,
@@ -109,7 +109,7 @@ export type FieldBindOptions<E, T> = Readonly<{
  * @typeParam E — Concrete {@link } subclass anchor.
  * @typeParam T — Parsed field value.
  */
-export function bindFieldToReact<E extends , T>(opts: FieldBindOptions<E, T>): () => FieldReadState<T> {
+export function bindFieldToReact<E extends Entity, T>(opts: FieldBindOptions<E, T>): () => FieldReadState<T> {
   const { read, eventKind, get } = opts;
   return function use(): FieldReadState<T> {
     const entity = get();
@@ -154,7 +154,7 @@ export function bindFieldToReact<E extends , T>(opts: FieldBindOptions<E, T>): (
   };
 }
 
-export type DefinedFieldBindOptions<E extends , T> = Readonly<{
+export type DefinedFieldBindOptions<E extends Entity, T> = Readonly<{
   spec: FieldSpec<T>;
   pathInKit: (self: E) => string;
   get: () => E | null;
@@ -166,7 +166,7 @@ export type DefinedFieldBindOptions<E extends , T> = Readonly<{
  * @typeParam E — Concrete {@link } subclass anchor.
  * @typeParam T — Parsed field value.
  */
-export function bindDefinedFieldToReact<E extends , T>(opts: DefinedFieldBindOptions<E, T>): () => FieldReadState<T> {
+export function bindDefinedFieldToReact<E extends Entity, T>(opts: DefinedFieldBindOptions<E, T>): () => FieldReadState<T> {
   const { spec, pathInKit, get, eventKind } = opts;
   return function useDefined(): FieldReadState<T> {
     const entity = get();
@@ -231,7 +231,7 @@ export function mapTooLong(err: SetError, maxChars: number): string {
  * @typeParam E — Concrete {@link } subclass anchor.
  * @typeParam Args — Operation arguments after the entity receiver.
  */
-export function bindOpToReact<E extends , Args extends unknown[] = []>(impl: (entity: E, ...args: Args) => Promise<SetResult>): (get: () => E | null) => readonly [(...args: Args) => Promise<SetResult>, OperationStatus] {
+export function bindOpToReact<E extends Entity, Args extends unknown[] = []>(impl: (entity: E, ...args: Args) => Promise<SetResult>): (get: () => E | null) => readonly [(...args: Args) => Promise<SetResult>, OperationStatus] {
   return function useOp(get: () => E | null): readonly [(...args: Args) => Promise<SetResult>, OperationStatus] {
     const getRef = React.useRef(get);
     getRef.current = get;
@@ -897,11 +897,6 @@ const useTypeAddConnectorOp = bindOpToReact<Type, [string, string | null | undef
 );
 const useTypeRemoveConnectorOp = bindOpToReact<Type, [string]>((t, id) => t.removeConnector(id));
 const useTypeRemoveConnectorsOp = bindOpToReact<Type, [readonly string[]]>((t, ids) => t.removeConnectors(ids));
-
-/** @emoji 🛡️ Contextual {@link Type}. */
-export function useType(): Type | null {
-  return useType();
-}
 
 /** @emoji 📖 Live {@link Type#readName}. */
 export function useTypeName(): FieldReadState<string> {
