@@ -556,13 +556,13 @@ pub mod error {
 //#region 📐 geom
 
 pub mod geom {
-    //! 📐 Geometry: Copy wire structs (serde / kit inputs) + `entity` (`Arc` graph nodes). Live [`entity::PositionNode`] state is only in child locks; [`Position`] snapshots are derived on read.
+    //! 📐 Geometry: wire [`VectorInput`], [`PositionInput`], … for serde / kit inputs; canonical live weak entities live in [`entity`] as `Arc` graph nodes with one Rust kind per SDL weak entity.
     use async_graphql::InputObject;
     use serde::{Deserialize, Serialize};
 
     #[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize, InputObject)]
     #[graphql(name = "VectorInput")]
-    pub struct Vector {
+    pub struct VectorInput {
         pub x: f64,
         pub y: f64,
         pub z: f64,
@@ -570,7 +570,7 @@ pub mod geom {
 
     #[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize, InputObject)]
     #[graphql(name = "PointInput")]
-    pub struct Point {
+    pub struct PointInput {
         pub x: f64,
         pub y: f64,
         pub z: f64,
@@ -578,54 +578,54 @@ pub mod geom {
 
     #[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize, InputObject)]
     #[graphql(name = "CoordinateInput")]
-    pub struct Coordinate {
+    pub struct CoordinateInput {
         pub u: f64,
         pub v: f64,
     }
 
     #[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize, InputObject)]
     #[graphql(name = "OffsetInput")]
-    pub struct Offset {
+    pub struct OffsetInput {
         pub u: f64,
         pub v: f64,
     }
 
     #[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize, InputObject)]
     #[graphql(name = "PlaneInput")]
-    pub struct Plane {
+    pub struct PlaneInput {
         #[serde(default)]
-        pub origin: Point,
+        pub origin: PointInput,
         #[graphql(name = "xAxis")]
         #[serde(alias = "xAxis", default)]
-        pub x_axis: Vector,
+        pub x_axis: VectorInput,
         #[graphql(name = "yAxis")]
         #[serde(alias = "yAxis", default)]
-        pub y_axis: Vector,
+        pub y_axis: VectorInput,
     }
 
-    impl Default for Plane {
+    impl Default for PlaneInput {
         /// @emoji ◭ World XY plane through origin; hydrates kit JSON that omits plane axes.
         fn default() -> Self {
-            Self { origin: Point::default(), x_axis: Vector { x: 1.0, y: 0.0, z: 0.0 }, y_axis: Vector { x: 0.0, y: 1.0, z: 0.0 } }
+            Self { origin: PointInput::default(), x_axis: VectorInput { x: 1.0, y: 0.0, z: 0.0 }, y_axis: VectorInput { x: 0.0, y: 1.0, z: 0.0 } }
         }
     }
 
     #[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize, InputObject)]
     #[graphql(name = "PositionInput")]
-    pub struct Position {
+    pub struct PositionInput {
         #[serde(default)]
-        pub center: Coordinate,
+        pub center: CoordinateInput,
         #[serde(default)]
-        pub plane: Plane,
+        pub plane: PlaneInput,
     }
 
-    impl Default for Position {
+    impl Default for PositionInput {
         fn default() -> Self {
-            Self { center: Coordinate::default(), plane: Plane::default() }
+            Self { center: CoordinateInput::default(), plane: PlaneInput::default() }
         }
     }
 
-    /// @emoji 🌍 Wire `LocationInput` (lon/lat/alt) for [`entity::LocationNode`].
+    /// @emoji 🌍 Wire `LocationInput` (lon/lat/alt) for [`entity::Location`].
     #[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize, InputObject)]
     #[graphql(name = "LocationInput")]
     pub struct LocationInput {
@@ -644,27 +644,27 @@ pub mod geom {
         use crate::hash::{h, merkle_node_str};
         use crate::id::Id;
 
-        use super::{Coordinate, Plane, Point, Position, Vector};
+        use super::{CoordinateInput, PlaneInput, PointInput, PositionInput, VectorInput};
 
         fn weak(prefix: &str, parts: &[&str]) -> Id {
             Id::from(format!("semio:weak:{prefix}:{}", h(parts)))
         }
 
-        /// @emoji 📍 Coordinate WeakEntity data node.
+        /// @emoji 📍 Canonical weak `Coordinate` (live u/v under `RwLock`).
         #[derive(Debug)]
-        pub struct CoordinateNode {
+        pub struct Coordinate {
             pub id: Id,
             pub u: RwLock<f64>,
             pub v: RwLock<f64>,
         }
 
-        impl CoordinateNode {
-            pub fn from_value(c: Coordinate) -> Arc<Self> {
+        impl Coordinate {
+            pub fn from_input(c: CoordinateInput) -> Arc<Self> {
                 let id = weak("coordinate", &[&format!("{:.9}", c.u), &format!("{:.9}", c.v)]);
                 Arc::new(Self { id, u: RwLock::new(c.u), v: RwLock::new(c.v) })
             }
 
-            /// @emoji 🪪 Merkle leaf: id + live u/v (matches [`super::Coordinate`] payload).
+            /// @emoji 🪪 Merkle leaf: id + live u/v (matches [`super::CoordinateInput`] payload).
             pub async fn compute_hash(&self) -> String {
                 let u = *self.u.read().await;
                 let v = *self.v.read().await;
@@ -672,17 +672,17 @@ pub mod geom {
             }
         }
 
-        /// @emoji ↗ Vector WeakEntity data node.
+        /// @emoji ↗ Canonical weak `Vector`.
         #[derive(Debug)]
-        pub struct VectorNode {
+        pub struct Vector {
             pub id: Id,
             pub x: RwLock<f64>,
             pub y: RwLock<f64>,
             pub z: RwLock<f64>,
         }
 
-        impl VectorNode {
-            pub fn from_value(v: Vector) -> Arc<Self> {
+        impl Vector {
+            pub fn from_input(v: VectorInput) -> Arc<Self> {
                 let id = weak("vector", &[&format!("{:.9}", v.x), &format!("{:.9}", v.y), &format!("{:.9}", v.z)]);
                 Arc::new(Self { id, x: RwLock::new(v.x), y: RwLock::new(v.y), z: RwLock::new(v.z) })
             }
@@ -696,17 +696,17 @@ pub mod geom {
             }
         }
 
-        /// @emoji ◆ Point WeakEntity data node.
+        /// @emoji ◆ Canonical weak `Point`.
         #[derive(Debug)]
-        pub struct PointNode {
+        pub struct Point {
             pub id: Id,
             pub x: RwLock<f64>,
             pub y: RwLock<f64>,
             pub z: RwLock<f64>,
         }
 
-        impl PointNode {
-            pub fn from_value(p: Point) -> Arc<Self> {
+        impl Point {
+            pub fn from_input(p: PointInput) -> Arc<Self> {
                 let id = weak("point", &[&format!("{:.9}", p.x), &format!("{:.9}", p.y), &format!("{:.9}", p.z)]);
                 Arc::new(Self { id, x: RwLock::new(p.x), y: RwLock::new(p.y), z: RwLock::new(p.z) })
             }
@@ -720,20 +720,20 @@ pub mod geom {
             }
         }
 
-        /// @emoji ▭ Plane WeakEntity data node (owns origin + axes).
+        /// @emoji ▭ Canonical weak `Plane` (owns origin + axes).
         #[derive(Debug)]
-        pub struct PlaneNode {
+        pub struct Plane {
             pub id: Id,
-            pub origin: Arc<PointNode>,
-            pub x_axis: Arc<VectorNode>,
-            pub y_axis: Arc<VectorNode>,
+            pub origin: Arc<Point>,
+            pub x_axis: Arc<Vector>,
+            pub y_axis: Arc<Vector>,
         }
 
-        impl PlaneNode {
-            pub fn from_value(pl: Plane) -> Arc<Self> {
-                let origin = PointNode::from_value(pl.origin);
-                let x_axis = VectorNode::from_value(pl.x_axis);
-                let y_axis = VectorNode::from_value(pl.y_axis);
+        impl Plane {
+            pub fn from_input(pl: PlaneInput) -> Arc<Self> {
+                let origin = Point::from_input(pl.origin);
+                let x_axis = Vector::from_input(pl.x_axis);
+                let y_axis = Vector::from_input(pl.y_axis);
                 let id = weak("plane", &[origin.id.as_str(), x_axis.id.as_str(), y_axis.id.as_str()]);
                 Arc::new(Self { id, origin, x_axis, y_axis })
             }
@@ -746,16 +746,16 @@ pub mod geom {
             }
         }
 
-        /// @emoji ↖ WeakEntity-style offset (piece drag input echo).
+        /// @emoji ↖ Canonical weak `Offset` (piece drag input echo).
         #[derive(Debug)]
-        pub struct OffsetNode {
+        pub struct Offset {
             pub id: Id,
             pub u: RwLock<f64>,
             pub v: RwLock<f64>,
         }
 
-        impl OffsetNode {
-            pub fn from_value(o: super::Offset) -> Arc<Self> {
+        impl Offset {
+            pub fn from_input(o: super::OffsetInput) -> Arc<Self> {
                 let id = weak("offset", &[&format!("{:.9}", o.u), &format!("{:.9}", o.v)]);
                 Arc::new(Self { id, u: RwLock::new(o.u), v: RwLock::new(o.v) })
             }
@@ -768,24 +768,24 @@ pub mod geom {
             }
         }
 
-        /// @emoji ⌖ Position WeakEntity root (center + plane); canonical live state lives only in child nodes (no duplicate Copy payload).
+        /// @emoji ⌖ Canonical weak `Position` (center + plane); live state only in child locks.
         #[derive(Debug)]
-        pub struct PositionNode {
+        pub struct Position {
             pub id: Id,
-            pub center: Arc<CoordinateNode>,
-            pub plane: Arc<PlaneNode>,
+            pub center: Arc<Coordinate>,
+            pub plane: Arc<Plane>,
         }
 
-        impl PositionNode {
-            pub fn from_position_value(value: Position) -> Arc<Self> {
-                let center = CoordinateNode::from_value(value.center);
-                let plane = PlaneNode::from_value(value.plane);
+        impl Position {
+            pub fn from_position_input(value: PositionInput) -> Arc<Self> {
+                let center = Coordinate::from_input(value.center);
+                let plane = Plane::from_input(value.plane);
                 let id = weak("position", &[center.id.as_str(), plane.id.as_str()]);
                 Arc::new(Self { id, center, plane })
             }
 
-            /// @emoji 📸 Assembles the wire [`super::Position`] snapshot from live center + plane child locks (single source of truth).
-            pub async fn snapshot_value(&self) -> Position {
+            /// @emoji 📸 Wire [`super::PositionInput`] from live center + plane child locks (single source of truth).
+            pub async fn snapshot_input(&self) -> PositionInput {
                 let u = *self.center.u.read().await;
                 let v = *self.center.v.read().await;
                 let ox = *self.plane.origin.x.read().await;
@@ -797,19 +797,19 @@ pub mod geom {
                 let yx = *self.plane.y_axis.x.read().await;
                 let yy = *self.plane.y_axis.y.read().await;
                 let yz = *self.plane.y_axis.z.read().await;
-                Position {
-                    center: Coordinate { u, v },
-                    plane: Plane {
-                        origin: Point { x: ox, y: oy, z: oz },
-                        x_axis: Vector { x: xx, y: xy, z: xz },
-                        y_axis: Vector { x: yx, y: yy, z: yz },
+                PositionInput {
+                    center: CoordinateInput { u, v },
+                    plane: PlaneInput {
+                        origin: PointInput { x: ox, y: oy, z: oz },
+                        x_axis: VectorInput { x: xx, y: xy, z: xz },
+                        y_axis: VectorInput { x: yx, y: yy, z: yz },
                     },
                 }
             }
 
             /// @emoji 🪪 Merkle node: live position scalars plus sorted digests of center + plane arcs.
             pub async fn compute_hash(&self) -> String {
-                let p = self.snapshot_value().await;
+                let p = self.snapshot_input().await;
                 let flat = format!(
                     "{:.9}\x1f{:.9}\x1f{:.9}\x1f{:.9}\x1f{:.9}\x1f{:.9}\x1f{:.9}\x1f{:.9}\x1f{:.9}\x1f{:.9}\x1f{:.9}",
                     p.center.u, p.center.v, p.plane.origin.x, p.plane.origin.y, p.plane.origin.z, p.plane.x_axis.x, p.plane.x_axis.y, p.plane.x_axis.z, p.plane.y_axis.x, p.plane.y_axis.y, p.plane.y_axis.z,
@@ -820,17 +820,17 @@ pub mod geom {
             }
         }
 
-        /// @emoji 🌍 WeakEntity-style geographic location (lon/lat/alt).
+        /// @emoji 🌍 Canonical weak `Location` (lon/lat/alt).
         #[derive(Debug)]
-        pub struct LocationNode {
+        pub struct Location {
             pub id: Id,
             pub longitude: RwLock<f64>,
             pub latitude: RwLock<f64>,
             pub altitude: RwLock<f64>,
         }
 
-        impl LocationNode {
-            pub fn from_value(loc: super::LocationInput) -> Arc<Self> {
+        impl Location {
+            pub fn from_location_input(loc: super::LocationInput) -> Arc<Self> {
                 let id = weak("location", &[&format!("{:.9}", loc.longitude), &format!("{:.9}", loc.latitude), &format!("{:.9}", loc.altitude)]);
                 Arc::new(Self { id, longitude: RwLock::new(loc.longitude), latitude: RwLock::new(loc.latitude), altitude: RwLock::new(loc.altitude) })
             }
@@ -844,14 +844,14 @@ pub mod geom {
             }
         }
 
-        /// @emoji 🧭 Placeholder StrongEntity shell for `Place` (full meta wiring lands with meta lift).
+        /// @emoji 🧭 Placeholder shell for `Place` (full meta wiring lands with meta lift).
         #[derive(Debug)]
-        pub struct PlaceNode {
+        pub struct Place {
             pub id: Id,
             pub label: RwLock<Option<String>>,
         }
 
-        impl PlaceNode {
+        impl Place {
             pub async fn new() -> Arc<Self> {
                 Arc::new(Self { id: Id::new().await, label: RwLock::new(None) })
             }
@@ -864,49 +864,49 @@ pub mod geom {
         }
 
         //#region 🔧 Default stubs (schema codegen union / interface defaults)
-        impl Default for CoordinateNode {
+        impl Default for Coordinate {
             fn default() -> Self {
                 Self { id: Id::default(), u: RwLock::new(0.0), v: RwLock::new(0.0) }
             }
         }
 
-        impl Default for VectorNode {
+        impl Default for Vector {
             fn default() -> Self {
                 Self { id: Id::default(), x: RwLock::new(0.0), y: RwLock::new(0.0), z: RwLock::new(0.0) }
             }
         }
 
-        impl Default for PointNode {
+        impl Default for Point {
             fn default() -> Self {
                 Self { id: Id::default(), x: RwLock::new(0.0), y: RwLock::new(0.0), z: RwLock::new(0.0) }
             }
         }
 
-        impl Default for PlaneNode {
+        impl Default for Plane {
             fn default() -> Self {
-                Self { id: Id::default(), origin: Arc::new(PointNode::default()), x_axis: Arc::new(VectorNode::default()), y_axis: Arc::new(VectorNode::default()) }
+                Self { id: Id::default(), origin: Arc::new(Point::default()), x_axis: Arc::new(Vector::default()), y_axis: Arc::new(Vector::default()) }
             }
         }
 
-        impl Default for OffsetNode {
+        impl Default for Offset {
             fn default() -> Self {
                 Self { id: Id::default(), u: RwLock::new(0.0), v: RwLock::new(0.0) }
             }
         }
 
-        impl Default for PositionNode {
+        impl Default for Position {
             fn default() -> Self {
-                Self { id: Id::default(), center: Arc::new(CoordinateNode::default()), plane: Arc::new(PlaneNode::default()) }
+                Self { id: Id::default(), center: Arc::new(Coordinate::default()), plane: Arc::new(Plane::default()) }
             }
         }
 
-        impl Default for LocationNode {
+        impl Default for Location {
             fn default() -> Self {
                 Self { id: Id::default(), longitude: RwLock::new(0.0), latitude: RwLock::new(0.0), altitude: RwLock::new(0.0) }
             }
         }
 
-        impl Default for PlaceNode {
+        impl Default for Place {
             fn default() -> Self {
                 Self { id: Id::default(), label: RwLock::new(None) }
             }
@@ -1338,7 +1338,7 @@ pub mod gql_relay {
     crate::simple_conn_entity!(TagConnection, TagEdge, std::sync::Arc<Tag>);
     crate::simple_conn_entity!(QualityConnection, QualityEdge, std::sync::Arc<Quality>);
     crate::simple_conn_entity!(PortConnection, PortEdge, std::sync::Arc<crate::kit::r#type::Port>);
-    crate::simple_conn_entity!(PlaceConnection, PlaceEdge, std::sync::Arc<crate::geom::entity::PlaceNode>);
+    crate::simple_conn_entity!(PlaceConnection, PlaceEdge, std::sync::Arc<crate::geom::entity::Place>);
     crate::simple_conn_sync!(BenchmarkConnection, BenchmarkEdge, Benchmark, |b: &Benchmark| b.compute_entity_hash());
     crate::simple_conn_sync!(PropConnection, PropEdge, Prop, |p: &Prop| p.compute_entity_hash());
     crate::simple_conn_sync!(AttributeConnection, AttributeEdge, crate::meta::Attribute, |a: &crate::meta::Attribute| a.compute_entity_hash());
@@ -1346,13 +1346,13 @@ pub mod gql_relay {
     crate::simple_conn_sync!(LayerConnection, LayerEdge, Layer, |l: &Layer| l.compute_entity_hash());
     crate::simple_conn_sync!(GroupConnection, GroupEdge, Group, |g: &Group| g.compute_entity_hash());
 
-    crate::entity_full_family!(Vector, Arc<crate::geom::entity::VectorNode>, relay = (VectorConnection, VectorEdge));
-    crate::entity_full_family!(Point, Arc<crate::geom::entity::PointNode>, relay = (PointConnection, PointEdge));
-    crate::entity_full_family!(Coordinate, Arc<crate::geom::entity::CoordinateNode>, relay = (CoordinateConnection, CoordinateEdge));
-    crate::entity_full_family!(Offset, Arc<crate::geom::entity::OffsetNode>, relay = (OffsetConnection, OffsetEdge));
-    crate::entity_full_family!(Plane, Arc<crate::geom::entity::PlaneNode>, relay = (PlaneConnection, PlaneEdge));
-    crate::entity_full_family!(Position, Arc<crate::geom::entity::PositionNode>, relay = (PositionConnection, PositionEdge));
-    crate::entity_full_family!(Location, Arc<crate::geom::entity::LocationNode>, relay = (LocationConnection, LocationEdge));
+    crate::entity_full_family!(Vector, Arc<crate::geom::entity::Vector>, relay = (VectorConnection, VectorEdge));
+    crate::entity_full_family!(Point, Arc<crate::geom::entity::Point>, relay = (PointConnection, PointEdge));
+    crate::entity_full_family!(Coordinate, Arc<crate::geom::entity::Coordinate>, relay = (CoordinateConnection, CoordinateEdge));
+    crate::entity_full_family!(Offset, Arc<crate::geom::entity::Offset>, relay = (OffsetConnection, OffsetEdge));
+    crate::entity_full_family!(Plane, Arc<crate::geom::entity::Plane>, relay = (PlaneConnection, PlaneEdge));
+    crate::entity_full_family!(Position, Arc<crate::geom::entity::Position>, relay = (PositionConnection, PositionEdge));
+    crate::entity_full_family!(Location, Arc<crate::geom::entity::Location>, relay = (LocationConnection, LocationEdge));
 
     crate::entity_family! {
         /// @emoji 🧷 Kit [`Family`] SDL shell — Artifact [`name`]/[`description`]/[`icon`] are persisted kit fields.
@@ -2365,8 +2365,8 @@ pub mod kit {
             use async_graphql::{Enum, Object};
             use async_lock::RwLock;
 
-            use crate::geom::entity::PositionNode;
-            use crate::geom::Position;
+            use crate::geom::entity::Position as PositionEntity;
+            use crate::geom::PositionInput;
             use crate::hash::h;
             use crate::id::Id;
             use crate::meta::{Attribute, Prop};
@@ -2386,7 +2386,7 @@ pub mod kit {
                 pub owner_design: Weak<super::Design>,
                 pub name: RwLock<Option<String>>,
                 pub description: RwLock<Option<String>>,
-                pub position: RwLock<Option<Arc<PositionNode>>>,
+                pub position: RwLock<Option<Arc<PositionEntity>>>,
                 pub scale: RwLock<Option<f64>>,
                 pub blueprint: RwLock<super::super::r#type::Blueprint>,
                 pub connection_kind: RwLock<Option<PieceConnectionKind>>,
@@ -2424,14 +2424,14 @@ pub mod kit {
             }
 
             impl Piece {
-                pub async fn new_fixed(owner_design: Weak<super::Design>, blueprint: super::super::r#type::Blueprint, position: Position) -> Arc<Self> {
-                    let pos_node = PositionNode::from_position_value(position);
+                pub async fn new_fixed(owner_design: Weak<super::Design>, blueprint: super::super::r#type::Blueprint, position: PositionInput) -> Arc<Self> {
+                    let pos_node = PositionEntity::from_position_input(position);
                     Arc::new(Self { id: Id::new().await, owner_design, position: RwLock::new(Some(pos_node)), blueprint: RwLock::new(blueprint), connection_kind: RwLock::new(Some(PieceConnectionKind::Fixed)), ..Default::default() })
                 }
 
                 /// 🧾 Hydrated workspace piece aligned to external JSON id (facade snapshot hydration).
-                pub async fn new_fixed_with_external_id(id: Id, owner_design: Weak<super::Design>, blueprint: super::super::r#type::Blueprint, position: Position) -> Arc<Self> {
-                    let pos_node = PositionNode::from_position_value(position);
+                pub async fn new_fixed_with_external_id(id: Id, owner_design: Weak<super::Design>, blueprint: super::super::r#type::Blueprint, position: PositionInput) -> Arc<Self> {
+                    let pos_node = PositionEntity::from_position_input(position);
                     Arc::new(Self { id, owner_design, position: RwLock::new(Some(pos_node)), blueprint: RwLock::new(blueprint), connection_kind: RwLock::new(Some(PieceConnectionKind::Fixed)), ..Default::default() })
                 }
 
@@ -2441,9 +2441,9 @@ pub mod kit {
                 pub async fn set_description(&self, description: Option<String>) {
                     *self.description.write().await = description;
                 }
-                pub async fn set_position(&self, position: Option<Position>) {
+                pub async fn set_position(&self, position: Option<PositionInput>) {
                     let mut g = self.position.write().await;
-                    *g = position.map(PositionNode::from_position_value);
+                    *g = position.map(PositionEntity::from_position_input);
                 }
 
                 pub async fn compute_hash(&self) -> String {
@@ -2451,11 +2451,11 @@ pub mod kit {
                     h(&[self.id.as_str(), name.as_deref().unwrap_or("")])
                 }
 
-                pub async fn compute_flat_position(&self) -> Position {
+                pub async fn compute_flat_position(&self) -> PositionInput {
                     if let Some(n) = self.position.read().await.as_ref() {
-                        return n.snapshot_value().await;
+                        return n.snapshot_input().await;
                     }
-                    Position::default()
+                    PositionInput::default()
                 }
             }
 
@@ -2476,7 +2476,7 @@ pub mod kit {
                 pub async fn description(&self) -> Option<String> {
                     self.description.read().await.clone()
                 }
-                pub async fn position(&self) -> Option<Arc<PositionNode>> {
+                pub async fn position(&self) -> Option<Arc<PositionEntity>> {
                     self.position.read().await.clone()
                 }
                 pub async fn scale(&self) -> Option<f64> {
@@ -2490,11 +2490,11 @@ pub mod kit {
                     *self.connection_kind.read().await
                 }
                 #[graphql(name = "flatPosition")]
-                pub async fn flat_position(&self) -> Arc<PositionNode> {
+                pub async fn flat_position(&self) -> Arc<PositionEntity> {
                     if let Some(n) = self.position.read().await.clone() {
                         return n;
                     }
-                    PositionNode::from_position_value(Position::default())
+                    PositionEntity::from_position_input(PositionInput::default())
                 }
                 #[graphql(name = "replaceableBlueprints")]
                 pub async fn replaceable_blueprints(&self) -> crate::gql_relay::BlueprintConnection {
@@ -2747,7 +2747,7 @@ pub mod kit {
         use async_graphql::{Object, Union};
         use async_lock::RwLock;
 
-        use crate::geom::entity::LocationNode;
+        use crate::geom::entity::Location;
         use crate::hash::h;
         use crate::id::Id;
         use crate::meta::{Attribute, Author, Group, Layer, Prop, Quality, Stat};
@@ -2805,7 +2805,7 @@ pub mod kit {
             pub description: RwLock<Option<String>>,
             pub icon: RwLock<Option<String>>,
             pub image: RwLock<Option<String>>,
-            pub location: RwLock<Option<Arc<LocationNode>>>,
+            pub location: RwLock<Option<Arc<Location>>>,
             pub unit: RwLock<Option<String>>,
             pub created: RwLock<Option<Timestamp>>,
             pub updated: RwLock<Option<Timestamp>>,
@@ -2911,7 +2911,7 @@ pub mod kit {
                     let pose = pj.get("pose");
                     let plane_val = pj.get("plane").cloned().or_else(|| pose.and_then(|p| p.get("plane")).cloned()).unwrap_or_else(|| serde_json::json!({}));
                     let center_val = pj.get("center").cloned().or_else(|| pose.and_then(|p| p.get("center")).cloned()).unwrap_or_else(|| serde_json::json!({"u":0.0,"v":0.0}));
-                    let position: crate::geom::Position = serde_json::from_value(serde_json::json!({"plane": plane_val, "center": center_val})).map_err(|e| crate::error::SemioError::invalid(format!("piece position serde: {}", e)))?;
+                    let position: crate::geom::PositionInput = serde_json::from_value(serde_json::json!({"plane": plane_val, "center": center_val})).map_err(|e| crate::error::SemioError::invalid(format!("piece position serde: {}", e)))?;
                     let scale = pj.get("scale").and_then(|s| s.as_f64()).unwrap_or(1.0);
                     let nm_opt = pj.get("name").and_then(|x| x.as_str());
                     let bp = crate::kit::r#type::Blueprint::Type(ty.clone());
@@ -2949,7 +2949,7 @@ pub mod kit {
             pub async fn image(&self) -> Option<String> {
                 self.image.read().await.clone()
             }
-            pub async fn location(&self) -> Option<Arc<LocationNode>> {
+            pub async fn location(&self) -> Option<Arc<Location>> {
                 self.location.read().await.clone()
             }
             pub async fn unit(&self) -> Option<String> {
@@ -3708,7 +3708,7 @@ pub mod kit {
         }
 
         async fn apply_design_piece_modified_json(self: &Arc<Self>, design_id: &Id, piece_id: &Id, pdiff: &serde_json::Value) -> Result<(), crate::error::SemioError> {
-            use crate::geom::entity::PositionNode;
+            use crate::geom::entity::Position as GeomPosition;
             let design = self.design_by_external_id(design_id).await.ok_or_else(|| crate::error::SemioError::not_found("Design", design_id.as_str()))?;
             let piece = design.piece_by_external_id(piece_id).await.ok_or_else(|| crate::error::SemioError::not_found("Piece", piece_id.as_str()))?;
             if let Some(true) = pdiff.get("fixPiece").and_then(|x| x.as_bool()) {
@@ -3717,24 +3717,23 @@ pub mod kit {
             }
             if let Some(du) = pdiff.get("drag").and_then(|d| d.get("u")).and_then(|x| x.as_f64()) {
                 let dv = pdiff.get("drag").and_then(|d| d.get("v")).and_then(|x| x.as_f64()).unwrap_or(0.0);
-                let offset = crate::geom::Offset { u: du, v: dv };
                 let pos_slot = piece.position.read().await.clone();
                 if let Some(pos) = pos_slot {
-                    let u = *pos.center.u.read().await + offset.u;
-                    let v = *pos.center.v.read().await + offset.v;
+                    let u = *pos.center.u.read().await + du;
+                    let v = *pos.center.v.read().await + dv;
                     *pos.center.u.write().await = u;
                     *pos.center.v.write().await = v;
                 } else {
-                    let n = PositionNode::from_position_value(crate::geom::Position::default());
-                    *n.center.u.write().await = offset.u;
-                    *n.center.v.write().await = offset.v;
+                    let n = GeomPosition::from_position_input(crate::geom::PositionInput::default());
+                    *n.center.u.write().await = du;
+                    *n.center.v.write().await = dv;
                     *piece.position.write().await = Some(n);
                 }
                 return Ok(());
             }
             if let Some(pose_v) = pdiff.get("pose") {
-                let position: crate::geom::Position = serde_json::from_value(pose_v.clone()).map_err(|e| crate::error::SemioError::invalid(e.to_string()))?;
-                let n = PositionNode::from_position_value(position);
+                let position: crate::geom::PositionInput = serde_json::from_value(pose_v.clone()).map_err(|e| crate::error::SemioError::invalid(e.to_string()))?;
+                let n = GeomPosition::from_position_input(position);
                 *piece.position.write().await = Some(n);
                 return Ok(());
             }
@@ -5874,7 +5873,7 @@ pub mod iface {
 
     use async_graphql::{Object, SimpleObject, Union};
 
-    use crate::geom::entity::{CoordinateNode, LocationNode, OffsetNode, PlaceNode, PlaneNode, PointNode, PositionNode, VectorNode};
+    use crate::geom::entity::{Coordinate, Location, Offset, Place, Plane, Point, Position, Vector};
     use crate::hash::merkle_collection;
     use crate::id::Id;
     use crate::kit::design::piece::Piece;
@@ -5898,14 +5897,14 @@ pub mod iface {
         Conflict(Arc<Conflict>),
         ReadVersion(Arc<ReadVersion>),
         WriteVersion(Arc<WriteVersion>),
-        Position(Arc<PositionNode>),
-        Coordinate(Arc<CoordinateNode>),
-        Plane(Arc<PlaneNode>),
-        Point(Arc<PointNode>),
-        Vector(Arc<VectorNode>),
-        Place(Arc<PlaceNode>),
-        Offset(Arc<OffsetNode>),
-        Location(Arc<LocationNode>),
+        Position(Arc<Position>),
+        Coordinate(Arc<Coordinate>),
+        Plane(Arc<Plane>),
+        Point(Arc<Point>),
+        Vector(Arc<Vector>),
+        Place(Arc<Place>),
+        Offset(Arc<Offset>),
+        Location(Arc<Location>),
     }
 
     /// @emoji 🔗 SDL `OwnedEntity` subset for non-empty `ownedEntities` edges.
@@ -6027,9 +6026,9 @@ pub mod iface {
         None
     }
 
-    /// @emoji 📍 WeakEntity + entity shell for [`CoordinateNode`] (SDL `Coordinate`).
+    /// @emoji 📍 WeakEntity + entity shell for [`Coordinate`] (SDL `Coordinate`).
     #[Object(name = "Coordinate")]
-    impl CoordinateNode {
+    impl Coordinate {
         pub async fn id(&self) -> Id {
             self.id.clone()
         }
@@ -6051,7 +6050,7 @@ pub mod iface {
     }
 
     #[Object(name = "Vector")]
-    impl VectorNode {
+    impl Vector {
         pub async fn id(&self) -> Id {
             self.id.clone()
         }
@@ -6076,7 +6075,7 @@ pub mod iface {
     }
 
     #[Object(name = "Point")]
-    impl PointNode {
+    impl Point {
         pub async fn id(&self) -> Id {
             self.id.clone()
         }
@@ -6101,7 +6100,7 @@ pub mod iface {
     }
 
     #[Object(name = "Plane")]
-    impl PlaneNode {
+    impl Plane {
         pub async fn id(&self) -> Id {
             self.id.clone()
         }
@@ -6114,21 +6113,21 @@ pub mod iface {
         pub async fn owned_entities(&self) -> Option<std::sync::Arc<crate::iface::OwnedEntityConnection>> {
             Some(crate::iface::empty_owned_entity_connection())
         }
-        pub async fn origin(&self) -> Arc<PointNode> {
+        pub async fn origin(&self) -> Arc<Point> {
             self.origin.clone()
         }
         #[graphql(name = "xAxis")]
-        pub async fn x_axis(&self) -> Arc<VectorNode> {
+        pub async fn x_axis(&self) -> Arc<Vector> {
             self.x_axis.clone()
         }
         #[graphql(name = "yAxis")]
-        pub async fn y_axis(&self) -> Arc<VectorNode> {
+        pub async fn y_axis(&self) -> Arc<Vector> {
             self.y_axis.clone()
         }
     }
 
     #[Object(name = "Position")]
-    impl PositionNode {
+    impl Position {
         pub async fn id(&self) -> Id {
             self.id.clone()
         }
@@ -6141,16 +6140,16 @@ pub mod iface {
         pub async fn owned_entities(&self) -> Option<std::sync::Arc<crate::iface::OwnedEntityConnection>> {
             Some(crate::iface::empty_owned_entity_connection())
         }
-        pub async fn center(&self) -> Arc<CoordinateNode> {
+        pub async fn center(&self) -> Arc<Coordinate> {
             self.center.clone()
         }
-        pub async fn plane(&self) -> Arc<PlaneNode> {
+        pub async fn plane(&self) -> Arc<Plane> {
             self.plane.clone()
         }
     }
 
     #[Object(name = "Offset")]
-    impl OffsetNode {
+    impl Offset {
         pub async fn id(&self) -> Id {
             self.id.clone()
         }
@@ -6171,9 +6170,9 @@ pub mod iface {
         }
     }
 
-    /// @emoji 🌍 WeakEntity shell for [`LocationNode`] (SDL `Location`).
+    /// @emoji 🌍 WeakEntity shell for [`Location`] (SDL `Location`).
     #[Object(name = "Location")]
-    impl LocationNode {
+    impl Location {
         pub async fn id(&self) -> Id {
             self.id.clone()
         }
@@ -6198,7 +6197,7 @@ pub mod iface {
     }
 
     #[Object(name = "Place")]
-    impl PlaceNode {
+    impl Place {
         pub async fn id(&self) -> Id {
             self.id.clone()
         }
@@ -7399,8 +7398,8 @@ pub mod operation {
         pub async fn blueprint_id(&self) -> Id {
             self.blueprint_id.clone()
         }
-        pub async fn position(&self) -> Arc<crate::geom::entity::PositionNode> {
-            crate::geom::entity::PositionNode::from_position_value(self.position)
+        pub async fn position(&self) -> Arc<crate::geom::entity::Position> {
+            crate::geom::entity::Position::from_position_value(self.position)
         }
         pub async fn name(&self) -> Option<String> {
             self.name.clone()
@@ -7445,8 +7444,8 @@ pub mod operation {
         pub async fn piece_ids(&self) -> Vec<Id> {
             self.piece_ids.clone()
         }
-        pub async fn offset(&self) -> Arc<crate::geom::entity::OffsetNode> {
-            crate::geom::entity::OffsetNode::from_value(self.offset)
+        pub async fn offset(&self) -> Arc<crate::geom::entity::Offset> {
+            crate::geom::entity::Offset::from_value(self.offset)
         }
     }
 
@@ -9344,19 +9343,19 @@ pub mod gql {
 
         use async_graphql::Interface;
 
-        use crate::geom::entity::{CoordinateNode, LocationNode, OffsetNode, PlaneNode, PointNode, PositionNode, VectorNode};
+        use crate::geom::entity::{Coordinate, Location, Offset, Plane, Point, Position, Vector};
         use crate::gql_relay::{CoordinateEdge, LocationEdge, OffsetEdge, PlaneEdge, PointEdge, PositionEdge, VectorEdge};
 
         #[derive(Clone, Interface)]
         #[graphql(name = "Node", field(name = "id", ty = "crate::id::Id"))]
         pub enum NodeIface {
-            Vector(Arc<VectorNode>),
-            Point(Arc<PointNode>),
-            Coordinate(Arc<CoordinateNode>),
-            Offset(Arc<OffsetNode>),
-            Plane(Arc<PlaneNode>),
-            Position(Arc<PositionNode>),
-            Location(Arc<LocationNode>),
+            Vector(Arc<Vector>),
+            Point(Arc<Point>),
+            Coordinate(Arc<Coordinate>),
+            Offset(Arc<Offset>),
+            Plane(Arc<Plane>),
+            Position(Arc<Position>),
+            Location(Arc<Location>),
         }
 
         #[derive(Clone, Interface)]
@@ -11667,7 +11666,7 @@ mod tests {
     fn geom_plane_compute_hash_stable() {
         block_on(async {
             let pl =
-                crate::geom::entity::PlaneNode::from_value(crate::geom::Plane { origin: crate::geom::Point { x: 0.0, y: 0.0, z: 0.0 }, x_axis: crate::geom::Vector { x: 1.0, y: 0.0, z: 0.0 }, y_axis: crate::geom::Vector { x: 0.0, y: 1.0, z: 0.0 } });
+                crate::geom::entity::Plane::from_value(crate::geom::Plane { origin: crate::geom::Point { x: 0.0, y: 0.0, z: 0.0 }, x_axis: crate::geom::Vector { x: 1.0, y: 0.0, z: 0.0 }, y_axis: crate::geom::Vector { x: 0.0, y: 1.0, z: 0.0 } });
             assert_eq!(pl.compute_hash().await, pl.compute_hash().await);
         });
     }

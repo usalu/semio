@@ -422,6 +422,43 @@ export abstract class Entity {
 }
 //#endregion 🛠️Base
 
+//#region 🪶WeakArtifacts
+/** @emoji 🪪 Weak attribute row anchored on an owning {@link Entity} (no separate {@code node(id:)} identity). */
+export class Attribute {
+  constructor(
+    public readonly owner: Entity,
+    public readonly id: string,
+    public readonly key: string,
+    public readonly value: string | null,
+    public readonly definition: string,
+  ) { }
+
+  get kit(): Kit {
+    return this.owner.kit;
+  }
+}
+
+/** @emoji 🏁 Weak benchmark row under {@link Quality}. */
+export class Benchmark {
+  constructor(
+    public readonly quality: Quality,
+    public readonly id: string,
+    public readonly name: string,
+    public readonly min: number | null,
+    public readonly max: number | null,
+    public readonly minExcluded: boolean | null,
+    public readonly maxExcluded: boolean | null,
+  ) { }
+
+  get kit(): Kit {
+    return this.quality.kit;
+  }
+}
+
+/** @emoji 🧬 Union anchor for VCS scope / modification ends (narrow at callsites). */
+export type EntityRef = Entity;
+//#endregion 🪶WeakArtifacts
+
 //#region 🏭Factories
 export type FieldSpec<T> = Readonly<{
   eventKind?: string;
@@ -552,7 +589,7 @@ export const DESIGN_ARTIFACT_FIELD_SPECS = defineFields([
 
 //#region 🧩Parsers
 /** @emoji 🧩 Parses {@code attributes { edges { node { … } } }} under a JSON object (e.g. {@code tag}, {@code node}). */
-function parseAttributeConnectionUnder(owner: JsonObject | null | undefined): readonly Attribute[] {
+function parseAttributeConnectionUnder(ownerEntity: Entity, owner: JsonObject | null | undefined): readonly Attribute[] {
   const attrs = owner?.["attributes"] as JsonObject | undefined;
   const edges = attrs?.["edges"] as readonly JsonValue[] | undefined;
   if (!Array.isArray(edges)) return [];
@@ -561,12 +598,15 @@ function parseAttributeConnectionUnder(owner: JsonObject | null | undefined): re
     if (!isJsonObjectNode(e)) continue;
     const n = e["node"] as JsonObject | undefined;
     if (n == null) continue;
-    out.push({
-      id: String(n["id"] ?? ""),
-      key: String(n["key"] ?? ""),
-      value: n["value"] == null ? null : String(n["value"]),
-      definition: String(n["definition"] ?? ""),
-    });
+    out.push(
+      new Attribute(
+        ownerEntity,
+        String(n["id"] ?? ""),
+        String(n["key"] ?? ""),
+        n["value"] == null ? null : String(n["value"]),
+        String(n["definition"] ?? ""),
+      ),
+    );
   }
   return out;
 }
@@ -1643,7 +1683,7 @@ export class Type extends Entity {
   async readAttributes(): Promise<readonly Attribute[]> {
     const inner = "attributes { edges { node { id key value definition } } }";
     const frag = (await this.kit.readKitInner(this.tsel(inner))) as JsonObject | null;
-    return parseAttributeConnectionUnder(this.typeNode(frag));
+    return parseAttributeConnectionUnder(this, this.typeNode(frag));
   }
 }
 //#endregion 🧰Type
@@ -1706,7 +1746,7 @@ export class Port extends Entity {
   async readAttributes(): Promise<readonly Attribute[]> {
     const inner = "attributes { edges { node { id key value definition } } }";
     const frag = (await this.kit.readKitInner(this.psel(inner))) as JsonObject | null;
-    return parseAttributeConnectionUnder(this.portNode(frag));
+    return parseAttributeConnectionUnder(this, this.portNode(frag));
   }
 
   async rename(newCode: string, newLabel?: string | null): Promise<SetResult> {
@@ -1808,7 +1848,7 @@ export class Connector extends Entity {
   async readAttributes(): Promise<readonly Attribute[]> {
     const inner = "attributes { edges { node { id key value definition } } }";
     const frag = (await this.kit.readKitInner(this.csel(inner))) as JsonObject | null;
-    return parseAttributeConnectionUnder(this.connectorNode(frag));
+    return parseAttributeConnectionUnder(this, this.connectorNode(frag));
   }
 }
 //#endregion 🔗Connector
@@ -1826,43 +1866,216 @@ function __pieceKit(frag: JsonObject | null | undefined): JsonObject | null {
   return p ?? null;
 }
 
-function __parseCoordinateFromJson(node: JsonObject | null | undefined): Coordinate | null {
-  if (node == null || typeof node !== "object") return null;
-  const u = node["u"];
-  const v = node["v"];
-  if (typeof u !== "number" || typeof v !== "number") return null;
-  return { u, v };
+//#region 🪶WeakGeometry
+/** @emoji 📌 Weak {@code position}/{@code flatPosition} anchored on {@link Piece} (stable child cache). */
+export class Position {
+  private readonly _center: Coordinate;
+  private readonly _plane: Plane;
+  constructor(
+    public readonly piece: Piece,
+    public readonly role: "position" | "flatPosition",
+  ) {
+    this._center = new Coordinate(this);
+    this._plane = new Plane(this);
+  }
+
+  center(): Coordinate {
+    return this._center;
+  }
+
+  plane(): Plane {
+    return this._plane;
+  }
 }
 
-function __parsePointFromJson(node: JsonObject | null | undefined): Point | null {
-  if (node == null || typeof node !== "object") return null;
-  const x = node["x"];
-  const y = node["y"];
-  const z = node["z"];
-  if (typeof x !== "number" || typeof y !== "number" || typeof z !== "number") return null;
-  return { x, y, z };
+/** @emoji 📍 Weak {@code Coordinate} under {@link Position}. */
+export class Coordinate {
+  constructor(public readonly parent: Position) { }
+
+  async readU(): Promise<number> {
+    const frag = (await this.parent.piece.kit.readKitInner(
+      this.parent.piece.psel(`${this.parent.role} { center { u v } }`),
+    )) as JsonObject | null;
+    const row = __pieceKit(frag)?.[this.parent.role] as JsonObject | undefined;
+    const c = row?.["center"] as JsonObject | undefined;
+    return typeof c?.["u"] === "number" ? c["u"] : 0;
+  }
+
+  async readV(): Promise<number> {
+    const frag = (await this.parent.piece.kit.readKitInner(
+      this.parent.piece.psel(`${this.parent.role} { center { u v } }`),
+    )) as JsonObject | null;
+    const row = __pieceKit(frag)?.[this.parent.role] as JsonObject | undefined;
+    const c = row?.["center"] as JsonObject | undefined;
+    return typeof c?.["v"] === "number" ? c["v"] : 0;
+  }
 }
 
-function __parseVectorFromJson(node: JsonObject | null | undefined): Vector | null {
-  return __parsePointFromJson(node);
+/** @emoji 📐 Weak {@code Plane} under {@link Position}. */
+export class Plane {
+  private readonly _origin: Point;
+  private readonly _xAxis: Vector;
+  private readonly _yAxis: Vector;
+  constructor(public readonly parent: Position) {
+    this._origin = new Point(this);
+    this._xAxis = new Vector(this, "xAxis");
+    this._yAxis = new Vector(this, "yAxis");
+  }
+
+  origin(): Point {
+    return this._origin;
+  }
+
+  xAxis(): Vector {
+    return this._xAxis;
+  }
+
+  yAxis(): Vector {
+    return this._yAxis;
+  }
 }
 
-function __parsePlaneFromJson(node: JsonObject | null | undefined): Plane | null {
-  if (node == null || typeof node !== "object") return null;
-  const origin = __parsePointFromJson(node["origin"] as JsonObject | undefined);
-  const xAxis = __parseVectorFromJson(node["xAxis"] as JsonObject | undefined);
-  const yAxis = __parseVectorFromJson(node["yAxis"] as JsonObject | undefined);
-  if (origin == null || xAxis == null || yAxis == null) return null;
-  return { origin, xAxis, yAxis };
+/** @emoji 🔵 Weak 3D point leaf (origin) under {@link Plane}. */
+export class Point {
+  constructor(public readonly parent: Plane) { }
+
+  async readX(): Promise<number> {
+    const frag = (await this.parent.parent.piece.kit.readKitInner(
+      this.parent.parent.piece.psel(`${this.parent.parent.role} { plane { origin { x y z } } }`),
+    )) as JsonObject | null;
+    const row = __pieceKit(frag)?.[this.parent.parent.role] as JsonObject | undefined;
+    const pl = row?.["plane"] as JsonObject | undefined;
+    const o = pl?.["origin"] as JsonObject | undefined;
+    return typeof o?.["x"] === "number" ? o["x"] : 0;
+  }
+
+  async readY(): Promise<number> {
+    const frag = (await this.parent.parent.piece.kit.readKitInner(
+      this.parent.parent.piece.psel(`${this.parent.parent.role} { plane { origin { x y z } } }`),
+    )) as JsonObject | null;
+    const row = __pieceKit(frag)?.[this.parent.parent.role] as JsonObject | undefined;
+    const pl = row?.["plane"] as JsonObject | undefined;
+    const o = pl?.["origin"] as JsonObject | undefined;
+    return typeof o?.["y"] === "number" ? o["y"] : 0;
+  }
+
+  async readZ(): Promise<number> {
+    const frag = (await this.parent.parent.piece.kit.readKitInner(
+      this.parent.parent.piece.psel(`${this.parent.parent.role} { plane { origin { x y z } } }`),
+    )) as JsonObject | null;
+    const row = __pieceKit(frag)?.[this.parent.parent.role] as JsonObject | undefined;
+    const pl = row?.["plane"] as JsonObject | undefined;
+    const o = pl?.["origin"] as JsonObject | undefined;
+    return typeof o?.["z"] === "number" ? o["z"] : 0;
+  }
 }
 
-function __parsePositionFromJson(node: JsonObject | null | undefined): Position | null {
-  if (node == null || typeof node !== "object") return null;
-  const center = __parseCoordinateFromJson(node["center"] as JsonObject | undefined);
-  const plane = __parsePlaneFromJson(node["plane"] as JsonObject | undefined);
-  if (center == null || plane == null) return null;
-  return { center, plane };
+/** @emoji ➡️ Weak axis vector leaf under {@link Plane}. */
+export class Vector {
+  constructor(
+    public readonly parent: Plane,
+    public readonly axisRole: "xAxis" | "yAxis",
+  ) { }
+
+  async readX(): Promise<number> {
+    const frag = (await this.parent.parent.piece.kit.readKitInner(
+      this.parent.parent.piece.psel(`${this.parent.parent.role} { plane { ${this.axisRole} { x y z } } }`),
+    )) as JsonObject | null;
+    const row = __pieceKit(frag)?.[this.parent.parent.role] as JsonObject | undefined;
+    const pl = row?.["plane"] as JsonObject | undefined;
+    const ax = pl?.[this.axisRole] as JsonObject | undefined;
+    return typeof ax?.["x"] === "number" ? ax["x"] : 0;
+  }
+
+  async readY(): Promise<number> {
+    const frag = (await this.parent.parent.piece.kit.readKitInner(
+      this.parent.parent.piece.psel(`${this.parent.parent.role} { plane { ${this.axisRole} { x y z } } }`),
+    )) as JsonObject | null;
+    const row = __pieceKit(frag)?.[this.parent.parent.role] as JsonObject | undefined;
+    const pl = row?.["plane"] as JsonObject | undefined;
+    const ax = pl?.[this.axisRole] as JsonObject | undefined;
+    return typeof ax?.["y"] === "number" ? ax["y"] : 0;
+  }
+
+  async readZ(): Promise<number> {
+    const frag = (await this.parent.parent.piece.kit.readKitInner(
+      this.parent.parent.piece.psel(`${this.parent.parent.role} { plane { ${this.axisRole} { x y z } } }`),
+    )) as JsonObject | null;
+    const row = __pieceKit(frag)?.[this.parent.parent.role] as JsonObject | undefined;
+    const pl = row?.["plane"] as JsonObject | undefined;
+    const ax = pl?.[this.axisRole] as JsonObject | undefined;
+    return typeof ax?.["z"] === "number" ? ax["z"] : 0;
+  }
 }
+
+/** @emoji ↔️ Weak {@code OffsetInput} path shell (drag hints; expand when SDL exposes offset nodes). */
+export class Offset {
+  constructor(
+    public readonly piece: Piece,
+    public readonly role: "drag",
+  ) { }
+}
+
+/** @emoji 🌍 Geographic weak shell (parent + role path for future SDL). */
+export class Place {
+  constructor(
+    public readonly owner: Entity,
+    public readonly role: string,
+  ) { }
+}
+
+/** @emoji 🗺️ Weak lat/lon shell under {@link Place}. */
+export class Location {
+  constructor(public readonly parent: Place) { }
+}
+
+/** @emoji 📷 Weak camera shell (viewport hints). */
+export class Camera {
+  constructor(
+    public readonly owner: Entity,
+    public readonly role: string,
+  ) { }
+}
+
+//#region 📥GeomInputs
+/** @emoji 📥 GraphQL {@code PositionInput} mirror for kit mutations (plain wire struct, not {@link Position}). */
+export type PositionInput = Readonly<{
+  center: Readonly<{ u: number; v: number }>;
+  plane: Readonly<{
+    origin: Readonly<{ x: number; y: number; z: number }>;
+    xAxis: Readonly<{ x: number; y: number; z: number }>;
+    yAxis: Readonly<{ x: number; y: number; z: number }>;
+  }>;
+}>;
+
+/** @emoji 📥 GraphQL {@code OffsetInput} mirror for kit mutations. */
+export type OffsetInput = Readonly<{
+  u: number;
+  v: number;
+}>;
+
+function __gqlGeomNum(n: number): string {
+  return Number.isFinite(n) ? String(n) : "0";
+}
+
+/** @emoji 📡 Inline GraphQL object literal for {@code PositionInput}. */
+export function formatPositionInput(p: PositionInput): string {
+  const c = p.center;
+  const pl = p.plane;
+  const o = pl.origin;
+  const xa = pl.xAxis;
+  const ya = pl.yAxis;
+  return `{ center: { u: ${__gqlGeomNum(c.u)}, v: ${__gqlGeomNum(c.v)} }, plane: { origin: { x: ${__gqlGeomNum(o.x)}, y: ${__gqlGeomNum(o.y)}, z: ${__gqlGeomNum(o.z)} }, xAxis: { x: ${__gqlGeomNum(xa.x)}, y: ${__gqlGeomNum(xa.y)}, z: ${__gqlGeomNum(xa.z)} }, yAxis: { x: ${__gqlGeomNum(ya.x)}, y: ${__gqlGeomNum(ya.y)}, z: ${__gqlGeomNum(ya.z)} } } }`;
+}
+
+/** @emoji 📡 Inline GraphQL object literal for {@code OffsetInput}. */
+export function formatOffsetInput(o: OffsetInput): string {
+  return `{ u: ${__gqlGeomNum(o.u)}, v: ${__gqlGeomNum(o.v)} }`;
+}
+//#endregion 📥GeomInputs
+//#endregion 🪶WeakGeometry
+
+const __PIECE_POSITION_SUBSELECTION = "center { u v } plane { origin { x y z } xAxis { x y z } yAxis { x y z } }";
 
 function __parsePieceBlueprintFromJson(node: JsonObject | null | undefined): PieceBlueprint | null {
   if (node == null || typeof node !== "object") return null;
@@ -1872,25 +2085,6 @@ function __parsePieceBlueprintFromJson(node: JsonObject | null | undefined): Pie
   if (tn === "Type") return { blueprintKind: "Type", id };
   if (tn === "Design") return { blueprintKind: "Design", id };
   return null;
-}
-
-function __parseAttributeNodesFromConnection(obj: JsonObject | null | undefined): readonly Attribute[] {
-  const attrs = obj?.["attributes"] as JsonObject | undefined;
-  const edges = attrs?.["edges"];
-  if (!Array.isArray(edges)) return [];
-  const out: Attribute[] = [];
-  for (const e of edges) {
-    if (e == null || typeof e !== "object" || Array.isArray(e)) continue;
-    const n = (e as JsonObject)["node"] as JsonObject | undefined;
-    if (n == null || typeof n !== "object") continue;
-    const id = String(n["id"] ?? "");
-    const key = String(n["key"] ?? "");
-    if (id === "" || key === "") continue;
-    const valueRaw = n["value"];
-    const value = valueRaw == null ? null : String(valueRaw);
-    out.push({ id, key, value, definition: String(n["definition"] ?? "") });
-  }
-  return out;
 }
 
 function __parseIdListConnection(obj: JsonObject | null | undefined, field: string): readonly string[] {
@@ -1907,10 +2101,9 @@ function __parseIdListConnection(obj: JsonObject | null | undefined, field: stri
   return ids;
 }
 
-const __PIECE_POSITION_SUBSELECTION = "center { u v } plane { origin { x y z } xAxis { x y z } yAxis { x y z } }";
-
 export class Piece extends Entity {
   readonly designId: string;
+  private readonly __positionByRole = new Map<"position" | "flatPosition", Position>();
   constructor(kit: Kit, designId: string, id: string) {
     super(kit, id);
     this.designId = designId;
@@ -1918,6 +2111,26 @@ export class Piece extends Entity {
 
   private psel(inner: string): string {
     return `design(id: ${__gqlStr(this.designId)}) { piece(id: ${__gqlStr(this.id)}) { ${inner} } }`;
+  }
+
+  /** @emoji 📌 Stable weak {@code position} handle for this piece. */
+  position(): Position {
+    let p = this.__positionByRole.get("position");
+    if (!p) {
+      p = new Position(this, "position");
+      this.__positionByRole.set("position", p);
+    }
+    return p;
+  }
+
+  /** @emoji 📌 Stable weak {@code flatPosition} handle for this piece. */
+  flatPosition(): Position {
+    let p = this.__positionByRole.get("flatPosition");
+    if (!p) {
+      p = new Position(this, "flatPosition");
+      this.__positionByRole.set("flatPosition", p);
+    }
+    return p;
   }
 
   async readName(): Promise<string> {
@@ -1943,28 +2156,36 @@ export class Piece extends Entity {
 
   async readPosition(): Promise<Position | null> {
     const frag = (await this.kit.readKitInner(this.psel(`position { ${__PIECE_POSITION_SUBSELECTION} }`))) as JsonObject | null;
-    return __parsePositionFromJson(__pieceKit(frag)?.["position"] as JsonObject | undefined);
+    const raw = __pieceKit(frag)?.["position"];
+    if (raw == null || typeof raw !== "object") return null;
+    return this.position();
   }
 
   async readFlatPosition(): Promise<Position | null> {
     const frag = (await this.kit.readKitInner(this.psel(`flatPosition { ${__PIECE_POSITION_SUBSELECTION} }`))) as JsonObject | null;
-    return __parsePositionFromJson(__pieceKit(frag)?.["flatPosition"] as JsonObject | undefined);
+    const raw = __pieceKit(frag)?.["flatPosition"];
+    if (raw == null || typeof raw !== "object") return null;
+    return this.flatPosition();
   }
 
   async readPlane(): Promise<Plane | null> {
-    return (await this.readPosition())?.plane ?? null;
+    if ((await this.readPosition()) == null) return null;
+    return this.position().plane();
   }
 
   async readCenter(): Promise<Coordinate | null> {
-    return (await this.readPosition())?.center ?? null;
+    if ((await this.readPosition()) == null) return null;
+    return this.position().center();
   }
 
   async readFlatPlane(): Promise<Plane | null> {
-    return (await this.readFlatPosition())?.plane ?? null;
+    if ((await this.readFlatPosition()) == null) return null;
+    return this.flatPosition().plane();
   }
 
   async readFlatCenter(): Promise<Coordinate | null> {
-    return (await this.readFlatPosition())?.center ?? null;
+    if ((await this.readFlatPosition()) == null) return null;
+    return this.flatPosition().center();
   }
 
   async readBlueprint(): Promise<PieceBlueprint | null> {
@@ -1974,7 +2195,7 @@ export class Piece extends Entity {
 
   async readAttributes(): Promise<readonly Attribute[]> {
     const frag = (await this.kit.readKitInner(this.psel("attributes { edges { node { id key value definition } } }"))) as JsonObject | null;
-    return __parseAttributeNodesFromConnection(__pieceKit(frag));
+    return parseAttributeConnectionUnder(this, __pieceKit(frag));
   }
 
   async readConnectionKind(): Promise<"FIXED" | "CONNECTED" | null> {
@@ -2096,12 +2317,23 @@ export class PiecesOperations {
 //#endregion 🪢PiecesOperations
 
 //#region ⛓️Connection
-/** @emoji ⛓️ @description Schema-aligned {@link Connection} side (piece + optional port / connector / designPiece ids). */
-export interface ConnectionSide {
-  readonly pieceId: string;
-  readonly portId: string | null;
-  readonly connectorId: string | null;
-  readonly designPieceId: string | null;
+/** @emoji ⛓️ Schema-aligned {@link Connection} endpoint (piece + optional port / connector / designPiece ids). */
+export class ConnectionSide {
+  constructor(
+    public readonly kit: Kit,
+    public readonly designId: string,
+    public readonly connectionId: string,
+    public readonly role: "connected" | "connecting",
+    public readonly pieceId: string,
+    public readonly portId: string | null,
+    public readonly connectorId: string | null,
+    public readonly designPieceId: string | null,
+  ) { }
+
+  /** @emoji 🧩 Resolved {@link Piece} on this kit read point. */
+  piece(): Piece {
+    return this.kit.design(this.designId).piece(this.pieceId);
+  }
 }
 
 const __CONNECTION_SIDE_SUBSELECTION = "piece { id } port { id } designPiece { id } connector { id }";
@@ -2112,7 +2344,13 @@ function __connectionKit(frag: JsonObject | null | undefined): JsonObject | null
   return c ?? null;
 }
 
-function __parseConnectionSideFromJson(node: JsonObject | null | undefined): ConnectionSide | null {
+function __parseConnectionSideFromJson(
+  kit: Kit,
+  designId: string,
+  connectionId: string,
+  role: "connected" | "connecting",
+  node: JsonObject | null | undefined,
+): ConnectionSide | null {
   if (node == null || typeof node !== "object") return null;
   const piece = node["piece"] as JsonObject | undefined;
   const pieceId = piece == null ? "" : String(piece["id"] ?? "");
@@ -2126,7 +2364,7 @@ function __parseConnectionSideFromJson(node: JsonObject | null | undefined): Con
   const conn = node["connector"] as JsonObject | undefined;
   const cxRaw = conn == null ? "" : String(conn["id"] ?? "");
   const connectorId = cxRaw === "" ? null : cxRaw;
-  return { pieceId, portId, connectorId, designPieceId };
+  return new ConnectionSide(kit, designId, connectionId, role, pieceId, portId, connectorId, designPieceId);
 }
 
 export class Connection extends Entity {
@@ -2205,17 +2443,17 @@ export class Connection extends Entity {
 
   async readConnected(): Promise<ConnectionSide | null> {
     const frag = ((await this.kit.readKitInner(this.csel(`connected { ${__CONNECTION_SIDE_SUBSELECTION} }`))) as JsonObject | null) ?? null;
-    return __parseConnectionSideFromJson(__connectionKit(frag)?.["connected"] as JsonObject | undefined);
+    return __parseConnectionSideFromJson(this.kit, this.designId, this.id, "connected", __connectionKit(frag)?.["connected"] as JsonObject | undefined);
   }
 
   async readConnecting(): Promise<ConnectionSide | null> {
     const frag = ((await this.kit.readKitInner(this.csel(`connecting { ${__CONNECTION_SIDE_SUBSELECTION} }`))) as JsonObject | null) ?? null;
-    return __parseConnectionSideFromJson(__connectionKit(frag)?.["connecting"] as JsonObject | undefined);
+    return __parseConnectionSideFromJson(this.kit, this.designId, this.id, "connecting", __connectionKit(frag)?.["connecting"] as JsonObject | undefined);
   }
 
   async readAttributes(): Promise<readonly Attribute[]> {
     const frag = ((await this.kit.readKitInner(this.csel("attributes { edges { node { id key value definition } } }"))) as JsonObject | null) ?? null;
-    return __parseAttributeNodesFromConnection(__connectionKit(frag));
+    return parseAttributeConnectionUnder(this, __connectionKit(frag));
   }
 }
 //#endregion ⛓️Connection
@@ -2313,7 +2551,7 @@ export class Quality extends Entity {
 
   async readAttributes(): Promise<readonly Attribute[]> {
     const frag = (await this.kit.readKitInner(this.qsel(`attributes { edges { node { id key value definition } } }`))) as JsonObject | null;
-    return parseAttributeConnectionUnder(frag?.["quality"] as JsonObject | undefined);
+    return parseAttributeConnectionUnder(this, frag?.["quality"] as JsonObject | undefined);
   }
 
   async readBenchmarks(): Promise<readonly Benchmark[]> {
@@ -2411,7 +2649,7 @@ export class Tag extends Entity {
 
   async readAttributes(): Promise<readonly Attribute[]> {
     const frag = (await this.kit.readKitInner(this.tsel(`attributes { edges { node { id key value definition } } }`))) as JsonObject | null;
-    return parseAttributeConnectionUnder(frag?.["tag"] as JsonObject | undefined);
+    return parseAttributeConnectionUnder(this, frag?.["tag"] as JsonObject | undefined);
   }
 
   async rename(newName: string): Promise<SetResult> {
@@ -2484,7 +2722,7 @@ export class Concept extends Entity {
 
   async readAttributes(): Promise<readonly Attribute[]> {
     const frag = (await this.kit.readKitInner(this.csel(`attributes { edges { node { id key value definition } } }`))) as JsonObject | null;
-    return parseAttributeConnectionUnder(frag?.["concept"] as JsonObject | undefined);
+    return parseAttributeConnectionUnder(this, frag?.["concept"] as JsonObject | undefined);
   }
 
   async rename(newName: string): Promise<SetResult> {
@@ -2599,7 +2837,7 @@ export class Representation extends Entity {
     const frag = (await this.kit.readKitInner(this.rsel(`attributes { edges { node { id key value definition } } }`))) as JsonObject | null;
     const t = frag?.["type"] as JsonObject | undefined;
     const r = t?.["representation"] as JsonObject | undefined;
-    return parseAttributeConnectionUnder(r);
+    return parseAttributeConnectionUnder(this, r);
   }
 }
 //#endregion 🎨Representation
