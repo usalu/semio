@@ -86,7 +86,7 @@
       "executor": "nx:run-commands",
       "cache": true,
       "options": {
-        "command": "bunx dependency-cruiser@16 semio/js semio/react semio/sketchpad --config .dependency-cruiser.cjs --output-type err"
+        "command": "npx --yes dependency-cruiser@16 semio/js semio/react semio/sketchpad --config .dependency-cruiser.cjs --output-type err"
       }
     },
     "install-native": {

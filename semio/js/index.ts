@@ -12,8 +12,10 @@ export function createKitStoreWorker(): Worker {
   return new Worker(new URL("./kit-store.worker.ts", import.meta.url), { type: "module" });
 }
 
-export type JsonValue = string | number | boolean | null | readonly JsonValue[] | JsonObject;
-export type JsonObject = { readonly [k: string]: JsonValue };
+/** @emoji 🧵 File-local GraphQL wire JSON (not part of the public @semio/js surface). */
+type JsonValue = string | number | boolean | null | readonly JsonValue[] | JsonObject;
+/** @emoji 🧵 File-local GraphQL wire JSON object node. */
+type JsonObject = { readonly [k: string]: JsonValue };
 
 type KitGraphqlResponseEnvelope<TData> = Readonly<{
   data?: TData | null;
@@ -192,7 +194,7 @@ class WorkerStringTransport {
   }
 }
 
-/** @emoji 🌐 Thin GraphQL wire: JSON request in, JSON string out; pairs with rs {@code KitStoreHandle}. */
+/** @emoji 🌐 Thin GraphQL JSON transport: request in, JSON string out; pairs with rs {@code KitStoreHandle}. */
 export class GqlTransport {
   constructor(private readonly inner: WorkerStringTransport | InlineTransport) { }
 
@@ -539,7 +541,7 @@ function backboneBootstrapUriForKitOpen(raw: string): string {
   return t;
 }
 
-/** @emoji 📑 Same wire as {@link FieldSpec} but declared before {@link Entity} so {@link Kit#fieldRead} stays self-contained. */
+/** @emoji 📑 Same JSON shape as {@link FieldSpec} but declared before {@link Entity} so {@link Kit#fieldRead} stays self-contained. */
 export type KitFieldReadSpec<T> = Readonly<{
   eventKind?: string;
   selection: string;
@@ -619,7 +621,7 @@ export class Kit {
   private __stableTags: { ids: readonly string[]; arr: readonly Tag[] } = { ids: [], arr: [] };
   private __stableConcepts: { ids: readonly string[]; arr: readonly Concept[] } = { ids: [], arr: [] };
 
-  /** @emoji 🌐 GraphQL executor (JSON wire). */
+  /** @emoji 🌐 GraphQL executor (JSON in/out). */
   readonly gql: GqlTransport;
   /** @emoji 📡 Demuxed subscription fan-out. */
   readonly bus: EventBus;
@@ -803,7 +805,7 @@ export class Kit {
     return gqlOkFromEnvelope(env);
   }
 
-  /** @emoji 🛜 Reads {@code BackboneStatus} via the command shell (typed snapshot, not raw wire). */
+  /** @emoji 🛜 Reads {@code BackboneStatus} via the command shell (typed snapshot, not raw JSON). */
   async backboneStatus(): Promise<Readonly<{ attachedUri: string | null; kind: string }>> {
     this.ensureAlive();
     const data = kitGraphqlData(
@@ -1736,20 +1738,20 @@ export class CreatedQualityInput extends Input {}
 
 //#region 🧬OperationVariants
 export class RenamedKit extends Operation {}
-export class ChangedDescriptionOp extends Operation {}
-export class CreatedQualityOp extends Operation {}
-export class CreatedQualitiesOp extends Operation {}
-export class DeletedQualityOp extends Operation {}
-export class CreatedTagOp extends Operation {}
-export class DeletedPieceOp extends Operation {}
-export class DeletedPiecesOp extends Operation {}
-export class DraggedPieceOp extends Operation {}
-export class MovedPieceOp extends Operation {}
-export class FixedPieceOp extends Operation {}
-export class FlattenedDesignOp extends Operation {}
-export class CreatedFixedPieceOp extends Operation {}
-export class AddedChildPieceWithParentConnectionOp extends Operation {}
-export class AddedHangingChildPieceWithParentConnectionOp extends Operation {}
+export class ChangedDescriptionOperation extends Operation {}
+export class CreatedQualityOperation extends Operation {}
+export class CreatedQualitiesOperation extends Operation {}
+export class DeletedQualityOperation extends Operation {}
+export class CreatedTagOperation extends Operation {}
+export class DeletedPieceOperation extends Operation {}
+export class DeletedPiecesOperation extends Operation {}
+export class DraggedPieceOperation extends Operation {}
+export class MovedPieceOperation extends Operation {}
+export class FixedPieceOperation extends Operation {}
+export class FlattenedDesignOperation extends Operation {}
+export class CreatedFixedPieceOperation extends Operation {}
+export class AddedChildPieceWithParentConnectionOperation extends Operation {}
+export class AddedHangingChildPieceWithParentConnectionOperation extends Operation {}
 //#endregion 🧬OperationVariants
 //#endregion 🧮ChangeAlgebra
 
@@ -2573,7 +2575,7 @@ export class Camera {
 }
 
 //#region 📥GeomInputs
-/** @emoji 📥 GraphQL {@code PositionInput} mirror for kit mutations (plain wire struct, not {@link Position}). */
+/** @emoji 📥 GraphQL {@code PositionInput} mirror for kit mutations (matches SDL input, not {@link Position}). */
 export type PositionInput = Readonly<{
   center: Readonly<{ u: number; v: number }>;
   plane: Readonly<{
@@ -3652,7 +3654,7 @@ if (
       expect(kitReadPointKey(theKitReadPoint)).toBe(JSON.stringify(theKitReadPoint));
     });
 
-    it("VCS + change-algebra shells wire without KitRuntime", () => {
+    it("VCS + change-algebra shells JSON without KitRuntime", () => {
       const k = Object.create(Kit.prototype) as Kit;
       const g = new Graph(k, "wip");
       expect(g.root).toBe("wip");
@@ -3754,7 +3756,7 @@ if (
       expect(b.wip.initialKit).toBeTruthy();
     });
 
-    it("dev JSON backbone wire shape documents semanticOpLog + persistence hints (US-004)", async () => {
+    it("dev JSON backbone bundle shape documents semanticOpLog + persistence hints (US-004)", async () => {
       const backboneDoc = {
         kind: "semio.kit_backbone.dev_json",
         schema: "2026-05-06",

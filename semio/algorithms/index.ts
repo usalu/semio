@@ -1,14 +1,14 @@
 // #region 🧲Header
 // 💻 semio/algorithms/index.ts
 // Specs: Story helpers over `@semio/js` `openKit` (field-only GraphQL kit) plus plain JSON {@link Design} types from `@semio/ui`.
-// Summary: WASM-backed flatten/drag/move reads and local diff helpers for Storybook; no legacy `KitStore` / zod DTO bridge.
+// Summary: WASM-backed flatten/drag/move reads and local diff helpers for Storybook; no legacy `KitStore` / zod schema bridge.
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 // #endregion 🧲Header
 
 /// <reference types="vite/client" />
 
 // #region 📥Imports
-import { openKit, type JsonObject, type Kit as JsKit } from "@semio/js";
+import { openKit, type Kit as JsKit } from "@semio/js";
 import {
   AlgorithmApp,
   WindowKind,
@@ -25,6 +25,11 @@ import {
   kitSurface,
 } from "@semio/ui";
 // #endregion 📥Imports
+
+// #region 🧾GqlWire
+/** @emoji 🧾 Local GraphQL response fragment object (replaces re-exported @semio/js wire types). */
+type GqlWireObject = { readonly [k: string]: unknown };
+// #endregion 🧾GqlWire
 
 // #region 📤UiReExports
 export {
@@ -56,14 +61,14 @@ const PASTE_ANCHORS: readonly PasteDesignAnchoringKind[] = ["original", "middle"
 /** @emoji 🧰 Static kit helpers for Storybook (selection anchoring + stub replaceable search). */
 export const Kit = Object.freeze({
   pasteDesignAnchoringKinds: PASTE_ANCHORS,
-  ensure(kit: JsonObject | Record<string, unknown>) {
+  ensure(kit: GqlWireObject | Record<string, unknown>) {
     return new AlgorithmKitFacade(kit);
   },
 });
 
 /** @emoji 🧰 Kit façade used by find-replaceable story (deterministic fixture ids for Nakagin selection). */
 export class AlgorithmKitFacade {
-  constructor(private readonly kit: JsonObject | Record<string, unknown>) {}
+  constructor(private readonly kit: GqlWireObject | Record<string, unknown>) {}
 
   findReplaceableTypesInDesignsForPiecesInDesignOp(
     _design: unknown,
@@ -211,12 +216,12 @@ export type OperationResult<T> = { ok: true; value: T } | { ok: false; errors: r
 // #endregion 🧾StoryTypes
 
 // #region 🌐WasmKitSession
-function __toBootstrap(kit: unknown): JsonObject {
-  return JSON.parse(JSON.stringify(kit)) as JsonObject;
+function __toBootstrap(kit: unknown): GqlWireObject {
+  return JSON.parse(JSON.stringify(kit)) as GqlWireObject;
 }
 
 async function __withJsKit<T>(kit: unknown, fn: (js: JsKit) => Promise<T>): Promise<T> {
-  const js = await openKit(__toBootstrap(kit));
+  const js = await openKit(JSON.stringify(__toBootstrap(kit)));
   try {
     return await fn(js);
   } finally {
@@ -228,17 +233,17 @@ async function __readFlattenLayout(js: JsKit, designId: string): Promise<readonl
   const flat = await js.design(designId).flatten();
   if (!flat.ok) throw new Error(flat.error.message);
   const sel = `design(id: ${JSON.stringify(designId)}) { pieces { edges { node { id flatPosition { center { u v } plane { origin { x y z } xAxis { x y z } yAxis { x y z } } } } } } }`;
-  const frag = (await js.readKitInner(sel)) as JsonObject | null;
-  const design = frag?.["design"] as JsonObject | undefined;
-  const pieces = design?.["pieces"] as JsonObject | undefined;
-  const edges = (pieces?.["edges"] as readonly JsonObject[] | undefined) ?? [];
+  const frag = (await js.readKitInner(sel)) as GqlWireObject | null;
+  const design = frag?.["design"] as GqlWireObject | undefined;
+  const pieces = design?.["pieces"] as GqlWireObject | undefined;
+  const edges = (pieces?.["edges"] as readonly GqlWireObject[] | undefined) ?? [];
   const out: { pieceId: string; plane: unknown; center: { u: number; v: number } }[] = [];
   for (const e of edges) {
-    const n = e["node"] as JsonObject | undefined;
+    const n = e["node"] as GqlWireObject | undefined;
     if (!n) continue;
     const id = String(n["id"] ?? "");
-    const fp = n["flatPosition"] as JsonObject | undefined;
-    const c = fp?.["center"] as JsonObject | undefined;
+    const fp = n["flatPosition"] as GqlWireObject | undefined;
+    const c = fp?.["center"] as GqlWireObject | undefined;
     const plane = fp?.["plane"];
     out.push({ pieceId: id, plane, center: { u: Number(c?.["u"] ?? 0), v: Number(c?.["v"] ?? 0) } });
   }

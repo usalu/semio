@@ -208,7 +208,7 @@ export type DefinedFieldBindOptions<E extends Entity, T> = Readonly<{
 }>;
 
 /**
- * @emoji 🪝 Same as {@link bindFieldToReact} but wires {@link defineField} so callers share {@link FieldSpec} with tooling/docs.
+ * @emoji 🪝 Same as {@link bindFieldToReact} but connects {@link defineField} so callers share {@link FieldSpec} with tooling/docs.
  * @typeParam E — Concrete {@link } subclass anchor.
  * @typeParam T — Parsed field value.
  */
@@ -260,7 +260,7 @@ export function bindDefinedFieldToReact<E extends Entity, T>(opts: DefinedFieldB
 // #endregion 🪝FieldBind
 
 // #region 🪝OpBind
-/** @emoji 🎛️ UI-facing operation lifecycle for {@link bindOpToReact} (idle → pending → settled). */
+/** @emoji 🎛️ UI-facing operation lifecycle for {@link bindOperationToReact} (idle → pending → settled). */
 export type OperationStatus = { readonly kind: "idle" } | { readonly kind: "pending" } | { readonly kind: "settled"; readonly result: SetResult };
 
 /**
@@ -277,8 +277,8 @@ export function mapTooLong(err: SetError, maxChars: number): string {
  * @typeParam E — Concrete {@link } subclass anchor.
  * @typeParam Args — Operation arguments after the entity receiver.
  */
-export function bindOpToReact<E extends Entity, Args extends unknown[] = []>(impl: (entity: E, ...args: Args) => Promise<SetResult>): (get: () => E | null) => readonly [(...args: Args) => Promise<SetResult>, OperationStatus] {
-  return function useOp(get: () => E | null): readonly [(...args: Args) => Promise<SetResult>, OperationStatus] {
+export function bindOperationToReact<E extends Entity, Args extends unknown[] = []>(impl: (entity: E, ...args: Args) => Promise<SetResult>): (get: () => E | null) => readonly [(...args: Args) => Promise<SetResult>, OperationStatus] {
+  return function useOperation(get: () => E | null): readonly [(...args: Args) => Promise<SetResult>, OperationStatus] {
     const getRef = React.useRef(get);
     getRef.current = get;
     const [status, setStatus] = React.useState<OperationStatus>({ kind: "idle" });
@@ -1142,6 +1142,36 @@ export function useEndSession(): readonly [() => Promise<SetResult>, OperationSt
   return bindKitOperationToReact<[]>((k) => k.sessionEnd())(() => kit);
 }
 
+// #region 🪝BackboneOps
+/** @emoji 🛜 {@link Kit#attachBackbone} — GraphQL session backbone attach (URI scheme dispatches backbone kind). */
+export function useAttachBackbone(): readonly [(uri: string) => Promise<SetResult>, OperationStatus] {
+  const kit = useKit();
+  return bindKitOperationToReact<[string]>((k, uri) => k.attachBackbone(uri))(() => kit);
+}
+
+/** @emoji 🛜 {@link Kit#detachBackbone}. */
+export function useDetachBackbone(): readonly [(uri: string) => Promise<SetResult>, OperationStatus] {
+  const kit = useKit();
+  return bindKitOperationToReact<[string]>((k, uri) => k.detachBackbone(uri))(() => kit);
+}
+
+/** @emoji 🛜 {@link Kit#backboneSyncNow}. */
+export function useBackboneSyncNow(): readonly [() => Promise<SetResult>, OperationStatus] {
+  const kit = useKit();
+  return bindKitOperationToReact<[]>((k) => k.backboneSyncNow())(() => kit);
+}
+
+/** @emoji 🛜 Live {@link Kit#backboneStatus} (refreshes on {@code commandSucceeded} bus events). */
+export function useBackboneStatus(): FieldReadState<Readonly<{ attachedUri: string | null; kind: string }>> {
+  const kit = useKit();
+  return bindKitFieldToReact<Readonly<{ attachedUri: string | null; kind: string }>>({
+    getKit: () => kit,
+    read: (k) => k.backboneStatus(),
+    eventKind: "commandSucceeded",
+  })();
+}
+// #endregion 🪝BackboneOps
+
 // #endregion 🪝HooksKit
 
 // #region 🪝HooksDesign
@@ -1187,43 +1217,43 @@ export function useDesignQualitySum(): FieldReadState<number> {
 /** @emoji ✍️ {@link Design#rename}. */
 export function useRenameDesign(): readonly [(newName: string) => Promise<SetResult>, OperationStatus] {
   const entity = useDesign();
-  return bindOpToReact<Design, [string]>((d, n) => d.rename(n))(() => entity);
+  return bindOperationToReact<Design, [string]>((d, n) => d.rename(n))(() => entity);
 }
 
 /** @emoji ✍️ {@link Design#changeDescription}. */
 export function useChangeDesignDescription(): readonly [(newDescription: string) => Promise<SetResult>, OperationStatus] {
   const entity = useDesign();
-  return bindOpToReact<Design, [string]>((d, t) => d.changeDescription(t))(() => entity);
+  return bindOperationToReact<Design, [string]>((d, t) => d.changeDescription(t))(() => entity);
 }
 
 /** @emoji ✍️ {@link Design#flatten}. */
 export function useFlattenDesign(): readonly [() => Promise<SetResult>, OperationStatus] {
   const entity = useDesign();
-  return bindOpToReact<Design, []>((d) => d.flatten())(() => entity);
+  return bindOperationToReact<Design, []>((d) => d.flatten())(() => entity);
 }
 
 /** @emoji ✍️ {@link Design#addAttribute}. */
 export function useAddDesignAttribute(): readonly [(key: string, value: string, definition: string) => Promise<SetResult>, OperationStatus] {
   const entity = useDesign();
-  return bindOpToReact<Design, [string, string, string]>((d, k, v, def) => d.addAttribute(k, v, def))(() => entity);
+  return bindOperationToReact<Design, [string, string, string]>((d, k, v, def) => d.addAttribute(k, v, def))(() => entity);
 }
 
 /** @emoji ✍️ {@link Design#removeAttribute}. */
 export function useRemoveDesignAttribute(): readonly [(id: string) => Promise<SetResult>, OperationStatus] {
   const entity = useDesign();
-  return bindOpToReact<Design, [string]>((d, id) => d.removeAttribute(id))(() => entity);
+  return bindOperationToReact<Design, [string]>((d, id) => d.removeAttribute(id))(() => entity);
 }
 
 /** @emoji ✍️ {@link Design#removeAttributes}. */
 export function useRemoveDesignAttributes(): readonly [(ids: readonly string[]) => Promise<SetResult>, OperationStatus] {
   const entity = useDesign();
-  return bindOpToReact<Design, [readonly string[]]>((d, ids) => d.removeAttributes(ids))(() => entity);
+  return bindOperationToReact<Design, [readonly string[]]>((d, ids) => d.removeAttributes(ids))(() => entity);
 }
 
 /** @emoji ✍️ {@link Design#addFixedPiece}. */
 export function useAddFixedPiece(): readonly [(blueprintId: string, position: PositionInput, name?: string | null, description?: string | null) => Promise<SetResult>, OperationStatus] {
   const entity = useDesign();
-  return bindOpToReact<Design, [string, PositionInput, string | null | undefined, string | null | undefined]>((d, bp, pos, n, desc) => d.addFixedPiece(bp, pos, n, desc))(() => entity);
+  return bindOperationToReact<Design, [string, PositionInput, string | null | undefined, string | null | undefined]>((d, bp, pos, n, desc) => d.addFixedPiece(bp, pos, n, desc))(() => entity);
 }
 
 /** @emoji ✍️ {@link Design#addChildPieceWithParentConnection}. */
@@ -1232,7 +1262,7 @@ export function useAddChildPieceWithParentConnection(): readonly [
   OperationStatus,
 ] {
   const entity = useDesign();
-  return bindOpToReact<Design, [string, string, string, string, string | null | undefined, string | null | undefined, PositionInput | null | undefined, number | null | undefined]>((d, bp, pp, pc, cc, n, desc, pos, sc) =>
+  return bindOperationToReact<Design, [string, string, string, string, string | null | undefined, string | null | undefined, PositionInput | null | undefined, number | null | undefined]>((d, bp, pp, pc, cc, n, desc, pos, sc) =>
     d.addChildPieceWithParentConnection(bp, pp, pc, cc, n, desc, pos, sc),
   )(() => entity);
 }
@@ -1243,7 +1273,7 @@ export function useAddHangingChildPieceWithParentConnection(): readonly [
   OperationStatus,
 ] {
   const entity = useDesign();
-  return bindOpToReact<Design, [string, string, string, string, PositionInput, string | null | undefined, string | null | undefined, number | null | undefined]>((d, bp, pp, pc, cc, pos, n, desc, sc) =>
+  return bindOperationToReact<Design, [string, string, string, string, PositionInput, string | null | undefined, string | null | undefined, number | null | undefined]>((d, bp, pp, pc, cc, pos, n, desc, sc) =>
     d.addHangingChildPieceWithParentConnection(bp, pp, pc, cc, pos, n, desc, sc),
   )(() => entity);
 }
@@ -1251,40 +1281,40 @@ export function useAddHangingChildPieceWithParentConnection(): readonly [
 /** @emoji ✍️ {@link Design#deletePiece}. */
 export function useDeleteDesignPiece(): readonly [(pieceId: string) => Promise<SetResult>, OperationStatus] {
   const entity = useDesign();
-  return bindOpToReact<Design, [string]>((d, id) => d.deletePiece(id))(() => entity);
+  return bindOperationToReact<Design, [string]>((d, id) => d.deletePiece(id))(() => entity);
 }
 
 /** @emoji ✍️ {@link Design#deletePieces}. */
 export function useDeleteDesignPieces(): readonly [(ids: readonly string[]) => Promise<SetResult>, OperationStatus] {
   const entity = useDesign();
-  return bindOpToReact<Design, [readonly string[]]>((d, ids) => d.deletePieces(ids))(() => entity);
+  return bindOperationToReact<Design, [readonly string[]]>((d, ids) => d.deletePieces(ids))(() => entity);
 }
 
 /** @emoji ✍️ {@link Design#deletePiecesAndConnections}. */
 export function useDeleteDesignPiecesAndConnections(): readonly [(pieceIds: readonly string[], connectionIds: readonly string[]) => Promise<SetResult>, OperationStatus] {
   const entity = useDesign();
-  return bindOpToReact<Design, [readonly string[], readonly string[]]>((d, p, c) => d.deletePiecesAndConnections(p, c))(() => entity);
+  return bindOperationToReact<Design, [readonly string[], readonly string[]]>((d, p, c) => d.deletePiecesAndConnections(p, c))(() => entity);
 }
 // #endregion ✍️DesignWrites
 // #endregion 🪝HooksDesign
 
 // #region 🧰Type
-const useTypeRenameOp = bindOpToReact<Type, [string]>((t, newName) => t.rename(newName));
-const useTypeChangeDescriptionOp = bindOpToReact<Type, [string]>((t, d) => t.changeDescription(d));
-const useTypeChangeIconOp = bindOpToReact<Type, [string]>((t, i) => t.changeIcon(i));
-const useTypeAddAttributeOp = bindOpToReact<Type, [string, string, string]>((t, key, value, definition) => t.addAttribute(key, value, definition));
-const useTypeRemoveAttributeOp = bindOpToReact<Type, [string]>((t, id) => t.removeAttribute(id));
-const useTypeRemoveAttributesOp = bindOpToReact<Type, [readonly string[]]>((t, ids) => t.removeAttributes(ids));
-const useTypeCreatePortOp = bindOpToReact<Type, [string | null | undefined, string | null | undefined, string | null | undefined, string | null | undefined, number | null | undefined]>((t, code, label, description, icon, order) =>
+const useTypeRenameOperation = bindOperationToReact<Type, [string]>((t, newName) => t.rename(newName));
+const useTypeChangeDescriptionOperation = bindOperationToReact<Type, [string]>((t, d) => t.changeDescription(d));
+const useTypeChangeIconOperation = bindOperationToReact<Type, [string]>((t, i) => t.changeIcon(i));
+const useTypeAddAttributeOperation = bindOperationToReact<Type, [string, string, string]>((t, key, value, definition) => t.addAttribute(key, value, definition));
+const useTypeRemoveAttributeOperation = bindOperationToReact<Type, [string]>((t, id) => t.removeAttribute(id));
+const useTypeRemoveAttributesOperation = bindOperationToReact<Type, [readonly string[]]>((t, ids) => t.removeAttributes(ids));
+const useTypeCreatePortOperation = bindOperationToReact<Type, [string | null | undefined, string | null | undefined, string | null | undefined, string | null | undefined, number | null | undefined]>((t, code, label, description, icon, order) =>
   t.createPort(code ?? null, label ?? null, description ?? null, icon ?? null, order ?? null),
 );
-const useTypeDeletePortOp = bindOpToReact<Type, [string]>((t, id) => t.deletePort(id));
-const useTypeDeletePortsOp = bindOpToReact<Type, [readonly string[]]>((t, ids) => t.deletePorts(ids));
-const useTypeAddConnectorOp = bindOpToReact<Type, [string, string | null | undefined, string | null | undefined, string | null | undefined]>((t, code, description, icon, portId) =>
+const useTypeDeletePortOperation = bindOperationToReact<Type, [string]>((t, id) => t.deletePort(id));
+const useTypeDeletePortsOperation = bindOperationToReact<Type, [readonly string[]]>((t, ids) => t.deletePorts(ids));
+const useTypeAddConnectorOperation = bindOperationToReact<Type, [string, string | null | undefined, string | null | undefined, string | null | undefined]>((t, code, description, icon, portId) =>
   t.addConnector(code, description ?? null, icon ?? null, portId ?? null),
 );
-const useTypeRemoveConnectorOp = bindOpToReact<Type, [string]>((t, id) => t.removeConnector(id));
-const useTypeRemoveConnectorsOp = bindOpToReact<Type, [readonly string[]]>((t, ids) => t.removeConnectors(ids));
+const useTypeRemoveConnectorOperation = bindOperationToReact<Type, [string]>((t, id) => t.removeConnector(id));
+const useTypeRemoveConnectorsOperation = bindOperationToReact<Type, [readonly string[]]>((t, ids) => t.removeConnectors(ids));
 
 /** @emoji 📖 Live {@link Type#readName}. */
 export function useTypeName(): FieldReadState<string> {
@@ -1337,83 +1367,83 @@ export function useTypeAttributes(): FieldReadState<readonly Attribute[]> {
 /** @emoji ✍️ {@link TypeOperationInput#rename}. */
 export function useRenameType(): readonly [(newName: string) => Promise<SetResult>, OperationStatus] {
   const e = useType();
-  return useTypeRenameOp(() => e);
+  return useTypeRenameOperation(() => e);
 }
 
 /** @emoji ✍️ {@link TypeOperationInput#changeDescription}. */
 export function useChangeTypeDescription(): readonly [(newDescription: string) => Promise<SetResult>, OperationStatus] {
   const e = useType();
-  return useTypeChangeDescriptionOp(() => e);
+  return useTypeChangeDescriptionOperation(() => e);
 }
 
 /** @emoji ✍️ {@link TypeOperationInput#changeIcon}. */
 export function useChangeTypeIcon(): readonly [(newIcon: string) => Promise<SetResult>, OperationStatus] {
   const e = useType();
-  return useTypeChangeIconOp(() => e);
+  return useTypeChangeIconOperation(() => e);
 }
 
 /** @emoji ✍️ {@link TypeOperationInput#addAttribute}. */
 export function useAddTypeAttribute(): readonly [(key: string, value: string, definition: string) => Promise<SetResult>, OperationStatus] {
   const e = useType();
-  return useTypeAddAttributeOp(() => e);
+  return useTypeAddAttributeOperation(() => e);
 }
 
 /** @emoji ✍️ {@link TypeOperationInput#removeAttribute}. */
 export function useRemoveTypeAttribute(): readonly [(id: string) => Promise<SetResult>, OperationStatus] {
   const e = useType();
-  return useTypeRemoveAttributeOp(() => e);
+  return useTypeRemoveAttributeOperation(() => e);
 }
 
 /** @emoji ✍️ {@link TypeOperationInput#removeAttributes}. */
 export function useRemoveTypeAttributes(): readonly [(ids: readonly string[]) => Promise<SetResult>, OperationStatus] {
   const e = useType();
-  return useTypeRemoveAttributesOp(() => e);
+  return useTypeRemoveAttributesOperation(() => e);
 }
 
 /** @emoji ✍️ {@link TypeOperationInput#createPort}. */
 export function useCreatePort(): readonly [(code?: string | null, label?: string | null, description?: string | null, icon?: string | null, order?: number | null) => Promise<SetResult>, OperationStatus] {
   const e = useType();
-  return useTypeCreatePortOp(() => e);
+  return useTypeCreatePortOperation(() => e);
 }
 
 /** @emoji ✍️ {@link TypeOperationInput#deletePort}. */
 export function useDeletePort(): readonly [(id: string) => Promise<SetResult>, OperationStatus] {
   const e = useType();
-  return useTypeDeletePortOp(() => e);
+  return useTypeDeletePortOperation(() => e);
 }
 
 /** @emoji ✍️ {@link TypeOperationInput#deletePorts}. */
 export function useDeletePorts(): readonly [(ids: readonly string[]) => Promise<SetResult>, OperationStatus] {
   const e = useType();
-  return useTypeDeletePortsOp(() => e);
+  return useTypeDeletePortsOperation(() => e);
 }
 
 /** @emoji ✍️ {@link TypeOperationInput#addConnector}. */
 export function useAddConnector(): readonly [(code: string, description?: string | null, icon?: string | null, portId?: string | null) => Promise<SetResult>, OperationStatus] {
   const e = useType();
-  return useTypeAddConnectorOp(() => e);
+  return useTypeAddConnectorOperation(() => e);
 }
 
 /** @emoji ✍️ {@link TypeOperationInput#removeConnector}. */
 export function useRemoveConnector(): readonly [(id: string) => Promise<SetResult>, OperationStatus] {
   const e = useType();
-  return useTypeRemoveConnectorOp(() => e);
+  return useTypeRemoveConnectorOperation(() => e);
 }
 
 /** @emoji ✍️ {@link TypeOperationInput#removeConnectors}. */
 export function useRemoveConnectors(): readonly [(ids: readonly string[]) => Promise<SetResult>, OperationStatus] {
   const e = useType();
-  return useTypeRemoveConnectorsOp(() => e);
+  return useTypeRemoveConnectorsOperation(() => e);
 }
 // #endregion 🧰Type
 
 // #region 🔘Port
-const usePortRenameOp = bindOpToReact<Port, [string, string | null | undefined]>((p, newCode, newLabel) => p.rename(newCode, newLabel));
-const usePortChangeDescriptionOp = bindOpToReact<Port, [string]>((p, d) => p.changeDescription(d));
-const usePortChangeIconOp = bindOpToReact<Port, [string]>((p, i) => p.changeIcon(i));
-const usePortAddAttributeOp = bindOpToReact<Port, [string, string, string]>((p, key, value, definition) => p.addAttribute(key, value, definition));
-const usePortRemoveAttributeOp = bindOpToReact<Port, [string]>((p, id) => p.removeAttribute(id));
-const usePortRemoveAttributesOp = bindOpToReact<Port, [readonly string[]]>((p, ids) => p.removeAttributes(ids));
+const usePortRenameOperation = bindOperationToReact<Port, [string, string | null | undefined]>((p, newCode, newLabel) => p.rename(newCode, newLabel));
+const usePortChangeDescriptionOperation = bindOperationToReact<Port, [string]>((p, d) => p.changeDescription(d));
+const usePortChangeIconOperation = bindOperationToReact<Port, [string]>((p, i) => p.changeIcon(i));
+const usePortAddAttributeOperation = bindOperationToReact<Port, [string, string, string]>((p, key, value, definition) => p.addAttribute(key, value, definition));
+const usePortRemoveAttributeOperation = bindOperationToReact<Port, [string]>((p, id) => p.removeAttribute(id));
+const usePortRemoveAttributesOperation = bindOperationToReact<Port, [readonly string[]]>((p, ids) => p.removeAttributes(ids));
 
 /** @emoji 📖 Live {@link Port#readCode}. */
 export function usePortCode(): FieldReadState<string> {
@@ -1460,44 +1490,44 @@ export function usePortAttributes(): FieldReadState<readonly Attribute[]> {
 /** @emoji ✍️ {@link PortOperationInput#rename}. */
 export function useRenamePort(): readonly [(newCode: string, newLabel?: string | null) => Promise<SetResult>, OperationStatus] {
   const e = usePort();
-  return usePortRenameOp(() => e);
+  return usePortRenameOperation(() => e);
 }
 
 /** @emoji ✍️ {@link PortOperationInput#changeDescription}. */
 export function useChangePortDescription(): readonly [(newDescription: string) => Promise<SetResult>, OperationStatus] {
   const e = usePort();
-  return usePortChangeDescriptionOp(() => e);
+  return usePortChangeDescriptionOperation(() => e);
 }
 
 /** @emoji ✍️ {@link PortOperationInput#changeIcon}. */
 export function useChangePortIcon(): readonly [(newIcon: string) => Promise<SetResult>, OperationStatus] {
   const e = usePort();
-  return usePortChangeIconOp(() => e);
+  return usePortChangeIconOperation(() => e);
 }
 
 /** @emoji ✍️ {@link PortOperationInput#addAttribute}. */
 export function useAddPortAttribute(): readonly [(key: string, value: string, definition: string) => Promise<SetResult>, OperationStatus] {
   const e = usePort();
-  return usePortAddAttributeOp(() => e);
+  return usePortAddAttributeOperation(() => e);
 }
 
 /** @emoji ✍️ {@link PortOperationInput#removeAttribute}. */
 export function useRemovePortAttribute(): readonly [(id: string) => Promise<SetResult>, OperationStatus] {
   const e = usePort();
-  return usePortRemoveAttributeOp(() => e);
+  return usePortRemoveAttributeOperation(() => e);
 }
 
 /** @emoji ✍️ {@link PortOperationInput#removeAttributes}. */
 export function useRemovePortAttributes(): readonly [(ids: readonly string[]) => Promise<SetResult>, OperationStatus] {
   const e = usePort();
-  return usePortRemoveAttributesOp(() => e);
+  return usePortRemoveAttributesOperation(() => e);
 }
 // #endregion 🔘Port
 
 // #region 🔗Connector
-const useConnectorRenameOp = bindOpToReact<Connector, [string]>((c, newCode) => c.rename(newCode));
-const useConnectorChangeDescriptionOp = bindOpToReact<Connector, [string]>((c, d) => c.changeDescription(d));
-const useConnectorChangeIconOp = bindOpToReact<Connector, [string]>((c, i) => c.changeIcon(i));
+const useConnectorRenameOperation = bindOperationToReact<Connector, [string]>((c, newCode) => c.rename(newCode));
+const useConnectorChangeDescriptionOperation = bindOperationToReact<Connector, [string]>((c, d) => c.changeDescription(d));
+const useConnectorChangeIconOperation = bindOperationToReact<Connector, [string]>((c, i) => c.changeIcon(i));
 
 /** @emoji 📖 Live {@link Connector#readCode}. */
 export function useConnectorCode(): FieldReadState<string> {
@@ -1526,19 +1556,19 @@ export function useConnectorAttributes(): FieldReadState<readonly Attribute[]> {
 /** @emoji ✍️ {@link ConnectorOperationInput#rename}. */
 export function useRenameConnector(): readonly [(newCode: string) => Promise<SetResult>, OperationStatus] {
   const e = useConnector();
-  return useConnectorRenameOp(() => e);
+  return useConnectorRenameOperation(() => e);
 }
 
 /** @emoji ✍️ {@link ConnectorOperationInput#changeDescription}. */
 export function useChangeConnectorDescription(): readonly [(newDescription: string) => Promise<SetResult>, OperationStatus] {
   const e = useConnector();
-  return useConnectorChangeDescriptionOp(() => e);
+  return useConnectorChangeDescriptionOperation(() => e);
 }
 
 /** @emoji ✍️ {@link ConnectorOperationInput#changeIcon}. */
 export function useChangeConnectorIcon(): readonly [(newIcon: string) => Promise<SetResult>, OperationStatus] {
   const e = useConnector();
-  return useConnectorChangeIconOp(() => e);
+  return useConnectorChangeIconOperation(() => e);
 }
 // #endregion 🔗Connector
 
@@ -1581,12 +1611,12 @@ export function useAuthorRole(): FieldReadState<string> {
 // #endregion ✍️Author
 
 // #region 💎Quality
-const useQualityRenameOp = bindOpToReact<Quality, [string]>((q, k) => q.rename(k));
-const useQualityChangeDescriptionOp = bindOpToReact<Quality, [string]>((q, d) => q.changeDescription(d));
-const useQualityChangeIconOp = bindOpToReact<Quality, [string]>((q, i) => q.changeIcon(i));
-const useQualityAddAttributeOp = bindOpToReact<Quality, [string, string, string]>((q, key, value, definition) => q.addAttribute(key, value, definition));
-const useQualityRemoveAttributeOp = bindOpToReact<Quality, [string]>((q, id) => q.removeAttribute(id));
-const useQualityRemoveAttributesOp = bindOpToReact<Quality, [readonly string[]]>((q, ids) => q.removeAttributes(ids));
+const useQualityRenameOperation = bindOperationToReact<Quality, [string]>((q, k) => q.rename(k));
+const useQualityChangeDescriptionOperation = bindOperationToReact<Quality, [string]>((q, d) => q.changeDescription(d));
+const useQualityChangeIconOperation = bindOperationToReact<Quality, [string]>((q, i) => q.changeIcon(i));
+const useQualityAddAttributeOperation = bindOperationToReact<Quality, [string, string, string]>((q, key, value, definition) => q.addAttribute(key, value, definition));
+const useQualityRemoveAttributeOperation = bindOperationToReact<Quality, [string]>((q, id) => q.removeAttribute(id));
+const useQualityRemoveAttributesOperation = bindOperationToReact<Quality, [readonly string[]]>((q, ids) => q.removeAttributes(ids));
 
 /** @emoji 📖 Live {@link Quality#readKey}. */
 export function useQualityKey(): FieldReadState<string> {
@@ -1639,47 +1669,47 @@ export function useQualityBenchmarks(): FieldReadState<readonly Benchmark[]> {
 /** @emoji ✍️ {@link Quality#rename}. */
 export function useRenameQuality(): readonly [(newKey: string) => Promise<SetResult>, OperationStatus] {
   const e = useQuality();
-  return useQualityRenameOp(() => e);
+  return useQualityRenameOperation(() => e);
 }
 
 /** @emoji ✍️ {@link Quality#changeDescription}. */
 export function useChangeQualityDescription(): readonly [(newDescription: string) => Promise<SetResult>, OperationStatus] {
   const e = useQuality();
-  return useQualityChangeDescriptionOp(() => e);
+  return useQualityChangeDescriptionOperation(() => e);
 }
 
 /** @emoji ✍️ {@link Quality#changeIcon}. */
 export function useChangeQualityIcon(): readonly [(newIcon: string) => Promise<SetResult>, OperationStatus] {
   const e = useQuality();
-  return useQualityChangeIconOp(() => e);
+  return useQualityChangeIconOperation(() => e);
 }
 
 /** @emoji ✍️ {@link Quality#addAttribute}. */
 export function useAddQualityAttribute(): readonly [(key: string, value: string, definition: string) => Promise<SetResult>, OperationStatus] {
   const e = useQuality();
-  return useQualityAddAttributeOp(() => e);
+  return useQualityAddAttributeOperation(() => e);
 }
 
 /** @emoji ✍️ {@link Quality#removeAttribute}. */
 export function useRemoveQualityAttribute(): readonly [(attributeId: string) => Promise<SetResult>, OperationStatus] {
   const e = useQuality();
-  return useQualityRemoveAttributeOp(() => e);
+  return useQualityRemoveAttributeOperation(() => e);
 }
 
 /** @emoji ✍️ {@link Quality#removeAttributes}. */
 export function useRemoveQualityAttributes(): readonly [(ids: readonly string[]) => Promise<SetResult>, OperationStatus] {
   const e = useQuality();
-  return useQualityRemoveAttributesOp(() => e);
+  return useQualityRemoveAttributesOperation(() => e);
 }
 // #endregion 💎Quality
 
 // #region 🏷️Tag
-const useTagRenameOp = bindOpToReact<Tag, [string]>((t, n) => t.rename(n));
-const useTagChangeDescriptionOp = bindOpToReact<Tag, [string]>((t, d) => t.changeDescription(d));
-const useTagChangeIconOp = bindOpToReact<Tag, [string]>((t, i) => t.changeIcon(i));
-const useTagAddAttributeOp = bindOpToReact<Tag, [string, string, string]>((t, key, value, definition) => t.addAttribute(key, value, definition));
-const useTagRemoveAttributeOp = bindOpToReact<Tag, [string]>((t, id) => t.removeAttribute(id));
-const useTagRemoveAttributesOp = bindOpToReact<Tag, [readonly string[]]>((t, ids) => t.removeAttributes(ids));
+const useTagRenameOperation = bindOperationToReact<Tag, [string]>((t, n) => t.rename(n));
+const useTagChangeDescriptionOperation = bindOperationToReact<Tag, [string]>((t, d) => t.changeDescription(d));
+const useTagChangeIconOperation = bindOperationToReact<Tag, [string]>((t, i) => t.changeIcon(i));
+const useTagAddAttributeOperation = bindOperationToReact<Tag, [string, string, string]>((t, key, value, definition) => t.addAttribute(key, value, definition));
+const useTagRemoveAttributeOperation = bindOperationToReact<Tag, [string]>((t, id) => t.removeAttribute(id));
+const useTagRemoveAttributesOperation = bindOperationToReact<Tag, [readonly string[]]>((t, ids) => t.removeAttributes(ids));
 
 /** @emoji 📖 Live {@link Tag#readName}. */
 export function useTagName(): FieldReadState<string> {
@@ -1714,47 +1744,47 @@ export function useTagAttributes(): FieldReadState<readonly Attribute[]> {
 /** @emoji ✍️ {@link Tag#rename}. */
 export function useRenameTag(): readonly [(newName: string) => Promise<SetResult>, OperationStatus] {
   const e = useTag();
-  return useTagRenameOp(() => e);
+  return useTagRenameOperation(() => e);
 }
 
 /** @emoji ✍️ {@link Tag#changeDescription}. */
 export function useChangeTagDescription(): readonly [(newDescription: string) => Promise<SetResult>, OperationStatus] {
   const e = useTag();
-  return useTagChangeDescriptionOp(() => e);
+  return useTagChangeDescriptionOperation(() => e);
 }
 
 /** @emoji ✍️ {@link Tag#changeIcon}. */
 export function useChangeTagIcon(): readonly [(newIcon: string) => Promise<SetResult>, OperationStatus] {
   const e = useTag();
-  return useTagChangeIconOp(() => e);
+  return useTagChangeIconOperation(() => e);
 }
 
 /** @emoji ✍️ {@link Tag#addAttribute}. */
 export function useAddTagAttribute(): readonly [(key: string, value: string, definition: string) => Promise<SetResult>, OperationStatus] {
   const e = useTag();
-  return useTagAddAttributeOp(() => e);
+  return useTagAddAttributeOperation(() => e);
 }
 
 /** @emoji ✍️ {@link Tag#removeAttribute}. */
 export function useRemoveTagAttribute(): readonly [(attributeId: string) => Promise<SetResult>, OperationStatus] {
   const e = useTag();
-  return useTagRemoveAttributeOp(() => e);
+  return useTagRemoveAttributeOperation(() => e);
 }
 
 /** @emoji ✍️ {@link Tag#removeAttributes}. */
 export function useRemoveTagAttributes(): readonly [(ids: readonly string[]) => Promise<SetResult>, OperationStatus] {
   const e = useTag();
-  return useTagRemoveAttributesOp(() => e);
+  return useTagRemoveAttributesOperation(() => e);
 }
 // #endregion 🏷️Tag
 
 // #region 💡Concept
-const useConceptRenameOp = bindOpToReact<Concept, [string]>((c, n) => c.rename(n));
-const useConceptChangeDescriptionOp = bindOpToReact<Concept, [string]>((c, d) => c.changeDescription(d));
-const useConceptChangeIconOp = bindOpToReact<Concept, [string]>((c, i) => c.changeIcon(i));
-const useConceptAddAttributeOp = bindOpToReact<Concept, [string, string, string]>((c, key, value, definition) => c.addAttribute(key, value, definition));
-const useConceptRemoveAttributeOp = bindOpToReact<Concept, [string]>((c, id) => c.removeAttribute(id));
-const useConceptRemoveAttributesOp = bindOpToReact<Concept, [readonly string[]]>((c, ids) => c.removeAttributes(ids));
+const useConceptRenameOperation = bindOperationToReact<Concept, [string]>((c, n) => c.rename(n));
+const useConceptChangeDescriptionOperation = bindOperationToReact<Concept, [string]>((c, d) => c.changeDescription(d));
+const useConceptChangeIconOperation = bindOperationToReact<Concept, [string]>((c, i) => c.changeIcon(i));
+const useConceptAddAttributeOperation = bindOperationToReact<Concept, [string, string, string]>((c, key, value, definition) => c.addAttribute(key, value, definition));
+const useConceptRemoveAttributeOperation = bindOperationToReact<Concept, [string]>((c, id) => c.removeAttribute(id));
+const useConceptRemoveAttributesOperation = bindOperationToReact<Concept, [readonly string[]]>((c, ids) => c.removeAttributes(ids));
 
 /** @emoji 📖 Live {@link Concept#readName}. */
 export function useConceptName(): FieldReadState<string> {
@@ -1789,37 +1819,37 @@ export function useConceptAttributes(): FieldReadState<readonly Attribute[]> {
 /** @emoji ✍️ {@link Concept#rename}. */
 export function useRenameConcept(): readonly [(newName: string) => Promise<SetResult>, OperationStatus] {
   const e = useConcept();
-  return useConceptRenameOp(() => e);
+  return useConceptRenameOperation(() => e);
 }
 
 /** @emoji ✍️ {@link Concept#changeDescription}. */
 export function useChangeConceptDescription(): readonly [(newDescription: string) => Promise<SetResult>, OperationStatus] {
   const e = useConcept();
-  return useConceptChangeDescriptionOp(() => e);
+  return useConceptChangeDescriptionOperation(() => e);
 }
 
 /** @emoji ✍️ {@link Concept#changeIcon}. */
 export function useChangeConceptIcon(): readonly [(newIcon: string) => Promise<SetResult>, OperationStatus] {
   const e = useConcept();
-  return useConceptChangeIconOp(() => e);
+  return useConceptChangeIconOperation(() => e);
 }
 
 /** @emoji ✍️ {@link Concept#addAttribute}. */
 export function useAddConceptAttribute(): readonly [(key: string, value: string, definition: string) => Promise<SetResult>, OperationStatus] {
   const e = useConcept();
-  return useConceptAddAttributeOp(() => e);
+  return useConceptAddAttributeOperation(() => e);
 }
 
 /** @emoji ✍️ {@link Concept#removeAttribute}. */
 export function useRemoveConceptAttribute(): readonly [(attributeId: string) => Promise<SetResult>, OperationStatus] {
   const e = useConcept();
-  return useConceptRemoveAttributeOp(() => e);
+  return useConceptRemoveAttributeOperation(() => e);
 }
 
 /** @emoji ✍️ {@link Concept#removeAttributes}. */
 export function useRemoveConceptAttributes(): readonly [(ids: readonly string[]) => Promise<SetResult>, OperationStatus] {
   const e = useConcept();
-  return useConceptRemoveAttributesOp(() => e);
+  return useConceptRemoveAttributesOperation(() => e);
 }
 // #endregion 💡Concept
 
@@ -1970,68 +2000,68 @@ export function usePieceDepth(): FieldReadState<number | null> {
   return bindFieldToReact<Piece, number | null>({ get: () => entity, read: (p) => p.readDepth() })();
 }
 
-const usePieceRenameOp = bindOpToReact<Piece, [string]>((p, n) => p.rename(n));
-const usePieceChangeDescriptionOp = bindOpToReact<Piece, [string]>((p, d) => p.changeDescription(d));
-const usePieceDragOp = bindOpToReact<Piece, [OffsetInput]>((p, o) => p.drag(o));
-const usePieceMoveOp = bindOpToReact<Piece, [PositionInput]>((p, pos) => p.move(pos));
-const usePieceFixOp = bindOpToReact<Piece, []>((p) => p.fix());
-const usePieceChangeBlueprintOp = bindOpToReact<Piece, [string]>((p, id) => p.changeBlueprint(id));
-const usePieceAddAttributeOp = bindOpToReact<Piece, [string, string, string]>((p, key, value, definition) => p.addAttribute(key, value, definition));
-const usePieceRemoveAttributeOp = bindOpToReact<Piece, [string]>((p, id) => p.removeAttribute(id));
-const usePieceRemoveAttributesOp = bindOpToReact<Piece, [readonly string[]]>((p, ids) => p.removeAttributes(ids));
+const usePieceRenameOperation = bindOperationToReact<Piece, [string]>((p, n) => p.rename(n));
+const usePieceChangeDescriptionOperation = bindOperationToReact<Piece, [string]>((p, d) => p.changeDescription(d));
+const usePieceDragOperation = bindOperationToReact<Piece, [OffsetInput]>((p, o) => p.drag(o));
+const usePieceMoveOperation = bindOperationToReact<Piece, [PositionInput]>((p, pos) => p.move(pos));
+const usePieceFixOperation = bindOperationToReact<Piece, []>((p) => p.fix());
+const usePieceChangeBlueprintOperation = bindOperationToReact<Piece, [string]>((p, id) => p.changeBlueprint(id));
+const usePieceAddAttributeOperation = bindOperationToReact<Piece, [string, string, string]>((p, key, value, definition) => p.addAttribute(key, value, definition));
+const usePieceRemoveAttributeOperation = bindOperationToReact<Piece, [string]>((p, id) => p.removeAttribute(id));
+const usePieceRemoveAttributesOperation = bindOperationToReact<Piece, [readonly string[]]>((p, ids) => p.removeAttributes(ids));
 
 /** @emoji ✍️ {@link Piece#rename} bound to {@link PieceContext}. */
 export function useRenamePiece(): readonly [(newName: string) => Promise<SetResult>, OperationStatus] {
   const e = usePiece();
-  return usePieceRenameOp(() => e);
+  return usePieceRenameOperation(() => e);
 }
 
 /** @emoji ✍️ {@link Piece#changeDescription}. */
 export function useChangePieceDescription(): readonly [(newDescription: string) => Promise<SetResult>, OperationStatus] {
   const e = usePiece();
-  return usePieceChangeDescriptionOp(() => e);
+  return usePieceChangeDescriptionOperation(() => e);
 }
 
 /** @emoji ✍️ {@link Piece#drag}. */
 export function useDragPiece(): readonly [(offset: OffsetInput) => Promise<SetResult>, OperationStatus] {
   const e = usePiece();
-  return usePieceDragOp(() => e);
+  return usePieceDragOperation(() => e);
 }
 
 /** @emoji ✍️ {@link Piece#move}. */
 export function useMovePiece(): readonly [(position: PositionInput) => Promise<SetResult>, OperationStatus] {
   const e = usePiece();
-  return usePieceMoveOp(() => e);
+  return usePieceMoveOperation(() => e);
 }
 
 /** @emoji ✍️ {@link Piece#fix}. */
 export function useFixPiece(): readonly [() => Promise<SetResult>, OperationStatus] {
   const e = usePiece();
-  return usePieceFixOp(() => e);
+  return usePieceFixOperation(() => e);
 }
 
 /** @emoji ✍️ {@link Piece#changeBlueprint}. */
 export function useChangePieceBlueprint(): readonly [(blueprintId: string) => Promise<SetResult>, OperationStatus] {
   const e = usePiece();
-  return usePieceChangeBlueprintOp(() => e);
+  return usePieceChangeBlueprintOperation(() => e);
 }
 
 /** @emoji ✍️ {@link Piece#addAttribute}. */
 export function useAddPieceAttribute(): readonly [(key: string, value: string, definition: string) => Promise<SetResult>, OperationStatus] {
   const e = usePiece();
-  return usePieceAddAttributeOp(() => e);
+  return usePieceAddAttributeOperation(() => e);
 }
 
 /** @emoji ✍️ {@link Piece#removeAttribute}. */
 export function useRemovePieceAttribute(): readonly [(attributeId: string) => Promise<SetResult>, OperationStatus] {
   const e = usePiece();
-  return usePieceRemoveAttributeOp(() => e);
+  return usePieceRemoveAttributeOperation(() => e);
 }
 
 /** @emoji ✍️ {@link Piece#removeAttributes}. */
 export function useRemovePieceAttributes(): readonly [(ids: readonly string[]) => Promise<SetResult>, OperationStatus] {
   const e = usePiece();
-  return usePieceRemoveAttributesOp(() => e);
+  return usePieceRemoveAttributesOperation(() => e);
 }
 // #endregion 🧩Piece
 
@@ -2040,7 +2070,7 @@ export function useRemovePieceAttributes(): readonly [(ids: readonly string[]) =
  * @emoji 🪝 Binds {@link PiecesOperations} batch mutations (not an {@link } — no cached kit state on the handle).
  * @typeParam Args — forwarded to the underlying {@link PiecesOperations} method after the ops handle.
  */
-function bindPiecesOperationsOpToReact<Args extends unknown[]>(impl: (ops: PiecesOperations, ...args: Args) => Promise<SetResult>): (getOps: () => PiecesOperations | null) => readonly [(...args: Args) => Promise<SetResult>, OperationStatus] {
+function bindPiecesOperationsOperationToReact<Args extends unknown[]>(impl: (ops: PiecesOperations, ...args: Args) => Promise<SetResult>): (getOps: () => PiecesOperations | null) => readonly [(...args: Args) => Promise<SetResult>, OperationStatus] {
   return function usePiecesOperationsOp(getOps: () => PiecesOperations | null): readonly [(...args: Args) => Promise<SetResult>, OperationStatus] {
     const getRef = React.useRef(getOps);
     getRef.current = getOps;
@@ -2076,37 +2106,37 @@ function bindPiecesOperationsOpToReact<Args extends unknown[]>(impl: (ops: Piece
   };
 }
 
-const usePiecesDragOp = bindPiecesOperationsOpToReact((ops, o: OffsetInput) => ops.drag(o));
-const usePiecesMoveOp = bindPiecesOperationsOpToReact((ops, o: OffsetInput) => ops.move(o));
-const usePiecesFixOp = bindPiecesOperationsOpToReact((ops) => ops.fix());
-const usePiecesChangeBlueprintOp = bindPiecesOperationsOpToReact((ops, id: string) => ops.changeBlueprint(id));
+const usePiecesDragOperation = bindPiecesOperationsOperationToReact((ops, o: OffsetInput) => ops.drag(o));
+const usePiecesMoveOperation = bindPiecesOperationsOperationToReact((ops, o: OffsetInput) => ops.move(o));
+const usePiecesFixOperation = bindPiecesOperationsOperationToReact((ops) => ops.fix());
+const usePiecesChangeBlueprintOperation = bindPiecesOperationsOperationToReact((ops, id: string) => ops.changeBlueprint(id));
 
 /** @emoji ✍️ {@link PiecesOperations#drag} for {@code design.pieces(ids)}. */
 export function useDragPieces(designId: string, pieceIds: readonly string[]): readonly [(offset: OffsetInput) => Promise<SetResult>, OperationStatus] {
   const kit = useKit();
   const getOps = React.useCallback(() => (pieceIds.length === 0 ? null : kit.design(designId).pieces(pieceIds)), [kit, designId, pieceIds]);
-  return usePiecesDragOp(getOps);
+  return usePiecesDragOperation(getOps);
 }
 
 /** @emoji ✍️ {@link PiecesOperations#move}. */
 export function useMovePieces(designId: string, pieceIds: readonly string[]): readonly [(offset: OffsetInput) => Promise<SetResult>, OperationStatus] {
   const kit = useKit();
   const getOps = React.useCallback(() => (pieceIds.length === 0 ? null : kit.design(designId).pieces(pieceIds)), [kit, designId, pieceIds]);
-  return usePiecesMoveOp(getOps);
+  return usePiecesMoveOperation(getOps);
 }
 
 /** @emoji ✍️ {@link PiecesOperations#fix}. */
 export function useFixPieces(designId: string, pieceIds: readonly string[]): readonly [() => Promise<SetResult>, OperationStatus] {
   const kit = useKit();
   const getOps = React.useCallback(() => (pieceIds.length === 0 ? null : kit.design(designId).pieces(pieceIds)), [kit, designId, pieceIds]);
-  return usePiecesFixOp(getOps);
+  return usePiecesFixOperation(getOps);
 }
 
 /** @emoji ✍️ {@link PiecesOperations#changeBlueprint}. */
 export function useChangePiecesBlueprint(designId: string, pieceIds: readonly string[]): readonly [(blueprintId: string) => Promise<SetResult>, OperationStatus] {
   const kit = useKit();
   const getOps = React.useCallback(() => (pieceIds.length === 0 ? null : kit.design(designId).pieces(pieceIds)), [kit, designId, pieceIds]);
-  return usePiecesChangeBlueprintOp(getOps);
+  return usePiecesChangeBlueprintOperation(getOps);
 }
 // #endregion 🪢Pieces
 

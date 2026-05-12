@@ -3596,33 +3596,39 @@ pub mod kit {
             use crate::geom::entity::Position as GeomPosition;
             let design = self.design_by_external_id(design_id).await.ok_or_else(|| crate::error::SemioError::not_found("Design", design_id.as_str()))?;
             let piece = design.piece_by_external_id(piece_id).await.ok_or_else(|| crate::error::SemioError::not_found("Piece", piece_id.as_str()))?;
-            let wire: crate::operation::PieceDiffWire =
-                serde_json::from_value(pdiff.clone()).map_err(|e| crate::error::SemioError::invalid(e.to_string()))?;
-            if let Some(true) = wire.fix_piece {
+            if let Some(true) = pdiff.get("fixPiece").and_then(|x| x.as_bool()) {
                 *piece.connection_kind.write().await = Some(crate::kit::design::piece::PieceConnectionKind::Fixed);
                 return Ok(());
             }
-            if let Some(off) = wire.drag {
-                let du = off.u;
-                let dv = off.v;
-                let pos_slot = piece.position.read().await.clone();
-                if let Some(pos) = pos_slot {
-                    let u = *pos.center.u.read().await + du;
-                    let v = *pos.center.v.read().await + dv;
-                    *pos.center.u.write().await = u;
-                    *pos.center.v.write().await = v;
-                } else {
-                    let n = GeomPosition::from_position_input(crate::geom::PositionInput::default());
-                    *n.center.u.write().await = du;
-                    *n.center.v.write().await = dv;
-                    *piece.position.write().await = Some(n);
+            if let Some(drag_v) = pdiff.get("drag") {
+                if let Some(off) = serde_json::from_value::<Option<crate::geom::OffsetInput>>(drag_v.clone())
+                    .map_err(|e| crate::error::SemioError::invalid(e.to_string()))?
+                {
+                    let du = off.u;
+                    let dv = off.v;
+                    let pos_slot = piece.position.read().await.clone();
+                    if let Some(pos) = pos_slot {
+                        let u = *pos.center.u.read().await + du;
+                        let v = *pos.center.v.read().await + dv;
+                        *pos.center.u.write().await = u;
+                        *pos.center.v.write().await = v;
+                    } else {
+                        let n = GeomPosition::from_position_input(crate::geom::PositionInput::default());
+                        *n.center.u.write().await = du;
+                        *n.center.v.write().await = dv;
+                        *piece.position.write().await = Some(n);
+                    }
+                    return Ok(());
                 }
-                return Ok(());
             }
-            if let Some(position) = wire.pose {
-                let n = GeomPosition::from_position_input(position);
-                *piece.position.write().await = Some(n);
-                return Ok(());
+            if let Some(pose_v) = pdiff.get("pose") {
+                if let Some(position) = serde_json::from_value::<Option<crate::geom::PositionInput>>(pose_v.clone())
+                    .map_err(|e| crate::error::SemioError::invalid(e.to_string()))?
+                {
+                    let n = GeomPosition::from_position_input(position);
+                    *piece.position.write().await = Some(n);
+                    return Ok(());
+                }
             }
             if let Some(n) = pdiff.get("name").and_then(|x| x.as_str()) {
                 piece.set_name(Some(n.to_string())).await;
@@ -4633,8 +4639,8 @@ pub mod vcs {
         pub id: Id,
         pub owner_draft: Weak<Draft>,
         pub changes: RwLock<Vec<Arc<Change>>>,
-        pub forward_iface_ops: RwLock<Vec<Arc<operation::OperationIface>>>,
-        pub backward_iface_ops: RwLock<Vec<Arc<operation::OperationIface>>>,
+        pub forward_iface_operations: RwLock<Vec<Arc<operation::OperationIface>>>,
+        pub backward_iface_operations: RwLock<Vec<Arc<operation::OperationIface>>>,
         pub sequence_number: RwLock<i32>,
         pub started_at: RwLock<Option<Timestamp>>,
         pub finished_at: RwLock<Option<Timestamp>>,
@@ -4648,8 +4654,8 @@ pub mod vcs {
                 id: Id::default(),
                 owner_draft: Weak::new(),
                 changes: RwLock::new(Vec::new()),
-                forward_iface_ops: RwLock::new(Vec::new()),
-                backward_iface_ops: RwLock::new(Vec::new()),
+                forward_iface_operations: RwLock::new(Vec::new()),
+                backward_iface_operations: RwLock::new(Vec::new()),
                 sequence_number: RwLock::new(0),
                 started_at: RwLock::new(None),
                 finished_at: RwLock::new(None),
@@ -4668,8 +4674,8 @@ pub mod vcs {
                 id,
                 owner_draft,
                 changes: RwLock::new(Vec::new()),
-                forward_iface_ops: RwLock::new(Vec::new()),
-                backward_iface_ops: RwLock::new(Vec::new()),
+                forward_iface_operations: RwLock::new(Vec::new()),
+                backward_iface_operations: RwLock::new(Vec::new()),
                 sequence_number: RwLock::new(sequence_number),
                 started_at: RwLock::new(Some(Timestamp::default())),
                 finished_at: RwLock::new(None),
@@ -4711,10 +4717,10 @@ pub mod vcs {
             cp.map(EditOwnerUnion::Checkpoint)
         }
         pub async fn forwards(&self) -> crate::gql_relay::OperationConnection {
-            crate::gql_relay::OperationConnection::from_iface_rows(self.forward_iface_ops.read().await.clone())
+            crate::gql_relay::OperationConnection::from_iface_rows(self.forward_iface_operations.read().await.clone())
         }
         pub async fn backwards(&self) -> crate::gql_relay::OperationConnection {
-            crate::gql_relay::OperationConnection::from_iface_rows(self.backward_iface_ops.read().await.clone())
+            crate::gql_relay::OperationConnection::from_iface_rows(self.backward_iface_operations.read().await.clone())
         }
         #[graphql(name = "sequenceNumber")]
         pub async fn sequence_number(&self) -> i32 {
@@ -6158,20 +6164,20 @@ pub mod operation {
         pub definition: Option<String>,
     }
 
-    //#region 🔖canonical_kit_types_designs_wire
+    //#region 🔖canonical_kit_types_designs_mod
     /// @emoji 📦 Sparse `types` triple; `modified[].diff` stays JSON until nested representation/connector apply is typed (metabolism fixture round-trip).
     #[derive(Clone, Debug, Default, Serialize, Deserialize, PartialEq)]
     #[serde(rename_all = "camelCase", default)]
     pub struct TypesCollectionDiff {
         pub removed: Vec<IdRef>,
-        pub modified: Vec<TypeModifiedWireRow>,
+        pub modified: Vec<TypeModifiedRow>,
         pub added: Vec<serde_json::Value>,
     }
 
     /// @emoji 📦 One `types.modified[]` row: `{ "type": { "id" }, "diff": { … } }`.
     #[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
     #[serde(rename_all = "camelCase")]
-    pub struct TypeModifiedWireRow {
+    pub struct TypeModifiedRow {
         #[serde(rename = "type")]
         pub type_ref: IdRef,
         pub diff: serde_json::Value,
@@ -6182,29 +6188,19 @@ pub mod operation {
     #[serde(rename_all = "camelCase", default)]
     pub struct DesignsCollectionDiff {
         pub removed: Vec<IdRef>,
-        pub modified: Vec<DesignModifiedWireRow>,
+        pub modified: Vec<DesignModifiedRow>,
         pub added: Vec<serde_json::Value>,
     }
 
     /// @emoji 📦 One `designs.modified[]` row: `{ "design": { "id" }, "diff": { … } }`.
     #[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
     #[serde(rename_all = "camelCase")]
-    pub struct DesignModifiedWireRow {
+    pub struct DesignModifiedRow {
         pub design: IdRef,
         pub diff: serde_json::Value,
     }
 
-    /// @emoji 🧷 Deserialize-only piece delta for [`Kit::apply_design_piece_modified_json`] (`fixPiece`, `drag`, `pose`); name/description stay on raw JSON for explicit-null semantics.
-    #[derive(Clone, Debug, Default, Deserialize)]
-    #[serde(rename_all = "camelCase", default)]
-    pub(crate) struct PieceDiffWire {
-        #[serde(rename = "fixPiece")]
-        pub fix_piece: Option<bool>,
-        pub drag: Option<crate::geom::OffsetInput>,
-        pub pose: Option<crate::geom::PositionInput>,
-    }
-
-    //#endregion 🔖canonical_kit_types_designs_wire
+    //#endregion 🔖canonical_kit_types_designs_mod
 
     /// @emoji 📦 Canonical sparse kit diff (camelCase) aligned with [`semio/assets/semio/metabolism.kit.diff.semio.json`]; `types` / `designs` use typed envelopes with JSON-only `modified[].diff` leaves; `files` / `folders` / `authors` stay raw JSON until apply exists.
     #[derive(Clone, Debug, Default, Serialize, Deserialize, PartialEq)]
@@ -6566,7 +6562,7 @@ pub mod operation {
                     if kit.type_by_external_id(entity_id).await.is_some() {
                         return Ok(KitDiff(CanonicalKitDiff {
                             types: Some(TypesCollectionDiff {
-                                modified: vec![TypeModifiedWireRow {
+                                modified: vec![TypeModifiedRow {
                                     type_ref: IdRef { id: entity_id.clone() },
                                     diff: serde_json::json!({ "description": description }),
                                 }],
@@ -6578,7 +6574,7 @@ pub mod operation {
                     if kit.design_by_external_id(entity_id).await.is_some() {
                         return Ok(KitDiff(CanonicalKitDiff {
                             designs: Some(DesignsCollectionDiff {
-                                modified: vec![DesignModifiedWireRow {
+                                modified: vec![DesignModifiedRow {
                                     design: IdRef { id: entity_id.clone() },
                                     diff: serde_json::json!({ "description": description }),
                                 }],
@@ -6622,7 +6618,7 @@ pub mod operation {
                     if kit.type_by_external_id(entity_id).await.is_some() {
                         return Ok(KitDiff(CanonicalKitDiff {
                             types: Some(TypesCollectionDiff {
-                                modified: vec![TypeModifiedWireRow {
+                                modified: vec![TypeModifiedRow {
                                     type_ref: IdRef { id: entity_id.clone() },
                                     diff: serde_json::json!({ "icon": icon }),
                                 }],
@@ -6634,7 +6630,7 @@ pub mod operation {
                     if kit.design_by_external_id(entity_id).await.is_some() {
                         return Ok(KitDiff(CanonicalKitDiff {
                             designs: Some(DesignsCollectionDiff {
-                                modified: vec![DesignModifiedWireRow {
+                                modified: vec![DesignModifiedRow {
                                     design: IdRef { id: entity_id.clone() },
                                     diff: serde_json::json!({ "icon": icon }),
                                 }],
@@ -6660,7 +6656,7 @@ pub mod operation {
                     if kit.type_by_external_id(entity_id).await.is_some() {
                         return Ok(KitDiff(CanonicalKitDiff {
                             types: Some(TypesCollectionDiff {
-                                modified: vec![TypeModifiedWireRow {
+                                modified: vec![TypeModifiedRow {
                                     type_ref: IdRef { id: entity_id.clone() },
                                     diff: serde_json::json!({ "image": image }),
                                 }],
@@ -6672,7 +6668,7 @@ pub mod operation {
                     if kit.design_by_external_id(entity_id).await.is_some() {
                         return Ok(KitDiff(CanonicalKitDiff {
                             designs: Some(DesignsCollectionDiff {
-                                modified: vec![DesignModifiedWireRow {
+                                modified: vec![DesignModifiedRow {
                                     design: IdRef { id: entity_id.clone() },
                                     diff: serde_json::json!({ "image": image }),
                                 }],
@@ -6842,7 +6838,7 @@ pub mod operation {
                     });
                     Ok(KitDiff(CanonicalKitDiff {
                         designs: Some(DesignsCollectionDiff {
-                            modified: vec![DesignModifiedWireRow {
+                            modified: vec![DesignModifiedRow {
                                 design: IdRef { id: design_id.clone() },
                                 diff: serde_json::json!({ "pieces": { "added": [piece_json] } }),
                             }],
@@ -6858,7 +6854,7 @@ pub mod operation {
                     ensure_piece(kit, design_id, piece_id).await?;
                     Ok(KitDiff(CanonicalKitDiff {
                         designs: Some(DesignsCollectionDiff {
-                            modified: vec![DesignModifiedWireRow {
+                            modified: vec![DesignModifiedRow {
                                 design: IdRef { id: design_id.clone() },
                                 diff: serde_json::json!({ "pieces": { "removed": [{ "id": piece_id.as_str() }] } }),
                             }],
@@ -6878,7 +6874,7 @@ pub mod operation {
                     let drag = serde_json::to_value(offset).map_err(|e| SemioError::invalid(e.to_string()))?;
                     Ok(KitDiff(CanonicalKitDiff {
                         designs: Some(DesignsCollectionDiff {
-                            modified: vec![DesignModifiedWireRow {
+                            modified: vec![DesignModifiedRow {
                                 design: IdRef { id: design_id.clone() },
                                 diff: serde_json::json!({
                                     "pieces": {
@@ -6914,7 +6910,7 @@ pub mod operation {
                     }
                     Ok(KitDiff(CanonicalKitDiff {
                         designs: Some(DesignsCollectionDiff {
-                            modified: vec![DesignModifiedWireRow {
+                            modified: vec![DesignModifiedRow {
                                 design: IdRef { id: design_id.clone() },
                                 diff: serde_json::json!({ "pieces": { "modified": pm } }),
                             }],
@@ -6930,7 +6926,7 @@ pub mod operation {
                     ensure_piece(kit, design_id, piece_id).await?;
                     Ok(KitDiff(CanonicalKitDiff {
                         designs: Some(DesignsCollectionDiff {
-                            modified: vec![DesignModifiedWireRow {
+                            modified: vec![DesignModifiedRow {
                                 design: IdRef { id: design_id.clone() },
                                 diff: serde_json::json!({
                                     "pieces": {
@@ -7794,7 +7790,7 @@ pub mod operation {
     macro_rules! operations {
         ($($row:ident),* $(,)?) => {
             /// @emoji 🔢 Row count listed in `operations! { … }` (static registry grows toward ~100 SDL operations).
-            pub const GRAPH_OP_REGISTRY_ROWS: usize = [$(stringify!($row)),*].len();
+            pub const GRAPH_OPERATION_REGISTRY_ROWS: usize = [$(stringify!($row)),*].len();
         };
     }
 
@@ -7961,7 +7957,7 @@ pub mod kit_graph_engine {
 
     //#region 🪡  operation apply
     /// @emoji 🧾 Output of [`apply__operation_json`]: ephemeral diff + optional created entities.
-    pub struct AppliedOp {
+    pub struct AppliedOperation {
         pub diff: operation::Diff,
         pub created_piece: Option<Arc<kit::design::piece::Piece>>,
     }
@@ -7978,7 +7974,7 @@ pub mod kit_graph_engine {
     }
 
     /// @emoji 🪡 Async apply for one persisted  operation (`kind` + JSON payload); supports both legacy fixture payloads and normalized scoped operations.
-    pub async fn apply__operation_json(graph: &Arc<Graph>, draft_id: &Id, transaction_id: &Id, op_kind: &str, payload_json: &str) -> Result<AppliedOp, SemioError> {
+    pub async fn apply__operation_json(graph: &Arc<Graph>, draft_id: &Id, transaction_id: &Id, op_kind: &str, payload_json: &str) -> Result<AppliedOperation, SemioError> {
         match op_kind {
             "createdFixedPiece" => {
                 let payload: CreatedFixedPiecePayload = serde_json::from_str(payload_json).map_err(|e| SemioError::invalid(e.to_string()))?;
@@ -7999,7 +7995,7 @@ pub mod kit_graph_engine {
                 let fp_before = projection_fingerprint_for_kit(before.as_ref()).await;
                 let fp_after = projection_fingerprint_for_kit(after.as_ref()).await;
                 let diff = deterministic__diff("createdFixedPiece", &input_ser, &fp_before, &fp_after);
-                Ok(AppliedOp { diff, created_piece: Some(piece) })
+                Ok(AppliedOperation { diff, created_piece: Some(piece) })
             }
             "createFixedPiece" => {
                 let operation = operation::KitOperation::from_kind_and_payload(op_kind, payload_json)?;
@@ -8019,7 +8015,7 @@ pub mod kit_graph_engine {
                 let fp_before = projection_fingerprint_for_kit(before.as_ref()).await;
                 let fp_after = projection_fingerprint_for_kit(after.as_ref()).await;
                 let diff = deterministic__diff("createFixedPiece", payload_json, &fp_before, &fp_after);
-                Ok(AppliedOp { diff, created_piece: Some(piece) })
+                Ok(AppliedOperation { diff, created_piece: Some(piece) })
             }
             other => Err(SemioError::invalid(format!("unsupported  operation kind `{other}`"))),
         }
@@ -8427,16 +8423,16 @@ pub mod kit_backbone {
         }
 
         /// @emoji 🔁 Flatten every recorded `wip` version edit into ordered [`StoredOperation`] records ready for replay.
-        pub fn wip__ops(&self) -> Vec<StoredOperation> {
+        pub fn wip__operations(&self) -> Vec<StoredOperation> {
             let mut out = Vec::new();
-            Self::push__ops_from_version_changes(&mut out, self.wip.the_kit.saved_changes.items.iter().chain(self.wip.the_kit.unsaved_changes.items.iter()), "the-kit");
+            Self::push__operations_from_version_changes(&mut out, self.wip.the_kit.saved_changes.items.iter().chain(self.wip.the_kit.unsaved_changes.items.iter()), "the-kit");
             for alternative in &self.wip.alternatives.items {
-                Self::push__ops_from_version_changes(&mut out, alternative.saved_changes.items.iter().chain(alternative.unsaved_changes.items.iter()), alternative.id.as_str());
+                Self::push__operations_from_version_changes(&mut out, alternative.saved_changes.items.iter().chain(alternative.unsaved_changes.items.iter()), alternative.id.as_str());
             }
             out
         }
 
-        fn push__ops_from_version_changes<'a>(out: &mut Vec<StoredOperation>, changes: impl Iterator<Item = &'a VersionChangeDto>, fallback_draft_id: &str) {
+        fn push__operations_from_version_changes<'a>(out: &mut Vec<StoredOperation>, changes: impl Iterator<Item = &'a VersionChangeDto>, fallback_draft_id: &str) {
             for change in changes {
                 let draft_id = change.origin.clone().unwrap_or_else(|| fallback_draft_id.to_string());
                 for edit in &change.edits.items {
@@ -8756,7 +8752,7 @@ pub mod kit_backbone {
         }
 
         /// @emoji 🪪 Build a metabolism-shaped bundle from a flat ordered  operation log (used by golden test fixtures and import paths).
-        pub fn from_stored__ops(operations: &[StoredOperation]) -> Self {
+        pub fn from_stored__operations(operations: &[StoredOperation]) -> Self {
             let mut bundle = Self::template();
             for operation in operations {
                 bundle.append_unsaved_edit_with_origin(&operation.transaction_id, Some(operation.draft_id.clone()), &operation.kind, operation.input.clone());
@@ -8858,7 +8854,7 @@ CREATE TABLE IF NOT EXISTS conflict_stub (
     //#endregion ✍️ atomic json
 
     //#region 🔁 replay
-    pub async fn replay_stored_ops(graph: &Arc<Graph>, operations: &[StoredOperation]) -> Result<(), SemioError> {
+    pub async fn replay_stored_operations(graph: &Arc<Graph>, operations: &[StoredOperation]) -> Result<(), SemioError> {
         graph.parent_root_for_active_draft.read().await.clear_piece_projections_for_backbone_replay().await;
         for operation in operations {
             let draft_id = Id::from(operation.draft_id.as_str());
@@ -8885,7 +8881,7 @@ CREATE TABLE IF NOT EXISTS conflict_stub (
         }
 
         /// @emoji ➕ Append a forward  operation step into the targeted unsaved version change and atomically rewrite the bundle.
-        pub fn append_op(&mut self, draft_id: &Id, transaction_id: &Id, kind: &str, input: &serde_json::Value) -> Result<(), SemioError> {
+        pub fn append_operation(&mut self, draft_id: &Id, transaction_id: &Id, kind: &str, input: &serde_json::Value) -> Result<(), SemioError> {
             let mut doc = self.read_bundle()?;
             let _ = draft_id;
             doc.append_unsaved_edit(transaction_id.as_str(), kind, input.clone());
@@ -8903,7 +8899,7 @@ CREATE TABLE IF NOT EXISTS conflict_stub (
 
     #[cfg(not(target_arch = "wasm32"))]
     impl LocalBackboneAttached {
-        pub fn append_op(&mut self, draft_id: &Id, transaction_id: &Id, kind: &str, input: &serde_json::Value) -> Result<(), SemioError> {
+        pub fn append_operation(&mut self, draft_id: &Id, transaction_id: &Id, kind: &str, input: &serde_json::Value) -> Result<(), SemioError> {
             let conn = Connection::open(&self.db_path).map_err(|e| SemioError::invalid(format!("sqlite append: {e}")))?;
             let input_json = serde_json::to_string(input).map_err(|e| SemioError::invalid(e.to_string()))?;
             conn.execute("INSERT INTO _op_log (draft_id, transaction_id, kind, input_json) VALUES (?1, ?2, ?3, ?4)", rusqlite::params![draft_id.as_str(), transaction_id.as_str(), kind, input_json])
@@ -8911,7 +8907,7 @@ CREATE TABLE IF NOT EXISTS conflict_stub (
             Ok(())
         }
 
-        fn load_ops(&self) -> Result<Vec<StoredOperation>, SemioError> {
+        fn load_operations(&self) -> Result<Vec<StoredOperation>, SemioError> {
             let conn = Connection::open(&self.db_path).map_err(|e| SemioError::invalid(format!("sqlite read: {e}")))?;
             let mut stmt = conn.prepare("SELECT draft_id, transaction_id, kind, input_json FROM _op_log ORDER BY seq ASC").map_err(|e| SemioError::invalid(format!("sqlite prepare: {e}")))?;
             let mut rows = stmt.query([]).map_err(|e| SemioError::invalid(format!("sqlite query: {e}")))?;
@@ -8958,16 +8954,16 @@ CREATE TABLE IF NOT EXISTS conflict_stub (
 
         pub async fn replay_into_graph(&mut self, graph: &Arc<Graph>) -> Result<(), SemioError> {
             let operations: Vec<StoredOperation> = match self {
-                AttachedBackbone::Dev(d) => d.read_bundle()?.wip__ops(),
-                AttachedBackbone::Local(l) => l.load_ops()?,
+                AttachedBackbone::Dev(d) => d.read_bundle()?.wip__operations(),
+                AttachedBackbone::Local(l) => l.load_operations()?,
             };
-            replay_stored_ops(graph, &operations).await
+            replay_stored_operations(graph, &operations).await
         }
 
-        pub fn append__op(&mut self, draft_id: &Id, transaction_id: &Id, kind: &str, input: &serde_json::Value) -> Result<(), SemioError> {
+        pub fn append__operation(&mut self, draft_id: &Id, transaction_id: &Id, kind: &str, input: &serde_json::Value) -> Result<(), SemioError> {
             match self {
-                AttachedBackbone::Dev(d) => d.append_op(draft_id, transaction_id, kind, input),
-                AttachedBackbone::Local(l) => l.append_op(draft_id, transaction_id, kind, input),
+                AttachedBackbone::Dev(d) => d.append_operation(draft_id, transaction_id, kind, input),
+                AttachedBackbone::Local(l) => l.append_operation(draft_id, transaction_id, kind, input),
             }
         }
 
@@ -8981,7 +8977,7 @@ CREATE TABLE IF NOT EXISTS conflict_stub (
     //#endregion 🧩 attached variants
 
     /// @emoji 📑 US-001 golden JSON: top-level `operations` array, or legacy key `ops` (see `kit-store.golden.ops.semio.json`).
-    pub fn golden_ops_records_ref(src: &serde_json::Value) -> Result<&Vec<serde_json::Value>, SemioError> {
+    pub fn golden_operation_records_ref(src: &serde_json::Value) -> Result<&Vec<serde_json::Value>, SemioError> {
         src.get("operations")
             .and_then(|v| v.as_array())
             .or_else(|| src.get("ops").and_then(|v| v.as_array()))
@@ -8989,10 +8985,10 @@ CREATE TABLE IF NOT EXISTS conflict_stub (
     }
 
     /// @emoji 🧪 Build [`StoredOperation`] rows from `kit-store.golden.ops.semio.json` (US-001 fixture) for persistence tests.
-    pub fn stored_ops_from_golden_ops_json(src: &serde_json::Value) -> Result<Vec<StoredOperation>, SemioError> {
+    pub fn stored_operations_from_golden_operations_json(src: &serde_json::Value) -> Result<Vec<StoredOperation>, SemioError> {
         let draft_id = src["draftId"].as_str().ok_or_else(|| SemioError::invalid("golden operations missing draftId"))?.to_string();
         let transaction_id = src["transactionId"].as_str().ok_or_else(|| SemioError::invalid("golden operations missing transactionId"))?.to_string();
-        let arr = golden_ops_records_ref(src)?;
+        let arr = golden_operation_records_ref(src)?;
         let mut out = Vec::new();
         for rec in arr {
             let kind = rec["kind"].as_str().ok_or_else(|| SemioError::invalid("operation.kind"))?;
@@ -9189,7 +9185,7 @@ pub mod worker {
                 let mut guard = self.slot.write().await;
                 if let Some(backbone) = guard.as_mut() {
                     let payload = serde_json::to_value(operation).map_err(|e| SemioError::invalid(e.to_string()))?;
-                    backbone.append__op(draft_id, transaction_id, operation.kind(), &payload)?;
+                    backbone.append__operation(draft_id, transaction_id, operation.kind(), &payload)?;
                 }
                 Ok(())
             }
@@ -9351,7 +9347,7 @@ pub mod worker {
                     let op_evt = Arc::new(RenamedKit { id: Id::new().await, request_id, owner_edit: Arc::downgrade(&tx_edit), input: OperationRenamedKitInput { name: name.clone() }, diff, kit: after_kit.clone() });
                     let iface = Arc::new(OperationIface::RenamedKit(op_evt.clone()));
                     graph.op_history.write().await.push(iface.clone());
-                    tx_edit.forward_iface_ops.write().await.push(iface);
+                    tx_edit.forward_iface_operations.write().await.push(iface);
                     self.bus.emit_event(Event::RenamedKit(op_evt)).await;
                 }
                 KitOperation::CreateFixedPiece { scope, input } => {
@@ -9373,7 +9369,7 @@ pub mod worker {
                     let op_evt = Arc::new(CreatedFixedPiece { id: Id::new().await, owner_edit: Arc::downgrade(&tx_edit), input: created_input, diff, piece });
                     let iface = Arc::new(OperationIface::CreatedFixedPiece(op_evt.clone()));
                     graph.op_history.write().await.push(iface.clone());
-                    tx_edit.forward_iface_ops.write().await.push(iface);
+                    tx_edit.forward_iface_operations.write().await.push(iface);
                     self.bus.emit_event(Event::CreatedFixedPiece(op_evt)).await;
                 }
                 _ => {}
@@ -10724,7 +10720,7 @@ pub mod wasm_bridge {
     }
 
     #[derive(Deserialize)]
-    struct WireReq {
+    struct GraphqlExecuteJson {
         query: String,
         #[serde(rename = "operationName")]
         #[allow(dead_code)]
@@ -10732,8 +10728,8 @@ pub mod wasm_bridge {
         variables: Option<serde_json::Value>,
     }
 
-    fn request_from_wire(s: &str) -> Result<Request, JsValue> {
-        let w: WireReq = serde_json::from_str(s).map_err(|e| JsValue::from_str(&format!("graphql json: {}", e)))?;
+    fn graphql_execute_request_from_str(s: &str) -> Result<Request, JsValue> {
+        let w: GraphqlExecuteJson = serde_json::from_str(s).map_err(|e| JsValue::from_str(&format!("graphql json: {}", e)))?;
         let mut r = Request::new(w.query);
         if let Some(v) = w.variables {
             let vars = Variables::from_json(v);
@@ -10801,7 +10797,7 @@ pub mod wasm_bridge {
                 let schema = schema.clone();
                 drop(locked);
 
-                let mut req = request_from_wire(&req_str)?;
+                let mut req = graphql_execute_request_from_str(&req_str)?;
                 req = req.data(rt.clone()).data(rt.bus.clone());
                 let resp = schema.execute(req).await;
                 let json = serde_json::to_string(&async_graphql::Response::from(resp)).map_err(|e| JsValue::from_str(&e.to_string()))?;
@@ -10826,7 +10822,7 @@ pub mod wasm_bridge {
                 let schema = schema.clone();
                 drop(locked);
 
-                let mut req = request_from_wire(&req_str)?;
+                let mut req = graphql_execute_request_from_str(&req_str)?;
                 req = req.data(rt.clone()).data(rt.bus.clone());
                 let mut stream = schema.execute_stream(req);
                 while let Some(resp) = stream.next().await {
@@ -11197,8 +11193,8 @@ mod tests {
     }
 
     #[test]
-    fn graph_op_registry_row_count() {
-        assert_eq!(crate::operation::GRAPH_OP_REGISTRY_ROWS, 98);
+    fn graph_operation_registry_row_count() {
+        assert_eq!(crate::operation::GRAPH_OPERATION_REGISTRY_ROWS, 98);
     }
 
     #[test]
@@ -11309,7 +11305,7 @@ mod tests {
     }
 
     #[test]
-    fn kit_store_golden_ops_replay_matches_expected_invariants() {
+    fn kit_store_golden_operations_replay_matches_expected_invariants() {
         block_on(async {
             let path_ops = Path::new(env!("CARGO_MANIFEST_DIR")).join("../assets/semio/kit-store.golden.ops.semio.json");
             let path_exp = Path::new(env!("CARGO_MANIFEST_DIR")).join("../assets/semio/kit-store.golden.expected.semio.json");
@@ -11319,7 +11315,7 @@ mod tests {
             let g = crate::vcs::Graph::new().await;
             let draft_id = crate::id::Id::from(ops_json["draftId"].as_str().expect("draftId"));
             let tx_id = crate::id::Id::from(ops_json["transactionId"].as_str().expect("transactionId"));
-            let golden_ops = crate::kit_backbone::golden_ops_records_ref(&ops_json).expect("operations|ops");
+            let golden_ops = crate::kit_backbone::golden_operation_records_ref(&ops_json).expect("operations|ops");
             for rec in golden_ops {
                 let kind = rec["kind"].as_str().expect("operation kind");
                 let input = &rec["input"];
@@ -11368,7 +11364,7 @@ mod tests {
 
     /// 🪡 `kit_graph_engine::apply__operation_json` must replay the same golden operations as manual apply.
     #[test]
-    fn kit_store_golden_ops_via__op_json_match_fingerprint() {
+    fn kit_store_golden_operations_via__operation_json_match_fingerprint() {
         block_on(async {
             let path_ops = Path::new(env!("CARGO_MANIFEST_DIR")).join("../assets/semio/kit-store.golden.ops.semio.json");
             let path_exp = Path::new(env!("CARGO_MANIFEST_DIR")).join("../assets/semio/kit-store.golden.expected.semio.json");
@@ -11378,7 +11374,7 @@ mod tests {
             let g = crate::vcs::Graph::new().await;
             let draft_id = crate::id::Id::from(ops_json["draftId"].as_str().expect("draftId"));
             let tx_id = crate::id::Id::from(ops_json["transactionId"].as_str().expect("transactionId"));
-            let golden_ops = crate::kit_backbone::golden_ops_records_ref(&ops_json).expect("operations|ops");
+            let golden_ops = crate::kit_backbone::golden_operation_records_ref(&ops_json).expect("operations|ops");
             for rec in golden_ops {
                 let kind = rec["kind"].as_str().expect("operation kind");
                 let payload = serde_json::to_string(rec.get("input").expect("input")).expect("payload json");
@@ -11395,7 +11391,7 @@ mod tests {
 
     #[cfg(not(target_arch = "wasm32"))]
     #[test]
-    fn dev_json_backbone_persisted_ops_replay_matches_us001_projection_fingerprint() {
+    fn dev_json_backbone_persisted_operations_replay_matches_us001_projection_fingerprint() {
         block_on(async {
             let dir = tempfile::tempdir().expect("temp dir");
             let path = dir.path().join("dev-kit.json");
@@ -11405,10 +11401,10 @@ mod tests {
             let golden_ops: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(path_ops).expect("read operations")).expect("parse golden operations");
             let exp: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(path_exp).expect("read expected")).expect("parse golden expected");
 
-            let stored = crate::kit_backbone::stored_ops_from_golden_ops_json(&golden_ops).expect("golden → stored operations");
+            let stored = crate::kit_backbone::stored_operations_from_golden_operations_json(&golden_ops).expect("golden → stored operations");
             let uri_full = format!("file://{}", path.display());
             let norm = crate::kit_backbone::normalize_connection_uri(&uri_full);
-            let bundle = crate::kit_backbone::DevBackboneBundleDoc::from_stored__ops(&stored);
+            let bundle = crate::kit_backbone::DevBackboneBundleDoc::from_stored__operations(&stored);
             std::fs::write(&path, serde_json::to_string_pretty(&bundle).expect("serialize kit-store bundle")).expect("write kit-store bundle");
 
             let g = crate::vcs::Graph::new().await;
@@ -11423,7 +11419,7 @@ mod tests {
 
     #[cfg(not(target_arch = "wasm32"))]
     #[test]
-    fn local_semio_sqlite_backbone_persisted_ops_replay_matches_us001_projection_fingerprint() {
+    fn local_semio_sqlite_backbone_persisted_operations_replay_matches_us001_projection_fingerprint() {
         block_on(async {
             let dir = tempfile::tempdir().expect("temp dir");
             let proj_root = dir.path().join("workspace");
@@ -11437,7 +11433,7 @@ mod tests {
             let golden_ops: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(path_ops).expect("read operations")).expect("parse golden operations");
             let exp: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(path_exp).expect("read expected")).expect("parse golden expected");
 
-            let stored = crate::kit_backbone::stored_ops_from_golden_ops_json(&golden_ops).expect("golden → stored operations");
+            let stored = crate::kit_backbone::stored_operations_from_golden_operations_json(&golden_ops).expect("golden → stored operations");
 
             let g_bootstrap = crate::vcs::Graph::new().await;
             let _bones = crate::kit_backbone::AttachedBackbone::mount_and_replay(&norm, "wip", &g_bootstrap).await.expect("bootstrap .semio layout");
@@ -11583,7 +11579,7 @@ mod tests {
             let mut bone = crate::kit_backbone::AttachedBackbone::mount_and_replay(&norm, "wip", &g).await.expect("mount empty bundle");
             let draft_id = crate::id::Id::from("draft-rs-1");
             let tx_id = crate::id::Id::from("tx-rs-1");
-            bone.append__op(&draft_id, &tx_id, "kit.design.piece.createdFixedPiece", &serde_json::json!({"designId": "d-1", "blueprintId": "b-1"})).expect("append operation");
+            bone.append__operation(&draft_id, &tx_id, "kit.design.piece.createdFixedPiece", &serde_json::json!({"designId": "d-1", "blueprintId": "b-1"})).expect("append operation");
 
             let raw = std::fs::read_to_string(&path).expect("read on-disk bundle");
             let v: serde_json::Value = serde_json::from_str(&raw).expect("parse on-disk bundle");
@@ -11631,7 +11627,7 @@ mod tests {
         assert_eq!(bundle.wip.the_kit.unsaved_changes.items[0].edits.items[0].forwards.items.len(), 2, "two forward steps");
 
         // Flatten replays everything in order from wip version changes.
-        let flat = bundle.wip__ops();
+        let flat = bundle.wip__operations();
         assert_eq!(flat.len(), 2);
         assert_eq!(flat[0].draft_id, "the-kit");
         assert_eq!(flat[0].transaction_id, "change-y");

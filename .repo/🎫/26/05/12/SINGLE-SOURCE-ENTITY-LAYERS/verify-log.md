@@ -250,3 +250,76 @@
 
 - `semio/rs/lib.rs`
 - `.repo/🎫/26/05/12/SINGLE-SOURCE-ENTITY-LAYERS/verify-log.md` (this append)
+
+---
+
+## Phase D — verification matrix (2026-05-12)
+
+### Done
+
+- **Golden ops fixture**: tests pointed at non-existent `kit-store.golden.operations.semio.json`; repo ships **`semio/assets/semio/kit-store.golden.ops.semio.json`** with key **`ops`**. Added **`kit_backbone::golden_ops_records_ref`** (accepts `operations` or `ops`); all golden readers use **`kit-store.golden.ops.semio.json`** + helper / `stored_ops_from_golden_ops_json`.
+- **`KitOperation::to_diff` JSON**: fixed **`DragPieceInDesign`** / **`FixPieceInDesign`** `serde_json::json!` closing (`})` vs `),`) and **`}}]`** → **`}]`** so `cargo check` parses.
+- **`semio/algorithms` tsc**: `openKit(JSON.stringify(__toBootstrap(kit)))`; dropped removed **`KitBootstrapJson`** in favor of **`JsonObject`**.
+- **`semio/ui` tsc** (algorithms pulls ui): local **`Attribute` / `Coordinate` / `Plane` / `SemioVector`** as **`JsonObject`** aliases; **`VectorValue`** explicit `{x,y,z}`; **`toSceneVector`** accepts **`JsonValue`** with numeric coercion.
+- **Nx `workspace:depcruise`**: **`project.json`** switched **`bunx dependency-cruiser@16`** → **`npx --yes dependency-cruiser@16`** (Bun could not resolve `dependency-cruiser@16` script on this runner).
+
+### Commands (`--target-dir c:\git\semio\target-phaseD` unless noted)
+
+| Command | Exit |
+|--------|------|
+| `cargo check -p semio --target-dir c:\git\semio\target-phaseD` | **0** |
+| `cargo check -p semio --target wasm32-unknown-unknown --target-dir c:\git\semio\target-phaseD` | **0** |
+| `cargo test -p semio --target-dir c:\git\semio\target-phaseD` | **0** (36 passed, 1 ignored) |
+| `bunx tsc --noEmit` in `semio/js` | **0** |
+| `bunx tsc --noEmit` in `semio/react` | **0** |
+| `bunx tsc --noEmit` in `semio/sketchpad` | **0** |
+| `bunx tsc --noEmit` in `semio/algorithms` | **0** |
+| `bun nx run workspace:depcruise` | **0** (after `project.json` fix; was **1** with `bunx dependency-cruiser@16` script-not-found) |
+| `npx --yes dependency-cruiser@16 semio/js semio/react semio/sketchpad --config .dependency-cruiser.cjs --output-type err` | **0** (same graph as Nx target) |
+| `bunx vitest run` in `semio/react` | **0** |
+
+### Files touched
+
+- `semio/rs/lib.rs`
+- `semio/ui/index.tsx`
+- `semio/algorithms/index.ts`
+- `project.json`
+- `.repo/🎫/26/05/12/SINGLE-SOURCE-ENTITY-LAYERS/verify-log.md` (this append)
+
+---
+
+## Wire-type audit (2026-05-12) — no `*Wire` / `*WireRow` names; piece diff without extra struct
+
+### Removed / renamed (policy: align with `target.schema.graphql` input names + existing row patterns; no ad-hoc `*Wire`)
+
+| Before | After / action |
+|--------|----------------|
+| `operation::TypeModifiedWireRow` | **`TypeModifiedRow`** (same shape as `TagModifiedRow`; `diff` remains `serde_json::Value`) |
+| `operation::DesignModifiedWireRow` | **`DesignModifiedRow`** |
+| `operation::PieceDiffWire` | **removed** — `Kit::apply_design_piece_modified_json` reads `fixPiece` / `drag` / `pose` from `serde_json::Value` and deserializes **`OffsetInput`** / **`PositionInput`** only |
+| `WireReq` (WASM GraphQL JSON envelope) | **`GraphqlExecuteJson`** |
+| `request_from_wire` | **`graphql_execute_request_from_str`** |
+| `//#region 🔖canonical_kit_types_designs_wire` | **`//#region 🔖canonical_kit_types_designs_mod`** |
+| `semio/ui` **`KitPortWire`** | **`KitPortPlain`** (still `JsonObject` extension; naming matches `KitKindPlain`) |
+| Docstrings / tests mentioning “wire” for transport | Rephrased to JSON / SDL-aligned wording in **`semio/js/index.ts`**, **`semio/react/index.tsx`**, **`semio/ui/index.tsx`** |
+
+### Commands (`--target-dir` under ticket folder)
+
+| Command | Exit |
+|--------|------|
+| `cargo test -p semio --target-dir c:/git/semio/.repo/🎫/26/05/12/SINGLE-SOURCE-ENTITY-LAYERS/target-wire-audit` | **0** (36 passed, 1 ignored) |
+| `bunx tsc --noEmit -p semio/js/tsconfig.json` | **0** |
+| `bunx tsc --noEmit -p semio/react/tsconfig.json` | **0** |
+| `bunx tsc --noEmit -p semio/sketchpad/tsconfig.json` | **0** |
+| `bunx tsc --noEmit -p semio/algorithms/tsconfig.json` | **0** |
+| `bunx tsc --noEmit -p semio/ui/tsconfig.json` | **0** |
+| `bun nx run workspace:depcruise` | **0** |
+
+### Files touched
+
+- `semio/rs/lib.rs`
+- `semio/js/index.ts`
+- `semio/react/index.tsx`
+- `semio/ui/index.tsx`
+- `semio/algorithms/index.ts`
+- `.repo/🎫/26/05/12/SINGLE-SOURCE-ENTITY-LAYERS/verify-log.md` (this append)
