@@ -1,0 +1,13 @@
+{
+  "title": "JS Store Root Class",
+  "emoji": "📜",
+  "status": "closed",
+  "description": "Make semio/js expose Store as the root owner for GraphQL transport and keep Kit beneath the Version interface shape from target.schema.graphql.",
+  "summary": "Renamed the semio/js transport-owning facade to Store, added a target-schema Kit entity under Version/TheKit, exposed TheKit.readKit, and updated semio/react to treat Store as the root hook handle while re-exporting Store.",
+  "goal": "🎯r2602",
+  "files": [
+    "semio/js/index.ts",
+    "semio/react/index.tsx",
+    ".repo/🎫/26/05/12/JS-STORE-ROOT-CLASS/ticket.json"
+  ]
+}

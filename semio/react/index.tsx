@@ -16,7 +16,6 @@ import type {
   Entity,
   FieldSpec,
   GraphRootKind,
-  Kit,
   KitReadPoint,
   Location,
   OffsetInput,
@@ -29,6 +28,7 @@ import type {
   SetError,
   SetResult,
   Side,
+  Store as Kit,
   Vector,
 } from "@semio/js";
 import {
@@ -66,6 +66,7 @@ import {
   Representation,
   Session,
   Stat,
+  Store,
   Tag,
   theKitReadPoint,
   TheKit,
@@ -98,7 +99,7 @@ export {
   Folder,
   Graph,
   Group,
-  Kit,
+  Store,
   KIT_EVENT_STREAM_SUBSCRIPTION,
   kitReadPointKey,
   Layer,

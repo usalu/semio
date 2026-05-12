@@ -1,6 +1,6 @@
 //#region 🧲Header
 // 2025-2026 Ueli Saluz <ueli@semio-tech.com>
-// GNU LGPL-3.0 or later — semio/js: stateless {@link Kit} + GraphQL transport (WASM worker or inline); no client-side kit cache.
+// GNU LGPL-3.0 or later — semio/js: stateless {@link Store} + GraphQL transport (WASM worker or inline); no client-side kit cache.
 //#endregion 🧲Header
 
 //#region 📥KitImports
@@ -249,7 +249,7 @@ export class EventBus {
   }
 }
 
-/** @emoji 📡 Live-query mirror of root {@code Query.wip} — ticks {@link Kit#bus} on each WIP emission (replaces {@code Subscription.event}). */
+/** @emoji 📡 Live-query mirror of root {@code Query.wip} — ticks {@link Store#bus} on each WIP emission (replaces {@code Subscription.event}). */
 export const KIT_EVENT_STREAM_SUBSCRIPTION = `subscription { wip { id hash } }` as const;
 
 /** @emoji 📡 Alias for correlators that previously reused the same subscription document as the kit event stream. */
@@ -414,12 +414,15 @@ async function __readSemioBytesFromMonorepoCandidates(): Promise<Uint8Array | un
 //#region 🧬Entity
 
 //#region 🛠️Base
-/** @emoji 🧬 Strong entity anchor: {@link Kit} + id (no cached fields on the instance). */
+/** @emoji 🧬 Strong entity anchor: {@link Store} + id (no cached fields on the instance). */
 export abstract class Entity {
-  protected constructor(
-    public readonly kit: Kit,
-    public readonly id: string,
-  ) { }
+  public readonly kit: Store;
+  public readonly store: Store;
+
+  protected constructor(store: Store, public readonly id: string) {
+    this.store = store;
+    this.kit = store;
+  }
 }
 //#endregion 🛠️Base
 
@@ -434,7 +437,7 @@ export class Attribute {
     public readonly definition: string,
   ) { }
 
-  get kit(): Kit {
+  get kit(): Store {
     return this.owner.kit;
   }
 }
@@ -451,7 +454,7 @@ export class Benchmark {
     public readonly maxExcluded: boolean | null,
   ) { }
 
-  get kit(): Kit {
+  get kit(): Store {
     return this.quality.kit;
   }
 }
@@ -490,7 +493,7 @@ export function defineField<E extends Entity, T>(entity: E, spec: FieldSpec<T>, 
   };
 }
 
-/** @emoji 🏭  a mutation leaf using {@link Kit#mutateScoped}. */
+/** @emoji 🏭  a mutation leaf using {@link Store#mutateScoped}. */
 export function defineOperation(entity: Entity, spec: OperationSpec, buildPath: (self: Entity) => string): () => Promise<SetResult> {
   return async () => {
     void spec;
@@ -528,8 +531,8 @@ function parseAttributeConnectionUnder(ownerEntity: Entity, owner: JsonObject | 
 //#endregion 🧬Entity
 
 
-//#region 🎒Kit
-/** @emoji 🔗 Map `Kit.open` input: inline JSON becomes `dev+json:` base64 for the WASM bootstrap URI. */
+//#region 🏪Store
+/** @emoji 🔗 Map `Store.open` input: inline JSON becomes `dev+json:` base64 for the WASM bootstrap URI. */
 function backboneBootstrapUriForKitOpen(raw: string): string {
   const t = raw.trim();
   if (t.startsWith("{") || t.startsWith("[")) {
@@ -541,7 +544,7 @@ function backboneBootstrapUriForKitOpen(raw: string): string {
   return t;
 }
 
-/** @emoji 📑 Same JSON shape as {@link FieldSpec} but declared before {@link Entity} so {@link Kit#fieldRead} stays self-contained. */
+/** @emoji 📑 Same JSON shape as {@link FieldSpec} but declared before {@link Entity} so {@link Store} field reads stay self-contained. */
 export type KitFieldReadSpec<T> = Readonly<{
   eventKind?: string;
   selection: string;
@@ -591,9 +594,9 @@ function __readIdListStable<T>(
 }
 
 /**
- * @emoji 🎒 Stateless kit façade: owns {@link GqlTransport} + {@link EventBus}; every read is a fresh GraphQL round-trip.
+ * @emoji 🏪 Stateless store root: owns {@link GqlTransport} + {@link EventBus}; every read is a fresh GraphQL round-trip.
  */
-export class Kit {
+export class Store {
   private readonly timeoutMs: number;
   private readonly handle: KitGraphqlHandle;
   private readonly innerTransport: WorkerStringTransport | InlineTransport;
@@ -613,6 +616,7 @@ export class Kit {
   private readonly __statCache = new Map<string, Stat>();
   private readonly __conflictCache = new Map<string, Conflict>();
   private readonly __graphByRoot = new Map<"wip" | "authoritative", Graph>();
+  private __rootKit: Kit | undefined;
   private __session: Session | undefined;
   private __stableDesigns: { ids: readonly string[]; arr: readonly Design[] } = { ids: [], arr: [] };
   private __stableTypes: { ids: readonly string[]; arr: readonly Type[] } = { ids: [], arr: [] };
@@ -635,7 +639,7 @@ export class Kit {
   }
 
   private ensureAlive(): void {
-    if (this.disposed) throw new Error("Kit disposed");
+    if (this.disposed) throw new Error("Store disposed");
   }
 
   getReadPoint(): KitReadPoint {
@@ -825,7 +829,7 @@ export class Kit {
     await this.readKitInner("id name");
   }
 
-  static async open(uri: string, opts?: KitOpenOptions): Promise<Kit> {
+  static async open(uri: string, opts?: KitOpenOptions): Promise<Store> {
     const timeoutMs = opts?.timeoutMs ?? 60_000;
     const wasmSpecifier = opts?.wasmSpecifier ?? (globalThis as { __SEMIO_WASM_SPECIFIER__?: string }).__SEMIO_WASM_SPECIFIER__ ?? "@semio/rs-wasm";
     const preferInlineInVitest = (() => {
@@ -848,7 +852,7 @@ export class Kit {
       const wt = new WorkerStringTransport(worker);
       try {
         await wt.init(bootstrapUri);
-        const k = new Kit(timeoutMs, wt);
+        const k = new Store(timeoutMs, wt);
         await withTimeout(k.warmGraphqlRead(), timeoutMs, "graphql");
         void k.startSubscriptionLoop();
         return k;
@@ -880,7 +884,7 @@ export class Kit {
       throw new Error("KitStoreHandle.create did not return execute()");
     }
     const t = new InlineTransport(wasmHandle as { execute: ExecuteFn; subscribe: SubscribeFn; free?: () => void });
-    const k = new Kit(timeoutMs, t);
+    const k = new Store(timeoutMs, t);
     await withTimeout(k.warmGraphqlRead(), timeoutMs, "graphql");
     void k.startSubscriptionLoop();
     return k;
@@ -1019,6 +1023,11 @@ export class Kit {
       this.__conflictCache.set(id, c);
     }
     return c;
+  }
+
+  /** @emoji 📦 Materialized {@link Kit} beneath {@link TheKit} / {@link Version}. */
+  rootKit(id = "kit"): Kit {
+    return (this.__rootKit ??= new Kit(this, id));
   }
 
   async rename(newName: string): Promise<SetResult> {
@@ -1226,10 +1235,82 @@ export class Kit {
     return __readIdListStable(this.__stableConcepts, ids, (id) => this.concept(id));
   }
 }
-//#endregion 🎒Kit
+//#endregion 🏪Store
+
+//#region 📦Kit
+/** @emoji 📦 Target-schema kit entity beneath {@link Version}; delegates transport work to {@link Store}. */
+export class Kit extends Entity {
+  constructor(store: Store, id: string) {
+    super(store, id);
+  }
+
+  async rename(newName: string): Promise<SetResult> {
+    return this.store.rename(newName);
+  }
+
+  async changeDescription(newDescription: string): Promise<SetResult> {
+    return this.store.changeDescription(newDescription);
+  }
+
+  async createTag(name: string, description?: string | null, icon?: string | null, order?: number | null): Promise<SetResult> {
+    return this.store.createTag(name, description, icon, order);
+  }
+
+  async createConcept(name: string, description?: string | null, icon?: string | null, order?: number | null): Promise<SetResult> {
+    return this.store.createConcept(name, description, icon, order);
+  }
+
+  async createQuality(
+    key: string,
+    value?: string | null,
+    unit?: string | null,
+    definition?: string | null,
+    description?: string | null,
+    icon?: string | null,
+  ): Promise<SetResult> {
+    return this.store.createQuality(key, value, unit, definition, description, icon);
+  }
+
+  async createType(name: string, description?: string | null, icon?: string | null, image?: string | null, unit?: string | null): Promise<SetResult> {
+    return this.store.createType(name, description, icon, image, unit);
+  }
+
+  async createDesign(name: string, description?: string | null, icon?: string | null, image?: string | null, unit?: string | null): Promise<SetResult> {
+    return this.store.createDesign(name, description, icon, image, unit);
+  }
+
+  async readName(): Promise<string> {
+    return this.store.readName();
+  }
+
+  async readDescription(): Promise<string> {
+    return this.store.readDescription();
+  }
+
+  async readId(): Promise<string> {
+    return this.store.readId();
+  }
+
+  async readIcon(): Promise<string> {
+    return this.store.readIcon();
+  }
+
+  async readImage(): Promise<string> {
+    return this.store.readImage();
+  }
+
+  async readDesigns(): Promise<readonly Design[]> {
+    return this.store.readDesigns();
+  }
+
+  async readTypes(): Promise<readonly Type[]> {
+    return this.store.readTypes();
+  }
+}
+//#endregion 📦Kit
 
 function __kitGraphqlEnvelope(
-  kit: Kit,
+  kit: Store,
   body: Readonly<{ query: string; variables?: JsonObject; operationName?: string }>,
 ): Promise<KitGraphqlResponseEnvelope<JsonValue>> {
   return (kit as unknown as { gqlRun(b: typeof body): Promise<KitGraphqlResponseEnvelope<JsonValue>> }).gqlRun(body);
@@ -1239,7 +1320,7 @@ function __kitGraphqlEnvelope(
 /** @emoji 🌐 WIP or authoritative {@code Graph} root from {@code Query}. */
 export type GraphRootKind = "wip" | "authoritative";
 
-/** @emoji 🌐 VCS graph: {@code wip} / {@code authoritative} selections on {@link Kit}. */
+/** @emoji 🌐 VCS graph: {@code wip} / {@code authoritative} selections on {@link Store}. */
 export class Graph extends Entity {
   private readonly __checkpointCache = new Map<string, Checkpoint>();
   private readonly __alternativeCache = new Map<string, Alternative>();
@@ -1247,7 +1328,7 @@ export class Graph extends Entity {
   private __stableAlternatives: { ids: readonly string[]; arr: readonly Alternative[] } = { ids: [], arr: [] };
   private __stableCheckpoints: { ids: readonly string[]; arr: readonly Checkpoint[] } = { ids: [], arr: [] };
 
-  constructor(kit: Kit, root: GraphRootKind) {
+  constructor(kit: Store, root: GraphRootKind) {
     super(kit, root);
   }
 
@@ -1356,7 +1437,7 @@ export class Session extends Entity {
   private readonly __alternativeCache = new Map<string, Alternative>();
   private __stableAlternatives: { ids: readonly string[]; arr: readonly Alternative[] } = { ids: [], arr: [] };
 
-  constructor(kit: Kit) {
+  constructor(kit: Store) {
     super(kit, "session");
   }
 
@@ -1417,7 +1498,7 @@ export type AlternativeParent = { readonly parent: "graph"; readonly root: Graph
 /** @emoji 🔀 {@code Alternative} under {@link Graph} or {@link Session}. */
 export class Alternative extends Entity {
   constructor(
-    kit: Kit,
+    kit: Store,
     private readonly ap: AlternativeParent,
     id: string,
   ) {
@@ -1439,7 +1520,7 @@ export class Alternative extends Entity {
 
 /** @emoji 🏛 {@code TheKit} under {@code wip}/{@code authoritative}. */
 export class TheKit extends Entity {
-  constructor(kit: Kit, private readonly graphRoot: GraphRootKind) {
+  constructor(kit: Store, private readonly graphRoot: GraphRootKind) {
     super(kit, `theKit:${graphRoot}`);
   }
 
@@ -1450,6 +1531,11 @@ export class TheKit extends Entity {
     const tk = rootNode?.["theKit"] as JsonObject | undefined;
     return String(tk?.["id"] ?? "");
   }
+
+  /** @emoji 📦 Target {@code Version.kit} handle; field reads stay scoped by the owning {@link Store}. */
+  async readKit(): Promise<Kit> {
+    return this.store.rootKit(await this.readId());
+  }
 }
 
 /** @emoji 🏁 {@code Checkpoint} under {@link Graph}. */
@@ -1459,7 +1545,7 @@ export class Checkpoint extends Entity {
   private __stableChanges: { ids: readonly string[]; arr: readonly Change[] } = { ids: [], arr: [] };
   private __stableEdits: { ids: readonly string[]; arr: readonly Edit[] } = { ids: [], arr: [] };
 
-  constructor(kit: Kit, private readonly graphRoot: GraphRootKind, checkpointId: string) {
+  constructor(kit: Store, private readonly graphRoot: GraphRootKind, checkpointId: string) {
     super(kit, checkpointId);
   }
 
@@ -1563,7 +1649,7 @@ export class Checkpoint extends Entity {
 
 /** @emoji 🔀 {@code Change} scoped to a {@link Checkpoint} (navigation shell; expand with field reads). */
 export class Change extends Entity {
-  constructor(kit: Kit, private readonly graphRoot: GraphRootKind, private readonly checkpointId: string, changeId: string) {
+  constructor(kit: Store, private readonly graphRoot: GraphRootKind, private readonly checkpointId: string, changeId: string) {
     super(kit, changeId);
   }
 
@@ -1608,7 +1694,7 @@ export class Change extends Entity {
 
 /** @emoji ✏️ {@code Edit} scoped to a {@link Checkpoint} (navigation shell; expand with field reads). */
 export class Edit extends Entity {
-  constructor(kit: Kit, private readonly graphRoot: GraphRootKind, private readonly checkpointId: string, editId: string) {
+  constructor(kit: Store, private readonly graphRoot: GraphRootKind, private readonly checkpointId: string, editId: string) {
     super(kit, editId);
   }
 
@@ -1646,7 +1732,7 @@ export class Edit extends Entity {
 
 /** @emoji ⚔️ {@code Conflict} via {@code node(id:)}. */
 export class Conflict extends Entity {
-  constructor(kit: Kit, id: string) {
+  constructor(kit: Store, id: string) {
     super(kit, id);
   }
 
@@ -1766,7 +1852,7 @@ export class Design extends Entity {
   private __stablePieces: { ids: readonly string[]; arr: readonly Piece[] } = { ids: [], arr: [] };
   private __stableConnections: { ids: readonly string[]; arr: readonly Connection[] } = { ids: [], arr: [] };
 
-  constructor(kit: Kit, id: string) {
+  constructor(kit: Store, id: string) {
     super(kit, id);
   }
 
@@ -2051,7 +2137,7 @@ export class Type extends Entity {
   private readonly __connectorCache = new Map<string, Connector>();
   private readonly __representationCache = new Map<string, Representation>();
 
-  constructor(kit: Kit, id: string) {
+  constructor(kit: Store, id: string) {
     super(kit, id);
   }
 
@@ -2228,7 +2314,7 @@ export class Type extends Entity {
 //#region 🔘Port
 export class Port extends Entity {
   readonly typeId: string;
-  constructor(kit: Kit, typeId: string, id: string) {
+  constructor(kit: Store, typeId: string, id: string) {
     super(kit, id);
     this.typeId = typeId;
   }
@@ -2322,7 +2408,7 @@ export class Port extends Entity {
 //#region 🔗Connector
 export class Connector extends Entity {
   readonly typeId: string;
-  constructor(kit: Kit, typeId: string, id: string) {
+  constructor(kit: Store, typeId: string, id: string) {
     super(kit, id);
     this.typeId = typeId;
   }
@@ -2641,7 +2727,7 @@ function __parseIdListConnection(obj: JsonObject | null | undefined, field: stri
 export class Piece extends Entity {
   readonly designId: string;
   private readonly __positionByRole = new Map<"position" | "flatPosition", Position>();
-  constructor(kit: Kit, designId: string, id: string) {
+  constructor(kit: Store, designId: string, id: string) {
     super(kit, id);
     this.designId = designId;
   }
@@ -2823,7 +2909,7 @@ export class Piece extends Entity {
 //#region 🪢PiecesOperations
 export class PiecesOperations {
   constructor(
-    private readonly kit: Kit,
+    private readonly kit: Store,
     private readonly designId: string,
     private readonly pieceIds: readonly string[],
   ) { }
@@ -2858,7 +2944,7 @@ export class PiecesOperations {
 /** @emoji ⛓️ Schema-aligned {@link Connection} endpoint (piece + optional port / connector / designPiece ids). */
 export class ConnectionSide {
   constructor(
-    public readonly kit: Kit,
+    public readonly kit: Store,
     public readonly designId: string,
     public readonly connectionId: string,
     public readonly role: "connected" | "connecting",
@@ -2886,7 +2972,7 @@ function __connectionKit(frag: JsonObject | null | undefined): JsonObject | null
 }
 
 function __parseConnectionSideFromJson(
-  kit: Kit,
+  kit: Store,
   designId: string,
   connectionId: string,
   role: "connected" | "connecting",
@@ -2910,7 +2996,7 @@ function __parseConnectionSideFromJson(
 
 export class Connection extends Entity {
   readonly designId: string;
-  constructor(kit: Kit, designId: string, id: string) {
+  constructor(kit: Store, designId: string, id: string) {
     super(kit, id);
     this.designId = designId;
   }
@@ -3002,7 +3088,7 @@ export class Connection extends Entity {
 //#region ✍️Author
 /** @emoji ✍️ Author artifact: kit-scoped reads only (no {@code *OperationInput} on Author in schema). */
 export class Author extends Entity {
-  constructor(kit: Kit, id: string) {
+  constructor(kit: Store, id: string) {
     super(kit, id);
   }
 
@@ -3048,7 +3134,7 @@ export class Author extends Entity {
 //#region 💎Quality
 /** @emoji 💎 Quality artifact: {@code QualityOperationInput} leaves + scalar reads via {@code quality(id:)}. */
 export class Quality extends Entity {
-  constructor(kit: Kit, id: string) {
+  constructor(kit: Store, id: string) {
     super(kit, id);
   }
 
@@ -3158,7 +3244,7 @@ export class Quality extends Entity {
 //#region 🏷️Tag
 /** @emoji 🏷️ Tag artifact: {@code TagOperationInput} leaves + kit-scoped reads. */
 export class Tag extends Entity {
-  constructor(kit: Kit, id: string) {
+  constructor(kit: Store, id: string) {
     super(kit, id);
   }
 
@@ -3231,7 +3317,7 @@ export class Tag extends Entity {
 //#region 💡Concept
 /** @emoji 💡 Concept artifact: {@code ConceptOperationInput} leaves + kit-scoped reads. */
 export class Concept extends Entity {
-  constructor(kit: Kit, id: string) {
+  constructor(kit: Store, id: string) {
     super(kit, id);
   }
 
@@ -3305,7 +3391,7 @@ export class Concept extends Entity {
 /** @emoji 🎨 Representation under {@link Type}: read-only until schema adds {@code RepresentationOperationInput}. */
 export class Representation extends Entity {
   readonly typeId: string;
-  constructor(kit: Kit, typeId: string, id: string) {
+  constructor(kit: Store, typeId: string, id: string) {
     super(kit, id);
     this.typeId = typeId;
   }
@@ -3389,7 +3475,7 @@ export class Representation extends Entity {
 //#region 👨‍👩‍👦Family
 /** @emoji 👨‍👩‍👦 Family artifact: read-only in current kit API. */
 export class Family extends Entity {
-  constructor(kit: Kit, id: string) {
+  constructor(kit: Store, id: string) {
     super(kit, id);
   }
 
@@ -3417,7 +3503,7 @@ export class Family extends Entity {
 
 //#region 📄File
 export class File extends Entity {
-  constructor(kit: Kit, id: string) {
+  constructor(kit: Store, id: string) {
     super(kit, id);
   }
 
@@ -3433,7 +3519,7 @@ export class File extends Entity {
 //#region 📁Folder
 /** @emoji 📁 Folder artifact: read-only in current kit API. */
 export class Folder extends Entity {
-  constructor(kit: Kit, id: string) {
+  constructor(kit: Store, id: string) {
     super(kit, id);
   }
 
@@ -3463,7 +3549,7 @@ export class Folder extends Entity {
 /** @emoji 🪟 Design layer row: read-only in current kit API. */
 export class Layer extends Entity {
   readonly designId: string;
-  constructor(kit: Kit, designId: string, id: string) {
+  constructor(kit: Store, designId: string, id: string) {
     super(kit, id);
     this.designId = designId;
   }
@@ -3525,7 +3611,7 @@ export class Layer extends Entity {
 //#region 👥Group
 export class Group extends Entity {
   readonly designId: string;
-  constructor(kit: Kit, designId: string, id: string) {
+  constructor(kit: Store, designId: string, id: string) {
     super(kit, id);
     this.designId = designId;
   }
@@ -3545,7 +3631,7 @@ export class Group extends Entity {
 //#region 📊Stat
 /** @emoji 📊 Stat artifact: read-only in current kit API. */
 export class Stat extends Entity {
-  constructor(kit: Kit, id: string) {
+  constructor(kit: Store, id: string) {
     super(kit, id);
   }
 
@@ -3586,7 +3672,7 @@ export class Stat extends Entity {
 //#region 🎚️Prop
 /** @emoji 🎚️ Prop artifact: read-only in current kit API. */
 export class Prop extends Entity {
-  constructor(kit: Kit, id: string) {
+  constructor(kit: Store, id: string) {
     super(kit, id);
   }
 
@@ -3628,9 +3714,9 @@ export class Prop extends Entity {
 //#endregion 🧱Classes
 
 //#region 🚀PublicAPI
-/** @emoji 🚀 Opens a {@link Kit} backed by rs WASM (worker or inline). */
-export async function openKit(uri: string, opts?: KitOpenOptions): Promise<Kit> {
-  return Kit.open(uri, opts);
+/** @emoji 🚀 Opens a {@link Store} backed by rs WASM (worker or inline). */
+export async function openKit(uri: string, opts?: KitOpenOptions): Promise<Store> {
+  return Store.open(uri, opts);
 }
 //#endregion 🚀PublicAPI
 
@@ -3643,10 +3729,10 @@ if (
 ) {
   const { describe, it, expect } = await import("vitest");
 
-  describe("semio-js Kit facade (strict)", () => {
-    it("Kit.prototype has no legacy snapshot() hook", () => {
+  describe("semio-js Store root (strict)", () => {
+    it("Store.prototype has no legacy snapshot() hook", () => {
       type Snap = { snapshot?: () => unknown };
-      const snap: Snap = Kit.prototype as unknown as Snap;
+      const snap: Snap = Store.prototype as unknown as Snap;
       expect(snap.snapshot).toBeUndefined();
     });
 
@@ -3655,11 +3741,13 @@ if (
     });
 
     it("VCS + change-algebra shells JSON without KitRuntime", () => {
-      const k = Object.create(Kit.prototype) as Kit;
+      const k = Object.create(Store.prototype) as Store;
       const g = new Graph(k, "wip");
       expect(g.root).toBe("wip");
       expect(new Session(k).id).toBe("session");
       expect(new TheKit(k, "wip").id).toContain("theKit");
+      expect(new Kit(k, "kit1").store).toBe(k);
+      expect(typeof new TheKit(k, "wip").readKit).toBe("function");
       const cp = new Checkpoint(k, "wip", "cp1");
       expect(cp.change("c1").id).toBe("c1");
       expect(cp.edit("e1").id).toBe("e1");
@@ -3669,7 +3757,7 @@ if (
     });
 
     it("Design / Graph / Session / Checkpoint expose id-list-stable read* + subscribe* for owned lists", () => {
-      const k = Object.create(Kit.prototype) as Kit;
+      const k = Object.create(Store.prototype) as Store;
       const d = new Design(k, "d1");
       expect(typeof d.readPieces).toBe("function");
       expect(typeof d.subscribePieces).toBe("function");
@@ -3795,7 +3883,7 @@ if (typeof process !== "undefined" && !!process.env && process.env["SEMIO_JS_RUN
 
     it("Piece.drag issues one mutateScoped path (stub kit)", async () => {
       const calls: string[] = [];
-      const k = Object.create(Kit.prototype) as Kit;
+      const k = Object.create(Store.prototype) as Store;
       (k as unknown as { ensureAlive(): void }).ensureAlive = () => { };
       (k as unknown as { mutateScoped: (c: string, s: string) => Promise<SetResult> }).mutateScoped = async (_c, s) => {
         calls.push(s);
@@ -3818,3 +3906,4 @@ if (typeof process !== "undefined" && !!process.env && process.env["SEMIO_JS_RUN
   });
 }
 //#endregion 🧪Tests
+

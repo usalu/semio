@@ -1,19 +1,4 @@
 //! 🦀 semio rust control plane — in-memory Arc-reference architecture (code-first GraphQL).
-//!
-//! Every entity is one hand-written Rust struct shared as
-//! `Arc<Self>` with interior `async_lock::RwLock` per mutable field. GraphQL resolvers take
-//! `&self` on the entity (deref'd through the Arc) and return `Arc<Child>` for relationships,
-//! so a query like `wip.theKit.design(id).piece(id).position` only acquires the locks it actually
-//! needs and never deep-copies an aggregate Vec. There is exactly **one** `emit_event` in
-//! the entire crate ([`event::EventBus::emit_event`]); every mutation routes through it.
-//!
-//! Worker topology: a parent router hosts the GraphQL schema and dispatches commands to two
-//! child workers (`wip` + `authoritative`), each owning its own [`vcs::Graph`] as a shared
-//! `Arc`. On native targets both children run as in-process async actors; on `wasm32` they
-//! live in dedicated web workers wired through [`wasm_bridge`].
-//!
-//! Kit graph engine ([`kit_graph_engine`]): pointer-backed design/piece slot tables, deterministic
-//!  diffs, and `projectionFingerprint` aligned with kit-store golden fixtures.
 
 #![allow(clippy::new_without_default)]
 #![allow(clippy::too_many_arguments)]
@@ -102,7 +87,7 @@ register_entities! {
     ],
     design: [
         crate::kit::design::Design,
-        crate::kit::design::Piece,
+        crate::kit::design::piece::Piece,
         crate::kit::design::connection::Side,
         crate::kit::design::connection::Connection,
         crate::kit::design::Clump,
@@ -132,13 +117,14 @@ register_operations! {
     connector:  [AddedConnector, AddedConnectors, RenamedConnector, UpdatedConnectorDescription, UpdatedConnectorIcon, RemovedConnector, RemovedConnectors],
 }
 
+/// @emoji 🪢 `entity_relay_sync!` — relay Edge/Connection for `SimpleObject` rows with sync child digests (`compute_entity_hash`, …).
 #[macro_export]
-macro_rules! simple_conn_sync {
-    ($Conn:ident, $Edge:ident, $node:ty, $hash_fn:expr) => {
+macro_rules! entity_relay_sync {
+    ($Conn:ident, $Edge:ident, $Node:ty, $hash_fn:expr) => {
         #[derive(Clone, async_graphql::SimpleObject)]
         pub struct $Edge {
             pub cursor: String,
-            pub node: $node,
+            pub node: $Node,
         }
 
         #[derive(Clone, async_graphql::SimpleObject)]
@@ -150,41 +136,10 @@ macro_rules! simple_conn_sync {
         }
 
         impl $Conn {
-            pub fn from_rows(rows: Vec<$node>) -> Self {
+            pub fn from_rows(rows: Vec<$Node>) -> Self {
                 let mut child_hashes = Vec::with_capacity(rows.len());
                 for r in &rows {
                     child_hashes.push($hash_fn(r));
-                }
-                let hash = $crate::hash::merkle_collection(child_hashes);
-                let edges = rows.into_iter().enumerate().map(|(i, node)| $Edge { cursor: $crate::gql_relay::edge_cursor(i), node }).collect();
-                Self { edges, page_info: std::sync::Arc::new($crate::gql_relay::PageInfo::default()), hash }
-            }
-        }
-    };
-}
-
-#[macro_export]
-macro_rules! simple_conn_entity {
-    ($Conn:ident, $Edge:ident, $node:ty) => {
-        #[derive(Clone, async_graphql::SimpleObject)]
-        pub struct $Edge {
-            pub cursor: String,
-            pub node: $node,
-        }
-
-        #[derive(Clone, async_graphql::SimpleObject)]
-        pub struct $Conn {
-            pub edges: Vec<$Edge>,
-            #[graphql(name = "pageInfo")]
-            pub page_info: std::sync::Arc<$crate::gql_relay::PageInfo>,
-            pub hash: String,
-        }
-
-        impl $Conn {
-            pub async fn from_rows(rows: Vec<$node>) -> Self {
-                let mut child_hashes = Vec::with_capacity(rows.len());
-                for r in &rows {
-                    child_hashes.push(r.compute_hash().await);
                 }
                 let hash = $crate::hash::merkle_collection(child_hashes);
                 let edges = rows.into_iter().enumerate().map(|(i, node)| $Edge { cursor: $crate::gql_relay::edge_cursor(i), node }).collect();
@@ -198,21 +153,43 @@ macro_rules! simple_conn_entity {
 #[macro_export]
 macro_rules! entity_full_family {
     (
-        $base:ident,
+        $_base:ident,
         $node:ty,
         relay = ($conn:ident, $edge:ident)
     ) => {
-        paste::paste! {
-            simple_conn_entity!($conn, $edge, $node);
-        }
+        $crate::entity_relay!($conn, $edge, $node);
     };
 }
 
-/// @emoji 🪢 `entity_relay!` — forwards to [`simple_conn_entity!`] for non-geometry relay shells.
+/// @emoji 🪢 `entity_relay!` — relay Edge/Connection for `Arc` graph nodes with async `compute_hash` digests.
 #[macro_export]
 macro_rules! entity_relay {
     ($Conn:ident, $Edge:ident, $Node:ty) => {
-        simple_conn_entity!($Conn, $Edge, $Node);
+        #[derive(Clone, async_graphql::SimpleObject)]
+        pub struct $Edge {
+            pub cursor: String,
+            pub node: $Node,
+        }
+
+        #[derive(Clone, async_graphql::SimpleObject)]
+        pub struct $Conn {
+            pub edges: Vec<$Edge>,
+            #[graphql(name = "pageInfo")]
+            pub page_info: std::sync::Arc<$crate::gql_relay::PageInfo>,
+            pub hash: String,
+        }
+
+        impl $Conn {
+            pub async fn from_rows(rows: Vec<$Node>) -> Self {
+                let mut child_hashes = Vec::with_capacity(rows.len());
+                for r in &rows {
+                    child_hashes.push(r.compute_hash().await);
+                }
+                let hash = $crate::hash::merkle_collection(child_hashes);
+                let edges = rows.into_iter().enumerate().map(|(i, node)| $Edge { cursor: $crate::gql_relay::edge_cursor(i), node }).collect();
+                Self { edges, page_info: std::sync::Arc::new($crate::gql_relay::PageInfo::default()), hash }
+            }
+        }
     };
 }
 
@@ -996,159 +973,45 @@ pub mod gql_relay {
         pub end_cursor: Option<String>,
     }
 
-    #[derive(Clone, SimpleObject)]
-    pub struct DesignEdge {
-        pub cursor: String,
-        pub node: Arc<Design>,
-    }
-
-    #[derive(Clone, SimpleObject)]
-    pub struct DesignConnection {
-        pub edges: Vec<DesignEdge>,
-        #[graphql(name = "pageInfo")]
-        pub page_info: std::sync::Arc<PageInfo>,
-        pub hash: String,
-    }
-
+    crate::entity_relay!(DesignConnection, DesignEdge, Arc<Design>);
     impl DesignConnection {
         pub async fn from_designs(rows: Vec<Arc<Design>>) -> Self {
-            let mut child_hashes = Vec::with_capacity(rows.len());
-            for d in &rows {
-                child_hashes.push(d.compute_hash().await);
-            }
-            let hash = merkle_collection(child_hashes);
-            let edges = rows.into_iter().enumerate().map(|(i, d)| DesignEdge { cursor: edge_cursor(i), node: d }).collect();
-            Self { edges, page_info: std::sync::Arc::new(PageInfo::default()), hash }
+            Self::from_rows(rows).await
         }
     }
 
-    #[derive(Clone, SimpleObject)]
-    pub struct PieceEdge {
-        pub cursor: String,
-        pub node: Arc<Piece>,
-    }
-
-    #[derive(Clone, SimpleObject)]
-    pub struct PieceConnection {
-        pub edges: Vec<PieceEdge>,
-        #[graphql(name = "pageInfo")]
-        pub page_info: std::sync::Arc<PageInfo>,
-        pub hash: String,
-    }
-
+    crate::entity_relay!(PieceConnection, PieceEdge, Arc<Piece>);
     impl PieceConnection {
         pub async fn from_pieces(rows: Vec<Arc<Piece>>) -> Self {
-            let mut child_hashes = Vec::with_capacity(rows.len());
-            for p in &rows {
-                child_hashes.push(p.compute_hash().await);
-            }
-            let hash = merkle_collection(child_hashes);
-            let edges = rows.into_iter().enumerate().map(|(i, p)| PieceEdge { cursor: edge_cursor(i), node: p }).collect();
-            Self { edges, page_info: std::sync::Arc::new(PageInfo::default()), hash }
+            Self::from_rows(rows).await
         }
     }
 
-    #[derive(Clone, SimpleObject)]
-    pub struct TypeEdge {
-        pub cursor: String,
-        pub node: Arc<Type>,
-    }
-
-    #[derive(Clone, SimpleObject)]
-    pub struct TypeConnection {
-        pub edges: Vec<TypeEdge>,
-        #[graphql(name = "pageInfo")]
-        pub page_info: std::sync::Arc<PageInfo>,
-        pub hash: String,
-    }
-
+    crate::entity_relay!(TypeConnection, TypeEdge, Arc<Type>);
     impl TypeConnection {
         pub async fn from_types(rows: Vec<Arc<Type>>) -> Self {
-            let mut child_hashes = Vec::with_capacity(rows.len());
-            for t in &rows {
-                child_hashes.push(t.compute_hash().await);
-            }
-            let hash = merkle_collection(child_hashes);
-            let edges = rows.into_iter().enumerate().map(|(i, t)| TypeEdge { cursor: edge_cursor(i), node: t }).collect();
-            Self { edges, page_info: std::sync::Arc::new(PageInfo::default()), hash }
+            Self::from_rows(rows).await
         }
     }
 
-    #[derive(Clone, SimpleObject)]
-    pub struct ConnectorEdge {
-        pub cursor: String,
-        pub node: Arc<Connector>,
-    }
-
-    #[derive(Clone, SimpleObject)]
-    pub struct ConnectorConnection {
-        pub edges: Vec<ConnectorEdge>,
-        #[graphql(name = "pageInfo")]
-        pub page_info: std::sync::Arc<PageInfo>,
-        pub hash: String,
-    }
-
+    crate::entity_relay!(ConnectorConnection, ConnectorEdge, Arc<Connector>);
     impl ConnectorConnection {
         pub async fn from_connectors(rows: Vec<Arc<Connector>>) -> Self {
-            let mut child_hashes = Vec::with_capacity(rows.len());
-            for c in &rows {
-                child_hashes.push(c.compute_hash().await);
-            }
-            let hash = merkle_collection(child_hashes);
-            let edges = rows.into_iter().enumerate().map(|(i, c)| ConnectorEdge { cursor: edge_cursor(i), node: c }).collect();
-            Self { edges, page_info: std::sync::Arc::new(PageInfo::default()), hash }
+            Self::from_rows(rows).await
         }
     }
 
-    #[derive(Clone, SimpleObject)]
-    pub struct RepresentationEdge {
-        pub cursor: String,
-        pub node: Arc<Representation>,
-    }
-
-    #[derive(Clone, SimpleObject)]
-    pub struct RepresentationConnection {
-        pub edges: Vec<RepresentationEdge>,
-        #[graphql(name = "pageInfo")]
-        pub page_info: std::sync::Arc<PageInfo>,
-        pub hash: String,
-    }
-
+    crate::entity_relay!(RepresentationConnection, RepresentationEdge, Arc<Representation>);
     impl RepresentationConnection {
         pub async fn from_representations(rows: Vec<Arc<Representation>>) -> Self {
-            let mut child_hashes = Vec::with_capacity(rows.len());
-            for r in &rows {
-                child_hashes.push(r.compute_hash().await);
-            }
-            let hash = merkle_collection(child_hashes);
-            let edges = rows.into_iter().enumerate().map(|(i, r)| RepresentationEdge { cursor: edge_cursor(i), node: r }).collect();
-            Self { edges, page_info: std::sync::Arc::new(PageInfo::default()), hash }
+            Self::from_rows(rows).await
         }
     }
 
-    #[derive(Clone, SimpleObject)]
-    pub struct SideEdge {
-        pub cursor: String,
-        pub node: Arc<Side>,
-    }
-
-    #[derive(Clone, SimpleObject)]
-    pub struct SideConnection {
-        pub edges: Vec<SideEdge>,
-        #[graphql(name = "pageInfo")]
-        pub page_info: std::sync::Arc<PageInfo>,
-        pub hash: String,
-    }
-
+    crate::entity_relay!(SideConnection, SideEdge, Arc<Side>);
     impl SideConnection {
         pub async fn from_sides(rows: Vec<Arc<Side>>) -> Self {
-            let mut child_hashes = Vec::with_capacity(rows.len());
-            for s in &rows {
-                child_hashes.push(s.compute_hash().await);
-            }
-            let hash = merkle_collection(child_hashes);
-            let edges = rows.into_iter().enumerate().map(|(i, s)| SideEdge { cursor: edge_cursor(i), node: s }).collect();
-            Self { edges, page_info: std::sync::Arc::new(PageInfo::default()), hash }
+            Self::from_rows(rows).await
         }
     }
 
@@ -1182,81 +1045,24 @@ pub mod gql_relay {
         }
     }
 
-    #[derive(Clone, SimpleObject)]
-    pub struct ConflictEdge {
-        pub cursor: String,
-        pub node: Arc<Conflict>,
-    }
-
-    #[derive(Clone, SimpleObject)]
-    pub struct ConflictConnection {
-        pub edges: Vec<ConflictEdge>,
-        #[graphql(name = "pageInfo")]
-        pub page_info: std::sync::Arc<PageInfo>,
-        pub hash: String,
-    }
-
+    crate::entity_relay!(ConflictConnection, ConflictEdge, Arc<Conflict>);
     impl ConflictConnection {
         pub async fn from_conflicts(rows: Vec<Arc<Conflict>>) -> Self {
-            let mut child_hashes = Vec::with_capacity(rows.len());
-            for c in &rows {
-                child_hashes.push(c.compute_hash().await);
-            }
-            let hash = merkle_collection(child_hashes);
-            let edges = rows.into_iter().enumerate().map(|(i, c)| ConflictEdge { cursor: edge_cursor(i), node: c }).collect();
-            Self { edges, page_info: std::sync::Arc::new(PageInfo::default()), hash }
+            Self::from_rows(rows).await
         }
     }
 
-    #[derive(Clone, SimpleObject)]
-    pub struct AlternativeEdge {
-        pub cursor: String,
-        pub node: Arc<Alternative>,
-    }
-
-    #[derive(Clone, SimpleObject)]
-    pub struct AlternativeConnection {
-        pub edges: Vec<AlternativeEdge>,
-        #[graphql(name = "pageInfo")]
-        pub page_info: std::sync::Arc<PageInfo>,
-        pub hash: String,
-    }
-
+    crate::entity_relay!(AlternativeConnection, AlternativeEdge, Arc<Alternative>);
     impl AlternativeConnection {
         pub async fn from_alternatives(rows: Vec<Arc<Alternative>>) -> Self {
-            let mut child_hashes = Vec::with_capacity(rows.len());
-            for a in &rows {
-                child_hashes.push(a.compute_hash().await);
-            }
-            let hash = merkle_collection(child_hashes);
-            let edges = rows.into_iter().enumerate().map(|(i, a)| AlternativeEdge { cursor: edge_cursor(i), node: a }).collect();
-            Self { edges, page_info: std::sync::Arc::new(PageInfo::default()), hash }
+            Self::from_rows(rows).await
         }
     }
 
-    #[derive(Clone, SimpleObject)]
-    pub struct ChangeEdge {
-        pub cursor: String,
-        pub node: Arc<Change>,
-    }
-
-    #[derive(Clone, SimpleObject)]
-    pub struct ChangeConnection {
-        pub edges: Vec<ChangeEdge>,
-        #[graphql(name = "pageInfo")]
-        pub page_info: std::sync::Arc<PageInfo>,
-        pub hash: String,
-    }
-
+    crate::entity_relay!(ChangeConnection, ChangeEdge, Arc<Change>);
     impl ChangeConnection {
         pub async fn from_changes(rows: Vec<Arc<Change>>) -> Self {
-            let mut child_hashes = Vec::with_capacity(rows.len());
-            for c in &rows {
-                child_hashes.push(c.compute_hash().await);
-            }
-            let hash = merkle_collection(child_hashes);
-            let edges = rows.into_iter().enumerate().map(|(i, c)| ChangeEdge { cursor: edge_cursor(i), node: c }).collect();
-            Self { edges, page_info: std::sync::Arc::new(PageInfo::default()), hash }
+            Self::from_rows(rows).await
         }
 
         pub fn empty() -> Self {
@@ -1264,29 +1070,10 @@ pub mod gql_relay {
         }
     }
 
-    #[derive(Clone, SimpleObject)]
-    pub struct EditEdge {
-        pub cursor: String,
-        pub node: Arc<crate::vcs::Edit>,
-    }
-
-    #[derive(Clone, SimpleObject)]
-    pub struct EditConnection {
-        pub edges: Vec<EditEdge>,
-        #[graphql(name = "pageInfo")]
-        pub page_info: std::sync::Arc<PageInfo>,
-        pub hash: String,
-    }
-
+    crate::entity_relay!(EditConnection, EditEdge, Arc<crate::vcs::Edit>);
     impl EditConnection {
         pub async fn from_edits(rows: Vec<Arc<crate::vcs::Edit>>) -> Self {
-            let mut child_hashes = Vec::with_capacity(rows.len());
-            for e in &rows {
-                child_hashes.push(e.compute_hash().await);
-            }
-            let hash = merkle_collection(child_hashes);
-            let edges = rows.into_iter().enumerate().map(|(i, e)| EditEdge { cursor: edge_cursor(i), node: e }).collect();
-            Self { edges, page_info: std::sync::Arc::new(PageInfo::default()), hash }
+            Self::from_rows(rows).await
         }
 
         pub fn empty() -> Self {
@@ -1321,29 +1108,10 @@ pub mod gql_relay {
         }
     }
 
-    #[derive(Clone, SimpleObject)]
-    pub struct CheckpointEdge {
-        pub cursor: String,
-        pub node: Arc<Checkpoint>,
-    }
-
-    #[derive(Clone, SimpleObject)]
-    pub struct CheckpointConnection {
-        pub edges: Vec<CheckpointEdge>,
-        #[graphql(name = "pageInfo")]
-        pub page_info: std::sync::Arc<PageInfo>,
-        pub hash: String,
-    }
-
+    crate::entity_relay!(CheckpointConnection, CheckpointEdge, Arc<Checkpoint>);
     impl CheckpointConnection {
         pub async fn from_checkpoints(rows: Vec<Arc<Checkpoint>>) -> Self {
-            let mut child_hashes = Vec::with_capacity(rows.len());
-            for c in &rows {
-                child_hashes.push(c.compute_hash().await);
-            }
-            let hash = merkle_collection(child_hashes);
-            let edges = rows.into_iter().enumerate().map(|(i, c)| CheckpointEdge { cursor: edge_cursor(i), node: c }).collect();
-            Self { edges, page_info: std::sync::Arc::new(PageInfo::default()), hash }
+            Self::from_rows(rows).await
         }
     }
 
@@ -1375,20 +1143,20 @@ pub mod gql_relay {
         }
     }
 
-    crate::simple_conn_sync!(FileConnection, FileEdge, File, |f: &File| f.compute_entity_hash());
-    crate::simple_conn_sync!(FolderConnection, FolderEdge, Folder, |f: &Folder| f.compute_entity_hash());
-    crate::simple_conn_sync!(AuthorConnection, AuthorEdge, Author, |a: &Author| a.compute_entity_hash());
-    crate::simple_conn_entity!(ConceptConnection, ConceptEdge, std::sync::Arc<Concept>);
-    crate::simple_conn_entity!(TagConnection, TagEdge, std::sync::Arc<Tag>);
-    crate::simple_conn_entity!(QualityConnection, QualityEdge, std::sync::Arc<Quality>);
-    crate::simple_conn_entity!(PortConnection, PortEdge, std::sync::Arc<crate::kit::r#type::Port>);
-    crate::simple_conn_entity!(PlaceConnection, PlaceEdge, std::sync::Arc<crate::geom::entity::Place>);
-    crate::simple_conn_sync!(BenchmarkConnection, BenchmarkEdge, Benchmark, |b: &Benchmark| b.compute_entity_hash());
-    crate::simple_conn_sync!(PropConnection, PropEdge, Prop, |p: &Prop| p.compute_entity_hash());
-    crate::simple_conn_sync!(AttributeConnection, AttributeEdge, crate::meta::Attribute, |a: &crate::meta::Attribute| a.compute_entity_hash());
-    crate::simple_conn_sync!(StatConnection, StatEdge, Stat, |s: &Stat| s.compute_entity_hash());
-    crate::simple_conn_sync!(LayerConnection, LayerEdge, Layer, |l: &Layer| l.compute_entity_hash());
-    crate::simple_conn_sync!(GroupConnection, GroupEdge, Group, |g: &Group| g.compute_entity_hash());
+    crate::entity_relay_sync!(FileConnection, FileEdge, File, |f: &File| f.compute_entity_hash());
+    crate::entity_relay_sync!(FolderConnection, FolderEdge, Folder, |f: &Folder| f.compute_entity_hash());
+    crate::entity_relay_sync!(AuthorConnection, AuthorEdge, Author, |a: &Author| a.compute_entity_hash());
+    crate::entity_relay!(ConceptConnection, ConceptEdge, std::sync::Arc<Concept>);
+    crate::entity_relay!(TagConnection, TagEdge, std::sync::Arc<Tag>);
+    crate::entity_relay!(QualityConnection, QualityEdge, std::sync::Arc<Quality>);
+    crate::entity_relay!(PortConnection, PortEdge, std::sync::Arc<crate::kit::r#type::Port>);
+    crate::entity_relay!(PlaceConnection, PlaceEdge, std::sync::Arc<crate::geom::entity::Place>);
+    crate::entity_relay_sync!(BenchmarkConnection, BenchmarkEdge, Benchmark, |b: &Benchmark| b.compute_entity_hash());
+    crate::entity_relay_sync!(PropConnection, PropEdge, Prop, |p: &Prop| p.compute_entity_hash());
+    crate::entity_relay_sync!(AttributeConnection, AttributeEdge, crate::meta::Attribute, |a: &crate::meta::Attribute| a.compute_entity_hash());
+    crate::entity_relay_sync!(StatConnection, StatEdge, Stat, |s: &Stat| s.compute_entity_hash());
+    crate::entity_relay_sync!(LayerConnection, LayerEdge, Layer, |l: &Layer| l.compute_entity_hash());
+    crate::entity_relay_sync!(GroupConnection, GroupEdge, Group, |g: &Group| g.compute_entity_hash());
 
     crate::entity_full_family!(Vector, Arc<crate::geom::entity::Vector>, relay = (VectorConnection, VectorEdge));
     crate::entity_full_family!(Point, Arc<crate::geom::entity::Point>, relay = (PointConnection, PointEdge));
@@ -1414,7 +1182,7 @@ pub mod gql_relay {
         }
     }
 
-    crate::simple_conn_sync!(FamilyConnection, FamilyEdge, Family, |f: &Family| f.compute_entity_hash());
+    crate::entity_relay_sync!(FamilyConnection, FamilyEdge, Family, |f: &Family| f.compute_entity_hash());
 }
 
 //#endregion 🪢 gql_relay
