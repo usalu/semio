@@ -148,6 +148,7 @@ import {
   useOpenKitShallows,
   useParentPieceId as useParentPieceIdFromKit,
   usePatchKit,
+  usePieceScopedRead,
   usePiece,
   usePieceCenter as useSchemaPieceCenter,
   usePieceColor as useSchemaPieceColor,
@@ -163,6 +164,7 @@ import {
   usePieces,
   usePieceScope,
   usePiecesMetadataMap as usePiecesMetadataRecordFromKit,
+  useQualityScopedRead,
   useQuality,
   useQualityScope,
   useRegistryHasKit,
@@ -172,6 +174,7 @@ import {
   useReplacableTypes as useReplacableTypeIdsFromKit,
   useResolvedKitIdentifier,
   useTagsFull,
+  useTypeScopedRead,
   useType,
   useTypeDescription,
   useTypeIcon,
@@ -16911,7 +16914,7 @@ export function usePieceStatus(): DiffStatus {
  * Hook returning the diffed piece with applied transaction edits.
  **/
 export function useDiffedPiece<T>(selector?: (piece: Piece) => T, id?: string, deep: boolean = false): T | Piece {
-  const originalPiece = usePiece(identitySelector, id, deep) as Piece;
+  const originalPiece = usePieceScopedRead(identitySelector, id, deep) as Piece;
   const pieceScope = usePieceScope();
   const designScope = useDesignScope();
   const designAppStore = useDesignStore(identitySelector) as any;
@@ -35171,7 +35174,7 @@ const LoadedPieceMesh: FC<{ url: string; fileExtension: string; highlightColor: 
 
 const PieceMesh: FC<{ highlightColor: string | null } & DesignMeshEventProps> = ({ highlightColor, onClick, onDoubleClick, onPointerEnter, onPointerLeave }) => {
   const piece = usePiece() as Piece;
-  const type = useType(undefined, typeof piece.type === "string" ? piece.type : piece.type?.id) as Type | undefined;
+  const type = useTypeScopedRead(undefined, typeof piece.type === "string" ? piece.type : piece.type?.id) as Type | undefined;
   const typeConcepts = type?.concepts;
   const [files] = useFilesFull();
   const [selectedRepresentationTags] = useDesignAppSelectedRepresentationTags();
@@ -38245,9 +38248,9 @@ const TypeMesh: FC<{ activeTool: ToolKind; onPortPreview: (position: THREE.Vecto
   onPortCreate,
   onClearPreview,
 }) => {
-  const typeRepresentations = useType(selectTypeRepresentations) as Representation[] | undefined;
-  const typeConcepts = useType(selectTypeConcepts) as any[] | undefined;
-  const typeId = useType(selectTypeMeshId) as string | undefined;
+  const typeRepresentations = useTypeScopedRead(selectTypeRepresentations) as Representation[] | undefined;
+  const typeConcepts = useTypeScopedRead(selectTypeConcepts) as any[] | undefined;
+  const typeId = useTypeScopedRead(selectTypeMeshId) as string | undefined;
 
   const [files] = useFilesFull();
   const [selectedRepresentationId] = useTypeAppSelectedRepresentationId();
@@ -38429,8 +38432,8 @@ const SceneContent: FC = React.memo(() => {
   const [activeTool] = useTypeAppActiveTool();
   const typeFilters = useTypeFilters();
 
-  const typePorts = useType(selectTypePorts) as Connector[] | undefined;
-  const typeId = useType(selectTypeId) as string | undefined;
+  const typePorts = useTypeScopedRead(selectTypePorts) as Connector[] | undefined;
+  const typeId = useTypeScopedRead(selectTypeId) as string | undefined;
 
   const { run: runUpdateType } = useUpdateType();
   const [selection, setSelection] = useTypeAppSelection();
@@ -38647,7 +38650,7 @@ export const TypeDetails: FC = () => {
  **/
 const TypeDetailsForm: FC = () => {
   const { run: runUpdateType } = useUpdateType();
-  const type = useType(undefined, undefined, true) as Type;
+  const type = useTypeScopedRead(undefined, undefined, true) as Type;
 
   const updateTypeField = (diff: any) => {
     void runUpdateType(type.id, diff as Record<string, unknown>);
@@ -38714,7 +38717,7 @@ const RepresentationsSectionForm: FC = () => {
   const [hoverRepresentation] = useTypeAppHoverRepresentation();
   const [clearHover] = useTypeAppClearHover();
   const { run: runUpdateType } = useUpdateType();
-  const type = useType(undefined, undefined, true) as Type;
+  const type = useTypeScopedRead(undefined, undefined, true) as Type;
   const [selection, setSelection] = useTypeAppSelection();
   const [hover] = useTypeAppHover();
   const [activeTool] = useTypeAppActiveTool();
@@ -38882,7 +38885,7 @@ const ConnectorsListSectionForm: FC = () => {
   const [hoverPort] = useTypeAppHoverPort();
   const [clearHover] = useTypeAppClearHover();
   const { run: runUpdateType } = useUpdateType();
-  const type = useType(undefined, undefined, true) as Type;
+  const type = useTypeScopedRead(undefined, undefined, true) as Type;
   const [selection, setSelection] = useTypeAppSelection();
   const [hover] = useTypeAppHover();
   const [activeTool] = useTypeAppActiveTool();
@@ -39185,7 +39188,7 @@ const AuthorsSectionForm: FC = () => {
   const { run: runUpdateType } = useUpdateType();
   const { run: runCreateAuthor } = useCreateAuthor();
   const { run: runUpdateAuthor } = useUpdateAuthor();
-  const type = useType(undefined, undefined, true) as Type;
+  const type = useTypeScopedRead(undefined, undefined, true) as Type;
   const auKs = useKitStoreSnapshot();
   const kit = auKs?.kit as Kit | null;
 
@@ -39294,7 +39297,7 @@ export const AttributesSection: FC = () => {
 const AttributesSectionForm: FC = () => {
   const tooltip = useTooltip();
   const { run: runUpdateType } = useUpdateType();
-  const type = useType(undefined, undefined, true) as Type;
+  const type = useTypeScopedRead(undefined, undefined, true) as Type;
 
   const applyDiff = (diff: any) => {
     void runUpdateType(type.id, diff as Record<string, unknown>);
@@ -39425,7 +39428,7 @@ export const TypeConnectorSection: FC<{ connectorId: Id }> = ({ connectorId }) =
 const TypeConnectorSectionForm: FC<{ connectorId: Id }> = ({ connectorId }) => {
   const tooltip = useTooltip();
   const { run: runUpdateType } = useUpdateType();
-  const type = useType(undefined, undefined, true) as Type;
+  const type = useTypeScopedRead(undefined, undefined, true) as Type;
 
   const connector = type.connectors?.find((p) => p.id === connectorId);
 
@@ -39607,7 +39610,7 @@ export const ConnectorsMultipleSection: FC<{ connectorIds: Id[] }> = ({ connecto
 const ConnectorsMultipleSectionForm: FC<{ connectorIds: Id[] }> = ({ connectorIds }) => {
   const tooltip = useTooltip();
   const { run: runUpdateType } = useUpdateType();
-  const type = useType(undefined, undefined, true) as Type;
+  const type = useTypeScopedRead(undefined, undefined, true) as Type;
 
   const connectors = type.connectors?.filter((p) => connectorIds.includes(p.id)) || [];
 
@@ -41970,7 +41973,7 @@ const QualityDiagram: FC<QualityDiagramProps> = ({ reactFlowInstanceRef }) => {
 /**
  **/
 const Formula: FC = () => {
-  const quality = useQuality(undefined, undefined, true) as Quality | undefined;
+  const quality = useQualityScopedRead(undefined, undefined, true) as Quality | undefined;
   const mathRef = useRef<HTMLDivElement>(null);
 
   const formulaToLatexString = (formula?: string): string => {
@@ -42026,7 +42029,7 @@ const Formula: FC = () => {
  * Detail panel component displaying quality property fields.
  **/
 export const QualityDetails: FC = () => {
-  const quality = useQuality(undefined, undefined, true) as Quality | undefined;
+  const quality = useQualityScopedRead(undefined, undefined, true) as Quality | undefined;
   const { updateFormula } = useQualityAppCommands();
 
   if (!quality) return null;
@@ -42149,7 +42152,7 @@ interface QualityAvatarProps {
  * Draggable avatar component for a quality with optional hover card.
  **/
 export const QualityAvatar: FC<QualityAvatarProps> = ({ qualityId, quality: qualityProp, showHoverCard = false }) => {
-  const qualityFromStore = qualityId && !qualityProp ? (useQuality(undefined, qualityId) as Quality | null) : null;
+  const qualityFromStore = qualityId && !qualityProp ? (useQualityScopedRead(undefined, qualityId) as Quality | null) : null;
   const quality = qualityProp || qualityFromStore;
   const { setActiveInteraction } = useSketchpadCommands();
   const activeInteraction = useActiveInteraction();

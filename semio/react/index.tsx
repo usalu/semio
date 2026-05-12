@@ -71,6 +71,7 @@ import {
   Concept,
   Connection,
   Connector,
+  CommandBuilder,
   createKitStoreWorker,
   defineField,
   defineFields,
@@ -2127,7 +2128,7 @@ const {
   writeStatusEquivalent,
   writeKitStoreClientSchemaField,
   getSemioKitLiveReadStore,
-  CommandBuilder,
+  kitStoreFromKitStoreClient,
 } = WasmGraph;
 
 const {
@@ -2142,6 +2143,7 @@ const {
   createKitFileObjectUrl,
   Design: DesignModel,
   DesignStore,
+  DesignMetadataDtoSchema,
   DiffStatus,
   FamilyStore,
   fetchReadableKitFileBlob,
@@ -3035,17 +3037,17 @@ function resolveReference(index: IndexedSchemaState, typeName: string, id?: stri
   return undefined;
 }
 
-function findLivePiece(kit: any, pieceId: string): { piece: Piece; design: Design } | undefined {
+function findLivePiece(kit: any, pieceId: string): { piece: any; design: any } | undefined {
   for (const design of kit.designs ?? []) {
-    const piece = design.pieces?.find((entry) => entry.id === pieceId);
+    const piece = design.pieces?.find((entry: any) => entry.id === pieceId);
     if (piece) return { piece, design };
   }
   return undefined;
 }
 
-function findLiveConnection(kit: any, connectionId: string): { connection: any; design: Design } | undefined {
+function findLiveConnection(kit: any, connectionId: string): { connection: any; design: any } | undefined {
   for (const design of kit.designs ?? []) {
-    const connection = design._connections?.find((entry) => entry.id === connectionId);
+    const connection = design._connections?.find((entry: any) => entry.id === connectionId);
     if (connection) return { connection, design };
   }
   return undefined;
@@ -3058,29 +3060,29 @@ function findLiveEntity(kit: any, typeName: string, id?: string): any {
   if (typeName === "ConnectionStore") return findLiveConnection(kit, id)?.connection;
   if (typeName === "Type") return kit.findType(id);
   if (typeName === "Design") return kit.findDesign(id);
-  if (typeName === "Port") return getKitPorts(kit).find((entry) => entry.id === id);
-  if (typeName === "Quality") return kit.qualities?.find((entry) => entry.id === id);
-  if (typeName === "File") return kit.files?.find((entry) => entry.id === id);
-  if (typeName === "Folder") return kit.folders?.find((entry) => entry.id === id);
-  if (typeName === "Author") return kit.authors?.find((entry) => entry.id === id);
-  if (typeName === "Tag") return kit.tags?.find((entry) => entry.id === id);
-  if (typeName === "Concept") return kit.concepts?.find((entry) => entry.id === id);
-  if (typeName === "Family") return kit.families?.find((entry) => entry.id === id);
+  if (typeName === "Port") return getKitPorts(kit).find((entry: any) => entry.id === id);
+  if (typeName === "Quality") return kit.qualities?.find((entry: any) => entry.id === id);
+  if (typeName === "File") return kit.files?.find((entry: any) => entry.id === id);
+  if (typeName === "Folder") return kit.folders?.find((entry: any) => entry.id === id);
+  if (typeName === "Author") return kit.authors?.find((entry: any) => entry.id === id);
+  if (typeName === "Tag") return kit.tags?.find((entry: any) => entry.id === id);
+  if (typeName === "Concept") return kit.concepts?.find((entry: any) => entry.id === id);
+  if (typeName === "Family") return kit.families?.find((entry: any) => entry.id === id);
   if (typeName === "RepresentationStore") {
     for (const entry of kit.types ?? []) {
-      const match = entry.representations?.find((representation) => representation.id === id);
+      const match = entry.representations?.find((representation: any) => representation.id === id);
       if (match) return match;
     }
   }
   if (typeName === "ConnectorStore") {
     for (const entry of kit.types ?? []) {
-      const match = entry.connectors?.find((connector) => connector.id === id);
+      const match = entry.connectors?.find((connector: any) => connector.id === id);
       if (match) return match;
     }
   }
   if (typeName === "Benchmark") {
     for (const entry of kit.qualities ?? []) {
-      const match = entry.benchmarks?.find((benchmark) => benchmark.id === id);
+      const match = entry.benchmarks?.find((benchmark: any) => benchmark.id === id);
       if (match) return match;
     }
   }
@@ -3121,7 +3123,7 @@ function readCustomFieldValue(state: IndexedSchemaState, typeName: string, field
       try {
         const metadata = state.kit.piecesMetadataFor(design.id);
         if (!metadata.ok || !metadata.diff) return [];
-        return (design._connections ?? []).filter((connection) => {
+        return (design._connections ?? []).filter((connection: any) => {
           try {
             const connectedId = connection.connected.piece.id;
             const connectingId = connection.connecting.piece.id;
@@ -3141,13 +3143,13 @@ function readCustomFieldValue(state: IndexedSchemaState, typeName: string, field
       const alt = piece.design as (Design & { getDesignFamily?: () => readonly { id: string }[] }) | undefined;
       if (!alt || typeof alt.getDesignFamily !== "function") return [];
       try {
-        return alt.getDesignFamily!().filter((entry) => entry.id !== alt.id);
+        return alt.getDesignFamily!().filter((entry: any) => entry.id !== alt.id);
       } catch {
         return [];
       }
     }
     if (fieldName === "alternatives") {
-      return [...(piece.alternativeTypes() ?? []).map((entry) => ({ type: entry, design: undefined })), ...(readCustomFieldValue(state, typeName, "alternativeDesigns", id) ?? []).map((entry: any) => ({ type: undefined, design: entry }))];
+      return [...(piece.alternativeTypes() ?? []).map((entry: any) => ({ type: entry, design: undefined })), ...(readCustomFieldValue(state, typeName, "alternativeDesigns", id) ?? []).map((entry: any) => ({ type: undefined, design: entry }))];
     }
   }
   if (typeName === "ConnectionStore") {
@@ -3872,7 +3874,7 @@ export function createDefaultBrowserSketchpadFileKitStoreFactory(): SketchpadKit
 /** @emoji 🌐 Browser SPA: remote kit via session transport; `kit.name` must hold the server URL. */
 export function createDefaultBrowserSketchpadRemoteKitStoreFactory(): SketchpadKitStoreFactory {
   return async (kit: Kit) => {
-    const serverUrl = kit.name;
+    const serverUrl = (kit as { name?: string }).name;
     if (!serverUrl) throw new Error("No server URL provided for remote kit");
     return createSessionKitStore({
       serverUrl,
@@ -6978,6 +6980,18 @@ export function useConnections(): any[] {
 }
 
 /** Merged read/write status for collection hooks (see {@link useTypes}). */
+function operationStatusToWriteStatus(s: OperationStatus): WriteStatus {
+  switch (s.kind) {
+    case "pending":
+      return WRITE_STATUS_PENDING;
+    case "settled":
+      return s.result.ok ? WRITE_STATUS_IDLE : { kind: "error", pending: 0, lastError: s.result.error };
+    case "idle":
+    default:
+      return WRITE_STATUS_IDLE;
+  }
+}
+
 function mergeWriteStatuses(...statuses: WriteStatus[]): WriteStatus {
   const readonly_ = statuses.some((s) => s.kind === "readonly");
   if (readonly_) {
@@ -7008,28 +7022,34 @@ export type UseTypesResult = {
   shallowTypes: TypeShallow[];
   typesMetadata: TypeMetadataDto[];
   typeIds: string[];
-  createType: (dto: unknown) => Promise<SetResult>;
+  createType: (
+    name: string,
+    description?: string | null,
+    icon?: string | null,
+    image?: string | null,
+    unit?: string | null,
+  ) => Promise<SetResult>;
   deleteType: (typeId: string) => Promise<SetResult>;
   status: WriteStatus;
 };
 
 export function useTypes(): UseTypesResult {
   const [types, rpcStatus] = useKitTypesShallow();
-  const { run: createType, status: createStatus } = useCreateType();
-  const { run: deleteType, status: deleteStatus } = useDeleteType();
+  const [createType, createStatus] = useCreateType();
+  const [deleteType, deleteStatus] = useDeleteType();
 
   const shallowTypes = React.useMemo(() => {
     if (!Array.isArray(types)) {
       return [];
     }
-    return types.map((t) => TypeShallowSchema.parse((t as Type).toDto()));
+    return types.map((t) => TypeShallowSchema.parse((t as DtoType).toDto()));
   }, [types]);
 
   const typesMetadata = React.useMemo(() => {
     if (!Array.isArray(types)) {
       return [];
     }
-    return types.map((t) => TypeMetadataDtoSchema.parse((t as Type).toDto()));
+    return types.map((t) => TypeMetadataDtoSchema.parse((t as DtoType).toDto()));
   }, [types]);
 
   const typeIds = React.useMemo(() => {
@@ -7039,7 +7059,10 @@ export function useTypes(): UseTypesResult {
     return types.map((t) => t?.id).filter((x): x is string => typeof x === "string");
   }, [types]);
 
-  const status = React.useMemo(() => mergeWriteStatuses(rpcStatus, createStatus, deleteStatus), [rpcStatus, createStatus, deleteStatus]);
+  const status = React.useMemo(
+    () => mergeWriteStatuses(rpcStatus, operationStatusToWriteStatus(createStatus), operationStatusToWriteStatus(deleteStatus)),
+    [rpcStatus, createStatus, deleteStatus],
+  );
 
   return {
     types: Array.isArray(types) ? types : [],
@@ -7060,28 +7083,34 @@ export type UseDesignsResult = {
   shallowDesigns: DesignShallow[];
   designsMetadata: DesignMetadataDto[];
   designIds: string[];
-  createDesign: (dto: unknown) => Promise<SetResult>;
+  createDesign: (
+    name: string,
+    description?: string | null,
+    icon?: string | null,
+    image?: string | null,
+    unit?: string | null,
+  ) => Promise<SetResult>;
   deleteDesign: (designId: string) => Promise<SetResult>;
   status: WriteStatus;
 };
 
 export function useDesigns(): UseDesignsResult {
   const [designs, rpcStatus] = useKitDesignsShallow();
-  const { run: createDesign, status: createStatus } = useCreateDesign();
-  const { run: deleteDesign, status: deleteStatus } = useDeleteDesign();
+  const [createDesign, createStatus] = useCreateDesign();
+  const [deleteDesign, deleteStatus] = useDeleteDesign();
 
   const shallowDesigns = React.useMemo(() => {
     if (!Array.isArray(designs)) {
       return [];
     }
-    return designs.map((d) => DesignShallowSchema.parse((d as Design).toDto()));
+    return designs.map((d) => DesignShallowSchema.parse((d as DtoDesign).toDto()));
   }, [designs]);
 
   const designsMetadata = React.useMemo(() => {
     if (!Array.isArray(designs)) {
       return [];
     }
-    return designs.map((d) => DesignMetadataDtoSchema.parse((d as Design).toDto()));
+    return designs.map((d) => DesignMetadataDtoSchema.parse((d as DtoDesign).toDto()));
   }, [designs]);
 
   const designIds = React.useMemo(() => {
@@ -7091,7 +7120,10 @@ export function useDesigns(): UseDesignsResult {
     return designs.map((d) => d?.id).filter((x): x is string => typeof x === "string");
   }, [designs]);
 
-  const status = React.useMemo(() => mergeWriteStatuses(rpcStatus, createStatus, deleteStatus), [rpcStatus, createStatus, deleteStatus]);
+  const status = React.useMemo(
+    () => mergeWriteStatuses(rpcStatus, operationStatusToWriteStatus(createStatus), operationStatusToWriteStatus(deleteStatus)),
+    [rpcStatus, createStatus, deleteStatus],
+  );
 
   return {
     designs: Array.isArray(designs) ? designs : [],
@@ -7937,7 +7969,7 @@ export function useKitCommandEngineExplicitOrigin(kitStore: KitHostStore | null)
 }
 
 /** @emoji 📌 Shallow kit rows for every open registry kit; subscribes per {@link KitHostStore} + registry list changes via bridge (canvas portals lack {@link KitRegistryContext}). */
-export function useOpenKitShallows(): Kit[] {
+export function useOpenKitShallows(): DtoKit[] {
   const [tick, setTick] = React.useState(0);
   React.useEffect(() => {
     const bump = () => setTick((t) => t + 1);
@@ -8183,6 +8215,7 @@ export {
   getOrCreateKitFileState,
   getReadableKitFileUrl,
   getStoredKitFileUrls,
+  kitStoreFromKitStoreClient,
   InMemoryKitStore,
   isBrowserReadableFileUrl,
   KitGraphDto,
@@ -19597,7 +19630,7 @@ if (shouldRunReactEmbeddedTests) {
       const store = new InMemoryKitStore(kit);
       const kitClient = createTestKitClient(store);
       let renameKit: ((v: string) => Promise<SetResult>) | undefined;
-      let lastStatus: WriteStatus | undefined;
+      let lastStatus: OperationStatus | undefined;
       let client: KitStoreClient | null = null;
 
       function Probe() {
@@ -19616,7 +19649,7 @@ if (shouldRunReactEmbeddedTests) {
       });
       const r = await renameKit!("");
       expect(r.ok).toBe(false);
-      await waitFor(() => expect(lastStatus?.kind).toBe("error"));
+      await waitFor(() => expect(lastStatus?.kind === "settled" && lastStatus.kind === "settled" && !lastStatus.result.ok).toBe(true));
     });
 
     it("embedded kit client stub exposes read promise methods used by live-read hooks", async () => {
@@ -19703,12 +19736,12 @@ if (shouldRunReactEmbeddedTests) {
       const renders = { p1: 0, p2: 0 };
 
       function Piece1() {
-        usePieceFlatPlane("d1", "p1");
+        usePieceFlatPlaneKitHostBinding("d1", "p1");
         renders.p1 += 1;
         return null;
       }
       function Piece2() {
-        usePieceFlatPlane("d1", "p2");
+        usePieceFlatPlaneKitHostBinding("d1", "p2");
         renders.p2 += 1;
         return null;
       }
@@ -19820,7 +19853,7 @@ if (shouldRunReactEmbeddedTests) {
   describe("useOpenKitShallows + useRegistryHasKit + useRegistryKitPersistenceKind", () => {
     it("returns empty shallows when no KitRegistryProvider (Home table shell)", () => {
       cleanup();
-      let shallows: Kit[] = [];
+      let shallows: ReturnType<typeof useOpenKitShallows> = [];
       function Probe() {
         shallows = useOpenKitShallows();
         return null;
@@ -19838,7 +19871,7 @@ if (shouldRunReactEmbeddedTests) {
       });
       const store = new InMemoryKitStore(kit);
       const kitClient = createTestKitClient(store);
-      let shallows: Kit[] = [];
+      let shallows: ReturnType<typeof useOpenKitShallows> = [];
       let hasKit = false;
       let pkind: KitPersistenceInfo["kind"] | undefined;
       function Probe() {

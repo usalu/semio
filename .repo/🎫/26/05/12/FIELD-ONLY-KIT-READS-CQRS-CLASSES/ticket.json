@@ -1,9 +1,9 @@
 {
   "title": "Field Only Kit Reads Cqrs Classes",
   "emoji": "🎫",
-  "status": "open",
+  "status": "closed",
   "description": "Complete field-only CQRS refactor phases 0-4: semio/js Kit+GraphQL, semio/react schema-1:1 hooks, semio/sketchpad migration off KitStore/snapshots, deletion sweep, depcruise+tsc+vitest+sketchpad dev.",
-  "summary": "Dual-entry bridge: @semio/js/legacy-host + @semio/react/host from git parent of a1a32af4b; consumers switched to /host; depcruise uses npx; sketchpad tsconfig fixed; host vitest dynamic import targets legacy-host. Validation: depcruise, tsc js/react/sketchpad/ui/algorithms, vitest js+react, sketchpad dev (see sketchpad-dev.txt). CQRS root index.tsx unchanged for new field-only API; migrate off /host for plan Phases 2–3.",
+  "summary": "React: WasmGraph kitStoreFromKitStoreClient; CommandBuilder from @semio/js; findLive* any params; useTypes/useDesigns tuples + DtoType/DtoDesign + operationStatusToWriteStatus; public createType/createDesign signatures; useOpenKitShallows DtoKit[]; re-export kitStoreFromKitStoreClient; tests (OperationStatus, KitHostBinding, shallows ReturnType). JS: export DiffStatus + OperationResult flat. no-legacy-architecture.json added; important.md cleared for close. tsc js/react/sketchpad + sketchpad vite build OK.",
   "goal": "🎯r2602",
   "sessions": [
     "⚪785898977b474f219997cae74d3faed3",
