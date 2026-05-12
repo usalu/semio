@@ -7,7 +7,23 @@
 // #endregion 🧷JsReexports
 
 // #region ⚛️Imports
-import type { Attribute, Benchmark, ConnectionSide, Coordinate, Entity, FieldSpec, Kit, KitReadPoint, PieceBlueprint, Plane, Position, SetError, SetResult } from "@semio/js";
+import type {
+  Attribute,
+  Benchmark,
+  ConnectionSide,
+  Coordinate,
+  Entity,
+  FieldSpec,
+  Kit,
+  KitReadPoint,
+  OffsetInput,
+  PieceBlueprint,
+  Plane,
+  Position,
+  PositionInput,
+  SetError,
+  SetResult,
+} from "@semio/js";
 import {
   Author,
   Concept,
@@ -360,13 +376,14 @@ export function bindKitOperationToReact<Args extends unknown[] = []>(impl: (kit:
 
 // #region 🎭Contexts
 // #region 🎒Kit
-export type Kit = Readonly<{
+/** @emoji 🎒 React runtime bag: {@link Kit} instance + materialization read point (mirrors {@link Kit#setReadPoint}). */
+export type KitRuntimeValue = Readonly<{
   kit: Kit;
   readPoint: KitReadPoint;
   setReadPoint: (next: KitReadPoint) => void;
 }>;
 
-const KitContext = React.createContext<Kit | null>(null);
+const KitRuntimeContext = React.createContext<KitRuntimeValue | null>(null);
 
 export type KitContextProviderProps = Readonly<{
   kit: Kit;
@@ -383,15 +400,15 @@ export function KitContextProvider(props: KitContextProviderProps): React.ReactE
   const setReadPoint = React.useCallback((next: KitReadPoint) => {
     setReadPointState(next);
   }, []);
-  const value = React.useMemo<Kit>(() => ({ kit: props.kit, readPoint, setReadPoint }), [props.kit, readPoint, setReadPoint]);
-  return React.createElement(KitContext.Provider, { value }, props.children);
+  const value = React.useMemo<KitRuntimeValue>(() => ({ kit: props.kit, readPoint, setReadPoint }), [props.kit, readPoint, setReadPoint]);
+  return React.createElement(KitRuntimeContext.Provider, { value }, props.children);
 }
 
-/** @emoji 🧭 Requires {@link KitContextProvider}; throws when missing (fail-fast for app wiring). */
+/** @emoji 🧭 Requires {@link KitContextProvider}; returns the {@link Kit} handle (stable reference for the session). */
 export function useKit(): Kit {
-  const v = React.useContext(KitContext);
+  const v = React.useContext(KitRuntimeContext);
   if (v == null) throw new Error("semio/react: useKit requires <KitContextProvider>.");
-  return v;
+  return v.kit;
 }
 
 // #endregion 🎒Kit
@@ -403,7 +420,7 @@ export function DesignContextProvider(props: { designId: string; children: React
   return React.createElement(DesignContext.Provider, { value: { designId: props.designId } }, props.children);
 }
 export function useDesign(): Design | null {
-  const { kit } = useKit();
+  const kit = useKit();
   const ctx = React.useContext(DesignContext);
   return ctx == null ? null : kit.design(ctx.designId);
 }
@@ -418,7 +435,7 @@ export function PieceContextProvider(props: PieceContext & { children: ReactNode
   return React.createElement(PieceContext.Provider, { value: { designId: props.designId, pieceId: props.pieceId } }, props.children);
 }
 export function usePiece(): Piece | null {
-  const { kit } = useKit();
+  const kit = useKit();
   const ctx = React.useContext(PieceContext);
   return ctx == null ? null : kit.design(ctx.designId).piece(ctx.pieceId);
 }
@@ -429,7 +446,7 @@ export function TypeContextProvider(props: { typeId: string; children: ReactNode
   return React.createElement(TypeContext.Provider, { value: { typeId: props.typeId } }, props.children);
 }
 export function useType(): Type | null {
-  const { kit } = useKit();
+  const kit = useKit();
   const ctx = React.useContext(TypeContext);
   return ctx == null ? null : kit.type(ctx.typeId);
 }
@@ -440,7 +457,7 @@ export function ConnectionContextProvider(props: ConnectionContext & { children:
   return React.createElement(ConnectionContext.Provider, { value: { designId: props.designId, connectionId: props.connectionId } }, props.children);
 }
 export function useConnection(): Connection | null {
-  const { kit } = useKit();
+  const kit = useKit();
   const ctx = React.useContext(ConnectionContext);
   return ctx == null ? null : kit.design(ctx.designId).connection(ctx.connectionId);
 }
@@ -451,7 +468,7 @@ export function PortContextProvider(props: PortContext & { children: ReactNode }
   return React.createElement(PortContext.Provider, { value: { typeId: props.typeId, portId: props.portId } }, props.children);
 }
 export function usePort(): Port | null {
-  const { kit } = useKit();
+  const kit = useKit();
   const ctx = React.useContext(PortContext);
   return ctx == null ? null : kit.type(ctx.typeId).port(ctx.portId);
 }
@@ -462,7 +479,7 @@ export function ConnectorContextProvider(props: ConnectorContext & { children: R
   return React.createElement(ConnectorContext.Provider, { value: { typeId: props.typeId, connectorId: props.connectorId } }, props.children);
 }
 export function useConnector(): Connector | null {
-  const { kit } = useKit();
+  const kit = useKit();
   const ctx = React.useContext(ConnectorContext);
   return ctx == null ? null : kit.type(ctx.typeId).connector(ctx.connectorId);
 }
@@ -473,7 +490,7 @@ export function QualityContextProvider(props: { qualityId: string; children: Rea
   return React.createElement(QualityContext.Provider, { value: { qualityId: props.qualityId } }, props.children);
 }
 export function useQuality(): Quality | null {
-  const { kit } = useKit();
+  const kit = useKit();
   const ctx = React.useContext(QualityContext);
   return ctx == null ? null : kit.quality(ctx.qualityId);
 }
@@ -484,7 +501,7 @@ export function TagContextProvider(props: { tagId: string; children: ReactNode }
   return React.createElement(TagContext.Provider, { value: { tagId: props.tagId } }, props.children);
 }
 export function useTag(): Tag | null {
-  const { kit } = useKit();
+  const kit = useKit();
   const ctx = React.useContext(TagContext);
   return ctx == null ? null : kit.tag(ctx.tagId);
 }
@@ -495,7 +512,7 @@ export function ConceptContextProvider(props: { conceptId: string; children: Rea
   return React.createElement(ConceptContext.Provider, { value: { conceptId: props.conceptId } }, props.children);
 }
 export function useConcept(): Concept | null {
-  const { kit } = useKit();
+  const kit = useKit();
   const ctx = React.useContext(ConceptContext);
   return ctx == null ? null : kit.concept(ctx.conceptId);
 }
@@ -506,7 +523,7 @@ export function AuthorContextProvider(props: { authorId: string; children: React
   return React.createElement(AuthorContext.Provider, { value: { authorId: props.authorId } }, props.children);
 }
 export function useAuthor(): Author | null {
-  const { kit } = useKit();
+  const kit = useKit();
   const ctx = React.useContext(AuthorContext);
   return ctx == null ? null : kit.author(ctx.authorId);
 }
@@ -517,7 +534,7 @@ export function RepresentationContextProvider(props: RepresentationContext & { c
   return React.createElement(RepresentationContext.Provider, { value: { typeId: props.typeId, representationId: props.representationId } }, props.children);
 }
 export function useRepresentation(): Representation | null {
-  const { kit } = useKit();
+  const kit = useKit();
   const ctx = React.useContext(RepresentationContext);
   return ctx == null ? null : kit.type(ctx.typeId).representation(ctx.representationId);
 }
@@ -527,73 +544,73 @@ export function useRepresentation(): Representation | null {
 // #region 📖KitReads
 /** @emoji 📖 Live {@link Kit#readName} + {@code kitRenamed}. */
 export function useKitName(): FieldReadState<string> {
-  const { kit } = useKit();
+  const kit = useKit();
   return bindKitFieldToReact<string>({ getKit: () => kit, read: (k) => k.readName(), eventKind: "kitRenamed" })();
 }
 
 /** @emoji 📖 Live {@link Kit#readDescription} + {@code changedDescription}. */
 export function useKitDescription(): FieldReadState<string> {
-  const { kit } = useKit();
+  const kit = useKit();
   return bindKitFieldToReact<string>({ getKit: () => kit, read: (k) => k.readDescription(), eventKind: "changedDescription" })();
 }
 
 /** @emoji 📖 Live {@link Kit#readId}. */
 export function useKitId(): FieldReadState<string> {
-  const { kit } = useKit();
+  const kit = useKit();
   return bindKitFieldToReact<string>({ getKit: () => kit, read: (k) => k.readId() })();
 }
 
 /** @emoji 📖 Live {@link Kit#readIcon}. */
 export function useKitIcon(): FieldReadState<string> {
-  const { kit } = useKit();
+  const kit = useKit();
   return bindKitFieldToReact<string>({ getKit: () => kit, read: (k) => k.readIcon() })();
 }
 
 /** @emoji 📖 Live {@link Kit#readImage}. */
 export function useKitImage(): FieldReadState<string> {
-  const { kit } = useKit();
+  const kit = useKit();
   return bindKitFieldToReact<string>({ getKit: () => kit, read: (k) => k.readImage() })();
 }
 
 /** @emoji 📖 Live {@link Kit#readTypeIds}. */
 export function useKitTypeIds(): FieldReadState<readonly string[]> {
-  const { kit } = useKit();
+  const kit = useKit();
   return bindKitFieldToReact<readonly string[]>({ getKit: () => kit, read: (k) => k.readTypeIds() })();
 }
 
 /** @emoji 📖 Live {@link Kit#readDesignIds}. */
 export function useKitDesignIds(): FieldReadState<readonly string[]> {
-  const { kit } = useKit();
+  const kit = useKit();
   return bindKitFieldToReact<readonly string[]>({ getKit: () => kit, read: (k) => k.readDesignIds() })();
 }
 
 /** @emoji 📖 Live {@link Kit#readAuthorIds}. */
 export function useKitAuthorIds(): FieldReadState<readonly string[]> {
-  const { kit } = useKit();
+  const kit = useKit();
   return bindKitFieldToReact<readonly string[]>({ getKit: () => kit, read: (k) => k.readAuthorIds() })();
 }
 
 /** @emoji 📖 Live {@link Kit#readQualityIds}. */
 export function useKitQualityIds(): FieldReadState<readonly string[]> {
-  const { kit } = useKit();
+  const kit = useKit();
   return bindKitFieldToReact<readonly string[]>({ getKit: () => kit, read: (k) => k.readQualityIds() })();
 }
 
 /** @emoji 📖 Live {@link Kit#readTagIds}. */
 export function useKitTagIds(): FieldReadState<readonly string[]> {
-  const { kit } = useKit();
+  const kit = useKit();
   return bindKitFieldToReact<readonly string[]>({ getKit: () => kit, read: (k) => k.readTagIds() })();
 }
 
 /** @emoji 📖 Live {@link Kit#readConceptIds}. */
 export function useKitConceptIds(): FieldReadState<readonly string[]> {
-  const { kit } = useKit();
+  const kit = useKit();
   return bindKitFieldToReact<readonly string[]>({ getKit: () => kit, read: (k) => k.readConceptIds() })();
 }
 
 /** @emoji 🧾 Exposes {@link Kit#ensureChangeId} as a stable callback. */
 export function useEnsureKitChangeId(): () => Promise<string> {
-  const { kit } = useKit();
+  const kit = useKit();
   return React.useCallback(() => kit.ensureChangeId(), [kit]);
 }
 // #endregion 📖KitReads
@@ -601,55 +618,55 @@ export function useEnsureKitChangeId(): () => Promise<string> {
 // #region ✍️KitWrites
 /** @emoji ✍️ {@link Kit#rename}. */
 export function useRenameKit(): readonly [(newName: string) => Promise<SetResult>, OperationStatus] {
-  const { kit } = useKit();
+  const kit = useKit();
   return bindKitOperationToReact<[string]>((k, newName) => k.rename(newName))(() => kit);
 }
 
 /** @emoji ✍️ {@link Kit#changeDescription}. */
 export function useChangeKitDescription(): readonly [(newDescription: string) => Promise<SetResult>, OperationStatus] {
-  const { kit } = useKit();
+  const kit = useKit();
   return bindKitOperationToReact<[string]>((k, d) => k.changeDescription(d))(() => kit);
 }
 
 /** @emoji ✍️ {@link Kit#createTag}. */
 export function useCreateTag(): readonly [(name: string, description?: string | null, icon?: string | null, order?: number | null) => Promise<SetResult>, OperationStatus] {
-  const { kit } = useKit();
+  const kit = useKit();
   return bindKitOperationToReact<[string, string | null | undefined, string | null | undefined, number | null | undefined]>((k, n, d, i, o) => k.createTag(n, d, i, o))(() => kit);
 }
 
 /** @emoji ✍️ {@link Kit#deleteTag}. */
 export function useDeleteTag(): readonly [(id: string) => Promise<SetResult>, OperationStatus] {
-  const { kit } = useKit();
+  const kit = useKit();
   return bindKitOperationToReact<[string]>((k, id) => k.deleteTag(id))(() => kit);
 }
 
 /** @emoji ✍️ {@link Kit#deleteTags}. */
 export function useDeleteTags(): readonly [(ids: readonly string[]) => Promise<SetResult>, OperationStatus] {
-  const { kit } = useKit();
+  const kit = useKit();
   return bindKitOperationToReact<[readonly string[]]>((k, ids) => k.deleteTags(ids))(() => kit);
 }
 
 /** @emoji ✍️ {@link Kit#createConcept}. */
 export function useCreateConcept(): readonly [(name: string, description?: string | null, icon?: string | null, order?: number | null) => Promise<SetResult>, OperationStatus] {
-  const { kit } = useKit();
+  const kit = useKit();
   return bindKitOperationToReact<[string, string | null | undefined, string | null | undefined, number | null | undefined]>((k, n, d, i, o) => k.createConcept(n, d, i, o))(() => kit);
 }
 
 /** @emoji ✍️ {@link Kit#deleteConcept}. */
 export function useDeleteConcept(): readonly [(id: string) => Promise<SetResult>, OperationStatus] {
-  const { kit } = useKit();
+  const kit = useKit();
   return bindKitOperationToReact<[string]>((k, id) => k.deleteConcept(id))(() => kit);
 }
 
 /** @emoji ✍️ {@link Kit#deleteConcepts}. */
 export function useDeleteConcepts(): readonly [(ids: readonly string[]) => Promise<SetResult>, OperationStatus] {
-  const { kit } = useKit();
+  const kit = useKit();
   return bindKitOperationToReact<[readonly string[]]>((k, ids) => k.deleteConcepts(ids))(() => kit);
 }
 
 /** @emoji ✍️ {@link Kit#createQuality}. */
 export function useCreateQuality(): readonly [(key: string, value?: string | null, unit?: string | null, definition?: string | null, description?: string | null, icon?: string | null) => Promise<SetResult>, OperationStatus] {
-  const { kit } = useKit();
+  const kit = useKit();
   return bindKitOperationToReact<[string, string | null | undefined, string | null | undefined, string | null | undefined, string | null | undefined, string | null | undefined]>((k, key, value, unit, definition, description, icon) =>
     k.createQuality(key, value, unit, definition, description, icon),
   )(() => kit);
@@ -657,55 +674,55 @@ export function useCreateQuality(): readonly [(key: string, value?: string | nul
 
 /** @emoji ✍️ {@link Kit#deleteQuality}. */
 export function useDeleteQuality(): readonly [(id: string) => Promise<SetResult>, OperationStatus] {
-  const { kit } = useKit();
+  const kit = useKit();
   return bindKitOperationToReact<[string]>((k, id) => k.deleteQuality(id))(() => kit);
 }
 
 /** @emoji ✍️ {@link Kit#deleteQualities}. */
 export function useDeleteQualities(): readonly [(ids: readonly string[]) => Promise<SetResult>, OperationStatus] {
-  const { kit } = useKit();
+  const kit = useKit();
   return bindKitOperationToReact<[readonly string[]]>((k, ids) => k.deleteQualities(ids))(() => kit);
 }
 
 /** @emoji ✍️ {@link Kit#createType}. */
 export function useCreateType(): readonly [(name: string, description?: string | null, icon?: string | null, image?: string | null, unit?: string | null) => Promise<SetResult>, OperationStatus] {
-  const { kit } = useKit();
+  const kit = useKit();
   return bindKitOperationToReact<[string, string | null | undefined, string | null | undefined, string | null | undefined, string | null | undefined]>((k, n, d, i, im, u) => k.createType(n, d, i, im, u))(() => kit);
 }
 
 /** @emoji ✍️ {@link Kit#deleteType}. */
 export function useDeleteType(): readonly [(id: string) => Promise<SetResult>, OperationStatus] {
-  const { kit } = useKit();
+  const kit = useKit();
   return bindKitOperationToReact<[string]>((k, id) => k.deleteType(id))(() => kit);
 }
 
 /** @emoji ✍️ {@link Kit#deleteTypes}. */
 export function useDeleteTypes(): readonly [(ids: readonly string[]) => Promise<SetResult>, OperationStatus] {
-  const { kit } = useKit();
+  const kit = useKit();
   return bindKitOperationToReact<[readonly string[]]>((k, ids) => k.deleteTypes(ids))(() => kit);
 }
 
 /** @emoji ✍️ {@link Kit#createDesign}. */
 export function useCreateDesign(): readonly [(name: string, description?: string | null, icon?: string | null, image?: string | null, unit?: string | null) => Promise<SetResult>, OperationStatus] {
-  const { kit } = useKit();
+  const kit = useKit();
   return bindKitOperationToReact<[string, string | null | undefined, string | null | undefined, string | null | undefined, string | null | undefined]>((k, n, d, i, im, u) => k.createDesign(n, d, i, im, u))(() => kit);
 }
 
 /** @emoji ✍️ {@link Kit#deleteDesign}. */
 export function useDeleteDesign(): readonly [(id: string) => Promise<SetResult>, OperationStatus] {
-  const { kit } = useKit();
+  const kit = useKit();
   return bindKitOperationToReact<[string]>((k, id) => k.deleteDesign(id))(() => kit);
 }
 
 /** @emoji ✍️ {@link Kit#deleteDesigns}. */
 export function useDeleteDesigns(): readonly [(ids: readonly string[]) => Promise<SetResult>, OperationStatus] {
-  const { kit } = useKit();
+  const kit = useKit();
   return bindKitOperationToReact<[readonly string[]]>((k, ids) => k.deleteDesigns(ids))(() => kit);
 }
 
 /** @emoji ✍️ {@link Kit#saveChange}. */
 export function useSaveKitChange(): readonly [() => Promise<SetResult>, OperationStatus] {
-  const { kit } = useKit();
+  const kit = useKit();
   return bindKitOperationToReact<[]>(async (k) => {
     await k.saveChange();
     return { ok: true };
@@ -714,43 +731,43 @@ export function useSaveKitChange(): readonly [() => Promise<SetResult>, Operatio
 
 /** @emoji ✍️ {@link Kit#createCheckpoint}. */
 export function useCreateCheckpoint(): readonly [(message: string) => Promise<SetResult>, OperationStatus] {
-  const { kit } = useKit();
+  const kit = useKit();
   return bindKitOperationToReact<[string]>((k, message) => k.createCheckpoint(message))(() => kit);
 }
 
 /** @emoji ✍️ {@link Kit#startAlternative}. */
 export function useStartAlternative(): readonly [(name?: string | null) => Promise<SetResult>, OperationStatus] {
-  const { kit } = useKit();
+  const kit = useKit();
   return bindKitOperationToReact<[string | null | undefined]>((k, name) => k.startAlternative(name ?? undefined))(() => kit);
 }
 
 /** @emoji ✍️ {@link Kit#integrateAlternative}. */
 export function useIntegrateAlternative(): readonly [(alternativeId: string) => Promise<SetResult>, OperationStatus] {
-  const { kit } = useKit();
+  const kit = useKit();
   return bindKitOperationToReact<[string]>((k, id) => k.integrateAlternative(id))(() => kit);
 }
 
 /** @emoji ✍️ {@link Kit#login}. */
 export function useLogin(): readonly [(username: string, passwordHash: string, hubUrl?: string) => Promise<SetResult>, OperationStatus] {
-  const { kit } = useKit();
+  const kit = useKit();
   return bindKitOperationToReact<[string, string, string | undefined]>((k, u, p, h) => k.login(u, p, h))(() => kit);
 }
 
 /** @emoji ✍️ {@link Kit#logout}. */
 export function useLogout(): readonly [() => Promise<SetResult>, OperationStatus] {
-  const { kit } = useKit();
+  const kit = useKit();
   return bindKitOperationToReact<[]>((k) => k.logout())(() => kit);
 }
 
 /** @emoji ✍️ {@link Kit#sessionStart}. */
 export function useStartSession(): readonly [() => Promise<SetResult>, OperationStatus] {
-  const { kit } = useKit();
+  const kit = useKit();
   return bindKitOperationToReact<[]>((k) => k.sessionStart())(() => kit);
 }
 
 /** @emoji ✍️ {@link Kit#sessionEnd}. */
 export function useEndSession(): readonly [() => Promise<SetResult>, OperationStatus] {
-  const { kit } = useKit();
+  const kit = useKit();
   return bindKitOperationToReact<[]>((k) => k.sessionEnd())(() => kit);
 }
 
@@ -1027,11 +1044,6 @@ const usePortAddAttributeOp = bindOpToReact<Port, [string, string, string]>((p, 
 const usePortRemoveAttributeOp = bindOpToReact<Port, [string]>((p, id) => p.removeAttribute(id));
 const usePortRemoveAttributesOp = bindOpToReact<Port, [readonly string[]]>((p, ids) => p.removeAttributes(ids));
 
-/** @emoji 🛡️ Contextual {@link Port}. */
-export function usePort(): Port | null {
-  return usePort();
-}
-
 /** @emoji 📖 Live {@link Port#readCode}. */
 export function usePortCode(): FieldReadState<string> {
   const entity = usePort();
@@ -1116,11 +1128,6 @@ const useConnectorRenameOp = bindOpToReact<Connector, [string]>((c, newCode) => 
 const useConnectorChangeDescriptionOp = bindOpToReact<Connector, [string]>((c, d) => c.changeDescription(d));
 const useConnectorChangeIconOp = bindOpToReact<Connector, [string]>((c, i) => c.changeIcon(i));
 
-/** @emoji 🛡️ Contextual {@link Connector}. */
-export function useConnector(): Connector | null {
-  return useConnector();
-}
-
 /** @emoji 📖 Live {@link Connector#readCode}. */
 export function useConnectorCode(): FieldReadState<string> {
   const entity = useConnector();
@@ -1165,11 +1172,6 @@ export function useChangeConnectorIcon(): readonly [(newIcon: string) => Promise
 // #endregion 🔗Connector
 
 // #region ✍️Author
-/** @emoji 🛡️ Alias for {@link useAuthor} (plan name {@code useAuthor}). */
-export function useAuthor(): Author | null {
-  return useAuthor();
-}
-
 /** @emoji 📖 Live {@link Author#readName}. */
 export function useAuthorName(): FieldReadState<string> {
   const entity = useAuthor();
@@ -1214,11 +1216,6 @@ const useQualityChangeIconOp = bindOpToReact<Quality, [string]>((q, i) => q.chan
 const useQualityAddAttributeOp = bindOpToReact<Quality, [string, string, string]>((q, key, value, definition) => q.addAttribute(key, value, definition));
 const useQualityRemoveAttributeOp = bindOpToReact<Quality, [string]>((q, id) => q.removeAttribute(id));
 const useQualityRemoveAttributesOp = bindOpToReact<Quality, [readonly string[]]>((q, ids) => q.removeAttributes(ids));
-
-/** @emoji 🛡️ Alias for {@link useQuality}. */
-export function useQuality(): Quality | null {
-  return useQuality();
-}
 
 /** @emoji 📖 Live {@link Quality#readKey}. */
 export function useQualityKey(): FieldReadState<string> {
@@ -1313,11 +1310,6 @@ const useTagAddAttributeOp = bindOpToReact<Tag, [string, string, string]>((t, ke
 const useTagRemoveAttributeOp = bindOpToReact<Tag, [string]>((t, id) => t.removeAttribute(id));
 const useTagRemoveAttributesOp = bindOpToReact<Tag, [readonly string[]]>((t, ids) => t.removeAttributes(ids));
 
-/** @emoji 🛡️ Alias for {@link useTag}. */
-export function useTag(): Tag | null {
-  return useTag();
-}
-
 /** @emoji 📖 Live {@link Tag#readName}. */
 export function useTagName(): FieldReadState<string> {
   const entity = useTag();
@@ -1393,11 +1385,6 @@ const useConceptAddAttributeOp = bindOpToReact<Concept, [string, string, string]
 const useConceptRemoveAttributeOp = bindOpToReact<Concept, [string]>((c, id) => c.removeAttribute(id));
 const useConceptRemoveAttributesOp = bindOpToReact<Concept, [readonly string[]]>((c, ids) => c.removeAttributes(ids));
 
-/** @emoji 🛡️ Alias for {@link useConcept}. */
-export function useConcept(): Concept | null {
-  return useConcept();
-}
-
 /** @emoji 📖 Live {@link Concept#readName}. */
 export function useConceptName(): FieldReadState<string> {
   const entity = useConcept();
@@ -1466,11 +1453,6 @@ export function useRemoveConceptAttributes(): readonly [(ids: readonly string[])
 // #endregion 💡Concept
 
 // #region 🎨Representation
-/** @emoji 🛡️ Alias for {@link useRepresentation}. */
-export function useRepresentation(): Representation | null {
-  return useRepresentation();
-}
-
 /** @emoji 📖 Live {@link Representation#readUrl}. */
 export function useRepresentationUrl(): FieldReadState<string> {
   const entity = useRepresentation();
@@ -1509,11 +1491,6 @@ export function useRepresentationFileId(): FieldReadState<string> {
 // #endregion 🎨Representation
 
 // #region 🧩Piece
-/** @emoji 🛡️ Resolves the contextual {@link Piece} from {@link PieceContextProvider}. */
-export function usePiece(): Piece | null {
-  return usePiece();
-}
-
 /** @emoji 📖 Live {@link Piece#readName}. */
 export function usePieceName(): FieldReadState<string> {
   const entity = usePiece();
@@ -1735,39 +1712,34 @@ const usePiecesChangeBlueprintOp = bindPiecesOperationsOpToReact((ops, id: strin
 
 /** @emoji ✍️ {@link PiecesOperations#drag} for {@code design.pieces(ids)}. */
 export function useDragPieces(designId: string, pieceIds: readonly string[]): readonly [(offset: OffsetInput) => Promise<SetResult>, OperationStatus] {
-  const { kit } = useKit();
+  const kit = useKit();
   const getOps = React.useCallback(() => (pieceIds.length === 0 ? null : kit.design(designId).pieces(pieceIds)), [kit, designId, pieceIds]);
   return usePiecesDragOp(getOps);
 }
 
 /** @emoji ✍️ {@link PiecesOperations#move}. */
 export function useMovePieces(designId: string, pieceIds: readonly string[]): readonly [(offset: OffsetInput) => Promise<SetResult>, OperationStatus] {
-  const { kit } = useKit();
+  const kit = useKit();
   const getOps = React.useCallback(() => (pieceIds.length === 0 ? null : kit.design(designId).pieces(pieceIds)), [kit, designId, pieceIds]);
   return usePiecesMoveOp(getOps);
 }
 
 /** @emoji ✍️ {@link PiecesOperations#fix}. */
 export function useFixPieces(designId: string, pieceIds: readonly string[]): readonly [() => Promise<SetResult>, OperationStatus] {
-  const { kit } = useKit();
+  const kit = useKit();
   const getOps = React.useCallback(() => (pieceIds.length === 0 ? null : kit.design(designId).pieces(pieceIds)), [kit, designId, pieceIds]);
   return usePiecesFixOp(getOps);
 }
 
 /** @emoji ✍️ {@link PiecesOperations#changeBlueprint}. */
 export function useChangePiecesBlueprint(designId: string, pieceIds: readonly string[]): readonly [(blueprintId: string) => Promise<SetResult>, OperationStatus] {
-  const { kit } = useKit();
+  const kit = useKit();
   const getOps = React.useCallback(() => (pieceIds.length === 0 ? null : kit.design(designId).pieces(pieceIds)), [kit, designId, pieceIds]);
   return usePiecesChangeBlueprintOp(getOps);
 }
 // #endregion 🪢Pieces
 
 // #region ⛓️Connection
-/** @emoji 🛡️ Resolves the contextual {@link Connection} from {@link ConnectionContextProvider}. */
-export function useConnection(): Connection | null {
-  return useConnection();
-}
-
 /** @emoji 📖 Live {@link Connection#readGap}. */
 export function useConnectionGap(): FieldReadState<number | null> {
   const entity = useConnection();
@@ -1854,740 +1826,39 @@ export function useConnectionAttributes(): FieldReadState<readonly Attribute[]> 
 // #endregion ⛓️Connection
 
 // #region ⚛️Embedded tests
-const shouldRunReactEmbeddedTests =
-  (typeof process !== "undefined" && process.env.SEMIO_REACT_RUN_EMBEDDED_TESTS === "1") || (typeof (globalThis as any).__SEMIO_REACT_RUN_EMBEDDED_TESTS__ !== "undefined" && (globalThis as any).__SEMIO_REACT_RUN_EMBEDDED_TESTS__ === true);
-
-if (shouldRunReactEmbeddedTests) {
-  const { describe, expect, it } = await import("vitest");
-  const { act, cleanup, render, waitFor } = await import("@testing-library/react");
-  const { InMemoryKitStore, asKitInstance, kitReadPointKey, theKitReadPoint, StoreField, StoreCommand } = await import("@semio/js");
-
-  const kitJsonFromStore = (store: KitHostStore) => {
-    const host = store as KitHostStore & { _kit?: { toJSON: () => unknown } };
-    if (((store as any).__semioKitBridge || (store as any).__semioKitClient) && host._kit) return host._kit.toJSON();
-    return store.getSnapshot().kit.toJSON();
-  };
-
-  const createTestKitClient = (store: KitHostStore): KitStoreClient => {
-    const initialName = String((kitJsonFromStore(store) as Kit).name ?? "");
-    let pushKitName!: (v: string) => void;
-    const kitNameField = new StoreField<string>(initialName, (push) => {
-      pushKitName = push;
-      push(initialName);
-      return () => {};
-    });
-    const renameKitCmd = new StoreCommand<import("@semio/js").RenameKitCommandArgs>(async (args) => {
-      const v = String(args.input?.name ?? "").trim();
-      if (v === "") return { ok: false, error: { kind: "InvalidValue", message: "kit name required" } };
-      const kit: Kit = JSON.parse(JSON.stringify(kitJsonFromStore(store))) as Kit;
-      (kit as { name: string }).name = v;
-      store.replace(asKitInstance(kit));
-      pushKitName(v);
-      return { ok: true };
-    });
-    return {
-      fetchKit: async () => kitJsonFromStore(store) as Kit,
-      kitReadPoint: theKitReadPoint,
-      submitChangeKitCommands: async (commands: readonly ChangeKitCommand[]) => {
-        const kit: Kit = JSON.parse(JSON.stringify(kitJsonFromStore(store))) as Kit;
-        for (const cmd of commands) {
-          const c = cmd as Record<string, unknown>;
-          if ("name" in c && c.name && typeof c.name === "object") {
-            const nm = String((c.name as { name?: string }).name ?? "");
-            if (nm.trim() === "") return { ok: false, error: { kind: "IllegalName", message: "name cannot be empty" } };
-            (kit as { name: string }).name = nm;
-            pushKitName(nm);
-          }
-          if ("description" in c && c.description && typeof c.description === "object") (kit as { description?: string }).description = (c.description as { description?: string | null }).description ?? undefined;
-          if ("icon" in c && c.icon && typeof c.icon === "object") (kit as { icon?: string }).icon = (c.icon as { icon?: string | null }).icon ?? undefined;
-          if ("image" in c && c.image && typeof c.image === "object") (kit as { image?: string }).image = (c.image as { image?: string | null }).image ?? undefined;
-          if ("version" in c && c.version && typeof c.version === "object") (kit as { version?: string }).version = (c.version as { version?: string | null }).version ?? undefined;
-          if ("homepage" in c && c.homepage && typeof c.homepage === "object") (kit as { homepage?: string }).homepage = (c.homepage as { homepage?: string | null }).homepage ?? undefined;
-          if ("license" in c && c.license && typeof c.license === "object") (kit as { license?: string }).license = (c.license as { license?: string | null }).license ?? undefined;
-        }
-        store.replace(asKitInstance(kit));
-        return { ok: true };
-      },
-      readPieceFlatPlane: async () => null,
-      readPieceFlatCenter: async () => null,
-      readPieceParentConnection: async () => null,
-      readDesignIncludedDesigns: async () => [],
-      readDesignClusterableGroups: async () => [],
-      readDesignQualitySum: async () => 0,
-      readTypeBestRepresentation: async () => null,
-      readColoredConnectors: async () => [],
-      readDesignReplaceableCatalogTypes: async () => [],
-      readDesignReplaceableCatalogDesigns: async () => [],
-      readDesignIncludedDesignIds: async () => [],
-      kitGraphql: () => {
-        throw new Error("kitGraphql not available in embedded test client");
-      },
-      clusterPieces: async () => ({ ok: true }),
-      dragPieces: async () => ({ ok: true }),
-      movePieces: async () => ({ ok: true }),
-      fixPieces: async () => ({ ok: true }),
-      flattenDesign: async () => ({ ok: true }),
-      expandDesign: async () => ({ ok: true }),
-      deleteConnection: async () => ({ ok: true }),
-      changePieceType: async () => ({ ok: true }),
-      pasteDesignSelection: async () => ({ ok: true }),
-      createHangingPieces: async () => ({ ok: true }),
-      createConnectedPiece: async () => ({ ok: true }),
-      createFixedPiece: async () => ({ ok: true }),
-      getPiecesMetadata: async () => new Map(),
-      getPieces: async () => [],
-      getConnections: async () => [],
-      getDesigns: async () => [],
-      getTypes: async () => [],
-      getAuthors: async () => [],
-      getKitMetadata: async () => {
-        const k = kitJsonFromStore(store) as Kit;
-        return { id: String(k.id ?? ""), name: String(k.name ?? "") };
-      },
-      undo: async () => ({ ok: true }),
-      redo: async () => ({ ok: true }),
-      canUndo: async () => false,
-      canRedo: async () => false,
-      backboneStatus: async () => ({ attached: false, kind: null, backboneTip: null, pendingWipCheckpoints: 0 }),
-      attachBackbone: async () => ({ ok: true }) as const,
-      detachBackbone: async () => ({ ok: true }) as const,
-      listConflicts: async () => [] as const,
-      resolveConflict: async () => ({ ok: true }) as const,
-      syncNow: async () => ({ ok: true }) as const,
-      kitName: kitNameField,
-      renameKit: renameKitCmd,
-      readKitName: async () => String((kitJsonFromStore(store) as Kit).name ?? ""),
-      createAlternativeFromTip: async () => "alt-test",
-      getKitWriteScope: () => null,
-      setKitWriteScope: () => {},
-      finalizeKitWriteTransaction: async () => ({ ok: true }),
-      abortKitWriteTransaction: async () => ({ ok: true }),
-      subscribe: (cb: (ev: any) => void) => store.subscribe(() => cb({ kind: "test" })),
-      setKitReadPoint: (_s: import("@semio/js").KitReadPoint) => {},
-      dispose: () => {
-        kitNameField.dispose();
-        renameKitCmd.dispose();
-      },
-    } as unknown as KitStoreClient;
-  };
-
-  describe("pipeline hooks", () => {
-    it("useKitName rejects empty required name via kit client", async () => {
-      const kit = asKitInstance({
-        id: "k1",
-        name: "K",
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-        designs: [
-          {
-            id: "d1",
-            name: "D",
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
-            pieces: [{ id: "p1", name: "N" }],
-          },
-        ],
-      });
-      const store = new InMemoryKitStore(kit);
-      const kitClient = createTestKitClient(store);
-      let renameKit: ((v: string) => Promise<SetResult>) | undefined;
-      let lastStatus: OperationStatus | undefined;
-      let client: KitStoreClient | null = null;
-
-      function Probe() {
-        const [run, st] = useRenameKit();
-        renameKit = run;
-        lastStatus = st;
-        client = useKitStoreClient();
-        return null;
-      }
-
-      render(React.createElement(KitScope, { store, kitClient, children: React.createElement(Probe) }));
-
-      await waitFor(() => {
-        expect(renameKit).toBeDefined();
-        expect(client).not.toBeNull();
-      });
-      const r = await renameKit!("");
-      expect(r.ok).toBe(false);
-      await waitFor(() => expect(lastStatus?.kind === "settled" && lastStatus.kind === "settled" && !lastStatus.result.ok).toBe(true));
-    });
-
-    it("embedded kit client stub exposes read promise methods used by live-read hooks", async () => {
-      const kit = asKitInstance({
-        id: "k1",
-        name: "K",
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      });
-      const store = new InMemoryKitStore(kit);
-      const c = createTestKitClient(store);
-      expect(typeof c.readPieceFlatPlane).toBe("function");
-      expect(typeof c.readDesignIncludedDesigns).toBe("function");
-      expect(typeof c.readDesignReplaceableCatalogTypes).toBe("function");
-    });
-
-    it("kit metadata hooks write through the kit client (segregated read+mutation pattern)", async () => {
-      const kit = asKitInstance({
-        id: "k1",
-        name: "K",
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      });
-      const store = new InMemoryKitStore(kit);
-      const kitClient = createTestKitClient(store);
-      let setName: ((v: string) => Promise<any>) | undefined;
-      let patchKit: ((p: Record<string, unknown>) => Promise<any>) | undefined;
-      let client: KitStoreClient | null = null;
-
-      function Probe() {
-        setName = useRenameKit()[0];
-        patchKit = usePatchKit().run;
-        client = useKitStoreClient();
-        return null;
-      }
-
-      render(React.createElement(KitScope, { store, kitClient, children: React.createElement(Probe) }));
-      await waitFor(() => {
-        expect(patchKit).toBeDefined();
-        expect(client).not.toBeNull();
-      });
-
-      expect((await setName!("Renamed Kit")).ok).toBe(true);
-      expect((await patchKit!({ release: "1.2.3", description: "Updated description", icon: "spark", image: "kit.png", homepage: "https://semio.example", license: "LGPL-3.0-or-later" })).ok).toBe(true);
-
-      await waitFor(() => {
-        const next = store.getSnapshot().kit.toJSON();
-        expect(next.name).toBe("Renamed Kit");
-        expect(next.version).toBe("1.2.3");
-        expect(next.description).toBe("Updated description");
-        expect(next.icon).toBe("spark");
-        expect(next.image).toBe("kit.png");
-        expect(next.homepage).toBe("https://semio.example");
-        expect(next.license).toBe("LGPL-3.0-or-later");
-      });
-    });
-
-    it("usePieceFlatPlane subscribes narrowly: FlattenInvalidated for one piece rerenders only that hook", async () => {
-      const kit = asKitInstance({
-        id: "k-gran",
-        name: "K",
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      });
-      const store = new InMemoryKitStore(kit);
-      const listeners = new Set<(ev: import("@semio/js").KitEvent) => void>();
-      const mockKs = {
-        piece(d: string, p: string, _scope: unknown) {
-          void _scope;
-          return {
-            readFlatPlane: async () => ({ tag: `${d}:${p}`, origin: [0, 0, 0] as const }),
-          };
-        },
-      };
-      const kitClient = createTestKitClient(store) as KitStoreClient & { internalKs?: () => unknown };
-      kitClient.internalKs = () => mockKs as unknown as import("@semio/js").KitStore;
-      kitClient.subscribe = (cb: (ev: import("@semio/js").KitEvent) => void) => {
-        listeners.add(cb);
-        return () => {
-          listeners.delete(cb);
-        };
-      };
-
-      const renders = { p1: 0, p2: 0 };
-
-      function Piece1() {
-        usePieceFlatPlaneKitHostBinding("d1", "p1");
-        renders.p1 += 1;
-        return null;
-      }
-      function Piece2() {
-        usePieceFlatPlaneKitHostBinding("d1", "p2");
-        renders.p2 += 1;
-        return null;
-      }
-
-      render(React.createElement(KitScope, { store, kitClient, children: React.createElement(React.Fragment, null, React.createElement(Piece1), React.createElement(Piece2)) }));
-
-      await waitFor(() => {
-        expect(renders.p1).toBeGreaterThan(0);
-        expect(renders.p2).toBeGreaterThan(0);
-      });
-
-      const afterIdle = { p1: renders.p1, p2: renders.p2 };
-
-      await act(async () => {
-        const ev = { FlattenInvalidated: { design: "d1", pieces: ["p1"] } } as import("@semio/js").KitEvent;
-        for (const l of [...listeners]) l(ev);
-      });
-
-      await waitFor(() => {
-        expect(renders.p1).toBeGreaterThan(afterIdle.p1);
-        expect(renders.p2).toBe(afterIdle.p2);
-      });
-    });
-  });
-
-  describe("KitRegistry + useOptimistic", () => {
-    it("registry open/close refcounts and useOptimistic keeps draft until commit", async () => {
-      const kit = asKitInstance({
-        id: "k1",
-        name: "K",
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      });
-      const store = new InMemoryKitStore(kit);
-      const kitClient = createTestKitClient(store);
-      let reg: ReturnType<typeof useKitRegistry> | null = null;
-      function RegProbe() {
-        reg = useKitRegistry();
-        return null;
-      }
-      render(React.createElement(KitRegistryProvider, null, React.createElement(RegProbe)));
-      await waitFor(() => expect(reg).not.toBeNull());
-      await reg!.open("k1", { store, kitClient });
-      expect(reg!.get("k1")?.refs).toBe(1);
-      await reg!.open("k1", { store });
-      expect(reg!.get("k1")?.refs).toBe(2);
-      reg!.close("k1");
-      expect(reg!.get("k1")?.refs).toBe(1);
-      reg!.close("k1");
-      expect(reg!.get("k1")).toBeUndefined();
-
-      const triad: KitFieldBinding<string> = ["hello", async () => ({ ok: true }) as const, { kind: "idle", pending: 0 }];
-      let opt: ReturnType<typeof useOptimistic<string>> | null = null;
-      function OptProbe() {
-        opt = useOptimistic(triad);
-        return null;
-      }
-      render(React.createElement(OptProbe));
-      await waitFor(() => expect(opt).not.toBeNull());
-      expect(opt!.dirty).toBe(false);
-    });
-  });
-
-  describe("getKitRegistryBridge", () => {
-    it("is non-null under KitRegistryProvider and null after unmount", async () => {
-      const { unmount } = render(React.createElement(KitRegistryProvider, { children: React.createElement("div", null, "x") }));
-      const b = getKitRegistryBridge();
-      expect(b).not.toBeNull();
-      expect(typeof b!.list).toBe("function");
-      unmount();
-      await waitFor(() => expect(getKitRegistryBridge()).toBeNull());
-    });
-  });
-
-  describe("useOpenKitGuids + useActiveKitGuid", () => {
-    it("mirrors registry list() and activeKitId after open", async () => {
-      const kit = asKitInstance({
-        id: "k-open",
-        name: "OpenK",
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      });
-      const store = new InMemoryKitStore(kit);
-      const kitClient = createTestKitClient(store);
-      let openIds: string[] = [];
-      let active: string | undefined;
-      function Probe() {
-        openIds = useOpenKitGuids();
-        active = useActiveKitGuid();
-        return null;
-      }
-      render(React.createElement(KitRegistryProvider, null, React.createElement(Probe)));
-      const b = getKitRegistryBridge();
-      expect(b).not.toBeNull();
-      await b!.open("k-open", { store, kitClient });
-      b!.setActiveKit("k-open");
-      await waitFor(() => {
-        expect(openIds).toContain("k-open");
-        expect(active).toBe("k-open");
-      });
-    });
-  });
-
-  describe("useOpenKitShallows + useRegistryHasKit + useRegistryKitPersistenceKind", () => {
-    it("returns empty shallows when no KitRegistryProvider (Home table shell)", () => {
-      cleanup();
-      let shallows: ReturnType<typeof useOpenKitShallows> = [];
-      function Probe() {
-        shallows = useOpenKitShallows();
-        return null;
-      }
-      render(React.createElement(Probe));
-      expect(shallows).toEqual([]);
-    });
-
-    it("reflects registry kit snapshots and persistence kind", async () => {
-      const kit = asKitInstance({
-        id: "k-shallow",
-        name: "ShallowK",
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      });
-      const store = new InMemoryKitStore(kit);
-      const kitClient = createTestKitClient(store);
-      let shallows: ReturnType<typeof useOpenKitShallows> = [];
-      let hasKit = false;
-      let pkind: KitPersistenceInfo["kind"] | undefined;
-      function Probe() {
-        shallows = useOpenKitShallows();
-        hasKit = useRegistryHasKit("k-shallow");
-        pkind = useRegistryKitPersistenceKind("k-shallow");
-        return null;
-      }
-      const { unmount } = render(React.createElement(KitRegistryProvider, null, React.createElement(Probe)));
-      const b = getKitRegistryBridge();
-      expect(b).not.toBeNull();
-      await b!.open("k-shallow", { store, kitClient });
-      await waitFor(() => expect(b!.list()).toContain("k-shallow"));
-      await waitFor(() => {
-        expect(hasKit).toBe(true);
-        expect(pkind).toBe("temporary");
-        expect(shallows.some((s) => s.id === "k-shallow" && s.name === "ShallowK")).toBe(true);
-      });
-      unmount();
-      await waitFor(() => expect(getKitRegistryBridge()).toBeNull());
-    });
-  });
-
-  describe("executeSemioKitCommand moveToFolder", () => {
-    it("updates quality folder on InMemoryKitStore", async () => {
-      const t = new Date().toISOString();
-      const kit = asKitInstance({
-        id: "drag-kit",
-        name: "Drag Kit",
-        createdAt: t,
-        updatedAt: t,
-        folders: [
-          { id: "folder-a", name: "Folder A" },
-          { id: "folder-b", name: "Folder B" },
-          { id: "folder-c", name: "Folder C", parent: { id: "folder-a" } },
-        ],
-        types: [{ id: "type-a", name: "Type A", folder: "folder-a", createdAt: t, updatedAt: t }],
-        designs: [{ id: "design-a", name: "Design A", folder: "folder-a", pieces: [], connections: [], createdAt: t, updatedAt: t }],
-        qualities: [{ id: "quality-a", name: "Quality A", key: "quality.a", folder: "folder-a" }],
-        files: [{ id: "file-a", name: "mesh.glb", folder: { id: "folder-a" }, createdAt: t, updatedAt: t }],
-      });
-      const store = new InMemoryKitStore(kit);
-      await executeSemioKitCommand(store, "semio.kit.moveToFolder", "test.moveToFolder.quality", "quality-a", "quality", "folder-b");
-      const q = store.getSnapshot().kit.qualities?.find((x) => x.id === "quality-a");
-      expect(q?.folder).toBe("folder-b");
-    });
-  });
-
-  describe("KitStoreClient stub RPC hooks", () => {
-    it("records kit command request lifecycle events from the store client", async () => {
-      const kit = asKitInstance({
-        id: "k1",
-        name: "K",
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-        designs: [{ id: "d1", name: "D", createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), pieces: [{ id: "p1", name: "P" }], connections: [] }],
-      });
-      const store = new InMemoryKitStore(kit);
-      const listeners = new Set<(event: any) => void>();
-      const emit = (event: any) => {
-        for (const listener of listeners) listener(event);
-      };
-      const stub = {
-        ...createTestKitClient(store),
-        subscribe: (cb: (ev: any) => void) => {
-          listeners.add(cb);
-          return () => listeners.delete(cb);
-        },
-        clusterPieces: async () => {
-          await new Promise((resolve) => setTimeout(resolve, 0));
-          emit({ semioKitCommand: { requestId: "r1", commandKind: "clusterPieces", phase: "accepted" } });
-          emit({ semioKitCommand: { requestId: "r1", commandKind: "clusterPieces", phase: "failed", error: { kind: "InvalidValue", message: "bad cluster" } } });
-          return { ok: false, error: { kind: "InvalidValue", message: "bad cluster" }, requestId: "r1" };
-        },
-      } as unknown as KitStoreClient;
-      let events: SchemaPropertyEvent[] = [];
-      let errors: SetError[] = [];
-      function Probe() {
-        const { run } = useClusterPieces();
-        events = useSchemaEvents({ typeName: "KitCommand" });
-        errors = useSetErrors();
-        const ran = React.useRef(false);
-        React.useEffect(() => {
-          if (ran.current) return;
-          ran.current = true;
-          void run("d1", ["p1"], "C");
-        }, [run]);
-        return null;
-      }
-      render(React.createElement(KitScope, { store, kitClient: stub, children: React.createElement(Probe) }));
-      await waitFor(() => expect(events.some((event) => event.requestId === "r1" && event.phase === "failed")).toBe(true));
-      expect(errors.some((error) => error.message === "bad cluster")).toBe(true);
-    });
-
-    it("useClusterPieces forwards failures to useSetErrors", async () => {
-      const kit = asKitInstance({
-        id: "k1",
-        name: "K",
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-        designs: [
-          {
-            id: "d1",
-            name: "D",
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
-            pieces: [{ id: "p1", name: "P" }],
-            connections: [],
-          },
-        ],
-      });
-      const store = new InMemoryKitStore(kit);
-      const stub: KitStoreClient = {
-        fetchKit: async () => store.getSnapshot().kit.toJSON() as Kit,
-        kitReadPoint: theKitReadPoint,
-        getKitWriteScope: () => null,
-        setKitWriteScope: () => {},
-        finalizeKitWriteTransaction: async () => ({ ok: true }) as const,
-        abortKitWriteTransaction: async () => ({ ok: true }) as const,
-        submitChangeKitCommands: async () => ({ ok: true }) as const,
-        kitGraphql: () => {
-          throw new Error("no gql");
-        },
-        clusterPieces: async () => ({ ok: false, error: { kind: "InvalidValue", message: "stub-cluster" } }),
-        dragPieces: async () => ({ ok: true }) as const,
-        movePieces: async () => ({ ok: true }) as const,
-        fixPieces: async () => ({ ok: true }) as const,
-        flattenDesign: async () => ({ ok: true }) as const,
-        expandDesign: async () => ({ ok: true }) as const,
-        deleteConnection: async () => ({ ok: true }) as const,
-        changePieceType: async () => ({ ok: true }) as const,
-        pasteDesignSelection: async () => ({ ok: true }) as const,
-        createHangingPieces: async () => ({ ok: true }) as const,
-        createConnectedPiece: async () => ({ ok: true }) as const,
-        createFixedPiece: async () => ({ ok: true }) as const,
-        getPiecesMetadata: async () => new Map(),
-        getPieces: async () => [],
-        getConnections: async () => [],
-        getDesigns: async () => [],
-        getTypes: async () => [],
-        getAuthors: async () => [],
-        getKitMetadata: async () => {
-          const k = store.getSnapshot().kit.toJSON() as Kit;
-          return { id: String(k.id ?? ""), name: String(k.name ?? "") };
-        },
-        undo: async () => ({ ok: true }) as const,
-        redo: async () => ({ ok: true }) as const,
-        canUndo: async () => false,
-        canRedo: async () => false,
-        backboneStatus: async () => ({ attached: false, kind: null, backboneTip: null, pendingWipCheckpoints: 0 }),
-        attachBackbone: async () => ({ ok: true }) as const,
-        detachBackbone: async () => ({ ok: true }) as const,
-        listConflicts: async () => [],
-        resolveConflict: async () => ({ ok: true }) as const,
-        syncNow: async () => ({ ok: true }) as const,
-        kitName: new StoreField<string>(""),
-        renameKit: new StoreCommand<import("@semio/js").RenameKitCommandArgs>(async () => ({
-          ok: false,
-          error: { kind: "NotSupported", message: "stub" },
-        })),
-        readKitName: async () => "",
-        readPieceFlatPlane: async () => null,
-        readPieceFlatCenter: async () => null,
-        readPieceParentConnection: async () => null,
-        readDesignIncludedDesigns: async () => [],
-        readDesignClusterableGroups: async () => [],
-        readDesignQualitySum: async () => 0,
-        readTypeBestRepresentation: async () => null,
-        readColoredConnectors: async () => [],
-        readDesignReplaceableCatalogTypes: async () => [],
-        readDesignReplaceableCatalogDesigns: async () => [],
-        readDesignIncludedDesignIds: async () => [],
-        subscribe: () => () => {},
-        setKitReadPoint: () => {},
-        dispose: () => {},
-      } as unknown as KitStoreClient;
-      let seen: SetError[] = [];
-      function Probe() {
-        const { run } = useClusterPieces();
-        seen = useSetErrors();
-        const ran = React.useRef(false);
-        React.useEffect(() => {
-          if (ran.current) return;
-          ran.current = true;
-          void run("d1", ["p1"], "C");
-        }, [run]);
-        return null;
-      }
-      render(React.createElement(KitScope, { store, kitClient: stub, children: React.createElement(Probe) }));
-      await waitFor(() => expect(seen.length).toBeGreaterThan(0));
-      expect(seen[0]?.message).toContain("stub-cluster");
-    });
-  });
-
-  describe("kit data scope", () => {
-    it("KitScope kitReadPoint prop drives setKitReadPoint and useKitReadPoint (checkpoint line)", async () => {
-      const log: string[] = [];
-      const kit = asKitInstance({
-        id: "k1",
-        name: "K",
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-        types: [],
-        designs: [],
-      });
-      const store = new InMemoryKitStore(kit);
-      const base = createTestKitClient(store);
-      const client: KitStoreClient = {
-        ...base,
-        setKitReadPoint: (s) => {
-          log.push(kitReadPointKey(s));
-        },
-      };
-      const ck: KitReadPoint = { checkpoint: { checkpointId: "cpx" } };
-      let got: KitReadPoint | null = null;
-      function Leaf() {
-        got = useKitReadPoint();
-        return null;
-      }
-      const tree = React.createElement(KitScope, {
-        store,
-        kitClient: client,
-        kitReadPoint: ck,
-        children: React.createElement(Leaf, null),
-      });
-      const { unmount } = render(tree);
-      await waitFor(() => {
-        if (!got || !("checkpoint" in got) || (got as { checkpoint: { checkpointId: string } }).checkpoint.checkpointId !== "cpx") {
-          throw new Error("not ready");
-        }
-      });
-      const ckKey = kitReadPointKey({ checkpoint: { checkpointId: "cpx" } });
-      expect(log).toContain(ckKey);
-      unmount();
-    });
-
-    it("KitScope without kitReadPoint follows KitAlternativeSelectionProvider alternative id", async () => {
-      const log: string[] = [];
-      const kit = asKitInstance({
-        id: "k1",
-        name: "K",
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-        types: [],
-        designs: [],
-      });
-      const store = new InMemoryKitStore(kit);
-      const base = createTestKitClient(store);
-      const client: KitStoreClient = {
-        ...base,
-        setKitReadPoint: (s) => {
-          log.push(kitReadPointKey(s));
-        },
-      };
-      function Probe() {
-        const [, setAlt] = useKitAlternativeSelection();
-        React.useEffect(() => {
-          setAlt("alt-7");
-        }, [setAlt]);
-        useKitReadPoint();
-        return null;
-      }
-      const tree = React.createElement(KitAlternativeSelectionProvider, {
-        children: React.createElement(KitScope, {
-          store,
-          kitClient: client,
-          children: React.createElement(Probe, null),
-        }),
-      });
-      const { unmount } = render(tree);
-      await waitFor(() => {
-        expect(log).toContain(kitReadPointKey({ alternative: { alternativeId: "alt-7" } }));
-      });
-      unmount();
-    });
-  });
-
-  describe("usePendingTriad", () => {
-    it("keeps local draft and does not clear it when commit rejects", async () => {
-      const triad: KitFieldBinding<string> = [
-        "server",
-        async (next) => {
-          const v = typeof next === "function" ? (next as (p: string) => string)("server") : next;
-          if (v === "reject") return { ok: false, error: { kind: "InvalidValue", message: "rejected" } } as const;
-          return { ok: true } as const;
-        },
-        { kind: "idle", pending: 0 },
-      ];
-      let snap: ReturnType<typeof usePendingTriad<string>> | null = null;
-      function P() {
-        snap = usePendingTriad(triad);
-        return null;
-      }
-      render(React.createElement(P));
-      await waitFor(() => expect(snap).not.toBeNull());
-      await act(async () => {
-        snap!.setPending("reject");
-      });
-      const r = await act(async () => snap!.commit());
-      expect(r.ok).toBe(false);
-      expect(snap!.value).toBe("reject");
-    });
-
-    it("clears draft when commit succeeds", async () => {
-      const triad: KitFieldBinding<string> = [
-        "server",
-        async (next) => {
-          const v = typeof next === "function" ? (next as (p: string) => string)("server") : next;
-          return { ok: true } as const;
-        },
-        { kind: "idle", pending: 0 },
-      ];
-      let snap: ReturnType<typeof usePendingTriad<string>> | null = null;
-      function P() {
-        snap = usePendingTriad(triad);
-        return null;
-      }
-      render(React.createElement(P));
-      await waitFor(() => expect(snap).not.toBeNull());
-      await act(async () => {
-        snap!.setPending("edited");
-      });
-      expect(snap!.value).toBe("edited");
-      const r = await act(async () => snap!.commit());
-      expect(r.ok).toBe(true);
-      expect(snap!.value).toBe("server");
-    });
-
-    it("two usePendingTriad instances do not share pending state", async () => {
-      const triadA: KitFieldBinding<string> = ["a", async () => ({ ok: true }) as const, { kind: "idle", pending: 0 }];
-      const triadB: KitFieldBinding<string> = ["b", async () => ({ ok: true }) as const, { kind: "idle", pending: 0 }];
-      let sa: ReturnType<typeof usePendingTriad<string>> | null = null;
-      let sb: ReturnType<typeof usePendingTriad<string>> | null = null;
-      function P() {
-        sa = usePendingTriad(triadA);
-        sb = usePendingTriad(triadB);
-        return null;
-      }
-      render(React.createElement(P));
-      await waitFor(() => expect(sa && sb).toBeTruthy());
-      await act(async () => {
-        sa!.setPending("only-a");
-        sb!.setPending("only-b");
-      });
-      expect(sa!.value).toBe("only-a");
-      expect(sb!.value).toBe("only-b");
-    });
-  });
-}
+// @emoji 🧹 Legacy InMemoryKitStore embedded block removed during single-source Kit migration; restore with GraphQL Kit stubs only.
 // #endregion ⚛️Embedded tests
 
-//#endregion 🪁SketchpadHost
 
 // #region 🧪Vitest
 if (import.meta.vitest) {
+  const { readFileSync } = await import("node:fs");
+  const { fileURLToPath } = await import("node:url");
   const { describe, expect, it } = import.meta.vitest;
+  const reactSrcPath = fileURLToPath(new URL("./index.tsx", import.meta.url));
+  const reactSrc = readFileSync(reactSrcPath, "utf8");
   describe("semio/react kit binders", () => {
     it("mapTooLong surfaces max length for NameTooLong", () => {
       const msg = mapTooLong({ kind: "NameTooLong", message: "ignored", field: "name" }, 42);
       expect(msg).toContain("42");
+    });
+  });
+  describe("schema-1:1 banned patterns (this file)", () => {
+    const mustNotMatchCode = [
+      /\buseSyncExternalStore\s*\(/,
+      /\bapplyKitDiff\s*\(/,
+      /\buseDesignAppCommands\s*\(/,
+      /\bKitStoreSnapshot\b/,
+      /\bapplyToCache\s*\(/,
+      /\bdispatchSync\s*\(/,
+      /\bfieldSync\b/,
+      /\boptimistic\b/,
+      /\breconcil/i,
+    ];
+    it("react index has no banned substrings as live code calls", () => {
+      for (const re of mustNotMatchCode) {
+        expect.soft(reactSrc.match(re)).toBeNull();
+      }
     });
   });
 }

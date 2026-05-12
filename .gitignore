@@ -13,6 +13,7 @@ old
 generated
 reports
 **dist*
+target*
 #--------------------------------------SEMIOREPO--------------------------------------
 .repo/cache
 SPECS.md

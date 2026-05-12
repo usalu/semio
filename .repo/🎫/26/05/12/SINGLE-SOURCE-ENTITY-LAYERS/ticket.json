@@ -3,15 +3,16 @@
   "emoji": "🧬",
   "status": "open",
   "description": "Implement single-source entity layers: Rust BackboneKind, kit backbones, EventBus path subscribe, remove hydrate; JS Kit.open URI, backbone mutations; React Context rename, OperationStatus, bindFieldToReact without useSyncExternalStore.",
-  "summary": "Implemented BackboneKind (Dev/Local/Remote) with from_uri; native AttachedBackbone mounts derive kind from URI (local:// for SQLite backbone); renamed Dev/Local attach structs; Command::BackboneAttach drops redundant store_kind; added session.backbone GraphQL nav (attach/detach/status/setActiveCheckpoint/syncNow) and BackboneStatus SDL; removed hydrateKitStoreBundleJson mutation; WASM KitStoreHandle.create now takes backbone/bootstrap URI (dev://empty, dev+json:base64, dev://fetchable URL) with internal bundle vs kit JSON routing; EventBus.subscribe_paths MVP forwards to subscribe. JS: Kit.open maps inline JSON to dev+json URI, worker init uses uri, attachBackbone/detachBackbone mutations. React: fixed Entity generic constraints and removed recursive useType(). Verification: cargo/tsc not run due to build dir lock — see ticket verify-log.md.",
+  "summary": "Rust: fixed BackboneStatus (no Copy), BackboneAttach mount \u0026str, wasm bootstrap empty URI Ok wrap; implemented Event::matches_watched_paths + canonical_touched_paths, EventBus path_sinks + emit_event fan-out to async_channel subscribers, subscribe_paths returning filtered channel; gql collect_subscription_field_paths via Lookahead + all Subscription roots use filtered rx when selection non-empty; schema_matches_target_graphql_file still passes; native+wasm cargo check with isolated target dirs OK. React: embedded-test KitScope/useKitStoreClient shim (KitEmbedHost), KitContextProvider wiring fix; vitest block reads index.tsx and soft-asserts banned regexes (schema-1:1 partial). verify-log.md updated with command outcomes. Not done vs plan: full geom weak DTO+*Node collapse; bundle/serde_json confinement; exhaustive Event touched_paths per operation; full JS 282 classes + Entity factories + KIT_* purge + public Json removal; full React hooks/context rename across sketchpad; depcruise + green tsc for react (many existing errors).",
   "goal": "🎯r2602🎯runningsketchpad",
   "plan": {
     "client": "cursor",
     "id": "51ba1616",
-    "source": "c:\\git\\semio\\.cursor\\plans\\single-source_entity_layers_51ba1616.plan.md"
+    "local": "single-source_entity_layers_51ba1616.plan.md"
   },
   "sessions": [
     "⚪61b88a4a22ef4bd0a4466d15c01c8cc3",
-    "⚪8423dd8ed14e41b080fb2536eb924913"
+    "⚪8423dd8ed14e41b080fb2536eb924913",
+    "⚪80779f4983de4fc98480d9e8c7141808"
   ]
 }

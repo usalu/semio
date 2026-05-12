@@ -905,20 +905,20 @@ export class Kit {
     return new Family(this, id);
   }
 
-  file(id: string): FileEntity {
-    return new FileEntity(this, id);
+  file(id: string): File {
+    return new File(this, id);
   }
 
-  folder(id: string): FolderEntity {
-    return new FolderEntity(this, id);
+  folder(id: string): Folder {
+    return new Folder(this, id);
   }
 
   author(id: string): Author {
     return new Author(this, id);
   }
 
-  stat(id: string): StatEntity {
-    return new StatEntity(this, id);
+  stat(id: string): Stat {
+    return new Stat(this, id);
   }
 
   async rename(newName: string): Promise<SetResult> {
@@ -1114,12 +1114,12 @@ export class Design extends Entity {
     return new Connection(this.kit, this.id, connectionId);
   }
 
-  layer(layerId: string): LayerEntity {
-    return new LayerEntity(this.kit, this.id, layerId);
+  layer(layerId: string): Layer {
+    return new Layer(this.kit, this.id, layerId);
   }
 
-  group(groupId: string): GroupEntity {
-    return new GroupEntity(this.kit, this.id, groupId);
+  group(groupId: string): Group {
+    return new Group(this.kit, this.id, groupId);
   }
 
   /** @emoji 🧷 GraphQL kit-store tail for {@code design(id){ … }} (shared with {@link bindDefinedFieldToReact}). */
@@ -2462,7 +2462,7 @@ export class Family extends Entity {
 //#endregion 👨‍👩‍👦Family
 
 //#region 📄File
-export class FileEntity extends Entity {
+export class File extends Entity {
   constructor(kit: Kit, id: string) {
     super(kit, id);
   }
@@ -2478,7 +2478,7 @@ export class FileEntity extends Entity {
 
 //#region 📁Folder
 /** @emoji 📁 Folder artifact: read-only in current kit API. */
-export class FolderEntity extends Entity {
+export class Folder extends Entity {
   constructor(kit: Kit, id: string) {
     super(kit, id);
   }
@@ -2507,7 +2507,7 @@ export class FolderEntity extends Entity {
 
 //#region 🪟Layer
 /** @emoji 🪟 Design layer row: read-only in current kit API. */
-export class LayerEntity extends Entity {
+export class Layer extends Entity {
   readonly designId: string;
   constructor(kit: Kit, designId: string, id: string) {
     super(kit, id);
@@ -2569,7 +2569,7 @@ export class LayerEntity extends Entity {
 //#endregion 🪟Layer
 
 //#region 👥Group
-export class GroupEntity extends Entity {
+export class Group extends Entity {
   readonly designId: string;
   constructor(kit: Kit, designId: string, id: string) {
     super(kit, id);
@@ -2590,7 +2590,7 @@ export class GroupEntity extends Entity {
 
 //#region 📊Stat
 /** @emoji 📊 Stat artifact: read-only in current kit API. */
-export class StatEntity extends Entity {
+export class Stat extends Entity {
   constructor(kit: Kit, id: string) {
     super(kit, id);
   }
@@ -2631,7 +2631,7 @@ export class StatEntity extends Entity {
 
 //#region 🎚️Prop
 /** @emoji 🎚️ Prop artifact: read-only in current kit API. */
-export class PropEntity extends Entity {
+export class Prop extends Entity {
   constructor(kit: Kit, id: string) {
     super(kit, id);
   }
@@ -2714,6 +2714,39 @@ export interface Position {
   readonly plane: Plane;
 }
 //#endregion 📌Position
+
+//#region 📥GeomInputs
+/** @emoji 📥 GraphQL {@code PositionInput} mirror for kit mutations. */
+export type PositionInput = Readonly<{
+  center: Readonly<Coordinate>;
+  plane: Readonly<Plane>;
+}>;
+
+/** @emoji 📥 GraphQL {@code OffsetInput} mirror for kit mutations. */
+export type OffsetInput = Readonly<{
+  u: number;
+  v: number;
+}>;
+
+function __gqlGeomNum(n: number): string {
+  return Number.isFinite(n) ? String(n) : "0";
+}
+
+/** @emoji 📡 Inline GraphQL object literal for {@code PositionInput}. */
+export function formatPositionInput(p: PositionInput): string {
+  const c = p.center;
+  const pl = p.plane;
+  const o = pl.origin;
+  const xa = pl.xAxis;
+  const ya = pl.yAxis;
+  return `{ center: { u: ${__gqlGeomNum(c.u)}, v: ${__gqlGeomNum(c.v)} }, plane: { origin: { x: ${__gqlGeomNum(o.x)}, y: ${__gqlGeomNum(o.y)}, z: ${__gqlGeomNum(o.z)} }, xAxis: { x: ${__gqlGeomNum(xa.x)}, y: ${__gqlGeomNum(xa.y)}, z: ${__gqlGeomNum(xa.z)} }, yAxis: { x: ${__gqlGeomNum(ya.x)}, y: ${__gqlGeomNum(ya.y)}, z: ${__gqlGeomNum(ya.z)} } } }`;
+}
+
+/** @emoji 📡 Inline GraphQL object literal for {@code OffsetInput}. */
+export function formatOffsetInput(o: OffsetInput): string {
+  return `{ u: ${__gqlGeomNum(o.u)}, v: ${__gqlGeomNum(o.v)} }`;
+}
+//#endregion 📥GeomInputs
 //#region 🌍Place
 export interface Place {
   readonly location: Location;

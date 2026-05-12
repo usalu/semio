@@ -1,6 +1,12 @@
-# Verification (2026-05-12)
+# Verification (2026-05-12, follow-up)
 
-- `cargo check` / `cargo check --target wasm32-unknown-unknown`: **not completed** — build directory file lock from concurrent agent (`Blocking waiting for file lock on build directory`). Re-run locally with isolated `CARGO_TARGET_DIR` if needed.
-- `tsc --noEmit` / `npm run depcruise:layers`: **not run** (same reason / time).
+## Commands (exit 0 unless noted)
 
-Manual review: Rust `BackboneKind` + `from_uri`, native `AttachedBackbone` mount path, WASM `KitStoreHandle.create(String)` URI bootstrap, JS `Kit.open` + worker `init` URI, GraphQL `session.backbone` nav, `hydrateKitStoreBundleJson` removed from `Mutation`.
+- `cargo check -p semio --target-dir target-ssel` — **ok** (after fixing `BackboneStatus` Copy, `BackboneAttach` `&connection_uri`, wasm `bootstrap_runtime_from_open_uri` `Ok(...)`).
+- `cargo check -p semio --target wasm32-unknown-unknown --target-dir target-ssel-wasm` — **ok** (same fixes).
+- `cargo test -p semio --target-dir target-ssel schema_matches_target_graphql_file -- --nocapture` — **ok** (1 test).
+- `bunx tsc --noEmit` in `semio/react` — **exit 2**: many pre-existing errors (duplicate `usePiece` / `Kit` type shadow vs `@semio/js` `Kit`, missing `@semio/js` exports for embedded-test-only symbols, missing `PositionInput`, etc.). Not fully cleared in this pass.
+
+## Notes
+
+- Isolated `CARGO_TARGET_DIR` avoids the concurrent default `target/` lock called out in the prior log.

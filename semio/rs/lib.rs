@@ -10595,7 +10595,7 @@ pub mod wasm_bridge {
     async fn bootstrap_runtime_from_open_uri(uri: &str) -> Result<Arc<ParentRuntime>, crate::error::SemioError> {
         let u = uri.trim();
         if u.is_empty() || u == "dev://empty" {
-            return ParentRuntime::spawn().await;
+            return Ok(ParentRuntime::spawn().await);
         }
         if let Some(b64) = u.strip_prefix("dev+json:") {
             let bytes = base64::engine::general_purpose::STANDARD
