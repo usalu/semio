@@ -8300,16 +8300,19 @@ type SessionCommandInput {
 #endregion Commands
 
 #endregion VCS
+type Store {
+  session: Session!
+  wip: Graph!
+  authoritative: Graph
+  conflicts: ConflictConnection!
+}
 #endregion Entities
 
 #region Schema
 
 type Query {
   # Query
-  session: Session!
-  wip: Graph!
-  authoritative: Graph
-  conflicts: ConflictConnection!
+  store: Store!
   node(id: ID!): Node
   entity(hash: ID!): Entity
 }
@@ -8331,12 +8334,7 @@ type Mutation {
 type Subscription {
   # Subscription
   # Events
-  session: Session!
-  wip: Graph!
-  authoritative: Graph
-  conflicts: ConflictConnection!
-  node(id: ID!): Node!
-  entity(hash: ID!): Entity!
+  store:
   # Commands
   operation: Operation!
 }

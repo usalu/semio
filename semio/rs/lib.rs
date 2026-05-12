@@ -10063,8 +10063,8 @@ pub mod gql {
     #[Object]
     impl Mutation {
         /// @emoji 🎛️ Kit-changing commands — navigate via nested fields per `target.schema.graphql` `#region Commands`.
-        async fn session(&self) -> SessionCommand {
-            SessionCommandNav
+        async fn session(&self) -> SessionCommandInput {
+            SessionCommandInput
         }
     }
 
@@ -10316,6 +10316,9 @@ pub mod gql {
     pub async fn sdl() -> String {
         let mut acc = String::new();
         for frag in crate::sdl_registry::all_fragments() {
+            if frag.is_empty() {
+                continue;
+            }
             acc.push_str(frag);
             acc.push('\n');
         }

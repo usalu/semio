@@ -17,7 +17,7 @@ type JsonValue = string | number | boolean | null | readonly JsonValue[] | JsonO
 /** @emoji 🧵 File-local GraphQL wire JSON object node. */
 type JsonObject = { readonly [k: string]: JsonValue };
 
-type KitGraphqlResponseEnvelope<TData> = Readonly<{
+type GraphqlEnvelope<TData> = Readonly<{
   data?: TData | null;
   errors?: readonly { readonly message?: string }[];
 }>;
@@ -30,12 +30,12 @@ function isJsonObjectNode(v: JsonValue | null | undefined): v is JsonObject {
   return v != null && typeof v === "object" && !Array.isArray(v);
 }
 
-function kitGraphqlData<TData>(response: KitGraphqlResponseEnvelope<TData>): TData {
-  if (response == null || typeof response !== "object") throw new Error("kitGraphql: response is not an object");
+function unwrapGraphqlData<TData>(response: GraphqlEnvelope<TData>): TData {
+  if (response == null || typeof response !== "object") throw new Error("graphql: response is not an object");
   if (Array.isArray(response.errors) && response.errors.length > 0) throw new Error(response.errors[0]?.message ?? "GraphQL error");
   const d = response.data;
   if (d != null && typeof d === "object") return d;
-  throw new Error("kitGraphql: no data in response");
+  throw new Error("graphql: no data in response");
 }
 
 function withTimeout<T>(p: Promise<T>, ms: number, label: string): Promise<T> {
@@ -198,15 +198,15 @@ class WorkerStringTransport {
 export class GqlTransport {
   constructor(private readonly inner: WorkerStringTransport | InlineTransport) { }
 
-  async executeJson(body: { readonly query: string; readonly variables?: JsonObject; readonly operationName?: string }, timeoutMs: number): Promise<KitGraphqlResponseEnvelope<JsonValue>> {
+  async executeJson(body: { readonly query: string; readonly variables?: JsonObject; readonly operationName?: string }, timeoutMs: number): Promise<GraphqlEnvelope<JsonValue>> {
     const json = await withTimeout(this.inner.execute(JSON.stringify(body)), timeoutMs, "graphql");
-    return parseJsonValue(json) as KitGraphqlResponseEnvelope<JsonValue>;
+    return parseJsonValue(json) as GraphqlEnvelope<JsonValue>;
   }
 
-  async subscribeJson(body: { readonly query: string; readonly variables?: JsonObject }, onEvent: (env: KitGraphqlResponseEnvelope<JsonValue>) => void): Promise<void> {
+  async subscribeJson(body: { readonly query: string; readonly variables?: JsonObject }, onEvent: (env: GraphqlEnvelope<JsonValue>) => void): Promise<void> {
     await this.inner.subscribe(JSON.stringify(body), (eventJson) => {
       try {
-        onEvent(parseJsonValue(eventJson) as KitGraphqlResponseEnvelope<JsonValue>);
+        onEvent(parseJsonValue(eventJson) as GraphqlEnvelope<JsonValue>);
       } catch {
         /* ignore */
       }
@@ -220,7 +220,7 @@ export class GqlTransport {
 
 export type Unsubscribe = () => void;
 
-/** @emoji 📡 Demultiplexes live subscription `data` roots + legacy `event` JSON into listener fan-out (no client cache). */
+/** @emoji 📡 Demultiplexes live subscription `data` roots into listener fan-out (no client cache). */
 export class EventBus {
   private readonly listeners = new Set<(ev: JsonValue) => void>();
 
@@ -312,22 +312,22 @@ export type StoreOpenOptions = Readonly<{
   workerFactory?: () => Worker;
 }>;
 
-function __gqlStr(s: string): string {
+function gqlString(s: string): string {
   return JSON.stringify(s);
 }
 
-function __gqlIds(ids: readonly string[]): string {
-  return `[${ids.map((x) => __gqlStr(x)).join(",")}]`;
+function gqlIdList(ids: readonly string[]): string {
+  return `[${ids.map((x) => gqlString(x)).join(",")}]`;
 }
 
-function __scopedKitMutationBody(changeId: string, kitSelection: string): { readonly query: string; readonly variables: JsonObject } {
+function scopedKitMutationBody(changeId: string, kitSelection: string): { readonly query: string; readonly variables: JsonObject } {
   return {
     query: `mutation($changeId: ID!) { session { theKit { unsavedChange(id: $changeId) { kit { ${kitSelection} } } } } }`,
     variables: { changeId },
   };
 }
 
-function kitSessionWipStoreSelect(point: KitReadPoint, innerOnKitStore: string): { query: string; variables: JsonObject } {
+function kitReadSelectionDocument(point: KitReadPoint, innerOnKitStore: string): { query: string; variables: JsonObject } {
   if (isTheKitReadPoint(point)) {
     return {
       query: `query KitSessionWipStore { wip { theKit { kit { ${innerOnKitStore} } } } }`,
@@ -352,7 +352,7 @@ function kitSessionWipStoreSelect(point: KitReadPoint, innerOnKitStore: string):
   };
 }
 
-function gqlDataSessionWipKitStore(d: JsonValue | null | undefined, point: KitReadPoint): JsonObject | null {
+function kitReadSelectionFromData(d: JsonValue | null | undefined, point: KitReadPoint): JsonObject | null {
   if (d == null || typeof d !== "object" || Array.isArray(d)) return null;
   const wip = (d as { wip?: JsonObject | null }).wip;
   if (!wip || typeof wip !== "object" || Array.isArray(wip)) return null;
@@ -371,21 +371,21 @@ function gqlDataSessionWipKitStore(d: JsonValue | null | undefined, point: KitRe
   return kit != null && typeof kit === "object" && !Array.isArray(kit) ? (kit as JsonObject) : null;
 }
 
-async function kitGraphqlRun(handle: { execute(requestJson: string): Promise<string> }, body: { query: string; variables?: JsonObject; operationName?: string }, timeoutMs?: number): Promise<KitGraphqlResponseEnvelope<JsonValue>> {
+async function executeGraphql(handle: { execute(requestJson: string): Promise<string> }, body: { query: string; variables?: JsonObject; operationName?: string }, timeoutMs?: number): Promise<GraphqlEnvelope<JsonValue>> {
   const json = await withTimeout(handle.execute(JSON.stringify(body)), timeoutMs ?? 0, "graphql");
-  return parseJsonValue(json) as KitGraphqlResponseEnvelope<JsonValue>;
+  return parseJsonValue(json) as GraphqlEnvelope<JsonValue>;
 }
 
-function gqlOkFromEnvelope(env: KitGraphqlResponseEnvelope<JsonValue>): SetResult {
+function gqlOkFromEnvelope(env: GraphqlEnvelope<JsonValue>): SetResult {
   if (Array.isArray(env.errors) && env.errors.length > 0) {
     return { ok: false, error: { kind: "Internal", message: env.errors[0]?.message ?? "GraphQL error" } };
   }
   return { ok: true };
 }
 
-type KitGraphqlHandle = { execute(requestJson: string): Promise<string> };
+type GraphqlExecuteHandle = { execute(requestJson: string): Promise<string> };
 
-async function __readSemioBytesFromMonorepoCandidates(): Promise<Uint8Array | undefined> {
+async function readSemioWasmBytesFromMonorepoCandidates(): Promise<Uint8Array | undefined> {
   try {
     const fs = await import("node:fs/promises");
     const path = await import("node:path");
@@ -549,7 +549,7 @@ export type KitFieldReadSpec<T> = Readonly<{
   parse: (v: JsonValue) => T;
 }>;
 
-function __parseEntityConnectionIds(frag: JsonObject | null | undefined, key: string): readonly string[] {
+function parseEntityConnectionIds(frag: JsonObject | null | undefined, key: string): readonly string[] {
   const conn = frag?.[key] as JsonObject | undefined;
   const edges = conn?.["edges"] as readonly JsonValue[] | undefined;
   if (!Array.isArray(edges)) return [];
@@ -565,7 +565,7 @@ function __parseEntityConnectionIds(frag: JsonObject | null | undefined, key: st
 }
 
 /** @emoji 🧩 Parses {@code key: [{ id: … }]} non-relay {@code [StrongEntity!]} lists on a JSON row (e.g. {@code Checkpoint.changes}). */
-function __parseStrongEntityArrayIds(frag: JsonObject | null | undefined, key: string): readonly string[] {
+function parseStrongEntityArrayIds(frag: JsonObject | null | undefined, key: string): readonly string[] {
   const arr = frag?.[key] as readonly JsonValue[] | undefined;
   if (!Array.isArray(arr)) return [];
   const out: string[] = [];
@@ -577,7 +577,7 @@ function __parseStrongEntityArrayIds(frag: JsonObject | null | undefined, key: s
   return out;
 }
 
-function __readIdListStable<T>(
+function readStableEntityList<T>(
   cache: { ids: readonly string[]; arr: readonly T[] },
   nextIds: readonly string[],
   build: (id: string) => T,
@@ -596,32 +596,31 @@ function __readIdListStable<T>(
  */
 export class Store {
   private readonly timeoutMs: number;
-  private readonly handle: KitGraphqlHandle;
+  private readonly handle: GraphqlExecuteHandle;
   private readonly innerTransport: WorkerStringTransport | InlineTransport;
   private gqlLoopRunning = false;
   private disposed = false;
   private activeReadPoint: KitReadPoint = theKitReadPoint;
   private kitWriteChangeId: string | null = null;
-  private readonly __designCache = new Map<string, Design>();
-  private readonly __typeCache = new Map<string, Type>();
-  private readonly __tagCache = new Map<string, Tag>();
-  private readonly __conceptCache = new Map<string, Concept>();
-  private readonly __qualityCache = new Map<string, Quality>();
-  private readonly __familyCache = new Map<string, Family>();
-  private readonly __fileCache = new Map<string, File>();
-  private readonly __folderCache = new Map<string, Folder>();
-  private readonly __authorCache = new Map<string, Author>();
-  private readonly __statCache = new Map<string, Stat>();
-  private readonly __conflictCache = new Map<string, Conflict>();
-  private readonly __graphByRoot = new Map<"wip" | "authoritative", Graph>();
-  private __rootKit: Kit | undefined;
-  private __session: Session | undefined;
-  private __stableDesigns: { ids: readonly string[]; arr: readonly Design[] } = { ids: [], arr: [] };
-  private __stableTypes: { ids: readonly string[]; arr: readonly Type[] } = { ids: [], arr: [] };
-  private __stableAuthors: { ids: readonly string[]; arr: readonly Author[] } = { ids: [], arr: [] };
-  private __stableQualities: { ids: readonly string[]; arr: readonly Quality[] } = { ids: [], arr: [] };
-  private __stableTags: { ids: readonly string[]; arr: readonly Tag[] } = { ids: [], arr: [] };
-  private __stableConcepts: { ids: readonly string[]; arr: readonly Concept[] } = { ids: [], arr: [] };
+  private readonly designCache = new Map<string, Design>();
+  private readonly typeCache = new Map<string, Type>();
+  private readonly tagCache = new Map<string, Tag>();
+  private readonly conceptCache = new Map<string, Concept>();
+  private readonly qualityCache = new Map<string, Quality>();
+  private readonly familyCache = new Map<string, Family>();
+  private readonly fileCache = new Map<string, File>();
+  private readonly folderCache = new Map<string, Folder>();
+  private readonly authorCache = new Map<string, Author>();
+  private readonly statCache = new Map<string, Stat>();
+  private readonly conflictCache = new Map<string, Conflict>();
+  private readonly graphByRoot = new Map<"wip" | "authoritative", Graph>();
+  private sessionEntity: Session | undefined;
+  private stableDesigns: { ids: readonly string[]; arr: readonly Design[] } = { ids: [], arr: [] };
+  private stableTypes: { ids: readonly string[]; arr: readonly Type[] } = { ids: [], arr: [] };
+  private stableAuthors: { ids: readonly string[]; arr: readonly Author[] } = { ids: [], arr: [] };
+  private stableQualities: { ids: readonly string[]; arr: readonly Quality[] } = { ids: [], arr: [] };
+  private stableTags: { ids: readonly string[]; arr: readonly Tag[] } = { ids: [], arr: [] };
+  private stableConcepts: { ids: readonly string[]; arr: readonly Concept[] } = { ids: [], arr: [] };
 
   /** @emoji 🌐 GraphQL executor (JSON in/out). */
   readonly gql: GqlTransport;
@@ -656,7 +655,7 @@ export class Store {
       return;
     }
     if (data["wip"] !== undefined) {
-      // Coarse invalidation: live-query WIP tick → same bus kinds as legacy semantic events + command correlator.
+      // Coarse invalidation: live-query WIP tick fans out to the current semantic bus kinds and command correlator.
       this.bus.emit({ kind: "kitRenamed", payload: undefined } as unknown as JsonValue);
       this.bus.emit({ kind: "changedDescription", payload: undefined } as unknown as JsonValue);
       this.bus.emit({ kind: "commandSucceeded", payload: undefined } as unknown as JsonValue);
@@ -676,7 +675,7 @@ export class Store {
     void this.innerTransport
       .subscribe(JSON.stringify({ query: KIT_EVENT_STREAM_SUBSCRIPTION }), (eventJson: string) => {
         try {
-          const msg = parseJsonValue(eventJson) as KitGraphqlResponseEnvelope<JsonObject>;
+          const msg = parseJsonValue(eventJson) as GraphqlEnvelope<JsonObject>;
           if (msg.errors && Array.isArray(msg.errors) && msg.errors.length) return;
           const row = msg.data;
           if (row == null || typeof row !== "object") return;
@@ -690,22 +689,22 @@ export class Store {
       });
   }
 
-  private async gqlRun(body: { query: string; variables?: JsonObject; operationName?: string }): Promise<KitGraphqlResponseEnvelope<JsonValue>> {
+  private async gqlRun(body: { query: string; variables?: JsonObject; operationName?: string }): Promise<GraphqlEnvelope<JsonValue>> {
     this.ensureAlive();
-    return kitGraphqlRun(this.handle, body, this.timeoutMs);
+    return executeGraphql(this.handle, body, this.timeoutMs);
   }
 
   /** @emoji 🧾 Reads a selection inside scoped {@code kit { … }} for {@link activeReadPoint}. */
   async readKitInner(inner: string, variables: JsonObject = {}): Promise<JsonObject | null> {
-    const { query, variables: v0 } = kitSessionWipStoreSelect(this.activeReadPoint, inner);
-    const data = kitGraphqlData(await this.gqlRun({ query, variables: { ...v0, ...variables } })) as JsonValue;
-    return gqlDataSessionWipKitStore(data, this.activeReadPoint);
+    const { query, variables: v0 } = kitReadSelectionDocument(this.activeReadPoint, inner);
+    const data = unwrapGraphqlData(await this.gqlRun({ query, variables: { ...v0, ...variables } })) as JsonValue;
+    return kitReadSelectionFromData(data, this.activeReadPoint);
   }
 
   /** @emoji 🧾 Runs {@code mutation session { theKit { unsavedChange { kit { … } } } }} when {@linkcode changeId} is set. */
   async mutateScoped(changeId: string, kitSelection: string): Promise<SetResult> {
     this.ensureAlive();
-    const { query, variables } = __scopedKitMutationBody(changeId, kitSelection);
+    const { query, variables } = scopedKitMutationBody(changeId, kitSelection);
     const env = await this.gqlRun({ query, variables });
     return gqlOkFromEnvelope(env);
   }
@@ -713,7 +712,7 @@ export class Store {
   async ensureChangeId(): Promise<string> {
     this.ensureAlive();
     if (this.kitWriteChangeId) return this.kitWriteChangeId;
-    const data = kitGraphqlData(await this.gqlRun({ query: `mutation { session { theKit { startNewChange } } }` })) as JsonObject;
+    const data = unwrapGraphqlData(await this.gqlRun({ query: `mutation { session { theKit { startNewChange } } }` })) as JsonObject;
     const sess = data["session"] as JsonObject | undefined;
     const tk = sess?.["theKit"] as JsonObject | undefined;
     const cid = String(tk?.["startNewChange"] ?? "");
@@ -724,7 +723,7 @@ export class Store {
 
   async saveChange(): Promise<void> {
     this.ensureAlive();
-    kitGraphqlData(await this.gqlRun({ query: `mutation { session { theKit { save } } }` }));
+    unwrapGraphqlData(await this.gqlRun({ query: `mutation { session { theKit { save } } }` }));
     this.kitWriteChangeId = null;
   }
 
@@ -734,7 +733,7 @@ export class Store {
 
   async createCheckpoint(message: string): Promise<SetResult> {
     this.ensureAlive();
-    const env = await this.gqlRun({ query: `mutation { session { theKit { createCheckpoint(message: ${__gqlStr(message)}) } } }` });
+    const env = await this.gqlRun({ query: `mutation { session { theKit { createCheckpoint(message: ${gqlString(message)}) } } }` });
     return gqlOkFromEnvelope(env);
   }
 
@@ -744,7 +743,7 @@ export class Store {
       query:
         name == null
           ? `mutation { session { startAlternative } }`
-          : `mutation { session { startAlternative(name: ${__gqlStr(name)}) } }`,
+          : `mutation { session { startAlternative(name: ${gqlString(name)}) } }`,
     });
     return gqlOkFromEnvelope(env);
   }
@@ -752,7 +751,7 @@ export class Store {
   async integrateAlternative(alternativeId: string): Promise<SetResult> {
     this.ensureAlive();
     const env = await this.gqlRun({
-      query: `mutation { session { alternative(id: ${__gqlStr(alternativeId)}) { integrateIntoTheKit } } }`,
+      query: `mutation { session { alternative(id: ${gqlString(alternativeId)}) { integrateIntoTheKit } } }`,
     });
     return gqlOkFromEnvelope(env);
   }
@@ -762,10 +761,10 @@ export class Store {
     const env =
       hubUrl == null
         ? await this.gqlRun({
-          query: `mutation { session { login(username: ${__gqlStr(username)}, passwordHash: ${__gqlStr(passwordHash)}) } }`,
+          query: `mutation { session { login(username: ${gqlString(username)}, passwordHash: ${gqlString(passwordHash)}) } }`,
         })
         : await this.gqlRun({
-          query: `mutation { session { login(username: ${__gqlStr(username)}, passwordHash: ${__gqlStr(passwordHash)}, hubUrl: ${__gqlStr(hubUrl)}) } }`,
+          query: `mutation { session { login(username: ${gqlString(username)}, passwordHash: ${gqlString(passwordHash)}, hubUrl: ${gqlString(hubUrl)}) } }`,
         });
     return gqlOkFromEnvelope(env);
   }
@@ -790,13 +789,13 @@ export class Store {
 
   async attachBackbone(uri: string): Promise<SetResult> {
     this.ensureAlive();
-    const env = await this.gqlRun({ query: `mutation { session { backbone { attach(uri: ${__gqlStr(uri)}) } } }` });
+    const env = await this.gqlRun({ query: `mutation { session { backbone { attach(uri: ${gqlString(uri)}) } } }` });
     return gqlOkFromEnvelope(env);
   }
 
   async detachBackbone(uri: string): Promise<SetResult> {
     this.ensureAlive();
-    const env = await this.gqlRun({ query: `mutation { session { backbone { detach(uri: ${__gqlStr(uri)}) } } }` });
+    const env = await this.gqlRun({ query: `mutation { session { backbone { detach(uri: ${gqlString(uri)}) } } }` });
     return gqlOkFromEnvelope(env);
   }
 
@@ -810,7 +809,7 @@ export class Store {
   /** @emoji 🛜 Reads {@code BackboneStatus} via the command shell (typed snapshot, not raw JSON). */
   async backboneStatus(): Promise<Readonly<{ attachedUri: string | null; kind: string }>> {
     this.ensureAlive();
-    const data = kitGraphqlData(
+    const data = unwrapGraphqlData(
       await this.gqlRun({ query: `mutation { session { backbone { status { attachedUri kind } } } }` }),
     ) as JsonObject;
     const sess = data["session"] as JsonObject | undefined;
@@ -840,7 +839,7 @@ export class Store {
       return typeof process !== "undefined" && !!process.env && "VITEST" in process.env;
     })();
 
-    const wasmBytesPre = await __readSemioBytesFromMonorepoCandidates();
+    const wasmBytesPre = await readSemioWasmBytesFromMonorepoCandidates();
     const useDedicatedWorker = typeof Worker !== "undefined" && !preferInlineInVitest && wasmBytesPre == null;
 
     const bootstrapUri = backboneBootstrapUriForStoreOpen(uri);
@@ -899,179 +898,174 @@ export class Store {
   }
 
   design(id: string): Design {
-    let d = this.__designCache.get(id);
+    let d = this.designCache.get(id);
     if (!d) {
       d = new Design(this, id);
-      this.__designCache.set(id, d);
+      this.designCache.set(id, d);
     }
     return d;
   }
 
   type(id: string): Type {
-    let t = this.__typeCache.get(id);
+    let t = this.typeCache.get(id);
     if (!t) {
       t = new Type(this, id);
-      this.__typeCache.set(id, t);
+      this.typeCache.set(id, t);
     }
     return t;
   }
 
   tag(id: string): Tag {
-    let t = this.__tagCache.get(id);
+    let t = this.tagCache.get(id);
     if (!t) {
       t = new Tag(this, id);
-      this.__tagCache.set(id, t);
+      this.tagCache.set(id, t);
     }
     return t;
   }
 
   concept(id: string): Concept {
-    let c = this.__conceptCache.get(id);
+    let c = this.conceptCache.get(id);
     if (!c) {
       c = new Concept(this, id);
-      this.__conceptCache.set(id, c);
+      this.conceptCache.set(id, c);
     }
     return c;
   }
 
   quality(id: string): Quality {
-    let q = this.__qualityCache.get(id);
+    let q = this.qualityCache.get(id);
     if (!q) {
       q = new Quality(this, id);
-      this.__qualityCache.set(id, q);
+      this.qualityCache.set(id, q);
     }
     return q;
   }
 
   family(id: string): Family {
-    let f = this.__familyCache.get(id);
+    let f = this.familyCache.get(id);
     if (!f) {
       f = new Family(this, id);
-      this.__familyCache.set(id, f);
+      this.familyCache.set(id, f);
     }
     return f;
   }
 
   file(id: string): File {
-    let f = this.__fileCache.get(id);
+    let f = this.fileCache.get(id);
     if (!f) {
       f = new File(this, id);
-      this.__fileCache.set(id, f);
+      this.fileCache.set(id, f);
     }
     return f;
   }
 
   folder(id: string): Folder {
-    let f = this.__folderCache.get(id);
+    let f = this.folderCache.get(id);
     if (!f) {
       f = new Folder(this, id);
-      this.__folderCache.set(id, f);
+      this.folderCache.set(id, f);
     }
     return f;
   }
 
   author(id: string): Author {
-    let a = this.__authorCache.get(id);
+    let a = this.authorCache.get(id);
     if (!a) {
       a = new Author(this, id);
-      this.__authorCache.set(id, a);
+      this.authorCache.set(id, a);
     }
     return a;
   }
 
   stat(id: string): Stat {
-    let s = this.__statCache.get(id);
+    let s = this.statCache.get(id);
     if (!s) {
       s = new Stat(this, id);
-      this.__statCache.set(id, s);
+      this.statCache.set(id, s);
     }
     return s;
   }
 
   /** @emoji 🌐 WIP {@link Graph} ({@code Query.wip}). */
   wip(): Graph {
-    let g = this.__graphByRoot.get("wip");
+    let g = this.graphByRoot.get("wip");
     if (!g) {
       g = new Graph(this, "wip");
-      this.__graphByRoot.set("wip", g);
+      this.graphByRoot.set("wip", g);
     }
     return g;
   }
 
   /** @emoji 🌐 Authoritative {@link Graph} when the server exposes it ({@code Query.authoritative}). */
   authoritative(): Graph {
-    let g = this.__graphByRoot.get("authoritative");
+    let g = this.graphByRoot.get("authoritative");
     if (!g) {
       g = new Graph(this, "authoritative");
-      this.__graphByRoot.set("authoritative", g);
+      this.graphByRoot.set("authoritative", g);
     }
     return g;
   }
 
   /** @emoji 🗂️ Root {@link Session} ({@code Query.session}). */
   session(): Session {
-    return (this.__session ??= new Session(this));
+    return (this.sessionEntity ??= new Session(this));
   }
 
   /** @emoji ⚔️ {@link Conflict} via {@code node(id:)}. */
   conflict(id: string): Conflict {
-    let c = this.__conflictCache.get(id);
+    let c = this.conflictCache.get(id);
     if (!c) {
       c = new Conflict(this, id);
-      this.__conflictCache.set(id, c);
+      this.conflictCache.set(id, c);
     }
     return c;
   }
 
-  /** @emoji 📦 Materialized {@link Kit} beneath {@link TheKit} / {@link Version}. */
-  rootKit(id = "kit"): Kit {
-    return (this.__rootKit ??= new Kit(this, id));
-  }
-
   async rename(newName: string): Promise<SetResult> {
     const cid = await this.ensureChangeId();
-    return this.mutateScoped(cid, `rn: rename(newName: ${__gqlStr(newName)})`);
+    return this.mutateScoped(cid, `rn: rename(newName: ${gqlString(newName)})`);
   }
 
   async changeDescription(newDescription: string): Promise<SetResult> {
     const cid = await this.ensureChangeId();
-    return this.mutateScoped(cid, `cd: changeDescription(newDescription: ${__gqlStr(newDescription)})`);
+    return this.mutateScoped(cid, `cd: changeDescription(newDescription: ${gqlString(newDescription)})`);
   }
 
   async createTag(name: string, description?: string | null, icon?: string | null, order?: number | null): Promise<SetResult> {
     const cid = await this.ensureChangeId();
-    const d = description == null ? "null" : __gqlStr(description);
-    const ic = icon == null ? "null" : __gqlStr(icon);
+    const d = description == null ? "null" : gqlString(description);
+    const ic = icon == null ? "null" : gqlString(icon);
     const ord = order == null ? "null" : String(order);
-    return this.mutateScoped(cid, `ct: createTag(name: ${__gqlStr(name)}, description: ${d}, icon: ${ic}, order: ${ord})`);
+    return this.mutateScoped(cid, `ct: createTag(name: ${gqlString(name)}, description: ${d}, icon: ${ic}, order: ${ord})`);
   }
 
   async deleteTag(id: string): Promise<SetResult> {
     const cid = await this.ensureChangeId();
-    return this.mutateScoped(cid, `dt: deleteTag(id: ${__gqlStr(id)})`);
+    return this.mutateScoped(cid, `dt: deleteTag(id: ${gqlString(id)})`);
   }
 
   async deleteTags(ids: readonly string[]): Promise<SetResult> {
     const cid = await this.ensureChangeId();
-    return this.mutateScoped(cid, `dts: deleteTags(ids: ${__gqlIds(ids)})`);
+    return this.mutateScoped(cid, `dts: deleteTags(ids: ${gqlIdList(ids)})`);
   }
 
   async createConcept(name: string, description?: string | null, icon?: string | null, order?: number | null): Promise<SetResult> {
     const cid = await this.ensureChangeId();
-    const d = description == null ? "null" : __gqlStr(description);
-    const ic = icon == null ? "null" : __gqlStr(icon);
+    const d = description == null ? "null" : gqlString(description);
+    const ic = icon == null ? "null" : gqlString(icon);
     const ord = order == null ? "null" : String(order);
-    return this.mutateScoped(cid, `cc: createConcept(name: ${__gqlStr(name)}, description: ${d}, icon: ${ic}, order: ${ord})`);
+    return this.mutateScoped(cid, `cc: createConcept(name: ${gqlString(name)}, description: ${d}, icon: ${ic}, order: ${ord})`);
   }
 
   async deleteConcept(id: string): Promise<SetResult> {
     const cid = await this.ensureChangeId();
-    return this.mutateScoped(cid, `dc: deleteConcept(id: ${__gqlStr(id)})`);
+    return this.mutateScoped(cid, `dc: deleteConcept(id: ${gqlString(id)})`);
   }
 
   async deleteConcepts(ids: readonly string[]): Promise<SetResult> {
     const cid = await this.ensureChangeId();
-    return this.mutateScoped(cid, `dcs: deleteConcepts(ids: ${__gqlIds(ids)})`);
+    return this.mutateScoped(cid, `dcs: deleteConcepts(ids: ${gqlIdList(ids)})`);
   }
 
   async createQuality(
@@ -1083,63 +1077,63 @@ export class Store {
     icon?: string | null,
   ): Promise<SetResult> {
     const cid = await this.ensureChangeId();
-    const va = value == null ? "null" : __gqlStr(value);
-    const un = unit == null ? "null" : __gqlStr(unit);
-    const de = definition == null ? "null" : __gqlStr(definition);
-    const ds = description == null ? "null" : __gqlStr(description);
-    const ic = icon == null ? "null" : __gqlStr(icon);
+    const va = value == null ? "null" : gqlString(value);
+    const un = unit == null ? "null" : gqlString(unit);
+    const de = definition == null ? "null" : gqlString(definition);
+    const ds = description == null ? "null" : gqlString(description);
+    const ic = icon == null ? "null" : gqlString(icon);
     return this.mutateScoped(
       cid,
-      `cq: createQuality(key: ${__gqlStr(key)}, value: ${va}, unit: ${un}, definition: ${de}, description: ${ds}, icon: ${ic})`,
+      `cq: createQuality(key: ${gqlString(key)}, value: ${va}, unit: ${un}, definition: ${de}, description: ${ds}, icon: ${ic})`,
     );
   }
 
   async deleteQuality(id: string): Promise<SetResult> {
     const cid = await this.ensureChangeId();
-    return this.mutateScoped(cid, `dq: deleteQuality(id: ${__gqlStr(id)})`);
+    return this.mutateScoped(cid, `dq: deleteQuality(id: ${gqlString(id)})`);
   }
 
   async deleteQualities(ids: readonly string[]): Promise<SetResult> {
     const cid = await this.ensureChangeId();
-    return this.mutateScoped(cid, `dqs: deleteQualities(ids: ${__gqlIds(ids)})`);
+    return this.mutateScoped(cid, `dqs: deleteQualities(ids: ${gqlIdList(ids)})`);
   }
 
   async createType(name: string, description?: string | null, icon?: string | null, image?: string | null, unit?: string | null): Promise<SetResult> {
     const cid = await this.ensureChangeId();
-    const d = description == null ? "null" : __gqlStr(description);
-    const ic = icon == null ? "null" : __gqlStr(icon);
-    const im = image == null ? "null" : __gqlStr(image);
-    const u = unit == null ? "null" : __gqlStr(unit);
-    return this.mutateScoped(cid, `cT: createType(name: ${__gqlStr(name)}, description: ${d}, icon: ${ic}, image: ${im}, unit: ${u})`);
+    const d = description == null ? "null" : gqlString(description);
+    const ic = icon == null ? "null" : gqlString(icon);
+    const im = image == null ? "null" : gqlString(image);
+    const u = unit == null ? "null" : gqlString(unit);
+    return this.mutateScoped(cid, `cT: createType(name: ${gqlString(name)}, description: ${d}, icon: ${ic}, image: ${im}, unit: ${u})`);
   }
 
   async deleteType(id: string): Promise<SetResult> {
     const cid = await this.ensureChangeId();
-    return this.mutateScoped(cid, `dT: deleteType(id: ${__gqlStr(id)})`);
+    return this.mutateScoped(cid, `dT: deleteType(id: ${gqlString(id)})`);
   }
 
   async deleteTypes(ids: readonly string[]): Promise<SetResult> {
     const cid = await this.ensureChangeId();
-    return this.mutateScoped(cid, `dTs: deleteTypes(ids: ${__gqlIds(ids)})`);
+    return this.mutateScoped(cid, `dTs: deleteTypes(ids: ${gqlIdList(ids)})`);
   }
 
   async createDesign(name: string, description?: string | null, icon?: string | null, image?: string | null, unit?: string | null): Promise<SetResult> {
     const cid = await this.ensureChangeId();
-    const d = description == null ? "null" : __gqlStr(description);
-    const ic = icon == null ? "null" : __gqlStr(icon);
-    const im = image == null ? "null" : __gqlStr(image);
-    const u = unit == null ? "null" : __gqlStr(unit);
-    return this.mutateScoped(cid, `cD: createDesign(name: ${__gqlStr(name)}, description: ${d}, icon: ${ic}, image: ${im}, unit: ${u})`);
+    const d = description == null ? "null" : gqlString(description);
+    const ic = icon == null ? "null" : gqlString(icon);
+    const im = image == null ? "null" : gqlString(image);
+    const u = unit == null ? "null" : gqlString(unit);
+    return this.mutateScoped(cid, `cD: createDesign(name: ${gqlString(name)}, description: ${d}, icon: ${ic}, image: ${im}, unit: ${u})`);
   }
 
   async deleteDesign(id: string): Promise<SetResult> {
     const cid = await this.ensureChangeId();
-    return this.mutateScoped(cid, `dD: deleteDesign(id: ${__gqlStr(id)})`);
+    return this.mutateScoped(cid, `dD: deleteDesign(id: ${gqlString(id)})`);
   }
 
   async deleteDesigns(ids: readonly string[]): Promise<SetResult> {
     const cid = await this.ensureChangeId();
-    return this.mutateScoped(cid, `dDs: deleteDesigns(ids: ${__gqlIds(ids)})`);
+    return this.mutateScoped(cid, `dDs: deleteDesigns(ids: ${gqlIdList(ids)})`);
   }
 
   async readName(): Promise<string> {
@@ -1169,68 +1163,68 @@ export class Store {
 
   async readTypeIds(): Promise<readonly string[]> {
     const frag = (await this.readKitInner("types { edges { node { id } } }")) as JsonObject | null;
-    return __parseEntityConnectionIds(frag, "types");
+    return parseEntityConnectionIds(frag, "types");
   }
 
   async readDesignIds(): Promise<readonly string[]> {
     const frag = (await this.readKitInner("designs { edges { node { id } } }")) as JsonObject | null;
-    return __parseEntityConnectionIds(frag, "designs");
+    return parseEntityConnectionIds(frag, "designs");
   }
 
   async readAuthorIds(): Promise<readonly string[]> {
     const frag = (await this.readKitInner("authors { edges { node { id } } }")) as JsonObject | null;
-    return __parseEntityConnectionIds(frag, "authors");
+    return parseEntityConnectionIds(frag, "authors");
   }
 
   async readQualityIds(): Promise<readonly string[]> {
     const frag = (await this.readKitInner("qualities { edges { node { id } } }")) as JsonObject | null;
-    return __parseEntityConnectionIds(frag, "qualities");
+    return parseEntityConnectionIds(frag, "qualities");
   }
 
   async readTagIds(): Promise<readonly string[]> {
     const frag = (await this.readKitInner("tags { edges { node { id } } }")) as JsonObject | null;
-    return __parseEntityConnectionIds(frag, "tags");
+    return parseEntityConnectionIds(frag, "tags");
   }
 
   async readConceptIds(): Promise<readonly string[]> {
     const frag = (await this.readKitInner("concepts { edges { node { id } } }")) as JsonObject | null;
-    return __parseEntityConnectionIds(frag, "concepts");
+    return parseEntityConnectionIds(frag, "concepts");
   }
 
   /** @emoji 📚 Id-list-stable {@link Design} handles for the active read point. */
   async readDesigns(): Promise<readonly Design[]> {
     const ids = await this.readDesignIds();
-    return __readIdListStable(this.__stableDesigns, ids, (id) => this.design(id));
+    return readStableEntityList(this.stableDesigns, ids, (id) => this.design(id));
   }
 
   /** @emoji 📚 Id-list-stable {@link Type} handles. */
   async readTypes(): Promise<readonly Type[]> {
     const ids = await this.readTypeIds();
-    return __readIdListStable(this.__stableTypes, ids, (id) => this.type(id));
+    return readStableEntityList(this.stableTypes, ids, (id) => this.type(id));
   }
 
   /** @emoji 📚 Id-list-stable {@link Author} handles. */
   async readAuthors(): Promise<readonly Author[]> {
     const ids = await this.readAuthorIds();
-    return __readIdListStable(this.__stableAuthors, ids, (id) => this.author(id));
+    return readStableEntityList(this.stableAuthors, ids, (id) => this.author(id));
   }
 
   /** @emoji 📚 Id-list-stable {@link Quality} handles. */
   async readQualities(): Promise<readonly Quality[]> {
     const ids = await this.readQualityIds();
-    return __readIdListStable(this.__stableQualities, ids, (id) => this.quality(id));
+    return readStableEntityList(this.stableQualities, ids, (id) => this.quality(id));
   }
 
   /** @emoji 📚 Id-list-stable {@link Tag} handles. */
   async readTags(): Promise<readonly Tag[]> {
     const ids = await this.readTagIds();
-    return __readIdListStable(this.__stableTags, ids, (id) => this.tag(id));
+    return readStableEntityList(this.stableTags, ids, (id) => this.tag(id));
   }
 
   /** @emoji 📚 Id-list-stable {@link Concept} handles. */
   async readConcepts(): Promise<readonly Concept[]> {
     const ids = await this.readConceptIds();
-    return __readIdListStable(this.__stableConcepts, ids, (id) => this.concept(id));
+    return readStableEntityList(this.stableConcepts, ids, (id) => this.concept(id));
   }
 }
 //#endregion 🏪Store
@@ -1387,11 +1381,11 @@ export class Kit extends Entity {
 }
 //#endregion 📦Kit
 
-function __kitGraphqlEnvelope(
+function executeStoreGraphql(
   store: Store,
   body: Readonly<{ query: string; variables?: JsonObject; operationName?: string }>,
-): Promise<KitGraphqlResponseEnvelope<JsonValue>> {
-  return (store as unknown as { gqlRun(b: typeof body): Promise<KitGraphqlResponseEnvelope<JsonValue>> }).gqlRun(body);
+): Promise<GraphqlEnvelope<JsonValue>> {
+  return (store as unknown as { gqlRun(b: typeof body): Promise<GraphqlEnvelope<JsonValue>> }).gqlRun(body);
 }
 
 //#region 🧬VcsEntities
@@ -1400,11 +1394,11 @@ export type GraphRootKind = "wip" | "authoritative";
 
 /** @emoji 🌐 VCS graph: {@code wip} / {@code authoritative} selections on {@link Store}. */
 export class Graph extends Entity {
-  private readonly __checkpointCache = new Map<string, Checkpoint>();
-  private readonly __alternativeCache = new Map<string, Alternative>();
-  private __theKit: TheKit | undefined;
-  private __stableAlternatives: { ids: readonly string[]; arr: readonly Alternative[] } = { ids: [], arr: [] };
-  private __stableCheckpoints: { ids: readonly string[]; arr: readonly Checkpoint[] } = { ids: [], arr: [] };
+  private readonly checkpointCache = new Map<string, Checkpoint>();
+  private readonly alternativeCache = new Map<string, Alternative>();
+  private theKitEntity: TheKit | undefined;
+  private stableAlternatives: { ids: readonly string[]; arr: readonly Alternative[] } = { ids: [], arr: [] };
+  private stableCheckpoints: { ids: readonly string[]; arr: readonly Checkpoint[] } = { ids: [], arr: [] };
 
   constructor(store: Store, root: GraphRootKind) {
     super(store, root);
@@ -1416,37 +1410,37 @@ export class Graph extends Entity {
 
   /** @emoji 🏛 {@code graph { theKit }} handle. */
   theKit(): TheKit {
-    return (this.__theKit ??= new TheKit(this.store, this.root));
+    return (this.theKitEntity ??= new TheKit(this.store, this.root));
   }
 
   checkpoint(checkpointId: string): Checkpoint {
-    let c = this.__checkpointCache.get(checkpointId);
+    let c = this.checkpointCache.get(checkpointId);
     if (!c) {
       c = new Checkpoint(this.store, this.root, checkpointId);
-      this.__checkpointCache.set(checkpointId, c);
+      this.checkpointCache.set(checkpointId, c);
     }
     return c;
   }
 
   alternative(alternativeId: string): Alternative {
-    let a = this.__alternativeCache.get(alternativeId);
+    let a = this.alternativeCache.get(alternativeId);
     if (!a) {
       a = new Alternative(this.store, { parent: "graph", root: this.root }, alternativeId);
-      this.__alternativeCache.set(alternativeId, a);
+      this.alternativeCache.set(alternativeId, a);
     }
     return a;
   }
 
   async readId(): Promise<string> {
     const q = this.root === "wip" ? `query { wip { id } }` : `query { authoritative { id } }`;
-    const data = kitGraphqlData(await __kitGraphqlEnvelope(this.store, { query: q })) as JsonObject;
+    const data = unwrapGraphqlData(await executeStoreGraphql(this.store, { query: q })) as JsonObject;
     const node = data[this.root] as JsonObject | null | undefined;
     return node == null ? "" : String(node["id"] ?? "");
   }
 
   async readHash(): Promise<string> {
     const q = this.root === "wip" ? `query { wip { hash } }` : `query { authoritative { hash } }`;
-    const data = kitGraphqlData(await __kitGraphqlEnvelope(this.store, { query: q })) as JsonObject;
+    const data = unwrapGraphqlData(await executeStoreGraphql(this.store, { query: q })) as JsonObject;
     const node = data[this.root] as JsonObject | null | undefined;
     return node == null ? "" : String(node["hash"] ?? "");
   }
@@ -1456,9 +1450,9 @@ export class Graph extends Entity {
       this.root === "wip"
         ? `query { wip { alternatives { edges { node { id } } } } }`
         : `query { authoritative { alternatives { edges { node { id } } } } }`;
-    const data = kitGraphqlData(await __kitGraphqlEnvelope(this.store, { query: q })) as JsonObject;
+    const data = unwrapGraphqlData(await executeStoreGraphql(this.store, { query: q })) as JsonObject;
     const node = data[this.root] as JsonObject | undefined;
-    return __parseEntityConnectionIds(node ?? null, "alternatives");
+    return parseEntityConnectionIds(node ?? null, "alternatives");
   }
 
   async readCheckpointIds(): Promise<readonly string[]> {
@@ -1466,21 +1460,21 @@ export class Graph extends Entity {
       this.root === "wip"
         ? `query { wip { checkpoints { edges { node { id } } } } }`
         : `query { authoritative { checkpoints { edges { node { id } } } } }`;
-    const data = kitGraphqlData(await __kitGraphqlEnvelope(this.store, { query: q })) as JsonObject;
+    const data = unwrapGraphqlData(await executeStoreGraphql(this.store, { query: q })) as JsonObject;
     const node = data[this.root] as JsonObject | undefined;
-    return __parseEntityConnectionIds(node ?? null, "checkpoints");
+    return parseEntityConnectionIds(node ?? null, "checkpoints");
   }
 
   /** @emoji 📚 Id-list-stable {@link Alternative} handles under this graph root. */
   async readAlternatives(): Promise<readonly Alternative[]> {
     const ids = await this.readAlternativeIds();
-    return __readIdListStable(this.__stableAlternatives, ids, (id) => this.alternative(id));
+    return readStableEntityList(this.stableAlternatives, ids, (id) => this.alternative(id));
   }
 
   /** @emoji 📚 Id-list-stable {@link Checkpoint} handles under this graph root. */
   async readCheckpoints(): Promise<readonly Checkpoint[]> {
     const ids = await this.readCheckpointIds();
-    return __readIdListStable(this.__stableCheckpoints, ids, (id) => this.checkpoint(id));
+    return readStableEntityList(this.stableCheckpoints, ids, (id) => this.checkpoint(id));
   }
 
   /** @emoji 📡 Refetches {@link Graph#readAlternatives} on coarse kit ticks. */
@@ -1512,30 +1506,30 @@ export class Graph extends Entity {
 
 /** @emoji 🗂️ {@code Query.session} singleton anchor. */
 export class Session extends Entity {
-  private readonly __alternativeCache = new Map<string, Alternative>();
-  private __stableAlternatives: { ids: readonly string[]; arr: readonly Alternative[] } = { ids: [], arr: [] };
+  private readonly alternativeCache = new Map<string, Alternative>();
+  private stableAlternatives: { ids: readonly string[]; arr: readonly Alternative[] } = { ids: [], arr: [] };
 
   constructor(store: Store) {
     super(store, "session");
   }
 
   alternative(alternativeId: string): Alternative {
-    let a = this.__alternativeCache.get(alternativeId);
+    let a = this.alternativeCache.get(alternativeId);
     if (!a) {
       a = new Alternative(this.store, { parent: "session" }, alternativeId);
-      this.__alternativeCache.set(alternativeId, a);
+      this.alternativeCache.set(alternativeId, a);
     }
     return a;
   }
 
   async readId(): Promise<string> {
-    const data = kitGraphqlData(await __kitGraphqlEnvelope(this.store, { query: `query { session { id } }` })) as JsonObject;
+    const data = unwrapGraphqlData(await executeStoreGraphql(this.store, { query: `query { session { id } }` })) as JsonObject;
     const s = data["session"] as JsonObject | undefined;
     return String(s?.["id"] ?? "");
   }
 
   async readStartedAt(): Promise<string | null> {
-    const data = kitGraphqlData(await __kitGraphqlEnvelope(this.store, { query: `query { session { startedAt } }` })) as JsonObject;
+    const data = unwrapGraphqlData(await executeStoreGraphql(this.store, { query: `query { session { startedAt } }` })) as JsonObject;
     const s = data["session"] as JsonObject | undefined;
     const v = s?.["startedAt"];
     if (v == null) return null;
@@ -1543,17 +1537,17 @@ export class Session extends Entity {
   }
 
   async readAlternativeIds(): Promise<readonly string[]> {
-    const data = kitGraphqlData(
-      await __kitGraphqlEnvelope(this.store, { query: `query { session { alternatives { edges { node { id } } } } }` }),
+    const data = unwrapGraphqlData(
+      await executeStoreGraphql(this.store, { query: `query { session { alternatives { edges { node { id } } } } }` }),
     ) as JsonObject;
     const s = data["session"] as JsonObject | undefined;
-    return __parseEntityConnectionIds(s ?? null, "alternatives");
+    return parseEntityConnectionIds(s ?? null, "alternatives");
   }
 
   /** @emoji 📚 Id-list-stable {@link Alternative} handles on {@code session.alternatives}. */
   async readAlternatives(): Promise<readonly Alternative[]> {
     const ids = await this.readAlternativeIds();
-    return __readIdListStable(this.__stableAlternatives, ids, (id) => this.alternative(id));
+    return readStableEntityList(this.stableAlternatives, ids, (id) => this.alternative(id));
   }
 
   /** @emoji 📡 Refetches {@link Session#readAlternatives} on coarse kit ticks. */
@@ -1586,9 +1580,9 @@ export class Alternative extends Entity {
   async readName(): Promise<string> {
     const q =
       this.ap.parent === "graph"
-        ? `query { ${this.ap.root} { alternative(id: ${__gqlStr(this.id)}) { name } } }`
-        : `query { session { alternative(id: ${__gqlStr(this.id)}) { name } } }`;
-    const data = kitGraphqlData(await __kitGraphqlEnvelope(this.store, { query: q })) as JsonObject;
+        ? `query { ${this.ap.root} { alternative(id: ${gqlString(this.id)}) { name } } }`
+        : `query { session { alternative(id: ${gqlString(this.id)}) { name } } }`;
+    const data = unwrapGraphqlData(await executeStoreGraphql(this.store, { query: q })) as JsonObject;
     const first =
       this.ap.parent === "graph" ? (data[this.ap.root] as JsonObject | undefined) : (data["session"] as JsonObject | undefined);
     const alt = first?.["alternative"] as JsonObject | undefined;
@@ -1598,64 +1592,76 @@ export class Alternative extends Entity {
 
 /** @emoji 🏛 {@code TheKit} under {@code wip}/{@code authoritative}. */
 export class TheKit extends Entity {
+  private readonly kitCache = new Map<string, Kit>();
+
   constructor(store: Store, private readonly graphRoot: GraphRootKind) {
     super(store, `theKit:${graphRoot}`);
   }
 
+  /** @emoji 📦 Target {@code Version.kit} handle beneath this version node. */
+  kit(id = "kit"): Kit {
+    let k = this.kitCache.get(id);
+    if (!k) {
+      k = new Kit(this.store, id);
+      this.kitCache.set(id, k);
+    }
+    return k;
+  }
+
   async readId(): Promise<string> {
     const q = `query { ${this.graphRoot} { theKit { id } } }`;
-    const data = kitGraphqlData(await __kitGraphqlEnvelope(this.store, { query: q })) as JsonObject;
+    const data = unwrapGraphqlData(await executeStoreGraphql(this.store, { query: q })) as JsonObject;
     const rootNode = data[this.graphRoot] as JsonObject | undefined;
     const tk = rootNode?.["theKit"] as JsonObject | undefined;
     return String(tk?.["id"] ?? "");
   }
 
-  /** @emoji 📦 Target {@code Version.store} handle; field reads stay scoped by the owning {@link Store}. */
+  /** @emoji 📦 Reads target {@code Version.kit} and returns the matching {@link Kit} handle. */
   async readKit(): Promise<Kit> {
-    return this.store.rootKit(await this.readId());
+    return this.kit(await this.readId());
   }
 }
 
 /** @emoji 🏁 {@code Checkpoint} under {@link Graph}. */
 export class Checkpoint extends Entity {
-  private readonly __edits = new Map<string, Edit>();
-  private readonly __changes = new Map<string, Change>();
-  private __stableChanges: { ids: readonly string[]; arr: readonly Change[] } = { ids: [], arr: [] };
-  private __stableEdits: { ids: readonly string[]; arr: readonly Edit[] } = { ids: [], arr: [] };
+  private readonly edits = new Map<string, Edit>();
+  private readonly changes = new Map<string, Change>();
+  private stableChanges: { ids: readonly string[]; arr: readonly Change[] } = { ids: [], arr: [] };
+  private stableEdits: { ids: readonly string[]; arr: readonly Edit[] } = { ids: [], arr: [] };
 
   constructor(store: Store, private readonly graphRoot: GraphRootKind, checkpointId: string) {
     super(store, checkpointId);
   }
 
   change(changeId: string): Change {
-    let x = this.__changes.get(changeId);
+    let x = this.changes.get(changeId);
     if (!x) {
       x = new Change(this.store, this.graphRoot, this.id, changeId);
-      this.__changes.set(changeId, x);
+      this.changes.set(changeId, x);
     }
     return x;
   }
 
   edit(editId: string): Edit {
-    let e = this.__edits.get(editId);
+    let e = this.edits.get(editId);
     if (!e) {
       e = new Edit(this.store, this.graphRoot, this.id, editId);
-      this.__edits.set(editId, e);
+      this.edits.set(editId, e);
     }
     return e;
   }
 
   async readMessage(): Promise<string> {
-    const q = `query { ${this.graphRoot} { checkpoint(id: ${__gqlStr(this.id)}) { message } } }`;
-    const data = kitGraphqlData(await __kitGraphqlEnvelope(this.store, { query: q })) as JsonObject;
+    const q = `query { ${this.graphRoot} { checkpoint(id: ${gqlString(this.id)}) { message } } }`;
+    const data = unwrapGraphqlData(await executeStoreGraphql(this.store, { query: q })) as JsonObject;
     const rootNode = data[this.graphRoot] as JsonObject | undefined;
     const cp = rootNode?.["checkpoint"] as JsonObject | undefined;
     return String(cp?.["message"] ?? "");
   }
 
   async readTimestamp(): Promise<string | null> {
-    const q = `query { ${this.graphRoot} { checkpoint(id: ${__gqlStr(this.id)}) { timestamp } } }`;
-    const data = kitGraphqlData(await __kitGraphqlEnvelope(this.store, { query: q })) as JsonObject;
+    const q = `query { ${this.graphRoot} { checkpoint(id: ${gqlString(this.id)}) { timestamp } } }`;
+    const data = unwrapGraphqlData(await executeStoreGraphql(this.store, { query: q })) as JsonObject;
     const rootNode = data[this.graphRoot] as JsonObject | undefined;
     const cp = rootNode?.["checkpoint"] as JsonObject | undefined;
     const ts = cp?.["timestamp"];
@@ -1663,39 +1669,39 @@ export class Checkpoint extends Entity {
   }
 
   async readHash(): Promise<string> {
-    const q = `query { ${this.graphRoot} { checkpoint(id: ${__gqlStr(this.id)}) { hash } } }`;
-    const data = kitGraphqlData(await __kitGraphqlEnvelope(this.store, { query: q })) as JsonObject;
+    const q = `query { ${this.graphRoot} { checkpoint(id: ${gqlString(this.id)}) { hash } } }`;
+    const data = unwrapGraphqlData(await executeStoreGraphql(this.store, { query: q })) as JsonObject;
     const rootNode = data[this.graphRoot] as JsonObject | undefined;
     const cp = rootNode?.["checkpoint"] as JsonObject | undefined;
     return String(cp?.["hash"] ?? "");
   }
 
   async readChangeIds(): Promise<readonly string[]> {
-    const q = `query { ${this.graphRoot} { checkpoint(id: ${__gqlStr(this.id)}) { changes { id } } } }`;
-    const data = kitGraphqlData(await __kitGraphqlEnvelope(this.store, { query: q })) as JsonObject;
+    const q = `query { ${this.graphRoot} { checkpoint(id: ${gqlString(this.id)}) { changes { id } } } }`;
+    const data = unwrapGraphqlData(await executeStoreGraphql(this.store, { query: q })) as JsonObject;
     const rootNode = data[this.graphRoot] as JsonObject | undefined;
     const cp = rootNode?.["checkpoint"] as JsonObject | undefined;
-    return __parseStrongEntityArrayIds(cp ?? null, "changes");
+    return parseStrongEntityArrayIds(cp ?? null, "changes");
   }
 
   async readEditIds(): Promise<readonly string[]> {
-    const q = `query { ${this.graphRoot} { checkpoint(id: ${__gqlStr(this.id)}) { edits { edges { node { id } } } } } }`;
-    const data = kitGraphqlData(await __kitGraphqlEnvelope(this.store, { query: q })) as JsonObject;
+    const q = `query { ${this.graphRoot} { checkpoint(id: ${gqlString(this.id)}) { edits { edges { node { id } } } } } }`;
+    const data = unwrapGraphqlData(await executeStoreGraphql(this.store, { query: q })) as JsonObject;
     const rootNode = data[this.graphRoot] as JsonObject | undefined;
     const cp = rootNode?.["checkpoint"] as JsonObject | undefined;
-    return __parseEntityConnectionIds(cp ?? null, "edits");
+    return parseEntityConnectionIds(cp ?? null, "edits");
   }
 
   /** @emoji 📚 Id-list-stable {@link Change} rows for this checkpoint (schema {@code changes: [Change!]!}). */
   async readChanges(): Promise<readonly Change[]> {
     const ids = await this.readChangeIds();
-    return __readIdListStable(this.__stableChanges, ids, (cid) => this.change(cid));
+    return readStableEntityList(this.stableChanges, ids, (cid) => this.change(cid));
   }
 
   /** @emoji 📚 Id-list-stable {@link Edit} handles for this checkpoint. */
   async readEdits(): Promise<readonly Edit[]> {
     const ids = await this.readEditIds();
-    return __readIdListStable(this.__stableEdits, ids, (eid) => this.edit(eid));
+    return readStableEntityList(this.stableEdits, ids, (eid) => this.edit(eid));
   }
 
   /** @emoji 📡 Refetches {@link Checkpoint#readChanges} on coarse kit ticks. */
@@ -1732,8 +1738,8 @@ export class Change extends Entity {
   }
 
   private async readUnderChange(inner: string): Promise<JsonObject | null> {
-    const q = `query { ${this.graphRoot} { checkpoint(id: ${__gqlStr(this.checkpointId)}) { change(id: ${__gqlStr(this.id)}) { ${inner} } } } }`;
-    const data = kitGraphqlData(await __kitGraphqlEnvelope(this.store, { query: q })) as JsonObject;
+    const q = `query { ${this.graphRoot} { checkpoint(id: ${gqlString(this.checkpointId)}) { change(id: ${gqlString(this.id)}) { ${inner} } } } }`;
+    const data = unwrapGraphqlData(await executeStoreGraphql(this.store, { query: q })) as JsonObject;
     const rootNode = data[this.graphRoot] as JsonObject | undefined;
     const cp = rootNode?.["checkpoint"] as JsonObject | undefined;
     const ch = cp?.["change"] as JsonObject | undefined;
@@ -1777,8 +1783,8 @@ export class Edit extends Entity {
   }
 
   private async readUnderEdit(inner: string): Promise<JsonObject | null> {
-    const q = `query { ${this.graphRoot} { checkpoint(id: ${__gqlStr(this.checkpointId)}) { edit(id: ${__gqlStr(this.id)}) { ${inner} } } } }`;
-    const data = kitGraphqlData(await __kitGraphqlEnvelope(this.store, { query: q })) as JsonObject;
+    const q = `query { ${this.graphRoot} { checkpoint(id: ${gqlString(this.checkpointId)}) { edit(id: ${gqlString(this.id)}) { ${inner} } } } }`;
+    const data = unwrapGraphqlData(await executeStoreGraphql(this.store, { query: q })) as JsonObject;
     const rootNode = data[this.graphRoot] as JsonObject | undefined;
     const cp = rootNode?.["checkpoint"] as JsonObject | undefined;
     const ed = cp?.["edit"] as JsonObject | undefined;
@@ -1815,8 +1821,8 @@ export class Conflict extends Entity {
   }
 
   async readReasons(): Promise<readonly string[]> {
-    const data = kitGraphqlData(
-      await __kitGraphqlEnvelope(this.store, { query: `query($id: ID!) { node(id: $id) { ... on Conflict { reasons } } }`, variables: { id: this.id } }),
+    const data = unwrapGraphqlData(
+      await executeStoreGraphql(this.store, { query: `query($id: ID!) { node(id: $id) { ... on Conflict { reasons } } }`, variables: { id: this.id } }),
     ) as JsonObject;
     const n = data["node"] as JsonObject | undefined;
     const raw = n?.["reasons"] as readonly JsonValue[] | undefined;
@@ -1825,8 +1831,8 @@ export class Conflict extends Entity {
   }
 
   async readAuthoritativeChangeId(): Promise<string> {
-    const data = kitGraphqlData(
-      await __kitGraphqlEnvelope(this.store, {
+    const data = unwrapGraphqlData(
+      await executeStoreGraphql(this.store, {
         query: `query($id: ID!) { node(id: $id) { ... on Conflict { authoritativeChange { id } } } }`,
         variables: { id: this.id },
       }),
@@ -1837,8 +1843,8 @@ export class Conflict extends Entity {
   }
 
   async readWipChangeId(): Promise<string> {
-    const data = kitGraphqlData(
-      await __kitGraphqlEnvelope(this.store, {
+    const data = unwrapGraphqlData(
+      await executeStoreGraphql(this.store, {
         query: `query($id: ID!) { node(id: $id) { ... on Conflict { wipChange { id } } } }`,
         variables: { id: this.id },
       }),
@@ -1923,26 +1929,26 @@ export class AddedHangingChildPieceWithParentConnectionOperation extends Operati
 
 //#region 📐Design
 export class Design extends Entity {
-  private readonly __pieceCache = new Map<string, Piece>();
-  private readonly __connectionCache = new Map<string, Connection>();
-  private readonly __layerCache = new Map<string, Layer>();
-  private readonly __groupCache = new Map<string, Group>();
-  private __stablePieces: { ids: readonly string[]; arr: readonly Piece[] } = { ids: [], arr: [] };
-  private __stableConnections: { ids: readonly string[]; arr: readonly Connection[] } = { ids: [], arr: [] };
+  private readonly pieceCache = new Map<string, Piece>();
+  private readonly connectionCache = new Map<string, Connection>();
+  private readonly layerCache = new Map<string, Layer>();
+  private readonly groupCache = new Map<string, Group>();
+  private stablePieces: { ids: readonly string[]; arr: readonly Piece[] } = { ids: [], arr: [] };
+  private stableConnections: { ids: readonly string[]; arr: readonly Connection[] } = { ids: [], arr: [] };
 
   constructor(store: Store, id: string) {
     super(store, id);
   }
 
   private dsel(inner: string): string {
-    return `design(id: ${__gqlStr(this.id)}) { ${inner} }`;
+    return `design(id: ${gqlString(this.id)}) { ${inner} }`;
   }
 
   piece(pieceId: string): Piece {
-    let p = this.__pieceCache.get(pieceId);
+    let p = this.pieceCache.get(pieceId);
     if (!p) {
       p = new Piece(this.store, this.id, pieceId);
-      this.__pieceCache.set(pieceId, p);
+      this.pieceCache.set(pieceId, p);
     }
     return p;
   }
@@ -1952,28 +1958,28 @@ export class Design extends Entity {
   }
 
   connection(connectionId: string): Connection {
-    let c = this.__connectionCache.get(connectionId);
+    let c = this.connectionCache.get(connectionId);
     if (!c) {
       c = new Connection(this.store, this.id, connectionId);
-      this.__connectionCache.set(connectionId, c);
+      this.connectionCache.set(connectionId, c);
     }
     return c;
   }
 
   layer(layerId: string): Layer {
-    let l = this.__layerCache.get(layerId);
+    let l = this.layerCache.get(layerId);
     if (!l) {
       l = new Layer(this.store, this.id, layerId);
-      this.__layerCache.set(layerId, l);
+      this.layerCache.set(layerId, l);
     }
     return l;
   }
 
   group(groupId: string): Group {
-    let g = this.__groupCache.get(groupId);
+    let g = this.groupCache.get(groupId);
     if (!g) {
       g = new Group(this.store, this.id, groupId);
-      this.__groupCache.set(groupId, g);
+      this.groupCache.set(groupId, g);
     }
     return g;
   }
@@ -1992,7 +1998,7 @@ export class Design extends Entity {
   }
 
   /**
-   * @emoji 📡 When {@link FieldSpec#eventKind} matches {@link EventBus} kinds (legacy `Subscription.event` or live WIP ticks), refetches via {@link Design#fieldRead}.
+   * @emoji 📡 When {@link FieldSpec#eventKind} matches {@link EventBus} kinds or live WIP ticks, refetches via {@link Design#fieldRead}.
    */
   subscribeField<T>(spec: FieldSpec<T>, cb: (next: T) => void): Unsubscribe {
     const kind = spec.eventKind;
@@ -2043,13 +2049,13 @@ export class Design extends Entity {
   async readPieceIds(): Promise<readonly string[]> {
     const frag = (await this.store.readKitInner(this.dsel("pieces { edges { node { id } } }"))) as JsonObject | null;
     const d = frag?.["design"] as JsonObject | undefined;
-    return __parseEntityConnectionIds(d ?? (isJsonObjectNode(frag) ? frag : null), "pieces");
+    return parseEntityConnectionIds(d ?? (isJsonObjectNode(frag) ? frag : null), "pieces");
   }
 
   /** @emoji 📚 Id-list-stable {@link Piece} handles (same order as {@link Design#readPieceIds}); prefer over ad-hoc {@code readPieceIds().map(…)}. */
   async readPieces(): Promise<readonly Piece[]> {
     const ids = await this.readPieceIds();
-    return __readIdListStable(this.__stablePieces, ids, (pid) => this.piece(pid));
+    return readStableEntityList(this.stablePieces, ids, (pid) => this.piece(pid));
   }
 
   /** @emoji 📡 Refetches {@link Design#readPieces} on coarse kit ticks (piece membership / graph writes). */
@@ -2068,13 +2074,13 @@ export class Design extends Entity {
   async readConnectionIds(): Promise<readonly string[]> {
     const frag = (await this.store.readKitInner(this.dsel("connections { edges { node { id } } }"))) as JsonObject | null;
     const d = frag?.["design"] as JsonObject | undefined;
-    return __parseEntityConnectionIds(d ?? (isJsonObjectNode(frag) ? frag : null), "connections");
+    return parseEntityConnectionIds(d ?? (isJsonObjectNode(frag) ? frag : null), "connections");
   }
 
   /** @emoji 📚 Id-list-stable {@link Connection} handles (same order as {@link Design#readConnectionIds}). */
   async readConnections(): Promise<readonly Connection[]> {
     const ids = await this.readConnectionIds();
-    return __readIdListStable(this.__stableConnections, ids, (cid) => this.connection(cid));
+    return readStableEntityList(this.stableConnections, ids, (cid) => this.connection(cid));
   }
 
   /** @emoji 📡 Refetches {@link Design#readConnections} on coarse kit ticks. */
@@ -2093,7 +2099,7 @@ export class Design extends Entity {
   async readAttributeIds(): Promise<readonly string[]> {
     const frag = (await this.store.readKitInner(this.dsel("attributes { edges { node { id } } }"))) as JsonObject | null;
     const d = frag?.["design"] as JsonObject | undefined;
-    return __parseEntityConnectionIds(d ?? (isJsonObjectNode(frag) ? frag : null), "attributes");
+    return parseEntityConnectionIds(d ?? (isJsonObjectNode(frag) ? frag : null), "attributes");
   }
 
   async readName(): Promise<string> {
@@ -2110,12 +2116,12 @@ export class Design extends Entity {
 
   async rename(newName: string): Promise<SetResult> {
     const cid = await this.store.ensureChangeId();
-    return this.store.mutateScoped(cid, this.dsel(`rn: rename(newName: ${__gqlStr(newName)})`));
+    return this.store.mutateScoped(cid, this.dsel(`rn: rename(newName: ${gqlString(newName)})`));
   }
 
   async changeDescription(newDescription: string): Promise<SetResult> {
     const cid = await this.store.ensureChangeId();
-    return this.store.mutateScoped(cid, this.dsel(`cd: changeDescription(newDescription: ${__gqlStr(newDescription)})`));
+    return this.store.mutateScoped(cid, this.dsel(`cd: changeDescription(newDescription: ${gqlString(newDescription)})`));
   }
 
   async flatten(): Promise<SetResult> {
@@ -2125,25 +2131,25 @@ export class Design extends Entity {
 
   async addAttribute(key: string, value: string, definition: string): Promise<SetResult> {
     const cid = await this.store.ensureChangeId();
-    return this.store.mutateScoped(cid, this.dsel(`aa: addAttribute(key: ${__gqlStr(key)}, value: ${__gqlStr(value)}, definition: ${__gqlStr(definition)})`));
+    return this.store.mutateScoped(cid, this.dsel(`aa: addAttribute(key: ${gqlString(key)}, value: ${gqlString(value)}, definition: ${gqlString(definition)})`));
   }
 
   async removeAttribute(id: string): Promise<SetResult> {
     const cid = await this.store.ensureChangeId();
-    return this.store.mutateScoped(cid, this.dsel(`ra: removeAttribute(id: ${__gqlStr(id)})`));
+    return this.store.mutateScoped(cid, this.dsel(`ra: removeAttribute(id: ${gqlString(id)})`));
   }
 
   async removeAttributes(ids: readonly string[]): Promise<SetResult> {
     const cid = await this.store.ensureChangeId();
-    return this.store.mutateScoped(cid, this.dsel(`ras: removeAttributes(ids: ${__gqlIds(ids)})`));
+    return this.store.mutateScoped(cid, this.dsel(`ras: removeAttributes(ids: ${gqlIdList(ids)})`));
   }
 
   async addFixedPiece(blueprintId: string, position: PositionInput, name?: string | null, description?: string | null): Promise<SetResult> {
     const cid = await this.store.ensureChangeId();
     const pos = formatPositionInput(position);
-    const n = name == null ? "null" : __gqlStr(name);
-    const d = description == null ? "null" : __gqlStr(description);
-    return this.store.mutateScoped(cid, this.dsel(`afp: addFixedPiece(blueprintId: ${__gqlStr(blueprintId)}, position: ${pos}, name: ${n}, description: ${d})`));
+    const n = name == null ? "null" : gqlString(name);
+    const d = description == null ? "null" : gqlString(description);
+    return this.store.mutateScoped(cid, this.dsel(`afp: addFixedPiece(blueprintId: ${gqlString(blueprintId)}, position: ${pos}, name: ${n}, description: ${d})`));
   }
 
   async addChildPieceWithParentConnection(
@@ -2158,13 +2164,13 @@ export class Design extends Entity {
   ): Promise<SetResult> {
     const cid = await this.store.ensureChangeId();
     const pos = position == null ? "null" : formatPositionInput(position);
-    const n = name == null ? "null" : __gqlStr(name);
-    const d = description == null ? "null" : __gqlStr(description);
+    const n = name == null ? "null" : gqlString(name);
+    const d = description == null ? "null" : gqlString(description);
     const sc = scale == null ? "null" : String(scale);
     return this.store.mutateScoped(
       cid,
       this.dsel(
-        `ac: addChildPieceWithParentConnection(blueprintId: ${__gqlStr(blueprintId)}, parentPieceId: ${__gqlStr(parentPieceId)}, parentConnector: ${__gqlStr(parentConnector)}, childConnector: ${__gqlStr(childConnector)}, name: ${n}, description: ${d}, position: ${pos}, scale: ${sc})`,
+        `ac: addChildPieceWithParentConnection(blueprintId: ${gqlString(blueprintId)}, parentPieceId: ${gqlString(parentPieceId)}, parentConnector: ${gqlString(parentConnector)}, childConnector: ${gqlString(childConnector)}, name: ${n}, description: ${d}, position: ${pos}, scale: ${sc})`,
       ),
     );
   }
@@ -2181,141 +2187,141 @@ export class Design extends Entity {
   ): Promise<SetResult> {
     const cid = await this.store.ensureChangeId();
     const pos = formatPositionInput(position);
-    const n = name == null ? "null" : __gqlStr(name);
-    const d = description == null ? "null" : __gqlStr(description);
+    const n = name == null ? "null" : gqlString(name);
+    const d = description == null ? "null" : gqlString(description);
     const sc = scale == null ? "null" : String(scale);
     return this.store.mutateScoped(
       cid,
       this.dsel(
-        `ah: addHangingChildPieceWithParentConnection(blueprintId: ${__gqlStr(blueprintId)}, parentPieceId: ${__gqlStr(parentPieceId)}, parentConnector: ${__gqlStr(parentConnector)}, childConnector: ${__gqlStr(childConnector)}, position: ${pos}, name: ${n}, description: ${d}, scale: ${sc})`,
+        `ah: addHangingChildPieceWithParentConnection(blueprintId: ${gqlString(blueprintId)}, parentPieceId: ${gqlString(parentPieceId)}, parentConnector: ${gqlString(parentConnector)}, childConnector: ${gqlString(childConnector)}, position: ${pos}, name: ${n}, description: ${d}, scale: ${sc})`,
       ),
     );
   }
 
   async deletePiece(id: string): Promise<SetResult> {
     const cid = await this.store.ensureChangeId();
-    return this.store.mutateScoped(cid, this.dsel(`dp: deletePiece(id: ${__gqlStr(id)})`));
+    return this.store.mutateScoped(cid, this.dsel(`dp: deletePiece(id: ${gqlString(id)})`));
   }
 
   async deletePieces(ids: readonly string[]): Promise<SetResult> {
     const cid = await this.store.ensureChangeId();
-    return this.store.mutateScoped(cid, this.dsel(`dps: deletePieces(ids: ${__gqlIds(ids)})`));
+    return this.store.mutateScoped(cid, this.dsel(`dps: deletePieces(ids: ${gqlIdList(ids)})`));
   }
 
   async deletePiecesAndConnections(pieceIds: readonly string[], connectionIds: readonly string[]): Promise<SetResult> {
     const cid = await this.store.ensureChangeId();
-    return this.store.mutateScoped(cid, this.dsel(`dpc: deletePiecesAndConnections(pieceIds: ${__gqlIds(pieceIds)}, connectionIds: ${__gqlIds(connectionIds)})`));
+    return this.store.mutateScoped(cid, this.dsel(`dpc: deletePiecesAndConnections(pieceIds: ${gqlIdList(pieceIds)}, connectionIds: ${gqlIdList(connectionIds)})`));
   }
 }
 //#endregion 📐Design
 
 //#region 🧰Type
 export class Type extends Entity {
-  private readonly __portCache = new Map<string, Port>();
-  private readonly __connectorCache = new Map<string, Connector>();
-  private readonly __representationCache = new Map<string, Representation>();
+  private readonly portCache = new Map<string, Port>();
+  private readonly connectorCache = new Map<string, Connector>();
+  private readonly representationCache = new Map<string, Representation>();
 
   constructor(store: Store, id: string) {
     super(store, id);
   }
 
   private tsel(inner: string): string {
-    return `type(id: ${__gqlStr(this.id)}) { ${inner} }`;
+    return `type(id: ${gqlString(this.id)}) { ${inner} }`;
   }
 
   port(portId: string): Port {
-    let p = this.__portCache.get(portId);
+    let p = this.portCache.get(portId);
     if (!p) {
       p = new Port(this.store, this.id, portId);
-      this.__portCache.set(portId, p);
+      this.portCache.set(portId, p);
     }
     return p;
   }
 
   connector(connectorId: string): Connector {
-    let c = this.__connectorCache.get(connectorId);
+    let c = this.connectorCache.get(connectorId);
     if (!c) {
       c = new Connector(this.store, this.id, connectorId);
-      this.__connectorCache.set(connectorId, c);
+      this.connectorCache.set(connectorId, c);
     }
     return c;
   }
 
   representation(representationId: string): Representation {
-    let r = this.__representationCache.get(representationId);
+    let r = this.representationCache.get(representationId);
     if (!r) {
       r = new Representation(this.store, this.id, representationId);
-      this.__representationCache.set(representationId, r);
+      this.representationCache.set(representationId, r);
     }
     return r;
   }
 
   async rename(newName: string): Promise<SetResult> {
     const cid = await this.store.ensureChangeId();
-    return this.store.mutateScoped(cid, this.tsel(`rn: rename(newName: ${__gqlStr(newName)})`));
+    return this.store.mutateScoped(cid, this.tsel(`rn: rename(newName: ${gqlString(newName)})`));
   }
 
   async changeDescription(newDescription: string): Promise<SetResult> {
     const cid = await this.store.ensureChangeId();
-    return this.store.mutateScoped(cid, this.tsel(`cd: changeDescription(newDescription: ${__gqlStr(newDescription)})`));
+    return this.store.mutateScoped(cid, this.tsel(`cd: changeDescription(newDescription: ${gqlString(newDescription)})`));
   }
 
   async changeIcon(newIcon: string): Promise<SetResult> {
     const cid = await this.store.ensureChangeId();
-    return this.store.mutateScoped(cid, this.tsel(`ci: changeIcon(newIcon: ${__gqlStr(newIcon)})`));
+    return this.store.mutateScoped(cid, this.tsel(`ci: changeIcon(newIcon: ${gqlString(newIcon)})`));
   }
 
   async addAttribute(key: string, value: string, definition: string): Promise<SetResult> {
     const cid = await this.store.ensureChangeId();
-    return this.store.mutateScoped(cid, this.tsel(`aa: addAttribute(key: ${__gqlStr(key)}, value: ${__gqlStr(value)}, definition: ${__gqlStr(definition)})`));
+    return this.store.mutateScoped(cid, this.tsel(`aa: addAttribute(key: ${gqlString(key)}, value: ${gqlString(value)}, definition: ${gqlString(definition)})`));
   }
 
   async removeAttribute(id: string): Promise<SetResult> {
     const cid = await this.store.ensureChangeId();
-    return this.store.mutateScoped(cid, this.tsel(`ra: removeAttribute(id: ${__gqlStr(id)})`));
+    return this.store.mutateScoped(cid, this.tsel(`ra: removeAttribute(id: ${gqlString(id)})`));
   }
 
   async removeAttributes(ids: readonly string[]): Promise<SetResult> {
     const cid = await this.store.ensureChangeId();
-    return this.store.mutateScoped(cid, this.tsel(`ras: removeAttributes(ids: ${__gqlIds(ids)})`));
+    return this.store.mutateScoped(cid, this.tsel(`ras: removeAttributes(ids: ${gqlIdList(ids)})`));
   }
 
   async createPort(code?: string | null, label?: string | null, description?: string | null, icon?: string | null, order?: number | null): Promise<SetResult> {
     const cid = await this.store.ensureChangeId();
-    const c = code == null ? "null" : __gqlStr(code);
-    const l = label == null ? "null" : __gqlStr(label);
-    const d = description == null ? "null" : __gqlStr(description);
-    const i = icon == null ? "null" : __gqlStr(icon);
+    const c = code == null ? "null" : gqlString(code);
+    const l = label == null ? "null" : gqlString(label);
+    const d = description == null ? "null" : gqlString(description);
+    const i = icon == null ? "null" : gqlString(icon);
     const o = order == null ? "null" : String(order);
     return this.store.mutateScoped(cid, this.tsel(`cp: createPort(code: ${c}, label: ${l}, description: ${d}, icon: ${i}, order: ${o})`));
   }
 
   async deletePort(id: string): Promise<SetResult> {
     const cid = await this.store.ensureChangeId();
-    return this.store.mutateScoped(cid, this.tsel(`dp: deletePort(id: ${__gqlStr(id)})`));
+    return this.store.mutateScoped(cid, this.tsel(`dp: deletePort(id: ${gqlString(id)})`));
   }
 
   async deletePorts(ids: readonly string[]): Promise<SetResult> {
     const cid = await this.store.ensureChangeId();
-    return this.store.mutateScoped(cid, this.tsel(`dps: deletePorts(ids: ${__gqlIds(ids)})`));
+    return this.store.mutateScoped(cid, this.tsel(`dps: deletePorts(ids: ${gqlIdList(ids)})`));
   }
 
   async addConnector(code: string, description?: string | null, icon?: string | null, portId?: string | null): Promise<SetResult> {
     const cid = await this.store.ensureChangeId();
-    const d = description == null ? "null" : __gqlStr(description);
-    const i = icon == null ? "null" : __gqlStr(icon);
-    const p = portId == null ? "null" : __gqlStr(portId);
-    return this.store.mutateScoped(cid, this.tsel(`ac: addConnector(code: ${__gqlStr(code)}, description: ${d}, icon: ${i}, portId: ${p})`));
+    const d = description == null ? "null" : gqlString(description);
+    const i = icon == null ? "null" : gqlString(icon);
+    const p = portId == null ? "null" : gqlString(portId);
+    return this.store.mutateScoped(cid, this.tsel(`ac: addConnector(code: ${gqlString(code)}, description: ${d}, icon: ${i}, portId: ${p})`));
   }
 
   async removeConnector(id: string): Promise<SetResult> {
     const cid = await this.store.ensureChangeId();
-    return this.store.mutateScoped(cid, this.tsel(`rc: removeConnector(id: ${__gqlStr(id)})`));
+    return this.store.mutateScoped(cid, this.tsel(`rc: removeConnector(id: ${gqlString(id)})`));
   }
 
   async removeConnectors(ids: readonly string[]): Promise<SetResult> {
     const cid = await this.store.ensureChangeId();
-    return this.store.mutateScoped(cid, this.tsel(`rcs: removeConnectors(ids: ${__gqlIds(ids)})`));
+    return this.store.mutateScoped(cid, this.tsel(`rcs: removeConnectors(ids: ${gqlIdList(ids)})`));
   }
 
   /** @emoji 🧰 Resolves {@code type(id){…}} on the materialized kit fragment. */
@@ -2398,7 +2404,7 @@ export class Port extends Entity {
   }
 
   private psel(inner: string): string {
-    return `type(id: ${__gqlStr(this.typeId)}) { port(id: ${__gqlStr(this.id)}) { ${inner} } }`;
+    return `type(id: ${gqlString(this.typeId)}) { port(id: ${gqlString(this.id)}) { ${inner} } }`;
   }
 
   /** @emoji 🔘 Resolves {@code type { port {…}}} on the kit fragment. */
@@ -2452,33 +2458,33 @@ export class Port extends Entity {
 
   async rename(newCode: string, newLabel?: string | null): Promise<SetResult> {
     const cid = await this.store.ensureChangeId();
-    const lab = newLabel == null ? "null" : __gqlStr(newLabel);
-    return this.store.mutateScoped(cid, this.psel(`rn: rename(newCode: ${__gqlStr(newCode)}, newLabel: ${lab})`));
+    const lab = newLabel == null ? "null" : gqlString(newLabel);
+    return this.store.mutateScoped(cid, this.psel(`rn: rename(newCode: ${gqlString(newCode)}, newLabel: ${lab})`));
   }
 
   async changeDescription(newDescription: string): Promise<SetResult> {
     const cid = await this.store.ensureChangeId();
-    return this.store.mutateScoped(cid, this.psel(`cd: changeDescription(newDescription: ${__gqlStr(newDescription)})`));
+    return this.store.mutateScoped(cid, this.psel(`cd: changeDescription(newDescription: ${gqlString(newDescription)})`));
   }
 
   async changeIcon(newIcon: string): Promise<SetResult> {
     const cid = await this.store.ensureChangeId();
-    return this.store.mutateScoped(cid, this.psel(`ci: changeIcon(newIcon: ${__gqlStr(newIcon)})`));
+    return this.store.mutateScoped(cid, this.psel(`ci: changeIcon(newIcon: ${gqlString(newIcon)})`));
   }
 
   async addAttribute(key: string, value: string, definition: string): Promise<SetResult> {
     const cid = await this.store.ensureChangeId();
-    return this.store.mutateScoped(cid, this.psel(`aa: addAttribute(key: ${__gqlStr(key)}, value: ${__gqlStr(value)}, definition: ${__gqlStr(definition)})`));
+    return this.store.mutateScoped(cid, this.psel(`aa: addAttribute(key: ${gqlString(key)}, value: ${gqlString(value)}, definition: ${gqlString(definition)})`));
   }
 
   async removeAttribute(id: string): Promise<SetResult> {
     const cid = await this.store.ensureChangeId();
-    return this.store.mutateScoped(cid, this.psel(`ra: removeAttribute(id: ${__gqlStr(id)})`));
+    return this.store.mutateScoped(cid, this.psel(`ra: removeAttribute(id: ${gqlString(id)})`));
   }
 
   async removeAttributes(ids: readonly string[]): Promise<SetResult> {
     const cid = await this.store.ensureChangeId();
-    return this.store.mutateScoped(cid, this.psel(`ras: removeAttributes(ids: ${__gqlIds(ids)})`));
+    return this.store.mutateScoped(cid, this.psel(`ras: removeAttributes(ids: ${gqlIdList(ids)})`));
   }
 }
 //#endregion 🔘Port
@@ -2492,22 +2498,22 @@ export class Connector extends Entity {
   }
 
   private csel(inner: string): string {
-    return `type(id: ${__gqlStr(this.typeId)}) { connector(id: ${__gqlStr(this.id)}) { ${inner} } }`;
+    return `type(id: ${gqlString(this.typeId)}) { connector(id: ${gqlString(this.id)}) { ${inner} } }`;
   }
 
   async rename(newCode: string): Promise<SetResult> {
     const cid = await this.store.ensureChangeId();
-    return this.store.mutateScoped(cid, this.csel(`rn: rename(newCode: ${__gqlStr(newCode)})`));
+    return this.store.mutateScoped(cid, this.csel(`rn: rename(newCode: ${gqlString(newCode)})`));
   }
 
   async changeDescription(newDescription: string): Promise<SetResult> {
     const cid = await this.store.ensureChangeId();
-    return this.store.mutateScoped(cid, this.csel(`cd: changeDescription(newDescription: ${__gqlStr(newDescription)})`));
+    return this.store.mutateScoped(cid, this.csel(`cd: changeDescription(newDescription: ${gqlString(newDescription)})`));
   }
 
   async changeIcon(newIcon: string): Promise<SetResult> {
     const cid = await this.store.ensureChangeId();
-    return this.store.mutateScoped(cid, this.csel(`ci: changeIcon(newIcon: ${__gqlStr(newIcon)})`));
+    return this.store.mutateScoped(cid, this.csel(`ci: changeIcon(newIcon: ${gqlString(newIcon)})`));
   }
 
   /** @emoji 🔗 Resolves {@code type{ connector{…}}} on the kit fragment. */
@@ -2561,7 +2567,7 @@ export interface PieceBlueprint {
   readonly id: string;
 }
 
-function __pieceKit(frag: JsonObject | null | undefined): JsonObject | null {
+function pieceKit(frag: JsonObject | null | undefined): JsonObject | null {
   const d = frag?.["design"] as JsonObject | undefined;
   const p = d?.["piece"] as JsonObject | undefined;
   return p ?? null;
@@ -2597,7 +2603,7 @@ export class Coordinate {
     const frag = (await this.parent.piece.store.readKitInner(
       this.parent.piece.kitPieceSelection(`${this.parent.role} { center { u v } }`),
     )) as JsonObject | null;
-    const row = __pieceKit(frag)?.[this.parent.role] as JsonObject | undefined;
+    const row = pieceKit(frag)?.[this.parent.role] as JsonObject | undefined;
     const c = row?.["center"] as JsonObject | undefined;
     return typeof c?.["u"] === "number" ? c["u"] : 0;
   }
@@ -2606,7 +2612,7 @@ export class Coordinate {
     const frag = (await this.parent.piece.store.readKitInner(
       this.parent.piece.kitPieceSelection(`${this.parent.role} { center { u v } }`),
     )) as JsonObject | null;
-    const row = __pieceKit(frag)?.[this.parent.role] as JsonObject | undefined;
+    const row = pieceKit(frag)?.[this.parent.role] as JsonObject | undefined;
     const c = row?.["center"] as JsonObject | undefined;
     return typeof c?.["v"] === "number" ? c["v"] : 0;
   }
@@ -2644,7 +2650,7 @@ export class Point {
     const frag = (await this.parent.parent.piece.store.readKitInner(
       this.parent.parent.piece.kitPieceSelection(`${this.parent.parent.role} { plane { origin { x y z } } }`),
     )) as JsonObject | null;
-    const row = __pieceKit(frag)?.[this.parent.parent.role] as JsonObject | undefined;
+    const row = pieceKit(frag)?.[this.parent.parent.role] as JsonObject | undefined;
     const pl = row?.["plane"] as JsonObject | undefined;
     const o = pl?.["origin"] as JsonObject | undefined;
     return typeof o?.["x"] === "number" ? o["x"] : 0;
@@ -2654,7 +2660,7 @@ export class Point {
     const frag = (await this.parent.parent.piece.store.readKitInner(
       this.parent.parent.piece.kitPieceSelection(`${this.parent.parent.role} { plane { origin { x y z } } }`),
     )) as JsonObject | null;
-    const row = __pieceKit(frag)?.[this.parent.parent.role] as JsonObject | undefined;
+    const row = pieceKit(frag)?.[this.parent.parent.role] as JsonObject | undefined;
     const pl = row?.["plane"] as JsonObject | undefined;
     const o = pl?.["origin"] as JsonObject | undefined;
     return typeof o?.["y"] === "number" ? o["y"] : 0;
@@ -2664,7 +2670,7 @@ export class Point {
     const frag = (await this.parent.parent.piece.store.readKitInner(
       this.parent.parent.piece.kitPieceSelection(`${this.parent.parent.role} { plane { origin { x y z } } }`),
     )) as JsonObject | null;
-    const row = __pieceKit(frag)?.[this.parent.parent.role] as JsonObject | undefined;
+    const row = pieceKit(frag)?.[this.parent.parent.role] as JsonObject | undefined;
     const pl = row?.["plane"] as JsonObject | undefined;
     const o = pl?.["origin"] as JsonObject | undefined;
     return typeof o?.["z"] === "number" ? o["z"] : 0;
@@ -2682,7 +2688,7 @@ export class Vector {
     const frag = (await this.parent.parent.piece.store.readKitInner(
       this.parent.parent.piece.kitPieceSelection(`${this.parent.parent.role} { plane { ${this.axisRole} { x y z } } }`),
     )) as JsonObject | null;
-    const row = __pieceKit(frag)?.[this.parent.parent.role] as JsonObject | undefined;
+    const row = pieceKit(frag)?.[this.parent.parent.role] as JsonObject | undefined;
     const pl = row?.["plane"] as JsonObject | undefined;
     const ax = pl?.[this.axisRole] as JsonObject | undefined;
     return typeof ax?.["x"] === "number" ? ax["x"] : 0;
@@ -2692,7 +2698,7 @@ export class Vector {
     const frag = (await this.parent.parent.piece.store.readKitInner(
       this.parent.parent.piece.kitPieceSelection(`${this.parent.parent.role} { plane { ${this.axisRole} { x y z } } }`),
     )) as JsonObject | null;
-    const row = __pieceKit(frag)?.[this.parent.parent.role] as JsonObject | undefined;
+    const row = pieceKit(frag)?.[this.parent.parent.role] as JsonObject | undefined;
     const pl = row?.["plane"] as JsonObject | undefined;
     const ax = pl?.[this.axisRole] as JsonObject | undefined;
     return typeof ax?.["y"] === "number" ? ax["y"] : 0;
@@ -2702,7 +2708,7 @@ export class Vector {
     const frag = (await this.parent.parent.piece.store.readKitInner(
       this.parent.parent.piece.kitPieceSelection(`${this.parent.parent.role} { plane { ${this.axisRole} { x y z } } }`),
     )) as JsonObject | null;
-    const row = __pieceKit(frag)?.[this.parent.parent.role] as JsonObject | undefined;
+    const row = pieceKit(frag)?.[this.parent.parent.role] as JsonObject | undefined;
     const pl = row?.["plane"] as JsonObject | undefined;
     const ax = pl?.[this.axisRole] as JsonObject | undefined;
     return typeof ax?.["z"] === "number" ? ax["z"] : 0;
@@ -2755,7 +2761,7 @@ export type OffsetInput = Readonly<{
   v: number;
 }>;
 
-function __gqlGeomNum(n: number): string {
+function gqlFiniteNumber(n: number): string {
   return Number.isFinite(n) ? String(n) : "0";
 }
 
@@ -2766,19 +2772,19 @@ export function formatPositionInput(p: PositionInput): string {
   const o = pl.origin;
   const xa = pl.xAxis;
   const ya = pl.yAxis;
-  return `{ center: { u: ${__gqlGeomNum(c.u)}, v: ${__gqlGeomNum(c.v)} }, plane: { origin: { x: ${__gqlGeomNum(o.x)}, y: ${__gqlGeomNum(o.y)}, z: ${__gqlGeomNum(o.z)} }, xAxis: { x: ${__gqlGeomNum(xa.x)}, y: ${__gqlGeomNum(xa.y)}, z: ${__gqlGeomNum(xa.z)} }, yAxis: { x: ${__gqlGeomNum(ya.x)}, y: ${__gqlGeomNum(ya.y)}, z: ${__gqlGeomNum(ya.z)} } } }`;
+  return `{ center: { u: ${gqlFiniteNumber(c.u)}, v: ${gqlFiniteNumber(c.v)} }, plane: { origin: { x: ${gqlFiniteNumber(o.x)}, y: ${gqlFiniteNumber(o.y)}, z: ${gqlFiniteNumber(o.z)} }, xAxis: { x: ${gqlFiniteNumber(xa.x)}, y: ${gqlFiniteNumber(xa.y)}, z: ${gqlFiniteNumber(xa.z)} }, yAxis: { x: ${gqlFiniteNumber(ya.x)}, y: ${gqlFiniteNumber(ya.y)}, z: ${gqlFiniteNumber(ya.z)} } } }`;
 }
 
 /** @emoji 📡 Inline GraphQL object literal for {@code OffsetInput}. */
 export function formatOffsetInput(o: OffsetInput): string {
-  return `{ u: ${__gqlGeomNum(o.u)}, v: ${__gqlGeomNum(o.v)} }`;
+  return `{ u: ${gqlFiniteNumber(o.u)}, v: ${gqlFiniteNumber(o.v)} }`;
 }
 //#endregion 📥GeomInputs
 //#endregion 🪶WeakGeometry
 
-const __PIECE_POSITION_SUBSELECTION = "center { u v } plane { origin { x y z } xAxis { x y z } yAxis { x y z } }";
+const PIECE_POSITION_SELECTION = "center { u v } plane { origin { x y z } xAxis { x y z } yAxis { x y z } }";
 
-function __parsePieceBlueprintFromJson(node: JsonObject | null | undefined): PieceBlueprint | null {
+function parsePieceBlueprintFromJson(node: JsonObject | null | undefined): PieceBlueprint | null {
   if (node == null || typeof node !== "object") return null;
   const tn = String(node["__typename"] ?? "");
   const id = String(node["id"] ?? "");
@@ -2788,7 +2794,7 @@ function __parsePieceBlueprintFromJson(node: JsonObject | null | undefined): Pie
   return null;
 }
 
-function __parseIdListConnection(obj: JsonObject | null | undefined, field: string): readonly string[] {
+function parseIdListConnection(obj: JsonObject | null | undefined, field: string): readonly string[] {
   const c = obj?.[field] as JsonObject | undefined;
   const edges = c?.["edges"];
   if (!Array.isArray(edges)) return [];
@@ -2804,7 +2810,7 @@ function __parseIdListConnection(obj: JsonObject | null | undefined, field: stri
 
 export class Piece extends Entity {
   readonly designId: string;
-  private readonly __positionByRole = new Map<"position" | "flatPosition", Position>();
+  private readonly positionByRole = new Map<"position" | "flatPosition", Position>();
   constructor(store: Store, designId: string, id: string) {
     super(store, id);
     this.designId = designId;
@@ -2812,60 +2818,60 @@ export class Piece extends Entity {
 
   /** @emoji 🧷 GraphQL path fragment under {@code design(id){ piece(id){ … }}} for kit reads (weak geometry + {@link Piece} fields). */
   kitPieceSelection(inner: string): string {
-    return `design(id: ${__gqlStr(this.designId)}) { piece(id: ${__gqlStr(this.id)}) { ${inner} } }`;
+    return `design(id: ${gqlString(this.designId)}) { piece(id: ${gqlString(this.id)}) { ${inner} } }`;
   }
 
   /** @emoji 📌 Stable weak {@code position} handle for this piece. */
   position(): Position {
-    let p = this.__positionByRole.get("position");
+    let p = this.positionByRole.get("position");
     if (!p) {
       p = new Position(this, "position");
-      this.__positionByRole.set("position", p);
+      this.positionByRole.set("position", p);
     }
     return p;
   }
 
   /** @emoji 📌 Stable weak {@code flatPosition} handle for this piece. */
   flatPosition(): Position {
-    let p = this.__positionByRole.get("flatPosition");
+    let p = this.positionByRole.get("flatPosition");
     if (!p) {
       p = new Position(this, "flatPosition");
-      this.__positionByRole.set("flatPosition", p);
+      this.positionByRole.set("flatPosition", p);
     }
     return p;
   }
 
   async readName(): Promise<string> {
     const frag = (await this.store.readKitInner(this.kitPieceSelection("name"))) as JsonObject | null;
-    return String(__pieceKit(frag)?.["name"] ?? "");
+    return String(pieceKit(frag)?.["name"] ?? "");
   }
 
   async readDescription(): Promise<string> {
     const frag = (await this.store.readKitInner(this.kitPieceSelection("description"))) as JsonObject | null;
-    return String(__pieceKit(frag)?.["description"] ?? "");
+    return String(pieceKit(frag)?.["description"] ?? "");
   }
 
   async readIcon(): Promise<string> {
     const frag = (await this.store.readKitInner(this.kitPieceSelection("icon"))) as JsonObject | null;
-    return String(__pieceKit(frag)?.["icon"] ?? "");
+    return String(pieceKit(frag)?.["icon"] ?? "");
   }
 
   async readScale(): Promise<number | null> {
     const frag = (await this.store.readKitInner(this.kitPieceSelection("scale"))) as JsonObject | null;
-    const v = __pieceKit(frag)?.["scale"];
+    const v = pieceKit(frag)?.["scale"];
     return typeof v === "number" ? v : null;
   }
 
   async readPosition(): Promise<Position | null> {
-    const frag = (await this.store.readKitInner(this.kitPieceSelection(`position { ${__PIECE_POSITION_SUBSELECTION} }`))) as JsonObject | null;
-    const raw = __pieceKit(frag)?.["position"];
+    const frag = (await this.store.readKitInner(this.kitPieceSelection(`position { ${PIECE_POSITION_SELECTION} }`))) as JsonObject | null;
+    const raw = pieceKit(frag)?.["position"];
     if (raw == null || typeof raw !== "object") return null;
     return this.position();
   }
 
   async readFlatPosition(): Promise<Position | null> {
-    const frag = (await this.store.readKitInner(this.kitPieceSelection(`flatPosition { ${__PIECE_POSITION_SUBSELECTION} }`))) as JsonObject | null;
-    const raw = __pieceKit(frag)?.["flatPosition"];
+    const frag = (await this.store.readKitInner(this.kitPieceSelection(`flatPosition { ${PIECE_POSITION_SELECTION} }`))) as JsonObject | null;
+    const raw = pieceKit(frag)?.["flatPosition"];
     if (raw == null || typeof raw !== "object") return null;
     return this.flatPosition();
   }
@@ -2892,59 +2898,59 @@ export class Piece extends Entity {
 
   async readBlueprint(): Promise<PieceBlueprint | null> {
     const frag = (await this.store.readKitInner(this.kitPieceSelection("blueprint { __typename id }"))) as JsonObject | null;
-    return __parsePieceBlueprintFromJson(__pieceKit(frag)?.["blueprint"] as JsonObject | undefined);
+    return parsePieceBlueprintFromJson(pieceKit(frag)?.["blueprint"] as JsonObject | undefined);
   }
 
   async readAttributes(): Promise<readonly Attribute[]> {
     const frag = (await this.store.readKitInner(this.kitPieceSelection("attributes { edges { node { id key value definition } } }"))) as JsonObject | null;
-    return parseAttributeConnectionUnder(this, __pieceKit(frag));
+    return parseAttributeConnectionUnder(this, pieceKit(frag));
   }
 
   async readConnectionKind(): Promise<"FIXED" | "CONNECTED" | null> {
     const frag = (await this.store.readKitInner(this.kitPieceSelection("connectionKind"))) as JsonObject | null;
-    const k = __pieceKit(frag)?.["connectionKind"];
+    const k = pieceKit(frag)?.["connectionKind"];
     if (k === "FIXED" || k === "CONNECTED") return k;
     return null;
   }
 
   async readParentPieceId(): Promise<string | null> {
     const frag = (await this.store.readKitInner(this.kitPieceSelection("parentPiece { id }"))) as JsonObject | null;
-    const n = __pieceKit(frag)?.["parentPiece"] as JsonObject | undefined;
+    const n = pieceKit(frag)?.["parentPiece"] as JsonObject | undefined;
     const id = n == null ? "" : String(n["id"] ?? "");
     return id === "" ? null : id;
   }
 
   async readParentConnectionId(): Promise<string | null> {
     const frag = (await this.store.readKitInner(this.kitPieceSelection("parentConnection { id }"))) as JsonObject | null;
-    const n = __pieceKit(frag)?.["parentConnection"] as JsonObject | undefined;
+    const n = pieceKit(frag)?.["parentConnection"] as JsonObject | undefined;
     const id = n == null ? "" : String(n["id"] ?? "");
     return id === "" ? null : id;
   }
 
   async readChildPieceIds(): Promise<readonly string[]> {
     const frag = (await this.store.readKitInner(this.kitPieceSelection("childPieces { edges { node { id } } }"))) as JsonObject | null;
-    return __parseIdListConnection(__pieceKit(frag), "childPieces");
+    return parseIdListConnection(pieceKit(frag), "childPieces");
   }
 
   async readChildConnectionIds(): Promise<readonly string[]> {
     const frag = (await this.store.readKitInner(this.kitPieceSelection("childConnections { edges { node { id } } }"))) as JsonObject | null;
-    return __parseIdListConnection(__pieceKit(frag), "childConnections");
+    return parseIdListConnection(pieceKit(frag), "childConnections");
   }
 
   async readDepth(): Promise<number | null> {
     const frag = (await this.store.readKitInner(this.kitPieceSelection("depth"))) as JsonObject | null;
-    const v = __pieceKit(frag)?.["depth"];
+    const v = pieceKit(frag)?.["depth"];
     return typeof v === "number" ? v : null;
   }
 
   async rename(newName: string): Promise<SetResult> {
     const cid = await this.store.ensureChangeId();
-    return this.store.mutateScoped(cid, this.kitPieceSelection(`rn: rename(newName: ${__gqlStr(newName)})`));
+    return this.store.mutateScoped(cid, this.kitPieceSelection(`rn: rename(newName: ${gqlString(newName)})`));
   }
 
   async changeDescription(newDescription: string): Promise<SetResult> {
     const cid = await this.store.ensureChangeId();
-    return this.store.mutateScoped(cid, this.kitPieceSelection(`cd: changeDescription(newDescription: ${__gqlStr(newDescription)})`));
+    return this.store.mutateScoped(cid, this.kitPieceSelection(`cd: changeDescription(newDescription: ${gqlString(newDescription)})`));
   }
 
   async drag(offset: OffsetInput): Promise<SetResult> {
@@ -2964,22 +2970,22 @@ export class Piece extends Entity {
 
   async changeBlueprint(blueprintId: string): Promise<SetResult> {
     const cid = await this.store.ensureChangeId();
-    return this.store.mutateScoped(cid, this.kitPieceSelection(`cb: changeBlueprint(blueprintId: ${__gqlStr(blueprintId)})`));
+    return this.store.mutateScoped(cid, this.kitPieceSelection(`cb: changeBlueprint(blueprintId: ${gqlString(blueprintId)})`));
   }
 
   async addAttribute(key: string, value: string, definition: string): Promise<SetResult> {
     const cid = await this.store.ensureChangeId();
-    return this.store.mutateScoped(cid, this.kitPieceSelection(`aa: addAttribute(key: ${__gqlStr(key)}, value: ${__gqlStr(value)}, definition: ${__gqlStr(definition)})`));
+    return this.store.mutateScoped(cid, this.kitPieceSelection(`aa: addAttribute(key: ${gqlString(key)}, value: ${gqlString(value)}, definition: ${gqlString(definition)})`));
   }
 
   async removeAttribute(id: string): Promise<SetResult> {
     const cid = await this.store.ensureChangeId();
-    return this.store.mutateScoped(cid, this.kitPieceSelection(`ra: removeAttribute(id: ${__gqlStr(id)})`));
+    return this.store.mutateScoped(cid, this.kitPieceSelection(`ra: removeAttribute(id: ${gqlString(id)})`));
   }
 
   async removeAttributes(ids: readonly string[]): Promise<SetResult> {
     const cid = await this.store.ensureChangeId();
-    return this.store.mutateScoped(cid, this.kitPieceSelection(`ras: removeAttributes(ids: ${__gqlIds(ids)})`));
+    return this.store.mutateScoped(cid, this.kitPieceSelection(`ras: removeAttributes(ids: ${gqlIdList(ids)})`));
   }
 }
 //#endregion 🧩Piece
@@ -2993,7 +2999,7 @@ export class PiecesOperations {
   ) { }
 
   private psel(inner: string): string {
-    return `design(id: ${__gqlStr(this.designId)}) { pieces(ids: ${__gqlIds(this.pieceIds)}) { ${inner} } }`;
+    return `design(id: ${gqlString(this.designId)}) { pieces(ids: ${gqlIdList(this.pieceIds)}) { ${inner} } }`;
   }
 
   async drag(offset: OffsetInput): Promise<SetResult> {
@@ -3013,7 +3019,7 @@ export class PiecesOperations {
 
   async changeBlueprint(blueprintId: string): Promise<SetResult> {
     const cid = await this.store.ensureChangeId();
-    return this.store.mutateScoped(cid, this.psel(`cb: changeBlueprint(blueprintId: ${__gqlStr(blueprintId)})`));
+    return this.store.mutateScoped(cid, this.psel(`cb: changeBlueprint(blueprintId: ${gqlString(blueprintId)})`));
   }
 }
 //#endregion 🪢PiecesOperations
@@ -3041,15 +3047,15 @@ export class ConnectionSide {
 /** @emoji ↔️ SDL {@code Side} alias for {@link ConnectionSide} in UI layers. */
 export type Side = ConnectionSide;
 
-const __CONNECTION_SIDE_SUBSELECTION = "piece { id } port { id } designPiece { id } connector { id }";
+const CONNECTION_SIDE_SELECTION = "piece { id } port { id } designPiece { id } connector { id }";
 
-function __connectionKit(frag: JsonObject | null | undefined): JsonObject | null {
+function connectionKit(frag: JsonObject | null | undefined): JsonObject | null {
   const d = frag?.["design"] as JsonObject | undefined;
   const c = d?.["connection"] as JsonObject | undefined;
   return c ?? null;
 }
 
-function __parseConnectionSideFromJson(
+function parseConnectionSideFromJson(
   store: Store,
   designId: string,
   connectionId: string,
@@ -3080,85 +3086,85 @@ export class Connection extends Entity {
   }
 
   private csel(inner: string): string {
-    return `design(id: ${__gqlStr(this.designId)}) { connection(id: ${__gqlStr(this.id)}) { ${inner} } }`;
+    return `design(id: ${gqlString(this.designId)}) { connection(id: ${gqlString(this.id)}) { ${inner} } }`;
   }
 
   async readName(): Promise<string> {
     const frag = ((await this.store.readKitInner(this.csel("name"))) as JsonObject | null) ?? null;
-    return String(__connectionKit(frag)?.["name"] ?? "");
+    return String(connectionKit(frag)?.["name"] ?? "");
   }
 
   async readDescription(): Promise<string> {
     const frag = ((await this.store.readKitInner(this.csel("description"))) as JsonObject | null) ?? null;
-    return String(__connectionKit(frag)?.["description"] ?? "");
+    return String(connectionKit(frag)?.["description"] ?? "");
   }
 
   async readIcon(): Promise<string> {
     const frag = ((await this.store.readKitInner(this.csel("icon"))) as JsonObject | null) ?? null;
-    return String(__connectionKit(frag)?.["icon"] ?? "");
+    return String(connectionKit(frag)?.["icon"] ?? "");
   }
 
   async readGap(): Promise<number | null> {
     const frag = ((await this.store.readKitInner(this.csel("gap"))) as JsonObject | null) ?? null;
-    const v = __connectionKit(frag)?.["gap"];
+    const v = connectionKit(frag)?.["gap"];
     return typeof v === "number" ? v : null;
   }
 
   async readShift(): Promise<number | null> {
     const frag = ((await this.store.readKitInner(this.csel("shift"))) as JsonObject | null) ?? null;
-    const v = __connectionKit(frag)?.["shift"];
+    const v = connectionKit(frag)?.["shift"];
     return typeof v === "number" ? v : null;
   }
 
   async readRise(): Promise<number | null> {
     const frag = ((await this.store.readKitInner(this.csel("rise"))) as JsonObject | null) ?? null;
-    const v = __connectionKit(frag)?.["rise"];
+    const v = connectionKit(frag)?.["rise"];
     return typeof v === "number" ? v : null;
   }
 
   async readRotation(): Promise<number | null> {
     const frag = ((await this.store.readKitInner(this.csel("rotation"))) as JsonObject | null) ?? null;
-    const v = __connectionKit(frag)?.["rotation"];
+    const v = connectionKit(frag)?.["rotation"];
     return typeof v === "number" ? v : null;
   }
 
   async readTurn(): Promise<number | null> {
     const frag = ((await this.store.readKitInner(this.csel("turn"))) as JsonObject | null) ?? null;
-    const v = __connectionKit(frag)?.["turn"];
+    const v = connectionKit(frag)?.["turn"];
     return typeof v === "number" ? v : null;
   }
 
   async readTilt(): Promise<number | null> {
     const frag = ((await this.store.readKitInner(this.csel("tilt"))) as JsonObject | null) ?? null;
-    const v = __connectionKit(frag)?.["tilt"];
+    const v = connectionKit(frag)?.["tilt"];
     return typeof v === "number" ? v : null;
   }
 
   async readU(): Promise<number | null> {
     const frag = ((await this.store.readKitInner(this.csel("u"))) as JsonObject | null) ?? null;
-    const v = __connectionKit(frag)?.["u"];
+    const v = connectionKit(frag)?.["u"];
     return typeof v === "number" ? v : null;
   }
 
   async readV(): Promise<number | null> {
     const frag = ((await this.store.readKitInner(this.csel("v"))) as JsonObject | null) ?? null;
-    const v = __connectionKit(frag)?.["v"];
+    const v = connectionKit(frag)?.["v"];
     return typeof v === "number" ? v : null;
   }
 
   async readConnected(): Promise<ConnectionSide | null> {
-    const frag = ((await this.store.readKitInner(this.csel(`connected { ${__CONNECTION_SIDE_SUBSELECTION} }`))) as JsonObject | null) ?? null;
-    return __parseConnectionSideFromJson(this.store, this.designId, this.id, "connected", __connectionKit(frag)?.["connected"] as JsonObject | undefined);
+    const frag = ((await this.store.readKitInner(this.csel(`connected { ${CONNECTION_SIDE_SELECTION} }`))) as JsonObject | null) ?? null;
+    return parseConnectionSideFromJson(this.store, this.designId, this.id, "connected", connectionKit(frag)?.["connected"] as JsonObject | undefined);
   }
 
   async readConnecting(): Promise<ConnectionSide | null> {
-    const frag = ((await this.store.readKitInner(this.csel(`connecting { ${__CONNECTION_SIDE_SUBSELECTION} }`))) as JsonObject | null) ?? null;
-    return __parseConnectionSideFromJson(this.store, this.designId, this.id, "connecting", __connectionKit(frag)?.["connecting"] as JsonObject | undefined);
+    const frag = ((await this.store.readKitInner(this.csel(`connecting { ${CONNECTION_SIDE_SELECTION} }`))) as JsonObject | null) ?? null;
+    return parseConnectionSideFromJson(this.store, this.designId, this.id, "connecting", connectionKit(frag)?.["connecting"] as JsonObject | undefined);
   }
 
   async readAttributes(): Promise<readonly Attribute[]> {
     const frag = ((await this.store.readKitInner(this.csel("attributes { edges { node { id key value definition } } }"))) as JsonObject | null) ?? null;
-    return parseAttributeConnectionUnder(this, __connectionKit(frag));
+    return parseAttributeConnectionUnder(this, connectionKit(frag));
   }
 }
 //#endregion ⛓️Connection
@@ -3171,37 +3177,37 @@ export class Author extends Entity {
   }
 
   async readName(): Promise<string> {
-    const data = kitGraphqlData(await __kitGraphqlEnvelope(this.store, { query: `query($id: ID!) { node(id: $id) { ... on Author { name } } }`, variables: { id: this.id } })) as JsonObject;
+    const data = unwrapGraphqlData(await executeStoreGraphql(this.store, { query: `query($id: ID!) { node(id: $id) { ... on Author { name } } }`, variables: { id: this.id } })) as JsonObject;
     const n = data["node"] as JsonObject | undefined;
     return String(n?.["name"] ?? "");
   }
 
   async readDescription(): Promise<string> {
-    const data = kitGraphqlData(await __kitGraphqlEnvelope(this.store, { query: `query($id: ID!) { node(id: $id) { ... on Author { description } } }`, variables: { id: this.id } })) as JsonObject;
+    const data = unwrapGraphqlData(await executeStoreGraphql(this.store, { query: `query($id: ID!) { node(id: $id) { ... on Author { description } } }`, variables: { id: this.id } })) as JsonObject;
     const n = data["node"] as JsonObject | undefined;
     return String(n?.["description"] ?? "");
   }
 
   async readIcon(): Promise<string> {
-    const data = kitGraphqlData(await __kitGraphqlEnvelope(this.store, { query: `query($id: ID!) { node(id: $id) { ... on Author { icon } } }`, variables: { id: this.id } })) as JsonObject;
+    const data = unwrapGraphqlData(await executeStoreGraphql(this.store, { query: `query($id: ID!) { node(id: $id) { ... on Author { icon } } }`, variables: { id: this.id } })) as JsonObject;
     const n = data["node"] as JsonObject | undefined;
     return String(n?.["icon"] ?? "");
   }
 
   async readEmail(): Promise<string> {
-    const data = kitGraphqlData(await __kitGraphqlEnvelope(this.store, { query: `query($id: ID!) { node(id: $id) { ... on Author { email } } }`, variables: { id: this.id } })) as JsonObject;
+    const data = unwrapGraphqlData(await executeStoreGraphql(this.store, { query: `query($id: ID!) { node(id: $id) { ... on Author { email } } }`, variables: { id: this.id } })) as JsonObject;
     const n = data["node"] as JsonObject | undefined;
     return String(n?.["email"] ?? "");
   }
 
   async readRole(): Promise<string> {
-    const data = kitGraphqlData(await __kitGraphqlEnvelope(this.store, { query: `query($id: ID!) { node(id: $id) { ... on Author { role } } }`, variables: { id: this.id } })) as JsonObject;
+    const data = unwrapGraphqlData(await executeStoreGraphql(this.store, { query: `query($id: ID!) { node(id: $id) { ... on Author { role } } }`, variables: { id: this.id } })) as JsonObject;
     const n = data["node"] as JsonObject | undefined;
     return String(n?.["role"] ?? "");
   }
 
   async readRank(): Promise<number | null> {
-    const data = kitGraphqlData(await __kitGraphqlEnvelope(this.store, { query: `query($id: ID!) { node(id: $id) { ... on Author { rank } } }`, variables: { id: this.id } })) as JsonObject;
+    const data = unwrapGraphqlData(await executeStoreGraphql(this.store, { query: `query($id: ID!) { node(id: $id) { ... on Author { rank } } }`, variables: { id: this.id } })) as JsonObject;
     const n = data["node"] as JsonObject | undefined;
     const r = n?.["rank"];
     return typeof r === "number" ? r : null;
@@ -3217,7 +3223,7 @@ export class Quality extends Entity {
   }
 
   private qsel(inner: string): string {
-    return `quality(id: ${__gqlStr(this.id)}) { ${inner} }`;
+    return `quality(id: ${gqlString(this.id)}) { ${inner} }`;
   }
 
   private async readScalarUnderQuality(field: string): Promise<string> {
@@ -3289,32 +3295,32 @@ export class Quality extends Entity {
 
   async rename(newKey: string): Promise<SetResult> {
     const cid = await this.store.ensureChangeId();
-    return this.store.mutateScoped(cid, this.qsel(`rk: rename(newKey: ${__gqlStr(newKey)})`));
+    return this.store.mutateScoped(cid, this.qsel(`rk: rename(newKey: ${gqlString(newKey)})`));
   }
 
   async changeDescription(newDescription: string): Promise<SetResult> {
     const cid = await this.store.ensureChangeId();
-    return this.store.mutateScoped(cid, this.qsel(`cd: changeDescription(newDescription: ${__gqlStr(newDescription)})`));
+    return this.store.mutateScoped(cid, this.qsel(`cd: changeDescription(newDescription: ${gqlString(newDescription)})`));
   }
 
   async changeIcon(newIcon: string): Promise<SetResult> {
     const cid = await this.store.ensureChangeId();
-    return this.store.mutateScoped(cid, this.qsel(`ci: changeIcon(newIcon: ${__gqlStr(newIcon)})`));
+    return this.store.mutateScoped(cid, this.qsel(`ci: changeIcon(newIcon: ${gqlString(newIcon)})`));
   }
 
   async addAttribute(key: string, value: string, definition: string): Promise<SetResult> {
     const cid = await this.store.ensureChangeId();
-    return this.store.mutateScoped(cid, this.qsel(`aa: addAttribute(key: ${__gqlStr(key)}, value: ${__gqlStr(value)}, definition: ${__gqlStr(definition)})`));
+    return this.store.mutateScoped(cid, this.qsel(`aa: addAttribute(key: ${gqlString(key)}, value: ${gqlString(value)}, definition: ${gqlString(definition)})`));
   }
 
   async removeAttribute(id: string): Promise<SetResult> {
     const cid = await this.store.ensureChangeId();
-    return this.store.mutateScoped(cid, this.qsel(`ra: removeAttribute(id: ${__gqlStr(id)})`));
+    return this.store.mutateScoped(cid, this.qsel(`ra: removeAttribute(id: ${gqlString(id)})`));
   }
 
   async removeAttributes(ids: readonly string[]): Promise<SetResult> {
     const cid = await this.store.ensureChangeId();
-    return this.store.mutateScoped(cid, this.qsel(`ras: removeAttributes(ids: ${__gqlIds(ids)})`));
+    return this.store.mutateScoped(cid, this.qsel(`ras: removeAttributes(ids: ${gqlIdList(ids)})`));
   }
 }
 //#endregion 💎Quality
@@ -3327,7 +3333,7 @@ export class Tag extends Entity {
   }
 
   private tsel(inner: string): string {
-    return `tag(id: ${__gqlStr(this.id)}) { ${inner} }`;
+    return `tag(id: ${gqlString(this.id)}) { ${inner} }`;
   }
 
   private async readScalarUnderTag(field: string): Promise<string> {
@@ -3362,32 +3368,32 @@ export class Tag extends Entity {
 
   async rename(newName: string): Promise<SetResult> {
     const cid = await this.store.ensureChangeId();
-    return this.store.mutateScoped(cid, this.tsel(`rn: rename(newName: ${__gqlStr(newName)})`));
+    return this.store.mutateScoped(cid, this.tsel(`rn: rename(newName: ${gqlString(newName)})`));
   }
 
   async changeDescription(newDescription: string): Promise<SetResult> {
     const cid = await this.store.ensureChangeId();
-    return this.store.mutateScoped(cid, this.tsel(`cd: changeDescription(newDescription: ${__gqlStr(newDescription)})`));
+    return this.store.mutateScoped(cid, this.tsel(`cd: changeDescription(newDescription: ${gqlString(newDescription)})`));
   }
 
   async changeIcon(newIcon: string): Promise<SetResult> {
     const cid = await this.store.ensureChangeId();
-    return this.store.mutateScoped(cid, this.tsel(`ci: changeIcon(newIcon: ${__gqlStr(newIcon)})`));
+    return this.store.mutateScoped(cid, this.tsel(`ci: changeIcon(newIcon: ${gqlString(newIcon)})`));
   }
 
   async addAttribute(key: string, value: string, definition: string): Promise<SetResult> {
     const cid = await this.store.ensureChangeId();
-    return this.store.mutateScoped(cid, this.tsel(`aa: addAttribute(key: ${__gqlStr(key)}, value: ${__gqlStr(value)}, definition: ${__gqlStr(definition)})`));
+    return this.store.mutateScoped(cid, this.tsel(`aa: addAttribute(key: ${gqlString(key)}, value: ${gqlString(value)}, definition: ${gqlString(definition)})`));
   }
 
   async removeAttribute(id: string): Promise<SetResult> {
     const cid = await this.store.ensureChangeId();
-    return this.store.mutateScoped(cid, this.tsel(`ra: removeAttribute(id: ${__gqlStr(id)})`));
+    return this.store.mutateScoped(cid, this.tsel(`ra: removeAttribute(id: ${gqlString(id)})`));
   }
 
   async removeAttributes(ids: readonly string[]): Promise<SetResult> {
     const cid = await this.store.ensureChangeId();
-    return this.store.mutateScoped(cid, this.tsel(`ras: removeAttributes(ids: ${__gqlIds(ids)})`));
+    return this.store.mutateScoped(cid, this.tsel(`ras: removeAttributes(ids: ${gqlIdList(ids)})`));
   }
 }
 //#endregion 🏷️Tag
@@ -3400,7 +3406,7 @@ export class Concept extends Entity {
   }
 
   private csel(inner: string): string {
-    return `concept(id: ${__gqlStr(this.id)}) { ${inner} }`;
+    return `concept(id: ${gqlString(this.id)}) { ${inner} }`;
   }
 
   private async readScalarUnderConcept(field: string): Promise<string> {
@@ -3435,32 +3441,32 @@ export class Concept extends Entity {
 
   async rename(newName: string): Promise<SetResult> {
     const cid = await this.store.ensureChangeId();
-    return this.store.mutateScoped(cid, this.csel(`rn: rename(newName: ${__gqlStr(newName)})`));
+    return this.store.mutateScoped(cid, this.csel(`rn: rename(newName: ${gqlString(newName)})`));
   }
 
   async changeDescription(newDescription: string): Promise<SetResult> {
     const cid = await this.store.ensureChangeId();
-    return this.store.mutateScoped(cid, this.csel(`cd: changeDescription(newDescription: ${__gqlStr(newDescription)})`));
+    return this.store.mutateScoped(cid, this.csel(`cd: changeDescription(newDescription: ${gqlString(newDescription)})`));
   }
 
   async changeIcon(newIcon: string): Promise<SetResult> {
     const cid = await this.store.ensureChangeId();
-    return this.store.mutateScoped(cid, this.csel(`ci: changeIcon(newIcon: ${__gqlStr(newIcon)})`));
+    return this.store.mutateScoped(cid, this.csel(`ci: changeIcon(newIcon: ${gqlString(newIcon)})`));
   }
 
   async addAttribute(key: string, value: string, definition: string): Promise<SetResult> {
     const cid = await this.store.ensureChangeId();
-    return this.store.mutateScoped(cid, this.csel(`aa: addAttribute(key: ${__gqlStr(key)}, value: ${__gqlStr(value)}, definition: ${__gqlStr(definition)})`));
+    return this.store.mutateScoped(cid, this.csel(`aa: addAttribute(key: ${gqlString(key)}, value: ${gqlString(value)}, definition: ${gqlString(definition)})`));
   }
 
   async removeAttribute(id: string): Promise<SetResult> {
     const cid = await this.store.ensureChangeId();
-    return this.store.mutateScoped(cid, this.csel(`ra: removeAttribute(id: ${__gqlStr(id)})`));
+    return this.store.mutateScoped(cid, this.csel(`ra: removeAttribute(id: ${gqlString(id)})`));
   }
 
   async removeAttributes(ids: readonly string[]): Promise<SetResult> {
     const cid = await this.store.ensureChangeId();
-    return this.store.mutateScoped(cid, this.csel(`ras: removeAttributes(ids: ${__gqlIds(ids)})`));
+    return this.store.mutateScoped(cid, this.csel(`ras: removeAttributes(ids: ${gqlIdList(ids)})`));
   }
 }
 //#endregion 💡Concept
@@ -3475,7 +3481,7 @@ export class Representation extends Entity {
   }
 
   private rsel(inner: string): string {
-    return `type(id: ${__gqlStr(this.typeId)}) { representation(id: ${__gqlStr(this.id)}) { ${inner} } }`;
+    return `type(id: ${gqlString(this.typeId)}) { representation(id: ${gqlString(this.id)}) { ${inner} } }`;
   }
 
   private async readUnderRepresentation(field: string): Promise<string> {
@@ -3558,8 +3564,8 @@ export class Family extends Entity {
   }
 
   private async readScalarOnNode(field: string): Promise<string> {
-    const data = kitGraphqlData(
-      await __kitGraphqlEnvelope(this.store, { query: `query($id: ID!) { node(id: $id) { ... on Family { ${field} } } }`, variables: { id: this.id } }),
+    const data = unwrapGraphqlData(
+      await executeStoreGraphql(this.store, { query: `query($id: ID!) { node(id: $id) { ... on Family { ${field} } } }`, variables: { id: this.id } }),
     ) as JsonObject;
     const n = data["node"] as JsonObject | undefined;
     return String(n?.[field] ?? "");
@@ -3586,8 +3592,8 @@ export class File extends Entity {
   }
 
   async readName(): Promise<string> {
-    const data = kitGraphqlData(
-      await __kitGraphqlEnvelope(this.store, { query: `query($id: ID!) { node(id: $id) { ... on File { name } } }`, variables: { id: this.id } }),
+    const data = unwrapGraphqlData(
+      await executeStoreGraphql(this.store, { query: `query($id: ID!) { node(id: $id) { ... on File { name } } }`, variables: { id: this.id } }),
     ) as JsonObject;
     return String((data["node"] as JsonObject | undefined)?.["name"] ?? "");
   }
@@ -3602,8 +3608,8 @@ export class Folder extends Entity {
   }
 
   private async readScalarOnNode(field: string): Promise<string> {
-    const data = kitGraphqlData(
-      await __kitGraphqlEnvelope(this.store, { query: `query($id: ID!) { node(id: $id) { ... on Folder { ${field} } } }`, variables: { id: this.id } }),
+    const data = unwrapGraphqlData(
+      await executeStoreGraphql(this.store, { query: `query($id: ID!) { node(id: $id) { ... on Folder { ${field} } } }`, variables: { id: this.id } }),
     ) as JsonObject;
     const n = data["node"] as JsonObject | undefined;
     return String(n?.[field] ?? "");
@@ -3633,7 +3639,7 @@ export class Layer extends Entity {
   }
 
   private lsel(inner: string): string {
-    return `design(id: ${__gqlStr(this.designId)}) { layers { edges { node { id ${inner} } } } }`;
+    return `design(id: ${gqlString(this.designId)}) { layers { edges { node { id ${inner} } } } }`;
   }
 
   private async selfLayerNode(innerFields: string): Promise<JsonObject | null> {
@@ -3695,7 +3701,7 @@ export class Group extends Entity {
   }
 
   async readName(): Promise<string> {
-    const frag = await this.store.readKitInner(`design(id: ${__gqlStr(this.designId)}) { groups { edges { node { id name } } } }`);
+    const frag = await this.store.readKitInner(`design(id: ${gqlString(this.designId)}) { groups { edges { node { id name } } } }`);
     const edges = (((frag as JsonObject | null)?.["design"] as JsonObject | undefined)?.["groups"] as JsonObject | undefined)?.["edges"] as readonly JsonObject[] | undefined;
     for (const e of edges ?? []) {
       const n = e["node"] as JsonObject | undefined;
@@ -3714,8 +3720,8 @@ export class Stat extends Entity {
   }
 
   private async readScalarOnNode(field: string): Promise<string> {
-    const data = kitGraphqlData(
-      await __kitGraphqlEnvelope(this.store, { query: `query($id: ID!) { node(id: $id) { ... on Stat { ${field} } } }`, variables: { id: this.id } }),
+    const data = unwrapGraphqlData(
+      await executeStoreGraphql(this.store, { query: `query($id: ID!) { node(id: $id) { ... on Stat { ${field} } } }`, variables: { id: this.id } }),
     ) as JsonObject;
     const n = data["node"] as JsonObject | undefined;
     return String(n?.[field] ?? "");
@@ -3755,8 +3761,8 @@ export class Prop extends Entity {
   }
 
   private async readScalarOnNode(field: string): Promise<string> {
-    const data = kitGraphqlData(
-      await __kitGraphqlEnvelope(this.store, { query: `query($id: ID!) { node(id: $id) { ... on Prop { ${field} } } }`, variables: { id: this.id } }),
+    const data = unwrapGraphqlData(
+      await executeStoreGraphql(this.store, { query: `query($id: ID!) { node(id: $id) { ... on Prop { ${field} } } }`, variables: { id: this.id } }),
     ) as JsonObject;
     const n = data["node"] as JsonObject | undefined;
     return String(n?.[field] ?? "");
@@ -3779,8 +3785,8 @@ export class Prop extends Entity {
   }
 
   async readQualityId(): Promise<string> {
-    const data = kitGraphqlData(
-      await __kitGraphqlEnvelope(this.store, { query: `query($id: ID!) { node(id: $id) { ... on Prop { quality { id } } } }`, variables: { id: this.id } }),
+    const data = unwrapGraphqlData(
+      await executeStoreGraphql(this.store, { query: `query($id: ID!) { node(id: $id) { ... on Prop { quality { id } } } }`, variables: { id: this.id } }),
     ) as JsonObject;
     const n = data["node"] as JsonObject | undefined;
     const q = n?.["quality"] as JsonObject | undefined;
@@ -3808,7 +3814,7 @@ if (
   const { describe, it, expect } = await import("vitest");
 
   describe("semio-js Store root (strict)", () => {
-    it("Store.prototype has no legacy snapshot() hook", () => {
+    it("Store.prototype has no snapshot() hook", () => {
       type Snap = { snapshot?: () => unknown };
       const snap: Snap = Store.prototype as unknown as Snap;
       expect(snap.snapshot).toBeUndefined();
@@ -3818,7 +3824,7 @@ if (
       expect(kitReadPointKey(theKitReadPoint)).toBe(JSON.stringify(theKitReadPoint));
     });
 
-    it("VCS + change-algebra shells JSON without KitRuntime", () => {
+    it("VCS + change-algebra shells JSON without a runtime umbrella", () => {
       const k = Object.create(Store.prototype) as Store;
       const g = new Graph(k, "wip");
       expect(g.root).toBe("wip");

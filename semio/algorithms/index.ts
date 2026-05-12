@@ -1,14 +1,14 @@
 // #region 🧲Header
 // 💻 semio/algorithms/index.ts
-// Specs: Story helpers over `@semio/js` `openKit` (field-only GraphQL kit) plus plain JSON {@link Design} types from `@semio/ui`.
-// Summary: WASM-backed flatten/drag/move reads and local diff helpers for Storybook; no legacy `KitStore` / zod schema bridge.
+// Specs: Story helpers over `@semio/js` `openStore` plus plain JSON {@link Design} types from `@semio/ui`.
+// Summary: WASM-backed flatten/drag/move reads and local diff helpers for Storybook; no snapshot store or schema bridge.
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 // #endregion 🧲Header
 
 /// <reference types="vite/client" />
 
 // #region 📥Imports
-import { openKit, type Kit as JsKit } from "@semio/js";
+import { openStore, type Store as JsStore } from "@semio/js";
 import {
   AlgorithmApp,
   WindowKind,
@@ -220,20 +220,20 @@ function __toBootstrap(kit: unknown): GqlWireObject {
   return JSON.parse(JSON.stringify(kit)) as GqlWireObject;
 }
 
-async function __withJsKit<T>(kit: unknown, fn: (js: JsKit) => Promise<T>): Promise<T> {
-  const js = await openKit(JSON.stringify(__toBootstrap(kit)));
+async function __withJsStore<T>(kit: unknown, fn: (store: JsStore) => Promise<T>): Promise<T> {
+  const store = await openStore(JSON.stringify(__toBootstrap(kit)));
   try {
-    return await fn(js);
+    return await fn(store);
   } finally {
-    await js.dispose();
+    await store.dispose();
   }
 }
 
-async function __readFlattenLayout(js: JsKit, designId: string): Promise<readonly { pieceId: string; plane: unknown; center: { u: number; v: number } }[]> {
-  const flat = await js.design(designId).flatten();
+async function __readFlattenLayout(store: JsStore, designId: string): Promise<readonly { pieceId: string; plane: unknown; center: { u: number; v: number } }[]> {
+  const flat = await store.design(designId).flatten();
   if (!flat.ok) throw new Error(flat.error.message);
   const sel = `design(id: ${JSON.stringify(designId)}) { pieces { edges { node { id flatPosition { center { u v } plane { origin { x y z } xAxis { x y z } yAxis { x y z } } } } } } }`;
-  const frag = (await js.readKitInner(sel)) as GqlWireObject | null;
+  const frag = (await store.readKitInner(sel)) as GqlWireObject | null;
   const design = frag?.["design"] as GqlWireObject | undefined;
   const pieces = design?.["pieces"] as GqlWireObject | undefined;
   const edges = (pieces?.["edges"] as readonly GqlWireObject[] | undefined) ?? [];
@@ -276,7 +276,7 @@ export async function flattenDesign(kit: unknown, designId: string): Promise<Des
   }
   const design = new Design({ ...designPlain }) as unknown as Design;
   try {
-    const rows = await __withJsKit(kit, (js) => __readFlattenLayout(js, designId));
+    const rows = await __withJsStore(kit, (js) => __readFlattenLayout(js, designId));
     const conns = new Design(designPlain).connections;
     const forward: DesignDiff = {
       pieces: __piecesDiffFromLayout(rows),
@@ -324,7 +324,7 @@ export async function deletePieces(_kit: unknown, design: Design, pieceIds: read
  */
 export async function dragPieces(kit: unknown, rawDesign: Design, pieceIds: readonly string[], offset: CoordinatePlain): Promise<{ inputDesign: Design; output: Design; dragDiff: DesignDiff }> {
   const designId = String((rawDesign as { id?: string }).id ?? (rawDesign as Design).id ?? "");
-  const preRows = await __withJsKit(kit, (js) => __readFlattenLayout(js, designId));
+  const preRows = await __withJsStore(kit, (js) => __readFlattenLayout(js, designId));
   const prePieceDiff = __piecesDiffFromLayout(preRows);
   const flat = __cloneDesignWithDiff(rawDesign, { pieces: prePieceDiff });
   const flatModel = flat as unknown as Design;
@@ -340,7 +340,7 @@ export async function dragPieces(kit: unknown, rawDesign: Design, pieceIds: read
   const designs = __itemsOf<Record<string, unknown>>(surface["designs"]).map((d) => (String(d["id"] ?? "") === designId ? __plainFromDesign(updatedRaw) : d));
   surface["designs"] = designs;
   const updatedBundle = { ...kitPlain, wip: { ...(kitPlain["wip"] as object), initialKit: surface } };
-  const postRows = await __withJsKit(updatedBundle, (js) => __readFlattenLayout(js, designId));
+  const postRows = await __withJsStore(updatedBundle, (js) => __readFlattenLayout(js, designId));
   const postPieceDiff = __piecesDiffFromLayout(postRows);
   const output = __cloneDesignWithDiff(updatedRaw, { pieces: postPieceDiff });
   return { inputDesign: flat, output, dragDiff };
@@ -351,7 +351,7 @@ export async function dragPieces(kit: unknown, rawDesign: Design, pieceIds: read
  */
 export async function movePieces(kit: unknown, rawDesign: Design, pieceIds: readonly string[], vector: MoveVector): Promise<{ inputDesign: Design; output: Design; moveDiff: DesignDiff }> {
   const designId = String((rawDesign as { id?: string }).id ?? (rawDesign as Design).id ?? "");
-  const preRows = await __withJsKit(kit, (js) => __readFlattenLayout(js, designId));
+  const preRows = await __withJsStore(kit, (js) => __readFlattenLayout(js, designId));
   const prePieceDiff = __piecesDiffFromLayout(preRows);
   const flat = __cloneDesignWithDiff(rawDesign, { pieces: prePieceDiff });
   const preById = new Map(preRows.map((r) => [r.pieceId, r] as const));
@@ -372,7 +372,7 @@ export async function movePieces(kit: unknown, rawDesign: Design, pieceIds: read
   const designs = __itemsOf<Record<string, unknown>>(surface["designs"]).map((d) => (String(d["id"] ?? "") === designId ? __plainFromDesign(updatedRaw) : d));
   surface["designs"] = designs;
   const updatedBundle = { ...kitPlain, wip: { ...(kitPlain["wip"] as object), initialKit: surface } };
-  const postRows = await __withJsKit(updatedBundle, (js) => __readFlattenLayout(js, designId));
+  const postRows = await __withJsStore(updatedBundle, (js) => __readFlattenLayout(js, designId));
   const postPieceDiff = __piecesDiffFromLayout(postRows);
   const output = __cloneDesignWithDiff(updatedRaw, { pieces: postPieceDiff });
   return { inputDesign: flat, output, moveDiff };

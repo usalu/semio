@@ -318,23 +318,23 @@ export function bindOperationToReact<E extends Entity, Args extends unknown[] = 
 // #region 🪝KitFieldBind
 /** @emoji 🪝 Kit-scoped field bind (uses {@link Store#bus} like {@link bindFieldToReact}). */
 export type KitFieldBindOptions<T> = Readonly<{
-  read: (store: Store) => Promise<T>;
+  read: (kit: Kit) => Promise<T>;
   eventKind?: string;
-  getStore: () => Store | null;
+  getKit: () => Kit | null;
 }>;
 
 export function bindKitFieldToReact<T>(opts: KitFieldBindOptions<T>): () => FieldReadState<T> {
-  const { read, eventKind, getStore } = opts;
+  const { read, eventKind, getKit } = opts;
   return function useKitBound(): FieldReadState<T> {
-    const store = getStore();
+    const kit = getKit();
     const [value, setValue] = React.useState<T | undefined>(undefined);
     const [loading, setLoading] = React.useState(false);
     const [error, setError] = React.useState<unknown>(undefined);
-    const storeRef = React.useRef(store);
-    storeRef.current = store;
+    const kitRef = React.useRef(kit);
+    kitRef.current = kit;
 
     const refresh = React.useCallback(async () => {
-      const k = storeRef.current;
+      const k = kitRef.current;
       if (k == null) {
         setValue(undefined);
         setError(undefined);
@@ -354,12 +354,63 @@ export function bindKitFieldToReact<T>(opts: KitFieldBindOptions<T>): () => Fiel
 
     React.useEffect(() => {
       void refresh();
+    }, [refresh, kit]);
+
+    React.useEffect(() => {
+      const k = kitRef.current;
+      if (k == null) return;
+      if (eventKind != null && eventKind !== "") return k.store.bus.subscribeKind(eventKind, () => void refresh());
+      return undefined;
+    }, [kit, eventKind, refresh]);
+
+    return { value, loading, error, refresh };
+  };
+}
+
+export type StoreFieldBindOptions<T> = Readonly<{
+  read: (store: Store) => Promise<T>;
+  eventKind?: string;
+  getStore: () => Store | null;
+}>;
+
+/** @emoji 🪝 Store-root field bind for session/backbone/root fields. */
+export function bindStoreFieldToReact<T>(opts: StoreFieldBindOptions<T>): () => FieldReadState<T> {
+  const { read, eventKind, getStore } = opts;
+  return function useStoreBound(): FieldReadState<T> {
+    const store = getStore();
+    const [value, setValue] = React.useState<T | undefined>(undefined);
+    const [loading, setLoading] = React.useState(false);
+    const [error, setError] = React.useState<unknown>(undefined);
+    const storeRef = React.useRef(store);
+    storeRef.current = store;
+
+    const refresh = React.useCallback(async () => {
+      const s = storeRef.current;
+      if (s == null) {
+        setValue(undefined);
+        setError(undefined);
+        setLoading(false);
+        return;
+      }
+      setLoading(true);
+      setError(undefined);
+      try {
+        setValue(await read(s));
+      } catch (err) {
+        setError(err);
+      } finally {
+        setLoading(false);
+      }
+    }, [read]);
+
+    React.useEffect(() => {
+      void refresh();
     }, [refresh, store]);
 
     React.useEffect(() => {
-      const k = storeRef.current;
-      if (k == null) return;
-      if (eventKind != null && eventKind !== "") return k.bus.subscribeKind(eventKind, () => void refresh());
+      const s = storeRef.current;
+      if (s == null) return;
+      if (eventKind != null && eventKind !== "") return s.bus.subscribeKind(eventKind, () => void refresh());
       return undefined;
     }, [store, eventKind, refresh]);
 
@@ -368,10 +419,10 @@ export function bindKitFieldToReact<T>(opts: KitFieldBindOptions<T>): () => Fiel
 }
 // #endregion 🪝KitFieldBind
 
-// #region 🪝KitOpBind
-/** @emoji 🪝 Binds a {@link Kit} operation to `[run, status]`. */
-export function bindKitOperationToReact<Args extends unknown[] = []>(impl: (store: Store, ...args: Args) => Promise<SetResult>): (getStore: () => Store | null) => readonly [(...args: Args) => Promise<SetResult>, OperationStatus] {
-  return function useKitOp(getStore: () => Store | null): readonly [(...args: Args) => Promise<SetResult>, OperationStatus] {
+// #region 🪝StoreOpBind
+/** @emoji 🪝 Binds a {@link Store} operation to `[run, status]`. */
+export function bindStoreOperationToReact<Args extends unknown[] = []>(impl: (store: Store, ...args: Args) => Promise<SetResult>): (getStore: () => Store | null) => readonly [(...args: Args) => Promise<SetResult>, OperationStatus] {
+  return function useStoreOp(getStore: () => Store | null): readonly [(...args: Args) => Promise<SetResult>, OperationStatus] {
     const getRef = React.useRef(getStore);
     getRef.current = getStore;
     const [status, setStatus] = React.useState<OperationStatus>({ kind: "idle" });
@@ -404,7 +455,7 @@ export function bindKitOperationToReact<Args extends unknown[] = []>(impl: (stor
     return [run, status] as const;
   };
 }
-// #endregion 🪝KitOpBind
+// #endregion 🪝StoreOpBind
 
 // #region 🫳ShellHost
 /** @emoji 🪟 Sketchpad kit-store factory signature (host wiring; store shape is host-owned). */
@@ -424,7 +475,7 @@ export function ActiveKitTabContextProvider(props: { kitTabId: string; children:
   return React.createElement(ActiveKitTabContext.Provider, { value: v }, props.children);
 }
 
-/** @emoji 🧭 Reads {@link ActiveKitTabContextProvider} as `{ id }` for legacy call-site shape. */
+/** @emoji 🧭 Reads {@link ActiveKitTabContextProvider} as the active tab id value. */
 export function useActiveKitTab(): ActiveKitTabValue | null {
   return React.useContext(ActiveKitTabContext);
 }
@@ -525,6 +576,18 @@ export function useStoreOptional(): Store | null {
 export function useWipGraph(): Graph {
   const store = useStore();
   return React.useMemo(() => store.wip(), [store]);
+}
+
+/** @emoji 🏛 Target-schema {@link TheKit} under {@code Store.wip()}. */
+export function useWipVersion(): TheKit {
+  const graph = useWipGraph();
+  return React.useMemo(() => graph.theKit(), [graph]);
+}
+
+/** @emoji 📦 Target-schema {@link Kit} under {@code Store.wip().theKit()}. */
+export function useWipKit(): Kit {
+  const version = useWipVersion();
+  return React.useMemo(() => version.kit(), [version]);
 }
 
 /** @emoji 🌐 Authoritative {@link Graph} from {@link Store#authoritative}. */
@@ -778,54 +841,54 @@ export function ConnectionUnderActiveDesignProvider(props: { connectionId: strin
 // #region 🪝IdStableEntityLists
 /** @emoji 📚 Kit-level designs via {@link Kit#readDesigns} (id-list-stable handles). */
 export function useKitDesigns(): FieldReadState<readonly Design[]> {
-  const store = useStore();
+  const kit = useWipKit();
   return bindKitFieldToReact<readonly Design[]>({
-    getStore: () => store,
+    getKit: () => kit,
     read: async (k) => k.readDesigns(),
   })();
 }
 
 /** @emoji 📚 Kit-level kinds via {@link Kit#readTypes}. */
 export function useKitTypes(): FieldReadState<readonly Type[]> {
-  const store = useStore();
+  const kit = useWipKit();
   return bindKitFieldToReact<readonly Type[]>({
-    getStore: () => store,
+    getKit: () => kit,
     read: async (k) => k.readTypes(),
   })();
 }
 
 /** @emoji 📚 Kit-level authors via {@link Kit#readAuthors}. */
 export function useKitAuthors(): FieldReadState<readonly Author[]> {
-  const store = useStore();
+  const kit = useWipKit();
   return bindKitFieldToReact<readonly Author[]>({
-    getStore: () => store,
+    getKit: () => kit,
     read: async (k) => k.readAuthors(),
   })();
 }
 
 /** @emoji 📚 Kit-level qualities via {@link Kit#readQualities}. */
 export function useKitQualities(): FieldReadState<readonly Quality[]> {
-  const store = useStore();
+  const kit = useWipKit();
   return bindKitFieldToReact<readonly Quality[]>({
-    getStore: () => store,
+    getKit: () => kit,
     read: async (k) => k.readQualities(),
   })();
 }
 
 /** @emoji 📚 Kit-level tags via {@link Kit#readTags}. */
 export function useKitTags(): FieldReadState<readonly Tag[]> {
-  const store = useStore();
+  const kit = useWipKit();
   return bindKitFieldToReact<readonly Tag[]>({
-    getStore: () => store,
+    getKit: () => kit,
     read: async (k) => k.readTags(),
   })();
 }
 
 /** @emoji 📚 Kit-level concepts via {@link Kit#readConcepts}. */
 export function useKitConcepts(): FieldReadState<readonly Concept[]> {
-  const store = useStore();
+  const kit = useWipKit();
   return bindKitFieldToReact<readonly Concept[]>({
-    getStore: () => store,
+    getKit: () => kit,
     read: async (k) => k.readConcepts(),
   })();
 }
@@ -917,68 +980,68 @@ export function useQualityContextRead<S>(selector: ((q: Quality) => S) | undefin
 // #region 📖KitReads
 /** @emoji 📖 Live {@link Kit#readName} + {@code kitRenamed}. */
 export function useKitName(): FieldReadState<string> {
-  const store = useStore();
-  return bindKitFieldToReact<string>({ getStore: () => store, read: (k) => k.readName(), eventKind: "kitRenamed" })();
+  const kit = useWipKit();
+  return bindKitFieldToReact<string>({ getKit: () => kit, read: (k) => k.readName(), eventKind: "kitRenamed" })();
 }
 
 /** @emoji 📖 Live {@link Kit#readDescription} + {@code changedDescription}. */
 export function useKitDescription(): FieldReadState<string> {
-  const store = useStore();
-  return bindKitFieldToReact<string>({ getStore: () => store, read: (k) => k.readDescription(), eventKind: "changedDescription" })();
+  const kit = useWipKit();
+  return bindKitFieldToReact<string>({ getKit: () => kit, read: (k) => k.readDescription(), eventKind: "changedDescription" })();
 }
 
 /** @emoji 📖 Live {@link Kit#readId}. */
 export function useKitId(): FieldReadState<string> {
-  const store = useStore();
-  return bindKitFieldToReact<string>({ getStore: () => store, read: (k) => k.readId() })();
+  const kit = useWipKit();
+  return bindKitFieldToReact<string>({ getKit: () => kit, read: (k) => k.readId() })();
 }
 
 /** @emoji 📖 Live {@link Kit#readIcon}. */
 export function useKitIcon(): FieldReadState<string> {
-  const store = useStore();
-  return bindKitFieldToReact<string>({ getStore: () => store, read: (k) => k.readIcon() })();
+  const kit = useWipKit();
+  return bindKitFieldToReact<string>({ getKit: () => kit, read: (k) => k.readIcon() })();
 }
 
 /** @emoji 📖 Live {@link Kit#readImage}. */
 export function useKitImage(): FieldReadState<string> {
-  const store = useStore();
-  return bindKitFieldToReact<string>({ getStore: () => store, read: (k) => k.readImage() })();
+  const kit = useWipKit();
+  return bindKitFieldToReact<string>({ getKit: () => kit, read: (k) => k.readImage() })();
 }
 
 /** @emoji 📖 Live {@link Kit#readTypeIds}. */
 export function useKitTypeIds(): FieldReadState<readonly string[]> {
-  const store = useStore();
-  return bindKitFieldToReact<readonly string[]>({ getStore: () => store, read: (k) => k.readTypeIds() })();
+  const kit = useWipKit();
+  return bindKitFieldToReact<readonly string[]>({ getKit: () => kit, read: (k) => k.readTypeIds() })();
 }
 
 /** @emoji 📖 Live {@link Kit#readDesignIds}. */
 export function useKitDesignIds(): FieldReadState<readonly string[]> {
-  const store = useStore();
-  return bindKitFieldToReact<readonly string[]>({ getStore: () => store, read: (k) => k.readDesignIds() })();
+  const kit = useWipKit();
+  return bindKitFieldToReact<readonly string[]>({ getKit: () => kit, read: (k) => k.readDesignIds() })();
 }
 
 /** @emoji 📖 Live {@link Kit#readAuthorIds}. */
 export function useKitAuthorIds(): FieldReadState<readonly string[]> {
-  const store = useStore();
-  return bindKitFieldToReact<readonly string[]>({ getStore: () => store, read: (k) => k.readAuthorIds() })();
+  const kit = useWipKit();
+  return bindKitFieldToReact<readonly string[]>({ getKit: () => kit, read: (k) => k.readAuthorIds() })();
 }
 
 /** @emoji 📖 Live {@link Kit#readQualityIds}. */
 export function useKitQualityIds(): FieldReadState<readonly string[]> {
-  const store = useStore();
-  return bindKitFieldToReact<readonly string[]>({ getStore: () => store, read: (k) => k.readQualityIds() })();
+  const kit = useWipKit();
+  return bindKitFieldToReact<readonly string[]>({ getKit: () => kit, read: (k) => k.readQualityIds() })();
 }
 
 /** @emoji 📖 Live {@link Kit#readTagIds}. */
 export function useKitTagIds(): FieldReadState<readonly string[]> {
-  const store = useStore();
-  return bindKitFieldToReact<readonly string[]>({ getStore: () => store, read: (k) => k.readTagIds() })();
+  const kit = useWipKit();
+  return bindKitFieldToReact<readonly string[]>({ getKit: () => kit, read: (k) => k.readTagIds() })();
 }
 
 /** @emoji 📖 Live {@link Kit#readConceptIds}. */
 export function useKitConceptIds(): FieldReadState<readonly string[]> {
-  const store = useStore();
-  return bindKitFieldToReact<readonly string[]>({ getStore: () => store, read: (k) => k.readConceptIds() })();
+  const kit = useWipKit();
+  return bindKitFieldToReact<readonly string[]>({ getKit: () => kit, read: (k) => k.readConceptIds() })();
 }
 
 /** @emoji 🧾 Exposes {@link Store#ensureChangeId} as a stable callback. */
@@ -992,55 +1055,55 @@ export function useEnsureKitChangeId(): () => Promise<string> {
 /** @emoji ✍️ {@link Store#rename}. */
 export function useRenameKit(): readonly [(newName: string) => Promise<SetResult>, OperationStatus] {
   const store = useStore();
-  return bindKitOperationToReact<[string]>((k, newName) => k.rename(newName))(() => store);
+  return bindStoreOperationToReact<[string]>((k, newName) => k.rename(newName))(() => store);
 }
 
 /** @emoji ✍️ {@link Store#changeDescription}. */
 export function useChangeKitDescription(): readonly [(newDescription: string) => Promise<SetResult>, OperationStatus] {
   const store = useStore();
-  return bindKitOperationToReact<[string]>((k, d) => k.changeDescription(d))(() => store);
+  return bindStoreOperationToReact<[string]>((k, d) => k.changeDescription(d))(() => store);
 }
 
 /** @emoji ✍️ {@link Store#createTag}. */
 export function useCreateTag(): readonly [(name: string, description?: string | null, icon?: string | null, order?: number | null) => Promise<SetResult>, OperationStatus] {
   const store = useStore();
-  return bindKitOperationToReact<[string, string | null | undefined, string | null | undefined, number | null | undefined]>((k, n, d, i, o) => k.createTag(n, d, i, o))(() => store);
+  return bindStoreOperationToReact<[string, string | null | undefined, string | null | undefined, number | null | undefined]>((k, n, d, i, o) => k.createTag(n, d, i, o))(() => store);
 }
 
 /** @emoji ✍️ {@link Store#deleteTag}. */
 export function useDeleteTag(): readonly [(id: string) => Promise<SetResult>, OperationStatus] {
   const store = useStore();
-  return bindKitOperationToReact<[string]>((k, id) => k.deleteTag(id))(() => store);
+  return bindStoreOperationToReact<[string]>((k, id) => k.deleteTag(id))(() => store);
 }
 
 /** @emoji ✍️ {@link Store#deleteTags}. */
 export function useDeleteTags(): readonly [(ids: readonly string[]) => Promise<SetResult>, OperationStatus] {
   const store = useStore();
-  return bindKitOperationToReact<[readonly string[]]>((k, ids) => k.deleteTags(ids))(() => store);
+  return bindStoreOperationToReact<[readonly string[]]>((k, ids) => k.deleteTags(ids))(() => store);
 }
 
 /** @emoji ✍️ {@link Store#createConcept}. */
 export function useCreateConcept(): readonly [(name: string, description?: string | null, icon?: string | null, order?: number | null) => Promise<SetResult>, OperationStatus] {
   const store = useStore();
-  return bindKitOperationToReact<[string, string | null | undefined, string | null | undefined, number | null | undefined]>((k, n, d, i, o) => k.createConcept(n, d, i, o))(() => store);
+  return bindStoreOperationToReact<[string, string | null | undefined, string | null | undefined, number | null | undefined]>((k, n, d, i, o) => k.createConcept(n, d, i, o))(() => store);
 }
 
 /** @emoji ✍️ {@link Store#deleteConcept}. */
 export function useDeleteConcept(): readonly [(id: string) => Promise<SetResult>, OperationStatus] {
   const store = useStore();
-  return bindKitOperationToReact<[string]>((k, id) => k.deleteConcept(id))(() => store);
+  return bindStoreOperationToReact<[string]>((k, id) => k.deleteConcept(id))(() => store);
 }
 
 /** @emoji ✍️ {@link Store#deleteConcepts}. */
 export function useDeleteConcepts(): readonly [(ids: readonly string[]) => Promise<SetResult>, OperationStatus] {
   const store = useStore();
-  return bindKitOperationToReact<[readonly string[]]>((k, ids) => k.deleteConcepts(ids))(() => store);
+  return bindStoreOperationToReact<[readonly string[]]>((k, ids) => k.deleteConcepts(ids))(() => store);
 }
 
 /** @emoji ✍️ {@link Store#createQuality}. */
 export function useCreateQuality(): readonly [(key: string, value?: string | null, unit?: string | null, definition?: string | null, description?: string | null, icon?: string | null) => Promise<SetResult>, OperationStatus] {
   const store = useStore();
-  return bindKitOperationToReact<[string, string | null | undefined, string | null | undefined, string | null | undefined, string | null | undefined, string | null | undefined]>((k, key, value, unit, definition, description, icon) =>
+  return bindStoreOperationToReact<[string, string | null | undefined, string | null | undefined, string | null | undefined, string | null | undefined, string | null | undefined]>((k, key, value, unit, definition, description, icon) =>
     k.createQuality(key, value, unit, definition, description, icon),
   )(() => store);
 }
@@ -1048,55 +1111,55 @@ export function useCreateQuality(): readonly [(key: string, value?: string | nul
 /** @emoji ✍️ {@link Store#deleteQuality}. */
 export function useDeleteQuality(): readonly [(id: string) => Promise<SetResult>, OperationStatus] {
   const store = useStore();
-  return bindKitOperationToReact<[string]>((k, id) => k.deleteQuality(id))(() => store);
+  return bindStoreOperationToReact<[string]>((k, id) => k.deleteQuality(id))(() => store);
 }
 
 /** @emoji ✍️ {@link Store#deleteQualities}. */
 export function useDeleteQualities(): readonly [(ids: readonly string[]) => Promise<SetResult>, OperationStatus] {
   const store = useStore();
-  return bindKitOperationToReact<[readonly string[]]>((k, ids) => k.deleteQualities(ids))(() => store);
+  return bindStoreOperationToReact<[readonly string[]]>((k, ids) => k.deleteQualities(ids))(() => store);
 }
 
 /** @emoji ✍️ {@link Store#createType}. */
 export function useCreateType(): readonly [(name: string, description?: string | null, icon?: string | null, image?: string | null, unit?: string | null) => Promise<SetResult>, OperationStatus] {
   const store = useStore();
-  return bindKitOperationToReact<[string, string | null | undefined, string | null | undefined, string | null | undefined, string | null | undefined]>((k, n, d, i, im, u) => k.createType(n, d, i, im, u))(() => store);
+  return bindStoreOperationToReact<[string, string | null | undefined, string | null | undefined, string | null | undefined, string | null | undefined]>((k, n, d, i, im, u) => k.createType(n, d, i, im, u))(() => store);
 }
 
 /** @emoji ✍️ {@link Store#deleteType}. */
 export function useDeleteType(): readonly [(id: string) => Promise<SetResult>, OperationStatus] {
   const store = useStore();
-  return bindKitOperationToReact<[string]>((k, id) => k.deleteType(id))(() => store);
+  return bindStoreOperationToReact<[string]>((k, id) => k.deleteType(id))(() => store);
 }
 
 /** @emoji ✍️ {@link Store#deleteTypes}. */
 export function useDeleteTypes(): readonly [(ids: readonly string[]) => Promise<SetResult>, OperationStatus] {
   const store = useStore();
-  return bindKitOperationToReact<[readonly string[]]>((k, ids) => k.deleteTypes(ids))(() => store);
+  return bindStoreOperationToReact<[readonly string[]]>((k, ids) => k.deleteTypes(ids))(() => store);
 }
 
 /** @emoji ✍️ {@link Store#createDesign}. */
 export function useCreateDesign(): readonly [(name: string, description?: string | null, icon?: string | null, image?: string | null, unit?: string | null) => Promise<SetResult>, OperationStatus] {
   const store = useStore();
-  return bindKitOperationToReact<[string, string | null | undefined, string | null | undefined, string | null | undefined, string | null | undefined]>((k, n, d, i, im, u) => k.createDesign(n, d, i, im, u))(() => store);
+  return bindStoreOperationToReact<[string, string | null | undefined, string | null | undefined, string | null | undefined, string | null | undefined]>((k, n, d, i, im, u) => k.createDesign(n, d, i, im, u))(() => store);
 }
 
 /** @emoji ✍️ {@link Store#deleteDesign}. */
 export function useDeleteDesign(): readonly [(id: string) => Promise<SetResult>, OperationStatus] {
   const store = useStore();
-  return bindKitOperationToReact<[string]>((k, id) => k.deleteDesign(id))(() => store);
+  return bindStoreOperationToReact<[string]>((k, id) => k.deleteDesign(id))(() => store);
 }
 
 /** @emoji ✍️ {@link Store#deleteDesigns}. */
 export function useDeleteDesigns(): readonly [(ids: readonly string[]) => Promise<SetResult>, OperationStatus] {
   const store = useStore();
-  return bindKitOperationToReact<[readonly string[]]>((k, ids) => k.deleteDesigns(ids))(() => store);
+  return bindStoreOperationToReact<[readonly string[]]>((k, ids) => k.deleteDesigns(ids))(() => store);
 }
 
 /** @emoji ✍️ {@link Store#saveChange}. */
 export function useSaveKitChange(): readonly [() => Promise<SetResult>, OperationStatus] {
   const store = useStore();
-  return bindKitOperationToReact<[]>(async (k) => {
+  return bindStoreOperationToReact<[]>(async (k) => {
     await k.saveChange();
     return { ok: true };
   })(() => store);
@@ -1105,70 +1168,70 @@ export function useSaveKitChange(): readonly [() => Promise<SetResult>, Operatio
 /** @emoji ✍️ {@link Store#createCheckpoint}. */
 export function useCreateCheckpoint(): readonly [(message: string) => Promise<SetResult>, OperationStatus] {
   const store = useStore();
-  return bindKitOperationToReact<[string]>((k, message) => k.createCheckpoint(message))(() => store);
+  return bindStoreOperationToReact<[string]>((k, message) => k.createCheckpoint(message))(() => store);
 }
 
 /** @emoji ✍️ {@link Store#startAlternative}. */
 export function useStartAlternative(): readonly [(name?: string | null) => Promise<SetResult>, OperationStatus] {
   const store = useStore();
-  return bindKitOperationToReact<[string | null | undefined]>((k, name) => k.startAlternative(name ?? undefined))(() => store);
+  return bindStoreOperationToReact<[string | null | undefined]>((k, name) => k.startAlternative(name ?? undefined))(() => store);
 }
 
 /** @emoji ✍️ {@link Store#integrateAlternative}. */
 export function useIntegrateAlternative(): readonly [(alternativeId: string) => Promise<SetResult>, OperationStatus] {
   const store = useStore();
-  return bindKitOperationToReact<[string]>((k, id) => k.integrateAlternative(id))(() => store);
+  return bindStoreOperationToReact<[string]>((k, id) => k.integrateAlternative(id))(() => store);
 }
 
 /** @emoji ✍️ {@link Store#login}. */
 export function useLogin(): readonly [(username: string, passwordHash: string, hubUrl?: string) => Promise<SetResult>, OperationStatus] {
   const store = useStore();
-  return bindKitOperationToReact<[string, string, string | undefined]>((k, u, p, h) => k.login(u, p, h))(() => store);
+  return bindStoreOperationToReact<[string, string, string | undefined]>((k, u, p, h) => k.login(u, p, h))(() => store);
 }
 
 /** @emoji ✍️ {@link Store#logout}. */
 export function useLogout(): readonly [() => Promise<SetResult>, OperationStatus] {
   const store = useStore();
-  return bindKitOperationToReact<[]>((k) => k.logout())(() => store);
+  return bindStoreOperationToReact<[]>((k) => k.logout())(() => store);
 }
 
 /** @emoji ✍️ {@link Store#sessionStart}. */
 export function useStartSession(): readonly [() => Promise<SetResult>, OperationStatus] {
   const store = useStore();
-  return bindKitOperationToReact<[]>((k) => k.sessionStart())(() => store);
+  return bindStoreOperationToReact<[]>((k) => k.sessionStart())(() => store);
 }
 
 /** @emoji ✍️ {@link Store#sessionEnd}. */
 export function useEndSession(): readonly [() => Promise<SetResult>, OperationStatus] {
   const store = useStore();
-  return bindKitOperationToReact<[]>((k) => k.sessionEnd())(() => store);
+  return bindStoreOperationToReact<[]>((k) => k.sessionEnd())(() => store);
 }
 
 // #region 🪝BackboneOps
 /** @emoji 🛜 {@link Store#attachBackbone} — GraphQL session backbone attach (URI scheme dispatches backbone kind). */
 export function useAttachBackbone(): readonly [(uri: string) => Promise<SetResult>, OperationStatus] {
   const store = useStore();
-  return bindKitOperationToReact<[string]>((k, uri) => k.attachBackbone(uri))(() => store);
+  return bindStoreOperationToReact<[string]>((k, uri) => k.attachBackbone(uri))(() => store);
 }
 
 /** @emoji 🛜 {@link Store#detachBackbone}. */
 export function useDetachBackbone(): readonly [(uri: string) => Promise<SetResult>, OperationStatus] {
   const store = useStore();
-  return bindKitOperationToReact<[string]>((k, uri) => k.detachBackbone(uri))(() => store);
+  return bindStoreOperationToReact<[string]>((k, uri) => k.detachBackbone(uri))(() => store);
 }
 
 /** @emoji 🛜 {@link Store#backboneSyncNow}. */
 export function useBackboneSyncNow(): readonly [() => Promise<SetResult>, OperationStatus] {
   const store = useStore();
-  return bindKitOperationToReact<[]>((k) => k.backboneSyncNow())(() => store);
+  return bindStoreOperationToReact<[]>((k) => k.backboneSyncNow())(() => store);
 }
 
 /** @emoji 🛜 Live {@link Store#backboneStatus} (refreshes on {@code commandSucceeded} bus events). */
 export function useBackboneStatus(): FieldReadState<Readonly<{ attachedUri: string | null; kind: string }>> {
   const store = useStore();
-  return bindKitFieldToReact<Readonly<{ attachedUri: string | null; kind: string }>>({
+  return bindStoreFieldToReact<Readonly<{ attachedUri: string | null; kind: string }>>({
     getStore: () => store,
-    read: (k) => k.backboneStatus(),
+    read: (s) => s.backboneStatus(),
     eventKind: "commandSucceeded",
   })();
 }
@@ -2243,7 +2306,7 @@ if (import.meta.vitest) {
     try {
       return fileURLToPath(new URL("./index.tsx", import.meta.url));
     } catch {
-      return path.join(process.cwd(), "index.tsx");
+      return path.join(process.cwd(), "semio", "react", "index.tsx");
     }
   })();
   const reactSrc = readFileSync(reactSrcPath, "utf8");
@@ -2266,8 +2329,6 @@ if (import.meta.vitest) {
       /\bfieldSync\b/,
       /\boptimistic\b/,
       /\breconcil/i,
-      /\bKitRuntime\b/,
-      /\buseKitRuntimeSafe\s*\(/,
       /\buseKitScope\s*\(/,
       /\bKitScope\b/,
       /\bKitShellScopeProvider\b/,

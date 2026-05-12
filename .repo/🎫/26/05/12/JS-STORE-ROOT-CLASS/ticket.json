@@ -3,7 +3,7 @@
   "emoji": "📜",
   "status": "closed",
   "description": "Make semio/js expose Store as the root owner for GraphQL transport and keep Kit beneath the Version interface shape from target.schema.graphql.",
-  "summary": "Renamed the semio/js transport-owning facade to Store, added a target-schema Kit entity under Version/TheKit, exposed TheKit.readKit, and updated semio/react to treat Store as the root hook handle while re-exporting Store.",
+  "summary": "Store is now the transport/root class, Kit is a schema entity below Version/TheKit, TheKit exposes readKit, and the React adapter uses StoreContext/useStore plus useRootKit for kit fields. Removed the root alias pattern (no kit: Store, no Store-as-Kit import, no openKit root helper).",
   "goal": "🎯r2602",
   "files": [
     "semio/js/index.ts",
