@@ -1,9 +1,8 @@
-// #region 🧲Header
+//#region 🧲Header
 // 2025-2026 Ueli Saluz <ueli@semio-tech.com>
 // GNU LGPL-3.0 or later — semio/js: stateless {@link Kit} + GraphQL transport (WASM worker or inline); no client-side kit cache.
-// #endregion 🧲Header
+//#endregion 🧲Header
 
-// @ts-nocheck — embedded vitest block references legacy `Graph.*` kit-store types; restore strict typing when the kit-store surface is merged back into this entry.
 //#region 📥KitImports
 //#endregion 📥KitImports
 
@@ -25,7 +24,7 @@ function parseJsonValue(text: string): JsonValue {
   return JSON.parse(text) as JsonValue;
 }
 
-function isJsonObjectNode(v: JsonValue | KitJsonTreeDto | null | undefined): v is JsonObject | KitJsonObjectDto {
+function isJsonObjectNode(v: JsonValue | null | undefined): v is JsonObject {
   return v != null && typeof v === "object" && !Array.isArray(v);
 }
 
@@ -498,93 +497,6 @@ export function defineOperation(entity: Entity, spec: OperationSpec, buildPath: 
   };
 }
 
-/** @emoji 📑 Metadata mirror of {@code KitOperationInput} leaves (see {@link semio/graphql/target.schema.graphql}). */
-export const KIT_OPERATION_SPECS = defineOperations([
-  { alias: "rn", call: "rename(newName: String!): ID!" },
-  { alias: "cd", call: "changeDescription(newDescription: String!): ID!" },
-  { alias: "ct", call: "createTag(name: String!, description: String, icon: String, order: Int): ID!" },
-  { alias: "dt", call: "deleteTag(id: ID!): ID!" },
-  { alias: "dts", call: "deleteTags(ids: [ID!]!): ID!" },
-  { alias: "cc", call: "createConcept(name: String!, description: String, icon: String, order: Int): ID!" },
-  { alias: "dc", call: "deleteConcept(id: ID!): ID!" },
-  { alias: "dcs", call: "deleteConcepts(ids: [ID!]!): ID!" },
-  { alias: "cq", call: "createQuality(key: String!, value: String, unit: String, definition: String, description: String, icon: String): ID!" },
-  { alias: "dq", call: "deleteQuality(id: ID!): ID!" },
-  { alias: "dqs", call: "deleteQualities(ids: [ID!]!): ID!" },
-  { alias: "cT", call: "createType(name: String!, description: String, icon: String, image: String, unit: String): ID!" },
-  { alias: "dT", call: "deleteType(id: ID!): ID!" },
-  { alias: "dTs", call: "deleteTypes(ids: [ID!]!): ID!" },
-  { alias: "cD", call: "createDesign(name: String!, description: String, icon: String, image: String, unit: String): ID!" },
-  { alias: "dD", call: "deleteDesign(id: ID!): ID!" },
-  { alias: "dDs", call: "deleteDesigns(ids: [ID!]!): ID!" },
-] as const);
-
-function __kitScalar(v: JsonValue, key: string): string {
-  if (!isJsonObjectNode(v)) return "";
-  return String(v[key] ?? "");
-}
-
-/** @emoji 📑 {@code Kit} data fields for {@link Kit#fieldRead} / {@link bindDefinedFieldToReact}. */
-export const KIT_ARTIFACT_FIELD_SPECS = defineFields([
-  { selection: "id", parse: (v) => __kitScalar(v, "id") },
-  { eventKind: "kitRenamed", selection: "name", parse: (v) => __kitScalar(v, "name") },
-  { eventKind: "changedDescription", selection: "description", parse: (v) => __kitScalar(v, "description") },
-  { selection: "icon", parse: (v) => __kitScalar(v, "icon") },
-  { selection: "image", parse: (v) => __kitScalar(v, "image") },
-  { selection: "preview", parse: (v) => __kitScalar(v, "preview") },
-  { selection: "remote", parse: (v) => __kitScalar(v, "remote") },
-  { selection: "homepage", parse: (v) => __kitScalar(v, "homepage") },
-  { selection: "license", parse: (v) => __kitScalar(v, "license") },
-  { selection: "uri", parse: (v) => __kitScalar(v, "uri") },
-  { selection: "types { edges { node { id } } }", parse: (v): unknown => [...__parseEntityConnectionIds(isJsonObjectNode(v) ? v : null, "types")] },
-  { selection: "designs { edges { node { id } } }", parse: (v): unknown => [...__parseEntityConnectionIds(isJsonObjectNode(v) ? v : null, "designs")] },
-  { selection: "authors { edges { node { id } } }", parse: (v): unknown => [...__parseEntityConnectionIds(isJsonObjectNode(v) ? v : null, "authors")] },
-  { selection: "qualities { edges { node { id } } }", parse: (v): unknown => [...__parseEntityConnectionIds(isJsonObjectNode(v) ? v : null, "qualities")] },
-  { selection: "tags { edges { node { id } } }", parse: (v): unknown => [...__parseEntityConnectionIds(isJsonObjectNode(v) ? v : null, "tags")] },
-  { selection: "concepts { edges { node { id } } }", parse: (v): unknown => [...__parseEntityConnectionIds(isJsonObjectNode(v) ? v : null, "concepts")] },
-] as const);
-
-/** @emoji 📑 Metadata mirror of {@code DesignOperationInput} leaves (see {@link semio/graphql/target.schema.graphql}). */
-export const DESIGN_OPERATION_SPECS = defineOperations([
-  { alias: "rn", call: "rename(newName: String!): ID!" },
-  { alias: "cd", call: "changeDescription(newDescription: String!): ID!" },
-  { alias: "fl", call: "flatten: ID!" },
-  { alias: "aa", call: "addAttribute(key: String!, value: String!, definition: String!): ID!" },
-  { alias: "ra", call: "removeAttribute(id: ID!): ID!" },
-  { alias: "ras", call: "removeAttributes(ids: [ID!]!): ID!" },
-  { alias: "afp", call: "addFixedPiece(blueprintId: ID!, position: PositionInput!, name: String, description: String): ID!" },
-  { alias: "ac", call: "addChildPieceWithParentConnection(blueprintId: ID!, parentPieceId: ID!, parentConnector: String!, childConnector: String!, name: String, description: String, position: PositionInput, scale: Float): ID!" },
-  { alias: "ah", call: "addHangingChildPieceWithParentConnection(blueprintId: ID!, parentPieceId: ID!, parentConnector: String!, childConnector: String!, position: PositionInput!, name: String, description: String, scale: Float): ID!" },
-  { alias: "dp", call: "deletePiece(id: ID!): ID!" },
-  { alias: "dps", call: "deletePieces(ids: [ID!]!): ID!" },
-  { alias: "dpc", call: "deletePiecesAndConnections(pieceIds: [ID!]!, connectionIds: [ID!]!): ID!" },
-] as const);
-
-function __designJson(v: JsonValue): JsonObject | null {
-  if (!isJsonObjectNode(v)) return null;
-  const d = v["design"] as JsonObject | undefined;
-  if (d != null && typeof d === "object" && !Array.isArray(d)) return d;
-  return v;
-}
-
-function __designScalar(v: JsonValue, key: string): string {
-  const d = __designJson(v);
-  return d ? String(d[key] ?? "") : "";
-}
-
-/** @emoji 📑 {@code Design} data fields for {@link Design#fieldRead} / {@link bindDefinedFieldToReact}. */
-export const DESIGN_ARTIFACT_FIELD_SPECS = defineFields([
-  { selection: "id", parse: (v) => __designScalar(v, "id") },
-  { selection: "name", parse: (v) => __designScalar(v, "name") },
-  { eventKind: "changedDescription", selection: "description", parse: (v) => __designScalar(v, "description") },
-  { selection: "icon", parse: (v) => __designScalar(v, "icon") },
-  { selection: "image", parse: (v) => __designScalar(v, "image") },
-  { selection: "unit", parse: (v) => __designScalar(v, "unit") },
-  { selection: "qualitySum", parse: (v) => Number(__designScalar(v, "qualitySum")) },
-  { selection: "pieces { edges { node { id } } }", parse: (v): unknown => [...__parseEntityConnectionIds(__designJson(v), "pieces")] },
-  { selection: "connections { edges { node { id } } }", parse: (v): unknown => [...__parseEntityConnectionIds(__designJson(v), "connections")] },
-  { selection: "attributes { edges { node { id } } }", parse: (v): unknown => [...__parseEntityConnectionIds(__designJson(v), "attributes")] },
-] as const);
 //#endregion 🏭Factories
 
 //#region 🧩Parsers
@@ -644,6 +556,19 @@ function __parseEntityConnectionIds(frag: JsonObject | null | undefined, key: st
     const n = e["node"] as JsonObject | undefined;
     if (n == null) continue;
     const id = String(n["id"] ?? "");
+    if (id !== "") out.push(id);
+  }
+  return out;
+}
+
+/** @emoji 🧩 Parses {@code key: [{ id: … }]} non-relay {@code [StrongEntity!]} lists on a JSON row (e.g. {@code Checkpoint.changes}). */
+function __parseStrongEntityArrayIds(frag: JsonObject | null | undefined, key: string): readonly string[] {
+  const arr = frag?.[key] as readonly JsonValue[] | undefined;
+  if (!Array.isArray(arr)) return [];
+  const out: string[] = [];
+  for (const item of arr) {
+    if (!isJsonObjectNode(item)) continue;
+    const id = String(item["id"] ?? "");
     if (id !== "") out.push(id);
   }
   return out;
@@ -1317,6 +1242,8 @@ export class Graph extends Entity {
   private readonly __checkpointCache = new Map<string, Checkpoint>();
   private readonly __alternativeCache = new Map<string, Alternative>();
   private __theKit: TheKit | undefined;
+  private __stableAlternatives: { ids: readonly string[]; arr: readonly Alternative[] } = { ids: [], arr: [] };
+  private __stableCheckpoints: { ids: readonly string[]; arr: readonly Checkpoint[] } = { ids: [], arr: [] };
 
   constructor(kit: Kit, root: GraphRootKind) {
     super(kit, root);
@@ -1355,11 +1282,77 @@ export class Graph extends Entity {
     const node = data[this.root] as JsonObject | null | undefined;
     return node == null ? "" : String(node["id"] ?? "");
   }
+
+  async readHash(): Promise<string> {
+    const q = this.root === "wip" ? `query { wip { hash } }` : `query { authoritative { hash } }`;
+    const data = kitGraphqlData(await __kitGraphqlEnvelope(this.kit, { query: q })) as JsonObject;
+    const node = data[this.root] as JsonObject | null | undefined;
+    return node == null ? "" : String(node["hash"] ?? "");
+  }
+
+  async readAlternativeIds(): Promise<readonly string[]> {
+    const q =
+      this.root === "wip"
+        ? `query { wip { alternatives { edges { node { id } } } } }`
+        : `query { authoritative { alternatives { edges { node { id } } } } }`;
+    const data = kitGraphqlData(await __kitGraphqlEnvelope(this.kit, { query: q })) as JsonObject;
+    const node = data[this.root] as JsonObject | undefined;
+    return __parseEntityConnectionIds(node ?? null, "alternatives");
+  }
+
+  async readCheckpointIds(): Promise<readonly string[]> {
+    const q =
+      this.root === "wip"
+        ? `query { wip { checkpoints { edges { node { id } } } } }`
+        : `query { authoritative { checkpoints { edges { node { id } } } } }`;
+    const data = kitGraphqlData(await __kitGraphqlEnvelope(this.kit, { query: q })) as JsonObject;
+    const node = data[this.root] as JsonObject | undefined;
+    return __parseEntityConnectionIds(node ?? null, "checkpoints");
+  }
+
+  /** @emoji 📚 Id-list-stable {@link Alternative} handles under this graph root. */
+  async readAlternatives(): Promise<readonly Alternative[]> {
+    const ids = await this.readAlternativeIds();
+    return __readIdListStable(this.__stableAlternatives, ids, (id) => this.alternative(id));
+  }
+
+  /** @emoji 📚 Id-list-stable {@link Checkpoint} handles under this graph root. */
+  async readCheckpoints(): Promise<readonly Checkpoint[]> {
+    const ids = await this.readCheckpointIds();
+    return __readIdListStable(this.__stableCheckpoints, ids, (id) => this.checkpoint(id));
+  }
+
+  /** @emoji 📡 Refetches {@link Graph#readAlternatives} on coarse kit ticks. */
+  subscribeAlternatives(cb: (next: readonly Alternative[]) => void): Unsubscribe {
+    const run = (): void => {
+      void this.readAlternatives().then(cb);
+    };
+    const a = this.kit.bus.subscribeKind("commandSucceeded", run);
+    const b = this.kit.bus.subscribeKind("kitRenamed", run);
+    return (): void => {
+      a();
+      b();
+    };
+  }
+
+  /** @emoji 📡 Refetches {@link Graph#readCheckpoints} on coarse kit ticks. */
+  subscribeCheckpoints(cb: (next: readonly Checkpoint[]) => void): Unsubscribe {
+    const run = (): void => {
+      void this.readCheckpoints().then(cb);
+    };
+    const a = this.kit.bus.subscribeKind("commandSucceeded", run);
+    const b = this.kit.bus.subscribeKind("kitRenamed", run);
+    return (): void => {
+      a();
+      b();
+    };
+  }
 }
 
 /** @emoji 🗂️ {@code Query.session} singleton anchor. */
 export class Session extends Entity {
   private readonly __alternativeCache = new Map<string, Alternative>();
+  private __stableAlternatives: { ids: readonly string[]; arr: readonly Alternative[] } = { ids: [], arr: [] };
 
   constructor(kit: Kit) {
     super(kit, "session");
@@ -1378,6 +1371,41 @@ export class Session extends Entity {
     const data = kitGraphqlData(await __kitGraphqlEnvelope(this.kit, { query: `query { session { id } }` })) as JsonObject;
     const s = data["session"] as JsonObject | undefined;
     return String(s?.["id"] ?? "");
+  }
+
+  async readStartedAt(): Promise<string | null> {
+    const data = kitGraphqlData(await __kitGraphqlEnvelope(this.kit, { query: `query { session { startedAt } }` })) as JsonObject;
+    const s = data["session"] as JsonObject | undefined;
+    const v = s?.["startedAt"];
+    if (v == null) return null;
+    return String(v);
+  }
+
+  async readAlternativeIds(): Promise<readonly string[]> {
+    const data = kitGraphqlData(
+      await __kitGraphqlEnvelope(this.kit, { query: `query { session { alternatives { edges { node { id } } } } }` }),
+    ) as JsonObject;
+    const s = data["session"] as JsonObject | undefined;
+    return __parseEntityConnectionIds(s ?? null, "alternatives");
+  }
+
+  /** @emoji 📚 Id-list-stable {@link Alternative} handles on {@code session.alternatives}. */
+  async readAlternatives(): Promise<readonly Alternative[]> {
+    const ids = await this.readAlternativeIds();
+    return __readIdListStable(this.__stableAlternatives, ids, (id) => this.alternative(id));
+  }
+
+  /** @emoji 📡 Refetches {@link Session#readAlternatives} on coarse kit ticks. */
+  subscribeAlternatives(cb: (next: readonly Alternative[]) => void): Unsubscribe {
+    const run = (): void => {
+      void this.readAlternatives().then(cb);
+    };
+    const a = this.kit.bus.subscribeKind("commandSucceeded", run);
+    const b = this.kit.bus.subscribeKind("kitRenamed", run);
+    return (): void => {
+      a();
+      b();
+    };
   }
 }
 
@@ -1426,6 +1454,8 @@ export class TheKit extends Entity {
 export class Checkpoint extends Entity {
   private readonly __edits = new Map<string, Edit>();
   private readonly __changes = new Map<string, Change>();
+  private __stableChanges: { ids: readonly string[]; arr: readonly Change[] } = { ids: [], arr: [] };
+  private __stableEdits: { ids: readonly string[]; arr: readonly Edit[] } = { ids: [], arr: [] };
 
   constructor(kit: Kit, private readonly graphRoot: GraphRootKind, checkpointId: string) {
     super(kit, checkpointId);
@@ -1456,6 +1486,77 @@ export class Checkpoint extends Entity {
     const cp = rootNode?.["checkpoint"] as JsonObject | undefined;
     return String(cp?.["message"] ?? "");
   }
+
+  async readTimestamp(): Promise<string | null> {
+    const q = `query { ${this.graphRoot} { checkpoint(id: ${__gqlStr(this.id)}) { timestamp } } }`;
+    const data = kitGraphqlData(await __kitGraphqlEnvelope(this.kit, { query: q })) as JsonObject;
+    const rootNode = data[this.graphRoot] as JsonObject | undefined;
+    const cp = rootNode?.["checkpoint"] as JsonObject | undefined;
+    const ts = cp?.["timestamp"];
+    return ts == null ? null : String(ts);
+  }
+
+  async readHash(): Promise<string> {
+    const q = `query { ${this.graphRoot} { checkpoint(id: ${__gqlStr(this.id)}) { hash } } }`;
+    const data = kitGraphqlData(await __kitGraphqlEnvelope(this.kit, { query: q })) as JsonObject;
+    const rootNode = data[this.graphRoot] as JsonObject | undefined;
+    const cp = rootNode?.["checkpoint"] as JsonObject | undefined;
+    return String(cp?.["hash"] ?? "");
+  }
+
+  async readChangeIds(): Promise<readonly string[]> {
+    const q = `query { ${this.graphRoot} { checkpoint(id: ${__gqlStr(this.id)}) { changes { id } } } }`;
+    const data = kitGraphqlData(await __kitGraphqlEnvelope(this.kit, { query: q })) as JsonObject;
+    const rootNode = data[this.graphRoot] as JsonObject | undefined;
+    const cp = rootNode?.["checkpoint"] as JsonObject | undefined;
+    return __parseStrongEntityArrayIds(cp ?? null, "changes");
+  }
+
+  async readEditIds(): Promise<readonly string[]> {
+    const q = `query { ${this.graphRoot} { checkpoint(id: ${__gqlStr(this.id)}) { edits { edges { node { id } } } } } }`;
+    const data = kitGraphqlData(await __kitGraphqlEnvelope(this.kit, { query: q })) as JsonObject;
+    const rootNode = data[this.graphRoot] as JsonObject | undefined;
+    const cp = rootNode?.["checkpoint"] as JsonObject | undefined;
+    return __parseEntityConnectionIds(cp ?? null, "edits");
+  }
+
+  /** @emoji 📚 Id-list-stable {@link Change} rows for this checkpoint (schema {@code changes: [Change!]!}). */
+  async readChanges(): Promise<readonly Change[]> {
+    const ids = await this.readChangeIds();
+    return __readIdListStable(this.__stableChanges, ids, (cid) => this.change(cid));
+  }
+
+  /** @emoji 📚 Id-list-stable {@link Edit} handles for this checkpoint. */
+  async readEdits(): Promise<readonly Edit[]> {
+    const ids = await this.readEditIds();
+    return __readIdListStable(this.__stableEdits, ids, (eid) => this.edit(eid));
+  }
+
+  /** @emoji 📡 Refetches {@link Checkpoint#readChanges} on coarse kit ticks. */
+  subscribeChanges(cb: (next: readonly Change[]) => void): Unsubscribe {
+    const run = (): void => {
+      void this.readChanges().then(cb);
+    };
+    const a = this.kit.bus.subscribeKind("commandSucceeded", run);
+    const b = this.kit.bus.subscribeKind("kitRenamed", run);
+    return (): void => {
+      a();
+      b();
+    };
+  }
+
+  /** @emoji 📡 Refetches {@link Checkpoint#readEdits} on coarse kit ticks. */
+  subscribeEdits(cb: (next: readonly Edit[]) => void): Unsubscribe {
+    const run = (): void => {
+      void this.readEdits().then(cb);
+    };
+    const a = this.kit.bus.subscribeKind("commandSucceeded", run);
+    const b = this.kit.bus.subscribeKind("kitRenamed", run);
+    return (): void => {
+      a();
+      b();
+    };
+  }
 }
 
 /** @emoji 🔀 {@code Change} scoped to a {@link Checkpoint} (navigation shell; expand with field reads). */
@@ -1463,12 +1564,81 @@ export class Change extends Entity {
   constructor(kit: Kit, private readonly graphRoot: GraphRootKind, private readonly checkpointId: string, changeId: string) {
     super(kit, changeId);
   }
+
+  private async readUnderChange(inner: string): Promise<JsonObject | null> {
+    const q = `query { ${this.graphRoot} { checkpoint(id: ${__gqlStr(this.checkpointId)}) { change(id: ${__gqlStr(this.id)}) { ${inner} } } } }`;
+    const data = kitGraphqlData(await __kitGraphqlEnvelope(this.kit, { query: q })) as JsonObject;
+    const rootNode = data[this.graphRoot] as JsonObject | undefined;
+    const cp = rootNode?.["checkpoint"] as JsonObject | undefined;
+    const ch = cp?.["change"] as JsonObject | undefined;
+    return ch ?? null;
+  }
+
+  async readDescription(): Promise<string> {
+    const row = await this.readUnderChange("description");
+    return String(row?.["description"] ?? "");
+  }
+
+  async readOrigin(): Promise<string> {
+    const row = await this.readUnderChange("origin");
+    return String(row?.["origin"] ?? "");
+  }
+
+  async readSaved(): Promise<boolean | null> {
+    const row = await this.readUnderChange("saved");
+    const v = row?.["saved"];
+    if (v == null) return null;
+    return Boolean(v);
+  }
+
+  async readStartedAt(): Promise<string> {
+    const row = await this.readUnderChange("startedAt");
+    const v = row?.["startedAt"];
+    return v == null ? "" : String(v);
+  }
+
+  async readSavedAt(): Promise<string | null> {
+    const row = await this.readUnderChange("savedAt");
+    const v = row?.["savedAt"];
+    return v == null ? null : String(v);
+  }
 }
 
 /** @emoji ✏️ {@code Edit} scoped to a {@link Checkpoint} (navigation shell; expand with field reads). */
 export class Edit extends Entity {
   constructor(kit: Kit, private readonly graphRoot: GraphRootKind, private readonly checkpointId: string, editId: string) {
     super(kit, editId);
+  }
+
+  private async readUnderEdit(inner: string): Promise<JsonObject | null> {
+    const q = `query { ${this.graphRoot} { checkpoint(id: ${__gqlStr(this.checkpointId)}) { edit(id: ${__gqlStr(this.id)}) { ${inner} } } } }`;
+    const data = kitGraphqlData(await __kitGraphqlEnvelope(this.kit, { query: q })) as JsonObject;
+    const rootNode = data[this.graphRoot] as JsonObject | undefined;
+    const cp = rootNode?.["checkpoint"] as JsonObject | undefined;
+    const ed = cp?.["edit"] as JsonObject | undefined;
+    return ed ?? null;
+  }
+
+  async readDescription(): Promise<string> {
+    const row = await this.readUnderEdit("description");
+    return String(row?.["description"] ?? "");
+  }
+
+  async readOrigin(): Promise<string> {
+    const row = await this.readUnderEdit("origin");
+    return String(row?.["origin"] ?? "");
+  }
+
+  async readSequenceNumber(): Promise<number> {
+    const row = await this.readUnderEdit("sequenceNumber");
+    const v = row?.["sequenceNumber"];
+    return typeof v === "number" ? v : Number(v ?? NaN);
+  }
+
+  async readStartedAt(): Promise<string> {
+    const row = await this.readUnderEdit("startedAt");
+    const v = row?.["startedAt"];
+    return v == null ? "" : String(v);
   }
 }
 
@@ -1486,6 +1656,30 @@ export class Conflict extends Entity {
     const raw = n?.["reasons"] as readonly JsonValue[] | undefined;
     if (!Array.isArray(raw)) return [];
     return raw.map((x) => String(x));
+  }
+
+  async readAuthoritativeChangeId(): Promise<string> {
+    const data = kitGraphqlData(
+      await __kitGraphqlEnvelope(this.kit, {
+        query: `query($id: ID!) { node(id: $id) { ... on Conflict { authoritativeChange { id } } } }`,
+        variables: { id: this.id },
+      }),
+    ) as JsonObject;
+    const n = data["node"] as JsonObject | undefined;
+    const ch = n?.["authoritativeChange"] as JsonObject | null | undefined;
+    return ch ? String(ch["id"] ?? "") : "";
+  }
+
+  async readWipChangeId(): Promise<string> {
+    const data = kitGraphqlData(
+      await __kitGraphqlEnvelope(this.kit, {
+        query: `query($id: ID!) { node(id: $id) { ... on Conflict { wipChange { id } } } }`,
+        variables: { id: this.id },
+      }),
+    ) as JsonObject;
+    const n = data["node"] as JsonObject | undefined;
+    const ch = n?.["wipChange"] as JsonObject | null | undefined;
+    return ch ? String(ch["id"] ?? "") : "";
   }
 }
 
@@ -1567,6 +1761,8 @@ export class Design extends Entity {
   private readonly __connectionCache = new Map<string, Connection>();
   private readonly __layerCache = new Map<string, Layer>();
   private readonly __groupCache = new Map<string, Group>();
+  private __stablePieces: { ids: readonly string[]; arr: readonly Piece[] } = { ids: [], arr: [] };
+  private __stableConnections: { ids: readonly string[]; arr: readonly Connection[] } = { ids: [], arr: [] };
 
   constructor(kit: Kit, id: string) {
     super(kit, id);
@@ -1684,10 +1880,48 @@ export class Design extends Entity {
     return __parseEntityConnectionIds(d ?? (isJsonObjectNode(frag) ? frag : null), "pieces");
   }
 
+  /** @emoji 📚 Id-list-stable {@link Piece} handles (same order as {@link Design#readPieceIds}); prefer over ad-hoc {@code readPieceIds().map(…)}. */
+  async readPieces(): Promise<readonly Piece[]> {
+    const ids = await this.readPieceIds();
+    return __readIdListStable(this.__stablePieces, ids, (pid) => this.piece(pid));
+  }
+
+  /** @emoji 📡 Refetches {@link Design#readPieces} on coarse kit ticks (piece membership / graph writes). */
+  subscribePieces(cb: (next: readonly Piece[]) => void): Unsubscribe {
+    const run = (): void => {
+      void this.readPieces().then(cb);
+    };
+    const a = this.kit.bus.subscribeKind("commandSucceeded", run);
+    const b = this.kit.bus.subscribeKind("kitRenamed", run);
+    return (): void => {
+      a();
+      b();
+    };
+  }
+
   async readConnectionIds(): Promise<readonly string[]> {
     const frag = (await this.kit.readKitInner(this.dsel("connections { edges { node { id } } }"))) as JsonObject | null;
     const d = frag?.["design"] as JsonObject | undefined;
     return __parseEntityConnectionIds(d ?? (isJsonObjectNode(frag) ? frag : null), "connections");
+  }
+
+  /** @emoji 📚 Id-list-stable {@link Connection} handles (same order as {@link Design#readConnectionIds}). */
+  async readConnections(): Promise<readonly Connection[]> {
+    const ids = await this.readConnectionIds();
+    return __readIdListStable(this.__stableConnections, ids, (cid) => this.connection(cid));
+  }
+
+  /** @emoji 📡 Refetches {@link Design#readConnections} on coarse kit ticks. */
+  subscribeConnections(cb: (next: readonly Connection[]) => void): Unsubscribe {
+    const run = (): void => {
+      void this.readConnections().then(cb);
+    };
+    const a = this.kit.bus.subscribeKind("commandSucceeded", run);
+    const b = this.kit.bus.subscribeKind("kitRenamed", run);
+    return (): void => {
+      a();
+      b();
+    };
   }
 
   async readAttributeIds(): Promise<readonly string[]> {
@@ -2195,7 +2429,7 @@ export class Coordinate {
 
   async readU(): Promise<number> {
     const frag = (await this.parent.piece.kit.readKitInner(
-      this.parent.piece.psel(`${this.parent.role} { center { u v } }`),
+      this.parent.piece.kitPieceSelection(`${this.parent.role} { center { u v } }`),
     )) as JsonObject | null;
     const row = __pieceKit(frag)?.[this.parent.role] as JsonObject | undefined;
     const c = row?.["center"] as JsonObject | undefined;
@@ -2204,7 +2438,7 @@ export class Coordinate {
 
   async readV(): Promise<number> {
     const frag = (await this.parent.piece.kit.readKitInner(
-      this.parent.piece.psel(`${this.parent.role} { center { u v } }`),
+      this.parent.piece.kitPieceSelection(`${this.parent.role} { center { u v } }`),
     )) as JsonObject | null;
     const row = __pieceKit(frag)?.[this.parent.role] as JsonObject | undefined;
     const c = row?.["center"] as JsonObject | undefined;
@@ -2242,7 +2476,7 @@ export class Point {
 
   async readX(): Promise<number> {
     const frag = (await this.parent.parent.piece.kit.readKitInner(
-      this.parent.parent.piece.psel(`${this.parent.parent.role} { plane { origin { x y z } } }`),
+      this.parent.parent.piece.kitPieceSelection(`${this.parent.parent.role} { plane { origin { x y z } } }`),
     )) as JsonObject | null;
     const row = __pieceKit(frag)?.[this.parent.parent.role] as JsonObject | undefined;
     const pl = row?.["plane"] as JsonObject | undefined;
@@ -2252,7 +2486,7 @@ export class Point {
 
   async readY(): Promise<number> {
     const frag = (await this.parent.parent.piece.kit.readKitInner(
-      this.parent.parent.piece.psel(`${this.parent.parent.role} { plane { origin { x y z } } }`),
+      this.parent.parent.piece.kitPieceSelection(`${this.parent.parent.role} { plane { origin { x y z } } }`),
     )) as JsonObject | null;
     const row = __pieceKit(frag)?.[this.parent.parent.role] as JsonObject | undefined;
     const pl = row?.["plane"] as JsonObject | undefined;
@@ -2262,7 +2496,7 @@ export class Point {
 
   async readZ(): Promise<number> {
     const frag = (await this.parent.parent.piece.kit.readKitInner(
-      this.parent.parent.piece.psel(`${this.parent.parent.role} { plane { origin { x y z } } }`),
+      this.parent.parent.piece.kitPieceSelection(`${this.parent.parent.role} { plane { origin { x y z } } }`),
     )) as JsonObject | null;
     const row = __pieceKit(frag)?.[this.parent.parent.role] as JsonObject | undefined;
     const pl = row?.["plane"] as JsonObject | undefined;
@@ -2280,7 +2514,7 @@ export class Vector {
 
   async readX(): Promise<number> {
     const frag = (await this.parent.parent.piece.kit.readKitInner(
-      this.parent.parent.piece.psel(`${this.parent.parent.role} { plane { ${this.axisRole} { x y z } } }`),
+      this.parent.parent.piece.kitPieceSelection(`${this.parent.parent.role} { plane { ${this.axisRole} { x y z } } }`),
     )) as JsonObject | null;
     const row = __pieceKit(frag)?.[this.parent.parent.role] as JsonObject | undefined;
     const pl = row?.["plane"] as JsonObject | undefined;
@@ -2290,7 +2524,7 @@ export class Vector {
 
   async readY(): Promise<number> {
     const frag = (await this.parent.parent.piece.kit.readKitInner(
-      this.parent.parent.piece.psel(`${this.parent.parent.role} { plane { ${this.axisRole} { x y z } } }`),
+      this.parent.parent.piece.kitPieceSelection(`${this.parent.parent.role} { plane { ${this.axisRole} { x y z } } }`),
     )) as JsonObject | null;
     const row = __pieceKit(frag)?.[this.parent.parent.role] as JsonObject | undefined;
     const pl = row?.["plane"] as JsonObject | undefined;
@@ -2300,7 +2534,7 @@ export class Vector {
 
   async readZ(): Promise<number> {
     const frag = (await this.parent.parent.piece.kit.readKitInner(
-      this.parent.parent.piece.psel(`${this.parent.parent.role} { plane { ${this.axisRole} { x y z } } }`),
+      this.parent.parent.piece.kitPieceSelection(`${this.parent.parent.role} { plane { ${this.axisRole} { x y z } } }`),
     )) as JsonObject | null;
     const row = __pieceKit(frag)?.[this.parent.parent.role] as JsonObject | undefined;
     const pl = row?.["plane"] as JsonObject | undefined;
@@ -2410,7 +2644,8 @@ export class Piece extends Entity {
     this.designId = designId;
   }
 
-  private psel(inner: string): string {
+  /** @emoji 🧷 GraphQL path fragment under {@code design(id){ piece(id){ … }}} for kit reads (weak geometry + {@link Piece} fields). */
+  kitPieceSelection(inner: string): string {
     return `design(id: ${__gqlStr(this.designId)}) { piece(id: ${__gqlStr(this.id)}) { ${inner} } }`;
   }
 
@@ -2435,35 +2670,35 @@ export class Piece extends Entity {
   }
 
   async readName(): Promise<string> {
-    const frag = (await this.kit.readKitInner(this.psel("name"))) as JsonObject | null;
+    const frag = (await this.kit.readKitInner(this.kitPieceSelection("name"))) as JsonObject | null;
     return String(__pieceKit(frag)?.["name"] ?? "");
   }
 
   async readDescription(): Promise<string> {
-    const frag = (await this.kit.readKitInner(this.psel("description"))) as JsonObject | null;
+    const frag = (await this.kit.readKitInner(this.kitPieceSelection("description"))) as JsonObject | null;
     return String(__pieceKit(frag)?.["description"] ?? "");
   }
 
   async readIcon(): Promise<string> {
-    const frag = (await this.kit.readKitInner(this.psel("icon"))) as JsonObject | null;
+    const frag = (await this.kit.readKitInner(this.kitPieceSelection("icon"))) as JsonObject | null;
     return String(__pieceKit(frag)?.["icon"] ?? "");
   }
 
   async readScale(): Promise<number | null> {
-    const frag = (await this.kit.readKitInner(this.psel("scale"))) as JsonObject | null;
+    const frag = (await this.kit.readKitInner(this.kitPieceSelection("scale"))) as JsonObject | null;
     const v = __pieceKit(frag)?.["scale"];
     return typeof v === "number" ? v : null;
   }
 
   async readPosition(): Promise<Position | null> {
-    const frag = (await this.kit.readKitInner(this.psel(`position { ${__PIECE_POSITION_SUBSELECTION} }`))) as JsonObject | null;
+    const frag = (await this.kit.readKitInner(this.kitPieceSelection(`position { ${__PIECE_POSITION_SUBSELECTION} }`))) as JsonObject | null;
     const raw = __pieceKit(frag)?.["position"];
     if (raw == null || typeof raw !== "object") return null;
     return this.position();
   }
 
   async readFlatPosition(): Promise<Position | null> {
-    const frag = (await this.kit.readKitInner(this.psel(`flatPosition { ${__PIECE_POSITION_SUBSELECTION} }`))) as JsonObject | null;
+    const frag = (await this.kit.readKitInner(this.kitPieceSelection(`flatPosition { ${__PIECE_POSITION_SUBSELECTION} }`))) as JsonObject | null;
     const raw = __pieceKit(frag)?.["flatPosition"];
     if (raw == null || typeof raw !== "object") return null;
     return this.flatPosition();
@@ -2490,95 +2725,95 @@ export class Piece extends Entity {
   }
 
   async readBlueprint(): Promise<PieceBlueprint | null> {
-    const frag = (await this.kit.readKitInner(this.psel("blueprint { __typename id }"))) as JsonObject | null;
+    const frag = (await this.kit.readKitInner(this.kitPieceSelection("blueprint { __typename id }"))) as JsonObject | null;
     return __parsePieceBlueprintFromJson(__pieceKit(frag)?.["blueprint"] as JsonObject | undefined);
   }
 
   async readAttributes(): Promise<readonly Attribute[]> {
-    const frag = (await this.kit.readKitInner(this.psel("attributes { edges { node { id key value definition } } }"))) as JsonObject | null;
+    const frag = (await this.kit.readKitInner(this.kitPieceSelection("attributes { edges { node { id key value definition } } }"))) as JsonObject | null;
     return parseAttributeConnectionUnder(this, __pieceKit(frag));
   }
 
   async readConnectionKind(): Promise<"FIXED" | "CONNECTED" | null> {
-    const frag = (await this.kit.readKitInner(this.psel("connectionKind"))) as JsonObject | null;
+    const frag = (await this.kit.readKitInner(this.kitPieceSelection("connectionKind"))) as JsonObject | null;
     const k = __pieceKit(frag)?.["connectionKind"];
     if (k === "FIXED" || k === "CONNECTED") return k;
     return null;
   }
 
   async readParentPieceId(): Promise<string | null> {
-    const frag = (await this.kit.readKitInner(this.psel("parentPiece { id }"))) as JsonObject | null;
+    const frag = (await this.kit.readKitInner(this.kitPieceSelection("parentPiece { id }"))) as JsonObject | null;
     const n = __pieceKit(frag)?.["parentPiece"] as JsonObject | undefined;
     const id = n == null ? "" : String(n["id"] ?? "");
     return id === "" ? null : id;
   }
 
   async readParentConnectionId(): Promise<string | null> {
-    const frag = (await this.kit.readKitInner(this.psel("parentConnection { id }"))) as JsonObject | null;
+    const frag = (await this.kit.readKitInner(this.kitPieceSelection("parentConnection { id }"))) as JsonObject | null;
     const n = __pieceKit(frag)?.["parentConnection"] as JsonObject | undefined;
     const id = n == null ? "" : String(n["id"] ?? "");
     return id === "" ? null : id;
   }
 
   async readChildPieceIds(): Promise<readonly string[]> {
-    const frag = (await this.kit.readKitInner(this.psel("childPieces { edges { node { id } } }"))) as JsonObject | null;
+    const frag = (await this.kit.readKitInner(this.kitPieceSelection("childPieces { edges { node { id } } }"))) as JsonObject | null;
     return __parseIdListConnection(__pieceKit(frag), "childPieces");
   }
 
   async readChildConnectionIds(): Promise<readonly string[]> {
-    const frag = (await this.kit.readKitInner(this.psel("childConnections { edges { node { id } } }"))) as JsonObject | null;
+    const frag = (await this.kit.readKitInner(this.kitPieceSelection("childConnections { edges { node { id } } }"))) as JsonObject | null;
     return __parseIdListConnection(__pieceKit(frag), "childConnections");
   }
 
   async readDepth(): Promise<number | null> {
-    const frag = (await this.kit.readKitInner(this.psel("depth"))) as JsonObject | null;
+    const frag = (await this.kit.readKitInner(this.kitPieceSelection("depth"))) as JsonObject | null;
     const v = __pieceKit(frag)?.["depth"];
     return typeof v === "number" ? v : null;
   }
 
   async rename(newName: string): Promise<SetResult> {
     const cid = await this.kit.ensureChangeId();
-    return this.kit.mutateScoped(cid, this.psel(`rn: rename(newName: ${__gqlStr(newName)})`));
+    return this.kit.mutateScoped(cid, this.kitPieceSelection(`rn: rename(newName: ${__gqlStr(newName)})`));
   }
 
   async changeDescription(newDescription: string): Promise<SetResult> {
     const cid = await this.kit.ensureChangeId();
-    return this.kit.mutateScoped(cid, this.psel(`cd: changeDescription(newDescription: ${__gqlStr(newDescription)})`));
+    return this.kit.mutateScoped(cid, this.kitPieceSelection(`cd: changeDescription(newDescription: ${__gqlStr(newDescription)})`));
   }
 
   async drag(offset: OffsetInput): Promise<SetResult> {
     const cid = await this.kit.ensureChangeId();
-    return this.kit.mutateScoped(cid, this.psel(`dg: drag(offset: ${formatOffsetInput(offset)})`));
+    return this.kit.mutateScoped(cid, this.kitPieceSelection(`dg: drag(offset: ${formatOffsetInput(offset)})`));
   }
 
   async move(position: PositionInput): Promise<SetResult> {
     const cid = await this.kit.ensureChangeId();
-    return this.kit.mutateScoped(cid, this.psel(`mv: move(position: ${formatPositionInput(position)})`));
+    return this.kit.mutateScoped(cid, this.kitPieceSelection(`mv: move(position: ${formatPositionInput(position)})`));
   }
 
   async fix(): Promise<SetResult> {
     const cid = await this.kit.ensureChangeId();
-    return this.kit.mutateScoped(cid, this.psel(`fx: fix`));
+    return this.kit.mutateScoped(cid, this.kitPieceSelection(`fx: fix`));
   }
 
   async changeBlueprint(blueprintId: string): Promise<SetResult> {
     const cid = await this.kit.ensureChangeId();
-    return this.kit.mutateScoped(cid, this.psel(`cb: changeBlueprint(blueprintId: ${__gqlStr(blueprintId)})`));
+    return this.kit.mutateScoped(cid, this.kitPieceSelection(`cb: changeBlueprint(blueprintId: ${__gqlStr(blueprintId)})`));
   }
 
   async addAttribute(key: string, value: string, definition: string): Promise<SetResult> {
     const cid = await this.kit.ensureChangeId();
-    return this.kit.mutateScoped(cid, this.psel(`aa: addAttribute(key: ${__gqlStr(key)}, value: ${__gqlStr(value)}, definition: ${__gqlStr(definition)})`));
+    return this.kit.mutateScoped(cid, this.kitPieceSelection(`aa: addAttribute(key: ${__gqlStr(key)}, value: ${__gqlStr(value)}, definition: ${__gqlStr(definition)})`));
   }
 
   async removeAttribute(id: string): Promise<SetResult> {
     const cid = await this.kit.ensureChangeId();
-    return this.kit.mutateScoped(cid, this.psel(`ra: removeAttribute(id: ${__gqlStr(id)})`));
+    return this.kit.mutateScoped(cid, this.kitPieceSelection(`ra: removeAttribute(id: ${__gqlStr(id)})`));
   }
 
   async removeAttributes(ids: readonly string[]): Promise<SetResult> {
     const cid = await this.kit.ensureChangeId();
-    return this.kit.mutateScoped(cid, this.psel(`ras: removeAttributes(ids: ${__gqlIds(ids)})`));
+    return this.kit.mutateScoped(cid, this.kitPieceSelection(`ras: removeAttributes(ids: ${__gqlIds(ids)})`));
   }
 }
 //#endregion 🧩Piece
@@ -3398,297 +3633,59 @@ export async function openKit(uri: string, opts?: KitOpenOptions): Promise<Kit> 
 //#endregion 🚀PublicAPI
 
 
-// #region 🧪EmbeddedTests
+//#region 🧪EmbeddedTests
 if (
   typeof process !== "undefined" &&
   !!process.env &&
   process.env["SEMIO_JS_RUN_EMBEDDED_TESTS"] === "1"
 ) {
   const { describe, it, expect } = await import("vitest");
-  type KitFullDto = Graph.KitFullDto;
-  type KitJsonFileAdapter = Graph.KitJsonFileAdapter;
-  type KitClassifiedMutationEvent = Graph.KitClassifiedMutationEvent;
-  type ReadBatch = Graph.ReadBatch;
-  type KitEvent = Graph.KitEvent;
-  type ChangeKitCommand = Graph.ChangeKitCommand;
-  type KitStoreClient = Graph.KitStoreClient;
 
-  describe("semio-js KitStore", () => {
-
-    it("KitStore has no JS snapshot() full-read method (use theKit / scoped reads only)", () => {
+  describe("semio-js Kit facade (strict)", () => {
+    it("Kit.prototype has no legacy snapshot() hook", () => {
       type Snap = { snapshot?: () => unknown };
-      const snap: Snap = KitStore.prototype as unknown as Snap;
+      const snap: Snap = Kit.prototype as unknown as Snap;
       expect(snap.snapshot).toBeUndefined();
-    });
-
-    describe("wasm GraphQL integration (KitStoreHandle over GraphQL)", () => {
-      it("opens dedicated worker wasm and returns typed full kit DTO from GraphQL", async () => {
-        const minimalKit: KitFullDto = {
-          id: "test-kit",
-          name: "TestKit",
-          createdAt: "2020-01-01T00:00:00.000Z",
-          updatedAt: "2020-01-01T00:00:00.000Z",
-          types: [{ id: "type-1", name: "Wall", connectors: [] }],
-          designs: [{ id: "design-1", name: "Floor1", pieces: [], connections: [] }],
-        };
-        const ks = await KitStore.open(minimalKit);
-        const snap = await ks.theKit();
-        expect(snap.id).toBe("test-kit");
-        expect(snap.name).toBe("TestKit");
-        const typeStores = await ks.types();
-        expect(typeStores.map((t) => t.id)).toEqual(["type-1"]);
-        const designStores = await ks.designs();
-        expect(designStores.map((d) => d.id)).toEqual(["design-1"]);
-        const meta = await ks.type("type-1").metadata();
-        expect(meta.id).toBe("type-1");
-        expect(meta.name).toBe("Wall");
-        await ks.dispose();
-      });
     });
 
     it("kitReadPointKey normalizes the main line scope for cache keys", () => {
       expect(kitReadPointKey(theKitReadPoint)).toBe(JSON.stringify(theKitReadPoint));
     });
 
-    it("kitChangeSemanticKindToGraphQl maps GraphQL enum + other label", () => {
-      expect(kitChangeSemanticKindToGraphQl("ADD_PIECE", null)).toBe("addPiece");
-      expect(kitChangeSemanticKindToGraphQl("OTHER", "addFamily")).toEqual({ other: "addFamily" });
-      expect(kitChangeSemanticKindToGraphQl("OTHER", null)).toBe("inferred");
+    it("VCS + change-algebra shells wire without KitRuntime", () => {
+      const k = Object.create(Kit.prototype) as Kit;
+      const g = new Graph(k, "wip");
+      expect(g.root).toBe("wip");
+      expect(new Session(k).id).toBe("session");
+      expect(new TheKit(k, "wip").id).toContain("theKit");
+      const cp = new Checkpoint(k, "wip", "cp1");
+      expect(cp.change("c1").id).toBe("c1");
+      expect(cp.edit("e1").id).toBe("e1");
+      expect(RenamedKit.name).toBe("RenamedKit");
+      expect(KitDiff.name).toBe("KitDiff");
+      expect(RenamedKitInput.name).toBe("RenamedKitInput");
     });
 
-    it("normalizeKitEventFromSubscription passes flat classified mutation rows", () => {
-      const raw = {
-        renamedDesign: {
-          designId: "d1",
-          change: { forward: [] as const, inverse: [] as const, kind: "modifyDesign" as const },
-        },
-      };
-      const out = normalizeKitEventFromSubscription(raw);
-      expect(out).toBeDefined();
-      expect(isKitClassifiedMutationEvent(out!)).toBe(true);
-      if (isKitClassifiedMutationEvent(out!)) {
-        expect("renamedDesign" in out && out.renamedDesign.designId).toBe("d1");
-      }
-    });
-
-    it("kitEventTouchesDesignStrict matches renamedDesign kit events", () => {
-      const ev = {
-        renamedDesign: { designId: "dx", change: { forward: [], inverse: [] } },
-      } as const satisfies KitClassifiedMutationEvent;
-      expect(kitEventTouchesDesignStrict(ev, "dx")).toBe(true);
-      expect(kitEventTouchesDesignStrict(ev, "other")).toBe(false);
-    });
-
-    describe("wasm GraphQL integration · KitStore.read / vcs", () => {
-      it("read batch returns typed rows", async () => {
-        const minimalKit: KitFullDto = {
-          id: "read-kit",
-          name: "R",
-          createdAt: "2020-01-01T00:00:00.000Z",
-          updatedAt: "2020-01-01T00:00:00.000Z",
-          types: [],
-          designs: [],
-        };
-        const ks = await KitStore.open(minimalKit);
-        const batch: ReadBatch = [{ readKitTypesShallowCommand: null }, { readKitTypeIdsCommand: null }];
-        const res = await ks.read(theKitReadPoint, batch);
-        expect(res.length).toBe(2);
-        await ks.dispose();
-      });
-
-      it("designIds and kindIds align with design() and type() factory lists", async () => {
-        const minimalKit: KitFullDto = {
-          id: "row-ids-kit",
-          name: "R",
-          createdAt: "2020-01-01T00:00:00.000Z",
-          updatedAt: "2020-01-01T00:00:00.000Z",
-          types: [{ id: "ta", name: "A", connectors: [] }],
-          designs: [{ id: "da", name: "D", pieces: [], connections: [] }],
-        };
-        const ks = await KitStore.open(minimalKit);
-        expect(await ks.designIds()).toEqual((await ks.designs()).map((d) => d.id));
-        expect(await ks.kindIds()).toEqual((await ks.types()).map((t) => t.id));
-        await ks.dispose();
-      });
-
-      it("PieceStore readFlatPlane is defined on the owning store (delegates to live read dto)", async () => {
-        const minimalKit: KitFullDto = {
-          id: "piece-flat-kit",
-          name: "P",
-          createdAt: "2020-01-01T00:00:00.000Z",
-          updatedAt: "2020-01-01T00:00:00.000Z",
-          types: [{ id: "t1", name: "T", connectors: [] }],
-          designs: [
-            {
-              id: "d1",
-              name: "D",
-              pieces: [
-                {
-                  id: "p1",
-                  name: "Piece1",
-                  type: { id: "t1" },
-                  plane: { origin: { x: 0, y: 0, z: 0 }, xAxis: { x: 1, y: 0, z: 0 }, yAxis: { x: 0, y: 1, z: 0 } },
-                  center: { u: 0, v: 0 },
-                  scale: 1,
-                  color: "#000000",
-                  props: [],
-                  attributes: [],
-                },
-              ],
-              connections: [],
-            },
-          ],
-        };
-        const ks = await KitStore.open(minimalKit);
-        expect(typeof ks.piece("d1", "p1").readFlatPlane).toBe("function");
-        expect(typeof ks.design("d1").readClusterableGroups).toBe("function");
-        expect(typeof ks.type("t1").readBestRepresentation).toBe("function");
-        await ks.dispose();
-      });
-
-      it("rejects theKit() after dispose", async () => {
-        const minimalKit: KitFullDto = {
-          id: "dispose-kit",
-          name: "D",
-          createdAt: "2020-01-01T00:00:00.000Z",
-          updatedAt: "2020-01-01T00:00:00.000Z",
-          types: [],
-          designs: [],
-        };
-        const ks = await KitStore.open(minimalKit);
-        await ks.dispose();
-        await expect(ks.theKit()).rejects.toThrow(/disposed/i);
-      });
-
-      it("subscribe returns Unsubscribe and does not expose events$", async () => {
-        const minimalKit: KitFullDto = {
-          id: "sub-kit",
-          name: "S",
-          createdAt: "2020-01-01T00:00:00.000Z",
-          updatedAt: "2020-01-01T00:00:00.000Z",
-          types: [],
-          designs: [],
-        };
-        const ks = await KitStore.open(minimalKit);
-        let n = 0;
-        const off = ks.subscribe(() => {
-          n += 1;
-        });
-        expect(typeof off).toBe("function");
-        off();
-        await ks.dispose();
-        type KitStorePublicKeys = keyof KitStore;
-        type MustNotIncludeEvents = "events$" extends KitStorePublicKeys ? never : true;
-        const _compileAssert: MustNotIncludeEvents = true;
-        expect(_compileAssert).toBe(true);
-        expect(n).toBeGreaterThanOrEqual(0);
-      });
-
-      it("subscribeFiltered and subscribeSemioKitCommandLifecycle return Unsubscribe (RxJS internal; no events$ on KitStore)", async () => {
-        const minimalKit: KitFullDto = {
-          id: "sub-filter-kit",
-          name: "Sf",
-          createdAt: "2020-01-01T00:00:00.000Z",
-          updatedAt: "2020-01-01T00:00:00.000Z",
-          types: [],
-          designs: [],
-        };
-        const ks = await KitStore.open(minimalKit);
-        const offFiltered = ks.subscribeFiltered(() => false, () => {
-          /* noop */
-        });
-        const offLifecycle = ks.subscribeSemioKitCommandLifecycle(() => {
-          /* noop */
-        });
-        expect(typeof offFiltered).toBe("function");
-        expect(typeof offLifecycle).toBe("function");
-        offFiltered();
-        offLifecycle();
-        await ks.dispose();
-      });
-
-      it("theKit, vcsState, readAt root, and undo/redo flags round-trip", async () => {
-        const minimalKit: KitFullDto = {
-          id: "vcs-kit",
-          name: "V",
-          createdAt: "2020-01-01T00:00:00.000Z",
-          updatedAt: "2020-01-01T00:00:00.000Z",
-          types: [],
-          designs: [],
-        };
-        const ks = await KitStore.open(minimalKit);
-        const snap = await ks.theKit();
-        const snap2 = await ks.theKit();
-        expect(snap2.id).toBe(snap.id);
-        const vcs = await ks.vcsState();
-        expect(vcs != null && typeof vcs === "object").toBe(true);
-        const mat = await ks.readAt("");
-        expect(mat.id).toBe(snap.id);
-        expect(typeof (await ks.canUndo())).toBe("boolean");
-        expect(typeof (await ks.canRedo())).toBe("boolean");
-        await ks.dispose();
-      });
-
-      it("createAlternativeFromTip adds an alternative on wip", async () => {
-        const minimalKit: KitFullDto = {
-          id: "alt-create-kit",
-          name: "A",
-          createdAt: "2020-01-01T00:00:00.000Z",
-          updatedAt: "2020-01-01T00:00:00.000Z",
-          types: [],
-          designs: [],
-        };
-        const ks = await KitStore.open(minimalKit);
-        await ks.kitStoreInitializeDefaults();
-        const aid = await ks.createAlternativeFromTip("branch-one", null);
-        expect(aid.length).toBeGreaterThan(8);
-        const vcs = await ks.vcsState();
-        const wip = vcs["wip"] as { alternatives?: readonly { id?: string }[] } | undefined;
-        const alts = wip?.alternatives;
-        expect(Array.isArray(alts)).toBe(true);
-        expect((alts as readonly { id?: string }[]).some((a) => String(a?.id) === aid)).toBe(true);
-        await ks.dispose();
-      });
-
-      it("serializes a fresh dev-json bundle with three graphs, a seed checkpoint, and an open unsaved change", async () => {
-        const minimalKit: KitFullDto = {
-          id: "dev-json-kit",
-          name: "the kit",
-          createdAt: "2020-01-01T00:00:00.000Z",
-          updatedAt: "2020-01-01T00:00:00.000Z",
-          types: [],
-          designs: [],
-        };
-        const ks = await KitStore.open(minimalKit);
-        await ks.kitStoreInitializeDefaults();
-        const raw = await ks.serializeKitStoreBundleJson();
-        const bundle = JSON.parse(raw) as JsonObject;
-        expect(bundle["schema"]).toBe("🎆26🌙06⬆️1");
-        for (const key of ["wip", "authoritative", "stage"]) {
-          expect(bundle[key] != null && typeof bundle[key] === "object").toBe(true);
-          expect(((bundle[key] as JsonObject)["initialKit"] as JsonObject | undefined)?.["name"]).toBe("the kit");
-        }
-        const wip = bundle["wip"] as JsonObject;
-        expect((((wip["checkpoints"] as JsonObject)["items"] as readonly unknown[]) ?? []).length).toBe(1);
-        expect(wip["drafts"]).toBeUndefined();
-        expect(wip["transactions"]).toBeUndefined();
-        expect(wip["savedChanges"]).toBeUndefined();
-        expect(wip["unsavedChanges"]).toBeUndefined();
-        const theKit = wip["theKit"] as JsonObject;
-        const changes = ((theKit["unsavedChanges"] as JsonObject)["items"] as readonly JsonObject[]) ?? [];
-        expect(changes.length).toBe(1);
-        const edits = ((changes[0]["edits"] as JsonObject)["items"] as readonly unknown[]) ?? [];
-        expect(edits.length).toBe(0);
-        await ks.dispose();
-      });
-
-    });
-
-    it("compile-time: KitStore public surface excludes rxjs-style stream fields", () => {
-      type KitStorePublicKeys = keyof KitStore;
-      type MustNotLeakRx = "events$" extends KitStorePublicKeys ? never : "pipe" extends KitStorePublicKeys ? never : "_trySubscribe" extends KitStorePublicKeys ? never : true;
-      const _assert: MustNotLeakRx = true;
-      expect(_assert).toBe(true);
+    it("Design / Graph / Session / Checkpoint expose id-list-stable read* + subscribe* for owned lists", () => {
+      const k = Object.create(Kit.prototype) as Kit;
+      const d = new Design(k, "d1");
+      expect(typeof d.readPieces).toBe("function");
+      expect(typeof d.subscribePieces).toBe("function");
+      expect(typeof d.readConnections).toBe("function");
+      expect(typeof d.subscribeConnections).toBe("function");
+      const g = new Graph(k, "wip");
+      expect(typeof g.readAlternatives).toBe("function");
+      expect(typeof g.readCheckpoints).toBe("function");
+      expect(typeof g.subscribeAlternatives).toBe("function");
+      expect(typeof g.subscribeCheckpoints).toBe("function");
+      const s = new Session(k);
+      expect(typeof s.readAlternatives).toBe("function");
+      expect(typeof s.subscribeAlternatives).toBe("function");
+      const cp = new Checkpoint(k, "wip", "cp1");
+      expect(typeof cp.readChanges).toBe("function");
+      expect(typeof cp.readEdits).toBe("function");
+      expect(typeof cp.subscribeChanges).toBe("function");
+      expect(typeof cp.subscribeEdits).toBe("function");
     });
   });
 
@@ -3737,7 +3734,6 @@ if (
     });
 
     it("metabolism.new kit bundle has metabolism on-disk shape (Rust-owned)", async () => {
-      // 🚧 The on-disk bundle format is owned by `semio/rs` — JS only verifies the metabolism shape exists on the asset.
       const { readFileSync } = await import("node:fs");
       const { resolve, dirname } = await import("node:path");
       const { fileURLToPath } = await import("node:url");
@@ -3775,130 +3771,8 @@ if (
       expect(Array.isArray(backboneDoc.semanticOpLog)).toBe(true);
     });
   });
-
-  describe("semio-js kit event entity filters", () => {
-    it("kitEventTouchesDesignStrict matches nested Design payload", () => {
-      const ev = { Design: { design_id: "d1", event: { Piece: { piece_id: "p1", event: "Changed" } } } } as KitEvent;
-      expect(kitEventTouchesDesignStrict(ev, "d1")).toBe(true);
-      expect(kitEventTouchesDesignStrict(ev, "d2")).toBe(false);
-    });
-
-    it("kitEventTouchesPiece ignores bare Changed", () => {
-      expect(kitEventTouchesPiece({ Changed: null } as KitEvent, "d1", "p1")).toBe(false);
-    });
-
-    it("kitEventTouchesPiece matches FlattenInvalidated piece list", () => {
-      const ev = { FlattenInvalidated: { design: "d1", pieces: ["p1"] } } as KitEvent;
-      expect(kitEventTouchesPiece(ev, "d1", "p1")).toBe(true);
-      expect(kitEventTouchesPiece(ev, "d1", "p2")).toBe(false);
-    });
-
-    it("kitEventTouchesDesign matches rs-shaped design name field change", () => {
-      const ev = { Design: { design_id: "design-a", event: { FieldChanged: "Name" } } } as KitEvent;
-      expect(kitEventTouchesDesign(ev, "design-a")).toBe(true);
-      expect(kitEventTouchesDesign(ev, "other")).toBe(false);
-    });
-
-    it("kitEventTouchesTypeStrict matches Type payload", () => {
-      const ev = { Type: { type_id: "t1", event: "Changed" } } as KitEvent;
-      expect(kitEventTouchesTypeStrict(ev, "t1")).toBe(true);
-      expect(kitEventTouchesTypeStrict(ev, "t2")).toBe(false);
-    });
-  });
-
-  describe("semio-js entity stores", () => {
-    describe("wasm KitStoreHandle · entity stores", () => {
-      it("TypeStore metadata and shallow read paths resolve", async () => {
-        const minimalKit: KitFullDto = {
-          id: "meta-type-kit",
-          name: "K",
-          createdAt: "2020-01-01T00:00:00.000Z",
-          updatedAt: "2020-01-01T00:00:00.000Z",
-          types: [{ id: "type-z", name: "Zed", connectors: [] }],
-          designs: [],
-        };
-        const ks = await KitStore.open(minimalKit);
-        const t = ks.type("type-z");
-        const meta = await t.metadata();
-        expect(meta.id).toBe("type-z");
-        expect(meta.name).toBe("Zed");
-        const sh = await t.shallow();
-        expect(sh.id).toBe("type-z");
-        await ks.dispose();
-      });
-    });
-  });
-
-  describe("semio-js kit store dto helpers", () => {
-    it("piecePatchToChangeCommands maps plane and type ref", () => {
-      const cmds = piecePatchToChangeCommands({ plane: { x: 1 }, type: { id: "t1" } });
-      expect(cmds.length).toBe(2);
-      expect(cmds.some((c) => "plane" in c)).toBe(true);
-      expect(cmds.some((c) => "type" in c && (c as { type: { typeId: { id: string } } }).type.typeId.id === "t1")).toBe(true);
-    });
-
-    it("connectionDiffKeyForDataKey maps u to x", () => {
-      expect(connectionDiffKeyForDataKey("u")).toBe("x");
-      expect(connectionDiffKeyForDataKey("gap")).toBe("gap");
-    });
-
-    it("buildSchemaEntityChangeCommands returns nested piece dto with design id", () => {
-      const cmds = buildSchemaEntityChangeCommands("Piece", "p1", "color", "#fff", "d1");
-      expect(cmds.length).toBe(1);
-      expect(cmds[0]).toMatchObject({
-        changeDesignCommands: { designId: { id: "d1" } },
-      });
-    });
-
-    it("kitStoreClientUpdatePiece forwards to submitChangeKitCommands", async () => {
-      let last: readonly ChangeKitCommand[] | undefined;
-      const client = {
-        getKitWriteScope: () => null,
-        setKitWriteScope: () => { },
-        finalizeKitWriteTransaction: async () => ({ ok: true as const }),
-        abortKitWriteTransaction: async () => ({ ok: true as const }),
-        submitChangeKitCommands: async (cs: readonly ChangeKitCommand[]) => {
-          last = cs;
-          return { ok: true as const };
-        },
-      } as unknown as KitStoreClient;
-      await kitStoreClientUpdatePiece(client, "d1", "p1", { name: "N" });
-      expect(last?.length).toBe(1);
-    });
-
-    it("decodeKitSemioEnvelopeToFullDtoFromValue unwraps initialKit and flattens bundle items", () => {
-      const dto = decodeKitSemioEnvelopeToFullDtoFromValue({
-        schema: "s",
-        initialKit: {
-          id: "kit-1",
-          name: "Kit",
-          createdAt: "2020-01-01T00:00:00.000Z",
-          updatedAt: "2020-01-01T00:00:00.000Z",
-          types: {
-            hash: "h",
-            items: [
-              {
-                id: "t1",
-                name: "T",
-                createdAt: "2020-01-01T00:00:00.000Z",
-                updatedAt: "2020-01-01T00:00:00.000Z",
-                families: { items: [{ id: "f1" }] },
-                connectors: [],
-                representations: [],
-              },
-            ],
-          },
-          designs: { items: [] },
-        },
-      });
-      expect(dto.id).toBe("kit-1");
-      expect(Array.isArray(dto.types)).toBe(true);
-      expect(dto.types?.[0]?.id).toBe("t1");
-      expect(Array.isArray(dto.types?.[0]?.families)).toBe(true);
-    });
-  });
 }
-// #endregion 🧪EmbeddedTests
+//#endregion 🧪EmbeddedTests
 
 
 //#region 🧪Tests

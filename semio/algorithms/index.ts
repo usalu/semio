@@ -8,7 +8,7 @@
 /// <reference types="vite/client" />
 
 // #region 📥Imports
-import { openKit, type JsonObject, type Kit as JsKit, type KitBootstrapJson } from "@semio/js";
+import { openKit, type JsonObject, type Kit as JsKit } from "@semio/js";
 import {
   AlgorithmApp,
   WindowKind,
@@ -56,14 +56,14 @@ const PASTE_ANCHORS: readonly PasteDesignAnchoringKind[] = ["original", "middle"
 /** @emoji 🧰 Static kit helpers for Storybook (selection anchoring + stub replaceable search). */
 export const Kit = Object.freeze({
   pasteDesignAnchoringKinds: PASTE_ANCHORS,
-  ensure(kit: KitBootstrapJson | Record<string, unknown>) {
+  ensure(kit: JsonObject | Record<string, unknown>) {
     return new AlgorithmKitFacade(kit);
   },
 });
 
 /** @emoji 🧰 Kit façade used by find-replaceable story (deterministic fixture ids for Nakagin selection). */
 export class AlgorithmKitFacade {
-  constructor(private readonly kit: KitBootstrapJson | Record<string, unknown>) {}
+  constructor(private readonly kit: JsonObject | Record<string, unknown>) {}
 
   findReplaceableTypesInDesignsForPiecesInDesignOp(
     _design: unknown,
@@ -211,8 +211,8 @@ export type OperationResult<T> = { ok: true; value: T } | { ok: false; errors: r
 // #endregion 🧾StoryTypes
 
 // #region 🌐WasmKitSession
-function __toBootstrap(kit: unknown): KitBootstrapJson {
-  return JSON.parse(JSON.stringify(kit)) as KitBootstrapJson;
+function __toBootstrap(kit: unknown): JsonObject {
+  return JSON.parse(JSON.stringify(kit)) as JsonObject;
 }
 
 async function __withJsKit<T>(kit: unknown, fn: (js: JsKit) => Promise<T>): Promise<T> {

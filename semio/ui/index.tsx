@@ -15,13 +15,7 @@ import { useGLTF } from "@react-three/drei/core/Gltf.js";
 import { Grid } from "@react-three/drei/core/Grid.js";
 import { OrbitControls } from "@react-three/drei/core/OrbitControls.js";
 import { Canvas as ThreeCanvas, useFrame, useThree } from "@react-three/fiber";
-import type {
-  AttributeWire as Attribute,
-  CoordinateWire as Coordinate,
-  JsonObject,
-  PlaneWire as Plane,
-  VectorWire as SemioVector,
-} from "@semio/js";
+import type { Attribute, Coordinate, JsonObject, Plane, Vector as SemioVector } from "@semio/js";
 
 /** @emoji 🧾 Scene/canvas camera JSON (position+target wire shape, optional legacy up/forward). */
 export type SceneCamera = JsonObject & {

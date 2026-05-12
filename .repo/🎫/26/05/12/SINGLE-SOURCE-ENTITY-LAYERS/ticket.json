@@ -3,7 +3,7 @@
   "emoji": "🧬",
   "status": "closed",
   "description": "Implement single-source entity layers: Rust BackboneKind, kit backbones, EventBus path subscribe, remove hydrate; JS Kit.open URI, backbone mutations; React Context rename, OperationStatus, bindFieldToReact without useSyncExternalStore.",
-  "summary": "Phase B JS: weak classes (Position/Coordinate/Plane/Point/Vector, Attribute, Benchmark, ConnectionSide), Kit/Design/Type/Graph/Session/Checkpoint instance caches, id-list-stable collection reads, backboneSyncNow/backboneStatus, __kitGraphqlEnvelope (removed Kit.runGraphql + legacy operationSucceeded subscription path), change-algebra base + variant shells including RenamedKit, kit-store.worker regions; verify-log updated. KIT_* exports kept for parallel react.",
+  "summary": "Phase B (js): Design readPieces/subscribePieces + readConnections/subscribeConnections with id-list-stable caches; Graph readAlternatives/readCheckpoints + subscribe*; Session readAlternativeIds/readAlternatives + subscribeAlternatives; Checkpoint readChangeIds/readEditIds/readChanges/readEdits + subscribe*; __parseStrongEntityArrayIds; embedded vitest extended. tsc 0; vitest index.ts 11/11 with SEMIO_JS_RUN_EMBEDDED_TESTS via PowerShell. kit-store.worker.ts unchanged.",
   "goal": "🎯r2602🎯runningsketchpad",
   "plan": {
     "client": "cursor",
@@ -13,6 +13,9 @@
   "sessions": [
     "⚪61b88a4a22ef4bd0a4466d15c01c8cc3",
     "⚪8423dd8ed14e41b080fb2536eb924913",
-    "⚪80779f4983de4fc98480d9e8c7141808"
+    "⚪80779f4983de4fc98480d9e8c7141808",
+    "⚪e27ce55562c1455491b24cd2a1665d87",
+    "⚪c9b2865e7c1a49fc82d3d49c2e8bbf9a",
+    "⚪5896a3497f3b4b499b112b90a94a2f14"
   ]
 }

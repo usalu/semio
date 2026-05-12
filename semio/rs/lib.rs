@@ -2890,40 +2890,6 @@ pub mod kit {
                 self.piece_weak_by_external_id.read().await.get(id).and_then(|w| w.upgrade())
             }
 
-            pub async fn hydrate_pieces_from_snapshot_json(des: &Arc<Self>, kit: &Arc<crate::kit::Kit>, d_json: &serde_json::Value) -> Result<(), crate::error::SemioError> {
-                {
-                    let mut pcs = des.pieces.write().await;
-                    pcs.clear();
-                }
-                *des.piece_weak_by_external_id.write().await = HashMap::new();
-                let plist = d_json.get("pieces").and_then(crate::kit_backbone::json_array_or_block_items_ref).cloned().unwrap_or_default();
-                let owner_des = Arc::downgrade(des);
-                for pj in plist {
-                    let pid = pj.get("id").and_then(|x| x.as_str()).ok_or_else(|| crate::error::SemioError::invalid("design piece missing id"))?;
-                    let type_id_raw = match pj.get("type") {
-                        Some(serde_json::Value::String(s)) => s.as_str(),
-                        Some(serde_json::Value::Object(map)) => map.get("id").and_then(|x| x.as_str()).ok_or_else(|| crate::error::SemioError::invalid("design piece type object missing id"))?,
-                        _ => {
-                            return Err(crate::error::SemioError::invalid("design piece missing type (string id or { id })"));
-                        }
-                    };
-                    let ty = kit.types.read().await.iter().find(|t| t.id.as_str() == type_id_raw).cloned().ok_or_else(|| crate::error::SemioError::not_found("Type", type_id_raw))?;
-                    let pose = pj.get("pose");
-                    let plane_val = pj.get("plane").cloned().or_else(|| pose.and_then(|p| p.get("plane")).cloned()).unwrap_or_else(|| serde_json::json!({}));
-                    let center_val = pj.get("center").cloned().or_else(|| pose.and_then(|p| p.get("center")).cloned()).unwrap_or_else(|| serde_json::json!({"u":0.0,"v":0.0}));
-                    let position: crate::geom::PositionInput = serde_json::from_value(serde_json::json!({"plane": plane_val, "center": center_val})).map_err(|e| crate::error::SemioError::invalid(format!("piece position serde: {}", e)))?;
-                    let scale = pj.get("scale").and_then(|s| s.as_f64()).unwrap_or(1.0);
-                    let nm_opt = pj.get("name").and_then(|x| x.as_str());
-                    let bp = crate::kit::r#type::Blueprint::Type(ty.clone());
-                    let piece = piece::Piece::new_fixed_with_external_id(pid.into(), owner_des.clone(), bp, position).await;
-                    if let Some(nm) = nm_opt {
-                        piece.set_name(Some(nm.to_string())).await;
-                    }
-                    *piece.scale.write().await = Some(scale);
-                    let _ = des.insert_piece(piece).await;
-                }
-                Ok(())
-            }
         }
 
         #[Object(name = "Design")]
@@ -3433,77 +3399,13 @@ pub mod kit {
             *g = g.saturating_add(1);
         }
 
-        /// @emoji 📸 `KitFullDto`-shaped JSON for bundle baselines / [`Kit::deep_clone`] round-trips (subset: `types`, `designs` with nested `pieces`).
-        pub async fn kit_full_snapshot_value(&self) -> serde_json::Value {
-            use crate::kit::r#type::Blueprint;
-            let kid = self.workspace_kit_id().await;
-            let name = self.name.read().await.clone();
-            let types_items: Vec<serde_json::Value> = {
-                let tys = self.types.read().await;
-                let mut out = Vec::with_capacity(tys.len());
-                for t in tys.iter() {
-                    let tid = t.id.as_str();
-                    let nm = t.name.read().await.clone();
-                    out.push(serde_json::json!({"id": tid, "name": nm, "connectors": []}));
-                }
-                out
-            };
-            let design_items: Vec<serde_json::Value> = {
-                let des = self.designs.read().await;
-                let mut out = Vec::with_capacity(des.len());
-                for d in des.iter() {
-                    let did = d.id.as_str();
-                    let dn = d.name.read().await.clone();
-                    let pieces: Vec<serde_json::Value> = {
-                        let pcs = d.pieces.read().await;
-                        let mut pj = Vec::with_capacity(pcs.len());
-                        for p in pcs.iter() {
-                            let ty_id = match &*p.blueprint.read().await {
-                                Blueprint::Type(ty) => ty.id.as_str().to_string(),
-                                _ => String::new(),
-                            };
-                            let pos = p.compute_flat_position().await;
-                            let pv = serde_json::to_value(&pos).unwrap_or_else(|_| serde_json::json!({}));
-                            let scale = p.scale.read().await.unwrap_or(1.0);
-                            let nm = p.name.read().await.clone().unwrap_or_default();
-                            pj.push(serde_json::json!({
-                                "id": p.id.as_str(),
-                                "name": nm,
-                                "type": { "id": ty_id },
-                                "plane": pv.get("plane").cloned().unwrap_or_else(|| serde_json::json!({})),
-                                "center": pv.get("center").cloned().unwrap_or_else(|| serde_json::json!({"u":0.0,"v":0.0})),
-                                "scale": scale,
-                                "color": "#000000",
-                                "props": [],
-                                "attributes": [],
-                            }));
-                        }
-                        pj
-                    };
-                    out.push(serde_json::json!({
-                        "id": did,
-                        "name": dn,
-                        "pieces": { "hash": crate::kit_backbone::KIT_BUNDLE_HASH_STUB, "items": pieces },
-                        "connections": { "hash": crate::kit_backbone::KIT_BUNDLE_HASH_STUB, "items": [] },
-                    }));
-                }
-                out
-            };
-            serde_json::json!({
-                "id": kid.as_str(),
-                "name": name,
-                "types": { "hash": crate::kit_backbone::KIT_BUNDLE_HASH_STUB, "items": types_items },
-                "designs": { "hash": crate::kit_backbone::KIT_BUNDLE_HASH_STUB, "items": design_items },
-            })
-        }
-
-        /// @emoji 🧬 Deep-clone this kit graph (snapshot JSON round-trip) for immutable graph `initialKit` baselines / replay scratch kits.
+        /// @emoji 🧬 Deep-clone this kit graph (dev-backbone `initialKit` projection round-trip) for immutable graph `initialKit` baselines / replay scratch kits.
         pub async fn deep_clone(self: &Arc<Self>) -> Arc<Kit> {
-            let snap = self.kit_full_snapshot_value().await;
+            let snap = crate::kit_backbone::initial_kit_projection_value(self).await;
             let owner = self.owner_graph.clone();
             let nm = self.name.read().await.clone();
             let row = Kit::new_sync(owner, nm);
-            let _ = row.hydrate_from_kit_full_snapshot_json(&snap).await;
+            let _ = crate::kit_backbone::hydrate_kit_from_initial_projection_value(&row, &snap).await;
             row
         }
 
@@ -3537,11 +3439,11 @@ pub mod kit {
             if let Some(s) = &d.license {
                 *self.license.write().await = Some(s.clone());
             }
-            if let Some(v) = &d.types {
-                self.apply_types_diff_json(v).await?;
+            if let Some(t) = &d.types {
+                self.apply_types_collection_diff(t).await?;
             }
-            if let Some(v) = &d.designs {
-                self.apply_designs_diff_json(v).await?;
+            if let Some(ds) = &d.designs {
+                self.apply_designs_collection_diff(ds).await?;
             }
             if let Some(t) = &d.tags {
                 self.apply_tags_collection_diff(t).await?;
@@ -3586,107 +3488,90 @@ pub mod kit {
             }
         }
 
-        async fn apply_types_diff_json(self: &Arc<Self>, v: &serde_json::Value) -> Result<(), crate::error::SemioError> {
-            let Some(obj) = v.as_object() else {
-                return Ok(());
-            };
-            if let Some(serde_json::Value::Array(removed)) = obj.get("removed") {
-                for row in removed {
-                    let id: Id = serde_json::from_value(row.get("id").cloned().ok_or_else(|| crate::error::SemioError::invalid("type removed.id"))?).map_err(|e| crate::error::SemioError::invalid(e.to_string()))?;
-                    let mut tys = self.types.write().await;
-                    tys.retain(|t| t.id != id);
-                    drop(tys);
-                    self.type_weak_by_id.write().await.remove(&id);
+        async fn apply_types_collection_diff(self: &Arc<Self>, t: &crate::operation::TypesCollectionDiff) -> Result<(), crate::error::SemioError> {
+            for r in &t.removed {
+                let id = r.id.clone();
+                let mut tys = self.types.write().await;
+                tys.retain(|ty| ty.id != id);
+                drop(tys);
+                self.type_weak_by_id.write().await.remove(&id);
+            }
+            for row in &t.modified {
+                let tid = row.type_ref.id.clone();
+                let Some(ty) = self.type_by_external_id(&tid).await else {
+                    continue;
+                };
+                let diff = &row.diff;
+                if let Some(s) = diff.get("name").and_then(|x| x.as_str()) {
+                    *ty.name.write().await = s.to_string();
+                }
+                if diff.get("description").is_some() {
+                    *ty.description.write().await = diff.get("description").and_then(|x| x.as_str()).unwrap_or("").to_string();
+                }
+                if diff.get("icon").is_some() {
+                    *ty.icon.write().await = diff.get("icon").and_then(|x| x.as_str()).unwrap_or("").to_string();
+                }
+                if diff.get("image").is_some() {
+                    *ty.image.write().await = diff.get("image").and_then(|x| x.as_str()).unwrap_or("").to_string();
+                }
+                if diff.get("unit").is_some() {
+                    *ty.unit.write().await = diff.get("unit").and_then(|x| x.as_str()).unwrap_or("").to_string();
                 }
             }
-            if let Some(serde_json::Value::Array(modified)) = obj.get("modified") {
-                for row in modified {
-                    let tid: Id = serde_json::from_value(row.get("type").and_then(|t| t.get("id")).cloned().ok_or_else(|| crate::error::SemioError::invalid("type modified.type.id"))?).map_err(|e| crate::error::SemioError::invalid(e.to_string()))?;
-                    let Some(ty) = self.type_by_external_id(&tid).await else {
-                        continue;
-                    };
-                    let diff = row.get("diff").cloned().unwrap_or(serde_json::json!({}));
-                    if let Some(s) = diff.get("name").and_then(|x| x.as_str()) {
-                        *ty.name.write().await = s.to_string();
-                    }
-                    if diff.get("description").is_some() {
-                        *ty.description.write().await = diff.get("description").and_then(|x| x.as_str()).unwrap_or("").to_string();
-                    }
-                    if diff.get("icon").is_some() {
-                        *ty.icon.write().await = diff.get("icon").and_then(|x| x.as_str()).unwrap_or("").to_string();
-                    }
-                    if diff.get("image").is_some() {
-                        *ty.image.write().await = diff.get("image").and_then(|x| x.as_str()).unwrap_or("").to_string();
-                    }
-                    if diff.get("unit").is_some() {
-                        *ty.unit.write().await = diff.get("unit").and_then(|x| x.as_str()).unwrap_or("").to_string();
-                    }
-                }
-            }
-            if obj.get("added").and_then(|x| x.as_array()).map(|a| !a.is_empty()).unwrap_or(false) {
+            if !t.added.is_empty() {
                 return Err(crate::error::SemioError::invalid("kit diff `types.added` apply not implemented"));
             }
             Ok(())
         }
 
-        async fn apply_designs_diff_json(self: &Arc<Self>, v: &serde_json::Value) -> Result<(), crate::error::SemioError> {
-            let Some(obj) = v.as_object() else {
-                return Ok(());
-            };
-            if let Some(serde_json::Value::Array(removed)) = obj.get("removed") {
-                for row in removed {
-                    let id: Id = serde_json::from_value(row.get("id").cloned().ok_or_else(|| crate::error::SemioError::invalid("design removed.id"))?).map_err(|e| crate::error::SemioError::invalid(e.to_string()))?;
-                    let mut ds = self.designs.write().await;
-                    ds.retain(|d| d.id != id);
-                    drop(ds);
-                    self.design_weak_by_id.write().await.remove(&id);
-                }
+        async fn apply_designs_collection_diff(self: &Arc<Self>, d: &crate::operation::DesignsCollectionDiff) -> Result<(), crate::error::SemioError> {
+            for r in &d.removed {
+                let id = r.id.clone();
+                let mut ds = self.designs.write().await;
+                ds.retain(|des| des.id != id);
+                drop(ds);
+                self.design_weak_by_id.write().await.remove(&id);
             }
-            if let Some(serde_json::Value::Array(modified)) = obj.get("modified") {
-                for row in modified {
-                    let design_id: Id =
-                        serde_json::from_value(row.get("design").and_then(|d| d.get("id")).cloned().ok_or_else(|| crate::error::SemioError::invalid("design modified.design.id"))?).map_err(|e| crate::error::SemioError::invalid(e.to_string()))?;
-                    let diff = row.get("diff").cloned().unwrap_or(serde_json::json!({}));
-                    if let Some(design) = self.design_by_external_id(&design_id).await {
-                        if let Some(s) = diff.get("name").and_then(|x| x.as_str()) {
-                            *design.name.write().await = s.to_string();
-                        }
-                        if diff.get("description").is_some() {
-                            *design.description.write().await = diff.get("description").and_then(|x| x.as_str()).map(|s| s.to_string());
-                        }
-                        if diff.get("icon").is_some() {
-                            *design.icon.write().await = diff.get("icon").and_then(|x| x.as_str()).map(|s| s.to_string());
-                        }
-                        if diff.get("image").is_some() {
-                            *design.image.write().await = diff.get("image").and_then(|x| x.as_str()).map(|s| s.to_string());
-                        }
+            for row in &d.modified {
+                let design_id = row.design.id.clone();
+                let diff = &row.diff;
+                if let Some(design) = self.design_by_external_id(&design_id).await {
+                    if let Some(s) = diff.get("name").and_then(|x| x.as_str()) {
+                        *design.name.write().await = s.to_string();
                     }
-                    if let Some(pr) = diff.get("pieces").and_then(|p| p.get("removed")).and_then(|x| x.as_array()) {
-                        for pr_row in pr {
-                            let piece_id: Id = serde_json::from_value(pr_row.get("id").cloned().ok_or_else(|| crate::error::SemioError::invalid("piece removed.id"))?).map_err(|e| crate::error::SemioError::invalid(e.to_string()))?;
-                            let design = self.design_by_external_id(&design_id).await.ok_or_else(|| crate::error::SemioError::not_found("Design", design_id.as_str()))?;
-                            design.delete_piece_by_external_id(&piece_id).await?;
-                        }
+                    if diff.get("description").is_some() {
+                        *design.description.write().await = diff.get("description").and_then(|x| x.as_str()).map(|s| s.to_string());
                     }
-                    if let Some(pa) = diff.get("pieces").and_then(|p| p.get("added")).and_then(|x| x.as_array()) {
-                        for piece_v in pa {
-                            self.apply_design_piece_added_json(&design_id, piece_v).await?;
-                        }
+                    if diff.get("icon").is_some() {
+                        *design.icon.write().await = diff.get("icon").and_then(|x| x.as_str()).map(|s| s.to_string());
                     }
-                    if let Some(pm) = diff.get("pieces").and_then(|p| p.get("modified")).and_then(|x| x.as_array()) {
-                        for prow in pm {
-                            let piece_id: Id = serde_json::from_value(prow.get("piece").and_then(|p| p.get("id")).cloned().ok_or_else(|| crate::error::SemioError::invalid("piece modified.piece.id"))?)
-                                .map_err(|e| crate::error::SemioError::invalid(e.to_string()))?;
-                            let pdiff = prow.get("diff").cloned().unwrap_or(serde_json::json!({}));
-                            self.apply_design_piece_modified_json(&design_id, &piece_id, &pdiff).await?;
-                        }
+                    if diff.get("image").is_some() {
+                        *design.image.write().await = diff.get("image").and_then(|x| x.as_str()).map(|s| s.to_string());
+                    }
+                }
+                if let Some(pr) = diff.get("pieces").and_then(|p| p.get("removed")).and_then(|x| x.as_array()) {
+                    for pr_row in pr {
+                        let piece_id: Id = serde_json::from_value(pr_row.get("id").cloned().ok_or_else(|| crate::error::SemioError::invalid("piece removed.id"))?).map_err(|e| crate::error::SemioError::invalid(e.to_string()))?;
+                        let design = self.design_by_external_id(&design_id).await.ok_or_else(|| crate::error::SemioError::not_found("Design", design_id.as_str()))?;
+                        design.delete_piece_by_external_id(&piece_id).await?;
+                    }
+                }
+                if let Some(pa) = diff.get("pieces").and_then(|p| p.get("added")).and_then(|x| x.as_array()) {
+                    for piece_v in pa {
+                        self.apply_design_piece_added_json(&design_id, piece_v).await?;
+                    }
+                }
+                if let Some(pm) = diff.get("pieces").and_then(|p| p.get("modified")).and_then(|x| x.as_array()) {
+                    for prow in pm {
+                        let piece_id: Id = serde_json::from_value(prow.get("piece").and_then(|p| p.get("id")).cloned().ok_or_else(|| crate::error::SemioError::invalid("piece modified.piece.id"))?)
+                            .map_err(|e| crate::error::SemioError::invalid(e.to_string()))?;
+                        let pdiff = prow.get("diff").cloned().unwrap_or(serde_json::json!({}));
+                        self.apply_design_piece_modified_json(&design_id, &piece_id, &pdiff).await?;
                     }
                 }
             }
-            if let Some(serde_json::Value::Array(added)) = obj.get("added") {
-                for _design_v in added {
-                    return Err(crate::error::SemioError::invalid("kit diff `designs.added` apply not implemented"));
-                }
+            if !d.added.is_empty() {
+                return Err(crate::error::SemioError::invalid("kit diff `designs.added` apply not implemented"));
             }
             Ok(())
         }
@@ -3711,12 +3596,15 @@ pub mod kit {
             use crate::geom::entity::Position as GeomPosition;
             let design = self.design_by_external_id(design_id).await.ok_or_else(|| crate::error::SemioError::not_found("Design", design_id.as_str()))?;
             let piece = design.piece_by_external_id(piece_id).await.ok_or_else(|| crate::error::SemioError::not_found("Piece", piece_id.as_str()))?;
-            if let Some(true) = pdiff.get("fixPiece").and_then(|x| x.as_bool()) {
+            let wire: crate::operation::PieceDiffWire =
+                serde_json::from_value(pdiff.clone()).map_err(|e| crate::error::SemioError::invalid(e.to_string()))?;
+            if let Some(true) = wire.fix_piece {
                 *piece.connection_kind.write().await = Some(crate::kit::design::piece::PieceConnectionKind::Fixed);
                 return Ok(());
             }
-            if let Some(du) = pdiff.get("drag").and_then(|d| d.get("u")).and_then(|x| x.as_f64()) {
-                let dv = pdiff.get("drag").and_then(|d| d.get("v")).and_then(|x| x.as_f64()).unwrap_or(0.0);
+            if let Some(off) = wire.drag {
+                let du = off.u;
+                let dv = off.v;
                 let pos_slot = piece.position.read().await.clone();
                 if let Some(pos) = pos_slot {
                     let u = *pos.center.u.read().await + du;
@@ -3731,8 +3619,7 @@ pub mod kit {
                 }
                 return Ok(());
             }
-            if let Some(pose_v) = pdiff.get("pose") {
-                let position: crate::geom::PositionInput = serde_json::from_value(pose_v.clone()).map_err(|e| crate::error::SemioError::invalid(e.to_string()))?;
+            if let Some(position) = wire.pose {
                 let n = GeomPosition::from_position_input(position);
                 *piece.position.write().await = Some(n);
                 return Ok(());
@@ -4306,57 +4193,6 @@ pub mod kit {
             }
         }
 
-        /// 🧾 Overlays layout + metadata from `@semio/js` `KitFullDto`-style JSON (`types`, `designs`, `pieces`); control plane authoritative copy stays in-process.
-        pub async fn hydrate_from_kit_full_snapshot_json(self: &Arc<Self>, dto: &serde_json::Value) -> Result<(), crate::error::SemioError> {
-            if let Some(n) = dto.get("name").and_then(|v| v.as_str()) {
-                *self.name.write().await = n.to_string();
-            }
-            if let Some(id_override) = dto.get("id").and_then(|v| v.as_str()) {
-                *self.snapshot_external_kit_id.write().await = Some(Id::from(id_override));
-            } else {
-                *self.snapshot_external_kit_id.write().await = None;
-            }
-
-            {
-                let mut tys = self.types.write().await;
-                let mut tw = self.type_weak_by_id.write().await;
-                tys.clear();
-                tw.clear();
-                let types_arr = dto.get("types").and_then(crate::kit_backbone::json_array_or_block_items_ref).cloned().unwrap_or_default();
-                let owner = Arc::downgrade(self);
-                for t in &types_arr {
-                    let Some(ts) = t.get("id").and_then(|x| x.as_str()) else { continue };
-                    let nm = t.get("name").and_then(|x| x.as_str()).unwrap_or("");
-                    let row = crate::kit::r#type::Type::new_with_external_id(owner.clone(), ts.into(), nm.to_string()).await;
-                    tw.insert(row.id.clone(), Arc::downgrade(&row));
-                    tys.push(row);
-                }
-            }
-
-            let owner = Arc::downgrade(self);
-            let design_arr_owned = dto.get("designs").and_then(crate::kit_backbone::json_array_or_block_items_ref).cloned().unwrap_or_default();
-            let mut appended: Vec<Arc<design::Design>> = Vec::new();
-            for d in &design_arr_owned {
-                let Some(ds) = d.get("id").and_then(|x| x.as_str()) else { continue };
-                let dn = d.get("name").and_then(|x| x.as_str()).unwrap_or(ds);
-                let des = crate::kit::design::Design::with_id(owner.clone(), ds.into(), dn.to_string()).await;
-                design::Design::hydrate_pieces_from_snapshot_json(&des, self, d).await?;
-                appended.push(des);
-            }
-            {
-                let mut designs_slot = self.designs.write().await;
-                let mut weak_map = self.design_weak_by_id.write().await;
-                designs_slot.clear();
-                weak_map.clear();
-                for des in appended {
-                    let did = des.id.clone();
-                    weak_map.insert(did, Arc::downgrade(&des));
-                    designs_slot.push(des);
-                }
-            }
-
-            Ok(())
-        }
     }
 
     #[Object(name = "Kit")]
@@ -5392,26 +5228,9 @@ pub mod vcs {
             self.arc_here().materialized_head_kit().await
         }
 
-        /// 🛰️ WIP bootstrap for `@semio/js` WASM: hydrates [`Graph::parent_root_for_active_draft`] then re-seeds a deep-cloned immutable parent line.
-        pub async fn new_overlay_from_kit_json(dto_json: serde_json::Value) -> Result<Arc<Self>, SemioError> {
-            let g = Self::new().await;
-            {
-                let mut slot = g.parent_root_for_active_draft.write().await;
-                slot.hydrate_from_kit_full_snapshot_json(&dto_json).await?;
-                if let Some(c) = dto_json.get("createdAt").and_then(|v| v.as_str()) {
-                    *slot.created.write().await = Some(crate::timestamp::Timestamp(c.to_string()));
-                }
-                if let Some(u) = dto_json.get("updatedAt").and_then(|v| v.as_str()) {
-                    *slot.updated.write().await = Some(crate::timestamp::Timestamp(u.to_string()));
-                }
-                let cloned = slot.deep_clone().await;
-                *slot = cloned;
-            }
-            {
-                let ini = g.parent_root_for_active_draft.read().await.deep_clone().await;
-                *g.initial_kit.write().await = ini;
-            }
-            Ok(g)
+        /// 🛰️ WIP bootstrap for `@semio/js` WASM: hydrates [`Graph::parent_root_for_active_draft`] via [`crate::kit_backbone::graph_new_overlay_from_initial_projection_json`] then re-seeds a deep-cloned immutable parent line.
+        pub async fn new_overlay_from_initial_kit_projection_json(dto_json: serde_json::Value) -> Result<Arc<Self>, SemioError> {
+            crate::kit_backbone::graph_new_overlay_from_initial_projection_json(dto_json).await
         }
 
         pub async fn compute_hash(&self) -> String {
@@ -6339,7 +6158,55 @@ pub mod operation {
         pub definition: Option<String>,
     }
 
-    /// @emoji 📦 Canonical sparse kit diff (camelCase) aligned with [`semio/assets/semio/metabolism.kit.diff.semio.json`]; `types` / `designs` / `files` / `folders` / `authors` keep raw JSON subtrees for full golden round-trip until every subtree has a typed apply path.
+    //#region 🔖canonical_kit_types_designs_wire
+    /// @emoji 📦 Sparse `types` triple; `modified[].diff` stays JSON until nested representation/connector apply is typed (metabolism fixture round-trip).
+    #[derive(Clone, Debug, Default, Serialize, Deserialize, PartialEq)]
+    #[serde(rename_all = "camelCase", default)]
+    pub struct TypesCollectionDiff {
+        pub removed: Vec<IdRef>,
+        pub modified: Vec<TypeModifiedWireRow>,
+        pub added: Vec<serde_json::Value>,
+    }
+
+    /// @emoji 📦 One `types.modified[]` row: `{ "type": { "id" }, "diff": { … } }`.
+    #[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
+    #[serde(rename_all = "camelCase")]
+    pub struct TypeModifiedWireRow {
+        #[serde(rename = "type")]
+        pub type_ref: IdRef,
+        pub diff: serde_json::Value,
+    }
+
+    /// @emoji 📦 Sparse `designs` triple; `modified[].diff` stays JSON until connections/attributes apply is typed.
+    #[derive(Clone, Debug, Default, Serialize, Deserialize, PartialEq)]
+    #[serde(rename_all = "camelCase", default)]
+    pub struct DesignsCollectionDiff {
+        pub removed: Vec<IdRef>,
+        pub modified: Vec<DesignModifiedWireRow>,
+        pub added: Vec<serde_json::Value>,
+    }
+
+    /// @emoji 📦 One `designs.modified[]` row: `{ "design": { "id" }, "diff": { … } }`.
+    #[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
+    #[serde(rename_all = "camelCase")]
+    pub struct DesignModifiedWireRow {
+        pub design: IdRef,
+        pub diff: serde_json::Value,
+    }
+
+    /// @emoji 🧷 Deserialize-only piece delta for [`Kit::apply_design_piece_modified_json`] (`fixPiece`, `drag`, `pose`); name/description stay on raw JSON for explicit-null semantics.
+    #[derive(Clone, Debug, Default, Deserialize)]
+    #[serde(rename_all = "camelCase", default)]
+    pub(crate) struct PieceDiffWire {
+        #[serde(rename = "fixPiece")]
+        pub fix_piece: Option<bool>,
+        pub drag: Option<crate::geom::OffsetInput>,
+        pub pose: Option<crate::geom::PositionInput>,
+    }
+
+    //#endregion 🔖canonical_kit_types_designs_wire
+
+    /// @emoji 📦 Canonical sparse kit diff (camelCase) aligned with [`semio/assets/semio/metabolism.kit.diff.semio.json`]; `types` / `designs` use typed envelopes with JSON-only `modified[].diff` leaves; `files` / `folders` / `authors` stay raw JSON until apply exists.
     #[derive(Clone, Debug, Default, Serialize, Deserialize, PartialEq)]
     #[serde(rename_all = "camelCase", default)]
     pub struct CanonicalKitDiff {
@@ -6353,9 +6220,9 @@ pub mod operation {
         pub license: Option<String>,
         pub preview: Option<String>,
         #[serde(skip_serializing_if = "Option::is_none")]
-        pub types: Option<serde_json::Value>,
+        pub types: Option<TypesCollectionDiff>,
         #[serde(skip_serializing_if = "Option::is_none")]
-        pub designs: Option<serde_json::Value>,
+        pub designs: Option<DesignsCollectionDiff>,
         #[serde(skip_serializing_if = "Option::is_none")]
         pub tags: Option<TagsCollectionDiff>,
         #[serde(skip_serializing_if = "Option::is_none")]
@@ -6698,17 +6565,25 @@ pub mod operation {
                     }
                     if kit.type_by_external_id(entity_id).await.is_some() {
                         return Ok(KitDiff(CanonicalKitDiff {
-                            types: Some(serde_json::json!({
-                                "modified": [{ "type": { "id": entity_id }, "diff": { "description": description } }]
-                            })),
+                            types: Some(TypesCollectionDiff {
+                                modified: vec![TypeModifiedWireRow {
+                                    type_ref: IdRef { id: entity_id.clone() },
+                                    diff: serde_json::json!({ "description": description }),
+                                }],
+                                ..Default::default()
+                            }),
                             ..Default::default()
                         }));
                     }
                     if kit.design_by_external_id(entity_id).await.is_some() {
                         return Ok(KitDiff(CanonicalKitDiff {
-                            designs: Some(serde_json::json!({
-                                "modified": [{ "design": { "id": entity_id }, "diff": { "description": description } }]
-                            })),
+                            designs: Some(DesignsCollectionDiff {
+                                modified: vec![DesignModifiedWireRow {
+                                    design: IdRef { id: entity_id.clone() },
+                                    diff: serde_json::json!({ "description": description }),
+                                }],
+                                ..Default::default()
+                            }),
                             ..Default::default()
                         }));
                     }
@@ -6746,17 +6621,25 @@ pub mod operation {
                     }
                     if kit.type_by_external_id(entity_id).await.is_some() {
                         return Ok(KitDiff(CanonicalKitDiff {
-                            types: Some(serde_json::json!({
-                                "modified": [{ "type": { "id": entity_id }, "diff": { "icon": icon } }]
-                            })),
+                            types: Some(TypesCollectionDiff {
+                                modified: vec![TypeModifiedWireRow {
+                                    type_ref: IdRef { id: entity_id.clone() },
+                                    diff: serde_json::json!({ "icon": icon }),
+                                }],
+                                ..Default::default()
+                            }),
                             ..Default::default()
                         }));
                     }
                     if kit.design_by_external_id(entity_id).await.is_some() {
                         return Ok(KitDiff(CanonicalKitDiff {
-                            designs: Some(serde_json::json!({
-                                "modified": [{ "design": { "id": entity_id }, "diff": { "icon": icon } }]
-                            })),
+                            designs: Some(DesignsCollectionDiff {
+                                modified: vec![DesignModifiedWireRow {
+                                    design: IdRef { id: entity_id.clone() },
+                                    diff: serde_json::json!({ "icon": icon }),
+                                }],
+                                ..Default::default()
+                            }),
                             ..Default::default()
                         }));
                     }
@@ -6776,17 +6659,25 @@ pub mod operation {
                     }
                     if kit.type_by_external_id(entity_id).await.is_some() {
                         return Ok(KitDiff(CanonicalKitDiff {
-                            types: Some(serde_json::json!({
-                                "modified": [{ "type": { "id": entity_id }, "diff": { "image": image } }]
-                            })),
+                            types: Some(TypesCollectionDiff {
+                                modified: vec![TypeModifiedWireRow {
+                                    type_ref: IdRef { id: entity_id.clone() },
+                                    diff: serde_json::json!({ "image": image }),
+                                }],
+                                ..Default::default()
+                            }),
                             ..Default::default()
                         }));
                     }
                     if kit.design_by_external_id(entity_id).await.is_some() {
                         return Ok(KitDiff(CanonicalKitDiff {
-                            designs: Some(serde_json::json!({
-                                "modified": [{ "design": { "id": entity_id }, "diff": { "image": image } }]
-                            })),
+                            designs: Some(DesignsCollectionDiff {
+                                modified: vec![DesignModifiedWireRow {
+                                    design: IdRef { id: entity_id.clone() },
+                                    diff: serde_json::json!({ "image": image }),
+                                }],
+                                ..Default::default()
+                            }),
                             ..Default::default()
                         }));
                     }
@@ -6950,12 +6841,13 @@ pub mod operation {
                         "pose": pose,
                     });
                     Ok(KitDiff(CanonicalKitDiff {
-                        designs: Some(serde_json::json!({
-                            "modified": [{
-                                "design": { "id": design_id.as_str() },
-                                "diff": { "pieces": { "added": [piece_json] } }
-                            }]
-                        })),
+                        designs: Some(DesignsCollectionDiff {
+                            modified: vec![DesignModifiedWireRow {
+                                design: IdRef { id: design_id.clone() },
+                                diff: serde_json::json!({ "pieces": { "added": [piece_json] } }),
+                            }],
+                            ..Default::default()
+                        }),
                         ..Default::default()
                     }))
                 }
@@ -6965,12 +6857,13 @@ pub mod operation {
                     };
                     ensure_piece(kit, design_id, piece_id).await?;
                     Ok(KitDiff(CanonicalKitDiff {
-                        designs: Some(serde_json::json!({
-                            "modified": [{
-                                "design": { "id": design_id.as_str() },
-                                "diff": { "pieces": { "removed": [{ "id": piece_id.as_str() }] } }
-                            }]
-                        })),
+                        designs: Some(DesignsCollectionDiff {
+                            modified: vec![DesignModifiedWireRow {
+                                design: IdRef { id: design_id.clone() },
+                                diff: serde_json::json!({ "pieces": { "removed": [{ "id": piece_id.as_str() }] } }),
+                            }],
+                            ..Default::default()
+                        }),
                         ..Default::default()
                     }))
                 }
@@ -6982,16 +6875,24 @@ pub mod operation {
                         return Err(SemioError::invalid("dragPieceInDesign expects Input::Offset"));
                     };
                     ensure_piece(kit, design_id, piece_id).await?;
+                    let drag = serde_json::to_value(offset).map_err(|e| SemioError::invalid(e.to_string()))?;
                     Ok(KitDiff(CanonicalKitDiff {
-                        designs: Some(serde_json::json!({
-                            "modified": [{
-                                "design": { "id": design_id.as_str() },
-                                "diff": { "pieces": { "modified": [{
-                                    "piece": { "id": piece_id.as_str() },
-                                    "diff": { "drag": { "u": offset.u, "v": offset.v } }
-                                }] } }
-                            }]
-                        })),
+                        designs: Some(DesignsCollectionDiff {
+                            modified: vec![DesignModifiedWireRow {
+                                design: IdRef { id: design_id.clone() },
+                                diff: serde_json::json!({
+                                    "pieces": {
+                                        "modified": [
+                                            {
+                                                "piece": { "id": piece_id.as_str() },
+                                                "diff": { "drag": drag }
+                                            }
+                                        ]
+                                    }
+                                }),
+                            }],
+                            ..Default::default()
+                        }),
                         ..Default::default()
                     }))
                 }
@@ -7002,21 +6903,23 @@ pub mod operation {
                     let Input::Offset { offset } = input else {
                         return Err(SemioError::invalid("dragPiecesInDesign expects Input::Offset"));
                     };
+                    let drag = serde_json::to_value(offset).map_err(|e| SemioError::invalid(e.to_string()))?;
                     let mut pm = Vec::new();
                     for piece_id in piece_ids {
                         ensure_piece(kit, design_id, piece_id).await?;
                         pm.push(serde_json::json!({
                             "piece": { "id": piece_id.as_str() },
-                            "diff": { "drag": { "u": offset.u, "v": offset.v } }
+                            "diff": { "drag": drag.clone() }
                         }));
                     }
                     Ok(KitDiff(CanonicalKitDiff {
-                        designs: Some(serde_json::json!({
-                            "modified": [{
-                                "design": { "id": design_id.as_str() },
-                                "diff": { "pieces": { "modified": pm } }
-                            }]
-                        })),
+                        designs: Some(DesignsCollectionDiff {
+                            modified: vec![DesignModifiedWireRow {
+                                design: IdRef { id: design_id.clone() },
+                                diff: serde_json::json!({ "pieces": { "modified": pm } }),
+                            }],
+                            ..Default::default()
+                        }),
                         ..Default::default()
                     }))
                 }
@@ -7026,15 +6929,22 @@ pub mod operation {
                     };
                     ensure_piece(kit, design_id, piece_id).await?;
                     Ok(KitDiff(CanonicalKitDiff {
-                        designs: Some(serde_json::json!({
-                            "modified": [{
-                                "design": { "id": design_id.as_str() },
-                                "diff": { "pieces": { "modified": [{
-                                    "piece": { "id": piece_id.as_str() },
-                                    "diff": { "fixPiece": true }
-                                }] } }
-                            }]
-                        })),
+                        designs: Some(DesignsCollectionDiff {
+                            modified: vec![DesignModifiedWireRow {
+                                design: IdRef { id: design_id.clone() },
+                                diff: serde_json::json!({
+                                    "pieces": {
+                                        "modified": [
+                                            {
+                                                "piece": { "id": piece_id.as_str() },
+                                                "diff": { "fixPiece": true }
+                                            }
+                                        ]
+                                    }
+                                }),
+                            }],
+                            ..Default::default()
+                        }),
                         ..Default::default()
                     }))
                 }
@@ -8123,7 +8033,7 @@ pub mod kit_graph_engine {
 
 pub mod kit_backbone {
     //! @emoji 🗄️ Dev JSON + local `.semio/` kit backbones: atomic single-file writes, multi-db SQLite + blobs dir, replay via [`kit_graph_engine::apply__operation_json`].
-    //! 🌐 The bundle wire format (`KitStoreBundleFile` + DTOs + `from_graph` / `hydrate_into_graph`) is wasm-compatible —
+    //! 🌐 The bundle wire format (`DevBackboneBundleDoc` + DTOs + `from_graph` / `hydrate_into_graph`) is wasm-compatible —
     //! sketchpad's WASM runtime serializes / hydrates the metabolism-shaped JSON directly. The SQLite + filesystem-IO parts
     //! (atomic writes, `DevJsonAttached`, `LocalAttached`) are native-only and gated below.
 
@@ -8167,6 +8077,187 @@ pub mod kit_backbone {
         }
     }
 
+    //#region 🔖 dev_backbone_initial_kit_projection
+    /// @emoji 📸 `KitFullDto`-shaped JSON for dev bundle `initialKit` baselines + deep-clone round-trips; **`serde_json::Value` stays inside [`kit_backbone`] for this projection only** (per single-source backbone plan).
+    pub(crate) async fn initial_kit_projection_value(kit: &std::sync::Arc<crate::kit::Kit>) -> serde_json::Value {
+        use crate::kit::r#type::Blueprint;
+        let kid = kit.workspace_kit_id().await;
+        let name = kit.name.read().await.clone();
+        let types_items: Vec<serde_json::Value> = {
+            let tys = kit.types.read().await;
+            let mut out = Vec::with_capacity(tys.len());
+            for t in tys.iter() {
+                let tid = t.id.as_str();
+                let nm = t.name.read().await.clone();
+                out.push(serde_json::json!({"id": tid, "name": nm, "connectors": []}));
+            }
+            out
+        };
+        let design_items: Vec<serde_json::Value> = {
+            let des = kit.designs.read().await;
+            let mut out = Vec::with_capacity(des.len());
+            for d in des.iter() {
+                let did = d.id.as_str();
+                let dn = d.name.read().await.clone();
+                let pieces: Vec<serde_json::Value> = {
+                    let pcs = d.pieces.read().await;
+                    let mut pj = Vec::with_capacity(pcs.len());
+                    for p in pcs.iter() {
+                        let ty_id = match &*p.blueprint.read().await {
+                            Blueprint::Type(ty) => ty.id.as_str().to_string(),
+                            _ => String::new(),
+                        };
+                        let pos = p.compute_flat_position().await;
+                        let pv = serde_json::to_value(&pos).unwrap_or_else(|_| serde_json::json!({}));
+                        let scale = p.scale.read().await.unwrap_or(1.0);
+                        let nm = p.name.read().await.clone().unwrap_or_default();
+                        pj.push(serde_json::json!({
+                            "id": p.id.as_str(),
+                            "name": nm,
+                            "type": { "id": ty_id },
+                            "plane": pv.get("plane").cloned().unwrap_or_else(|| serde_json::json!({})),
+                            "center": pv.get("center").cloned().unwrap_or_else(|| serde_json::json!({"u":0.0,"v":0.0})),
+                            "scale": scale,
+                            "color": "#000000",
+                            "props": [],
+                            "attributes": [],
+                        }));
+                    }
+                    pj
+                };
+                out.push(serde_json::json!({
+                    "id": did,
+                    "name": dn,
+                    "pieces": { "hash": crate::kit_backbone::KIT_BUNDLE_HASH_STUB, "items": pieces },
+                    "connections": { "hash": crate::kit_backbone::KIT_BUNDLE_HASH_STUB, "items": [] },
+                }));
+            }
+            out
+        };
+        serde_json::json!({
+            "id": kid.as_str(),
+            "name": name,
+            "types": { "hash": crate::kit_backbone::KIT_BUNDLE_HASH_STUB, "items": types_items },
+            "designs": { "hash": crate::kit_backbone::KIT_BUNDLE_HASH_STUB, "items": design_items },
+        })
+    }
+
+    /// @emoji 🧾 Overlays layout + metadata from `@semio/js` `KitFullDto`-style JSON (`types`, `designs`, `pieces`); **`serde_json::Value` only on this dev-backbone projection path**.
+    pub(crate) async fn hydrate_kit_from_initial_projection_value(kit: &std::sync::Arc<crate::kit::Kit>, dto: &serde_json::Value) -> Result<(), crate::error::SemioError> {
+        if let Some(n) = dto.get("name").and_then(|v| v.as_str()) {
+            *kit.name.write().await = n.to_string();
+        }
+        if let Some(id_override) = dto.get("id").and_then(|v| v.as_str()) {
+            *kit.snapshot_external_kit_id.write().await = Some(Id::from(id_override));
+        } else {
+            *kit.snapshot_external_kit_id.write().await = None;
+        }
+
+        {
+            let mut tys = kit.types.write().await;
+            let mut tw = kit.type_weak_by_id.write().await;
+            tys.clear();
+            tw.clear();
+            let types_arr = dto.get("types").and_then(crate::kit_backbone::json_array_or_block_items_ref).cloned().unwrap_or_default();
+            let owner = std::sync::Arc::downgrade(kit);
+            for t in &types_arr {
+                let Some(ts) = t.get("id").and_then(|x| x.as_str()) else { continue };
+                let nm = t.get("name").and_then(|x| x.as_str()).unwrap_or("");
+                let row = crate::kit::r#type::Type::new_with_external_id(owner.clone(), ts.into(), nm.to_string()).await;
+                tw.insert(row.id.clone(), std::sync::Arc::downgrade(&row));
+                tys.push(row);
+            }
+        }
+
+        let owner = std::sync::Arc::downgrade(kit);
+        let design_arr_owned = dto.get("designs").and_then(crate::kit_backbone::json_array_or_block_items_ref).cloned().unwrap_or_default();
+        let mut appended: Vec<std::sync::Arc<crate::kit::design::Design>> = Vec::new();
+        for d in &design_arr_owned {
+            let Some(ds) = d.get("id").and_then(|x| x.as_str()) else { continue };
+            let dn = d.get("name").and_then(|x| x.as_str()).unwrap_or(ds);
+            let des = crate::kit::design::Design::with_id(owner.clone(), ds.into(), dn.to_string()).await;
+            hydrate_design_pieces_from_snapshot_value(&des, kit, d).await?;
+            appended.push(des);
+        }
+        {
+            let mut designs_slot = kit.designs.write().await;
+            let mut weak_map = kit.design_weak_by_id.write().await;
+            designs_slot.clear();
+            weak_map.clear();
+            for des in appended {
+                let did = des.id.clone();
+                weak_map.insert(did, std::sync::Arc::downgrade(&des));
+                designs_slot.push(des);
+            }
+        }
+
+        Ok(())
+    }
+
+    /// @emoji 🪢 Hydrates [`crate::kit::design::Design`] pieces from one `designs[]` row (`pieces` block or array).
+    pub(crate) async fn hydrate_design_pieces_from_snapshot_value(
+        des: &std::sync::Arc<crate::kit::design::Design>,
+        kit: &std::sync::Arc<crate::kit::Kit>,
+        d_json: &serde_json::Value,
+    ) -> Result<(), crate::error::SemioError> {
+        use std::collections::HashMap;
+        {
+            let mut pcs = des.pieces.write().await;
+            pcs.clear();
+        }
+        *des.piece_weak_by_external_id.write().await = HashMap::new();
+        let plist = d_json.get("pieces").and_then(crate::kit_backbone::json_array_or_block_items_ref).cloned().unwrap_or_default();
+        let owner_des = std::sync::Arc::downgrade(des);
+        for pj in plist {
+            let pid = pj.get("id").and_then(|x| x.as_str()).ok_or_else(|| crate::error::SemioError::invalid("design piece missing id"))?;
+            let type_id_raw = match pj.get("type") {
+                Some(serde_json::Value::String(s)) => s.as_str(),
+                Some(serde_json::Value::Object(map)) => map.get("id").and_then(|x| x.as_str()).ok_or_else(|| crate::error::SemioError::invalid("design piece type object missing id"))?,
+                _ => {
+                    return Err(crate::error::SemioError::invalid("design piece missing type (string id or { id })"));
+                }
+            };
+            let ty = kit.types.read().await.iter().find(|t| t.id.as_str() == type_id_raw).cloned().ok_or_else(|| crate::error::SemioError::not_found("Type", type_id_raw))?;
+            let pose = pj.get("pose");
+            let plane_val = pj.get("plane").cloned().or_else(|| pose.and_then(|p| p.get("plane")).cloned()).unwrap_or_else(|| serde_json::json!({}));
+            let center_val = pj.get("center").cloned().or_else(|| pose.and_then(|p| p.get("center")).cloned()).unwrap_or_else(|| serde_json::json!({"u":0.0,"v":0.0}));
+            let position: crate::geom::PositionInput = serde_json::from_value(serde_json::json!({"plane": plane_val, "center": center_val})).map_err(|e| crate::error::SemioError::invalid(format!("piece position serde: {}", e)))?;
+            let scale = pj.get("scale").and_then(|s| s.as_f64()).unwrap_or(1.0);
+            let nm_opt = pj.get("name").and_then(|x| x.as_str());
+            let bp = crate::kit::r#type::Blueprint::Type(ty.clone());
+            let piece = crate::kit::design::piece::Piece::new_fixed_with_external_id(pid.into(), owner_des.clone(), bp, position).await;
+            if let Some(nm) = nm_opt {
+                piece.set_name(Some(nm.to_string())).await;
+            }
+            *piece.scale.write().await = Some(scale);
+            let _ = des.insert_piece(piece).await;
+        }
+        Ok(())
+    }
+
+    /// 🛰️ WIP bootstrap: hydrates [`crate::vcs::Graph::parent_root_for_active_draft`] from `KitFullDto`-shaped JSON then re-seeds the immutable parent line (WASM / host overlay entry).
+    pub async fn graph_new_overlay_from_initial_projection_json(dto_json: serde_json::Value) -> Result<std::sync::Arc<crate::vcs::Graph>, crate::error::SemioError> {
+        let g = crate::vcs::Graph::new().await;
+        {
+            let mut slot = g.parent_root_for_active_draft.write().await;
+            hydrate_kit_from_initial_projection_value(&*slot, &dto_json).await?;
+            if let Some(c) = dto_json.get("createdAt").and_then(|v| v.as_str()) {
+                *slot.created.write().await = Some(crate::timestamp::Timestamp(c.to_string()));
+            }
+            if let Some(u) = dto_json.get("updatedAt").and_then(|v| v.as_str()) {
+                *slot.updated.write().await = Some(crate::timestamp::Timestamp(u.to_string()));
+            }
+            let cloned = slot.deep_clone().await;
+            *slot = cloned;
+        }
+        {
+            let ini = g.parent_root_for_active_draft.read().await.deep_clone().await;
+            *g.initial_kit.write().await = ini;
+        }
+        Ok(g)
+    }
+    //#endregion 🔖 dev_backbone_initial_kit_projection
+
     /// @emoji 📜 `{hash, items: [T]}` envelope — the universal "block-hashed list" reused in every nested collection of the bundle.
     #[derive(Clone, Debug, serde::Deserialize, serde::Serialize)]
     pub struct BlockHashedListDto<T> {
@@ -8189,11 +8280,11 @@ pub mod kit_backbone {
 
     /// @emoji 📦 Top-level on-disk kit store bundle (mirrors `metabolism.new.kit.semio.json`: `schema / wip / authoritative / stage / conflicts / blobs`; each graph snapshot holds kit seed JSON under `initialKit`).
     #[derive(Clone, Debug, serde::Deserialize, serde::Serialize)]
-    pub struct KitStoreBundleFile {
+    pub struct DevBackboneBundleDoc {
         pub schema: String,
-        pub wip: GraphSnapshotDto,
-        pub authoritative: GraphSnapshotDto,
-        pub stage: GraphSnapshotDto,
+        pub wip: DevBackboneGraphHead,
+        pub authoritative: DevBackboneGraphHead,
+        pub stage: DevBackboneGraphHead,
         #[serde(default)]
         pub conflicts: BlockHashedListDto<serde_json::Value>,
         #[serde(default)]
@@ -8202,7 +8293,7 @@ pub mod kit_backbone {
 
     /// @emoji 🌐 One graph snapshot (head pointer used as `wip` / `authoritative` / `stage` heads in the bundle).
     #[derive(Clone, Debug, serde::Deserialize, serde::Serialize)]
-    pub struct GraphSnapshotDto {
+    pub struct DevBackboneGraphHead {
         pub id: String,
         pub hash: String,
         #[serde(default)]
@@ -8211,16 +8302,16 @@ pub mod kit_backbone {
         #[serde(rename = "initialKit", default = "empty_root_value")]
         pub root: serde_json::Value,
         #[serde(rename = "theKit", default)]
-        pub the_kit: TheKitVersionDto,
+        pub the_kit: DevBackboneTheKitHead,
         #[serde(default)]
         pub checkpoints: BlockHashedListDto<serde_json::Value>,
         #[serde(default)]
-        pub alternatives: BlockHashedListDto<AlternativeVersionDto>,
+        pub alternatives: BlockHashedListDto<DevBackboneAltHead>,
     }
 
     /// @emoji 🧭 Main kit version row; version-scoped changes live here, not on the graph snapshot.
     #[derive(Clone, Debug, serde::Deserialize, serde::Serialize)]
-    pub struct TheKitVersionDto {
+    pub struct DevBackboneTheKitHead {
         pub id: String,
         pub hash: String,
         #[serde(rename = "savedChanges", default)]
@@ -8229,7 +8320,7 @@ pub mod kit_backbone {
         pub unsaved_changes: BlockHashedListDto<VersionChangeDto>,
     }
 
-    impl Default for TheKitVersionDto {
+    impl Default for DevBackboneTheKitHead {
         fn default() -> Self {
             Self { id: "the-kit".to_string(), hash: KIT_BUNDLE_HASH_STUB.to_string(), saved_changes: BlockHashedListDto::default(), unsaved_changes: BlockHashedListDto::default() }
         }
@@ -8237,7 +8328,7 @@ pub mod kit_backbone {
 
     /// @emoji 🌿 Alternative version row; each alternative owns its own version-scoped changes.
     #[derive(Clone, Debug, serde::Deserialize, serde::Serialize)]
-    pub struct AlternativeVersionDto {
+    pub struct DevBackboneAltHead {
         pub id: String,
         pub hash: String,
         pub name: String,
@@ -8307,7 +8398,7 @@ pub mod kit_backbone {
         })
     }
 
-    impl GraphSnapshotDto {
+    impl DevBackboneGraphHead {
         /// @emoji 🌱 Empty graph snapshot stamped with `kit_id` (used for fresh `wip` / `authoritative` / `stage` heads).
         pub fn empty(kit_id: &str) -> Self {
             Self {
@@ -8315,21 +8406,21 @@ pub mod kit_backbone {
                 hash: KIT_BUNDLE_HASH_STUB.to_string(),
                 authors: BlockHashedListDto::default(),
                 root: empty_root_value(),
-                the_kit: TheKitVersionDto::default(),
+                the_kit: DevBackboneTheKitHead::default(),
                 checkpoints: BlockHashedListDto::default(),
                 alternatives: BlockHashedListDto::default(),
             }
         }
     }
 
-    impl KitStoreBundleFile {
+    impl DevBackboneBundleDoc {
         /// @emoji 🌱 Fresh empty bundle stamped with [`KIT_STORE_BUNDLE_SCHEMA`]; kit ids fill in once the live kit projects into `root`.
         pub fn template() -> Self {
             Self {
                 schema: KIT_STORE_BUNDLE_SCHEMA.to_string(),
-                wip: GraphSnapshotDto::empty(""),
-                authoritative: GraphSnapshotDto::empty(""),
-                stage: GraphSnapshotDto::empty(""),
+                wip: DevBackboneGraphHead::empty(""),
+                authoritative: DevBackboneGraphHead::empty(""),
+                stage: DevBackboneGraphHead::empty(""),
                 conflicts: BlockHashedListDto::default(),
                 blobs: BlockHashedListDto::default(),
             }
@@ -8425,7 +8516,7 @@ pub mod kit_backbone {
         pub async fn from_graph(graph: &crate::vcs::Graph) -> Self {
             let mut bundle = Self::template();
             let g = graph.arc_here();
-            let initial_dto = g.initial_kit.read().await.kit_full_snapshot_value().await;
+            let initial_dto = crate::kit_backbone::initial_kit_projection_value(&*g.initial_kit.read().await).await;
             let gid = graph.id.as_str().to_string();
             bundle.wip.id = gid.clone();
             bundle.authoritative.id = gid.clone();
@@ -8464,7 +8555,7 @@ pub mod kit_backbone {
                     Some(draft) => Self::change_lists_from_draft(&draft).await,
                     None => (BlockHashedListDto::default(), BlockHashedListDto::default()),
                 };
-                bundle.wip.alternatives.items.push(AlternativeVersionDto { id: alternative.id.as_str().to_string(), hash: KIT_BUNDLE_HASH_STUB.to_string(), name: alternative.name.read().await.clone(), saved_changes, unsaved_changes });
+                bundle.wip.alternatives.items.push(DevBackboneAltHead { id: alternative.id.as_str().to_string(), hash: KIT_BUNDLE_HASH_STUB.to_string(), name: alternative.name.read().await.clone(), saved_changes, unsaved_changes });
             }
 
             Self::hoist_inline_file_blobs_for_storage(&mut bundle);
@@ -8473,13 +8564,13 @@ pub mod kit_backbone {
 
         //#region 📦 bundle file blobs (content-addressed outside kit projection JSON)
 
-        /// @emoji 🔢 Blake3 hex digest of the UTF-8 blob wire (`data:` URL or raw); identical bytes ⇒ identical digest ⇒ one row in [`KitStoreBundleFile::blobs`].
+        /// @emoji 🔢 Blake3 hex digest of the UTF-8 blob wire (`data:` URL or raw); identical bytes ⇒ identical digest ⇒ one row in [`DevBackboneBundleDoc::blobs`].
         pub(crate) fn digest_kit_blob_wire(wire: &str) -> String {
             blake3::hash(wire.as_bytes()).to_hex().to_string()
         }
 
-        /// @emoji 📦 Hoist each `files[].blob` into [`KitStoreBundleFile::blobs`] keyed by [`digest_kit_blob_wire`], set `files[].blobHash`, strip inline payload (shared digest dedupes across graph `initialKit` projections).
-        pub fn hoist_inline_file_blobs_for_storage(bundle: &mut KitStoreBundleFile) {
+        /// @emoji 📦 Hoist each `files[].blob` into [`DevBackboneBundleDoc::blobs`] keyed by [`digest_kit_blob_wire`], set `files[].blobHash`, strip inline payload (shared digest dedupes across graph `initialKit` projections).
+        pub fn hoist_inline_file_blobs_for_storage(bundle: &mut DevBackboneBundleDoc) {
             let mut seen_digest = std::collections::HashSet::<String>::new();
             let mut collected: Vec<serde_json::Value> = Vec::new();
             Self::take_file_blobs_from_kit_json_into(&mut bundle.wip.root, &mut seen_digest, &mut collected);
@@ -8488,12 +8579,12 @@ pub mod kit_backbone {
         }
 
         /// @emoji 🧹 Drop [`blobs`] rows whose digest is not referenced by any `files[].blobHash` on `wip` / `authoritative` / `stage` `initialKit` snapshots.
-        pub fn purge_unreferenced_blobs(bundle: &mut KitStoreBundleFile) {
+        pub fn purge_unreferenced_blobs(bundle: &mut DevBackboneBundleDoc) {
             let refs = Self::referenced_blob_hashes_from_bundle(bundle);
             bundle.blobs.items.retain(|b| b.get("hash").and_then(|x| x.as_str()).map(|h| refs.contains(h)).unwrap_or(false));
         }
 
-        fn referenced_blob_hashes_from_bundle(bundle: &KitStoreBundleFile) -> std::collections::HashSet<String> {
+        fn referenced_blob_hashes_from_bundle(bundle: &DevBackboneBundleDoc) -> std::collections::HashSet<String> {
             let mut s = std::collections::HashSet::new();
             Self::collect_blob_hashes_from_kit_projection(&bundle.wip.root, &mut s);
             Self::collect_blob_hashes_from_kit_projection(&bundle.authoritative.root, &mut s);
@@ -8582,7 +8673,10 @@ pub mod kit_backbone {
             let mut wip_root = bundle.wip.root.clone();
             Self::merge_bundle_file_blobs_into_kit_json(&mut wip_root, &bundle.blobs.items);
             if !wip_root.is_null() && wip_root.is_object() {
-                graph.parent_root_for_active_draft.write().await.hydrate_from_kit_full_snapshot_json(&wip_root).await?;
+                {
+                    let w = graph.parent_root_for_active_draft.write().await;
+                    crate::kit_backbone::hydrate_kit_from_initial_projection_value(&*w, &wip_root).await?;
+                }
                 let ini = graph.parent_root_for_active_draft.read().await.deep_clone().await;
                 *graph.initial_kit.write().await = ini;
             }
@@ -8743,7 +8837,7 @@ CREATE TABLE IF NOT EXISTS conflict_stub (
 
     //#region ✍️ atomic json (native only)
     #[cfg(not(target_arch = "wasm32"))]
-    fn atomic_write_bundle(path: &Path, doc: &KitStoreBundleFile) -> Result<(), SemioError> {
+    fn atomic_write_bundle(path: &Path, doc: &DevBackboneBundleDoc) -> Result<(), SemioError> {
         let parent = path.parent().ok_or_else(|| SemioError::invalid("kit-store bundle path has no parent directory"))?;
         std::fs::create_dir_all(parent).map_err(|e| SemioError::invalid(format!("create kit-store bundle parent: {e}")))?;
         let tmp = path.with_extension("tmp.semio-write");
@@ -8754,9 +8848,9 @@ CREATE TABLE IF NOT EXISTS conflict_stub (
     }
 
     #[cfg(not(target_arch = "wasm32"))]
-    fn read_or_init_bundle(path: &Path) -> Result<KitStoreBundleFile, SemioError> {
+    fn read_or_init_bundle(path: &Path) -> Result<DevBackboneBundleDoc, SemioError> {
         if !path.exists() {
-            return Ok(KitStoreBundleFile::template());
+            return Ok(DevBackboneBundleDoc::template());
         }
         let s = std::fs::read_to_string(path).map_err(|e| SemioError::invalid(format!("read kit-store bundle: {e}")))?;
         serde_json::from_str(&s).map_err(|e| SemioError::invalid(format!("parse kit-store bundle: {e}")))
@@ -8786,7 +8880,7 @@ CREATE TABLE IF NOT EXISTS conflict_stub (
     #[cfg(not(target_arch = "wasm32"))]
     impl DevBackboneAttached {
         /// @emoji 📥 Read the on-disk bundle (or fresh template if file is absent).
-        pub fn read_bundle(&self) -> Result<KitStoreBundleFile, SemioError> {
+        pub fn read_bundle(&self) -> Result<DevBackboneBundleDoc, SemioError> {
             read_or_init_bundle(&self.path)
         }
 
@@ -8886,11 +8980,19 @@ CREATE TABLE IF NOT EXISTS conflict_stub (
     }
     //#endregion 🧩 attached variants
 
-    /// @emoji 🧪 Build [`StoredOperation`] rows from `kit-store.golden.operations.semio.json` (US-001 fixture) for persistence tests.
+    /// @emoji 📑 US-001 golden JSON: top-level `operations` array, or legacy key `ops` (see `kit-store.golden.ops.semio.json`).
+    pub fn golden_ops_records_ref(src: &serde_json::Value) -> Result<&Vec<serde_json::Value>, SemioError> {
+        src.get("operations")
+            .and_then(|v| v.as_array())
+            .or_else(|| src.get("ops").and_then(|v| v.as_array()))
+            .ok_or_else(|| SemioError::invalid("golden operations missing `operations` or `ops` array"))
+    }
+
+    /// @emoji 🧪 Build [`StoredOperation`] rows from `kit-store.golden.ops.semio.json` (US-001 fixture) for persistence tests.
     pub fn stored_ops_from_golden_ops_json(src: &serde_json::Value) -> Result<Vec<StoredOperation>, SemioError> {
         let draft_id = src["draftId"].as_str().ok_or_else(|| SemioError::invalid("golden operations missing draftId"))?.to_string();
         let transaction_id = src["transactionId"].as_str().ok_or_else(|| SemioError::invalid("golden operations missing transactionId"))?.to_string();
-        let arr = src["operations"].as_array().ok_or_else(|| SemioError::invalid("golden operations missing operations"))?;
+        let arr = golden_ops_records_ref(src)?;
         let mut out = Vec::new();
         for rec in arr {
             let kind = rec["kind"].as_str().ok_or_else(|| SemioError::invalid("operation.kind"))?;
@@ -9144,10 +9246,10 @@ pub mod worker {
         }
 
         /// 🛰️ WASM/host bootstrap: hydrate WIP [`Graph`] from `@semio/js` kit JSON snapshot; authoritative line stays mint-empty.
-        pub async fn spawn_wip_overlay_from_kit_dto(dto: serde_json::Value) -> Result<Arc<Self>, crate::error::SemioError> {
+        pub async fn spawn_wip_overlay_from_initial_kit_projection_json(dto: serde_json::Value) -> Result<Arc<Self>, crate::error::SemioError> {
             let bus = EventBus::new(1024);
 
-            let wip_graph = Graph::new_overlay_from_kit_json(dto).await?;
+            let wip_graph = Graph::new_overlay_from_initial_kit_projection_json(dto).await?;
             let auth_graph = Graph::new().await;
 
             let (wip_tx, wip_rx) = async_channel::unbounded::<Command>();
@@ -9425,7 +9527,7 @@ pub mod gql {
         pub async fn kit_store_bundle_json(&self, ctx: &Context<'_>) -> async_graphql::Result<String> {
             let rt = ctx.data::<Arc<ParentRuntime>>()?;
             rt.wip_graph.ensure_default_seed_state().await;
-            let bundle = crate::kit_backbone::KitStoreBundleFile::from_graph(rt.wip_graph.as_ref()).await;
+            let bundle = crate::kit_backbone::DevBackboneBundleDoc::from_graph(rt.wip_graph.as_ref()).await;
             serde_json::to_string_pretty(&bundle).map_err(|e| async_graphql::Error::new(e.to_string()))
         }
     }
@@ -10590,10 +10692,10 @@ pub mod wasm_bridge {
         if v.get("schema").and_then(|s| s.as_str()) == Some(crate::kit_backbone::KIT_STORE_BUNDLE_SCHEMA) {
             let rt = ParentRuntime::spawn().await;
             let s = serde_json::to_string(&v).map_err(|e| crate::error::SemioError::invalid(e.to_string()))?;
-            crate::kit_backbone::KitStoreBundleFile::hydrate_into_graph(&rt.wip_graph, &s).await?;
+            crate::kit_backbone::DevBackboneBundleDoc::hydrate_into_graph(&rt.wip_graph, &s).await?;
             Ok(rt)
         } else {
-            ParentRuntime::spawn_wip_overlay_from_kit_dto(v).await
+            ParentRuntime::spawn_wip_overlay_from_initial_kit_projection_json(v).await
         }
     }
 
@@ -10859,7 +10961,7 @@ mod tests {
 
     #[test]
     fn kit_store_bundle_serialize_hydrate_round_trip_via_graphql() {
-        // 📸 Renames then hydrates via [`crate::kit_backbone::KitStoreBundleFile`] (bundle GraphQL entry points were dropped from the target schema).
+        // 📸 Renames then hydrates via [`crate::kit_backbone::DevBackboneBundleDoc`] (bundle GraphQL entry points were dropped from the target schema).
         block_on(async {
             let rt = crate::worker::ParentRuntime::spawn().await;
             let g = rt.wip_graph.clone();
@@ -10912,7 +11014,7 @@ mod tests {
                 .await;
             std::thread::sleep(std::time::Duration::from_millis(150));
 
-            let json_a = serde_json::to_string(&crate::kit_backbone::KitStoreBundleFile::from_graph(g.as_ref()).await).expect("serialize bundle");
+            let json_a = serde_json::to_string(&crate::kit_backbone::DevBackboneBundleDoc::from_graph(g.as_ref()).await).expect("serialize bundle");
 
             let v: serde_json::Value = serde_json::from_str(&json_a).expect("bundle parses");
             assert_eq!(v["schema"].as_str().unwrap(), crate::kit_backbone::KIT_STORE_BUNDLE_SCHEMA);
@@ -10929,9 +11031,9 @@ mod tests {
             assert!(!v["wip"]["theKit"]["unsavedChanges"]["items"].as_array().unwrap().is_empty(), "default unsaved change present on the kit version");
 
             let rt_b = crate::worker::ParentRuntime::spawn().await;
-            crate::kit_backbone::KitStoreBundleFile::hydrate_into_graph(&rt_b.wip_graph, &json_a).await.expect("hydrate");
+            crate::kit_backbone::DevBackboneBundleDoc::hydrate_into_graph(&rt_b.wip_graph, &json_a).await.expect("hydrate");
 
-            let json_b = serde_json::to_string(&crate::kit_backbone::KitStoreBundleFile::from_graph(rt_b.wip_graph.as_ref()).await).expect("serialize bundle b");
+            let json_b = serde_json::to_string(&crate::kit_backbone::DevBackboneBundleDoc::from_graph(rt_b.wip_graph.as_ref()).await).expect("serialize bundle b");
             let vb: serde_json::Value = serde_json::from_str(&json_b).expect("bundle b parses");
             assert_eq!(vb["wip"]["initialKit"]["name"].as_str().unwrap_or(""), "the kit", "immutable baseline survives bundle round-trip");
         });
@@ -11209,15 +11311,16 @@ mod tests {
     #[test]
     fn kit_store_golden_ops_replay_matches_expected_invariants() {
         block_on(async {
-            let path_ops = Path::new(env!("CARGO_MANIFEST_DIR")).join("../assets/semio/kit-store.golden.operations.semio.json");
+            let path_ops = Path::new(env!("CARGO_MANIFEST_DIR")).join("../assets/semio/kit-store.golden.ops.semio.json");
             let path_exp = Path::new(env!("CARGO_MANIFEST_DIR")).join("../assets/semio/kit-store.golden.expected.semio.json");
-            let ops_json: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(path_ops).expect("read kit-store.golden.operations")).expect("parse operations");
+            let ops_json: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(path_ops).expect("read kit-store.golden.ops")).expect("parse operations");
             let exp: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(path_exp).expect("read kit-store.golden.expected")).expect("parse expected");
 
             let g = crate::vcs::Graph::new().await;
             let draft_id = crate::id::Id::from(ops_json["draftId"].as_str().expect("draftId"));
             let tx_id = crate::id::Id::from(ops_json["transactionId"].as_str().expect("transactionId"));
-            for rec in ops_json["operations"].as_array().expect("operations") {
+            let golden_ops = crate::kit_backbone::golden_ops_records_ref(&ops_json).expect("operations|ops");
+            for rec in golden_ops {
                 let kind = rec["kind"].as_str().expect("operation kind");
                 let input = &rec["input"];
                 match kind {
@@ -11267,15 +11370,16 @@ mod tests {
     #[test]
     fn kit_store_golden_ops_via__op_json_match_fingerprint() {
         block_on(async {
-            let path_ops = Path::new(env!("CARGO_MANIFEST_DIR")).join("../assets/semio/kit-store.golden.operations.semio.json");
+            let path_ops = Path::new(env!("CARGO_MANIFEST_DIR")).join("../assets/semio/kit-store.golden.ops.semio.json");
             let path_exp = Path::new(env!("CARGO_MANIFEST_DIR")).join("../assets/semio/kit-store.golden.expected.semio.json");
-            let ops_json: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(path_ops).expect("read kit-store.golden.operations")).expect("parse operations");
+            let ops_json: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(path_ops).expect("read kit-store.golden.ops")).expect("parse operations");
             let exp: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(path_exp).expect("read kit-store.golden.expected")).expect("parse expected");
 
             let g = crate::vcs::Graph::new().await;
             let draft_id = crate::id::Id::from(ops_json["draftId"].as_str().expect("draftId"));
             let tx_id = crate::id::Id::from(ops_json["transactionId"].as_str().expect("transactionId"));
-            for rec in ops_json["operations"].as_array().expect("operations") {
+            let golden_ops = crate::kit_backbone::golden_ops_records_ref(&ops_json).expect("operations|ops");
+            for rec in golden_ops {
                 let kind = rec["kind"].as_str().expect("operation kind");
                 let payload = serde_json::to_string(rec.get("input").expect("input")).expect("payload json");
                 let applied = crate::kit_graph_engine::apply__operation_json(&g, &draft_id, &tx_id, kind, &payload).await.expect("apply__operation_json");
@@ -11296,7 +11400,7 @@ mod tests {
             let dir = tempfile::tempdir().expect("temp dir");
             let path = dir.path().join("dev-kit.json");
 
-            let path_ops = Path::new(env!("CARGO_MANIFEST_DIR")).join("../assets/semio/kit-store.golden.operations.semio.json");
+            let path_ops = Path::new(env!("CARGO_MANIFEST_DIR")).join("../assets/semio/kit-store.golden.ops.semio.json");
             let path_exp = Path::new(env!("CARGO_MANIFEST_DIR")).join("../assets/semio/kit-store.golden.expected.semio.json");
             let golden_ops: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(path_ops).expect("read operations")).expect("parse golden operations");
             let exp: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(path_exp).expect("read expected")).expect("parse golden expected");
@@ -11304,7 +11408,7 @@ mod tests {
             let stored = crate::kit_backbone::stored_ops_from_golden_ops_json(&golden_ops).expect("golden → stored operations");
             let uri_full = format!("file://{}", path.display());
             let norm = crate::kit_backbone::normalize_connection_uri(&uri_full);
-            let bundle = crate::kit_backbone::KitStoreBundleFile::from_stored__ops(&stored);
+            let bundle = crate::kit_backbone::DevBackboneBundleDoc::from_stored__ops(&stored);
             std::fs::write(&path, serde_json::to_string_pretty(&bundle).expect("serialize kit-store bundle")).expect("write kit-store bundle");
 
             let g = crate::vcs::Graph::new().await;
@@ -11328,7 +11432,7 @@ mod tests {
             let uri_local = format!("local://{}", proj_canon.display());
             let norm = crate::kit_backbone::normalize_connection_uri(&uri_local);
 
-            let path_ops = Path::new(env!("CARGO_MANIFEST_DIR")).join("../assets/semio/kit-store.golden.operations.semio.json");
+            let path_ops = Path::new(env!("CARGO_MANIFEST_DIR")).join("../assets/semio/kit-store.golden.ops.semio.json");
             let path_exp = Path::new(env!("CARGO_MANIFEST_DIR")).join("../assets/semio/kit-store.golden.expected.semio.json");
             let golden_ops: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(path_ops).expect("read operations")).expect("parse golden operations");
             let exp: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(path_exp).expect("read expected")).expect("parse golden expected");
@@ -11370,7 +11474,7 @@ mod tests {
     #[test]
     fn kit_store_bundle_template_round_trips_metabolism_top_level_keys() {
         // 🧾 The empty bundle template is byte-stable in its top-level shape: serialise → deserialise → keys match.
-        let bundle = crate::kit_backbone::KitStoreBundleFile::template();
+        let bundle = crate::kit_backbone::DevBackboneBundleDoc::template();
         let s = serde_json::to_string_pretty(&bundle).expect("serialize empty template");
         let v: serde_json::Value = serde_json::from_str(&s).expect("parse template");
         for k in ["schema", "wip", "authoritative", "stage", "conflicts", "blobs"] {
@@ -11404,7 +11508,7 @@ mod tests {
     #[cfg(not(target_arch = "wasm32"))]
     #[test]
     fn kit_bundle_purge_unreferenced_blob_rows() {
-        let mut bundle = crate::kit_backbone::KitStoreBundleFile::template();
+        let mut bundle = crate::kit_backbone::DevBackboneBundleDoc::template();
         bundle.blobs.items.push(serde_json::json!({ "hash": "orphan_digest_deadbeef", "blob": "data:,x" }));
         bundle.wip.root = serde_json::json!({
             "id": "k-purge",
@@ -11413,7 +11517,7 @@ mod tests {
             "updatedAt": "2020-01-01T00:00:00.000Z",
             "files": [],
         });
-        crate::kit_backbone::KitStoreBundleFile::purge_unreferenced_blobs(&mut bundle);
+        crate::kit_backbone::DevBackboneBundleDoc::purge_unreferenced_blobs(&mut bundle);
         assert!(bundle.blobs.items.is_empty());
     }
 
@@ -11421,8 +11525,8 @@ mod tests {
     #[test]
     fn kit_bundle_hoist_and_materialize_file_blobs_round_trip() {
         let blob_txt = "data:application/octet-stream;base64,QQ==";
-        let dig = crate::kit_backbone::KitStoreBundleFile::digest_kit_blob_wire(blob_txt);
-        let mut bundle = crate::kit_backbone::KitStoreBundleFile::template();
+        let dig = crate::kit_backbone::DevBackboneBundleDoc::digest_kit_blob_wire(blob_txt);
+        let mut bundle = crate::kit_backbone::DevBackboneBundleDoc::template();
         bundle.wip.root = serde_json::json!({
             "id": "k-blob",
             "name": "K",
@@ -11436,13 +11540,13 @@ mod tests {
                 "updatedAt": "2020-01-01T00:00:00.000Z",
             }],
         });
-        crate::kit_backbone::KitStoreBundleFile::hoist_inline_file_blobs_for_storage(&mut bundle);
+        crate::kit_backbone::DevBackboneBundleDoc::hoist_inline_file_blobs_for_storage(&mut bundle);
         assert!(bundle.wip.root["files"][0].as_object().expect("file obj").get("blob").is_none());
         assert_eq!(bundle.wip.root["files"][0]["blobHash"].as_str().expect("blobHash"), dig);
         assert_eq!(bundle.blobs.items.len(), 1);
         assert_eq!(bundle.blobs.items[0]["hash"].as_str().expect("blob row hash"), dig);
         let mut merged = bundle.wip.root.clone();
-        crate::kit_backbone::KitStoreBundleFile::merge_bundle_file_blobs_into_kit_json(&mut merged, &bundle.blobs.items);
+        crate::kit_backbone::DevBackboneBundleDoc::merge_bundle_file_blobs_into_kit_json(&mut merged, &bundle.blobs.items);
         assert_eq!(merged["files"][0]["blob"].as_str().expect("merged blob"), blob_txt);
     }
 
@@ -11450,7 +11554,7 @@ mod tests {
     #[test]
     fn kit_store_bundle_initialize_with_unsaved_change_seeds_root_checkpoint_and_change() {
         // 🌱 Bundle bootstrap matches sketchpad "create dev kit (json)": one root, one checkpoint, one unsaved change on the version.
-        let bundle = crate::kit_backbone::KitStoreBundleFile::initialize_with_unsaved_change("kit-id-1", "change-1", "ckpt-1");
+        let bundle = crate::kit_backbone::DevBackboneBundleDoc::initialize_with_unsaved_change("kit-id-1", "change-1", "ckpt-1");
         assert_eq!(bundle.schema, crate::kit_backbone::KIT_STORE_BUNDLE_SCHEMA);
         assert_eq!(bundle.wip.id, "kit-id-1");
         assert_eq!(bundle.authoritative.id, "kit-id-1");
@@ -11506,7 +11610,7 @@ mod tests {
     #[test]
     fn kit_store_bundle_append_unsaved_edit_creates_change_and_edit_paths() {
         // ➕ Appending to a fresh template materialises wip.theKit.unsavedChanges[0].edits[0].forwards[0] without touching authoritative/stage.
-        let mut bundle = crate::kit_backbone::KitStoreBundleFile::template();
+        let mut bundle = crate::kit_backbone::DevBackboneBundleDoc::template();
         bundle.append_unsaved_edit("change-y", "kit.design.piece.createdFixedPiece", serde_json::json!({"hello": "world"}));
         assert_eq!(bundle.wip.the_kit.unsaved_changes.items.len(), 1, "wip.theKit unsaved change created");
         let change = &bundle.wip.the_kit.unsaved_changes.items[0];
@@ -11541,7 +11645,7 @@ mod tests {
         block_on(async {
             let graph = crate::vcs::Graph::new().await;
             let alt_id = graph.create_alternative_from_tip("branch-a".to_string(), None).await.expect("alternative");
-            let bundle = crate::kit_backbone::KitStoreBundleFile::from_graph(graph.as_ref()).await;
+            let bundle = crate::kit_backbone::DevBackboneBundleDoc::from_graph(graph.as_ref()).await;
             assert!(bundle.wip.the_kit.saved_changes.items.is_empty());
             let alt = bundle.wip.alternatives.items.iter().find(|a| a.id == alt_id.as_str()).expect("alternative dto");
             assert_eq!(alt.name, "branch-a");

@@ -1,8 +1,8 @@
-// #region 🧲Header
+//#region 🧲Header
 // 2025-2026 Ueli Saluz <ueli@semio-tech.com>
 // GNU LGPL-3.0 or later — GraphQL WASM worker: JSON `execute` / `subscribe` only (no JS-side DTO marshaling).
 // Bundled by Vite so `@semio/rs-wasm` resolves; Blob workers cannot import bare specifiers.
-// #endregion 🧲Header
+//#endregion 🧲Header
 
 /// <reference lib="webworker" />
 
