@@ -995,6 +995,13 @@ semio/js:
 
 ---
 
+Currently kit class is the root that owns gqlTransport etc in index.ts
+Create a new class called Store that is the root.
+Kit is just a class beneath Version interface.
+Follow @target.schema.graphql
+
+---
+
 There MUST NOT be any kit state or caching in semio/js.
 The only state tracked in semio/js are request ids to match the events (some of them are responses to the requests).
 Every read MUST be directly forwarded to semio/rs.
@@ -1102,7 +1109,7 @@ semio/rs:
 
 ---
 
-The target graphql has significantly changed. Make sure to refactor  to exactly yield this schema and refactor downstream  semio/js, semio/react, semio/sketchpad.   
+The target graphql has significantly changed. Make sure to refactor to exactly yield this schema and refactor downstream semio/js, semio/react, semio/sketchpad.
 
 ---
 

@@ -28,7 +28,6 @@ import type {
   SetError,
   SetResult,
   Side,
-  Store as Kit,
   Vector,
 } from "@semio/js";
 import {
@@ -53,10 +52,11 @@ import {
   Folder,
   Graph,
   Group,
+  Kit,
   KIT_EVENT_STREAM_SUBSCRIPTION,
   kitReadPointKey,
   Layer,
-  openKit,
+  openStore,
   Operation,
   Piece,
   PiecesOperations,
@@ -99,11 +99,12 @@ export {
   Folder,
   Graph,
   Group,
+  Kit,
   Store,
   KIT_EVENT_STREAM_SUBSCRIPTION,
   kitReadPointKey,
   Layer,
-  openKit,
+  openStore,
   Operation,
   Piece,
   PiecesOperations,
@@ -145,7 +146,7 @@ export type FieldReadState<T> = Readonly<{
 export type FieldBindOptions<E, T> = Readonly<{
   /** @emoji 🧲 Single async read (one GraphQL selection / entity method). */
   read: (entity: E) => Promise<T>;
-  /** @emoji 📡 When set, {@link Kit#bus} {@code subscribeKind}; when omitted, only mount + {@link FieldReadState#refresh} pull fresh data. */
+  /** @emoji 📡 When set, {@link Store#bus} {@code subscribeKind}; when omitted, only mount + {@link FieldReadState#refresh} pull fresh data. */
   eventKind?: string;
   /** @emoji 🪝  source; re-invoked each render — keep stable via {@link React#useCallback}. */
   get: () => E | null;
@@ -187,13 +188,13 @@ export function bindFieldToReact<E extends Entity, T>(opts: FieldBindOptions<E, 
 
     React.useEffect(() => {
       void refresh();
-    }, [refresh, entity?.id, entity?.kit]);
+    }, [refresh, entity?.id, entity?.store]);
 
     React.useEffect(() => {
       const e = entityRef.current;
       if (e == null) return;
-      const kit = e.kit;
-      if (eventKind != null && eventKind !== "") return kit.bus.subscribeKind(eventKind, () => void refresh());
+      const store = e.store;
+      if (eventKind != null && eventKind !== "") return store.bus.subscribeKind(eventKind, () => void refresh());
       return undefined;
     }, [entity, eventKind, refresh]);
 
@@ -245,13 +246,13 @@ export function bindDefinedFieldToReact<E extends Entity, T>(opts: DefinedFieldB
 
     React.useEffect(() => {
       void refresh();
-    }, [refresh, entity?.id, entity?.kit]);
+    }, [refresh, entity?.id, entity?.store]);
 
     React.useEffect(() => {
       const e = entityRef.current;
       if (e == null) return;
-      const kit = e.kit;
-      if (eventKind != null && eventKind !== "") return kit.bus.subscribeKind(eventKind, () => void refresh());
+      const store = e.store;
+      if (eventKind != null && eventKind !== "") return store.bus.subscribeKind(eventKind, () => void refresh());
       return undefined;
     }, [entity, eventKind, refresh]);
 
@@ -315,25 +316,25 @@ export function bindOperationToReact<E extends Entity, Args extends unknown[] = 
 // #endregion 🪝OpBind
 
 // #region 🪝KitFieldBind
-/** @emoji 🪝 Kit-scoped field bind (uses {@link Kit#bus} like {@link bindFieldToReact}). */
+/** @emoji 🪝 Kit-scoped field bind (uses {@link Store#bus} like {@link bindFieldToReact}). */
 export type KitFieldBindOptions<T> = Readonly<{
-  read: (kit: Kit) => Promise<T>;
+  read: (store: Store) => Promise<T>;
   eventKind?: string;
-  getKit: () => Kit | null;
+  getStore: () => Store | null;
 }>;
 
 export function bindKitFieldToReact<T>(opts: KitFieldBindOptions<T>): () => FieldReadState<T> {
-  const { read, eventKind, getKit } = opts;
+  const { read, eventKind, getStore } = opts;
   return function useKitBound(): FieldReadState<T> {
-    const kit = getKit();
+    const store = getStore();
     const [value, setValue] = React.useState<T | undefined>(undefined);
     const [loading, setLoading] = React.useState(false);
     const [error, setError] = React.useState<unknown>(undefined);
-    const kitRef = React.useRef(kit);
-    kitRef.current = kit;
+    const storeRef = React.useRef(store);
+    storeRef.current = store;
 
     const refresh = React.useCallback(async () => {
-      const k = kitRef.current;
+      const k = storeRef.current;
       if (k == null) {
         setValue(undefined);
         setError(undefined);
@@ -353,14 +354,14 @@ export function bindKitFieldToReact<T>(opts: KitFieldBindOptions<T>): () => Fiel
 
     React.useEffect(() => {
       void refresh();
-    }, [refresh, kit]);
+    }, [refresh, store]);
 
     React.useEffect(() => {
-      const k = kitRef.current;
+      const k = storeRef.current;
       if (k == null) return;
       if (eventKind != null && eventKind !== "") return k.bus.subscribeKind(eventKind, () => void refresh());
       return undefined;
-    }, [kit, eventKind, refresh]);
+    }, [store, eventKind, refresh]);
 
     return { value, loading, error, refresh };
   };
@@ -369,17 +370,17 @@ export function bindKitFieldToReact<T>(opts: KitFieldBindOptions<T>): () => Fiel
 
 // #region 🪝KitOpBind
 /** @emoji 🪝 Binds a {@link Kit} operation to `[run, status]`. */
-export function bindKitOperationToReact<Args extends unknown[] = []>(impl: (kit: Kit, ...args: Args) => Promise<SetResult>): (getKit: () => Kit | null) => readonly [(...args: Args) => Promise<SetResult>, OperationStatus] {
-  return function useKitOp(getKit: () => Kit | null): readonly [(...args: Args) => Promise<SetResult>, OperationStatus] {
-    const getRef = React.useRef(getKit);
-    getRef.current = getKit;
+export function bindKitOperationToReact<Args extends unknown[] = []>(impl: (store: Store, ...args: Args) => Promise<SetResult>): (getStore: () => Store | null) => readonly [(...args: Args) => Promise<SetResult>, OperationStatus] {
+  return function useKitOp(getStore: () => Store | null): readonly [(...args: Args) => Promise<SetResult>, OperationStatus] {
+    const getRef = React.useRef(getStore);
+    getRef.current = getStore;
     const [status, setStatus] = React.useState<OperationStatus>({ kind: "idle" });
 
     const run = React.useCallback(
       async (...args: Args) => {
         const k = getRef.current();
         if (k == null) {
-          const result: SetResult = { ok: false, error: { kind: "Disposed", message: "No kit in React context.", field: undefined, entity: undefined } };
+          const result: SetResult = { ok: false, error: { kind: "Disposed", message: "No store in React context.", field: undefined, entity: undefined } };
           setStatus({ kind: "settled", result });
           return result;
         }
@@ -407,7 +408,7 @@ export function bindKitOperationToReact<Args extends unknown[] = []>(impl: (kit:
 
 // #region 🫳ShellHost
 /** @emoji 🪟 Sketchpad kit-store factory signature (host wiring; store shape is host-owned). */
-export type SketchpadKitStoreFactory = (kit: Kit) => Promise<unknown>;
+export type SketchpadKitStoreFactory = (store: Store) => Promise<unknown>;
 
 /** @emoji 🪟 Which persistence-backed kit open paths are available in the host shell. */
 export type SketchpadKitKindAvailability = Readonly<Record<"temporary" | "file" | "folder" | "remote", boolean>>;
@@ -433,7 +434,7 @@ export function useIsInActiveKitTab(): boolean {
   return React.useContext(ActiveKitTabContext) != null;
 }
 
-/** @emoji 🔌 Optional WASM host bindings (store + client) parallel to {@link KitContextProvider}. */
+/** @emoji 🔌 Optional WASM host bindings (store + client) parallel to {@link StoreContextProvider}. */
 export type KitWasmHostState = Readonly<{ kitTabId: string; store: unknown; kitClient: unknown | null }>;
 
 const KitWasmHostContext = React.createContext<KitWasmHostState | null>(null);
@@ -445,21 +446,21 @@ export function useKitWasmHost(): KitWasmHostState | null {
 
 export type KitWasmMountProviderProps = Readonly<{
   kitId?: string;
-  store: unknown;
+  hostStore: unknown;
   kitClient?: unknown;
-  kit?: Kit | null;
+  store?: Store | null;
   children: ReactNode;
 }>;
 
-/** @emoji 🔌 Publishes host store/client and optionally wraps {@link KitContextProvider} when {@code kit} is known. */
+/** @emoji 🔌 Publishes host store/client and optionally wraps {@link StoreContextProvider} when {@code kit} is known. */
 export function KitWasmMountProvider(props: KitWasmMountProviderProps): React.ReactElement {
   const host = React.useMemo<KitWasmHostState>(
-    () => ({ kitTabId: props.kitId ?? "", store: props.store, kitClient: props.kitClient ?? null }),
-    [props.kitId, props.store, props.kitClient],
+    () => ({ kitTabId: props.kitId ?? "", store: props.hostStore, kitClient: props.kitClient ?? null }),
+    [props.kitId, props.hostStore, props.kitClient],
   );
   const inner =
-    props.kit != null
-      ? React.createElement(KitContextProvider, { kit: props.kit, children: props.children })
+    props.store != null
+      ? React.createElement(StoreContextProvider, { store: props.store, children: props.children })
       : props.children;
   return React.createElement(KitWasmHostContext.Provider, { value: host }, inner);
 }
@@ -491,51 +492,51 @@ export function useKitAlternatives(): readonly unknown[] {
 
 // #region 🎭Contexts
 // #region 🎒Kit
-const KitContext = React.createContext<Kit | null>(null);
+const StoreContext = React.createContext<Store | null>(null);
 
-export type KitContextProviderProps = Readonly<{
-  kit: Kit;
+export type StoreContextProviderProps = Readonly<{
+  store: Store;
   initialReadPoint?: KitReadPoint;
   children: ReactNode;
 }>;
 
-/** @emoji 🧭 Provides {@link Kit}; keeps {@link KitReadPoint} in React state and applies it with {@link Kit#setReadPoint}. */
-export function KitContextProvider(props: KitContextProviderProps): React.ReactElement {
+/** @emoji 🧭 Provides {@link Kit}; keeps {@link KitReadPoint} in React state and applies it with {@link Store#setReadPoint}. */
+export function StoreContextProvider(props: StoreContextProviderProps): React.ReactElement {
   const [readPoint, setReadPointState] = React.useState<KitReadPoint>(props.initialReadPoint ?? theKitReadPoint);
   React.useEffect(() => {
-    props.kit.setReadPoint(readPoint);
-  }, [props.kit, readPoint]);
-  return React.createElement(KitContext.Provider, { value: props.kit }, props.children);
+    props.store.setReadPoint(readPoint);
+  }, [props.store, readPoint]);
+  return React.createElement(StoreContext.Provider, { value: props.store }, props.children);
 }
 
-/** @emoji 🧭 Requires {@link KitContextProvider}; returns the GraphQL {@link Kit} handle. */
-export function useKit(): Kit {
-  const k = React.useContext(KitContext);
-  if (k == null) throw new Error("semio/react: useKit requires <KitContextProvider>.");
-  return k;
+/** @emoji 🧭 Requires {@link StoreContextProvider}; returns the GraphQL {@link Store} root. */
+export function useStore(): Store {
+  const store = React.useContext(StoreContext);
+  if (store == null) throw new Error("semio/react: useStore requires <StoreContextProvider>.");
+  return store;
 }
 
-/** @emoji 🧭 Optional {@link Kit} when {@link KitContextProvider} is absent (host-only subtrees). */
-export function useKitOptional(): Kit | null {
-  return React.useContext(KitContext);
+/** @emoji 🧭 Optional {@link Store} when {@link StoreContextProvider} is absent (host-only subtrees). */
+export function useStoreOptional(): Store | null {
+  return React.useContext(StoreContext);
 }
 
-/** @emoji 🌐 WIP {@link Graph} from {@link Kit#wip} (no extra provider). */
+/** @emoji 🌐 WIP {@link Graph} from {@link Store#wip} (no extra provider). */
 export function useWipGraph(): Graph {
-  const kit = useKit();
-  return React.useMemo(() => kit.wip(), [kit]);
+  const store = useStore();
+  return React.useMemo(() => store.wip(), [store]);
 }
 
-/** @emoji 🌐 Authoritative {@link Graph} from {@link Kit#authoritative}. */
+/** @emoji 🌐 Authoritative {@link Graph} from {@link Store#authoritative}. */
 export function useAuthoritativeGraph(): Graph {
-  const kit = useKit();
-  return React.useMemo(() => kit.authoritative(), [kit]);
+  const store = useStore();
+  return React.useMemo(() => store.authoritative(), [store]);
 }
 
-/** @emoji 🗂️ Root {@link Session} from {@link Kit#session}. */
+/** @emoji 🗂️ Root {@link Session} from {@link Store#session}. */
 export function useSession(): Session {
-  const kit = useKit();
-  return React.useMemo(() => kit.session(), [kit]);
+  const store = useStore();
+  return React.useMemo(() => store.session(), [store]);
 }
 
 // #endregion 🎒Kit
@@ -553,10 +554,10 @@ export function GraphContextProvider(props: { root: GraphRootKind; children: Rea
 
 /** @emoji 🌐 {@link Graph} for the current {@link GraphContextProvider} {@code root}. */
 export function useGraph(): Graph {
-  const kit = useKit();
+  const store = useStore();
   const ctx = React.useContext(GraphRootContext);
   if (ctx == null) throw new Error("semio/react: useGraph requires <GraphContextProvider root=\"wip\"|\"authoritative\">.");
-  return React.useMemo(() => new Graph(kit, ctx.root), [kit, ctx.root]);
+  return React.useMemo(() => new Graph(store, ctx.root), [store, ctx.root]);
 }
 
 // #endregion 🌐GraphContext
@@ -568,9 +569,9 @@ export function DesignContextProvider(props: { designId: string; children: React
   return React.createElement(DesignContext.Provider, { value: { designId: props.designId } }, props.children);
 }
 export function useDesign(): Design | null {
-  const kit = useKit();
+  const store = useStore();
   const ctx = React.useContext(DesignContext);
-  return ctx == null ? null : kit.design(ctx.designId);
+  return ctx == null ? null : store.design(ctx.designId);
 }
 // #endregion 📐Design
 
@@ -583,9 +584,9 @@ export function PieceContextProvider(props: PieceContext & { children: ReactNode
   return React.createElement(PieceContext.Provider, { value: { designId: props.designId, pieceId: props.pieceId } }, props.children);
 }
 export function usePiece(): Piece | null {
-  const kit = useKit();
+  const store = useStore();
   const ctx = React.useContext(PieceContext);
-  return ctx == null ? null : kit.design(ctx.designId).piece(ctx.pieceId);
+  return ctx == null ? null : store.design(ctx.designId).piece(ctx.pieceId);
 }
 
 export type TypeContext = Readonly<{ typeId: string }>;
@@ -594,9 +595,9 @@ export function TypeContextProvider(props: { typeId: string; children: ReactNode
   return React.createElement(TypeContext.Provider, { value: { typeId: props.typeId } }, props.children);
 }
 export function useType(): Type | null {
-  const kit = useKit();
+  const store = useStore();
   const ctx = React.useContext(TypeContext);
-  return ctx == null ? null : kit.type(ctx.typeId);
+  return ctx == null ? null : store.type(ctx.typeId);
 }
 
 export type ConnectionContext = Readonly<{ designId: string; connectionId: string }>;
@@ -605,9 +606,9 @@ export function ConnectionContextProvider(props: ConnectionContext & { children:
   return React.createElement(ConnectionContext.Provider, { value: { designId: props.designId, connectionId: props.connectionId } }, props.children);
 }
 export function useConnection(): Connection | null {
-  const kit = useKit();
+  const store = useStore();
   const ctx = React.useContext(ConnectionContext);
-  return ctx == null ? null : kit.design(ctx.designId).connection(ctx.connectionId);
+  return ctx == null ? null : store.design(ctx.designId).connection(ctx.connectionId);
 }
 
 export type PortContext = Readonly<{ typeId: string; portId: string }>;
@@ -616,9 +617,9 @@ export function PortContextProvider(props: PortContext & { children: ReactNode }
   return React.createElement(PortContext.Provider, { value: { typeId: props.typeId, portId: props.portId } }, props.children);
 }
 export function usePort(): Port | null {
-  const kit = useKit();
+  const store = useStore();
   const ctx = React.useContext(PortContext);
-  return ctx == null ? null : kit.type(ctx.typeId).port(ctx.portId);
+  return ctx == null ? null : store.type(ctx.typeId).port(ctx.portId);
 }
 
 export type ConnectorContext = Readonly<{ typeId: string; connectorId: string }>;
@@ -627,9 +628,9 @@ export function ConnectorContextProvider(props: ConnectorContext & { children: R
   return React.createElement(ConnectorContext.Provider, { value: { typeId: props.typeId, connectorId: props.connectorId } }, props.children);
 }
 export function useConnector(): Connector | null {
-  const kit = useKit();
+  const store = useStore();
   const ctx = React.useContext(ConnectorContext);
-  return ctx == null ? null : kit.type(ctx.typeId).connector(ctx.connectorId);
+  return ctx == null ? null : store.type(ctx.typeId).connector(ctx.connectorId);
 }
 
 export type QualityContext = Readonly<{ qualityId: string }>;
@@ -638,9 +639,9 @@ export function QualityContextProvider(props: { qualityId: string; children: Rea
   return React.createElement(QualityContext.Provider, { value: { qualityId: props.qualityId } }, props.children);
 }
 export function useQuality(): Quality | null {
-  const kit = useKit();
+  const store = useStore();
   const ctx = React.useContext(QualityContext);
-  return ctx == null ? null : kit.quality(ctx.qualityId);
+  return ctx == null ? null : store.quality(ctx.qualityId);
 }
 
 export type TagContext = Readonly<{ tagId: string }>;
@@ -649,9 +650,9 @@ export function TagContextProvider(props: { tagId: string; children: ReactNode }
   return React.createElement(TagContext.Provider, { value: { tagId: props.tagId } }, props.children);
 }
 export function useTag(): Tag | null {
-  const kit = useKit();
+  const store = useStore();
   const ctx = React.useContext(TagContext);
-  return ctx == null ? null : kit.tag(ctx.tagId);
+  return ctx == null ? null : store.tag(ctx.tagId);
 }
 
 export type ConceptContext = Readonly<{ conceptId: string }>;
@@ -660,9 +661,9 @@ export function ConceptContextProvider(props: { conceptId: string; children: Rea
   return React.createElement(ConceptContext.Provider, { value: { conceptId: props.conceptId } }, props.children);
 }
 export function useConcept(): Concept | null {
-  const kit = useKit();
+  const store = useStore();
   const ctx = React.useContext(ConceptContext);
-  return ctx == null ? null : kit.concept(ctx.conceptId);
+  return ctx == null ? null : store.concept(ctx.conceptId);
 }
 
 export type AuthorContext = Readonly<{ authorId: string }>;
@@ -671,9 +672,9 @@ export function AuthorContextProvider(props: { authorId: string; children: React
   return React.createElement(AuthorContext.Provider, { value: { authorId: props.authorId } }, props.children);
 }
 export function useAuthor(): Author | null {
-  const kit = useKit();
+  const store = useStore();
   const ctx = React.useContext(AuthorContext);
-  return ctx == null ? null : kit.author(ctx.authorId);
+  return ctx == null ? null : store.author(ctx.authorId);
 }
 
 export type RepresentationContext = Readonly<{ typeId: string; representationId: string }>;
@@ -682,9 +683,9 @@ export function RepresentationContextProvider(props: RepresentationContext & { c
   return React.createElement(RepresentationContext.Provider, { value: { typeId: props.typeId, representationId: props.representationId } }, props.children);
 }
 export function useRepresentation(): Representation | null {
-  const kit = useKit();
+  const store = useStore();
   const ctx = React.useContext(RepresentationContext);
-  return ctx == null ? null : kit.type(ctx.typeId).representation(ctx.representationId);
+  return ctx == null ? null : store.type(ctx.typeId).representation(ctx.representationId);
 }
 // #endregion 🪢Contexts
 
@@ -777,54 +778,54 @@ export function ConnectionUnderActiveDesignProvider(props: { connectionId: strin
 // #region 🪝IdStableEntityLists
 /** @emoji 📚 Kit-level designs via {@link Kit#readDesigns} (id-list-stable handles). */
 export function useKitDesigns(): FieldReadState<readonly Design[]> {
-  const kit = useKit();
+  const store = useStore();
   return bindKitFieldToReact<readonly Design[]>({
-    getKit: () => kit,
+    getStore: () => store,
     read: async (k) => k.readDesigns(),
   })();
 }
 
 /** @emoji 📚 Kit-level kinds via {@link Kit#readTypes}. */
 export function useKitTypes(): FieldReadState<readonly Type[]> {
-  const kit = useKit();
+  const store = useStore();
   return bindKitFieldToReact<readonly Type[]>({
-    getKit: () => kit,
+    getStore: () => store,
     read: async (k) => k.readTypes(),
   })();
 }
 
 /** @emoji 📚 Kit-level authors via {@link Kit#readAuthors}. */
 export function useKitAuthors(): FieldReadState<readonly Author[]> {
-  const kit = useKit();
+  const store = useStore();
   return bindKitFieldToReact<readonly Author[]>({
-    getKit: () => kit,
+    getStore: () => store,
     read: async (k) => k.readAuthors(),
   })();
 }
 
 /** @emoji 📚 Kit-level qualities via {@link Kit#readQualities}. */
 export function useKitQualities(): FieldReadState<readonly Quality[]> {
-  const kit = useKit();
+  const store = useStore();
   return bindKitFieldToReact<readonly Quality[]>({
-    getKit: () => kit,
+    getStore: () => store,
     read: async (k) => k.readQualities(),
   })();
 }
 
 /** @emoji 📚 Kit-level tags via {@link Kit#readTags}. */
 export function useKitTags(): FieldReadState<readonly Tag[]> {
-  const kit = useKit();
+  const store = useStore();
   return bindKitFieldToReact<readonly Tag[]>({
-    getKit: () => kit,
+    getStore: () => store,
     read: async (k) => k.readTags(),
   })();
 }
 
 /** @emoji 📚 Kit-level concepts via {@link Kit#readConcepts}. */
 export function useKitConcepts(): FieldReadState<readonly Concept[]> {
-  const kit = useKit();
+  const store = useStore();
   return bindKitFieldToReact<readonly Concept[]>({
-    getKit: () => kit,
+    getStore: () => store,
     read: async (k) => k.readConcepts(),
   })();
 }
@@ -872,7 +873,7 @@ export function usePieces(): readonly Piece[] {
 /** @emoji 📖 Resolves a kit {@link Piece} from context and/or ids, then applies {@code selector}. */
 export function usePieceContextRead<T>(selector: (p: Piece) => T, pieceId?: string | undefined, _deep?: boolean): T {
   const ctxPiece = usePiece();
-  const k = useKitOptional();
+  const k = useStoreOptional();
   const dctx = React.useContext(DesignContext);
   const resolvedPieceId = pieceId ?? ctxPiece?.id ?? null;
   if (resolvedPieceId == null || k == null || dctx == null) {
@@ -884,7 +885,7 @@ export function usePieceContextRead<T>(selector: (p: Piece) => T, pieceId?: stri
 /** @emoji 📖 Resolves a kit {@link Type} handle from context and/or id, then applies {@code selector}. */
 export function useTypeContextRead<S>(selector: ((t: Type) => S) | undefined, kindId?: string | undefined, deep?: boolean): S | Type | undefined {
   const fromCtx = useType();
-  const k = useKitOptional();
+  const k = useStoreOptional();
   const resolvedId = kindId ?? fromCtx?.id ?? null;
   if (resolvedId == null || k == null) {
     if (fromCtx == null) return undefined;
@@ -899,7 +900,7 @@ export function useTypeContextRead<S>(selector: ((t: Type) => S) | undefined, ki
 /** @emoji 📖 Resolves a kit {@link Quality} from context and/or id, then applies {@code selector}. */
 export function useQualityContextRead<S>(selector: ((q: Quality) => S) | undefined, qualityId?: string | undefined, deep?: boolean): S | Quality | undefined {
   const fromCtx = useQuality();
-  const k = useKitOptional();
+  const k = useStoreOptional();
   const resolvedId = qualityId ?? fromCtx?.id ?? null;
   if (resolvedId == null || k == null) {
     if (fromCtx == null) return undefined;
@@ -916,257 +917,257 @@ export function useQualityContextRead<S>(selector: ((q: Quality) => S) | undefin
 // #region 📖KitReads
 /** @emoji 📖 Live {@link Kit#readName} + {@code kitRenamed}. */
 export function useKitName(): FieldReadState<string> {
-  const kit = useKit();
-  return bindKitFieldToReact<string>({ getKit: () => kit, read: (k) => k.readName(), eventKind: "kitRenamed" })();
+  const store = useStore();
+  return bindKitFieldToReact<string>({ getStore: () => store, read: (k) => k.readName(), eventKind: "kitRenamed" })();
 }
 
 /** @emoji 📖 Live {@link Kit#readDescription} + {@code changedDescription}. */
 export function useKitDescription(): FieldReadState<string> {
-  const kit = useKit();
-  return bindKitFieldToReact<string>({ getKit: () => kit, read: (k) => k.readDescription(), eventKind: "changedDescription" })();
+  const store = useStore();
+  return bindKitFieldToReact<string>({ getStore: () => store, read: (k) => k.readDescription(), eventKind: "changedDescription" })();
 }
 
 /** @emoji 📖 Live {@link Kit#readId}. */
 export function useKitId(): FieldReadState<string> {
-  const kit = useKit();
-  return bindKitFieldToReact<string>({ getKit: () => kit, read: (k) => k.readId() })();
+  const store = useStore();
+  return bindKitFieldToReact<string>({ getStore: () => store, read: (k) => k.readId() })();
 }
 
 /** @emoji 📖 Live {@link Kit#readIcon}. */
 export function useKitIcon(): FieldReadState<string> {
-  const kit = useKit();
-  return bindKitFieldToReact<string>({ getKit: () => kit, read: (k) => k.readIcon() })();
+  const store = useStore();
+  return bindKitFieldToReact<string>({ getStore: () => store, read: (k) => k.readIcon() })();
 }
 
 /** @emoji 📖 Live {@link Kit#readImage}. */
 export function useKitImage(): FieldReadState<string> {
-  const kit = useKit();
-  return bindKitFieldToReact<string>({ getKit: () => kit, read: (k) => k.readImage() })();
+  const store = useStore();
+  return bindKitFieldToReact<string>({ getStore: () => store, read: (k) => k.readImage() })();
 }
 
 /** @emoji 📖 Live {@link Kit#readTypeIds}. */
 export function useKitTypeIds(): FieldReadState<readonly string[]> {
-  const kit = useKit();
-  return bindKitFieldToReact<readonly string[]>({ getKit: () => kit, read: (k) => k.readTypeIds() })();
+  const store = useStore();
+  return bindKitFieldToReact<readonly string[]>({ getStore: () => store, read: (k) => k.readTypeIds() })();
 }
 
 /** @emoji 📖 Live {@link Kit#readDesignIds}. */
 export function useKitDesignIds(): FieldReadState<readonly string[]> {
-  const kit = useKit();
-  return bindKitFieldToReact<readonly string[]>({ getKit: () => kit, read: (k) => k.readDesignIds() })();
+  const store = useStore();
+  return bindKitFieldToReact<readonly string[]>({ getStore: () => store, read: (k) => k.readDesignIds() })();
 }
 
 /** @emoji 📖 Live {@link Kit#readAuthorIds}. */
 export function useKitAuthorIds(): FieldReadState<readonly string[]> {
-  const kit = useKit();
-  return bindKitFieldToReact<readonly string[]>({ getKit: () => kit, read: (k) => k.readAuthorIds() })();
+  const store = useStore();
+  return bindKitFieldToReact<readonly string[]>({ getStore: () => store, read: (k) => k.readAuthorIds() })();
 }
 
 /** @emoji 📖 Live {@link Kit#readQualityIds}. */
 export function useKitQualityIds(): FieldReadState<readonly string[]> {
-  const kit = useKit();
-  return bindKitFieldToReact<readonly string[]>({ getKit: () => kit, read: (k) => k.readQualityIds() })();
+  const store = useStore();
+  return bindKitFieldToReact<readonly string[]>({ getStore: () => store, read: (k) => k.readQualityIds() })();
 }
 
 /** @emoji 📖 Live {@link Kit#readTagIds}. */
 export function useKitTagIds(): FieldReadState<readonly string[]> {
-  const kit = useKit();
-  return bindKitFieldToReact<readonly string[]>({ getKit: () => kit, read: (k) => k.readTagIds() })();
+  const store = useStore();
+  return bindKitFieldToReact<readonly string[]>({ getStore: () => store, read: (k) => k.readTagIds() })();
 }
 
 /** @emoji 📖 Live {@link Kit#readConceptIds}. */
 export function useKitConceptIds(): FieldReadState<readonly string[]> {
-  const kit = useKit();
-  return bindKitFieldToReact<readonly string[]>({ getKit: () => kit, read: (k) => k.readConceptIds() })();
+  const store = useStore();
+  return bindKitFieldToReact<readonly string[]>({ getStore: () => store, read: (k) => k.readConceptIds() })();
 }
 
-/** @emoji 🧾 Exposes {@link Kit#ensureChangeId} as a stable callback. */
+/** @emoji 🧾 Exposes {@link Store#ensureChangeId} as a stable callback. */
 export function useEnsureKitChangeId(): () => Promise<string> {
-  const kit = useKit();
-  return React.useCallback(() => kit.ensureChangeId(), [kit]);
+  const store = useStore();
+  return React.useCallback(() => store.ensureChangeId(), [store]);
 }
 // #endregion 📖KitReads
 
 // #region ✍️KitWrites
-/** @emoji ✍️ {@link Kit#rename}. */
+/** @emoji ✍️ {@link Store#rename}. */
 export function useRenameKit(): readonly [(newName: string) => Promise<SetResult>, OperationStatus] {
-  const kit = useKit();
-  return bindKitOperationToReact<[string]>((k, newName) => k.rename(newName))(() => kit);
+  const store = useStore();
+  return bindKitOperationToReact<[string]>((k, newName) => k.rename(newName))(() => store);
 }
 
-/** @emoji ✍️ {@link Kit#changeDescription}. */
+/** @emoji ✍️ {@link Store#changeDescription}. */
 export function useChangeKitDescription(): readonly [(newDescription: string) => Promise<SetResult>, OperationStatus] {
-  const kit = useKit();
-  return bindKitOperationToReact<[string]>((k, d) => k.changeDescription(d))(() => kit);
+  const store = useStore();
+  return bindKitOperationToReact<[string]>((k, d) => k.changeDescription(d))(() => store);
 }
 
-/** @emoji ✍️ {@link Kit#createTag}. */
+/** @emoji ✍️ {@link Store#createTag}. */
 export function useCreateTag(): readonly [(name: string, description?: string | null, icon?: string | null, order?: number | null) => Promise<SetResult>, OperationStatus] {
-  const kit = useKit();
-  return bindKitOperationToReact<[string, string | null | undefined, string | null | undefined, number | null | undefined]>((k, n, d, i, o) => k.createTag(n, d, i, o))(() => kit);
+  const store = useStore();
+  return bindKitOperationToReact<[string, string | null | undefined, string | null | undefined, number | null | undefined]>((k, n, d, i, o) => k.createTag(n, d, i, o))(() => store);
 }
 
-/** @emoji ✍️ {@link Kit#deleteTag}. */
+/** @emoji ✍️ {@link Store#deleteTag}. */
 export function useDeleteTag(): readonly [(id: string) => Promise<SetResult>, OperationStatus] {
-  const kit = useKit();
-  return bindKitOperationToReact<[string]>((k, id) => k.deleteTag(id))(() => kit);
+  const store = useStore();
+  return bindKitOperationToReact<[string]>((k, id) => k.deleteTag(id))(() => store);
 }
 
-/** @emoji ✍️ {@link Kit#deleteTags}. */
+/** @emoji ✍️ {@link Store#deleteTags}. */
 export function useDeleteTags(): readonly [(ids: readonly string[]) => Promise<SetResult>, OperationStatus] {
-  const kit = useKit();
-  return bindKitOperationToReact<[readonly string[]]>((k, ids) => k.deleteTags(ids))(() => kit);
+  const store = useStore();
+  return bindKitOperationToReact<[readonly string[]]>((k, ids) => k.deleteTags(ids))(() => store);
 }
 
-/** @emoji ✍️ {@link Kit#createConcept}. */
+/** @emoji ✍️ {@link Store#createConcept}. */
 export function useCreateConcept(): readonly [(name: string, description?: string | null, icon?: string | null, order?: number | null) => Promise<SetResult>, OperationStatus] {
-  const kit = useKit();
-  return bindKitOperationToReact<[string, string | null | undefined, string | null | undefined, number | null | undefined]>((k, n, d, i, o) => k.createConcept(n, d, i, o))(() => kit);
+  const store = useStore();
+  return bindKitOperationToReact<[string, string | null | undefined, string | null | undefined, number | null | undefined]>((k, n, d, i, o) => k.createConcept(n, d, i, o))(() => store);
 }
 
-/** @emoji ✍️ {@link Kit#deleteConcept}. */
+/** @emoji ✍️ {@link Store#deleteConcept}. */
 export function useDeleteConcept(): readonly [(id: string) => Promise<SetResult>, OperationStatus] {
-  const kit = useKit();
-  return bindKitOperationToReact<[string]>((k, id) => k.deleteConcept(id))(() => kit);
+  const store = useStore();
+  return bindKitOperationToReact<[string]>((k, id) => k.deleteConcept(id))(() => store);
 }
 
-/** @emoji ✍️ {@link Kit#deleteConcepts}. */
+/** @emoji ✍️ {@link Store#deleteConcepts}. */
 export function useDeleteConcepts(): readonly [(ids: readonly string[]) => Promise<SetResult>, OperationStatus] {
-  const kit = useKit();
-  return bindKitOperationToReact<[readonly string[]]>((k, ids) => k.deleteConcepts(ids))(() => kit);
+  const store = useStore();
+  return bindKitOperationToReact<[readonly string[]]>((k, ids) => k.deleteConcepts(ids))(() => store);
 }
 
-/** @emoji ✍️ {@link Kit#createQuality}. */
+/** @emoji ✍️ {@link Store#createQuality}. */
 export function useCreateQuality(): readonly [(key: string, value?: string | null, unit?: string | null, definition?: string | null, description?: string | null, icon?: string | null) => Promise<SetResult>, OperationStatus] {
-  const kit = useKit();
+  const store = useStore();
   return bindKitOperationToReact<[string, string | null | undefined, string | null | undefined, string | null | undefined, string | null | undefined, string | null | undefined]>((k, key, value, unit, definition, description, icon) =>
     k.createQuality(key, value, unit, definition, description, icon),
-  )(() => kit);
+  )(() => store);
 }
 
-/** @emoji ✍️ {@link Kit#deleteQuality}. */
+/** @emoji ✍️ {@link Store#deleteQuality}. */
 export function useDeleteQuality(): readonly [(id: string) => Promise<SetResult>, OperationStatus] {
-  const kit = useKit();
-  return bindKitOperationToReact<[string]>((k, id) => k.deleteQuality(id))(() => kit);
+  const store = useStore();
+  return bindKitOperationToReact<[string]>((k, id) => k.deleteQuality(id))(() => store);
 }
 
-/** @emoji ✍️ {@link Kit#deleteQualities}. */
+/** @emoji ✍️ {@link Store#deleteQualities}. */
 export function useDeleteQualities(): readonly [(ids: readonly string[]) => Promise<SetResult>, OperationStatus] {
-  const kit = useKit();
-  return bindKitOperationToReact<[readonly string[]]>((k, ids) => k.deleteQualities(ids))(() => kit);
+  const store = useStore();
+  return bindKitOperationToReact<[readonly string[]]>((k, ids) => k.deleteQualities(ids))(() => store);
 }
 
-/** @emoji ✍️ {@link Kit#createType}. */
+/** @emoji ✍️ {@link Store#createType}. */
 export function useCreateType(): readonly [(name: string, description?: string | null, icon?: string | null, image?: string | null, unit?: string | null) => Promise<SetResult>, OperationStatus] {
-  const kit = useKit();
-  return bindKitOperationToReact<[string, string | null | undefined, string | null | undefined, string | null | undefined, string | null | undefined]>((k, n, d, i, im, u) => k.createType(n, d, i, im, u))(() => kit);
+  const store = useStore();
+  return bindKitOperationToReact<[string, string | null | undefined, string | null | undefined, string | null | undefined, string | null | undefined]>((k, n, d, i, im, u) => k.createType(n, d, i, im, u))(() => store);
 }
 
-/** @emoji ✍️ {@link Kit#deleteType}. */
+/** @emoji ✍️ {@link Store#deleteType}. */
 export function useDeleteType(): readonly [(id: string) => Promise<SetResult>, OperationStatus] {
-  const kit = useKit();
-  return bindKitOperationToReact<[string]>((k, id) => k.deleteType(id))(() => kit);
+  const store = useStore();
+  return bindKitOperationToReact<[string]>((k, id) => k.deleteType(id))(() => store);
 }
 
-/** @emoji ✍️ {@link Kit#deleteTypes}. */
+/** @emoji ✍️ {@link Store#deleteTypes}. */
 export function useDeleteTypes(): readonly [(ids: readonly string[]) => Promise<SetResult>, OperationStatus] {
-  const kit = useKit();
-  return bindKitOperationToReact<[readonly string[]]>((k, ids) => k.deleteTypes(ids))(() => kit);
+  const store = useStore();
+  return bindKitOperationToReact<[readonly string[]]>((k, ids) => k.deleteTypes(ids))(() => store);
 }
 
-/** @emoji ✍️ {@link Kit#createDesign}. */
+/** @emoji ✍️ {@link Store#createDesign}. */
 export function useCreateDesign(): readonly [(name: string, description?: string | null, icon?: string | null, image?: string | null, unit?: string | null) => Promise<SetResult>, OperationStatus] {
-  const kit = useKit();
-  return bindKitOperationToReact<[string, string | null | undefined, string | null | undefined, string | null | undefined, string | null | undefined]>((k, n, d, i, im, u) => k.createDesign(n, d, i, im, u))(() => kit);
+  const store = useStore();
+  return bindKitOperationToReact<[string, string | null | undefined, string | null | undefined, string | null | undefined, string | null | undefined]>((k, n, d, i, im, u) => k.createDesign(n, d, i, im, u))(() => store);
 }
 
-/** @emoji ✍️ {@link Kit#deleteDesign}. */
+/** @emoji ✍️ {@link Store#deleteDesign}. */
 export function useDeleteDesign(): readonly [(id: string) => Promise<SetResult>, OperationStatus] {
-  const kit = useKit();
-  return bindKitOperationToReact<[string]>((k, id) => k.deleteDesign(id))(() => kit);
+  const store = useStore();
+  return bindKitOperationToReact<[string]>((k, id) => k.deleteDesign(id))(() => store);
 }
 
-/** @emoji ✍️ {@link Kit#deleteDesigns}. */
+/** @emoji ✍️ {@link Store#deleteDesigns}. */
 export function useDeleteDesigns(): readonly [(ids: readonly string[]) => Promise<SetResult>, OperationStatus] {
-  const kit = useKit();
-  return bindKitOperationToReact<[readonly string[]]>((k, ids) => k.deleteDesigns(ids))(() => kit);
+  const store = useStore();
+  return bindKitOperationToReact<[readonly string[]]>((k, ids) => k.deleteDesigns(ids))(() => store);
 }
 
-/** @emoji ✍️ {@link Kit#saveChange}. */
+/** @emoji ✍️ {@link Store#saveChange}. */
 export function useSaveKitChange(): readonly [() => Promise<SetResult>, OperationStatus] {
-  const kit = useKit();
+  const store = useStore();
   return bindKitOperationToReact<[]>(async (k) => {
     await k.saveChange();
     return { ok: true };
-  })(() => kit);
+  })(() => store);
 }
 
-/** @emoji ✍️ {@link Kit#createCheckpoint}. */
+/** @emoji ✍️ {@link Store#createCheckpoint}. */
 export function useCreateCheckpoint(): readonly [(message: string) => Promise<SetResult>, OperationStatus] {
-  const kit = useKit();
-  return bindKitOperationToReact<[string]>((k, message) => k.createCheckpoint(message))(() => kit);
+  const store = useStore();
+  return bindKitOperationToReact<[string]>((k, message) => k.createCheckpoint(message))(() => store);
 }
 
-/** @emoji ✍️ {@link Kit#startAlternative}. */
+/** @emoji ✍️ {@link Store#startAlternative}. */
 export function useStartAlternative(): readonly [(name?: string | null) => Promise<SetResult>, OperationStatus] {
-  const kit = useKit();
-  return bindKitOperationToReact<[string | null | undefined]>((k, name) => k.startAlternative(name ?? undefined))(() => kit);
+  const store = useStore();
+  return bindKitOperationToReact<[string | null | undefined]>((k, name) => k.startAlternative(name ?? undefined))(() => store);
 }
 
-/** @emoji ✍️ {@link Kit#integrateAlternative}. */
+/** @emoji ✍️ {@link Store#integrateAlternative}. */
 export function useIntegrateAlternative(): readonly [(alternativeId: string) => Promise<SetResult>, OperationStatus] {
-  const kit = useKit();
-  return bindKitOperationToReact<[string]>((k, id) => k.integrateAlternative(id))(() => kit);
+  const store = useStore();
+  return bindKitOperationToReact<[string]>((k, id) => k.integrateAlternative(id))(() => store);
 }
 
-/** @emoji ✍️ {@link Kit#login}. */
+/** @emoji ✍️ {@link Store#login}. */
 export function useLogin(): readonly [(username: string, passwordHash: string, hubUrl?: string) => Promise<SetResult>, OperationStatus] {
-  const kit = useKit();
-  return bindKitOperationToReact<[string, string, string | undefined]>((k, u, p, h) => k.login(u, p, h))(() => kit);
+  const store = useStore();
+  return bindKitOperationToReact<[string, string, string | undefined]>((k, u, p, h) => k.login(u, p, h))(() => store);
 }
 
-/** @emoji ✍️ {@link Kit#logout}. */
+/** @emoji ✍️ {@link Store#logout}. */
 export function useLogout(): readonly [() => Promise<SetResult>, OperationStatus] {
-  const kit = useKit();
-  return bindKitOperationToReact<[]>((k) => k.logout())(() => kit);
+  const store = useStore();
+  return bindKitOperationToReact<[]>((k) => k.logout())(() => store);
 }
 
-/** @emoji ✍️ {@link Kit#sessionStart}. */
+/** @emoji ✍️ {@link Store#sessionStart}. */
 export function useStartSession(): readonly [() => Promise<SetResult>, OperationStatus] {
-  const kit = useKit();
-  return bindKitOperationToReact<[]>((k) => k.sessionStart())(() => kit);
+  const store = useStore();
+  return bindKitOperationToReact<[]>((k) => k.sessionStart())(() => store);
 }
 
-/** @emoji ✍️ {@link Kit#sessionEnd}. */
+/** @emoji ✍️ {@link Store#sessionEnd}. */
 export function useEndSession(): readonly [() => Promise<SetResult>, OperationStatus] {
-  const kit = useKit();
-  return bindKitOperationToReact<[]>((k) => k.sessionEnd())(() => kit);
+  const store = useStore();
+  return bindKitOperationToReact<[]>((k) => k.sessionEnd())(() => store);
 }
 
 // #region 🪝BackboneOps
-/** @emoji 🛜 {@link Kit#attachBackbone} — GraphQL session backbone attach (URI scheme dispatches backbone kind). */
+/** @emoji 🛜 {@link Store#attachBackbone} — GraphQL session backbone attach (URI scheme dispatches backbone kind). */
 export function useAttachBackbone(): readonly [(uri: string) => Promise<SetResult>, OperationStatus] {
-  const kit = useKit();
-  return bindKitOperationToReact<[string]>((k, uri) => k.attachBackbone(uri))(() => kit);
+  const store = useStore();
+  return bindKitOperationToReact<[string]>((k, uri) => k.attachBackbone(uri))(() => store);
 }
 
-/** @emoji 🛜 {@link Kit#detachBackbone}. */
+/** @emoji 🛜 {@link Store#detachBackbone}. */
 export function useDetachBackbone(): readonly [(uri: string) => Promise<SetResult>, OperationStatus] {
-  const kit = useKit();
-  return bindKitOperationToReact<[string]>((k, uri) => k.detachBackbone(uri))(() => kit);
+  const store = useStore();
+  return bindKitOperationToReact<[string]>((k, uri) => k.detachBackbone(uri))(() => store);
 }
 
-/** @emoji 🛜 {@link Kit#backboneSyncNow}. */
+/** @emoji 🛜 {@link Store#backboneSyncNow}. */
 export function useBackboneSyncNow(): readonly [() => Promise<SetResult>, OperationStatus] {
-  const kit = useKit();
-  return bindKitOperationToReact<[]>((k) => k.backboneSyncNow())(() => kit);
+  const store = useStore();
+  return bindKitOperationToReact<[]>((k) => k.backboneSyncNow())(() => store);
 }
 
-/** @emoji 🛜 Live {@link Kit#backboneStatus} (refreshes on {@code commandSucceeded} bus events). */
+/** @emoji 🛜 Live {@link Store#backboneStatus} (refreshes on {@code commandSucceeded} bus events). */
 export function useBackboneStatus(): FieldReadState<Readonly<{ attachedUri: string | null; kind: string }>> {
-  const kit = useKit();
+  const store = useStore();
   return bindKitFieldToReact<Readonly<{ attachedUri: string | null; kind: string }>>({
-    getKit: () => kit,
+    getStore: () => store,
     read: (k) => k.backboneStatus(),
     eventKind: "commandSucceeded",
   })();
@@ -2082,7 +2083,7 @@ function bindPiecesOperationsOperationToReact<Args extends unknown[]>(impl: (ops
         if (ops == null) {
           const result: SetResult = {
             ok: false,
-            error: { kind: "Disposed", message: "No pieces batch scope (empty ids or missing kit).", field: undefined, entity: undefined },
+            error: { kind: "Disposed", message: "No pieces batch scope (empty ids or missing store).", field: undefined, entity: undefined },
           };
           setStatus({ kind: "settled", result });
           return result;
@@ -2114,29 +2115,29 @@ const usePiecesChangeBlueprintOperation = bindPiecesOperationsOperationToReact((
 
 /** @emoji ✍️ {@link PiecesOperations#drag} for {@code design.pieces(ids)}. */
 export function useDragPieces(designId: string, pieceIds: readonly string[]): readonly [(offset: OffsetInput) => Promise<SetResult>, OperationStatus] {
-  const kit = useKit();
-  const getOps = React.useCallback(() => (pieceIds.length === 0 ? null : kit.design(designId).pieces(pieceIds)), [kit, designId, pieceIds]);
+  const store = useStore();
+  const getOps = React.useCallback(() => (pieceIds.length === 0 ? null : store.design(designId).pieces(pieceIds)), [store, designId, pieceIds]);
   return usePiecesDragOperation(getOps);
 }
 
 /** @emoji ✍️ {@link PiecesOperations#move}. */
 export function useMovePieces(designId: string, pieceIds: readonly string[]): readonly [(offset: OffsetInput) => Promise<SetResult>, OperationStatus] {
-  const kit = useKit();
-  const getOps = React.useCallback(() => (pieceIds.length === 0 ? null : kit.design(designId).pieces(pieceIds)), [kit, designId, pieceIds]);
+  const store = useStore();
+  const getOps = React.useCallback(() => (pieceIds.length === 0 ? null : store.design(designId).pieces(pieceIds)), [store, designId, pieceIds]);
   return usePiecesMoveOperation(getOps);
 }
 
 /** @emoji ✍️ {@link PiecesOperations#fix}. */
 export function useFixPieces(designId: string, pieceIds: readonly string[]): readonly [() => Promise<SetResult>, OperationStatus] {
-  const kit = useKit();
-  const getOps = React.useCallback(() => (pieceIds.length === 0 ? null : kit.design(designId).pieces(pieceIds)), [kit, designId, pieceIds]);
+  const store = useStore();
+  const getOps = React.useCallback(() => (pieceIds.length === 0 ? null : store.design(designId).pieces(pieceIds)), [store, designId, pieceIds]);
   return usePiecesFixOperation(getOps);
 }
 
 /** @emoji ✍️ {@link PiecesOperations#changeBlueprint}. */
 export function useChangePiecesBlueprint(designId: string, pieceIds: readonly string[]): readonly [(blueprintId: string) => Promise<SetResult>, OperationStatus] {
-  const kit = useKit();
-  const getOps = React.useCallback(() => (pieceIds.length === 0 ? null : kit.design(designId).pieces(pieceIds)), [kit, designId, pieceIds]);
+  const store = useStore();
+  const getOps = React.useCallback(() => (pieceIds.length === 0 ? null : store.design(designId).pieces(pieceIds)), [store, designId, pieceIds]);
   return usePiecesChangeBlueprintOperation(getOps);
 }
 // #endregion 🪢Pieces
@@ -2279,3 +2280,5 @@ if (import.meta.vitest) {
   });
 }
 // #endregion 🧪Vitest
+
+

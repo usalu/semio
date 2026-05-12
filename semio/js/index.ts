@@ -306,7 +306,7 @@ function isTheKitReadPoint(s: KitReadPoint): boolean {
   return "theKit" in s;
 }
 
-export type KitOpenOptions = Readonly<{
+export type StoreOpenOptions = Readonly<{
   timeoutMs?: number;
   wasmSpecifier?: string;
   workerFactory?: () => Worker;
@@ -416,12 +416,10 @@ async function __readSemioBytesFromMonorepoCandidates(): Promise<Uint8Array | un
 //#region 🛠️Base
 /** @emoji 🧬 Strong entity anchor: {@link Store} + id (no cached fields on the instance). */
 export abstract class Entity {
-  public readonly kit: Store;
   public readonly store: Store;
 
   protected constructor(store: Store, public readonly id: string) {
     this.store = store;
-    this.kit = store;
   }
 }
 //#endregion 🛠️Base
@@ -437,8 +435,8 @@ export class Attribute {
     public readonly definition: string,
   ) { }
 
-  get kit(): Store {
-    return this.owner.kit;
+  get store(): Store {
+    return this.owner.store;
   }
 }
 
@@ -454,8 +452,8 @@ export class Benchmark {
     public readonly maxExcluded: boolean | null,
   ) { }
 
-  get kit(): Store {
-    return this.quality.kit;
+  get store(): Store {
+    return this.quality.store;
   }
 }
 
@@ -488,7 +486,7 @@ export function defineOperations<const S extends readonly OperationSpec[]>(specs
 /** @emoji 🏭  a field read when the caller supplies the kit-relative GraphQL tail. */
 export function defineField<E extends Entity, T>(entity: E, spec: FieldSpec<T>, pathInKit: (self: E) => string): () => Promise<T> {
   return async () => {
-    const frag = await entity.kit.readKitInner(pathInKit(entity));
+    const frag = await entity.store.readKitInner(pathInKit(entity));
     return spec.parse(frag as JsonValue);
   };
 }
@@ -497,8 +495,8 @@ export function defineField<E extends Entity, T>(entity: E, spec: FieldSpec<T>, 
 export function defineOperation(entity: Entity, spec: OperationSpec, buildPath: (self: Entity) => string): () => Promise<SetResult> {
   return async () => {
     void spec;
-    const cid = await entity.kit.ensureChangeId();
-    return entity.kit.mutateScoped(cid, buildPath(entity));
+    const cid = await entity.store.ensureChangeId();
+    return entity.store.mutateScoped(cid, buildPath(entity));
   };
 }
 
@@ -533,7 +531,7 @@ function parseAttributeConnectionUnder(ownerEntity: Entity, owner: JsonObject | 
 
 //#region 🏪Store
 /** @emoji 🔗 Map `Store.open` input: inline JSON becomes `dev+json:` base64 for the WASM bootstrap URI. */
-function backboneBootstrapUriForKitOpen(raw: string): string {
+function backboneBootstrapUriForStoreOpen(raw: string): string {
   const t = raw.trim();
   if (t.startsWith("{") || t.startsWith("[")) {
     const bytes = new TextEncoder().encode(t);
@@ -829,7 +827,7 @@ export class Store {
     await this.readKitInner("id name");
   }
 
-  static async open(uri: string, opts?: KitOpenOptions): Promise<Store> {
+  static async open(uri: string, opts?: StoreOpenOptions): Promise<Store> {
     const timeoutMs = opts?.timeoutMs ?? 60_000;
     const wasmSpecifier = opts?.wasmSpecifier ?? (globalThis as { __SEMIO_WASM_SPECIFIER__?: string }).__SEMIO_WASM_SPECIFIER__ ?? "@semio/rs-wasm";
     const preferInlineInVitest = (() => {
@@ -845,7 +843,7 @@ export class Store {
     const wasmBytesPre = await __readSemioBytesFromMonorepoCandidates();
     const useDedicatedWorker = typeof Worker !== "undefined" && !preferInlineInVitest && wasmBytesPre == null;
 
-    const bootstrapUri = backboneBootstrapUriForKitOpen(uri);
+    const bootstrapUri = backboneBootstrapUriForStoreOpen(uri);
 
     if (useDedicatedWorker) {
       const worker = opts?.workerFactory?.() ?? createKitStoreWorker();
@@ -1256,8 +1254,24 @@ export class Kit extends Entity {
     return this.store.createTag(name, description, icon, order);
   }
 
+  async deleteTag(id: string): Promise<SetResult> {
+    return this.store.deleteTag(id);
+  }
+
+  async deleteTags(ids: readonly string[]): Promise<SetResult> {
+    return this.store.deleteTags(ids);
+  }
+
   async createConcept(name: string, description?: string | null, icon?: string | null, order?: number | null): Promise<SetResult> {
     return this.store.createConcept(name, description, icon, order);
+  }
+
+  async deleteConcept(id: string): Promise<SetResult> {
+    return this.store.deleteConcept(id);
+  }
+
+  async deleteConcepts(ids: readonly string[]): Promise<SetResult> {
+    return this.store.deleteConcepts(ids);
   }
 
   async createQuality(
@@ -1271,12 +1285,36 @@ export class Kit extends Entity {
     return this.store.createQuality(key, value, unit, definition, description, icon);
   }
 
+  async deleteQuality(id: string): Promise<SetResult> {
+    return this.store.deleteQuality(id);
+  }
+
+  async deleteQualities(ids: readonly string[]): Promise<SetResult> {
+    return this.store.deleteQualities(ids);
+  }
+
   async createType(name: string, description?: string | null, icon?: string | null, image?: string | null, unit?: string | null): Promise<SetResult> {
     return this.store.createType(name, description, icon, image, unit);
   }
 
+  async deleteType(id: string): Promise<SetResult> {
+    return this.store.deleteType(id);
+  }
+
+  async deleteTypes(ids: readonly string[]): Promise<SetResult> {
+    return this.store.deleteTypes(ids);
+  }
+
   async createDesign(name: string, description?: string | null, icon?: string | null, image?: string | null, unit?: string | null): Promise<SetResult> {
     return this.store.createDesign(name, description, icon, image, unit);
+  }
+
+  async deleteDesign(id: string): Promise<SetResult> {
+    return this.store.deleteDesign(id);
+  }
+
+  async deleteDesigns(ids: readonly string[]): Promise<SetResult> {
+    return this.store.deleteDesigns(ids);
   }
 
   async readName(): Promise<string> {
@@ -1299,6 +1337,30 @@ export class Kit extends Entity {
     return this.store.readImage();
   }
 
+  async readTypeIds(): Promise<readonly string[]> {
+    return this.store.readTypeIds();
+  }
+
+  async readDesignIds(): Promise<readonly string[]> {
+    return this.store.readDesignIds();
+  }
+
+  async readAuthorIds(): Promise<readonly string[]> {
+    return this.store.readAuthorIds();
+  }
+
+  async readQualityIds(): Promise<readonly string[]> {
+    return this.store.readQualityIds();
+  }
+
+  async readTagIds(): Promise<readonly string[]> {
+    return this.store.readTagIds();
+  }
+
+  async readConceptIds(): Promise<readonly string[]> {
+    return this.store.readConceptIds();
+  }
+
   async readDesigns(): Promise<readonly Design[]> {
     return this.store.readDesigns();
   }
@@ -1306,14 +1368,30 @@ export class Kit extends Entity {
   async readTypes(): Promise<readonly Type[]> {
     return this.store.readTypes();
   }
+
+  async readAuthors(): Promise<readonly Author[]> {
+    return this.store.readAuthors();
+  }
+
+  async readQualities(): Promise<readonly Quality[]> {
+    return this.store.readQualities();
+  }
+
+  async readTags(): Promise<readonly Tag[]> {
+    return this.store.readTags();
+  }
+
+  async readConcepts(): Promise<readonly Concept[]> {
+    return this.store.readConcepts();
+  }
 }
 //#endregion 📦Kit
 
 function __kitGraphqlEnvelope(
-  kit: Store,
+  store: Store,
   body: Readonly<{ query: string; variables?: JsonObject; operationName?: string }>,
 ): Promise<KitGraphqlResponseEnvelope<JsonValue>> {
-  return (kit as unknown as { gqlRun(b: typeof body): Promise<KitGraphqlResponseEnvelope<JsonValue>> }).gqlRun(body);
+  return (store as unknown as { gqlRun(b: typeof body): Promise<KitGraphqlResponseEnvelope<JsonValue>> }).gqlRun(body);
 }
 
 //#region 🧬VcsEntities
@@ -1328,8 +1406,8 @@ export class Graph extends Entity {
   private __stableAlternatives: { ids: readonly string[]; arr: readonly Alternative[] } = { ids: [], arr: [] };
   private __stableCheckpoints: { ids: readonly string[]; arr: readonly Checkpoint[] } = { ids: [], arr: [] };
 
-  constructor(kit: Store, root: GraphRootKind) {
-    super(kit, root);
+  constructor(store: Store, root: GraphRootKind) {
+    super(store, root);
   }
 
   get root(): GraphRootKind {
@@ -1338,13 +1416,13 @@ export class Graph extends Entity {
 
   /** @emoji 🏛 {@code graph { theKit }} handle. */
   theKit(): TheKit {
-    return (this.__theKit ??= new TheKit(this.kit, this.root));
+    return (this.__theKit ??= new TheKit(this.store, this.root));
   }
 
   checkpoint(checkpointId: string): Checkpoint {
     let c = this.__checkpointCache.get(checkpointId);
     if (!c) {
-      c = new Checkpoint(this.kit, this.root, checkpointId);
+      c = new Checkpoint(this.store, this.root, checkpointId);
       this.__checkpointCache.set(checkpointId, c);
     }
     return c;
@@ -1353,7 +1431,7 @@ export class Graph extends Entity {
   alternative(alternativeId: string): Alternative {
     let a = this.__alternativeCache.get(alternativeId);
     if (!a) {
-      a = new Alternative(this.kit, { parent: "graph", root: this.root }, alternativeId);
+      a = new Alternative(this.store, { parent: "graph", root: this.root }, alternativeId);
       this.__alternativeCache.set(alternativeId, a);
     }
     return a;
@@ -1361,14 +1439,14 @@ export class Graph extends Entity {
 
   async readId(): Promise<string> {
     const q = this.root === "wip" ? `query { wip { id } }` : `query { authoritative { id } }`;
-    const data = kitGraphqlData(await __kitGraphqlEnvelope(this.kit, { query: q })) as JsonObject;
+    const data = kitGraphqlData(await __kitGraphqlEnvelope(this.store, { query: q })) as JsonObject;
     const node = data[this.root] as JsonObject | null | undefined;
     return node == null ? "" : String(node["id"] ?? "");
   }
 
   async readHash(): Promise<string> {
     const q = this.root === "wip" ? `query { wip { hash } }` : `query { authoritative { hash } }`;
-    const data = kitGraphqlData(await __kitGraphqlEnvelope(this.kit, { query: q })) as JsonObject;
+    const data = kitGraphqlData(await __kitGraphqlEnvelope(this.store, { query: q })) as JsonObject;
     const node = data[this.root] as JsonObject | null | undefined;
     return node == null ? "" : String(node["hash"] ?? "");
   }
@@ -1378,7 +1456,7 @@ export class Graph extends Entity {
       this.root === "wip"
         ? `query { wip { alternatives { edges { node { id } } } } }`
         : `query { authoritative { alternatives { edges { node { id } } } } }`;
-    const data = kitGraphqlData(await __kitGraphqlEnvelope(this.kit, { query: q })) as JsonObject;
+    const data = kitGraphqlData(await __kitGraphqlEnvelope(this.store, { query: q })) as JsonObject;
     const node = data[this.root] as JsonObject | undefined;
     return __parseEntityConnectionIds(node ?? null, "alternatives");
   }
@@ -1388,7 +1466,7 @@ export class Graph extends Entity {
       this.root === "wip"
         ? `query { wip { checkpoints { edges { node { id } } } } }`
         : `query { authoritative { checkpoints { edges { node { id } } } } }`;
-    const data = kitGraphqlData(await __kitGraphqlEnvelope(this.kit, { query: q })) as JsonObject;
+    const data = kitGraphqlData(await __kitGraphqlEnvelope(this.store, { query: q })) as JsonObject;
     const node = data[this.root] as JsonObject | undefined;
     return __parseEntityConnectionIds(node ?? null, "checkpoints");
   }
@@ -1410,8 +1488,8 @@ export class Graph extends Entity {
     const run = (): void => {
       void this.readAlternatives().then(cb);
     };
-    const a = this.kit.bus.subscribeKind("commandSucceeded", run);
-    const b = this.kit.bus.subscribeKind("kitRenamed", run);
+    const a = this.store.bus.subscribeKind("commandSucceeded", run);
+    const b = this.store.bus.subscribeKind("kitRenamed", run);
     return (): void => {
       a();
       b();
@@ -1423,8 +1501,8 @@ export class Graph extends Entity {
     const run = (): void => {
       void this.readCheckpoints().then(cb);
     };
-    const a = this.kit.bus.subscribeKind("commandSucceeded", run);
-    const b = this.kit.bus.subscribeKind("kitRenamed", run);
+    const a = this.store.bus.subscribeKind("commandSucceeded", run);
+    const b = this.store.bus.subscribeKind("kitRenamed", run);
     return (): void => {
       a();
       b();
@@ -1437,27 +1515,27 @@ export class Session extends Entity {
   private readonly __alternativeCache = new Map<string, Alternative>();
   private __stableAlternatives: { ids: readonly string[]; arr: readonly Alternative[] } = { ids: [], arr: [] };
 
-  constructor(kit: Store) {
-    super(kit, "session");
+  constructor(store: Store) {
+    super(store, "session");
   }
 
   alternative(alternativeId: string): Alternative {
     let a = this.__alternativeCache.get(alternativeId);
     if (!a) {
-      a = new Alternative(this.kit, { parent: "session" }, alternativeId);
+      a = new Alternative(this.store, { parent: "session" }, alternativeId);
       this.__alternativeCache.set(alternativeId, a);
     }
     return a;
   }
 
   async readId(): Promise<string> {
-    const data = kitGraphqlData(await __kitGraphqlEnvelope(this.kit, { query: `query { session { id } }` })) as JsonObject;
+    const data = kitGraphqlData(await __kitGraphqlEnvelope(this.store, { query: `query { session { id } }` })) as JsonObject;
     const s = data["session"] as JsonObject | undefined;
     return String(s?.["id"] ?? "");
   }
 
   async readStartedAt(): Promise<string | null> {
-    const data = kitGraphqlData(await __kitGraphqlEnvelope(this.kit, { query: `query { session { startedAt } }` })) as JsonObject;
+    const data = kitGraphqlData(await __kitGraphqlEnvelope(this.store, { query: `query { session { startedAt } }` })) as JsonObject;
     const s = data["session"] as JsonObject | undefined;
     const v = s?.["startedAt"];
     if (v == null) return null;
@@ -1466,7 +1544,7 @@ export class Session extends Entity {
 
   async readAlternativeIds(): Promise<readonly string[]> {
     const data = kitGraphqlData(
-      await __kitGraphqlEnvelope(this.kit, { query: `query { session { alternatives { edges { node { id } } } } }` }),
+      await __kitGraphqlEnvelope(this.store, { query: `query { session { alternatives { edges { node { id } } } } }` }),
     ) as JsonObject;
     const s = data["session"] as JsonObject | undefined;
     return __parseEntityConnectionIds(s ?? null, "alternatives");
@@ -1483,8 +1561,8 @@ export class Session extends Entity {
     const run = (): void => {
       void this.readAlternatives().then(cb);
     };
-    const a = this.kit.bus.subscribeKind("commandSucceeded", run);
-    const b = this.kit.bus.subscribeKind("kitRenamed", run);
+    const a = this.store.bus.subscribeKind("commandSucceeded", run);
+    const b = this.store.bus.subscribeKind("kitRenamed", run);
     return (): void => {
       a();
       b();
@@ -1498,11 +1576,11 @@ export type AlternativeParent = { readonly parent: "graph"; readonly root: Graph
 /** @emoji 🔀 {@code Alternative} under {@link Graph} or {@link Session}. */
 export class Alternative extends Entity {
   constructor(
-    kit: Store,
+    store: Store,
     private readonly ap: AlternativeParent,
     id: string,
   ) {
-    super(kit, id);
+    super(store, id);
   }
 
   async readName(): Promise<string> {
@@ -1510,7 +1588,7 @@ export class Alternative extends Entity {
       this.ap.parent === "graph"
         ? `query { ${this.ap.root} { alternative(id: ${__gqlStr(this.id)}) { name } } }`
         : `query { session { alternative(id: ${__gqlStr(this.id)}) { name } } }`;
-    const data = kitGraphqlData(await __kitGraphqlEnvelope(this.kit, { query: q })) as JsonObject;
+    const data = kitGraphqlData(await __kitGraphqlEnvelope(this.store, { query: q })) as JsonObject;
     const first =
       this.ap.parent === "graph" ? (data[this.ap.root] as JsonObject | undefined) : (data["session"] as JsonObject | undefined);
     const alt = first?.["alternative"] as JsonObject | undefined;
@@ -1520,19 +1598,19 @@ export class Alternative extends Entity {
 
 /** @emoji 🏛 {@code TheKit} under {@code wip}/{@code authoritative}. */
 export class TheKit extends Entity {
-  constructor(kit: Store, private readonly graphRoot: GraphRootKind) {
-    super(kit, `theKit:${graphRoot}`);
+  constructor(store: Store, private readonly graphRoot: GraphRootKind) {
+    super(store, `theKit:${graphRoot}`);
   }
 
   async readId(): Promise<string> {
     const q = `query { ${this.graphRoot} { theKit { id } } }`;
-    const data = kitGraphqlData(await __kitGraphqlEnvelope(this.kit, { query: q })) as JsonObject;
+    const data = kitGraphqlData(await __kitGraphqlEnvelope(this.store, { query: q })) as JsonObject;
     const rootNode = data[this.graphRoot] as JsonObject | undefined;
     const tk = rootNode?.["theKit"] as JsonObject | undefined;
     return String(tk?.["id"] ?? "");
   }
 
-  /** @emoji 📦 Target {@code Version.kit} handle; field reads stay scoped by the owning {@link Store}. */
+  /** @emoji 📦 Target {@code Version.store} handle; field reads stay scoped by the owning {@link Store}. */
   async readKit(): Promise<Kit> {
     return this.store.rootKit(await this.readId());
   }
@@ -1545,14 +1623,14 @@ export class Checkpoint extends Entity {
   private __stableChanges: { ids: readonly string[]; arr: readonly Change[] } = { ids: [], arr: [] };
   private __stableEdits: { ids: readonly string[]; arr: readonly Edit[] } = { ids: [], arr: [] };
 
-  constructor(kit: Store, private readonly graphRoot: GraphRootKind, checkpointId: string) {
-    super(kit, checkpointId);
+  constructor(store: Store, private readonly graphRoot: GraphRootKind, checkpointId: string) {
+    super(store, checkpointId);
   }
 
   change(changeId: string): Change {
     let x = this.__changes.get(changeId);
     if (!x) {
-      x = new Change(this.kit, this.graphRoot, this.id, changeId);
+      x = new Change(this.store, this.graphRoot, this.id, changeId);
       this.__changes.set(changeId, x);
     }
     return x;
@@ -1561,7 +1639,7 @@ export class Checkpoint extends Entity {
   edit(editId: string): Edit {
     let e = this.__edits.get(editId);
     if (!e) {
-      e = new Edit(this.kit, this.graphRoot, this.id, editId);
+      e = new Edit(this.store, this.graphRoot, this.id, editId);
       this.__edits.set(editId, e);
     }
     return e;
@@ -1569,7 +1647,7 @@ export class Checkpoint extends Entity {
 
   async readMessage(): Promise<string> {
     const q = `query { ${this.graphRoot} { checkpoint(id: ${__gqlStr(this.id)}) { message } } }`;
-    const data = kitGraphqlData(await __kitGraphqlEnvelope(this.kit, { query: q })) as JsonObject;
+    const data = kitGraphqlData(await __kitGraphqlEnvelope(this.store, { query: q })) as JsonObject;
     const rootNode = data[this.graphRoot] as JsonObject | undefined;
     const cp = rootNode?.["checkpoint"] as JsonObject | undefined;
     return String(cp?.["message"] ?? "");
@@ -1577,7 +1655,7 @@ export class Checkpoint extends Entity {
 
   async readTimestamp(): Promise<string | null> {
     const q = `query { ${this.graphRoot} { checkpoint(id: ${__gqlStr(this.id)}) { timestamp } } }`;
-    const data = kitGraphqlData(await __kitGraphqlEnvelope(this.kit, { query: q })) as JsonObject;
+    const data = kitGraphqlData(await __kitGraphqlEnvelope(this.store, { query: q })) as JsonObject;
     const rootNode = data[this.graphRoot] as JsonObject | undefined;
     const cp = rootNode?.["checkpoint"] as JsonObject | undefined;
     const ts = cp?.["timestamp"];
@@ -1586,7 +1664,7 @@ export class Checkpoint extends Entity {
 
   async readHash(): Promise<string> {
     const q = `query { ${this.graphRoot} { checkpoint(id: ${__gqlStr(this.id)}) { hash } } }`;
-    const data = kitGraphqlData(await __kitGraphqlEnvelope(this.kit, { query: q })) as JsonObject;
+    const data = kitGraphqlData(await __kitGraphqlEnvelope(this.store, { query: q })) as JsonObject;
     const rootNode = data[this.graphRoot] as JsonObject | undefined;
     const cp = rootNode?.["checkpoint"] as JsonObject | undefined;
     return String(cp?.["hash"] ?? "");
@@ -1594,7 +1672,7 @@ export class Checkpoint extends Entity {
 
   async readChangeIds(): Promise<readonly string[]> {
     const q = `query { ${this.graphRoot} { checkpoint(id: ${__gqlStr(this.id)}) { changes { id } } } }`;
-    const data = kitGraphqlData(await __kitGraphqlEnvelope(this.kit, { query: q })) as JsonObject;
+    const data = kitGraphqlData(await __kitGraphqlEnvelope(this.store, { query: q })) as JsonObject;
     const rootNode = data[this.graphRoot] as JsonObject | undefined;
     const cp = rootNode?.["checkpoint"] as JsonObject | undefined;
     return __parseStrongEntityArrayIds(cp ?? null, "changes");
@@ -1602,7 +1680,7 @@ export class Checkpoint extends Entity {
 
   async readEditIds(): Promise<readonly string[]> {
     const q = `query { ${this.graphRoot} { checkpoint(id: ${__gqlStr(this.id)}) { edits { edges { node { id } } } } } }`;
-    const data = kitGraphqlData(await __kitGraphqlEnvelope(this.kit, { query: q })) as JsonObject;
+    const data = kitGraphqlData(await __kitGraphqlEnvelope(this.store, { query: q })) as JsonObject;
     const rootNode = data[this.graphRoot] as JsonObject | undefined;
     const cp = rootNode?.["checkpoint"] as JsonObject | undefined;
     return __parseEntityConnectionIds(cp ?? null, "edits");
@@ -1625,8 +1703,8 @@ export class Checkpoint extends Entity {
     const run = (): void => {
       void this.readChanges().then(cb);
     };
-    const a = this.kit.bus.subscribeKind("commandSucceeded", run);
-    const b = this.kit.bus.subscribeKind("kitRenamed", run);
+    const a = this.store.bus.subscribeKind("commandSucceeded", run);
+    const b = this.store.bus.subscribeKind("kitRenamed", run);
     return (): void => {
       a();
       b();
@@ -1638,8 +1716,8 @@ export class Checkpoint extends Entity {
     const run = (): void => {
       void this.readEdits().then(cb);
     };
-    const a = this.kit.bus.subscribeKind("commandSucceeded", run);
-    const b = this.kit.bus.subscribeKind("kitRenamed", run);
+    const a = this.store.bus.subscribeKind("commandSucceeded", run);
+    const b = this.store.bus.subscribeKind("kitRenamed", run);
     return (): void => {
       a();
       b();
@@ -1649,13 +1727,13 @@ export class Checkpoint extends Entity {
 
 /** @emoji 🔀 {@code Change} scoped to a {@link Checkpoint} (navigation shell; expand with field reads). */
 export class Change extends Entity {
-  constructor(kit: Store, private readonly graphRoot: GraphRootKind, private readonly checkpointId: string, changeId: string) {
-    super(kit, changeId);
+  constructor(store: Store, private readonly graphRoot: GraphRootKind, private readonly checkpointId: string, changeId: string) {
+    super(store, changeId);
   }
 
   private async readUnderChange(inner: string): Promise<JsonObject | null> {
     const q = `query { ${this.graphRoot} { checkpoint(id: ${__gqlStr(this.checkpointId)}) { change(id: ${__gqlStr(this.id)}) { ${inner} } } } }`;
-    const data = kitGraphqlData(await __kitGraphqlEnvelope(this.kit, { query: q })) as JsonObject;
+    const data = kitGraphqlData(await __kitGraphqlEnvelope(this.store, { query: q })) as JsonObject;
     const rootNode = data[this.graphRoot] as JsonObject | undefined;
     const cp = rootNode?.["checkpoint"] as JsonObject | undefined;
     const ch = cp?.["change"] as JsonObject | undefined;
@@ -1694,13 +1772,13 @@ export class Change extends Entity {
 
 /** @emoji ✏️ {@code Edit} scoped to a {@link Checkpoint} (navigation shell; expand with field reads). */
 export class Edit extends Entity {
-  constructor(kit: Store, private readonly graphRoot: GraphRootKind, private readonly checkpointId: string, editId: string) {
-    super(kit, editId);
+  constructor(store: Store, private readonly graphRoot: GraphRootKind, private readonly checkpointId: string, editId: string) {
+    super(store, editId);
   }
 
   private async readUnderEdit(inner: string): Promise<JsonObject | null> {
     const q = `query { ${this.graphRoot} { checkpoint(id: ${__gqlStr(this.checkpointId)}) { edit(id: ${__gqlStr(this.id)}) { ${inner} } } } }`;
-    const data = kitGraphqlData(await __kitGraphqlEnvelope(this.kit, { query: q })) as JsonObject;
+    const data = kitGraphqlData(await __kitGraphqlEnvelope(this.store, { query: q })) as JsonObject;
     const rootNode = data[this.graphRoot] as JsonObject | undefined;
     const cp = rootNode?.["checkpoint"] as JsonObject | undefined;
     const ed = cp?.["edit"] as JsonObject | undefined;
@@ -1732,13 +1810,13 @@ export class Edit extends Entity {
 
 /** @emoji ⚔️ {@code Conflict} via {@code node(id:)}. */
 export class Conflict extends Entity {
-  constructor(kit: Store, id: string) {
-    super(kit, id);
+  constructor(store: Store, id: string) {
+    super(store, id);
   }
 
   async readReasons(): Promise<readonly string[]> {
     const data = kitGraphqlData(
-      await __kitGraphqlEnvelope(this.kit, { query: `query($id: ID!) { node(id: $id) { ... on Conflict { reasons } } }`, variables: { id: this.id } }),
+      await __kitGraphqlEnvelope(this.store, { query: `query($id: ID!) { node(id: $id) { ... on Conflict { reasons } } }`, variables: { id: this.id } }),
     ) as JsonObject;
     const n = data["node"] as JsonObject | undefined;
     const raw = n?.["reasons"] as readonly JsonValue[] | undefined;
@@ -1748,7 +1826,7 @@ export class Conflict extends Entity {
 
   async readAuthoritativeChangeId(): Promise<string> {
     const data = kitGraphqlData(
-      await __kitGraphqlEnvelope(this.kit, {
+      await __kitGraphqlEnvelope(this.store, {
         query: `query($id: ID!) { node(id: $id) { ... on Conflict { authoritativeChange { id } } } }`,
         variables: { id: this.id },
       }),
@@ -1760,7 +1838,7 @@ export class Conflict extends Entity {
 
   async readWipChangeId(): Promise<string> {
     const data = kitGraphqlData(
-      await __kitGraphqlEnvelope(this.kit, {
+      await __kitGraphqlEnvelope(this.store, {
         query: `query($id: ID!) { node(id: $id) { ... on Conflict { wipChange { id } } } }`,
         variables: { id: this.id },
       }),
@@ -1852,8 +1930,8 @@ export class Design extends Entity {
   private __stablePieces: { ids: readonly string[]; arr: readonly Piece[] } = { ids: [], arr: [] };
   private __stableConnections: { ids: readonly string[]; arr: readonly Connection[] } = { ids: [], arr: [] };
 
-  constructor(kit: Store, id: string) {
-    super(kit, id);
+  constructor(store: Store, id: string) {
+    super(store, id);
   }
 
   private dsel(inner: string): string {
@@ -1863,20 +1941,20 @@ export class Design extends Entity {
   piece(pieceId: string): Piece {
     let p = this.__pieceCache.get(pieceId);
     if (!p) {
-      p = new Piece(this.kit, this.id, pieceId);
+      p = new Piece(this.store, this.id, pieceId);
       this.__pieceCache.set(pieceId, p);
     }
     return p;
   }
 
   pieces(pieceIds: readonly string[]): PiecesOperations {
-    return new PiecesOperations(this.kit, this.id, pieceIds);
+    return new PiecesOperations(this.store, this.id, pieceIds);
   }
 
   connection(connectionId: string): Connection {
     let c = this.__connectionCache.get(connectionId);
     if (!c) {
-      c = new Connection(this.kit, this.id, connectionId);
+      c = new Connection(this.store, this.id, connectionId);
       this.__connectionCache.set(connectionId, c);
     }
     return c;
@@ -1885,7 +1963,7 @@ export class Design extends Entity {
   layer(layerId: string): Layer {
     let l = this.__layerCache.get(layerId);
     if (!l) {
-      l = new Layer(this.kit, this.id, layerId);
+      l = new Layer(this.store, this.id, layerId);
       this.__layerCache.set(layerId, l);
     }
     return l;
@@ -1894,7 +1972,7 @@ export class Design extends Entity {
   group(groupId: string): Group {
     let g = this.__groupCache.get(groupId);
     if (!g) {
-      g = new Group(this.kit, this.id, groupId);
+      g = new Group(this.store, this.id, groupId);
       this.__groupCache.set(groupId, g);
     }
     return g;
@@ -1909,7 +1987,7 @@ export class Design extends Entity {
    * @emoji 📖 Stateless read for one {@code design(id){ … }} selection; {@link FieldSpec#parse} receives the kit row (with nested {@code design}).
    */
   async fieldRead<T>(spec: FieldSpec<T>): Promise<T> {
-    const frag = await this.kit.readKitInner(this.dsel(spec.selection));
+    const frag = await this.store.readKitInner(this.dsel(spec.selection));
     return spec.parse(frag as JsonValue);
   }
 
@@ -1919,51 +1997,51 @@ export class Design extends Entity {
   subscribeField<T>(spec: FieldSpec<T>, cb: (next: T) => void): Unsubscribe {
     const kind = spec.eventKind;
     if (kind == null || kind === "") return () => { };
-    return this.kit.bus.subscribeKind(kind, () => {
+    return this.store.bus.subscribeKind(kind, () => {
       void this.fieldRead(spec).then(cb);
     });
   }
 
   /** @emoji 📡 Design description stream (rs {@code changedDescription}; coarse — refetches design description). */
   onDescriptionChanged(cb: (next: string) => void): Unsubscribe {
-    return this.kit.bus.subscribeKind("changedDescription", () => {
+    return this.store.bus.subscribeKind("changedDescription", () => {
       void this.readDescription().then(cb);
     });
   }
 
   async readId(): Promise<string> {
-    const frag = (await this.kit.readKitInner(this.dsel("id"))) as JsonObject | null;
+    const frag = (await this.store.readKitInner(this.dsel("id"))) as JsonObject | null;
     const d = frag?.["design"] as JsonObject | undefined;
     return String(d?.["id"] ?? frag?.["id"] ?? "");
   }
 
   async readIcon(): Promise<string> {
-    const frag = (await this.kit.readKitInner(this.dsel("icon"))) as JsonObject | null;
+    const frag = (await this.store.readKitInner(this.dsel("icon"))) as JsonObject | null;
     const d = frag?.["design"] as JsonObject | undefined;
     return String(d?.["icon"] ?? frag?.["icon"] ?? "");
   }
 
   async readImage(): Promise<string> {
-    const frag = (await this.kit.readKitInner(this.dsel("image"))) as JsonObject | null;
+    const frag = (await this.store.readKitInner(this.dsel("image"))) as JsonObject | null;
     const d = frag?.["design"] as JsonObject | undefined;
     return String(d?.["image"] ?? frag?.["image"] ?? "");
   }
 
   async readUnit(): Promise<string> {
-    const frag = (await this.kit.readKitInner(this.dsel("unit"))) as JsonObject | null;
+    const frag = (await this.store.readKitInner(this.dsel("unit"))) as JsonObject | null;
     const d = frag?.["design"] as JsonObject | undefined;
     return String(d?.["unit"] ?? frag?.["unit"] ?? "");
   }
 
   async readQualitySum(): Promise<number> {
-    const frag = (await this.kit.readKitInner(this.dsel("qualitySum"))) as JsonObject | null;
+    const frag = (await this.store.readKitInner(this.dsel("qualitySum"))) as JsonObject | null;
     const d = frag?.["design"] as JsonObject | undefined;
     const raw = d?.["qualitySum"] ?? frag?.["qualitySum"];
     return typeof raw === "number" ? raw : Number(raw ?? NaN);
   }
 
   async readPieceIds(): Promise<readonly string[]> {
-    const frag = (await this.kit.readKitInner(this.dsel("pieces { edges { node { id } } }"))) as JsonObject | null;
+    const frag = (await this.store.readKitInner(this.dsel("pieces { edges { node { id } } }"))) as JsonObject | null;
     const d = frag?.["design"] as JsonObject | undefined;
     return __parseEntityConnectionIds(d ?? (isJsonObjectNode(frag) ? frag : null), "pieces");
   }
@@ -1979,8 +2057,8 @@ export class Design extends Entity {
     const run = (): void => {
       void this.readPieces().then(cb);
     };
-    const a = this.kit.bus.subscribeKind("commandSucceeded", run);
-    const b = this.kit.bus.subscribeKind("kitRenamed", run);
+    const a = this.store.bus.subscribeKind("commandSucceeded", run);
+    const b = this.store.bus.subscribeKind("kitRenamed", run);
     return (): void => {
       a();
       b();
@@ -1988,7 +2066,7 @@ export class Design extends Entity {
   }
 
   async readConnectionIds(): Promise<readonly string[]> {
-    const frag = (await this.kit.readKitInner(this.dsel("connections { edges { node { id } } }"))) as JsonObject | null;
+    const frag = (await this.store.readKitInner(this.dsel("connections { edges { node { id } } }"))) as JsonObject | null;
     const d = frag?.["design"] as JsonObject | undefined;
     return __parseEntityConnectionIds(d ?? (isJsonObjectNode(frag) ? frag : null), "connections");
   }
@@ -2004,8 +2082,8 @@ export class Design extends Entity {
     const run = (): void => {
       void this.readConnections().then(cb);
     };
-    const a = this.kit.bus.subscribeKind("commandSucceeded", run);
-    const b = this.kit.bus.subscribeKind("kitRenamed", run);
+    const a = this.store.bus.subscribeKind("commandSucceeded", run);
+    const b = this.store.bus.subscribeKind("kitRenamed", run);
     return (): void => {
       a();
       b();
@@ -2013,59 +2091,59 @@ export class Design extends Entity {
   }
 
   async readAttributeIds(): Promise<readonly string[]> {
-    const frag = (await this.kit.readKitInner(this.dsel("attributes { edges { node { id } } }"))) as JsonObject | null;
+    const frag = (await this.store.readKitInner(this.dsel("attributes { edges { node { id } } }"))) as JsonObject | null;
     const d = frag?.["design"] as JsonObject | undefined;
     return __parseEntityConnectionIds(d ?? (isJsonObjectNode(frag) ? frag : null), "attributes");
   }
 
   async readName(): Promise<string> {
-    const frag = (await this.kit.readKitInner(this.dsel("name"))) as JsonObject | null;
+    const frag = (await this.store.readKitInner(this.dsel("name"))) as JsonObject | null;
     const d = frag?.["design"] as JsonObject | undefined;
     return String(d?.["name"] ?? frag?.["name"] ?? "");
   }
 
   async readDescription(): Promise<string> {
-    const frag = (await this.kit.readKitInner(this.dsel("description"))) as JsonObject | null;
+    const frag = (await this.store.readKitInner(this.dsel("description"))) as JsonObject | null;
     const d = frag?.["design"] as JsonObject | undefined;
     return String(d?.["description"] ?? frag?.["description"] ?? "");
   }
 
   async rename(newName: string): Promise<SetResult> {
-    const cid = await this.kit.ensureChangeId();
-    return this.kit.mutateScoped(cid, this.dsel(`rn: rename(newName: ${__gqlStr(newName)})`));
+    const cid = await this.store.ensureChangeId();
+    return this.store.mutateScoped(cid, this.dsel(`rn: rename(newName: ${__gqlStr(newName)})`));
   }
 
   async changeDescription(newDescription: string): Promise<SetResult> {
-    const cid = await this.kit.ensureChangeId();
-    return this.kit.mutateScoped(cid, this.dsel(`cd: changeDescription(newDescription: ${__gqlStr(newDescription)})`));
+    const cid = await this.store.ensureChangeId();
+    return this.store.mutateScoped(cid, this.dsel(`cd: changeDescription(newDescription: ${__gqlStr(newDescription)})`));
   }
 
   async flatten(): Promise<SetResult> {
-    const cid = await this.kit.ensureChangeId();
-    return this.kit.mutateScoped(cid, this.dsel(`fl: flatten`));
+    const cid = await this.store.ensureChangeId();
+    return this.store.mutateScoped(cid, this.dsel(`fl: flatten`));
   }
 
   async addAttribute(key: string, value: string, definition: string): Promise<SetResult> {
-    const cid = await this.kit.ensureChangeId();
-    return this.kit.mutateScoped(cid, this.dsel(`aa: addAttribute(key: ${__gqlStr(key)}, value: ${__gqlStr(value)}, definition: ${__gqlStr(definition)})`));
+    const cid = await this.store.ensureChangeId();
+    return this.store.mutateScoped(cid, this.dsel(`aa: addAttribute(key: ${__gqlStr(key)}, value: ${__gqlStr(value)}, definition: ${__gqlStr(definition)})`));
   }
 
   async removeAttribute(id: string): Promise<SetResult> {
-    const cid = await this.kit.ensureChangeId();
-    return this.kit.mutateScoped(cid, this.dsel(`ra: removeAttribute(id: ${__gqlStr(id)})`));
+    const cid = await this.store.ensureChangeId();
+    return this.store.mutateScoped(cid, this.dsel(`ra: removeAttribute(id: ${__gqlStr(id)})`));
   }
 
   async removeAttributes(ids: readonly string[]): Promise<SetResult> {
-    const cid = await this.kit.ensureChangeId();
-    return this.kit.mutateScoped(cid, this.dsel(`ras: removeAttributes(ids: ${__gqlIds(ids)})`));
+    const cid = await this.store.ensureChangeId();
+    return this.store.mutateScoped(cid, this.dsel(`ras: removeAttributes(ids: ${__gqlIds(ids)})`));
   }
 
   async addFixedPiece(blueprintId: string, position: PositionInput, name?: string | null, description?: string | null): Promise<SetResult> {
-    const cid = await this.kit.ensureChangeId();
+    const cid = await this.store.ensureChangeId();
     const pos = formatPositionInput(position);
     const n = name == null ? "null" : __gqlStr(name);
     const d = description == null ? "null" : __gqlStr(description);
-    return this.kit.mutateScoped(cid, this.dsel(`afp: addFixedPiece(blueprintId: ${__gqlStr(blueprintId)}, position: ${pos}, name: ${n}, description: ${d})`));
+    return this.store.mutateScoped(cid, this.dsel(`afp: addFixedPiece(blueprintId: ${__gqlStr(blueprintId)}, position: ${pos}, name: ${n}, description: ${d})`));
   }
 
   async addChildPieceWithParentConnection(
@@ -2078,12 +2156,12 @@ export class Design extends Entity {
     position?: PositionInput | null,
     scale?: number | null,
   ): Promise<SetResult> {
-    const cid = await this.kit.ensureChangeId();
+    const cid = await this.store.ensureChangeId();
     const pos = position == null ? "null" : formatPositionInput(position);
     const n = name == null ? "null" : __gqlStr(name);
     const d = description == null ? "null" : __gqlStr(description);
     const sc = scale == null ? "null" : String(scale);
-    return this.kit.mutateScoped(
+    return this.store.mutateScoped(
       cid,
       this.dsel(
         `ac: addChildPieceWithParentConnection(blueprintId: ${__gqlStr(blueprintId)}, parentPieceId: ${__gqlStr(parentPieceId)}, parentConnector: ${__gqlStr(parentConnector)}, childConnector: ${__gqlStr(childConnector)}, name: ${n}, description: ${d}, position: ${pos}, scale: ${sc})`,
@@ -2101,12 +2179,12 @@ export class Design extends Entity {
     description?: string | null,
     scale?: number | null,
   ): Promise<SetResult> {
-    const cid = await this.kit.ensureChangeId();
+    const cid = await this.store.ensureChangeId();
     const pos = formatPositionInput(position);
     const n = name == null ? "null" : __gqlStr(name);
     const d = description == null ? "null" : __gqlStr(description);
     const sc = scale == null ? "null" : String(scale);
-    return this.kit.mutateScoped(
+    return this.store.mutateScoped(
       cid,
       this.dsel(
         `ah: addHangingChildPieceWithParentConnection(blueprintId: ${__gqlStr(blueprintId)}, parentPieceId: ${__gqlStr(parentPieceId)}, parentConnector: ${__gqlStr(parentConnector)}, childConnector: ${__gqlStr(childConnector)}, position: ${pos}, name: ${n}, description: ${d}, scale: ${sc})`,
@@ -2115,18 +2193,18 @@ export class Design extends Entity {
   }
 
   async deletePiece(id: string): Promise<SetResult> {
-    const cid = await this.kit.ensureChangeId();
-    return this.kit.mutateScoped(cid, this.dsel(`dp: deletePiece(id: ${__gqlStr(id)})`));
+    const cid = await this.store.ensureChangeId();
+    return this.store.mutateScoped(cid, this.dsel(`dp: deletePiece(id: ${__gqlStr(id)})`));
   }
 
   async deletePieces(ids: readonly string[]): Promise<SetResult> {
-    const cid = await this.kit.ensureChangeId();
-    return this.kit.mutateScoped(cid, this.dsel(`dps: deletePieces(ids: ${__gqlIds(ids)})`));
+    const cid = await this.store.ensureChangeId();
+    return this.store.mutateScoped(cid, this.dsel(`dps: deletePieces(ids: ${__gqlIds(ids)})`));
   }
 
   async deletePiecesAndConnections(pieceIds: readonly string[], connectionIds: readonly string[]): Promise<SetResult> {
-    const cid = await this.kit.ensureChangeId();
-    return this.kit.mutateScoped(cid, this.dsel(`dpc: deletePiecesAndConnections(pieceIds: ${__gqlIds(pieceIds)}, connectionIds: ${__gqlIds(connectionIds)})`));
+    const cid = await this.store.ensureChangeId();
+    return this.store.mutateScoped(cid, this.dsel(`dpc: deletePiecesAndConnections(pieceIds: ${__gqlIds(pieceIds)}, connectionIds: ${__gqlIds(connectionIds)})`));
   }
 }
 //#endregion 📐Design
@@ -2137,8 +2215,8 @@ export class Type extends Entity {
   private readonly __connectorCache = new Map<string, Connector>();
   private readonly __representationCache = new Map<string, Representation>();
 
-  constructor(kit: Store, id: string) {
-    super(kit, id);
+  constructor(store: Store, id: string) {
+    super(store, id);
   }
 
   private tsel(inner: string): string {
@@ -2148,7 +2226,7 @@ export class Type extends Entity {
   port(portId: string): Port {
     let p = this.__portCache.get(portId);
     if (!p) {
-      p = new Port(this.kit, this.id, portId);
+      p = new Port(this.store, this.id, portId);
       this.__portCache.set(portId, p);
     }
     return p;
@@ -2157,7 +2235,7 @@ export class Type extends Entity {
   connector(connectorId: string): Connector {
     let c = this.__connectorCache.get(connectorId);
     if (!c) {
-      c = new Connector(this.kit, this.id, connectorId);
+      c = new Connector(this.store, this.id, connectorId);
       this.__connectorCache.set(connectorId, c);
     }
     return c;
@@ -2166,78 +2244,78 @@ export class Type extends Entity {
   representation(representationId: string): Representation {
     let r = this.__representationCache.get(representationId);
     if (!r) {
-      r = new Representation(this.kit, this.id, representationId);
+      r = new Representation(this.store, this.id, representationId);
       this.__representationCache.set(representationId, r);
     }
     return r;
   }
 
   async rename(newName: string): Promise<SetResult> {
-    const cid = await this.kit.ensureChangeId();
-    return this.kit.mutateScoped(cid, this.tsel(`rn: rename(newName: ${__gqlStr(newName)})`));
+    const cid = await this.store.ensureChangeId();
+    return this.store.mutateScoped(cid, this.tsel(`rn: rename(newName: ${__gqlStr(newName)})`));
   }
 
   async changeDescription(newDescription: string): Promise<SetResult> {
-    const cid = await this.kit.ensureChangeId();
-    return this.kit.mutateScoped(cid, this.tsel(`cd: changeDescription(newDescription: ${__gqlStr(newDescription)})`));
+    const cid = await this.store.ensureChangeId();
+    return this.store.mutateScoped(cid, this.tsel(`cd: changeDescription(newDescription: ${__gqlStr(newDescription)})`));
   }
 
   async changeIcon(newIcon: string): Promise<SetResult> {
-    const cid = await this.kit.ensureChangeId();
-    return this.kit.mutateScoped(cid, this.tsel(`ci: changeIcon(newIcon: ${__gqlStr(newIcon)})`));
+    const cid = await this.store.ensureChangeId();
+    return this.store.mutateScoped(cid, this.tsel(`ci: changeIcon(newIcon: ${__gqlStr(newIcon)})`));
   }
 
   async addAttribute(key: string, value: string, definition: string): Promise<SetResult> {
-    const cid = await this.kit.ensureChangeId();
-    return this.kit.mutateScoped(cid, this.tsel(`aa: addAttribute(key: ${__gqlStr(key)}, value: ${__gqlStr(value)}, definition: ${__gqlStr(definition)})`));
+    const cid = await this.store.ensureChangeId();
+    return this.store.mutateScoped(cid, this.tsel(`aa: addAttribute(key: ${__gqlStr(key)}, value: ${__gqlStr(value)}, definition: ${__gqlStr(definition)})`));
   }
 
   async removeAttribute(id: string): Promise<SetResult> {
-    const cid = await this.kit.ensureChangeId();
-    return this.kit.mutateScoped(cid, this.tsel(`ra: removeAttribute(id: ${__gqlStr(id)})`));
+    const cid = await this.store.ensureChangeId();
+    return this.store.mutateScoped(cid, this.tsel(`ra: removeAttribute(id: ${__gqlStr(id)})`));
   }
 
   async removeAttributes(ids: readonly string[]): Promise<SetResult> {
-    const cid = await this.kit.ensureChangeId();
-    return this.kit.mutateScoped(cid, this.tsel(`ras: removeAttributes(ids: ${__gqlIds(ids)})`));
+    const cid = await this.store.ensureChangeId();
+    return this.store.mutateScoped(cid, this.tsel(`ras: removeAttributes(ids: ${__gqlIds(ids)})`));
   }
 
   async createPort(code?: string | null, label?: string | null, description?: string | null, icon?: string | null, order?: number | null): Promise<SetResult> {
-    const cid = await this.kit.ensureChangeId();
+    const cid = await this.store.ensureChangeId();
     const c = code == null ? "null" : __gqlStr(code);
     const l = label == null ? "null" : __gqlStr(label);
     const d = description == null ? "null" : __gqlStr(description);
     const i = icon == null ? "null" : __gqlStr(icon);
     const o = order == null ? "null" : String(order);
-    return this.kit.mutateScoped(cid, this.tsel(`cp: createPort(code: ${c}, label: ${l}, description: ${d}, icon: ${i}, order: ${o})`));
+    return this.store.mutateScoped(cid, this.tsel(`cp: createPort(code: ${c}, label: ${l}, description: ${d}, icon: ${i}, order: ${o})`));
   }
 
   async deletePort(id: string): Promise<SetResult> {
-    const cid = await this.kit.ensureChangeId();
-    return this.kit.mutateScoped(cid, this.tsel(`dp: deletePort(id: ${__gqlStr(id)})`));
+    const cid = await this.store.ensureChangeId();
+    return this.store.mutateScoped(cid, this.tsel(`dp: deletePort(id: ${__gqlStr(id)})`));
   }
 
   async deletePorts(ids: readonly string[]): Promise<SetResult> {
-    const cid = await this.kit.ensureChangeId();
-    return this.kit.mutateScoped(cid, this.tsel(`dps: deletePorts(ids: ${__gqlIds(ids)})`));
+    const cid = await this.store.ensureChangeId();
+    return this.store.mutateScoped(cid, this.tsel(`dps: deletePorts(ids: ${__gqlIds(ids)})`));
   }
 
   async addConnector(code: string, description?: string | null, icon?: string | null, portId?: string | null): Promise<SetResult> {
-    const cid = await this.kit.ensureChangeId();
+    const cid = await this.store.ensureChangeId();
     const d = description == null ? "null" : __gqlStr(description);
     const i = icon == null ? "null" : __gqlStr(icon);
     const p = portId == null ? "null" : __gqlStr(portId);
-    return this.kit.mutateScoped(cid, this.tsel(`ac: addConnector(code: ${__gqlStr(code)}, description: ${d}, icon: ${i}, portId: ${p})`));
+    return this.store.mutateScoped(cid, this.tsel(`ac: addConnector(code: ${__gqlStr(code)}, description: ${d}, icon: ${i}, portId: ${p})`));
   }
 
   async removeConnector(id: string): Promise<SetResult> {
-    const cid = await this.kit.ensureChangeId();
-    return this.kit.mutateScoped(cid, this.tsel(`rc: removeConnector(id: ${__gqlStr(id)})`));
+    const cid = await this.store.ensureChangeId();
+    return this.store.mutateScoped(cid, this.tsel(`rc: removeConnector(id: ${__gqlStr(id)})`));
   }
 
   async removeConnectors(ids: readonly string[]): Promise<SetResult> {
-    const cid = await this.kit.ensureChangeId();
-    return this.kit.mutateScoped(cid, this.tsel(`rcs: removeConnectors(ids: ${__gqlIds(ids)})`));
+    const cid = await this.store.ensureChangeId();
+    return this.store.mutateScoped(cid, this.tsel(`rcs: removeConnectors(ids: ${__gqlIds(ids)})`));
   }
 
   /** @emoji 🧰 Resolves {@code type(id){…}} on the materialized kit fragment. */
@@ -2246,34 +2324,34 @@ export class Type extends Entity {
   }
 
   async readName(): Promise<string> {
-    const frag = (await this.kit.readKitInner(this.tsel("name"))) as JsonObject | null;
+    const frag = (await this.store.readKitInner(this.tsel("name"))) as JsonObject | null;
     return String(this.typeNode(frag)?.["name"] ?? "");
   }
 
   async readDescription(): Promise<string> {
-    const frag = (await this.kit.readKitInner(this.tsel("description"))) as JsonObject | null;
+    const frag = (await this.store.readKitInner(this.tsel("description"))) as JsonObject | null;
     return String(this.typeNode(frag)?.["description"] ?? "");
   }
 
   async readIcon(): Promise<string> {
-    const frag = (await this.kit.readKitInner(this.tsel("icon"))) as JsonObject | null;
+    const frag = (await this.store.readKitInner(this.tsel("icon"))) as JsonObject | null;
     return String(this.typeNode(frag)?.["icon"] ?? "");
   }
 
   async readImage(): Promise<string> {
-    const frag = (await this.kit.readKitInner(this.tsel("image"))) as JsonObject | null;
+    const frag = (await this.store.readKitInner(this.tsel("image"))) as JsonObject | null;
     return String(this.typeNode(frag)?.["image"] ?? "");
   }
 
   async readUnit(): Promise<string> {
-    const frag = (await this.kit.readKitInner(this.tsel("unit"))) as JsonObject | null;
+    const frag = (await this.store.readKitInner(this.tsel("unit"))) as JsonObject | null;
     return String(this.typeNode(frag)?.["unit"] ?? "");
   }
 
   /** @emoji 🧰 Bulky {@code connectors { edges { node { id code name } } }} read (SDL {@code Type.connectors}). */
   async readConnectors(): Promise<readonly { readonly id: string; readonly code: string; readonly name: string }[]> {
     const inner = "connectors { edges { node { id code name } } }";
-    const frag = (await this.kit.readKitInner(this.tsel(inner))) as JsonObject | null;
+    const frag = (await this.store.readKitInner(this.tsel(inner))) as JsonObject | null;
     const conn = this.typeNode(frag)?.["connectors"] as JsonObject | undefined;
     const edges = (conn?.["edges"] as readonly JsonObject[] | undefined) ?? [];
     const out: { id: string; code: string; name: string }[] = [];
@@ -2290,7 +2368,7 @@ export class Type extends Entity {
   /** @emoji 🧰 Bulky {@code representations { edges { node { id } } }} read (SDL {@code Type.representations}). */
   async readRepresentations(): Promise<readonly { readonly id: string }[]> {
     const inner = "representations { edges { node { id } } }";
-    const frag = (await this.kit.readKitInner(this.tsel(inner))) as JsonObject | null;
+    const frag = (await this.store.readKitInner(this.tsel(inner))) as JsonObject | null;
     const rep = this.typeNode(frag)?.["representations"] as JsonObject | undefined;
     const edges = (rep?.["edges"] as readonly JsonObject[] | undefined) ?? [];
     const out: { id: string }[] = [];
@@ -2305,7 +2383,7 @@ export class Type extends Entity {
   /** @emoji 🧰 Bulky {@code attributes { edges { node {…} } }} read (SDL {@code Type.attributes}). */
   async readAttributes(): Promise<readonly Attribute[]> {
     const inner = "attributes { edges { node { id key value definition } } }";
-    const frag = (await this.kit.readKitInner(this.tsel(inner))) as JsonObject | null;
+    const frag = (await this.store.readKitInner(this.tsel(inner))) as JsonObject | null;
     return parseAttributeConnectionUnder(this, this.typeNode(frag));
   }
 }
@@ -2314,8 +2392,8 @@ export class Type extends Entity {
 //#region 🔘Port
 export class Port extends Entity {
   readonly typeId: string;
-  constructor(kit: Store, typeId: string, id: string) {
-    super(kit, id);
+  constructor(store: Store, typeId: string, id: string) {
+    super(store, id);
     this.typeId = typeId;
   }
 
@@ -2331,76 +2409,76 @@ export class Port extends Entity {
 
   /** @emoji 🔘 SDL {@code Port.code}. */
   async readCode(): Promise<string> {
-    const frag = (await this.kit.readKitInner(this.psel("code"))) as JsonObject | null;
+    const frag = (await this.store.readKitInner(this.psel("code"))) as JsonObject | null;
     const v = this.portNode(frag)?.["code"];
     return v == null ? "" : String(v);
   }
 
   /** @emoji 🔘 SDL {@code Port.label}. */
   async readLabel(): Promise<string> {
-    const frag = (await this.kit.readKitInner(this.psel("label"))) as JsonObject | null;
+    const frag = (await this.store.readKitInner(this.psel("label"))) as JsonObject | null;
     const v = this.portNode(frag)?.["label"];
     return v == null ? "" : String(v);
   }
 
   /** @emoji 🔘 SDL {@code Port.order}. */
   async readOrder(): Promise<number | null> {
-    const frag = (await this.kit.readKitInner(this.psel("order"))) as JsonObject | null;
+    const frag = (await this.store.readKitInner(this.psel("order"))) as JsonObject | null;
     const v = this.portNode(frag)?.["order"];
     return typeof v === "number" ? v : null;
   }
 
   async readName(): Promise<string> {
-    const frag = (await this.kit.readKitInner(this.psel("name"))) as JsonObject | null;
+    const frag = (await this.store.readKitInner(this.psel("name"))) as JsonObject | null;
     return String(this.portNode(frag)?.["name"] ?? "");
   }
 
   async readDescription(): Promise<string> {
-    const frag = (await this.kit.readKitInner(this.psel("description"))) as JsonObject | null;
+    const frag = (await this.store.readKitInner(this.psel("description"))) as JsonObject | null;
     return String(this.portNode(frag)?.["description"] ?? "");
   }
 
   async readIcon(): Promise<string> {
-    const frag = (await this.kit.readKitInner(this.psel("icon"))) as JsonObject | null;
+    const frag = (await this.store.readKitInner(this.psel("icon"))) as JsonObject | null;
     return String(this.portNode(frag)?.["icon"] ?? "");
   }
 
   /** @emoji 🔘 Bulky {@code attributes { edges { node {…} } }} read (SDL {@code Port.attributes}). */
   async readAttributes(): Promise<readonly Attribute[]> {
     const inner = "attributes { edges { node { id key value definition } } }";
-    const frag = (await this.kit.readKitInner(this.psel(inner))) as JsonObject | null;
+    const frag = (await this.store.readKitInner(this.psel(inner))) as JsonObject | null;
     return parseAttributeConnectionUnder(this, this.portNode(frag));
   }
 
   async rename(newCode: string, newLabel?: string | null): Promise<SetResult> {
-    const cid = await this.kit.ensureChangeId();
+    const cid = await this.store.ensureChangeId();
     const lab = newLabel == null ? "null" : __gqlStr(newLabel);
-    return this.kit.mutateScoped(cid, this.psel(`rn: rename(newCode: ${__gqlStr(newCode)}, newLabel: ${lab})`));
+    return this.store.mutateScoped(cid, this.psel(`rn: rename(newCode: ${__gqlStr(newCode)}, newLabel: ${lab})`));
   }
 
   async changeDescription(newDescription: string): Promise<SetResult> {
-    const cid = await this.kit.ensureChangeId();
-    return this.kit.mutateScoped(cid, this.psel(`cd: changeDescription(newDescription: ${__gqlStr(newDescription)})`));
+    const cid = await this.store.ensureChangeId();
+    return this.store.mutateScoped(cid, this.psel(`cd: changeDescription(newDescription: ${__gqlStr(newDescription)})`));
   }
 
   async changeIcon(newIcon: string): Promise<SetResult> {
-    const cid = await this.kit.ensureChangeId();
-    return this.kit.mutateScoped(cid, this.psel(`ci: changeIcon(newIcon: ${__gqlStr(newIcon)})`));
+    const cid = await this.store.ensureChangeId();
+    return this.store.mutateScoped(cid, this.psel(`ci: changeIcon(newIcon: ${__gqlStr(newIcon)})`));
   }
 
   async addAttribute(key: string, value: string, definition: string): Promise<SetResult> {
-    const cid = await this.kit.ensureChangeId();
-    return this.kit.mutateScoped(cid, this.psel(`aa: addAttribute(key: ${__gqlStr(key)}, value: ${__gqlStr(value)}, definition: ${__gqlStr(definition)})`));
+    const cid = await this.store.ensureChangeId();
+    return this.store.mutateScoped(cid, this.psel(`aa: addAttribute(key: ${__gqlStr(key)}, value: ${__gqlStr(value)}, definition: ${__gqlStr(definition)})`));
   }
 
   async removeAttribute(id: string): Promise<SetResult> {
-    const cid = await this.kit.ensureChangeId();
-    return this.kit.mutateScoped(cid, this.psel(`ra: removeAttribute(id: ${__gqlStr(id)})`));
+    const cid = await this.store.ensureChangeId();
+    return this.store.mutateScoped(cid, this.psel(`ra: removeAttribute(id: ${__gqlStr(id)})`));
   }
 
   async removeAttributes(ids: readonly string[]): Promise<SetResult> {
-    const cid = await this.kit.ensureChangeId();
-    return this.kit.mutateScoped(cid, this.psel(`ras: removeAttributes(ids: ${__gqlIds(ids)})`));
+    const cid = await this.store.ensureChangeId();
+    return this.store.mutateScoped(cid, this.psel(`ras: removeAttributes(ids: ${__gqlIds(ids)})`));
   }
 }
 //#endregion 🔘Port
@@ -2408,8 +2486,8 @@ export class Port extends Entity {
 //#region 🔗Connector
 export class Connector extends Entity {
   readonly typeId: string;
-  constructor(kit: Store, typeId: string, id: string) {
-    super(kit, id);
+  constructor(store: Store, typeId: string, id: string) {
+    super(store, id);
     this.typeId = typeId;
   }
 
@@ -2418,18 +2496,18 @@ export class Connector extends Entity {
   }
 
   async rename(newCode: string): Promise<SetResult> {
-    const cid = await this.kit.ensureChangeId();
-    return this.kit.mutateScoped(cid, this.csel(`rn: rename(newCode: ${__gqlStr(newCode)})`));
+    const cid = await this.store.ensureChangeId();
+    return this.store.mutateScoped(cid, this.csel(`rn: rename(newCode: ${__gqlStr(newCode)})`));
   }
 
   async changeDescription(newDescription: string): Promise<SetResult> {
-    const cid = await this.kit.ensureChangeId();
-    return this.kit.mutateScoped(cid, this.csel(`cd: changeDescription(newDescription: ${__gqlStr(newDescription)})`));
+    const cid = await this.store.ensureChangeId();
+    return this.store.mutateScoped(cid, this.csel(`cd: changeDescription(newDescription: ${__gqlStr(newDescription)})`));
   }
 
   async changeIcon(newIcon: string): Promise<SetResult> {
-    const cid = await this.kit.ensureChangeId();
-    return this.kit.mutateScoped(cid, this.csel(`ci: changeIcon(newIcon: ${__gqlStr(newIcon)})`));
+    const cid = await this.store.ensureChangeId();
+    return this.store.mutateScoped(cid, this.csel(`ci: changeIcon(newIcon: ${__gqlStr(newIcon)})`));
   }
 
   /** @emoji 🔗 Resolves {@code type{ connector{…}}} on the kit fragment. */
@@ -2439,28 +2517,28 @@ export class Connector extends Entity {
   }
 
   async readName(): Promise<string> {
-    const frag = (await this.kit.readKitInner(this.csel("name"))) as JsonObject | null;
+    const frag = (await this.store.readKitInner(this.csel("name"))) as JsonObject | null;
     return String(this.connectorNode(frag)?.["name"] ?? "");
   }
 
   async readCode(): Promise<string> {
-    const frag = (await this.kit.readKitInner(this.csel("code"))) as JsonObject | null;
+    const frag = (await this.store.readKitInner(this.csel("code"))) as JsonObject | null;
     return String(this.connectorNode(frag)?.["code"] ?? "");
   }
 
   async readDescription(): Promise<string> {
-    const frag = (await this.kit.readKitInner(this.csel("description"))) as JsonObject | null;
+    const frag = (await this.store.readKitInner(this.csel("description"))) as JsonObject | null;
     return String(this.connectorNode(frag)?.["description"] ?? "");
   }
 
   async readIcon(): Promise<string> {
-    const frag = (await this.kit.readKitInner(this.csel("icon"))) as JsonObject | null;
+    const frag = (await this.store.readKitInner(this.csel("icon"))) as JsonObject | null;
     return String(this.connectorNode(frag)?.["icon"] ?? "");
   }
 
   /** @emoji 🔗 Nullable {@code port { id }} per SDL {@code Connector.port}. */
   async readPortId(): Promise<string | null> {
-    const frag = (await this.kit.readKitInner(this.csel("port { id }"))) as JsonObject | null;
+    const frag = (await this.store.readKitInner(this.csel("port { id }"))) as JsonObject | null;
     const p = this.connectorNode(frag)?.["port"] as JsonObject | null | undefined;
     if (p == null) return null;
     const id = String(p["id"] ?? "");
@@ -2470,7 +2548,7 @@ export class Connector extends Entity {
   /** @emoji 🔗 Bulky {@code attributes { edges { node {…} } }} read (SDL {@code Connector.attributes}). */
   async readAttributes(): Promise<readonly Attribute[]> {
     const inner = "attributes { edges { node { id key value definition } } }";
-    const frag = (await this.kit.readKitInner(this.csel(inner))) as JsonObject | null;
+    const frag = (await this.store.readKitInner(this.csel(inner))) as JsonObject | null;
     return parseAttributeConnectionUnder(this, this.connectorNode(frag));
   }
 }
@@ -2516,7 +2594,7 @@ export class Coordinate {
   constructor(public readonly parent: Position) { }
 
   async readU(): Promise<number> {
-    const frag = (await this.parent.piece.kit.readKitInner(
+    const frag = (await this.parent.piece.store.readKitInner(
       this.parent.piece.kitPieceSelection(`${this.parent.role} { center { u v } }`),
     )) as JsonObject | null;
     const row = __pieceKit(frag)?.[this.parent.role] as JsonObject | undefined;
@@ -2525,7 +2603,7 @@ export class Coordinate {
   }
 
   async readV(): Promise<number> {
-    const frag = (await this.parent.piece.kit.readKitInner(
+    const frag = (await this.parent.piece.store.readKitInner(
       this.parent.piece.kitPieceSelection(`${this.parent.role} { center { u v } }`),
     )) as JsonObject | null;
     const row = __pieceKit(frag)?.[this.parent.role] as JsonObject | undefined;
@@ -2563,7 +2641,7 @@ export class Point {
   constructor(public readonly parent: Plane) { }
 
   async readX(): Promise<number> {
-    const frag = (await this.parent.parent.piece.kit.readKitInner(
+    const frag = (await this.parent.parent.piece.store.readKitInner(
       this.parent.parent.piece.kitPieceSelection(`${this.parent.parent.role} { plane { origin { x y z } } }`),
     )) as JsonObject | null;
     const row = __pieceKit(frag)?.[this.parent.parent.role] as JsonObject | undefined;
@@ -2573,7 +2651,7 @@ export class Point {
   }
 
   async readY(): Promise<number> {
-    const frag = (await this.parent.parent.piece.kit.readKitInner(
+    const frag = (await this.parent.parent.piece.store.readKitInner(
       this.parent.parent.piece.kitPieceSelection(`${this.parent.parent.role} { plane { origin { x y z } } }`),
     )) as JsonObject | null;
     const row = __pieceKit(frag)?.[this.parent.parent.role] as JsonObject | undefined;
@@ -2583,7 +2661,7 @@ export class Point {
   }
 
   async readZ(): Promise<number> {
-    const frag = (await this.parent.parent.piece.kit.readKitInner(
+    const frag = (await this.parent.parent.piece.store.readKitInner(
       this.parent.parent.piece.kitPieceSelection(`${this.parent.parent.role} { plane { origin { x y z } } }`),
     )) as JsonObject | null;
     const row = __pieceKit(frag)?.[this.parent.parent.role] as JsonObject | undefined;
@@ -2601,7 +2679,7 @@ export class Vector {
   ) { }
 
   async readX(): Promise<number> {
-    const frag = (await this.parent.parent.piece.kit.readKitInner(
+    const frag = (await this.parent.parent.piece.store.readKitInner(
       this.parent.parent.piece.kitPieceSelection(`${this.parent.parent.role} { plane { ${this.axisRole} { x y z } } }`),
     )) as JsonObject | null;
     const row = __pieceKit(frag)?.[this.parent.parent.role] as JsonObject | undefined;
@@ -2611,7 +2689,7 @@ export class Vector {
   }
 
   async readY(): Promise<number> {
-    const frag = (await this.parent.parent.piece.kit.readKitInner(
+    const frag = (await this.parent.parent.piece.store.readKitInner(
       this.parent.parent.piece.kitPieceSelection(`${this.parent.parent.role} { plane { ${this.axisRole} { x y z } } }`),
     )) as JsonObject | null;
     const row = __pieceKit(frag)?.[this.parent.parent.role] as JsonObject | undefined;
@@ -2621,7 +2699,7 @@ export class Vector {
   }
 
   async readZ(): Promise<number> {
-    const frag = (await this.parent.parent.piece.kit.readKitInner(
+    const frag = (await this.parent.parent.piece.store.readKitInner(
       this.parent.parent.piece.kitPieceSelection(`${this.parent.parent.role} { plane { ${this.axisRole} { x y z } } }`),
     )) as JsonObject | null;
     const row = __pieceKit(frag)?.[this.parent.parent.role] as JsonObject | undefined;
@@ -2727,8 +2805,8 @@ function __parseIdListConnection(obj: JsonObject | null | undefined, field: stri
 export class Piece extends Entity {
   readonly designId: string;
   private readonly __positionByRole = new Map<"position" | "flatPosition", Position>();
-  constructor(kit: Store, designId: string, id: string) {
-    super(kit, id);
+  constructor(store: Store, designId: string, id: string) {
+    super(store, id);
     this.designId = designId;
   }
 
@@ -2758,35 +2836,35 @@ export class Piece extends Entity {
   }
 
   async readName(): Promise<string> {
-    const frag = (await this.kit.readKitInner(this.kitPieceSelection("name"))) as JsonObject | null;
+    const frag = (await this.store.readKitInner(this.kitPieceSelection("name"))) as JsonObject | null;
     return String(__pieceKit(frag)?.["name"] ?? "");
   }
 
   async readDescription(): Promise<string> {
-    const frag = (await this.kit.readKitInner(this.kitPieceSelection("description"))) as JsonObject | null;
+    const frag = (await this.store.readKitInner(this.kitPieceSelection("description"))) as JsonObject | null;
     return String(__pieceKit(frag)?.["description"] ?? "");
   }
 
   async readIcon(): Promise<string> {
-    const frag = (await this.kit.readKitInner(this.kitPieceSelection("icon"))) as JsonObject | null;
+    const frag = (await this.store.readKitInner(this.kitPieceSelection("icon"))) as JsonObject | null;
     return String(__pieceKit(frag)?.["icon"] ?? "");
   }
 
   async readScale(): Promise<number | null> {
-    const frag = (await this.kit.readKitInner(this.kitPieceSelection("scale"))) as JsonObject | null;
+    const frag = (await this.store.readKitInner(this.kitPieceSelection("scale"))) as JsonObject | null;
     const v = __pieceKit(frag)?.["scale"];
     return typeof v === "number" ? v : null;
   }
 
   async readPosition(): Promise<Position | null> {
-    const frag = (await this.kit.readKitInner(this.kitPieceSelection(`position { ${__PIECE_POSITION_SUBSELECTION} }`))) as JsonObject | null;
+    const frag = (await this.store.readKitInner(this.kitPieceSelection(`position { ${__PIECE_POSITION_SUBSELECTION} }`))) as JsonObject | null;
     const raw = __pieceKit(frag)?.["position"];
     if (raw == null || typeof raw !== "object") return null;
     return this.position();
   }
 
   async readFlatPosition(): Promise<Position | null> {
-    const frag = (await this.kit.readKitInner(this.kitPieceSelection(`flatPosition { ${__PIECE_POSITION_SUBSELECTION} }`))) as JsonObject | null;
+    const frag = (await this.store.readKitInner(this.kitPieceSelection(`flatPosition { ${__PIECE_POSITION_SUBSELECTION} }`))) as JsonObject | null;
     const raw = __pieceKit(frag)?.["flatPosition"];
     if (raw == null || typeof raw !== "object") return null;
     return this.flatPosition();
@@ -2813,95 +2891,95 @@ export class Piece extends Entity {
   }
 
   async readBlueprint(): Promise<PieceBlueprint | null> {
-    const frag = (await this.kit.readKitInner(this.kitPieceSelection("blueprint { __typename id }"))) as JsonObject | null;
+    const frag = (await this.store.readKitInner(this.kitPieceSelection("blueprint { __typename id }"))) as JsonObject | null;
     return __parsePieceBlueprintFromJson(__pieceKit(frag)?.["blueprint"] as JsonObject | undefined);
   }
 
   async readAttributes(): Promise<readonly Attribute[]> {
-    const frag = (await this.kit.readKitInner(this.kitPieceSelection("attributes { edges { node { id key value definition } } }"))) as JsonObject | null;
+    const frag = (await this.store.readKitInner(this.kitPieceSelection("attributes { edges { node { id key value definition } } }"))) as JsonObject | null;
     return parseAttributeConnectionUnder(this, __pieceKit(frag));
   }
 
   async readConnectionKind(): Promise<"FIXED" | "CONNECTED" | null> {
-    const frag = (await this.kit.readKitInner(this.kitPieceSelection("connectionKind"))) as JsonObject | null;
+    const frag = (await this.store.readKitInner(this.kitPieceSelection("connectionKind"))) as JsonObject | null;
     const k = __pieceKit(frag)?.["connectionKind"];
     if (k === "FIXED" || k === "CONNECTED") return k;
     return null;
   }
 
   async readParentPieceId(): Promise<string | null> {
-    const frag = (await this.kit.readKitInner(this.kitPieceSelection("parentPiece { id }"))) as JsonObject | null;
+    const frag = (await this.store.readKitInner(this.kitPieceSelection("parentPiece { id }"))) as JsonObject | null;
     const n = __pieceKit(frag)?.["parentPiece"] as JsonObject | undefined;
     const id = n == null ? "" : String(n["id"] ?? "");
     return id === "" ? null : id;
   }
 
   async readParentConnectionId(): Promise<string | null> {
-    const frag = (await this.kit.readKitInner(this.kitPieceSelection("parentConnection { id }"))) as JsonObject | null;
+    const frag = (await this.store.readKitInner(this.kitPieceSelection("parentConnection { id }"))) as JsonObject | null;
     const n = __pieceKit(frag)?.["parentConnection"] as JsonObject | undefined;
     const id = n == null ? "" : String(n["id"] ?? "");
     return id === "" ? null : id;
   }
 
   async readChildPieceIds(): Promise<readonly string[]> {
-    const frag = (await this.kit.readKitInner(this.kitPieceSelection("childPieces { edges { node { id } } }"))) as JsonObject | null;
+    const frag = (await this.store.readKitInner(this.kitPieceSelection("childPieces { edges { node { id } } }"))) as JsonObject | null;
     return __parseIdListConnection(__pieceKit(frag), "childPieces");
   }
 
   async readChildConnectionIds(): Promise<readonly string[]> {
-    const frag = (await this.kit.readKitInner(this.kitPieceSelection("childConnections { edges { node { id } } }"))) as JsonObject | null;
+    const frag = (await this.store.readKitInner(this.kitPieceSelection("childConnections { edges { node { id } } }"))) as JsonObject | null;
     return __parseIdListConnection(__pieceKit(frag), "childConnections");
   }
 
   async readDepth(): Promise<number | null> {
-    const frag = (await this.kit.readKitInner(this.kitPieceSelection("depth"))) as JsonObject | null;
+    const frag = (await this.store.readKitInner(this.kitPieceSelection("depth"))) as JsonObject | null;
     const v = __pieceKit(frag)?.["depth"];
     return typeof v === "number" ? v : null;
   }
 
   async rename(newName: string): Promise<SetResult> {
-    const cid = await this.kit.ensureChangeId();
-    return this.kit.mutateScoped(cid, this.kitPieceSelection(`rn: rename(newName: ${__gqlStr(newName)})`));
+    const cid = await this.store.ensureChangeId();
+    return this.store.mutateScoped(cid, this.kitPieceSelection(`rn: rename(newName: ${__gqlStr(newName)})`));
   }
 
   async changeDescription(newDescription: string): Promise<SetResult> {
-    const cid = await this.kit.ensureChangeId();
-    return this.kit.mutateScoped(cid, this.kitPieceSelection(`cd: changeDescription(newDescription: ${__gqlStr(newDescription)})`));
+    const cid = await this.store.ensureChangeId();
+    return this.store.mutateScoped(cid, this.kitPieceSelection(`cd: changeDescription(newDescription: ${__gqlStr(newDescription)})`));
   }
 
   async drag(offset: OffsetInput): Promise<SetResult> {
-    const cid = await this.kit.ensureChangeId();
-    return this.kit.mutateScoped(cid, this.kitPieceSelection(`dg: drag(offset: ${formatOffsetInput(offset)})`));
+    const cid = await this.store.ensureChangeId();
+    return this.store.mutateScoped(cid, this.kitPieceSelection(`dg: drag(offset: ${formatOffsetInput(offset)})`));
   }
 
   async move(position: PositionInput): Promise<SetResult> {
-    const cid = await this.kit.ensureChangeId();
-    return this.kit.mutateScoped(cid, this.kitPieceSelection(`mv: move(position: ${formatPositionInput(position)})`));
+    const cid = await this.store.ensureChangeId();
+    return this.store.mutateScoped(cid, this.kitPieceSelection(`mv: move(position: ${formatPositionInput(position)})`));
   }
 
   async fix(): Promise<SetResult> {
-    const cid = await this.kit.ensureChangeId();
-    return this.kit.mutateScoped(cid, this.kitPieceSelection(`fx: fix`));
+    const cid = await this.store.ensureChangeId();
+    return this.store.mutateScoped(cid, this.kitPieceSelection(`fx: fix`));
   }
 
   async changeBlueprint(blueprintId: string): Promise<SetResult> {
-    const cid = await this.kit.ensureChangeId();
-    return this.kit.mutateScoped(cid, this.kitPieceSelection(`cb: changeBlueprint(blueprintId: ${__gqlStr(blueprintId)})`));
+    const cid = await this.store.ensureChangeId();
+    return this.store.mutateScoped(cid, this.kitPieceSelection(`cb: changeBlueprint(blueprintId: ${__gqlStr(blueprintId)})`));
   }
 
   async addAttribute(key: string, value: string, definition: string): Promise<SetResult> {
-    const cid = await this.kit.ensureChangeId();
-    return this.kit.mutateScoped(cid, this.kitPieceSelection(`aa: addAttribute(key: ${__gqlStr(key)}, value: ${__gqlStr(value)}, definition: ${__gqlStr(definition)})`));
+    const cid = await this.store.ensureChangeId();
+    return this.store.mutateScoped(cid, this.kitPieceSelection(`aa: addAttribute(key: ${__gqlStr(key)}, value: ${__gqlStr(value)}, definition: ${__gqlStr(definition)})`));
   }
 
   async removeAttribute(id: string): Promise<SetResult> {
-    const cid = await this.kit.ensureChangeId();
-    return this.kit.mutateScoped(cid, this.kitPieceSelection(`ra: removeAttribute(id: ${__gqlStr(id)})`));
+    const cid = await this.store.ensureChangeId();
+    return this.store.mutateScoped(cid, this.kitPieceSelection(`ra: removeAttribute(id: ${__gqlStr(id)})`));
   }
 
   async removeAttributes(ids: readonly string[]): Promise<SetResult> {
-    const cid = await this.kit.ensureChangeId();
-    return this.kit.mutateScoped(cid, this.kitPieceSelection(`ras: removeAttributes(ids: ${__gqlIds(ids)})`));
+    const cid = await this.store.ensureChangeId();
+    return this.store.mutateScoped(cid, this.kitPieceSelection(`ras: removeAttributes(ids: ${__gqlIds(ids)})`));
   }
 }
 //#endregion 🧩Piece
@@ -2909,7 +2987,7 @@ export class Piece extends Entity {
 //#region 🪢PiecesOperations
 export class PiecesOperations {
   constructor(
-    private readonly kit: Store,
+    private readonly store: Store,
     private readonly designId: string,
     private readonly pieceIds: readonly string[],
   ) { }
@@ -2919,23 +2997,23 @@ export class PiecesOperations {
   }
 
   async drag(offset: OffsetInput): Promise<SetResult> {
-    const cid = await this.kit.ensureChangeId();
-    return this.kit.mutateScoped(cid, this.psel(`dg: drag(offset: ${formatOffsetInput(offset)})`));
+    const cid = await this.store.ensureChangeId();
+    return this.store.mutateScoped(cid, this.psel(`dg: drag(offset: ${formatOffsetInput(offset)})`));
   }
 
   async move(offset: OffsetInput): Promise<SetResult> {
-    const cid = await this.kit.ensureChangeId();
-    return this.kit.mutateScoped(cid, this.psel(`mv: move(offset: ${formatOffsetInput(offset)})`));
+    const cid = await this.store.ensureChangeId();
+    return this.store.mutateScoped(cid, this.psel(`mv: move(offset: ${formatOffsetInput(offset)})`));
   }
 
   async fix(): Promise<SetResult> {
-    const cid = await this.kit.ensureChangeId();
-    return this.kit.mutateScoped(cid, this.psel(`fx: fix`));
+    const cid = await this.store.ensureChangeId();
+    return this.store.mutateScoped(cid, this.psel(`fx: fix`));
   }
 
   async changeBlueprint(blueprintId: string): Promise<SetResult> {
-    const cid = await this.kit.ensureChangeId();
-    return this.kit.mutateScoped(cid, this.psel(`cb: changeBlueprint(blueprintId: ${__gqlStr(blueprintId)})`));
+    const cid = await this.store.ensureChangeId();
+    return this.store.mutateScoped(cid, this.psel(`cb: changeBlueprint(blueprintId: ${__gqlStr(blueprintId)})`));
   }
 }
 //#endregion 🪢PiecesOperations
@@ -2944,7 +3022,7 @@ export class PiecesOperations {
 /** @emoji ⛓️ Schema-aligned {@link Connection} endpoint (piece + optional port / connector / designPiece ids). */
 export class ConnectionSide {
   constructor(
-    public readonly kit: Store,
+    public readonly store: Store,
     public readonly designId: string,
     public readonly connectionId: string,
     public readonly role: "connected" | "connecting",
@@ -2956,7 +3034,7 @@ export class ConnectionSide {
 
   /** @emoji 🧩 Resolved {@link Piece} on this kit read point. */
   piece(): Piece {
-    return this.kit.design(this.designId).piece(this.pieceId);
+    return this.store.design(this.designId).piece(this.pieceId);
   }
 }
 
@@ -2972,7 +3050,7 @@ function __connectionKit(frag: JsonObject | null | undefined): JsonObject | null
 }
 
 function __parseConnectionSideFromJson(
-  kit: Store,
+  store: Store,
   designId: string,
   connectionId: string,
   role: "connected" | "connecting",
@@ -2991,13 +3069,13 @@ function __parseConnectionSideFromJson(
   const conn = node["connector"] as JsonObject | undefined;
   const cxRaw = conn == null ? "" : String(conn["id"] ?? "");
   const connectorId = cxRaw === "" ? null : cxRaw;
-  return new ConnectionSide(kit, designId, connectionId, role, pieceId, portId, connectorId, designPieceId);
+  return new ConnectionSide(store, designId, connectionId, role, pieceId, portId, connectorId, designPieceId);
 }
 
 export class Connection extends Entity {
   readonly designId: string;
-  constructor(kit: Store, designId: string, id: string) {
-    super(kit, id);
+  constructor(store: Store, designId: string, id: string) {
+    super(store, id);
     this.designId = designId;
   }
 
@@ -3006,80 +3084,80 @@ export class Connection extends Entity {
   }
 
   async readName(): Promise<string> {
-    const frag = ((await this.kit.readKitInner(this.csel("name"))) as JsonObject | null) ?? null;
+    const frag = ((await this.store.readKitInner(this.csel("name"))) as JsonObject | null) ?? null;
     return String(__connectionKit(frag)?.["name"] ?? "");
   }
 
   async readDescription(): Promise<string> {
-    const frag = ((await this.kit.readKitInner(this.csel("description"))) as JsonObject | null) ?? null;
+    const frag = ((await this.store.readKitInner(this.csel("description"))) as JsonObject | null) ?? null;
     return String(__connectionKit(frag)?.["description"] ?? "");
   }
 
   async readIcon(): Promise<string> {
-    const frag = ((await this.kit.readKitInner(this.csel("icon"))) as JsonObject | null) ?? null;
+    const frag = ((await this.store.readKitInner(this.csel("icon"))) as JsonObject | null) ?? null;
     return String(__connectionKit(frag)?.["icon"] ?? "");
   }
 
   async readGap(): Promise<number | null> {
-    const frag = ((await this.kit.readKitInner(this.csel("gap"))) as JsonObject | null) ?? null;
+    const frag = ((await this.store.readKitInner(this.csel("gap"))) as JsonObject | null) ?? null;
     const v = __connectionKit(frag)?.["gap"];
     return typeof v === "number" ? v : null;
   }
 
   async readShift(): Promise<number | null> {
-    const frag = ((await this.kit.readKitInner(this.csel("shift"))) as JsonObject | null) ?? null;
+    const frag = ((await this.store.readKitInner(this.csel("shift"))) as JsonObject | null) ?? null;
     const v = __connectionKit(frag)?.["shift"];
     return typeof v === "number" ? v : null;
   }
 
   async readRise(): Promise<number | null> {
-    const frag = ((await this.kit.readKitInner(this.csel("rise"))) as JsonObject | null) ?? null;
+    const frag = ((await this.store.readKitInner(this.csel("rise"))) as JsonObject | null) ?? null;
     const v = __connectionKit(frag)?.["rise"];
     return typeof v === "number" ? v : null;
   }
 
   async readRotation(): Promise<number | null> {
-    const frag = ((await this.kit.readKitInner(this.csel("rotation"))) as JsonObject | null) ?? null;
+    const frag = ((await this.store.readKitInner(this.csel("rotation"))) as JsonObject | null) ?? null;
     const v = __connectionKit(frag)?.["rotation"];
     return typeof v === "number" ? v : null;
   }
 
   async readTurn(): Promise<number | null> {
-    const frag = ((await this.kit.readKitInner(this.csel("turn"))) as JsonObject | null) ?? null;
+    const frag = ((await this.store.readKitInner(this.csel("turn"))) as JsonObject | null) ?? null;
     const v = __connectionKit(frag)?.["turn"];
     return typeof v === "number" ? v : null;
   }
 
   async readTilt(): Promise<number | null> {
-    const frag = ((await this.kit.readKitInner(this.csel("tilt"))) as JsonObject | null) ?? null;
+    const frag = ((await this.store.readKitInner(this.csel("tilt"))) as JsonObject | null) ?? null;
     const v = __connectionKit(frag)?.["tilt"];
     return typeof v === "number" ? v : null;
   }
 
   async readU(): Promise<number | null> {
-    const frag = ((await this.kit.readKitInner(this.csel("u"))) as JsonObject | null) ?? null;
+    const frag = ((await this.store.readKitInner(this.csel("u"))) as JsonObject | null) ?? null;
     const v = __connectionKit(frag)?.["u"];
     return typeof v === "number" ? v : null;
   }
 
   async readV(): Promise<number | null> {
-    const frag = ((await this.kit.readKitInner(this.csel("v"))) as JsonObject | null) ?? null;
+    const frag = ((await this.store.readKitInner(this.csel("v"))) as JsonObject | null) ?? null;
     const v = __connectionKit(frag)?.["v"];
     return typeof v === "number" ? v : null;
   }
 
   async readConnected(): Promise<ConnectionSide | null> {
-    const frag = ((await this.kit.readKitInner(this.csel(`connected { ${__CONNECTION_SIDE_SUBSELECTION} }`))) as JsonObject | null) ?? null;
-    return __parseConnectionSideFromJson(this.kit, this.designId, this.id, "connected", __connectionKit(frag)?.["connected"] as JsonObject | undefined);
+    const frag = ((await this.store.readKitInner(this.csel(`connected { ${__CONNECTION_SIDE_SUBSELECTION} }`))) as JsonObject | null) ?? null;
+    return __parseConnectionSideFromJson(this.store, this.designId, this.id, "connected", __connectionKit(frag)?.["connected"] as JsonObject | undefined);
   }
 
   async readConnecting(): Promise<ConnectionSide | null> {
-    const frag = ((await this.kit.readKitInner(this.csel(`connecting { ${__CONNECTION_SIDE_SUBSELECTION} }`))) as JsonObject | null) ?? null;
-    return __parseConnectionSideFromJson(this.kit, this.designId, this.id, "connecting", __connectionKit(frag)?.["connecting"] as JsonObject | undefined);
+    const frag = ((await this.store.readKitInner(this.csel(`connecting { ${__CONNECTION_SIDE_SUBSELECTION} }`))) as JsonObject | null) ?? null;
+    return __parseConnectionSideFromJson(this.store, this.designId, this.id, "connecting", __connectionKit(frag)?.["connecting"] as JsonObject | undefined);
   }
 
   async readAttributes(): Promise<readonly Attribute[]> {
-    const frag = ((await this.kit.readKitInner(this.csel("attributes { edges { node { id key value definition } } }"))) as JsonObject | null) ?? null;
+    const frag = ((await this.store.readKitInner(this.csel("attributes { edges { node { id key value definition } } }"))) as JsonObject | null) ?? null;
     return parseAttributeConnectionUnder(this, __connectionKit(frag));
   }
 }
@@ -3088,42 +3166,42 @@ export class Connection extends Entity {
 //#region ✍️Author
 /** @emoji ✍️ Author artifact: kit-scoped reads only (no {@code *OperationInput} on Author in schema). */
 export class Author extends Entity {
-  constructor(kit: Store, id: string) {
-    super(kit, id);
+  constructor(store: Store, id: string) {
+    super(store, id);
   }
 
   async readName(): Promise<string> {
-    const data = kitGraphqlData(await __kitGraphqlEnvelope(this.kit, { query: `query($id: ID!) { node(id: $id) { ... on Author { name } } }`, variables: { id: this.id } })) as JsonObject;
+    const data = kitGraphqlData(await __kitGraphqlEnvelope(this.store, { query: `query($id: ID!) { node(id: $id) { ... on Author { name } } }`, variables: { id: this.id } })) as JsonObject;
     const n = data["node"] as JsonObject | undefined;
     return String(n?.["name"] ?? "");
   }
 
   async readDescription(): Promise<string> {
-    const data = kitGraphqlData(await __kitGraphqlEnvelope(this.kit, { query: `query($id: ID!) { node(id: $id) { ... on Author { description } } }`, variables: { id: this.id } })) as JsonObject;
+    const data = kitGraphqlData(await __kitGraphqlEnvelope(this.store, { query: `query($id: ID!) { node(id: $id) { ... on Author { description } } }`, variables: { id: this.id } })) as JsonObject;
     const n = data["node"] as JsonObject | undefined;
     return String(n?.["description"] ?? "");
   }
 
   async readIcon(): Promise<string> {
-    const data = kitGraphqlData(await __kitGraphqlEnvelope(this.kit, { query: `query($id: ID!) { node(id: $id) { ... on Author { icon } } }`, variables: { id: this.id } })) as JsonObject;
+    const data = kitGraphqlData(await __kitGraphqlEnvelope(this.store, { query: `query($id: ID!) { node(id: $id) { ... on Author { icon } } }`, variables: { id: this.id } })) as JsonObject;
     const n = data["node"] as JsonObject | undefined;
     return String(n?.["icon"] ?? "");
   }
 
   async readEmail(): Promise<string> {
-    const data = kitGraphqlData(await __kitGraphqlEnvelope(this.kit, { query: `query($id: ID!) { node(id: $id) { ... on Author { email } } }`, variables: { id: this.id } })) as JsonObject;
+    const data = kitGraphqlData(await __kitGraphqlEnvelope(this.store, { query: `query($id: ID!) { node(id: $id) { ... on Author { email } } }`, variables: { id: this.id } })) as JsonObject;
     const n = data["node"] as JsonObject | undefined;
     return String(n?.["email"] ?? "");
   }
 
   async readRole(): Promise<string> {
-    const data = kitGraphqlData(await __kitGraphqlEnvelope(this.kit, { query: `query($id: ID!) { node(id: $id) { ... on Author { role } } }`, variables: { id: this.id } })) as JsonObject;
+    const data = kitGraphqlData(await __kitGraphqlEnvelope(this.store, { query: `query($id: ID!) { node(id: $id) { ... on Author { role } } }`, variables: { id: this.id } })) as JsonObject;
     const n = data["node"] as JsonObject | undefined;
     return String(n?.["role"] ?? "");
   }
 
   async readRank(): Promise<number | null> {
-    const data = kitGraphqlData(await __kitGraphqlEnvelope(this.kit, { query: `query($id: ID!) { node(id: $id) { ... on Author { rank } } }`, variables: { id: this.id } })) as JsonObject;
+    const data = kitGraphqlData(await __kitGraphqlEnvelope(this.store, { query: `query($id: ID!) { node(id: $id) { ... on Author { rank } } }`, variables: { id: this.id } })) as JsonObject;
     const n = data["node"] as JsonObject | undefined;
     const r = n?.["rank"];
     return typeof r === "number" ? r : null;
@@ -3134,8 +3212,8 @@ export class Author extends Entity {
 //#region 💎Quality
 /** @emoji 💎 Quality artifact: {@code QualityOperationInput} leaves + scalar reads via {@code quality(id:)}. */
 export class Quality extends Entity {
-  constructor(kit: Store, id: string) {
-    super(kit, id);
+  constructor(store: Store, id: string) {
+    super(store, id);
   }
 
   private qsel(inner: string): string {
@@ -3143,7 +3221,7 @@ export class Quality extends Entity {
   }
 
   private async readScalarUnderQuality(field: string): Promise<string> {
-    const frag = (await this.kit.readKitInner(this.qsel(field))) as JsonObject | null;
+    const frag = (await this.store.readKitInner(this.qsel(field))) as JsonObject | null;
     const q = frag?.["quality"] as JsonObject | undefined;
     return String(q?.[field] ?? "");
   }
@@ -3177,12 +3255,12 @@ export class Quality extends Entity {
   }
 
   async readAttributes(): Promise<readonly Attribute[]> {
-    const frag = (await this.kit.readKitInner(this.qsel(`attributes { edges { node { id key value definition } } }`))) as JsonObject | null;
+    const frag = (await this.store.readKitInner(this.qsel(`attributes { edges { node { id key value definition } } }`))) as JsonObject | null;
     return parseAttributeConnectionUnder(this, frag?.["quality"] as JsonObject | undefined);
   }
 
   async readBenchmarks(): Promise<readonly Benchmark[]> {
-    const frag = (await this.kit.readKitInner(
+    const frag = (await this.store.readKitInner(
       this.qsel(`benchmarks { edges { node { id name min max minExcluded maxExcluded } } }`),
     )) as JsonObject | null;
     const q = frag?.["quality"] as JsonObject | undefined;
@@ -3210,33 +3288,33 @@ export class Quality extends Entity {
   }
 
   async rename(newKey: string): Promise<SetResult> {
-    const cid = await this.kit.ensureChangeId();
-    return this.kit.mutateScoped(cid, this.qsel(`rk: rename(newKey: ${__gqlStr(newKey)})`));
+    const cid = await this.store.ensureChangeId();
+    return this.store.mutateScoped(cid, this.qsel(`rk: rename(newKey: ${__gqlStr(newKey)})`));
   }
 
   async changeDescription(newDescription: string): Promise<SetResult> {
-    const cid = await this.kit.ensureChangeId();
-    return this.kit.mutateScoped(cid, this.qsel(`cd: changeDescription(newDescription: ${__gqlStr(newDescription)})`));
+    const cid = await this.store.ensureChangeId();
+    return this.store.mutateScoped(cid, this.qsel(`cd: changeDescription(newDescription: ${__gqlStr(newDescription)})`));
   }
 
   async changeIcon(newIcon: string): Promise<SetResult> {
-    const cid = await this.kit.ensureChangeId();
-    return this.kit.mutateScoped(cid, this.qsel(`ci: changeIcon(newIcon: ${__gqlStr(newIcon)})`));
+    const cid = await this.store.ensureChangeId();
+    return this.store.mutateScoped(cid, this.qsel(`ci: changeIcon(newIcon: ${__gqlStr(newIcon)})`));
   }
 
   async addAttribute(key: string, value: string, definition: string): Promise<SetResult> {
-    const cid = await this.kit.ensureChangeId();
-    return this.kit.mutateScoped(cid, this.qsel(`aa: addAttribute(key: ${__gqlStr(key)}, value: ${__gqlStr(value)}, definition: ${__gqlStr(definition)})`));
+    const cid = await this.store.ensureChangeId();
+    return this.store.mutateScoped(cid, this.qsel(`aa: addAttribute(key: ${__gqlStr(key)}, value: ${__gqlStr(value)}, definition: ${__gqlStr(definition)})`));
   }
 
   async removeAttribute(id: string): Promise<SetResult> {
-    const cid = await this.kit.ensureChangeId();
-    return this.kit.mutateScoped(cid, this.qsel(`ra: removeAttribute(id: ${__gqlStr(id)})`));
+    const cid = await this.store.ensureChangeId();
+    return this.store.mutateScoped(cid, this.qsel(`ra: removeAttribute(id: ${__gqlStr(id)})`));
   }
 
   async removeAttributes(ids: readonly string[]): Promise<SetResult> {
-    const cid = await this.kit.ensureChangeId();
-    return this.kit.mutateScoped(cid, this.qsel(`ras: removeAttributes(ids: ${__gqlIds(ids)})`));
+    const cid = await this.store.ensureChangeId();
+    return this.store.mutateScoped(cid, this.qsel(`ras: removeAttributes(ids: ${__gqlIds(ids)})`));
   }
 }
 //#endregion 💎Quality
@@ -3244,8 +3322,8 @@ export class Quality extends Entity {
 //#region 🏷️Tag
 /** @emoji 🏷️ Tag artifact: {@code TagOperationInput} leaves + kit-scoped reads. */
 export class Tag extends Entity {
-  constructor(kit: Store, id: string) {
-    super(kit, id);
+  constructor(store: Store, id: string) {
+    super(store, id);
   }
 
   private tsel(inner: string): string {
@@ -3253,7 +3331,7 @@ export class Tag extends Entity {
   }
 
   private async readScalarUnderTag(field: string): Promise<string> {
-    const frag = (await this.kit.readKitInner(this.tsel(field))) as JsonObject | null;
+    const frag = (await this.store.readKitInner(this.tsel(field))) as JsonObject | null;
     const t = frag?.["tag"] as JsonObject | undefined;
     return String(t?.[field] ?? "");
   }
@@ -3271,45 +3349,45 @@ export class Tag extends Entity {
   }
 
   async readOrder(): Promise<number | null> {
-    const frag = (await this.kit.readKitInner(this.tsel("order"))) as JsonObject | null;
+    const frag = (await this.store.readKitInner(this.tsel("order"))) as JsonObject | null;
     const t = frag?.["tag"] as JsonObject | undefined;
     const o = t?.["order"];
     return typeof o === "number" ? o : null;
   }
 
   async readAttributes(): Promise<readonly Attribute[]> {
-    const frag = (await this.kit.readKitInner(this.tsel(`attributes { edges { node { id key value definition } } }`))) as JsonObject | null;
+    const frag = (await this.store.readKitInner(this.tsel(`attributes { edges { node { id key value definition } } }`))) as JsonObject | null;
     return parseAttributeConnectionUnder(this, frag?.["tag"] as JsonObject | undefined);
   }
 
   async rename(newName: string): Promise<SetResult> {
-    const cid = await this.kit.ensureChangeId();
-    return this.kit.mutateScoped(cid, this.tsel(`rn: rename(newName: ${__gqlStr(newName)})`));
+    const cid = await this.store.ensureChangeId();
+    return this.store.mutateScoped(cid, this.tsel(`rn: rename(newName: ${__gqlStr(newName)})`));
   }
 
   async changeDescription(newDescription: string): Promise<SetResult> {
-    const cid = await this.kit.ensureChangeId();
-    return this.kit.mutateScoped(cid, this.tsel(`cd: changeDescription(newDescription: ${__gqlStr(newDescription)})`));
+    const cid = await this.store.ensureChangeId();
+    return this.store.mutateScoped(cid, this.tsel(`cd: changeDescription(newDescription: ${__gqlStr(newDescription)})`));
   }
 
   async changeIcon(newIcon: string): Promise<SetResult> {
-    const cid = await this.kit.ensureChangeId();
-    return this.kit.mutateScoped(cid, this.tsel(`ci: changeIcon(newIcon: ${__gqlStr(newIcon)})`));
+    const cid = await this.store.ensureChangeId();
+    return this.store.mutateScoped(cid, this.tsel(`ci: changeIcon(newIcon: ${__gqlStr(newIcon)})`));
   }
 
   async addAttribute(key: string, value: string, definition: string): Promise<SetResult> {
-    const cid = await this.kit.ensureChangeId();
-    return this.kit.mutateScoped(cid, this.tsel(`aa: addAttribute(key: ${__gqlStr(key)}, value: ${__gqlStr(value)}, definition: ${__gqlStr(definition)})`));
+    const cid = await this.store.ensureChangeId();
+    return this.store.mutateScoped(cid, this.tsel(`aa: addAttribute(key: ${__gqlStr(key)}, value: ${__gqlStr(value)}, definition: ${__gqlStr(definition)})`));
   }
 
   async removeAttribute(id: string): Promise<SetResult> {
-    const cid = await this.kit.ensureChangeId();
-    return this.kit.mutateScoped(cid, this.tsel(`ra: removeAttribute(id: ${__gqlStr(id)})`));
+    const cid = await this.store.ensureChangeId();
+    return this.store.mutateScoped(cid, this.tsel(`ra: removeAttribute(id: ${__gqlStr(id)})`));
   }
 
   async removeAttributes(ids: readonly string[]): Promise<SetResult> {
-    const cid = await this.kit.ensureChangeId();
-    return this.kit.mutateScoped(cid, this.tsel(`ras: removeAttributes(ids: ${__gqlIds(ids)})`));
+    const cid = await this.store.ensureChangeId();
+    return this.store.mutateScoped(cid, this.tsel(`ras: removeAttributes(ids: ${__gqlIds(ids)})`));
   }
 }
 //#endregion 🏷️Tag
@@ -3317,8 +3395,8 @@ export class Tag extends Entity {
 //#region 💡Concept
 /** @emoji 💡 Concept artifact: {@code ConceptOperationInput} leaves + kit-scoped reads. */
 export class Concept extends Entity {
-  constructor(kit: Store, id: string) {
-    super(kit, id);
+  constructor(store: Store, id: string) {
+    super(store, id);
   }
 
   private csel(inner: string): string {
@@ -3326,7 +3404,7 @@ export class Concept extends Entity {
   }
 
   private async readScalarUnderConcept(field: string): Promise<string> {
-    const frag = (await this.kit.readKitInner(this.csel(field))) as JsonObject | null;
+    const frag = (await this.store.readKitInner(this.csel(field))) as JsonObject | null;
     const c = frag?.["concept"] as JsonObject | undefined;
     return String(c?.[field] ?? "");
   }
@@ -3344,45 +3422,45 @@ export class Concept extends Entity {
   }
 
   async readOrder(): Promise<number | null> {
-    const frag = (await this.kit.readKitInner(this.csel("order"))) as JsonObject | null;
+    const frag = (await this.store.readKitInner(this.csel("order"))) as JsonObject | null;
     const c = frag?.["concept"] as JsonObject | undefined;
     const o = c?.["order"];
     return typeof o === "number" ? o : null;
   }
 
   async readAttributes(): Promise<readonly Attribute[]> {
-    const frag = (await this.kit.readKitInner(this.csel(`attributes { edges { node { id key value definition } } }`))) as JsonObject | null;
+    const frag = (await this.store.readKitInner(this.csel(`attributes { edges { node { id key value definition } } }`))) as JsonObject | null;
     return parseAttributeConnectionUnder(this, frag?.["concept"] as JsonObject | undefined);
   }
 
   async rename(newName: string): Promise<SetResult> {
-    const cid = await this.kit.ensureChangeId();
-    return this.kit.mutateScoped(cid, this.csel(`rn: rename(newName: ${__gqlStr(newName)})`));
+    const cid = await this.store.ensureChangeId();
+    return this.store.mutateScoped(cid, this.csel(`rn: rename(newName: ${__gqlStr(newName)})`));
   }
 
   async changeDescription(newDescription: string): Promise<SetResult> {
-    const cid = await this.kit.ensureChangeId();
-    return this.kit.mutateScoped(cid, this.csel(`cd: changeDescription(newDescription: ${__gqlStr(newDescription)})`));
+    const cid = await this.store.ensureChangeId();
+    return this.store.mutateScoped(cid, this.csel(`cd: changeDescription(newDescription: ${__gqlStr(newDescription)})`));
   }
 
   async changeIcon(newIcon: string): Promise<SetResult> {
-    const cid = await this.kit.ensureChangeId();
-    return this.kit.mutateScoped(cid, this.csel(`ci: changeIcon(newIcon: ${__gqlStr(newIcon)})`));
+    const cid = await this.store.ensureChangeId();
+    return this.store.mutateScoped(cid, this.csel(`ci: changeIcon(newIcon: ${__gqlStr(newIcon)})`));
   }
 
   async addAttribute(key: string, value: string, definition: string): Promise<SetResult> {
-    const cid = await this.kit.ensureChangeId();
-    return this.kit.mutateScoped(cid, this.csel(`aa: addAttribute(key: ${__gqlStr(key)}, value: ${__gqlStr(value)}, definition: ${__gqlStr(definition)})`));
+    const cid = await this.store.ensureChangeId();
+    return this.store.mutateScoped(cid, this.csel(`aa: addAttribute(key: ${__gqlStr(key)}, value: ${__gqlStr(value)}, definition: ${__gqlStr(definition)})`));
   }
 
   async removeAttribute(id: string): Promise<SetResult> {
-    const cid = await this.kit.ensureChangeId();
-    return this.kit.mutateScoped(cid, this.csel(`ra: removeAttribute(id: ${__gqlStr(id)})`));
+    const cid = await this.store.ensureChangeId();
+    return this.store.mutateScoped(cid, this.csel(`ra: removeAttribute(id: ${__gqlStr(id)})`));
   }
 
   async removeAttributes(ids: readonly string[]): Promise<SetResult> {
-    const cid = await this.kit.ensureChangeId();
-    return this.kit.mutateScoped(cid, this.csel(`ras: removeAttributes(ids: ${__gqlIds(ids)})`));
+    const cid = await this.store.ensureChangeId();
+    return this.store.mutateScoped(cid, this.csel(`ras: removeAttributes(ids: ${__gqlIds(ids)})`));
   }
 }
 //#endregion 💡Concept
@@ -3391,8 +3469,8 @@ export class Concept extends Entity {
 /** @emoji 🎨 Representation under {@link Type}: read-only until schema adds {@code RepresentationOperationInput}. */
 export class Representation extends Entity {
   readonly typeId: string;
-  constructor(kit: Store, typeId: string, id: string) {
-    super(kit, id);
+  constructor(store: Store, typeId: string, id: string) {
+    super(store, id);
     this.typeId = typeId;
   }
 
@@ -3401,7 +3479,7 @@ export class Representation extends Entity {
   }
 
   private async readUnderRepresentation(field: string): Promise<string> {
-    const frag = (await this.kit.readKitInner(this.rsel(field))) as JsonObject | null;
+    const frag = (await this.store.readKitInner(this.rsel(field))) as JsonObject | null;
     const t = frag?.["type"] as JsonObject | undefined;
     const r = t?.["representation"] as JsonObject | undefined;
     return String(r?.[field] ?? "");
@@ -3424,7 +3502,7 @@ export class Representation extends Entity {
   }
 
   async readFileId(): Promise<string> {
-    const frag = (await this.kit.readKitInner(this.rsel(`file { id }`))) as JsonObject | null;
+    const frag = (await this.store.readKitInner(this.rsel(`file { id }`))) as JsonObject | null;
     const t = frag?.["type"] as JsonObject | undefined;
     const r = t?.["representation"] as JsonObject | undefined;
     const f = r?.["file"] as JsonObject | undefined;
@@ -3432,7 +3510,7 @@ export class Representation extends Entity {
   }
 
   async readTagIds(): Promise<readonly string[]> {
-    const frag = (await this.kit.readKitInner(this.rsel(`tags { edges { node { id } } }`))) as JsonObject | null;
+    const frag = (await this.store.readKitInner(this.rsel(`tags { edges { node { id } } }`))) as JsonObject | null;
     const t = frag?.["type"] as JsonObject | undefined;
     const r = t?.["representation"] as JsonObject | undefined;
     const tags = r?.["tags"] as JsonObject | undefined;
@@ -3448,7 +3526,7 @@ export class Representation extends Entity {
   }
 
   async readQualityIds(): Promise<readonly string[]> {
-    const frag = (await this.kit.readKitInner(this.rsel(`qualities { edges { node { id } } }`))) as JsonObject | null;
+    const frag = (await this.store.readKitInner(this.rsel(`qualities { edges { node { id } } }`))) as JsonObject | null;
     const t = frag?.["type"] as JsonObject | undefined;
     const r = t?.["representation"] as JsonObject | undefined;
     const quals = r?.["qualities"] as JsonObject | undefined;
@@ -3464,7 +3542,7 @@ export class Representation extends Entity {
   }
 
   async readAttributes(): Promise<readonly Attribute[]> {
-    const frag = (await this.kit.readKitInner(this.rsel(`attributes { edges { node { id key value definition } } }`))) as JsonObject | null;
+    const frag = (await this.store.readKitInner(this.rsel(`attributes { edges { node { id key value definition } } }`))) as JsonObject | null;
     const t = frag?.["type"] as JsonObject | undefined;
     const r = t?.["representation"] as JsonObject | undefined;
     return parseAttributeConnectionUnder(this, r);
@@ -3475,13 +3553,13 @@ export class Representation extends Entity {
 //#region 👨‍👩‍👦Family
 /** @emoji 👨‍👩‍👦 Family artifact: read-only in current kit API. */
 export class Family extends Entity {
-  constructor(kit: Store, id: string) {
-    super(kit, id);
+  constructor(store: Store, id: string) {
+    super(store, id);
   }
 
   private async readScalarOnNode(field: string): Promise<string> {
     const data = kitGraphqlData(
-      await __kitGraphqlEnvelope(this.kit, { query: `query($id: ID!) { node(id: $id) { ... on Family { ${field} } } }`, variables: { id: this.id } }),
+      await __kitGraphqlEnvelope(this.store, { query: `query($id: ID!) { node(id: $id) { ... on Family { ${field} } } }`, variables: { id: this.id } }),
     ) as JsonObject;
     const n = data["node"] as JsonObject | undefined;
     return String(n?.[field] ?? "");
@@ -3503,13 +3581,13 @@ export class Family extends Entity {
 
 //#region 📄File
 export class File extends Entity {
-  constructor(kit: Store, id: string) {
-    super(kit, id);
+  constructor(store: Store, id: string) {
+    super(store, id);
   }
 
   async readName(): Promise<string> {
     const data = kitGraphqlData(
-      await __kitGraphqlEnvelope(this.kit, { query: `query($id: ID!) { node(id: $id) { ... on File { name } } }`, variables: { id: this.id } }),
+      await __kitGraphqlEnvelope(this.store, { query: `query($id: ID!) { node(id: $id) { ... on File { name } } }`, variables: { id: this.id } }),
     ) as JsonObject;
     return String((data["node"] as JsonObject | undefined)?.["name"] ?? "");
   }
@@ -3519,13 +3597,13 @@ export class File extends Entity {
 //#region 📁Folder
 /** @emoji 📁 Folder artifact: read-only in current kit API. */
 export class Folder extends Entity {
-  constructor(kit: Store, id: string) {
-    super(kit, id);
+  constructor(store: Store, id: string) {
+    super(store, id);
   }
 
   private async readScalarOnNode(field: string): Promise<string> {
     const data = kitGraphqlData(
-      await __kitGraphqlEnvelope(this.kit, { query: `query($id: ID!) { node(id: $id) { ... on Folder { ${field} } } }`, variables: { id: this.id } }),
+      await __kitGraphqlEnvelope(this.store, { query: `query($id: ID!) { node(id: $id) { ... on Folder { ${field} } } }`, variables: { id: this.id } }),
     ) as JsonObject;
     const n = data["node"] as JsonObject | undefined;
     return String(n?.[field] ?? "");
@@ -3549,8 +3627,8 @@ export class Folder extends Entity {
 /** @emoji 🪟 Design layer row: read-only in current kit API. */
 export class Layer extends Entity {
   readonly designId: string;
-  constructor(kit: Store, designId: string, id: string) {
-    super(kit, id);
+  constructor(store: Store, designId: string, id: string) {
+    super(store, id);
     this.designId = designId;
   }
 
@@ -3559,7 +3637,7 @@ export class Layer extends Entity {
   }
 
   private async selfLayerNode(innerFields: string): Promise<JsonObject | null> {
-    const frag = (await this.kit.readKitInner(this.lsel(innerFields))) as JsonObject | null;
+    const frag = (await this.store.readKitInner(this.lsel(innerFields))) as JsonObject | null;
     const edges = (((frag?.["design"] as JsonObject | undefined)?.["layers"] as JsonObject | undefined)?.["edges"] as readonly JsonObject[] | undefined) ?? [];
     for (const e of edges) {
       const n = e["node"] as JsonObject | undefined;
@@ -3611,13 +3689,13 @@ export class Layer extends Entity {
 //#region 👥Group
 export class Group extends Entity {
   readonly designId: string;
-  constructor(kit: Store, designId: string, id: string) {
-    super(kit, id);
+  constructor(store: Store, designId: string, id: string) {
+    super(store, id);
     this.designId = designId;
   }
 
   async readName(): Promise<string> {
-    const frag = await this.kit.readKitInner(`design(id: ${__gqlStr(this.designId)}) { groups { edges { node { id name } } } }`);
+    const frag = await this.store.readKitInner(`design(id: ${__gqlStr(this.designId)}) { groups { edges { node { id name } } } }`);
     const edges = (((frag as JsonObject | null)?.["design"] as JsonObject | undefined)?.["groups"] as JsonObject | undefined)?.["edges"] as readonly JsonObject[] | undefined;
     for (const e of edges ?? []) {
       const n = e["node"] as JsonObject | undefined;
@@ -3631,13 +3709,13 @@ export class Group extends Entity {
 //#region 📊Stat
 /** @emoji 📊 Stat artifact: read-only in current kit API. */
 export class Stat extends Entity {
-  constructor(kit: Store, id: string) {
-    super(kit, id);
+  constructor(store: Store, id: string) {
+    super(store, id);
   }
 
   private async readScalarOnNode(field: string): Promise<string> {
     const data = kitGraphqlData(
-      await __kitGraphqlEnvelope(this.kit, { query: `query($id: ID!) { node(id: $id) { ... on Stat { ${field} } } }`, variables: { id: this.id } }),
+      await __kitGraphqlEnvelope(this.store, { query: `query($id: ID!) { node(id: $id) { ... on Stat { ${field} } } }`, variables: { id: this.id } }),
     ) as JsonObject;
     const n = data["node"] as JsonObject | undefined;
     return String(n?.[field] ?? "");
@@ -3672,13 +3750,13 @@ export class Stat extends Entity {
 //#region 🎚️Prop
 /** @emoji 🎚️ Prop artifact: read-only in current kit API. */
 export class Prop extends Entity {
-  constructor(kit: Store, id: string) {
-    super(kit, id);
+  constructor(store: Store, id: string) {
+    super(store, id);
   }
 
   private async readScalarOnNode(field: string): Promise<string> {
     const data = kitGraphqlData(
-      await __kitGraphqlEnvelope(this.kit, { query: `query($id: ID!) { node(id: $id) { ... on Prop { ${field} } } }`, variables: { id: this.id } }),
+      await __kitGraphqlEnvelope(this.store, { query: `query($id: ID!) { node(id: $id) { ... on Prop { ${field} } } }`, variables: { id: this.id } }),
     ) as JsonObject;
     const n = data["node"] as JsonObject | undefined;
     return String(n?.[field] ?? "");
@@ -3702,7 +3780,7 @@ export class Prop extends Entity {
 
   async readQualityId(): Promise<string> {
     const data = kitGraphqlData(
-      await __kitGraphqlEnvelope(this.kit, { query: `query($id: ID!) { node(id: $id) { ... on Prop { quality { id } } } }`, variables: { id: this.id } }),
+      await __kitGraphqlEnvelope(this.store, { query: `query($id: ID!) { node(id: $id) { ... on Prop { quality { id } } } }`, variables: { id: this.id } }),
     ) as JsonObject;
     const n = data["node"] as JsonObject | undefined;
     const q = n?.["quality"] as JsonObject | undefined;
@@ -3715,7 +3793,7 @@ export class Prop extends Entity {
 
 //#region 🚀PublicAPI
 /** @emoji 🚀 Opens a {@link Store} backed by rs WASM (worker or inline). */
-export async function openKit(uri: string, opts?: KitOpenOptions): Promise<Store> {
+export async function openStore(uri: string, opts?: StoreOpenOptions): Promise<Store> {
   return Store.open(uri, opts);
 }
 //#endregion 🚀PublicAPI
@@ -3906,4 +3984,5 @@ if (typeof process !== "undefined" && !!process.env && process.env["SEMIO_JS_RUN
   });
 }
 //#endregion 🧪Tests
+
 

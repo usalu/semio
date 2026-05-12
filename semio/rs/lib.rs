@@ -5510,11 +5510,12 @@ pub mod interface {
     use crate::kit::design::piece::Piece;
     use crate::kit::design::Design;
     use crate::kit::Kit;
-    use crate::vcs::{Alternative, Checkpoint, Conflict, Graph, ReadVersion, Session, WriteVersion};
+    use crate::vcs::{Alternative, Checkpoint, Conflict, Edit, Graph, ReadVersion, Session, WriteVersion};
 
     /// @emoji 🔗 SDL `OwnerEntity` subset (grow toward full target union).
     #[derive(Clone, Union)]
     pub enum OwnerEntity {
+        Edit(Arc<Edit>),
         Kit(Arc<Kit>),
         Type(std::sync::Arc<crate::kit::r#type::Type>),
         Representation(std::sync::Arc<crate::kit::r#type::Representation>),
@@ -5862,18 +5863,6 @@ pub mod operation {
     use crate::interface::{empty_owned_entity_connection, OwnedEntityConnection, OwnerEntity};
     use crate::meta::{ConceptInput, QualityInput, TagInput};
     use crate::vcs::Edit;
-
-    /// 🏷️ Hand union for `Operation.owner` (every operation is owned by an `Edit`).
-    #[derive(Clone, Union)]
-    pub enum OperationOwner {
-        Edit(Arc<Edit>),
-    }
-
-    impl Default for OperationOwner {
-        fn default() -> Self {
-            Self::Edit(Arc::default())
-        }
-    }
 
     //#region 🧭 normalized operation contract
     //#region 🔖 canonical_kit_diff
@@ -7233,12 +7222,8 @@ pub mod operation {
         pub async fn hash(&self) -> String {
             crate::hash::h(&[self.id.as_str()])
         }
-        pub async fn owner(&self) -> Arc<OperationOwner> {
-            Arc::new(OperationOwner::Edit(self.owner_edit.upgrade().unwrap_or_default()))
-        }
-        #[graphql(name = "owner")]
         pub async fn owner(&self) -> Option<Arc<OwnerEntity>> {
-            None
+            self.owner_edit.upgrade().map(|e| Arc::new(OwnerEntity::Edit(e)))
         }
         #[graphql(name = "owns")]
         pub async fn owns(&self) -> Option<Arc<OwnedEntityConnection>> {
@@ -7271,12 +7256,8 @@ pub mod operation {
         pub async fn hash(&self) -> String {
             crate::hash::h(&[self.id.as_str()])
         }
-        pub async fn owner(&self) -> Arc<OperationOwner> {
-            Arc::new(OperationOwner::Edit(self.owner_edit.upgrade().unwrap_or_default()))
-        }
-        #[graphql(name = "owner")]
         pub async fn owner(&self) -> Option<Arc<OwnerEntity>> {
-            None
+            self.owner_edit.upgrade().map(|e| Arc::new(OwnerEntity::Edit(e)))
         }
         #[graphql(name = "owns")]
         pub async fn owns(&self) -> Option<Arc<OwnedEntityConnection>> {
@@ -7309,12 +7290,8 @@ pub mod operation {
         pub async fn hash(&self) -> String {
             crate::hash::h(&[self.id.as_str()])
         }
-        pub async fn owner(&self) -> Arc<OperationOwner> {
-            Arc::new(OperationOwner::Edit(self.owner_edit.upgrade().unwrap_or_default()))
-        }
-        #[graphql(name = "owner")]
         pub async fn owner(&self) -> Option<Arc<OwnerEntity>> {
-            None
+            self.owner_edit.upgrade().map(|e| Arc::new(OwnerEntity::Edit(e)))
         }
         #[graphql(name = "owns")]
         pub async fn owns(&self) -> Option<Arc<OwnedEntityConnection>> {
@@ -7353,12 +7330,8 @@ pub mod operation {
         pub async fn hash(&self) -> String {
             crate::hash::h(&[self.id.as_str()])
         }
-        pub async fn owner(&self) -> Arc<OperationOwner> {
-            Arc::new(OperationOwner::Edit(self.owner_edit.upgrade().unwrap_or_default()))
-        }
-        #[graphql(name = "owner")]
         pub async fn owner(&self) -> Option<Arc<OwnerEntity>> {
-            None
+            self.owner_edit.upgrade().map(|e| Arc::new(OwnerEntity::Edit(e)))
         }
         #[graphql(name = "owns")]
         pub async fn owns(&self) -> Option<Arc<OwnedEntityConnection>> {
@@ -7391,12 +7364,8 @@ pub mod operation {
         pub async fn hash(&self) -> String {
             crate::hash::h(&[self.id.as_str()])
         }
-        pub async fn owner(&self) -> Arc<OperationOwner> {
-            Arc::new(OperationOwner::Edit(self.owner_edit.upgrade().unwrap_or_default()))
-        }
-        #[graphql(name = "owner")]
         pub async fn owner(&self) -> Option<Arc<OwnerEntity>> {
-            None
+            self.owner_edit.upgrade().map(|e| Arc::new(OwnerEntity::Edit(e)))
         }
         #[graphql(name = "owns")]
         pub async fn owns(&self) -> Option<Arc<OwnedEntityConnection>> {
@@ -7424,7 +7393,6 @@ pub mod operation {
         name = "Operation",
         field(name = "id", ty = "crate::id::Id"),
         field(name = "hash", ty = "String"),
-        field(name = "owner", ty = "std::sync::Arc<crate::operation::OperationOwner>"),
         field(name = "owner", method = "owner", ty = "Option<std::sync::Arc<crate::interface::OwnerEntity>>"),
         field(name = "owns", method = "owns", ty = "Option<std::sync::Arc<crate::interface::OwnedEntityConnection>>")
     )]
@@ -9132,7 +9100,7 @@ pub mod gql {
     use crate::event::EventBus;
     use crate::geom::{OffsetInput, PositionInput};
     use crate::id::Id;
-    use crate::operation::{Command, Input, KitOperation, Scope};
+    use crate::operation::{Command, Input, Scope};
     use crate::vcs::Graph;
     use crate::worker::ParentRuntime;
 
@@ -9268,10 +9236,10 @@ pub mod gql {
 
     //#region 🎛️commands
     /// @emoji 🎛️ `Mutation.session` scope — holds kit command context on [`ParentRuntime`].
-    pub struct SessionCommandNav;
+    pub struct SessionCommandInput;
 
     #[Object(name = "SessionCommandInput")]
-    impl SessionCommand {
+    impl SessionCommandInput {
         async fn start(&self, ctx: &Context<'_>) -> async_graphql::Result<Id> {
             let rt = ctx.data::<Arc<ParentRuntime>>()?;
             let _ = rt.wip_graph.ensure_default_seed_state().await;
@@ -9293,17 +9261,17 @@ pub mod gql {
             Ok(Id::new().await)
         }
 
-        async fn backbone(&self) -> BackboneCommand {
-            BackboneCommandNav
+        async fn backbone(&self) -> BackboneCommandInput {
+            BackboneCommandInput
         }
 
         #[graphql(name = "theKit")]
-        async fn the_kit(&self) -> VersionCommand {
-            VersionCommandNav
+        async fn the_kit(&self) -> VersionCommandInput {
+            VersionCommandInput
         }
 
-        async fn alternative(&self, #[graphql(name = "id")] id: Id) -> AlternativeCommand {
-            AlternativeCommand { alternative_id: id }
+        async fn alternative(&self, #[graphql(name = "id")] id: Id) -> AlternativeCommandInput {
+            AlternativeCommandInput { alternative_id: id }
         }
 
         #[graphql(name = "startAlternative")]
@@ -9315,7 +9283,7 @@ pub mod gql {
     }
 
     /// @emoji 🗄️ GraphQL entry for `session.backbone.*` kit persistence commands.
-    pub struct BackboneCommandNav;
+    pub struct BackboneCommandInput;
 
     #[derive(Clone, async_graphql::SimpleObject)]
     #[graphql(name = "BackboneStatus")]
@@ -9326,7 +9294,7 @@ pub mod gql {
     }
 
     #[Object(name = "BackboneCommandInput")]
-    impl BackboneCommand {
+    impl BackboneCommandInput {
         async fn attach(&self, ctx: &Context<'_>, uri: String) -> async_graphql::Result<Id> {
             let _ = crate::operation::BackboneKind::from_uri(&uri).map_err(|e| async_graphql::Error::new(e.message))?;
             let rt = ctx.data::<Arc<ParentRuntime>>()?;
@@ -9358,10 +9326,10 @@ pub mod gql {
         }
     }
 
-    pub struct VersionCommandNav;
+    pub struct VersionCommandInput;
 
     #[Object(name = "VersionCommandInput")]
-    impl VersionCommand {
+    impl VersionCommandInput {
         #[graphql(name = "startNewChange")]
         async fn start_new_change(&self, ctx: &Context<'_>) -> async_graphql::Result<Id> {
             let rt = ctx.data::<Arc<ParentRuntime>>()?;
@@ -9372,14 +9340,14 @@ pub mod gql {
         }
 
         #[graphql(name = "unsavedChange")]
-        async fn unsaved_change(&self, ctx: &Context<'_>, id: Id) -> async_graphql::Result<UnsavedChangeNav> {
+        async fn unsaved_change(&self, ctx: &Context<'_>, id: Id) -> async_graphql::Result<UnsavedChangeCommandInput> {
             let rt = ctx.data::<Arc<ParentRuntime>>()?;
             if let Some((_, tx)) = rt.wip_kit_scope.read().await.as_ref() {
                 if tx != &id {
                     return Err(async_graphql::Error::new("unsavedChange id does not match active change"));
                 }
             }
-            Ok(UnsavedChange { change_id: id })
+            Ok(UnsavedChangeCommandInput { change_id: id })
         }
 
         async fn save(&self, ctx: &Context<'_>) -> async_graphql::Result<Id> {
@@ -9400,14 +9368,14 @@ pub mod gql {
         }
     }
 
-    pub struct UnsavedChange {
+    pub struct UnsavedChangeCommandInput {
         pub change_id: Id,
     }
 
     #[Object(name = "UnsavedChangeCommandInput")]
-    impl UnsavedChange {
-        async fn kit(&self) -> KitOperation {
-            KitOperation { change_id: self.change_id.clone() }
+    impl UnsavedChangeCommandInput {
+        async fn kit(&self) -> KitOperationInput {
+            KitOperationInput { change_id: self.change_id.clone() }
         }
 
         async fn save(&self, ctx: &Context<'_>) -> async_graphql::Result<Id> {
@@ -9425,12 +9393,12 @@ pub mod gql {
         }
     }
 
-    pub struct AlternativeCommand {
+    pub struct AlternativeCommandInput {
         pub alternative_id: Id,
     }
 
     #[Object(name = "AlternativeCommandInput")]
-    impl AlternativeCommand {
+    impl AlternativeCommandInput {
         async fn version(&self, ctx: &Context<'_>) -> async_graphql::Result<Id> {
             let _ = (ctx, &self.alternative_id);
             Ok(Id::new().await)
@@ -9443,12 +9411,12 @@ pub mod gql {
         }
     }
 
-    pub struct KitOperation {
+    pub struct KitOperationInput {
         pub change_id: Id,
     }
 
     #[Object(name = "KitOperationInput")]
-    impl KitOperation {
+    impl KitOperationInput {
         #[graphql(name = "rename")]
         async fn rename(&self, ctx: &Context<'_>, #[graphql(name = "newName")] new_name: String) -> async_graphql::Result<Id> {
             let rt = ctx.data::<Arc<ParentRuntime>>()?;
@@ -9457,7 +9425,7 @@ pub mod gql {
                 return Err(async_graphql::Error::new("change id mismatch for kit operation"));
             }
             let request_id = Id::new().await;
-            let cmd = Command::ApplyKitOperation { request_id: request_id.clone(), draft_id, transaction_id, operation: KitOperation::RenameKit { scope: Scope::Kit, input: Input::Name { name: new_name } } };
+            let cmd = Command::ApplyKitOperation { request_id: request_id.clone(), draft_id, transaction_id, operation: crate::operation::KitOperation::RenameKit { scope: Scope::Kit, input: Input::Name { name: new_name } } };
             Ok(rt.dispatch_wip(cmd).await)
         }
 
@@ -9483,13 +9451,13 @@ pub mod gql {
                 request_id: request_id.clone(),
                 draft_id,
                 transaction_id,
-                operation: KitOperation::CreateTag { scope: Scope::CreateTag { owner_id, tag_id: tag_id.clone(), attribute_ids: Vec::new() }, input: Input::Tag { tag } },
+                operation: crate::operation::KitOperation::CreateTag { scope: Scope::CreateTag { owner_id, tag_id: tag_id.clone(), attribute_ids: Vec::new() }, input: Input::Tag { tag } },
             };
             Ok(rt.dispatch_wip(cmd).await)
         }
 
-        async fn tag(&self, #[graphql(name = "id")] id: Id) -> TagOperation {
-            TagOperation { change_id: self.change_id.clone(), tag_id: id }
+        async fn tag(&self, #[graphql(name = "id")] id: Id) -> TagOperationInput {
+            TagOperationInput { change_id: self.change_id.clone(), tag_id: id }
         }
 
         #[graphql(name = "deleteTag")]
@@ -9520,13 +9488,13 @@ pub mod gql {
                 request_id: request_id.clone(),
                 draft_id,
                 transaction_id,
-                operation: KitOperation::CreateConcept { scope: Scope::CreateConcept { owner_id, concept_id: concept_id.clone(), attribute_ids: Vec::new() }, input: Input::Concept { concept } },
+                operation: crate::operation::KitOperation::CreateConcept { scope: Scope::CreateConcept { owner_id, concept_id: concept_id.clone(), attribute_ids: Vec::new() }, input: Input::Concept { concept } },
             };
             Ok(rt.dispatch_wip(cmd).await)
         }
 
-        async fn concept(&self, #[graphql(name = "id")] id: Id) -> ConceptOperation {
-            ConceptOperation { change_id: self.change_id.clone(), concept_id: id }
+        async fn concept(&self, #[graphql(name = "id")] id: Id) -> ConceptOperationInput {
+            ConceptOperationInput { change_id: self.change_id.clone(), concept_id: id }
         }
 
         #[graphql(name = "deleteConcept")]
@@ -9557,13 +9525,13 @@ pub mod gql {
                 request_id: request_id.clone(),
                 draft_id,
                 transaction_id,
-                operation: KitOperation::CreateQuality { scope: Scope::CreateQuality { owner_id, quality_id: quality_id.clone(), attribute_ids: Vec::new(), benchmark_ids: Vec::new() }, input: Input::Quality { quality } },
+                operation: crate::operation::KitOperation::CreateQuality { scope: Scope::CreateQuality { owner_id, quality_id: quality_id.clone(), attribute_ids: Vec::new(), benchmark_ids: Vec::new() }, input: Input::Quality { quality } },
             };
             Ok(rt.dispatch_wip(cmd).await)
         }
 
-        async fn quality(&self, #[graphql(name = "id")] id: Id) -> QualityOperation {
-            QualityOperation { change_id: self.change_id.clone(), quality_id: id }
+        async fn quality(&self, #[graphql(name = "id")] id: Id) -> QualityOperationInput {
+            QualityOperationInput { change_id: self.change_id.clone(), quality_id: id }
         }
 
         #[graphql(name = "deleteQuality")]
@@ -9584,8 +9552,8 @@ pub mod gql {
             Ok(Id::new().await)
         }
 
-        async fn r#type(&self, #[graphql(name = "id")] id: Id) -> TypeOperation {
-            TypeOperation { change_id: self.change_id.clone(), type_id: id }
+        async fn r#type(&self, #[graphql(name = "id")] id: Id) -> TypeOperationInput {
+            TypeOperationInput { change_id: self.change_id.clone(), type_id: id }
         }
 
         #[graphql(name = "deleteType")]
@@ -9606,8 +9574,8 @@ pub mod gql {
             Ok(Id::new().await)
         }
 
-        async fn design(&self, #[graphql(name = "id")] id: Id) -> DesignOperation {
-            DesignOperation { change_id: self.change_id.clone(), design_id: id }
+        async fn design(&self, #[graphql(name = "id")] id: Id) -> DesignOperationInput {
+            DesignOperationInput { change_id: self.change_id.clone(), design_id: id }
         }
 
         #[graphql(name = "deleteDesign")]
@@ -9623,13 +9591,13 @@ pub mod gql {
         }
     }
 
-    pub struct TagOperation {
+    pub struct TagOperationInput {
         pub change_id: Id,
         pub tag_id: Id,
     }
 
     #[Object(name = "TagOperationInput")]
-    impl TagOperation {
+    impl TagOperationInput {
         #[graphql(name = "rename")]
         async fn rename(&self, ctx: &Context<'_>, #[graphql(name = "newName")] new_name: String) -> async_graphql::Result<Id> {
             let _ = (ctx, self, new_name);
@@ -9662,13 +9630,13 @@ pub mod gql {
         }
     }
 
-    pub struct ConceptOperation {
+    pub struct ConceptOperationInput {
         pub change_id: Id,
         pub concept_id: Id,
     }
 
     #[Object(name = "ConceptOperationInput")]
-    impl ConceptOperation {
+    impl ConceptOperationInput {
         #[graphql(name = "rename")]
         async fn rename(&self, ctx: &Context<'_>, #[graphql(name = "newName")] new_name: String) -> async_graphql::Result<Id> {
             let _ = (ctx, self, new_name);
@@ -9701,13 +9669,13 @@ pub mod gql {
         }
     }
 
-    pub struct QualityOperation {
+    pub struct QualityOperationInput {
         pub change_id: Id,
         pub quality_id: Id,
     }
 
     #[Object(name = "QualityOperationInput")]
-    impl QualityOperation {
+    impl QualityOperationInput {
         #[graphql(name = "rename")]
         async fn rename(&self, ctx: &Context<'_>, #[graphql(name = "newKey")] new_key: String) -> async_graphql::Result<Id> {
             let _ = (ctx, self, new_key);
@@ -9740,13 +9708,13 @@ pub mod gql {
         }
     }
 
-    pub struct TypeOperation {
+    pub struct TypeOperationInput {
         pub change_id: Id,
         pub type_id: Id,
     }
 
     #[Object(name = "TypeOperationInput")]
-    impl TypeOperation {
+    impl TypeOperationInput {
         #[graphql(name = "rename")]
         async fn rename(&self, ctx: &Context<'_>, #[graphql(name = "newName")] new_name: String) -> async_graphql::Result<Id> {
             let _ = (ctx, self, new_name);
@@ -9782,8 +9750,8 @@ pub mod gql {
             let _ = (ctx, self, code, label, description, icon, order);
             Ok(Id::new().await)
         }
-        async fn port(&self, #[graphql(name = "id")] id: Id) -> PortOperation {
-            PortOperation { change_id: self.change_id.clone(), type_id: self.type_id.clone(), port_id: id }
+        async fn port(&self, #[graphql(name = "id")] id: Id) -> PortOperationInput {
+            PortOperationInput { change_id: self.change_id.clone(), type_id: self.type_id.clone(), port_id: id }
         }
         #[graphql(name = "deletePort")]
         async fn delete_port(&self, ctx: &Context<'_>, id: Id) -> async_graphql::Result<Id> {
@@ -9800,8 +9768,8 @@ pub mod gql {
             let _ = (ctx, self, code, description, icon, port_id);
             Ok(Id::new().await)
         }
-        async fn connector(&self, #[graphql(name = "id")] id: Id) -> ConnectorOperation {
-            ConnectorOperation { change_id: self.change_id.clone(), type_id: self.type_id.clone(), connector_id: id }
+        async fn connector(&self, #[graphql(name = "id")] id: Id) -> ConnectorOperationInput {
+            ConnectorOperationInput { change_id: self.change_id.clone(), type_id: self.type_id.clone(), connector_id: id }
         }
         #[graphql(name = "removeConnector")]
         async fn remove_connector(&self, ctx: &Context<'_>, id: Id) -> async_graphql::Result<Id> {
@@ -9815,14 +9783,14 @@ pub mod gql {
         }
     }
 
-    pub struct PortOperation {
+    pub struct PortOperationInput {
         pub change_id: Id,
         pub type_id: Id,
         pub port_id: Id,
     }
 
     #[Object(name = "PortOperationInput")]
-    impl PortOperation {
+    impl PortOperationInput {
         #[graphql(name = "rename")]
         async fn rename(&self, ctx: &Context<'_>, #[graphql(name = "newCode")] new_code: String, #[graphql(name = "newLabel")] new_label: Option<String>) -> async_graphql::Result<Id> {
             let _ = (ctx, self, new_code, new_label);
@@ -9855,14 +9823,14 @@ pub mod gql {
         }
     }
 
-    pub struct ConnectorOperation {
+    pub struct ConnectorOperationInput {
         pub change_id: Id,
         pub type_id: Id,
         pub connector_id: Id,
     }
 
     #[Object(name = "ConnectorOperationInput")]
-    impl ConnectorOperation {
+    impl ConnectorOperationInput {
         #[graphql(name = "rename")]
         async fn rename(&self, ctx: &Context<'_>, #[graphql(name = "newCode")] new_code: String) -> async_graphql::Result<Id> {
             let _ = (ctx, self, new_code);
@@ -9880,13 +9848,13 @@ pub mod gql {
         }
     }
 
-    pub struct DesignOperation {
+    pub struct DesignOperationInput {
         pub change_id: Id,
         pub design_id: Id,
     }
 
     #[Object(name = "DesignOperationInput")]
-    impl DesignOperation {
+    impl DesignOperationInput {
         #[graphql(name = "rename")]
         async fn rename(&self, ctx: &Context<'_>, #[graphql(name = "newName")] new_name: String) -> async_graphql::Result<Id> {
             let _ = (ctx, self, new_name);
@@ -9929,7 +9897,7 @@ pub mod gql {
                 request_id: request_id.clone(),
                 draft_id,
                 transaction_id,
-                operation: KitOperation::CreateFixedPiece { scope: Scope::CreateFixedPiece { design_id: self.design_id.clone(), piece_id, blueprint_id, attribute_ids: Vec::new() }, input: Input::FixedPiece { position, name, description } },
+                operation: crate::operation::KitOperation::CreateFixedPiece { scope: Scope::CreateFixedPiece { design_id: self.design_id.clone(), piece_id, blueprint_id, attribute_ids: Vec::new() }, input: Input::FixedPiece { position, name, description } },
             };
             Ok(rt.dispatch_wip(cmd).await)
         }
@@ -9965,11 +9933,11 @@ pub mod gql {
             let _ = (ctx, self, blueprint_id, parent_piece_id, parent_connector, child_connector, position, name, description, scale);
             Ok(Id::new().await)
         }
-        async fn piece(&self, #[graphql(name = "id")] id: Id) -> PieceOperation {
-            PieceOperation { change_id: self.change_id.clone(), design_id: self.design_id.clone(), piece_id: id }
+        async fn piece(&self, #[graphql(name = "id")] id: Id) -> PieceOperationInput {
+            PieceOperationInput { change_id: self.change_id.clone(), design_id: self.design_id.clone(), piece_id: id }
         }
-        async fn pieces(&self, ids: Vec<Id>) -> PiecesOperation {
-            PiecesOperation { change_id: self.change_id.clone(), design_id: self.design_id.clone(), piece_ids: ids }
+        async fn pieces(&self, ids: Vec<Id>) -> PiecesOperationInput {
+            PiecesOperationInput { change_id: self.change_id.clone(), design_id: self.design_id.clone(), piece_ids: ids }
         }
         #[graphql(name = "deletePiece")]
         async fn delete_piece(&self, ctx: &Context<'_>, id: Id) -> async_graphql::Result<Id> {
@@ -9988,14 +9956,14 @@ pub mod gql {
         }
     }
 
-    pub struct PieceOperation {
+    pub struct PieceOperationInput {
         pub change_id: Id,
         pub design_id: Id,
         pub piece_id: Id,
     }
 
     #[Object(name = "PieceOperationInput")]
-    impl PieceOperation {
+    impl PieceOperationInput {
         #[graphql(name = "rename")]
         async fn rename(&self, ctx: &Context<'_>, #[graphql(name = "newName")] new_name: String) -> async_graphql::Result<Id> {
             let _ = (ctx, self, new_name);
@@ -10017,7 +9985,7 @@ pub mod gql {
                 request_id,
                 draft_id,
                 transaction_id,
-                operation: KitOperation::DragPieceInDesign { scope: Scope::PieceInDesign { design_id: self.design_id.clone(), piece_id: self.piece_id.clone() }, input: Input::Offset { offset } },
+                operation: crate::operation::KitOperation::DragPieceInDesign { scope: Scope::PieceInDesign { design_id: self.design_id.clone(), piece_id: self.piece_id.clone() }, input: Input::Offset { offset } },
             };
             Ok(rt.dispatch_wip(cmd).await)
         }
@@ -10051,14 +10019,14 @@ pub mod gql {
         }
     }
 
-    pub struct PiecesOperation {
+    pub struct PiecesOperationInput {
         pub change_id: Id,
         pub design_id: Id,
         pub piece_ids: Vec<Id>,
     }
 
     #[Object(name = "PiecesOperationInput")]
-    impl PiecesOperation {
+    impl PiecesOperationInput {
         async fn drag(&self, ctx: &Context<'_>, offset: OffsetInput) -> async_graphql::Result<Id> {
             let rt = ctx.data::<Arc<ParentRuntime>>()?;
             let (draft_id, transaction_id) = rt.wip_kit_scope.read().await.clone().ok_or_else(|| async_graphql::Error::new("no active kit scope"))?;
@@ -10070,7 +10038,7 @@ pub mod gql {
                 request_id,
                 draft_id,
                 transaction_id,
-                operation: KitOperation::DragPiecesInDesign { scope: Scope::PiecesInDesign { design_id: self.design_id.clone(), piece_ids: self.piece_ids.clone() }, input: Input::Offset { offset } },
+                operation: crate::operation::KitOperation::DragPiecesInDesign { scope: Scope::PiecesInDesign { design_id: self.design_id.clone(), piece_ids: self.piece_ids.clone() }, input: Input::Offset { offset } },
             };
             Ok(rt.dispatch_wip(cmd).await)
         }
