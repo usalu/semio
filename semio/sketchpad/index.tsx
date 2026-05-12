@@ -42,7 +42,7 @@ import {
   Concept,
   Connection,
   ConnectionDiff,
-  ConnectionScopeProvider,
+  ConnectionUnderActiveDesignProvider,
   Coordinate,
   createDefaultBrowserSketchpadFileKitStoreFactory,
   createDefaultBrowserSketchpadRemoteKitStoreFactory,
@@ -52,7 +52,7 @@ import {
   decodeKitSemioEnvelopeToFullDtoFromValue,
   Design,
   DesignDiff,
-  DesignScopeProvider,
+  DesignContextProvider,
   DiffStatus,
   executeSemioKitCommand,
   Folder,
@@ -70,18 +70,18 @@ import {
   kitHostRedo,
   kitHostUndo,
   kitStoreFromKitStoreClient,
-  KitScope,
-  KitScopeContext,
-  KitShellScopeProvider,
+  KitWasmMountProvider
+  ActiveKitTabContext,
+  ActiveKitTabContextProvider,
   KitStoreProvider,
   Piece,
   PieceDiff,
-  PieceScopeProvider,
+  PieceUnderActiveDesignProvider,
   Plane,
   Point,
   Quality,
   QualityDiff,
-  QualityScopeProvider,
+  QualityContextProvider,
   Representation,
   SchemaScopeContext,
   schemaScopeForEntityId,
@@ -90,10 +90,10 @@ import {
   TOLERANCE,
   Type,
   TypeDiff,
-  TypeScopeProvider,
+  TypeContextProvider,
   useConnection,
   useConnections,
-  useConnectionScope,
+  useConnectionContextRow,
   useCreateAuthor,
   useKitHostCreateDesign,
   useCreateFolder,
@@ -116,7 +116,7 @@ import {
   useDesignImage,
   useDesignName,
   useDesigns,
-  useDesignScope,
+  useDesignContextRow,
   useDesignsFull,
   useDesignUnit,
   useExplodeableDesignNodes as useExplodeableDesignNodeIdsFromKit,
@@ -125,9 +125,9 @@ import {
   useFixedPieceId as useFixedPieceIdFromKit,
   useIncludedDesigns as useIncludedDesignsFromKit,
   useIsConnectedPiece as useIsConnectedPieceFromKit,
-  useIsInDesignScope,
-  useIsInKitScope,
-  useIsInTypeScope,
+  useHasDesignContext,
+  useIsInActiveKitTab,
+  useHasTypeContext,
   useKitAlternatives,
   useKitAlternativeSelection,
   useKitCommandEngineExplicitOrigin,
@@ -140,15 +140,15 @@ import {
   useKitLicense,
   useKitRegistrySafe,
   useKitRelease,
-  useKitRuntimeSafe,
-  useKitScope,
+  useKitWasmHost,
+  useActiveKitTab,
   useKitStore,
   useKitStoreSnapshot,
   useMoveKitArtifactToFolder,
   useOpenKitShallows,
   useParentPieceId as useParentPieceIdFromKit,
   usePatchKit,
-  usePieceScopedRead,
+  usePieceContextRowdRead,
   usePiece,
   usePieceCenter as useSchemaPieceCenter,
   usePieceColor as useSchemaPieceColor,
@@ -162,11 +162,11 @@ import {
   usePieceParentConnection as usePieceParentConnectionFromKit,
   usePieceScale as useSchemaPieceScale,
   usePieces,
-  usePieceScope,
+  usePieceContextRow,
   usePiecesMetadataMap as usePiecesMetadataRecordFromKit,
-  useQualityScopedRead,
+  useQualityContextRowdRead,
   useQuality,
-  useQualityScope,
+  useQualityContextRow,
   useRegistryHasKit,
   useRegistryKitPersistenceKind,
   useRenameKit,
@@ -174,7 +174,7 @@ import {
   useReplacableTypes as useReplacableTypeIdsFromKit,
   useResolvedKitIdentifier,
   useTagsFull,
-  useTypeScopedRead,
+  useTypeContextRowdRead,
   useType,
   useTypeDescription,
   useTypeIcon,
@@ -183,7 +183,7 @@ import {
   useTypeName,
   useTypeParent,
   useTypes,
-  useTypeScope,
+  useTypeContextRow,
   useTypesFull,
   useTypeUnit,
   useUpdateAuthor,
@@ -7187,38 +7187,38 @@ export type { SketchpadKitKindAvailability, SketchpadKitStoreFactory } from "@se
 
 export {
   AuthorScopeProvider,
-  ConnectionScopeProvider,
-  DesignScopeProvider,
-  KitScopeContext,
-  PieceScopeProvider,
-  QualityScopeProvider,
-  TypeScopeProvider,
+  ConnectionUnderActiveDesignProvider,
+  DesignContextProvider,
+  ActiveKitTabContext,
+  PieceUnderActiveDesignProvider,
+  QualityContextProvider,
+  TypeContextProvider,
   useAuthor,
-  useAuthorScope,
+  useAuthorContextRow,
   useConnection,
   useConnections,
-  useConnectionScope,
+  useConnectionContextRow,
   useDesign,
-  useDesignScope,
+  useDesignContextRow,
   useDesignsFull,
   useDesignsIds,
   useDesignsMetadata,
   useFilesFull,
-  useIsInAuthorScope,
-  useIsInDesignScope,
-  useIsInKitScope,
-  useIsInQualityScope,
-  useIsInTypeScope,
-  useKitScope,
+  useHasAuthorContext,
+  useHasDesignContext,
+  useIsInActiveKitTab,
+  useHasQualityContext,
+  useHasTypeContext,
+  useActiveKitTab,
   useKitStoreSnapshot,
   usePiece,
   usePieces,
-  usePieceScope,
+  usePieceContextRow,
   useQuality,
-  useQualityScope,
+  useQualityContextRow,
   useTagsFull,
   useType,
-  useTypeScope,
+  useTypeContextRow,
   useTypesFull,
   useTypesIds,
   useTypesMetadata,
@@ -7236,7 +7236,7 @@ export type PieceMetadata = {
 };
 
 export function usePiecesMetadataMap(): Map<string, PieceMetadata> {
-  const designScope = useDesignScope();
+  const designScope = useDesignContextRow();
   const [placementMap] = usePiecesMetadataRecordFromKit(designScope?.id);
   return useMemo(() => {
     const m = new Map<string, PieceMetadata>();
@@ -7253,40 +7253,40 @@ export function usePiecesMetadataMap(): Map<string, PieceMetadata> {
 }
 
 export function usePieceMetadata(pieceId?: Id): PieceMetadata | undefined {
-  const designScope = useDesignScope();
-  const pieceScope = usePieceScope();
+  const designScope = useDesignContextRow();
+  const pieceScope = usePieceContextRow();
   const resolvedPieceId = pieceId ?? pieceScope?.id;
   const [meta] = usePieceMetadataFromKit(designScope?.id, resolvedPieceId);
   return meta as PieceMetadata | undefined;
 }
 
 export function useIsConnectedPiece(id?: Id): boolean {
-  const designScope = useDesignScope();
-  const pieceScope = usePieceScope();
+  const designScope = useDesignContextRow();
+  const pieceScope = usePieceContextRow();
   const pieceId = id ?? pieceScope?.id;
   const [v] = useIsConnectedPieceFromKit(designScope?.id, pieceId);
   return Boolean(v);
 }
 
 export function usePieceDepth(id?: Id): number {
-  const designScope = useDesignScope();
-  const pieceScope = usePieceScope();
+  const designScope = useDesignContextRow();
+  const pieceScope = usePieceContextRow();
   const pieceId = id ?? pieceScope?.id;
   const [d] = usePieceDepthFromKit(designScope?.id, pieceId);
   return typeof d === "number" ? d : 0;
 }
 
 export function useFixedPieceId(id?: Id): string | undefined {
-  const designScope = useDesignScope();
-  const pieceScope = usePieceScope();
+  const designScope = useDesignContextRow();
+  const pieceScope = usePieceContextRow();
   const pieceId = id ?? pieceScope?.id;
   const [v] = useFixedPieceIdFromKit(designScope?.id, pieceId);
   return v;
 }
 
 export function useParentPieceId(id?: Id): string | null {
-  const designScope = useDesignScope();
-  const pieceScope = usePieceScope();
+  const designScope = useDesignContextRow();
+  const pieceScope = usePieceContextRow();
   const pieceId = id ?? pieceScope?.id;
   const [v] = useParentPieceIdFromKit(designScope?.id, pieceId);
   return v ?? null;
@@ -7301,8 +7301,8 @@ export function useCurrentPiecePlane(): Plane {
 }
 
 export function usePieceParentConnection(id?: Id): Connection | null {
-  const designScope = useDesignScope();
-  const pieceScope = usePieceScope();
+  const designScope = useDesignContextRow();
+  const pieceScope = usePieceContextRow();
   const pieceId = (typeof id === "string" ? id : (pieceScope?.id ?? null)) as string | null;
   const [c] = usePieceParentConnectionFromKit(designScope?.id, pieceId ?? undefined);
   return (c as Connection | undefined) ?? null;
@@ -7313,13 +7313,13 @@ export function usePieceParentConnection(id?: Id): Connection | null {
 // #region 🎹Design Derived Hooks
 
 export function useIncludedDesigns(): Design[] {
-  const designId = useDesignScope()?.id;
+  const designId = useDesignContextRow()?.id;
   const [included] = useIncludedDesignsFromKit(designId);
   return Array.isArray(included) ? (included as Design[]) : [];
 }
 
 export function useDesignId(): string | null {
-  const designScope = useDesignScope();
+  const designScope = useDesignContextRow();
   return designScope?.id ?? null;
 }
 
@@ -7329,7 +7329,7 @@ export function usePiecesFromIds(pieceIds: Id[]): Piece[] {
 }
 
 export function useReplacableTypes(pieceIds: Id[], selectedVariants?: string[]): Type[] {
-  const designId = useDesignScope()?.id;
+  const designId = useDesignContextRow()?.id;
   const [replaceTypeIds] = useReplacableTypeIdsFromKit(designId, pieceIds);
   const { types: allTypes } = useTypes();
   return useMemo(() => {
@@ -7341,7 +7341,7 @@ export function useReplacableTypes(pieceIds: Id[], selectedVariants?: string[]):
 }
 
 export function useReplacableDesigns(piece: Piece): Design[] {
-  const designId = useDesignScope()?.id;
+  const designId = useDesignContextRow()?.id;
   const pieceIds = piece?.id ? [piece.id] : [];
   const [replaceDesignIds] = useReplacableDesignIdsFromKit(designId, pieceIds);
   const { designs: allDesigns } = useDesigns();
@@ -7356,7 +7356,7 @@ export function useReplacableDesigns(piece: Piece): Design[] {
 // #endregion 🥈Entity Hooks
 
 // #region ⏱️Kit
-// Shell kit id context lives in `@semio/react` ({@link KitShellScopeProvider}, {@link KitScopeContext}).
+// Shell kit id context lives in `@semio/react` ({@link ActiveKitTabContextProvider}, {@link ActiveKitTabContext}).
 
 /**
  * Wraps children with {@link KitScope} from `@semio/react` so command/query hooks work.
@@ -7376,17 +7376,17 @@ function KitWasmRuntimeBridge(props: { kitId: string; children: React.ReactNode 
     const status = registry.status(kitId);
     const entry = registry.get(kitId);
     if (status === "ready" && entry) {
-      return React.createElement(KitAlternativeSelectionProvider, { kitId }, React.createElement(KitScope, { kitId, store: entry.store, kitClient: entry.kitClient, children }));
+      return React.createElement(KitAlternativeSelectionProvider, { kitId }, React.createElement(KitWasmMountProvider, { kitId, store: entry.store, kitClient: entry.kitClient, children }));
     }
   }
-  return React.createElement(KitAlternativeSelectionProvider, { kitId }, React.createElement(KitScope, { store: innerStore, children }));
+  return React.createElement(KitAlternativeSelectionProvider, { kitId }, React.createElement(KitWasmMountProvider, { store: innerStore, children }));
 }
 
 /**
- * React provider: tab shell id + wasm {@link KitScope} for that kit.
+ * React provider: tab shell id + wasm {@link KitWasmMountProvider} for that kit.
  **/
 export const KitScopeProvider = (props: { id: string; children: React.ReactNode }) => {
-  return React.createElement(KitShellScopeProvider, { id: props.id }, React.createElement(KitWasmRuntimeBridge, { kitId: props.id, children: props.children as any }));
+  return React.createElement(ActiveKitTabContextProvider, { kitTabId: props.id }, React.createElement(KitWasmRuntimeBridge, { kitId: props.id, children: props.children as any }));
 };
 
 // #endregion ⏱️Kit
@@ -10447,7 +10447,7 @@ export function useKitAppSelectAll(): ActionHookResult<[]> {
  **/
 export function useKitAppSetFilter(): ActionHookResult<[search: string]> {
   const actor = useSketchpadActor();
-  const kitScope = useKitScope();
+  const kitScope = useActiveKitTab();
   const kitId = kitScope?.id ?? "";
   const canActEvent = useMemo(() => ({ type: "KIT.SET_FILTER" as const, kitId, search: "" }), [kitId]);
   const canAct = useSelector(actor, (snapshot) => snapshot.can(canActEvent));
@@ -10464,7 +10464,7 @@ export function useKitAppSetFilter(): ActionHookResult<[search: string]> {
  **/
 export function useKitAppToggleRow(): ActionHookResult<[rowId: string]> {
   const actor = useSketchpadActor();
-  const kitScope = useKitScope();
+  const kitScope = useActiveKitTab();
   const kitId = kitScope?.id ?? "";
   const canActEvent = useMemo(() => ({ type: "KIT.TOGGLE_ROW" as const, kitId, rowId: "" }), [kitId]);
   const canAct = useSelector(actor, (snapshot) => snapshot.can(canActEvent));
@@ -10481,7 +10481,7 @@ export function useKitAppToggleRow(): ActionHookResult<[rowId: string]> {
  **/
 export function useKitAppSetSort(): ActionHookResult<[column: string, direction: "asc" | "desc"]> {
   const actor = useSketchpadActor();
-  const kitScope = useKitScope();
+  const kitScope = useActiveKitTab();
   const kitId = kitScope?.id ?? "";
   const canActEvent = useMemo(() => ({ type: "KIT.SET_SORT" as const, kitId, column: "", direction: "asc" as const }), [kitId]);
   const canAct = useSelector(actor, (snapshot) => snapshot.can(canActEvent));
@@ -10498,7 +10498,7 @@ export function useKitAppSetSort(): ActionHookResult<[column: string, direction:
  **/
 export function useKitAppToggleSort(): ActionHookResult<[column: KitAppSortColumn]> {
   const actor = useSketchpadActor();
-  const kitScope = useKitScope();
+  const kitScope = useActiveKitTab();
   const kitId = kitScope?.id ?? "";
   const [selection] = useKitAppSelection();
   const kitApp = useKitAppXState(kitId);
@@ -10521,7 +10521,7 @@ export function useKitAppToggleSort(): ActionHookResult<[column: KitAppSortColum
  *MUST provide the current hover, a setter, and a canSet flag.
  **/
 export function useKitAppHover(): HookNoSetResult<KitAppHover | undefined> {
-  const kitScope = useKitScope();
+  const kitScope = useActiveKitTab();
   const actor = useSketchpadActor();
   const kitId = kitScope?.id ?? "";
   const selector = useMemo(() => createKitHoverSelector(kitId), [kitId]);
@@ -10536,7 +10536,7 @@ export function useKitAppHover(): HookNoSetResult<KitAppHover | undefined> {
  **/
 export function useKitAppSetHover(): ActionHookResult<[hover: KitAppHover]> {
   const actor = useSketchpadActor();
-  const kitScope = useKitScope();
+  const kitScope = useActiveKitTab();
   const kitId = kitScope?.id ?? "";
   const canActEvent = useMemo(() => ({ type: "KIT.SET_HOVER" as const, kitId, hover: {} as KitAppHover }), [kitId]);
   const canAct = useSelector(actor, (snapshot) => snapshot.can(canActEvent));
@@ -10553,7 +10553,7 @@ export function useKitAppSetHover(): ActionHookResult<[hover: KitAppHover]> {
  **/
 export function useKitAppClearHover(): ActionHookResult<[]> {
   const actor = useSketchpadActor();
-  const kitScope = useKitScope();
+  const kitScope = useActiveKitTab();
   const kitId = kitScope?.id ?? "";
   const canActEvent = useMemo(() => ({ type: "KIT.CLEAR_HOVER" as const, kitId }), [kitId]);
   const canAct = useSelector(actor, (snapshot) => snapshot.can(canActEvent));
@@ -10570,7 +10570,7 @@ export function useKitAppClearHover(): ActionHookResult<[]> {
  **/
 export function useKitAppTogglePanel(): ActionHookResult<[panel: keyof PanelVisibility]> {
   const actor = useSketchpadActor();
-  const kitScope = useKitScope();
+  const kitScope = useActiveKitTab();
   const kitId = kitScope?.id ?? "";
   const canActEvent = useMemo(() => ({ type: "KIT.TOGGLE_PANEL" as const, kitId, panel: "toolbar" as keyof PanelVisibility }), [kitId]);
   const canAct = useSelector(actor, (snapshot) => snapshot.can(canActEvent));
@@ -10593,7 +10593,7 @@ export function useKitAppTogglePanel(): ActionHookResult<[panel: keyof PanelVisi
  *MUST check the hover state for the given type ID.
  **/
 export function useKitAppIsTypeHovered(): HookNoSetResult<boolean> {
-  const typeScope = useTypeScope();
+  const typeScope = useTypeContextRow();
   const typeId = typeScope?.id;
   const isHovered = useKitApp((state) => (typeId ? state.hover?.type === typeId : false)) as boolean;
   const canRead = typeScope !== null;
@@ -10605,7 +10605,7 @@ export function useKitAppIsTypeHovered(): HookNoSetResult<boolean> {
  *MUST derive status from selection and hover states for the given type ID.
  **/
 export function useKitAppTypeStatus(): HookNoSetResult<DiffStatus> {
-  const typeScope = useTypeScope();
+  const typeScope = useTypeContextRow();
   const canRead = typeScope !== null;
   return [DiffStatus.Unchanged, undefined, canRead];
 }
@@ -10615,7 +10615,7 @@ export function useKitAppTypeStatus(): HookNoSetResult<DiffStatus> {
  *MUST derive the color from the type's hovered and selected state.
  **/
 export function useKitAppTypeColor(isSelected: boolean): HookNoSetResult<{ fill: string; stroke: string; opacity: number }> {
-  const typeScope = useTypeScope();
+  const typeScope = useTypeContextRow();
   const [isHovered] = useKitAppIsTypeHovered();
   const [status] = useKitAppTypeStatus();
   const canRead = typeScope !== null;
@@ -10674,7 +10674,7 @@ export function useKitAppTypeColor(isSelected: boolean): HookNoSetResult<{ fill:
  *MUST check the hover state for the given design ID.
  **/
 export function useKitAppIsDesignHovered(): HookNoSetResult<boolean> {
-  const designScope = useDesignScope();
+  const designScope = useDesignContextRow();
   const designId = designScope?.id;
   const isHovered = useKitApp((state) => (designId ? state.hover?.design === designId : false)) as boolean;
   const canRead = designScope !== null;
@@ -10686,7 +10686,7 @@ export function useKitAppIsDesignHovered(): HookNoSetResult<boolean> {
  *MUST derive status from selection and hover states for the given design ID.
  **/
 export function useKitAppDesignStatus(): HookNoSetResult<DiffStatus> {
-  const designScope = useDesignScope();
+  const designScope = useDesignContextRow();
   const canRead = designScope !== null;
   return [DiffStatus.Unchanged, undefined, canRead];
 }
@@ -10696,7 +10696,7 @@ export function useKitAppDesignStatus(): HookNoSetResult<DiffStatus> {
  *MUST derive the color from the design's hovered and selected state.
  **/
 export function useKitAppDesignColor(isSelected: boolean): HookNoSetResult<{ fill: string; stroke: string; opacity: number }> {
-  const designScope = useDesignScope();
+  const designScope = useDesignContextRow();
   const [isHovered] = useKitAppIsDesignHovered();
   const [status] = useKitAppDesignStatus();
   const canRead = designScope !== null;
@@ -11838,7 +11838,7 @@ const AppContent: FC = () => {
   const params = useParams();
   const [searchParams, setSearchParams] = useSearchParams();
 
-  const kitScope = useKitScope();
+  const kitScope = useActiveKitTab();
   const hasKit = useHasKit(kitScope?.id || "");
 
   const appKs = useKitStoreSnapshot();
@@ -13862,7 +13862,7 @@ class ErrorBoundary extends React.Component<ErrorBoundaryProps, { hasError: bool
  **/
 function useKitAppYjsToXStateSync() {
   const actor = useSketchpadActor();
-  const kitScope = useKitScope();
+  const kitScope = useActiveKitTab();
   const kitId = kitScope?.id ?? "";
   const sketchpadStore = useSketchpadStore();
   const hasKit = useHasKit(kitId);
@@ -13954,7 +13954,7 @@ function useKitAppYjsToXStateSync() {
  **/
 const KitTableApp: FC = () => {
   useKitAppYjsToXStateSync();
-  const kitId = useKitScope()?.id ?? "";
+  const kitId = useActiveKitTab()?.id ?? "";
   const transaction = useKitAppChange();
   const { undo, redo, deleteSelected } = useKitAppCommands();
   useHotkeys("ctrl+z", () => undo?.(), { enableOnFormTags: true });
@@ -14576,7 +14576,7 @@ const KitDiagramInner: FC = () => {
   const [selection] = useKitAppSelection();
   const [setHover] = useKitAppSetHover();
   const [clearHover] = useKitAppClearHover();
-  const kitScope = useKitScope();
+  const kitScope = useActiveKitTab();
   const kitId = kitScope?.id ?? "";
   const [activeTool] = useKitAppActiveTool();
   const isHandTool = activeTool === ToolKind.HAND;
@@ -15196,7 +15196,7 @@ const MultiWindowApp: FC = () => {
   const transaction = useKitAppChange();
   const actor = useSketchpadActor();
   const sketchpadStore = useSketchpadStore();
-  const kitId = useKitScope()?.id;
+  const kitId = useActiveKitTab()?.id;
   const appType = useAppType();
   const addSection = useAddPanelSection();
   const removeSection = useRemovePanelSection();
@@ -15566,7 +15566,7 @@ const MultiWindowApp: FC = () => {
  **/
 export function useKitAppFilterSearch(): HookResult<string> {
   const actor = useSketchpadActor();
-  const kitScope = useKitScope();
+  const kitScope = useActiveKitTab();
   const kitId = kitScope?.id ?? "";
   const filterSearchSelector = useMemo(() => createKitFilterSearchSelector(kitId), [kitId]);
   const filterSearch = useSelector(actor, filterSearchSelector) ?? "";
@@ -15854,7 +15854,7 @@ function SketchpadTriadToggleRow(props: { triad: KitFieldBinding<boolean | undef
  *MUST render the kit metadata form fields within a detail panel section.
  **/
 export const KitSection: FC = () => {
-  const isInKitScope = useIsInKitScope();
+  const isInKitScope = useIsInActiveKitTab();
   if (!isInKitScope) return null;
   return <KitSectionForm />;
 };
@@ -16659,7 +16659,7 @@ const KitAlternativeFooterSelector: FC = () => {
   const appType = useAppType();
   const [selectedAlternativeId, setSelectedAlternativeId] = useKitAlternativeSelection();
   const alternatives = useKitAlternatives();
-  const kitRuntime = useKitRuntimeSafe();
+  const kitRuntime = useKitWasmHost();
   const kitClient = kitRuntime?.kitClient ?? null;
   const newAltInputRef = useRef<HTMLInputElement>(null);
   const [creatingAlt, setCreatingAlt] = useState(false);
@@ -16881,7 +16881,7 @@ export const kitConfig: AppConfig = {
  * Hook returning whether the current scoped piece is selected.
  **/
 export function useIsPieceSelected(): boolean {
-  const piece = usePieceScope();
+  const piece = usePieceContextRow();
   return useDesignAppIsPieceSelected(undefined, piece?.id ?? "");
 }
 
@@ -16889,7 +16889,7 @@ export function useIsPieceSelected(): boolean {
  * Hook returning whether the current scoped piece is hovered.
  **/
 export function useIsPieceHovered(): boolean {
-  const pieceScope = usePieceScope();
+  const pieceScope = usePieceContextRow();
   return useDesignAppIsPieceHovered(undefined, pieceScope?.id ?? "");
 }
 
@@ -16897,7 +16897,7 @@ export function useIsPieceHovered(): boolean {
  * Hook returning whether the current scoped piece is transitively hovered.
  **/
 export function useIsPieceTransitiveHovered(): boolean {
-  const pieceScope = usePieceScope();
+  const pieceScope = usePieceContextRow();
   const isHovered = useDesignAppIsPieceTransitiveHovered(undefined, pieceScope?.id ?? "");
   if (!pieceScope) return false;
   return isHovered;
@@ -16914,9 +16914,9 @@ export function usePieceStatus(): DiffStatus {
  * Hook returning the diffed piece with applied transaction edits.
  **/
 export function useDiffedPiece<T>(selector?: (piece: Piece) => T, id?: string, deep: boolean = false): T | Piece {
-  const originalPiece = usePieceScopedRead(identitySelector, id, deep) as Piece;
-  const pieceScope = usePieceScope();
-  const designScope = useDesignScope();
+  const originalPiece = usePieceContextRowdRead(identitySelector, id, deep) as Piece;
+  const pieceScope = usePieceContextRow();
+  const designScope = useDesignContextRow();
   const designAppStore = useDesignStore(identitySelector) as any;
 
   if (!designAppStore || !pieceScope || !designScope) {
@@ -16930,7 +16930,7 @@ export function useDiffedPiece<T>(selector?: (piece: Piece) => T, id?: string, d
  * Hook returning the piece center U coordinate with setter.
  **/
 export function usePieceCenterU(): HookResult<number> {
-  const pieceScope = usePieceScope();
+  const pieceScope = usePieceContextRow();
   const id = pieceScope?.id;
   const [center, setCenter, ws] = useSchemaPieceCenter(id);
   const u = (center as { u?: number } | undefined)?.u ?? 0;
@@ -16946,7 +16946,7 @@ export function usePieceCenterU(): HookResult<number> {
  * Hook returning the piece center V coordinate with setter.
  **/
 export function usePieceCenterV(): HookResult<number> {
-  const pieceScope = usePieceScope();
+  const pieceScope = usePieceContextRow();
   const id = pieceScope?.id;
   const [center, setCenter, ws] = useSchemaPieceCenter(id);
   const u = (center as { u?: number } | undefined)?.u ?? 0;
@@ -16962,7 +16962,7 @@ export function usePieceCenterV(): HookResult<number> {
  * Hook returning the piece scale with setter.
  **/
 export function usePieceScale(): HookResult<number> {
-  const pieceScope = usePieceScope();
+  const pieceScope = usePieceContextRow();
   const binding = useSchemaPieceScale(pieceScope?.id);
   const [raw, setAsync, ws] = binding;
   const value = (raw as number | undefined) ?? 1;
@@ -16977,7 +16977,7 @@ export function usePieceScale(): HookResult<number> {
  * Hook returning the piece hidden state with setter.
  **/
 export function usePieceIsHidden(): HookResult<boolean> {
-  const pieceScope = usePieceScope();
+  const pieceScope = usePieceContextRow();
   const binding = useSchemaPieceIsHidden(pieceScope?.id);
   const [raw, setAsync, ws] = binding;
   const value = Boolean(raw);
@@ -16992,7 +16992,7 @@ export function usePieceIsHidden(): HookResult<boolean> {
  * Hook returning the piece locked state with setter.
  **/
 export function usePieceIsLocked(): HookResult<boolean> {
-  const pieceScope = usePieceScope();
+  const pieceScope = usePieceContextRow();
   const binding = useSchemaPieceIsLocked(pieceScope?.id);
   const [raw, setAsync, ws] = binding;
   const value = Boolean(raw);
@@ -17007,7 +17007,7 @@ export function usePieceIsLocked(): HookResult<boolean> {
  * Hook returning the piece color with setter.
  **/
 export function usePieceColor(): HookResult<string | undefined> {
-  const pieceScope = usePieceScope();
+  const pieceScope = usePieceContextRow();
   return kitFieldBindingToHookResult(pieceScope?.id, useSchemaPieceColor(pieceScope?.id));
 }
 
@@ -17015,7 +17015,7 @@ export function usePieceColor(): HookResult<string | undefined> {
  * Hook returning the piece description with setter.
  **/
 export function usePieceDescription(): HookResult<string | undefined> {
-  const pieceScope = usePieceScope();
+  const pieceScope = usePieceContextRow();
   return kitFieldBindingToHookResult(pieceScope?.id, useSchemaPieceDescription(pieceScope?.id));
 }
 
@@ -17023,7 +17023,7 @@ export function usePieceDescription(): HookResult<string | undefined> {
  * Hook returning the piece name with setter.
  **/
 export function usePieceName(): HookResult<string | undefined> {
-  const pieceScope = usePieceScope();
+  const pieceScope = usePieceContextRow();
   return kitFieldBindingToHookResult(pieceScope?.id, useSchemaPieceName(pieceScope?.id));
 }
 
@@ -17031,7 +17031,7 @@ export function usePieceName(): HookResult<string | undefined> {
  * Hook returning whether the current scoped connection is selected.
  **/
 export function useIsConnectionSelected(): boolean {
-  const connectionScope = useConnectionScope();
+  const connectionScope = useConnectionContextRow();
   return useDesignAppIsConnectionSelected(undefined, connectionScope?.id ?? "");
 }
 
@@ -17039,7 +17039,7 @@ export function useIsConnectionSelected(): boolean {
  * Hook returning whether the current scoped connection is hovered.
  **/
 export function useIsConnectionHovered(): boolean {
-  const connectionScope = useConnectionScope();
+  const connectionScope = useConnectionContextRow();
   return useDesignAppIsConnectionHovered(undefined, connectionScope?.id ?? "");
 }
 
@@ -17047,9 +17047,9 @@ export function useIsConnectionHovered(): boolean {
  * Hook returning the diff status of the current scoped connection.
  **/
 export function useConnectionStatus(): DiffStatus {
-  const connection = useConnectionScope();
+  const connection = useConnectionContextRow();
   const kitDiff = useDesignAppDiff();
-  const designScope = useDesignScope();
+  const designScope = useDesignContextRow();
 
   if (!connection || !designScope || !kitDiff?.designs?.updated) {
     return DiffStatus.Unchanged;
@@ -17086,7 +17086,7 @@ export function useConnectionStatus(): DiffStatus {
  * Hook returning the connection gap with setter.
  **/
 export function useConnectionGap(): HookResult<number> {
-  const connectionScope = useConnectionScope();
+  const connectionScope = useConnectionContextRow();
   const binding = useSchemaConnectionGap(connectionScope?.id);
   const [raw, setAsync, ws] = binding;
   const value = (raw as number | undefined) ?? 0;
@@ -17098,7 +17098,7 @@ export function useConnectionGap(): HookResult<number> {
  * Hook returning the connection shift with setter.
  **/
 export function useConnectionShift(): HookResult<number> {
-  const connectionScope = useConnectionScope();
+  const connectionScope = useConnectionContextRow();
   const binding = useSchemaConnectionShift(connectionScope?.id);
   const [raw, setAsync, ws] = binding;
   const value = (raw as number | undefined) ?? 0;
@@ -17110,7 +17110,7 @@ export function useConnectionShift(): HookResult<number> {
  * Hook returning the connection rise with setter.
  **/
 export function useConnectionRise(): HookResult<number> {
-  const connectionScope = useConnectionScope();
+  const connectionScope = useConnectionContextRow();
   const binding = useSchemaConnectionRise(connectionScope?.id);
   const [raw, setAsync, ws] = binding;
   const value = (raw as number | undefined) ?? 0;
@@ -17122,7 +17122,7 @@ export function useConnectionRise(): HookResult<number> {
  * Hook returning the connection rotation with setter.
  **/
 export function useConnectionRotation(): HookResult<number> {
-  const connectionScope = useConnectionScope();
+  const connectionScope = useConnectionContextRow();
   const binding = useSchemaConnectionRotation(connectionScope?.id);
   const [raw, setAsync, ws] = binding;
   const value = (raw as number | undefined) ?? 0;
@@ -17134,7 +17134,7 @@ export function useConnectionRotation(): HookResult<number> {
  * Hook returning the connection turn with setter.
  **/
 export function useConnectionTurn(): HookResult<number> {
-  const connectionScope = useConnectionScope();
+  const connectionScope = useConnectionContextRow();
   const binding = useSchemaConnectionTurn(connectionScope?.id);
   const [raw, setAsync, ws] = binding;
   const value = (raw as number | undefined) ?? 0;
@@ -17146,7 +17146,7 @@ export function useConnectionTurn(): HookResult<number> {
  * Hook returning the connection tilt with setter.
  **/
 export function useConnectionTilt(): HookResult<number> {
-  const connectionScope = useConnectionScope();
+  const connectionScope = useConnectionContextRow();
   const binding = useSchemaConnectionTilt(connectionScope?.id);
   const [raw, setAsync, ws] = binding;
   const value = (raw as number | undefined) ?? 0;
@@ -17158,7 +17158,7 @@ export function useConnectionTilt(): HookResult<number> {
  * Hook returning the connection U coordinate with setter.
  **/
 export function useConnectionU(): HookResult<number> {
-  const connectionScope = useConnectionScope();
+  const connectionScope = useConnectionContextRow();
   const binding = useSchemaConnectionU(connectionScope?.id);
   const [raw, setAsync, ws] = binding;
   const value = (raw as number | undefined) ?? 0;
@@ -17170,7 +17170,7 @@ export function useConnectionU(): HookResult<number> {
  * Hook returning the connection V coordinate with setter.
  **/
 export function useConnectionV(): HookResult<number> {
-  const connectionScope = useConnectionScope();
+  const connectionScope = useConnectionContextRow();
   const binding = useSchemaConnectionV(connectionScope?.id);
   const [raw, setAsync, ws] = binding;
   const value = (raw as number | undefined) ?? 0;
@@ -17179,7 +17179,7 @@ export function useConnectionV(): HookResult<number> {
 }
 
 export function useConnectionDescription(): HookResult<string> {
-  const connectionScope = useConnectionScope();
+  const connectionScope = useConnectionContextRow();
   const binding = useSchemaConnectionDescription(connectionScope?.id);
   const [raw, setAsync, ws] = binding;
   const text = (raw as string | undefined) ?? "";
@@ -17194,7 +17194,7 @@ export function useConnectionDescription(): HookResult<string> {
  * Each group is a list of piece id strings.
  **/
 export function useClusterableGroups() {
-  const designScope = useDesignScope();
+  const designScope = useDesignContextRow();
   const selection = useDesignAppSelection();
   const [groups] = useDesignClusterableGroups(designScope?.id, selection.pieces ?? []);
   return useMemo(() => {
@@ -17248,9 +17248,9 @@ export function usePieceWithDiff(): { original: Piece; diffed: Piece | null; has
  * Hook returning stroke and fill colors based on connection diff status.
  **/
 export function useConnectionColor(): { stroke: string; fill: string } {
-  const connection = useConnectionScope();
+  const connection = useConnectionContextRow();
   const kitDiff = useDesignAppDiff();
-  const designScope = useDesignScope();
+  const designScope = useDesignContextRow();
 
   let diffStatus = DiffStatus.Unchanged;
   if (connection && designScope && kitDiff?.designs?.updated) {
@@ -17293,8 +17293,8 @@ export function useConnectionColor(): { stroke: string; fill: string } {
  **/
 export function useDiffedDesign(): Design {
   const kit = useDiffedKit();
-  const designScope = useDesignScope();
-  if (!designScope) throw new Error("useDiffedDesign must be called within a DesignScopeProvider");
+  const designScope = useDesignContextRow();
+  if (!designScope) throw new Error("useDiffedDesign must be called within a DesignContextProvider");
   return findDesignInKit(kit, designScope.id);
 }
 
@@ -19957,7 +19957,7 @@ export function useNavigate() {
  **/
 export function useSketchpadCommands() {
   const store = useSketchpadStore();
-  const kitRuntime = useKitRuntimeSafe();
+  const kitRuntime = useKitWasmHost();
   const navigate = useNavigate();
   const reactNavigate = useReactNavigate();
   return useMemo(
@@ -20070,7 +20070,7 @@ export function useKits(): KitShallowDto[] {
  * Hook returning kit command dispatchers for a specific kit by id.
  **/
 function useKitCommandsById(kitId?: string) {
-  const runtime = useKitRuntimeSafe();
+  const runtime = useKitWasmHost();
   const effectiveKitId = useResolvedKitIdentifier(kitId);
   const kitStore = runtime && effectiveKitId && String(runtime.kitId ?? "") === String(effectiveKitId) ? runtime.store : null;
   return useKitCommandEngineExplicitOrigin(kitStore);
@@ -22385,11 +22385,11 @@ export const LayoutCanvas: FC<{
 
     if (item && kit) {
       if (itemType === "qualities") {
-        wrapped = <QualityScopeProvider id={item}>{wrapped}</QualityScopeProvider>;
+        wrapped = <QualityContextProvider id={item}>{wrapped}</QualityContextProvider>;
       } else if (itemType === "types") {
-        wrapped = <TypeScopeProvider id={item}>{wrapped}</TypeScopeProvider>;
+        wrapped = <TypeContextProvider id={item}>{wrapped}</TypeContextProvider>;
       } else if (itemType === "designs") {
-        wrapped = <DesignScopeProvider id={item}>{wrapped}</DesignScopeProvider>;
+        wrapped = <DesignContextProvider id={item}>{wrapped}</DesignContextProvider>;
       }
     }
     if (kit) {
@@ -23021,11 +23021,11 @@ const ToolbarScopeWrapper: FC<{ children: ReactNode }> = ({ children }) => {
 
   if (item && kit) {
     if (itemType === "qualities") {
-      wrapped = <QualityScopeProvider id={item}>{wrapped}</QualityScopeProvider>;
+      wrapped = <QualityContextProvider id={item}>{wrapped}</QualityContextProvider>;
     } else if (itemType === "types") {
-      wrapped = <TypeScopeProvider id={item}>{wrapped}</TypeScopeProvider>;
+      wrapped = <TypeContextProvider id={item}>{wrapped}</TypeContextProvider>;
     } else if (itemType === "designs") {
-      wrapped = <DesignScopeProvider id={item}>{wrapped}</DesignScopeProvider>;
+      wrapped = <DesignContextProvider id={item}>{wrapped}</DesignContextProvider>;
     }
   }
   if (kit) {
@@ -25168,7 +25168,7 @@ export function useKitAppStore<T>(selector: (controller: KitAppStoreImpl) => T, 
  **/
 export function useKitAppStore<T>(selector?: (controller: KitAppStoreImpl) => T, id?: KitAppId): T | KitAppStoreImpl | null {
   const orchestrator = useSketchpadStore();
-  const kitScope = useKitScope();
+  const kitScope = useActiveKitTab();
   const resolvedKitId = kitScope?.id ?? id?.kit;
   if (!resolvedKitId) {
     return null;
@@ -25190,7 +25190,7 @@ export function useKitAppStore<T>(selector?: (controller: KitAppStoreImpl) => T,
  *MUST use the sketchpad actor to reactively track the Kit app state slice.
  **/
 export function useKitApp<T>(selector?: (state: KitAppState) => T, id?: KitAppId): T | KitAppState {
-  const kitScope = useKitScope();
+  const kitScope = useActiveKitTab();
   const kitId = kitScope?.id ?? id?.kit;
 
   const defaultState: KitAppState = {
@@ -25232,7 +25232,7 @@ export function useKitApp<T>(selector?: (state: KitAppState) => T, id?: KitAppId
  *MUST provide the current selection, a setter, and a canSet flag.
  **/
 export function useKitAppSelection(): HookResult<KitAppSelection> {
-  const kitScope = useKitScope();
+  const kitScope = useActiveKitTab();
   const actor = useSketchpadActor();
   const kitId = kitScope?.id ?? "";
   const selector = useMemo(() => createKitSelectionSelector(kitId), [kitId]);
@@ -25253,7 +25253,7 @@ export function useKitAppSelection(): HookResult<KitAppSelection> {
  *MUST provide the current fullscreen window, a setter, and a canSet flag.
  **/
 export function useKitAppFullscreen(): HookResult<KitAppFullscreenWindow> {
-  const kitScope = useKitScope();
+  const kitScope = useActiveKitTab();
   const kitId = kitScope?.id ?? "";
   const actor = useSketchpadActor();
   const selector = useMemo(() => createKitFullscreenSelector(kitId), [kitId]);
@@ -25274,7 +25274,7 @@ export function useKitAppFullscreen(): HookResult<KitAppFullscreenWindow> {
  *MUST return a read-only list of other users' presence data.
  **/
 export function useKitAppOthers(): HookNoSetResult<KitAppPresenceOther[]> {
-  const kitScope = useKitScope();
+  const kitScope = useActiveKitTab();
   const actor = useSketchpadActor();
   const kitId = kitScope?.id ?? "";
   const selector = useMemo(() => createKitOthersSelector(kitId), [kitId]);
@@ -25288,7 +25288,7 @@ export function useKitAppOthers(): HookNoSetResult<KitAppPresenceOther[]> {
  *MUST provide the current window layout, a setter, and a canSet flag.
  **/
 export function useKitAppWindowLayout(): HookResult<any> {
-  const kitScope = useKitScope();
+  const kitScope = useActiveKitTab();
   const kitId = kitScope?.id ?? "";
   const actor = useSketchpadActor();
   const selector = useMemo(() => createKitWindowLayoutSelector(kitId), [kitId]);
@@ -25309,7 +25309,7 @@ export function useKitAppWindowLayout(): HookResult<any> {
  *MUST provide the current force settings, an updater, and a canSet flag.
  **/
 export function useKitAppDiagramForce(): readonly [DiagramForceSettings, ((value: Partial<DiagramForceSettings>) => void) | undefined, boolean] {
-  const kitScope = useKitScope();
+  const kitScope = useActiveKitTab();
   const kitId = kitScope?.id ?? "";
   const actor = useSketchpadActor();
   const selector = useMemo(() => createKitDiagramForceSelector(kitId), [kitId]);
@@ -25331,7 +25331,7 @@ export function useKitAppDiagramForce(): readonly [DiagramForceSettings, ((value
  **/
 export function useKitAppActiveTool(): HookResult<ToolKind> {
   const actor = useSketchpadActor();
-  const kitId = useKitScope()?.id;
+  const kitId = useActiveKitTab()?.id;
 
   const canSet = useSelector(actor, (snapshot) => {
     if (!kitId) return false;
@@ -25366,7 +25366,7 @@ export function useKitAppActiveToolField(): Field<ToolKind> {
  *MUST provide the current sort column from the XState snapshot.
  **/
 export function useKitAppSortColumn(): HookNoSetResult<string> {
-  const kitScope = useKitScope();
+  const kitScope = useActiveKitTab();
   const actor = useSketchpadActor();
   const kitId = kitScope?.id ?? "";
   const selector = useMemo(() => createKitSortColumnSelector(kitId), [kitId]);
@@ -25380,7 +25380,7 @@ export function useKitAppSortColumn(): HookNoSetResult<string> {
  *MUST provide the current sort direction from the XState snapshot.
  **/
 export function useKitAppSortDirection(): HookNoSetResult<"asc" | "desc"> {
-  const kitScope = useKitScope();
+  const kitScope = useActiveKitTab();
   const actor = useSketchpadActor();
   const kitId = kitScope?.id ?? "";
   const selector = useMemo(() => createKitSortDirectionSelector(kitId), [kitId]);
@@ -25394,7 +25394,7 @@ export function useKitAppSortDirection(): HookNoSetResult<"asc" | "desc"> {
  *MUST provide the current expanded row set from the XState snapshot.
  **/
 export function useKitAppExpandedRows(): HookNoSetResult<Set<string>> {
-  const kitScope = useKitScope();
+  const kitScope = useActiveKitTab();
   const actor = useSketchpadActor();
   const kitId = kitScope?.id ?? "";
   const selector = useMemo(() => createKitExpandedRowsSelector(kitId), [kitId]);
@@ -25409,7 +25409,7 @@ export function useKitAppExpandedRows(): HookNoSetResult<Set<string>> {
  **/
 export function useKitAppChange(): TransactionCallbacks {
   const actor = useSketchpadActor();
-  const kitScope = useKitScope();
+  const kitScope = useActiveKitTab();
   const kitId = kitScope?.id ?? "";
 
   if (!kitId) {
@@ -25587,7 +25587,7 @@ export type ActionHookResult<TArgs extends any[]> = readonly [action: ((...args:
  **/
 export function useKitAppSelectType(): ActionHookResult<[typeId: Id]> {
   const actor = useSketchpadActor();
-  const kitScope = useKitScope();
+  const kitScope = useActiveKitTab();
   const kitId = kitScope?.id ?? "";
   const canActEvent = useMemo(() => ({ type: "KIT.SELECT_TYPE" as const, kitId, typeId: "" }), [kitId]);
   const canAct = useSelector(actor, (snapshot) => snapshot.can(canActEvent));
@@ -25604,7 +25604,7 @@ export function useKitAppSelectType(): ActionHookResult<[typeId: Id]> {
  **/
 export function useKitAppDeselectType(): ActionHookResult<[typeId: Id]> {
   const actor = useSketchpadActor();
-  const kitScope = useKitScope();
+  const kitScope = useActiveKitTab();
   const kitId = kitScope?.id ?? "";
   const canActEvent = useMemo(() => ({ type: "KIT.DESELECT_TYPE" as const, kitId, typeId: "" }), [kitId]);
   const canAct = useSelector(actor, (snapshot) => snapshot.can(canActEvent));
@@ -25621,7 +25621,7 @@ export function useKitAppDeselectType(): ActionHookResult<[typeId: Id]> {
  **/
 export function useKitAppSelectDesign(): ActionHookResult<[designId: Id]> {
   const actor = useSketchpadActor();
-  const kitScope = useKitScope();
+  const kitScope = useActiveKitTab();
   const kitId = kitScope?.id ?? "";
   const canActEvent = useMemo(() => ({ type: "KIT.SELECT_DESIGN" as const, kitId, designId: "" }), [kitId]);
   const canAct = useSelector(actor, (snapshot) => snapshot.can(canActEvent));
@@ -25638,7 +25638,7 @@ export function useKitAppSelectDesign(): ActionHookResult<[designId: Id]> {
  **/
 export function useKitAppDeselectDesign(): ActionHookResult<[designId: Id]> {
   const actor = useSketchpadActor();
-  const kitScope = useKitScope();
+  const kitScope = useActiveKitTab();
   const kitId = kitScope?.id ?? "";
   const canActEvent = useMemo(() => ({ type: "KIT.DESELECT_DESIGN" as const, kitId, designId: "" }), [kitId]);
   const canAct = useSelector(actor, (snapshot) => snapshot.can(canActEvent));
@@ -25655,7 +25655,7 @@ export function useKitAppDeselectDesign(): ActionHookResult<[designId: Id]> {
  **/
 export function useKitAppSetSelection(): ActionHookResult<[selection: KitAppSelection]> {
   const actor = useSketchpadActor();
-  const kitScope = useKitScope();
+  const kitScope = useActiveKitTab();
   const kitId = kitScope?.id ?? "";
   const canActEvent = useMemo(() => ({ type: "KIT.SET_SELECTION" as const, kitId, selection: {} as KitAppSelection }), [kitId]);
   const canAct = useSelector(actor, (snapshot) => snapshot.can(canActEvent));
@@ -25671,7 +25671,7 @@ export function useKitAppSetSelection(): ActionHookResult<[selection: KitAppSele
  **/
 export function useKitAppClearSelection(): ActionHookResult<[]> {
   const actor = useSketchpadActor();
-  const kitScope = useKitScope();
+  const kitScope = useActiveKitTab();
   const kitId = kitScope?.id ?? "";
   const canActEvent = useMemo(() => ({ type: "KIT.CLEAR_SELECTION" as const, kitId }), [kitId]);
   const canAct = useSelector(actor, (snapshot) => snapshot.can(canActEvent));
@@ -27191,8 +27191,8 @@ const DesignAppSyncComponent = ({ children }: { children: React.ReactNode }) => 
  **/
 function useDesignAppInitialize() {
   const actor = useSketchpadActor();
-  const kitScope = useKitScope();
-  const designScope = useDesignScope();
+  const kitScope = useActiveKitTab();
+  const designScope = useDesignContextRow();
   const kitId = kitScope?.id ?? "";
   const designId = designScope?.id ?? "";
   const initializedKeyRef = useRef<string | null>(null);
@@ -27256,8 +27256,8 @@ export function useDesignAppActor(): any {
  **/
 export function useDesignStore<T = DesignStore>(selector?: (store: DesignStore) => T, id?: DesignAppId): T | null {
   const store = useSketchpadStore();
-  const kitScope = useKitScope();
-  const designScope = useDesignScope();
+  const kitScope = useActiveKitTab();
+  const designScope = useDesignContextRow();
   const resolvedKitId = kitScope?.id ?? id?.kit;
   const resolvedDesignId = designScope?.id ?? id?.design;
   if (!resolvedKitId || !resolvedDesignId) {
@@ -27274,8 +27274,8 @@ export { useDesignStore as useDesignAppStore };
  *MUST use useSelector to reactively track the Design app state slice.
  **/
 export function useDesignApp<T>(selector?: (state: DesignAppState) => T, id?: DesignAppId): T | DesignAppState | null {
-  const kitScope = useKitScope();
-  const designScope = useDesignScope();
+  const kitScope = useActiveKitTab();
+  const designScope = useDesignContextRow();
   const kitId = kitScope?.id ?? id?.kit ?? "";
   const designId = designScope?.id ?? id?.design ?? "";
 
@@ -27324,8 +27324,8 @@ interface UseDesignAppFieldOptions<T, TEvent extends { type: string }> {
 function useDesignAppField<T, TEvent extends { type: string }>(options: UseDesignAppFieldOptions<T, TEvent>): Field<T> {
   const { createGranularSelector, fallback, createCanEvent, createSendEvent, useWildcardFallback = false } = options;
   const actor = useSketchpadActor();
-  const kitScope = useKitScope();
-  const designScope = useDesignScope();
+  const kitScope = useActiveKitTab();
+  const designScope = useDesignContextRow();
   const kitId = kitScope?.id ?? "";
   const designId = designScope?.id ?? "";
   const granularSelector = useMemo(() => createGranularSelector(kitId, designId), [createGranularSelector, kitId, designId]);
@@ -27400,7 +27400,7 @@ export function useDesignAppActiveToolField(): Field<ToolKind> {
  *MUST provide the current active tool, a setter, and a canSet flag.
  **/
 export function useDesignAppActiveTool(): HookResult<ToolKind> {
-  const designScope = useDesignScope();
+  const designScope = useDesignContextRow();
   const store = useDesignStore() as DesignStore | null;
   const activeTool = useDesignApp((state) => state.activeTool) as ToolKind | undefined;
   const canSet = designScope !== null && store !== null;
@@ -27427,8 +27427,8 @@ export function useDesignAppDiff(): HookResult<KitDiff | undefined> {
  **/
 export function useDesignAppOthers(): HookResult<DesignAppPresenceOther[]> {
   const actor = useSketchpadActor();
-  const kitScope = useKitScope();
-  const designScope = useDesignScope();
+  const kitScope = useActiveKitTab();
+  const designScope = useDesignContextRow();
   const kitId = kitScope?.id ?? "";
   const designId = designScope?.id ?? "";
   const selector = useMemo(() => createDesignOthersSelector(kitId, designId), [kitId, designId]);
@@ -27463,8 +27463,8 @@ export function useDesignAppCamera(): HookResult<Camera | undefined> {
  **/
 export function useDesignAppDiagramCenter(): HookResult<Coordinate | undefined> {
   const actor = useSketchpadActor();
-  const kitScope = useKitScope();
-  const designScope = useDesignScope();
+  const kitScope = useActiveKitTab();
+  const designScope = useDesignContextRow();
   const kitId = kitScope?.id ?? "";
   const designId = designScope?.id ?? "";
   const selector = useMemo(() => createDesignDiagramCenterSelector(kitId, designId), [kitId, designId]);
@@ -27489,8 +27489,8 @@ export function useDesignAppDiagramCenter(): HookResult<Coordinate | undefined> 
  **/
 export function useDesignAppDiagramScale(): HookResult<number | undefined> {
   const actor = useSketchpadActor();
-  const kitScope = useKitScope();
-  const designScope = useDesignScope();
+  const kitScope = useActiveKitTab();
+  const designScope = useDesignContextRow();
   const kitId = kitScope?.id ?? "";
   const designId = designScope?.id ?? "";
   const selector = useMemo(() => createDesignDiagramScaleSelector(kitId, designId), [kitId, designId]);
@@ -27535,8 +27535,8 @@ export function useDesignAppFocusedPieceId(): HookResult<Id | undefined> {
  **/
 export function useDesignAppSelectedRepresentationTags(): HookResult<Record<Id, string[]>> {
   const actor = useSketchpadActor();
-  const kitScope = useKitScope();
-  const designScope = useDesignScope();
+  const kitScope = useActiveKitTab();
+  const designScope = useDesignContextRow();
   const kitId = kitScope?.id ?? "";
   const designId = designScope?.id ?? "";
   const selector = useMemo(() => createDesignSelectedRepresentationTagsSelector(kitId, designId), [kitId, designId]);
@@ -27558,8 +27558,8 @@ export function useDesignAppSelectedRepresentationTags(): HookResult<Record<Id, 
  **/
 export function useDesignAppHover(): HookResult<DesignAppHover | undefined> {
   const actor = useSketchpadActor();
-  const kitScope = useKitScope();
-  const designScope = useDesignScope();
+  const kitScope = useActiveKitTab();
+  const designScope = useDesignContextRow();
   const kitId = kitScope?.id ?? "";
   const designId = designScope?.id ?? "";
   const store = useDesignStore(identitySelector) as DesignStore | null;
@@ -28286,8 +28286,8 @@ export function useDesignAppExpandDesign(): ActionHookResult<[designId: Id]> {
  **/
 export function useDesignAppYjsToXStateSync(id?: DesignAppId) {
   const actor = useSketchpadActorSafe();
-  const kitScope = useKitScope();
-  const designScope = useDesignScope();
+  const kitScope = useActiveKitTab();
+  const designScope = useDesignContextRow();
   const kitId = kitScope?.id ?? id?.kit ?? "";
   const designId = designScope?.id ?? id?.design ?? "";
   const store = useDesignStore(undefined, id) as DesignStore | null;
@@ -28558,8 +28558,8 @@ export function useIsDesignPieceChangedInTransaction(id: DesignAppId | undefined
  **/
 export function useDesignAppIsPieceHovered(id?: DesignAppId, pieceId?: string): boolean {
   const actor = useSketchpadActor();
-  const kitScope = useKitScope();
-  const designScope = useDesignScope();
+  const kitScope = useActiveKitTab();
+  const designScope = useDesignContextRow();
   const kitId = kitScope?.id ?? id?.kit ?? "";
   const designId = designScope?.id ?? id?.design ?? "";
   const stablePieceId = pieceId ?? "";
@@ -28677,8 +28677,8 @@ function HoverPiecesProviderInner({ store, children }: { store: DesignStore; chi
   if (!hoverStoreRef.current) hoverStoreRef.current = new HoverPiecesStore();
   const hoverStore = hoverStoreRef.current;
   const actor = useSketchpadActorSafe();
-  const kitScope = useKitScope();
-  const designScope = useDesignScope();
+  const kitScope = useActiveKitTab();
+  const designScope = useDesignContextRow();
   const syncKeyRef = useRef("");
   syncKeyRef.current = `${kitScope?.id ?? ""}:${designScope?.id ?? ""}`;
   const lastActorHoverRef = useRef<DesignAppHover | undefined>(undefined);
@@ -28782,8 +28782,8 @@ export function useDesignAppPieceStatus(id: DesignAppId | undefined, pieceId: st
  **/
 export function useDesignAppIsPieceSelected(id?: DesignAppId, pieceId?: string): boolean {
   const actor = useSketchpadActor();
-  const kitScope = useKitScope();
-  const designScope = useDesignScope();
+  const kitScope = useActiveKitTab();
+  const designScope = useDesignContextRow();
   const kitId = kitScope?.id ?? id?.kit ?? "";
   const designId = designScope?.id ?? id?.design ?? "";
   const stablePieceId = pieceId ?? "";
@@ -28861,8 +28861,8 @@ export function useDesignAppPieceColor(id: DesignAppId | undefined, pieceId: str
  **/
 export function useDesignAppIsConnectionHovered(id?: DesignAppId, connectionId?: string): boolean {
   const actor = useSketchpadActor();
-  const kitScope = useKitScope();
-  const designScope = useDesignScope();
+  const kitScope = useActiveKitTab();
+  const designScope = useDesignContextRow();
   const kitId = kitScope?.id ?? id?.kit ?? "";
   const designId = designScope?.id ?? id?.design ?? "";
   const stableConnectionId = connectionId ?? "";
@@ -28879,8 +28879,8 @@ export function useDesignAppIsConnectionHovered(id?: DesignAppId, connectionId?:
  **/
 export function useDesignAppIsConnectionSelected(id?: DesignAppId, connectionId?: string): boolean {
   const actor = useSketchpadActor();
-  const kitScope = useKitScope();
-  const designScope = useDesignScope();
+  const kitScope = useActiveKitTab();
+  const designScope = useDesignContextRow();
   const kitId = kitScope?.id ?? id?.kit ?? "";
   const designId = designScope?.id ?? id?.design ?? "";
   const stableConnectionId = connectionId ?? "";
@@ -28897,8 +28897,8 @@ export function useDesignAppIsConnectionSelected(id?: DesignAppId, connectionId?
  **/
 export function useDesignAppIsPortHovered(id: DesignAppId | undefined, pieceId: string, connectorId: string): boolean {
   const actor = useSketchpadActor();
-  const kitScope = useKitScope();
-  const designScope = useDesignScope();
+  const kitScope = useActiveKitTab();
+  const designScope = useDesignContextRow();
   const kitId = kitScope?.id ?? id?.kit ?? "";
   const designId = designScope?.id ?? id?.design ?? "";
   const selector = useMemo(() => {
@@ -28923,8 +28923,8 @@ const EMPTY_CONNECTOR: SelectedConnector = undefined;
  **/
 export function useDesignAppSelectedConnector(id?: DesignAppId): SelectedConnector {
   const actor = useSketchpadActor();
-  const kitScope = useKitScope();
-  const designScope = useDesignScope();
+  const kitScope = useActiveKitTab();
+  const designScope = useDesignContextRow();
   const kitId = kitScope?.id ?? id?.kit ?? "";
   const designId = designScope?.id ?? id?.design ?? "";
   const selector = useMemo(() => {
@@ -28945,8 +28945,8 @@ export function useDesignAppSelectedConnector(id?: DesignAppId): SelectedConnect
  **/
 export function useDesignAppIsPiecePortSelected(pieceId: string, connectorId?: string): boolean {
   const actor = useSketchpadActor();
-  const kitScope = useKitScope();
-  const designScope = useDesignScope();
+  const kitScope = useActiveKitTab();
+  const designScope = useDesignContextRow();
   const kitId = kitScope?.id ?? "";
   const designId = designScope?.id ?? "";
   const stableConnectorId = connectorId ?? "";
@@ -29035,7 +29035,7 @@ export function useDesignAppConnectionColor(id: DesignAppId | undefined, connect
 export function useDesignAppPieceCenter(id?: DesignAppId, pieceId?: Id): Coordinate | undefined {
   const scope = useDesignAppScope();
   const appId = id ?? (scope ? JSON.parse(scope.id) : undefined);
-  const pieceScope = usePieceScope();
+  const pieceScope = usePieceContextRow();
   const finalPieceId = pieceId ?? pieceScope?.id;
   const metadata = usePiecesMetadataMap();
   return finalPieceId ? metadata.get(finalPieceId)?.center : undefined;
@@ -29048,7 +29048,7 @@ export function useDesignAppPieceCenter(id?: DesignAppId, pieceId?: Id): Coordin
 export function useDesignAppPiecePlane(id?: DesignAppId, pieceId?: Id): Plane | undefined {
   const scope = useDesignAppScope();
   const appId = id ?? (scope ? JSON.parse(scope.id) : undefined);
-  const pieceScope = usePieceScope();
+  const pieceScope = usePieceContextRow();
   const finalPieceId = pieceId ?? pieceScope?.id;
   const metadata = usePiecesMetadataMap();
   return finalPieceId ? metadata.get(finalPieceId)?.plane : undefined;
@@ -29665,8 +29665,8 @@ const DesignSectionForm: FC = () => {
   const location = useLocation();
   const [transaction] = useDesignAppChange();
   const { run: runUpdateDesign } = useUpdateDesign();
-  const kitScope = useKitScope();
-  const designScope = useDesignScope();
+  const kitScope = useActiveKitTab();
+  const designScope = useDesignContextRow();
   const pathScope = useMemo(() => {
     const match = location.pathname.match(/^\/kits\/([^/?]+)(?:\/designs\/([^/?]+))?/);
     return {
@@ -31006,10 +31006,10 @@ const PiecesSectionForm: FC = () => {
       ) : null}
       {!hasNoValidPieces && parentConnection && (
         <TreeItem id="semio.sketchpad.app.design.panel.details.parentConnection">
-          <ConnectionScopeProvider id={parentConnection.id}>
+          <ConnectionUnderActiveDesignProvider id={parentConnection.id}>
             <SingleConnectionInfo />
             <SingleConnectionFields />
-          </ConnectionScopeProvider>
+          </ConnectionUnderActiveDesignProvider>
         </TreeItem>
       )}
       {!hasNoValidPieces && !isSingle && parentConnections.length > 0 && (
@@ -31030,7 +31030,7 @@ export const ConnectionsSection: FC<{
   isSingle: boolean;
   count: number;
 }> = ({ connections, isSingle, count }) => {
-  const isInDesignScope = useIsInDesignScope();
+  const isInDesignScope = useHasDesignContext();
   if (!isInDesignScope) return null;
   return <ConnectionsSectionForm connections={connections} sectionLabel={undefined} />;
 };
@@ -31304,10 +31304,10 @@ const ConnectionsSectionForm: FC<{
 
   if (isSingle && connection) {
     return (
-      <ConnectionScopeProvider id={connection.id}>
+      <ConnectionUnderActiveDesignProvider id={connection.id}>
         <SingleConnectionInfo />
         <SingleConnectionFields />
-      </ConnectionScopeProvider>
+      </ConnectionUnderActiveDesignProvider>
     );
   }
   return (
@@ -31367,7 +31367,7 @@ const ConnectionsSectionForm: FC<{
  *MUST render the connector detail form for the selected port.
  **/
 export const ConnectorSection: FC<{ pieceId: Id; connectorId: Id }> = ({ pieceId, connectorId }) => {
-  const isInDesignScope = useIsInDesignScope();
+  const isInDesignScope = useHasDesignContext();
   if (!isInDesignScope) return null;
   return <ConnectorSectionForm pieceId={pieceId} connectorId={connectorId} />;
 };
@@ -31777,7 +31777,7 @@ type ExpandMenuProps = {
 /**
  **/
 const ExpandMenu: FC<ExpandMenuProps> = ({ nodes, edges, onExpand }) => {
-  const designScope = useDesignScope();
+  const designScope = useDesignContextRow();
   const [explodeableIds] = useExplodeableDesignNodeIdsFromKit(designScope?.id ?? undefined);
   const ksKit = useKitStoreSnapshot();
   const kit = ksKit?.kit as Kit;
@@ -32393,7 +32393,7 @@ const DesignNodeComponent: React.FC<NodeProps<DesignNode>> = React.memo(({ id, d
   });
 
   return (
-    <PieceScopeProvider id={designPieceId}>
+    <PieceUnderActiveDesignProvider pieceId={designPieceId}>
       <DesignNodeInner
         id={designPieceId}
         piece={piece}
@@ -32407,7 +32407,7 @@ const DesignNodeComponent: React.FC<NodeProps<DesignNode>> = React.memo(({ id, d
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
       />
-    </PieceScopeProvider>
+    </PieceUnderActiveDesignProvider>
   );
 });
 
@@ -32539,9 +32539,9 @@ const ConnectionEdgeComponent: React.FC<EdgeProps<ConnectionEdge>> = (props) => 
     return <ConnectionEdgeFallback {...props} />;
   }
   return (
-    <ConnectionScopeProvider id={connectionId}>
+    <ConnectionUnderActiveDesignProvider id={connectionId}>
       <ConnectionEdgeInner {...props} connectionId={connectionId} />
-    </ConnectionScopeProvider>
+    </ConnectionUnderActiveDesignProvider>
   );
 };
 /**
@@ -34764,8 +34764,8 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
   const pieceRenderDataStoreRef = useRef<PieceRenderDataStoreApi>(createPieceRenderDataStore());
   const designStoreForSync = useDesignStore(identitySelector) as DesignStore | null;
   const actorForSync = useSketchpadActorSafe();
-  const kitScopeForSync = useKitScope();
-  const designScopeForSync = useDesignScope();
+  const kitScopeForSync = useActiveKitTab();
+  const designScopeForSync = useDesignContextRow();
   const syncKeyRef = useRef("");
   const lastActorStateRef = useRef<{ hover?: DesignAppHover; selection?: DesignAppSelection }>({});
   syncKeyRef.current = `${kitScopeForSync?.id ?? ""}:${designScopeForSync?.id ?? ""}`;
@@ -35174,7 +35174,7 @@ const LoadedPieceMesh: FC<{ url: string; fileExtension: string; highlightColor: 
 
 const PieceMesh: FC<{ highlightColor: string | null } & DesignMeshEventProps> = ({ highlightColor, onClick, onDoubleClick, onPointerEnter, onPointerLeave }) => {
   const piece = usePiece() as Piece;
-  const type = useTypeScopedRead(undefined, typeof piece.type === "string" ? piece.type : piece.type?.id) as Type | undefined;
+  const type = useTypeContextRowdRead(undefined, typeof piece.type === "string" ? piece.type : piece.type?.id) as Type | undefined;
   const typeConcepts = type?.concepts;
   const [files] = useFilesFull();
   const [selectedRepresentationTags] = useDesignAppSelectedRepresentationTags();
@@ -35267,7 +35267,7 @@ const RepresentationPiece: FC<RepresentationPieceProps> = () => {
   const isSelected = useIsPieceSelected();
   const isHovered = useIsPieceTransitiveHovered();
   const status = usePieceStatus();
-  const [flatPlane] = usePieceFlatPlane(useDesignScope()?.id, piece.id);
+  const [flatPlane] = usePieceFlatPlane(useDesignContextRow()?.id, piece.id);
 
   const [selection, setSelection] = useDesignAppSelection();
   const { hoverPiece, clearHover } = useDesignAppHoverActions();
@@ -35542,9 +35542,9 @@ const RepresentationDesign: FC = () => {
         <group>
           {showPieces &&
             flatDesign?.pieces?.map((piece: Piece) => (
-              <PieceScopeProvider key={piece.id} id={piece.id}>
+              <PieceUnderActiveDesignProvider key={piece.id} pieceId={piece.id}>
                 <RepresentationPiece />
-              </PieceScopeProvider>
+              </PieceUnderActiveDesignProvider>
             ))}
           {others.map((presence, id) => (
             <PresenceThree key={id} {...presence} />
@@ -35565,7 +35565,7 @@ const RepresentationDesign: FC = () => {
  **/
 const SceneContextBridge: FC<{
   designScope: { id: string } | null;
-  kitScope: React.ContextType<typeof KitScopeContext>;
+  kitScope: React.ContextType<typeof ActiveKitTabContext>;
   sketchpadScope: React.ContextType<typeof SketchpadScopeContext>;
   sketchpadActor: React.ContextType<typeof SketchpadActorContext>;
   designAppScope: React.ContextType<typeof DesignAppScopeContext>;
@@ -35579,7 +35579,7 @@ const SceneContextBridge: FC<{
   return (
     <SketchpadScopeContext.Provider value={sketchpadScope}>
       <SketchpadActorContext.Provider value={sketchpadActor}>
-        <KitScopeContext.Provider value={kitScope}>
+        <ActiveKitTabContext.Provider value={kitScope}>
           <SchemaScopeContext.Provider value={designScope?.id ? schemaScopeForEntityId("Design", designScope.id) : null}>
             <DesignAppScopeContext.Provider value={designAppScope}>
               <DesignAppActorContext.Provider value={designAppActor}>
@@ -35593,7 +35593,7 @@ const SceneContextBridge: FC<{
               </DesignAppActorContext.Provider>
             </DesignAppScopeContext.Provider>
           </SchemaScopeContext.Provider>
-        </KitScopeContext.Provider>
+        </ActiveKitTabContext.Provider>
       </SketchpadActorContext.Provider>
     </SketchpadScopeContext.Provider>
   );
@@ -35620,8 +35620,8 @@ const DesignAppScene: FC = () => {
   const sceneId = useRef(id()).current;
 
   // 🔭Read all context values in DOM tree for bridging into R3F
-  const designScope = useDesignScope();
-  const kitScope = useKitScope();
+  const designScope = useDesignContextRow();
+  const kitScope = useActiveKitTab();
   const sketchpadScope = useSketchpadScope();
   const sketchpadActor = useSketchpadActor();
   const designAppScope = useDesignAppScope();
@@ -35866,8 +35866,8 @@ const DesignWindowApp: FC<AppProps> = () => {
   const [activeTool] = useDesignAppActiveTool();
 
   const [selection] = useDesignAppSelection();
-  const kitScope = useKitScope();
-  const designScope = useDesignScope();
+  const kitScope = useActiveKitTab();
+  const designScope = useDesignContextRow();
   const wbKs = useKitStoreSnapshot();
   const kit = wbKs?.kit as Kit | null;
   const designFromScope = useDesign() as Design | null;
@@ -36152,9 +36152,9 @@ const DesignWindowApp: FC<AppProps> = () => {
         content: () =>
           detailDesignId && kitId ? (
             <KitScopeProvider id={kitId}>
-              <DesignScopeProvider id={detailDesignId}>
+              <DesignContextProvider id={detailDesignId}>
                 <DesignSection />
-              </DesignScopeProvider>
+              </DesignContextProvider>
             </KitScopeProvider>
           ) : null,
       });
@@ -36169,9 +36169,9 @@ const DesignWindowApp: FC<AppProps> = () => {
         content: () =>
           detailDesignId && kitId ? (
             <KitScopeProvider id={kitId}>
-              <DesignScopeProvider id={detailDesignId}>
+              <DesignContextProvider id={detailDesignId}>
                 <ConnectorSection pieceId={connectorPieceId} connectorId={connectorId} />
-              </DesignScopeProvider>
+              </DesignContextProvider>
             </KitScopeProvider>
           ) : null,
       });
@@ -36183,9 +36183,9 @@ const DesignWindowApp: FC<AppProps> = () => {
         content: () =>
           detailDesignId && kitId ? (
             <KitScopeProvider id={kitId}>
-              <DesignScopeProvider id={detailDesignId}>
+              <DesignContextProvider id={detailDesignId}>
                 <DesignSection />
-              </DesignScopeProvider>
+              </DesignContextProvider>
             </KitScopeProvider>
           ) : null,
       });
@@ -36201,9 +36201,9 @@ const DesignWindowApp: FC<AppProps> = () => {
           content: () =>
             detailDesignId && kitId ? (
               <KitScopeProvider id={kitId}>
-                <DesignScopeProvider id={detailDesignId}>
+                <DesignContextProvider id={detailDesignId}>
                   <PiecesSection />
-                </DesignScopeProvider>
+                </DesignContextProvider>
               </KitScopeProvider>
             ) : null,
         });
@@ -36218,9 +36218,9 @@ const DesignWindowApp: FC<AppProps> = () => {
           content: () =>
             detailDesignId && kitId ? (
               <KitScopeProvider id={kitId}>
-                <DesignScopeProvider id={detailDesignId}>
+                <DesignContextProvider id={detailDesignId}>
                   <ConnectionsSection connections={selectedConnections} isSingle={selectedConnections.length === 1} count={selectedConnections.length} />
-                </DesignScopeProvider>
+                </DesignContextProvider>
               </KitScopeProvider>
             ) : null,
         });
@@ -36245,9 +36245,9 @@ const DesignWindowApp: FC<AppProps> = () => {
         content: () =>
           detailDesignId && kitId ? (
             <KitScopeProvider id={kitId}>
-              <DesignScopeProvider id={detailDesignId}>
+              <DesignContextProvider id={detailDesignId}>
                 <DesignSection />
-              </DesignScopeProvider>
+              </DesignContextProvider>
             </KitScopeProvider>
           ) : null,
       });
@@ -36818,7 +36818,7 @@ export const designConfig: AppConfig = {
     {
       path: "designs/:design",
       paramName: "design",
-      scopeProvider: DesignScopeProvider,
+      scopeProvider: DesignContextProvider,
     },
   ],
   getPanels: (): PanelDefinition[] => [
@@ -37167,8 +37167,8 @@ if (typeof window !== "undefined") {
  *MUST return null when no kit or type scope is available.
  **/
 export function useTypeApp<T>(selector?: (state: TypeAppState) => T, id?: TypeAppId): T | TypeAppState | null {
-  const kitScope = useKitScope();
-  const typeScope = useTypeScope();
+  const kitScope = useActiveKitTab();
+  const typeScope = useTypeContextRow();
   const kitId = kitScope?.id ?? id?.kit;
   const typeId = typeScope?.id ?? id?.type;
 
@@ -37187,8 +37187,8 @@ export function useTypeApp<T>(selector?: (state: TypeAppState) => T, id?: TypeAp
  **/
 export function useTypeAppSelection(): HookResult<TypeAppSelection> {
   const actor = useSketchpadActor();
-  const kitScope = useKitScope();
-  const typeScope = useTypeScope();
+  const kitScope = useActiveKitTab();
+  const typeScope = useTypeContextRow();
   const kitId = kitScope?.id ?? "";
   const typeId = typeScope?.id ?? "";
   const selector = useMemo(() => createTypeSelectionSelector(kitId, typeId), [kitId, typeId]);
@@ -37210,8 +37210,8 @@ export function useTypeAppSelection(): HookResult<TypeAppSelection> {
  **/
 export function useTypeAppPanelVisibility(): HookResult<PanelVisibility> {
   const actor = useSketchpadActor();
-  const kitScope = useKitScope();
-  const typeScope = useTypeScope();
+  const kitScope = useActiveKitTab();
+  const typeScope = useTypeContextRow();
   const kitId = kitScope?.id ?? "";
   const typeId = typeScope?.id ?? "";
   const selector = useMemo(() => createTypePanelVisibilitySelector(kitId, typeId), [kitId, typeId]);
@@ -37233,8 +37233,8 @@ export function useTypeAppPanelVisibility(): HookResult<PanelVisibility> {
  **/
 export function useTypeAppOthers(): HookResult<TypeAppPresenceOther[]> {
   const actor = useSketchpadActor();
-  const kitScope = useKitScope();
-  const typeScope = useTypeScope();
+  const kitScope = useActiveKitTab();
+  const typeScope = useTypeContextRow();
   const kitId = kitScope?.id ?? "";
   const typeId = typeScope?.id ?? "";
   const selector = useMemo(() => createTypeOthersSelector(kitId, typeId), [kitId, typeId]);
@@ -37248,8 +37248,8 @@ export function useTypeAppOthers(): HookResult<TypeAppPresenceOther[]> {
  **/
 export function useTypeAppCamera(): HookResult<Camera | undefined> {
   const actor = useSketchpadActor();
-  const kitScope = useKitScope();
-  const typeScope = useTypeScope();
+  const kitScope = useActiveKitTab();
+  const typeScope = useTypeContextRow();
   const kitId = kitScope?.id ?? "";
   const typeId = typeScope?.id ?? "";
   const selector = useMemo(() => createTypeCameraSelector(kitId, typeId), [kitId, typeId]);
@@ -37271,8 +37271,8 @@ export function useTypeAppCamera(): HookResult<Camera | undefined> {
  **/
 export function useTypeAppFocusedConnectorId(): HookResult<Id | undefined> {
   const actor = useSketchpadActor();
-  const kitScope = useKitScope();
-  const typeScope = useTypeScope();
+  const kitScope = useActiveKitTab();
+  const typeScope = useTypeContextRow();
   const kitId = kitScope?.id ?? "";
   const typeId = typeScope?.id ?? "";
   const selector = useMemo(() => createTypeFocusedConnectorSelector(kitId, typeId), [kitId, typeId]);
@@ -37298,8 +37298,8 @@ export function useTypeAppFocusedConnectorId(): HookResult<Id | undefined> {
  **/
 export function useTypeAppHover(): HookResult<TypeAppHover | undefined> {
   const actor = useSketchpadActor();
-  const kitScope = useKitScope();
-  const typeScope = useTypeScope();
+  const kitScope = useActiveKitTab();
+  const typeScope = useTypeContextRow();
   const kitId = kitScope?.id ?? "";
   const typeId = typeScope?.id ?? "";
   const selector = useMemo(() => createTypeHoverSelector(kitId, typeId), [kitId, typeId]);
@@ -37327,8 +37327,8 @@ export function useTypeAppHover(): HookResult<TypeAppHover | undefined> {
  **/
 export function useTypeAppActiveTool(): HookResult<ToolKind> {
   const actor = useSketchpadActor();
-  const kitScope = useKitScope();
-  const typeScope = useTypeScope();
+  const kitScope = useActiveKitTab();
+  const typeScope = useTypeContextRow();
   const kitId = kitScope?.id ?? "";
   const typeId = typeScope?.id ?? "";
   const selector = useMemo(() => createTypeActiveToolSelector(kitId, typeId), [kitId, typeId]);
@@ -37358,8 +37358,8 @@ interface TransactionCallbacks {
  */
 export function useTypeAppChange(id?: TypeAppId): TransactionCallbacks {
   const actor = useSketchpadActor();
-  const kitScope = useKitScope();
-  const typeScope = useTypeScope();
+  const kitScope = useActiveKitTab();
+  const typeScope = useTypeContextRow();
   const kitId = kitScope?.id ?? id?.kit ?? "";
   const typeId = typeScope?.id ?? id?.type ?? "";
 
@@ -37382,8 +37382,8 @@ export function useTypeAppChange(id?: TypeAppId): TransactionCallbacks {
  **/
 export function useTypeAppCommands(id?: TypeAppId) {
   const actor = useSketchpadActor();
-  const kitScope = useKitScope();
-  const typeScope = useTypeScope();
+  const kitScope = useActiveKitTab();
+  const typeScope = useTypeContextRow();
   const kitId = kitScope?.id ?? id?.kit ?? "";
   const typeId = typeScope?.id ?? id?.type ?? "";
 
@@ -37457,8 +37457,8 @@ export function useTypeAppCommands(id?: TypeAppId) {
  **/
 export function useTypeAppIsPortSelected(connectorId: string): HookResult<boolean> {
   const actor = useSketchpadActor();
-  const kitScope = useKitScope();
-  const typeScope = useTypeScope();
+  const kitScope = useActiveKitTab();
+  const typeScope = useTypeContextRow();
   const kitId = kitScope?.id ?? "";
   const typeId = typeScope?.id ?? "";
   const selector = useMemo(() => createTypeSelectionSelector(kitId, typeId), [kitId, typeId]);
@@ -37485,8 +37485,8 @@ export function useTypeAppIsPortSelected(connectorId: string): HookResult<boolea
  **/
 export function useTypeAppIsPortHovered(connectorId: string): HookResult<boolean> {
   const actor = useSketchpadActor();
-  const kitScope = useKitScope();
-  const typeScope = useTypeScope();
+  const kitScope = useActiveKitTab();
+  const typeScope = useTypeContextRow();
   const kitId = kitScope?.id ?? "";
   const typeId = typeScope?.id ?? "";
   const boolSelector = useMemo(() => {
@@ -37515,8 +37515,8 @@ export function useTypeAppIsPortHovered(connectorId: string): HookResult<boolean
  **/
 export function useTypeAppSelectedRepresentationId(): HookResult<Id | undefined> {
   const actor = useSketchpadActor();
-  const kitScope = useKitScope();
-  const typeScope = useTypeScope();
+  const kitScope = useActiveKitTab();
+  const typeScope = useTypeContextRow();
   const kitId = kitScope?.id ?? "";
   const typeId = typeScope?.id ?? "";
   const selector = useMemo(() => createTypeAppSelector(kitId, typeId), [kitId, typeId]);
@@ -37541,8 +37541,8 @@ export function useTypeAppSelectedRepresentationId(): HookResult<Id | undefined>
  **/
 export function useTypeAppSelectedRepresentationTags(): HookResult<string[]> {
   const actor = useSketchpadActor();
-  const kitScope = useKitScope();
-  const typeScope = useTypeScope();
+  const kitScope = useActiveKitTab();
+  const typeScope = useTypeContextRow();
   const kitId = kitScope?.id ?? "";
   const typeId = typeScope?.id ?? "";
   const selector = useMemo(() => createTypeSelectedRepresentationTagsSelector(kitId, typeId), [kitId, typeId]);
@@ -38248,9 +38248,9 @@ const TypeMesh: FC<{ activeTool: ToolKind; onPortPreview: (position: THREE.Vecto
   onPortCreate,
   onClearPreview,
 }) => {
-  const typeRepresentations = useTypeScopedRead(selectTypeRepresentations) as Representation[] | undefined;
-  const typeConcepts = useTypeScopedRead(selectTypeConcepts) as any[] | undefined;
-  const typeId = useTypeScopedRead(selectTypeMeshId) as string | undefined;
+  const typeRepresentations = useTypeContextRowdRead(selectTypeRepresentations) as Representation[] | undefined;
+  const typeConcepts = useTypeContextRowdRead(selectTypeConcepts) as any[] | undefined;
+  const typeId = useTypeContextRowdRead(selectTypeMeshId) as string | undefined;
 
   const [files] = useFilesFull();
   const [selectedRepresentationId] = useTypeAppSelectedRepresentationId();
@@ -38432,8 +38432,8 @@ const SceneContent: FC = React.memo(() => {
   const [activeTool] = useTypeAppActiveTool();
   const typeFilters = useTypeFilters();
 
-  const typePorts = useTypeScopedRead(selectTypePorts) as Connector[] | undefined;
-  const typeId = useTypeScopedRead(selectTypeId) as string | undefined;
+  const typePorts = useTypeContextRowdRead(selectTypePorts) as Connector[] | undefined;
+  const typeId = useTypeContextRowdRead(selectTypeId) as string | undefined;
 
   const { run: runUpdateType } = useUpdateType();
   const [selection, setSelection] = useTypeAppSelection();
@@ -38639,7 +38639,7 @@ const Scene: FC<{ isDragOver?: boolean }> = ({ isDragOver = false }) => {
  * Detail panel section displaying editable type properties.
  **/
 export const TypeDetails: FC = () => {
-  const isInTypeScope = useIsInTypeScope();
+  const isInTypeScope = useHasTypeContext();
   if (!isInTypeScope) return null;
   return <TypeDetailsForm />;
 };
@@ -38650,7 +38650,7 @@ export const TypeDetails: FC = () => {
  **/
 const TypeDetailsForm: FC = () => {
   const { run: runUpdateType } = useUpdateType();
-  const type = useTypeScopedRead(undefined, undefined, true) as Type;
+  const type = useTypeContextRowdRead(undefined, undefined, true) as Type;
 
   const updateTypeField = (diff: any) => {
     void runUpdateType(type.id, diff as Record<string, unknown>);
@@ -38703,7 +38703,7 @@ const TypeDetailsForm: FC = () => {
  * Detail panel section for managing type representations with add, remove, and reorder.
  **/
 export const RepresentationsSection: FC = () => {
-  const isInTypeScope = useIsInTypeScope();
+  const isInTypeScope = useHasTypeContext();
   if (!isInTypeScope) return null;
   return <RepresentationsSectionForm />;
 };
@@ -38717,7 +38717,7 @@ const RepresentationsSectionForm: FC = () => {
   const [hoverRepresentation] = useTypeAppHoverRepresentation();
   const [clearHover] = useTypeAppClearHover();
   const { run: runUpdateType } = useUpdateType();
-  const type = useTypeScopedRead(undefined, undefined, true) as Type;
+  const type = useTypeContextRowdRead(undefined, undefined, true) as Type;
   const [selection, setSelection] = useTypeAppSelection();
   const [hover] = useTypeAppHover();
   const [activeTool] = useTypeAppActiveTool();
@@ -38871,7 +38871,7 @@ const RepresentationsSectionForm: FC = () => {
  * Detail panel section listing all type connectors with inline editing.
  **/
 export const ConnectorsListSection: FC = () => {
-  const isInTypeScope = useIsInTypeScope();
+  const isInTypeScope = useHasTypeContext();
   if (!isInTypeScope) return null;
   return <ConnectorsListSectionForm />;
 };
@@ -38885,7 +38885,7 @@ const ConnectorsListSectionForm: FC = () => {
   const [hoverPort] = useTypeAppHoverPort();
   const [clearHover] = useTypeAppClearHover();
   const { run: runUpdateType } = useUpdateType();
-  const type = useTypeScopedRead(undefined, undefined, true) as Type;
+  const type = useTypeContextRowdRead(undefined, undefined, true) as Type;
   const [selection, setSelection] = useTypeAppSelection();
   const [hover] = useTypeAppHover();
   const [activeTool] = useTypeAppActiveTool();
@@ -39175,7 +39175,7 @@ const ConnectorsListSectionForm: FC = () => {
  * Detail panel section for managing type authors.
  **/
 export const AuthorsSection: FC = () => {
-  const isInTypeScope = useIsInTypeScope();
+  const isInTypeScope = useHasTypeContext();
   if (!isInTypeScope) return null;
   return <AuthorsSectionForm />;
 };
@@ -39188,7 +39188,7 @@ const AuthorsSectionForm: FC = () => {
   const { run: runUpdateType } = useUpdateType();
   const { run: runCreateAuthor } = useCreateAuthor();
   const { run: runUpdateAuthor } = useUpdateAuthor();
-  const type = useTypeScopedRead(undefined, undefined, true) as Type;
+  const type = useTypeContextRowdRead(undefined, undefined, true) as Type;
   const auKs = useKitStoreSnapshot();
   const kit = auKs?.kit as Kit | null;
 
@@ -39287,7 +39287,7 @@ const AuthorsSectionForm: FC = () => {
  * Detail panel section for managing type key-value attributes.
  **/
 export const AttributesSection: FC = () => {
-  const isInTypeScope = useIsInTypeScope();
+  const isInTypeScope = useHasTypeContext();
   if (!isInTypeScope) return null;
   return <AttributesSectionForm />;
 };
@@ -39297,7 +39297,7 @@ export const AttributesSection: FC = () => {
 const AttributesSectionForm: FC = () => {
   const tooltip = useTooltip();
   const { run: runUpdateType } = useUpdateType();
-  const type = useTypeScopedRead(undefined, undefined, true) as Type;
+  const type = useTypeContextRowdRead(undefined, undefined, true) as Type;
 
   const applyDiff = (diff: any) => {
     void runUpdateType(type.id, diff as Record<string, unknown>);
@@ -39418,7 +39418,7 @@ const AttributesSectionForm: FC = () => {
  * Detail panel section for editing a single selected connector.
  **/
 export const TypeConnectorSection: FC<{ connectorId: Id }> = ({ connectorId }) => {
-  const isInTypeScope = useIsInTypeScope();
+  const isInTypeScope = useHasTypeContext();
   if (!isInTypeScope) return null;
   return <TypeConnectorSectionForm connectorId={connectorId} />;
 };
@@ -39428,7 +39428,7 @@ export const TypeConnectorSection: FC<{ connectorId: Id }> = ({ connectorId }) =
 const TypeConnectorSectionForm: FC<{ connectorId: Id }> = ({ connectorId }) => {
   const tooltip = useTooltip();
   const { run: runUpdateType } = useUpdateType();
-  const type = useTypeScopedRead(undefined, undefined, true) as Type;
+  const type = useTypeContextRowdRead(undefined, undefined, true) as Type;
 
   const connector = type.connectors?.find((p) => p.id === connectorId);
 
@@ -39600,7 +39600,7 @@ const TypeConnectorSectionForm: FC<{ connectorId: Id }> = ({ connectorId }) => {
  * Detail panel section for batch-editing multiple selected connectors.
  **/
 export const ConnectorsMultipleSection: FC<{ connectorIds: Id[] }> = ({ connectorIds }) => {
-  const isInTypeScope = useIsInTypeScope();
+  const isInTypeScope = useHasTypeContext();
   if (!isInTypeScope) return null;
   return <ConnectorsMultipleSectionForm connectorIds={connectorIds} />;
 };
@@ -39610,7 +39610,7 @@ export const ConnectorsMultipleSection: FC<{ connectorIds: Id[] }> = ({ connecto
 const ConnectorsMultipleSectionForm: FC<{ connectorIds: Id[] }> = ({ connectorIds }) => {
   const tooltip = useTooltip();
   const { run: runUpdateType } = useUpdateType();
-  const type = useTypeScopedRead(undefined, undefined, true) as Type;
+  const type = useTypeContextRowdRead(undefined, undefined, true) as Type;
 
   const connectors = type.connectors?.filter((p) => connectorIds.includes(p.id)) || [];
 
@@ -39953,8 +39953,8 @@ export const TypeSelectSettings: FC = () => {
 
 export const TypeHistorySettings: FC = () => {
   const actor = useSketchpadActor();
-  const kitScope = useKitScope();
-  const typeScope = useTypeScope();
+  const kitScope = useActiveKitTab();
+  const typeScope = useTypeContextRow();
   const { undo, redo } = useTypeAppCommands();
   const kitId = kitScope?.id ?? "";
   const typeId = typeScope?.id ?? "";
@@ -40480,8 +40480,8 @@ const TypeApp: FC = () => {
  **/
 function useTypeAppInitialize() {
   const actor = useSketchpadActor();
-  const kitScope = useKitScope();
-  const typeScope = useTypeScope();
+  const kitScope = useActiveKitTab();
+  const typeScope = useTypeContextRow();
   const kitId = kitScope?.id ?? "";
   const typeId = typeScope?.id ?? "";
   const initializedKeyRef = useRef<string | null>(null);
@@ -40627,7 +40627,7 @@ export const typeConfig: AppConfig = {
     {
       path: "types/:type",
       paramName: "type",
-      scopeProvider: TypeScopeProvider,
+      scopeProvider: TypeContextProvider,
     },
   ],
   getPanels: (): PanelDefinition[] => [
@@ -41465,12 +41465,12 @@ const useQualityAppScope = () => useContext(QualityAppScopeContext);
 
 /**
  * Returns the quality app store instance, optionally applying a selector.
- *The hook MUST be called within a KitScopeProvider and QualityScopeProvider.
+ *The hook MUST be called within a KitScopeProvider and QualityContextProvider.
  **/
 export function useQualityAppStore<T>(selector?: (store: QualityAppStore) => T, id?: QualityAppId): T | QualityAppStore | null {
   const store = useSketchpadStore();
-  const kitScope = useKitScope();
-  const qualityScope = useQualityScope();
+  const kitScope = useActiveKitTab();
+  const qualityScope = useQualityContextRow();
   const resolvedKitId = kitScope?.id ?? id?.kit;
   const resolvedQualityId = qualityScope?.id ?? id?.quality;
   if (!resolvedKitId || !resolvedQualityId) {
@@ -41486,8 +41486,8 @@ export function useQualityAppStore<T>(selector?: (store: QualityAppStore) => T, 
  **/
 export function useQualityApp<T>(selector?: (state: QualityAppState) => T, id?: QualityAppId): T | QualityAppState | null {
   const actor = useSketchpadActor();
-  const kitScope = useKitScope();
-  const qualityScope = useQualityScope();
+  const kitScope = useActiveKitTab();
+  const qualityScope = useQualityContextRow();
   const resolvedKitId = kitScope?.id ?? id?.kit;
   const resolvedQualityId = qualityScope?.id ?? id?.quality;
   const appSelector = useMemo(() => {
@@ -41561,7 +41561,7 @@ export function useQualityAppCommands(id?: QualityAppId) {
  *The setter MUST receive a valid QualityAppFullscreenWindow value.
  **/
 export function useQualityAppFullscreen(): HookResult<QualityAppFullscreenWindow> {
-  const qualityScope = useQualityScope();
+  const qualityScope = useQualityContextRow();
   const store = useQualityAppStore() as QualityAppStore | null;
   const fullscreen = useQualityApp((s) => s.fullscreenWindow) as QualityAppFullscreenWindow;
   const canSet = qualityScope !== null && store !== null;
@@ -41579,7 +41579,7 @@ export function useQualityAppFullscreen(): HookResult<QualityAppFullscreenWindow
  *The setter MUST receive a valid QualityAppSelection object.
  **/
 export function useQualityAppSelection(): HookResult<QualityAppSelection> {
-  const qualityScope = useQualityScope();
+  const qualityScope = useQualityContextRow();
   const store = useQualityAppStore() as QualityAppStore | null;
   const selection = useQualityApp((s) => s.selection) as QualityAppSelection | undefined;
   const canSet = qualityScope !== null && store !== null;
@@ -41597,7 +41597,7 @@ export function useQualityAppSelection(): HookResult<QualityAppSelection> {
  *The setter MUST receive a QualityAppHover or undefined to clear.
  **/
 export function useQualityAppHover(): HookResult<QualityAppHover | undefined> {
-  const qualityScope = useQualityScope();
+  const qualityScope = useQualityContextRow();
   const store = useQualityAppStore() as QualityAppStore | null;
   const hover = useQualityApp((s) => s.hover) as QualityAppHover | undefined;
   const canSet = qualityScope !== null && store !== null;
@@ -41615,7 +41615,7 @@ export function useQualityAppHover(): HookResult<QualityAppHover | undefined> {
  *The setter MUST receive a valid ToolKind value.
  **/
 export function useQualityAppActiveTool(): HookResult<ToolKind> {
-  const qualityScope = useQualityScope();
+  const qualityScope = useQualityContextRow();
   const store = useQualityAppStore() as QualityAppStore | null;
   const activeTool = useQualityApp((s) => s.activeTool) as ToolKind;
   const canSet = qualityScope !== null && store !== null;
@@ -41633,7 +41633,7 @@ export function useQualityAppActiveTool(): HookResult<ToolKind> {
  *The hook MUST be called within a quality app scope.
  **/
 export function useQualityAppFormulaNodes(): HookNoSetResult<FormulaNode[]> {
-  const qualityScope = useQualityScope();
+  const qualityScope = useQualityContextRow();
   const formulaNodes = useQualityApp((s) => s.formulaNodes) as FormulaNode[];
   const canRead = qualityScope !== null;
   return [formulaNodes ?? [], undefined, canRead];
@@ -41644,7 +41644,7 @@ export function useQualityAppFormulaNodes(): HookNoSetResult<FormulaNode[]> {
  *The setter MUST receive a complete PanelVisibility object.
  **/
 export function useQualityAppPanelVisibility(): HookResult<PanelVisibility> {
-  const qualityScope = useQualityScope();
+  const qualityScope = useQualityContextRow();
   const store = useQualityAppStore() as QualityAppStore | null;
   const panelVisibility = useQualityApp((s) => s.panelVisibility) as PanelVisibility;
   const canSet = qualityScope !== null && store !== null;
@@ -41661,7 +41661,7 @@ export function useQualityAppPanelVisibility(): HookResult<PanelVisibility> {
  * Returns the window layout state with a setter.
  **/
 export function useQualityAppWindowLayout(): HookResult<any> {
-  const qualityScope = useQualityScope();
+  const qualityScope = useQualityContextRow();
   const store = useQualityAppStore() as QualityAppStore | null;
   const windowLayout = useQualityApp((s) => s.windowLayout);
   const canSet = qualityScope !== null && store !== null;
@@ -41973,7 +41973,7 @@ const QualityDiagram: FC<QualityDiagramProps> = ({ reactFlowInstanceRef }) => {
 /**
  **/
 const Formula: FC = () => {
-  const quality = useQualityScopedRead(undefined, undefined, true) as Quality | undefined;
+  const quality = useQualityContextRowdRead(undefined, undefined, true) as Quality | undefined;
   const mathRef = useRef<HTMLDivElement>(null);
 
   const formulaToLatexString = (formula?: string): string => {
@@ -42029,7 +42029,7 @@ const Formula: FC = () => {
  * Detail panel component displaying quality property fields.
  **/
 export const QualityDetails: FC = () => {
-  const quality = useQualityScopedRead(undefined, undefined, true) as Quality | undefined;
+  const quality = useQualityContextRowdRead(undefined, undefined, true) as Quality | undefined;
   const { updateFormula } = useQualityAppCommands();
 
   if (!quality) return null;
@@ -42152,7 +42152,7 @@ interface QualityAvatarProps {
  * Draggable avatar component for a quality with optional hover card.
  **/
 export const QualityAvatar: FC<QualityAvatarProps> = ({ qualityId, quality: qualityProp, showHoverCard = false }) => {
-  const qualityFromStore = qualityId && !qualityProp ? (useQualityScopedRead(undefined, qualityId) as Quality | null) : null;
+  const qualityFromStore = qualityId && !qualityProp ? (useQualityContextRowdRead(undefined, qualityId) as Quality | null) : null;
   const quality = qualityProp || qualityFromStore;
   const { setActiveInteraction } = useSketchpadCommands();
   const activeInteraction = useActiveInteraction();

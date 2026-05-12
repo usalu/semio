@@ -44,11 +44,78 @@
 
 ### remaining-work (plan checklist not satisfied — ticket **open**)
 
-1. **Rust weak geom**: Finish true **one-type-per-weak-geom** collapse for `Vector`, `Point`, `Coordinate`, `Offset`, `Plane`, `Location`, `Attribute` (still split Copy wire vs `*Node`); align `entity_family!` / SDL naming with merged shapes.
+1. **Rust weak geom**: ~~Finish true **one-type-per-weak-geom** collapse for `Vector`, `Point`, `Coordinate`, `Offset`, `Plane`, `Location`~~ **(partial)** — live `geom::entity::{…}` + wire `*Input` split landed; **`Attribute`** still meta-only / not collapsed here; macro/SDL naming may still need alignment passes.
 2. **Rust bundle / serde_json**: Remove remaining `KitStoreBundle` / snapshot DTO paths per plan; confine `serde_json` to GraphQL decode + `DevBackbone` I/O only.
-3. **Rust `Event::canonical_touched_paths`**: Extend for every `Event` variant and future ops (today only a handful of variants exist; subscription gating still coarse vs plan).
+3. **Rust `Event::canonical_touched_paths`**: ~~Extend~~ **(partial)** — added `…:designs` paths for piece events; still coarse for future op variants / full field tree vs plan.
 4. **Rust `rust-sub-fieldgate` / macros / SDL**: Per plan YAML (`rust-sub-fieldgate`, `rust-macros`, `rust-sdl-roundtrip`, `rust-vcs-canonical`, `rust-change-algebra-canonical`).
 5. **JS**: Weak entities as `class` + caches; `*Entity` renames; VCS + change-algebra classes; `Entity` + `defineField` / `defineOperations`; purge `KIT_*`; private Json wire (`js-purge-json`, `js-drop-fieldspecs`, …).
 6. **React**: `*Scope` → `*Context` on all exports; field hooks + owned collections; bridges region; no `useSyncExternalStore` (grep-clean + vitest negatives per plan).
 7. **Sketchpad**: Migrate off `useKitRuntimeSafe`, `useKitScope`, `KitScope` / `KitScopeProvider` to the renamed React API once (6) lands.
 8. **Verify**: Run `kit_store_golden_ops_via__op_json_match_fingerprint` where golden files are checked out; add `depcruise:layers` if/when scripted; broader `cargo test -p semio` when fixtures available.
+
+---
+
+## Phase A slice (2026-05-12) — Rust weak-geom + touches
+
+### Weak geom (single kind per SDL weak entity in `geom::entity`)
+
+- Wire-only inputs: `VectorInput`, `PointInput`, `CoordinateInput`, `OffsetInput`, `PlaneInput`, `PositionInput` (+ existing `LocationInput`).
+- Canonical live nodes renamed from `*Node` to `Coordinate`, `Vector`, `Point`, `Plane`, `Offset`, `Position`, `Location`, `Place` under `geom::entity`; `Position::snapshot_input` replaces the old Copy `Position` snapshot.
+- `operation::Input::FixedPiece` / `CreateFixedPieceInput` / kit diff paths / GraphQL resolvers use `PositionInput`; drag paths use `OffsetInput`.
+- `DesignSlot` (was `DesignHandle`) for kit-graph slot indirection only.
+- Removed unused SDL enum `KitGraphWorkspace` (not in `target.schema.graphql`).
+- `Event::canonical_touched_paths`: piece-affecting events also list `…:designs` paths for subscription gating.
+
+### Not done in this slice (still for follow-up / other workers)
+
+- `KitStoreBundleFile` / snapshot DTO stack and broad `serde_json::Value` confinement to DevBackbone + GraphQL decode only (unchanged struct names; still many `serde_json` call sites).
+- Full macro-driven weak-entity registration churn beyond re-pointing `entity_full_family!` at renamed `geom::entity` kinds.
+
+### Commands (`--target-dir c:\\git\\semio\\target-phaseA`)
+
+| Command | Exit |
+|--------|------|
+| `cargo check -p semio --target-dir c:\git\semio\target-phaseA` | **0** |
+| `cargo check -p semio --target wasm32-unknown-unknown --target-dir c:\git\semio\target-phaseA` | **0** |
+| `cargo test -p semio --target-dir c:\git\semio\target-phaseA schema_matches_target_graphql_file` | **0** |
+| `cargo test -p semio --target-dir c:\git\semio\target-phaseA no_deep_clone_on_traversal` | **0** |
+| `cargo test -p semio --target-dir c:\git\semio\target-phaseA kit_store_bundle_serialize_hydrate_round_trip_via_graphql` | **0** |
+
+### Files touched
+
+- `semio/rs/lib.rs` only (no `semio/graphql/*.graphql` edits — schema guard still green).
+
+### Conflicts avoided
+
+- Did **not** edit `semio/js/index.ts` or `semio/react/index.tsx` (per parent directive).
+- Ticket `ticket_reopen` returned “already open”; no duplicate ticket.
+
+---
+
+## Phase B — JS (`semio/js/index.ts`, `semio/js/kit-store.worker.ts`) — 2026-05-12
+
+### Done (sub-pass)
+
+- **Weak geometry + wire**: `Position`, `Coordinate`, `Plane`, `Point`, `Vector`, `Offset`, `Place`, `Location`, `Camera` as **classes** with parent/role; `PositionInput` / `OffsetInput` + `formatPositionInput` / `formatOffsetInput` kept as **plain mutation structs** (file-local helpers under `🪶WeakGeometry`); removed duplicate tail `🪶WeakEntities` interfaces.
+- **Artifacts**: `Attribute` and `Benchmark` as **classes** (`Attribute.owner`, `Benchmark.quality`); `ConnectionSide` as **class** + `export type Side = ConnectionSide`; `parseAttributeConnectionUnder(ownerEntity, json)`.
+- **Caches**: `Kit` factories + `wip`/`authoritative`/`session`; `Design` piece/connection/layer/group; `Type` port/connector/representation; `Graph` checkpoint/alternative + `TheKit`; `Session` alternative; `Checkpoint` edit/change; id-list-stable **`readDesigns` / `readTypes` / `readAuthors` / `readQualities` / `readTags` / `readConcepts`** via `__readIdListStable`.
+- **VCS + change algebra**: `__kitGraphqlEnvelope` for navigators; removed public **`Kit#runGraphql`** and legacy subscription **`operationSucceeded`** fan-out; **`backboneSyncNow`**, **`backboneStatus`** (typed snapshot); extended **`🧮ChangeAlgebra`** (`Diff`, `Modification`, `Modifications`, `Input`, `ChangeLedgerEvent`, diff/mod/input/operation variant shells incl. **`RenamedKit`**).
+- **`EntityRef`**: `export type EntityRef = Entity`.
+- **Worker**: `kit-store.worker.ts` split into **`//#region`** blocks (header, handle, wire, onmessage).
+
+### Commands
+
+| Command | Exit |
+|--------|------|
+| `bunx tsc --noEmit` in `semio/js` | **0** |
+
+### Files touched
+
+- `semio/js/index.ts`
+- `semio/js/kit-store.worker.ts`
+- `.repo/🎫/26/05/12/SINGLE-SOURCE-ENTITY-LAYERS/verify-log.md` (this append)
+
+### Note
+
+- **`KIT_*_SPECS` / `defineFields` / `defineOperations`** kept **exported** for parallel **`semio/react`** re-exports (not edited here). Full purge waits React pass.
+- **`// @ts-nocheck`** retained: embedded vitest block still references legacy `Graph.*` kit-store types.

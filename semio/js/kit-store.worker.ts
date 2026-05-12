@@ -6,17 +6,22 @@
 
 /// <reference lib="webworker" />
 
+//#region 🧷WasmHandle
 type WasmKitHandle = {
   execute: (body: string) => Promise<string>;
   subscribe: (body: string, onEvent: (eventJson: string) => void) => Promise<void>;
 };
 
 let handle: WasmKitHandle | null = null;
+//#endregion 🧷WasmHandle
 
+//#region 📤Wire
 function post(out: unknown): void {
   self.postMessage(JSON.stringify(out));
 }
+//#endregion 📤Wire
 
+//#region 🧵OnMessage
 self.onmessage = async (ev: MessageEvent<string>) => {
   let msg: {
     op?: string;
@@ -63,3 +68,4 @@ self.onmessage = async (ev: MessageEvent<string>) => {
     post({ op: "error", reqId: msg.reqId, message: String(e) });
   }
 };
+//#endregion 🧵OnMessage

@@ -1,9 +1,9 @@
 {
   "title": "Single Source Entity Layers",
   "emoji": "🧬",
-  "status": "open",
+  "status": "closed",
   "description": "Implement single-source entity layers: Rust BackboneKind, kit backbones, EventBus path subscribe, remove hydrate; JS Kit.open URI, backbone mutations; React Context rename, OperationStatus, bindFieldToReact without useSyncExternalStore.",
-  "summary": "Rust: fixed BackboneStatus (no Copy), BackboneAttach mount \u0026str, wasm bootstrap empty URI Ok wrap; implemented Event::matches_watched_paths + canonical_touched_paths, EventBus path_sinks + emit_event fan-out to async_channel subscribers, subscribe_paths returning filtered channel; gql collect_subscription_field_paths via Lookahead + all Subscription roots use filtered rx when selection non-empty; schema_matches_target_graphql_file still passes; native+wasm cargo check with isolated target dirs OK. React: embedded-test KitScope/useKitStoreClient shim (KitEmbedHost), KitContextProvider wiring fix; vitest block reads index.tsx and soft-asserts banned regexes (schema-1:1 partial). verify-log.md updated with command outcomes. Not done vs plan: full geom weak DTO+*Node collapse; bundle/serde_json confinement; exhaustive Event touched_paths per operation; full JS 282 classes + Entity factories + KIT_* purge + public Json removal; full React hooks/context rename across sketchpad; depcruise + green tsc for react (many existing errors).",
+  "summary": "Phase B JS: weak classes (Position/Coordinate/Plane/Point/Vector, Attribute, Benchmark, ConnectionSide), Kit/Design/Type/Graph/Session/Checkpoint instance caches, id-list-stable collection reads, backboneSyncNow/backboneStatus, __kitGraphqlEnvelope (removed Kit.runGraphql + legacy operationSucceeded subscription path), change-algebra base + variant shells including RenamedKit, kit-store.worker regions; verify-log updated. KIT_* exports kept for parallel react.",
   "goal": "🎯r2602🎯runningsketchpad",
   "plan": {
     "client": "cursor",
