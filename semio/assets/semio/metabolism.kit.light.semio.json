@@ -54436,7 +54436,148 @@
         },
         "checkpoints": {
             "hash": "…",
-            "items": []
+            "items": [
+                {
+                    "id": "…",
+                    "hash": "…",
+                    "timestamp": "…",
+                    "message": "…",
+                    "authors": {
+                        "hash": "…",
+                        "items": [
+                            {
+                                "id": "…",
+                                "hash": "…"
+                            }
+                        ]
+                    },
+                    "changes": {
+                        "hash": "…",
+                        "items": [
+                            {
+                                "id": "…",
+                                "hash": "…",
+                                "description": "…",
+                                "origin": "…",
+                                "icon": "",
+                                "name": "",
+                                "edits": {
+                                    "hash": "…",
+                                    "items": [
+                                        {
+                                            "id": "…",
+                                            "hash": "…",
+                                            "forwards": {
+                                                "hash": "…",
+                                                "items": [
+                                                    {
+                                                        "id": "…",
+                                                        "hash": "…",
+                                                        "kind": "kit.design.createdFixedPiece",
+                                                        "description": "…",
+                                                        "input": {
+                                                            "hash": "…",
+                                                            "blueprint": {
+                                                                "hash": "…",
+                                                                "type": {
+                                                                    "id": "…",
+                                                                    "hash": "…"
+                                                                }
+                                                            },
+                                                            "position": {
+                                                                "center": {
+                                                                    "u": 1.5,
+                                                                    "v": -7.7
+                                                                },
+                                                                "plane": {
+                                                                    "origin": {
+                                                                        "x": 0.4,
+                                                                        "y": 1.2,
+                                                                        "z": 5
+                                                                    },
+                                                                    "xAxis": {
+                                                                        "x": 0,
+                                                                        "y": 1,
+                                                                        "z": 0
+                                                                    },
+                                                                    "yAxis": {
+                                                                        "x": 0,
+                                                                        "y": 0,
+                                                                        "z": 1
+                                                                    }
+                                                                }
+                                                            }
+                                                        }
+                                                    },
+                                                    {
+                                                        "id": "…",
+                                                        "hash": "…",
+                                                        "kind": "kit.design.piece.createdFixedPiece",
+                                                        "description": "…",
+                                                        "input": {
+                                                            "position": {
+                                                                "center": {
+                                                                    "u": -1,
+                                                                    "v": 5
+                                                                },
+                                                                "plane": {
+                                                                    "origin": {
+                                                                        "x": 0,
+                                                                        "y": -2,
+                                                                        "z": 3
+                                                                    },
+                                                                    "xAxis": {
+                                                                        "x": 0,
+                                                                        "y": 0,
+                                                                        "z": 1
+                                                                    },
+                                                                    "yAxis": {
+                                                                        "x": 1,
+                                                                        "y": 0,
+                                                                        "z": 0
+                                                                    }
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+                                                ]
+                                            },
+                                            "backwards": {
+                                                "hash": "…",
+                                                "items": [
+                                                    {
+                                                        "id": "…",
+                                                        "hash": "…",
+                                                        "kind": "kit.design.piece.deletedFixedPieces",
+                                                        "description": "…",
+                                                        "input": {
+                                                            "hash": "…",
+                                                            "pieceIds": [
+                                                                {
+                                                                    "id": "…",
+                                                                    "hash": "…"
+                                                                },
+                                                                {
+                                                                    "id": "…",
+                                                                    "hash": "…"
+                                                                }
+                                                            ]
+                                                        }
+                                                    }
+                                                ]
+                                            },
+                                            "startedAt": "…",
+                                            "finishedAt": "…",
+                                            "description": "…",
+                                            "origin": "…"
+                                        }
+                                    ]
+                                }
+                            }
+                        ]
+                    }
+                }
+            ]
         },
         "theKit": {},
         "alternatives": {

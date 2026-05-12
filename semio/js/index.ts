@@ -257,9 +257,6 @@ export class EventBus {
 /** @emoji 📡 Live-query mirror of target {@code Subscription.store.wip}; ticks {@link Store#bus} on each WIP emission. */
 export const KIT_EVENT_STREAM_SUBSCRIPTION = `subscription { store { wip { id hash } } }` as const;
 
-/** @emoji 📡 Alias for correlators that previously reused the same subscription document as the kit event stream. */
-export const KIT_COMMAND_SUCCEEDED_SUBSCRIPTION = KIT_EVENT_STREAM_SUBSCRIPTION;
-
 /** @emoji 🧭 Store entry query fragment aligned with {@code target.schema.graphql} (WIP head + {@code theKit} id). */
 export const KIT_SESSION_QUERY_ENTRY = `query KitStoreEntry { store { wip { id theKit { id } } } }` as const;
 
@@ -1847,72 +1844,72 @@ export class Conflict extends Entity {
 }
 
 /** @emoji 🧬 Abstract {@code Operation}; concrete operation subclasses follow the plan roster. */
-export abstract class Operation extends Entity {}
+export abstract class Operation extends Entity { }
 
 //#region 🧮ChangeAlgebra
 /** @emoji 🧮 Abstract diff leaf (kit algebra owned by rs; JS is navigation + reads). */
-export abstract class Diff extends Entity {}
+export abstract class Diff extends Entity { }
 
 /** @emoji 🧮 Abstract modification triple (before, diff, after). */
-export abstract class Modification extends Entity {}
+export abstract class Modification extends Entity { }
 
 /** @emoji 🧮 Wrapper for removed/added/modification rows on an entity diff. */
-export class Modifications extends Entity {}
+export class Modifications extends Entity { }
 
 /** @emoji 📥 Abstract operation input payload (arguments mirror SDL input types). */
-export abstract class Input extends Entity {}
+export abstract class Input extends Entity { }
 
 /** @emoji 📜 Domain ledger event (timestamp + involves — avoid shadowing DOM {@link Event}). */
-export abstract class ChangeLedgerEvent extends Entity {}
+export abstract class ChangeLedgerEvent extends Entity { }
 
 //#region 🧬DiffVariants
 /** @emoji 🧬 {@code KitDiff} navigation shell. */
-export class KitDiff extends Diff {}
+export class KitDiff extends Diff { }
 /** @emoji 🧬 {@code DesignDiff} navigation shell. */
-export class DesignDiff extends Diff {}
+export class DesignDiff extends Diff { }
 /** @emoji 🧬 {@code TypeDiff} navigation shell. */
-export class TypeDiff extends Diff {}
+export class TypeDiff extends Diff { }
 /** @emoji 🧬 {@code PieceDiff} navigation shell. */
-export class PieceDiff extends Diff {}
+export class PieceDiff extends Diff { }
 /** @emoji 🧬 {@code ConnectionDiff} navigation shell. */
-export class ConnectionDiff extends Diff {}
+export class ConnectionDiff extends Diff { }
 //#endregion 🧬DiffVariants
 
 //#region 🧬ModificationVariants
-export class KitModification extends Modification {}
-export class DesignModification extends Modification {}
-export class TypeModification extends Modification {}
-export class PieceModification extends Modification {}
-export class ConnectionModification extends Modification {}
+export class KitModification extends Modification { }
+export class DesignModification extends Modification { }
+export class TypeModification extends Modification { }
+export class PieceModification extends Modification { }
+export class ConnectionModification extends Modification { }
 //#endregion 🧬ModificationVariants
 
 //#region 🧬ModificationsVariants
-export class KitModifications extends Modifications {}
-export class DesignModifications extends Modifications {}
+export class KitModifications extends Modifications { }
+export class DesignModifications extends Modifications { }
 //#endregion 🧬ModificationsVariants
 
 //#region 🧬InputVariants
-export class RenamedKitInput extends Input {}
-export class CreatedTagInput extends Input {}
-export class CreatedQualityInput extends Input {}
+export class RenamedKitInput extends Input { }
+export class CreatedTagInput extends Input { }
+export class CreatedQualityInput extends Input { }
 //#endregion 🧬InputVariants
 
 //#region 🧬OperationVariants
-export class RenamedKit extends Operation {}
-export class ChangedDescriptionOperation extends Operation {}
-export class CreatedQualityOperation extends Operation {}
-export class CreatedQualitiesOperation extends Operation {}
-export class DeletedQualityOperation extends Operation {}
-export class CreatedTagOperation extends Operation {}
-export class DeletedPieceOperation extends Operation {}
-export class DeletedPiecesOperation extends Operation {}
-export class DraggedPieceOperation extends Operation {}
-export class MovedPieceOperation extends Operation {}
-export class FixedPieceOperation extends Operation {}
-export class FlattenedDesignOperation extends Operation {}
-export class CreatedFixedPieceOperation extends Operation {}
-export class AddedChildPieceWithParentConnectionOperation extends Operation {}
-export class AddedHangingChildPieceWithParentConnectionOperation extends Operation {}
+export class RenamedKit extends Operation { }
+export class ChangedDescriptionOperation extends Operation { }
+export class CreatedQualityOperation extends Operation { }
+export class CreatedQualitiesOperation extends Operation { }
+export class DeletedQualityOperation extends Operation { }
+export class CreatedTagOperation extends Operation { }
+export class DeletedPieceOperation extends Operation { }
+export class DeletedPiecesOperation extends Operation { }
+export class DraggedPieceOperation extends Operation { }
+export class MovedPieceOperation extends Operation { }
+export class FixedPieceOperation extends Operation { }
+export class FlattenedDesignOperation extends Operation { }
+export class CreatedFixedPieceOperation extends Operation { }
+export class AddedChildPieceWithParentConnectionOperation extends Operation { }
+export class AddedHangingChildPieceWithParentConnectionOperation extends Operation { }
 //#endregion 🧬OperationVariants
 //#endregion 🧮ChangeAlgebra
 
@@ -3796,14 +3793,9 @@ export async function openStore(uri: string, opts?: StoreOpenOptions): Promise<S
 //#endregion 🚀PublicAPI
 
 
-//#region 🧪EmbeddedTests
-if (
-  typeof process !== "undefined" &&
-  !!process.env &&
-  process.env["SEMIO_JS_RUN_EMBEDDED_TESTS"] === "1"
-) {
+//#region 🧪Tests
+if (typeof process !== "undefined" && !!process.env && process.env["SEMIO_JS_RUN_EMBEDDED_TESTS"] === "1") {
   const { describe, it, expect } = await import("vitest");
-
   describe("semio-js Store root (strict)", () => {
     it("Store.prototype has no snapshot() hook", () => {
       type Snap = { snapshot?: () => unknown };
@@ -3853,7 +3845,6 @@ if (
       expect(typeof cp.subscribeEdits).toBe("function");
     });
   });
-
   describe("semio-js GraphQL dto contract", () => {
     it("KIT_SESSION_QUERY_ENTRY and KIT_EVENT_STREAM_SUBSCRIPTION align with target.schema.graphql", async () => {
       const { readFileSync } = await import("node:fs");
@@ -3878,14 +3869,13 @@ if (
       expect(sdl).toMatch(/type Subscription[\s\S]*\bstore:/s);
       expect(sdl).not.toMatch(/^\s*event:\s*Json!/m);
       expect(sdl).toContain("type Mutation");
-      expect(sdl).toContain("session: SessionCommandInput!");
+      expect(sdl).toContain("session: SessionCommand!");
       expect(sdl).not.toContain("type KitStoreMutation");
       expect(KIT_SESSION_QUERY_ENTRY).toContain("store { wip { id theKit");
       expect(KIT_EVENT_STREAM_SUBSCRIPTION).toContain("store { wip");
       expect(KIT_COMMAND_SUCCEEDED_SUBSCRIPTION).toBe(KIT_EVENT_STREAM_SUBSCRIPTION);
     });
   });
-
   describe("semio kit-store fixtures (US-001)", () => {
     it("golden ops + expected invariants parse and match op count", async () => {
       const { readFileSync } = await import("node:fs");
@@ -3938,12 +3928,6 @@ if (
       expect(Array.isArray(backboneDoc.semanticOpLog)).toBe(true);
     });
   });
-}
-//#endregion 🧪EmbeddedTests
-
-
-//#region 🧪Tests
-if (typeof process !== "undefined" && !!process.env && process.env["SEMIO_JS_RUN_EMBEDDED_TESTS"] === "1") {
   describe("semio/js field-only kit", () => {
     it("source has no banned cache/sync substrings", async () => {
       const fs = await import("node:fs");
@@ -3982,6 +3966,7 @@ if (typeof process !== "undefined" && !!process.env && process.env["SEMIO_JS_RUN
     });
   });
 }
+
 //#endregion 🧪Tests
 
 
