@@ -17,8 +17,6 @@ export function createKitStoreWorker(): Worker {
 export type JsonValue = string | number | boolean | null | readonly JsonValue[] | JsonObject;
 export type JsonObject = { readonly [k: string]: JsonValue };
 
-type GraphQlVariables = JsonObject;
-
 type KitGraphqlResponseEnvelope<TData> = Readonly<{
   data?: TData | null;
   errors?: readonly { readonly message?: string }[];
@@ -200,12 +198,12 @@ class WorkerStringTransport {
 export class GqlTransport {
   constructor(private readonly inner: WorkerStringTransport | InlineWasmTransport) {}
 
-  async executeJson(body: { readonly query: string; readonly variables?: GraphQlVariables; readonly operationName?: string }, timeoutMs: number): Promise<KitGraphqlResponseEnvelope<JsonValue>> {
+  async executeJson(body: { readonly query: string; readonly variables?: JsonObject; readonly operationName?: string }, timeoutMs: number): Promise<KitGraphqlResponseEnvelope<JsonValue>> {
     const json = await withTimeout(this.inner.execute(JSON.stringify(body)), timeoutMs, "graphql");
     return parseJsonValue(json) as KitGraphqlResponseEnvelope<JsonValue>;
   }
 
-  async subscribeJson(body: { readonly query: string; readonly variables?: GraphQlVariables }, onEvent: (env: KitGraphqlResponseEnvelope<JsonValue>) => void): Promise<void> {
+  async subscribeJson(body: { readonly query: string; readonly variables?: JsonObject }, onEvent: (env: KitGraphqlResponseEnvelope<JsonValue>) => void): Promise<void> {
     await this.inner.subscribe(JSON.stringify(body), (eventJson) => {
       try {
         onEvent(parseJsonValue(eventJson) as KitGraphqlResponseEnvelope<JsonValue>);
@@ -318,14 +316,14 @@ function __gqlIds(ids: readonly string[]): string {
   return `[${ids.map((x) => __gqlStr(x)).join(",")}]`;
 }
 
-function __scopedKitMutationBody(changeId: string, kitSelection: string): { readonly query: string; readonly variables: GraphQlVariables } {
+function __scopedKitMutationBody(changeId: string, kitSelection: string): { readonly query: string; readonly variables: JsonObject } {
   return {
     query: `mutation($changeId: ID!) { session { theKit { unsavedChange(id: $changeId) { kit { ${kitSelection} } } } } }`,
     variables: { changeId },
   };
 }
 
-function kitSessionWipStoreSelect(point: KitReadPoint, innerOnKitStore: string): { query: string; variables: GraphQlVariables } {
+function kitSessionWipStoreSelect(point: KitReadPoint, innerOnKitStore: string): { query: string; variables: JsonObject } {
   if (isTheKitReadPoint(point)) {
     return {
       query: `query KitSessionWipStore { wip { theKit { kit { ${innerOnKitStore} } } } }`,
@@ -369,7 +367,7 @@ function gqlDataSessionWipKitStore(d: JsonValue | null | undefined, point: KitRe
   return kit != null && typeof kit === "object" && !Array.isArray(kit) ? (kit as JsonObject) : null;
 }
 
-async function kitGraphqlRun(handle: { execute(requestJson: string): Promise<string> }, body: { query: string; variables?: GraphQlVariables; operationName?: string }, timeoutMs?: number): Promise<KitGraphqlResponseEnvelope<JsonValue>> {
+async function kitGraphqlRun(handle: { execute(requestJson: string): Promise<string> }, body: { query: string; variables?: JsonObject; operationName?: string }, timeoutMs?: number): Promise<KitGraphqlResponseEnvelope<JsonValue>> {
   const json = await withTimeout(handle.execute(JSON.stringify(body)), timeoutMs ?? 0, "graphql");
   return parseJsonValue(json) as KitGraphqlResponseEnvelope<JsonValue>;
 }
@@ -501,18 +499,18 @@ export class Kit {
       });
   }
 
-  private async gqlRun(body: { query: string; variables?: GraphQlVariables; operationName?: string }): Promise<KitGraphqlResponseEnvelope<JsonValue>> {
+  private async gqlRun(body: { query: string; variables?: JsonObject; operationName?: string }): Promise<KitGraphqlResponseEnvelope<JsonValue>> {
     this.ensureAlive();
     return kitGraphqlRun(this.handle, body, this.timeoutMs);
   }
 
   /** @emoji 🌐 Public GraphQL round-trip (root {@code Query} / {@code Mutation}), for {@code node(id:)} reads. */
-  async runGraphql(body: { query: string; variables?: GraphQlVariables; operationName?: string }): Promise<KitGraphqlResponseEnvelope<JsonValue>> {
+  async runGraphql(body: { query: string; variables?: JsonObject; operationName?: string }): Promise<KitGraphqlResponseEnvelope<JsonValue>> {
     return this.gqlRun(body);
   }
 
   /** @emoji 🧾 Reads a selection inside scoped {@code kit { … }} for {@link activeReadPoint}. */
-  async readKitInner(inner: string, variables: GraphQlVariables = {}): Promise<JsonObject | null> {
+  async readKitInner(inner: string, variables: JsonObject = {}): Promise<JsonObject | null> {
     const { query, variables: v0 } = kitSessionWipStoreSelect(this.activeReadPoint, inner);
     const data = kitGraphqlData(await this.gqlRun({ query, variables: { ...v0, ...variables } })) as JsonValue;
     return gqlDataSessionWipKitStore(data, this.activeReadPoint);
@@ -3352,10 +3350,10 @@ export type ChangeKitCommand =
 /**
  * @public GraphQL `variables` map for `kitStore.batch` (kit JSON object trees, camelCase; matches {@link GraphQlObjectMutable} construction in this module).
  */
-export type GraphQlVariables = KitJsonObjectDto;
+export type JsonObject = KitJsonObjectDto;
 
 /** @emoji 🧾 True for object-shaped JSON / kit tree nodes (excludes arrays and `null`). */
-function isJsonObjectNode(v: JsonValue | KitJsonTreeDto | null | undefined): v is GraphQlVariables | JsonObject | KitJsonObjectDto {
+function isJsonObjectNode(v: JsonValue | KitJsonTreeDto | null | undefined): v is JsonObject | JsonObject | KitJsonObjectDto {
   return v != null && typeof v === "object" && !Array.isArray(v);
 }
 
@@ -3859,7 +3857,7 @@ function __gqlIds(ids: readonly string[]): string {
 }
 
 /** @emoji 🧾 Wraps kit selection under `unsavedChange` + `theKit` (target command tree). */
-function __scopedKitMutationBody(changeId: string, kitSelection: string): { readonly query: string; readonly variables: GraphQlVariables } {
+function __scopedKitMutationBody(changeId: string, kitSelection: string): { readonly query: string; readonly variables: JsonObject } {
   return {
     query: `mutation($changeId: ID!) { session { theKit { unsavedChange(id: $changeId) { kit { ${kitSelection} } } } } }`,
     variables: { changeId },
@@ -3870,7 +3868,7 @@ function __scopedKitMutationBody(changeId: string, kitSelection: string): { read
 function buildScopedChangeKitMutation(
   changeId: string,
   cmd: ChangeKitCommand,
-): { readonly query: string; readonly variables: GraphQlVariables } | null {
+): { readonly query: string; readonly variables: JsonObject } | null {
   if ("name" in cmd && cmd.name != null && typeof cmd.name === "object" && "name" in cmd.name) {
     const n = String((cmd.name as { name?: string | null }).name ?? "");
     return __scopedKitMutationBody(changeId, `r: rename(newName: ${__gqlStr(n)})`);
@@ -4208,7 +4206,7 @@ function kitGraphqlData<TData>(response: KitGraphqlResponseEnvelope<TData>): TDa
 }
 
 /** @emoji 🧾 GraphQL selection on a target-schema version's nested `kit` (`wip.theKit.kit`, checkpoint root, or alternative kit). */
-function kitSessionWipStoreSelect(point: KitReadPoint, innerOnKitStore: string): { query: string; variables: GraphQlVariables } {
+function kitSessionWipStoreSelect(point: KitReadPoint, innerOnKitStore: string): { query: string; variables: JsonObject } {
   if (isTheKitReadPoint(point)) {
     return {
       query: `query KitSessionWipStore { wip { theKit { kit { ${innerOnKitStore} } } } }`,
@@ -4446,7 +4444,7 @@ export function normalizeKitEventFromSubscription(raw: unknown): KitEvent | unde
 
 type KitGraphqlHandle = { execute(requestJson: string): Promise<string> };
 
-async function kitGraphqlRun(handle: KitGraphqlHandle, body: { query: string; variables?: GraphQlVariables; operationName?: string }, timeoutMs?: number): Promise<KitGraphqlResponseEnvelope<JsonValue>> {
+async function kitGraphqlRun(handle: KitGraphqlHandle, body: { query: string; variables?: JsonObject; operationName?: string }, timeoutMs?: number): Promise<KitGraphqlResponseEnvelope<JsonValue>> {
   const json = await withTimeout(handle.execute(JSON.stringify(body)), timeoutMs ?? 0, "graphql");
   return parseJsonValue(json) as KitGraphqlResponseEnvelope<JsonValue>;
 }
@@ -4457,7 +4455,7 @@ async function kitGraphqlRun(handle: KitGraphqlHandle, body: { query: string; va
  */
 export async function kitGraphqlRunTyped<TData extends JsonValue>(
   handle: { execute(requestJson: string): Promise<string> },
-  body: { query: string; variables?: GraphQlVariables; operationName?: string },
+  body: { query: string; variables?: JsonObject; operationName?: string },
   timeoutMs?: number,
 ): Promise<KitGraphqlResponseEnvelope<TData>> {
   return (await kitGraphqlRun(handle, body, timeoutMs)) as KitGraphqlResponseEnvelope<TData>;
@@ -4898,7 +4896,7 @@ export class KitStore {
     spec: {
       /** Declarations after `$at`, e.g. `$typeId: Id!` (omit when selection uses only `$at`). */
       extraVariableDecl?: string;
-      extraVariables?: GraphQlVariables;
+      extraVariables?: JsonObject;
       innerOnKit: string;
       parse: (kitFragment: JsonObject) => T;
       initial: T;
@@ -4913,18 +4911,18 @@ export class KitStore {
           const point = this.activeReadPoint;
           const extraDecl = spec.extraVariableDecl?.trim();
           let query: string;
-          let variables: GraphQlVariables;
+          let variables: JsonObject;
           if (isTheKitReadPoint(point)) {
             const varHeader = extraDecl ? (`${extraDecl}` as const) : "";
             const headerPart = varHeader ? `(${varHeader})` : "";
             query = `query SemioMatKit${headerPart} { wip { theKit { kit { ${spec.innerOnKit} } } } }`;
-            variables = { ...(spec.extraVariables ?? {}) } as GraphQlVariables;
+            variables = { ...(spec.extraVariables ?? {}) } as JsonObject;
           } else {
             const varHeader = extraDecl ? (`${extraDecl}` as const) : "";
             const headerPart = varHeader ? `(${varHeader})` : "";
             const selected = kitSessionWipStoreSelect(point, spec.innerOnKit);
             query = extraDecl ? selected.query.replace("query KitSessionWipStore", `query SemioMatKit${headerPart}`) : selected.query.replace("query KitSessionWipStore", "query SemioMatKit");
-            variables = { ...selected.variables, ...(spec.extraVariables ?? {}) } as GraphQlVariables;
+            variables = { ...selected.variables, ...(spec.extraVariables ?? {}) } as JsonObject;
           }
           const data = kitGraphqlData(await this.gqlRun({ query, variables })) as JsonValue;
           const frag = gqlDataSessionWipKitStore(data, point) ?? ({} as JsonObject);
@@ -5026,7 +5024,7 @@ export class KitStore {
     if (this.disposed) throw new Error("KitStore disposed");
   }
 
-  private async gqlRun(body: { query: string; variables?: GraphQlVariables; operationName?: string }): Promise<KitGraphqlResponseEnvelope<JsonValue>> {
+  private async gqlRun(body: { query: string; variables?: JsonObject; operationName?: string }): Promise<KitGraphqlResponseEnvelope<JsonValue>> {
     this.ensureAlive();
     return kitGraphqlRun(this.graphqlHandle(), body, this.timeoutMs);
   }
@@ -5044,7 +5042,7 @@ export class KitStore {
   }
 
   /** @emoji 🧾 Runs a session/wip/store query merging `extra` variables (e.g. `id` for `design(id: $id)`). */
-  private async gqlRunSessionWipStore(scope: KitReadPoint, innerOnKitStore: string, extra: GraphQlVariables = {} as GraphQlVariables): Promise<JsonValue> {
+  private async gqlRunSessionWipStore(scope: KitReadPoint, innerOnKitStore: string, extra: JsonObject = {} as JsonObject): Promise<JsonValue> {
     const { query, variables } = kitSessionWipStoreSelect(scope, innerOnKitStore);
     return kitGraphqlData(await this.gqlRun({ query, variables: { ...variables, ...extra } })) as JsonValue;
   }
@@ -5316,7 +5314,7 @@ export class KitStore {
     const one = (cmd: ChangeKitCommand): JsonObject => ({ changeKitCommands: { commands: [cmd] } } as JsonObject);
     switch (commandKind) {
       case "changeKitCommands":
-        return { changeKitCommands: { commands: (v["commands"] as readonly ChangeKitCommand[] | undefined) ?? [] } } as GraphQlVariables;
+        return { changeKitCommands: { commands: (v["commands"] as readonly ChangeKitCommand[] | undefined) ?? [] } } as JsonObject;
       case "clusterPieces":
         return null;
       case "dragPieces":
@@ -6354,7 +6352,7 @@ export type KitStoreClient = SemioKitBridge & {
     cacheKey: string,
     spec: {
       extraVariableDecl?: string;
-      extraVariables?: GraphQlVariables;
+      extraVariables?: JsonObject;
       innerOnKit: string;
       parse: (kitFragment: JsonObject) => T;
       initial: T;
@@ -6858,7 +6856,7 @@ export class WasmKitStoreClient implements KitStoreClient {
     cacheKey: string,
     spec: {
       extraVariableDecl?: string;
-      extraVariables?: GraphQlVariables;
+      extraVariables?: JsonObject;
       innerOnKit: string;
       parse: (kitFragment: JsonObject) => T;
       initial: T;
@@ -11491,6 +11489,264 @@ export import submitKitChangeCommands = WasmGraph.submitKitChangeCommands;
 export import writeKitStoreClientSchemaField = WasmGraph.writeKitStoreClientSchemaField;
 export import writeStatusEquivalent = WasmGraph.writeStatusEquivalent;
 //#endregion 🧷WasmGraphFlatReexports
+
+//#region 🧷WasmGraphTypeAliases
+export type AlgorithmError = WasmGraph.AlgorithmError;
+export type AttributeDiff = WasmGraph.AttributeDiff;
+export type AttributeDto = WasmGraph.AttributeDto;
+export type AttributeIdDto = WasmGraph.AttributeIdDto;
+export type AttributeMetadataDto = WasmGraph.AttributeMetadataDto;
+export type AttributeShallow = WasmGraph.AttributeShallow;
+export type AttributesDiff = WasmGraph.AttributesDiff;
+export type AuthorDiff = WasmGraph.AuthorDiff;
+export type AuthorDto = WasmGraph.AuthorDto;
+export type AuthorIdDto = WasmGraph.AuthorIdDto;
+export type AuthorMetadataDto = WasmGraph.AuthorMetadataDto;
+export type AuthorShallow = WasmGraph.AuthorShallow;
+export type AuthorsDiff = WasmGraph.AuthorsDiff;
+export type BackboneConfig = WasmGraph.BackboneConfig;
+export type BackboneStatusDto = WasmGraph.BackboneStatusDto;
+export type BenchmarkDiff = WasmGraph.BenchmarkDiff;
+export type BenchmarkDto = WasmGraph.BenchmarkDto;
+export type BenchmarkIdDto = WasmGraph.BenchmarkIdDto;
+export type BenchmarkMetadataDto = WasmGraph.BenchmarkMetadataDto;
+export type BenchmarkShallow = WasmGraph.BenchmarkShallow;
+export type BenchmarksDiff = WasmGraph.BenchmarksDiff;
+export type CameraDiff = WasmGraph.CameraDiff;
+export type CameraDto = WasmGraph.CameraDto;
+export type ChangeAuthorCommand = WasmGraph.ChangeAuthorCommand;
+export type ChangeConceptCommand = WasmGraph.ChangeConceptCommand;
+export type ChangeConnectionCommand = WasmGraph.ChangeConnectionCommand;
+export type ChangeDesignCommand = WasmGraph.ChangeDesignCommand;
+export type ChangeFamilyCommand = WasmGraph.ChangeFamilyCommand;
+export type ChangeFileCommand = WasmGraph.ChangeFileCommand;
+export type ChangeFolderCommand = WasmGraph.ChangeFolderCommand;
+export type ChangeKitCommand = WasmGraph.ChangeKitCommand;
+export type ChangeKitQualityCommand = WasmGraph.ChangeKitQualityCommand;
+export type ChangeLifecycle = WasmGraph.ChangeLifecycle;
+export type ChangePieceCommand = WasmGraph.ChangePieceCommand;
+export type ChangePortCommand = WasmGraph.ChangePortCommand;
+export type ChangeTagCommand = WasmGraph.ChangeTagCommand;
+export type ChangeTypeCommand = WasmGraph.ChangeTypeCommand;
+export type ChangedDesignCommandsKitEvent = WasmGraph.ChangedDesignCommandsKitEvent;
+export type ChangedKitEvent = WasmGraph.ChangedKitEvent;
+export type ChangedPieceKindKitEvent = WasmGraph.ChangedPieceKindKitEvent;
+export type ChangedTypeCommandsKitEvent = WasmGraph.ChangedTypeCommandsKitEvent;
+export type ClusteredPiecesKitEvent = WasmGraph.ClusteredPiecesKitEvent;
+export type ConceptDiff = WasmGraph.ConceptDiff;
+export type ConceptDto = WasmGraph.ConceptDto;
+export type ConceptIdDto = WasmGraph.ConceptIdDto;
+export type ConceptMetadataDto = WasmGraph.ConceptMetadataDto;
+export type ConceptShallow = WasmGraph.ConceptShallow;
+export type ConceptsDiff = WasmGraph.ConceptsDiff;
+export type ConflictBatchRecord = WasmGraph.ConflictBatchRecord;
+export type ConflictResolution = WasmGraph.ConflictResolution;
+export type ConnectionDiff = WasmGraph.ConnectionDiff;
+export type ConnectionDto = WasmGraph.ConnectionDto;
+export type ConnectionFieldPatchInput = WasmGraph.ConnectionFieldPatchInput;
+export type ConnectionIdDto = WasmGraph.ConnectionIdDto;
+export type ConnectionMetadataDto = WasmGraph.ConnectionMetadataDto;
+export type ConnectionPlain = WasmGraph.ConnectionPlain;
+export type ConnectionShallow = WasmGraph.ConnectionShallow;
+export type ConnectionsDiff = WasmGraph.ConnectionsDiff;
+export type ConnectorDiff = WasmGraph.ConnectorDiff;
+export type ConnectorDto = WasmGraph.ConnectorDto;
+export type ConnectorIdDto = WasmGraph.ConnectorIdDto;
+export type ConnectorMetadataDto = WasmGraph.ConnectorMetadataDto;
+export type ConnectorShallow = WasmGraph.ConnectorShallow;
+export type ConnectorsDiff = WasmGraph.ConnectorsDiff;
+export type CoordinateDiff = WasmGraph.CoordinateDiff;
+export type CoordinateDto = WasmGraph.CoordinateDto;
+export type CoordinatePlain = WasmGraph.CoordinatePlain;
+export type DeletedConnectionKitEvent = WasmGraph.DeletedConnectionKitEvent;
+export type DesignDiff = WasmGraph.DesignDiff;
+export type DesignDiffOperationResult = WasmGraph.DesignDiffOperationResult;
+export type DesignDto = WasmGraph.DesignDto;
+export type DesignFlattenMapEntryDto = WasmGraph.DesignFlattenMapEntryDto;
+export type DesignIdDto = WasmGraph.DesignIdDto;
+export type DesignMetadataDto = WasmGraph.DesignMetadataDto;
+export type DesignOperationResult = WasmGraph.DesignOperationResult;
+export type DesignPlain = WasmGraph.DesignPlain;
+export type DesignShallow = WasmGraph.DesignShallow;
+export type DesignsDiff = WasmGraph.DesignsDiff;
+export type DraggedFlatCenterPieceKitEvent = WasmGraph.DraggedFlatCenterPieceKitEvent;
+export type EntityLifecycle = WasmGraph.EntityLifecycle;
+export type ExpandedNestedDesignKitEvent = WasmGraph.ExpandedNestedDesignKitEvent;
+export type FamiliesDiff = WasmGraph.FamiliesDiff;
+export type FamilyDiff = WasmGraph.FamilyDiff;
+export type FamilyDto = WasmGraph.FamilyDto;
+export type FamilyIdDto = WasmGraph.FamilyIdDto;
+export type FamilyMetadataDto = WasmGraph.FamilyMetadataDto;
+export type FamilyShallow = WasmGraph.FamilyShallow;
+export type FileDiff = WasmGraph.FileDiff;
+export type FileDto = WasmGraph.FileDto;
+export type FileIdDto = WasmGraph.FileIdDto;
+export type FileMetadataDto = WasmGraph.FileMetadataDto;
+export type FileShallow = WasmGraph.FileShallow;
+export type FilesDiff = WasmGraph.FilesDiff;
+export type FixedPiecesFlatCenterKitEvent = WasmGraph.FixedPiecesFlatCenterKitEvent;
+export type FlatMerkleCacheEntry = WasmGraph.FlatMerkleCacheEntry;
+export type FlattenedDesignKitEvent = WasmGraph.FlattenedDesignKitEvent;
+export type FolderDiff = WasmGraph.FolderDiff;
+export type FolderDto = WasmGraph.FolderDto;
+export type FolderIdDto = WasmGraph.FolderIdDto;
+export type FolderMetadataDto = WasmGraph.FolderMetadataDto;
+export type FolderShallow = WasmGraph.FolderShallow;
+export type FoldersDiff = WasmGraph.FoldersDiff;
+export type GroupDiff = WasmGraph.GroupDiff;
+export type GroupDto = WasmGraph.GroupDto;
+export type GroupIdDto = WasmGraph.GroupIdDto;
+export type GroupMetadataDto = WasmGraph.GroupMetadataDto;
+export type GroupShallow = WasmGraph.GroupShallow;
+export type GroupsDiff = WasmGraph.GroupsDiff;
+export type Id = WasmGraph.Id;
+export type IncludedDesignInfoDto = WasmGraph.IncludedDesignInfoDto;
+export type KitBinaryStore = WasmGraph.KitBinaryStore;
+export type KitBundlePersisting = WasmGraph.KitBundlePersisting;
+export type KitChange = WasmGraph.KitChange;
+export type KitChangeKind = WasmGraph.KitChangeKind;
+export type KitChangeSemanticKindGql = WasmGraph.KitChangeSemanticKindGql;
+export type KitCheckpointDto = WasmGraph.KitCheckpointDto;
+export type KitChildEntityKind = WasmGraph.KitChildEntityKind;
+export type KitClassifiedMutationEvent = WasmGraph.KitClassifiedMutationEvent;
+export type KitColoredConnectorRowDto = WasmGraph.KitColoredConnectorRowDto;
+export type KitCommandContext = WasmGraph.KitCommandContext;
+export type KitCommandLifecycleEvent = WasmGraph.KitCommandLifecycleEvent;
+export type KitCommandLifecyclePhase = WasmGraph.KitCommandLifecyclePhase;
+export type KitCommandReceipt = WasmGraph.KitCommandReceipt;
+export type KitCommandRequestId = WasmGraph.KitCommandRequestId;
+export type KitCommandResult = WasmGraph.KitCommandResult;
+export type KitConflict = WasmGraph.KitConflict;
+export type KitDesignReadKind = WasmGraph.KitDesignReadKind;
+export type KitDiff = WasmGraph.KitDiff;
+export type KitEvent = WasmGraph.KitEvent;
+export type KitEventEnvelope = WasmGraph.KitEventEnvelope;
+export type KitEventFilter = WasmGraph.KitEventFilter;
+export type KitFileProvider = WasmGraph.KitFileProvider;
+export type KitFileProviderFactory = WasmGraph.KitFileProviderFactory;
+export type KitFileState = WasmGraph.KitFileState;
+export type KitFolderAdapter = WasmGraph.KitFolderAdapter;
+export type KitFullDto = WasmGraph.KitFullDto;
+export type KitGraphqlDataKitScopedFullDto = WasmGraph.KitGraphqlDataKitScopedFullDto;
+export type KitHostStore = WasmGraph.KitHostStore;
+export type KitHostStoreSnapshot = WasmGraph.KitHostStoreSnapshot;
+export type KitIdDto = WasmGraph.KitIdDto;
+export type KitJsonFileAdapter = WasmGraph.KitJsonFileAdapter;
+export type KitJsonObjectDto = WasmGraph.KitJsonObjectDto;
+export type KitJsonTreeDto = WasmGraph.KitJsonTreeDto;
+export type KitKind = WasmGraph.KitKind;
+export type KitLike = WasmGraph.KitLike;
+export type KitMetadataDto = WasmGraph.KitMetadataDto;
+export type KitShallowListKind = WasmGraph.KitShallowListKind;
+export type KitStoreBatchResultRow = WasmGraph.KitStoreBatchResultRow;
+export type KitStoreClient = WasmGraph.KitStoreClient;
+export type KitStoreExecuteResult = WasmGraph.KitStoreExecuteResult;
+export type KitStoreOpenOptions = WasmGraph.KitStoreOpenOptions;
+export type KitStoreReadSnap = WasmGraph.KitStoreReadSnap;
+export type KitStoreSnapshot = WasmGraph.KitStoreSnapshot;
+export type KitSyncSnapshot = WasmGraph.KitSyncSnapshot;
+export type KitViewCatalogKey = WasmGraph.KitViewCatalogKey;
+export type KitWriteScope = WasmGraph.KitWriteScope;
+export type LayerDiff = WasmGraph.LayerDiff;
+export type LayerDto = WasmGraph.LayerDto;
+export type LayerIdDto = WasmGraph.LayerIdDto;
+export type LayerMetadataDto = WasmGraph.LayerMetadataDto;
+export type LayerShallow = WasmGraph.LayerShallow;
+export type LayersDiff = WasmGraph.LayersDiff;
+export type LocationDiff = WasmGraph.LocationDiff;
+export type LocationDto = WasmGraph.LocationDto;
+export type LocationIdDto = WasmGraph.LocationIdDto;
+export type LocationMetadataDto = WasmGraph.LocationMetadataDto;
+export type LocationShallow = WasmGraph.LocationShallow;
+export type MoveVector = WasmGraph.MoveVector;
+export type MovedPiecesFlatCenterKitEvent = WasmGraph.MovedPiecesFlatCenterKitEvent;
+export type PasteDesignAnchoringKind = WasmGraph.PasteDesignAnchoringKind;
+export type PieceDiff = WasmGraph.PieceDiff;
+export type PieceDto = WasmGraph.PieceDto;
+export type PieceFieldPatchInput = WasmGraph.PieceFieldPatchInput;
+export type PieceIdDto = WasmGraph.PieceIdDto;
+export type PieceMetadataDto = WasmGraph.PieceMetadataDto;
+export type PiecePlacementRowDto = WasmGraph.PiecePlacementRowDto;
+export type PiecePlain = WasmGraph.PiecePlain;
+export type PieceShallow = WasmGraph.PieceShallow;
+export type PiecesDiff = WasmGraph.PiecesDiff;
+export type PlaneDiff = WasmGraph.PlaneDiff;
+export type PlaneDto = WasmGraph.PlaneDto;
+export type PlanePlain = WasmGraph.PlanePlain;
+export type PointDiff = WasmGraph.PointDiff;
+export type PointDto = WasmGraph.PointDto;
+export type PortDiff = WasmGraph.PortDiff;
+export type PortDto = WasmGraph.PortDto;
+export type PortIdDto = WasmGraph.PortIdDto;
+export type PortMetadataDto = WasmGraph.PortMetadataDto;
+export type PortShallow = WasmGraph.PortShallow;
+export type PortsDiff = WasmGraph.PortsDiff;
+export type PropDiff = WasmGraph.PropDiff;
+export type PropDto = WasmGraph.PropDto;
+export type PropIdDto = WasmGraph.PropIdDto;
+export type PropMetadataDto = WasmGraph.PropMetadataDto;
+export type PropShallow = WasmGraph.PropShallow;
+export type PropsDiff = WasmGraph.PropsDiff;
+export type QualitiesDiff = WasmGraph.QualitiesDiff;
+export type QualityDiff = WasmGraph.QualityDiff;
+export type QualityDto = WasmGraph.QualityDto;
+export type QualityIdDto = WasmGraph.QualityIdDto;
+export type QualityMetadataDto = WasmGraph.QualityMetadataDto;
+export type QualityShallow = WasmGraph.QualityShallow;
+export type ReadBatch = WasmGraph.ReadBatch;
+export type ReadBatchItem = WasmGraph.ReadBatchItem;
+export type ReadBatchResult = WasmGraph.ReadBatchResult;
+export type ReadDesignCommand = WasmGraph.ReadDesignCommand;
+export type ReadDesignCommandOutput = WasmGraph.ReadDesignCommandOutput;
+export type ReadKitCommand = WasmGraph.ReadKitCommand;
+export type ReadKitCommandOutput = WasmGraph.ReadKitCommandOutput;
+export type ReadPieceCommand = WasmGraph.ReadPieceCommand;
+export type ReadPieceCommandOutput = WasmGraph.ReadPieceCommandOutput;
+export type ReadTypeCommand = WasmGraph.ReadTypeCommand;
+export type ReadTypeCommandOutput = WasmGraph.ReadTypeCommandOutput;
+export type RenameKitCommandArgs = WasmGraph.RenameKitCommandArgs;
+export type RenamedDesignKitEvent = WasmGraph.RenamedDesignKitEvent;
+export type RenamedTypeKitEvent = WasmGraph.RenamedTypeKitEvent;
+export type RepresentationDiff = WasmGraph.RepresentationDiff;
+export type RepresentationDto = WasmGraph.RepresentationDto;
+export type RepresentationIdDto = WasmGraph.RepresentationIdDto;
+export type RepresentationMetadataDto = WasmGraph.RepresentationMetadataDto;
+export type RepresentationShallow = WasmGraph.RepresentationShallow;
+export type RepresentationsDiff = WasmGraph.RepresentationsDiff;
+export type SchemaEntityFieldValue = WasmGraph.SchemaEntityFieldValue;
+export type SemioKitBridge = WasmGraph.SemioKitBridge;
+export type SemioKitCommandFacade = WasmGraph.SemioKitCommandFacade;
+export type SemioKitStoreControlCommandName = WasmGraph.SemioKitStoreControlCommandName;
+export type SessionKitStoreConfig = WasmGraph.SessionKitStoreConfig;
+export type SideDiff = WasmGraph.SideDiff;
+export type SideDto = WasmGraph.SideDto;
+export type SideIdDto = WasmGraph.SideIdDto;
+export type SidesDiff = WasmGraph.SidesDiff;
+export type StatDiff = WasmGraph.StatDiff;
+export type StatDto = WasmGraph.StatDto;
+export type StatIdDto = WasmGraph.StatIdDto;
+export type StatMetadataDto = WasmGraph.StatMetadataDto;
+export type StatShallow = WasmGraph.StatShallow;
+export type StatsDiff = WasmGraph.StatsDiff;
+export type TagDiff = WasmGraph.TagDiff;
+export type TagDto = WasmGraph.TagDto;
+export type TagIdDto = WasmGraph.TagIdDto;
+export type TagMetadataDto = WasmGraph.TagMetadataDto;
+export type TagShallow = WasmGraph.TagShallow;
+export type TagsDiff = WasmGraph.TagsDiff;
+export type TypeDiff = WasmGraph.TypeDiff;
+export type TypeDto = WasmGraph.TypeDto;
+export type TypeIdDto = WasmGraph.TypeIdDto;
+export type TypeMetadataDto = WasmGraph.TypeMetadataDto;
+export type TypePlain = WasmGraph.TypePlain;
+export type TypeShallow = WasmGraph.TypeShallow;
+export type TypesDiff = WasmGraph.TypesDiff;
+export type VecDiff = WasmGraph.VecDiff;
+export type VecDto = WasmGraph.VecDto;
+export type VectorDiff = WasmGraph.VectorDiff;
+export type VectorDto = WasmGraph.VectorDto;
+export type WriteStatus = WasmGraph.WriteStatus;
+//#endregion 🧷WasmGraphTypeAliases
 
 
 

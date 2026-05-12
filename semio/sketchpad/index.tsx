@@ -15,18 +15,33 @@
 
 // #region ⛩️Imports
 
-import type { Connector, KitCommandContext, KitFolderAdapter, KitHostGraphOperation, KitHostStore, KitJsonFileAdapter, KitRegistryValue, Port, SketchpadKitKindAvailability, SketchpadKitStoreFactory } from "@semio/react/host";
+import type {
+  AuthorIdDto as AuthorId,
+  ConnectionIdDto as ConnectionId,
+  ConnectorGraphDto as Connector,
+  DesignShallow as DesignShallowDto,
+  KitCommandContext,
+  KitFolderAdapter,
+  KitFullDto as KitShallowDto,
+  KitHostGraphOperation,
+  KitHostStore,
+  KitJsonFileAdapter,
+  KitRegistryValue,
+  PieceIdDto as PieceId,
+  PortGraphDto as Port,
+  SketchpadKitKindAvailability,
+  SketchpadKitStoreFactory,
+  TypeShallow as TypeShallowDto,
+} from "@semio/react";
 import {
   applyKitHostGraphOperation,
   asKitInstance,
   attachSketchpadKitReadShell,
   Author,
-  AuthorId,
   Camera,
   Concept,
   Connection,
   ConnectionDiff,
-  ConnectionId,
   ConnectionScopeProvider,
   Coordinate,
   createDefaultBrowserSketchpadFileKitStoreFactory,
@@ -38,7 +53,6 @@ import {
   Design,
   DesignDiff,
   DesignScopeProvider,
-  DesignShallowDto,
   DiffStatus,
   executeSemioKitCommand,
   Folder,
@@ -58,12 +72,10 @@ import {
   kitStoreFromKitStoreClient,
   KitScope,
   KitScopeContext,
-  KitShallowDto,
   KitShellScopeProvider,
   KitStoreProvider,
   Piece,
   PieceDiff,
-  PieceId,
   PieceScopeProvider,
   Plane,
   Point,
@@ -79,16 +91,15 @@ import {
   Type,
   TypeDiff,
   TypeScopeProvider,
-  TypeShallowDto,
   useConnection,
   useConnections,
   useConnectionScope,
   useCreateAuthor,
-  useCreateDesign,
+  useKitHostCreateDesign,
   useCreateFolder,
-  useCreatePort,
-  useCreateQuality,
-  useCreateType,
+  useKitHostCreatePort,
+  useKitHostCreateQuality,
+  useKitHostCreateType,
   useConnectionDescription as useSchemaConnectionDescription,
   useConnectionGap as useSchemaConnectionGap,
   useConnectionRise as useSchemaConnectionRise,
@@ -140,9 +151,9 @@ import {
   usePiece,
   usePieceCenter as useSchemaPieceCenter,
   usePieceColor as useSchemaPieceColor,
-  usePieceDepth as usePieceDepthFromKit,
+  usePieceDepthKitHostBinding as usePieceDepthFromKit,
   usePieceDescription as useSchemaPieceDescription,
-  usePieceFlatPlane,
+  usePieceFlatPlaneKitHostBinding as usePieceFlatPlane,
   usePieceIsHidden as useSchemaPieceIsHidden,
   usePieceIsLocked as useSchemaPieceIsLocked,
   usePieceMetadata as usePieceMetadataFromKit,
@@ -177,7 +188,7 @@ import {
   useUpdateType,
   useWriteIndicator,
   Vector,
-} from "@semio/react/host";
+} from "@semio/react";
 import { gunzipSync } from "fflate";
 
 import type {
@@ -7166,7 +7177,7 @@ const clearDomRoot = (element: HTMLElement, root: Root): void => {
   }
 };
 
-export type { SketchpadKitKindAvailability, SketchpadKitStoreFactory } from "@semio/react/host";
+export type { SketchpadKitKindAvailability, SketchpadKitStoreFactory } from "@semio/react";
 
 // #region 🥈Entity Hooks
 // Sketchpad kit snapshot helpers; entity scopes and entity reads live in `@semio/react`.
@@ -7208,7 +7219,7 @@ export {
   useTypesFull,
   useTypesIds,
   useTypesMetadata,
-} from "@semio/react/host";
+} from "@semio/react";
 
 // #region 🎆Piece Derived Hooks
 

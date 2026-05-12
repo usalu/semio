@@ -3,71 +3,7 @@
 // #endregion ⚛️Header
 
 // #region 🧷JsReexports
-export type { JsonObject, JsonValue } from "@semio/js";
-export {
-  Author,
-  Concept,
-  Connection,
-  Connector,
-  createKitStoreWorker,
-  defineField,
-  defineFields,
-  defineOperation,
-  defineOperations,
-  DESIGN_ARTIFACT_FIELD_SPECS,
-  DESIGN_OPERATION_SPECS,
-  Design,
-  Entity,
-  EventBus,
-  Family,
-  FileEntity,
-  FolderEntity,
-  GroupEntity,
-  KIT_ARTIFACT_FIELD_SPECS,
-  KIT_EVENT_STREAM_SUBSCRIPTION,
-  KIT_OPERATION_SPECS,
-  Kit,
-  LayerEntity,
-  openKit,
-  Piece,
-  PiecesOperations,
-  Port,
-  PropEntity,
-  Quality,
-  Representation,
-  StatEntity,
-  Tag,
-  Type,
-} from "@semio/js";
-export type {
-  AttributeWire,
-  BenchmarkWire,
-  CameraWire,
-  ChangeId,
-  ConnectionSideWire,
-  CoordinateInputWire,
-  FieldSpec,
-  KitBootstrapJson,
-  KitFieldReadSpec,
-  KitOpenOptions,
-  KitReadPoint,
-  OffsetInputWire,
-  OperationSpec,
-  PieceBlueprintWire,
-  PlaneInputWire,
-  PlaneWire,
-  PointWire,
-  PositionInputWire,
-  PositionWire,
-  SetError,
-  SetErrorKind,
-  SetResult,
-  SideWire,
-  Unsubscribe,
-  VectorInputWire,
-  VectorWire,
-} from "@semio/js";
-export { kitReadPointKey, theKitReadPoint } from "@semio/js";
+// Value/type re-exports follow the local `@semio/js` imports below (single binding per symbol).
 // #endregion 🧷JsReexports
 
 // #region ⚛️Imports
@@ -135,25 +71,86 @@ import {
   Concept,
   Connection,
   Connector,
+  createKitStoreWorker,
   defineField,
+  defineFields,
+  defineOperation,
+  defineOperations,
+  DESIGN_ARTIFACT_FIELD_SPECS,
+  DESIGN_OPERATION_SPECS,
   Design,
   Entity,
+  EventBus,
+  Family,
+  FileEntity,
+  FolderEntity,
+  GroupEntity,
+  KIT_ARTIFACT_FIELD_SPECS,
+  KIT_EVENT_STREAM_SUBSCRIPTION,
+  KIT_OPERATION_SPECS,
   Kit,
+  LayerEntity,
+  normalizeKitFullDtoFolderPaths,
+  openKit,
   Piece,
   PiecesOperations,
   Port,
+  PropEntity,
   Quality,
   Representation,
-  StoreField,
+  StatEntity,
   StoreCommand,
+  StoreField,
   Tag,
   Type,
+  kitReadPointKey,
   theKitReadPoint,
   WasmGraph,
 } from "@semio/js";
 import type { ReactNode, SetStateAction } from "react";
 import * as React from "react";
 // #endregion ⚛️Imports
+
+// #region 🧷JsPublicExports
+export {
+  Author,
+  Concept,
+  Connection,
+  Connector,
+  createKitStoreWorker,
+  defineField,
+  defineFields,
+  defineOperation,
+  defineOperations,
+  DESIGN_ARTIFACT_FIELD_SPECS,
+  DESIGN_OPERATION_SPECS,
+  Design,
+  Entity,
+  EventBus,
+  Family,
+  FileEntity,
+  FolderEntity,
+  GroupEntity,
+  KIT_ARTIFACT_FIELD_SPECS,
+  KIT_EVENT_STREAM_SUBSCRIPTION,
+  KIT_OPERATION_SPECS,
+  Kit,
+  LayerEntity,
+  normalizeKitFullDtoFolderPaths,
+  openKit,
+  Piece,
+  PiecesOperations,
+  Port,
+  PropEntity,
+  Quality,
+  Representation,
+  StatEntity,
+  Tag,
+  Type,
+  kitReadPointKey,
+  theKitReadPoint,
+};
+// #endregion 🧷JsPublicExports
 
 // #region 📐UiConstants
 /** @emoji 📐 Icon column width shared by sketchpad-era layouts (UI-only, not domain). */
@@ -2102,12 +2099,7 @@ const {
   createJsonFileKitStore,
   createKitStoreClient,
   createSessionKitStore,
-  getKitClientReadPoint,
-  kitReadPointKey,
-  kitStoreFromKitStoreClient,
-  normalizeKitFullDtoFolderPaths,
-  theKitReadPoint,
-  DesignMetadataDtoSchema,
+  submitKitChangeCommands,
   DesignSchema,
   DesignShallowSchema,
   FamilySchema,
@@ -2122,7 +2114,6 @@ const {
   kitEventAffectsTypeScopedRead,
   kitEventTouchesDesign,
   resolveDesignIdForPieceOrConnection,
-  submitKitChangeCommands,
   kitStoreClientAddChildByKind,
   kitStoreClientAddConnection,
   kitStoreClientAddPiece,
@@ -2166,8 +2157,6 @@ const {
   getOrCreateKitFileState,
   getReadableKitFileUrl,
   getStoredKitFileUrls,
-  ICON_WIDTH,
-  id,
   InMemoryKitStore,
   isBrowserReadableFileUrl,
   Kit: KitModel,
@@ -2184,7 +2173,6 @@ const {
   RepresentationSchema,
   Tag: TagModel,
   TagSchema,
-  TOLERANCE,
   Type: TypeModel,
   TypeMetadataDtoSchema,
   TypeSchema,
@@ -2670,37 +2658,6 @@ export function createKitCommandEngine(store: KitHostStore): ReturnType<typeof c
 }
 // #endregion 🔖KitHostCommandDispatch
 
-export type { BackboneConfig, BackboneStatusDto, ConflictResolution, KitConflict, KitReadPoint, KitWriteScope, RenameKitCommandArgs, SetError, SetResult, WriteStatus } from "@semio/js";
-export {
-  WRITE_STATUS_IDLE,
-  WRITE_STATUS_READONLY,
-  WRITE_STATUS_PENDING,
-  writeStatusEquivalent,
-  StoreField,
-  StoreCommand,
-} from "@semio/js";
-export { getKitClientReadPoint, kitReadPointKey, kitStoreFromKitStoreClient, theKitReadPoint } from "@semio/js";
-export type { KitBinaryStore, KitFileState } from "@semio/js";
-export type { KitHostStore, KitHostStoreSnapshot } from "@semio/js";
-export type {
-  KitStoreExecuteResult,
-  KitDesignReadKind,
-  KitShallowListKind,
-  KitStoreReadSnap,
-  KitViewCatalogKey,
-} from "@semio/js";
-export { DesignStore, TypeStore, PieceStore, ConnectionStore, FamilyStore, FileStore, FolderStore, KitEntityStore } from "@semio/js";
-export {
-  SemioKitDesignReadStore,
-  SemioKitLiveReadStore,
-  SemioKitShallowListReadStore,
-  SemioKitViewStore,
-  getSemioKitDesignReadStore,
-  getSemioKitLiveReadStore,
-  getSemioKitShallowListReadStore,
-  getSemioKitViewStore,
-} from "@semio/js";
-
 // #region ⚛️Types
 
 // Live-read snapshot hub is implemented in `semio/js` (`getSemioKitLiveReadStore`); hooks use `useSyncExternalStore` here.
@@ -2759,7 +2716,7 @@ type IndexedSchemaReference = {
 
 type IndexedSchemaState = {
   plain: any;
-  kit: Kit;
+  kit: any;
   kitId?: string;
   byId: Map<string, IndexedSchemaReference[]>;
   byType: Map<string, IndexedSchemaReference[]>;
@@ -3078,7 +3035,7 @@ function resolveReference(index: IndexedSchemaState, typeName: string, id?: stri
   return undefined;
 }
 
-function findLivePiece(kit: Kit, pieceId: string): { piece: Piece; design: Design } | undefined {
+function findLivePiece(kit: any, pieceId: string): { piece: Piece; design: Design } | undefined {
   for (const design of kit.designs ?? []) {
     const piece = design.pieces?.find((entry) => entry.id === pieceId);
     if (piece) return { piece, design };
@@ -3086,7 +3043,7 @@ function findLivePiece(kit: Kit, pieceId: string): { piece: Piece; design: Desig
   return undefined;
 }
 
-function findLiveConnection(kit: Kit, connectionId: string): { connection: any; design: Design } | undefined {
+function findLiveConnection(kit: any, connectionId: string): { connection: any; design: Design } | undefined {
   for (const design of kit.designs ?? []) {
     const connection = design._connections?.find((entry) => entry.id === connectionId);
     if (connection) return { connection, design };
@@ -3094,7 +3051,7 @@ function findLiveConnection(kit: Kit, connectionId: string): { connection: any; 
   return undefined;
 }
 
-function findLiveEntity(kit: Kit, typeName: string, id?: string): any {
+function findLiveEntity(kit: any, typeName: string, id?: string): any {
   if (typeName === "Kit") return kit;
   if (!id) return undefined;
   if (typeName === "Piece") return findLivePiece(kit, id)?.piece;
@@ -3457,7 +3414,7 @@ function inferPersistenceFromInit(init: { backbone?: KitBackboneConfig; store?: 
 
 // #region ⚛️Context
 
-const KitRuntimeContext = React.createContext<KitRuntimeContextValue | null>(null);
+const KitHostRuntimeContext = React.createContext<KitRuntimeContextValue | null>(null);
 
 /**
  * @emoji 🧭 One bridge: host kit id, active read scope, and optional VCS write anchors (set by {@link KitScope}).
@@ -3949,14 +3906,14 @@ export function createVscodeWebviewSketchpadFileKitStoreFactory(vscodeApi: { pos
 // #endregion KitRegistry
 
 function useKitRuntime(): KitRuntimeContextValue {
-  const runtime = React.useContext(KitRuntimeContext);
+  const runtime = React.useContext(KitHostRuntimeContext);
   if (!runtime) throw new Error("semio/react hooks must be used inside <KitScope>.");
   return runtime;
 }
 
 /** Like {@link useKitRuntime} but returns `null` outside {@link KitScope} (no throw). */
 export function useKitRuntimeSafe(): KitRuntimeContextValue | null {
-  return React.useContext(KitRuntimeContext);
+  return React.useContext(KitHostRuntimeContext);
 }
 
 /**
@@ -3970,10 +3927,10 @@ export function useKitStoreClient(): KitStoreClient | null {
 
 /** Active kit id from {@link KitScope} runtime, or `undefined` outside a scope. */
 export function useActiveKitId(): string | undefined {
-  return React.useContext(KitRuntimeContext)?.kitId;
+  return React.useContext(KitHostRuntimeContext)?.kitId;
 }
 
-/** @emoji 📌 Shell / tab kit id (DOM bridge, R3F); complements {@link useActiveKitId} from {@link KitRuntimeContext}. */
+/** @emoji 📌 Shell / tab kit id (DOM bridge, R3F); complements {@link useActiveKitId} from {@link KitHostRuntimeContext}. */
 export type KitShellScopeValue = { id: string };
 
 const KitShellScopeContext = React.createContext<KitShellScopeValue | null>(null);
@@ -4017,7 +3974,7 @@ export function useIsInKitScope(): boolean {
 }
 
 /**
- * @emoji 📌 Live {@link KitHostStoreSnapshot} for the resolved kit when it matches the current {@link KitRuntimeContext}.
+ * @emoji 📌 Live {@link KitHostStoreSnapshot} for the resolved kit when it matches the current {@link KitHostRuntimeContext}.
  */
 export function useKitStoreSnapshot(explicitKitId?: string): KitHostStoreSnapshot | null {
   const runtime = useKitRuntimeSafe();
@@ -4778,7 +4735,7 @@ export function KitScope({
   return React.createElement(
     SemioKitScopedViewContext.Provider,
     { value: semioKitScopedView },
-    React.createElement(KitRuntimeContext.Provider, { value }, children),
+    React.createElement(KitHostRuntimeContext.Provider, { value }, children),
   );
 }
 
@@ -5433,7 +5390,7 @@ export function useClusterPieces(): {
   return { run, status };
 }
 
-export function useDragPieces(): {
+export function useDragPiecesKitHostBinding(): {
   run: (designId: string, pieceIds: string[], du: number, dv: number) => Promise<SetResult>;
   status: WriteStatus;
 } {
@@ -5461,7 +5418,7 @@ export function useDragPieces(): {
   return { run, status };
 }
 
-export function useMovePieces(): {
+export function useMovePiecesKitHostBinding(): {
   run: (designId: string, pieceIds: string[], gap: number, shift: number, rise: number) => Promise<SetResult>;
   status: WriteStatus;
 } {
@@ -5489,7 +5446,7 @@ export function useMovePieces(): {
   return { run, status };
 }
 
-export function useFixPieces(): {
+export function useFixPiecesKitHostBinding(): {
   run: (designId: string, pieceIds: string[]) => Promise<SetResult>;
   status: WriteStatus;
 } {
@@ -5517,7 +5474,7 @@ export function useFixPieces(): {
   return { run, status };
 }
 
-export function useFlattenDesign(): { run: (designId: string) => Promise<SetResult>; status: WriteStatus } {
+export function useFlattenDesignKitHostBinding(): { run: (designId: string) => Promise<SetResult>; status: WriteStatus } {
   const runtime = useKitRuntime();
   const [status, setStatus] = React.useState<WriteStatus>({ kind: "idle", pending: 0 });
   const run = React.useCallback(
@@ -5750,7 +5707,7 @@ export function useUnsavedChanges(): KitFieldBinding<readonly unknown[]> {
 }
 
 /** @emoji 🧭 Session hub auth (stub until rs hub mutations are wired). */
-export function useLogin(): {
+export function useLoginKitHostBinding(): {
   run: (username: string, passwordHash: string, hubUrl?: string) => Promise<SetResult>;
   status: WriteStatus;
 } {
@@ -5771,7 +5728,7 @@ export function useLogin(): {
 }
 
 /** @emoji 🧭 Session hub logout (stub until rs hub mutations are wired). */
-export function useLogout(): { run: () => Promise<SetResult>; status: WriteStatus } {
+export function useLogoutKitHostBinding(): { run: () => Promise<SetResult>; status: WriteStatus } {
   const b = useCommandBuilder();
   const [status, setStatus] = React.useState<WriteStatus>(WRITE_STATUS_IDLE);
   const run = React.useCallback(async () => {
@@ -5786,7 +5743,7 @@ export function useLogout(): { run: () => Promise<SetResult>; status: WriteStatu
 }
 
 /** @emoji 🧭 `Session.startAlternative` wrapper around {@link KitStoreClient.createAlternativeFromTip}. */
-export function useStartAlternative(): { run: (name?: string) => Promise<SetResult>; status: WriteStatus } {
+export function useStartAlternativeKitHostBinding(): { run: (name?: string) => Promise<SetResult>; status: WriteStatus } {
   const b = useCommandBuilder();
   const [status, setStatus] = React.useState<WriteStatus>(WRITE_STATUS_IDLE);
   const run = React.useCallback(
@@ -5804,7 +5761,7 @@ export function useStartAlternative(): { run: (name?: string) => Promise<SetResu
 }
 
 /** @emoji 🧭 `AlternativeCommandInput.integrateIntoTheKit` (stub until rs merges alternatives). */
-export function useIntegrateAlternative(alternativeId: string): { run: () => Promise<SetResult>; status: WriteStatus } {
+export function useIntegrateAlternativeKitHostBinding(alternativeId: string): { run: () => Promise<SetResult>; status: WriteStatus } {
   const b = useCommandBuilder();
   const [status, setStatus] = React.useState<WriteStatus>(WRITE_STATUS_IDLE);
   const run = React.useCallback(async () => {
@@ -5976,8 +5933,8 @@ export const useUpdateAuthor = (): {
   return { run, status };
 };
 
-export const useCreateType = () => useKitAddToKit("Type");
-export const useDeleteType = () => useKitRemoveFromKit("Type");
+export const useKitHostCreateType = () => useKitAddToKit("Type");
+export const useKitHostDeleteType = () => useKitRemoveFromKit("Type");
 
 /** @emoji 🧾 Patch root {@link Kit} fields via `submitKitChangeCommands` (value lane separate from reads). */
 export const usePatchKit = (): {
@@ -6045,8 +6002,8 @@ export const useUpdateType = (): {
   return { run, status };
 };
 
-export const useCreateDesign = () => useKitAddToKit("Design");
-export const useDeleteDesign = () => useKitRemoveFromKit("Design");
+export const useKitHostCreateDesign = () => useKitAddToKit("Design");
+export const useKitHostDeleteDesign = () => useKitRemoveFromKit("Design");
 export const useUpdateDesign = (): {
   run: (designId: string, patch: Record<string, unknown>) => Promise<SetResult>;
   status: WriteStatus;
@@ -6079,8 +6036,8 @@ export const useUpdateDesign = (): {
   return { run, status };
 };
 
-export const useCreateQuality = () => useKitAddToKit("Quality");
-export const useDeleteQuality = () => useKitRemoveFromKit("Quality");
+export const useKitHostCreateQuality = () => useKitAddToKit("Quality");
+export const useKitHostDeleteQuality = () => useKitRemoveFromKit("Quality");
 export const useUpdateQuality = (): {
   run: (qualityId: string, patch: Record<string, unknown>) => Promise<SetResult>;
   status: WriteStatus;
@@ -6113,8 +6070,8 @@ export const useUpdateQuality = (): {
   return { run, status };
 };
 
-export const useCreatePort = () => useKitAddToKit("Port");
-export const useDeletePort = () => useKitRemoveFromKit("Port");
+export const useKitHostCreatePort = () => useKitAddToKit("Port");
+export const useKitHostDeletePort = () => useKitRemoveFromKit("Port");
 export const useUpdatePort = (): {
   run: (portId: string, patch: Record<string, unknown>) => Promise<SetResult>;
   status: WriteStatus;
@@ -6147,8 +6104,8 @@ export const useUpdatePort = (): {
   return { run, status };
 };
 
-export const useCreateTag = () => useKitAddToKit("Tag");
-export const useDeleteTag = () => useKitRemoveFromKit("Tag");
+export const useKitHostCreateTag = () => useKitAddToKit("Tag");
+export const useKitHostDeleteTag = () => useKitRemoveFromKit("Tag");
 export const useUpdateTag = (): {
   run: (tagId: string, patch: Record<string, unknown>) => Promise<SetResult>;
   status: WriteStatus;
@@ -6181,8 +6138,8 @@ export const useUpdateTag = (): {
   return { run, status };
 };
 
-export const useCreateConcept = () => useKitAddToKit("Concept");
-export const useDeleteConcept = () => useKitRemoveFromKit("Concept");
+export const useKitHostCreateConcept = () => useKitAddToKit("Concept");
+export const useKitHostDeleteConcept = () => useKitRemoveFromKit("Concept");
 
 export const useAddFile = () => useKitAddToKit("File");
 export const useRemoveFile = () => useKitRemoveFromKit("File");
@@ -7161,7 +7118,7 @@ export function usePieceMetadata(designId?: string, pieceId?: string): HookRead<
 /**
  * Flattened piece plane from {@link PieceStore.readFlatPlane} (`readPieceFlatPlaneCommand`).
  */
-export function usePieceFlatPlane(designId?: string, pieceId?: string): HookRead<any> {
+export function usePieceFlatPlaneKitHostBinding(designId?: string, pieceId?: string): HookRead<any> {
   const runtime = useKitRuntime();
   const readPoint = useKitReadPoint();
   const key = `pfp:${designId ?? ""}:${pieceId ?? ""}:${kitReadPointKey(readPoint)}`;
@@ -7201,7 +7158,7 @@ export function usePieceFlatPlane(designId?: string, pieceId?: string): HookRead
 }
 
 /** Flattened piece center from {@link PieceStore.readFlatCenter} (`readPieceFlatCenterCommand`). */
-export function usePieceFlatCenter(designId?: string, pieceId?: string): HookRead<any> {
+export function usePieceFlatCenterKitHostBinding(designId?: string, pieceId?: string): HookRead<any> {
   const runtime = useKitRuntime();
   const readPoint = useKitReadPoint();
   const key = `pfc:${designId ?? ""}:${pieceId ?? ""}:${kitReadPointKey(readPoint)}`;
@@ -7246,7 +7203,7 @@ export function useIsConnectedPiece(designId?: string, pieceId?: string): HookRe
   return [value, status] as const;
 }
 
-export function usePieceDepth(designId?: string, pieceId?: string): HookRead<number> {
+export function usePieceDepthKitHostBinding(designId?: string, pieceId?: string): HookRead<number> {
   const [meta, status] = usePieceMetadata(designId, pieceId);
   const value = React.useMemo(() => (typeof meta?.depth === "number" ? meta.depth : 0), [meta]);
   return [value, status] as const;
@@ -8199,15 +8156,15 @@ function useSchemaFieldState(typeName: string, fieldName: string, idValue?: stri
 
 // #region ⚛️Direct Domain Exports
 
-/** Re-exports of kit entities + WASM bridge; sketchpad UI helpers live in `@semio/sketchpad`. */
+/** @emoji 🌉 Graph DTO factories + kit host helpers; CQRS classes stay the default `Author` / `Kit` / … bindings above. */
 export {
   applyKitClientSnapshotToLocalStore,
   asKitInstance,
   Attribute,
-  AuthorGraphDto as Author,
+  AuthorGraphDto,
   Camera,
-  ConceptGraphDto as Concept,
-  ConnectionGraphDto as Connection,
+  ConceptGraphDto,
+  ConnectionGraphDto,
   Coordinate,
   createFolderKitStore,
   createJsonFileKitStore,
@@ -8215,7 +8172,7 @@ export {
   createSessionKitStore,
   decodeKitSemioEnvelopeBytesToFullDto,
   decodeKitSemioEnvelopeToFullDtoFromValue,
-  DesignGraphDto as Design,
+  DesignGraphDto,
   DiffStatus,
   Folder,
   fetchReadableKitFileBlob,
@@ -8226,26 +8183,21 @@ export {
   getOrCreateKitFileState,
   getReadableKitFileUrl,
   getStoredKitFileUrls,
-  ICON_WIDTH,
-  id,
   InMemoryKitStore,
   isBrowserReadableFileUrl,
-  KitGraphDto as Kit,
+  KitGraphDto,
   KitFullDtoSchema,
-  PieceGraphDto as Piece,
+  PieceGraphDto,
   Plane,
   Point,
-  QualityGraphDto as Quality,
-  RepresentationGraphDto as Representation,
+  QualityGraphDto,
+  RepresentationGraphDto,
   File,
-  File as SemioFile,
-  TagGraphDto as Tag,
-  TOLERANCE,
-  TypeGraphDto as Type,
+  TagGraphDto,
+  TypeGraphDto,
   Vector,
 } from "@semio/js";
 export { KitStore } from "@semio/js";
-export type { ChangeId } from "@semio/js";
 export {
   AlternativeCommandNav,
   CommandBuilder,
@@ -8258,7 +8210,7 @@ export type {
   AuthorIdDto,
   ConnectionDiff,
   ConnectionIdDto,
-  ConnectorGraphDto as Connector,
+  ConnectorGraphDto,
   CoordinatePlain,
   DesignDiff,
   DesignMetadataDto,
@@ -8270,19 +8222,20 @@ export type {
   Id,
   KitDiff,
   KitFolderAdapter,
+  KitFullDto,
   KitJsonFileAdapter,
   MoveVector,
   OperationResult,
   PieceDiff,
   PieceIdDto,
-  PortGraphDto as Port,
+  PortGraphDto,
   QualityDiff,
   TypeDiff,
   TypeShallow,
   TypeMetadataDto,
 } from "@semio/js";
 export { normalizeDesignCopyResult, normalizeDesignDiffResult, normalizeDesignFlattenResult } from "@semio/js";
-export type { KitCommandContext, KitCommandResult } from "@semio/js";
+export type { File as SemioFile } from "@semio/js";
 
 export function useJSON(idValue?: string): KitFieldBinding<any> {
   return useSchemaObjectState("JSON", idValue);
@@ -8664,11 +8617,11 @@ export function useAuthorId(idValue?: string): KitFieldBinding<any> {
   return useSchemaFieldState("Author", "id", idValue);
 }
 
-export function useAuthorName(idValue?: string): KitFieldBinding<any> {
+export function useAuthorNameKitHostBinding(idValue?: string): KitFieldBinding<any> {
   return useSchemaFieldState("Author", "name", idValue);
 }
 
-export function useAuthorEmail(idValue?: string): KitFieldBinding<any> {
+export function useAuthorEmailKitHostBinding(idValue?: string): KitFieldBinding<any> {
   return useSchemaFieldState("Author", "email", idValue);
 }
 
@@ -9084,7 +9037,7 @@ export function useQualityKit(idValue?: string): KitFieldBinding<any> {
   return useSchemaFieldState("Quality", "kit", idValue);
 }
 
-export function useQualityKey(idValue?: string): KitFieldBinding<any> {
+export function useQualityKeyKitHostBinding(idValue?: string): KitFieldBinding<any> {
   return useSchemaFieldState("Quality", "key", idValue);
 }
 
@@ -9092,7 +9045,7 @@ export function useQualityName(idValue?: string): KitFieldBinding<any> {
   return useSchemaFieldState("Quality", "name", idValue);
 }
 
-export function useQualityDescription(idValue?: string): KitFieldBinding<any> {
+export function useQualityDescriptionKitHostBinding(idValue?: string): KitFieldBinding<any> {
   return useSchemaFieldState("Quality", "description", idValue);
 }
 
@@ -9144,7 +9097,7 @@ export function useQualityFormula(idValue?: string): KitFieldBinding<any> {
   return useSchemaFieldState("Quality", "formula", idValue);
 }
 
-export function useQualityIcon(idValue?: string): KitFieldBinding<any> {
+export function useQualityIconKitHostBinding(idValue?: string): KitFieldBinding<any> {
   return useSchemaFieldState("Quality", "icon", idValue);
 }
 
@@ -9152,15 +9105,15 @@ export function useQualityImage(idValue?: string): KitFieldBinding<any> {
   return useSchemaFieldState("Quality", "image", idValue);
 }
 
-export function useQualityUnit(idValue?: string): KitFieldBinding<any> {
+export function useQualityUnitKitHostBinding(idValue?: string): KitFieldBinding<any> {
   return useSchemaFieldState("Quality", "unit", idValue);
 }
 
-export function useQualityBenchmarks(idValue?: string): KitFieldBinding<any> {
+export function useQualityBenchmarksKitHostBinding(idValue?: string): KitFieldBinding<any> {
   return useSchemaFieldState("Quality", "benchmarks", idValue);
 }
 
-export function useQualityAttributes(idValue?: string): KitFieldBinding<any> {
+export function useQualityAttributesKitHostBinding(idValue?: string): KitFieldBinding<any> {
   return useSchemaFieldState("Quality", "attributes", idValue);
 }
 
@@ -9336,7 +9289,7 @@ export function useQualityPatchInputAttributes(idValue?: string): KitFieldBindin
   return useSchemaFieldState("QualityPatchInput", "attributes", idValue);
 }
 
-export function usePort(idValue?: string): KitFieldBinding<any> {
+export function usePortKitHostBinding(idValue?: string): KitFieldBinding<any> {
   return useSchemaObjectState("Port", idValue);
 }
 
@@ -9352,15 +9305,15 @@ export function usePortKit(idValue?: string): KitFieldBinding<any> {
   return useSchemaFieldState("Port", "kit", idValue);
 }
 
-export function usePortName(idValue?: string): KitFieldBinding<any> {
+export function usePortNameKitHostBinding(idValue?: string): KitFieldBinding<any> {
   return useSchemaFieldState("Port", "name", idValue);
 }
 
-export function usePortDescription(idValue?: string): KitFieldBinding<any> {
+export function usePortDescriptionKitHostBinding(idValue?: string): KitFieldBinding<any> {
   return useSchemaFieldState("Port", "description", idValue);
 }
 
-export function usePortIcon(idValue?: string): KitFieldBinding<any> {
+export function usePortIconKitHostBinding(idValue?: string): KitFieldBinding<any> {
   return useSchemaFieldState("Port", "icon", idValue);
 }
 
@@ -9372,7 +9325,7 @@ export function usePortCompatiblePorts(idValue?: string): KitFieldBinding<any> {
   return useSchemaFieldState("Port", "compatiblePorts", idValue);
 }
 
-export function usePortAttributes(idValue?: string): KitFieldBinding<any> {
+export function usePortAttributesKitHostBinding(idValue?: string): KitFieldBinding<any> {
   return useSchemaFieldState("Port", "attributes", idValue);
 }
 
@@ -9492,7 +9445,7 @@ export function usePropInputAttributes(idValue?: string): KitFieldBinding<any> {
   return useSchemaFieldState("PropInput", "attributes", idValue);
 }
 
-export function useTag(idValue?: string): KitFieldBinding<any> {
+export function useTagKitHostBinding(idValue?: string): KitFieldBinding<any> {
   return useSchemaObjectState("Tag", idValue);
 }
 
@@ -9508,19 +9461,19 @@ export function useTagKit(idValue?: string): KitFieldBinding<any> {
   return useSchemaFieldState("Tag", "kit", idValue);
 }
 
-export function useTagName(idValue?: string): KitFieldBinding<any> {
+export function useTagNameKitHostBinding(idValue?: string): KitFieldBinding<any> {
   return useSchemaFieldState("Tag", "name", idValue);
 }
 
-export function useTagDescription(idValue?: string): KitFieldBinding<any> {
+export function useTagDescriptionKitHostBinding(idValue?: string): KitFieldBinding<any> {
   return useSchemaFieldState("Tag", "description", idValue);
 }
 
-export function useTagIcon(idValue?: string): KitFieldBinding<any> {
+export function useTagIconKitHostBinding(idValue?: string): KitFieldBinding<any> {
   return useSchemaFieldState("Tag", "icon", idValue);
 }
 
-export function useTagAttributes(idValue?: string): KitFieldBinding<any> {
+export function useTagAttributesKitHostBinding(idValue?: string): KitFieldBinding<any> {
   return useSchemaFieldState("Tag", "attributes", idValue);
 }
 
@@ -9568,7 +9521,7 @@ export function useTagPatchInputAttributes(idValue?: string): KitFieldBinding<an
   return useSchemaFieldState("TagPatchInput", "attributes", idValue);
 }
 
-export function useConcept(idValue?: string): KitFieldBinding<any> {
+export function useConceptKitHostBinding(idValue?: string): KitFieldBinding<any> {
   return useSchemaObjectState("Concept", idValue);
 }
 
@@ -9584,19 +9537,19 @@ export function useConceptKit(idValue?: string): KitFieldBinding<any> {
   return useSchemaFieldState("Concept", "kit", idValue);
 }
 
-export function useConceptName(idValue?: string): KitFieldBinding<any> {
+export function useConceptNameKitHostBinding(idValue?: string): KitFieldBinding<any> {
   return useSchemaFieldState("Concept", "name", idValue);
 }
 
-export function useConceptDescription(idValue?: string): KitFieldBinding<any> {
+export function useConceptDescriptionKitHostBinding(idValue?: string): KitFieldBinding<any> {
   return useSchemaFieldState("Concept", "description", idValue);
 }
 
-export function useConceptIcon(idValue?: string): KitFieldBinding<any> {
+export function useConceptIconKitHostBinding(idValue?: string): KitFieldBinding<any> {
   return useSchemaFieldState("Concept", "icon", idValue);
 }
 
-export function useConceptAttributes(idValue?: string): KitFieldBinding<any> {
+export function useConceptAttributesKitHostBinding(idValue?: string): KitFieldBinding<any> {
   return useSchemaFieldState("Concept", "attributes", idValue);
 }
 
@@ -9732,7 +9685,7 @@ export function useFamilyPatchInputAttributes(idValue?: string): KitFieldBinding
   return useSchemaFieldState("FamilyPatchInput", "attributes", idValue);
 }
 
-export function useRepresentation(idValue?: string): KitFieldBinding<any> {
+export function useRepresentationKitHostBinding(idValue?: string): KitFieldBinding<any> {
   return useSchemaObjectState("RepresentationStore", idValue);
 }
 
@@ -9752,7 +9705,7 @@ export function useRepresentationName(idValue?: string): KitFieldBinding<any> {
   return useSchemaFieldState("RepresentationStore", "name", idValue);
 }
 
-export function useRepresentationTags(idValue?: string): KitFieldBinding<any> {
+export function useRepresentationTagsKitHostBinding(idValue?: string): KitFieldBinding<any> {
   return useSchemaFieldState("RepresentationStore", "tags", idValue);
 }
 
@@ -9760,11 +9713,11 @@ export function useRepresentationFile(idValue?: string): KitFieldBinding<any> {
   return useSchemaFieldState("RepresentationStore", "file", idValue);
 }
 
-export function useRepresentationDescription(idValue?: string): KitFieldBinding<any> {
+export function useRepresentationDescriptionKitHostBinding(idValue?: string): KitFieldBinding<any> {
   return useSchemaFieldState("RepresentationStore", "description", idValue);
 }
 
-export function useRepresentationAttributes(idValue?: string): KitFieldBinding<any> {
+export function useRepresentationAttributesKitHostBinding(idValue?: string): KitFieldBinding<any> {
   return useSchemaFieldState("RepresentationStore", "attributes", idValue);
 }
 
@@ -9796,7 +9749,7 @@ export function useRepresentationInputAttributes(idValue?: string): KitFieldBind
   return useSchemaFieldState("RepresentationInput", "attributes", idValue);
 }
 
-export function useConnector(idValue?: string): KitFieldBinding<any> {
+export function useConnectorKitHostBinding(idValue?: string): KitFieldBinding<any> {
   return useSchemaObjectState("ConnectorStore", idValue);
 }
 
@@ -9828,7 +9781,7 @@ export function useConnectorDirection(idValue?: string): KitFieldBinding<any> {
   return useSchemaFieldState("ConnectorStore", "direction", idValue);
 }
 
-export function useConnectorDescription(idValue?: string): KitFieldBinding<any> {
+export function useConnectorDescriptionKitHostBinding(idValue?: string): KitFieldBinding<any> {
   return useSchemaFieldState("ConnectorStore", "description", idValue);
 }
 
@@ -9848,7 +9801,7 @@ export function useConnectorProps(idValue?: string): KitFieldBinding<any> {
   return useSchemaFieldState("ConnectorStore", "props", idValue);
 }
 
-export function useConnectorAttributes(idValue?: string): KitFieldBinding<any> {
+export function useConnectorAttributesKitHostBinding(idValue?: string): KitFieldBinding<any> {
   return useSchemaFieldState("ConnectorStore", "attributes", idValue);
 }
 
@@ -9924,7 +9877,7 @@ export function useTypeKit(idValue?: string): KitFieldBinding<any> {
   return useSchemaFieldState("Type", "kit", idValue);
 }
 
-export function useTypeName(idValue?: string): string {
+export function useTypeNameKitHostBinding(idValue?: string): string {
   const client = useKitStoreClient();
   if (!client || !idValue) return "";
   const tid = String(idValue);
@@ -9960,11 +9913,11 @@ export function useTypeFolder(idValue?: string): KitFieldBinding<any> {
   return useSchemaFieldState("Type", "folder", idValue);
 }
 
-export function useTypeRepresentations(idValue?: string): KitFieldBinding<any> {
+export function useTypeRepresentationsKitHostBinding(idValue?: string): KitFieldBinding<any> {
   return useSchemaFieldState("Type", "representations", idValue);
 }
 
-export function useTypeConnectors(idValue?: string): KitFieldBinding<any> {
+export function useTypeConnectorsKitHostBinding(idValue?: string): KitFieldBinding<any> {
   return useSchemaFieldState("Type", "connectors", idValue);
 }
 
@@ -9980,7 +9933,7 @@ export function useTypeVirtual(idValue?: string): KitFieldBinding<any> {
   return useSchemaFieldState("Type", "virtual", idValue);
 }
 
-export function useTypeUnit(idValue?: string): string {
+export function useTypeUnitKitHostBinding(idValue?: string): string {
   const client = useKitStoreClient();
   if (!client || !idValue) return "";
   const tid = String(idValue);
@@ -10014,7 +9967,7 @@ export function useTypeConcepts(idValue?: string): KitFieldBinding<any> {
   return useSchemaFieldState("Type", "concepts", idValue);
 }
 
-export function useTypeIcon(idValue?: string): string {
+export function useTypeIconKitHostBinding(idValue?: string): string {
   const client = useKitStoreClient();
   if (!client || !idValue) return "";
   const tid = String(idValue);
@@ -10028,7 +9981,7 @@ export function useTypeIcon(idValue?: string): string {
   return React.useSyncExternalStore(field.subscribe, field.getSnapshot, field.getSnapshot);
 }
 
-export function useTypeImage(idValue?: string): string {
+export function useTypeImageKitHostBinding(idValue?: string): string {
   const client = useKitStoreClient();
   if (!client || !idValue) return "";
   const tid = String(idValue);
@@ -10042,7 +9995,7 @@ export function useTypeImage(idValue?: string): string {
   return React.useSyncExternalStore(field.subscribe, field.getSnapshot, field.getSnapshot);
 }
 
-export function useTypeDescription(idValue?: string): string {
+export function useTypeDescriptionKitHostBinding(idValue?: string): string {
   const client = useKitStoreClient();
   if (!client || !idValue) return "";
   const tid = String(idValue);
@@ -10056,7 +10009,7 @@ export function useTypeDescription(idValue?: string): string {
   return React.useSyncExternalStore(field.subscribe, field.getSnapshot, field.getSnapshot);
 }
 
-export function useTypeAttributes(idValue?: string): KitFieldBinding<any> {
+export function useTypeAttributesKitHostBinding(idValue?: string): KitFieldBinding<any> {
   return useSchemaFieldState("Type", "attributes", idValue);
 }
 
@@ -10356,51 +10309,51 @@ export function useConnectionDesign(idValue?: string): KitFieldBinding<any> {
   return useSchemaFieldState("ConnectionStore", "design", idValue);
 }
 
-export function useConnectionConnected(idValue?: string): KitFieldBinding<any> {
+export function useConnectionConnectedKitHostBinding(idValue?: string): KitFieldBinding<any> {
   return useSchemaFieldState("ConnectionStore", "connected", idValue);
 }
 
-export function useConnectionConnecting(idValue?: string): KitFieldBinding<any> {
+export function useConnectionConnectingKitHostBinding(idValue?: string): KitFieldBinding<any> {
   return useSchemaFieldState("ConnectionStore", "connecting", idValue);
 }
 
-export function useConnectionGap(idValue?: string): KitFieldBinding<any> {
+export function useConnectionGapKitHostBinding(idValue?: string): KitFieldBinding<any> {
   return useSchemaFieldState("ConnectionStore", "gap", idValue);
 }
 
-export function useConnectionShift(idValue?: string): KitFieldBinding<any> {
+export function useConnectionShiftKitHostBinding(idValue?: string): KitFieldBinding<any> {
   return useSchemaFieldState("ConnectionStore", "shift", idValue);
 }
 
-export function useConnectionRise(idValue?: string): KitFieldBinding<any> {
+export function useConnectionRiseKitHostBinding(idValue?: string): KitFieldBinding<any> {
   return useSchemaFieldState("ConnectionStore", "rise", idValue);
 }
 
-export function useConnectionRotation(idValue?: string): KitFieldBinding<any> {
+export function useConnectionRotationKitHostBinding(idValue?: string): KitFieldBinding<any> {
   return useSchemaFieldState("ConnectionStore", "rotation", idValue);
 }
 
-export function useConnectionTurn(idValue?: string): KitFieldBinding<any> {
+export function useConnectionTurnKitHostBinding(idValue?: string): KitFieldBinding<any> {
   return useSchemaFieldState("ConnectionStore", "turn", idValue);
 }
 
-export function useConnectionTilt(idValue?: string): KitFieldBinding<any> {
+export function useConnectionTiltKitHostBinding(idValue?: string): KitFieldBinding<any> {
   return useSchemaFieldState("ConnectionStore", "tilt", idValue);
 }
 
-export function useConnectionU(idValue?: string): KitFieldBinding<any> {
+export function useConnectionUKitHostBinding(idValue?: string): KitFieldBinding<any> {
   return useSchemaFieldState("ConnectionStore", "u", idValue);
 }
 
-export function useConnectionV(idValue?: string): KitFieldBinding<any> {
+export function useConnectionVKitHostBinding(idValue?: string): KitFieldBinding<any> {
   return useSchemaFieldState("ConnectionStore", "v", idValue);
 }
 
-export function useConnectionDescription(idValue?: string): KitFieldBinding<any> {
+export function useConnectionDescriptionKitHostBinding(idValue?: string): KitFieldBinding<any> {
   return useSchemaFieldState("ConnectionStore", "description", idValue);
 }
 
-export function useConnectionAttributes(idValue?: string): KitFieldBinding<any> {
+export function useConnectionAttributesKitHostBinding(idValue?: string): KitFieldBinding<any> {
   return useSchemaFieldState("ConnectionStore", "attributes", idValue);
 }
 
@@ -10628,19 +10581,19 @@ export function usePieceHash(idValue?: string): KitFieldBinding<any> {
   return useSchemaFieldState("Piece", "hash", idValue);
 }
 
-export function usePieceName(idValue?: string): KitFieldBinding<any> {
+export function usePieceNameKitHostBinding(idValue?: string): KitFieldBinding<any> {
   return useSchemaFieldState("Piece", "name", idValue);
 }
 
-export function usePiecePlane(idValue?: string): KitFieldBinding<any> {
+export function usePiecePlaneKitHostBinding(idValue?: string): KitFieldBinding<any> {
   return useSchemaFieldState("Piece", "plane", idValue);
 }
 
-export function usePieceCenter(idValue?: string): KitFieldBinding<any> {
+export function usePieceCenterKitHostBinding(idValue?: string): KitFieldBinding<any> {
   return useSchemaFieldState("Piece", "center", idValue);
 }
 
-export function usePieceScale(idValue?: string): KitFieldBinding<any> {
+export function usePieceScaleKitHostBinding(idValue?: string): KitFieldBinding<any> {
   return useSchemaFieldState("Piece", "scale", idValue);
 }
 
@@ -10660,7 +10613,7 @@ export function usePieceColor(idValue?: string): KitFieldBinding<any> {
   return useSchemaFieldState("Piece", "color", idValue);
 }
 
-export function usePieceDescription(idValue?: string): KitFieldBinding<any> {
+export function usePieceDescriptionKitHostBinding(idValue?: string): KitFieldBinding<any> {
   return useSchemaFieldState("Piece", "description", idValue);
 }
 
@@ -10680,7 +10633,7 @@ export function usePieceProps(idValue?: string): KitFieldBinding<any> {
   return useSchemaFieldState("Piece", "props", idValue);
 }
 
-export function usePieceAttributes(idValue?: string): KitFieldBinding<any> {
+export function usePieceAttributesKitHostBinding(idValue?: string): KitFieldBinding<any> {
   return useSchemaFieldState("Piece", "attributes", idValue);
 }
 
@@ -10893,7 +10846,7 @@ export function useDesignTriad(idValue?: string): KitFieldBinding<any> {
 }
 
 /** @emoji 📌 Scoped entity read: merges {@link useAuthorScope} id with optional explicit id; selector optional. */
-export function useAuthor<T = unknown>(selector?: (entity: any) => T, idValue?: string, _deep?: boolean): T | any | null {
+export function useAuthorScopedRead<T = unknown>(selector?: (entity: any) => T, idValue?: string, _deep?: boolean): T | any | null {
   const resolvedId = useAuthorScope()?.id ?? idValue;
   const [obj] = useAuthorTriad(resolvedId);
   if (obj == null) return null;
@@ -10901,7 +10854,7 @@ export function useAuthor<T = unknown>(selector?: (entity: any) => T, idValue?: 
 }
 
 /** @emoji 📌 Scoped entity read for {@link TypeScope}. */
-export function useType<T = unknown>(selector?: (entity: any) => T, idValue?: string, _deep?: boolean): T | any | null {
+export function useTypeScopedRead<T = unknown>(selector?: (entity: any) => T, idValue?: string, _deep?: boolean): T | any | null {
   const resolvedId = useTypeScope()?.id ?? idValue;
   const [obj] = useTypeTriad(resolvedId);
   if (obj == null) return null;
@@ -10909,7 +10862,7 @@ export function useType<T = unknown>(selector?: (entity: any) => T, idValue?: st
 }
 
 /** @emoji 📌 Scoped entity read for {@link QualityScope}. */
-export function useQuality<T = unknown>(selector?: (entity: any) => T, idValue?: string, _deep?: boolean): T | any | null {
+export function useQualityScopedRead<T = unknown>(selector?: (entity: any) => T, idValue?: string, _deep?: boolean): T | any | null {
   const resolvedId = useQualityScope()?.id ?? idValue;
   const [obj] = useQualityTriad(resolvedId);
   if (obj == null) return null;
@@ -10925,7 +10878,7 @@ export function useDesign<T = unknown>(selector?: (entity: any) => T, _deep?: bo
 }
 
 /** @emoji 📌 Scoped entity read for {@link PieceScope}. */
-export function usePiece<T = unknown>(selector?: (entity: any) => T, idValue?: string, _deep?: boolean): T | any | null {
+export function usePieceScopedRead<T = unknown>(selector?: (entity: any) => T, idValue?: string, _deep?: boolean): T | any | null {
   const resolvedId = usePieceScope()?.id ?? idValue;
   const [obj] = usePieceTriad(resolvedId);
   if (obj == null) return null;
@@ -10933,7 +10886,7 @@ export function usePiece<T = unknown>(selector?: (entity: any) => T, idValue?: s
 }
 
 /** @emoji 📌 Scoped entity read for {@link ConnectionScope}. */
-export function useConnection<T = unknown>(selector?: (entity: any) => T, idValue?: string, _deep?: boolean): T | any | null {
+export function useConnectionScopedRead<T = unknown>(selector?: (entity: any) => T, idValue?: string, _deep?: boolean): T | any | null {
   const resolvedId = useConnectionScope()?.id ?? idValue;
   const [obj] = useConnectionTriad(resolvedId);
   if (obj == null) return null;
@@ -11236,7 +11189,7 @@ export function useDesignPatchInputUpdatedAt(idValue?: string): KitFieldBinding<
   return useSchemaFieldState("DesignPatchInput", "updatedAt", idValue);
 }
 
-export function useKit(idValue?: string): KitFieldBinding<any> {
+export function useKitKitHostBinding(idValue?: string): KitFieldBinding<any> {
   return useSchemaObjectState("Kit", idValue);
 }
 
@@ -11267,7 +11220,7 @@ export function useKitName(): string {
 }
 
 /** @emoji 🪪 Rename kit command + {@link WriteStatus} from {@link KitStoreClient.renameKit} (string arg maps to uniform `scope`/`input`). */
-export function useRenameKit(): readonly [(name: string) => Promise<SetResult>, WriteStatus] {
+export function useRenameKitKitHostBinding(): readonly [(name: string) => Promise<SetResult>, WriteStatus] {
   const client = useKitStoreClient();
   if (!client) throw new Error("useRenameKit: kit client required inside KitScope");
   const [run, st] = useStoreCommand(client.renameKit);
