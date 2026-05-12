@@ -8340,7 +8340,7 @@ type Mutation {
 type Subscription {
   # Subscription
   # Events
-  store:
+  store: Store!
   # Commands
   operation: Operation!
 }

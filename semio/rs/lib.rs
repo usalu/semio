@@ -9189,29 +9189,43 @@ pub mod gql {
     /// @emoji 🧩 Executable schema (`Query`, `Mutation`, `Subscription`).
     pub type AppSchema = Schema<Query, Mutation, Subscription>;
 
-    pub struct Query;
+    /// @emoji 🏪 Explicit target-schema Store root for session, graph heads, and conflict reads.
+    pub struct Store;
 
-    #[Object]
-    impl Query {
-        /// @emoji 🧭 Canonical entry: first active [`crate::vcs::Session`] on this runtime.
+    #[Object(name = "Store")]
+    impl Store {
+        /// @emoji 🧭 First active [`crate::vcs::Session`] on this runtime.
         pub async fn session(&self, ctx: &Context<'_>) -> async_graphql::Result<Arc<crate::vcs::Session>> {
             let rt = ctx.data::<Arc<ParentRuntime>>()?;
             rt.sessions.read().await.first().cloned().ok_or_else(|| async_graphql::Error::new("no session"))
         }
 
+        /// @emoji 🌐 Writable in-progress graph head.
         pub async fn wip(&self, ctx: &Context<'_>) -> async_graphql::Result<Arc<Graph>> {
             Ok(ctx.data::<Arc<ParentRuntime>>()?.wip_graph.clone())
         }
 
+        /// @emoji 🧾 Authoritative graph head when available.
         #[graphql(name = "authoritative")]
-        pub async fn authoritative(&self, ctx: &Context<'_>) -> async_graphql::Result<Arc<Graph>> {
-            Ok(ctx.data::<Arc<ParentRuntime>>()?.auth_graph.clone())
+        pub async fn authoritative(&self, ctx: &Context<'_>) -> async_graphql::Result<Option<Arc<Graph>>> {
+            Ok(Some(ctx.data::<Arc<ParentRuntime>>()?.auth_graph.clone()))
         }
 
+        /// @emoji ⚔️ Current conflict registry as a relay connection.
         pub async fn conflicts(&self, ctx: &Context<'_>) -> async_graphql::Result<crate::gql_relay::ConflictConnection> {
             let rt = ctx.data::<Arc<ParentRuntime>>()?;
             let list = rt.conflicts.read().await.clone();
             Ok(crate::gql_relay::ConflictConnection::from_conflicts(list).await)
+        }
+    }
+
+    pub struct Query;
+
+    #[Object]
+    impl Query {
+        /// @emoji 🏪 Canonical target-schema read root.
+        pub async fn store(&self) -> Store {
+            Store
         }
 
         /// @emoji 🔎 Relay-style global `node` lookup (WIP + authoritative + sessions + conflicts).
@@ -9223,14 +9237,6 @@ pub mod gql {
         /// @emoji 🔎 Alias of [`Query::node`] for SDL `entity` entry point (`hash` merkle id).
         pub async fn entity(&self, ctx: &Context<'_>, hash: Id) -> async_graphql::Result<Option<crate::interface::GqlNode>> {
             self.node(ctx, hash).await
-        }
-
-        #[graphql(name = "kitStoreBundleJson")]
-        pub async fn kit_store_bundle_json(&self, ctx: &Context<'_>) -> async_graphql::Result<String> {
-            let rt = ctx.data::<Arc<ParentRuntime>>()?;
-            rt.wip_graph.ensure_default_seed_state().await;
-            let bundle = crate::kit_backbone::DevBackboneBundleDoc::from_graph(rt.wip_graph.as_ref()).await;
-            serde_json::to_string_pretty(&bundle).map_err(|e| async_graphql::Error::new(e.to_string()))
         }
     }
 
@@ -10073,6 +10079,7 @@ pub mod gql {
 
     pub struct Subscription;
 
+    type StoreStream = Pin<Box<dyn Stream<Item = async_graphql::Result<Store>> + Send>>;
     type SessionStream = Pin<Box<dyn Stream<Item = async_graphql::Result<Arc<crate::vcs::Session>>> + Send>>;
     type GraphStream = Pin<Box<dyn Stream<Item = async_graphql::Result<Arc<Graph>>> + Send>>;
     type ConflictStream = Pin<Box<dyn Stream<Item = async_graphql::Result<crate::gql_relay::ConflictConnection>> + Send>>;
@@ -10080,6 +10087,32 @@ pub mod gql {
 
     #[Subscription]
     impl Subscription {
+        /// @emoji 📡 Live-query mirror of [`Query::store`] — re-emits the explicit Store root on matching event-bus ticks.
+        async fn store(&self, ctx: &Context<'_>) -> async_graphql::Result<StoreStream> {
+            let bus = ctx.data::<Arc<EventBus>>()?.clone();
+            let watched = collect_subscription_field_paths("store", ctx);
+            let filtered = !watched.is_empty();
+            Ok(Box::pin(stream! {
+                let mut broadcast_rx = if filtered { None } else { Some(bus.subscribe()) };
+                let path_rx = if filtered { Some(bus.subscribe_paths(&watched)) } else { None };
+                loop {
+                    yield Ok(Store);
+                    if let Some(ref prx) = path_rx {
+                        if prx.recv().await.is_err() {
+                            break;
+                        }
+                    } else if let Some(ref mut brx) = broadcast_rx {
+                        match brx.recv().await {
+                            Ok(_) => {}
+                            Err(_) => break,
+                        }
+                    } else {
+                        break;
+                    }
+                }
+            }))
+        }
+
         /// @emoji 📡 Live-query mirror of [`Query::session`] — re-emits on each outbound [`EventBus`] tick.
         async fn session(&self, ctx: &Context<'_>) -> async_graphql::Result<SessionStream> {
             let rt = ctx.data::<Arc<ParentRuntime>>()?.clone();
