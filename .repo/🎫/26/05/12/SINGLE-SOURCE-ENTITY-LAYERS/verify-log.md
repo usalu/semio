@@ -323,3 +323,41 @@
 - `semio/ui/index.tsx`
 - `semio/algorithms/index.ts`
 - `.repo/🎫/26/05/12/SINGLE-SOURCE-ENTITY-LAYERS/verify-log.md` (this append)
+
+---
+
+## Parallel plan pass + wire-surface tighten (2026-05-12)
+
+### Parallel agents (read-only)
+
+- **Rust**: `geom::entity::*` + `*Input` wire split; no `PositionNode`; bundle DTOs absent from product code (`DevBackbone*` in use).
+- **JS**: regions `🌐Transport` / `🧬Entity` / `🪶WeakGeometry`; weak geometry already `class`; `KIT_*_FIELD_SPECS` absent.
+- **React**: no `useSyncExternalStore` calls; `KitContext` naming; gaps noted for backbone hooks and full K-hook roster.
+
+### Done this slice
+
+- **`semio/js`**: `JsonValue` / `JsonObject` are **file-local** wire aliases (no longer exported) per plan `js-purge-json`.
+- **`semio/algorithms`**: local **`GqlWireObject`**; dropped `JsonObject` import from `@semio/js`.
+- **`semio/ui`**: local **`PlainJsonObject` / `PlainJsonValue`**; removed `@semio/js` type import; **`toSceneVector`** accepts `unknown` for piece plane origins.
+- **`semio/react`**: **`useAttachBackbone`**, **`useDetachBackbone`**, **`useBackboneSyncNow`**, **`useBackboneStatus`** (`🪝BackboneOps` under kit hooks), wired to existing `Kit` GraphQL methods.
+
+### Commands
+
+| Command | Exit |
+|--------|------|
+| `bunx tsc --noEmit -p semio/js/tsconfig.json` | **0** |
+| `bunx tsc --noEmit -p semio/react/tsconfig.json` | **0** |
+| `bunx tsc --noEmit -p semio/ui/tsconfig.json` | **0** |
+| `bunx tsc --noEmit -p semio/algorithms/tsconfig.json` | **0** |
+| `bunx tsc --noEmit -p semio/sketchpad/tsconfig.json` | **0** |
+| `$env:SEMIO_JS_RUN_EMBEDDED_TESTS='1'; bunx vitest run index.ts` in `semio/js` | **0** (11 tests) |
+| `npx nx run workspace:depcruise` | **0** |
+| `cargo test -p semio` | **not completed** — blocked on global Cargo artifact directory file lock in this environment |
+
+### Files
+
+- `semio/js/index.ts`
+- `semio/algorithms/index.ts`
+- `semio/ui/index.tsx`
+- `semio/react/index.tsx`
+- `.repo/🎫/26/05/12/SINGLE-SOURCE-ENTITY-LAYERS/verify-log.md` (this append)
