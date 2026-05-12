@@ -3935,7 +3935,6 @@ export function getOrCreateAppState<TState>(context: Record<string, Record<strin
  * Interface for design app hook functions including commands, diff, hover, and selection.
  **/
 export interface DesignAppHooks {
-  useDesignAppCommands: (id?: { kit: string; design: string }) => any;
   useDesignAppDiff: () => any;
   useDesignAppHover: () => any;
   useDesignAppIsPieceHovered: (id?: DesignAppId, pieceId?: string) => boolean;
@@ -3958,7 +3957,6 @@ export interface KitAppHooks {
  * defaultDesignAppHooks holds the data fields for a defaultDesignAppHooks record.
  **/
 const defaultDesignAppHooks: DesignAppHooks = {
-  useDesignAppCommands: () => ({ togglePanel: () => {}, execute: () => Promise.resolve({}) }),
   useDesignAppDiff: () => ({}),
   useDesignAppHover: () => undefined,
   useDesignAppIsPieceHovered: () => false,
@@ -27016,7 +27014,6 @@ const designAppPlugin: AppPlugin = {
 if (typeof window !== "undefined") {
   registerAppPlugin(designAppPlugin);
   registerDesignAppHooks({
-    useDesignAppCommands,
     useDesignAppDiff,
     useDesignAppHover,
     useDesignAppIsPieceHovered,
@@ -48510,11 +48507,11 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
 
     // #region 🎨Sketchpad 🧪NegativeGrep
     test("NegativeGrep sketchpad has no direct @semio/js import specifiers", async () => {
-      const { readFileSync } = await import("node:fs");
-      const { dirname, join } = await import("node:path");
-      const { fileURLToPath } = await import("node:url");
-      const here = dirname(fileURLToPath(import.meta.url));
-      const src = readFileSync(join(here, "index.tsx"), "utf8");
+      const fs = await import(/* @vite-ignore */ "node" + ":fs");
+      const pathMod = await import(/* @vite-ignore */ "node" + ":path");
+      const urlMod = await import(/* @vite-ignore */ "node" + ":url");
+      const here = pathMod.dirname(urlMod.fileURLToPath(import.meta.url));
+      const src = fs.readFileSync(pathMod.join(here, "index.tsx"), "utf8");
       expect(src).not.toMatch(/from\s+["']@semio\/js["']/);
       expect(src).not.toMatch(/from\s+["']@semio\/js\//);
     });
