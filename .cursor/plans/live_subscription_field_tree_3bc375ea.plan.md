@@ -4,28 +4,28 @@ overview: "Replace the opaque `Subscription { event: Json! }` with a typed live-
 todos:
   - id: subscription_tree
     content: "Replace `type Subscription { event: Json! }` with a live-query mirror of Query (`session`, `wip`, `authoritative`, `conflicts`, `node(id)`, `entity(hash)`) and a region comment documenting live-query semantics."
-    status: in_progress
+    status: completed
   - id: kit_id_accessors
     content: "On `Kit`, replace bare `design`/`type` singulars with `design(id: ID!)`/`type(id: ID!)`; add id-based accessors for family/file/folder/author/concept/tag/quality/prop/attribute/stat."
-    status: pending
+    status: completed
   - id: design_id_accessors
     content: On `Design`, replace bare `piece`/`connection` with id-based variants; add `layer(id)`, `group(id)`, `author(id)`, `quality(id)`, `prop(id)`, `attribute(id)`, `stat(id)`.
-    status: pending
+    status: completed
   - id: type_id_accessors
     content: On `Type`, replace bare `connector`/`representation` with id-based; add `port(id)`, `concept(id)`, `tag(id)`, `quality(id)`, `prop(id)`, `attribute(id)`, `stat(id)`, `author(id)`. Keep `bestRepresentation`.
-    status: pending
+    status: completed
   - id: child_id_accessors
     content: Add id-based accessors on Folder (file/subFolder/family/type/design), Piece (prop/attribute/childPiece/childConnection), Connection/Connector/Port/File/Tag/Concept/Quality/Prop/Stat (attribute, quality, tag where applicable), Group (piece).
-    status: pending
+    status: completed
   - id: session_navigation
     content: "Add `Session.alternative(id: ID!): Alternative` and `Session.theKit: Version` so subscription paths mirror SessionCommandInput. Promote Checkpoint.change/edit id args from optional to required."
-    status: pending
+    status: completed
   - id: validate_schema
     content: "Re-run `semio/graphql/scripts/export-schema.ts`; ripgrep checks for remaining bare singular accessors and remaining `event: Json!`; validate a sample subscription doc with the user's full example path against the new SDL."
-    status: pending
+    status: completed
   - id: ticket_lifecycle
     content: Open ticket via repo MCP under goal r2602/runningsketchpad with this plan id, update ticket.md with problem/change/verification, close ticket on completion.
-    status: pending
+    status: completed
 isProject: false
 ---
 

@@ -204,6 +204,7 @@ macro_rules! entity_family {
             $($(#[$fm:meta])* $fvis:vis $field:ident : $ftype:ty),* $(,)?
         }
         hash = |$this:ident| $body:block
+        $(, extra = ($($extra:item)+))?
     ) => {
         $(#[$sm])*
         #[derive(Clone, Debug, Default, serde::Serialize, serde::Deserialize, async_graphql::SimpleObject)]
@@ -222,6 +223,7 @@ macro_rules! entity_family {
             pub async fn hash(&self) -> String {
                 self.compute_entity_hash()
             }
+            $($($extra)+)?
         }
     };
 }
@@ -1472,19 +1474,17 @@ pub mod meta {
                 Vec::new(),
             )
         }
-    }
-
-    #[async_graphql::ComplexObject]
-    impl File {
-        pub async fn tag(&self, #[graphql(name = "id")] _id: Id) -> Option<std::sync::Arc<Tag>> {
-            None
-        }
-        pub async fn quality(&self, #[graphql(name = "id")] _id: Id) -> Option<std::sync::Arc<Quality>> {
-            None
-        }
-        pub async fn attribute(&self, #[graphql(name = "id")] _id: Id) -> Option<Attribute> {
-            None
-        }
+        , extra = (
+            pub async fn tag(&self, #[graphql(name = "id")] _id: Id) -> Option<std::sync::Arc<Tag>> {
+                None
+            }
+            pub async fn quality(&self, #[graphql(name = "id")] _id: Id) -> Option<std::sync::Arc<Quality>> {
+                None
+            }
+            pub async fn attribute(&self, #[graphql(name = "id")] _id: Id) -> Option<Attribute> {
+                None
+            }
+        )
     }
 
     crate::entity_family! {
@@ -1496,27 +1496,25 @@ pub mod meta {
         hash = |this| {
             crate::hash::merkle_node_str(&["semio:meta:Folder", this.id.as_str(), this.path.as_str(), this.description.as_deref().unwrap_or("")], Vec::new())
         }
-    }
-
-    #[async_graphql::ComplexObject]
-    impl Folder {
-        pub async fn file(&self, #[graphql(name = "id")] _id: Id) -> Option<File> {
-            None
-        }
-        #[graphql(name = "subFolder")]
-        pub async fn sub_folder(&self, #[graphql(name = "id")] _id: Id) -> Option<Folder> {
-            None
-        }
-        pub async fn family(&self, #[graphql(name = "id")] _id: Id) -> Option<Family> {
-            None
-        }
-        #[graphql(name = "type")]
-        pub async fn type_(&self, #[graphql(name = "id")] _id: Id) -> Option<std::sync::Arc<crate::kit::r#type::Type>> {
-            None
-        }
-        pub async fn design(&self, #[graphql(name = "id")] _id: Id) -> Option<std::sync::Arc<crate::kit::design::Design>> {
-            None
-        }
+        , extra = (
+            pub async fn file(&self, #[graphql(name = "id")] _id: Id) -> Option<File> {
+                None
+            }
+            #[graphql(name = "subFolder")]
+            pub async fn sub_folder(&self, #[graphql(name = "id")] _id: Id) -> Option<Folder> {
+                None
+            }
+            pub async fn family(&self, #[graphql(name = "id")] _id: Id) -> Option<crate::gql_relay::Family> {
+                None
+            }
+            #[graphql(name = "type")]
+            pub async fn type_(&self, #[graphql(name = "id")] _id: Id) -> Option<std::sync::Arc<crate::kit::r#type::Type>> {
+                None
+            }
+            pub async fn design(&self, #[graphql(name = "id")] _id: Id) -> Option<std::sync::Arc<crate::kit::design::Design>> {
+                None
+            }
+        )
     }
 
     crate::entity_family! {
@@ -1626,14 +1624,12 @@ pub mod meta {
         hash = |this| {
             crate::hash::merkle_node_str(&["semio:meta:Prop", this.id.as_str(), this.key.as_str(), this.value.as_str(), this.unit.as_deref().unwrap_or("")], Vec::new())
         }
-    }
-
-    #[async_graphql::ComplexObject]
-    impl Prop {
-        /// @emoji 🔎 SDL `Prop.attribute(id)` — props carry no attribute bag yet; reserved for kit snapshots.
-        pub async fn attribute(&self, #[graphql(name = "id")] _id: Id) -> Option<Attribute> {
-            None
-        }
+        , extra = (
+            /// @emoji 🔎 SDL `Prop.attribute(id)` — props carry no attribute bag yet; reserved for kit snapshots.
+            pub async fn attribute(&self, #[graphql(name = "id")] _id: Id) -> Option<Attribute> {
+                None
+            }
+        )
     }
 
     /// @emoji 🪢 Resolved kit/type/representation owner for a [`Tag`] (write path sets exactly one arm).
@@ -1702,14 +1698,12 @@ pub mod meta {
                 Vec::new(),
             )
         }
-    }
-
-    #[async_graphql::ComplexObject]
-    impl Stat {
-        /// @emoji 🔎 SDL `Stat.attribute(id)` — stats carry no attribute bag yet; reserved for kit snapshots.
-        pub async fn attribute(&self, #[graphql(name = "id")] _id: Id) -> Option<Attribute> {
-            None
-        }
+        , extra = (
+            /// @emoji 🔎 SDL `Stat.attribute(id)` — stats carry no attribute bag yet; reserved for kit snapshots.
+            pub async fn attribute(&self, #[graphql(name = "id")] _id: Id) -> Option<Attribute> {
+                None
+            }
+        )
     }
 
     crate::entity_family! {
@@ -1763,16 +1757,14 @@ pub mod meta {
                 Vec::new(),
             )
         }
-    }
-
-    #[async_graphql::ComplexObject]
-    impl Group {
-        pub async fn pieces(&self) -> crate::gql_relay::PieceConnection {
-            crate::gql_relay::PieceConnection::from_pieces(Vec::new()).await
-        }
-        pub async fn piece(&self, #[graphql(name = "id")] _id: Id) -> Option<std::sync::Arc<crate::kit::design::piece::Piece>> {
-            None
-        }
+        , extra = (
+            pub async fn pieces(&self) -> crate::gql_relay::PieceConnection {
+                crate::gql_relay::PieceConnection::from_pieces(Vec::new()).await
+            }
+            pub async fn piece(&self, #[graphql(name = "id")] _id: Id) -> Option<std::sync::Arc<crate::kit::design::piece::Piece>> {
+                None
+            }
+        )
     }
 }
 
@@ -3423,6 +3415,70 @@ pub mod kit {
             *g = g.saturating_add(1);
         }
 
+        /// @emoji 📸 `KitFullDto`-shaped JSON for bundle baselines / [`Kit::deep_clone`] round-trips (subset: `types`, `designs` with nested `pieces`).
+        pub async fn kit_full_snapshot_value(&self) -> serde_json::Value {
+            use crate::kit::r#type::Blueprint;
+            let kid = self.workspace_kit_id().await;
+            let name = self.name.read().await.clone();
+            let types_items: Vec<serde_json::Value> = {
+                let tys = self.types.read().await;
+                let mut out = Vec::with_capacity(tys.len());
+                for t in tys.iter() {
+                    let tid = t.id.as_str();
+                    let nm = t.name.read().await.clone();
+                    out.push(serde_json::json!({"id": tid, "name": nm, "connectors": []}));
+                }
+                out
+            };
+            let design_items: Vec<serde_json::Value> = {
+                let des = self.designs.read().await;
+                let mut out = Vec::with_capacity(des.len());
+                for d in des.iter() {
+                    let did = d.id.as_str();
+                    let dn = d.name.read().await.clone();
+                    let pieces: Vec<serde_json::Value> = {
+                        let pcs = d.pieces.read().await;
+                        let mut pj = Vec::with_capacity(pcs.len());
+                        for p in pcs.iter() {
+                            let ty_id = match &*p.blueprint.read().await {
+                                Blueprint::Type(ty) => ty.id.as_str().to_string(),
+                                _ => String::new(),
+                            };
+                            let pos = p.compute_flat_position().await;
+                            let pv = serde_json::to_value(&pos).unwrap_or_else(|_| serde_json::json!({}));
+                            let scale = p.scale.read().await.unwrap_or(1.0);
+                            let nm = p.name.read().await.clone().unwrap_or_default();
+                            pj.push(serde_json::json!({
+                                "id": p.id.as_str(),
+                                "name": nm,
+                                "type": { "id": ty_id },
+                                "plane": pv.get("plane").cloned().unwrap_or_else(|| serde_json::json!({})),
+                                "center": pv.get("center").cloned().unwrap_or_else(|| serde_json::json!({"u":0.0,"v":0.0})),
+                                "scale": scale,
+                                "color": "#000000",
+                                "props": [],
+                                "attributes": [],
+                            }));
+                        }
+                        pj
+                    };
+                    out.push(serde_json::json!({
+                        "id": did,
+                        "name": dn,
+                        "pieces": { "hash": crate::kit_backbone::KIT_BUNDLE_HASH_STUB, "items": pieces },
+                        "connections": { "hash": crate::kit_backbone::KIT_BUNDLE_HASH_STUB, "items": [] },
+                    }));
+                }
+                out
+            };
+            serde_json::json!({
+                "id": kid.as_str(),
+                "name": name,
+                "types": { "hash": crate::kit_backbone::KIT_BUNDLE_HASH_STUB, "items": types_items },
+                "designs": { "hash": crate::kit_backbone::KIT_BUNDLE_HASH_STUB, "items": design_items },
+            })
+        }
+
         /// @emoji 🧬 Deep-clone this kit graph (snapshot JSON round-trip) for immutable graph `initialKit` baselines / replay scratch kits.
         pub async fn deep_clone(self: &Arc<Self>) -> Arc<Kit> {
             let snap = self.kit_full_snapshot_value().await;
@@ -4399,7 +4455,7 @@ pub mod kit {
             self.folders.read().await.iter().find(|f| f.id == id).cloned()
         }
 
-        pub async fn family(&self, id: Id) -> Option<crate::meta::Family> {
+        pub async fn family(&self, id: Id) -> Option<crate::gql_relay::Family> {
             let _ = id;
             None
         }
@@ -4499,7 +4555,7 @@ impl crate::meta::Tag {
         crate::gql_relay::AttributeConnection::from_rows(self.attributes.read().await.clone())
     }
 
-    pub async fn attribute(&self, id: Id) -> Option<Attribute> {
+    pub async fn attribute(&self, id: crate::id::Id) -> Option<crate::meta::Attribute> {
         self.attributes.read().await.iter().find(|a| a.id == id).cloned()
     }
 }
@@ -4535,7 +4591,7 @@ impl crate::meta::Concept {
         crate::gql_relay::AttributeConnection::from_rows(self.attributes.read().await.clone())
     }
 
-    pub async fn attribute(&self, id: Id) -> Option<Attribute> {
+    pub async fn attribute(&self, id: crate::id::Id) -> Option<crate::meta::Attribute> {
         self.attributes.read().await.iter().find(|a| a.id == id).cloned()
     }
 }
@@ -4583,7 +4639,7 @@ impl crate::meta::Quality {
         crate::gql_relay::AttributeConnection::from_rows(self.attributes.read().await.clone())
     }
 
-    pub async fn attribute(&self, id: Id) -> Option<Attribute> {
+    pub async fn attribute(&self, id: crate::id::Id) -> Option<crate::meta::Attribute> {
         self.attributes.read().await.iter().find(|a| a.id == id).cloned()
     }
 }
@@ -5730,21 +5786,22 @@ pub mod vcs {
             self.started_at.read().await.clone()
         }
 
-        /// @emoji 🌐 Same navigation as WIP [`Graph`] — resolved via [`crate::gql::ParentRuntime::wip_graph`] for the active runtime.
+        /// @emoji 🌐 Same navigation as WIP [`Graph`] — resolved via [`crate::worker::ParentRuntime::wip_graph`] for the active runtime.
         pub async fn alternatives(&self, ctx: &Context<'_>) -> async_graphql::Result<crate::gql_relay::AlternativeConnection> {
-            let rt = ctx.data::<Arc<crate::gql::ParentRuntime>>()?;
+            let rt = ctx.data::<Arc<crate::worker::ParentRuntime>>()?;
             Ok(crate::gql_relay::AlternativeConnection::from_alternatives(rt.wip_graph.alternatives.read().await.clone()).await)
         }
 
         pub async fn alternative(&self, ctx: &Context<'_>, id: Id) -> async_graphql::Result<Option<Arc<Alternative>>> {
-            let rt = ctx.data::<Arc<crate::gql::ParentRuntime>>()?;
-            Ok(rt.wip_graph.alternative(id).await)
+            let rt = ctx.data::<Arc<crate::worker::ParentRuntime>>()?;
+            let alts = rt.wip_graph.alternatives.read().await;
+            Ok(alts.iter().find(|a| a.id == id).cloned())
         }
 
         #[graphql(name = "theKit")]
         pub async fn the_kit(&self, ctx: &Context<'_>) -> async_graphql::Result<crate::gql::interfaces::VersionIface> {
-            let rt = ctx.data::<Arc<crate::gql::ParentRuntime>>()?;
-            Ok(rt.wip_graph.the_kit().await)
+            let rt = ctx.data::<Arc<crate::worker::ParentRuntime>>()?;
+            Ok(crate::gql::interfaces::VersionIface::TheKit(TheKit::new(Arc::downgrade(&rt.wip_graph.arc_here()))))
         }
     }
     //#endregion 👤 session

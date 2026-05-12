@@ -1,5 +1,5 @@
 // #region ⚛️Header
-// Standalone React hooks for semio: thin adapter over stateless {@link Kit} + {@link Entity} reads/writes.
+// Standalone React hooks for semio: thin adapter over stateless {@link Kit} + {@link } reads/writes.
 // #endregion ⚛️Header
 
 // #region 🧷JsReexports
@@ -7,108 +7,43 @@
 // #endregion 🧷JsReexports
 
 // #region ⚛️Imports
-import type {
-  AttributeWire,
-  BenchmarkWire,
-  BackboneConfig,
-  BackboneStatusDto,
-  ChangeId,
-  ChangeKitCommand,
-  ConflictResolution,
-  ConnectionDiff,
-  ConnectionIdDto,
-  ConnectionPlain,
-  ConnectionSideWire,
-  CoordinateWire,
-  DesignDiff,
-  DesignIdDto,
-  DesignMetadataDto,
-  DesignPlain,
-  DesignShallow,
-  FieldSpec,
-  JsonObject,
-  JsonValue,
-  KitBinaryStore,
-  KitChildEntityKind,
-  KitConflict,
-  KitDesignReadKind,
-  KitEvent,
-  KitFileState,
-  KitFolderAdapter,
-  KitFullDto,
-  KitJsonFileAdapter,
-  KitJsonTreeDto,
-  KitHostStore,
-  KitHostStoreSnapshot,
-  KitLike,
-  KitReadPoint,
-  KitShallowListKind,
-  KitStoreClient,
-  KitStoreReadSnap,
-  KitViewCatalogKey,
-  KitWriteScope,
-  OffsetInputWire,
-  PieceBlueprintWire,
-  PieceDiff,
-  PieceIdDto,
-  PiecePlain,
-  PiecePlacementRowDto,
-  PlanePlain,
-  PlaneWire,
-  PositionInputWire,
-  PositionWire,
-  SetError,
-  SetResult,
-  TypeDiff,
-  TypeIdDto,
-  TypeMetadataDto,
-  TypePlain,
-  TypeShallow,
-  WriteStatus,
-} from "@semio/js";
+import type { Attribute, Benchmark, ConnectionSide, Coordinate, FieldSpec, Kit, KitReadPoint, PieceBlueprint, Plane, Position, SetError, SetResult } from "@semio/js";
 import {
   Author,
   Concept,
   Connection,
   Connector,
-  CommandBuilder,
   createKitStoreWorker,
   defineField,
   defineFields,
   defineOperation,
   defineOperations,
+  Design,
   DESIGN_ARTIFACT_FIELD_SPECS,
   DESIGN_OPERATION_SPECS,
-  Design,
-  Entity,
   EventBus,
   Family,
-  FileEntity,
-  FolderEntity,
-  GroupEntity,
+  File,
+  Folder,
+  Group,
   KIT_ARTIFACT_FIELD_SPECS,
   KIT_EVENT_STREAM_SUBSCRIPTION,
   KIT_OPERATION_SPECS,
-  Kit,
-  LayerEntity,
-  normalizeKitFullDtoFolderPaths,
+  kitReadPointKey,
+  Layer,
   openKit,
   Piece,
   PiecesOperations,
   Port,
-  PropEntity,
+  Prop,
   Quality,
   Representation,
-  StatEntity,
-  StoreCommand,
-  StoreField,
+  Stat,
   Tag,
-  Type,
-  kitReadPointKey,
   theKitReadPoint,
-  WasmGraph,
+  Type,
 } from "@semio/js";
-import type { ReactNode, SetStateAction } from "react";
+import type { ReactNode } from "react";
 import * as React from "react";
 // #endregion ⚛️Imports
 
@@ -123,50 +58,33 @@ export {
   defineFields,
   defineOperation,
   defineOperations,
+  Design,
   DESIGN_ARTIFACT_FIELD_SPECS,
   DESIGN_OPERATION_SPECS,
-  Design,
-  Entity,
   EventBus,
   Family,
-  FileEntity,
-  FolderEntity,
-  GroupEntity,
+  File,
+  Folder,
+  Group,
+  Kit,
   KIT_ARTIFACT_FIELD_SPECS,
   KIT_EVENT_STREAM_SUBSCRIPTION,
   KIT_OPERATION_SPECS,
-  Kit,
-  LayerEntity,
-  normalizeKitFullDtoFolderPaths,
+  kitReadPointKey,
+  Layer,
   openKit,
   Piece,
   PiecesOperations,
   Port,
-  PropEntity,
+  Prop,
   Quality,
   Representation,
-  StatEntity,
+  Stat,
   Tag,
-  Type,
-  kitReadPointKey,
   theKitReadPoint,
+  Type,
 };
 // #endregion 🧷JsPublicExports
-
-// #region 📐UiConstants
-/** @emoji 📐 Icon column width shared by sketchpad-era layouts (UI-only, not domain). */
-export const ICON_WIDTH = 24;
-
-/** @emoji 📐 Numeric tolerance for float compares in canvas-era helpers (UI-only). */
-export const TOLERANCE = 1e-6;
-
-/** @emoji 🆔 Opaque id helper for client-only rows (crypto UUID when available). */
-export function id(): string {
-  const c = globalThis.crypto;
-  if (c && typeof c.randomUUID === "function") return c.randomUUID();
-  return `tmp-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
-}
-// #endregion 📐UiConstants
 
 // #region 🪝FieldBind
 /** @emoji 📖 One materialized field read: value, loading, error, and manual refresh (no sync external store). */
@@ -182,19 +100,19 @@ export type FieldBindOptions<E, T> = Readonly<{
   read: (entity: E) => Promise<T>;
   /** @emoji 📡 When set, {@link Kit#bus} {@code subscribeKind}; when omitted, only mount + {@link FieldReadState#refresh} pull fresh data. */
   eventKind?: string;
-  /** @emoji 🪝 Entity source; re-invoked each render — keep stable via {@link React#useCallback}. */
-  getEntity: () => E | null;
+  /** @emoji 🪝  source; re-invoked each render — keep stable via {@link React#useCallback}. */
+  get: () => E | null;
 }>;
 
 /**
  * @emoji 🪝 Binds one async entity read to React state; optional bus kind narrows refresh fan-in (no `useSyncExternalStore`).
- * @typeParam E — Concrete {@link Entity} subclass anchor.
+ * @typeParam E — Concrete {@link } subclass anchor.
  * @typeParam T — Parsed field value.
  */
-export function bindFieldToReact<E extends Entity, T>(opts: FieldBindOptions<E, T>): () => FieldReadState<T> {
-  const { read, eventKind, getEntity } = opts;
-  return function useEntityField(): FieldReadState<T> {
-    const entity = getEntity();
+export function bindFieldToReact<E extends , T>(opts: FieldBindOptions<E, T>): () => FieldReadState<T> {
+  const { read, eventKind, get } = opts;
+  return function use(): FieldReadState<T> {
+    const entity = get();
     const [value, setValue] = React.useState<T | undefined>(undefined);
     const [loading, setLoading] = React.useState(false);
     const [error, setError] = React.useState<unknown>(undefined);
@@ -236,22 +154,22 @@ export function bindFieldToReact<E extends Entity, T>(opts: FieldBindOptions<E, 
   };
 }
 
-export type DefinedFieldBindOptions<E extends Entity, T> = Readonly<{
+export type DefinedFieldBindOptions<E extends , T> = Readonly<{
   spec: FieldSpec<T>;
   pathInKit: (self: E) => string;
-  getEntity: () => E | null;
+  get: () => E | null;
   eventKind?: string;
 }>;
 
 /**
  * @emoji 🪝 Same as {@link bindFieldToReact} but wires {@link defineField} so callers share {@link FieldSpec} with tooling/docs.
- * @typeParam E — Concrete {@link Entity} subclass anchor.
+ * @typeParam E — Concrete {@link } subclass anchor.
  * @typeParam T — Parsed field value.
  */
-export function bindDefinedFieldToReact<E extends Entity, T>(opts: DefinedFieldBindOptions<E, T>): () => FieldReadState<T> {
-  const { spec, pathInKit, getEntity, eventKind } = opts;
-  return function useDefinedEntityField(): FieldReadState<T> {
-    const entity = getEntity();
+export function bindDefinedFieldToReact<E extends , T>(opts: DefinedFieldBindOptions<E, T>): () => FieldReadState<T> {
+  const { spec, pathInKit, get, eventKind } = opts;
+  return function useDefined(): FieldReadState<T> {
+    const entity = get();
     const [value, setValue] = React.useState<T | undefined>(undefined);
     const [loading, setLoading] = React.useState(false);
     const [error, setError] = React.useState<unknown>(undefined);
@@ -297,10 +215,7 @@ export function bindDefinedFieldToReact<E extends Entity, T>(opts: DefinedFieldB
 
 // #region 🪝OpBind
 /** @emoji 🎛️ UI-facing operation lifecycle for {@link bindOpToReact} (idle → pending → settled). */
-export type OperationStatus =
-  | { readonly kind: "idle" }
-  | { readonly kind: "pending" }
-  | { readonly kind: "settled"; readonly result: SetResult };
+export type OperationStatus = { readonly kind: "idle" } | { readonly kind: "pending" } | { readonly kind: "settled"; readonly result: SetResult };
 
 /**
  * @emoji 🗺️ Maps {@link SetErrorKind#NameTooLong} to a fixed max-length message; otherwise returns {@link SetError#message}.
@@ -312,16 +227,14 @@ export function mapTooLong(err: SetError, maxChars: number): string {
 }
 
 /**
- * @emoji 🪝 Binds an entity operation to `[run, status]`; `run` reads latest entity via {@code getEntity} ref (no sync external store).
- * @typeParam E — Concrete {@link Entity} subclass anchor.
+ * @emoji 🪝 Binds an entity operation to `[run, status]`; `run` reads latest entity via {@code get} ref (no sync external store).
+ * @typeParam E — Concrete {@link } subclass anchor.
  * @typeParam Args — Operation arguments after the entity receiver.
  */
-export function bindOpToReact<E extends Entity, Args extends unknown[] = []>(
-  impl: (entity: E, ...args: Args) => Promise<SetResult>,
-): (getEntity: () => E | null) => readonly [(...args: Args) => Promise<SetResult>, OperationStatus] {
-  return function useEntityOp(getEntity: () => E | null): readonly [(...args: Args) => Promise<SetResult>, OperationStatus] {
-    const getRef = React.useRef(getEntity);
-    getRef.current = getEntity;
+export function bindOpToReact<E extends , Args extends unknown[] = []>(impl: (entity: E, ...args: Args) => Promise<SetResult>): (get: () => E | null) => readonly [(...args: Args) => Promise<SetResult>, OperationStatus] {
+  return function useOp(get: () => E | null): readonly [(...args: Args) => Promise<SetResult>, OperationStatus] {
+    const getRef = React.useRef(get);
+    getRef.current = get;
     const [status, setStatus] = React.useState<OperationStatus>({ kind: "idle" });
 
     const run = React.useCallback(
@@ -364,7 +277,7 @@ export type KitFieldBindOptions<T> = Readonly<{
 
 export function bindKitFieldToReact<T>(opts: KitFieldBindOptions<T>): () => FieldReadState<T> {
   const { read, eventKind, getKit } = opts;
-  return function useKitBoundField(): FieldReadState<T> {
+  return function useKitBound(): FieldReadState<T> {
     const kit = getKit();
     const [value, setValue] = React.useState<T | undefined>(undefined);
     const [loading, setLoading] = React.useState(false);
@@ -409,9 +322,7 @@ export function bindKitFieldToReact<T>(opts: KitFieldBindOptions<T>): () => Fiel
 
 // #region 🪝KitOpBind
 /** @emoji 🪝 Binds a {@link Kit} operation to `[run, status]`. */
-export function bindKitOpToReact<Args extends unknown[] = []>(
-  impl: (kit: Kit, ...args: Args) => Promise<SetResult>,
-): (getKit: () => Kit | null) => readonly [(...args: Args) => Promise<SetResult>, OperationStatus] {
+export function bindKitOperationToReact<Args extends unknown[] = []>(impl: (kit: Kit, ...args: Args) => Promise<SetResult>): (getKit: () => Kit | null) => readonly [(...args: Args) => Promise<SetResult>, OperationStatus] {
   return function useKitOp(getKit: () => Kit | null): readonly [(...args: Args) => Promise<SetResult>, OperationStatus] {
     const getRef = React.useRef(getKit);
     getRef.current = getKit;
@@ -448,14 +359,14 @@ export function bindKitOpToReact<Args extends unknown[] = []>(
 // #endregion 🪝KitOpBind
 
 // #region 🎭Contexts
-// #region 🎒KitRuntime
-export type KitRuntimeValue = Readonly<{
+// #region 🎒Kit
+export type Kit = Readonly<{
   kit: Kit;
   readPoint: KitReadPoint;
   setReadPoint: (next: KitReadPoint) => void;
 }>;
 
-const KitRuntimeContext = React.createContext<KitRuntimeValue | null>(null);
+const KitContext = React.createContext<Kit | null>(null);
 
 export type KitContextProviderProps = Readonly<{
   kit: Kit;
@@ -472,248 +383,210 @@ export function KitContextProvider(props: KitContextProviderProps): React.ReactE
   const setReadPoint = React.useCallback((next: KitReadPoint) => {
     setReadPointState(next);
   }, []);
-  const value = React.useMemo<KitRuntimeValue>(
-    () => ({ kit: props.kit, readPoint, setReadPoint }),
-    [props.kit, readPoint, setReadPoint],
-  );
-  return React.createElement(KitRuntimeContext.Provider, { value }, props.children);
+  const value = React.useMemo<Kit>(() => ({ kit: props.kit, readPoint, setReadPoint }), [props.kit, readPoint, setReadPoint]);
+  return React.createElement(KitContext.Provider, { value }, props.children);
 }
 
 /** @emoji 🧭 Requires {@link KitContextProvider}; throws when missing (fail-fast for app wiring). */
-export function useKit(): KitRuntimeValue {
-  const v = React.useContext(KitRuntimeContext);
+export function useKit(): Kit {
+  const v = React.useContext(KitContext);
   if (v == null) throw new Error("semio/react: useKit requires <KitContextProvider>.");
   return v;
 }
 
-/** @emoji 🧭 Nullable kit runtime for optional UI (Storybook / diagnostics). */
-export function useKitOrNull(): KitRuntimeValue | null {
-  return React.useContext(KitRuntimeContext);
-}
-// #endregion 🎒KitRuntime
+// #endregion 🎒Kit
 
-// #region 📐DesignEntity
-export type DesignEntityContextValue = Readonly<{ designId: string }>;
-const DesignEntityContext = React.createContext<DesignEntityContextValue | null>(null);
-export function DesignEntityContextProvider(props: { designId: string; children: ReactNode }): React.ReactElement {
-  return React.createElement(DesignEntityContext.Provider, { value: { designId: props.designId } }, props.children);
+// #region 📐Design
+export type DesignContext = Readonly<{ designId: string }>;
+const DesignContext = React.createContext<DesignContext | null>(null);
+export function DesignContextProvider(props: { designId: string; children: ReactNode }): React.ReactElement {
+  return React.createElement(DesignContext.Provider, { value: { designId: props.designId } }, props.children);
 }
-export function useDesignEntity(): Design | null {
+export function useDesign(): Design | null {
   const { kit } = useKit();
-  const ctx = React.useContext(DesignEntityContext);
+  const ctx = React.useContext(DesignContext);
   return ctx == null ? null : kit.design(ctx.designId);
 }
-// #endregion 📐DesignEntity
+// #endregion 📐Design
 
 // #endregion 🎭Contexts
 
-// #region 🪢SchemaEntityContext
-/** @emoji 🪢 Token carried through nested entity providers for form controllers (not authoritative kit state). */
-export type SchemaContext = Readonly<{ entityKind: string; entityId: string }>;
-
-/** @emoji 🪢 React context for {@link SchemaContext} (replaces legacy `SchemaScopeContext`). */
-export const SchemaEntityContext = React.createContext<SchemaContext | null>(null);
-
-/** @emoji 🪢 Builds a {@link SchemaContext} value for a single entity id. */
-export function schemaContextForEntityId(entityKind: string, entityId: string): SchemaContext {
-  return { entityKind, entityId };
+// #region 🪢Contexts
+export type PieceContext = Readonly<{ designId: string; pieceId: string }>;
+const PieceContext = React.createContext<PieceContext | null>(null);
+export function PieceContextProvider(props: PieceContext & { children: ReactNode }): React.ReactElement {
+  return React.createElement(PieceContext.Provider, { value: { designId: props.designId, pieceId: props.pieceId } }, props.children);
 }
-// #endregion 🪢SchemaEntityContext
-
-// #region 🪢ShellContext
-export type KitShellContextValue = Readonly<{ id: string }>;
-
-const KitShellContext = React.createContext<KitShellContextValue | null>(null);
-
-/** @emoji 🪟 Pins active kit tab / shell id for hooks that resolve ids without prop drilling. */
-export function KitShellContextProvider(props: { id: string; children: ReactNode }): React.ReactElement {
-  return React.createElement(KitShellContext.Provider, { value: { id: props.id } }, props.children);
-}
-
-export function useKitShellContext(): KitShellContextValue | null {
-  return React.useContext(KitShellContext);
-}
-
-/** @emoji 🪟 Alias for {@link KitShellContext} naming parity with older `KitScopeContext`. */
-export { KitShellContext as KitContextShellContext };
-// #endregion 🪢ShellContext
-
-// #region 🪢EntityContexts
-export type PieceEntityContextValue = Readonly<{ designId: string; pieceId: string }>;
-const PieceEntityContext = React.createContext<PieceEntityContextValue | null>(null);
-export function PieceEntityContextProvider(props: PieceEntityContextValue & { children: ReactNode }): React.ReactElement {
-  return React.createElement(PieceEntityContext.Provider, { value: { designId: props.designId, pieceId: props.pieceId } }, props.children);
-}
-export function usePieceEntity(): Piece | null {
+export function usePiece(): Piece | null {
   const { kit } = useKit();
-  const ctx = React.useContext(PieceEntityContext);
+  const ctx = React.useContext(PieceContext);
   return ctx == null ? null : kit.design(ctx.designId).piece(ctx.pieceId);
 }
 
-export type TypeEntityContextValue = Readonly<{ typeId: string }>;
-const TypeEntityContext = React.createContext<TypeEntityContextValue | null>(null);
-export function TypeEntityContextProvider(props: { typeId: string; children: ReactNode }): React.ReactElement {
-  return React.createElement(TypeEntityContext.Provider, { value: { typeId: props.typeId } }, props.children);
+export type TypeContext = Readonly<{ typeId: string }>;
+const TypeContext = React.createContext<TypeContext | null>(null);
+export function TypeContextProvider(props: { typeId: string; children: ReactNode }): React.ReactElement {
+  return React.createElement(TypeContext.Provider, { value: { typeId: props.typeId } }, props.children);
 }
-export function useTypeEntity(): Type | null {
+export function useType(): Type | null {
   const { kit } = useKit();
-  const ctx = React.useContext(TypeEntityContext);
+  const ctx = React.useContext(TypeContext);
   return ctx == null ? null : kit.type(ctx.typeId);
 }
 
-export type ConnectionEntityContextValue = Readonly<{ designId: string; connectionId: string }>;
-const ConnectionEntityContext = React.createContext<ConnectionEntityContextValue | null>(null);
-export function ConnectionEntityContextProvider(props: ConnectionEntityContextValue & { children: ReactNode }): React.ReactElement {
-  return React.createElement(ConnectionEntityContext.Provider, { value: { designId: props.designId, connectionId: props.connectionId } }, props.children);
+export type ConnectionContext = Readonly<{ designId: string; connectionId: string }>;
+const ConnectionContext = React.createContext<ConnectionContext | null>(null);
+export function ConnectionContextProvider(props: ConnectionContext & { children: ReactNode }): React.ReactElement {
+  return React.createElement(ConnectionContext.Provider, { value: { designId: props.designId, connectionId: props.connectionId } }, props.children);
 }
-export function useConnectionEntity(): Connection | null {
+export function useConnection(): Connection | null {
   const { kit } = useKit();
-  const ctx = React.useContext(ConnectionEntityContext);
+  const ctx = React.useContext(ConnectionContext);
   return ctx == null ? null : kit.design(ctx.designId).connection(ctx.connectionId);
 }
 
-export type PortEntityContextValue = Readonly<{ typeId: string; portId: string }>;
-const PortEntityContext = React.createContext<PortEntityContextValue | null>(null);
-export function PortEntityContextProvider(props: PortEntityContextValue & { children: ReactNode }): React.ReactElement {
-  return React.createElement(PortEntityContext.Provider, { value: { typeId: props.typeId, portId: props.portId } }, props.children);
+export type PortContext = Readonly<{ typeId: string; portId: string }>;
+const PortContext = React.createContext<PortContext | null>(null);
+export function PortContextProvider(props: PortContext & { children: ReactNode }): React.ReactElement {
+  return React.createElement(PortContext.Provider, { value: { typeId: props.typeId, portId: props.portId } }, props.children);
 }
-export function usePortEntity(): Port | null {
+export function usePort(): Port | null {
   const { kit } = useKit();
-  const ctx = React.useContext(PortEntityContext);
+  const ctx = React.useContext(PortContext);
   return ctx == null ? null : kit.type(ctx.typeId).port(ctx.portId);
 }
 
-export type ConnectorEntityContextValue = Readonly<{ typeId: string; connectorId: string }>;
-const ConnectorEntityContext = React.createContext<ConnectorEntityContextValue | null>(null);
-export function ConnectorEntityContextProvider(props: ConnectorEntityContextValue & { children: ReactNode }): React.ReactElement {
-  return React.createElement(ConnectorEntityContext.Provider, { value: { typeId: props.typeId, connectorId: props.connectorId } }, props.children);
+export type ConnectorContext = Readonly<{ typeId: string; connectorId: string }>;
+const ConnectorContext = React.createContext<ConnectorContext | null>(null);
+export function ConnectorContextProvider(props: ConnectorContext & { children: ReactNode }): React.ReactElement {
+  return React.createElement(ConnectorContext.Provider, { value: { typeId: props.typeId, connectorId: props.connectorId } }, props.children);
 }
-export function useConnectorEntity(): Connector | null {
+export function useConnector(): Connector | null {
   const { kit } = useKit();
-  const ctx = React.useContext(ConnectorEntityContext);
+  const ctx = React.useContext(ConnectorContext);
   return ctx == null ? null : kit.type(ctx.typeId).connector(ctx.connectorId);
 }
 
-export type QualityEntityContextValue = Readonly<{ qualityId: string }>;
-const QualityEntityContext = React.createContext<QualityEntityContextValue | null>(null);
-export function QualityEntityContextProvider(props: { qualityId: string; children: ReactNode }): React.ReactElement {
-  return React.createElement(QualityEntityContext.Provider, { value: { qualityId: props.qualityId } }, props.children);
+export type QualityContext = Readonly<{ qualityId: string }>;
+const QualityContext = React.createContext<QualityContext | null>(null);
+export function QualityContextProvider(props: { qualityId: string; children: ReactNode }): React.ReactElement {
+  return React.createElement(QualityContext.Provider, { value: { qualityId: props.qualityId } }, props.children);
 }
-export function useQualityEntity(): Quality | null {
+export function useQuality(): Quality | null {
   const { kit } = useKit();
-  const ctx = React.useContext(QualityEntityContext);
+  const ctx = React.useContext(QualityContext);
   return ctx == null ? null : kit.quality(ctx.qualityId);
 }
 
-export type TagEntityContextValue = Readonly<{ tagId: string }>;
-const TagEntityContext = React.createContext<TagEntityContextValue | null>(null);
-export function TagEntityContextProvider(props: { tagId: string; children: ReactNode }): React.ReactElement {
-  return React.createElement(TagEntityContext.Provider, { value: { tagId: props.tagId } }, props.children);
+export type TagContext = Readonly<{ tagId: string }>;
+const TagContext = React.createContext<TagContext | null>(null);
+export function TagContextProvider(props: { tagId: string; children: ReactNode }): React.ReactElement {
+  return React.createElement(TagContext.Provider, { value: { tagId: props.tagId } }, props.children);
 }
-export function useTagEntity(): Tag | null {
+export function useTag(): Tag | null {
   const { kit } = useKit();
-  const ctx = React.useContext(TagEntityContext);
+  const ctx = React.useContext(TagContext);
   return ctx == null ? null : kit.tag(ctx.tagId);
 }
 
-export type ConceptEntityContextValue = Readonly<{ conceptId: string }>;
-const ConceptEntityContext = React.createContext<ConceptEntityContextValue | null>(null);
-export function ConceptEntityContextProvider(props: { conceptId: string; children: ReactNode }): React.ReactElement {
-  return React.createElement(ConceptEntityContext.Provider, { value: { conceptId: props.conceptId } }, props.children);
+export type ConceptContext = Readonly<{ conceptId: string }>;
+const ConceptContext = React.createContext<ConceptContext | null>(null);
+export function ConceptContextProvider(props: { conceptId: string; children: ReactNode }): React.ReactElement {
+  return React.createElement(ConceptContext.Provider, { value: { conceptId: props.conceptId } }, props.children);
 }
-export function useConceptEntity(): Concept | null {
+export function useConcept(): Concept | null {
   const { kit } = useKit();
-  const ctx = React.useContext(ConceptEntityContext);
+  const ctx = React.useContext(ConceptContext);
   return ctx == null ? null : kit.concept(ctx.conceptId);
 }
 
-export type AuthorEntityContextValue = Readonly<{ authorId: string }>;
-const AuthorEntityContext = React.createContext<AuthorEntityContextValue | null>(null);
-export function AuthorEntityContextProvider(props: { authorId: string; children: ReactNode }): React.ReactElement {
-  return React.createElement(AuthorEntityContext.Provider, { value: { authorId: props.authorId } }, props.children);
+export type AuthorContext = Readonly<{ authorId: string }>;
+const AuthorContext = React.createContext<AuthorContext | null>(null);
+export function AuthorContextProvider(props: { authorId: string; children: ReactNode }): React.ReactElement {
+  return React.createElement(AuthorContext.Provider, { value: { authorId: props.authorId } }, props.children);
 }
-export function useAuthorEntity(): Author | null {
+export function useAuthor(): Author | null {
   const { kit } = useKit();
-  const ctx = React.useContext(AuthorEntityContext);
+  const ctx = React.useContext(AuthorContext);
   return ctx == null ? null : kit.author(ctx.authorId);
 }
 
-export type RepresentationEntityContextValue = Readonly<{ typeId: string; representationId: string }>;
-const RepresentationEntityContext = React.createContext<RepresentationEntityContextValue | null>(null);
-export function RepresentationEntityContextProvider(props: RepresentationEntityContextValue & { children: ReactNode }): React.ReactElement {
-  return React.createElement(RepresentationEntityContext.Provider, { value: { typeId: props.typeId, representationId: props.representationId } }, props.children);
+export type RepresentationContext = Readonly<{ typeId: string; representationId: string }>;
+const RepresentationContext = React.createContext<RepresentationContext | null>(null);
+export function RepresentationContextProvider(props: RepresentationContext & { children: ReactNode }): React.ReactElement {
+  return React.createElement(RepresentationContext.Provider, { value: { typeId: props.typeId, representationId: props.representationId } }, props.children);
 }
-export function useRepresentationEntity(): Representation | null {
+export function useRepresentation(): Representation | null {
   const { kit } = useKit();
-  const ctx = React.useContext(RepresentationEntityContext);
+  const ctx = React.useContext(RepresentationContext);
   return ctx == null ? null : kit.type(ctx.typeId).representation(ctx.representationId);
 }
-// #endregion 🪢EntityContexts
+// #endregion 🪢Contexts
 
 // #region 🪝HooksKit
 // #region 📖KitReads
 /** @emoji 📖 Live {@link Kit#readName} + {@code kitRenamed}. */
-export function useKitNameField(): FieldReadState<string> {
+export function useKitName(): FieldReadState<string> {
   const { kit } = useKit();
   return bindKitFieldToReact<string>({ getKit: () => kit, read: (k) => k.readName(), eventKind: "kitRenamed" })();
 }
 
 /** @emoji 📖 Live {@link Kit#readDescription} + {@code changedDescription}. */
-export function useKitDescriptionField(): FieldReadState<string> {
+export function useKitDescription(): FieldReadState<string> {
   const { kit } = useKit();
   return bindKitFieldToReact<string>({ getKit: () => kit, read: (k) => k.readDescription(), eventKind: "changedDescription" })();
 }
 
 /** @emoji 📖 Live {@link Kit#readId}. */
-export function useKitIdField(): FieldReadState<string> {
+export function useKitId(): FieldReadState<string> {
   const { kit } = useKit();
   return bindKitFieldToReact<string>({ getKit: () => kit, read: (k) => k.readId() })();
 }
 
 /** @emoji 📖 Live {@link Kit#readIcon}. */
-export function useKitIconField(): FieldReadState<string> {
+export function useKitIcon(): FieldReadState<string> {
   const { kit } = useKit();
   return bindKitFieldToReact<string>({ getKit: () => kit, read: (k) => k.readIcon() })();
 }
 
 /** @emoji 📖 Live {@link Kit#readImage}. */
-export function useKitImageField(): FieldReadState<string> {
+export function useKitImage(): FieldReadState<string> {
   const { kit } = useKit();
   return bindKitFieldToReact<string>({ getKit: () => kit, read: (k) => k.readImage() })();
 }
 
 /** @emoji 📖 Live {@link Kit#readTypeIds}. */
-export function useKitTypeIdsField(): FieldReadState<readonly string[]> {
+export function useKitTypeIds(): FieldReadState<readonly string[]> {
   const { kit } = useKit();
   return bindKitFieldToReact<readonly string[]>({ getKit: () => kit, read: (k) => k.readTypeIds() })();
 }
 
 /** @emoji 📖 Live {@link Kit#readDesignIds}. */
-export function useKitDesignIdsField(): FieldReadState<readonly string[]> {
+export function useKitDesignIds(): FieldReadState<readonly string[]> {
   const { kit } = useKit();
   return bindKitFieldToReact<readonly string[]>({ getKit: () => kit, read: (k) => k.readDesignIds() })();
 }
 
 /** @emoji 📖 Live {@link Kit#readAuthorIds}. */
-export function useKitAuthorIdsField(): FieldReadState<readonly string[]> {
+export function useKitAuthorIds(): FieldReadState<readonly string[]> {
   const { kit } = useKit();
   return bindKitFieldToReact<readonly string[]>({ getKit: () => kit, read: (k) => k.readAuthorIds() })();
 }
 
 /** @emoji 📖 Live {@link Kit#readQualityIds}. */
-export function useKitQualityIdsField(): FieldReadState<readonly string[]> {
+export function useKitQualityIds(): FieldReadState<readonly string[]> {
   const { kit } = useKit();
   return bindKitFieldToReact<readonly string[]>({ getKit: () => kit, read: (k) => k.readQualityIds() })();
 }
 
 /** @emoji 📖 Live {@link Kit#readTagIds}. */
-export function useKitTagIdsField(): FieldReadState<readonly string[]> {
+export function useKitTagIds(): FieldReadState<readonly string[]> {
   const { kit } = useKit();
   return bindKitFieldToReact<readonly string[]>({ getKit: () => kit, read: (k) => k.readTagIds() })();
 }
 
 /** @emoji 📖 Live {@link Kit#readConceptIds}. */
-export function useKitConceptIdsField(): FieldReadState<readonly string[]> {
+export function useKitConceptIds(): FieldReadState<readonly string[]> {
   const { kit } = useKit();
   return bindKitFieldToReact<readonly string[]>({ getKit: () => kit, read: (k) => k.readConceptIds() })();
 }
@@ -729,141 +602,111 @@ export function useEnsureKitChangeId(): () => Promise<string> {
 /** @emoji ✍️ {@link Kit#rename}. */
 export function useRenameKit(): readonly [(newName: string) => Promise<SetResult>, OperationStatus] {
   const { kit } = useKit();
-  return bindKitOpToReact<[string]>((k, newName) => k.rename(newName))(() => kit);
+  return bindKitOperationToReact<[string]>((k, newName) => k.rename(newName))(() => kit);
 }
 
 /** @emoji ✍️ {@link Kit#changeDescription}. */
 export function useChangeKitDescription(): readonly [(newDescription: string) => Promise<SetResult>, OperationStatus] {
   const { kit } = useKit();
-  return bindKitOpToReact<[string]>((k, d) => k.changeDescription(d))(() => kit);
+  return bindKitOperationToReact<[string]>((k, d) => k.changeDescription(d))(() => kit);
 }
 
 /** @emoji ✍️ {@link Kit#createTag}. */
-export function useCreateTag(): readonly [
-  (name: string, description?: string | null, icon?: string | null, order?: number | null) => Promise<SetResult>,
-  OperationStatus,
-] {
+export function useCreateTag(): readonly [(name: string, description?: string | null, icon?: string | null, order?: number | null) => Promise<SetResult>, OperationStatus] {
   const { kit } = useKit();
-  return bindKitOpToReact<[string, string | null | undefined, string | null | undefined, number | null | undefined]>((k, n, d, i, o) =>
-    k.createTag(n, d, i, o),
-  )(() => kit);
+  return bindKitOperationToReact<[string, string | null | undefined, string | null | undefined, number | null | undefined]>((k, n, d, i, o) => k.createTag(n, d, i, o))(() => kit);
 }
 
 /** @emoji ✍️ {@link Kit#deleteTag}. */
 export function useDeleteTag(): readonly [(id: string) => Promise<SetResult>, OperationStatus] {
   const { kit } = useKit();
-  return bindKitOpToReact<[string]>((k, id) => k.deleteTag(id))(() => kit);
+  return bindKitOperationToReact<[string]>((k, id) => k.deleteTag(id))(() => kit);
 }
 
 /** @emoji ✍️ {@link Kit#deleteTags}. */
 export function useDeleteTags(): readonly [(ids: readonly string[]) => Promise<SetResult>, OperationStatus] {
   const { kit } = useKit();
-  return bindKitOpToReact<[readonly string[]]>((k, ids) => k.deleteTags(ids))(() => kit);
+  return bindKitOperationToReact<[readonly string[]]>((k, ids) => k.deleteTags(ids))(() => kit);
 }
 
 /** @emoji ✍️ {@link Kit#createConcept}. */
-export function useCreateConcept(): readonly [
-  (name: string, description?: string | null, icon?: string | null, order?: number | null) => Promise<SetResult>,
-  OperationStatus,
-] {
+export function useCreateConcept(): readonly [(name: string, description?: string | null, icon?: string | null, order?: number | null) => Promise<SetResult>, OperationStatus] {
   const { kit } = useKit();
-  return bindKitOpToReact<[string, string | null | undefined, string | null | undefined, number | null | undefined]>((k, n, d, i, o) =>
-    k.createConcept(n, d, i, o),
-  )(() => kit);
+  return bindKitOperationToReact<[string, string | null | undefined, string | null | undefined, number | null | undefined]>((k, n, d, i, o) => k.createConcept(n, d, i, o))(() => kit);
 }
 
 /** @emoji ✍️ {@link Kit#deleteConcept}. */
 export function useDeleteConcept(): readonly [(id: string) => Promise<SetResult>, OperationStatus] {
   const { kit } = useKit();
-  return bindKitOpToReact<[string]>((k, id) => k.deleteConcept(id))(() => kit);
+  return bindKitOperationToReact<[string]>((k, id) => k.deleteConcept(id))(() => kit);
 }
 
 /** @emoji ✍️ {@link Kit#deleteConcepts}. */
 export function useDeleteConcepts(): readonly [(ids: readonly string[]) => Promise<SetResult>, OperationStatus] {
   const { kit } = useKit();
-  return bindKitOpToReact<[readonly string[]]>((k, ids) => k.deleteConcepts(ids))(() => kit);
+  return bindKitOperationToReact<[readonly string[]]>((k, ids) => k.deleteConcepts(ids))(() => kit);
 }
 
 /** @emoji ✍️ {@link Kit#createQuality}. */
-export function useCreateQuality(): readonly [
-  (
-    key: string,
-    value?: string | null,
-    unit?: string | null,
-    definition?: string | null,
-    description?: string | null,
-    icon?: string | null,
-  ) => Promise<SetResult>,
-  OperationStatus,
-] {
+export function useCreateQuality(): readonly [(key: string, value?: string | null, unit?: string | null, definition?: string | null, description?: string | null, icon?: string | null) => Promise<SetResult>, OperationStatus] {
   const { kit } = useKit();
-  return bindKitOpToReact<
-    [string, string | null | undefined, string | null | undefined, string | null | undefined, string | null | undefined, string | null | undefined]
-  >((k, key, value, unit, definition, description, icon) => k.createQuality(key, value, unit, definition, description, icon))(() => kit);
+  return bindKitOperationToReact<[string, string | null | undefined, string | null | undefined, string | null | undefined, string | null | undefined, string | null | undefined]>((k, key, value, unit, definition, description, icon) =>
+    k.createQuality(key, value, unit, definition, description, icon),
+  )(() => kit);
 }
 
 /** @emoji ✍️ {@link Kit#deleteQuality}. */
 export function useDeleteQuality(): readonly [(id: string) => Promise<SetResult>, OperationStatus] {
   const { kit } = useKit();
-  return bindKitOpToReact<[string]>((k, id) => k.deleteQuality(id))(() => kit);
+  return bindKitOperationToReact<[string]>((k, id) => k.deleteQuality(id))(() => kit);
 }
 
 /** @emoji ✍️ {@link Kit#deleteQualities}. */
 export function useDeleteQualities(): readonly [(ids: readonly string[]) => Promise<SetResult>, OperationStatus] {
   const { kit } = useKit();
-  return bindKitOpToReact<[readonly string[]]>((k, ids) => k.deleteQualities(ids))(() => kit);
+  return bindKitOperationToReact<[readonly string[]]>((k, ids) => k.deleteQualities(ids))(() => kit);
 }
 
 /** @emoji ✍️ {@link Kit#createType}. */
-export function useCreateType(): readonly [
-  (name: string, description?: string | null, icon?: string | null, image?: string | null, unit?: string | null) => Promise<SetResult>,
-  OperationStatus,
-] {
+export function useCreateType(): readonly [(name: string, description?: string | null, icon?: string | null, image?: string | null, unit?: string | null) => Promise<SetResult>, OperationStatus] {
   const { kit } = useKit();
-  return bindKitOpToReact<[string, string | null | undefined, string | null | undefined, string | null | undefined, string | null | undefined]>((k, n, d, i, im, u) =>
-    k.createType(n, d, i, im, u),
-  )(() => kit);
+  return bindKitOperationToReact<[string, string | null | undefined, string | null | undefined, string | null | undefined, string | null | undefined]>((k, n, d, i, im, u) => k.createType(n, d, i, im, u))(() => kit);
 }
 
 /** @emoji ✍️ {@link Kit#deleteType}. */
 export function useDeleteType(): readonly [(id: string) => Promise<SetResult>, OperationStatus] {
   const { kit } = useKit();
-  return bindKitOpToReact<[string]>((k, id) => k.deleteType(id))(() => kit);
+  return bindKitOperationToReact<[string]>((k, id) => k.deleteType(id))(() => kit);
 }
 
 /** @emoji ✍️ {@link Kit#deleteTypes}. */
 export function useDeleteTypes(): readonly [(ids: readonly string[]) => Promise<SetResult>, OperationStatus] {
   const { kit } = useKit();
-  return bindKitOpToReact<[readonly string[]]>((k, ids) => k.deleteTypes(ids))(() => kit);
+  return bindKitOperationToReact<[readonly string[]]>((k, ids) => k.deleteTypes(ids))(() => kit);
 }
 
 /** @emoji ✍️ {@link Kit#createDesign}. */
-export function useCreateDesign(): readonly [
-  (name: string, description?: string | null, icon?: string | null, image?: string | null, unit?: string | null) => Promise<SetResult>,
-  OperationStatus,
-] {
+export function useCreateDesign(): readonly [(name: string, description?: string | null, icon?: string | null, image?: string | null, unit?: string | null) => Promise<SetResult>, OperationStatus] {
   const { kit } = useKit();
-  return bindKitOpToReact<[string, string | null | undefined, string | null | undefined, string | null | undefined, string | null | undefined]>((k, n, d, i, im, u) =>
-    k.createDesign(n, d, i, im, u),
-  )(() => kit);
+  return bindKitOperationToReact<[string, string | null | undefined, string | null | undefined, string | null | undefined, string | null | undefined]>((k, n, d, i, im, u) => k.createDesign(n, d, i, im, u))(() => kit);
 }
 
 /** @emoji ✍️ {@link Kit#deleteDesign}. */
 export function useDeleteDesign(): readonly [(id: string) => Promise<SetResult>, OperationStatus] {
   const { kit } = useKit();
-  return bindKitOpToReact<[string]>((k, id) => k.deleteDesign(id))(() => kit);
+  return bindKitOperationToReact<[string]>((k, id) => k.deleteDesign(id))(() => kit);
 }
 
 /** @emoji ✍️ {@link Kit#deleteDesigns}. */
 export function useDeleteDesigns(): readonly [(ids: readonly string[]) => Promise<SetResult>, OperationStatus] {
   const { kit } = useKit();
-  return bindKitOpToReact<[readonly string[]]>((k, ids) => k.deleteDesigns(ids))(() => kit);
+  return bindKitOperationToReact<[readonly string[]]>((k, ids) => k.deleteDesigns(ids))(() => kit);
 }
 
 /** @emoji ✍️ {@link Kit#saveChange}. */
 export function useSaveKitChange(): readonly [() => Promise<SetResult>, OperationStatus] {
   const { kit } = useKit();
-  return bindKitOpToReact<[]>(async (k) => {
+  return bindKitOperationToReact<[]>(async (k) => {
     await k.saveChange();
     return { ok: true };
   })(() => kit);
@@ -872,200 +715,166 @@ export function useSaveKitChange(): readonly [() => Promise<SetResult>, Operatio
 /** @emoji ✍️ {@link Kit#createCheckpoint}. */
 export function useCreateCheckpoint(): readonly [(message: string) => Promise<SetResult>, OperationStatus] {
   const { kit } = useKit();
-  return bindKitOpToReact<[string]>((k, message) => k.createCheckpoint(message))(() => kit);
+  return bindKitOperationToReact<[string]>((k, message) => k.createCheckpoint(message))(() => kit);
 }
 
 /** @emoji ✍️ {@link Kit#startAlternative}. */
 export function useStartAlternative(): readonly [(name?: string | null) => Promise<SetResult>, OperationStatus] {
   const { kit } = useKit();
-  return bindKitOpToReact<[string | null | undefined]>((k, name) => k.startAlternative(name ?? undefined))(() => kit);
+  return bindKitOperationToReact<[string | null | undefined]>((k, name) => k.startAlternative(name ?? undefined))(() => kit);
 }
 
 /** @emoji ✍️ {@link Kit#integrateAlternative}. */
 export function useIntegrateAlternative(): readonly [(alternativeId: string) => Promise<SetResult>, OperationStatus] {
   const { kit } = useKit();
-  return bindKitOpToReact<[string]>((k, id) => k.integrateAlternative(id))(() => kit);
+  return bindKitOperationToReact<[string]>((k, id) => k.integrateAlternative(id))(() => kit);
 }
 
 /** @emoji ✍️ {@link Kit#login}. */
 export function useLogin(): readonly [(username: string, passwordHash: string, hubUrl?: string) => Promise<SetResult>, OperationStatus] {
   const { kit } = useKit();
-  return bindKitOpToReact<[string, string, string | undefined]>((k, u, p, h) => k.login(u, p, h))(() => kit);
+  return bindKitOperationToReact<[string, string, string | undefined]>((k, u, p, h) => k.login(u, p, h))(() => kit);
 }
 
 /** @emoji ✍️ {@link Kit#logout}. */
 export function useLogout(): readonly [() => Promise<SetResult>, OperationStatus] {
   const { kit } = useKit();
-  return bindKitOpToReact<[]>((k) => k.logout())(() => kit);
+  return bindKitOperationToReact<[]>((k) => k.logout())(() => kit);
 }
 
 /** @emoji ✍️ {@link Kit#sessionStart}. */
 export function useStartSession(): readonly [() => Promise<SetResult>, OperationStatus] {
   const { kit } = useKit();
-  return bindKitOpToReact<[]>((k) => k.sessionStart())(() => kit);
+  return bindKitOperationToReact<[]>((k) => k.sessionStart())(() => kit);
 }
 
 /** @emoji ✍️ {@link Kit#sessionEnd}. */
 export function useEndSession(): readonly [() => Promise<SetResult>, OperationStatus] {
   const { kit } = useKit();
-  return bindKitOpToReact<[]>((k) => k.sessionEnd())(() => kit);
+  return bindKitOperationToReact<[]>((k) => k.sessionEnd())(() => kit);
 }
 
-/** @emoji ✍️ {@link Kit#hydrateKitStoreBundleJson}. */
-export function useHydrateKitStoreBundleJson(): readonly [(json: string) => Promise<SetResult>, OperationStatus] {
-  const { kit } = useKit();
-  return bindKitOpToReact<[string]>((k, json) => k.hydrateKitStoreBundleJson(json))(() => kit);
-}
-// #endregion ✍️KitWrites
 // #endregion 🪝HooksKit
 
 // #region 🪝HooksDesign
 // #region 📖DesignReads
 /** @emoji 📖 Live {@link Design#readName}. */
-export function useDesignNameField(): FieldReadState<string> {
-  const entity = useDesignEntity();
-  return bindFieldToReact<Design, string>({ getEntity: () => entity, read: (d) => d.readName() })();
+export function useDesignName(): FieldReadState<string> {
+  const entity = useDesign();
+  return bindFieldToReact<Design, string>({ get: () => entity, read: (d) => d.readName() })();
 }
 
 /** @emoji 📖 Live {@link Design#readDescription} + {@code changedDescription}. */
-export function useDesignDescriptionField(): FieldReadState<string> {
-  const entity = useDesignEntity();
-  return bindFieldToReact<Design, string>({ getEntity: () => entity, read: (d) => d.readDescription(), eventKind: "changedDescription" })();
+export function useDesignDescription(): FieldReadState<string> {
+  const entity = useDesign();
+  return bindFieldToReact<Design, string>({ get: () => entity, read: (d) => d.readDescription(), eventKind: "changedDescription" })();
 }
 
 /** @emoji 📖 Live {@link Design#readPieceIds}. */
-export function useDesignPieceIdsField(): FieldReadState<readonly string[]> {
-  const entity = useDesignEntity();
-  return bindFieldToReact<Design, readonly string[]>({ getEntity: () => entity, read: (d) => d.readPieceIds() })();
+export function useDesignPieceIds(): FieldReadState<readonly string[]> {
+  const entity = useDesign();
+  return bindFieldToReact<Design, readonly string[]>({ get: () => entity, read: (d) => d.readPieceIds() })();
 }
 
 /** @emoji 📖 Live {@link Design#readConnectionIds}. */
-export function useDesignConnectionIdsField(): FieldReadState<readonly string[]> {
-  const entity = useDesignEntity();
-  return bindFieldToReact<Design, readonly string[]>({ getEntity: () => entity, read: (d) => d.readConnectionIds() })();
+export function useDesignConnectionIds(): FieldReadState<readonly string[]> {
+  const entity = useDesign();
+  return bindFieldToReact<Design, readonly string[]>({ get: () => entity, read: (d) => d.readConnectionIds() })();
 }
 
 /** @emoji 📖 Live {@link Design#readAttributeIds}. */
-export function useDesignAttributeIdsField(): FieldReadState<readonly string[]> {
-  const entity = useDesignEntity();
-  return bindFieldToReact<Design, readonly string[]>({ getEntity: () => entity, read: (d) => d.readAttributeIds() })();
+export function useDesignAttributeIds(): FieldReadState<readonly string[]> {
+  const entity = useDesign();
+  return bindFieldToReact<Design, readonly string[]>({ get: () => entity, read: (d) => d.readAttributeIds() })();
 }
 
 /** @emoji 📖 Live {@link Design#readQualitySum}. */
-export function useDesignQualitySumField(): FieldReadState<number> {
-  const entity = useDesignEntity();
-  return bindFieldToReact<Design, number>({ getEntity: () => entity, read: (d) => d.readQualitySum() })();
+export function useDesignQualitySum(): FieldReadState<number> {
+  const entity = useDesign();
+  return bindFieldToReact<Design, number>({ get: () => entity, read: (d) => d.readQualitySum() })();
 }
 // #endregion 📖DesignReads
 
 // #region ✍️DesignWrites
 /** @emoji ✍️ {@link Design#rename}. */
 export function useRenameDesign(): readonly [(newName: string) => Promise<SetResult>, OperationStatus] {
-  const entity = useDesignEntity();
+  const entity = useDesign();
   return bindOpToReact<Design, [string]>((d, n) => d.rename(n))(() => entity);
 }
 
 /** @emoji ✍️ {@link Design#changeDescription}. */
 export function useChangeDesignDescription(): readonly [(newDescription: string) => Promise<SetResult>, OperationStatus] {
-  const entity = useDesignEntity();
+  const entity = useDesign();
   return bindOpToReact<Design, [string]>((d, t) => d.changeDescription(t))(() => entity);
 }
 
 /** @emoji ✍️ {@link Design#flatten}. */
 export function useFlattenDesign(): readonly [() => Promise<SetResult>, OperationStatus] {
-  const entity = useDesignEntity();
+  const entity = useDesign();
   return bindOpToReact<Design, []>((d) => d.flatten())(() => entity);
 }
 
 /** @emoji ✍️ {@link Design#addAttribute}. */
 export function useAddDesignAttribute(): readonly [(key: string, value: string, definition: string) => Promise<SetResult>, OperationStatus] {
-  const entity = useDesignEntity();
+  const entity = useDesign();
   return bindOpToReact<Design, [string, string, string]>((d, k, v, def) => d.addAttribute(k, v, def))(() => entity);
 }
 
 /** @emoji ✍️ {@link Design#removeAttribute}. */
 export function useRemoveDesignAttribute(): readonly [(id: string) => Promise<SetResult>, OperationStatus] {
-  const entity = useDesignEntity();
+  const entity = useDesign();
   return bindOpToReact<Design, [string]>((d, id) => d.removeAttribute(id))(() => entity);
 }
 
 /** @emoji ✍️ {@link Design#removeAttributes}. */
 export function useRemoveDesignAttributes(): readonly [(ids: readonly string[]) => Promise<SetResult>, OperationStatus] {
-  const entity = useDesignEntity();
+  const entity = useDesign();
   return bindOpToReact<Design, [readonly string[]]>((d, ids) => d.removeAttributes(ids))(() => entity);
 }
 
 /** @emoji ✍️ {@link Design#addFixedPiece}. */
-export function useAddFixedPiece(): readonly [
-  (blueprintId: string, position: PositionInputWire, name?: string | null, description?: string | null) => Promise<SetResult>,
-  OperationStatus,
-] {
-  const entity = useDesignEntity();
-  return bindOpToReact<Design, [string, PositionInputWire, string | null | undefined, string | null | undefined]>((d, bp, pos, n, desc) =>
-    d.addFixedPiece(bp, pos, n, desc),
-  )(() => entity);
+export function useAddFixedPiece(): readonly [(blueprintId: string, position: PositionInput, name?: string | null, description?: string | null) => Promise<SetResult>, OperationStatus] {
+  const entity = useDesign();
+  return bindOpToReact<Design, [string, PositionInput, string | null | undefined, string | null | undefined]>((d, bp, pos, n, desc) => d.addFixedPiece(bp, pos, n, desc))(() => entity);
 }
 
 /** @emoji ✍️ {@link Design#addChildPieceWithParentConnection}. */
 export function useAddChildPieceWithParentConnection(): readonly [
-  (
-    blueprintId: string,
-    parentPieceId: string,
-    parentConnector: string,
-    childConnector: string,
-    name?: string | null,
-    description?: string | null,
-    position?: PositionInputWire | null,
-    scale?: number | null,
-  ) => Promise<SetResult>,
+  (blueprintId: string, parentPieceId: string, parentConnector: string, childConnector: string, name?: string | null, description?: string | null, position?: PositionInput | null, scale?: number | null) => Promise<SetResult>,
   OperationStatus,
 ] {
-  const entity = useDesignEntity();
-  return bindOpToReact<
-    Design,
-    [string, string, string, string, string | null | undefined, string | null | undefined, PositionInputWire | null | undefined, number | null | undefined]
-  >((d, bp, pp, pc, cc, n, desc, pos, sc) => d.addChildPieceWithParentConnection(bp, pp, pc, cc, n, desc, pos, sc))(() => entity);
+  const entity = useDesign();
+  return bindOpToReact<Design, [string, string, string, string, string | null | undefined, string | null | undefined, PositionInput | null | undefined, number | null | undefined]>((d, bp, pp, pc, cc, n, desc, pos, sc) =>
+    d.addChildPieceWithParentConnection(bp, pp, pc, cc, n, desc, pos, sc),
+  )(() => entity);
 }
 
 /** @emoji ✍️ {@link Design#addHangingChildPieceWithParentConnection}. */
 export function useAddHangingChildPieceWithParentConnection(): readonly [
-  (
-    blueprintId: string,
-    parentPieceId: string,
-    parentConnector: string,
-    childConnector: string,
-    position: PositionInputWire,
-    name?: string | null,
-    description?: string | null,
-    scale?: number | null,
-  ) => Promise<SetResult>,
+  (blueprintId: string, parentPieceId: string, parentConnector: string, childConnector: string, position: PositionInput, name?: string | null, description?: string | null, scale?: number | null) => Promise<SetResult>,
   OperationStatus,
 ] {
-  const entity = useDesignEntity();
-  return bindOpToReact<
-    Design,
-    [string, string, string, string, PositionInputWire, string | null | undefined, string | null | undefined, number | null | undefined]
-  >((d, bp, pp, pc, cc, pos, n, desc, sc) => d.addHangingChildPieceWithParentConnection(bp, pp, pc, cc, pos, n, desc, sc))(() => entity);
+  const entity = useDesign();
+  return bindOpToReact<Design, [string, string, string, string, PositionInput, string | null | undefined, string | null | undefined, number | null | undefined]>((d, bp, pp, pc, cc, pos, n, desc, sc) =>
+    d.addHangingChildPieceWithParentConnection(bp, pp, pc, cc, pos, n, desc, sc),
+  )(() => entity);
 }
 
 /** @emoji ✍️ {@link Design#deletePiece}. */
 export function useDeleteDesignPiece(): readonly [(pieceId: string) => Promise<SetResult>, OperationStatus] {
-  const entity = useDesignEntity();
+  const entity = useDesign();
   return bindOpToReact<Design, [string]>((d, id) => d.deletePiece(id))(() => entity);
 }
 
 /** @emoji ✍️ {@link Design#deletePieces}. */
 export function useDeleteDesignPieces(): readonly [(ids: readonly string[]) => Promise<SetResult>, OperationStatus] {
-  const entity = useDesignEntity();
+  const entity = useDesign();
   return bindOpToReact<Design, [readonly string[]]>((d, ids) => d.deletePieces(ids))(() => entity);
 }
 
 /** @emoji ✍️ {@link Design#deletePiecesAndConnections}. */
-export function useDeleteDesignPiecesAndConnections(): readonly [
-  (pieceIds: readonly string[], connectionIds: readonly string[]) => Promise<SetResult>,
-  OperationStatus,
-] {
-  const entity = useDesignEntity();
+export function useDeleteDesignPiecesAndConnections(): readonly [(pieceIds: readonly string[], connectionIds: readonly string[]) => Promise<SetResult>, OperationStatus] {
+  const entity = useDesign();
   return bindOpToReact<Design, [readonly string[], readonly string[]]>((d, p, c) => d.deletePiecesAndConnections(p, c))(() => entity);
 }
 // #endregion ✍️DesignWrites
@@ -1078,152 +887,139 @@ const useTypeChangeIconOp = bindOpToReact<Type, [string]>((t, i) => t.changeIcon
 const useTypeAddAttributeOp = bindOpToReact<Type, [string, string, string]>((t, key, value, definition) => t.addAttribute(key, value, definition));
 const useTypeRemoveAttributeOp = bindOpToReact<Type, [string]>((t, id) => t.removeAttribute(id));
 const useTypeRemoveAttributesOp = bindOpToReact<Type, [readonly string[]]>((t, ids) => t.removeAttributes(ids));
-const useTypeCreatePortOp = bindOpToReact<
-  Type,
-  [string | null | undefined, string | null | undefined, string | null | undefined, string | null | undefined, number | null | undefined]
->((t, code, label, description, icon, order) => t.createPort(code ?? null, label ?? null, description ?? null, icon ?? null, order ?? null));
+const useTypeCreatePortOp = bindOpToReact<Type, [string | null | undefined, string | null | undefined, string | null | undefined, string | null | undefined, number | null | undefined]>((t, code, label, description, icon, order) =>
+  t.createPort(code ?? null, label ?? null, description ?? null, icon ?? null, order ?? null),
+);
 const useTypeDeletePortOp = bindOpToReact<Type, [string]>((t, id) => t.deletePort(id));
 const useTypeDeletePortsOp = bindOpToReact<Type, [readonly string[]]>((t, ids) => t.deletePorts(ids));
-const useTypeAddConnectorOp = bindOpToReact<Type, [string, string | null | undefined, string | null | undefined, string | null | undefined]>(
-  (t, code, description, icon, portId) => t.addConnector(code, description ?? null, icon ?? null, portId ?? null),
+const useTypeAddConnectorOp = bindOpToReact<Type, [string, string | null | undefined, string | null | undefined, string | null | undefined]>((t, code, description, icon, portId) =>
+  t.addConnector(code, description ?? null, icon ?? null, portId ?? null),
 );
 const useTypeRemoveConnectorOp = bindOpToReact<Type, [string]>((t, id) => t.removeConnector(id));
 const useTypeRemoveConnectorsOp = bindOpToReact<Type, [readonly string[]]>((t, ids) => t.removeConnectors(ids));
 
 /** @emoji 🛡️ Contextual {@link Type}. */
 export function useType(): Type | null {
-  return useTypeEntity();
+  return useType();
 }
 
 /** @emoji 📖 Live {@link Type#readName}. */
 export function useTypeName(): FieldReadState<string> {
-  const entity = useTypeEntity();
-  return bindFieldToReact<Type, string>({ getEntity: () => entity, read: (t) => t.readName() })();
+  const entity = useType();
+  return bindFieldToReact<Type, string>({ get: () => entity, read: (t) => t.readName() })();
 }
 
 /** @emoji 📖 Live {@link Type#readDescription}. */
 export function useTypeDescription(): FieldReadState<string> {
-  const entity = useTypeEntity();
-  return bindFieldToReact<Type, string>({ getEntity: () => entity, read: (t) => t.readDescription() })();
+  const entity = useType();
+  return bindFieldToReact<Type, string>({ get: () => entity, read: (t) => t.readDescription() })();
 }
 
 /** @emoji 📖 Live {@link Type#readIcon}. */
 export function useTypeIcon(): FieldReadState<string> {
-  const entity = useTypeEntity();
-  return bindFieldToReact<Type, string>({ getEntity: () => entity, read: (t) => t.readIcon() })();
+  const entity = useType();
+  return bindFieldToReact<Type, string>({ get: () => entity, read: (t) => t.readIcon() })();
 }
 
 /** @emoji 📖 Live {@link Type#readImage}. */
 export function useTypeImage(): FieldReadState<string> {
-  const entity = useTypeEntity();
-  return bindFieldToReact<Type, string>({ getEntity: () => entity, read: (t) => t.readImage() })();
+  const entity = useType();
+  return bindFieldToReact<Type, string>({ get: () => entity, read: (t) => t.readImage() })();
 }
 
 /** @emoji 📖 Live {@link Type#readUnit}. */
 export function useTypeUnit(): FieldReadState<string> {
-  const entity = useTypeEntity();
-  return bindFieldToReact<Type, string>({ getEntity: () => entity, read: (t) => t.readUnit() })();
+  const entity = useType();
+  return bindFieldToReact<Type, string>({ get: () => entity, read: (t) => t.readUnit() })();
 }
 
 /** @emoji 📖 Bulky {@link Type#readConnectors}. */
 export function useTypeConnectors(): FieldReadState<readonly { readonly id: string; readonly code: string; readonly name: string }[]> {
-  const entity = useTypeEntity();
-  return bindFieldToReact<Type, readonly { readonly id: string; readonly code: string; readonly name: string }[]>({ getEntity: () => entity, read: (t) => t.readConnectors() })();
+  const entity = useType();
+  return bindFieldToReact<Type, readonly { readonly id: string; readonly code: string; readonly name: string }[]>({ get: () => entity, read: (t) => t.readConnectors() })();
 }
 
 /** @emoji 📖 Bulky {@link Type#readRepresentations}. */
 export function useTypeRepresentations(): FieldReadState<readonly { readonly id: string }[]> {
-  const entity = useTypeEntity();
-  return bindFieldToReact<Type, readonly { readonly id: string }[]>({ getEntity: () => entity, read: (t) => t.readRepresentations() })();
+  const entity = useType();
+  return bindFieldToReact<Type, readonly { readonly id: string }[]>({ get: () => entity, read: (t) => t.readRepresentations() })();
 }
 
 /** @emoji 📖 Bulky {@link Type#readAttributes}. */
-export function useTypeAttributes(): FieldReadState<readonly AttributeWire[]> {
-  const entity = useTypeEntity();
-  return bindFieldToReact<Type, readonly AttributeWire[]>({ getEntity: () => entity, read: (t) => t.readAttributes() })();
+export function useTypeAttributes(): FieldReadState<readonly Attribute[]> {
+  const entity = useType();
+  return bindFieldToReact<Type, readonly Attribute[]>({ get: () => entity, read: (t) => t.readAttributes() })();
 }
 
 /** @emoji ✍️ {@link TypeOperationInput#rename}. */
 export function useRenameType(): readonly [(newName: string) => Promise<SetResult>, OperationStatus] {
-  const e = useTypeEntity();
+  const e = useType();
   return useTypeRenameOp(() => e);
 }
 
 /** @emoji ✍️ {@link TypeOperationInput#changeDescription}. */
 export function useChangeTypeDescription(): readonly [(newDescription: string) => Promise<SetResult>, OperationStatus] {
-  const e = useTypeEntity();
+  const e = useType();
   return useTypeChangeDescriptionOp(() => e);
 }
 
 /** @emoji ✍️ {@link TypeOperationInput#changeIcon}. */
 export function useChangeTypeIcon(): readonly [(newIcon: string) => Promise<SetResult>, OperationStatus] {
-  const e = useTypeEntity();
+  const e = useType();
   return useTypeChangeIconOp(() => e);
 }
 
 /** @emoji ✍️ {@link TypeOperationInput#addAttribute}. */
 export function useAddTypeAttribute(): readonly [(key: string, value: string, definition: string) => Promise<SetResult>, OperationStatus] {
-  const e = useTypeEntity();
+  const e = useType();
   return useTypeAddAttributeOp(() => e);
 }
 
 /** @emoji ✍️ {@link TypeOperationInput#removeAttribute}. */
 export function useRemoveTypeAttribute(): readonly [(id: string) => Promise<SetResult>, OperationStatus] {
-  const e = useTypeEntity();
+  const e = useType();
   return useTypeRemoveAttributeOp(() => e);
 }
 
 /** @emoji ✍️ {@link TypeOperationInput#removeAttributes}. */
 export function useRemoveTypeAttributes(): readonly [(ids: readonly string[]) => Promise<SetResult>, OperationStatus] {
-  const e = useTypeEntity();
+  const e = useType();
   return useTypeRemoveAttributesOp(() => e);
 }
 
 /** @emoji ✍️ {@link TypeOperationInput#createPort}. */
-export function useCreatePort(): readonly [
-  (
-    code?: string | null,
-    label?: string | null,
-    description?: string | null,
-    icon?: string | null,
-    order?: number | null,
-  ) => Promise<SetResult>,
-  OperationStatus,
-] {
-  const e = useTypeEntity();
+export function useCreatePort(): readonly [(code?: string | null, label?: string | null, description?: string | null, icon?: string | null, order?: number | null) => Promise<SetResult>, OperationStatus] {
+  const e = useType();
   return useTypeCreatePortOp(() => e);
 }
 
 /** @emoji ✍️ {@link TypeOperationInput#deletePort}. */
 export function useDeletePort(): readonly [(id: string) => Promise<SetResult>, OperationStatus] {
-  const e = useTypeEntity();
+  const e = useType();
   return useTypeDeletePortOp(() => e);
 }
 
 /** @emoji ✍️ {@link TypeOperationInput#deletePorts}. */
 export function useDeletePorts(): readonly [(ids: readonly string[]) => Promise<SetResult>, OperationStatus] {
-  const e = useTypeEntity();
+  const e = useType();
   return useTypeDeletePortsOp(() => e);
 }
 
 /** @emoji ✍️ {@link TypeOperationInput#addConnector}. */
-export function useAddConnector(): readonly [
-  (code: string, description?: string | null, icon?: string | null, portId?: string | null) => Promise<SetResult>,
-  OperationStatus,
-] {
-  const e = useTypeEntity();
+export function useAddConnector(): readonly [(code: string, description?: string | null, icon?: string | null, portId?: string | null) => Promise<SetResult>, OperationStatus] {
+  const e = useType();
   return useTypeAddConnectorOp(() => e);
 }
 
 /** @emoji ✍️ {@link TypeOperationInput#removeConnector}. */
 export function useRemoveConnector(): readonly [(id: string) => Promise<SetResult>, OperationStatus] {
-  const e = useTypeEntity();
+  const e = useType();
   return useTypeRemoveConnectorOp(() => e);
 }
 
 /** @emoji ✍️ {@link TypeOperationInput#removeConnectors}. */
 export function useRemoveConnectors(): readonly [(ids: readonly string[]) => Promise<SetResult>, OperationStatus] {
-  const e = useTypeEntity();
+  const e = useType();
   return useTypeRemoveConnectorsOp(() => e);
 }
 // #endregion 🧰Type
@@ -1238,84 +1034,84 @@ const usePortRemoveAttributesOp = bindOpToReact<Port, [readonly string[]]>((p, i
 
 /** @emoji 🛡️ Contextual {@link Port}. */
 export function usePort(): Port | null {
-  return usePortEntity();
+  return usePort();
 }
 
 /** @emoji 📖 Live {@link Port#readCode}. */
 export function usePortCode(): FieldReadState<string> {
-  const entity = usePortEntity();
-  return bindFieldToReact<Port, string>({ getEntity: () => entity, read: (p) => p.readCode() })();
+  const entity = usePort();
+  return bindFieldToReact<Port, string>({ get: () => entity, read: (p) => p.readCode() })();
 }
 
 /** @emoji 📖 Live {@link Port#readLabel}. */
 export function usePortLabel(): FieldReadState<string> {
-  const entity = usePortEntity();
-  return bindFieldToReact<Port, string>({ getEntity: () => entity, read: (p) => p.readLabel() })();
+  const entity = usePort();
+  return bindFieldToReact<Port, string>({ get: () => entity, read: (p) => p.readLabel() })();
 }
 
 /** @emoji 📖 Live {@link Port#readOrder}. */
 export function usePortOrder(): FieldReadState<number | null> {
-  const entity = usePortEntity();
-  return bindFieldToReact<Port, number | null>({ getEntity: () => entity, read: (p) => p.readOrder() })();
+  const entity = usePort();
+  return bindFieldToReact<Port, number | null>({ get: () => entity, read: (p) => p.readOrder() })();
 }
 
 /** @emoji 📖 Live {@link Port#readName}. */
 export function usePortName(): FieldReadState<string> {
-  const entity = usePortEntity();
-  return bindFieldToReact<Port, string>({ getEntity: () => entity, read: (p) => p.readName() })();
+  const entity = usePort();
+  return bindFieldToReact<Port, string>({ get: () => entity, read: (p) => p.readName() })();
 }
 
 /** @emoji 📖 Live {@link Port#readDescription}. */
 export function usePortDescription(): FieldReadState<string> {
-  const entity = usePortEntity();
-  return bindFieldToReact<Port, string>({ getEntity: () => entity, read: (p) => p.readDescription() })();
+  const entity = usePort();
+  return bindFieldToReact<Port, string>({ get: () => entity, read: (p) => p.readDescription() })();
 }
 
 /** @emoji 📖 Live {@link Port#readIcon}. */
 export function usePortIcon(): FieldReadState<string> {
-  const entity = usePortEntity();
-  return bindFieldToReact<Port, string>({ getEntity: () => entity, read: (p) => p.readIcon() })();
+  const entity = usePort();
+  return bindFieldToReact<Port, string>({ get: () => entity, read: (p) => p.readIcon() })();
 }
 
 /** @emoji 📖 Bulky {@link Port#readAttributes}. */
-export function usePortAttributes(): FieldReadState<readonly AttributeWire[]> {
-  const entity = usePortEntity();
-  return bindFieldToReact<Port, readonly AttributeWire[]>({ getEntity: () => entity, read: (p) => p.readAttributes() })();
+export function usePortAttributes(): FieldReadState<readonly Attribute[]> {
+  const entity = usePort();
+  return bindFieldToReact<Port, readonly Attribute[]>({ get: () => entity, read: (p) => p.readAttributes() })();
 }
 
 /** @emoji ✍️ {@link PortOperationInput#rename}. */
 export function useRenamePort(): readonly [(newCode: string, newLabel?: string | null) => Promise<SetResult>, OperationStatus] {
-  const e = usePortEntity();
+  const e = usePort();
   return usePortRenameOp(() => e);
 }
 
 /** @emoji ✍️ {@link PortOperationInput#changeDescription}. */
 export function useChangePortDescription(): readonly [(newDescription: string) => Promise<SetResult>, OperationStatus] {
-  const e = usePortEntity();
+  const e = usePort();
   return usePortChangeDescriptionOp(() => e);
 }
 
 /** @emoji ✍️ {@link PortOperationInput#changeIcon}. */
 export function useChangePortIcon(): readonly [(newIcon: string) => Promise<SetResult>, OperationStatus] {
-  const e = usePortEntity();
+  const e = usePort();
   return usePortChangeIconOp(() => e);
 }
 
 /** @emoji ✍️ {@link PortOperationInput#addAttribute}. */
 export function useAddPortAttribute(): readonly [(key: string, value: string, definition: string) => Promise<SetResult>, OperationStatus] {
-  const e = usePortEntity();
+  const e = usePort();
   return usePortAddAttributeOp(() => e);
 }
 
 /** @emoji ✍️ {@link PortOperationInput#removeAttribute}. */
 export function useRemovePortAttribute(): readonly [(id: string) => Promise<SetResult>, OperationStatus] {
-  const e = usePortEntity();
+  const e = usePort();
   return usePortRemoveAttributeOp(() => e);
 }
 
 /** @emoji ✍️ {@link PortOperationInput#removeAttributes}. */
 export function useRemovePortAttributes(): readonly [(ids: readonly string[]) => Promise<SetResult>, OperationStatus] {
-  const e = usePortEntity();
+  const e = usePort();
   return usePortRemoveAttributesOp(() => e);
 }
 // #endregion 🔘Port
@@ -1327,92 +1123,92 @@ const useConnectorChangeIconOp = bindOpToReact<Connector, [string]>((c, i) => c.
 
 /** @emoji 🛡️ Contextual {@link Connector}. */
 export function useConnector(): Connector | null {
-  return useConnectorEntity();
+  return useConnector();
 }
 
 /** @emoji 📖 Live {@link Connector#readCode}. */
 export function useConnectorCode(): FieldReadState<string> {
-  const entity = useConnectorEntity();
-  return bindFieldToReact<Connector, string>({ getEntity: () => entity, read: (c) => c.readCode() })();
+  const entity = useConnector();
+  return bindFieldToReact<Connector, string>({ get: () => entity, read: (c) => c.readCode() })();
 }
 
 /** @emoji 📖 Live {@link Connector#readDescription}. */
 export function useConnectorDescription(): FieldReadState<string> {
-  const entity = useConnectorEntity();
-  return bindFieldToReact<Connector, string>({ getEntity: () => entity, read: (c) => c.readDescription() })();
+  const entity = useConnector();
+  return bindFieldToReact<Connector, string>({ get: () => entity, read: (c) => c.readDescription() })();
 }
 
 /** @emoji 📖 Live {@link Connector#readIcon}. */
 export function useConnectorIcon(): FieldReadState<string> {
-  const entity = useConnectorEntity();
-  return bindFieldToReact<Connector, string>({ getEntity: () => entity, read: (c) => c.readIcon() })();
+  const entity = useConnector();
+  return bindFieldToReact<Connector, string>({ get: () => entity, read: (c) => c.readIcon() })();
 }
 
 /** @emoji 📖 Bulky {@link Connector#readAttributes}. */
-export function useConnectorAttributes(): FieldReadState<readonly AttributeWire[]> {
-  const entity = useConnectorEntity();
-  return bindFieldToReact<Connector, readonly AttributeWire[]>({ getEntity: () => entity, read: (c) => c.readAttributes() })();
+export function useConnectorAttributes(): FieldReadState<readonly Attribute[]> {
+  const entity = useConnector();
+  return bindFieldToReact<Connector, readonly Attribute[]>({ get: () => entity, read: (c) => c.readAttributes() })();
 }
 
 /** @emoji ✍️ {@link ConnectorOperationInput#rename}. */
 export function useRenameConnector(): readonly [(newCode: string) => Promise<SetResult>, OperationStatus] {
-  const e = useConnectorEntity();
+  const e = useConnector();
   return useConnectorRenameOp(() => e);
 }
 
 /** @emoji ✍️ {@link ConnectorOperationInput#changeDescription}. */
 export function useChangeConnectorDescription(): readonly [(newDescription: string) => Promise<SetResult>, OperationStatus] {
-  const e = useConnectorEntity();
+  const e = useConnector();
   return useConnectorChangeDescriptionOp(() => e);
 }
 
 /** @emoji ✍️ {@link ConnectorOperationInput#changeIcon}. */
 export function useChangeConnectorIcon(): readonly [(newIcon: string) => Promise<SetResult>, OperationStatus] {
-  const e = useConnectorEntity();
+  const e = useConnector();
   return useConnectorChangeIconOp(() => e);
 }
 // #endregion 🔗Connector
 
 // #region ✍️Author
-/** @emoji 🛡️ Alias for {@link useAuthorEntity} (plan name {@code useAuthor}). */
+/** @emoji 🛡️ Alias for {@link useAuthor} (plan name {@code useAuthor}). */
 export function useAuthor(): Author | null {
-  return useAuthorEntity();
+  return useAuthor();
 }
 
 /** @emoji 📖 Live {@link Author#readName}. */
 export function useAuthorName(): FieldReadState<string> {
-  const entity = useAuthorEntity();
-  return bindFieldToReact<Author, string>({ getEntity: () => entity, read: (a) => a.readName() })();
+  const entity = useAuthor();
+  return bindFieldToReact<Author, string>({ get: () => entity, read: (a) => a.readName() })();
 }
 
 /** @emoji 📖 Live {@link Author#readEmail}. */
 export function useAuthorEmail(): FieldReadState<string> {
-  const entity = useAuthorEntity();
-  return bindFieldToReact<Author, string>({ getEntity: () => entity, read: (a) => a.readEmail() })();
+  const entity = useAuthor();
+  return bindFieldToReact<Author, string>({ get: () => entity, read: (a) => a.readEmail() })();
 }
 
 /** @emoji 📖 Live {@link Author#readRank}. */
 export function useAuthorRank(): FieldReadState<number | null> {
-  const entity = useAuthorEntity();
-  return bindFieldToReact<Author, number | null>({ getEntity: () => entity, read: (a) => a.readRank() })();
+  const entity = useAuthor();
+  return bindFieldToReact<Author, number | null>({ get: () => entity, read: (a) => a.readRank() })();
 }
 
 /** @emoji 📖 Live {@link Author#readDescription}. */
 export function useAuthorDescription(): FieldReadState<string> {
-  const entity = useAuthorEntity();
-  return bindFieldToReact<Author, string>({ getEntity: () => entity, read: (a) => a.readDescription() })();
+  const entity = useAuthor();
+  return bindFieldToReact<Author, string>({ get: () => entity, read: (a) => a.readDescription() })();
 }
 
 /** @emoji 📖 Live {@link Author#readIcon}. */
 export function useAuthorIcon(): FieldReadState<string> {
-  const entity = useAuthorEntity();
-  return bindFieldToReact<Author, string>({ getEntity: () => entity, read: (a) => a.readIcon() })();
+  const entity = useAuthor();
+  return bindFieldToReact<Author, string>({ get: () => entity, read: (a) => a.readIcon() })();
 }
 
 /** @emoji 📖 Live {@link Author#readRole}. */
 export function useAuthorRole(): FieldReadState<string> {
-  const entity = useAuthorEntity();
-  return bindFieldToReact<Author, string>({ getEntity: () => entity, read: (a) => a.readRole() })();
+  const entity = useAuthor();
+  return bindFieldToReact<Author, string>({ get: () => entity, read: (a) => a.readRole() })();
 }
 // #endregion ✍️Author
 
@@ -1424,92 +1220,92 @@ const useQualityAddAttributeOp = bindOpToReact<Quality, [string, string, string]
 const useQualityRemoveAttributeOp = bindOpToReact<Quality, [string]>((q, id) => q.removeAttribute(id));
 const useQualityRemoveAttributesOp = bindOpToReact<Quality, [readonly string[]]>((q, ids) => q.removeAttributes(ids));
 
-/** @emoji 🛡️ Alias for {@link useQualityEntity}. */
+/** @emoji 🛡️ Alias for {@link useQuality}. */
 export function useQuality(): Quality | null {
-  return useQualityEntity();
+  return useQuality();
 }
 
 /** @emoji 📖 Live {@link Quality#readKey}. */
 export function useQualityKey(): FieldReadState<string> {
-  const entity = useQualityEntity();
-  return bindFieldToReact<Quality, string>({ getEntity: () => entity, read: (q) => q.readKey() })();
+  const entity = useQuality();
+  return bindFieldToReact<Quality, string>({ get: () => entity, read: (q) => q.readKey() })();
 }
 
 /** @emoji 📖 Live {@link Quality#readValue}. */
 export function useQualityValue(): FieldReadState<string> {
-  const entity = useQualityEntity();
-  return bindFieldToReact<Quality, string>({ getEntity: () => entity, read: (q) => q.readValue() })();
+  const entity = useQuality();
+  return bindFieldToReact<Quality, string>({ get: () => entity, read: (q) => q.readValue() })();
 }
 
 /** @emoji 📖 Live {@link Quality#readUnit}. */
 export function useQualityUnit(): FieldReadState<string> {
-  const entity = useQualityEntity();
-  return bindFieldToReact<Quality, string>({ getEntity: () => entity, read: (q) => q.readUnit() })();
+  const entity = useQuality();
+  return bindFieldToReact<Quality, string>({ get: () => entity, read: (q) => q.readUnit() })();
 }
 
 /** @emoji 📖 Live {@link Quality#readDefinition}. */
 export function useQualityDefinition(): FieldReadState<string> {
-  const entity = useQualityEntity();
-  return bindFieldToReact<Quality, string>({ getEntity: () => entity, read: (q) => q.readDefinition() })();
+  const entity = useQuality();
+  return bindFieldToReact<Quality, string>({ get: () => entity, read: (q) => q.readDefinition() })();
 }
 
 /** @emoji 📖 Live {@link Quality#readDescription}. */
 export function useQualityDescription(): FieldReadState<string> {
-  const entity = useQualityEntity();
-  return bindFieldToReact<Quality, string>({ getEntity: () => entity, read: (q) => q.readDescription() })();
+  const entity = useQuality();
+  return bindFieldToReact<Quality, string>({ get: () => entity, read: (q) => q.readDescription() })();
 }
 
 /** @emoji 📖 Live {@link Quality#readIcon}. */
 export function useQualityIcon(): FieldReadState<string> {
-  const entity = useQualityEntity();
-  return bindFieldToReact<Quality, string>({ getEntity: () => entity, read: (q) => q.readIcon() })();
+  const entity = useQuality();
+  return bindFieldToReact<Quality, string>({ get: () => entity, read: (q) => q.readIcon() })();
 }
 
 /** @emoji 📖 Live {@link Quality#readAttributes}. */
-export function useQualityAttributes(): FieldReadState<readonly AttributeWire[]> {
-  const entity = useQualityEntity();
-  return bindFieldToReact<Quality, readonly AttributeWire[]>({ getEntity: () => entity, read: (q) => q.readAttributes() })();
+export function useQualityAttributes(): FieldReadState<readonly Attribute[]> {
+  const entity = useQuality();
+  return bindFieldToReact<Quality, readonly Attribute[]>({ get: () => entity, read: (q) => q.readAttributes() })();
 }
 
 /** @emoji 📖 Live {@link Quality#readBenchmarks}. */
-export function useQualityBenchmarks(): FieldReadState<readonly BenchmarkWire[]> {
-  const entity = useQualityEntity();
-  return bindFieldToReact<Quality, readonly BenchmarkWire[]>({ getEntity: () => entity, read: (q) => q.readBenchmarks() })();
+export function useQualityBenchmarks(): FieldReadState<readonly Benchmark[]> {
+  const entity = useQuality();
+  return bindFieldToReact<Quality, readonly Benchmark[]>({ get: () => entity, read: (q) => q.readBenchmarks() })();
 }
 
 /** @emoji ✍️ {@link Quality#rename}. */
 export function useRenameQuality(): readonly [(newKey: string) => Promise<SetResult>, OperationStatus] {
-  const e = useQualityEntity();
+  const e = useQuality();
   return useQualityRenameOp(() => e);
 }
 
 /** @emoji ✍️ {@link Quality#changeDescription}. */
 export function useChangeQualityDescription(): readonly [(newDescription: string) => Promise<SetResult>, OperationStatus] {
-  const e = useQualityEntity();
+  const e = useQuality();
   return useQualityChangeDescriptionOp(() => e);
 }
 
 /** @emoji ✍️ {@link Quality#changeIcon}. */
 export function useChangeQualityIcon(): readonly [(newIcon: string) => Promise<SetResult>, OperationStatus] {
-  const e = useQualityEntity();
+  const e = useQuality();
   return useQualityChangeIconOp(() => e);
 }
 
 /** @emoji ✍️ {@link Quality#addAttribute}. */
 export function useAddQualityAttribute(): readonly [(key: string, value: string, definition: string) => Promise<SetResult>, OperationStatus] {
-  const e = useQualityEntity();
+  const e = useQuality();
   return useQualityAddAttributeOp(() => e);
 }
 
 /** @emoji ✍️ {@link Quality#removeAttribute}. */
 export function useRemoveQualityAttribute(): readonly [(attributeId: string) => Promise<SetResult>, OperationStatus] {
-  const e = useQualityEntity();
+  const e = useQuality();
   return useQualityRemoveAttributeOp(() => e);
 }
 
 /** @emoji ✍️ {@link Quality#removeAttributes}. */
 export function useRemoveQualityAttributes(): readonly [(ids: readonly string[]) => Promise<SetResult>, OperationStatus] {
-  const e = useQualityEntity();
+  const e = useQuality();
   return useQualityRemoveAttributesOp(() => e);
 }
 // #endregion 💎Quality
@@ -1522,74 +1318,74 @@ const useTagAddAttributeOp = bindOpToReact<Tag, [string, string, string]>((t, ke
 const useTagRemoveAttributeOp = bindOpToReact<Tag, [string]>((t, id) => t.removeAttribute(id));
 const useTagRemoveAttributesOp = bindOpToReact<Tag, [readonly string[]]>((t, ids) => t.removeAttributes(ids));
 
-/** @emoji 🛡️ Alias for {@link useTagEntity}. */
+/** @emoji 🛡️ Alias for {@link useTag}. */
 export function useTag(): Tag | null {
-  return useTagEntity();
+  return useTag();
 }
 
 /** @emoji 📖 Live {@link Tag#readName}. */
 export function useTagName(): FieldReadState<string> {
-  const entity = useTagEntity();
-  return bindFieldToReact<Tag, string>({ getEntity: () => entity, read: (t) => t.readName() })();
+  const entity = useTag();
+  return bindFieldToReact<Tag, string>({ get: () => entity, read: (t) => t.readName() })();
 }
 
 /** @emoji 📖 Live {@link Tag#readDescription}. */
 export function useTagDescription(): FieldReadState<string> {
-  const entity = useTagEntity();
-  return bindFieldToReact<Tag, string>({ getEntity: () => entity, read: (t) => t.readDescription() })();
+  const entity = useTag();
+  return bindFieldToReact<Tag, string>({ get: () => entity, read: (t) => t.readDescription() })();
 }
 
 /** @emoji 📖 Live {@link Tag#readIcon}. */
 export function useTagIcon(): FieldReadState<string> {
-  const entity = useTagEntity();
-  return bindFieldToReact<Tag, string>({ getEntity: () => entity, read: (t) => t.readIcon() })();
+  const entity = useTag();
+  return bindFieldToReact<Tag, string>({ get: () => entity, read: (t) => t.readIcon() })();
 }
 
 /** @emoji 📖 Live {@link Tag#readOrder}. */
 export function useTagOrder(): FieldReadState<number | null> {
-  const entity = useTagEntity();
-  return bindFieldToReact<Tag, number | null>({ getEntity: () => entity, read: (t) => t.readOrder() })();
+  const entity = useTag();
+  return bindFieldToReact<Tag, number | null>({ get: () => entity, read: (t) => t.readOrder() })();
 }
 
 /** @emoji 📖 Live {@link Tag#readAttributes}. */
-export function useTagAttributes(): FieldReadState<readonly AttributeWire[]> {
-  const entity = useTagEntity();
-  return bindFieldToReact<Tag, readonly AttributeWire[]>({ getEntity: () => entity, read: (t) => t.readAttributes() })();
+export function useTagAttributes(): FieldReadState<readonly Attribute[]> {
+  const entity = useTag();
+  return bindFieldToReact<Tag, readonly Attribute[]>({ get: () => entity, read: (t) => t.readAttributes() })();
 }
 
 /** @emoji ✍️ {@link Tag#rename}. */
 export function useRenameTag(): readonly [(newName: string) => Promise<SetResult>, OperationStatus] {
-  const e = useTagEntity();
+  const e = useTag();
   return useTagRenameOp(() => e);
 }
 
 /** @emoji ✍️ {@link Tag#changeDescription}. */
 export function useChangeTagDescription(): readonly [(newDescription: string) => Promise<SetResult>, OperationStatus] {
-  const e = useTagEntity();
+  const e = useTag();
   return useTagChangeDescriptionOp(() => e);
 }
 
 /** @emoji ✍️ {@link Tag#changeIcon}. */
 export function useChangeTagIcon(): readonly [(newIcon: string) => Promise<SetResult>, OperationStatus] {
-  const e = useTagEntity();
+  const e = useTag();
   return useTagChangeIconOp(() => e);
 }
 
 /** @emoji ✍️ {@link Tag#addAttribute}. */
 export function useAddTagAttribute(): readonly [(key: string, value: string, definition: string) => Promise<SetResult>, OperationStatus] {
-  const e = useTagEntity();
+  const e = useTag();
   return useTagAddAttributeOp(() => e);
 }
 
 /** @emoji ✍️ {@link Tag#removeAttribute}. */
 export function useRemoveTagAttribute(): readonly [(attributeId: string) => Promise<SetResult>, OperationStatus] {
-  const e = useTagEntity();
+  const e = useTag();
   return useTagRemoveAttributeOp(() => e);
 }
 
 /** @emoji ✍️ {@link Tag#removeAttributes}. */
 export function useRemoveTagAttributes(): readonly [(ids: readonly string[]) => Promise<SetResult>, OperationStatus] {
-  const e = useTagEntity();
+  const e = useTag();
   return useTagRemoveAttributesOp(() => e);
 }
 // #endregion 🏷️Tag
@@ -1602,308 +1398,306 @@ const useConceptAddAttributeOp = bindOpToReact<Concept, [string, string, string]
 const useConceptRemoveAttributeOp = bindOpToReact<Concept, [string]>((c, id) => c.removeAttribute(id));
 const useConceptRemoveAttributesOp = bindOpToReact<Concept, [readonly string[]]>((c, ids) => c.removeAttributes(ids));
 
-/** @emoji 🛡️ Alias for {@link useConceptEntity}. */
+/** @emoji 🛡️ Alias for {@link useConcept}. */
 export function useConcept(): Concept | null {
-  return useConceptEntity();
+  return useConcept();
 }
 
 /** @emoji 📖 Live {@link Concept#readName}. */
 export function useConceptName(): FieldReadState<string> {
-  const entity = useConceptEntity();
-  return bindFieldToReact<Concept, string>({ getEntity: () => entity, read: (c) => c.readName() })();
+  const entity = useConcept();
+  return bindFieldToReact<Concept, string>({ get: () => entity, read: (c) => c.readName() })();
 }
 
 /** @emoji 📖 Live {@link Concept#readDescription}. */
 export function useConceptDescription(): FieldReadState<string> {
-  const entity = useConceptEntity();
-  return bindFieldToReact<Concept, string>({ getEntity: () => entity, read: (c) => c.readDescription() })();
+  const entity = useConcept();
+  return bindFieldToReact<Concept, string>({ get: () => entity, read: (c) => c.readDescription() })();
 }
 
 /** @emoji 📖 Live {@link Concept#readIcon}. */
 export function useConceptIcon(): FieldReadState<string> {
-  const entity = useConceptEntity();
-  return bindFieldToReact<Concept, string>({ getEntity: () => entity, read: (c) => c.readIcon() })();
+  const entity = useConcept();
+  return bindFieldToReact<Concept, string>({ get: () => entity, read: (c) => c.readIcon() })();
 }
 
 /** @emoji 📖 Live {@link Concept#readOrder}. */
 export function useConceptOrder(): FieldReadState<number | null> {
-  const entity = useConceptEntity();
-  return bindFieldToReact<Concept, number | null>({ getEntity: () => entity, read: (c) => c.readOrder() })();
+  const entity = useConcept();
+  return bindFieldToReact<Concept, number | null>({ get: () => entity, read: (c) => c.readOrder() })();
 }
 
 /** @emoji 📖 Live {@link Concept#readAttributes}. */
-export function useConceptAttributes(): FieldReadState<readonly AttributeWire[]> {
-  const entity = useConceptEntity();
-  return bindFieldToReact<Concept, readonly AttributeWire[]>({ getEntity: () => entity, read: (c) => c.readAttributes() })();
+export function useConceptAttributes(): FieldReadState<readonly Attribute[]> {
+  const entity = useConcept();
+  return bindFieldToReact<Concept, readonly Attribute[]>({ get: () => entity, read: (c) => c.readAttributes() })();
 }
 
 /** @emoji ✍️ {@link Concept#rename}. */
 export function useRenameConcept(): readonly [(newName: string) => Promise<SetResult>, OperationStatus] {
-  const e = useConceptEntity();
+  const e = useConcept();
   return useConceptRenameOp(() => e);
 }
 
 /** @emoji ✍️ {@link Concept#changeDescription}. */
 export function useChangeConceptDescription(): readonly [(newDescription: string) => Promise<SetResult>, OperationStatus] {
-  const e = useConceptEntity();
+  const e = useConcept();
   return useConceptChangeDescriptionOp(() => e);
 }
 
 /** @emoji ✍️ {@link Concept#changeIcon}. */
 export function useChangeConceptIcon(): readonly [(newIcon: string) => Promise<SetResult>, OperationStatus] {
-  const e = useConceptEntity();
+  const e = useConcept();
   return useConceptChangeIconOp(() => e);
 }
 
 /** @emoji ✍️ {@link Concept#addAttribute}. */
 export function useAddConceptAttribute(): readonly [(key: string, value: string, definition: string) => Promise<SetResult>, OperationStatus] {
-  const e = useConceptEntity();
+  const e = useConcept();
   return useConceptAddAttributeOp(() => e);
 }
 
 /** @emoji ✍️ {@link Concept#removeAttribute}. */
 export function useRemoveConceptAttribute(): readonly [(attributeId: string) => Promise<SetResult>, OperationStatus] {
-  const e = useConceptEntity();
+  const e = useConcept();
   return useConceptRemoveAttributeOp(() => e);
 }
 
 /** @emoji ✍️ {@link Concept#removeAttributes}. */
 export function useRemoveConceptAttributes(): readonly [(ids: readonly string[]) => Promise<SetResult>, OperationStatus] {
-  const e = useConceptEntity();
+  const e = useConcept();
   return useConceptRemoveAttributesOp(() => e);
 }
 // #endregion 💡Concept
 
 // #region 🎨Representation
-/** @emoji 🛡️ Alias for {@link useRepresentationEntity}. */
+/** @emoji 🛡️ Alias for {@link useRepresentation}. */
 export function useRepresentation(): Representation | null {
-  return useRepresentationEntity();
+  return useRepresentation();
 }
 
 /** @emoji 📖 Live {@link Representation#readUrl}. */
 export function useRepresentationUrl(): FieldReadState<string> {
-  const entity = useRepresentationEntity();
-  return bindFieldToReact<Representation, string>({ getEntity: () => entity, read: (r) => r.readUrl() })();
+  const entity = useRepresentation();
+  return bindFieldToReact<Representation, string>({ get: () => entity, read: (r) => r.readUrl() })();
 }
 
 /** @emoji 📖 Live {@link Representation#readDescription}. */
 export function useRepresentationDescription(): FieldReadState<string> {
-  const entity = useRepresentationEntity();
-  return bindFieldToReact<Representation, string>({ getEntity: () => entity, read: (r) => r.readDescription() })();
+  const entity = useRepresentation();
+  return bindFieldToReact<Representation, string>({ get: () => entity, read: (r) => r.readDescription() })();
 }
 
 /** @emoji 📖 Live {@link Representation#readTagIds} (plan “tags”). */
 export function useRepresentationTags(): FieldReadState<readonly string[]> {
-  const entity = useRepresentationEntity();
-  return bindFieldToReact<Representation, readonly string[]>({ getEntity: () => entity, read: (r) => r.readTagIds() })();
+  const entity = useRepresentation();
+  return bindFieldToReact<Representation, readonly string[]>({ get: () => entity, read: (r) => r.readTagIds() })();
 }
 
 /** @emoji 📖 Live {@link Representation#readQualityIds}; schema has {@code qualities}, not LOD. */
 export function useRepresentationLod(): FieldReadState<readonly string[]> {
-  const entity = useRepresentationEntity();
-  return bindFieldToReact<Representation, readonly string[]>({ getEntity: () => entity, read: (r) => r.readQualityIds() })();
+  const entity = useRepresentation();
+  return bindFieldToReact<Representation, readonly string[]>({ get: () => entity, read: (r) => r.readQualityIds() })();
 }
 
 /** @emoji 📖 Live {@link Representation#readAttributes}. */
-export function useRepresentationAttributes(): FieldReadState<readonly AttributeWire[]> {
-  const entity = useRepresentationEntity();
-  return bindFieldToReact<Representation, readonly AttributeWire[]>({ getEntity: () => entity, read: (r) => r.readAttributes() })();
+export function useRepresentationAttributes(): FieldReadState<readonly Attribute[]> {
+  const entity = useRepresentation();
+  return bindFieldToReact<Representation, readonly Attribute[]>({ get: () => entity, read: (r) => r.readAttributes() })();
 }
 
 /** @emoji 📖 Live {@link Representation#readFileId}. */
 export function useRepresentationFileId(): FieldReadState<string> {
-  const entity = useRepresentationEntity();
-  return bindFieldToReact<Representation, string>({ getEntity: () => entity, read: (r) => r.readFileId() })();
+  const entity = useRepresentation();
+  return bindFieldToReact<Representation, string>({ get: () => entity, read: (r) => r.readFileId() })();
 }
 // #endregion 🎨Representation
 
 // #region 🧩Piece
-/** @emoji 🛡️ Resolves the contextual {@link Piece} from {@link PieceEntityContextProvider}. */
+/** @emoji 🛡️ Resolves the contextual {@link Piece} from {@link PieceContextProvider}. */
 export function usePiece(): Piece | null {
-  return usePieceEntity();
+  return usePiece();
 }
 
 /** @emoji 📖 Live {@link Piece#readName}. */
 export function usePieceName(): FieldReadState<string> {
-  const entity = usePieceEntity();
-  return bindFieldToReact<Piece, string>({ getEntity: () => entity, read: (p) => p.readName() })();
+  const entity = usePiece();
+  return bindFieldToReact<Piece, string>({ get: () => entity, read: (p) => p.readName() })();
 }
 
 /** @emoji 📖 Live {@link Piece#readDescription}. */
 export function usePieceDescription(): FieldReadState<string> {
-  const entity = usePieceEntity();
-  return bindFieldToReact<Piece, string>({ getEntity: () => entity, read: (p) => p.readDescription() })();
+  const entity = usePiece();
+  return bindFieldToReact<Piece, string>({ get: () => entity, read: (p) => p.readDescription() })();
 }
 
 /** @emoji 📖 Live {@link Piece#readIcon}. */
 export function usePieceIcon(): FieldReadState<string> {
-  const entity = usePieceEntity();
-  return bindFieldToReact<Piece, string>({ getEntity: () => entity, read: (p) => p.readIcon() })();
+  const entity = usePiece();
+  return bindFieldToReact<Piece, string>({ get: () => entity, read: (p) => p.readIcon() })();
 }
 
 /** @emoji 📖 Live {@link Piece#readScale}. */
 export function usePieceScale(): FieldReadState<number | null> {
-  const entity = usePieceEntity();
-  return bindFieldToReact<Piece, number | null>({ getEntity: () => entity, read: (p) => p.readScale() })();
+  const entity = usePiece();
+  return bindFieldToReact<Piece, number | null>({ get: () => entity, read: (p) => p.readScale() })();
 }
 
 /** @emoji 📖 Live {@link Piece#readPosition}. */
-export function usePiecePosition(): FieldReadState<PositionWire | null> {
-  const entity = usePieceEntity();
-  return bindFieldToReact<Piece, PositionWire | null>({ getEntity: () => entity, read: (p) => p.readPosition() })();
+export function usePiecePosition(): FieldReadState<Position | null> {
+  const entity = usePiece();
+  return bindFieldToReact<Piece, Position | null>({ get: () => entity, read: (p) => p.readPosition() })();
 }
 
 /** @emoji 📖 Live {@link Piece#readFlatPosition}. */
-export function usePieceFlatPosition(): FieldReadState<PositionWire | null> {
-  const entity = usePieceEntity();
-  return bindFieldToReact<Piece, PositionWire | null>({ getEntity: () => entity, read: (p) => p.readFlatPosition() })();
+export function usePieceFlatPosition(): FieldReadState<Position | null> {
+  const entity = usePiece();
+  return bindFieldToReact<Piece, Position | null>({ get: () => entity, read: (p) => p.readFlatPosition() })();
 }
 
 /** @emoji 📖 Live {@link Piece#readPlane}. */
-export function usePiecePlane(): FieldReadState<PlaneWire | null> {
-  const entity = usePieceEntity();
-  return bindFieldToReact<Piece, PlaneWire | null>({ getEntity: () => entity, read: (p) => p.readPlane() })();
+export function usePiecePlane(): FieldReadState<Plane | null> {
+  const entity = usePiece();
+  return bindFieldToReact<Piece, Plane | null>({ get: () => entity, read: (p) => p.readPlane() })();
 }
 
 /** @emoji 📖 Live {@link Piece#readCenter}. */
-export function usePieceCenter(): FieldReadState<CoordinateWire | null> {
-  const entity = usePieceEntity();
-  return bindFieldToReact<Piece, CoordinateWire | null>({ getEntity: () => entity, read: (p) => p.readCenter() })();
+export function usePieceCenter(): FieldReadState<Coordinate | null> {
+  const entity = usePiece();
+  return bindFieldToReact<Piece, Coordinate | null>({ get: () => entity, read: (p) => p.readCenter() })();
 }
 
 /** @emoji 📖 Live {@link Piece#readFlatPlane}. */
-export function usePieceFlatPlane(): FieldReadState<PlaneWire | null> {
-  const entity = usePieceEntity();
-  return bindFieldToReact<Piece, PlaneWire | null>({ getEntity: () => entity, read: (p) => p.readFlatPlane() })();
+export function usePieceFlatPlane(): FieldReadState<Plane | null> {
+  const entity = usePiece();
+  return bindFieldToReact<Piece, Plane | null>({ get: () => entity, read: (p) => p.readFlatPlane() })();
 }
 
 /** @emoji 📖 Live {@link Piece#readFlatCenter}. */
-export function usePieceFlatCenter(): FieldReadState<CoordinateWire | null> {
-  const entity = usePieceEntity();
-  return bindFieldToReact<Piece, CoordinateWire | null>({ getEntity: () => entity, read: (p) => p.readFlatCenter() })();
+export function usePieceFlatCenter(): FieldReadState<Coordinate | null> {
+  const entity = usePiece();
+  return bindFieldToReact<Piece, Coordinate | null>({ get: () => entity, read: (p) => p.readFlatCenter() })();
 }
 
 /** @emoji 📖 Live {@link Piece#readBlueprint}. */
-export function usePieceBlueprint(): FieldReadState<PieceBlueprintWire | null> {
-  const entity = usePieceEntity();
-  return bindFieldToReact<Piece, PieceBlueprintWire | null>({ getEntity: () => entity, read: (p) => p.readBlueprint() })();
+export function usePieceBlueprint(): FieldReadState<PieceBlueprint | null> {
+  const entity = usePiece();
+  return bindFieldToReact<Piece, PieceBlueprint | null>({ get: () => entity, read: (p) => p.readBlueprint() })();
 }
 
 /** @emoji 📖 Live {@link Piece#readAttributes}. */
-export function usePieceAttributes(): FieldReadState<readonly AttributeWire[]> {
-  const entity = usePieceEntity();
-  return bindFieldToReact<Piece, readonly AttributeWire[]>({ getEntity: () => entity, read: (p) => p.readAttributes() })();
+export function usePieceAttributes(): FieldReadState<readonly Attribute[]> {
+  const entity = usePiece();
+  return bindFieldToReact<Piece, readonly Attribute[]>({ get: () => entity, read: (p) => p.readAttributes() })();
 }
 
 /** @emoji 📖 Live {@link Piece#readConnectionKind}. */
 export function usePieceConnectionKind(): FieldReadState<"FIXED" | "CONNECTED" | null> {
-  const entity = usePieceEntity();
-  return bindFieldToReact<Piece, "FIXED" | "CONNECTED" | null>({ getEntity: () => entity, read: (p) => p.readConnectionKind() })();
+  const entity = usePiece();
+  return bindFieldToReact<Piece, "FIXED" | "CONNECTED" | null>({ get: () => entity, read: (p) => p.readConnectionKind() })();
 }
 
 /** @emoji 📖 Live {@link Piece#readParentPieceId}. */
 export function usePieceParentPieceId(): FieldReadState<string | null> {
-  const entity = usePieceEntity();
-  return bindFieldToReact<Piece, string | null>({ getEntity: () => entity, read: (p) => p.readParentPieceId() })();
+  const entity = usePiece();
+  return bindFieldToReact<Piece, string | null>({ get: () => entity, read: (p) => p.readParentPieceId() })();
 }
 
 /** @emoji 📖 Live {@link Piece#readParentConnectionId}. */
 export function usePieceParentConnectionId(): FieldReadState<string | null> {
-  const entity = usePieceEntity();
-  return bindFieldToReact<Piece, string | null>({ getEntity: () => entity, read: (p) => p.readParentConnectionId() })();
+  const entity = usePiece();
+  return bindFieldToReact<Piece, string | null>({ get: () => entity, read: (p) => p.readParentConnectionId() })();
 }
 
 /** @emoji 📖 Live {@link Piece#readChildPieceIds}. */
 export function usePieceChildPieceIds(): FieldReadState<readonly string[]> {
-  const entity = usePieceEntity();
-  return bindFieldToReact<Piece, readonly string[]>({ getEntity: () => entity, read: (p) => p.readChildPieceIds() })();
+  const entity = usePiece();
+  return bindFieldToReact<Piece, readonly string[]>({ get: () => entity, read: (p) => p.readChildPieceIds() })();
 }
 
 /** @emoji 📖 Live {@link Piece#readChildConnectionIds}. */
 export function usePieceChildConnectionIds(): FieldReadState<readonly string[]> {
-  const entity = usePieceEntity();
-  return bindFieldToReact<Piece, readonly string[]>({ getEntity: () => entity, read: (p) => p.readChildConnectionIds() })();
+  const entity = usePiece();
+  return bindFieldToReact<Piece, readonly string[]>({ get: () => entity, read: (p) => p.readChildConnectionIds() })();
 }
 
 /** @emoji 📖 Live {@link Piece#readDepth}. */
 export function usePieceDepth(): FieldReadState<number | null> {
-  const entity = usePieceEntity();
-  return bindFieldToReact<Piece, number | null>({ getEntity: () => entity, read: (p) => p.readDepth() })();
+  const entity = usePiece();
+  return bindFieldToReact<Piece, number | null>({ get: () => entity, read: (p) => p.readDepth() })();
 }
 
 const usePieceRenameOp = bindOpToReact<Piece, [string]>((p, n) => p.rename(n));
 const usePieceChangeDescriptionOp = bindOpToReact<Piece, [string]>((p, d) => p.changeDescription(d));
-const usePieceDragOp = bindOpToReact<Piece, [OffsetInputWire]>((p, o) => p.drag(o));
-const usePieceMoveOp = bindOpToReact<Piece, [PositionInputWire]>((p, pos) => p.move(pos));
+const usePieceDragOp = bindOpToReact<Piece, [OffsetInput]>((p, o) => p.drag(o));
+const usePieceMoveOp = bindOpToReact<Piece, [PositionInput]>((p, pos) => p.move(pos));
 const usePieceFixOp = bindOpToReact<Piece, []>((p) => p.fix());
 const usePieceChangeBlueprintOp = bindOpToReact<Piece, [string]>((p, id) => p.changeBlueprint(id));
 const usePieceAddAttributeOp = bindOpToReact<Piece, [string, string, string]>((p, key, value, definition) => p.addAttribute(key, value, definition));
 const usePieceRemoveAttributeOp = bindOpToReact<Piece, [string]>((p, id) => p.removeAttribute(id));
 const usePieceRemoveAttributesOp = bindOpToReact<Piece, [readonly string[]]>((p, ids) => p.removeAttributes(ids));
 
-/** @emoji ✍️ {@link Piece#rename} bound to {@link PieceEntityContext}. */
+/** @emoji ✍️ {@link Piece#rename} bound to {@link PieceContext}. */
 export function useRenamePiece(): readonly [(newName: string) => Promise<SetResult>, OperationStatus] {
-  const e = usePieceEntity();
+  const e = usePiece();
   return usePieceRenameOp(() => e);
 }
 
 /** @emoji ✍️ {@link Piece#changeDescription}. */
 export function useChangePieceDescription(): readonly [(newDescription: string) => Promise<SetResult>, OperationStatus] {
-  const e = usePieceEntity();
+  const e = usePiece();
   return usePieceChangeDescriptionOp(() => e);
 }
 
 /** @emoji ✍️ {@link Piece#drag}. */
-export function useDragPiece(): readonly [(offset: OffsetInputWire) => Promise<SetResult>, OperationStatus] {
-  const e = usePieceEntity();
+export function useDragPiece(): readonly [(offset: OffsetInput) => Promise<SetResult>, OperationStatus] {
+  const e = usePiece();
   return usePieceDragOp(() => e);
 }
 
 /** @emoji ✍️ {@link Piece#move}. */
-export function useMovePiece(): readonly [(position: PositionInputWire) => Promise<SetResult>, OperationStatus] {
-  const e = usePieceEntity();
+export function useMovePiece(): readonly [(position: PositionInput) => Promise<SetResult>, OperationStatus] {
+  const e = usePiece();
   return usePieceMoveOp(() => e);
 }
 
 /** @emoji ✍️ {@link Piece#fix}. */
 export function useFixPiece(): readonly [() => Promise<SetResult>, OperationStatus] {
-  const e = usePieceEntity();
+  const e = usePiece();
   return usePieceFixOp(() => e);
 }
 
 /** @emoji ✍️ {@link Piece#changeBlueprint}. */
 export function useChangePieceBlueprint(): readonly [(blueprintId: string) => Promise<SetResult>, OperationStatus] {
-  const e = usePieceEntity();
+  const e = usePiece();
   return usePieceChangeBlueprintOp(() => e);
 }
 
 /** @emoji ✍️ {@link Piece#addAttribute}. */
 export function useAddPieceAttribute(): readonly [(key: string, value: string, definition: string) => Promise<SetResult>, OperationStatus] {
-  const e = usePieceEntity();
+  const e = usePiece();
   return usePieceAddAttributeOp(() => e);
 }
 
 /** @emoji ✍️ {@link Piece#removeAttribute}. */
 export function useRemovePieceAttribute(): readonly [(attributeId: string) => Promise<SetResult>, OperationStatus] {
-  const e = usePieceEntity();
+  const e = usePiece();
   return usePieceRemoveAttributeOp(() => e);
 }
 
 /** @emoji ✍️ {@link Piece#removeAttributes}. */
 export function useRemovePieceAttributes(): readonly [(ids: readonly string[]) => Promise<SetResult>, OperationStatus] {
-  const e = usePieceEntity();
+  const e = usePiece();
   return usePieceRemoveAttributesOp(() => e);
 }
 // #endregion 🧩Piece
 
 // #region 🪢Pieces
 /**
- * @emoji 🪝 Binds {@link PiecesOperations} batch mutations (not an {@link Entity} — no cached kit state on the handle).
+ * @emoji 🪝 Binds {@link PiecesOperations} batch mutations (not an {@link } — no cached kit state on the handle).
  * @typeParam Args — forwarded to the underlying {@link PiecesOperations} method after the ops handle.
  */
-function bindPiecesOperationsOpToReact<Args extends unknown[]>(
-  impl: (ops: PiecesOperations, ...args: Args) => Promise<SetResult>,
-): (getOps: () => PiecesOperations | null) => readonly [(...args: Args) => Promise<SetResult>, OperationStatus] {
+function bindPiecesOperationsOpToReact<Args extends unknown[]>(impl: (ops: PiecesOperations, ...args: Args) => Promise<SetResult>): (getOps: () => PiecesOperations | null) => readonly [(...args: Args) => Promise<SetResult>, OperationStatus] {
   return function usePiecesOperationsOp(getOps: () => PiecesOperations | null): readonly [(...args: Args) => Promise<SetResult>, OperationStatus] {
     const getRef = React.useRef(getOps);
     getRef.current = getOps;
@@ -1939,155 +1733,130 @@ function bindPiecesOperationsOpToReact<Args extends unknown[]>(
   };
 }
 
-const usePiecesDragOp = bindPiecesOperationsOpToReact((ops, o: OffsetInputWire) => ops.drag(o));
-const usePiecesMoveOp = bindPiecesOperationsOpToReact((ops, o: OffsetInputWire) => ops.move(o));
+const usePiecesDragOp = bindPiecesOperationsOpToReact((ops, o: OffsetInput) => ops.drag(o));
+const usePiecesMoveOp = bindPiecesOperationsOpToReact((ops, o: OffsetInput) => ops.move(o));
 const usePiecesFixOp = bindPiecesOperationsOpToReact((ops) => ops.fix());
 const usePiecesChangeBlueprintOp = bindPiecesOperationsOpToReact((ops, id: string) => ops.changeBlueprint(id));
 
 /** @emoji ✍️ {@link PiecesOperations#drag} for {@code design.pieces(ids)}. */
-export function useDragPieces(
-  designId: string,
-  pieceIds: readonly string[],
-): readonly [(offset: OffsetInputWire) => Promise<SetResult>, OperationStatus] {
+export function useDragPieces(designId: string, pieceIds: readonly string[]): readonly [(offset: OffsetInput) => Promise<SetResult>, OperationStatus] {
   const { kit } = useKit();
-  const getOps = React.useCallback(
-    () => (pieceIds.length === 0 ? null : kit.design(designId).pieces(pieceIds)),
-    [kit, designId, pieceIds],
-  );
+  const getOps = React.useCallback(() => (pieceIds.length === 0 ? null : kit.design(designId).pieces(pieceIds)), [kit, designId, pieceIds]);
   return usePiecesDragOp(getOps);
 }
 
 /** @emoji ✍️ {@link PiecesOperations#move}. */
-export function useMovePieces(
-  designId: string,
-  pieceIds: readonly string[],
-): readonly [(offset: OffsetInputWire) => Promise<SetResult>, OperationStatus] {
+export function useMovePieces(designId: string, pieceIds: readonly string[]): readonly [(offset: OffsetInput) => Promise<SetResult>, OperationStatus] {
   const { kit } = useKit();
-  const getOps = React.useCallback(
-    () => (pieceIds.length === 0 ? null : kit.design(designId).pieces(pieceIds)),
-    [kit, designId, pieceIds],
-  );
+  const getOps = React.useCallback(() => (pieceIds.length === 0 ? null : kit.design(designId).pieces(pieceIds)), [kit, designId, pieceIds]);
   return usePiecesMoveOp(getOps);
 }
 
 /** @emoji ✍️ {@link PiecesOperations#fix}. */
-export function useFixPieces(
-  designId: string,
-  pieceIds: readonly string[],
-): readonly [() => Promise<SetResult>, OperationStatus] {
+export function useFixPieces(designId: string, pieceIds: readonly string[]): readonly [() => Promise<SetResult>, OperationStatus] {
   const { kit } = useKit();
-  const getOps = React.useCallback(
-    () => (pieceIds.length === 0 ? null : kit.design(designId).pieces(pieceIds)),
-    [kit, designId, pieceIds],
-  );
+  const getOps = React.useCallback(() => (pieceIds.length === 0 ? null : kit.design(designId).pieces(pieceIds)), [kit, designId, pieceIds]);
   return usePiecesFixOp(getOps);
 }
 
 /** @emoji ✍️ {@link PiecesOperations#changeBlueprint}. */
-export function useChangePiecesBlueprint(
-  designId: string,
-  pieceIds: readonly string[],
-): readonly [(blueprintId: string) => Promise<SetResult>, OperationStatus] {
+export function useChangePiecesBlueprint(designId: string, pieceIds: readonly string[]): readonly [(blueprintId: string) => Promise<SetResult>, OperationStatus] {
   const { kit } = useKit();
-  const getOps = React.useCallback(
-    () => (pieceIds.length === 0 ? null : kit.design(designId).pieces(pieceIds)),
-    [kit, designId, pieceIds],
-  );
+  const getOps = React.useCallback(() => (pieceIds.length === 0 ? null : kit.design(designId).pieces(pieceIds)), [kit, designId, pieceIds]);
   return usePiecesChangeBlueprintOp(getOps);
 }
 // #endregion 🪢Pieces
 
 // #region ⛓️Connection
-/** @emoji 🛡️ Resolves the contextual {@link Connection} from {@link ConnectionEntityContextProvider}. */
+/** @emoji 🛡️ Resolves the contextual {@link Connection} from {@link ConnectionContextProvider}. */
 export function useConnection(): Connection | null {
-  return useConnectionEntity();
+  return useConnection();
 }
 
 /** @emoji 📖 Live {@link Connection#readGap}. */
 export function useConnectionGap(): FieldReadState<number | null> {
-  const entity = useConnectionEntity();
-  return bindFieldToReact<Connection, number | null>({ getEntity: () => entity, read: (c) => c.readGap() })();
+  const entity = useConnection();
+  return bindFieldToReact<Connection, number | null>({ get: () => entity, read: (c) => c.readGap() })();
 }
 
 /** @emoji 📖 Live {@link Connection#readShift}. */
 export function useConnectionShift(): FieldReadState<number | null> {
-  const entity = useConnectionEntity();
-  return bindFieldToReact<Connection, number | null>({ getEntity: () => entity, read: (c) => c.readShift() })();
+  const entity = useConnection();
+  return bindFieldToReact<Connection, number | null>({ get: () => entity, read: (c) => c.readShift() })();
 }
 
 /** @emoji 📖 Live {@link Connection#readRise}. */
 export function useConnectionRise(): FieldReadState<number | null> {
-  const entity = useConnectionEntity();
-  return bindFieldToReact<Connection, number | null>({ getEntity: () => entity, read: (c) => c.readRise() })();
+  const entity = useConnection();
+  return bindFieldToReact<Connection, number | null>({ get: () => entity, read: (c) => c.readRise() })();
 }
 
 /** @emoji 📖 Live {@link Connection#readRotation}. */
 export function useConnectionRotation(): FieldReadState<number | null> {
-  const entity = useConnectionEntity();
-  return bindFieldToReact<Connection, number | null>({ getEntity: () => entity, read: (c) => c.readRotation() })();
+  const entity = useConnection();
+  return bindFieldToReact<Connection, number | null>({ get: () => entity, read: (c) => c.readRotation() })();
 }
 
 /** @emoji 📖 Live {@link Connection#readTurn}. */
 export function useConnectionTurn(): FieldReadState<number | null> {
-  const entity = useConnectionEntity();
-  return bindFieldToReact<Connection, number | null>({ getEntity: () => entity, read: (c) => c.readTurn() })();
+  const entity = useConnection();
+  return bindFieldToReact<Connection, number | null>({ get: () => entity, read: (c) => c.readTurn() })();
 }
 
 /** @emoji 📖 Live {@link Connection#readTilt}. */
 export function useConnectionTilt(): FieldReadState<number | null> {
-  const entity = useConnectionEntity();
-  return bindFieldToReact<Connection, number | null>({ getEntity: () => entity, read: (c) => c.readTilt() })();
+  const entity = useConnection();
+  return bindFieldToReact<Connection, number | null>({ get: () => entity, read: (c) => c.readTilt() })();
 }
 
 /** @emoji 📖 Live {@link Connection#readU}. */
 export function useConnectionU(): FieldReadState<number | null> {
-  const entity = useConnectionEntity();
-  return bindFieldToReact<Connection, number | null>({ getEntity: () => entity, read: (c) => c.readU() })();
+  const entity = useConnection();
+  return bindFieldToReact<Connection, number | null>({ get: () => entity, read: (c) => c.readU() })();
 }
 
 /** @emoji 📖 Live {@link Connection#readV}. */
 export function useConnectionV(): FieldReadState<number | null> {
-  const entity = useConnectionEntity();
-  return bindFieldToReact<Connection, number | null>({ getEntity: () => entity, read: (c) => c.readV() })();
+  const entity = useConnection();
+  return bindFieldToReact<Connection, number | null>({ get: () => entity, read: (c) => c.readV() })();
 }
 
 /** @emoji 📖 Live {@link Connection#readConnected}. */
-export function useConnectionConnected(): FieldReadState<ConnectionSideWire | null> {
-  const entity = useConnectionEntity();
-  return bindFieldToReact<Connection, ConnectionSideWire | null>({ getEntity: () => entity, read: (c) => c.readConnected() })();
+export function useConnectionConnected(): FieldReadState<ConnectionSide | null> {
+  const entity = useConnection();
+  return bindFieldToReact<Connection, ConnectionSide | null>({ get: () => entity, read: (c) => c.readConnected() })();
 }
 
 /** @emoji 📖 Live {@link Connection#readConnecting}. */
-export function useConnectionConnecting(): FieldReadState<ConnectionSideWire | null> {
-  const entity = useConnectionEntity();
-  return bindFieldToReact<Connection, ConnectionSideWire | null>({ getEntity: () => entity, read: (c) => c.readConnecting() })();
+export function useConnectionConnecting(): FieldReadState<ConnectionSide | null> {
+  const entity = useConnection();
+  return bindFieldToReact<Connection, ConnectionSide | null>({ get: () => entity, read: (c) => c.readConnecting() })();
 }
 
 /** @emoji 📖 Live {@link Connection#readName}. */
 export function useConnectionName(): FieldReadState<string> {
-  const entity = useConnectionEntity();
-  return bindFieldToReact<Connection, string>({ getEntity: () => entity, read: (c) => c.readName() })();
+  const entity = useConnection();
+  return bindFieldToReact<Connection, string>({ get: () => entity, read: (c) => c.readName() })();
 }
 
 /** @emoji 📖 Live {@link Connection#readDescription}. */
 export function useConnectionDescription(): FieldReadState<string> {
-  const entity = useConnectionEntity();
-  return bindFieldToReact<Connection, string>({ getEntity: () => entity, read: (c) => c.readDescription() })();
+  const entity = useConnection();
+  return bindFieldToReact<Connection, string>({ get: () => entity, read: (c) => c.readDescription() })();
 }
 
 /** @emoji 📖 Live {@link Connection#readIcon}. */
 export function useConnectionIcon(): FieldReadState<string> {
-  const entity = useConnectionEntity();
-  return bindFieldToReact<Connection, string>({ getEntity: () => entity, read: (c) => c.readIcon() })();
+  const entity = useConnection();
+  return bindFieldToReact<Connection, string>({ get: () => entity, read: (c) => c.readIcon() })();
 }
 
 /** @emoji 📖 Live {@link Connection#readAttributes}. */
-export function useConnectionAttributes(): FieldReadState<readonly AttributeWire[]> {
-  const entity = useConnectionEntity();
-  return bindFieldToReact<Connection, readonly AttributeWire[]>({ getEntity: () => entity, read: (c) => c.readAttributes() })();
+export function useConnectionAttributes(): FieldReadState<readonly Attribute[]> {
+  const entity = useConnection();
+  return bindFieldToReact<Connection, readonly Attribute[]>({ get: () => entity, read: (c) => c.readAttributes() })();
 }
 // #endregion ⛓️Connection
-
 
 // #region ⚛️Embedded tests
 const shouldRunReactEmbeddedTests =
@@ -2105,7 +1874,7 @@ if (shouldRunReactEmbeddedTests) {
   };
 
   const createTestKitClient = (store: KitHostStore): KitStoreClient => {
-    const initialName = String((kitJsonFromStore(store) as KitFullDto).name ?? "");
+    const initialName = String((kitJsonFromStore(store) as Kit).name ?? "");
     let pushKitName!: (v: string) => void;
     const kitNameField = new StoreField<string>(initialName, (push) => {
       pushKitName = push;
@@ -2115,17 +1884,17 @@ if (shouldRunReactEmbeddedTests) {
     const renameKitCmd = new StoreCommand<import("@semio/js").RenameKitCommandArgs>(async (args) => {
       const v = String(args.input?.name ?? "").trim();
       if (v === "") return { ok: false, error: { kind: "InvalidValue", message: "kit name required" } };
-      const kitDto: KitFullDto = JSON.parse(JSON.stringify(kitJsonFromStore(store))) as KitFullDto;
-      (kitDto as { name: string }).name = v;
-      store.replace(asKitInstance(kitDto));
+      const kit: Kit = JSON.parse(JSON.stringify(kitJsonFromStore(store))) as Kit;
+      (kit as { name: string }).name = v;
+      store.replace(asKitInstance(kit));
       pushKitName(v);
       return { ok: true };
     });
     return {
-      fetchFullKit: async () => kitJsonFromStore(store) as KitFullDto,
+      fetchKit: async () => kitJsonFromStore(store) as Kit,
       kitReadPoint: theKitReadPoint,
       submitChangeKitCommands: async (commands: readonly ChangeKitCommand[]) => {
-        const kit: KitFullDto = JSON.parse(JSON.stringify(kitJsonFromStore(store))) as KitFullDto;
+        const kit: Kit = JSON.parse(JSON.stringify(kitJsonFromStore(store))) as Kit;
         for (const cmd of commands) {
           const c = cmd as Record<string, unknown>;
           if ("name" in c && c.name && typeof c.name === "object") {
@@ -2134,26 +1903,19 @@ if (shouldRunReactEmbeddedTests) {
             (kit as { name: string }).name = nm;
             pushKitName(nm);
           }
-          if ("description" in c && c.description && typeof c.description === "object")
-            (kit as { description?: string }).description =
-              (c.description as { description?: string | null }).description ?? undefined;
-          if ("icon" in c && c.icon && typeof c.icon === "object")
-            (kit as { icon?: string }).icon = (c.icon as { icon?: string | null }).icon ?? undefined;
-          if ("image" in c && c.image && typeof c.image === "object")
-            (kit as { image?: string }).image = (c.image as { image?: string | null }).image ?? undefined;
-          if ("version" in c && c.version && typeof c.version === "object")
-            (kit as { version?: string }).version = (c.version as { version?: string | null }).version ?? undefined;
-          if ("homepage" in c && c.homepage && typeof c.homepage === "object")
-            (kit as { homepage?: string }).homepage = (c.homepage as { homepage?: string | null }).homepage ?? undefined;
-          if ("license" in c && c.license && typeof c.license === "object")
-            (kit as { license?: string }).license = (c.license as { license?: string | null }).license ?? undefined;
+          if ("description" in c && c.description && typeof c.description === "object") (kit as { description?: string }).description = (c.description as { description?: string | null }).description ?? undefined;
+          if ("icon" in c && c.icon && typeof c.icon === "object") (kit as { icon?: string }).icon = (c.icon as { icon?: string | null }).icon ?? undefined;
+          if ("image" in c && c.image && typeof c.image === "object") (kit as { image?: string }).image = (c.image as { image?: string | null }).image ?? undefined;
+          if ("version" in c && c.version && typeof c.version === "object") (kit as { version?: string }).version = (c.version as { version?: string | null }).version ?? undefined;
+          if ("homepage" in c && c.homepage && typeof c.homepage === "object") (kit as { homepage?: string }).homepage = (c.homepage as { homepage?: string | null }).homepage ?? undefined;
+          if ("license" in c && c.license && typeof c.license === "object") (kit as { license?: string }).license = (c.license as { license?: string | null }).license ?? undefined;
         }
         store.replace(asKitInstance(kit));
         return { ok: true };
       },
       readPieceFlatPlane: async () => null,
       readPieceFlatCenter: async () => null,
-      readPieceParentConnectionFull: async () => null,
+      readPieceParentConnection: async () => null,
       readDesignIncludedDesigns: async () => [],
       readDesignClusterableGroups: async () => [],
       readDesignQualitySum: async () => 0,
@@ -2184,7 +1946,7 @@ if (shouldRunReactEmbeddedTests) {
       getTypes: async () => [],
       getAuthors: async () => [],
       getKitMetadata: async () => {
-        const k = kitJsonFromStore(store) as KitFullDto;
+        const k = kitJsonFromStore(store) as Kit;
         return { id: String(k.id ?? ""), name: String(k.name ?? "") };
       },
       undo: async () => ({ ok: true }),
@@ -2192,14 +1954,14 @@ if (shouldRunReactEmbeddedTests) {
       canUndo: async () => false,
       canRedo: async () => false,
       backboneStatus: async () => ({ attached: false, kind: null, backboneTip: null, pendingWipCheckpoints: 0 }),
-      attachBackbone: async () => ({ ok: true } as const),
-      detachBackbone: async () => ({ ok: true } as const),
+      attachBackbone: async () => ({ ok: true }) as const,
+      detachBackbone: async () => ({ ok: true }) as const,
       listConflicts: async () => [] as const,
-      resolveConflict: async () => ({ ok: true } as const),
-      syncNow: async () => ({ ok: true } as const),
+      resolveConflict: async () => ({ ok: true }) as const,
+      syncNow: async () => ({ ok: true }) as const,
       kitName: kitNameField,
       renameKit: renameKitCmd,
-      readKitName: async () => String((kitJsonFromStore(store) as KitFullDto).name ?? ""),
+      readKitName: async () => String((kitJsonFromStore(store) as Kit).name ?? ""),
       createAlternativeFromTip: async () => "alt-test",
       getKitWriteScope: () => null,
       setKitWriteScope: () => {},
@@ -2350,12 +2112,7 @@ if (shouldRunReactEmbeddedTests) {
         return null;
       }
 
-      render(
-        React.createElement(
-          KitScope,
-          { store, kitClient, children: React.createElement(React.Fragment, null, React.createElement(Piece1), React.createElement(Piece2)) },
-        ),
-      );
+      render(React.createElement(KitScope, { store, kitClient, children: React.createElement(React.Fragment, null, React.createElement(Piece1), React.createElement(Piece2)) }));
 
       await waitFor(() => {
         expect(renders.p1).toBeGreaterThan(0);
@@ -2589,7 +2346,7 @@ if (shouldRunReactEmbeddedTests) {
       });
       const store = new InMemoryKitStore(kit);
       const stub: KitStoreClient = {
-        fetchFullKit: async () => store.getSnapshot().kit.toJSON() as KitFullDto,
+        fetchKit: async () => store.getSnapshot().kit.toJSON() as Kit,
         kitReadPoint: theKitReadPoint,
         getKitWriteScope: () => null,
         setKitWriteScope: () => {},
@@ -2618,7 +2375,7 @@ if (shouldRunReactEmbeddedTests) {
         getTypes: async () => [],
         getAuthors: async () => [],
         getKitMetadata: async () => {
-          const k = store.getSnapshot().kit.toJSON() as KitFullDto;
+          const k = store.getSnapshot().kit.toJSON() as Kit;
           return { id: String(k.id ?? ""), name: String(k.name ?? "") };
         },
         undo: async () => ({ ok: true }) as const,
@@ -2626,11 +2383,11 @@ if (shouldRunReactEmbeddedTests) {
         canUndo: async () => false,
         canRedo: async () => false,
         backboneStatus: async () => ({ attached: false, kind: null, backboneTip: null, pendingWipCheckpoints: 0 }),
-        attachBackbone: async () => ({ ok: true } as const),
-        detachBackbone: async () => ({ ok: true } as const),
+        attachBackbone: async () => ({ ok: true }) as const,
+        detachBackbone: async () => ({ ok: true }) as const,
         listConflicts: async () => [],
-        resolveConflict: async () => ({ ok: true } as const),
-        syncNow: async () => ({ ok: true } as const),
+        resolveConflict: async () => ({ ok: true }) as const,
+        syncNow: async () => ({ ok: true }) as const,
         kitName: new StoreField<string>(""),
         renameKit: new StoreCommand<import("@semio/js").RenameKitCommandArgs>(async () => ({
           ok: false,
@@ -2639,7 +2396,7 @@ if (shouldRunReactEmbeddedTests) {
         readKitName: async () => "",
         readPieceFlatPlane: async () => null,
         readPieceFlatCenter: async () => null,
-        readPieceParentConnectionFull: async () => null,
+        readPieceParentConnection: async () => null,
         readDesignIncludedDesigns: async () => [],
         readDesignClusterableGroups: async () => [],
         readDesignQualitySum: async () => 0,

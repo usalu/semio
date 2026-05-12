@@ -6,8 +6,6 @@ scalar Timestamp
 
 scalar Color
 
-scalar Json
-
 #endregion Scalars
 
 #region Entities
@@ -8294,7 +8292,6 @@ type Query {
   conflicts: ConflictConnection!
   node(id: ID!): Node
   entity(hash: ID!): Entity
-  kitStoreBundleJson: String!
 }
 
 #region ScopedCommands
@@ -8306,7 +8303,6 @@ type Query {
 type Mutation {
   # Mutation
   session: SessionCommandInput!
-  hydrateKitStoreBundleJson(json: String!): ID!
 }
 
 # 🔴 Live subscription: mirrors `Query`. The server emits the resolved selection on subscribe
@@ -8314,12 +8310,15 @@ type Mutation {
 # limits emissions to updates of that scalar.
 type Subscription {
   # Subscription
+  # Events
   session: Session!
   wip: Graph!
   authoritative: Graph
   conflicts: ConflictConnection!
-  node(id: ID!): Node
-  entity(hash: ID!): Entity
+  node(id: ID!): Node!
+  entity(hash: ID!): Entity!
+  # Commands
+  operation: Operation!
 }
 
 schema {
