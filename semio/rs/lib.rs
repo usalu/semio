@@ -4243,12 +4243,6 @@ pub mod vcs {
     use crate::timestamp::Timestamp;
 
     //#region 🪪 change
-    /// @emoji 📦 One recorded kit command plus optional canonical diff wire for bundle `kitDiff` / backbone audit (replay still uses `operation` input).
-    pub struct KitRecordedStep {
-        pub operation: operation::KitOperation,
-        pub kit_diff_wire: Option<serde_json::Value>,
-    }
-
     pub struct Change {
         pub id: Id,
         pub owner: RwLock<Option<ChangeOwnerRef>>,
@@ -4257,10 +4251,10 @@ pub mod vcs {
         pub saved_at: RwLock<Option<Timestamp>>,
         pub description: RwLock<String>,
         pub origin: RwLock<String>,
-        /// @emoji 📜 Forward kit steps (materialized via `Kit::apply_diff` from each `operation`).
-        pub forwards: RwLock<Vec<KitRecordedStep>>,
-        /// @emoji 📜 Backward companion steps for explicit undo/redo (same materialization pipeline).
-        pub backwards: RwLock<Vec<KitRecordedStep>>,
+        /// @emoji 📜 Forward [`operation::KitOperation`] steps (materialized via `Kit::apply_diff`; persisted `kitDiff` in bundles is derived from each op's `to_diff` at projection time).
+        pub forwards: RwLock<Vec<operation::KitOperation>>,
+        /// @emoji 📜 Backward companion operations for explicit undo/redo (same pipeline).
+        pub backwards: RwLock<Vec<operation::KitOperation>>,
     }
 
     /// 🔗 Weak owner lane matching SDL `Alternative | Checkpoint` for persisted [`Change`] entities.
@@ -4966,8 +4960,8 @@ pub mod vcs {
         }
 
         /// 🛰️ WIP bootstrap for `@semio/js` WASM: hydrates [`Graph::parent_root_for_active_draft`] via [`crate::kit_backbone::graph_new_overlay_from_initial_projection_json`] then re-seeds a deep-cloned immutable parent line.
-        pub async fn new_overlay_from_initial_kit_projection_json(dto_json: serde_json::Value) -> Result<Arc<Self>, SemioError> {
-            crate::kit_backbone::graph_new_overlay_from_initial_projection_json(dto_json).await
+        pub async fn new_overlay_from_initial_kit_projection_json(json: serde_json::Value) -> Result<Arc<Self>, SemioError> {
+            crate::kit_backbone::graph_new_overlay_from_initial_projection_json(json).await
         }
 
         pub async fn compute_hash(&self) -> String {
@@ -5017,8 +5011,8 @@ pub mod vcs {
                 let changes = ed.changes.read().await.clone();
                 for ch in changes {
                     let forwards = ch.forwards.read().await.clone();
-                    for step in forwards {
-                        let diff = match step.operation.to_diff(&mat).await {
+                    for op in forwards {
+                        let diff = match op.to_diff(&mat).await {
                             Ok(d) => d,
                             Err(_) => continue,
                         };
@@ -5032,15 +5026,41 @@ pub mod vcs {
             mat
         }
 
+        /// @emoji 📦 Deep-clone parent line and replay forward ops on `draft` strictly before `forward_idx` in `change_idx` within `target_tx` (same ordering as [`Self::materialized_kit_for_draft`]).
+        pub async fn scratch_kit_before_forward_step(self: &Arc<Self>, draft: &Arc<Draft>, target_tx: &Arc<Edit>, change_idx: usize, forward_idx: usize) -> Arc<Kit> {
+            let base = self.parent_root_for_active_draft.read().await.clone();
+            let mat = base.deep_clone().await;
+            let mut edits: Vec<Arc<Edit>> = Vec::new();
+            edits.extend(draft.finalized_transactions.read().await.clone());
+            edits.extend(draft.transactions.read().await.clone());
+            for ed in edits {
+                let same_ed = Arc::ptr_eq(&ed, target_tx);
+                let changes = ed.changes.read().await.clone();
+                for (ci, c_arc) in changes.iter().enumerate() {
+                    let forwards = c_arc.forwards.read().await.clone();
+                    if same_ed && ci == change_idx {
+                        for (fi, op) in forwards.into_iter().enumerate() {
+                            if fi >= forward_idx {
+                                return mat;
+                            }
+                            if let Ok(d) = op.to_diff(&mat).await {
+                                let _ = mat.apply_diff(&d).await;
+                            }
+                        }
+                        return mat;
+                    }
+                    for op in forwards {
+                        if let Ok(d) = op.to_diff(&mat).await {
+                            let _ = mat.apply_diff(&d).await;
+                        }
+                    }
+                }
+            }
+            mat
+        }
+
         /// @emoji 📝 Append one forward operation plus backward operations onto the open transaction's tail [`Change`], bumping draft `change_seq`.
-        pub async fn record_op_in_open_transaction(
-            self: &Arc<Self>,
-            draft_id: &Id,
-            transaction_id: &Id,
-            forward: crate::operation::KitOperation,
-            forward_kit_diff_wire: Option<serde_json::Value>,
-            backwards: Vec<crate::operation::KitOperation>,
-        ) -> Result<(), SemioError> {
+        pub async fn record_op_in_open_transaction(self: &Arc<Self>, draft_id: &Id, transaction_id: &Id, forward: crate::operation::KitOperation, backwards: Vec<crate::operation::KitOperation>) -> Result<(), SemioError> {
             let draft = self.ensure_draft(draft_id).await;
             let _ = draft.ensure_transaction(transaction_id).await;
             let tx = draft.transactions.read().await.iter().find(|t| &t.id == transaction_id).cloned().ok_or_else(|| SemioError::not_found("Edit", transaction_id.as_str()))?;
@@ -5063,13 +5083,8 @@ pub mod vcs {
                 None
             };
             *change.owner.write().await = lane_owner;
-            change.forwards.write().await.push(KitRecordedStep { operation: forward, kit_diff_wire: forward_kit_diff_wire });
-            {
-                let mut bw = change.backwards.write().await;
-                for b in backwards {
-                    bw.push(KitRecordedStep { operation: b, kit_diff_wire: None });
-                }
-            }
+            change.forwards.write().await.push(forward);
+            change.backwards.write().await.extend(backwards);
             draft.change_seq.fetch_add(1, Ordering::Relaxed);
             self.invalidate_materialized_cache().await;
             Ok(())
@@ -5281,10 +5296,8 @@ pub mod vcs {
                 input: crate::operation::Input::FixedPiece { position, name, description },
             };
             let before = self.materialized_kit_for_draft(&draft_id).await;
-            let kit_diff = forward.to_diff(&before).await?;
-            let wire = Some(crate::kit_backbone::canonical_kit_diff_to_wire_json(&kit_diff.0));
             let backwards = forward.to_backwards(&before).await?;
-            self.record_op_in_open_transaction(&draft_id, &transaction_id, forward, wire, backwards).await?;
+            self.record_op_in_open_transaction(&draft_id, &transaction_id, forward, backwards).await?;
             let after = self.materialized_kit_for_draft(&draft_id).await;
             let piece = after.design_by_external_id(&design_id).await.ok_or_else(|| SemioError::not_found("Design", design_id.as_str()))?.piece_by_external_id(&piece_id).await.ok_or_else(|| SemioError::not_found("Piece", piece_id.as_str()))?;
             Ok((piece,))
@@ -6016,7 +6029,6 @@ pub mod operation {
         pub authors: KitAuxSubtree,
     }
 
-    /// @emoji 📦 Canonical kit transition shape; companion JSON under `kitDiff` on persisted [`OperationStepDto`] (replay uses typed operation `input` only).
     #[derive(Clone, Debug, Default, PartialEq)]
     pub struct KitDiff(pub CanonicalKitDiff);
 
@@ -7639,10 +7651,8 @@ pub mod kit_graph_engine {
             _ => None,
         };
         let before = graph.materialized_kit_for_draft(draft_id).await;
-        let kit_diff = operation.to_diff(&before).await?;
-        let wire = Some(crate::kit_backbone::canonical_kit_diff_to_wire_json(&kit_diff.0));
         let backwards = operation.to_backwards(&before).await?;
-        graph.record_op_in_open_transaction(draft_id, transaction_id, operation, wire, backwards).await?;
+        graph.record_op_in_open_transaction(draft_id, transaction_id, operation, backwards).await?;
         let after = graph.materialized_kit_for_draft(draft_id).await;
         let fp_before = projection_fingerprint_for_kit(before.as_ref()).await;
         let fp_after = projection_fingerprint_for_kit(after.as_ref()).await;
@@ -7727,7 +7737,7 @@ pub mod kit_backbone {
     pub(crate) fn canonical_kit_diff_to_wire_json(d: &crate::operation::CanonicalKitDiff) -> serde_json::Value {
         use serde_json::{Map, Value};
         let mut root = Map::new();
-        let mut opt_s = |m: &mut Map<String, Value>, k: &str, v: &Option<String>| {
+        let opt_s = |m: &mut Map<String, Value>, k: &str, v: &Option<String>| {
             if let Some(s) = v {
                 m.insert(k.to_string(), Value::String(s.clone()));
             }
@@ -7781,7 +7791,7 @@ pub mod kit_backbone {
     }
 
     fn type_scalar_diff_wire(d: &crate::operation::TypeScalarDiff) -> serde_json::Value {
-        use serde_json::{json, Map, Value};
+        use serde_json::{Map, Value};
         let mut m = Map::new();
         if let Some(ref s) = d.name {
             m.insert("name".into(), Value::String(s.clone()));
@@ -7832,7 +7842,7 @@ pub mod kit_backbone {
     }
 
     fn design_diff_wire(d: &crate::operation::DesignDiff) -> serde_json::Value {
-        use serde_json::{json, Value};
+        use serde_json::Value;
         let mut o = serde_json::Map::new();
         o.insert("scalars".to_string(), design_scalar_diff_wire(&d.scalars));
         if let Some(p) = &d.pieces {
@@ -8199,11 +8209,7 @@ pub mod kit_backbone {
         let (yx, yy, yz) = f3(ya)?;
         Ok(crate::geom::PositionInput {
             center: crate::geom::CoordinateInput { u, v: vv },
-            plane: crate::geom::PlaneInput {
-                origin: crate::geom::PointInput { x: ox, y: oy, z: oz },
-                x_axis: crate::geom::VectorInput { x: xx, y: xy, z: xz },
-                y_axis: crate::geom::VectorInput { x: yx, y: yy, z: yz },
-            },
+            plane: crate::geom::PlaneInput { origin: crate::geom::PointInput { x: ox, y: oy, z: oz }, x_axis: crate::geom::VectorInput { x: xx, y: xy, z: xz }, y_axis: crate::geom::VectorInput { x: yx, y: yy, z: yz } },
         })
     }
 
@@ -8233,28 +8239,15 @@ pub mod kit_backbone {
             "CreateTag" => Scope::CreateTag {
                 owner_id: id_from_str(m.get("owner_id").and_then(|x| x.as_str()).ok_or_else(|| SemioError::invalid("owner_id"))?),
                 tag_id: id_from_str(m.get("tag_id").and_then(|x| x.as_str()).ok_or_else(|| SemioError::invalid("tag_id"))?),
-                attribute_ids: m
-                    .get("attribute_ids")
-                    .and_then(|x| x.as_array())
-                    .map(|a| a.iter().map(|x| id_from_str(x.as_str().unwrap_or(""))).collect())
-                    .unwrap_or_default(),
+                attribute_ids: m.get("attribute_ids").and_then(|x| x.as_array()).map(|a| a.iter().map(|x| id_from_str(x.as_str().unwrap_or(""))).collect()).unwrap_or_default(),
             },
             "CreateTags" => Scope::CreateTags {
                 owner_id: id_from_str(m.get("owner_id").and_then(|x| x.as_str()).ok_or_else(|| SemioError::invalid("owner_id"))?),
-                tag_ids: m
-                    .get("tag_ids")
-                    .and_then(|x| x.as_array())
-                    .map(|a| a.iter().map(|x| id_from_str(x.as_str().unwrap_or(""))).collect())
-                    .unwrap_or_default(),
+                tag_ids: m.get("tag_ids").and_then(|x| x.as_array()).map(|a| a.iter().map(|x| id_from_str(x.as_str().unwrap_or(""))).collect()).unwrap_or_default(),
                 attribute_ids: m
                     .get("attribute_ids")
                     .and_then(|x| x.as_array())
-                    .map(|outer| {
-                        outer
-                            .iter()
-                            .map(|inner| inner.as_array().map(|a| a.iter().map(|x| id_from_str(x.as_str().unwrap_or(""))).collect()).unwrap_or_default())
-                            .collect()
-                    })
+                    .map(|outer| outer.iter().map(|inner| inner.as_array().map(|a| a.iter().map(|x| id_from_str(x.as_str().unwrap_or(""))).collect()).unwrap_or_default()).collect())
                     .unwrap_or_default(),
             },
             "CreateConcept" => Scope::CreateConcept {
@@ -8381,20 +8374,11 @@ pub mod kit_backbone {
             "FixedPiece" => {
                 let m = inner.as_object().ok_or_else(|| SemioError::invalid("FixedPiece"))?;
                 let position = position_input_from_json(m.get("position").ok_or_else(|| SemioError::invalid("position"))?)?;
-                Input::FixedPiece {
-                    position,
-                    name: m.get("name").and_then(|x| x.as_str()).map(|s| s.to_string()),
-                    description: m.get("description").and_then(|x| x.as_str()).map(|s| s.to_string()),
-                }
+                Input::FixedPiece { position, name: m.get("name").and_then(|x| x.as_str()).map(|s| s.to_string()), description: m.get("description").and_then(|x| x.as_str()).map(|s| s.to_string()) }
             }
             "Offset" => {
                 let m = inner.get("offset").and_then(|x| x.as_object()).ok_or_else(|| SemioError::invalid("offset"))?;
-                Input::Offset {
-                    offset: crate::geom::OffsetInput {
-                        u: m.get("u").and_then(|x| x.as_f64()).unwrap_or(0.0),
-                        v: m.get("v").and_then(|x| x.as_f64()).unwrap_or(0.0),
-                    },
-                }
+                Input::Offset { offset: crate::geom::OffsetInput { u: m.get("u").and_then(|x| x.as_f64()).unwrap_or(0.0), v: m.get("v").and_then(|x| x.as_f64()).unwrap_or(0.0) } }
             }
             other => return Err(SemioError::invalid(format!("unknown input `{other}`"))),
         })
@@ -8452,7 +8436,6 @@ pub mod kit_backbone {
     //#endregion 🔖 dev_backbone_kit_operation_json
 
     //#region 🔖 dev_backbone_initial_kit_projection
-    /// @emoji 📸 `KitFullDto`-shaped JSON for dev bundle `initialKit` baselines + deep-clone round-trips; **`serde_json::Value` stays inside [`kit_backbone`] for this projection only** (per single-source backbone plan).
     pub(crate) async fn initial_kit_projection_value(kit: &std::sync::Arc<crate::kit::Kit>) -> serde_json::Value {
         use crate::kit::r#type::Blueprint;
         let kid = kit.workspace_kit_id().await;
@@ -8516,12 +8499,11 @@ pub mod kit_backbone {
         })
     }
 
-    /// @emoji 🧾 Overlays layout + metadata from `@semio/js` `KitFullDto`-style JSON (`types`, `designs`, `pieces`); **`serde_json::Value` only on this dev-backbone projection path**.
-    pub(crate) async fn hydrate_kit_from_initial_projection_value(kit: &std::sync::Arc<crate::kit::Kit>, dto: &serde_json::Value) -> Result<(), crate::error::SemioError> {
-        if let Some(n) = dto.get("name").and_then(|v| v.as_str()) {
+    pub(crate) async fn hydrate_kit_from_initial_projection_value(kit: &std::sync::Arc<crate::kit::Kit>, json: &serde_json::Value) -> Result<(), crate::error::SemioError> {
+        if let Some(n) = json.get("name").and_then(|v| v.as_str()) {
             *kit.name.write().await = n.to_string();
         }
-        if let Some(id_override) = dto.get("id").and_then(|v| v.as_str()) {
+        if let Some(id_override) = json.get("id").and_then(|v| v.as_str()) {
             *kit.snapshot_external_kit_id.write().await = Some(Id::from(id_override));
         } else {
             *kit.snapshot_external_kit_id.write().await = None;
@@ -8532,7 +8514,7 @@ pub mod kit_backbone {
             let mut tw = kit.type_weak_by_id.write().await;
             tys.clear();
             tw.clear();
-            let types_arr = dto.get("types").and_then(crate::kit_backbone::json_array_or_block_items_ref).cloned().unwrap_or_default();
+            let types_arr = json.get("types").and_then(crate::kit_backbone::json_array_or_block_items_ref).cloned().unwrap_or_default();
             let owner = std::sync::Arc::downgrade(kit);
             for t in &types_arr {
                 let Some(ts) = t.get("id").and_then(|x| x.as_str()) else { continue };
@@ -8544,7 +8526,7 @@ pub mod kit_backbone {
         }
 
         let owner = std::sync::Arc::downgrade(kit);
-        let design_arr_owned = dto.get("designs").and_then(crate::kit_backbone::json_array_or_block_items_ref).cloned().unwrap_or_default();
+        let design_arr_owned = json.get("designs").and_then(crate::kit_backbone::json_array_or_block_items_ref).cloned().unwrap_or_default();
         let mut appended: Vec<std::sync::Arc<crate::kit::design::Design>> = Vec::new();
         for d in &design_arr_owned {
             let Some(ds) = d.get("id").and_then(|x| x.as_str()) else { continue };
@@ -8605,16 +8587,15 @@ pub mod kit_backbone {
         Ok(())
     }
 
-    /// 🛰️ WIP bootstrap: hydrates [`crate::vcs::Graph::parent_root_for_active_draft`] from `KitFullDto`-shaped JSON then re-seeds the immutable parent line (WASM / host overlay entry).
-    pub async fn graph_new_overlay_from_initial_projection_json(dto_json: serde_json::Value) -> Result<std::sync::Arc<crate::vcs::Graph>, crate::error::SemioError> {
+    pub async fn graph_new_overlay_from_initial_projection_json(json: serde_json::Value) -> Result<std::sync::Arc<crate::vcs::Graph>, crate::error::SemioError> {
         let g = crate::vcs::Graph::new().await;
         {
             let mut slot = g.parent_root_for_active_draft.write().await;
-            hydrate_kit_from_initial_projection_value(&*slot, &dto_json).await?;
-            if let Some(c) = dto_json.get("createdAt").and_then(|v| v.as_str()) {
+            hydrate_kit_from_initial_projection_value(&*slot, &json).await?;
+            if let Some(c) = json.get("createdAt").and_then(|v| v.as_str()) {
                 *slot.created.write().await = Some(crate::timestamp::Timestamp(c.to_string()));
             }
-            if let Some(u) = dto_json.get("updatedAt").and_then(|v| v.as_str()) {
+            if let Some(u) = json.get("updatedAt").and_then(|v| v.as_str()) {
                 *slot.updated.write().await = Some(crate::timestamp::Timestamp(u.to_string()));
             }
             let cloned = slot.deep_clone().await;
@@ -8630,12 +8611,12 @@ pub mod kit_backbone {
 
     /// @emoji 📜 `{hash, items: [T]}` envelope — the universal "block-hashed list" reused in every nested collection of the bundle.
     #[derive(Clone, Debug, serde::Deserialize, serde::Serialize)]
-    pub struct BlockHashedListDto<T> {
+    pub struct BlockHashedList<T> {
         pub hash: String,
         pub items: Vec<T>,
     }
 
-    impl<T> Default for BlockHashedListDto<T> {
+    impl<T> Default for BlockHashedList<T> {
         fn default() -> Self {
             Self { hash: KIT_BUNDLE_HASH_STUB.to_string(), items: Vec::new() }
         }
@@ -8643,7 +8624,7 @@ pub mod kit_backbone {
 
     /// @emoji 🔗 `{id, hash}` typed reference to another node in the bundle (authors, qualities, ports, families, …).
     #[derive(Clone, Debug, serde::Deserialize, serde::Serialize)]
-    pub struct HashRefDto {
+    pub struct HashRef {
         pub id: String,
         pub hash: String,
     }
@@ -8656,9 +8637,9 @@ pub mod kit_backbone {
         pub authoritative: DevBackboneGraphHead,
         pub stage: DevBackboneGraphHead,
         #[serde(default)]
-        pub conflicts: BlockHashedListDto<serde_json::Value>,
+        pub conflicts: BlockHashedList<serde_json::Value>,
         #[serde(default)]
-        pub blobs: BlockHashedListDto<serde_json::Value>,
+        pub blobs: BlockHashedList<serde_json::Value>,
     }
 
     /// @emoji 🌐 One graph snapshot (head pointer used as `wip` / `authoritative` / `stage` heads in the bundle).
@@ -8667,16 +8648,16 @@ pub mod kit_backbone {
         pub id: String,
         pub hash: String,
         #[serde(default)]
-        pub authors: BlockHashedListDto<HashRefDto>,
+        pub authors: BlockHashedList<HashRef>,
         /// @emoji 📦 Wire key `initialKit` — persisted kit seed for this snapshot (GraphQL `Graph.theKit` is the live materialization, not this JSON name).
         #[serde(rename = "initialKit", default = "empty_root_value")]
         pub root: serde_json::Value,
         #[serde(rename = "theKit", default)]
         pub the_kit: DevBackboneTheKitHead,
         #[serde(default)]
-        pub checkpoints: BlockHashedListDto<serde_json::Value>,
+        pub checkpoints: BlockHashedList<serde_json::Value>,
         #[serde(default)]
-        pub alternatives: BlockHashedListDto<DevBackboneAltHead>,
+        pub alternatives: BlockHashedList<DevBackboneAltHead>,
     }
 
     /// @emoji 🧭 Main kit version row; version-scoped changes live here, not on the graph snapshot.
@@ -8685,14 +8666,14 @@ pub mod kit_backbone {
         pub id: String,
         pub hash: String,
         #[serde(rename = "savedChanges", default)]
-        pub saved_changes: BlockHashedListDto<VersionChangeDto>,
+        pub saved_changes: BlockHashedList<VersionChange>,
         #[serde(rename = "unsavedChanges", default)]
-        pub unsaved_changes: BlockHashedListDto<VersionChangeDto>,
+        pub unsaved_changes: BlockHashedList<VersionChange>,
     }
 
     impl Default for DevBackboneTheKitHead {
         fn default() -> Self {
-            Self { id: "the-kit".to_string(), hash: KIT_BUNDLE_HASH_STUB.to_string(), saved_changes: BlockHashedListDto::default(), unsaved_changes: BlockHashedListDto::default() }
+            Self { id: "the-kit".to_string(), hash: KIT_BUNDLE_HASH_STUB.to_string(), saved_changes: BlockHashedList::default(), unsaved_changes: BlockHashedList::default() }
         }
     }
 
@@ -8703,18 +8684,18 @@ pub mod kit_backbone {
         pub hash: String,
         pub name: String,
         #[serde(rename = "savedChanges", default)]
-        pub saved_changes: BlockHashedListDto<VersionChangeDto>,
+        pub saved_changes: BlockHashedList<VersionChange>,
         #[serde(rename = "unsavedChanges", default)]
-        pub unsaved_changes: BlockHashedListDto<VersionChangeDto>,
+        pub unsaved_changes: BlockHashedList<VersionChange>,
     }
 
     /// @emoji 🧾 Version change record containing ordered edits directly on `the kit` or an alternative.
     #[derive(Clone, Debug, serde::Deserialize, serde::Serialize)]
-    pub struct VersionChangeDto {
+    pub struct VersionChange {
         pub id: String,
         pub hash: String,
         #[serde(default)]
-        pub edits: BlockHashedListDto<VersionEditDto>,
+        pub edits: BlockHashedList<VersionEdit>,
         #[serde(rename = "startedAt")]
         pub started_at: String,
         #[serde(rename = "savedAt", default, skip_serializing_if = "Option::is_none")]
@@ -8727,13 +8708,13 @@ pub mod kit_backbone {
 
     /// @emoji ✏️ Version edit record with forward and backward  operation steps.
     #[derive(Clone, Debug, serde::Deserialize, serde::Serialize)]
-    pub struct VersionEditDto {
+    pub struct VersionEdit {
         pub id: String,
         pub hash: String,
         #[serde(default)]
-        pub forwards: BlockHashedListDto<OperationStepDto>,
+        pub forwards: BlockHashedList<OperationStep>,
         #[serde(default)]
-        pub backwards: BlockHashedListDto<OperationStepDto>,
+        pub backwards: BlockHashedList<OperationStep>,
         #[serde(rename = "sequenceNumber")]
         pub sequence_number: i32,
         #[serde(rename = "startedAt")]
@@ -8748,7 +8729,7 @@ pub mod kit_backbone {
 
     /// @emoji 🪡 One  operation step inside an edit.
     #[derive(Clone, Debug, serde::Deserialize, serde::Serialize)]
-    pub struct OperationStepDto {
+    pub struct OperationStep {
         pub id: String,
         pub hash: String,
         pub kind: String,
@@ -8777,11 +8758,11 @@ pub mod kit_backbone {
             Self {
                 id: kit_id.to_string(),
                 hash: KIT_BUNDLE_HASH_STUB.to_string(),
-                authors: BlockHashedListDto::default(),
+                authors: BlockHashedList::default(),
                 root: empty_root_value(),
                 the_kit: DevBackboneTheKitHead::default(),
-                checkpoints: BlockHashedListDto::default(),
-                alternatives: BlockHashedListDto::default(),
+                checkpoints: BlockHashedList::default(),
+                alternatives: BlockHashedList::default(),
             }
         }
     }
@@ -8794,8 +8775,8 @@ pub mod kit_backbone {
                 wip: DevBackboneGraphHead::empty(""),
                 authoritative: DevBackboneGraphHead::empty(""),
                 stage: DevBackboneGraphHead::empty(""),
-                conflicts: BlockHashedListDto::default(),
-                blobs: BlockHashedListDto::default(),
+                conflicts: BlockHashedList::default(),
+                blobs: BlockHashedList::default(),
             }
         }
 
@@ -8809,52 +8790,54 @@ pub mod kit_backbone {
             out
         }
 
-        fn push__operations_from_version_changes<'a>(out: &mut Vec<StoredOperation>, changes: impl Iterator<Item = &'a VersionChangeDto>, fallback_draft_id: &str) {
+        fn push__operations_from_version_changes<'a>(out: &mut Vec<StoredOperation>, changes: impl Iterator<Item = &'a VersionChange>, fallback_draft_id: &str) {
             for change in changes {
                 let draft_id = change.origin.clone().unwrap_or_else(|| fallback_draft_id.to_string());
                 for edit in &change.edits.items {
                     for step in &edit.forwards.items {
-                        out.push(StoredOperation {
-                            draft_id: draft_id.clone(),
-                            transaction_id: change.id.clone(),
-                            kind: step.kind.clone(),
-                            input: step.input.clone(),
-                            kit_diff: step.kit_diff.clone(),
-                        });
+                        out.push(StoredOperation { draft_id: draft_id.clone(), transaction_id: change.id.clone(), kind: step.kind.clone(), input: step.input.clone(), kit_diff: step.kit_diff.clone() });
                     }
                 }
             }
         }
 
-        /// @emoji 📸 Project one live  change into a bundle edit.
-        async fn edit_dto_from_runtime_change(ch: &Arc<crate::vcs::Change>, sequence_number: i32) -> VersionEditDto {
-            let mut forward_items: Vec<OperationStepDto> = Vec::new();
-            let mut backward_items: Vec<OperationStepDto> = Vec::new();
-            for step in ch.forwards.read().await.iter() {
-                forward_items.push(OperationStepDto {
-                    id: Id::new().await.as_str().to_string(),
-                    hash: KIT_BUNDLE_HASH_STUB.to_string(),
-                    kind: step.operation.kind().to_string(),
-                    description: None,
-                    input: kit_operation_step_input_json(&step.operation),
-                    kit_diff: step.kit_diff_wire.clone(),
-                });
+        /// @emoji 📸 Project one live change into a bundle edit; each step's `kitDiff` is computed from that op's `to_diff` against a scratch kit replayed to the same point as materialization.
+        async fn edit_from_runtime_change(
+            graph: &std::sync::Arc<crate::vcs::Graph>,
+            draft: &std::sync::Arc<crate::vcs::Draft>,
+            tx: &std::sync::Arc<crate::vcs::Edit>,
+            change_idx: usize,
+            ch: &std::sync::Arc<crate::vcs::Change>,
+            sequence_number: i32,
+        ) -> VersionEdit {
+            let mut forward_items: Vec<OperationStep> = Vec::new();
+            let mut backward_items: Vec<OperationStep> = Vec::new();
+            let forwards_list = ch.forwards.read().await.clone();
+            for (fi, op) in forwards_list.iter().enumerate() {
+                let scratch = graph.scratch_kit_before_forward_step(draft, tx, change_idx, fi).await;
+                let kit_diff = match op.to_diff(&scratch).await {
+                    Ok(d) => Some(crate::kit_backbone::canonical_kit_diff_to_wire_json(&d.0)),
+                    Err(_) => None,
+                };
+                forward_items.push(OperationStep { id: Id::new().await.as_str().to_string(), hash: KIT_BUNDLE_HASH_STUB.to_string(), kind: op.kind().to_string(), description: None, input: kit_operation_step_input_json(op), kit_diff });
             }
-            for step in ch.backwards.read().await.iter() {
-                backward_items.push(OperationStepDto {
-                    id: Id::new().await.as_str().to_string(),
-                    hash: KIT_BUNDLE_HASH_STUB.to_string(),
-                    kind: step.operation.kind().to_string(),
-                    description: None,
-                    input: kit_operation_step_input_json(&step.operation),
-                    kit_diff: step.kit_diff_wire.clone(),
-                });
+            let mut scratch_bw = graph.scratch_kit_before_forward_step(draft, tx, change_idx, forwards_list.len()).await;
+            for op in ch.backwards.read().await.iter() {
+                let kit_diff = match op.to_diff(&scratch_bw).await {
+                    Ok(d) => {
+                        let w = Some(crate::kit_backbone::canonical_kit_diff_to_wire_json(&d.0));
+                        let _ = scratch_bw.apply_diff(&d).await;
+                        w
+                    }
+                    Err(_) => None,
+                };
+                backward_items.push(OperationStep { id: Id::new().await.as_str().to_string(), hash: KIT_BUNDLE_HASH_STUB.to_string(), kind: op.kind().to_string(), description: None, input: kit_operation_step_input_json(op), kit_diff });
             }
-            VersionEditDto {
+            VersionEdit {
                 id: ch.id.as_str().to_string(),
                 hash: KIT_BUNDLE_HASH_STUB.to_string(),
-                forwards: BlockHashedListDto { hash: KIT_BUNDLE_HASH_STUB.to_string(), items: forward_items },
-                backwards: BlockHashedListDto { hash: KIT_BUNDLE_HASH_STUB.to_string(), items: backward_items },
+                forwards: BlockHashedList { hash: KIT_BUNDLE_HASH_STUB.to_string(), items: forward_items },
+                backwards: BlockHashedList { hash: KIT_BUNDLE_HASH_STUB.to_string(), items: backward_items },
                 sequence_number,
                 started_at: KIT_BUNDLE_CHECKPOINT_TIMESTAMP_STUB.to_string(),
                 finished_at: Some(KIT_BUNDLE_CHECKPOINT_TIMESTAMP_STUB.to_string()),
@@ -8864,15 +8847,15 @@ pub mod kit_backbone {
         }
 
         /// @emoji 📸 Project one live write session into a version change with edits.
-        async fn change_dto_from_runtime_edit(tx: &Arc<crate::vcs::Edit>, saved: bool) -> VersionChangeDto {
+        async fn change_from_runtime_edit(graph: &std::sync::Arc<crate::vcs::Graph>, draft: &std::sync::Arc<crate::vcs::Draft>, tx: &std::sync::Arc<crate::vcs::Edit>, saved: bool) -> VersionChange {
             let mut edits = Vec::new();
             for (idx, ch) in tx.changes.read().await.iter().enumerate() {
-                edits.push(Self::edit_dto_from_runtime_change(ch, (idx + 1) as i32).await);
+                edits.push(Self::edit_from_runtime_change(graph, draft, tx, idx, ch, (idx + 1) as i32).await);
             }
-            VersionChangeDto {
+            VersionChange {
                 id: tx.id.as_str().to_string(),
                 hash: KIT_BUNDLE_HASH_STUB.to_string(),
-                edits: BlockHashedListDto { hash: KIT_BUNDLE_HASH_STUB.to_string(), items: edits },
+                edits: BlockHashedList { hash: KIT_BUNDLE_HASH_STUB.to_string(), items: edits },
                 started_at: KIT_BUNDLE_CHECKPOINT_TIMESTAMP_STUB.to_string(),
                 saved_at: if saved { Some(KIT_BUNDLE_CHECKPOINT_TIMESTAMP_STUB.to_string()) } else { None },
                 description: None,
@@ -8880,14 +8863,14 @@ pub mod kit_backbone {
             }
         }
 
-        async fn change_lists_from_draft(draft: &Arc<crate::vcs::Draft>) -> (BlockHashedListDto<VersionChangeDto>, BlockHashedListDto<VersionChangeDto>) {
-            let mut saved = BlockHashedListDto::default();
-            let mut unsaved = BlockHashedListDto::default();
+        async fn change_lists_from_draft(graph: &std::sync::Arc<crate::vcs::Graph>, draft: &std::sync::Arc<crate::vcs::Draft>) -> (BlockHashedList<VersionChange>, BlockHashedList<VersionChange>) {
+            let mut saved = BlockHashedList::default();
+            let mut unsaved = BlockHashedList::default();
             for tx in draft.finalized_transactions.read().await.iter() {
-                saved.items.push(Self::change_dto_from_runtime_edit(tx, true).await);
+                saved.items.push(Self::change_from_runtime_edit(graph, draft, tx, true).await);
             }
             for tx in draft.transactions.read().await.iter() {
-                unsaved.items.push(Self::change_dto_from_runtime_edit(tx, false).await);
+                unsaved.items.push(Self::change_from_runtime_edit(graph, draft, tx, false).await);
             }
             (saved, unsaved)
         }
@@ -8897,7 +8880,7 @@ pub mod kit_backbone {
         pub async fn from_graph(graph: &crate::vcs::Graph) -> Self {
             let mut bundle = Self::template();
             let g = graph.arc_here();
-            let initial_dto = crate::kit_backbone::initial_kit_projection_value(&*g.initial_kit.read().await).await;
+            let initial = crate::kit_backbone::initial_kit_projection_value(&*g.initial_kit.read().await).await;
             let gid = graph.id.as_str().to_string();
             bundle.wip.id = gid.clone();
             bundle.authoritative.id = gid.clone();
@@ -8905,9 +8888,9 @@ pub mod kit_backbone {
             bundle.wip.the_kit.id = gid.clone();
             bundle.authoritative.the_kit.id = gid.clone();
             bundle.stage.the_kit.id = gid;
-            bundle.wip.root = initial_dto.clone();
-            bundle.authoritative.root = initial_dto.clone();
-            bundle.stage.root = initial_dto;
+            bundle.wip.root = initial.clone();
+            bundle.authoritative.root = initial.clone();
+            bundle.stage.root = initial;
 
             // 🪧 Project checkpoints (metadata only; kit baselines live on `Graph.initialKit`).
             for cp in graph.checkpoints.read().await.iter() {
@@ -8926,15 +8909,15 @@ pub mod kit_backbone {
             // 🧾 Project version changes and edits directly on the wip version entities.
             for draft in graph.drafts.read().await.iter() {
                 if draft.owner_alternative.upgrade().is_none() {
-                    let (saved, unsaved) = Self::change_lists_from_draft(draft).await;
+                    let (saved, unsaved) = Self::change_lists_from_draft(&g, draft).await;
                     bundle.wip.the_kit.saved_changes.items.extend(saved.items);
                     bundle.wip.the_kit.unsaved_changes.items.extend(unsaved.items);
                 }
             }
             for alternative in graph.alternatives.read().await.iter() {
                 let (saved_changes, unsaved_changes) = match alternative.draft.read().await.upgrade() {
-                    Some(draft) => Self::change_lists_from_draft(&draft).await,
-                    None => (BlockHashedListDto::default(), BlockHashedListDto::default()),
+                    Some(draft) => Self::change_lists_from_draft(&g, &draft).await,
+                    None => (BlockHashedList::default(), BlockHashedList::default()),
                 };
                 bundle.wip.alternatives.items.push(DevBackboneAltHead { id: alternative.id.as_str().to_string(), hash: KIT_BUNDLE_HASH_STUB.to_string(), name: alternative.name.read().await.clone(), saved_changes, unsaved_changes });
             }
@@ -9085,10 +9068,10 @@ pub mod kit_backbone {
                 "changes": { "hash": KIT_BUNDLE_HASH_STUB, "items": [] },
             }));
             // 🧾 Initial unsaved change on the version; edits are added when user actions run.
-            bundle.wip.the_kit.unsaved_changes.items.push(VersionChangeDto {
+            bundle.wip.the_kit.unsaved_changes.items.push(VersionChange {
                 id: change_id.to_string(),
                 hash: KIT_BUNDLE_HASH_STUB.to_string(),
-                edits: BlockHashedListDto::default(),
+                edits: BlockHashedList::default(),
                 started_at: KIT_BUNDLE_CHECKPOINT_TIMESTAMP_STUB.to_string(),
                 saved_at: None,
                 description: None,
@@ -9108,10 +9091,10 @@ pub mod kit_backbone {
             let change_idx = match changes.iter().position(|c| c.id == change_id) {
                 Some(i) => i,
                 None => {
-                    changes.push(VersionChangeDto {
+                    changes.push(VersionChange {
                         id: change_id.to_string(),
                         hash: KIT_BUNDLE_HASH_STUB.to_string(),
-                        edits: BlockHashedListDto::default(),
+                        edits: BlockHashedList::default(),
                         started_at: KIT_BUNDLE_CHECKPOINT_TIMESTAMP_STUB.to_string(),
                         saved_at: None,
                         description: None,
@@ -9121,11 +9104,11 @@ pub mod kit_backbone {
                 }
             };
             if changes[change_idx].edits.items.is_empty() {
-                changes[change_idx].edits.items.push(VersionEditDto {
+                changes[change_idx].edits.items.push(VersionEdit {
                     id: uuid::Uuid::now_v7().to_string(),
                     hash: KIT_BUNDLE_HASH_STUB.to_string(),
-                    forwards: BlockHashedListDto::default(),
-                    backwards: BlockHashedListDto::default(),
+                    forwards: BlockHashedList::default(),
+                    backwards: BlockHashedList::default(),
                     sequence_number: 1,
                     started_at: KIT_BUNDLE_CHECKPOINT_TIMESTAMP_STUB.to_string(),
                     finished_at: Some(KIT_BUNDLE_CHECKPOINT_TIMESTAMP_STUB.to_string()),
@@ -9133,27 +9116,14 @@ pub mod kit_backbone {
                     origin: None,
                 });
             }
-            changes[change_idx].edits.items[0].forwards.items.push(OperationStepDto {
-                id: uuid::Uuid::now_v7().to_string(),
-                hash: KIT_BUNDLE_HASH_STUB.to_string(),
-                kind: kind.to_string(),
-                description: None,
-                input,
-                kit_diff,
-            });
+            changes[change_idx].edits.items[0].forwards.items.push(OperationStep { id: uuid::Uuid::now_v7().to_string(), hash: KIT_BUNDLE_HASH_STUB.to_string(), kind: kind.to_string(), description: None, input, kit_diff });
         }
 
         /// @emoji 🪪 Build a metabolism-shaped bundle from a flat ordered  operation log (used by golden test fixtures and import paths).
         pub fn from_stored__operations(operations: &[StoredOperation]) -> Self {
             let mut bundle = Self::template();
             for operation in operations {
-                bundle.append_unsaved_edit_with_origin(
-                    &operation.transaction_id,
-                    Some(operation.draft_id.clone()),
-                    &operation.kind,
-                    operation.input.clone(),
-                    operation.kit_diff.clone(),
-                );
+                bundle.append_unsaved_edit_with_origin(&operation.transaction_id, Some(operation.draft_id.clone()), &operation.kind, operation.input.clone(), operation.kit_diff.clone());
             }
             bundle
         }
@@ -9326,20 +9296,15 @@ CREATE TABLE IF NOT EXISTS conflict_stub (
                 Some(v) => Some(serde_json::to_string(v).map_err(|e| SemioError::invalid(e.to_string()))?),
                 None => None,
             };
-            conn.execute(
-                "INSERT INTO _op_log (draft_id, transaction_id, kind, input_json, kit_diff_json) VALUES (?1, ?2, ?3, ?4, ?5)",
-                rusqlite::params![draft_id.as_str(), transaction_id.as_str(), kind, input_json, kit_json],
-            )
-            .map_err(|e| SemioError::invalid(format!("sqlite insert: {e}")))?;
+            conn.execute("INSERT INTO _op_log (draft_id, transaction_id, kind, input_json, kit_diff_json) VALUES (?1, ?2, ?3, ?4, ?5)", rusqlite::params![draft_id.as_str(), transaction_id.as_str(), kind, input_json, kit_json])
+                .map_err(|e| SemioError::invalid(format!("sqlite insert: {e}")))?;
             Ok(())
         }
 
         fn load_operations(&self) -> Result<Vec<StoredOperation>, SemioError> {
             let conn = Connection::open(&self.db_path).map_err(|e| SemioError::invalid(format!("sqlite read: {e}")))?;
             ensure_op_log_kit_diff_json_column(&conn)?;
-            let mut stmt = conn
-                .prepare("SELECT draft_id, transaction_id, kind, input_json, kit_diff_json FROM _op_log ORDER BY seq ASC")
-                .map_err(|e| SemioError::invalid(format!("sqlite prepare: {e}")))?;
+            let mut stmt = conn.prepare("SELECT draft_id, transaction_id, kind, input_json, kit_diff_json FROM _op_log ORDER BY seq ASC").map_err(|e| SemioError::invalid(format!("sqlite prepare: {e}")))?;
             let mut entities = stmt.query([]).map_err(|e| SemioError::invalid(format!("sqlite query: {e}")))?;
             let mut out = Vec::new();
             while let Some(row) = entities.next().map_err(|e| SemioError::invalid(format!("sqlite row: {e}")))? {
@@ -9425,13 +9390,7 @@ CREATE TABLE IF NOT EXISTS conflict_stub (
             let kind = rec["kind"].as_str().ok_or_else(|| SemioError::invalid("operation.kind"))?;
             let input = rec.get("input").cloned().ok_or_else(|| SemioError::invalid("operation.input"))?;
             let kit_diff = rec.get("kitDiff").cloned();
-            out.push(StoredOperation {
-                draft_id: draft_id.clone(),
-                transaction_id: transaction_id.clone(),
-                kind: kind.to_string(),
-                input,
-                kit_diff,
-            });
+            out.push(StoredOperation { draft_id: draft_id.clone(), transaction_id: transaction_id.clone(), kind: kind.to_string(), input, kit_diff });
         }
         Ok(out)
     }
@@ -9612,13 +9571,7 @@ pub mod worker {
             }
         }
 
-        pub async fn record_kit_operation_if_attached(
-            &self,
-            draft_id: &Id,
-            transaction_id: &Id,
-            operation: &crate::operation::KitOperation,
-            kit_diff_wire: Option<serde_json::Value>,
-        ) -> Result<(), SemioError> {
+        pub async fn record_kit_operation_if_attached(&self, draft_id: &Id, transaction_id: &Id, operation: &crate::operation::KitOperation, kit_diff_wire: Option<serde_json::Value>) -> Result<(), SemioError> {
             #[cfg(not(target_arch = "wasm32"))]
             {
                 let mut guard = self.slot.write().await;
@@ -9682,10 +9635,10 @@ pub mod worker {
         }
 
         /// 🛰️ WASM/host bootstrap: hydrate WIP [`Graph`] from `@semio/js` kit JSON snapshot; authoritative line stays mint-empty.
-        pub async fn spawn_wip_overlay_from_initial_kit_projection_json(dto: serde_json::Value) -> Result<Arc<Self>, crate::error::SemioError> {
+        pub async fn spawn_wip_overlay_from_initial_kit_projection_json(json: serde_json::Value) -> Result<Arc<Self>, crate::error::SemioError> {
             let bus = EventBus::new(1024);
 
-            let wip_graph = Graph::new_overlay_from_initial_kit_projection_json(dto).await?;
+            let wip_graph = Graph::new_overlay_from_initial_kit_projection_json(json).await?;
             let auth_graph = Graph::new().await;
 
             let (wip_tx, wip_rx) = async_channel::unbounded::<Command>();
@@ -9768,7 +9721,7 @@ pub mod worker {
             let backwards = operation.to_backwards(&before_kit).await?;
             let forward = operation.clone();
             let kit_wire = crate::kit_backbone::canonical_kit_diff_to_wire_json(&kit_diff.0);
-            graph.record_op_in_open_transaction(&draft_id, &transaction_id, forward, Some(kit_wire.clone()), backwards).await?;
+            graph.record_op_in_open_transaction(&draft_id, &transaction_id, forward, backwards).await?;
             self.backbone.record_kit_operation_if_attached(&draft_id, &transaction_id, &operation, Some(kit_wire)).await?;
             let after_kit = graph.materialized_kit_for_draft(&draft_id).await;
 
@@ -12121,7 +12074,7 @@ mod tests {
             let alt_id = graph.create_alternative_from_tip("branch-a".to_string(), None).await.expect("alternative");
             let bundle = crate::kit_backbone::DevBackboneBundleDoc::from_graph(graph.as_ref()).await;
             assert!(bundle.wip.the_kit.saved_changes.items.is_empty());
-            let alt = bundle.wip.alternatives.items.iter().find(|a| a.id == alt_id.as_str()).expect("alternative dto");
+            let alt = bundle.wip.alternatives.items.iter().find(|a| a.id == alt_id.as_str()).expect("alternative json");
             assert_eq!(alt.name, "branch-a");
             assert!(alt.saved_changes.items.is_empty(), "alternative owns savedChanges");
             assert!(alt.unsaved_changes.items.is_empty(), "alternative owns unsavedChanges");
@@ -12218,16 +12171,7 @@ mod tests {
 
     #[test]
     fn file_blob_digest_field_is_exposed_on_entity() {
-        let f = crate::meta::File {
-            id: crate::id::Id::from("019caa00-0000-7000-a000-000000000021"),
-            url: "https://example.com/f".to_string(),
-            mime: None,
-            size: None,
-            hash: "sha256:abc".to_string(),
-            description: None,
-            created: None,
-            updated: None,
-        };
+        let f = crate::meta::File { id: crate::id::Id::from("019caa00-0000-7000-a000-000000000021"), url: "https://example.com/f".to_string(), mime: None, size: None, hash: "sha256:abc".to_string(), description: None, created: None, updated: None };
         assert_eq!(f.hash, "sha256:abc");
     }
 
