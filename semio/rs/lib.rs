@@ -7490,14 +7490,38 @@ pub mod operation {
         Authoritative,
     }
 
-    /// @emoji 🗄️ Dev JSON bundle vs local `.semio/` backbone — capability surface without SQL leakage.
+    /// @emoji 🗄️ Backbone materialization: dev JSON file, local `.semio/` SQLite+blobs, or remote hub (reserved).
     #[derive(Clone, Copy, Debug, Eq, PartialEq, async_graphql::Enum)]
-    #[graphql(name = "BackboneStoreKind")]
-    pub enum BackboneStoreKind {
-        #[graphql(name = "DEV_JSON")]
-        DevJson,
-        #[graphql(name = "LOCAL_DOT_SEMIO")]
-        LocalDotSemio,
+    #[graphql(name = "BackboneKind")]
+    pub enum BackboneKind {
+        #[graphql(name = "DEV")]
+        Dev,
+        #[graphql(name = "LOCAL")]
+        Local,
+        #[graphql(name = "REMOTE")]
+        Remote,
+    }
+
+    impl BackboneKind {
+        /// @emoji 🗺️ Parse `dev://`, `local://`, `remote://`, or legacy `file://` (dev file path).
+        pub fn from_uri(raw: &str) -> Result<(Self, String), crate::error::SemioError> {
+            let u = raw.trim();
+            if let Some(rest) = u.strip_prefix("file://") {
+                return Ok((Self::Dev, rest.trim().to_string()));
+            }
+            if let Some(rest) = u.strip_prefix("dev://") {
+                return Ok((Self::Dev, rest.trim().to_string()));
+            }
+            if let Some(rest) = u.strip_prefix("local://") {
+                return Ok((Self::Local, rest.trim().to_string()));
+            }
+            if let Some(rest) = u.strip_prefix("remote://") {
+                return Ok((Self::Remote, rest.trim().to_string()));
+            }
+            Err(crate::error::SemioError::invalid(
+                "backbone uri must start with dev://, local://, remote://, or file://",
+            ))
+        }
     }
     //#endregion 🧭 graph workspace + backbone store kind (readable/writable selectors)
 
@@ -7832,7 +7856,7 @@ pub mod operation {
     #[derive(Clone, Debug)]
     pub enum Command {
         ApplyKitOperation { request_id: Id, draft_id: Id, transaction_id: Id, operation: KitOperation },
-        BackboneAttach { request_id: Id, connection_uri: String, store_kind: BackboneStoreKind },
+        BackboneAttach { request_id: Id, connection_uri: String },
         BackboneDetach { request_id: Id, connection_uri: String },
     }
 
@@ -8113,8 +8137,6 @@ pub mod kit_backbone {
 
     use crate::error::SemioError;
     use crate::id::Id;
-    #[cfg(not(target_arch = "wasm32"))]
-    use crate::operation::BackboneStoreKind;
     use crate::vcs::Graph;
 
     //#region 🧾 wire format
@@ -8756,13 +8778,13 @@ CREATE TABLE IF NOT EXISTS conflict_stub (
 
     //#region 🧩 attached variants (native only)
     #[cfg(not(target_arch = "wasm32"))]
-    pub struct DevJsonAttached {
+    pub struct DevBackboneAttached {
         path: PathBuf,
         connection_uri_normalized: String,
     }
 
     #[cfg(not(target_arch = "wasm32"))]
-    impl DevJsonAttached {
+    impl DevBackboneAttached {
         /// @emoji 📥 Read the on-disk bundle (or fresh template if file is absent).
         pub fn read_bundle(&self) -> Result<KitStoreBundleFile, SemioError> {
             read_or_init_bundle(&self.path)
@@ -8778,7 +8800,7 @@ CREATE TABLE IF NOT EXISTS conflict_stub (
     }
 
     #[cfg(not(target_arch = "wasm32"))]
-    pub struct LocalAttached {
+    pub struct LocalBackboneAttached {
         #[allow(dead_code)]
         semio_root: PathBuf,
         db_path: PathBuf,
@@ -8786,7 +8808,7 @@ CREATE TABLE IF NOT EXISTS conflict_stub (
     }
 
     #[cfg(not(target_arch = "wasm32"))]
-    impl LocalAttached {
+    impl LocalBackboneAttached {
         pub fn append_op(&mut self, draft_id: &Id, transaction_id: &Id, kind: &str, input: &serde_json::Value) -> Result<(), SemioError> {
             let conn = Connection::open(&self.db_path).map_err(|e| SemioError::invalid(format!("sqlite append: {e}")))?;
             let input_json = serde_json::to_string(input).map_err(|e| SemioError::invalid(e.to_string()))?;
@@ -8814,22 +8836,26 @@ CREATE TABLE IF NOT EXISTS conflict_stub (
 
     #[cfg(not(target_arch = "wasm32"))]
     pub enum AttachedBackbone {
-        DevJson(DevJsonAttached),
-        Local(LocalAttached),
+        Dev(DevBackboneAttached),
+        Local(LocalBackboneAttached),
     }
 
     #[cfg(not(target_arch = "wasm32"))]
     impl AttachedBackbone {
-        pub async fn mount_and_replay(connection_uri: &str, store_kind: BackboneStoreKind, child_label: &'static str, graph: &Arc<Graph>) -> Result<Self, SemioError> {
+        pub async fn mount_and_replay(connection_uri: &str, child_label: &'static str, graph: &Arc<Graph>) -> Result<Self, SemioError> {
             let norm = normalize_connection_uri(connection_uri);
-            let path = filesystem_path_from_uri(&norm)?;
-            let mut this = match store_kind {
-                BackboneStoreKind::DevJson => Self::DevJson(DevJsonAttached { path, connection_uri_normalized: norm }),
-                BackboneStoreKind::LocalDotSemio => {
+            let (bone_kind, remainder) = crate::operation::BackboneKind::from_uri(&norm)?;
+            let path = filesystem_path_from_uri(remainder.trim())?;
+            let mut this = match bone_kind {
+                crate::operation::BackboneKind::Dev => Self::Dev(DevBackboneAttached { path, connection_uri_normalized: norm }),
+                crate::operation::BackboneKind::Local => {
                     let semio_root = resolve_local_semio_root(&path);
                     init_local_dot_semio_layout(&semio_root)?;
                     let db_path = db_file_for_child(&semio_root, child_label)?;
-                    Self::Local(LocalAttached { semio_root, db_path, connection_uri_normalized: norm })
+                    Self::Local(LocalBackboneAttached { semio_root, db_path, connection_uri_normalized: norm })
+                }
+                crate::operation::BackboneKind::Remote => {
+                    return Err(SemioError::invalid("remote backbone attach is not implemented yet"));
                 }
             };
             this.replay_into_graph(graph).await?;
@@ -8838,7 +8864,7 @@ CREATE TABLE IF NOT EXISTS conflict_stub (
 
         pub async fn replay_into_graph(&mut self, graph: &Arc<Graph>) -> Result<(), SemioError> {
             let operations: Vec<StoredOperation> = match self {
-                AttachedBackbone::DevJson(d) => d.read_bundle()?.wip__ops(),
+                AttachedBackbone::Dev(d) => d.read_bundle()?.wip__ops(),
                 AttachedBackbone::Local(l) => l.load_ops()?,
             };
             replay_stored_ops(graph, &operations).await
@@ -8846,14 +8872,14 @@ CREATE TABLE IF NOT EXISTS conflict_stub (
 
         pub fn append__op(&mut self, draft_id: &Id, transaction_id: &Id, kind: &str, input: &serde_json::Value) -> Result<(), SemioError> {
             match self {
-                AttachedBackbone::DevJson(d) => d.append_op(draft_id, transaction_id, kind, input),
+                AttachedBackbone::Dev(d) => d.append_op(draft_id, transaction_id, kind, input),
                 AttachedBackbone::Local(l) => l.append_op(draft_id, transaction_id, kind, input),
             }
         }
 
         pub fn normalized_connection_uri(&self) -> &str {
             match self {
-                AttachedBackbone::DevJson(d) => d.connection_uri_normalized.as_str(),
+                AttachedBackbone::Dev(d) => d.connection_uri_normalized.as_str(),
                 AttachedBackbone::Local(l) => l.connection_uri_normalized.as_str(),
             }
         }
@@ -8927,6 +8953,11 @@ pub mod event {
         pub fn subscribe(&self) -> Receiver<Event> {
             self.keep_alive.activate_cloned()
         }
+
+        /// @emoji 🔔 Path-filtered subscription (MVP: forwards to [`Self::subscribe`]; selection-aware filtering lands with live-query path registry).
+        pub fn subscribe_paths(&self, _watched: &[String]) -> Receiver<Event> {
+            self.subscribe()
+        }
     }
 }
 
@@ -8947,7 +8978,7 @@ pub mod worker {
     use crate::error::SemioError;
     use crate::event::{Event, EventBus};
     use crate::id::Id;
-    use crate::operation::{BackboneStoreKind, Command, CommandReceipt, CreatedFixedPiece, CreatedFixedPieceInput, Diff, Input, KitOperation, OperationIface, RenamedKit, RenamedKitInput as OperationRenamedKitInput, Scope};
+    use crate::operation::{Command, CommandReceipt, CreatedFixedPiece, CreatedFixedPieceInput, Diff, Input, KitOperation, OperationIface, RenamedKit, RenamedKitInput as OperationRenamedKitInput, Scope};
     use crate::vcs::{Conflict, Graph, Session};
 
     //#region 🗄️ backbone slot
@@ -8969,16 +9000,16 @@ pub mod worker {
             }
         }
 
-        pub async fn mount(&self, graph: &Arc<Graph>, child_label: &'static str, uri: &str, store_kind: BackboneStoreKind) -> Result<(), SemioError> {
+        pub async fn mount(&self, graph: &Arc<Graph>, child_label: &'static str, uri: &str) -> Result<(), SemioError> {
             #[cfg(not(target_arch = "wasm32"))]
             {
-                let bone = crate::kit_backbone::AttachedBackbone::mount_and_replay(uri, store_kind, child_label, graph).await?;
+                let bone = crate::kit_backbone::AttachedBackbone::mount_and_replay(uri, child_label, graph).await?;
                 *self.slot.write().await = Some(bone);
                 Ok(())
             }
             #[cfg(target_arch = "wasm32")]
             {
-                let _ = (graph, child_label, uri, store_kind);
+                let _ = (graph, child_label, uri);
                 Err(SemioError::invalid("Attachable kit backbones use native disk (atomic JSON / SQLite); drive them from native hosts over GraphQL IPC instead of WASM."))
             }
         }
@@ -9141,7 +9172,7 @@ pub mod worker {
         pub async fn apply(&self, cmd: Command) -> Result<(), SemioError> {
             match cmd {
                 Command::ApplyKitOperation { request_id, draft_id, transaction_id, operation } => self.apply_kit_operation(request_id, draft_id, transaction_id, operation).await,
-                Command::BackboneAttach { connection_uri, store_kind, .. } => self.backbone.mount(&self.graph, self.label, &connection_uri, store_kind).await,
+                Command::BackboneAttach { connection_uri, .. } => self.backbone.mount(&self.graph, self.label, connection_uri).await,
                 Command::BackboneDetach { connection_uri, .. } => self.backbone.detach_matching(&connection_uri).await,
             }
         }
@@ -9350,6 +9381,10 @@ pub mod gql {
             Ok(Id::new().await)
         }
 
+        async fn backbone(&self) -> BackboneCommandNav {
+            BackboneCommandNav
+        }
+
         #[graphql(name = "theKit")]
         async fn the_kit(&self) -> VersionCommandNav {
             VersionCommandNav
@@ -9364,6 +9399,50 @@ pub mod gql {
             let rt = ctx.data::<Arc<ParentRuntime>>()?;
             let n = name.unwrap_or_default();
             rt.wip_graph.create_alternative_from_tip(n, None).await.map_err(|e| async_graphql::Error::new(e.to_string()))
+        }
+    }
+
+    /// @emoji 🗄️ GraphQL entry for `session.backbone.*` kit persistence commands.
+    pub struct BackboneCommandNav;
+
+    #[derive(Clone, Copy, async_graphql::SimpleObject)]
+    #[graphql(name = "BackboneStatus")]
+    pub struct BackboneStatus {
+        #[graphql(name = "attachedUri")]
+        pub attached_uri: Option<String>,
+        pub kind: Option<crate::operation::BackboneKind>,
+    }
+
+    #[Object(name = "BackboneCommandInput")]
+    impl BackboneCommandNav {
+        async fn attach(&self, ctx: &Context<'_>, uri: String) -> async_graphql::Result<Id> {
+            let _ = crate::operation::BackboneKind::from_uri(&uri).map_err(|e| async_graphql::Error::new(e.message))?;
+            let rt = ctx.data::<Arc<ParentRuntime>>()?;
+            let request_id = Id::new().await;
+            Ok(rt.dispatch_wip(Command::BackboneAttach { request_id, connection_uri: uri }).await)
+        }
+
+        async fn detach(&self, ctx: &Context<'_>, uri: String) -> async_graphql::Result<Id> {
+            let rt = ctx.data::<Arc<ParentRuntime>>()?;
+            let request_id = Id::new().await;
+            Ok(rt.dispatch_wip(Command::BackboneDetach { request_id, connection_uri: uri }).await)
+        }
+
+        async fn status(&self, ctx: &Context<'_>) -> async_graphql::Result<BackboneStatus> {
+            let _ = ctx;
+            Ok(BackboneStatus { attached_uri: None, kind: None })
+        }
+
+        #[graphql(name = "setActiveCheckpoint")]
+        async fn set_active_checkpoint(&self, ctx: &Context<'_>, id: Id) -> async_graphql::Result<Id> {
+            let _ = (ctx, id);
+            Ok(Id::new().await)
+        }
+
+        #[graphql(name = "syncNow")]
+        async fn sync_now(&self, ctx: &Context<'_>) -> async_graphql::Result<Id> {
+            let _ = ctx;
+            Ok(Id::new().await)
         }
     }
 
@@ -10107,14 +10186,6 @@ pub mod gql {
         async fn session(&self) -> SessionCommandNav {
             SessionCommandNav
         }
-
-        #[graphql(name = "hydrateKitStoreBundleJson")]
-        async fn hydrate_kit_store_bundle_json(&self, ctx: &Context<'_>, json: String) -> async_graphql::Result<Id> {
-            let rt = ctx.data::<Arc<ParentRuntime>>()?;
-            crate::kit_backbone::KitStoreBundleFile::hydrate_into_graph(&rt.wip_graph, &json).await.map_err(|e| async_graphql::Error::new(e.to_string()))?;
-            rt.wip_graph.ensure_default_seed_state().await;
-            Ok(rt.wip_graph.id.clone())
-        }
     }
 
     pub struct Subscription;
@@ -10289,6 +10360,7 @@ pub mod gql {
             .register_output_type::<crate::gql::interfaces::NodeIface>()
             .register_output_type::<crate::gql::interfaces::EntityEdgeIface>()
             .register_output_type::<crate::gql::interfaces::VersionIface>()
+            .register_output_type::<crate::gql::BackboneStatus>()
             .finish()
     }
 
@@ -10346,12 +10418,64 @@ pub mod wasm_bridge {
     use std::sync::Mutex;
 
     use async_graphql::{Request, Variables};
+    use base64::Engine;
     use serde::Deserialize;
     use wasm_bindgen::prelude::*;
+    use wasm_bindgen::JsCast;
     use wasm_bindgen_futures::future_to_promise;
+    use wasm_bindgen_futures::JsFuture;
+    use web_sys::Response;
 
     use crate::gql::{build_schema_for, AppSchema};
     use crate::worker::ParentRuntime;
+
+    async fn fetch_text_url(url: &str) -> Result<String, crate::error::SemioError> {
+        let win = web_sys::window().ok_or_else(|| crate::error::SemioError::invalid("no window"))?;
+        let resp_val = JsFuture::from(win.fetch_with_str(url)).await.map_err(|e| crate::error::SemioError::invalid(format!("fetch: {e:?}")))?;
+        let resp: Response = resp_val.dyn_into().map_err(|_| crate::error::SemioError::invalid("bad response"))?;
+        if !resp.ok() {
+            return Err(crate::error::SemioError::invalid(format!("http {}", resp.status())));
+        }
+        let text = JsFuture::from(resp.text().map_err(|e| crate::error::SemioError::invalid(format!("text(): {e:?}")))?)
+            .await
+            .map_err(|e| crate::error::SemioError::invalid(format!("text await: {e:?}")))?;
+        Ok(text.as_string().unwrap_or_default())
+    }
+
+    async fn bootstrap_runtime_from_json_value(v: serde_json::Value) -> Result<Arc<ParentRuntime>, crate::error::SemioError> {
+        if v.get("schema").and_then(|s| s.as_str()) == Some(crate::kit_backbone::KIT_STORE_BUNDLE_SCHEMA) {
+            let rt = ParentRuntime::spawn().await;
+            let s = serde_json::to_string(&v).map_err(|e| crate::error::SemioError::invalid(e.to_string()))?;
+            crate::kit_backbone::KitStoreBundleFile::hydrate_into_graph(&rt.wip_graph, &s).await?;
+            Ok(rt)
+        } else {
+            ParentRuntime::spawn_wip_overlay_from_kit_dto(v).await
+        }
+    }
+
+    async fn bootstrap_runtime_from_open_uri(uri: &str) -> Result<Arc<ParentRuntime>, crate::error::SemioError> {
+        let u = uri.trim();
+        if u.is_empty() || u == "dev://empty" {
+            return ParentRuntime::spawn().await;
+        }
+        if let Some(b64) = u.strip_prefix("dev+json:") {
+            let bytes = base64::engine::general_purpose::STANDARD
+                .decode(b64.trim())
+                .map_err(|e| crate::error::SemioError::invalid(format!("base64: {e}")))?;
+            let v: serde_json::Value = serde_json::from_slice(&bytes).map_err(|e| crate::error::SemioError::invalid(e.to_string()))?;
+            return bootstrap_runtime_from_json_value(v).await;
+        }
+        let (_k, tail) = crate::operation::BackboneKind::from_uri(u)?;
+        let tail = tail.trim();
+        if tail.starts_with("http://") || tail.starts_with("https://") || tail.starts_with("blob:") {
+            let txt = fetch_text_url(tail).await?;
+            let v: serde_json::Value = serde_json::from_str(&txt).map_err(|e| crate::error::SemioError::invalid(e.to_string()))?;
+            return bootstrap_runtime_from_json_value(v).await;
+        }
+        Err(crate::error::SemioError::invalid(
+            "KitStoreHandle.create: use dev://empty, dev+json:<standard-base64>, or dev://<http(s)|blob-url> returning kit or bundle JSON",
+        ))
+    }
 
     #[derive(Deserialize)]
     struct WireReq {
@@ -10408,12 +10532,11 @@ pub mod wasm_bridge {
 
     #[wasm_bindgen]
     impl KitStoreHandle {
-        /// 🧾 `KitStoreHandle.create(JSON.parse(kitDto))`.
+        /// 🧾 `KitStoreHandle.create(uri)` — `dev://empty`, `dev+json:<base64>`, or `dev://<fetchable-url>` returning kit/bundle JSON.
         #[wasm_bindgen(js_name = create)]
-        pub fn create(dto_js: JsValue) -> js_sys::Promise {
+        pub fn create(uri: String) -> js_sys::Promise {
             future_to_promise(async move {
-                let v: serde_json::Value = serde_wasm_bindgen::from_value(dto_js).map_err(|e| JsValue::from_str(&e.to_string()))?;
-                let rt = ParentRuntime::spawn_wip_overlay_from_kit_dto(v).await.map_err(|e| JsValue::from_str(&e.message))?;
+                let rt = bootstrap_runtime_from_open_uri(&uri).await.map_err(|e| JsValue::from_str(&e.message))?;
                 Ok(JsValue::from(KitStoreHandle { rt, schema_mtx: Arc::new(Mutex::new(None)) }))
             })
         }
@@ -11041,7 +11164,7 @@ mod tests {
             std::fs::write(&path, serde_json::to_string_pretty(&bundle).expect("serialize kit-store bundle")).expect("write kit-store bundle");
 
             let g = crate::vcs::Graph::new().await;
-            crate::kit_backbone::AttachedBackbone::mount_and_replay(&norm, crate::operation::BackboneStoreKind::DevJson, "wip", &g).await.expect("dev json mount+replay");
+            crate::kit_backbone::AttachedBackbone::mount_and_replay(&norm, "wip", &g).await.expect("dev json mount+replay");
 
             let draft_id = crate::id::Id::from(golden_ops["draftId"].as_str().expect("draftId"));
             let fp = stable_projection_fingerprint(&g.materialized_kit_for_draft(&draft_id).await).await;
@@ -11058,8 +11181,8 @@ mod tests {
             let proj_root = dir.path().join("workspace");
             std::fs::create_dir_all(&proj_root).expect("mkdir workspace");
             let proj_canon = proj_root.canonicalize().expect("canonical workspace");
-            let uri_full = format!("file://{}", proj_canon.display());
-            let norm = crate::kit_backbone::normalize_connection_uri(&uri_full);
+            let uri_local = format!("local://{}", proj_canon.display());
+            let norm = crate::kit_backbone::normalize_connection_uri(&uri_local);
 
             let path_ops = Path::new(env!("CARGO_MANIFEST_DIR")).join("../assets/semio/kit-store.golden.operations.semio.json");
             let path_exp = Path::new(env!("CARGO_MANIFEST_DIR")).join("../assets/semio/kit-store.golden.expected.semio.json");
@@ -11069,7 +11192,7 @@ mod tests {
             let stored = crate::kit_backbone::stored_ops_from_golden_ops_json(&golden_ops).expect("golden → stored operations");
 
             let g_bootstrap = crate::vcs::Graph::new().await;
-            let _bones = crate::kit_backbone::AttachedBackbone::mount_and_replay(&norm, crate::operation::BackboneStoreKind::LocalDotSemio, "wip", &g_bootstrap).await.expect("bootstrap .semio layout");
+            let _bones = crate::kit_backbone::AttachedBackbone::mount_and_replay(&norm, "wip", &g_bootstrap).await.expect("bootstrap .semio layout");
 
             let db_path = proj_canon.join(".semio").join("wip.db");
             let conn = rusqlite::Connection::open(&db_path).expect("open wip.db");
@@ -11080,7 +11203,7 @@ mod tests {
             drop(conn);
 
             let g2 = crate::vcs::Graph::new().await;
-            crate::kit_backbone::AttachedBackbone::mount_and_replay(&norm, crate::operation::BackboneStoreKind::LocalDotSemio, "wip", &g2).await.expect("replay wip.db");
+            crate::kit_backbone::AttachedBackbone::mount_and_replay(&norm, "wip", &g2).await.expect("replay wip.db");
 
             let draft_id = crate::id::Id::from(golden_ops["draftId"].as_str().expect("draftId"));
             let fp = stable_projection_fingerprint(&g2.materialized_kit_for_draft(&draft_id).await).await;
@@ -11209,7 +11332,7 @@ mod tests {
             let norm = crate::kit_backbone::normalize_connection_uri(&uri_full);
 
             let g = crate::vcs::Graph::new().await;
-            let mut bone = crate::kit_backbone::AttachedBackbone::mount_and_replay(&norm, crate::operation::BackboneStoreKind::DevJson, "wip", &g).await.expect("mount empty bundle");
+            let mut bone = crate::kit_backbone::AttachedBackbone::mount_and_replay(&norm, "wip", &g).await.expect("mount empty bundle");
             let draft_id = crate::id::Id::from("draft-rs-1");
             let tx_id = crate::id::Id::from("tx-rs-1");
             bone.append__op(&draft_id, &tx_id, "kit.design.piece.createdFixedPiece", &serde_json::json!({"designId": "d-1", "blueprintId": "b-1"})).expect("append operation");

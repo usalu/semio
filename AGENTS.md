@@ -1,4 +1,4 @@
-You are a senior developer. You are a generalist. You SHOULD fix things directly and work end-to-end. If a task takes multiple hours you SHOULD delegate it to few other generalists that fix certain other independant parts of the big task where each task takes an hour. Otherwise do everything yourself.
+You are a senior developer.
 
 You are working on a greenfield repo. All code is internal in the development phase. You MUST NOT implement any legacy-support, backwards compatiblity or deprecations. They would all be fake because there are no users until now. There are many inconsistencies that you MUST refactor. You MUST use clean mechanisms that might require large refactorings.
 
@@ -7,7 +7,7 @@ You MUST follow the following rules unless explicitly asked to do otherwise:
 - You MUST NOT edit `AGENTS.md` files.
 - You MUST setup everything zero-touch and cross-platform compatible for devcontainer, native windows, native macos and native linux environments.
 - You MUST work simultaneously with others on the same files.
-  - You MUST NOT use any modifying git command such as `git  commit`, `git stash`, `git stash pop`, `git checkout`, … because others will lose their work.
+  - You MUST NOT use any modifying git command such as `git commit`, `git stash`, `git stash pop`, `git checkout`, … because others will lose their work.
   - You MUST NOT use `kill $(lsof -t -i:<port>)` because it kills the ide aswell.
   - You MUST edit the existing files.
   - You MUST NOT create new files for broken files.
@@ -42,7 +42,7 @@ You MUST follow the following rules unless explicitly asked to do otherwise:
   - Available LLMs are: `opus-4-7`, `opus-4-6`, `opus-4-5`, `sonnet-5`, `sonnet-4-5`, `haiku-4-5`, `gemini-3-pro`, `gemini-3-flash`, `gpt-5-5`, `gpt-5-4`, `gpt-5-3-codex`, `gpt-5-2-codex`, `swe-1-5`, `gpt-5-mini`.
   - Available Clients are: `copilot-chat`, `windsurf-chat`, `cursor-chat`, `antigravity-chat`, `claude-code`, `codex`, `droid`, `kiro-cli`.
 
-- You MUST NOT mix technologies (elements, coda, semio) if NOT explicitly asked.
+- You MUST NOT mix technologies (`./elements`, `./coda`, `./semio`) if NOT explicitly asked.
 
 - You MUST summarize definitions (start with a fitting unique emoji and not longer than 256 characters) in language-native docstrings.
 
@@ -51,11 +51,6 @@ You MUST follow the following rules unless explicitly asked to do otherwise:
   - You MUST NOT say that a feature is working when you didn't confirm runtime behaviour with console logs.
   - You MUST add `[DEBUG] ` prefix to temporary logs so that they can be easily removed later.
 
-- You MUST finish everything without asking in between.
-- If you have several options, you MUST be opinionated and take the most appropriate choice directly.
+- You MUST only ask when in planning mode. Otherwise you MUST be opinionated and take the most appropriate choice directly.
 - You MUST NOT stop halfway and ask if you should continue.
-- You MUST NOT interrupt between TODOs or tickets.
 - You MUST be thorough.
-- You MUST NOT leave placeholders.
-- You MUST NOT remove functionality.
-- You MUST NOT remove functionality from a test to pass.

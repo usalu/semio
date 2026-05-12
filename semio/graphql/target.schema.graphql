@@ -8266,12 +8266,32 @@ type AlternativeCommandInput {
   integrateIntoTheKit: ID!
 }
 
+enum BackboneKind {
+  DEV
+  LOCAL
+  REMOTE
+}
+
+type BackboneStatus {
+  attachedUri: String
+  kind: BackboneKind
+}
+
+type BackboneCommandInput {
+  attach(uri: String!): ID!
+  detach(uri: String!): ID!
+  status: BackboneStatus!
+  setActiveCheckpoint(id: ID!): ID!
+  syncNow: ID!
+}
+
 type SessionCommandInput {
   # SessionCommandInput
   start: ID!
   end: ID!
   login(username: String!, passwordHash: String!, hubUrl: String): ID!
   logout: ID!
+  backbone: BackboneCommandInput!
   theKit: VersionCommandInput
   alternative(id: ID!): AlternativeCommandInput
   startAlternative(name: String): ID!

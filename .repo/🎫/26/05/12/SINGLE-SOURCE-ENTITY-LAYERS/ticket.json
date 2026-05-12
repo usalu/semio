@@ -1,0 +1,10 @@
+{
+  "title": "Single Source Entity Layers",
+  "emoji": "🧬",
+  "status": "open",
+  "description": "Implement single-source entity layers: Rust BackboneKind, kit backbones, EventBus path subscribe, remove hydrate; JS Kit.open URI, backbone mutations; React Context rename, OperationStatus, bindFieldToReact without useSyncExternalStore.",
+  "goal": "🎯r2602🎯runningsketchpad",
+  "sessions": [
+    "⚪61b88a4a22ef4bd0a4466d15c01c8cc3"
+  ]
+}

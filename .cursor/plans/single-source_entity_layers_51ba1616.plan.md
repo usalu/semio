@@ -4,7 +4,7 @@ overview: Collapse every entity in the schema (Kit, Design, Type, Piece, Connect
 todos:
   - id: rust-weak-collapse
     content: "Rust: collapse `geom::Position` (DTO) + `geom::entity::PositionNode` (Arc) to one canonical `pub struct Position`; same for Vector, Point, Coordinate, Offset, Plane, Location, Attribute."
-    status: pending
+    status: in_progress
   - id: rust-bundle-fold
     content: "Rust: remove KitStoreBundleFile/GraphSnapshotDto/AlternativeVersionDto/KitGraphWorkspace/DesignHandle/hydrateKitStoreBundleJson; confine serde_json to GraphQL request decoder + DevBackbone reader/writer only."
     status: pending
@@ -84,7 +84,7 @@ todos:
     content: "React: useAttachBackbone/useDetachBackbone/useBackboneSyncNow/useBackboneStatus over the new GraphQL backbone command surface; no JSON in any signature."
     status: pending
   - id: verification
-    content: "Verify cargo check (native + wasm32), schema_matches_target_graphql_file round-trip, full cargo test, tsc --noEmit, depcruise:layers, inline negative-grep vitest blocks, useCoordinateU [DEBUG] smoke, useDragPiece/useRenamePiece OperationStatus smoke (incl. expectTypeOf static error for `dragPieceStatus.kind === \"tooLong\"`); extend existing test files only."
+    content: Verify cargo check (native + wasm32), schema_matches_target_graphql_file round-trip, full cargo test, tsc --noEmit, depcruise:layers, inline negative-grep vitest blocks, useCoordinateU [DEBUG] smoke, useDragPiece/useRenamePiece OperationStatus smoke (incl. expectTypeOf static error for `dragPieceStatus.kind === "tooLong"`); extend existing test files only.
     status: pending
   - id: ticket
     content: Open repo MCP ticket under goal r2602/runningsketchpad with this plan id; close with file list and verification summary.
