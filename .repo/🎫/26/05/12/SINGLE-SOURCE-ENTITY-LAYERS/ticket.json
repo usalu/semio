@@ -1,11 +1,17 @@
 {
   "title": "Single Source Entity Layers",
   "emoji": "🧬",
-  "status": "closed",
+  "status": "open",
   "description": "Implement single-source entity layers: Rust BackboneKind, kit backbones, EventBus path subscribe, remove hydrate; JS Kit.open URI, backbone mutations; React Context rename, OperationStatus, bindFieldToReact without useSyncExternalStore.",
   "summary": "Implemented BackboneKind (Dev/Local/Remote) with from_uri; native AttachedBackbone mounts derive kind from URI (local:// for SQLite backbone); renamed Dev/Local attach structs; Command::BackboneAttach drops redundant store_kind; added session.backbone GraphQL nav (attach/detach/status/setActiveCheckpoint/syncNow) and BackboneStatus SDL; removed hydrateKitStoreBundleJson mutation; WASM KitStoreHandle.create now takes backbone/bootstrap URI (dev://empty, dev+json:base64, dev://fetchable URL) with internal bundle vs kit JSON routing; EventBus.subscribe_paths MVP forwards to subscribe. JS: Kit.open maps inline JSON to dev+json URI, worker init uses uri, attachBackbone/detachBackbone mutations. React: fixed Entity generic constraints and removed recursive useType(). Verification: cargo/tsc not run due to build dir lock — see ticket verify-log.md.",
   "goal": "🎯r2602🎯runningsketchpad",
+  "plan": {
+    "client": "cursor",
+    "id": "51ba1616",
+    "source": "c:\\git\\semio\\.cursor\\plans\\single-source_entity_layers_51ba1616.plan.md"
+  },
   "sessions": [
-    "⚪61b88a4a22ef4bd0a4466d15c01c8cc3"
+    "⚪61b88a4a22ef4bd0a4466d15c01c8cc3",
+    "⚪8423dd8ed14e41b080fb2536eb924913"
   ]
 }

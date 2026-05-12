@@ -10,10 +10,10 @@ todos:
     status: pending
   - id: rust-backbones
     content: "Rust: rename BackboneStoreKind -> BackboneKind {Dev,Local,Remote}; implement DevBackbone (single JSON file), LocalBackbone (folder + .semio/kit.db + blobs, no JSON), RemoteBackbone (websocket, no JSON DTO frames)."
-    status: pending
+    status: completed
   - id: rust-backbone-graphql
     content: "Rust+Schema: add Mutation.session.backbone.attach(uri)/detach/status/setActiveCheckpoint/syncNow to target.schema.graphql + gql.rs resolvers; remove the today-internal-only Command::BackboneAttach front door."
-    status: pending
+    status: completed
   - id: rust-sub-fieldgate
     content: "Rust: extend EventBus with selection-aware subscribe; rewrite `gql::Subscription` to gate emissions on selection-touched fields (per-leaf live-query, not per-tick refetch)."
     status: pending
@@ -64,7 +64,7 @@ todos:
     status: pending
   - id: js-kit-open-uri
     content: "JS: rework Kit.open(uri) to interpret uri as a backbone URI (dev:/// | local:/// | remote://); remove all JSON-DTO ingestion. Add attachBackbone/detachBackbone/backboneSyncNow/backboneStatus methods."
-    status: pending
+    status: completed
   - id: react-strong-refs
     content: "React: collapse useKit to bare Kit; add ref hooks for all 28 primary strong entities + 95 concrete Operation subclasses (memoized, never update); collapse duplicate useType."
     status: pending
@@ -88,7 +88,7 @@ todos:
     status: pending
   - id: ticket
     content: Open repo MCP ticket under goal r2602/runningsketchpad with this plan id; close with file list and verification summary.
-    status: pending
+    status: completed
 isProject: false
 ---
 

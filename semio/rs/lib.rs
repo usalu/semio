@@ -8907,10 +8907,10 @@ CREATE TABLE IF NOT EXISTS conflict_stub (
 
 pub mod event {
     //! 📣 The single emit point of the entire crate. Variants carry Arc-shared payloads.
-    use std::sync::Arc;
+    use std::sync::{Arc, Mutex};
 
     use async_broadcast::{InactiveReceiver, Receiver, Sender};
-    use async_lock::Mutex;
+    use async_lock::Mutex as AsyncMutex;
 
     use crate::error::SemioError;
     use crate::operation;
@@ -8928,10 +8928,43 @@ pub mod event {
         ChangedDescription(Arc<operation::ChangedDescription>),
     }
 
+    impl Event {
+        /// @emoji 🧭 Command / aggregate outcome events re-emit every live subscription root.
+        pub fn invalidates_all_subscription_paths(&self) -> bool {
+            matches!(self, Self::CommandSucceeded(_) | Self::OperationSucceeded(_) | Self::OperationFailed(_))
+        }
+
+        /// @emoji 🎯 `watched` comes from subscription lookahead; empty ⇒ match all paths.
+        pub fn matches_watched_paths(&self, watched: &[String]) -> bool {
+            if watched.is_empty() {
+                return true;
+            }
+            if self.invalidates_all_subscription_paths() {
+                return true;
+            }
+            let touched = self.canonical_touched_paths();
+            watched.iter().any(|w| touched.iter().any(|t| t == w))
+        }
+
+        /// @emoji 📍 Canonical dotted paths this event may invalidate (wip / authoritative mirrors).
+        pub fn canonical_touched_paths(&self) -> Vec<String> {
+            match self {
+                Self::CommandSucceeded(_) | Self::OperationSucceeded(_) | Self::OperationFailed(_) => Vec::new(),
+                Self::RenamedKit(_) => vec!["wip:theKit:kit:name".into(), "authoritative:theKit:kit:name".into()],
+                Self::ChangedDescription(_) => vec!["wip:theKit:kit:description".into(), "authoritative:theKit:kit:description".into()],
+                Self::CreatedFixedPiece(_) | Self::FixedPiece(_) | Self::DraggedPiece(_) => {
+                    vec!["wip:theKit:kit".into(), "authoritative:theKit:kit".into()]
+                }
+            }
+        }
+    }
+
     /// 📣 The bus. Holds the only `emit_event` function in the crate.
     pub struct EventBus {
-        tx: Mutex<Sender<Event>>,
+        tx: AsyncMutex<Sender<Event>>,
         keep_alive: InactiveReceiver<Event>,
+        /// @emoji 🧷 Per-subscription [`Event`] fan-out keyed by watched canonical paths.
+        path_sinks: Mutex<Vec<(Vec<String>, async_channel::Sender<Event>)>>,
     }
 
     impl EventBus {
@@ -8940,23 +8973,31 @@ pub mod event {
             tx.set_overflow(true);
             // No active receivers? still proceed (drop the message) instead of awaiting one.
             tx.set_await_active(false);
-            Arc::new(Self { tx: Mutex::new(tx), keep_alive: rx.deactivate() })
+            Arc::new(Self { tx: AsyncMutex::new(tx), keep_alive: rx.deactivate(), path_sinks: Mutex::new(Vec::new()) })
         }
 
         /// 📣 The **only** `emit_event` in the entire crate. All other code paths must call this.
         pub async fn emit_event(&self, ev: Event) {
-            let tx = self.tx.lock().await;
-            let _ = tx.broadcast_direct(ev).await;
+            let sinks: Vec<(Vec<String>, async_channel::Sender<Event>)> = self.path_sinks.lock().unwrap().iter().map(|(p, t)| (p.clone(), t.clone())).collect();
+            for (paths, tx) in sinks {
+                if paths.is_empty() || ev.matches_watched_paths(&paths) {
+                    let _ = tx.send(ev.clone()).await;
+                }
+            }
+            let txb = self.tx.lock().await;
+            let _ = txb.broadcast_direct(ev).await;
         }
 
-        /// 🔔 New subscriber receiver.
+        /// 🔔 New subscriber receiver (unfiltered broadcast).
         pub fn subscribe(&self) -> Receiver<Event> {
             self.keep_alive.activate_cloned()
         }
 
-        /// @emoji 🔔 Path-filtered subscription (MVP: forwards to [`Self::subscribe`]; selection-aware filtering lands with live-query path registry).
-        pub fn subscribe_paths(&self, _watched: &[String]) -> Receiver<Event> {
-            self.subscribe()
+        /// @emoji 🔔 Path-filtered channel: emits only [`Event`] values matching `watched` canonical paths.
+        pub fn subscribe_paths(&self, watched: &[String]) -> async_channel::Receiver<Event> {
+            let (tx, rx) = async_channel::unbounded();
+            self.path_sinks.lock().unwrap().push((watched.to_vec(), tx));
+            rx
         }
     }
 }
@@ -9172,7 +9213,7 @@ pub mod worker {
         pub async fn apply(&self, cmd: Command) -> Result<(), SemioError> {
             match cmd {
                 Command::ApplyKitOperation { request_id, draft_id, transaction_id, operation } => self.apply_kit_operation(request_id, draft_id, transaction_id, operation).await,
-                Command::BackboneAttach { connection_uri, .. } => self.backbone.mount(&self.graph, self.label, connection_uri).await,
+                Command::BackboneAttach { connection_uri, .. } => self.backbone.mount(&self.graph, self.label, &connection_uri).await,
                 Command::BackboneDetach { connection_uri, .. } => self.backbone.detach_matching(&connection_uri).await,
             }
         }
@@ -9241,7 +9282,7 @@ pub mod worker {
 
 pub mod gql {
     //! 🌐 Type-safe static GraphQL schema via `Schema::build` (embedded target SDL string for tooling).
-    use async_graphql::{Context, Object, Schema, Subscription};
+    use async_graphql::{Context, Lookahead, Object, Schema, Subscription};
     use async_stream::stream;
     use futures_util::Stream;
     use std::pin::Pin;
@@ -9253,6 +9294,36 @@ pub mod gql {
     use crate::operation::{Command, Input, KitOperation, Scope};
     use crate::vcs::Graph;
     use crate::worker::ParentRuntime;
+
+    //#region 📡 subscription_paths
+    /// @emoji 📡 Flattens subscription selection into canonical `root:field:...` strings for [`crate::event::Event::matches_watched_paths`].
+    pub(crate) fn collect_subscription_field_paths(root: &str, ctx: &Context<'_>) -> Vec<String> {
+        let la = ctx.look_ahead();
+        let inner = la.field(root);
+        let focus = if inner.exists() { inner } else { la };
+        let mut out = Vec::new();
+        collect_la_paths(root, &focus, &mut out);
+        out
+    }
+
+    fn collect_la_paths(prefix: &str, look: &Lookahead<'_>, acc: &mut Vec<String>) {
+        let fields = look.selection_fields();
+        if fields.is_empty() {
+            acc.push(prefix.to_string());
+            return;
+        }
+        for sf in fields {
+            let name = sf.name();
+            let path = format!("{prefix}:{name}");
+            let nested = Lookahead::from(sf);
+            if nested.selection_fields().is_empty() {
+                acc.push(path);
+            } else {
+                collect_la_paths(&path, &nested, acc);
+            }
+        }
+    }
+    //#endregion 📡 subscription_paths
 
     //#region 🌐 interfaces
     /// @emoji 🌐 SDL `Node` + `EntityEdge` interfaces (geometry variants). `EntityConnection` + `Entity`/`WeakEntity`/… need resolver-aligned field types (register after `page_info`/`Arc` story settles).
@@ -9405,7 +9476,7 @@ pub mod gql {
     /// @emoji 🗄️ GraphQL entry for `session.backbone.*` kit persistence commands.
     pub struct BackboneCommandNav;
 
-    #[derive(Clone, Copy, async_graphql::SimpleObject)]
+    #[derive(Clone, async_graphql::SimpleObject)]
     #[graphql(name = "BackboneStatus")]
     pub struct BackboneStatus {
         #[graphql(name = "attachedUri")]
@@ -10201,8 +10272,11 @@ pub mod gql {
         async fn session(&self, ctx: &Context<'_>) -> async_graphql::Result<SessStream> {
             let rt = ctx.data::<Arc<ParentRuntime>>()?.clone();
             let bus = ctx.data::<Arc<EventBus>>()?.clone();
-            let mut rx = bus.subscribe();
+            let watched = collect_subscription_field_paths("session", ctx);
+            let filtered = !watched.is_empty();
             Ok(Box::pin(stream! {
+                let mut broadcast_rx = if filtered { None } else { Some(bus.subscribe()) };
+                let path_rx = if filtered { Some(bus.subscribe_paths(&watched)) } else { None };
                 loop {
                     let out = {
                         let g = rt.sessions.read().await;
@@ -10215,9 +10289,17 @@ pub mod gql {
                             break;
                         }
                     }
-                    match rx.recv().await {
-                        Ok(_) => {}
-                        Err(_) => break,
+                    if let Some(ref prx) = path_rx {
+                        if prx.recv().await.is_err() {
+                            break;
+                        }
+                    } else if let Some(ref mut brx) = broadcast_rx {
+                        match brx.recv().await {
+                            Ok(_) => {}
+                            Err(_) => break,
+                        }
+                    } else {
+                        break;
                     }
                 }
             }))
@@ -10227,13 +10309,24 @@ pub mod gql {
         async fn wip(&self, ctx: &Context<'_>) -> async_graphql::Result<GraphStream> {
             let rt = ctx.data::<Arc<ParentRuntime>>()?.clone();
             let bus = ctx.data::<Arc<EventBus>>()?.clone();
-            let mut rx = bus.subscribe();
+            let watched = collect_subscription_field_paths("wip", ctx);
+            let filtered = !watched.is_empty();
             Ok(Box::pin(stream! {
+                let mut broadcast_rx = if filtered { None } else { Some(bus.subscribe()) };
+                let path_rx = if filtered { Some(bus.subscribe_paths(&watched)) } else { None };
                 loop {
                     yield Ok(rt.wip_graph.clone());
-                    match rx.recv().await {
-                        Ok(_) => {}
-                        Err(_) => break,
+                    if let Some(ref prx) = path_rx {
+                        if prx.recv().await.is_err() {
+                            break;
+                        }
+                    } else if let Some(ref mut brx) = broadcast_rx {
+                        match brx.recv().await {
+                            Ok(_) => {}
+                            Err(_) => break,
+                        }
+                    } else {
+                        break;
                     }
                 }
             }))
@@ -10244,13 +10337,24 @@ pub mod gql {
         async fn authoritative(&self, ctx: &Context<'_>) -> async_graphql::Result<GraphStream> {
             let rt = ctx.data::<Arc<ParentRuntime>>()?.clone();
             let bus = ctx.data::<Arc<EventBus>>()?.clone();
-            let mut rx = bus.subscribe();
+            let watched = collect_subscription_field_paths("authoritative", ctx);
+            let filtered = !watched.is_empty();
             Ok(Box::pin(stream! {
+                let mut broadcast_rx = if filtered { None } else { Some(bus.subscribe()) };
+                let path_rx = if filtered { Some(bus.subscribe_paths(&watched)) } else { None };
                 loop {
                     yield Ok(rt.auth_graph.clone());
-                    match rx.recv().await {
-                        Ok(_) => {}
-                        Err(_) => break,
+                    if let Some(ref prx) = path_rx {
+                        if prx.recv().await.is_err() {
+                            break;
+                        }
+                    } else if let Some(ref mut brx) = broadcast_rx {
+                        match brx.recv().await {
+                            Ok(_) => {}
+                            Err(_) => break,
+                        }
+                    } else {
+                        break;
                     }
                 }
             }))
@@ -10260,15 +10364,26 @@ pub mod gql {
         async fn conflicts(&self, ctx: &Context<'_>) -> async_graphql::Result<ConfStream> {
             let rt = ctx.data::<Arc<ParentRuntime>>()?.clone();
             let bus = ctx.data::<Arc<EventBus>>()?.clone();
-            let mut rx = bus.subscribe();
+            let watched = collect_subscription_field_paths("conflicts", ctx);
+            let filtered = !watched.is_empty();
             Ok(Box::pin(stream! {
+                let mut broadcast_rx = if filtered { None } else { Some(bus.subscribe()) };
+                let path_rx = if filtered { Some(bus.subscribe_paths(&watched)) } else { None };
                 loop {
                     let list = rt.conflicts.read().await.clone();
                     let row = crate::gql_relay::ConflictConnection::from_conflicts(list).await;
                     yield Ok(row);
-                    match rx.recv().await {
-                        Ok(_) => {}
-                        Err(_) => break,
+                    if let Some(ref prx) = path_rx {
+                        if prx.recv().await.is_err() {
+                            break;
+                        }
+                    } else if let Some(ref mut brx) = broadcast_rx {
+                        match brx.recv().await {
+                            Ok(_) => {}
+                            Err(_) => break,
+                        }
+                    } else {
+                        break;
                     }
                 }
             }))
@@ -10278,14 +10393,26 @@ pub mod gql {
         async fn node(&self, ctx: &Context<'_>, id: Id) -> async_graphql::Result<NodeStream> {
             let rt = ctx.data::<Arc<ParentRuntime>>()?.clone();
             let bus = ctx.data::<Arc<EventBus>>()?.clone();
-            let mut rx = bus.subscribe();
+            let id_capture = id.clone();
+            let watched = collect_subscription_field_paths("node", ctx);
+            let filtered = !watched.is_empty();
             Ok(Box::pin(stream! {
+                let mut broadcast_rx = if filtered { None } else { Some(bus.subscribe()) };
+                let path_rx = if filtered { Some(bus.subscribe_paths(&watched)) } else { None };
                 loop {
-                    let out = crate::iface::resolve_node(rt.as_ref(), &id).await;
+                    let out = crate::iface::resolve_node(rt.as_ref(), &id_capture).await;
                     yield Ok(out);
-                    match rx.recv().await {
-                        Ok(_) => {}
-                        Err(_) => break,
+                    if let Some(ref prx) = path_rx {
+                        if prx.recv().await.is_err() {
+                            break;
+                        }
+                    } else if let Some(ref mut brx) = broadcast_rx {
+                        match brx.recv().await {
+                            Ok(_) => {}
+                            Err(_) => break,
+                        }
+                    } else {
+                        break;
                     }
                 }
             }))
@@ -10295,14 +10422,26 @@ pub mod gql {
         async fn entity(&self, ctx: &Context<'_>, hash: Id) -> async_graphql::Result<NodeStream> {
             let rt = ctx.data::<Arc<ParentRuntime>>()?.clone();
             let bus = ctx.data::<Arc<EventBus>>()?.clone();
-            let mut rx = bus.subscribe();
+            let hash_capture = hash.clone();
+            let watched = collect_subscription_field_paths("entity", ctx);
+            let filtered = !watched.is_empty();
             Ok(Box::pin(stream! {
+                let mut broadcast_rx = if filtered { None } else { Some(bus.subscribe()) };
+                let path_rx = if filtered { Some(bus.subscribe_paths(&watched)) } else { None };
                 loop {
-                    let out = crate::iface::resolve_node(rt.as_ref(), &hash).await;
+                    let out = crate::iface::resolve_node(rt.as_ref(), &hash_capture).await;
                     yield Ok(out);
-                    match rx.recv().await {
-                        Ok(_) => {}
-                        Err(_) => break,
+                    if let Some(ref prx) = path_rx {
+                        if prx.recv().await.is_err() {
+                            break;
+                        }
+                    } else if let Some(ref mut brx) = broadcast_rx {
+                        match brx.recv().await {
+                            Ok(_) => {}
+                            Err(_) => break,
+                        }
+                    } else {
+                        break;
                     }
                 }
             }))
