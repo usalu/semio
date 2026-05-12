@@ -8094,7 +8094,7 @@ type ConflictConnection implements EntityConnection {
 
 #region Commands
 
-type TagOperationInput {
+type TagOperation {
   # Artifact
   rename(newName: String!): ID!
   changeDescription(newDescription: String!): ID!
@@ -8105,7 +8105,7 @@ type TagOperationInput {
   removeAttributes(ids: [ID!]!): ID!
 }
 
-type ConceptOperationInput {
+type ConceptOperation {
   # Artifact
   rename(newName: String!): ID!
   changeDescription(newDescription: String!): ID!
@@ -8116,7 +8116,7 @@ type ConceptOperationInput {
   removeAttributes(ids: [ID!]!): ID!
 }
 
-type QualityOperationInput {
+type QualityOperation {
   # Artifact
   rename(newKey: String!): ID!
   changeDescription(newDescription: String!): ID!
@@ -8127,7 +8127,7 @@ type QualityOperationInput {
   removeAttributes(ids: [ID!]!): ID!
 }
 
-type TypeOperationInput {
+type TypeOperation {
   # Artifact
   rename(newName: String!): ID!
   changeDescription(newDescription: String!): ID!
@@ -8138,17 +8138,17 @@ type TypeOperationInput {
   removeAttributes(ids: [ID!]!): ID!
   # Ports
   createPort(code: String, label: String, description: String, icon: String, order: Int): ID!
-  port(id: ID!): PortOperationInput!
+  port(id: ID!): PortOperation!
   deletePort(id: ID!): ID!
   deletePorts(ids: [ID!]!): ID!
   # Connectors
   addConnector(code: String!, description: String, icon: String, portId: ID): ID!
-  connector(id: ID!): ConnectorOperationInput!
+  connector(id: ID!): ConnectorOperation!
   removeConnector(id: ID!): ID!
   removeConnectors(ids: [ID!]!): ID!
 }
 
-type PortOperationInput {
+type PortOperation {
   # Artifact
   rename(newCode: String!, newLabel: String): ID!
   changeDescription(newDescription: String!): ID!
@@ -8159,14 +8159,14 @@ type PortOperationInput {
   removeAttributes(ids: [ID!]!): ID!
 }
 
-type ConnectorOperationInput {
+type ConnectorOperation {
   # Artifact
   rename(newCode: String!): ID!
   changeDescription(newDescription: String!): ID!
   changeIcon(newIcon: String!): ID!
 }
 
-type DesignOperationInput {
+type DesignOperation {
   # Artifact
   rename(newName: String!): ID!
   changeDescription(newDescription: String!): ID!
@@ -8177,23 +8177,23 @@ type DesignOperationInput {
   removeAttribute(id: ID!): ID!
   removeAttributes(ids: [ID!]!): ID!
   # Pieces
-  addFixedPiece(blueprintId: ID!, position: PositionInput!, name: String, description: String): ID!
-  addChildPieceWithParentConnection(blueprintId: ID!, parentPieceId: ID!, parentConnector: String!, childConnector: String!, name: String, description: String, position: PositionInput, scale: Float): ID!
-  addHangingChildPieceWithParentConnection(blueprintId: ID!, parentPieceId: ID!, parentConnector: String!, childConnector: String!, position: PositionInput!, name: String, description: String, scale: Float): ID!
-  piece(id: ID!): PieceOperationInput!
-  pieces(ids: [ID!]!): PiecesOperationInput!
+  addFixedPiece(blueprintId: ID!, position: Position!, name: String, description: String): ID!
+  addChildPieceWithParentConnection(blueprintId: ID!, parentPieceId: ID!, parentConnector: String!, childConnector: String!, name: String, description: String, position: Position, scale: Float): ID!
+  addHangingChildPieceWithParentConnection(blueprintId: ID!, parentPieceId: ID!, parentConnector: String!, childConnector: String!, position: Position!, name: String, description: String, scale: Float): ID!
+  piece(id: ID!): PieceOperation!
+  pieces(ids: [ID!]!): PiecesOperation!
   deletePiece(id: ID!): ID!
   deletePieces(ids: [ID!]!): ID!
   deletePiecesAndConnections(pieceIds: [ID!]!, connectionIds: [ID!]!): ID!
 }
 
-type PieceOperationInput {
+type PieceOperation {
   # Artifact
   rename(newName: String!): ID!
   changeDescription(newDescription: String!): ID!
   # Piece
-  drag(offset: OffsetInput!): ID!
-  move(position: PositionInput!): ID!
+  drag(offset: Offset!): ID!
+  move(position: Position!): ID!
   fix: ID!
   changeBlueprint(blueprintId: ID!): ID!
   # Attributes
@@ -8202,66 +8202,66 @@ type PieceOperationInput {
   removeAttributes(ids: [ID!]!): ID!
 }
 
-type PiecesOperationInput {
-  # PiecesOperationInput
-  drag(offset: OffsetInput!): ID!
-  move(offset: OffsetInput!): ID!
+type PiecesOperation {
+  # PiecesOperation
+  drag(offset: Offset!): ID!
+  move(offset: Offset!): ID!
   fix: ID!
   changeBlueprint(blueprintId: ID!): ID!
 }
 
-type KitOperationInput {
+type KitOperation {
   # Artifact
   rename(newName: String!): ID!
   changeDescription(newDescription: String!): ID!
 
   # Tags
   createTag(name: String!, description: String, icon: String, order: Int): ID!
-  tag(id: ID!): TagOperationInput!
+  tag(id: ID!): TagOperation!
   deleteTag(id: ID!): ID!
   deleteTags(ids: [ID!]!): ID!
 
   # Concepts
   createConcept(name: String!, description: String, icon: String, order: Int): ID!
-  concept(id: ID!): ConceptOperationInput!
+  concept(id: ID!): ConceptOperation!
   deleteConcept(id: ID!): ID!
   deleteConcepts(ids: [ID!]!): ID!
 
   # Qualities
   createQuality(key: String!, value: String, unit: String, definition: String, description: String, icon: String): ID!
-  quality(id: ID!): QualityOperationInput!
+  quality(id: ID!): QualityOperation!
   deleteQuality(id: ID!): ID!
   deleteQualities(ids: [ID!]!): ID!
 
   # Types
   createType(name: String!, description: String, icon: String, image: String, unit: String): ID!
-  type(id: ID!): TypeOperationInput!
+  type(id: ID!): TypeOperation!
   deleteType(id: ID!): ID!
   deleteTypes(ids: [ID!]!): ID!
 
   # Designs
   createDesign(name: String!, description: String, icon: String, image: String, unit: String): ID!
-  design(id: ID!): DesignOperationInput!
+  design(id: ID!): DesignOperation!
   deleteDesign(id: ID!): ID!
   deleteDesigns(ids: [ID!]!): ID!
 }
 
-type UnsavedChangeCommandInput {
-  # UnsavedChangeCommandInput
-  kit: KitOperationInput!
+type UnsavedChangeCommand {
+  # UnsavedChangeCommand
+  kit: KitOperation!
   save: ID!
 }
 
-type VersionCommandInput {
-  # VersionCommandInput
+type VersionCommand {
+  # VersionCommand
   startNewChange: ID!
-  unsavedChange(id: ID!): UnsavedChangeCommandInput!
+  unsavedChange(id: ID!): UnsavedChangeCommand!
   save: ID!
   createCheckpoint(message: String!): ID!
 }
 
-type AlternativeCommandInput {
-  # AlternativeCommandInput
+type AlternativeCommand {
+  # AlternativeCommand
   version: ID!
   integrateIntoTheKit: ID!
 }
@@ -8277,7 +8277,7 @@ type BackboneStatus {
   kind: BackboneKind
 }
 
-type BackboneCommandInput {
+type BackboneCommand {
   attach(uri: String!): ID!
   detach(uri: String!): ID!
   status: BackboneStatus!
@@ -8285,27 +8285,33 @@ type BackboneCommandInput {
   syncNow: ID!
 }
 
-type SessionCommandInput {
-  # SessionCommandInput
+type SessionCommand {
+  # SessionCommand
   start: ID!
   end: ID!
   login(username: String!, passwordHash: String!, hubUrl: String): ID!
   logout: ID!
-  backbone: BackboneCommandInput!
-  theKit: VersionCommandInput
-  alternative(id: ID!): AlternativeCommandInput
+  backbone: BackboneCommand!
+  theKit: VersionCommand
+  alternative(id: ID!): AlternativeCommand
   startAlternative(name: String): ID!
 }
 
 #endregion Commands
 
-#endregion VCS
+#region Store
+
 type Store {
   session: Session!
   wip: Graph!
   authoritative: Graph
   conflicts: ConflictConnection!
 }
+
+#endregion Store
+
+#endregion VCS
+
 #endregion Entities
 
 #region Schema

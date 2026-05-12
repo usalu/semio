@@ -30,6 +30,11 @@ function isJsonObjectNode(v: JsonValue | null | undefined): v is JsonObject {
   return v != null && typeof v === "object" && !Array.isArray(v);
 }
 
+function jsonObjectField(node: JsonObject | null | undefined, key: string): JsonObject | null {
+  const value = node?.[key];
+  return value != null && typeof value === "object" && !Array.isArray(value) ? (value as JsonObject) : null;
+}
+
 function unwrapGraphqlData<TData>(response: GraphqlEnvelope<TData>): TData {
   if (response == null || typeof response !== "object") throw new Error("graphql: response is not an object");
   if (Array.isArray(response.errors) && response.errors.length > 0) throw new Error(response.errors[0]?.message ?? "GraphQL error");
@@ -249,14 +254,14 @@ export class EventBus {
   }
 }
 
-/** @emoji 📡 Live-query mirror of root {@code Query.wip} — ticks {@link Store#bus} on each WIP emission (replaces {@code Subscription.event}). */
-export const KIT_EVENT_STREAM_SUBSCRIPTION = `subscription { wip { id hash } }` as const;
+/** @emoji 📡 Live-query mirror of target {@code Subscription.store.wip}; ticks {@link Store#bus} on each WIP emission. */
+export const KIT_EVENT_STREAM_SUBSCRIPTION = `subscription { store { wip { id hash } } }` as const;
 
 /** @emoji 📡 Alias for correlators that previously reused the same subscription document as the kit event stream. */
 export const KIT_COMMAND_SUCCEEDED_SUBSCRIPTION = KIT_EVENT_STREAM_SUBSCRIPTION;
 
-/** @emoji 🧭 Session entry query fragment aligned with {@code target.schema.graphql} (WIP head + {@code theKit} id). */
-export const KIT_SESSION_QUERY_ENTRY = `query KitStoreEntry { wip { id theKit { id } } }` as const;
+/** @emoji 🧭 Store entry query fragment aligned with {@code target.schema.graphql} (WIP head + {@code theKit} id). */
+export const KIT_SESSION_QUERY_ENTRY = `query KitStoreEntry { store { wip { id theKit { id } } } }` as const;
 
 //#endregion 🌐Transport
 
@@ -330,45 +335,40 @@ function scopedKitMutationBody(changeId: string, kitSelection: string): { readon
 function kitReadSelectionDocument(point: KitReadPoint, innerOnKitStore: string): { query: string; variables: JsonObject } {
   if (isTheKitReadPoint(point)) {
     return {
-      query: `query KitSessionWipStore { wip { theKit { kit { ${innerOnKitStore} } } } }`,
+      query: `query KitSessionWipStore { store { wip { theKit { kit { ${innerOnKitStore} } } } } }`,
       variables: {},
     };
   }
   if ("checkpoint" in point) {
     return {
-      query: `query KitSessionWipStore($checkpointId: ID!) { wip { checkpoint(id: $checkpointId) { frozenRoot { ${innerOnKitStore} } } } }`,
+      query: `query KitSessionWipStore($checkpointId: ID!) { store { wip { checkpoint(id: $checkpointId) { frozenRoot { ${innerOnKitStore} } } } } }`,
       variables: { checkpointId: point.checkpoint.checkpointId },
     };
   }
   if ("alternative" in point) {
     return {
-      query: `query KitSessionWipStore($alternativeId: ID!) { wip { alternative(id: $alternativeId) { kit { ${innerOnKitStore} } } } }`,
+      query: `query KitSessionWipStore($alternativeId: ID!) { store { wip { alternative(id: $alternativeId) { kit { ${innerOnKitStore} } } } } }`,
       variables: { alternativeId: point.alternative.alternativeId },
     };
   }
   return {
-    query: `query KitSessionWipStore { wip { theKit { kit { ${innerOnKitStore} } } } }`,
+    query: `query KitSessionWipStore { store { wip { theKit { kit { ${innerOnKitStore} } } } } }`,
     variables: {},
   };
 }
 
 function kitReadSelectionFromData(d: JsonValue | null | undefined, point: KitReadPoint): JsonObject | null {
   if (d == null || typeof d !== "object" || Array.isArray(d)) return null;
-  const wip = (d as { wip?: JsonObject | null }).wip;
-  if (!wip || typeof wip !== "object" || Array.isArray(wip)) return null;
+  const store = jsonObjectField(d as JsonObject, "store");
+  const wip = jsonObjectField(store, "wip");
+  if (wip == null) return null;
   if ("checkpoint" in point) {
-    const cp = wip["checkpoint"];
-    const root = cp != null && typeof cp === "object" && !Array.isArray(cp) ? (cp as JsonObject)["frozenRoot"] : null;
-    return root != null && typeof root === "object" && !Array.isArray(root) ? (root as JsonObject) : null;
+    return jsonObjectField(jsonObjectField(wip, "checkpoint"), "frozenRoot");
   }
   if ("alternative" in point) {
-    const alt = wip["alternative"];
-    const kit = alt != null && typeof alt === "object" && !Array.isArray(alt) ? (alt as JsonObject)["kit"] : null;
-    return kit != null && typeof kit === "object" && !Array.isArray(kit) ? (kit as JsonObject) : null;
+    return jsonObjectField(jsonObjectField(wip, "alternative"), "kit");
   }
-  const tk = wip["theKit"];
-  const kit = tk != null && typeof tk === "object" && !Array.isArray(tk) ? (tk as JsonObject)["kit"] : null;
-  return kit != null && typeof kit === "object" && !Array.isArray(kit) ? (kit as JsonObject) : null;
+  return jsonObjectField(jsonObjectField(wip, "theKit"), "kit");
 }
 
 async function executeGraphql(handle: { execute(requestJson: string): Promise<string> }, body: { query: string; variables?: JsonObject; operationName?: string }, timeoutMs?: number): Promise<GraphqlEnvelope<JsonValue>> {
@@ -650,23 +650,20 @@ export class Store {
 
   private dispatchSubscriptionGraphqlData(data: JsonObject | null | undefined): void {
     if (data == null) return;
-    if (data["event"] !== undefined) {
-      this.bus.emit(data["event"] as JsonValue);
-      return;
-    }
-    if (data["wip"] !== undefined) {
+    const root = jsonObjectField(data, "store") ?? data;
+    if (root["wip"] !== undefined) {
       // Coarse invalidation: live-query WIP tick fans out to the current semantic bus kinds and command correlator.
       this.bus.emit({ kind: "kitRenamed", payload: undefined } as unknown as JsonValue);
       this.bus.emit({ kind: "changedDescription", payload: undefined } as unknown as JsonValue);
       this.bus.emit({ kind: "commandSucceeded", payload: undefined } as unknown as JsonValue);
       return;
     }
-    if (data["session"] !== undefined) {
+    if (root["session"] !== undefined) {
       this.bus.emit({ kind: "commandSucceeded", payload: undefined } as unknown as JsonValue);
       return;
     }
-    if (data["commandSucceeded"] !== undefined) this.bus.emit({ kind: "commandSucceeded", payload: data["commandSucceeded"] });
-    if (data["operationFailed"] !== undefined) this.bus.emit({ kind: "operationFailed", payload: data["operationFailed"] });
+    if (root["commandSucceeded"] !== undefined) this.bus.emit({ kind: "commandSucceeded", payload: root["commandSucceeded"] });
+    if (root["operationFailed"] !== undefined) this.bus.emit({ kind: "operationFailed", payload: root["operationFailed"] });
   }
 
   private startSubscriptionLoop(): void {
@@ -1432,37 +1429,31 @@ export class Graph extends Entity {
   }
 
   async readId(): Promise<string> {
-    const q = this.root === "wip" ? `query { wip { id } }` : `query { authoritative { id } }`;
+    const q = `query { store { ${this.root} { id } } }`;
     const data = unwrapGraphqlData(await executeStoreGraphql(this.store, { query: q })) as JsonObject;
-    const node = data[this.root] as JsonObject | null | undefined;
+    const node = jsonObjectField(jsonObjectField(data, "store"), this.root);
     return node == null ? "" : String(node["id"] ?? "");
   }
 
   async readHash(): Promise<string> {
-    const q = this.root === "wip" ? `query { wip { hash } }` : `query { authoritative { hash } }`;
+    const q = `query { store { ${this.root} { hash } } }`;
     const data = unwrapGraphqlData(await executeStoreGraphql(this.store, { query: q })) as JsonObject;
-    const node = data[this.root] as JsonObject | null | undefined;
+    const node = jsonObjectField(jsonObjectField(data, "store"), this.root);
     return node == null ? "" : String(node["hash"] ?? "");
   }
 
   async readAlternativeIds(): Promise<readonly string[]> {
-    const q =
-      this.root === "wip"
-        ? `query { wip { alternatives { edges { node { id } } } } }`
-        : `query { authoritative { alternatives { edges { node { id } } } } }`;
+    const q = `query { store { ${this.root} { alternatives { edges { node { id } } } } } }`;
     const data = unwrapGraphqlData(await executeStoreGraphql(this.store, { query: q })) as JsonObject;
-    const node = data[this.root] as JsonObject | undefined;
-    return parseEntityConnectionIds(node ?? null, "alternatives");
+    const node = jsonObjectField(jsonObjectField(data, "store"), this.root);
+    return parseEntityConnectionIds(node, "alternatives");
   }
 
   async readCheckpointIds(): Promise<readonly string[]> {
-    const q =
-      this.root === "wip"
-        ? `query { wip { checkpoints { edges { node { id } } } } }`
-        : `query { authoritative { checkpoints { edges { node { id } } } } }`;
+    const q = `query { store { ${this.root} { checkpoints { edges { node { id } } } } } }`;
     const data = unwrapGraphqlData(await executeStoreGraphql(this.store, { query: q })) as JsonObject;
-    const node = data[this.root] as JsonObject | undefined;
-    return parseEntityConnectionIds(node ?? null, "checkpoints");
+    const node = jsonObjectField(jsonObjectField(data, "store"), this.root);
+    return parseEntityConnectionIds(node, "checkpoints");
   }
 
   /** @emoji 📚 Id-list-stable {@link Alternative} handles under this graph root. */
@@ -1523,14 +1514,14 @@ export class Session extends Entity {
   }
 
   async readId(): Promise<string> {
-    const data = unwrapGraphqlData(await executeStoreGraphql(this.store, { query: `query { session { id } }` })) as JsonObject;
-    const s = data["session"] as JsonObject | undefined;
+    const data = unwrapGraphqlData(await executeStoreGraphql(this.store, { query: `query { store { session { id } } }` })) as JsonObject;
+    const s = jsonObjectField(jsonObjectField(data, "store"), "session");
     return String(s?.["id"] ?? "");
   }
 
   async readStartedAt(): Promise<string | null> {
-    const data = unwrapGraphqlData(await executeStoreGraphql(this.store, { query: `query { session { startedAt } }` })) as JsonObject;
-    const s = data["session"] as JsonObject | undefined;
+    const data = unwrapGraphqlData(await executeStoreGraphql(this.store, { query: `query { store { session { startedAt } } }` })) as JsonObject;
+    const s = jsonObjectField(jsonObjectField(data, "store"), "session");
     const v = s?.["startedAt"];
     if (v == null) return null;
     return String(v);
@@ -1538,10 +1529,10 @@ export class Session extends Entity {
 
   async readAlternativeIds(): Promise<readonly string[]> {
     const data = unwrapGraphqlData(
-      await executeStoreGraphql(this.store, { query: `query { session { alternatives { edges { node { id } } } } }` }),
+      await executeStoreGraphql(this.store, { query: `query { store { session { alternatives { edges { node { id } } } } } }` }),
     ) as JsonObject;
-    const s = data["session"] as JsonObject | undefined;
-    return parseEntityConnectionIds(s ?? null, "alternatives");
+    const s = jsonObjectField(jsonObjectField(data, "store"), "session");
+    return parseEntityConnectionIds(s, "alternatives");
   }
 
   /** @emoji 📚 Id-list-stable {@link Alternative} handles on {@code session.alternatives}. */
@@ -1580,11 +1571,11 @@ export class Alternative extends Entity {
   async readName(): Promise<string> {
     const q =
       this.ap.parent === "graph"
-        ? `query { ${this.ap.root} { alternative(id: ${gqlString(this.id)}) { name } } }`
-        : `query { session { alternative(id: ${gqlString(this.id)}) { name } } }`;
+        ? `query { store { ${this.ap.root} { alternative(id: ${gqlString(this.id)}) { name } } } }`
+        : `query { store { session { alternative(id: ${gqlString(this.id)}) { name } } } }`;
     const data = unwrapGraphqlData(await executeStoreGraphql(this.store, { query: q })) as JsonObject;
-    const first =
-      this.ap.parent === "graph" ? (data[this.ap.root] as JsonObject | undefined) : (data["session"] as JsonObject | undefined);
+    const storeNode = jsonObjectField(data, "store");
+    const first = this.ap.parent === "graph" ? jsonObjectField(storeNode, this.ap.root) : jsonObjectField(storeNode, "session");
     const alt = first?.["alternative"] as JsonObject | undefined;
     return String(alt?.["name"] ?? "");
   }
@@ -1609,10 +1600,10 @@ export class TheKit extends Entity {
   }
 
   async readId(): Promise<string> {
-    const q = `query { ${this.graphRoot} { theKit { id } } }`;
+    const q = `query { store { ${this.graphRoot} { theKit { id } } } }`;
     const data = unwrapGraphqlData(await executeStoreGraphql(this.store, { query: q })) as JsonObject;
-    const rootNode = data[this.graphRoot] as JsonObject | undefined;
-    const tk = rootNode?.["theKit"] as JsonObject | undefined;
+    const rootNode = jsonObjectField(jsonObjectField(data, "store"), this.graphRoot);
+    const tk = jsonObjectField(rootNode, "theKit");
     return String(tk?.["id"] ?? "");
   }
 
@@ -3882,13 +3873,15 @@ if (
       expect(sdl).toContain("type Session");
       expect(sdl).toContain("type Kit");
       expect(sdl).toMatch(/type Kit[\s\S]*designs:/s);
-      expect(sdl).toMatch(/type Subscription[\s\S]*\bwip\b/s);
+      expect(sdl).toMatch(/type Query[\s\S]*\bstore:\s*Store!/s);
+      expect(sdl).toMatch(/type Store[\s\S]*\bwip:\s*Graph!/s);
+      expect(sdl).toMatch(/type Subscription[\s\S]*\bstore:/s);
       expect(sdl).not.toMatch(/^\s*event:\s*Json!/m);
       expect(sdl).toContain("type Mutation");
       expect(sdl).toContain("session: SessionCommandInput!");
       expect(sdl).not.toContain("type KitStoreMutation");
-      expect(KIT_SESSION_QUERY_ENTRY).toContain("wip { id theKit");
-      expect(KIT_EVENT_STREAM_SUBSCRIPTION).toContain("wip");
+      expect(KIT_SESSION_QUERY_ENTRY).toContain("store { wip { id theKit");
+      expect(KIT_EVENT_STREAM_SUBSCRIPTION).toContain("store { wip");
       expect(KIT_COMMAND_SUCCEEDED_SUBSCRIPTION).toBe(KIT_EVENT_STREAM_SUBSCRIPTION);
     });
   });

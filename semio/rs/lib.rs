@@ -9236,10 +9236,10 @@ pub mod gql {
 
     //#region 🎛️commands
     /// @emoji 🎛️ `Mutation.session` scope — holds kit command context on [`ParentRuntime`].
-    pub struct SessionCommandInput;
+    pub struct SessionCommand;
 
-    #[Object(name = "SessionCommandInput")]
-    impl SessionCommandInput {
+    #[Object(name = "SessionCommand")]
+    impl SessionCommand {
         async fn start(&self, ctx: &Context<'_>) -> async_graphql::Result<Id> {
             let rt = ctx.data::<Arc<ParentRuntime>>()?;
             let _ = rt.wip_graph.ensure_default_seed_state().await;
@@ -9261,17 +9261,17 @@ pub mod gql {
             Ok(Id::new().await)
         }
 
-        async fn backbone(&self) -> BackboneCommandInput {
-            BackboneCommandInput
+        async fn backbone(&self) -> BackboneCommand {
+            BackboneCommand
         }
 
         #[graphql(name = "theKit")]
-        async fn the_kit(&self) -> VersionCommandInput {
-            VersionCommandInput
+        async fn the_kit(&self) -> VersionCommand {
+            VersionCommand
         }
 
-        async fn alternative(&self, #[graphql(name = "id")] id: Id) -> AlternativeCommandInput {
-            AlternativeCommandInput { alternative_id: id }
+        async fn alternative(&self, #[graphql(name = "id")] id: Id) -> AlternativeCommand {
+            AlternativeCommand { alternative_id: id }
         }
 
         #[graphql(name = "startAlternative")]
@@ -9283,7 +9283,7 @@ pub mod gql {
     }
 
     /// @emoji 🗄️ GraphQL entry for `session.backbone.*` kit persistence commands.
-    pub struct BackboneCommandInput;
+    pub struct BackboneCommand;
 
     #[derive(Clone, async_graphql::SimpleObject)]
     #[graphql(name = "BackboneStatus")]
@@ -9293,8 +9293,8 @@ pub mod gql {
         pub kind: Option<crate::operation::BackboneKind>,
     }
 
-    #[Object(name = "BackboneCommandInput")]
-    impl BackboneCommandInput {
+    #[Object(name = "BackboneCommand")]
+    impl BackboneCommand {
         async fn attach(&self, ctx: &Context<'_>, uri: String) -> async_graphql::Result<Id> {
             let _ = crate::operation::BackboneKind::from_uri(&uri).map_err(|e| async_graphql::Error::new(e.message))?;
             let rt = ctx.data::<Arc<ParentRuntime>>()?;
@@ -9326,10 +9326,10 @@ pub mod gql {
         }
     }
 
-    pub struct VersionCommandInput;
+    pub struct VersionCommand;
 
-    #[Object(name = "VersionCommandInput")]
-    impl VersionCommandInput {
+    #[Object(name = "VersionCommand")]
+    impl VersionCommand {
         #[graphql(name = "startNewChange")]
         async fn start_new_change(&self, ctx: &Context<'_>) -> async_graphql::Result<Id> {
             let rt = ctx.data::<Arc<ParentRuntime>>()?;
@@ -9340,14 +9340,14 @@ pub mod gql {
         }
 
         #[graphql(name = "unsavedChange")]
-        async fn unsaved_change(&self, ctx: &Context<'_>, id: Id) -> async_graphql::Result<UnsavedChangeCommandInput> {
+        async fn unsaved_change(&self, ctx: &Context<'_>, id: Id) -> async_graphql::Result<UnsavedChangeCommand> {
             let rt = ctx.data::<Arc<ParentRuntime>>()?;
             if let Some((_, tx)) = rt.wip_kit_scope.read().await.as_ref() {
                 if tx != &id {
                     return Err(async_graphql::Error::new("unsavedChange id does not match active change"));
                 }
             }
-            Ok(UnsavedChangeCommandInput { change_id: id })
+            Ok(UnsavedChangeCommand { change_id: id })
         }
 
         async fn save(&self, ctx: &Context<'_>) -> async_graphql::Result<Id> {
@@ -9368,12 +9368,12 @@ pub mod gql {
         }
     }
 
-    pub struct UnsavedChangeCommandInput {
+    pub struct UnsavedChangeCommand {
         pub change_id: Id,
     }
 
-    #[Object(name = "UnsavedChangeCommandInput")]
-    impl UnsavedChangeCommandInput {
+    #[Object(name = "UnsavedChangeCommand")]
+    impl UnsavedChangeCommand {
         async fn kit(&self) -> KitOperationInput {
             KitOperationInput { change_id: self.change_id.clone() }
         }
@@ -9393,12 +9393,12 @@ pub mod gql {
         }
     }
 
-    pub struct AlternativeCommandInput {
+    pub struct AlternativeCommand {
         pub alternative_id: Id,
     }
 
-    #[Object(name = "AlternativeCommandInput")]
-    impl AlternativeCommandInput {
+    #[Object(name = "AlternativeCommand")]
+    impl AlternativeCommand {
         async fn version(&self, ctx: &Context<'_>) -> async_graphql::Result<Id> {
             let _ = (ctx, &self.alternative_id);
             Ok(Id::new().await)
@@ -9897,7 +9897,10 @@ pub mod gql {
                 request_id: request_id.clone(),
                 draft_id,
                 transaction_id,
-                operation: crate::operation::KitOperation::CreateFixedPiece { scope: Scope::CreateFixedPiece { design_id: self.design_id.clone(), piece_id, blueprint_id, attribute_ids: Vec::new() }, input: Input::FixedPiece { position, name, description } },
+                operation: crate::operation::KitOperation::CreateFixedPiece {
+                    scope: Scope::CreateFixedPiece { design_id: self.design_id.clone(), piece_id, blueprint_id, attribute_ids: Vec::new() },
+                    input: Input::FixedPiece { position, name, description },
+                },
             };
             Ok(rt.dispatch_wip(cmd).await)
         }
@@ -10063,8 +10066,8 @@ pub mod gql {
     #[Object]
     impl Mutation {
         /// @emoji 🎛️ Kit-changing commands — navigate via nested fields per `target.schema.graphql` `#region Commands`.
-        async fn session(&self) -> SessionCommandInput {
-            SessionCommandInput
+        async fn session(&self) -> SessionCommand {
+            SessionCommand
         }
     }
 
