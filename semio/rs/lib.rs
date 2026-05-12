@@ -3694,7 +3694,7 @@ pub mod kit {
         async fn apply_design_piece_added_json(self: &Arc<Self>, design_id: &Id, piece_v: &serde_json::Value) -> Result<(), crate::error::SemioError> {
             let piece_id: Id = serde_json::from_value(piece_v.get("id").cloned().ok_or_else(|| crate::error::SemioError::invalid("piece.id"))?).map_err(|e| crate::error::SemioError::invalid(e.to_string()))?;
             let blueprint_id: Id = piece_v.get("blueprintId").and_then(|x| x.as_str()).map(Id::from).unwrap_or_else(|| piece_id.clone());
-            let position: crate::geom::Position = piece_v.get("pose").map(|p| serde_json::from_value(p.clone())).transpose().map_err(|e| crate::error::SemioError::invalid(e.to_string()))?.unwrap_or_default();
+            let position: crate::geom::PositionInput = piece_v.get("pose").map(|p| serde_json::from_value(p.clone())).transpose().map_err(|e| crate::error::SemioError::invalid(e.to_string()))?.unwrap_or_default();
             let name = piece_v.get("name").and_then(|x| x.as_str()).map(|s| s.to_string());
             let description = piece_v.get("description").and_then(|x| x.as_str()).map(|s| s.to_string());
             let (_handle, design) = self.bind_external_design_id(design_id).await;
@@ -4288,13 +4288,13 @@ pub mod kit {
         }
 
         /// 🧷 Single external-id translation → opaque handle + shared [`Arc`] for all subsequent hot-path graph work.
-        pub async fn bind_external_design_id(self: &Arc<Self>, design_id: &Id) -> (crate::kit_graph_engine::DesignHandle, Arc<design::Design>) {
+        pub async fn bind_external_design_id(self: &Arc<Self>, design_id: &Id) -> (crate::kit_graph_engine::DesignSlot, Arc<design::Design>) {
             let design = self.ensure_design(design_id).await;
             let slot = {
                 let designs = self.designs.read().await;
                 designs.iter().position(|d| &d.id == design_id).expect("design slot after ensure_design") as u32
             };
-            (crate::kit_graph_engine::DesignHandle(slot), design)
+            (crate::kit_graph_engine::DesignSlot(slot), design)
         }
 
         /// @emoji 🔁 Clears every **layout** node’s placed pieces and piece slot maps so [`crate::kit_backbone`] can replay without duplicating projections; kit metadata and empty layout shells stay resident (detach leaves this graph materialized in memory).
@@ -5703,7 +5703,7 @@ pub mod vcs {
             transaction_id: Id,
             design_id: Id,
             blueprint_id: Id,
-            position: crate::geom::Position,
+            position: crate::geom::PositionInput,
             name: Option<String>,
             description: Option<String>,
         ) -> Result<(Arc<crate::kit::design::piece::Piece>,), SemioError> {
@@ -5913,7 +5913,7 @@ pub mod iface {
         Kit(Arc<Kit>),
         Design(Arc<Design>),
         Piece(Arc<Piece>),
-        Position(Arc<PositionNode>),
+        Position(Arc<Position>),
     }
 
     #[derive(Clone, SimpleObject)]
@@ -6226,7 +6226,7 @@ pub mod operation {
     use serde::{Deserialize, Serialize};
 
     use crate::error::SemioError;
-    use crate::geom::{Offset, Position};
+    use crate::geom::{OffsetInput, PositionInput};
     use crate::id::Id;
     use crate::iface::{empty_owned_entity_connection, OwnedEntityConnection, OwnerEntity};
     use crate::meta::{ConceptInput, QualityInput, TagInput};
@@ -6541,7 +6541,7 @@ pub mod operation {
     /// @emoji ✏️ Fixed-piece creation payload.
     #[derive(Clone, Debug, Default, Serialize, Deserialize)]
     pub struct CreateFixedPieceInput {
-        pub position: Position,
+        pub position: PositionInput,
         pub name: Option<String>,
         pub description: Option<String>,
     }
@@ -6549,7 +6549,7 @@ pub mod operation {
     /// @emoji ✏️ Piece drag payload.
     #[derive(Clone, Debug, Default, Serialize, Deserialize)]
     pub struct DragPieceInput {
-        pub offset: Offset,
+        pub offset: OffsetInput,
     }
 
     /// @emoji 🧭 Shared scope payload: every distinct id-shape used across [`KitOperation`] commands.
@@ -6582,8 +6582,8 @@ pub mod operation {
         Tags { tags: Vec<TagInput> },
         Concept { concept: ConceptInput },
         Quality { quality: QualityInput },
-        FixedPiece { position: Position, name: Option<String>, description: Option<String> },
-        Offset { offset: Offset },
+        FixedPiece { position: PositionInput, name: Option<String>, description: Option<String> },
+        Offset { offset: OffsetInput },
     }
 
     /// @emoji 🧩 Normalized  operation surface: every variant is `{ scope: Scope, input: Input }`.
@@ -7203,7 +7203,7 @@ pub mod operation {
                     let Scope::PieceInDesign { design_id, piece_id } = scope else {
                         return Err(SemioError::invalid("dragPieceInDesign expects Scope::PieceInDesign"));
                     };
-                    Ok(vec![KitOperation::DragPieceInDesign { scope: Scope::PieceInDesign { design_id: design_id.clone(), piece_id: piece_id.clone() }, input: Input::Offset { offset: Offset { u: -offset.u, v: -offset.v } } }])
+                    Ok(vec![KitOperation::DragPieceInDesign { scope: Scope::PieceInDesign { design_id: design_id.clone(), piece_id: piece_id.clone() }, input: Input::Offset { offset: OffsetInput { u: -offset.u, v: -offset.v } } }])
                 }
                 KitOperation::DragPiecesInDesign { scope, input } => {
                     let Input::Offset { offset } = input else {
@@ -7212,7 +7212,7 @@ pub mod operation {
                     let Scope::PiecesInDesign { design_id, piece_ids } = scope else {
                         return Err(SemioError::invalid("dragPiecesInDesign expects Scope::PiecesInDesign"));
                     };
-                    Ok(vec![KitOperation::DragPiecesInDesign { scope: Scope::PiecesInDesign { design_id: design_id.clone(), piece_ids: piece_ids.clone() }, input: Input::Offset { offset: Offset { u: -offset.u, v: -offset.v } } }])
+                    Ok(vec![KitOperation::DragPiecesInDesign { scope: Scope::PiecesInDesign { design_id: design_id.clone(), piece_ids: piece_ids.clone() }, input: Input::Offset { offset: OffsetInput { u: -offset.u, v: -offset.v } } }])
                 }
                 KitOperation::FixPieceInDesign { scope, .. } => {
                     let Scope::PieceInDesign { design_id, piece_id } = scope else {
@@ -7383,7 +7383,7 @@ pub mod operation {
     pub struct CreatedFixedPieceInput {
         pub design_id: Id,
         pub blueprint_id: Id,
-        pub position: Position,
+        pub position: PositionInput,
         pub name: Option<String>,
         pub description: Option<String>,
     }
@@ -7399,7 +7399,7 @@ pub mod operation {
             self.blueprint_id.clone()
         }
         pub async fn position(&self) -> Arc<crate::geom::entity::Position> {
-            crate::geom::entity::Position::from_position_value(self.position)
+            crate::geom::entity::Position::from_position_input(self.position)
         }
         pub async fn name(&self) -> Option<String> {
             self.name.clone()
@@ -7431,7 +7431,7 @@ pub mod operation {
     pub struct DraggedPieceInput {
         pub design_id: Id,
         pub piece_ids: Vec<Id>,
-        pub offset: Offset,
+        pub offset: OffsetInput,
     }
 
     #[Object(name = "DraggedPieceInput")]
@@ -7445,7 +7445,7 @@ pub mod operation {
             self.piece_ids.clone()
         }
         pub async fn offset(&self) -> Arc<crate::geom::entity::Offset> {
-            crate::geom::entity::Offset::from_value(self.offset)
+            crate::geom::entity::Offset::from_input(self.offset)
         }
     }
 
@@ -7489,17 +7489,6 @@ pub mod operation {
         DraggedPiece(DraggedPieceInput),
     }
     //#endregion 🧾 inputs
-
-    //#region 🧭 graph workspace + backbone store kind (readable/writable selectors)
-    /// @emoji 🧭 Which materialized graph line a read or write targets (`wip` vs `authoritative`).
-    #[derive(Clone, Copy, Debug, Eq, PartialEq, async_graphql::Enum)]
-    #[graphql(name = "KitGraphWorkspace")]
-    pub enum KitGraphWorkspace {
-        #[graphql(name = "WIP")]
-        Wip,
-        #[graphql(name = "AUTHORITATIVE")]
-        Authoritative,
-    }
 
     /// @emoji 🗄️ Backbone materialization: dev JSON file, local `.semio/` SQLite+blobs, or remote hub (reserved).
     #[derive(Clone, Copy, Debug, Eq, PartialEq, async_graphql::Enum)]
@@ -7827,7 +7816,7 @@ pub mod operation {
         pub design_id: Id,
         #[graphql(name = "blueprintId")]
         pub blueprint_id: Id,
-        pub position: Position,
+        pub position: PositionInput,
         pub name: Option<String>,
         pub description: Option<String>,
     }
@@ -7846,7 +7835,7 @@ pub mod operation {
         pub design_id: Id,
         #[graphql(name = "pieceIds")]
         pub piece_ids: Vec<Id>,
-        pub offset: Offset,
+        pub offset: OffsetInput,
     }
 
     #[derive(Clone, Debug, InputObject)]
@@ -8022,7 +8011,7 @@ pub mod kit_graph_engine {
     //#region 🧷 handles
     /// @emoji 🧷 Opaque internal design slot index; external [`Id`] maps only in [`kit::Kit::bind_external_design_id`].
     #[derive(Clone, Copy, Debug, Eq, PartialEq, Hash)]
-    pub struct DesignHandle(pub u32);
+    pub struct DesignSlot(pub u32);
     //#endregion 🧷 handles
 
     //#region 🔢 projection fingerprint
@@ -8034,7 +8023,7 @@ pub mod kit_graph_engine {
             let mut pts: Vec<(f64, f64)> = Vec::new();
             for p in d.pieces.read().await.iter() {
                 if let Some(node) = p.position.read().await.as_ref() {
-                    let pos = node.snapshot_value().await;
+                    let pos = node.snapshot_input().await;
                     pts.push((pos.center.u, pos.center.v));
                 }
             }
@@ -8073,7 +8062,7 @@ pub mod kit_graph_engine {
         design_id: String,
         #[serde(rename = "blueprintId")]
         blueprint_id: String,
-        position: crate::geom::Position,
+        position: crate::geom::PositionInput,
         name: Option<String>,
         description: Option<String>,
     }
@@ -8964,7 +8953,12 @@ pub mod event {
                 Self::RenamedKit(_) => vec!["wip:theKit:kit:name".into(), "authoritative:theKit:kit:name".into()],
                 Self::ChangedDescription(_) => vec!["wip:theKit:kit:description".into(), "authoritative:theKit:kit:description".into()],
                 Self::CreatedFixedPiece(_) | Self::FixedPiece(_) | Self::DraggedPiece(_) => {
-                    vec!["wip:theKit:kit".into(), "authoritative:theKit:kit".into()]
+                    vec![
+                        "wip:theKit:kit".into(),
+                        "wip:theKit:kit:designs".into(),
+                        "authoritative:theKit:kit".into(),
+                        "authoritative:theKit:kit:designs".into(),
+                    ]
                 }
             }
         }
@@ -9300,7 +9294,7 @@ pub mod gql {
     use std::sync::Arc;
 
     use crate::event::EventBus;
-    use crate::geom::{Offset, Position};
+    use crate::geom::{OffsetInput, PositionInput};
     use crate::id::Id;
     use crate::operation::{Command, Input, KitOperation, Scope};
     use crate::vcs::Graph;
@@ -10087,7 +10081,7 @@ pub mod gql {
             Ok(Id::new().await)
         }
         #[graphql(name = "addFixedPiece")]
-        async fn add_fixed_piece(&self, ctx: &Context<'_>, #[graphql(name = "blueprintId")] blueprint_id: Id, position: Position, name: Option<String>, description: Option<String>) -> async_graphql::Result<Id> {
+        async fn add_fixed_piece(&self, ctx: &Context<'_>, #[graphql(name = "blueprintId")] blueprint_id: Id, position: PositionInput, name: Option<String>, description: Option<String>) -> async_graphql::Result<Id> {
             let rt = ctx.data::<Arc<ParentRuntime>>()?;
             let (draft_id, transaction_id) = rt.wip_kit_scope.read().await.clone().ok_or_else(|| async_graphql::Error::new("no active kit scope"))?;
             if transaction_id != self.change_id {
@@ -10113,7 +10107,7 @@ pub mod gql {
             #[graphql(name = "childConnector")] child_connector: String,
             name: Option<String>,
             description: Option<String>,
-            position: Option<Position>,
+            position: Option<PositionInput>,
             scale: Option<f64>,
         ) -> async_graphql::Result<Id> {
             let _ = (ctx, self, blueprint_id, parent_piece_id, parent_connector, child_connector, name, description, position, scale);
@@ -10127,7 +10121,7 @@ pub mod gql {
             #[graphql(name = "parentPieceId")] parent_piece_id: Id,
             #[graphql(name = "parentConnector")] parent_connector: String,
             #[graphql(name = "childConnector")] child_connector: String,
-            position: Position,
+            position: PositionInput,
             name: Option<String>,
             description: Option<String>,
             scale: Option<f64>,
@@ -10176,7 +10170,7 @@ pub mod gql {
             let _ = (ctx, self, new_description);
             Ok(Id::new().await)
         }
-        async fn drag(&self, ctx: &Context<'_>, offset: Offset) -> async_graphql::Result<Id> {
+        async fn drag(&self, ctx: &Context<'_>, offset: OffsetInput) -> async_graphql::Result<Id> {
             let rt = ctx.data::<Arc<ParentRuntime>>()?;
             let (draft_id, transaction_id) = rt.wip_kit_scope.read().await.clone().ok_or_else(|| async_graphql::Error::new("no active kit scope"))?;
             if transaction_id != self.change_id {
@@ -10191,7 +10185,7 @@ pub mod gql {
             };
             Ok(rt.dispatch_wip(cmd).await)
         }
-        async fn r#move(&self, ctx: &Context<'_>, position: Position) -> async_graphql::Result<Id> {
+        async fn r#move(&self, ctx: &Context<'_>, position: PositionInput) -> async_graphql::Result<Id> {
             let _ = (ctx, self, position);
             Ok(Id::new().await)
         }
@@ -10229,7 +10223,7 @@ pub mod gql {
 
     #[Object(name = "PiecesOperationInput")]
     impl PiecesOperationNav {
-        async fn drag(&self, ctx: &Context<'_>, offset: Offset) -> async_graphql::Result<Id> {
+        async fn drag(&self, ctx: &Context<'_>, offset: OffsetInput) -> async_graphql::Result<Id> {
             let rt = ctx.data::<Arc<ParentRuntime>>()?;
             let (draft_id, transaction_id) = rt.wip_kit_scope.read().await.clone().ok_or_else(|| async_graphql::Error::new("no active kit scope"))?;
             if transaction_id != self.change_id {
@@ -10244,7 +10238,7 @@ pub mod gql {
             };
             Ok(rt.dispatch_wip(cmd).await)
         }
-        async fn r#move(&self, ctx: &Context<'_>, offset: Offset) -> async_graphql::Result<Id> {
+        async fn r#move(&self, ctx: &Context<'_>, offset: OffsetInput) -> async_graphql::Result<Id> {
             let _ = (ctx, self, offset);
             Ok(Id::new().await)
         }
@@ -11156,7 +11150,7 @@ mod tests {
             let tx = rt.wip_graph.open_transaction(&draft.id).await;
 
             // Insert two pieces directly via the wip graph (no GraphQL plumbing).
-            let position = crate::geom::Position::default();
+            let position = crate::geom::PositionInput::default();
             let blueprint_id = crate::id::Id::new().await;
             let p1 = rt.wip_graph.apply_create_fixed_piece(draft.id.clone(), tx.id.clone(), crate::id::Id::from("des1"), blueprint_id.clone(), position, None, None).await.expect("insert piece 1").0;
             let _p2 = rt.wip_graph.apply_create_fixed_piece(draft.id.clone(), tx.id.clone(), crate::id::Id::from("des1"), blueprint_id, position, None, None).await.expect("insert piece 2").0;
@@ -11230,7 +11224,7 @@ mod tests {
                     "createdFixedPiece" => {
                         let design_id = crate::id::Id::from(input["designId"].as_str().expect("designId"));
                         let blueprint_id = crate::id::Id::from(input["blueprintId"].as_str().expect("blueprintId"));
-                        let position: crate::geom::Position = serde_json::from_value(input["position"].clone()).expect("position serde");
+                        let position: crate::geom::PositionInput = serde_json::from_value(input["position"].clone()).expect("position serde");
                         let name = input.get("name").and_then(|v| v.as_str()).map(|s| s.to_string());
                         let description = input.get("description").and_then(|v| v.as_str()).map(|s| s.to_string());
                         g.apply_create_fixed_piece(draft_id.clone(), tx_id.clone(), design_id, blueprint_id, position, name, description).await.expect("apply createFixedPiece");
@@ -11250,7 +11244,7 @@ mod tests {
                     total += 1;
                     let guard = p.position.read().await;
                     let n = guard.as_ref().expect("piece position");
-                    let pv = n.snapshot_value().await;
+                    let pv = n.snapshot_input().await;
                     centers.push([pv.center.u, pv.center.v]);
                 }
             }
@@ -11666,7 +11660,11 @@ mod tests {
     fn geom_plane_compute_hash_stable() {
         block_on(async {
             let pl =
-                crate::geom::entity::Plane::from_value(crate::geom::Plane { origin: crate::geom::Point { x: 0.0, y: 0.0, z: 0.0 }, x_axis: crate::geom::Vector { x: 1.0, y: 0.0, z: 0.0 }, y_axis: crate::geom::Vector { x: 0.0, y: 1.0, z: 0.0 } });
+                crate::geom::entity::Plane::from_input(crate::geom::PlaneInput {
+                    origin: crate::geom::PointInput { x: 0.0, y: 0.0, z: 0.0 },
+                    x_axis: crate::geom::VectorInput { x: 1.0, y: 0.0, z: 0.0 },
+                    y_axis: crate::geom::VectorInput { x: 0.0, y: 1.0, z: 0.0 },
+                });
             assert_eq!(pl.compute_hash().await, pl.compute_hash().await);
         });
     }
@@ -11695,7 +11693,7 @@ mod tests {
                     blueprint_id: crate::id::Id::from("blueprint-scoped-1"),
                     attribute_ids: Vec::new(),
                 },
-                input: crate::operation::Input::FixedPiece { position: crate::geom::Position::default(), name: Some("Scoped Piece".to_string()), description: Some("Persisted with explicit scope ids".to_string()) },
+                input: crate::operation::Input::FixedPiece { position: crate::geom::PositionInput::default(), name: Some("Scoped Piece".to_string()), description: Some("Persisted with explicit scope ids".to_string()) },
             };
 
             let payload = operation.payload_json().expect("payload json");

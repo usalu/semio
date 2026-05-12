@@ -10,6 +10,7 @@
 import type {
   Attribute,
   Benchmark,
+  Camera,
   ConnectionSide,
   Coordinate,
   Entity,
@@ -17,13 +18,18 @@ import type {
   GraphRootKind,
   Kit,
   KitReadPoint,
+  Location,
   OffsetInput,
   PieceBlueprint,
+  Place,
   Plane,
+  Point,
   Position,
   PositionInput,
   SetError,
   SetResult,
+  Side,
+  Vector,
 } from "@semio/js";
 import {
   Alternative,
@@ -119,7 +125,19 @@ export {
   TheKit,
   Type,
 };
-export type { GraphRootKind };
+export type {
+  Attribute,
+  Benchmark,
+  Camera,
+  Coordinate,
+  GraphRootKind,
+  Location,
+  Place,
+  Plane,
+  Point,
+  Side,
+  Vector,
+};
 // #endregion 🧷JsPublicExports
 
 // #region 🪝FieldBind
@@ -394,6 +412,88 @@ export function bindKitOperationToReact<Args extends unknown[] = []>(impl: (kit:
 }
 // #endregion 🪝KitOpBind
 
+// #region 🫳ShellHost
+/** @emoji 🪟 Sketchpad kit-store factory signature (host wiring; store shape is host-owned). */
+export type SketchpadKitStoreFactory = (kit: Kit) => Promise<unknown>;
+
+/** @emoji 🪟 Which persistence-backed kit open paths are available in the host shell. */
+export type SketchpadKitKindAvailability = Readonly<Record<"temporary" | "file" | "folder" | "remote", boolean>>;
+
+/** @emoji 🧭 Tab-shell kit id for routing (not the GraphQL {@link Kit#readId} async field). */
+export type ActiveKitTabValue = Readonly<{ id: string }>;
+
+export const ActiveKitTabContext = React.createContext<ActiveKitTabValue | null>(null);
+
+/** @emoji 🧭 Binds the active tab kit id for sketchpad routing and machine events. */
+export function ActiveKitTabContextProvider(props: { kitTabId: string; children: ReactNode }): React.ReactElement {
+  const v = React.useMemo<ActiveKitTabValue>(() => ({ id: props.kitTabId }), [props.kitTabId]);
+  return React.createElement(ActiveKitTabContext.Provider, { value: v }, props.children);
+}
+
+/** @emoji 🧭 Reads {@link ActiveKitTabContextProvider} as `{ id }` for legacy call-site shape. */
+export function useActiveKitTab(): ActiveKitTabValue | null {
+  return React.useContext(ActiveKitTabContext);
+}
+
+/** @emoji 🧭 True when {@link ActiveKitTabContextProvider} is mounted above. */
+export function useIsInActiveKitTab(): boolean {
+  return React.useContext(ActiveKitTabContext) != null;
+}
+
+/** @emoji 🔌 Optional WASM host bindings (store + client) parallel to {@link KitContextProvider}. */
+export type KitWasmHostState = Readonly<{ kitTabId: string; store: unknown; kitClient: unknown | null }>;
+
+const KitWasmHostContext = React.createContext<KitWasmHostState | null>(null);
+
+/** @emoji 🔌 Reads {@link KitWasmMountProvider} host bindings (never a synthetic runtime umbrella). */
+export function useKitWasmHost(): KitWasmHostState | null {
+  return React.useContext(KitWasmHostContext);
+}
+
+export type KitWasmMountProviderProps = Readonly<{
+  kitId?: string;
+  store: unknown;
+  kitClient?: unknown;
+  kit?: Kit | null;
+  children: ReactNode;
+}>;
+
+/** @emoji 🔌 Publishes host store/client and optionally wraps {@link KitContextProvider} when {@code kit} is known. */
+export function KitWasmMountProvider(props: KitWasmMountProviderProps): React.ReactElement {
+  const host = React.useMemo<KitWasmHostState>(
+    () => ({ kitTabId: props.kitId ?? "", store: props.store, kitClient: props.kitClient ?? null }),
+    [props.kitId, props.store, props.kitClient],
+  );
+  const inner =
+    props.kit != null ? React.createElement(KitContextProvider, { kit: props.kit }, props.children) : props.children;
+  return React.createElement(KitWasmHostContext.Provider, { value: host }, inner);
+}
+
+const KitAlternativeSelectionContext = React.createContext<Readonly<{ kitId: string }> | null>(null);
+
+/** @emoji 🌿 Local alternative selection scope for sketchpad footer (host VCS wiring may replace reads later). */
+export function KitAlternativeSelectionProvider(props: { kitId: string; children: ReactNode }): React.ReactElement {
+  const v = React.useMemo(() => ({ kitId: props.kitId }), [props.kitId]);
+  return React.createElement(KitAlternativeSelectionContext.Provider, { value: v }, props.children);
+}
+
+/** @emoji 🌿 `[selectedId, setSelectedId]` for the current {@link KitAlternativeSelectionProvider}. */
+export function useKitAlternativeSelection(): readonly [string | null, (next: string | null) => void] {
+  const ctx = React.useContext(KitAlternativeSelectionContext);
+  const kitId = ctx?.kitId ?? null;
+  const [selected, setSelected] = React.useState<string | null>(null);
+  React.useEffect(() => {
+    setSelected(null);
+  }, [kitId]);
+  return [selected, setSelected] as const;
+}
+
+/** @emoji 🌿 Stub list until VCS alternatives are bound to {@link Kit} GraphQL reads in the host. */
+export function useKitAlternatives(): readonly unknown[] {
+  return React.useMemo(() => [], []);
+}
+// #endregion 🫳ShellHost
+
 // #region 🎭Contexts
 // #region 🎒Kit
 const KitContext = React.createContext<Kit | null>(null);
@@ -587,6 +687,166 @@ export function useRepresentation(): Representation | null {
   return ctx == null ? null : kit.type(ctx.typeId).representation(ctx.representationId);
 }
 // #endregion 🪢Contexts
+
+// #region 🔖EntityContextHelpers
+/** @emoji 🧭 `{ id }` view of {@link DesignContext} for sketchpad routing (no entity fetch). */
+export function useDesignContextRow(): Readonly<{ id: string }> | null {
+  const ctx = React.useContext(DesignContext);
+  return ctx == null ? null : { id: ctx.designId };
+}
+
+/** @emoji 🧭 True when a {@link DesignContextProvider} is mounted above. */
+export function useHasDesignContext(): boolean {
+  return React.useContext(DesignContext) != null;
+}
+
+/** @emoji 🧭 `{ id }` view of {@link PieceContext} (piece id only). */
+export function usePieceContextRow(): Readonly<{ id: string }> | null {
+  const ctx = React.useContext(PieceContext);
+  return ctx == null ? null : { id: ctx.pieceId };
+}
+
+/** @emoji 🧭 True when {@link PieceContextProvider} is mounted above. */
+export function useHasPieceContext(): boolean {
+  return React.useContext(PieceContext) != null;
+}
+
+/** @emoji 🧭 `{ id }` view of {@link ConnectionContext}. */
+export function useConnectionContextRow(): Readonly<{ id: string }> | null {
+  const ctx = React.useContext(ConnectionContext);
+  return ctx == null ? null : { id: ctx.connectionId };
+}
+
+/** @emoji 🧭 True when {@link ConnectionContextProvider} is mounted above. */
+export function useHasConnectionContext(): boolean {
+  return React.useContext(ConnectionContext) != null;
+}
+
+/** @emoji 🧭 `{ id }` view of {@link TypeContext}. */
+export function useTypeContextRow(): Readonly<{ id: string }> | null {
+  const ctx = React.useContext(TypeContext);
+  return ctx == null ? null : { id: ctx.typeId };
+}
+
+/** @emoji 🧭 True when {@link TypeContextProvider} is mounted above. */
+export function useHasTypeContext(): boolean {
+  return React.useContext(TypeContext) != null;
+}
+
+/** @emoji 🧭 `{ id }` view of {@link QualityContext}. */
+export function useQualityContextRow(): Readonly<{ id: string }> | null {
+  const ctx = React.useContext(QualityContext);
+  return ctx == null ? null : { id: ctx.qualityId };
+}
+
+/** @emoji 🧭 True when {@link QualityContextProvider} is mounted above. */
+export function useHasQualityContext(): boolean {
+  return React.useContext(QualityContext) != null;
+}
+
+/** @emoji 🧭 `{ id }` view of {@link AuthorContext}. */
+export function useAuthorContextRow(): Readonly<{ id: string }> | null {
+  const ctx = React.useContext(AuthorContext);
+  return ctx == null ? null : { id: ctx.authorId };
+}
+
+/** @emoji 🧭 True when {@link AuthorContextProvider} is mounted above. */
+export function useHasAuthorContext(): boolean {
+  return React.useContext(AuthorContext) != null;
+}
+
+/** @emoji 🧷 {@link PieceContextProvider} using the enclosing {@link DesignContextProvider} {@code designId}. */
+export function PieceUnderActiveDesignProvider(props: { pieceId: string; children: ReactNode }): React.ReactElement {
+  const d = React.useContext(DesignContext);
+  if (d == null) {
+    throw new Error("semio/react: PieceUnderActiveDesignProvider requires <DesignContextProvider designId=\"…\">.");
+  }
+  return React.createElement(PieceContext.Provider, { value: { designId: d.designId, pieceId: props.pieceId } }, props.children);
+}
+
+/** @emoji 🧷 {@link ConnectionContextProvider} using the enclosing {@link DesignContextProvider} {@code designId}. */
+export function ConnectionUnderActiveDesignProvider(props: { connectionId: string; children: ReactNode }): React.ReactElement {
+  const d = React.useContext(DesignContext);
+  if (d == null) {
+    throw new Error("semio/react: ConnectionUnderActiveDesignProvider requires <DesignContextProvider designId=\"…\">.");
+  }
+  return React.createElement(ConnectionContext.Provider, { value: { designId: d.designId, connectionId: props.connectionId } }, props.children);
+}
+// #endregion 🔖EntityContextHelpers
+
+// #region 🪝IdStableEntityLists
+/** @emoji 📚 Kit-level designs ordered by {@link Kit#readDesignIds} (handles from {@link Kit#design}). */
+export function useKitDesignEntities(): FieldReadState<readonly Design[]> {
+  const kit = useKit();
+  return bindKitFieldToReact<readonly Design[]>({
+    getKit: () => kit,
+    read: async (k) => (await k.readDesignIds()).map((id) => k.design(id)),
+  })();
+}
+
+/** @emoji 📚 Kit-level types ordered by {@link Kit#readTypeIds}. */
+export function useKitTypeEntities(): FieldReadState<readonly Type[]> {
+  const kit = useKit();
+  return bindKitFieldToReact<readonly Type[]>({
+    getKit: () => kit,
+    read: async (k) => (await k.readTypeIds()).map((id) => k.type(id)),
+  })();
+}
+
+/** @emoji 📚 Kit-level authors ordered by {@link Kit#readAuthorIds}. */
+export function useKitAuthorEntities(): FieldReadState<readonly Author[]> {
+  const kit = useKit();
+  return bindKitFieldToReact<readonly Author[]>({
+    getKit: () => kit,
+    read: async (k) => (await k.readAuthorIds()).map((id) => k.author(id)),
+  })();
+}
+
+/** @emoji 📚 Kit-level qualities ordered by {@link Kit#readQualityIds}. */
+export function useKitQualityEntities(): FieldReadState<readonly Quality[]> {
+  const kit = useKit();
+  return bindKitFieldToReact<readonly Quality[]>({
+    getKit: () => kit,
+    read: async (k) => (await k.readQualityIds()).map((id) => k.quality(id)),
+  })();
+}
+
+/** @emoji 📚 Kit-level tags ordered by {@link Kit#readTagIds}. */
+export function useKitTagEntities(): FieldReadState<readonly Tag[]> {
+  const kit = useKit();
+  return bindKitFieldToReact<readonly Tag[]>({
+    getKit: () => kit,
+    read: async (k) => (await k.readTagIds()).map((id) => k.tag(id)),
+  })();
+}
+
+/** @emoji 📚 Kit-level concepts ordered by {@link Kit#readConceptIds}. */
+export function useKitConceptEntities(): FieldReadState<readonly Concept[]> {
+  const kit = useKit();
+  return bindKitFieldToReact<readonly Concept[]>({
+    getKit: () => kit,
+    read: async (k) => (await k.readConceptIds()).map((id) => k.concept(id)),
+  })();
+}
+
+/** @emoji 📚 Design pieces ordered by {@link Design#readPieceIds}. */
+export function useDesignPieceEntities(): FieldReadState<readonly Piece[]> {
+  const d = useDesign();
+  return bindFieldToReact<Design, readonly Piece[]>({
+    get: () => d,
+    read: async (design) => (await design.readPieceIds()).map((id) => design.piece(id)),
+  })();
+}
+
+/** @emoji 📚 Design connections ordered by {@link Design#readConnectionIds}. */
+export function useDesignConnectionEntities(): FieldReadState<readonly Connection[]> {
+  const d = useDesign();
+  return bindFieldToReact<Design, readonly Connection[]>({
+    get: () => d,
+    read: async (design) => (await design.readConnectionIds()).map((id) => design.connection(id)),
+  })();
+}
+// #endregion 🪝IdStableEntityLists
 
 // #region 🪝HooksKit
 // #region 📖KitReads
@@ -1902,6 +2162,12 @@ if (import.meta.vitest) {
       /\bfieldSync\b/,
       /\boptimistic\b/,
       /\breconcil/i,
+      /\bKitRuntime\b/,
+      /\buseKitRuntimeSafe\s*\(/,
+      /\buseKitScope\s*\(/,
+      /\bKitScope\b/,
+      /\bKitShellScopeProvider\b/,
+      /\buseSyncExternalStore\b/,
     ];
     it("react index has no banned substrings as live code calls", () => {
       for (const re of mustNotMatchCode) {

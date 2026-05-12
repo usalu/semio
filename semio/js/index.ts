@@ -649,6 +649,20 @@ function __parseEntityConnectionIds(frag: JsonObject | null | undefined, key: st
   return out;
 }
 
+function __readIdListStable<T>(
+  cache: { ids: readonly string[]; arr: readonly T[] },
+  nextIds: readonly string[],
+  build: (id: string) => T,
+): readonly T[] {
+  if (cache.ids.length === nextIds.length && cache.ids.every((v, i) => v === nextIds[i]!)) {
+    return cache.arr;
+  }
+  const ids = [...nextIds];
+  cache.ids = ids;
+  cache.arr = Object.freeze(ids.map((id) => build(id)));
+  return cache.arr;
+}
+
 /**
  * @emoji 🎒 Stateless kit façade: owns {@link GqlTransport} + {@link EventBus}; every read is a fresh GraphQL round-trip.
  */
@@ -660,6 +674,25 @@ export class Kit {
   private disposed = false;
   private activeReadPoint: KitReadPoint = theKitReadPoint;
   private kitWriteChangeId: string | null = null;
+  private readonly __designCache = new Map<string, Design>();
+  private readonly __typeCache = new Map<string, Type>();
+  private readonly __tagCache = new Map<string, Tag>();
+  private readonly __conceptCache = new Map<string, Concept>();
+  private readonly __qualityCache = new Map<string, Quality>();
+  private readonly __familyCache = new Map<string, Family>();
+  private readonly __fileCache = new Map<string, File>();
+  private readonly __folderCache = new Map<string, Folder>();
+  private readonly __authorCache = new Map<string, Author>();
+  private readonly __statCache = new Map<string, Stat>();
+  private readonly __conflictCache = new Map<string, Conflict>();
+  private readonly __graphByRoot = new Map<"wip" | "authoritative", Graph>();
+  private __session: Session | undefined;
+  private __stableDesigns: { ids: readonly string[]; arr: readonly Design[] } = { ids: [], arr: [] };
+  private __stableTypes: { ids: readonly string[]; arr: readonly Type[] } = { ids: [], arr: [] };
+  private __stableAuthors: { ids: readonly string[]; arr: readonly Author[] } = { ids: [], arr: [] };
+  private __stableQualities: { ids: readonly string[]; arr: readonly Quality[] } = { ids: [], arr: [] };
+  private __stableTags: { ids: readonly string[]; arr: readonly Tag[] } = { ids: [], arr: [] };
+  private __stableConcepts: { ids: readonly string[]; arr: readonly Concept[] } = { ids: [], arr: [] };
 
   /** @emoji 🌐 GraphQL executor (JSON wire). */
   readonly gql: GqlTransport;
@@ -706,8 +739,6 @@ export class Kit {
     }
     if (data["commandSucceeded"] !== undefined) this.bus.emit({ kind: "commandSucceeded", payload: data["commandSucceeded"] });
     if (data["operationFailed"] !== undefined) this.bus.emit({ kind: "operationFailed", payload: data["operationFailed"] });
-    const legacyOp = data["operationSucceeded"];
-    if (legacyOp !== undefined) this.bus.emit(legacyOp as JsonValue);
   }
 
   private startSubscriptionLoop(): void {
@@ -733,11 +764,6 @@ export class Kit {
   private async gqlRun(body: { query: string; variables?: JsonObject; operationName?: string }): Promise<KitGraphqlResponseEnvelope<JsonValue>> {
     this.ensureAlive();
     return kitGraphqlRun(this.handle, body, this.timeoutMs);
-  }
-
-  /** @emoji 🌐 Public GraphQL round-trip (root {@code Query} / {@code Mutation}), for {@code node(id:)} reads. */
-  async runGraphql(body: { query: string; variables?: JsonObject; operationName?: string }): Promise<KitGraphqlResponseEnvelope<JsonValue>> {
-    return this.gqlRun(body);
   }
 
   /** @emoji 🧾 Reads a selection inside scoped {@code kit { … }} for {@link activeReadPoint}. */
@@ -845,6 +871,28 @@ export class Kit {
     return gqlOkFromEnvelope(env);
   }
 
+  /** @emoji 🛜 Runs {@code backbone.syncNow} on the active session. */
+  async backboneSyncNow(): Promise<SetResult> {
+    this.ensureAlive();
+    const env = await this.gqlRun({ query: `mutation { session { backbone { syncNow } } }` });
+    return gqlOkFromEnvelope(env);
+  }
+
+  /** @emoji 🛜 Reads {@code BackboneStatus} via the command shell (typed snapshot, not raw wire). */
+  async backboneStatus(): Promise<Readonly<{ attachedUri: string | null; kind: string }>> {
+    this.ensureAlive();
+    const data = kitGraphqlData(
+      await this.gqlRun({ query: `mutation { session { backbone { status { attachedUri kind } } } }` }),
+    ) as JsonObject;
+    const sess = data["session"] as JsonObject | undefined;
+    const bb = sess?.["backbone"] as JsonObject | undefined;
+    const st = bb?.["status"] as JsonObject | undefined;
+    return {
+      attachedUri: st?.["attachedUri"] == null || st["attachedUri"] === null ? null : String(st["attachedUri"]),
+      kind: String(st?.["kind"] ?? ""),
+    };
+  }
+
   /** @emoji 🧾 Warm-path query after WASM init. */
   private async warmGraphqlRead(): Promise<void> {
     await this.readKitInner("id name");
@@ -922,63 +970,128 @@ export class Kit {
   }
 
   design(id: string): Design {
-    return new Design(this, id);
+    let d = this.__designCache.get(id);
+    if (!d) {
+      d = new Design(this, id);
+      this.__designCache.set(id, d);
+    }
+    return d;
   }
 
   type(id: string): Type {
-    return new Type(this, id);
+    let t = this.__typeCache.get(id);
+    if (!t) {
+      t = new Type(this, id);
+      this.__typeCache.set(id, t);
+    }
+    return t;
   }
 
   tag(id: string): Tag {
-    return new Tag(this, id);
+    let t = this.__tagCache.get(id);
+    if (!t) {
+      t = new Tag(this, id);
+      this.__tagCache.set(id, t);
+    }
+    return t;
   }
 
   concept(id: string): Concept {
-    return new Concept(this, id);
+    let c = this.__conceptCache.get(id);
+    if (!c) {
+      c = new Concept(this, id);
+      this.__conceptCache.set(id, c);
+    }
+    return c;
   }
 
   quality(id: string): Quality {
-    return new Quality(this, id);
+    let q = this.__qualityCache.get(id);
+    if (!q) {
+      q = new Quality(this, id);
+      this.__qualityCache.set(id, q);
+    }
+    return q;
   }
 
   family(id: string): Family {
-    return new Family(this, id);
+    let f = this.__familyCache.get(id);
+    if (!f) {
+      f = new Family(this, id);
+      this.__familyCache.set(id, f);
+    }
+    return f;
   }
 
   file(id: string): File {
-    return new File(this, id);
+    let f = this.__fileCache.get(id);
+    if (!f) {
+      f = new File(this, id);
+      this.__fileCache.set(id, f);
+    }
+    return f;
   }
 
   folder(id: string): Folder {
-    return new Folder(this, id);
+    let f = this.__folderCache.get(id);
+    if (!f) {
+      f = new Folder(this, id);
+      this.__folderCache.set(id, f);
+    }
+    return f;
   }
 
   author(id: string): Author {
-    return new Author(this, id);
+    let a = this.__authorCache.get(id);
+    if (!a) {
+      a = new Author(this, id);
+      this.__authorCache.set(id, a);
+    }
+    return a;
   }
 
   stat(id: string): Stat {
-    return new Stat(this, id);
+    let s = this.__statCache.get(id);
+    if (!s) {
+      s = new Stat(this, id);
+      this.__statCache.set(id, s);
+    }
+    return s;
   }
 
   /** @emoji 🌐 WIP {@link Graph} ({@code Query.wip}). */
   wip(): Graph {
-    return new Graph(this, "wip");
+    let g = this.__graphByRoot.get("wip");
+    if (!g) {
+      g = new Graph(this, "wip");
+      this.__graphByRoot.set("wip", g);
+    }
+    return g;
   }
 
   /** @emoji 🌐 Authoritative {@link Graph} when the server exposes it ({@code Query.authoritative}). */
   authoritative(): Graph {
-    return new Graph(this, "authoritative");
+    let g = this.__graphByRoot.get("authoritative");
+    if (!g) {
+      g = new Graph(this, "authoritative");
+      this.__graphByRoot.set("authoritative", g);
+    }
+    return g;
   }
 
   /** @emoji 🗂️ Root {@link Session} ({@code Query.session}). */
   session(): Session {
-    return new Session(this);
+    return (this.__session ??= new Session(this));
   }
 
   /** @emoji ⚔️ {@link Conflict} via {@code node(id:)}. */
   conflict(id: string): Conflict {
-    return new Conflict(this, id);
+    let c = this.__conflictCache.get(id);
+    if (!c) {
+      c = new Conflict(this, id);
+      this.__conflictCache.set(id, c);
+    }
+    return c;
   }
 
   async rename(newName: string): Promise<SetResult> {
@@ -1149,8 +1262,51 @@ export class Kit {
     const frag = (await this.readKitInner("concepts { edges { node { id } } }")) as JsonObject | null;
     return __parseEntityConnectionIds(frag, "concepts");
   }
+
+  /** @emoji 📚 Id-list-stable {@link Design} handles for the active read point. */
+  async readDesigns(): Promise<readonly Design[]> {
+    const ids = await this.readDesignIds();
+    return __readIdListStable(this.__stableDesigns, ids, (id) => this.design(id));
+  }
+
+  /** @emoji 📚 Id-list-stable {@link Type} handles. */
+  async readTypes(): Promise<readonly Type[]> {
+    const ids = await this.readTypeIds();
+    return __readIdListStable(this.__stableTypes, ids, (id) => this.type(id));
+  }
+
+  /** @emoji 📚 Id-list-stable {@link Author} handles. */
+  async readAuthors(): Promise<readonly Author[]> {
+    const ids = await this.readAuthorIds();
+    return __readIdListStable(this.__stableAuthors, ids, (id) => this.author(id));
+  }
+
+  /** @emoji 📚 Id-list-stable {@link Quality} handles. */
+  async readQualities(): Promise<readonly Quality[]> {
+    const ids = await this.readQualityIds();
+    return __readIdListStable(this.__stableQualities, ids, (id) => this.quality(id));
+  }
+
+  /** @emoji 📚 Id-list-stable {@link Tag} handles. */
+  async readTags(): Promise<readonly Tag[]> {
+    const ids = await this.readTagIds();
+    return __readIdListStable(this.__stableTags, ids, (id) => this.tag(id));
+  }
+
+  /** @emoji 📚 Id-list-stable {@link Concept} handles. */
+  async readConcepts(): Promise<readonly Concept[]> {
+    const ids = await this.readConceptIds();
+    return __readIdListStable(this.__stableConcepts, ids, (id) => this.concept(id));
+  }
 }
 //#endregion 🎒Kit
+
+function __kitGraphqlEnvelope(
+  kit: Kit,
+  body: Readonly<{ query: string; variables?: JsonObject; operationName?: string }>,
+): Promise<KitGraphqlResponseEnvelope<JsonValue>> {
+  return (kit as unknown as { gqlRun(b: typeof body): Promise<KitGraphqlResponseEnvelope<JsonValue>> }).gqlRun(body);
+}
 
 //#region 🧬VcsEntities
 /** @emoji 🌐 WIP or authoritative {@code Graph} root from {@code Query}. */
@@ -1158,6 +1314,10 @@ export type GraphRootKind = "wip" | "authoritative";
 
 /** @emoji 🌐 VCS graph: {@code wip} / {@code authoritative} selections on {@link Kit}. */
 export class Graph extends Entity {
+  private readonly __checkpointCache = new Map<string, Checkpoint>();
+  private readonly __alternativeCache = new Map<string, Alternative>();
+  private __theKit: TheKit | undefined;
+
   constructor(kit: Kit, root: GraphRootKind) {
     super(kit, root);
   }
@@ -1168,20 +1328,30 @@ export class Graph extends Entity {
 
   /** @emoji 🏛 {@code graph { theKit }} handle. */
   theKit(): TheKit {
-    return new TheKit(this.kit, this.root);
+    return (this.__theKit ??= new TheKit(this.kit, this.root));
   }
 
   checkpoint(checkpointId: string): Checkpoint {
-    return new Checkpoint(this.kit, this.root, checkpointId);
+    let c = this.__checkpointCache.get(checkpointId);
+    if (!c) {
+      c = new Checkpoint(this.kit, this.root, checkpointId);
+      this.__checkpointCache.set(checkpointId, c);
+    }
+    return c;
   }
 
   alternative(alternativeId: string): Alternative {
-    return new Alternative(this.kit, { parent: "graph", root: this.root }, alternativeId);
+    let a = this.__alternativeCache.get(alternativeId);
+    if (!a) {
+      a = new Alternative(this.kit, { parent: "graph", root: this.root }, alternativeId);
+      this.__alternativeCache.set(alternativeId, a);
+    }
+    return a;
   }
 
   async readId(): Promise<string> {
     const q = this.root === "wip" ? `query { wip { id } }` : `query { authoritative { id } }`;
-    const data = kitGraphqlData(await this.kit.gqlRun({ query: q })) as JsonObject;
+    const data = kitGraphqlData(await __kitGraphqlEnvelope(this.kit, { query: q })) as JsonObject;
     const node = data[this.root] as JsonObject | null | undefined;
     return node == null ? "" : String(node["id"] ?? "");
   }
@@ -1189,16 +1359,23 @@ export class Graph extends Entity {
 
 /** @emoji 🗂️ {@code Query.session} singleton anchor. */
 export class Session extends Entity {
+  private readonly __alternativeCache = new Map<string, Alternative>();
+
   constructor(kit: Kit) {
     super(kit, "session");
   }
 
   alternative(alternativeId: string): Alternative {
-    return new Alternative(this.kit, { parent: "session" }, alternativeId);
+    let a = this.__alternativeCache.get(alternativeId);
+    if (!a) {
+      a = new Alternative(this.kit, { parent: "session" }, alternativeId);
+      this.__alternativeCache.set(alternativeId, a);
+    }
+    return a;
   }
 
   async readId(): Promise<string> {
-    const data = kitGraphqlData(await this.kit.gqlRun({ query: `query { session { id } }` })) as JsonObject;
+    const data = kitGraphqlData(await __kitGraphqlEnvelope(this.kit, { query: `query { session { id } }` })) as JsonObject;
     const s = data["session"] as JsonObject | undefined;
     return String(s?.["id"] ?? "");
   }
@@ -1222,7 +1399,7 @@ export class Alternative extends Entity {
       this.ap.parent === "graph"
         ? `query { ${this.ap.root} { alternative(id: ${__gqlStr(this.id)}) { name } } }`
         : `query { session { alternative(id: ${__gqlStr(this.id)}) { name } } }`;
-    const data = kitGraphqlData(await this.kit.gqlRun({ query: q })) as JsonObject;
+    const data = kitGraphqlData(await __kitGraphqlEnvelope(this.kit, { query: q })) as JsonObject;
     const first =
       this.ap.parent === "graph" ? (data[this.ap.root] as JsonObject | undefined) : (data["session"] as JsonObject | undefined);
     const alt = first?.["alternative"] as JsonObject | undefined;
@@ -1238,7 +1415,7 @@ export class TheKit extends Entity {
 
   async readId(): Promise<string> {
     const q = `query { ${this.graphRoot} { theKit { id } } }`;
-    const data = kitGraphqlData(await this.kit.gqlRun({ query: q })) as JsonObject;
+    const data = kitGraphqlData(await __kitGraphqlEnvelope(this.kit, { query: q })) as JsonObject;
     const rootNode = data[this.graphRoot] as JsonObject | undefined;
     const tk = rootNode?.["theKit"] as JsonObject | undefined;
     return String(tk?.["id"] ?? "");
@@ -1247,21 +1424,34 @@ export class TheKit extends Entity {
 
 /** @emoji 🏁 {@code Checkpoint} under {@link Graph}. */
 export class Checkpoint extends Entity {
+  private readonly __edits = new Map<string, Edit>();
+  private readonly __changes = new Map<string, Change>();
+
   constructor(kit: Kit, private readonly graphRoot: GraphRootKind, checkpointId: string) {
     super(kit, checkpointId);
   }
 
   change(changeId: string): Change {
-    return new Change(this.kit, this.graphRoot, this.id, changeId);
+    let x = this.__changes.get(changeId);
+    if (!x) {
+      x = new Change(this.kit, this.graphRoot, this.id, changeId);
+      this.__changes.set(changeId, x);
+    }
+    return x;
   }
 
   edit(editId: string): Edit {
-    return new Edit(this.kit, this.graphRoot, this.id, editId);
+    let e = this.__edits.get(editId);
+    if (!e) {
+      e = new Edit(this.kit, this.graphRoot, this.id, editId);
+      this.__edits.set(editId, e);
+    }
+    return e;
   }
 
   async readMessage(): Promise<string> {
     const q = `query { ${this.graphRoot} { checkpoint(id: ${__gqlStr(this.id)}) { message } } }`;
-    const data = kitGraphqlData(await this.kit.gqlRun({ query: q })) as JsonObject;
+    const data = kitGraphqlData(await __kitGraphqlEnvelope(this.kit, { query: q })) as JsonObject;
     const rootNode = data[this.graphRoot] as JsonObject | undefined;
     const cp = rootNode?.["checkpoint"] as JsonObject | undefined;
     return String(cp?.["message"] ?? "");
@@ -1290,7 +1480,7 @@ export class Conflict extends Entity {
 
   async readReasons(): Promise<readonly string[]> {
     const data = kitGraphqlData(
-      await this.kit.gqlRun({ query: `query($id: ID!) { node(id: $id) { ... on Conflict { reasons } } }`, variables: { id: this.id } }),
+      await __kitGraphqlEnvelope(this.kit, { query: `query($id: ID!) { node(id: $id) { ... on Conflict { reasons } } }`, variables: { id: this.id } }),
     ) as JsonObject;
     const n = data["node"] as JsonObject | undefined;
     const raw = n?.["reasons"] as readonly JsonValue[] | undefined;
@@ -1302,10 +1492,82 @@ export class Conflict extends Entity {
 /** @emoji 🧬 Abstract {@code Operation}; concrete operation subclasses follow the plan roster. */
 export abstract class Operation extends Entity {}
 
+//#region 🧮ChangeAlgebra
+/** @emoji 🧮 Abstract diff leaf (kit algebra owned by rs; JS is navigation + reads). */
+export abstract class Diff extends Entity {}
+
+/** @emoji 🧮 Abstract modification triple (before, diff, after). */
+export abstract class Modification extends Entity {}
+
+/** @emoji 🧮 Wrapper for removed/added/modification rows on an entity diff. */
+export class Modifications extends Entity {}
+
+/** @emoji 📥 Abstract operation input payload (arguments mirror SDL input types). */
+export abstract class Input extends Entity {}
+
+/** @emoji 📜 Domain ledger event (timestamp + involves — avoid shadowing DOM {@link Event}). */
+export abstract class ChangeLedgerEvent extends Entity {}
+
+//#region 🧬DiffVariants
+/** @emoji 🧬 {@code KitDiff} navigation shell. */
+export class KitDiff extends Diff {}
+/** @emoji 🧬 {@code DesignDiff} navigation shell. */
+export class DesignDiff extends Diff {}
+/** @emoji 🧬 {@code TypeDiff} navigation shell. */
+export class TypeDiff extends Diff {}
+/** @emoji 🧬 {@code PieceDiff} navigation shell. */
+export class PieceDiff extends Diff {}
+/** @emoji 🧬 {@code ConnectionDiff} navigation shell. */
+export class ConnectionDiff extends Diff {}
+//#endregion 🧬DiffVariants
+
+//#region 🧬ModificationVariants
+export class KitModification extends Modification {}
+export class DesignModification extends Modification {}
+export class TypeModification extends Modification {}
+export class PieceModification extends Modification {}
+export class ConnectionModification extends Modification {}
+//#endregion 🧬ModificationVariants
+
+//#region 🧬ModificationsVariants
+export class KitModifications extends Modifications {}
+export class DesignModifications extends Modifications {}
+//#endregion 🧬ModificationsVariants
+
+//#region 🧬InputVariants
+export class RenamedKitInput extends Input {}
+export class CreatedTagInput extends Input {}
+export class CreatedQualityInput extends Input {}
+//#endregion 🧬InputVariants
+
+//#region 🧬OperationVariants
+export class RenamedKit extends Operation {}
+export class ChangedDescriptionOp extends Operation {}
+export class CreatedQualityOp extends Operation {}
+export class CreatedQualitiesOp extends Operation {}
+export class DeletedQualityOp extends Operation {}
+export class CreatedTagOp extends Operation {}
+export class DeletedPieceOp extends Operation {}
+export class DeletedPiecesOp extends Operation {}
+export class DraggedPieceOp extends Operation {}
+export class MovedPieceOp extends Operation {}
+export class FixedPieceOp extends Operation {}
+export class FlattenedDesignOp extends Operation {}
+export class CreatedFixedPieceOp extends Operation {}
+export class AddedChildPieceWithParentConnectionOp extends Operation {}
+export class AddedHangingChildPieceWithParentConnectionOp extends Operation {}
+//#endregion 🧬OperationVariants
+//#endregion 🧮ChangeAlgebra
+
 //#endregion 🧬VcsEntities
 
 //#region 📐Design
 export class Design extends Entity {
+  private readonly __pieceCache = new Map<string, Piece>();
+  private readonly __connectionCache = new Map<string, Connection>();
+  private readonly __layerCache = new Map<string, Layer>();
+  private readonly __groupCache = new Map<string, Group>();
+
   constructor(kit: Kit, id: string) {
     super(kit, id);
   }
@@ -1315,7 +1577,12 @@ export class Design extends Entity {
   }
 
   piece(pieceId: string): Piece {
-    return new Piece(this.kit, this.id, pieceId);
+    let p = this.__pieceCache.get(pieceId);
+    if (!p) {
+      p = new Piece(this.kit, this.id, pieceId);
+      this.__pieceCache.set(pieceId, p);
+    }
+    return p;
   }
 
   pieces(pieceIds: readonly string[]): PiecesOperations {
@@ -1323,15 +1590,30 @@ export class Design extends Entity {
   }
 
   connection(connectionId: string): Connection {
-    return new Connection(this.kit, this.id, connectionId);
+    let c = this.__connectionCache.get(connectionId);
+    if (!c) {
+      c = new Connection(this.kit, this.id, connectionId);
+      this.__connectionCache.set(connectionId, c);
+    }
+    return c;
   }
 
   layer(layerId: string): Layer {
-    return new Layer(this.kit, this.id, layerId);
+    let l = this.__layerCache.get(layerId);
+    if (!l) {
+      l = new Layer(this.kit, this.id, layerId);
+      this.__layerCache.set(layerId, l);
+    }
+    return l;
   }
 
   group(groupId: string): Group {
-    return new Group(this.kit, this.id, groupId);
+    let g = this.__groupCache.get(groupId);
+    if (!g) {
+      g = new Group(this.kit, this.id, groupId);
+      this.__groupCache.set(groupId, g);
+    }
+    return g;
   }
 
   /** @emoji 🧷 GraphQL kit-store tail for {@code design(id){ … }} (shared with {@link bindDefinedFieldToReact}). */
@@ -1529,6 +1811,10 @@ export class Design extends Entity {
 
 //#region 🧰Type
 export class Type extends Entity {
+  private readonly __portCache = new Map<string, Port>();
+  private readonly __connectorCache = new Map<string, Connector>();
+  private readonly __representationCache = new Map<string, Representation>();
+
   constructor(kit: Kit, id: string) {
     super(kit, id);
   }
@@ -1538,15 +1824,30 @@ export class Type extends Entity {
   }
 
   port(portId: string): Port {
-    return new Port(this.kit, this.id, portId);
+    let p = this.__portCache.get(portId);
+    if (!p) {
+      p = new Port(this.kit, this.id, portId);
+      this.__portCache.set(portId, p);
+    }
+    return p;
   }
 
   connector(connectorId: string): Connector {
-    return new Connector(this.kit, this.id, connectorId);
+    let c = this.__connectorCache.get(connectorId);
+    if (!c) {
+      c = new Connector(this.kit, this.id, connectorId);
+      this.__connectorCache.set(connectorId, c);
+    }
+    return c;
   }
 
   representation(representationId: string): Representation {
-    return new Representation(this.kit, this.id, representationId);
+    let r = this.__representationCache.get(representationId);
+    if (!r) {
+      r = new Representation(this.kit, this.id, representationId);
+      this.__representationCache.set(representationId, r);
+    }
+    return r;
   }
 
   async rename(newName: string): Promise<SetResult> {
@@ -2336,6 +2637,9 @@ export class ConnectionSide {
   }
 }
 
+/** @emoji ↔️ SDL {@code Side} alias for {@link ConnectionSide} in UI layers. */
+export type Side = ConnectionSide;
+
 const __CONNECTION_SIDE_SUBSELECTION = "piece { id } port { id } designPiece { id } connector { id }";
 
 function __connectionKit(frag: JsonObject | null | undefined): JsonObject | null {
@@ -2466,37 +2770,37 @@ export class Author extends Entity {
   }
 
   async readName(): Promise<string> {
-    const data = kitGraphqlData(await this.kit.runGraphql({ query: `query($id: ID!) { node(id: $id) { ... on Author { name } } }`, variables: { id: this.id } })) as JsonObject;
+    const data = kitGraphqlData(await __kitGraphqlEnvelope(this.kit, { query: `query($id: ID!) { node(id: $id) { ... on Author { name } } }`, variables: { id: this.id } })) as JsonObject;
     const n = data["node"] as JsonObject | undefined;
     return String(n?.["name"] ?? "");
   }
 
   async readDescription(): Promise<string> {
-    const data = kitGraphqlData(await this.kit.runGraphql({ query: `query($id: ID!) { node(id: $id) { ... on Author { description } } }`, variables: { id: this.id } })) as JsonObject;
+    const data = kitGraphqlData(await __kitGraphqlEnvelope(this.kit, { query: `query($id: ID!) { node(id: $id) { ... on Author { description } } }`, variables: { id: this.id } })) as JsonObject;
     const n = data["node"] as JsonObject | undefined;
     return String(n?.["description"] ?? "");
   }
 
   async readIcon(): Promise<string> {
-    const data = kitGraphqlData(await this.kit.runGraphql({ query: `query($id: ID!) { node(id: $id) { ... on Author { icon } } }`, variables: { id: this.id } })) as JsonObject;
+    const data = kitGraphqlData(await __kitGraphqlEnvelope(this.kit, { query: `query($id: ID!) { node(id: $id) { ... on Author { icon } } }`, variables: { id: this.id } })) as JsonObject;
     const n = data["node"] as JsonObject | undefined;
     return String(n?.["icon"] ?? "");
   }
 
   async readEmail(): Promise<string> {
-    const data = kitGraphqlData(await this.kit.runGraphql({ query: `query($id: ID!) { node(id: $id) { ... on Author { email } } }`, variables: { id: this.id } })) as JsonObject;
+    const data = kitGraphqlData(await __kitGraphqlEnvelope(this.kit, { query: `query($id: ID!) { node(id: $id) { ... on Author { email } } }`, variables: { id: this.id } })) as JsonObject;
     const n = data["node"] as JsonObject | undefined;
     return String(n?.["email"] ?? "");
   }
 
   async readRole(): Promise<string> {
-    const data = kitGraphqlData(await this.kit.runGraphql({ query: `query($id: ID!) { node(id: $id) { ... on Author { role } } }`, variables: { id: this.id } })) as JsonObject;
+    const data = kitGraphqlData(await __kitGraphqlEnvelope(this.kit, { query: `query($id: ID!) { node(id: $id) { ... on Author { role } } }`, variables: { id: this.id } })) as JsonObject;
     const n = data["node"] as JsonObject | undefined;
     return String(n?.["role"] ?? "");
   }
 
   async readRank(): Promise<number | null> {
-    const data = kitGraphqlData(await this.kit.runGraphql({ query: `query($id: ID!) { node(id: $id) { ... on Author { rank } } }`, variables: { id: this.id } })) as JsonObject;
+    const data = kitGraphqlData(await __kitGraphqlEnvelope(this.kit, { query: `query($id: ID!) { node(id: $id) { ... on Author { rank } } }`, variables: { id: this.id } })) as JsonObject;
     const n = data["node"] as JsonObject | undefined;
     const r = n?.["rank"];
     return typeof r === "number" ? r : null;
@@ -2567,14 +2871,17 @@ export class Quality extends Entity {
       if (!isJsonObjectNode(e)) continue;
       const n = e["node"] as JsonObject | undefined;
       if (n == null) continue;
-      out.push({
-        id: String(n["id"] ?? ""),
-        name: String(n["name"] ?? ""),
-        min: typeof n["min"] === "number" ? n["min"] : null,
-        max: typeof n["max"] === "number" ? n["max"] : null,
-        minExcluded: typeof n["minExcluded"] === "boolean" ? n["minExcluded"] : null,
-        maxExcluded: typeof n["maxExcluded"] === "boolean" ? n["maxExcluded"] : null,
-      });
+      out.push(
+        new Benchmark(
+          this,
+          String(n["id"] ?? ""),
+          String(n["name"] ?? ""),
+          typeof n["min"] === "number" ? n["min"] : null,
+          typeof n["max"] === "number" ? n["max"] : null,
+          typeof n["minExcluded"] === "boolean" ? n["minExcluded"] : null,
+          typeof n["maxExcluded"] === "boolean" ? n["maxExcluded"] : null,
+        ),
+      );
     }
     return out;
   }
@@ -2851,7 +3158,7 @@ export class Family extends Entity {
 
   private async readScalarOnNode(field: string): Promise<string> {
     const data = kitGraphqlData(
-      await this.kit.runGraphql({ query: `query($id: ID!) { node(id: $id) { ... on Family { ${field} } } }`, variables: { id: this.id } }),
+      await __kitGraphqlEnvelope(this.kit, { query: `query($id: ID!) { node(id: $id) { ... on Family { ${field} } } }`, variables: { id: this.id } }),
     ) as JsonObject;
     const n = data["node"] as JsonObject | undefined;
     return String(n?.[field] ?? "");
@@ -2879,7 +3186,7 @@ export class File extends Entity {
 
   async readName(): Promise<string> {
     const data = kitGraphqlData(
-      await this.kit.runGraphql({ query: `query($id: ID!) { node(id: $id) { ... on File { name } } }`, variables: { id: this.id } }),
+      await __kitGraphqlEnvelope(this.kit, { query: `query($id: ID!) { node(id: $id) { ... on File { name } } }`, variables: { id: this.id } }),
     ) as JsonObject;
     return String((data["node"] as JsonObject | undefined)?.["name"] ?? "");
   }
@@ -2895,7 +3202,7 @@ export class Folder extends Entity {
 
   private async readScalarOnNode(field: string): Promise<string> {
     const data = kitGraphqlData(
-      await this.kit.runGraphql({ query: `query($id: ID!) { node(id: $id) { ... on Folder { ${field} } } }`, variables: { id: this.id } }),
+      await __kitGraphqlEnvelope(this.kit, { query: `query($id: ID!) { node(id: $id) { ... on Folder { ${field} } } }`, variables: { id: this.id } }),
     ) as JsonObject;
     const n = data["node"] as JsonObject | undefined;
     return String(n?.[field] ?? "");
@@ -3007,7 +3314,7 @@ export class Stat extends Entity {
 
   private async readScalarOnNode(field: string): Promise<string> {
     const data = kitGraphqlData(
-      await this.kit.runGraphql({ query: `query($id: ID!) { node(id: $id) { ... on Stat { ${field} } } }`, variables: { id: this.id } }),
+      await __kitGraphqlEnvelope(this.kit, { query: `query($id: ID!) { node(id: $id) { ... on Stat { ${field} } } }`, variables: { id: this.id } }),
     ) as JsonObject;
     const n = data["node"] as JsonObject | undefined;
     return String(n?.[field] ?? "");
@@ -3048,7 +3355,7 @@ export class Prop extends Entity {
 
   private async readScalarOnNode(field: string): Promise<string> {
     const data = kitGraphqlData(
-      await this.kit.runGraphql({ query: `query($id: ID!) { node(id: $id) { ... on Prop { ${field} } } }`, variables: { id: this.id } }),
+      await __kitGraphqlEnvelope(this.kit, { query: `query($id: ID!) { node(id: $id) { ... on Prop { ${field} } } }`, variables: { id: this.id } }),
     ) as JsonObject;
     const n = data["node"] as JsonObject | undefined;
     return String(n?.[field] ?? "");
@@ -3072,7 +3379,7 @@ export class Prop extends Entity {
 
   async readQualityId(): Promise<string> {
     const data = kitGraphqlData(
-      await this.kit.runGraphql({ query: `query($id: ID!) { node(id: $id) { ... on Prop { quality { id } } } }`, variables: { id: this.id } }),
+      await __kitGraphqlEnvelope(this.kit, { query: `query($id: ID!) { node(id: $id) { ... on Prop { quality { id } } } }`, variables: { id: this.id } }),
     ) as JsonObject;
     const n = data["node"] as JsonObject | undefined;
     const q = n?.["quality"] as JsonObject | undefined;
@@ -3082,119 +3389,6 @@ export class Prop extends Entity {
 //#endregion 🎚️Prop
 
 //#endregion 🧱Classes
-
-//#region 🪶WeakEntities
-//#region 📐Plane
-/** @emoji 📐 Weak plane value (schema mirror). */
-export interface Plane {
-  readonly origin: Vector;
-  readonly xAxis: Vector;
-  readonly yAxis: Vector;
-}
-//#endregion 📐Plane
-//#region 📍Coordinate
-export interface Coordinate {
-  readonly u: number;
-  readonly v: number;
-}
-//#endregion 📍Coordinate
-//#region 🔵Point
-export interface Point {
-  readonly x: number;
-  readonly y: number;
-  readonly z: number;
-}
-//#endregion 🔵Point
-//#region ➡️Vector
-export interface Vector {
-  readonly x: number;
-  readonly y: number;
-  readonly z: number;
-}
-//#endregion ➡️Vector
-//#region ↔️Side
-export interface Side {
-  readonly piece: { readonly id: string };
-  readonly connector: string;
-}
-//#endregion ↔️Side
-//#region 📌Position
-export interface Position {
-  readonly center: Coordinate;
-  readonly plane: Plane;
-}
-//#endregion 📌Position
-
-//#region 📥GeomInputs
-/** @emoji 📥 GraphQL {@code PositionInput} mirror for kit mutations. */
-export type PositionInput = Readonly<{
-  center: Readonly<Coordinate>;
-  plane: Readonly<Plane>;
-}>;
-
-/** @emoji 📥 GraphQL {@code OffsetInput} mirror for kit mutations. */
-export type OffsetInput = Readonly<{
-  u: number;
-  v: number;
-}>;
-
-function __gqlGeomNum(n: number): string {
-  return Number.isFinite(n) ? String(n) : "0";
-}
-
-/** @emoji 📡 Inline GraphQL object literal for {@code PositionInput}. */
-export function formatPositionInput(p: PositionInput): string {
-  const c = p.center;
-  const pl = p.plane;
-  const o = pl.origin;
-  const xa = pl.xAxis;
-  const ya = pl.yAxis;
-  return `{ center: { u: ${__gqlGeomNum(c.u)}, v: ${__gqlGeomNum(c.v)} }, plane: { origin: { x: ${__gqlGeomNum(o.x)}, y: ${__gqlGeomNum(o.y)}, z: ${__gqlGeomNum(o.z)} }, xAxis: { x: ${__gqlGeomNum(xa.x)}, y: ${__gqlGeomNum(xa.y)}, z: ${__gqlGeomNum(xa.z)} }, yAxis: { x: ${__gqlGeomNum(ya.x)}, y: ${__gqlGeomNum(ya.y)}, z: ${__gqlGeomNum(ya.z)} } } }`;
-}
-
-/** @emoji 📡 Inline GraphQL object literal for {@code OffsetInput}. */
-export function formatOffsetInput(o: OffsetInput): string {
-  return `{ u: ${__gqlGeomNum(o.u)}, v: ${__gqlGeomNum(o.v)} }`;
-}
-//#endregion 📥GeomInputs
-//#region 🌍Place
-export interface Place {
-  readonly location: Location;
-}
-//#endregion 🌍Place
-//#region 🗺️Location
-export interface Location {
-  readonly latitude: number;
-  readonly longitude: number;
-}
-//#endregion 🗺️Location
-//#region 📷Camera
-export interface Camera {
-  readonly position: Point;
-  readonly target: Point;
-}
-//#endregion 📷Camera
-//#region 🏁Benchmark
-/** @emoji 🏁 Benchmark row subset from {@code Benchmark} (owner: Quality). */
-export interface Benchmark {
-  readonly id: string;
-  readonly name: string;
-  readonly min: number | null;
-  readonly max: number | null;
-  readonly minExcluded: boolean | null;
-  readonly maxExcluded: boolean | null;
-}
-//#endregion 🏁Benchmark
-//#region 🪪Attribute
-/** @emoji 🪪 Attribute row mirror for {@code Attribute} weak entity edges. */
-export interface Attribute {
-  readonly id: string;
-  readonly key: string;
-  readonly value: string | null;
-  readonly definition: string;
-}
-//#endregion 🪪Attribute
-//#endregion 🪶WeakEntities
 
 //#region 🚀PublicAPI
 /** @emoji 🚀 Opens a {@link Kit} backed by rs WASM (worker or inline). */
