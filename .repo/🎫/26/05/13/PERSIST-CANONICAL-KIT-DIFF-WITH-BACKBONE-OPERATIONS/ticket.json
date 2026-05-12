@@ -1,0 +1,10 @@
+{
+  "title": "Persist Canonical Kit Diff With Backbone Operations",
+  "emoji": "📦",
+  "status": "open",
+  "description": "Persist structured CanonicalKitDiff as kitDiff on OperationStepDto / SQLite beside kit operation input; wire ChildRuntime createFixedPiece recording; migration for _op_log.kit_diff_json; tests.",
+  "goal": "🎯r2602🎯runningsketchpad🎯runningsketchpadapps",
+  "sessions": [
+    "⚪320e693fb9504126bd027ff0f6f65c41"
+  ]
+}

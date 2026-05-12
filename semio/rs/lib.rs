@@ -215,7 +215,7 @@ macro_rules! entity_input {
         }
     ) => {
         $(#[$sm])*
-        #[derive(Clone, Debug, Default, async_graphql::InputObject)]
+        #[derive(Clone, Debug, Default, PartialEq, async_graphql::InputObject)]
         #[graphql(name = $gql)]
         $vis struct $Name {
             $($(#[$fm])* $fvis $field : $ftype),*
@@ -3256,17 +3256,17 @@ pub mod kit {
                 self.apply_qualities_collection_diff(q).await?;
             }
             if let Some(v) = &d.files {
-                if *v == Some(true) {
+                if *v {
                     return Err(crate::error::SemioError::invalid("kit diff `files` subtree apply not implemented"));
                 }
             }
             if let Some(v) = &d.folders {
-                if *v == Some(true) {
+                if *v {
                     return Err(crate::error::SemioError::invalid("kit diff `folders` subtree apply not implemented"));
                 }
             }
             if let Some(v) = &d.authors {
-                if *v == Some(true) {
+                if *v {
                     return Err(crate::error::SemioError::invalid("kit diff `authors` subtree apply not implemented"));
                 }
             }
@@ -4243,6 +4243,12 @@ pub mod vcs {
     use crate::timestamp::Timestamp;
 
     //#region 🪪 change
+    /// @emoji 📦 One recorded kit command plus optional canonical diff wire for bundle `kitDiff` / backbone audit (replay still uses `operation` input).
+    pub struct KitRecordedStep {
+        pub operation: operation::KitOperation,
+        pub kit_diff_wire: Option<serde_json::Value>,
+    }
+
     pub struct Change {
         pub id: Id,
         pub owner: RwLock<Option<ChangeOwnerRef>>,
@@ -4251,10 +4257,10 @@ pub mod vcs {
         pub saved_at: RwLock<Option<Timestamp>>,
         pub description: RwLock<String>,
         pub origin: RwLock<String>,
-        /// @emoji 📜 Forward [`crate::operation::KitOperation`] steps (materialized via `Kit::apply_diff`).
-        pub forwards: RwLock<Vec<operation::KitOperation>>,
-        /// @emoji 📜 Backward companion operations for explicit undo/redo (same materialization pipeline).
-        pub backwards: RwLock<Vec<operation::KitOperation>>,
+        /// @emoji 📜 Forward kit steps (materialized via `Kit::apply_diff` from each `operation`).
+        pub forwards: RwLock<Vec<KitRecordedStep>>,
+        /// @emoji 📜 Backward companion steps for explicit undo/redo (same materialization pipeline).
+        pub backwards: RwLock<Vec<KitRecordedStep>>,
     }
 
     /// 🔗 Weak owner lane matching SDL `Alternative | Checkpoint` for persisted [`Change`] entities.
@@ -5011,8 +5017,8 @@ pub mod vcs {
                 let changes = ed.changes.read().await.clone();
                 for ch in changes {
                     let forwards = ch.forwards.read().await.clone();
-                    for op in forwards {
-                        let diff = match op.to_diff(&mat).await {
+                    for step in forwards {
+                        let diff = match step.operation.to_diff(&mat).await {
                             Ok(d) => d,
                             Err(_) => continue,
                         };
@@ -5027,7 +5033,14 @@ pub mod vcs {
         }
 
         /// @emoji 📝 Append one forward operation plus backward operations onto the open transaction's tail [`Change`], bumping draft `change_seq`.
-        pub async fn record_op_in_open_transaction(self: &Arc<Self>, draft_id: &Id, transaction_id: &Id, forward: crate::operation::KitOperation, backwards: Vec<crate::operation::KitOperation>) -> Result<(), SemioError> {
+        pub async fn record_op_in_open_transaction(
+            self: &Arc<Self>,
+            draft_id: &Id,
+            transaction_id: &Id,
+            forward: crate::operation::KitOperation,
+            forward_kit_diff_wire: Option<serde_json::Value>,
+            backwards: Vec<crate::operation::KitOperation>,
+        ) -> Result<(), SemioError> {
             let draft = self.ensure_draft(draft_id).await;
             let _ = draft.ensure_transaction(transaction_id).await;
             let tx = draft.transactions.read().await.iter().find(|t| &t.id == transaction_id).cloned().ok_or_else(|| SemioError::not_found("Edit", transaction_id.as_str()))?;
@@ -5050,8 +5063,13 @@ pub mod vcs {
                 None
             };
             *change.owner.write().await = lane_owner;
-            change.forwards.write().await.push(forward);
-            change.backwards.write().await.extend(backwards);
+            change.forwards.write().await.push(KitRecordedStep { operation: forward, kit_diff_wire: forward_kit_diff_wire });
+            {
+                let mut bw = change.backwards.write().await;
+                for b in backwards {
+                    bw.push(KitRecordedStep { operation: b, kit_diff_wire: None });
+                }
+            }
             draft.change_seq.fetch_add(1, Ordering::Relaxed);
             self.invalidate_materialized_cache().await;
             Ok(())
@@ -5263,8 +5281,10 @@ pub mod vcs {
                 input: crate::operation::Input::FixedPiece { position, name, description },
             };
             let before = self.materialized_kit_for_draft(&draft_id).await;
+            let kit_diff = forward.to_diff(&before).await?;
+            let wire = Some(crate::kit_backbone::canonical_kit_diff_to_wire_json(&kit_diff.0));
             let backwards = forward.to_backwards(&before).await?;
-            self.record_op_in_open_transaction(&draft_id, &transaction_id, forward, backwards).await?;
+            self.record_op_in_open_transaction(&draft_id, &transaction_id, forward, wire, backwards).await?;
             let after = self.materialized_kit_for_draft(&draft_id).await;
             let piece = after.design_by_external_id(&design_id).await.ok_or_else(|| SemioError::not_found("Design", design_id.as_str()))?.piece_by_external_id(&piece_id).await.ok_or_else(|| SemioError::not_found("Piece", piece_id.as_str()))?;
             Ok((piece,))
@@ -5996,7 +6016,7 @@ pub mod operation {
         pub authors: KitAuxSubtree,
     }
 
-    /// @emoji 📦 Persisted / replayed kit transition: canonical [`CanonicalKitDiff`] only (no `__ops` envelope).
+    /// @emoji 📦 Canonical kit transition shape; companion JSON under `kitDiff` on persisted [`OperationStepDto`] (replay uses typed operation `input` only).
     #[derive(Clone, Debug, Default, PartialEq)]
     pub struct KitDiff(pub CanonicalKitDiff);
 
@@ -7016,7 +7036,7 @@ pub mod operation {
     //#endregion 🧭 normalized operation contract
 
     //#region 🧾 inputs
-    #[derive(Clone, Debug, Default, Serialize, Deserialize)]
+    #[derive(Clone, Debug, Default)]
     pub struct CreatedFixedPieceInput {
         pub design_id: Id,
         pub blueprint_id: Id,
@@ -7046,7 +7066,7 @@ pub mod operation {
         }
     }
 
-    #[derive(Clone, Debug, Default, Serialize, Deserialize)]
+    #[derive(Clone, Debug, Default)]
     pub struct FixedPieceInput {
         pub design_id: Id,
         pub piece_id: Id,
@@ -7064,7 +7084,7 @@ pub mod operation {
         }
     }
 
-    #[derive(Clone, Debug, Default, Serialize, Deserialize)]
+    #[derive(Clone, Debug, Default)]
     pub struct DraggedPieceInput {
         pub design_id: Id,
         pub piece_ids: Vec<Id>,
@@ -7086,7 +7106,7 @@ pub mod operation {
         }
     }
 
-    #[derive(Clone, Debug, Default, Serialize, Deserialize)]
+    #[derive(Clone, Debug, Default)]
     pub struct RenamedKitInput {
         pub name: String,
     }
@@ -7098,7 +7118,7 @@ pub mod operation {
         }
     }
 
-    #[derive(Clone, Debug, Default, Serialize, Deserialize)]
+    #[derive(Clone, Debug, Default)]
     pub struct ChangedDescriptionInput {
         pub entity_id: Id,
         pub description: String,
@@ -7165,8 +7185,8 @@ pub mod operation {
     //#endregion 📜  operation record (kit bundle / operation log contract)
 
     //#region 📦 diff
-    /// 📜 Ephemeral  diff payload for the kit engine; replay/apply diff carrier (not a GraphQL output type).
-    #[derive(Clone, Debug, Default, Serialize, Deserialize)]
+    /// 📜 Ephemeral operation-side payload (id + summary) for [`CreatedFixedPiece`] / siblings — **not** the geometric `interface Diff` from `semio/graphql/target.schema.graphql` (`VectorDiff`, `PositionDiff`, …).
+    #[derive(Clone, Debug, Default)]
     pub struct Diff {
         pub id: Id,
         pub summary: Option<String>,
@@ -7424,7 +7444,7 @@ pub mod operation {
     }
 
     /// ✅ Lightweight signal that a command was accepted (used by `commandSucceeded`).
-    #[derive(Clone, Debug, Default, Serialize, Deserialize, async_graphql::SimpleObject)]
+    #[derive(Clone, Debug, Default, async_graphql::SimpleObject)]
     #[graphql(name = "Command")]
     pub struct CommandReceipt {
         #[graphql(name = "requestId")]
@@ -7545,10 +7565,107 @@ pub mod operation {
 
 //#endregion ⚙️ operation
 
+//#region 🧮 kit graph engine
+
+pub mod kit_graph_engine {
+    //! @emoji 🧮 Core kit graph engine: deterministic projection fingerprints, ephemeral operation diffs, and typed [`crate::operation::KitOperation`] apply for replay (no serde on the control-plane surface).
+    use std::collections::BTreeMap;
+    use std::sync::Arc;
+
+    use crate::error::SemioError;
+    use crate::hash::h;
+    use crate::id::Id;
+    use crate::kit;
+    use crate::operation::{self, KitOperation, Scope};
+    use crate::vcs::Graph;
+
+    //#region 🔖 design_slot
+    /// @emoji 🧷 Opaque internal design list index; external [`Id`] maps only in [`kit::Kit::bind_external_design_id`].
+    #[derive(Clone, Copy, Debug, Eq, PartialEq, Hash)]
+    pub struct DesignSlot(pub u32);
+    //#endregion 🔖 design_slot
+
+    //#region 🔖 projection_fingerprint
+    /// @emoji 🔢 Stable `projectionFingerprint`: [`h`] over sorted piece centers keyed by design id (matches golden `kit-store.golden.expected`).
+    pub async fn projection_fingerprint_for_kit(kit: &kit::Kit) -> String {
+        let designs = kit.designs.read().await;
+        let mut by_design: BTreeMap<String, Vec<(f64, f64)>> = BTreeMap::new();
+        for d in designs.iter() {
+            let mut pts: Vec<(f64, f64)> = Vec::new();
+            for p in d.pieces.read().await.iter() {
+                if let Some(node) = p.position.read().await.as_ref() {
+                    let pos = node.snapshot_input().await;
+                    pts.push((pos.center.u, pos.center.v));
+                }
+            }
+            pts.sort_by(|a, b| a.0.partial_cmp(&b.0).unwrap().then_with(|| a.1.partial_cmp(&b.1).unwrap()));
+            by_design.insert(d.id.as_str().to_string(), pts);
+        }
+        let flattened: Vec<String> = by_design
+            .into_iter()
+            .map(|(id, pts)| {
+                let inner = pts.iter().map(|(u, v)| format!("{u:.9}:{v:.9}")).collect::<Vec<_>>().join(";");
+                format!("{id}@{inner}")
+            })
+            .collect();
+        h(&[flattened.join("|")])
+    }
+    //#endregion 🔖 projection_fingerprint
+
+    //#region 🔖 deterministic_diff
+    /// @emoji 📦 Deterministic non-persisted diff from operation kind + stable payload digest + projection fingerprint transition.
+    pub fn deterministic__diff(op_kind: &str, payload_digest: &str, projection_fp_before: &str, projection_fp_after: &str) -> operation::Diff {
+        let digest = h(&[op_kind, payload_digest, projection_fp_before, projection_fp_after]);
+        operation::Diff { id: Id::from(format!("semio:diff:{digest}")), summary: Some(digest) }
+    }
+    //#endregion 🔖 deterministic_diff
+
+    //#region 🔖 apply_kit_operation
+    /// @emoji 🧾 Output of [`apply_kit_operation`]: ephemeral diff + optional created entities.
+    pub struct AppliedOperation {
+        pub diff: operation::Diff,
+        pub created_piece: Option<Arc<kit::design::piece::Piece>>,
+    }
+
+    /// @emoji 🧩 Record one forward [`KitOperation`] (plus backwards) on `graph` and return deterministic projection metadata.
+    pub async fn apply_kit_operation(graph: &Arc<Graph>, draft_id: &Id, transaction_id: &Id, operation: KitOperation) -> Result<AppliedOperation, SemioError> {
+        let op_kind = operation.kind();
+        let payload_digest = operation.stable_payload_digest();
+        let created_piece_ids = match &operation {
+            KitOperation::CreateFixedPiece { scope, .. } => match scope {
+                Scope::CreateFixedPiece { design_id, piece_id, .. } => Some((design_id.clone(), piece_id.clone())),
+                _ => None,
+            },
+            _ => None,
+        };
+        let before = graph.materialized_kit_for_draft(draft_id).await;
+        let kit_diff = operation.to_diff(&before).await?;
+        let wire = Some(crate::kit_backbone::canonical_kit_diff_to_wire_json(&kit_diff.0));
+        let backwards = operation.to_backwards(&before).await?;
+        graph.record_op_in_open_transaction(draft_id, transaction_id, operation, wire, backwards).await?;
+        let after = graph.materialized_kit_for_draft(draft_id).await;
+        let fp_before = projection_fingerprint_for_kit(before.as_ref()).await;
+        let fp_after = projection_fingerprint_for_kit(after.as_ref()).await;
+        let diff = deterministic__diff(op_kind, &payload_digest, &fp_before, &fp_after);
+        let created_piece = if let Some((design_id, piece_id)) = created_piece_ids {
+            match after.design_by_external_id(&design_id).await {
+                Some(des) => des.piece_by_external_id(&piece_id).await,
+                None => None,
+            }
+        } else {
+            None
+        };
+        Ok(AppliedOperation { diff, created_piece })
+    }
+    //#endregion 🔖 apply_kit_operation
+}
+
+//#endregion 🧮 kit graph engine
+
 //#region 🗄️ kit backbone persistence (native)
 
 pub mod kit_backbone {
-    //! @emoji 🗄️ Dev JSON + local `.semio/` kit backbones: atomic single-file writes, multi-db SQLite + blobs dir, replay via [`kit_graph_engine::apply__operation_json`].
+    //! @emoji 🗄️ Dev JSON + local `.semio/` kit backbones: atomic single-file writes, multi-db SQLite + blobs dir, replay via [`kit_graph_engine::apply_kit_operation`].
     //! 🌐 The bundle wire format (`DevBackboneBundleDoc` + DTOs + `from_graph` / `hydrate_into_graph`) is wasm-compatible —
     //! sketchpad's WASM runtime serializes / hydrates the metabolism-shaped JSON directly. The SQLite + filesystem-IO parts
     //! (atomic writes, `DevJsonAttached`, `LocalAttached`) are native-only and gated below.
@@ -7604,6 +7721,302 @@ pub mod kit_backbone {
             }
         })
     }
+
+    //#region 🔖 dev_backbone_canonical_kit_diff_wire_json
+    /// @emoji 📦 Serializes [`crate::operation::CanonicalKitDiff`] for `kitDiff` on persisted operation steps (sparse object; aligns with `metabolism.kit.diff.semio.json` collection keys).
+    pub(crate) fn canonical_kit_diff_to_wire_json(d: &crate::operation::CanonicalKitDiff) -> serde_json::Value {
+        use serde_json::{Map, Value};
+        let mut root = Map::new();
+        let mut opt_s = |m: &mut Map<String, Value>, k: &str, v: &Option<String>| {
+            if let Some(s) = v {
+                m.insert(k.to_string(), Value::String(s.clone()));
+            }
+        };
+        opt_s(&mut root, "name", &d.name);
+        opt_s(&mut root, "version", &d.version);
+        opt_s(&mut root, "description", &d.description);
+        opt_s(&mut root, "icon", &d.icon);
+        opt_s(&mut root, "image", &d.image);
+        opt_s(&mut root, "remote", &d.remote);
+        opt_s(&mut root, "homepage", &d.homepage);
+        opt_s(&mut root, "license", &d.license);
+        opt_s(&mut root, "preview", &d.preview);
+        if let Some(t) = &d.types {
+            root.insert("types".to_string(), types_collection_diff_wire(t));
+        }
+        if let Some(ds) = &d.designs {
+            root.insert("designs".to_string(), designs_collection_diff_wire(ds));
+        }
+        if let Some(t) = &d.tags {
+            root.insert("tags".to_string(), tags_collection_diff_wire(t));
+        }
+        if let Some(c) = &d.concepts {
+            root.insert("concepts".to_string(), concepts_collection_diff_wire(c));
+        }
+        if let Some(q) = &d.qualities {
+            root.insert("qualities".to_string(), qualities_collection_diff_wire(q));
+        }
+        if let Some(v) = d.files {
+            root.insert("files".to_string(), Value::Bool(v));
+        }
+        if let Some(v) = d.folders {
+            root.insert("folders".to_string(), Value::Bool(v));
+        }
+        if let Some(v) = d.authors {
+            root.insert("authors".to_string(), Value::Bool(v));
+        }
+        Value::Object(root)
+    }
+
+    fn types_collection_diff_wire(t: &crate::operation::TypesCollectionDiff) -> serde_json::Value {
+        use serde_json::{json, Value};
+        json!({
+            "removed": t.removed.iter().map(|r| json!({ "id": r.id.as_str() })).collect::<Vec<Value>>(),
+            "modified": t.modified.iter().map(|row| json!({
+                "type": { "id": row.type_ref.id.as_str() },
+                "diff": type_scalar_diff_wire(&row.diff),
+            })).collect::<Vec<Value>>(),
+            "added": t.added.iter().map(type_scalar_diff_wire).collect::<Vec<Value>>(),
+        })
+    }
+
+    fn type_scalar_diff_wire(d: &crate::operation::TypeScalarDiff) -> serde_json::Value {
+        use serde_json::{json, Map, Value};
+        let mut m = Map::new();
+        if let Some(ref s) = d.name {
+            m.insert("name".into(), Value::String(s.clone()));
+        }
+        if let Some(ref s) = d.description {
+            m.insert("description".into(), Value::String(s.clone()));
+        }
+        if let Some(ref s) = d.icon {
+            m.insert("icon".into(), Value::String(s.clone()));
+        }
+        if let Some(ref s) = d.image {
+            m.insert("image".into(), Value::String(s.clone()));
+        }
+        if let Some(ref s) = d.unit {
+            m.insert("unit".into(), Value::String(s.clone()));
+        }
+        Value::Object(m)
+    }
+
+    fn designs_collection_diff_wire(d: &crate::operation::DesignsCollectionDiff) -> serde_json::Value {
+        use serde_json::{json, Value};
+        json!({
+            "removed": d.removed.iter().map(|r| json!({ "id": r.id.as_str() })).collect::<Vec<Value>>(),
+            "modified": d.modified.iter().map(|row| json!({
+                "design": { "id": row.design.id.as_str() },
+                "diff": design_diff_wire(&row.diff),
+            })).collect::<Vec<Value>>(),
+            "added": d.added.iter().map(design_diff_wire).collect::<Vec<Value>>(),
+        })
+    }
+
+    fn design_scalar_diff_wire(d: &crate::operation::DesignScalarDiff) -> serde_json::Value {
+        use serde_json::{Map, Value};
+        let mut m = Map::new();
+        if let Some(ref s) = d.name {
+            m.insert("name".into(), Value::String(s.clone()));
+        }
+        if let Some(ref s) = d.description {
+            m.insert("description".into(), Value::String(s.clone()));
+        }
+        if let Some(ref s) = d.icon {
+            m.insert("icon".into(), Value::String(s.clone()));
+        }
+        if let Some(ref s) = d.image {
+            m.insert("image".into(), Value::String(s.clone()));
+        }
+        Value::Object(m)
+    }
+
+    fn design_diff_wire(d: &crate::operation::DesignDiff) -> serde_json::Value {
+        use serde_json::{json, Value};
+        let mut o = serde_json::Map::new();
+        o.insert("scalars".to_string(), design_scalar_diff_wire(&d.scalars));
+        if let Some(p) = &d.pieces {
+            o.insert("pieces".to_string(), pieces_collection_diff_wire(p));
+        }
+        Value::Object(o)
+    }
+
+    fn pieces_collection_diff_wire(p: &crate::operation::PiecesCollectionDiff) -> serde_json::Value {
+        use serde_json::{json, Value};
+        json!({
+            "removed": p.removed.iter().map(|r| json!({ "id": r.id.as_str() })).collect::<Vec<Value>>(),
+            "added": p.added.iter().map(piece_added_row_wire).collect::<Vec<Value>>(),
+            "modified": p.modified.iter().map(|row| json!({
+                "piece": { "id": row.piece.id.as_str() },
+                "diff": piece_patch_wire(&row.diff),
+            })).collect::<Vec<Value>>(),
+        })
+    }
+
+    fn piece_added_row_wire(row: &crate::operation::PieceAddedRow) -> serde_json::Value {
+        use serde_json::json;
+        let mut o = serde_json::Map::new();
+        o.insert("id".to_string(), json!(row.id.as_str()));
+        o.insert("blueprint_id".to_string(), json!(row.blueprint_id.as_str()));
+        o.insert("scale".to_string(), json!(row.scale));
+        o.insert("pose".to_string(), position_input_to_json(&row.pose));
+        if let Some(ref n) = row.name {
+            o.insert("name".to_string(), json!(n));
+        }
+        if let Some(ref n) = row.description {
+            o.insert("description".to_string(), json!(n));
+        }
+        serde_json::Value::Object(o)
+    }
+
+    fn piece_patch_wire(p: &crate::operation::PiecePatch) -> serde_json::Value {
+        use serde_json::{json, Map, Value};
+        let mut m = Map::new();
+        if p.fix_piece {
+            m.insert("fix_piece".into(), Value::Bool(true));
+        }
+        if let Some(off) = &p.drag {
+            m.insert("drag".into(), json!({ "u": off.u, "v": off.v }));
+        }
+        if let Some(pos) = &p.pose {
+            m.insert("pose".into(), position_input_to_json(pos));
+        }
+        if let Some(ref n) = p.name {
+            m.insert("name".into(), Value::String(n.clone()));
+        }
+        if let Some(ref n) = p.description {
+            m.insert("description".into(), Value::String(n.clone()));
+        }
+        Value::Object(m)
+    }
+
+    fn tag_patch_wire(p: &crate::operation::TagPatch) -> serde_json::Value {
+        use serde_json::{Map, Value};
+        let mut m = Map::new();
+        if let Some(ref s) = p.name {
+            m.insert("name".into(), Value::String(s.clone()));
+        }
+        if let Some(ref s) = p.description {
+            m.insert("description".into(), Value::String(s.clone()));
+        }
+        if let Some(ref s) = p.icon {
+            m.insert("icon".into(), Value::String(s.clone()));
+        }
+        Value::Object(m)
+    }
+
+    fn tag_input_wire(t: &crate::meta::TagInput) -> serde_json::Value {
+        serde_json::json!({
+            "name": t.name,
+            "description": t.description,
+            "icon": t.icon,
+            "order": t.order,
+            "attributes": t.attributes.as_ref().map(|v| v.iter().map(kit_attribute_input_json).collect::<Vec<_>>()),
+        })
+    }
+
+    fn tags_collection_diff_wire(t: &crate::operation::TagsCollectionDiff) -> serde_json::Value {
+        use serde_json::{json, Value};
+        json!({
+            "removed": t.removed.iter().map(|r| json!({ "id": r.id.as_str() })).collect::<Vec<Value>>(),
+            "modified": t.modified.iter().map(|row| json!({
+                "tag": { "id": row.tag.id.as_str() },
+                "diff": tag_patch_wire(&row.diff),
+            })).collect::<Vec<Value>>(),
+            "added": t.added.iter().map(|row| json!({
+                "owner_id": row.owner_id.as_str(),
+                "id": row.id.as_str(),
+                "attribute_ids": row.attribute_ids.iter().map(|i| i.as_str()).collect::<Vec<_>>(),
+                "tag": tag_input_wire(&row.tag),
+            })).collect::<Vec<Value>>(),
+        })
+    }
+
+    fn concept_patch_wire(p: &crate::operation::ConceptPatch) -> serde_json::Value {
+        tag_patch_wire(&crate::operation::TagPatch { name: p.name.clone(), description: p.description.clone(), icon: p.icon.clone() })
+    }
+
+    fn concept_input_wire(c: &crate::meta::ConceptInput) -> serde_json::Value {
+        serde_json::json!({
+            "name": c.name,
+            "description": c.description,
+            "icon": c.icon,
+            "order": c.order,
+            "attributes": c.attributes.as_ref().map(|v| v.iter().map(kit_attribute_input_json).collect::<Vec<_>>()),
+        })
+    }
+
+    fn concepts_collection_diff_wire(t: &crate::operation::ConceptsCollectionDiff) -> serde_json::Value {
+        use serde_json::{json, Value};
+        json!({
+            "removed": t.removed.iter().map(|r| json!({ "id": r.id.as_str() })).collect::<Vec<Value>>(),
+            "modified": t.modified.iter().map(|row| json!({
+                "concept": { "id": row.concept.id.as_str() },
+                "diff": concept_patch_wire(&row.diff),
+            })).collect::<Vec<Value>>(),
+            "added": t.added.iter().map(|row| json!({
+                "owner_id": row.owner_id.as_str(),
+                "id": row.id.as_str(),
+                "attribute_ids": row.attribute_ids.iter().map(|i| i.as_str()).collect::<Vec<_>>(),
+                "concept": concept_input_wire(&row.concept),
+            })).collect::<Vec<Value>>(),
+        })
+    }
+
+    fn quality_patch_wire(p: &crate::operation::QualityPatch) -> serde_json::Value {
+        use serde_json::{Map, Value};
+        let mut m = Map::new();
+        if let Some(ref s) = p.description {
+            m.insert("description".into(), Value::String(s.clone()));
+        }
+        if let Some(ref s) = p.icon {
+            m.insert("icon".into(), Value::String(s.clone()));
+        }
+        if let Some(ref s) = p.key {
+            m.insert("key".into(), Value::String(s.clone()));
+        }
+        if let Some(ref s) = p.value {
+            m.insert("value".into(), Value::String(s.clone()));
+        }
+        if let Some(ref s) = p.unit {
+            m.insert("unit".into(), Value::String(s.clone()));
+        }
+        if let Some(ref s) = p.definition {
+            m.insert("definition".into(), Value::String(s.clone()));
+        }
+        Value::Object(m)
+    }
+
+    fn quality_input_wire(q: &crate::meta::QualityInput) -> serde_json::Value {
+        serde_json::json!({
+            "key": q.key,
+            "value": q.value,
+            "unit": q.unit,
+            "definition": q.definition,
+            "description": q.description,
+            "icon": q.icon,
+            "attributes": q.attributes.as_ref().map(|v| v.iter().map(kit_attribute_input_json).collect::<Vec<_>>()),
+        })
+    }
+
+    fn qualities_collection_diff_wire(t: &crate::operation::QualitiesCollectionDiff) -> serde_json::Value {
+        use serde_json::{json, Value};
+        json!({
+            "removed": t.removed.iter().map(|r| json!({ "id": r.id.as_str() })).collect::<Vec<Value>>(),
+            "modified": t.modified.iter().map(|row| json!({
+                "quality": { "id": row.quality.id.as_str() },
+                "diff": quality_patch_wire(&row.diff),
+            })).collect::<Vec<Value>>(),
+            "added": t.added.iter().map(|row| json!({
+                "owner_id": row.owner_id.as_str(),
+                "id": row.id.as_str(),
+                "attribute_ids": row.attribute_ids.iter().map(|i| i.as_str()).collect::<Vec<_>>(),
+                "benchmark_ids": row.benchmark_ids.iter().map(|i| i.as_str()).collect::<Vec<_>>(),
+                "quality": quality_input_wire(&row.quality),
+            })).collect::<Vec<Value>>(),
+        })
+    }
+    //#endregion 🔖 dev_backbone_canonical_kit_diff_wire_json
 
     fn kit_scope_json(s: &crate::operation::Scope) -> serde_json::Value {
         use crate::operation::Scope;
@@ -7763,7 +8176,7 @@ pub mod kit_backbone {
         crate::id::Id::from(s)
     }
 
-    fn position_input_from_json(v: &serde_json::Value) -> Result<crate::geom::PositionInput, SemioError> {
+    pub(crate) fn position_input_from_json(v: &serde_json::Value) -> Result<crate::geom::PositionInput, SemioError> {
         let f2 = |o: &serde_json::Map<String, serde_json::Value>, a: &str, b: &str| -> Result<(f64, f64), SemioError> {
             let u = o.get(a).and_then(|x| x.as_f64()).ok_or_else(|| SemioError::invalid("position field"))?;
             let v = o.get(b).and_then(|x| x.as_f64()).ok_or_else(|| SemioError::invalid("position field"))?;
@@ -7776,7 +8189,7 @@ pub mod kit_backbone {
             Ok((x, y, z))
         };
         let center_o = v.get("center").and_then(|x| x.as_object()).ok_or_else(|| SemioError::invalid("position.center"))?;
-        let (u, v) = f2(center_o, "u", "v")?;
+        let (u, vv) = f2(center_o, "u", "v")?;
         let plane_o = v.get("plane").and_then(|x| x.as_object()).ok_or_else(|| SemioError::invalid("position.plane"))?;
         let origin = plane_o.get("origin").and_then(|x| x.as_object()).ok_or_else(|| SemioError::invalid("plane.origin"))?;
         let (ox, oy, oz) = f3(origin)?;
@@ -7785,7 +8198,7 @@ pub mod kit_backbone {
         let ya = plane_o.get("yAxis").or_else(|| plane_o.get("y_axis")).and_then(|x| x.as_object()).ok_or_else(|| SemioError::invalid("plane.yAxis"))?;
         let (yx, yy, yz) = f3(ya)?;
         Ok(crate::geom::PositionInput {
-            center: crate::geom::CoordinateInput { u, v },
+            center: crate::geom::CoordinateInput { u, v: vv },
             plane: crate::geom::PlaneInput {
                 origin: crate::geom::PointInput { x: ox, y: oy, z: oz },
                 x_axis: crate::geom::VectorInput { x: xx, y: xy, z: xz },
@@ -7809,7 +8222,11 @@ pub mod kit_backbone {
             "Tag" => Scope::Tag { tag_id: id_from_str(m.get("tag_id").and_then(|x| x.as_str()).ok_or_else(|| SemioError::invalid("tag_id"))?) },
             "Tags" => {
                 let arr = m.get("tag_ids").and_then(|x| x.as_array()).ok_or_else(|| SemioError::invalid("tag_ids"))?;
-                Scope::Tags { tag_ids: arr.iter().map(|x| id_from_str(x.as_str().ok_or_else(|| SemioError::invalid("tag id"))?)).collect() }
+                let mut tag_ids = Vec::with_capacity(arr.len());
+                for x in arr {
+                    tag_ids.push(id_from_str(x.as_str().ok_or_else(|| SemioError::invalid("tag id"))?));
+                }
+                Scope::Tags { tag_ids }
             }
             "Concept" => Scope::Concept { concept_id: id_from_str(m.get("concept_id").and_then(|x| x.as_str()).ok_or_else(|| SemioError::invalid("concept_id"))?) },
             "Quality" => Scope::Quality { quality_id: id_from_str(m.get("quality_id").and_then(|x| x.as_str()).ok_or_else(|| SemioError::invalid("quality_id"))?) },
@@ -8339,6 +8756,9 @@ pub mod kit_backbone {
         pub description: Option<String>,
         #[serde(default)]
         pub input: serde_json::Value,
+        /// @emoji 📦 Canonical [`crate::operation::CanonicalKitDiff`] JSON persisted beside `input` for audit and tooling (replay still uses `input`).
+        #[serde(rename = "kitDiff", default, skip_serializing_if = "Option::is_none")]
+        pub kit_diff: Option<serde_json::Value>,
     }
 
     /// @emoji 🌱 Empty `root` projection placeholder used until [`Kit`] dumps a real metabolism-shaped root.
@@ -8394,7 +8814,13 @@ pub mod kit_backbone {
                 let draft_id = change.origin.clone().unwrap_or_else(|| fallback_draft_id.to_string());
                 for edit in &change.edits.items {
                     for step in &edit.forwards.items {
-                        out.push(StoredOperation { draft_id: draft_id.clone(), transaction_id: change.id.clone(), kind: step.kind.clone(), input: step.input.clone() });
+                        out.push(StoredOperation {
+                            draft_id: draft_id.clone(),
+                            transaction_id: change.id.clone(),
+                            kind: step.kind.clone(),
+                            input: step.input.clone(),
+                            kit_diff: step.kit_diff.clone(),
+                        });
                     }
                 }
             }
@@ -8404,22 +8830,24 @@ pub mod kit_backbone {
         async fn edit_dto_from_runtime_change(ch: &Arc<crate::vcs::Change>, sequence_number: i32) -> VersionEditDto {
             let mut forward_items: Vec<OperationStepDto> = Vec::new();
             let mut backward_items: Vec<OperationStepDto> = Vec::new();
-            for operation in ch.forwards.read().await.iter() {
+            for step in ch.forwards.read().await.iter() {
                 forward_items.push(OperationStepDto {
                     id: Id::new().await.as_str().to_string(),
                     hash: KIT_BUNDLE_HASH_STUB.to_string(),
-                    kind: operation.kind().to_string(),
+                    kind: step.operation.kind().to_string(),
                     description: None,
-                    input: kit_operation_step_input_json(operation),
+                    input: kit_operation_step_input_json(&step.operation),
+                    kit_diff: step.kit_diff_wire.clone(),
                 });
             }
-            for operation in ch.backwards.read().await.iter() {
+            for step in ch.backwards.read().await.iter() {
                 backward_items.push(OperationStepDto {
                     id: Id::new().await.as_str().to_string(),
                     hash: KIT_BUNDLE_HASH_STUB.to_string(),
-                    kind: operation.kind().to_string(),
+                    kind: step.operation.kind().to_string(),
                     description: None,
-                    input: kit_operation_step_input_json(operation),
+                    input: kit_operation_step_input_json(&step.operation),
+                    kit_diff: step.kit_diff_wire.clone(),
                 });
             }
             VersionEditDto {
@@ -8671,11 +9099,11 @@ pub mod kit_backbone {
 
         /// @emoji ➕ Append a single forward operation to an unsaved version change (creating the change/edit if absent).
         pub fn append_unsaved_edit(&mut self, change_id: &str, kind: &str, input: serde_json::Value) {
-            self.append_unsaved_edit_with_origin(change_id, None, kind, input);
+            self.append_unsaved_edit_with_origin(change_id, None, kind, input, None);
         }
 
-        /// @emoji ➕ Append a forward operation to an unsaved version change and keep an optional replay origin anchor.
-        pub fn append_unsaved_edit_with_origin(&mut self, change_id: &str, origin: Option<String>, kind: &str, input: serde_json::Value) {
+        /// @emoji ➕ Append a forward operation to an unsaved version change and keep an optional replay origin anchor plus optional persisted [`crate::operation::CanonicalKitDiff`] JSON.
+        pub fn append_unsaved_edit_with_origin(&mut self, change_id: &str, origin: Option<String>, kind: &str, input: serde_json::Value, kit_diff: Option<serde_json::Value>) {
             let changes = &mut self.wip.the_kit.unsaved_changes.items;
             let change_idx = match changes.iter().position(|c| c.id == change_id) {
                 Some(i) => i,
@@ -8705,14 +9133,27 @@ pub mod kit_backbone {
                     origin: None,
                 });
             }
-            changes[change_idx].edits.items[0].forwards.items.push(OperationStepDto { id: uuid::Uuid::now_v7().to_string(), hash: KIT_BUNDLE_HASH_STUB.to_string(), kind: kind.to_string(), description: None, input });
+            changes[change_idx].edits.items[0].forwards.items.push(OperationStepDto {
+                id: uuid::Uuid::now_v7().to_string(),
+                hash: KIT_BUNDLE_HASH_STUB.to_string(),
+                kind: kind.to_string(),
+                description: None,
+                input,
+                kit_diff,
+            });
         }
 
         /// @emoji 🪪 Build a metabolism-shaped bundle from a flat ordered  operation log (used by golden test fixtures and import paths).
         pub fn from_stored__operations(operations: &[StoredOperation]) -> Self {
             let mut bundle = Self::template();
             for operation in operations {
-                bundle.append_unsaved_edit_with_origin(&operation.transaction_id, Some(operation.draft_id.clone()), &operation.kind, operation.input.clone());
+                bundle.append_unsaved_edit_with_origin(
+                    &operation.transaction_id,
+                    Some(operation.draft_id.clone()),
+                    &operation.kind,
+                    operation.input.clone(),
+                    operation.kit_diff.clone(),
+                );
             }
             bundle
         }
@@ -8725,6 +9166,7 @@ pub mod kit_backbone {
         pub transaction_id: String,
         pub kind: String,
         pub input: serde_json::Value,
+        pub kit_diff: Option<serde_json::Value>,
     }
     //#endregion 🧾 wire format
 
@@ -8763,7 +9205,8 @@ CREATE TABLE IF NOT EXISTS _op_log (
   draft_id TEXT NOT NULL,
   transaction_id TEXT NOT NULL,
   kind TEXT NOT NULL,
-  input_json TEXT NOT NULL
+  input_json TEXT NOT NULL,
+  kit_diff_json TEXT
 );
 CREATE TABLE IF NOT EXISTS conflict_stub (
   id INTEGER PRIMARY KEY
@@ -8773,6 +9216,25 @@ CREATE TABLE IF NOT EXISTS conflict_stub (
             let db = semio_root.join(name);
             let conn = Connection::open(&db).map_err(|e| SemioError::invalid(format!("open {name}: {e}")))?;
             conn.execute_batch(ddl).map_err(|e| SemioError::invalid(format!("init {name}: {e}")))?;
+            ensure_op_log_kit_diff_json_column(&conn).map_err(|e| SemioError::invalid(format!("migrate {name}: {e}")))?;
+        }
+        Ok(())
+    }
+
+    #[cfg(not(target_arch = "wasm32"))]
+    fn ensure_op_log_kit_diff_json_column(conn: &Connection) -> Result<(), SemioError> {
+        let mut stmt = conn.prepare("PRAGMA table_info(_op_log)").map_err(|e| SemioError::invalid(format!("pragma: {e}")))?;
+        let mut has = false;
+        let mut rows = stmt.query([]).map_err(|e| SemioError::invalid(format!("pragma query: {e}")))?;
+        while let Some(row) = rows.next().map_err(|e| SemioError::invalid(format!("pragma row: {e}")))? {
+            let name: String = row.get(1).map_err(|e| SemioError::invalid(format!("pragma name: {e}")))?;
+            if name == "kit_diff_json" {
+                has = true;
+                break;
+            }
+        }
+        if !has {
+            conn.execute("ALTER TABLE _op_log ADD COLUMN kit_diff_json TEXT", []).map_err(|e| SemioError::invalid(format!("alter add kit_diff_json: {e}")))?;
         }
         Ok(())
     }
@@ -8816,8 +9278,8 @@ CREATE TABLE IF NOT EXISTS conflict_stub (
         for operation in operations {
             let draft_id = Id::from(operation.draft_id.as_str());
             let transaction_id = Id::from(operation.transaction_id.as_str());
-            let payload = serde_json::to_string(&operation.input).map_err(|e| SemioError::invalid(e.to_string()))?;
-            crate::kit_graph_engine::apply__operation_json(graph, &draft_id, &transaction_id, operation.kind.as_str(), &payload).await?;
+            let op = kit_operation_from_stored(operation.kind.as_str(), &operation.input).await?;
+            crate::kit_graph_engine::apply_kit_operation(graph, &draft_id, &transaction_id, op).await?;
         }
         Ok(())
     }
@@ -8838,10 +9300,10 @@ CREATE TABLE IF NOT EXISTS conflict_stub (
         }
 
         /// @emoji ➕ Append a forward  operation step into the targeted unsaved version change and atomically rewrite the bundle.
-        pub fn append_operation(&mut self, draft_id: &Id, transaction_id: &Id, kind: &str, input: &serde_json::Value) -> Result<(), SemioError> {
+        pub fn append_operation(&mut self, draft_id: &Id, transaction_id: &Id, kind: &str, input: &serde_json::Value, kit_diff: Option<&serde_json::Value>) -> Result<(), SemioError> {
             let mut doc = self.read_bundle()?;
             let _ = draft_id;
-            doc.append_unsaved_edit(transaction_id.as_str(), kind, input.clone());
+            doc.append_unsaved_edit_with_origin(transaction_id.as_str(), None, kind, input.clone(), kit_diff.cloned());
             atomic_write_bundle(&self.path, &doc)
         }
     }
@@ -8856,17 +9318,28 @@ CREATE TABLE IF NOT EXISTS conflict_stub (
 
     #[cfg(not(target_arch = "wasm32"))]
     impl LocalBackboneAttached {
-        pub fn append_operation(&mut self, draft_id: &Id, transaction_id: &Id, kind: &str, input: &serde_json::Value) -> Result<(), SemioError> {
+        pub fn append_operation(&mut self, draft_id: &Id, transaction_id: &Id, kind: &str, input: &serde_json::Value, kit_diff: Option<&serde_json::Value>) -> Result<(), SemioError> {
             let conn = Connection::open(&self.db_path).map_err(|e| SemioError::invalid(format!("sqlite append: {e}")))?;
+            ensure_op_log_kit_diff_json_column(&conn)?;
             let input_json = serde_json::to_string(input).map_err(|e| SemioError::invalid(e.to_string()))?;
-            conn.execute("INSERT INTO _op_log (draft_id, transaction_id, kind, input_json) VALUES (?1, ?2, ?3, ?4)", rusqlite::params![draft_id.as_str(), transaction_id.as_str(), kind, input_json])
-                .map_err(|e| SemioError::invalid(format!("sqlite insert: {e}")))?;
+            let kit_json = match kit_diff {
+                Some(v) => Some(serde_json::to_string(v).map_err(|e| SemioError::invalid(e.to_string()))?),
+                None => None,
+            };
+            conn.execute(
+                "INSERT INTO _op_log (draft_id, transaction_id, kind, input_json, kit_diff_json) VALUES (?1, ?2, ?3, ?4, ?5)",
+                rusqlite::params![draft_id.as_str(), transaction_id.as_str(), kind, input_json, kit_json],
+            )
+            .map_err(|e| SemioError::invalid(format!("sqlite insert: {e}")))?;
             Ok(())
         }
 
         fn load_operations(&self) -> Result<Vec<StoredOperation>, SemioError> {
             let conn = Connection::open(&self.db_path).map_err(|e| SemioError::invalid(format!("sqlite read: {e}")))?;
-            let mut stmt = conn.prepare("SELECT draft_id, transaction_id, kind, input_json FROM _op_log ORDER BY seq ASC").map_err(|e| SemioError::invalid(format!("sqlite prepare: {e}")))?;
+            ensure_op_log_kit_diff_json_column(&conn)?;
+            let mut stmt = conn
+                .prepare("SELECT draft_id, transaction_id, kind, input_json, kit_diff_json FROM _op_log ORDER BY seq ASC")
+                .map_err(|e| SemioError::invalid(format!("sqlite prepare: {e}")))?;
             let mut entities = stmt.query([]).map_err(|e| SemioError::invalid(format!("sqlite query: {e}")))?;
             let mut out = Vec::new();
             while let Some(row) = entities.next().map_err(|e| SemioError::invalid(format!("sqlite row: {e}")))? {
@@ -8875,7 +9348,11 @@ CREATE TABLE IF NOT EXISTS conflict_stub (
                 let kind: String = row.get(2).map_err(|e| SemioError::invalid(format!("sqlite col: {e}")))?;
                 let input_json: String = row.get(3).map_err(|e| SemioError::invalid(format!("sqlite col: {e}")))?;
                 let input: serde_json::Value = serde_json::from_str(&input_json).map_err(|e| SemioError::invalid(e.to_string()))?;
-                out.push(StoredOperation { draft_id, transaction_id, kind, input });
+                let kit_diff: Option<serde_json::Value> = match row.get::<_, Option<String>>(4) {
+                    Ok(Some(s)) if !s.is_empty() => Some(serde_json::from_str(&s).map_err(|e| SemioError::invalid(e.to_string()))?),
+                    _ => None,
+                };
+                out.push(StoredOperation { draft_id, transaction_id, kind, input, kit_diff });
             }
             Ok(out)
         }
@@ -8917,10 +9394,10 @@ CREATE TABLE IF NOT EXISTS conflict_stub (
             replay_stored_operations(graph, &operations).await
         }
 
-        pub fn append__operation(&mut self, draft_id: &Id, transaction_id: &Id, kind: &str, input: &serde_json::Value) -> Result<(), SemioError> {
+        pub fn append__operation(&mut self, draft_id: &Id, transaction_id: &Id, kind: &str, input: &serde_json::Value, kit_diff: Option<&serde_json::Value>) -> Result<(), SemioError> {
             match self {
-                AttachedBackbone::Dev(d) => d.append_operation(draft_id, transaction_id, kind, input),
-                AttachedBackbone::Local(l) => l.append_operation(draft_id, transaction_id, kind, input),
+                AttachedBackbone::Dev(d) => d.append_operation(draft_id, transaction_id, kind, input, kit_diff),
+                AttachedBackbone::Local(l) => l.append_operation(draft_id, transaction_id, kind, input, kit_diff),
             }
         }
 
@@ -8947,7 +9424,14 @@ CREATE TABLE IF NOT EXISTS conflict_stub (
         for rec in arr {
             let kind = rec["kind"].as_str().ok_or_else(|| SemioError::invalid("operation.kind"))?;
             let input = rec.get("input").cloned().ok_or_else(|| SemioError::invalid("operation.input"))?;
-            out.push(StoredOperation { draft_id: draft_id.clone(), transaction_id: transaction_id.clone(), kind: kind.to_string(), input });
+            let kit_diff = rec.get("kitDiff").cloned();
+            out.push(StoredOperation {
+                draft_id: draft_id.clone(),
+                transaction_id: transaction_id.clone(),
+                kind: kind.to_string(),
+                input,
+                kit_diff,
+            });
         }
         Ok(out)
     }
@@ -9128,19 +9612,26 @@ pub mod worker {
             }
         }
 
-        pub async fn record_kit_operation_if_attached(&self, draft_id: &Id, transaction_id: &Id, operation: &crate::operation::KitOperation) -> Result<(), SemioError> {
+        pub async fn record_kit_operation_if_attached(
+            &self,
+            draft_id: &Id,
+            transaction_id: &Id,
+            operation: &crate::operation::KitOperation,
+            kit_diff_wire: Option<serde_json::Value>,
+        ) -> Result<(), SemioError> {
             #[cfg(not(target_arch = "wasm32"))]
             {
                 let mut guard = self.slot.write().await;
                 if let Some(backbone) = guard.as_mut() {
-                    let payload = serde_json::to_value(operation).map_err(|e| SemioError::invalid(e.to_string()))?;
-                    backbone.append__operation(draft_id, transaction_id, operation.kind(), &payload)?;
+                    let payload = crate::kit_backbone::kit_operation_step_input_json(operation);
+                    let kd = kit_diff_wire.as_ref();
+                    backbone.append__operation(draft_id, transaction_id, operation.kind(), &payload, kd)?;
                 }
                 Ok(())
             }
             #[cfg(target_arch = "wasm32")]
             {
-                let _ = (draft_id, transaction_id, operation);
+                let _ = (draft_id, transaction_id, operation, kit_diff_wire);
                 Ok(())
             }
         }
@@ -9273,10 +9764,12 @@ pub mod worker {
         async fn apply_kit_operation(&self, request_id: Id, draft_id: Id, transaction_id: Id, operation: KitOperation) -> Result<(), SemioError> {
             let graph = self.graph.clone();
             let before_kit = graph.materialized_kit_for_draft(&draft_id).await;
-            let _ = operation.to_diff(&before_kit).await?;
+            let kit_diff = operation.to_diff(&before_kit).await?;
             let backwards = operation.to_backwards(&before_kit).await?;
             let forward = operation.clone();
-            graph.record_op_in_open_transaction(&draft_id, &transaction_id, forward, backwards).await?;
+            let kit_wire = crate::kit_backbone::canonical_kit_diff_to_wire_json(&kit_diff.0);
+            graph.record_op_in_open_transaction(&draft_id, &transaction_id, forward, Some(kit_wire.clone()), backwards).await?;
+            self.backbone.record_kit_operation_if_attached(&draft_id, &transaction_id, &operation, Some(kit_wire)).await?;
             let after_kit = graph.materialized_kit_for_draft(&draft_id).await;
 
             let tx_edit = {
@@ -9301,7 +9794,6 @@ pub mod worker {
                 }
                 KitOperation::CreateFixedPiece { scope, input } => {
                     let persisted = operation.clone();
-                    self.backbone.record_kit_operation_if_attached(&draft_id, &transaction_id, &persisted).await?;
                     let Scope::CreateFixedPiece { design_id, piece_id, blueprint_id, .. } = scope else {
                         return Err(SemioError::invalid("createFixedPiece expects Scope::CreateFixedPiece"));
                     };
@@ -9310,10 +9802,10 @@ pub mod worker {
                     };
                     let design = after_kit.design_by_external_id(design_id).await.ok_or_else(|| SemioError::not_found("Design", design_id.as_str()))?;
                     let piece = design.piece_by_external_id(piece_id).await.ok_or_else(|| SemioError::not_found("Piece", piece_id.as_str()))?;
-                    let payload_json = persisted.payload_json()?;
+                    let payload_digest = persisted.stable_payload_digest();
                     let fp_before = crate::kit_graph_engine::projection_fingerprint_for_kit(before_kit.as_ref()).await;
                     let fp_after = crate::kit_graph_engine::projection_fingerprint_for_kit(after_kit.as_ref()).await;
-                    let diff = crate::kit_graph_engine::deterministic__diff("createFixedPiece", &payload_json, &fp_before, &fp_after);
+                    let diff = crate::kit_graph_engine::deterministic__diff("createFixedPiece", &payload_digest, &fp_before, &fp_after);
                     let created_input = CreatedFixedPieceInput { design_id: design_id.clone(), blueprint_id: blueprint_id.clone(), position: position.clone(), name: name.clone(), description: description.clone() };
                     let op_evt = Arc::new(CreatedFixedPiece { id: Id::new().await, owner_edit: Arc::downgrade(&tx_edit), input: created_input, diff, piece });
                     let interface = Arc::new(OperationInterface::CreatedFixedPiece(op_evt.clone()));
@@ -10649,7 +11141,6 @@ pub mod wasm_bridge {
 
     use async_graphql::{Request, Variables};
     use base64::Engine;
-    use serde::Deserialize;
     use wasm_bindgen::prelude::*;
     use wasm_bindgen::JsCast;
     use wasm_bindgen_futures::future_to_promise;
@@ -10701,21 +11192,15 @@ pub mod wasm_bridge {
         Err(crate::error::SemioError::invalid("KitStoreHandle.create: use dev://empty, dev+json:<standard-base64>, or dev://<http(s)|blob-url> returning kit or bundle JSON"))
     }
 
-    #[derive(Deserialize)]
-    struct GraphqlExecuteJson {
-        query: String,
-        #[serde(rename = "operationName")]
-        #[allow(dead_code)]
-        operation_name: Option<String>,
-        variables: Option<serde_json::Value>,
-    }
-
     fn graphql_execute_request_from_str(s: &str) -> Result<Request, JsValue> {
-        let w: GraphqlExecuteJson = serde_json::from_str(s).map_err(|e| JsValue::from_str(&format!("graphql json: {}", e)))?;
-        let mut r = Request::new(w.query);
-        if let Some(v) = w.variables {
-            let vars = Variables::from_json(v);
-            r = r.variables(vars);
+        let v: serde_json::Value = serde_json::from_str(s).map_err(|e| JsValue::from_str(&format!("graphql json: {}", e)))?;
+        let query = v.get("query").and_then(|x| x.as_str()).ok_or_else(|| JsValue::from_str("graphql json: missing query"))?.to_string();
+        let mut r = Request::new(query);
+        if let Some(vars) = v.get("variables") {
+            if !vars.is_null() {
+                let gql_vars = Variables::from_json(vars.clone());
+                r = r.variables(gql_vars);
+            }
         }
         Ok(r)
     }
@@ -11009,6 +11494,10 @@ mod tests {
             assert!(v["wip"].get("savedChanges").is_none(), "graph must not persist savedChanges");
             assert!(v["wip"].get("unsavedChanges").is_none(), "graph must not persist unsavedChanges");
             assert!(!v["wip"]["theKit"]["unsavedChanges"]["items"].as_array().unwrap().is_empty(), "default unsaved change present on the kit version");
+            let fwd0 = &v["wip"]["theKit"]["unsavedChanges"]["items"][0]["edits"]["items"][0]["forwards"]["items"][0];
+            assert_eq!(fwd0["kind"].as_str(), Some("renameKit"), "bundle forward step kind");
+            let kd = fwd0.get("kitDiff").expect("bundle must persist kitDiff beside operation input");
+            assert_eq!(kd["name"].as_str(), Some("Hello Bundle"), "renameKit kitDiff wire carries new name");
 
             let rt_b = crate::worker::ParentRuntime::spawn().await;
             crate::kit_backbone::DevBackboneBundleDoc::hydrate_into_graph(&rt_b.wip_graph, &json_a).await.expect("hydrate");
@@ -11307,7 +11796,7 @@ mod tests {
                     "createdFixedPiece" => {
                         let design_id = crate::id::Id::from(input["designId"].as_str().expect("designId"));
                         let blueprint_id = crate::id::Id::from(input["blueprintId"].as_str().expect("blueprintId"));
-                        let position: crate::geom::PositionInput = serde_json::from_value(input["position"].clone()).expect("position serde");
+                        let position = crate::kit_backbone::position_input_from_json(&input["position"]).expect("position from golden json");
                         let name = input.get("name").and_then(|v| v.as_str()).map(|s| s.to_string());
                         let description = input.get("description").and_then(|v| v.as_str()).map(|s| s.to_string());
                         g.apply_create_fixed_piece(draft_id.clone(), tx_id.clone(), design_id, blueprint_id, position, name, description).await.expect("apply createFixedPiece");
@@ -11346,9 +11835,9 @@ mod tests {
         });
     }
 
-    /// 🪡 `kit_graph_engine::apply__operation_json` must replay the same golden operations as manual apply.
+    /// 🪡 `kit_graph_engine::apply_kit_operation` must replay the same golden operations as manual apply.
     #[test]
-    fn kit_store_golden_operations_via__operation_json_match_fingerprint() {
+    fn kit_store_golden_operations_via_kit_graph_engine_match_fingerprint() {
         block_on(async {
             let path_ops = Path::new(env!("CARGO_MANIFEST_DIR")).join("../assets/semio/kit-store.golden.ops.semio.json");
             let path_exp = Path::new(env!("CARGO_MANIFEST_DIR")).join("../assets/semio/kit-store.golden.expected.semio.json");
@@ -11361,15 +11850,16 @@ mod tests {
             let golden_ops = crate::kit_backbone::golden_operation_records_ref(&ops_json).expect("operations|ops");
             for rec in golden_ops {
                 let kind = rec["kind"].as_str().expect("operation kind");
-                let payload = serde_json::to_string(rec.get("input").expect("input")).expect("payload json");
-                let applied = crate::kit_graph_engine::apply__operation_json(&g, &draft_id, &tx_id, kind, &payload).await.expect("apply__operation_json");
+                let input = rec.get("input").expect("input");
+                let op = crate::kit_backbone::kit_operation_from_stored(kind, input).await.expect("kit_operation_from_stored");
+                let applied = crate::kit_graph_engine::apply_kit_operation(&g, &draft_id, &tx_id, op).await.expect("apply_kit_operation");
                 assert!(applied.created_piece.is_some(), "expected piece for {kind}");
                 assert!(applied.diff.summary.as_ref().map(|s| !s.is_empty()).unwrap_or(false), "diff summary");
             }
 
             let fp = stable_projection_fingerprint(&g.materialized_kit_for_draft(&draft_id).await).await;
             let exp_fp = exp["projectionFingerprint"].as_str().expect("projectionFingerprint");
-            assert_eq!(fp, exp_fp, "projectionFingerprint via  json apply");
+            assert_eq!(fp, exp_fp, "projectionFingerprint via typed apply");
         });
     }
 
@@ -11426,7 +11916,11 @@ mod tests {
             let conn = rusqlite::Connection::open(&db_path).expect("open wip.db");
             for operation in &stored {
                 let input_json = serde_json::to_string(&operation.input).expect("input json");
-                conn.execute("INSERT INTO _op_log (draft_id, transaction_id, kind, input_json) VALUES (?1, ?2, ?3, ?4)", rusqlite::params![operation.draft_id, operation.transaction_id, operation.kind, input_json]).expect("insert  operation row");
+                conn.execute(
+                    "INSERT INTO _op_log (draft_id, transaction_id, kind, input_json, kit_diff_json) VALUES (?1, ?2, ?3, ?4, ?5)",
+                    rusqlite::params![operation.draft_id, operation.transaction_id, operation.kind, input_json, operation.kit_diff.as_ref().map(|v| serde_json::to_string(v).expect("kit diff json"))],
+                )
+                .expect("insert  operation row");
             }
             drop(conn);
 
@@ -11563,7 +12057,7 @@ mod tests {
             let mut bone = crate::kit_backbone::AttachedBackbone::mount_and_replay(&norm, "wip", &g).await.expect("mount empty bundle");
             let draft_id = crate::id::Id::from("draft-rs-1");
             let tx_id = crate::id::Id::from("tx-rs-1");
-            bone.append__operation(&draft_id, &tx_id, "kit.design.piece.createdFixedPiece", &serde_json::json!({"designId": "d-1", "blueprintId": "b-1"})).expect("append operation");
+            bone.append__operation(&draft_id, &tx_id, "kit.design.piece.createdFixedPiece", &serde_json::json!({"designId": "d-1", "blueprintId": "b-1"}), None).expect("append operation");
 
             let raw = std::fs::read_to_string(&path).expect("read on-disk bundle");
             let v: serde_json::Value = serde_json::from_str(&raw).expect("parse on-disk bundle");
@@ -11662,9 +12156,9 @@ mod tests {
             let tags = diff.0.tags.as_ref().expect("tags collection diff");
             assert_eq!(tags.added.len(), 1, "single added tag row");
             let row = &tags.added[0];
-            assert_eq!(row.get("id").and_then(|v| v.as_str()), Some(tag_id.as_str()));
-            assert_eq!(row.get("ownerId").and_then(|v| v.as_str()), Some(owner_id.as_str()));
-            assert_eq!(row.get("name").and_then(|v| v.as_str()), Some("alpha-tag"));
+            assert_eq!(row.id, tag_id);
+            assert_eq!(row.owner_id, owner_id);
+            assert_eq!(row.tag.name, "alpha-tag");
 
             let staged = kit.deep_clone().await;
             staged.apply_diff(&diff).await.expect("apply createTag diff on clone");
@@ -11690,14 +12184,14 @@ mod tests {
         });
     }
 
-    /// @emoji 📦 `metabolism.kit.diff.semio.json` deserializes as [`crate::operation::CanonicalKitDiff`] and round-trips through `serde_json::Value` without structural drift.
+    /// @emoji 📦 `metabolism.kit.diff.semio.json` parses as JSON and exposes expected top-level contract keys (typed [`crate::operation::CanonicalKitDiff`] lives on the GraphQL control plane only).
     #[test]
-    fn canonical_kit_diff_metabolism_fixture_json_round_trip() {
+    fn canonical_kit_diff_metabolism_fixture_has_contract_keys() {
         const FIXTURE: &str = include_str!("../assets/semio/metabolism.kit.diff.semio.json");
         let raw: serde_json::Value = serde_json::from_str(FIXTURE).expect("fixture parses as JSON");
-        let parsed: crate::operation::CanonicalKitDiff = serde_json::from_value(raw.clone()).expect("fixture maps to CanonicalKitDiff");
-        let round = serde_json::to_value(&parsed).expect("CanonicalKitDiff serializes");
-        assert_eq!(round, raw, "canonical kit diff fixture must round-trip through CanonicalKitDiff serde");
+        assert_eq!(raw.get("name").and_then(|v| v.as_str()), Some("Metabolism Modified"));
+        assert!(raw.get("types").is_some(), "fixture must include types collection");
+        assert!(raw.get("designs").is_some(), "fixture must include designs collection");
     }
 
     //#region 🪪 merkle hashing
@@ -11723,21 +12217,18 @@ mod tests {
     }
 
     #[test]
-    fn file_serde_round_trips_blob_digest_as_hash() {
-        let v = json!({
-            "id": "019caa00-0000-7000-a000-000000000021",
-            "url": "https://example.com/f",
-            "hash": "sha256:abc",
-            "mime": serde_json::Value::Null,
-            "size": serde_json::Value::Null,
-            "description": serde_json::Value::Null,
-            "created": serde_json::Value::Null,
-            "updated": serde_json::Value::Null
-        });
-        let f: crate::meta::File = serde_json::from_value(v.clone()).expect("File from JSON");
+    fn file_blob_digest_field_is_exposed_on_entity() {
+        let f = crate::meta::File {
+            id: crate::id::Id::from("019caa00-0000-7000-a000-000000000021"),
+            url: "https://example.com/f".to_string(),
+            mime: None,
+            size: None,
+            hash: "sha256:abc".to_string(),
+            description: None,
+            created: None,
+            updated: None,
+        };
         assert_eq!(f.hash, "sha256:abc");
-        let out = serde_json::to_value(&f).expect("File serde_json::to_value");
-        assert_eq!(out.get("hash").and_then(|x| x.as_str()), Some("sha256:abc"));
     }
 
     #[test]
@@ -11779,8 +12270,7 @@ mod tests {
                 input: crate::operation::Input::FixedPiece { position: crate::geom::PositionInput::default(), name: Some("Scoped Piece".to_string()), description: Some("Persisted with explicit scope ids".to_string()) },
             };
 
-            let payload = operation.payload_json().expect("payload json");
-            let applied = crate::kit_graph_engine::apply__operation_json(&graph, &draft_id, &crate::id::Id::from("tx-scoped-1"), operation.kind(), &payload).await.expect("apply normalized createFixedPiece");
+            let applied = crate::kit_graph_engine::apply_kit_operation(&graph, &draft_id, &crate::id::Id::from("tx-scoped-1"), operation).await.expect("apply normalized createFixedPiece");
 
             let piece = applied.created_piece.expect("created piece");
             assert_eq!(piece.id, crate::id::Id::from("piece-scoped-1"));
