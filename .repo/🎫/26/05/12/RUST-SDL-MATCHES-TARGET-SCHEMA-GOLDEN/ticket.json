@@ -1,0 +1,11 @@
+{
+  "title": "Rust SDL Matches Target Schema Golden",
+  "emoji": "📜",
+  "status": "closed",
+  "description": "Align semio/rs/lib.rs GraphQL surface with semio/graphql/target.schema.graphql: ensure gql::sdl() round-trip (schema_matches_target_graphql_file), register_entities SDL fragments policy per macro-driven_entity_family_refactor + single-source_entity_layers plans, fix any drift.",
+  "summary": "Aligned Rust GraphQL id scalar with target schema: `Id` exports as wire name `ID` (`#[Scalar(name = \"ID\")]`). Clarified `gql::sdl()` and `schema_matches_target_graphql_file` docs for macro-driven fragment + golden assembly per MACRO-DRIVEN-ENTITY-FAMILY-REFACTOR and SINGLE-SOURCE-ENTITY-LAYERS plans. Verified `cargo test -p semio --lib` (36 passed, 1 ignored) and `cargo check --target wasm32-unknown-unknown -p semio`. Documented why executable `Schema::sdl()` is not byte-compared to the schema-first golden (deferred to plan rust-sdl-roundtrip / integrate).",
+  "goal": "🎯r2602runningsketchpadmacrodrivenentityfamilyrefactor",
+  "sessions": [
+    "⚪1f6e4f0fb0c64982b0236a8a783d3b2c"
+  ]
+}

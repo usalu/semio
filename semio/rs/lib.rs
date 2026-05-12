@@ -117,7 +117,7 @@ register_operations! {
     connector:  [AddedConnector, AddedConnectors, RenamedConnector, UpdatedConnectorDescription, UpdatedConnectorIcon, RemovedConnector, RemovedConnectors],
 }
 
-/// @emoji 🪢 `entity_relay_sync!` — relay Edge/Connection for `SimpleObject` rows with sync child digests (`compute_entity_hash`, …).
+/// @emoji 🪢 `entity_relay_sync!` — relay Edge/Connection for `SimpleObject` entities with sync child digests (`compute_entity_hash`, …).
 #[macro_export]
 macro_rules! entity_relay_sync {
     ($Conn:ident, $Edge:ident, $Node:ty, $hash_fn:expr) => {
@@ -136,13 +136,13 @@ macro_rules! entity_relay_sync {
         }
 
         impl $Conn {
-            pub fn from_rows(rows: Vec<$Node>) -> Self {
-                let mut child_hashes = Vec::with_capacity(rows.len());
-                for r in &rows {
+            pub fn from_entities(entities: Vec<$Node>) -> Self {
+                let mut child_hashes = Vec::with_capacity(entities.len());
+                for r in &entities {
                     child_hashes.push($hash_fn(r));
                 }
                 let hash = $crate::hash::merkle_collection(child_hashes);
-                let edges = rows.into_iter().enumerate().map(|(i, node)| $Edge { cursor: $crate::gql_relay::edge_cursor(i), node }).collect();
+                let edges = entities.into_iter().enumerate().map(|(i, node)| $Edge { cursor: $crate::gql_relay::edge_cursor(i), node }).collect();
                 Self { edges, page_info: std::sync::Arc::new($crate::gql_relay::PageInfo::default()), hash }
             }
         }
@@ -180,13 +180,13 @@ macro_rules! entity_relay {
         }
 
         impl $Conn {
-            pub async fn from_rows(rows: Vec<$Node>) -> Self {
-                let mut child_hashes = Vec::with_capacity(rows.len());
-                for r in &rows {
+            pub async fn from_entities(entities: Vec<$Node>) -> Self {
+                let mut child_hashes = Vec::with_capacity(entities.len());
+                for r in &entities {
                     child_hashes.push(r.compute_hash().await);
                 }
                 let hash = $crate::hash::merkle_collection(child_hashes);
-                let edges = rows.into_iter().enumerate().map(|(i, node)| $Edge { cursor: $crate::gql_relay::edge_cursor(i), node }).collect();
+                let edges = entities.into_iter().enumerate().map(|(i, node)| $Edge { cursor: $crate::gql_relay::edge_cursor(i), node }).collect();
                 Self { edges, page_info: std::sync::Arc::new($crate::gql_relay::PageInfo::default()), hash }
             }
         }
@@ -205,7 +205,7 @@ macro_rules! entity_owner {
     ($($_base:ident),* $(,)?) => {};
 }
 
-/// @emoji 🧾 `entity_input!` — GraphQL `InputObject` + serde row with explicit SDL `name`.
+/// @emoji 🧾 `entity_input!` — GraphQL `InputObject` with explicit SDL `name` (no serde; control plane is GraphQL-native).
 #[macro_export]
 macro_rules! entity_input {
     (
@@ -215,7 +215,7 @@ macro_rules! entity_input {
         }
     ) => {
         $(#[$sm])*
-        #[derive(Clone, Debug, Default, serde::Serialize, serde::Deserialize, async_graphql::InputObject)]
+        #[derive(Clone, Debug, Default, async_graphql::InputObject)]
         #[graphql(name = $gql)]
         $vis struct $Name {
             $($(#[$fm])* $fvis $field : $ftype),*
@@ -235,7 +235,7 @@ macro_rules! entity_family {
         $(, extra = ($($extra:item)+))?
     ) => {
         $(#[$sm])*
-        #[derive(Clone, Debug, Default, serde::Serialize, serde::Deserialize, async_graphql::SimpleObject)]
+        #[derive(Clone, Debug, Default, async_graphql::SimpleObject)]
         #[graphql(complex)]
         $vis struct $Name {
             $($(#[$fm])* $fvis $field : $ftype),*
@@ -349,7 +349,7 @@ macro_rules! meta_arc_titled_entity {
 #[macro_export]
 macro_rules! meta_quality_entity {
     () => {
-        /// @emoji 🏷️ SDL `Quality` entity (benchmarks stay value-typed [`Benchmark`] rows).
+        /// @emoji 🏷️ SDL `Quality` entity (benchmarks stay value-typed [`Benchmark`] entities).
         #[derive(Debug)]
         pub struct Quality {
             pub id: crate::id::Id,
@@ -458,11 +458,10 @@ macro_rules! meta_quality_entity {
 pub mod id {
     //! 🆔 Immutable uuid-v7 wrapper used by every entity.
     use async_graphql::{InputValueError, InputValueResult, Scalar, ScalarType, Value};
-    use serde::{Deserialize, Serialize};
     use std::fmt;
 
-    #[derive(Clone, Debug, Default, Eq, Hash, PartialEq, Serialize, Deserialize)]
-    #[serde(transparent)]
+    /// @emoji 🆔 Opaque node identifier (uuidv7 string); GraphQL wire name `ID` per target schema.
+    #[derive(Clone, Debug, Default, Eq, Hash, PartialEq)]
     pub struct Id(pub String);
 
     impl Id {
@@ -498,7 +497,8 @@ pub mod id {
         }
     }
 
-    #[Scalar]
+    /// @emoji 🆔 Wire name `ID` matches relay + [`semio/graphql/target.schema.graphql`](../../graphql/target.schema.graphql) `scalar`/Node ids.
+    #[Scalar(name = "ID")]
     impl ScalarType for Id {
         fn parse(value: Value) -> InputValueResult<Self> {
             match value {
@@ -519,9 +519,8 @@ pub mod id {
 pub mod timestamp {
     //! ⏱️ ISO-8601 millisecond-precision timestamp scalar.
     use async_graphql::{InputValueError, InputValueResult, Scalar, ScalarType, Value};
-    use serde::{Deserialize, Serialize};
 
-    #[derive(Clone, Debug, Default, Eq, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, Default, Eq, PartialEq)]
     pub struct Timestamp(pub String);
 
     #[Scalar]
@@ -545,10 +544,9 @@ pub mod timestamp {
 pub mod error {
     //! 🚨 Crate-wide error type wired through the event bus as `OperationFailed`.
     use async_graphql::SimpleObject;
-    use serde::{Deserialize, Serialize};
     use thiserror::Error;
 
-    #[derive(Clone, Debug, Error, Serialize, Deserialize, SimpleObject)]
+    #[derive(Clone, Debug, Error, SimpleObject)]
     #[graphql(name = "Error")]
     #[error("{kind}: {message}")]
     pub struct SemioError {
@@ -584,11 +582,10 @@ pub mod error {
 //#region 📐 geom
 
 pub mod geom {
-    //! 📐 Geometry: wire [`VectorInput`], [`PositionInput`], … for serde / kit inputs; canonical live weak entities live in [`entity`] as `Arc` graph nodes with one Rust kind per SDL weak entity.
+    //! 📐 Geometry: wire [`VectorInput`], [`PositionInput`], … for GraphQL kit inputs; canonical live weak entities live in [`entity`] as `Arc` graph nodes with one Rust kind per SDL weak entity.
     use async_graphql::InputObject;
-    use serde::{Deserialize, Serialize};
 
-    #[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize, InputObject)]
+    #[derive(Clone, Copy, Debug, Default, PartialEq, InputObject)]
     #[graphql(name = "VectorInput")]
     pub struct VectorInput {
         pub x: f64,
@@ -596,7 +593,7 @@ pub mod geom {
         pub z: f64,
     }
 
-    #[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize, InputObject)]
+    #[derive(Clone, Copy, Debug, Default, PartialEq, InputObject)]
     #[graphql(name = "PointInput")]
     pub struct PointInput {
         pub x: f64,
@@ -604,30 +601,27 @@ pub mod geom {
         pub z: f64,
     }
 
-    #[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize, InputObject)]
+    #[derive(Clone, Copy, Debug, Default, PartialEq, InputObject)]
     #[graphql(name = "CoordinateInput")]
     pub struct CoordinateInput {
         pub u: f64,
         pub v: f64,
     }
 
-    #[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize, InputObject)]
+    #[derive(Clone, Copy, Debug, Default, PartialEq, InputObject)]
     #[graphql(name = "OffsetInput")]
     pub struct OffsetInput {
         pub u: f64,
         pub v: f64,
     }
 
-    #[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize, InputObject)]
+    #[derive(Clone, Copy, Debug, PartialEq, InputObject)]
     #[graphql(name = "PlaneInput")]
     pub struct PlaneInput {
-        #[serde(default)]
         pub origin: PointInput,
         #[graphql(name = "xAxis")]
-        #[serde(alias = "xAxis", default)]
         pub x_axis: VectorInput,
         #[graphql(name = "yAxis")]
-        #[serde(alias = "yAxis", default)]
         pub y_axis: VectorInput,
     }
 
@@ -638,12 +632,10 @@ pub mod geom {
         }
     }
 
-    #[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize, InputObject)]
+    #[derive(Clone, Copy, Debug, PartialEq, InputObject)]
     #[graphql(name = "PositionInput")]
     pub struct PositionInput {
-        #[serde(default)]
         pub center: CoordinateInput,
-        #[serde(default)]
         pub plane: PlaneInput,
     }
 
@@ -654,7 +646,7 @@ pub mod geom {
     }
 
     /// @emoji 🌍 Wire `LocationInput` (lon/lat/alt) for [`entity::Location`].
-    #[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize, InputObject)]
+    #[derive(Clone, Copy, Debug, Default, PartialEq, InputObject)]
     #[graphql(name = "LocationInput")]
     pub struct LocationInput {
         pub longitude: f64,
@@ -975,43 +967,43 @@ pub mod gql_relay {
 
     crate::entity_relay!(DesignConnection, DesignEdge, Arc<Design>);
     impl DesignConnection {
-        pub async fn from_designs(rows: Vec<Arc<Design>>) -> Self {
-            Self::from_rows(rows).await
+        pub async fn from_designs(entities: Vec<Arc<Design>>) -> Self {
+            Self::from_entities(entities).await
         }
     }
 
     crate::entity_relay!(PieceConnection, PieceEdge, Arc<Piece>);
     impl PieceConnection {
-        pub async fn from_pieces(rows: Vec<Arc<Piece>>) -> Self {
-            Self::from_rows(rows).await
+        pub async fn from_pieces(entities: Vec<Arc<Piece>>) -> Self {
+            Self::from_entities(entities).await
         }
     }
 
     crate::entity_relay!(TypeConnection, TypeEdge, Arc<Type>);
     impl TypeConnection {
-        pub async fn from_types(rows: Vec<Arc<Type>>) -> Self {
-            Self::from_rows(rows).await
+        pub async fn from_types(entities: Vec<Arc<Type>>) -> Self {
+            Self::from_entities(entities).await
         }
     }
 
     crate::entity_relay!(ConnectorConnection, ConnectorEdge, Arc<Connector>);
     impl ConnectorConnection {
-        pub async fn from_connectors(rows: Vec<Arc<Connector>>) -> Self {
-            Self::from_rows(rows).await
+        pub async fn from_connectors(entities: Vec<Arc<Connector>>) -> Self {
+            Self::from_entities(entities).await
         }
     }
 
     crate::entity_relay!(RepresentationConnection, RepresentationEdge, Arc<Representation>);
     impl RepresentationConnection {
-        pub async fn from_representations(rows: Vec<Arc<Representation>>) -> Self {
-            Self::from_rows(rows).await
+        pub async fn from_representations(entities: Vec<Arc<Representation>>) -> Self {
+            Self::from_entities(entities).await
         }
     }
 
     crate::entity_relay!(SideConnection, SideEdge, Arc<Side>);
     impl SideConnection {
-        pub async fn from_sides(rows: Vec<Arc<Side>>) -> Self {
-            Self::from_rows(rows).await
+        pub async fn from_sides(entities: Vec<Arc<Side>>) -> Self {
+            Self::from_entities(entities).await
         }
     }
 
@@ -1030,9 +1022,9 @@ pub mod gql_relay {
     }
 
     impl BlueprintConnection {
-        pub async fn from_blueprints(rows: Vec<crate::kit::r#type::Blueprint>) -> Self {
-            let mut child_hashes = Vec::with_capacity(rows.len());
-            for b in &rows {
+        pub async fn from_blueprints(entities: Vec<crate::kit::r#type::Blueprint>) -> Self {
+            let mut child_hashes = Vec::with_capacity(entities.len());
+            for b in &entities {
                 let h = match b {
                     crate::kit::r#type::Blueprint::Type(t) => t.compute_hash().await,
                     crate::kit::r#type::Blueprint::Design(d) => d.compute_hash().await,
@@ -1040,29 +1032,29 @@ pub mod gql_relay {
                 child_hashes.push(h);
             }
             let hash = merkle_collection(child_hashes);
-            let edges = rows.into_iter().enumerate().map(|(i, node)| BlueprintEdge { cursor: edge_cursor(i), node }).collect();
+            let edges = entities.into_iter().enumerate().map(|(i, node)| BlueprintEdge { cursor: edge_cursor(i), node }).collect();
             Self { edges, page_info: std::sync::Arc::new(PageInfo::default()), hash }
         }
     }
 
     crate::entity_relay!(ConflictConnection, ConflictEdge, Arc<Conflict>);
     impl ConflictConnection {
-        pub async fn from_conflicts(rows: Vec<Arc<Conflict>>) -> Self {
-            Self::from_rows(rows).await
+        pub async fn from_conflicts(entities: Vec<Arc<Conflict>>) -> Self {
+            Self::from_entities(entities).await
         }
     }
 
     crate::entity_relay!(AlternativeConnection, AlternativeEdge, Arc<Alternative>);
     impl AlternativeConnection {
-        pub async fn from_alternatives(rows: Vec<Arc<Alternative>>) -> Self {
-            Self::from_rows(rows).await
+        pub async fn from_alternatives(entities: Vec<Arc<Alternative>>) -> Self {
+            Self::from_entities(entities).await
         }
     }
 
     crate::entity_relay!(ChangeConnection, ChangeEdge, Arc<Change>);
     impl ChangeConnection {
-        pub async fn from_changes(rows: Vec<Arc<Change>>) -> Self {
-            Self::from_rows(rows).await
+        pub async fn from_changes(entities: Vec<Arc<Change>>) -> Self {
+            Self::from_entities(entities).await
         }
 
         pub fn empty() -> Self {
@@ -1072,8 +1064,8 @@ pub mod gql_relay {
 
     crate::entity_relay!(EditConnection, EditEdge, Arc<crate::vcs::Edit>);
     impl EditConnection {
-        pub async fn from_edits(rows: Vec<Arc<crate::vcs::Edit>>) -> Self {
-            Self::from_rows(rows).await
+        pub async fn from_edits(entities: Vec<Arc<crate::vcs::Edit>>) -> Self {
+            Self::from_entities(entities).await
         }
 
         pub fn empty() -> Self {
@@ -1096,10 +1088,10 @@ pub mod gql_relay {
     }
 
     impl OperationConnection {
-        pub fn from_interface_rows(rows: Vec<Arc<crate::operation::OperationInterface>>) -> Self {
-            let child_hashes: Vec<String> = rows.iter().map(|o| h(&[o.row_id().as_str()])).collect();
+        pub fn from_interface_entities(entities: Vec<Arc<crate::operation::OperationInterface>>) -> Self {
+            let child_hashes: Vec<String> = entities.iter().map(|o| h(&[o.row_id().as_str()])).collect();
             let hash = merkle_collection(child_hashes);
-            let edges = rows.into_iter().enumerate().map(|(i, o)| OperationEdge { cursor: edge_cursor(i), node: o }).collect();
+            let edges = entities.into_iter().enumerate().map(|(i, o)| OperationEdge { cursor: edge_cursor(i), node: o }).collect();
             Self { edges, page_info: std::sync::Arc::new(PageInfo::default()), hash }
         }
 
@@ -1110,8 +1102,8 @@ pub mod gql_relay {
 
     crate::entity_relay!(CheckpointConnection, CheckpointEdge, Arc<Checkpoint>);
     impl CheckpointConnection {
-        pub async fn from_checkpoints(rows: Vec<Arc<Checkpoint>>) -> Self {
-            Self::from_rows(rows).await
+        pub async fn from_checkpoints(entities: Vec<Arc<Checkpoint>>) -> Self {
+            Self::from_entities(entities).await
         }
     }
 
@@ -1132,13 +1124,13 @@ pub mod gql_relay {
     }
 
     impl ConnectionConnection {
-        pub async fn from_connections(rows: Vec<Arc<crate::kit::design::connection::Connection>>) -> Self {
-            let mut child_hashes = Vec::with_capacity(rows.len());
-            for c in &rows {
+        pub async fn from_connections(entities: Vec<Arc<crate::kit::design::connection::Connection>>) -> Self {
+            let mut child_hashes = Vec::with_capacity(entities.len());
+            for c in &entities {
                 child_hashes.push(c.compute_hash().await);
             }
             let hash = merkle_collection(child_hashes);
-            let edges = rows.into_iter().enumerate().map(|(i, node)| ConnectionEdge { cursor: edge_cursor(i), node }).collect();
+            let edges = entities.into_iter().enumerate().map(|(i, node)| ConnectionEdge { cursor: edge_cursor(i), node }).collect();
             Self { edges, page_info: std::sync::Arc::new(PageInfo::default()), hash }
         }
     }
@@ -1194,14 +1186,13 @@ pub mod meta {
     use std::sync::Weak;
 
     use async_graphql::Object;
-    use serde::{Deserialize, Serialize};
 
     use crate::id::Id;
     use crate::timestamp::Timestamp;
 
     //#region 🧾 graphql inputs
     crate::entity_input! {
-        /// @emoji 🧾 SDL `AttributeInput` — instantiates [`Attribute`] rows on entity create/update paths.
+        /// @emoji 🧾 SDL `AttributeInput` — instantiates [`Attribute`] entities on entity create/update paths.
         pub struct AttributeInput as "AttributeInput" {
             pub key: String,
             pub value: Option<String>,
@@ -1257,7 +1248,7 @@ pub mod meta {
         }
     }
 
-    /// @emoji ➕ Expand optional GraphQL attribute rows into minted [`Attribute`] entities.
+    /// @emoji ➕ Expand optional GraphQL attribute entities into minted [`Attribute`] entities.
     pub async fn attributes_from_inputs(inp: Option<Vec<AttributeInput>>) -> Vec<Attribute> {
         let mut v = Vec::new();
         for a in inp.into_iter().flatten() {
@@ -1266,7 +1257,7 @@ pub mod meta {
         v
     }
 
-    /// @emoji 🪪 Rebuild optional GraphQL attribute rows using the ids already recorded in operation scope.
+    /// @emoji 🪪 Rebuild optional GraphQL attribute entities using the ids already recorded in operation scope.
     pub fn attributes_from_inputs_with_ids(inp: Option<Vec<AttributeInput>>, ids: &[Id]) -> Result<Vec<Attribute>, crate::error::SemioError> {
         let attrs = inp.unwrap_or_default();
         if attrs.len() != ids.len() {
@@ -1370,7 +1361,7 @@ pub mod meta {
         }
     }
 
-    #[derive(Clone, Debug, Default, Serialize, Deserialize)]
+    #[derive(Clone, Debug, Default)]
     pub struct Attribute {
         pub id: Id,
         pub key: String,
@@ -1448,7 +1439,6 @@ pub mod meta {
             pub value: String,
             pub unit: Option<String>,
             #[graphql(skip)]
-            #[serde(skip)]
             pub quality: Option<std::sync::Arc<Quality>>,
         }
         hash = |this| {
@@ -1796,10 +1786,10 @@ pub mod kit {
                 self.port.read().await.clone()
             }
             pub async fn qualities(&self) -> crate::gql_relay::QualityConnection {
-                crate::gql_relay::QualityConnection::from_rows(self.qualities.read().await.clone()).await
+                crate::gql_relay::QualityConnection::from_entities(self.qualities.read().await.clone()).await
             }
             pub async fn attributes(&self) -> crate::gql_relay::AttributeConnection {
-                crate::gql_relay::AttributeConnection::from_rows(self.attributes.read().await.clone())
+                crate::gql_relay::AttributeConnection::from_entities(self.attributes.read().await.clone())
             }
 
             pub async fn quality(&self, id: Id) -> Option<Arc<Quality>> {
@@ -1897,13 +1887,13 @@ pub mod kit {
                 self.file.read().await.clone()
             }
             pub async fn tags(&self) -> crate::gql_relay::TagConnection {
-                crate::gql_relay::TagConnection::from_rows(self.tags.read().await.clone()).await
+                crate::gql_relay::TagConnection::from_entities(self.tags.read().await.clone()).await
             }
             pub async fn qualities(&self) -> crate::gql_relay::QualityConnection {
-                crate::gql_relay::QualityConnection::from_rows(self.qualities.read().await.clone()).await
+                crate::gql_relay::QualityConnection::from_entities(self.qualities.read().await.clone()).await
             }
             pub async fn attributes(&self) -> crate::gql_relay::AttributeConnection {
-                crate::gql_relay::AttributeConnection::from_rows(self.attributes.read().await.clone())
+                crate::gql_relay::AttributeConnection::from_entities(self.attributes.read().await.clone())
             }
 
             pub async fn tag(&self, id: Id) -> Option<Arc<Tag>> {
@@ -2074,7 +2064,7 @@ pub mod kit {
                 crate::gql_relay::ConnectorConnection::from_connectors(self.connectors.read().await.clone()).await
             }
             pub async fn ports(&self) -> crate::gql_relay::PortConnection {
-                crate::gql_relay::PortConnection::from_rows(self.ports.read().await.clone()).await
+                crate::gql_relay::PortConnection::from_entities(self.ports.read().await.clone()).await
             }
             pub async fn port(&self, id: Id) -> Option<Arc<Port>> {
                 self.refresh_connector_child_weak_maps().await;
@@ -2096,25 +2086,25 @@ pub mod kit {
                 self.best_representation_for_tags(&tag_ids).await
             }
             pub async fn authors(&self) -> crate::gql_relay::AuthorConnection {
-                crate::gql_relay::AuthorConnection::from_rows(self.authors.read().await.clone())
+                crate::gql_relay::AuthorConnection::from_entities(self.authors.read().await.clone())
             }
             pub async fn concepts(&self) -> crate::gql_relay::ConceptConnection {
-                crate::gql_relay::ConceptConnection::from_rows(self.concepts.read().await.clone()).await
+                crate::gql_relay::ConceptConnection::from_entities(self.concepts.read().await.clone()).await
             }
             pub async fn tags(&self) -> crate::gql_relay::TagConnection {
-                crate::gql_relay::TagConnection::from_rows(self.tags.read().await.clone()).await
+                crate::gql_relay::TagConnection::from_entities(self.tags.read().await.clone()).await
             }
             pub async fn qualities(&self) -> crate::gql_relay::QualityConnection {
-                crate::gql_relay::QualityConnection::from_rows(self.qualities.read().await.clone()).await
+                crate::gql_relay::QualityConnection::from_entities(self.qualities.read().await.clone()).await
             }
             pub async fn props(&self) -> crate::gql_relay::PropConnection {
-                crate::gql_relay::PropConnection::from_rows(self.props.read().await.clone())
+                crate::gql_relay::PropConnection::from_entities(self.props.read().await.clone())
             }
             pub async fn attributes(&self) -> crate::gql_relay::AttributeConnection {
-                crate::gql_relay::AttributeConnection::from_rows(self.attributes.read().await.clone())
+                crate::gql_relay::AttributeConnection::from_entities(self.attributes.read().await.clone())
             }
             pub async fn stats(&self) -> crate::gql_relay::StatConnection {
-                crate::gql_relay::StatConnection::from_rows(self.stats.read().await.clone())
+                crate::gql_relay::StatConnection::from_entities(self.stats.read().await.clone())
             }
 
             pub async fn author(&self, id: Id) -> Option<Author> {
@@ -2541,7 +2531,7 @@ pub mod kit {
                     *self.v.read().await
                 }
                 pub async fn attributes(&self) -> crate::gql_relay::AttributeConnection {
-                    crate::gql_relay::AttributeConnection::from_rows(self.attributes.read().await.clone())
+                    crate::gql_relay::AttributeConnection::from_entities(self.attributes.read().await.clone())
                 }
 
                 pub async fn attribute(&self, id: Id) -> Option<Attribute> {
@@ -2753,25 +2743,25 @@ pub mod kit {
                 self.connections.read().await.iter().find(|c| c.id == id).cloned()
             }
             pub async fn layers(&self) -> crate::gql_relay::LayerConnection {
-                crate::gql_relay::LayerConnection::from_rows(self.layers.read().await.clone())
+                crate::gql_relay::LayerConnection::from_entities(self.layers.read().await.clone())
             }
             pub async fn groups(&self) -> crate::gql_relay::GroupConnection {
-                crate::gql_relay::GroupConnection::from_rows(self.groups.read().await.clone())
+                crate::gql_relay::GroupConnection::from_entities(self.groups.read().await.clone())
             }
             pub async fn authors(&self) -> crate::gql_relay::AuthorConnection {
-                crate::gql_relay::AuthorConnection::from_rows(self.authors.read().await.clone())
+                crate::gql_relay::AuthorConnection::from_entities(self.authors.read().await.clone())
             }
             pub async fn qualities(&self) -> crate::gql_relay::QualityConnection {
-                crate::gql_relay::QualityConnection::from_rows(self.qualities.read().await.clone()).await
+                crate::gql_relay::QualityConnection::from_entities(self.qualities.read().await.clone()).await
             }
             pub async fn props(&self) -> crate::gql_relay::PropConnection {
-                crate::gql_relay::PropConnection::from_rows(self.props.read().await.clone())
+                crate::gql_relay::PropConnection::from_entities(self.props.read().await.clone())
             }
             pub async fn attributes(&self) -> crate::gql_relay::AttributeConnection {
-                crate::gql_relay::AttributeConnection::from_rows(self.attributes.read().await.clone())
+                crate::gql_relay::AttributeConnection::from_entities(self.attributes.read().await.clone())
             }
             pub async fn stats(&self) -> crate::gql_relay::StatConnection {
-                crate::gql_relay::StatConnection::from_rows(self.stats.read().await.clone())
+                crate::gql_relay::StatConnection::from_entities(self.stats.read().await.clone())
             }
             #[graphql(name = "qualitySum")]
             pub async fn quality_sum(&self, _quality_id: Id) -> f64 {
@@ -3266,37 +3256,22 @@ pub mod kit {
                 self.apply_qualities_collection_diff(q).await?;
             }
             if let Some(v) = &d.files {
-                if Self::json_diff_non_trivial(v) {
+                if *v == Some(true) {
                     return Err(crate::error::SemioError::invalid("kit diff `files` subtree apply not implemented"));
                 }
             }
             if let Some(v) = &d.folders {
-                if Self::json_diff_non_trivial(v) {
+                if *v == Some(true) {
                     return Err(crate::error::SemioError::invalid("kit diff `folders` subtree apply not implemented"));
                 }
             }
             if let Some(v) = &d.authors {
-                if Self::json_diff_non_trivial(v) {
+                if *v == Some(true) {
                     return Err(crate::error::SemioError::invalid("kit diff `authors` subtree apply not implemented"));
                 }
             }
             self.bump_touch_epoch().await;
             Ok(())
-        }
-
-        fn json_diff_non_trivial(v: &serde_json::Value) -> bool {
-            match v {
-                serde_json::Value::Null => false,
-                serde_json::Value::Object(m) if m.is_empty() => false,
-                serde_json::Value::Object(m) => m.iter().any(|(_, x)| match x {
-                    serde_json::Value::Array(a) => !a.is_empty(),
-                    serde_json::Value::Object(o) => !o.is_empty(),
-                    serde_json::Value::Null => false,
-                    _ => true,
-                }),
-                serde_json::Value::Array(a) => !a.is_empty(),
-                _ => true,
-            }
         }
 
         async fn apply_types_collection_diff(self: &Arc<Self>, t: &crate::operation::TypesCollectionDiff) -> Result<(), crate::error::SemioError> {
@@ -3313,20 +3288,20 @@ pub mod kit {
                     continue;
                 };
                 let diff = &row.diff;
-                if let Some(s) = diff.get("name").and_then(|x| x.as_str()) {
-                    *ty.name.write().await = s.to_string();
+                if let Some(s) = &diff.name {
+                    *ty.name.write().await = s.clone();
                 }
-                if diff.get("description").is_some() {
-                    *ty.description.write().await = diff.get("description").and_then(|x| x.as_str()).unwrap_or("").to_string();
+                if diff.description.is_some() {
+                    *ty.description.write().await = diff.description.clone().unwrap_or_default();
                 }
-                if diff.get("icon").is_some() {
-                    *ty.icon.write().await = diff.get("icon").and_then(|x| x.as_str()).unwrap_or("").to_string();
+                if diff.icon.is_some() {
+                    *ty.icon.write().await = diff.icon.clone().unwrap_or_default();
                 }
-                if diff.get("image").is_some() {
-                    *ty.image.write().await = diff.get("image").and_then(|x| x.as_str()).unwrap_or("").to_string();
+                if diff.image.is_some() {
+                    *ty.image.write().await = diff.image.clone().unwrap_or_default();
                 }
-                if diff.get("unit").is_some() {
-                    *ty.unit.write().await = diff.get("unit").and_then(|x| x.as_str()).unwrap_or("").to_string();
+                if diff.unit.is_some() {
+                    *ty.unit.write().await = diff.unit.clone().unwrap_or_default();
                 }
             }
             if !t.added.is_empty() {
@@ -3347,37 +3322,31 @@ pub mod kit {
                 let design_id = row.design.id.clone();
                 let diff = &row.diff;
                 if let Some(design) = self.design_by_external_id(&design_id).await {
-                    if let Some(s) = diff.get("name").and_then(|x| x.as_str()) {
-                        *design.name.write().await = s.to_string();
+                    let sc = &diff.scalars;
+                    if let Some(s) = &sc.name {
+                        *design.name.write().await = s.clone();
                     }
-                    if diff.get("description").is_some() {
-                        *design.description.write().await = diff.get("description").and_then(|x| x.as_str()).map(|s| s.to_string());
+                    if sc.description.is_some() {
+                        *design.description.write().await = sc.description.clone();
                     }
-                    if diff.get("icon").is_some() {
-                        *design.icon.write().await = diff.get("icon").and_then(|x| x.as_str()).map(|s| s.to_string());
+                    if sc.icon.is_some() {
+                        *design.icon.write().await = sc.icon.clone();
                     }
-                    if diff.get("image").is_some() {
-                        *design.image.write().await = diff.get("image").and_then(|x| x.as_str()).map(|s| s.to_string());
+                    if sc.image.is_some() {
+                        *design.image.write().await = sc.image.clone();
                     }
                 }
-                if let Some(pr) = diff.get("pieces").and_then(|p| p.get("removed")).and_then(|x| x.as_array()) {
-                    for pr_row in pr {
-                        let piece_id: Id = serde_json::from_value(pr_row.get("id").cloned().ok_or_else(|| crate::error::SemioError::invalid("piece removed.id"))?).map_err(|e| crate::error::SemioError::invalid(e.to_string()))?;
+                if let Some(pc) = &diff.pieces {
+                    for pr in &pc.removed {
+                        let piece_id = pr.id.clone();
                         let design = self.design_by_external_id(&design_id).await.ok_or_else(|| crate::error::SemioError::not_found("Design", design_id.as_str()))?;
                         design.delete_piece_by_external_id(&piece_id).await?;
                     }
-                }
-                if let Some(pa) = diff.get("pieces").and_then(|p| p.get("added")).and_then(|x| x.as_array()) {
-                    for piece_v in pa {
-                        self.apply_design_piece_added_json(&design_id, piece_v).await?;
+                    for piece_row in &pc.added {
+                        self.apply_design_piece_added_row(&design_id, piece_row).await?;
                     }
-                }
-                if let Some(pm) = diff.get("pieces").and_then(|p| p.get("modified")).and_then(|x| x.as_array()) {
-                    for prow in pm {
-                        let piece_id: Id =
-                            serde_json::from_value(prow.get("piece").and_then(|p| p.get("id")).cloned().ok_or_else(|| crate::error::SemioError::invalid("piece modified.piece.id"))?).map_err(|e| crate::error::SemioError::invalid(e.to_string()))?;
-                        let pdiff = prow.get("diff").cloned().unwrap_or(serde_json::json!({}));
-                        self.apply_design_piece_modified_json(&design_id, &piece_id, &pdiff).await?;
+                    for prow in &pc.modified {
+                        self.apply_design_piece_patch(&design_id, &prow.piece.id, &prow.diff).await?;
                     }
                 }
             }
@@ -3387,12 +3356,12 @@ pub mod kit {
             Ok(())
         }
 
-        async fn apply_design_piece_added_json(self: &Arc<Self>, design_id: &Id, piece_v: &serde_json::Value) -> Result<(), crate::error::SemioError> {
-            let piece_id: Id = serde_json::from_value(piece_v.get("id").cloned().ok_or_else(|| crate::error::SemioError::invalid("piece.id"))?).map_err(|e| crate::error::SemioError::invalid(e.to_string()))?;
-            let blueprint_id: Id = piece_v.get("blueprintId").and_then(|x| x.as_str()).map(Id::from).unwrap_or_else(|| piece_id.clone());
-            let position: crate::geom::PositionInput = piece_v.get("pose").map(|p| serde_json::from_value(p.clone())).transpose().map_err(|e| crate::error::SemioError::invalid(e.to_string()))?.unwrap_or_default();
-            let name = piece_v.get("name").and_then(|x| x.as_str()).map(|s| s.to_string());
-            let description = piece_v.get("description").and_then(|x| x.as_str()).map(|s| s.to_string());
+        async fn apply_design_piece_added_row(self: &Arc<Self>, design_id: &Id, row: &crate::operation::PieceAddedRow) -> Result<(), crate::error::SemioError> {
+            let piece_id = row.id.clone();
+            let blueprint_id = row.blueprint_id.clone();
+            let position = row.pose;
+            let name = row.name.clone();
+            let description = row.description.clone();
             let (_handle, design) = self.bind_external_design_id(design_id).await;
             let blueprint_type = crate::kit::r#type::Type::new(Arc::downgrade(self), format!("type-{}", blueprint_id.as_str())).await;
             let blueprint = crate::kit::r#type::Blueprint::Type(blueprint_type);
@@ -3403,46 +3372,41 @@ pub mod kit {
             Ok(())
         }
 
-        async fn apply_design_piece_modified_json(self: &Arc<Self>, design_id: &Id, piece_id: &Id, pdiff: &serde_json::Value) -> Result<(), crate::error::SemioError> {
+        async fn apply_design_piece_patch(self: &Arc<Self>, design_id: &Id, piece_id: &Id, pdiff: &crate::operation::PiecePatch) -> Result<(), crate::error::SemioError> {
             use crate::geom::entity::Position as GeomPosition;
             let design = self.design_by_external_id(design_id).await.ok_or_else(|| crate::error::SemioError::not_found("Design", design_id.as_str()))?;
             let piece = design.piece_by_external_id(piece_id).await.ok_or_else(|| crate::error::SemioError::not_found("Piece", piece_id.as_str()))?;
-            if let Some(true) = pdiff.get("fixPiece").and_then(|x| x.as_bool()) {
+            if pdiff.fix_piece {
                 *piece.connection_kind.write().await = Some(crate::kit::design::piece::PieceConnectionKind::Fixed);
                 return Ok(());
             }
-            if let Some(drag_v) = pdiff.get("drag") {
-                if let Some(off) = serde_json::from_value::<Option<crate::geom::OffsetInput>>(drag_v.clone()).map_err(|e| crate::error::SemioError::invalid(e.to_string()))? {
-                    let du = off.u;
-                    let dv = off.v;
-                    let pos_slot = piece.position.read().await.clone();
-                    if let Some(pos) = pos_slot {
-                        let u = *pos.center.u.read().await + du;
-                        let v = *pos.center.v.read().await + dv;
-                        *pos.center.u.write().await = u;
-                        *pos.center.v.write().await = v;
-                    } else {
-                        let n = GeomPosition::from_position_input(crate::geom::PositionInput::default());
-                        *n.center.u.write().await = du;
-                        *n.center.v.write().await = dv;
-                        *piece.position.write().await = Some(n);
-                    }
-                    return Ok(());
-                }
-            }
-            if let Some(pose_v) = pdiff.get("pose") {
-                if let Some(position) = serde_json::from_value::<Option<crate::geom::PositionInput>>(pose_v.clone()).map_err(|e| crate::error::SemioError::invalid(e.to_string()))? {
-                    let n = GeomPosition::from_position_input(position);
+            if let Some(off) = pdiff.drag {
+                let du = off.u;
+                let dv = off.v;
+                let pos_slot = piece.position.read().await.clone();
+                if let Some(pos) = pos_slot {
+                    let u = *pos.center.u.read().await + du;
+                    let v = *pos.center.v.read().await + dv;
+                    *pos.center.u.write().await = u;
+                    *pos.center.v.write().await = v;
+                } else {
+                    let n = GeomPosition::from_position_input(crate::geom::PositionInput::default());
+                    *n.center.u.write().await = du;
+                    *n.center.v.write().await = dv;
                     *piece.position.write().await = Some(n);
-                    return Ok(());
                 }
+                return Ok(());
             }
-            if let Some(n) = pdiff.get("name").and_then(|x| x.as_str()) {
-                piece.set_name(Some(n.to_string())).await;
+            if let Some(position) = pdiff.pose {
+                let n = GeomPosition::from_position_input(position);
+                *piece.position.write().await = Some(n);
+                return Ok(());
             }
-            if pdiff.get("description").is_some() {
-                let s = pdiff.get("description").and_then(|x| x.as_str()).map(|s| s.to_string());
-                piece.set_description(s).await;
+            if let Some(n) = &pdiff.name {
+                piece.set_name(Some(n.clone())).await;
+            }
+            if pdiff.description.is_some() {
+                piece.set_description(pdiff.description.clone()).await;
             }
             Ok(())
         }
@@ -3464,21 +3428,7 @@ pub mod kit {
                 }
             }
             for row in &t.added {
-                let owner_id: Id = match row.get("ownerId").and_then(|x| x.as_str()).map(Id::from) {
-                    Some(id) => id,
-                    None => self.workspace_kit_id().await,
-                };
-                let tag_id: Id = serde_json::from_value(row.get("id").cloned().ok_or_else(|| crate::error::SemioError::invalid("tag added.id"))?).map_err(|e| crate::error::SemioError::invalid(e.to_string()))?;
-                let attribute_ids: Vec<Id> = serde_json::from_value(row.get("attributeIds").cloned().unwrap_or(serde_json::json!([]))).map_err(|e| crate::error::SemioError::invalid(e.to_string()))?;
-                let tag_input: crate::meta::TagInput = serde_json::from_value(serde_json::json!({
-                    "name": row.get("name"),
-                    "description": row.get("description"),
-                    "icon": row.get("icon"),
-                    "order": row.get("order"),
-                    "attributes": row.get("attributes"),
-                }))
-                .map_err(|e| crate::error::SemioError::invalid(e.to_string()))?;
-                self.apply_create_tag_scoped(&owner_id, &tag_id, &attribute_ids, tag_input).await?;
+                self.apply_create_tag_scoped(&row.owner_id, &row.id, &row.attribute_ids, row.tag.clone()).await?;
             }
             Ok(())
         }
@@ -3500,21 +3450,7 @@ pub mod kit {
                 }
             }
             for row in &c.added {
-                let owner_id: Id = match row.get("ownerId").and_then(|x| x.as_str()).map(Id::from) {
-                    Some(id) => id,
-                    None => self.workspace_kit_id().await,
-                };
-                let concept_id: Id = serde_json::from_value(row.get("id").cloned().ok_or_else(|| crate::error::SemioError::invalid("concept added.id"))?).map_err(|e| crate::error::SemioError::invalid(e.to_string()))?;
-                let attribute_ids: Vec<Id> = serde_json::from_value(row.get("attributeIds").cloned().unwrap_or(serde_json::json!([]))).map_err(|e| crate::error::SemioError::invalid(e.to_string()))?;
-                let input: crate::meta::ConceptInput = serde_json::from_value(serde_json::json!({
-                    "name": row.get("name"),
-                    "description": row.get("description"),
-                    "icon": row.get("icon"),
-                    "order": row.get("order"),
-                    "attributes": row.get("attributes"),
-                }))
-                .map_err(|e| crate::error::SemioError::invalid(e.to_string()))?;
-                self.apply_create_concept_scoped(&owner_id, &concept_id, &attribute_ids, input).await?;
+                self.apply_create_concept_scoped(&row.owner_id, &row.id, &row.attribute_ids, row.concept.clone()).await?;
             }
             Ok(())
         }
@@ -3545,24 +3481,7 @@ pub mod kit {
                 }
             }
             for row in &q.added {
-                let owner_id: Id = match row.get("ownerId").and_then(|x| x.as_str()).map(Id::from) {
-                    Some(id) => id,
-                    None => self.workspace_kit_id().await,
-                };
-                let quality_id: Id = serde_json::from_value(row.get("id").cloned().ok_or_else(|| crate::error::SemioError::invalid("quality added.id"))?).map_err(|e| crate::error::SemioError::invalid(e.to_string()))?;
-                let attribute_ids: Vec<Id> = serde_json::from_value(row.get("attributeIds").cloned().unwrap_or(serde_json::json!([]))).map_err(|e| crate::error::SemioError::invalid(e.to_string()))?;
-                let benchmark_ids: Vec<Id> = serde_json::from_value(row.get("benchmarkIds").cloned().unwrap_or(serde_json::json!([]))).map_err(|e| crate::error::SemioError::invalid(e.to_string()))?;
-                let input: crate::meta::QualityInput = serde_json::from_value(serde_json::json!({
-                    "key": row.get("key").cloned().unwrap_or(serde_json::json!("")),
-                    "value": row.get("value"),
-                    "unit": row.get("unit"),
-                    "definition": row.get("definition"),
-                    "description": row.get("description"),
-                    "icon": row.get("icon"),
-                    "attributes": row.get("attributes"),
-                }))
-                .map_err(|e| crate::error::SemioError::invalid(e.to_string()))?;
-                self.apply_create_quality_scoped(&owner_id, &quality_id, &attribute_ids, &benchmark_ids, input).await?;
+                self.apply_create_quality_scoped(&row.owner_id, &row.id, &row.attribute_ids, &row.benchmark_ids, row.quality.clone()).await?;
             }
             Ok(())
         }
@@ -4076,34 +3995,34 @@ pub mod kit {
             crate::gql_relay::TypeConnection::from_types(self.types.read().await.clone()).await
         }
         pub async fn files(&self) -> crate::gql_relay::FileConnection {
-            crate::gql_relay::FileConnection::from_rows(self.files.read().await.clone())
+            crate::gql_relay::FileConnection::from_entities(self.files.read().await.clone())
         }
         pub async fn folders(&self) -> crate::gql_relay::FolderConnection {
-            crate::gql_relay::FolderConnection::from_rows(self.folders.read().await.clone())
+            crate::gql_relay::FolderConnection::from_entities(self.folders.read().await.clone())
         }
         pub async fn families(&self) -> crate::gql_relay::FamilyConnection {
-            crate::gql_relay::FamilyConnection::from_rows(Vec::new())
+            crate::gql_relay::FamilyConnection::from_entities(Vec::new())
         }
         pub async fn authors(&self) -> crate::gql_relay::AuthorConnection {
-            crate::gql_relay::AuthorConnection::from_rows(self.authors.read().await.clone())
+            crate::gql_relay::AuthorConnection::from_entities(self.authors.read().await.clone())
         }
         pub async fn concepts(&self) -> crate::gql_relay::ConceptConnection {
-            crate::gql_relay::ConceptConnection::from_rows(self.concepts.read().await.clone()).await
+            crate::gql_relay::ConceptConnection::from_entities(self.concepts.read().await.clone()).await
         }
         pub async fn tags(&self) -> crate::gql_relay::TagConnection {
-            crate::gql_relay::TagConnection::from_rows(self.tags.read().await.clone()).await
+            crate::gql_relay::TagConnection::from_entities(self.tags.read().await.clone()).await
         }
         pub async fn qualities(&self) -> crate::gql_relay::QualityConnection {
-            crate::gql_relay::QualityConnection::from_rows(self.qualities.read().await.clone()).await
+            crate::gql_relay::QualityConnection::from_entities(self.qualities.read().await.clone()).await
         }
         pub async fn props(&self) -> crate::gql_relay::PropConnection {
-            crate::gql_relay::PropConnection::from_rows(self.props.read().await.clone())
+            crate::gql_relay::PropConnection::from_entities(self.props.read().await.clone())
         }
         pub async fn attributes(&self) -> crate::gql_relay::AttributeConnection {
-            crate::gql_relay::AttributeConnection::from_rows(self.attributes.read().await.clone())
+            crate::gql_relay::AttributeConnection::from_entities(self.attributes.read().await.clone())
         }
         pub async fn stats(&self) -> crate::gql_relay::StatConnection {
-            crate::gql_relay::StatConnection::from_rows(self.stats.read().await.clone())
+            crate::gql_relay::StatConnection::from_entities(self.stats.read().await.clone())
         }
 
         pub async fn file(&self, id: Id) -> Option<File> {
@@ -4211,7 +4130,7 @@ impl crate::meta::Tag {
         *self.order.read().await
     }
     pub async fn attributes(&self) -> crate::gql_relay::AttributeConnection {
-        crate::gql_relay::AttributeConnection::from_rows(self.attributes.read().await.clone())
+        crate::gql_relay::AttributeConnection::from_entities(self.attributes.read().await.clone())
     }
 
     pub async fn attribute(&self, id: crate::id::Id) -> Option<crate::meta::Attribute> {
@@ -4247,7 +4166,7 @@ impl crate::meta::Concept {
         *self.order.read().await
     }
     pub async fn attributes(&self) -> crate::gql_relay::AttributeConnection {
-        crate::gql_relay::AttributeConnection::from_rows(self.attributes.read().await.clone())
+        crate::gql_relay::AttributeConnection::from_entities(self.attributes.read().await.clone())
     }
 
     pub async fn attribute(&self, id: crate::id::Id) -> Option<crate::meta::Attribute> {
@@ -4292,10 +4211,10 @@ impl crate::meta::Quality {
         self.icon.read().await.clone()
     }
     pub async fn benchmarks(&self) -> crate::gql_relay::BenchmarkConnection {
-        crate::gql_relay::BenchmarkConnection::from_rows(self.benchmarks.read().await.clone())
+        crate::gql_relay::BenchmarkConnection::from_entities(self.benchmarks.read().await.clone())
     }
     pub async fn attributes(&self) -> crate::gql_relay::AttributeConnection {
-        crate::gql_relay::AttributeConnection::from_rows(self.attributes.read().await.clone())
+        crate::gql_relay::AttributeConnection::from_entities(self.attributes.read().await.clone())
     }
 
     pub async fn attribute(&self, id: crate::id::Id) -> Option<crate::meta::Attribute> {
@@ -4338,7 +4257,7 @@ pub mod vcs {
         pub backwards: RwLock<Vec<operation::KitOperation>>,
     }
 
-    /// 🔗 Weak owner lane matching SDL `Alternative | Checkpoint` for persisted [`Change`] rows.
+    /// 🔗 Weak owner lane matching SDL `Alternative | Checkpoint` for persisted [`Change`] entities.
     #[derive(Clone)]
     pub enum ChangeOwnerRef {
         Alternative(Weak<Alternative>),
@@ -4497,7 +4416,7 @@ pub mod vcs {
         }
     }
 
-    /// @emoji 🧾 Flatten write-session records into target-schema `ChangeConnection` rows for a version lane.
+    /// @emoji 🧾 Flatten write-session records into target-schema `ChangeConnection` entities for a version lane.
     async fn changes_from_edits(edits: Vec<Arc<Edit>>) -> Vec<Arc<Change>> {
         let mut out = Vec::new();
         for ed in edits {
@@ -4523,10 +4442,10 @@ pub mod vcs {
             cp.map(EditOwnerUnion::Checkpoint)
         }
         pub async fn forwards(&self) -> crate::gql_relay::OperationConnection {
-            crate::gql_relay::OperationConnection::from_interface_rows(self.forward_interface_operations.read().await.clone())
+            crate::gql_relay::OperationConnection::from_interface_entities(self.forward_interface_operations.read().await.clone())
         }
         pub async fn backwards(&self) -> crate::gql_relay::OperationConnection {
-            crate::gql_relay::OperationConnection::from_interface_rows(self.backward_interface_operations.read().await.clone())
+            crate::gql_relay::OperationConnection::from_interface_entities(self.backward_interface_operations.read().await.clone())
         }
         #[graphql(name = "sequenceNumber")]
         pub async fn sequence_number(&self) -> i32 {
@@ -4732,7 +4651,7 @@ pub mod vcs {
             self.timestamp.read().await.clone()
         }
         pub async fn authors(&self) -> crate::gql_relay::AuthorConnection {
-            crate::gql_relay::AuthorConnection::from_rows(self.authors.read().await.clone())
+            crate::gql_relay::AuthorConnection::from_entities(self.authors.read().await.clone())
         }
 
         /// @emoji 🔗 SDL `Checkpoint.parent` — prior checkpoint in the spine (none for the seed checkpoint).
@@ -5854,11 +5773,11 @@ pub mod operation {
     //! event bus broadcasts shared references, never deep-copied entity data.
     use std::sync::{Arc, Weak};
 
-    use async_graphql::{InputObject, Interface, Object, OneofObject, Union};
-    use serde::{Deserialize, Serialize};
+    use async_graphql::{Interface, Object, Union};
 
     use crate::error::SemioError;
     use crate::geom::{OffsetInput, PositionInput};
+    use crate::hash::h;
     use crate::id::Id;
     use crate::interface::{empty_owned_entity_connection, OwnedEntityConnection, OwnerEntity};
     use crate::meta::{ConceptInput, QualityInput, TagInput};
@@ -5866,140 +5785,197 @@ pub mod operation {
 
     //#region 🧭 normalized operation contract
     //#region 🔖 canonical_kit_diff
-    /// @emoji 📦 `Id` reference wrapper matching `{ "id": "…" }` rows in kit diff JSON.
-    #[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
+    /// @emoji 📦 `Id` reference wrapper for kit diff collection entities.
+    #[derive(Clone, Debug, PartialEq, Eq)]
     pub struct IdRef {
         pub id: Id,
     }
 
     /// @emoji 📦 Sparse `tags` triple (`metabolism.kit.diff.semio.json`).
-    #[derive(Clone, Debug, Default, Serialize, Deserialize, PartialEq)]
-    #[serde(rename_all = "camelCase", default)]
+    #[derive(Clone, Debug, Default, PartialEq)]
     pub struct TagsCollectionDiff {
         pub removed: Vec<IdRef>,
         pub modified: Vec<TagModifiedRow>,
-        pub added: Vec<serde_json::Value>,
+        pub added: Vec<TagAddedRow>,
     }
 
-    #[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
-    #[serde(rename_all = "camelCase")]
+    #[derive(Clone, Debug, PartialEq)]
     pub struct TagModifiedRow {
         pub tag: IdRef,
         pub diff: TagPatch,
     }
 
-    #[derive(Clone, Debug, Default, Serialize, Deserialize, PartialEq)]
-    #[serde(rename_all = "camelCase", default)]
+    #[derive(Clone, Debug, Default, PartialEq)]
     pub struct TagPatch {
-        #[serde(skip_serializing_if = "Option::is_none")]
         pub name: Option<String>,
-        #[serde(skip_serializing_if = "Option::is_none")]
         pub description: Option<String>,
-        #[serde(skip_serializing_if = "Option::is_none")]
         pub icon: Option<String>,
     }
 
+    /// @emoji 📦 Row for `tags.added[]` (owner + ids + GraphQL [`TagInput`]).
+    #[derive(Clone, Debug, PartialEq)]
+    pub struct TagAddedRow {
+        pub owner_id: Id,
+        pub id: Id,
+        pub attribute_ids: Vec<Id>,
+        pub tag: TagInput,
+    }
+
     /// @emoji 📦 Sparse `concepts` triple.
-    #[derive(Clone, Debug, Default, Serialize, Deserialize, PartialEq)]
-    #[serde(rename_all = "camelCase", default)]
+    #[derive(Clone, Debug, Default, PartialEq)]
     pub struct ConceptsCollectionDiff {
         pub removed: Vec<IdRef>,
         pub modified: Vec<ConceptModifiedRow>,
-        pub added: Vec<serde_json::Value>,
+        pub added: Vec<ConceptAddedRow>,
     }
 
-    #[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
-    #[serde(rename_all = "camelCase")]
+    #[derive(Clone, Debug, PartialEq)]
     pub struct ConceptModifiedRow {
         pub concept: IdRef,
         pub diff: ConceptPatch,
     }
 
-    #[derive(Clone, Debug, Default, Serialize, Deserialize, PartialEq)]
-    #[serde(rename_all = "camelCase", default)]
+    #[derive(Clone, Debug, Default, PartialEq)]
     pub struct ConceptPatch {
-        #[serde(skip_serializing_if = "Option::is_none")]
         pub name: Option<String>,
-        #[serde(skip_serializing_if = "Option::is_none")]
         pub description: Option<String>,
-        #[serde(skip_serializing_if = "Option::is_none")]
         pub icon: Option<String>,
     }
 
+    #[derive(Clone, Debug, PartialEq)]
+    pub struct ConceptAddedRow {
+        pub owner_id: Id,
+        pub id: Id,
+        pub attribute_ids: Vec<Id>,
+        pub concept: ConceptInput,
+    }
+
     /// @emoji 📦 Sparse `qualities` triple (kit-level).
-    #[derive(Clone, Debug, Default, Serialize, Deserialize, PartialEq)]
-    #[serde(rename_all = "camelCase", default)]
+    #[derive(Clone, Debug, Default, PartialEq)]
     pub struct QualitiesCollectionDiff {
         pub removed: Vec<IdRef>,
         pub modified: Vec<QualityModifiedRow>,
-        pub added: Vec<serde_json::Value>,
+        pub added: Vec<QualityAddedRow>,
     }
 
-    #[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
-    #[serde(rename_all = "camelCase")]
+    #[derive(Clone, Debug, PartialEq)]
     pub struct QualityModifiedRow {
         pub quality: IdRef,
         pub diff: QualityPatch,
     }
 
-    #[derive(Clone, Debug, Default, Serialize, Deserialize, PartialEq)]
-    #[serde(rename_all = "camelCase", default)]
+    #[derive(Clone, Debug, Default, PartialEq)]
     pub struct QualityPatch {
-        #[serde(skip_serializing_if = "Option::is_none")]
         pub description: Option<String>,
-        #[serde(skip_serializing_if = "Option::is_none")]
         pub icon: Option<String>,
-        #[serde(skip_serializing_if = "Option::is_none")]
         pub key: Option<String>,
-        #[serde(skip_serializing_if = "Option::is_none")]
         pub value: Option<String>,
-        #[serde(skip_serializing_if = "Option::is_none")]
         pub unit: Option<String>,
-        #[serde(skip_serializing_if = "Option::is_none")]
         pub definition: Option<String>,
     }
 
+    #[derive(Clone, Debug, PartialEq)]
+    pub struct QualityAddedRow {
+        pub owner_id: Id,
+        pub id: Id,
+        pub attribute_ids: Vec<Id>,
+        pub benchmark_ids: Vec<Id>,
+        pub quality: QualityInput,
+    }
+
     //#region 🔖canonical_kit_types_designs_mod
-    /// @emoji 📦 Sparse `types` triple; `modified[].diff` stays JSON until nested representation/connector apply is typed (metabolism fixture round-trip).
-    #[derive(Clone, Debug, Default, Serialize, Deserialize, PartialEq)]
-    #[serde(rename_all = "camelCase", default)]
+    /// @emoji 📦 Sparse `types` triple.
+    #[derive(Clone, Debug, Default, PartialEq)]
     pub struct TypesCollectionDiff {
         pub removed: Vec<IdRef>,
         pub modified: Vec<TypeModifiedRow>,
-        pub added: Vec<serde_json::Value>,
+        pub added: Vec<TypeScalarDiff>,
     }
 
-    /// @emoji 📦 One `types.modified[]` row: `{ "type": { "id" }, "diff": { … } }`.
-    #[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
-    #[serde(rename_all = "camelCase")]
+    /// @emoji 📦 One `types.modified[]` row.
+    #[derive(Clone, Debug, PartialEq)]
     pub struct TypeModifiedRow {
-        #[serde(rename = "type")]
         pub type_ref: IdRef,
-        pub diff: serde_json::Value,
+        pub diff: TypeScalarDiff,
     }
 
-    /// @emoji 📦 Sparse `designs` triple; `modified[].diff` stays JSON until connections/attributes apply is typed.
-    #[derive(Clone, Debug, Default, Serialize, Deserialize, PartialEq)]
-    #[serde(rename_all = "camelCase", default)]
+    #[derive(Clone, Debug, Default, PartialEq)]
+    pub struct TypeScalarDiff {
+        pub name: Option<String>,
+        pub description: Option<String>,
+        pub icon: Option<String>,
+        pub image: Option<String>,
+        pub unit: Option<String>,
+    }
+
+    #[derive(Clone, Debug, Default, PartialEq)]
+    pub struct PiecesCollectionDiff {
+        pub removed: Vec<IdRef>,
+        pub added: Vec<PieceAddedRow>,
+        pub modified: Vec<PieceModifiedRow>,
+    }
+
+    #[derive(Clone, Debug, PartialEq)]
+    pub struct PieceAddedRow {
+        pub id: Id,
+        pub blueprint_id: Id,
+        pub name: Option<String>,
+        pub description: Option<String>,
+        pub scale: f64,
+        pub pose: PositionInput,
+    }
+
+    #[derive(Clone, Debug, PartialEq)]
+    pub struct PieceModifiedRow {
+        pub piece: IdRef,
+        pub diff: PiecePatch,
+    }
+
+    #[derive(Clone, Debug, Default, PartialEq)]
+    pub struct PiecePatch {
+        pub fix_piece: bool,
+        pub drag: Option<OffsetInput>,
+        pub pose: Option<PositionInput>,
+        pub name: Option<String>,
+        pub description: Option<String>,
+    }
+
+    #[derive(Clone, Debug, Default, PartialEq)]
+    pub struct DesignScalarDiff {
+        pub name: Option<String>,
+        pub description: Option<String>,
+        pub icon: Option<String>,
+        pub image: Option<String>,
+    }
+
+    #[derive(Clone, Debug, Default, PartialEq)]
+    pub struct DesignDiff {
+        pub scalars: DesignScalarDiff,
+        pub pieces: Option<PiecesCollectionDiff>,
+    }
+
+    /// @emoji 📦 Sparse `designs` triple.
+    #[derive(Clone, Debug, Default, PartialEq)]
     pub struct DesignsCollectionDiff {
         pub removed: Vec<IdRef>,
         pub modified: Vec<DesignModifiedRow>,
-        pub added: Vec<serde_json::Value>,
+        pub added: Vec<DesignDiff>,
     }
 
-    /// @emoji 📦 One `designs.modified[]` row: `{ "design": { "id" }, "diff": { … } }`.
-    #[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
-    #[serde(rename_all = "camelCase")]
+    /// @emoji 📦 One `designs.modified[]` row.
+    #[derive(Clone, Debug, PartialEq)]
     pub struct DesignModifiedRow {
         pub design: IdRef,
-        pub diff: serde_json::Value,
+        pub diff: DesignDiff,
     }
 
     //#endregion 🔖canonical_kit_types_designs_mod
 
-    /// @emoji 📦 Canonical sparse kit diff (camelCase) aligned with [`semio/assets/semio/metabolism.kit.diff.semio.json`]; `types` / `designs` use typed envelopes with JSON-only `modified[].diff` leaves; `files` / `folders` / `authors` stay raw JSON until apply exists.
-    #[derive(Clone, Debug, Default, Serialize, Deserialize, PartialEq)]
-    #[serde(rename_all = "camelCase", default)]
+    /// @emoji 📦 `files` / `folders` / `authors`: `None` omitted; `Some(false)` trivial; `Some(true)` means unsupported non-empty subtree.
+    pub type KitAuxSubtree = Option<bool>;
+
+    /// @emoji 📦 Canonical sparse kit diff aligned with metabolism fixtures (typed collections; aux subtrees are tri-state placeholders).
+    #[derive(Clone, Debug, Default, PartialEq)]
     pub struct CanonicalKitDiff {
         pub name: Option<String>,
         pub version: Option<String>,
@@ -6010,27 +5986,18 @@ pub mod operation {
         pub homepage: Option<String>,
         pub license: Option<String>,
         pub preview: Option<String>,
-        #[serde(skip_serializing_if = "Option::is_none")]
         pub types: Option<TypesCollectionDiff>,
-        #[serde(skip_serializing_if = "Option::is_none")]
         pub designs: Option<DesignsCollectionDiff>,
-        #[serde(skip_serializing_if = "Option::is_none")]
         pub tags: Option<TagsCollectionDiff>,
-        #[serde(skip_serializing_if = "Option::is_none")]
         pub concepts: Option<ConceptsCollectionDiff>,
-        #[serde(skip_serializing_if = "Option::is_none")]
         pub qualities: Option<QualitiesCollectionDiff>,
-        #[serde(skip_serializing_if = "Option::is_none")]
-        pub files: Option<serde_json::Value>,
-        #[serde(skip_serializing_if = "Option::is_none")]
-        pub folders: Option<serde_json::Value>,
-        #[serde(skip_serializing_if = "Option::is_none")]
-        pub authors: Option<serde_json::Value>,
+        pub files: KitAuxSubtree,
+        pub folders: KitAuxSubtree,
+        pub authors: KitAuxSubtree,
     }
 
     /// @emoji 📦 Persisted / replayed kit transition: canonical [`CanonicalKitDiff`] only (no `__ops` envelope).
-    #[derive(Clone, Debug, Default, Serialize, Deserialize, PartialEq)]
-    #[serde(transparent)]
+    #[derive(Clone, Debug, Default, PartialEq)]
     pub struct KitDiff(pub CanonicalKitDiff);
 
     impl KitDiff {
@@ -6066,46 +6033,46 @@ pub mod operation {
     }
     //#endregion 🔖 canonical_kit_diff
 
-    /// @emoji 🚫 Empty payload marker for scope-only operations (serde shape).
-    #[derive(Clone, Debug, Default, Serialize, Deserialize)]
+    /// @emoji 🚫 Empty payload marker for scope-only operations.
+    #[derive(Clone, Debug, Default, PartialEq)]
     pub struct NoInput;
 
     /// @emoji 🪪 Kit root scope; the kit id is implicit from the target graph line.
-    #[derive(Clone, Debug, Default, Serialize, Deserialize)]
+    #[derive(Clone, Debug, Default, PartialEq)]
     pub struct RenameKitScope;
 
     /// @emoji 🪪 Single entity scope.
-    #[derive(Clone, Debug, Default, Serialize, Deserialize)]
+    #[derive(Clone, Debug, Default, PartialEq)]
     pub struct EntityScope {
         pub entity_id: Id,
     }
 
     /// @emoji 🪪 Single tag scope.
-    #[derive(Clone, Debug, Default, Serialize, Deserialize)]
+    #[derive(Clone, Debug, Default, PartialEq)]
     pub struct TagScope {
         pub tag_id: Id,
     }
 
     /// @emoji 🪪 Multi-tag scope.
-    #[derive(Clone, Debug, Default, Serialize, Deserialize)]
+    #[derive(Clone, Debug, Default, PartialEq)]
     pub struct TagsScope {
         pub tag_ids: Vec<Id>,
     }
 
     /// @emoji 🪪 Single concept scope.
-    #[derive(Clone, Debug, Default, Serialize, Deserialize)]
+    #[derive(Clone, Debug, Default, PartialEq)]
     pub struct ConceptScope {
         pub concept_id: Id,
     }
 
     /// @emoji 🪪 Single quality scope.
-    #[derive(Clone, Debug, Default, Serialize, Deserialize)]
+    #[derive(Clone, Debug, Default, PartialEq)]
     pub struct QualityScope {
         pub quality_id: Id,
     }
 
     /// @emoji 🪪 Create-tag scope with owner id plus all pre-minted ids.
-    #[derive(Clone, Debug, Default, Serialize, Deserialize)]
+    #[derive(Clone, Debug, Default, PartialEq)]
     pub struct CreateTagScope {
         pub owner_id: Id,
         pub tag_id: Id,
@@ -6113,7 +6080,7 @@ pub mod operation {
     }
 
     /// @emoji 🪪 Batch create-tag scope with owner id plus all pre-minted ids.
-    #[derive(Clone, Debug, Default, Serialize, Deserialize)]
+    #[derive(Clone, Debug, Default, PartialEq)]
     pub struct CreateTagsScope {
         pub owner_id: Id,
         pub tag_ids: Vec<Id>,
@@ -6121,7 +6088,7 @@ pub mod operation {
     }
 
     /// @emoji 🪪 Create-concept scope with owner id plus all pre-minted ids.
-    #[derive(Clone, Debug, Default, Serialize, Deserialize)]
+    #[derive(Clone, Debug, Default, PartialEq)]
     pub struct CreateConceptScope {
         pub owner_id: Id,
         pub concept_id: Id,
@@ -6129,7 +6096,7 @@ pub mod operation {
     }
 
     /// @emoji 🪪 Create-quality scope with owner id plus all pre-minted ids.
-    #[derive(Clone, Debug, Default, Serialize, Deserialize)]
+    #[derive(Clone, Debug, Default, PartialEq)]
     pub struct CreateQualityScope {
         pub owner_id: Id,
         pub quality_id: Id,
@@ -6138,7 +6105,7 @@ pub mod operation {
     }
 
     /// @emoji 🪪 Create-piece scope with the parent design id and the pre-minted piece id.
-    #[derive(Clone, Debug, Default, Serialize, Deserialize)]
+    #[derive(Clone, Debug, Default, PartialEq)]
     pub struct CreateFixedPieceScope {
         pub design_id: Id,
         pub piece_id: Id,
@@ -6147,57 +6114,57 @@ pub mod operation {
     }
 
     /// @emoji 🪪 Single piece-in-design scope.
-    #[derive(Clone, Debug, Default, Serialize, Deserialize)]
+    #[derive(Clone, Debug, Default, PartialEq)]
     pub struct PieceInDesignScope {
         pub design_id: Id,
         pub piece_id: Id,
     }
 
     /// @emoji 🪪 Multi-piece-in-design scope.
-    #[derive(Clone, Debug, Default, Serialize, Deserialize)]
+    #[derive(Clone, Debug, Default, PartialEq)]
     pub struct PiecesInDesignScope {
         pub design_id: Id,
         pub piece_ids: Vec<Id>,
     }
 
     /// @emoji ✏️ Rename-kit payload.
-    #[derive(Clone, Debug, Default, Serialize, Deserialize)]
+    #[derive(Clone, Debug, Default, PartialEq)]
     pub struct RenameKitInput {
         pub name: String,
     }
 
     /// @emoji ✏️ Rename-tag payload.
-    #[derive(Clone, Debug, Default, Serialize, Deserialize)]
+    #[derive(Clone, Debug, Default, PartialEq)]
     pub struct RenameTagInput {
         pub name: String,
     }
 
     /// @emoji ✏️ Generic description payload.
-    #[derive(Clone, Debug, Default, Serialize, Deserialize)]
+    #[derive(Clone, Debug, Default, PartialEq)]
     pub struct ChangeDescriptionInput {
         pub description: Option<String>,
     }
 
     /// @emoji ✏️ Generic icon payload.
-    #[derive(Clone, Debug, Default, Serialize, Deserialize)]
+    #[derive(Clone, Debug, Default, PartialEq)]
     pub struct ChangeIconInput {
         pub icon: Option<String>,
     }
 
     /// @emoji ✏️ Generic image payload.
-    #[derive(Clone, Debug, Default, Serialize, Deserialize)]
+    #[derive(Clone, Debug, Default, PartialEq)]
     pub struct ChangeImageInput {
         pub image: Option<String>,
     }
 
     /// @emoji ✏️ Batch tag payload.
-    #[derive(Clone, Debug, Default, Serialize, Deserialize)]
+    #[derive(Clone, Debug, Default, PartialEq)]
     pub struct CreateTagsInput {
         pub tags: Vec<TagInput>,
     }
 
     /// @emoji ✏️ Fixed-piece creation payload.
-    #[derive(Clone, Debug, Default, Serialize, Deserialize)]
+    #[derive(Clone, Debug, Default, PartialEq)]
     pub struct CreateFixedPieceInput {
         pub position: PositionInput,
         pub name: Option<String>,
@@ -6205,13 +6172,13 @@ pub mod operation {
     }
 
     /// @emoji ✏️ Piece drag payload.
-    #[derive(Clone, Debug, Default, Serialize, Deserialize)]
+    #[derive(Clone, Debug, Default, PartialEq)]
     pub struct DragPieceInput {
         pub offset: OffsetInput,
     }
 
     /// @emoji 🧭 Shared scope payload: every distinct id-shape used across [`KitOperation`] commands.
-    #[derive(Clone, Debug, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq)]
     pub enum Scope {
         Kit,
         Entity { entity_id: Id },
@@ -6229,7 +6196,7 @@ pub mod operation {
     }
 
     /// @emoji 🧭 Shared non-id input payload reused across commands with the same shape.
-    #[derive(Clone, Debug, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq)]
     pub enum Input {
         None,
         Name { name: String },
@@ -6245,7 +6212,7 @@ pub mod operation {
     }
 
     /// @emoji 🧩 Normalized  operation surface: every variant is `{ scope: Scope, input: Input }`.
-    #[derive(Clone, Debug, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq)]
     pub enum KitOperation {
         RenameKit { scope: Scope, input: Input },
         ChangeDescription { scope: Scope, input: Input },
@@ -6291,16 +6258,49 @@ pub mod operation {
             }
         }
 
-        pub fn payload_json(&self) -> Result<String, SemioError> {
-            serde_json::to_string(self).map_err(|e| SemioError::invalid(e.to_string()))
-        }
-
-        pub fn from_kind_and_payload(kind: &str, payload_json: &str) -> Result<Self, SemioError> {
-            let operation: KitOperation = serde_json::from_str(payload_json).map_err(|e| SemioError::invalid(e.to_string()))?;
-            if operation.kind() != kind {
-                return Err(SemioError::invalid(format!("operation kind mismatch: expected `{kind}`, got `{}`", operation.kind())));
+        /// @emoji 🔢 Stable digest for deterministic diff ids (no JSON serde).
+        pub fn stable_payload_digest(&self) -> String {
+            fn pos_fp(p: &PositionInput) -> String {
+                format!(
+                    "c:{}:{}|p:o:{}:{}:{}|xa:{}:{}:{}|ya:{}:{}:{}",
+                    p.center.u, p.center.v, p.plane.origin.x, p.plane.origin.y, p.plane.origin.z, p.plane.x_axis.x, p.plane.x_axis.y, p.plane.x_axis.z, p.plane.y_axis.x, p.plane.y_axis.y, p.plane.y_axis.z,
+                )
             }
-            Ok(operation)
+            match self {
+                KitOperation::CreateFixedPiece { scope, input } => {
+                    let (d, p, b, ac) = match scope {
+                        Scope::CreateFixedPiece { design_id, piece_id, blueprint_id, attribute_ids } => (design_id.as_str(), piece_id.as_str(), blueprint_id.as_str(), attribute_ids.len()),
+                        _ => ("", "", "", 0usize),
+                    };
+                    let Input::FixedPiece { position, name, description } = input else {
+                        return h(&[self.kind(), "bad-input"]);
+                    };
+                    h(&[self.kind(), d, p, b, &ac.to_string(), &pos_fp(position), name.as_deref().unwrap_or(""), description.as_deref().unwrap_or("")])
+                }
+                KitOperation::RenameKit { input, .. } => match input {
+                    Input::Name { name } => h(&[self.kind(), name.as_str()]),
+                    _ => h(&[self.kind(), "bad-input"]),
+                },
+                KitOperation::DragPieceInDesign { scope, input } | KitOperation::DragPiecesInDesign { scope, input } => {
+                    let (d, pid) = match scope {
+                        Scope::PieceInDesign { design_id, piece_id } => (design_id.as_str(), piece_id.as_str()),
+                        Scope::PiecesInDesign { design_id, piece_ids } => {
+                            let mut s = piece_ids.iter().map(|x| x.as_str().to_string()).collect::<Vec<_>>();
+                            s.sort();
+                            return match input {
+                                Input::Offset { offset } => h(&[self.kind(), design_id.as_str(), &s.join(","), &format!("{}:{}", offset.u, offset.v)]),
+                                _ => h(&[self.kind(), "bad-input"]),
+                            };
+                        }
+                        _ => ("", ""),
+                    };
+                    match input {
+                        Input::Offset { offset } => h(&[self.kind(), d, pid, &format!("{}:{}", offset.u, offset.v)]),
+                        _ => h(&[self.kind(), "bad-input"]),
+                    }
+                }
+                _ => h(&[self.kind(), "minimal"]),
+            }
         }
 
         /// Pure: read pre-state and produce a structural diff without mutating the kit.
@@ -6356,13 +6356,16 @@ pub mod operation {
                     }
                     if kit.type_by_external_id(entity_id).await.is_some() {
                         return Ok(KitDiff(CanonicalKitDiff {
-                            types: Some(TypesCollectionDiff { modified: vec![TypeModifiedRow { type_ref: IdRef { id: entity_id.clone() }, diff: serde_json::json!({ "description": description }) }], ..Default::default() }),
+                            types: Some(TypesCollectionDiff { modified: vec![TypeModifiedRow { type_ref: IdRef { id: entity_id.clone() }, diff: TypeScalarDiff { description: description.clone(), ..Default::default() } }], ..Default::default() }),
                             ..Default::default()
                         }));
                     }
                     if kit.design_by_external_id(entity_id).await.is_some() {
                         return Ok(KitDiff(CanonicalKitDiff {
-                            designs: Some(DesignsCollectionDiff { modified: vec![DesignModifiedRow { design: IdRef { id: entity_id.clone() }, diff: serde_json::json!({ "description": description }) }], ..Default::default() }),
+                            designs: Some(DesignsCollectionDiff {
+                                modified: vec![DesignModifiedRow { design: IdRef { id: entity_id.clone() }, diff: DesignDiff { scalars: DesignScalarDiff { description: description.clone(), ..Default::default() }, pieces: None } }],
+                                ..Default::default()
+                            }),
                             ..Default::default()
                         }));
                     }
@@ -6400,13 +6403,16 @@ pub mod operation {
                     }
                     if kit.type_by_external_id(entity_id).await.is_some() {
                         return Ok(KitDiff(CanonicalKitDiff {
-                            types: Some(TypesCollectionDiff { modified: vec![TypeModifiedRow { type_ref: IdRef { id: entity_id.clone() }, diff: serde_json::json!({ "icon": icon }) }], ..Default::default() }),
+                            types: Some(TypesCollectionDiff { modified: vec![TypeModifiedRow { type_ref: IdRef { id: entity_id.clone() }, diff: TypeScalarDiff { icon: icon.clone(), ..Default::default() } }], ..Default::default() }),
                             ..Default::default()
                         }));
                     }
                     if kit.design_by_external_id(entity_id).await.is_some() {
                         return Ok(KitDiff(CanonicalKitDiff {
-                            designs: Some(DesignsCollectionDiff { modified: vec![DesignModifiedRow { design: IdRef { id: entity_id.clone() }, diff: serde_json::json!({ "icon": icon }) }], ..Default::default() }),
+                            designs: Some(DesignsCollectionDiff {
+                                modified: vec![DesignModifiedRow { design: IdRef { id: entity_id.clone() }, diff: DesignDiff { scalars: DesignScalarDiff { icon: icon.clone(), ..Default::default() }, pieces: None } }],
+                                ..Default::default()
+                            }),
                             ..Default::default()
                         }));
                     }
@@ -6426,13 +6432,16 @@ pub mod operation {
                     }
                     if kit.type_by_external_id(entity_id).await.is_some() {
                         return Ok(KitDiff(CanonicalKitDiff {
-                            types: Some(TypesCollectionDiff { modified: vec![TypeModifiedRow { type_ref: IdRef { id: entity_id.clone() }, diff: serde_json::json!({ "image": image }) }], ..Default::default() }),
+                            types: Some(TypesCollectionDiff { modified: vec![TypeModifiedRow { type_ref: IdRef { id: entity_id.clone() }, diff: TypeScalarDiff { image: image.clone(), ..Default::default() } }], ..Default::default() }),
                             ..Default::default()
                         }));
                     }
                     if kit.design_by_external_id(entity_id).await.is_some() {
                         return Ok(KitDiff(CanonicalKitDiff {
-                            designs: Some(DesignsCollectionDiff { modified: vec![DesignModifiedRow { design: IdRef { id: entity_id.clone() }, diff: serde_json::json!({ "image": image }) }], ..Default::default() }),
+                            designs: Some(DesignsCollectionDiff {
+                                modified: vec![DesignModifiedRow { design: IdRef { id: entity_id.clone() }, diff: DesignDiff { scalars: DesignScalarDiff { image: image.clone(), ..Default::default() }, pieces: None } }],
+                                ..Default::default()
+                            }),
                             ..Default::default()
                         }));
                     }
@@ -6450,13 +6459,10 @@ pub mod operation {
                         return Err(SemioError::invalid(format!("Tag already exists: {}", tag_id.as_str())));
                     }
                     validate_attribute_ids(tag.attributes.as_ref().map(|items| items.len()).unwrap_or_default(), attribute_ids)?;
-                    let mut tv = serde_json::to_value(tag).map_err(|e| SemioError::invalid(e.to_string()))?;
-                    if let serde_json::Value::Object(ref mut m) = tv {
-                        m.insert("id".to_string(), serde_json::json!(tag_id.as_str()));
-                        m.insert("ownerId".to_string(), serde_json::json!(owner_id.as_str()));
-                        m.insert("attributeIds".to_string(), serde_json::to_value(attribute_ids).map_err(|e| SemioError::invalid(e.to_string()))?);
-                    }
-                    Ok(KitDiff(CanonicalKitDiff { tags: Some(TagsCollectionDiff { added: vec![tv], ..Default::default() }), ..Default::default() }))
+                    Ok(KitDiff(CanonicalKitDiff {
+                        tags: Some(TagsCollectionDiff { added: vec![TagAddedRow { owner_id: owner_id.clone(), id: tag_id.clone(), attribute_ids: attribute_ids.clone(), tag: tag.clone() }], ..Default::default() }),
+                        ..Default::default()
+                    }))
                 }
                 KitOperation::CreateTags { scope, input } => {
                     let Scope::CreateTags { owner_id, tag_ids, attribute_ids } = scope else {
@@ -6475,13 +6481,7 @@ pub mod operation {
                             return Err(SemioError::invalid(format!("Tag already exists: {}", tag_ids[index].as_str())));
                         }
                         validate_attribute_ids(tag.attributes.as_ref().map(|items| items.len()).unwrap_or_default(), &attribute_ids[index])?;
-                        let mut tv = serde_json::to_value(tag).map_err(|e| SemioError::invalid(e.to_string()))?;
-                        if let serde_json::Value::Object(ref mut m) = tv {
-                            m.insert("id".to_string(), serde_json::json!(tag_ids[index].as_str()));
-                            m.insert("ownerId".to_string(), serde_json::json!(owner_id.as_str()));
-                            m.insert("attributeIds".to_string(), serde_json::to_value(&attribute_ids[index]).map_err(|e| SemioError::invalid(e.to_string()))?);
-                        }
-                        added.push(tv);
+                        added.push(TagAddedRow { owner_id: owner_id.clone(), id: tag_ids[index].clone(), attribute_ids: attribute_ids[index].clone(), tag: tag.clone() });
                     }
                     Ok(KitDiff(CanonicalKitDiff { tags: Some(TagsCollectionDiff { added, ..Default::default() }), ..Default::default() }))
                 }
@@ -6528,13 +6528,10 @@ pub mod operation {
                         return Err(SemioError::invalid(format!("Concept already exists: {}", concept_id.as_str())));
                     }
                     validate_attribute_ids(concept.attributes.as_ref().map(|items| items.len()).unwrap_or_default(), attribute_ids)?;
-                    let mut cv = serde_json::to_value(concept).map_err(|e| SemioError::invalid(e.to_string()))?;
-                    if let serde_json::Value::Object(ref mut m) = cv {
-                        m.insert("id".to_string(), serde_json::json!(concept_id.as_str()));
-                        m.insert("ownerId".to_string(), serde_json::json!(owner_id.as_str()));
-                        m.insert("attributeIds".to_string(), serde_json::to_value(attribute_ids).map_err(|e| SemioError::invalid(e.to_string()))?);
-                    }
-                    Ok(KitDiff(CanonicalKitDiff { concepts: Some(ConceptsCollectionDiff { added: vec![cv], ..Default::default() }), ..Default::default() }))
+                    Ok(KitDiff(CanonicalKitDiff {
+                        concepts: Some(ConceptsCollectionDiff { added: vec![ConceptAddedRow { owner_id: owner_id.clone(), id: concept_id.clone(), attribute_ids: attribute_ids.clone(), concept: concept.clone() }], ..Default::default() }),
+                        ..Default::default()
+                    }))
                 }
                 KitOperation::DeleteConcept { scope, .. } => {
                     let Scope::Concept { concept_id } = scope else {
@@ -6558,14 +6555,13 @@ pub mod operation {
                     if !benchmark_ids.is_empty() {
                         return Err(SemioError::invalid("quality benchmark ids are not supported yet"));
                     }
-                    let mut qv = serde_json::to_value(quality).map_err(|e| SemioError::invalid(e.to_string()))?;
-                    if let serde_json::Value::Object(ref mut m) = qv {
-                        m.insert("id".to_string(), serde_json::json!(quality_id.as_str()));
-                        m.insert("ownerId".to_string(), serde_json::json!(owner_id.as_str()));
-                        m.insert("attributeIds".to_string(), serde_json::to_value(attribute_ids).map_err(|e| SemioError::invalid(e.to_string()))?);
-                        m.insert("benchmarkIds".to_string(), serde_json::to_value(benchmark_ids).map_err(|e| SemioError::invalid(e.to_string()))?);
-                    }
-                    Ok(KitDiff(CanonicalKitDiff { qualities: Some(QualitiesCollectionDiff { added: vec![qv], ..Default::default() }), ..Default::default() }))
+                    Ok(KitDiff(CanonicalKitDiff {
+                        qualities: Some(QualitiesCollectionDiff {
+                            added: vec![QualityAddedRow { owner_id: owner_id.clone(), id: quality_id.clone(), attribute_ids: attribute_ids.clone(), benchmark_ids: benchmark_ids.clone(), quality: quality.clone() }],
+                            ..Default::default()
+                        }),
+                        ..Default::default()
+                    }))
                 }
                 KitOperation::DeleteQuality { scope, .. } => {
                     let Scope::Quality { quality_id } = scope else {
@@ -6584,19 +6580,21 @@ pub mod operation {
                     if !attribute_ids.is_empty() {
                         return Err(SemioError::invalid("piece attribute ids are not supported yet"));
                     }
-                    let pose = serde_json::to_value(position).map_err(|e| SemioError::invalid(e.to_string()))?;
-                    let piece_json = serde_json::json!({
-                        "id": piece_id.as_str(),
-                        "blueprintId": blueprint_id.as_str(),
-                        "name": name,
-                        "description": description,
-                        "scale": 1.0,
-                        "props": [],
-                        "attributes": [],
-                        "pose": pose,
-                    });
                     Ok(KitDiff(CanonicalKitDiff {
-                        designs: Some(DesignsCollectionDiff { modified: vec![DesignModifiedRow { design: IdRef { id: design_id.clone() }, diff: serde_json::json!({ "pieces": { "added": [piece_json] } }) }], ..Default::default() }),
+                        designs: Some(DesignsCollectionDiff {
+                            modified: vec![DesignModifiedRow {
+                                design: IdRef { id: design_id.clone() },
+                                diff: DesignDiff {
+                                    scalars: DesignScalarDiff::default(),
+                                    pieces: Some(PiecesCollectionDiff {
+                                        removed: vec![],
+                                        added: vec![PieceAddedRow { id: piece_id.clone(), blueprint_id: blueprint_id.clone(), name: name.clone(), description: description.clone(), scale: 1.0, pose: *position }],
+                                        modified: vec![],
+                                    }),
+                                },
+                            }],
+                            ..Default::default()
+                        }),
                         ..Default::default()
                     }))
                 }
@@ -6606,7 +6604,13 @@ pub mod operation {
                     };
                     ensure_piece(kit, design_id, piece_id).await?;
                     Ok(KitDiff(CanonicalKitDiff {
-                        designs: Some(DesignsCollectionDiff { modified: vec![DesignModifiedRow { design: IdRef { id: design_id.clone() }, diff: serde_json::json!({ "pieces": { "removed": [{ "id": piece_id.as_str() }] } }) }], ..Default::default() }),
+                        designs: Some(DesignsCollectionDiff {
+                            modified: vec![DesignModifiedRow {
+                                design: IdRef { id: design_id.clone() },
+                                diff: DesignDiff { scalars: DesignScalarDiff::default(), pieces: Some(PiecesCollectionDiff { removed: vec![IdRef { id: piece_id.clone() }], added: vec![], modified: vec![] }) },
+                            }],
+                            ..Default::default()
+                        }),
                         ..Default::default()
                     }))
                 }
@@ -6618,21 +6622,14 @@ pub mod operation {
                         return Err(SemioError::invalid("dragPieceInDesign expects Input::Offset"));
                     };
                     ensure_piece(kit, design_id, piece_id).await?;
-                    let drag = serde_json::to_value(offset).map_err(|e| SemioError::invalid(e.to_string()))?;
                     Ok(KitDiff(CanonicalKitDiff {
                         designs: Some(DesignsCollectionDiff {
                             modified: vec![DesignModifiedRow {
                                 design: IdRef { id: design_id.clone() },
-                                diff: serde_json::json!({
-                                    "pieces": {
-                                        "modified": [
-                                            {
-                                                "piece": { "id": piece_id.as_str() },
-                                                "diff": { "drag": drag }
-                                            }
-                                        ]
-                                    }
-                                }),
+                                diff: DesignDiff {
+                                    scalars: DesignScalarDiff::default(),
+                                    pieces: Some(PiecesCollectionDiff { removed: vec![], added: vec![], modified: vec![PieceModifiedRow { piece: IdRef { id: piece_id.clone() }, diff: PiecePatch { drag: Some(*offset), ..Default::default() } }] }),
+                                },
                             }],
                             ..Default::default()
                         }),
@@ -6646,17 +6643,16 @@ pub mod operation {
                     let Input::Offset { offset } = input else {
                         return Err(SemioError::invalid("dragPiecesInDesign expects Input::Offset"));
                     };
-                    let drag = serde_json::to_value(offset).map_err(|e| SemioError::invalid(e.to_string()))?;
-                    let mut pm = Vec::new();
+                    let mut modified = Vec::new();
                     for piece_id in piece_ids {
                         ensure_piece(kit, design_id, piece_id).await?;
-                        pm.push(serde_json::json!({
-                            "piece": { "id": piece_id.as_str() },
-                            "diff": { "drag": drag.clone() }
-                        }));
+                        modified.push(PieceModifiedRow { piece: IdRef { id: (*piece_id).clone() }, diff: PiecePatch { drag: Some(*offset), ..Default::default() } });
                     }
                     Ok(KitDiff(CanonicalKitDiff {
-                        designs: Some(DesignsCollectionDiff { modified: vec![DesignModifiedRow { design: IdRef { id: design_id.clone() }, diff: serde_json::json!({ "pieces": { "modified": pm } }) }], ..Default::default() }),
+                        designs: Some(DesignsCollectionDiff {
+                            modified: vec![DesignModifiedRow { design: IdRef { id: design_id.clone() }, diff: DesignDiff { scalars: DesignScalarDiff::default(), pieces: Some(PiecesCollectionDiff { removed: vec![], added: vec![], modified }) } }],
+                            ..Default::default()
+                        }),
                         ..Default::default()
                     }))
                 }
@@ -6669,16 +6665,10 @@ pub mod operation {
                         designs: Some(DesignsCollectionDiff {
                             modified: vec![DesignModifiedRow {
                                 design: IdRef { id: design_id.clone() },
-                                diff: serde_json::json!({
-                                    "pieces": {
-                                        "modified": [
-                                            {
-                                                "piece": { "id": piece_id.as_str() },
-                                                "diff": { "fixPiece": true }
-                                            }
-                                        ]
-                                    }
-                                }),
+                                diff: DesignDiff {
+                                    scalars: DesignScalarDiff::default(),
+                                    pieces: Some(PiecesCollectionDiff { removed: vec![], added: vec![], modified: vec![PieceModifiedRow { piece: IdRef { id: piece_id.clone() }, diff: PiecePatch { fix_piece: true, ..Default::default() } }] }),
+                                },
                             }],
                             ..Default::default()
                         }),
@@ -7125,16 +7115,6 @@ pub mod operation {
         }
     }
 
-    /// 🧾 The schema's `union OperationInput = …` (one variant resolved at a time).
-    #[derive(Clone, Union)]
-    #[graphql(name = "OperationInput")]
-    pub enum OperationInputUnion {
-        RenamedKit(RenamedKitInput),
-        ChangedDescription(ChangedDescriptionInput),
-        CreatedFixedPiece(CreatedFixedPieceInput),
-        FixedPiece(FixedPieceInput),
-        DraggedPiece(DraggedPieceInput),
-    }
     //#endregion 🧾 inputs
 
     /// @emoji 🗄️ Backbone materialization: dev JSON file, local `.semio/` SQLite+blobs, or remote hub (reserved).
@@ -7422,57 +7402,6 @@ pub mod operation {
             }
         }
     }
-
-    /// 🧾 OneOf input-object surface for batched submissions.
-    #[derive(Clone, Debug, OneofObject)]
-    #[graphql(name = "OperationInputOneOf")]
-    pub enum OperationInputOneOf {
-        CreatedFixedPiece(CreatedFixedPieceInputDto),
-        FixedPiece(FixedPieceInputDto),
-        DraggedPiece(DraggedPieceInputDto),
-        RenamedKit(RenamedKitInputDto),
-        ChangedDescription(ChangedDescriptionInputDto),
-    }
-
-    #[derive(Clone, Debug, InputObject)]
-    pub struct CreatedFixedPieceInputDto {
-        #[graphql(name = "designId")]
-        pub design_id: Id,
-        #[graphql(name = "blueprintId")]
-        pub blueprint_id: Id,
-        pub position: PositionInput,
-        pub name: Option<String>,
-        pub description: Option<String>,
-    }
-
-    #[derive(Clone, Debug, InputObject)]
-    pub struct FixedPieceInputDto {
-        #[graphql(name = "designId")]
-        pub design_id: Id,
-        #[graphql(name = "pieceId")]
-        pub piece_id: Id,
-    }
-
-    #[derive(Clone, Debug, InputObject)]
-    pub struct DraggedPieceInputDto {
-        #[graphql(name = "designId")]
-        pub design_id: Id,
-        #[graphql(name = "pieceIds")]
-        pub piece_ids: Vec<Id>,
-        pub offset: OffsetInput,
-    }
-
-    #[derive(Clone, Debug, InputObject)]
-    pub struct RenamedKitInputDto {
-        pub name: String,
-    }
-
-    #[derive(Clone, Debug, InputObject)]
-    pub struct ChangedDescriptionInputDto {
-        #[graphql(name = "entityId")]
-        pub entity_id: Id,
-        pub description: String,
-    }
     //#endregion 🪄 operations
 
     //#region 📡 commands
@@ -7616,133 +7545,6 @@ pub mod operation {
 
 //#endregion ⚙️ operation
 
-//#region 🧩 kit graph engine
-
-pub mod kit_graph_engine {
-    //! 🧩 Core kit graph engine: internal handle-backed slots, deterministic ephemeral  diffs, async apply for bundle replay and multi-`Graph` states (`wip` / `authoritative`).
-    use std::collections::BTreeMap;
-    use std::sync::Arc;
-
-    use serde::Deserialize;
-
-    use crate::error::SemioError;
-    use crate::hash::h;
-    use crate::id::Id;
-    use crate::kit;
-    use crate::operation;
-    use crate::vcs::Graph;
-
-    //#region 🧷 handles
-    /// @emoji 🧷 Opaque internal design slot index; external [`Id`] maps only in [`kit::Kit::bind_external_design_id`].
-    #[derive(Clone, Copy, Debug, Eq, PartialEq, Hash)]
-    pub struct DesignSlot(pub u32);
-    //#endregion 🧷 handles
-
-    //#region 🔢 projection fingerprint
-    /// @emoji 🔢 Stable `projectionFingerprint`: blake3-style [`h`] over sorted piece centers (matches golden `kit-store.golden.expected`).
-    pub async fn projection_fingerprint_for_kit(kit: &kit::Kit) -> String {
-        let designs = kit.designs.read().await;
-        let mut by_design: BTreeMap<String, Vec<(f64, f64)>> = BTreeMap::new();
-        for d in designs.iter() {
-            let mut pts: Vec<(f64, f64)> = Vec::new();
-            for p in d.pieces.read().await.iter() {
-                if let Some(node) = p.position.read().await.as_ref() {
-                    let pos = node.snapshot_input().await;
-                    pts.push((pos.center.u, pos.center.v));
-                }
-            }
-            pts.sort_by(|a, b| a.partial_cmp(b).unwrap());
-            by_design.insert(d.id.as_str().to_string(), pts);
-        }
-        let flattened: Vec<String> = by_design
-            .into_iter()
-            .map(|(id, pts)| {
-                let inner = pts.iter().map(|(u, v)| format!("{u:.9}:{v:.9}")).collect::<Vec<_>>().join(";");
-                format!("{id}@{inner}")
-            })
-            .collect();
-        h(&[flattened.join("|")])
-    }
-    //#endregion 🔢 projection fingerprint
-
-    //#region 📦  diff
-    /// @emoji 📦 Deterministic non-persisted diff from operation kind + payload + projection fingerprint transition.
-    pub fn deterministic__diff(op_kind: &str, payload_json: &str, projection_fp_before: &str, projection_fp_after: &str) -> operation::Diff {
-        let digest = h(&[op_kind, payload_json, projection_fp_before, projection_fp_after]);
-        operation::Diff { id: Id::from(format!("semio:diff:{digest}")), summary: Some(digest) }
-    }
-    //#endregion 📦  diff
-
-    //#region 🪡  operation apply
-    /// @emoji 🧾 Output of [`apply__operation_json`]: ephemeral diff + optional created entities.
-    pub struct AppliedOperation {
-        pub diff: operation::Diff,
-        pub created_piece: Option<Arc<kit::design::piece::Piece>>,
-    }
-
-    #[derive(Debug, Deserialize, serde::Serialize)]
-    struct CreatedFixedPiecePayload {
-        #[serde(rename = "designId")]
-        design_id: String,
-        #[serde(rename = "blueprintId")]
-        blueprint_id: String,
-        position: crate::geom::PositionInput,
-        name: Option<String>,
-        description: Option<String>,
-    }
-
-    /// @emoji 🪡 Async apply for one persisted  operation (`kind` + JSON payload); supports both legacy fixture payloads and normalized scoped operations.
-    pub async fn apply__operation_json(graph: &Arc<Graph>, draft_id: &Id, transaction_id: &Id, op_kind: &str, payload_json: &str) -> Result<AppliedOperation, SemioError> {
-        match op_kind {
-            "createdFixedPiece" => {
-                let payload: CreatedFixedPiecePayload = serde_json::from_str(payload_json).map_err(|e| SemioError::invalid(e.to_string()))?;
-                let input_ser = serde_json::to_string(&payload).map_err(|e| SemioError::invalid(e.to_string()))?;
-                let design_id = Id::from(payload.design_id.as_str());
-                let blueprint_id = Id::from(payload.blueprint_id.as_str());
-                let piece_id = Id::new().await;
-                let forward = operation::KitOperation::CreateFixedPiece {
-                    scope: operation::Scope::CreateFixedPiece { design_id: design_id.clone(), piece_id: piece_id.clone(), blueprint_id, attribute_ids: Vec::new() },
-                    input: operation::Input::FixedPiece { position: payload.position, name: payload.name, description: payload.description },
-                };
-                let before = graph.materialized_kit_for_draft(draft_id).await;
-                let backwards = forward.to_backwards(&before).await?;
-                graph.record_op_in_open_transaction(draft_id, transaction_id, forward, backwards).await?;
-                let after = graph.materialized_kit_for_draft(draft_id).await;
-                let design = after.design_by_external_id(&design_id).await.ok_or_else(|| SemioError::not_found("Design", design_id.as_str()))?;
-                let piece = design.piece_by_external_id(&piece_id).await.ok_or_else(|| SemioError::not_found("Piece", piece_id.as_str()))?;
-                let fp_before = projection_fingerprint_for_kit(before.as_ref()).await;
-                let fp_after = projection_fingerprint_for_kit(after.as_ref()).await;
-                let diff = deterministic__diff("createdFixedPiece", &input_ser, &fp_before, &fp_after);
-                Ok(AppliedOperation { diff, created_piece: Some(piece) })
-            }
-            "createFixedPiece" => {
-                let operation = operation::KitOperation::from_kind_and_payload(op_kind, payload_json)?;
-                let (design_id, piece_id) = match &operation {
-                    operation::KitOperation::CreateFixedPiece { scope, .. } => match scope {
-                        operation::Scope::CreateFixedPiece { design_id, piece_id, .. } => (design_id.clone(), piece_id.clone()),
-                        _ => return Err(SemioError::invalid("createFixedPiece expects Scope::CreateFixedPiece")),
-                    },
-                    _ => return Err(SemioError::invalid("createFixedPiece payload did not decode to CreateFixedPiece")),
-                };
-                let before = graph.materialized_kit_for_draft(draft_id).await;
-                let backwards = operation.to_backwards(&before).await?;
-                graph.record_op_in_open_transaction(draft_id, transaction_id, operation.clone(), backwards).await?;
-                let after = graph.materialized_kit_for_draft(draft_id).await;
-                let design = after.design_by_external_id(&design_id).await.ok_or_else(|| SemioError::not_found("Design", design_id.as_str()))?;
-                let piece = design.piece_by_external_id(&piece_id).await.ok_or_else(|| SemioError::not_found("Piece", piece_id.as_str()))?;
-                let fp_before = projection_fingerprint_for_kit(before.as_ref()).await;
-                let fp_after = projection_fingerprint_for_kit(after.as_ref()).await;
-                let diff = deterministic__diff("createFixedPiece", payload_json, &fp_before, &fp_after);
-                Ok(AppliedOperation { diff, created_piece: Some(piece) })
-            }
-            other => Err(SemioError::invalid(format!("unsupported  operation kind `{other}`"))),
-        }
-    }
-    //#endregion 🪡  operation apply
-}
-
-//#endregion 🧩 kit graph engine
-
 //#region 🗄️ kit backbone persistence (native)
 
 pub mod kit_backbone {
@@ -7791,6 +7593,447 @@ pub mod kit_backbone {
         }
     }
 
+    //#region 🔖 dev_backbone_kit_operation_json
+    fn position_input_to_json(p: &crate::geom::PositionInput) -> serde_json::Value {
+        serde_json::json!({
+            "center": { "u": p.center.u, "v": p.center.v },
+            "plane": {
+                "origin": { "x": p.plane.origin.x, "y": p.plane.origin.y, "z": p.plane.origin.z },
+                "xAxis": { "x": p.plane.x_axis.x, "y": p.plane.x_axis.y, "z": p.plane.x_axis.z },
+                "yAxis": { "x": p.plane.y_axis.x, "y": p.plane.y_axis.y, "z": p.plane.y_axis.z },
+            }
+        })
+    }
+
+    fn kit_scope_json(s: &crate::operation::Scope) -> serde_json::Value {
+        use crate::operation::Scope;
+        match s {
+            Scope::Kit => serde_json::json!("Kit"),
+            Scope::Entity { entity_id } => serde_json::json!({ "Entity": { "entity_id": entity_id.as_str() } }),
+            Scope::Tag { tag_id } => serde_json::json!({ "Tag": { "tag_id": tag_id.as_str() } }),
+            Scope::Tags { tag_ids } => serde_json::json!({ "Tags": { "tag_ids": tag_ids.iter().map(|i| i.as_str()).collect::<Vec<_>>() } }),
+            Scope::Concept { concept_id } => serde_json::json!({ "Concept": { "concept_id": concept_id.as_str() } }),
+            Scope::Quality { quality_id } => serde_json::json!({ "Quality": { "quality_id": quality_id.as_str() } }),
+            Scope::CreateTag { owner_id, tag_id, attribute_ids } => serde_json::json!({
+                "CreateTag": {
+                    "owner_id": owner_id.as_str(),
+                    "tag_id": tag_id.as_str(),
+                    "attribute_ids": attribute_ids.iter().map(|i| i.as_str()).collect::<Vec<_>>(),
+                }
+            }),
+            Scope::CreateTags { owner_id, tag_ids, attribute_ids } => serde_json::json!({
+                "CreateTags": {
+                    "owner_id": owner_id.as_str(),
+                    "tag_ids": tag_ids.iter().map(|i| i.as_str()).collect::<Vec<_>>(),
+                    "attribute_ids": attribute_ids.iter().map(|v| v.iter().map(|i| i.as_str()).collect::<Vec<_>>()).collect::<Vec<_>>(),
+                }
+            }),
+            Scope::CreateConcept { owner_id, concept_id, attribute_ids } => serde_json::json!({
+                "CreateConcept": {
+                    "owner_id": owner_id.as_str(),
+                    "concept_id": concept_id.as_str(),
+                    "attribute_ids": attribute_ids.iter().map(|i| i.as_str()).collect::<Vec<_>>(),
+                }
+            }),
+            Scope::CreateQuality { owner_id, quality_id, attribute_ids, benchmark_ids } => serde_json::json!({
+                "CreateQuality": {
+                    "owner_id": owner_id.as_str(),
+                    "quality_id": quality_id.as_str(),
+                    "attribute_ids": attribute_ids.iter().map(|i| i.as_str()).collect::<Vec<_>>(),
+                    "benchmark_ids": benchmark_ids.iter().map(|i| i.as_str()).collect::<Vec<_>>(),
+                }
+            }),
+            Scope::CreateFixedPiece { design_id, piece_id, blueprint_id, attribute_ids } => serde_json::json!({
+                "CreateFixedPiece": {
+                    "design_id": design_id.as_str(),
+                    "piece_id": piece_id.as_str(),
+                    "blueprint_id": blueprint_id.as_str(),
+                    "attribute_ids": attribute_ids.iter().map(|i| i.as_str()).collect::<Vec<_>>(),
+                }
+            }),
+            Scope::PieceInDesign { design_id, piece_id } => serde_json::json!({ "PieceInDesign": { "design_id": design_id.as_str(), "piece_id": piece_id.as_str() } }),
+            Scope::PiecesInDesign { design_id, piece_ids } => serde_json::json!({
+                "PiecesInDesign": {
+                    "design_id": design_id.as_str(),
+                    "piece_ids": piece_ids.iter().map(|i| i.as_str()).collect::<Vec<_>>(),
+                }
+            }),
+        }
+    }
+
+    fn kit_attribute_input_json(a: &crate::meta::AttributeInput) -> serde_json::Value {
+        serde_json::json!({
+            "key": a.key,
+            "value": a.value,
+            "definition": a.definition,
+        })
+    }
+
+    fn kit_input_json(i: &crate::operation::Input) -> serde_json::Value {
+        use crate::operation::Input;
+        match i {
+            Input::None => serde_json::json!("None"),
+            Input::Name { name } => serde_json::json!({ "Name": { "name": name } }),
+            Input::Description { description } => serde_json::json!({ "Description": { "description": description } }),
+            Input::Icon { icon } => serde_json::json!({ "Icon": { "icon": icon } }),
+            Input::Image { image } => serde_json::json!({ "Image": { "image": image } }),
+            Input::Tag { tag } => serde_json::json!({
+                "Tag": {
+                    "tag": {
+                        "name": tag.name,
+                        "description": tag.description,
+                        "icon": tag.icon,
+                        "order": tag.order,
+                        "attributes": tag.attributes.as_ref().map(|v| v.iter().map(kit_attribute_input_json).collect::<Vec<_>>()),
+                    }
+                }
+            }),
+            Input::Tags { tags } => serde_json::json!({
+                "Tags": {
+                    "tags": tags.iter().map(|t| serde_json::json!({
+                        "name": t.name,
+                        "description": t.description,
+                        "icon": t.icon,
+                        "order": t.order,
+                        "attributes": t.attributes.as_ref().map(|v| v.iter().map(kit_attribute_input_json).collect::<Vec<_>>()),
+                    })).collect::<Vec<_>>()
+                }
+            }),
+            Input::Concept { concept } => serde_json::json!({
+                "Concept": {
+                    "concept": {
+                        "name": concept.name,
+                        "description": concept.description,
+                        "icon": concept.icon,
+                        "order": concept.order,
+                        "attributes": concept.attributes.as_ref().map(|v| v.iter().map(kit_attribute_input_json).collect::<Vec<_>>()),
+                    }
+                }
+            }),
+            Input::Quality { quality } => serde_json::json!({
+                "Quality": {
+                    "quality": {
+                        "key": quality.key,
+                        "value": quality.value,
+                        "unit": quality.unit,
+                        "definition": quality.definition,
+                        "description": quality.description,
+                        "icon": quality.icon,
+                        "attributes": quality.attributes.as_ref().map(|v| v.iter().map(kit_attribute_input_json).collect::<Vec<_>>()),
+                    }
+                }
+            }),
+            Input::FixedPiece { position, name, description } => serde_json::json!({
+                "FixedPiece": {
+                    "position": position_input_to_json(position),
+                    "name": name,
+                    "description": description,
+                }
+            }),
+            Input::Offset { offset } => serde_json::json!({ "Offset": { "offset": { "u": offset.u, "v": offset.v } } }),
+        }
+    }
+
+    pub(crate) fn kit_operation_step_input_json(op: &crate::operation::KitOperation) -> serde_json::Value {
+        use crate::operation::{KitOperation, Scope};
+        let pair = |scope: &Scope, input: &crate::operation::Input| serde_json::json!({ "scope": kit_scope_json(scope), "input": kit_input_json(input) });
+        match op {
+            KitOperation::RenameKit { scope, input } => serde_json::json!({ "RenameKit": pair(scope, input) }),
+            KitOperation::ChangeDescription { scope, input } => serde_json::json!({ "ChangeDescription": pair(scope, input) }),
+            KitOperation::ChangeIcon { scope, input } => serde_json::json!({ "ChangeIcon": pair(scope, input) }),
+            KitOperation::ChangeImage { scope, input } => serde_json::json!({ "ChangeImage": pair(scope, input) }),
+            KitOperation::CreateTag { scope, input } => serde_json::json!({ "CreateTag": pair(scope, input) }),
+            KitOperation::CreateTags { scope, input } => serde_json::json!({ "CreateTags": pair(scope, input) }),
+            KitOperation::DeleteTag { scope, input } => serde_json::json!({ "DeleteTag": pair(scope, input) }),
+            KitOperation::DeleteTags { scope, input } => serde_json::json!({ "DeleteTags": pair(scope, input) }),
+            KitOperation::RenameTag { scope, input } => serde_json::json!({ "RenameTag": pair(scope, input) }),
+            KitOperation::CreateConcept { scope, input } => serde_json::json!({ "CreateConcept": pair(scope, input) }),
+            KitOperation::DeleteConcept { scope, input } => serde_json::json!({ "DeleteConcept": pair(scope, input) }),
+            KitOperation::CreateQuality { scope, input } => serde_json::json!({ "CreateQuality": pair(scope, input) }),
+            KitOperation::DeleteQuality { scope, input } => serde_json::json!({ "DeleteQuality": pair(scope, input) }),
+            KitOperation::CreateFixedPiece { scope, input } => serde_json::json!({ "CreateFixedPiece": pair(scope, input) }),
+            KitOperation::DeletePieceInDesign { scope, input } => serde_json::json!({ "DeletePieceInDesign": pair(scope, input) }),
+            KitOperation::DragPieceInDesign { scope, input } => serde_json::json!({ "DragPieceInDesign": pair(scope, input) }),
+            KitOperation::DragPiecesInDesign { scope, input } => serde_json::json!({ "DragPiecesInDesign": pair(scope, input) }),
+            KitOperation::FixPieceInDesign { scope, input } => serde_json::json!({ "FixPieceInDesign": pair(scope, input) }),
+        }
+    }
+
+    fn id_from_str(s: &str) -> crate::id::Id {
+        crate::id::Id::from(s)
+    }
+
+    fn position_input_from_json(v: &serde_json::Value) -> Result<crate::geom::PositionInput, SemioError> {
+        let f2 = |o: &serde_json::Map<String, serde_json::Value>, a: &str, b: &str| -> Result<(f64, f64), SemioError> {
+            let u = o.get(a).and_then(|x| x.as_f64()).ok_or_else(|| SemioError::invalid("position field"))?;
+            let v = o.get(b).and_then(|x| x.as_f64()).ok_or_else(|| SemioError::invalid("position field"))?;
+            Ok((u, v))
+        };
+        let f3 = |o: &serde_json::Map<String, serde_json::Value>| -> Result<(f64, f64, f64), SemioError> {
+            let x = o.get("x").and_then(|x| x.as_f64()).ok_or_else(|| SemioError::invalid("position field"))?;
+            let y = o.get("y").and_then(|x| x.as_f64()).ok_or_else(|| SemioError::invalid("position field"))?;
+            let z = o.get("z").and_then(|x| x.as_f64()).ok_or_else(|| SemioError::invalid("position field"))?;
+            Ok((x, y, z))
+        };
+        let center_o = v.get("center").and_then(|x| x.as_object()).ok_or_else(|| SemioError::invalid("position.center"))?;
+        let (u, v) = f2(center_o, "u", "v")?;
+        let plane_o = v.get("plane").and_then(|x| x.as_object()).ok_or_else(|| SemioError::invalid("position.plane"))?;
+        let origin = plane_o.get("origin").and_then(|x| x.as_object()).ok_or_else(|| SemioError::invalid("plane.origin"))?;
+        let (ox, oy, oz) = f3(origin)?;
+        let xa = plane_o.get("xAxis").or_else(|| plane_o.get("x_axis")).and_then(|x| x.as_object()).ok_or_else(|| SemioError::invalid("plane.xAxis"))?;
+        let (xx, xy, xz) = f3(xa)?;
+        let ya = plane_o.get("yAxis").or_else(|| plane_o.get("y_axis")).and_then(|x| x.as_object()).ok_or_else(|| SemioError::invalid("plane.yAxis"))?;
+        let (yx, yy, yz) = f3(ya)?;
+        Ok(crate::geom::PositionInput {
+            center: crate::geom::CoordinateInput { u, v },
+            plane: crate::geom::PlaneInput {
+                origin: crate::geom::PointInput { x: ox, y: oy, z: oz },
+                x_axis: crate::geom::VectorInput { x: xx, y: xy, z: xz },
+                y_axis: crate::geom::VectorInput { x: yx, y: yy, z: yz },
+            },
+        })
+    }
+
+    fn kit_scope_from_json(v: &serde_json::Value) -> Result<crate::operation::Scope, SemioError> {
+        use crate::operation::Scope;
+        if let Some(s) = v.as_str() {
+            if s == "Kit" {
+                return Ok(Scope::Kit);
+            }
+        }
+        let o = v.as_object().ok_or_else(|| SemioError::invalid("scope object"))?;
+        let (k, inner) = o.iter().next().ok_or_else(|| SemioError::invalid("empty scope"))?;
+        let m = inner.as_object().ok_or_else(|| SemioError::invalid("scope inner"))?;
+        Ok(match k.as_str() {
+            "Entity" => Scope::Entity { entity_id: id_from_str(m.get("entity_id").and_then(|x| x.as_str()).ok_or_else(|| SemioError::invalid("entity_id"))?) },
+            "Tag" => Scope::Tag { tag_id: id_from_str(m.get("tag_id").and_then(|x| x.as_str()).ok_or_else(|| SemioError::invalid("tag_id"))?) },
+            "Tags" => {
+                let arr = m.get("tag_ids").and_then(|x| x.as_array()).ok_or_else(|| SemioError::invalid("tag_ids"))?;
+                Scope::Tags { tag_ids: arr.iter().map(|x| id_from_str(x.as_str().ok_or_else(|| SemioError::invalid("tag id"))?)).collect() }
+            }
+            "Concept" => Scope::Concept { concept_id: id_from_str(m.get("concept_id").and_then(|x| x.as_str()).ok_or_else(|| SemioError::invalid("concept_id"))?) },
+            "Quality" => Scope::Quality { quality_id: id_from_str(m.get("quality_id").and_then(|x| x.as_str()).ok_or_else(|| SemioError::invalid("quality_id"))?) },
+            "CreateTag" => Scope::CreateTag {
+                owner_id: id_from_str(m.get("owner_id").and_then(|x| x.as_str()).ok_or_else(|| SemioError::invalid("owner_id"))?),
+                tag_id: id_from_str(m.get("tag_id").and_then(|x| x.as_str()).ok_or_else(|| SemioError::invalid("tag_id"))?),
+                attribute_ids: m
+                    .get("attribute_ids")
+                    .and_then(|x| x.as_array())
+                    .map(|a| a.iter().map(|x| id_from_str(x.as_str().unwrap_or(""))).collect())
+                    .unwrap_or_default(),
+            },
+            "CreateTags" => Scope::CreateTags {
+                owner_id: id_from_str(m.get("owner_id").and_then(|x| x.as_str()).ok_or_else(|| SemioError::invalid("owner_id"))?),
+                tag_ids: m
+                    .get("tag_ids")
+                    .and_then(|x| x.as_array())
+                    .map(|a| a.iter().map(|x| id_from_str(x.as_str().unwrap_or(""))).collect())
+                    .unwrap_or_default(),
+                attribute_ids: m
+                    .get("attribute_ids")
+                    .and_then(|x| x.as_array())
+                    .map(|outer| {
+                        outer
+                            .iter()
+                            .map(|inner| inner.as_array().map(|a| a.iter().map(|x| id_from_str(x.as_str().unwrap_or(""))).collect()).unwrap_or_default())
+                            .collect()
+                    })
+                    .unwrap_or_default(),
+            },
+            "CreateConcept" => Scope::CreateConcept {
+                owner_id: id_from_str(m.get("owner_id").and_then(|x| x.as_str()).ok_or_else(|| SemioError::invalid("owner_id"))?),
+                concept_id: id_from_str(m.get("concept_id").and_then(|x| x.as_str()).ok_or_else(|| SemioError::invalid("concept_id"))?),
+                attribute_ids: m.get("attribute_ids").and_then(|x| x.as_array()).map(|a| a.iter().map(|x| id_from_str(x.as_str().unwrap_or(""))).collect()).unwrap_or_default(),
+            },
+            "CreateQuality" => Scope::CreateQuality {
+                owner_id: id_from_str(m.get("owner_id").and_then(|x| x.as_str()).ok_or_else(|| SemioError::invalid("owner_id"))?),
+                quality_id: id_from_str(m.get("quality_id").and_then(|x| x.as_str()).ok_or_else(|| SemioError::invalid("quality_id"))?),
+                attribute_ids: m.get("attribute_ids").and_then(|x| x.as_array()).map(|a| a.iter().map(|x| id_from_str(x.as_str().unwrap_or(""))).collect()).unwrap_or_default(),
+                benchmark_ids: m.get("benchmark_ids").and_then(|x| x.as_array()).map(|a| a.iter().map(|x| id_from_str(x.as_str().unwrap_or(""))).collect()).unwrap_or_default(),
+            },
+            "CreateFixedPiece" => Scope::CreateFixedPiece {
+                design_id: id_from_str(m.get("design_id").and_then(|x| x.as_str()).ok_or_else(|| SemioError::invalid("design_id"))?),
+                piece_id: id_from_str(m.get("piece_id").and_then(|x| x.as_str()).ok_or_else(|| SemioError::invalid("piece_id"))?),
+                blueprint_id: id_from_str(m.get("blueprint_id").and_then(|x| x.as_str()).ok_or_else(|| SemioError::invalid("blueprint_id"))?),
+                attribute_ids: m.get("attribute_ids").and_then(|x| x.as_array()).map(|a| a.iter().map(|x| id_from_str(x.as_str().unwrap_or(""))).collect()).unwrap_or_default(),
+            },
+            "PieceInDesign" => Scope::PieceInDesign {
+                design_id: id_from_str(m.get("design_id").and_then(|x| x.as_str()).ok_or_else(|| SemioError::invalid("design_id"))?),
+                piece_id: id_from_str(m.get("piece_id").and_then(|x| x.as_str()).ok_or_else(|| SemioError::invalid("piece_id"))?),
+            },
+            "PiecesInDesign" => Scope::PiecesInDesign {
+                design_id: id_from_str(m.get("design_id").and_then(|x| x.as_str()).ok_or_else(|| SemioError::invalid("design_id"))?),
+                piece_ids: m.get("piece_ids").and_then(|x| x.as_array()).map(|a| a.iter().map(|x| id_from_str(x.as_str().unwrap_or(""))).collect()).unwrap_or_default(),
+            },
+            other => return Err(SemioError::invalid(format!("unknown scope `{other}`"))),
+        })
+    }
+
+    fn attribute_input_from_json(v: &serde_json::Value) -> Result<crate::meta::AttributeInput, SemioError> {
+        let m = v.as_object().ok_or_else(|| SemioError::invalid("AttributeInput"))?;
+        Ok(crate::meta::AttributeInput {
+            key: m.get("key").and_then(|x| x.as_str()).unwrap_or("").to_string(),
+            value: m.get("value").and_then(|x| x.as_str()).map(|s| s.to_string()),
+            definition: m.get("definition").and_then(|x| x.as_str()).map(|s| s.to_string()),
+        })
+    }
+
+    fn kit_input_from_json(v: &serde_json::Value) -> Result<crate::operation::Input, SemioError> {
+        use crate::operation::Input;
+        if let Some(s) = v.as_str() {
+            if s == "None" {
+                return Ok(Input::None);
+            }
+        }
+        let o = v.as_object().ok_or_else(|| SemioError::invalid("input object"))?;
+        let (k, inner) = o.iter().next().ok_or_else(|| SemioError::invalid("empty input"))?;
+        Ok(match k.as_str() {
+            "Name" => {
+                let m = inner.as_object().ok_or_else(|| SemioError::invalid("Name"))?;
+                Input::Name { name: m.get("name").and_then(|x| x.as_str()).unwrap_or("").to_string() }
+            }
+            "Description" => {
+                let m = inner.as_object().ok_or_else(|| SemioError::invalid("Description"))?;
+                Input::Description { description: m.get("description").and_then(|x| x.as_str()).map(|s| s.to_string()) }
+            }
+            "Icon" => {
+                let m = inner.as_object().ok_or_else(|| SemioError::invalid("Icon"))?;
+                Input::Icon { icon: m.get("icon").and_then(|x| x.as_str()).map(|s| s.to_string()) }
+            }
+            "Image" => {
+                let m = inner.as_object().ok_or_else(|| SemioError::invalid("Image"))?;
+                Input::Image { image: m.get("image").and_then(|x| x.as_str()).map(|s| s.to_string()) }
+            }
+            "Tag" => {
+                let m = inner.get("tag").and_then(|x| x.as_object()).ok_or_else(|| SemioError::invalid("tag"))?;
+                let attrs = m.get("attributes").and_then(|x| x.as_array()).map(|a| a.iter().map(attribute_input_from_json).collect::<Result<Vec<_>, _>>()).transpose()?;
+                Input::Tag {
+                    tag: crate::meta::TagInput {
+                        name: m.get("name").and_then(|x| x.as_str()).unwrap_or("").to_string(),
+                        description: m.get("description").and_then(|x| x.as_str()).map(|s| s.to_string()),
+                        icon: m.get("icon").and_then(|x| x.as_str()).map(|s| s.to_string()),
+                        order: m.get("order").and_then(|x| x.as_i64()).map(|i| i as i32),
+                        attributes: attrs,
+                    },
+                }
+            }
+            "Tags" => {
+                let arr = inner.get("tags").and_then(|x| x.as_array()).ok_or_else(|| SemioError::invalid("tags"))?;
+                let mut tags = Vec::new();
+                for t in arr {
+                    let m = t.as_object().ok_or_else(|| SemioError::invalid("tag row"))?;
+                    let attrs = m.get("attributes").and_then(|x| x.as_array()).map(|a| a.iter().map(attribute_input_from_json).collect::<Result<Vec<_>, _>>()).transpose()?;
+                    tags.push(crate::meta::TagInput {
+                        name: m.get("name").and_then(|x| x.as_str()).unwrap_or("").to_string(),
+                        description: m.get("description").and_then(|x| x.as_str()).map(|s| s.to_string()),
+                        icon: m.get("icon").and_then(|x| x.as_str()).map(|s| s.to_string()),
+                        order: m.get("order").and_then(|x| x.as_i64()).map(|i| i as i32),
+                        attributes: attrs,
+                    });
+                }
+                Input::Tags { tags }
+            }
+            "Concept" => {
+                let m = inner.get("concept").and_then(|x| x.as_object()).ok_or_else(|| SemioError::invalid("concept"))?;
+                let attrs = m.get("attributes").and_then(|x| x.as_array()).map(|a| a.iter().map(attribute_input_from_json).collect::<Result<Vec<_>, _>>()).transpose()?;
+                Input::Concept {
+                    concept: crate::meta::ConceptInput {
+                        name: m.get("name").and_then(|x| x.as_str()).unwrap_or("").to_string(),
+                        description: m.get("description").and_then(|x| x.as_str()).map(|s| s.to_string()),
+                        icon: m.get("icon").and_then(|x| x.as_str()).map(|s| s.to_string()),
+                        order: m.get("order").and_then(|x| x.as_i64()).map(|i| i as i32),
+                        attributes: attrs,
+                    },
+                }
+            }
+            "Quality" => {
+                let m = inner.get("quality").and_then(|x| x.as_object()).ok_or_else(|| SemioError::invalid("quality"))?;
+                let attrs = m.get("attributes").and_then(|x| x.as_array()).map(|a| a.iter().map(attribute_input_from_json).collect::<Result<Vec<_>, _>>()).transpose()?;
+                Input::Quality {
+                    quality: crate::meta::QualityInput {
+                        key: m.get("key").and_then(|x| x.as_str()).unwrap_or("").to_string(),
+                        value: m.get("value").and_then(|x| x.as_str()).map(|s| s.to_string()),
+                        unit: m.get("unit").and_then(|x| x.as_str()).map(|s| s.to_string()),
+                        definition: m.get("definition").and_then(|x| x.as_str()).map(|s| s.to_string()),
+                        description: m.get("description").and_then(|x| x.as_str()).map(|s| s.to_string()),
+                        icon: m.get("icon").and_then(|x| x.as_str()).map(|s| s.to_string()),
+                        attributes: attrs,
+                    },
+                }
+            }
+            "FixedPiece" => {
+                let m = inner.as_object().ok_or_else(|| SemioError::invalid("FixedPiece"))?;
+                let position = position_input_from_json(m.get("position").ok_or_else(|| SemioError::invalid("position"))?)?;
+                Input::FixedPiece {
+                    position,
+                    name: m.get("name").and_then(|x| x.as_str()).map(|s| s.to_string()),
+                    description: m.get("description").and_then(|x| x.as_str()).map(|s| s.to_string()),
+                }
+            }
+            "Offset" => {
+                let m = inner.get("offset").and_then(|x| x.as_object()).ok_or_else(|| SemioError::invalid("offset"))?;
+                Input::Offset {
+                    offset: crate::geom::OffsetInput {
+                        u: m.get("u").and_then(|x| x.as_f64()).unwrap_or(0.0),
+                        v: m.get("v").and_then(|x| x.as_f64()).unwrap_or(0.0),
+                    },
+                }
+            }
+            other => return Err(SemioError::invalid(format!("unknown input `{other}`"))),
+        })
+    }
+
+    pub(crate) fn kit_operation_from_step_json(v: &serde_json::Value) -> Result<crate::operation::KitOperation, SemioError> {
+        use crate::operation::KitOperation;
+        let o = v.as_object().ok_or_else(|| SemioError::invalid("kit operation"))?;
+        let (k, inner) = o.iter().next().ok_or_else(|| SemioError::invalid("empty kit operation"))?;
+        let body = inner.as_object().ok_or_else(|| SemioError::invalid("kit operation body"))?;
+        let scope = kit_scope_from_json(body.get("scope").ok_or_else(|| SemioError::invalid("scope"))?)?;
+        let input = kit_input_from_json(body.get("input").ok_or_else(|| SemioError::invalid("input"))?)?;
+        Ok(match k.as_str() {
+            "RenameKit" => KitOperation::RenameKit { scope, input },
+            "ChangeDescription" => KitOperation::ChangeDescription { scope, input },
+            "ChangeIcon" => KitOperation::ChangeIcon { scope, input },
+            "ChangeImage" => KitOperation::ChangeImage { scope, input },
+            "CreateTag" => KitOperation::CreateTag { scope, input },
+            "CreateTags" => KitOperation::CreateTags { scope, input },
+            "DeleteTag" => KitOperation::DeleteTag { scope, input },
+            "DeleteTags" => KitOperation::DeleteTags { scope, input },
+            "RenameTag" => KitOperation::RenameTag { scope, input },
+            "CreateConcept" => KitOperation::CreateConcept { scope, input },
+            "DeleteConcept" => KitOperation::DeleteConcept { scope, input },
+            "CreateQuality" => KitOperation::CreateQuality { scope, input },
+            "DeleteQuality" => KitOperation::DeleteQuality { scope, input },
+            "CreateFixedPiece" => KitOperation::CreateFixedPiece { scope, input },
+            "DeletePieceInDesign" => KitOperation::DeletePieceInDesign { scope, input },
+            "DragPieceInDesign" => KitOperation::DragPieceInDesign { scope, input },
+            "DragPiecesInDesign" => KitOperation::DragPiecesInDesign { scope, input },
+            "FixPieceInDesign" => KitOperation::FixPieceInDesign { scope, input },
+            other => return Err(SemioError::invalid(format!("unknown kit operation `{other}`"))),
+        })
+    }
+
+    async fn legacy_created_fixed_piece_to_kit_op(input: &serde_json::Value) -> Result<crate::operation::KitOperation, SemioError> {
+        let design_id = id_from_str(input.get("designId").and_then(|x| x.as_str()).ok_or_else(|| SemioError::invalid("designId"))?);
+        let blueprint_id = id_from_str(input.get("blueprintId").and_then(|x| x.as_str()).ok_or_else(|| SemioError::invalid("blueprintId"))?);
+        let position = position_input_from_json(input.get("position").ok_or_else(|| SemioError::invalid("position"))?)?;
+        let name = input.get("name").and_then(|x| x.as_str()).map(|s| s.to_string());
+        let description = input.get("description").and_then(|x| x.as_str()).map(|s| s.to_string());
+        let piece_id = crate::id::Id::new().await;
+        Ok(crate::operation::KitOperation::CreateFixedPiece {
+            scope: crate::operation::Scope::CreateFixedPiece { design_id, piece_id, blueprint_id, attribute_ids: Vec::new() },
+            input: crate::operation::Input::FixedPiece { position, name, description },
+        })
+    }
+
+    pub(crate) async fn kit_operation_from_stored(kind: &str, input: &serde_json::Value) -> Result<crate::operation::KitOperation, SemioError> {
+        if kind == "createdFixedPiece" {
+            return legacy_created_fixed_piece_to_kit_op(input).await;
+        }
+        kit_operation_from_step_json(input)
+    }
+    //#endregion 🔖 dev_backbone_kit_operation_json
+
     //#region 🔖 dev_backbone_initial_kit_projection
     /// @emoji 📸 `KitFullDto`-shaped JSON for dev bundle `initialKit` baselines + deep-clone round-trips; **`serde_json::Value` stays inside [`kit_backbone`] for this projection only** (per single-source backbone plan).
     pub(crate) async fn initial_kit_projection_value(kit: &std::sync::Arc<crate::kit::Kit>) -> serde_json::Value {
@@ -7822,7 +8065,7 @@ pub mod kit_backbone {
                             _ => String::new(),
                         };
                         let pos = p.compute_flat_position().await;
-                        let pv = serde_json::to_value(&pos).unwrap_or_else(|_| serde_json::json!({}));
+                        let pv = position_input_to_json(&pos);
                         let scale = p.scale.read().await.unwrap_or(1.0);
                         let nm = p.name.read().await.clone().unwrap_or_default();
                         pj.push(serde_json::json!({
@@ -7931,7 +8174,7 @@ pub mod kit_backbone {
             let pose = pj.get("pose");
             let plane_val = pj.get("plane").cloned().or_else(|| pose.and_then(|p| p.get("plane")).cloned()).unwrap_or_else(|| serde_json::json!({}));
             let center_val = pj.get("center").cloned().or_else(|| pose.and_then(|p| p.get("center")).cloned()).unwrap_or_else(|| serde_json::json!({"u":0.0,"v":0.0}));
-            let position: crate::geom::PositionInput = serde_json::from_value(serde_json::json!({"plane": plane_val, "center": center_val})).map_err(|e| crate::error::SemioError::invalid(format!("piece position serde: {}", e)))?;
+            let position = position_input_from_json(&serde_json::json!({ "plane": plane_val, "center": center_val }))?;
             let scale = pj.get("scale").and_then(|s| s.as_f64()).unwrap_or(1.0);
             let nm_opt = pj.get("name").and_then(|x| x.as_str());
             let bp = crate::kit::r#type::Blueprint::Type(ty.clone());
@@ -8167,7 +8410,7 @@ pub mod kit_backbone {
                     hash: KIT_BUNDLE_HASH_STUB.to_string(),
                     kind: operation.kind().to_string(),
                     description: None,
-                    input: serde_json::to_value(operation).unwrap_or_else(|_| serde_json::json!({})),
+                    input: kit_operation_step_input_json(operation),
                 });
             }
             for operation in ch.backwards.read().await.iter() {
@@ -8176,7 +8419,7 @@ pub mod kit_backbone {
                     hash: KIT_BUNDLE_HASH_STUB.to_string(),
                     kind: operation.kind().to_string(),
                     description: None,
-                    input: serde_json::to_value(operation).unwrap_or_else(|_| serde_json::json!({})),
+                    input: kit_operation_step_input_json(operation),
                 });
             }
             VersionEditDto {
@@ -8252,7 +8495,7 @@ pub mod kit_backbone {
                 }));
             }
 
-            // 🧾 Project version changes and edits directly on the wip version rows.
+            // 🧾 Project version changes and edits directly on the wip version entities.
             for draft in graph.drafts.read().await.iter() {
                 if draft.owner_alternative.upgrade().is_none() {
                     let (saved, unsaved) = Self::change_lists_from_draft(draft).await;
@@ -8288,7 +8531,7 @@ pub mod kit_backbone {
             Self::purge_unreferenced_blobs(bundle);
         }
 
-        /// @emoji 🧹 Drop [`blobs`] rows whose digest is not referenced by any `files[].blobHash` on `wip` / `authoritative` / `stage` `initialKit` snapshots.
+        /// @emoji 🧹 Drop [`blobs`] entities whose digest is not referenced by any `files[].blobHash` on `wip` / `authoritative` / `stage` `initialKit` snapshots.
         pub fn purge_unreferenced_blobs(bundle: &mut DevBackboneBundleDoc) {
             let refs = Self::referenced_blob_hashes_from_bundle(bundle);
             bundle.blobs.items.retain(|b| b.get("hash").and_then(|x| x.as_str()).map(|h| refs.contains(h)).unwrap_or(false));
@@ -8624,9 +8867,9 @@ CREATE TABLE IF NOT EXISTS conflict_stub (
         fn load_operations(&self) -> Result<Vec<StoredOperation>, SemioError> {
             let conn = Connection::open(&self.db_path).map_err(|e| SemioError::invalid(format!("sqlite read: {e}")))?;
             let mut stmt = conn.prepare("SELECT draft_id, transaction_id, kind, input_json FROM _op_log ORDER BY seq ASC").map_err(|e| SemioError::invalid(format!("sqlite prepare: {e}")))?;
-            let mut rows = stmt.query([]).map_err(|e| SemioError::invalid(format!("sqlite query: {e}")))?;
+            let mut entities = stmt.query([]).map_err(|e| SemioError::invalid(format!("sqlite query: {e}")))?;
             let mut out = Vec::new();
-            while let Some(row) = rows.next().map_err(|e| SemioError::invalid(format!("sqlite row: {e}")))? {
+            while let Some(row) = entities.next().map_err(|e| SemioError::invalid(format!("sqlite row: {e}")))? {
                 let draft_id: String = row.get(0).map_err(|e| SemioError::invalid(format!("sqlite col: {e}")))?;
                 let transaction_id: String = row.get(1).map_err(|e| SemioError::invalid(format!("sqlite col: {e}")))?;
                 let kind: String = row.get(2).map_err(|e| SemioError::invalid(format!("sqlite col: {e}")))?;
@@ -8695,7 +8938,7 @@ CREATE TABLE IF NOT EXISTS conflict_stub (
         src.get("operations").and_then(|v| v.as_array()).or_else(|| src.get("ops").and_then(|v| v.as_array())).ok_or_else(|| SemioError::invalid("golden operations missing `operations` or `ops` array"))
     }
 
-    /// @emoji 🧪 Build [`StoredOperation`] rows from `kit-store.golden.ops.semio.json` (US-001 fixture) for persistence tests.
+    /// @emoji 🧪 Build [`StoredOperation`] entities from `kit-store.golden.ops.semio.json` (US-001 fixture) for persistence tests.
     pub fn stored_operations_from_golden_operations_json(src: &serde_json::Value) -> Result<Vec<StoredOperation>, SemioError> {
         let draft_id = src["draftId"].as_str().ok_or_else(|| SemioError::invalid("golden operations missing draftId"))?.to_string();
         let transaction_id = src["transactionId"].as_str().ok_or_else(|| SemioError::invalid("golden operations missing transactionId"))?.to_string();
@@ -10348,7 +10591,7 @@ pub mod gql {
             .finish()
     }
 
-    /// 📜 Canonical SDL: static fragments from [`crate::sdl_registry`] plus embedded executable golden (`semio/graphql/target.schema.graphql`).
+    /// 📜 Canonical SDL: non-empty [`crate::sdl_registry::HasSdlFragment::SDL_FRAGMENT`] prefixes (code-first ladder, plan W0–W8) plus embedded golden [`include_str!("../graphql/target.schema.graphql")`] until fragments subsume the file.
     pub async fn sdl() -> String {
         let mut acc = String::new();
         for frag in crate::sdl_registry::all_fragments() {
@@ -10597,7 +10840,7 @@ mod tests {
 
     use crate::gql::AppSchema;
 
-    /// @emoji 📜 `gql::sdl()` tracks the canonical target SDL file.
+    /// @emoji 📜 `gql::sdl()` equals normalized `target.schema.graphql` (non-empty [`crate::sdl_registry::HasSdlFragment::SDL_FRAGMENT`] values prefix the embedded golden per macro-driven refactor).
     #[test]
     fn schema_matches_target_graphql_file() {
         let disk = include_str!("../graphql/target.schema.graphql");
@@ -10655,11 +10898,11 @@ mod tests {
     "#;
 
     fn relay_wip_designs_have_piece() -> &'static str {
-        "{ wip { theKit { kit { designs { edges { node { id pieces { edges { node { id position { center { u v } } } } } } } } } } } }"
+        "{ store { wip { theKit { kit { designs { edges { node { id pieces { edges { node { id position { center { u v } } } } } } } } } } } } }"
     }
 
     fn relay_auth_designs_piece_ids() -> &'static str {
-        "{ authoritative { theKit { kit { designs { edges { node { pieces { edges { node { id } } } } } } } } } }"
+        "{ store { authoritative { theKit { kit { designs { edges { node { pieces { edges { node { id } } } } } } } } } } }"
     }
 
     /// 📤 Writes the executable schema's SDL to `SEMIO_GRAPHQL_SCHEMA_OUT`; run via `npx nx build semio/graphql`.
@@ -10715,27 +10958,29 @@ mod tests {
 
             let schema_a = crate::gql::build_schema_for(rt.clone());
             let q_baseline = r#"{
-                wip {
-                    initialKit { name }
-                    theKit { kit { name } }
-                    checkpoints { edges { node { initial { name } kit { name } } } }
+                store {
+                    wip {
+                        initialKit { name }
+                        theKit { kit { name } }
+                        checkpoints { edges { node { initial { name } kit { name } } } }
+                    }
                 }
             }"#;
             let res = schema_a.execute(q_baseline).await;
             assert!(res.errors.is_empty(), "baseline query errors: {:?}", res.errors);
             let vr = res.data.into_json().unwrap();
-            assert_eq!(vr["wip"]["theKit"]["kit"]["name"].as_str(), Some("Hello Bundle"), "materialized wip.theKit.kit");
-            assert_eq!(vr["wip"]["initialKit"]["name"].as_str(), Some("the kit"), "graph.initialKit stays immutable");
-            let cp_initial = vr["wip"]["checkpoints"]["edges"][0]["node"]["initial"]["name"].as_str().expect("checkpoint.initial.name");
+            assert_eq!(vr["store"]["wip"]["theKit"]["kit"]["name"].as_str(), Some("Hello Bundle"), "materialized wip.theKit.kit");
+            assert_eq!(vr["store"]["wip"]["initialKit"]["name"].as_str(), Some("the kit"), "graph.initialKit stays immutable");
+            let cp_initial = vr["store"]["wip"]["checkpoints"]["edges"][0]["node"]["initial"]["name"].as_str().expect("checkpoint.initial.name");
             assert_eq!(cp_initial, "the kit", "checkpoint.initial must not alias live rename");
 
             g.abort_transaction(&draft_a.id, &tx_a.id).await.expect("abort");
             let res = schema_a.execute(q_baseline).await;
             assert!(res.errors.is_empty(), "baseline after abort: {:?}", res.errors);
             let vr = res.data.into_json().unwrap();
-            assert_eq!(vr["wip"]["theKit"]["kit"]["name"].as_str(), Some("the kit"), "materialized kit reverts after abort");
-            assert_eq!(vr["wip"]["initialKit"]["name"].as_str(), Some("the kit"));
-            assert_eq!(vr["wip"]["checkpoints"]["edges"][0]["node"]["initial"]["name"].as_str(), Some("the kit"));
+            assert_eq!(vr["store"]["wip"]["theKit"]["kit"]["name"].as_str(), Some("the kit"), "materialized kit reverts after abort");
+            assert_eq!(vr["store"]["wip"]["initialKit"]["name"].as_str(), Some("the kit"));
+            assert_eq!(vr["store"]["wip"]["checkpoints"]["edges"][0]["node"]["initial"]["name"].as_str(), Some("the kit"));
 
             let tx_a2 = g.open_transaction(&draft_a.id).await;
             let req2 = crate::id::Id::new().await;
@@ -10783,11 +11028,11 @@ mod tests {
             assert!(res.errors.is_empty(), "startAlternative errors: {:?}", res.errors);
             let id: String = res.data.into_json().unwrap()["session"]["startAlternative"].as_str().expect("alt id").to_string();
 
-            let q = r#"{ wip { alternatives { edges { node { id name } } } } }"#;
+            let q = r#"{ store { wip { alternatives { edges { node { id name } } } } } }"#;
             let res = schema.execute(q).await;
             assert!(res.errors.is_empty(), "alternatives query errors: {:?}", res.errors);
             let v = res.data.into_json().unwrap();
-            let edges = v["wip"]["alternatives"]["edges"].as_array().expect("edges");
+            let edges = v["store"]["wip"]["alternatives"]["edges"].as_array().expect("edges");
             assert!(edges.iter().any(|e| e["node"]["id"].as_str() == Some(id.as_str())), "expected new alternative id in wip.alternatives");
             assert!(edges.iter().any(|e| e["node"]["name"].as_str() == Some("branch-a")));
         });
@@ -10847,11 +11092,11 @@ mod tests {
 
             std::thread::sleep(std::time::Duration::from_millis(150));
 
-            let q = "{ wip { theKit { kit { tags { edges { node { name } } } } } } }";
+            let q = "{ store { wip { theKit { kit { tags { edges { node { name } } } } } } } }";
             let res = schema.execute(q).await;
             assert!(res.errors.is_empty(), "query errors: {:?}", res.errors);
             let data = res.data.into_json().unwrap();
-            let names: Vec<String> = data["wip"]["theKit"]["kit"]["tags"]["edges"].as_array().unwrap().iter().filter_map(|e| e["node"]["name"].as_str().map(String::from)).collect();
+            let names: Vec<String> = data["store"]["wip"]["theKit"]["kit"]["tags"]["edges"].as_array().unwrap().iter().filter_map(|e| e["node"]["name"].as_str().map(String::from)).collect();
             assert!(names.iter().any(|n| n == "alpha-tag"), "tags missing new name: {:?}", names);
         });
     }
@@ -10884,11 +11129,11 @@ mod tests {
 
             std::thread::sleep(std::time::Duration::from_millis(150));
 
-            let q = "{ wip { theKit { kit { concepts { edges { node { name } } } } } } }";
+            let q = "{ store { wip { theKit { kit { concepts { edges { node { name } } } } } } } }";
             let res = schema.execute(q).await;
             assert!(res.errors.is_empty(), "query errors: {:?}", res.errors);
             let data = res.data.into_json().unwrap();
-            let names: Vec<String> = data["wip"]["theKit"]["kit"]["concepts"]["edges"].as_array().unwrap().iter().filter_map(|e| e["node"]["name"].as_str().map(String::from)).collect();
+            let names: Vec<String> = data["store"]["wip"]["theKit"]["kit"]["concepts"]["edges"].as_array().unwrap().iter().filter_map(|e| e["node"]["name"].as_str().map(String::from)).collect();
             assert!(names.iter().any(|n| n == "beta-concept"), "concepts missing new name: {:?}", names);
         });
     }
@@ -10922,11 +11167,11 @@ mod tests {
 
             std::thread::sleep(std::time::Duration::from_millis(150));
 
-            let q = "{ wip { theKit { kit { qualities { edges { node { key value } } } } } } }";
+            let q = "{ store { wip { theKit { kit { qualities { edges { node { key value } } } } } } } }";
             let res = schema.execute(q).await;
             assert!(res.errors.is_empty(), "query errors: {:?}", res.errors);
             let data = res.data.into_json().unwrap();
-            let keys: Vec<String> = data["wip"]["theKit"]["kit"]["qualities"]["edges"].as_array().unwrap().iter().filter_map(|e| e["node"]["key"].as_str().map(String::from)).collect();
+            let keys: Vec<String> = data["store"]["wip"]["theKit"]["kit"]["qualities"]["edges"].as_array().unwrap().iter().filter_map(|e| e["node"]["key"].as_str().map(String::from)).collect();
             assert!(keys.iter().any(|k| k == "q1"), "qualities missing new key: {:?}", keys);
         });
     }
@@ -10951,7 +11196,7 @@ mod tests {
             let res = schema.execute(q).await;
             assert!(res.errors.is_empty(), "query errors: {:?}", res.errors);
             let data = res.data.into_json().unwrap();
-            let edges = data["wip"]["theKit"]["kit"]["designs"]["edges"].as_array().expect("design edges");
+            let edges = data["store"]["wip"]["theKit"]["kit"]["designs"]["edges"].as_array().expect("design edges");
             let any_piece = edges.iter().any(|e| e["node"]["pieces"]["edges"].as_array().map(|pe| pe.iter().any(|_| true)).unwrap_or(false));
             assert!(any_piece, "expected at least one piece in wip; got: {}", serde_json::to_string_pretty(&data).unwrap());
         });
@@ -10968,7 +11213,7 @@ mod tests {
             let q = relay_auth_designs_piece_ids();
             let res = schema.execute(q).await;
             let data = res.data.into_json().unwrap();
-            let edges = data["authoritative"]["theKit"]["kit"]["designs"]["edges"].as_array().expect("auth design edges");
+            let edges = data["store"]["authoritative"]["theKit"]["kit"]["designs"]["edges"].as_array().expect("auth design edges");
             let all_empty = edges.iter().all(|e| e["node"]["pieces"]["edges"].as_array().map(|pe| pe.is_empty()).unwrap_or(true));
             assert!(all_empty, "authoritative leaked pieces: {}", serde_json::to_string_pretty(&data).unwrap());
         });
@@ -11008,7 +11253,7 @@ mod tests {
     }
 
     fn relay_piece_count_wip(data: &serde_json::Value) -> usize {
-        let Some(edges) = data["wip"]["theKit"]["kit"]["designs"]["edges"].as_array() else {
+        let Some(edges) = data["store"]["wip"]["theKit"]["kit"]["designs"]["edges"].as_array() else {
             return 0;
         };
         edges.iter().map(|e| e["node"]["pieces"]["edges"].as_array().map(|pe| pe.len()).unwrap_or(0)).sum()
@@ -11242,7 +11487,7 @@ mod tests {
 
     #[cfg(not(target_arch = "wasm32"))]
     #[test]
-    fn kit_bundle_purge_unreferenced_blob_rows() {
+    fn kit_bundle_purge_unreferenced_blob_entities() {
         let mut bundle = crate::kit_backbone::DevBackboneBundleDoc::template();
         bundle.blobs.items.push(serde_json::json!({ "hash": "orphan_digest_deadbeef", "blob": "data:,x" }));
         bundle.wip.root = serde_json::json!({
