@@ -4,10 +4,10 @@ overview: Rewrite [semio/client/lib/rs/lib.rs](semio/client/lib/rs/lib.rs) so ev
 todos:
   - id: phase0-ticket
     content: Open umbrella ticket; archive current lib.rs runtime to ticket folder; gut lib.rs to scalars + macro DSL + empty regions
-    status: in_progress
+    status: completed
   - id: phase1-foundation
     content: Phase 1 — scalars + macro DSL + all 20 general interfaces (Node…Operation…Provider) with full 12-ladders
-    status: pending
+    status: in_progress
   - id: phase2-geom
     content: "Phase 2 — Vector/Point/Coordinate/Offset/Plane/Position/Location: inputs + entities + 12-ladders"
     status: pending

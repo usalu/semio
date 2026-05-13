@@ -1,0 +1,10 @@
+{
+  "title": "Align Metabolism Kit Fixture To Light Graph",
+  "emoji": "📦",
+  "status": "open",
+  "description": "Align semio/assets/fixtures/metabolism.kit.semio.json graph structure with metabolism.kit.light.semio.json (hash/items relation blocks per golden schema).",
+  "goal": "🎯r2602🎯runningsketchpad🎯runningsketchpadapps",
+  "sessions": [
+    "⚪69598505aed745ad932f4fd87cd6ee4e"
+  ]
+}
