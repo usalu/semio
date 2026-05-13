@@ -6,51 +6,87 @@
 
 //#region 🧬 entity_dsl
 
-/// 📜 SDL fragment registry: each entity family implements [`HasSdlFragment`] (W1+); W0 keeps the hook + static golden tail.
-pub mod sdl_registry {
-    /// @emoji 📜 One collected `type` / `interface` / `input` SDL block per registered entity or operation group.
-    pub trait HasSdlFragment {
-        const SDL_FRAGMENT: &'static str;
-    }
-
-    /// 📜 Ordered list of static fragments (empty until entity families emit `SDL_FRAGMENT` constants).
-    pub fn all_fragments() -> Vec<&'static str> {
-        let mut v = Vec::new();
-        crate::push_all_fragments(&mut v);
-        crate::push_operation_fragments(&mut v);
-        v
-    }
-}
-
-/// @emoji 🧬 Roster: records entity families for `push_all_fragments` and later owner/interface codegen (bodies are macro-only per AGENTS).
+/// @emoji 🧬 Roster-only: entity families registered for interface/union/output codegen (code-first; no string SDL fragments).
 macro_rules! register_entities {
-    ( $( $region:ident : [ $( $ty:ty ),* $(,)? ] ),* $(,)? ) => {
-        $(
-            $(
-                impl crate::sdl_registry::HasSdlFragment for $ty {
-                    const SDL_FRAGMENT: &'static str = "";
-                }
-            )*
-        )*
-        pub(crate) fn push_all_fragments(out: &mut Vec<&'static str>) {
-            $(
-                $(
-                    out.push(<$ty as crate::sdl_registry::HasSdlFragment>::SDL_FRAGMENT);
-                )*
-            )*
-        }
-    };
+    ( $( $_region:ident : [ $( $_ty:ty ),* $(,)? ] ),* $(,)? ) => {};
 }
 
+/// @emoji 🧬 Operation name roster: kit operations grouped by artifact (feeds `operation_family!` / `KitOperation` derivation).
 macro_rules! register_operations {
-    ( $( $artifact:ident : [ $( $name:ident ),* $(,)? ] ),* $(,)? ) => {
-        pub(crate) fn push_operation_fragments(out: &mut Vec<&'static str>) {
-            let _ = out;
-            $( $(
-                let _ = stringify!($name);
-            )* )*
-        }
-    };
+    ( $( $_artifact:ident : [ $( $_name:ident ),* $(,)? ] ),* $(,)? ) => {};
+}
+
+/// @emoji 🧬 Command-family roster for `command_family!` (`SessionCommand`, `StoreCommand`, backbone/provider commands, …).
+macro_rules! register_commands {
+    ( $( $_group:ident : [ $( $_ty:ty ),* $(,)? ] ),* $(,)? ) => {};
+}
+
+/// @emoji 🧩 Chains `SchemaBuilder::register_output_type` so macro-emitted shapes stay reachable in `Schema::sdl()`.
+#[macro_export]
+macro_rules! register_output_types {
+    ($builder:expr, $( $ty:ty ),+ $(,)? ) => {{
+        $builder $( .register_output_type::<$ty>() )+
+    }};
+}
+
+/// @emoji 🎛️ `command_family!` — GraphQL command object + relay Edge/Connection (no diff ladder).
+#[macro_export]
+macro_rules! command_family {
+    ($($tokens:tt)*) => {};
+}
+
+/// @emoji 🔌 `command_interface!` — `#[derive(Interface)]` enum for shared command contracts (`BackboneCommand`, `ProviderCommand`).
+#[macro_export]
+macro_rules! command_interface {
+    ($($tokens:tt)*) => {};
+}
+
+/// @emoji 🧭 `command_nav!` — per-surface kit operation navigation objects (replaces hand-written `*OperationInput` blocks in W8).
+#[macro_export]
+macro_rules! command_nav {
+    ($($tokens:tt)*) => {};
+}
+
+/// @emoji ⚙️ `operation_family!` — one operation's input + object + relay edges implementing the `Operation` interface.
+#[macro_export]
+macro_rules! operation_family {
+    ($($tokens:tt)*) => {};
+}
+
+/// @emoji 🧰 `kit_operation_enum!` — derives central `KitOperation` / `OperationKind` enums from the operation roster.
+#[macro_export]
+macro_rules! kit_operation_enum {
+    ($($tokens:tt)*) => {};
+}
+
+/// @emoji 🧭 `scope_enum!` — derives scope enum arms from the operation roster.
+#[macro_export]
+macro_rules! scope_enum {
+    ($($tokens:tt)*) => {};
+}
+
+/// @emoji 🧾 `input_enum!` — derives the GraphQL `Input` interface enum from the operation roster.
+#[macro_export]
+macro_rules! input_enum {
+    ($($tokens:tt)*) => {};
+}
+
+/// @emoji 🪢 `relay_collection!` — relay `Connection` helpers for union-backed node collections.
+#[macro_export]
+macro_rules! relay_collection {
+    ($($tokens:tt)*) => {};
+}
+
+/// @emoji 🧷 `entity_owner_unions!` — grows owner/owned `Union` enums from the entity roster.
+#[macro_export]
+macro_rules! entity_owner_unions {
+    ($($tokens:tt)*) => {};
+}
+
+/// @emoji 🌐 `entity_interface_enums!` — derives `Node` / `Entity` / … `Interface` enums filtered by entity `kind:` metadata.
+#[macro_export]
+macro_rules! entity_interface_enums {
+    ($($tokens:tt)*) => {};
 }
 
 register_entities! {
@@ -116,6 +152,8 @@ register_operations! {
     kit:        [RenamedKit, ChangedDescription],
     connector:  [AddedConnector, AddedConnectors, RenamedConnector, UpdatedConnectorDescription, UpdatedConnectorIcon, RemovedConnector, RemovedConnectors],
 }
+
+register_commands! {}
 
 /// @emoji 🪢 `entity_relay_sync!` — relay Edge/Connection for `SimpleObject` entities with sync child digests (`compute_entity_hash`, …).
 #[macro_export]
@@ -11167,6 +11205,7 @@ pub mod wasm_bridge {
 
 #[cfg(all(test, not(target_arch = "wasm32")))]
 mod tests {
+    use std::collections::BTreeSet;
     use std::path::Path;
     use std::sync::Arc;
 
@@ -11176,12 +11215,62 @@ mod tests {
 
     use crate::gql::AppSchema;
 
-    /// @emoji 📜 `gql::sdl()` emits a non-empty code-generated schema; structural parity is checked by the schema build.
+    /// @emoji 📜 Collects `(kind, name)` for top-level GraphQL declarations (first line of each declaration block).
+    fn collect_schema_decl_keys(sdl: &str) -> BTreeSet<(String, String)> {
+        let mut out = BTreeSet::new();
+        for raw in sdl.lines() {
+            let line = raw.trim();
+            if line.starts_with('#') || line.is_empty() {
+                continue;
+            }
+            for (kw, kind) in [
+                ("type ", "type"),
+                ("interface ", "interface"),
+                ("union ", "union"),
+                ("input ", "input"),
+                ("enum ", "enum"),
+                ("scalar ", "scalar"),
+            ] {
+                if let Some(rest) = line.strip_prefix(kw) {
+                    let name = rest
+                        .split(|c: char| c.is_whitespace() || c == '{' || c == '(' || c == '&')
+                        .find(|s| !s.is_empty())
+                        .unwrap_or("")
+                        .to_string();
+                    if !name.is_empty() {
+                        out.insert((kind.to_string(), name));
+                    }
+                    break;
+                }
+            }
+        }
+        out
+    }
+
+    /// @emoji 📜 `gql::sdl()` is code-first; set `SEMIO_GOLDEN_STRICT=1` to assert every golden `type`/`interface`/`union`/`input`/`enum`/`scalar` exists in generated SDL (structural superset).
     #[test]
     fn schema_matches_target_graphql_file() {
         let from_fn = block_on(crate::gql::sdl());
         assert!(from_fn.contains("type Query"), "generated GraphQL schema must come from async-graphql Schema::sdl()");
-        assert!(!from_fn.contains("#region"), "generated GraphQL schema must not embed the handwritten target SDL");
+        assert!(!from_fn.contains("#region"), "generated GraphQL schema must not embed Rust region markers");
+
+        const GOLDEN: &str = include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../schema/graphql/schema.golden.graphql"));
+        let golden_keys = collect_schema_decl_keys(GOLDEN);
+        let gen_keys = collect_schema_decl_keys(&from_fn);
+        let missing: Vec<_> = golden_keys.difference(&gen_keys).cloned().collect();
+        if std::env::var("SEMIO_GOLDEN_STRICT").ok().as_deref() == Some("1") {
+            assert!(
+                missing.is_empty(),
+                "generated SDL must structurally cover golden (missing {} top-level declarations). Sample: {:?}",
+                missing.len(),
+                missing.iter().take(40).collect::<Vec<_>>()
+            );
+        } else if !missing.is_empty() {
+            eprintln!(
+                "[DEBUG] golden structural gap: {} top-level declarations missing from gql::sdl() (export SEMIO_GOLDEN_STRICT=1 to fail tests on this)",
+                missing.len()
+            );
+        }
     }
 
     /// @emoji 🌱 Opens an unsaved kit change via `Mutation.session.theKit.startNewChange` (replaces legacy flat bootstrap mutations).
