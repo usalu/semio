@@ -6,8 +6,8 @@ const host = process.env.DEVCONTAINER === "true" ? "0.0.0.0" : "127.0.0.1";
 const root = resolve(import.meta.dir, "..");
 
 const child = spawn(
-  "bunx",
-  ["-y", "@modelcontextprotocol/inspector", "--config", ".cursor/mcp.json", "--server", "repo"],
+  "npx",
+  ["--yes", "@modelcontextprotocol/inspector", "--config", ".cursor/mcp.json", "--server", "repo"],
   {
     stdio: "inherit",
     shell: true,

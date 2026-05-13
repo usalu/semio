@@ -34,7 +34,7 @@
         "forwardAllArgs": true
       }
     },
-    "publish": {
+    "build-vsix": {
       "executor": "nx:run-commands",
       "dependsOn": ["build"],
       "options": {

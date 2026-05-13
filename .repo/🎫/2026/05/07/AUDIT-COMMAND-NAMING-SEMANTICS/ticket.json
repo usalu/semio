@@ -1,7 +1,7 @@
 {
   "title": "Audit Command Naming Semantics",
-  "status": "open",
-  "summary": "Cleaned the React entity hook surface to use schema-aligned instance-returning reads and updated sketchpad detail sections to rely on hook-based reads instead of direct class field access in the kit, type, tag, concept, design, and file panels.",
+  "status": "closed",
+  "summary": "Re-audited command semantics after the earlier rename pass. Fixed misleading and ambiguous names instead of forcing everything into generic targets. Renamed the repo VS Code VSIX step from publish to build-vsix because setup/devcontainer only build a local artifact, not publish anything. Split MCP inspector entrypoints into clear dev variants: added generic workspace dev-mcp plus dev-mcp-engine and dev-mcp-repo, then exposed root package scripts dev:mcp, dev:mcp:engine, and dev:mcp:repo. Restored a root package command surface with conventional verb-first colon scripts for the launch-config entrypoints, and updated launch.json to use the renamed coda/repo script names plus the corrected repo/client/mcp path. Fixed the inspector launchers to use npx --yes instead of bunx -y / bunx for non-workspace packages so the renamed MCP commands actually start. Validation: bun run dev:mcp starts the generic inspector; bun run dev:mcp:repo starts the repo inspector and serves the inspector URL; file diagnostics are clean. Remaining unrelated failure: bun run build:repo:vscode still fails inside the existing semio/rs Rust/WASM build due pre-existing Rust compile errors, not because of the naming changes.",
   "goal": "🎯graphqltargetsemiors",
   "sessions": [
     "⚪d723dbfbdbf7465e8e0b3cbfe817cf89",

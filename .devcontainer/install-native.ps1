@@ -216,7 +216,7 @@ function Install-EditorExtensions {
 
     $bunPathLocal = Get-CommandPathOrThrow -Label "bun" -Candidates @("bun.exe", "bun")
     Invoke-RepoCommand -FilePath $bunPathLocal -ArgumentList @("nx", "run", "repo:build") -WorkingDirectory $RepoRoot
-    Invoke-RepoCommand -FilePath $bunPathLocal -ArgumentList @("nx", "run", "repo:publish") -WorkingDirectory $RepoRoot
+    Invoke-RepoCommand -FilePath $bunPathLocal -ArgumentList @("nx", "run", "repo:build-vsix") -WorkingDirectory $RepoRoot
 
     foreach ($editorCli in $EditorCliPaths) {
         foreach ($extension in $recommendations) {

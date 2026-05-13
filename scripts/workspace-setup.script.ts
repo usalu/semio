@@ -89,6 +89,6 @@ if (existsSync(configureBin)) {
 
 console.log("[workspace-setup] VS Code extension build & package…");
 tryRun("bun", ["nx", "run", "repo:build"]);
-tryRun("bun", ["nx", "run", "repo:publish"]);
+tryRun("bun", ["nx", "run", "repo:build-vsix"]);
 
 console.log("[workspace-setup] done.");

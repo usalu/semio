@@ -1207,8 +1207,6 @@ pub mod gql_relay {
 
 pub mod meta {
     //! 🏷️ Metadata: DTO [`SimpleObject`] shells plus Arc-backed [`Tag`]/[`Concept`]/[`Quality`] entities (SDL `Entity`).
-    use std::sync::Weak;
-
     use async_graphql::Object;
 
     use crate::id::Id;
@@ -3488,6 +3486,7 @@ pub mod kit {
                         r.tags.write().await.push(tag.clone());
                     }
                 }
+                crate::gql::interfaces::EntityOwnerWeak::Connector(_) | crate::gql::interfaces::EntityOwnerWeak::Design(_) => {}
                 crate::gql::interfaces::EntityOwnerWeak::Unset => {}
             }
             Ok(())
@@ -3509,6 +3508,9 @@ pub mod kit {
                         t.concepts.write().await.push(c.clone());
                     }
                 }
+                crate::gql::interfaces::EntityOwnerWeak::Representation(_)
+                | crate::gql::interfaces::EntityOwnerWeak::Connector(_)
+                | crate::gql::interfaces::EntityOwnerWeak::Design(_) => {}
                 crate::gql::interfaces::EntityOwnerWeak::Unset => {}
             }
             Ok(())
@@ -3694,6 +3696,7 @@ pub mod kit {
                         r.tags.write().await.push(tag.clone());
                     }
                 }
+                crate::gql::interfaces::EntityOwnerWeak::Connector(_) | crate::gql::interfaces::EntityOwnerWeak::Design(_) => {}
                 crate::gql::interfaces::EntityOwnerWeak::Unset => {}
             }
             Ok(tag)
@@ -3718,6 +3721,7 @@ pub mod kit {
                         r.tags.write().await.retain(|t| &t.id != tag_id);
                     }
                 }
+                crate::gql::interfaces::EntityOwnerWeak::Connector(_) | crate::gql::interfaces::EntityOwnerWeak::Design(_) => {}
                 crate::gql::interfaces::EntityOwnerWeak::Unset => {}
             }
             self.tag_by_id.write().await.remove(tag_id);
@@ -3752,6 +3756,9 @@ pub mod kit {
                         t.concepts.write().await.push(c.clone());
                     }
                 }
+                crate::gql::interfaces::EntityOwnerWeak::Representation(_)
+                | crate::gql::interfaces::EntityOwnerWeak::Connector(_)
+                | crate::gql::interfaces::EntityOwnerWeak::Design(_) => {}
                 crate::gql::interfaces::EntityOwnerWeak::Unset => {}
             }
             Ok(c)
@@ -3771,6 +3778,9 @@ pub mod kit {
                         t.concepts.write().await.retain(|item| &item.id != concept_id);
                     }
                 }
+                crate::gql::interfaces::EntityOwnerWeak::Representation(_)
+                | crate::gql::interfaces::EntityOwnerWeak::Connector(_)
+                | crate::gql::interfaces::EntityOwnerWeak::Design(_) => {}
                 crate::gql::interfaces::EntityOwnerWeak::Unset => {}
             }
             self.concept_by_id.write().await.remove(concept_id);
@@ -4062,12 +4072,7 @@ impl crate::meta::Tag {
         self.compute_hash().await
     }
     pub async fn owner(&self) -> Option<crate::gql::interfaces::EntityInterface> {
-        match &*self.owner.read().await {
-            crate::gql::interfaces::EntityOwnerWeak::Kit(w) => w.upgrade().map(crate::gql::interfaces::EntityInterface::Kit),
-            crate::gql::interfaces::EntityOwnerWeak::Type(w) => w.upgrade().map(crate::gql::interfaces::EntityInterface::Type),
-            crate::gql::interfaces::EntityOwnerWeak::Representation(w) => w.upgrade().map(crate::gql::interfaces::EntityInterface::Representation),
-            crate::gql::interfaces::EntityOwnerWeak::Unset => None,
-        }
+        self.owner.read().await.upgrade()
     }
     pub async fn owns(&self) -> Option<crate::gql::interfaces::EntityConnectionInterface> {
         Some(crate::gql::interfaces::empty_entity_connection())
@@ -4102,11 +4107,7 @@ impl crate::meta::Concept {
         self.compute_hash().await
     }
     pub async fn owner(&self) -> Option<crate::gql::interfaces::EntityInterface> {
-        match &*self.owner.read().await {
-            crate::gql::interfaces::EntityOwnerWeak::Kit(w) => w.upgrade().map(crate::gql::interfaces::EntityInterface::Kit),
-            crate::gql::interfaces::EntityOwnerWeak::Type(w) => w.upgrade().map(crate::gql::interfaces::EntityInterface::Type),
-            crate::gql::interfaces::EntityOwnerWeak::Unset => None,
-        }
+        self.owner.read().await.upgrade()
     }
     pub async fn owns(&self) -> Option<crate::gql::interfaces::EntityConnectionInterface> {
         Some(crate::gql::interfaces::empty_entity_connection())
@@ -4141,14 +4142,7 @@ impl crate::meta::Quality {
         self.compute_hash().await
     }
     pub async fn owner(&self) -> Option<crate::gql::interfaces::EntityInterface> {
-        match &*self.owner.read().await {
-            crate::gql::interfaces::EntityOwnerWeak::Kit(w) => w.upgrade().map(crate::gql::interfaces::EntityInterface::Kit),
-            crate::gql::interfaces::EntityOwnerWeak::Type(w) => w.upgrade().map(crate::gql::interfaces::EntityInterface::Type),
-            crate::gql::interfaces::EntityOwnerWeak::Representation(w) => w.upgrade().map(crate::gql::interfaces::EntityInterface::Representation),
-            crate::gql::interfaces::EntityOwnerWeak::Connector(w) => w.upgrade().map(crate::gql::interfaces::EntityInterface::Connector),
-            crate::gql::interfaces::EntityOwnerWeak::Design(w) => w.upgrade().map(crate::gql::interfaces::EntityInterface::Design),
-            crate::gql::interfaces::EntityOwnerWeak::Unset => None,
-        }
+        self.owner.read().await.upgrade()
     }
     pub async fn owns(&self) -> Option<crate::gql::interfaces::EntityConnectionInterface> {
         Some(crate::gql::interfaces::empty_entity_connection())
@@ -6951,31 +6945,15 @@ pub mod operation {
     }
 
     pub(crate) async fn tag_owner_id(kit: &Arc<crate::kit::Kit>, tag: &Arc<crate::meta::Tag>) -> Result<Id, SemioError> {
-        match &*tag.owner.read().await {
-            crate::gql::interfaces::EntityOwnerWeak::Kit(_) => Ok(kit.workspace_kit_id().await),
-            crate::gql::interfaces::EntityOwnerWeak::Type(owner) => owner.upgrade().map(|value| value.id.clone()).ok_or_else(|| SemioError::invalid("Tag owner dropped")),
-            crate::gql::interfaces::EntityOwnerWeak::Representation(owner) => owner.upgrade().map(|value| value.id.clone()).ok_or_else(|| SemioError::invalid("Tag owner dropped")),
-            crate::gql::interfaces::EntityOwnerWeak::Unset => Err(SemioError::invalid("Tag owner unset")),
-        }
+        tag.owner.read().await.resolve_workspace_owner_id(kit).await
     }
 
     pub(crate) async fn concept_owner_id(kit: &Arc<crate::kit::Kit>, concept: &Arc<crate::meta::Concept>) -> Result<Id, SemioError> {
-        match &*concept.owner.read().await {
-            crate::gql::interfaces::EntityOwnerWeak::Kit(_) => Ok(kit.workspace_kit_id().await),
-            crate::gql::interfaces::EntityOwnerWeak::Type(owner) => owner.upgrade().map(|value| value.id.clone()).ok_or_else(|| SemioError::invalid("Concept owner dropped")),
-            crate::gql::interfaces::EntityOwnerWeak::Unset => Err(SemioError::invalid("Concept owner unset")),
-        }
+        concept.owner.read().await.resolve_workspace_owner_id(kit).await
     }
 
     pub(crate) async fn quality_owner_id(kit: &Arc<crate::kit::Kit>, quality: &Arc<crate::meta::Quality>) -> Result<Id, SemioError> {
-        match &*quality.owner.read().await {
-            crate::gql::interfaces::EntityOwnerWeak::Kit(_) => Ok(kit.workspace_kit_id().await),
-            crate::gql::interfaces::EntityOwnerWeak::Type(owner) => owner.upgrade().map(|value| value.id.clone()).ok_or_else(|| SemioError::invalid("Quality owner dropped")),
-            crate::gql::interfaces::EntityOwnerWeak::Representation(owner) => owner.upgrade().map(|value| value.id.clone()).ok_or_else(|| SemioError::invalid("Quality owner dropped")),
-            crate::gql::interfaces::EntityOwnerWeak::Connector(owner) => owner.upgrade().map(|value| value.id.clone()).ok_or_else(|| SemioError::invalid("Quality owner dropped")),
-            crate::gql::interfaces::EntityOwnerWeak::Design(owner) => owner.upgrade().map(|value| value.id.clone()).ok_or_else(|| SemioError::invalid("Quality owner dropped")),
-            crate::gql::interfaces::EntityOwnerWeak::Unset => Err(SemioError::invalid("Quality owner unset")),
-        }
+        quality.owner.read().await.resolve_workspace_owner_id(kit).await
     }
 
     async fn tag_input_from_entity(tag: &Arc<crate::meta::Tag>) -> TagInput {
@@ -9844,7 +9822,7 @@ pub mod gql {
         #[graphql(name = "EmptyEntityConnection")]
         pub struct EmptyEntityConnection {
             #[graphql(name = "pageInfo")]
-            pub page_info: Arc<crate::gql_relay::PageInfo>,
+            pub page_info: crate::gql_relay::PageInfo,
             pub hash: String,
         }
 
@@ -9852,33 +9830,18 @@ pub mod gql {
         #[derive(Interface)]
         #[graphql(
             name = "EntityConnection",
-            field(name = "pageInfo", method = "resolve_entity_connection_page_info", ty = "std::sync::Arc<crate::gql_relay::PageInfo>"),
-            field(name = "hash", method = "resolve_entity_connection_hash", ty = "String")
+            field(name = "pageInfo", ty = "crate::gql_relay::PageInfo"),
+            field(name = "hash", ty = "String")
         )]
         pub enum EntityConnectionInterface {
             Empty(EmptyEntityConnection),
             Store(crate::gql::StoreConnection),
         }
 
-        impl EntityConnectionInterface {
-            async fn resolve_entity_connection_page_info(&self) -> Arc<crate::gql_relay::PageInfo> {
-                match self {
-                    Self::Empty(e) => e.page_info.clone(),
-                    Self::Store(s) => s.page_info.clone(),
-                }
-            }
-            async fn resolve_entity_connection_hash(&self) -> String {
-                match self {
-                    Self::Empty(e) => e.hash.clone(),
-                    Self::Store(s) => s.hash.clone(),
-                }
-            }
-        }
-
         /// @emoji 🪢 Canonical empty `EntityConnection` for shells without materialized child rows.
         pub fn empty_entity_connection() -> EntityConnectionInterface {
             EntityConnectionInterface::Empty(EmptyEntityConnection {
-                page_info: Arc::new(crate::gql_relay::PageInfo::default()),
+                page_info: crate::gql_relay::PageInfo::default(),
                 hash: h(&["entity-connection", "empty"]),
             })
         }

@@ -412,7 +412,7 @@ if [ "${#IDE_CLIS[@]}" -gt 0 ]; then
     fi
     if [ -n "$needs_rebuild" ]; then
       echo "🔨 Building semio VSCode extension..."
-      if (bun nx run repo:build && bun nx run repo:publish); then
+      if (bun nx run repo:build && bun nx run repo:build-vsix); then
         echo "✅ Extension build completed."
       else
         echo "⚠️  Extension build failed, continuing without extension install."

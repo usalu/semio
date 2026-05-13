@@ -36,7 +36,7 @@
       "type": "node",
       "request": "launch",
       "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "mcp:inspector"],
+      "runtimeArgs": ["run", "dev:mcp"],
       "env": {
         "CLIENT_PORT": "6274",
         "SERVER_PORT": "6277"
@@ -148,7 +148,7 @@
       "name": "🛠️dev👤semio📚engine🤖mcp",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run workspace:dev",
+      "command": "bun run dev:mcp:engine",
       "isBackground": true,
       "options": {
         "cwd": "${workspaceFolder}"
@@ -295,7 +295,7 @@
       "type": "node",
       "request": "launch",
       "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "dev:coda-desktop"],
+      "runtimeArgs": ["run", "dev:coda:desktop"],
       "cwd": "${workspaceFolder}",
       "console": "integratedTerminal"
     },
@@ -321,7 +321,7 @@
       "name": "🛠️dev🔬coda🤖mcp (with inspector)",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run workspace:dev",
+      "command": "bun run dev:mcp",
       "isBackground": true,
       "options": {
         "cwd": "${workspaceFolder}",
@@ -358,7 +358,7 @@
       "type": "node",
       "request": "launch",
       "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "mcp:inspector"],
+      "runtimeArgs": ["run", "dev:mcp:repo"],
       "env": {
         "MCP_AUTO_OPEN_ENABLED": "false",
         "MCP_PROXY_AUTH_TOKEN": "repo-mcp-debug-token"
@@ -368,7 +368,7 @@
       "serverReadyAction": {
         "action": "openExternally",
         "pattern": "(http://[^\\s]+:6274/\\?MCP_PROXY_AUTH_TOKEN=[^\\s]+)",
-        "uriFormat": "%s&transport=stdio&serverCommand=go&serverArgs=run&serverArgs=./repo/mcp&MCP_PROXY_FULL_ADDRESS=http://127.0.0.1:6277"
+        "uriFormat": "%s&transport=stdio&serverCommand=go&serverArgs=run&serverArgs=./repo/client/mcp&MCP_PROXY_FULL_ADDRESS=http://127.0.0.1:6277"
       }
     },
     {
@@ -466,7 +466,7 @@
       "type": "node",
       "request": "launch",
       "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "build:coda-desktop"],
+      "runtimeArgs": ["run", "build:coda:desktop"],
       "cwd": "${workspaceFolder}",
       "console": "integratedTerminal"
     },
@@ -475,7 +475,7 @@
       "type": "node",
       "request": "launch",
       "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "build:repo-cli"],
+      "runtimeArgs": ["run", "build:repo:cli"],
       "cwd": "${workspaceFolder}",
       "console": "integratedTerminal"
     },
@@ -484,7 +484,7 @@
       "type": "node",
       "request": "launch",
       "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "build:repo-server"],
+      "runtimeArgs": ["run", "build:repo:server"],
       "cwd": "${workspaceFolder}",
       "console": "integratedTerminal"
     },
@@ -493,7 +493,7 @@
       "type": "node",
       "request": "launch",
       "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "build:repo-vscode"],
+      "runtimeArgs": ["run", "build:repo:vscode"],
       "cwd": "${workspaceFolder}",
       "console": "integratedTerminal"
     },
@@ -540,7 +540,7 @@
       "type": "node",
       "request": "launch",
       "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "publish:coda-desktop"],
+      "runtimeArgs": ["run", "publish:coda:desktop"],
       "cwd": "${workspaceFolder}",
       "console": "integratedTerminal"
     }

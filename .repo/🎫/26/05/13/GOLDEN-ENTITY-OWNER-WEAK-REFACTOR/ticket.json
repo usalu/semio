@@ -1,7 +1,7 @@
 {
   "title": "Golden Entity Owner Weak Refactor",
   "emoji": "🦀",
-  "status": "open",
+  "status": "closed",
   "description": "Refactor semio/client/lib/rs/lib.rs: consolidate TagOwnerSlot, ConceptOwnerSlot, QualityOwnerSlot into gql::interfaces::EntityOwnerWeak; remove AttributeOwner GraphQL union; align Attribute.owner with Option\u003cEntityInterface\u003e.",
   "goal": "🎯r2602",
   "sessions": [

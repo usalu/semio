@@ -6,9 +6,9 @@ const host = process.env.DEVCONTAINER === "true" ? "0.0.0.0" : "127.0.0.1";
 const engineDir = resolve(import.meta.dir, "..", "semio", "engine");
 
 const child = spawn(
-  "bunx",
+  "npx",
   [
-    "-y",
+    "--yes",
     "@mcpjam/inspector@latest",
     "uv",
     "--directory",
