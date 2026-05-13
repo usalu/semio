@@ -3210,7 +3210,7 @@ pub mod kit {
             row
         }
 
-        /// @emoji 📦 Single mutation entry: walks canonical [`crate::operation::CanonicalKitDiff`] from [`crate::operation::KitOperation::to_diff`].
+        /// @emoji 📦 Single mutation entry: walks canonical [`crate::operation::CanonicalKitDiff`] from [`crate::operation::Operation::to_diff`].
         pub async fn apply_diff(self: &Arc<Self>, diff: &crate::operation::KitDiff) -> Result<(), crate::error::SemioError> {
             let d = &diff.0;
             if let Some(s) = &d.name {
@@ -4251,10 +4251,10 @@ pub mod vcs {
         pub saved_at: RwLock<Option<Timestamp>>,
         pub description: RwLock<String>,
         pub origin: RwLock<String>,
-        /// @emoji 📜 Forward [`operation::KitOperation`] steps (materialized via `Kit::apply_diff`; persisted `kitDiff` in bundles is derived from each op's `to_diff` at projection time).
-        pub forwards: RwLock<Vec<operation::KitOperation>>,
+        /// @emoji 📜 Forward [`operation::Operation`] steps (materialized via `Kit::apply_diff`; persisted `kitDiff` in bundles is derived from each op's `to_diff` at projection time).
+        pub forwards: RwLock<Vec<operation::Operation>>,
         /// @emoji 📜 Backward companion operations for explicit undo/redo (same pipeline).
-        pub backwards: RwLock<Vec<operation::KitOperation>>,
+        pub backwards: RwLock<Vec<operation::Operation>>,
     }
 
     /// 🔗 Weak owner lane matching SDL `Alternative | Checkpoint` for persisted [`Change`] entities.
@@ -4990,7 +4990,7 @@ pub mod vcs {
             crate::gql_relay::ChangeConnection::from_changes(changes_from_edits(transactions).await).await
         }
 
-        /// @emoji 📦 Deterministic materialized [`Kit`] for `draft_id`: clone [`Graph::parent_root_for_active_draft`] and replay recorded [`KitOperation`] forwards.
+        /// @emoji 📦 Deterministic materialized [`Kit`] for `draft_id`: clone [`Graph::parent_root_for_active_draft`] and replay recorded [`Operation`] forwards.
         pub async fn materialized_kit_for_draft(self: &Arc<Self>, draft_id: &Id) -> Arc<Kit> {
             let draft = self.ensure_draft(draft_id).await;
             let seq = draft.change_seq.load(Ordering::Relaxed);
@@ -5060,7 +5060,7 @@ pub mod vcs {
         }
 
         /// @emoji 📝 Append one forward operation plus backward operations onto the open transaction's tail [`Change`], bumping draft `change_seq`.
-        pub async fn record_op_in_open_transaction(self: &Arc<Self>, draft_id: &Id, transaction_id: &Id, forward: crate::operation::KitOperation, backwards: Vec<crate::operation::KitOperation>) -> Result<(), SemioError> {
+        pub async fn record_op_in_open_transaction(self: &Arc<Self>, draft_id: &Id, transaction_id: &Id, forward: crate::operation::Operation, backwards: Vec<crate::operation::Operation>) -> Result<(), SemioError> {
             let draft = self.ensure_draft(draft_id).await;
             let _ = draft.ensure_transaction(transaction_id).await;
             let tx = draft.transactions.read().await.iter().find(|t| &t.id == transaction_id).cloned().ok_or_else(|| SemioError::not_found("Edit", transaction_id.as_str()))?;
@@ -5291,7 +5291,7 @@ pub mod vcs {
             description: Option<String>,
         ) -> Result<(Arc<crate::kit::design::piece::Piece>,), SemioError> {
             let piece_id = Id::new().await;
-            let forward = crate::operation::KitOperation::CreateFixedPiece {
+            let forward = crate::operation::Operation::CreateFixedPiece {
                 scope: crate::operation::Scope::CreateFixedPiece { design_id: design_id.clone(), piece_id: piece_id.clone(), blueprint_id, attribute_ids: Vec::new() },
                 input: crate::operation::Input::FixedPiece { position, name, description },
             };
@@ -6209,7 +6209,7 @@ pub mod operation {
         pub offset: OffsetInput,
     }
 
-    /// @emoji 🧭 Shared scope payload: every distinct id-shape used across [`KitOperation`] commands.
+    /// @emoji 🧭 Shared scope payload: every distinct id-shape used across [`Operation`] commands.
     #[derive(Clone, Debug, PartialEq)]
     pub enum Scope {
         Kit,
@@ -6245,7 +6245,7 @@ pub mod operation {
 
     /// @emoji 🧩 Normalized  operation surface: every variant is `{ scope: Scope, input: Input }`.
     #[derive(Clone, Debug, PartialEq)]
-    pub enum KitOperation {
+    pub enum Operation {
         RenameKit { scope: Scope, input: Input },
         ChangeDescription { scope: Scope, input: Input },
         ChangeIcon { scope: Scope, input: Input },
@@ -6266,27 +6266,27 @@ pub mod operation {
         FixPieceInDesign { scope: Scope, input: Input },
     }
 
-    impl KitOperation {
+    impl Operation {
         pub fn kind(&self) -> &'static str {
             match self {
-                KitOperation::RenameKit { .. } => "renameKit",
-                KitOperation::ChangeDescription { .. } => "changeDescription",
-                KitOperation::ChangeIcon { .. } => "changeIcon",
-                KitOperation::ChangeImage { .. } => "changeImage",
-                KitOperation::CreateTag { .. } => "createTag",
-                KitOperation::CreateTags { .. } => "createTags",
-                KitOperation::DeleteTag { .. } => "deleteTag",
-                KitOperation::DeleteTags { .. } => "deleteTags",
-                KitOperation::RenameTag { .. } => "renameTag",
-                KitOperation::CreateConcept { .. } => "createConcept",
-                KitOperation::DeleteConcept { .. } => "deleteConcept",
-                KitOperation::CreateQuality { .. } => "createQuality",
-                KitOperation::DeleteQuality { .. } => "deleteQuality",
-                KitOperation::CreateFixedPiece { .. } => "createFixedPiece",
-                KitOperation::DeletePieceInDesign { .. } => "deletePieceInDesign",
-                KitOperation::DragPieceInDesign { .. } => "dragPieceInDesign",
-                KitOperation::DragPiecesInDesign { .. } => "dragPiecesInDesign",
-                KitOperation::FixPieceInDesign { .. } => "fixPieceInDesign",
+                Operation::RenameKit { .. } => "renameKit",
+                Operation::ChangeDescription { .. } => "changeDescription",
+                Operation::ChangeIcon { .. } => "changeIcon",
+                Operation::ChangeImage { .. } => "changeImage",
+                Operation::CreateTag { .. } => "createTag",
+                Operation::CreateTags { .. } => "createTags",
+                Operation::DeleteTag { .. } => "deleteTag",
+                Operation::DeleteTags { .. } => "deleteTags",
+                Operation::RenameTag { .. } => "renameTag",
+                Operation::CreateConcept { .. } => "createConcept",
+                Operation::DeleteConcept { .. } => "deleteConcept",
+                Operation::CreateQuality { .. } => "createQuality",
+                Operation::DeleteQuality { .. } => "deleteQuality",
+                Operation::CreateFixedPiece { .. } => "createFixedPiece",
+                Operation::DeletePieceInDesign { .. } => "deletePieceInDesign",
+                Operation::DragPieceInDesign { .. } => "dragPieceInDesign",
+                Operation::DragPiecesInDesign { .. } => "dragPiecesInDesign",
+                Operation::FixPieceInDesign { .. } => "fixPieceInDesign",
             }
         }
 
@@ -6299,7 +6299,7 @@ pub mod operation {
                 )
             }
             match self {
-                KitOperation::CreateFixedPiece { scope, input } => {
+                Operation::CreateFixedPiece { scope, input } => {
                     let (d, p, b, ac) = match scope {
                         Scope::CreateFixedPiece { design_id, piece_id, blueprint_id, attribute_ids } => (design_id.as_str(), piece_id.as_str(), blueprint_id.as_str(), attribute_ids.len()),
                         _ => ("", "", "", 0usize),
@@ -6309,11 +6309,11 @@ pub mod operation {
                     };
                     h(&[self.kind(), d, p, b, &ac.to_string(), &pos_fp(position), name.as_deref().unwrap_or(""), description.as_deref().unwrap_or("")])
                 }
-                KitOperation::RenameKit { input, .. } => match input {
+                Operation::RenameKit { input, .. } => match input {
                     Input::Name { name } => h(&[self.kind(), name.as_str()]),
                     _ => h(&[self.kind(), "bad-input"]),
                 },
-                KitOperation::DragPieceInDesign { scope, input } | KitOperation::DragPiecesInDesign { scope, input } => {
+                Operation::DragPieceInDesign { scope, input } | Operation::DragPiecesInDesign { scope, input } => {
                     let (d, pid) = match scope {
                         Scope::PieceInDesign { design_id, piece_id } => (design_id.as_str(), piece_id.as_str()),
                         Scope::PiecesInDesign { design_id, piece_ids } => {
@@ -6338,7 +6338,7 @@ pub mod operation {
         /// Pure: read pre-state and produce a structural diff without mutating the kit.
         pub async fn to_diff(&self, kit: &Arc<crate::kit::Kit>) -> Result<KitDiff, SemioError> {
             match self {
-                KitOperation::RenameKit { scope, input } => {
+                Operation::RenameKit { scope, input } => {
                     let Scope::Kit = scope else {
                         return Err(SemioError::invalid("renameKit expects Scope::Kit"));
                     };
@@ -6350,7 +6350,7 @@ pub mod operation {
                     }
                     Ok(KitDiff(CanonicalKitDiff { name: Some(name.clone()), ..Default::default() }))
                 }
-                KitOperation::ChangeDescription { scope, input } => {
+                Operation::ChangeDescription { scope, input } => {
                     let Scope::Entity { entity_id } = scope else {
                         return Err(SemioError::invalid("changeDescription expects Scope::Entity"));
                     };
@@ -6403,7 +6403,7 @@ pub mod operation {
                     }
                     Err(SemioError::not_found("DescriptionEntity", entity_id.as_str()))
                 }
-                KitOperation::ChangeIcon { scope, input } => {
+                Operation::ChangeIcon { scope, input } => {
                     let Scope::Entity { entity_id } = scope else {
                         return Err(SemioError::invalid("changeIcon expects Scope::Entity"));
                     };
@@ -6450,7 +6450,7 @@ pub mod operation {
                     }
                     Err(SemioError::not_found("IconEntity", entity_id.as_str()))
                 }
-                KitOperation::ChangeImage { scope, input } => {
+                Operation::ChangeImage { scope, input } => {
                     let Scope::Entity { entity_id } = scope else {
                         return Err(SemioError::invalid("changeImage expects Scope::Entity"));
                     };
@@ -6479,7 +6479,7 @@ pub mod operation {
                     }
                     Err(SemioError::not_found("ImageEntity", entity_id.as_str()))
                 }
-                KitOperation::CreateTag { scope, input } => {
+                Operation::CreateTag { scope, input } => {
                     let Scope::CreateTag { owner_id, tag_id, attribute_ids } = scope else {
                         return Err(SemioError::invalid("createTag expects Scope::CreateTag"));
                     };
@@ -6496,7 +6496,7 @@ pub mod operation {
                         ..Default::default()
                     }))
                 }
-                KitOperation::CreateTags { scope, input } => {
+                Operation::CreateTags { scope, input } => {
                     let Scope::CreateTags { owner_id, tag_ids, attribute_ids } = scope else {
                         return Err(SemioError::invalid("createTags expects Scope::CreateTags"));
                     };
@@ -6517,14 +6517,14 @@ pub mod operation {
                     }
                     Ok(KitDiff(CanonicalKitDiff { tags: Some(TagsCollectionDiff { added, ..Default::default() }), ..Default::default() }))
                 }
-                KitOperation::DeleteTag { scope, .. } => {
+                Operation::DeleteTag { scope, .. } => {
                     let Scope::Tag { tag_id } = scope else {
                         return Err(SemioError::invalid("deleteTag expects Scope::Tag"));
                     };
                     ensure_tag(kit, tag_id).await?;
                     Ok(KitDiff(CanonicalKitDiff { tags: Some(TagsCollectionDiff { removed: vec![IdRef { id: tag_id.clone() }], ..Default::default() }), ..Default::default() }))
                 }
-                KitOperation::DeleteTags { scope, .. } => {
+                Operation::DeleteTags { scope, .. } => {
                     let Scope::Tags { tag_ids } = scope else {
                         return Err(SemioError::invalid("deleteTags expects Scope::Tags"));
                     };
@@ -6535,7 +6535,7 @@ pub mod operation {
                     }
                     Ok(KitDiff(CanonicalKitDiff { tags: Some(TagsCollectionDiff { removed, ..Default::default() }), ..Default::default() }))
                 }
-                KitOperation::RenameTag { scope, input } => {
+                Operation::RenameTag { scope, input } => {
                     let Scope::Tag { tag_id } = scope else {
                         return Err(SemioError::invalid("renameTag expects Scope::Tag"));
                     };
@@ -6548,7 +6548,7 @@ pub mod operation {
                         ..Default::default()
                     }))
                 }
-                KitOperation::CreateConcept { scope, input } => {
+                Operation::CreateConcept { scope, input } => {
                     let Scope::CreateConcept { owner_id, concept_id, attribute_ids } = scope else {
                         return Err(SemioError::invalid("createConcept expects Scope::CreateConcept"));
                     };
@@ -6565,14 +6565,14 @@ pub mod operation {
                         ..Default::default()
                     }))
                 }
-                KitOperation::DeleteConcept { scope, .. } => {
+                Operation::DeleteConcept { scope, .. } => {
                     let Scope::Concept { concept_id } = scope else {
                         return Err(SemioError::invalid("deleteConcept expects Scope::Concept"));
                     };
                     ensure_concept(kit, concept_id).await?;
                     Ok(KitDiff(CanonicalKitDiff { concepts: Some(ConceptsCollectionDiff { removed: vec![IdRef { id: concept_id.clone() }], ..Default::default() }), ..Default::default() }))
                 }
-                KitOperation::CreateQuality { scope, input } => {
+                Operation::CreateQuality { scope, input } => {
                     let Scope::CreateQuality { owner_id, quality_id, attribute_ids, benchmark_ids } = scope else {
                         return Err(SemioError::invalid("createQuality expects Scope::CreateQuality"));
                     };
@@ -6595,14 +6595,14 @@ pub mod operation {
                         ..Default::default()
                     }))
                 }
-                KitOperation::DeleteQuality { scope, .. } => {
+                Operation::DeleteQuality { scope, .. } => {
                     let Scope::Quality { quality_id } = scope else {
                         return Err(SemioError::invalid("deleteQuality expects Scope::Quality"));
                     };
                     ensure_quality(kit, quality_id).await?;
                     Ok(KitDiff(CanonicalKitDiff { qualities: Some(QualitiesCollectionDiff { removed: vec![IdRef { id: quality_id.clone() }], ..Default::default() }), ..Default::default() }))
                 }
-                KitOperation::CreateFixedPiece { scope, input } => {
+                Operation::CreateFixedPiece { scope, input } => {
                     let Scope::CreateFixedPiece { design_id, piece_id, blueprint_id, attribute_ids } = scope else {
                         return Err(SemioError::invalid("createFixedPiece expects Scope::CreateFixedPiece"));
                     };
@@ -6630,7 +6630,7 @@ pub mod operation {
                         ..Default::default()
                     }))
                 }
-                KitOperation::DeletePieceInDesign { scope, .. } => {
+                Operation::DeletePieceInDesign { scope, .. } => {
                     let Scope::PieceInDesign { design_id, piece_id } = scope else {
                         return Err(SemioError::invalid("deletePieceInDesign expects Scope::PieceInDesign"));
                     };
@@ -6646,7 +6646,7 @@ pub mod operation {
                         ..Default::default()
                     }))
                 }
-                KitOperation::DragPieceInDesign { scope, input } => {
+                Operation::DragPieceInDesign { scope, input } => {
                     let Scope::PieceInDesign { design_id, piece_id } = scope else {
                         return Err(SemioError::invalid("dragPieceInDesign expects Scope::PieceInDesign"));
                     };
@@ -6668,7 +6668,7 @@ pub mod operation {
                         ..Default::default()
                     }))
                 }
-                KitOperation::DragPiecesInDesign { scope, input } => {
+                Operation::DragPiecesInDesign { scope, input } => {
                     let Scope::PiecesInDesign { design_id, piece_ids } = scope else {
                         return Err(SemioError::invalid("dragPiecesInDesign expects Scope::PiecesInDesign"));
                     };
@@ -6688,7 +6688,7 @@ pub mod operation {
                         ..Default::default()
                     }))
                 }
-                KitOperation::FixPieceInDesign { scope, .. } => {
+                Operation::FixPieceInDesign { scope, .. } => {
                     let Scope::PieceInDesign { design_id, piece_id } = scope else {
                         return Err(SemioError::invalid("fixPieceInDesign expects Scope::PieceInDesign"));
                     };
@@ -6711,52 +6711,52 @@ pub mod operation {
         }
 
         /// Pure: read pre-state and return the ordered list of backward operations.
-        pub async fn to_backwards(&self, kit: &Arc<crate::kit::Kit>) -> Result<Vec<KitOperation>, SemioError> {
+        pub async fn to_backwards(&self, kit: &Arc<crate::kit::Kit>) -> Result<Vec<Operation>, SemioError> {
             match self {
-                KitOperation::RenameKit { .. } => Ok(vec![KitOperation::RenameKit { scope: Scope::Kit, input: Input::Name { name: kit.name.read().await.clone() } }]),
-                KitOperation::ChangeDescription { scope, .. } => {
+                Operation::RenameKit { .. } => Ok(vec![Operation::RenameKit { scope: Scope::Kit, input: Input::Name { name: kit.name.read().await.clone() } }]),
+                Operation::ChangeDescription { scope, .. } => {
                     let Scope::Entity { entity_id } = scope else {
                         return Err(SemioError::invalid("changeDescription expects Scope::Entity"));
                     };
-                    Ok(vec![KitOperation::ChangeDescription { scope: Scope::Entity { entity_id: entity_id.clone() }, input: Input::Description { description: entity_description(kit, entity_id).await? } }])
+                    Ok(vec![Operation::ChangeDescription { scope: Scope::Entity { entity_id: entity_id.clone() }, input: Input::Description { description: entity_description(kit, entity_id).await? } }])
                 }
-                KitOperation::ChangeIcon { scope, .. } => {
+                Operation::ChangeIcon { scope, .. } => {
                     let Scope::Entity { entity_id } = scope else {
                         return Err(SemioError::invalid("changeIcon expects Scope::Entity"));
                     };
-                    Ok(vec![KitOperation::ChangeIcon { scope: Scope::Entity { entity_id: entity_id.clone() }, input: Input::Icon { icon: entity_icon(kit, entity_id).await? } }])
+                    Ok(vec![Operation::ChangeIcon { scope: Scope::Entity { entity_id: entity_id.clone() }, input: Input::Icon { icon: entity_icon(kit, entity_id).await? } }])
                 }
-                KitOperation::ChangeImage { scope, .. } => {
+                Operation::ChangeImage { scope, .. } => {
                     let Scope::Entity { entity_id } = scope else {
                         return Err(SemioError::invalid("changeImage expects Scope::Entity"));
                     };
-                    Ok(vec![KitOperation::ChangeImage { scope: Scope::Entity { entity_id: entity_id.clone() }, input: Input::Image { image: entity_image(kit, entity_id).await? } }])
+                    Ok(vec![Operation::ChangeImage { scope: Scope::Entity { entity_id: entity_id.clone() }, input: Input::Image { image: entity_image(kit, entity_id).await? } }])
                 }
-                KitOperation::CreateTag { scope, .. } => {
+                Operation::CreateTag { scope, .. } => {
                     let Scope::CreateTag { tag_id, .. } = scope else {
                         return Err(SemioError::invalid("createTag expects Scope::CreateTag"));
                     };
-                    Ok(vec![KitOperation::DeleteTag { scope: Scope::Tag { tag_id: tag_id.clone() }, input: Input::None }])
+                    Ok(vec![Operation::DeleteTag { scope: Scope::Tag { tag_id: tag_id.clone() }, input: Input::None }])
                 }
-                KitOperation::CreateTags { scope, .. } => {
+                Operation::CreateTags { scope, .. } => {
                     let Scope::CreateTags { tag_ids, .. } = scope else {
                         return Err(SemioError::invalid("createTags expects Scope::CreateTags"));
                     };
-                    Ok(vec![KitOperation::DeleteTags { scope: Scope::Tags { tag_ids: tag_ids.clone() }, input: Input::None }])
+                    Ok(vec![Operation::DeleteTags { scope: Scope::Tags { tag_ids: tag_ids.clone() }, input: Input::None }])
                 }
-                KitOperation::DeleteTag { scope, .. } => {
+                Operation::DeleteTag { scope, .. } => {
                     let Scope::Tag { tag_id } = scope else {
                         return Err(SemioError::invalid("deleteTag expects Scope::Tag"));
                     };
                     let tag = ensure_tag(kit, tag_id).await?;
                     let owner_id = tag_owner_id(kit, &tag).await?;
                     let attributes = tag.attributes.read().await.clone();
-                    Ok(vec![KitOperation::CreateTag {
+                    Ok(vec![Operation::CreateTag {
                         scope: Scope::CreateTag { owner_id, tag_id: tag.id.clone(), attribute_ids: attributes.iter().map(|attribute| attribute.id.clone()).collect() },
                         input: Input::Tag { tag: tag_input_from_entity(&tag).await },
                     }])
                 }
-                KitOperation::DeleteTags { scope, .. } => {
+                Operation::DeleteTags { scope, .. } => {
                     let Scope::Tags { tag_ids } = scope else {
                         return Err(SemioError::invalid("deleteTags expects Scope::Tags"));
                     };
@@ -6779,9 +6779,9 @@ pub mod operation {
                         attribute_ids.push(attrs.iter().map(|attribute| attribute.id.clone()).collect());
                         tags.push(tag_input_from_entity(&tag).await);
                     }
-                    Ok(vec![KitOperation::CreateTags { scope: Scope::CreateTags { owner_id: owner_id.unwrap_or_default(), tag_ids: out_tag_ids, attribute_ids }, input: Input::Tags { tags } }])
+                    Ok(vec![Operation::CreateTags { scope: Scope::CreateTags { owner_id: owner_id.unwrap_or_default(), tag_ids: out_tag_ids, attribute_ids }, input: Input::Tags { tags } }])
                 }
-                KitOperation::RenameTag { scope, .. } => {
+                Operation::RenameTag { scope, .. } => {
                     let Scope::Tag { tag_id } = scope else {
                         return Err(SemioError::invalid("renameTag expects Scope::Tag"));
                     };
@@ -6791,33 +6791,33 @@ pub mod operation {
                         guard.clone()
                     };
                     drop(tag);
-                    Ok(vec![KitOperation::RenameTag { scope: Scope::Tag { tag_id: tag_id.clone() }, input: Input::Name { name } }])
+                    Ok(vec![Operation::RenameTag { scope: Scope::Tag { tag_id: tag_id.clone() }, input: Input::Name { name } }])
                 }
-                KitOperation::CreateConcept { scope, .. } => {
+                Operation::CreateConcept { scope, .. } => {
                     let Scope::CreateConcept { concept_id, .. } = scope else {
                         return Err(SemioError::invalid("createConcept expects Scope::CreateConcept"));
                     };
-                    Ok(vec![KitOperation::DeleteConcept { scope: Scope::Concept { concept_id: concept_id.clone() }, input: Input::None }])
+                    Ok(vec![Operation::DeleteConcept { scope: Scope::Concept { concept_id: concept_id.clone() }, input: Input::None }])
                 }
-                KitOperation::DeleteConcept { scope, .. } => {
+                Operation::DeleteConcept { scope, .. } => {
                     let Scope::Concept { concept_id } = scope else {
                         return Err(SemioError::invalid("deleteConcept expects Scope::Concept"));
                     };
                     let concept = ensure_concept(kit, concept_id).await?;
                     let owner_id = concept_owner_id(kit, &concept).await?;
                     let attributes = concept.attributes.read().await.clone();
-                    Ok(vec![KitOperation::CreateConcept {
+                    Ok(vec![Operation::CreateConcept {
                         scope: Scope::CreateConcept { owner_id, concept_id: concept.id.clone(), attribute_ids: attributes.iter().map(|attribute| attribute.id.clone()).collect() },
                         input: Input::Concept { concept: concept_input_from_entity(&concept).await },
                     }])
                 }
-                KitOperation::CreateQuality { scope, .. } => {
+                Operation::CreateQuality { scope, .. } => {
                     let Scope::CreateQuality { quality_id, .. } = scope else {
                         return Err(SemioError::invalid("createQuality expects Scope::CreateQuality"));
                     };
-                    Ok(vec![KitOperation::DeleteQuality { scope: Scope::Quality { quality_id: quality_id.clone() }, input: Input::None }])
+                    Ok(vec![Operation::DeleteQuality { scope: Scope::Quality { quality_id: quality_id.clone() }, input: Input::None }])
                 }
-                KitOperation::DeleteQuality { scope, .. } => {
+                Operation::DeleteQuality { scope, .. } => {
                     let Scope::Quality { quality_id } = scope else {
                         return Err(SemioError::invalid("deleteQuality expects Scope::Quality"));
                     };
@@ -6828,18 +6828,18 @@ pub mod operation {
                     if !benchmarks.is_empty() {
                         return Err(SemioError::invalid("deleteQuality backwards does not support benchmarks yet"));
                     }
-                    Ok(vec![KitOperation::CreateQuality {
+                    Ok(vec![Operation::CreateQuality {
                         scope: Scope::CreateQuality { owner_id, quality_id: quality.id.clone(), attribute_ids: attributes.iter().map(|attribute| attribute.id.clone()).collect(), benchmark_ids: Vec::new() },
                         input: Input::Quality { quality: quality_input_from_entity(&quality).await },
                     }])
                 }
-                KitOperation::CreateFixedPiece { scope, .. } => {
+                Operation::CreateFixedPiece { scope, .. } => {
                     let Scope::CreateFixedPiece { design_id, piece_id, .. } = scope else {
                         return Err(SemioError::invalid("createFixedPiece expects Scope::CreateFixedPiece"));
                     };
-                    Ok(vec![KitOperation::DeletePieceInDesign { scope: Scope::PieceInDesign { design_id: design_id.clone(), piece_id: piece_id.clone() }, input: Input::None }])
+                    Ok(vec![Operation::DeletePieceInDesign { scope: Scope::PieceInDesign { design_id: design_id.clone(), piece_id: piece_id.clone() }, input: Input::None }])
                 }
-                KitOperation::DeletePieceInDesign { scope, .. } => {
+                Operation::DeletePieceInDesign { scope, .. } => {
                     let Scope::PieceInDesign { design_id, piece_id } = scope else {
                         return Err(SemioError::invalid("deletePieceInDesign expects Scope::PieceInDesign"));
                     };
@@ -6863,27 +6863,27 @@ pub mod operation {
                         guard.clone()
                     };
                     drop(piece);
-                    Ok(vec![KitOperation::CreateFixedPiece { scope: Scope::CreateFixedPiece { design_id: design_id.clone(), piece_id, blueprint_id, attribute_ids }, input: Input::FixedPiece { position, name, description } }])
+                    Ok(vec![Operation::CreateFixedPiece { scope: Scope::CreateFixedPiece { design_id: design_id.clone(), piece_id, blueprint_id, attribute_ids }, input: Input::FixedPiece { position, name, description } }])
                 }
-                KitOperation::DragPieceInDesign { scope, input } => {
+                Operation::DragPieceInDesign { scope, input } => {
                     let Input::Offset { offset } = input else {
                         return Err(SemioError::invalid("dragPieceInDesign expects Input::Offset"));
                     };
                     let Scope::PieceInDesign { design_id, piece_id } = scope else {
                         return Err(SemioError::invalid("dragPieceInDesign expects Scope::PieceInDesign"));
                     };
-                    Ok(vec![KitOperation::DragPieceInDesign { scope: Scope::PieceInDesign { design_id: design_id.clone(), piece_id: piece_id.clone() }, input: Input::Offset { offset: OffsetInput { u: -offset.u, v: -offset.v } } }])
+                    Ok(vec![Operation::DragPieceInDesign { scope: Scope::PieceInDesign { design_id: design_id.clone(), piece_id: piece_id.clone() }, input: Input::Offset { offset: OffsetInput { u: -offset.u, v: -offset.v } } }])
                 }
-                KitOperation::DragPiecesInDesign { scope, input } => {
+                Operation::DragPiecesInDesign { scope, input } => {
                     let Input::Offset { offset } = input else {
                         return Err(SemioError::invalid("dragPiecesInDesign expects Input::Offset"));
                     };
                     let Scope::PiecesInDesign { design_id, piece_ids } = scope else {
                         return Err(SemioError::invalid("dragPiecesInDesign expects Scope::PiecesInDesign"));
                     };
-                    Ok(vec![KitOperation::DragPiecesInDesign { scope: Scope::PiecesInDesign { design_id: design_id.clone(), piece_ids: piece_ids.clone() }, input: Input::Offset { offset: OffsetInput { u: -offset.u, v: -offset.v } } }])
+                    Ok(vec![Operation::DragPiecesInDesign { scope: Scope::PiecesInDesign { design_id: design_id.clone(), piece_ids: piece_ids.clone() }, input: Input::Offset { offset: OffsetInput { u: -offset.u, v: -offset.v } } }])
                 }
-                KitOperation::FixPieceInDesign { scope, .. } => {
+                Operation::FixPieceInDesign { scope, .. } => {
                     let Scope::PieceInDesign { design_id, piece_id } = scope else {
                         return Err(SemioError::invalid("fixPieceInDesign expects Scope::PieceInDesign"));
                     };
@@ -7440,7 +7440,7 @@ pub mod operation {
     /// 📡 Internal command envelope passed parent → child runtime over the work queue.
     #[derive(Clone, Debug)]
     pub enum Command {
-        ApplyKitOperation { request_id: Id, draft_id: Id, transaction_id: Id, operation: KitOperation },
+        ApplyOperation { request_id: Id, draft_id: Id, transaction_id: Id, operation: Operation },
         BackboneAttach { request_id: Id, connection_uri: String },
         BackboneDetach { request_id: Id, connection_uri: String },
     }
@@ -7448,7 +7448,7 @@ pub mod operation {
     impl Command {
         pub fn request_id(&self) -> &Id {
             match self {
-                Command::ApplyKitOperation { request_id, .. } => request_id,
+                Command::ApplyOperation { request_id, .. } => request_id,
                 Command::BackboneAttach { request_id, .. } => request_id,
                 Command::BackboneDetach { request_id, .. } => request_id,
             }
@@ -7580,7 +7580,7 @@ pub mod operation {
 //#region 🧮 kit graph engine
 
 pub mod kit_graph_engine {
-    //! @emoji 🧮 Core kit graph engine: deterministic projection fingerprints, ephemeral operation diffs, and typed [`crate::operation::KitOperation`] apply for replay (no serde on the control-plane surface).
+    //! @emoji 🧮 Core kit graph engine: deterministic projection fingerprints, ephemeral operation diffs, and typed [`crate::operation::Operation`] apply for replay (no serde on the control-plane surface).
     use std::collections::BTreeMap;
     use std::sync::Arc;
 
@@ -7588,7 +7588,7 @@ pub mod kit_graph_engine {
     use crate::hash::h;
     use crate::id::Id;
     use crate::kit;
-    use crate::operation::{self, KitOperation, Scope};
+    use crate::operation::{self, Operation, Scope};
     use crate::vcs::Graph;
 
     //#region 🔖 design_slot
@@ -7639,12 +7639,12 @@ pub mod kit_graph_engine {
         pub created_piece: Option<Arc<kit::design::piece::Piece>>,
     }
 
-    /// @emoji 🧩 Record one forward [`KitOperation`] (plus backwards) on `graph` and return deterministic projection metadata.
-    pub async fn apply_kit_operation(graph: &Arc<Graph>, draft_id: &Id, transaction_id: &Id, operation: KitOperation) -> Result<AppliedOperation, SemioError> {
+    /// @emoji 🧩 Record one forward [`Operation`] (plus backwards) on `graph` and return deterministic projection metadata.
+    pub async fn apply_kit_operation(graph: &Arc<Graph>, draft_id: &Id, transaction_id: &Id, operation: Operation) -> Result<AppliedOperation, SemioError> {
         let op_kind = operation.kind();
         let payload_digest = operation.stable_payload_digest();
         let created_piece_ids = match &operation {
-            KitOperation::CreateFixedPiece { scope, .. } => match scope {
+            Operation::CreateFixedPiece { scope, .. } => match scope {
                 Scope::CreateFixedPiece { design_id, piece_id, .. } => Some((design_id.clone(), piece_id.clone())),
                 _ => None,
             },
@@ -8157,28 +8157,28 @@ pub mod kit_backbone {
         }
     }
 
-    pub(crate) fn kit_operation_step_input_json(op: &crate::operation::KitOperation) -> serde_json::Value {
-        use crate::operation::{KitOperation, Scope};
+    pub(crate) fn kit_operation_step_input_json(op: &crate::operation::Operation) -> serde_json::Value {
+        use crate::operation::{Operation, Scope};
         let pair = |scope: &Scope, input: &crate::operation::Input| serde_json::json!({ "scope": kit_scope_json(scope), "input": kit_input_json(input) });
         match op {
-            KitOperation::RenameKit { scope, input } => serde_json::json!({ "RenameKit": pair(scope, input) }),
-            KitOperation::ChangeDescription { scope, input } => serde_json::json!({ "ChangeDescription": pair(scope, input) }),
-            KitOperation::ChangeIcon { scope, input } => serde_json::json!({ "ChangeIcon": pair(scope, input) }),
-            KitOperation::ChangeImage { scope, input } => serde_json::json!({ "ChangeImage": pair(scope, input) }),
-            KitOperation::CreateTag { scope, input } => serde_json::json!({ "CreateTag": pair(scope, input) }),
-            KitOperation::CreateTags { scope, input } => serde_json::json!({ "CreateTags": pair(scope, input) }),
-            KitOperation::DeleteTag { scope, input } => serde_json::json!({ "DeleteTag": pair(scope, input) }),
-            KitOperation::DeleteTags { scope, input } => serde_json::json!({ "DeleteTags": pair(scope, input) }),
-            KitOperation::RenameTag { scope, input } => serde_json::json!({ "RenameTag": pair(scope, input) }),
-            KitOperation::CreateConcept { scope, input } => serde_json::json!({ "CreateConcept": pair(scope, input) }),
-            KitOperation::DeleteConcept { scope, input } => serde_json::json!({ "DeleteConcept": pair(scope, input) }),
-            KitOperation::CreateQuality { scope, input } => serde_json::json!({ "CreateQuality": pair(scope, input) }),
-            KitOperation::DeleteQuality { scope, input } => serde_json::json!({ "DeleteQuality": pair(scope, input) }),
-            KitOperation::CreateFixedPiece { scope, input } => serde_json::json!({ "CreateFixedPiece": pair(scope, input) }),
-            KitOperation::DeletePieceInDesign { scope, input } => serde_json::json!({ "DeletePieceInDesign": pair(scope, input) }),
-            KitOperation::DragPieceInDesign { scope, input } => serde_json::json!({ "DragPieceInDesign": pair(scope, input) }),
-            KitOperation::DragPiecesInDesign { scope, input } => serde_json::json!({ "DragPiecesInDesign": pair(scope, input) }),
-            KitOperation::FixPieceInDesign { scope, input } => serde_json::json!({ "FixPieceInDesign": pair(scope, input) }),
+            Operation::RenameKit { scope, input } => serde_json::json!({ "RenameKit": pair(scope, input) }),
+            Operation::ChangeDescription { scope, input } => serde_json::json!({ "ChangeDescription": pair(scope, input) }),
+            Operation::ChangeIcon { scope, input } => serde_json::json!({ "ChangeIcon": pair(scope, input) }),
+            Operation::ChangeImage { scope, input } => serde_json::json!({ "ChangeImage": pair(scope, input) }),
+            Operation::CreateTag { scope, input } => serde_json::json!({ "CreateTag": pair(scope, input) }),
+            Operation::CreateTags { scope, input } => serde_json::json!({ "CreateTags": pair(scope, input) }),
+            Operation::DeleteTag { scope, input } => serde_json::json!({ "DeleteTag": pair(scope, input) }),
+            Operation::DeleteTags { scope, input } => serde_json::json!({ "DeleteTags": pair(scope, input) }),
+            Operation::RenameTag { scope, input } => serde_json::json!({ "RenameTag": pair(scope, input) }),
+            Operation::CreateConcept { scope, input } => serde_json::json!({ "CreateConcept": pair(scope, input) }),
+            Operation::DeleteConcept { scope, input } => serde_json::json!({ "DeleteConcept": pair(scope, input) }),
+            Operation::CreateQuality { scope, input } => serde_json::json!({ "CreateQuality": pair(scope, input) }),
+            Operation::DeleteQuality { scope, input } => serde_json::json!({ "DeleteQuality": pair(scope, input) }),
+            Operation::CreateFixedPiece { scope, input } => serde_json::json!({ "CreateFixedPiece": pair(scope, input) }),
+            Operation::DeletePieceInDesign { scope, input } => serde_json::json!({ "DeletePieceInDesign": pair(scope, input) }),
+            Operation::DragPieceInDesign { scope, input } => serde_json::json!({ "DragPieceInDesign": pair(scope, input) }),
+            Operation::DragPiecesInDesign { scope, input } => serde_json::json!({ "DragPiecesInDesign": pair(scope, input) }),
+            Operation::FixPieceInDesign { scope, input } => serde_json::json!({ "FixPieceInDesign": pair(scope, input) }),
         }
     }
 
@@ -8384,50 +8384,50 @@ pub mod kit_backbone {
         })
     }
 
-    pub(crate) fn kit_operation_from_step_json(v: &serde_json::Value) -> Result<crate::operation::KitOperation, SemioError> {
-        use crate::operation::KitOperation;
+    pub(crate) fn kit_operation_from_step_json(v: &serde_json::Value) -> Result<crate::operation::Operation, SemioError> {
+        use crate::operation::Operation;
         let o = v.as_object().ok_or_else(|| SemioError::invalid("kit operation"))?;
         let (k, inner) = o.iter().next().ok_or_else(|| SemioError::invalid("empty kit operation"))?;
         let body = inner.as_object().ok_or_else(|| SemioError::invalid("kit operation body"))?;
         let scope = kit_scope_from_json(body.get("scope").ok_or_else(|| SemioError::invalid("scope"))?)?;
         let input = kit_input_from_json(body.get("input").ok_or_else(|| SemioError::invalid("input"))?)?;
         Ok(match k.as_str() {
-            "RenameKit" => KitOperation::RenameKit { scope, input },
-            "ChangeDescription" => KitOperation::ChangeDescription { scope, input },
-            "ChangeIcon" => KitOperation::ChangeIcon { scope, input },
-            "ChangeImage" => KitOperation::ChangeImage { scope, input },
-            "CreateTag" => KitOperation::CreateTag { scope, input },
-            "CreateTags" => KitOperation::CreateTags { scope, input },
-            "DeleteTag" => KitOperation::DeleteTag { scope, input },
-            "DeleteTags" => KitOperation::DeleteTags { scope, input },
-            "RenameTag" => KitOperation::RenameTag { scope, input },
-            "CreateConcept" => KitOperation::CreateConcept { scope, input },
-            "DeleteConcept" => KitOperation::DeleteConcept { scope, input },
-            "CreateQuality" => KitOperation::CreateQuality { scope, input },
-            "DeleteQuality" => KitOperation::DeleteQuality { scope, input },
-            "CreateFixedPiece" => KitOperation::CreateFixedPiece { scope, input },
-            "DeletePieceInDesign" => KitOperation::DeletePieceInDesign { scope, input },
-            "DragPieceInDesign" => KitOperation::DragPieceInDesign { scope, input },
-            "DragPiecesInDesign" => KitOperation::DragPiecesInDesign { scope, input },
-            "FixPieceInDesign" => KitOperation::FixPieceInDesign { scope, input },
+            "RenameKit" => Operation::RenameKit { scope, input },
+            "ChangeDescription" => Operation::ChangeDescription { scope, input },
+            "ChangeIcon" => Operation::ChangeIcon { scope, input },
+            "ChangeImage" => Operation::ChangeImage { scope, input },
+            "CreateTag" => Operation::CreateTag { scope, input },
+            "CreateTags" => Operation::CreateTags { scope, input },
+            "DeleteTag" => Operation::DeleteTag { scope, input },
+            "DeleteTags" => Operation::DeleteTags { scope, input },
+            "RenameTag" => Operation::RenameTag { scope, input },
+            "CreateConcept" => Operation::CreateConcept { scope, input },
+            "DeleteConcept" => Operation::DeleteConcept { scope, input },
+            "CreateQuality" => Operation::CreateQuality { scope, input },
+            "DeleteQuality" => Operation::DeleteQuality { scope, input },
+            "CreateFixedPiece" => Operation::CreateFixedPiece { scope, input },
+            "DeletePieceInDesign" => Operation::DeletePieceInDesign { scope, input },
+            "DragPieceInDesign" => Operation::DragPieceInDesign { scope, input },
+            "DragPiecesInDesign" => Operation::DragPiecesInDesign { scope, input },
+            "FixPieceInDesign" => Operation::FixPieceInDesign { scope, input },
             other => return Err(SemioError::invalid(format!("unknown kit operation `{other}`"))),
         })
     }
 
-    async fn legacy_created_fixed_piece_to_kit_op(input: &serde_json::Value) -> Result<crate::operation::KitOperation, SemioError> {
+    async fn legacy_created_fixed_piece_to_kit_op(input: &serde_json::Value) -> Result<crate::operation::Operation, SemioError> {
         let design_id = id_from_str(input.get("designId").and_then(|x| x.as_str()).ok_or_else(|| SemioError::invalid("designId"))?);
         let blueprint_id = id_from_str(input.get("blueprintId").and_then(|x| x.as_str()).ok_or_else(|| SemioError::invalid("blueprintId"))?);
         let position = position_input_from_json(input.get("position").ok_or_else(|| SemioError::invalid("position"))?)?;
         let name = input.get("name").and_then(|x| x.as_str()).map(|s| s.to_string());
         let description = input.get("description").and_then(|x| x.as_str()).map(|s| s.to_string());
         let piece_id = crate::id::Id::new().await;
-        Ok(crate::operation::KitOperation::CreateFixedPiece {
+        Ok(crate::operation::Operation::CreateFixedPiece {
             scope: crate::operation::Scope::CreateFixedPiece { design_id, piece_id, blueprint_id, attribute_ids: Vec::new() },
             input: crate::operation::Input::FixedPiece { position, name, description },
         })
     }
 
-    pub(crate) async fn kit_operation_from_stored(kind: &str, input: &serde_json::Value) -> Result<crate::operation::KitOperation, SemioError> {
+    pub(crate) async fn kit_operation_from_stored(kind: &str, input: &serde_json::Value) -> Result<crate::operation::Operation, SemioError> {
         if kind == "createdFixedPiece" {
             return legacy_created_fixed_piece_to_kit_op(input).await;
         }
@@ -9514,7 +9514,7 @@ pub mod worker {
     use crate::error::SemioError;
     use crate::event::{Event, EventBus};
     use crate::id::Id;
-    use crate::operation::{Command, CommandReceipt, CreatedFixedPiece, CreatedFixedPieceInput, Diff, Input, KitOperation, OperationInterface, RenamedKit, RenamedKitInput as OperationRenamedKitInput, Scope};
+    use crate::operation::{Command, CommandReceipt, CreatedFixedPiece, CreatedFixedPieceInput, Diff, Input, Operation, OperationInterface, RenamedKit, RenamedKitInput as OperationRenamedKitInput, Scope};
     use crate::vcs::{Conflict, Graph, Session};
 
     //#region 🗄️ backbone slot
@@ -9571,7 +9571,7 @@ pub mod worker {
             }
         }
 
-        pub async fn record_kit_operation_if_attached(&self, draft_id: &Id, transaction_id: &Id, operation: &crate::operation::KitOperation, kit_diff_wire: Option<serde_json::Value>) -> Result<(), SemioError> {
+        pub async fn record_kit_operation_if_attached(&self, draft_id: &Id, transaction_id: &Id, operation: &crate::operation::Operation, kit_diff_wire: Option<serde_json::Value>) -> Result<(), SemioError> {
             #[cfg(not(target_arch = "wasm32"))]
             {
                 let mut guard = self.slot.write().await;
@@ -9692,7 +9692,7 @@ pub mod worker {
             while let Ok(cmd) = self.inbox.recv().await {
                 let request_id = cmd.request_id().clone();
                 let kind = match &cmd {
-                    Command::ApplyKitOperation { operation, .. } => operation.kind(),
+                    Command::ApplyOperation { operation, .. } => operation.kind(),
                     Command::BackboneAttach { .. } => "backboneAttach",
                     Command::BackboneDetach { .. } => "backboneDetach",
                 };
@@ -9708,13 +9708,13 @@ pub mod worker {
 
         pub async fn apply(&self, cmd: Command) -> Result<(), SemioError> {
             match cmd {
-                Command::ApplyKitOperation { request_id, draft_id, transaction_id, operation } => self.apply_kit_operation(request_id, draft_id, transaction_id, operation).await,
+                Command::ApplyOperation { request_id, draft_id, transaction_id, operation } => self.apply_kit_operation(request_id, draft_id, transaction_id, operation).await,
                 Command::BackboneAttach { connection_uri, .. } => self.backbone.mount(&self.graph, self.label, &connection_uri).await,
                 Command::BackboneDetach { connection_uri, .. } => self.backbone.detach_matching(&connection_uri).await,
             }
         }
 
-        async fn apply_kit_operation(&self, request_id: Id, draft_id: Id, transaction_id: Id, operation: KitOperation) -> Result<(), SemioError> {
+        async fn apply_kit_operation(&self, request_id: Id, draft_id: Id, transaction_id: Id, operation: Operation) -> Result<(), SemioError> {
             let graph = self.graph.clone();
             let before_kit = graph.materialized_kit_for_draft(&draft_id).await;
             let kit_diff = operation.to_diff(&before_kit).await?;
@@ -9732,7 +9732,7 @@ pub mod worker {
             };
 
             match &operation {
-                KitOperation::RenameKit { input, .. } => {
+                Operation::RenameKit { input, .. } => {
                     let Input::Name { name } = input else {
                         return Err(SemioError::invalid("renameKit expects Input::Name"));
                     };
@@ -9745,7 +9745,7 @@ pub mod worker {
                     tx_edit.forward_interface_operations.write().await.push(interface);
                     self.bus.emit_event(Event::RenamedKit(op_evt)).await;
                 }
-                KitOperation::CreateFixedPiece { scope, input } => {
+                Operation::CreateFixedPiece { scope, input } => {
                     let persisted = operation.clone();
                     let Scope::CreateFixedPiece { design_id, piece_id, blueprint_id, .. } = scope else {
                         return Err(SemioError::invalid("createFixedPiece expects Scope::CreateFixedPiece"));
@@ -10068,8 +10068,8 @@ pub mod gql {
 
     #[Object(name = "UnsavedChangeCommand")]
     impl UnsavedChangeCommand {
-        async fn kit(&self) -> KitOperationInput {
-            KitOperationInput { change_id: self.change_id.clone() }
+        async fn kit(&self) -> OperationInput {
+            OperationInput { change_id: self.change_id.clone() }
         }
 
         async fn save(&self, ctx: &Context<'_>) -> async_graphql::Result<Id> {
@@ -10105,12 +10105,12 @@ pub mod gql {
         }
     }
 
-    pub struct KitOperationInput {
+    pub struct OperationInput {
         pub change_id: Id,
     }
 
-    #[Object(name = "KitOperationInput")]
-    impl KitOperationInput {
+    #[Object(name = "OperationInput")]
+    impl OperationInput {
         #[graphql(name = "rename")]
         async fn rename(&self, ctx: &Context<'_>, #[graphql(name = "newName")] new_name: String) -> async_graphql::Result<Id> {
             let rt = ctx.data::<Arc<ParentStore>>()?;
@@ -10119,7 +10119,7 @@ pub mod gql {
                 return Err(async_graphql::Error::new("change id mismatch for kit operation"));
             }
             let request_id = Id::new().await;
-            let cmd = Command::ApplyKitOperation { request_id: request_id.clone(), draft_id, transaction_id, operation: crate::operation::KitOperation::RenameKit { scope: Scope::Kit, input: Input::Name { name: new_name } } };
+            let cmd = Command::ApplyOperation { request_id: request_id.clone(), draft_id, transaction_id, operation: crate::operation::Operation::RenameKit { scope: Scope::Kit, input: Input::Name { name: new_name } } };
             Ok(rt.dispatch_wip(cmd).await)
         }
 
@@ -10141,11 +10141,11 @@ pub mod gql {
             let tag_id = Id::new().await;
             let request_id = Id::new().await;
             let tag = crate::meta::TagInput { name, description, icon, order, attributes: None };
-            let cmd = Command::ApplyKitOperation {
+            let cmd = Command::ApplyOperation {
                 request_id: request_id.clone(),
                 draft_id,
                 transaction_id,
-                operation: crate::operation::KitOperation::CreateTag { scope: Scope::CreateTag { owner_id, tag_id: tag_id.clone(), attribute_ids: Vec::new() }, input: Input::Tag { tag } },
+                operation: crate::operation::Operation::CreateTag { scope: Scope::CreateTag { owner_id, tag_id: tag_id.clone(), attribute_ids: Vec::new() }, input: Input::Tag { tag } },
             };
             Ok(rt.dispatch_wip(cmd).await)
         }
@@ -10178,11 +10178,11 @@ pub mod gql {
             let concept_id = Id::new().await;
             let request_id = Id::new().await;
             let concept = crate::meta::ConceptInput { name, description, icon, order, attributes: None };
-            let cmd = Command::ApplyKitOperation {
+            let cmd = Command::ApplyOperation {
                 request_id: request_id.clone(),
                 draft_id,
                 transaction_id,
-                operation: crate::operation::KitOperation::CreateConcept { scope: Scope::CreateConcept { owner_id, concept_id: concept_id.clone(), attribute_ids: Vec::new() }, input: Input::Concept { concept } },
+                operation: crate::operation::Operation::CreateConcept { scope: Scope::CreateConcept { owner_id, concept_id: concept_id.clone(), attribute_ids: Vec::new() }, input: Input::Concept { concept } },
             };
             Ok(rt.dispatch_wip(cmd).await)
         }
@@ -10215,11 +10215,11 @@ pub mod gql {
             let quality_id = Id::new().await;
             let request_id = Id::new().await;
             let quality = crate::meta::QualityInput { key, value, unit, definition, description, icon, attributes: None };
-            let cmd = Command::ApplyKitOperation {
+            let cmd = Command::ApplyOperation {
                 request_id: request_id.clone(),
                 draft_id,
                 transaction_id,
-                operation: crate::operation::KitOperation::CreateQuality { scope: Scope::CreateQuality { owner_id, quality_id: quality_id.clone(), attribute_ids: Vec::new(), benchmark_ids: Vec::new() }, input: Input::Quality { quality } },
+                operation: crate::operation::Operation::CreateQuality { scope: Scope::CreateQuality { owner_id, quality_id: quality_id.clone(), attribute_ids: Vec::new(), benchmark_ids: Vec::new() }, input: Input::Quality { quality } },
             };
             Ok(rt.dispatch_wip(cmd).await)
         }
@@ -10587,11 +10587,11 @@ pub mod gql {
             }
             let request_id = Id::new().await;
             let piece_id = Id::new().await;
-            let cmd = Command::ApplyKitOperation {
+            let cmd = Command::ApplyOperation {
                 request_id: request_id.clone(),
                 draft_id,
                 transaction_id,
-                operation: crate::operation::KitOperation::CreateFixedPiece {
+                operation: crate::operation::Operation::CreateFixedPiece {
                     scope: Scope::CreateFixedPiece { design_id: self.design_id.clone(), piece_id, blueprint_id, attribute_ids: Vec::new() },
                     input: Input::FixedPiece { position, name, description },
                 },
@@ -10678,11 +10678,11 @@ pub mod gql {
                 return Err(async_graphql::Error::new("change id mismatch"));
             }
             let request_id = Id::new().await;
-            let cmd = Command::ApplyKitOperation {
+            let cmd = Command::ApplyOperation {
                 request_id,
                 draft_id,
                 transaction_id,
-                operation: crate::operation::KitOperation::DragPieceInDesign { scope: Scope::PieceInDesign { design_id: self.design_id.clone(), piece_id: self.piece_id.clone() }, input: Input::Offset { offset } },
+                operation: crate::operation::Operation::DragPieceInDesign { scope: Scope::PieceInDesign { design_id: self.design_id.clone(), piece_id: self.piece_id.clone() }, input: Input::Offset { offset } },
             };
             Ok(rt.dispatch_wip(cmd).await)
         }
@@ -10731,11 +10731,11 @@ pub mod gql {
                 return Err(async_graphql::Error::new("change id mismatch"));
             }
             let request_id = Id::new().await;
-            let cmd = Command::ApplyKitOperation {
+            let cmd = Command::ApplyOperation {
                 request_id,
                 draft_id,
                 transaction_id,
-                operation: crate::operation::KitOperation::DragPiecesInDesign { scope: Scope::PiecesInDesign { design_id: self.design_id.clone(), piece_ids: self.piece_ids.clone() }, input: Input::Offset { offset } },
+                operation: crate::operation::Operation::DragPiecesInDesign { scope: Scope::PiecesInDesign { design_id: self.design_id.clone(), piece_ids: self.piece_ids.clone() }, input: Input::Offset { offset } },
             };
             Ok(rt.dispatch_wip(cmd).await)
         }
@@ -11385,11 +11385,11 @@ mod tests {
             let tx_a = g.open_transaction(&draft_a.id).await;
             let req = crate::id::Id::new().await;
             let _ = rt
-                .dispatch_wip(crate::operation::Command::ApplyKitOperation {
+                .dispatch_wip(crate::operation::Command::ApplyOperation {
                     request_id: req,
                     draft_id: draft_a.id.clone(),
                     transaction_id: tx_a.id.clone(),
-                    operation: crate::operation::KitOperation::RenameKit { scope: crate::operation::Scope::Kit, input: crate::operation::Input::Name { name: "Hello Bundle".into() } },
+                    operation: crate::operation::Operation::RenameKit { scope: crate::operation::Scope::Kit, input: crate::operation::Input::Name { name: "Hello Bundle".into() } },
                 })
                 .await;
             std::thread::sleep(std::time::Duration::from_millis(150));
@@ -11423,11 +11423,11 @@ mod tests {
             let tx_a2 = g.open_transaction(&draft_a.id).await;
             let req2 = crate::id::Id::new().await;
             let _ = rt
-                .dispatch_wip(crate::operation::Command::ApplyKitOperation {
+                .dispatch_wip(crate::operation::Command::ApplyOperation {
                     request_id: req2,
                     draft_id: draft_a.id.clone(),
                     transaction_id: tx_a2.id.clone(),
-                    operation: crate::operation::KitOperation::RenameKit { scope: crate::operation::Scope::Kit, input: crate::operation::Input::Name { name: "Hello Bundle".into() } },
+                    operation: crate::operation::Operation::RenameKit { scope: crate::operation::Scope::Kit, input: crate::operation::Input::Name { name: "Hello Bundle".into() } },
                 })
                 .await;
             std::thread::sleep(std::time::Duration::from_millis(150));
@@ -12100,7 +12100,7 @@ mod tests {
                 order: Some(3),
                 attributes: Some(vec![crate::meta::AttributeInput { key: "material".to_string(), value: Some("steel".to_string()), definition: Some("visible material".to_string()) }]),
             };
-            let create = crate::operation::KitOperation::CreateTag {
+            let create = crate::operation::Operation::CreateTag {
                 scope: crate::operation::Scope::CreateTag { owner_id: owner_id.clone(), tag_id: tag_id.clone(), attribute_ids: vec![attribute_id.clone()] },
                 input: crate::operation::Input::Tag { tag: tag_input.clone() },
             };
@@ -12116,10 +12116,10 @@ mod tests {
             let staged = kit.deep_clone().await;
             staged.apply_diff(&diff).await.expect("apply createTag diff on clone");
 
-            let backwards = crate::operation::KitOperation::DeleteTag { scope: crate::operation::Scope::Tag { tag_id: tag_id.clone() }, input: crate::operation::Input::None }.to_backwards(&staged).await.expect("deleteTag backwards");
+            let backwards = crate::operation::Operation::DeleteTag { scope: crate::operation::Scope::Tag { tag_id: tag_id.clone() }, input: crate::operation::Input::None }.to_backwards(&staged).await.expect("deleteTag backwards");
             assert_eq!(backwards.len(), 1);
             match &backwards[0] {
-                crate::operation::KitOperation::CreateTag { scope, input } => {
+                crate::operation::Operation::CreateTag { scope, input } => {
                     let crate::operation::Scope::CreateTag { owner_id: o, tag_id: t, attribute_ids } = scope else {
                         panic!("expected CreateTag scope");
                     };
@@ -12204,7 +12204,7 @@ mod tests {
         block_on(async {
             let graph = crate::vcs::Graph::new().await;
             let draft_id = crate::id::Id::from("draft-scoped-1");
-            let operation = crate::operation::KitOperation::CreateFixedPiece {
+            let operation = crate::operation::Operation::CreateFixedPiece {
                 scope: crate::operation::Scope::CreateFixedPiece {
                     design_id: crate::id::Id::from("design-scoped-1"),
                     piece_id: crate::id::Id::from("piece-scoped-1"),
