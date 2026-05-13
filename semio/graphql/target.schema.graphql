@@ -141,14 +141,14 @@ interface Event implements WeakEntity {
   involves: EntityConnection # reference
 }
 
-interface Version implements StrongEntity {
+interface Workspace implements StrongEntity {
   # Node
   id: ID! # data // uuidv7
   # Entity
   hash: String! # cached
   owner: Entity # reference
   owns: EntityConnection # reference
-  # Version
+  # Workspace
   checkpoint: CheckpointConnection # reference
   latestWipCheckpointAncestor: Checkpoint # computed
   savedChanges: ChangeConnection! # data
@@ -7914,14 +7914,14 @@ type CheckpointConnection implements EntityConnection {
 
 #region TheKit
 
-type TheKit implements Version {
+type TheKit implements Workspace {
   # Node
   id: ID! # data // uuidv7
   # Entity
   hash: String! # cached
   owner: Entity # reference // Graph
   owns: EntityConnection # reference // Edit | Checkpoint
-  # Version
+  # Workspace
   checkpoint: CheckpointConnection # reference
   latestWipCheckpointAncestor: Checkpoint # computed
   savedChanges: ChangeConnection! # data
@@ -7961,14 +7961,14 @@ type TheKitConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type Alternative implements Version {
+type Alternative implements Workspace {
   # Node
   id: ID! # data // uuidv7
   # Entity
   hash: String! # cached
   owner: Entity # reference // Graph
   owns: EntityConnection # reference // Edit | Checkpoint
-  # Version
+  # Workspace
   checkpoint: CheckpointConnection # reference
   latestWipCheckpointAncestor: Checkpoint # computed
   savedChanges: ChangeConnection! # data
@@ -7995,6 +7995,32 @@ type AlternativeConnection implements EntityConnection {
 
 #endregion Alternatives
 
+#region Versions
+
+type Version {
+  inititalKit: Kit!
+  checkpoint: Checkpoint
+  change: Change
+  edit: Edit
+  operation: Operation
+}
+
+type VersionEdge implements EntityEdge {
+  # EntityEdge
+  cursor: String! # computed
+  # EntityEdgeNode
+  node: Version! # reference
+}
+
+type VersionConnection implements EntityConnection {
+  # EntityConnection
+  edges: [VersionEdge!]! # computed
+  pageInfo: PageInfo! # computed
+  hash: String! # cached
+}
+
+#endregion Versions
+
 #region Graphs
 
 type Graph implements StrongEntity {
@@ -8006,7 +8032,7 @@ type Graph implements StrongEntity {
   owns: EntityConnection # reference // Kit | Alternative | Checkpoint | Session
   # Graph
   initialKit: Kit # data
-  theKit: Version # data
+  theKit: Workspace # data
   alternatives: AlternativeConnection! # data
   alternative(id: ID!): Alternative # computed
   checkpoints: CheckpointConnection! # data
@@ -8040,7 +8066,7 @@ type Session implements StrongEntity {
   startedAt: Timestamp # data
   alternatives: AlternativeConnection! # data
   alternative(id: ID!): Alternative # computed
-  theKit: Version # computed
+  theKit: Workspace # computed
 }
 
 #endregion Graphs
