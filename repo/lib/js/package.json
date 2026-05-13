@@ -1,0 +1,20 @@
+{
+  "name": "@repo/lib",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./nx-plugin": "./nx-plugin.mjs"
+  },
+  "scripts": {
+    "lint": "bun nx run @repo/lib:lint",
+    "test": "bun test ./src/index.test.ts"
+  },
+  "devDependencies": {
+    "@nx/devkit": "21.4.1",
+    "@types/node": "^22.19.6",
+    "nx": "^21.4.1",
+    "typescript": "^5.9.3"
+  }
+}

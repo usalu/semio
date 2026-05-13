@@ -9887,7 +9887,7 @@ pub mod gql {
     pub mod interfaces {
         use std::sync::{Arc, OnceLock, Weak};
 
-        use async_graphql::{Context, Interface, Object};
+        use async_graphql::{Context, Interface, Object, SimpleObject};
 
         use crate::geom::entity::{Coordinate, Location, Offset, Plane, Place, Point, Position, Vector};
         use crate::gql_relay::{
@@ -9961,6 +9961,13 @@ pub mod gql {
             Tag(Arc<crate::meta::Tag>),
             Concept(Arc<crate::meta::Concept>),
             Quality(Arc<crate::meta::Quality>),
+            Vector(Arc<Vector>),
+            Point(Arc<Point>),
+            Coordinate(Arc<Coordinate>),
+            Offset(Arc<Offset>),
+            Plane(Arc<Plane>),
+            Position(Arc<Position>),
+            Location(Arc<Location>),
         }
 
         impl KitGraphParentWeak {
@@ -10043,6 +10050,308 @@ pub mod gql {
             Position(Arc<Position>),
             Location(Arc<Location>),
         }
+
+        //#region 🪢 golden_interface_relay
+        /// @emoji 🪢 SDL `InputEdge` / `InputConnection` — relay over [`PubInputInterface`].
+        #[derive(Clone, SimpleObject)]
+        #[graphql(name = "InputEdge")]
+        pub struct InputEdge {
+            pub cursor: String,
+            pub node: PubInputInterface,
+        }
+
+        #[derive(Clone, SimpleObject)]
+        #[graphql(name = "InputConnection")]
+        pub struct InputConnection {
+            pub edges: Vec<InputEdge>,
+            #[graphql(name = "pageInfo")]
+            pub page_info: Arc<crate::gql_relay::PageInfo>,
+            pub hash: String,
+        }
+
+        /// @emoji 🪢 SDL `DiffEdge` / `DiffConnection` — relay over [`GqlDiffInterface`].
+        #[derive(Clone, SimpleObject)]
+        #[graphql(name = "DiffEdge")]
+        pub struct DiffEdge {
+            pub cursor: String,
+            pub node: GqlDiffInterface,
+        }
+
+        #[derive(Clone, SimpleObject)]
+        #[graphql(name = "DiffConnection")]
+        pub struct DiffConnection {
+            pub edges: Vec<DiffEdge>,
+            #[graphql(name = "pageInfo")]
+            pub page_info: Arc<crate::gql_relay::PageInfo>,
+            pub hash: String,
+        }
+
+        /// @emoji 🪢 SDL `ModificationEdge` / `ModificationConnection` — relay over [`GqlModificationInterface`].
+        #[derive(Clone, SimpleObject)]
+        #[graphql(name = "ModificationEdge")]
+        pub struct ModificationEdge {
+            pub cursor: String,
+            pub node: GqlModificationInterface,
+        }
+
+        #[derive(Clone, SimpleObject)]
+        #[graphql(name = "ModificationConnection")]
+        pub struct ModificationConnection {
+            pub edges: Vec<ModificationEdge>,
+            #[graphql(name = "pageInfo")]
+            pub page_info: Arc<crate::gql_relay::PageInfo>,
+            pub hash: String,
+        }
+
+        impl ModificationConnection {
+            /// @emoji 🪢 Empty `ModificationConnection` for aggregate `Modifications.modifications`.
+            pub fn empty_shell() -> Self {
+                Self {
+                    edges: Vec::new(),
+                    page_info: Arc::new(crate::gql_relay::PageInfo::default()),
+                    hash: crate::hash::h(&["modification-connection", "empty"]),
+                }
+            }
+        }
+
+        /// @emoji 🧱 SDL `Modifications` — aggregate removed / live / added modification rows (stub projection).
+        #[derive(Clone, Debug, Default)]
+        pub struct Modifications {
+            pub id: Id,
+        }
+
+        #[Object(name = "Modifications")]
+        impl Modifications {
+            async fn id(&self) -> Id {
+                self.id.clone()
+            }
+            async fn hash(&self) -> String {
+                crate::hash::h(&["modifications", self.id.as_str()])
+            }
+            async fn owner(&self) -> Option<EntityInterface> {
+                None
+            }
+            async fn owns(&self) -> Option<EntityConnectionInterface> {
+                Some(empty_entity_connection())
+            }
+            async fn removed(&self) -> EntityConnectionInterface {
+                empty_entity_connection()
+            }
+            async fn modifications(&self) -> ModificationConnection {
+                ModificationConnection::empty_shell()
+            }
+            async fn added(&self) -> EntityConnectionInterface {
+                empty_entity_connection()
+            }
+        }
+
+        #[derive(Clone, SimpleObject)]
+        #[graphql(name = "ModificationsEdge")]
+        pub struct ModificationsEdge {
+            pub cursor: String,
+            pub node: Arc<Modifications>,
+        }
+
+        #[derive(Clone, SimpleObject)]
+        #[graphql(name = "ModificationsConnection")]
+        pub struct ModificationsConnection {
+            pub edges: Vec<ModificationsEdge>,
+            #[graphql(name = "pageInfo")]
+            pub page_info: Arc<crate::gql_relay::PageInfo>,
+            pub hash: String,
+        }
+
+        /// @emoji 🪢 SDL `BackboneCommandEdge` / `BackboneCommandConnection`.
+        #[derive(Clone, SimpleObject)]
+        #[graphql(name = "BackboneCommandEdge")]
+        pub struct BackboneCommandEdge {
+            pub cursor: String,
+            pub node: BackboneCommandInterface,
+        }
+
+        #[derive(Clone, SimpleObject)]
+        #[graphql(name = "BackboneCommandConnection")]
+        pub struct BackboneCommandConnection {
+            pub edges: Vec<BackboneCommandEdge>,
+            #[graphql(name = "pageInfo")]
+            pub page_info: Arc<crate::gql_relay::PageInfo>,
+            pub hash: String,
+        }
+
+        /// @emoji 🪢 SDL `ProviderEdge` / `ProviderConnection`.
+        #[derive(Clone, SimpleObject)]
+        #[graphql(name = "ProviderEdge")]
+        pub struct ProviderEdge {
+            pub cursor: String,
+            pub node: crate::gql::ProviderInterface,
+        }
+
+        #[derive(Clone, SimpleObject)]
+        #[graphql(name = "ProviderConnection")]
+        pub struct ProviderConnection {
+            pub edges: Vec<ProviderEdge>,
+            #[graphql(name = "pageInfo")]
+            pub page_info: Arc<crate::gql_relay::PageInfo>,
+            pub hash: String,
+        }
+
+        /// @emoji 🪢 SDL `ProviderCommandEdge` / `ProviderCommandConnection`.
+        #[derive(Clone, SimpleObject)]
+        #[graphql(name = "ProviderCommandEdge")]
+        pub struct ProviderCommandEdge {
+            pub cursor: String,
+            pub node: crate::gql::ProviderCommandInterface,
+        }
+
+        #[derive(Clone, SimpleObject)]
+        #[graphql(name = "ProviderCommandConnection")]
+        pub struct ProviderCommandConnection {
+            pub edges: Vec<ProviderCommandEdge>,
+            #[graphql(name = "pageInfo")]
+            pub page_info: Arc<crate::gql_relay::PageInfo>,
+            pub hash: String,
+        }
+
+        /// @emoji 📐 SDL `VectorDiff` — golden `Diff` row for [`geom::entity::Vector`] scalars.
+        #[derive(Clone, Debug, Default)]
+        pub struct VectorDiff {
+            pub id: Id,
+            pub x: Option<f64>,
+            pub y: Option<f64>,
+            pub z: Option<f64>,
+        }
+
+        impl VectorDiff {
+            pub async fn compute_hash(&self) -> String {
+                crate::hash::merkle_node_str(
+                    &["VectorDiff", self.id.as_str(), &format!("{:?}", self.x), &format!("{:?}", self.y), &format!("{:?}", self.z)],
+                    Vec::new(),
+                )
+            }
+        }
+
+        #[Object(name = "VectorDiff")]
+        impl VectorDiff {
+            async fn id(&self) -> Id {
+                self.id.clone()
+            }
+            async fn hash(&self) -> String {
+                self.compute_hash().await
+            }
+            async fn owner(&self) -> Option<EntityInterface> {
+                None
+            }
+            async fn owns(&self) -> Option<EntityConnectionInterface> {
+                Some(empty_entity_connection())
+            }
+            async fn x(&self) -> Option<f64> {
+                self.x
+            }
+            async fn y(&self) -> Option<f64> {
+                self.y
+            }
+            async fn z(&self) -> Option<f64> {
+                self.z
+            }
+        }
+
+        crate::entity_relay!(VectorDiffConnection, VectorDiffEdge, Arc<VectorDiff>);
+
+        /// @emoji 📐 SDL `VectorModification` — golden `Modification` row for vector before/after.
+        #[derive(Clone, Debug)]
+        pub struct VectorModification {
+            pub id: Id,
+            pub before: Arc<Vector>,
+            pub diff: Arc<VectorDiff>,
+            pub after: Arc<Vector>,
+        }
+
+        impl Default for VectorModification {
+            fn default() -> Self {
+                Self {
+                    id: Id::default(),
+                    before: Arc::new(Vector::default()),
+                    diff: Arc::new(VectorDiff::default()),
+                    after: Arc::new(Vector::default()),
+                }
+            }
+        }
+
+        impl VectorModification {
+            pub async fn compute_hash(&self) -> String {
+                let b = self.before.compute_hash().await;
+                let d = self.diff.compute_hash().await;
+                let a = self.after.compute_hash().await;
+                crate::hash::merkle_node_str(&["VectorModification", self.id.as_str()], vec![b, d, a])
+            }
+        }
+
+        #[Object(name = "VectorModification")]
+        impl VectorModification {
+            async fn id(&self) -> Id {
+                self.id.clone()
+            }
+            async fn hash(&self) -> String {
+                self.compute_hash().await
+            }
+            async fn owner(&self) -> Option<EntityInterface> {
+                None
+            }
+            async fn owns(&self) -> Option<EntityConnectionInterface> {
+                Some(empty_entity_connection())
+            }
+            async fn before(&self) -> EntityInterface {
+                EntityInterface::Vector(self.before.clone())
+            }
+            async fn diff(&self) -> GqlDiffInterface {
+                GqlDiffInterface::VectorDiff(self.diff.clone())
+            }
+            async fn after(&self) -> EntityInterface {
+                EntityInterface::Vector(self.after.clone())
+            }
+        }
+
+        crate::entity_relay!(VectorModificationConnection, VectorModificationEdge, Arc<VectorModification>);
+
+        /// @emoji 📐 SDL `VectorModifications` — aggregate vector modification rows.
+        #[derive(Clone, Debug, Default)]
+        pub struct VectorModifications {
+            pub id: Id,
+        }
+
+        #[Object(name = "VectorModifications")]
+        impl VectorModifications {
+            async fn id(&self) -> Id {
+                self.id.clone()
+            }
+            async fn hash(&self) -> String {
+                crate::hash::h(&["vector-modifications", self.id.as_str()])
+            }
+            async fn owner(&self) -> Option<EntityInterface> {
+                None
+            }
+            async fn owns(&self) -> Option<EntityConnectionInterface> {
+                Some(empty_entity_connection())
+            }
+            async fn removed(&self) -> EntityConnectionInterface {
+                empty_entity_connection()
+            }
+            async fn modifications(&self) -> VectorModificationConnection {
+                VectorModificationConnection::from_entities(Vec::new()).await
+            }
+            async fn added(&self) -> EntityConnectionInterface {
+                empty_entity_connection()
+            }
+        }
+
+        impl VectorModifications {
+            pub async fn compute_hash(&self) -> String {
+                crate::hash::h(&["vector-modifications", self.id.as_str()])
+            }
+        }
+
+        crate::entity_relay!(VectorModificationsConnection, VectorModificationsEdge, Arc<VectorModifications>);
+        //#endregion 🪢 golden_interface_relay
 
         //#region 🧱 golden_interface_stubs
         /// @emoji 🧷 SDL `EmptyDiff` — placeholder [`Diff`] implementor until geometry `*Diff` rows wire into this enum.
@@ -10327,6 +10636,7 @@ pub mod gql {
         )]
         pub enum GqlDiffInterface {
             Stub(Arc<GqlEmptyDiff>),
+            VectorDiff(Arc<VectorDiff>),
         }
 
         /// @emoji 🌐 SDL `interface Modification` — `before` / `diff` / `after` triple shell.
@@ -10343,6 +10653,7 @@ pub mod gql {
         )]
         pub enum GqlModificationInterface {
             Stub(Arc<EmptyModification>),
+            VectorModification(Arc<VectorModification>),
         }
 
         /// @emoji 🌐 SDL `interface Input` — operation-side argument projection (`*Input` types implement this in golden).
@@ -11913,6 +12224,37 @@ pub mod gql {
             .register_output_type::<crate::gql::interfaces::WebsocketBackboneCommand>()
             .register_output_type::<crate::gql::ProviderInterface>()
             .register_output_type::<crate::gql::ProviderCommandInterface>()
+            .register_output_type::<crate::gql::interfaces::InputEdge>()
+            .register_output_type::<crate::gql::interfaces::InputConnection>()
+            .register_output_type::<crate::gql::interfaces::DiffEdge>()
+            .register_output_type::<crate::gql::interfaces::DiffConnection>()
+            .register_output_type::<crate::gql::interfaces::ModificationEdge>()
+            .register_output_type::<crate::gql::interfaces::ModificationConnection>()
+            .register_output_type::<crate::gql::interfaces::Modifications>()
+            .register_output_type::<crate::gql::interfaces::ModificationsEdge>()
+            .register_output_type::<crate::gql::interfaces::ModificationsConnection>()
+            .register_output_type::<crate::gql::interfaces::BackboneCommandEdge>()
+            .register_output_type::<crate::gql::interfaces::BackboneCommandConnection>()
+            .register_output_type::<crate::gql::interfaces::ProviderEdge>()
+            .register_output_type::<crate::gql::interfaces::ProviderConnection>()
+            .register_output_type::<crate::gql::interfaces::ProviderCommandEdge>()
+            .register_output_type::<crate::gql::interfaces::ProviderCommandConnection>()
+            .register_output_type::<crate::gql::interfaces::VectorDiff>()
+            .register_output_type::<crate::gql::interfaces::VectorDiffEdge>()
+            .register_output_type::<crate::gql::interfaces::VectorDiffConnection>()
+            .register_output_type::<crate::gql::interfaces::VectorModification>()
+            .register_output_type::<crate::gql::interfaces::VectorModificationEdge>()
+            .register_output_type::<crate::gql::interfaces::VectorModificationConnection>()
+            .register_output_type::<crate::gql::interfaces::VectorModifications>()
+            .register_output_type::<crate::gql::interfaces::VectorModificationsEdge>()
+            .register_output_type::<crate::gql::interfaces::VectorModificationsConnection>()
+            .register_output_type::<crate::gql_relay::VectorConnection>()
+            .register_output_type::<crate::gql_relay::PointConnection>()
+            .register_output_type::<crate::gql_relay::CoordinateConnection>()
+            .register_output_type::<crate::gql_relay::OffsetConnection>()
+            .register_output_type::<crate::gql_relay::PlaneConnection>()
+            .register_output_type::<crate::gql_relay::PositionConnection>()
+            .register_output_type::<crate::gql_relay::LocationConnection>()
             .register_output_type::<crate::color::Color>()
             .register_output_type::<crate::vcs::VersionKind>()
             .register_input_type::<crate::geom::VectorInput>()
