@@ -5402,6 +5402,17 @@ pub mod vcs {
         pub async fn stores(&self) -> crate::gql::StoreConnection {
             crate::gql::StoreConnection::active()
         }
+
+        #[graphql(name = "localProvider")]
+        pub async fn local_provider(&self, ctx: &Context<'_>) -> async_graphql::Result<Arc<crate::gql::LocalProvider>> {
+            Ok(ctx.data::<Arc<crate::worker::ParentStore>>()?.local_provider.clone())
+        }
+
+        #[graphql(name = "remoteProviders")]
+        pub async fn remote_providers(&self, ctx: &Context<'_>) -> async_graphql::Result<crate::gql::RemoteProviderConnection> {
+            let rt = ctx.data::<Arc<crate::worker::ParentStore>>()?;
+            Ok(crate::gql::RemoteProviderConnection::from_providers(rt.remote_providers.read().await.clone()))
+        }
     }
     //#endregion 👤 session
 
@@ -5487,6 +5498,8 @@ pub mod interface {
         Tag(std::sync::Arc<crate::meta::Tag>),
         Concept(std::sync::Arc<crate::meta::Concept>),
         Quality(std::sync::Arc<crate::meta::Quality>),
+        LocalProvider(std::sync::Arc<crate::gql::LocalProvider>),
+        RemoteProvider(std::sync::Arc<crate::gql::RemoteProvider>),
     }
 
     /// @emoji 🔎 Resolve a global id against WIP + authoritative graphs, sessions, and conflicts.
@@ -5532,6 +5545,14 @@ pub mod interface {
         for c in conflicts.iter() {
             if &c.id == id {
                 return Some(GqlNode::Conflict(c.clone()));
+            }
+        }
+        if &rt.local_provider.id == id {
+            return Some(GqlNode::LocalProvider(rt.local_provider.clone()));
+        }
+        for p in rt.remote_providers.read().await.iter() {
+            if &p.id == id {
+                return Some(GqlNode::RemoteProvider(p.clone()));
             }
         }
         None
@@ -9548,6 +9569,8 @@ pub mod worker {
         pub sessions: RwLock<Vec<Arc<Session>>>,
         pub conflicts: RwLock<Vec<Arc<Conflict>>>,
         pub wip_kit_scope: RwLock<Option<(Id, Id)>>,
+        pub local_provider: Arc<crate::gql::LocalProvider>,
+        pub remote_providers: RwLock<Vec<Arc<crate::gql::RemoteProvider>>>,
     }
 
     impl ParentStore {
@@ -9567,7 +9590,21 @@ pub mod worker {
             let sess = crate::vcs::Session::new().await;
             let sessions = RwLock::new(vec![sess]);
 
-            Arc::new(Self { bus, wip: ChildPort { inbound: wip_tx }, auth: ChildPort { inbound: auth_tx }, wip_graph, auth_graph, sessions, conflicts: RwLock::new(Vec::new()), wip_kit_scope: RwLock::new(None) })
+            let local_id = Id::new().await;
+            let local_provider = Arc::new(crate::gql::LocalProvider::new(local_id, "local://session-default".into()));
+
+            Arc::new(Self {
+                bus,
+                wip: ChildPort { inbound: wip_tx },
+                auth: ChildPort { inbound: auth_tx },
+                wip_graph,
+                auth_graph,
+                sessions,
+                conflicts: RwLock::new(Vec::new()),
+                wip_kit_scope: RwLock::new(None),
+                local_provider,
+                remote_providers: RwLock::new(Vec::new()),
+            })
         }
 
         /// 🛰️ WASM/host bootstrap: hydrate WIP [`Graph`] from `@semio/js` kit JSON snapshot; authoritative line stays mint-empty.
@@ -9586,7 +9623,21 @@ pub mod worker {
             let sess = crate::vcs::Session::new().await;
             let sessions = RwLock::new(vec![sess]);
 
-            Ok(Arc::new(Self { bus, wip: ChildPort { inbound: wip_tx }, auth: ChildPort { inbound: auth_tx }, wip_graph, auth_graph, sessions, conflicts: RwLock::new(Vec::new()), wip_kit_scope: RwLock::new(None) }))
+            let local_id = Id::new().await;
+            let local_provider = Arc::new(crate::gql::LocalProvider::new(local_id, "local://session-default".into()));
+
+            Ok(Arc::new(Self {
+                bus,
+                wip: ChildPort { inbound: wip_tx },
+                auth: ChildPort { inbound: auth_tx },
+                wip_graph,
+                auth_graph,
+                sessions,
+                conflicts: RwLock::new(Vec::new()),
+                wip_kit_scope: RwLock::new(None),
+                local_provider,
+                remote_providers: RwLock::new(Vec::new()),
+            }))
         }
 
         pub async fn dispatch_wip(&self, cmd: Command) -> Id {
@@ -9753,6 +9804,25 @@ pub mod gql {
             }
         }
     }
+
+    /// @emoji 🧷 Maps [`crate::interface::GqlNode`] into golden `Node` interface for [`Query::node`].
+    fn gql_node_to_node_interface(node: crate::interface::GqlNode) -> Option<interfaces::NodeInterface> {
+        use crate::gql::interfaces::NodeInterface as NI;
+        use crate::interface::GqlNode as N;
+        Some(match node {
+            N::Graph(g) => NI::Graph(g),
+            N::Kit(k) => NI::Kit(k),
+            N::Design(d) => NI::Design(d),
+            N::Piece(p) => NI::Piece(p),
+            N::Session(s) => NI::Session(s),
+            N::Conflict(c) => NI::Conflict(c),
+            N::Tag(t) => NI::Tag(t),
+            N::Concept(c) => NI::Concept(c),
+            N::Quality(q) => NI::Quality(q),
+            N::LocalProvider(p) => NI::LocalProvider(p),
+            N::RemoteProvider(p) => NI::RemoteProvider(p),
+        })
+    }
     //#endregion 📡 subscription_paths
 
     //#region 🌐 interfaces
@@ -9811,6 +9881,8 @@ pub mod gql {
             Alternative(Arc<crate::vcs::Alternative>),
             Checkpoint(Arc<crate::vcs::Checkpoint>),
             Conflict(Arc<crate::vcs::Conflict>),
+            LocalProvider(Arc<crate::gql::LocalProvider>),
+            RemoteProvider(Arc<crate::gql::RemoteProvider>),
         }
 
         #[derive(Clone, Interface)]
@@ -9823,6 +9895,17 @@ pub mod gql {
             Plane(Arc<Plane>),
             Position(Arc<Position>),
             Location(Arc<Location>),
+            Graph(Arc<crate::vcs::Graph>),
+            Session(Arc<crate::vcs::Session>),
+            Conflict(Arc<crate::vcs::Conflict>),
+            Kit(Arc<crate::kit::Kit>),
+            Design(Arc<crate::kit::design::Design>),
+            Piece(Arc<crate::kit::design::piece::Piece>),
+            Tag(Arc<crate::meta::Tag>),
+            Concept(Arc<crate::meta::Concept>),
+            Quality(Arc<crate::meta::Quality>),
+            LocalProvider(Arc<crate::gql::LocalProvider>),
+            RemoteProvider(Arc<crate::gql::RemoteProvider>),
         }
 
         #[derive(Clone, Interface)]
@@ -9856,6 +9939,279 @@ pub mod gql {
         }
     }
     //#endregion 🌐 interfaces
+
+    //#region 🌐 runtime_hosting
+    /// @emoji 🛜 Golden `BackboneStatus` enum (`OFFLINE` / `RECONNECTING` / `ONLINE`).
+    #[derive(Clone, Copy, PartialEq, Eq, async_graphql::Enum)]
+    pub enum BackboneStatus {
+        #[graphql(name = "OFFLINE")]
+        Offline,
+        #[graphql(name = "RECONNECTING")]
+        Reconnecting,
+        #[graphql(name = "ONLINE")]
+        Online,
+    }
+
+    /// @emoji 🗄️ Golden `FileBackbone` — disk-backed backbone row (stub until native attach wires fields).
+    pub struct FileBackbone {
+        pub id: Id,
+        pub uri: String,
+    }
+
+    #[Object(name = "FileBackbone")]
+    impl FileBackbone {
+        pub async fn id(&self) -> Id {
+            self.id.clone()
+        }
+        pub async fn hash(&self) -> String {
+            crate::hash::h(&["file-backbone", self.id.as_str(), self.uri.as_str()])
+        }
+        pub async fn owner(&self) -> Option<interfaces::EntityInterface> {
+            None
+        }
+        pub async fn owns(&self) -> Option<interfaces::EntityConnectionInterface> {
+            Some(interfaces::empty_entity_connection())
+        }
+        pub async fn uri(&self) -> String {
+            self.uri.clone()
+        }
+        pub async fn status(&self) -> BackboneStatus {
+            BackboneStatus::Offline
+        }
+    }
+
+    /// @emoji 🌐 Golden `WebsocketBackbone` — websocket backbone row (stub).
+    pub struct WebsocketBackbone {
+        pub id: Id,
+        pub uri: String,
+    }
+
+    #[Object(name = "WebsocketBackbone")]
+    impl WebsocketBackbone {
+        pub async fn id(&self) -> Id {
+            self.id.clone()
+        }
+        pub async fn hash(&self) -> String {
+            crate::hash::h(&["websocket-backbone", self.id.as_str(), self.uri.as_str()])
+        }
+        pub async fn owner(&self) -> Option<interfaces::EntityInterface> {
+            None
+        }
+        pub async fn owns(&self) -> Option<interfaces::EntityConnectionInterface> {
+            Some(interfaces::empty_entity_connection())
+        }
+        pub async fn uri(&self) -> String {
+            self.uri.clone()
+        }
+        pub async fn status(&self) -> BackboneStatus {
+            BackboneStatus::Offline
+        }
+    }
+
+    /// @emoji 🧷 Golden `interface Backbone` — concrete [`FileBackbone`] / [`WebsocketBackbone`].
+    #[derive(Clone, async_graphql::Interface)]
+    #[graphql(
+        name = "Backbone",
+        field(name = "id", ty = "crate::id::Id"),
+        field(name = "hash", ty = "String"),
+        field(name = "owner", ty = "Option<crate::gql::interfaces::EntityInterface>"),
+        field(name = "owns", ty = "Option<crate::gql::interfaces::EntityConnectionInterface>"),
+        field(name = "uri", ty = "String"),
+        field(name = "status", ty = "crate::gql::BackboneStatus")
+    )]
+    pub enum BackboneInterface {
+        File(Arc<FileBackbone>),
+        Websocket(Arc<WebsocketBackbone>),
+    }
+
+    /// @emoji 🪢 Golden `BackboneEdge` / `BackboneConnection` relay shells.
+    #[derive(Clone, async_graphql::SimpleObject)]
+    pub struct BackboneEdge {
+        pub cursor: String,
+        pub node: BackboneInterface,
+    }
+
+    #[derive(Clone, async_graphql::SimpleObject)]
+    #[graphql(name = "BackboneConnection")]
+    pub struct BackboneConnection {
+        pub edges: Vec<BackboneEdge>,
+        #[graphql(name = "pageInfo")]
+        pub page_info: Arc<crate::gql_relay::PageInfo>,
+        pub hash: String,
+    }
+
+    impl BackboneConnection {
+        /// @emoji 🪢 Empty backbone connection (no rows materialised yet).
+        pub fn empty() -> Self {
+            Self { edges: Vec::new(), page_info: Arc::new(crate::gql_relay::PageInfo::default()), hash: crate::hash::h(&["backbone-connection", "empty"]) }
+        }
+    }
+
+    /// @emoji 🏠 Golden `LocalProvider` — dev host provider (`uri` + active [`StoreConnection`]).
+    pub struct LocalProvider {
+        pub id: Id,
+        pub uri: String,
+    }
+
+    impl LocalProvider {
+        /// @emoji 🏠 Builds a deterministic shell for the active session provider row.
+        pub fn new(id: Id, uri: String) -> Self {
+            Self { id, uri }
+        }
+    }
+
+    #[Object(name = "LocalProvider")]
+    impl LocalProvider {
+        pub async fn id(&self) -> Id {
+            self.id.clone()
+        }
+        pub async fn hash(&self) -> String {
+            crate::hash::h(&["local-provider", self.id.as_str(), self.uri.as_str()])
+        }
+        pub async fn owner(&self) -> Option<interfaces::EntityInterface> {
+            None
+        }
+        pub async fn owns(&self) -> Option<interfaces::EntityConnectionInterface> {
+            Some(interfaces::empty_entity_connection())
+        }
+        pub async fn backbones(&self) -> Option<BackboneConnection> {
+            Some(BackboneConnection::empty())
+        }
+        pub async fn backbone(&self, #[graphql(name = "id")] _id: Id) -> Option<BackboneInterface> {
+            None
+        }
+        pub async fn uri(&self) -> String {
+            self.uri.clone()
+        }
+        pub async fn stores(&self) -> StoreConnection {
+            StoreConnection::active()
+        }
+        pub async fn store(&self, #[graphql(name = "id")] _id: Id) -> StoreCommand {
+            StoreCommand
+        }
+    }
+
+    /// @emoji 🛰️ Golden `RemoteProvider` — hub-linked provider (`uri` + `url` + backbone catalog).
+    #[derive(Clone)]
+    pub struct RemoteProvider {
+        pub id: Id,
+        pub uri: String,
+        pub url: String,
+    }
+
+    #[Object(name = "RemoteProvider")]
+    impl RemoteProvider {
+        pub async fn id(&self) -> Id {
+            self.id.clone()
+        }
+        pub async fn hash(&self) -> String {
+            crate::hash::h(&["remote-provider", self.id.as_str(), self.uri.as_str(), self.url.as_str()])
+        }
+        pub async fn owner(&self) -> Option<interfaces::EntityInterface> {
+            None
+        }
+        pub async fn owns(&self) -> Option<interfaces::EntityConnectionInterface> {
+            Some(interfaces::empty_entity_connection())
+        }
+        pub async fn uri(&self) -> String {
+            self.uri.clone()
+        }
+        pub async fn backbones(&self) -> BackboneConnection {
+            BackboneConnection::empty()
+        }
+        pub async fn backbone(&self, #[graphql(name = "id")] _id: Id) -> Option<BackboneInterface> {
+            None
+        }
+        pub async fn url(&self) -> String {
+            self.url.clone()
+        }
+    }
+
+    #[derive(Clone, async_graphql::SimpleObject)]
+    pub struct RemoteProviderEdge {
+        pub cursor: String,
+        pub node: Arc<RemoteProvider>,
+    }
+
+    #[derive(Clone, async_graphql::SimpleObject)]
+    #[graphql(name = "RemoteProviderConnection")]
+    pub struct RemoteProviderConnection {
+        pub edges: Vec<RemoteProviderEdge>,
+        #[graphql(name = "pageInfo")]
+        pub page_info: Arc<crate::gql_relay::PageInfo>,
+        pub hash: String,
+    }
+
+    impl RemoteProviderConnection {
+        /// @emoji 🪢 Builds the golden `RemoteProviderConnection` from runtime rows.
+        pub fn from_providers(providers: Vec<Arc<RemoteProvider>>) -> Self {
+            let mut child_hashes = Vec::with_capacity(providers.len());
+            for p in &providers {
+                child_hashes.push(p.id.as_str().to_string());
+            }
+            let hash = crate::hash::merkle_collection(child_hashes);
+            let edges = providers
+                .into_iter()
+                .enumerate()
+                .map(|(i, node)| RemoteProviderEdge { cursor: crate::gql_relay::edge_cursor(i), node })
+                .collect();
+            Self { edges, page_info: Arc::new(crate::gql_relay::PageInfo::default()), hash }
+        }
+
+        /// @emoji 🪢 Empty remote-provider catalog.
+        pub fn empty() -> Self {
+            Self::from_providers(Vec::new())
+        }
+    }
+
+    /// @emoji 🎛️ Golden `LocalProviderCommand` (`createBackbone` / `attachBackbone`).
+    pub struct LocalProviderCommand;
+
+    #[Object(name = "LocalProviderCommand")]
+    impl LocalProviderCommand {
+        #[graphql(name = "createBackbone")]
+        async fn create_backbone(&self, ctx: &Context<'_>, uri: String) -> async_graphql::Result<Id> {
+            let _ = (ctx, uri);
+            Ok(Id::new().await)
+        }
+
+        #[graphql(name = "attachBackbone")]
+        async fn attach_backbone(&self, ctx: &Context<'_>, #[graphql(name = "store")] store: Id) -> async_graphql::Result<Id> {
+            let _ = (ctx, store);
+            Ok(Id::new().await)
+        }
+    }
+
+    /// @emoji 🎛️ Golden `RemoteProviderCommand` — extends provider commands with `login` / `logout`.
+    pub struct RemoteProviderCommand {
+        pub url: String,
+    }
+
+    #[Object(name = "RemoteProviderCommand")]
+    impl RemoteProviderCommand {
+        #[graphql(name = "createBackbone")]
+        async fn create_backbone(&self, ctx: &Context<'_>, uri: String) -> async_graphql::Result<Id> {
+            let _ = (ctx, uri, self);
+            Ok(Id::new().await)
+        }
+
+        #[graphql(name = "attachBackbone")]
+        async fn attach_backbone(&self, ctx: &Context<'_>, #[graphql(name = "store")] store: Id) -> async_graphql::Result<Id> {
+            let _ = (ctx, store, self);
+            Ok(Id::new().await)
+        }
+
+        async fn login(&self, ctx: &Context<'_>, username: String, password_hash: String, hub_url: Option<String>) -> async_graphql::Result<Id> {
+            let _ = (ctx, username, password_hash, hub_url, self);
+            Ok(Id::new().await)
+        }
+
+        async fn logout(&self, ctx: &Context<'_>) -> async_graphql::Result<Id> {
+            let _ = ctx;
+            Ok(Id::new().await)
+        }
+    }
+    //#endregion 🌐 runtime_hosting
 
     /// @emoji 🧩 Executable schema (`Query`, `Mutation`, `Subscription`).
     pub type AppSchema = Schema<Query, Mutation, Subscription>;
@@ -9912,10 +10268,10 @@ pub mod gql {
 
     #[Object]
     impl Query {
-        /// @emoji 🔎 Relay-style global `node` lookup (WIP + authoritative + sessions + conflicts).
-        pub async fn node(&self, ctx: &Context<'_>, id: Id) -> async_graphql::Result<Option<crate::interface::GqlNode>> {
+        /// @emoji 🔎 Golden `Query.node(id)` — returns the `Node` interface for resolvable globals on this runtime.
+        pub async fn node(&self, ctx: &Context<'_>, id: Id) -> async_graphql::Result<Option<crate::gql::interfaces::NodeInterface>> {
             let rt = ctx.data::<Arc<ParentStore>>()?;
-            Ok(crate::interface::resolve_node(rt.as_ref(), &id).await)
+            Ok(crate::interface::resolve_node(rt.as_ref(), &id).await.and_then(gql_node_to_node_interface))
         }
 
         /// @emoji 🔎 Golden `Query.entity(hash)` — returns the `Entity` interface for VCS shells resolvable on this runtime.
@@ -9924,6 +10280,9 @@ pub mod gql {
             Ok(match crate::interface::resolve_node(rt.as_ref(), &hash).await {
                 Some(crate::interface::GqlNode::Graph(g)) => Some(crate::gql::interfaces::EntityInterface::Graph(g)),
                 Some(crate::interface::GqlNode::Session(s)) => Some(crate::gql::interfaces::EntityInterface::Session(s)),
+                Some(crate::interface::GqlNode::Conflict(c)) => Some(crate::gql::interfaces::EntityInterface::Conflict(c)),
+                Some(crate::interface::GqlNode::LocalProvider(p)) => Some(crate::gql::interfaces::EntityInterface::LocalProvider(p)),
+                Some(crate::interface::GqlNode::RemoteProvider(p)) => Some(crate::gql::interfaces::EntityInterface::RemoteProvider(p)),
                 _ => None,
             })
         }
@@ -9954,6 +10313,16 @@ pub mod gql {
 
         async fn store(&self, #[graphql(name = "id")] _id: Id) -> StoreCommand {
             StoreCommand
+        }
+
+        #[graphql(name = "localProvider")]
+        async fn local_provider(&self) -> LocalProviderCommand {
+            LocalProviderCommand
+        }
+
+        #[graphql(name = "remoteProvider")]
+        async fn remote_provider(&self, url: String) -> RemoteProviderCommand {
+            RemoteProviderCommand { url }
         }
     }
 
@@ -10748,43 +11117,12 @@ pub mod gql {
 
     pub struct Subscription;
 
-    type StoreStream = Pin<Box<dyn Stream<Item = async_graphql::Result<Store>> + Send>>;
     type SessionStream = Pin<Box<dyn Stream<Item = async_graphql::Result<Arc<crate::vcs::Session>>> + Send>>;
-    type GraphStream = Pin<Box<dyn Stream<Item = async_graphql::Result<Arc<Graph>>> + Send>>;
-    type ConflictStream = Pin<Box<dyn Stream<Item = async_graphql::Result<crate::gql_relay::ConflictConnection>> + Send>>;
-    type NodeStream = Pin<Box<dyn Stream<Item = async_graphql::Result<Option<crate::interface::GqlNode>>> + Send>>;
-    type EntityStream = Pin<Box<dyn Stream<Item = async_graphql::Result<Option<crate::gql::interfaces::EntityInterface>>> + Send>>;
     type OperationStream = Pin<Box<dyn Stream<Item = async_graphql::Result<crate::operation::OperationInterface>> + Send>>;
 
     #[Subscription]
     impl Subscription {
-        /// @emoji 📡 Live-query mirror of [`Query::store`] — re-emits the explicit Store root on matching event-bus ticks.
-        async fn store(&self, ctx: &Context<'_>) -> async_graphql::Result<StoreStream> {
-            let bus = ctx.data::<Arc<EventBus>>()?.clone();
-            let watched = collect_subscription_field_paths("store", ctx);
-            let filtered = !watched.is_empty();
-            Ok(Box::pin(stream! {
-                let mut broadcast_rx = if filtered { None } else { Some(bus.subscribe()) };
-                let path_rx = if filtered { Some(bus.subscribe_paths(&watched)) } else { None };
-                loop {
-                    yield Ok(Store);
-                    if let Some(ref prx) = path_rx {
-                        if prx.recv().await.is_err() {
-                            break;
-                        }
-                    } else if let Some(ref mut brx) = broadcast_rx {
-                        match brx.recv().await {
-                            Ok(_) => {}
-                            Err(_) => break,
-                        }
-                    } else {
-                        break;
-                    }
-                }
-            }))
-        }
-
-        /// @emoji 📡 Live-query mirror of [`Query::session`] — re-emits on each outbound [`EventBus`] tick.
+        /// @emoji 📡 Golden `Subscription.session` — live mirror of [`Query::session`].
         async fn session(&self, ctx: &Context<'_>) -> async_graphql::Result<SessionStream> {
             let rt = ctx.data::<Arc<ParentStore>>()?.clone();
             let bus = ctx.data::<Arc<EventBus>>()?.clone();
@@ -10805,152 +11143,6 @@ pub mod gql {
                             break;
                         }
                     }
-                    if let Some(ref prx) = path_rx {
-                        if prx.recv().await.is_err() {
-                            break;
-                        }
-                    } else if let Some(ref mut brx) = broadcast_rx {
-                        match brx.recv().await {
-                            Ok(_) => {}
-                            Err(_) => break,
-                        }
-                    } else {
-                        break;
-                    }
-                }
-            }))
-        }
-
-        /// @emoji 📡 Live-query mirror of [`Query::wip`].
-        async fn wip(&self, ctx: &Context<'_>) -> async_graphql::Result<GraphStream> {
-            let rt = ctx.data::<Arc<ParentStore>>()?.clone();
-            let bus = ctx.data::<Arc<EventBus>>()?.clone();
-            let watched = collect_subscription_field_paths("wip", ctx);
-            let filtered = !watched.is_empty();
-            Ok(Box::pin(stream! {
-                let mut broadcast_rx = if filtered { None } else { Some(bus.subscribe()) };
-                let path_rx = if filtered { Some(bus.subscribe_paths(&watched)) } else { None };
-                loop {
-                    yield Ok(rt.wip_graph.clone());
-                    if let Some(ref prx) = path_rx {
-                        if prx.recv().await.is_err() {
-                            break;
-                        }
-                    } else if let Some(ref mut brx) = broadcast_rx {
-                        match brx.recv().await {
-                            Ok(_) => {}
-                            Err(_) => break,
-                        }
-                    } else {
-                        break;
-                    }
-                }
-            }))
-        }
-
-        /// @emoji 📡 Live-query mirror of [`Query::authoritative`].
-        #[graphql(name = "authoritative")]
-        async fn authoritative(&self, ctx: &Context<'_>) -> async_graphql::Result<GraphStream> {
-            let rt = ctx.data::<Arc<ParentStore>>()?.clone();
-            let bus = ctx.data::<Arc<EventBus>>()?.clone();
-            let watched = collect_subscription_field_paths("authoritative", ctx);
-            let filtered = !watched.is_empty();
-            Ok(Box::pin(stream! {
-                let mut broadcast_rx = if filtered { None } else { Some(bus.subscribe()) };
-                let path_rx = if filtered { Some(bus.subscribe_paths(&watched)) } else { None };
-                loop {
-                    yield Ok(rt.auth_graph.clone());
-                    if let Some(ref prx) = path_rx {
-                        if prx.recv().await.is_err() {
-                            break;
-                        }
-                    } else if let Some(ref mut brx) = broadcast_rx {
-                        match brx.recv().await {
-                            Ok(_) => {}
-                            Err(_) => break,
-                        }
-                    } else {
-                        break;
-                    }
-                }
-            }))
-        }
-
-        /// @emoji 📡 Live-query mirror of [`Query::conflicts`].
-        async fn conflicts(&self, ctx: &Context<'_>) -> async_graphql::Result<ConflictStream> {
-            let rt = ctx.data::<Arc<ParentStore>>()?.clone();
-            let bus = ctx.data::<Arc<EventBus>>()?.clone();
-            let watched = collect_subscription_field_paths("conflicts", ctx);
-            let filtered = !watched.is_empty();
-            Ok(Box::pin(stream! {
-                let mut broadcast_rx = if filtered { None } else { Some(bus.subscribe()) };
-                let path_rx = if filtered { Some(bus.subscribe_paths(&watched)) } else { None };
-                loop {
-                    let list = rt.conflicts.read().await.clone();
-                    let entity = crate::gql_relay::ConflictConnection::from_conflicts(list).await;
-                    yield Ok(entity);
-                    if let Some(ref prx) = path_rx {
-                        if prx.recv().await.is_err() {
-                            break;
-                        }
-                    } else if let Some(ref mut brx) = broadcast_rx {
-                        match brx.recv().await {
-                            Ok(_) => {}
-                            Err(_) => break,
-                        }
-                    } else {
-                        break;
-                    }
-                }
-            }))
-        }
-
-        /// @emoji 📡 Live-query mirror of [`Query::node`].
-        async fn node(&self, ctx: &Context<'_>, id: Id) -> async_graphql::Result<NodeStream> {
-            let rt = ctx.data::<Arc<ParentStore>>()?.clone();
-            let bus = ctx.data::<Arc<EventBus>>()?.clone();
-            let id_capture = id.clone();
-            let watched = collect_subscription_field_paths("node", ctx);
-            let filtered = !watched.is_empty();
-            Ok(Box::pin(stream! {
-                let mut broadcast_rx = if filtered { None } else { Some(bus.subscribe()) };
-                let path_rx = if filtered { Some(bus.subscribe_paths(&watched)) } else { None };
-                loop {
-                    let out = crate::interface::resolve_node(rt.as_ref(), &id_capture).await;
-                    yield Ok(out);
-                    if let Some(ref prx) = path_rx {
-                        if prx.recv().await.is_err() {
-                            break;
-                        }
-                    } else if let Some(ref mut brx) = broadcast_rx {
-                        match brx.recv().await {
-                            Ok(_) => {}
-                            Err(_) => break,
-                        }
-                    } else {
-                        break;
-                    }
-                }
-            }))
-        }
-
-        /// @emoji 📡 Live-query mirror of [`Query::entity`] (`Entity` interface).
-        async fn entity(&self, ctx: &Context<'_>, hash: Id) -> async_graphql::Result<EntityStream> {
-            let rt = ctx.data::<Arc<ParentStore>>()?.clone();
-            let bus = ctx.data::<Arc<EventBus>>()?.clone();
-            let hash_capture = hash.clone();
-            let watched = collect_subscription_field_paths("entity", ctx);
-            let filtered = !watched.is_empty();
-            Ok(Box::pin(stream! {
-                let mut broadcast_rx = if filtered { None } else { Some(bus.subscribe()) };
-                let path_rx = if filtered { Some(bus.subscribe_paths(&watched)) } else { None };
-                loop {
-                    let out = match crate::interface::resolve_node(rt.as_ref(), &hash_capture).await {
-                        Some(crate::interface::GqlNode::Graph(g)) => Some(crate::gql::interfaces::EntityInterface::Graph(g)),
-                        Some(crate::interface::GqlNode::Session(s)) => Some(crate::gql::interfaces::EntityInterface::Session(s)),
-                        _ => None,
-                    };
-                    yield Ok(out);
                     if let Some(ref prx) = path_rx {
                         if prx.recv().await.is_err() {
                             break;
@@ -11050,6 +11242,21 @@ pub mod gql {
             .register_output_type::<crate::gql::interfaces::EntityConnectionInterface>()
             .register_output_type::<crate::gql::interfaces::EntityInterface>()
             .register_output_type::<crate::gql::interfaces::WorkspaceInterface>()
+            .register_output_type::<crate::gql::BackboneStatus>()
+            .register_output_type::<crate::gql::BackboneInterface>()
+            .register_output_type::<crate::gql::BackboneEdge>()
+            .register_output_type::<crate::gql::BackboneConnection>()
+            .register_output_type::<crate::gql::FileBackbone>()
+            .register_output_type::<crate::gql::WebsocketBackbone>()
+            .register_output_type::<crate::gql::LocalProvider>()
+            .register_output_type::<crate::gql::RemoteProvider>()
+            .register_output_type::<crate::gql::RemoteProviderEdge>()
+            .register_output_type::<crate::gql::RemoteProviderConnection>()
+            .register_output_type::<crate::gql::LocalProviderCommand>()
+            .register_output_type::<crate::gql::RemoteProviderCommand>()
+            .register_output_type::<crate::gql::Store>()
+            .register_output_type::<crate::gql::StoreEdge>()
+            .register_output_type::<crate::gql::StoreConnection>()
             .register_output_type::<crate::operation::OperationInterface>()
             .finish()
     }
@@ -11288,6 +11495,15 @@ mod tests {
 
     use crate::gql::AppSchema;
 
+    /// @emoji 🛤️ Golden navigation: `Query.session → stores → Store` (first active edge).
+    fn session_store_node(data: &serde_json::Value) -> &serde_json::Value {
+        &data["session"]["stores"]["edges"][0]["node"]
+    }
+
+    fn session_store_wip(data: &serde_json::Value) -> &serde_json::Value {
+        &session_store_node(data)["wip"]
+    }
+
     /// @emoji 📜 Collects `(kind, name)` for top-level GraphQL declarations (first line of each declaration block).
     fn collect_schema_decl_keys(sdl: &str) -> BTreeSet<(String, String)> {
         let mut out = BTreeSet::new();
@@ -11457,29 +11673,37 @@ mod tests {
 
             let schema_a = crate::gql::build_schema_for(rt.clone());
             let q_baseline = r#"{
-                store {
-                    wip {
-                        initialKit { name }
-                        theKit { kit { name } }
-                        checkpoints { edges { node { initial { name } kit { name } } } }
+                session {
+                    stores {
+                        edges {
+                            node {
+                                wip {
+                                    initialKit { name }
+                                    theKit { kit { name } }
+                                    checkpoints { edges { node { initial { name } kit { name } } } }
+                                }
+                            }
+                        }
                     }
                 }
             }"#;
             let res = schema_a.execute(q_baseline).await;
             assert!(res.errors.is_empty(), "baseline query errors: {:?}", res.errors);
             let vr = res.data.into_json().unwrap();
-            assert_eq!(vr["store"]["wip"]["theKit"]["kit"]["name"].as_str(), Some("Hello Bundle"), "materialized wip.theKit.kit");
-            assert_eq!(vr["store"]["wip"]["initialKit"]["name"].as_str(), Some("the kit"), "graph.initialKit stays immutable");
-            let cp_initial = vr["store"]["wip"]["checkpoints"]["edges"][0]["node"]["initial"]["name"].as_str().expect("checkpoint.initial.name");
+            let wip = session_store_wip(&vr);
+            assert_eq!(wip["theKit"]["kit"]["name"].as_str(), Some("Hello Bundle"), "materialized wip.theKit.kit");
+            assert_eq!(wip["initialKit"]["name"].as_str(), Some("the kit"), "graph.initialKit stays immutable");
+            let cp_initial = wip["checkpoints"]["edges"][0]["node"]["initial"]["name"].as_str().expect("checkpoint.initial.name");
             assert_eq!(cp_initial, "the kit", "checkpoint.initial must not alias live rename");
 
             g.abort_transaction(&ws_a, &tx_a.id).await.expect("abort");
             let res = schema_a.execute(q_baseline).await;
             assert!(res.errors.is_empty(), "baseline after abort: {:?}", res.errors);
             let vr = res.data.into_json().unwrap();
-            assert_eq!(vr["store"]["wip"]["theKit"]["kit"]["name"].as_str(), Some("the kit"), "materialized kit reverts after abort");
-            assert_eq!(vr["store"]["wip"]["initialKit"]["name"].as_str(), Some("the kit"));
-            assert_eq!(vr["store"]["wip"]["checkpoints"]["edges"][0]["node"]["initial"]["name"].as_str(), Some("the kit"));
+            let wip = session_store_wip(&vr);
+            assert_eq!(wip["theKit"]["kit"]["name"].as_str(), Some("the kit"), "materialized kit reverts after abort");
+            assert_eq!(wip["initialKit"]["name"].as_str(), Some("the kit"));
+            assert_eq!(wip["checkpoints"]["edges"][0]["node"]["initial"]["name"].as_str(), Some("the kit"));
 
             let tx_a2 = g.open_transaction(&ws_a).await;
             let req2 = crate::id::Id::new().await;
@@ -11531,11 +11755,11 @@ mod tests {
             assert!(res.errors.is_empty(), "startAlternative errors: {:?}", res.errors);
             let id: String = res.data.into_json().unwrap()["session"]["startAlternative"].as_str().expect("alt id").to_string();
 
-            let q = r#"{ store { wip { alternatives { edges { node { id name } } } } } }"#;
+            let q = r#"{ session { stores { edges { node { wip { alternatives { edges { node { id name } } } } } } } } } } }"#;
             let res = schema.execute(q).await;
             assert!(res.errors.is_empty(), "alternatives query errors: {:?}", res.errors);
             let v = res.data.into_json().unwrap();
-            let edges = v["store"]["wip"]["alternatives"]["edges"].as_array().expect("edges");
+            let edges = session_store_wip(&v)["alternatives"]["edges"].as_array().expect("edges");
             assert!(edges.iter().any(|e| e["node"]["id"].as_str() == Some(id.as_str())), "expected new alternative id in wip.alternatives");
             assert!(edges.iter().any(|e| e["node"]["name"].as_str() == Some("branch-a")));
         });
@@ -11596,11 +11820,11 @@ mod tests {
 
             std::thread::sleep(std::time::Duration::from_millis(150));
 
-            let q = "{ store { wip { theKit { kit { tags { edges { node { name } } } } } } } }";
+            let q = "{ session { stores { edges { node { wip { theKit { kit { tags { edges { node { name } } } } } } } } } } } } }";
             let res = schema.execute(q).await;
             assert!(res.errors.is_empty(), "query errors: {:?}", res.errors);
             let data = res.data.into_json().unwrap();
-            let names: Vec<String> = data["store"]["wip"]["theKit"]["kit"]["tags"]["edges"].as_array().unwrap().iter().filter_map(|e| e["node"]["name"].as_str().map(String::from)).collect();
+            let names: Vec<String> = session_store_wip(&data)["theKit"]["kit"]["tags"]["edges"].as_array().unwrap().iter().filter_map(|e| e["node"]["name"].as_str().map(String::from)).collect();
             assert!(names.iter().any(|n| n == "alpha-tag"), "tags missing new name: {:?}", names);
         });
     }
@@ -11700,7 +11924,7 @@ mod tests {
             let res = schema.execute(q).await;
             assert!(res.errors.is_empty(), "query errors: {:?}", res.errors);
             let data = res.data.into_json().unwrap();
-            let edges = data["store"]["wip"]["theKit"]["kit"]["designs"]["edges"].as_array().expect("design edges");
+            let edges = session_store_wip(&data)["theKit"]["kit"]["designs"]["edges"].as_array().expect("design edges");
             let any_piece = edges.iter().any(|e| e["node"]["pieces"]["edges"].as_array().map(|pe| pe.iter().any(|_| true)).unwrap_or(false));
             assert!(any_piece, "expected at least one piece in wip; got: {}", serde_json::to_string_pretty(&data).unwrap());
         });
@@ -11717,7 +11941,7 @@ mod tests {
             let q = relay_auth_designs_piece_ids();
             let res = schema.execute(q).await;
             let data = res.data.into_json().unwrap();
-            let edges = data["store"]["authoritative"]["theKit"]["kit"]["designs"]["edges"].as_array().expect("auth design edges");
+            let edges = session_store_node(&data)["authoritative"]["theKit"]["kit"]["designs"]["edges"].as_array().expect("auth design edges");
             let all_empty = edges.iter().all(|e| e["node"]["pieces"]["edges"].as_array().map(|pe| pe.is_empty()).unwrap_or(true));
             assert!(all_empty, "authoritative leaked pieces: {}", serde_json::to_string_pretty(&data).unwrap());
         });
@@ -11758,7 +11982,7 @@ mod tests {
     }
 
     fn relay_piece_count_wip(data: &serde_json::Value) -> usize {
-        let Some(edges) = data["store"]["wip"]["theKit"]["kit"]["designs"]["edges"].as_array() else {
+        let Some(edges) = session_store_wip(data)["theKit"]["kit"]["designs"]["edges"].as_array() else {
             return 0;
         };
         edges.iter().map(|e| e["node"]["pieces"]["edges"].as_array().map(|pe| pe.len()).unwrap_or(0)).sum()

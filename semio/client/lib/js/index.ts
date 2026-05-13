@@ -257,7 +257,7 @@ export class EventBus {
 /** @emoji 📡 Live-query mirror of target {@code Subscription.session}; ticks {@link Store#bus} on each WIP emission. */
 export const KIT_EVENT_STREAM_SUBSCRIPTION = `subscription { session { stores { edges { node { wip { id hash } } } } } }` as const;
 
-/** @emoji 🧭 Store entry query fragment aligned with {@code target.schema.graphql} (WIP head + {@code theKit} id). */
+/** @emoji 🧭 Store entry query fragment aligned with {@code schema.golden.graphql} (WIP head + {@code theKit} id). */
 export const KIT_SESSION_QUERY_ENTRY = `query KitStoreEntry { session { stores { edges { node { wip { id theKit { id } } } } } } }` as const;
 
 //#endregion 🌐Transport
@@ -340,7 +340,6 @@ function sessionStoreSelectionDocument(innerOnStore: string): { query: string; v
 function kitReadSelectionDocument(point: KitReadPoint, innerOnKitStore: string): { query: string; variables: JsonObject } {
   if (isTheKitReadPoint(point)) {
     return {
-      ...sessionStoreSelectionDocument(`wip { theKit { kit { ${innerOnKitStore} } } }`),
       query: `query KitSessionWipStore { session { stores { edges { node { wip { theKit { kit { ${innerOnKitStore} } } } } } } } }`,
       variables: {},
     };
@@ -998,7 +997,7 @@ export class Store {
     return gqlOkFromEnvelope(env);
   }
 
-  /** @emoji 🛜 Runs {@code backbone.syncNow} on the active session. */
+  /** @emoji 🛜 Runs target {@code BackboneCommand.sync} through the active store command scope. */
   async backboneSyncNow(): Promise<SetResult> {
     this.ensureAlive();
     const env = await this.gqlRun({ query: `mutation($storeId: ID!) { session { store(id: $storeId) { backbone { sync } } } }`, variables: { storeId: this.storeId } });
@@ -1135,7 +1134,7 @@ export class Store {
     return cachedMapGet(this.statCache, id, () => new Stat(this, id));
   }
 
-  /** @emoji 🌐 WIP {@link Graph} ({@code Query.store.wip}). */
+  /** @emoji 🌐 WIP {@link Graph} ({@code Query.session.stores.edges.node.wip}). */
   wip(): Graph {
     let g = this.graphByRoot.get("wip");
     if (!g) {
@@ -1145,7 +1144,7 @@ export class Store {
     return g;
   }
 
-  /** @emoji 🌐 Authoritative {@link Graph} when the server exposes it ({@code Query.store.authoritative}). */
+  /** @emoji 🌐 Authoritative {@link Graph} when the server exposes it ({@code Query.session.stores.edges.node.authoritative}). */
   authoritative(): Graph {
     let g = this.graphByRoot.get("authoritative");
     if (!g) {
@@ -1155,7 +1154,7 @@ export class Store {
     return g;
   }
 
-  /** @emoji 🗂️ Root {@link Session} ({@code Query.store.session}). */
+  /** @emoji 🗂️ Root {@link Session} ({@code Query.session}). */
   session(): Session {
     return (this.sessionEntity ??= new Session(this));
   }
@@ -1537,9 +1536,7 @@ export class Graph extends Entity {
   }
 
   private async readStoreGraphRootScalar(field: "id" | "hash"): Promise<string> {
-    const q = `query { store { ${this.root} { ${field} } } }`;
-    const data = unwrapGraphqlData(await executeStoreGraphql(this.store, { query: q })) as JsonObject;
-    const node = jsonObjectField(jsonObjectField(data, "store"), this.root);
+    const node = jsonObjectField(await this.store.readStoreInner(`${this.root} { ${field} }`), this.root);
     return node == null ? "" : String(node[field] ?? "");
   }
 
@@ -1548,16 +1545,12 @@ export class Graph extends Entity {
   }
 
   private async alternativeIds(): Promise<readonly string[]> {
-    const q = `query { store { ${this.root} { alternatives { edges { node { id } } } } } }`;
-    const data = unwrapGraphqlData(await executeStoreGraphql(this.store, { query: q })) as JsonObject;
-    const node = jsonObjectField(jsonObjectField(data, "store"), this.root);
+    const node = jsonObjectField(await this.store.readStoreInner(`${this.root} { alternatives { edges { node { id } } } }`), this.root);
     return parseEntityConnectionIds(node, "alternatives");
   }
 
   private async checkpointIds(): Promise<readonly string[]> {
-    const q = `query { store { ${this.root} { checkpoints { edges { node { id } } } } } }`;
-    const data = unwrapGraphqlData(await executeStoreGraphql(this.store, { query: q })) as JsonObject;
-    const node = jsonObjectField(jsonObjectField(data, "store"), this.root);
+    const node = jsonObjectField(await this.store.readStoreInner(`${this.root} { checkpoints { edges { node { id } } } }`), this.root);
     return parseEntityConnectionIds(node, "checkpoints");
   }
 
@@ -1590,7 +1583,7 @@ export class Graph extends Entity {
   }
 }
 
-/** @emoji 🗂️ {@code Query.store.session} singleton anchor. */
+/** @emoji 🗂️ {@code Query.session} singleton anchor. */
 export class Session extends Entity {
   private readonly alternativeCache = new Map<string, Alternative>();
   private stableAlternatives: { ids: readonly string[]; arr: readonly Alternative[] } = { ids: [], arr: [] };
@@ -1604,19 +1597,16 @@ export class Session extends Entity {
   }
 
   async startedAt(): Promise<string | null> {
-    const data = unwrapGraphqlData(await executeStoreGraphql(this.store, { query: `query { store { session { startedAt } } }` })) as JsonObject;
-    const s = jsonObjectField(jsonObjectField(data, "store"), "session");
+    const data = unwrapGraphqlData(await executeStoreGraphql(this.store, { query: `query { session { startedAt } }` })) as JsonObject;
+    const s = jsonObjectField(data, "session");
     const v = s?.["startedAt"];
     if (v == null) return null;
     return String(v);
   }
 
   private async alternativeIds(): Promise<readonly string[]> {
-    const data = unwrapGraphqlData(
-      await executeStoreGraphql(this.store, { query: `query { store { session { alternatives { edges { node { id } } } } } }` }),
-    ) as JsonObject;
-    const s = jsonObjectField(jsonObjectField(data, "store"), "session");
-    return parseEntityConnectionIds(s, "alternatives");
+    const node = jsonObjectField(await this.store.readStoreInner("wip { alternatives { edges { node { id } } } }"), "wip");
+    return parseEntityConnectionIds(node, "alternatives");
   }
 
   /** @emoji 📚 Id-list-stable {@link Alternative} handles on {@code session.alternatives}. */
@@ -1648,13 +1638,8 @@ export class Alternative extends Entity {
   }
 
   async name(): Promise<string> {
-    const q =
-      this.ap.parent === "graph"
-        ? `query { store { ${this.ap.root} { alternative(id: ${gqlString(this.id)}) { name } } } }`
-        : `query { store { session { alternative(id: ${gqlString(this.id)}) { name } } } }`;
-    const data = unwrapGraphqlData(await executeStoreGraphql(this.store, { query: q })) as JsonObject;
-    const storeNode = jsonObjectField(data, "store");
-    const first = this.ap.parent === "graph" ? jsonObjectField(storeNode, this.ap.root) : jsonObjectField(storeNode, "session");
+    const root = this.ap.parent === "graph" ? this.ap.root : "wip";
+    const first = jsonObjectField(await this.store.readStoreInner(`${root} { alternative(id: ${gqlString(this.id)}) { name } }`), root);
     const alt = first?.["alternative"] as JsonObject | undefined;
     return String(alt?.["name"] ?? "");
   }
@@ -1674,9 +1659,7 @@ export class TheKit extends Entity {
   }
 
   private async kitId(): Promise<string> {
-    const q = `query { store { ${this.graphRoot} { theKit { id } } } }`;
-    const data = unwrapGraphqlData(await executeStoreGraphql(this.store, { query: q })) as JsonObject;
-    const rootNode = jsonObjectField(jsonObjectField(data, "store"), this.graphRoot);
+    const rootNode = jsonObjectField(await this.store.readStoreInner(`${this.graphRoot} { theKit { id } }`), this.graphRoot);
     const tk = jsonObjectField(rootNode, "theKit");
     return String(tk?.["id"] ?? "");
   }
@@ -1707,42 +1690,32 @@ export class Checkpoint extends Entity {
   }
 
   async message(): Promise<string> {
-    const q = `query { ${this.graphRoot} { checkpoint(id: ${gqlString(this.id)}) { message } } }`;
-    const data = unwrapGraphqlData(await executeStoreGraphql(this.store, { query: q })) as JsonObject;
-    const rootNode = data[this.graphRoot] as JsonObject | undefined;
+    const rootNode = jsonObjectField(await this.store.readStoreInner(`${this.graphRoot} { checkpoint(id: ${gqlString(this.id)}) { message } }`), this.graphRoot);
     const cp = rootNode?.["checkpoint"] as JsonObject | undefined;
     return String(cp?.["message"] ?? "");
   }
 
   async timestamp(): Promise<string | null> {
-    const q = `query { ${this.graphRoot} { checkpoint(id: ${gqlString(this.id)}) { timestamp } } }`;
-    const data = unwrapGraphqlData(await executeStoreGraphql(this.store, { query: q })) as JsonObject;
-    const rootNode = data[this.graphRoot] as JsonObject | undefined;
+    const rootNode = jsonObjectField(await this.store.readStoreInner(`${this.graphRoot} { checkpoint(id: ${gqlString(this.id)}) { timestamp } }`), this.graphRoot);
     const cp = rootNode?.["checkpoint"] as JsonObject | undefined;
     const ts = cp?.["timestamp"];
     return ts == null ? null : String(ts);
   }
 
   async hash(): Promise<string> {
-    const q = `query { ${this.graphRoot} { checkpoint(id: ${gqlString(this.id)}) { hash } } }`;
-    const data = unwrapGraphqlData(await executeStoreGraphql(this.store, { query: q })) as JsonObject;
-    const rootNode = data[this.graphRoot] as JsonObject | undefined;
+    const rootNode = jsonObjectField(await this.store.readStoreInner(`${this.graphRoot} { checkpoint(id: ${gqlString(this.id)}) { hash } }`), this.graphRoot);
     const cp = rootNode?.["checkpoint"] as JsonObject | undefined;
     return String(cp?.["hash"] ?? "");
   }
 
   private async changeIds(): Promise<readonly string[]> {
-    const q = `query { ${this.graphRoot} { checkpoint(id: ${gqlString(this.id)}) { changes { id } } } }`;
-    const data = unwrapGraphqlData(await executeStoreGraphql(this.store, { query: q })) as JsonObject;
-    const rootNode = data[this.graphRoot] as JsonObject | undefined;
+    const rootNode = jsonObjectField(await this.store.readStoreInner(`${this.graphRoot} { checkpoint(id: ${gqlString(this.id)}) { changes { id } } }`), this.graphRoot);
     const cp = rootNode?.["checkpoint"] as JsonObject | undefined;
     return parseStrongEntityArrayIds(cp ?? null, "changes");
   }
 
   private async editIds(): Promise<readonly string[]> {
-    const q = `query { ${this.graphRoot} { checkpoint(id: ${gqlString(this.id)}) { edits { edges { node { id } } } } } }`;
-    const data = unwrapGraphqlData(await executeStoreGraphql(this.store, { query: q })) as JsonObject;
-    const rootNode = data[this.graphRoot] as JsonObject | undefined;
+    const rootNode = jsonObjectField(await this.store.readStoreInner(`${this.graphRoot} { checkpoint(id: ${gqlString(this.id)}) { edits { edges { node { id } } } } }`), this.graphRoot);
     const cp = rootNode?.["checkpoint"] as JsonObject | undefined;
     return parseEntityConnectionIds(cp ?? null, "edits");
   }
@@ -1783,9 +1756,7 @@ export class Change extends Entity {
   }
 
   private async readUnderChange(inner: string): Promise<JsonObject | null> {
-    const q = `query { ${this.graphRoot} { checkpoint(id: ${gqlString(this.checkpointId)}) { change(id: ${gqlString(this.id)}) { ${inner} } } } }`;
-    const data = unwrapGraphqlData(await executeStoreGraphql(this.store, { query: q })) as JsonObject;
-    const rootNode = data[this.graphRoot] as JsonObject | undefined;
+    const rootNode = jsonObjectField(await this.store.readStoreInner(`${this.graphRoot} { checkpoint(id: ${gqlString(this.checkpointId)}) { change(id: ${gqlString(this.id)}) { ${inner} } } }`), this.graphRoot);
     const cp = rootNode?.["checkpoint"] as JsonObject | undefined;
     const ch = cp?.["change"] as JsonObject | undefined;
     return ch ?? null;
@@ -1828,9 +1799,7 @@ export class Edit extends Entity {
   }
 
   private async readUnderEdit(inner: string): Promise<JsonObject | null> {
-    const q = `query { ${this.graphRoot} { checkpoint(id: ${gqlString(this.checkpointId)}) { edit(id: ${gqlString(this.id)}) { ${inner} } } } }`;
-    const data = unwrapGraphqlData(await executeStoreGraphql(this.store, { query: q })) as JsonObject;
-    const rootNode = data[this.graphRoot] as JsonObject | undefined;
+    const rootNode = jsonObjectField(await this.store.readStoreInner(`${this.graphRoot} { checkpoint(id: ${gqlString(this.checkpointId)}) { edit(id: ${gqlString(this.id)}) { ${inner} } } }`), this.graphRoot);
     const cp = rootNode?.["checkpoint"] as JsonObject | undefined;
     const ed = cp?.["edit"] as JsonObject | undefined;
     return ed ?? null;
@@ -3687,13 +3656,13 @@ if (typeof process !== "undefined" && !!process.env && process.env["SEMIO_JS_RUN
     });
   });
   describe("semio-js GraphQL dto contract", () => {
-    it("KIT_SESSION_QUERY_ENTRY and KIT_EVENT_STREAM_SUBSCRIPTION align with target.schema.graphql", async () => {
+    it("KIT_SESSION_QUERY_ENTRY and KIT_EVENT_STREAM_SUBSCRIPTION align with schema.golden.graphql", async () => {
       const { readFileSync } = await import("node:fs");
       const { resolve, dirname } = await import("node:path");
       const { fileURLToPath } = await import("node:url");
       let sdl = "";
       const here = dirname(fileURLToPath(import.meta.url));
-      for (const p of [resolve(here, "../graphql/target.schema.graphql"), resolve(process.cwd(), "semio/graphql/target.schema.graphql")]) {
+      for (const p of [resolve(here, "../../../schema/graphql/schema.golden.graphql"), resolve(process.cwd(), "semio/schema/graphql/schema.golden.graphql")]) {
         try {
           sdl = readFileSync(p, "utf8");
           if (sdl.length > 100) break;
@@ -3705,15 +3674,16 @@ if (typeof process !== "undefined" && !!process.env && process.env["SEMIO_JS_RUN
       expect(sdl).toContain("type Session");
       expect(sdl).toContain("type Kit");
       expect(sdl).toMatch(/type Kit[\s\S]*designs:/s);
-      expect(sdl).toMatch(/type Query[\s\S]*\bstore:\s*Store!/s);
+      expect(sdl).toMatch(/type Query[\s\S]*\bsession:\s*Session!/s);
+      expect(sdl).toMatch(/type Session[\s\S]*\bstores:\s*StoreConnection/s);
       expect(sdl).toMatch(/type Store[\s\S]*\bwip:\s*Graph!/s);
-      expect(sdl).toMatch(/type Subscription[\s\S]*\bstore:/s);
+      expect(sdl).toMatch(/type Subscription[\s\S]*\bsession:\s*Session!/s);
       expect(sdl).not.toMatch(/^\s*event:\s*Json!/m);
       expect(sdl).toContain("type Mutation");
-      expect(sdl).toContain("session: SessionCommandInput!");
+      expect(sdl).toContain("session: SessionCommand!");
       expect(sdl).not.toContain("type KitStoreMutation");
-      expect(KIT_SESSION_QUERY_ENTRY).toContain("store { wip { id theKit");
-      expect(KIT_EVENT_STREAM_SUBSCRIPTION).toContain("store { wip");
+      expect(KIT_SESSION_QUERY_ENTRY).toContain("session { stores");
+      expect(KIT_EVENT_STREAM_SUBSCRIPTION).toContain("session { stores");
     });
   });
   describe("semio kit-store fixtures (US-001)", () => {
