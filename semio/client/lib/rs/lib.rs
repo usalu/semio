@@ -11087,7 +11087,7 @@ pub mod gql {
             .finish()
     }
 
-    /// 📜 Canonical SDL: non-empty [`crate::sdl_registry::HasSdlFragment::SDL_FRAGMENT`] prefixes (code-first ladder, plan W0–W8) plus embedded golden [`include_str!("../graphql/target.schema.graphql")`] until fragments subsume the file.
+    /// 📜 Canonical SDL: non-empty [`crate::sdl_registry::HasSdlFragment::SDL_FRAGMENT`] prefixes (code-first ladder, plan W0–W8) plus embedded golden [`include_str!("../graphql/schema.graphql")`] until fragments subsume the file.
     pub async fn sdl() -> String {
         let mut acc = String::new();
         for frag in crate::sdl_registry::all_fragments() {
@@ -11097,7 +11097,7 @@ pub mod gql {
             acc.push_str(frag);
             acc.push('\n');
         }
-        acc.push_str(include_str!("../../../schema/graphql/target.schema.graphql"));
+        acc.push_str(include_str!("../../../schema/graphql/schema.graphql"));
         normalize_target_sdl(&acc)
     }
 

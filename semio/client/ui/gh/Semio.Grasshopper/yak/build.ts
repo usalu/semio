@@ -38,7 +38,7 @@ if (!existsSync(distDir)) {
   mkdirSync(distDir);
 }
 
-copyFileSync(join(cwd, "..", "..", "..", "..", "assets", "icons", "semio_512x512.png"), join(distDir, "semio_512x512.png"));
+copyFileSync(join(cwd, "..", "..", "..", "..", "..", "assets", "icons", "semio_512x512.png"), join(distDir, "semio_512x512.png"));
 copyFileSync(join(cwd, "manifest.yml"), join(distDir, "manifest.yml"));
 
 /**

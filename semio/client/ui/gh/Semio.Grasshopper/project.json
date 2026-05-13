@@ -12,6 +12,7 @@
     },
     "build-yak": {
       "executor": "nx:run-commands",
+      "dependsOn": ["build-gh"],
       "options": {
         "cwd": "semio/client/ui/gh/Semio.Grasshopper",
         "command": "bun ./yak/build.ts",
