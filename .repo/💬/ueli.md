@@ -768,6 +768,24 @@ There MUST be only one schema, no migrations or legacy api support.
 
 ---
 
+The main class of semio/js is Session. not Store, Not graph, not kit, etc
+
+There is no active store.
+There is one session.
+Every session can have multiple stores.
+You can attach/detach a backbone to a store.
+There are different backbone providers.
+
+All logic, caching, reads and writes over commands happens exclusively over graphql to lib.rs
+
+Local backbone uses the computer.
+File backbone is a single embedded json file.
+Folder backbone is single folder with .semio folder along with sqlite files (wip.db, stage.db, authoratitive.db, conflicts.db)
+There is a two way communication actor model between store and backbone.
+E.g. if the json file or the sqlite files are updated by other processes or the remote kit changes and an event is sent to the websocket backbone, then the changes must be reflected.
+
+---
+
 semio:
 The schema in the repo is not yet consistent.
 semio has been extended by version-control.
@@ -1811,6 +1829,12 @@ useChildConnectionsIds():ConnectionId[]
 ### ✏️sketchpad
 
 semio/sketchpad:
+
+---
+
+semio/sketchpad is totally outdated.
+Refactor @file:index.tsx to exclusively use hook for fields and context providers following the react plan @file:refactor-react-composable-contexts_ec8b0106.plan.md
+Everything must follow @file:schema.golden.graphql schema
 
 ---
 

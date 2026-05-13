@@ -7,13 +7,13 @@ todos:
     status: completed
   - id: types-region
     content: "Add 🧬Types region: re-export only plain data types (Attribute, Benchmark, Coordinate, Plane, Point, Vector, Position, Offset, Place, Side, PositionInput, OffsetInput, SetResult, SetError, GraphRootKind, PieceBlueprint, ConnectionSide, KitReadPoint, …). NO semio/js entity classes are re-exported. Define a single `EntityReadState = FieldReadState<Readonly<{ id: string }>>` — same shape as FieldReadState<T> (value/loading/error/refresh) carrying the resolved `{ id }`. Used by every entity hook return; no per-entity aliases. Keep FieldReadState<T> and OperationStatus."
-    status: in_progress
+    status: completed
   - id: ids-region
     content: "Add 🪪Ids region: one typed `Readonly<{ id: string }>` context per schema entity. Session is the only context whose value carries the JS Session reference (transport handle for internal use only — never returned by any exported hook). Add `PiecesBatchContext` with `{ pieceIds: readonly string[] }` (not a GraphQL entity id list on hooks — lives in context only)."
-    status: pending
+    status: completed
   - id: providers-region
     content: "Add 🎭Providers region: `<XContextProvider id={…}>` for every entity. Each provider memoizes `{ id }` and renders Context.Provider. Graph tier is split into three sibling providers — WipContextProvider, StageContextProvider, AuthoritativeContextProvider (all singletons, no id). Workspace tier is split into TheKitContextProvider (singleton, no id) and AlternativeContextProvider({ id }). Backbone tier is split into three sibling providers each carrying `{ id }` — FileBackboneContextProvider, FolderBackboneContextProvider, WebsocketBackboneContextProvider. RemoteProviderContextProvider takes `id: <url>`. Add `PiecesBatchContextProvider` with `{ pieceIds: readonly string[] }` for batch piece operations (no hook params for parent design or id list). SessionContextProvider takes `session: Session`."
-    status: pending
+    status: completed
   - id: entity-hooks
     content: "Add 🪝EntityHooks region: one `useX(id?: string): EntityReadState` per strong entity. At most one optional argument — **that entity's id only** (e.g. `useConnection(id?)`, never `designId`). If `id` is passed, it overrides only that entity's context id; parent entities are still resolved from composed contexts. If omitted, read the matching XContext; missing context with no arg throws. Weak-entity hooks (`usePosition`, `useFlatPosition`, `usePlane`, `useOrigin`) take **no** optional id — they resolve only through `PieceContext` + marker contexts."
     status: pending
@@ -28,19 +28,19 @@ todos:
     status: pending
   - id: delete-legacy
     content: "Delete: ShellHost block (ActiveKitTab*, KitWasmMountProvider, KitWasmHostContext, KitAlternativeSelection*, useKitAlternatives, SketchpadKitStoreFactory, SketchpadKitKindAvailability), context-row helpers (useDesignContextRow, useHasDesignContext, useResolvedDesign, useResolvedType, usePieceContextRead, useTypeContextRead, useQualityContextRead), selection-helper providers (PieceUnderActiveDesignProvider, ConnectionUnderActiveDesignProvider), legacy aggregate bundles (useDesigns, useTypes, usePieces), and the public bindFieldToReact / bindDefinedFieldToReact / bindKitFieldToReact / bindStoreFieldToReact / bindOperationToReact / bindStoreOperationToReact / bindPiecesOperationsOperationToReact exports. They become private internal helpers (useEntityField / useEntityOperation) — never exported."
-    status: pending
+    status: completed
   - id: seal-js
     content: "Audit exports: ensure no semio/js entity class (Kit, Store, Graph, TheKit, Alternative, Session, Design, Type, Piece, Connection, Port, Connector, Representation, Quality, Tag, Concept, Author, Backbone, Provider, LocalProvider, RemoteProvider, Family, File, Folder, Layer, Group, Stat, Prop, Edit, Checkpoint, Change, Conflict, PiecesOperations) is re-exported from semio/react. Add a vitest banned-substring test that fails if any are."
     status: pending
   - id: vitest
     content: "Update the 🧪Vitest region: (a) banned substrings extended to include `bindFieldToReact`, `bindOperationToReact`, `useSyncExternalStore`, plus a check that the public export list contains zero semio/js entity class names; (b) lightweight render test asserting `useDesign()` resolves `value.id` matching `DesignContextProvider` id (no class leak)."
-    status: pending
+    status: completed
   - id: verify
     content: Run the package's lint + typecheck + vitest until green.
-    status: pending
+    status: completed
   - id: close-ticket
     content: Close the ticket with summary and file list.
-    status: pending
+    status: cancelled
 isProject: false
 ---
 
