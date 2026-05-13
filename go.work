@@ -1,16 +1,16 @@
 go 1.25.0
 
 use (
-	./coda/blnbo/go
-	./coda/programming/go
-	./repo/claude
+	./coda/client/lib/blnbo/go
+	./coda/client/lib/programming/go
 	./repo/client
-	./repo/codex
-	./repo/copilot
-	./repo/cursor
-	./repo/go
-	./repo/kiro
-	./repo/mcp
-	./repo/server
-	./semio/go
+	./repo/client/mcp
+	./repo/client/mcp/claude
+	./repo/client/mcp/codex
+	./repo/client/mcp/copilot
+	./repo/client/mcp/cursor
+	./repo/client/mcp/kiro
+	./repo/lib/go
+	./repo/server/coordinator
+	./semio/client/lib/go
 )

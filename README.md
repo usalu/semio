@@ -824,7 +824,7 @@ The files in this repository are licensed under the [GNU Affero General Public L
 
 As a reference, different type of components have usually different licenses:
 
-- software libraries: [LGPLv3 or later - GNU Lesser General Public License Version 3](https://www.gnu.org/licenses/lgpl-3.0.en.html)
+- software libraries and schemas: [LGPLv3 or later - GNU Lesser General Public License Version 3](https://www.gnu.org/licenses/lgpl-3.0.en.html)
 - applications: [AGPLv3 or later - GNU Affero General Public License Version 3](https://www.gnu.org/licenses/agpl-3.0.en.html)
 - examples: [MIT - The MIT License](https://mit-license.org)
 - templates: [CC0 - No Rights Reserved](https://creativecommons.org/public-domain/cc0/)

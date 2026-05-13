@@ -12,8 +12,8 @@
 // #region 🐹Build
 // Grasshopper build script. MUST compile the solution and copy artifacts to the Yak distribution folder.
 
-import { execSync } from "child_process";
-import { copyFileSync, existsSync, mkdirSync, readdirSync, rmSync } from "fs";
+import { execFileSync } from "node:child_process";
+import { cpSync, existsSync, mkdirSync, readdirSync, rmSync } from "fs";
 import { join } from "path";
 
 /**
@@ -22,16 +22,16 @@ import { join } from "path";
  **/
 const cwd = __dirname;
 
-execSync("tsx ./build-value-lists.ts", { cwd, stdio: "inherit" });
+execFileSync(process.execPath, ["x", "tsx", "./build-value-lists.ts"], { cwd, stdio: "inherit" });
 
-execSync(`dotnet clean Semio.Grasshopper.csproj -c Debug`, { cwd, stdio: "inherit" });
-execSync(`dotnet build Semio.Grasshopper.csproj -c Debug`, { cwd, stdio: "inherit" });
+execFileSync("dotnet", ["clean", "Semio.Grasshopper.csproj", "-c", "Debug"], { cwd, stdio: "inherit" });
+execFileSync("dotnet", ["build", "Semio.Grasshopper.csproj", "-c", "Debug"], { cwd, stdio: "inherit" });
 
 /**
  * Yak distribution output folder path.
  * MUST be cleaned and recreated before copying build artifacts.
  **/
-const yakDistFolder = join(cwd, "..", "..", "yak", "dist");
+const yakDistFolder = join(cwd, "yak", "dist");
 if (existsSync(yakDistFolder)) {
   rmSync(yakDistFolder, { recursive: true });
 }
@@ -48,7 +48,7 @@ const binFolder = join(cwd, "bin", "Debug", "net48");
  **/
 const files = readdirSync(binFolder);
 for (const file of files) {
-  copyFileSync(join(binFolder, file), join(yakDistFolder, file));
+  cpSync(join(binFolder, file), join(yakDistFolder, file), { force: true, recursive: true });
 }
 
 console.log("✅ Grasshopper build complete");

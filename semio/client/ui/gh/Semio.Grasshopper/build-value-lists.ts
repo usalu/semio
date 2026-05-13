@@ -12,7 +12,6 @@
 // #region 🖥️Value List Generation
 // Value list generation script. MUST convert CSV data into Grasshopper value list text files.
 
-import { parse } from "csv-parse/sync";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "fs";
 import { join } from "path";
 
@@ -31,7 +30,22 @@ if (!existsSync(buildDir)) {
  **/
 function convertCsvToValueList(csvPath: string, outputPath: string, keyColumn: string, valueColumn: string): void {
   const csvContent = readFileSync(csvPath, "utf-8");
-  const records = parse(csvContent, { columns: true, skip_empty_lines: true });
+  const [headerLine, ...dataLines] = csvContent.split(/\r?\n/).filter((line) => line.trim().length > 0);
+  const headers = headerLine.split(",");
+  const keyIndex = headers.indexOf(keyColumn);
+  const valueIndex = headers.indexOf(valueColumn);
+
+  if (keyIndex === -1 || valueIndex === -1) {
+    throw new Error(`Missing CSV columns ${keyColumn} / ${valueColumn} in ${csvPath}`);
+  }
+
+  const records = dataLines.map((line) => {
+    const values = line.split(",");
+    return {
+      [keyColumn]: values[keyIndex] ?? "",
+      [valueColumn]: values[valueIndex] ?? "",
+    };
+  });
 
   const lines = records.map((record: any) => {
     return `${record[keyColumn]} = "${record[valueColumn]}"`;
@@ -40,9 +54,9 @@ function convertCsvToValueList(csvPath: string, outputPath: string, keyColumn: s
   writeFileSync(outputPath, lines.join("\n"), "utf-8");
 }
 
-convertCsvToValueList(join(__dirname, "..", "..", "meta", "mimes.csv"), join(buildDir, "mimes.txt"), "Extension", "MIME");
+convertCsvToValueList(join(__dirname, "..", "..", "..", "..", "..", "elements", "assets", "lists", "mimes.csv"), join(buildDir, "mimes.txt"), "Extension", "MIME");
 
-convertCsvToValueList(join(__dirname, "..", "..", "meta", "licenses.csv"), join(buildDir, "licenses.txt"), "Name", "SPDX");
+convertCsvToValueList(join(__dirname, "..", "..", "..", "..", "..", "elements", "assets", "lists", "licenses.csv"), join(buildDir, "licenses.txt"), "Name", "SPDX");
 
 console.log("✅ Value lists generated");
 

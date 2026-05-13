@@ -7,7 +7,7 @@ require (
 	modernc.org/sqlite v1.48.2
 )
 
-replace github.com/usalu/semio/repo/go => ../go
+replace github.com/usalu/semio/repo/go => ../../lib/go
 
 require (
 	github.com/dustin/go-humanize v1.0.1 // indirect

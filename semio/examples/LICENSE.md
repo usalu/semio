@@ -1,8 +1,8 @@
 # The MIT License (MIT)
 
 Copyright © 2023-2026 Ueli Saluz
-Copyright © 2025 Christian Hödtke
-Copyright © 2025 Elduane Lumpine
+Copyright © 2025-2026 Kinan Sarakbi
+Copyright © 2025 Christian Hötdke
 
 Permission is hereby granted, free of charge, to any person
 obtaining a copy of this software and associated documentation

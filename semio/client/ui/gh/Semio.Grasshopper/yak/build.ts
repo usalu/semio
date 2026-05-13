@@ -12,7 +12,7 @@
 // #region 🐹Build
 // Yak package build script. MUST prepare the distribution folder and build the .yak package.
 
-import { execSync } from "child_process";
+import { execFileSync } from "node:child_process";
 import { copyFileSync, existsSync, mkdirSync, rmSync } from "fs";
 import { join } from "path";
 
@@ -38,7 +38,7 @@ if (!existsSync(distDir)) {
   mkdirSync(distDir);
 }
 
-copyFileSync(join(cwd, "..", "assets", "icons", "semio_512x512.png"), join(distDir, "semio_512x512.png"));
+copyFileSync(join(cwd, "..", "..", "..", "..", "assets", "icons", "semio_512x512.png"), join(distDir, "semio_512x512.png"));
 copyFileSync(join(cwd, "manifest.yml"), join(distDir, "manifest.yml"));
 
 /**
@@ -50,7 +50,7 @@ const yak = process.platform === "win32"
   : process.platform === "darwin"
     ? "/Applications/Rhino 8.app/Contents/Resources/bin/yak"
     : "yak";
-execSync(`"${yak}" build --platform win`, { cwd: distDir, stdio: "inherit" });
+execFileSync(yak, ["build", "--platform", "win"], { cwd: distDir, stdio: "inherit" });
 
 console.log("✅ Yak package built");
 

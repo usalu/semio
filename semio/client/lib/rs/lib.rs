@@ -12208,7 +12208,7 @@ mod tests {
     /// @emoji 📦 `metabolism.kit.diff.semio.json` parses as JSON and exposes expected top-level contract keys (typed [`crate::operation::CanonicalKitDiff`] lives on the GraphQL control plane only).
     #[test]
     fn canonical_kit_diff_metabolism_fixture_has_contract_keys() {
-        const FIXTURE: &str = include_str!("../assets/semio/metabolism.kit.diff.semio.json");
+        const FIXTURE: &str = include_str!("../../../assets/fixtures/metabolism.kit.diff.semio.json");
         let raw: serde_json::Value = serde_json::from_str(FIXTURE).expect("fixture parses as JSON");
         assert_eq!(raw.get("name").and_then(|v| v.as_str()), Some("Metabolism Modified"));
         assert!(raw.get("types").is_some(), "fixture must include types collection");
