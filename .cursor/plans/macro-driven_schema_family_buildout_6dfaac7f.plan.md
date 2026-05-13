@@ -11,8 +11,11 @@ todos:
   - id: w0-macro-foundation
     content: "W0: rewrite //#region entity_dsl with code-first macro suite (entity_family! emits struct + Default + #[Object] impl + owner-slot enum + owner async_graphql::Union + Edge/Connection/Diff/Modification/Modifications real Rust types via SimpleObject/ComplexObject - no string concat anywhere)"
     status: pending
+  - id: w0-command-macro
+    content: "W0: build command_family! macro for command-only types (SessionCommand/StoreCommand/AlternativeCommand/VersionCommand/UnsavedChangeCommand and Backbone/Provider command impls) that emit only Object + Edge + Connection (no Diff/Modification ladder)"
+    status: pending
   - id: w0-interface-enums
-    content: "W0: build interface_enums! macro emitting #[derive(async_graphql::Interface)] enums for Node, Entity, WeakEntity, StrongEntity, RichStrongEntity, Artifact, Document, Event, Workspace, Input, Diff, Modification, Operation, EntityEdge, EntityConnection - populated from the entity/operation roster"
+    content: "W0: build interface_enums! macro emitting #[derive(async_graphql::Interface)] enums for Node, Entity, WeakEntity, StrongEntity, RichStrongEntity, Artifact, Document, Event, Workspace, Input, Diff, Modification, Operation, EntityEdge, EntityConnection, Backbone, Provider, BackboneCommand, ProviderCommand - populated from the entity/operation/command roster filtered by kind"
     status: pending
   - id: w0-region-markers
     content: "W0: inject //#region W1..W8 markers into lib.rs to delimit subagent write ranges"
@@ -28,6 +31,9 @@ todos:
     status: pending
   - id: w8-command-navs
     content: "W8: dispatch sequential subagent to replace hand-written *OperationNav structs with command_nav! invocations driven by the operation roster"
+    status: pending
+  - id: w9-runtime-mechanisms
+    content: "W9: dispatch sequential subagent for the new Session/Provider/Backbone/Store/Graph/Version mechanisms - emit Workspace/Backbone/Provider interfaces, FileBackbone+WebsocketBackbone+LocalProvider+RemoteProvider entity_family! invocations, Store/Version concrete types, full command_family! suite (SessionCommand/StoreCommand/AlternativeCommand/VersionCommand/UnsavedChangeCommand + Backbone/Provider command impls), VersionKind/BackboneStatus enums, and rewire Mutation root to session: SessionCommand!"
     status: pending
   - id: integrate-rosters
     content: "Integrate: author final register_entities!/register_operations! rosters that auto-grow async_graphql::Union enums (OwnerEntity, OwnedEntity, AttributeOwner, Blueprint, ChangeOwner, ...) and Interface enums covering every entity/operation"
@@ -53,9 +59,32 @@ The goal is **not** to reproduce the golden SDL string. The goal is to **impleme
 
 - Pure code-first via async-graphql. `gql::sdl()` keeps its current body — `build_schema().await.sdl()` — and the resulting SDL is whatever async-graphql produces from the typed surface. Nothing is hand-written as string.
 - Every type in `[semio/schema/graphql/schema.golden.graphql](semio/schema/graphql/schema.golden.graphql)` becomes a real Rust struct/enum derived through `#[Object]`, `#[derive(SimpleObject)]`, `#[derive(InputObject)]`, `#[derive(async_graphql::Interface)]`, or `#[derive(async_graphql::Union)]`.
-- Every interface (`Entity`, `WeakEntity`, `StrongEntity`, `RichStrongEntity`, `Artifact`, `Document`, `Event`, `Workspace`, `Input`, `Diff`, `Modification`, `Operation`, `EntityEdge`, `EntityConnection`, `Node`) is an `async_graphql::Interface` enum auto-populated from the entity / operation roster.
+- Every interface (`Entity`, `WeakEntity`, `StrongEntity`, `RichStrongEntity`, `Artifact`, `Document`, `Event`, `Workspace`, `Backbone`, `Provider`, `Input`, `Diff`, `Modification`, `Operation`, `BackboneCommand`, `ProviderCommand`, `EntityEdge`, `EntityConnection`, `Node`) is an `async_graphql::Interface` enum auto-populated from the entity / operation / command roster.
 - Every owner / owned union (`AttributeOwner`, `Blueprint`, `ChangeOwner`, …) is an `async_graphql::Union` enum auto-grown from the same roster.
 - Macros emit Rust types only. There is no `SDL_FRAGMENT` constant, no `__sdl_*` macro, no `SDL_HEADER` string, no `extract_root_types`. `sdl_registry::HasSdlFragment` and the matching infrastructure get deleted.
+
+## New mechanisms in the updated golden
+
+The May 13 update introduced a runtime / hosting layer that the previous lib.rs only partially modeled:
+
+- `interface Workspace` (line 158) — abstract workspace contract; concrete impls `TheKit` and `Alternative` (lines 9237 / 9270) implement `Workspace & StrongEntity & Entity & Node` and carry `checkpoint`, `latestWipCheckpointAncestor`, `savedChanges`, `unsavedChanges`, `kit`. `Alternative` adds `name`. This replaces the old `interface Version` for that role.
+- `enum VersionKind { INITIAL_KIT, MATERIALIZED }` + concrete `type Version { kind, initialKit, edit }` (line 9335). This is a thin descriptor, not an interface.
+- `enum BackboneStatus { OFFLINE, RECONNECTING, ONLINE }` + `interface Backbone` (line 330) + concrete `type FileBackbone implements Backbone & StrongEntity & Entity & Node` (line 9523) + `type WebsocketBackbone implements Backbone & StrongEntity & Entity & Node` (line 9614). All Backbones expose `uri`, `status`. Owner is `Store`.
+- `interface Provider` (line 379) with `backbones: BackboneConnection`, `backbone(id): Backbone`. Concrete impls: `LocalProvider` (line 9570: `uri`, `stores: StoreConnection`, `store(id): StoreCommand!`) and `RemoteProvider` (line 9663: `uri`, `backbones`, `backbone(id)`, plus its own `url`).
+- `type Store { wip: Graph!, authoritative: Graph, conflicts: ConflictConnection! }` (line 9470). Now first-class.
+- `type Graph implements StrongEntity & Entity & Node` (line 9405) — owns `initialKit: Kit`, `theKit: Workspace`, `alternatives`, `alternative(id)`, `checkpoints`, `checkpoint(id)`, `releases`, `release(id)`. The session→store→graph→workspace hierarchy is the new container model.
+- `type Session implements StrongEntity & Entity & Node` (line 9735) — owns `stores: StoreConnection`, `localProvider: LocalProvider`, `remoteProviders: RemoteProviderConnection`, `startedAt: Timestamp`. Owner: `Graph`.
+- Command surface (no Diff/Modification ladder; relay Edge/Connection only):
+  - `interface BackboneCommand { detach: ID!, sync: ID! }` + `type FileBackboneCommand implements BackboneCommand`, `type WebsocketBackboneCommand implements BackboneCommand`.
+  - `interface ProviderCommand { createBackbone(uri), attachBackbone(store) }` + `type LocalProviderCommand implements ProviderCommand`, `type RemoteProviderCommand implements ProviderCommand` (adds `login`, `logout`).
+  - `type SessionCommand { start, end, store(id), localProvider, remoteProvider(url) }`.
+  - `type StoreCommand { backbone, theKit: VersionCommand, alternative(id), startAlternative(name) }`.
+  - `type AlternativeCommand { version, integrateIntoTheKit }`.
+  - `type VersionCommand { startNewChange, unsavedChange(id), save, createCheckpoint(message) }`.
+  - `type UnsavedChangeCommand { kit: KitOperation!, save }`.
+- Mutation root rewired: `type Mutation { session: SessionCommand! }` (line 9799).
+- Subscription rewired: `type Subscription { session: Session!, operation: Operation! }`.
+- `Edit` and `Change` (lines 9128 / 9164) become `StrongEntity` owned by `Alternative | Checkpoint`, owning the operation set directly. `Checkpoint` owns `Edit`s.
 
 ## Background
 
@@ -78,6 +107,7 @@ flowchart TD
     W6["W6 vcs"]
     W7["W7 operations"]
     W8["W8 command navs"]
+    W9["W9 runtime mechanisms\nSession/Provider/Backbone/\nStore/Graph/Version/Workspace\n+ command_family! types"]
     Integ["Integrator: rosters,\nregister_output_type sweep,\nregenerate schema.graphql"]
 
     Coord --> W0
@@ -94,7 +124,8 @@ flowchart TD
     W5 --> W7
     W6 --> W7
     W7 --> W8
-    W8 --> Integ
+    W8 --> W9
+    W9 --> Integ
     Integ --> Coord
 ```
 
@@ -118,13 +149,15 @@ Acceptance: `cargo check -p semio` green, macro foundation usable by W1-W6 subag
   - Delete any `push_all_fragments` / `push_operation_fragments` / `all_fragments` references throughout the file (mostly inside `gql::sdl`).
   - Confirm `gql::sdl()` reduces to `build_schema().await.sdl()` (already the case at line 11124).
 - In `//#region 🧬 entity_dsl` rewrite the macro suite (no `__sdl_*`, no `__build_sdl_fragment!`, no `HasSdlFragment`):
-  - `entity_family!` emits: entity struct (RwLock fields) + Default + `new` / `new_with_id` / `compute_hash` / `compute_entity_hash` + `XOwnerSlot` enum + `#[derive(async_graphql::Union)] XOwnerUnion` + full `#[Object(name = "X")]` impl (id / hash / owner / typed_owner / ownerEntity / ownedEntities / one resolver per data field / one connection resolver per child collection) + `__entity_relay!(X)` (Edge/Connection as `SimpleObject`) + `__entity_diff!(X, …)` (`XDiff` `SimpleObject` with `Option<...>` fields + ComplexObject hash + Edge/Connection) + `__entity_modification!(X, …)` + `__entity_modifications!(X, …)`.
+  - `entity_family!` emits: entity struct (RwLock fields) + Default + `new` / `new_with_id` / `compute_hash` / `compute_entity_hash` + `XOwnerSlot` enum + `#[derive(async_graphql::Union)] XOwnerUnion` + full `#[Object(name = "X")]` impl (id / hash / owner / typed_owner / ownerEntity / ownedEntities / one resolver per data field / one connection resolver per child collection) + `__entity_relay!(X)` (Edge/Connection as `SimpleObject`) + `__entity_diff!(X, …)` (`XDiff` `SimpleObject` with `Option<...>` fields + ComplexObject hash + Edge/Connection) + `__entity_modification!(X, …)` + `__entity_modifications!(X, …)`. The `kind:` field accepts `weak | strong | rich | artifact | document | event | workspace | backbone | provider`; the `__entity_diff!`/`__entity_modification!`/`__entity_modifications!` ladder is skipped for `kind: workspace | backbone | provider` (per golden, those don't have diff/modification trios — they're hosting-layer entities).
   - `entity_input!` emits: `#[derive(InputObject)] XInput` + async `into_x()` / sync `into_x_with_id()`.
+  - `command_family!` (NEW — for command-only types like `SessionCommand`, `StoreCommand`, `AlternativeCommand`, `VersionCommand`, `UnsavedChangeCommand`, `FileBackboneCommand`, `WebsocketBackboneCommand`, `LocalProviderCommand`, `RemoteProviderCommand`): emits `X` struct + `#[Object(name = "X")]` impl with one async resolver per declared method (dispatching `Command::*` through `ParentStore`) + `XEdge` + `XConnection` (`SimpleObject`). No Diff/Modification ladder, no owner-slot enum, no `Default`. Methods are declared inline as `methods: [ rename(new_name: String) -> RenamedTag, … ]` mapping to `KitOperation::*` arms or to direct host-side actions (login, attach, …).
+  - `command_interface!` (NEW — for `BackboneCommand` / `ProviderCommand`): emits `#[derive(async_graphql::Interface)] XCommandIface` enum with one variant per concrete impl + matching `field(name=...)` attributes for the interface's required methods.
   - `operation_family!` emits: `XInput` (when input fields), `X` (`SimpleObject` implementing the `Operation` interface via field selection), `XEdge` / `XConnection` / `XInputEdge` / `XInputConnection`, plus an `apply_to(kit) -> Result<()>` skeleton (default `Ok(())`).
   - `kit_operation_enum!` / `scope_enum!` / `input_enum!` derive the central `KitOperation` / `OperationKind` / `OperationIface` / `Scope` / `Input` enums from the operation roster. `OperationIface` is `#[derive(async_graphql::Interface)]` with shape `field(name = "id", …), field(name = "hash", …), field(name = "scope", …), field(name = "input", …), field(name = "modification", …)` matching golden's `interface Operation`.
   - `entity_owner_unions!` derives `OwnerEntity` / `OwnedEntity` / `OwnedEntityConnection` (`#[derive(async_graphql::Union)]`) from the entity roster.
-  - `entity_interface_enums!` derives `Node` / `Entity` / `WeakEntity` / `StrongEntity` / `RichStrongEntity` / `Artifact` / `Document` / `Event` / `Workspace` / `Input` / `Diff` / `Modification` / `Operation` / `EntityEdge` / `EntityConnection` (each `#[derive(async_graphql::Interface)]`). Each macro arm filters the roster by entity `kind:` to populate only the matching interface (e.g. `WeakEntity` only includes entities declared `kind: weak`).
-  - `command_nav!` emits `XOperationNav` struct + `#[Object]` impl with one async resolver per declared method, dispatching `Command::ApplyKitOperation` through `ParentRuntime`.
+  - `entity_interface_enums!` derives `Node` / `Entity` / `WeakEntity` / `StrongEntity` / `RichStrongEntity` / `Artifact` / `Document` / `Event` / `Workspace` / `Backbone` / `Provider` / `Input` / `Diff` / `Modification` / `Operation` / `EntityEdge` / `EntityConnection` (each `#[derive(async_graphql::Interface)]`). Each macro arm filters the roster by entity `kind:` to populate only the matching interface (e.g. `WeakEntity` only includes entities declared `kind: weak`; `Workspace` only includes `kind: workspace`; `Backbone` only includes `kind: backbone`; `Provider` only includes `kind: provider`).
+  - `command_nav!` emits `XOperationNav` struct + `#[Object]` impl with one async resolver per declared method, dispatching `Command::ApplyKitOperation` through `ParentRuntime`. (Distinct from `command_family!` — `command_nav!` is for the per-artifact mutation entry points; `command_family!` is for the standalone `*Command` GraphQL types.)
   - `relay_collection!` for union-node connections (`Blueprint`, `OwnedEntity`, `OperationIface`).
 - Inject region markers: `//#region 🤖 W1` (geometry), `//#region 🤖 W2` (meta), `//#region 🤖 W3` (type-tree), `//#region 🤖 W4` (design-tree), `//#region 🤖 W5` (kit), `//#region 🤖 W6` (vcs), `//#region 🤖 W7` (operations), `//#region 🤖 W8` (command navs). These delimit each subagent's exclusive write range.
 - Convert `Vector` (`kind: weak`) and `Tag` (`kind: artifact`) end-to-end as the canonical examples. Verify with a quick assertion test that `gql::sdl()` already contains `type VectorDiff implements Diff`, `type VectorModification implements Modification`, `type TagDiff implements Diff`, etc.
@@ -145,7 +178,7 @@ W-package contents (entities and their golden `kind`):
 - W3 type-tree — `Type`, `Port`, `Connector`, `Representation` (`Type` is `artifact`, others `weak`).
 - W4 design-tree — `Design`, `Piece`, `Side`, `Connection`, `Clump`.
 - W5 kit root — `Kit` (single entity but emits the full ladder + owns the rich relay shell at the kit-level).
-- W6 vcs — `Edit`, `Change`, `Checkpoint`, `TheKit`, `Alternative`, `Graph`, `Session`, `Conflict`.
+- W6 vcs — `Edit`, `Change`, `Checkpoint`, `TheKit` (`kind: workspace`), `Alternative` (`kind: workspace`), `Graph`, `Session`, `Conflict`.
 
 Subagent prompt skeleton:
 
@@ -165,14 +198,43 @@ W8 command navs — depends on per-op enums existing. Tasks:
 
 - In `//#region 🤖 W8`, replace the hand-written `KitOperationNav` / `TagOperationNav` / `ConceptOperationNav` / `QualityOperationNav` / `PortOperationNav` / `TypeOperationNav` / `ConnectorOperationNav` / `DesignOperationNav` / `PieceOperationNav` / `PiecesOperationNav` (lines 9499-9700+ in `[semio/client/lib/rs/lib.rs](semio/client/lib/rs/lib.rs)`) with `command_nav! { … }` invocations driven by the operation roster.
 
-## Integrator (coordinator) — wave 5
+## Subagent dispatch — wave 5 (sequential after W8)
 
-- Author the bottom-of-file `register_entities! { … }` and `register_operations! { … }` rosters (replacing the current empty-fragment versions at lines 56-118). The rosters auto-grow:
+W9 runtime mechanisms — covers the May-13 hosting layer additions. One subagent owns this wave. Tasks (in `//#region 🤖 W9`):
+
+- Emit the host-layer enums: `BackboneStatus { Offline, Reconnecting, Online }` (`#[derive(async_graphql::Enum)]`) and `VersionKind { InitialKit, Materialized }`.
+- Emit the host-layer entities via `entity_family!` with the new `kind:` values:
+  - `Session` (`kind: strong`, owners `[Graph]`, fields `stores: Vec<Store> @children(StoreConnection)`, `local_provider: Arc<LocalProvider> @entity`, `remote_providers: Vec<RemoteProvider> @children(RemoteProviderConnection)`, `started_at: Option<Timestamp> @data`).
+  - `FileBackbone` and `WebsocketBackbone` (`kind: backbone`, owners `[Store]`, fields `uri: String @data`, `status: BackboneStatus @data`).
+  - `LocalProvider` (`kind: provider`, owners `[Store]`, fields `uri: String @data`, `stores: Vec<Store> @children(StoreConnection)`, plus a typed `store(id)` resolver returning `StoreCommand`).
+  - `RemoteProvider` (`kind: provider`, owners `[Store]`, fields `uri: String @data`, `url: String @data`, `backbones: Vec<Backbone> @children(BackboneConnection)`, plus a `backbone(id)` resolver).
+  - `Graph` already covered in W6, but extend its `entity_family!` declaration here if W6 doesn't yet add `theKit: Workspace` / `release(id)` / `releases` / `alternative(id)` / `checkpoint(id)`.
+  - `Conflict` already covered in W6 — re-verify.
+- Emit `Store` and `Version` as concrete (non-entity) types via `command_family!` (or `#[derive(SimpleObject)]` directly, since they don't need the entity ladder):
+  - `Store { wip: Arc<Graph>, authoritative: Option<Arc<Graph>>, conflicts: ConflictConnection }` — no Diff/Modification, just `SimpleObject` + relay.
+  - `Version { kind: VersionKind, initial_kit: Arc<Kit>, edit: Option<Arc<Edit>> }`.
+- Emit the command interface enums via `command_interface!`:
+  - `BackboneCommand` (interface) with concrete `FileBackboneCommand` + `WebsocketBackboneCommand` (each `command_family!` with `methods: [detach, sync]`, body dispatches `Command::DetachBackbone` / `Command::SyncBackbone` through `ParentStore`).
+  - `ProviderCommand` (interface) with concrete `LocalProviderCommand` + `RemoteProviderCommand`. `LocalProviderCommand` methods: `create_backbone(uri)`, `attach_backbone(store)`. `RemoteProviderCommand` adds `login(username, password_hash, hub_url?)`, `logout`.
+- Emit the standalone command types via `command_family!`:
+  - `SessionCommand { start, end, store(id) -> StoreCommand!, local_provider -> LocalProviderCommand!, remote_provider(url) -> RemoteProviderCommand! }`.
+  - `StoreCommand { backbone -> BackboneCommand!, the_kit -> Option<VersionCommand>, alternative(id) -> Option<AlternativeCommand>, start_alternative(name?) -> ID! }`.
+  - `AlternativeCommand { version -> ID!, integrate_into_the_kit -> ID! }`.
+  - `VersionCommand { start_new_change -> ID!, unsaved_change(id) -> UnsavedChangeCommand!, save -> ID!, create_checkpoint(message) -> ID! }`.
+  - `UnsavedChangeCommand { kit -> KitOperation!, save -> ID! }`.
+- Rewire `Mutation`: replace existing `Mutation::session` body with `async fn session(&self) -> SessionCommand` returning a `SessionCommand` instance. Delete the legacy `SessionCommandNav` / `StoreCommandNav` / `BackboneCommandNav` / `VersionCommandNav` / `UnsavedChangeCommandNav` hand-written structs once equivalents exist via `command_family!`.
+- Rewire `Subscription`: ensure `session: Session!` and `operation: Operation!` resolvers exist (drop legacy `events`/`commands` subscriptions if they aren't in golden).
+- Verify the runtime backbone routing: existing `kit_backbone::DevBackboneBundleDoc` etc. continue to feed `FileBackbone` (dev JSON) and `WebsocketBackbone` (remote sync) — the macro emits the GraphQL surface; existing host code stays as-is, only its public types are replaced.
+- Run `cargo check -p semio` + `cargo test -p semio` (specifically `schema_matches_target_graphql_file` once strengthened in the integrate wave).
+
+## Integrator (coordinator) — wave 6
+
+- Author the bottom-of-file `register_entities! { … }`, `register_operations! { … }`, and `register_commands! { … }` rosters (replacing the current empty-fragment versions at lines 56-118). The rosters auto-grow:
   - `OwnerEntity` / `OwnedEntity` async-graphql Unions (one variant per registered entity).
-  - The 14 Interface enums (`Node`, `Entity`, `WeakEntity`, `StrongEntity`, `RichStrongEntity`, `Artifact`, `Document`, `Event`, `Workspace`, `Input`, `Diff`, `Modification`, `Operation`, `EntityEdge`, `EntityConnection`).
+  - The full Interface enum set (`Node`, `Entity`, `WeakEntity`, `StrongEntity`, `RichStrongEntity`, `Artifact`, `Document`, `Event`, `Workspace`, `Backbone`, `Provider`, `Input`, `Diff`, `Modification`, `Operation`, `BackboneCommand`, `ProviderCommand`, `EntityEdge`, `EntityConnection`).
   - `KitOperation` / `OperationKind` / `OperationIface` / `Scope` / `Input` operation enums.
-- Specialty unions (`AttributeOwner`, `Blueprint`, `ChangeOwner`, `QualityOwner`, `PieceOwner`, `ConnectionOwner`, `PortOwner`, `RepresentationOwner`) are emitted as real `#[derive(async_graphql::Union)]` enums in the same `entity_dsl` region (one declaration per golden union); their variants are listed once and referenced wherever an entity's `owners:` slot needs them.
-- `register_output_type` sweep in `gql::build_schema_sync_for`: every macro-emitted concrete type must be reachable from `Query` / `Mutation` / `Subscription` OR explicitly registered (`SchemaBuilder::register_output_type::<XDiff>()`, `::<XModification>()`, `::<XModifications>()`, `::<XInput>()`, …) so async-graphql includes it in `Schema::sdl()`. Generate the registration list from the same roster (a `register_output_types!` macro emitted alongside `register_entities!`).
+- Specialty unions (`AttributeOwner`, `Blueprint`, `ChangeOwner`, `QualityOwner`, `PieceOwner`, `ConnectionOwner`, `PortOwner`, `RepresentationOwner`, plus the new owner unions implied by the host layer like `BackboneOwner = Store`, `ProviderOwner = Store`, `SessionOwner = Graph`) are emitted as real `#[derive(async_graphql::Union)]` enums in the same `entity_dsl` region (one declaration per golden union); their variants are listed once and referenced wherever an entity's `owners:` slot needs them.
+- `register_output_type` sweep in `gql::build_schema_sync_for`: every macro-emitted concrete type must be reachable from `Query` / `Mutation` / `Subscription` OR explicitly registered (`SchemaBuilder::register_output_type::<XDiff>()`, `::<XModification>()`, `::<XModifications>()`, `::<XInput>()`, `::<FileBackbone>()`, `::<WebsocketBackbone>()`, `::<LocalProvider>()`, `::<RemoteProvider>()`, `::<Store>()`, `::<Version>()`, `::<*Command>()`, …) so async-graphql includes it in `Schema::sdl()`. Generate the registration list from the same roster (a `register_output_types!` macro emitted alongside `register_entities!`/`register_commands!`).
 - Regenerate `[semio/schema/graphql/schema.graphql](semio/schema/graphql/schema.graphql)` via `bun run semio/schema/graphql/build.script.ts` (which runs `cargo test export_semio_graphql_schema_file -- --ignored --nocapture`).
 - Diff against `[semio/schema/graphql/schema.golden.graphql](semio/schema/graphql/schema.golden.graphql)` using `Compare-Object` on `^type|^interface|^union|^input|^scalar|^enum` lines. Iterate (add missing entities, missing operations, missing register_output_type calls) until missing-types count is 0.
 - Run full `cargo test -p semio --manifest-path semio/client/lib/rs/Cargo.toml`. Rewrite `schema_matches_target_graphql_file` (currently just asserts non-empty SDL) to:

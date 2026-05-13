@@ -199,12 +199,6 @@ macro_rules! entity_diffs {
     ($($_base:ident),* $(,)?) => {};
 }
 
-/// @emoji 🪢 `entity_owner!` — expands owner/owned union shells (filled when mega-unions derive from roster).
-#[macro_export]
-macro_rules! entity_owner {
-    ($($_base:ident),* $(,)?) => {};
-}
-
 /// @emoji 🧾 `entity_input!` — GraphQL `InputObject` with explicit SDL `name` (no serde; control plane is GraphQL-native).
 #[macro_export]
 macro_rules! entity_input {
@@ -876,7 +870,6 @@ pub mod geom {
             }
         }
 
-        //#region 🔧 Default stubs (schema codegen union / interface defaults)
         impl Default for Coordinate {
             fn default() -> Self {
                 Self { id: Id::default(), u: RwLock::new(0.0), v: RwLock::new(0.0) }
@@ -924,7 +917,7 @@ pub mod geom {
                 Self { id: Id::default(), label: RwLock::new(None) }
             }
         }
-        //#endregion 🔧 Default stubs (schema codegen union / interface defaults)
+        //#endregion
     }
     //#endregion 📐 entity
 }
@@ -1374,20 +1367,6 @@ pub mod meta {
         pub fn compute_entity_hash(&self) -> String {
             crate::hash::merkle_node_str(&["semio:meta:Attribute", self.id.as_str(), self.key.as_str(), self.value.as_str(), self.definition.as_deref().unwrap_or("")], Vec::new())
         }
-    }
-
-    /// 🏷️ Hand union for `Attribute.owner` (subset of carriers Attribute can hang off of).
-    #[derive(Clone, async_graphql::Union)]
-    pub enum AttributeOwner {
-        Piece(std::sync::Arc<crate::kit::design::piece::Piece>),
-        Connector(std::sync::Arc<crate::kit::r#type::Connector>),
-        Representation(std::sync::Arc<crate::kit::r#type::Representation>),
-        Connection(std::sync::Arc<crate::kit::design::connection::Connection>),
-        Kit(std::sync::Arc<crate::kit::Kit>),
-        Design(std::sync::Arc<crate::kit::design::Design>),
-        Type(std::sync::Arc<crate::kit::r#type::Type>),
-        Concept(std::sync::Arc<crate::meta::Concept>),
-        Tag(std::sync::Arc<crate::meta::Tag>),
     }
 
     #[Object(name = "Attribute")]
@@ -2138,7 +2117,6 @@ pub mod kit {
         //#endregion 🏠 type
 
         //#region 🧩 blueprint
-        /// 🧩 Blueprint union (Type | Design) — what a Piece references and what a Piece's owner is.
         #[derive(Clone, Union)]
         #[graphql(name = "Blueprint")]
         pub enum Blueprint {
@@ -2392,13 +2370,6 @@ pub mod kit {
                 }
             }
 
-            /// @emoji 🔗 SDL `union SideOwner = Connection`.
-            #[derive(Clone, Union)]
-            #[graphql(name = "SideOwner")]
-            pub enum SideOwner {
-                Connection(Arc<Connection>),
-            }
-
             #[Object(name = "Side")]
             impl Side {
                 pub async fn id(&self) -> Id {
@@ -2592,13 +2563,6 @@ pub mod kit {
             }
         }
         //#endregion 🧱 clump
-
-        /// @emoji 🏠 SDL `union DesignOwner = Kit`.
-        #[derive(Clone, Union)]
-        #[graphql(name = "DesignOwner")]
-        pub enum DesignOwner {
-            Kit(Arc<super::Kit>),
-        }
 
         pub struct Design {
             pub id: Id,
@@ -3093,15 +3057,6 @@ pub mod kit {
     use crate::id::Id;
     use crate::meta::{Attribute, Author, Concept, File, Folder, Prop, Quality, Stat, Tag};
     use crate::timestamp::Timestamp;
-
-    /// @emoji 🔗 SDL `union KitOwner = Graph | Checkpoint | Alternative`.
-    #[derive(Clone, Union)]
-    #[graphql(name = "KitOwner")]
-    pub enum KitOwner {
-        Graph(Arc<crate::vcs::Graph>),
-        Checkpoint(Arc<crate::vcs::Checkpoint>),
-        Alternative(Arc<crate::vcs::Alternative>),
-    }
 
     pub struct Kit {
         pub id: Id,
@@ -4073,34 +4028,6 @@ pub mod kit {
 
 //#region 🏷️ meta graphql
 
-/// @emoji 🔗 SDL `union TagOwner`.
-#[derive(Clone, async_graphql::Union)]
-#[graphql(name = "TagOwner")]
-pub enum TagOwnerUnion {
-    Kit(std::sync::Arc<crate::kit::Kit>),
-    Type(std::sync::Arc<crate::kit::r#type::Type>),
-    Representation(std::sync::Arc<crate::kit::r#type::Representation>),
-}
-
-/// @emoji 🔗 SDL `union ConceptOwner`.
-#[derive(Clone, async_graphql::Union)]
-#[graphql(name = "ConceptOwner")]
-pub enum ConceptOwnerUnion {
-    Kit(std::sync::Arc<crate::kit::Kit>),
-    Type(std::sync::Arc<crate::kit::r#type::Type>),
-}
-
-/// @emoji 🔗 SDL `union QualityOwner`.
-#[derive(Clone, async_graphql::Union)]
-#[graphql(name = "QualityOwner")]
-pub enum QualityOwnerUnion {
-    Connector(std::sync::Arc<crate::kit::r#type::Connector>),
-    Representation(std::sync::Arc<crate::kit::r#type::Representation>),
-    Type(std::sync::Arc<crate::kit::r#type::Type>),
-    Design(std::sync::Arc<crate::kit::design::Design>),
-    Kit(std::sync::Arc<crate::kit::Kit>),
-}
-
 #[async_graphql::Object(name = "Tag")]
 impl crate::meta::Tag {
     pub async fn id(&self) -> crate::id::Id {
@@ -4832,13 +4759,6 @@ pub mod vcs {
     }
     //#endregion 🌱 alternative
 
-    //#region 🌐 graph
-    /// @emoji 🔗 `Graph.owner` — target SDL `union GraphOwner = Session`.
-    #[derive(Clone, Union)]
-    pub enum GraphOwner {
-        Session(Arc<Session>),
-    }
-
     /// @emoji 📦 Cached materialized [`Kit`] for a [`Workspace`](../../graphql/target.schema.graphql) (`workspace_id` + `change_seq`).
     pub struct MaterializedSlot {
         pub workspace_id: Id,
@@ -5005,17 +4925,9 @@ pub mod vcs {
         pub async fn materialized_kit_for_workspace(self: &Arc<Self>, workspace_id: &Id) -> Arc<Kit> {
             let ws = self.resolve_workspace_id(workspace_id).await;
             let (saved, unsaved, seq) = if ws == self.id {
-                (
-                    self.the_kit_saved_edits.read().await.clone(),
-                    self.the_kit_unsaved_edits.read().await.clone(),
-                    self.the_kit_workspace_seq.load(Ordering::Relaxed),
-                )
+                (self.the_kit_saved_edits.read().await.clone(), self.the_kit_unsaved_edits.read().await.clone(), self.the_kit_workspace_seq.load(Ordering::Relaxed))
             } else if let Some(a) = self.workspace_alternative(&ws).await {
-                (
-                    a.saved_edits.read().await.clone(),
-                    a.unsaved_edits.read().await.clone(),
-                    a.change_seq.load(Ordering::Relaxed),
-                )
+                (a.saved_edits.read().await.clone(), a.unsaved_edits.read().await.clone(), a.change_seq.load(Ordering::Relaxed))
             } else {
                 return self.mutable_kit.read().await.clone();
             };
@@ -5052,13 +4964,7 @@ pub mod vcs {
         }
 
         /// @emoji 📦 [`Kit`] materialized for `workspace_id` through `target_edit` / `change_idx` / `forward_idx` (used when persisting each operation's `kitDiff` beside its input).
-        pub async fn kit_materialized_for_workspace_before_operation_step(
-            self: &Arc<Self>,
-            workspace_id: &Id,
-            target_edit: &Arc<Edit>,
-            change_idx: usize,
-            forward_idx: usize,
-        ) -> Arc<Kit> {
+        pub async fn kit_materialized_for_workspace_before_operation_step(self: &Arc<Self>, workspace_id: &Id, target_edit: &Arc<Edit>, change_idx: usize, forward_idx: usize) -> Arc<Kit> {
             let (saved, unsaved) = self.workspace_saved_and_unsaved_edits(workspace_id).await.unwrap_or_else(|| (Vec::new(), Vec::new()));
             let base = self.mutable_kit.read().await.clone();
             let mat = base.deep_clone().await;
@@ -5092,13 +4998,7 @@ pub mod vcs {
         }
 
         /// @emoji 📝 Append one forward operation plus backward operations onto the open [`Edit`]'s tail [`Change`], bumping the workspace cache epoch.
-        pub async fn record_operation_in_open_transaction(
-            self: &Arc<Self>,
-            workspace_id: &Id,
-            edit_id: &Id,
-            forward: crate::operation::Operation,
-            backwards: Vec<crate::operation::Operation>,
-        ) -> Result<(), SemioError> {
+        pub async fn record_operation_in_open_transaction(self: &Arc<Self>, workspace_id: &Id, edit_id: &Id, forward: crate::operation::Operation, backwards: Vec<crate::operation::Operation>) -> Result<(), SemioError> {
             let ws = self.resolve_workspace_id(workspace_id).await;
             let tx = if ws == self.id {
                 let _ = self.ensure_the_kit_unsaved_edit(edit_id).await;
@@ -5507,7 +5407,6 @@ pub mod vcs {
 
 //#region 🧷 interface
 
-/// 🧷 Cross-cutting GraphQL `OwnerEntity` / `OwnedEntity` unions and empty Relay shells (expanded as more entities register).
 pub mod interface {
     use std::sync::Arc;
 
@@ -5521,78 +5420,6 @@ pub mod interface {
     use crate::kit::Kit;
     use crate::vcs::{Alternative, Checkpoint, Conflict, Edit, Graph, ReadVersion, Session, WriteVersion};
 
-    /// @emoji 🔗 SDL `OwnerEntity` subset (grow toward full target union).
-    #[derive(Clone, Union)]
-    pub enum OwnerEntity {
-        Edit(Arc<Edit>),
-        Kit(Arc<Kit>),
-        Type(std::sync::Arc<crate::kit::r#type::Type>),
-        Representation(std::sync::Arc<crate::kit::r#type::Representation>),
-        Connector(std::sync::Arc<crate::kit::r#type::Connector>),
-        Design(Arc<Design>),
-        Piece(Arc<Piece>),
-        Graph(Arc<Graph>),
-        Session(Arc<Session>),
-        Checkpoint(Arc<Checkpoint>),
-        Alternative(Arc<Alternative>),
-        Conflict(Arc<Conflict>),
-        ReadVersion(Arc<ReadVersion>),
-        WriteVersion(Arc<WriteVersion>),
-        Position(Arc<Position>),
-        Coordinate(Arc<Coordinate>),
-        Plane(Arc<Plane>),
-        Point(Arc<Point>),
-        Vector(Arc<Vector>),
-        Place(Arc<Place>),
-        Offset(Arc<Offset>),
-        Location(Arc<Location>),
-    }
-
-    /// @emoji 🔗 SDL `OwnedEntity` subset for non-empty `owns` edges.
-    #[derive(Clone, Union)]
-    pub enum OwnedEntity {
-        Kit(Arc<Kit>),
-        Design(Arc<Design>),
-        Piece(Arc<Piece>),
-        Position(Arc<Position>),
-    }
-
-    #[derive(Clone, SimpleObject)]
-    pub struct OwnedEntityEdge {
-        pub cursor: String,
-        pub node: OwnedEntity,
-    }
-
-    #[derive(Clone, SimpleObject)]
-    pub struct OwnedEntityConnection {
-        pub edges: Vec<OwnedEntityEdge>,
-        #[graphql(name = "pageInfo")]
-        pub page_info: crate::gql_relay::PageInfo,
-        pub hash: String,
-    }
-
-    impl OwnedEntityConnection {
-        pub fn empty() -> Self {
-            Self { edges: Vec::new(), page_info: crate::gql_relay::PageInfo::default(), hash: merkle_collection(Vec::new()) }
-        }
-    }
-
-    /// 🏷️ Wrap an [`OwnerEntity`] in `Arc` (resolver convenience).
-    pub fn owner_arc(e: OwnerEntity) -> Arc<OwnerEntity> {
-        Arc::new(e)
-    }
-
-    /// 🏷️ Map an `Option<OwnerEntity>` resolver value into the `Arc<OwnerEntity>` shape.
-    pub fn owner_arc_opt(o: Option<OwnerEntity>) -> Option<Arc<OwnerEntity>> {
-        o.map(Arc::new)
-    }
-
-    /// 🏷️ Empty `OwnedEntityConnection` shell (used by entities with no owned children yet).
-    pub fn empty_owned_entity_connection() -> Arc<OwnedEntityConnection> {
-        Arc::new(OwnedEntityConnection::empty())
-    }
-
-    /// @emoji 🌐 Global `node` / `entity` resolution union (Relay `Node` stand-in until full `Entity` interface wiring).
     #[derive(Clone, Union)]
     pub enum GqlNode {
         Graph(Arc<Graph>),
@@ -9779,11 +9606,7 @@ pub mod worker {
             self.backbone.record_kit_operation_if_attached(&workspace_id, &transaction_id, &operation, Some(kit_wire)).await?;
             let after_kit = graph.materialized_kit_for_workspace(&ws).await;
 
-            let tx_edit = graph
-                .workspace_saved_and_unsaved_edits(&ws)
-                .await
-                .and_then(|(s, u)| s.into_iter().chain(u).find(|t| t.id == transaction_id))
-                .ok_or_else(|| SemioError::not_found("Edit", transaction_id.as_str()))?;
+            let tx_edit = graph.workspace_saved_and_unsaved_edits(&ws).await.and_then(|(s, u)| s.into_iter().chain(u).find(|t| t.id == transaction_id)).ok_or_else(|| SemioError::not_found("Edit", transaction_id.as_str()))?;
 
             match &operation {
                 Operation::RenameKit { input, .. } => {

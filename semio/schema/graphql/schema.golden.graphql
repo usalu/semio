@@ -6692,6 +6692,8 @@ enum PieceConnectionKind {
   CONNECTED
 }
 
+union Blueprint = Type | Design
+
 type BlueprintEdge implements EntityEdge {
   # Polymorphic edge over Type | Design (no Blueprint type)
   # EntityEdge
