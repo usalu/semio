@@ -1,9 +1,9 @@
 {
-  "title": "Macro-Driven Entity Family Refactor",
+  "title": "Macro Driven Entity Family Refactor",
   "emoji": "🎫",
-  "status": "open",
+  "status": "closed",
   "description": "Refactor semio/rs/lib.rs and semio/graphql/target.schema.graphql so all base functionality is macro-derived (edges, connections, hashing, diffs, modifications, owner unions, interface enums, operations, command navs, SDL fragments). Code-first: one entity_family! per entity emits the full 12-type ladder + Object impls + SDL fragment; gql::sdl() concatenates registered fragments instead of include_str! tautology; target.schema.graphql becomes a generated golden. Fixes all schema inconsistencies (duplicate Clump/TheKit, missing Stat/Layer/Group/Connection/Kit/Representation operation ladders, missing ClumpDiff ladder, FixedPiecesInput, ConnectionDiff body, normalized Modifications.owns comments). Multi-worker parallel execution: 1 coordinator + W0 foundation + W1-W6 entity conversion in parallel + W7 operations + W8 command navs + integrator + sweep. See plan e6121b3c for full DAG, worker manifest, region partitioning, subagent prompts, and concurrency safety rules.",
-  "summary": "Macro-driven relay and entity roster in semio/rs/lib.rs: register_entities! now uses full type paths and emits HasSdlFragment impls plus real push_all_fragments; replaced simple_conn_* with entity_relay!/entity_relay_sync!; gql_relay Arc connections expanded via entity_relay! with domain from_* wrappers; gql::sdl skips empty fragments so golden SDL test stays stable. Fixed unrelated build breaks: Operation interface duplicate owner (operationOwner + owner), KitOperationInputRoot vs operation::KitOperation enum alias, Session/Backbone/Version command nav impl types, Piece roster path (design::piece::Piece). cargo test: 36 passed, 1 ignored.",
+  "summary": "Aligned semio Rust GraphQL control plane with schema.golden.graphql: Entity + EntityConnection interfaces, Workspace (renamed from Version), VCS owner/owns fields on Graph/Session/TheKit/Alternative/Checkpoint/Edit/Conflict, Operation interface uses Entity instead of removed OwnerEntity union, trimmed SessionCommand and BackboneCommand to golden fields, Query.entity returns Entity, Subscription.operation added, schema registration updated. Windows cargo check hit LNK1104 on proc-macro DLLs in this agent environment.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/1412"
   },

@@ -41,7 +41,7 @@ macro_rules! command_interface {
     ($($tokens:tt)*) => {};
 }
 
-/// @emoji 🧭 `command_nav!` — per-surface kit operation navigation objects (replaces hand-written `*OperationInput` blocks in W8).
+/// @emoji 🧭 `command_nav!` — per-surface kit operation navigation objects (replaces hand-written `*OperationInput` blocks).
 #[macro_export]
 macro_rules! command_nav {
     ($($tokens:tt)*) => {};
@@ -74,12 +74,6 @@ macro_rules! input_enum {
 /// @emoji 🪢 `relay_collection!` — relay `Connection` helpers for union-backed node collections.
 #[macro_export]
 macro_rules! relay_collection {
-    ($($tokens:tt)*) => {};
-}
-
-/// @emoji 🧷 `entity_owner_unions!` — grows owner/owned `Union` enums from the entity roster.
-#[macro_export]
-macro_rules! entity_owner_unions {
     ($($tokens:tt)*) => {};
 }
 
@@ -4310,13 +4304,6 @@ pub mod vcs {
     }
 
     #[derive(Clone, Union)]
-    #[graphql(name = "EditOwner")]
-    pub enum EditOwnerUnion {
-        Alternative(Arc<Alternative>),
-        Checkpoint(Arc<Checkpoint>),
-    }
-
-    #[derive(Clone, Union)]
     #[graphql(name = "ChangeOwner")]
     pub enum ChangeOwnerUnion {
         Alternative(Arc<Alternative>),
@@ -4404,16 +4391,17 @@ pub mod vcs {
         pub async fn hash(&self) -> String {
             self.compute_hash().await
         }
-        pub async fn owner(&self) -> Option<EditOwnerUnion> {
+        pub async fn owner(&self) -> Option<crate::gql::interfaces::EntityInterface> {
             match &self.owner {
-                EditOwner::Alternative(wa) => wa.upgrade().map(EditOwnerUnion::Alternative),
-                EditOwner::TheKit(wg) => {
-                    let g = wg.upgrade()?;
-                    let cp = g.the_kit_parent_checkpoint.read().await.upgrade()?;
-                    Some(EditOwnerUnion::Checkpoint(cp))
-                }
+                EditOwner::Alternative(wa) => wa.upgrade().map(crate::gql::interfaces::EntityInterface::Alternative),
+                EditOwner::TheKit(wg) => wg.upgrade().and_then(|g| g.the_kit_parent_checkpoint.read().await.upgrade().map(crate::gql::interfaces::EntityInterface::Checkpoint)),
             }
         }
+
+        pub async fn owns(&self) -> Option<crate::gql::interfaces::EntityConnectionInterface> {
+            Some(crate::gql::interfaces::empty_entity_connection())
+        }
+
         pub async fn forwards(&self) -> crate::gql_relay::OperationConnection {
             crate::gql_relay::OperationConnection::from_interface_entities(self.forward_interface_operations.read().await.clone())
         }
@@ -4476,7 +4464,7 @@ pub mod vcs {
     //#endregion 📍 kit read point
 
     //#region 📖 read write version
-    /// @emoji 📖 Placeholder version entity for `OwnerEntity` (`ReadVersion` in target SDL).
+    /// @emoji 📖 Placeholder read-side version row (`ReadVersion` in golden schema).
     pub struct ReadVersion {
         pub id: Id,
     }
@@ -4497,7 +4485,7 @@ pub mod vcs {
         }
     }
 
-    /// @emoji 📖 Placeholder version entity for `OwnerEntity` (`WriteVersion` in target SDL).
+    /// @emoji 📖 Placeholder write-side version row (`WriteVersion` in golden schema).
     pub struct WriteVersion {
         pub id: Id,
     }
@@ -4563,6 +4551,12 @@ pub mod vcs {
         }
         pub async fn hash(&self) -> String {
             self.compute_hash().await
+        }
+        pub async fn owner(&self) -> Option<crate::gql::interfaces::EntityInterface> {
+            self.owner_graph.upgrade().map(crate::gql::interfaces::EntityInterface::Graph)
+        }
+        pub async fn owns(&self) -> Option<crate::gql::interfaces::EntityConnectionInterface> {
+            Some(crate::gql::interfaces::empty_entity_connection())
         }
         pub async fn timestamp(&self) -> Option<Timestamp> {
             self.timestamp.read().await.clone()
@@ -4659,8 +4653,11 @@ pub mod vcs {
         pub async fn hash(&self) -> String {
             self.compute_hash().await
         }
-        pub async fn owner(&self) -> Option<Arc<Graph>> {
-            self.graph().await
+        pub async fn owner(&self) -> Option<crate::gql::interfaces::EntityInterface> {
+            self.graph().await.map(crate::gql::interfaces::EntityInterface::Graph)
+        }
+        pub async fn owns(&self) -> Option<crate::gql::interfaces::EntityConnectionInterface> {
+            Some(crate::gql::interfaces::empty_entity_connection())
         }
         pub async fn checkpoint(&self) -> crate::gql_relay::CheckpointConnection {
             match self.graph().await {
@@ -4758,8 +4755,11 @@ pub mod vcs {
         pub async fn hash(&self) -> String {
             self.compute_hash().await
         }
-        pub async fn owner(&self) -> Option<Arc<Graph>> {
-            self.owner_graph.upgrade()
+        pub async fn owner(&self) -> Option<crate::gql::interfaces::EntityInterface> {
+            self.owner_graph.upgrade().map(crate::gql::interfaces::EntityInterface::Graph)
+        }
+        pub async fn owns(&self) -> Option<crate::gql::interfaces::EntityConnectionInterface> {
+            Some(crate::gql::interfaces::empty_entity_connection())
         }
         pub async fn name(&self) -> String {
             self.name.read().await.clone()
@@ -4769,9 +4769,6 @@ pub mod vcs {
         }
         pub async fn checkpoints(&self) -> Vec<Arc<Checkpoint>> {
             self.checkpoints.read().await.clone()
-        }
-        pub async fn store(&self) -> Arc<Kit> {
-            self.kit.read().await.clone().unwrap_or_default()
         }
         pub async fn checkpoint(&self) -> crate::gql_relay::CheckpointConnection {
             crate::gql_relay::CheckpointConnection::from_checkpoints(self.checkpoints.read().await.clone()).await
@@ -4793,6 +4790,11 @@ pub mod vcs {
                 Some(g) => g.materialized_kit_for_workspace(&self.id).await,
                 None => self.kit.read().await.clone().unwrap_or_default(),
             }
+        }
+
+        pub async fn change(&self, #[graphql(name = "id")] id: Id) -> Option<Arc<Change>> {
+            let _ = id;
+            None
         }
     }
     //#endregion 🌱 alternative
@@ -5304,16 +5306,15 @@ pub mod vcs {
         pub async fn hash(&self) -> String {
             self.compute_hash().await
         }
-        pub async fn owner(&self) -> GraphOwner {
-            let g = self.owner_session.read().await;
-            match g.upgrade() {
-                Some(s) => GraphOwner::Session(s),
-                None => GraphOwner::Session(Arc::new(Session::default())),
-            }
+        pub async fn owner(&self) -> Option<crate::gql::interfaces::EntityInterface> {
+            self.owner_session.read().await.upgrade().map(crate::gql::interfaces::EntityInterface::Session)
+        }
+        pub async fn owns(&self) -> Option<crate::gql::interfaces::EntityConnectionInterface> {
+            Some(crate::gql::interfaces::empty_entity_connection())
         }
         #[graphql(name = "theKit")]
-        pub async fn the_kit(&self) -> crate::gql::interfaces::VersionInterface {
-            crate::gql::interfaces::VersionInterface::TheKit(TheKit::new(Arc::downgrade(&self.arc_here())))
+        pub async fn the_kit(&self) -> crate::gql::interfaces::WorkspaceInterface {
+            crate::gql::interfaces::WorkspaceInterface::TheKit(TheKit::new(Arc::downgrade(&self.arc_here())))
         }
         #[graphql(name = "initialKit")]
         pub async fn initial_kit(&self) -> Option<Arc<Kit>> {
@@ -5371,6 +5372,15 @@ pub mod vcs {
             self.started_at.read().await.clone()
         }
 
+        pub async fn owner(&self, ctx: &Context<'_>) -> async_graphql::Result<Option<crate::gql::interfaces::EntityInterface>> {
+            let rt = ctx.data::<Arc<crate::worker::ParentStore>>()?;
+            Ok(Some(crate::gql::interfaces::EntityInterface::Graph(rt.wip_graph.clone())))
+        }
+
+        pub async fn owns(&self) -> Option<crate::gql::interfaces::EntityConnectionInterface> {
+            Some(crate::gql::interfaces::empty_entity_connection())
+        }
+
         /// @emoji 🌐 Same navigation as WIP [`Graph`] — resolved via [`crate::worker::ParentStore::wip_graph`] for the active runtime.
         pub async fn alternatives(&self, ctx: &Context<'_>) -> async_graphql::Result<crate::gql_relay::AlternativeConnection> {
             let rt = ctx.data::<Arc<crate::worker::ParentStore>>()?;
@@ -5384,9 +5394,9 @@ pub mod vcs {
         }
 
         #[graphql(name = "theKit")]
-        pub async fn the_kit(&self, ctx: &Context<'_>) -> async_graphql::Result<crate::gql::interfaces::VersionInterface> {
+        pub async fn the_kit(&self, ctx: &Context<'_>) -> async_graphql::Result<crate::gql::interfaces::WorkspaceInterface> {
             let rt = ctx.data::<Arc<crate::worker::ParentStore>>()?;
-            Ok(crate::gql::interfaces::VersionInterface::TheKit(TheKit::new(Arc::downgrade(&rt.wip_graph.arc_here()))))
+            Ok(crate::gql::interfaces::WorkspaceInterface::TheKit(TheKit::new(Arc::downgrade(&rt.wip_graph.arc_here()))))
         }
 
         pub async fn stores(&self) -> crate::gql::StoreConnection {
@@ -5427,16 +5437,24 @@ pub mod vcs {
         pub async fn hash(&self) -> String {
             self.compute_hash().await
         }
-        #[graphql(name = "backboneTip")]
-        pub async fn backbone_tip(&self) -> Option<String> {
-            self.backbone_tip.read().await.clone()
+        pub async fn owner(&self, ctx: &Context<'_>) -> async_graphql::Result<Option<crate::gql::interfaces::EntityInterface>> {
+            let rt = ctx.data::<Arc<crate::worker::ParentStore>>()?;
+            Ok(rt.sessions.read().await.first().cloned().map(crate::gql::interfaces::EntityInterface::Session))
         }
-        pub async fn reason(&self) -> String {
-            self.reason.read().await.clone()
+        pub async fn owns(&self) -> Option<crate::gql::interfaces::EntityConnectionInterface> {
+            Some(crate::gql::interfaces::empty_entity_connection())
         }
-        #[graphql(name = "createdAt")]
-        pub async fn created_at(&self) -> Timestamp {
-            self.created_at.read().await.clone()
+        #[graphql(name = "authoritativeChange")]
+        pub async fn authoritative_change(&self) -> Option<Arc<Change>> {
+            None
+        }
+        #[graphql(name = "wipChange")]
+        pub async fn wip_change(&self) -> Option<Arc<Change>> {
+            None
+        }
+        pub async fn reasons(&self) -> Vec<String> {
+            let r = self.reason.read().await.clone();
+            if r.is_empty() { vec![] } else { vec![r] }
         }
     }
     //#endregion ⚠️ conflict
@@ -5541,11 +5559,11 @@ pub mod interface {
         pub async fn hash(&self) -> String {
             self.compute_hash().await
         }
-        pub async fn owner(&self) -> Option<std::sync::Arc<crate::interface::OwnerEntity>> {
+        pub async fn owner(&self) -> Option<crate::gql::interfaces::EntityInterface> {
             None
         }
-        pub async fn owns(&self) -> Option<std::sync::Arc<crate::interface::OwnedEntityConnection>> {
-            Some(crate::interface::empty_owned_entity_connection())
+        pub async fn owns(&self) -> Option<crate::gql::interfaces::EntityConnectionInterface> {
+            Some(crate::gql::interfaces::empty_entity_connection())
         }
         pub async fn u(&self) -> f64 {
             *self.u.read().await
@@ -5563,11 +5581,11 @@ pub mod interface {
         pub async fn hash(&self) -> String {
             self.compute_hash().await
         }
-        pub async fn owner(&self) -> Option<std::sync::Arc<crate::interface::OwnerEntity>> {
+        pub async fn owner(&self) -> Option<crate::gql::interfaces::EntityInterface> {
             None
         }
-        pub async fn owns(&self) -> Option<std::sync::Arc<crate::interface::OwnedEntityConnection>> {
-            Some(crate::interface::empty_owned_entity_connection())
+        pub async fn owns(&self) -> Option<crate::gql::interfaces::EntityConnectionInterface> {
+            Some(crate::gql::interfaces::empty_entity_connection())
         }
         pub async fn x(&self) -> f64 {
             *self.x.read().await
@@ -5588,11 +5606,11 @@ pub mod interface {
         pub async fn hash(&self) -> String {
             self.compute_hash().await
         }
-        pub async fn owner(&self) -> Option<std::sync::Arc<crate::interface::OwnerEntity>> {
+        pub async fn owner(&self) -> Option<crate::gql::interfaces::EntityInterface> {
             None
         }
-        pub async fn owns(&self) -> Option<std::sync::Arc<crate::interface::OwnedEntityConnection>> {
-            Some(crate::interface::empty_owned_entity_connection())
+        pub async fn owns(&self) -> Option<crate::gql::interfaces::EntityConnectionInterface> {
+            Some(crate::gql::interfaces::empty_entity_connection())
         }
         pub async fn x(&self) -> f64 {
             *self.x.read().await
@@ -5613,11 +5631,11 @@ pub mod interface {
         pub async fn hash(&self) -> String {
             self.compute_hash().await
         }
-        pub async fn owner(&self) -> Option<std::sync::Arc<crate::interface::OwnerEntity>> {
+        pub async fn owner(&self) -> Option<crate::gql::interfaces::EntityInterface> {
             None
         }
-        pub async fn owns(&self) -> Option<std::sync::Arc<crate::interface::OwnedEntityConnection>> {
-            Some(crate::interface::empty_owned_entity_connection())
+        pub async fn owns(&self) -> Option<crate::gql::interfaces::EntityConnectionInterface> {
+            Some(crate::gql::interfaces::empty_entity_connection())
         }
         pub async fn origin(&self) -> Arc<Point> {
             self.origin.clone()
@@ -5640,11 +5658,11 @@ pub mod interface {
         pub async fn hash(&self) -> String {
             self.compute_hash().await
         }
-        pub async fn owner(&self) -> Option<std::sync::Arc<crate::interface::OwnerEntity>> {
+        pub async fn owner(&self) -> Option<crate::gql::interfaces::EntityInterface> {
             None
         }
-        pub async fn owns(&self) -> Option<std::sync::Arc<crate::interface::OwnedEntityConnection>> {
-            Some(crate::interface::empty_owned_entity_connection())
+        pub async fn owns(&self) -> Option<crate::gql::interfaces::EntityConnectionInterface> {
+            Some(crate::gql::interfaces::empty_entity_connection())
         }
         pub async fn center(&self) -> Arc<Coordinate> {
             self.center.clone()
@@ -5662,11 +5680,11 @@ pub mod interface {
         pub async fn hash(&self) -> String {
             self.compute_hash().await
         }
-        pub async fn owner(&self) -> Option<std::sync::Arc<crate::interface::OwnerEntity>> {
+        pub async fn owner(&self) -> Option<crate::gql::interfaces::EntityInterface> {
             None
         }
-        pub async fn owns(&self) -> Option<std::sync::Arc<crate::interface::OwnedEntityConnection>> {
-            Some(crate::interface::empty_owned_entity_connection())
+        pub async fn owns(&self) -> Option<crate::gql::interfaces::EntityConnectionInterface> {
+            Some(crate::gql::interfaces::empty_entity_connection())
         }
         pub async fn u(&self) -> f64 {
             *self.u.read().await
@@ -5685,11 +5703,11 @@ pub mod interface {
         pub async fn hash(&self) -> String {
             self.compute_hash().await
         }
-        pub async fn owner(&self) -> Option<std::sync::Arc<crate::interface::OwnerEntity>> {
+        pub async fn owner(&self) -> Option<crate::gql::interfaces::EntityInterface> {
             None
         }
-        pub async fn owns(&self) -> Option<std::sync::Arc<crate::interface::OwnedEntityConnection>> {
-            Some(crate::interface::empty_owned_entity_connection())
+        pub async fn owns(&self) -> Option<crate::gql::interfaces::EntityConnectionInterface> {
+            Some(crate::gql::interfaces::empty_entity_connection())
         }
         pub async fn longitude(&self) -> f64 {
             *self.longitude.read().await
@@ -5710,11 +5728,11 @@ pub mod interface {
         pub async fn hash(&self) -> String {
             self.compute_hash().await
         }
-        pub async fn owner(&self) -> Option<std::sync::Arc<crate::interface::OwnerEntity>> {
+        pub async fn owner(&self) -> Option<crate::gql::interfaces::EntityInterface> {
             None
         }
-        pub async fn owns(&self) -> Option<std::sync::Arc<crate::interface::OwnedEntityConnection>> {
-            Some(crate::interface::empty_owned_entity_connection())
+        pub async fn owns(&self) -> Option<crate::gql::interfaces::EntityConnectionInterface> {
+            Some(crate::gql::interfaces::empty_entity_connection())
         }
     }
 }
@@ -5734,7 +5752,7 @@ pub mod operation {
     use crate::geom::{OffsetInput, PositionInput};
     use crate::hash::h;
     use crate::id::Id;
-    use crate::interface::{empty_owned_entity_connection, OwnedEntityConnection, OwnerEntity};
+    use crate::gql::interfaces::{empty_entity_connection, EntityConnectionInterface, EntityInterface};
     use crate::meta::{ConceptInput, QualityInput, TagInput};
     use crate::vcs::Edit;
 
@@ -7156,12 +7174,12 @@ pub mod operation {
         pub async fn hash(&self) -> String {
             crate::hash::h(&[self.id.as_str()])
         }
-        pub async fn owner(&self) -> Option<Arc<OwnerEntity>> {
-            self.owner_edit.upgrade().map(|e| Arc::new(OwnerEntity::Edit(e)))
+        pub async fn owner(&self) -> Option<EntityInterface> {
+            self.owner_edit.upgrade().map(EntityInterface::Edit)
         }
         #[graphql(name = "owns")]
-        pub async fn owns(&self) -> Option<Arc<OwnedEntityConnection>> {
-            Some(empty_owned_entity_connection())
+        pub async fn owns(&self) -> Option<EntityConnectionInterface> {
+            Some(empty_entity_connection())
         }
         pub async fn piece(&self) -> Arc<crate::kit::design::piece::Piece> {
             self.piece.clone()
@@ -7190,12 +7208,12 @@ pub mod operation {
         pub async fn hash(&self) -> String {
             crate::hash::h(&[self.id.as_str()])
         }
-        pub async fn owner(&self) -> Option<Arc<OwnerEntity>> {
-            self.owner_edit.upgrade().map(|e| Arc::new(OwnerEntity::Edit(e)))
+        pub async fn owner(&self) -> Option<EntityInterface> {
+            self.owner_edit.upgrade().map(EntityInterface::Edit)
         }
         #[graphql(name = "owns")]
-        pub async fn owns(&self) -> Option<Arc<OwnedEntityConnection>> {
-            Some(empty_owned_entity_connection())
+        pub async fn owns(&self) -> Option<EntityConnectionInterface> {
+            Some(empty_entity_connection())
         }
         pub async fn piece(&self) -> Arc<crate::kit::design::piece::Piece> {
             self.piece.clone()
@@ -7224,12 +7242,12 @@ pub mod operation {
         pub async fn hash(&self) -> String {
             crate::hash::h(&[self.id.as_str()])
         }
-        pub async fn owner(&self) -> Option<Arc<OwnerEntity>> {
-            self.owner_edit.upgrade().map(|e| Arc::new(OwnerEntity::Edit(e)))
+        pub async fn owner(&self) -> Option<EntityInterface> {
+            self.owner_edit.upgrade().map(EntityInterface::Edit)
         }
         #[graphql(name = "owns")]
-        pub async fn owns(&self) -> Option<Arc<OwnedEntityConnection>> {
-            Some(empty_owned_entity_connection())
+        pub async fn owns(&self) -> Option<EntityConnectionInterface> {
+            Some(empty_entity_connection())
         }
         pub async fn pieces(&self) -> Vec<Arc<crate::kit::design::piece::Piece>> {
             self.pieces.clone()
@@ -7264,12 +7282,12 @@ pub mod operation {
         pub async fn hash(&self) -> String {
             crate::hash::h(&[self.id.as_str()])
         }
-        pub async fn owner(&self) -> Option<Arc<OwnerEntity>> {
-            self.owner_edit.upgrade().map(|e| Arc::new(OwnerEntity::Edit(e)))
+        pub async fn owner(&self) -> Option<EntityInterface> {
+            self.owner_edit.upgrade().map(EntityInterface::Edit)
         }
         #[graphql(name = "owns")]
-        pub async fn owns(&self) -> Option<Arc<OwnedEntityConnection>> {
-            Some(empty_owned_entity_connection())
+        pub async fn owns(&self) -> Option<EntityConnectionInterface> {
+            Some(empty_entity_connection())
         }
         pub async fn kit(&self) -> Arc<crate::kit::Kit> {
             self.kit.clone()
@@ -7298,12 +7316,12 @@ pub mod operation {
         pub async fn hash(&self) -> String {
             crate::hash::h(&[self.id.as_str()])
         }
-        pub async fn owner(&self) -> Option<Arc<OwnerEntity>> {
-            self.owner_edit.upgrade().map(|e| Arc::new(OwnerEntity::Edit(e)))
+        pub async fn owner(&self) -> Option<EntityInterface> {
+            self.owner_edit.upgrade().map(EntityInterface::Edit)
         }
         #[graphql(name = "owns")]
-        pub async fn owns(&self) -> Option<Arc<OwnedEntityConnection>> {
-            Some(empty_owned_entity_connection())
+        pub async fn owns(&self) -> Option<EntityConnectionInterface> {
+            Some(empty_entity_connection())
         }
         pub async fn entity(&self) -> Arc<crate::kit::Kit> {
             self.entity.clone()
@@ -7327,8 +7345,8 @@ pub mod operation {
         name = "Operation",
         field(name = "id", ty = "crate::id::Id"),
         field(name = "hash", ty = "String"),
-        field(name = "owner", method = "owner", ty = "Option<std::sync::Arc<crate::interface::OwnerEntity>>"),
-        field(name = "owns", method = "owns", ty = "Option<std::sync::Arc<crate::interface::OwnedEntityConnection>>")
+        field(name = "owner", method = "owner", ty = "Option<crate::gql::interfaces::EntityInterface>"),
+        field(name = "owns", method = "owns", ty = "Option<crate::gql::interfaces::EntityConnectionInterface>")
     )]
     pub enum OperationInterface {
         CreatedFixedPiece(Arc<CreatedFixedPiece>),
@@ -9738,14 +9756,62 @@ pub mod gql {
     //#endregion 📡 subscription_paths
 
     //#region 🌐 interfaces
-    /// @emoji 🌐 SDL `Node` + `EntityEdge` interfaces (geometry variants). `EntityConnection` + `Entity`/`WeakEntity`/… need resolver-aligned field types (register after `page_info`/`Arc` story settles).
+    /// @emoji 🌐 SDL `Node`, `Entity`, `EntityConnection`, `EntityEdge`, and `Workspace` interface shells (code-first; mirrors `schema.golden.graphql`).
     pub mod interfaces {
         use std::sync::Arc;
 
-        use async_graphql::Interface;
+        use async_graphql::{Interface, SimpleObject};
 
         use crate::geom::entity::{Coordinate, Location, Offset, Plane, Point, Position, Vector};
         use crate::gql_relay::{CoordinateEdge, LocationEdge, OffsetEdge, PlaneEdge, PointEdge, PositionEdge, VectorEdge};
+        use crate::hash::h;
+
+        /// @emoji 🪢 Minimal `EntityConnection` shell (`pageInfo` + merkle `hash`) for empty `owns` projections.
+        #[derive(Clone, SimpleObject)]
+        #[graphql(name = "EmptyEntityConnection")]
+        pub struct EmptyEntityConnection {
+            #[graphql(name = "pageInfo")]
+            pub page_info: Arc<crate::gql_relay::PageInfo>,
+            pub hash: String,
+        }
+
+        /// @emoji 🌐 SDL `interface EntityConnection` — shared relay tail (`StoreConnection`, empty shells, …).
+        #[derive(Clone, Interface)]
+        #[graphql(
+            name = "EntityConnection",
+            field(name = "pageInfo", method = "page_info", ty = "std::sync::Arc<crate::gql_relay::PageInfo>"),
+            field(name = "hash", ty = "String")
+        )]
+        pub enum EntityConnectionInterface {
+            Empty(EmptyEntityConnection),
+            Store(crate::gql::StoreConnection),
+        }
+
+        /// @emoji 🪢 Canonical empty `EntityConnection` for shells without materialized child rows.
+        pub fn empty_entity_connection() -> EntityConnectionInterface {
+            EntityConnectionInterface::Empty(EmptyEntityConnection {
+                page_info: Arc::new(crate::gql_relay::PageInfo::default()),
+                hash: h(&["entity-connection", "empty"]),
+            })
+        }
+
+        /// @emoji 🌐 SDL `interface Entity` — VCS + conflict shells participating in the global owner graph.
+        #[derive(Clone, Interface)]
+        #[graphql(
+            name = "Entity",
+            field(name = "id", ty = "crate::id::Id"),
+            field(name = "hash", ty = "String"),
+            field(name = "owner", ty = "Option<crate::gql::interfaces::EntityInterface>"),
+            field(name = "owns", ty = "Option<crate::gql::interfaces::EntityConnectionInterface>")
+        )]
+        pub enum EntityInterface {
+            Graph(Arc<crate::vcs::Graph>),
+            Session(Arc<crate::vcs::Session>),
+            Edit(Arc<crate::vcs::Edit>),
+            Alternative(Arc<crate::vcs::Alternative>),
+            Checkpoint(Arc<crate::vcs::Checkpoint>),
+            Conflict(Arc<crate::vcs::Conflict>),
+        }
 
         #[derive(Clone, Interface)]
         #[graphql(name = "Node", field(name = "id", ty = "crate::id::Id"))]
@@ -9773,16 +9839,18 @@ pub mod gql {
 
         #[derive(Clone, Interface)]
         #[graphql(
-            name = "Version",
+            name = "Workspace",
             field(name = "id", ty = "crate::id::Id"),
             field(name = "hash", ty = "String"),
+            field(name = "owner", ty = "Option<crate::gql::interfaces::EntityInterface>"),
+            field(name = "owns", ty = "Option<crate::gql::interfaces::EntityConnectionInterface>"),
             field(name = "checkpoint", ty = "crate::gql_relay::CheckpointConnection"),
             field(name = "latestWipCheckpointAncestor", method = "latest_wip_checkpoint_ancestor", ty = "Option<Arc<crate::vcs::Checkpoint>>"),
             field(name = "savedChanges", method = "saved_changes", ty = "crate::gql_relay::ChangeConnection"),
             field(name = "unsavedChanges", method = "unsaved_changes", ty = "crate::gql_relay::ChangeConnection"),
             field(name = "kit", ty = "Arc<crate::kit::Kit>")
         )]
-        pub enum VersionInterface {
+        pub enum WorkspaceInterface {
             TheKit(Arc<crate::vcs::TheKit>),
             Alternative(Arc<crate::vcs::Alternative>),
         }
@@ -9850,9 +9918,14 @@ pub mod gql {
             Ok(crate::interface::resolve_node(rt.as_ref(), &id).await)
         }
 
-        /// @emoji 🔎 Alias of [`Query::node`] for SDL `entity` entry point (`hash` merkle id).
-        pub async fn entity(&self, ctx: &Context<'_>, hash: Id) -> async_graphql::Result<Option<crate::interface::GqlNode>> {
-            self.node(ctx, hash).await
+        /// @emoji 🔎 Golden `Query.entity(hash)` — returns the `Entity` interface for VCS shells resolvable on this runtime.
+        pub async fn entity(&self, ctx: &Context<'_>, hash: Id) -> async_graphql::Result<Option<crate::gql::interfaces::EntityInterface>> {
+            let rt = ctx.data::<Arc<ParentStore>>()?;
+            Ok(match crate::interface::resolve_node(rt.as_ref(), &hash).await {
+                Some(crate::interface::GqlNode::Graph(g)) => Some(crate::gql::interfaces::EntityInterface::Graph(g)),
+                Some(crate::interface::GqlNode::Session(s)) => Some(crate::gql::interfaces::EntityInterface::Session(s)),
+                _ => None,
+            })
         }
 
         /// @emoji 🧭 First active [`crate::vcs::Session`] on this runtime.
@@ -9875,16 +9948,6 @@ pub mod gql {
         }
 
         async fn end(&self, ctx: &Context<'_>) -> async_graphql::Result<Id> {
-            let _ = ctx;
-            Ok(Id::new().await)
-        }
-
-        async fn login(&self, ctx: &Context<'_>, username: String, password_hash: String, hub_url: Option<String>) -> async_graphql::Result<Id> {
-            let _ = (ctx, username, password_hash, hub_url);
-            Ok(Id::new().await)
-        }
-
-        async fn logout(&self, ctx: &Context<'_>) -> async_graphql::Result<Id> {
             let _ = ctx;
             Ok(Id::new().await)
         }
@@ -9923,42 +9986,15 @@ pub mod gql {
     /// @emoji 🗄️ GraphQL entry for `session.backbone.*` kit persistence commands.
     pub struct BackboneCommand;
 
-    #[derive(Clone, async_graphql::SimpleObject)]
-    #[graphql(name = "BackboneStatus")]
-    pub struct BackboneStatus {
-        #[graphql(name = "attachedUri")]
-        pub attached_uri: Option<String>,
-        pub kind: Option<crate::operation::BackboneKind>,
-    }
-
     #[Object(name = "BackboneCommand")]
     impl BackboneCommand {
-        async fn attach(&self, ctx: &Context<'_>, uri: String) -> async_graphql::Result<Id> {
-            let _ = crate::operation::BackboneKind::from_uri(&uri).map_err(|e| async_graphql::Error::new(e.message))?;
-            let rt = ctx.data::<Arc<ParentStore>>()?;
-            let request_id = Id::new().await;
-            Ok(rt.dispatch_wip(Command::BackboneAttach { request_id, connection_uri: uri }).await)
-        }
-
         async fn detach(&self, ctx: &Context<'_>, uri: String) -> async_graphql::Result<Id> {
             let rt = ctx.data::<Arc<ParentStore>>()?;
             let request_id = Id::new().await;
             Ok(rt.dispatch_wip(Command::BackboneDetach { request_id, connection_uri: uri }).await)
         }
 
-        async fn status(&self, ctx: &Context<'_>) -> async_graphql::Result<BackboneStatus> {
-            let _ = ctx;
-            Ok(BackboneStatus { attached_uri: None, kind: None })
-        }
-
-        #[graphql(name = "setActiveCheckpoint")]
-        async fn set_active_checkpoint(&self, ctx: &Context<'_>, id: Id) -> async_graphql::Result<Id> {
-            let _ = (ctx, id);
-            Ok(Id::new().await)
-        }
-
-        #[graphql(name = "syncNow")]
-        async fn sync_now(&self, ctx: &Context<'_>) -> async_graphql::Result<Id> {
+        async fn sync(&self, ctx: &Context<'_>) -> async_graphql::Result<Id> {
             let _ = ctx;
             Ok(Id::new().await)
         }
@@ -10717,6 +10753,8 @@ pub mod gql {
     type GraphStream = Pin<Box<dyn Stream<Item = async_graphql::Result<Arc<Graph>>> + Send>>;
     type ConflictStream = Pin<Box<dyn Stream<Item = async_graphql::Result<crate::gql_relay::ConflictConnection>> + Send>>;
     type NodeStream = Pin<Box<dyn Stream<Item = async_graphql::Result<Option<crate::interface::GqlNode>>> + Send>>;
+    type EntityStream = Pin<Box<dyn Stream<Item = async_graphql::Result<Option<crate::gql::interfaces::EntityInterface>>> + Send>>;
+    type OperationStream = Pin<Box<dyn Stream<Item = async_graphql::Result<crate::operation::OperationInterface>> + Send>>;
 
     #[Subscription]
     impl Subscription {
@@ -10896,8 +10934,8 @@ pub mod gql {
             }))
         }
 
-        /// @emoji 📡 Live-query mirror of [`Query::entity`].
-        async fn entity(&self, ctx: &Context<'_>, hash: Id) -> async_graphql::Result<NodeStream> {
+        /// @emoji 📡 Live-query mirror of [`Query::entity`] (`Entity` interface).
+        async fn entity(&self, ctx: &Context<'_>, hash: Id) -> async_graphql::Result<EntityStream> {
             let rt = ctx.data::<Arc<ParentStore>>()?.clone();
             let bus = ctx.data::<Arc<EventBus>>()?.clone();
             let hash_capture = hash.clone();
@@ -10907,8 +10945,40 @@ pub mod gql {
                 let mut broadcast_rx = if filtered { None } else { Some(bus.subscribe()) };
                 let path_rx = if filtered { Some(bus.subscribe_paths(&watched)) } else { None };
                 loop {
-                    let out = crate::interface::resolve_node(rt.as_ref(), &hash_capture).await;
+                    let out = match crate::interface::resolve_node(rt.as_ref(), &hash_capture).await {
+                        Some(crate::interface::GqlNode::Graph(g)) => Some(crate::gql::interfaces::EntityInterface::Graph(g)),
+                        Some(crate::interface::GqlNode::Session(s)) => Some(crate::gql::interfaces::EntityInterface::Session(s)),
+                        _ => None,
+                    };
                     yield Ok(out);
+                    if let Some(ref prx) = path_rx {
+                        if prx.recv().await.is_err() {
+                            break;
+                        }
+                    } else if let Some(ref mut brx) = broadcast_rx {
+                        match brx.recv().await {
+                            Ok(_) => {}
+                            Err(_) => break,
+                        }
+                    } else {
+                        break;
+                    }
+                }
+            }))
+        }
+
+        /// @emoji 📡 Golden `Subscription.operation` — emits the latest WIP [`OperationInterface`] (placeholder selection until operation cursor wiring lands).
+        async fn operation(&self, ctx: &Context<'_>) -> async_graphql::Result<OperationStream> {
+            let rt = ctx.data::<Arc<ParentStore>>()?.clone();
+            let bus = ctx.data::<Arc<EventBus>>()?.clone();
+            let watched = collect_subscription_field_paths("operation", ctx);
+            let filtered = !watched.is_empty();
+            Ok(Box::pin(stream! {
+                let mut broadcast_rx = if filtered { None } else { Some(bus.subscribe()) };
+                let path_rx = if filtered { Some(bus.subscribe_paths(&watched)) } else { None };
+                loop {
+                    let op = rt.wip_graph.op_history.read().await.last().cloned().unwrap_or_default();
+                    yield Ok(op);
                     if let Some(ref prx) = path_rx {
                         if prx.recv().await.is_err() {
                             break;
@@ -10976,8 +11046,11 @@ pub mod gql {
             .register_output_type::<crate::kit::target_operations::DeletedPortsInput>()
             .register_output_type::<crate::gql::interfaces::NodeInterface>()
             .register_output_type::<crate::gql::interfaces::EntityEdgeInterface>()
-            .register_output_type::<crate::gql::interfaces::VersionInterface>()
-            .register_output_type::<crate::gql::BackboneStatus>()
+            .register_output_type::<crate::gql::interfaces::EmptyEntityConnection>()
+            .register_output_type::<crate::gql::interfaces::EntityConnectionInterface>()
+            .register_output_type::<crate::gql::interfaces::EntityInterface>()
+            .register_output_type::<crate::gql::interfaces::WorkspaceInterface>()
+            .register_output_type::<crate::operation::OperationInterface>()
             .finish()
     }
 

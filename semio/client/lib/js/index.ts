@@ -254,11 +254,11 @@ export class EventBus {
   }
 }
 
-/** @emoji 📡 Live-query mirror of target {@code Subscription.store.wip}; ticks {@link Store#bus} on each WIP emission. */
-export const KIT_EVENT_STREAM_SUBSCRIPTION = `subscription { store { wip { id hash } } }` as const;
+/** @emoji 📡 Live-query mirror of target {@code Subscription.session}; ticks {@link Store#bus} on each WIP emission. */
+export const KIT_EVENT_STREAM_SUBSCRIPTION = `subscription { session { stores { edges { node { wip { id hash } } } } } }` as const;
 
 /** @emoji 🧭 Store entry query fragment aligned with {@code target.schema.graphql} (WIP head + {@code theKit} id). */
-export const KIT_SESSION_QUERY_ENTRY = `query KitStoreEntry { store { wip { id theKit { id } } } }` as const;
+export const KIT_SESSION_QUERY_ENTRY = `query KitStoreEntry { session { stores { edges { node { wip { id theKit { id } } } } } } }` as const;
 
 //#endregion 🌐Transport
 
@@ -310,6 +310,7 @@ function isTheKitReadPoint(s: KitReadPoint): boolean {
 
 export type StoreOpenOptions = Readonly<{
   timeoutMs?: number;
+  storeId?: string;
   wasmSpecifier?: string;
   workerFactory?: () => Worker;
 }>;
@@ -324,43 +325,59 @@ function gqlIdList(ids: readonly string[]): string {
 
 function scopedKitMutationBody(changeId: string, kitSelection: string): { readonly query: string; readonly variables: JsonObject } {
   return {
-    query: `mutation($changeId: ID!) { session { theKit { unsavedChange(id: $changeId) { kit { ${kitSelection} } } } } }`,
+    query: `mutation($storeId: ID!, $changeId: ID!) { session { store(id: $storeId) { theKit { unsavedChange(id: $changeId) { kit { ${kitSelection} } } } } } }`,
     variables: { changeId },
+  };
+}
+
+function sessionStoreSelectionDocument(innerOnStore: string): { query: string; variables: JsonObject } {
+  return {
+    query: `query SemioSessionStore { session { stores { edges { node { ${innerOnStore} } } } } }`,
+    variables: {},
   };
 }
 
 function kitReadSelectionDocument(point: KitReadPoint, innerOnKitStore: string): { query: string; variables: JsonObject } {
   if (isTheKitReadPoint(point)) {
     return {
-      query: `query KitSessionWipStore { store { wip { theKit { kit { ${innerOnKitStore} } } } } }`,
+      ...sessionStoreSelectionDocument(`wip { theKit { kit { ${innerOnKitStore} } } }`),
+      query: `query KitSessionWipStore { session { stores { edges { node { wip { theKit { kit { ${innerOnKitStore} } } } } } } } }`,
       variables: {},
     };
   }
   if ("checkpoint" in point) {
     return {
-      query: `query KitSessionWipStore($checkpointId: ID!) { store { wip { checkpoint(id: $checkpointId) { frozenRoot { ${innerOnKitStore} } } } } }`,
+      query: `query KitSessionWipStore($checkpointId: ID!) { session { stores { edges { node { wip { checkpoint(id: $checkpointId) { kit { ${innerOnKitStore} } } } } } } } }`,
       variables: { checkpointId: point.checkpoint.checkpointId },
     };
   }
   if ("alternative" in point) {
     return {
-      query: `query KitSessionWipStore($alternativeId: ID!) { store { wip { alternative(id: $alternativeId) { kit { ${innerOnKitStore} } } } } }`,
+      query: `query KitSessionWipStore($alternativeId: ID!) { session { stores { edges { node { wip { alternative(id: $alternativeId) { kit { ${innerOnKitStore} } } } } } } } }`,
       variables: { alternativeId: point.alternative.alternativeId },
     };
   }
   return {
-    query: `query KitSessionWipStore { store { wip { theKit { kit { ${innerOnKitStore} } } } } }`,
+    query: `query KitSessionWipStore { session { stores { edges { node { wip { theKit { kit { ${innerOnKitStore} } } } } } } } }`,
     variables: {},
   };
 }
 
-function kitReadSelectionFromData(d: JsonValue | null | undefined, point: KitReadPoint): JsonObject | null {
+function firstSessionStoreNode(d: JsonValue | null | undefined): JsonObject | null {
   if (d == null || typeof d !== "object" || Array.isArray(d)) return null;
-  const store = jsonObjectField(d as JsonObject, "store");
+  const session = jsonObjectField(d as JsonObject, "session");
+  const stores = jsonObjectField(session, "stores");
+  const edges = stores?.["edges"];
+  if (!Array.isArray(edges)) return null;
+  return jsonObjectField(edges[0] as JsonObject | undefined, "node");
+}
+
+function kitReadSelectionFromData(d: JsonValue | null | undefined, point: KitReadPoint): JsonObject | null {
+  const store = firstSessionStoreNode(d);
   const wip = jsonObjectField(store, "wip");
   if (wip == null) return null;
   if ("checkpoint" in point) {
-    return jsonObjectField(jsonObjectField(wip, "checkpoint"), "frozenRoot");
+    return jsonObjectField(jsonObjectField(wip, "checkpoint"), "kit");
   }
   if ("alternative" in point) {
     return jsonObjectField(jsonObjectField(wip, "alternative"), "kit");
@@ -770,6 +787,7 @@ function readStableEntityList<T>(
  */
 export class Store {
   private readonly timeoutMs: number;
+  private readonly storeId: string;
   private readonly handle: GraphqlExecuteHandle;
   private readonly innerTransport: WorkerStringTransport | InlineTransport;
   private gqlLoopRunning = false;
@@ -801,8 +819,9 @@ export class Store {
   /** @emoji 📡 Demuxed subscription fan-out. */
   readonly bus: EventBus;
 
-  private constructor(timeoutMs: number, inner: WorkerStringTransport | InlineTransport) {
+  private constructor(timeoutMs: number, storeId: string, inner: WorkerStringTransport | InlineTransport) {
     this.timeoutMs = timeoutMs;
+    this.storeId = storeId;
     this.innerTransport = inner;
     this.handle = { execute: (j) => inner.execute(j) };
     this.gql = new GqlTransport(inner);
@@ -824,8 +843,8 @@ export class Store {
 
   private dispatchSubscriptionGraphqlData(data: JsonObject | null | undefined): void {
     if (data == null) return;
-    const root = jsonObjectField(data, "store") ?? data;
-    if (root["wip"] !== undefined) {
+    const root = firstSessionStoreNode(data) ?? jsonObjectField(data, "session") ?? data;
+    if (root["wip"] !== undefined || root["stores"] !== undefined) {
       // Coarse invalidation: live-query WIP tick fans out to the current semantic bus kinds and command correlator.
       this.bus.emit({ kind: "kitRenamed", payload: undefined } as unknown as JsonValue);
       this.bus.emit({ kind: "changedDescription", payload: undefined } as unknown as JsonValue);
@@ -872,20 +891,28 @@ export class Store {
     return kitReadSelectionFromData(data, this.activeReadPoint);
   }
 
+  /** @emoji 🧾 Reads a selection inside the active target {@code Session.stores} node. */
+  async readStoreInner(inner: string, variables: JsonObject = {}): Promise<JsonObject | null> {
+    const { query, variables: v0 } = sessionStoreSelectionDocument(inner);
+    const data = unwrapGraphqlData(await this.gqlRun({ query, variables: { ...v0, ...variables } })) as JsonValue;
+    return firstSessionStoreNode(data);
+  }
+
   /** @emoji 🧾 Runs {@code mutation session { theKit { unsavedChange { kit { … } } } }} when {@linkcode changeId} is set. */
   async mutateScoped(changeId: string, kitSelection: string): Promise<SetResult> {
     this.ensureAlive();
     const { query, variables } = scopedKitMutationBody(changeId, kitSelection);
-    const env = await this.gqlRun({ query, variables });
+    const env = await this.gqlRun({ query, variables: { ...variables, storeId: this.storeId } });
     return gqlOkFromEnvelope(env);
   }
 
   async ensureChangeId(): Promise<string> {
     this.ensureAlive();
     if (this.kitWriteChangeId) return this.kitWriteChangeId;
-    const data = unwrapGraphqlData(await this.gqlRun({ query: `mutation { session { theKit { startNewChange } } }` })) as JsonObject;
+    const data = unwrapGraphqlData(await this.gqlRun({ query: `mutation($storeId: ID!) { session { store(id: $storeId) { theKit { startNewChange } } } }`, variables: { storeId: this.storeId } })) as JsonObject;
     const sess = data["session"] as JsonObject | undefined;
-    const tk = sess?.["theKit"] as JsonObject | undefined;
+    const store = sess?.["store"] as JsonObject | undefined;
+    const tk = store?.["theKit"] as JsonObject | undefined;
     const cid = String(tk?.["startNewChange"] ?? "");
     if (cid === "") throw new Error("startNewChange: empty change id");
     this.kitWriteChangeId = cid;
@@ -894,7 +921,7 @@ export class Store {
 
   async saveChange(): Promise<void> {
     this.ensureAlive();
-    unwrapGraphqlData(await this.gqlRun({ query: `mutation { session { theKit { save } } }` }));
+    unwrapGraphqlData(await this.gqlRun({ query: `mutation($storeId: ID!) { session { store(id: $storeId) { theKit { save } } } }`, variables: { storeId: this.storeId } }));
     this.kitWriteChangeId = null;
   }
 
@@ -904,7 +931,7 @@ export class Store {
 
   async createCheckpoint(message: string): Promise<SetResult> {
     this.ensureAlive();
-    const env = await this.gqlRun({ query: `mutation { session { theKit { createCheckpoint(message: ${gqlString(message)}) } } }` });
+    const env = await this.gqlRun({ query: `mutation($storeId: ID!) { session { store(id: $storeId) { theKit { createCheckpoint(message: ${gqlString(message)}) } } } }`, variables: { storeId: this.storeId } });
     return gqlOkFromEnvelope(env);
   }
 
@@ -913,8 +940,9 @@ export class Store {
     const env = await this.gqlRun({
       query:
         name == null
-          ? `mutation { session { startAlternative } }`
-          : `mutation { session { startAlternative(name: ${gqlString(name)}) } }`,
+          ? `mutation($storeId: ID!) { session { store(id: $storeId) { startAlternative } } }`
+          : `mutation($storeId: ID!) { session { store(id: $storeId) { startAlternative(name: ${gqlString(name)}) } } }`,
+      variables: { storeId: this.storeId },
     });
     return gqlOkFromEnvelope(env);
   }
@@ -922,27 +950,25 @@ export class Store {
   async integrateAlternative(alternativeId: string): Promise<SetResult> {
     this.ensureAlive();
     const env = await this.gqlRun({
-      query: `mutation { session { alternative(id: ${gqlString(alternativeId)}) { integrateIntoTheKit } } }`,
+      query: `mutation($storeId: ID!) { session { store(id: $storeId) { alternative(id: ${gqlString(alternativeId)}) { integrateIntoTheKit } } } }`,
+      variables: { storeId: this.storeId },
     });
     return gqlOkFromEnvelope(env);
   }
 
   async login(username: string, passwordHash: string, hubUrl?: string): Promise<SetResult> {
     this.ensureAlive();
-    const env =
-      hubUrl == null
-        ? await this.gqlRun({
-          query: `mutation { session { login(username: ${gqlString(username)}, passwordHash: ${gqlString(passwordHash)}) } }`,
-        })
-        : await this.gqlRun({
-          query: `mutation { session { login(username: ${gqlString(username)}, passwordHash: ${gqlString(passwordHash)}, hubUrl: ${gqlString(hubUrl)}) } }`,
-        });
+    const url = hubUrl ?? "";
+    const h = hubUrl == null ? "null" : gqlString(hubUrl);
+    const env = await this.gqlRun({
+      query: `mutation { session { remoteProvider(url: ${gqlString(url)}) { login(username: ${gqlString(username)}, passwordHash: ${gqlString(passwordHash)}, hubUrl: ${h}) } } }`,
+    });
     return gqlOkFromEnvelope(env);
   }
 
   async logout(): Promise<SetResult> {
     this.ensureAlive();
-    const env = await this.gqlRun({ query: `mutation { session { logout } }` });
+    const env = await this.gqlRun({ query: `mutation { session { remoteProvider(url: "") { logout } } }` });
     return gqlOkFromEnvelope(env);
   }
 
@@ -960,20 +986,22 @@ export class Store {
 
   async attachBackbone(uri: string): Promise<SetResult> {
     this.ensureAlive();
-    const env = await this.gqlRun({ query: `mutation { session { backbone { attach(uri: ${gqlString(uri)}) } } }` });
+    const createEnv = await this.gqlRun({ query: `mutation { session { localProvider { createBackbone(uri: ${gqlString(uri)}) } } }` });
+    if (Array.isArray(createEnv.errors) && createEnv.errors.length > 0) return gqlOkFromEnvelope(createEnv);
+    const env = await this.gqlRun({ query: `mutation($storeId: ID!) { session { localProvider { attachBackbone(store: $storeId) } } }`, variables: { storeId: this.storeId } });
     return gqlOkFromEnvelope(env);
   }
 
-  async detachBackbone(uri: string): Promise<SetResult> {
+  async detachBackbone(_uri: string): Promise<SetResult> {
     this.ensureAlive();
-    const env = await this.gqlRun({ query: `mutation { session { backbone { detach(uri: ${gqlString(uri)}) } } }` });
+    const env = await this.gqlRun({ query: `mutation($storeId: ID!) { session { store(id: $storeId) { backbone { detach } } } }`, variables: { storeId: this.storeId } });
     return gqlOkFromEnvelope(env);
   }
 
   /** @emoji 🛜 Runs {@code backbone.syncNow} on the active session. */
   async backboneSyncNow(): Promise<SetResult> {
     this.ensureAlive();
-    const env = await this.gqlRun({ query: `mutation { session { backbone { syncNow } } }` });
+    const env = await this.gqlRun({ query: `mutation($storeId: ID!) { session { store(id: $storeId) { backbone { sync } } } }`, variables: { storeId: this.storeId } });
     return gqlOkFromEnvelope(env);
   }
 
@@ -981,14 +1009,12 @@ export class Store {
   async backboneStatus(): Promise<Readonly<{ attachedUri: string | null; kind: string }>> {
     this.ensureAlive();
     const data = unwrapGraphqlData(
-      await this.gqlRun({ query: `mutation { session { backbone { status { attachedUri kind } } } }` }),
+      await this.gqlRun({ query: `query { session { stores { edges { node { authoritative { id } conflicts { edges { node { id } } } } } } } }` }),
     ) as JsonObject;
-    const sess = data["session"] as JsonObject | undefined;
-    const bb = sess?.["backbone"] as JsonObject | undefined;
-    const st = bb?.["status"] as JsonObject | undefined;
+    const st = firstSessionStoreNode(data);
     return {
-      attachedUri: st?.["attachedUri"] == null || st["attachedUri"] === null ? null : String(st["attachedUri"]),
-      kind: String(st?.["kind"] ?? ""),
+      attachedUri: null,
+      kind: st?.["authoritative"] == null ? "OFFLINE" : "ONLINE",
     };
   }
 
@@ -1014,13 +1040,14 @@ export class Store {
     const useDedicatedWorker = typeof Worker !== "undefined" && !preferInlineInVitest && wasmBytesPre == null;
 
     const bootstrapUri = backboneBootstrapUriForStoreOpen(uri);
+    const storeId = opts?.storeId ?? bootstrapUri;
 
     if (useDedicatedWorker) {
       const worker = opts?.workerFactory?.() ?? createKitStoreWorker();
       const wt = new WorkerStringTransport(worker);
       try {
         await wt.init(bootstrapUri);
-        const k = new Store(timeoutMs, wt);
+        const k = new Store(timeoutMs, storeId, wt);
         await withTimeout(k.warmGraphqlRead(), timeoutMs, "graphql");
         void k.startSubscriptionLoop();
         return k;
@@ -1052,7 +1079,7 @@ export class Store {
       throw new Error("KitStoreHandle.create did not return execute()");
     }
     const t = new InlineTransport(wasmHandle as { execute: ExecuteFn; subscribe: SubscribeFn; free?: () => void });
-    const k = new Store(timeoutMs, t);
+    const k = new Store(timeoutMs, storeId, t);
     await withTimeout(k.warmGraphqlRead(), timeoutMs, "graphql");
     void k.startSubscriptionLoop();
     return k;
@@ -3818,4 +3845,3 @@ if (typeof process !== "undefined" && !!process.env && process.env["SEMIO_JS_RUN
 }
 
 //#endregion 🧪Tests
-
