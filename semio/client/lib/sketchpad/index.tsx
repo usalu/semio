@@ -15,47 +15,25 @@
 
 // #region ⛩️Imports
 
-import * as SemioReact from "@semio/react";
-
-type Author = any;
-type Camera = any;
-type Concept = any;
-type Connection = any;
-type Connector = any;
-type Coordinate = any;
-type Design = any;
-type Folder = any;
-type Id = string;
-type Kit = any;
-type Piece = any;
-type Plane = any;
-type Point = any;
-type Port = any;
-type Quality = any;
-type Representation = any;
-type SemioFile = any;
-type Tag = any;
-type Type = any;
-type Vector = any;
-type AuthorId = string;
-type ConnectionId = string;
-type PieceId = string;
-type KitCommandContext = any;
-type KitFolderAdapter = any;
-type KitHostGraphOperation = any;
-type KitHostStore = any;
-type KitJsonFileAdapter = any;
-type KitRegistryValue = any;
-type SketchpadKitKindAvailability = any;
-type SketchpadKitStoreFactory = any;
-type WriteStatus = any;
-type KitFieldBinding<T> = readonly [T, (next: T) => Promise<unknown>, WriteStatus];
-type DesignShallow = { id: string; name?: string; description?: string; icon?: string; image?: string; unit?: string; pieces?: Piece[]; connections?: Connection[] };
-type TypeShallow = { id: string; name?: string; description?: string; icon?: string; image?: string; unit?: string; variant?: string | null };
-type KitShallow = { id: string; name?: string; description?: string; designs?: DesignShallow[]; types?: TypeShallow[]; remote?: string | null };
-
-const SemioReactAny = SemioReact as Record<string, any>;
-const {
+import type {
+  AuthorId as AuthorId,
+  ConnectionId as ConnectionId,
+  ConnectorGraph as Connector,
+  DesignShallow as DesignShallow,
+  KitCommandContext,
+  KitFolderAdapter,
+  KitFull as KitShallow,
+  KitHostGraphOperation,
+  KitHostStore,
+  KitJsonFileAdapter,
+  KitRegistryValue,
+  PieceId as PieceId,
+  PortGraph as Port,
+  SketchpadKitKindAvailability,
+  SketchpadKitStoreFactory,
+  TypeShallow as TypeShallow,
+} from "@semio/react";
+import {
   applyKitHostGraphOperation,
   asKitInstance,
   attachSketchpadKitReadShell,
@@ -64,7 +42,7 @@ const {
   Concept,
   Connection,
   ConnectionDiff,
-  Connector,
+  ConnectionUnderActiveDesignProvider,
   Coordinate,
   createDefaultBrowserSketchpadFileKitStoreFactory,
   createDefaultBrowserSketchpadRemoteKitStoreFactory,
@@ -86,115 +64,138 @@ const {
   id,
   InMemoryKitStore,
   Kit,
+  KitAlternativeSelectionProvider,
   KitDiff,
+  type KitFieldBinding,
   KitFullSchema,
   kitHostRedo,
   kitHostUndo,
   kitStoreFromKitStoreClient,
+  KitWasmMountProvider,
+  ActiveKitTabContext,
+  ActiveKitTabContextProvider,
   KitStoreProvider,
   Piece,
   PieceDiff,
+  PieceUnderActiveDesignProvider,
   Plane,
   Point,
-  Port,
   Quality,
   QualityDiff,
   QualityContextProvider,
   Representation,
-  File: SemioFile,
+  SchemaScopeContext,
+  schemaScopeForEntityId,
+  File as SemioFile,
   TagContextProvider,
   Tag,
   TOLERANCE,
   Type,
   TypeDiff,
   TypeContextProvider,
+  useConnection,
+  useConnections,
+  useConnectionContext,
   useCreateAuthor,
   useKitHostCreateDesign,
   useCreateFolder,
   useKitHostCreatePort,
   useKitHostCreateQuality,
   useKitHostCreateType,
-  useConnectionDescription: useReactConnectionDescription,
-  useConnectionGap: useReactConnectionGap,
-  useConnectionRise: useReactConnectionRise,
-  useConnectionRotation: useReactConnectionRotation,
-  useConnectionShift: useReactConnectionShift,
-  useConnectionTilt: useReactConnectionTilt,
-  useConnectionTurn: useReactConnectionTurn,
-  useConnectionU: useReactConnectionU,
-  useConnectionV: useReactConnectionV,
-  useConnectionContext: useReactConnectionContext,
-  useDesign: useReactDesignEntity,
-  useDesignContext: useReactDesignContext,
-  useDesignDescription: useReactDesignDescription,
-  useDesignIcon: useReactDesignIcon,
-  useDesignImage: useReactDesignImage,
-  useDesignName: useReactDesignName,
-  useDesignUnit: useReactDesignUnit,
-  useDesignConnections: useReactDesignConnections,
-  useDesignPieces: useReactDesignPieces,
-  useExplodeableDesignNodes: useExplodeableDesignNodeIdsFromKit,
-  useKitStoredFileUrls: useFileUrls,
-  useFixedPieceId: useReactFixedPieceId,
-  useIncludedDesigns: useReactIncludedDesigns,
-  useIsConnectedPiece: useReactIsConnectedPiece,
+  useConnectionDescription as useSchemaConnectionDescription,
+  useConnectionGap as useSchemaConnectionGap,
+  useConnectionRise as useSchemaConnectionRise,
+  useConnectionRotation as useSchemaConnectionRotation,
+  useConnectionShift as useSchemaConnectionShift,
+  useConnectionTilt as useSchemaConnectionTilt,
+  useConnectionTurn as useSchemaConnectionTurn,
+  useConnectionU as useSchemaConnectionU,
+  useConnectionV as useSchemaConnectionV,
+  useDesign,
+  useDesignClusterableGroups,
+  useDesignDescription,
+  useDesignIcon,
+  useDesignImage,
+  useDesignName,
+  useDesigns,
+  useDesignContext,
+  useChangeDesignDescription,
+  useKitDesigns,
+  useRenameDesign,
+  useDesignUnit,
+  useExplodeableDesignNodes as useExplodeableDesignNodeIdsFromKit,
+  useFilesFull,
+  useKitStoredFileUrls as useFileUrls,
+  useFixedPieceId as useFixedPieceIdFromKit,
+  useIncludedDesigns as useIncludedDesignsFromKit,
+  useIsConnectedPiece as useIsConnectedPieceFromKit,
+  useHasDesignContext,
+  useIsInActiveKitTab,
+  useHasTypeContext,
+  useKitAlternatives,
+  useKitAlternativeSelection,
   useKitCommandEngineExplicitOrigin,
-  useKitDescription: useReactKitDescription,
+  useKitDescription,
   useKitFileBlobUrl,
   useKitFileUrl,
-  useKitHomepage: useReactKitHomepage,
-  useKitIcon: useReactKitIcon,
-  useKitImage: useReactKitImage,
-  useKitLicense: useReactKitLicense,
-  useKitName: useReactKitName,
+  useKitHomepage,
+  useKitIcon,
+  useKitImage,
+  useKitLicense,
   useKitRegistrySafe,
-  useKitRelease: useReactKitRelease,
+  useKitRelease,
+  useKitWasmHost,
+  useActiveKitTab,
   useKitStore,
   useKitStoreSnapshot,
   useMoveKitArtifactToFolder,
   useOpenKitShallows,
-  useParentPieceId: useReactParentPieceId,
+  useParentPieceId as useParentPieceIdFromKit,
   usePatchKit,
   usePieceContextRead,
-  usePiece: useReactPieceEntity,
-  usePieceCenter: useReactPieceCenter,
-  usePieceColor: useReactPieceColor,
-  usePieceDepthKitHostBinding: usePieceDepthFromKit,
-  usePieceDescription: useReactPieceDescription,
-  usePieceFlatPlaneKitHostBinding: usePieceFlatPlane,
-  usePieceIsHidden: useReactPieceIsHidden,
-  usePieceIsLocked: useReactPieceIsLocked,
-  usePieceMetadata: useReactPieceMetadata,
-  usePieceName: useReactPieceName,
-  usePieceParentConnection: useReactPieceParentConnection,
-  usePieceScale: useReactPieceScale,
-  usePieceContext: useReactPieceContext,
-  usePiecesMetadataMap: useReactPiecesMetadataMap,
+  usePiece,
+  usePieceCenter as useSchemaPieceCenter,
+  usePieceColor as useSchemaPieceColor,
+  usePieceDepthKitHostBinding as usePieceDepthFromKit,
+  usePieceDescription as useSchemaPieceDescription,
+  usePieceFlatPlaneKitHostBinding as usePieceFlatPlane,
+  usePieceIsHidden as useSchemaPieceIsHidden,
+  usePieceIsLocked as useSchemaPieceIsLocked,
+  usePieceMetadata as usePieceMetadataFromKit,
+  usePieceName as useSchemaPieceName,
+  usePieceParentConnection as usePieceParentConnectionFromKit,
+  usePieceScale as useSchemaPieceScale,
+  usePieces,
+  usePieceContext,
+  usePiecesMetadataMap as usePiecesMetadataRecordFromKit,
   useQualityContextRead,
-  useQuality: useReactQualityEntity,
-  useQualityContext: useReactQualityContext,
+  useQuality,
+  useQualityContext,
   useRegistryHasKit,
   useRegistryKitPersistenceKind,
   useRenameKit,
-  useReplacableDesigns: useReactReplacableDesigns,
-  useReplacableTypes: useReactReplacableTypes,
+  useReplacableDesigns as useReplacableDesignIdsFromKit,
+  useReplacableTypes as useReplacableTypeIdsFromKit,
   useResolvedKitIdentifier,
+  useTagsFull,
   useTypeContextRead,
-  useType: useReactTypeEntity,
-  useTypeDescription: useReactTypeDescription,
-  useTypeIcon: useReactTypeIcon,
-  useTypeImage: useReactTypeImage,
-  useTypeIsAbstract: useReactTypeIsAbstract,
-  useTypeName: useReactTypeName,
-  useTypeParent: useReactTypeParent,
-  useTypeContext: useReactTypeContext,
-  useTypeUnit: useReactTypeUnit,
+  useType,
+  useTypeDescription,
+  useTypeIcon,
+  useTypeImage,
+  useTypeIsAbstract,
+  useTypeName,
+  useTypeParent,
+  useTypes,
+  useTypeContext,
+  useTypesFull,
+  useTypeUnit,
   useUpdateAuthor,
   useUpdateDesign,
   useUpdateType,
   useWriteIndicator,
   Vector,
-} = SemioReactAny;
+} from "@semio/react";
 import { gunzipSync } from "fflate";
 
 import type {
@@ -264,6 +265,7 @@ import {
   Edges,
   dateFnsEnUS as enUS,
   FileTree,
+  FileTreeNode,
   Footer,
   forceCollide,
   forceLink,
@@ -446,7 +448,7 @@ import {
   TypeIcon,
   UserIcon,
   WorkbenchIcon,
-} from "../../../assets/icons";
+} from "@semio/assets/icons";
 export type { LayoutColumn, LayoutNode, LayoutRow, LayoutStack } from "@semio/ui";
 export { Canvas, createDefaultLayout, deduplicateWindowLayout, HorizontalWindows, layoutNodeToGoldenLayoutConfig, parseWindowLayout, SectionSpecificity, stringifyWindowLayout, VerticalWindows, Window, WindowKind };
 
@@ -7182,397 +7184,49 @@ const clearDomRoot = (element: HTMLElement, root: Root): void => {
   }
 };
 
-export type { SketchpadKitKindAvailability, SketchpadKitStoreFactory };
+export type { SketchpadKitKindAvailability, SketchpadKitStoreFactory } from "@semio/react";
 
 // #region 🥈Entity Hooks
 // Sketchpad kit snapshot helpers; entity scopes and entity reads live in `@semio/react`.
 
-export { AuthorContextProvider, DesignContextProvider, QualityContextProvider, TypeContextProvider };
-
-export const ActiveKitTabContext = React.createContext<Readonly<{ id: string }> | null>(null);
-const KitWasmHostContext = React.createContext<any>(null);
-const KitAlternativeSelectionContext = React.createContext<readonly [string | null, (next: string | null) => void] | null>(null);
-export const SchemaScopeContext = React.createContext<unknown>(null);
-
-export function ActiveKitTabContextProvider(props: Readonly<{ kitTabId: string; children: React.ReactNode }>): React.ReactElement {
-  const value = React.useMemo(() => ({ id: props.kitTabId }), [props.kitTabId]);
-  return React.createElement(ActiveKitTabContext.Provider, { value }, props.children);
-}
-
-export function useActiveKitTab(): Readonly<{ id: string }> | null {
-  return React.useContext(ActiveKitTabContext);
-}
-
-export function useIsInActiveKitTab(): boolean {
-  return useActiveKitTab() != null;
-}
-
-export function KitWasmMountProvider(props: Readonly<{ children: React.ReactNode; kitId?: string; store?: unknown; kitClient?: unknown }>): React.ReactElement {
-  const activeKit = useActiveKitTab();
-  const value = React.useMemo(() => ({ kitTabId: props.kitId ?? activeKit?.id ?? null, store: props.store ?? null, kitClient: props.kitClient ?? null }), [activeKit?.id, props.kitId, props.kitClient, props.store]);
-  return React.createElement(KitWasmHostContext.Provider, { value }, props.children);
-}
-
-export function useKitWasmHost(): any {
-  return React.useContext(KitWasmHostContext);
-}
-
-export function KitAlternativeSelectionProvider(props: Readonly<{ kitId: string; children: React.ReactNode }>): React.ReactElement {
-  const [selectedAlternativeId, setSelectedAlternativeId] = React.useState<string | null>(null);
-  const value = React.useMemo(() => [selectedAlternativeId, setSelectedAlternativeId] as const, [selectedAlternativeId]);
-  return React.createElement(KitAlternativeSelectionContext.Provider, { value }, props.children);
-}
-
-export function useKitAlternativeSelection(): readonly [string | null, (next: string | null) => void] {
-  const context = React.useContext(KitAlternativeSelectionContext);
-  if (context != null) return context;
-  return [null, () => {}] as const;
-}
-
-export function useKitAlternatives(): readonly Array<{ id: string; name?: string }> {
-  const snapshot = useKitStoreSnapshot?.();
-  const rawAlternatives = snapshot?.kit?.alternatives;
-  return Array.isArray(rawAlternatives) ? rawAlternatives : [];
-}
-
-export function schemaScopeForEntityId(kind: string, entityId: string): Readonly<{ kind: string; id: string }> {
-  return { kind, id: entityId };
-}
-
-export function useDesignContextNode(): Readonly<{ id: string }> | null {
-  return useReactDesignContext?.() ?? null;
-}
-
-export function usePieceContextNode(): Readonly<{ id: string }> | null {
-  return useReactPieceContext?.() ?? null;
-}
-
-export function useConnectionContextNode(): Readonly<{ id: string }> | null {
-  return useReactConnectionContext?.() ?? null;
-}
-
-export function useTypeContextNode(): Readonly<{ id: string }> | null {
-  return useReactTypeContext?.() ?? null;
-}
-
-export function useQualityContextNode(): Readonly<{ id: string }> | null {
-  return useReactQualityContext?.() ?? null;
-}
-
-export function useAuthorContextNode(): Readonly<{ id: string }> | null {
-  return SemioReactAny.useAuthorContext?.() ?? null;
-}
-
-export function useHasAuthorContext(): boolean {
-  return useAuthorContextNode() != null;
-}
-
-export function useHasDesignContext(): boolean {
-  return useDesignContextNode() != null;
-}
-
-export function useHasQualityContext(): boolean {
-  return useQualityContextNode() != null;
-}
-
-export function useHasTypeContext(): boolean {
-  return useTypeContextNode() != null;
-}
-
-export function PieceUnderActiveDesignProvider(props: Readonly<{ pieceId: string; children: React.ReactNode }>): React.ReactElement {
-  return React.createElement(SemioReactAny.PieceContextProvider, { id: props.pieceId }, props.children);
-}
-
-export function ConnectionUnderActiveDesignProvider(props: Readonly<{ connectionId: string; children: React.ReactNode }>): React.ReactElement {
-  return React.createElement(SemioReactAny.ConnectionContextProvider, { id: props.connectionId }, props.children);
-}
-
-function readFieldValue<T>(state: { value?: T } | null | undefined, fallback: T): T {
-  return state?.value ?? fallback;
-}
-
-function useKitSnapshot(): Kit | undefined {
-  return useKitStoreSnapshot?.()?.kit as Kit | undefined;
-}
-
-export function useAuthor(id?: string): Author | undefined {
-  const kit = useKitSnapshot();
-  const authorId = id ?? useAuthorContextNode()?.id;
-  return Array.isArray(kit?.authors) ? kit.authors.find((entry: Author) => entry.id === authorId) : undefined;
-}
-
-export function useDesign(...args: any[]): Design | null {
-  const explicitId = typeof args[0] === "string" ? args[0] : undefined;
-  const kit = useKitSnapshot();
-  const designId = explicitId ?? useDesignContextNode()?.id;
-  if (!designId || !Array.isArray(kit?.designs)) return null;
-  return kit.designs.find((entry: Design) => entry.id === designId) ?? null;
-}
-
-export function useType(...args: any[]): Type | null {
-  const explicitId = typeof args[0] === "string" ? args[0] : undefined;
-  const kit = useKitSnapshot();
-  const typeId = explicitId ?? useTypeContextNode()?.id;
-  if (!typeId || !Array.isArray(kit?.types)) return null;
-  return kit.types.find((entry: Type) => entry.id === typeId) ?? null;
-}
-
-export function useQuality(...args: any[]): Quality | null {
-  const explicitId = typeof args[0] === "string" ? args[0] : undefined;
-  const kit = useKitSnapshot();
-  const qualityId = explicitId ?? useQualityContextNode()?.id;
-  if (!qualityId || !Array.isArray(kit?.qualities)) return null;
-  return kit.qualities.find((entry: Quality) => entry.id === qualityId) ?? null;
-}
-
-export function usePiece(id?: string): Piece | null {
-  const pieceId = id ?? usePieceContextNode()?.id;
-  const design = useDesign();
-  if (!pieceId || !Array.isArray(design?.pieces)) return null;
-  return design.pieces.find((entry: Piece) => entry.id === pieceId) ?? null;
-}
-
-export function useConnection(id?: string): Connection | null {
-  const connectionId = id ?? useConnectionContextNode()?.id;
-  const design = useDesign();
-  if (!connectionId || !Array.isArray(design?.connections)) return null;
-  return design.connections.find((entry: Connection) => entry.id === connectionId) ?? null;
-}
-
-export function useConnections(): readonly Connection[] {
-  return readFieldValue(useReactDesignConnections?.(), [] as Connection[]);
-}
-
-export function usePieces(): readonly Piece[] {
-  return readFieldValue(useReactDesignPieces?.(), [] as Piece[]);
-}
-
-export function useDesigns(): Readonly<{ designs: readonly Design[] }> {
-  return { designs: readFieldValue(SemioReactAny.useKitDesigns?.(), [] as Design[]) };
-}
-
-export function useTypes(): Readonly<{ types: readonly Type[] }> {
-  return { types: readFieldValue(SemioReactAny.useKitTypes?.(), [] as Type[]) };
-}
-
-export function useDesignsFull(_kitId?: string): HookNoSetResult<Design[]> {
-  return readonlyHookResult(readFieldValue(SemioReactAny.useKitDesigns?.(), [] as Design[]));
-}
-
-export function useTypesFull(): HookNoSetResult<Type[]> {
-  return readonlyHookResult(readFieldValue(SemioReactAny.useKitTypes?.(), [] as Type[]));
-}
-
-export function useTagsFull(): HookNoSetResult<Tag[]> {
-  return readonlyHookResult((useKitSnapshot()?.tags ?? []) as Tag[]);
-}
-
-export function useFilesFull(): HookNoSetResult<SemioFile[]> {
-  return readonlyHookResult((useKitSnapshot()?.files ?? []) as SemioFile[]);
-}
-
-export function useDesignsIds(): readonly string[] {
-  return useDesigns().designs.map((entry) => entry.id);
-}
-
-export function useTypesIds(): readonly string[] {
-  return useTypes().types.map((entry) => entry.id);
-}
-
-export function useDesignsMetadata(): ReadonlyMap<string, Design> {
-  return new Map(useDesigns().designs.map((entry) => [entry.id, entry]));
-}
-
-export function useTypesMetadata(): ReadonlyMap<string, Type> {
-  return new Map(useTypes().types.map((entry) => [entry.id, entry]));
-}
-
-function readonlyBinding<T>(value: T): KitFieldBinding<T> {
-  return [value, async () => undefined, { kind: "readonly" }] as const;
-}
-
-export function useKitName(): string {
-  return readFieldValue(useReactKitName?.(), useKitSnapshot()?.name ?? "");
-}
-
-export function useKitDescription(): string {
-  return readFieldValue(useReactKitDescription?.(), useKitSnapshot()?.description ?? "");
-}
-
-export function useKitIcon(): string {
-  return readFieldValue(useReactKitIcon?.(), useKitSnapshot()?.icon ?? "");
-}
-
-export function useKitImage(): string {
-  return readFieldValue(useReactKitImage?.(), useKitSnapshot()?.image ?? "");
-}
-
-export function useKitHomepage(): string {
-  return useKitSnapshot()?.homepage ?? readFieldValue(useReactKitHomepage?.(), "");
-}
-
-export function useKitLicense(): string {
-  return useKitSnapshot()?.license ?? readFieldValue(useReactKitLicense?.(), "");
-}
-
-export function useKitRelease(): string {
-  return useKitSnapshot()?.release ?? readFieldValue(useReactKitRelease?.(), "");
-}
-
-export function useDesignName(id?: string): string {
-  return readFieldValue(useReactDesignName?.(id), useDesign(id)?.name ?? "");
-}
-
-export function useDesignDescription(id?: string): string {
-  return readFieldValue(useReactDesignDescription?.(id), useDesign(id)?.description ?? "");
-}
-
-export function useDesignIcon(id?: string): string {
-  return readFieldValue(useReactDesignIcon?.(id), useDesign(id)?.icon ?? "");
-}
-
-export function useDesignImage(id?: string): string {
-  return readFieldValue(useReactDesignImage?.(id), useDesign(id)?.image ?? "");
-}
-
-export function useDesignUnit(id?: string): string {
-  return readFieldValue(useReactDesignUnit?.(id), useDesign(id)?.unit ?? "");
-}
-
-export function useDesignNameBinding(id?: string): KitFieldBinding<string> {
-  return readonlyBinding(useDesignName(id));
-}
-
-export function useDesignDescriptionBinding(id?: string): KitFieldBinding<string> {
-  return readonlyBinding(useDesignDescription(id));
-}
-
-export function useDesignIconBinding(id?: string): KitFieldBinding<string> {
-  return readonlyBinding(useDesignIcon(id));
-}
-
-export function useDesignImageBinding(id?: string): KitFieldBinding<string> {
-  return readonlyBinding(useDesignImage(id));
-}
-
-export function useDesignUnitBinding(id?: string): KitFieldBinding<string> {
-  return readonlyBinding(useDesignUnit(id));
-}
-
-export function useTypeName(id?: string): string {
-  return readFieldValue(useReactTypeName?.(id), useType(id)?.name ?? "");
-}
-
-export function useTypeDescription(id?: string): string {
-  return readFieldValue(useReactTypeDescription?.(id), useType(id)?.description ?? "");
-}
-
-export function useTypeIcon(id?: string): string {
-  return readFieldValue(useReactTypeIcon?.(id), useType(id)?.icon ?? "");
-}
-
-export function useTypeImage(id?: string): string {
-  return readFieldValue(useReactTypeImage?.(id), useType(id)?.image ?? "");
-}
-
-export function useTypeIsAbstract(id?: string): boolean {
-  return Boolean(readFieldValue(useReactTypeIsAbstract?.(id), useType(id)?.isAbstract ?? false));
-}
-
-export function useTypeUnit(id?: string): string {
-  return readFieldValue(useReactTypeUnit?.(id), useType(id)?.unit ?? "");
-}
-
-export function useTypeParent(id?: string): KitFieldBinding<unknown> {
-  return readonlyBinding(readFieldValue(useReactTypeParent?.(id), useType(id)?.parent ?? null));
-}
-
-function bindingFromState<T>(state: { value?: T } | null | undefined, fallback: T): KitFieldBinding<T> {
-  return readonlyBinding(readFieldValue(state, fallback));
-}
-
-const useSchemaPieceCenter = (id?: string): KitFieldBinding<any> => bindingFromState(useReactPieceCenter?.(id), usePiece(id)?.center ?? null);
-const useSchemaPieceColor = (id?: string): KitFieldBinding<any> => bindingFromState(useReactPieceColor?.(id), usePiece(id)?.color ?? undefined);
-const useSchemaPieceDescription = (id?: string): KitFieldBinding<any> => bindingFromState(useReactPieceDescription?.(id), usePiece(id)?.description ?? "");
-const useSchemaPieceIsHidden = (id?: string): KitFieldBinding<any> => bindingFromState(useReactPieceIsHidden?.(id), Boolean(usePiece(id)?.isHidden));
-const useSchemaPieceIsLocked = (id?: string): KitFieldBinding<any> => bindingFromState(useReactPieceIsLocked?.(id), Boolean(usePiece(id)?.isLocked));
-const useSchemaPieceName = (id?: string): KitFieldBinding<any> => bindingFromState(useReactPieceName?.(id), usePiece(id)?.name ?? "");
-const useSchemaPieceScale = (id?: string): KitFieldBinding<any> => bindingFromState(useReactPieceScale?.(id), usePiece(id)?.scale ?? 1);
-const useSchemaConnectionDescription = (id?: string): KitFieldBinding<any> => bindingFromState(useReactConnectionDescription?.(id), useConnection(id)?.description ?? "");
-const useSchemaConnectionGap = (id?: string): KitFieldBinding<any> => bindingFromState(useReactConnectionGap?.(id), useConnection(id)?.gap ?? 0);
-const useSchemaConnectionRise = (id?: string): KitFieldBinding<any> => bindingFromState(useReactConnectionRise?.(id), useConnection(id)?.rise ?? 0);
-const useSchemaConnectionRotation = (id?: string): KitFieldBinding<any> => bindingFromState(useReactConnectionRotation?.(id), useConnection(id)?.rotation ?? 0);
-const useSchemaConnectionShift = (id?: string): KitFieldBinding<any> => bindingFromState(useReactConnectionShift?.(id), useConnection(id)?.shift ?? 0);
-const useSchemaConnectionTilt = (id?: string): KitFieldBinding<any> => bindingFromState(useReactConnectionTilt?.(id), useConnection(id)?.tilt ?? 0);
-const useSchemaConnectionTurn = (id?: string): KitFieldBinding<any> => bindingFromState(useReactConnectionTurn?.(id), useConnection(id)?.turn ?? 0);
-const useSchemaConnectionU = (id?: string): KitFieldBinding<any> => bindingFromState(useReactConnectionU?.(id), useConnection(id)?.u ?? 0);
-const useSchemaConnectionV = (id?: string): KitFieldBinding<any> => bindingFromState(useReactConnectionV?.(id), useConnection(id)?.v ?? 0);
-
-function buildPieceMetadataRecord(design: Design | null): Record<string, PieceMetadata> {
-  if (!design || !Array.isArray(design.pieces)) return {};
-  return Object.fromEntries(
-    design.pieces.map((piece: Piece) => [
-      piece.id,
-      {
-        plane: piece.plane ?? useCurrentPiecePlane(),
-        center: piece.center ?? { x: 0, y: 0, z: 0 },
-        fixedPieceId: piece.fixedPieceId ?? piece.id,
-        parentPieceId: piece.parentPieceId ?? null,
-        depth: piece.depth ?? 0,
-        path: Array.isArray(piece.path) ? piece.path : [],
-      } satisfies PieceMetadata,
-    ]),
-  );
-}
-
-function usePiecesMetadataRecordFromKit(designId?: string): HookNoSetResult<Record<string, PieceMetadata>> {
-  return readonlyHookResult(buildPieceMetadataRecord(useDesign(designId)));
-}
-
-function usePieceMetadataFromKit(designId?: string, pieceId?: string): HookNoSetResult<PieceMetadata | undefined> {
-  const record = buildPieceMetadataRecord(useDesign(designId));
-  return readonlyHookResult(pieceId == null ? undefined : record[pieceId]);
-}
-
-function useIsConnectedPieceFromKit(_designId?: string, pieceId?: string): HookNoSetResult<boolean> {
-  const piece = usePiece(pieceId);
-  return readonlyHookResult(Boolean(piece?.parentConnection || piece?.connectionKind === "CONNECTED"));
-}
-
-function useFixedPieceIdFromKit(_designId?: string, pieceId?: string): HookNoSetResult<string | undefined> {
-  return readonlyHookResult(usePiece(pieceId)?.fixedPieceId);
-}
-
-function usePieceDepthFromKit(_designId?: string, pieceId?: string): HookNoSetResult<number> {
-  return readonlyHookResult(usePiece(pieceId)?.depth ?? 0);
-}
-
-function useParentPieceIdFromKit(_designId?: string, pieceId?: string): HookNoSetResult<string | null> {
-  return readonlyHookResult(usePiece(pieceId)?.parentPieceId ?? null);
-}
-
-function usePieceParentConnectionFromKit(_designId?: string, pieceId?: string): HookNoSetResult<Connection | null> {
-  return readonlyHookResult((usePiece(pieceId)?.parentConnection as Connection | null | undefined) ?? null);
-}
-
-function useIncludedDesignsFromKit(designId?: string): HookNoSetResult<Design[]> {
-  const kit = useKitSnapshot();
-  const design = useDesign(designId);
-  return readonlyHookResult(kit && design ? getIncludedDesigns(kit, design) : []);
-}
-
-function useReplacableTypeIdsFromKit(_designId?: string, _pieceIds: Id[]): HookNoSetResult<string[]> {
-  return readonlyHookResult([]);
-}
-
-function useReplacableDesignIdsFromKit(_designId?: string, _pieceIds: Id[]): HookNoSetResult<string[]> {
-  return readonlyHookResult([]);
-}
-
-function useDesignClusterableGroups(designId?: string, pieceIds: Id[] = []): HookNoSetResult<string[][]> {
-  const kit = useKitSnapshot();
-  return readonlyHookResult(kit && designId ? getClusterableGroups(kit, designId, pieceIds) : []);
-}
+export {
+  AuthorContextProvider,
+  ConnectionUnderActiveDesignProvider,
+  DesignContextProvider,
+  ActiveKitTabContext,
+  PieceUnderActiveDesignProvider,
+  QualityContextProvider,
+  TypeContextProvider,
+  useAuthor,
+  useAuthorContextNode,
+  useConnection,
+  useConnections,
+  useConnectionContext,
+  useDesign,
+  useDesignContext,
+  useKitDesigns,
+  useDesignsIds,
+  useDesignsMetadata,
+  useFilesFull,
+  useHasAuthorContext,
+  useHasDesignContext,
+  useIsInActiveKitTab,
+  useHasQualityContext,
+  useHasTypeContext,
+  useActiveKitTab,
+  useKitStoreSnapshot,
+  usePiece,
+  usePieces,
+  usePieceContext,
+  useQuality,
+  useQualityContext,
+  useTagsFull,
+  useType,
+  useTypeContext,
+  useTypesFull,
+  useTypesIds,
+  useTypesMetadata,
+} from "@semio/react";
 
 // #region 🎆Piece Derived Hooks
 
@@ -7586,7 +7240,7 @@ export type PieceMetadata = {
 };
 
 export function usePiecesMetadataMap(): Map<string, PieceMetadata> {
-  const designScope = useDesignContextNode();
+  const designScope = useDesignContext();
   const [placementMap] = usePiecesMetadataRecordFromKit(designScope?.id);
   return useMemo(() => {
     const m = new Map<string, PieceMetadata>();
@@ -7603,40 +7257,40 @@ export function usePiecesMetadataMap(): Map<string, PieceMetadata> {
 }
 
 export function usePieceMetadata(pieceId?: Id): PieceMetadata | undefined {
-  const designScope = useDesignContextNode();
-  const pieceScope = usePieceContextNode();
+  const designScope = useDesignContext();
+  const pieceScope = usePieceContext();
   const resolvedPieceId = pieceId ?? pieceScope?.id;
   const [meta] = usePieceMetadataFromKit(designScope?.id, resolvedPieceId);
   return meta as PieceMetadata | undefined;
 }
 
 export function useIsConnectedPiece(id?: Id): boolean {
-  const designScope = useDesignContextNode();
-  const pieceScope = usePieceContextNode();
+  const designScope = useDesignContext();
+  const pieceScope = usePieceContext();
   const pieceId = id ?? pieceScope?.id;
   const [v] = useIsConnectedPieceFromKit(designScope?.id, pieceId);
   return Boolean(v);
 }
 
 export function usePieceDepth(id?: Id): number {
-  const designScope = useDesignContextNode();
-  const pieceScope = usePieceContextNode();
+  const designScope = useDesignContext();
+  const pieceScope = usePieceContext();
   const pieceId = id ?? pieceScope?.id;
   const [d] = usePieceDepthFromKit(designScope?.id, pieceId);
   return typeof d === "number" ? d : 0;
 }
 
 export function useFixedPieceId(id?: Id): string | undefined {
-  const designScope = useDesignContextNode();
-  const pieceScope = usePieceContextNode();
+  const designScope = useDesignContext();
+  const pieceScope = usePieceContext();
   const pieceId = id ?? pieceScope?.id;
   const [v] = useFixedPieceIdFromKit(designScope?.id, pieceId);
   return v;
 }
 
 export function useParentPieceId(id?: Id): string | null {
-  const designScope = useDesignContextNode();
-  const pieceScope = usePieceContextNode();
+  const designScope = useDesignContext();
+  const pieceScope = usePieceContext();
   const pieceId = id ?? pieceScope?.id;
   const [v] = useParentPieceIdFromKit(designScope?.id, pieceId);
   return v ?? null;
@@ -7651,8 +7305,8 @@ export function useCurrentPiecePlane(): Plane {
 }
 
 export function usePieceParentConnection(id?: Id): Connection | null {
-  const designScope = useDesignContextNode();
-  const pieceScope = usePieceContextNode();
+  const designScope = useDesignContext();
+  const pieceScope = usePieceContext();
   const pieceId = (typeof id === "string" ? id : (pieceScope?.id ?? null)) as string | null;
   const [c] = usePieceParentConnectionFromKit(designScope?.id, pieceId ?? undefined);
   return (c as Connection | undefined) ?? null;
@@ -7663,13 +7317,13 @@ export function usePieceParentConnection(id?: Id): Connection | null {
 // #region 🎹Design Derived Hooks
 
 export function useIncludedDesigns(): Design[] {
-  const designId = useDesignContextNode()?.id;
+  const designId = useDesignContext()?.id;
   const [included] = useIncludedDesignsFromKit(designId);
   return Array.isArray(included) ? (included as Design[]) : [];
 }
 
 export function useDesignId(): string | null {
-  const designScope = useDesignContextNode();
+  const designScope = useDesignContext();
   return designScope?.id ?? null;
 }
 
@@ -7679,7 +7333,7 @@ export function usePiecesFromIds(pieceIds: Id[]): Piece[] {
 }
 
 export function useReplacableTypes(pieceIds: Id[], selectedVariants?: string[]): Type[] {
-  const designId = useDesignContextNode()?.id;
+  const designId = useDesignContext()?.id;
   const [replaceTypeIds] = useReplacableTypeIdsFromKit(designId, pieceIds);
   const { types: allTypes } = useTypes();
   return useMemo(() => {
@@ -7691,7 +7345,7 @@ export function useReplacableTypes(pieceIds: Id[], selectedVariants?: string[]):
 }
 
 export function useReplacableDesigns(piece: Piece): Design[] {
-  const designId = useDesignContextNode()?.id;
+  const designId = useDesignContext()?.id;
   const pieceIds = piece?.id ? [piece.id] : [];
   const [replaceDesignIds] = useReplacableDesignIdsFromKit(designId, pieceIds);
   const { designs: allDesigns } = useDesigns();
@@ -10943,7 +10597,7 @@ export function useKitAppTogglePanel(): ActionHookResult<[panel: keyof PanelVisi
  *MUST check the hover state for the given type ID.
  **/
 export function useKitAppIsTypeHovered(): HookNoSetResult<boolean> {
-  const typeScope = useTypeContextNode();
+  const typeScope = useTypeContext();
   const typeId = typeScope?.id;
   const isHovered = useKitApp((state) => (typeId ? state.hover?.type === typeId : false)) as boolean;
   const canRead = typeScope !== null;
@@ -10955,7 +10609,7 @@ export function useKitAppIsTypeHovered(): HookNoSetResult<boolean> {
  *MUST derive status from selection and hover states for the given type ID.
  **/
 export function useKitAppTypeStatus(): HookNoSetResult<DiffStatus> {
-  const typeScope = useTypeContextNode();
+  const typeScope = useTypeContext();
   const canRead = typeScope !== null;
   return [DiffStatus.Unchanged, undefined, canRead];
 }
@@ -10965,7 +10619,7 @@ export function useKitAppTypeStatus(): HookNoSetResult<DiffStatus> {
  *MUST derive the color from the type's hovered and selected state.
  **/
 export function useKitAppTypeColor(isSelected: boolean): HookNoSetResult<{ fill: string; stroke: string; opacity: number }> {
-  const typeScope = useTypeContextNode();
+  const typeScope = useTypeContext();
   const [isHovered] = useKitAppIsTypeHovered();
   const [status] = useKitAppTypeStatus();
   const canRead = typeScope !== null;
@@ -11024,7 +10678,7 @@ export function useKitAppTypeColor(isSelected: boolean): HookNoSetResult<{ fill:
  *MUST check the hover state for the given design ID.
  **/
 export function useKitAppIsDesignHovered(): HookNoSetResult<boolean> {
-  const designScope = useDesignContextNode();
+  const designScope = useDesignContext();
   const designId = designScope?.id;
   const isHovered = useKitApp((state) => (designId ? state.hover?.design === designId : false)) as boolean;
   const canRead = designScope !== null;
@@ -11036,7 +10690,7 @@ export function useKitAppIsDesignHovered(): HookNoSetResult<boolean> {
  *MUST derive status from selection and hover states for the given design ID.
  **/
 export function useKitAppDesignStatus(): HookNoSetResult<DiffStatus> {
-  const designScope = useDesignContextNode();
+  const designScope = useDesignContext();
   const canRead = designScope !== null;
   return [DiffStatus.Unchanged, undefined, canRead];
 }
@@ -11046,7 +10700,7 @@ export function useKitAppDesignStatus(): HookNoSetResult<DiffStatus> {
  *MUST derive the color from the design's hovered and selected state.
  **/
 export function useKitAppDesignColor(isSelected: boolean): HookNoSetResult<{ fill: string; stroke: string; opacity: number }> {
-  const designScope = useDesignContextNode();
+  const designScope = useDesignContext();
   const [isHovered] = useKitAppIsDesignHovered();
   const [status] = useKitAppDesignStatus();
   const canRead = designScope !== null;
@@ -16510,7 +16164,7 @@ export const ConceptSection: FC = () => {
  **/
 const SingleConceptSection: FC<{ conceptId: string }> = ({ conceptId }) => {
   return (
-    <ConceptContextProvider conceptId={conceptId}>
+    <ConceptContextProvider id={conceptId}>
       <SingleConceptSectionFields />
     </ConceptContextProvider>
   );
@@ -16534,7 +16188,7 @@ const SingleConceptSectionFields: FC = () => {
 
 const SelectedConceptLabelRow: FC<{ conceptId: string }> = ({ conceptId }) => {
   return (
-    <ConceptContextProvider conceptId={conceptId}>
+    <ConceptContextProvider id={conceptId}>
       <SelectedConceptLabelRowInner />
     </ConceptContextProvider>
   );
@@ -16573,43 +16227,53 @@ export const KitDesignSection: FC = () => {
   const [selection] = useKitAppSelection();
   const selectedDesigns = selection?.designs || [];
   if (selectedDesigns.length === 0) return null;
-  if (selectedDesigns.length === 1) return <SingleDesignSection designId={selectedDesigns[0]} />;
+  if (selectedDesigns.length === 1)
+    return (
+      <DesignContextProvider id={selectedDesigns[0]}>
+        <SingleDesignSectionInner />
+      </DesignContextProvider>
+    );
   return <MultipleDesignsSection designIds={selectedDesigns} />;
 };
 /**
- * SingleDesignSection holds the data fields for a SingleDesignSection record.
+ * SingleDesignSectionInner holds the data fields for a SingleDesignSectionInner record.
  **/
-const SingleDesignSection: FC<{ designId: string }> = ({ designId }) => {
-  const name = useDesignName(designId);
-  const description = useDesignDescription(designId);
-  const icon = useDesignIcon(designId);
-  const image = useDesignImage(designId);
-  const unit = useDesignUnit(designId);
-  const [kitDesignsRaw] = useDesignsFull();
-  const design = useMemo(() => (kitDesignsRaw ?? []).find((entry) => entry.id === designId), [kitDesignsRaw, designId]);
+const SingleDesignSectionInner: FC = () => {
+  const nameState = useDesignName();
+  const descriptionState = useDesignDescription();
+  const iconState = useDesignIcon();
+  const imageState = useDesignImage();
+  const unitState = useDesignUnit();
+  const kitDesignsField = useKitDesigns();
+  const designId = useDesign().value?.id;
+  const design = useMemo(() => {
+    if (designId == null) return null;
+    const rows = kitDesignsField.value ?? [];
+    return (rows as Design[]).find((entry) => entry.id === designId) ?? null;
+  }, [designId, kitDesignsField.value]);
   if (!design) return null;
   return (
     <>
       <TreeRow>
-        <Input id="semio.sketchpad.app.design.panel.details.section.design.name" value={name} readOnly showLabel />
+        <Input id="semio.sketchpad.app.design.panel.details.section.design.name" value={nameState.value ?? ""} readOnly showLabel />
       </TreeRow>
       <TreeRow>
-        <Textarea id="semio.sketchpad.app.design.panel.details.section.design.description" value={description || ""} placeholderId="semio.sketchpad.app.design.descriptionPlaceholder" readOnly showLabel />
+        <Textarea
+          id="semio.sketchpad.app.design.panel.details.section.design.description"
+          value={descriptionState.value ?? ""}
+          placeholderId="semio.sketchpad.app.design.descriptionPlaceholder"
+          readOnly
+          showLabel
+        />
       </TreeRow>
       <TreeRow>
-        <Input id="semio.sketchpad.app.design.panel.details.section.design.icon" value={icon || ""} placeholderId="semio.sketchpad.app.design.iconPlaceholder" readOnly showLabel />
+        <Input id="semio.sketchpad.app.design.panel.details.section.design.icon" value={iconState.value ?? ""} placeholderId="semio.sketchpad.app.design.iconPlaceholder" readOnly showLabel />
       </TreeRow>
       <TreeRow>
-        <Input id="semio.sketchpad.app.design.panel.details.section.design.image" value={image || ""} placeholderId="semio.sketchpad.app.design.imagePlaceholder" readOnly showLabel />
+        <Input id="semio.sketchpad.app.design.panel.details.section.design.image" value={imageState.value ?? ""} placeholderId="semio.sketchpad.app.design.imagePlaceholder" readOnly showLabel />
       </TreeRow>
       <TreeRow>
-        <Input id="semio.sketchpad.app.design.panel.details.section.design.variant" value={(design as any).variant || ""} placeholderId="semio.sketchpad.app.design.variantPlaceholder" readOnly showLabel />
-      </TreeRow>
-      <TreeRow>
-        <Input id="semio.sketchpad.app.design.panel.details.section.design.view" value={(design as any).view || ""} placeholderId="semio.sketchpad.app.design.viewPlaceholder" readOnly showLabel />
-      </TreeRow>
-      <TreeRow>
-        <Input id="semio.sketchpad.app.design.panel.details.section.design.unit" value={unit || ""} readOnly showLabel />
+        <Input id="semio.sketchpad.app.design.panel.details.section.design.unit" value={unitState.value ?? ""} readOnly showLabel />
       </TreeRow>
       {design.location && (
         <>
@@ -16656,10 +16320,18 @@ const SingleDesignSection: FC<{ designId: string }> = ({ designId }) => {
 };
 
 const SelectedDesignLabelRow: FC<{ designId: string }> = ({ designId }) => {
-  const name = useDesignName(designId);
+  return (
+    <DesignContextProvider id={designId}>
+      <SelectedDesignLabelRowInner />
+    </DesignContextProvider>
+  );
+};
+
+const SelectedDesignLabelRowInner: FC = () => {
+  const nameState = useDesignName();
   return (
     <HelperRow propertyAligned>
-      <p className="text-sm font-medium text-foreground">{name}</p>
+      <p className="text-sm font-medium text-foreground">{nameState.value ?? ""}</p>
     </HelperRow>
   );
 };
@@ -17270,7 +16942,7 @@ export const kitConfig: AppConfig = {
  * Hook returning whether the current scoped piece is selected.
  **/
 export function useIsPieceSelected(): boolean {
-  const piece = usePieceContextNode();
+  const piece = usePieceContext();
   return useDesignAppIsPieceSelected(undefined, piece?.id ?? "");
 }
 
@@ -17278,7 +16950,7 @@ export function useIsPieceSelected(): boolean {
  * Hook returning whether the current scoped piece is hovered.
  **/
 export function useIsPieceHovered(): boolean {
-  const pieceScope = usePieceContextNode();
+  const pieceScope = usePieceContext();
   return useDesignAppIsPieceHovered(undefined, pieceScope?.id ?? "");
 }
 
@@ -17286,7 +16958,7 @@ export function useIsPieceHovered(): boolean {
  * Hook returning whether the current scoped piece is transitively hovered.
  **/
 export function useIsPieceTransitiveHovered(): boolean {
-  const pieceScope = usePieceContextNode();
+  const pieceScope = usePieceContext();
   const isHovered = useDesignAppIsPieceTransitiveHovered(undefined, pieceScope?.id ?? "");
   if (!pieceScope) return false;
   return isHovered;
@@ -17304,8 +16976,8 @@ export function usePieceStatus(): DiffStatus {
  **/
 export function useDiffedPiece<T>(selector?: (piece: Piece) => T, id?: string, deep: boolean = false): T | Piece {
   const originalPiece = usePieceContextRead(identitySelector, id, deep) as Piece;
-  const pieceScope = usePieceContextNode();
-  const designScope = useDesignContextNode();
+  const pieceScope = usePieceContext();
+  const designScope = useDesignContext();
   const designAppStore = useDesignStore(identitySelector) as any;
 
   if (!designAppStore || !pieceScope || !designScope) {
@@ -17319,7 +16991,7 @@ export function useDiffedPiece<T>(selector?: (piece: Piece) => T, id?: string, d
  * Hook returning the piece center U coordinate with setter.
  **/
 export function usePieceCenterU(): HookResult<number> {
-  const pieceScope = usePieceContextNode();
+  const pieceScope = usePieceContext();
   const id = pieceScope?.id;
   const [center, setCenter, ws] = useSchemaPieceCenter(id);
   const u = (center as { u?: number } | undefined)?.u ?? 0;
@@ -17335,7 +17007,7 @@ export function usePieceCenterU(): HookResult<number> {
  * Hook returning the piece center V coordinate with setter.
  **/
 export function usePieceCenterV(): HookResult<number> {
-  const pieceScope = usePieceContextNode();
+  const pieceScope = usePieceContext();
   const id = pieceScope?.id;
   const [center, setCenter, ws] = useSchemaPieceCenter(id);
   const u = (center as { u?: number } | undefined)?.u ?? 0;
@@ -17351,7 +17023,7 @@ export function usePieceCenterV(): HookResult<number> {
  * Hook returning the piece scale with setter.
  **/
 export function usePieceScale(): HookResult<number> {
-  const pieceScope = usePieceContextNode();
+  const pieceScope = usePieceContext();
   const binding = useSchemaPieceScale(pieceScope?.id);
   const [raw, setAsync, ws] = binding;
   const value = (raw as number | undefined) ?? 1;
@@ -17366,7 +17038,7 @@ export function usePieceScale(): HookResult<number> {
  * Hook returning the piece hidden state with setter.
  **/
 export function usePieceIsHidden(): HookResult<boolean> {
-  const pieceScope = usePieceContextNode();
+  const pieceScope = usePieceContext();
   const binding = useSchemaPieceIsHidden(pieceScope?.id);
   const [raw, setAsync, ws] = binding;
   const value = Boolean(raw);
@@ -17381,7 +17053,7 @@ export function usePieceIsHidden(): HookResult<boolean> {
  * Hook returning the piece locked state with setter.
  **/
 export function usePieceIsLocked(): HookResult<boolean> {
-  const pieceScope = usePieceContextNode();
+  const pieceScope = usePieceContext();
   const binding = useSchemaPieceIsLocked(pieceScope?.id);
   const [raw, setAsync, ws] = binding;
   const value = Boolean(raw);
@@ -17396,7 +17068,7 @@ export function usePieceIsLocked(): HookResult<boolean> {
  * Hook returning the piece color with setter.
  **/
 export function usePieceColor(): HookResult<string | undefined> {
-  const pieceScope = usePieceContextNode();
+  const pieceScope = usePieceContext();
   return kitFieldBindingToHookResult(pieceScope?.id, useSchemaPieceColor(pieceScope?.id));
 }
 
@@ -17404,7 +17076,7 @@ export function usePieceColor(): HookResult<string | undefined> {
  * Hook returning the piece description with setter.
  **/
 export function usePieceDescription(): HookResult<string | undefined> {
-  const pieceScope = usePieceContextNode();
+  const pieceScope = usePieceContext();
   return kitFieldBindingToHookResult(pieceScope?.id, useSchemaPieceDescription(pieceScope?.id));
 }
 
@@ -17412,7 +17084,7 @@ export function usePieceDescription(): HookResult<string | undefined> {
  * Hook returning the piece name with setter.
  **/
 export function usePieceName(): HookResult<string | undefined> {
-  const pieceScope = usePieceContextNode();
+  const pieceScope = usePieceContext();
   return kitFieldBindingToHookResult(pieceScope?.id, useSchemaPieceName(pieceScope?.id));
 }
 
@@ -17420,7 +17092,7 @@ export function usePieceName(): HookResult<string | undefined> {
  * Hook returning whether the current scoped connection is selected.
  **/
 export function useIsConnectionSelected(): boolean {
-  const connectionScope = useConnectionContextNode();
+  const connectionScope = useConnectionContext();
   return useDesignAppIsConnectionSelected(undefined, connectionScope?.id ?? "");
 }
 
@@ -17428,7 +17100,7 @@ export function useIsConnectionSelected(): boolean {
  * Hook returning whether the current scoped connection is hovered.
  **/
 export function useIsConnectionHovered(): boolean {
-  const connectionScope = useConnectionContextNode();
+  const connectionScope = useConnectionContext();
   return useDesignAppIsConnectionHovered(undefined, connectionScope?.id ?? "");
 }
 
@@ -17436,9 +17108,9 @@ export function useIsConnectionHovered(): boolean {
  * Hook returning the diff status of the current scoped connection.
  **/
 export function useConnectionStatus(): DiffStatus {
-  const connection = useConnectionContextNode();
+  const connection = useConnectionContext();
   const kitDiff = useDesignAppDiff();
-  const designScope = useDesignContextNode();
+  const designScope = useDesignContext();
 
   if (!connection || !designScope || !kitDiff?.designs?.updated) {
     return DiffStatus.Unchanged;
@@ -17475,7 +17147,7 @@ export function useConnectionStatus(): DiffStatus {
  * Hook returning the connection gap with setter.
  **/
 export function useConnectionGap(): HookResult<number> {
-  const connectionScope = useConnectionContextNode();
+  const connectionScope = useConnectionContext();
   const binding = useSchemaConnectionGap(connectionScope?.id);
   const [raw, setAsync, ws] = binding;
   const value = (raw as number | undefined) ?? 0;
@@ -17487,7 +17159,7 @@ export function useConnectionGap(): HookResult<number> {
  * Hook returning the connection shift with setter.
  **/
 export function useConnectionShift(): HookResult<number> {
-  const connectionScope = useConnectionContextNode();
+  const connectionScope = useConnectionContext();
   const binding = useSchemaConnectionShift(connectionScope?.id);
   const [raw, setAsync, ws] = binding;
   const value = (raw as number | undefined) ?? 0;
@@ -17499,7 +17171,7 @@ export function useConnectionShift(): HookResult<number> {
  * Hook returning the connection rise with setter.
  **/
 export function useConnectionRise(): HookResult<number> {
-  const connectionScope = useConnectionContextNode();
+  const connectionScope = useConnectionContext();
   const binding = useSchemaConnectionRise(connectionScope?.id);
   const [raw, setAsync, ws] = binding;
   const value = (raw as number | undefined) ?? 0;
@@ -17511,7 +17183,7 @@ export function useConnectionRise(): HookResult<number> {
  * Hook returning the connection rotation with setter.
  **/
 export function useConnectionRotation(): HookResult<number> {
-  const connectionScope = useConnectionContextNode();
+  const connectionScope = useConnectionContext();
   const binding = useSchemaConnectionRotation(connectionScope?.id);
   const [raw, setAsync, ws] = binding;
   const value = (raw as number | undefined) ?? 0;
@@ -17523,7 +17195,7 @@ export function useConnectionRotation(): HookResult<number> {
  * Hook returning the connection turn with setter.
  **/
 export function useConnectionTurn(): HookResult<number> {
-  const connectionScope = useConnectionContextNode();
+  const connectionScope = useConnectionContext();
   const binding = useSchemaConnectionTurn(connectionScope?.id);
   const [raw, setAsync, ws] = binding;
   const value = (raw as number | undefined) ?? 0;
@@ -17535,7 +17207,7 @@ export function useConnectionTurn(): HookResult<number> {
  * Hook returning the connection tilt with setter.
  **/
 export function useConnectionTilt(): HookResult<number> {
-  const connectionScope = useConnectionContextNode();
+  const connectionScope = useConnectionContext();
   const binding = useSchemaConnectionTilt(connectionScope?.id);
   const [raw, setAsync, ws] = binding;
   const value = (raw as number | undefined) ?? 0;
@@ -17547,7 +17219,7 @@ export function useConnectionTilt(): HookResult<number> {
  * Hook returning the connection U coordinate with setter.
  **/
 export function useConnectionU(): HookResult<number> {
-  const connectionScope = useConnectionContextNode();
+  const connectionScope = useConnectionContext();
   const binding = useSchemaConnectionU(connectionScope?.id);
   const [raw, setAsync, ws] = binding;
   const value = (raw as number | undefined) ?? 0;
@@ -17559,7 +17231,7 @@ export function useConnectionU(): HookResult<number> {
  * Hook returning the connection V coordinate with setter.
  **/
 export function useConnectionV(): HookResult<number> {
-  const connectionScope = useConnectionContextNode();
+  const connectionScope = useConnectionContext();
   const binding = useSchemaConnectionV(connectionScope?.id);
   const [raw, setAsync, ws] = binding;
   const value = (raw as number | undefined) ?? 0;
@@ -17568,7 +17240,7 @@ export function useConnectionV(): HookResult<number> {
 }
 
 export function useConnectionDescription(): HookResult<string> {
-  const connectionScope = useConnectionContextNode();
+  const connectionScope = useConnectionContext();
   const binding = useSchemaConnectionDescription(connectionScope?.id);
   const [raw, setAsync, ws] = binding;
   const text = (raw as string | undefined) ?? "";
@@ -17583,7 +17255,7 @@ export function useConnectionDescription(): HookResult<string> {
  * Each group is a list of piece id strings.
  **/
 export function useClusterableGroups() {
-  const designScope = useDesignContextNode();
+  const designScope = useDesignContext();
   const selection = useDesignAppSelection();
   const [groups] = useDesignClusterableGroups(designScope?.id, selection.pieces ?? []);
   return useMemo(() => {
@@ -17637,9 +17309,9 @@ export function usePieceWithDiff(): { original: Piece; diffed: Piece | null; has
  * Hook returning stroke and fill colors based on connection diff status.
  **/
 export function useConnectionColor(): { stroke: string; fill: string } {
-  const connection = useConnectionContextNode();
+  const connection = useConnectionContext();
   const kitDiff = useDesignAppDiff();
-  const designScope = useDesignContextNode();
+  const designScope = useDesignContext();
 
   let diffStatus = DiffStatus.Unchanged;
   if (connection && designScope && kitDiff?.designs?.updated) {
@@ -17682,7 +17354,7 @@ export function useConnectionColor(): { stroke: string; fill: string } {
  **/
 export function useDiffedDesign(): Design {
   const kit = useDiffedKit();
-  const designScope = useDesignContextNode();
+  const designScope = useDesignContext();
   if (!designScope) throw new Error("useDiffedDesign must be called within a DesignContextProvider");
   return findDesignInKit(kit, designScope.id);
 }
@@ -22774,11 +22446,11 @@ export const LayoutCanvas: FC<{
 
     if (item && kit) {
       if (itemType === "qualities") {
-        wrapped = <QualityContextProvider qualityId={item}>{wrapped}</QualityContextProvider>;
+        wrapped = <QualityContextProvider id={item}>{wrapped}</QualityContextProvider>;
       } else if (itemType === "types") {
-        wrapped = <TypeContextProvider typeId={item}>{wrapped}</TypeContextProvider>;
+        wrapped = <TypeContextProvider id={item}>{wrapped}</TypeContextProvider>;
       } else if (itemType === "designs") {
-        wrapped = <DesignContextProvider designId={item}>{wrapped}</DesignContextProvider>;
+        wrapped = <DesignContextProvider id={item}>{wrapped}</DesignContextProvider>;
       }
     }
     if (kit) {
@@ -23410,11 +23082,11 @@ const ToolbarContextHost: FC<{ children: ReactNode }> = ({ children }) => {
 
   if (item && kit) {
     if (itemType === "qualities") {
-      wrapped = <QualityContextProvider qualityId={item}>{wrapped}</QualityContextProvider>;
+      wrapped = <QualityContextProvider id={item}>{wrapped}</QualityContextProvider>;
     } else if (itemType === "types") {
-      wrapped = <TypeContextProvider typeId={item}>{wrapped}</TypeContextProvider>;
+      wrapped = <TypeContextProvider id={item}>{wrapped}</TypeContextProvider>;
     } else if (itemType === "designs") {
-      wrapped = <DesignContextProvider designId={item}>{wrapped}</DesignContextProvider>;
+      wrapped = <DesignContextProvider id={item}>{wrapped}</DesignContextProvider>;
     }
   }
   if (kit) {
@@ -27579,7 +27251,7 @@ const DesignAppSyncComponent = ({ children }: { children: React.ReactNode }) => 
 function useDesignAppInitialize() {
   const actor = useSketchpadActor();
   const kitScope = useActiveKitTab();
-  const designScope = useDesignContextNode();
+  const designScope = useDesignContext();
   const kitId = kitScope?.id ?? "";
   const designId = designScope?.id ?? "";
   const initializedKeyRef = useRef<string | null>(null);
@@ -27644,7 +27316,7 @@ export function useDesignAppActor(): any {
 export function useDesignStore<T = DesignStore>(selector?: (store: DesignStore) => T, id?: DesignAppId): T | null {
   const store = useSketchpadStore();
   const kitScope = useActiveKitTab();
-  const designScope = useDesignContextNode();
+  const designScope = useDesignContext();
   const resolvedKitId = kitScope?.id ?? id?.kit;
   const resolvedDesignId = designScope?.id ?? id?.design;
   if (!resolvedKitId || !resolvedDesignId) {
@@ -27662,7 +27334,7 @@ export { useDesignStore as useDesignAppStore };
  **/
 export function useDesignApp<T>(selector?: (state: DesignAppState) => T, id?: DesignAppId): T | DesignAppState | null {
   const kitScope = useActiveKitTab();
-  const designScope = useDesignContextNode();
+  const designScope = useDesignContext();
   const kitId = kitScope?.id ?? id?.kit ?? "";
   const designId = designScope?.id ?? id?.design ?? "";
 
@@ -27712,7 +27384,7 @@ function useDesignAppField<T, TEvent extends { type: string }>(options: UseDesig
   const { createGranularSelector, fallback, createCanEvent, createSendEvent, useWildcardFallback = false } = options;
   const actor = useSketchpadActor();
   const kitScope = useActiveKitTab();
-  const designScope = useDesignContextNode();
+  const designScope = useDesignContext();
   const kitId = kitScope?.id ?? "";
   const designId = designScope?.id ?? "";
   const granularSelector = useMemo(() => createGranularSelector(kitId, designId), [createGranularSelector, kitId, designId]);
@@ -27787,7 +27459,7 @@ export function useDesignAppActiveToolField(): Field<ToolKind> {
  *MUST provide the current active tool, a setter, and a canSet flag.
  **/
 export function useDesignAppActiveTool(): HookResult<ToolKind> {
-  const designScope = useDesignContextNode();
+  const designScope = useDesignContext();
   const store = useDesignStore() as DesignStore | null;
   const activeTool = useDesignApp((state) => state.activeTool) as ToolKind | undefined;
   const canSet = designScope !== null && store !== null;
@@ -27815,7 +27487,7 @@ export function useDesignAppDiff(): HookResult<KitDiff | undefined> {
 export function useDesignAppOthers(): HookResult<DesignAppPresenceOther[]> {
   const actor = useSketchpadActor();
   const kitScope = useActiveKitTab();
-  const designScope = useDesignContextNode();
+  const designScope = useDesignContext();
   const kitId = kitScope?.id ?? "";
   const designId = designScope?.id ?? "";
   const selector = useMemo(() => createDesignOthersSelector(kitId, designId), [kitId, designId]);
@@ -27851,7 +27523,7 @@ export function useDesignAppCamera(): HookResult<Camera | undefined> {
 export function useDesignAppDiagramCenter(): HookResult<Coordinate | undefined> {
   const actor = useSketchpadActor();
   const kitScope = useActiveKitTab();
-  const designScope = useDesignContextNode();
+  const designScope = useDesignContext();
   const kitId = kitScope?.id ?? "";
   const designId = designScope?.id ?? "";
   const selector = useMemo(() => createDesignDiagramCenterSelector(kitId, designId), [kitId, designId]);
@@ -27877,7 +27549,7 @@ export function useDesignAppDiagramCenter(): HookResult<Coordinate | undefined> 
 export function useDesignAppDiagramScale(): HookResult<number | undefined> {
   const actor = useSketchpadActor();
   const kitScope = useActiveKitTab();
-  const designScope = useDesignContextNode();
+  const designScope = useDesignContext();
   const kitId = kitScope?.id ?? "";
   const designId = designScope?.id ?? "";
   const selector = useMemo(() => createDesignDiagramScaleSelector(kitId, designId), [kitId, designId]);
@@ -27923,7 +27595,7 @@ export function useDesignAppFocusedPieceId(): HookResult<Id | undefined> {
 export function useDesignAppSelectedRepresentationTags(): HookResult<Record<Id, string[]>> {
   const actor = useSketchpadActor();
   const kitScope = useActiveKitTab();
-  const designScope = useDesignContextNode();
+  const designScope = useDesignContext();
   const kitId = kitScope?.id ?? "";
   const designId = designScope?.id ?? "";
   const selector = useMemo(() => createDesignSelectedRepresentationTagsSelector(kitId, designId), [kitId, designId]);
@@ -27946,7 +27618,7 @@ export function useDesignAppSelectedRepresentationTags(): HookResult<Record<Id, 
 export function useDesignAppHover(): HookResult<DesignAppHover | undefined> {
   const actor = useSketchpadActor();
   const kitScope = useActiveKitTab();
-  const designScope = useDesignContextNode();
+  const designScope = useDesignContext();
   const kitId = kitScope?.id ?? "";
   const designId = designScope?.id ?? "";
   const store = useDesignStore(identitySelector) as DesignStore | null;
@@ -28674,7 +28346,7 @@ export function useDesignAppExpandDesign(): ActionHookResult<[designId: Id]> {
 export function useDesignAppYjsToXStateSync(id?: DesignAppId) {
   const actor = useSketchpadActorSafe();
   const kitScope = useActiveKitTab();
-  const designScope = useDesignContextNode();
+  const designScope = useDesignContext();
   const kitId = kitScope?.id ?? id?.kit ?? "";
   const designId = designScope?.id ?? id?.design ?? "";
   const store = useDesignStore(undefined, id) as DesignStore | null;
@@ -28946,7 +28618,7 @@ export function useIsDesignPieceChangedInTransaction(id: DesignAppId | undefined
 export function useDesignAppIsPieceHovered(id?: DesignAppId, pieceId?: string): boolean {
   const actor = useSketchpadActor();
   const kitScope = useActiveKitTab();
-  const designScope = useDesignContextNode();
+  const designScope = useDesignContext();
   const kitId = kitScope?.id ?? id?.kit ?? "";
   const designId = designScope?.id ?? id?.design ?? "";
   const stablePieceId = pieceId ?? "";
@@ -29065,7 +28737,7 @@ function HoverPiecesProviderInner({ store, children }: { store: DesignStore; chi
   const hoverStore = hoverStoreRef.current;
   const actor = useSketchpadActorSafe();
   const kitScope = useActiveKitTab();
-  const designScope = useDesignContextNode();
+  const designScope = useDesignContext();
   const syncKeyRef = useRef("");
   syncKeyRef.current = `${kitScope?.id ?? ""}:${designScope?.id ?? ""}`;
   const lastActorHoverRef = useRef<DesignAppHover | undefined>(undefined);
@@ -29170,7 +28842,7 @@ export function useDesignAppPieceStatus(id: DesignAppId | undefined, pieceId: st
 export function useDesignAppIsPieceSelected(id?: DesignAppId, pieceId?: string): boolean {
   const actor = useSketchpadActor();
   const kitScope = useActiveKitTab();
-  const designScope = useDesignContextNode();
+  const designScope = useDesignContext();
   const kitId = kitScope?.id ?? id?.kit ?? "";
   const designId = designScope?.id ?? id?.design ?? "";
   const stablePieceId = pieceId ?? "";
@@ -29249,7 +28921,7 @@ export function useDesignAppPieceColor(id: DesignAppId | undefined, pieceId: str
 export function useDesignAppIsConnectionHovered(id?: DesignAppId, connectionId?: string): boolean {
   const actor = useSketchpadActor();
   const kitScope = useActiveKitTab();
-  const designScope = useDesignContextNode();
+  const designScope = useDesignContext();
   const kitId = kitScope?.id ?? id?.kit ?? "";
   const designId = designScope?.id ?? id?.design ?? "";
   const stableConnectionId = connectionId ?? "";
@@ -29267,7 +28939,7 @@ export function useDesignAppIsConnectionHovered(id?: DesignAppId, connectionId?:
 export function useDesignAppIsConnectionSelected(id?: DesignAppId, connectionId?: string): boolean {
   const actor = useSketchpadActor();
   const kitScope = useActiveKitTab();
-  const designScope = useDesignContextNode();
+  const designScope = useDesignContext();
   const kitId = kitScope?.id ?? id?.kit ?? "";
   const designId = designScope?.id ?? id?.design ?? "";
   const stableConnectionId = connectionId ?? "";
@@ -29285,7 +28957,7 @@ export function useDesignAppIsConnectionSelected(id?: DesignAppId, connectionId?
 export function useDesignAppIsPortHovered(id: DesignAppId | undefined, pieceId: string, connectorId: string): boolean {
   const actor = useSketchpadActor();
   const kitScope = useActiveKitTab();
-  const designScope = useDesignContextNode();
+  const designScope = useDesignContext();
   const kitId = kitScope?.id ?? id?.kit ?? "";
   const designId = designScope?.id ?? id?.design ?? "";
   const selector = useMemo(() => {
@@ -29311,7 +28983,7 @@ const EMPTY_CONNECTOR: SelectedConnector = undefined;
 export function useDesignAppSelectedConnector(id?: DesignAppId): SelectedConnector {
   const actor = useSketchpadActor();
   const kitScope = useActiveKitTab();
-  const designScope = useDesignContextNode();
+  const designScope = useDesignContext();
   const kitId = kitScope?.id ?? id?.kit ?? "";
   const designId = designScope?.id ?? id?.design ?? "";
   const selector = useMemo(() => {
@@ -29333,7 +29005,7 @@ export function useDesignAppSelectedConnector(id?: DesignAppId): SelectedConnect
 export function useDesignAppIsPiecePortSelected(pieceId: string, connectorId?: string): boolean {
   const actor = useSketchpadActor();
   const kitScope = useActiveKitTab();
-  const designScope = useDesignContextNode();
+  const designScope = useDesignContext();
   const kitId = kitScope?.id ?? "";
   const designId = designScope?.id ?? "";
   const stableConnectorId = connectorId ?? "";
@@ -29422,7 +29094,7 @@ export function useDesignAppConnectionColor(id: DesignAppId | undefined, connect
 export function useDesignAppPieceCenter(id?: DesignAppId, pieceId?: Id): Coordinate | undefined {
   const scope = useDesignAppShell();
   const appId = id ?? (scope ? JSON.parse(scope.id) : undefined);
-  const pieceScope = usePieceContextNode();
+  const pieceScope = usePieceContext();
   const finalPieceId = pieceId ?? pieceScope?.id;
   const metadata = usePiecesMetadataMap();
   return finalPieceId ? metadata.get(finalPieceId)?.center : undefined;
@@ -29435,7 +29107,7 @@ export function useDesignAppPieceCenter(id?: DesignAppId, pieceId?: Id): Coordin
 export function useDesignAppPiecePlane(id?: DesignAppId, pieceId?: Id): Plane | undefined {
   const scope = useDesignAppShell();
   const appId = id ?? (scope ? JSON.parse(scope.id) : undefined);
-  const pieceScope = usePieceContextNode();
+  const pieceScope = usePieceContext();
   const finalPieceId = pieceId ?? pieceScope?.id;
   const metadata = usePiecesMetadataMap();
   return finalPieceId ? metadata.get(finalPieceId)?.plane : undefined;
@@ -30052,8 +29724,7 @@ const DesignSectionForm: FC = () => {
   const location = useLocation();
   const [transaction] = useDesignAppChange();
   const { run: runUpdateDesign } = useUpdateDesign();
-  const kitScope = useActiveKitTab();
-  const designScope = useDesignContextNode();
+  const designScope = useDesignContext();
   const pathScope = useMemo(() => {
     const match = location.pathname.match(/^\/kits\/([^/?]+)(?:\/designs\/([^/?]+))?/);
     return {
@@ -30061,32 +29732,28 @@ const DesignSectionForm: FC = () => {
       designId: match?.[2],
     };
   }, [location.pathname]);
-  const scopedKitId = kitScope?.id ?? pathScope.kitId;
   const scopedDesignId = designScope?.id ?? pathScope.designId;
   const dsgKs = useKitStoreSnapshot();
   const kit = dsgKs?.kit as Kit | null;
-  const [kitDesignsRaw] = useDesignsFull(scopedKitId as string | undefined);
-  const kitDesigns = (kitDesignsRaw ?? []) as Design[];
-  const designFromScope = useDesign() as Design | null;
+  const kitDesignsField = useKitDesigns();
+  const kitDesigns = (kitDesignsField.value ?? []) as Design[];
+  const designIdentity = useDesign();
+  const activeDesignId = designIdentity.value?.id ?? scopedDesignId ?? null;
   const design = useMemo(() => {
-    if (designFromScope) return designFromScope;
-    if (scopedDesignId) {
-      const designFromKitList = kitDesigns.find((entry) => entry.id === scopedDesignId);
-      if (designFromKitList) return designFromKitList;
-    }
-    if (!kit || !scopedDesignId) return null;
-    return kit.designs?.find((entry) => entry.id === scopedDesignId) ?? null;
-  }, [designFromScope, kitDesigns, kit, scopedDesignId]);
+    if (activeDesignId == null) return null;
+    return kitDesigns.find((entry) => entry.id === activeDesignId) ?? kit?.designs?.find((entry) => entry.id === activeDesignId) ?? null;
+  }, [activeDesignId, kitDesigns, kit]);
 
   const authorLabel = useLabel("semio.sketchpad.app.design.author");
   const attributeLabel = useLabel("semio.sketchpad.app.design.attribute");
 
-  const designDetailId = design?.id;
-  const designNameTriad = useDesignNameBinding(designDetailId);
-  const designDescriptionTriad = useDesignDescriptionBinding(designDetailId);
-  const designIconTriad = useDesignIconBinding(designDetailId);
-  const designImageTriad = useDesignImageBinding(designDetailId);
-  const designUnitTriad = useDesignUnitBinding(designDetailId);
+  const designNameField = useDesignName();
+  const designDescriptionField = useDesignDescription();
+  const designIconField = useDesignIcon();
+  const designImageField = useDesignImage();
+  const designUnitField = useDesignUnit();
+  const [renameDesign, renameDesignStatus] = useRenameDesign();
+  const [changeDesignDescription, changeDesignDescriptionStatus] = useChangeDesignDescription();
 
   if (!design) return null;
 
@@ -30108,31 +29775,60 @@ const DesignSectionForm: FC = () => {
 
   return (
     <>
-      <SketchpadTriadInputRow triad={designNameTriad} id="semio.sketchpad.app.design.panel.details.section.design.name" />
-      <SketchpadTriadTextareaRow triad={designDescriptionTriad} id="semio.sketchpad.app.design.panel.details.section.design.description" placeholderId="semio.sketchpad.app.design.descriptionPlaceholder" />
-      <SketchpadTriadInputRow triad={designIconTriad} id="semio.sketchpad.app.design.panel.details.section.design.icon" placeholderId="semio.sketchpad.app.design.iconPlaceholder" />
-      <SketchpadTriadInputRow triad={designImageTriad} id="semio.sketchpad.app.design.panel.details.section.design.image" placeholderId="semio.sketchpad.app.design.imagePlaceholder" />
+      <SketchpadInputRow
+        value={designNameField.value ?? ""}
+        commit={async (v) => renameDesign(String(v))}
+        status={renameDesignStatus}
+        id="semio.sketchpad.app.design.panel.details.section.design.name"
+      />
+      <SketchpadTextareaRow
+        value={designDescriptionField.value ?? ""}
+        commit={async (v) => changeDesignDescription(String(v))}
+        status={changeDesignDescriptionStatus}
+        id="semio.sketchpad.app.design.panel.details.section.design.description"
+        placeholderId="semio.sketchpad.app.design.descriptionPlaceholder"
+      />
       <TreeRow>
-        <Input
-          lazy
-          id="semio.sketchpad.app.design.panel.details.section.design.variant"
-          value={(design as any).variant || ""}
-          placeholderId="semio.sketchpad.app.design.variantPlaceholder"
-          onLazyChange={(value) => updateDesignField({ variant: value })}
-          showLabel
-        />
+        <div className="flex min-w-0 w-full flex-col gap-tiny">
+          <div className="min-w-0 w-full">
+            <Input
+              lazy
+              id="semio.sketchpad.app.design.panel.details.section.design.icon"
+              value={designIconField.value ?? ""}
+              placeholderId="semio.sketchpad.app.design.iconPlaceholder"
+              readOnly
+              showLabel
+            />
+          </div>
+        </div>
       </TreeRow>
       <TreeRow>
-        <Input
-          lazy
-          id="semio.sketchpad.app.design.panel.details.section.design.view"
-          value={(design as any).view || ""}
-          placeholderId="semio.sketchpad.app.design.viewPlaceholder"
-          onLazyChange={(value) => updateDesignField({ view: value })}
-          showLabel
-        />
+        <div className="flex min-w-0 w-full flex-col gap-tiny">
+          <div className="min-w-0 w-full">
+            <Input
+              lazy
+              id="semio.sketchpad.app.design.panel.details.section.design.image"
+              value={designImageField.value ?? ""}
+              placeholderId="semio.sketchpad.app.design.imagePlaceholder"
+              readOnly
+              showLabel
+            />
+          </div>
+        </div>
       </TreeRow>
-      <SketchpadTriadInputRow triad={designUnitTriad} id="semio.sketchpad.app.design.panel.details.section.design.unit" />
+      <TreeRow>
+        <div className="flex min-w-0 w-full flex-col gap-tiny">
+          <div className="min-w-0 w-full">
+            <Input
+              lazy
+              id="semio.sketchpad.app.design.panel.details.section.design.unit"
+              value={designUnitField.value ?? ""}
+              readOnly
+              showLabel
+            />
+          </div>
+        </div>
+      </TreeRow>
       {design.location ? (
         <TreeItem
           id="semio.sketchpad.app.design.location"
@@ -32164,7 +31860,7 @@ type ExpandMenuProps = {
 /**
  **/
 const ExpandMenu: FC<ExpandMenuProps> = ({ nodes, edges, onExpand }) => {
-  const designScope = useDesignContextNode();
+  const designScope = useDesignContext();
   const [explodeableIds] = useExplodeableDesignNodeIdsFromKit(designScope?.id ?? undefined);
   const ksKit = useKitStoreSnapshot();
   const kit = ksKit?.kit as Kit;
@@ -33663,7 +33359,8 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
 
   const sketchpadCommands = useSketchpadCommands();
   const [kitTypes] = useTypesFull();
-  const [kitDesigns] = useDesignsFull();
+  const kitDesignsField = useKitDesigns();
+  const kitDesigns = (kitDesignsField.value ?? []) as Design[];
   const ksKit = useKitStoreSnapshot();
   const kit = ksKit?.kit as Kit;
   const [activeTool] = useDesignAppActiveTool();
@@ -33677,7 +33374,12 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
   const [savedDiagramScale] = useDesignAppDiagramScale();
   const [panelVisibility] = useDesignAppPanelVisibility();
 
-  const design = useDesign(undefined, undefined, true) as Design | null;
+  const designIdentity = useDesign();
+  const activeDesignId = designIdentity.value?.id ?? null;
+  const design = useMemo(() => {
+    if (activeDesignId == null) return null;
+    return kitDesigns.find((d) => d.id === activeDesignId) ?? kit.designs?.find((d) => d.id === activeDesignId) ?? null;
+  }, [activeDesignId, kitDesigns, kit]) as Design | null;
   const metadata = usePiecesMetadataMap();
 
   const selectedConnector = getPrimaryDesignConnectorSelection(selection);
@@ -35152,7 +34854,7 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
   const designStoreForSync = useDesignStore(identitySelector) as DesignStore | null;
   const actorForSync = useSketchpadActorSafe();
   const kitScopeForSync = useActiveKitTab();
-  const designScopeForSync = useDesignContextNode();
+  const designScopeForSync = useDesignContext();
   const syncKeyRef = useRef("");
   const lastActorStateRef = useRef<{ hover?: DesignAppHover; selection?: DesignAppSelection }>({});
   syncKeyRef.current = `${kitScopeForSync?.id ?? ""}:${designScopeForSync?.id ?? ""}`;
@@ -35654,7 +35356,7 @@ const RepresentationPiece: FC<RepresentationPieceProps> = () => {
   const isSelected = useIsPieceSelected();
   const isHovered = useIsPieceTransitiveHovered();
   const status = usePieceStatus();
-  const [flatPlane] = usePieceFlatPlane(useDesignContextNode()?.id, piece.id);
+  const [flatPlane] = usePieceFlatPlane(useDesignContext()?.id, piece.id);
 
   const [selection, setSelection] = useDesignAppSelection();
   const { hoverPiece, clearHover } = useDesignAppHoverActions();
@@ -35999,7 +35701,8 @@ const DesignAppScene: FC = () => {
   const [focusedPieceId] = useDesignAppFocusedPieceId();
   const [projection, setProjection] = React.useState<"camera" | "orthographic">("camera");
   const [sceneTypes0] = useTypesFull();
-  const [sceneDesigns0] = useDesignsFull();
+  const sceneDesignsField = useKitDesigns();
+  const sceneDesigns0 = sceneDesignsField.value ?? [];
   const sceneTypes = sceneTypes0 ?? [];
   const sceneDesigns = sceneDesigns0 ?? [];
   const { setActiveDraggedType, setActiveDraggedDesign } = useDragDrop();
@@ -36007,7 +35710,7 @@ const DesignAppScene: FC = () => {
   const sceneId = useRef(id()).current;
 
   // 🔭Read all context values in DOM tree for bridging into R3F
-  const designScope = useDesignContextNode();
+  const designScope = useDesignContext();
   const kitScope = useActiveKitTab();
   const sketchpadInstance = useSketchpadInstance();
   const sketchpadActor = useSketchpadActor();
@@ -36254,18 +35957,21 @@ const DesignWindowApp: FC<AppProps> = () => {
 
   const [selection] = useDesignAppSelection();
   const kitScope = useActiveKitTab();
-  const designScope = useDesignContextNode();
+  const designScope = useDesignContext();
   const wbKs = useKitStoreSnapshot();
   const kit = wbKs?.kit as Kit | null;
-  const designFromScope = useDesign() as Design | null;
+  const designEntity = useDesign();
+  const scopedDesignId = designEntity.value?.id ?? designScope?.id ?? null;
+  const kitDesignsForWorkbench = useKitDesigns();
   const design = useMemo(() => {
-    if (designFromScope) return designFromScope;
-    if (!kit || !designScope) return undefined;
-    return kit.designs?.find((entry) => entry.id === designScope.id);
-  }, [designFromScope, kit, designScope?.id]);
+    if (scopedDesignId == null || !kit) return undefined;
+    const rows = (kitDesignsForWorkbench.value ?? []) as Design[];
+    return rows.find((entry) => entry.id === scopedDesignId) ?? kit.designs?.find((entry) => entry.id === scopedDesignId);
+  }, [scopedDesignId, kit, kitDesignsForWorkbench.value]);
   const kitId = kitScope?.id ?? kit?.id;
   const [workbenchTypes0] = useTypesFull();
-  const [workbenchDesigns0] = useDesignsFull();
+  const workbenchDesignsField = useKitDesigns();
+  const workbenchDesigns0 = workbenchDesignsField.value ?? [];
   const workbenchTypes = workbenchTypes0 ?? [];
   const workbenchDesigns = workbenchDesigns0 ?? [];
   const appSettings = useSketchpad((s) => s.settings?.apps) as any;
@@ -36539,7 +36245,7 @@ const DesignWindowApp: FC<AppProps> = () => {
         content: () =>
           detailDesignId && kitId ? (
             <KitTabContextProvider id={kitId}>
-              <DesignContextProvider designId={detailDesignId}>
+              <DesignContextProvider id={detailDesignId}>
                 <DesignSection />
               </DesignContextProvider>
             </KitTabContextProvider>
@@ -36556,7 +36262,7 @@ const DesignWindowApp: FC<AppProps> = () => {
         content: () =>
           detailDesignId && kitId ? (
             <KitTabContextProvider id={kitId}>
-              <DesignContextProvider designId={detailDesignId}>
+              <DesignContextProvider id={detailDesignId}>
                 <ConnectorSection pieceId={connectorPieceId} connectorId={connectorId} />
               </DesignContextProvider>
             </KitTabContextProvider>
@@ -36570,7 +36276,7 @@ const DesignWindowApp: FC<AppProps> = () => {
         content: () =>
           detailDesignId && kitId ? (
             <KitTabContextProvider id={kitId}>
-              <DesignContextProvider designId={detailDesignId}>
+              <DesignContextProvider id={detailDesignId}>
                 <DesignSection />
               </DesignContextProvider>
             </KitTabContextProvider>
@@ -36588,7 +36294,7 @@ const DesignWindowApp: FC<AppProps> = () => {
           content: () =>
             detailDesignId && kitId ? (
               <KitTabContextProvider id={kitId}>
-                <DesignContextProvider designId={detailDesignId}>
+                <DesignContextProvider id={detailDesignId}>
                   <PiecesSection />
                 </DesignContextProvider>
               </KitTabContextProvider>
@@ -36605,7 +36311,7 @@ const DesignWindowApp: FC<AppProps> = () => {
           content: () =>
             detailDesignId && kitId ? (
               <KitTabContextProvider id={kitId}>
-                <DesignContextProvider designId={detailDesignId}>
+                <DesignContextProvider id={detailDesignId}>
                   <ConnectionsSection connections={selectedConnections} isSingle={selectedConnections.length === 1} count={selectedConnections.length} />
                 </DesignContextProvider>
               </KitTabContextProvider>
@@ -36632,7 +36338,7 @@ const DesignWindowApp: FC<AppProps> = () => {
         content: () =>
           detailDesignId && kitId ? (
             <KitTabContextProvider id={kitId}>
-              <DesignContextProvider designId={detailDesignId}>
+              <DesignContextProvider id={detailDesignId}>
                 <DesignSection />
               </DesignContextProvider>
             </KitTabContextProvider>
@@ -37555,7 +37261,7 @@ if (typeof window !== "undefined") {
  **/
 export function useTypeApp<T>(selector?: (state: TypeAppState) => T, id?: TypeAppId): T | TypeAppState | null {
   const kitScope = useActiveKitTab();
-  const typeScope = useTypeContextNode();
+  const typeScope = useTypeContext();
   const kitId = kitScope?.id ?? id?.kit;
   const typeId = typeScope?.id ?? id?.type;
 
@@ -37575,7 +37281,7 @@ export function useTypeApp<T>(selector?: (state: TypeAppState) => T, id?: TypeAp
 export function useTypeAppSelection(): HookResult<TypeAppSelection> {
   const actor = useSketchpadActor();
   const kitScope = useActiveKitTab();
-  const typeScope = useTypeContextNode();
+  const typeScope = useTypeContext();
   const kitId = kitScope?.id ?? "";
   const typeId = typeScope?.id ?? "";
   const selector = useMemo(() => createTypeSelectionSelector(kitId, typeId), [kitId, typeId]);
@@ -37598,7 +37304,7 @@ export function useTypeAppSelection(): HookResult<TypeAppSelection> {
 export function useTypeAppPanelVisibility(): HookResult<PanelVisibility> {
   const actor = useSketchpadActor();
   const kitScope = useActiveKitTab();
-  const typeScope = useTypeContextNode();
+  const typeScope = useTypeContext();
   const kitId = kitScope?.id ?? "";
   const typeId = typeScope?.id ?? "";
   const selector = useMemo(() => createTypePanelVisibilitySelector(kitId, typeId), [kitId, typeId]);
@@ -37621,7 +37327,7 @@ export function useTypeAppPanelVisibility(): HookResult<PanelVisibility> {
 export function useTypeAppOthers(): HookResult<TypeAppPresenceOther[]> {
   const actor = useSketchpadActor();
   const kitScope = useActiveKitTab();
-  const typeScope = useTypeContextNode();
+  const typeScope = useTypeContext();
   const kitId = kitScope?.id ?? "";
   const typeId = typeScope?.id ?? "";
   const selector = useMemo(() => createTypeOthersSelector(kitId, typeId), [kitId, typeId]);
@@ -37636,7 +37342,7 @@ export function useTypeAppOthers(): HookResult<TypeAppPresenceOther[]> {
 export function useTypeAppCamera(): HookResult<Camera | undefined> {
   const actor = useSketchpadActor();
   const kitScope = useActiveKitTab();
-  const typeScope = useTypeContextNode();
+  const typeScope = useTypeContext();
   const kitId = kitScope?.id ?? "";
   const typeId = typeScope?.id ?? "";
   const selector = useMemo(() => createTypeCameraSelector(kitId, typeId), [kitId, typeId]);
@@ -37659,7 +37365,7 @@ export function useTypeAppCamera(): HookResult<Camera | undefined> {
 export function useTypeAppFocusedConnectorId(): HookResult<Id | undefined> {
   const actor = useSketchpadActor();
   const kitScope = useActiveKitTab();
-  const typeScope = useTypeContextNode();
+  const typeScope = useTypeContext();
   const kitId = kitScope?.id ?? "";
   const typeId = typeScope?.id ?? "";
   const selector = useMemo(() => createTypeFocusedConnectorSelector(kitId, typeId), [kitId, typeId]);
@@ -37686,7 +37392,7 @@ export function useTypeAppFocusedConnectorId(): HookResult<Id | undefined> {
 export function useTypeAppHover(): HookResult<TypeAppHover | undefined> {
   const actor = useSketchpadActor();
   const kitScope = useActiveKitTab();
-  const typeScope = useTypeContextNode();
+  const typeScope = useTypeContext();
   const kitId = kitScope?.id ?? "";
   const typeId = typeScope?.id ?? "";
   const selector = useMemo(() => createTypeHoverSelector(kitId, typeId), [kitId, typeId]);
@@ -37715,7 +37421,7 @@ export function useTypeAppHover(): HookResult<TypeAppHover | undefined> {
 export function useTypeAppActiveTool(): HookResult<ToolKind> {
   const actor = useSketchpadActor();
   const kitScope = useActiveKitTab();
-  const typeScope = useTypeContextNode();
+  const typeScope = useTypeContext();
   const kitId = kitScope?.id ?? "";
   const typeId = typeScope?.id ?? "";
   const selector = useMemo(() => createTypeActiveToolSelector(kitId, typeId), [kitId, typeId]);
@@ -37746,7 +37452,7 @@ interface TransactionCallbacks {
 export function useTypeAppChange(id?: TypeAppId): TransactionCallbacks {
   const actor = useSketchpadActor();
   const kitScope = useActiveKitTab();
-  const typeScope = useTypeContextNode();
+  const typeScope = useTypeContext();
   const kitId = kitScope?.id ?? id?.kit ?? "";
   const typeId = typeScope?.id ?? id?.type ?? "";
 
@@ -37770,7 +37476,7 @@ export function useTypeAppChange(id?: TypeAppId): TransactionCallbacks {
 export function useTypeAppCommands(id?: TypeAppId) {
   const actor = useSketchpadActor();
   const kitScope = useActiveKitTab();
-  const typeScope = useTypeContextNode();
+  const typeScope = useTypeContext();
   const kitId = kitScope?.id ?? id?.kit ?? "";
   const typeId = typeScope?.id ?? id?.type ?? "";
 
@@ -37845,7 +37551,7 @@ export function useTypeAppCommands(id?: TypeAppId) {
 export function useTypeAppIsPortSelected(connectorId: string): HookResult<boolean> {
   const actor = useSketchpadActor();
   const kitScope = useActiveKitTab();
-  const typeScope = useTypeContextNode();
+  const typeScope = useTypeContext();
   const kitId = kitScope?.id ?? "";
   const typeId = typeScope?.id ?? "";
   const selector = useMemo(() => createTypeSelectionSelector(kitId, typeId), [kitId, typeId]);
@@ -37873,7 +37579,7 @@ export function useTypeAppIsPortSelected(connectorId: string): HookResult<boolea
 export function useTypeAppIsPortHovered(connectorId: string): HookResult<boolean> {
   const actor = useSketchpadActor();
   const kitScope = useActiveKitTab();
-  const typeScope = useTypeContextNode();
+  const typeScope = useTypeContext();
   const kitId = kitScope?.id ?? "";
   const typeId = typeScope?.id ?? "";
   const boolSelector = useMemo(() => {
@@ -37903,7 +37609,7 @@ export function useTypeAppIsPortHovered(connectorId: string): HookResult<boolean
 export function useTypeAppSelectedRepresentationId(): HookResult<Id | undefined> {
   const actor = useSketchpadActor();
   const kitScope = useActiveKitTab();
-  const typeScope = useTypeContextNode();
+  const typeScope = useTypeContext();
   const kitId = kitScope?.id ?? "";
   const typeId = typeScope?.id ?? "";
   const selector = useMemo(() => createTypeAppSelector(kitId, typeId), [kitId, typeId]);
@@ -37929,7 +37635,7 @@ export function useTypeAppSelectedRepresentationId(): HookResult<Id | undefined>
 export function useTypeAppSelectedRepresentationTags(): HookResult<string[]> {
   const actor = useSketchpadActor();
   const kitScope = useActiveKitTab();
-  const typeScope = useTypeContextNode();
+  const typeScope = useTypeContext();
   const kitId = kitScope?.id ?? "";
   const typeId = typeScope?.id ?? "";
   const selector = useMemo(() => createTypeSelectedRepresentationTagsSelector(kitId, typeId), [kitId, typeId]);
@@ -40337,7 +40043,7 @@ export const TypeSelectSettings: FC = () => {
 export const TypeHistorySettings: FC = () => {
   const actor = useSketchpadActor();
   const kitScope = useActiveKitTab();
-  const typeScope = useTypeContextNode();
+  const typeScope = useTypeContext();
   const { undo, redo } = useTypeAppCommands();
   const kitId = kitScope?.id ?? "";
   const typeId = typeScope?.id ?? "";
@@ -40864,7 +40570,7 @@ const TypeApp: FC = () => {
 function useTypeAppInitialize() {
   const actor = useSketchpadActor();
   const kitScope = useActiveKitTab();
-  const typeScope = useTypeContextNode();
+  const typeScope = useTypeContext();
   const kitId = kitScope?.id ?? "";
   const typeId = typeScope?.id ?? "";
   const initializedKeyRef = useRef<string | null>(null);
@@ -41850,7 +41556,7 @@ const useQualityAppShell = () => useContext(QualityAppShellContext);
 export function useQualityAppStore<T>(selector?: (store: QualityAppStore) => T, id?: QualityAppId): T | QualityAppStore | null {
   const store = useSketchpadStore();
   const kitScope = useActiveKitTab();
-  const qualityScope = useQualityContextNode();
+  const qualityScope = useQualityContext();
   const resolvedKitId = kitScope?.id ?? id?.kit;
   const resolvedQualityId = qualityScope?.id ?? id?.quality;
   if (!resolvedKitId || !resolvedQualityId) {
@@ -41867,7 +41573,7 @@ export function useQualityAppStore<T>(selector?: (store: QualityAppStore) => T, 
 export function useQualityApp<T>(selector?: (state: QualityAppState) => T, id?: QualityAppId): T | QualityAppState | null {
   const actor = useSketchpadActor();
   const kitScope = useActiveKitTab();
-  const qualityScope = useQualityContextNode();
+  const qualityScope = useQualityContext();
   const resolvedKitId = kitScope?.id ?? id?.kit;
   const resolvedQualityId = qualityScope?.id ?? id?.quality;
   const appSelector = useMemo(() => {
@@ -41941,7 +41647,7 @@ export function useQualityAppCommands(id?: QualityAppId) {
  *The setter MUST receive a valid QualityAppFullscreenWindow value.
  **/
 export function useQualityAppFullscreen(): HookResult<QualityAppFullscreenWindow> {
-  const qualityScope = useQualityContextNode();
+  const qualityScope = useQualityContext();
   const store = useQualityAppStore() as QualityAppStore | null;
   const fullscreen = useQualityApp((s) => s.fullscreenWindow) as QualityAppFullscreenWindow;
   const canSet = qualityScope !== null && store !== null;
@@ -41959,7 +41665,7 @@ export function useQualityAppFullscreen(): HookResult<QualityAppFullscreenWindow
  *The setter MUST receive a valid QualityAppSelection object.
  **/
 export function useQualityAppSelection(): HookResult<QualityAppSelection> {
-  const qualityScope = useQualityContextNode();
+  const qualityScope = useQualityContext();
   const store = useQualityAppStore() as QualityAppStore | null;
   const selection = useQualityApp((s) => s.selection) as QualityAppSelection | undefined;
   const canSet = qualityScope !== null && store !== null;
@@ -41977,7 +41683,7 @@ export function useQualityAppSelection(): HookResult<QualityAppSelection> {
  *The setter MUST receive a QualityAppHover or undefined to clear.
  **/
 export function useQualityAppHover(): HookResult<QualityAppHover | undefined> {
-  const qualityScope = useQualityContextNode();
+  const qualityScope = useQualityContext();
   const store = useQualityAppStore() as QualityAppStore | null;
   const hover = useQualityApp((s) => s.hover) as QualityAppHover | undefined;
   const canSet = qualityScope !== null && store !== null;
@@ -41995,7 +41701,7 @@ export function useQualityAppHover(): HookResult<QualityAppHover | undefined> {
  *The setter MUST receive a valid ToolKind value.
  **/
 export function useQualityAppActiveTool(): HookResult<ToolKind> {
-  const qualityScope = useQualityContextNode();
+  const qualityScope = useQualityContext();
   const store = useQualityAppStore() as QualityAppStore | null;
   const activeTool = useQualityApp((s) => s.activeTool) as ToolKind;
   const canSet = qualityScope !== null && store !== null;
@@ -42013,7 +41719,7 @@ export function useQualityAppActiveTool(): HookResult<ToolKind> {
  *The hook MUST be called within a quality app scope.
  **/
 export function useQualityAppFormulaNodes(): HookNoSetResult<FormulaNode[]> {
-  const qualityScope = useQualityContextNode();
+  const qualityScope = useQualityContext();
   const formulaNodes = useQualityApp((s) => s.formulaNodes) as FormulaNode[];
   const canRead = qualityScope !== null;
   return [formulaNodes ?? [], undefined, canRead];
@@ -42024,7 +41730,7 @@ export function useQualityAppFormulaNodes(): HookNoSetResult<FormulaNode[]> {
  *The setter MUST receive a complete PanelVisibility object.
  **/
 export function useQualityAppPanelVisibility(): HookResult<PanelVisibility> {
-  const qualityScope = useQualityContextNode();
+  const qualityScope = useQualityContext();
   const store = useQualityAppStore() as QualityAppStore | null;
   const panelVisibility = useQualityApp((s) => s.panelVisibility) as PanelVisibility;
   const canSet = qualityScope !== null && store !== null;
@@ -42041,7 +41747,7 @@ export function useQualityAppPanelVisibility(): HookResult<PanelVisibility> {
  * Returns the window layout state with a setter.
  **/
 export function useQualityAppWindowLayout(): HookResult<any> {
-  const qualityScope = useQualityContextNode();
+  const qualityScope = useQualityContext();
   const store = useQualityAppStore() as QualityAppStore | null;
   const windowLayout = useQualityApp((s) => s.windowLayout);
   const canSet = qualityScope !== null && store !== null;

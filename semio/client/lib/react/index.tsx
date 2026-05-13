@@ -1351,6 +1351,24 @@ export function useDesignQualitySum(designId?: string): FieldReadState<number> {
   const entity = useResolvedDesign(designId);
   return useCurrentEntityField(entity, (d) => d.qualitySum());
 }
+
+/** @emoji 📖 Live {@link Design#icon}. */
+export function useDesignIcon(designId?: string): FieldReadState<string> {
+  const entity = useResolvedDesign(designId);
+  return useCurrentEntityField(entity, (d) => d.icon());
+}
+
+/** @emoji 📖 Live {@link Design#image}. */
+export function useDesignImage(designId?: string): FieldReadState<string> {
+  const entity = useResolvedDesign(designId);
+  return useCurrentEntityField(entity, (d) => d.image());
+}
+
+/** @emoji 📖 Live {@link Design#unit}. */
+export function useDesignUnit(designId?: string): FieldReadState<string> {
+  const entity = useResolvedDesign(designId);
+  return useCurrentEntityField(entity, (d) => d.unit());
+}
 // #endregion 📖DesignReads
 
 // #region ✍️DesignWrites
@@ -1434,6 +1452,36 @@ export function useDeleteDesignPieces(): readonly [(ids: readonly string[]) => P
 export function useDeleteDesignPiecesAndConnections(): readonly [(pieceIds: readonly string[], connectionIds: readonly string[]) => Promise<SetResult>, OperationStatus] {
   const entity = resolveDesign();
   return semioInternalOperationBind<Design, [readonly string[], readonly string[]]>((d, p, c) => d.deletePiecesAndConnections(p, c))(() => entity);
+}
+
+/**
+ * @emoji ✍️ Legacy shallow {@link Design} patch runner: applies only keys backed by {@link DesignOperation}; other keys are ignored with a {@code [DEBUG]} console warning.
+ */
+export function useUpdateDesign(): Readonly<{
+  run: (designId: string, patch: Record<string, unknown>) => Promise<SetResult>;
+  status: OperationStatus;
+}> {
+  const store = useJsStore();
+  const [run, status] = semioInternalOperationBind<Store, [string, Record<string, unknown>]>(async (st, designId, patch) => {
+    const d = st.design(designId);
+    for (const [key, raw] of Object.entries(patch)) {
+      if (key === "name") {
+        const r = await d.rename(String(raw ?? ""));
+        if (!r.ok) return r;
+      } else if (key === "description") {
+        const r = await d.changeDescription(String(raw ?? ""));
+        if (!r.ok) return r;
+      } else if (key === "flatten" && raw === true) {
+        const r = await d.flatten();
+        if (!r.ok) return r;
+      } else {
+        console.warn(`[DEBUG] useUpdateDesign ignored non-DesignOperation patch key "${key}"`);
+      }
+    }
+    return { ok: true } as const;
+  })(() => store);
+  const runDesign = React.useCallback((designId: string, patch: Record<string, unknown>) => run(designId, patch), [run]);
+  return { run: runDesign, status };
 }
 // #endregion ✍️DesignWrites
 // #endregion 🪝HooksDesign
@@ -2377,6 +2425,42 @@ export function useConnectionAttributes(): FieldReadState<readonly Attribute[]> 
   return useCurrentEntityField(entity, (c) => c.attributes());
 }
 // #endregion ⛓️Connection
+
+// #region 🎛️WriteIndicator
+type LegacyWriteRowStatus =
+  | { readonly kind: "readonly" }
+  | { readonly kind: "idle"; readonly pending: number }
+  | { readonly kind: "pending"; readonly pending: number }
+  | { readonly kind: "error"; readonly pending: number; readonly lastError: SetError };
+
+/** @emoji 🎛️ Maps {@link OperationStatus} or legacy triad status into sketchpad row affordances. */
+export function useWriteIndicator(status: OperationStatus | LegacyWriteRowStatus): Readonly<{
+  disabled: boolean;
+  spinning: boolean;
+  error?: SetError;
+}> {
+  if (status.kind === "readonly") {
+    return { disabled: true, spinning: false, error: undefined };
+  }
+  if (status.kind === "error" && "lastError" in status) {
+    return { disabled: false, spinning: false, error: status.lastError };
+  }
+  if (status.kind === "pending" && "pending" in status) {
+    return { disabled: true, spinning: true, error: undefined };
+  }
+  if (status.kind === "idle" && "pending" in status) {
+    return { disabled: false, spinning: false, error: undefined };
+  }
+  const op = status as OperationStatus;
+  if (op.kind === "pending") {
+    return { disabled: true, spinning: true, error: undefined };
+  }
+  if (op.kind === "settled" && !op.result.ok) {
+    return { disabled: false, spinning: false, error: op.result.error };
+  }
+  return { disabled: false, spinning: false, error: undefined };
+}
+// #endregion 🎛️WriteIndicator
 
 // #region ⚛️Embedded tests
 // @emoji 🧹 Legacy InMemoryKitStore embedded block removed during single-source Kit migration; restore with GraphQL Kit stubs only.

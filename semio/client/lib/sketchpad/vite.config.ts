@@ -65,7 +65,7 @@ const RUNTIME_ASSET_DIRECTORIES = new Set(["badges", "cursors", "fonts", "icons"
 
 function attachWasmAndAssetsMiddleware(server: { middlewares: { use: (fn: (req: any, res: any, next: any) => void) => void } }, fsMod: typeof import("fs")) {
   const sketchpadPublicPath = path.resolve(__dirname, "public");
-  const assetsPath = path.resolve(__dirname, "../assets");
+  const assetsPath = path.resolve(__dirname, "../../../assets");
   server.middlewares.use((req: any, res: any, next: any) => {
     if (req.url?.endsWith(".wasm")) {
       const wasmFile = path.join(sketchpadPublicPath, req.url);
@@ -98,13 +98,14 @@ export default defineConfig(async ({ mode }) => {
   // 📥normal import fails in electron due to esm stuff
   const tailwind = await import("@tailwindcss/vite");
   const fs = await import("fs");
+  const workspaceRoot = path.resolve(__dirname, "../../../../");
   const prod = mode === "production";
-  const useSyncRoot = path.resolve(__dirname, "../../node_modules/use-sync-external-store/cjs");
+  const useSyncRoot = path.resolve(workspaceRoot, "node_modules/use-sync-external-store/cjs");
   const shimMain = path.join(useSyncRoot, prod ? "use-sync-external-store-shim.production.js" : "use-sync-external-store-shim.development.js");
   const shimWithSelector = path.join(useSyncRoot, "use-sync-external-store-shim", prod ? "with-selector.production.js" : "with-selector.development.js");
-  const schedulerRoot = path.resolve(__dirname, "../../node_modules/scheduler/cjs");
+  const schedulerRoot = path.resolve(workspaceRoot, "node_modules/scheduler/cjs");
   const schedulerEntry = path.join(schedulerRoot, prod ? "scheduler.production.js" : "scheduler.development.js");
-  const viteInternalFallback = path.resolve(__dirname, "../../node_modules/vite/dist/node/index.js");
+  const viteInternalFallback = path.resolve(workspaceRoot, "node_modules/vite/dist/node/index.js");
   return {
     define: {
       __SEMIO_JS_RUN_BENCHMARKS__: "false",
@@ -121,9 +122,9 @@ export default defineConfig(async ({ mode }) => {
         { find: "@semio/ui", replacement: path.resolve(__dirname, "../ui") },
         { find: "@semio/sketchpad", replacement: path.resolve(__dirname) },
         { find: "@semio/studio", replacement: path.resolve(__dirname, "../studio") },
-        { find: "@semio/assets", replacement: path.resolve(__dirname, "../assets") },
-        { find: /^@elements\/ui\/elements$/, replacement: path.resolve(__dirname, "../../elements/ui/index.tsx") },
-        { find: /^@elements\/ui$/, replacement: path.resolve(__dirname, "../../elements/ui/index.tsx") },
+        { find: "@semio/assets", replacement: path.resolve(__dirname, "../../../assets") },
+        { find: /^@elements\/ui\/elements$/, replacement: path.resolve(__dirname, "../../../../elements/ui/index.tsx") },
+        { find: /^@elements\/ui$/, replacement: path.resolve(__dirname, "../../../../elements/ui/index.tsx") },
         { find: /^use-sync-external-store\/shim\/with-selector(?:\.js)?$/, replacement: shimWithSelector },
         { find: /^use-sync-external-store\/shim(?:\.js)?$/, replacement: shimMain },
         { find: "scheduler", replacement: schedulerEntry },

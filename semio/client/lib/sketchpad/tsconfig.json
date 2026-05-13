@@ -9,8 +9,10 @@
       "@semio/js/*": ["../js/*"],
       "@semio/ui": ["../ui"],
       "@semio/ui/*": ["../ui/*"],
-      "@semio/assets": ["../assets"],
-      "@semio/assets/*": ["../assets/*"],
+      "@semio/assets": ["../../../assets"],
+      "@semio/assets/*": ["../../../assets/*"],
+      "@semio/react": ["../react"],
+      "@semio/react/*": ["../react/*"],
       "@semio/rs-wasm": ["../rs/pkg/semio.d.ts"],
       "@semio/rs-wasm/*": ["../rs/pkg/*"]
     },

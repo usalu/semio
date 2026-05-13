@@ -346,6 +346,26 @@ semio:
 
 ---
 
+Make sure dev sketchpad works end-to-end.
+
+semio/graphql:
+
+- You MUST NOT introduce any new type, interface, union, input.
+
+semio/js:
+
+- You MUST NOT introduce any new class, method, interface.
+
+semio/react:
+
+- You MUST NOT introduce any new hook, context.
+
+semio/sketchpad:
+
+- You MUST NOT introduce any new hook, context.
+
+---
+
 Somehow the term "row", Row, Rows slipped into the code.
 If two classes exist for the same this is a code smell.
 For every entity there is exactly one class, one hook, etc
@@ -1835,6 +1855,7 @@ semio/sketchpad:
 semio/sketchpad is totally outdated.
 Refactor @file:index.tsx to exclusively use hook for fields and context providers following the react plan @file:refactor-react-composable-contexts_ec8b0106.plan.md
 Everything must follow @file:schema.golden.graphql schema
+You MUST NOT introduce any compatibility hooks or generated approach. Just manually replacing the old hooks with the new ones.
 
 ---
 

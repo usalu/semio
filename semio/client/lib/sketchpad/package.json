@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "fflate": "^0.8.2",
+    "@semio/js": "*",
     "@semio/react": "*",
     "@semio/ui": "*",
     "react": "^19.2.3",
