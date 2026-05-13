@@ -62,7 +62,7 @@ interface EntityConnection {
   hash: String! # cached // our own extension on top of the relay specs
 }
 
-interface WeakEntity implements Entity {
+interface WeakEntity implements Entity & Node {
   # Node
   id: ID! # computed // hash
   # Entity
@@ -71,7 +71,7 @@ interface WeakEntity implements Entity {
   owns: EntityConnection # reference
 }
 
-interface StrongEntity implements Entity {
+interface StrongEntity implements Entity & Node {
   # Node
   id: ID! # data // uuidv7
   # Entity
@@ -80,7 +80,7 @@ interface StrongEntity implements Entity {
   owns: EntityConnection # reference
 }
 
-interface RichStrongEntity implements StrongEntity {
+interface RichStrongEntity implements StrongEntity & Entity & Node {
   # Node
   id: ID! # data // uuidv7
   # Entity
@@ -95,7 +95,7 @@ interface RichStrongEntity implements StrongEntity {
   createdBy: Author # computed
 }
 
-interface Artifact implements RichStrongEntity {
+interface Artifact implements RichStrongEntity & StrongEntity & Entity & Node {
   # Node
   id: ID! # data // uuidv7
   # Entity
@@ -118,7 +118,7 @@ interface Artifact implements RichStrongEntity {
   edits: EditConnection # computed
 }
 
-interface Document implements Artifact {
+interface Document implements Artifact & RichStrongEntity & StrongEntity & Entity & Node {
   # Node
   id: ID! # data // uuidv7
   # Entity
@@ -143,7 +143,7 @@ interface Document implements Artifact {
   previewImage: File # reference // preview
 }
 
-interface Event implements WeakEntity {
+interface Event implements WeakEntity & Entity & Node {
   # Node
   id: ID! # computed // hash
   # Entity
@@ -155,7 +155,7 @@ interface Event implements WeakEntity {
   involves: EntityConnection # reference
 }
 
-interface Workspace implements StrongEntity {
+interface Workspace implements StrongEntity & Entity & Node {
   # Node
   id: ID! # data // uuidv7
   # Entity
@@ -172,7 +172,7 @@ interface Workspace implements StrongEntity {
 
 #region Inputs
 
-interface Input implements WeakEntity {
+interface Input implements WeakEntity & Entity & Node {
   # Node
   id: ID! # computed // hash
   # Entity
@@ -201,7 +201,7 @@ type InputConnection implements EntityConnection {
 
 #region Diffs
 
-interface Diff implements WeakEntity {
+interface Diff implements WeakEntity & Entity & Node {
   # Node
   id: ID! # computed // hash
   # Entity
@@ -231,7 +231,7 @@ type DiffConnection implements EntityConnection {
 
 #region Modifications
 
-interface Modification implements WeakEntity {
+interface Modification implements WeakEntity & Entity & Node {
   # Node
   id: ID! # computed // hash
   # Entity
@@ -258,7 +258,7 @@ type ModificationConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type Modifications implements WeakEntity {
+type Modifications implements WeakEntity & Entity & Node {
   # Node
   id: ID! # computed // hash
   # Entity
@@ -289,7 +289,7 @@ type ModificationsConnection implements EntityConnection {
 
 #region Operations
 
-interface Operation implements StrongEntity {
+interface Operation implements StrongEntity & Entity & Node {
   # Node
   id: ID! # data // uuidv7
   # Entity
@@ -322,12 +322,12 @@ type OperationConnection implements EntityConnection {
 #region Backbones
 
 enum BackboneStatus {
-  IDLE
-  SYNCING
-  BLOCKED
+  OFFLINE
+  RECONNECTING
+  ONLINE
 }
 
-interface Backbone implements StrongEntity {
+interface Backbone implements StrongEntity & Entity & Node {
   # Node
   id: ID! # data // uuidv7
   # Entity
@@ -376,7 +376,7 @@ type BackboneCommandConnection implements EntityConnection {
 
 #region Provider
 
-interface Provider implements StrongEntity {
+interface Provider implements StrongEntity & Entity & Node {
   # Node
   id: ID! # data // uuidv7
   # Entity
@@ -403,8 +403,8 @@ type ProviderConnection implements EntityConnection {
 }
 
 interface ProviderCommand {
-  createBackbone: ID!
-  attachBackbone: ID!
+  createBackbone(uri: String!): ID!
+  attachBackbone(store: ID!): ID!
 }
 
 type ProviderCommandEdge implements EntityEdge {
@@ -434,7 +434,7 @@ input VectorInput {
   z: Float! # data
 }
 
-type Vector implements WeakEntity {
+type Vector implements WeakEntity & Entity & Node {
   # Node
   id: ID! # computed // hash
   # Entity
@@ -461,7 +461,7 @@ type VectorConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type VectorDiff implements Diff {
+type VectorDiff implements Diff & WeakEntity & Entity & Node {
   # Node
   id: ID! # computed // hash
   # Entity
@@ -489,7 +489,7 @@ type VectorDiffConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type VectorModification implements Modification {
+type VectorModification implements Modification & WeakEntity & Entity & Node {
   # Node
   id: ID! # computed // hash
   # Entity
@@ -516,7 +516,7 @@ type VectorModificationConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type VectorModifications implements WeakEntity {
+type VectorModifications implements WeakEntity & Entity & Node {
   # Node
   id: ID! # computed // hash
   # Entity
@@ -554,7 +554,7 @@ input PointInput {
   z: Float! # data
 }
 
-type Point implements WeakEntity {
+type Point implements WeakEntity & Entity & Node {
   # Node
   id: ID! # computed // hash
   # Entity
@@ -581,7 +581,7 @@ type PointConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type PointDiff implements Diff {
+type PointDiff implements Diff & WeakEntity & Entity & Node {
   # Node
   id: ID! # computed // hash
   # Entity
@@ -609,7 +609,7 @@ type PointDiffConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type PointModification implements Modification {
+type PointModification implements Modification & WeakEntity & Entity & Node {
   # Node
   id: ID! # computed // hash
   # Entity
@@ -636,7 +636,7 @@ type PointModificationConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type PointModifications implements WeakEntity {
+type PointModifications implements WeakEntity & Entity & Node {
   # Node
   id: ID! # computed // hash
   # Entity
@@ -673,7 +673,7 @@ input CoordinateInput {
   v: Float! # data
 }
 
-type Coordinate implements WeakEntity {
+type Coordinate implements WeakEntity & Entity & Node {
   # Node
   id: ID! # computed // hash
   # Entity
@@ -699,7 +699,7 @@ type CoordinateConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type CoordinateDiff implements Diff {
+type CoordinateDiff implements Diff & WeakEntity & Entity & Node {
   # Node
   id: ID! # computed // hash
   # Entity
@@ -726,7 +726,7 @@ type CoordinateDiffConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type CoordinateModification implements Modification {
+type CoordinateModification implements Modification & WeakEntity & Entity & Node {
   # Node
   id: ID! # computed // hash
   # Entity
@@ -753,7 +753,7 @@ type CoordinateModificationConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type CoordinateModifications implements WeakEntity {
+type CoordinateModifications implements WeakEntity & Entity & Node {
   # Node
   id: ID! # computed // hash
   # Entity
@@ -790,7 +790,7 @@ input OffsetInput {
   v: Float! # data
 }
 
-type Offset implements WeakEntity {
+type Offset implements WeakEntity & Entity & Node {
   # Node
   id: ID! # computed // hash
   # Entity
@@ -816,7 +816,7 @@ type OffsetConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type OffsetDiff implements Diff {
+type OffsetDiff implements Diff & WeakEntity & Entity & Node {
   # Node
   id: ID! # computed // hash
   # Entity
@@ -843,7 +843,7 @@ type OffsetDiffConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type OffsetModification implements Modification {
+type OffsetModification implements Modification & WeakEntity & Entity & Node {
   # Node
   id: ID! # computed // hash
   # Entity
@@ -870,7 +870,7 @@ type OffsetModificationConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type OffsetModifications implements WeakEntity {
+type OffsetModifications implements WeakEntity & Entity & Node {
   # Node
   id: ID! # computed // hash
   # Entity
@@ -908,7 +908,7 @@ input PlaneInput {
   yAxis: VectorInput! # data
 }
 
-type Plane implements WeakEntity {
+type Plane implements WeakEntity & Entity & Node {
   # Node
   id: ID! # computed // hash
   # Entity
@@ -935,7 +935,7 @@ type PlaneConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type PlaneDiff implements Diff {
+type PlaneDiff implements Diff & WeakEntity & Entity & Node {
   # Node
   id: ID! # computed // hash
   # Entity
@@ -963,7 +963,7 @@ type PlaneDiffConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type PlaneModification implements Modification {
+type PlaneModification implements Modification & WeakEntity & Entity & Node {
   # Node
   id: ID! # computed // hash
   # Entity
@@ -990,7 +990,7 @@ type PlaneModificationConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type PlaneModifications implements WeakEntity {
+type PlaneModifications implements WeakEntity & Entity & Node {
   # Node
   id: ID! # computed // hash
   # Entity
@@ -1027,7 +1027,7 @@ input PositionInput {
   plane: PlaneInput! # data
 }
 
-type Position implements WeakEntity {
+type Position implements WeakEntity & Entity & Node {
   # Node
   id: ID! # computed // hash
   # Entity
@@ -1053,7 +1053,7 @@ type PositionConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type PositionDiff implements Diff {
+type PositionDiff implements Diff & WeakEntity & Entity & Node {
   # Node
   id: ID! # computed // hash
   # Entity
@@ -1080,7 +1080,7 @@ type PositionDiffConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type PositionModification implements Modification {
+type PositionModification implements Modification & WeakEntity & Entity & Node {
   # Node
   id: ID! # computed // hash
   # Entity
@@ -1107,7 +1107,7 @@ type PositionModificationConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type PositionModifications implements WeakEntity {
+type PositionModifications implements WeakEntity & Entity & Node {
   # Node
   id: ID! # computed // hash
   # Entity
@@ -1145,7 +1145,7 @@ input LocationInput {
   altitude: Float # data
 }
 
-type Location implements WeakEntity {
+type Location implements WeakEntity & Entity & Node {
   # Node
   id: ID! # computed // hash
   # Entity
@@ -1172,7 +1172,7 @@ type LocationConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type LocationDiff implements Diff {
+type LocationDiff implements Diff & WeakEntity & Entity & Node {
   # Node
   id: ID! # computed // hash
   # Entity
@@ -1200,7 +1200,7 @@ type LocationDiffConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type LocationModification implements Modification {
+type LocationModification implements Modification & WeakEntity & Entity & Node {
   # Node
   id: ID! # computed // hash
   # Entity
@@ -1227,7 +1227,7 @@ type LocationModificationConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type LocationModifications implements WeakEntity {
+type LocationModifications implements WeakEntity & Entity & Node {
   # Node
   id: ID! # computed // hash
   # Entity
@@ -1258,7 +1258,7 @@ type LocationModificationsConnection implements EntityConnection {
 
 #region Attribute
 
-type Attribute implements WeakEntity {
+type Attribute implements WeakEntity & Entity & Node {
   # Node
   id: ID! # computed // hash
   # Entity
@@ -1285,7 +1285,7 @@ type AttributeConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type AttributeDiff implements Diff {
+type AttributeDiff implements Diff & WeakEntity & Entity & Node {
   # Node
   id: ID! # computed // hash
   # Entity
@@ -1313,7 +1313,7 @@ type AttributeDiffConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type AttributeModification implements Modification {
+type AttributeModification implements Modification & WeakEntity & Entity & Node {
   # Node
   id: ID! # computed // hash
   # Entity
@@ -1340,7 +1340,7 @@ type AttributeModificationConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type AttributeModifications implements WeakEntity {
+type AttributeModifications implements WeakEntity & Entity & Node {
   # Node
   id: ID! # computed // hash
   # Entity
@@ -1373,7 +1373,7 @@ type AttributeModificationsConnection implements EntityConnection {
 
 #region Place
 
-type Place implements Artifact {
+type Place implements Artifact & RichStrongEntity & StrongEntity & Entity & Node {
   # Node
   id: ID! # data // uuidv7
   # Entity
@@ -1412,7 +1412,7 @@ type PlaceConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type PlaceDiff implements Diff {
+type PlaceDiff implements Diff & WeakEntity & Entity & Node {
   # Node
   id: ID! # computed // hash
   # Entity
@@ -1441,7 +1441,7 @@ type PlaceDiffConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type PlaceModification implements Modification {
+type PlaceModification implements Modification & WeakEntity & Entity & Node {
   # Node
   id: ID! # computed // hash
   # Entity
@@ -1468,7 +1468,7 @@ type PlaceModificationConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type PlaceModifications implements WeakEntity {
+type PlaceModifications implements WeakEntity & Entity & Node {
   # Node
   id: ID! # computed // hash
   # Entity
@@ -1499,7 +1499,7 @@ type PlaceModificationsConnection implements EntityConnection {
 
 #region Family
 
-type Family implements Artifact {
+type Family implements Artifact & RichStrongEntity & StrongEntity & Entity & Node {
   # Node
   id: ID! # data // uuidv7
   # Entity
@@ -1536,7 +1536,7 @@ type FamilyConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type FamilyDiff implements Diff {
+type FamilyDiff implements Diff & WeakEntity & Entity & Node {
   # Node
   id: ID! # computed // hash
   # Entity
@@ -1564,7 +1564,7 @@ type FamilyDiffConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type FamilyModification implements Modification {
+type FamilyModification implements Modification & WeakEntity & Entity & Node {
   # Node
   id: ID! # computed // hash
   # Entity
@@ -1591,7 +1591,7 @@ type FamilyModificationConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type FamilyModifications implements WeakEntity {
+type FamilyModifications implements WeakEntity & Entity & Node {
   # Node
   id: ID! # computed // hash
   # Entity
@@ -1622,7 +1622,7 @@ type FamilyModificationsConnection implements EntityConnection {
 
 #region Folder
 
-type Folder implements Artifact {
+type Folder implements Artifact & RichStrongEntity & StrongEntity & Entity & Node {
   # Node
   id: ID! # data // uuidv7
   # Entity
@@ -1671,7 +1671,7 @@ type FolderConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type FolderDiff implements Diff {
+type FolderDiff implements Diff & WeakEntity & Entity & Node {
   # Node
   id: ID! # computed // hash
   # Entity
@@ -1704,7 +1704,7 @@ type FolderDiffConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type FolderModification implements Modification {
+type FolderModification implements Modification & WeakEntity & Entity & Node {
   # Node
   id: ID! # computed // hash
   # Entity
@@ -1731,7 +1731,7 @@ type FolderModificationConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type FolderModifications implements WeakEntity {
+type FolderModifications implements WeakEntity & Entity & Node {
   # Node
   id: ID! # computed // hash
   # Entity
@@ -1762,7 +1762,7 @@ type FolderModificationsConnection implements EntityConnection {
 
 #region File
 
-type File implements Artifact {
+type File implements Artifact & RichStrongEntity & StrongEntity & Entity & Node {
   # Node
   id: ID! # data // uuidv7
   # Entity
@@ -1805,7 +1805,7 @@ type FileConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type FileDiff implements Diff {
+type FileDiff implements Diff & WeakEntity & Entity & Node {
   # Node
   id: ID! # computed // hash
   # Entity
@@ -1847,7 +1847,7 @@ type FileDiffConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type FileModification implements Modification {
+type FileModification implements Modification & WeakEntity & Entity & Node {
   # Node
   id: ID! # computed // hash
   # Entity
@@ -1874,7 +1874,7 @@ type FileModificationConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type FileModifications implements WeakEntity {
+type FileModifications implements WeakEntity & Entity & Node {
   # Node
   id: ID! # computed // hash
   # Entity
@@ -1905,7 +1905,7 @@ type FileModificationsConnection implements EntityConnection {
 
 #region Author
 
-type Author implements Artifact {
+type Author implements Artifact & RichStrongEntity & StrongEntity & Entity & Node {
   # Node
   id: ID! # data // uuidv7
   # Entity
@@ -1946,7 +1946,7 @@ type AuthorConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type AuthorDiff implements Diff {
+type AuthorDiff implements Diff & WeakEntity & Entity & Node {
   # Node
   id: ID! # computed // hash
   # Entity
@@ -1977,7 +1977,7 @@ type AuthorDiffConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type AuthorModification implements Modification {
+type AuthorModification implements Modification & WeakEntity & Entity & Node {
   # Node
   id: ID! # computed // hash
   # Entity
@@ -2004,7 +2004,7 @@ type AuthorModificationConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type AuthorModifications implements WeakEntity {
+type AuthorModifications implements WeakEntity & Entity & Node {
   # Node
   id: ID! # computed // hash
   # Entity
@@ -2035,7 +2035,7 @@ type AuthorModificationsConnection implements EntityConnection {
 
 #region Prop
 
-type Prop implements Artifact {
+type Prop implements Artifact & RichStrongEntity & StrongEntity & Entity & Node {
   # Node
   id: ID! # data // uuidv7
   # Entity
@@ -2078,7 +2078,7 @@ type PropConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type PropDiff implements Diff {
+type PropDiff implements Diff & WeakEntity & Entity & Node {
   # Node
   id: ID! # computed // hash
   # Entity
@@ -2109,7 +2109,7 @@ type PropDiffConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type PropModification implements Modification {
+type PropModification implements Modification & WeakEntity & Entity & Node {
   # Node
   id: ID! # computed // hash
   # Entity
@@ -2136,7 +2136,7 @@ type PropModificationConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type PropModifications implements WeakEntity {
+type PropModifications implements WeakEntity & Entity & Node {
   # Node
   id: ID! # computed // hash
   # Entity
@@ -2167,7 +2167,7 @@ type PropModificationsConnection implements EntityConnection {
 
 #region Benchmark
 
-type Benchmark implements Artifact {
+type Benchmark implements Artifact & RichStrongEntity & StrongEntity & Entity & Node {
   # Node
   id: ID! # data // uuidv7
   # Entity
@@ -2209,7 +2209,7 @@ type BenchmarkConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type BenchmarkDiff implements Diff {
+type BenchmarkDiff implements Diff & WeakEntity & Entity & Node {
   # Node
   id: ID! # computed // hash
   # Entity
@@ -2243,7 +2243,7 @@ type BenchmarkDiffConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type BenchmarkModification implements Modification {
+type BenchmarkModification implements Modification & WeakEntity & Entity & Node {
   # Node
   id: ID! # computed // hash
   # Entity
@@ -2270,7 +2270,7 @@ type BenchmarkModificationConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type BenchmarkModifications implements WeakEntity {
+type BenchmarkModifications implements WeakEntity & Entity & Node {
   # Node
   id: ID! # computed // hash
   # Entity
@@ -2301,7 +2301,7 @@ type BenchmarkModificationsConnection implements EntityConnection {
 
 #region Quality
 
-type Quality implements Artifact {
+type Quality implements Artifact & RichStrongEntity & StrongEntity & Entity & Node {
   # Node
   id: ID! # data // uuidv7
   # Entity
@@ -2346,7 +2346,7 @@ type QualityConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type QualityDiff implements Diff {
+type QualityDiff implements Diff & WeakEntity & Entity & Node {
   # Node
   id: ID! # computed // hash
   # Entity
@@ -2383,7 +2383,7 @@ type QualityDiffConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type QualityModification implements Modification {
+type QualityModification implements Modification & WeakEntity & Entity & Node {
   # Node
   id: ID! # computed // hash
   # Entity
@@ -2410,7 +2410,7 @@ type QualityModificationConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type QualityModifications implements WeakEntity {
+type QualityModifications implements WeakEntity & Entity & Node {
   # Node
   id: ID! # computed // hash
   # Entity
@@ -2468,7 +2468,7 @@ type QualityOperationConnection implements EntityConnection {
 
 #region Operations
 
-type CreatedQualityInput implements Input {
+type CreatedQualityInput implements Input & WeakEntity & Entity & Node {
   # Node
   id: ID! # computed // hash
   # Entity
@@ -2494,7 +2494,7 @@ type CreatedQualityInputConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type CreatedQuality implements Operation {
+type CreatedQuality implements Operation & StrongEntity & Entity & Node {
   # Node
   id: ID! # data // uuidv7
   # Entity
@@ -2523,7 +2523,7 @@ type CreatedQualityConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type CreatedQualitiesInput implements Input {
+type CreatedQualitiesInput implements Input & WeakEntity & Entity & Node {
   # Node
   id: ID! # computed // hash
   # Entity
@@ -2549,7 +2549,7 @@ type CreatedQualitiesInputConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type CreatedQualities implements Operation {
+type CreatedQualities implements Operation & StrongEntity & Entity & Node {
   # Node
   id: ID! # data // uuidv7
   # Entity
@@ -2578,7 +2578,7 @@ type CreatedQualitiesConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type RenamedQualityInput implements Input {
+type RenamedQualityInput implements Input & WeakEntity & Entity & Node {
   # Node
   id: ID! # computed // hash
   # Entity
@@ -2604,7 +2604,7 @@ type RenamedQualityInputConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type RenamedQuality implements Operation {
+type RenamedQuality implements Operation & StrongEntity & Entity & Node {
   # Node
   id: ID! # data // uuidv7
   # Entity
@@ -2633,7 +2633,7 @@ type RenamedQualityConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type UpdatedQualityDescriptionInput implements Input {
+type UpdatedQualityDescriptionInput implements Input & WeakEntity & Entity & Node {
   # Node
   id: ID! # computed // hash
   # Entity
@@ -2659,7 +2659,7 @@ type UpdatedQualityDescriptionInputConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type UpdatedQualityDescription implements Operation {
+type UpdatedQualityDescription implements Operation & StrongEntity & Entity & Node {
   # Node
   id: ID! # data // uuidv7
   # Entity
@@ -2688,7 +2688,7 @@ type UpdatedQualityDescriptionConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type UpdatedQualityIconInput implements Input {
+type UpdatedQualityIconInput implements Input & WeakEntity & Entity & Node {
   # Node
   id: ID! # computed // hash
   # Entity
@@ -2714,7 +2714,7 @@ type UpdatedQualityIconInputConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type UpdatedQualityIcon implements Operation {
+type UpdatedQualityIcon implements Operation & StrongEntity & Entity & Node {
   # Node
   id: ID! # data // uuidv7
   # Entity
@@ -2743,7 +2743,7 @@ type UpdatedQualityIconConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type AddedAttributeToQualityInput implements Input {
+type AddedAttributeToQualityInput implements Input & WeakEntity & Entity & Node {
   # Node
   id: ID! # computed // hash
   # Entity
@@ -2769,7 +2769,7 @@ type AddedAttributeToQualityInputConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type AddedAttributeToQuality implements Operation {
+type AddedAttributeToQuality implements Operation & StrongEntity & Entity & Node {
   # Node
   id: ID! # data // uuidv7
   # Entity
@@ -2799,7 +2799,7 @@ type AddedAttributeToQualityConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type AddedAttributesToQualityInput implements Input {
+type AddedAttributesToQualityInput implements Input & WeakEntity & Entity & Node {
   # Node
   id: ID! # computed // hash
   # Entity
@@ -2825,7 +2825,7 @@ type AddedAttributesToQualityInputConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type AddedAttributesToQuality implements Operation {
+type AddedAttributesToQuality implements Operation & StrongEntity & Entity & Node {
   # Node
   id: ID! # data // uuidv7
   # Entity
@@ -2855,7 +2855,7 @@ type AddedAttributesToQualityConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type RemovedAttributeFromQuality implements Operation {
+type RemovedAttributeFromQuality implements Operation & StrongEntity & Entity & Node {
   # Node
   id: ID! # data // uuidv7
   # Entity
@@ -2864,6 +2864,7 @@ type RemovedAttributeFromQuality implements Operation {
   owns: EntityConnection # reference
   # Operation
   scope: Entity! # reference // Quality | Attribute
+  input: Input # data // null when all operation data is carried by scope
   modification: Modification! # computed
   # Operation Output
   quality: Quality! # data
@@ -2883,7 +2884,7 @@ type RemovedAttributeFromQualityConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type RemovedAttributesFromQuality implements Operation {
+type RemovedAttributesFromQuality implements Operation & StrongEntity & Entity & Node {
   # Node
   id: ID! # data // uuidv7
   # Entity
@@ -2892,6 +2893,7 @@ type RemovedAttributesFromQuality implements Operation {
   owns: EntityConnection # reference
   # Operation
   scope: Entity! # reference // Quality | Attribute
+  input: Input # data // null when all operation data is carried by scope
   modification: Modification! # computed
   # Operation Output
   quality: Quality! # data
@@ -2911,7 +2913,7 @@ type RemovedAttributesFromQualityConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type DeletedQuality implements Operation {
+type DeletedQuality implements Operation & StrongEntity & Entity & Node {
   # Node
   id: ID! # data // uuidv7
   # Entity
@@ -2920,6 +2922,7 @@ type DeletedQuality implements Operation {
   owns: EntityConnection # reference
   # Operation
   scope: Entity! # reference // Quality
+  input: Input # data // null when all operation data is carried by scope
   modification: Modification! # computed
 }
 
@@ -2937,7 +2940,7 @@ type DeletedQualityConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type DeletedQualities implements Operation {
+type DeletedQualities implements Operation & StrongEntity & Entity & Node {
   # Node
   id: ID! # data // uuidv7
   # Entity
@@ -2946,6 +2949,7 @@ type DeletedQualities implements Operation {
   owns: EntityConnection # reference
   # Operation
   scope: Entity! # reference // Quality
+  input: Input # data // null when all operation data is carried by scope
   modification: Modification! # computed
 }
 
@@ -2969,7 +2973,7 @@ type DeletedQualitiesConnection implements EntityConnection {
 
 #region Tag
 
-type Tag implements Artifact {
+type Tag implements Artifact & RichStrongEntity & StrongEntity & Entity & Node {
   # Node
   id: ID! # data // uuidv7
   # Entity
@@ -3010,7 +3014,7 @@ type TagConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type TagDiff implements Diff {
+type TagDiff implements Diff & WeakEntity & Entity & Node {
   # Node
   id: ID! # computed // hash
   # Entity
@@ -3042,7 +3046,7 @@ type TagDiffConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type TagModification implements Modification {
+type TagModification implements Modification & WeakEntity & Entity & Node {
   # Node
   id: ID! # computed // hash
   # Entity
@@ -3069,7 +3073,7 @@ type TagModificationConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type TagModifications implements WeakEntity {
+type TagModifications implements WeakEntity & Entity & Node {
   # Node
   id: ID! # computed // hash
   # Entity
@@ -3127,7 +3131,7 @@ type TagOperationConnection implements EntityConnection {
 
 #region Operations
 
-type CreatedTagInput implements Input {
+type CreatedTagInput implements Input & WeakEntity & Entity & Node {
   # Node
   id: ID! # computed // hash
   # Entity
@@ -3153,7 +3157,7 @@ type CreatedTagInputConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type CreatedTag implements Operation {
+type CreatedTag implements Operation & StrongEntity & Entity & Node {
   # Node
   id: ID! # data // uuidv7
   # Entity
@@ -3182,7 +3186,7 @@ type CreatedTagConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type CreatedTagsInput implements Input {
+type CreatedTagsInput implements Input & WeakEntity & Entity & Node {
   # Node
   id: ID! # computed // hash
   # Entity
@@ -3208,7 +3212,7 @@ type CreatedTagsInputConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type CreatedTags implements Operation {
+type CreatedTags implements Operation & StrongEntity & Entity & Node {
   # Node
   id: ID! # data // uuidv7
   # Entity
@@ -3237,7 +3241,7 @@ type CreatedTagsConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type RenamedTagInput implements Input {
+type RenamedTagInput implements Input & WeakEntity & Entity & Node {
   # Node
   id: ID! # computed // hash
   # Entity
@@ -3263,7 +3267,7 @@ type RenamedTagInputConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type RenamedTag implements Operation {
+type RenamedTag implements Operation & StrongEntity & Entity & Node {
   # Node
   id: ID! # data // uuidv7
   # Entity
@@ -3292,7 +3296,7 @@ type RenamedTagConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type UpdatedTagDescriptionInput implements Input {
+type UpdatedTagDescriptionInput implements Input & WeakEntity & Entity & Node {
   # Node
   id: ID! # computed // hash
   # Entity
@@ -3318,7 +3322,7 @@ type UpdatedTagDescriptionInputConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type UpdatedTagDescription implements Operation {
+type UpdatedTagDescription implements Operation & StrongEntity & Entity & Node {
   # Node
   id: ID! # data // uuidv7
   # Entity
@@ -3347,7 +3351,7 @@ type UpdatedTagDescriptionConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type UpdatedTagIconInput implements Input {
+type UpdatedTagIconInput implements Input & WeakEntity & Entity & Node {
   # Node
   id: ID! # computed // hash
   # Entity
@@ -3373,7 +3377,7 @@ type UpdatedTagIconInputConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type UpdatedTagIcon implements Operation {
+type UpdatedTagIcon implements Operation & StrongEntity & Entity & Node {
   # Node
   id: ID! # data // uuidv7
   # Entity
@@ -3402,7 +3406,7 @@ type UpdatedTagIconConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type AddedAttributeToTagInput implements Input {
+type AddedAttributeToTagInput implements Input & WeakEntity & Entity & Node {
   # Node
   id: ID! # computed // hash
   # Entity
@@ -3428,7 +3432,7 @@ type AddedAttributeToTagInputConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type AddedAttributeToTag implements Operation {
+type AddedAttributeToTag implements Operation & StrongEntity & Entity & Node {
   # Node
   id: ID! # data // uuidv7
   # Entity
@@ -3458,7 +3462,7 @@ type AddedAttributeToTagConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type AddedAttributesToTagInput implements Input {
+type AddedAttributesToTagInput implements Input & WeakEntity & Entity & Node {
   # Node
   id: ID! # computed // hash
   # Entity
@@ -3484,7 +3488,7 @@ type AddedAttributesToTagInputConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type AddedAttributesToTag implements Operation {
+type AddedAttributesToTag implements Operation & StrongEntity & Entity & Node {
   # Node
   id: ID! # data // uuidv7
   # Entity
@@ -3514,7 +3518,7 @@ type AddedAttributesToTagConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type RemovedAttributeFromTag implements Operation {
+type RemovedAttributeFromTag implements Operation & StrongEntity & Entity & Node {
   # Node
   id: ID! # data // uuidv7
   # Entity
@@ -3523,6 +3527,7 @@ type RemovedAttributeFromTag implements Operation {
   owns: EntityConnection # reference
   # Operation
   scope: Entity! # reference // Tag | Attribute
+  input: Input # data // null when all operation data is carried by scope
   modification: Modification! # computed
   # Operation Output
   tag: Tag! # data
@@ -3542,7 +3547,7 @@ type RemovedAttributeFromTagConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type RemovedAttributesFromTag implements Operation {
+type RemovedAttributesFromTag implements Operation & StrongEntity & Entity & Node {
   # Node
   id: ID! # data // uuidv7
   # Entity
@@ -3551,6 +3556,7 @@ type RemovedAttributesFromTag implements Operation {
   owns: EntityConnection # reference
   # Operation
   scope: Entity! # reference // Tag | Attribute
+  input: Input # data // null when all operation data is carried by scope
   modification: Modification! # computed
   # Operation Output
   tag: Tag! # data
@@ -3570,7 +3576,7 @@ type RemovedAttributesFromTagConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type DeletedTag implements Operation {
+type DeletedTag implements Operation & StrongEntity & Entity & Node {
   # Node
   id: ID! # data // uuidv7
   # Entity
@@ -3579,6 +3585,7 @@ type DeletedTag implements Operation {
   owns: EntityConnection # reference
   # Operation
   scope: Entity! # reference // Tag
+  input: Input # data // null when all operation data is carried by scope
   modification: Modification! # computed
 }
 
@@ -3596,7 +3603,7 @@ type DeletedTagConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type DeletedTags implements Operation {
+type DeletedTags implements Operation & StrongEntity & Entity & Node {
   # Node
   id: ID! # data // uuidv7
   # Entity
@@ -3605,6 +3612,7 @@ type DeletedTags implements Operation {
   owns: EntityConnection # reference
   # Operation
   scope: Entity! # reference // Tag
+  input: Input # data // null when all operation data is carried by scope
   modification: Modification! # computed
 }
 
@@ -3628,7 +3636,7 @@ type DeletedTagsConnection implements EntityConnection {
 
 #region Concept
 
-type Concept implements Artifact {
+type Concept implements Artifact & RichStrongEntity & StrongEntity & Entity & Node {
   # Node
   id: ID! # data // uuidv7
   # Entity
@@ -3669,7 +3677,7 @@ type ConceptConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type ConceptDiff implements Diff {
+type ConceptDiff implements Diff & WeakEntity & Entity & Node {
   # Node
   id: ID! # computed // hash
   # Entity
@@ -3701,7 +3709,7 @@ type ConceptDiffConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type ConceptModification implements Modification {
+type ConceptModification implements Modification & WeakEntity & Entity & Node {
   # Node
   id: ID! # computed // hash
   # Entity
@@ -3728,7 +3736,7 @@ type ConceptModificationConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type ConceptModifications implements WeakEntity {
+type ConceptModifications implements WeakEntity & Entity & Node {
   # Node
   id: ID! # computed // hash
   # Entity
@@ -3786,7 +3794,7 @@ type ConceptOperationConnection implements EntityConnection {
 
 #region Operations
 
-type CreatedConceptInput implements Input {
+type CreatedConceptInput implements Input & WeakEntity & Entity & Node {
   # Node
   id: ID! # computed // hash
   # Entity
@@ -3812,7 +3820,7 @@ type CreatedConceptInputConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type CreatedConcept implements Operation {
+type CreatedConcept implements Operation & StrongEntity & Entity & Node {
   # Node
   id: ID! # data // uuidv7
   # Entity
@@ -3841,7 +3849,7 @@ type CreatedConceptConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type CreatedConceptsInput implements Input {
+type CreatedConceptsInput implements Input & WeakEntity & Entity & Node {
   # Node
   id: ID! # computed // hash
   # Entity
@@ -3867,7 +3875,7 @@ type CreatedConceptsInputConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type CreatedConcepts implements Operation {
+type CreatedConcepts implements Operation & StrongEntity & Entity & Node {
   # Node
   id: ID! # data // uuidv7
   # Entity
@@ -3896,7 +3904,7 @@ type CreatedConceptsConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type RenamedConceptInput implements Input {
+type RenamedConceptInput implements Input & WeakEntity & Entity & Node {
   # Node
   id: ID! # computed // hash
   # Entity
@@ -3922,7 +3930,7 @@ type RenamedConceptInputConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type RenamedConcept implements Operation {
+type RenamedConcept implements Operation & StrongEntity & Entity & Node {
   # Node
   id: ID! # data // uuidv7
   # Entity
@@ -3951,7 +3959,7 @@ type RenamedConceptConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type UpdatedConceptDescriptionInput implements Input {
+type UpdatedConceptDescriptionInput implements Input & WeakEntity & Entity & Node {
   # Node
   id: ID! # computed // hash
   # Entity
@@ -3977,7 +3985,7 @@ type UpdatedConceptDescriptionInputConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type UpdatedConceptDescription implements Operation {
+type UpdatedConceptDescription implements Operation & StrongEntity & Entity & Node {
   # Node
   id: ID! # data // uuidv7
   # Entity
@@ -4006,7 +4014,7 @@ type UpdatedConceptDescriptionConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type UpdatedConceptIconInput implements Input {
+type UpdatedConceptIconInput implements Input & WeakEntity & Entity & Node {
   # Node
   id: ID! # computed // hash
   # Entity
@@ -4032,7 +4040,7 @@ type UpdatedConceptIconInputConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type UpdatedConceptIcon implements Operation {
+type UpdatedConceptIcon implements Operation & StrongEntity & Entity & Node {
   # Node
   id: ID! # data // uuidv7
   # Entity
@@ -4061,7 +4069,7 @@ type UpdatedConceptIconConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type AddedAttributeToConceptInput implements Input {
+type AddedAttributeToConceptInput implements Input & WeakEntity & Entity & Node {
   # Node
   id: ID! # computed // hash
   # Entity
@@ -4087,7 +4095,7 @@ type AddedAttributeToConceptInputConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type AddedAttributeToConcept implements Operation {
+type AddedAttributeToConcept implements Operation & StrongEntity & Entity & Node {
   # Node
   id: ID! # data // uuidv7
   # Entity
@@ -4117,7 +4125,7 @@ type AddedAttributeToConceptConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type AddedAttributesToConceptInput implements Input {
+type AddedAttributesToConceptInput implements Input & WeakEntity & Entity & Node {
   # Node
   id: ID! # computed // hash
   # Entity
@@ -4143,7 +4151,7 @@ type AddedAttributesToConceptInputConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type AddedAttributesToConcept implements Operation {
+type AddedAttributesToConcept implements Operation & StrongEntity & Entity & Node {
   # Node
   id: ID! # data // uuidv7
   # Entity
@@ -4173,7 +4181,7 @@ type AddedAttributesToConceptConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type RemovedAttributeFromConcept implements Operation {
+type RemovedAttributeFromConcept implements Operation & StrongEntity & Entity & Node {
   # Node
   id: ID! # data // uuidv7
   # Entity
@@ -4182,6 +4190,7 @@ type RemovedAttributeFromConcept implements Operation {
   owns: EntityConnection # reference
   # Operation
   scope: Entity! # reference // Concept | Attribute
+  input: Input # data // null when all operation data is carried by scope
   modification: Modification! # computed
   # Operation Output
   concept: Concept! # data
@@ -4201,7 +4210,7 @@ type RemovedAttributeFromConceptConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type RemovedAttributesFromConcept implements Operation {
+type RemovedAttributesFromConcept implements Operation & StrongEntity & Entity & Node {
   # Node
   id: ID! # data // uuidv7
   # Entity
@@ -4210,6 +4219,7 @@ type RemovedAttributesFromConcept implements Operation {
   owns: EntityConnection # reference
   # Operation
   scope: Entity! # reference // Concept | Attribute
+  input: Input # data // null when all operation data is carried by scope
   modification: Modification! # computed
   # Operation Output
   concept: Concept! # data
@@ -4229,7 +4239,7 @@ type RemovedAttributesFromConceptConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type DeletedConcept implements Operation {
+type DeletedConcept implements Operation & StrongEntity & Entity & Node {
   # Node
   id: ID! # data // uuidv7
   # Entity
@@ -4238,6 +4248,7 @@ type DeletedConcept implements Operation {
   owns: EntityConnection # reference
   # Operation
   scope: Entity! # reference // Concept
+  input: Input # data // null when all operation data is carried by scope
   modification: Modification! # computed
 }
 
@@ -4255,7 +4266,7 @@ type DeletedConceptConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type DeletedConcepts implements Operation {
+type DeletedConcepts implements Operation & StrongEntity & Entity & Node {
   # Node
   id: ID! # data // uuidv7
   # Entity
@@ -4264,6 +4275,7 @@ type DeletedConcepts implements Operation {
   owns: EntityConnection # reference
   # Operation
   scope: Entity! # reference // Concept
+  input: Input # data // null when all operation data is carried by scope
   modification: Modification! # computed
 }
 
@@ -4287,7 +4299,7 @@ type DeletedConceptsConnection implements EntityConnection {
 
 #region Stat
 
-type Stat implements Artifact {
+type Stat implements Artifact & RichStrongEntity & StrongEntity & Entity & Node {
   # Node
   id: ID! # data // uuidv7
   # Entity
@@ -4329,7 +4341,7 @@ type StatConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type StatDiff implements Diff {
+type StatDiff implements Diff & WeakEntity & Entity & Node {
   # Node
   id: ID! # computed // hash
   # Entity
@@ -4360,7 +4372,7 @@ type StatDiffConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type StatModification implements Modification {
+type StatModification implements Modification & WeakEntity & Entity & Node {
   # Node
   id: ID! # computed // hash
   # Entity
@@ -4387,7 +4399,7 @@ type StatModificationConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type StatModifications implements WeakEntity {
+type StatModifications implements WeakEntity & Entity & Node {
   # Node
   id: ID! # computed // hash
   # Entity
@@ -4418,7 +4430,7 @@ type StatModificationsConnection implements EntityConnection {
 
 #region Port
 
-type Port implements Artifact {
+type Port implements Artifact & RichStrongEntity & StrongEntity & Entity & Node {
   # Node
   id: ID! # data // uuidv7
   # Entity
@@ -4460,7 +4472,7 @@ type PortConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type PortDiff implements Diff {
+type PortDiff implements Diff & WeakEntity & Entity & Node {
   # Node
   id: ID! # computed // hash
   # Entity
@@ -4489,7 +4501,7 @@ type PortDiffConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type PortModification implements Modification {
+type PortModification implements Modification & WeakEntity & Entity & Node {
   # Node
   id: ID! # computed // hash
   # Entity
@@ -4516,7 +4528,7 @@ type PortModificationConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type PortModifications implements WeakEntity {
+type PortModifications implements WeakEntity & Entity & Node {
   # Node
   id: ID! # computed // hash
   # Entity
@@ -4574,7 +4586,7 @@ type PortOperationConnection implements EntityConnection {
 
 #region Operations
 
-type CreatedPortInput implements Input {
+type CreatedPortInput implements Input & WeakEntity & Entity & Node {
   # Node
   id: ID! # computed // hash
   # Entity
@@ -4600,7 +4612,7 @@ type CreatedPortInputConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type CreatedPort implements Operation {
+type CreatedPort implements Operation & StrongEntity & Entity & Node {
   # Node
   id: ID! # data // uuidv7
   # Entity
@@ -4629,7 +4641,7 @@ type CreatedPortConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type CreatedPortsInput implements Input {
+type CreatedPortsInput implements Input & WeakEntity & Entity & Node {
   # Node
   id: ID! # computed // hash
   # Entity
@@ -4655,7 +4667,7 @@ type CreatedPortsInputConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type CreatedPorts implements Operation {
+type CreatedPorts implements Operation & StrongEntity & Entity & Node {
   # Node
   id: ID! # data // uuidv7
   # Entity
@@ -4684,7 +4696,7 @@ type CreatedPortsConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type RenamedPortInput implements Input {
+type RenamedPortInput implements Input & WeakEntity & Entity & Node {
   # Node
   id: ID! # computed // hash
   # Entity
@@ -4711,7 +4723,7 @@ type RenamedPortInputConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type RenamedPort implements Operation {
+type RenamedPort implements Operation & StrongEntity & Entity & Node {
   # Node
   id: ID! # data // uuidv7
   # Entity
@@ -4740,7 +4752,7 @@ type RenamedPortConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type UpdatedPortDescriptionInput implements Input {
+type UpdatedPortDescriptionInput implements Input & WeakEntity & Entity & Node {
   # Node
   id: ID! # computed // hash
   # Entity
@@ -4766,7 +4778,7 @@ type UpdatedPortDescriptionInputConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type UpdatedPortDescription implements Operation {
+type UpdatedPortDescription implements Operation & StrongEntity & Entity & Node {
   # Node
   id: ID! # data // uuidv7
   # Entity
@@ -4795,7 +4807,7 @@ type UpdatedPortDescriptionConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type UpdatedPortIconInput implements Input {
+type UpdatedPortIconInput implements Input & WeakEntity & Entity & Node {
   # Node
   id: ID! # computed // hash
   # Entity
@@ -4821,7 +4833,7 @@ type UpdatedPortIconInputConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type UpdatedPortIcon implements Operation {
+type UpdatedPortIcon implements Operation & StrongEntity & Entity & Node {
   # Node
   id: ID! # data // uuidv7
   # Entity
@@ -4850,7 +4862,7 @@ type UpdatedPortIconConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type AddedAttributeToPortInput implements Input {
+type AddedAttributeToPortInput implements Input & WeakEntity & Entity & Node {
   # Node
   id: ID! # computed // hash
   # Entity
@@ -4876,7 +4888,7 @@ type AddedAttributeToPortInputConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type AddedAttributeToPort implements Operation {
+type AddedAttributeToPort implements Operation & StrongEntity & Entity & Node {
   # Node
   id: ID! # data // uuidv7
   # Entity
@@ -4906,7 +4918,7 @@ type AddedAttributeToPortConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type AddedAttributesToPortInput implements Input {
+type AddedAttributesToPortInput implements Input & WeakEntity & Entity & Node {
   # Node
   id: ID! # computed // hash
   # Entity
@@ -4932,7 +4944,7 @@ type AddedAttributesToPortInputConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type AddedAttributesToPort implements Operation {
+type AddedAttributesToPort implements Operation & StrongEntity & Entity & Node {
   # Node
   id: ID! # data // uuidv7
   # Entity
@@ -4962,7 +4974,7 @@ type AddedAttributesToPortConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type RemovedAttributeFromPort implements Operation {
+type RemovedAttributeFromPort implements Operation & StrongEntity & Entity & Node {
   # Node
   id: ID! # data // uuidv7
   # Entity
@@ -4971,6 +4983,7 @@ type RemovedAttributeFromPort implements Operation {
   owns: EntityConnection # reference
   # Operation
   scope: Entity! # reference // Port | Attribute
+  input: Input # data // null when all operation data is carried by scope
   modification: Modification! # computed
   # Operation Output
   port: Port! # data
@@ -4990,7 +5003,7 @@ type RemovedAttributeFromPortConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type RemovedAttributesFromPort implements Operation {
+type RemovedAttributesFromPort implements Operation & StrongEntity & Entity & Node {
   # Node
   id: ID! # data // uuidv7
   # Entity
@@ -4999,6 +5012,7 @@ type RemovedAttributesFromPort implements Operation {
   owns: EntityConnection # reference
   # Operation
   scope: Entity! # reference // Port | Attribute
+  input: Input # data // null when all operation data is carried by scope
   modification: Modification! # computed
   # Operation Output
   port: Port! # data
@@ -5018,7 +5032,7 @@ type RemovedAttributesFromPortConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type DeletedPort implements Operation {
+type DeletedPort implements Operation & StrongEntity & Entity & Node {
   # Node
   id: ID! # data // uuidv7
   # Entity
@@ -5027,6 +5041,7 @@ type DeletedPort implements Operation {
   owns: EntityConnection # reference
   # Operation
   scope: Entity! # reference // Port
+  input: Input # data // null when all operation data is carried by scope
   modification: Modification! # computed
 }
 
@@ -5044,7 +5059,7 @@ type DeletedPortConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type DeletedPorts implements Operation {
+type DeletedPorts implements Operation & StrongEntity & Entity & Node {
   # Node
   id: ID! # data // uuidv7
   # Entity
@@ -5053,6 +5068,7 @@ type DeletedPorts implements Operation {
   owns: EntityConnection # reference
   # Operation
   scope: Entity! # reference // Port
+  input: Input # data // null when all operation data is carried by scope
   modification: Modification! # computed
 }
 
@@ -5076,7 +5092,7 @@ type DeletedPortsConnection implements EntityConnection {
 
 #region Type
 
-type Connector implements Artifact {
+type Connector implements Artifact & RichStrongEntity & StrongEntity & Entity & Node {
   # Node
   id: ID! # data // uuidv7
   # Entity
@@ -5120,7 +5136,7 @@ type ConnectorConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type ConnectorDiff implements Diff {
+type ConnectorDiff implements Diff & WeakEntity & Entity & Node {
   # Node
   id: ID! # computed // hash
   # Entity
@@ -5152,7 +5168,7 @@ type ConnectorDiffConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type ConnectorModification implements Modification {
+type ConnectorModification implements Modification & WeakEntity & Entity & Node {
   # Node
   id: ID! # computed // hash
   # Entity
@@ -5179,7 +5195,7 @@ type ConnectorModificationConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type ConnectorModifications implements WeakEntity {
+type ConnectorModifications implements WeakEntity & Entity & Node {
   # Node
   id: ID! # computed // hash
   # Entity
@@ -5231,7 +5247,7 @@ type ConnectorOperationConnection implements EntityConnection {
 
 #endregion Commands
 
-type Representation implements Artifact {
+type Representation implements Artifact & RichStrongEntity & StrongEntity & Entity & Node {
   # Node
   id: ID! # data // uuidv7
   # Entity
@@ -5277,7 +5293,7 @@ type RepresentationConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type RepresentationDiff implements Diff {
+type RepresentationDiff implements Diff & WeakEntity & Entity & Node {
   # Node
   id: ID! # computed // hash
   # Entity
@@ -5307,7 +5323,7 @@ type RepresentationDiffConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type RepresentationModification implements Modification {
+type RepresentationModification implements Modification & WeakEntity & Entity & Node {
   # Node
   id: ID! # computed // hash
   # Entity
@@ -5334,7 +5350,7 @@ type RepresentationModificationConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type RepresentationModifications implements WeakEntity {
+type RepresentationModifications implements WeakEntity & Entity & Node {
   # Node
   id: ID! # computed // hash
   # Entity
@@ -5361,7 +5377,7 @@ type RepresentationModificationsConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type Type implements Artifact {
+type Type implements Artifact & RichStrongEntity & StrongEntity & Entity & Node {
   # Node
   id: ID! # data // uuidv7
   # Entity
@@ -5421,7 +5437,7 @@ type TypeConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type TypeDiff implements Diff {
+type TypeDiff implements Diff & WeakEntity & Entity & Node {
   # Node
   id: ID! # computed // hash
   # Entity
@@ -5465,7 +5481,7 @@ type TypeDiffConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type TypeModification implements Modification {
+type TypeModification implements Modification & WeakEntity & Entity & Node {
   # Node
   id: ID! # computed // hash
   # Entity
@@ -5492,7 +5508,7 @@ type TypeModificationConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type TypeModifications implements WeakEntity {
+type TypeModifications implements WeakEntity & Entity & Node {
   # Node
   id: ID! # computed // hash
   # Entity
@@ -5560,7 +5576,7 @@ type TypeOperationConnection implements EntityConnection {
 
 #region Operations
 
-type CreatedTypeInput implements Input {
+type CreatedTypeInput implements Input & WeakEntity & Entity & Node {
   # Node
   id: ID! # computed // hash
   # Entity
@@ -5586,7 +5602,7 @@ type CreatedTypeInputConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type CreatedType implements Operation {
+type CreatedType implements Operation & StrongEntity & Entity & Node {
   # Node
   id: ID! # data // uuidv7
   # Entity
@@ -5615,7 +5631,7 @@ type CreatedTypeConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type CreatedTypesInput implements Input {
+type CreatedTypesInput implements Input & WeakEntity & Entity & Node {
   # Node
   id: ID! # computed // hash
   # Entity
@@ -5641,7 +5657,7 @@ type CreatedTypesInputConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type CreatedTypes implements Operation {
+type CreatedTypes implements Operation & StrongEntity & Entity & Node {
   # Node
   id: ID! # data // uuidv7
   # Entity
@@ -5670,7 +5686,7 @@ type CreatedTypesConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type RenamedTypeInput implements Input {
+type RenamedTypeInput implements Input & WeakEntity & Entity & Node {
   # Node
   id: ID! # computed // hash
   # Entity
@@ -5696,7 +5712,7 @@ type RenamedTypeInputConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type RenamedType implements Operation {
+type RenamedType implements Operation & StrongEntity & Entity & Node {
   # Node
   id: ID! # data // uuidv7
   # Entity
@@ -5725,7 +5741,7 @@ type RenamedTypeConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type UpdatedTypeDescriptionInput implements Input {
+type UpdatedTypeDescriptionInput implements Input & WeakEntity & Entity & Node {
   # Node
   id: ID! # computed // hash
   # Entity
@@ -5751,7 +5767,7 @@ type UpdatedTypeDescriptionInputConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type UpdatedTypeDescription implements Operation {
+type UpdatedTypeDescription implements Operation & StrongEntity & Entity & Node {
   # Node
   id: ID! # data // uuidv7
   # Entity
@@ -5780,7 +5796,7 @@ type UpdatedTypeDescriptionConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type UpdatedTypeIconInput implements Input {
+type UpdatedTypeIconInput implements Input & WeakEntity & Entity & Node {
   # Node
   id: ID! # computed // hash
   # Entity
@@ -5806,7 +5822,7 @@ type UpdatedTypeIconInputConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type UpdatedTypeIcon implements Operation {
+type UpdatedTypeIcon implements Operation & StrongEntity & Entity & Node {
   # Node
   id: ID! # data // uuidv7
   # Entity
@@ -5835,7 +5851,7 @@ type UpdatedTypeIconConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type AddedAttributeToTypeInput implements Input {
+type AddedAttributeToTypeInput implements Input & WeakEntity & Entity & Node {
   # Node
   id: ID! # computed // hash
   # Entity
@@ -5861,7 +5877,7 @@ type AddedAttributeToTypeInputConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type AddedAttributeToType implements Operation {
+type AddedAttributeToType implements Operation & StrongEntity & Entity & Node {
   # Node
   id: ID! # data // uuidv7
   # Entity
@@ -5891,7 +5907,7 @@ type AddedAttributeToTypeConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type AddedAttributesToTypeInput implements Input {
+type AddedAttributesToTypeInput implements Input & WeakEntity & Entity & Node {
   # Node
   id: ID! # computed // hash
   # Entity
@@ -5917,7 +5933,7 @@ type AddedAttributesToTypeInputConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type AddedAttributesToType implements Operation {
+type AddedAttributesToType implements Operation & StrongEntity & Entity & Node {
   # Node
   id: ID! # data // uuidv7
   # Entity
@@ -5947,7 +5963,7 @@ type AddedAttributesToTypeConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type RemovedAttributeFromType implements Operation {
+type RemovedAttributeFromType implements Operation & StrongEntity & Entity & Node {
   # Node
   id: ID! # data // uuidv7
   # Entity
@@ -5956,6 +5972,7 @@ type RemovedAttributeFromType implements Operation {
   owns: EntityConnection # reference
   # Operation
   scope: Entity! # reference // Type | Attribute
+  input: Input # data // null when all operation data is carried by scope
   modification: Modification! # computed
   # Operation Output
   type: Type! # data
@@ -5975,7 +5992,7 @@ type RemovedAttributeFromTypeConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type RemovedAttributesFromType implements Operation {
+type RemovedAttributesFromType implements Operation & StrongEntity & Entity & Node {
   # Node
   id: ID! # data // uuidv7
   # Entity
@@ -5984,6 +6001,7 @@ type RemovedAttributesFromType implements Operation {
   owns: EntityConnection # reference
   # Operation
   scope: Entity! # reference // Type | Attribute
+  input: Input # data // null when all operation data is carried by scope
   modification: Modification! # computed
   # Operation Output
   type: Type! # data
@@ -6003,7 +6021,7 @@ type RemovedAttributesFromTypeConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type DeletedType implements Operation {
+type DeletedType implements Operation & StrongEntity & Entity & Node {
   # Node
   id: ID! # data // uuidv7
   # Entity
@@ -6012,6 +6030,7 @@ type DeletedType implements Operation {
   owns: EntityConnection # reference
   # Operation
   scope: Entity! # reference // Type
+  input: Input # data // null when all operation data is carried by scope
   modification: Modification! # computed
 }
 
@@ -6029,7 +6048,7 @@ type DeletedTypeConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type DeletedTypes implements Operation {
+type DeletedTypes implements Operation & StrongEntity & Entity & Node {
   # Node
   id: ID! # data // uuidv7
   # Entity
@@ -6038,6 +6057,7 @@ type DeletedTypes implements Operation {
   owns: EntityConnection # reference
   # Operation
   scope: Entity! # reference // Type
+  input: Input # data // null when all operation data is carried by scope
   modification: Modification! # computed
 }
 
@@ -6057,7 +6077,7 @@ type DeletedTypesConnection implements EntityConnection {
 
 #region Connector
 
-type AddedConnectorInput implements Input {
+type AddedConnectorInput implements Input & WeakEntity & Entity & Node {
   # Node
   id: ID! # computed // hash
   # Entity
@@ -6083,7 +6103,7 @@ type AddedConnectorInputConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type AddedConnector implements Operation {
+type AddedConnector implements Operation & StrongEntity & Entity & Node {
   # Node
   id: ID! # data // uuidv7
   # Entity
@@ -6113,7 +6133,7 @@ type AddedConnectorConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type AddedConnectorsInput implements Input {
+type AddedConnectorsInput implements Input & WeakEntity & Entity & Node {
   # Node
   id: ID! # computed // hash
   # Entity
@@ -6139,7 +6159,7 @@ type AddedConnectorsInputConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type AddedConnectors implements Operation {
+type AddedConnectors implements Operation & StrongEntity & Entity & Node {
   # Node
   id: ID! # data // uuidv7
   # Entity
@@ -6169,7 +6189,7 @@ type AddedConnectorsConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type RenamedConnectorInput implements Input {
+type RenamedConnectorInput implements Input & WeakEntity & Entity & Node {
   # Node
   id: ID! # computed // hash
   # Entity
@@ -6195,7 +6215,7 @@ type RenamedConnectorInputConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type RenamedConnector implements Operation {
+type RenamedConnector implements Operation & StrongEntity & Entity & Node {
   # Node
   id: ID! # data // uuidv7
   # Entity
@@ -6224,7 +6244,7 @@ type RenamedConnectorConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type UpdatedConnectorDescriptionInput implements Input {
+type UpdatedConnectorDescriptionInput implements Input & WeakEntity & Entity & Node {
   # Node
   id: ID! # computed // hash
   # Entity
@@ -6250,7 +6270,7 @@ type UpdatedConnectorDescriptionInputConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type UpdatedConnectorDescription implements Operation {
+type UpdatedConnectorDescription implements Operation & StrongEntity & Entity & Node {
   # Node
   id: ID! # data // uuidv7
   # Entity
@@ -6279,7 +6299,7 @@ type UpdatedConnectorDescriptionConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type UpdatedConnectorIconInput implements Input {
+type UpdatedConnectorIconInput implements Input & WeakEntity & Entity & Node {
   # Node
   id: ID! # computed // hash
   # Entity
@@ -6305,7 +6325,7 @@ type UpdatedConnectorIconInputConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type UpdatedConnectorIcon implements Operation {
+type UpdatedConnectorIcon implements Operation & StrongEntity & Entity & Node {
   # Node
   id: ID! # data // uuidv7
   # Entity
@@ -6334,7 +6354,7 @@ type UpdatedConnectorIconConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type RemovedConnector implements Operation {
+type RemovedConnector implements Operation & StrongEntity & Entity & Node {
   # Node
   id: ID! # data // uuidv7
   # Entity
@@ -6343,6 +6363,7 @@ type RemovedConnector implements Operation {
   owns: EntityConnection # reference
   # Operation
   scope: Entity! # reference // Connector
+  input: Input # data // null when all operation data is carried by scope
   modification: Modification! # computed
   # Operation Output
   type: Type! # data
@@ -6362,7 +6383,7 @@ type RemovedConnectorConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type RemovedConnectors implements Operation {
+type RemovedConnectors implements Operation & StrongEntity & Entity & Node {
   # Node
   id: ID! # data // uuidv7
   # Entity
@@ -6371,6 +6392,7 @@ type RemovedConnectors implements Operation {
   owns: EntityConnection # reference
   # Operation
   scope: Entity! # reference // Connector
+  input: Input # data // null when all operation data is carried by scope
   modification: Modification! # computed
   # Operation Output
   type: Type! # data
@@ -6400,7 +6422,7 @@ type RemovedConnectorsConnection implements EntityConnection {
 
 #region Layer
 
-type Layer implements Artifact {
+type Layer implements Artifact & RichStrongEntity & StrongEntity & Entity & Node {
   # Node
   id: ID! # data // uuidv7
   # Entity
@@ -6442,7 +6464,7 @@ type LayerConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type LayerDiff implements Diff {
+type LayerDiff implements Diff & WeakEntity & Entity & Node {
   # Node
   id: ID! # computed // hash
   # Entity
@@ -6478,7 +6500,7 @@ type LayerDiffConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type LayerModification implements Modification {
+type LayerModification implements Modification & WeakEntity & Entity & Node {
   # Node
   id: ID! # computed // hash
   # Entity
@@ -6505,7 +6527,7 @@ type LayerModificationConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type LayerModifications implements WeakEntity {
+type LayerModifications implements WeakEntity & Entity & Node {
   # Node
   id: ID! # computed // hash
   # Entity
@@ -6536,7 +6558,7 @@ type LayerModificationsConnection implements EntityConnection {
 
 #region Group
 
-type Group implements Artifact {
+type Group implements Artifact & RichStrongEntity & StrongEntity & Entity & Node {
   # Node
   id: ID! # data // uuidv7
   # Entity
@@ -6577,7 +6599,7 @@ type GroupConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type GroupDiff implements Diff {
+type GroupDiff implements Diff & WeakEntity & Entity & Node {
   # Node
   id: ID! # computed // hash
   # Entity
@@ -6607,7 +6629,7 @@ type GroupDiffConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type GroupModification implements Modification {
+type GroupModification implements Modification & WeakEntity & Entity & Node {
   # Node
   id: ID! # computed // hash
   # Entity
@@ -6634,7 +6656,7 @@ type GroupModificationConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type GroupModifications implements WeakEntity {
+type GroupModifications implements WeakEntity & Entity & Node {
   # Node
   id: ID! # computed // hash
   # Entity
@@ -6685,7 +6707,7 @@ type BlueprintConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type Piece implements Artifact {
+type Piece implements Artifact & RichStrongEntity & StrongEntity & Entity & Node {
   # Node
   id: ID! # data // uuidv7
   # Entity
@@ -6741,7 +6763,7 @@ type PieceConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type PieceDiff implements Diff {
+type PieceDiff implements Diff & WeakEntity & Entity & Node {
   # Node
   id: ID! # computed // hash
   # Entity
@@ -6775,7 +6797,7 @@ type PieceDiffConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type PieceModification implements Modification {
+type PieceModification implements Modification & WeakEntity & Entity & Node {
   # Node
   id: ID! # computed // hash
   # Entity
@@ -6802,7 +6824,7 @@ type PieceModificationConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type PieceModifications implements WeakEntity {
+type PieceModifications implements WeakEntity & Entity & Node {
   # Node
   id: ID! # computed // hash
   # Entity
@@ -6829,7 +6851,7 @@ type PieceModificationsConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type Connection implements Artifact {
+type Connection implements Artifact & RichStrongEntity & StrongEntity & Entity & Node {
   # Node
   id: ID! # data // uuidv7
   # Entity
@@ -6879,7 +6901,7 @@ type ConnectionConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type ConnectionDiff implements Diff {
+type ConnectionDiff implements Diff & WeakEntity & Entity & Node {
   # Node
   id: ID! # computed // hash
   # Entity
@@ -6902,7 +6924,7 @@ type ConnectionDiffConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type ConnectionModification implements Modification {
+type ConnectionModification implements Modification & WeakEntity & Entity & Node {
   # Node
   id: ID! # computed // hash
   # Entity
@@ -6929,7 +6951,7 @@ type ConnectionModificationConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type ConnectionModifications implements WeakEntity {
+type ConnectionModifications implements WeakEntity & Entity & Node {
   # Node
   id: ID! # computed // hash
   # Entity
@@ -6963,8 +6985,8 @@ type PieceOperation {
   rename(newName: String!): ID!
   changeDescription(newDescription: String!): ID!
   # Piece
-  drag(offset: Offset!): ID!
-  move(position: Position!): ID!
+  drag(offset: OffsetInput!): ID!
+  move(position: PositionInput!): ID!
   fix: ID!
   changeBlueprint(blueprintId: ID!): ID!
   # Attributes
@@ -6989,8 +7011,8 @@ type PieceOperationConnection implements EntityConnection {
 
 type PiecesOperation {
   # PiecesOperation
-  drag(offset: Offset!): ID!
-  move(offset: Offset!): ID!
+  drag(offset: OffsetInput!): ID!
+  move(offset: OffsetInput!): ID!
   fix: ID!
   changeBlueprint(blueprintId: ID!): ID!
 }
@@ -7013,7 +7035,7 @@ type PiecesOperationConnection implements EntityConnection {
 
 #region Operations
 
-type CreatedFixedPieceInput implements Input {
+type CreatedFixedPieceInput implements Input & WeakEntity & Entity & Node {
   # Node
   id: ID! # computed // hash
   # Entity
@@ -7042,7 +7064,7 @@ type CreatedFixedPieceInputConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type CreatedFixedPiece implements Operation {
+type CreatedFixedPiece implements Operation & StrongEntity & Entity & Node {
   # Node
   id: ID! # data // uuidv7
   # Entity
@@ -7071,7 +7093,7 @@ type CreatedFixedPieceConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type FixedPiece implements Operation {
+type FixedPiece implements Operation & StrongEntity & Entity & Node {
   # Node
   id: ID! # data // uuidv7
   # Entity
@@ -7080,6 +7102,7 @@ type FixedPiece implements Operation {
   owns: EntityConnection # reference // Piece
   # Operation
   scope: Entity! # reference // Design | Piece
+  input: Input # data // null when all operation data is carried by scope
   modification: Modification! # computed
   # Operation Output
   piece: Piece! # data
@@ -7099,7 +7122,7 @@ type FixedPieceConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type DraggedPiecesInput implements Input {
+type DraggedPiecesInput implements Input & WeakEntity & Entity & Node {
   # Node
   id: ID! # computed // hash
   # Entity
@@ -7125,7 +7148,7 @@ type DraggedPiecesInputConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type DraggedPieces implements Operation {
+type DraggedPieces implements Operation & StrongEntity & Entity & Node {
   # Node
   id: ID! # data // uuidv7
   # Entity
@@ -7154,7 +7177,7 @@ type DraggedPiecesConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type DraggedPieceInput implements Input {
+type DraggedPieceInput implements Input & WeakEntity & Entity & Node {
   # Node
   id: ID! # computed // hash
   # Entity
@@ -7180,7 +7203,7 @@ type DraggedPieceInputConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type DraggedPiece implements Operation {
+type DraggedPiece implements Operation & StrongEntity & Entity & Node {
   # Node
   id: ID! # data // uuidv7
   # Entity
@@ -7209,7 +7232,7 @@ type DraggedPieceConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type AddedChildPieceWithParentConnectionInput implements Input {
+type AddedChildPieceWithParentConnectionInput implements Input & WeakEntity & Entity & Node {
   # Node
   id: ID! # computed // hash
   # Entity
@@ -7236,7 +7259,7 @@ type AddedChildPieceWithParentConnectionInputConnection implements EntityConnect
   hash: String! # cached
 }
 
-type AddedChildPieceWithParentConnection implements Operation {
+type AddedChildPieceWithParentConnection implements Operation & StrongEntity & Entity & Node {
   # Node
   id: ID! # data // uuidv7
   # Entity
@@ -7266,7 +7289,7 @@ type AddedChildPieceWithParentConnectionConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type AddedChildPiecesWithParentConnectionsInput implements Input {
+type AddedChildPiecesWithParentConnectionsInput implements Input & WeakEntity & Entity & Node {
   # Node
   id: ID! # computed // hash
   # Entity
@@ -7293,7 +7316,7 @@ type AddedChildPiecesWithParentConnectionsInputConnection implements EntityConne
   hash: String! # cached
 }
 
-type AddedChildPiecesWithParentConnections implements Operation {
+type AddedChildPiecesWithParentConnections implements Operation & StrongEntity & Entity & Node {
   # Node
   id: ID! # data // uuidv7
   # Entity
@@ -7323,7 +7346,7 @@ type AddedChildPiecesWithParentConnectionsConnection implements EntityConnection
   hash: String! # cached
 }
 
-type AddedHangingChildPieceWithParentConnectionInput implements Input {
+type AddedHangingChildPieceWithParentConnectionInput implements Input & WeakEntity & Entity & Node {
   # Node
   id: ID! # computed // hash
   # Entity
@@ -7350,7 +7373,7 @@ type AddedHangingChildPieceWithParentConnectionInputConnection implements Entity
   hash: String! # cached
 }
 
-type AddedHangingChildPieceWithParentConnection implements Operation {
+type AddedHangingChildPieceWithParentConnection implements Operation & StrongEntity & Entity & Node {
   # Node
   id: ID! # data // uuidv7
   # Entity
@@ -7380,7 +7403,7 @@ type AddedHangingChildPieceWithParentConnectionConnection implements EntityConne
   hash: String! # cached
 }
 
-type AddedHangingChildPiecesWithParentConnectionsInput implements Input {
+type AddedHangingChildPiecesWithParentConnectionsInput implements Input & WeakEntity & Entity & Node {
   # Node
   id: ID! # computed // hash
   # Entity
@@ -7407,7 +7430,7 @@ type AddedHangingChildPiecesWithParentConnectionsInputConnection implements Enti
   hash: String! # cached
 }
 
-type AddedHangingChildPiecesWithParentConnections implements Operation {
+type AddedHangingChildPiecesWithParentConnections implements Operation & StrongEntity & Entity & Node {
   # Node
   id: ID! # data // uuidv7
   # Entity
@@ -7437,7 +7460,7 @@ type AddedHangingChildPiecesWithParentConnectionsConnection implements EntityCon
   hash: String! # cached
 }
 
-type RenamedPieceInput implements Input {
+type RenamedPieceInput implements Input & WeakEntity & Entity & Node {
   # Node
   id: ID! # computed // hash
   # Entity
@@ -7463,7 +7486,7 @@ type RenamedPieceInputConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type RenamedPiece implements Operation {
+type RenamedPiece implements Operation & StrongEntity & Entity & Node {
   # Node
   id: ID! # data // uuidv7
   # Entity
@@ -7492,7 +7515,7 @@ type RenamedPieceConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type UpdatedPieceDescriptionInput implements Input {
+type UpdatedPieceDescriptionInput implements Input & WeakEntity & Entity & Node {
   # Node
   id: ID! # computed // hash
   # Entity
@@ -7518,7 +7541,7 @@ type UpdatedPieceDescriptionInputConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type UpdatedPieceDescription implements Operation {
+type UpdatedPieceDescription implements Operation & StrongEntity & Entity & Node {
   # Node
   id: ID! # data // uuidv7
   # Entity
@@ -7547,7 +7570,7 @@ type UpdatedPieceDescriptionConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type MovedPieceInput implements Input {
+type MovedPieceInput implements Input & WeakEntity & Entity & Node {
   # Node
   id: ID! # computed // hash
   # Entity
@@ -7573,7 +7596,7 @@ type MovedPieceInputConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type MovedPiece implements Operation {
+type MovedPiece implements Operation & StrongEntity & Entity & Node {
   # Node
   id: ID! # data // uuidv7
   # Entity
@@ -7602,7 +7625,7 @@ type MovedPieceConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type MovedPiecesInput implements Input {
+type MovedPiecesInput implements Input & WeakEntity & Entity & Node {
   # Node
   id: ID! # computed // hash
   # Entity
@@ -7628,7 +7651,7 @@ type MovedPiecesInputConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type MovedPieces implements Operation {
+type MovedPieces implements Operation & StrongEntity & Entity & Node {
   # Node
   id: ID! # data // uuidv7
   # Entity
@@ -7657,7 +7680,7 @@ type MovedPiecesConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type FixedPieces implements Operation {
+type FixedPieces implements Operation & StrongEntity & Entity & Node {
   # Node
   id: ID! # data // uuidv7
   # Entity
@@ -7666,6 +7689,7 @@ type FixedPieces implements Operation {
   owns: EntityConnection # reference // Piece
   # Operation
   scope: Entity! # reference // Design | Piece
+  input: Input # data // null when all operation data is carried by scope
   modification: Modification! # computed
   # Operation Output
   pieces: PieceConnection! # data
@@ -7685,7 +7709,7 @@ type FixedPiecesConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type ChangedPieceToTypeInput implements Input {
+type ChangedPieceToTypeInput implements Input & WeakEntity & Entity & Node {
   # Node
   id: ID! # computed // hash
   # Entity
@@ -7711,7 +7735,7 @@ type ChangedPieceToTypeInputConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type ChangedPieceToType implements Operation {
+type ChangedPieceToType implements Operation & StrongEntity & Entity & Node {
   # Node
   id: ID! # data // uuidv7
   # Entity
@@ -7740,7 +7764,7 @@ type ChangedPieceToTypeConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type ChangedPiecesToTypeInput implements Input {
+type ChangedPiecesToTypeInput implements Input & WeakEntity & Entity & Node {
   # Node
   id: ID! # computed // hash
   # Entity
@@ -7766,7 +7790,7 @@ type ChangedPiecesToTypeInputConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type ChangedPiecesToType implements Operation {
+type ChangedPiecesToType implements Operation & StrongEntity & Entity & Node {
   # Node
   id: ID! # data // uuidv7
   # Entity
@@ -7795,7 +7819,7 @@ type ChangedPiecesToTypeConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type AddedAttributeToPieceInput implements Input {
+type AddedAttributeToPieceInput implements Input & WeakEntity & Entity & Node {
   # Node
   id: ID! # computed // hash
   # Entity
@@ -7821,7 +7845,7 @@ type AddedAttributeToPieceInputConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type AddedAttributeToPiece implements Operation {
+type AddedAttributeToPiece implements Operation & StrongEntity & Entity & Node {
   # Node
   id: ID! # data // uuidv7
   # Entity
@@ -7851,7 +7875,7 @@ type AddedAttributeToPieceConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type AddedAttributesToPieceInput implements Input {
+type AddedAttributesToPieceInput implements Input & WeakEntity & Entity & Node {
   # Node
   id: ID! # computed // hash
   # Entity
@@ -7877,7 +7901,7 @@ type AddedAttributesToPieceInputConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type AddedAttributesToPiece implements Operation {
+type AddedAttributesToPiece implements Operation & StrongEntity & Entity & Node {
   # Node
   id: ID! # data // uuidv7
   # Entity
@@ -7907,7 +7931,7 @@ type AddedAttributesToPieceConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type RemovedAttributeFromPiece implements Operation {
+type RemovedAttributeFromPiece implements Operation & StrongEntity & Entity & Node {
   # Node
   id: ID! # data // uuidv7
   # Entity
@@ -7916,6 +7940,7 @@ type RemovedAttributeFromPiece implements Operation {
   owns: EntityConnection # reference
   # Operation
   scope: Entity! # reference // Piece | Attribute
+  input: Input # data // null when all operation data is carried by scope
   modification: Modification! # computed
   # Operation Output
   piece: Piece! # data
@@ -7935,7 +7960,7 @@ type RemovedAttributeFromPieceConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type RemovedAttributesFromPiece implements Operation {
+type RemovedAttributesFromPiece implements Operation & StrongEntity & Entity & Node {
   # Node
   id: ID! # data // uuidv7
   # Entity
@@ -7944,6 +7969,7 @@ type RemovedAttributesFromPiece implements Operation {
   owns: EntityConnection # reference
   # Operation
   scope: Entity! # reference // Piece | Attribute
+  input: Input # data // null when all operation data is carried by scope
   modification: Modification! # computed
   # Operation Output
   piece: Piece! # data
@@ -7963,7 +7989,7 @@ type RemovedAttributesFromPieceConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type DeletedPiece implements Operation {
+type DeletedPiece implements Operation & StrongEntity & Entity & Node {
   # Node
   id: ID! # data // uuidv7
   # Entity
@@ -7972,6 +7998,7 @@ type DeletedPiece implements Operation {
   owns: EntityConnection # reference
   # Operation
   scope: Entity! # reference // Design | Piece
+  input: Input # data // null when all operation data is carried by scope
   modification: Modification! # computed
 }
 
@@ -7989,7 +8016,7 @@ type DeletedPieceConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type DeletedPieces implements Operation {
+type DeletedPieces implements Operation & StrongEntity & Entity & Node {
   # Node
   id: ID! # data // uuidv7
   # Entity
@@ -7998,6 +8025,7 @@ type DeletedPieces implements Operation {
   owns: EntityConnection # reference
   # Operation
   scope: Entity! # reference // Design | Piece
+  input: Input # data // null when all operation data is carried by scope
   modification: Modification! # computed
 }
 
@@ -8015,7 +8043,7 @@ type DeletedPiecesConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type DeletedPiecesAndConnections implements Operation {
+type DeletedPiecesAndConnections implements Operation & StrongEntity & Entity & Node {
   # Node
   id: ID! # data // uuidv7
   # Entity
@@ -8024,6 +8052,7 @@ type DeletedPiecesAndConnections implements Operation {
   owns: EntityConnection # reference
   # Operation
   scope: Entity! # reference // Design | Piece | Connection
+  input: Input # data // null when all operation data is carried by scope
   modification: Modification! # computed
 }
 
@@ -8049,7 +8078,7 @@ type DeletedPiecesAndConnectionsConnection implements EntityConnection {
 
 #region Side
 
-type Side implements StrongEntity {
+type Side implements StrongEntity & Entity & Node {
   # Node
   id: ID! # data // uuidv7
   # Entity
@@ -8077,7 +8106,7 @@ type SideConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type SideDiff implements Diff {
+type SideDiff implements Diff & WeakEntity & Entity & Node {
   # Node
   id: ID! # computed // hash
   # Entity
@@ -8109,7 +8138,7 @@ type SideDiffConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type SideModification implements Modification {
+type SideModification implements Modification & WeakEntity & Entity & Node {
   # Node
   id: ID! # computed // hash
   # Entity
@@ -8136,7 +8165,7 @@ type SideModificationConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type SideModifications implements WeakEntity {
+type SideModifications implements WeakEntity & Entity & Node {
   # Node
   id: ID! # computed // hash
   # Entity
@@ -8167,7 +8196,7 @@ type SideModificationsConnection implements EntityConnection {
 
 #endregion Connection
 
-type Design implements Artifact {
+type Design implements Artifact & RichStrongEntity & StrongEntity & Entity & Node {
   # Node
   id: ID! # data // uuidv7
   # Entity
@@ -8228,7 +8257,7 @@ type DesignConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type DesignDiff implements Diff {
+type DesignDiff implements Diff & WeakEntity & Entity & Node {
   # Node
   id: ID! # computed // hash
   # Entity
@@ -8266,7 +8295,7 @@ type DesignDiffConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type DesignModification implements Modification {
+type DesignModification implements Modification & WeakEntity & Entity & Node {
   # Node
   id: ID! # computed // hash
   # Entity
@@ -8293,7 +8322,7 @@ type DesignModificationConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type DesignModifications implements WeakEntity {
+type DesignModifications implements WeakEntity & Entity & Node {
   # Node
   id: ID! # computed // hash
   # Entity
@@ -8321,7 +8350,7 @@ type DesignModificationsConnection implements EntityConnection {
 }
 #region Clump
 
-type Clump implements WeakEntity {
+type Clump implements WeakEntity & Entity & Node {
   # Node
   id: ID! # computed // hash
   # Entity
@@ -8348,25 +8377,11 @@ type ClumpConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type ClumpEdge implements EntityEdge {
-  # EntityEdge
-  cursor: String! # computed
-  # EntityEdgeNode
-  node: Clump! # reference
-}
-
-type ClumpConnection implements EntityConnection {
-  # EntityConnection
-  edges: [ClumpEdge!]! # computed
-  pageInfo: PageInfo! # computed
-  hash: String! # cached
-}
-
 #endregion Clump
 
 #region Operations
 
-type CreatedDesignInput implements Input {
+type CreatedDesignInput implements Input & WeakEntity & Entity & Node {
   # Node
   id: ID! # computed // hash
   # Entity
@@ -8392,7 +8407,7 @@ type CreatedDesignInputConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type CreatedDesign implements Operation {
+type CreatedDesign implements Operation & StrongEntity & Entity & Node {
   # Node
   id: ID! # data // uuidv7
   # Entity
@@ -8421,7 +8436,7 @@ type CreatedDesignConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type CreatedDesignsInput implements Input {
+type CreatedDesignsInput implements Input & WeakEntity & Entity & Node {
   # Node
   id: ID! # computed // hash
   # Entity
@@ -8447,7 +8462,7 @@ type CreatedDesignsInputConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type CreatedDesigns implements Operation {
+type CreatedDesigns implements Operation & StrongEntity & Entity & Node {
   # Node
   id: ID! # data // uuidv7
   # Entity
@@ -8476,7 +8491,7 @@ type CreatedDesignsConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type DeletedDesign implements Operation {
+type DeletedDesign implements Operation & StrongEntity & Entity & Node {
   # Node
   id: ID! # data // uuidv7
   # Entity
@@ -8485,6 +8500,7 @@ type DeletedDesign implements Operation {
   owns: EntityConnection # reference
   # Operation
   scope: Entity! # reference // Design
+  input: Input # data // null when all operation data is carried by scope
   modification: Modification! # computed
 }
 
@@ -8502,7 +8518,7 @@ type DeletedDesignConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type DeletedDesigns implements Operation {
+type DeletedDesigns implements Operation & StrongEntity & Entity & Node {
   # Node
   id: ID! # data // uuidv7
   # Entity
@@ -8511,6 +8527,7 @@ type DeletedDesigns implements Operation {
   owns: EntityConnection # reference
   # Operation
   scope: Entity! # reference // Design
+  input: Input # data // null when all operation data is carried by scope
   modification: Modification! # computed
 }
 
@@ -8528,7 +8545,7 @@ type DeletedDesignsConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type FlattenedDesign implements Operation {
+type FlattenedDesign implements Operation & StrongEntity & Entity & Node {
   # Node
   id: ID! # data // uuidv7
   # Entity
@@ -8537,6 +8554,7 @@ type FlattenedDesign implements Operation {
   owns: EntityConnection # reference // Design
   # Operation
   scope: Entity! # reference // Design
+  input: Input # data // null when all operation data is carried by scope
   modification: Modification! # computed
   # Operation Output
   design: Design! # data
@@ -8556,7 +8574,7 @@ type FlattenedDesignConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type AddedAttributeToDesignInput implements Input {
+type AddedAttributeToDesignInput implements Input & WeakEntity & Entity & Node {
   # Node
   id: ID! # computed // hash
   # Entity
@@ -8582,7 +8600,7 @@ type AddedAttributeToDesignInputConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type AddedAttributeToDesign implements Operation {
+type AddedAttributeToDesign implements Operation & StrongEntity & Entity & Node {
   # Node
   id: ID! # data // uuidv7
   # Entity
@@ -8612,7 +8630,7 @@ type AddedAttributeToDesignConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type AddedAttributesToDesignInput implements Input {
+type AddedAttributesToDesignInput implements Input & WeakEntity & Entity & Node {
   # Node
   id: ID! # computed // hash
   # Entity
@@ -8638,7 +8656,7 @@ type AddedAttributesToDesignInputConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type AddedAttributesToDesign implements Operation {
+type AddedAttributesToDesign implements Operation & StrongEntity & Entity & Node {
   # Node
   id: ID! # data // uuidv7
   # Entity
@@ -8668,7 +8686,7 @@ type AddedAttributesToDesignConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type RemovedAttributeFromDesign implements Operation {
+type RemovedAttributeFromDesign implements Operation & StrongEntity & Entity & Node {
   # Node
   id: ID! # data // uuidv7
   # Entity
@@ -8677,6 +8695,7 @@ type RemovedAttributeFromDesign implements Operation {
   owns: EntityConnection # reference
   # Operation
   scope: Entity! # reference // Design | Attribute
+  input: Input # data // null when all operation data is carried by scope
   modification: Modification! # computed
   # Operation Output
   design: Design! # data
@@ -8696,7 +8715,7 @@ type RemovedAttributeFromDesignConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type RemovedAttributesFromDesign implements Operation {
+type RemovedAttributesFromDesign implements Operation & StrongEntity & Entity & Node {
   # Node
   id: ID! # data // uuidv7
   # Entity
@@ -8705,6 +8724,7 @@ type RemovedAttributesFromDesign implements Operation {
   owns: EntityConnection # reference
   # Operation
   scope: Entity! # reference // Design | Attribute
+  input: Input # data // null when all operation data is carried by scope
   modification: Modification! # computed
   # Operation Output
   design: Design! # data
@@ -8737,9 +8757,9 @@ type DesignOperation {
   removeAttribute(id: ID!): ID!
   removeAttributes(ids: [ID!]!): ID!
   # Pieces
-  addFixedPiece(blueprintId: ID!, position: Position!, name: String, description: String): ID!
-  addChildPieceWithParentConnection(blueprintId: ID!, parentPieceId: ID!, parentConnector: String!, childConnector: String!, name: String, description: String, position: Position, scale: Float): ID!
-  addHangingChildPieceWithParentConnection(blueprintId: ID!, parentPieceId: ID!, parentConnector: String!, childConnector: String!, position: Position!, name: String, description: String, scale: Float): ID!
+  addFixedPiece(blueprintId: ID!, position: PositionInput!, name: String, description: String): ID!
+  addChildPieceWithParentConnection(blueprintId: ID!, parentPieceId: ID!, parentConnector: String!, childConnector: String!, name: String, description: String, position: PositionInput, scale: Float): ID!
+  addHangingChildPieceWithParentConnection(blueprintId: ID!, parentPieceId: ID!, parentConnector: String!, childConnector: String!, position: PositionInput!, name: String, description: String, scale: Float): ID!
   piece(id: ID!): PieceOperation!
   pieces(ids: [ID!]!): PiecesOperation!
   deletePiece(id: ID!): ID!
@@ -8767,7 +8787,7 @@ type DesignOperationConnection implements EntityConnection {
 
 #endregion Design
 
-type Kit implements Artifact {
+type Kit implements Artifact & RichStrongEntity & StrongEntity & Entity & Node {
   # Node
   id: ID! # data // uuidv7
   # Entity
@@ -8835,7 +8855,7 @@ type KitConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type KitDiff implements Diff {
+type KitDiff implements Diff & WeakEntity & Entity & Node {
   # Node
   id: ID! # computed // hash
   # Entity
@@ -8877,7 +8897,7 @@ type KitDiffConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type KitModification implements Modification {
+type KitModification implements Modification & WeakEntity & Entity & Node {
   # Node
   id: ID! # computed // hash
   # Entity
@@ -8904,7 +8924,7 @@ type KitModificationConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type KitModifications implements WeakEntity {
+type KitModifications implements WeakEntity & Entity & Node {
   # Node
   id: ID! # computed // hash
   # Entity
@@ -8987,7 +9007,7 @@ type KitOperationConnection implements EntityConnection {
 
 #region Operations
 
-type RenamedKitInput implements Input {
+type RenamedKitInput implements Input & WeakEntity & Entity & Node {
   # Node
   id: ID! # computed // hash
   # Entity
@@ -9013,7 +9033,7 @@ type RenamedKitInputConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type RenamedKit implements Operation {
+type RenamedKit implements Operation & StrongEntity & Entity & Node {
   # Node
   id: ID! # data // uuidv7
   # Entity
@@ -9042,7 +9062,7 @@ type RenamedKitConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type ChangedDescriptionInput implements Input {
+type ChangedDescriptionInput implements Input & WeakEntity & Entity & Node {
   # Node
   id: ID! # computed // hash
   # Entity
@@ -9068,7 +9088,7 @@ type ChangedDescriptionInputConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type ChangedDescription implements Operation {
+type ChangedDescription implements Operation & StrongEntity & Entity & Node {
   # Node
   id: ID! # data // uuidv7
   # Entity
@@ -9105,7 +9125,7 @@ type ChangedDescriptionConnection implements EntityConnection {
 
 #region Edits
 
-type Edit implements StrongEntity {
+type Edit implements StrongEntity & Entity & Node {
   # Node
   id: ID! # data // uuidv7
   # Entity
@@ -9141,7 +9161,7 @@ type EditConnection implements EntityConnection {
 
 #region Changes
 
-type Change implements StrongEntity {
+type Change implements StrongEntity & Entity & Node {
   # Node
   id: ID! # data // uuidv7
   # Entity
@@ -9175,7 +9195,7 @@ type ChangeConnection implements EntityConnection {
 
 #region Checkpoints
 
-type Checkpoint implements StrongEntity {
+type Checkpoint implements StrongEntity & Entity & Node {
   # Node
   id: ID! # data // uuidv7
   # Entity
@@ -9214,7 +9234,7 @@ type CheckpointConnection implements EntityConnection {
 
 #region TheKit
 
-type TheKit implements Workspace {
+type TheKit implements Workspace & StrongEntity & Entity & Node {
   # Node
   id: ID! # data // uuidv7
   # Entity
@@ -9247,21 +9267,7 @@ type TheKitConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type TheKitEdge implements EntityEdge {
-  # EntityEdge
-  cursor: String! # computed
-  # EntityEdgeNode
-  node: TheKit! # reference
-}
-
-type TheKitConnection implements EntityConnection {
-  # EntityConnection
-  edges: [TheKitEdge!]! # computed
-  pageInfo: PageInfo! # computed
-  hash: String! # cached
-}
-
-type Alternative implements Workspace {
+type Alternative implements Workspace & StrongEntity & Entity & Node {
   # Node
   id: ID! # data // uuidv7
   # Entity
@@ -9322,13 +9328,13 @@ type AlternativeCommandConnection implements EntityConnection {
 #region Versions
 
 enum VersionKind {
-  INITAL_KIT
+  INITIAL_KIT
   MATERIALIZED
 }
 
 type Version {
   kind: VersionKind
-  inititalKit: Kit!
+  initialKit: Kit!
   edit: Edit
 }
 
@@ -9396,7 +9402,7 @@ type VersionCommandConnection implements EntityConnection {
 
 #region Graphs
 
-type Graph implements StrongEntity {
+type Graph implements StrongEntity & Entity & Node {
   # Node
   id: ID! # data // uuidv7
   # Entity
@@ -9432,7 +9438,7 @@ type GraphConnection implements EntityConnection {
 
 #region Conflicts
 
-type Conflict implements StrongEntity {
+type Conflict implements StrongEntity & Entity & Node {
   # Node
   id: ID! # data // uuidv7
   # Entity
@@ -9514,7 +9520,7 @@ type StoreCommandConnection implements EntityConnection {
 
 #region FileBackbone
 
-type FileBackbone implements Backbone {
+type FileBackbone implements Backbone & StrongEntity & Entity & Node {
   # Node
   id: ID! # data // uuidv7
   # Entity
@@ -9561,7 +9567,17 @@ type FileBackboneCommandConnection implements EntityConnection {
 
 #endregion FileBackbone
 
-type LocalProvider implements Provider {
+type LocalProvider implements Provider & StrongEntity & Entity & Node {
+  # Node
+  id: ID! # data // uuidv7
+  # Entity
+  hash: String! # cached
+  owner: Entity # reference // Store
+  owns: EntityConnection # reference // Nothing
+  # Provider
+  backbones: BackboneConnection
+  backbone(id: ID!): Backbone
+  # LocalProvider
   uri: String! # data
   stores: StoreConnection # data
   store(id: ID!): StoreCommand! # computed
@@ -9569,7 +9585,8 @@ type LocalProvider implements Provider {
 
 type LocalProviderCommand implements ProviderCommand {
   # ProviderCommand
-  createStore(uri: String!): ID!
+  createBackbone(uri: String!): ID!
+  attachBackbone(store: ID!): ID!
 }
 
 type LocalProviderCommandEdge implements EntityEdge {
@@ -9590,9 +9607,11 @@ type LocalProviderCommandConnection implements EntityConnection {
 
 #region RemoteProvider
 
+#region Backbones
+
 #region WebsocketBackbone
 
-type WebsocketBackbone implements Backbone {
+type WebsocketBackbone implements Backbone & StrongEntity & Entity & Node {
   # Node
   id: ID! # data // uuidv7
   # Entity
@@ -9639,15 +9658,44 @@ type WebsocketBackboneCommandConnection implements EntityConnection {
 
 #endregion WebsocketBackbone
 
-type RemoteProvider implements Provider {
+#endregion Backbones
+
+type RemoteProvider implements Provider & StrongEntity & Entity & Node {
+  # Node
+  id: ID! # data // uuidv7
+  # Entity
+  hash: String! # cached
+  owner: Entity # reference // Store
+  owns: EntityConnection # reference // Nothing
+  # Provider
   uri: String! # data
-  stores: StoreConnection # data
-  store(id: ID!): StoreCommand! # computed
+  backbones: BackboneConnection # data
+  backbone(id: ID!): Backbone # computed
+  # RemoteProvider
+  url: String! # data
 }
 
-type RemoteProviderCommand {
+type RemoteProviderEdge implements EntityEdge {
+  # EntityEdge
+  cursor: String! # computed
+  # EntityEdgeNode
+  node: RemoteProvider! # reference
+}
+
+type RemoteProviderConnection implements EntityConnection {
+  # EntityConnection
+  edges: [RemoteProviderEdge!]! # computed
+  pageInfo: PageInfo! # computed
+  hash: String! # cached
+}
+
+type RemoteProviderCommand implements ProviderCommand {
+  # ProviderCommand
+  createBackbone(uri: String!): ID!
+  attachBackbone(store: ID!): ID!
   # RemoteProviderCommand
-  createStore(uri: String!): ID!
+  login(username: String!, passwordHash: String!, hubUrl: String): ID!
+  logout: ID!
 }
 
 type RemoteProviderCommandEdge implements EntityEdge {
@@ -9684,7 +9732,7 @@ type SessionConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type Session implements StrongEntity {
+type Session implements StrongEntity & Entity & Node {
   # Node
   id: ID! # data // uuidv7
   # Entity
@@ -9692,8 +9740,10 @@ type Session implements StrongEntity {
   owner: Entity # reference // Graph
   owns: EntityConnection # reference // Alternative | Graph | Checkpoint
   # Session
+  stores: StoreConnection # data
+  localProvider: LocalProvider # data
+  remoteProviders: RemoteProviderConnection # data
   startedAt: Timestamp # data
-  stores: StoreConnection
 }
 
 #region Commands
@@ -9702,9 +9752,9 @@ type SessionCommand {
   # SessionCommand
   start: ID!
   end: ID!
-  login(username: String!, passwordHash: String!, hubUrl: String): ID!
-  logout: ID!
   store(id: ID!): StoreCommand!
+  localProvider: LocalProviderCommand!
+  remoteProvider(url: String!): RemoteProviderCommand!
 }
 
 type SessionCommandEdge implements EntityEdge {
@@ -9748,7 +9798,7 @@ type Query {
 #     then `unsavedChange(id) → kit → …`. Leaf fields return the resulting operation `ID!`.
 type Mutation {
   # Mutation
-  session: SessionCommandInput!
+  session: SessionCommand!
 }
 
 # 🔴 Live subscription: mirrors `Query`. The server emits the resolved selection on subscribe
