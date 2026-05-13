@@ -6,21 +6,6 @@
 
 //#region 🧬 entity_dsl
 
-/// @emoji 🧬 Roster-only: entity families registered for interface/union/output codegen (code-first; no string SDL fragments).
-macro_rules! register_entities {
-    ( $( $_region:ident : [ $( $_ty:ty ),* $(,)? ] ),* $(,)? ) => {};
-}
-
-/// @emoji 🧬 Operation name roster: kit operations grouped by artifact (feeds `operation_family!` / `KitOperation` derivation).
-macro_rules! register_operations {
-    ( $( $_artifact:ident : [ $( $_name:ident ),* $(,)? ] ),* $(,)? ) => {};
-}
-
-/// @emoji 🧬 Command-family roster for `command_family!` (`SessionCommand`, `StoreCommand`, backbone/provider commands, …).
-macro_rules! register_commands {
-    ( $( $_group:ident : [ $( $_ty:ty ),* $(,)? ] ),* $(,)? ) => {};
-}
-
 /// @emoji 🧩 Chains `SchemaBuilder::register_output_type` so macro-emitted shapes stay reachable in `Schema::sdl()`.
 #[macro_export]
 macro_rules! register_output_types {
@@ -28,126 +13,6 @@ macro_rules! register_output_types {
         $builder $( .register_output_type::<$ty>() )+
     }};
 }
-
-/// @emoji 🎛️ `command_family!` — GraphQL command object + relay Edge/Connection (no diff ladder).
-#[macro_export]
-macro_rules! command_family {
-    ($($tokens:tt)*) => {};
-}
-
-/// @emoji 🔌 `command_interface!` — `#[derive(Interface)]` enum for shared command contracts (`BackboneCommand`, `ProviderCommand`).
-#[macro_export]
-macro_rules! command_interface {
-    ($($tokens:tt)*) => {};
-}
-
-/// @emoji 🧭 `command_nav!` — per-surface kit operation navigation objects (replaces hand-written `*OperationInput` blocks).
-#[macro_export]
-macro_rules! command_nav {
-    ($($tokens:tt)*) => {};
-}
-
-/// @emoji ⚙️ `operation_family!` — one operation's input + object + relay edges implementing the `Operation` interface.
-#[macro_export]
-macro_rules! operation_family {
-    ($($tokens:tt)*) => {};
-}
-
-/// @emoji 🧰 `kit_operation_enum!` — derives central `KitOperation` / `OperationKind` enums from the operation roster.
-#[macro_export]
-macro_rules! kit_operation_enum {
-    ($($tokens:tt)*) => {};
-}
-
-/// @emoji 🧭 `scope_enum!` — derives scope enum arms from the operation roster.
-#[macro_export]
-macro_rules! scope_enum {
-    ($($tokens:tt)*) => {};
-}
-
-/// @emoji 🧾 `input_enum!` — derives the GraphQL `Input` interface enum from the operation roster.
-#[macro_export]
-macro_rules! input_enum {
-    ($($tokens:tt)*) => {};
-}
-
-/// @emoji 🪢 `relay_collection!` — relay `Connection` helpers for union-backed node collections.
-#[macro_export]
-macro_rules! relay_collection {
-    ($($tokens:tt)*) => {};
-}
-
-/// @emoji 🌐 `entity_interface_enums!` — derives `Node` / `Entity` / … `Interface` enums filtered by entity `kind:` metadata.
-#[macro_export]
-macro_rules! entity_interface_enums {
-    ($($tokens:tt)*) => {};
-}
-
-register_entities! {
-    geom: [
-        crate::geom::entity::Vector,
-        crate::geom::entity::Point,
-        crate::geom::entity::Coordinate,
-        crate::geom::entity::Offset,
-        crate::geom::entity::Plane,
-        crate::geom::entity::Position,
-        crate::geom::entity::Location,
-        crate::geom::entity::Place,
-    ],
-    meta: [
-        crate::meta::Attribute,
-        crate::meta::Author,
-        crate::meta::File,
-        crate::meta::Folder,
-        crate::meta::Prop,
-        crate::meta::Benchmark,
-        crate::meta::Quality,
-        crate::meta::Tag,
-        crate::meta::Concept,
-        crate::meta::Stat,
-        crate::meta::Layer,
-        crate::meta::Group,
-        crate::gql_relay::Family,
-    ],
-    type_: [
-        crate::kit::r#type::Type,
-        crate::kit::r#type::Port,
-        crate::kit::r#type::Connector,
-        crate::kit::r#type::Representation,
-    ],
-    design: [
-        crate::kit::design::Design,
-        crate::kit::design::piece::Piece,
-        crate::kit::design::connection::Side,
-        crate::kit::design::connection::Connection,
-        crate::kit::design::Clump,
-    ],
-    kit: [crate::kit::Kit],
-    vcs: [
-        crate::vcs::Edit,
-        crate::vcs::Change,
-        crate::vcs::Checkpoint,
-        crate::vcs::TheKit,
-        crate::vcs::Alternative,
-        crate::vcs::Graph,
-        crate::vcs::Session,
-        crate::vcs::Conflict,
-    ],
-}
-
-register_operations! {
-    tag:        [CreatedTag, CreatedTags, RenamedTag, UpdatedTagDescription, UpdatedTagIcon, AddedAttributeToTag, AddedAttributesToTag, RemovedAttributeFromTag, RemovedAttributesFromTag, DeletedTag, DeletedTags],
-    concept:    [CreatedConcept, RenamedConcept, UpdatedConceptDescription, UpdatedConceptIcon, AddedAttributeToConcept, AddedAttributesToConcept, RemovedAttributeFromConcept, RemovedAttributesFromConcept, DeletedConcept, DeletedConcepts],
-    quality:    [CreatedQuality, RenamedQuality, UpdatedQualityDescription, UpdatedQualityIcon, AddedAttributeToQuality, AddedAttributesToQuality, RemovedAttributeFromQuality, RemovedAttributesFromQuality, DeletedQuality, DeletedQualities],
-    port:       [CreatedPort, CreatedPorts, RenamedPort, UpdatedPortDescription, UpdatedPortIcon, AddedAttributeToPort, AddedAttributesToPort, RemovedAttributeFromPort, RemovedAttributesFromPort, DeletedPort, DeletedPorts],
-    type_:      [CreatedType, RenamedType],
-    design:     [CreatedDesign, CreatedDesigns, DeletedDesign, DeletedDesigns, FlattenedDesign, AddedAttributeToDesign, AddedAttributesToDesign, RemovedAttributeFromDesign, RemovedAttributesFromDesign],
-    piece:      [CreatedFixedPiece, FixedPiece, FixedPieces, DraggedPieces, DraggedPiece, AddedChildPieceWithParentConnection, AddedChildPiecesWithParentConnections, AddedHangingChildPieceWithParentConnection, AddedHangingChildPiecesWithParentConnections, RenamedPiece, UpdatedPieceDescription, MovedPiece, MovedPieces, ChangedPieceToType, ChangedPiecesToType, AddedAttributeToPiece, AddedAttributesToPiece, RemovedAttributeFromPiece, RemovedAttributesFromPiece, DeletedPiece, DeletedPieces, DeletedPiecesAndConnections],
-    kit:        [RenamedKit, ChangedDescription],
-    connector:  [AddedConnector, AddedConnectors, RenamedConnector, UpdatedConnectorDescription, UpdatedConnectorIcon, RemovedConnector, RemovedConnectors],
-}
-
-register_commands! {}
 
 /// @emoji 🪢 `entity_relay_sync!` — relay Edge/Connection for `SimpleObject` entities with sync child digests (`compute_entity_hash`, …).
 #[macro_export]
@@ -253,10 +118,12 @@ macro_rules! _ladder_relay_full {
     };
 }
 
-/// @emoji 🧱 `entity_bare!` — golden **0-shell** surface (`Query`, `Mutation`, `LocalProvider`, …): only the `#[Object]` / `SimpleObject` body (no Edge/Connection); expander lands with schema bodies.
+/// @emoji 🧱 `entity_bare!` — splices `item` tokens (structs, impls, consts) with **no** relay shells; use for roots and `LocalProvider`-class bare nodes.
 #[macro_export]
 macro_rules! entity_bare {
-    ($($tokens:tt)*) => {};
+    ($($item:item)*) => {
+        $($item)*
+    };
 }
 
 /// @emoji 🪢 `entity_lite!` — golden **3-ladder** (`Name` + `NameEdge` + `NameConnection`); expands relay via [`_ladder_relay_lite!`].
@@ -296,22 +163,20 @@ macro_rules! entity_full {
     };
 }
 
-/// @emoji ⚙️ `operation_with_input!` — plan §macro DSL: `Operation` + `Input` lite-ladder pair (hook expands toward [`kit::target_operations`] patterns).
+/// @emoji ⚙️ `operation_with_input!` — splices `item` tokens for an operation plus its `*Input` surface; combine with [`entity_lite!`] for `*Edge`/`*Connection` where those Rust types exist.
 #[macro_export]
 macro_rules! operation_with_input {
-    ($($tokens:tt)*) => {};
+    ($($item:item)*) => {
+        $($item)*
+    };
 }
 
-/// @emoji ⚙️ `operation_no_input!` — plan §macro DSL: `Operation` lite-ladder only (no companion `*Input` object).
+/// @emoji ⚙️ `operation_no_input!` — splices `item` tokens for inputless operations; combine with [`entity_lite!`] for relay shells.
 #[macro_export]
 macro_rules! operation_no_input {
-    ($($tokens:tt)*) => {};
-}
-
-/// @emoji 🪜 `entity_diffs!` — legacy roster hook; prefer [`entity_full!`] + [`_ladder_relay_full!`] for new golden ladders.
-#[macro_export]
-macro_rules! entity_diffs {
-    ($($_base:ident),* $(,)?) => {};
+    ($($item:item)*) => {
+        $($item)*
+    };
 }
 
 /// @emoji 🧾 `entity_input!` — GraphQL `InputObject` with explicit SDL `name` (no serde; control plane is GraphQL-native).
@@ -365,7 +230,7 @@ macro_rules! entity_family {
     };
 }
 
-/// @emoji 🏷️ `meta_arc_titled_entity!` — shared Arc/RwLock tag/concept entity (`new`, `new_with_id`, `compute_hash`, `Default`); owner is always [`crate::gql::interfaces::EntityOwnerWeak`] per golden `Entity.owner`.
+/// @emoji 🏷️ `meta_arc_titled_entity!` — shared Arc/RwLock tag/concept entity (`new`, `new_with_id`, `compute_hash`, `Default`); owner is always [`crate::gql::interfaces::KitGraphParentWeak`] per golden `Entity.owner`.
 #[macro_export]
 macro_rules! meta_arc_titled_entity {
     (
@@ -377,7 +242,7 @@ macro_rules! meta_arc_titled_entity {
         #[derive(Debug)]
         pub struct $N {
             pub id: crate::id::Id,
-            pub owner: async_lock::RwLock<crate::gql::interfaces::EntityOwnerWeak>,
+            pub owner: async_lock::RwLock<crate::gql::interfaces::KitGraphParentWeak>,
             pub name: async_lock::RwLock<String>,
             pub description: async_lock::RwLock<Option<String>>,
             pub icon: async_lock::RwLock<Option<String>>,
@@ -387,7 +252,7 @@ macro_rules! meta_arc_titled_entity {
 
         impl $N {
             pub async fn new(
-                owner: crate::gql::interfaces::EntityOwnerWeak,
+                owner: crate::gql::interfaces::KitGraphParentWeak,
                 name: String,
                 description: Option<String>,
                 icon: Option<String>,
@@ -406,7 +271,7 @@ macro_rules! meta_arc_titled_entity {
             }
 
             pub fn new_with_id(
-                owner: crate::gql::interfaces::EntityOwnerWeak,
+                owner: crate::gql::interfaces::KitGraphParentWeak,
                 id: crate::id::Id,
                 name: String,
                 description: Option<String>,
@@ -441,7 +306,7 @@ macro_rules! meta_arc_titled_entity {
             fn default() -> Self {
                 Self {
                     id: crate::id::Id::default(),
-                    owner: async_lock::RwLock::new(crate::gql::interfaces::EntityOwnerWeak::default()),
+                    owner: async_lock::RwLock::new(crate::gql::interfaces::KitGraphParentWeak::default()),
                     name: async_lock::RwLock::new(String::new()),
                     description: async_lock::RwLock::new(None),
                     icon: async_lock::RwLock::new(None),
@@ -461,7 +326,7 @@ macro_rules! meta_quality_entity {
         #[derive(Debug)]
         pub struct Quality {
             pub id: crate::id::Id,
-            pub owner: async_lock::RwLock<crate::gql::interfaces::EntityOwnerWeak>,
+            pub owner: async_lock::RwLock<crate::gql::interfaces::KitGraphParentWeak>,
             pub key: async_lock::RwLock<String>,
             pub value: async_lock::RwLock<Option<String>>,
             pub unit: async_lock::RwLock<Option<String>>,
@@ -474,7 +339,7 @@ macro_rules! meta_quality_entity {
 
         impl Quality {
             pub async fn new(
-                owner: crate::gql::interfaces::EntityOwnerWeak,
+                owner: crate::gql::interfaces::KitGraphParentWeak,
                 key: String,
                 value: Option<String>,
                 unit: Option<String>,
@@ -499,7 +364,7 @@ macro_rules! meta_quality_entity {
             }
 
             pub fn new_with_id(
-                owner: crate::gql::interfaces::EntityOwnerWeak,
+                owner: crate::gql::interfaces::KitGraphParentWeak,
                 id: crate::id::Id,
                 key: String,
                 value: Option<String>,
@@ -536,7 +401,7 @@ macro_rules! meta_quality_entity {
                 let mut child_hashes: Vec<String> = bm.iter().map(crate::meta::Benchmark::compute_entity_hash).collect();
                 child_hashes.extend(av.iter().map(crate::meta::Attribute::compute_entity_hash));
                 child_hashes.sort();
-                crate::hash::merkle_node_str(&["semio:meta:Quality", self.id.as_str(), k.as_str(), v.as_str(), u.as_str(), def.as_str(), desc.as_str(), ic.as_str()], child_hashes)
+                crate::hash::merkle_node_str(&["Quality", self.id.as_str(), k.as_str(), v.as_str(), u.as_str(), def.as_str(), desc.as_str(), ic.as_str()], child_hashes)
             }
         }
 
@@ -544,7 +409,7 @@ macro_rules! meta_quality_entity {
             fn default() -> Self {
                 Self {
                     id: crate::id::Id::default(),
-                    owner: async_lock::RwLock::new(crate::gql::interfaces::EntityOwnerWeak::default()),
+                    owner: async_lock::RwLock::new(crate::gql::interfaces::KitGraphParentWeak::default()),
                     key: async_lock::RwLock::new(String::new()),
                     value: async_lock::RwLock::new(None),
                     unit: async_lock::RwLock::new(None),
@@ -775,7 +640,7 @@ pub mod geom {
         use super::{CoordinateInput, PlaneInput, PointInput, PositionInput, VectorInput};
 
         fn weak(prefix: &str, parts: &[&str]) -> Id {
-            Id::from(format!("semio:weak:{prefix}:{}", h(parts)))
+            Id::from(format!("weak:{prefix}:{}", h(parts)))
         }
 
         /// @emoji 📍 Canonical weak `Coordinate` (live u/v under `RwLock`).
@@ -796,7 +661,7 @@ pub mod geom {
             pub async fn compute_hash(&self) -> String {
                 let u = *self.u.read().await;
                 let v = *self.v.read().await;
-                merkle_node_str(&["semio:geom:Coordinate", self.id.as_str(), &format!("{u:.9}"), &format!("{v:.9}")], Vec::new())
+                merkle_node_str(&["Coordinate", self.id.as_str(), &format!("{u:.9}"), &format!("{v:.9}")], Vec::new())
             }
         }
 
@@ -820,7 +685,7 @@ pub mod geom {
                 let x = *self.x.read().await;
                 let y = *self.y.read().await;
                 let z = *self.z.read().await;
-                merkle_node_str(&["semio:geom:Vector", self.id.as_str(), &format!("{x:.9}"), &format!("{y:.9}"), &format!("{z:.9}")], Vec::new())
+                merkle_node_str(&["Vector", self.id.as_str(), &format!("{x:.9}"), &format!("{y:.9}"), &format!("{z:.9}")], Vec::new())
             }
         }
 
@@ -844,7 +709,7 @@ pub mod geom {
                 let x = *self.x.read().await;
                 let y = *self.y.read().await;
                 let z = *self.z.read().await;
-                merkle_node_str(&["semio:geom:Point", self.id.as_str(), &format!("{x:.9}"), &format!("{y:.9}"), &format!("{z:.9}")], Vec::new())
+                merkle_node_str(&["Point", self.id.as_str(), &format!("{x:.9}"), &format!("{y:.9}"), &format!("{z:.9}")], Vec::new())
             }
         }
 
@@ -870,7 +735,7 @@ pub mod geom {
             pub async fn compute_hash(&self) -> String {
                 let mut ch = vec![self.origin.compute_hash().await, self.x_axis.compute_hash().await, self.y_axis.compute_hash().await];
                 ch.sort();
-                merkle_node_str(&["semio:geom:Plane", self.id.as_str()], ch)
+                merkle_node_str(&["Plane", self.id.as_str()], ch)
             }
         }
 
@@ -892,7 +757,7 @@ pub mod geom {
             pub async fn compute_hash(&self) -> String {
                 let u = *self.u.read().await;
                 let v = *self.v.read().await;
-                merkle_node_str(&["semio:geom:Offset", self.id.as_str(), &format!("{u:.9}"), &format!("{v:.9}")], Vec::new())
+                merkle_node_str(&["Offset", self.id.as_str(), &format!("{u:.9}"), &format!("{v:.9}")], Vec::new())
             }
         }
 
@@ -937,7 +802,7 @@ pub mod geom {
                 );
                 let mut ch = vec![self.center.compute_hash().await, self.plane.compute_hash().await];
                 ch.sort();
-                merkle_node_str(&["semio:geom:Position", self.id.as_str(), flat.as_str()], ch)
+                merkle_node_str(&["Position", self.id.as_str(), flat.as_str()], ch)
             }
         }
 
@@ -961,7 +826,7 @@ pub mod geom {
                 let lo = *self.longitude.read().await;
                 let la = *self.latitude.read().await;
                 let al = *self.altitude.read().await;
-                merkle_node_str(&["semio:geom:Location", self.id.as_str(), &format!("{lo:.9}"), &format!("{la:.9}"), &format!("{al:.9}")], Vec::new())
+                merkle_node_str(&["Location", self.id.as_str(), &format!("{lo:.9}"), &format!("{la:.9}"), &format!("{al:.9}")], Vec::new())
             }
         }
 
@@ -980,7 +845,7 @@ pub mod geom {
             /// @emoji 🪪 Merkle leaf: id + optional label.
             pub async fn compute_hash(&self) -> String {
                 let lb = self.label.read().await.clone().unwrap_or_default();
-                merkle_node_str(&["semio:geom:Place", self.id.as_str(), lb.as_str()], Vec::new())
+                merkle_node_str(&["Place", self.id.as_str(), lb.as_str()], Vec::new())
             }
         }
 
@@ -1087,6 +952,17 @@ pub mod gql_relay {
         #[graphql(name = "pageInfo")]
         pub page_info: Arc<PageInfo>,
         pub hash: String,
+    }
+
+    impl PageInfoConnection {
+        /// @emoji 🪢 Golden `PageInfoConnection` with no edges — valid `EntityConnection` implementor for empty `owns` shells.
+        pub fn empty_entity_shell() -> Self {
+            Self {
+                edges: vec![],
+                page_info: Arc::new(PageInfo::default()),
+                hash: h(&["EntityConnection", "PageInfo", "empty"]),
+            }
+        }
     }
 
     crate::entity_relay!(DesignConnection, DesignEdge, Arc<Design>);
@@ -1292,7 +1168,7 @@ pub mod gql_relay {
         }
         hash = |this| {
             crate::hash::merkle_node_str(
-                &["semio:meta:Family", this.id.as_str(), this.name.as_str(), this.description.as_deref().unwrap_or(""), this.icon.as_deref().unwrap_or("")],
+                &["Family", this.id.as_str(), this.name.as_str(), this.description.as_deref().unwrap_or(""), this.icon.as_deref().unwrap_or("")],
                 Vec::new(),
             )
         }
@@ -1404,7 +1280,7 @@ pub mod meta {
         hash = |this| {
             crate::hash::merkle_node_str(
                 &[
-                    "semio:meta:File",
+                    "File",
                     this.id.as_str(),
                     this.url.as_str(),
                     this.mime.as_deref().unwrap_or(""),
@@ -1437,7 +1313,7 @@ pub mod meta {
             pub description: Option<String>,
         }
         hash = |this| {
-            crate::hash::merkle_node_str(&["semio:meta:Folder", this.id.as_str(), this.path.as_str(), this.description.as_deref().unwrap_or("")], Vec::new())
+            crate::hash::merkle_node_str(&["Folder", this.id.as_str(), this.path.as_str(), this.description.as_deref().unwrap_or("")], Vec::new())
         }
         , extra = (
             pub async fn file(&self, #[graphql(name = "id")] _id: Id) -> Option<File> {
@@ -1471,7 +1347,7 @@ pub mod meta {
         hash = |this| {
             crate::hash::merkle_node_str(
                 &[
-                    "semio:meta:Author",
+                    "Author",
                     this.id.as_str(),
                     this.name.as_str(),
                     this.email.as_str(),
@@ -1494,7 +1370,7 @@ pub mod meta {
     impl Attribute {
         /// @emoji 🌿 Blake3 leaf over persisted attribute columns (no owner weak refs).
         pub fn compute_entity_hash(&self) -> String {
-            crate::hash::merkle_node_str(&["semio:meta:Attribute", self.id.as_str(), self.key.as_str(), self.value.as_str(), self.definition.as_deref().unwrap_or("")], Vec::new())
+            crate::hash::merkle_node_str(&["Attribute", self.id.as_str(), self.key.as_str(), self.value.as_str(), self.definition.as_deref().unwrap_or("")], Vec::new())
         }
     }
 
@@ -1539,7 +1415,7 @@ pub mod meta {
             let max = this.max.map(|v| format!("{v:.9}")).unwrap_or_default();
             let minx = this.min_excluded.map(|b| if b { "1" } else { "0" }).unwrap_or_default();
             let maxx = this.max_excluded.map(|b| if b { "1" } else { "0" }).unwrap_or_default();
-            crate::hash::merkle_node_str(&["semio:meta:Benchmark", this.id.as_str(), this.name.as_str(), min.as_str(), max.as_str(), minx, maxx], Vec::new())
+            crate::hash::merkle_node_str(&["Benchmark", this.id.as_str(), this.name.as_str(), min.as_str(), max.as_str(), minx, maxx], Vec::new())
         }
     }
 
@@ -1553,7 +1429,7 @@ pub mod meta {
             pub quality: Option<std::sync::Arc<Quality>>,
         }
         hash = |this| {
-            crate::hash::merkle_node_str(&["semio:meta:Prop", this.id.as_str(), this.key.as_str(), this.value.as_str(), this.unit.as_deref().unwrap_or("")], Vec::new())
+            crate::hash::merkle_node_str(&["Prop", this.id.as_str(), this.key.as_str(), this.value.as_str(), this.unit.as_deref().unwrap_or("")], Vec::new())
         }
         , extra = (
             /// @emoji 🔎 SDL `Prop.attribute(id)` — props carry no attribute bag yet; reserved for kit snapshots.
@@ -1563,9 +1439,9 @@ pub mod meta {
         )
     }
 
-    crate::meta_arc_titled_entity!(Tag, "semio:meta:Tag");
+    crate::meta_arc_titled_entity!(Tag, "Tag");
 
-    crate::meta_arc_titled_entity!(Concept, "semio:meta:Concept");
+    crate::meta_arc_titled_entity!(Concept, "Concept");
 
     crate::meta_quality_entity!();
 
@@ -1579,7 +1455,7 @@ pub mod meta {
         }
         hash = |this| {
             crate::hash::merkle_node_str(
-                &["semio:meta:Stat", this.id.as_str(), this.key.as_str(), this.value.as_str(), this.unit.as_deref().unwrap_or(""), this.description.as_deref().unwrap_or("")],
+                &["Stat", this.id.as_str(), this.key.as_str(), this.value.as_str(), this.unit.as_deref().unwrap_or(""), this.description.as_deref().unwrap_or("")],
                 Vec::new(),
             )
         }
@@ -1608,7 +1484,7 @@ pub mod meta {
             let lck = this.locked.map(|b| if b { "1" } else { "0" }).unwrap_or_default();
             crate::hash::merkle_node_str(
                 &[
-                    "semio:meta:Layer",
+                    "Layer",
                     this.id.as_str(),
                     this.name.as_str(),
                     this.description.as_deref().unwrap_or(""),
@@ -1638,7 +1514,7 @@ pub mod meta {
             ids.sort();
             let joined = ids.join("\x1e");
             crate::hash::merkle_node_str(
-                &["semio:meta:Group", this.id.as_str(), this.name.as_str(), this.description.as_deref().unwrap_or(""), this.color.as_deref().unwrap_or(""), this.icon.as_deref().unwrap_or(""), joined.as_str()],
+                &["Group", this.id.as_str(), this.name.as_str(), this.description.as_deref().unwrap_or(""), this.color.as_deref().unwrap_or(""), this.icon.as_deref().unwrap_or(""), joined.as_str()],
                 Vec::new(),
             )
         }
@@ -1687,7 +1563,7 @@ pub mod hash {
 
     /// @emoji 🪢 Relay collection hash: sorted child entity hashes under a stable collection tag.
     pub fn merkle_collection(children: Vec<String>) -> String {
-        merkle_node_str(&["semio:relay:collection"], children)
+        merkle_node_str(&["RelayCollection"], children)
     }
 }
 
@@ -3571,23 +3447,23 @@ pub mod kit {
             let tag = crate::meta::Tag::new_with_id(slot, tag_id.clone(), input.name, input.description, input.icon, input.order, attrs);
             self.register_tag(tag.clone()).await;
             match &*tag.owner.read().await {
-                crate::gql::interfaces::EntityOwnerWeak::Kit(w) => {
+                crate::gql::interfaces::KitGraphParentWeak::Kit(w) => {
                     if let Some(k) = w.upgrade() {
                         k.tags.write().await.push(tag.clone());
                     }
                 }
-                crate::gql::interfaces::EntityOwnerWeak::Type(w) => {
+                crate::gql::interfaces::KitGraphParentWeak::Type(w) => {
                     if let Some(t) = w.upgrade() {
                         t.tags.write().await.push(tag.clone());
                     }
                 }
-                crate::gql::interfaces::EntityOwnerWeak::Representation(w) => {
+                crate::gql::interfaces::KitGraphParentWeak::Representation(w) => {
                     if let Some(r) = w.upgrade() {
                         r.tags.write().await.push(tag.clone());
                     }
                 }
-                crate::gql::interfaces::EntityOwnerWeak::Connector(_) | crate::gql::interfaces::EntityOwnerWeak::Design(_) => {}
-                crate::gql::interfaces::EntityOwnerWeak::Unset => {}
+                crate::gql::interfaces::KitGraphParentWeak::Connector(_) | crate::gql::interfaces::KitGraphParentWeak::Design(_) => {}
+                crate::gql::interfaces::KitGraphParentWeak::Unset => {}
             }
             Ok(())
         }
@@ -3598,20 +3474,20 @@ pub mod kit {
             let c = crate::meta::Concept::new_with_id(slot, concept_id.clone(), input.name, input.description, input.icon, input.order, attrs);
             self.register_concept(c.clone()).await;
             match &*c.owner.read().await {
-                crate::gql::interfaces::EntityOwnerWeak::Kit(w) => {
+                crate::gql::interfaces::KitGraphParentWeak::Kit(w) => {
                     if let Some(k) = w.upgrade() {
                         k.concepts.write().await.push(c.clone());
                     }
                 }
-                crate::gql::interfaces::EntityOwnerWeak::Type(w) => {
+                crate::gql::interfaces::KitGraphParentWeak::Type(w) => {
                     if let Some(t) = w.upgrade() {
                         t.concepts.write().await.push(c.clone());
                     }
                 }
-                crate::gql::interfaces::EntityOwnerWeak::Representation(_)
-                | crate::gql::interfaces::EntityOwnerWeak::Connector(_)
-                | crate::gql::interfaces::EntityOwnerWeak::Design(_) => {}
-                crate::gql::interfaces::EntityOwnerWeak::Unset => {}
+                crate::gql::interfaces::KitGraphParentWeak::Representation(_)
+                | crate::gql::interfaces::KitGraphParentWeak::Connector(_)
+                | crate::gql::interfaces::KitGraphParentWeak::Design(_) => {}
+                crate::gql::interfaces::KitGraphParentWeak::Unset => {}
             }
             Ok(())
         }
@@ -3625,32 +3501,32 @@ pub mod kit {
             let q = crate::meta::Quality::new_with_id(slot, quality_id.clone(), input.key, input.value, input.unit, input.definition, input.description, input.icon, Vec::new(), attrs);
             self.register_quality(q.clone()).await;
             match &*q.owner.read().await {
-                crate::gql::interfaces::EntityOwnerWeak::Kit(w) => {
+                crate::gql::interfaces::KitGraphParentWeak::Kit(w) => {
                     if let Some(k) = w.upgrade() {
                         k.qualities.write().await.push(q.clone());
                     }
                 }
-                crate::gql::interfaces::EntityOwnerWeak::Type(w) => {
+                crate::gql::interfaces::KitGraphParentWeak::Type(w) => {
                     if let Some(t) = w.upgrade() {
                         t.qualities.write().await.push(q.clone());
                     }
                 }
-                crate::gql::interfaces::EntityOwnerWeak::Representation(w) => {
+                crate::gql::interfaces::KitGraphParentWeak::Representation(w) => {
                     if let Some(r) = w.upgrade() {
                         r.qualities.write().await.push(q.clone());
                     }
                 }
-                crate::gql::interfaces::EntityOwnerWeak::Connector(w) => {
+                crate::gql::interfaces::KitGraphParentWeak::Connector(w) => {
                     if let Some(c) = w.upgrade() {
                         c.qualities.write().await.push(q.clone());
                     }
                 }
-                crate::gql::interfaces::EntityOwnerWeak::Design(w) => {
+                crate::gql::interfaces::KitGraphParentWeak::Design(w) => {
                     if let Some(d) = w.upgrade() {
                         d.qualities.write().await.push(q.clone());
                     }
                 }
-                crate::gql::interfaces::EntityOwnerWeak::Unset => {}
+                crate::gql::interfaces::KitGraphParentWeak::Unset => {}
             }
             Ok(())
         }
@@ -3716,49 +3592,49 @@ pub mod kit {
         }
 
         /// @emoji 🪢 Resolve SDL `TagInput` owner (`Kit` root id, `Type` id, or `Representation` id).
-        pub async fn resolve_tag_owner_slot(self: &Arc<Self>, owner_id: &Id) -> Result<crate::gql::interfaces::EntityOwnerWeak, crate::error::SemioError> {
+        pub async fn resolve_tag_owner_slot(self: &Arc<Self>, owner_id: &Id) -> Result<crate::gql::interfaces::KitGraphParentWeak, crate::error::SemioError> {
             let kid = self.workspace_kit_id().await;
             if owner_id == &kid || owner_id == &self.id {
-                return Ok(crate::gql::interfaces::EntityOwnerWeak::Kit(Arc::downgrade(self)));
+                return Ok(crate::gql::interfaces::KitGraphParentWeak::Kit(Arc::downgrade(self)));
             }
             if let Some(ty) = self.type_by_external_id(owner_id).await {
-                return Ok(crate::gql::interfaces::EntityOwnerWeak::Type(Arc::downgrade(&ty)));
+                return Ok(crate::gql::interfaces::KitGraphParentWeak::Type(Arc::downgrade(&ty)));
             }
             if let Some(rep) = self.find_representation(owner_id).await {
-                return Ok(crate::gql::interfaces::EntityOwnerWeak::Representation(Arc::downgrade(&rep)));
+                return Ok(crate::gql::interfaces::KitGraphParentWeak::Representation(Arc::downgrade(&rep)));
             }
             Err(crate::error::SemioError::not_found("TagOwner", owner_id.as_str()))
         }
 
         /// @emoji 🪢 Resolve SDL `ConceptInput` owner (`Kit` or `Type`).
-        pub async fn resolve_concept_owner_slot(self: &Arc<Self>, owner_id: &Id) -> Result<crate::gql::interfaces::EntityOwnerWeak, crate::error::SemioError> {
+        pub async fn resolve_concept_owner_slot(self: &Arc<Self>, owner_id: &Id) -> Result<crate::gql::interfaces::KitGraphParentWeak, crate::error::SemioError> {
             let kid = self.workspace_kit_id().await;
             if owner_id == &kid || owner_id == &self.id {
-                return Ok(crate::gql::interfaces::EntityOwnerWeak::Kit(Arc::downgrade(self)));
+                return Ok(crate::gql::interfaces::KitGraphParentWeak::Kit(Arc::downgrade(self)));
             }
             if let Some(ty) = self.type_by_external_id(owner_id).await {
-                return Ok(crate::gql::interfaces::EntityOwnerWeak::Type(Arc::downgrade(&ty)));
+                return Ok(crate::gql::interfaces::KitGraphParentWeak::Type(Arc::downgrade(&ty)));
             }
             Err(crate::error::SemioError::not_found("ConceptOwner", owner_id.as_str()))
         }
 
         /// @emoji 🪢 Resolve SDL `QualityInput` owner (kit/type/representation/connector/design).
-        pub async fn resolve_quality_owner_slot(self: &Arc<Self>, owner_id: &Id) -> Result<crate::gql::interfaces::EntityOwnerWeak, crate::error::SemioError> {
+        pub async fn resolve_quality_owner_slot(self: &Arc<Self>, owner_id: &Id) -> Result<crate::gql::interfaces::KitGraphParentWeak, crate::error::SemioError> {
             let kid = self.workspace_kit_id().await;
             if owner_id == &kid || owner_id == &self.id {
-                return Ok(crate::gql::interfaces::EntityOwnerWeak::Kit(Arc::downgrade(self)));
+                return Ok(crate::gql::interfaces::KitGraphParentWeak::Kit(Arc::downgrade(self)));
             }
             if let Some(ty) = self.type_by_external_id(owner_id).await {
-                return Ok(crate::gql::interfaces::EntityOwnerWeak::Type(Arc::downgrade(&ty)));
+                return Ok(crate::gql::interfaces::KitGraphParentWeak::Type(Arc::downgrade(&ty)));
             }
             if let Some(rep) = self.find_representation(owner_id).await {
-                return Ok(crate::gql::interfaces::EntityOwnerWeak::Representation(Arc::downgrade(&rep)));
+                return Ok(crate::gql::interfaces::KitGraphParentWeak::Representation(Arc::downgrade(&rep)));
             }
             if let Some(conn) = self.find_connector(owner_id).await {
-                return Ok(crate::gql::interfaces::EntityOwnerWeak::Connector(Arc::downgrade(&conn)));
+                return Ok(crate::gql::interfaces::KitGraphParentWeak::Connector(Arc::downgrade(&conn)));
             }
             if let Some(des) = self.design_by_external_id(owner_id).await {
-                return Ok(crate::gql::interfaces::EntityOwnerWeak::Design(Arc::downgrade(&des)));
+                return Ok(crate::gql::interfaces::KitGraphParentWeak::Design(Arc::downgrade(&des)));
             }
             Err(crate::error::SemioError::not_found("QualityOwner", owner_id.as_str()))
         }
@@ -3781,23 +3657,23 @@ pub mod kit {
             let tag = Tag::new_with_id(slot, tag_id.clone(), input.name, input.description, input.icon, input.order, attrs);
             self.register_tag(tag.clone()).await;
             match &*tag.owner.read().await {
-                crate::gql::interfaces::EntityOwnerWeak::Kit(w) => {
+                crate::gql::interfaces::KitGraphParentWeak::Kit(w) => {
                     if let Some(k) = w.upgrade() {
                         k.tags.write().await.push(tag.clone());
                     }
                 }
-                crate::gql::interfaces::EntityOwnerWeak::Type(w) => {
+                crate::gql::interfaces::KitGraphParentWeak::Type(w) => {
                     if let Some(t) = w.upgrade() {
                         t.tags.write().await.push(tag.clone());
                     }
                 }
-                crate::gql::interfaces::EntityOwnerWeak::Representation(w) => {
+                crate::gql::interfaces::KitGraphParentWeak::Representation(w) => {
                     if let Some(r) = w.upgrade() {
                         r.tags.write().await.push(tag.clone());
                     }
                 }
-                crate::gql::interfaces::EntityOwnerWeak::Connector(_) | crate::gql::interfaces::EntityOwnerWeak::Design(_) => {}
-                crate::gql::interfaces::EntityOwnerWeak::Unset => {}
+                crate::gql::interfaces::KitGraphParentWeak::Connector(_) | crate::gql::interfaces::KitGraphParentWeak::Design(_) => {}
+                crate::gql::interfaces::KitGraphParentWeak::Unset => {}
             }
             Ok(tag)
         }
@@ -3806,23 +3682,23 @@ pub mod kit {
         pub async fn delete_tag_by_id(self: &Arc<Self>, tag_id: &Id) -> Result<(), crate::error::SemioError> {
             let tag = self.find_tag(tag_id).await.ok_or_else(|| crate::error::SemioError::not_found("Tag", tag_id.as_str()))?;
             match &*tag.owner.read().await {
-                crate::gql::interfaces::EntityOwnerWeak::Kit(w) => {
+                crate::gql::interfaces::KitGraphParentWeak::Kit(w) => {
                     if let Some(k) = w.upgrade() {
                         k.tags.write().await.retain(|t| &t.id != tag_id);
                     }
                 }
-                crate::gql::interfaces::EntityOwnerWeak::Type(w) => {
+                crate::gql::interfaces::KitGraphParentWeak::Type(w) => {
                     if let Some(t) = w.upgrade() {
                         t.tags.write().await.retain(|t| &t.id != tag_id);
                     }
                 }
-                crate::gql::interfaces::EntityOwnerWeak::Representation(w) => {
+                crate::gql::interfaces::KitGraphParentWeak::Representation(w) => {
                     if let Some(r) = w.upgrade() {
                         r.tags.write().await.retain(|t| &t.id != tag_id);
                     }
                 }
-                crate::gql::interfaces::EntityOwnerWeak::Connector(_) | crate::gql::interfaces::EntityOwnerWeak::Design(_) => {}
-                crate::gql::interfaces::EntityOwnerWeak::Unset => {}
+                crate::gql::interfaces::KitGraphParentWeak::Connector(_) | crate::gql::interfaces::KitGraphParentWeak::Design(_) => {}
+                crate::gql::interfaces::KitGraphParentWeak::Unset => {}
             }
             self.tag_by_id.write().await.remove(tag_id);
             Ok(())
@@ -3846,20 +3722,20 @@ pub mod kit {
             let c = Concept::new_with_id(slot, concept_id.clone(), input.name, input.description, input.icon, input.order, attrs);
             self.register_concept(c.clone()).await;
             match &*c.owner.read().await {
-                crate::gql::interfaces::EntityOwnerWeak::Kit(w) => {
+                crate::gql::interfaces::KitGraphParentWeak::Kit(w) => {
                     if let Some(k) = w.upgrade() {
                         k.concepts.write().await.push(c.clone());
                     }
                 }
-                crate::gql::interfaces::EntityOwnerWeak::Type(w) => {
+                crate::gql::interfaces::KitGraphParentWeak::Type(w) => {
                     if let Some(t) = w.upgrade() {
                         t.concepts.write().await.push(c.clone());
                     }
                 }
-                crate::gql::interfaces::EntityOwnerWeak::Representation(_)
-                | crate::gql::interfaces::EntityOwnerWeak::Connector(_)
-                | crate::gql::interfaces::EntityOwnerWeak::Design(_) => {}
-                crate::gql::interfaces::EntityOwnerWeak::Unset => {}
+                crate::gql::interfaces::KitGraphParentWeak::Representation(_)
+                | crate::gql::interfaces::KitGraphParentWeak::Connector(_)
+                | crate::gql::interfaces::KitGraphParentWeak::Design(_) => {}
+                crate::gql::interfaces::KitGraphParentWeak::Unset => {}
             }
             Ok(c)
         }
@@ -3868,20 +3744,20 @@ pub mod kit {
         pub async fn delete_concept_by_id(self: &Arc<Self>, concept_id: &Id) -> Result<(), crate::error::SemioError> {
             let concept = self.find_concept(concept_id).await.ok_or_else(|| crate::error::SemioError::not_found("Concept", concept_id.as_str()))?;
             match &*concept.owner.read().await {
-                crate::gql::interfaces::EntityOwnerWeak::Kit(w) => {
+                crate::gql::interfaces::KitGraphParentWeak::Kit(w) => {
                     if let Some(k) = w.upgrade() {
                         k.concepts.write().await.retain(|item| &item.id != concept_id);
                     }
                 }
-                crate::gql::interfaces::EntityOwnerWeak::Type(w) => {
+                crate::gql::interfaces::KitGraphParentWeak::Type(w) => {
                     if let Some(t) = w.upgrade() {
                         t.concepts.write().await.retain(|item| &item.id != concept_id);
                     }
                 }
-                crate::gql::interfaces::EntityOwnerWeak::Representation(_)
-                | crate::gql::interfaces::EntityOwnerWeak::Connector(_)
-                | crate::gql::interfaces::EntityOwnerWeak::Design(_) => {}
-                crate::gql::interfaces::EntityOwnerWeak::Unset => {}
+                crate::gql::interfaces::KitGraphParentWeak::Representation(_)
+                | crate::gql::interfaces::KitGraphParentWeak::Connector(_)
+                | crate::gql::interfaces::KitGraphParentWeak::Design(_) => {}
+                crate::gql::interfaces::KitGraphParentWeak::Unset => {}
             }
             self.concept_by_id.write().await.remove(concept_id);
             Ok(())
@@ -3908,32 +3784,32 @@ pub mod kit {
             let q = Quality::new_with_id(slot, quality_id.clone(), input.key, input.value, input.unit, input.definition, input.description, input.icon, Vec::new(), attrs);
             self.register_quality(q.clone()).await;
             match &*q.owner.read().await {
-                crate::gql::interfaces::EntityOwnerWeak::Kit(w) => {
+                crate::gql::interfaces::KitGraphParentWeak::Kit(w) => {
                     if let Some(k) = w.upgrade() {
                         k.qualities.write().await.push(q.clone());
                     }
                 }
-                crate::gql::interfaces::EntityOwnerWeak::Type(w) => {
+                crate::gql::interfaces::KitGraphParentWeak::Type(w) => {
                     if let Some(t) = w.upgrade() {
                         t.qualities.write().await.push(q.clone());
                     }
                 }
-                crate::gql::interfaces::EntityOwnerWeak::Representation(w) => {
+                crate::gql::interfaces::KitGraphParentWeak::Representation(w) => {
                     if let Some(r) = w.upgrade() {
                         r.qualities.write().await.push(q.clone());
                     }
                 }
-                crate::gql::interfaces::EntityOwnerWeak::Connector(w) => {
+                crate::gql::interfaces::KitGraphParentWeak::Connector(w) => {
                     if let Some(c) = w.upgrade() {
                         c.qualities.write().await.push(q.clone());
                     }
                 }
-                crate::gql::interfaces::EntityOwnerWeak::Design(w) => {
+                crate::gql::interfaces::KitGraphParentWeak::Design(w) => {
                     if let Some(d) = w.upgrade() {
                         d.qualities.write().await.push(q.clone());
                     }
                 }
-                crate::gql::interfaces::EntityOwnerWeak::Unset => {}
+                crate::gql::interfaces::KitGraphParentWeak::Unset => {}
             }
             Ok(q)
         }
@@ -3942,32 +3818,32 @@ pub mod kit {
         pub async fn delete_quality_by_id(self: &Arc<Self>, quality_id: &Id) -> Result<(), crate::error::SemioError> {
             let quality = self.find_quality(quality_id).await.ok_or_else(|| crate::error::SemioError::not_found("Quality", quality_id.as_str()))?;
             match &*quality.owner.read().await {
-                crate::gql::interfaces::EntityOwnerWeak::Kit(w) => {
+                crate::gql::interfaces::KitGraphParentWeak::Kit(w) => {
                     if let Some(k) = w.upgrade() {
                         k.qualities.write().await.retain(|item| &item.id != quality_id);
                     }
                 }
-                crate::gql::interfaces::EntityOwnerWeak::Type(w) => {
+                crate::gql::interfaces::KitGraphParentWeak::Type(w) => {
                     if let Some(t) = w.upgrade() {
                         t.qualities.write().await.retain(|item| &item.id != quality_id);
                     }
                 }
-                crate::gql::interfaces::EntityOwnerWeak::Representation(w) => {
+                crate::gql::interfaces::KitGraphParentWeak::Representation(w) => {
                     if let Some(r) = w.upgrade() {
                         r.qualities.write().await.retain(|item| &item.id != quality_id);
                     }
                 }
-                crate::gql::interfaces::EntityOwnerWeak::Connector(w) => {
+                crate::gql::interfaces::KitGraphParentWeak::Connector(w) => {
                     if let Some(c) = w.upgrade() {
                         c.qualities.write().await.retain(|item| &item.id != quality_id);
                     }
                 }
-                crate::gql::interfaces::EntityOwnerWeak::Design(w) => {
+                crate::gql::interfaces::KitGraphParentWeak::Design(w) => {
                     if let Some(d) = w.upgrade() {
                         d.qualities.write().await.retain(|item| &item.id != quality_id);
                     }
                 }
-                crate::gql::interfaces::EntityOwnerWeak::Unset => {}
+                crate::gql::interfaces::KitGraphParentWeak::Unset => {}
             }
             self.quality_by_id.write().await.remove(quality_id);
             Ok(())
@@ -4568,7 +4444,7 @@ pub mod vcs {
 
     impl ReadVersion {
         pub async fn compute_hash(&self) -> String {
-            h(&["semio:vcs:ReadVersion", self.id.as_str()])
+            h(&["ReadVersion", self.id.as_str()])
         }
     }
 
@@ -4589,7 +4465,7 @@ pub mod vcs {
 
     impl WriteVersion {
         pub async fn compute_hash(&self) -> String {
-            h(&["semio:vcs:WriteVersion", self.id.as_str()])
+            h(&["WriteVersion", self.id.as_str()])
         }
     }
 
@@ -5533,7 +5409,7 @@ pub mod vcs {
             let tip = self.backbone_tip.read().await.clone().unwrap_or_default();
             let reason = self.reason.read().await.clone();
             let created = self.created_at.read().await.clone();
-            merkle_node_str(&["semio:vcs:Conflict", self.id.as_str(), tip.as_str(), reason.as_str(), created.0.as_str()], Vec::new())
+            merkle_node_str(&["Conflict", self.id.as_str(), tip.as_str(), reason.as_str(), created.0.as_str()], Vec::new())
         }
     }
 
@@ -5585,7 +5461,7 @@ pub mod interface {
     use crate::vcs::{Alternative, Checkpoint, Conflict, Edit, Graph, ReadVersion, Session, WriteVersion};
 
     #[derive(Clone, Union)]
-    pub enum GqlNode {
+    pub enum KitGraphNavNode {
         Graph(Arc<Graph>),
         Kit(Arc<Kit>),
         Design(Arc<Design>),
@@ -5600,34 +5476,34 @@ pub mod interface {
     }
 
     /// @emoji 🔎 Resolve a global id against WIP + authoritative graphs, sessions, and conflicts.
-    pub async fn resolve_node(rt: &crate::worker::ParentStore, id: &Id) -> Option<GqlNode> {
+    pub async fn resolve_node(rt: &crate::worker::ParentStore, id: &Id) -> Option<KitGraphNavNode> {
         for g in [&rt.wip_graph, &rt.auth_graph] {
             if &g.id == id {
-                return Some(GqlNode::Graph(g.clone()));
+                return Some(KitGraphNavNode::Graph(g.clone()));
             }
             let kit = g.mutable_kit.read().await.clone();
             let kid = kit.workspace_kit_id().await;
             if id == &kid || id == &kit.id {
-                return Some(GqlNode::Kit(kit.clone()));
+                return Some(KitGraphNavNode::Kit(kit.clone()));
             }
             if let Some(t) = kit.find_tag(id).await {
-                return Some(GqlNode::Tag(t));
+                return Some(KitGraphNavNode::Tag(t));
             }
             if let Some(c) = kit.find_concept(id).await {
-                return Some(GqlNode::Concept(c));
+                return Some(KitGraphNavNode::Concept(c));
             }
             if let Some(q) = kit.find_quality(id).await {
-                return Some(GqlNode::Quality(q));
+                return Some(KitGraphNavNode::Quality(q));
             }
             let designs = kit.designs.read().await;
             for d in designs.iter() {
                 if &d.id == id {
-                    return Some(GqlNode::Design(d.clone()));
+                    return Some(KitGraphNavNode::Design(d.clone()));
                 }
                 let pieces = d.pieces.read().await;
                 for p in pieces.iter() {
                     if &p.id == id {
-                        return Some(GqlNode::Piece(p.clone()));
+                        return Some(KitGraphNavNode::Piece(p.clone()));
                     }
                 }
             }
@@ -5635,21 +5511,21 @@ pub mod interface {
         let sessions = rt.sessions.read().await;
         for s in sessions.iter() {
             if &s.id == id {
-                return Some(GqlNode::Session(s.clone()));
+                return Some(KitGraphNavNode::Session(s.clone()));
             }
         }
         let conflicts = rt.conflicts.read().await;
         for c in conflicts.iter() {
             if &c.id == id {
-                return Some(GqlNode::Conflict(c.clone()));
+                return Some(KitGraphNavNode::Conflict(c.clone()));
             }
         }
         if &rt.local_provider.id == id {
-            return Some(GqlNode::LocalProvider(rt.local_provider.clone()));
+            return Some(KitGraphNavNode::LocalProvider(rt.local_provider.clone()));
         }
         for p in rt.remote_providers.read().await.iter() {
             if &p.id == id {
-                return Some(GqlNode::RemoteProvider(p.clone()));
+                return Some(KitGraphNavNode::RemoteProvider(p.clone()));
             }
         }
         None
@@ -7670,7 +7546,7 @@ pub mod kit_graph_engine {
     /// @emoji 📦 Deterministic non-persisted diff from operation kind + stable payload digest + projection fingerprint transition.
     pub fn deterministic__diff(op_kind: &str, payload_digest: &str, projection_fp_before: &str, projection_fp_after: &str) -> operation::Diff {
         let digest = h(&[op_kind, payload_digest, projection_fp_before, projection_fp_after]);
-        operation::Diff { id: Id::from(format!("semio:diff:{digest}")), summary: Some(digest) }
+        operation::Diff { id: Id::from(format!("diff:{digest}")), summary: Some(digest) }
     }
     //#endregion 🔖 deterministic_diff
 
@@ -9886,10 +9762,10 @@ pub mod gql {
         }
     }
 
-    /// @emoji 🧷 Maps [`crate::interface::GqlNode`] into golden `Node` interface for [`Query::node`].
-    fn gql_node_to_node_interface(node: crate::interface::GqlNode) -> Option<crate::gql::interfaces::NodeInterface> {
+    /// @emoji 🧷 Maps [`crate::interface::KitGraphNavNode`] into golden `Node` interface for [`Query::node`].
+    fn kit_graph_nav_node_to_node_interface(node: crate::interface::KitGraphNavNode) -> Option<crate::gql::interfaces::NodeInterface> {
         use crate::gql::interfaces::NodeInterface as NI;
-        use crate::interface::GqlNode as N;
+        use crate::interface::KitGraphNavNode as N;
         Some(match node {
             N::Graph(g) => NI::Graph(g),
             N::Kit(k) => NI::Kit(k),
@@ -9911,22 +9787,12 @@ pub mod gql {
     pub mod interfaces {
         use std::sync::{Arc, Weak};
 
-        use async_graphql::{Interface, SimpleObject};
+        use async_graphql::Interface;
 
         use crate::geom::entity::{Coordinate, Location, Offset, Plane, Point, Position, Vector};
         use crate::gql_relay::{CoordinateEdge, LocationEdge, OffsetEdge, PlaneEdge, PointEdge, PositionEdge, VectorEdge};
-        use crate::hash::h;
 
-        /// @emoji 🪢 Minimal `EntityConnection` shell (`pageInfo` + merkle `hash`) for empty `owns` projections.
-        #[derive(Clone, SimpleObject)]
-        #[graphql(name = "EmptyEntityConnection")]
-        pub struct EmptyEntityConnection {
-            #[graphql(name = "pageInfo")]
-            pub page_info: Arc<crate::gql_relay::PageInfo>,
-            pub hash: String,
-        }
-
-        /// @emoji 🌐 SDL `interface EntityConnection` — shared relay tail (`StoreConnection`, empty shells, …).
+        /// @emoji 🌐 SDL `interface EntityConnection` — shared relay tail (`StoreConnection`, golden `PageInfoConnection` for empty owns).
         #[derive(Interface)]
         #[graphql(
             name = "EntityConnection",
@@ -9934,21 +9800,18 @@ pub mod gql {
             field(name = "hash", ty = "String")
         )]
         pub enum EntityConnectionInterface {
-            Empty(EmptyEntityConnection),
+            PageInfo(crate::gql_relay::PageInfoConnection),
             Store(crate::gql::StoreConnection),
         }
 
-        /// @emoji 🪢 Canonical empty `EntityConnection` for shells without materialized child rows.
+        /// @emoji 🪢 Canonical empty `EntityConnection` for shells without materialized child rows (golden `PageInfoConnection` implementor).
         pub fn empty_entity_connection() -> EntityConnectionInterface {
-            EntityConnectionInterface::Empty(EmptyEntityConnection {
-                page_info: Arc::new(crate::gql_relay::PageInfo::default()),
-                hash: h(&["entity-connection", "empty"]),
-            })
+            EntityConnectionInterface::PageInfo(crate::gql_relay::PageInfoConnection::empty_entity_shell())
         }
 
-        /// @emoji 🪢 Weak back-reference for golden `Entity.owner` on in-memory Tag, Concept, and Quality rows (replaces meta-local owner slot enums).
+        /// @emoji 🪢 Weak back-reference for golden `Entity.owner` on in-memory Tag, Concept, and Quality rows.
         #[derive(Debug)]
-        pub enum EntityOwnerWeak {
+        pub enum KitGraphParentWeak {
             Unset,
             Kit(Weak<crate::kit::Kit>),
             Type(Weak<crate::kit::r#type::Type>),
@@ -9957,7 +9820,7 @@ pub mod gql {
             Design(Weak<crate::kit::design::Design>),
         }
 
-        impl Default for EntityOwnerWeak {
+        impl Default for KitGraphParentWeak {
             fn default() -> Self {
                 Self::Unset
             }
@@ -9994,7 +9857,7 @@ pub mod gql {
             Quality(Arc<crate::meta::Quality>),
         }
 
-        impl EntityOwnerWeak {
+        impl KitGraphParentWeak {
             /// @emoji 🌐 Upgrade to live [`EntityInterface`] for GraphQL `Entity.owner` resolution.
             pub fn upgrade(&self) -> Option<EntityInterface> {
                 match self {
@@ -10407,24 +10270,24 @@ pub mod gql {
         /// @emoji 🔎 Golden `Query.node(id)` — returns the `Node` interface for resolvable globals on this runtime.
         pub async fn node(&self, ctx: &Context<'_>, id: Id) -> async_graphql::Result<Option<crate::gql::interfaces::NodeInterface>> {
             let rt = ctx.data::<Arc<ParentStore>>()?;
-            Ok(crate::interface::resolve_node(rt.as_ref(), &id).await.and_then(gql_node_to_node_interface))
+            Ok(crate::interface::resolve_node(rt.as_ref(), &id).await.and_then(kit_graph_nav_node_to_node_interface))
         }
 
         /// @emoji 🔎 Golden `Query.entity(hash)` — returns the `Entity` interface for VCS shells resolvable on this runtime.
         pub async fn entity(&self, ctx: &Context<'_>, hash: Id) -> async_graphql::Result<Option<crate::gql::interfaces::EntityInterface>> {
             let rt = ctx.data::<Arc<ParentStore>>()?;
             Ok(match crate::interface::resolve_node(rt.as_ref(), &hash).await {
-                Some(crate::interface::GqlNode::Graph(g)) => Some(crate::gql::interfaces::EntityInterface::Graph(g)),
-                Some(crate::interface::GqlNode::Session(s)) => Some(crate::gql::interfaces::EntityInterface::Session(s)),
-                Some(crate::interface::GqlNode::Conflict(c)) => Some(crate::gql::interfaces::EntityInterface::Conflict(c)),
-                Some(crate::interface::GqlNode::LocalProvider(p)) => Some(crate::gql::interfaces::EntityInterface::LocalProvider(p)),
-                Some(crate::interface::GqlNode::RemoteProvider(p)) => Some(crate::gql::interfaces::EntityInterface::RemoteProvider(p)),
-                Some(crate::interface::GqlNode::Kit(k)) => Some(crate::gql::interfaces::EntityInterface::Kit(k)),
-                Some(crate::interface::GqlNode::Design(d)) => Some(crate::gql::interfaces::EntityInterface::Design(d)),
-                Some(crate::interface::GqlNode::Piece(p)) => Some(crate::gql::interfaces::EntityInterface::Piece(p)),
-                Some(crate::interface::GqlNode::Tag(t)) => Some(crate::gql::interfaces::EntityInterface::Tag(t)),
-                Some(crate::interface::GqlNode::Concept(c)) => Some(crate::gql::interfaces::EntityInterface::Concept(c)),
-                Some(crate::interface::GqlNode::Quality(q)) => Some(crate::gql::interfaces::EntityInterface::Quality(q)),
+                Some(crate::interface::KitGraphNavNode::Graph(g)) => Some(crate::gql::interfaces::EntityInterface::Graph(g)),
+                Some(crate::interface::KitGraphNavNode::Session(s)) => Some(crate::gql::interfaces::EntityInterface::Session(s)),
+                Some(crate::interface::KitGraphNavNode::Conflict(c)) => Some(crate::gql::interfaces::EntityInterface::Conflict(c)),
+                Some(crate::interface::KitGraphNavNode::LocalProvider(p)) => Some(crate::gql::interfaces::EntityInterface::LocalProvider(p)),
+                Some(crate::interface::KitGraphNavNode::RemoteProvider(p)) => Some(crate::gql::interfaces::EntityInterface::RemoteProvider(p)),
+                Some(crate::interface::KitGraphNavNode::Kit(k)) => Some(crate::gql::interfaces::EntityInterface::Kit(k)),
+                Some(crate::interface::KitGraphNavNode::Design(d)) => Some(crate::gql::interfaces::EntityInterface::Design(d)),
+                Some(crate::interface::KitGraphNavNode::Piece(p)) => Some(crate::gql::interfaces::EntityInterface::Piece(p)),
+                Some(crate::interface::KitGraphNavNode::Tag(t)) => Some(crate::gql::interfaces::EntityInterface::Tag(t)),
+                Some(crate::interface::KitGraphNavNode::Concept(c)) => Some(crate::gql::interfaces::EntityInterface::Concept(c)),
+                Some(crate::interface::KitGraphNavNode::Quality(q)) => Some(crate::gql::interfaces::EntityInterface::Quality(q)),
                 _ => None,
             })
         }
@@ -11385,7 +11248,6 @@ pub mod gql {
             .register_output_type::<crate::kit::target_operations::DeletedPortsInput>()
             .register_output_type::<crate::gql::interfaces::NodeInterface>()
             .register_output_type::<crate::gql::interfaces::EntityEdgeInterface>()
-            .register_output_type::<crate::gql::interfaces::EmptyEntityConnection>()
             .register_output_type::<crate::gql::interfaces::EntityConnectionInterface>()
             .register_output_type::<crate::gql::interfaces::EntityInterface>()
             .register_output_type::<crate::gql::interfaces::WorkspaceInterface>()
@@ -11713,6 +11575,21 @@ mod tests {
                 missing.len()
             );
         }
+    }
+
+    /// @emoji 🧱 `entity_bare!` / `operation_with_input!` / `operation_no_input!` expand to real `item` tokens (compile-time splice, not `$( )* => {}` stubs).
+    #[test]
+    fn golden_macro_dsl_item_splices_compile() {
+        crate::entity_bare! {
+            const _ENTITY_BARE_PROBE: u32 = 3;
+        }
+        crate::operation_with_input! {
+            const _OP_WITH_INPUT_PROBE: u32 = 4;
+        }
+        crate::operation_no_input! {
+            const _OP_NO_INPUT_PROBE: u32 = 5;
+        }
+        assert_eq!(_ENTITY_BARE_PROBE + _OP_WITH_INPUT_PROBE + _OP_NO_INPUT_PROBE, 12);
     }
 
     /// @emoji 🌱 Opens an unsaved kit change via golden `Mutation.session.store.theKit.startNewChange` (see `schema.golden.graphql` Commands block).
@@ -12626,15 +12503,15 @@ mod tests {
     //#region 🪪 merkle hashing
     #[test]
     fn merkle_node_str_sorts_child_digests_for_order_independence() {
-        let a = crate::hash::merkle_node_str(&["semio:test:node", "id-1"], vec!["zzz".into(), "aaa".into(), "mmm".into()]);
-        let b = crate::hash::merkle_node_str(&["semio:test:node", "id-1"], vec!["mmm".into(), "zzz".into(), "aaa".into()]);
+        let a = crate::hash::merkle_node_str(&["test:node", "id-1"], vec!["zzz".into(), "aaa".into(), "mmm".into()]);
+        let b = crate::hash::merkle_node_str(&["test:node", "id-1"], vec!["mmm".into(), "zzz".into(), "aaa".into()]);
         assert_eq!(a, b, "child digest order must not affect the parent hash");
     }
 
     #[test]
     fn merkle_collection_matches_tagged_empty_node() {
         let empty_coll = crate::hash::merkle_collection(Vec::new());
-        let tagged = crate::hash::merkle_node_str(&["semio:relay:collection"], Vec::new());
+        let tagged = crate::hash::merkle_node_str(&["RelayCollection"], Vec::new());
         assert_eq!(empty_coll, tagged);
     }
 

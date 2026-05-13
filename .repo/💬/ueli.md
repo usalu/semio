@@ -346,6 +346,14 @@ semio:
 
 ---
 
+Somehow the term "row", Row, Rows slipped into the code.
+If two classes exist for the same this is a code smell.
+For every entity there is exactly one class, one hook, etc
+There must be no other terms like used in [schema.golden.graphql](semio/schema/graphql/schema.golden.graphql) .
+Check [lib.rs](semio/client/lib/rs/lib.rs) , [index.ts](semio/client/lib/js/index.ts) , [index.tsx](semio/client/lib/react/index.tsx)
+
+---
+
 semio/graphql, semio/rs, semio/js, semio/react, semio/sketchpad:
 We are in the middle of state managment refactor.
 Achieve the following first example of the new architecture:

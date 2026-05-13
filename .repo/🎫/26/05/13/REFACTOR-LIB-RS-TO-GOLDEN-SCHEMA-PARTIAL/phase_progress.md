@@ -1,44 +1,32 @@
-# Refactor Lib Rs To Golden Schema — Progress (session 2026-05-13)
+# Refactor Lib Rs To Golden Schema — Progress
 
-## Done this session
+## Direction (greenfield)
 
-- **Compile:** Fixed `EntityConnectionInterface` (`#[derive(Interface)]`): mapped GraphQL `pageInfo` via `method = "page_info"`, unified `EmptyEntityConnection.page_info` as `Arc<PageInfo>`, set interface field `ty = "&Arc<PageInfo>"` so async-graphql derive accepts both variants with `StoreConnection`.
-- **SDL hygiene:** Removed literal `#region` from two `///` docstrings that leaked into generated SDL (tripped `schema_matches_target_graphql_file` guard).
-- **Tests vs golden commands:** Updated GraphQL test mutations to the golden chain `Mutation.session → store(id) → theKit → unsavedChange → kit → …` (was incorrectly calling `theKit` on `SessionCommand`). Fixed `create_alternative` to use `store.startAlternative`. Response JSON paths updated.
-- **Fixtures:** Corrected `metabolism.new.kit.semio.json` path to `../../../assets/fixtures/…`. Added `kit_store_golden_fixture_paths()` resolving `../../../assets/semio/kit-store.golden.*.json` with skip + `[DEBUG]` when absent (fixtures present in full tree → tests run).
-- **Archive:** Full `lib.rs` copied to `tmp_legacy_lib_full.rs.txt` in this ticket folder for porting reference.
+Single code-first `lib.rs` surface: GraphQL identifiers come only from golden SDL; internal runtime uses **non-schema** Rust names (`KitGraphParentWeak`, `KitGraphNavNode`, …). No parallel legacy naming, no `tmp_legacy_*` archives in this ticket (prior `tmp_legacy_lib_full.rs.txt` removed as obsolete).
 
-## Verified
+Macro DSL: `entity_full!` / `entity_lite!` compose `entity_relay!` + `_ladder_relay_full!` where applicable; `entity_bare!` / `operation_with_input!` / `operation_no_input!` are **item splices** (expand to real `item` tokens) so call sites own struct/`#[Object]` bodies until codegen covers the full 985-declaration set.
 
-- `cargo test -p semio --lib` (36 passed, 1 ignored) with **no** `SEMIO_GOLDEN_STRICT` in environment.
+## Done (latest)
 
-## Not done (plan phases 1–12)
+- **EntityConnection empty shell:** Dropped non-golden `EmptyEntityConnection`; `EntityConnectionInterface` now uses golden `PageInfoConnection` (via `PageInfoConnection::empty_entity_shell()`) for empty `owns` projections. Removed `register_output_type` for the old hack.
+- **Renames:** `EntityOwnerWeak` → `KitGraphParentWeak`; `GqlNode` → `KitGraphNavNode`; `gql_node_to_node_interface` → `kit_graph_nav_node_to_node_interface`.
+- **Merkle / id labels:** Removed `semio:*` product prefixes from hash/id segments in favor of GraphQL-aligned typenames (`Vector`, `Quality`, `weak:…`, `diff:…`, `RelayCollection`, `test:…`, etc.). `resolve_local_semio_root` path helper unchanged (filesystem, not merkle).
+- **Dead DSL:** Removed no-op `register_entities!` / `register_operations!` / `register_commands!` blocks and stub `command_*` / `operation_family!` / `relay_collection!` / `entity_interface_enums!` macros. Removed unused `entity_diffs!`.
+- **Tests:** Added `golden_macro_dsl_item_splices_compile` proving macro bodies are non-empty splices.
+- **Windows:** `cargo test` against default `target/debug` may hit `LNK1104` (locked `.dll`); `CARGO_TARGET_DIR=c:\git\semio\target-agent-semio-rs` avoids contention — documented for agents/CI.
 
-- **Strict gate:** With `SEMIO_GOLDEN_STRICT=1`, **817** top-level golden declarations still missing from `gql::sdl()` (interfaces, scalars, full relay ladders, operations, etc.). Needs macro DSL + mass `register_output_type` / reachability per plan.
-- **Renames / cleanup:** `ParentStore` → non-schema runtime name, remove `EntityOwnerWeak` / `GqlNode` per plan, align `OperationInput` GraphQL object name with golden `KitOperation`, rename `*OperationInput` types to golden `*Operation` where applicable.
-- **Feature `SEMIO_GOLDEN_STRICT`:** Leave env-gated until SDL covers golden set; optional Cargo feature wiring per plan.
+## Verified (this session)
 
-## Suggested next steps
+- `cargo check` (semio crate) with alternate `CARGO_TARGET_DIR` — OK.
+- `cargo test golden_macro_dsl_item_splices_compile` — OK.
+- `SEMIO_GOLDEN_STRICT=1 cargo test schema_matches_target_graphql_file` — **fails**: **815** golden top-level declarations still missing from `gql::sdl()` (unchanged vs prior baseline: removing `EmptyEntityConnection` did not affect golden-key coverage).
 
-1. Implement `_ladder_relay_full!` / `_ladder_relay_lite!` + public `entity_full!` / `entity_lite!` / `entity_bare!` and operation macros; migrate one vertical slice (e.g. geom) end-to-end including `SchemaBuilder::register_output_type`.
-2. Script or derive `register_output_type` list from `.repo/all_type_names.txt` until `collect_schema_decl_keys` diff is empty under strict.
-3. Flip `SEMIO_GOLDEN_STRICT=1` in CI only after export matches `schema.golden.graphql`.
+## Not done
 
----
+- Mass registration: interfaces (`Diff`, `Modification`, `Modifications`, `WeakEntity`, …), scalars (`Color`, `Timestamp` if missing), full relay ladders per entity, ~70+ operation GraphQL types — needs generated or exhaustive `register_output_type` wiring per plan.
+- `ticket_close` deferred until strict gate passes.
 
-## Continuation (subagent session, same ticket)
+## Next
 
-### Done
-
-- **Macro ladder (scaffold):** Added `_ladder_relay_lite!`, `_ladder_relay_full!`, `entity_full!`, `entity_lite!`, `entity_bare!`, `operation_with_input!`, `operation_no_input!` in `lib.rs` `//#region 🧬 entity_dsl` (per plan naming); `entity_full!` composes `entity_relay!` + optional `_ladder_relay_full!` when `ladder_full = (...)` is passed.
-- **SDL reachability:** Implemented golden `PageInfoEdge` / `PageInfoConnection` in `gql_relay` and registered both in `Schema::build` (`build_schema_sync_for`).
-- **Repo MCP `ticket_close`:** Tool schema requires `summary` (required); `files` is an optional **JSON array of path strings** (`{ "type": "array", "items": { "type": "string" } }`).
-
-### Verified / blocked
-
-- **Windows linker:** `cargo test -p semio` failed locally with `LNK1104` (cannot open `paste-*.dll` in `target/debug/deps`) — likely AV/IDE file lock; **not** re-run successfully in this environment. Prior agent reported 36 tests green without `SEMIO_GOLDEN_STRICT`.
-- **Strict count:** Not re-measured here; expect **815** missing declarations after +2 registered types (817 − 2), until `Diff` / `Modification` / entity diff families and ~70 operations are added.
-
-### Next
-
-- Emit `interface Diff` / `Modification` + 30× concrete diff/modification/modifications types (or macro-generated), then wire `register_output_type` from `.repo/all_type_names.txt`.
+1. `build.rs` or bundled generator emitting golden stubs + `Schema::build` registration from `.repo/all_type_names.txt` / `schema.golden.graphql` (single source of truth).
+2. Wire real resolvers onto generated shells; then `SEMIO_GOLDEN_STRICT=1` in CI.
