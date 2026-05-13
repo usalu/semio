@@ -26,22 +26,6 @@
         "forwardAllArgs": true
       }
     },
-    "worker": {
-      "executor": "nx:run-commands",
-      "options": {
-        "cwd": "repo/server/coordinator",
-        "command": "bun lib/worker.ts",
-        "forwardAllArgs": true
-      }
-    },
-    "migrate": {
-      "executor": "nx:run-commands",
-      "options": {
-        "cwd": "repo/server/coordinator",
-        "command": "bun lib/migrate.ts",
-        "forwardAllArgs": true
-      }
-    },
     "test": {
       "executor": "nx:run-commands",
       "options": {

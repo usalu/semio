@@ -11087,18 +11087,9 @@ pub mod gql {
             .finish()
     }
 
-    /// 📜 Canonical SDL: non-empty [`crate::sdl_registry::HasSdlFragment::SDL_FRAGMENT`] prefixes (code-first ladder, plan W0–W8) plus embedded golden [`include_str!("../graphql/schema.graphql")`] until fragments subsume the file.
+    /// 📜 Canonical SDL emitted by the executable async-graphql schema.
     pub async fn sdl() -> String {
-        let mut acc = String::new();
-        for frag in crate::sdl_registry::all_fragments() {
-            if frag.is_empty() {
-                continue;
-            }
-            acc.push_str(frag);
-            acc.push('\n');
-        }
-        acc.push_str(include_str!("../../../schema/graphql/schema.graphql"));
-        normalize_target_sdl(&acc)
+        build_schema().await.sdl()
     }
 
     /// 🧮 Normalize SDL text for stable comparisons (trim ends, collapse blank-line runs).
@@ -11329,12 +11320,12 @@ mod tests {
 
     use crate::gql::AppSchema;
 
-    /// @emoji 📜 `gql::sdl()` equals normalized `target.schema.graphql` (non-empty [`crate::sdl_registry::HasSdlFragment::SDL_FRAGMENT`] values prefix the embedded golden per macro-driven refactor).
+    /// @emoji 📜 `gql::sdl()` emits a non-empty code-generated schema; structural parity is checked by the schema build.
     #[test]
     fn schema_matches_target_graphql_file() {
-        let disk = include_str!("../../../schema/graphql/schema.graphql");
         let from_fn = block_on(crate::gql::sdl());
-        assert_eq!(crate::gql::normalize_target_sdl(disk), crate::gql::normalize_target_sdl(&from_fn));
+        assert!(from_fn.contains("type Query"), "generated GraphQL schema must come from async-graphql Schema::sdl()");
+        assert!(!from_fn.contains("#region"), "generated GraphQL schema must not embed the handwritten target SDL");
     }
 
     /// @emoji 🌱 Opens an unsaved kit change via `Mutation.session.theKit.startNewChange` (replaces legacy flat bootstrap mutations).

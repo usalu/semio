@@ -9440,6 +9440,8 @@ type StoreConnection implements EntityConnection {
   hash: String! # cached
 }
 
+#region Commands
+
 type StoreCommand {
   backbone: BackboneCommand!
   theKit: VersionCommand
@@ -9460,6 +9462,8 @@ type StoreCommandConnection implements EntityConnection {
   pageInfo: PageInfo! # computed
   hash: String! # cached
 }
+
+#endregion Commands
 
 #endregion Store
 
@@ -9488,9 +9492,7 @@ type Session implements StrongEntity {
   owns: EntityConnection # reference // Alternative | Graph | Checkpoint
   # Session
   startedAt: Timestamp # data
-  alternatives: AlternativeConnection! # data
-  alternative(id: ID!): Alternative # computed
-  theKit: Workspace # computed
+  stores: StoreConnection
 }
 
 #region Commands

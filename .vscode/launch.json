@@ -148,7 +148,7 @@
       "name": "🛠️dev👤semio📚engine🤖mcp",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run workspace:mcp-inspector",
+      "command": "bun nx run workspace:dev",
       "isBackground": true,
       "options": {
         "cwd": "${workspaceFolder}"
@@ -321,7 +321,7 @@
       "name": "🛠️dev🔬coda🤖mcp (with inspector)",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run workspace:mcp-inspector",
+      "command": "bun nx run workspace:dev",
       "isBackground": true,
       "options": {
         "cwd": "${workspaceFolder}",

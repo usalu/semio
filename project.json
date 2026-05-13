@@ -15,7 +15,7 @@
       "executor": "nx:run-commands",
       "dependsOn": [],
       "options": {
-        "command": "bun nx run-many -t lint --all --exclude workspace"
+        "command": "bun nx run-many -t lint --all --exclude workspace && npx --yes dependency-cruiser@16 semio/client/lib/js semio/client/lib/react semio/client/lib/sketchpad --config .dependency-cruiser.cjs --output-type err"
       }
     },
     "format": {
@@ -39,35 +39,7 @@
         "command": "bun nx run-many -t build --all --exclude workspace"
       }
     },
-    "typecheck": {
-      "executor": "nx:run-commands",
-      "dependsOn": [],
-      "options": {
-        "command": "bun nx run-many -t build -p @semio/js @semio/react && bun nx run semio/graphql:build"
-      }
-    },
-    "git-setup": {
-      "executor": "nx:run-commands",
-      "cache": false,
-      "options": {
-        "command": "bun scripts/git-setup.script.ts"
-      }
-    },
-    "pre-commit-install": {
-      "executor": "nx:run-commands",
-      "cache": false,
-      "options": {
-        "command": "pre-commit install"
-      }
-    },
-    "pre-commit": {
-      "executor": "nx:run-commands",
-      "cache": false,
-      "options": {
-        "command": "pre-commit run --all-files"
-      }
-    },
-    "mcp-inspector": {
+    "dev": {
       "executor": "nx:run-commands",
       "cache": false,
       "options": {
@@ -75,25 +47,18 @@
         "parallel": false
       }
     },
-    "mcp-inspector-repo": {
+    "start": {
       "executor": "nx:run-commands",
       "cache": false,
       "options": {
         "command": "bun scripts/mcp-inspector-repo.script.ts"
       }
     },
-    "depcruise": {
+    "typecheck": {
       "executor": "nx:run-commands",
-      "cache": true,
+      "dependsOn": [],
       "options": {
-        "command": "npx --yes dependency-cruiser@16 semio/client/lib/js semio/client/lib/react semio/client/lib/sketchpad --config .dependency-cruiser.cjs --output-type err"
-      }
-    },
-    "install-native": {
-      "executor": "nx:run-commands",
-      "cache": false,
-      "options": {
-        "command": "powershell -NoProfile -ExecutionPolicy Bypass -File .devcontainer/install-native.ps1"
+        "command": "bun nx run-many -t build -p @semio/js @semio/react && bun nx run semio/graphql:build"
       }
     }
   }

@@ -1,10 +1,11 @@
 {
-  "title": "Clean React And Sketchpad Hook Surface",
-  "status": "closed",
+  "title": "Audit Command Naming Semantics",
+  "status": "open",
   "summary": "Cleaned the React entity hook surface to use schema-aligned instance-returning reads and updated sketchpad detail sections to rely on hook-based reads instead of direct class field access in the kit, type, tag, concept, design, and file panels.",
   "goal": "🎯graphqltargetsemiors",
   "sessions": [
     "⚪d723dbfbdbf7465e8e0b3cbfe817cf89",
-    "⚪5ccaf3db9f6c4d0eb07de7931c87ec31"
+    "⚪5ccaf3db9f6c4d0eb07de7931c87ec31",
+    "⚪9dbdabec5df1461fbc6cba840bc7e0c8"
   ]
 }
