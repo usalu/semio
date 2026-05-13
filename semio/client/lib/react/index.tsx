@@ -694,6 +694,13 @@ function resolveAuthor(authorId?: string): Author | null {
   return st.author(id);
 }
 
+function resolveFile(fileId?: string): File | null {
+  const st = React.useContext(StoreHandleContext);
+  const id = fileId ?? null;
+  if (st == null || id == null) return null;
+  return st.file(id);
+}
+
 function resolveAlternative(alternativeId?: string): Alternative | null {
   const g = React.useContext(GraphHandleContext);
   const row = React.useContext(AlternativeIdContext);
@@ -994,74 +1001,54 @@ function useResolvedType(typeId?: string): Type | null {
 }
 
 // #region 🪝IdStableEntityLists
-/** @emoji 📚 Kit-level designs via {@link Kit#readDesigns} (id-list-stable handles). */
-export function useKitDesigns(): FieldReadState<readonly Design[]> {
+/** @emoji 📚 Kit-level design ids via {@link Kit#designs} (stable {@link IdRow} rows only). */
+export function useKitDesigns(): FieldReadState<readonly IdRow[]> {
   const kit = useWipKit();
-  return useCurrentEntityField(kit, (k) => k.designs());
+  return useCurrentEntityField(kit, async (k) => Object.freeze((await k.designs()).map((d) => ({ id: d.id }))));
 }
 
-/** @emoji 📚 Kit-level kinds via {@link Kit#readTypes}. */
-export function useKitTypes(): FieldReadState<readonly Type[]> {
+/** @emoji 📚 Kit-level kind ids via {@link Kit#types}. */
+export function useKitTypes(): FieldReadState<readonly IdRow[]> {
   const kit = useWipKit();
-  return useCurrentEntityField(kit, (k) => k.types());
+  return useCurrentEntityField(kit, async (k) => Object.freeze((await k.types()).map((t) => ({ id: t.id }))));
 }
 
-/** @emoji 📚 Kit-level authors via {@link Kit#readAuthors}. */
-export function useKitAuthors(): FieldReadState<readonly Author[]> {
+/** @emoji 📚 Kit-level author ids via {@link Kit#authors}. */
+export function useKitAuthors(): FieldReadState<readonly IdRow[]> {
   const kit = useWipKit();
-  return useCurrentEntityField(kit, (k) => k.authors());
+  return useCurrentEntityField(kit, async (k) => Object.freeze((await k.authors()).map((a) => ({ id: a.id }))));
 }
 
-/** @emoji 📚 Kit-level qualities via {@link Kit#readQualities}. */
-export function useKitQualities(): FieldReadState<readonly Quality[]> {
+/** @emoji 📚 Kit-level quality ids via {@link Kit#qualities}. */
+export function useKitQualities(): FieldReadState<readonly IdRow[]> {
   const kit = useWipKit();
-  return useCurrentEntityField(kit, (k) => k.qualities());
+  return useCurrentEntityField(kit, async (k) => Object.freeze((await k.qualities()).map((q) => ({ id: q.id }))));
 }
 
-/** @emoji 📚 Kit-level tags via {@link Kit#readTags}. */
-export function useKitTags(): FieldReadState<readonly Tag[]> {
+/** @emoji 📚 Kit-level tag ids via {@link Kit#tags}. */
+export function useKitTags(): FieldReadState<readonly IdRow[]> {
   const kit = useWipKit();
-  return useCurrentEntityField(kit, (k) => k.tags());
+  return useCurrentEntityField(kit, async (k) => Object.freeze((await k.tags()).map((t) => ({ id: t.id }))));
 }
 
-/** @emoji 📚 Kit-level concepts via {@link Kit#readConcepts}. */
-export function useKitConcepts(): FieldReadState<readonly Concept[]> {
+/** @emoji 📚 Kit-level concept ids via {@link Kit#concepts}. */
+export function useKitConcepts(): FieldReadState<readonly IdRow[]> {
   const kit = useWipKit();
-  return useCurrentEntityField(kit, (k) => k.concepts());
+  return useCurrentEntityField(kit, async (k) => Object.freeze((await k.concepts()).map((c) => ({ id: c.id }))));
 }
 
-/** @emoji 📚 Design pieces ordered by {@link Design#readPieceIds} (stable {@link Piece} handles per id). */
-export function useDesignPieces(): FieldReadState<readonly Piece[]> {
+/** @emoji 📚 Piece ids in the active {@link DesignContext} design (stable {@link IdRow} rows). */
+export function useDesignPieces(): FieldReadState<readonly IdRow[]> {
   const entity = useResolvedDesign();
-  return useCurrentEntityField(entity, (design) => design.pieces());
+  return useCurrentEntityField(entity, async (design) => Object.freeze((await design.pieces()).map((p) => ({ id: p.id }))));
 }
 
-/** @emoji 📚 Design connections ordered by {@link Design#readConnectionIds}. */
-export function useDesignConnections(): FieldReadState<readonly Connection[]> {
+/** @emoji 📚 Connection ids in the active {@link DesignContext} design (stable {@link IdRow} rows). */
+export function useDesignConnections(): FieldReadState<readonly IdRow[]> {
   const entity = useResolvedDesign();
-  return useCurrentEntityField(entity, (design) => design.connections());
+  return useCurrentEntityField(entity, async (design) => Object.freeze((await design.connections()).map((c) => ({ id: c.id }))));
 }
 // #endregion 🪝IdStableEntityLists
-
-// #region 🪝AggregateListBundles
-/** @emoji 📚 Sketchpad bundle: live kit designs (id-list-stable). */
-export function useDesigns(): Readonly<{ designs: readonly Design[] }> {
-  const { value } = useKitDesigns();
-  return { designs: value ?? [] };
-}
-
-/** @emoji 📚 Sketchpad bundle: live kit kinds (id-list-stable). */
-export function useTypes(): Readonly<{ types: readonly Type[] }> {
-  const { value } = useKitTypes();
-  return { types: value ?? [] };
-}
-
-/** @emoji 📚 Pieces in the active {@link DesignContextProvider} design (see {@link DesignContext}). */
-export function usePieces(): readonly Piece[] {
-  const { value } = useDesignPieces();
-  return value ?? [];
-}
-// #endregion 🪝AggregateListBundles
 
 // #region 🪝EntityContextReads
 /** @emoji 📖 Resolves a kit {@link Piece} from context and/or ids, then applies {@code selector}. */
@@ -1134,6 +1121,36 @@ export function useKitIcon(): FieldReadState<string> {
 export function useKitImage(): FieldReadState<string> {
   const kit = useWipKit();
   return useCurrentEntityField(kit, (k) => k.image());
+}
+
+/** @emoji 📖 Live {@link Kit#preview}. */
+export function useKitPreview(): FieldReadState<string> {
+  const kit = useWipKit();
+  return useCurrentEntityField(kit, (k) => k.preview());
+}
+
+/** @emoji 📖 Live {@link Kit#remote}. */
+export function useKitRemote(): FieldReadState<string> {
+  const kit = useWipKit();
+  return useCurrentEntityField(kit, (k) => k.remote());
+}
+
+/** @emoji 📖 Live {@link Kit#homepage}. */
+export function useKitHomepage(): FieldReadState<string> {
+  const kit = useWipKit();
+  return useCurrentEntityField(kit, (k) => k.homepage());
+}
+
+/** @emoji 📖 Live {@link Kit#license}. */
+export function useKitLicense(): FieldReadState<string> {
+  const kit = useWipKit();
+  return useCurrentEntityField(kit, (k) => k.license());
+}
+
+/** @emoji 📖 Live {@link Kit#uri}. */
+export function useKitUri(): FieldReadState<string> {
+  const kit = useWipKit();
+  return useCurrentEntityField(kit, (k) => k.uri());
 }
 
 /** @emoji 🧾 Exposes {@link Store#ensureChangeId} as a stable callback. */
@@ -1384,6 +1401,12 @@ export function useChangeDesignDescription(): readonly [(newDescription: string)
   return semioInternalOperationBind<Design, [string]>((d, t) => d.changeDescription(t))(() => entity);
 }
 
+/** @emoji ✍️ {@link Design#changeIcon}. */
+export function useChangeDesignIcon(): readonly [(newIcon: string) => Promise<SetResult>, OperationStatus] {
+  const entity = resolveDesign();
+  return semioInternalOperationBind<Design, [string]>((d, i) => d.changeIcon(i))(() => entity);
+}
+
 /** @emoji ✍️ {@link Design#flatten}. */
 export function useFlattenDesign(): readonly [() => Promise<SetResult>, OperationStatus] {
   const entity = resolveDesign();
@@ -1455,7 +1478,7 @@ export function useDeleteDesignPiecesAndConnections(): readonly [(pieceIds: read
 }
 
 /**
- * @emoji ✍️ Legacy shallow {@link Design} patch runner: applies only keys backed by {@link DesignOperation}; other keys are ignored with a {@code [DEBUG]} console warning.
+ * @emoji ✍️ Legacy shallow {@link Design} patch runner: applies only keys backed by {@link DesignOperation} ({@code name}, {@code description}, {@code icon}, {@code flatten}); other keys are ignored with a {@code [DEBUG]} console warning.
  */
 export function useUpdateDesign(): Readonly<{
   run: (designId: string, patch: Record<string, unknown>) => Promise<SetResult>;
@@ -1470,6 +1493,9 @@ export function useUpdateDesign(): Readonly<{
         if (!r.ok) return r;
       } else if (key === "description") {
         const r = await d.changeDescription(String(raw ?? ""));
+        if (!r.ok) return r;
+      } else if (key === "icon") {
+        const r = await d.changeIcon(String(raw ?? ""));
         if (!r.ok) return r;
       } else if (key === "flatten" && raw === true) {
         const r = await d.flatten();
@@ -1550,6 +1576,12 @@ export function useTypeRepresentations(typeId?: string): FieldReadState<readonly
 export function useTypeAttributes(typeId?: string): FieldReadState<readonly Attribute[]> {
   const entity = useResolvedType(typeId);
   return useCurrentEntityField(entity, (t) => t.attributes());
+}
+
+/** @emoji 📖 Bulky {@link Type#authors}. */
+export function useTypeAuthors(typeId?: string): FieldReadState<readonly Author[]> {
+  const entity = useResolvedType(typeId);
+  return useCurrentEntityField(entity, (t) => t.authors());
 }
 
 /** @emoji ✍️ {@link TypeOperationInput#rename}. */
@@ -1718,26 +1750,32 @@ const useConnectorChangeDescriptionOperation = semioInternalOperationBind<Connec
 const useConnectorChangeIconOperation = semioInternalOperationBind<Connector, [string]>((c, i) => c.changeIcon(i));
 
 /** @emoji 📖 Live {@link Connector#code}. */
-export function useConnectorCode(): FieldReadState<string> {
-  const entity = resolveConnector();
+export function useConnectorCode(connectorId?: string): FieldReadState<string> {
+  const entity = resolveConnector(connectorId);
   return useCurrentEntityField(entity, (c) => c.code());
 }
 
 /** @emoji 📖 Live {@link Connector#description}. */
-export function useConnectorDescription(): FieldReadState<string> {
-  const entity = resolveConnector();
+export function useConnectorDescription(connectorId?: string): FieldReadState<string> {
+  const entity = resolveConnector(connectorId);
   return useCurrentEntityField(entity, (c) => c.description());
 }
 
 /** @emoji 📖 Live {@link Connector#icon}. */
-export function useConnectorIcon(): FieldReadState<string> {
-  const entity = resolveConnector();
+export function useConnectorIcon(connectorId?: string): FieldReadState<string> {
+  const entity = resolveConnector(connectorId);
   return useCurrentEntityField(entity, (c) => c.icon());
 }
 
+/** @emoji 📖 Live {@link Connector#port}. */
+export function useConnectorPort(connectorId?: string): FieldReadState<Port | null> {
+  const entity = resolveConnector(connectorId);
+  return useCurrentEntityField(entity, (c) => c.port());
+}
+
 /** @emoji 📖 Bulky {@link Connector#attributes}. */
-export function useConnectorAttributes(): FieldReadState<readonly Attribute[]> {
-  const entity = resolveConnector();
+export function useConnectorAttributes(connectorId?: string): FieldReadState<readonly Attribute[]> {
+  const entity = resolveConnector(connectorId);
   return useCurrentEntityField(entity, (c) => c.attributes());
 }
 
@@ -1762,38 +1800,38 @@ export function useChangeConnectorIcon(): readonly [(newIcon: string) => Promise
 
 // #region ✍️Author
 /** @emoji 📖 Live {@link Author#name}. */
-export function useAuthorName(): FieldReadState<string> {
-  const entity = resolveAuthor();
+export function useAuthorName(authorId?: string): FieldReadState<string> {
+  const entity = resolveAuthor(authorId);
   return useCurrentEntityField(entity, (a) => a.name());
 }
 
 /** @emoji 📖 Live {@link Author#email}. */
-export function useAuthorEmail(): FieldReadState<string> {
-  const entity = resolveAuthor();
+export function useAuthorEmail(authorId?: string): FieldReadState<string> {
+  const entity = resolveAuthor(authorId);
   return useCurrentEntityField(entity, (a) => a.email());
 }
 
 /** @emoji 📖 Live {@link Author#rank}. */
-export function useAuthorRank(): FieldReadState<number | null> {
-  const entity = resolveAuthor();
+export function useAuthorRank(authorId?: string): FieldReadState<number | null> {
+  const entity = resolveAuthor(authorId);
   return useCurrentEntityField(entity, (a) => a.rank());
 }
 
 /** @emoji 📖 Live {@link Author#description}. */
-export function useAuthorDescription(): FieldReadState<string> {
-  const entity = resolveAuthor();
+export function useAuthorDescription(authorId?: string): FieldReadState<string> {
+  const entity = resolveAuthor(authorId);
   return useCurrentEntityField(entity, (a) => a.description());
 }
 
 /** @emoji 📖 Live {@link Author#icon}. */
-export function useAuthorIcon(): FieldReadState<string> {
-  const entity = resolveAuthor();
+export function useAuthorIcon(authorId?: string): FieldReadState<string> {
+  const entity = resolveAuthor(authorId);
   return useCurrentEntityField(entity, (a) => a.icon());
 }
 
 /** @emoji 📖 Live {@link Author#role}. */
-export function useAuthorRole(): FieldReadState<string> {
-  const entity = resolveAuthor();
+export function useAuthorRole(authorId?: string): FieldReadState<string> {
+  const entity = resolveAuthor(authorId);
   return useCurrentEntityField(entity, (a) => a.role());
 }
 // #endregion ✍️Author
@@ -2043,39 +2081,45 @@ export function useRemoveConceptAttributes(): readonly [(ids: readonly string[])
 
 // #region 🎨Representation
 /** @emoji 📖 Live {@link Representation#url}. */
-export function useRepresentationUrl(): FieldReadState<string> {
-  const entity = resolveRepresentation();
+export function useRepresentationUrl(representationId?: string): FieldReadState<string> {
+  const entity = resolveRepresentation(representationId);
   return useCurrentEntityField(entity, (r) => r.url());
 }
 
 /** @emoji 📖 Live {@link Representation#description}. */
-export function useRepresentationDescription(): FieldReadState<string> {
-  const entity = resolveRepresentation();
+export function useRepresentationDescription(representationId?: string): FieldReadState<string> {
+  const entity = resolveRepresentation(representationId);
   return useCurrentEntityField(entity, (r) => r.description());
 }
 
 /** @emoji 📖 Live {@link Representation#tags}. */
-export function useRepresentationTags(): FieldReadState<readonly Tag[]> {
-  const entity = resolveRepresentation();
+export function useRepresentationTags(representationId?: string): FieldReadState<readonly Tag[]> {
+  const entity = resolveRepresentation(representationId);
   return useCurrentEntityField(entity, (r) => r.tags());
 }
 
 /** @emoji 📖 Live {@link Representation#qualities}. */
-export function useRepresentationQualities(): FieldReadState<readonly Quality[]> {
-  const entity = resolveRepresentation();
+export function useRepresentationQualities(representationId?: string): FieldReadState<readonly Quality[]> {
+  const entity = resolveRepresentation(representationId);
   return useCurrentEntityField(entity, (r) => r.qualities());
 }
 
 /** @emoji 📖 Live {@link Representation#attributes}. */
-export function useRepresentationAttributes(): FieldReadState<readonly Attribute[]> {
-  const entity = resolveRepresentation();
+export function useRepresentationAttributes(representationId?: string): FieldReadState<readonly Attribute[]> {
+  const entity = resolveRepresentation(representationId);
   return useCurrentEntityField(entity, (r) => r.attributes());
 }
 
 /** @emoji 📖 Live {@link Representation#file}. */
-export function useRepresentationFile(): FieldReadState<File | null> {
-  const entity = resolveRepresentation();
+export function useRepresentationFile(representationId?: string): FieldReadState<File | null> {
+  const entity = resolveRepresentation(representationId);
   return useCurrentEntityField(entity, (r) => r.file());
+}
+
+/** @emoji 📖 Live {@link File#name}. */
+export function useFileName(fileId?: string): FieldReadState<string> {
+  const entity = resolveFile(fileId);
+  return useCurrentEntityField(entity, (f) => f.name());
 }
 // #endregion 🎨Representation
 

@@ -13129,6 +13129,11 @@ pub mod gql {
             let _ = (ctx, self, new_description);
             Ok(Id::new().await)
         }
+        #[graphql(name = "changeIcon")]
+        async fn change_icon(&self, ctx: &Context<'_>, #[graphql(name = "newIcon")] new_icon: String) -> async_graphql::Result<Id> {
+            let _ = (ctx, self, new_icon);
+            Ok(Id::new().await)
+        }
         async fn flatten(&self, ctx: &Context<'_>) -> async_graphql::Result<Id> {
             let _ = (ctx, self);
             Ok(Id::new().await)

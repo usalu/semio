@@ -16,92 +16,154 @@
 // #region ⛩️Imports
 
 import type {
-  AuthorId as AuthorId,
-  ConnectionId as ConnectionId,
-  ConnectorGraph as Connector,
-  DesignShallow as DesignShallow,
-  KitCommandContext,
-  KitFolderAdapter,
-  KitFull as KitShallow,
-  KitHostGraphOperation,
-  KitHostStore,
-  KitJsonFileAdapter,
-  KitRegistryValue,
-  PieceId as PieceId,
-  PortGraph as Port,
-  SketchpadKitKindAvailability,
-  SketchpadKitStoreFactory,
-  TypeShallow as TypeShallow,
-} from "@semio/react";
-import {
-  applyKitHostGraphOperation,
-  asKitInstance,
-  attachSketchpadKitReadShell,
   Author,
-  Camera,
   Concept,
   Connection,
+  Connector,
+  Design,
+  File as SemioFile,
+  Folder,
+  Piece,
+  Port,
+  Quality,
+  Representation,
+  Tag,
+  Type,
+} from "@semio/js";
+import { Camera, Kit, Session } from "@semio/js";
+
+/** @emoji 👟 Registry kit-store factory until sketchpad runs purely on {@link SessionContextProvider}. */
+export type SketchpadKitStoreFactory = (kit?: Kit) => Promise<KitHostStore>;
+
+export type SketchpadKitKindAvailability = Readonly<{
+  temporary: boolean;
+  file: boolean;
+  folder: boolean;
+  remote: boolean;
+}>;
+
+/** @emoji 🗄 Mutable kit snapshot host used by the registry bridge (being replaced by graph-tier providers). */
+export type KitHostStore = {
+  getSnapshot: () => { kit: Kit };
+  subscribe?: (listener: () => void) => () => void;
+  replace?: (next: Kit) => void;
+} & Record<string, unknown>;
+
+export type KitCommandContext = Record<string, unknown>;
+export type KitHostGraphOperation = unknown;
+export type KitFolderAdapter = Record<string, unknown>;
+export type KitJsonFileAdapter = Record<string, unknown>;
+export type KitRegistryValue = Record<string, unknown>;
+import {
+  ActiveKitTabContext,
+  ActiveKitTabContextProvider,
+  applyKitHostGraphOperation,
+  attachSketchpadKitReadShell,
+  ConceptContextProvider,
   ConnectionDiff,
   ConnectionUnderActiveDesignProvider,
   Coordinate,
   createDefaultBrowserSketchpadFileKitStoreFactory,
   createDefaultBrowserSketchpadRemoteKitStoreFactory,
-  ConceptContextProvider,
   createFolderKitStore,
   createJsonFileKitStore,
   createVscodeWebviewSketchpadFileKitStoreFactory,
-  decodeKitSemioEnvelopeToFullFromValue,
-  Design,
-  DesignDiff,
   DesignContextProvider,
+  DesignDiff,
   DiffStatus,
   executeSemioKitCommand,
-  Folder,
   getKitPorts,
   getKitRegistryBridge,
   getOrCreateKitFileState,
   ICON_WIDTH,
   id,
   InMemoryKitStore,
-  Kit,
   KitAlternativeSelectionProvider,
   KitDiff,
   type KitFieldBinding,
-  KitFullSchema,
   kitHostRedo,
   kitHostUndo,
   kitStoreFromKitStoreClient,
-  KitWasmMountProvider,
-  ActiveKitTabContext,
-  ActiveKitTabContextProvider,
   KitStoreProvider,
-  Piece,
+  KitWasmMountProvider,
   PieceDiff,
   PieceUnderActiveDesignProvider,
   Plane,
   Point,
-  Quality,
-  QualityDiff,
   QualityContextProvider,
+  QualityDiff,
   Representation,
   SchemaScopeContext,
   schemaScopeForEntityId,
-  File as SemioFile,
   TagContextProvider,
-  Tag,
   TOLERANCE,
-  Type,
-  TypeDiff,
   TypeContextProvider,
+  TypeDiff,
+  useActiveKitTab,
+  useChangeDesignDescription,
+  useChangeDesignIcon,
+  useChangeKitDescription,
+  useChangeTypeDescription,
+  useChangeTypeIcon,
   useConnection,
-  useConnections,
   useConnectionContext,
+  useConnections,
   useCreateAuthor,
-  useKitHostCreateDesign,
   useCreateFolder,
-  useKitHostCreatePort,
-  useKitHostCreateQuality,
-  useKitHostCreateType,
+  useDesign,
+  useDesignClusterableGroups,
+  useDesignContext,
+  useDesignDescription,
+  useDesignIcon,
+  useDesignImage,
+  useDesignName,
+  useDesigns,
+  useDesignUnit,
+  useExplodeableDesignNodes as useExplodeableDesignNodeIdsFromKit,
+  useFilesFull,
+  useKitStoredFileUrls as useFileUrls,
+  useHasDesignContext,
+  useHasTypeContext,
+  useIncludedDesigns as useIncludedDesignsFromKit,
+  useIsInActiveKitTab,
+  useKitAlternatives,
+  useKitAlternativeSelection,
+  useKitCommandEngineExplicitOrigin,
+  useKitDescription,
+  useKitDesigns,
+  useKitFileBlobUrl,
+  useKitFileUrl,
+  useKitHomepage,
+  useKitIcon,
+  useKitImage,
+  useKitLicense,
+  useKitRegistrySafe,
+  useKitStore,
+  useKitStoreSnapshot,
+  useKitWasmHost,
+  useMoveKitArtifactToFolder,
+  useOpenKits,
+  useParentPieceId as useParentPieceIdFromKit,
+  usePiece,
+  usePieceContext,
+  usePieceContextRead,
+  usePieceDepthKitHostBinding as usePieceDepthFromKit,
+  usePieceFlatPlaneKitHostBinding as usePieceFlatPlane,
+  usePieceMetadata as usePieceMetadataFromKit,
+  usePieceParentConnection as usePieceParentConnectionFromKit,
+  usePieces,
+  usePiecesMetadataMap as usePiecesMetadataRecordFromKit,
+  useQuality,
+  useQualityContext,
+  useQualityContextRead,
+  useRegistryHasKit,
+  useRegistryKitPersistenceKind,
+  useRenameDesign,
+  useRenameKit,
+  useRenameType,
+  useReplacableDesigns as useReplacableDesignIdsFromKit,
+  useReplacableTypes as useReplacableTypeIdsFromKit,
+  useResolvedKitIdentifier,
   useConnectionDescription as useSchemaConnectionDescription,
   useConnectionGap as useSchemaConnectionGap,
   useConnectionRise as useSchemaConnectionRise,
@@ -111,90 +173,28 @@ import {
   useConnectionTurn as useSchemaConnectionTurn,
   useConnectionU as useSchemaConnectionU,
   useConnectionV as useSchemaConnectionV,
-  useDesign,
-  useDesignClusterableGroups,
-  useDesignDescription,
-  useDesignIcon,
-  useDesignImage,
-  useDesignName,
-  useDesigns,
-  useDesignContext,
-  useChangeDesignDescription,
-  useKitDesigns,
-  useRenameDesign,
-  useDesignUnit,
-  useExplodeableDesignNodes as useExplodeableDesignNodeIdsFromKit,
-  useFilesFull,
-  useKitStoredFileUrls as useFileUrls,
-  useFixedPieceId as useFixedPieceIdFromKit,
-  useIncludedDesigns as useIncludedDesignsFromKit,
-  useIsConnectedPiece as useIsConnectedPieceFromKit,
-  useHasDesignContext,
-  useIsInActiveKitTab,
-  useHasTypeContext,
-  useKitAlternatives,
-  useKitAlternativeSelection,
-  useKitCommandEngineExplicitOrigin,
-  useKitDescription,
-  useKitFileBlobUrl,
-  useKitFileUrl,
-  useKitHomepage,
-  useKitIcon,
-  useKitImage,
-  useKitLicense,
-  useKitRegistrySafe,
-  useKitRelease,
-  useKitWasmHost,
-  useActiveKitTab,
-  useKitStore,
-  useKitStoreSnapshot,
-  useMoveKitArtifactToFolder,
-  useOpenKitShallows,
-  useParentPieceId as useParentPieceIdFromKit,
-  usePatchKit,
-  usePieceContextRead,
-  usePiece,
   usePieceCenter as useSchemaPieceCenter,
   usePieceColor as useSchemaPieceColor,
-  usePieceDepthKitHostBinding as usePieceDepthFromKit,
   usePieceDescription as useSchemaPieceDescription,
-  usePieceFlatPlaneKitHostBinding as usePieceFlatPlane,
   usePieceIsHidden as useSchemaPieceIsHidden,
   usePieceIsLocked as useSchemaPieceIsLocked,
-  usePieceMetadata as usePieceMetadataFromKit,
   usePieceName as useSchemaPieceName,
-  usePieceParentConnection as usePieceParentConnectionFromKit,
   usePieceScale as useSchemaPieceScale,
-  usePieces,
-  usePieceContext,
-  usePiecesMetadataMap as usePiecesMetadataRecordFromKit,
-  useQualityContextRead,
-  useQuality,
-  useQualityContext,
-  useRegistryHasKit,
-  useRegistryKitPersistenceKind,
-  useRenameKit,
-  useReplacableDesigns as useReplacableDesignIdsFromKit,
-  useReplacableTypes as useReplacableTypeIdsFromKit,
-  useResolvedKitIdentifier,
   useTagsFull,
-  useTypeContextRead,
   useType,
+  useTypeContext,
+  useTypeContextRead,
   useTypeDescription,
   useTypeIcon,
   useTypeImage,
-  useTypeIsAbstract,
   useTypeName,
-  useTypeParent,
   useTypes,
-  useTypeContext,
-  useTypesFull,
   useTypeUnit,
   useUpdateAuthor,
   useUpdateDesign,
   useUpdateType,
   useWriteIndicator,
-  Vector,
+  Vector
 } from "@semio/react";
 import { gunzipSync } from "fflate";
 
@@ -379,8 +379,6 @@ import {
 } from "@semio/ui";
 import React, { ComponentType, createContext, FC, memo, ReactNode, Suspense, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useReducer, useRef, useState } from "react";
 
-import { createPortal } from "react-dom";
-import { createRoot, type Root } from "react-dom/client";
 import {
   AddIcon,
   AlertCircleIcon,
@@ -449,16 +447,55 @@ import {
   UserIcon,
   WorkbenchIcon,
 } from "@semio/assets/icons";
+import { createPortal } from "react-dom";
+import { createRoot, type Root } from "react-dom/client";
 export type { LayoutColumn, LayoutNode, LayoutRow, LayoutStack } from "@semio/ui";
 export { Canvas, createDefaultLayout, deduplicateWindowLayout, HorizontalWindows, layoutNodeToGoldenLayoutConfig, parseWindowLayout, SectionSpecificity, stringifyWindowLayout, VerticalWindows, Window, WindowKind };
 
-import type { Locator, Page as PlaywrightPage } from "@playwright/test";
-import { Euler, Matrix4, Vector3 } from "three";
+  import type { Locator, Page as PlaywrightPage } from "@playwright/test";
+  import { Euler, Matrix4, Vector3 } from "three";
 
 // #region 🔖SketchpadKitUiHelpers
 /**
  * @emoji 🎨 {@link Sketchpad} read helpers and scene math only; authoritative kit graph is `semio/rs` via {@link executeSemioKitCommand} (no DTO diffs, no local merge/apply in sketchpad).
  */
+
+type SemioBundleJson = Record<string, unknown>;
+
+/** @emoji 🧾 Recursively flattens `{ items: [...] }` and Relay `edges` for WASM `dev+json:` bootstrap. */
+function semioDenormalizeBundleValue(v: unknown): unknown {
+  if (v == null || typeof v !== "object") return v;
+  if (Array.isArray(v)) return v.map(semioDenormalizeBundleValue);
+  const o = v as SemioBundleJson;
+  if (Array.isArray(o["items"])) return (o["items"] as unknown[]).map(semioDenormalizeBundleValue);
+  if (Array.isArray(o["edges"])) {
+    const out: unknown[] = [];
+    for (const e of o["edges"] as unknown[]) {
+      if (e != null && typeof e === "object" && !Array.isArray(e) && "node" in (e as SemioBundleJson)) {
+        out.push(semioDenormalizeBundleValue((e as SemioBundleJson)["node"]));
+      }
+    }
+    return out;
+  }
+  const flat: SemioBundleJson = {};
+  for (const [k, val] of Object.entries(o)) flat[k] = semioDenormalizeBundleValue(val) as never;
+  return flat;
+}
+
+/** @emoji 🧾 Lifts `*.kit.semio.json` (`initialKit` / `wip.initialKit`) then flattens bundle lists for inline JSON bootstrap. */
+export function decodeKitSemioEnvelopeToFullFromValue(v: unknown): unknown {
+  let inner: unknown = v;
+  if (inner && typeof inner === "object" && !Array.isArray(inner)) {
+    const top = inner as SemioBundleJson;
+    if (top["initialKit"] != null && typeof top["initialKit"] === "object" && !Array.isArray(top["initialKit"])) {
+      inner = top["initialKit"];
+    } else if (top["wip"] != null && typeof top["wip"] === "object" && !Array.isArray(top["wip"])) {
+      const wr = (top["wip"] as SemioBundleJson)["initialKit"];
+      if (wr != null && typeof wr === "object" && !Array.isArray(wr)) inner = wr;
+    }
+  }
+  return semioDenormalizeBundleValue(inner);
+}
 
 function colorStringForIdText(text: string): string {
   let h = 0;
@@ -647,9 +684,9 @@ export function planeToMatrix(plane: Plane | { origin: { x: number; y: number; z
 }
 
 /**
- * @emoji 📦 Decode gzip-or-JSON kit bytes into a {@link Kit} instance; does not mutate a store (strict layering: no `@semio/js` import here).
+ * @emoji 📦 Decode gzip-or-JSON kit bytes into a live {@link Kit} handle via {@link Session.open} (`dev+json:` bootstrap).
  */
-export async function importKit(data: ArrayBuffer | Blob | File | string): Promise<{ kit: Kit }> {
+export async function importKit(data: ArrayBuffer | Blob | File | string): Promise<{ kit: Kit; session: Session }> {
   let bytes: Uint8Array;
   if (typeof data === "string") {
     const res = await fetch(data);
@@ -662,11 +699,14 @@ export async function importKit(data: ArrayBuffer | Blob | File | string): Promi
   if (bytes.length >= 2 && bytes[0] === 0x1f && bytes[1] === 0x8b) {
     bytes = gunzipSync(bytes);
   }
-  // 🚧 The on-disk kit-store bundle envelope (`{schema, wip:{...}, root}` from `*.kit.semio.json`)
-  // is decoded here to flat {@link KitFull} for in-browser memory kits (WASM hydrate).
   const text = new TextDecoder().decode(bytes);
-  const plain = decodeKitSemioEnvelopeToFullFromValue(JSON.parse(text));
-  return { kit: asKitInstance(Kit.fromPlain(plain)) };
+  const plainUnknown = decodeKitSemioEnvelopeToFullFromValue(JSON.parse(text));
+  const payload = typeof plainUnknown === "object" && plainUnknown != null ? JSON.stringify(plainUnknown) : String(plainUnknown);
+  const session = await Session.open(payload);
+  const stores = await session.stores();
+  if (stores.length === 0) throw new Error("semio/sketchpad: importKit found zero stores after WASM bootstrap");
+  const kit = await stores[0]!.wip().theKit().kit();
+  return { kit, session };
 }
 
 // #endregion 🔖SketchpadKitUiHelpers
@@ -1973,6 +2013,8 @@ export interface SketchpadDiff {
  **/
 export interface InitialStateKit {
   kit: Kit;
+  /** @emoji 🔌 Owns WASM transport for this inline-imported kit; dispose when tab closes. */
+  session?: Session;
   kind?: KitKind;
   source?: {
     kind: "folder" | "file" | "remote";
@@ -7184,49 +7226,7 @@ const clearDomRoot = (element: HTMLElement, root: Root): void => {
   }
 };
 
-export type { SketchpadKitKindAvailability, SketchpadKitStoreFactory } from "@semio/react";
-
-// #region 🥈Entity Hooks
-// Sketchpad kit snapshot helpers; entity scopes and entity reads live in `@semio/react`.
-
-export {
-  AuthorContextProvider,
-  ConnectionUnderActiveDesignProvider,
-  DesignContextProvider,
-  ActiveKitTabContext,
-  PieceUnderActiveDesignProvider,
-  QualityContextProvider,
-  TypeContextProvider,
-  useAuthor,
-  useAuthorContextNode,
-  useConnection,
-  useConnections,
-  useConnectionContext,
-  useDesign,
-  useDesignContext,
-  useKitDesigns,
-  useDesignsIds,
-  useDesignsMetadata,
-  useFilesFull,
-  useHasAuthorContext,
-  useHasDesignContext,
-  useIsInActiveKitTab,
-  useHasQualityContext,
-  useHasTypeContext,
-  useActiveKitTab,
-  useKitStoreSnapshot,
-  usePiece,
-  usePieces,
-  usePieceContext,
-  useQuality,
-  useQualityContext,
-  useTagsFull,
-  useType,
-  useTypeContext,
-  useTypesFull,
-  useTypesIds,
-  useTypesMetadata,
-} from "@semio/react";
+// Sketchpad consumers SHOULD import field hooks and providers from `@semio/react` directly (no barrel re-exports here).
 
 // #region 🎆Piece Derived Hooks
 
@@ -15871,26 +15871,21 @@ const KitSectionForm: FC = () => {
   const ksKit = useKitStoreSnapshot();
   const kit = ksKit?.kit as Kit | undefined;
   const [renameKit, renameKitStatus] = useRenameKit();
+  const [changeKitDescription, changeKitDescriptionStatus] = useChangeKitDescription();
   const { spinning, error, disabled } = useWriteIndicator(renameKitStatus);
   // 📥 Read lane — value-only hooks follow the active kit read scope.
   const kitNameValue = useKitName();
-  const release = useKitRelease();
   const description = useKitDescription();
   const icon = useKitIcon();
   const image = useKitImage();
   const homepage = useKitHomepage();
   const license = useKitLicense();
-  // 📝 Write lane — single mutation hook for batched root `Kit` field patches.
-  const { run: patchKit, status: patchKitStatus } = usePatchKit();
   const notAvailableLabel = useLabel("semio.sketchpad.app.kit.notAvailable");
-  const versionPlaceholder = useLabel("semio.sketchpad.app.kit.versionPlaceholder.label");
   const descriptionPlaceholder = useLabel("semio.sketchpad.app.kit.descriptionPlaceholder.label");
   const iconPlaceholder = useLabel("semio.sketchpad.app.kit.iconPlaceholder.label");
   const imagePlaceholder = useLabel("semio.sketchpad.app.kit.imagePlaceholder.label");
   const homepagePlaceholder = useLabel("semio.sketchpad.app.kit.homepagePlaceholder.label");
   const licensePlaceholder = useLabel("semio.sketchpad.app.kit.licensePlaceholder.label");
-  const optionalKitText = useCallback((value: string) => (value.trim() === "" ? null : value), []);
-  const commitKitField = useCallback((field: string) => (value: unknown) => patchKit({ [field]: value }), [patchKit]);
 
   if (!kit) {
     return (
@@ -15906,19 +15901,24 @@ const KitSectionForm: FC = () => {
         <div className="flex min-w-0 w-full flex-col gap-tiny">
           <div className="flex min-w-0 w-full items-center gap-single">
             <div className="min-w-0 flex-1">
-              <Input lazy id="semio.sketchpad.app.kit.panel.details.section.kit.name" value={kitNameValue} readOnly={disabled} onLazyChange={disabled ? undefined : (v) => void renameKit(v)} showLabel />
+              <Input lazy id="semio.sketchpad.app.kit.panel.details.section.kit.name" value={kitNameValue.value ?? ""} readOnly={disabled} onLazyChange={disabled ? undefined : (v) => void renameKit(v)} showLabel />
             </div>
             {spinning ? <Spinner size="small" className="text-muted-foreground shrink-0" /> : null}
           </div>
           {error?.message ? <p className="pl-tiny text-xs text-destructive">{error.message}</p> : null}
         </div>
       </TreeRow>
-      <SketchpadInputRow value={release} commit={commitKitField("release")} status={patchKitStatus} id="semio.sketchpad.app.kit.panel.details.section.kit.version" placeholder={versionPlaceholder} mapCommit={optionalKitText} />
-      <SketchpadTextareaRow value={description} commit={commitKitField("description")} status={patchKitStatus} id="semio.sketchpad.app.kit.panel.details.section.kit.description" placeholder={descriptionPlaceholder} mapCommit={optionalKitText} />
-      <SketchpadInputRow value={icon} commit={commitKitField("icon")} status={patchKitStatus} id="semio.sketchpad.app.kit.panel.details.section.kit.icon" placeholder={iconPlaceholder} mapCommit={optionalKitText} />
-      <SketchpadInputRow value={image} commit={commitKitField("image")} status={patchKitStatus} id="semio.sketchpad.app.kit.panel.details.section.kit.image" placeholder={imagePlaceholder} mapCommit={optionalKitText} />
-      <SketchpadInputRow value={homepage} commit={commitKitField("homepage")} status={patchKitStatus} id="semio.sketchpad.app.kit.panel.details.section.kit.homepage" placeholder={homepagePlaceholder} mapCommit={optionalKitText} />
-      <SketchpadInputRow value={license} commit={commitKitField("license")} status={patchKitStatus} id="semio.sketchpad.app.kit.panel.details.section.kit.license" placeholder={licensePlaceholder} mapCommit={optionalKitText} />
+      <SketchpadTextareaRow
+        value={description.value ?? ""}
+        commit={async (value) => changeKitDescription(String(value))}
+        status={changeKitDescriptionStatus}
+        id="semio.sketchpad.app.kit.panel.details.section.kit.description"
+        placeholder={descriptionPlaceholder}
+      />
+      <SketchpadInputRow value={icon.value ?? ""} commit={async () => ({ ok: true } as const)} status={{ kind: "idle" }} id="semio.sketchpad.app.kit.panel.details.section.kit.icon" placeholder={iconPlaceholder} readOnly />
+      <SketchpadInputRow value={image.value ?? ""} commit={async () => ({ ok: true } as const)} status={{ kind: "idle" }} id="semio.sketchpad.app.kit.panel.details.section.kit.image" placeholder={imagePlaceholder} readOnly />
+      <SketchpadInputRow value={homepage.value ?? ""} commit={async () => ({ ok: true } as const)} status={{ kind: "idle" }} id="semio.sketchpad.app.kit.panel.details.section.kit.homepage" placeholder={homepagePlaceholder} readOnly />
+      <SketchpadInputRow value={license.value ?? ""} commit={async () => ({ ok: true } as const)} status={{ kind: "idle" }} id="semio.sketchpad.app.kit.panel.details.section.kit.license" placeholder={licensePlaceholder} readOnly />
     </>
   );
 };
@@ -15940,55 +15940,53 @@ export const TypeSection: FC = () => {
 /**
  **/
 const SingleTypeSection: FC<{ typeId: string }> = ({ typeId }) => {
-  // 📥 Read lane — value-only field hooks follow the active kit read scope.
-  const name = useTypeName(typeId);
-  const description = useTypeDescription(typeId);
-  const icon = useTypeIcon(typeId);
-  const image = useTypeImage(typeId);
-  const isAbstract = useTypeIsAbstract(typeId);
-  const unit = useTypeUnit(typeId);
-  const parentTriad = useTypeParent(typeId);
-  // 📝 Write lane — single mutation hook batches `Type` field patches.
-  const { run: updateType, status: updateTypeStatus } = useUpdateType();
-  const commitTypeField = useCallback((field: string) => (value: unknown) => updateType(typeId, { [field]: value }), [updateType, typeId]);
+  return (
+    <TypeContextProvider id={typeId}>
+      <SingleTypeSectionFields />
+    </TypeContextProvider>
+  );
+};
 
-  const parentDisplay = formatTypeParentRefForInput(parentTriad[0]);
-  const parentIndicator = useWriteIndicator(parentTriad[2]);
+const SingleTypeSectionFields: FC = () => {
+  const name = useTypeName();
+  const description = useTypeDescription();
+  const icon = useTypeIcon();
+  const image = useTypeImage();
+  const unit = useTypeUnit();
+  const [renameType, renameTypeStatus] = useRenameType();
+  const [changeTypeDescription, changeTypeDescriptionStatus] = useChangeTypeDescription();
+  const [changeTypeIcon, changeTypeIconStatus] = useChangeTypeIcon();
 
   return (
     <>
-      <SketchpadInputRow value={name} commit={commitTypeField("name")} status={updateTypeStatus} id="semio.sketchpad.app.type.panel.details.section.type.name" />
+      <SketchpadInputRow value={name.value ?? ""} commit={async (value) => renameType(String(value))} status={renameTypeStatus} id="semio.sketchpad.app.type.panel.details.section.type.name" />
       <SketchpadTextareaRow
-        value={description}
-        commit={commitTypeField("description")}
-        status={updateTypeStatus}
+        value={description.value ?? ""}
+        commit={async (value) => changeTypeDescription(String(value))}
+        status={changeTypeDescriptionStatus}
         id="semio.sketchpad.app.type.panel.details.section.type.description"
         placeholderId="semio.sketchpad.app.type.descriptionPlaceholder.label"
       />
-      <SketchpadInputRow value={icon} commit={commitTypeField("icon")} status={updateTypeStatus} id="semio.sketchpad.app.type.panel.details.section.type.icon" placeholderId="semio.sketchpad.app.type.iconPlaceholder.label" />
-      <SketchpadInputRow value={image} commit={commitTypeField("image")} status={updateTypeStatus} id="semio.sketchpad.app.type.panel.details.section.type.image" placeholderId="semio.sketchpad.app.type.imagePlaceholder.label" />
-      <TreeRow>
-        <div className="flex min-w-0 w-full flex-col gap-tiny">
-          <div className="flex min-w-0 w-full items-center gap-single">
-            <div className="min-w-0 flex-1">
-              <Input id="semio.sketchpad.app.type.panel.details.section.type.parent" value={parentDisplay} readOnly placeholderId="semio.sketchpad.app.type.parentPlaceholder.label" showLabel />
-            </div>
-            {parentIndicator.spinning ? <Spinner size="small" className="text-muted-foreground shrink-0" /> : null}
-          </div>
-          {parentIndicator.error?.message ? <p className="pl-tiny text-xs text-destructive">{parentIndicator.error.message}</p> : null}
-        </div>
-      </TreeRow>
-      <SketchpadTriadToggleRow triad={[isAbstract, ((v: unknown) => commitTypeField("isAbstract")(v)) as any, updateTypeStatus]} id="semio.sketchpad.app.type.panel.details.section.type.abstract" icon={<CheckIcon />} />
-      <SketchpadInputRow value={unit} commit={commitTypeField("unit")} status={updateTypeStatus} id="semio.sketchpad.app.type.panel.details.section.type.unit" />
+      <SketchpadInputRow value={icon.value ?? ""} commit={async (value) => changeTypeIcon(String(value))} status={changeTypeIconStatus} id="semio.sketchpad.app.type.panel.details.section.type.icon" placeholderId="semio.sketchpad.app.type.iconPlaceholder.label" />
+      <SketchpadInputRow value={image.value ?? ""} commit={async () => ({ ok: true } as const)} status={{ kind: "idle" }} id="semio.sketchpad.app.type.panel.details.section.type.image" placeholderId="semio.sketchpad.app.type.imagePlaceholder.label" readOnly />
+      <SketchpadInputRow value={unit.value ?? ""} commit={async () => ({ ok: true } as const)} status={{ kind: "idle" }} id="semio.sketchpad.app.type.panel.details.section.type.unit" readOnly />
     </>
   );
 };
 
 const SelectedTypeLabelRow: FC<{ typeId: string }> = ({ typeId }) => {
-  const name = useTypeName(typeId);
+  return (
+    <TypeContextProvider id={typeId}>
+      <SelectedTypeLabelRowInner />
+    </TypeContextProvider>
+  );
+};
+
+const SelectedTypeLabelRowInner: FC = () => {
+  const name = useTypeName();
   return (
     <HelperRow propertyAligned>
-      <p className="text-sm font-medium text-foreground">{name}</p>
+      <p className="text-sm font-medium text-foreground">{name.value ?? ""}</p>
     </HelperRow>
   );
 };
@@ -16028,7 +16026,7 @@ export const PortSection: FC = () => {
 const SinglePortSection: FC<{ portId: string }> = ({ portId }) => {
   const { t } = useTranslation();
   const ksKit = useKitStoreSnapshot();
-  const kit = ksKit?.kit as KitShallow | undefined;
+  const kit = ksKit?.kit as Kit | undefined;
   const iface = kit?.ports?.find((i) => i.id === portId);
   if (!iface) return null;
   const compatibleCount = iface.compatiblePorts?.length || 0;
@@ -16057,7 +16055,7 @@ const SinglePortSection: FC<{ portId: string }> = ({ portId }) => {
 const MultiplePortsSection: FC<{ portIds: string[] }> = ({ portIds }) => {
   const { t } = useTranslation();
   const ksKit = useKitStoreSnapshot();
-  const kit = ksKit?.kit as KitShallow | undefined;
+  const kit = ksKit?.kit as Kit | undefined;
   const ports = portIds.map((id) => kit?.ports?.find((i) => i.id === id)).filter((i) => i !== undefined) as Port[];
   return (
     <>
@@ -17279,7 +17277,7 @@ export function useDiffedKit(): Kit {
  **/
 export function usePortColoredTypes(): Type[] {
   const diffedKit = useDiffedKit();
-  const [kitTypes] = useTypesFull();
+  const [kitTypes] = useTypes();
   const typesWithColoredConnectors = useMemo(() => {
     if (!diffedKit.types || !kitTypes) return [];
     const colorDiff = colorPortsForTypes(diffedKit.types);
@@ -18855,10 +18853,10 @@ export class SketchpadStore {
     throw new Error(`Kit with id ${id} not found`);
   }
 
-  kitShallows(): KitShallow[] {
+  kits(): Kit[] {
     const reg = getKitRegistryBridge();
     const kitIds = new Set<string>(reg ? reg.list() : []);
-    return Array.from(kitIds, (kid) => this.kitStore(kid).getSnapshot().kit as KitShallow);
+    return Array.from(kitIds, (kid) => this.kitStore(kid).getSnapshot().kit as Kit);
   }
 
   hasKitApp(kitApp: KitAppId): boolean {
@@ -19759,8 +19757,8 @@ export function useHomeCommands() {
 /**
  * Hook returning shallow kit data for all kits with reactive updates.
  **/
-export function useKitShallows(): KitShallow[] {
-  return useOpenKitShallows();
+export function useKits(): Kit[] {
+  return useOpenKits();
 }
 
 /**
@@ -19804,9 +19802,9 @@ export function useOpenableKitKinds(): SketchpadKitKindAvailability {
 /**
  * Hook returning kit shallows filtered by persistence kind.
  **/
-export function useFilteredKitShallows(kind?: KitKind): KitShallow[] {
+export function useFilteredKits(kind?: KitKind): Kit[] {
   const reg = useKitRegistrySafe();
-  const allKits = useKitShallows();
+  const allKits = useKits();
   return useMemo(() => {
     if (!kind) return allKits;
     return allKits.filter((k) => reg?.get(k.id)?.persistence.kind === kind);
@@ -20124,8 +20122,8 @@ export function useSketchpadCommands() {
  * Hook returning shallow kit data for all kits.
  *
  **/
-export function useKits(): KitShallow[] {
-  return useOpenKitShallows();
+export function useKits(): Kit[] {
+  return useOpenKits();
 }
 /**
  * Hook returning kit command dispatchers for a specific kit by id.
@@ -21128,7 +21126,7 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
   const kitFromScope = navbarKitSnap?.kit;
   const designFromScope = useDesign();
   const typeFromScope = useType();
-  const kit: Kit | KitShallow | null | undefined = (kitFromScope as Kit | KitShallow | null | undefined) || kits.find((k) => k.id === kitId);
+  const kit: Kit | Kit | null | undefined = (kitFromScope as Kit | Kit | null | undefined) || kits.find((k) => k.id === kitId);
   const kitKind = useKitKind(kitId || "");
 
   const kitKindItems = [
@@ -21138,7 +21136,7 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
     { label: <RemoteKitIcon size={16} />, id: "semio.sketchpad.navbar.breadcrumb.remote", href: "/?kind=remote" },
   ];
 
-  const filteredKits = useFilteredKitShallows(kitKind);
+  const filteredKits = useFilteredKits(kitKind);
   const createKitLabel = useLabel("semio.sketchpad.navbar.createKit");
   const kitItemsWithCreate = useMemo(() => {
     const items = filteredKits.map((k) => ({ label: k.name, href: `/kits/${k.id}` }));
@@ -21483,7 +21481,7 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
     return items;
   }, [kit, kits, defaultVersionLabel, createVersionLabel, kitId]);
 
-  const homeKitsByKind = useFilteredKitShallows(homeKind || undefined);
+  const homeKitsByKind = useFilteredKits(homeKind || undefined);
   const homeKitsForKind = useMemo(() => {
     if (!homeKind) return [];
     const items = homeKitsByKind
@@ -21893,16 +21891,16 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
  **/
 type SearchResult = {
   type: "kit" | "design" | "type" | "quality" | "tutorial";
-  item: KitShallow | DesignShallow | TypeShallow | Quality | { id: string; name: string; description?: string };
+  item: Kit | Design | Type | Quality | { id: string; name: string; description?: string };
   kitId?: string;
 };
 /**
  * buildSearchResultPath holds the data fields for a buildSearchResultPath record.
  **/
 const buildSearchResultPath = (result: SearchResult): string => {
-  if (result.type === "kit") return `/kits/${(result.item as KitShallow).id}`;
-  if (result.type === "design") return `/kits/${result.kitId}/designs/${(result.item as DesignShallow).id}`;
-  if (result.type === "type") return `/kits/${result.kitId}/types/${(result.item as TypeShallow).id}`;
+  if (result.type === "kit") return `/kits/${(result.item as Kit).id}`;
+  if (result.type === "design") return `/kits/${result.kitId}/designs/${(result.item as Design).id}`;
+  if (result.type === "type") return `/kits/${result.kitId}/types/${(result.item as Type).id}`;
   if (result.type === "quality") return `/kits/${result.kitId}?kind=qualities&select=${(result.item as Quality).id}`;
   if (result.type === "tutorial") return `/?tutorial=${(result.item as { id: string }).id}`;
   return "";
@@ -21934,12 +21932,12 @@ const Search: FC = ({}) => {
   const searchData = useMemo(() => {
     const results: SearchResult[] = [];
     kits.forEach((kit) => {
-      results.push({ type: "kit", item: kit as KitShallow, kitId: kit.id });
+      results.push({ type: "kit", item: kit as Kit, kitId: kit.id });
       (kit.designs || []).forEach((design) => {
-        if (typeof design === "object") results.push({ type: "design", item: design as DesignShallow, kitId: kit.id });
+        if (typeof design === "object") results.push({ type: "design", item: design as Design, kitId: kit.id });
       });
       (kit.types || []).forEach((type) => {
-        if (typeof type === "object") results.push({ type: "type", item: type as TypeShallow, kitId: kit.id });
+        if (typeof type === "object") results.push({ type: "type", item: type as Type, kitId: kit.id });
       });
       (kit.qualities || []).forEach((quality) => {
         if (typeof quality === "object") results.push({ type: "quality", item: quality as Quality, kitId: kit.id });
@@ -22018,9 +22016,9 @@ const Search: FC = ({}) => {
         navigate(path);
       } else {
         const { type, item, kitId } = result;
-        if (type === "kit") navigate(`/kits/${(item as KitShallow).id}`);
-        else if (type === "design") navigate(`/kits/${kitId}/designs/${(item as DesignShallow).id}`);
-        else if (type === "type") navigate(`/kits/${kitId}/types/${(item as TypeShallow).id}`);
+        if (type === "kit") navigate(`/kits/${(item as Kit).id}`);
+        else if (type === "design") navigate(`/kits/${kitId}/designs/${(item as Design).id}`);
+        else if (type === "type") navigate(`/kits/${kitId}/types/${(item as Type).id}`);
         else if (type === "quality") navigate(`/kits/${kitId}?kind=qualities&select=${(item as Quality).id}`);
       }
     },
@@ -22063,7 +22061,7 @@ const Search: FC = ({}) => {
           {groupedSearchResults.kits.length > 0 && (
             <CommandGroup heading={kitsLabel}>
               {groupedSearchResults.kits.map((r: FuseResult<SearchResult>, idx: number) => (
-                <CommandItem key={`kit-${(r.item.item as KitShallow).id}-${idx}`} onSelect={() => handleSelect(r.item)}>
+                <CommandItem key={`kit-${(r.item.item as Kit).id}-${idx}`} onSelect={() => handleSelect(r.item)}>
                   <div className="flex items-center gap-single">
                     {getIcon(r.item.type)}
                     <span>{getDisplayName(r.item)}</span>
@@ -22075,7 +22073,7 @@ const Search: FC = ({}) => {
           {groupedSearchResults.designs.length > 0 && (
             <CommandGroup heading={designsLabel}>
               {groupedSearchResults.designs.map((r: FuseResult<SearchResult>, idx: number) => (
-                <CommandItem key={`design-${(r.item.item as DesignShallow).id}-${idx}`} onSelect={() => handleSelect(r.item)}>
+                <CommandItem key={`design-${(r.item.item as Design).id}-${idx}`} onSelect={() => handleSelect(r.item)}>
                   <div className="flex items-center gap-single">
                     {getIcon(r.item.type)}
                     <span>{getDisplayName(r.item)}</span>
@@ -22087,7 +22085,7 @@ const Search: FC = ({}) => {
           {groupedSearchResults.types.length > 0 && (
             <CommandGroup heading={typesLabel}>
               {groupedSearchResults.types.map((r: FuseResult<SearchResult>, idx: number) => (
-                <CommandItem key={`type-${(r.item.item as TypeShallow).id}-${idx}`} onSelect={() => handleSelect(r.item)}>
+                <CommandItem key={`type-${(r.item.item as Type).id}-${idx}`} onSelect={() => handleSelect(r.item)}>
                   <div className="flex items-center gap-single">
                     {getIcon(r.item.type)}
                     <span>{getDisplayName(r.item)}</span>
@@ -23360,7 +23358,7 @@ const LayoutWrapper: FC = () => {
   const kitFromScope = footerKitSnap?.kit;
   const designFromScope = useDesign();
   const typeFromScope = useType();
-  const kit: Kit | KitShallow | null | undefined = (kitFromScope as Kit | KitShallow | null | undefined) || kits.find((k) => k.id === kitId);
+  const kit: Kit | Kit | null | undefined = (kitFromScope as Kit | Kit | null | undefined) || kits.find((k) => k.id === kitId);
   const kitKind = useKitKind(kitId || "");
 
   const itemId = isDesignApp || isTypeApp ? thirdPart : null;
@@ -23746,22 +23744,22 @@ const LayoutWrapper: FC = () => {
     }
     return [];
   }, []);
-  const kitShallows = useKitShallows();
+  const kits = useKits();
   const getTypeOrDesignName = useCallback(() => {
     if (!activeDragData) return null;
     if (activeDragData.type === "type") {
       const kitId = activeDragData.typeId?.split("-")[0];
-      const kit = kitShallows.find((k) => k.id.startsWith(kitId));
+      const kit = kits.find((k) => k.id.startsWith(kitId));
       const type = kit?.types?.find((t: any) => typeof t === "object" && t.id === activeDragData.typeId) as any;
       return type?.name || "Type";
     } else if (activeDragData.type === "design") {
       const kitId = activeDragData.designId?.split("-")[0];
-      const kit = kitShallows.find((k) => k.id.startsWith(kitId));
+      const kit = kits.find((k) => k.id.startsWith(kitId));
       const design = kit?.designs?.find((d: any) => typeof d === "object" && d.id === activeDragData.designId) as any;
       return design?.name || "Design";
     }
     return null;
-  }, [activeDragData, kitShallows]);
+  }, [activeDragData, kits]);
   return (
     <TutorialProvider store={tutorialStore}>
       <GlobalFooterItems />
@@ -25534,7 +25532,7 @@ export function useKitAppCommands(id?: KitAppId) {
       addAuthorToSelection: noOp,
       removeAuthorFromSelection: noOp,
       deleteSelected: noOp,
-      toggleTypesFullscreen: noOp,
+      toggleTypesscreen: noOp,
       toggleDesignsFullscreen: noOp,
       addType: noOp,
       addTypeAfter: noOp,
@@ -25601,7 +25599,7 @@ export function useKitAppCommands(id?: KitAppId) {
     addAuthorToSelection: (name: string) => controller.execute("semio.kitApp.addAuthorToSelection", getOrigin(), name),
     removeAuthorFromSelection: (name: string) => controller.execute("semio.kitApp.removeAuthorFromSelection", getOrigin(), name),
     deleteSelected: () => controller.execute("semio.kitApp.deleteSelected", getOrigin()),
-    toggleTypesFullscreen: () => controller.execute("semio.kitApp.toggleTypesFullscreen", getOrigin()),
+    toggleTypesscreen: () => controller.execute("semio.kitApp.toggleTypesscreen", getOrigin()),
     toggleDesignsFullscreen: () => controller.execute("semio.kitApp.toggleDesignsFullscreen", getOrigin()),
     addType: (type: Type) => controller.execute("semio.kitApp.addType", getOrigin(), type),
     addTypeAfter: (type: Type, afterId: Id) => controller.execute("semio.kitApp.addTypeAfter", getOrigin(), type, afterId),
@@ -29125,7 +29123,7 @@ export const DesignAppFooter: FC = () => {
   const removeFooterItem = useRemoveFooterItem();
   const appType = useAppType();
   const design = useDesign() as Design | undefined;
-  const [types] = useTypesFull();
+  const [types] = useTypes();
   const [tags] = useTagsFull();
   const [selectedRepresentationTags] = useDesignAppSelectedRepresentationTags();
   const [addRepresentationTagForAllTypes] = useDesignAppAddRepresentationTagForAllTypes();
@@ -29754,6 +29752,7 @@ const DesignSectionForm: FC = () => {
   const designUnitField = useDesignUnit();
   const [renameDesign, renameDesignStatus] = useRenameDesign();
   const [changeDesignDescription, changeDesignDescriptionStatus] = useChangeDesignDescription();
+  const [changeDesignIcon, changeDesignIconStatus] = useChangeDesignIcon();
 
   if (!design) return null;
 
@@ -29788,20 +29787,13 @@ const DesignSectionForm: FC = () => {
         id="semio.sketchpad.app.design.panel.details.section.design.description"
         placeholderId="semio.sketchpad.app.design.descriptionPlaceholder"
       />
-      <TreeRow>
-        <div className="flex min-w-0 w-full flex-col gap-tiny">
-          <div className="min-w-0 w-full">
-            <Input
-              lazy
-              id="semio.sketchpad.app.design.panel.details.section.design.icon"
-              value={designIconField.value ?? ""}
-              placeholderId="semio.sketchpad.app.design.iconPlaceholder"
-              readOnly
-              showLabel
-            />
-          </div>
-        </div>
-      </TreeRow>
+      <SketchpadInputRow
+        value={designIconField.value ?? ""}
+        commit={async (v) => changeDesignIcon(String(v))}
+        status={changeDesignIconStatus}
+        id="semio.sketchpad.app.design.panel.details.section.design.icon"
+        placeholderId="semio.sketchpad.app.design.iconPlaceholder"
+      />
       <TreeRow>
         <div className="flex min-w-0 w-full flex-col gap-tiny">
           <div className="min-w-0 w-full">
@@ -33358,7 +33350,7 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
   const designStore = useDesignStore(identitySelector) as DesignStore | null;
 
   const sketchpadCommands = useSketchpadCommands();
-  const [kitTypes] = useTypesFull();
+  const [kitTypes] = useTypes();
   const kitDesignsField = useKitDesigns();
   const kitDesigns = (kitDesignsField.value ?? []) as Design[];
   const ksKit = useKitStoreSnapshot();
@@ -35700,7 +35692,7 @@ const DesignAppScene: FC = () => {
   const selectionOnDrag = activeTool !== ToolKind.HAND;
   const [focusedPieceId] = useDesignAppFocusedPieceId();
   const [projection, setProjection] = React.useState<"camera" | "orthographic">("camera");
-  const [sceneTypes0] = useTypesFull();
+  const [sceneTypes0] = useTypes();
   const sceneDesignsField = useKitDesigns();
   const sceneDesigns0 = sceneDesignsField.value ?? [];
   const sceneTypes = sceneTypes0 ?? [];
@@ -35969,7 +35961,7 @@ const DesignWindowApp: FC<AppProps> = () => {
     return rows.find((entry) => entry.id === scopedDesignId) ?? kit.designs?.find((entry) => entry.id === scopedDesignId);
   }, [scopedDesignId, kit, kitDesignsForWorkbench.value]);
   const kitId = kitScope?.id ?? kit?.id;
-  const [workbenchTypes0] = useTypesFull();
+  const [workbenchTypes0] = useTypes();
   const workbenchDesignsField = useKitDesigns();
   const workbenchDesigns0 = workbenchDesignsField.value ?? [];
   const workbenchTypes = workbenchTypes0 ?? [];
@@ -44797,7 +44789,7 @@ export { useHome };
 
 // #region 🛎️Table
 
-export {};
+  export { };
 
 // #endregion 🛎️Table
 
@@ -44825,9 +44817,9 @@ export const HomeKitSection: FC = () => {
  * SingleKitSection holds the data fields for a SingleKitSection record.
  **/
 const SingleKitSection: FC<{ kitId: string }> = ({ kitId }) => {
-  const kitShallows = useKitShallows();
-  const kitShallow = kitShallows.find((k) => k.id === kitId);
-  if (!kitShallow) {
+  const kits = useKits();
+  const kit = kits.find((k) => k.id === kitId);
+  if (!kit) {
     return (
       <TreeRow>
         <p className="text-sm text-muted-foreground">{useLabel("semio.sketchpad.app.kit.notFound")}</p>
@@ -44837,19 +44829,19 @@ const SingleKitSection: FC<{ kitId: string }> = ({ kitId }) => {
   return (
     <>
       <TreeRow>
-        <Input id="semio.sketchpad.app.home.panel.details.kit.name" value={kitShallow.name} readOnly showLabel />
+        <Input id="semio.sketchpad.app.home.panel.details.kit.name" value={kit.name} readOnly showLabel />
       </TreeRow>
       <TreeRow>
-        <Input id="semio.sketchpad.app.home.panel.details.kit.version" value={kitShallow.version || ""} placeholder={useLabel("semio.sketchpad.app.kit.versionPlaceholder.label")} readOnly showLabel />
+        <Input id="semio.sketchpad.app.home.panel.details.kit.version" value={kit.version || ""} placeholder={useLabel("semio.sketchpad.app.kit.versionPlaceholder.label")} readOnly showLabel />
       </TreeRow>
       <TreeRow>
-        <Textarea id="semio.sketchpad.app.home.panel.details.kit.description" value={kitShallow.description || ""} placeholder={useLabel("semio.sketchpad.app.kit.descriptionPlaceholder.label")} readOnly showLabel />
+        <Textarea id="semio.sketchpad.app.home.panel.details.kit.description" value={kit.description || ""} placeholder={useLabel("semio.sketchpad.app.kit.descriptionPlaceholder.label")} readOnly showLabel />
       </TreeRow>
       <TreeRow>
-        <Input id="semio.sketchpad.app.home.panel.details.kit.icon" value={kitShallow.icon || ""} placeholder={useLabel("semio.sketchpad.app.kit.iconPlaceholder.label")} readOnly showLabel />
+        <Input id="semio.sketchpad.app.home.panel.details.kit.icon" value={kit.icon || ""} placeholder={useLabel("semio.sketchpad.app.kit.iconPlaceholder.label")} readOnly showLabel />
       </TreeRow>
       <TreeRow>
-        <Input id="semio.sketchpad.app.home.panel.details.kit.image" value={kitShallow.image || ""} placeholder={useLabel("semio.sketchpad.app.kit.imagePlaceholder.label")} readOnly showLabel />
+        <Input id="semio.sketchpad.app.home.panel.details.kit.image" value={kit.image || ""} placeholder={useLabel("semio.sketchpad.app.kit.imagePlaceholder.label")} readOnly showLabel />
       </TreeRow>
     </>
   );
@@ -44858,10 +44850,10 @@ const SingleKitSection: FC<{ kitId: string }> = ({ kitId }) => {
  * MultipleKitsSection holds the data fields for a MultipleKitsSection record.
  **/
 const MultipleKitsSection: FC<{ kitIds: string[] }> = ({ kitIds }) => {
-  const kitShallows = useKitShallows();
-  const kits = kitIds.map((id) => kitShallows.find((k) => k.id === id)).filter((k) => k !== undefined) as KitShallow[];
+  const kits = useKits();
+  const kits = kitIds.map((id) => kits.find((k) => k.id === id)).filter((k) => k !== undefined) as Kit[];
 
-  const getCommonValue = <T,>(getter: (kit: KitShallow) => T): T | undefined => {
+  const getCommonValue = <T,>(getter: (kit: Kit) => T): T | undefined => {
     if (kits.length === 0) return undefined;
     const firstValue = getter(kits[0]);
     const allSame = kits.every((kit) => getter(kit) === firstValue);
@@ -45344,7 +45336,7 @@ type HomeTableRow = {
   type: KitKind | "docs" | "loading";
   updatedAt: string;
   createdAt: string;
-  kit?: KitShallow;
+  kit?: Kit;
   docsPath?: string;
   icon?: string;
   isLoading?: boolean;
@@ -45523,7 +45515,7 @@ const HomeTableContent: FC = () => {
       });
     });
 
-    const kitGroups = new Map<string, KitShallow[]>();
+    const kitGroups = new Map<string, Kit[]>();
 
     kits.forEach((kit) => {
       const type = getKitKind(kit.id) || "temporary";
@@ -46810,7 +46802,7 @@ export { FeedbackIcon };
 // #region 🎆Entrypoint
 // --- Combined from index.tsx and index.ts ---
 
-import "./globals.css";
+  import "./globals.css";
 
 // Types and classes already exported inline at definition site above.
 
@@ -46840,8 +46832,11 @@ async function boot() {
     fileKitStoreFactory = createVscodeWebviewSketchpadFileKitStoreFactory(vscodeApi);
     const raw = (window as any).__SEMIO_KIT_JSON__;
     if (raw != null) {
-      const dto = KitFullSchema.parse(typeof raw === "string" ? JSON.parse(raw) : raw);
-      vscodeInitial = { kits: [{ kit: asKitInstance(Kit.fromPlain(dto)), kind: "file", source: { kind: "file", path: "vscode-webview" } }] };
+      const parsed = typeof raw === "string" ? JSON.parse(raw) : raw;
+      const normalized = decodeKitSemioEnvelopeToFullFromValue(parsed);
+      const blob = new Blob([JSON.stringify(normalized)], { type: "application/json" });
+      const { kit, session } = await importKit(blob);
+      vscodeInitial = { kits: [{ kit, session, kind: "file", source: { kind: "file", path: "vscode-webview" } }] };
     }
     (window as any).__SEMIO_ON_EXTERNAL_UPDATE__ = (json: string) => {
       try {
@@ -46849,7 +46844,7 @@ async function boot() {
         const kid = reg?.list()?.[0];
         if (!kid) return;
         const st = reg.get(kid)?.store as { applyExternalUpdate?: (k: unknown) => void } | undefined;
-        st?.applyExternalUpdate?.(KitFullSchema.parse(JSON.parse(json)));
+        st?.applyExternalUpdate?.(decodeKitSemioEnvelopeToFullFromValue(JSON.parse(json)));
       } catch {
         /* ignore parse errors */
       }
@@ -47026,8 +47021,8 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
     const existingKitId = await page
       .evaluate(() => {
         const store = (window as any).__SEMIO_STORE__;
-        if (!store || typeof store.kitShallows !== "function") return null;
-        const match = (store.kitShallows?.() ?? []).find((kit: any) =>
+        if (!store || typeof store.kits !== "function") return null;
+        const match = (store.kits?.() ?? []).find((kit: any) =>
           String(kit?.name ?? "")
             .toLowerCase()
             .includes("metabolism"),
@@ -47057,8 +47052,8 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
         async () => {
           importedKitId = await page.evaluate(() => {
             const store = (window as any).__SEMIO_STORE__;
-            if (!store || typeof store.kitShallows !== "function") return null;
-            const match = (store.kitShallows?.() ?? []).find((kit: any) =>
+            if (!store || typeof store.kits !== "function") return null;
+            const match = (store.kits?.() ?? []).find((kit: any) =>
               String(kit?.name ?? "")
                 .toLowerCase()
                 .includes("metabolism"),
@@ -47981,37 +47976,6 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
         connected: c.connected?.piece?.id,
       }));
     });
-  }
-
-  async function getDesignPieceMetadata(page: PlaywrightPage): Promise<Record<string, { parentPieceId: string | null; center: { u: number; v: number } | null }>> {
-    return await page.evaluate(() => {
-      const store = (window as any).__SEMIO_STORE__;
-      if (!store) return {};
-      const kitIds = Array.from((store as any).kits?.keys() ?? []) as string[];
-      if (kitIds.length === 0) return {};
-      const kitStore = store.kit(kitIds[0]);
-      if (!kitStore) return {};
-      const kit = kitStore.snapshot();
-      const url = window.location.pathname;
-      const designIdMatch = url.match(/\/designs\/([^/]+)/);
-      const designId = designIdMatch?.[1];
-      const design = designId ? kit.designs?.find((d: any) => d.id === designId) : kit.designs?.[kit.designs.length - 1];
-      if (!design) return {};
-      const piecesMetadata = (window as any).__SEMIO_PIECES_METADATA__;
-      if (piecesMetadata && typeof piecesMetadata === "object") {
-        const result: Record<string, { parentPieceId: string | null; center: { u: number; v: number } | null }> = {};
-        for (const [id, meta] of Object.entries(piecesMetadata) as any) {
-          result[id] = { parentPieceId: meta.parentPieceId ?? null, center: meta.center ?? null };
-        }
-        return result;
-      }
-      const result: Record<string, { parentPieceId: string | null; center: { u: number; v: number } | null }> = {};
-      for (const piece of design.pieces ?? []) {
-        result[piece.id] = { parentPieceId: null, center: piece.center ?? null };
-      }
-      return result;
-    });
-  }
 
   async function togglePanelAndVerify(page: PlaywrightPage, panelToggleId: string, panelKey: string, appName: string): Promise<boolean> {
     const toggle = page.locator(`[id="${panelToggleId}"]`);
@@ -52829,9 +52793,8 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
 
             // Use metadata (resolved) centers: the drag algorithm adjusts connection offsets
             // for connected pieces rather than raw piece centers.
-            const metadataBeforeDrag = await getDesignPieceMetadata(page);
             const centersBeforeDrag: Record<string, { u: number; v: number } | null> = {};
-            for (const [id, meta] of Object.entries(metadataBeforeDrag)) {
+            for (const [id, meta] of Object.entriesBeforeDrag)) {
               centersBeforeDrag[id] = meta.center;
             }
             let pieceIdFromData = pieceIdDrag?.replace(/^piece-\d+-/, "") ?? "";
@@ -52873,9 +52836,9 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
             const firstViewportDeltaY = pieceNodeBoxAfterDrag && beforeDraggedNodePosition ? pieceNodeBoxAfterDrag.y - beforeDraggedNodePosition.y : 0;
             console.log(`[Design] Piece node moved in viewport: ${nodeMovedInViewport}`);
             console.log(`[Design] First drag viewport delta: dx=${firstViewportDeltaX}, dy=${firstViewportDeltaY}`);
-            const metadataAfterDrag = await getDesignPieceMetadata(page);
+            constAfterDrag = await getDesignPieceMetadata(page);
             const centersAfterDrag: Record<string, { u: number; v: number } | null> = {};
-            for (const [id, meta] of Object.entries(metadataAfterDrag)) {
+            for (const [id, meta] of Object.entriesAfterDrag)) {
               centersAfterDrag[id] = meta.center;
             }
             const centerAfterDrag = centersAfterDrag[pieceIdFromData];
@@ -52933,9 +52896,9 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
             }, draggedNodeId);
             console.log(`[Design] After second drag DOM state: ${JSON.stringify(afterSecondDragTransform)}`);
 
-            const metadataAfterSecondDrag = await getDesignPieceMetadata(page);
+            constAfterSecondDrag = await getDesignPieceMetadata(page);
             const centersAfterSecondDrag: Record<string, { u: number; v: number } | null> = {};
-            for (const [id, meta] of Object.entries(metadataAfterSecondDrag)) {
+            for (const [id, meta] of Object.entriesAfterSecondDrag)) {
               centersAfterSecondDrag[id] = meta.center;
             }
             const centerAfterSecondDrag = centersAfterSecondDrag[pieceIdFromData];
@@ -52970,23 +52933,23 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
       console.log("[Design] Testing drag propagation to downstream descendants");
 
       if (hasDiagram) {
-        const metadataProp = await getDesignPieceMetadata(page);
-        const metadataIds = Object.keys(metadataProp);
-        console.log(`[Design] Metadata available for ${metadataIds.length} pieces`);
+        constProp = await getDesignPieceMetadata(page);
+        constIds = Object.keysProp);
+        console.log(`[Design] Metadata available for $Ids.length} pieces`);
 
         const childrenMapProp: Record<string, string[]> = {};
-        for (const [id, meta] of Object.entries(metadataProp)) {
+        for (const [id, meta] of Object.entriesProp)) {
           if (meta.parentPieceId) {
             if (!childrenMapProp[meta.parentPieceId]) childrenMapProp[meta.parentPieceId] = [];
             childrenMapProp[meta.parentPieceId].push(id);
           }
         }
 
-        const rootPiecesProp = metadataIds.filter((id) => !metadataProp[id].parentPieceId);
+        const rootPiecesProp =Ids.filter((id) => Prop[id].parentPieceId);
         console.log(`[Design] Root pieces (no parent): ${rootPiecesProp.length}`);
         console.log(`[Design] Pieces with children: ${Object.keys(childrenMapProp).length}`);
 
-        const parentWithChildAndGrandchild = metadataIds.find((id) => {
+        const parentWithChildAndGrandchild =Ids.find((id) => {
           const children = childrenMapProp[id] ?? [];
           return children.length > 0 && children.some((c) => (childrenMapProp[c] ?? []).length > 0);
         });
@@ -52994,7 +52957,7 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
         if (parentWithChildAndGrandchild) {
           const childId = (childrenMapProp[parentWithChildAndGrandchild] ?? []).find((c) => (childrenMapProp[c] ?? []).length > 0)!;
           const grandchildId = (childrenMapProp[childId] ?? [])[0];
-          const parentParentId = metadataProp[parentWithChildAndGrandchild].parentPieceId;
+          const parentParentId =Prop[parentWithChildAndGrandchild].parentPieceId;
           const siblingIds = parentParentId ? (childrenMapProp[parentParentId] ?? []).filter((s) => s !== parentWithChildAndGrandchild) : [];
 
           console.log(`[Design] Propagation chain: parent=${parentWithChildAndGrandchild?.slice(0, 8)}, child=${childId?.slice(0, 8)}, grandchild=${grandchildId?.slice(0, 8)}`);
@@ -53031,12 +52994,12 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
               return positions;
             });
 
-            // Use metadata (resolved) centers for drag propagation: the algorithm correctly
+            // Use (resolved) centers for drag propagation: the algorithm correctly
             // adjusts connection offsets for connected pieces rather than raw piece centers,
-            // so resolved metadata centers reflect the true absolute positions.
-            const metadataBeforePropDrag = await getDesignPieceMetadata(page);
+            // so resolved centers reflect the true absolute positions.
+            constBeforePropDrag = await getDesignPieceMetadata(page);
             const centersBeforePropDrag: Record<string, { u: number; v: number } | null> = {};
-            for (const [id, meta] of Object.entries(metadataBeforePropDrag)) {
+            for (const [id, meta] of Object.entriesBeforePropDrag)) {
               centersBeforePropDrag[id] = meta.center;
             }
 
@@ -53086,9 +53049,9 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
                 return positions;
               });
 
-              const metadataAfterPropDrag = await getDesignPieceMetadata(page);
+              constAfterPropDrag = await getDesignPieceMetadata(page);
               const centersAfterPropDrag: Record<string, { u: number; v: number } | null> = {};
-              for (const [id, meta] of Object.entries(metadataAfterPropDrag)) {
+              for (const [id, meta] of Object.entriesAfterPropDrag)) {
                 centersAfterPropDrag[id] = meta.center;
               }
 
@@ -53189,7 +53152,7 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
             console.log("[Design] Could not find a parent-child-grandchild chain for propagation test");
           }
         } else {
-          console.log("[Design] No metadata available or diagram not visible for propagation test");
+          console.log("[Design] No available or diagram not visible for propagation test");
         }
       }
 

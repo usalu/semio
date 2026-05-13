@@ -8752,6 +8752,7 @@ type DesignOperation {
   # Artifact
   rename(newName: String!): ID!
   changeDescription(newDescription: String!): ID!
+  changeIcon(newIcon: String!): ID!
   # Design
   flatten: ID!
   # Attributes

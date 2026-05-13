@@ -1280,6 +1280,31 @@ export class Kit extends Entity {
     return String(frag?.["image"] ?? "");
   }
 
+  async preview(): Promise<string> {
+    const frag = await this.readKitInner("preview");
+    return String(frag?.["preview"] ?? "");
+  }
+
+  async remote(): Promise<string> {
+    const frag = await this.readKitInner("remote");
+    return String(frag?.["remote"] ?? "");
+  }
+
+  async homepage(): Promise<string> {
+    const frag = await this.readKitInner("homepage");
+    return String(frag?.["homepage"] ?? "");
+  }
+
+  async license(): Promise<string> {
+    const frag = await this.readKitInner("license");
+    return String(frag?.["license"] ?? "");
+  }
+
+  async uri(): Promise<string> {
+    const frag = await this.readKitInner("uri");
+    return String(frag?.["uri"] ?? "");
+  }
+
   async designs(): Promise<readonly Design[]> {
     const frag = await this.readKitInner("designs { edges { node { id } } }");
     return Object.freeze(parseEntityConnectionIds(frag, "designs").map((id) => this.entity(Design, id)));
@@ -1339,6 +1364,10 @@ export class Store extends Entity {
 
   type(id: string): Type {
     return this.entity(Type, id, this.id);
+  }
+
+  file(id: string): File {
+    return this.entity(File, id, this.id);
   }
 
   tag(id: string): Tag {
@@ -2081,6 +2110,11 @@ export class Design extends Entity {
     return this.mutateScoped(cid, this.dsel(`cd: changeDescription(newDescription: ${gqlString(newDescription)})`));
   }
 
+  async changeIcon(newIcon: string): Promise<SetResult> {
+    const cid = await this.ensureChangeId();
+    return this.mutateScoped(cid, this.dsel(`ci: changeIcon(newIcon: ${gqlString(newIcon)})`));
+  }
+
   async flatten(): Promise<SetResult> {
     const cid = await this.ensureChangeId();
     return this.mutateScoped(cid, this.dsel(`fl: flatten`));
@@ -2350,6 +2384,21 @@ export class Type extends Entity {
     const inner = "attributes { edges { node { id key value definition } } }";
     const frag = await this.typeKitFrag(inner);
     return parseAttributeConnectionUnder(this, this.typeNode(frag));
+  }
+
+  /** @emoji 🧰 Stable {@link Author} handles for the SDL {@code authors} field. */
+  async authors(): Promise<readonly Author[]> {
+    const inner = "authors { edges { node { id } } }";
+    const frag = await this.typeKitFrag(inner);
+    const authors = this.typeNode(frag)?.["authors"] as JsonObject | undefined;
+    const edges = (authors?.["edges"] as readonly JsonObject[] | undefined) ?? [];
+    const out: Author[] = [];
+    for (const e of edges) {
+      const n = e["node"] as JsonObject | undefined;
+      const id = String(n?.["id"] ?? "");
+      if (id !== "") out.push(new Author(this.session, id, this.storeId));
+    }
+    return Object.freeze(out);
   }
 }
 //#endregion 🧰Type
