@@ -308,7 +308,7 @@ function isTheKitReadPoint(s: KitReadPoint): boolean {
   return "theKit" in s;
 }
 
-export type StoreOpenOptions = Readonly<{
+export type SessionOpenOptions = Readonly<{
   timeoutMs?: number;
   storeId?: string;
   wasmSpecifier?: string;
@@ -323,16 +323,16 @@ function gqlIdList(ids: readonly string[]): string {
   return `[${ids.map((x) => gqlString(x)).join(",")}]`;
 }
 
-function scopedKitMutationBody(changeId: string, kitSelection: string): { readonly query: string; readonly variables: JsonObject } {
+function scopedKitMutationBody(storeId: string, changeId: string, kitSelection: string): { readonly query: string; readonly variables: JsonObject } {
   return {
     query: `mutation($storeId: ID!, $changeId: ID!) { session { store(id: $storeId) { theKit { unsavedChange(id: $changeId) { kit { ${kitSelection} } } } } } }`,
-    variables: { changeId },
+    variables: { storeId, changeId },
   };
 }
 
 function sessionStoreSelectionDocument(innerOnStore: string): { query: string; variables: JsonObject } {
   return {
-    query: `query SemioSessionStore { session { stores { edges { node { ${innerOnStore} } } } } }`,
+    query: `query SessionStores { session { stores { edges { node { ${innerOnStore} } } } } }`,
     variables: {},
   };
 }
@@ -362,17 +362,26 @@ function kitReadSelectionDocument(point: KitReadPoint, innerOnKitStore: string):
   };
 }
 
-function firstSessionStoreNode(d: JsonValue | null | undefined): JsonObject | null {
-  if (d == null || typeof d !== "object" || Array.isArray(d)) return null;
+function sessionStoreEdges(d: JsonValue | null | undefined): readonly JsonObject[] {
+  if (d == null || typeof d !== "object" || Array.isArray(d)) return [];
   const session = jsonObjectField(d as JsonObject, "session");
   const stores = jsonObjectField(session, "stores");
   const edges = stores?.["edges"];
-  if (!Array.isArray(edges)) return null;
-  return jsonObjectField(edges[0] as JsonObject | undefined, "node");
+  return Array.isArray(edges) ? (edges.filter(isJsonObjectNode) as readonly JsonObject[]) : [];
 }
 
-function kitReadSelectionFromData(d: JsonValue | null | undefined, point: KitReadPoint): JsonObject | null {
-  const store = firstSessionStoreNode(d);
+function sessionStoreEdgeId(edge: JsonObject | null | undefined): string {
+  return String(edge?.["cursor"] ?? "");
+}
+
+function sessionStoreNodeFromData(d: JsonValue | null | undefined, storeId?: string | null): JsonObject | null {
+  const edges = sessionStoreEdges(d);
+  const edge = storeId == null || storeId === "" ? edges[0] : edges.find((e) => sessionStoreEdgeId(e) === storeId);
+  return jsonObjectField(edge, "node");
+}
+
+function kitReadSelectionFromData(d: JsonValue | null | undefined, point: KitReadPoint, storeId?: string | null): JsonObject | null {
+  const store = sessionStoreNodeFromData(d, storeId);
   const wip = jsonObjectField(store, "wip");
   if (wip == null) return null;
   if ("checkpoint" in point) {
@@ -427,11 +436,11 @@ async function readSemioWasmBytesFromMonorepoCandidates(): Promise<Uint8Array | 
 //#region 🧬Entity
 
 //#region 🛠️Base
-/** @emoji 🧬 Strong entity anchor: {@link Store} + id (no cached fields on the instance). */
+/** @emoji 🧬 Strong entity anchor: {@link Session} + id (no cached fields on the instance). */
 export abstract class Entity {
-  public readonly store: Store;
+  public readonly store: Session;
 
-  protected constructor(store: Store, public readonly id: string) {
+  protected constructor(store: Session, public readonly id: string) {
     this.store = store;
   }
 }
@@ -448,7 +457,7 @@ export class Attribute {
     public readonly definition: string,
   ) { }
 
-  get store(): Store {
+  get store(): Session {
     return this.owner.store;
   }
 }
@@ -465,7 +474,7 @@ export class Benchmark {
     public readonly maxExcluded: boolean | null,
   ) { }
 
-  get store(): Store {
+  get store(): Session {
     return this.quality.store;
   }
 }
@@ -784,9 +793,8 @@ function readStableEntityList<T>(
 /**
  * @emoji 🏪 Stateless store root: owns {@link GqlTransport} + {@link EventBus}; every read is a fresh GraphQL round-trip.
  */
-export class Store {
+export class Session {
   private readonly timeoutMs: number;
-  private readonly storeId: string;
   private readonly handle: GraphqlExecuteHandle;
   private readonly innerTransport: WorkerStringTransport | InlineTransport;
   private gqlLoopRunning = false;
@@ -804,8 +812,11 @@ export class Store {
   private readonly authorCache = new Map<string, Author>();
   private readonly statCache = new Map<string, Stat>();
   private readonly conflictCache = new Map<string, Conflict>();
-  private readonly graphByRoot = new Map<"wip" | "authoritative", Graph>();
-  private sessionEntity: Session | undefined;
+  private readonly storeCache = new Map<string, Store>();
+  private readonly remoteProviderCache = new Map<string, RemoteProvider>();
+  private localProviderEntity: LocalProvider | undefined;
+  private stableStores: { ids: readonly string[]; arr: readonly Store[] } = { ids: [], arr: [] };
+  private stableRemoteProviders: { ids: readonly string[]; arr: readonly RemoteProvider[] } = { ids: [], arr: [] };
   private stableDesigns: { ids: readonly string[]; arr: readonly Design[] } = { ids: [], arr: [] };
   private stableTypes: { ids: readonly string[]; arr: readonly Type[] } = { ids: [], arr: [] };
   private stableAuthors: { ids: readonly string[]; arr: readonly Author[] } = { ids: [], arr: [] };
@@ -818,9 +829,8 @@ export class Store {
   /** @emoji 📡 Demuxed subscription fan-out. */
   readonly bus: EventBus;
 
-  private constructor(timeoutMs: number, storeId: string, inner: WorkerStringTransport | InlineTransport) {
+  private constructor(timeoutMs: number, inner: WorkerStringTransport | InlineTransport) {
     this.timeoutMs = timeoutMs;
-    this.storeId = storeId;
     this.innerTransport = inner;
     this.handle = { execute: (j) => inner.execute(j) };
     this.gql = new GqlTransport(inner);
@@ -842,7 +852,7 @@ export class Store {
 
   private dispatchSubscriptionGraphqlData(data: JsonObject | null | undefined): void {
     if (data == null) return;
-    const root = firstSessionStoreNode(data) ?? jsonObjectField(data, "session") ?? data;
+    const root = jsonObjectField(data, "session") ?? data;
     if (root["wip"] !== undefined || root["stores"] !== undefined) {
       // Coarse invalidation: live-query WIP tick fans out to the current semantic bus kinds and command correlator.
       this.bus.emit({ kind: "kitRenamed", payload: undefined } as unknown as JsonValue);
@@ -883,32 +893,79 @@ export class Store {
     return executeGraphql(this.handle, body, this.timeoutMs);
   }
 
-  /** @emoji 🧾 Reads a selection inside scoped {@code kit { … }} for {@link activeReadPoint}. */
-  async readKitInner(inner: string, variables: JsonObject = {}): Promise<JsonObject | null> {
+  /** @emoji 🧾 Reads a selection inside a specific store's scoped {@code kit { … }} for {@link activeReadPoint}. */
+  async readKitInnerForStore(storeId: string, inner: string, variables: JsonObject = {}): Promise<JsonObject | null> {
     const { query, variables: v0 } = kitReadSelectionDocument(this.activeReadPoint, inner);
     const data = unwrapGraphqlData(await this.gqlRun({ query, variables: { ...v0, ...variables } })) as JsonValue;
-    return kitReadSelectionFromData(data, this.activeReadPoint);
+    return kitReadSelectionFromData(data, this.activeReadPoint, storeId);
   }
 
-  /** @emoji 🧾 Reads a selection inside the active target {@code Session.stores} node. */
-  async readStoreInner(inner: string, variables: JsonObject = {}): Promise<JsonObject | null> {
+  async readKitInner(_inner: string, _variables: JsonObject = {}): Promise<JsonObject | null> {
+    throw new Error("store id is required; use session.store(id).readKitInner(...)");
+  }
+
+  async readStoreInner(_inner: string, _variables: JsonObject = {}): Promise<JsonObject | null> {
+    throw new Error("store id is required; use session.store(id).readStoreInner(...)");
+  }
+
+  /** @emoji 🧾 Reads a selection inside a specific target {@code Store} edge. */
+  async readStoreInnerForId(storeId: string, inner: string, variables: JsonObject = {}): Promise<JsonObject | null> {
     const { query, variables: v0 } = sessionStoreSelectionDocument(inner);
     const data = unwrapGraphqlData(await this.gqlRun({ query, variables: { ...v0, ...variables } })) as JsonValue;
-    return firstSessionStoreNode(data);
+    return sessionStoreNodeFromData(data, storeId);
   }
 
-  /** @emoji 🧾 Runs {@code mutation session { theKit { unsavedChange { kit { … } } } }} when {@linkcode changeId} is set. */
-  async mutateScoped(changeId: string, kitSelection: string): Promise<SetResult> {
+  /** @emoji 🧾 Runs a store-scoped kit mutation through {@code SessionCommand.store(id:)}. */
+  async mutateScoped(storeId: string, changeId?: string, kitSelection?: string): Promise<SetResult> {
     this.ensureAlive();
-    const { query, variables } = scopedKitMutationBody(changeId, kitSelection);
-    const env = await this.gqlRun({ query, variables: { ...variables, storeId: this.storeId } });
+    if (changeId == null || kitSelection == null) throw new Error("store id is required for store-scoped mutation");
+    const { query, variables } = scopedKitMutationBody(storeId, changeId, kitSelection);
+    const env = await this.gqlRun({ query, variables });
     return gqlOkFromEnvelope(env);
   }
 
-  async ensureChangeId(): Promise<string> {
+  store(storeId: string): Store {
+    return cachedMapGet(this.storeCache, storeId, () => new Store(this, storeId));
+  }
+
+  private async sessionStoreIds(): Promise<readonly string[]> {
+    const data = unwrapGraphqlData(await this.gqlRun({ query: `query { session { stores { edges { cursor } } } }` })) as JsonValue;
+    return sessionStoreEdges(data).map(sessionStoreEdgeId).filter((id) => id !== "");
+  }
+
+  async stores(): Promise<readonly Store[]> {
+    const ids = await this.sessionStoreIds();
+    return readStableEntityList(this.stableStores, ids, (id) => this.store(id));
+  }
+
+  localProvider(): LocalProvider {
+    return (this.localProviderEntity ??= new LocalProvider(this));
+  }
+
+  remoteProvider(url: string): RemoteProvider {
+    return cachedMapGet(this.remoteProviderCache, url, () => new RemoteProvider(this, url));
+  }
+
+  private async remoteProviderUrls(): Promise<readonly string[]> {
+    const data = unwrapGraphqlData(
+      await this.gqlRun({ query: `query { session { remoteProviders { edges { node { url } } } } }` }),
+    ) as JsonObject;
+    const session = jsonObjectField(data, "session");
+    const edges = jsonObjectField(session, "remoteProviders")?.["edges"];
+    if (!Array.isArray(edges)) return [];
+    return edges.map((e) => String(((e as JsonObject)["node"] as JsonObject | undefined)?.["url"] ?? "")).filter((url) => url !== "");
+  }
+
+  async remoteProviders(): Promise<readonly RemoteProvider[]> {
+    const urls = await this.remoteProviderUrls();
+    return readStableEntityList(this.stableRemoteProviders, urls, (url) => this.remoteProvider(url));
+  }
+
+  async ensureChangeId(storeId?: string): Promise<string> {
     this.ensureAlive();
+    if (storeId == null || storeId === "") throw new Error("store id is required for store-scoped change");
     if (this.kitWriteChangeId) return this.kitWriteChangeId;
-    const data = unwrapGraphqlData(await this.gqlRun({ query: `mutation($storeId: ID!) { session { store(id: $storeId) { theKit { startNewChange } } } }`, variables: { storeId: this.storeId } })) as JsonObject;
+    const data = unwrapGraphqlData(await this.gqlRun({ query: `mutation($storeId: ID!) { session { store(id: $storeId) { theKit { startNewChange } } } }`, variables: { storeId } })) as JsonObject;
     const sess = data["session"] as JsonObject | undefined;
     const store = sess?.["store"] as JsonObject | undefined;
     const tk = store?.["theKit"] as JsonObject | undefined;
@@ -918,39 +975,40 @@ export class Store {
     return cid;
   }
 
-  async saveChange(): Promise<void> {
+  async saveChange(storeId?: string): Promise<void> {
     this.ensureAlive();
-    unwrapGraphqlData(await this.gqlRun({ query: `mutation($storeId: ID!) { session { store(id: $storeId) { theKit { save } } } }`, variables: { storeId: this.storeId } }));
+    if (storeId == null || storeId === "") throw new Error("store id is required for store-scoped save");
+    unwrapGraphqlData(await this.gqlRun({ query: `mutation($storeId: ID!) { session { store(id: $storeId) { theKit { save } } } }`, variables: { storeId } }));
     this.kitWriteChangeId = null;
   }
 
-  async startNewChange(): Promise<ChangeId> {
-    return await this.ensureChangeId();
+  async startNewChange(storeId: string): Promise<ChangeId> {
+    return await this.ensureChangeId(storeId);
   }
 
-  async createCheckpoint(message: string): Promise<SetResult> {
+  async createCheckpoint(storeId: string, message: string): Promise<SetResult> {
     this.ensureAlive();
-    const env = await this.gqlRun({ query: `mutation($storeId: ID!) { session { store(id: $storeId) { theKit { createCheckpoint(message: ${gqlString(message)}) } } } }`, variables: { storeId: this.storeId } });
+    const env = await this.gqlRun({ query: `mutation($storeId: ID!) { session { store(id: $storeId) { theKit { createCheckpoint(message: ${gqlString(message)}) } } } }`, variables: { storeId } });
     return gqlOkFromEnvelope(env);
   }
 
-  async startAlternative(name?: string): Promise<SetResult> {
+  async startAlternative(storeId: string, name?: string): Promise<SetResult> {
     this.ensureAlive();
     const env = await this.gqlRun({
       query:
         name == null
           ? `mutation($storeId: ID!) { session { store(id: $storeId) { startAlternative } } }`
           : `mutation($storeId: ID!) { session { store(id: $storeId) { startAlternative(name: ${gqlString(name)}) } } }`,
-      variables: { storeId: this.storeId },
+      variables: { storeId },
     });
     return gqlOkFromEnvelope(env);
   }
 
-  async integrateAlternative(alternativeId: string): Promise<SetResult> {
+  async integrateAlternative(storeId: string, alternativeId: string): Promise<SetResult> {
     this.ensureAlive();
     const env = await this.gqlRun({
       query: `mutation($storeId: ID!) { session { store(id: $storeId) { alternative(id: ${gqlString(alternativeId)}) { integrateIntoTheKit } } } }`,
-      variables: { storeId: this.storeId },
+      variables: { storeId },
     });
     return gqlOkFromEnvelope(env);
   }
@@ -983,34 +1041,30 @@ export class Store {
     return gqlOkFromEnvelope(env);
   }
 
-  async attachBackbone(uri: string): Promise<SetResult> {
+  async attachBackbone(storeId: string, provider: Provider, uri: string): Promise<SetResult> {
+    return provider.ensureBackboneAttached(storeId, uri);
+  }
+
+  async detachBackbone(storeId: string): Promise<SetResult> {
     this.ensureAlive();
-    const createEnv = await this.gqlRun({ query: `mutation { session { localProvider { createBackbone(uri: ${gqlString(uri)}) } } }` });
-    if (Array.isArray(createEnv.errors) && createEnv.errors.length > 0) return gqlOkFromEnvelope(createEnv);
-    const env = await this.gqlRun({ query: `mutation($storeId: ID!) { session { localProvider { attachBackbone(store: $storeId) } } }`, variables: { storeId: this.storeId } });
+    const env = await this.gqlRun({ query: `mutation($storeId: ID!) { session { store(id: $storeId) { backbone { detach } } } }`, variables: { storeId } });
     return gqlOkFromEnvelope(env);
   }
 
-  async detachBackbone(_uri: string): Promise<SetResult> {
+  /** @emoji 🛜 Runs target {@code BackboneCommand.sync} through the given store command scope. */
+  async backboneSyncNow(storeId: string): Promise<SetResult> {
     this.ensureAlive();
-    const env = await this.gqlRun({ query: `mutation($storeId: ID!) { session { store(id: $storeId) { backbone { detach } } } }`, variables: { storeId: this.storeId } });
-    return gqlOkFromEnvelope(env);
-  }
-
-  /** @emoji 🛜 Runs target {@code BackboneCommand.sync} through the active store command scope. */
-  async backboneSyncNow(): Promise<SetResult> {
-    this.ensureAlive();
-    const env = await this.gqlRun({ query: `mutation($storeId: ID!) { session { store(id: $storeId) { backbone { sync } } } }`, variables: { storeId: this.storeId } });
+    const env = await this.gqlRun({ query: `mutation($storeId: ID!) { session { store(id: $storeId) { backbone { sync } } } }`, variables: { storeId } });
     return gqlOkFromEnvelope(env);
   }
 
   /** @emoji 🛜 Reads {@code BackboneStatus} via the command shell (typed snapshot, not raw JSON). */
-  async backboneStatus(): Promise<Readonly<{ attachedUri: string | null; kind: string }>> {
+  async backboneStatus(storeId: string): Promise<Readonly<{ attachedUri: string | null; kind: string }>> {
     this.ensureAlive();
     const data = unwrapGraphqlData(
       await this.gqlRun({ query: `query { session { stores { edges { node { authoritative { id } conflicts { edges { node { id } } } } } } } }` }),
     ) as JsonObject;
-    const st = firstSessionStoreNode(data);
+    const st = sessionStoreNodeFromData(data, storeId);
     return {
       attachedUri: null,
       kind: st?.["authoritative"] == null ? "OFFLINE" : "ONLINE",
@@ -1019,10 +1073,11 @@ export class Store {
 
   /** @emoji 🧾 Warm-path query after WASM init. */
   private async warmGraphqlRead(): Promise<void> {
-    await this.readKitInner("id name");
+    const stores = await this.stores();
+    if (stores.length > 0) await stores[0]!.readKitInner("id name");
   }
 
-  static async open(uri: string, opts?: StoreOpenOptions): Promise<Store> {
+  static async open(uri: string, opts?: SessionOpenOptions): Promise<Session> {
     const timeoutMs = opts?.timeoutMs ?? 60_000;
     const wasmSpecifier = opts?.wasmSpecifier ?? (globalThis as { __SEMIO_WASM_SPECIFIER__?: string }).__SEMIO_WASM_SPECIFIER__ ?? "@semio/rs-wasm";
     const preferInlineInVitest = (() => {
@@ -1039,14 +1094,12 @@ export class Store {
     const useDedicatedWorker = typeof Worker !== "undefined" && !preferInlineInVitest && wasmBytesPre == null;
 
     const bootstrapUri = backboneBootstrapUriForStoreOpen(uri);
-    const storeId = opts?.storeId ?? bootstrapUri;
-
     if (useDedicatedWorker) {
       const worker = opts?.workerFactory?.() ?? createKitStoreWorker();
       const wt = new WorkerStringTransport(worker);
       try {
         await wt.init(bootstrapUri);
-        const k = new Store(timeoutMs, storeId, wt);
+        const k = new Session(timeoutMs, wt);
         await withTimeout(k.warmGraphqlRead(), timeoutMs, "graphql");
         void k.startSubscriptionLoop();
         return k;
@@ -1078,7 +1131,7 @@ export class Store {
       throw new Error("KitStoreHandle.create did not return execute()");
     }
     const t = new InlineTransport(wasmHandle as { execute: ExecuteFn; subscribe: SubscribeFn; free?: () => void });
-    const k = new Store(timeoutMs, storeId, t);
+    const k = new Session(timeoutMs, t);
     await withTimeout(k.warmGraphqlRead(), timeoutMs, "graphql");
     void k.startSubscriptionLoop();
     return k;
@@ -1132,31 +1185,6 @@ export class Store {
 
   stat(id: string): Stat {
     return cachedMapGet(this.statCache, id, () => new Stat(this, id));
-  }
-
-  /** @emoji 🌐 WIP {@link Graph} ({@code Query.session.stores.edges.node.wip}). */
-  wip(): Graph {
-    let g = this.graphByRoot.get("wip");
-    if (!g) {
-      g = new Graph(this, "wip");
-      this.graphByRoot.set("wip", g);
-    }
-    return g;
-  }
-
-  /** @emoji 🌐 Authoritative {@link Graph} when the server exposes it ({@code Query.session.stores.edges.node.authoritative}). */
-  authoritative(): Graph {
-    let g = this.graphByRoot.get("authoritative");
-    if (!g) {
-      g = new Graph(this, "authoritative");
-      this.graphByRoot.set("authoritative", g);
-    }
-    return g;
-  }
-
-  /** @emoji 🗂️ Root {@link Session} ({@code Query.session}). */
-  session(): Session {
-    return (this.sessionEntity ??= new Session(this));
   }
 
   /** @emoji ⚔️ {@link Conflict} via {@code node(id:)}. */
@@ -1374,7 +1402,7 @@ export class Store {
 //#region 📦Kit
 /** @emoji 📦 Target-schema kit entity beneath {@link Version}; delegates transport work to {@link Store}. */
 export class Kit extends Entity {
-  constructor(store: Store, id: string) {
+  constructor(store: Session, id: string) {
     super(store, id);
   }
 
@@ -1496,7 +1524,7 @@ export class Kit extends Entity {
 //#endregion 📦Kit
 
 function executeStoreGraphql(
-  store: Store,
+  store: Session,
   body: Readonly<{ query: string; variables?: JsonObject; operationName?: string }>,
 ): Promise<GraphqlEnvelope<JsonValue>> {
   return (store as unknown as { gqlRun(b: typeof body): Promise<GraphqlEnvelope<JsonValue>> }).gqlRun(body);
@@ -1506,6 +1534,200 @@ function executeStoreGraphql(
 /** @emoji 🌐 WIP or authoritative {@code Graph} root from {@code Query}. */
 export type GraphRootKind = "wip" | "authoritative";
 
+/** @emoji 🏪 Target store selected from {@code Session.stores.edges.cursor}. */
+export class Store extends Entity {
+  private readonly graphByRoot = new Map<GraphRootKind, Graph>();
+
+  constructor(session: Session, id: string) {
+    super(session, id);
+  }
+
+  async readKitInner(inner: string, variables: JsonObject = {}): Promise<JsonObject | null> {
+    return this.store.readKitInnerForStore(this.id, inner, variables);
+  }
+
+  design(id: string): Design {
+    return this.store.design(id);
+  }
+
+  type(id: string): Type {
+    return this.store.type(id);
+  }
+
+  tag(id: string): Tag {
+    return this.store.tag(id);
+  }
+
+  concept(id: string): Concept {
+    return this.store.concept(id);
+  }
+
+  quality(id: string): Quality {
+    return this.store.quality(id);
+  }
+
+  author(id: string): Author {
+    return this.store.author(id);
+  }
+
+  async mutateScoped(changeId: string, kitSelection: string): Promise<SetResult> {
+    return this.store.mutateScoped(this.id, changeId, kitSelection);
+  }
+
+  async ensureChangeId(): Promise<string> {
+    return this.store.ensureChangeId(this.id);
+  }
+
+  async saveChange(): Promise<void> {
+    await this.store.saveChange(this.id);
+  }
+
+  async startNewChange(): Promise<ChangeId> {
+    return await this.store.startNewChange(this.id);
+  }
+
+  async createCheckpoint(message: string): Promise<SetResult> {
+    return this.store.createCheckpoint(this.id, message);
+  }
+
+  async startAlternative(name?: string): Promise<SetResult> {
+    return this.store.startAlternative(this.id, name);
+  }
+
+  async integrateAlternative(alternativeId: string): Promise<SetResult> {
+    return this.store.integrateAlternative(this.id, alternativeId);
+  }
+
+  wip(): Graph {
+    return cachedMapGet(this.graphByRoot, "wip", () => new Graph(this.store, "wip", this.id));
+  }
+
+  authoritative(): Graph {
+    return cachedMapGet(this.graphByRoot, "authoritative", () => new Graph(this.store, "authoritative", this.id));
+  }
+
+  async conflicts(): Promise<readonly Conflict[]> {
+    const node = await this.store.readStoreInnerForId(this.id, "conflicts { edges { node { id } } }");
+    return parseEntityConnectionIds(node, "conflicts").map((id) => this.store.conflict(id));
+  }
+
+  async attachBackbone(provider: Provider, uri: string): Promise<SetResult> {
+    return provider.ensureBackboneAttached(this.id, uri);
+  }
+
+  async detachBackbone(): Promise<SetResult> {
+    const env = await executeStoreGraphql(this.store, {
+      query: `mutation($storeId: ID!) { session { store(id: $storeId) { backbone { detach } } } }`,
+      variables: { storeId: this.id },
+    });
+    return gqlOkFromEnvelope(env);
+  }
+
+  async syncBackbone(): Promise<SetResult> {
+    const env = await executeStoreGraphql(this.store, {
+      query: `mutation($storeId: ID!) { session { store(id: $storeId) { backbone { sync } } } }`,
+      variables: { storeId: this.id },
+    });
+    return gqlOkFromEnvelope(env);
+  }
+}
+
+/** @emoji 🪢 Backbone exposed by a local or remote provider. */
+export class Backbone extends Entity {
+  constructor(store: Session, id: string, public readonly provider: Provider) {
+    super(store, id);
+  }
+}
+
+/** @emoji 🔌 Provider command facade for creating and attaching backbones to managed stores. */
+export abstract class Provider extends Entity {
+  protected abstract readonly commandSelection: string;
+
+  constructor(store: Session, id: string) {
+    super(store, id);
+  }
+
+  protected abstract providerNode(inner: string): Promise<JsonObject | null>;
+
+  async backboneUris(): Promise<readonly string[]> {
+    const node = await this.providerNode("backbones { edges { node { uri } } }");
+    const edges = jsonObjectField(node, "backbones")?.["edges"];
+    if (!Array.isArray(edges)) return [];
+    return edges.map((e) => String(((e as JsonObject)["node"] as JsonObject | undefined)?.["uri"] ?? "")).filter((uri) => uri !== "");
+  }
+
+  async createBackbone(uri: string): Promise<SetResult> {
+    const env = await executeStoreGraphql(this.store, { query: `mutation { session { ${this.commandSelection} { createBackbone(uri: ${gqlString(uri)}) } } }` });
+    return gqlOkFromEnvelope(env);
+  }
+
+  async attachBackbone(storeId: string): Promise<SetResult> {
+    const env = await executeStoreGraphql(this.store, {
+      query: `mutation($storeId: ID!) { session { ${this.commandSelection} { attachBackbone(store: $storeId) } } }`,
+      variables: { storeId },
+    });
+    return gqlOkFromEnvelope(env);
+  }
+
+  async ensureBackboneAttached(storeId: string, uri: string): Promise<SetResult> {
+    if (!(await this.backboneUris()).includes(uri)) {
+      const created = await this.createBackbone(uri);
+      if (!created.ok) return created;
+    }
+    return this.attachBackbone(storeId);
+  }
+}
+
+/** @emoji 💾 Local provider facade for file-backed stores and backbones. */
+export class LocalProvider extends Provider {
+  protected readonly commandSelection = "localProvider";
+
+  constructor(store: Session) {
+    super(store, "local");
+  }
+
+  protected async providerNode(inner: string): Promise<JsonObject | null> {
+    const data = unwrapGraphqlData(await executeStoreGraphql(this.store, { query: `query { session { localProvider { ${inner} } } }` })) as JsonObject;
+    return jsonObjectField(jsonObjectField(data, "session"), "localProvider");
+  }
+}
+
+/** @emoji 🛜 Remote provider facade for websocket/hub-backed stores and backbones. */
+export class RemoteProvider extends Provider {
+  protected readonly commandSelection: string;
+
+  constructor(store: Session, public readonly url: string) {
+    super(store, url);
+    this.commandSelection = `remoteProvider(url: ${gqlString(url)})`;
+  }
+
+  protected override async providerNode(inner: string): Promise<JsonObject | null> {
+    const data = unwrapGraphqlData(
+      await executeStoreGraphql(this.store, { query: `query { session { remoteProviders { edges { node { url ${inner} } } } } }` }),
+    ) as JsonObject;
+    const edges = jsonObjectField(jsonObjectField(data, "session"), "remoteProviders")?.["edges"];
+    if (!Array.isArray(edges)) return null;
+    for (const edge of edges) {
+      const node = jsonObjectField(edge as JsonObject, "node");
+      if (String(node?.["url"] ?? "") === this.url) return node;
+    }
+    return null;
+  }
+
+  async login(username: string, passwordHash: string, hubUrl?: string | null): Promise<SetResult> {
+    const h = hubUrl == null ? "null" : gqlString(hubUrl);
+    const env = await executeStoreGraphql(this.store, {
+      query: `mutation { session { ${this.commandSelection} { login(username: ${gqlString(username)}, passwordHash: ${gqlString(passwordHash)}, hubUrl: ${h}) } } }`,
+    });
+    return gqlOkFromEnvelope(env);
+  }
+
+  async logout(): Promise<SetResult> {
+    const env = await executeStoreGraphql(this.store, { query: `mutation { session { ${this.commandSelection} { logout } } }` });
+    return gqlOkFromEnvelope(env);
+  }
+}
+
 /** @emoji 🌐 VCS graph: {@code wip} / {@code authoritative} selections on {@link Store}. */
 export class Graph extends Entity {
   private readonly checkpointCache = new Map<string, Checkpoint>();
@@ -1514,8 +1736,12 @@ export class Graph extends Entity {
   private stableAlternatives: { ids: readonly string[]; arr: readonly Alternative[] } = { ids: [], arr: [] };
   private stableCheckpoints: { ids: readonly string[]; arr: readonly Checkpoint[] } = { ids: [], arr: [] };
 
-  constructor(store: Store, root: GraphRootKind) {
+  constructor(store: Session, root: GraphRootKind, private readonly managedStoreId: string) {
     super(store, root);
+  }
+
+  private async readManagedStoreInner(inner: string): Promise<JsonObject | null> {
+    return this.store.readStoreInnerForId(this.managedStoreId, inner);
   }
 
   get root(): GraphRootKind {
@@ -1524,19 +1750,19 @@ export class Graph extends Entity {
 
   /** @emoji 🏛 {@code graph { theKit }} handle. */
   theKit(): TheKit {
-    return (this.theKitEntity ??= new TheKit(this.store, this.root));
+    return (this.theKitEntity ??= new TheKit(this.store, this.root, this.managedStoreId));
   }
 
   checkpoint(checkpointId: string): Checkpoint {
-    return cachedMapGet(this.checkpointCache, checkpointId, () => new Checkpoint(this.store, this.root, checkpointId));
+    return cachedMapGet(this.checkpointCache, checkpointId, () => new Checkpoint(this.store, this.root, checkpointId, this.managedStoreId));
   }
 
   alternative(alternativeId: string): Alternative {
-    return cachedMapGet(this.alternativeCache, alternativeId, () => new Alternative(this.store, { parent: "graph", root: this.root }, alternativeId));
+    return cachedMapGet(this.alternativeCache, alternativeId, () => new Alternative(this.store, { parent: "graph", root: this.root, storeId: this.managedStoreId }, alternativeId));
   }
 
   private async readStoreGraphRootScalar(field: "id" | "hash"): Promise<string> {
-    const node = jsonObjectField(await this.store.readStoreInner(`${this.root} { ${field} }`), this.root);
+    const node = jsonObjectField(await this.readManagedStoreInner(`${this.root} { ${field} }`), this.root);
     return node == null ? "" : String(node[field] ?? "");
   }
 
@@ -1545,12 +1771,12 @@ export class Graph extends Entity {
   }
 
   private async alternativeIds(): Promise<readonly string[]> {
-    const node = jsonObjectField(await this.store.readStoreInner(`${this.root} { alternatives { edges { node { id } } } }`), this.root);
+    const node = jsonObjectField(await this.readManagedStoreInner(`${this.root} { alternatives { edges { node { id } } } }`), this.root);
     return parseEntityConnectionIds(node, "alternatives");
   }
 
   private async checkpointIds(): Promise<readonly string[]> {
-    const node = jsonObjectField(await this.store.readStoreInner(`${this.root} { checkpoints { edges { node { id } } } }`), this.root);
+    const node = jsonObjectField(await this.readManagedStoreInner(`${this.root} { checkpoints { edges { node { id } } } }`), this.root);
     return parseEntityConnectionIds(node, "checkpoints");
   }
 
@@ -1583,54 +1809,13 @@ export class Graph extends Entity {
   }
 }
 
-/** @emoji 🗂️ {@code Query.session} singleton anchor. */
-export class Session extends Entity {
-  private readonly alternativeCache = new Map<string, Alternative>();
-  private stableAlternatives: { ids: readonly string[]; arr: readonly Alternative[] } = { ids: [], arr: [] };
-
-  constructor(store: Store) {
-    super(store, "session");
-  }
-
-  alternative(alternativeId: string): Alternative {
-    return cachedMapGet(this.alternativeCache, alternativeId, () => new Alternative(this.store, { parent: "session" }, alternativeId));
-  }
-
-  async startedAt(): Promise<string | null> {
-    const data = unwrapGraphqlData(await executeStoreGraphql(this.store, { query: `query { session { startedAt } }` })) as JsonObject;
-    const s = jsonObjectField(data, "session");
-    const v = s?.["startedAt"];
-    if (v == null) return null;
-    return String(v);
-  }
-
-  private async alternativeIds(): Promise<readonly string[]> {
-    const node = jsonObjectField(await this.store.readStoreInner("wip { alternatives { edges { node { id } } } }"), "wip");
-    return parseEntityConnectionIds(node, "alternatives");
-  }
-
-  /** @emoji 📚 Id-list-stable {@link Alternative} handles on {@code session.alternatives}. */
-  async alternatives(): Promise<readonly Alternative[]> {
-    const ids = await this.alternativeIds();
-    return readStableEntityList(this.stableAlternatives, ids, (id) => this.alternative(id));
-  }
-
-  /** @emoji 📡 Refetches {@link Session#readAlternatives} on coarse kit ticks. */
-  subscribeAlternatives(cb: (next: readonly Alternative[]) => void): Unsubscribe {
-    const run = (): void => {
-      void this.alternatives().then(cb);
-    };
-    return subscribeKitCoarseRefetch(this.store.bus, run);
-  }
-}
-
 /** @emoji 🧭 Parent scope for {@link Alternative} navigation. */
-export type AlternativeParent = { readonly parent: "graph"; readonly root: GraphRootKind } | { readonly parent: "session" };
+export type AlternativeParent = { readonly parent: "graph"; readonly root: GraphRootKind; readonly storeId: string };
 
 /** @emoji 🔀 {@code Alternative} under {@link Graph} or {@link Session}. */
 export class Alternative extends Entity {
   constructor(
-    store: Store,
+    store: Session,
     private readonly ap: AlternativeParent,
     id: string,
   ) {
@@ -1639,7 +1824,8 @@ export class Alternative extends Entity {
 
   async name(): Promise<string> {
     const root = this.ap.parent === "graph" ? this.ap.root : "wip";
-    const first = jsonObjectField(await this.store.readStoreInner(`${root} { alternative(id: ${gqlString(this.id)}) { name } }`), root);
+    const storeNode = await this.store.readStoreInnerForId(this.ap.storeId, `${root} { alternative(id: ${gqlString(this.id)}) { name } }`);
+    const first = jsonObjectField(storeNode, root);
     const alt = first?.["alternative"] as JsonObject | undefined;
     return String(alt?.["name"] ?? "");
   }
@@ -1649,7 +1835,7 @@ export class Alternative extends Entity {
 export class TheKit extends Entity {
   private readonly kitCache = new Map<string, Kit>();
 
-  constructor(store: Store, private readonly graphRoot: GraphRootKind) {
+  constructor(store: Session, private readonly graphRoot: GraphRootKind, private readonly managedStoreId: string) {
     super(store, `theKit:${graphRoot}`);
   }
 
@@ -1659,7 +1845,8 @@ export class TheKit extends Entity {
   }
 
   private async kitId(): Promise<string> {
-    const rootNode = jsonObjectField(await this.store.readStoreInner(`${this.graphRoot} { theKit { id } }`), this.graphRoot);
+    const storeNode = await this.store.readStoreInnerForId(this.managedStoreId, `${this.graphRoot} { theKit { id } }`);
+    const rootNode = jsonObjectField(storeNode, this.graphRoot);
     const tk = jsonObjectField(rootNode, "theKit");
     return String(tk?.["id"] ?? "");
   }
@@ -1677,45 +1864,49 @@ export class Checkpoint extends Entity {
   private stableChanges: { ids: readonly string[]; arr: readonly Change[] } = { ids: [], arr: [] };
   private stableEdits: { ids: readonly string[]; arr: readonly Edit[] } = { ids: [], arr: [] };
 
-  constructor(store: Store, private readonly graphRoot: GraphRootKind, checkpointId: string) {
+  constructor(store: Session, private readonly graphRoot: GraphRootKind, checkpointId: string, private readonly managedStoreId: string) {
     super(store, checkpointId);
   }
 
+  private async readManagedStoreInner(inner: string): Promise<JsonObject | null> {
+    return this.store.readStoreInnerForId(this.managedStoreId, inner);
+  }
+
   change(changeId: string): Change {
-    return cachedMapGet(this.changeCache, changeId, () => new Change(this.store, this.graphRoot, this.id, changeId));
+    return cachedMapGet(this.changeCache, changeId, () => new Change(this.store, this.graphRoot, this.id, changeId, this.managedStoreId));
   }
 
   edit(editId: string): Edit {
-    return cachedMapGet(this.editCache, editId, () => new Edit(this.store, this.graphRoot, this.id, editId));
+    return cachedMapGet(this.editCache, editId, () => new Edit(this.store, this.graphRoot, this.id, editId, this.managedStoreId));
   }
 
   async message(): Promise<string> {
-    const rootNode = jsonObjectField(await this.store.readStoreInner(`${this.graphRoot} { checkpoint(id: ${gqlString(this.id)}) { message } }`), this.graphRoot);
+    const rootNode = jsonObjectField(await this.readManagedStoreInner(`${this.graphRoot} { checkpoint(id: ${gqlString(this.id)}) { message } }`), this.graphRoot);
     const cp = rootNode?.["checkpoint"] as JsonObject | undefined;
     return String(cp?.["message"] ?? "");
   }
 
   async timestamp(): Promise<string | null> {
-    const rootNode = jsonObjectField(await this.store.readStoreInner(`${this.graphRoot} { checkpoint(id: ${gqlString(this.id)}) { timestamp } }`), this.graphRoot);
+    const rootNode = jsonObjectField(await this.readManagedStoreInner(`${this.graphRoot} { checkpoint(id: ${gqlString(this.id)}) { timestamp } }`), this.graphRoot);
     const cp = rootNode?.["checkpoint"] as JsonObject | undefined;
     const ts = cp?.["timestamp"];
     return ts == null ? null : String(ts);
   }
 
   async hash(): Promise<string> {
-    const rootNode = jsonObjectField(await this.store.readStoreInner(`${this.graphRoot} { checkpoint(id: ${gqlString(this.id)}) { hash } }`), this.graphRoot);
+    const rootNode = jsonObjectField(await this.readManagedStoreInner(`${this.graphRoot} { checkpoint(id: ${gqlString(this.id)}) { hash } }`), this.graphRoot);
     const cp = rootNode?.["checkpoint"] as JsonObject | undefined;
     return String(cp?.["hash"] ?? "");
   }
 
   private async changeIds(): Promise<readonly string[]> {
-    const rootNode = jsonObjectField(await this.store.readStoreInner(`${this.graphRoot} { checkpoint(id: ${gqlString(this.id)}) { changes { id } } }`), this.graphRoot);
+    const rootNode = jsonObjectField(await this.readManagedStoreInner(`${this.graphRoot} { checkpoint(id: ${gqlString(this.id)}) { changes { id } } }`), this.graphRoot);
     const cp = rootNode?.["checkpoint"] as JsonObject | undefined;
     return parseStrongEntityArrayIds(cp ?? null, "changes");
   }
 
   private async editIds(): Promise<readonly string[]> {
-    const rootNode = jsonObjectField(await this.store.readStoreInner(`${this.graphRoot} { checkpoint(id: ${gqlString(this.id)}) { edits { edges { node { id } } } } }`), this.graphRoot);
+    const rootNode = jsonObjectField(await this.readManagedStoreInner(`${this.graphRoot} { checkpoint(id: ${gqlString(this.id)}) { edits { edges { node { id } } } } }`), this.graphRoot);
     const cp = rootNode?.["checkpoint"] as JsonObject | undefined;
     return parseEntityConnectionIds(cp ?? null, "edits");
   }
@@ -1751,12 +1942,19 @@ export class Checkpoint extends Entity {
 
 /** @emoji 🔀 {@code Change} scoped to a {@link Checkpoint} (navigation shell; expand with field reads). */
 export class Change extends Entity {
-  constructor(store: Store, private readonly graphRoot: GraphRootKind, private readonly checkpointId: string, changeId: string) {
+  constructor(
+    store: Session,
+    private readonly graphRoot: GraphRootKind,
+    private readonly checkpointId: string,
+    changeId: string,
+    private readonly managedStoreId: string,
+  ) {
     super(store, changeId);
   }
 
   private async readUnderChange(inner: string): Promise<JsonObject | null> {
-    const rootNode = jsonObjectField(await this.store.readStoreInner(`${this.graphRoot} { checkpoint(id: ${gqlString(this.checkpointId)}) { change(id: ${gqlString(this.id)}) { ${inner} } } }`), this.graphRoot);
+    const storeNode = await this.store.readStoreInnerForId(this.managedStoreId, `${this.graphRoot} { checkpoint(id: ${gqlString(this.checkpointId)}) { change(id: ${gqlString(this.id)}) { ${inner} } } }`);
+    const rootNode = jsonObjectField(storeNode, this.graphRoot);
     const cp = rootNode?.["checkpoint"] as JsonObject | undefined;
     const ch = cp?.["change"] as JsonObject | undefined;
     return ch ?? null;
@@ -1794,12 +1992,19 @@ export class Change extends Entity {
 
 /** @emoji ✏️ {@code Edit} scoped to a {@link Checkpoint} (navigation shell; expand with field reads). */
 export class Edit extends Entity {
-  constructor(store: Store, private readonly graphRoot: GraphRootKind, private readonly checkpointId: string, editId: string) {
+  constructor(
+    store: Session,
+    private readonly graphRoot: GraphRootKind,
+    private readonly checkpointId: string,
+    editId: string,
+    private readonly managedStoreId: string,
+  ) {
     super(store, editId);
   }
 
   private async readUnderEdit(inner: string): Promise<JsonObject | null> {
-    const rootNode = jsonObjectField(await this.store.readStoreInner(`${this.graphRoot} { checkpoint(id: ${gqlString(this.checkpointId)}) { edit(id: ${gqlString(this.id)}) { ${inner} } } }`), this.graphRoot);
+    const storeNode = await this.store.readStoreInnerForId(this.managedStoreId, `${this.graphRoot} { checkpoint(id: ${gqlString(this.checkpointId)}) { edit(id: ${gqlString(this.id)}) { ${inner} } } }`);
+    const rootNode = jsonObjectField(storeNode, this.graphRoot);
     const cp = rootNode?.["checkpoint"] as JsonObject | undefined;
     const ed = cp?.["edit"] as JsonObject | undefined;
     return ed ?? null;
@@ -1830,7 +2035,7 @@ export class Edit extends Entity {
 
 /** @emoji ⚔️ {@code Conflict} via {@code node(id:)}. */
 export class Conflict extends Entity {
-  constructor(store: Store, id: string) {
+  constructor(store: Session, id: string) {
     super(store, id);
   }
 
@@ -1950,7 +2155,7 @@ export class Design extends Entity {
   private stablePieces: { ids: readonly string[]; arr: readonly Piece[] } = { ids: [], arr: [] };
   private stableConnections: { ids: readonly string[]; arr: readonly Connection[] } = { ids: [], arr: [] };
 
-  constructor(store: Store, id: string) {
+  constructor(store: Session, id: string) {
     super(store, id);
   }
 
@@ -2191,7 +2396,7 @@ export class Type extends Entity {
   private readonly connectorCache = new Map<string, Connector>();
   private readonly representationCache = new Map<string, Representation>();
 
-  constructor(store: Store, id: string) {
+  constructor(store: Session, id: string) {
     super(store, id);
   }
 
@@ -2360,7 +2565,7 @@ const KIT_PATH_TYPE_REPRESENTATION: readonly string[] = ["type", "representation
 //#region 🔘Port
 export class Port extends Entity {
   readonly typeId: string;
-  constructor(store: Store, typeId: string, id: string) {
+  constructor(store: Session, typeId: string, id: string) {
     super(store, id);
     this.typeId = typeId;
   }
@@ -2445,7 +2650,7 @@ export class Port extends Entity {
 //#region 🔗Connector
 export class Connector extends Entity {
   readonly typeId: string;
-  constructor(store: Store, typeId: string, id: string) {
+  constructor(store: Session, typeId: string, id: string) {
     super(store, id);
     this.typeId = typeId;
   }
@@ -2763,7 +2968,7 @@ function parseIdListConnection(obj: JsonObject | null | undefined, field: string
 export class Piece extends Entity {
   readonly designId: string;
   private readonly positionByRole = new Map<"position" | "flatPosition", Position>();
-  constructor(store: Store, designId: string, id: string) {
+  constructor(store: Session, designId: string, id: string) {
     super(store, id);
     this.designId = designId;
   }
@@ -2963,7 +3168,7 @@ export class Piece extends Entity {
 //#region 🪢PiecesOperations
 export class PiecesOperations {
   constructor(
-    private readonly store: Store,
+    private readonly store: Session,
     private readonly designId: string,
     private readonly pieceIds: readonly string[],
   ) { }
@@ -2998,7 +3203,7 @@ export class PiecesOperations {
 /** @emoji ⛓️ Schema-aligned {@link Connection} endpoint (piece + optional port / connector / designPiece ids). */
 export class ConnectionSide {
   constructor(
-    public readonly store: Store,
+    public readonly store: Session,
     public readonly designId: string,
     public readonly connectionId: string,
     public readonly role: "connected" | "connecting",
@@ -3026,7 +3231,7 @@ function connectionKit(frag: JsonObject | null | undefined): JsonObject | null {
 }
 
 function parseConnectionSideFromJson(
-  store: Store,
+  store: Session,
   designId: string,
   connectionId: string,
   role: "connected" | "connecting",
@@ -3050,7 +3255,7 @@ function parseConnectionSideFromJson(
 
 export class Connection extends Entity {
   readonly designId: string;
-  constructor(store: Store, designId: string, id: string) {
+  constructor(store: Session, designId: string, id: string) {
     super(store, id);
     this.designId = designId;
   }
@@ -3137,7 +3342,7 @@ export class Connection extends Entity {
 //#region ✍️Author
 /** @emoji ✍️ Author artifact: kit-scoped reads only (no {@code *OperationInput} on Author in schema). */
 export class Author extends Entity {
-  constructor(store: Store, id: string) {
+  constructor(store: Session, id: string) {
     super(store, id);
   }
 
@@ -3163,7 +3368,7 @@ installNodeFieldMethods(Author, "Author", AUTHOR_FIELDS);
 //#region 💎Quality
 /** @emoji 💎 Quality artifact: {@code QualityOperationInput} leaves + scalar reads via {@code quality(id:)}. */
 export class Quality extends Entity {
-  constructor(store: Store, id: string) {
+  constructor(store: Session, id: string) {
     super(store, id);
   }
 
@@ -3248,7 +3453,7 @@ installKitOperationMethods(Quality, QUALITY_OPERATIONS);
 //#region 🏷️Tag
 /** @emoji 🏷️ Tag artifact: {@code TagOperationInput} leaves + kit-scoped reads. */
 export class Tag extends Entity {
-  constructor(store: Store, id: string) {
+  constructor(store: Session, id: string) {
     super(store, id);
   }
 
@@ -3298,7 +3503,7 @@ installKitOperationMethods(Tag, defineBoundKitOperations([
 //#region 💡Concept
 /** @emoji 💡 Concept artifact: {@code ConceptOperationInput} leaves + kit-scoped reads. */
 export class Concept extends Entity {
-  constructor(store: Store, id: string) {
+  constructor(store: Session, id: string) {
     super(store, id);
   }
 
@@ -3349,7 +3554,7 @@ installKitOperationMethods(Concept, defineBoundKitOperations([
 /** @emoji 🎨 Representation under {@link Type}: read-only until schema adds {@code RepresentationOperationInput}. */
 export class Representation extends Entity {
   readonly typeId: string;
-  constructor(store: Store, typeId: string, id: string) {
+  constructor(store: Session, typeId: string, id: string) {
     super(store, id);
     this.typeId = typeId;
   }
@@ -3406,7 +3611,7 @@ installKitFieldMethods(Representation, defineBoundKitFields([
 //#region 👨‍👩‍👦Family
 /** @emoji 👨‍👩‍👦 Family artifact: read-only in current kit API. */
 export class Family extends Entity {
-  constructor(store: Store, id: string) {
+  constructor(store: Session, id: string) {
     super(store, id);
   }
 
@@ -3424,7 +3629,7 @@ installNodeFieldMethods(Family, "Family", defineBoundNodeFields([
 
 //#region 📄File
 export class File extends Entity {
-  constructor(store: Store, id: string) {
+  constructor(store: Session, id: string) {
     super(store, id);
   }
 
@@ -3439,7 +3644,7 @@ installNodeFieldMethods(File, "File", defineBoundNodeFields([
 //#region 📁Folder
 /** @emoji 📁 Folder artifact: read-only in current kit API. */
 export class Folder extends Entity {
-  constructor(store: Store, id: string) {
+  constructor(store: Session, id: string) {
     super(store, id);
   }
 
@@ -3459,7 +3664,7 @@ installNodeFieldMethods(Folder, "Folder", defineBoundNodeFields([
 /** @emoji 🪟 Design layer row: read-only in current kit API. */
 export class Layer extends Entity {
   readonly designId: string;
-  constructor(store: Store, designId: string, id: string) {
+  constructor(store: Session, designId: string, id: string) {
     super(store, id);
     this.designId = designId;
   }
@@ -3521,7 +3726,7 @@ export class Layer extends Entity {
 //#region 👥Group
 export class Group extends Entity {
   readonly designId: string;
-  constructor(store: Store, designId: string, id: string) {
+  constructor(store: Session, designId: string, id: string) {
     super(store, id);
     this.designId = designId;
   }
@@ -3541,7 +3746,7 @@ export class Group extends Entity {
 //#region 📊Stat
 /** @emoji 📊 Stat artifact: read-only in current kit API. */
 export class Stat extends Entity {
-  constructor(store: Store, id: string) {
+  constructor(store: Session, id: string) {
     super(store, id);
   }
 
@@ -3566,7 +3771,7 @@ installNodeFieldMethods(Stat, "Stat", defineBoundNodeFields([
 //#region 🎚️Prop
 /** @emoji 🎚️ Prop artifact: read-only in current kit API. */
 export class Prop extends Entity {
-  constructor(store: Store, id: string) {
+  constructor(store: Session, id: string) {
     super(store, id);
   }
 
@@ -3596,9 +3801,9 @@ installNodeFieldMethods(Prop, "Prop", defineBoundNodeFields([
 //#endregion 🧱Classes
 
 //#region 🚀PublicAPI
-/** @emoji 🚀 Opens a {@link Store} backed by rs WASM (worker or inline). */
-export async function openStore(uri: string, opts?: StoreOpenOptions): Promise<Store> {
-  return Store.open(uri, opts);
+/** @emoji 🚀 Opens a {@link Session} backed by rs WASM (worker or inline). */
+export async function openStore(uri: string, opts?: SessionOpenOptions): Promise<Session> {
+  return Session.open(uri, opts);
 }
 //#endregion 🚀PublicAPI
 
@@ -3606,10 +3811,10 @@ export async function openStore(uri: string, opts?: StoreOpenOptions): Promise<S
 //#region 🧪Tests
 if (typeof process !== "undefined" && !!process.env && process.env["SEMIO_JS_RUN_EMBEDDED_TESTS"] === "1") {
   const { describe, it, expect } = await import("vitest");
-  describe("semio-js Store root (strict)", () => {
-    it("Store.prototype has no snapshot() hook", () => {
+  describe("semio-js Session root (strict)", () => {
+    it("Session.prototype has no snapshot() hook", () => {
       type Snap = { snapshot?: () => unknown };
-      const snap: Snap = Store.prototype as unknown as Snap;
+      const snap: Snap = Session.prototype as unknown as Snap;
       expect(snap.snapshot).toBeUndefined();
     });
 
@@ -3618,14 +3823,13 @@ if (typeof process !== "undefined" && !!process.env && process.env["SEMIO_JS_RUN
     });
 
     it("VCS + change-algebra shells JSON without a runtime umbrella", () => {
-      const k = Object.create(Store.prototype) as Store;
-      const g = new Graph(k, "wip");
+      const k = Object.create(Session.prototype) as Session;
+      const g = new Graph(k, "wip", "store");
       expect(g.root).toBe("wip");
-      expect(new Session(k).id).toBe("session");
-      expect(new TheKit(k, "wip").id).toContain("theKit");
+      expect(new TheKit(k, "wip", "store").id).toContain("theKit");
       expect(new Kit(k, "kit1").store).toBe(k);
-      expect(typeof new TheKit(k, "wip").kit).toBe("function");
-      const cp = new Checkpoint(k, "wip", "cp1");
+      expect(typeof new TheKit(k, "wip", "store").kit).toBe("function");
+      const cp = new Checkpoint(k, "wip", "cp1", "store");
       expect(cp.change("c1").id).toBe("c1");
       expect(cp.edit("e1").id).toBe("e1");
       expect(RenamedKit.name).toBe("RenamedKit");
@@ -3634,25 +3838,57 @@ if (typeof process !== "undefined" && !!process.env && process.env["SEMIO_JS_RUN
     });
 
     it("Design / Graph / Session / Checkpoint expose id-list-stable read* + subscribe* for owned lists", () => {
-      const k = Object.create(Store.prototype) as Store;
+      const k = Object.create(Session.prototype) as Session;
       const d = new Design(k, "d1");
       expect(typeof d.pieces).toBe("function");
       expect(typeof d.subscribePieces).toBe("function");
       expect(typeof d.connections).toBe("function");
       expect(typeof d.subscribeConnections).toBe("function");
-      const g = new Graph(k, "wip");
+      const g = new Graph(k, "wip", "store");
       expect(typeof g.alternatives).toBe("function");
       expect(typeof g.checkpoints).toBe("function");
       expect(typeof g.subscribeAlternatives).toBe("function");
       expect(typeof g.subscribeCheckpoints).toBe("function");
-      const s = new Session(k);
-      expect(typeof s.alternatives).toBe("function");
-      expect(typeof s.subscribeAlternatives).toBe("function");
-      const cp = new Checkpoint(k, "wip", "cp1");
+      expect(typeof k.stores).toBe("function");
+      expect(typeof k.localProvider).toBe("function");
+      const cp = new Checkpoint(k, "wip", "cp1", "store");
       expect(typeof cp.changes).toBe("function");
       expect(typeof cp.edits).toBe("function");
       expect(typeof cp.subscribeChanges).toBe("function");
       expect(typeof cp.subscribeEdits).toBe("function");
+    });
+
+    it("Session exposes multiple managed stores keyed by StoreEdge cursor", async () => {
+      const k = Object.create(Session.prototype) as Session;
+      (k as unknown as { stableStores: { ids: readonly string[]; arr: readonly Store[] } }).stableStores = { ids: [], arr: [] };
+      (k as unknown as { storeCache: Map<string, Store> }).storeCache = new Map();
+      const queries: string[] = [];
+      (k as unknown as { gqlRun: (b: { query: string; variables?: JsonObject }) => Promise<GraphqlEnvelope<JsonValue>> }).gqlRun = async (body) => {
+        queries.push(body.query);
+        if (body.query.includes("edges { cursor }")) {
+          return { data: { session: { stores: { edges: [{ cursor: "store-a" }, { cursor: "store-b" }] } } } as unknown as JsonValue };
+        }
+        return {
+          data: {
+            session: {
+              stores: {
+                edges: [
+                  { cursor: "store-a", node: { wip: { id: "wip-a" } } },
+                  { cursor: "store-b", node: { wip: { id: "wip-b" } } },
+                ],
+              },
+            },
+          },
+        } as unknown as GraphqlEnvelope<JsonValue>;
+      };
+      (k as unknown as { ensureAlive: () => void }).ensureAlive = () => { };
+
+      const stores = await k.stores();
+      expect(stores.map((s) => s.id)).toEqual(["store-a", "store-b"]);
+      const selected = await k.store("store-b").wip().hash();
+
+      expect(selected).toBe("");
+      expect(queries.some((q) => q.includes("session { stores"))).toBe(true);
     });
   });
   describe("semio-js GraphQL dto contract", () => {
@@ -3755,7 +3991,7 @@ if (typeof process !== "undefined" && !!process.env && process.env["SEMIO_JS_RUN
     it("refactored declarative installers drive tag reads and mutations", async () => {
       const reads: string[] = [];
       const writes: string[] = [];
-      const k = Object.create(Store.prototype) as Store;
+      const k = Object.create(Session.prototype) as Session;
       (k as unknown as { readKitInner: (inner: string) => Promise<JsonObject> }).readKitInner = async (inner) => {
         reads.push(inner);
         return {
@@ -3771,7 +4007,7 @@ if (typeof process !== "undefined" && !!process.env && process.env["SEMIO_JS_RUN
         } as unknown as JsonObject;
       };
       (k as unknown as { ensureChangeId: () => Promise<string> }).ensureChangeId = async () => "chg-1";
-      (k as unknown as { mutateScoped: (changeId: string, path: string) => Promise<SetResult> }).mutateScoped = async (_changeId, path) => {
+      (k as unknown as { mutateScoped: (storeId: string, changeId: string, path: string) => Promise<SetResult> }).mutateScoped = async (_storeId, _changeId, path) => {
         writes.push(path);
         return { ok: true };
       };
@@ -3791,9 +4027,9 @@ if (typeof process !== "undefined" && !!process.env && process.env["SEMIO_JS_RUN
 
     it("Piece.drag issues one mutateScoped path (stub kit)", async () => {
       const calls: string[] = [];
-      const k = Object.create(Store.prototype) as Store;
+      const k = Object.create(Session.prototype) as Session;
       (k as unknown as { ensureAlive(): void }).ensureAlive = () => { };
-      (k as unknown as { mutateScoped: (c: string, s: string) => Promise<SetResult> }).mutateScoped = async (_c, s) => {
+      (k as unknown as { mutateScoped: (storeId: string, c: string, s: string) => Promise<SetResult> }).mutateScoped = async (_storeId, _c, s) => {
         calls.push(s);
         return { ok: true };
       };
@@ -3810,6 +4046,24 @@ if (typeof process !== "undefined" && !!process.env && process.env["SEMIO_JS_RUN
       bus.subscribe((e) => seen.push(e));
       bus.emit({ kind: "changed", payload: { x: 1 } } as unknown as JsonValue);
       expect(seen.length).toBe(1);
+    });
+
+    it("Provider creates missing backbone before attaching it to a specific managed store", async () => {
+      const calls: { query: string; variables?: JsonObject }[] = [];
+      const k = Object.create(Session.prototype) as Session;
+      (k as unknown as { gqlRun: (b: { query: string; variables?: JsonObject }) => Promise<GraphqlEnvelope<JsonValue>> }).gqlRun = async (body) => {
+        calls.push(body);
+        if (body.query.startsWith("query")) return { data: { session: { localProvider: { backbones: { edges: [] } } } } as unknown as JsonValue };
+        return { data: { session: { localProvider: { createBackbone: "backbone-1", attachBackbone: "attach-1" } } } as unknown as JsonValue };
+      };
+
+      const result = await new LocalProvider(k).ensureBackboneAttached("store-b", "file:///kit.semio");
+
+      expect(result.ok).toBe(true);
+      expect(calls[0]?.query).toContain("localProvider");
+      expect(calls[1]?.query).toContain("createBackbone");
+      expect(calls[2]?.query).toContain("attachBackbone");
+      expect(calls[2]?.variables?.["storeId"]).toBe("store-b");
     });
   });
 }
