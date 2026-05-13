@@ -15,25 +15,47 @@
 
 // #region ⛩️Imports
 
-import type {
-  AuthorId as AuthorId,
-  ConnectionId as ConnectionId,
-  ConnectorGraph as Connector,
-  DesignShallow as DesignShallow,
-  KitCommandContext,
-  KitFolderAdapter,
-  KitFull as KitShallow,
-  KitHostGraphOperation,
-  KitHostStore,
-  KitJsonFileAdapter,
-  KitRegistryValue,
-  PieceId as PieceId,
-  PortGraph as Port,
-  SketchpadKitKindAvailability,
-  SketchpadKitStoreFactory,
-  TypeShallow as TypeShallow,
-} from "@semio/react";
-import {
+import * as SemioReact from "@semio/react";
+
+type Author = any;
+type Camera = any;
+type Concept = any;
+type Connection = any;
+type Connector = any;
+type Coordinate = any;
+type Design = any;
+type Folder = any;
+type Id = string;
+type Kit = any;
+type Piece = any;
+type Plane = any;
+type Point = any;
+type Port = any;
+type Quality = any;
+type Representation = any;
+type SemioFile = any;
+type Tag = any;
+type Type = any;
+type Vector = any;
+type AuthorId = string;
+type ConnectionId = string;
+type PieceId = string;
+type KitCommandContext = any;
+type KitFolderAdapter = any;
+type KitHostGraphOperation = any;
+type KitHostStore = any;
+type KitJsonFileAdapter = any;
+type KitRegistryValue = any;
+type SketchpadKitKindAvailability = any;
+type SketchpadKitStoreFactory = any;
+type WriteStatus = any;
+type KitFieldBinding<T> = readonly [T, (next: T) => Promise<unknown>, WriteStatus];
+type DesignShallow = { id: string; name?: string; description?: string; icon?: string; image?: string; unit?: string; pieces?: Piece[]; connections?: Connection[] };
+type TypeShallow = { id: string; name?: string; description?: string; icon?: string; image?: string; unit?: string; variant?: string | null };
+type KitShallow = { id: string; name?: string; description?: string; designs?: DesignShallow[]; types?: TypeShallow[]; remote?: string | null };
+
+const SemioReactAny = SemioReact as Record<string, any>;
+const {
   applyKitHostGraphOperation,
   asKitInstance,
   attachSketchpadKitReadShell,
@@ -42,7 +64,7 @@ import {
   Concept,
   Connection,
   ConnectionDiff,
-  ConnectionUnderActiveDesignProvider,
+  Connector,
   Coordinate,
   createDefaultBrowserSketchpadFileKitStoreFactory,
   createDefaultBrowserSketchpadRemoteKitStoreFactory,
@@ -64,136 +86,115 @@ import {
   id,
   InMemoryKitStore,
   Kit,
-  KitAlternativeSelectionProvider,
   KitDiff,
-  type KitFieldBinding,
   KitFullSchema,
   kitHostRedo,
   kitHostUndo,
   kitStoreFromKitStoreClient,
-  KitWasmMountProvider,
-  ActiveKitTabContext,
-  ActiveKitTabContextProvider,
   KitStoreProvider,
   Piece,
   PieceDiff,
-  PieceUnderActiveDesignProvider,
   Plane,
   Point,
+  Port,
   Quality,
   QualityDiff,
   QualityContextProvider,
   Representation,
-  SchemaScopeContext,
-  schemaScopeForEntityId,
-  File as SemioFile,
+  File: SemioFile,
   TagContextProvider,
   Tag,
   TOLERANCE,
   Type,
   TypeDiff,
   TypeContextProvider,
-  useConnection,
-  useConnections,
-  useConnectionContextNode,
   useCreateAuthor,
   useKitHostCreateDesign,
   useCreateFolder,
   useKitHostCreatePort,
   useKitHostCreateQuality,
   useKitHostCreateType,
-  useConnectionDescription as useSchemaConnectionDescription,
-  useConnectionGap as useSchemaConnectionGap,
-  useConnectionRise as useSchemaConnectionRise,
-  useConnectionRotation as useSchemaConnectionRotation,
-  useConnectionShift as useSchemaConnectionShift,
-  useConnectionTilt as useSchemaConnectionTilt,
-  useConnectionTurn as useSchemaConnectionTurn,
-  useConnectionU as useSchemaConnectionU,
-  useConnectionV as useSchemaConnectionV,
-  useDesign,
-  useDesignClusterableGroups,
-  useDesignDescription,
-  useDesignIcon,
-  useDesignImage,
-  useDesignName,
-  useDesigns,
-  useDesignContextNode,
-  useDesignsFull,
-  useDesignUnit,
-  useExplodeableDesignNodes as useExplodeableDesignNodeIdsFromKit,
-  useFilesFull,
-  useKitStoredFileUrls as useFileUrls,
-  useFixedPieceId as useFixedPieceIdFromKit,
-  useIncludedDesigns as useIncludedDesignsFromKit,
-  useIsConnectedPiece as useIsConnectedPieceFromKit,
-  useHasDesignContext,
-  useIsInActiveKitTab,
-  useHasTypeContext,
-  useKitAlternatives,
-  useKitAlternativeSelection,
+  useConnectionDescription: useReactConnectionDescription,
+  useConnectionGap: useReactConnectionGap,
+  useConnectionRise: useReactConnectionRise,
+  useConnectionRotation: useReactConnectionRotation,
+  useConnectionShift: useReactConnectionShift,
+  useConnectionTilt: useReactConnectionTilt,
+  useConnectionTurn: useReactConnectionTurn,
+  useConnectionU: useReactConnectionU,
+  useConnectionV: useReactConnectionV,
+  useConnectionContext: useReactConnectionContext,
+  useDesign: useReactDesignEntity,
+  useDesignContext: useReactDesignContext,
+  useDesignDescription: useReactDesignDescription,
+  useDesignIcon: useReactDesignIcon,
+  useDesignImage: useReactDesignImage,
+  useDesignName: useReactDesignName,
+  useDesignUnit: useReactDesignUnit,
+  useDesignConnections: useReactDesignConnections,
+  useDesignPieces: useReactDesignPieces,
+  useExplodeableDesignNodes: useExplodeableDesignNodeIdsFromKit,
+  useKitStoredFileUrls: useFileUrls,
+  useFixedPieceId: useReactFixedPieceId,
+  useIncludedDesigns: useReactIncludedDesigns,
+  useIsConnectedPiece: useReactIsConnectedPiece,
   useKitCommandEngineExplicitOrigin,
-  useKitDescription,
+  useKitDescription: useReactKitDescription,
   useKitFileBlobUrl,
   useKitFileUrl,
-  useKitHomepage,
-  useKitIcon,
-  useKitImage,
-  useKitLicense,
+  useKitHomepage: useReactKitHomepage,
+  useKitIcon: useReactKitIcon,
+  useKitImage: useReactKitImage,
+  useKitLicense: useReactKitLicense,
+  useKitName: useReactKitName,
   useKitRegistrySafe,
-  useKitRelease,
-  useKitWasmHost,
-  useActiveKitTab,
+  useKitRelease: useReactKitRelease,
   useKitStore,
   useKitStoreSnapshot,
   useMoveKitArtifactToFolder,
   useOpenKitShallows,
-  useParentPieceId as useParentPieceIdFromKit,
+  useParentPieceId: useReactParentPieceId,
   usePatchKit,
   usePieceContextRead,
-  usePiece,
-  usePieceCenter as useSchemaPieceCenter,
-  usePieceColor as useSchemaPieceColor,
-  usePieceDepthKitHostBinding as usePieceDepthFromKit,
-  usePieceDescription as useSchemaPieceDescription,
-  usePieceFlatPlaneKitHostBinding as usePieceFlatPlane,
-  usePieceIsHidden as useSchemaPieceIsHidden,
-  usePieceIsLocked as useSchemaPieceIsLocked,
-  usePieceMetadata as usePieceMetadataFromKit,
-  usePieceName as useSchemaPieceName,
-  usePieceParentConnection as usePieceParentConnectionFromKit,
-  usePieceScale as useSchemaPieceScale,
-  usePieces,
-  usePieceContextNode,
-  usePiecesMetadataMap as usePiecesMetadataRecordFromKit,
+  usePiece: useReactPieceEntity,
+  usePieceCenter: useReactPieceCenter,
+  usePieceColor: useReactPieceColor,
+  usePieceDepthKitHostBinding: usePieceDepthFromKit,
+  usePieceDescription: useReactPieceDescription,
+  usePieceFlatPlaneKitHostBinding: usePieceFlatPlane,
+  usePieceIsHidden: useReactPieceIsHidden,
+  usePieceIsLocked: useReactPieceIsLocked,
+  usePieceMetadata: useReactPieceMetadata,
+  usePieceName: useReactPieceName,
+  usePieceParentConnection: useReactPieceParentConnection,
+  usePieceScale: useReactPieceScale,
+  usePieceContext: useReactPieceContext,
+  usePiecesMetadataMap: useReactPiecesMetadataMap,
   useQualityContextRead,
-  useQuality,
-  useQualityContextNode,
+  useQuality: useReactQualityEntity,
+  useQualityContext: useReactQualityContext,
   useRegistryHasKit,
   useRegistryKitPersistenceKind,
   useRenameKit,
-  useReplacableDesigns as useReplacableDesignIdsFromKit,
-  useReplacableTypes as useReplacableTypeIdsFromKit,
+  useReplacableDesigns: useReactReplacableDesigns,
+  useReplacableTypes: useReactReplacableTypes,
   useResolvedKitIdentifier,
-  useTagsFull,
   useTypeContextRead,
-  useType,
-  useTypeDescription,
-  useTypeIcon,
-  useTypeImage,
-  useTypeIsAbstract,
-  useTypeName,
-  useTypeParent,
-  useTypes,
-  useTypeContextNode,
-  useTypesFull,
-  useTypeUnit,
+  useType: useReactTypeEntity,
+  useTypeDescription: useReactTypeDescription,
+  useTypeIcon: useReactTypeIcon,
+  useTypeImage: useReactTypeImage,
+  useTypeIsAbstract: useReactTypeIsAbstract,
+  useTypeName: useReactTypeName,
+  useTypeParent: useReactTypeParent,
+  useTypeContext: useReactTypeContext,
+  useTypeUnit: useReactTypeUnit,
   useUpdateAuthor,
   useUpdateDesign,
   useUpdateType,
   useWriteIndicator,
   Vector,
-} from "@semio/react";
+} = SemioReactAny;
 import { gunzipSync } from "fflate";
 
 import type {
@@ -263,7 +264,6 @@ import {
   Edges,
   dateFnsEnUS as enUS,
   FileTree,
-  FileTreeNode,
   Footer,
   forceCollide,
   forceLink,
@@ -446,7 +446,7 @@ import {
   TypeIcon,
   UserIcon,
   WorkbenchIcon,
-} from "../assets/icons";
+} from "../../../assets/icons";
 export type { LayoutColumn, LayoutNode, LayoutRow, LayoutStack } from "@semio/ui";
 export { Canvas, createDefaultLayout, deduplicateWindowLayout, HorizontalWindows, layoutNodeToGoldenLayoutConfig, parseWindowLayout, SectionSpecificity, stringifyWindowLayout, VerticalWindows, Window, WindowKind };
 
@@ -7182,49 +7182,397 @@ const clearDomRoot = (element: HTMLElement, root: Root): void => {
   }
 };
 
-export type { SketchpadKitKindAvailability, SketchpadKitStoreFactory } from "@semio/react";
+export type { SketchpadKitKindAvailability, SketchpadKitStoreFactory };
 
 // #region 🥈Entity Hooks
 // Sketchpad kit snapshot helpers; entity scopes and entity reads live in `@semio/react`.
 
-export {
-  AuthorContextProvider,
-  ConnectionUnderActiveDesignProvider,
-  DesignContextProvider,
-  ActiveKitTabContext,
-  PieceUnderActiveDesignProvider,
-  QualityContextProvider,
-  TypeContextProvider,
-  useAuthor,
-  useAuthorContextNode,
-  useConnection,
-  useConnections,
-  useConnectionContextNode,
-  useDesign,
-  useDesignContextNode,
-  useDesignsFull,
-  useDesignsIds,
-  useDesignsMetadata,
-  useFilesFull,
-  useHasAuthorContext,
-  useHasDesignContext,
-  useIsInActiveKitTab,
-  useHasQualityContext,
-  useHasTypeContext,
-  useActiveKitTab,
-  useKitStoreSnapshot,
-  usePiece,
-  usePieces,
-  usePieceContextNode,
-  useQuality,
-  useQualityContextNode,
-  useTagsFull,
-  useType,
-  useTypeContextNode,
-  useTypesFull,
-  useTypesIds,
-  useTypesMetadata,
-} from "@semio/react";
+export { AuthorContextProvider, DesignContextProvider, QualityContextProvider, TypeContextProvider };
+
+export const ActiveKitTabContext = React.createContext<Readonly<{ id: string }> | null>(null);
+const KitWasmHostContext = React.createContext<any>(null);
+const KitAlternativeSelectionContext = React.createContext<readonly [string | null, (next: string | null) => void] | null>(null);
+export const SchemaScopeContext = React.createContext<unknown>(null);
+
+export function ActiveKitTabContextProvider(props: Readonly<{ kitTabId: string; children: React.ReactNode }>): React.ReactElement {
+  const value = React.useMemo(() => ({ id: props.kitTabId }), [props.kitTabId]);
+  return React.createElement(ActiveKitTabContext.Provider, { value }, props.children);
+}
+
+export function useActiveKitTab(): Readonly<{ id: string }> | null {
+  return React.useContext(ActiveKitTabContext);
+}
+
+export function useIsInActiveKitTab(): boolean {
+  return useActiveKitTab() != null;
+}
+
+export function KitWasmMountProvider(props: Readonly<{ children: React.ReactNode; kitId?: string; store?: unknown; kitClient?: unknown }>): React.ReactElement {
+  const activeKit = useActiveKitTab();
+  const value = React.useMemo(() => ({ kitTabId: props.kitId ?? activeKit?.id ?? null, store: props.store ?? null, kitClient: props.kitClient ?? null }), [activeKit?.id, props.kitId, props.kitClient, props.store]);
+  return React.createElement(KitWasmHostContext.Provider, { value }, props.children);
+}
+
+export function useKitWasmHost(): any {
+  return React.useContext(KitWasmHostContext);
+}
+
+export function KitAlternativeSelectionProvider(props: Readonly<{ kitId: string; children: React.ReactNode }>): React.ReactElement {
+  const [selectedAlternativeId, setSelectedAlternativeId] = React.useState<string | null>(null);
+  const value = React.useMemo(() => [selectedAlternativeId, setSelectedAlternativeId] as const, [selectedAlternativeId]);
+  return React.createElement(KitAlternativeSelectionContext.Provider, { value }, props.children);
+}
+
+export function useKitAlternativeSelection(): readonly [string | null, (next: string | null) => void] {
+  const context = React.useContext(KitAlternativeSelectionContext);
+  if (context != null) return context;
+  return [null, () => {}] as const;
+}
+
+export function useKitAlternatives(): readonly Array<{ id: string; name?: string }> {
+  const snapshot = useKitStoreSnapshot?.();
+  const rawAlternatives = snapshot?.kit?.alternatives;
+  return Array.isArray(rawAlternatives) ? rawAlternatives : [];
+}
+
+export function schemaScopeForEntityId(kind: string, entityId: string): Readonly<{ kind: string; id: string }> {
+  return { kind, id: entityId };
+}
+
+export function useDesignContextNode(): Readonly<{ id: string }> | null {
+  return useReactDesignContext?.() ?? null;
+}
+
+export function usePieceContextNode(): Readonly<{ id: string }> | null {
+  return useReactPieceContext?.() ?? null;
+}
+
+export function useConnectionContextNode(): Readonly<{ id: string }> | null {
+  return useReactConnectionContext?.() ?? null;
+}
+
+export function useTypeContextNode(): Readonly<{ id: string }> | null {
+  return useReactTypeContext?.() ?? null;
+}
+
+export function useQualityContextNode(): Readonly<{ id: string }> | null {
+  return useReactQualityContext?.() ?? null;
+}
+
+export function useAuthorContextNode(): Readonly<{ id: string }> | null {
+  return SemioReactAny.useAuthorContext?.() ?? null;
+}
+
+export function useHasAuthorContext(): boolean {
+  return useAuthorContextNode() != null;
+}
+
+export function useHasDesignContext(): boolean {
+  return useDesignContextNode() != null;
+}
+
+export function useHasQualityContext(): boolean {
+  return useQualityContextNode() != null;
+}
+
+export function useHasTypeContext(): boolean {
+  return useTypeContextNode() != null;
+}
+
+export function PieceUnderActiveDesignProvider(props: Readonly<{ pieceId: string; children: React.ReactNode }>): React.ReactElement {
+  return React.createElement(SemioReactAny.PieceContextProvider, { id: props.pieceId }, props.children);
+}
+
+export function ConnectionUnderActiveDesignProvider(props: Readonly<{ connectionId: string; children: React.ReactNode }>): React.ReactElement {
+  return React.createElement(SemioReactAny.ConnectionContextProvider, { id: props.connectionId }, props.children);
+}
+
+function readFieldValue<T>(state: { value?: T } | null | undefined, fallback: T): T {
+  return state?.value ?? fallback;
+}
+
+function useKitSnapshot(): Kit | undefined {
+  return useKitStoreSnapshot?.()?.kit as Kit | undefined;
+}
+
+export function useAuthor(id?: string): Author | undefined {
+  const kit = useKitSnapshot();
+  const authorId = id ?? useAuthorContextNode()?.id;
+  return Array.isArray(kit?.authors) ? kit.authors.find((entry: Author) => entry.id === authorId) : undefined;
+}
+
+export function useDesign(...args: any[]): Design | null {
+  const explicitId = typeof args[0] === "string" ? args[0] : undefined;
+  const kit = useKitSnapshot();
+  const designId = explicitId ?? useDesignContextNode()?.id;
+  if (!designId || !Array.isArray(kit?.designs)) return null;
+  return kit.designs.find((entry: Design) => entry.id === designId) ?? null;
+}
+
+export function useType(...args: any[]): Type | null {
+  const explicitId = typeof args[0] === "string" ? args[0] : undefined;
+  const kit = useKitSnapshot();
+  const typeId = explicitId ?? useTypeContextNode()?.id;
+  if (!typeId || !Array.isArray(kit?.types)) return null;
+  return kit.types.find((entry: Type) => entry.id === typeId) ?? null;
+}
+
+export function useQuality(...args: any[]): Quality | null {
+  const explicitId = typeof args[0] === "string" ? args[0] : undefined;
+  const kit = useKitSnapshot();
+  const qualityId = explicitId ?? useQualityContextNode()?.id;
+  if (!qualityId || !Array.isArray(kit?.qualities)) return null;
+  return kit.qualities.find((entry: Quality) => entry.id === qualityId) ?? null;
+}
+
+export function usePiece(id?: string): Piece | null {
+  const pieceId = id ?? usePieceContextNode()?.id;
+  const design = useDesign();
+  if (!pieceId || !Array.isArray(design?.pieces)) return null;
+  return design.pieces.find((entry: Piece) => entry.id === pieceId) ?? null;
+}
+
+export function useConnection(id?: string): Connection | null {
+  const connectionId = id ?? useConnectionContextNode()?.id;
+  const design = useDesign();
+  if (!connectionId || !Array.isArray(design?.connections)) return null;
+  return design.connections.find((entry: Connection) => entry.id === connectionId) ?? null;
+}
+
+export function useConnections(): readonly Connection[] {
+  return readFieldValue(useReactDesignConnections?.(), [] as Connection[]);
+}
+
+export function usePieces(): readonly Piece[] {
+  return readFieldValue(useReactDesignPieces?.(), [] as Piece[]);
+}
+
+export function useDesigns(): Readonly<{ designs: readonly Design[] }> {
+  return { designs: readFieldValue(SemioReactAny.useKitDesigns?.(), [] as Design[]) };
+}
+
+export function useTypes(): Readonly<{ types: readonly Type[] }> {
+  return { types: readFieldValue(SemioReactAny.useKitTypes?.(), [] as Type[]) };
+}
+
+export function useDesignsFull(_kitId?: string): HookNoSetResult<Design[]> {
+  return readonlyHookResult(readFieldValue(SemioReactAny.useKitDesigns?.(), [] as Design[]));
+}
+
+export function useTypesFull(): HookNoSetResult<Type[]> {
+  return readonlyHookResult(readFieldValue(SemioReactAny.useKitTypes?.(), [] as Type[]));
+}
+
+export function useTagsFull(): HookNoSetResult<Tag[]> {
+  return readonlyHookResult((useKitSnapshot()?.tags ?? []) as Tag[]);
+}
+
+export function useFilesFull(): HookNoSetResult<SemioFile[]> {
+  return readonlyHookResult((useKitSnapshot()?.files ?? []) as SemioFile[]);
+}
+
+export function useDesignsIds(): readonly string[] {
+  return useDesigns().designs.map((entry) => entry.id);
+}
+
+export function useTypesIds(): readonly string[] {
+  return useTypes().types.map((entry) => entry.id);
+}
+
+export function useDesignsMetadata(): ReadonlyMap<string, Design> {
+  return new Map(useDesigns().designs.map((entry) => [entry.id, entry]));
+}
+
+export function useTypesMetadata(): ReadonlyMap<string, Type> {
+  return new Map(useTypes().types.map((entry) => [entry.id, entry]));
+}
+
+function readonlyBinding<T>(value: T): KitFieldBinding<T> {
+  return [value, async () => undefined, { kind: "readonly" }] as const;
+}
+
+export function useKitName(): string {
+  return readFieldValue(useReactKitName?.(), useKitSnapshot()?.name ?? "");
+}
+
+export function useKitDescription(): string {
+  return readFieldValue(useReactKitDescription?.(), useKitSnapshot()?.description ?? "");
+}
+
+export function useKitIcon(): string {
+  return readFieldValue(useReactKitIcon?.(), useKitSnapshot()?.icon ?? "");
+}
+
+export function useKitImage(): string {
+  return readFieldValue(useReactKitImage?.(), useKitSnapshot()?.image ?? "");
+}
+
+export function useKitHomepage(): string {
+  return useKitSnapshot()?.homepage ?? readFieldValue(useReactKitHomepage?.(), "");
+}
+
+export function useKitLicense(): string {
+  return useKitSnapshot()?.license ?? readFieldValue(useReactKitLicense?.(), "");
+}
+
+export function useKitRelease(): string {
+  return useKitSnapshot()?.release ?? readFieldValue(useReactKitRelease?.(), "");
+}
+
+export function useDesignName(id?: string): string {
+  return readFieldValue(useReactDesignName?.(id), useDesign(id)?.name ?? "");
+}
+
+export function useDesignDescription(id?: string): string {
+  return readFieldValue(useReactDesignDescription?.(id), useDesign(id)?.description ?? "");
+}
+
+export function useDesignIcon(id?: string): string {
+  return readFieldValue(useReactDesignIcon?.(id), useDesign(id)?.icon ?? "");
+}
+
+export function useDesignImage(id?: string): string {
+  return readFieldValue(useReactDesignImage?.(id), useDesign(id)?.image ?? "");
+}
+
+export function useDesignUnit(id?: string): string {
+  return readFieldValue(useReactDesignUnit?.(id), useDesign(id)?.unit ?? "");
+}
+
+export function useDesignNameBinding(id?: string): KitFieldBinding<string> {
+  return readonlyBinding(useDesignName(id));
+}
+
+export function useDesignDescriptionBinding(id?: string): KitFieldBinding<string> {
+  return readonlyBinding(useDesignDescription(id));
+}
+
+export function useDesignIconBinding(id?: string): KitFieldBinding<string> {
+  return readonlyBinding(useDesignIcon(id));
+}
+
+export function useDesignImageBinding(id?: string): KitFieldBinding<string> {
+  return readonlyBinding(useDesignImage(id));
+}
+
+export function useDesignUnitBinding(id?: string): KitFieldBinding<string> {
+  return readonlyBinding(useDesignUnit(id));
+}
+
+export function useTypeName(id?: string): string {
+  return readFieldValue(useReactTypeName?.(id), useType(id)?.name ?? "");
+}
+
+export function useTypeDescription(id?: string): string {
+  return readFieldValue(useReactTypeDescription?.(id), useType(id)?.description ?? "");
+}
+
+export function useTypeIcon(id?: string): string {
+  return readFieldValue(useReactTypeIcon?.(id), useType(id)?.icon ?? "");
+}
+
+export function useTypeImage(id?: string): string {
+  return readFieldValue(useReactTypeImage?.(id), useType(id)?.image ?? "");
+}
+
+export function useTypeIsAbstract(id?: string): boolean {
+  return Boolean(readFieldValue(useReactTypeIsAbstract?.(id), useType(id)?.isAbstract ?? false));
+}
+
+export function useTypeUnit(id?: string): string {
+  return readFieldValue(useReactTypeUnit?.(id), useType(id)?.unit ?? "");
+}
+
+export function useTypeParent(id?: string): KitFieldBinding<unknown> {
+  return readonlyBinding(readFieldValue(useReactTypeParent?.(id), useType(id)?.parent ?? null));
+}
+
+function bindingFromState<T>(state: { value?: T } | null | undefined, fallback: T): KitFieldBinding<T> {
+  return readonlyBinding(readFieldValue(state, fallback));
+}
+
+const useSchemaPieceCenter = (id?: string): KitFieldBinding<any> => bindingFromState(useReactPieceCenter?.(id), usePiece(id)?.center ?? null);
+const useSchemaPieceColor = (id?: string): KitFieldBinding<any> => bindingFromState(useReactPieceColor?.(id), usePiece(id)?.color ?? undefined);
+const useSchemaPieceDescription = (id?: string): KitFieldBinding<any> => bindingFromState(useReactPieceDescription?.(id), usePiece(id)?.description ?? "");
+const useSchemaPieceIsHidden = (id?: string): KitFieldBinding<any> => bindingFromState(useReactPieceIsHidden?.(id), Boolean(usePiece(id)?.isHidden));
+const useSchemaPieceIsLocked = (id?: string): KitFieldBinding<any> => bindingFromState(useReactPieceIsLocked?.(id), Boolean(usePiece(id)?.isLocked));
+const useSchemaPieceName = (id?: string): KitFieldBinding<any> => bindingFromState(useReactPieceName?.(id), usePiece(id)?.name ?? "");
+const useSchemaPieceScale = (id?: string): KitFieldBinding<any> => bindingFromState(useReactPieceScale?.(id), usePiece(id)?.scale ?? 1);
+const useSchemaConnectionDescription = (id?: string): KitFieldBinding<any> => bindingFromState(useReactConnectionDescription?.(id), useConnection(id)?.description ?? "");
+const useSchemaConnectionGap = (id?: string): KitFieldBinding<any> => bindingFromState(useReactConnectionGap?.(id), useConnection(id)?.gap ?? 0);
+const useSchemaConnectionRise = (id?: string): KitFieldBinding<any> => bindingFromState(useReactConnectionRise?.(id), useConnection(id)?.rise ?? 0);
+const useSchemaConnectionRotation = (id?: string): KitFieldBinding<any> => bindingFromState(useReactConnectionRotation?.(id), useConnection(id)?.rotation ?? 0);
+const useSchemaConnectionShift = (id?: string): KitFieldBinding<any> => bindingFromState(useReactConnectionShift?.(id), useConnection(id)?.shift ?? 0);
+const useSchemaConnectionTilt = (id?: string): KitFieldBinding<any> => bindingFromState(useReactConnectionTilt?.(id), useConnection(id)?.tilt ?? 0);
+const useSchemaConnectionTurn = (id?: string): KitFieldBinding<any> => bindingFromState(useReactConnectionTurn?.(id), useConnection(id)?.turn ?? 0);
+const useSchemaConnectionU = (id?: string): KitFieldBinding<any> => bindingFromState(useReactConnectionU?.(id), useConnection(id)?.u ?? 0);
+const useSchemaConnectionV = (id?: string): KitFieldBinding<any> => bindingFromState(useReactConnectionV?.(id), useConnection(id)?.v ?? 0);
+
+function buildPieceMetadataRecord(design: Design | null): Record<string, PieceMetadata> {
+  if (!design || !Array.isArray(design.pieces)) return {};
+  return Object.fromEntries(
+    design.pieces.map((piece: Piece) => [
+      piece.id,
+      {
+        plane: piece.plane ?? useCurrentPiecePlane(),
+        center: piece.center ?? { x: 0, y: 0, z: 0 },
+        fixedPieceId: piece.fixedPieceId ?? piece.id,
+        parentPieceId: piece.parentPieceId ?? null,
+        depth: piece.depth ?? 0,
+        path: Array.isArray(piece.path) ? piece.path : [],
+      } satisfies PieceMetadata,
+    ]),
+  );
+}
+
+function usePiecesMetadataRecordFromKit(designId?: string): HookNoSetResult<Record<string, PieceMetadata>> {
+  return readonlyHookResult(buildPieceMetadataRecord(useDesign(designId)));
+}
+
+function usePieceMetadataFromKit(designId?: string, pieceId?: string): HookNoSetResult<PieceMetadata | undefined> {
+  const record = buildPieceMetadataRecord(useDesign(designId));
+  return readonlyHookResult(pieceId == null ? undefined : record[pieceId]);
+}
+
+function useIsConnectedPieceFromKit(_designId?: string, pieceId?: string): HookNoSetResult<boolean> {
+  const piece = usePiece(pieceId);
+  return readonlyHookResult(Boolean(piece?.parentConnection || piece?.connectionKind === "CONNECTED"));
+}
+
+function useFixedPieceIdFromKit(_designId?: string, pieceId?: string): HookNoSetResult<string | undefined> {
+  return readonlyHookResult(usePiece(pieceId)?.fixedPieceId);
+}
+
+function usePieceDepthFromKit(_designId?: string, pieceId?: string): HookNoSetResult<number> {
+  return readonlyHookResult(usePiece(pieceId)?.depth ?? 0);
+}
+
+function useParentPieceIdFromKit(_designId?: string, pieceId?: string): HookNoSetResult<string | null> {
+  return readonlyHookResult(usePiece(pieceId)?.parentPieceId ?? null);
+}
+
+function usePieceParentConnectionFromKit(_designId?: string, pieceId?: string): HookNoSetResult<Connection | null> {
+  return readonlyHookResult((usePiece(pieceId)?.parentConnection as Connection | null | undefined) ?? null);
+}
+
+function useIncludedDesignsFromKit(designId?: string): HookNoSetResult<Design[]> {
+  const kit = useKitSnapshot();
+  const design = useDesign(designId);
+  return readonlyHookResult(kit && design ? getIncludedDesigns(kit, design) : []);
+}
+
+function useReplacableTypeIdsFromKit(_designId?: string, _pieceIds: Id[]): HookNoSetResult<string[]> {
+  return readonlyHookResult([]);
+}
+
+function useReplacableDesignIdsFromKit(_designId?: string, _pieceIds: Id[]): HookNoSetResult<string[]> {
+  return readonlyHookResult([]);
+}
+
+function useDesignClusterableGroups(designId?: string, pieceIds: Id[] = []): HookNoSetResult<string[][]> {
+  const kit = useKitSnapshot();
+  return readonlyHookResult(kit && designId ? getClusterableGroups(kit, designId, pieceIds) : []);
+}
 
 // #region 🎆Piece Derived Hooks
 
@@ -29734,11 +30082,11 @@ const DesignSectionForm: FC = () => {
   const attributeLabel = useLabel("semio.sketchpad.app.design.attribute");
 
   const designDetailId = design?.id;
-  const designNameTriad = useDesignName(designDetailId);
-  const designDescriptionTriad = useDesignDescription(designDetailId);
-  const designIconTriad = useDesignIcon(designDetailId);
-  const designImageTriad = useDesignImage(designDetailId);
-  const designUnitTriad = useDesignUnit(designDetailId);
+  const designNameTriad = useDesignNameBinding(designDetailId);
+  const designDescriptionTriad = useDesignDescriptionBinding(designDetailId);
+  const designIconTriad = useDesignIconBinding(designDetailId);
+  const designImageTriad = useDesignImageBinding(designDetailId);
+  const designUnitTriad = useDesignUnitBinding(designDetailId);
 
   if (!design) return null;
 
