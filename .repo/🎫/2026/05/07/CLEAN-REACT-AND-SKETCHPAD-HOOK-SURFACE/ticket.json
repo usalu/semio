@@ -1,7 +1,7 @@
 {
   "title": "Clean React And Sketchpad Hook Surface",
-  "status": "open",
-  "summary": "Aligned the semio/js public surface in semio/js/index.ts with target.schema.graphql naming for Store, Kit, Graph, Session, Alternative, TheKit, Checkpoint, Change, Edit, and related embedded assertions. Removed the invalid Design.id() override, kept Entity.id as the schema id surface, hid leftover non-schema helpers, and revalidated with diagnostics plus embedded Vitest runs. Remaining Vitest failures are unchanged fixture-path ENOENT errors for missing semio asset JSON files.",
+  "status": "closed",
+  "summary": "Cleaned the React entity hook surface to use schema-aligned instance-returning reads and updated sketchpad detail sections to rely on hook-based reads instead of direct class field access in the kit, type, tag, concept, design, and file panels.",
   "goal": "🎯graphqltargetsemiors",
   "sessions": [
     "⚪d723dbfbdbf7465e8e0b3cbfe817cf89",

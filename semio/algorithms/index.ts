@@ -8,22 +8,22 @@
 /// <reference types="vite/client" />
 
 // #region 📥Imports
-import { openStore, type Store as JsStore } from "@semio/js";
 import {
   AlgorithmApp,
   WindowKind,
   createIpoAlgorithmLayout,
+  getKitPorts,
+  kitSurface,
   useAlgorithm,
   type AlgorithmAppProps,
   type AlgorithmContextValue,
   type AlgorithmWindowDef,
-  type VecValue,
   type DesignDiff,
   type DesignPlain,
   type MoveVector,
-  getKitPorts,
-  kitSurface,
+  type VecValue,
 } from "@semio/ui";
+import { openStore, type Store as JsStore } from "../client/lib/js";
 // #endregion 📥Imports
 
 // #region 🧾GqlWire
@@ -35,17 +35,12 @@ type GqlWireObject = { readonly [k: string]: unknown };
 export {
   AlgorithmApp,
   WindowKind,
-  createIpoAlgorithmLayout,
-  useAlgorithm,
-  getKitPorts,
-  kitSurface,
-  type AlgorithmAppProps,
+  createIpoAlgorithmLayout, getKitPorts,
+  kitSurface, useAlgorithm, type AlgorithmAppProps,
   type AlgorithmContextValue,
-  type AlgorithmWindowDef,
-  type VecValue,
-  type DesignDiff,
+  type AlgorithmWindowDef, type DesignDiff,
   type DesignPlain,
-  type MoveVector,
+  type MoveVector, type VecValue
 };
 // #endregion 📤UiReExports
 
@@ -68,7 +63,7 @@ export const Kit = Object.freeze({
 
 /** @emoji 🧰 Kit façade used by find-replaceable story (deterministic fixture ids for Nakagin selection). */
 export class AlgorithmKitFacade {
-  constructor(private readonly kit: GqlWireObject | Record<string, unknown>) {}
+  constructor(private readonly kit: GqlWireObject | Record<string, unknown>) { }
 
   findReplaceableTypesInDesignsForPiecesInDesignOp(
     _design: unknown,
@@ -149,7 +144,7 @@ function __previewWithDiff(design: unknown, diff: DesignDiff): Record<string, un
 }
 
 class Design {
-  constructor(private plain: Record<string, unknown>) {}
+  constructor(private plain: Record<string, unknown>) { }
   get id(): string {
     return String(this.plain["id"] ?? "");
   }
