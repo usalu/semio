@@ -2,7 +2,7 @@
   "name": "@semio/rhino",
   "version": "1.0.0",
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
-  "sourceRoot": "semio/3dm/Semio.Rhino",
+  "sourceRoot": "semio/client/ui/3dm/Semio.Rhino",
   "projectType": "application",
   "devDependencies": {
     "@semio/net": "*"

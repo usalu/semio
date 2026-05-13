@@ -1,22 +1,19 @@
 {
-  "name": "@semio/play",
+  "name": "@semio/docs",
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "targets": {
     "dev": {
       "executor": "nx:run-commands",
       "options": {
-        "cwd": "semio/sites/play",
-        "command": "bun ../../../scripts/run-vite-dev.ts --strictPort --port 4000",
-        "env": {
-          "CHOKIDAR_USEPOLLING": "1"
-        },
+        "cwd": "semio/site/docs",
+        "command": "bun ../../../scripts/run-vite-dev.ts --port 4321",
         "forwardAllArgs": true
       }
     },
     "build": {
       "executor": "nx:run-commands",
       "options": {
-        "cwd": "semio/sites/play",
+        "cwd": "semio/site/docs",
         "command": "vite build",
         "forwardAllArgs": true
       }
@@ -24,7 +21,7 @@
     "publish": {
       "executor": "nx:run-commands",
       "options": {
-        "cwd": "semio/sites/play",
+        "cwd": "semio/site/docs",
         "commands": ["vite build", "bun publish"],
         "parallel": false,
         "forwardAllArgs": true

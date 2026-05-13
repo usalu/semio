@@ -6,7 +6,7 @@
     "test": {
       "executor": "nx:run-commands",
       "options": {
-        "cwd": "semio/net/Semio.Tests",
+        "cwd": "semio/client/lib/net/Semio.Tests",
         "command": "dotnet test Semio.Tests.csproj"
       }
     }

@@ -2,7 +2,7 @@
   "name": "@semio/py",
   "version": "1.0.0",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
-  "sourceRoot": "semio/py",
+  "sourceRoot": "semio/client/lib/py",
   "projectType": "library",
   "author": {
     "name": "Ueli Saluz",

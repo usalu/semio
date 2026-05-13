@@ -7,7 +7,7 @@
   "main": ".vite/build/main.js",
   "dependencies": {
     "@electron/fuses": "^2.0.0",
-    "@elements/ui": "file:../../elements/ui",
+    "@elements/ui": "workspace:*",
     "electron-squirrel-startup": "^1.0.1",
     "react": "^19.2.3",
     "react-dom": "^19.2.3"

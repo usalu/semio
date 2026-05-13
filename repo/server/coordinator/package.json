@@ -2,7 +2,7 @@
   "name": "@repo/coordinator",
   "version": "1.0.0",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
-  "sourceRoot": "repo/server",
+  "sourceRoot": "repo/server/coordinator",
   "projectType": "application",
   "author": {
     "name": "Ueli Saluz",

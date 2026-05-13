@@ -21,7 +21,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Include="..\..\assets\logo\emblem_dark_round.png">
+    <None Include="..\..\..\..\assets\logo\emblem_dark_round.png">
       <Pack>True</Pack>
       <PackagePath>\</PackagePath>
     </None>
@@ -69,13 +69,13 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Content Include="..\..\..\target\release\semio-store.exe" Link="runtimes\win-x64\native\semio-store.exe" Condition="Exists('..\..\..\target\release\semio-store.exe')">
+    <Content Include="..\..\..\..\..\target\release\semio-store.exe" Link="runtimes\win-x64\native\semio-store.exe" Condition="Exists('..\..\..\..\..\target\release\semio-store.exe')">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="..\..\..\target\release\semio-store" Link="runtimes\linux-x64\native\semio-store" Condition="Exists('..\..\..\target\release\semio-store')">
+    <Content Include="..\..\..\..\..\target\release\semio-store" Link="runtimes\linux-x64\native\semio-store" Condition="Exists('..\..\..\..\..\target\release\semio-store')">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="..\..\..\target\release\semio-store.exe" Link="semio-store.exe" Condition="Exists('..\..\..\target\release\semio-store.exe')">
+    <Content Include="..\..\..\..\..\target\release\semio-store.exe" Link="semio-store.exe" Condition="Exists('..\..\..\..\..\target\release\semio-store.exe')">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>

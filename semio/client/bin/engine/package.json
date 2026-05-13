@@ -2,7 +2,7 @@
   "name": "@semio/engine",
   "version": "1.0.0",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
-  "sourceRoot": "semio/engine",
+  "sourceRoot": "semio/client/bin/engine",
   "projectType": "application",
   "devDependencies": {
     "@semio/assets": "*",

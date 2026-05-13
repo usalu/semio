@@ -6,7 +6,7 @@
     "test": {
       "executor": "nx:run-commands",
       "options": {
-        "cwd": "semio/3dm/Semio.Rhino.Tests",
+        "cwd": "semio/client/ui/3dm/Semio.Rhino.Tests",
         "command": "dotnet test Semio.Rhino.Tests.csproj"
       }
     }

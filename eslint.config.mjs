@@ -10,7 +10,7 @@ export default tseslint.config(
     ignores: ["**/node_modules/**", "**/dist/**", "**/pkg/**"],
   },
   {
-    files: ["semio/js/index.ts", "semio/react/index.tsx"],
+    files: ["semio/client/lib/js/index.ts", "semio/client/lib/react/index.tsx"],
     plugins: {
       "react-hooks": reactHooks,
     },

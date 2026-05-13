@@ -6,7 +6,7 @@
       "executor": "nx:run-commands",
       "cache": false,
       "options": {
-        "cwd": "semio/graphql",
+        "cwd": "semio/schema/graphql",
         "command": "bun scripts/export-schema.ts"
       }
     }

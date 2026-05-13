@@ -11,7 +11,7 @@
 //#region 🗃️Exports
 // Re-exports and data constants MUST come from the Metabolism kit assets.
 
-import MetabolismKitData from "./semio/metabolism.kit.semio.json";
+import MetabolismKitData from "./fixtures/metabolism.kit.semio.json";
 export * from "./icons";
 
 //#region 🔖KitBootstrapHelpers
@@ -29,48 +29,48 @@ function __metabolismKitInner(): Record<string, unknown> {
   return (inner && typeof inner === "object" ? inner : (MetabolismKitData as unknown as Record<string, unknown>)) ?? {};
 }
 //#endregion 🔖KitBootstrapHelpers
-export { default as DragDesign } from "./semio/drag/design.semio.json";
-export { default as DragDiffDesignFree } from "./semio/drag/diff.design.free.semio.json";
-export { default as DragDiffDesign } from "./semio/drag/diff.design.semio.json";
-export { default as DragOffset } from "./semio/drag/offset.semio.json";
-export { default as DragPieces } from "./semio/drag/pieces.semio.json";
-export { default as MoveVector } from "./semio/move/vector.semio.json";
-export { default as MoveDiffDesign } from "./semio/move/diff.design.semio.json";
-export { default as MoveStoryDesign } from "./semio/move/story.design.semio.json";
-export { default as InvalidKit } from "./semio/invalid.kit.semio.json";
-export { default as MetabolismKitDiffInverted } from "./semio/metabolism.kit.diff.inverted.semio.json";
-export { default as MetabolismKitDiff } from "./semio/metabolism.kit.diff.semio.json";
-export { default as MetabolismKitDiffed } from "./semio/metabolism.kit.diffed.semio.json";
-export { default as MetabolismMetaKit } from "./semio/metabolism.meta.kit.semio.json";
-export { default as MetabolismShallowKit } from "./semio/metabolism.shallow.kit.semio.json";
-export { default as RepresentationSelectionCases } from "./semio/representation.selection.semio.json";
-export { default as NakaginCapsuleTowerCopySelection } from "./semio/nakagin-capsule-tower.copy.design.selection.semio.json";
-export { default as NakaginCapsuleTowerCopyDesign } from "./semio/nakagin-capsule-tower.copy.design.semio.json";
-export { default as NakaginCapsuleTowerDeletedDesignDiff } from "./semio/nakagin-capsule-tower.deleted.design.diff.semio.json";
-export { default as NakaginCapsuleTowerDeletedSelection } from "./semio/nakagin-capsule-tower.deleted.selection.semio.json";
-export { default as MetabolismKitFilteredNakaginCapsuleTower, default as NakaginCapsuleTowerFilteredKit } from "./semio/nakagin-capsule-tower.filtered.kit.semio.json";
-export { default as NakaginCapsuleTowerMetaDesign } from "./semio/nakagin-capsule-tower.meta.design.semio.json";
-export { default as NakaginCapsuleTowerPasteDesignDiff } from "./semio/nakagin-capsule-tower.paste.design.diff.semio.json";
-export { default as NakaginCapsuleTowerPasteDesign } from "./semio/nakagin-capsule-tower.paste.design.semio.json";
-export { default as NakaginCapsuleTowerPasteWithCoordinateDesignDiff } from "./semio/nakagin-capsule-tower.paste.with-coordinate.design.diff.semio.json";
-export { default as NakaginCapsuleTowerShallowDesign } from "./semio/nakagin-capsule-tower.shallow.design.semio.json";
-export { default as NakaginCapsuleTowerWithDiffDesign } from "./semio/nakagin-capsule-tower.with-diff.design.semio.json";
-export { default as NakaginCapsuleTowerDiffDesign, default as NakginCapsuleTowerDiffDesign } from "./semio/nakgin-capsule-tower.diff.design.semio.json";
-export { default as TambourMetaType } from "./semio/tambour.meta.type.semio.json";
-export { default as TambourShallowType } from "./semio/tambour.shallow.type.semio.json";
-export { default as InvalidKitValidation } from "./semio/validation.semio.json";
-export { default as ValidateKitDiffCases } from "./semio/validate-kit-diff.cases.semio.json";
-export { default as FlattenMerkleCases } from "./semio/flatten-merkle.cases.semio.json";
-export { default as HashCases } from "./semio/hash.cases.semio.json";
-export { default as QualitySumCases } from "./semio/quality-sum.cases.semio.json";
-export { default as DesignWithDiffCases } from "./semio/design-with-diff.cases.semio.json";
-export { default as FilterKitCases } from "./semio/filter-kit.cases.semio.json";
-export { default as FindReplaceableTypesCases } from "./semio/find-replaceable-types.cases.semio.json";
-export { default as FlattenCases } from "./semio/flatten.cases.semio.json";
-export { default as SyntheticFindReplaceableKit } from "./semio/synthetic-find-replaceable.kit.semio.json";
-export { default as ExportDesignRepresentationCases } from "./semio/export-design-representation.cases.semio.json";
-export { default as DeleteCases } from "./semio/delete.cases.semio.json";
-export { default as CopyPasteCases } from "./semio/copy-paste.cases.semio.json";
+export { default as DragDesign } from "./fixtures/drag/design.semio.json";
+export { default as DragDiffDesignFree } from "./fixtures/drag/diff.design.free.semio.json";
+export { default as DragDiffDesign } from "./fixtures/drag/diff.design.semio.json";
+export { default as DragOffset } from "./fixtures/drag/offset.semio.json";
+export { default as DragPieces } from "./fixtures/drag/pieces.semio.json";
+export { default as MoveVector } from "./fixtures/move/vector.semio.json";
+export { default as MoveDiffDesign } from "./fixtures/move/diff.design.semio.json";
+export { default as MoveStoryDesign } from "./fixtures/move/story.design.semio.json";
+export { default as InvalidKit } from "./fixtures/invalid.kit.semio.json";
+export { default as MetabolismKitDiffInverted } from "./fixtures/metabolism.kit.diff.inverted.semio.json";
+export { default as MetabolismKitDiff } from "./fixtures/metabolism.kit.diff.semio.json";
+export { default as MetabolismKitDiffed } from "./fixtures/metabolism.kit.diffed.semio.json";
+export { default as MetabolismMetaKit } from "./fixtures/metabolism.meta.kit.semio.json";
+export { default as MetabolismShallowKit } from "./fixtures/metabolism.shallow.kit.semio.json";
+export { default as RepresentationSelectionCases } from "./fixtures/representation.selection.semio.json";
+export { default as NakaginCapsuleTowerCopySelection } from "./fixtures/nakagin-capsule-tower.copy.design.selection.semio.json";
+export { default as NakaginCapsuleTowerCopyDesign } from "./fixtures/nakagin-capsule-tower.copy.design.semio.json";
+export { default as NakaginCapsuleTowerDeletedDesignDiff } from "./fixtures/nakagin-capsule-tower.deleted.design.diff.semio.json";
+export { default as NakaginCapsuleTowerDeletedSelection } from "./fixtures/nakagin-capsule-tower.deleted.selection.semio.json";
+export { default as MetabolismKitFilteredNakaginCapsuleTower, default as NakaginCapsuleTowerFilteredKit } from "./fixtures/nakagin-capsule-tower.filtered.kit.semio.json";
+export { default as NakaginCapsuleTowerMetaDesign } from "./fixtures/nakagin-capsule-tower.meta.design.semio.json";
+export { default as NakaginCapsuleTowerPasteDesignDiff } from "./fixtures/nakagin-capsule-tower.paste.design.diff.semio.json";
+export { default as NakaginCapsuleTowerPasteDesign } from "./fixtures/nakagin-capsule-tower.paste.design.semio.json";
+export { default as NakaginCapsuleTowerPasteWithCoordinateDesignDiff } from "./fixtures/nakagin-capsule-tower.paste.with-coordinate.design.diff.semio.json";
+export { default as NakaginCapsuleTowerShallowDesign } from "./fixtures/nakagin-capsule-tower.shallow.design.semio.json";
+export { default as NakaginCapsuleTowerWithDiffDesign } from "./fixtures/nakagin-capsule-tower.with-diff.design.semio.json";
+export { default as NakaginCapsuleTowerDiffDesign, default as NakginCapsuleTowerDiffDesign } from "./fixtures/nakgin-capsule-tower.diff.design.semio.json";
+export { default as TambourMetaType } from "./fixtures/tambour.meta.type.semio.json";
+export { default as TambourShallowType } from "./fixtures/tambour.shallow.type.semio.json";
+export { default as InvalidKitValidation } from "./fixtures/validation.semio.json";
+export { default as ValidateKitDiffCases } from "./fixtures/validate-kit-diff.cases.semio.json";
+export { default as FlattenMerkleCases } from "./fixtures/flatten-merkle.cases.semio.json";
+export { default as HashCases } from "./fixtures/hash.cases.semio.json";
+export { default as QualitySumCases } from "./fixtures/quality-sum.cases.semio.json";
+export { default as DesignWithDiffCases } from "./fixtures/design-with-diff.cases.semio.json";
+export { default as FilterKitCases } from "./fixtures/filter-kit.cases.semio.json";
+export { default as FindReplaceableTypesCases } from "./fixtures/find-replaceable-types.cases.semio.json";
+export { default as FlattenCases } from "./fixtures/flatten.cases.semio.json";
+export { default as SyntheticFindReplaceableKit } from "./fixtures/synthetic-find-replaceable.kit.semio.json";
+export { default as ExportDesignRepresentationCases } from "./fixtures/export-design-representation.cases.semio.json";
+export { default as DeleteCases } from "./fixtures/delete.cases.semio.json";
+export { default as CopyPasteCases } from "./fixtures/copy-paste.cases.semio.json";
 export { MetabolismKitData as MetabolismKit };
 
 /**

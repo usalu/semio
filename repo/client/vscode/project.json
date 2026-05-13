@@ -5,7 +5,7 @@
     "dev": {
       "executor": "nx:run-commands",
       "options": {
-        "cwd": "repo/vscode",
+        "cwd": "repo/client/vscode",
         "command": "vite build --watch",
         "forwardAllArgs": true
       }
@@ -13,7 +13,7 @@
     "test": {
       "executor": "nx:run-commands",
       "options": {
-        "cwd": "repo/vscode",
+        "cwd": "repo/client/vscode",
         "command": "vscode-test",
         "forwardAllArgs": true
       }
@@ -21,7 +21,7 @@
     "build": {
       "executor": "nx:run-commands",
       "options": {
-        "cwd": "repo/vscode",
+        "cwd": "repo/client/vscode",
         "command": "vite build && vite build --config vite.test.config.ts",
         "forwardAllArgs": true
       }
@@ -29,7 +29,7 @@
     "lint": {
       "executor": "nx:run-commands",
       "options": {
-        "cwd": "repo/vscode",
+        "cwd": "repo/client/vscode",
         "command": "bunx eslint --max-warnings 0 --config eslint.config.ts .",
         "forwardAllArgs": true
       }
@@ -37,7 +37,7 @@
     "package": {
       "executor": "nx:run-commands",
       "options": {
-        "cwd": "repo/vscode",
+        "cwd": "repo/client/vscode",
         "command": "bunx vsce package --no-dependencies --out repo.vsix",
         "forwardAllArgs": true
       }

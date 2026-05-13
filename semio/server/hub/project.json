@@ -6,21 +6,21 @@
     "setup": {
       "executor": "nx:run-commands",
       "options": {
-        "cwd": "semio/hub",
+        "cwd": "semio/server/hub",
         "command": "cargo fetch --manifest-path Cargo.toml"
       }
     },
     "build": {
       "executor": "nx:run-commands",
       "options": {
-        "cwd": "semio/hub",
+        "cwd": "semio/server/hub",
         "command": "cargo build --release --manifest-path Cargo.toml"
       }
     },
     "test": {
       "executor": "nx:run-commands",
       "options": {
-        "cwd": "semio/hub",
+        "cwd": "semio/server/hub",
         "command": "cargo test --manifest-path Cargo.toml"
       }
     }

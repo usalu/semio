@@ -2,7 +2,7 @@
   "name": "@semio/rs",
   "version": "1.0.0",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
-  "sourceRoot": "semio/rs",
+  "sourceRoot": "semio/client/lib/rs",
   "projectType": "library",
   "author": {
     "name": "Ueli Saluz",

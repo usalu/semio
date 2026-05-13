@@ -5,7 +5,7 @@
     "build": {
       "executor": "nx:run-commands",
       "options": {
-        "cwd": "semio/net/Semio",
+        "cwd": "semio/client/lib/net/Semio",
         "command": "bun ./build.ts",
         "forwardAllArgs": true
       }
@@ -13,7 +13,7 @@
     "test": {
       "executor": "nx:run-commands",
       "options": {
-        "cwd": "semio/net/Semio",
+        "cwd": "semio/client/lib/net/Semio",
         "command": "dotnet test ../Semio.Tests/Semio.Tests.csproj",
         "forwardAllArgs": true
       }

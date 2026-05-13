@@ -5,7 +5,7 @@
     "dev": {
       "executor": "nx:run-commands",
       "options": {
-        "cwd": "coda/assistant",
+        "cwd": "coda/client/ui/assistant",
         "command": "uv run main.py",
         "forwardAllArgs": true
       }
@@ -13,7 +13,7 @@
     "build-mcp-app": {
       "executor": "nx:run-commands",
       "options": {
-        "cwd": "coda/assistant",
+        "cwd": "coda/client/ui/assistant",
         "command": "bunx vite build --config vite.mcp-app.config.ts",
         "forwardAllArgs": true
       }

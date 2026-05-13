@@ -5,7 +5,7 @@
     "build": {
       "executor": "nx:run-commands",
       "options": {
-        "cwd": "semio/vscode",
+        "cwd": "semio/client/ui/vscode",
         "command": "vite build && vite build --mode webview",
         "forwardAllArgs": true
       }
@@ -13,7 +13,7 @@
     "dev": {
       "executor": "nx:run-commands",
       "options": {
-        "cwd": "semio/vscode",
+        "cwd": "semio/client/ui/vscode",
         "parallel": true,
         "commands": ["bunx vite build --watch", "bunx vite build --watch --mode webview"]
       }
@@ -21,7 +21,7 @@
     "test": {
       "executor": "nx:run-commands",
       "options": {
-        "cwd": "semio/vscode",
+        "cwd": "semio/client/ui/vscode",
         "command": "echo 'no tests yet'",
         "forwardAllArgs": true
       }

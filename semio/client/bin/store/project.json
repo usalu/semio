@@ -5,7 +5,7 @@
     "build": {
       "executor": "nx:run-commands",
       "options": {
-        "cwd": "semio/store",
+        "cwd": "semio/client/bin/store",
         "command": "cargo build --release -p semio-store",
         "forwardAllArgs": true
       }
@@ -13,7 +13,7 @@
     "test": {
       "executor": "nx:run-commands",
       "options": {
-        "cwd": "semio/store",
+        "cwd": "semio/client/bin/store",
         "command": "cargo test -p semio-store",
         "forwardAllArgs": true
       }

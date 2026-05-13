@@ -6,7 +6,7 @@
       "executor": "nx:run-commands",
       "dependsOn": ["@semio/rs:build-wasm"],
       "options": {
-        "cwd": "semio/react",
+        "cwd": "semio/client/lib/react",
         "command": "bunx tsc --noEmit",
         "forwardAllArgs": true
       }
@@ -15,7 +15,7 @@
       "executor": "nx:run-commands",
       "dependsOn": ["@semio/rs:build-wasm"],
       "options": {
-        "cwd": "semio/react",
+        "cwd": "semio/client/lib/react",
         "command": "bunx vitest run --config vite.config.ts index.tsx",
         "forwardAllArgs": true,
         "env": {

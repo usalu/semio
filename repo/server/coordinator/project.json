@@ -5,7 +5,7 @@
     "dev": {
       "executor": "nx:run-commands",
       "options": {
-        "cwd": "repo/server",
+        "cwd": "repo/server/coordinator",
         "command": "go run .",
         "forwardAllArgs": true
       }
@@ -13,7 +13,7 @@
     "build": {
       "executor": "nx:run-commands",
       "options": {
-        "cwd": "repo/server",
+        "cwd": "repo/server/coordinator",
         "command": "bun scripts/build-server.ts",
         "forwardAllArgs": true
       }
@@ -21,7 +21,7 @@
     "start": {
       "executor": "nx:run-commands",
       "options": {
-        "cwd": "repo/server",
+        "cwd": "repo/server/coordinator",
         "command": "go run .",
         "forwardAllArgs": true
       }
@@ -29,7 +29,7 @@
     "worker": {
       "executor": "nx:run-commands",
       "options": {
-        "cwd": "repo/server",
+        "cwd": "repo/server/coordinator",
         "command": "bun lib/worker.ts",
         "forwardAllArgs": true
       }
@@ -37,7 +37,7 @@
     "migrate": {
       "executor": "nx:run-commands",
       "options": {
-        "cwd": "repo/server",
+        "cwd": "repo/server/coordinator",
         "command": "bun lib/migrate.ts",
         "forwardAllArgs": true
       }
@@ -45,7 +45,7 @@
     "test": {
       "executor": "nx:run-commands",
       "options": {
-        "cwd": "repo/server",
+        "cwd": "repo/server/coordinator",
         "command": "bunx vitest run",
         "forwardAllArgs": true
       }

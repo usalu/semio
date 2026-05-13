@@ -5,7 +5,7 @@
     "build": {
       "executor": "nx:run-commands",
       "options": {
-        "cwd": "semio/3dm/Semio.Rhino",
+        "cwd": "semio/client/ui/3dm/Semio.Rhino",
         "command": "dotnet build",
         "forwardAllArgs": true
       }
@@ -13,7 +13,7 @@
     "dev": {
       "executor": "nx:run-commands",
       "options": {
-        "cwd": "semio/3dm/Semio.Rhino",
+        "cwd": "semio/client/ui/3dm/Semio.Rhino",
         "command": "dotnet build",
         "forwardAllArgs": true
       }
@@ -21,7 +21,7 @@
     "test": {
       "executor": "nx:run-commands",
       "options": {
-        "cwd": "semio/3dm/Semio.Rhino",
+        "cwd": "semio/client/ui/3dm/Semio.Rhino",
         "command": "dotnet test ../Semio.Rhino.Tests/Semio.Rhino.Tests.csproj",
         "forwardAllArgs": true
       }

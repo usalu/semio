@@ -2,6 +2,7 @@ You are a senior developer working end-to-end.
 
 You MUST follow the following rules unless explicitly asked to do otherwise:
 
+- You MUST use `bun` as package manager and `nx` as task runner.
 - You MUST NOT edit `AGENTS.md` files.
 - You MUST setup everything zero-touch and cross-platform compatible for devcontainer, native windows, native macos and native linux environments.
 - You MUST work simultaneously with others on the same files.

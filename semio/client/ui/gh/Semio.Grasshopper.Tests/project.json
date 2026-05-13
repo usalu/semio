@@ -6,7 +6,7 @@
     "test": {
       "executor": "nx:run-commands",
       "options": {
-        "cwd": "semio/gh/Semio.Grasshopper.Tests",
+        "cwd": "semio/client/ui/gh/Semio.Grasshopper.Tests",
         "command": "dotnet test Semio.Grasshopper.Tests.csproj"
       }
     }

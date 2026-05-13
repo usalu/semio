@@ -5,7 +5,7 @@
     "dev": {
       "executor": "nx:run-commands",
       "options": {
-        "cwd": "coda/desktop",
+        "cwd": "coda/client/ui/desktop",
         "command": "bunx electron-forge start",
         "env": {
           "ELECTRON_DISABLE_SANDBOX": "1"
@@ -16,7 +16,7 @@
     "build": {
       "executor": "nx:run-commands",
       "options": {
-        "cwd": "coda/desktop",
+        "cwd": "coda/client/ui/desktop",
         "command": "bunx electron-forge make",
         "env": {
           "NODE_OPTIONS": "--max-old-space-size=8192"
@@ -27,7 +27,7 @@
     "publish": {
       "executor": "nx:run-commands",
       "options": {
-        "cwd": "coda/desktop",
+        "cwd": "coda/client/ui/desktop",
         "command": "electron-forge publish",
         "forwardAllArgs": true
       }

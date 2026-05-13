@@ -1,7 +1,7 @@
 {
   "name": "@semio/engine",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
-  "sourceRoot": "semio/engine",
+  "sourceRoot": "semio/client/bin/engine",
   "projectType": "application",
   "targets": {
     "update": {
@@ -13,7 +13,7 @@
     "dev": {
       "executor": "nx:run-commands",
       "options": {
-        "cwd": "semio/engine",
+        "cwd": "semio/client/bin/engine",
         "command": "uv run main.py",
         "forwardAllArgs": true,
         "env": {
@@ -24,7 +24,7 @@
     "build": {
       "executor": "nx:run-commands",
       "options": {
-        "cwd": "semio/engine",
+        "cwd": "semio/client/bin/engine",
         "command": "bun ./build.ts",
         "forwardAllArgs": true
       }
@@ -32,7 +32,7 @@
     "build-mcp-app": {
       "executor": "nx:run-commands",
       "options": {
-        "cwd": "semio/engine",
+        "cwd": "semio/client/bin/engine",
         "command": "bunx vite build --config vite.mcp-app.config.ts",
         "forwardAllArgs": true
       }
@@ -40,7 +40,7 @@
     "test": {
       "executor": "nx:run-commands",
       "options": {
-        "cwd": "semio/engine",
+        "cwd": "semio/client/bin/engine",
         "command": "bun ./test.ts",
         "forwardAllArgs": true
       }

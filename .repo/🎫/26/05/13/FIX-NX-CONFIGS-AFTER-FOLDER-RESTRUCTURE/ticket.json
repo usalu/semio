@@ -1,0 +1,13 @@
+{
+  "title": "Fix Nx Configs After Folder Restructure",
+  "emoji": "🎫",
+  "status": "open",
+  "description": "The folder layout has massively changed and was structured. Make sure all configs and imports are updated so everything runs with Nx. Initial failures observed from `bunx nx run-many -t build --all --nxBail`: `@semio/rs:build-wasm` fails on Windows with `spawn C:\\WINDOWS\\system32\\cmd.exe ENOENT` from `bun scripts/build-wasm.mjs`, and `@elements/ui:build` Storybook fails to resolve `@coda/desktop/renderer` from `elements/ui/.storybook/stories/OntologyTree.stories.tsx`. Work end-to-end until Nx is green or remaining blockers are validated and isolated.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1415"
+  },
+  "goal": "🎯aioptimizedrepo🎯sandboxedrepo🎯zerotouchdevcontainer",
+  "sessions": [
+    "⚪4b47b11f6ff54bff9a6ab8bd1db9905a"
+  ]
+}

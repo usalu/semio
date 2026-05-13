@@ -2,7 +2,7 @@
   "name": "@semio/grasshopper",
   "version": "1.0.0",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
-  "sourceRoot": "semio/gh/Semio.Grasshopper",
+  "sourceRoot": "semio/client/ui/gh/Semio.Grasshopper",
   "projectType": "application",
   "devDependencies": {
     "@semio/net": "*"

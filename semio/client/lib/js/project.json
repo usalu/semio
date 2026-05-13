@@ -6,7 +6,7 @@
       "executor": "nx:run-commands",
       "dependsOn": ["@semio/rs:build-wasm"],
       "options": {
-        "cwd": "semio/js",
+        "cwd": "semio/client/lib/js",
         "command": "bunx tsc --noEmit",
         "forwardAllArgs": true
       }
@@ -15,7 +15,7 @@
       "executor": "nx:run-commands",
       "dependsOn": ["@semio/rs:build-wasm"],
       "options": {
-        "cwd": "semio/js",
+        "cwd": "semio/client/lib/js",
         "command": "bunx vitest run",
         "forwardAllArgs": true,
         "env": {
@@ -27,7 +27,7 @@
       "executor": "nx:run-commands",
       "dependsOn": ["@semio/rs:build-wasm"],
       "options": {
-        "cwd": "semio/js",
+        "cwd": "semio/client/lib/js",
         "command": "bunx vitest run",
         "forwardAllArgs": true,
         "env": {
@@ -39,7 +39,7 @@
       "executor": "nx:run-commands",
       "dependsOn": ["@semio/rs:build-wasm"],
       "options": {
-        "cwd": "semio/js",
+        "cwd": "semio/client/lib/js",
         "command": "bunx vitest run --coverage",
         "forwardAllArgs": true
       }

@@ -11097,7 +11097,7 @@ pub mod gql {
             acc.push_str(frag);
             acc.push('\n');
         }
-        acc.push_str(include_str!("../graphql/target.schema.graphql"));
+        acc.push_str(include_str!("../../../schema/graphql/target.schema.graphql"));
         normalize_target_sdl(&acc)
     }
 
@@ -11332,7 +11332,7 @@ mod tests {
     /// @emoji 📜 `gql::sdl()` equals normalized `target.schema.graphql` (non-empty [`crate::sdl_registry::HasSdlFragment::SDL_FRAGMENT`] values prefix the embedded golden per macro-driven refactor).
     #[test]
     fn schema_matches_target_graphql_file() {
-        let disk = include_str!("../graphql/target.schema.graphql");
+        let disk = include_str!("../../../schema/graphql/target.schema.graphql");
         let from_fn = block_on(crate::gql::sdl());
         assert_eq!(crate::gql::normalize_target_sdl(disk), crate::gql::normalize_target_sdl(&from_fn));
     }

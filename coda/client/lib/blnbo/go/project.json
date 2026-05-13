@@ -6,7 +6,7 @@
     "test": {
       "executor": "nx:run-commands",
       "options": {
-        "cwd": "coda/blnbo/go",
+        "cwd": "coda/client/lib/blnbo/go",
         "command": "go test ./..."
       }
     }

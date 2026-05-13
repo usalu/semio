@@ -6,7 +6,7 @@
     "test": {
       "executor": "nx:run-commands",
       "options": {
-        "cwd": "repo/cursor",
+        "cwd": "repo/client/mcp/cursor",
         "command": "go test ./..."
       }
     }
