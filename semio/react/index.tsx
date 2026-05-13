@@ -68,8 +68,8 @@ import {
   Stat,
   Store,
   Tag,
-  theKitReadPoint,
   TheKit,
+  theKitReadPoint,
   Type,
 } from "@semio/js";
 import type { ReactNode } from "react";
@@ -100,7 +100,6 @@ export {
   Graph,
   Group,
   Kit,
-  Store,
   KIT_EVENT_STREAM_SUBSCRIPTION,
   kitReadPointKey,
   Layer,
@@ -114,24 +113,13 @@ export {
   Representation,
   Session,
   Stat,
+  Store,
   Tag,
-  theKitReadPoint,
   TheKit,
+  theKitReadPoint,
   Type,
 };
-export type {
-  Attribute,
-  Benchmark,
-  Camera,
-  Coordinate,
-  GraphRootKind,
-  Location,
-  Place,
-  Plane,
-  Point,
-  Side,
-  Vector,
-};
+export type { Attribute, Benchmark, Camera, Coordinate, GraphRootKind, Location, Place, Plane, Point, Side, Vector };
 // #endregion 🧷JsPublicExports
 
 // #region 🪝FieldBind
@@ -261,7 +249,7 @@ export function bindDefinedFieldToReact<E extends Entity, T>(opts: DefinedFieldB
 }
 // #endregion 🪝FieldBind
 
-// #region 🪝OpBind
+// #region 🪝OperationBind
 /** @emoji 🎛️ UI-facing operation lifecycle for {@link bindOperationToReact} (idle → pending → settled). */
 export type OperationStatus = { readonly kind: "idle" } | { readonly kind: "pending" } | { readonly kind: "settled"; readonly result: SetResult };
 
@@ -313,7 +301,7 @@ export function bindOperationToReact<E extends Entity, Args extends unknown[] = 
     return [run, status] as const;
   };
 }
-// #endregion 🪝OpBind
+// #endregion 🪝OperationBind
 
 // #region 🪝KitFieldBind
 /** @emoji 🪝 Kit-scoped field bind (uses {@link Store#bus} like {@link bindFieldToReact}). */
@@ -419,7 +407,7 @@ export function bindStoreFieldToReact<T>(opts: StoreFieldBindOptions<T>): () => 
 }
 // #endregion 🪝KitFieldBind
 
-// #region 🪝StoreOpBind
+// #region 🪝StoreOperationBind
 /** @emoji 🪝 Binds a {@link Store} operation to `[run, status]`. */
 export function bindStoreOperationToReact<Args extends unknown[] = []>(impl: (store: Store, ...args: Args) => Promise<SetResult>): (getStore: () => Store | null) => readonly [(...args: Args) => Promise<SetResult>, OperationStatus] {
   return function useStoreOp(getStore: () => Store | null): readonly [(...args: Args) => Promise<SetResult>, OperationStatus] {
@@ -455,7 +443,7 @@ export function bindStoreOperationToReact<Args extends unknown[] = []>(impl: (st
     return [run, status] as const;
   };
 }
-// #endregion 🪝StoreOpBind
+// #endregion 🪝StoreOperationBind
 
 // #region 🫳ShellHost
 /** @emoji 🪟 Sketchpad kit-store factory signature (host wiring; store shape is host-owned). */
@@ -505,14 +493,8 @@ export type KitWasmMountProviderProps = Readonly<{
 
 /** @emoji 🔌 Publishes host store/client and optionally wraps {@link StoreContextProvider} when {@code kit} is known. */
 export function KitWasmMountProvider(props: KitWasmMountProviderProps): React.ReactElement {
-  const host = React.useMemo<KitWasmHostState>(
-    () => ({ kitTabId: props.kitId ?? "", store: props.hostStore, kitClient: props.kitClient ?? null }),
-    [props.kitId, props.hostStore, props.kitClient],
-  );
-  const inner =
-    props.store != null
-      ? React.createElement(StoreContextProvider, { store: props.store, children: props.children })
-      : props.children;
+  const host = React.useMemo<KitWasmHostState>(() => ({ kitTabId: props.kitId ?? "", store: props.hostStore, kitClient: props.kitClient ?? null }), [props.kitId, props.hostStore, props.kitClient]);
+  const inner = props.store != null ? React.createElement(StoreContextProvider, { store: props.store, children: props.children }) : props.children;
   return React.createElement(KitWasmHostContext.Provider, { value: host }, inner);
 }
 
@@ -619,7 +601,7 @@ export function GraphContextProvider(props: { root: GraphRootKind; children: Rea
 export function useGraph(): Graph {
   const store = useStore();
   const ctx = React.useContext(GraphRootContext);
-  if (ctx == null) throw new Error("semio/react: useGraph requires <GraphContextProvider root=\"wip\"|\"authoritative\">.");
+  if (ctx == null) throw new Error('semio/react: useGraph requires <GraphContextProvider root="wip"|"authoritative">.');
   return React.useMemo(() => new Graph(store, ctx.root), [store, ctx.root]);
 }
 
@@ -823,7 +805,7 @@ export function useHasAuthorContext(): boolean {
 export function PieceUnderActiveDesignProvider(props: { pieceId: string; children: ReactNode }): React.ReactElement {
   const d = React.useContext(DesignContext);
   if (d == null) {
-    throw new Error("semio/react: PieceUnderActiveDesignProvider requires <DesignContextProvider designId=\"…\">.");
+    throw new Error('semio/react: PieceUnderActiveDesignProvider requires <DesignContextProvider designId="…">.');
   }
   return React.createElement(PieceContext.Provider, { value: { designId: d.designId, pieceId: props.pieceId } }, props.children);
 }
@@ -832,7 +814,7 @@ export function PieceUnderActiveDesignProvider(props: { pieceId: string; childre
 export function ConnectionUnderActiveDesignProvider(props: { connectionId: string; children: ReactNode }): React.ReactElement {
   const d = React.useContext(DesignContext);
   if (d == null) {
-    throw new Error("semio/react: ConnectionUnderActiveDesignProvider requires <DesignContextProvider designId=\"…\">.");
+    throw new Error('semio/react: ConnectionUnderActiveDesignProvider requires <DesignContextProvider designId="…">.');
   }
   return React.createElement(ConnectionContext.Provider, { value: { designId: d.designId, connectionId: props.connectionId } }, props.children);
 }
@@ -2295,7 +2277,6 @@ export function useConnectionAttributes(): FieldReadState<readonly Attribute[]> 
 // @emoji 🧹 Legacy InMemoryKitStore embedded block removed during single-source Kit migration; restore with GraphQL Kit stubs only.
 // #endregion ⚛️Embedded tests
 
-
 // #region 🧪Vitest
 if (import.meta.vitest) {
   const { readFileSync } = await import("node:fs");
@@ -2341,5 +2322,3 @@ if (import.meta.vitest) {
   });
 }
 // #endregion 🧪Vitest
-
-
