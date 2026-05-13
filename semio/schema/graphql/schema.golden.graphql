@@ -319,6 +319,110 @@ type OperationConnection implements EntityConnection {
 
 #endregion Operations
 
+#region Backbones
+
+enum BackboneStatus {
+  IDLE
+  SYNCING
+  BLOCKED
+}
+
+interface Backbone implements StrongEntity {
+  # Node
+  id: ID! # data // uuidv7
+  # Entity
+  hash: String! # cached
+  owner: Entity # reference // Store
+  owns: EntityConnection # reference // Nothing
+  # Backbone
+  uri: String!
+  status: BackboneStatus!
+}
+
+type BackboneEdge implements EntityEdge {
+  # EntityEdge
+  cursor: String! # computed
+  # EntityEdgeNode
+  node: Backbone! # reference
+}
+
+type BackboneConnection implements EntityConnection {
+  # EntityConnection
+  edges: [BackboneEdge!]! # computed
+  pageInfo: PageInfo! # computed
+  hash: String! # cached
+}
+
+interface BackboneCommand {
+  detach: ID!
+  sync: ID!
+}
+
+type BackboneCommandEdge implements EntityEdge {
+  # EntityEdge
+  cursor: String! # computed
+  # EntityEdgeNode
+  node: BackboneCommand! # reference
+}
+
+type BackboneCommandConnection implements EntityConnection {
+  # EntityConnection
+  edges: [BackboneCommandEdge!]! # computed
+  pageInfo: PageInfo! # computed
+  hash: String! # cached
+}
+
+#endregion Backbones
+
+#region Provider
+
+interface Provider implements StrongEntity {
+  # Node
+  id: ID! # data // uuidv7
+  # Entity
+  hash: String! # cached
+  owner: Entity # reference // Store
+  owns: EntityConnection # reference // Nothing
+  # Provider
+  backbones: BackboneConnection
+  backbone(id: ID!): Backbone
+}
+
+type ProviderEdge implements EntityEdge {
+  # EntityEdge
+  cursor: String! # computed
+  # EntityEdgeNode
+  node: Provider! # reference
+}
+
+type ProviderConnection implements EntityConnection {
+  # EntityConnection
+  edges: [ProviderEdge!]! # computed
+  pageInfo: PageInfo! # computed
+  hash: String! # cached
+}
+
+interface ProviderCommand {
+  createBackbone: ID!
+  attachBackbone: ID!
+}
+
+type ProviderCommandEdge implements EntityEdge {
+  # EntityEdge
+  cursor: String! # computed
+  # EntityEdgeNode
+  node: ProviderCommand! # reference
+}
+
+type ProviderCommandConnection implements EntityConnection {
+  # EntityConnection
+  edges: [ProviderCommandEdge!]! # computed
+  pageInfo: PageInfo! # computed
+  hash: String! # cached
+}
+
+#endregion Provider
+
 #endregion General
 
 #region Vector
@@ -9357,69 +9461,6 @@ type ConflictConnection implements EntityConnection {
 
 #region Store
 
-#region Backbones
-
-enum BackboneKind {
-  DEV
-  LOCAL
-  REMOTE
-}
-
-enum BackboneStatus {
-  IDLE
-  SYNCING
-  BLOCKED
-}
-
-type Backbone implements StrongEntity {
-  # Node
-  id: ID! # data // uuidv7
-  # Entity
-  hash: String! # cached
-  owner: Entity # reference // Store
-  owns: EntityConnection # reference // Nothing
-  # Backbone
-  uri: String!
-  kind: BackboneKind!
-}
-
-type BackboneEdge implements EntityEdge {
-  # EntityEdge
-  cursor: String! # computed
-  # EntityEdgeNode
-  node: Backbone! # reference
-}
-
-type BackboneConnection implements EntityConnection {
-  # EntityConnection
-  edges: [BackboneEdge!]! # computed
-  pageInfo: PageInfo! # computed
-  hash: String! # cached
-}
-
-type BackboneCommand {
-  detach(): ID!
-  status: BackboneStatus!
-  setActiveCheckpoint(id: ID!): ID!
-  syncNow: ID!
-}
-
-type BackboneCommandEdge implements EntityEdge {
-  # EntityEdge
-  cursor: String! # computed
-  # EntityEdgeNode
-  node: BackboneCommand! # reference
-}
-
-type BackboneCommandConnection implements EntityConnection {
-  # EntityConnection
-  edges: [BackboneCommandEdge!]! # computed
-  pageInfo: PageInfo! # computed
-  hash: String! # cached
-}
-
-#endregion Backbones
-
 type Store {
   wip: Graph!
   authoritative: Graph
@@ -9466,6 +9507,166 @@ type StoreCommandConnection implements EntityConnection {
 #endregion Commands
 
 #endregion Store
+
+#region Providers
+
+#region LocalProvider
+
+#region FileBackbone
+
+type FileBackbone implements Backbone {
+  # Node
+  id: ID! # data // uuidv7
+  # Entity
+  hash: String! # cached
+  owner: Entity # reference // Store
+  owns: EntityConnection # reference // Nothing
+  # Backbone
+  uri: String!
+  status: BackboneStatus!
+}
+
+type FileBackboneEdge implements EntityEdge {
+  # EntityEdge
+  cursor: String! # computed
+  # EntityEdgeNode
+  node: FileBackbone! # reference
+}
+
+type FileBackboneConnection implements EntityConnection {
+  # EntityConnection
+  edges: [FileBackboneEdge!]! # computed
+  pageInfo: PageInfo! # computed
+  hash: String! # cached
+}
+
+type FileBackboneCommand implements BackboneCommand {
+  detach: ID!
+  sync: ID!
+}
+
+type FileBackboneCommandEdge implements EntityEdge {
+  # EntityEdge
+  cursor: String! # computed
+  # EntityEdgeNode
+  node: FileBackboneCommand! # reference
+}
+
+type FileBackboneCommandConnection implements EntityConnection {
+  # EntityConnection
+  edges: [FileBackboneCommandEdge!]! # computed
+  pageInfo: PageInfo! # computed
+  hash: String! # cached
+}
+
+#endregion FileBackbone
+
+type LocalProvider implements Provider {
+  uri: String! # data
+  stores: StoreConnection # data
+  store(id: ID!): StoreCommand! # computed
+}
+
+type LocalProviderCommand implements ProviderCommand {
+  # ProviderCommand
+  createStore(uri: String!): ID!
+}
+
+type LocalProviderCommandEdge implements EntityEdge {
+  # EntityEdge
+  cursor: String! # computed
+  # EntityEdgeNode
+  node: LocalProviderCommand! # reference
+}
+
+type LocalProviderCommandConnection implements EntityConnection {
+  # EntityConnection
+  edges: [LocalProviderCommandEdge!]! # computed
+  pageInfo: PageInfo! # computed
+  hash: String! # cached
+}
+
+#endregion LocalProvider
+
+#region RemoteProvider
+
+#region WebsocketBackbone
+
+type WebsocketBackbone implements Backbone {
+  # Node
+  id: ID! # data // uuidv7
+  # Entity
+  hash: String! # cached
+  owner: Entity # reference // Store
+  owns: EntityConnection # reference // Nothing
+  # Backbone
+  uri: String!
+  status: BackboneStatus!
+}
+
+type WebsocketBackboneEdge implements EntityEdge {
+  # EntityEdge
+  cursor: String! # computed
+  # EntityEdgeNode
+  node: WebsocketBackbone! # reference
+}
+
+type WebsocketBackboneConnection implements EntityConnection {
+  # EntityConnection
+  edges: [WebsocketBackboneEdge!]! # computed
+  pageInfo: PageInfo! # computed
+  hash: String! # cached
+}
+
+type WebsocketBackboneCommand implements BackboneCommand {
+  detach: ID!
+  sync: ID!
+}
+
+type WebsocketBackboneCommandEdge implements EntityEdge {
+  # EntityEdge
+  cursor: String! # computed
+  # EntityEdgeNode
+  node: WebsocketBackboneCommand! # reference
+}
+
+type WebsocketBackboneCommandConnection implements EntityConnection {
+  # EntityConnection
+  edges: [WebsocketBackboneCommandEdge!]! # computed
+  pageInfo: PageInfo! # computed
+  hash: String! # cached
+}
+
+#endregion WebsocketBackbone
+
+type RemoteProvider implements Provider {
+  uri: String! # data
+  stores: StoreConnection # data
+  store(id: ID!): StoreCommand! # computed
+}
+
+type RemoteProviderCommand {
+  # RemoteProviderCommand
+  createStore(uri: String!): ID!
+}
+
+type RemoteProviderCommandEdge implements EntityEdge {
+  # EntityEdge
+  cursor: String! # computed
+  # EntityEdgeNode
+  node: RemoteProviderCommand! # reference
+}
+
+type RemoteProviderCommandConnection implements EntityConnection {
+  # EntityConnection
+  edges: [RemoteProviderCommandEdge!]! # computed
+  pageInfo: PageInfo! # computed
+  hash: String! # cached
+}
+
+#endregion RemoteProvider
+
+#endregion Providers
 
 #region Sessions
 
