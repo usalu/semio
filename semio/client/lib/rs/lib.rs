@@ -14,6 +14,14 @@ macro_rules! register_output_types {
     }};
 }
 
+/// @emoji 🧩 Chains `SchemaBuilder::register_input_type` for `InputObject` shapes not yet referenced by `Query`/`Mutation` fields (keeps golden `input` lines in `gql::sdl()`).
+#[macro_export]
+macro_rules! register_input_types {
+    ($builder:expr, $( $ty:ty ),+ $(,)? ) => {{
+        $builder $( .register_input_type::<$ty>() )+
+    }};
+}
+
 /// @emoji 🪢 `entity_relay_sync!` — relay Edge/Connection for `SimpleObject` entities with sync child digests (`compute_entity_hash`, …).
 #[macro_export]
 macro_rules! entity_relay_sync {
@@ -496,7 +504,7 @@ pub mod timestamp {
     #[derive(Clone, Debug, Default, Eq, PartialEq)]
     pub struct Timestamp(pub String);
 
-    #[Scalar]
+    #[Scalar(name = "Timestamp")]
     impl ScalarType for Timestamp {
         fn parse(value: Value) -> InputValueResult<Self> {
             match value {
@@ -511,6 +519,31 @@ pub mod timestamp {
 }
 
 //#endregion ⏱️ timestamp
+
+//#region 🎨 color
+
+pub mod color {
+    //! 🎨 Hex/CSS color token scalar matching golden `scalar Color`.
+    use async_graphql::{InputValueError, InputValueResult, Scalar, ScalarType, Value};
+
+    #[derive(Clone, Debug, Default, Eq, PartialEq)]
+    pub struct Color(pub String);
+
+    #[Scalar(name = "Color")]
+    impl ScalarType for Color {
+        fn parse(value: Value) -> InputValueResult<Self> {
+            match value {
+                Value::String(s) => Ok(Self(s)),
+                _ => Err(InputValueError::expected_type(value)),
+            }
+        }
+        fn to_value(&self) -> Value {
+            Value::String(self.0.clone())
+        }
+    }
+}
+
+//#endregion 🎨 color
 
 //#region 🚨 error
 
@@ -4173,6 +4206,17 @@ pub mod vcs {
     use crate::operation;
     use crate::timestamp::Timestamp;
 
+    //#region 🏷️ golden_version_kind
+    /// @emoji 🏷️ SDL `VersionKind` (`INITIAL_KIT` | `MATERIALIZED`) on golden `Version`.
+    #[derive(Clone, Copy, PartialEq, Eq, async_graphql::Enum)]
+    pub enum VersionKind {
+        #[graphql(name = "INITIAL_KIT")]
+        InitialKit,
+        #[graphql(name = "MATERIALIZED")]
+        Materialized,
+    }
+    //#endregion 🏷️ golden_version_kind
+
     //#region 🪪 change
     pub struct Change {
         pub id: Id,
@@ -5746,7 +5790,10 @@ pub mod operation {
     use crate::geom::{OffsetInput, PositionInput};
     use crate::hash::h;
     use crate::id::Id;
-    use crate::gql::interfaces::{empty_entity_connection, EntityConnectionInterface, EntityInterface};
+    use crate::gql::interfaces::{
+        empty_entity_connection, empty_modification_singleton, EntityConnectionInterface, EntityInterface, GqlModificationInterface,
+        PubInputInterface,
+    };
     use crate::meta::{ConceptInput, QualityInput, TagInput};
     use crate::vcs::Edit;
 
@@ -7159,6 +7206,15 @@ pub mod operation {
         pub async fn owns(&self) -> Option<EntityConnectionInterface> {
             Some(empty_entity_connection())
         }
+        pub async fn scope(&self) -> EntityInterface {
+            EntityInterface::Piece(self.piece.clone())
+        }
+        pub async fn input(&self) -> Option<PubInputInterface> {
+            None
+        }
+        pub async fn modification(&self) -> GqlModificationInterface {
+            GqlModificationInterface::Stub(empty_modification_singleton())
+        }
         pub async fn piece(&self) -> Arc<crate::kit::design::piece::Piece> {
             self.piece.clone()
         }
@@ -7193,6 +7249,15 @@ pub mod operation {
         pub async fn owns(&self) -> Option<EntityConnectionInterface> {
             Some(empty_entity_connection())
         }
+        pub async fn scope(&self) -> EntityInterface {
+            EntityInterface::Piece(self.piece.clone())
+        }
+        pub async fn input(&self) -> Option<PubInputInterface> {
+            None
+        }
+        pub async fn modification(&self) -> GqlModificationInterface {
+            GqlModificationInterface::Stub(empty_modification_singleton())
+        }
         pub async fn piece(&self) -> Arc<crate::kit::design::piece::Piece> {
             self.piece.clone()
         }
@@ -7226,6 +7291,20 @@ pub mod operation {
         #[graphql(name = "owns")]
         pub async fn owns(&self) -> Option<EntityConnectionInterface> {
             Some(empty_entity_connection())
+        }
+        pub async fn scope(&self) -> EntityInterface {
+            self.pieces
+                .first()
+                .cloned()
+                .map(EntityInterface::Piece)
+                .or_else(|| self.owner_edit.upgrade().map(EntityInterface::Edit))
+                .unwrap_or_else(|| EntityInterface::LocalProvider(Arc::new(crate::gql::LocalProvider::new(Id::default(), String::new()))))
+        }
+        pub async fn input(&self) -> Option<PubInputInterface> {
+            None
+        }
+        pub async fn modification(&self) -> GqlModificationInterface {
+            GqlModificationInterface::Stub(empty_modification_singleton())
         }
         pub async fn pieces(&self) -> Vec<Arc<crate::kit::design::piece::Piece>> {
             self.pieces.clone()
@@ -7267,6 +7346,15 @@ pub mod operation {
         pub async fn owns(&self) -> Option<EntityConnectionInterface> {
             Some(empty_entity_connection())
         }
+        pub async fn scope(&self) -> EntityInterface {
+            EntityInterface::Kit(self.kit.clone())
+        }
+        pub async fn input(&self) -> Option<PubInputInterface> {
+            None
+        }
+        pub async fn modification(&self) -> GqlModificationInterface {
+            GqlModificationInterface::Stub(empty_modification_singleton())
+        }
         pub async fn kit(&self) -> Arc<crate::kit::Kit> {
             self.kit.clone()
         }
@@ -7301,6 +7389,15 @@ pub mod operation {
         pub async fn owns(&self) -> Option<EntityConnectionInterface> {
             Some(empty_entity_connection())
         }
+        pub async fn scope(&self) -> EntityInterface {
+            EntityInterface::Kit(self.entity.clone())
+        }
+        pub async fn input(&self) -> Option<PubInputInterface> {
+            None
+        }
+        pub async fn modification(&self) -> GqlModificationInterface {
+            GqlModificationInterface::Stub(empty_modification_singleton())
+        }
         pub async fn entity(&self) -> Arc<crate::kit::Kit> {
             self.entity.clone()
         }
@@ -7324,7 +7421,10 @@ pub mod operation {
         field(name = "id", ty = "crate::id::Id"),
         field(name = "hash", ty = "String"),
         field(name = "owner", method = "owner", ty = "Option<crate::gql::interfaces::EntityInterface>"),
-        field(name = "owns", method = "owns", ty = "Option<crate::gql::interfaces::EntityConnectionInterface>")
+        field(name = "owns", method = "owns", ty = "Option<crate::gql::interfaces::EntityConnectionInterface>"),
+        field(name = "scope", ty = "crate::gql::interfaces::EntityInterface"),
+        field(name = "input", ty = "Option<crate::gql::interfaces::PubInputInterface>"),
+        field(name = "modification", ty = "crate::gql::interfaces::GqlModificationInterface")
     )]
     pub enum OperationInterface {
         CreatedFixedPiece(Arc<CreatedFixedPiece>),
@@ -9785,12 +9885,18 @@ pub mod gql {
     //#region 🌐 interfaces
     /// @emoji 🌐 SDL `Node`, `Entity`, `EntityConnection`, `EntityEdge`, and `Workspace` interface shells (code-first; mirrors `schema.golden.graphql`).
     pub mod interfaces {
-        use std::sync::{Arc, Weak};
+        use std::sync::{Arc, OnceLock, Weak};
 
-        use async_graphql::Interface;
+        use async_graphql::{Context, Interface, Object};
 
-        use crate::geom::entity::{Coordinate, Location, Offset, Plane, Point, Position, Vector};
-        use crate::gql_relay::{CoordinateEdge, LocationEdge, OffsetEdge, PlaneEdge, PointEdge, PositionEdge, VectorEdge};
+        use crate::geom::entity::{Coordinate, Location, Offset, Plane, Place, Point, Position, Vector};
+        use crate::gql_relay::{
+            AuthorConnection, ChangeConnection, CheckpointConnection, CoordinateEdge, EditConnection, LocationEdge, OffsetEdge, PlaneEdge,
+            PointEdge, PositionEdge, VectorEdge,
+        };
+        use crate::id::Id;
+        use crate::meta::Author;
+        use crate::timestamp::Timestamp;
 
         /// @emoji 🌐 SDL `interface EntityConnection` — shared relay tail (`StoreConnection`, golden `PageInfoConnection` for empty owns).
         #[derive(Interface)]
@@ -9918,6 +10024,510 @@ pub mod gql {
             Position(PositionEdge),
             Location(LocationEdge),
         }
+
+        /// @emoji 🌐 SDL `interface WeakEntity` — hash-backed graph nodes sharing the golden `Entity` tail (`id`, `hash`, `owner`, `owns`).
+        #[derive(Clone, Interface)]
+        #[graphql(
+            name = "WeakEntity",
+            field(name = "id", ty = "crate::id::Id"),
+            field(name = "hash", ty = "String"),
+            field(name = "owner", ty = "Option<crate::gql::interfaces::EntityInterface>"),
+            field(name = "owns", ty = "Option<crate::gql::interfaces::EntityConnectionInterface>")
+        )]
+        pub enum WeakEntityInterface {
+            Vector(Arc<Vector>),
+            Point(Arc<Point>),
+            Coordinate(Arc<Coordinate>),
+            Offset(Arc<Offset>),
+            Plane(Arc<Plane>),
+            Position(Arc<Position>),
+            Location(Arc<Location>),
+        }
+
+        //#region 🧱 golden_interface_stubs
+        /// @emoji 🧷 SDL `EmptyDiff` — placeholder [`Diff`] implementor until geometry `*Diff` rows wire into this enum.
+        #[derive(Clone, Debug, Default)]
+        pub struct GqlEmptyDiff {
+            pub id: Id,
+        }
+
+        #[Object(name = "EmptyDiff")]
+        impl GqlEmptyDiff {
+            async fn id(&self) -> Id {
+                self.id.clone()
+            }
+            async fn hash(&self) -> String {
+                crate::hash::h(&["empty-diff", self.id.as_str()])
+            }
+            async fn owner(&self) -> Option<EntityInterface> {
+                None
+            }
+            async fn owns(&self) -> Option<EntityConnectionInterface> {
+                Some(empty_entity_connection())
+            }
+        }
+
+        /// @emoji 🧷 SDL `EmptyModification` — placeholder [`Modification`] shell for golden `Operation.modification`.
+        #[derive(Clone, Debug, Default)]
+        pub struct EmptyModification {
+            pub id: Id,
+        }
+
+        #[Object(name = "EmptyModification")]
+        impl EmptyModification {
+            async fn id(&self) -> Id {
+                self.id.clone()
+            }
+            async fn hash(&self) -> String {
+                crate::hash::h(&["empty-modification", self.id.as_str()])
+            }
+            async fn owner(&self) -> Option<EntityInterface> {
+                None
+            }
+            async fn owns(&self) -> Option<EntityConnectionInterface> {
+                Some(empty_entity_connection())
+            }
+            async fn before(&self) -> EntityInterface {
+                EntityInterface::LocalProvider(Arc::new(crate::gql::LocalProvider::new(Id::default(), String::new())))
+            }
+            async fn diff(&self) -> GqlDiffInterface {
+                GqlDiffInterface::Stub(Arc::new(GqlEmptyDiff { id: self.id.clone() }))
+            }
+            async fn after(&self) -> EntityInterface {
+                EntityInterface::RemoteProvider(Arc::new(crate::gql::RemoteProvider {
+                    id: Id::default(),
+                    uri: String::new(),
+                    url: String::new(),
+                }))
+            }
+        }
+
+        static EMPTY_MODIFICATION_SINGLETON: OnceLock<Arc<EmptyModification>> = OnceLock::new();
+
+        /// @emoji 🧷 Shared [`EmptyModification`] for [`crate::operation::OperationInterface::modification`] stubs.
+        pub fn empty_modification_singleton() -> Arc<EmptyModification> {
+            EMPTY_MODIFICATION_SINGLETON.get_or_init(|| Arc::new(EmptyModification { id: Id::default() })).clone()
+        }
+
+        /// @emoji 🧷 SDL `EmptyPubInput` — placeholder [`Input`] implementor until `*Input` GraphQL types implement the interface.
+        #[derive(Clone, Debug, Default)]
+        pub struct EmptyPubInput {
+            pub id: Id,
+        }
+
+        #[Object(name = "EmptyPubInput")]
+        impl EmptyPubInput {
+            async fn id(&self) -> Id {
+                self.id.clone()
+            }
+            async fn hash(&self) -> String {
+                crate::hash::h(&["empty-pub-input", self.id.as_str()])
+            }
+            async fn owner(&self) -> Option<EntityInterface> {
+                None
+            }
+            async fn owns(&self) -> Option<EntityConnectionInterface> {
+                Some(empty_entity_connection())
+            }
+        }
+
+        /// @emoji 🧷 SDL `EmptyDocument` — placeholder [`Document`] implementor (golden has no concrete `Document` yet).
+        #[derive(Clone, Debug, Default)]
+        pub struct EmptyDocument {
+            pub id: Id,
+        }
+
+        #[Object(name = "EmptyDocument")]
+        impl EmptyDocument {
+            async fn id(&self) -> Id {
+                self.id.clone()
+            }
+            async fn hash(&self) -> String {
+                crate::hash::h(&["empty-document", self.id.as_str()])
+            }
+            async fn owner(&self) -> Option<EntityInterface> {
+                None
+            }
+            async fn owns(&self) -> Option<EntityConnectionInterface> {
+                Some(empty_entity_connection())
+            }
+            async fn name(&self) -> String {
+                String::new()
+            }
+            async fn description(&self) -> String {
+                String::new()
+            }
+            async fn icon(&self) -> String {
+                String::new()
+            }
+            async fn created_at(&self) -> Option<Timestamp> {
+                None
+            }
+            async fn created_by(&self) -> Option<Author> {
+                None
+            }
+            async fn authored_by(&self) -> AuthorConnection {
+                AuthorConnection::from_entities(Vec::new())
+            }
+            async fn changed_in(&self) -> CheckpointConnection {
+                CheckpointConnection::from_checkpoints(Vec::new()).await
+            }
+            async fn last_changed_at(&self) -> Option<Timestamp> {
+                None
+            }
+            async fn last_changed_by(&self) -> Option<Author> {
+                None
+            }
+            async fn last_changed_in(&self) -> Option<Arc<crate::vcs::Checkpoint>> {
+                None
+            }
+            async fn changes(&self) -> ChangeConnection {
+                ChangeConnection::empty()
+            }
+            async fn edits(&self) -> EditConnection {
+                EditConnection::empty()
+            }
+            #[graphql(name = "previewImage")]
+            async fn preview_image(&self) -> Option<crate::meta::File> {
+                None
+            }
+        }
+
+        /// @emoji 🧷 SDL `EmptyEvent` — placeholder [`Event`] implementor until event rows implement the interface.
+        #[derive(Clone, Debug, Default)]
+        pub struct EmptyEvent {
+            pub id: Id,
+        }
+
+        #[Object(name = "EmptyEvent")]
+        impl EmptyEvent {
+            async fn id(&self) -> Id {
+                self.id.clone()
+            }
+            async fn hash(&self) -> String {
+                crate::hash::h(&["empty-event", self.id.as_str()])
+            }
+            async fn owner(&self) -> Option<EntityInterface> {
+                None
+            }
+            async fn owns(&self) -> Option<EntityConnectionInterface> {
+                Some(empty_entity_connection())
+            }
+            async fn timestamp(&self) -> Timestamp {
+                Timestamp::default()
+            }
+            async fn involves(&self) -> Option<EntityConnectionInterface> {
+                Some(empty_entity_connection())
+            }
+        }
+
+        /// @emoji 🧷 SDL `EmptyRichStrong` — placeholder [`RichStrongEntity`] until every artifact row exposes rich fields.
+        #[derive(Clone, Debug, Default)]
+        pub struct EmptyRichStrong {
+            pub id: Id,
+        }
+
+        #[Object(name = "EmptyRichStrong")]
+        impl EmptyRichStrong {
+            async fn id(&self) -> Id {
+                self.id.clone()
+            }
+            async fn hash(&self) -> String {
+                crate::hash::h(&["empty-rich-strong", self.id.as_str()])
+            }
+            async fn owner(&self) -> Option<EntityInterface> {
+                None
+            }
+            async fn owns(&self) -> Option<EntityConnectionInterface> {
+                Some(empty_entity_connection())
+            }
+            async fn name(&self) -> String {
+                String::new()
+            }
+            async fn description(&self) -> String {
+                String::new()
+            }
+            async fn icon(&self) -> String {
+                String::new()
+            }
+            async fn created_at(&self) -> Option<Timestamp> {
+                None
+            }
+            async fn created_by(&self) -> Option<Author> {
+                None
+            }
+        }
+
+        /// @emoji 🧷 SDL `EmptyArtifact` — placeholder [`Artifact`] until concrete artifact fields are unified on entities.
+        #[derive(Clone, Debug, Default)]
+        pub struct EmptyArtifact {
+            pub id: Id,
+        }
+
+        #[Object(name = "EmptyArtifact")]
+        impl EmptyArtifact {
+            async fn id(&self) -> Id {
+                self.id.clone()
+            }
+            async fn hash(&self) -> String {
+                crate::hash::h(&["empty-artifact", self.id.as_str()])
+            }
+            async fn owner(&self) -> Option<EntityInterface> {
+                None
+            }
+            async fn owns(&self) -> Option<EntityConnectionInterface> {
+                Some(empty_entity_connection())
+            }
+            async fn name(&self) -> String {
+                String::new()
+            }
+            async fn description(&self) -> String {
+                String::new()
+            }
+            async fn icon(&self) -> String {
+                String::new()
+            }
+            async fn created_at(&self) -> Option<Timestamp> {
+                None
+            }
+            async fn created_by(&self) -> Option<Author> {
+                None
+            }
+            async fn authored_by(&self) -> AuthorConnection {
+                AuthorConnection::from_entities(Vec::new())
+            }
+            async fn changed_in(&self) -> CheckpointConnection {
+                CheckpointConnection::from_checkpoints(Vec::new()).await
+            }
+            async fn last_changed_at(&self) -> Option<Timestamp> {
+                None
+            }
+            async fn last_changed_by(&self) -> Option<Author> {
+                None
+            }
+            async fn last_changed_in(&self) -> Option<Arc<crate::vcs::Checkpoint>> {
+                None
+            }
+            async fn changes(&self) -> ChangeConnection {
+                ChangeConnection::empty()
+            }
+            async fn edits(&self) -> EditConnection {
+                EditConnection::empty()
+            }
+        }
+
+        /// @emoji 🌐 SDL `interface Diff` — hash-backed diff projection (placeholder + future `VectorDiff`, …).
+        #[derive(Clone, Interface)]
+        #[graphql(
+            name = "Diff",
+            field(name = "id", ty = "crate::id::Id"),
+            field(name = "hash", ty = "String"),
+            field(name = "owner", ty = "Option<crate::gql::interfaces::EntityInterface>"),
+            field(name = "owns", ty = "Option<crate::gql::interfaces::EntityConnectionInterface>")
+        )]
+        pub enum GqlDiffInterface {
+            Stub(Arc<GqlEmptyDiff>),
+        }
+
+        /// @emoji 🌐 SDL `interface Modification` — `before` / `diff` / `after` triple shell.
+        #[derive(Clone, Interface)]
+        #[graphql(
+            name = "Modification",
+            field(name = "id", ty = "crate::id::Id"),
+            field(name = "hash", ty = "String"),
+            field(name = "owner", ty = "Option<crate::gql::interfaces::EntityInterface>"),
+            field(name = "owns", ty = "Option<crate::gql::interfaces::EntityConnectionInterface>"),
+            field(name = "before", ty = "crate::gql::interfaces::EntityInterface"),
+            field(name = "diff", ty = "crate::gql::interfaces::GqlDiffInterface"),
+            field(name = "after", ty = "crate::gql::interfaces::EntityInterface")
+        )]
+        pub enum GqlModificationInterface {
+            Stub(Arc<EmptyModification>),
+        }
+
+        /// @emoji 🌐 SDL `interface Input` — operation-side argument projection (`*Input` types implement this in golden).
+        #[derive(Clone, Interface)]
+        #[graphql(
+            name = "Input",
+            field(name = "id", ty = "crate::id::Id"),
+            field(name = "hash", ty = "String"),
+            field(name = "owner", ty = "Option<crate::gql::interfaces::EntityInterface>"),
+            field(name = "owns", ty = "Option<crate::gql::interfaces::EntityConnectionInterface>")
+        )]
+        pub enum PubInputInterface {
+            Stub(Arc<EmptyPubInput>),
+        }
+
+        /// @emoji 🌐 SDL `interface Document` — preview-capable artifact (`EmptyDocument` placeholder).
+        #[derive(Clone, Interface)]
+        #[graphql(
+            name = "Document",
+            field(name = "id", ty = "crate::id::Id"),
+            field(name = "hash", ty = "String"),
+            field(name = "owner", ty = "Option<crate::gql::interfaces::EntityInterface>"),
+            field(name = "owns", ty = "Option<crate::gql::interfaces::EntityConnectionInterface>"),
+            field(name = "name", ty = "String"),
+            field(name = "description", ty = "String"),
+            field(name = "icon", ty = "String"),
+            field(name = "createdAt", method = "created_at", ty = "Option<crate::timestamp::Timestamp>"),
+            field(name = "createdBy", method = "created_by", ty = "Option<crate::meta::Author>"),
+            field(name = "authoredBy", method = "authored_by", ty = "crate::gql_relay::AuthorConnection"),
+            field(name = "changedIn", method = "changed_in", ty = "crate::gql_relay::CheckpointConnection"),
+            field(name = "lastChangedAt", method = "last_changed_at", ty = "Option<crate::timestamp::Timestamp>"),
+            field(name = "lastChangedBy", method = "last_changed_by", ty = "Option<crate::meta::Author>"),
+            field(name = "lastChangedIn", method = "last_changed_in", ty = "Option<std::sync::Arc<crate::vcs::Checkpoint>>"),
+            field(name = "changes", ty = "crate::gql_relay::ChangeConnection"),
+            field(name = "edits", ty = "crate::gql_relay::EditConnection"),
+            field(name = "previewImage", method = "preview_image", ty = "Option<crate::meta::File>")
+        )]
+        pub enum DocumentInterface {
+            Stub(Arc<EmptyDocument>),
+        }
+
+        /// @emoji 🌐 SDL `interface Event` — timestamped weak entity (`EmptyEvent` placeholder).
+        #[derive(Clone, Interface)]
+        #[graphql(
+            name = "Event",
+            field(name = "id", ty = "crate::id::Id"),
+            field(name = "hash", ty = "String"),
+            field(name = "owner", ty = "Option<crate::gql::interfaces::EntityInterface>"),
+            field(name = "owns", ty = "Option<crate::gql::interfaces::EntityConnectionInterface>"),
+            field(name = "timestamp", ty = "crate::timestamp::Timestamp"),
+            field(name = "involves", ty = "Option<crate::gql::interfaces::EntityConnectionInterface>")
+        )]
+        pub enum EventInterface {
+            Stub(Arc<EmptyEvent>),
+        }
+
+        /// @emoji 🌐 SDL `interface RichStrongEntity` — titled uuid entities (`EmptyRichStrong` placeholder + future concrete rows).
+        #[derive(Clone, Interface)]
+        #[graphql(
+            name = "RichStrongEntity",
+            field(name = "id", ty = "crate::id::Id"),
+            field(name = "hash", ty = "String"),
+            field(name = "owner", ty = "Option<crate::gql::interfaces::EntityInterface>"),
+            field(name = "owns", ty = "Option<crate::gql::interfaces::EntityConnectionInterface>"),
+            field(name = "name", ty = "String"),
+            field(name = "description", ty = "String"),
+            field(name = "icon", ty = "String"),
+            field(name = "createdAt", method = "created_at", ty = "Option<crate::timestamp::Timestamp>"),
+            field(name = "createdBy", method = "created_by", ty = "Option<crate::meta::Author>")
+        )]
+        pub enum RichStrongEntityInterface {
+            Stub(Arc<EmptyRichStrong>),
+        }
+
+        /// @emoji 🌐 SDL `interface Artifact` — authored change graph on rich entities (`EmptyArtifact` placeholder).
+        #[derive(Clone, Interface)]
+        #[graphql(
+            name = "Artifact",
+            field(name = "id", ty = "crate::id::Id"),
+            field(name = "hash", ty = "String"),
+            field(name = "owner", ty = "Option<crate::gql::interfaces::EntityInterface>"),
+            field(name = "owns", ty = "Option<crate::gql::interfaces::EntityConnectionInterface>"),
+            field(name = "name", ty = "String"),
+            field(name = "description", ty = "String"),
+            field(name = "icon", ty = "String"),
+            field(name = "createdAt", method = "created_at", ty = "Option<crate::timestamp::Timestamp>"),
+            field(name = "createdBy", method = "created_by", ty = "Option<crate::meta::Author>"),
+            field(name = "authoredBy", method = "authored_by", ty = "crate::gql_relay::AuthorConnection"),
+            field(name = "changedIn", method = "changed_in", ty = "crate::gql_relay::CheckpointConnection"),
+            field(name = "lastChangedAt", method = "last_changed_at", ty = "Option<crate::timestamp::Timestamp>"),
+            field(name = "lastChangedBy", method = "last_changed_by", ty = "Option<crate::meta::Author>"),
+            field(name = "lastChangedIn", method = "last_changed_in", ty = "Option<std::sync::Arc<crate::vcs::Checkpoint>>"),
+            field(name = "changes", ty = "crate::gql_relay::ChangeConnection"),
+            field(name = "edits", ty = "crate::gql_relay::EditConnection")
+        )]
+        pub enum ArtifactInterface {
+            Stub(Arc<EmptyArtifact>),
+        }
+
+        /// @emoji 🌐 SDL `interface StrongEntity` — uuidv7-backed [`Entity`] projection (mirrors golden implementors reachable today).
+        #[derive(Clone, Interface)]
+        #[graphql(
+            name = "StrongEntity",
+            field(name = "id", ty = "crate::id::Id"),
+            field(name = "hash", ty = "String"),
+            field(name = "owner", ty = "Option<crate::gql::interfaces::EntityInterface>"),
+            field(name = "owns", ty = "Option<crate::gql::interfaces::EntityConnectionInterface>")
+        )]
+        pub enum StrongEntityInterface {
+            Graph(Arc<crate::vcs::Graph>),
+            Session(Arc<crate::vcs::Session>),
+            Edit(Arc<crate::vcs::Edit>),
+            Alternative(Arc<crate::vcs::Alternative>),
+            Checkpoint(Arc<crate::vcs::Checkpoint>),
+            Conflict(Arc<crate::vcs::Conflict>),
+            LocalProvider(Arc<crate::gql::LocalProvider>),
+            RemoteProvider(Arc<crate::gql::RemoteProvider>),
+            Kit(Arc<crate::kit::Kit>),
+            Design(Arc<crate::kit::design::Design>),
+            Type(Arc<crate::kit::r#type::Type>),
+            Representation(Arc<crate::kit::r#type::Representation>),
+            Connector(Arc<crate::kit::r#type::Connector>),
+            Port(Arc<crate::kit::r#type::Port>),
+            Connection(Arc<crate::kit::design::connection::Connection>),
+            Piece(Arc<crate::kit::design::piece::Piece>),
+            Tag(Arc<crate::meta::Tag>),
+            Concept(Arc<crate::meta::Concept>),
+            Quality(Arc<crate::meta::Quality>),
+            Change(Arc<crate::vcs::Change>),
+            TheKit(Arc<crate::vcs::TheKit>),
+            Side(Arc<crate::kit::design::connection::Side>),
+            Place(Arc<Place>),
+            Operation(crate::operation::OperationInterface),
+        }
+
+        /// @emoji 🌐 SDL `interface BackboneCommand` — `detach` / `sync` command handles on backbones.
+        #[derive(Clone, Interface)]
+        #[graphql(
+            name = "BackboneCommand",
+            field(name = "detach", ty = "crate::id::Id"),
+            field(name = "sync", ty = "crate::id::Id")
+        )]
+        pub enum BackboneCommandInterface {
+            File(Arc<FileBackboneCommand>),
+            Websocket(Arc<WebsocketBackboneCommand>),
+        }
+
+        /// @emoji 🎛️ Golden `FileBackboneCommand` (`detach` / `sync`).
+        #[derive(Clone, Debug, Default)]
+        pub struct FileBackboneCommand;
+
+        #[Object(name = "FileBackboneCommand")]
+        impl FileBackboneCommand {
+            async fn detach(&self, ctx: &Context<'_>) -> Id {
+                let Ok(rt) = ctx.data::<std::sync::Arc<crate::worker::ParentStore>>() else {
+                    return Id::default();
+                };
+                let request_id = Id::new().await;
+                rt.dispatch_wip(crate::operation::Command::BackboneDetach { request_id, connection_uri: String::new() }).await
+            }
+            async fn sync(&self, ctx: &Context<'_>) -> Id {
+                let _ = ctx;
+                Id::new().await
+            }
+        }
+
+        /// @emoji 🎛️ Golden `WebsocketBackboneCommand` (`detach` / `sync`).
+        #[derive(Clone, Debug, Default)]
+        pub struct WebsocketBackboneCommand;
+
+        #[Object(name = "WebsocketBackboneCommand")]
+        impl WebsocketBackboneCommand {
+            async fn detach(&self, ctx: &Context<'_>) -> Id {
+                let Ok(rt) = ctx.data::<std::sync::Arc<crate::worker::ParentStore>>() else {
+                    return Id::default();
+                };
+                let request_id = Id::new().await;
+                rt.dispatch_wip(crate::operation::Command::BackboneDetach { request_id, connection_uri: String::new() }).await
+            }
+            async fn sync(&self, ctx: &Context<'_>) -> Id {
+                let _ = ctx;
+                Id::new().await
+            }
+        }
+        //#endregion 🧱 golden_interface_stubs
 
         #[derive(Clone, Interface)]
         #[graphql(
@@ -10073,8 +10683,8 @@ pub mod gql {
         pub async fn owns(&self) -> Option<interfaces::EntityConnectionInterface> {
             Some(interfaces::empty_entity_connection())
         }
-        pub async fn backbones(&self) -> Option<BackboneConnection> {
-            Some(BackboneConnection::empty())
+        pub async fn backbones(&self) -> BackboneConnection {
+            BackboneConnection::empty()
         }
         pub async fn backbone(&self, #[graphql(name = "id")] _id: Id) -> Option<BackboneInterface> {
             None
@@ -10163,41 +10773,71 @@ pub mod gql {
         }
     }
 
+    /// @emoji 🛰️ Golden `interface Provider` — concrete [`LocalProvider`] / [`RemoteProvider`].
+    #[derive(Clone, async_graphql::Interface)]
+    #[graphql(
+        name = "Provider",
+        field(name = "id", ty = "crate::id::Id"),
+        field(name = "hash", ty = "String"),
+        field(name = "owner", ty = "Option<crate::gql::interfaces::EntityInterface>"),
+        field(name = "owns", ty = "Option<crate::gql::interfaces::EntityConnectionInterface>"),
+        field(name = "backbones", ty = "crate::gql::BackboneConnection"),
+        field(name = "backbone", arg(name = "id", ty = "crate::id::Id"), ty = "Option<crate::gql::BackboneInterface>")
+    )]
+    pub enum ProviderInterface {
+        Local(Arc<LocalProvider>),
+        Remote(Arc<RemoteProvider>),
+    }
+
     /// @emoji 🎛️ Golden `LocalProviderCommand` (`createBackbone` / `attachBackbone`).
+    #[derive(Clone, Copy, Debug, Default)]
     pub struct LocalProviderCommand;
 
     #[Object(name = "LocalProviderCommand")]
     impl LocalProviderCommand {
         #[graphql(name = "createBackbone")]
-        async fn create_backbone(&self, ctx: &Context<'_>, uri: String) -> async_graphql::Result<Id> {
+        async fn create_backbone(&self, ctx: &Context<'_>, uri: String) -> Id {
             let _ = (ctx, uri);
-            Ok(Id::new().await)
+            Id::new().await
         }
 
         #[graphql(name = "attachBackbone")]
-        async fn attach_backbone(&self, ctx: &Context<'_>, #[graphql(name = "store")] store: Id) -> async_graphql::Result<Id> {
+        async fn attach_backbone(&self, ctx: &Context<'_>, #[graphql(name = "store")] store: Id) -> Id {
             let _ = (ctx, store);
-            Ok(Id::new().await)
+            Id::new().await
         }
     }
 
     /// @emoji 🎛️ Golden `RemoteProviderCommand` — extends provider commands with `login` / `logout`.
+    #[derive(Clone, Debug, Default)]
     pub struct RemoteProviderCommand {
         pub url: String,
+    }
+
+    /// @emoji 🎛️ Golden `interface ProviderCommand` — shared `createBackbone` / `attachBackbone` surface.
+    #[derive(Clone, async_graphql::Interface)]
+    #[graphql(
+        name = "ProviderCommand",
+        field(name = "createBackbone", method = "create_backbone", arg(name = "uri", ty = "String"), ty = "crate::id::Id"),
+        field(name = "attachBackbone", method = "attach_backbone", arg(name = "store", ty = "crate::id::Id"), ty = "crate::id::Id")
+    )]
+    pub enum ProviderCommandInterface {
+        Local(LocalProviderCommand),
+        Remote(RemoteProviderCommand),
     }
 
     #[Object(name = "RemoteProviderCommand")]
     impl RemoteProviderCommand {
         #[graphql(name = "createBackbone")]
-        async fn create_backbone(&self, ctx: &Context<'_>, uri: String) -> async_graphql::Result<Id> {
+        async fn create_backbone(&self, ctx: &Context<'_>, uri: String) -> Id {
             let _ = (ctx, uri, self);
-            Ok(Id::new().await)
+            Id::new().await
         }
 
         #[graphql(name = "attachBackbone")]
-        async fn attach_backbone(&self, ctx: &Context<'_>, #[graphql(name = "store")] store: Id) -> async_graphql::Result<Id> {
+        async fn attach_backbone(&self, ctx: &Context<'_>, #[graphql(name = "store")] store: Id) -> Id {
             let _ = (ctx, store, self);
-            Ok(Id::new().await)
+            Id::new().await
         }
 
         async fn login(&self, ctx: &Context<'_>, username: String, password_hash: String, hub_url: Option<String>) -> async_graphql::Result<Id> {
@@ -10341,8 +10981,8 @@ pub mod gql {
 
     #[Object(name = "StoreCommand")]
     impl StoreCommand {
-        async fn backbone(&self) -> BackboneCommand {
-            BackboneCommand
+        async fn backbone(&self) -> interfaces::BackboneCommandInterface {
+            interfaces::BackboneCommandInterface::File(std::sync::Arc::new(interfaces::FileBackboneCommand))
         }
 
         #[graphql(name = "theKit")]
@@ -10359,23 +10999,6 @@ pub mod gql {
             let rt = ctx.data::<Arc<ParentStore>>()?;
             let n = name.unwrap_or_default();
             rt.wip_graph.create_alternative_from_tip(n, None).await.map_err(|e| async_graphql::Error::new(e.to_string()))
-        }
-    }
-
-    /// @emoji 🗄️ GraphQL entry for `session.backbone.*` kit persistence commands.
-    pub struct BackboneCommand;
-
-    #[Object(name = "BackboneCommand")]
-    impl BackboneCommand {
-        async fn detach(&self, ctx: &Context<'_>, uri: String) -> async_graphql::Result<Id> {
-            let rt = ctx.data::<Arc<ParentStore>>()?;
-            let request_id = Id::new().await;
-            Ok(rt.dispatch_wip(Command::BackboneDetach { request_id, connection_uri: uri }).await)
-        }
-
-        async fn sync(&self, ctx: &Context<'_>) -> async_graphql::Result<Id> {
-            let _ = ctx;
-            Ok(Id::new().await)
         }
     }
 
@@ -11269,6 +11892,36 @@ pub mod gql {
             .register_output_type::<crate::gql_relay::PageInfoEdge>()
             .register_output_type::<crate::gql_relay::PageInfoConnection>()
             .register_output_type::<crate::operation::OperationInterface>()
+            .register_output_type::<crate::gql::interfaces::WeakEntityInterface>()
+            .register_output_type::<crate::gql::interfaces::GqlEmptyDiff>()
+            .register_output_type::<crate::gql::interfaces::EmptyModification>()
+            .register_output_type::<crate::gql::interfaces::EmptyPubInput>()
+            .register_output_type::<crate::gql::interfaces::EmptyDocument>()
+            .register_output_type::<crate::gql::interfaces::EmptyEvent>()
+            .register_output_type::<crate::gql::interfaces::EmptyRichStrong>()
+            .register_output_type::<crate::gql::interfaces::EmptyArtifact>()
+            .register_output_type::<crate::gql::interfaces::GqlDiffInterface>()
+            .register_output_type::<crate::gql::interfaces::GqlModificationInterface>()
+            .register_output_type::<crate::gql::interfaces::PubInputInterface>()
+            .register_output_type::<crate::gql::interfaces::DocumentInterface>()
+            .register_output_type::<crate::gql::interfaces::EventInterface>()
+            .register_output_type::<crate::gql::interfaces::RichStrongEntityInterface>()
+            .register_output_type::<crate::gql::interfaces::ArtifactInterface>()
+            .register_output_type::<crate::gql::interfaces::StrongEntityInterface>()
+            .register_output_type::<crate::gql::interfaces::BackboneCommandInterface>()
+            .register_output_type::<crate::gql::interfaces::FileBackboneCommand>()
+            .register_output_type::<crate::gql::interfaces::WebsocketBackboneCommand>()
+            .register_output_type::<crate::gql::ProviderInterface>()
+            .register_output_type::<crate::gql::ProviderCommandInterface>()
+            .register_output_type::<crate::color::Color>()
+            .register_output_type::<crate::vcs::VersionKind>()
+            .register_input_type::<crate::geom::VectorInput>()
+            .register_input_type::<crate::geom::PointInput>()
+            .register_input_type::<crate::geom::CoordinateInput>()
+            .register_input_type::<crate::geom::OffsetInput>()
+            .register_input_type::<crate::geom::PlaneInput>()
+            .register_input_type::<crate::geom::PositionInput>()
+            .register_input_type::<crate::geom::LocationInput>()
             .finish()
     }
 
