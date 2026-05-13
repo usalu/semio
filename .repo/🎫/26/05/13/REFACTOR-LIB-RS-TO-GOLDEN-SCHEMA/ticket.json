@@ -1,0 +1,15 @@
+{
+  "title": "Refactor Lib Rs To Golden Schema",
+  "emoji": "🦀",
+  "status": "open",
+  "description": "Execute full plan refactor lib.rs to golden schema: macro DSL (entity_full/lite/bare, operation_with_input/no_input, interface, union, enum_gql, scalar_gql), all 985 declarations matching schema.golden.graphql, rewire runtime, SEMIO_GOLDEN_STRICT=1 gate. Single umbrella ticket; temp files only in ticket folder.",
+  "goal": "🎯runningsketchpad",
+  "plan": {
+    "client": "cursor",
+    "id": "a5d816d2",
+    "source": "c:\\git\\semio\\.cursor\\plans\\refactor_lib.rs_to_golden_schema_a5d816d2.plan.md"
+  },
+  "sessions": [
+    "⚪5312edb0f0f34ec5a73d79d7bbe5d82a"
+  ]
+}

@@ -500,18 +500,15 @@ type KitPathEntity = Entity & {
 };
 
 type BoundKitFieldSpec<T, E extends KitPathEntity = KitPathEntity> = FieldSpec<T> & Readonly<{
-  methodName: string;
   parseEntity?: (entity: E, v: JsonValue) => T;
 }>;
 
 type BoundNodeFieldSpec<T> = Readonly<{
-  methodName: string;
   selection: string;
   parse: (node: JsonObject | undefined) => T;
 }>;
 
 type BoundKitOperationSpec<E extends KitPathEntity> = Readonly<{
-  methodName: string;
   buildInner: (entity: E, ...args: readonly unknown[]) => string;
 }>;
 
@@ -540,6 +537,18 @@ function defineBoundKitOperations<const S extends readonly BoundKitOperationSpec
   return specs;
 }
 
+function schemaFieldName(selection: string): string {
+  const name = selection.trim().match(/^[_A-Za-z][_0-9A-Za-z]*/)?.[0];
+  if (name == null || name === "") throw new Error(`Invalid GraphQL field selection: ${selection}`);
+  return name;
+}
+
+function schemaOperationName(inner: string): string {
+  const name = inner.trim().match(/^(?:[_A-Za-z][_0-9A-Za-z]*:\s*)?([_A-Za-z][_0-9A-Za-z]*)/)?.[1];
+  if (name == null || name === "") throw new Error(`Invalid GraphQL operation selection: ${inner}`);
+  return name;
+}
+
 /** @emoji 🏭  a field read when the caller supplies the kit-relative GraphQL tail. */
 export function defineField<E extends Entity, T>(entity: E, spec: FieldSpec<T>, pathInKit: (self: E) => string): () => Promise<T> {
   return async () => {
@@ -563,7 +572,7 @@ function installKitFieldMethods<E extends KitPathEntity>(
   specs: readonly BoundKitFieldSpec<unknown, E>[],
 ): void {
   for (const spec of specs) {
-    Object.defineProperty(ctor.prototype, spec.methodName, {
+    Object.defineProperty(ctor.prototype, schemaFieldName(spec.selection), {
       configurable: true,
       value: async function semioKitField(this: E): Promise<unknown> {
         const frag = await this.store.readKitInner(this.kitInnerPath(spec.selection));
@@ -596,7 +605,7 @@ function installNodeFieldMethods<E extends Entity>(
   specs: readonly BoundNodeFieldSpec<unknown>[],
 ): void {
   for (const spec of specs) {
-    Object.defineProperty(ctor.prototype, spec.methodName, {
+    Object.defineProperty(ctor.prototype, schemaFieldName(spec.selection), {
       configurable: true,
       value: function semioNodeField(this: E): Promise<unknown> {
         return readNodeSelection(this, typename, spec.selection, spec.parse);
@@ -612,7 +621,7 @@ function installKitOperationMethods<E extends KitPathEntity>(
   specs: readonly BoundKitOperationSpec<E>[],
 ): void {
   for (const spec of specs) {
-    Object.defineProperty(ctor.prototype, spec.methodName, {
+    Object.defineProperty(ctor.prototype, schemaOperationName(spec.buildInner({} as E)), {
       configurable: true,
       value: async function semioKitOperation(this: E, ...args: readonly unknown[]): Promise<SetResult> {
         const cid = await this.store.ensureChangeId();
@@ -3355,12 +3364,12 @@ export class Author extends Entity {
 }
 
 const AUTHOR_FIELDS = defineBoundNodeFields([
-  { methodName: "name", selection: "name", parse: (node) => String(node?.["name"] ?? "") },
-  { methodName: "description", selection: "description", parse: (node) => String(node?.["description"] ?? "") },
-  { methodName: "icon", selection: "icon", parse: (node) => String(node?.["icon"] ?? "") },
-  { methodName: "email", selection: "email", parse: (node) => String(node?.["email"] ?? "") },
-  { methodName: "role", selection: "role", parse: (node) => String(node?.["role"] ?? "") },
-  { methodName: "rank", selection: "rank", parse: (node) => (typeof node?.["rank"] === "number" ? node["rank"] : null) },
+  { selection: "name", parse: (node) => String(node?.["name"] ?? "") },
+  { selection: "description", parse: (node) => String(node?.["description"] ?? "") },
+  { selection: "icon", parse: (node) => String(node?.["icon"] ?? "") },
+  { selection: "email", parse: (node) => String(node?.["email"] ?? "") },
+  { selection: "role", parse: (node) => String(node?.["role"] ?? "") },
+  { selection: "rank", parse: (node) => (typeof node?.["rank"] === "number" ? node["rank"] : null) },
 ] as const);
 installNodeFieldMethods(Author, "Author", AUTHOR_FIELDS);
 //#endregion ✍️Author
@@ -3421,27 +3430,25 @@ export class Quality extends Entity {
 }
 
 const QUALITY_OPERATIONS = defineBoundKitOperations([
-  { methodName: "rename", buildInner: (_entity, newKey) => `rk: rename(newKey: ${gqlString(String(newKey ?? ""))})` },
-  { methodName: "changeDescription", buildInner: (_entity, newDescription) => `cd: changeDescription(newDescription: ${gqlString(String(newDescription ?? ""))})` },
-  { methodName: "changeIcon", buildInner: (_entity, newIcon) => `ci: changeIcon(newIcon: ${gqlString(String(newIcon ?? ""))})` },
+  { buildInner: (_entity, newKey) => `rk: rename(newKey: ${gqlString(String(newKey ?? ""))})` },
+  { buildInner: (_entity, newDescription) => `cd: changeDescription(newDescription: ${gqlString(String(newDescription ?? ""))})` },
+  { buildInner: (_entity, newIcon) => `ci: changeIcon(newIcon: ${gqlString(String(newIcon ?? ""))})` },
   {
-    methodName: "addAttribute",
     buildInner: (_entity, key, value, definition) =>
       `aa: addAttribute(key: ${gqlString(String(key ?? ""))}, value: ${gqlString(String(value ?? ""))}, definition: ${gqlString(String(definition ?? ""))})`,
   },
-  { methodName: "removeAttribute", buildInner: (_entity, id) => `ra: removeAttribute(id: ${gqlString(String(id ?? ""))})` },
-  { methodName: "removeAttributes", buildInner: (_entity, ids) => `ras: removeAttributes(ids: ${gqlIdList((ids as readonly string[]) ?? [])})` },
+  { buildInner: (_entity, id) => `ra: removeAttribute(id: ${gqlString(String(id ?? ""))})` },
+  { buildInner: (_entity, ids) => `ras: removeAttributes(ids: ${gqlIdList((ids as readonly string[]) ?? [])})` },
 ] as const);
 installKitFieldMethods(Quality, defineBoundKitFields([
-  { methodName: "key", selection: "key", parse: (frag) => readKitBranchString(frag as JsonObject | null, "quality", "key") },
-  { methodName: "value", selection: "value", parse: (frag) => readKitBranchString(frag as JsonObject | null, "quality", "value") },
-  { methodName: "unit", selection: "unit", parse: (frag) => readKitBranchString(frag as JsonObject | null, "quality", "unit") },
-  { methodName: "definition", selection: "definition", parse: (frag) => readKitBranchString(frag as JsonObject | null, "quality", "definition") },
-  { methodName: "name", selection: "name", parse: (frag) => readKitBranchString(frag as JsonObject | null, "quality", "name") },
-  { methodName: "description", selection: "description", parse: (frag) => readKitBranchString(frag as JsonObject | null, "quality", "description") },
-  { methodName: "icon", selection: "icon", parse: (frag) => readKitBranchString(frag as JsonObject | null, "quality", "icon") },
+  { selection: "key", parse: (frag) => readKitBranchString(frag as JsonObject | null, "quality", "key") },
+  { selection: "value", parse: (frag) => readKitBranchString(frag as JsonObject | null, "quality", "value") },
+  { selection: "unit", parse: (frag) => readKitBranchString(frag as JsonObject | null, "quality", "unit") },
+  { selection: "definition", parse: (frag) => readKitBranchString(frag as JsonObject | null, "quality", "definition") },
+  { selection: "name", parse: (frag) => readKitBranchString(frag as JsonObject | null, "quality", "name") },
+  { selection: "description", parse: (frag) => readKitBranchString(frag as JsonObject | null, "quality", "description") },
+  { selection: "icon", parse: (frag) => readKitBranchString(frag as JsonObject | null, "quality", "icon") },
   {
-    methodName: "attributes",
     selection: "attributes { edges { node { id key value definition } } }",
     parse: () => [],
     parseEntity: (entity, frag) => parseAttributeConnectionUnder(entity, (frag as JsonObject | null)?.["quality"] as JsonObject | undefined),
@@ -3475,28 +3482,26 @@ export class Tag extends Entity {
 }
 
 installKitFieldMethods(Tag, defineBoundKitFields([
-  { methodName: "name", selection: "name", parse: (frag) => readKitBranchString(frag as JsonObject | null, "tag", "name") },
-  { methodName: "description", selection: "description", parse: (frag) => readKitBranchString(frag as JsonObject | null, "tag", "description") },
-  { methodName: "icon", selection: "icon", parse: (frag) => readKitBranchString(frag as JsonObject | null, "tag", "icon") },
-  { methodName: "order", selection: "order", parse: (frag) => readKitBranchNumberOrNull(frag as JsonObject | null, "tag", "order") },
+  { selection: "name", parse: (frag) => readKitBranchString(frag as JsonObject | null, "tag", "name") },
+  { selection: "description", parse: (frag) => readKitBranchString(frag as JsonObject | null, "tag", "description") },
+  { selection: "icon", parse: (frag) => readKitBranchString(frag as JsonObject | null, "tag", "icon") },
+  { selection: "order", parse: (frag) => readKitBranchNumberOrNull(frag as JsonObject | null, "tag", "order") },
   {
-    methodName: "attributes",
     selection: "attributes { edges { node { id key value definition } } }",
     parse: () => [],
     parseEntity: (entity, frag) => parseAttributeConnectionUnder(entity, (frag as JsonObject | null)?.["tag"] as JsonObject | undefined),
   },
 ]) as readonly BoundKitFieldSpec<unknown, Tag>[]);
 installKitOperationMethods(Tag, defineBoundKitOperations([
-  { methodName: "rename", buildInner: (_entity, newName) => `rn: rename(newName: ${gqlString(String(newName ?? ""))})` },
-  { methodName: "changeDescription", buildInner: (_entity, newDescription) => `cd: changeDescription(newDescription: ${gqlString(String(newDescription ?? ""))})` },
-  { methodName: "changeIcon", buildInner: (_entity, newIcon) => `ci: changeIcon(newIcon: ${gqlString(String(newIcon ?? ""))})` },
+  { buildInner: (_entity, newName) => `rn: rename(newName: ${gqlString(String(newName ?? ""))})` },
+  { buildInner: (_entity, newDescription) => `cd: changeDescription(newDescription: ${gqlString(String(newDescription ?? ""))})` },
+  { buildInner: (_entity, newIcon) => `ci: changeIcon(newIcon: ${gqlString(String(newIcon ?? ""))})` },
   {
-    methodName: "addAttribute",
     buildInner: (_entity, key, value, definition) =>
       `aa: addAttribute(key: ${gqlString(String(key ?? ""))}, value: ${gqlString(String(value ?? ""))}, definition: ${gqlString(String(definition ?? ""))})`,
   },
-  { methodName: "removeAttribute", buildInner: (_entity, id) => `ra: removeAttribute(id: ${gqlString(String(id ?? ""))})` },
-  { methodName: "removeAttributes", buildInner: (_entity, ids) => `ras: removeAttributes(ids: ${gqlIdList((ids as readonly string[]) ?? [])})` },
+  { buildInner: (_entity, id) => `ra: removeAttribute(id: ${gqlString(String(id ?? ""))})` },
+  { buildInner: (_entity, ids) => `ras: removeAttributes(ids: ${gqlIdList((ids as readonly string[]) ?? [])})` },
 ] as const));
 //#endregion 🏷️Tag
 
@@ -3525,28 +3530,26 @@ export class Concept extends Entity {
 }
 
 installKitFieldMethods(Concept, defineBoundKitFields([
-  { methodName: "name", selection: "name", parse: (frag) => readKitBranchString(frag as JsonObject | null, "concept", "name") },
-  { methodName: "description", selection: "description", parse: (frag) => readKitBranchString(frag as JsonObject | null, "concept", "description") },
-  { methodName: "icon", selection: "icon", parse: (frag) => readKitBranchString(frag as JsonObject | null, "concept", "icon") },
-  { methodName: "order", selection: "order", parse: (frag) => readKitBranchNumberOrNull(frag as JsonObject | null, "concept", "order") },
+  { selection: "name", parse: (frag) => readKitBranchString(frag as JsonObject | null, "concept", "name") },
+  { selection: "description", parse: (frag) => readKitBranchString(frag as JsonObject | null, "concept", "description") },
+  { selection: "icon", parse: (frag) => readKitBranchString(frag as JsonObject | null, "concept", "icon") },
+  { selection: "order", parse: (frag) => readKitBranchNumberOrNull(frag as JsonObject | null, "concept", "order") },
   {
-    methodName: "attributes",
     selection: "attributes { edges { node { id key value definition } } }",
     parse: () => [],
     parseEntity: (entity, frag) => parseAttributeConnectionUnder(entity, (frag as JsonObject | null)?.["concept"] as JsonObject | undefined),
   },
 ]) as readonly BoundKitFieldSpec<unknown, Concept>[]);
 installKitOperationMethods(Concept, defineBoundKitOperations([
-  { methodName: "rename", buildInner: (_entity, newName) => `rn: rename(newName: ${gqlString(String(newName ?? ""))})` },
-  { methodName: "changeDescription", buildInner: (_entity, newDescription) => `cd: changeDescription(newDescription: ${gqlString(String(newDescription ?? ""))})` },
-  { methodName: "changeIcon", buildInner: (_entity, newIcon) => `ci: changeIcon(newIcon: ${gqlString(String(newIcon ?? ""))})` },
+  { buildInner: (_entity, newName) => `rn: rename(newName: ${gqlString(String(newName ?? ""))})` },
+  { buildInner: (_entity, newDescription) => `cd: changeDescription(newDescription: ${gqlString(String(newDescription ?? ""))})` },
+  { buildInner: (_entity, newIcon) => `ci: changeIcon(newIcon: ${gqlString(String(newIcon ?? ""))})` },
   {
-    methodName: "addAttribute",
     buildInner: (_entity, key, value, definition) =>
       `aa: addAttribute(key: ${gqlString(String(key ?? ""))}, value: ${gqlString(String(value ?? ""))}, definition: ${gqlString(String(definition ?? ""))})`,
   },
-  { methodName: "removeAttribute", buildInner: (_entity, id) => `ra: removeAttribute(id: ${gqlString(String(id ?? ""))})` },
-  { methodName: "removeAttributes", buildInner: (_entity, ids) => `ras: removeAttributes(ids: ${gqlIdList((ids as readonly string[]) ?? [])})` },
+  { buildInner: (_entity, id) => `ra: removeAttribute(id: ${gqlString(String(id ?? ""))})` },
+  { buildInner: (_entity, ids) => `ras: removeAttributes(ids: ${gqlIdList((ids as readonly string[]) ?? [])})` },
 ] as const));
 //#endregion 💡Concept
 
@@ -3574,12 +3577,11 @@ export class Representation extends Entity {
 }
 
 installKitFieldMethods(Representation, defineBoundKitFields([
-  { methodName: "name", selection: "name", parse: (frag) => readKitPathString(frag as JsonObject | null, KIT_PATH_TYPE_REPRESENTATION, "name") },
-  { methodName: "url", selection: "url", parse: (frag) => readKitPathString(frag as JsonObject | null, KIT_PATH_TYPE_REPRESENTATION, "url") },
-  { methodName: "description", selection: "description", parse: (frag) => readKitPathString(frag as JsonObject | null, KIT_PATH_TYPE_REPRESENTATION, "description") },
-  { methodName: "icon", selection: "icon", parse: (frag) => readKitPathString(frag as JsonObject | null, KIT_PATH_TYPE_REPRESENTATION, "icon") },
+  { selection: "name", parse: (frag) => readKitPathString(frag as JsonObject | null, KIT_PATH_TYPE_REPRESENTATION, "name") },
+  { selection: "url", parse: (frag) => readKitPathString(frag as JsonObject | null, KIT_PATH_TYPE_REPRESENTATION, "url") },
+  { selection: "description", parse: (frag) => readKitPathString(frag as JsonObject | null, KIT_PATH_TYPE_REPRESENTATION, "description") },
+  { selection: "icon", parse: (frag) => readKitPathString(frag as JsonObject | null, KIT_PATH_TYPE_REPRESENTATION, "icon") },
   {
-    methodName: "file",
     selection: "file { id }",
     parse: () => null,
     parseEntity: (entity, frag) => {
@@ -3588,19 +3590,16 @@ installKitFieldMethods(Representation, defineBoundKitFields([
     },
   },
   {
-    methodName: "tags",
     selection: "tags { edges { node { id } } }",
     parse: () => [],
     parseEntity: (entity, frag) => Object.freeze(parseIdListConnection(readKitPathNode(frag as JsonObject | null, KIT_PATH_TYPE_REPRESENTATION), "tags").map((id) => entity.store.tag(id))),
   },
   {
-    methodName: "qualities",
     selection: "qualities { edges { node { id } } }",
     parse: () => [],
     parseEntity: (entity, frag) => Object.freeze(parseIdListConnection(readKitPathNode(frag as JsonObject | null, KIT_PATH_TYPE_REPRESENTATION), "qualities").map((id) => entity.store.quality(id))),
   },
   {
-    methodName: "attributes",
     selection: "attributes { edges { node { id key value definition } } }",
     parse: () => [],
     parseEntity: (entity, frag) => parseAttributeConnectionUnder(entity, readKitPathNode(frag as JsonObject | null, KIT_PATH_TYPE_REPRESENTATION)),
@@ -3621,9 +3620,9 @@ export class Family extends Entity {
 }
 
 installNodeFieldMethods(Family, "Family", defineBoundNodeFields([
-  { methodName: "name", selection: "name", parse: (node) => String(node?.["name"] ?? "") },
-  { methodName: "description", selection: "description", parse: (node) => String(node?.["description"] ?? "") },
-  { methodName: "icon", selection: "icon", parse: (node) => String(node?.["icon"] ?? "") },
+  { selection: "name", parse: (node) => String(node?.["name"] ?? "") },
+  { selection: "description", parse: (node) => String(node?.["description"] ?? "") },
+  { selection: "icon", parse: (node) => String(node?.["icon"] ?? "") },
 ] as const));
 //#endregion 👨‍👩‍👦Family
 
@@ -3637,7 +3636,7 @@ export class File extends Entity {
 }
 
 installNodeFieldMethods(File, "File", defineBoundNodeFields([
-  { methodName: "name", selection: "name", parse: (node) => String(node?.["name"] ?? "") },
+  { selection: "name", parse: (node) => String(node?.["name"] ?? "") },
 ] as const));
 //#endregion 📄File
 
@@ -3654,9 +3653,9 @@ export class Folder extends Entity {
 }
 
 installNodeFieldMethods(Folder, "Folder", defineBoundNodeFields([
-  { methodName: "name", selection: "name", parse: (node) => String(node?.["name"] ?? "") },
-  { methodName: "description", selection: "description", parse: (node) => String(node?.["description"] ?? "") },
-  { methodName: "path", selection: "path", parse: (node) => String(node?.["path"] ?? "") },
+  { selection: "name", parse: (node) => String(node?.["name"] ?? "") },
+  { selection: "description", parse: (node) => String(node?.["description"] ?? "") },
+  { selection: "path", parse: (node) => String(node?.["path"] ?? "") },
 ] as const));
 //#endregion 📁Folder
 
@@ -3759,12 +3758,12 @@ export class Stat extends Entity {
 }
 
 installNodeFieldMethods(Stat, "Stat", defineBoundNodeFields([
-  { methodName: "key", selection: "key", parse: (node) => String(node?.["key"] ?? "") },
-  { methodName: "value", selection: "value", parse: (node) => String(node?.["value"] ?? "") },
-  { methodName: "unit", selection: "unit", parse: (node) => String(node?.["unit"] ?? "") },
-  { methodName: "name", selection: "name", parse: (node) => String(node?.["name"] ?? "") },
-  { methodName: "description", selection: "description", parse: (node) => String(node?.["description"] ?? "") },
-  { methodName: "icon", selection: "icon", parse: (node) => String(node?.["icon"] ?? "") },
+  { selection: "key", parse: (node) => String(node?.["key"] ?? "") },
+  { selection: "value", parse: (node) => String(node?.["value"] ?? "") },
+  { selection: "unit", parse: (node) => String(node?.["unit"] ?? "") },
+  { selection: "name", parse: (node) => String(node?.["name"] ?? "") },
+  { selection: "description", parse: (node) => String(node?.["description"] ?? "") },
+  { selection: "icon", parse: (node) => String(node?.["icon"] ?? "") },
 ] as const));
 //#endregion 📊Stat
 
@@ -3783,12 +3782,11 @@ export class Prop extends Entity {
 }
 
 installNodeFieldMethods(Prop, "Prop", defineBoundNodeFields([
-  { methodName: "key", selection: "key", parse: (node) => String(node?.["key"] ?? "") },
-  { methodName: "value", selection: "value", parse: (node) => String(node?.["value"] ?? "") },
-  { methodName: "unit", selection: "unit", parse: (node) => String(node?.["unit"] ?? "") },
-  { methodName: "name", selection: "name", parse: (node) => String(node?.["name"] ?? "") },
+  { selection: "key", parse: (node) => String(node?.["key"] ?? "") },
+  { selection: "value", parse: (node) => String(node?.["value"] ?? "") },
+  { selection: "unit", parse: (node) => String(node?.["unit"] ?? "") },
+  { selection: "name", parse: (node) => String(node?.["name"] ?? "") },
   {
-    methodName: "quality",
     selection: "quality { id }",
     parse: (node) => {
       const id = String((node?.["quality"] as JsonObject | undefined)?.["id"] ?? "");
@@ -4007,8 +4005,8 @@ if (typeof process !== "undefined" && !!process.env && process.env["SEMIO_JS_RUN
         } as unknown as JsonObject;
       };
       (k as unknown as { ensureChangeId: () => Promise<string> }).ensureChangeId = async () => "chg-1";
-      (k as unknown as { mutateScoped: (storeId: string, changeId: string, path: string) => Promise<SetResult> }).mutateScoped = async (_storeId, _changeId, path) => {
-        writes.push(path);
+      (k as unknown as { mutateScoped: (storeIdOrChangeId: string, changeIdOrPath: string, path?: string) => Promise<SetResult> }).mutateScoped = async (_storeIdOrChangeId, changeIdOrPath, path) => {
+        writes.push(path ?? changeIdOrPath);
         return { ok: true };
       };
       const tag = new Tag(k, "tag-1");
@@ -4029,8 +4027,8 @@ if (typeof process !== "undefined" && !!process.env && process.env["SEMIO_JS_RUN
       const calls: string[] = [];
       const k = Object.create(Session.prototype) as Session;
       (k as unknown as { ensureAlive(): void }).ensureAlive = () => { };
-      (k as unknown as { mutateScoped: (storeId: string, c: string, s: string) => Promise<SetResult> }).mutateScoped = async (_storeId, _c, s) => {
-        calls.push(s);
+      (k as unknown as { mutateScoped: (storeIdOrChangeId: string, changeIdOrPath: string, path?: string) => Promise<SetResult> }).mutateScoped = async (_storeIdOrChangeId, changeIdOrPath, path) => {
+        calls.push(path ?? changeIdOrPath);
         return { ok: true };
       };
       (k as unknown as { ensureChangeId: () => Promise<string> }).ensureChangeId = async () => "chg";
@@ -4069,3 +4067,4 @@ if (typeof process !== "undefined" && !!process.env && process.env["SEMIO_JS_RUN
 }
 
 //#endregion 🧪Tests
+

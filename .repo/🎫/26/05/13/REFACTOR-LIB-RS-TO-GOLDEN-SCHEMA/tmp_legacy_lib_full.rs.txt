@@ -2768,7 +2768,7 @@ pub mod kit {
     //#endregion 🏘 design
 
     //#region 📚 kit_target_operations
-    /// 🧾 Arc-backed operation `*Input` shells for Quality / Tag / Concept / Port (`target.schema.graphql` nested Operations block).
+    /// 🧾 Arc-backed operation `*Input` shells for Quality / Tag / Concept / Port (`target.schema.graphql` nested `#region Operations`).
     pub mod target_operations {
         use std::sync::Arc;
 
@@ -9822,7 +9822,7 @@ pub mod gql {
         #[graphql(name = "EmptyEntityConnection")]
         pub struct EmptyEntityConnection {
             #[graphql(name = "pageInfo")]
-            pub page_info: Arc<crate::gql_relay::PageInfo>,
+            pub page_info: crate::gql_relay::PageInfo,
             pub hash: String,
         }
 
@@ -9830,7 +9830,7 @@ pub mod gql {
         #[derive(Interface)]
         #[graphql(
             name = "EntityConnection",
-            field(name = "pageInfo", method = "page_info", ty = "&Arc<crate::gql_relay::PageInfo>"),
+            field(name = "pageInfo", ty = "crate::gql_relay::PageInfo"),
             field(name = "hash", ty = "String")
         )]
         pub enum EntityConnectionInterface {
@@ -9841,7 +9841,7 @@ pub mod gql {
         /// @emoji 🪢 Canonical empty `EntityConnection` for shells without materialized child rows.
         pub fn empty_entity_connection() -> EntityConnectionInterface {
             EntityConnectionInterface::Empty(EmptyEntityConnection {
-                page_info: Arc::new(crate::gql_relay::PageInfo::default()),
+                page_info: crate::gql_relay::PageInfo::default(),
                 hash: h(&["entity-connection", "empty"]),
             })
         }
@@ -11156,7 +11156,7 @@ pub mod gql {
 
     #[Object]
     impl Mutation {
-        /// @emoji 🎛️ Kit-changing commands — navigate via nested fields per `target.schema.graphql` Commands block.
+        /// @emoji 🎛️ Kit-changing commands — navigate via nested fields per `target.schema.graphql` `#region Commands`.
         async fn session(&self) -> SessionCommand {
             SessionCommand
         }
