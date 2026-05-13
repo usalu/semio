@@ -447,11 +447,11 @@ const FlatPositionMarkerContext = React.createContext(false);
 const PlaneMarkerContext = React.createContext(false);
 const OriginMarkerContext = React.createContext(false);
 
-const PiecesBatchContext = React.createContext<Readonly<{ pieceIds: readonly string[] }> | null>(null);
+const PiecesBatchContext = React.createContext<Readonly<{ ids: readonly string[] }> | null>(null);
 
 /** @emoji 🪢 Batch piece ids for {@link useDragPieces} under {@link DesignIdContext}. */
-export function PiecesBatchContextProvider(props: Readonly<{ pieceIds: readonly string[]; children: ReactNode }>): React.ReactElement {
-  const v = React.useMemo(() => ({ pieceIds: props.pieceIds }), [props.pieceIds]);
+export function PiecesBatchContextProvider(props: Readonly<{ ids: readonly string[]; children: ReactNode }>): React.ReactElement {
+  const v = React.useMemo(() => ({ ids: props.ids }), [props.ids]);
   return React.createElement(PiecesBatchContext.Provider, { value: v }, props.children);
 }
 
@@ -617,37 +617,37 @@ function resolveKit(id?: string): Kit | null {
   return k.id === rid ? k : new Kit(k.session, rid, k.storeId);
 }
 
-function resolveDesign(designId?: string): Design | null {
+function resolveDesign(id?: string): Design | null {
   const st = React.useContext(StoreHandleContext);
-  const id = readOptionalId(DesignIdContext, designId);
+  const id = readOptionalId(DesignIdContext, id);
   if (st == null || id == null) return null;
   return st.design(id);
 }
 
-function resolvePiece(pieceId?: string): Piece | null {
+function resolvePiece(id?: string): Piece | null {
   const d = resolveDesign();
-  const id = readOptionalId(PieceIdContext, pieceId);
+  const id = readOptionalId(PieceIdContext, id);
   if (d == null || id == null) return null;
   return d.piece(id);
 }
 
-function resolveType(typeId?: string): Type | null {
+function resolveType(id?: string): Type | null {
   const st = React.useContext(StoreHandleContext);
-  const id = readOptionalId(TypeIdContext, typeId);
+  const id = readOptionalId(TypeIdContext, id);
   if (st == null || id == null) return null;
   return st.type(id);
 }
 
-function resolveConnection(connectionId?: string): Connection | null {
+function resolveConnection(id?: string): Connection | null {
   const d = resolveDesign();
-  const id = readOptionalId(ConnectionIdContext, connectionId);
+  const id = readOptionalId(ConnectionIdContext, id);
   if (d == null || id == null) return null;
   return d.connection(id);
 }
 
-function resolvePort(portId?: string): Port | null {
+function resolvePort(id?: string): Port | null {
   const t = resolveType();
-  const id = readOptionalId(PortIdContext, portId);
+  const id = readOptionalId(PortIdContext, id);
   if (t == null || id == null) return null;
   return t.port(id);
 }
@@ -659,52 +659,52 @@ function resolveConnector(connectorId?: string): Connector | null {
   return t.connector(id);
 }
 
-function resolveRepresentation(representationId?: string): Representation | null {
+function resolveRepresentation(id?: string): Representation | null {
   const t = resolveType();
-  const id = readOptionalId(RepresentationIdContext, representationId);
+  const id = readOptionalId(RepresentationIdContext, id);
   if (t == null || id == null) return null;
   return t.representation(id);
 }
 
-function resolveQuality(qualityId?: string): Quality | null {
+function resolveQuality(id?: string): Quality | null {
   const st = React.useContext(StoreHandleContext);
-  const id = readOptionalId(QualityIdContext, qualityId);
+  const id = readOptionalId(QualityIdContext, id);
   if (st == null || id == null) return null;
   return st.quality(id);
 }
 
-function resolveTag(tagId?: string): Tag | null {
+function resolveTag(id?: string): Tag | null {
   const st = React.useContext(StoreHandleContext);
-  const id = readOptionalId(TagIdContext, tagId);
+  const id = readOptionalId(TagIdContext, id);
   if (st == null || id == null) return null;
   return st.tag(id);
 }
 
-function resolveConcept(conceptId?: string): Concept | null {
+function resolveConcept(id?: string): Concept | null {
   const st = React.useContext(StoreHandleContext);
-  const id = readOptionalId(ConceptIdContext, conceptId);
+  const id = readOptionalId(ConceptIdContext, id);
   if (st == null || id == null) return null;
   return st.concept(id);
 }
 
-function resolveAuthor(authorId?: string): Author | null {
+function resolveAuthor(id?: string): Author | null {
   const st = React.useContext(StoreHandleContext);
-  const id = readOptionalId(AuthorIdContext, authorId);
+  const id = readOptionalId(AuthorIdContext, id);
   if (st == null || id == null) return null;
   return st.author(id);
 }
 
-function resolveFile(fileId?: string): File | null {
+function resolveFile(id?: string): File | null {
   const st = React.useContext(StoreHandleContext);
-  const id = fileId ?? null;
+  const id = id ?? null;
   if (st == null || id == null) return null;
   return st.file(id);
 }
 
-function resolveAlternative(alternativeId?: string): Alternative | null {
+function resolveAlternative(id?: string): Alternative | null {
   const g = React.useContext(GraphHandleContext);
   const row = React.useContext(AlternativeIdContext);
-  const id = alternativeId ?? row?.id ?? null;
+  const id = id ?? row?.id ?? null;
   if (g == null || id == null) return null;
   return g.alternative(id);
 }
@@ -722,18 +722,15 @@ function resolveRemoteProvider(url?: string): RemoteProvider | null {
   return useJsSession().remoteProvider(id);
 }
 
-function resolveBackbone(backboneId?: string): Backbone | null {
+function resolveBackbone(id?: string): Backbone | null {
   const bb = React.useContext(BackboneHandleContext);
-  const id = backboneId ?? React.useContext(FileBackboneIdContext)?.id ?? React.useContext(FolderBackboneIdContext)?.id ?? React.useContext(WebsocketBackboneIdContext)?.id ?? null;
-  if (bb != null && (backboneId == null || bb.id === backboneId)) return bb;
+  const id = id ?? React.useContext(FileBackboneIdContext)?.id ?? React.useContext(FolderBackboneIdContext)?.id ?? React.useContext(WebsocketBackboneIdContext)?.id ?? null;
+  if (bb != null && (id == null || bb.id === id)) return bb;
   return null;
 }
 
 /** @emoji 🪪 Entity hooks return {@link FieldReadState} of plain {@code { id }}. */
 export type EntityReadState = FieldReadState<Readonly<{ id: string }>>;
-
-/** @emoji 📇 Plain list row for id-stable lists. */
-export type IdRow = Readonly<{ id: string }>;
 
 function entityRead(get: () => Entity | null): EntityReadState {
   return semioInternalFieldBind({
@@ -875,19 +872,19 @@ export function useGraph(): Graph {
 }
 
 // #region 📐Design
-/** @emoji 📐 Legacy design id context (compat: value uses {@code designId}). */
-export type DesignContext = Readonly<{ designId: string }>;
+/** @emoji 📐 Legacy design id context (compat: value uses {@code id}). */
+export type DesignContext = Readonly<{ id: string }>;
 const DesignContext = React.createContext<DesignContext | null>(null);
-/** @emoji 📐 Prefer {@link DesignContextProvider} from id-only kit; this accepts {@code id} and mirrors {@code designId}. */
+/** @emoji 📐 Prefer {@link DesignContextProvider} from id-only kit; this accepts {@code id} and mirrors {@code id}. */
 export function LegacyDesignContextProvider(props: Readonly<{ id: string; children: ReactNode }>): React.ReactElement {
-  const v = React.useMemo(() => ({ designId: props.id }), [props.id]);
+  const v = React.useMemo(() => ({ id: props.id }), [props.id]);
   return React.createElement(DesignContext.Provider, { value: v }, React.createElement(DesignIdContext.Provider, { value: { id: props.id } }, props.children));
 }
 /** @emoji 📐 {@link Design} from legacy {@link DesignContext} or id-only {@link DesignIdContext}. */
 export function useDesignJs(): Design | null {
   const store = useJsStore();
   const legacy = React.useContext(DesignContext);
-  const id = legacy?.designId ?? React.useContext(DesignIdContext)?.id ?? null;
+  const id = legacy?.id ?? React.useContext(DesignIdContext)?.id ?? null;
   return id == null ? null : store.design(id);
 }
 // #endregion 📐Design
@@ -915,7 +912,7 @@ export function useDesignContext(): Readonly<{ id: string }> | null {
   const idOnly = React.useContext(DesignIdContext);
   if (idOnly != null) return idOnly;
   const legacy = React.useContext(DesignContext);
-  return legacy == null ? null : { id: legacy.designId };
+  return legacy == null ? null : { id: legacy.id };
 }
 
 /** @emoji 🧭 True when a design scope is mounted. */
@@ -974,77 +971,77 @@ export function useHasAuthorContext(): boolean {
 }
 
 /** @emoji 🧷 {@link PieceContextProvider} using enclosing design scope. */
-export function PieceUnderActiveDesignProvider(props: Readonly<{ pieceId: string; children: ReactNode }>): React.ReactElement {
-  const designId = React.useContext(DesignIdContext)?.id ?? React.useContext(DesignContext)?.designId;
-  if (designId == null) {
+export function PieceUnderActiveDesignProvider(props: Readonly<{ id: string; children: ReactNode }>): React.ReactElement {
+  const id = React.useContext(DesignIdContext)?.id ?? React.useContext(DesignContext)?.id;
+  if (id == null) {
     throw new Error("semio/react: PieceUnderActiveDesignProvider requires DesignContextProvider / DesignIdContext.");
   }
-  return React.createElement(PieceIdContext.Provider, { value: { id: props.pieceId } }, props.children);
+  return React.createElement(PieceIdContext.Provider, { value: { id: props.id } }, props.children);
 }
 
 /** @emoji 🧷 {@link ConnectionContextProvider} using enclosing design scope. */
-export function ConnectionUnderActiveDesignProvider(props: Readonly<{ connectionId: string; children: ReactNode }>): React.ReactElement {
-  const designId = React.useContext(DesignIdContext)?.id ?? React.useContext(DesignContext)?.designId;
-  if (designId == null) {
+export function ConnectionUnderActiveDesignProvider(props: Readonly<{ id: string; children: ReactNode }>): React.ReactElement {
+  const id = React.useContext(DesignIdContext)?.id ?? React.useContext(DesignContext)?.id;
+  if (id == null) {
     throw new Error("semio/react: ConnectionUnderActiveDesignProvider requires DesignContextProvider / DesignIdContext.");
   }
-  return React.createElement(ConnectionIdContext.Provider, { value: { id: props.connectionId } }, props.children);
+  return React.createElement(ConnectionIdContext.Provider, { value: { id: props.id } }, props.children);
 }
 // #endregion 🔖EntityContextHelpers
 
-function useResolvedDesign(designId?: string): Design | null {
-  return resolveDesign(designId);
+function useResolvedDesign(id?: string): Design | null {
+  return resolveDesign(id);
 }
 
-function useResolvedType(typeId?: string): Type | null {
-  return resolveType(typeId);
+function useResolvedType(id?: string): Type | null {
+  return resolveType(id);
 }
 
 // #region 🪝IdStableEntityLists
-/** @emoji 📚 Kit-level design ids via {@link Kit#designs} (stable {@link IdRow} rows only). */
-export function useKitDesigns(): FieldReadState<readonly IdRow[]> {
+/** @emoji 📚 Kit-level design ids via {@link Kit#designs} (each entry is the same {@code { id }} shape as {@link EntityReadState#value}). */
+export function useKitDesigns(): FieldReadState<readonly NonNullable<EntityReadState["value"]>[]> {
   const kit = useWipKit();
   return useCurrentEntityField(kit, async (k) => Object.freeze((await k.designs()).map((d) => ({ id: d.id }))));
 }
 
 /** @emoji 📚 Kit-level kind ids via {@link Kit#types}. */
-export function useKitTypes(): FieldReadState<readonly IdRow[]> {
+export function useKitTypes(): FieldReadState<readonly NonNullable<EntityReadState["value"]>[]> {
   const kit = useWipKit();
   return useCurrentEntityField(kit, async (k) => Object.freeze((await k.types()).map((t) => ({ id: t.id }))));
 }
 
 /** @emoji 📚 Kit-level author ids via {@link Kit#authors}. */
-export function useKitAuthors(): FieldReadState<readonly IdRow[]> {
+export function useKitAuthors(): FieldReadState<readonly NonNullable<EntityReadState["value"]>[]> {
   const kit = useWipKit();
   return useCurrentEntityField(kit, async (k) => Object.freeze((await k.authors()).map((a) => ({ id: a.id }))));
 }
 
 /** @emoji 📚 Kit-level quality ids via {@link Kit#qualities}. */
-export function useKitQualities(): FieldReadState<readonly IdRow[]> {
+export function useKitQualities(): FieldReadState<readonly NonNullable<EntityReadState["value"]>[]> {
   const kit = useWipKit();
   return useCurrentEntityField(kit, async (k) => Object.freeze((await k.qualities()).map((q) => ({ id: q.id }))));
 }
 
 /** @emoji 📚 Kit-level tag ids via {@link Kit#tags}. */
-export function useKitTags(): FieldReadState<readonly IdRow[]> {
+export function useKitTags(): FieldReadState<readonly NonNullable<EntityReadState["value"]>[]> {
   const kit = useWipKit();
   return useCurrentEntityField(kit, async (k) => Object.freeze((await k.tags()).map((t) => ({ id: t.id }))));
 }
 
 /** @emoji 📚 Kit-level concept ids via {@link Kit#concepts}. */
-export function useKitConcepts(): FieldReadState<readonly IdRow[]> {
+export function useKitConcepts(): FieldReadState<readonly NonNullable<EntityReadState["value"]>[]> {
   const kit = useWipKit();
   return useCurrentEntityField(kit, async (k) => Object.freeze((await k.concepts()).map((c) => ({ id: c.id }))));
 }
 
-/** @emoji 📚 Piece ids in the active {@link DesignContext} design (stable {@link IdRow} rows). */
-export function useDesignPieces(): FieldReadState<readonly IdRow[]> {
+/** @emoji 📚 Piece ids in the active {@link DesignContext} design (same {@code { id }} shape as {@link EntityReadState#value}). */
+export function useDesignPieces(): FieldReadState<readonly NonNullable<EntityReadState["value"]>[]> {
   const entity = useResolvedDesign();
   return useCurrentEntityField(entity, async (design) => Object.freeze((await design.pieces()).map((p) => ({ id: p.id }))));
 }
 
-/** @emoji 📚 Connection ids in the active {@link DesignContext} design (stable {@link IdRow} rows). */
-export function useDesignConnections(): FieldReadState<readonly IdRow[]> {
+/** @emoji 📚 Connection ids in the active {@link DesignContext} design (same {@code { id }} shape as {@link EntityReadState#value}). */
+export function useDesignConnections(): FieldReadState<readonly NonNullable<EntityReadState["value"]>[]> {
   const entity = useResolvedDesign();
   return useCurrentEntityField(entity, async (design) => Object.freeze((await design.connections()).map((c) => ({ id: c.id }))));
 }
@@ -1052,10 +1049,10 @@ export function useDesignConnections(): FieldReadState<readonly IdRow[]> {
 
 // #region 🪝EntityContextReads
 /** @emoji 📖 Resolves a kit {@link Piece} from context and/or ids, then applies {@code selector}. */
-export function usePieceContextRead<T>(selector: (p: Piece) => T, pieceId?: string | undefined, _deep?: boolean): T {
-  const p = resolvePiece(pieceId);
+export function usePieceContextRead<T>(selector: (p: Piece) => T, id?: string | undefined, _deep?: boolean): T {
+  const p = resolvePiece(id);
   if (p == null) {
-    throw new Error("semio/react: usePieceContextRead requires PieceContextProvider or pieceId + Design scope.");
+    throw new Error("semio/react: usePieceContextRead requires PieceContextProvider or id + Design scope.");
   }
   return selector(p);
 }
@@ -1076,10 +1073,10 @@ export function useTypeContextRead<S>(selector: ((t: Type) => S) | undefined, ki
 }
 
 /** @emoji 📖 Resolves a kit {@link Quality} from context and/or id, then applies {@code selector}. */
-export function useQualityContextRead<S>(selector: ((q: Quality) => S) | undefined, qualityId?: string | undefined, deep?: boolean): S | Quality | undefined {
+export function useQualityContextRead<S>(selector: ((q: Quality) => S) | undefined, id?: string | undefined, deep?: boolean): S | Quality | undefined {
   const fromCtx = resolveQuality();
   const k = useStoreOptional();
-  const resolvedId = qualityId ?? fromCtx?.id ?? null;
+  const resolvedId = id ?? fromCtx?.id ?? null;
   if (resolvedId == null || k == null) {
     if (fromCtx == null) return undefined;
     if (selector == null) return deep === true ? fromCtx : undefined;
@@ -1287,7 +1284,7 @@ export function useStartAlternative(): readonly [(name?: string | null) => Promi
 }
 
 /** @emoji ✍️ {@link Store#integrateAlternative}. */
-export function useIntegrateAlternative(): readonly [(alternativeId: string) => Promise<SetResult>, OperationStatus] {
+export function useIntegrateAlternative(): readonly [(id: string) => Promise<SetResult>, OperationStatus] {
   const store = useJsStore();
   return semioInternalStoreOpBind<[string]>((k, id) => k.integrateAlternative(id))(() => store);
 }
@@ -1352,38 +1349,38 @@ export function useBackboneStatus(): FieldReadState<Readonly<{ attachedUri: stri
 // #region 🪝HooksDesign
 // #region 📖DesignReads
 /** @emoji 📖 Live {@link Design#name}. */
-export function useDesignName(designId?: string): FieldReadState<string> {
-  const entity = useResolvedDesign(designId);
+export function useDesignName(id?: string): FieldReadState<string> {
+  const entity = useResolvedDesign(id);
   return useCurrentEntityField(entity, (d) => d.name());
 }
 
 /** @emoji 📖 Live {@link Design#description} + {@code changedDescription}. */
-export function useDesignDescription(designId?: string): FieldReadState<string> {
-  const entity = useResolvedDesign(designId);
+export function useDesignDescription(id?: string): FieldReadState<string> {
+  const entity = useResolvedDesign(id);
   return useCurrentEntityField(entity, (d) => d.description(), "changedDescription");
 }
 
 /** @emoji 📖 Live {@link Design#qualitySum}. */
-export function useDesignQualitySum(designId?: string): FieldReadState<number> {
-  const entity = useResolvedDesign(designId);
+export function useDesignQualitySum(id?: string): FieldReadState<number> {
+  const entity = useResolvedDesign(id);
   return useCurrentEntityField(entity, (d) => d.qualitySum());
 }
 
 /** @emoji 📖 Live {@link Design#icon}. */
-export function useDesignIcon(designId?: string): FieldReadState<string> {
-  const entity = useResolvedDesign(designId);
+export function useDesignIcon(id?: string): FieldReadState<string> {
+  const entity = useResolvedDesign(id);
   return useCurrentEntityField(entity, (d) => d.icon());
 }
 
 /** @emoji 📖 Live {@link Design#image}. */
-export function useDesignImage(designId?: string): FieldReadState<string> {
-  const entity = useResolvedDesign(designId);
+export function useDesignImage(id?: string): FieldReadState<string> {
+  const entity = useResolvedDesign(id);
   return useCurrentEntityField(entity, (d) => d.image());
 }
 
 /** @emoji 📖 Live {@link Design#unit}. */
-export function useDesignUnit(designId?: string): FieldReadState<string> {
-  const entity = useResolvedDesign(designId);
+export function useDesignUnit(id?: string): FieldReadState<string> {
+  const entity = useResolvedDesign(id);
   return useCurrentEntityField(entity, (d) => d.unit());
 }
 // #endregion 📖DesignReads
@@ -1460,7 +1457,7 @@ export function useAddHangingChildPieceWithParentConnection(): readonly [
 }
 
 /** @emoji ✍️ {@link Design#deletePiece}. */
-export function useDeleteDesignPiece(): readonly [(pieceId: string) => Promise<SetResult>, OperationStatus] {
+export function useDeleteDesignPiece(): readonly [(id: string) => Promise<SetResult>, OperationStatus] {
   const entity = resolveDesign();
   return semioInternalOperationBind<Design, [string]>((d, id) => d.deletePiece(id))(() => entity);
 }
@@ -1472,7 +1469,7 @@ export function useDeleteDesignPieces(): readonly [(ids: readonly string[]) => P
 }
 
 /** @emoji ✍️ {@link Design#deletePiecesAndConnections}. */
-export function useDeleteDesignPiecesAndConnections(): readonly [(pieceIds: readonly string[], connectionIds: readonly string[]) => Promise<SetResult>, OperationStatus] {
+export function useDeleteDesignPiecesAndConnections(): readonly [(ids: readonly string[], ids: readonly string[]) => Promise<SetResult>, OperationStatus] {
   const entity = resolveDesign();
   return semioInternalOperationBind<Design, [readonly string[], readonly string[]]>((d, p, c) => d.deletePiecesAndConnections(p, c))(() => entity);
 }
@@ -1481,12 +1478,12 @@ export function useDeleteDesignPiecesAndConnections(): readonly [(pieceIds: read
  * @emoji ✍️ Legacy shallow {@link Design} patch runner: applies only keys backed by {@link DesignOperation} ({@code name}, {@code description}, {@code icon}, {@code flatten}); other keys are ignored with a {@code [DEBUG]} console warning.
  */
 export function useUpdateDesign(): Readonly<{
-  run: (designId: string, patch: Record<string, unknown>) => Promise<SetResult>;
+  run: (id: string, patch: Record<string, unknown>) => Promise<SetResult>;
   status: OperationStatus;
 }> {
   const store = useJsStore();
-  const [run, status] = semioInternalOperationBind<Store, [string, Record<string, unknown>]>(async (st, designId, patch) => {
-    const d = st.design(designId);
+  const [run, status] = semioInternalOperationBind<Store, [string, Record<string, unknown>]>(async (st, id, patch) => {
+    const d = st.design(id);
     for (const [key, raw] of Object.entries(patch)) {
       if (key === "name") {
         const r = await d.rename(String(raw ?? ""));
@@ -1506,7 +1503,7 @@ export function useUpdateDesign(): Readonly<{
     }
     return { ok: true } as const;
   })(() => store);
-  const runDesign = React.useCallback((designId: string, patch: Record<string, unknown>) => run(designId, patch), [run]);
+  const runDesign = React.useCallback((id: string, patch: Record<string, unknown>) => run(id, patch), [run]);
   return { run: runDesign, status };
 }
 // #endregion ✍️DesignWrites
@@ -1524,63 +1521,63 @@ const useTypeCreatePortOperation = semioInternalOperationBind<Type, [string | nu
 );
 const useTypeDeletePortOperation = semioInternalOperationBind<Type, [string]>((t, id) => t.deletePort(id));
 const useTypeDeletePortsOperation = semioInternalOperationBind<Type, [readonly string[]]>((t, ids) => t.deletePorts(ids));
-const useTypeAddConnectorOperation = semioInternalOperationBind<Type, [string, string | null | undefined, string | null | undefined, string | null | undefined]>((t, code, description, icon, portId) =>
-  t.addConnector(code, description ?? null, icon ?? null, portId ?? null),
+const useTypeAddConnectorOperation = semioInternalOperationBind<Type, [string, string | null | undefined, string | null | undefined, string | null | undefined]>((t, code, description, icon, id) =>
+  t.addConnector(code, description ?? null, icon ?? null, id ?? null),
 );
 const useTypeRemoveConnectorOperation = semioInternalOperationBind<Type, [string]>((t, id) => t.removeConnector(id));
 const useTypeRemoveConnectorsOperation = semioInternalOperationBind<Type, [readonly string[]]>((t, ids) => t.removeConnectors(ids));
 
 /** @emoji 📖 Live {@link Type#name}. */
-export function useTypeName(typeId?: string): FieldReadState<string> {
-  const entity = useResolvedType(typeId);
+export function useTypeName(id?: string): FieldReadState<string> {
+  const entity = useResolvedType(id);
   return useCurrentEntityField(entity, (t) => t.name());
 }
 
 /** @emoji 📖 Live {@link Type#description}. */
-export function useTypeDescription(typeId?: string): FieldReadState<string> {
-  const entity = useResolvedType(typeId);
+export function useTypeDescription(id?: string): FieldReadState<string> {
+  const entity = useResolvedType(id);
   return useCurrentEntityField(entity, (t) => t.description());
 }
 
 /** @emoji 📖 Live {@link Type#icon}. */
-export function useTypeIcon(typeId?: string): FieldReadState<string> {
-  const entity = useResolvedType(typeId);
+export function useTypeIcon(id?: string): FieldReadState<string> {
+  const entity = useResolvedType(id);
   return useCurrentEntityField(entity, (t) => t.icon());
 }
 
 /** @emoji 📖 Live {@link Type#image}. */
-export function useTypeImage(typeId?: string): FieldReadState<string> {
-  const entity = useResolvedType(typeId);
+export function useTypeImage(id?: string): FieldReadState<string> {
+  const entity = useResolvedType(id);
   return useCurrentEntityField(entity, (t) => t.image());
 }
 
 /** @emoji 📖 Live {@link Type#unit}. */
-export function useTypeUnit(typeId?: string): FieldReadState<string> {
-  const entity = useResolvedType(typeId);
+export function useTypeUnit(id?: string): FieldReadState<string> {
+  const entity = useResolvedType(id);
   return useCurrentEntityField(entity, (t) => t.unit());
 }
 
 /** @emoji 📖 Bulky {@link Type#connectors}. */
-export function useTypeConnectors(typeId?: string): FieldReadState<readonly Connector[]> {
-  const entity = useResolvedType(typeId);
+export function useTypeConnectors(id?: string): FieldReadState<readonly Connector[]> {
+  const entity = useResolvedType(id);
   return useCurrentEntityField(entity, (t) => t.connectors());
 }
 
 /** @emoji 📖 Bulky {@link Type#representations}. */
-export function useTypeRepresentations(typeId?: string): FieldReadState<readonly Representation[]> {
-  const entity = useResolvedType(typeId);
+export function useTypeRepresentations(id?: string): FieldReadState<readonly Representation[]> {
+  const entity = useResolvedType(id);
   return useCurrentEntityField(entity, (t) => t.representations());
 }
 
 /** @emoji 📖 Bulky {@link Type#attributes}. */
-export function useTypeAttributes(typeId?: string): FieldReadState<readonly Attribute[]> {
-  const entity = useResolvedType(typeId);
+export function useTypeAttributes(id?: string): FieldReadState<readonly Attribute[]> {
+  const entity = useResolvedType(id);
   return useCurrentEntityField(entity, (t) => t.attributes());
 }
 
 /** @emoji 📖 Bulky {@link Type#authors}. */
-export function useTypeAuthors(typeId?: string): FieldReadState<readonly Author[]> {
-  const entity = useResolvedType(typeId);
+export function useTypeAuthors(id?: string): FieldReadState<readonly Author[]> {
+  const entity = useResolvedType(id);
   return useCurrentEntityField(entity, (t) => t.authors());
 }
 
@@ -1639,7 +1636,7 @@ export function useDeletePorts(): readonly [(ids: readonly string[]) => Promise<
 }
 
 /** @emoji ✍️ {@link TypeOperationInput#addConnector}. */
-export function useAddConnector(): readonly [(code: string, description?: string | null, icon?: string | null, portId?: string | null) => Promise<SetResult>, OperationStatus] {
+export function useAddConnector(): readonly [(code: string, description?: string | null, icon?: string | null, id?: string | null) => Promise<SetResult>, OperationStatus] {
   const e = resolveType();
   return useTypeAddConnectorOperation(() => e);
 }
@@ -1800,38 +1797,38 @@ export function useChangeConnectorIcon(): readonly [(newIcon: string) => Promise
 
 // #region ✍️Author
 /** @emoji 📖 Live {@link Author#name}. */
-export function useAuthorName(authorId?: string): FieldReadState<string> {
-  const entity = resolveAuthor(authorId);
+export function useAuthorName(id?: string): FieldReadState<string> {
+  const entity = resolveAuthor(id);
   return useCurrentEntityField(entity, (a) => a.name());
 }
 
 /** @emoji 📖 Live {@link Author#email}. */
-export function useAuthorEmail(authorId?: string): FieldReadState<string> {
-  const entity = resolveAuthor(authorId);
+export function useAuthorEmail(id?: string): FieldReadState<string> {
+  const entity = resolveAuthor(id);
   return useCurrentEntityField(entity, (a) => a.email());
 }
 
 /** @emoji 📖 Live {@link Author#rank}. */
-export function useAuthorRank(authorId?: string): FieldReadState<number | null> {
-  const entity = resolveAuthor(authorId);
+export function useAuthorRank(id?: string): FieldReadState<number | null> {
+  const entity = resolveAuthor(id);
   return useCurrentEntityField(entity, (a) => a.rank());
 }
 
 /** @emoji 📖 Live {@link Author#description}. */
-export function useAuthorDescription(authorId?: string): FieldReadState<string> {
-  const entity = resolveAuthor(authorId);
+export function useAuthorDescription(id?: string): FieldReadState<string> {
+  const entity = resolveAuthor(id);
   return useCurrentEntityField(entity, (a) => a.description());
 }
 
 /** @emoji 📖 Live {@link Author#icon}. */
-export function useAuthorIcon(authorId?: string): FieldReadState<string> {
-  const entity = resolveAuthor(authorId);
+export function useAuthorIcon(id?: string): FieldReadState<string> {
+  const entity = resolveAuthor(id);
   return useCurrentEntityField(entity, (a) => a.icon());
 }
 
 /** @emoji 📖 Live {@link Author#role}. */
-export function useAuthorRole(authorId?: string): FieldReadState<string> {
-  const entity = resolveAuthor(authorId);
+export function useAuthorRole(id?: string): FieldReadState<string> {
+  const entity = resolveAuthor(id);
   return useCurrentEntityField(entity, (a) => a.role());
 }
 // #endregion ✍️Author
@@ -2081,155 +2078,161 @@ export function useRemoveConceptAttributes(): readonly [(ids: readonly string[])
 
 // #region 🎨Representation
 /** @emoji 📖 Live {@link Representation#url}. */
-export function useRepresentationUrl(representationId?: string): FieldReadState<string> {
-  const entity = resolveRepresentation(representationId);
+export function useRepresentationUrl(id?: string): FieldReadState<string> {
+  const entity = resolveRepresentation(id);
   return useCurrentEntityField(entity, (r) => r.url());
 }
 
 /** @emoji 📖 Live {@link Representation#description}. */
-export function useRepresentationDescription(representationId?: string): FieldReadState<string> {
-  const entity = resolveRepresentation(representationId);
+export function useRepresentationDescription(id?: string): FieldReadState<string> {
+  const entity = resolveRepresentation(id);
   return useCurrentEntityField(entity, (r) => r.description());
 }
 
 /** @emoji 📖 Live {@link Representation#tags}. */
-export function useRepresentationTags(representationId?: string): FieldReadState<readonly Tag[]> {
-  const entity = resolveRepresentation(representationId);
+export function useRepresentationTags(id?: string): FieldReadState<readonly Tag[]> {
+  const entity = resolveRepresentation(id);
   return useCurrentEntityField(entity, (r) => r.tags());
 }
 
 /** @emoji 📖 Live {@link Representation#qualities}. */
-export function useRepresentationQualities(representationId?: string): FieldReadState<readonly Quality[]> {
-  const entity = resolveRepresentation(representationId);
+export function useRepresentationQualities(id?: string): FieldReadState<readonly Quality[]> {
+  const entity = resolveRepresentation(id);
   return useCurrentEntityField(entity, (r) => r.qualities());
 }
 
 /** @emoji 📖 Live {@link Representation#attributes}. */
-export function useRepresentationAttributes(representationId?: string): FieldReadState<readonly Attribute[]> {
-  const entity = resolveRepresentation(representationId);
+export function useRepresentationAttributes(id?: string): FieldReadState<readonly Attribute[]> {
+  const entity = resolveRepresentation(id);
   return useCurrentEntityField(entity, (r) => r.attributes());
 }
 
 /** @emoji 📖 Live {@link Representation#file}. */
-export function useRepresentationFile(representationId?: string): FieldReadState<File | null> {
-  const entity = resolveRepresentation(representationId);
+export function useRepresentationFile(id?: string): FieldReadState<File | null> {
+  const entity = resolveRepresentation(id);
   return useCurrentEntityField(entity, (r) => r.file());
 }
 
 /** @emoji 📖 Live {@link File#name}. */
-export function useFileName(fileId?: string): FieldReadState<string> {
-  const entity = resolveFile(fileId);
+export function useFileName(id?: string): FieldReadState<string> {
+  const entity = resolveFile(id);
   return useCurrentEntityField(entity, (f) => f.name());
 }
 // #endregion 🎨Representation
 
 // #region 🧩Piece
 /** @emoji 📖 Live {@link Piece#name}. */
-export function usePieceName(): FieldReadState<string> {
-  const entity = resolvePiece();
+export function usePieceName(id?: string): FieldReadState<string> {
+  const entity = resolvePiece(id);
   return useCurrentEntityField(entity, (p) => p.name());
 }
 
 /** @emoji 📖 Live {@link Piece#description}. */
-export function usePieceDescription(): FieldReadState<string> {
-  const entity = resolvePiece();
+export function usePieceDescription(id?: string): FieldReadState<string> {
+  const entity = resolvePiece(id);
   return useCurrentEntityField(entity, (p) => p.description());
 }
 
 /** @emoji 📖 Live {@link Piece#icon}. */
-export function usePieceIcon(): FieldReadState<string> {
-  const entity = resolvePiece();
+export function usePieceIcon(id?: string): FieldReadState<string> {
+  const entity = resolvePiece(id);
   return useCurrentEntityField(entity, (p) => p.icon());
 }
 
 /** @emoji 📖 Live {@link Piece#scale}. */
-export function usePieceScale(): FieldReadState<number | null> {
-  const entity = resolvePiece();
+export function usePieceScale(id?: string): FieldReadState<number | null> {
+  const entity = resolvePiece(id);
   return useCurrentEntityField(entity, (p) => p.scale());
 }
 
 /** @emoji 📖 Live {@link Piece#position}. */
-export function usePiecePosition(): FieldReadState<Position> {
-  const entity = resolvePiece();
+export function usePiecePosition(id?: string): FieldReadState<Position> {
+  const entity = resolvePiece(id);
   return useCurrentEntityField(entity, async (p) => p.position());
 }
 
 /** @emoji 📖 Live {@link Piece#flatPosition}. */
-export function usePieceFlatPosition(): FieldReadState<Position> {
-  const entity = resolvePiece();
+export function usePieceFlatPosition(id?: string): FieldReadState<Position> {
+  const entity = resolvePiece(id);
   return useCurrentEntityField(entity, async (p) => p.flatPosition());
 }
 
 /** @emoji 📖 Live {@link Piece#plane}. */
-export function usePiecePlane(): FieldReadState<Plane | null> {
-  const entity = resolvePiece();
+export function usePiecePlane(id?: string): FieldReadState<Plane | null> {
+  const entity = resolvePiece(id);
   return useCurrentEntityField(entity, async (p) => p.position().plane());
 }
 
 /** @emoji 📖 Live {@link Piece#center}. */
-export function usePieceCenter(): FieldReadState<Coordinate | null> {
-  const entity = resolvePiece();
+export function usePieceCenter(id?: string): FieldReadState<Coordinate | null> {
+  const entity = resolvePiece(id);
   return useCurrentEntityField(entity, async (p) => p.position().center());
 }
 
 /** @emoji 📖 Live {@link Piece#flatPlane}. */
-export function usePieceFlatPlane(): FieldReadState<Plane | null> {
-  const entity = resolvePiece();
+export function usePieceFlatPlane(id?: string): FieldReadState<Plane | null> {
+  const entity = resolvePiece(id);
   return useCurrentEntityField(entity, async (p) => p.flatPosition().plane());
 }
 
 /** @emoji 📖 Live {@link Piece#flatCenter}. */
-export function usePieceFlatCenter(): FieldReadState<Coordinate | null> {
-  const entity = resolvePiece();
+export function usePieceFlatCenter(id?: string): FieldReadState<Coordinate | null> {
+  const entity = resolvePiece(id);
   return useCurrentEntityField(entity, async (p) => p.flatPosition().center());
 }
 
 /** @emoji 📖 Live {@link Piece#blueprint}. */
-export function usePieceBlueprint(): FieldReadState<PieceBlueprint | null> {
-  const entity = resolvePiece();
+export function usePieceBlueprint(id?: string): FieldReadState<PieceBlueprint | null> {
+  const entity = resolvePiece(id);
   return useCurrentEntityField(entity, (p) => p.blueprint());
 }
 
 /** @emoji 📖 Live {@link Piece#attributes}. */
-export function usePieceAttributes(): FieldReadState<readonly Attribute[]> {
-  const entity = resolvePiece();
+export function usePieceAttributes(id?: string): FieldReadState<readonly Attribute[]> {
+  const entity = resolvePiece(id);
   return useCurrentEntityField(entity, (p) => p.attributes());
 }
 
 /** @emoji 📖 Live {@link Piece#connectionKind}. */
-export function usePieceConnectionKind(): FieldReadState<"FIXED" | "CONNECTED" | null> {
-  const entity = resolvePiece();
+export function usePieceConnectionKind(id?: string): FieldReadState<"FIXED" | "CONNECTED" | null> {
+  const entity = resolvePiece(id);
   return useCurrentEntityField(entity, (p) => p.connectionKind());
 }
 
 /** @emoji 📖 Live {@link Piece#parentPiece}. */
-export function usePieceParentPiece(): FieldReadState<Piece | null> {
-  const entity = resolvePiece();
+export function usePieceParentPiece(id?: string): FieldReadState<Piece | null> {
+  const entity = resolvePiece(id);
   return useCurrentEntityField(entity, (p) => p.parentPiece());
 }
 
 /** @emoji 📖 Live {@link Piece#parentConnection}. */
-export function usePieceParentConnection(): FieldReadState<Connection | null> {
-  const entity = resolvePiece();
+export function usePieceParentConnection(id?: string): FieldReadState<Connection | null> {
+  const entity = resolvePiece(id);
   return useCurrentEntityField(entity, (p) => p.parentConnection());
 }
 
 /** @emoji 📖 Live {@link Piece#childPieces}. */
-export function usePieceChildPieces(): FieldReadState<readonly Piece[]> {
-  const entity = resolvePiece();
+export function usePieceChildPieces(id?: string): FieldReadState<readonly Piece[]> {
+  const entity = resolvePiece(id);
   return useCurrentEntityField(entity, (p) => p.childPieces());
 }
 
 /** @emoji 📖 Live {@link Piece#childConnections}. */
-export function usePieceChildConnections(): FieldReadState<readonly Connection[]> {
-  const entity = resolvePiece();
+export function usePieceChildConnections(id?: string): FieldReadState<readonly Connection[]> {
+  const entity = resolvePiece(id);
   return useCurrentEntityField(entity, (p) => p.childConnections());
 }
 
 /** @emoji 📖 Live {@link Piece#depth}. */
-export function usePieceDepth(): FieldReadState<number | null> {
-  const entity = resolvePiece();
+export function usePieceDepth(id?: string): FieldReadState<number | null> {
+  const entity = resolvePiece(id);
   return useCurrentEntityField(entity, (p) => p.depth());
+}
+
+/** @emoji 📖 Live {@link Piece#path} as ordered piece node keys (assembly chain). */
+export function usePiecePathPieces(id?: string): FieldReadState<readonly string[]> {
+  const entity = resolvePiece(id);
+  return useCurrentEntityField(entity, (p) => p.pathPieces());
 }
 
 const usePieceRenameOperation = semioInternalOperationBind<Piece, [string]>((p, n) => p.rename(n));
@@ -2346,40 +2349,40 @@ const usePiecesChangeBlueprintOperation = semioInternalPiecesOpBind((ops, id: st
 /** @emoji ✍️ {@link PiecesOperation#drag} using {@link PiecesBatchContext} + {@link DesignIdContext}. */
 export function useDragPieces(): readonly [(offset: OffsetInput) => Promise<SetResult>, OperationStatus] {
   const store = useJsStore();
-  const designId = React.useContext(DesignIdContext)?.id ?? React.useContext(DesignContext)?.designId ?? null;
+  const id = React.useContext(DesignIdContext)?.id ?? React.useContext(DesignContext)?.id ?? null;
   const batch = React.useContext(PiecesBatchContext);
-  const pieceIds = batch?.pieceIds ?? [];
-  const getOps = React.useCallback(() => (designId == null || pieceIds.length === 0 ? null : new PiecesOperation(store.session, designId, pieceIds, store.id)), [store.session, store.id, designId, pieceIds]);
+  const ids = batch?.ids ?? [];
+  const getOps = React.useCallback(() => (id == null || ids.length === 0 ? null : new PiecesOperation(store.session, id, ids, store.id)), [store.session, store.id, id, ids]);
   return usePiecesDragOperation(getOps);
 }
 
 /** @emoji ✍️ {@link PiecesOperation#move}. */
 export function useMovePieces(): readonly [(offset: OffsetInput) => Promise<SetResult>, OperationStatus] {
   const store = useJsStore();
-  const designId = React.useContext(DesignIdContext)?.id ?? React.useContext(DesignContext)?.designId ?? null;
+  const id = React.useContext(DesignIdContext)?.id ?? React.useContext(DesignContext)?.id ?? null;
   const batch = React.useContext(PiecesBatchContext);
-  const pieceIds = batch?.pieceIds ?? [];
-  const getOps = React.useCallback(() => (designId == null || pieceIds.length === 0 ? null : new PiecesOperation(store.session, designId, pieceIds, store.id)), [store.session, store.id, designId, pieceIds]);
+  const ids = batch?.ids ?? [];
+  const getOps = React.useCallback(() => (id == null || ids.length === 0 ? null : new PiecesOperation(store.session, id, ids, store.id)), [store.session, store.id, id, ids]);
   return usePiecesMoveOperation(getOps);
 }
 
 /** @emoji ✍️ {@link PiecesOperation#fix}. */
 export function useFixPieces(): readonly [() => Promise<SetResult>, OperationStatus] {
   const store = useJsStore();
-  const designId = React.useContext(DesignIdContext)?.id ?? React.useContext(DesignContext)?.designId ?? null;
+  const id = React.useContext(DesignIdContext)?.id ?? React.useContext(DesignContext)?.id ?? null;
   const batch = React.useContext(PiecesBatchContext);
-  const pieceIds = batch?.pieceIds ?? [];
-  const getOps = React.useCallback(() => (designId == null || pieceIds.length === 0 ? null : new PiecesOperation(store.session, designId, pieceIds, store.id)), [store.session, store.id, designId, pieceIds]);
+  const ids = batch?.ids ?? [];
+  const getOps = React.useCallback(() => (id == null || ids.length === 0 ? null : new PiecesOperation(store.session, id, ids, store.id)), [store.session, store.id, id, ids]);
   return usePiecesFixOperation(getOps);
 }
 
 /** @emoji ✍️ {@link PiecesOperation#changeBlueprint}. */
 export function useChangePiecesBlueprint(): readonly [(blueprintId: string) => Promise<SetResult>, OperationStatus] {
   const store = useJsStore();
-  const designId = React.useContext(DesignIdContext)?.id ?? React.useContext(DesignContext)?.designId ?? null;
+  const id = React.useContext(DesignIdContext)?.id ?? React.useContext(DesignContext)?.id ?? null;
   const batch = React.useContext(PiecesBatchContext);
-  const pieceIds = batch?.pieceIds ?? [];
-  const getOps = React.useCallback(() => (designId == null || pieceIds.length === 0 ? null : new PiecesOperation(store.session, designId, pieceIds, store.id)), [store.session, store.id, designId, pieceIds]);
+  const ids = batch?.ids ?? [];
+  const getOps = React.useCallback(() => (id == null || ids.length === 0 ? null : new PiecesOperation(store.session, id, ids, store.id)), [store.session, store.id, id, ids]);
   return usePiecesChangeBlueprintOperation(getOps);
 }
 // #endregion 🪢Pieces

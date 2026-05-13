@@ -76,7 +76,6 @@ import {
   getKitRegistryBridge,
   getOrCreateKitFileState,
   ICON_WIDTH,
-  id,
   InMemoryKitStore,
   KitAlternativeSelectionProvider,
   KitDiff,
@@ -100,6 +99,12 @@ import {
   TypeContextProvider,
   TypeDiff,
   useActiveKitTab,
+  useAddConnector,
+  useAddTypeAttribute,
+  useAuthorEmail,
+  useAuthorName,
+  useChangeConnectorDescription,
+  useChangeConnectorIcon,
   useChangeDesignDescription,
   useChangeDesignIcon,
   useChangeKitDescription,
@@ -107,6 +112,9 @@ import {
   useChangeTypeIcon,
   useConnection,
   useConnectionContext,
+  useConnectorCode,
+  useConnectorDescription,
+  useConnectorPort,
   useConnections,
   useCreateAuthor,
   useCreateFolder,
@@ -121,6 +129,7 @@ import {
   useDesignUnit,
   useExplodeableDesignNodes as useExplodeableDesignNodeIdsFromKit,
   useFilesFull,
+  useFileName,
   useKitStoredFileUrls as useFileUrls,
   useHasDesignContext,
   useHasTypeContext,
@@ -143,21 +152,27 @@ import {
   useKitWasmHost,
   useMoveKitArtifactToFolder,
   useOpenKits,
-  useParentPieceId as useParentPieceIdFromKit,
   usePiece,
   usePieceContext,
   usePieceContextRead,
-  usePieceDepthKitHostBinding as usePieceDepthFromKit,
-  usePieceFlatPlaneKitHostBinding as usePieceFlatPlane,
-  usePieceMetadata as usePieceMetadataFromKit,
-  usePieceParentConnection as usePieceParentConnectionFromKit,
+  usePieceConnectionKind as usePieceConnectionKindState,
+  usePieceDepth as usePieceDepthState,
+  usePieceFlatCenter as usePieceFlatCenterState,
+  usePieceFlatPlane as usePieceFlatPlaneState,
+  usePieceParentConnection as usePieceParentConnectionState,
   usePieces,
-  usePiecesMetadataMap as usePiecesMetadataRecordFromKit,
   useQuality,
   useQualityContext,
   useQualityContextRead,
   useRegistryHasKit,
   useRegistryKitPersistenceKind,
+  useRemoveConnector,
+  useRemoveConnectors,
+  useRemoveTypeAttribute,
+  useRepresentationDescription,
+  useRepresentationFile,
+  useRepresentationUrl,
+  useRenameConnector,
   useRenameDesign,
   useRenameKit,
   useRenameType,
@@ -182,12 +197,16 @@ import {
   usePieceScale as useSchemaPieceScale,
   useTagsFull,
   useType,
+  useTypeAttributes,
+  useTypeAuthors,
+  useTypeConnectors,
   useTypeContext,
   useTypeContextRead,
   useTypeDescription,
   useTypeIcon,
   useTypeImage,
   useTypeName,
+  useTypeRepresentations,
   useTypes,
   useTypeUnit,
   useUpdateAuthor,
@@ -196,6 +215,7 @@ import {
   useWriteIndicator,
   Vector
 } from "@semio/react";
+import type { DesignPieceDiagramRow } from "@semio/react";
 import { gunzipSync } from "fflate";
 
 import type {
@@ -1040,7 +1060,10 @@ export function createSqliteFolderPersistenceFactory(_adapter: SqliteAdapter): P
 
 // #region 📍Shared
 
-// #endregion 📍Imports
+/** @emoji 🪪 Fresh UUID string for sketchpad-scoped entities (browser {@link crypto.randomUUID}). */
+function id(): string {
+  return crypto.randomUUID();
+}
 
 // #region ⚙️Types
 
@@ -7225,140 +7248,6 @@ const clearDomRoot = (element: HTMLElement, root: Root): void => {
     delete rootHost.__semioReactRoot__;
   }
 };
-
-// Sketchpad consumers SHOULD import field hooks and providers from `@semio/react` directly (no barrel re-exports here).
-
-// #region 🎆Piece Derived Hooks
-
-export type PieceMetadata = {
-  plane: Plane;
-  center: Coordinate;
-  fixedPieceId: string;
-  parentPieceId: string | null;
-  depth: number;
-  path: string[];
-};
-
-export function usePiecesMetadataMap(): Map<string, PieceMetadata> {
-  const designScope = useDesignContext();
-  const [placementMap] = usePiecesMetadataRecordFromKit(designScope?.id);
-  return useMemo(() => {
-    const m = new Map<string, PieceMetadata>();
-    if (placementMap instanceof Map) {
-      for (const [k, v] of placementMap) m.set(k, v as PieceMetadata);
-    } else if (placementMap && typeof placementMap === "object") {
-      for (const [k, v] of Object.entries(placementMap as Record<string, PieceMetadata>)) m.set(k, v as PieceMetadata);
-    }
-    if (typeof window !== "undefined") {
-      (window as any).__SEMIO_PIECES_METADATA__ = Object.fromEntries(m);
-    }
-    return m;
-  }, [placementMap]);
-}
-
-export function usePieceMetadata(pieceId?: Id): PieceMetadata | undefined {
-  const designScope = useDesignContext();
-  const pieceScope = usePieceContext();
-  const resolvedPieceId = pieceId ?? pieceScope?.id;
-  const [meta] = usePieceMetadataFromKit(designScope?.id, resolvedPieceId);
-  return meta as PieceMetadata | undefined;
-}
-
-export function useIsConnectedPiece(id?: Id): boolean {
-  const designScope = useDesignContext();
-  const pieceScope = usePieceContext();
-  const pieceId = id ?? pieceScope?.id;
-  const [v] = useIsConnectedPieceFromKit(designScope?.id, pieceId);
-  return Boolean(v);
-}
-
-export function usePieceDepth(id?: Id): number {
-  const designScope = useDesignContext();
-  const pieceScope = usePieceContext();
-  const pieceId = id ?? pieceScope?.id;
-  const [d] = usePieceDepthFromKit(designScope?.id, pieceId);
-  return typeof d === "number" ? d : 0;
-}
-
-export function useFixedPieceId(id?: Id): string | undefined {
-  const designScope = useDesignContext();
-  const pieceScope = usePieceContext();
-  const pieceId = id ?? pieceScope?.id;
-  const [v] = useFixedPieceIdFromKit(designScope?.id, pieceId);
-  return v;
-}
-
-export function useParentPieceId(id?: Id): string | null {
-  const designScope = useDesignContext();
-  const pieceScope = usePieceContext();
-  const pieceId = id ?? pieceScope?.id;
-  const [v] = useParentPieceIdFromKit(designScope?.id, pieceId);
-  return v ?? null;
-}
-
-export function useCurrentPiecePlane(): Plane {
-  return {
-    origin: { x: 0, y: 0, z: 0 },
-    xAxis: { x: 1, y: 0, z: 0 },
-    yAxis: { x: 0, y: 1, z: 0 },
-  };
-}
-
-export function usePieceParentConnection(id?: Id): Connection | null {
-  const designScope = useDesignContext();
-  const pieceScope = usePieceContext();
-  const pieceId = (typeof id === "string" ? id : (pieceScope?.id ?? null)) as string | null;
-  const [c] = usePieceParentConnectionFromKit(designScope?.id, pieceId ?? undefined);
-  return (c as Connection | undefined) ?? null;
-}
-
-// #endregion 🎆Piece Derived Hooks
-
-// #region 🎹Design Derived Hooks
-
-export function useIncludedDesigns(): Design[] {
-  const designId = useDesignContext()?.id;
-  const [included] = useIncludedDesignsFromKit(designId);
-  return Array.isArray(included) ? (included as Design[]) : [];
-}
-
-export function useDesignId(): string | null {
-  const designScope = useDesignContext();
-  return designScope?.id ?? null;
-}
-
-export function usePiecesFromIds(pieceIds: Id[]): Piece[] {
-  const pieces = usePieces();
-  return useMemo(() => pieces.filter((p) => pieceIds.includes(p.id)), [pieces, pieceIds]);
-}
-
-export function useReplacableTypes(pieceIds: Id[], selectedVariants?: string[]): Type[] {
-  const designId = useDesignContext()?.id;
-  const [replaceTypeIds] = useReplacableTypeIdsFromKit(designId, pieceIds);
-  const { types: allTypes } = useTypes();
-  return useMemo(() => {
-    const idSet = new Set((replaceTypeIds ?? []).map(String));
-    const base = ((allTypes ?? []) as Type[]).filter((t) => t && idSet.has(t.id));
-    if (!selectedVariants?.length) return base;
-    return base.filter((t) => (t as any).variant == null || selectedVariants.includes((t as any).variant));
-  }, [replaceTypeIds, allTypes, selectedVariants]);
-}
-
-export function useReplacableDesigns(piece: Piece): Design[] {
-  const designId = useDesignContext()?.id;
-  const pieceIds = piece?.id ? [piece.id] : [];
-  const [replaceDesignIds] = useReplacableDesignIdsFromKit(designId, pieceIds);
-  const { designs: allDesigns } = useDesigns();
-  return useMemo(() => {
-    const idSet = new Set((replaceDesignIds ?? []).map(String));
-    return ((allDesigns ?? []) as Design[]).filter((d) => d && idSet.has(d.id));
-  }, [replaceDesignIds, allDesigns, piece?.id]);
-}
-
-// #endregion 🎹Design Derived Hooks
-
-// #endregion 🥈Entity Hooks
-
 // #region ⏱️Kit
 // Shell kit id context lives in `@semio/react` ({@link ActiveKitTabContextProvider}, {@link ActiveKitTabContext}).
 
@@ -7899,9 +7788,7 @@ function applyDiff(syncDoc: SyncDoc, syncSketchpad: SyncMap<any>, diff: Sketchpa
       const current = JSON.parse((syncSketchpad.get("hotkeyOverrides") as string) || "{}");
       syncSketchpad.set("hotkeyOverrides", JSON.stringify({ ...current, ...diff.hotkeyOverrides }));
     }
-    if ("activeHotkeySetting" in diff) {
-      syncSketchpad.set("activeHotkeySetting", diff.activeHotkeySetting || "");
-    }
+    if ("activeHotkeySetting" in diff) syncSketchpad.set("activeHotkeySetting", diff.activeHotkeySetting || "");
   });
 }
 
@@ -20119,13 +20006,6 @@ export function useSketchpadCommands() {
 }
 
 /**
- * Hook returning shallow kit data for all kits.
- *
- **/
-export function useKits(): Kit[] {
-  return useOpenKits();
-}
-/**
  * Hook returning kit command dispatchers for a specific kit by id.
  **/
 function useKitCommandsById(kitId?: string) {
@@ -23565,47 +23445,7 @@ const LayoutWrapper: FC = () => {
     "[&_[data-slot='tree-section-row']]:mt-[24px]",
     "[&_[data-slot='tree-section-content']]:gap-y-[6px]",
     "[&_[data-slot='tree-item-content']]:gap-y-[3px]",
-    "[&_[data-slot='tree-property-content']]:gap-y-[3px]",
-    "[&_[data-slot='tree-label']]:text-xs",
-    "[&_[data-slot='tree-label']]:tracking-[0.04em]",
-    "[&_[data-slot='tree-label']]:leading-[1.1]",
-    "[&_[data-slot='property-row']]:min-h-[24px]",
-    "[&_[data-slot='property-row']]:items-start",
-    "[&_[data-slot='property-row']]:grid-cols-[96px_minmax(0,1fr)]",
-    "[&_[data-slot='property-row']]:gap-x-[8px]",
-    "[&_[data-slot='property-control']]:min-h-[22px]",
-    "[&_[data-slot='property-control']_[data-detail-panel-control='fill']]:w-full",
-    "[&_[data-slot='property-control']_[data-detail-panel-control='fill']]:min-w-0",
-    "[&_[data-slot='property-control']_[data-detail-panel-control='fit']]:max-w-full",
-    "[&_[data-slot='property-control']:has(textarea[data-slot='textarea'])]:h-auto",
-    "[&_[data-slot='property-label']]:min-w-0",
-    "[&_[data-slot='property-label']]:px-0",
-    "[&_[data-slot='property-label']]:text-xs",
-    "[&_[data-slot='property-label']]:font-normal",
-    "[&_input[data-slot='input']]:!h-[22px]",
-    "[&_input[data-slot='input']]:rounded-[3px]",
-    "[&_input[data-slot='input']]:px-[6px]",
-    "[&_input[data-slot='input']]:text-xs",
-    "[&_[data-collapsed='true'][data-slot='input']]:rounded-[3px]",
-    "[&_[data-collapsed='true'][data-slot='input']]:px-[6px]",
-    "[&_[data-collapsed='true'][data-slot='input']]:text-xs",
-    "[&_[data-collapsed='true'][data-slot='input'][data-overflow-layout='single-line']]:!h-[22px]",
-    "[&_[data-slot='select-trigger']]:!h-[22px]",
-    "[&_[data-slot='select-trigger']]:w-full",
-    "[&_[data-slot='select-trigger']]:rounded-[3px]",
-    "[&_[data-slot='select-trigger']]:px-[6px]",
-    "[&_[data-slot='select-trigger']]:text-xs",
-    "[&_[data-slot='select-trigger']_svg]:size-[12px]",
-    "[&_[data-slot='stepper-group']]:h-[22px]",
-    "[&_[data-slot='stepper-group']]:w-full",
-    "[&_[data-slot='stepper-group']]:min-w-0",
-    "[&_[data-slot='stepper-group']]:rounded-[3px]",
-    "[&_[data-slot='stepper-minus']]:h-[22px]",
-    "[&_[data-slot='stepper-minus']]:w-[22px]",
-    "[&_[data-slot='stepper-plus']]:h-[22px]",
-    "[&_[data-slot='stepper-plus']]:w-[22px]",
-    "[&_[data-slot='stepper-group']_[data-slot='input']]:!h-[22px]",
-    "[&_[data-slot='stepper-group']_[data-slot='input']]:!w-full",
+    "[&_[data-slslot='input']]:!w-full",
     "[&_[data-slot='stepper-group']_[data-slot='input']]:!min-w-0",
     "[&_[data-slot='stepper-group']_[data-slot='input']]:!px-[6px]",
     "[&_[data-slot='slider-row']]:items-center",
@@ -23744,7 +23584,6 @@ const LayoutWrapper: FC = () => {
     }
     return [];
   }, []);
-  const kits = useKits();
   const getTypeOrDesignName = useCallback(() => {
     if (!activeDragData) return null;
     if (activeDragData.type === "type") {
@@ -29087,28 +28926,26 @@ export function useDesignAppConnectionColor(id: DesignAppId | undefined, connect
 
 /**
  * Returns the center position of a piece on the canvas.
- *MUST look up the piece metadata for the given ID and return its center.
+ *MUST read {@link Piece#flatCenter} via {@link usePieceFlatCenterState}.
  **/
 export function useDesignAppPieceCenter(id?: DesignAppId, pieceId?: Id): Coordinate | undefined {
-  const scope = useDesignAppShell();
-  const appId = id ?? (scope ? JSON.parse(scope.id) : undefined);
+  void id;
   const pieceScope = usePieceContext();
   const finalPieceId = pieceId ?? pieceScope?.id;
-  const metadata = usePiecesMetadataMap();
-  return finalPieceId ? metadata.get(finalPieceId)?.center : undefined;
+  const { value } = usePieceFlatCenterState(typeof finalPieceId === "string" ? finalPieceId : undefined);
+  return value ?? undefined;
 }
 
 /**
  * Returns the plane orientation of a piece.
- *MUST look up the piece metadata for the given ID and return its plane.
+ *MUST read {@link Piece#flatPlane} via {@link usePieceFlatPlaneState}.
  **/
 export function useDesignAppPiecePlane(id?: DesignAppId, pieceId?: Id): Plane | undefined {
-  const scope = useDesignAppShell();
-  const appId = id ?? (scope ? JSON.parse(scope.id) : undefined);
+  void id;
   const pieceScope = usePieceContext();
   const finalPieceId = pieceId ?? pieceScope?.id;
-  const metadata = usePiecesMetadataMap();
-  return finalPieceId ? metadata.get(finalPieceId)?.plane : undefined;
+  const { value } = usePieceFlatPlaneState(typeof finalPieceId === "string" ? finalPieceId : undefined);
+  return value ?? undefined;
 }
 
 // #region 🎮Footer
@@ -30155,7 +29992,7 @@ const PiecesSectionForm: FC = () => {
   const { run: runUpdateDesign } = useUpdateDesign();
   const includedDesigns = useIncludedDesigns();
   const includedDesignMap = useMemo(() => new Map(includedDesigns.map((includedDesign) => [includedDesign.id, includedDesign])), [includedDesigns]);
-  const metadata = usePiecesMetadataMap();
+  const layoutMap = useDesignPieceLayoutMap();
   const allConnections = useConnections();
   const [selection] = useDesignAppSelection();
   const knownSelectablePieceIds = useMemo(() => [...new Set([...(design?.pieces || []).map((entry) => entry.id), ...includedDesigns.map((entry) => entry.id)])], [design?.pieces, includedDesigns]);
@@ -33160,16 +32997,16 @@ const connectionToEdge = (
  **/
 /**
  **/
-const designToNodesAndEdges = (design: Design, metadata: Map<string, PieceMetadata>, kit: any, selection?: DesignAppSelection) => {
+const designToNodesAndEdges = (design: Design, placementByPiece: Map<string, PiecePlacement>, kit: any, selection?: DesignAppSelection) => {
   if (!design) return null;
 
   const selectedPieces = new Set(selection?.pieces ?? []);
   const selectedConnections = new Set(selection?.connections ?? []);
 
   const centerMap = new Map<string, Coordinate>();
-  metadata.forEach((meta, pieceId) => {
-    if (meta.center) {
-      centerMap.set(pieceId, meta.center);
+  placementByPiece.forEach((row, pieceId) => {
+    if (row.center) {
+      centerMap.set(pieceId, row.center);
     }
   });
 
@@ -33372,7 +33209,7 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
     if (activeDesignId == null) return null;
     return kitDesigns.find((d) => d.id === activeDesignId) ?? kit.designs?.find((d) => d.id === activeDesignId) ?? null;
   }, [activeDesignId, kitDesigns, kit]) as Design | null;
-  const metadata = usePiecesMetadataMap();
+  const layoutMap = useDesignPieceLayoutMap();
 
   const selectedConnector = getPrimaryDesignConnectorSelection(selection);
   const selectedConnectorPortId = useMemo(() => {
@@ -33390,11 +33227,11 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
   const { baseNodes, edges } = useMemo(() => {
     if (!design) return { baseNodes: [], edges: [] };
     const minimalKit = { types: kitTypes, designs: kitDesigns } as Kit;
-    const result = designToNodesAndEdges(design, metadata, minimalKit) ?? { nodes: [], edges: [] };
+    const result = designToNodesAndEdges(design, layoutMap, minimalKit) ?? { nodes: [], edges: [] };
     const filteredNodes = designFilters.showPieces ? result.nodes : [];
     const filteredEdges = designFilters.showPieces && designFilters.showConnections ? result.edges : [];
     return { baseNodes: filteredNodes, edges: filteredEdges };
-  }, [design, metadata, kitTypes, kitDesigns, designFilters.showPieces, designFilters.showConnections]);
+  }, [design, layoutMap, kitTypes, kitDesigns, designFilters.showPieces, designFilters.showConnections]);
 
   const [nodes, setNodes] = useState<typeof baseNodes>(baseNodes);
 
@@ -34049,7 +33886,7 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
       isDraggingNodeRef.current = true;
       suppressEdgeRecomputeRef.current = true;
       const dragRoots = new Set(updatedSelectedIds.length > 0 ? updatedSelectedIds : [pieceId]);
-      const descendants = getDownstreamDescendants(metadata, dragRoots);
+      const descendants = getDownstreamDescendants(layoutMap, dragRoots);
       dragDescendantsRef.current = descendants;
       const offsets = new Map<string, { dx: number; dy: number }>();
       const descNodeIds = new Map<string, string>();
@@ -34081,7 +33918,7 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
       designStore?.setDraggingPieces(allDraggedIds);
       setTimeout(() => transaction?.start(), 0);
     },
-    [activeTool, isDraggingNodeRef, transaction, metadata, nodes, diagramId, designStore, setSelection],
+    [activeTool, isDraggingNodeRef, transaction, layoutMap, nodes, diagramId, designStore, setSelection],
   );
 
   const isDraggingRef = useRef(false);
@@ -34143,7 +33980,7 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
         }
 
         const type = (selectedNode as PieceNode).data.type;
-        const fixedPieceId = metadata.get(piece.id)?.fixedPieceId;
+        const assemblyRootId = layoutMap.get(piece.id)?.assemblyRootPieceId;
 
         if (altPressed) {
           const EQUAL_DISTANCE_THRESHOLD = 15;
@@ -34610,7 +34447,7 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
         designStore.setDraggingPieces(new Set(updatedPieces.map((u) => u.id)));
       }
     },
-    [design, reactFlowInstanceRef, metadata, designStore],
+    [design, reactFlowInstanceRef, layoutMap, designStore],
   );
 
   const onNodeDragStop = useCallback(
@@ -34725,7 +34562,7 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
             if (selectedNode.type === "design") continue;
             const piece = selectedNode.data.piece;
             const type = (selectedNode as PieceNode).data.type;
-            const fixedPieceId = metadata.get(piece.id)?.fixedPieceId;
+            const assemblyRootId = layoutMap.get(piece.id)?.assemblyRootPieceId;
             const selectedInternalNode = rfInstance.getInternalNode(selectedNode.id);
             if (!selectedInternalNode) continue;
             const selX = selectedInternalNode.internals.positionAbsolute.x;
@@ -34753,7 +34590,7 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
                   if (!otherConnector || !otherConnector.id) continue;
                   if (usedPorts.has(`${otherNode.data.piece.id}::${otherConnector.id}`)) continue;
                   if (!selectedNode.data.piece.id || !otherNode.data.piece.id) continue;
-                  if (fixedPieceId && fixedPieceId === metadata.get(otherNode.data.piece.id)?.fixedPieceId) continue;
+                  if (assemblyRootId && assemblyRootId === layoutMap.get(otherNode.data.piece.id)?.assemblyRootPieceId) continue;
                   const otherPort = otherConnector.port?.id ? portMap.get(otherConnector.port.id) : undefined;
                   if (!arePortsCompatible(connectorPort, otherPort, kit?.ports || [])) continue;
                   const dx = selX + handle.x - (otherX + otherHandle.x);
@@ -36127,7 +35964,7 @@ const DesignWindowApp: FC<AppProps> = () => {
         designId: design?.id ?? null,
         pieceIds: (design?.pieces ?? []).map((entry) => entry.id),
         connectionIds: (design?.connections ?? []).map((entry) => entry.id),
-        includedDesignIds: getIncludedDesigns(design || ({} as Design)).map((entry) => entry.id),
+        includedDesignIds: design && kit ? getIncludedDesigns(kit, design).map((entry) => entry.id) : [],
         selectionPieces: (selection.pieces ?? []).map((entry) => resolveSelectionEntryId(entry) ?? entry),
         selectionConnections: (selection.connections ?? []).map((entry) => resolveSelectionEntryId(entry) ?? entry),
         selectionConnector: selection.connector ?? null,
@@ -36198,7 +36035,7 @@ const DesignWindowApp: FC<AppProps> = () => {
     const selectionPieceEntries = (selection.pieces || []) as any[];
     const selectionConnectionEntries = (selection.connections || []) as any[];
     const designConnections = design?.connections || [];
-    const knownPieceIdList = [...new Set([...(design?.pieces || []).map((entry) => entry.id), ...getIncludedDesigns(design || ({} as Design)).map((entry) => entry.id)])];
+    const knownPieceIdList = [...new Set([...(design?.pieces || []).map((entry) => entry.id), ...(design && kit ? getIncludedDesigns(kit, design).map((entry) => entry.id) : [])])];
     const knownConnectionIds = new Set(designConnections.map((entry) => entry.id));
     const selectedPieceIds = selectionPieceEntries.map((entry) => resolveSelectionEntryIdByKnownIds(entry, knownPieceIdList)).filter((entry): entry is Id => typeof entry === "string" && entry.length > 0);
     const knownPieceIdSet = new Set(knownPieceIdList);
@@ -38323,162 +38160,35 @@ const selectTypeMeshId = (type: Type) => type.id;
 /**
  * TypeMesh holds the data fields for a TypeMesh record.
  **/
-const TypeMesh: FC<{ activeTool: ToolKind; onPortPreview: (position: THREE.Vector3, normal: THREE.Vector3) => void; onPortCreate: (position: THREE.Vector3, normal: THREE.Vector3) => void; onClearPreview: () => void }> = ({
-  activeTool,
-  onPortPreview,
-  onPortCreate,
-  onClearPreview,
-}) => {
-  const typeRepresentations = useTypeContextRead(selectTypeRepresentations) as Representation[] | undefined;
-  const typeConcepts = useTypeContextRead(selectTypeConcepts) as any[] | undefined;
-  const typeId = useTypeContextRead(selectTypeMeshId) as string | undefined;
-
-  const [files] = useFilesFull();
+const TypeMesh: FC = () => {
+  const typeRepresentations = useTypeRepresentations();
   const [selectedRepresentationId] = useTypeAppSelectedRepresentationId();
-  const [selectedRepresentationTags] = useTypeAppSelectedRepresentationTags();
   const camera = useThree((state) => state.camera);
   const gl = useThree((state) => state.gl);
-  const raycaster = useThree((state) => state.raycaster);
   const meshSceneRef = useRef<THREE.Object3D | null>(null);
-  const isPointerDownRef = useRef(false);
-
-  const prevRepresentationIdRef = useRef<string | null>(null);
-
-  const { fileExtension, fileId, representationId, selectionReason } = useMemo(() => {
-    if (!typeRepresentations || typeRepresentations.length === 0) {
-      return { fileExtension: "", fileId: null, representationId: null, selectionReason: "no-representations" };
+  const activeRepresentationId = useMemo(() => {
+    const representations = typeRepresentations.value ?? [];
+    if (selectedRepresentationId && representations.some((representation) => representation.id === selectedRepresentationId)) {
+      return selectedRepresentationId;
     }
-
-    let representation: Representation | undefined;
-    let reason = "";
-
-    if (selectedRepresentationId) {
-      representation = typeRepresentations.find((r) => r.id === selectedRepresentationId);
-      reason = "explicit-id";
-    } else if (selectedRepresentationTags.length > 0) {
-      representation = selectBestRepresentation(typeRepresentations, selectedRepresentationTags);
-      reason = "manual-tags";
-    } else {
-      const conceptIds = typeConcepts?.map((c) => c.id) ?? [];
-      if (conceptIds.length > 0) {
-        representation = findRepresentation(typeRepresentations, conceptIds);
-        reason = "type-concepts";
-      } else {
-        const defaultRep = typeRepresentations.find((r) => !r.tags || r.tags.length === 0);
-        representation = defaultRep ?? typeRepresentations[0];
-        reason = "default/first";
-      }
-    }
-
-    if (!representation) {
-      return { fileExtension: "", fileId: null, representationId: null, selectionReason: "no-representation-found" };
-    }
-
-    const fileId0 = typeof representation.file === "string" ? representation.file : representation.file?.id;
-    const file = (files ?? []).find((f) => f.id === fileId0);
-    if (!file) {
-      return { fileExtension: "", fileId: null, representationId: representation.id, selectionReason: "file-not-found" };
-    }
-
-    const ext = file.name?.split(".").pop() || "";
-    return { fileExtension: ext, fileId: file.id, representationId: representation.id, selectionReason: reason };
-  }, [typeRepresentations, typeConcepts, files, selectedRepresentationId, selectedRepresentationTags]);
+    return representations[0]?.id ?? null;
+  }, [selectedRepresentationId, typeRepresentations.value]);
+  const representationFile = useRepresentationFile(activeRepresentationId ?? undefined);
+  const fileId = representationFile.value?.id ?? null;
+  const fileName = useFileName(fileId ?? undefined);
+  const fileExtension = useMemo(() => {
+    const name = fileName.value ?? "";
+    const segments = name.split(".");
+    return segments.length > 1 ? (segments.pop() ?? "") : "";
+  }, [fileName.value]);
 
   const [readableUrl] = useKitFileUrl(fileId ?? undefined);
   const { url: blobUrl } = useKitFileBlobUrl(fileId ?? undefined);
   const renderUrlPreview = blobUrl ?? readableUrl;
 
-  useEffect(() => {
-    if (representationId && representationId !== prevRepresentationIdRef.current) {
-      prevRepresentationIdRef.current = representationId;
-    } else if (!representationId && typeId && !typeRepresentations) {
-      console.warn("[TypeMesh] No representations available for type:", typeId);
-    } else if (!representationId && selectionReason === "no-representation-found") {
-      console.warn("[TypeMesh] No representation found for type:", typeId);
-    } else if (selectionReason === "file-not-found" && representationId !== prevRepresentationIdRef.current) {
-      prevRepresentationIdRef.current = representationId;
-      console.warn("[TypeMesh] File not found in kit for representation:", representationId);
-    }
-  }, [representationId, selectionReason, typeId, typeRepresentations]);
-
-  const resolveMeshIntersection = useCallback(
-    (clientX: number, clientY: number) => {
-      const meshScene = meshSceneRef.current;
-      if (!meshScene) return null;
-      const rect = gl.domElement.getBoundingClientRect();
-      if (rect.width <= 0 || rect.height <= 0) return null;
-
-      const pointer = new THREE.Vector2(((clientX - rect.left) / rect.width) * 2 - 1, -((clientY - rect.top) / rect.height) * 2 + 1);
-      raycaster.setFromCamera(pointer, camera);
-      return raycaster.intersectObject(meshScene, true).find((intersection) => Boolean(intersection.face)) ?? null;
-    },
-    [camera, gl, raycaster],
-  );
-
-  const getIntersectionPlacement = useCallback((intersection: THREE.Intersection<THREE.Object3D>) => {
-    if (!intersection.face) return null;
-    const position = new THREE.Vector3().copy(intersection.point);
-    const normal = intersection.face.normal.clone();
-    const normalMatrix = new THREE.Matrix3().getNormalMatrix(intersection.object.matrixWorld);
-    normal.applyMatrix3(normalMatrix).normalize();
-    return { position, normal };
-  }, []);
-
   const handleSceneReady = useCallback((scene: THREE.Object3D | null) => {
     meshSceneRef.current = scene;
   }, []);
-
-  useEffect(() => {
-    const canvas = gl.domElement;
-
-    const handlePointerDown = () => {
-      if (activeTool === ToolKind.CONNECTOR) isPointerDownRef.current = true;
-    };
-
-    const handlePointerUp = () => {
-      if (activeTool === ToolKind.CONNECTOR) isPointerDownRef.current = false;
-    };
-
-    const handlePointerMove = (event: PointerEvent) => {
-      if (activeTool !== ToolKind.CONNECTOR || isPointerDownRef.current) return;
-      const intersection = resolveMeshIntersection(event.clientX, event.clientY);
-      const placement = intersection ? getIntersectionPlacement(intersection) : null;
-      if (!placement) {
-        onClearPreview();
-        return;
-      }
-      onPortPreview(placement.position, placement.normal);
-    };
-
-    const handleClick = (event: MouseEvent) => {
-      if (activeTool !== ToolKind.CONNECTOR) return;
-      const intersection = resolveMeshIntersection(event.clientX, event.clientY);
-      const placement = intersection ? getIntersectionPlacement(intersection) : null;
-      if (!placement) return;
-      onPortCreate(placement.position, placement.normal);
-    };
-
-    const handlePointerLeave = () => {
-      if (activeTool === ToolKind.CONNECTOR) {
-        isPointerDownRef.current = false;
-        onClearPreview();
-      }
-    };
-
-    canvas.addEventListener("pointerdown", handlePointerDown);
-    canvas.addEventListener("pointerup", handlePointerUp);
-    canvas.addEventListener("pointermove", handlePointerMove);
-    canvas.addEventListener("click", handleClick);
-    canvas.addEventListener("pointerleave", handlePointerLeave);
-
-    return () => {
-      canvas.removeEventListener("pointerdown", handlePointerDown);
-      canvas.removeEventListener("pointerup", handlePointerUp);
-      canvas.removeEventListener("pointermove", handlePointerMove);
-      canvas.removeEventListener("click", handleClick);
-      canvas.removeEventListener("pointerleave", handlePointerLeave);
-    };
-  }, [activeTool, getIntersectionPlacement, gl, onClearPreview, onPortCreate, onPortPreview, resolveMeshIntersection]);
 
   const getComputedColor = (variable: string): string => getComputedStyle(document.documentElement).getPropertyValue(variable).trim();
   const foregroundColor = useMemo(() => getComputedColor("--foreground"), []);
@@ -38497,160 +38207,16 @@ const TypeMesh: FC<{ activeTool: ToolKind; onPortPreview: (position: THREE.Vecto
     </MeshErrorBoundary>
   );
 };
-/**
- * selectTypePorts holds the data fields for a selectTypePorts record.
- **/
-const selectTypePorts = (type: Type) => type.connectors;
-/**
- * selectTypeId holds the data fields for a selectTypeId record.
- **/
-const selectTypeId = (type: Type) => type.id;
 
 /**
  * SceneContent holds the data fields for a SceneContent record.
  **/
 const SceneContent: FC = React.memo(() => {
-  const [activeTool] = useTypeAppActiveTool();
   const typeFilters = useTypeFilters();
-
-  const typePorts = useTypeContextRead(selectTypePorts) as Connector[] | undefined;
-  const typeId = useTypeContextRead(selectTypeId) as string | undefined;
-
-  const { run: runUpdateType } = useUpdateType();
-  const [selection, setSelection] = useTypeAppSelection();
-  const [hover] = useTypeAppHover();
-
-  const [hoverPort] = useTypeAppHoverPort();
-  const [clearHover] = useTypeAppClearHover();
-  const [focusPort] = useTypeAppFocusPort();
-  const [connectorPreview, setConnectorPreview] = useState<{ position: THREE.Vector3; normal: THREE.Vector3 } | null>(null);
-  const focusContext = useFocusSafe();
-  const prevItemsRef = useRef<string>("");
-  const visibleTypePorts = useMemo(() => (typeFilters.showConnectors ? typePorts : []), [typeFilters.showConnectors, typePorts]);
-
-  useEffect(() => {
-    if (!focusContext) return;
-    const items = (visibleTypePorts || []).map((connector) => ({
-      id: connector.id,
-      label: connector.description || `Connector ${connector.id.substring(0, 8)}`,
-      category: "Connectors",
-    }));
-    const itemsKey = items.map((item) => `${item.id}:${item.label}`).join("|");
-    if (prevItemsRef.current !== itemsKey) {
-      prevItemsRef.current = itemsKey;
-      focusContext.setFocusItems(items);
-    }
-  }, [focusContext, visibleTypePorts]);
-
-  useEffect(() => {
-    if (!focusContext) return;
-    const handleFocus = (itemId: string) => {
-      if (focusPort) focusPort(itemId);
-    };
-    focusContext.setOnFocusItem(handleFocus);
-    return () => {
-      if (focusContext) focusContext.setOnFocusItem(undefined);
-    };
-  }, [focusContext, focusPort]);
-
-  const handlePortPreview = useCallback((position: THREE.Vector3, normal: THREE.Vector3) => {
-    setConnectorPreview({ position, normal });
-  }, []);
-
-  const handlePortCreate = useCallback(
-    (position: THREE.Vector3, normal: THREE.Vector3) => {
-      if (typeId) {
-        const semioPosition = position.clone().applyMatrix4(toSemioRotation());
-        const semioNormal = normal.clone().applyMatrix4(toSemioRotation()).normalize();
-
-        const newPort: Connector = {
-          id: id(),
-          point: {
-            x: semioPosition.x,
-            y: semioPosition.y,
-            z: semioPosition.z,
-          } as Point,
-          direction: {
-            x: semioNormal.x,
-            y: semioNormal.y,
-            z: semioNormal.z,
-          } as Vector,
-          t: 0,
-          mandatory: false,
-        };
-
-        void runUpdateType(typeId, {
-          connectors: {
-            added: [newPort],
-          },
-        } as Record<string, unknown>);
-      }
-    },
-    [typeId, runUpdateType],
-  );
-
-  const handleClearPreview = useCallback(() => {
-    setConnectorPreview(null);
-    if (clearHover) clearHover();
-  }, [clearHover]);
-
-  useEffect(() => {
-    if (typeFilters.showConnectors) return;
-    setConnectorPreview(null);
-    if (clearHover) clearHover();
-  }, [typeFilters.showConnectors, clearHover]);
-
-  const handlePortClick = useCallback(
-    (connectorId: string) => {
-      if (!setSelection) return;
-      const compositionKind = resolveSelectionCompositionKind(activeTool);
-      setSelection({
-        ...(selection || {}),
-        connectors: applySelectionComposition(selection?.connectors, [connectorId], compositionKind),
-        representations: compositionKind === "replace" ? [] : selection?.representations || [],
-      });
-    },
-    [selection, setSelection, activeTool],
-  );
-
-  const handlePortHover = useCallback(
-    (connectorId: string) => {
-      if (hoverPort) hoverPort(connectorId);
-    },
-    [hoverPort],
-  );
-
-  const handlePortLeave = useCallback(() => {
-    if (clearHover) clearHover();
-  }, [clearHover]);
-
-  const handlePortDoubleClick = useCallback(
-    (connectorId: string) => {
-      if (focusPort) focusPort(connectorId);
-    },
-    [focusPort],
-  );
 
   return (
     <>
-      {typeFilters.showRepresentations && <TypeMesh activeTool={activeTool} onPortPreview={handlePortPreview} onPortCreate={handlePortCreate} onClearPreview={handleClearPreview} />}
-      {visibleTypePorts?.map((connector) => {
-        const isSelected = selection?.connectors?.includes(connector.id) || false;
-        const isHovered = hover?.connector === connector.id;
-        return (
-          <ConnectorVisual
-            key={connector.id}
-            connector={connector}
-            isSelected={isSelected}
-            isHovered={isHovered}
-            onHover={() => handlePortHover(connector.id)}
-            onLeave={handlePortLeave}
-            onClick={() => handlePortClick(connector.id)}
-            onDoubleClick={() => handlePortDoubleClick(connector.id)}
-          />
-        );
-      })}
-      {typeFilters.showConnectors && connectorPreview && <ConnectorPreview position={connectorPreview.position} normal={connectorPreview.normal} />}
+      {typeFilters.showRepresentations && <TypeMesh />}
     </>
   );
 });
@@ -38725,57 +38291,161 @@ export const TypeDetails: FC = () => {
   return <TypeDetailsForm />;
 };
 
+const READONLY_ROW_STATUS = { kind: "idle" } as const;
+
+const TypeRepresentationTreeItem: FC<{
+  representationId: string;
+  isSelected: boolean;
+  isHovered: boolean;
+  onHover: () => void;
+  onLeave: () => void;
+  onClick: (event: React.MouseEvent) => void;
+}> = ({ representationId, isSelected, isHovered, onHover, onLeave, onClick }) => {
+  const representationUrl = useRepresentationUrl(representationId);
+  const representationDescription = useRepresentationDescription(representationId);
+  const representationFile = useRepresentationFile(representationId);
+  const representationFileName = useFileName(representationFile.value?.id ?? undefined);
+
+  return (
+    <div onPointerEnter={onHover} onPointerLeave={onLeave} onClick={onClick}>
+      <TreeItem
+        id="semio.sketchpad.app.type.representation"
+        label={representationUrl.value || representationFileName.value || representationId}
+        className={`${isSelected ? "bg-accent/20" : ""} ${isHovered ? "bg-hover" : ""}`}
+      >
+        <SketchpadInputRow value={representationUrl.value ?? ""} commit={async () => ({ ok: true } as const)} status={READONLY_ROW_STATUS} id="semio.sketchpad.app.type.panel.details.section.representations.url" readOnly />
+        <SketchpadTextareaRow value={representationDescription.value ?? ""} commit={async () => ({ ok: true } as const)} status={READONLY_ROW_STATUS} id="semio.sketchpad.app.type.panel.details.section.representations.description" placeholderId="semio.sketchpad.app.type.representationDescriptionPlaceholder.label" readOnly />
+        <SketchpadInputRow value={representationFileName.value ?? ""} commit={async () => ({ ok: true } as const)} status={READONLY_ROW_STATUS} id="semio.sketchpad.app.type.panel.details.section.representations.file" readOnly />
+      </TreeItem>
+    </div>
+  );
+};
+
+const TypeAuthorTreeItem: FC<{ authorId: string }> = ({ authorId }) => {
+  const authorName = useAuthorName(authorId);
+  const authorEmail = useAuthorEmail(authorId);
+
+  return (
+    <TreeItem id="semio.sketchpad.app.type.author" label={authorName.value || authorId}>
+      <SketchpadInputRow value={authorName.value ?? ""} commit={async () => ({ ok: true } as const)} status={READONLY_ROW_STATUS} id="semio.sketchpad.app.type.panel.details.section.authors.name" readOnly />
+      <SketchpadInputRow value={authorEmail.value ?? ""} commit={async () => ({ ok: true } as const)} status={READONLY_ROW_STATUS} id="semio.sketchpad.app.type.panel.details.section.authors.email" readOnly />
+    </TreeItem>
+  );
+};
+
+const TypeConnectorTreeItemBody: FC<{
+  connectorId: string;
+  isSelected: boolean;
+  isHovered: boolean;
+  onHover: () => void;
+  onLeave: () => void;
+  onClick: (event: React.MouseEvent) => void;
+  onRemove: () => void;
+}> = ({ connectorId, isSelected, isHovered, onHover, onLeave, onClick, onRemove }) => {
+  const connectorCode = useConnectorCode();
+  const connectorDescription = useConnectorDescription();
+  const connectorIcon = useConnectorIcon(connectorId);
+  const connectorPort = useConnectorPort(connectorId);
+  const [renameConnector, renameConnectorStatus] = useRenameConnector();
+  const [changeConnectorDescription, changeConnectorDescriptionStatus] = useChangeConnectorDescription();
+  const [changeConnectorIcon, changeConnectorIconStatus] = useChangeConnectorIcon();
+
+  return (
+    <div onPointerEnter={onHover} onPointerLeave={onLeave} onClick={onClick}>
+      <TreeItem
+        id="semio.sketchpad.app.type.connector"
+        label={connectorCode.value || connectorId}
+        className={`cursor-selectable ${isSelected ? "ring-1 ring-[color:var(--active-base)]" : ""} ${isHovered ? "bg-[color:var(--hover-base)]" : ""}`}
+        actions={[
+          {
+            icon: <RemoveIcon />,
+            onClick: () => {
+              onRemove();
+            },
+            id: "semio.sketchpad.common.remove",
+          },
+        ]}
+      >
+        <SketchpadInputRow value={connectorCode.value ?? ""} commit={async (value) => renameConnector(String(value))} status={renameConnectorStatus} id="semio.sketchpad.app.type.panel.details.section.connectors.code" />
+        <SketchpadTextareaRow value={connectorDescription.value ?? ""} commit={async (value) => changeConnectorDescription(String(value))} status={changeConnectorDescriptionStatus} id="semio.sketchpad.app.type.panel.details.section.connectors.description" placeholderId="semio.sketchpad.app.type.connectorDescriptionPlaceholder.label" />
+        <SketchpadInputRow value={connectorIcon.value ?? ""} commit={async (value) => changeConnectorIcon(String(value))} status={changeConnectorIconStatus} id="semio.sketchpad.app.type.panel.details.section.connectors.icon" />
+        <SketchpadInputRow value={connectorPort.value?.id ?? ""} commit={async () => ({ ok: true } as const)} status={READONLY_ROW_STATUS} id="semio.sketchpad.app.type.panel.details.section.connectors.port" placeholderId="semio.sketchpad.app.type.connectorPortPlaceholder.label" readOnly />
+      </TreeItem>
+    </div>
+  );
+};
+
+const TypeConnectorTreeItem: FC<{
+  connectorId: string;
+  isSelected: boolean;
+  isHovered: boolean;
+  onHover: () => void;
+  onLeave: () => void;
+  onClick: (event: React.MouseEvent) => void;
+  onRemove: () => void;
+}> = (props) => {
+  return (
+    <ConnectorContextProvider id={props.connectorId}>
+      <TypeConnectorTreeItemBody {...props} />
+    </ConnectorContextProvider>
+  );
+};
+
+const TypeConnectorSectionFormBody: FC<{ connectorId: Id }> = ({ connectorId }) => {
+  const connectorCode = useConnectorCode();
+  const connectorDescription = useConnectorDescription();
+  const connectorIcon = useConnectorIcon();
+  const connectorPort = useConnectorPort();
+  const [renameConnector, renameConnectorStatus] = useRenameConnector();
+  const [changeConnectorDescription, changeConnectorDescriptionStatus] = useChangeConnectorDescription();
+  const [changeConnectorIcon, changeConnectorIconStatus] = useChangeConnectorIcon();
+  const [removeConnector, removeConnectorStatus] = useRemoveConnector();
+  const { spinning, error, disabled } = useWriteIndicator(removeConnectorStatus);
+
+  return (
+    <>
+      <TreeRow>
+        <div className="flex min-w-0 w-full items-center gap-single">
+          <Button disabled={disabled} onClick={() => void removeConnector(connectorId)}>
+            Remove Connector
+          </Button>
+          {spinning ? <Spinner size="small" className="text-muted-foreground shrink-0" /> : null}
+        </div>
+      </TreeRow>
+      {error?.message ? (
+        <HelperRow propertyAligned>
+          <p className="text-sm text-destructive">{error.message}</p>
+        </HelperRow>
+      ) : null}
+      <SketchpadInputRow value={connectorCode.value ?? ""} commit={async (value) => renameConnector(String(value))} status={renameConnectorStatus} id="semio.sketchpad.app.type.panel.details.section.connectors.code" />
+      <SketchpadTextareaRow value={connectorDescription.value ?? ""} commit={async (value) => changeConnectorDescription(String(value))} status={changeConnectorDescriptionStatus} id="semio.sketchpad.app.type.panel.details.section.connectors.description" placeholderId="semio.sketchpad.app.type.connectorDescriptionPlaceholder.label" />
+      <SketchpadInputRow value={connectorIcon.value ?? ""} commit={async (value) => changeConnectorIcon(String(value))} status={changeConnectorIconStatus} id="semio.sketchpad.app.type.panel.details.section.connectors.icon" />
+      <SketchpadInputRow value={connectorPort.value?.id ?? ""} commit={async () => ({ ok: true } as const)} status={READONLY_ROW_STATUS} id="semio.sketchpad.app.type.panel.details.section.connectors.port" placeholderId="semio.sketchpad.app.type.connectorPortPlaceholder.label" readOnly />
+    </>
+  );
+};
+
 /** TypeDetailsForm holds the data fields for a TypeDetailsForm record.
  **/
 /**
  **/
 const TypeDetailsForm: FC = () => {
-  const { run: runUpdateType } = useUpdateType();
-  const type = useTypeContextRead(undefined, undefined, true) as Type;
-
-  const updateTypeField = (diff: any) => {
-    void runUpdateType(type.id, diff as Record<string, unknown>);
-  };
+  const typeName = useTypeName();
+  const typeDescription = useTypeDescription();
+  const typeIcon = useTypeIcon();
+  const typeImage = useTypeImage();
+  const typeUnit = useTypeUnit();
+  const [renameType, renameTypeStatus] = useRenameType();
+  const [changeTypeDescription, changeTypeDescriptionStatus] = useChangeTypeDescription();
+  const [changeTypeIcon, changeTypeIconStatus] = useChangeTypeIcon();
 
   return (
     <>
-      <TreeRow>
-        <Input lazy id="semio.sketchpad.app.type.panel.details.section.type.name" value={type.name} onLazyChange={(value) => updateTypeField({ name: value })} showLabel />
-      </TreeRow>
-      <TreeRow>
-        <Textarea
-          lazy
-          id="semio.sketchpad.app.type.panel.details.section.type.description"
-          value={type.description || ""}
-          placeholderId="semio.sketchpad.app.type.descriptionPlaceholder.label"
-          onLazyChange={(value) => updateTypeField({ description: value })}
-          showLabel
-        />
-      </TreeRow>
-      <TreeRow>
-        <Input lazy id="semio.sketchpad.app.type.panel.details.section.type.icon" value={type.icon || ""} placeholderId="semio.sketchpad.app.type.iconPlaceholder.label" onLazyChange={(value) => updateTypeField({ icon: value })} showLabel />
-      </TreeRow>
-      <TreeRow>
-        <Input lazy id="semio.sketchpad.app.type.panel.details.section.type.image" value={type.image || ""} placeholderId="semio.sketchpad.app.type.imagePlaceholder.label" onLazyChange={(value) => updateTypeField({ image: value })} showLabel />
-      </TreeRow>
-      <TreeRow>
-        <Input
-          lazy
-          id="semio.sketchpad.app.type.panel.details.section.type.parent"
-          value={type.parent?.id || ""}
-          placeholderId="semio.sketchpad.app.type.parentPlaceholder.label"
-          onLazyChange={(value) => updateTypeField({ parent: value ? { id: value } : undefined })}
-          showLabel
-        />
-      </TreeRow>
-      <TreeRow>
-        <Toggle id="semio.sketchpad.app.type.panel.details.section.type.abstract" pressed={type.isAbstract || false} onPressedChange={(value) => updateTypeField({ isAbstract: value })} showLabel icon={<CheckIcon />} />
-      </TreeRow>
-      {type.unit !== undefined && (
-        <TreeRow>
-          <Input lazy id="semio.sketchpad.app.type.panel.details.section.type.unit" value={type.unit} onLazyChange={(value) => updateTypeField({ unit: value })} showLabel />
-        </TreeRow>
-      )}
+      <SketchpadInputRow value={typeName.value ?? ""} commit={async (value) => renameType(String(value))} status={renameTypeStatus} id="semio.sketchpad.app.type.panel.details.section.type.name" />
+      <SketchpadTextareaRow value={typeDescription.value ?? ""} commit={async (value) => changeTypeDescription(String(value))} status={changeTypeDescriptionStatus} id="semio.sketchpad.app.type.panel.details.section.type.description" placeholderId="semio.sketchpad.app.type.descriptionPlaceholder.label" />
+      <SketchpadInputRow value={typeIcon.value ?? ""} commit={async (value) => changeTypeIcon(String(value))} status={changeTypeIconStatus} id="semio.sketchpad.app.type.panel.details.section.type.icon" placeholderId="semio.sketchpad.app.type.iconPlaceholder.label" />
+      <SketchpadInputRow value={typeImage.value ?? ""} commit={async () => ({ ok: true } as const)} status={READONLY_ROW_STATUS} id="semio.sketchpad.app.type.panel.details.section.type.image" placeholderId="semio.sketchpad.app.type.imagePlaceholder.label" readOnly />
+      <SketchpadInputRow value={typeUnit.value ?? ""} commit={async () => ({ ok: true } as const)} status={READONLY_ROW_STATUS} id="semio.sketchpad.app.type.panel.details.section.type.unit" readOnly />
     </>
   );
 };
@@ -38794,157 +38464,45 @@ export const RepresentationsSection: FC = () => {
 /**
  **/
 const RepresentationsSectionForm: FC = () => {
-  const tooltip = useTooltip();
   const [hoverRepresentation] = useTypeAppHoverRepresentation();
   const [clearHover] = useTypeAppClearHover();
-  const { run: runUpdateType } = useUpdateType();
-  const type = useTypeContextRead(undefined, undefined, true) as Type;
+  const typeRepresentations = useTypeRepresentations();
   const [selection, setSelection] = useTypeAppSelection();
   const [hover] = useTypeAppHover();
   const [activeTool] = useTypeAppActiveTool();
-
-  const applyDiff = (diff: any) => {
-    void runUpdateType(type.id, diff as Record<string, unknown>);
-  };
-
-  const updateRepresentation = (id: string, representationDiff: any) => {
-    applyDiff({
-      representations: {
-        updated: [{ id, diff: representationDiff }],
-      },
-    });
-  };
-
-  const hasRepresentations = type.representations && type.representations.length > 0;
+  const representations = typeRepresentations.value ?? [];
 
   return (
-    <>
-      <TreeItem
-        id="semio.sketchpad.app.type.representations"
-        actions={[
-          {
-            icon: <AddIcon />,
-            onClick: () => {
-              const origin = "semio.sketchpad.app.type.panel.details.representations.add";
-              applyDiff({
-                representations: {
-                  added: [{ id: id(), url: "", tags: [] }],
-                },
+    <TreeItem id="semio.sketchpad.app.type.representations">
+      {representations.map((representation) => {
+        const isSelected = selection?.representations?.includes(representation.id) || false;
+        const isHovered = hover?.representation === representation.id;
+        return (
+          <TypeRepresentationTreeItem
+            key={representation.id}
+            representationId={representation.id}
+            isSelected={isSelected}
+            isHovered={isHovered}
+            onHover={() => hoverRepresentation && hoverRepresentation(representation.id)}
+            onLeave={() => clearHover && clearHover()}
+            onClick={(event) => {
+              if (!setSelection) return;
+              const compositionKind = resolveSelectionCompositionKind(activeTool, {
+                shiftKey: event.shiftKey,
+                altKey: event.altKey,
+                ctrlKey: event.ctrlKey,
+                metaKey: event.metaKey,
               });
-            },
-            id: "semio.sketchpad.common.add",
-          },
-        ]}
-      >
-        {hasRepresentations && (
-          <SortableTreeItems
-            items={(type.representations || []).map((representation: any, index: number) => ({
-              ...representation,
-              id: `representation-${index}`,
-              index,
-            }))}
-            onReorder={(oldIndex, newIndex) => {
-              if (!type.representations) return;
-              const origin = "semio.sketchpad.app.type.panel.details.representations.reorder";
-              applyDiff({
-                representations: {
-                  removed: type.representations.map((representation: any) => representation.id),
-                  added: arrayMove(type.representations, oldIndex, newIndex),
-                },
+              setSelection({
+                ...(selection || {}),
+                representations: applySelectionComposition(selection?.representations, [representation.id], compositionKind),
+                connectors: compositionKind === "replace" ? [] : selection?.connectors || [],
               });
             }}
-          >
-            {(representation, index) => {
-              const isSelected = selection?.representations?.includes(representation.id) || false;
-              const isHovered = hover?.representation === representation.id;
-              return (
-                <div
-                  key={`representation-${index}`}
-                  onPointerEnter={() => hoverRepresentation && hoverRepresentation(representation.id)}
-                  onPointerLeave={() => clearHover && clearHover()}
-                  onClick={(e: React.MouseEvent) => {
-                    if (!setSelection) return;
-                    const compositionKind = resolveSelectionCompositionKind(activeTool, {
-                      shiftKey: e.shiftKey,
-                      altKey: e.altKey,
-                      ctrlKey: e.ctrlKey,
-                      metaKey: e.metaKey,
-                    });
-                    setSelection({
-                      ...(selection || {}),
-                      representations: applySelectionComposition(selection?.representations, [representation.id], compositionKind),
-                      connectors: compositionKind === "replace" ? [] : selection?.connectors || [],
-                    });
-                  }}
-                >
-                  <TreeItem
-                    key={`representation-${index}`}
-                    id="semio.sketchpad.app.type.representation"
-                    label={representation.url}
-                    sortable={true}
-                    sortableId={`representation-${index}`}
-                    isDragHandle={true}
-                    className={`${isSelected ? "bg-accent/20" : ""} ${isHovered ? "bg-hover" : ""}`}
-                    actions={[
-                      {
-                        icon: <RemoveIcon />,
-                        onClick: () => {
-                          const origin = "semio.sketchpad.app.type.panel.details.representations.remove";
-                          applyDiff({
-                            representations: {
-                              removed: [representation.id],
-                            },
-                          });
-                        },
-                        id: "semio.sketchpad.common.remove",
-                      },
-                    ]}
-                  >
-                    <TreeRow>
-                      <Input
-                        id="semio.sketchpad.app.type.panel.details.section.representations.url"
-                        value={representation.url}
-                        onChange={(e) => {
-                          updateRepresentation(representation.id, { url: e.target.value });
-                        }}
-                        showLabel
-                      />
-                    </TreeRow>
-                    <TreeRow>
-                      <Textarea
-                        id="semio.sketchpad.app.type.panel.details.section.representations.description"
-                        value={representation.description || ""}
-                        placeholderId="semio.sketchpad.app.type.representationDescriptionPlaceholder.label"
-                        onChange={(e) => {
-                          updateRepresentation(representation.id, { description: e.target.value });
-                        }}
-                        showLabel
-                      />
-                    </TreeRow>
-                    <TreeRow>
-                      <Input
-                        id="semio.sketchpad.app.type.panel.details.section.representations.tags"
-                        value={(representation.tags || []).join(", ")}
-                        placeholderId="semio.sketchpad.app.type.representationTagsPlaceholder.label"
-                        onChange={(e) => {
-                          updateRepresentation(representation.id, {
-                            tags: e.target.value
-                              .split(",")
-                              .map((tag) => tag.trim())
-                              .filter((tag) => tag),
-                          });
-                        }}
-                        showLabel
-                      />
-                    </TreeRow>
-                  </TreeItem>
-                </div>
-              );
-            }}
-          </SortableTreeItems>
-        )}
-      </TreeItem>
-    </>
+          />
+        );
+      })}
+    </TreeItem>
   );
 };
 
@@ -38962,293 +38520,66 @@ export const ConnectorsListSection: FC = () => {
 /**
  **/
 const ConnectorsListSectionForm: FC = () => {
-  const tooltip = useTooltip();
   const [hoverPort] = useTypeAppHoverPort();
   const [clearHover] = useTypeAppClearHover();
-  const { run: runUpdateType } = useUpdateType();
-  const type = useTypeContextRead(undefined, undefined, true) as Type;
+  const typeConnectors = useTypeConnectors();
+  const [addConnector] = useAddConnector();
+  const [removeConnector] = useRemoveConnector();
   const [selection, setSelection] = useTypeAppSelection();
   const [hover] = useTypeAppHover();
   const [activeTool] = useTypeAppActiveTool();
-
-  const applyDiff = (diff: any) => {
-    void runUpdateType(type.id, diff as Record<string, unknown>);
-  };
-
-  const updatePort = (id: string, connectorDiff: any) => {
-    const connector = type.connectors?.find((existingConnector) => existingConnector.id === id);
-    const diff: any = { ...connectorDiff };
-    if (connector) {
-      if (connectorDiff.point) {
-        diff.point = {};
-        if (connectorDiff.point.x !== undefined) diff.point.x = connectorDiff.point.x - connector.point.x;
-        if (connectorDiff.point.y !== undefined) diff.point.y = connectorDiff.point.y - connector.point.y;
-        if (connectorDiff.point.z !== undefined) diff.point.z = connectorDiff.point.z - connector.point.z;
-      }
-      if (connectorDiff.direction) {
-        diff.direction = {};
-        if (connectorDiff.direction.x !== undefined) diff.direction.x = connectorDiff.direction.x - connector.direction.x;
-        if (connectorDiff.direction.y !== undefined) diff.direction.y = connectorDiff.direction.y - connector.direction.y;
-        if (connectorDiff.direction.z !== undefined) diff.direction.z = connectorDiff.direction.z - connector.direction.z;
-      }
-    }
-    applyDiff({
-      connectors: {
-        updated: [{ id, diff }],
-      },
-    });
-  };
-
-  const hasPorts = type.connectors && type.connectors.length > 0;
+  const connectors = typeConnectors.value ?? [];
 
   return (
-    <>
-      <TreeItem
-        id="semio.sketchpad.app.type.connectors"
-        actions={[
-          {
-            icon: <AddIcon />,
-            onClick: () => {
-              const origin = "semio.sketchpad.app.type.panel.details.connectors.add";
-              applyDiff({
-                connectors: {
-                  added: [
-                    {
-                      id: id(),
-                      t: 0,
-                      point: { x: 0, y: 0, z: 0 },
-                      direction: { x: 0, y: 0, z: 1 },
-                    },
-                  ],
-                },
-              });
-            },
-            id: "semio.sketchpad.common.add",
+    <TreeItem
+      id="semio.sketchpad.app.type.connectors"
+      actions={[
+        {
+          icon: <AddIcon />,
+          onClick: () => {
+            void addConnector(`connector-${connectors.length + 1}`);
           },
-        ]}
-      >
-        {hasPorts && (
-          <TreeRow>
-            <Ring
-              id="semio.sketchpad.app.type.panel.details.section.connectors.ring"
-              orbs={(type.connectors || []).map((connector: any) => {
-                const isSelected = selection?.connectors?.includes(connector.id) || false;
-                return {
-                  id: connector.id,
-                  t: connector.t ?? 0,
-                  selected: isSelected,
-                  hovered: hover?.connector === connector.id,
-                  disabled: !isSelected,
-                };
-              })}
-              onOrbChange={(orbId, _oldT, newT) => {
-                updatePort(orbId, { t: newT });
-              }}
-              onOrbSelect={(orbId) => {
-                if (!setSelection) return;
-                setSelection({
-                  ...(selection || {}),
-                  connectors: [orbId],
-                  representations: [],
-                });
-              }}
-              onOrbHoverChange={(orbId, hovered) => {
-                if (hovered) hoverPort?.(orbId);
-                else clearHover?.();
-              }}
-              showLabel
-            />
-          </TreeRow>
-        )}
-        {hasPorts && (
-          <SortableTreeItems
-            items={(type.connectors || []).map((connector: any, index: number) => ({
-              ...connector,
-              id: `connector-${index}`,
-              index,
-            }))}
-            onReorder={(oldIndex, newIndex) => {
-              if (!type.connectors) return;
-              const origin = "semio.sketchpad.app.type.panel.details.connectors.reorder";
-              applyDiff({
-                connectors: {
-                  removed: type.connectors.map((existingConnector: any) => existingConnector.id),
-                  added: arrayMove(type.connectors, oldIndex, newIndex),
-                },
+          id: "semio.sketchpad.common.add",
+        },
+      ]}
+    >
+      {connectors.map((connector) => {
+        const isSelected = selection?.connectors?.includes(connector.id) || false;
+        const isHovered = hover?.connector === connector.id;
+        return (
+          <TypeConnectorTreeItem
+            key={connector.id}
+            connectorId={connector.id}
+            isSelected={isSelected}
+            isHovered={isHovered}
+            onHover={() => {
+              if (hoverPort) hoverPort(connector.id);
+            }}
+            onLeave={() => {
+              if (clearHover) clearHover();
+            }}
+            onClick={(event) => {
+              event.stopPropagation();
+              if (!setSelection) return;
+              const compositionKind = resolveSelectionCompositionKind(activeTool, {
+                shiftKey: event.shiftKey,
+                altKey: event.altKey,
+                ctrlKey: event.ctrlKey,
+                metaKey: event.metaKey,
+              });
+              setSelection({
+                ...(selection || {}),
+                connectors: applySelectionComposition(selection?.connectors, [connector.id], compositionKind),
+                representations: compositionKind === "replace" ? [] : selection?.representations || [],
               });
             }}
-          >
-            {(connector, index) => {
-              const isSelected = selection?.connectors?.includes(connector.id) || false;
-              const isHovered = hover?.connector === connector.id;
-              const handleClick = (event: React.MouseEvent) => {
-                event.stopPropagation();
-                if (!setSelection) return;
-                const compositionKind = resolveSelectionCompositionKind(activeTool, {
-                  shiftKey: event.shiftKey,
-                  altKey: event.altKey,
-                  ctrlKey: event.ctrlKey,
-                  metaKey: event.metaKey,
-                });
-                setSelection({
-                  ...(selection || {}),
-                  connectors: applySelectionComposition(selection?.connectors, [connector.id], compositionKind),
-                  representations: compositionKind === "replace" ? [] : selection?.representations || [],
-                });
-              };
-
-              const handleHover = () => {
-                if (hoverPort) hoverPort(connector.id);
-              };
-
-              const handleLeave = () => {
-                if (clearHover) clearHover();
-              };
-
-              return (
-                <div onPointerEnter={handleHover} onPointerLeave={handleLeave} onClick={handleClick}>
-                  <TreeItem
-                    key={`connector-${index}`}
-                    id="semio.sketchpad.app.type.connector"
-                    label={typeof connector.port === "string" ? connector.port : connector.port?.id || ""}
-                    sortable={true}
-                    sortableId={`connector-${index}`}
-                    isDragHandle={true}
-                    className={`cursor-selectable ${isSelected ? "ring-1 ring-[color:var(--active-base)]" : ""} ${isHovered ? "bg-[color:var(--hover-base)]" : ""}`}
-                    actions={[
-                      {
-                        icon: <RemoveIcon />,
-                        onClick: () => {
-                          const origin = "semio.sketchpad.app.type.panel.details.connectors.remove";
-                          applyDiff({
-                            connectors: {
-                              removed: [connector.id],
-                            },
-                          });
-                        },
-                        id: "semio.sketchpad.common.remove",
-                      },
-                    ]}
-                  >
-                    <TreeRow>
-                      <Input
-                        lazy
-                        id="semio.sketchpad.app.type.panel.details.section.connectors.port"
-                        value={typeof connector.port === "string" ? connector.port : connector.port?.id || ""}
-                        placeholderId="semio.sketchpad.app.type.connectorPortPlaceholder.label"
-                        onLazyChange={(value: string) => {
-                          updatePort(connector.id, { port: value });
-                        }}
-                        showLabel
-                      />
-                    </TreeRow>
-                    <TreeRow>
-                      <Textarea
-                        lazy
-                        id="semio.sketchpad.app.type.panel.details.section.connectors.description"
-                        value={connector.description || ""}
-                        placeholderId="semio.sketchpad.app.type.connectorDescriptionPlaceholder.label"
-                        onLazyChange={(value: string) => {
-                          updatePort(connector.id, { description: value });
-                        }}
-                        showLabel
-                      />
-                    </TreeRow>
-                    <TreeItem id="semio.sketchpad.app.type.connectorPoint">
-                      <TreeRow>
-                        <Stepper
-                          id="semio.sketchpad.app.type.panel.details.section.connectors.point.x"
-                          value={connector.point.x}
-                          onChange={(value: number) => {
-                            updatePort(connector.id, { point: { x: value } });
-                          }}
-                          step={0.1}
-                          showLabel
-                        />
-                      </TreeRow>
-                      <TreeRow>
-                        <Stepper
-                          id="semio.sketchpad.app.type.panel.details.section.connectors.point.y"
-                          value={connector.point.y}
-                          onChange={(value: number) => {
-                            updatePort(connector.id, { point: { y: value } });
-                          }}
-                          step={0.1}
-                          showLabel
-                        />
-                      </TreeRow>
-                      <TreeRow>
-                        <Stepper
-                          id="semio.sketchpad.app.type.panel.details.section.connectors.point.z"
-                          value={connector.point.z}
-                          onChange={(value: number) => {
-                            updatePort(connector.id, { point: { z: value } });
-                          }}
-                          step={0.1}
-                          showLabel
-                        />
-                      </TreeRow>
-                    </TreeItem>
-                    <TreeItem id="semio.sketchpad.app.type.connectorDirection">
-                      <TreeRow>
-                        <Stepper
-                          id="semio.sketchpad.app.type.panel.details.section.connectors.direction.x"
-                          value={connector.direction.x}
-                          onChange={(value: number) => {
-                            updatePort(connector.id, { direction: { x: value } });
-                          }}
-                          step={0.1}
-                          showLabel
-                        />
-                      </TreeRow>
-                      <TreeRow>
-                        <Stepper
-                          id="semio.sketchpad.app.type.panel.details.section.connectors.direction.y"
-                          value={connector.direction.y}
-                          onChange={(value: number) => {
-                            updatePort(connector.id, { direction: { y: value } });
-                          }}
-                          step={0.1}
-                          showLabel
-                        />
-                      </TreeRow>
-                      <TreeRow>
-                        <Stepper
-                          id="semio.sketchpad.app.type.panel.details.section.connectors.direction.z"
-                          value={connector.direction.z}
-                          onChange={(value: number) => {
-                            updatePort(connector.id, { direction: { z: value } });
-                          }}
-                          step={0.1}
-                          showLabel
-                        />
-                      </TreeRow>
-                    </TreeItem>
-                    <TreeRow>
-                      <Input
-                        lazy
-                        id="semio.sketchpad.app.type.panel.details.section.connectors.compatiblePorts"
-                        value={(connector.compatiblePorts || []).join(", ")}
-                        placeholderId="semio.sketchpad.app.type.connectorCompatiblePortsPlaceholder.label"
-                        onLazyChange={(value: string) => {
-                          updatePort(connector.id, {
-                            compatiblePorts: value
-                              .split(",")
-                              .map((port_) => port_.trim())
-                              .filter((port_) => port_),
-                          });
-                        }}
-                        showLabel
-                      />
-                    </TreeRow>
-                  </TreeItem>
-                </div>
-              );
+            onRemove={() => {
+              void removeConnector(connector.id);
             }}
-          </SortableTreeItems>
-        )}
-      </TreeItem>
-    </>
+          />
+        );
+      })}
+    </TreeItem>
   );
 };
 
@@ -39266,101 +38597,15 @@ export const AuthorsSection: FC = () => {
 /**
  **/
 const AuthorsSectionForm: FC = () => {
-  const { run: runUpdateType } = useUpdateType();
-  const { run: runCreateAuthor } = useCreateAuthor();
-  const { run: runUpdateAuthor } = useUpdateAuthor();
-  const type = useTypeContextRead(undefined, undefined, true) as Type;
-  const auKs = useKitStoreSnapshot();
-  const kit = auKs?.kit as Kit | null;
-
-  const updateAuthors = (authors: string[]) => {
-    void runUpdateType(type.id, { authors: authors.map((a) => ({ id: a })) } as Record<string, unknown>);
-  };
-
-  const hasAuthors = type?.authors && type.authors.length > 0;
+  const typeAuthors = useTypeAuthors();
+  const authors = typeAuthors.value ?? [];
 
   return (
-    <>
-      <TreeItem
-        id="semio.sketchpad.app.type.authors"
-        actions={[
-          {
-            icon: <AddIcon />,
-            onClick: () => {
-              const newAuthorId = id();
-              void runCreateAuthor({
-                id: newAuthorId,
-                name: "",
-                email: "",
-              } as unknown);
-              updateAuthors([...(type.authors || []).map((a) => a.id), newAuthorId]);
-            },
-            id: "semio.sketchpad.common.add",
-          },
-        ]}
-      >
-        {hasAuthors && (
-          <SortableTreeItems
-            items={(type.authors || [])
-              .filter((authorId): authorId is AuthorId => !!authorId?.id)
-              .map((authorId: AuthorId, index: number) => {
-                const author = kit?.authors?.find((a: Author) => a?.id === authorId.id);
-                return {
-                  id: `author-${index}`,
-                  index,
-                  authorId: authorId.id,
-                  name: author?.name || "",
-                  email: author?.email || "",
-                };
-              })}
-            onReorder={(oldIndex, newIndex) => {
-              updateAuthors(arrayMove(type.authors!, oldIndex, newIndex).map((a) => a.id));
-            }}
-          >
-            {(item, index) => (
-              <TreeItem
-                key={`author-${index}`}
-                id="semio.sketchpad.app.type.author"
-                label={item.name}
-                sortable={true}
-                sortableId={`author-${index}`}
-                isDragHandle={true}
-                actions={[
-                  {
-                    icon: <RemoveIcon />,
-                    onClick: () => {
-                      updateAuthors((type.authors || []).filter((_, i: number) => i !== index).map((a) => a.id));
-                    },
-                    id: "semio.sketchpad.common.remove",
-                  },
-                ]}
-              >
-                <TreeRow>
-                  <Input
-                    id="semio.sketchpad.app.type.panel.details.section.authors.name"
-                    value={item.name}
-                    onChange={(e) => {
-                      void runUpdateAuthor(item.authorId, { name: e.target.value });
-                    }}
-                    showLabel
-                  />
-                </TreeRow>
-                <TreeRow>
-                  <Input
-                    id="semio.sketchpad.app.type.panel.details.section.authors.email"
-                    value={item.email}
-                    onChange={(e) => {
-                      void runUpdateAuthor(item.authorId, { email: e.target.value });
-                    }}
-                    showLabel
-                  />
-                </TreeRow>
-              </TreeItem>
-            )}
-          </SortableTreeItems>
-        )}
-      </TreeItem>
-    </>
+    <TreeItem id="semio.sketchpad.app.type.authors">
+      {authors.map((author) => (
+        <TypeAuthorTreeItem key={author.id} authorId={author.id} />
+      ))}
+    </TreeItem>
   );
 };
 
@@ -39376,122 +38621,45 @@ export const AttributesSection: FC = () => {
  * AttributesSectionForm holds the data fields for a AttributesSectionForm record.
  **/
 const AttributesSectionForm: FC = () => {
-  const tooltip = useTooltip();
-  const { run: runUpdateType } = useUpdateType();
-  const type = useTypeContextRead(undefined, undefined, true) as Type;
-
-  const applyDiff = (diff: any) => {
-    void runUpdateType(type.id, diff as Record<string, unknown>);
-  };
-
-  const updateAttribute = (id: string, attributeDiff: any) => {
-    applyDiff({
-      attributes: {
-        updated: [{ id, diff: attributeDiff }],
-      },
-    });
-  };
-
-  const hasAttributes = type.attributes && type.attributes.length > 0;
+  const typeAttributes = useTypeAttributes();
+  const [addTypeAttribute] = useAddTypeAttribute();
+  const [removeTypeAttribute] = useRemoveTypeAttribute();
+  const attributes = typeAttributes.value ?? [];
 
   return (
-    <>
-      <TreeItem
-        id="semio.sketchpad.app.type.attributes"
-        actions={[
-          {
-            icon: <AddIcon />,
-            onClick: () => {
-              const origin = "semio.sketchpad.app.type.panel.details.attributes.add";
-              applyDiff({
-                attributes: {
-                  added: [{ id: id(), key: "" }],
-                },
-              });
-            },
-            id: "semio.sketchpad.common.add",
+    <TreeItem
+      id="semio.sketchpad.app.type.attributes"
+      actions={[
+        {
+          icon: <AddIcon />,
+          onClick: () => {
+            void addTypeAttribute("", "", "");
           },
-        ]}
-      >
-        {hasAttributes && (
-          <SortableTreeItems
-            items={(type.attributes || []).map((attribute: any, index: number) => ({
-              ...attribute,
-              id: `attribute-${index}`,
-              index,
-            }))}
-            onReorder={(oldIndex, newIndex) => {
-              if (!type.attributes) return;
-              const origin = "semio.sketchpad.app.type.panel.details.attributes.reorder";
-              applyDiff({
-                attributes: {
-                  removed: type.attributes.map((attribute: any) => attribute.id),
-                  added: arrayMove(type.attributes, oldIndex, newIndex),
-                },
-              });
-            }}
-          >
-            {(attribute, index) => (
-              <TreeItem
-                key={`attribute-${index}`}
-                id="semio.sketchpad.app.type.attribute"
-                label={attribute.key}
-                sortable={true}
-                sortableId={`attribute-${index}`}
-                isDragHandle={true}
-                actions={[
-                  {
-                    icon: <RemoveIcon />,
-                    onClick: () => {
-                      const origin = "semio.sketchpad.app.type.panel.details.attributes.remove";
-                      applyDiff({
-                        attributes: {
-                          removed: [attribute.id],
-                        },
-                      });
-                    },
-                    id: "semio.sketchpad.common.remove",
-                  },
-                ]}
-              >
-                <TreeRow>
-                  <Input
-                    id="semio.sketchpad.app.type.panel.details.section.attributes.name"
-                    value={attribute.key}
-                    onChange={(e) => {
-                      updateAttribute(attribute.id, { key: e.target.value });
-                    }}
-                    showLabel
-                  />
-                </TreeRow>
-                <TreeRow>
-                  <Input
-                    id="semio.sketchpad.app.type.panel.details.section.attributes.value"
-                    value={attribute.value || ""}
-                    placeholderId="semio.sketchpad.app.type.attributeValuePlaceholder.label"
-                    onChange={(e) => {
-                      updateAttribute(attribute.id, { value: e.target.value });
-                    }}
-                    showLabel
-                  />
-                </TreeRow>
-                <TreeRow>
-                  <Input
-                    id="semio.sketchpad.app.type.panel.details.section.attributes.definition"
-                    value={attribute.definition || ""}
-                    placeholderId="semio.sketchpad.app.type.attributeDefinitionPlaceholder.label"
-                    onChange={(e) => {
-                      updateAttribute(attribute.id, { definition: e.target.value });
-                    }}
-                    showLabel
-                  />
-                </TreeRow>
-              </TreeItem>
-            )}
-          </SortableTreeItems>
-        )}
-      </TreeItem>
-    </>
+          id: "semio.sketchpad.common.add",
+        },
+      ]}
+    >
+      {attributes.map((attribute: any) => (
+        <TreeItem
+          key={attribute.id}
+          id="semio.sketchpad.app.type.attribute"
+          label={attribute.key || attribute.id}
+          actions={[
+            {
+              icon: <RemoveIcon />,
+              onClick: () => {
+                void removeTypeAttribute(attribute.id);
+              },
+              id: "semio.sketchpad.common.remove",
+            },
+          ]}
+        >
+          <SketchpadInputRow value={attribute.key ?? ""} commit={async () => ({ ok: true } as const)} status={READONLY_ROW_STATUS} id="semio.sketchpad.app.type.panel.details.section.attributes.name" readOnly />
+          <SketchpadInputRow value={attribute.value ?? ""} commit={async () => ({ ok: true } as const)} status={READONLY_ROW_STATUS} id="semio.sketchpad.app.type.panel.details.section.attributes.value" placeholderId="semio.sketchpad.app.type.attributeValuePlaceholder.label" readOnly />
+          <SketchpadInputRow value={attribute.definition ?? ""} commit={async () => ({ ok: true } as const)} status={READONLY_ROW_STATUS} id="semio.sketchpad.app.type.panel.details.section.attributes.definition" placeholderId="semio.sketchpad.app.type.attributeDefinitionPlaceholder.label" readOnly />
+        </TreeItem>
+      ))}
+    </TreeItem>
   );
 };
 
@@ -39507,11 +38675,8 @@ export const TypeConnectorSection: FC<{ connectorId: Id }> = ({ connectorId }) =
  * ConnectorSectionForm holds the data fields for a ConnectorSectionForm record.
  **/
 const TypeConnectorSectionForm: FC<{ connectorId: Id }> = ({ connectorId }) => {
-  const tooltip = useTooltip();
-  const { run: runUpdateType } = useUpdateType();
-  const type = useTypeContextRead(undefined, undefined, true) as Type;
-
-  const connector = type.connectors?.find((p) => p.id === connectorId);
+  const typeConnectors = useTypeConnectors();
+  const connector = (typeConnectors.value ?? []).find((candidate) => candidate.id === connectorId);
 
   if (!connector) {
     return (
@@ -39521,159 +38686,10 @@ const TypeConnectorSectionForm: FC<{ connectorId: Id }> = ({ connectorId }) => {
     );
   }
 
-  const updatePort = (id: string, connectorDiff: any) => {
-    const connector = type.connectors?.find((existingConnector) => existingConnector.id === id);
-    const diff: any = { ...connectorDiff };
-    if (connector) {
-      if (connectorDiff.point) {
-        diff.point = {};
-        if (connectorDiff.point.x !== undefined) diff.point.x = connectorDiff.point.x - connector.point.x;
-        if (connectorDiff.point.y !== undefined) diff.point.y = connectorDiff.point.y - connector.point.y;
-        if (connectorDiff.point.z !== undefined) diff.point.z = connectorDiff.point.z - connector.point.z;
-      }
-      if (connectorDiff.direction) {
-        diff.direction = {};
-        if (connectorDiff.direction.x !== undefined) diff.direction.x = connectorDiff.direction.x - connector.direction.x;
-        if (connectorDiff.direction.y !== undefined) diff.direction.y = connectorDiff.direction.y - connector.direction.y;
-        if (connectorDiff.direction.z !== undefined) diff.direction.z = connectorDiff.direction.z - connector.direction.z;
-      }
-    }
-    void runUpdateType(type.id, {
-      connectors: {
-        updated: [{ connector: { id: id }, diff }],
-      },
-    } as Record<string, unknown>);
-  };
-
   return (
-    <>
-      <TreeRow>
-        <Input
-          lazy
-          id="semio.sketchpad.app.type.panel.details.section.connectors.port"
-          value={connector.port?.id || ""}
-          placeholderId="semio.sketchpad.app.type.connectorPortPlaceholder.label"
-          onLazyChange={(value: string) => {
-            updatePort(connector.id, { port: value ? { id: value } : undefined });
-          }}
-          showLabel
-        />
-      </TreeRow>
-      <TreeRow>
-        <Textarea
-          lazy
-          id="semio.sketchpad.app.type.panel.details.section.connectors.description"
-          value={connector.description || ""}
-          placeholderId="semio.sketchpad.app.type.connectorDescriptionPlaceholder.label"
-          onLazyChange={(value: string) => {
-            updatePort(connector.id, { description: value });
-          }}
-          showLabel
-        />
-      </TreeRow>
-      <TreeRow>
-        <Ring
-          id="semio.sketchpad.app.type.panel.details.section.connector.ring"
-          orbs={(type.connectors || []).map((c: Connector) => ({
-            id: c.id,
-            t: c.t ?? 0,
-            selected: c.id === connector.id,
-            disabled: c.id !== connector.id,
-          }))}
-          onOrbChange={(_orbId, _oldT, newT) => {
-            updatePort(connector.id, { t: newT });
-          }}
-          showLabel
-        />
-      </TreeRow>
-      <TreeItem id="semio.sketchpad.app.type.connectorPoint">
-        <TreeRow>
-          <Stepper
-            id="semio.sketchpad.app.type.panel.details.section.connectors.point.x"
-            value={connector.point.x}
-            onChange={(value: number) => {
-              updatePort(connector.id, { point: { x: value } });
-            }}
-            step={0.1}
-            showLabel
-          />
-        </TreeRow>
-        <TreeRow>
-          <Stepper
-            id="semio.sketchpad.app.type.panel.details.section.connectors.point.y"
-            value={connector.point.y}
-            onChange={(value: number) => {
-              updatePort(connector.id, { point: { y: value } });
-            }}
-            step={0.1}
-            showLabel
-          />
-        </TreeRow>
-        <TreeRow>
-          <Stepper
-            id="semio.sketchpad.app.type.panel.details.section.connectors.point.z"
-            value={connector.point.z}
-            onChange={(value: number) => {
-              updatePort(connector.id, { point: { z: value } });
-            }}
-            step={0.1}
-            showLabel
-          />
-        </TreeRow>
-      </TreeItem>
-      <TreeItem id="semio.sketchpad.app.type.connectorDirection">
-        <TreeRow>
-          <Stepper
-            id="semio.sketchpad.app.type.panel.details.section.connectors.direction.x"
-            value={connector.direction.x}
-            onChange={(value: number) => {
-              updatePort(connector.id, { direction: { x: value } });
-            }}
-            step={0.1}
-            showLabel
-          />
-        </TreeRow>
-        <TreeRow>
-          <Stepper
-            id="semio.sketchpad.app.type.panel.details.section.connectors.direction.y"
-            value={connector.direction.y}
-            onChange={(value: number) => {
-              updatePort(connector.id, { direction: { y: value } });
-            }}
-            step={0.1}
-            showLabel
-          />
-        </TreeRow>
-        <TreeRow>
-          <Stepper
-            id="semio.sketchpad.app.type.panel.details.section.connectors.direction.z"
-            value={connector.direction.z}
-            onChange={(value: number) => {
-              updatePort(connector.id, { direction: { z: value } });
-            }}
-            step={0.1}
-            showLabel
-          />
-        </TreeRow>
-      </TreeItem>
-      <TreeRow>
-        <Input
-          lazy
-          id="semio.sketchpad.app.type.panel.details.section.connectors.compatiblePorts"
-          value={((connector as any).compatiblePorts || []).join(", ")}
-          placeholderId="semio.sketchpad.app.type.connectorCompatiblePortsPlaceholder.label"
-          onLazyChange={(value: string) => {
-            updatePort(connector.id, {
-              compatiblePorts: value
-                .split(",")
-                .map((port_) => port_.trim())
-                .filter((port_) => port_),
-            } as any);
-          }}
-          showLabel
-        />
-      </TreeRow>
-    </>
+    <ConnectorContextProvider id={connectorId}>
+      <TypeConnectorSectionFormBody connectorId={connectorId} />
+    </ConnectorContextProvider>
   );
 };
 
@@ -39689,11 +38705,10 @@ export const ConnectorsMultipleSection: FC<{ connectorIds: Id[] }> = ({ connecto
  * ConnectorsMultipleSectionForm holds the data fields for a ConnectorsMultipleSectionForm record.
  **/
 const ConnectorsMultipleSectionForm: FC<{ connectorIds: Id[] }> = ({ connectorIds }) => {
-  const tooltip = useTooltip();
-  const { run: runUpdateType } = useUpdateType();
-  const type = useTypeContextRead(undefined, undefined, true) as Type;
-
-  const connectors = type.connectors?.filter((p) => connectorIds.includes(p.id)) || [];
+  const typeConnectors = useTypeConnectors();
+  const [removeConnectors, removeConnectorsStatus] = useRemoveConnectors();
+  const connectors = (typeConnectors.value ?? []).filter((connector) => connectorIds.includes(connector.id));
+  const { spinning, error, disabled } = useWriteIndicator(removeConnectorsStatus);
 
   if (connectors.length === 0) {
     return (
@@ -39703,140 +38718,24 @@ const ConnectorsMultipleSectionForm: FC<{ connectorIds: Id[] }> = ({ connectorId
     );
   }
 
-  const getCommonValue = <T,>(getter: (connector: any) => T | undefined): T | undefined => {
-    const values = connectors.map(getter).filter((v) => v !== undefined);
-    if (values.length === 0) return undefined;
-    const firstValue = values[0];
-    return values.every((v) => JSON.stringify(v) === JSON.stringify(firstValue)) ? firstValue : undefined;
-  };
-
-  const updatePorts = (origin: string, connectorDiff: any) => {
-    connectors.forEach((connector) => {
-      const diff: any = { ...connectorDiff };
-      if (connectorDiff.point) {
-        diff.point = {};
-        if (connectorDiff.point.x !== undefined) diff.point.x = connectorDiff.point.x - connector.point.x;
-        if (connectorDiff.point.y !== undefined) diff.point.y = connectorDiff.point.y - connector.point.y;
-        if (connectorDiff.point.z !== undefined) diff.point.z = connectorDiff.point.z - connector.point.z;
-      }
-      if (connectorDiff.direction) {
-        diff.direction = {};
-        if (connectorDiff.direction.x !== undefined) diff.direction.x = connectorDiff.direction.x - connector.direction.x;
-        if (connectorDiff.direction.y !== undefined) diff.direction.y = connectorDiff.direction.y - connector.direction.y;
-        if (connectorDiff.direction.z !== undefined) diff.direction.z = connectorDiff.direction.z - connector.direction.z;
-      }
-      void runUpdateType(type.id, {
-        connectors: {
-          updated: [{ connector: { id: connector.id }, diff }],
-        },
-      } as Record<string, unknown>);
-    });
-  };
-
-  const commonPort = getCommonValue((p) => p.port);
-  const commonT = getCommonValue((p) => p.t);
-  const commonPointX = getCommonValue((p) => p.point?.x);
-  const commonPointY = getCommonValue((p) => p.point?.y);
-  const commonPointZ = getCommonValue((p) => p.point?.z);
-  const commonDirectionX = getCommonValue((p) => p.direction?.x);
-  const commonDirectionY = getCommonValue((p) => p.direction?.y);
-  const commonDirectionZ = getCommonValue((p) => p.direction?.z);
-
   return (
     <>
+      <HelperRow propertyAligned>
+        <p className="text-sm text-muted-foreground">{`${connectors.length} connectors selected.`}</p>
+      </HelperRow>
       <TreeRow>
-        <Input
-          lazy
-          id="semio.sketchpad.app.type.panel.details.section.connectors.port"
-          value={commonPort || ""}
-          placeholderId={commonPort === undefined ? "semio.sketchpad.common.mixedValues" : "semio.sketchpad.app.type.connectorPortPlaceholder.label"}
-          onLazyChange={(value) => updatePorts("semio.sketchpad.app.type.panel.details.section.connectors.port", { port: value })}
-          showLabel
-        />
+        <div className="flex min-w-0 w-full items-center gap-single">
+          <Button disabled={disabled} onClick={() => void removeConnectors(connectorIds)}>
+            Remove Selected Connectors
+          </Button>
+          {spinning ? <Spinner size="small" className="text-muted-foreground shrink-0" /> : null}
+        </div>
       </TreeRow>
-      <TreeRow>
-        <Slider
-          id="semio.sketchpad.app.type.panel.details.section.connectors.t"
-          value={[commonT ?? 0]}
-          onValueChange={([value]) => {
-            updatePorts("semio.sketchpad.app.type.panel.details.section.connectors.t", { t: value });
-          }}
-          min={0}
-          max={1}
-          step={0.01}
-          showLabel
-        />
-      </TreeRow>
-      <TreeItem id="semio.sketchpad.app.type.connectorPoint">
-        <TreeRow>
-          <Stepper
-            id="semio.sketchpad.app.type.panel.details.section.connectors.point.x"
-            value={commonPointX}
-            onChange={(value: number) => {
-              updatePorts("semio.sketchpad.app.type.panel.details.section.connectors.point.x", { point: { x: value } });
-            }}
-            step={0.1}
-            showLabel
-          />
-        </TreeRow>
-        <TreeRow>
-          <Stepper
-            id="semio.sketchpad.app.type.panel.details.section.connectors.point.y"
-            value={commonPointY}
-            onChange={(value: number) => {
-              updatePorts("semio.sketchpad.app.type.panel.details.section.connectors.point.y", { point: { y: value } });
-            }}
-            step={0.1}
-            showLabel
-          />
-        </TreeRow>
-        <TreeRow>
-          <Stepper
-            id="semio.sketchpad.app.type.panel.details.section.connectors.point.z"
-            value={commonPointZ}
-            onChange={(value: number) => {
-              updatePorts("semio.sketchpad.app.type.panel.details.section.connectors.point.z", { point: { z: value } });
-            }}
-            step={0.1}
-            showLabel
-          />
-        </TreeRow>
-      </TreeItem>
-      <TreeItem id="semio.sketchpad.app.type.connectorDirection">
-        <TreeRow>
-          <Stepper
-            id="semio.sketchpad.app.type.panel.details.section.connectors.direction.x"
-            value={commonDirectionX}
-            onChange={(value: number) => {
-              updatePorts("semio.sketchpad.app.type.panel.details.section.connectors.direction.x", { direction: { x: value } });
-            }}
-            step={0.1}
-            showLabel
-          />
-        </TreeRow>
-        <TreeRow>
-          <Stepper
-            id="semio.sketchpad.app.type.panel.details.section.connectors.direction.y"
-            value={commonDirectionY}
-            onChange={(value: number) => {
-              updatePorts("semio.sketchpad.app.type.panel.details.section.connectors.direction.y", { direction: { y: value } });
-            }}
-            step={0.1}
-            showLabel
-          />
-        </TreeRow>
-        <TreeRow>
-          <Stepper
-            id="semio.sketchpad.app.type.panel.details.section.connectors.direction.z"
-            value={commonDirectionZ}
-            onChange={(value: number) => {
-              updatePorts("semio.sketchpad.app.type.panel.details.section.connectors.direction.z", { direction: { z: value } });
-            }}
-            step={0.1}
-            showLabel
-          />
-        </TreeRow>
-      </TreeItem>
+      {error?.message ? (
+        <HelperRow propertyAligned>
+          <p className="text-sm text-destructive">{error.message}</p>
+        </HelperRow>
+      ) : null}
     </>
   );
 };
@@ -40209,8 +39108,6 @@ const TypeWindowApp: FC = () => {
   const type = useType() as Type | undefined;
   const kitStore = useKitStore();
   const getOrigin = useOrigin();
-  const { run: runUpdateType } = useUpdateType();
-  const [setSelectedRepresentation] = useTypeAppSetSelectedRepresentation();
 
   useEffect(() => {
     if (appType !== "type") return;
@@ -40221,7 +39118,7 @@ const TypeWindowApp: FC = () => {
       setIsDragOver(false);
 
       const files = event.dataTransfer?.files;
-      if (!files || files.length === 0 || !type || !kitStore || !setSelectedRepresentation) return;
+      if (!files || files.length === 0 || !type || !kitStore) return;
 
       for (let i = 0; i < files.length; i++) {
         const file = files[i];
@@ -40235,22 +39132,7 @@ const TypeWindowApp: FC = () => {
           updatedAt: new Date().toISOString(),
         };
 
-        const newRepresentationId = id();
-        const newRepresentation: Representation = {
-          id: newRepresentationId,
-          file: { id: newFileId },
-          description: file.name,
-        };
-
         await executeSemioKitCommand(kitStore, "semio.kit.addFile", getOrigin(), newFile, file);
-
-        await runUpdateType(type.id, {
-          representations: {
-            added: [newRepresentation],
-          },
-        } as Record<string, unknown>);
-
-        setSelectedRepresentation(newRepresentationId);
       }
     };
 
@@ -40280,7 +39162,7 @@ const TypeWindowApp: FC = () => {
       document.removeEventListener("dragover", handleDragOver);
       document.removeEventListener("dragleave", handleDragLeave);
     };
-  }, [appType, type, kitStore, getOrigin, runUpdateType, setSelectedRepresentation]);
+  }, [appType, type, kitStore, getOrigin]);
 
   const persistedWindowLayout = useTypeApp((s) => s?.windowLayout);
   const addSidePanelTab = useAddSidePanelTab();
@@ -44850,8 +43732,8 @@ const SingleKitSection: FC<{ kitId: string }> = ({ kitId }) => {
  * MultipleKitsSection holds the data fields for a MultipleKitsSection record.
  **/
 const MultipleKitsSection: FC<{ kitIds: string[] }> = ({ kitIds }) => {
-  const kits = useKits();
-  const kits = kitIds.map((id) => kits.find((k) => k.id === id)).filter((k) => k !== undefined) as Kit[];
+  const allKits = useKits();
+  const kits = kitIds.map((id) => allKits.find((k) => k.id === id)).filter((k): k is Kit => k !== undefined);
 
   const getCommonValue = <T,>(getter: (kit: Kit) => T): T | undefined => {
     if (kits.length === 0) return undefined;
@@ -47932,6 +46814,38 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
         result[piece.id] = piece.center ?? null;
       }
       return result;
+    });
+  }
+
+  /** @emoji 🧪 Playwright: piece id → `{ center, parentPieceId }` from kit snapshot (drag / propagation assertions). */
+  async function getDesignPieceMetadataMap(
+    page: PlaywrightPage,
+  ): Promise<Record<string, { center: { u: number; v: number } | null; parentPieceId: string | null }>> {
+    return await page.evaluate(() => {
+      const store = (window as any).__SEMIO_STORE__;
+      if (!store) return {};
+      const kitIds = Array.from((store as any).kits?.keys() ?? []) as string[];
+      if (kitIds.length === 0) return {};
+      const kitStore = store.kit(kitIds[0]);
+      if (!kitStore) return {};
+      const kit = kitStore.snapshot();
+      const url = window.location.pathname;
+      const designIdMatch = url.match(/\/designs\/([^/]+)/);
+      const designId = designIdMatch?.[1];
+      const design = designId ? kit.designs?.find((d: any) => d.id === designId) : kit.designs?.[kit.designs.length - 1];
+      if (!design) return {};
+      const out: Record<string, { center: { u: number; v: number } | null; parentPieceId: string | null }> = {};
+      for (const piece of design.pieces ?? []) {
+        const pp = piece.parentPiece;
+        const parentPieceId =
+          pp && typeof pp === "object" && typeof pp.id === "string"
+            ? pp.id
+            : typeof piece.parentPieceId === "string"
+              ? piece.parentPieceId
+              : null;
+        out[piece.id] = { center: piece.center ?? null, parentPieceId };
+      }
+      return out;
     });
   }
 
@@ -52794,7 +51708,8 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
             // Use metadata (resolved) centers: the drag algorithm adjusts connection offsets
             // for connected pieces rather than raw piece centers.
             const centersBeforeDrag: Record<string, { u: number; v: number } | null> = {};
-            for (const [id, meta] of Object.entriesBeforeDrag)) {
+            const metadataBeforeDrag = await getDesignPieceMetadataMap(page);
+            for (const [id, meta] of Object.entries(metadataBeforeDrag)) {
               centersBeforeDrag[id] = meta.center;
             }
             let pieceIdFromData = pieceIdDrag?.replace(/^piece-\d+-/, "") ?? "";
@@ -52836,9 +51751,9 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
             const firstViewportDeltaY = pieceNodeBoxAfterDrag && beforeDraggedNodePosition ? pieceNodeBoxAfterDrag.y - beforeDraggedNodePosition.y : 0;
             console.log(`[Design] Piece node moved in viewport: ${nodeMovedInViewport}`);
             console.log(`[Design] First drag viewport delta: dx=${firstViewportDeltaX}, dy=${firstViewportDeltaY}`);
-            constAfterDrag = await getDesignPieceMetadata(page);
+            const metadataAfterDrag = await getDesignPieceMetadataMap(page);
             const centersAfterDrag: Record<string, { u: number; v: number } | null> = {};
-            for (const [id, meta] of Object.entriesAfterDrag)) {
+            for (const [id, meta] of Object.entries(metadataAfterDrag)) {
               centersAfterDrag[id] = meta.center;
             }
             const centerAfterDrag = centersAfterDrag[pieceIdFromData];
@@ -52896,9 +51811,9 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
             }, draggedNodeId);
             console.log(`[Design] After second drag DOM state: ${JSON.stringify(afterSecondDragTransform)}`);
 
-            constAfterSecondDrag = await getDesignPieceMetadata(page);
+            const metadataAfterSecondDrag = await getDesignPieceMetadataMap(page);
             const centersAfterSecondDrag: Record<string, { u: number; v: number } | null> = {};
-            for (const [id, meta] of Object.entriesAfterSecondDrag)) {
+            for (const [id, meta] of Object.entries(metadataAfterSecondDrag)) {
               centersAfterSecondDrag[id] = meta.center;
             }
             const centerAfterSecondDrag = centersAfterSecondDrag[pieceIdFromData];
@@ -52933,23 +51848,23 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
       console.log("[Design] Testing drag propagation to downstream descendants");
 
       if (hasDiagram) {
-        constProp = await getDesignPieceMetadata(page);
-        constIds = Object.keysProp);
-        console.log(`[Design] Metadata available for $Ids.length} pieces`);
+        const piecePlacementProp = await getDesignPieceMetadataMap(page);
+        const pieceIdsProp = Object.keys(piecePlacementProp);
+        console.log(`[Design] Piece snapshot rows available for ${pieceIdsProp.length} pieces`);
 
         const childrenMapProp: Record<string, string[]> = {};
-        for (const [id, meta] of Object.entriesProp)) {
+        for (const [id, meta] of Object.entries(piecePlacementProp)) {
           if (meta.parentPieceId) {
             if (!childrenMapProp[meta.parentPieceId]) childrenMapProp[meta.parentPieceId] = [];
             childrenMapProp[meta.parentPieceId].push(id);
           }
         }
 
-        const rootPiecesProp =Ids.filter((id) => Prop[id].parentPieceId);
+        const rootPiecesProp = pieceIdsProp.filter((id) => !piecePlacementProp[id].parentPieceId);
         console.log(`[Design] Root pieces (no parent): ${rootPiecesProp.length}`);
         console.log(`[Design] Pieces with children: ${Object.keys(childrenMapProp).length}`);
 
-        const parentWithChildAndGrandchild =Ids.find((id) => {
+        const parentWithChildAndGrandchild = pieceIdsProp.find((id) => {
           const children = childrenMapProp[id] ?? [];
           return children.length > 0 && children.some((c) => (childrenMapProp[c] ?? []).length > 0);
         });
@@ -52957,7 +51872,7 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
         if (parentWithChildAndGrandchild) {
           const childId = (childrenMapProp[parentWithChildAndGrandchild] ?? []).find((c) => (childrenMapProp[c] ?? []).length > 0)!;
           const grandchildId = (childrenMapProp[childId] ?? [])[0];
-          const parentParentId =Prop[parentWithChildAndGrandchild].parentPieceId;
+          const parentParentId = piecePlacementProp[parentWithChildAndGrandchild].parentPieceId;
           const siblingIds = parentParentId ? (childrenMapProp[parentParentId] ?? []).filter((s) => s !== parentWithChildAndGrandchild) : [];
 
           console.log(`[Design] Propagation chain: parent=${parentWithChildAndGrandchild?.slice(0, 8)}, child=${childId?.slice(0, 8)}, grandchild=${grandchildId?.slice(0, 8)}`);
@@ -52997,9 +51912,9 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
             // Use (resolved) centers for drag propagation: the algorithm correctly
             // adjusts connection offsets for connected pieces rather than raw piece centers,
             // so resolved centers reflect the true absolute positions.
-            constBeforePropDrag = await getDesignPieceMetadata(page);
+            const metadataBeforePropDrag = await getDesignPieceMetadataMap(page);
             const centersBeforePropDrag: Record<string, { u: number; v: number } | null> = {};
-            for (const [id, meta] of Object.entriesBeforePropDrag)) {
+            for (const [id, meta] of Object.entries(metadataBeforePropDrag)) {
               centersBeforePropDrag[id] = meta.center;
             }
 
@@ -53049,9 +51964,9 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
                 return positions;
               });
 
-              constAfterPropDrag = await getDesignPieceMetadata(page);
+              const metadataAfterPropDrag = await getDesignPieceMetadataMap(page);
               const centersAfterPropDrag: Record<string, { u: number; v: number } | null> = {};
-              for (const [id, meta] of Object.entriesAfterPropDrag)) {
+              for (const [id, meta] of Object.entries(metadataAfterPropDrag)) {
                 centersAfterPropDrag[id] = meta.center;
               }
 
@@ -55098,6 +54013,7 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
     });
     // #endregion 🗿Settings Panel In All Apps
   });
+}
 }
 //#endregion 📐Tests
 // #endregion 🎨Sketchpad

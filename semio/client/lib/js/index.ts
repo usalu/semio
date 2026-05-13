@@ -2966,6 +2966,12 @@ export class Piece extends Entity {
     return Object.freeze((await this.childConnectionIds()).map((id) => new Design(this.session, this.designId, this.storeId).connection(id)));
   }
 
+  /** @emoji 🧭 Ordered {@link Piece#path} piece node keys (root → … → self) from kit GraphQL. */
+  async pathPieces(): Promise<readonly string[]> {
+    const frag = (await this.readKitInner(this.kitPieceSelection("path { edges { node { id } } }"))) as JsonObject | null;
+    return parseIdListConnection(pieceKit(frag), "path");
+  }
+
   async rename(newName: string): Promise<SetResult> {
     const cid = await this.ensureChangeId();
     return this.mutateScoped(cid, this.kitPieceSelection(`rn: rename(newName: ${gqlString(newName)})`));
