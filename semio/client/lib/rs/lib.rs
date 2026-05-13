@@ -5450,6 +5450,10 @@ pub mod vcs {
             let rt = ctx.data::<Arc<crate::worker::ParentStore>>()?;
             Ok(crate::gql::interfaces::VersionInterface::TheKit(TheKit::new(Arc::downgrade(&rt.wip_graph.arc_here()))))
         }
+
+        pub async fn stores(&self) -> crate::gql::StoreConnection {
+            crate::gql::StoreConnection::active()
+        }
     }
     //#endregion 👤 session
 
@@ -9927,17 +9931,35 @@ pub mod gql {
     /// @emoji 🧩 Executable schema (`Query`, `Mutation`, `Subscription`).
     pub type AppSchema = Schema<Query, Mutation, Subscription>;
 
-    /// @emoji 🏪 Explicit target-schema Store root for session, graph heads, and conflict reads.
+    /// @emoji 🏪 Explicit target-schema Store root for graph heads and conflict reads.
+    #[derive(Clone)]
     pub struct Store;
+
+    #[derive(Clone, async_graphql::SimpleObject)]
+    #[graphql(name = "StoreEdge")]
+    pub struct StoreEdge {
+        pub cursor: String,
+        pub node: Store,
+    }
+
+    #[derive(Clone, async_graphql::SimpleObject)]
+    #[graphql(name = "StoreConnection")]
+    pub struct StoreConnection {
+        pub edges: Vec<StoreEdge>,
+        #[graphql(name = "pageInfo")]
+        pub page_info: Arc<crate::gql_relay::PageInfo>,
+        pub hash: String,
+    }
+
+    impl StoreConnection {
+        /// @emoji 🪢 Builds the active-session store connection from the runtime store roots.
+        pub fn active() -> Self {
+            Self { edges: vec![StoreEdge { cursor: crate::gql_relay::edge_cursor(0), node: Store }], page_info: Arc::new(crate::gql_relay::PageInfo::default()), hash: crate::hash::h(&["store"]) }
+        }
+    }
 
     #[Object(name = "Store")]
     impl Store {
-        /// @emoji 🧭 First active [`crate::vcs::Session`] on this runtime.
-        pub async fn session(&self, ctx: &Context<'_>) -> async_graphql::Result<Arc<crate::vcs::Session>> {
-            let rt = ctx.data::<Arc<ParentStore>>()?;
-            rt.sessions.read().await.first().cloned().ok_or_else(|| async_graphql::Error::new("no session"))
-        }
-
         /// @emoji 🌐 Writable in-progress graph head.
         pub async fn wip(&self, ctx: &Context<'_>) -> async_graphql::Result<Arc<Graph>> {
             Ok(ctx.data::<Arc<ParentStore>>()?.wip_graph.clone())
@@ -9961,11 +9983,6 @@ pub mod gql {
 
     #[Object]
     impl Query {
-        /// @emoji 🏪 Canonical target-schema read root.
-        pub async fn store(&self) -> Store {
-            Store
-        }
-
         /// @emoji 🔎 Relay-style global `node` lookup (WIP + authoritative + sessions + conflicts).
         pub async fn node(&self, ctx: &Context<'_>, id: Id) -> async_graphql::Result<Option<crate::interface::GqlNode>> {
             let rt = ctx.data::<Arc<ParentStore>>()?;
@@ -9975,6 +9992,12 @@ pub mod gql {
         /// @emoji 🔎 Alias of [`Query::node`] for SDL `entity` entry point (`hash` merkle id).
         pub async fn entity(&self, ctx: &Context<'_>, hash: Id) -> async_graphql::Result<Option<crate::interface::GqlNode>> {
             self.node(ctx, hash).await
+        }
+
+        /// @emoji 🧭 First active [`crate::vcs::Session`] on this runtime.
+        pub async fn session(&self, ctx: &Context<'_>) -> async_graphql::Result<Arc<crate::vcs::Session>> {
+            let rt = ctx.data::<Arc<ParentStore>>()?;
+            rt.sessions.read().await.first().cloned().ok_or_else(|| async_graphql::Error::new("no session"))
         }
     }
 
@@ -10005,13 +10028,23 @@ pub mod gql {
             Ok(Id::new().await)
         }
 
+        async fn store(&self, #[graphql(name = "id")] _id: Id) -> StoreCommand {
+            StoreCommand
+        }
+    }
+
+    /// @emoji 🎛️ `Mutation.session.store(id)` scope — commands scoped to one active store.
+    pub struct StoreCommand;
+
+    #[Object(name = "StoreCommand")]
+    impl StoreCommand {
         async fn backbone(&self) -> BackboneCommand {
             BackboneCommand
         }
 
         #[graphql(name = "theKit")]
-        async fn the_kit(&self) -> VersionCommand {
-            VersionCommand
+        async fn the_kit(&self) -> Option<VersionCommand> {
+            Some(VersionCommand)
         }
 
         async fn alternative(&self, #[graphql(name = "id")] id: Id) -> AlternativeCommand {
