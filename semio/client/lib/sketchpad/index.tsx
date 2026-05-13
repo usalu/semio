@@ -116,7 +116,6 @@ import {
   useConnectorDescription,
   useConnectorPort,
   useConnections,
-  useCreateAuthor,
   useCreateFolder,
   useDesign,
   useDesignClusterableGroups,
@@ -133,7 +132,6 @@ import {
   useKitStoredFileUrls as useFileUrls,
   useHasDesignContext,
   useHasTypeContext,
-  useIncludedDesigns as useIncludedDesignsFromKit,
   useIsInActiveKitTab,
   useKitAlternatives,
   useKitAlternativeSelection,
@@ -209,7 +207,6 @@ import {
   useTypeRepresentations,
   useTypes,
   useTypeUnit,
-  useUpdateAuthor,
   useUpdateDesign,
   useUpdateType,
   useWriteIndicator,
@@ -38163,67 +38160,43 @@ const selectTypeMeshId = (type: Type) => type.id;
 const TypeMesh: FC = () => {
   const typeRepresentations = useTypeRepresentations();
   const [selectedRepresentationId] = useTypeAppSelectedRepresentationId();
-  const camera = useThree((state) => state.camera);
-  const gl = useThree((state) => state.gl);
-  const meshSceneRef = useRef<THREE.Object3D | null>(null);
+
   const activeRepresentationId = useMemo(() => {
     const representations = typeRepresentations.value ?? [];
     if (selectedRepresentationId && representations.some((representation) => representation.id === selectedRepresentationId)) {
       return selectedRepresentationId;
     }
-    return representations[0]?.id ?? null;
+    return representations[0]?.id;
   }, [selectedRepresentationId, typeRepresentations.value]);
-  const representationFile = useRepresentationFile(activeRepresentationId ?? undefined);
-  const fileId = representationFile.value?.id ?? null;
-  const fileName = useFileName(fileId ?? undefined);
+
+  const representationFile = useRepresentationFile(activeRepresentationId);
+  const fileId = representationFile.value?.id;
+  const fileName = useFileName(fileId);
   const fileExtension = useMemo(() => {
     const name = fileName.value ?? "";
     const segments = name.split(".");
     return segments.length > 1 ? (segments.pop() ?? "") : "";
   }, [fileName.value]);
+  const [readableUrl] = useKitFileUrl(fileId);
+  const { url: blobUrl } = useKitFileBlobUrl(fileId);
+  const renderUrl = blobUrl ?? readableUrl;
 
-  const [readableUrl] = useKitFileUrl(fileId ?? undefined);
-  const { url: blobUrl } = useKitFileBlobUrl(fileId ?? undefined);
-  const renderUrlPreview = blobUrl ?? readableUrl;
-
-  const handleSceneReady = useCallback((scene: THREE.Object3D | null) => {
-    meshSceneRef.current = scene;
-  }, []);
-
-  const getComputedColor = (variable: string): string => getComputedStyle(document.documentElement).getPropertyValue(variable).trim();
-  const foregroundColor = useMemo(() => getComputedColor("--foreground"), []);
-
-  const renderUrl = renderUrlPreview;
-
-  if (!renderUrl) {
-    return null;
-  }
+  if (!renderUrl) return null;
 
   return (
     <MeshErrorBoundary fallback={null}>
       <Suspense fallback={null}>
-        <LoadedTypeMesh url={renderUrl} fileExtension={fileExtension} onSceneReady={handleSceneReady} />
+        <LoadedTypeMesh url={renderUrl} fileExtension={fileExtension} />
       </Suspense>
     </MeshErrorBoundary>
   );
 };
 
-/**
- * SceneContent holds the data fields for a SceneContent record.
- **/
 const SceneContent: FC = React.memo(() => {
   const typeFilters = useTypeFilters();
-
-  return (
-    <>
-      {typeFilters.showRepresentations && <TypeMesh />}
-    </>
-  );
+  return <>{typeFilters.showRepresentations ? <TypeMesh /> : null}</>;
 });
 
-/**
- * Scene holds the data fields for a Scene record.
- **/
 const Scene: FC<{ isDragOver?: boolean }> = ({ isDragOver = false }) => {
   const [setCamera] = useTypeAppSetCamera();
   const [camera] = useTypeAppCamera();
@@ -38263,12 +38236,12 @@ const Scene: FC<{ isDragOver?: boolean }> = ({ isDragOver = false }) => {
       orthographic={projection === "orthographic"}
     >
       <SceneContent />
-      {isDragOver && (
+      {isDragOver ? (
         <mesh position={[0, 0, 0]}>
           <planeGeometry args={[100, 100]} />
           <meshBasicMaterial color="#4f46e5" opacity={0.2} transparent />
         </mesh>
-      )}
+      ) : null}
     </SceneComponent>
   );
 };
@@ -38282,13 +38255,9 @@ const Scene: FC<{ isDragOver?: boolean }> = ({ isDragOver = false }) => {
 // #region 💧Details
 // Detail panel sections for editing type properties, connectors, representations, authors, and attributes. MUST render within tree items.
 
-/**
- * Detail panel section displaying editable type properties.
- **/
 export const TypeDetails: FC = () => {
   const isInTypeContext = useHasTypeContext();
-  if (!isInTypeContext) return null;
-  return <TypeDetailsForm />;
+  return isInTypeContext ? <TypeDetailsForm /> : null;
 };
 
 const READONLY_ROW_STATUS = { kind: "idle" } as const;
@@ -38304,7 +38273,7 @@ const TypeRepresentationTreeItem: FC<{
   const representationUrl = useRepresentationUrl(representationId);
   const representationDescription = useRepresentationDescription(representationId);
   const representationFile = useRepresentationFile(representationId);
-  const representationFileName = useFileName(representationFile.value?.id ?? undefined);
+  const representationFileName = useFileName(representationFile.value?.id);
 
   return (
     <div onPointerEnter={onHover} onPointerLeave={onLeave} onClick={onClick}>
@@ -38333,7 +38302,7 @@ const TypeAuthorTreeItem: FC<{ authorId: string }> = ({ authorId }) => {
   );
 };
 
-const TypeConnectorTreeItemBody: FC<{
+const TypeConnectorTreeItemContent: FC<{
   connectorId: string;
   isSelected: boolean;
   isHovered: boolean;
@@ -38344,8 +38313,8 @@ const TypeConnectorTreeItemBody: FC<{
 }> = ({ connectorId, isSelected, isHovered, onHover, onLeave, onClick, onRemove }) => {
   const connectorCode = useConnectorCode();
   const connectorDescription = useConnectorDescription();
-  const connectorIcon = useConnectorIcon(connectorId);
-  const connectorPort = useConnectorPort(connectorId);
+  const connectorIcon = useConnectorIcon();
+  const connectorPort = useConnectorPort();
   const [renameConnector, renameConnectorStatus] = useRenameConnector();
   const [changeConnectorDescription, changeConnectorDescriptionStatus] = useChangeConnectorDescription();
   const [changeConnectorIcon, changeConnectorIconStatus] = useChangeConnectorIcon();
@@ -38355,13 +38324,11 @@ const TypeConnectorTreeItemBody: FC<{
       <TreeItem
         id="semio.sketchpad.app.type.connector"
         label={connectorCode.value || connectorId}
-        className={`cursor-selectable ${isSelected ? "ring-1 ring-[color:var(--active-base)]" : ""} ${isHovered ? "bg-[color:var(--hover-base)]" : ""}`}
+        className={`${isSelected ? "bg-accent/20" : ""} ${isHovered ? "bg-hover" : ""}`}
         actions={[
           {
             icon: <RemoveIcon />,
-            onClick: () => {
-              onRemove();
-            },
+            onClick: onRemove,
             id: "semio.sketchpad.common.remove",
           },
         ]}
@@ -38383,11 +38350,203 @@ const TypeConnectorTreeItem: FC<{
   onLeave: () => void;
   onClick: (event: React.MouseEvent) => void;
   onRemove: () => void;
-}> = (props) => {
+}> = ({ connectorId, ...props }) => {
   return (
-    <ConnectorContextProvider id={props.connectorId}>
-      <TypeConnectorTreeItemBody {...props} />
+    <ConnectorContextProvider id={connectorId}>
+      <TypeConnectorTreeItemContent connectorId={connectorId} {...props} />
     </ConnectorContextProvider>
+  );
+};
+
+const TypeDetailsForm: FC = () => {
+  const typeName = useTypeName();
+  const typeDescription = useTypeDescription();
+  const typeIcon = useTypeIcon();
+  const typeImage = useTypeImage();
+  const typeUnit = useTypeUnit();
+  const [renameType, renameTypeStatus] = useRenameType();
+  const [changeTypeDescription, changeTypeDescriptionStatus] = useChangeTypeDescription();
+  const [changeTypeIcon, changeTypeIconStatus] = useChangeTypeIcon();
+
+  return (
+    <>
+      <SketchpadInputRow value={typeName.value ?? ""} commit={async (value) => renameType(String(value))} status={renameTypeStatus} id="semio.sketchpad.app.type.panel.details.section.type.name" />
+      <SketchpadTextareaRow value={typeDescription.value ?? ""} commit={async (value) => changeTypeDescription(String(value))} status={changeTypeDescriptionStatus} id="semio.sketchpad.app.type.panel.details.section.type.description" placeholderId="semio.sketchpad.app.type.descriptionPlaceholder.label" />
+      <SketchpadInputRow value={typeIcon.value ?? ""} commit={async (value) => changeTypeIcon(String(value))} status={changeTypeIconStatus} id="semio.sketchpad.app.type.panel.details.section.type.icon" placeholderId="semio.sketchpad.app.type.iconPlaceholder.label" />
+      <SketchpadInputRow value={typeImage.value ?? ""} commit={async () => ({ ok: true } as const)} status={READONLY_ROW_STATUS} id="semio.sketchpad.app.type.panel.details.section.type.image" placeholderId="semio.sketchpad.app.type.imagePlaceholder.label" readOnly />
+      <SketchpadInputRow value={typeUnit.value ?? ""} commit={async () => ({ ok: true } as const)} status={READONLY_ROW_STATUS} id="semio.sketchpad.app.type.panel.details.section.type.unit" readOnly />
+    </>
+  );
+};
+
+export const RepresentationsSection: FC = () => {
+  const isInTypeContext = useHasTypeContext();
+  return isInTypeContext ? <RepresentationsSectionForm /> : null;
+};
+
+const RepresentationsSectionForm: FC = () => {
+  const typeRepresentations = useTypeRepresentations();
+  const [hoverRepresentation] = useTypeAppHoverRepresentation();
+  const [clearHover] = useTypeAppClearHover();
+  const [selection, setSelection] = useTypeAppSelection();
+  const [hover] = useTypeAppHover();
+  const [activeTool] = useTypeAppActiveTool();
+
+  return (
+    <TreeItem id="semio.sketchpad.app.type.representations">
+      {(typeRepresentations.value ?? []).map((representation) => (
+        <TypeRepresentationTreeItem
+          key={representation.id}
+          representationId={representation.id}
+          isSelected={selection?.representations?.includes(representation.id) || false}
+          isHovered={hover?.representation === representation.id}
+          onHover={() => hoverRepresentation && hoverRepresentation(representation.id)}
+          onLeave={() => clearHover && clearHover()}
+          onClick={(event) => {
+            if (!setSelection) return;
+            const compositionKind = resolveSelectionCompositionKind(activeTool, {
+              shiftKey: event.shiftKey,
+              altKey: event.altKey,
+              ctrlKey: event.ctrlKey,
+              metaKey: event.metaKey,
+            });
+            setSelection({
+              ...(selection || {}),
+              representations: applySelectionComposition(selection?.representations, [representation.id], compositionKind),
+              connectors: compositionKind === "replace" ? [] : selection?.connectors || [],
+            });
+          }}
+        />
+      ))}
+    </TreeItem>
+  );
+};
+
+export const ConnectorsListSection: FC = () => {
+  const isInTypeContext = useHasTypeContext();
+  return isInTypeContext ? <ConnectorsListSectionForm /> : null;
+};
+
+const ConnectorsListSectionForm: FC = () => {
+  const typeConnectors = useTypeConnectors();
+  const [addConnector] = useAddConnector();
+  const [removeConnector] = useRemoveConnector();
+  const [hoverPort] = useTypeAppHoverPort();
+  const [clearHover] = useTypeAppClearHover();
+  const [selection, setSelection] = useTypeAppSelection();
+  const [hover] = useTypeAppHover();
+  const [activeTool] = useTypeAppActiveTool();
+  const connectors = typeConnectors.value ?? [];
+
+  return (
+    <TreeItem
+      id="semio.sketchpad.app.type.connectors"
+      actions={[
+        {
+          icon: <AddIcon />,
+          onClick: () => {
+            void addConnector(`connector-${connectors.length + 1}`);
+          },
+          id: "semio.sketchpad.common.add",
+        },
+      ]}
+    >
+      {connectors.map((connector) => (
+        <TypeConnectorTreeItem
+          key={connector.id}
+          connectorId={connector.id}
+          isSelected={selection?.connectors?.includes(connector.id) || false}
+          isHovered={hover?.connector === connector.id}
+          onHover={() => {
+            if (hoverPort) hoverPort(connector.id);
+          }}
+          onLeave={() => {
+            if (clearHover) clearHover();
+          }}
+          onClick={(event) => {
+            event.stopPropagation();
+            if (!setSelection) return;
+            const compositionKind = resolveSelectionCompositionKind(activeTool, {
+              shiftKey: event.shiftKey,
+              altKey: event.altKey,
+              ctrlKey: event.ctrlKey,
+              metaKey: event.metaKey,
+            });
+            setSelection({
+              ...(selection || {}),
+              connectors: applySelectionComposition(selection?.connectors, [connector.id], compositionKind),
+              representations: compositionKind === "replace" ? [] : selection?.representations || [],
+            });
+          }}
+          onRemove={() => {
+            void removeConnector(connector.id);
+          }}
+        />
+      ))}
+    </TreeItem>
+  );
+};
+
+export const AuthorsSection: FC = () => {
+  const isInTypeContext = useHasTypeContext();
+  return isInTypeContext ? <AuthorsSectionForm /> : null;
+};
+
+const AuthorsSectionForm: FC = () => {
+  const typeAuthors = useTypeAuthors();
+  return (
+    <TreeItem id="semio.sketchpad.app.type.authors">
+      {(typeAuthors.value ?? []).map((author) => (
+        <TypeAuthorTreeItem key={author.id} authorId={author.id} />
+      ))}
+    </TreeItem>
+  );
+};
+
+export const AttributesSection: FC = () => {
+  const isInTypeContext = useHasTypeContext();
+  return isInTypeContext ? <AttributesSectionForm /> : null;
+};
+
+const AttributesSectionForm: FC = () => {
+  const typeAttributes = useTypeAttributes();
+  const [addTypeAttribute] = useAddTypeAttribute();
+  const [removeTypeAttribute] = useRemoveTypeAttribute();
+
+  return (
+    <TreeItem
+      id="semio.sketchpad.app.type.attributes"
+      actions={[
+        {
+          icon: <AddIcon />,
+          onClick: () => {
+            void addTypeAttribute("", "", "");
+          },
+          id: "semio.sketchpad.common.add",
+        },
+      ]}
+    >
+      {(typeAttributes.value ?? []).map((attribute: any) => (
+        <TreeItem
+          key={attribute.id}
+          id="semio.sketchpad.app.type.attribute"
+          label={attribute.key || attribute.id}
+          actions={[
+            {
+              icon: <RemoveIcon />,
+              onClick: () => {
+                void removeTypeAttribute(attribute.id);
+              },
+              id: "semio.sketchpad.common.remove",
+            },
+          ]}
+        >
+          <SketchpadInputRow value={attribute.key ?? ""} commit={async () => ({ ok: true } as const)} status={READONLY_ROW_STATUS} id="semio.sketchpad.app.type.panel.details.section.attributes.name" readOnly />
+          <SketchpadInputRow value={attribute.value ?? ""} commit={async () => ({ ok: true } as const)} status={READONLY_ROW_STATUS} id="semio.sketchpad.app.type.panel.details.section.attributes.value" placeholderId="semio.sketchpad.app.type.attributeValuePlaceholder.label" readOnly />
+          <SketchpadInputRow value={attribute.definition ?? ""} commit={async () => ({ ok: true } as const)} status={READONLY_ROW_STATUS} id="semio.sketchpad.app.type.panel.details.section.attributes.definition" placeholderId="semio.sketchpad.app.type.attributeDefinitionPlaceholder.label" readOnly />
+        </TreeItem>
+      ))}
+    </TreeItem>
   );
 };
 
@@ -38425,263 +38584,20 @@ const TypeConnectorSectionFormBody: FC<{ connectorId: Id }> = ({ connectorId }) 
   );
 };
 
-/** TypeDetailsForm holds the data fields for a TypeDetailsForm record.
- **/
-/**
- **/
-const TypeDetailsForm: FC = () => {
-  const typeName = useTypeName();
-  const typeDescription = useTypeDescription();
-  const typeIcon = useTypeIcon();
-  const typeImage = useTypeImage();
-  const typeUnit = useTypeUnit();
-  const [renameType, renameTypeStatus] = useRenameType();
-  const [changeTypeDescription, changeTypeDescriptionStatus] = useChangeTypeDescription();
-  const [changeTypeIcon, changeTypeIconStatus] = useChangeTypeIcon();
-
-  return (
-    <>
-      <SketchpadInputRow value={typeName.value ?? ""} commit={async (value) => renameType(String(value))} status={renameTypeStatus} id="semio.sketchpad.app.type.panel.details.section.type.name" />
-      <SketchpadTextareaRow value={typeDescription.value ?? ""} commit={async (value) => changeTypeDescription(String(value))} status={changeTypeDescriptionStatus} id="semio.sketchpad.app.type.panel.details.section.type.description" placeholderId="semio.sketchpad.app.type.descriptionPlaceholder.label" />
-      <SketchpadInputRow value={typeIcon.value ?? ""} commit={async (value) => changeTypeIcon(String(value))} status={changeTypeIconStatus} id="semio.sketchpad.app.type.panel.details.section.type.icon" placeholderId="semio.sketchpad.app.type.iconPlaceholder.label" />
-      <SketchpadInputRow value={typeImage.value ?? ""} commit={async () => ({ ok: true } as const)} status={READONLY_ROW_STATUS} id="semio.sketchpad.app.type.panel.details.section.type.image" placeholderId="semio.sketchpad.app.type.imagePlaceholder.label" readOnly />
-      <SketchpadInputRow value={typeUnit.value ?? ""} commit={async () => ({ ok: true } as const)} status={READONLY_ROW_STATUS} id="semio.sketchpad.app.type.panel.details.section.type.unit" readOnly />
-    </>
-  );
-};
-
-/**
- * Detail panel section for managing type representations with add, remove, and reorder.
- **/
-export const RepresentationsSection: FC = () => {
-  const isInTypeContext = useHasTypeContext();
-  if (!isInTypeContext) return null;
-  return <RepresentationsSectionForm />;
-};
-
-/** RepresentationsSectionForm holds the data fields for a RepresentationsSectionForm record.
- **/
-/**
- **/
-const RepresentationsSectionForm: FC = () => {
-  const [hoverRepresentation] = useTypeAppHoverRepresentation();
-  const [clearHover] = useTypeAppClearHover();
-  const typeRepresentations = useTypeRepresentations();
-  const [selection, setSelection] = useTypeAppSelection();
-  const [hover] = useTypeAppHover();
-  const [activeTool] = useTypeAppActiveTool();
-  const representations = typeRepresentations.value ?? [];
-
-  return (
-    <TreeItem id="semio.sketchpad.app.type.representations">
-      {representations.map((representation) => {
-        const isSelected = selection?.representations?.includes(representation.id) || false;
-        const isHovered = hover?.representation === representation.id;
-        return (
-          <TypeRepresentationTreeItem
-            key={representation.id}
-            representationId={representation.id}
-            isSelected={isSelected}
-            isHovered={isHovered}
-            onHover={() => hoverRepresentation && hoverRepresentation(representation.id)}
-            onLeave={() => clearHover && clearHover()}
-            onClick={(event) => {
-              if (!setSelection) return;
-              const compositionKind = resolveSelectionCompositionKind(activeTool, {
-                shiftKey: event.shiftKey,
-                altKey: event.altKey,
-                ctrlKey: event.ctrlKey,
-                metaKey: event.metaKey,
-              });
-              setSelection({
-                ...(selection || {}),
-                representations: applySelectionComposition(selection?.representations, [representation.id], compositionKind),
-                connectors: compositionKind === "replace" ? [] : selection?.connectors || [],
-              });
-            }}
-          />
-        );
-      })}
-    </TreeItem>
-  );
-};
-
-/**
- * Detail panel section listing all type connectors with inline editing.
- **/
-export const ConnectorsListSection: FC = () => {
-  const isInTypeContext = useHasTypeContext();
-  if (!isInTypeContext) return null;
-  return <ConnectorsListSectionForm />;
-};
-
-/** ConnectorsListSectionForm holds the data fields for a ConnectorsListSectionForm record.
- **/
-/**
- **/
-const ConnectorsListSectionForm: FC = () => {
-  const [hoverPort] = useTypeAppHoverPort();
-  const [clearHover] = useTypeAppClearHover();
-  const typeConnectors = useTypeConnectors();
-  const [addConnector] = useAddConnector();
-  const [removeConnector] = useRemoveConnector();
-  const [selection, setSelection] = useTypeAppSelection();
-  const [hover] = useTypeAppHover();
-  const [activeTool] = useTypeAppActiveTool();
-  const connectors = typeConnectors.value ?? [];
-
-  return (
-    <TreeItem
-      id="semio.sketchpad.app.type.connectors"
-      actions={[
-        {
-          icon: <AddIcon />,
-          onClick: () => {
-            void addConnector(`connector-${connectors.length + 1}`);
-          },
-          id: "semio.sketchpad.common.add",
-        },
-      ]}
-    >
-      {connectors.map((connector) => {
-        const isSelected = selection?.connectors?.includes(connector.id) || false;
-        const isHovered = hover?.connector === connector.id;
-        return (
-          <TypeConnectorTreeItem
-            key={connector.id}
-            connectorId={connector.id}
-            isSelected={isSelected}
-            isHovered={isHovered}
-            onHover={() => {
-              if (hoverPort) hoverPort(connector.id);
-            }}
-            onLeave={() => {
-              if (clearHover) clearHover();
-            }}
-            onClick={(event) => {
-              event.stopPropagation();
-              if (!setSelection) return;
-              const compositionKind = resolveSelectionCompositionKind(activeTool, {
-                shiftKey: event.shiftKey,
-                altKey: event.altKey,
-                ctrlKey: event.ctrlKey,
-                metaKey: event.metaKey,
-              });
-              setSelection({
-                ...(selection || {}),
-                connectors: applySelectionComposition(selection?.connectors, [connector.id], compositionKind),
-                representations: compositionKind === "replace" ? [] : selection?.representations || [],
-              });
-            }}
-            onRemove={() => {
-              void removeConnector(connector.id);
-            }}
-          />
-        );
-      })}
-    </TreeItem>
-  );
-};
-
-/**
- * Detail panel section for managing type authors.
- **/
-export const AuthorsSection: FC = () => {
-  const isInTypeContext = useHasTypeContext();
-  if (!isInTypeContext) return null;
-  return <AuthorsSectionForm />;
-};
-
-/** AuthorsSectionForm holds the data fields for a AuthorsSectionForm record.
- **/
-/**
- **/
-const AuthorsSectionForm: FC = () => {
-  const typeAuthors = useTypeAuthors();
-  const authors = typeAuthors.value ?? [];
-
-  return (
-    <TreeItem id="semio.sketchpad.app.type.authors">
-      {authors.map((author) => (
-        <TypeAuthorTreeItem key={author.id} authorId={author.id} />
-      ))}
-    </TreeItem>
-  );
-};
-
-/**
- * Detail panel section for managing type key-value attributes.
- **/
-export const AttributesSection: FC = () => {
-  const isInTypeContext = useHasTypeContext();
-  if (!isInTypeContext) return null;
-  return <AttributesSectionForm />;
-};
-/**
- * AttributesSectionForm holds the data fields for a AttributesSectionForm record.
- **/
-const AttributesSectionForm: FC = () => {
-  const typeAttributes = useTypeAttributes();
-  const [addTypeAttribute] = useAddTypeAttribute();
-  const [removeTypeAttribute] = useRemoveTypeAttribute();
-  const attributes = typeAttributes.value ?? [];
-
-  return (
-    <TreeItem
-      id="semio.sketchpad.app.type.attributes"
-      actions={[
-        {
-          icon: <AddIcon />,
-          onClick: () => {
-            void addTypeAttribute("", "", "");
-          },
-          id: "semio.sketchpad.common.add",
-        },
-      ]}
-    >
-      {attributes.map((attribute: any) => (
-        <TreeItem
-          key={attribute.id}
-          id="semio.sketchpad.app.type.attribute"
-          label={attribute.key || attribute.id}
-          actions={[
-            {
-              icon: <RemoveIcon />,
-              onClick: () => {
-                void removeTypeAttribute(attribute.id);
-              },
-              id: "semio.sketchpad.common.remove",
-            },
-          ]}
-        >
-          <SketchpadInputRow value={attribute.key ?? ""} commit={async () => ({ ok: true } as const)} status={READONLY_ROW_STATUS} id="semio.sketchpad.app.type.panel.details.section.attributes.name" readOnly />
-          <SketchpadInputRow value={attribute.value ?? ""} commit={async () => ({ ok: true } as const)} status={READONLY_ROW_STATUS} id="semio.sketchpad.app.type.panel.details.section.attributes.value" placeholderId="semio.sketchpad.app.type.attributeValuePlaceholder.label" readOnly />
-          <SketchpadInputRow value={attribute.definition ?? ""} commit={async () => ({ ok: true } as const)} status={READONLY_ROW_STATUS} id="semio.sketchpad.app.type.panel.details.section.attributes.definition" placeholderId="semio.sketchpad.app.type.attributeDefinitionPlaceholder.label" readOnly />
-        </TreeItem>
-      ))}
-    </TreeItem>
-  );
-};
-
-/**
- * Detail panel section for editing a single selected connector.
- **/
 export const TypeConnectorSection: FC<{ connectorId: Id }> = ({ connectorId }) => {
   const isInTypeContext = useHasTypeContext();
-  if (!isInTypeContext) return null;
-  return <TypeConnectorSectionForm connectorId={connectorId} />;
+  return isInTypeContext ? <TypeConnectorSectionForm connectorId={connectorId} /> : null;
 };
-/**
- * ConnectorSectionForm holds the data fields for a ConnectorSectionForm record.
- **/
+
 const TypeConnectorSectionForm: FC<{ connectorId: Id }> = ({ connectorId }) => {
   const typeConnectors = useTypeConnectors();
-  const connector = (typeConnectors.value ?? []).find((candidate) => candidate.id === connectorId);
+  const connectorNotFoundLabel = useLabel("semio.sketchpad.app.type.connectorNotFound");
+  const connectorExists = (typeConnectors.value ?? []).some((connector) => connector.id === connectorId);
 
-  if (!connector) {
+  if (!connectorExists) {
     return (
       <HelperRow propertyAligned>
-        <p className="text-sm text-muted-foreground">{useLabel("semio.sketchpad.app.type.connectorNotFound")}</p>
+        <p className="text-sm text-muted-foreground">{connectorNotFoundLabel}</p>
       </HelperRow>
     );
   }
@@ -38693,19 +38609,14 @@ const TypeConnectorSectionForm: FC<{ connectorId: Id }> = ({ connectorId }) => {
   );
 };
 
-/**
- * Detail panel section for batch-editing multiple selected connectors.
- **/
 export const ConnectorsMultipleSection: FC<{ connectorIds: Id[] }> = ({ connectorIds }) => {
   const isInTypeContext = useHasTypeContext();
-  if (!isInTypeContext) return null;
-  return <ConnectorsMultipleSectionForm connectorIds={connectorIds} />;
+  return isInTypeContext ? <ConnectorsMultipleSectionForm connectorIds={connectorIds} /> : null;
 };
-/**
- * ConnectorsMultipleSectionForm holds the data fields for a ConnectorsMultipleSectionForm record.
- **/
+
 const ConnectorsMultipleSectionForm: FC<{ connectorIds: Id[] }> = ({ connectorIds }) => {
   const typeConnectors = useTypeConnectors();
+  const connectorsNotFoundLabel = useLabel("semio.sketchpad.app.type.connectorsNotFound");
   const [removeConnectors, removeConnectorsStatus] = useRemoveConnectors();
   const connectors = (typeConnectors.value ?? []).filter((connector) => connectorIds.includes(connector.id));
   const { spinning, error, disabled } = useWriteIndicator(removeConnectorsStatus);
@@ -38713,7 +38624,7 @@ const ConnectorsMultipleSectionForm: FC<{ connectorIds: Id[] }> = ({ connectorId
   if (connectors.length === 0) {
     return (
       <HelperRow propertyAligned>
-        <p className="text-sm text-muted-foreground">{useLabel("semio.sketchpad.app.type.connectorsNotFound")}</p>
+        <p className="text-sm text-muted-foreground">{connectorsNotFoundLabel}</p>
       </HelperRow>
     );
   }
