@@ -9469,10 +9469,19 @@ type ConflictConnection implements EntityConnection {
 
 #region Store
 
-type Store {
-  wip: Graph!
-  authoritative: Graph
-  conflicts: ConflictConnection!
+type Store implements StrongEntity & Entity & Node {
+  # Node
+  id: ID! # data // uuidv7
+  # Entity
+  hash: String! # cached
+  owner: Entity # reference // Session
+  owns: EntityConnection # reference // Kit | Alternative | Checkpoint | Session
+  # Store
+  wip: Graph! # data
+  stage: Graph # data
+  authoritative: Graph # data
+  conflicts: ConflictConnection! # data
+  backbone: Backbone # reference
 }
 
 type StoreEdge implements EntityEdge {

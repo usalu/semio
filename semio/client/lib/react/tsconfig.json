@@ -32,10 +32,10 @@
         "./*"
       ],
       "@semio/js": [
-        "../client/lib/js"
+        "../js"
       ],
       "@semio/js/*": [
-        "../client/lib/js/*"
+        "../js/*"
       ],
       "@semio/rs-wasm": [
         "../rs/pkg/semio.d.ts"

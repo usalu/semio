@@ -4,10 +4,10 @@ overview: Rewrite `semio/client/lib/react/index.tsx` as a sealed, schema-aligned
 todos:
   - id: open-ticket
     content: "Open ticket under 🎯runningsketchpad goal: 'Refactor Semio React to Composable Schema-Aligned Contexts'."
-    status: pending
+    status: completed
   - id: types-region
     content: "Add 🧬Types region: re-export only plain data types (Attribute, Benchmark, Coordinate, Plane, Point, Vector, Position, Offset, Place, Side, PositionInput, OffsetInput, SetResult, SetError, GraphRootKind, PieceBlueprint, ConnectionSide, KitReadPoint, …). NO semio/js entity classes are re-exported. Define a single `EntityReadState = FieldReadState<Readonly<{ id: string }>>` — same shape as FieldReadState<T> (value/loading/error/refresh) carrying the resolved `{ id }`. Used by every entity hook return; no per-entity aliases. Keep FieldReadState<T> and OperationStatus."
-    status: pending
+    status: in_progress
   - id: ids-region
     content: "Add 🪪Ids region: one typed `Readonly<{ id: string }>` context per schema entity. Session is the only context whose value carries the JS Session reference (transport handle for internal use only — never returned by any exported hook). Add `PiecesBatchContext` with `{ pieceIds: readonly string[] }` (not a GraphQL entity id list on hooks — lives in context only)."
     status: pending

@@ -1389,6 +1389,11 @@ export class Store extends Entity {
     return new Graph(this.session, "wip", this.id);
   }
 
+  /** @emoji 🧭 Staging graph selection (UI tier); mirrors {@link Store#wip} until a distinct stage root exists in the schema. */
+  stage(): Graph {
+    return this.wip();
+  }
+
   authoritative(): Graph {
     return new Graph(this.session, "authoritative", this.id);
   }
@@ -2289,6 +2294,23 @@ export class Type extends Entity {
 
   async unit(): Promise<string> {
     return readKitBranchString(await this.typeKitFrag("unit"), "type", "unit");
+  }
+
+  /** @emoji 🧰 Stable {@link Port} handles for the SDL {@code ports} field. */
+  async ports(): Promise<readonly Port[]> {
+    const inner = "ports { edges { node { id } } }";
+    const frag = await this.typeKitFrag(inner);
+    const prt = this.typeNode(frag)?.["ports"] as JsonObject | undefined;
+    const edges = (prt?.["edges"] as readonly JsonObject[] | undefined) ?? [];
+    const out: Port[] = [];
+    for (const e of edges) {
+      const n = e["node"] as JsonObject | undefined;
+      if (n == null) continue;
+      const id = String(n["id"] ?? "");
+      if (id === "") continue;
+      out.push(this.port(id));
+    }
+    return Object.freeze(out);
   }
 
   /** @emoji 🧰 Stable {@link Connector} handles for the SDL {@code connectors} field. */
