@@ -92,7 +92,7 @@ register_entities! {
         crate::kit::design::connection::Connection,
         crate::kit::design::Clump,
     ],
-    root: [crate::kit::Kit],
+    kit: [crate::kit::Kit],
     vcs: [
         crate::vcs::Edit,
         crate::vcs::Change,
@@ -1089,7 +1089,7 @@ pub mod gql_relay {
 
     impl OperationConnection {
         pub fn from_interface_entities(entities: Vec<Arc<crate::operation::OperationInterface>>) -> Self {
-            let child_hashes: Vec<String> = entities.iter().map(|o| h(&[o.row_id().as_str()])).collect();
+            let child_hashes: Vec<String> = entities.iter().map(|o| h(&[o.entity_id().as_str()])).collect();
             let hash = merkle_collection(child_hashes);
             let edges = entities.into_iter().enumerate().map(|(i, o)| OperationEdge { cursor: edge_cursor(i), node: o }).collect();
             Self { edges, page_info: std::sync::Arc::new(PageInfo::default()), hash }
@@ -3200,7 +3200,7 @@ pub mod kit {
             *g = g.saturating_add(1);
         }
 
-        /// @emoji 🧬 Deep-clone this kit graph (dev-backbone `initialKit` projection round-trip) for immutable graph `initialKit` baselines / replay roots.
+        /// @emoji 🧬 Deep-clone this kit graph (dev-backbone `initialKit` projection round-trip) for immutable graph `initialKit` baselines / operation replay.
         pub async fn deep_clone(self: &Arc<Self>) -> Arc<Kit> {
             let snap = crate::kit_backbone::initial_kit_projection_value(self).await;
             let owner = self.owner_graph.clone();
@@ -4851,8 +4851,8 @@ pub mod vcs {
         pub owner_session: RwLock<Weak<Session>>,
         pub self_weak: std::sync::Mutex<std::sync::Weak<Graph>>,
         pub initial_kit: RwLock<Arc<Kit>>,
-        /// @emoji 🏗️ Mutable [`Kit`] root used while replaying [`Operation`]s for materialized [`TheKit.kit`](../../graphql/target.schema.graphql) / [`Alternative.kit`](../../graphql/target.schema.graphql).
-        pub mutable_kit_root: RwLock<Arc<Kit>>,
+        /// @emoji 🏗️ Mutable working [`Kit`] used while replaying [`Operation`]s for materialized [`TheKit.kit`](../../graphql/target.schema.graphql) / [`Alternative.kit`](../../graphql/target.schema.graphql).
+        pub mutable_kit: RwLock<Arc<Kit>>,
         pub materialized_cache: RwLock<Option<MaterializedSlot>>,
         pub alternatives: RwLock<Vec<Arc<Alternative>>>,
         pub checkpoints: RwLock<Vec<Arc<Checkpoint>>>,
@@ -4873,7 +4873,7 @@ pub mod vcs {
                 owner_session: RwLock::new(Weak::new()),
                 self_weak: std::sync::Mutex::new(Weak::new()),
                 initial_kit: RwLock::new(Arc::default()),
-                mutable_kit_root: RwLock::new(Arc::default()),
+                mutable_kit: RwLock::new(Arc::default()),
                 materialized_cache: RwLock::new(None),
                 alternatives: RwLock::new(Vec::new()),
                 checkpoints: RwLock::new(Vec::new()),
@@ -4890,7 +4890,7 @@ pub mod vcs {
     }
 
     impl Graph {
-        /// 🆕 Build a brand-new Graph; seeds [`Graph::mutable_kit_root`] from a deep-cloned empty [`Kit`] so checkpoint roots never alias live mutation.
+        /// 🆕 Build a brand-new Graph; seeds [`Graph::mutable_kit`] from a deep-cloned empty [`Kit`] so [`Graph::initial_kit`] baselines never alias live mutation.
         pub async fn new() -> Arc<Self> {
             let id = Id::new().await;
             let g = Arc::new_cyclic(|weak_self: &Weak<Graph>| {
@@ -4900,7 +4900,7 @@ pub mod vcs {
                     owner_session: RwLock::new(Weak::new()),
                     self_weak: std::sync::Mutex::new(weak_self.clone()),
                     initial_kit: RwLock::new(Arc::default()),
-                    mutable_kit_root: RwLock::new(kit.clone()),
+                    mutable_kit: RwLock::new(kit.clone()),
                     materialized_cache: RwLock::new(None),
                     alternatives: RwLock::new(Vec::new()),
                     checkpoints: RwLock::new(Vec::new()),
@@ -4914,9 +4914,9 @@ pub mod vcs {
                     op_history: RwLock::new(Vec::new()),
                 }
             });
-            let baseline = g.mutable_kit_root.read().await.clone().deep_clone().await;
+            let baseline = g.mutable_kit.read().await.clone().deep_clone().await;
             *g.initial_kit.write().await = baseline.clone();
-            *g.mutable_kit_root.write().await = baseline;
+            *g.mutable_kit.write().await = baseline;
             g
         }
 
@@ -5001,7 +5001,7 @@ pub mod vcs {
             t
         }
 
-        /// @emoji 📦 Deterministic materialized [`Kit`] for a [`Workspace`](../../graphql/target.schema.graphql): clone [`Graph::mutable_kit_root`] and replay recorded [`Operation`] forwards (matches SDL `Workspace.kit` computation).
+        /// @emoji 📦 Deterministic materialized [`Kit`] for a [`Workspace`](../../graphql/target.schema.graphql): clone [`Graph::mutable_kit`] and replay recorded [`Operation`] forwards (matches SDL `Workspace.kit` computation).
         pub async fn materialized_kit_for_workspace(self: &Arc<Self>, workspace_id: &Id) -> Arc<Kit> {
             let ws = self.resolve_workspace_id(workspace_id).await;
             let (saved, unsaved, seq) = if ws == self.id {
@@ -5010,14 +5010,14 @@ pub mod vcs {
                     self.the_kit_unsaved_edits.read().await.clone(),
                     self.the_kit_workspace_seq.load(Ordering::Relaxed),
                 )
-            } else if let Some(a) = self.workspace_alternative(workspace_id).await {
+            } else if let Some(a) = self.workspace_alternative(&ws).await {
                 (
                     a.saved_edits.read().await.clone(),
                     a.unsaved_edits.read().await.clone(),
                     a.change_seq.load(Ordering::Relaxed),
                 )
             } else {
-                return self.mutable_kit_root.read().await.clone();
+                return self.mutable_kit.read().await.clone();
             };
             {
                 let cache = self.materialized_cache.read().await;
@@ -5027,7 +5027,7 @@ pub mod vcs {
                     }
                 }
             }
-            let base = self.mutable_kit_root.read().await.clone();
+            let base = self.mutable_kit.read().await.clone();
             let mat = base.deep_clone().await;
             let mut edits: Vec<Arc<Edit>> = Vec::new();
             edits.extend(saved);
@@ -5060,7 +5060,7 @@ pub mod vcs {
             forward_idx: usize,
         ) -> Arc<Kit> {
             let (saved, unsaved) = self.workspace_saved_and_unsaved_edits(workspace_id).await.unwrap_or_else(|| (Vec::new(), Vec::new()));
-            let base = self.mutable_kit_root.read().await.clone();
+            let base = self.mutable_kit.read().await.clone();
             let mat = base.deep_clone().await;
             let mut edits: Vec<Arc<Edit>> = Vec::new();
             edits.extend(saved);
@@ -5099,10 +5099,11 @@ pub mod vcs {
             forward: crate::operation::Operation,
             backwards: Vec<crate::operation::Operation>,
         ) -> Result<(), SemioError> {
-            let tx = if self.workspace_is_the_kit(workspace_id).await {
+            let ws = self.resolve_workspace_id(workspace_id).await;
+            let tx = if ws == self.id {
                 let _ = self.ensure_the_kit_unsaved_edit(edit_id).await;
                 self.the_kit_unsaved_edits.read().await.iter().find(|t| &t.id == edit_id).cloned().ok_or_else(|| SemioError::not_found("Edit", edit_id.as_str()))?
-            } else if let Some(alt) = self.workspace_alternative(workspace_id).await {
+            } else if let Some(alt) = self.workspace_alternative(&ws).await {
                 let _ = alt.ensure_unsaved_edit(edit_id).await;
                 alt.unsaved_edits.read().await.iter().find(|t| &t.id == edit_id).cloned().ok_or_else(|| SemioError::not_found("Edit", edit_id.as_str()))?
             } else {
@@ -5129,9 +5130,9 @@ pub mod vcs {
             *change.owner.write().await = change_owner;
             change.forwards.write().await.push(forward);
             change.backwards.write().await.extend(backwards);
-            if self.workspace_is_the_kit(workspace_id).await {
+            if ws == self.id {
                 self.the_kit_workspace_seq.fetch_add(1, Ordering::Relaxed);
-            } else if let Some(alt) = self.workspace_alternative(workspace_id).await {
+            } else if let Some(alt) = self.workspace_alternative(&ws).await {
                 alt.change_seq.fetch_add(1, Ordering::Relaxed);
             }
             self.invalidate_materialized_cache().await;
@@ -5183,11 +5184,15 @@ pub mod vcs {
                         let alts = self.alternatives.read().await;
                         alts.iter().find(|a| &a.id == aid).ok_or_else(|| SemioError::not_found("Alternative", aid.as_str()))?.clone()
                     };
-                    alt.start.read().await.upgrade().ok_or_else(|| SemioError::invalid("alternative has no start checkpoint"))?
+                    let parent_from_alt = {
+                        let start_guard = alt.start.read().await;
+                        start_guard.upgrade().ok_or_else(|| SemioError::invalid("alternative has no start checkpoint"))?
+                    };
+                    parent_from_alt
                 }
             };
 
-            let parent_root = self.initial_kit.read().await.clone();
+            let parent_initial_kit = self.initial_kit.read().await.clone();
 
             let new_alt_id = Id::new().await;
             let new_alt = Arc::new(Alternative {
@@ -5196,7 +5201,7 @@ pub mod vcs {
                 name: RwLock::new(name),
                 start: RwLock::new(Arc::downgrade(&parent_cp)),
                 checkpoints: RwLock::new(vec![parent_cp.clone()]),
-                kit: RwLock::new(Some(parent_root)),
+                kit: RwLock::new(Some(parent_initial_kit)),
                 open_edit: RwLock::new(Weak::new()),
                 saved_edits: RwLock::new(Vec::new()),
                 redo_edits: RwLock::new(Vec::new()),
@@ -5343,7 +5348,7 @@ pub mod vcs {
             Ok((piece,))
         }
 
-        /// 🛰️ WIP bootstrap: hydrate [`Graph::mutable_kit_root`] from initial kit projection JSON via [`crate::kit_backbone::graph_new_overlay_from_initial_projection_json`].
+        /// 🛰️ WIP bootstrap: hydrate [`Graph::mutable_kit`] from initial kit projection JSON via [`crate::kit_backbone::graph_new_overlay_from_initial_projection_json`].
         pub async fn new_overlay_from_initial_kit_projection_json(json: serde_json::Value) -> Result<Arc<Self>, SemioError> {
             crate::kit_backbone::graph_new_overlay_from_initial_projection_json(json).await
         }
@@ -5603,7 +5608,7 @@ pub mod interface {
             if &g.id == id {
                 return Some(GqlNode::Graph(g.clone()));
             }
-            let kit = g.mutable_kit_root.read().await.clone();
+            let kit = g.mutable_kit.read().await.clone();
             let kid = kit.workspace_kit_id().await;
             if id == &kid || id == &kit.id {
                 return Some(GqlNode::Kit(kit.clone()));
@@ -5648,7 +5653,7 @@ pub mod interface {
     /// @emoji 📍 Resolve `pieceInDesign` on the WIP graph line.
     pub async fn piece_in_design_on_wip(rt: &crate::worker::ParentStore, design_id: &Id, piece_id: &Id) -> Option<Arc<Piece>> {
         let g = &rt.wip_graph;
-        let kit = g.mutable_kit_root.read().await.clone();
+        let kit = g.mutable_kit.read().await.clone();
         let des = kit.design_by_external_id(design_id).await?;
         des.piece_by_external_id(piece_id).await
     }
@@ -6117,7 +6122,7 @@ pub mod operation {
     #[derive(Clone, Debug, Default, PartialEq)]
     pub struct NoInput;
 
-    /// @emoji 🪪 Kit root scope; the kit id is implicit from the target graph line.
+    /// @emoji 🪪 Rename-kit scope; the kit id is implicit from the target graph line.
     #[derive(Clone, Debug, Default, PartialEq)]
     pub struct RenameKitScope;
 
@@ -8639,7 +8644,7 @@ pub mod kit_backbone {
     pub async fn graph_new_overlay_from_initial_projection_json(json: serde_json::Value) -> Result<std::sync::Arc<crate::vcs::Graph>, crate::error::SemioError> {
         let g = crate::vcs::Graph::new().await;
         {
-            let mut slot = g.mutable_kit_root.write().await;
+            let mut slot = g.mutable_kit.write().await;
             hydrate_kit_from_initial_projection_value(&*slot, &json).await?;
             if let Some(c) = json.get("createdAt").and_then(|v| v.as_str()) {
                 *slot.created.write().await = Some(crate::timestamp::Timestamp(c.to_string()));
@@ -8651,7 +8656,7 @@ pub mod kit_backbone {
             *slot = cloned;
         }
         {
-            let ini = g.mutable_kit_root.read().await.deep_clone().await;
+            let ini = g.mutable_kit.read().await.deep_clone().await;
             *g.initial_kit.write().await = ini;
         }
         Ok(g)
@@ -8699,8 +8704,8 @@ pub mod kit_backbone {
         #[serde(default)]
         pub authors: BlockHashedList<HashRef>,
         /// @emoji 📦 Wire key `initialKit` — persisted kit seed for this snapshot (GraphQL `Graph.theKit` is the live materialization, not this JSON name).
-        #[serde(rename = "initialKit", default = "empty_root_value")]
-        pub root: serde_json::Value,
+        #[serde(rename = "initialKit", default = "empty_initial_kit_value")]
+        pub initial_kit: serde_json::Value,
         #[serde(rename = "theKit", default)]
         pub the_kit: DevBackboneTheKitHead,
         #[serde(default)]
@@ -8791,8 +8796,8 @@ pub mod kit_backbone {
         pub kit_diff: Option<serde_json::Value>,
     }
 
-    /// @emoji 🌱 Empty `root` projection placeholder used until [`Kit`] dumps a real metabolism-shaped root.
-    fn empty_root_value() -> serde_json::Value {
+    /// @emoji 🌱 Empty `initialKit` projection placeholder until [`Kit`] emits a real metabolism-shaped snapshot.
+    fn empty_initial_kit_value() -> serde_json::Value {
         serde_json::json!({
             "hash": KIT_BUNDLE_HASH_STUB,
             "name": "",
@@ -8808,7 +8813,7 @@ pub mod kit_backbone {
                 id: kit_id.to_string(),
                 hash: KIT_BUNDLE_HASH_STUB.to_string(),
                 authors: BlockHashedList::default(),
-                root: empty_root_value(),
+                initial_kit: empty_initial_kit_value(),
                 the_kit: DevBackboneTheKitHead::default(),
                 checkpoints: BlockHashedList::default(),
                 alternatives: BlockHashedList::default(),
@@ -8817,7 +8822,7 @@ pub mod kit_backbone {
     }
 
     impl DevBackboneBundleDoc {
-        /// @emoji 🌱 Fresh empty bundle stamped with [`KIT_STORE_BUNDLE_SCHEMA`]; kit ids fill in once the live kit projects into `root`.
+        /// @emoji 🌱 Fresh empty bundle stamped with [`KIT_STORE_BUNDLE_SCHEMA`]; kit ids fill in once the live kit projects into `initialKit`.
         pub fn template() -> Self {
             Self {
                 schema: KIT_STORE_BUNDLE_SCHEMA.to_string(),
@@ -8870,7 +8875,7 @@ pub mod kit_backbone {
                 };
                 forward_items.push(OperationStep { id: Id::new().await.as_str().to_string(), hash: KIT_BUNDLE_HASH_STUB.to_string(), kind: op.kind().to_string(), description: None, input: kit_operation_step_input_json(op), kit_diff });
             }
-            let mut kit_bw = graph.kit_materialized_for_workspace_before_operation_step(workspace_id, tx, change_idx, forwards_list.len()).await;
+            let kit_bw = graph.kit_materialized_for_workspace_before_operation_step(workspace_id, tx, change_idx, forwards_list.len()).await;
             for op in ch.backwards.read().await.iter() {
                 let kit_diff = match op.to_diff(&kit_bw).await {
                     Ok(d) => {
@@ -8939,9 +8944,9 @@ pub mod kit_backbone {
             bundle.wip.the_kit.id = gid.clone();
             bundle.authoritative.the_kit.id = gid.clone();
             bundle.stage.the_kit.id = gid;
-            bundle.wip.root = initial.clone();
-            bundle.authoritative.root = initial.clone();
-            bundle.stage.root = initial;
+            bundle.wip.initial_kit = initial.clone();
+            bundle.authoritative.initial_kit = initial.clone();
+            bundle.stage.initial_kit = initial;
 
             // 🪧 Project checkpoints (metadata only; kit baselines live on `Graph.initialKit`).
             for cp in graph.checkpoints.read().await.iter() {
@@ -8981,7 +8986,7 @@ pub mod kit_backbone {
         pub fn hoist_inline_file_blobs_for_storage(bundle: &mut DevBackboneBundleDoc) {
             let mut seen_digest = std::collections::HashSet::<String>::new();
             let mut collected: Vec<serde_json::Value> = Vec::new();
-            Self::take_file_blobs_from_kit_json_into(&mut bundle.wip.root, &mut seen_digest, &mut collected);
+            Self::take_file_blobs_from_kit_json_into(&mut bundle.wip.initial_kit, &mut seen_digest, &mut collected);
             bundle.blobs.items.extend(collected);
             Self::purge_unreferenced_blobs(bundle);
         }
@@ -8994,9 +8999,9 @@ pub mod kit_backbone {
 
         fn referenced_blob_hashes_from_bundle(bundle: &DevBackboneBundleDoc) -> std::collections::HashSet<String> {
             let mut s = std::collections::HashSet::new();
-            Self::collect_blob_hashes_from_kit_projection(&bundle.wip.root, &mut s);
-            Self::collect_blob_hashes_from_kit_projection(&bundle.authoritative.root, &mut s);
-            Self::collect_blob_hashes_from_kit_projection(&bundle.stage.root, &mut s);
+            Self::collect_blob_hashes_from_kit_projection(&bundle.wip.initial_kit, &mut s);
+            Self::collect_blob_hashes_from_kit_projection(&bundle.authoritative.initial_kit, &mut s);
+            Self::collect_blob_hashes_from_kit_projection(&bundle.stage.initial_kit, &mut s);
             s
         }
 
@@ -9078,20 +9083,20 @@ pub mod kit_backbone {
             if bundle.schema != KIT_STORE_BUNDLE_SCHEMA {
                 return Err(SemioError::invalid(format!("bundle schema mismatch: {} != {}", bundle.schema, KIT_STORE_BUNDLE_SCHEMA)));
             }
-            let mut wip_root = bundle.wip.root.clone();
-            Self::merge_bundle_file_blobs_into_kit_json(&mut wip_root, &bundle.blobs.items);
-            if !wip_root.is_null() && wip_root.is_object() {
+            let mut wip_initial_kit_json = bundle.wip.initial_kit.clone();
+            Self::merge_bundle_file_blobs_into_kit_json(&mut wip_initial_kit_json, &bundle.blobs.items);
+            if !wip_initial_kit_json.is_null() && wip_initial_kit_json.is_object() {
                 {
-                    let w = graph.mutable_kit_root.write().await;
-                    crate::kit_backbone::hydrate_kit_from_initial_projection_value(&*w, &wip_root).await?;
+                    let w = graph.mutable_kit.write().await;
+                    crate::kit_backbone::hydrate_kit_from_initial_projection_value(&*w, &wip_initial_kit_json).await?;
                 }
-                let ini = graph.mutable_kit_root.read().await.deep_clone().await;
+                let ini = graph.mutable_kit.read().await.deep_clone().await;
                 *graph.initial_kit.write().await = ini;
             }
             Ok(bundle)
         }
 
-        /// @emoji 🌱 Initialize an empty bundle with a non-empty `wip` head: empty root projection stamped with `kit_id`,
+        /// @emoji 🌱 Initialize an empty bundle with a non-empty `wip` head: empty `initialKit` projection stamped with `kit_id`,
         /// a single seed checkpoint anchored on the empty kit, and one empty unsaved change directly on the version.
         /// This is the "create dev kit" bootstrap state that sketchpad sees the moment a JSON file is opened/created.
         pub fn initialize_with_unsaved_change(kit_id: &str, change_id: &str, checkpoint_id: &str) -> Self {
@@ -9288,7 +9293,7 @@ CREATE TABLE IF NOT EXISTS conflict_stub (
 
     //#region 🔁 replay
     pub async fn replay_stored_operations(graph: &Arc<Graph>, operations: &[StoredOperation]) -> Result<(), SemioError> {
-        graph.mutable_kit_root.read().await.clear_piece_projections_for_backbone_replay().await;
+        graph.mutable_kit.read().await.clear_piece_projections_for_backbone_replay().await;
         for operation in operations {
             let workspace_id = Id::from(operation.workspace_id.as_str());
             let transaction_id = Id::from(operation.transaction_id.as_str());
@@ -11410,14 +11415,14 @@ mod tests {
         assert_eq!(count, 1, "expected exactly one canonical emit_event definition in lib.rs, found {}", count);
     }
 
-    /// 🛡️ [`crate::worker::ChildStore`] must record operations and rely on materialization replay (`Kit::apply_diff` inside `Graph::materialized_kit_for_workspace`); it must not replace `mutable_kit_root` or call `apply_diff` directly.
+    /// 🛡️ [`crate::worker::ChildStore`] must record operations and rely on materialization replay (`Kit::apply_diff` inside `Graph::materialized_kit_for_workspace`); it must not replace `mutable_kit` or call `apply_diff` directly.
     #[test]
-    fn worker_child_runtime_guard_no_direct_root_or_apply_diff() {
+    fn worker_child_runtime_guard_no_direct_mutable_kit_write_or_apply_diff() {
         let src = include_str!("lib.rs");
         let i = src.find("impl ChildStore").expect("ChildStore impl");
         let j = src[i..].find("//#endregion 🧵 worker").expect("worker end marker") + i;
         let worker = &src[i..j];
-        assert!(!worker.contains("mutable_kit_root.write()"), "ChildStore must not assign Graph::mutable_kit_root");
+        assert!(!worker.contains("mutable_kit.write()"), "ChildStore must not assign Graph::mutable_kit");
         assert!(!worker.contains("apply_diff"), "ChildStore must not call Kit::apply_diff; use record_operation_in_open_transaction + materialized_kit_for_workspace");
     }
 
@@ -11788,7 +11793,7 @@ mod tests {
             let exp: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(path_exp).expect("read kit-store.golden.expected")).expect("parse expected");
 
             let g = crate::vcs::Graph::new().await;
-            let workspace_id = crate::id::Id::from(ops_json["draftId"].as_str().expect("draftId"));
+            let workspace_id = g.id.clone();
             let tx_id = crate::id::Id::from(ops_json["transactionId"].as_str().expect("transactionId"));
             let golden_ops = crate::kit_backbone::golden_operation_records_ref(&ops_json).expect("operations|ops");
             for rec in golden_ops {
@@ -11847,7 +11852,7 @@ mod tests {
             let exp: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(path_exp).expect("read kit-store.golden.expected")).expect("parse expected");
 
             let g = crate::vcs::Graph::new().await;
-            let workspace_id = crate::id::Id::from(ops_json["draftId"].as_str().expect("draftId"));
+            let workspace_id = g.id.clone();
             let tx_id = crate::id::Id::from(ops_json["transactionId"].as_str().expect("transactionId"));
             let golden_ops = crate::kit_backbone::golden_operation_records_ref(&ops_json).expect("operations|ops");
             for rec in golden_ops {
@@ -11877,16 +11882,23 @@ mod tests {
             let golden_ops: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(path_ops).expect("read operations")).expect("parse golden operations");
             let exp: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(path_exp).expect("read expected")).expect("parse golden expected");
 
-            let stored = crate::kit_backbone::stored_operations_from_golden_operations_json(&golden_ops).expect("golden → stored operations");
+            let g = crate::vcs::Graph::new().await;
+            let legacy_workspace = golden_ops["draftId"].as_str().expect("draftId");
+            let graph_workspace = g.id.as_str().to_string();
+            let mut stored = crate::kit_backbone::stored_operations_from_golden_operations_json(&golden_ops).expect("golden → stored operations");
+            for op in &mut stored {
+                if op.workspace_id == legacy_workspace {
+                    op.workspace_id = graph_workspace.clone();
+                }
+            }
             let uri_full = format!("file://{}", path.display());
             let norm = crate::kit_backbone::normalize_connection_uri(&uri_full);
             let bundle = crate::kit_backbone::DevBackboneBundleDoc::from_stored__operations(&stored);
             std::fs::write(&path, serde_json::to_string_pretty(&bundle).expect("serialize kit-store bundle")).expect("write kit-store bundle");
 
-            let g = crate::vcs::Graph::new().await;
             crate::kit_backbone::AttachedBackbone::mount_and_replay(&norm, "wip", &g).await.expect("dev json mount+replay");
 
-            let workspace_id = crate::id::Id::from(golden_ops["draftId"].as_str().expect("draftId"));
+            let workspace_id = g.id.clone();
             let fp = stable_projection_fingerprint(&g.materialized_kit_for_workspace(&workspace_id).await).await;
             let exp_fp = exp["projectionFingerprint"].as_str().expect("projectionFingerprint");
             assert_eq!(fp, exp_fp, "dev-json backbone replay must match US-001 golden fingerprint");
@@ -11909,10 +11921,18 @@ mod tests {
             let golden_ops: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(path_ops).expect("read operations")).expect("parse golden operations");
             let exp: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(path_exp).expect("read expected")).expect("parse golden expected");
 
-            let stored = crate::kit_backbone::stored_operations_from_golden_operations_json(&golden_ops).expect("golden → stored operations");
-
             let g_bootstrap = crate::vcs::Graph::new().await;
             let _bones = crate::kit_backbone::AttachedBackbone::mount_and_replay(&norm, "wip", &g_bootstrap).await.expect("bootstrap .semio layout");
+
+            let g2 = crate::vcs::Graph::new().await;
+            let legacy_workspace = golden_ops["draftId"].as_str().expect("draftId");
+            let graph_workspace = g2.id.as_str().to_string();
+            let mut stored = crate::kit_backbone::stored_operations_from_golden_operations_json(&golden_ops).expect("golden → stored operations");
+            for op in &mut stored {
+                if op.workspace_id == legacy_workspace {
+                    op.workspace_id = graph_workspace.clone();
+                }
+            }
 
             let db_path = proj_canon.join(".semio").join("wip.db");
             let conn = rusqlite::Connection::open(&db_path).expect("open wip.db");
@@ -11926,10 +11946,9 @@ mod tests {
             }
             drop(conn);
 
-            let g2 = crate::vcs::Graph::new().await;
             crate::kit_backbone::AttachedBackbone::mount_and_replay(&norm, "wip", &g2).await.expect("replay wip.db");
 
-            let workspace_id = crate::id::Id::from(golden_ops["draftId"].as_str().expect("draftId"));
+            let workspace_id = g2.id.clone();
             let fp = stable_projection_fingerprint(&g2.materialized_kit_for_workspace(&workspace_id).await).await;
             let exp_fp = exp["projectionFingerprint"].as_str().expect("projectionFingerprint");
             assert_eq!(fp, exp_fp, "local .semio backbone replay must match US-001 golden fingerprint");
@@ -11986,7 +12005,7 @@ mod tests {
     fn kit_bundle_purge_unreferenced_blob_entities() {
         let mut bundle = crate::kit_backbone::DevBackboneBundleDoc::template();
         bundle.blobs.items.push(serde_json::json!({ "hash": "orphan_digest_deadbeef", "blob": "data:,x" }));
-        bundle.wip.root = serde_json::json!({
+        bundle.wip.initial_kit = serde_json::json!({
             "id": "k-purge",
             "name": "K",
             "createdAt": "2020-01-01T00:00:00.000Z",
@@ -12003,7 +12022,7 @@ mod tests {
         let blob_txt = "data:application/octet-stream;base64,QQ==";
         let dig = crate::kit_backbone::DevBackboneBundleDoc::digest_kit_blob_wire(blob_txt);
         let mut bundle = crate::kit_backbone::DevBackboneBundleDoc::template();
-        bundle.wip.root = serde_json::json!({
+        bundle.wip.initial_kit = serde_json::json!({
             "id": "k-blob",
             "name": "K",
             "createdAt": "2020-01-01T00:00:00.000Z",
@@ -12017,25 +12036,25 @@ mod tests {
             }],
         });
         crate::kit_backbone::DevBackboneBundleDoc::hoist_inline_file_blobs_for_storage(&mut bundle);
-        assert!(bundle.wip.root["files"][0].as_object().expect("file obj").get("blob").is_none());
-        assert_eq!(bundle.wip.root["files"][0]["blobHash"].as_str().expect("blobHash"), dig);
+        assert!(bundle.wip.initial_kit["files"][0].as_object().expect("file obj").get("blob").is_none());
+        assert_eq!(bundle.wip.initial_kit["files"][0]["blobHash"].as_str().expect("blobHash"), dig);
         assert_eq!(bundle.blobs.items.len(), 1);
         assert_eq!(bundle.blobs.items[0]["hash"].as_str().expect("blob entity hash"), dig);
-        let mut merged = bundle.wip.root.clone();
+        let mut merged = bundle.wip.initial_kit.clone();
         crate::kit_backbone::DevBackboneBundleDoc::merge_bundle_file_blobs_into_kit_json(&mut merged, &bundle.blobs.items);
         assert_eq!(merged["files"][0]["blob"].as_str().expect("merged blob"), blob_txt);
     }
 
     #[cfg(not(target_arch = "wasm32"))]
     #[test]
-    fn kit_store_bundle_initialize_with_unsaved_change_seeds_root_checkpoint_and_change() {
-        // 🌱 Bundle bootstrap matches sketchpad "create dev kit (json)": one root, one checkpoint, one unsaved change on the version.
+    fn kit_store_bundle_initialize_with_unsaved_change_seeds_checkpoint_and_change() {
+        // 🌱 Bundle bootstrap matches sketchpad "create dev kit (json)": one `initialKit`, one checkpoint, one unsaved change on the version.
         let bundle = crate::kit_backbone::DevBackboneBundleDoc::initialize_with_unsaved_change("kit-id-1", "change-1", "ckpt-1");
         assert_eq!(bundle.schema, crate::kit_backbone::KIT_STORE_BUNDLE_SCHEMA);
         assert_eq!(bundle.wip.id, "kit-id-1");
         assert_eq!(bundle.authoritative.id, "kit-id-1");
         assert_eq!(bundle.stage.id, "kit-id-1");
-        assert_eq!(bundle.wip.checkpoints.items.len(), 1, "first checkpoint anchored on root");
+        assert_eq!(bundle.wip.checkpoints.items.len(), 1, "first checkpoint anchored on initial kit");
         assert_eq!(bundle.wip.checkpoints.items[0]["id"], "ckpt-1");
         assert_eq!(bundle.wip.checkpoints.items[0]["message"], "init");
         assert!(bundle.wip.the_kit.saved_changes.items.is_empty(), "no saved changes at bootstrap");
@@ -12138,7 +12157,7 @@ mod tests {
     fn normalized_kit_operation_create_tag_diff_and_backwards_use_scoped_ids() {
         block_on(async {
             let graph = crate::vcs::Graph::new().await;
-            let kit = graph.mutable_kit_root.read().await.clone();
+            let kit = graph.mutable_kit.read().await.clone();
             let owner_id = kit.workspace_kit_id().await;
             let tag_id = crate::id::Id::from("tag-scope-1");
             let attribute_id = crate::id::Id::from("attr-scope-1");
@@ -12252,7 +12271,7 @@ mod tests {
     fn normalized_create_fixed_piece_replay_reuses_scoped_piece_id() {
         block_on(async {
             let graph = crate::vcs::Graph::new().await;
-            let workspace_id = crate::id::Id::from("draft-scoped-1");
+            let workspace_id = graph.id.clone();
             let operation = crate::operation::Operation::CreateFixedPiece {
                 scope: crate::operation::Scope::CreateFixedPiece {
                     design_id: crate::id::Id::from("design-scoped-1"),
