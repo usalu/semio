@@ -22,7 +22,11 @@ const repoClientPath = repoClientCandidates.find((p) => existsSync(p));
 if (repoClientPath) {
   run(repoClientPath, ["configure"]);
 } else {
-  run("go", ["run", "./repo/mcp", "configure"]);
+  execFileSync("go", ["run", "./repo/client/mcp", "configure"], {
+    stdio: "inherit",
+    cwd: root,
+    env: { ...process.env, GOWORK: join(root, "go.work") },
+  });
 }
 
 for (const alias of aliases) {

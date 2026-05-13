@@ -34,7 +34,7 @@ tryRun("cargo", ["fetch", "--manifest-path", "Cargo.toml"]);
 
 console.log("[workspace-setup] go build repo client…");
 const clientOut = join(root, "repo", "client", process.platform === "win32" ? "client.exe" : "client");
-tryRun("go", ["build", "-o", clientOut, "./repo/mcp"]);
+tryRun("go", ["build", "-o", clientOut, "./repo/client/mcp"], { env: { ...process.env, GOWORK: join(root, "go.work") } });
 
 console.log("[workspace-setup] dotnet restore…");
 tryRun("dotnet", ["restore", "Monorepo.sln"]);

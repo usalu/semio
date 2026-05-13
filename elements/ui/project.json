@@ -6,7 +6,7 @@
       "executor": "nx:run-commands",
       "options": {
         "cwd": "elements/ui",
-        "command": "bun ../../scripts/run-storybook-dev.ts",
+        "command": "bun ../../scripts/run-storybook-dev.script.ts",
         "env": {
           "STORYBOOK_PORT": "6006"
         },

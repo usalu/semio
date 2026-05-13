@@ -1,6 +1,6 @@
 // #region DesktopTestRunner
 // Launcher mirroring @vscode/test-electron `runTests`: spawns the desktop app with SEMIO_EXTENSION_TESTS_PATH set.
-// Usage: from `semio/desktop`: `node ./test/runDesktopTests.mjs`
+// Usage: from `semio/desktop`: `node ./test/runDesktopTests.script.mjs`
 // Specs: See https://code.visualstudio.com/api/working-with-extensions/testing-extension
 
 import { spawn } from "node:child_process";

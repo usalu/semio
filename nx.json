@@ -78,7 +78,7 @@
         "{projectRoot}/lib.rs",
         "{projectRoot}/package.json",
         "{projectRoot}/.cargo/**/*",
-        "{projectRoot}/scripts/build-wasm.mjs",
+        "{projectRoot}/scripts/build-wasm.script.mjs",
         "{workspaceRoot}/package.json",
         "{workspaceRoot}/bun.lock",
         "{workspaceRoot}/Cargo.toml",

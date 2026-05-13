@@ -367,7 +367,7 @@ exit 0
 		if !strings.Contains(configText, "\"command\": \"go\"") {
 			t.Fatalf("expected Windsurf MCP config to keep the portable go command, got:\n%s", configData)
 		}
-		if !strings.Contains(configText, "\"args\": [\n        \"run\",\n        \"./repo/mcp\"\n      ]") {
+		if !strings.Contains(configText, "\"args\": [\n        \"run\",\n        \"./repo/client/mcp\"\n      ]") {
 			t.Fatalf("expected Windsurf MCP config to keep portable repo args, got:\n%s", configData)
 		}
 
@@ -386,7 +386,7 @@ exit 0
 		if !strings.Contains(codexText, `command = "go"`) {
 			t.Fatalf("expected Codex MCP config to keep the portable go command, got:\n%s", codexData)
 		}
-		if !strings.Contains(codexText, `args = ["run", "./repo/mcp"]`) {
+		if !strings.Contains(codexText, `args = ["run", "./repo/client/mcp"]`) {
 			t.Fatalf("expected Codex MCP config to keep portable repo args, got:\n%s", codexData)
 		}
 		if !strings.Contains(codexText, fmt.Sprintf("cwd = %q", repoRoot)) {
@@ -508,7 +508,7 @@ personality = "ignored-template-value"
 
 [mcp_servers.repo]
 command = "go"
-args = ["run", "./repo/mcp"]
+args = ["run", "./repo/client/mcp"]
 enabled = true
 
 [mcp_servers.semio]
@@ -551,8 +551,8 @@ enabled = true
 	if !strings.Contains(text, `command = "go"`) {
 		t.Fatalf("expected repo command to stay portable, got:\n%s", text)
 	}
-	if !strings.Contains(text, `args = ["run", "./repo/codex"]`) && !strings.Contains(text, `args = ["run", "./repo/mcp"]`) {
-		t.Fatalf("expected repo args to stay portable (./repo/codex or ./repo/mcp), got:\n%s", text)
+	if !strings.Contains(text, `args = ["run", "./repo/codex"]`) && !strings.Contains(text, `args = ["run", "./repo/client/mcp"]`) {
+		t.Fatalf("expected repo args to stay portable (./repo/codex or ./repo/client/mcp), got:\n%s", text)
 	}
 	if !strings.Contains(text, fmt.Sprintf("cwd = %q", repoRoot)) {
 		t.Fatalf("expected codex config to set repo root cwd, got:\n%s", text)
@@ -635,7 +635,7 @@ func TestNativeBootstrapAssetsStayRepoRelative(t *testing.T) {
 				`Set-UserEnvironmentVariable -Name "SEMIO_F3D_AUTO_START" -Value "true"`,
 				`Stop-RepoPythonProcesses -RepoRoot $repoRoot`,
 				`@("sync", "--all-packages", "--all-groups", "--python", $script:PythonKind)`,
-				`@("run", "./repo/mcp", "configure", "--repo", $repoRoot)`,
+				`@("run", "./repo/client/mcp", "configure", "--repo", $repoRoot)`,
 				`@("playwright", "install", "chromium")`,
 				`@("run", "git:setup")`,
 			},
@@ -15759,7 +15759,7 @@ func TestIsToolBlocked(t *testing.T) {
 		{"case insensitive", "TERMINAL", "GIT CHECKOUT main", true},
 		{"grep with git checkout pattern not blocked", "", `grep "git checkout" file.go`, false},
 		{"echo with git stash not blocked", "", `echo "git stash"`, false},
-		{"semio cli command not blocked", "", `go run ./repo/mcp tree "hooks events inlet adapter cli"`, false},
+		{"semio cli command not blocked", "", `go run ./repo/client/mcp tree "hooks events inlet adapter cli"`, false},
 		{"cd then git checkout blocked", "", "cd /workspaces && git checkout feature", true},
 		{"pipe grep allowed", "", `ls | grep "git checkout"`, false},
 		{"git checkout after semicolon blocked", "", "echo done; git checkout main", true},
@@ -15852,7 +15852,7 @@ func TestIsCommandSegmentBlocked(t *testing.T) {
 		{`bash -lc "git stash && echo done"`, true},
 		{`grep "git checkout" file.go`, false},
 		{`echo "git stash"`, false},
-		{"go run ./repo/mcp tree hooks", false},
+		{"go run ./repo/client/mcp tree hooks", false},
 		{"git status", false},
 		{"git log --oneline -n 5", false},
 		{"git diff", false},
@@ -17426,11 +17426,11 @@ func TestDeriveRepoOpFromCLICommand(t *testing.T) {
 		cmd      string
 		expected string
 	}{
-		{"ticket open full path", "go run ./repo/mcp ticket open MY-GOAL 'My Title' 'My Prompt' claude-code sonnet-4-5", "ticket.open"},
+		{"ticket open full path", "go run ./repo/client/mcp ticket open MY-GOAL 'My Title' 'My Prompt' claude-code sonnet-4-5", "ticket.open"},
 		{"ticket open exe path", ".\\repo\\cli\\cli.exe ticket open MY-GOAL 'My Title' 'My Prompt' claude-code sonnet-4-5", "ticket.open"},
 		{"ticket close", "./cli ticket close 26 03 05 MY-SLUG 'Summary' semio/go/semio.go", "ticket.close"},
 		{"ticket reopen", "/workspaces/semio/repo/client/client ticket reopen 26 03 05 MY-SLUG 'Prompt' claude-code sonnet-4-5", "ticket.reopen"},
-		{"ticket reopen go run", "go run ./repo/mcp ticket reopen 26 03 05 MY-SLUG 'Prompt' claude-code sonnet-4-5", "ticket.reopen"},
+		{"ticket reopen go run", "go run ./repo/client/mcp ticket reopen 26 03 05 MY-SLUG 'Prompt' claude-code sonnet-4-5", "ticket.reopen"},
 		{"goal open", "./cli goal open 'Title' 'Desc' 'Prompt' claude-code sonnet-4-5", "goal.open"},
 		{"goal close", "./cli goal close MY-GOAL 'Summary'", "goal.close"},
 		{"contributor add", "./cli contributor add github-user", "contributor.add"},
@@ -17577,7 +17577,7 @@ func TestLogRepoOperationHookCLI(t *testing.T) {
 				HookResultBase: HookResultBase{Allowed: true},
 				Session:        "sess2",
 			},
-			Command: "go run ./repo/mcp ticket open MY-GOAL 'My Title' claude-code sonnet-4-5",
+			Command: "go run ./repo/client/mcp ticket open MY-GOAL 'My Title' claude-code sonnet-4-5",
 		}
 		hctx := HookContext{
 			Event:    HookAgentToolTerminalStarting,

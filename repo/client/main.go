@@ -9300,7 +9300,7 @@ func locCommand(factory EngineFactory, config *Config) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "loc",
 		Short: "Tracked-file LOC (code, markup, data) plus git deltas; internal scan (no cloc)",
-		Long:  "Counts tracked files via git (not cloc). The runnable CLI is built from repo/mcp (package main), not repo/client (library): go build -o repo/client/client.exe ./repo/mcp. Wip% is each row's edited churn vs the whole first-parent walk on the logged ref (default ⛳wip), including all contributors. With --history, each row scans the tree at that commit for physical LOC; Δ% is change vs the previous printed history step. Branch and checkpoint lines use the same emoji ids as the repo tree (⛳wip, 🔀abc1234, 🧑‍💻alias).",
+		Long:  "Counts tracked files via git (not cloc). The runnable CLI is built from repo/client/mcp (package main), not repo/client (library): go build -o repo/client/client.exe ./repo/client/mcp. Wip% is each row's edited churn vs the whole first-parent walk on the logged ref (default ⛳wip), including all contributors. With --history, each row scans the tree at that commit for physical LOC; Δ% is change vs the previous printed history step. Branch and checkpoint lines use the same emoji ids as the repo tree (⛳wip, 🔀abc1234, 🧑‍💻alias).",
 		Args:  cobra.NoArgs,
 		RunE: func(c *cobra.Command, args []string) error {
 			langs, _ := c.Flags().GetStringSlice("languages")
@@ -38093,7 +38093,7 @@ if [ -z "$repo_root" ]; then
 fi
 cd "$repo_root"
 if command -v go >/dev/null 2>&1; then
-  go run ./repo/mcp hook version.checkpoint.ended
+	go run ./repo/client/mcp hook version.checkpoint.ended
   exit $?
 fi
 if [ -f "$repo_root/repo/client/client" ]; then
@@ -38147,7 +38147,7 @@ func getClientHookMappings() []ClientHookMapping {
 
 // ⌨️repoCliHookCommand returns a cross-platform repo CLI invocation for hook configs.
 func repoCliHookCommand() string {
-	return "go run ./repo/mcp"
+	return "go run ./repo/client/mcp"
 }
 
 // 🔷generateCopilotConfig holds the data fields for a generateCopilotConfig record.
@@ -44458,7 +44458,7 @@ func deriveRepoOpFromCLICommand(cmd string) string {
 			if fields[i] == "go" && fields[i+1] == "run" {
 				for j := i + 2; j < len(fields); j++ {
 					base := filepath.Base(fields[j])
-					if base == "cli" || base == "cli.exe" || base == "client" || base == "client.exe" || fields[j] == "./repo/mcp" || fields[j] == "repo/mcp" {
+					if base == "cli" || base == "cli.exe" || base == "client" || base == "client.exe" || fields[j] == "./repo/client/mcp" || fields[j] == "repo/client/mcp" {
 						cliIndex = j
 						break
 					}

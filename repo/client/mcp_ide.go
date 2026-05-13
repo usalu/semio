@@ -3,7 +3,7 @@
 // #endregion 🧲Header
 
 // #region 🤸Preamble
-// Package client — MCP + hook helpers shared by repo/mcp and repo/{cursor,kiro,...}.
+// Package client — MCP + hook helpers shared by repo/client/mcp and repo/client/mcp/{cursor,kiro,...}.
 
 package client
 

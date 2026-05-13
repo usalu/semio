@@ -1,8 +1,9 @@
 #!/usr/bin/env bun
 import { execFileSync } from "node:child_process";
-import { join } from "node:path";
+import { fileURLToPath } from "node:url";
+import { dirname, join } from "node:path";
 
-const cwd = join(import.meta.dir, "..");
+const cwd = dirname(fileURLToPath(import.meta.url));
 const out = join(cwd, "schema.graphql");
 const cargoTargetDir = join(cwd, "target");
 execFileSync(

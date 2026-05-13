@@ -8,7 +8,7 @@
       "executor": "nx:run-commands",
       "cache": false,
       "options": {
-        "command": "bun scripts/workspace-setup.ts"
+        "command": "bun scripts/workspace-setup.script.ts"
       }
     },
     "lint": {
@@ -50,7 +50,7 @@
       "executor": "nx:run-commands",
       "cache": false,
       "options": {
-        "command": "bun scripts/git-setup.ts"
+        "command": "bun scripts/git-setup.script.ts"
       }
     },
     "pre-commit-install": {
@@ -71,7 +71,7 @@
       "executor": "nx:run-commands",
       "cache": false,
       "options": {
-        "commands": ["bun nx run @semio/engine:build-mcp-app", "bun scripts/mcp-inspector-engine.ts"],
+        "commands": ["bun nx run @semio/engine:build-mcp-app", "bun scripts/mcp-inspector-engine.script.ts"],
         "parallel": false
       }
     },
@@ -79,7 +79,7 @@
       "executor": "nx:run-commands",
       "cache": false,
       "options": {
-        "command": "bun scripts/mcp-inspector-repo.ts"
+        "command": "bun scripts/mcp-inspector-repo.script.ts"
       }
     },
     "depcruise": {

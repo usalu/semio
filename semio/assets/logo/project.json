@@ -6,7 +6,7 @@
       "executor": "nx:run-commands",
       "options": {
         "cwd": "semio/assets/logo",
-        "command": "bun --watch logo.ts",
+        "command": "bun --watch logo.script.ts",
         "forwardAllArgs": true
       }
     },
@@ -14,7 +14,7 @@
       "executor": "nx:run-commands",
       "options": {
         "cwd": "semio/assets/logo",
-        "command": "bun logo.ts",
+        "command": "bun logo.script.ts",
         "forwardAllArgs": true
       }
     }

@@ -6,7 +6,7 @@
       "executor": "nx:run-commands",
       "options": {
         "cwd": "semio/client/ui/gh/Semio.Grasshopper",
-        "command": "bun ./build.ts",
+        "command": "bun ./build.script.ts",
         "forwardAllArgs": true
       }
     },
@@ -15,7 +15,7 @@
       "dependsOn": ["build-gh"],
       "options": {
         "cwd": "semio/client/ui/gh/Semio.Grasshopper",
-        "command": "bun ./yak/build.ts",
+        "command": "bun ./yak/build.script.ts",
         "forwardAllArgs": true
       }
     },
@@ -32,7 +32,7 @@
       "executor": "nx:run-commands",
       "options": {
         "cwd": "semio/client/ui/gh/Semio.Grasshopper",
-        "command": "bun scripts/run-tests.ts",
+        "command": "bun scripts/run-tests.script.ts",
         "forwardAllArgs": true
       }
     },
@@ -40,7 +40,7 @@
       "executor": "nx:run-commands",
       "options": {
         "cwd": "semio/client/ui/gh/Semio.Grasshopper",
-        "command": "bun ./yak/publish.ts",
+        "command": "bun ./yak/publish.script.ts",
         "forwardAllArgs": true
       }
     }

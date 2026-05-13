@@ -22,7 +22,7 @@ import { join } from "path";
  **/
 const cwd = __dirname;
 
-execFileSync(process.execPath, ["x", "tsx", "./build-value-lists.ts"], { cwd, stdio: "inherit" });
+execFileSync(process.execPath, ["x", "tsx", "./build-value-lists.script.ts"], { cwd, stdio: "inherit" });
 
 execFileSync("dotnet", ["clean", "Semio.Grasshopper.csproj", "-c", "Debug"], { cwd, stdio: "inherit" });
 execFileSync("dotnet", ["build", "Semio.Grasshopper.csproj", "-c", "Debug"], { cwd, stdio: "inherit" });

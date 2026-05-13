@@ -7,7 +7,8 @@
       "dependsOn": ["@semio/rs:build-wasm"],
       "cache": false,
       "options": {
-        "command": "bun semio/schema/graphql/scripts/export-schema.ts"
+        "cwd": "semio/schema/graphql",
+        "command": "bun ./build.script.ts"
       }
     }
   }

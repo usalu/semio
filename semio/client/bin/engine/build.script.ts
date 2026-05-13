@@ -71,7 +71,7 @@ const args = [
 execSync(`uv run pyinstaller ${args.join(" ")}`, { cwd, env, stdio: "inherit" });
 
 if (!process.argv.includes("--skip-post-build")) {
-  execSync("bun ./post-build.ts", { cwd, stdio: "inherit" });
+  execSync("bun ./post-build.script.ts", { cwd, stdio: "inherit" });
 }
 
 console.log("✅ Build complete");

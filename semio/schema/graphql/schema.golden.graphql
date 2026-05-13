@@ -41,6 +41,20 @@ type PageInfo {
   endCursor: String! # computed // end at this entity
 }
 
+type PageInfoEdge implements EntityEdge {
+  # EntityEdge
+  cursor: String! # computed
+  # EntityEdgeNode
+  node: PageInfo! # reference
+}
+
+type PageInfoConnection implements EntityConnection {
+  # EntityConnection
+  edges: [PageInfoEdge!]! # computed
+  pageInfo: PageInfo! # computed
+  hash: String! # cached
+}
+
 interface EntityConnection {
   # EntityConnection
   # edges: [ENTITYEdge] # computed
@@ -2332,6 +2346,20 @@ type QualityOperation {
   removeAttributes(ids: [ID!]!): ID!
 }
 
+type QualityOperationEdge implements EntityEdge {
+  # EntityEdge
+  cursor: String! # computed
+  # EntityEdgeNode
+  node: QualityOperation! # reference
+}
+
+type QualityOperationConnection implements EntityConnection {
+  # EntityConnection
+  edges: [QualityOperationEdge!]! # computed
+  pageInfo: PageInfo! # computed
+  hash: String! # cached
+}
+
 #endregion Commands
 
 #region Operations
@@ -2346,6 +2374,20 @@ type CreatedQualityInput implements Input {
   # Input
   # Arguments
   quality: Quality! # data
+}
+
+type CreatedQualityInputEdge implements EntityEdge {
+  # EntityEdge
+  cursor: String! # computed
+  # EntityEdgeNode
+  node: CreatedQualityInput! # reference
+}
+
+type CreatedQualityInputConnection implements EntityConnection {
+  # EntityConnection
+  edges: [CreatedQualityInputEdge!]! # computed
+  pageInfo: PageInfo! # computed
+  hash: String! # cached
 }
 
 type CreatedQuality implements Operation {
@@ -2389,6 +2431,20 @@ type CreatedQualitiesInput implements Input {
   qualities: QualityConnection! # data
 }
 
+type CreatedQualitiesInputEdge implements EntityEdge {
+  # EntityEdge
+  cursor: String! # computed
+  # EntityEdgeNode
+  node: CreatedQualitiesInput! # reference
+}
+
+type CreatedQualitiesInputConnection implements EntityConnection {
+  # EntityConnection
+  edges: [CreatedQualitiesInputEdge!]! # computed
+  pageInfo: PageInfo! # computed
+  hash: String! # cached
+}
+
 type CreatedQualities implements Operation {
   # Node
   id: ID! # data // uuidv7
@@ -2428,6 +2484,20 @@ type RenamedQualityInput implements Input {
   # Input
   # Arguments
   key: String! # data
+}
+
+type RenamedQualityInputEdge implements EntityEdge {
+  # EntityEdge
+  cursor: String! # computed
+  # EntityEdgeNode
+  node: RenamedQualityInput! # reference
+}
+
+type RenamedQualityInputConnection implements EntityConnection {
+  # EntityConnection
+  edges: [RenamedQualityInputEdge!]! # computed
+  pageInfo: PageInfo! # computed
+  hash: String! # cached
 }
 
 type RenamedQuality implements Operation {
@@ -2471,6 +2541,20 @@ type UpdatedQualityDescriptionInput implements Input {
   description: String! # data
 }
 
+type UpdatedQualityDescriptionInputEdge implements EntityEdge {
+  # EntityEdge
+  cursor: String! # computed
+  # EntityEdgeNode
+  node: UpdatedQualityDescriptionInput! # reference
+}
+
+type UpdatedQualityDescriptionInputConnection implements EntityConnection {
+  # EntityConnection
+  edges: [UpdatedQualityDescriptionInputEdge!]! # computed
+  pageInfo: PageInfo! # computed
+  hash: String! # cached
+}
+
 type UpdatedQualityDescription implements Operation {
   # Node
   id: ID! # data // uuidv7
@@ -2510,6 +2594,20 @@ type UpdatedQualityIconInput implements Input {
   # Input
   # Arguments
   icon: String! # data
+}
+
+type UpdatedQualityIconInputEdge implements EntityEdge {
+  # EntityEdge
+  cursor: String! # computed
+  # EntityEdgeNode
+  node: UpdatedQualityIconInput! # reference
+}
+
+type UpdatedQualityIconInputConnection implements EntityConnection {
+  # EntityConnection
+  edges: [UpdatedQualityIconInputEdge!]! # computed
+  pageInfo: PageInfo! # computed
+  hash: String! # cached
 }
 
 type UpdatedQualityIcon implements Operation {
@@ -2553,6 +2651,20 @@ type AddedAttributeToQualityInput implements Input {
   attribute: Attribute! # data
 }
 
+type AddedAttributeToQualityInputEdge implements EntityEdge {
+  # EntityEdge
+  cursor: String! # computed
+  # EntityEdgeNode
+  node: AddedAttributeToQualityInput! # reference
+}
+
+type AddedAttributeToQualityInputConnection implements EntityConnection {
+  # EntityConnection
+  edges: [AddedAttributeToQualityInputEdge!]! # computed
+  pageInfo: PageInfo! # computed
+  hash: String! # cached
+}
+
 type AddedAttributeToQuality implements Operation {
   # Node
   id: ID! # data // uuidv7
@@ -2593,6 +2705,20 @@ type AddedAttributesToQualityInput implements Input {
   # Input
   # Arguments
   attributes: AttributeConnection! # data
+}
+
+type AddedAttributesToQualityInputEdge implements EntityEdge {
+  # EntityEdge
+  cursor: String! # computed
+  # EntityEdgeNode
+  node: AddedAttributesToQualityInput! # reference
+}
+
+type AddedAttributesToQualityInputConnection implements EntityConnection {
+  # EntityConnection
+  edges: [AddedAttributesToQualityInputEdge!]! # computed
+  pageInfo: PageInfo! # computed
+  hash: String! # cached
 }
 
 type AddedAttributesToQuality implements Operation {
@@ -2879,6 +3005,20 @@ type TagOperation {
   removeAttributes(ids: [ID!]!): ID!
 }
 
+type TagOperationEdge implements EntityEdge {
+  # EntityEdge
+  cursor: String! # computed
+  # EntityEdgeNode
+  node: TagOperation! # reference
+}
+
+type TagOperationConnection implements EntityConnection {
+  # EntityConnection
+  edges: [TagOperationEdge!]! # computed
+  pageInfo: PageInfo! # computed
+  hash: String! # cached
+}
+
 #endregion Commands
 
 #region Operations
@@ -2893,6 +3033,20 @@ type CreatedTagInput implements Input {
   # Input
   # Arguments
   tag: Tag! # data
+}
+
+type CreatedTagInputEdge implements EntityEdge {
+  # EntityEdge
+  cursor: String! # computed
+  # EntityEdgeNode
+  node: CreatedTagInput! # reference
+}
+
+type CreatedTagInputConnection implements EntityConnection {
+  # EntityConnection
+  edges: [CreatedTagInputEdge!]! # computed
+  pageInfo: PageInfo! # computed
+  hash: String! # cached
 }
 
 type CreatedTag implements Operation {
@@ -2936,6 +3090,20 @@ type CreatedTagsInput implements Input {
   tags: TagConnection! # data
 }
 
+type CreatedTagsInputEdge implements EntityEdge {
+  # EntityEdge
+  cursor: String! # computed
+  # EntityEdgeNode
+  node: CreatedTagsInput! # reference
+}
+
+type CreatedTagsInputConnection implements EntityConnection {
+  # EntityConnection
+  edges: [CreatedTagsInputEdge!]! # computed
+  pageInfo: PageInfo! # computed
+  hash: String! # cached
+}
+
 type CreatedTags implements Operation {
   # Node
   id: ID! # data // uuidv7
@@ -2975,6 +3143,20 @@ type RenamedTagInput implements Input {
   # Input
   # Arguments
   name: String! # data
+}
+
+type RenamedTagInputEdge implements EntityEdge {
+  # EntityEdge
+  cursor: String! # computed
+  # EntityEdgeNode
+  node: RenamedTagInput! # reference
+}
+
+type RenamedTagInputConnection implements EntityConnection {
+  # EntityConnection
+  edges: [RenamedTagInputEdge!]! # computed
+  pageInfo: PageInfo! # computed
+  hash: String! # cached
 }
 
 type RenamedTag implements Operation {
@@ -3018,6 +3200,20 @@ type UpdatedTagDescriptionInput implements Input {
   description: String! # data
 }
 
+type UpdatedTagDescriptionInputEdge implements EntityEdge {
+  # EntityEdge
+  cursor: String! # computed
+  # EntityEdgeNode
+  node: UpdatedTagDescriptionInput! # reference
+}
+
+type UpdatedTagDescriptionInputConnection implements EntityConnection {
+  # EntityConnection
+  edges: [UpdatedTagDescriptionInputEdge!]! # computed
+  pageInfo: PageInfo! # computed
+  hash: String! # cached
+}
+
 type UpdatedTagDescription implements Operation {
   # Node
   id: ID! # data // uuidv7
@@ -3057,6 +3253,20 @@ type UpdatedTagIconInput implements Input {
   # Input
   # Arguments
   icon: String! # data
+}
+
+type UpdatedTagIconInputEdge implements EntityEdge {
+  # EntityEdge
+  cursor: String! # computed
+  # EntityEdgeNode
+  node: UpdatedTagIconInput! # reference
+}
+
+type UpdatedTagIconInputConnection implements EntityConnection {
+  # EntityConnection
+  edges: [UpdatedTagIconInputEdge!]! # computed
+  pageInfo: PageInfo! # computed
+  hash: String! # cached
 }
 
 type UpdatedTagIcon implements Operation {
@@ -3100,6 +3310,20 @@ type AddedAttributeToTagInput implements Input {
   attribute: Attribute! # data
 }
 
+type AddedAttributeToTagInputEdge implements EntityEdge {
+  # EntityEdge
+  cursor: String! # computed
+  # EntityEdgeNode
+  node: AddedAttributeToTagInput! # reference
+}
+
+type AddedAttributeToTagInputConnection implements EntityConnection {
+  # EntityConnection
+  edges: [AddedAttributeToTagInputEdge!]! # computed
+  pageInfo: PageInfo! # computed
+  hash: String! # cached
+}
+
 type AddedAttributeToTag implements Operation {
   # Node
   id: ID! # data // uuidv7
@@ -3140,6 +3364,20 @@ type AddedAttributesToTagInput implements Input {
   # Input
   # Arguments
   attributes: AttributeConnection! # data
+}
+
+type AddedAttributesToTagInputEdge implements EntityEdge {
+  # EntityEdge
+  cursor: String! # computed
+  # EntityEdgeNode
+  node: AddedAttributesToTagInput! # reference
+}
+
+type AddedAttributesToTagInputConnection implements EntityConnection {
+  # EntityConnection
+  edges: [AddedAttributesToTagInputEdge!]! # computed
+  pageInfo: PageInfo! # computed
+  hash: String! # cached
 }
 
 type AddedAttributesToTag implements Operation {
@@ -3426,6 +3664,20 @@ type ConceptOperation {
   removeAttributes(ids: [ID!]!): ID!
 }
 
+type ConceptOperationEdge implements EntityEdge {
+  # EntityEdge
+  cursor: String! # computed
+  # EntityEdgeNode
+  node: ConceptOperation! # reference
+}
+
+type ConceptOperationConnection implements EntityConnection {
+  # EntityConnection
+  edges: [ConceptOperationEdge!]! # computed
+  pageInfo: PageInfo! # computed
+  hash: String! # cached
+}
+
 #endregion Commands
 
 #region Operations
@@ -3440,6 +3692,20 @@ type CreatedConceptInput implements Input {
   # Input
   # Arguments
   concept: Concept! # data
+}
+
+type CreatedConceptInputEdge implements EntityEdge {
+  # EntityEdge
+  cursor: String! # computed
+  # EntityEdgeNode
+  node: CreatedConceptInput! # reference
+}
+
+type CreatedConceptInputConnection implements EntityConnection {
+  # EntityConnection
+  edges: [CreatedConceptInputEdge!]! # computed
+  pageInfo: PageInfo! # computed
+  hash: String! # cached
 }
 
 type CreatedConcept implements Operation {
@@ -3483,6 +3749,20 @@ type CreatedConceptsInput implements Input {
   concepts: ConceptConnection! # data
 }
 
+type CreatedConceptsInputEdge implements EntityEdge {
+  # EntityEdge
+  cursor: String! # computed
+  # EntityEdgeNode
+  node: CreatedConceptsInput! # reference
+}
+
+type CreatedConceptsInputConnection implements EntityConnection {
+  # EntityConnection
+  edges: [CreatedConceptsInputEdge!]! # computed
+  pageInfo: PageInfo! # computed
+  hash: String! # cached
+}
+
 type CreatedConcepts implements Operation {
   # Node
   id: ID! # data // uuidv7
@@ -3522,6 +3802,20 @@ type RenamedConceptInput implements Input {
   # Input
   # Arguments
   name: String! # data
+}
+
+type RenamedConceptInputEdge implements EntityEdge {
+  # EntityEdge
+  cursor: String! # computed
+  # EntityEdgeNode
+  node: RenamedConceptInput! # reference
+}
+
+type RenamedConceptInputConnection implements EntityConnection {
+  # EntityConnection
+  edges: [RenamedConceptInputEdge!]! # computed
+  pageInfo: PageInfo! # computed
+  hash: String! # cached
 }
 
 type RenamedConcept implements Operation {
@@ -3565,6 +3859,20 @@ type UpdatedConceptDescriptionInput implements Input {
   description: String! # data
 }
 
+type UpdatedConceptDescriptionInputEdge implements EntityEdge {
+  # EntityEdge
+  cursor: String! # computed
+  # EntityEdgeNode
+  node: UpdatedConceptDescriptionInput! # reference
+}
+
+type UpdatedConceptDescriptionInputConnection implements EntityConnection {
+  # EntityConnection
+  edges: [UpdatedConceptDescriptionInputEdge!]! # computed
+  pageInfo: PageInfo! # computed
+  hash: String! # cached
+}
+
 type UpdatedConceptDescription implements Operation {
   # Node
   id: ID! # data // uuidv7
@@ -3604,6 +3912,20 @@ type UpdatedConceptIconInput implements Input {
   # Input
   # Arguments
   icon: String! # data
+}
+
+type UpdatedConceptIconInputEdge implements EntityEdge {
+  # EntityEdge
+  cursor: String! # computed
+  # EntityEdgeNode
+  node: UpdatedConceptIconInput! # reference
+}
+
+type UpdatedConceptIconInputConnection implements EntityConnection {
+  # EntityConnection
+  edges: [UpdatedConceptIconInputEdge!]! # computed
+  pageInfo: PageInfo! # computed
+  hash: String! # cached
 }
 
 type UpdatedConceptIcon implements Operation {
@@ -3647,6 +3969,20 @@ type AddedAttributeToConceptInput implements Input {
   attribute: Attribute! # data
 }
 
+type AddedAttributeToConceptInputEdge implements EntityEdge {
+  # EntityEdge
+  cursor: String! # computed
+  # EntityEdgeNode
+  node: AddedAttributeToConceptInput! # reference
+}
+
+type AddedAttributeToConceptInputConnection implements EntityConnection {
+  # EntityConnection
+  edges: [AddedAttributeToConceptInputEdge!]! # computed
+  pageInfo: PageInfo! # computed
+  hash: String! # cached
+}
+
 type AddedAttributeToConcept implements Operation {
   # Node
   id: ID! # data // uuidv7
@@ -3687,6 +4023,20 @@ type AddedAttributesToConceptInput implements Input {
   # Input
   # Arguments
   attributes: AttributeConnection! # data
+}
+
+type AddedAttributesToConceptInputEdge implements EntityEdge {
+  # EntityEdge
+  cursor: String! # computed
+  # EntityEdgeNode
+  node: AddedAttributesToConceptInput! # reference
+}
+
+type AddedAttributesToConceptInputConnection implements EntityConnection {
+  # EntityConnection
+  edges: [AddedAttributesToConceptInputEdge!]! # computed
+  pageInfo: PageInfo! # computed
+  hash: String! # cached
 }
 
 type AddedAttributesToConcept implements Operation {
@@ -4102,6 +4452,20 @@ type PortOperation {
   removeAttributes(ids: [ID!]!): ID!
 }
 
+type PortOperationEdge implements EntityEdge {
+  # EntityEdge
+  cursor: String! # computed
+  # EntityEdgeNode
+  node: PortOperation! # reference
+}
+
+type PortOperationConnection implements EntityConnection {
+  # EntityConnection
+  edges: [PortOperationEdge!]! # computed
+  pageInfo: PageInfo! # computed
+  hash: String! # cached
+}
+
 #endregion Commands
 
 #region Operations
@@ -4116,6 +4480,20 @@ type CreatedPortInput implements Input {
   # Input
   # Arguments
   port: Port! # data
+}
+
+type CreatedPortInputEdge implements EntityEdge {
+  # EntityEdge
+  cursor: String! # computed
+  # EntityEdgeNode
+  node: CreatedPortInput! # reference
+}
+
+type CreatedPortInputConnection implements EntityConnection {
+  # EntityConnection
+  edges: [CreatedPortInputEdge!]! # computed
+  pageInfo: PageInfo! # computed
+  hash: String! # cached
 }
 
 type CreatedPort implements Operation {
@@ -4157,6 +4535,20 @@ type CreatedPortsInput implements Input {
   # Input
   # Arguments
   ports: PortConnection! # data
+}
+
+type CreatedPortsInputEdge implements EntityEdge {
+  # EntityEdge
+  cursor: String! # computed
+  # EntityEdgeNode
+  node: CreatedPortsInput! # reference
+}
+
+type CreatedPortsInputConnection implements EntityConnection {
+  # EntityConnection
+  edges: [CreatedPortsInputEdge!]! # computed
+  pageInfo: PageInfo! # computed
+  hash: String! # cached
 }
 
 type CreatedPorts implements Operation {
@@ -4201,6 +4593,20 @@ type RenamedPortInput implements Input {
   label: String! # data
 }
 
+type RenamedPortInputEdge implements EntityEdge {
+  # EntityEdge
+  cursor: String! # computed
+  # EntityEdgeNode
+  node: RenamedPortInput! # reference
+}
+
+type RenamedPortInputConnection implements EntityConnection {
+  # EntityConnection
+  edges: [RenamedPortInputEdge!]! # computed
+  pageInfo: PageInfo! # computed
+  hash: String! # cached
+}
+
 type RenamedPort implements Operation {
   # Node
   id: ID! # data // uuidv7
@@ -4240,6 +4646,20 @@ type UpdatedPortDescriptionInput implements Input {
   # Input
   # Arguments
   description: String! # data
+}
+
+type UpdatedPortDescriptionInputEdge implements EntityEdge {
+  # EntityEdge
+  cursor: String! # computed
+  # EntityEdgeNode
+  node: UpdatedPortDescriptionInput! # reference
+}
+
+type UpdatedPortDescriptionInputConnection implements EntityConnection {
+  # EntityConnection
+  edges: [UpdatedPortDescriptionInputEdge!]! # computed
+  pageInfo: PageInfo! # computed
+  hash: String! # cached
 }
 
 type UpdatedPortDescription implements Operation {
@@ -4283,6 +4703,20 @@ type UpdatedPortIconInput implements Input {
   icon: String! # data
 }
 
+type UpdatedPortIconInputEdge implements EntityEdge {
+  # EntityEdge
+  cursor: String! # computed
+  # EntityEdgeNode
+  node: UpdatedPortIconInput! # reference
+}
+
+type UpdatedPortIconInputConnection implements EntityConnection {
+  # EntityConnection
+  edges: [UpdatedPortIconInputEdge!]! # computed
+  pageInfo: PageInfo! # computed
+  hash: String! # cached
+}
+
 type UpdatedPortIcon implements Operation {
   # Node
   id: ID! # data // uuidv7
@@ -4322,6 +4756,20 @@ type AddedAttributeToPortInput implements Input {
   # Input
   # Arguments
   attribute: Attribute! # data
+}
+
+type AddedAttributeToPortInputEdge implements EntityEdge {
+  # EntityEdge
+  cursor: String! # computed
+  # EntityEdgeNode
+  node: AddedAttributeToPortInput! # reference
+}
+
+type AddedAttributeToPortInputConnection implements EntityConnection {
+  # EntityConnection
+  edges: [AddedAttributeToPortInputEdge!]! # computed
+  pageInfo: PageInfo! # computed
+  hash: String! # cached
 }
 
 type AddedAttributeToPort implements Operation {
@@ -4364,6 +4812,20 @@ type AddedAttributesToPortInput implements Input {
   # Input
   # Arguments
   attributes: AttributeConnection! # data
+}
+
+type AddedAttributesToPortInputEdge implements EntityEdge {
+  # EntityEdge
+  cursor: String! # computed
+  # EntityEdgeNode
+  node: AddedAttributesToPortInput! # reference
+}
+
+type AddedAttributesToPortInputConnection implements EntityConnection {
+  # EntityConnection
+  edges: [AddedAttributesToPortInputEdge!]! # computed
+  pageInfo: PageInfo! # computed
+  hash: String! # cached
 }
 
 type AddedAttributesToPort implements Operation {
@@ -4647,6 +5109,20 @@ type ConnectorOperation {
   rename(newCode: String!): ID!
   changeDescription(newDescription: String!): ID!
   changeIcon(newIcon: String!): ID!
+}
+
+type ConnectorOperationEdge implements EntityEdge {
+  # EntityEdge
+  cursor: String! # computed
+  # EntityEdgeNode
+  node: ConnectorOperation! # reference
+}
+
+type ConnectorOperationConnection implements EntityConnection {
+  # EntityConnection
+  edges: [ConnectorOperationEdge!]! # computed
+  pageInfo: PageInfo! # computed
+  hash: String! # cached
 }
 
 #endregion Commands
@@ -4962,6 +5438,20 @@ type TypeOperation {
   removeConnectors(ids: [ID!]!): ID!
 }
 
+type TypeOperationEdge implements EntityEdge {
+  # EntityEdge
+  cursor: String! # computed
+  # EntityEdgeNode
+  node: TypeOperation! # reference
+}
+
+type TypeOperationConnection implements EntityConnection {
+  # EntityConnection
+  edges: [TypeOperationEdge!]! # computed
+  pageInfo: PageInfo! # computed
+  hash: String! # cached
+}
+
 #endregion Commands
 
 #region Operations
@@ -4976,6 +5466,20 @@ type CreatedTypeInput implements Input {
   # Input
   # Arguments
   type: Type! # data
+}
+
+type CreatedTypeInputEdge implements EntityEdge {
+  # EntityEdge
+  cursor: String! # computed
+  # EntityEdgeNode
+  node: CreatedTypeInput! # reference
+}
+
+type CreatedTypeInputConnection implements EntityConnection {
+  # EntityConnection
+  edges: [CreatedTypeInputEdge!]! # computed
+  pageInfo: PageInfo! # computed
+  hash: String! # cached
 }
 
 type CreatedType implements Operation {
@@ -5019,6 +5523,20 @@ type CreatedTypesInput implements Input {
   types: TypeConnection! # data
 }
 
+type CreatedTypesInputEdge implements EntityEdge {
+  # EntityEdge
+  cursor: String! # computed
+  # EntityEdgeNode
+  node: CreatedTypesInput! # reference
+}
+
+type CreatedTypesInputConnection implements EntityConnection {
+  # EntityConnection
+  edges: [CreatedTypesInputEdge!]! # computed
+  pageInfo: PageInfo! # computed
+  hash: String! # cached
+}
+
 type CreatedTypes implements Operation {
   # Node
   id: ID! # data // uuidv7
@@ -5058,6 +5576,20 @@ type RenamedTypeInput implements Input {
   # Input
   # Arguments
   name: String! # data
+}
+
+type RenamedTypeInputEdge implements EntityEdge {
+  # EntityEdge
+  cursor: String! # computed
+  # EntityEdgeNode
+  node: RenamedTypeInput! # reference
+}
+
+type RenamedTypeInputConnection implements EntityConnection {
+  # EntityConnection
+  edges: [RenamedTypeInputEdge!]! # computed
+  pageInfo: PageInfo! # computed
+  hash: String! # cached
 }
 
 type RenamedType implements Operation {
@@ -5101,6 +5633,20 @@ type UpdatedTypeDescriptionInput implements Input {
   description: String! # data
 }
 
+type UpdatedTypeDescriptionInputEdge implements EntityEdge {
+  # EntityEdge
+  cursor: String! # computed
+  # EntityEdgeNode
+  node: UpdatedTypeDescriptionInput! # reference
+}
+
+type UpdatedTypeDescriptionInputConnection implements EntityConnection {
+  # EntityConnection
+  edges: [UpdatedTypeDescriptionInputEdge!]! # computed
+  pageInfo: PageInfo! # computed
+  hash: String! # cached
+}
+
 type UpdatedTypeDescription implements Operation {
   # Node
   id: ID! # data // uuidv7
@@ -5140,6 +5686,20 @@ type UpdatedTypeIconInput implements Input {
   # Input
   # Arguments
   icon: String! # data
+}
+
+type UpdatedTypeIconInputEdge implements EntityEdge {
+  # EntityEdge
+  cursor: String! # computed
+  # EntityEdgeNode
+  node: UpdatedTypeIconInput! # reference
+}
+
+type UpdatedTypeIconInputConnection implements EntityConnection {
+  # EntityConnection
+  edges: [UpdatedTypeIconInputEdge!]! # computed
+  pageInfo: PageInfo! # computed
+  hash: String! # cached
 }
 
 type UpdatedTypeIcon implements Operation {
@@ -5183,6 +5743,20 @@ type AddedAttributeToTypeInput implements Input {
   attribute: Attribute! # data
 }
 
+type AddedAttributeToTypeInputEdge implements EntityEdge {
+  # EntityEdge
+  cursor: String! # computed
+  # EntityEdgeNode
+  node: AddedAttributeToTypeInput! # reference
+}
+
+type AddedAttributeToTypeInputConnection implements EntityConnection {
+  # EntityConnection
+  edges: [AddedAttributeToTypeInputEdge!]! # computed
+  pageInfo: PageInfo! # computed
+  hash: String! # cached
+}
+
 type AddedAttributeToType implements Operation {
   # Node
   id: ID! # data // uuidv7
@@ -5223,6 +5797,20 @@ type AddedAttributesToTypeInput implements Input {
   # Input
   # Arguments
   attributes: AttributeConnection! # data
+}
+
+type AddedAttributesToTypeInputEdge implements EntityEdge {
+  # EntityEdge
+  cursor: String! # computed
+  # EntityEdgeNode
+  node: AddedAttributesToTypeInput! # reference
+}
+
+type AddedAttributesToTypeInputConnection implements EntityConnection {
+  # EntityConnection
+  edges: [AddedAttributesToTypeInputEdge!]! # computed
+  pageInfo: PageInfo! # computed
+  hash: String! # cached
 }
 
 type AddedAttributesToType implements Operation {
@@ -5377,6 +5965,20 @@ type AddedConnectorInput implements Input {
   connector: Connector! # data
 }
 
+type AddedConnectorInputEdge implements EntityEdge {
+  # EntityEdge
+  cursor: String! # computed
+  # EntityEdgeNode
+  node: AddedConnectorInput! # reference
+}
+
+type AddedConnectorInputConnection implements EntityConnection {
+  # EntityConnection
+  edges: [AddedConnectorInputEdge!]! # computed
+  pageInfo: PageInfo! # computed
+  hash: String! # cached
+}
+
 type AddedConnector implements Operation {
   # Node
   id: ID! # data // uuidv7
@@ -5417,6 +6019,20 @@ type AddedConnectorsInput implements Input {
   # Input
   # Arguments
   connectors: ConnectorConnection! # data
+}
+
+type AddedConnectorsInputEdge implements EntityEdge {
+  # EntityEdge
+  cursor: String! # computed
+  # EntityEdgeNode
+  node: AddedConnectorsInput! # reference
+}
+
+type AddedConnectorsInputConnection implements EntityConnection {
+  # EntityConnection
+  edges: [AddedConnectorsInputEdge!]! # computed
+  pageInfo: PageInfo! # computed
+  hash: String! # cached
 }
 
 type AddedConnectors implements Operation {
@@ -5461,6 +6077,20 @@ type RenamedConnectorInput implements Input {
   code: String! # data
 }
 
+type RenamedConnectorInputEdge implements EntityEdge {
+  # EntityEdge
+  cursor: String! # computed
+  # EntityEdgeNode
+  node: RenamedConnectorInput! # reference
+}
+
+type RenamedConnectorInputConnection implements EntityConnection {
+  # EntityConnection
+  edges: [RenamedConnectorInputEdge!]! # computed
+  pageInfo: PageInfo! # computed
+  hash: String! # cached
+}
+
 type RenamedConnector implements Operation {
   # Node
   id: ID! # data // uuidv7
@@ -5502,6 +6132,20 @@ type UpdatedConnectorDescriptionInput implements Input {
   description: String! # data
 }
 
+type UpdatedConnectorDescriptionInputEdge implements EntityEdge {
+  # EntityEdge
+  cursor: String! # computed
+  # EntityEdgeNode
+  node: UpdatedConnectorDescriptionInput! # reference
+}
+
+type UpdatedConnectorDescriptionInputConnection implements EntityConnection {
+  # EntityConnection
+  edges: [UpdatedConnectorDescriptionInputEdge!]! # computed
+  pageInfo: PageInfo! # computed
+  hash: String! # cached
+}
+
 type UpdatedConnectorDescription implements Operation {
   # Node
   id: ID! # data // uuidv7
@@ -5541,6 +6185,20 @@ type UpdatedConnectorIconInput implements Input {
   # Input
   # Arguments
   icon: String! # data
+}
+
+type UpdatedConnectorIconInputEdge implements EntityEdge {
+  # EntityEdge
+  cursor: String! # computed
+  # EntityEdgeNode
+  node: UpdatedConnectorIconInput! # reference
+}
+
+type UpdatedConnectorIconInputConnection implements EntityConnection {
+  # EntityConnection
+  edges: [UpdatedConnectorIconInputEdge!]! # computed
+  pageInfo: PageInfo! # computed
+  hash: String! # cached
 }
 
 type UpdatedConnectorIcon implements Operation {
@@ -6211,12 +6869,40 @@ type PieceOperation {
   removeAttributes(ids: [ID!]!): ID!
 }
 
+type PieceOperationEdge implements EntityEdge {
+  # EntityEdge
+  cursor: String! # computed
+  # EntityEdgeNode
+  node: PieceOperation! # reference
+}
+
+type PieceOperationConnection implements EntityConnection {
+  # EntityConnection
+  edges: [PieceOperationEdge!]! # computed
+  pageInfo: PageInfo! # computed
+  hash: String! # cached
+}
+
 type PiecesOperation {
   # PiecesOperation
   drag(offset: Offset!): ID!
   move(offset: Offset!): ID!
   fix: ID!
   changeBlueprint(blueprintId: ID!): ID!
+}
+
+type PiecesOperationEdge implements EntityEdge {
+  # EntityEdge
+  cursor: String! # computed
+  # EntityEdgeNode
+  node: PiecesOperation! # reference
+}
+
+type PiecesOperationConnection implements EntityConnection {
+  # EntityConnection
+  edges: [PiecesOperationEdge!]! # computed
+  pageInfo: PageInfo! # computed
+  hash: String! # cached
 }
 
 #endregion Commands
@@ -6236,6 +6922,20 @@ type CreatedFixedPieceInput implements Input {
   position: Position! # data
   name: String # data
   description: String # data
+}
+
+type CreatedFixedPieceInputEdge implements EntityEdge {
+  # EntityEdge
+  cursor: String! # computed
+  # EntityEdgeNode
+  node: CreatedFixedPieceInput! # reference
+}
+
+type CreatedFixedPieceInputConnection implements EntityConnection {
+  # EntityConnection
+  edges: [CreatedFixedPieceInputEdge!]! # computed
+  pageInfo: PageInfo! # computed
+  hash: String! # cached
 }
 
 type CreatedFixedPiece implements Operation {
@@ -6307,6 +7007,20 @@ type DraggedPiecesInput implements Input {
   offset: Offset! # data
 }
 
+type DraggedPiecesInputEdge implements EntityEdge {
+  # EntityEdge
+  cursor: String! # computed
+  # EntityEdgeNode
+  node: DraggedPiecesInput! # reference
+}
+
+type DraggedPiecesInputConnection implements EntityConnection {
+  # EntityConnection
+  edges: [DraggedPiecesInputEdge!]! # computed
+  pageInfo: PageInfo! # computed
+  hash: String! # cached
+}
+
 type DraggedPieces implements Operation {
   # Node
   id: ID! # data // uuidv7
@@ -6346,6 +7060,20 @@ type DraggedPieceInput implements Input {
   # Input
   # Arguments
   offset: Offset! # data
+}
+
+type DraggedPieceInputEdge implements EntityEdge {
+  # EntityEdge
+  cursor: String! # computed
+  # EntityEdgeNode
+  node: DraggedPieceInput! # reference
+}
+
+type DraggedPieceInputConnection implements EntityConnection {
+  # EntityConnection
+  edges: [DraggedPieceInputEdge!]! # computed
+  pageInfo: PageInfo! # computed
+  hash: String! # cached
 }
 
 type DraggedPiece implements Operation {
@@ -6388,6 +7116,20 @@ type AddedChildPieceWithParentConnectionInput implements Input {
   # Arguments
   piece: Piece! # data
   connection: Connection! # data
+}
+
+type AddedChildPieceWithParentConnectionInputEdge implements EntityEdge {
+  # EntityEdge
+  cursor: String! # computed
+  # EntityEdgeNode
+  node: AddedChildPieceWithParentConnectionInput! # reference
+}
+
+type AddedChildPieceWithParentConnectionInputConnection implements EntityConnection {
+  # EntityConnection
+  edges: [AddedChildPieceWithParentConnectionInputEdge!]! # computed
+  pageInfo: PageInfo! # computed
+  hash: String! # cached
 }
 
 type AddedChildPieceWithParentConnection implements Operation {
@@ -6433,6 +7175,20 @@ type AddedChildPiecesWithParentConnectionsInput implements Input {
   connections: ConnectionConnection! # data
 }
 
+type AddedChildPiecesWithParentConnectionsInputEdge implements EntityEdge {
+  # EntityEdge
+  cursor: String! # computed
+  # EntityEdgeNode
+  node: AddedChildPiecesWithParentConnectionsInput! # reference
+}
+
+type AddedChildPiecesWithParentConnectionsInputConnection implements EntityConnection {
+  # EntityConnection
+  edges: [AddedChildPiecesWithParentConnectionsInputEdge!]! # computed
+  pageInfo: PageInfo! # computed
+  hash: String! # cached
+}
+
 type AddedChildPiecesWithParentConnections implements Operation {
   # Node
   id: ID! # data // uuidv7
@@ -6474,6 +7230,20 @@ type AddedHangingChildPieceWithParentConnectionInput implements Input {
   # Arguments
   piece: Piece! # data
   connection: Connection! # data
+}
+
+type AddedHangingChildPieceWithParentConnectionInputEdge implements EntityEdge {
+  # EntityEdge
+  cursor: String! # computed
+  # EntityEdgeNode
+  node: AddedHangingChildPieceWithParentConnectionInput! # reference
+}
+
+type AddedHangingChildPieceWithParentConnectionInputConnection implements EntityConnection {
+  # EntityConnection
+  edges: [AddedHangingChildPieceWithParentConnectionInputEdge!]! # computed
+  pageInfo: PageInfo! # computed
+  hash: String! # cached
 }
 
 type AddedHangingChildPieceWithParentConnection implements Operation {
@@ -6519,6 +7289,20 @@ type AddedHangingChildPiecesWithParentConnectionsInput implements Input {
   connections: ConnectionConnection! # data
 }
 
+type AddedHangingChildPiecesWithParentConnectionsInputEdge implements EntityEdge {
+  # EntityEdge
+  cursor: String! # computed
+  # EntityEdgeNode
+  node: AddedHangingChildPiecesWithParentConnectionsInput! # reference
+}
+
+type AddedHangingChildPiecesWithParentConnectionsInputConnection implements EntityConnection {
+  # EntityConnection
+  edges: [AddedHangingChildPiecesWithParentConnectionsInputEdge!]! # computed
+  pageInfo: PageInfo! # computed
+  hash: String! # cached
+}
+
 type AddedHangingChildPiecesWithParentConnections implements Operation {
   # Node
   id: ID! # data // uuidv7
@@ -6559,6 +7343,20 @@ type RenamedPieceInput implements Input {
   # Input
   # Arguments
   name: String! # data
+}
+
+type RenamedPieceInputEdge implements EntityEdge {
+  # EntityEdge
+  cursor: String! # computed
+  # EntityEdgeNode
+  node: RenamedPieceInput! # reference
+}
+
+type RenamedPieceInputConnection implements EntityConnection {
+  # EntityConnection
+  edges: [RenamedPieceInputEdge!]! # computed
+  pageInfo: PageInfo! # computed
+  hash: String! # cached
 }
 
 type RenamedPiece implements Operation {
@@ -6602,6 +7400,20 @@ type UpdatedPieceDescriptionInput implements Input {
   description: String! # data
 }
 
+type UpdatedPieceDescriptionInputEdge implements EntityEdge {
+  # EntityEdge
+  cursor: String! # computed
+  # EntityEdgeNode
+  node: UpdatedPieceDescriptionInput! # reference
+}
+
+type UpdatedPieceDescriptionInputConnection implements EntityConnection {
+  # EntityConnection
+  edges: [UpdatedPieceDescriptionInputEdge!]! # computed
+  pageInfo: PageInfo! # computed
+  hash: String! # cached
+}
+
 type UpdatedPieceDescription implements Operation {
   # Node
   id: ID! # data // uuidv7
@@ -6643,6 +7455,20 @@ type MovedPieceInput implements Input {
   position: Position! # data
 }
 
+type MovedPieceInputEdge implements EntityEdge {
+  # EntityEdge
+  cursor: String! # computed
+  # EntityEdgeNode
+  node: MovedPieceInput! # reference
+}
+
+type MovedPieceInputConnection implements EntityConnection {
+  # EntityConnection
+  edges: [MovedPieceInputEdge!]! # computed
+  pageInfo: PageInfo! # computed
+  hash: String! # cached
+}
+
 type MovedPiece implements Operation {
   # Node
   id: ID! # data // uuidv7
@@ -6682,6 +7508,20 @@ type MovedPiecesInput implements Input {
   # Input
   # Arguments
   offset: Offset! # data
+}
+
+type MovedPiecesInputEdge implements EntityEdge {
+  # EntityEdge
+  cursor: String! # computed
+  # EntityEdgeNode
+  node: MovedPiecesInput! # reference
+}
+
+type MovedPiecesInputConnection implements EntityConnection {
+  # EntityConnection
+  edges: [MovedPiecesInputEdge!]! # computed
+  pageInfo: PageInfo! # computed
+  hash: String! # cached
 }
 
 type MovedPieces implements Operation {
@@ -6753,6 +7593,20 @@ type ChangedPieceToTypeInput implements Input {
   blueprintId: ID! # data
 }
 
+type ChangedPieceToTypeInputEdge implements EntityEdge {
+  # EntityEdge
+  cursor: String! # computed
+  # EntityEdgeNode
+  node: ChangedPieceToTypeInput! # reference
+}
+
+type ChangedPieceToTypeInputConnection implements EntityConnection {
+  # EntityConnection
+  edges: [ChangedPieceToTypeInputEdge!]! # computed
+  pageInfo: PageInfo! # computed
+  hash: String! # cached
+}
+
 type ChangedPieceToType implements Operation {
   # Node
   id: ID! # data // uuidv7
@@ -6792,6 +7646,20 @@ type ChangedPiecesToTypeInput implements Input {
   # Input
   # Arguments
   blueprintId: ID! # data
+}
+
+type ChangedPiecesToTypeInputEdge implements EntityEdge {
+  # EntityEdge
+  cursor: String! # computed
+  # EntityEdgeNode
+  node: ChangedPiecesToTypeInput! # reference
+}
+
+type ChangedPiecesToTypeInputConnection implements EntityConnection {
+  # EntityConnection
+  edges: [ChangedPiecesToTypeInputEdge!]! # computed
+  pageInfo: PageInfo! # computed
+  hash: String! # cached
 }
 
 type ChangedPiecesToType implements Operation {
@@ -6835,6 +7703,20 @@ type AddedAttributeToPieceInput implements Input {
   attribute: Attribute! # data
 }
 
+type AddedAttributeToPieceInputEdge implements EntityEdge {
+  # EntityEdge
+  cursor: String! # computed
+  # EntityEdgeNode
+  node: AddedAttributeToPieceInput! # reference
+}
+
+type AddedAttributeToPieceInputConnection implements EntityConnection {
+  # EntityConnection
+  edges: [AddedAttributeToPieceInputEdge!]! # computed
+  pageInfo: PageInfo! # computed
+  hash: String! # cached
+}
+
 type AddedAttributeToPiece implements Operation {
   # Node
   id: ID! # data // uuidv7
@@ -6875,6 +7757,20 @@ type AddedAttributesToPieceInput implements Input {
   # Input
   # Arguments
   attributes: AttributeConnection! # data
+}
+
+type AddedAttributesToPieceInputEdge implements EntityEdge {
+  # EntityEdge
+  cursor: String! # computed
+  # EntityEdgeNode
+  node: AddedAttributesToPieceInput! # reference
+}
+
+type AddedAttributesToPieceInputConnection implements EntityConnection {
+  # EntityConnection
+  edges: [AddedAttributesToPieceInputEdge!]! # computed
+  pageInfo: PageInfo! # computed
+  hash: String! # cached
 }
 
 type AddedAttributesToPiece implements Operation {
@@ -7387,6 +8283,20 @@ type DesignOperation {
   deletePiecesAndConnections(pieceIds: [ID!]!, connectionIds: [ID!]!): ID!
 }
 
+type DesignOperationEdge implements EntityEdge {
+  # EntityEdge
+  cursor: String! # computed
+  # EntityEdgeNode
+  node: DesignOperation! # reference
+}
+
+type DesignOperationConnection implements EntityConnection {
+  # EntityConnection
+  edges: [DesignOperationEdge!]! # computed
+  pageInfo: PageInfo! # computed
+  hash: String! # cached
+}
+
 #endregion Commands
 
 #region Operations
@@ -7401,6 +8311,20 @@ type CreatedDesignInput implements Input {
   # Input
   # Arguments
   design: Design! # data
+}
+
+type CreatedDesignInputEdge implements EntityEdge {
+  # EntityEdge
+  cursor: String! # computed
+  # EntityEdgeNode
+  node: CreatedDesignInput! # reference
+}
+
+type CreatedDesignInputConnection implements EntityConnection {
+  # EntityConnection
+  edges: [CreatedDesignInputEdge!]! # computed
+  pageInfo: PageInfo! # computed
+  hash: String! # cached
 }
 
 type CreatedDesign implements Operation {
@@ -7442,6 +8366,20 @@ type CreatedDesignsInput implements Input {
   # Input
   # Arguments
   designs: DesignConnection! # data
+}
+
+type CreatedDesignsInputEdge implements EntityEdge {
+  # EntityEdge
+  cursor: String! # computed
+  # EntityEdgeNode
+  node: CreatedDesignsInput! # reference
+}
+
+type CreatedDesignsInputConnection implements EntityConnection {
+  # EntityConnection
+  edges: [CreatedDesignsInputEdge!]! # computed
+  pageInfo: PageInfo! # computed
+  hash: String! # cached
 }
 
 type CreatedDesigns implements Operation {
@@ -7565,6 +8503,20 @@ type AddedAttributeToDesignInput implements Input {
   attribute: Attribute! # data
 }
 
+type AddedAttributeToDesignInputEdge implements EntityEdge {
+  # EntityEdge
+  cursor: String! # computed
+  # EntityEdgeNode
+  node: AddedAttributeToDesignInput! # reference
+}
+
+type AddedAttributeToDesignInputConnection implements EntityConnection {
+  # EntityConnection
+  edges: [AddedAttributeToDesignInputEdge!]! # computed
+  pageInfo: PageInfo! # computed
+  hash: String! # cached
+}
+
 type AddedAttributeToDesign implements Operation {
   # Node
   id: ID! # data // uuidv7
@@ -7605,6 +8557,20 @@ type AddedAttributesToDesignInput implements Input {
   # Input
   # Arguments
   attributes: AttributeConnection! # data
+}
+
+type AddedAttributesToDesignInputEdge implements EntityEdge {
+  # EntityEdge
+  cursor: String! # computed
+  # EntityEdgeNode
+  node: AddedAttributesToDesignInput! # reference
+}
+
+type AddedAttributesToDesignInputConnection implements EntityConnection {
+  # EntityConnection
+  edges: [AddedAttributesToDesignInputEdge!]! # computed
+  pageInfo: PageInfo! # computed
+  hash: String! # cached
 }
 
 type AddedAttributesToDesign implements Operation {
@@ -7899,6 +8865,20 @@ type KitOperation {
   deleteDesigns(ids: [ID!]!): ID!
 }
 
+type KitOperationEdge implements EntityEdge {
+  # EntityEdge
+  cursor: String! # computed
+  # EntityEdgeNode
+  node: KitOperation! # reference
+}
+
+type KitOperationConnection implements EntityConnection {
+  # EntityConnection
+  edges: [KitOperationEdge!]! # computed
+  pageInfo: PageInfo! # computed
+  hash: String! # cached
+}
+
 #endregion Commands
 
 #region Operations
@@ -7913,6 +8893,20 @@ type RenamedKitInput implements Input {
   # Input
   # Arguments
   name: String!
+}
+
+type RenamedKitInputEdge implements EntityEdge {
+  # EntityEdge
+  cursor: String! # computed
+  # EntityEdgeNode
+  node: RenamedKitInput! # reference
+}
+
+type RenamedKitInputConnection implements EntityConnection {
+  # EntityConnection
+  edges: [RenamedKitInputEdge!]! # computed
+  pageInfo: PageInfo! # computed
+  hash: String! # cached
 }
 
 type RenamedKit implements Operation {
@@ -7954,6 +8948,20 @@ type ChangedDescriptionInput implements Input {
   # Input
   # Arguments
   description: String!
+}
+
+type ChangedDescriptionInputEdge implements EntityEdge {
+  # EntityEdge
+  cursor: String! # computed
+  # EntityEdgeNode
+  node: ChangedDescriptionInput! # reference
+}
+
+type ChangedDescriptionInputConnection implements EntityConnection {
+  # EntityConnection
+  edges: [ChangedDescriptionInputEdge!]! # computed
+  pageInfo: PageInfo! # computed
+  hash: String! # cached
 }
 
 type ChangedDescription implements Operation {
@@ -8189,6 +9197,20 @@ type AlternativeCommand {
   integrateIntoTheKit: ID!
 }
 
+type AlternativeCommandEdge implements EntityEdge {
+  # EntityEdge
+  cursor: String! # computed
+  # EntityEdgeNode
+  node: AlternativeCommand! # reference
+}
+
+type AlternativeCommandConnection implements EntityConnection {
+  # EntityConnection
+  edges: [AlternativeCommandEdge!]! # computed
+  pageInfo: PageInfo! # computed
+  hash: String! # cached
+}
+
 #endregion Commands
 
 #endregion Alternatives
@@ -8228,12 +9250,40 @@ type UnsavedChangeCommand {
   save: ID!
 }
 
+type UnsavedChangeCommandEdge implements EntityEdge {
+  # EntityEdge
+  cursor: String! # computed
+  # EntityEdgeNode
+  node: UnsavedChangeCommand! # reference
+}
+
+type UnsavedChangeCommandConnection implements EntityConnection {
+  # EntityConnection
+  edges: [UnsavedChangeCommandEdge!]! # computed
+  pageInfo: PageInfo! # computed
+  hash: String! # cached
+}
+
 type VersionCommand {
   # VersionCommand
   startNewChange: ID!
   unsavedChange(id: ID!): UnsavedChangeCommand!
   save: ID!
   createCheckpoint(message: String!): ID!
+}
+
+type VersionCommandEdge implements EntityEdge {
+  # EntityEdge
+  cursor: String! # computed
+  # EntityEdgeNode
+  node: VersionCommand! # reference
+}
+
+type VersionCommandConnection implements EntityConnection {
+  # EntityConnection
+  edges: [VersionCommandEdge!]! # computed
+  pageInfo: PageInfo! # computed
+  hash: String! # cached
 }
 
 #endregion Commands
@@ -8274,74 +9324,7 @@ type GraphConnection implements EntityConnection {
   hash: String! # cached
 }
 
-type Session implements StrongEntity {
-  # Node
-  id: ID! # data // uuidv7
-  # Entity
-  hash: String! # cached
-  owner: Entity # reference // Graph | Checkpoint | Alternative
-  owns: EntityConnection # reference // Alternative | Graph | Checkpoint
-  # Session
-  startedAt: Timestamp # data
-  alternatives: AlternativeConnection! # data
-  alternative(id: ID!): Alternative # computed
-  theKit: Workspace # computed
-}
-
-#region Commands
-
-enum BackboneKind {
-  DEV
-  LOCAL
-  REMOTE
-}
-
-type BackboneStatus {
-  attachedUri: String
-  kind: BackboneKind
-}
-
-type BackboneCommand {
-  attach(uri: String!): ID!
-  detach(uri: String!): ID!
-  status: BackboneStatus!
-  setActiveCheckpoint(id: ID!): ID!
-  syncNow: ID!
-}
-
-type SessionCommand {
-  # SessionCommand
-  start: ID!
-  end: ID!
-  login(username: String!, passwordHash: String!, hubUrl: String): ID!
-  logout: ID!
-  backbone: BackboneCommand!
-  theKit: VersionCommand
-  alternative(id: ID!): AlternativeCommand
-  startAlternative(name: String): ID!
-}
-
-#endregion Commands
-
 #endregion Graphs
-
-#region Sessions
-
-type SessionEdge implements EntityEdge {
-  # EntityEdge
-  cursor: String! # computed
-  # EntityEdgeNode
-  node: Session! # reference
-}
-
-type SessionConnection implements EntityConnection {
-  # EntityConnection
-  edges: [SessionEdge!]! # computed
-  pageInfo: PageInfo! # computed
-  hash: String! # cached
-}
-
-#endregion Sessions
 
 #region Conflicts
 
@@ -8374,14 +9357,158 @@ type ConflictConnection implements EntityConnection {
 
 #region Store
 
+#region Backbones
+
+enum BackboneKind {
+  DEV
+  LOCAL
+  REMOTE
+}
+
+type BackboneStatus {
+  attachedUri: String
+  kind: BackboneKind
+}
+
+type BackboneStatusEdge implements EntityEdge {
+  # EntityEdge
+  cursor: String! # computed
+  # EntityEdgeNode
+  node: BackboneStatus! # reference
+}
+
+type BackboneStatusConnection implements EntityConnection {
+  # EntityConnection
+  edges: [BackboneStatusEdge!]! # computed
+  pageInfo: PageInfo! # computed
+  hash: String! # cached
+}
+
+type BackboneCommand {
+  attach(uri: String!): ID!
+  detach(uri: String!): ID!
+  status: BackboneStatus!
+  setActiveCheckpoint(id: ID!): ID!
+  syncNow: ID!
+}
+
+type BackboneCommandEdge implements EntityEdge {
+  # EntityEdge
+  cursor: String! # computed
+  # EntityEdgeNode
+  node: BackboneCommand! # reference
+}
+
+type BackboneCommandConnection implements EntityConnection {
+  # EntityConnection
+  edges: [BackboneCommandEdge!]! # computed
+  pageInfo: PageInfo! # computed
+  hash: String! # cached
+}
+
+#endregion Backbones
+
 type Store {
-  session: Session!
   wip: Graph!
   authoritative: Graph
   conflicts: ConflictConnection!
 }
 
+type StoreEdge implements EntityEdge {
+  # EntityEdge
+  cursor: String! # computed
+  # EntityEdgeNode
+  node: Store! # reference
+}
+
+type StoreConnection implements EntityConnection {
+  # EntityConnection
+  edges: [StoreEdge!]! # computed
+  pageInfo: PageInfo! # computed
+  hash: String! # cached
+}
+
+type StoreCommand {
+  backbone: BackboneCommand!
+  theKit: VersionCommand
+  alternative(id: ID!): AlternativeCommand
+  startAlternative(name: String): ID!
+}
+
+type StoreCommandEdge implements EntityEdge {
+  # EntityEdge
+  cursor: String! # computed
+  # EntityEdgeNode
+  node: StoreCommand! # reference
+}
+
+type StoreCommandConnection implements EntityConnection {
+  # EntityConnection
+  edges: [StoreCommandEdge!]! # computed
+  pageInfo: PageInfo! # computed
+  hash: String! # cached
+}
+
 #endregion Store
+
+#region Sessions
+
+type SessionEdge implements EntityEdge {
+  # EntityEdge
+  cursor: String! # computed
+  # EntityEdgeNode
+  node: Session! # reference
+}
+
+type SessionConnection implements EntityConnection {
+  # EntityConnection
+  edges: [SessionEdge!]! # computed
+  pageInfo: PageInfo! # computed
+  hash: String! # cached
+}
+
+type Session implements StrongEntity {
+  # Node
+  id: ID! # data // uuidv7
+  # Entity
+  hash: String! # cached
+  owner: Entity # reference // Graph
+  owns: EntityConnection # reference // Alternative | Graph | Checkpoint
+  # Session
+  startedAt: Timestamp # data
+  alternatives: AlternativeConnection! # data
+  alternative(id: ID!): Alternative # computed
+  theKit: Workspace # computed
+}
+
+#region Commands
+
+type SessionCommand {
+  # SessionCommand
+  start: ID!
+  end: ID!
+  login(username: String!, passwordHash: String!, hubUrl: String): ID!
+  logout: ID!
+  store(id: ID!): StoreCommand!
+}
+
+type SessionCommandEdge implements EntityEdge {
+  # EntityEdge
+  cursor: String! # computed
+  # EntityEdgeNode
+  node: SessionCommand! # reference
+}
+
+type SessionCommandConnection implements EntityConnection {
+  # EntityConnection
+  edges: [SessionCommandEdge!]! # computed
+  pageInfo: PageInfo! # computed
+  hash: String! # cached
+}
+
+#endregion Commands
+
+#endregion Sessions
 
 #endregion VCS
 
@@ -8390,10 +9517,12 @@ type Store {
 #region Schema
 
 type Query {
-  # Query
-  store: Store!
+  # Node
   node(id: ID!): Node
+  # Entity
   entity(hash: ID!): Entity
+  # Query
+  session: Session!
 }
 
 #region ScopedCommands
@@ -8413,7 +9542,7 @@ type Mutation {
 type Subscription {
   # Subscription
   # Events
-  store: Store!
+  session: Session!
   # Commands
   operation: Operation!
 }

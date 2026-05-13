@@ -17,7 +17,7 @@
       "executor": "nx:run-commands",
       "options": {
         "cwd": "semio/client/lib/rs",
-        "command": "bun scripts/build-wasm.mjs",
+        "command": "bun scripts/build-wasm.script.mjs",
         "forwardAllArgs": true
       }
     },
