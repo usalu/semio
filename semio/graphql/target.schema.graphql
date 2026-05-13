@@ -7997,12 +7997,15 @@ type AlternativeConnection implements EntityConnection {
 
 #region Versions
 
+enum VersionKind {
+  INITAL_KIT
+  MATERIALIZED
+}
+
 type Version {
+  kind: VersionKind
   inititalKit: Kit!
-  checkpoint: Checkpoint
-  change: Change
   edit: Edit
-  operation: Operation
 }
 
 type VersionEdge implements EntityEdge {

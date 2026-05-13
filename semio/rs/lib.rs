@@ -3200,7 +3200,7 @@ pub mod kit {
             *g = g.saturating_add(1);
         }
 
-        /// @emoji 🧬 Deep-clone this kit graph (dev-backbone `initialKit` projection round-trip) for immutable graph `initialKit` baselines / replay scratch kits.
+        /// @emoji 🧬 Deep-clone this kit graph (dev-backbone `initialKit` projection round-trip) for immutable graph `initialKit` baselines / replay roots.
         pub async fn deep_clone(self: &Arc<Self>) -> Arc<Kit> {
             let snap = crate::kit_backbone::initial_kit_projection_value(self).await;
             let owner = self.owner_graph.clone();
@@ -4227,7 +4227,7 @@ impl crate::meta::Quality {
 //#region 🌿 vcs
 
 pub mod vcs {
-    //! 🌿 Version-control entities — change, edit, checkpoint, alternative, graph, session, conflict (SDL: unsavedChanges hold open edits; no draft layer).
+    //! 🌿 Version-control entities — [`Change`](../../graphql/target.schema.graphql), [`Edit`](../../graphql/target.schema.graphql), [`Checkpoint`](../../graphql/target.schema.graphql), [`Alternative`](../../graphql/target.schema.graphql), [`Graph`](../../graphql/target.schema.graphql), [`Session`](../../graphql/target.schema.graphql), [`TheKit`](../../graphql/target.schema.graphql) ([`Workspace`](../../graphql/target.schema.graphql)), [`Conflict`](../../graphql/target.schema.graphql).
     use std::sync::atomic::{AtomicU64, Ordering};
     use std::sync::{Arc, Weak};
 
@@ -4257,7 +4257,7 @@ pub mod vcs {
         pub backwards: RwLock<Vec<operation::Operation>>,
     }
 
-    /// 🔗 Weak owner lane matching SDL `Alternative | Checkpoint` for persisted [`Change`] entities.
+    /// 🔗 Weak owner matching SDL `Alternative | Checkpoint` for persisted [`Change`] entities.
     #[derive(Clone)]
     pub enum ChangeOwnerRef {
         Alternative(Weak<Alternative>),
@@ -4360,9 +4360,9 @@ pub mod vcs {
     //#endregion 🪪 change
 
     //#region 💼 edit
-    /// @emoji 🔗 Parent for [`Edit`] lists: main [`Graph`] lane or an [`Alternative`] (replaces former draft linkage).
+    /// @emoji 🔗 [`Edit`] owner: [`TheKit`] lives on [`Graph`]; [`Alternative`] is its own [`Workspace`](../../graphql/target.schema.graphql) (SDL `Workspace`).
     pub enum EditOwner {
-        Main(Weak<Graph>),
+        TheKit(Weak<Graph>),
         Alternative(Weak<Alternative>),
     }
 
@@ -4383,7 +4383,7 @@ pub mod vcs {
         fn default() -> Self {
             Self {
                 id: Id::default(),
-                owner: EditOwner::Main(Weak::new()),
+                owner: EditOwner::TheKit(Weak::new()),
                 changes: RwLock::new(Vec::new()),
                 forward_interface_operations: RwLock::new(Vec::new()),
                 backward_interface_operations: RwLock::new(Vec::new()),
@@ -4422,7 +4422,7 @@ pub mod vcs {
         }
     }
 
-    /// @emoji 🧾 Flatten write-session records into target-schema `ChangeConnection` entities for a version lane.
+    /// @emoji 🧾 Flatten [`Edit`] rows into target-schema [`Change`](../../graphql/target.schema.graphql) entities for a [`Workspace`](../../graphql/target.schema.graphql).
     async fn changes_from_edits(edits: Vec<Arc<Edit>>) -> Vec<Arc<Change>> {
         let mut out = Vec::new();
         for ed in edits {
@@ -4442,9 +4442,9 @@ pub mod vcs {
         pub async fn owner(&self) -> Option<EditOwnerUnion> {
             match &self.owner {
                 EditOwner::Alternative(wa) => wa.upgrade().map(EditOwnerUnion::Alternative),
-                EditOwner::Main(wg) => {
+                EditOwner::TheKit(wg) => {
                     let g = wg.upgrade()?;
-                    let cp = g.main_parent_checkpoint.read().await.upgrade()?;
+                    let cp = g.the_kit_parent_checkpoint.read().await.upgrade()?;
                     Some(EditOwnerUnion::Checkpoint(cp))
                 }
             }
@@ -4498,7 +4498,7 @@ pub mod vcs {
         #[graphql(name = "alternativeId")]
         pub alternative_id: Option<Id>,
         #[graphql(name = "draftId")]
-        pub draft_id: Option<Id>,
+        pub workspace_id: Option<Id>,
         #[graphql(name = "draftAlternativeId")]
         pub draft_alternative_id: Option<Id>,
         #[graphql(name = "draftTransactionId")]
@@ -4511,7 +4511,7 @@ pub mod vcs {
     //#endregion 📍 kit read point
 
     //#region 📖 read write version
-    /// @emoji 📖 Placeholder version entity for `OwnerEntity` (`ReadVersion` SDL lane).
+    /// @emoji 📖 Placeholder version entity for `OwnerEntity` (`ReadVersion` in target SDL).
     pub struct ReadVersion {
         pub id: Id,
     }
@@ -4532,7 +4532,7 @@ pub mod vcs {
         }
     }
 
-    /// @emoji 📖 Placeholder version entity for `OwnerEntity` (`WriteVersion` SDL lane).
+    /// @emoji 📖 Placeholder version entity for `OwnerEntity` (`WriteVersion` in target SDL).
     pub struct WriteVersion {
         pub id: Id,
     }
@@ -4669,7 +4669,7 @@ pub mod vcs {
     }
 
     impl TheKit {
-        /// @emoji 🧭 Main kit version wrapper; exposes `kit` plus version change lanes without making `Kit` itself a version.
+        /// @emoji 🧭 SDL [`TheKit`](../../graphql/target.schema.graphql) — [`Workspace`] on [`Graph`] with `savedChanges` / `unsavedChanges` / `kit`.
         pub fn new(owner_graph: Weak<Graph>) -> Arc<Self> {
             Arc::new(Self { owner_graph })
         }
@@ -4712,14 +4712,14 @@ pub mod vcs {
         #[graphql(name = "savedChanges")]
         pub async fn saved_changes(&self) -> crate::gql_relay::ChangeConnection {
             match self.graph().await {
-                Some(g) => g.saved_change_connection_for_main_line().await,
+                Some(g) => g.saved_change_connection_for_the_kit().await,
                 None => crate::gql_relay::ChangeConnection::empty(),
             }
         }
         #[graphql(name = "unsavedChanges")]
         pub async fn unsaved_changes(&self) -> crate::gql_relay::ChangeConnection {
             match self.graph().await {
-                Some(g) => g.unsaved_change_connection_for_main_line().await,
+                Some(g) => g.unsaved_change_connection_for_the_kit().await,
                 None => crate::gql_relay::ChangeConnection::empty(),
             }
         }
@@ -4740,8 +4740,6 @@ pub mod vcs {
         pub start: RwLock<Weak<Checkpoint>>,
         pub checkpoints: RwLock<Vec<Arc<Checkpoint>>>,
         pub kit: RwLock<Option<Arc<Kit>>>,
-        /// @emoji 🪪 Stable id for this lane's materialized kit / backbone routing (replaces former draft id).
-        pub change_lane_id: Id,
         pub open_edit: RwLock<Weak<Edit>>,
         pub saved_edits: RwLock<Vec<Arc<Edit>>>,
         pub redo_edits: RwLock<Vec<Arc<Edit>>>,
@@ -4758,7 +4756,6 @@ pub mod vcs {
                 start: RwLock::new(Weak::new()),
                 checkpoints: RwLock::new(Vec::new()),
                 kit: RwLock::new(None),
-                change_lane_id: Id::default(),
                 open_edit: RwLock::new(Weak::new()),
                 saved_edits: RwLock::new(Vec::new()),
                 redo_edits: RwLock::new(Vec::new()),
@@ -4774,7 +4771,7 @@ pub mod vcs {
             h(&[self.id.as_str(), name.as_str()])
         }
 
-        /// @emoji ✏️ Ensure an unsaved [`Edit`] row exists for `edit_id` on this alternative (SDL unsavedChanges lane).
+        /// @emoji ✏️ Ensure an unsaved [`Edit`] exists for `edit_id` on this [`Alternative`](../../graphql/target.schema.graphql) (SDL `unsavedChanges`).
         pub async fn ensure_unsaved_edit(self: &Arc<Self>, edit_id: &Id) -> Arc<Edit> {
             if let Some(t) = self.unsaved_edits.read().await.iter().find(|t| &t.id == edit_id).cloned() {
                 *self.open_edit.write().await = Arc::downgrade(&t);
@@ -4828,7 +4825,7 @@ pub mod vcs {
         }
         pub async fn kit(&self) -> Arc<Kit> {
             match self.owner_graph.upgrade() {
-                Some(g) => g.materialized_kit_for_change_lane(&self.change_lane_id).await,
+                Some(g) => g.materialized_kit_for_workspace(&self.id).await,
                 None => self.kit.read().await.clone().unwrap_or_default(),
             }
         }
@@ -4842,9 +4839,9 @@ pub mod vcs {
         Session(Arc<Session>),
     }
 
-    /// @emoji 📦 Cached materialized [`Kit`] for a change lane (`change_lane_id` + `change_seq`).
+    /// @emoji 📦 Cached materialized [`Kit`] for a [`Workspace`](../../graphql/target.schema.graphql) (`workspace_id` + `change_seq`).
     pub struct MaterializedSlot {
-        pub change_lane_id: Id,
+        pub workspace_id: Id,
         pub change_seq: u64,
         pub kit: Arc<Kit>,
     }
@@ -4854,20 +4851,18 @@ pub mod vcs {
         pub owner_session: RwLock<Weak<Session>>,
         pub self_weak: std::sync::Mutex<std::sync::Weak<Graph>>,
         pub initial_kit: RwLock<Arc<Kit>>,
-        /// @emoji 🏗️ Mutable kit root replayed through [`Graph::materialized_kit_for_change_lane`].
-        pub parent_root_for_active_draft: RwLock<Arc<Kit>>,
+        /// @emoji 🏗️ Mutable [`Kit`] root used while replaying [`Operation`]s for materialized [`TheKit.kit`](../../graphql/target.schema.graphql) / [`Alternative.kit`](../../graphql/target.schema.graphql).
+        pub mutable_kit_root: RwLock<Arc<Kit>>,
         pub materialized_cache: RwLock<Option<MaterializedSlot>>,
         pub alternatives: RwLock<Vec<Arc<Alternative>>>,
         pub checkpoints: RwLock<Vec<Arc<Checkpoint>>>,
         pub releases: RwLock<Vec<Arc<Checkpoint>>>,
-        /// @emoji 🪪 Main-line lane id (materialize / backbone key); set by [`Graph::ensure_default_seed_state`].
-        pub main_lane_id: RwLock<Option<Id>>,
-        pub main_parent_checkpoint: RwLock<Weak<Checkpoint>>,
-        pub main_open_edit: RwLock<Weak<Edit>>,
-        pub main_saved_edits: RwLock<Vec<Arc<Edit>>>,
-        pub main_redo_edits: RwLock<Vec<Arc<Edit>>>,
-        pub main_unsaved_edits: RwLock<Vec<Arc<Edit>>>,
-        pub main_change_seq: AtomicU64,
+        pub the_kit_parent_checkpoint: RwLock<Weak<Checkpoint>>,
+        pub the_kit_open_edit: RwLock<Weak<Edit>>,
+        pub the_kit_saved_edits: RwLock<Vec<Arc<Edit>>>,
+        pub the_kit_redo_edits: RwLock<Vec<Arc<Edit>>>,
+        pub the_kit_unsaved_edits: RwLock<Vec<Arc<Edit>>>,
+        pub the_kit_workspace_seq: AtomicU64,
         pub op_history: RwLock<Vec<Arc<crate::operation::OperationInterface>>>,
     }
 
@@ -4878,25 +4873,24 @@ pub mod vcs {
                 owner_session: RwLock::new(Weak::new()),
                 self_weak: std::sync::Mutex::new(Weak::new()),
                 initial_kit: RwLock::new(Arc::default()),
-                parent_root_for_active_draft: RwLock::new(Arc::default()),
+                mutable_kit_root: RwLock::new(Arc::default()),
                 materialized_cache: RwLock::new(None),
                 alternatives: RwLock::new(Vec::new()),
                 checkpoints: RwLock::new(Vec::new()),
                 releases: RwLock::new(Vec::new()),
-                main_lane_id: RwLock::new(None),
-                main_parent_checkpoint: RwLock::new(Weak::new()),
-                main_open_edit: RwLock::new(Weak::new()),
-                main_saved_edits: RwLock::new(Vec::new()),
-                main_redo_edits: RwLock::new(Vec::new()),
-                main_unsaved_edits: RwLock::new(Vec::new()),
-                main_change_seq: AtomicU64::new(0),
+                the_kit_parent_checkpoint: RwLock::new(Weak::new()),
+                the_kit_open_edit: RwLock::new(Weak::new()),
+                the_kit_saved_edits: RwLock::new(Vec::new()),
+                the_kit_redo_edits: RwLock::new(Vec::new()),
+                the_kit_unsaved_edits: RwLock::new(Vec::new()),
+                the_kit_workspace_seq: AtomicU64::new(0),
                 op_history: RwLock::new(Vec::new()),
             }
         }
     }
 
     impl Graph {
-        /// 🆕 Build a brand-new Graph; seeds [`Graph::parent_root_for_active_draft`] from a deep-cloned empty [`Kit`] so checkpoint roots never alias live mutation.
+        /// 🆕 Build a brand-new Graph; seeds [`Graph::mutable_kit_root`] from a deep-cloned empty [`Kit`] so checkpoint roots never alias live mutation.
         pub async fn new() -> Arc<Self> {
             let id = Id::new().await;
             let g = Arc::new_cyclic(|weak_self: &Weak<Graph>| {
@@ -4906,24 +4900,23 @@ pub mod vcs {
                     owner_session: RwLock::new(Weak::new()),
                     self_weak: std::sync::Mutex::new(weak_self.clone()),
                     initial_kit: RwLock::new(Arc::default()),
-                    parent_root_for_active_draft: RwLock::new(kit.clone()),
+                    mutable_kit_root: RwLock::new(kit.clone()),
                     materialized_cache: RwLock::new(None),
                     alternatives: RwLock::new(Vec::new()),
                     checkpoints: RwLock::new(Vec::new()),
                     releases: RwLock::new(Vec::new()),
-                    main_lane_id: RwLock::new(None),
-                    main_parent_checkpoint: RwLock::new(Weak::new()),
-                    main_open_edit: RwLock::new(Weak::new()),
-                    main_saved_edits: RwLock::new(Vec::new()),
-                    main_redo_edits: RwLock::new(Vec::new()),
-                    main_unsaved_edits: RwLock::new(Vec::new()),
-                    main_change_seq: AtomicU64::new(0),
+                    the_kit_parent_checkpoint: RwLock::new(Weak::new()),
+                    the_kit_open_edit: RwLock::new(Weak::new()),
+                    the_kit_saved_edits: RwLock::new(Vec::new()),
+                    the_kit_redo_edits: RwLock::new(Vec::new()),
+                    the_kit_unsaved_edits: RwLock::new(Vec::new()),
+                    the_kit_workspace_seq: AtomicU64::new(0),
                     op_history: RwLock::new(Vec::new()),
                 }
             });
-            let baseline = g.parent_root_for_active_draft.read().await.clone().deep_clone().await;
+            let baseline = g.mutable_kit_root.read().await.clone().deep_clone().await;
             *g.initial_kit.write().await = baseline.clone();
-            *g.parent_root_for_active_draft.write().await = baseline;
+            *g.mutable_kit_root.write().await = baseline;
             g
         }
 
@@ -4932,19 +4925,20 @@ pub mod vcs {
             self.self_weak.lock().ok().and_then(|slot| slot.upgrade()).expect("Graph.self_weak upgrade")
         }
 
-        /// @emoji 🪪 Map bundle / golden lane refs (`the-kit` = main SDL line) onto the live main lane id.
-        pub async fn resolve_change_lane_ref(self: &Arc<Self>, lane_ref: &Id) -> Id {
-            if lane_ref.as_str() == "the-kit" {
-                self.ensure_default_seed_state().await
+        /// @emoji 🪪 Map persisted bundle anchor `the-kit` onto this graph's [`TheKit`](../../graphql/target.schema.graphql) [`Workspace`](../../graphql/target.schema.graphql) id ([`Graph::id`]).
+        pub async fn resolve_workspace_id(self: &Arc<Self>, workspace_ref: &Id) -> Id {
+            if workspace_ref.as_str() == "the-kit" {
+                self.ensure_default_checkpoint_for_the_kit().await;
+                self.id.clone()
             } else {
-                lane_ref.clone()
+                workspace_ref.clone()
             }
         }
 
-        /// @emoji 📦 Materialized kit for the default main change lane (GraphQL `theKit` / node resolution).
+        /// @emoji 📦 [`TheKit.kit`](../../graphql/target.schema.graphql) — materialized [`Kit`] for the graph's [`TheKit`](../../graphql/target.schema.graphql) [`Workspace`](../../graphql/target.schema.graphql).
         pub async fn materialized_head_kit(self: &Arc<Self>) -> Arc<Kit> {
-            let lane = self.ensure_default_seed_state().await;
-            self.materialized_kit_for_change_lane(&lane).await
+            self.ensure_default_checkpoint_for_the_kit().await;
+            self.materialized_kit_for_workspace(&self.id).await
         }
 
         /// @emoji 📦 Same as [`Graph::materialized_head_kit`] but callable from `&Graph` resolvers.
@@ -4957,83 +4951,83 @@ pub mod vcs {
             *self.materialized_cache.write().await = None;
         }
 
-        /// @emoji 🧾 Saved edits on the main kit version (SDL `savedChanges`).
-        pub async fn saved_change_connection_for_main_line(self: &Arc<Self>) -> crate::gql_relay::ChangeConnection {
-            let _ = self.ensure_default_seed_state().await;
-            let txs = self.main_saved_edits.read().await.clone();
+        /// @emoji 🧾 SDL `TheKit.savedChanges` — [`ChangeConnection`](../../graphql/target.schema.graphql) for this graph's [`TheKit`](../../graphql/target.schema.graphql).
+        pub async fn saved_change_connection_for_the_kit(self: &Arc<Self>) -> crate::gql_relay::ChangeConnection {
+            self.ensure_default_checkpoint_for_the_kit().await;
+            let txs = self.the_kit_saved_edits.read().await.clone();
             crate::gql_relay::ChangeConnection::from_changes(changes_from_edits(txs).await).await
         }
 
-        /// @emoji 🧾 Unsaved edits on the main kit version (SDL `unsavedChanges`).
-        pub async fn unsaved_change_connection_for_main_line(self: &Arc<Self>) -> crate::gql_relay::ChangeConnection {
-            let _ = self.ensure_default_seed_state().await;
-            let txs = self.main_unsaved_edits.read().await.clone();
+        /// @emoji 🧾 SDL `TheKit.unsavedChanges` — [`ChangeConnection`](../../graphql/target.schema.graphql) for this graph's [`TheKit`](../../graphql/target.schema.graphql).
+        pub async fn unsaved_change_connection_for_the_kit(self: &Arc<Self>) -> crate::gql_relay::ChangeConnection {
+            self.ensure_default_checkpoint_for_the_kit().await;
+            let txs = self.the_kit_unsaved_edits.read().await.clone();
             crate::gql_relay::ChangeConnection::from_changes(changes_from_edits(txs).await).await
         }
 
-        /// @emoji 📎 Ordered saved then unsaved [`Edit`] rows for a change lane id (main or alternative).
-        pub async fn lane_saved_and_unsaved_edits(self: &Arc<Self>, change_lane_id: &Id) -> Option<(Vec<Arc<Edit>>, Vec<Arc<Edit>>)> {
-            let lane = self.resolve_change_lane_ref(change_lane_id).await;
-            if self.main_lane_id.read().await.as_deref() == Some(lane.as_str()) {
-                return Some((self.main_saved_edits.read().await.clone(), self.main_unsaved_edits.read().await.clone()));
+        /// @emoji 📎 Ordered saved then unsaved [`Edit`] rows for a [`Workspace`](../../graphql/target.schema.graphql) id ([`TheKit`](../../graphql/target.schema.graphql) = [`Graph::id`], [`Alternative`](../../graphql/target.schema.graphql) = [`Alternative::id`]).
+        pub async fn workspace_saved_and_unsaved_edits(self: &Arc<Self>, workspace_id: &Id) -> Option<(Vec<Arc<Edit>>, Vec<Arc<Edit>>)> {
+            let ws = self.resolve_workspace_id(workspace_id).await;
+            if ws == self.id {
+                return Some((self.the_kit_saved_edits.read().await.clone(), self.the_kit_unsaved_edits.read().await.clone()));
             }
             for a in self.alternatives.read().await.iter() {
-                if a.change_lane_id == lane {
+                if a.id == ws {
                     return Some((a.saved_edits.read().await.clone(), a.unsaved_edits.read().await.clone()));
                 }
             }
             None
         }
 
-        async fn is_main_lane(self: &Arc<Self>, change_lane_id: &Id) -> bool {
-            let lane = self.resolve_change_lane_ref(change_lane_id).await;
-            self.main_lane_id.read().await.as_deref() == Some(lane.as_str())
+        async fn workspace_is_the_kit(self: &Arc<Self>, workspace_id: &Id) -> bool {
+            self.resolve_workspace_id(workspace_id).await == self.id
         }
 
-        async fn alternative_for_lane(self: &Arc<Self>, change_lane_id: &Id) -> Option<Arc<Alternative>> {
-            let lane = self.resolve_change_lane_ref(change_lane_id).await;
-            self.alternatives.read().await.iter().find(|a| a.change_lane_id == lane).cloned()
+        async fn workspace_alternative(self: &Arc<Self>, workspace_id: &Id) -> Option<Arc<Alternative>> {
+            let ws = self.resolve_workspace_id(workspace_id).await;
+            self.alternatives.read().await.iter().find(|a| a.id == ws).cloned()
         }
 
-        /// @emoji ✏️ Ensure an unsaved [`Edit`] exists on the main lane (SDL `unsavedChanges` source).
-        pub async fn ensure_main_unsaved_edit(self: &Arc<Self>, edit_id: &Id) -> Arc<Edit> {
-            if let Some(t) = self.main_unsaved_edits.read().await.iter().find(|t| &t.id == edit_id).cloned() {
-                *self.main_open_edit.write().await = Arc::downgrade(&t);
+        /// @emoji ✏️ Ensure an unsaved [`Edit`] exists on [`TheKit`](../../graphql/target.schema.graphql) (SDL `unsavedChanges`).
+        pub async fn ensure_the_kit_unsaved_edit(self: &Arc<Self>, edit_id: &Id) -> Arc<Edit> {
+            if let Some(t) = self.the_kit_unsaved_edits.read().await.iter().find(|t| &t.id == edit_id).cloned() {
+                *self.the_kit_open_edit.write().await = Arc::downgrade(&t);
                 return t;
             }
-            let seq = self.main_unsaved_edits.read().await.len() as i32;
-            let t = Edit::with_id(EditOwner::Main(Arc::downgrade(self)), edit_id.clone(), seq).await;
-            self.main_unsaved_edits.write().await.push(t.clone());
-            *self.main_open_edit.write().await = Arc::downgrade(&t);
+            let seq = self.the_kit_unsaved_edits.read().await.len() as i32;
+            let t = Edit::with_id(EditOwner::TheKit(Arc::downgrade(self)), edit_id.clone(), seq).await;
+            self.the_kit_unsaved_edits.write().await.push(t.clone());
+            *self.the_kit_open_edit.write().await = Arc::downgrade(&t);
             t
         }
 
-        /// @emoji 📦 Deterministic materialized [`Kit`] for `change_lane_id`: clone [`Graph::parent_root_for_active_draft`] and replay recorded [`Operation`] forwards.
-        pub async fn materialized_kit_for_change_lane(self: &Arc<Self>, change_lane_id: &Id) -> Arc<Kit> {
-            let (saved, unsaved, seq) = if self.is_main_lane(change_lane_id).await {
+        /// @emoji 📦 Deterministic materialized [`Kit`] for a [`Workspace`](../../graphql/target.schema.graphql): clone [`Graph::mutable_kit_root`] and replay recorded [`Operation`] forwards (matches SDL `Workspace.kit` computation).
+        pub async fn materialized_kit_for_workspace(self: &Arc<Self>, workspace_id: &Id) -> Arc<Kit> {
+            let ws = self.resolve_workspace_id(workspace_id).await;
+            let (saved, unsaved, seq) = if ws == self.id {
                 (
-                    self.main_saved_edits.read().await.clone(),
-                    self.main_unsaved_edits.read().await.clone(),
-                    self.main_change_seq.load(Ordering::Relaxed),
+                    self.the_kit_saved_edits.read().await.clone(),
+                    self.the_kit_unsaved_edits.read().await.clone(),
+                    self.the_kit_workspace_seq.load(Ordering::Relaxed),
                 )
-            } else if let Some(a) = self.alternative_for_lane(change_lane_id).await {
+            } else if let Some(a) = self.workspace_alternative(workspace_id).await {
                 (
                     a.saved_edits.read().await.clone(),
                     a.unsaved_edits.read().await.clone(),
                     a.change_seq.load(Ordering::Relaxed),
                 )
             } else {
-                return self.parent_root_for_active_draft.read().await.clone();
+                return self.mutable_kit_root.read().await.clone();
             };
             {
                 let cache = self.materialized_cache.read().await;
                 if let Some(slot) = cache.as_ref() {
-                    if slot.change_lane_id == *change_lane_id && slot.change_seq == seq {
+                    if slot.workspace_id == ws && slot.change_seq == seq {
                         return slot.kit.clone();
                     }
                 }
             }
-            let base = self.parent_root_for_active_draft.read().await.clone();
+            let base = self.mutable_kit_root.read().await.clone();
             let mat = base.deep_clone().await;
             let mut edits: Vec<Arc<Edit>> = Vec::new();
             edits.extend(saved);
@@ -5053,20 +5047,26 @@ pub mod vcs {
                     }
                 }
             }
-            *self.materialized_cache.write().await = Some(MaterializedSlot { change_lane_id: change_lane_id.clone(), change_seq: seq, kit: mat.clone() });
+            *self.materialized_cache.write().await = Some(MaterializedSlot { workspace_id: ws.clone(), change_seq: seq, kit: mat.clone() });
             mat
         }
 
-        /// @emoji 📦 Deep-clone parent line and replay forward ops on `change_lane_id` strictly before `forward_idx` in `change_idx` within `target_tx`.
-        pub async fn scratch_kit_before_forward_step(self: &Arc<Self>, change_lane_id: &Id, target_tx: &Arc<Edit>, change_idx: usize, forward_idx: usize) -> Arc<Kit> {
-            let (saved, unsaved) = self.lane_saved_and_unsaved_edits(change_lane_id).await.unwrap_or_else(|| (Vec::new(), Vec::new()));
-            let base = self.parent_root_for_active_draft.read().await.clone();
+        /// @emoji 📦 [`Kit`] materialized for `workspace_id` through `target_edit` / `change_idx` / `forward_idx` (used when persisting each operation's `kitDiff` beside its input).
+        pub async fn kit_materialized_for_workspace_before_operation_step(
+            self: &Arc<Self>,
+            workspace_id: &Id,
+            target_edit: &Arc<Edit>,
+            change_idx: usize,
+            forward_idx: usize,
+        ) -> Arc<Kit> {
+            let (saved, unsaved) = self.workspace_saved_and_unsaved_edits(workspace_id).await.unwrap_or_else(|| (Vec::new(), Vec::new()));
+            let base = self.mutable_kit_root.read().await.clone();
             let mat = base.deep_clone().await;
             let mut edits: Vec<Arc<Edit>> = Vec::new();
             edits.extend(saved);
             edits.extend(unsaved);
             for ed in edits {
-                let same_ed = Arc::ptr_eq(&ed, target_tx);
+                let same_ed = Arc::ptr_eq(&ed, target_edit);
                 let changes = ed.changes.read().await.clone();
                 for (ci, c_arc) in changes.iter().enumerate() {
                     let forwards = c_arc.forwards.read().await.clone();
@@ -5091,22 +5091,22 @@ pub mod vcs {
             mat
         }
 
-        /// @emoji 📝 Append one forward operation plus backward operations onto the open edit's tail [`Change`], bumping lane `change_seq`.
+        /// @emoji 📝 Append one forward operation plus backward operations onto the open [`Edit`]'s tail [`Change`], bumping the workspace cache epoch.
         pub async fn record_operation_in_open_transaction(
             self: &Arc<Self>,
-            change_lane_id: &Id,
+            workspace_id: &Id,
             edit_id: &Id,
             forward: crate::operation::Operation,
             backwards: Vec<crate::operation::Operation>,
         ) -> Result<(), SemioError> {
-            let tx = if self.is_main_lane(change_lane_id).await {
-                let _ = self.ensure_main_unsaved_edit(edit_id).await;
-                self.main_unsaved_edits.read().await.iter().find(|t| &t.id == edit_id).cloned().ok_or_else(|| SemioError::not_found("Edit", edit_id.as_str()))?
-            } else if let Some(alt) = self.alternative_for_lane(change_lane_id).await {
+            let tx = if self.workspace_is_the_kit(workspace_id).await {
+                let _ = self.ensure_the_kit_unsaved_edit(edit_id).await;
+                self.the_kit_unsaved_edits.read().await.iter().find(|t| &t.id == edit_id).cloned().ok_or_else(|| SemioError::not_found("Edit", edit_id.as_str()))?
+            } else if let Some(alt) = self.workspace_alternative(workspace_id).await {
                 let _ = alt.ensure_unsaved_edit(edit_id).await;
                 alt.unsaved_edits.read().await.iter().find(|t| &t.id == edit_id).cloned().ok_or_else(|| SemioError::not_found("Edit", edit_id.as_str()))?
             } else {
-                return Err(SemioError::not_found("ChangeLane", change_lane_id.as_str()));
+                return Err(SemioError::not_found("Workspace", workspace_id.as_str()));
             };
             let change = {
                 let mut chs = tx.changes.write().await;
@@ -5119,27 +5119,27 @@ pub mod vcs {
                 }
             };
             *change.parent_edit.write().await = Arc::downgrade(&tx);
-            let lane_owner = match &tx.owner {
+            let change_owner = match &tx.owner {
                 EditOwner::Alternative(wa) => wa.upgrade().map(|a| ChangeOwnerRef::Alternative(Arc::downgrade(&a))),
-                EditOwner::Main(wg) => match wg.upgrade() {
-                    Some(gr) => gr.main_parent_checkpoint.read().await.upgrade().map(|cp| ChangeOwnerRef::Checkpoint(Arc::downgrade(&cp))),
+                EditOwner::TheKit(wg) => match wg.upgrade() {
+                    Some(gr) => gr.the_kit_parent_checkpoint.read().await.upgrade().map(|cp| ChangeOwnerRef::Checkpoint(Arc::downgrade(&cp))),
                     None => None,
                 },
             };
-            *change.owner.write().await = lane_owner;
+            *change.owner.write().await = change_owner;
             change.forwards.write().await.push(forward);
             change.backwards.write().await.extend(backwards);
-            if self.is_main_lane(change_lane_id).await {
-                self.main_change_seq.fetch_add(1, Ordering::Relaxed);
-            } else if let Some(alt) = self.alternative_for_lane(change_lane_id).await {
+            if self.workspace_is_the_kit(workspace_id).await {
+                self.the_kit_workspace_seq.fetch_add(1, Ordering::Relaxed);
+            } else if let Some(alt) = self.workspace_alternative(workspace_id).await {
                 alt.change_seq.fetch_add(1, Ordering::Relaxed);
             }
             self.invalidate_materialized_cache().await;
             Ok(())
         }
 
-        /// @emoji 🌱 Ensure seed checkpoint and main change lane id exist (idempotent).
-        pub async fn ensure_default_seed_state(self: &Arc<Self>) -> Id {
+        /// @emoji 🌱 Ensure a seed [`Checkpoint`] exists and [`TheKit`](../../graphql/target.schema.graphql) is anchored (idempotent).
+        pub async fn ensure_default_checkpoint_for_the_kit(self: &Arc<Self>) {
             let checkpoint = {
                 let cps = self.checkpoints.read().await;
                 if let Some(c) = cps.first().cloned() {
@@ -5161,25 +5161,23 @@ pub mod vcs {
                     cp
                 }
             };
-            let mut mid = self.main_lane_id.write().await;
-            if mid.is_none() {
-                *mid = Some(Id::new().await);
-                *self.main_parent_checkpoint.write().await = Arc::downgrade(&checkpoint);
+            let mut anch = self.the_kit_parent_checkpoint.write().await;
+            if anch.upgrade().is_none() {
+                *anch = Arc::downgrade(&checkpoint);
             }
-            mid.clone().expect("main lane id")
         }
 
-        /// @emoji 🌱 Fork a new named alternative from main or another alternative's tip checkpoint.
+        /// @emoji 🌱 Fork a new named [`Alternative`](../../graphql/target.schema.graphql) from [`TheKit`](../../graphql/target.schema.graphql) or another alternative's tip [`Checkpoint`](../../graphql/target.schema.graphql).
         pub async fn create_alternative_from_tip(self: &Arc<Self>, name: String, source_alternative_id: Option<&Id>) -> Result<Id, SemioError> {
             let name = name.trim().to_string();
             if name.is_empty() {
                 return Err(SemioError::invalid("alternative name required"));
             }
 
-            self.ensure_default_seed_state().await;
+            self.ensure_default_checkpoint_for_the_kit().await;
 
             let parent_cp = match source_alternative_id {
-                None => self.main_parent_checkpoint.read().await.upgrade().ok_or_else(|| SemioError::invalid("main lane has no parent checkpoint"))?,
+                None => self.the_kit_parent_checkpoint.read().await.upgrade().ok_or_else(|| SemioError::invalid("theKit workspace has no parent checkpoint"))?,
                 Some(aid) => {
                     let alt = {
                         let alts = self.alternatives.read().await;
@@ -5192,7 +5190,6 @@ pub mod vcs {
             let parent_root = self.initial_kit.read().await.clone();
 
             let new_alt_id = Id::new().await;
-            let lane_id = Id::new().await;
             let new_alt = Arc::new(Alternative {
                 id: new_alt_id.clone(),
                 owner_graph: Arc::downgrade(self),
@@ -5200,7 +5197,6 @@ pub mod vcs {
                 start: RwLock::new(Arc::downgrade(&parent_cp)),
                 checkpoints: RwLock::new(vec![parent_cp.clone()]),
                 kit: RwLock::new(Some(parent_root)),
-                change_lane_id: lane_id,
                 open_edit: RwLock::new(Weak::new()),
                 saved_edits: RwLock::new(Vec::new()),
                 redo_edits: RwLock::new(Vec::new()),
@@ -5213,18 +5209,18 @@ pub mod vcs {
             Ok(new_alt_id)
         }
 
-        /// @emoji 🟢 Open a new unsaved [`Edit`] on `change_lane_id` (SDL unsavedChanges lane).
-        pub async fn open_transaction(self: &Arc<Self>, change_lane_id: &Id) -> Arc<Edit> {
+        /// @emoji 🟢 Open a new unsaved [`Edit`] on `workspace_id` (SDL `unsavedChanges`).
+        pub async fn open_transaction(self: &Arc<Self>, workspace_id: &Id) -> Arc<Edit> {
             let tx_id = Id::new().await;
-            if self.is_main_lane(change_lane_id).await {
-                let _ = self.ensure_default_seed_state().await;
-                let seq = self.main_unsaved_edits.read().await.len() as i32;
-                let tx = Edit::with_id(EditOwner::Main(Arc::downgrade(self)), tx_id, seq).await;
-                self.main_unsaved_edits.write().await.push(tx.clone());
-                *self.main_open_edit.write().await = Arc::downgrade(&tx);
+            if self.workspace_is_the_kit(workspace_id).await {
+                let _ = self.ensure_default_checkpoint_for_the_kit().await;
+                let seq = self.the_kit_unsaved_edits.read().await.len() as i32;
+                let tx = Edit::with_id(EditOwner::TheKit(Arc::downgrade(self)), tx_id, seq).await;
+                self.the_kit_unsaved_edits.write().await.push(tx.clone());
+                *self.the_kit_open_edit.write().await = Arc::downgrade(&tx);
                 return tx;
             }
-            let alt = self.alternative_for_lane(change_lane_id).await.expect("ChangeLane not found for open_transaction");
+            let alt = self.workspace_alternative(workspace_id).await.expect("Workspace not found for open_transaction");
             let seq = alt.unsaved_edits.read().await.len() as i32;
             let tx = Edit::with_id(EditOwner::Alternative(Arc::downgrade(&alt)), tx_id, seq).await;
             alt.unsaved_edits.write().await.push(tx.clone());
@@ -5232,24 +5228,24 @@ pub mod vcs {
             tx
         }
 
-        /// @emoji ✅ Commit an unsaved edit: move it from unsaved to saved list on the lane.
-        pub async fn commit_transaction(self: &Arc<Self>, change_lane_id: &Id, edit_id: &Id) -> Result<(), SemioError> {
-            if self.is_main_lane(change_lane_id).await {
+        /// @emoji ✅ Commit an unsaved [`Edit`]: move it from `unsavedChanges` to `savedChanges` on that [`Workspace`](../../graphql/target.schema.graphql).
+        pub async fn commit_transaction(self: &Arc<Self>, workspace_id: &Id, edit_id: &Id) -> Result<(), SemioError> {
+            if self.workspace_is_the_kit(workspace_id).await {
                 let tx = {
-                    let mut txs = self.main_unsaved_edits.write().await;
+                    let mut txs = self.the_kit_unsaved_edits.write().await;
                     let pos = txs.iter().position(|t| &t.id == edit_id).ok_or_else(|| SemioError::not_found("Edit", edit_id.as_str()))?;
                     txs.remove(pos)
                 };
-                self.main_saved_edits.write().await.push(tx);
-                let open = self.main_open_edit.read().await.upgrade();
+                self.the_kit_saved_edits.write().await.push(tx);
+                let open = self.the_kit_open_edit.read().await.upgrade();
                 if let Some(open_tx) = open {
                     if &open_tx.id == edit_id {
-                        *self.main_open_edit.write().await = std::sync::Weak::new();
+                        *self.the_kit_open_edit.write().await = std::sync::Weak::new();
                     }
                 }
                 return Ok(());
             }
-            let alt = self.alternative_for_lane(change_lane_id).await.ok_or_else(|| SemioError::not_found("ChangeLane", change_lane_id.as_str()))?;
+            let alt = self.workspace_alternative(workspace_id).await.ok_or_else(|| SemioError::not_found("Workspace", workspace_id.as_str()))?;
             let tx = {
                 let mut txs = alt.unsaved_edits.write().await;
                 let pos = txs.iter().position(|t| &t.id == edit_id).ok_or_else(|| SemioError::not_found("Edit", edit_id.as_str()))?;
@@ -5265,25 +5261,25 @@ pub mod vcs {
             Ok(())
         }
 
-        /// @emoji ⛔ Drop an unsaved edit from the lane.
-        pub async fn abort_transaction(self: &Arc<Self>, change_lane_id: &Id, edit_id: &Id) -> Result<(), SemioError> {
-            if self.is_main_lane(change_lane_id).await {
+        /// @emoji ⛔ Drop an unsaved [`Edit`] from `unsavedChanges` on that [`Workspace`](../../graphql/target.schema.graphql).
+        pub async fn abort_transaction(self: &Arc<Self>, workspace_id: &Id, edit_id: &Id) -> Result<(), SemioError> {
+            if self.workspace_is_the_kit(workspace_id).await {
                 {
-                    let mut txs = self.main_unsaved_edits.write().await;
+                    let mut txs = self.the_kit_unsaved_edits.write().await;
                     let pos = txs.iter().position(|t| &t.id == edit_id).ok_or_else(|| SemioError::not_found("Edit", edit_id.as_str()))?;
                     txs.remove(pos);
                 }
-                let open = self.main_open_edit.read().await.upgrade();
+                let open = self.the_kit_open_edit.read().await.upgrade();
                 if let Some(open_tx) = open {
                     if &open_tx.id == edit_id {
-                        *self.main_open_edit.write().await = std::sync::Weak::new();
+                        *self.the_kit_open_edit.write().await = std::sync::Weak::new();
                     }
                 }
-                self.main_change_seq.fetch_add(1, Ordering::Relaxed);
+                self.the_kit_workspace_seq.fetch_add(1, Ordering::Relaxed);
                 self.invalidate_materialized_cache().await;
                 return Ok(());
             }
-            let alt = self.alternative_for_lane(change_lane_id).await.ok_or_else(|| SemioError::not_found("ChangeLane", change_lane_id.as_str()))?;
+            let alt = self.workspace_alternative(workspace_id).await.ok_or_else(|| SemioError::not_found("Workspace", workspace_id.as_str()))?;
             {
                 let mut txs = alt.unsaved_edits.write().await;
                 let pos = txs.iter().position(|t| &t.id == edit_id).ok_or_else(|| SemioError::not_found("Edit", edit_id.as_str()))?;
@@ -5300,7 +5296,7 @@ pub mod vcs {
             Ok(())
         }
 
-        /// @emoji 📍 Materialized [`Kit`] at a readable anchor (main line, checkpoint root, alternative).
+        /// @emoji 📍 Materialized [`Kit`] at a [`KitReadPointInput`] anchor ([`TheKit`](../../graphql/target.schema.graphql), [`Checkpoint`](../../graphql/target.schema.graphql), [`Alternative`](../../graphql/target.schema.graphql)).
         pub async fn materialized_kit_at_point(self: &Arc<Self>, p: KitReadPointInput) -> Result<Arc<Kit>, SemioError> {
             if p.the_kit == Some(true) {
                 return Ok(self.materialized_head_kit().await);
@@ -5314,11 +5310,11 @@ pub mod vcs {
             if let Some(aid) = p.alternative_id.clone() {
                 let alts = self.alternatives.read().await;
                 let alt = alts.iter().find(|a| a.id == aid).cloned().ok_or_else(|| SemioError::not_found("Alternative", aid.as_str()))?;
-                return Ok(self.materialized_kit_for_change_lane(&alt.change_lane_id).await);
+                return Ok(self.materialized_kit_for_workspace(&alt.id).await);
             }
-            if let Some(did) = p.draft_id.clone() {
+            if let Some(did) = p.workspace_id.clone() {
                 let _ = (p.draft_alternative_id.clone(), p.draft_transaction_id.clone(), p.draft_operation_id.clone(), p.draft_change_id.clone());
-                return Ok(self.materialized_kit_for_change_lane(&did).await);
+                return Ok(self.materialized_kit_for_workspace(&did).await);
             }
             Ok(self.materialized_head_kit().await)
         }
@@ -5326,7 +5322,7 @@ pub mod vcs {
         /// @emoji 🔧 Apply `createFixedPiece` via [`Graph::record_operation_in_open_transaction`] (tests / golden replay).
         pub async fn apply_create_fixed_piece(
             self: &Arc<Self>,
-            change_lane_id: Id,
+            workspace_id: Id,
             edit_id: Id,
             design_id: Id,
             blueprint_id: Id,
@@ -5339,15 +5335,15 @@ pub mod vcs {
                 scope: crate::operation::Scope::CreateFixedPiece { design_id: design_id.clone(), piece_id: piece_id.clone(), blueprint_id, attribute_ids: Vec::new() },
                 input: crate::operation::Input::FixedPiece { position, name, description },
             };
-            let before = self.materialized_kit_for_change_lane(&change_lane_id).await;
+            let before = self.materialized_kit_for_workspace(&workspace_id).await;
             let backwards = forward.to_backwards(&before).await?;
-            self.record_operation_in_open_transaction(&change_lane_id, &edit_id, forward, backwards).await?;
-            let after = self.materialized_kit_for_change_lane(&change_lane_id).await;
+            self.record_operation_in_open_transaction(&workspace_id, &edit_id, forward, backwards).await?;
+            let after = self.materialized_kit_for_workspace(&workspace_id).await;
             let piece = after.design_by_external_id(&design_id).await.ok_or_else(|| SemioError::not_found("Design", design_id.as_str()))?.piece_by_external_id(&piece_id).await.ok_or_else(|| SemioError::not_found("Piece", piece_id.as_str()))?;
             Ok((piece,))
         }
 
-        /// 🛰️ WIP bootstrap: hydrate [`Graph::parent_root_for_active_draft`] from initial kit projection JSON via [`crate::kit_backbone::graph_new_overlay_from_initial_projection_json`].
+        /// 🛰️ WIP bootstrap: hydrate [`Graph::mutable_kit_root`] from initial kit projection JSON via [`crate::kit_backbone::graph_new_overlay_from_initial_projection_json`].
         pub async fn new_overlay_from_initial_kit_projection_json(json: serde_json::Value) -> Result<Arc<Self>, SemioError> {
             crate::kit_backbone::graph_new_overlay_from_initial_projection_json(json).await
         }
@@ -5607,7 +5603,7 @@ pub mod interface {
             if &g.id == id {
                 return Some(GqlNode::Graph(g.clone()));
             }
-            let kit = g.parent_root_for_active_draft.read().await.clone();
+            let kit = g.mutable_kit_root.read().await.clone();
             let kid = kit.workspace_kit_id().await;
             if id == &kid || id == &kit.id {
                 return Some(GqlNode::Kit(kit.clone()));
@@ -5652,7 +5648,7 @@ pub mod interface {
     /// @emoji 📍 Resolve `pieceInDesign` on the WIP graph line.
     pub async fn piece_in_design_on_wip(rt: &crate::worker::ParentStore, design_id: &Id, piece_id: &Id) -> Option<Arc<Piece>> {
         let g = &rt.wip_graph;
-        let kit = g.parent_root_for_active_draft.read().await.clone();
+        let kit = g.mutable_kit_root.read().await.clone();
         let des = kit.design_by_external_id(design_id).await?;
         des.piece_by_external_id(piece_id).await
     }
@@ -7492,7 +7488,7 @@ pub mod operation {
     /// 📡 Internal command envelope passed parent → child runtime over the work queue.
     #[derive(Clone, Debug)]
     pub enum Command {
-        ApplyOperation { request_id: Id, draft_id: Id, transaction_id: Id, operation: Operation },
+        ApplyOperation { request_id: Id, workspace_id: Id, transaction_id: Id, operation: Operation },
         BackboneAttach { request_id: Id, connection_uri: String },
         BackboneDetach { request_id: Id, connection_uri: String },
     }
@@ -7692,8 +7688,8 @@ pub mod kit_graph_engine {
     }
 
     /// @emoji 🧩 Record one forward [`Operation`] (plus backwards) on `graph` and return deterministic projection metadata.
-    pub async fn apply_kit_operation(graph: &Arc<Graph>, draft_id: &Id, transaction_id: &Id, operation: Operation) -> Result<AppliedOperation, SemioError> {
-        let lane = graph.resolve_change_lane_ref(draft_id).await;
+    pub async fn apply_kit_operation(graph: &Arc<Graph>, workspace_id: &Id, transaction_id: &Id, operation: Operation) -> Result<AppliedOperation, SemioError> {
+        let ws = graph.resolve_workspace_id(workspace_id).await;
         let op_kind = operation.kind();
         let payload_digest = operation.stable_payload_digest();
         let created_piece_ids = match &operation {
@@ -7703,10 +7699,10 @@ pub mod kit_graph_engine {
             },
             _ => None,
         };
-        let before = graph.materialized_kit_for_change_lane(&lane).await;
+        let before = graph.materialized_kit_for_workspace(&ws).await;
         let backwards = operation.to_backwards(&before).await?;
-        graph.record_operation_in_open_transaction(&lane, transaction_id, operation, backwards).await?;
-        let after = graph.materialized_kit_for_change_lane(&lane).await;
+        graph.record_operation_in_open_transaction(&ws, transaction_id, operation, backwards).await?;
+        let after = graph.materialized_kit_for_workspace(&ws).await;
         let fp_before = projection_fingerprint_for_kit(before.as_ref()).await;
         let fp_after = projection_fingerprint_for_kit(after.as_ref()).await;
         let diff = deterministic__diff(op_kind, &payload_digest, &fp_before, &fp_after);
@@ -8643,7 +8639,7 @@ pub mod kit_backbone {
     pub async fn graph_new_overlay_from_initial_projection_json(json: serde_json::Value) -> Result<std::sync::Arc<crate::vcs::Graph>, crate::error::SemioError> {
         let g = crate::vcs::Graph::new().await;
         {
-            let mut slot = g.parent_root_for_active_draft.write().await;
+            let mut slot = g.mutable_kit_root.write().await;
             hydrate_kit_from_initial_projection_value(&*slot, &json).await?;
             if let Some(c) = json.get("createdAt").and_then(|v| v.as_str()) {
                 *slot.created.write().await = Some(crate::timestamp::Timestamp(c.to_string()));
@@ -8655,7 +8651,7 @@ pub mod kit_backbone {
             *slot = cloned;
         }
         {
-            let ini = g.parent_root_for_active_draft.read().await.deep_clone().await;
+            let ini = g.mutable_kit_root.read().await.deep_clone().await;
             *g.initial_kit.write().await = ini;
         }
         Ok(g)
@@ -8843,21 +8839,21 @@ pub mod kit_backbone {
             out
         }
 
-        fn push__operations_from_version_changes<'a>(out: &mut Vec<StoredOperation>, changes: impl Iterator<Item = &'a VersionChange>, fallback_draft_id: &str) {
+        fn push__operations_from_version_changes<'a>(out: &mut Vec<StoredOperation>, changes: impl Iterator<Item = &'a VersionChange>, fallback_workspace_id: &str) {
             for change in changes {
-                let draft_id = change.origin.clone().unwrap_or_else(|| fallback_draft_id.to_string());
+                let workspace_id = change.origin.clone().unwrap_or_else(|| fallback_workspace_id.to_string());
                 for edit in &change.edits.items {
                     for step in &edit.forwards.items {
-                        out.push(StoredOperation { draft_id: draft_id.clone(), transaction_id: change.id.clone(), kind: step.kind.clone(), input: step.input.clone(), kit_diff: step.kit_diff.clone() });
+                        out.push(StoredOperation { workspace_id: workspace_id.clone(), transaction_id: change.id.clone(), kind: step.kind.clone(), input: step.input.clone(), kit_diff: step.kit_diff.clone() });
                     }
                 }
             }
         }
 
-        /// @emoji 📸 Project one live change into a bundle edit; each step's `kitDiff` is computed from that op's `to_diff` against a scratch kit replayed to the same point as materialization.
+        /// @emoji 📸 Project one live change into a bundle edit; each step's `kitDiff` is computed from that op's `to_diff` against a [`Kit`] materialized for the same [`Workspace`](../../graphql/target.schema.graphql) / [`Edit`](../../graphql/target.schema.graphql) cursor as full materialization.
         async fn edit_from_runtime_change(
             graph: &std::sync::Arc<crate::vcs::Graph>,
-            change_lane_id: &crate::id::Id,
+            workspace_id: &crate::id::Id,
             tx: &std::sync::Arc<crate::vcs::Edit>,
             change_idx: usize,
             ch: &std::sync::Arc<crate::vcs::Change>,
@@ -8867,19 +8863,19 @@ pub mod kit_backbone {
             let mut backward_items: Vec<OperationStep> = Vec::new();
             let forwards_list = ch.forwards.read().await.clone();
             for (fi, op) in forwards_list.iter().enumerate() {
-                let scratch = graph.scratch_kit_before_forward_step(change_lane_id, tx, change_idx, fi).await;
-                let kit_diff = match op.to_diff(&scratch).await {
+                let kit_cursor = graph.kit_materialized_for_workspace_before_operation_step(workspace_id, tx, change_idx, fi).await;
+                let kit_diff = match op.to_diff(&kit_cursor).await {
                     Ok(d) => Some(crate::kit_backbone::canonical_kit_diff_to_wire_json(&d.0)),
                     Err(_) => None,
                 };
                 forward_items.push(OperationStep { id: Id::new().await.as_str().to_string(), hash: KIT_BUNDLE_HASH_STUB.to_string(), kind: op.kind().to_string(), description: None, input: kit_operation_step_input_json(op), kit_diff });
             }
-            let mut scratch_bw = graph.scratch_kit_before_forward_step(change_lane_id, tx, change_idx, forwards_list.len()).await;
+            let mut kit_bw = graph.kit_materialized_for_workspace_before_operation_step(workspace_id, tx, change_idx, forwards_list.len()).await;
             for op in ch.backwards.read().await.iter() {
-                let kit_diff = match op.to_diff(&scratch_bw).await {
+                let kit_diff = match op.to_diff(&kit_bw).await {
                     Ok(d) => {
                         let w = Some(crate::kit_backbone::canonical_kit_diff_to_wire_json(&d.0));
-                        let _ = scratch_bw.apply_diff(&d).await;
+                        let _ = kit_bw.apply_diff(&d).await;
                         w
                     }
                     Err(_) => None,
@@ -8900,10 +8896,10 @@ pub mod kit_backbone {
         }
 
         /// @emoji 📸 Project one live write session into a version change with edits.
-        async fn change_from_runtime_edit(graph: &std::sync::Arc<crate::vcs::Graph>, change_lane_id: &crate::id::Id, tx: &std::sync::Arc<crate::vcs::Edit>, saved: bool) -> VersionChange {
+        async fn change_from_runtime_edit(graph: &std::sync::Arc<crate::vcs::Graph>, workspace_id: &crate::id::Id, tx: &std::sync::Arc<crate::vcs::Edit>, saved: bool) -> VersionChange {
             let mut edits = Vec::new();
             for (idx, ch) in tx.changes.read().await.iter().enumerate() {
-                edits.push(Self::edit_from_runtime_change(graph, change_lane_id, tx, idx, ch, (idx + 1) as i32).await);
+                edits.push(Self::edit_from_runtime_change(graph, workspace_id, tx, idx, ch, (idx + 1) as i32).await);
             }
             VersionChange {
                 id: tx.id.as_str().to_string(),
@@ -8916,15 +8912,15 @@ pub mod kit_backbone {
             }
         }
 
-        async fn change_lists_from_lane(graph: &std::sync::Arc<crate::vcs::Graph>, change_lane_id: &crate::id::Id) -> (BlockHashedList<VersionChange>, BlockHashedList<VersionChange>) {
+        async fn change_lists_for_workspace(graph: &std::sync::Arc<crate::vcs::Graph>, workspace_id: &crate::id::Id) -> (BlockHashedList<VersionChange>, BlockHashedList<VersionChange>) {
             let mut saved = BlockHashedList::default();
             let mut unsaved = BlockHashedList::default();
-            if let Some((saved_edits, unsaved_edits)) = graph.lane_saved_and_unsaved_edits(change_lane_id).await {
+            if let Some((saved_edits, unsaved_edits)) = graph.workspace_saved_and_unsaved_edits(workspace_id).await {
                 for tx in saved_edits {
-                    saved.items.push(Self::change_from_runtime_edit(graph, change_lane_id, &tx, true).await);
+                    saved.items.push(Self::change_from_runtime_edit(graph, workspace_id, &tx, true).await);
                 }
                 for tx in unsaved_edits {
-                    unsaved.items.push(Self::change_from_runtime_edit(graph, change_lane_id, &tx, false).await);
+                    unsaved.items.push(Self::change_from_runtime_edit(graph, workspace_id, &tx, false).await);
                 }
             }
             (saved, unsaved)
@@ -8961,12 +8957,12 @@ pub mod kit_backbone {
                 }));
             }
 
-            let main_lane = g.ensure_default_seed_state().await;
-            let (saved, unsaved) = Self::change_lists_from_lane(&g, &main_lane).await;
+            g.ensure_default_checkpoint_for_the_kit().await;
+            let (saved, unsaved) = Self::change_lists_for_workspace(&g, &g.id).await;
             bundle.wip.the_kit.saved_changes.items.extend(saved.items);
             bundle.wip.the_kit.unsaved_changes.items.extend(unsaved.items);
             for alternative in graph.alternatives.read().await.iter() {
-                let (saved_changes, unsaved_changes) = Self::change_lists_from_lane(&g, &alternative.change_lane_id).await;
+                let (saved_changes, unsaved_changes) = Self::change_lists_for_workspace(&g, &alternative.id).await;
                 bundle.wip.alternatives.items.push(DevBackboneAltHead { id: alternative.id.as_str().to_string(), hash: KIT_BUNDLE_HASH_STUB.to_string(), name: alternative.name.read().await.clone(), saved_changes, unsaved_changes });
             }
 
@@ -9086,10 +9082,10 @@ pub mod kit_backbone {
             Self::merge_bundle_file_blobs_into_kit_json(&mut wip_root, &bundle.blobs.items);
             if !wip_root.is_null() && wip_root.is_object() {
                 {
-                    let w = graph.parent_root_for_active_draft.write().await;
+                    let w = graph.mutable_kit_root.write().await;
                     crate::kit_backbone::hydrate_kit_from_initial_projection_value(&*w, &wip_root).await?;
                 }
-                let ini = graph.parent_root_for_active_draft.read().await.deep_clone().await;
+                let ini = graph.mutable_kit_root.read().await.deep_clone().await;
                 *graph.initial_kit.write().await = ini;
             }
             Ok(bundle)
@@ -9171,7 +9167,7 @@ pub mod kit_backbone {
         pub fn from_stored__operations(operations: &[StoredOperation]) -> Self {
             let mut bundle = Self::template();
             for operation in operations {
-                bundle.append_unsaved_edit_with_origin(&operation.transaction_id, Some(operation.draft_id.clone()), &operation.kind, operation.input.clone(), operation.kit_diff.clone());
+                bundle.append_unsaved_edit_with_origin(&operation.transaction_id, Some(operation.workspace_id.clone()), &operation.kind, operation.input.clone(), operation.kit_diff.clone());
             }
             bundle
         }
@@ -9180,7 +9176,7 @@ pub mod kit_backbone {
     /// @emoji 📜 Internal value type used by replay + the SQLite local-`.semio/` path; not part of the on-disk dev-json wire format.
     #[derive(Clone, Debug)]
     pub struct StoredOperation {
-        pub draft_id: String,
+        pub workspace_id: String,
         pub transaction_id: String,
         pub kind: String,
         pub input: serde_json::Value,
@@ -9292,12 +9288,12 @@ CREATE TABLE IF NOT EXISTS conflict_stub (
 
     //#region 🔁 replay
     pub async fn replay_stored_operations(graph: &Arc<Graph>, operations: &[StoredOperation]) -> Result<(), SemioError> {
-        graph.parent_root_for_active_draft.read().await.clear_piece_projections_for_backbone_replay().await;
+        graph.mutable_kit_root.read().await.clear_piece_projections_for_backbone_replay().await;
         for operation in operations {
-            let draft_id = Id::from(operation.draft_id.as_str());
+            let workspace_id = Id::from(operation.workspace_id.as_str());
             let transaction_id = Id::from(operation.transaction_id.as_str());
             let op = kit_operation_from_stored(operation.kind.as_str(), &operation.input).await?;
-            crate::kit_graph_engine::apply_kit_operation(graph, &draft_id, &transaction_id, op).await?;
+            crate::kit_graph_engine::apply_kit_operation(graph, &workspace_id, &transaction_id, op).await?;
         }
         Ok(())
     }
@@ -9318,9 +9314,9 @@ CREATE TABLE IF NOT EXISTS conflict_stub (
         }
 
         /// @emoji ➕ Append a forward  operation step into the targeted unsaved version change and atomically rewrite the bundle.
-        pub fn append_operation(&mut self, draft_id: &Id, transaction_id: &Id, kind: &str, input: &serde_json::Value, kit_diff: Option<&serde_json::Value>) -> Result<(), SemioError> {
+        pub fn append_operation(&mut self, workspace_id: &Id, transaction_id: &Id, kind: &str, input: &serde_json::Value, kit_diff: Option<&serde_json::Value>) -> Result<(), SemioError> {
             let mut doc = self.read_bundle()?;
-            let _ = draft_id;
+            let _ = workspace_id;
             doc.append_unsaved_edit_with_origin(transaction_id.as_str(), None, kind, input.clone(), kit_diff.cloned());
             atomic_write_bundle(&self.path, &doc)
         }
@@ -9336,7 +9332,7 @@ CREATE TABLE IF NOT EXISTS conflict_stub (
 
     #[cfg(not(target_arch = "wasm32"))]
     impl LocalBackboneAttached {
-        pub fn append_operation(&mut self, draft_id: &Id, transaction_id: &Id, kind: &str, input: &serde_json::Value, kit_diff: Option<&serde_json::Value>) -> Result<(), SemioError> {
+        pub fn append_operation(&mut self, workspace_id: &Id, transaction_id: &Id, kind: &str, input: &serde_json::Value, kit_diff: Option<&serde_json::Value>) -> Result<(), SemioError> {
             let conn = Connection::open(&self.db_path).map_err(|e| SemioError::invalid(format!("sqlite append: {e}")))?;
             ensure_operation_log_kit_diff_json_column(&conn)?;
             let input_json = serde_json::to_string(input).map_err(|e| SemioError::invalid(e.to_string()))?;
@@ -9344,7 +9340,7 @@ CREATE TABLE IF NOT EXISTS conflict_stub (
                 Some(v) => Some(serde_json::to_string(v).map_err(|e| SemioError::invalid(e.to_string()))?),
                 None => None,
             };
-            conn.execute("INSERT INTO _operation_log (draft_id, transaction_id, kind, input_json, kit_diff_json) VALUES (?1, ?2, ?3, ?4, ?5)", rusqlite::params![draft_id.as_str(), transaction_id.as_str(), kind, input_json, kit_json])
+            conn.execute("INSERT INTO _operation_log (draft_id, transaction_id, kind, input_json, kit_diff_json) VALUES (?1, ?2, ?3, ?4, ?5)", rusqlite::params![workspace_id.as_str(), transaction_id.as_str(), kind, input_json, kit_json])
                 .map_err(|e| SemioError::invalid(format!("sqlite insert: {e}")))?;
             Ok(())
         }
@@ -9356,7 +9352,7 @@ CREATE TABLE IF NOT EXISTS conflict_stub (
             let mut entities = stmt.query([]).map_err(|e| SemioError::invalid(format!("sqlite query: {e}")))?;
             let mut out = Vec::new();
             while let Some(entity) = entities.next().map_err(|e| SemioError::invalid(format!("sqlite entity: {e}")))? {
-                let draft_id: String = entity.get(0).map_err(|e| SemioError::invalid(format!("sqlite col: {e}")))?;
+                let draft_id_col: String = entity.get(0).map_err(|e| SemioError::invalid(format!("sqlite col: {e}")))?;
                 let transaction_id: String = entity.get(1).map_err(|e| SemioError::invalid(format!("sqlite col: {e}")))?;
                 let kind: String = entity.get(2).map_err(|e| SemioError::invalid(format!("sqlite col: {e}")))?;
                 let input_json: String = entity.get(3).map_err(|e| SemioError::invalid(format!("sqlite col: {e}")))?;
@@ -9365,7 +9361,7 @@ CREATE TABLE IF NOT EXISTS conflict_stub (
                     Ok(Some(s)) if !s.is_empty() => Some(serde_json::from_str(&s).map_err(|e| SemioError::invalid(e.to_string()))?),
                     _ => None,
                 };
-                out.push(StoredOperation { draft_id, transaction_id, kind, input, kit_diff });
+                out.push(StoredOperation { workspace_id: draft_id_col, transaction_id, kind, input, kit_diff });
             }
             Ok(out)
         }
@@ -9407,10 +9403,10 @@ CREATE TABLE IF NOT EXISTS conflict_stub (
             replay_stored_operations(graph, &operations).await
         }
 
-        pub fn append__operation(&mut self, draft_id: &Id, transaction_id: &Id, kind: &str, input: &serde_json::Value, kit_diff: Option<&serde_json::Value>) -> Result<(), SemioError> {
+        pub fn append__operation(&mut self, workspace_id: &Id, transaction_id: &Id, kind: &str, input: &serde_json::Value, kit_diff: Option<&serde_json::Value>) -> Result<(), SemioError> {
             match self {
-                AttachedBackbone::Dev(d) => d.append_operation(draft_id, transaction_id, kind, input, kit_diff),
-                AttachedBackbone::Local(l) => l.append_operation(draft_id, transaction_id, kind, input, kit_diff),
+                AttachedBackbone::Dev(d) => d.append_operation(workspace_id, transaction_id, kind, input, kit_diff),
+                AttachedBackbone::Local(l) => l.append_operation(workspace_id, transaction_id, kind, input, kit_diff),
             }
         }
 
@@ -9430,7 +9426,7 @@ CREATE TABLE IF NOT EXISTS conflict_stub (
 
     /// @emoji 🧪 Build [`StoredOperation`] entities from `kit-store.golden.ops.semio.json` (US-001 fixture) for persistence tests.
     pub fn stored_operations_from_golden_operations_json(src: &serde_json::Value) -> Result<Vec<StoredOperation>, SemioError> {
-        let draft_id = src["draftId"].as_str().ok_or_else(|| SemioError::invalid("golden operations missing draftId"))?.to_string();
+        let workspace_id = src["draftId"].as_str().ok_or_else(|| SemioError::invalid("golden operations missing draftId"))?.to_string();
         let transaction_id = src["transactionId"].as_str().ok_or_else(|| SemioError::invalid("golden operations missing transactionId"))?.to_string();
         let arr = golden_operation_records_ref(src)?;
         let mut out = Vec::new();
@@ -9438,7 +9434,7 @@ CREATE TABLE IF NOT EXISTS conflict_stub (
             let kind = rec["kind"].as_str().ok_or_else(|| SemioError::invalid("operation.kind"))?;
             let input = rec.get("input").cloned().ok_or_else(|| SemioError::invalid("operation.input"))?;
             let kit_diff = rec.get("kitDiff").cloned();
-            out.push(StoredOperation { draft_id: draft_id.clone(), transaction_id: transaction_id.clone(), kind: kind.to_string(), input, kit_diff });
+            out.push(StoredOperation { workspace_id: workspace_id.clone(), transaction_id: transaction_id.clone(), kind: kind.to_string(), input, kit_diff });
         }
         Ok(out)
     }
@@ -9619,20 +9615,20 @@ pub mod worker {
             }
         }
 
-        pub async fn record_kit_operation_if_attached(&self, draft_id: &Id, transaction_id: &Id, operation: &crate::operation::Operation, kit_diff_wire: Option<serde_json::Value>) -> Result<(), SemioError> {
+        pub async fn record_kit_operation_if_attached(&self, workspace_id: &Id, transaction_id: &Id, operation: &crate::operation::Operation, kit_diff_wire: Option<serde_json::Value>) -> Result<(), SemioError> {
             #[cfg(not(target_arch = "wasm32"))]
             {
                 let mut guard = self.slot.write().await;
                 if let Some(backbone) = guard.as_mut() {
                     let payload = crate::kit_backbone::kit_operation_step_input_json(operation);
                     let kd = kit_diff_wire.as_ref();
-                    backbone.append__operation(draft_id, transaction_id, operation.kind(), &payload, kd)?;
+                    backbone.append__operation(workspace_id, transaction_id, operation.kind(), &payload, kd)?;
                 }
                 Ok(())
             }
             #[cfg(target_arch = "wasm32")]
             {
-                let _ = (draft_id, transaction_id, operation, kit_diff_wire);
+                let _ = (workspace_id, transaction_id, operation, kit_diff_wire);
                 Ok(())
             }
         }
@@ -9756,26 +9752,26 @@ pub mod worker {
 
         pub async fn apply(&self, cmd: Command) -> Result<(), SemioError> {
             match cmd {
-                Command::ApplyOperation { request_id, draft_id, transaction_id, operation } => self.apply_kit_operation(request_id, draft_id, transaction_id, operation).await,
+                Command::ApplyOperation { request_id, workspace_id, transaction_id, operation } => self.apply_kit_operation(request_id, workspace_id, transaction_id, operation).await,
                 Command::BackboneAttach { connection_uri, .. } => self.backbone.mount(&self.graph, self.label, &connection_uri).await,
                 Command::BackboneDetach { connection_uri, .. } => self.backbone.detach_matching(&connection_uri).await,
             }
         }
 
-        async fn apply_kit_operation(&self, request_id: Id, draft_id: Id, transaction_id: Id, operation: Operation) -> Result<(), SemioError> {
+        async fn apply_kit_operation(&self, request_id: Id, workspace_id: Id, transaction_id: Id, operation: Operation) -> Result<(), SemioError> {
             let graph = self.graph.clone();
-            let lane = graph.resolve_change_lane_ref(&draft_id).await;
-            let before_kit = graph.materialized_kit_for_change_lane(&lane).await;
+            let ws = graph.resolve_workspace_id(&workspace_id).await;
+            let before_kit = graph.materialized_kit_for_workspace(&ws).await;
             let kit_diff = operation.to_diff(&before_kit).await?;
             let backwards = operation.to_backwards(&before_kit).await?;
             let forward = operation.clone();
             let kit_wire = crate::kit_backbone::canonical_kit_diff_to_wire_json(&kit_diff.0);
-            graph.record_operation_in_open_transaction(&lane, &transaction_id, forward, backwards).await?;
-            self.backbone.record_kit_operation_if_attached(&draft_id, &transaction_id, &operation, Some(kit_wire)).await?;
-            let after_kit = graph.materialized_kit_for_change_lane(&lane).await;
+            graph.record_operation_in_open_transaction(&ws, &transaction_id, forward, backwards).await?;
+            self.backbone.record_kit_operation_if_attached(&workspace_id, &transaction_id, &operation, Some(kit_wire)).await?;
+            let after_kit = graph.materialized_kit_for_workspace(&ws).await;
 
             let tx_edit = graph
-                .lane_saved_and_unsaved_edits(&lane)
+                .workspace_saved_and_unsaved_edits(&ws)
                 .await
                 .and_then(|(s, u)| s.into_iter().chain(u).find(|t| t.id == transaction_id))
                 .ok_or_else(|| SemioError::not_found("Edit", transaction_id.as_str()))?;
@@ -9985,7 +9981,7 @@ pub mod gql {
     impl SessionCommand {
         async fn start(&self, ctx: &Context<'_>) -> async_graphql::Result<Id> {
             let rt = ctx.data::<Arc<ParentStore>>()?;
-            let _ = rt.wip_graph.ensure_default_seed_state().await;
+            let _ = rt.wip_graph.ensure_default_checkpoint_for_the_kit().await;
             Ok(rt.sessions.read().await.first().map(|s| s.id.clone()).ok_or_else(|| async_graphql::Error::new("no session"))?)
         }
 
@@ -10076,9 +10072,10 @@ pub mod gql {
         #[graphql(name = "startNewChange")]
         async fn start_new_change(&self, ctx: &Context<'_>) -> async_graphql::Result<Id> {
             let rt = ctx.data::<Arc<ParentStore>>()?;
-            let lane = rt.wip_graph.ensure_default_seed_state().await;
-            let tx = rt.wip_graph.open_transaction(&lane).await;
-            *rt.wip_kit_scope.write().await = Some((lane.clone(), tx.id.clone()));
+            rt.wip_graph.ensure_default_checkpoint_for_the_kit().await;
+            let ws = rt.wip_graph.id.clone();
+            let tx = rt.wip_graph.open_transaction(&ws).await;
+            *rt.wip_kit_scope.write().await = Some((ws, tx.id.clone()));
             Ok(tx.id.clone())
         }
 
@@ -10096,10 +10093,10 @@ pub mod gql {
         async fn save(&self, ctx: &Context<'_>) -> async_graphql::Result<Id> {
             let rt = ctx.data::<Arc<ParentStore>>()?;
             let scope = rt.wip_kit_scope.read().await.clone();
-            let Some((draft_id, tx_id)) = scope else {
+            let Some((workspace_id, tx_id)) = scope else {
                 return Err(async_graphql::Error::new("no active unsaved change"));
             };
-            rt.wip_graph.commit_transaction(&draft_id, &tx_id).await.map_err(|e| async_graphql::Error::new(e.to_string()))?;
+            rt.wip_graph.commit_transaction(&workspace_id, &tx_id).await.map_err(|e| async_graphql::Error::new(e.to_string()))?;
             *rt.wip_kit_scope.write().await = None;
             Ok(Id::new().await)
         }
@@ -10124,13 +10121,13 @@ pub mod gql {
         async fn save(&self, ctx: &Context<'_>) -> async_graphql::Result<Id> {
             let rt = ctx.data::<Arc<ParentStore>>()?;
             let scope = rt.wip_kit_scope.read().await.clone();
-            let Some((draft_id, tx_id)) = scope else {
+            let Some((workspace_id, tx_id)) = scope else {
                 return Err(async_graphql::Error::new("no active unsaved change"));
             };
             if tx_id != self.change_id {
                 return Err(async_graphql::Error::new("change id mismatch"));
             }
-            rt.wip_graph.commit_transaction(&draft_id, &tx_id).await.map_err(|e| async_graphql::Error::new(e.to_string()))?;
+            rt.wip_graph.commit_transaction(&workspace_id, &tx_id).await.map_err(|e| async_graphql::Error::new(e.to_string()))?;
             *rt.wip_kit_scope.write().await = None;
             Ok(Id::new().await)
         }
@@ -10163,12 +10160,12 @@ pub mod gql {
         #[graphql(name = "rename")]
         async fn rename(&self, ctx: &Context<'_>, #[graphql(name = "newName")] new_name: String) -> async_graphql::Result<Id> {
             let rt = ctx.data::<Arc<ParentStore>>()?;
-            let (draft_id, transaction_id) = rt.wip_kit_scope.read().await.clone().ok_or_else(|| async_graphql::Error::new("no active kit scope"))?;
+            let (workspace_id, transaction_id) = rt.wip_kit_scope.read().await.clone().ok_or_else(|| async_graphql::Error::new("no active kit scope"))?;
             if transaction_id != self.change_id {
                 return Err(async_graphql::Error::new("change id mismatch for kit operation"));
             }
             let request_id = Id::new().await;
-            let cmd = Command::ApplyOperation { request_id: request_id.clone(), draft_id, transaction_id, operation: crate::operation::Operation::RenameKit { scope: Scope::Kit, input: Input::Name { name: new_name } } };
+            let cmd = Command::ApplyOperation { request_id: request_id.clone(), workspace_id, transaction_id, operation: crate::operation::Operation::RenameKit { scope: Scope::Kit, input: Input::Name { name: new_name } } };
             Ok(rt.dispatch_wip(cmd).await)
         }
 
@@ -10181,7 +10178,7 @@ pub mod gql {
         #[graphql(name = "createTag")]
         async fn create_tag(&self, ctx: &Context<'_>, name: String, description: Option<String>, icon: Option<String>, order: Option<i32>) -> async_graphql::Result<Id> {
             let rt = ctx.data::<Arc<ParentStore>>()?;
-            let (draft_id, transaction_id) = rt.wip_kit_scope.read().await.clone().ok_or_else(|| async_graphql::Error::new("no active kit scope"))?;
+            let (workspace_id, transaction_id) = rt.wip_kit_scope.read().await.clone().ok_or_else(|| async_graphql::Error::new("no active kit scope"))?;
             if transaction_id != self.change_id {
                 return Err(async_graphql::Error::new("change id mismatch for kit operation"));
             }
@@ -10192,7 +10189,7 @@ pub mod gql {
             let tag = crate::meta::TagInput { name, description, icon, order, attributes: None };
             let cmd = Command::ApplyOperation {
                 request_id: request_id.clone(),
-                draft_id,
+                workspace_id,
                 transaction_id,
                 operation: crate::operation::Operation::CreateTag { scope: Scope::CreateTag { owner_id, tag_id: tag_id.clone(), attribute_ids: Vec::new() }, input: Input::Tag { tag } },
             };
@@ -10218,7 +10215,7 @@ pub mod gql {
         #[graphql(name = "createConcept")]
         async fn create_concept(&self, ctx: &Context<'_>, name: String, description: Option<String>, icon: Option<String>, order: Option<i32>) -> async_graphql::Result<Id> {
             let rt = ctx.data::<Arc<ParentStore>>()?;
-            let (draft_id, transaction_id) = rt.wip_kit_scope.read().await.clone().ok_or_else(|| async_graphql::Error::new("no active kit scope"))?;
+            let (workspace_id, transaction_id) = rt.wip_kit_scope.read().await.clone().ok_or_else(|| async_graphql::Error::new("no active kit scope"))?;
             if transaction_id != self.change_id {
                 return Err(async_graphql::Error::new("change id mismatch for kit operation"));
             }
@@ -10229,7 +10226,7 @@ pub mod gql {
             let concept = crate::meta::ConceptInput { name, description, icon, order, attributes: None };
             let cmd = Command::ApplyOperation {
                 request_id: request_id.clone(),
-                draft_id,
+                workspace_id,
                 transaction_id,
                 operation: crate::operation::Operation::CreateConcept { scope: Scope::CreateConcept { owner_id, concept_id: concept_id.clone(), attribute_ids: Vec::new() }, input: Input::Concept { concept } },
             };
@@ -10255,7 +10252,7 @@ pub mod gql {
         #[graphql(name = "createQuality")]
         async fn create_quality(&self, ctx: &Context<'_>, key: String, value: Option<String>, unit: Option<String>, definition: Option<String>, description: Option<String>, icon: Option<String>) -> async_graphql::Result<Id> {
             let rt = ctx.data::<Arc<ParentStore>>()?;
-            let (draft_id, transaction_id) = rt.wip_kit_scope.read().await.clone().ok_or_else(|| async_graphql::Error::new("no active kit scope"))?;
+            let (workspace_id, transaction_id) = rt.wip_kit_scope.read().await.clone().ok_or_else(|| async_graphql::Error::new("no active kit scope"))?;
             if transaction_id != self.change_id {
                 return Err(async_graphql::Error::new("change id mismatch for kit operation"));
             }
@@ -10266,7 +10263,7 @@ pub mod gql {
             let quality = crate::meta::QualityInput { key, value, unit, definition, description, icon, attributes: None };
             let cmd = Command::ApplyOperation {
                 request_id: request_id.clone(),
-                draft_id,
+                workspace_id,
                 transaction_id,
                 operation: crate::operation::Operation::CreateQuality { scope: Scope::CreateQuality { owner_id, quality_id: quality_id.clone(), attribute_ids: Vec::new(), benchmark_ids: Vec::new() }, input: Input::Quality { quality } },
             };
@@ -10630,7 +10627,7 @@ pub mod gql {
         #[graphql(name = "addFixedPiece")]
         async fn add_fixed_piece(&self, ctx: &Context<'_>, #[graphql(name = "blueprintId")] blueprint_id: Id, position: PositionInput, name: Option<String>, description: Option<String>) -> async_graphql::Result<Id> {
             let rt = ctx.data::<Arc<ParentStore>>()?;
-            let (draft_id, transaction_id) = rt.wip_kit_scope.read().await.clone().ok_or_else(|| async_graphql::Error::new("no active kit scope"))?;
+            let (workspace_id, transaction_id) = rt.wip_kit_scope.read().await.clone().ok_or_else(|| async_graphql::Error::new("no active kit scope"))?;
             if transaction_id != self.change_id {
                 return Err(async_graphql::Error::new("change id mismatch"));
             }
@@ -10638,7 +10635,7 @@ pub mod gql {
             let piece_id = Id::new().await;
             let cmd = Command::ApplyOperation {
                 request_id: request_id.clone(),
-                draft_id,
+                workspace_id,
                 transaction_id,
                 operation: crate::operation::Operation::CreateFixedPiece {
                     scope: Scope::CreateFixedPiece { design_id: self.design_id.clone(), piece_id, blueprint_id, attribute_ids: Vec::new() },
@@ -10722,14 +10719,14 @@ pub mod gql {
         }
         async fn drag(&self, ctx: &Context<'_>, offset: OffsetInput) -> async_graphql::Result<Id> {
             let rt = ctx.data::<Arc<ParentStore>>()?;
-            let (draft_id, transaction_id) = rt.wip_kit_scope.read().await.clone().ok_or_else(|| async_graphql::Error::new("no active kit scope"))?;
+            let (workspace_id, transaction_id) = rt.wip_kit_scope.read().await.clone().ok_or_else(|| async_graphql::Error::new("no active kit scope"))?;
             if transaction_id != self.change_id {
                 return Err(async_graphql::Error::new("change id mismatch"));
             }
             let request_id = Id::new().await;
             let cmd = Command::ApplyOperation {
                 request_id,
-                draft_id,
+                workspace_id,
                 transaction_id,
                 operation: crate::operation::Operation::DragPieceInDesign { scope: Scope::PieceInDesign { design_id: self.design_id.clone(), piece_id: self.piece_id.clone() }, input: Input::Offset { offset } },
             };
@@ -10775,14 +10772,14 @@ pub mod gql {
     impl PiecesOperationInput {
         async fn drag(&self, ctx: &Context<'_>, offset: OffsetInput) -> async_graphql::Result<Id> {
             let rt = ctx.data::<Arc<ParentStore>>()?;
-            let (draft_id, transaction_id) = rt.wip_kit_scope.read().await.clone().ok_or_else(|| async_graphql::Error::new("no active kit scope"))?;
+            let (workspace_id, transaction_id) = rt.wip_kit_scope.read().await.clone().ok_or_else(|| async_graphql::Error::new("no active kit scope"))?;
             if transaction_id != self.change_id {
                 return Err(async_graphql::Error::new("change id mismatch"));
             }
             let request_id = Id::new().await;
             let cmd = Command::ApplyOperation {
                 request_id,
-                draft_id,
+                workspace_id,
                 transaction_id,
                 operation: crate::operation::Operation::DragPiecesInDesign { scope: Scope::PiecesInDesign { design_id: self.design_id.clone(), piece_ids: self.piece_ids.clone() }, input: Input::Offset { offset } },
             };
@@ -11413,15 +11410,15 @@ mod tests {
         assert_eq!(count, 1, "expected exactly one canonical emit_event definition in lib.rs, found {}", count);
     }
 
-    /// 🛡️ [`crate::worker::ChildStore`] must record operations and rely on materialization replay (`Kit::apply_diff` inside `Graph::materialized_kit_for_change_lane`); it must not replace `parent_root_for_active_draft` or call `apply_diff` directly.
+    /// 🛡️ [`crate::worker::ChildStore`] must record operations and rely on materialization replay (`Kit::apply_diff` inside `Graph::materialized_kit_for_workspace`); it must not replace `mutable_kit_root` or call `apply_diff` directly.
     #[test]
     fn worker_child_runtime_guard_no_direct_root_or_apply_diff() {
         let src = include_str!("lib.rs");
         let i = src.find("impl ChildStore").expect("ChildStore impl");
         let j = src[i..].find("//#endregion 🧵 worker").expect("worker end marker") + i;
         let worker = &src[i..j];
-        assert!(!worker.contains("parent_root_for_active_draft.write()"), "ChildStore must not assign Graph::parent_root_for_active_draft");
-        assert!(!worker.contains("apply_diff"), "ChildStore must not call Kit::apply_diff; use record_operation_in_open_transaction + materialized_kit_for_change_lane");
+        assert!(!worker.contains("mutable_kit_root.write()"), "ChildStore must not assign Graph::mutable_kit_root");
+        assert!(!worker.contains("apply_diff"), "ChildStore must not call Kit::apply_diff; use record_operation_in_open_transaction + materialized_kit_for_workspace");
     }
 
     #[test]
@@ -11430,13 +11427,14 @@ mod tests {
         block_on(async {
             let rt = crate::worker::ParentStore::spawn().await;
             let g = rt.wip_graph.clone();
-            let lane_a = g.ensure_default_seed_state().await;
-            let tx_a = g.open_transaction(&lane_a).await;
+            g.ensure_default_checkpoint_for_the_kit().await;
+            let ws_a = g.id.clone();
+            let tx_a = g.open_transaction(&ws_a).await;
             let req = crate::id::Id::new().await;
             let _ = rt
                 .dispatch_wip(crate::operation::Command::ApplyOperation {
                     request_id: req,
-                    draft_id: lane_a.clone(),
+                    workspace_id: ws_a.clone(),
                     transaction_id: tx_a.id.clone(),
                     operation: crate::operation::Operation::RenameKit { scope: crate::operation::Scope::Kit, input: crate::operation::Input::Name { name: "Hello Bundle".into() } },
                 })
@@ -11461,7 +11459,7 @@ mod tests {
             let cp_initial = vr["store"]["wip"]["checkpoints"]["edges"][0]["node"]["initial"]["name"].as_str().expect("checkpoint.initial.name");
             assert_eq!(cp_initial, "the kit", "checkpoint.initial must not alias live rename");
 
-            g.abort_transaction(&lane_a, &tx_a.id).await.expect("abort");
+            g.abort_transaction(&ws_a, &tx_a.id).await.expect("abort");
             let res = schema_a.execute(q_baseline).await;
             assert!(res.errors.is_empty(), "baseline after abort: {:?}", res.errors);
             let vr = res.data.into_json().unwrap();
@@ -11469,12 +11467,12 @@ mod tests {
             assert_eq!(vr["store"]["wip"]["initialKit"]["name"].as_str(), Some("the kit"));
             assert_eq!(vr["store"]["wip"]["checkpoints"]["edges"][0]["node"]["initial"]["name"].as_str(), Some("the kit"));
 
-            let tx_a2 = g.open_transaction(&lane_a).await;
+            let tx_a2 = g.open_transaction(&ws_a).await;
             let req2 = crate::id::Id::new().await;
             let _ = rt
                 .dispatch_wip(crate::operation::Command::ApplyOperation {
                     request_id: req2,
-                    draft_id: lane_a.clone(),
+                    workspace_id: ws_a.clone(),
                     transaction_id: tx_a2.id.clone(),
                     operation: crate::operation::Operation::RenameKit { scope: crate::operation::Scope::Kit, input: crate::operation::Input::Name { name: "Hello Bundle".into() } },
                 })
@@ -11534,24 +11532,25 @@ mod tests {
         block_on(async {
             let rt = crate::worker::ParentStore::spawn().await;
             let g = &rt.wip_graph;
-            let lane = g.ensure_default_seed_state().await;
-            let tx_a = g.open_transaction(&lane).await;
-            assert_eq!(g.main_open_edit.read().await.upgrade().map(|t| t.id.clone()), Some(tx_a.id.clone()));
-            let ordered: Vec<crate::id::Id> = g.main_unsaved_edits.read().await.iter().map(|t| t.id.clone()).collect();
+            g.ensure_default_checkpoint_for_the_kit().await;
+            let workspace_id = g.id.clone();
+            let tx_a = g.open_transaction(&workspace_id).await;
+            assert_eq!(g.the_kit_open_edit.read().await.upgrade().map(|t| t.id.clone()), Some(tx_a.id.clone()));
+            let ordered: Vec<crate::id::Id> = g.the_kit_unsaved_edits.read().await.iter().map(|t| t.id.clone()).collect();
             assert_eq!(ordered, vec![tx_a.id.clone()]);
 
-            g.commit_transaction(&lane, &tx_a.id).await.expect("commit");
-            assert!(g.main_open_edit.read().await.upgrade().is_none());
-            assert!(g.main_unsaved_edits.read().await.is_empty());
-            assert_eq!(g.main_saved_edits.read().await.len(), 1);
+            g.commit_transaction(&workspace_id, &tx_a.id).await.expect("commit");
+            assert!(g.the_kit_open_edit.read().await.upgrade().is_none());
+            assert!(g.the_kit_unsaved_edits.read().await.is_empty());
+            assert_eq!(g.the_kit_saved_edits.read().await.len(), 1);
 
-            let tx_b = g.open_transaction(&lane).await;
-            g.abort_transaction(&lane, &tx_b.id).await.expect("abort");
-            assert!(g.main_open_edit.read().await.upgrade().is_none());
-            assert!(g.main_unsaved_edits.read().await.is_empty());
+            let tx_b = g.open_transaction(&workspace_id).await;
+            g.abort_transaction(&workspace_id, &tx_b.id).await.expect("abort");
+            assert!(g.the_kit_open_edit.read().await.upgrade().is_none());
+            assert!(g.the_kit_unsaved_edits.read().await.is_empty());
 
-            assert!(g.commit_transaction(&lane, &crate::id::Id::from("missing")).await.is_err());
-            assert!(g.abort_transaction(&crate::id::Id::from("missing-lane"), &tx_b.id).await.is_err());
+            assert!(g.commit_transaction(&workspace_id, &crate::id::Id::from("missing")).await.is_err());
+            assert!(g.abort_transaction(&crate::id::Id::from("missing-workspace"), &tx_b.id).await.is_err());
         });
     }
 
@@ -11719,14 +11718,15 @@ mod tests {
             let rt = crate::worker::ParentStore::spawn().await;
             let schema = crate::gql::build_schema_for(rt.clone());
 
-            let draft = rt.wip_graph.ensure_default_seed_state().await;
-            let tx = rt.wip_graph.open_transaction(&draft.id).await;
+            rt.wip_graph.ensure_default_checkpoint_for_the_kit().await;
+            let workspace_id = rt.wip_graph.id.clone();
+            let tx = rt.wip_graph.open_transaction(&workspace_id).await;
 
             // Insert two pieces directly via the wip graph (no GraphQL plumbing).
             let position = crate::geom::PositionInput::default();
             let blueprint_id = crate::id::Id::new().await;
-            let p1 = rt.wip_graph.apply_create_fixed_piece(draft.id.clone(), tx.id.clone(), crate::id::Id::from("des1"), blueprint_id.clone(), position, None, None).await.expect("insert piece 1").0;
-            let _p2 = rt.wip_graph.apply_create_fixed_piece(draft.id.clone(), tx.id.clone(), crate::id::Id::from("des1"), blueprint_id, position, None, None).await.expect("insert piece 2").0;
+            let p1 = rt.wip_graph.apply_create_fixed_piece(workspace_id.clone(), tx.id.clone(), crate::id::Id::from("des1"), blueprint_id.clone(), position, None, None).await.expect("insert piece 1").0;
+            let _p2 = rt.wip_graph.apply_create_fixed_piece(workspace_id.clone(), tx.id.clone(), crate::id::Id::from("des1"), blueprint_id, position, None, None).await.expect("insert piece 2").0;
 
             // Baseline strong count for p1: held by the design's pieces Vec + our local handle = 2.
             let baseline = Arc::strong_count(&p1);
@@ -11788,7 +11788,7 @@ mod tests {
             let exp: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(path_exp).expect("read kit-store.golden.expected")).expect("parse expected");
 
             let g = crate::vcs::Graph::new().await;
-            let draft_id = crate::id::Id::from(ops_json["draftId"].as_str().expect("draftId"));
+            let workspace_id = crate::id::Id::from(ops_json["draftId"].as_str().expect("draftId"));
             let tx_id = crate::id::Id::from(ops_json["transactionId"].as_str().expect("transactionId"));
             let golden_ops = crate::kit_backbone::golden_operation_records_ref(&ops_json).expect("operations|ops");
             for rec in golden_ops {
@@ -11801,14 +11801,14 @@ mod tests {
                         let position = crate::kit_backbone::position_input_from_json(&input["position"]).expect("position from golden json");
                         let name = input.get("name").and_then(|v| v.as_str()).map(|s| s.to_string());
                         let description = input.get("description").and_then(|v| v.as_str()).map(|s| s.to_string());
-                        g.apply_create_fixed_piece(draft_id.clone(), tx_id.clone(), design_id, blueprint_id, position, name, description).await.expect("apply createFixedPiece");
+                        g.apply_create_fixed_piece(workspace_id.clone(), tx_id.clone(), design_id, blueprint_id, position, name, description).await.expect("apply createFixedPiece");
                     }
                     other => panic!("unsupported golden operation kind: {other}"),
                 }
             }
 
             let inv = &exp["invariants"];
-            let kit = g.materialized_kit_for_change_lane(&draft_id).await;
+            let kit = g.materialized_kit_for_workspace(&workspace_id).await;
             let ds = kit.designs.read().await;
             assert_eq!(ds.len(), inv["designCount"].as_u64().expect("designCount") as usize, "designCount");
             let mut total = 0usize;
@@ -11831,7 +11831,7 @@ mod tests {
                 assert!((got[1] - want[1]).abs() < 1e-9, "center v");
             }
 
-            let fp = stable_projection_fingerprint(&g.materialized_kit_for_change_lane(&draft_id).await).await;
+            let fp = stable_projection_fingerprint(&g.materialized_kit_for_workspace(&workspace_id).await).await;
             let exp_fp = exp["projectionFingerprint"].as_str().expect("projectionFingerprint in kit-store.golden.expected.semio.json");
             assert_eq!(fp, exp_fp, "projectionFingerprint");
         });
@@ -11847,19 +11847,19 @@ mod tests {
             let exp: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(path_exp).expect("read kit-store.golden.expected")).expect("parse expected");
 
             let g = crate::vcs::Graph::new().await;
-            let draft_id = crate::id::Id::from(ops_json["draftId"].as_str().expect("draftId"));
+            let workspace_id = crate::id::Id::from(ops_json["draftId"].as_str().expect("draftId"));
             let tx_id = crate::id::Id::from(ops_json["transactionId"].as_str().expect("transactionId"));
             let golden_ops = crate::kit_backbone::golden_operation_records_ref(&ops_json).expect("operations|ops");
             for rec in golden_ops {
                 let kind = rec["kind"].as_str().expect("operation kind");
                 let input = rec.get("input").expect("input");
                 let op = crate::kit_backbone::kit_operation_from_stored(kind, input).await.expect("kit_operation_from_stored");
-                let applied = crate::kit_graph_engine::apply_kit_operation(&g, &draft_id, &tx_id, op).await.expect("apply_kit_operation");
+                let applied = crate::kit_graph_engine::apply_kit_operation(&g, &workspace_id, &tx_id, op).await.expect("apply_kit_operation");
                 assert!(applied.created_piece.is_some(), "expected piece for {kind}");
                 assert!(applied.diff.summary.as_ref().map(|s| !s.is_empty()).unwrap_or(false), "diff summary");
             }
 
-            let fp = stable_projection_fingerprint(&g.materialized_kit_for_change_lane(&draft_id).await).await;
+            let fp = stable_projection_fingerprint(&g.materialized_kit_for_workspace(&workspace_id).await).await;
             let exp_fp = exp["projectionFingerprint"].as_str().expect("projectionFingerprint");
             assert_eq!(fp, exp_fp, "projectionFingerprint via typed apply");
         });
@@ -11886,8 +11886,8 @@ mod tests {
             let g = crate::vcs::Graph::new().await;
             crate::kit_backbone::AttachedBackbone::mount_and_replay(&norm, "wip", &g).await.expect("dev json mount+replay");
 
-            let draft_id = crate::id::Id::from(golden_ops["draftId"].as_str().expect("draftId"));
-            let fp = stable_projection_fingerprint(&g.materialized_kit_for_change_lane(&draft_id).await).await;
+            let workspace_id = crate::id::Id::from(golden_ops["draftId"].as_str().expect("draftId"));
+            let fp = stable_projection_fingerprint(&g.materialized_kit_for_workspace(&workspace_id).await).await;
             let exp_fp = exp["projectionFingerprint"].as_str().expect("projectionFingerprint");
             assert_eq!(fp, exp_fp, "dev-json backbone replay must match US-001 golden fingerprint");
         });
@@ -11920,7 +11920,7 @@ mod tests {
                 let input_json = serde_json::to_string(&operation.input).expect("input json");
                 conn.execute(
                     "INSERT INTO _operation_log (draft_id, transaction_id, kind, input_json, kit_diff_json) VALUES (?1, ?2, ?3, ?4, ?5)",
-                    rusqlite::params![operation.draft_id, operation.transaction_id, operation.kind, input_json, operation.kit_diff.as_ref().map(|v| serde_json::to_string(v).expect("kit diff json"))],
+                    rusqlite::params![operation.workspace_id, operation.transaction_id, operation.kind, input_json, operation.kit_diff.as_ref().map(|v| serde_json::to_string(v).expect("kit diff json"))],
                 )
                 .expect("insert  operation entity");
             }
@@ -11929,8 +11929,8 @@ mod tests {
             let g2 = crate::vcs::Graph::new().await;
             crate::kit_backbone::AttachedBackbone::mount_and_replay(&norm, "wip", &g2).await.expect("replay wip.db");
 
-            let draft_id = crate::id::Id::from(golden_ops["draftId"].as_str().expect("draftId"));
-            let fp = stable_projection_fingerprint(&g2.materialized_kit_for_change_lane(&draft_id).await).await;
+            let workspace_id = crate::id::Id::from(golden_ops["draftId"].as_str().expect("draftId"));
+            let fp = stable_projection_fingerprint(&g2.materialized_kit_for_workspace(&workspace_id).await).await;
             let exp_fp = exp["projectionFingerprint"].as_str().expect("projectionFingerprint");
             assert_eq!(fp, exp_fp, "local .semio backbone replay must match US-001 golden fingerprint");
         });
@@ -12057,9 +12057,9 @@ mod tests {
 
             let g = crate::vcs::Graph::new().await;
             let mut bone = crate::kit_backbone::AttachedBackbone::mount_and_replay(&norm, "wip", &g).await.expect("mount empty bundle");
-            let draft_id = crate::id::Id::from("draft-rs-1");
+            let workspace_id = crate::id::Id::from("draft-rs-1");
             let tx_id = crate::id::Id::from("tx-rs-1");
-            bone.append__operation(&draft_id, &tx_id, "kit.design.piece.createdFixedPiece", &serde_json::json!({"designId": "d-1", "blueprintId": "b-1"}), None).expect("append operation");
+            bone.append__operation(&workspace_id, &tx_id, "kit.design.piece.createdFixedPiece", &serde_json::json!({"designId": "d-1", "blueprintId": "b-1"}), None).expect("append operation");
 
             let raw = std::fs::read_to_string(&path).expect("read on-disk bundle");
             let v: serde_json::Value = serde_json::from_str(&raw).expect("parse on-disk bundle");
@@ -12109,7 +12109,7 @@ mod tests {
         // Flatten replays everything in order from wip version changes.
         let flat = bundle.wip__operations();
         assert_eq!(flat.len(), 2);
-        assert_eq!(flat[0].draft_id, "the-kit");
+        assert_eq!(flat[0].workspace_id, "the-kit");
         assert_eq!(flat[0].transaction_id, "change-y");
         assert_eq!(flat[0].kind, "kit.design.piece.createdFixedPiece");
         assert_eq!(flat[1].kind, "kit.design.piece.deletedFixedPieces");
@@ -12117,7 +12117,7 @@ mod tests {
 
     #[cfg(not(target_arch = "wasm32"))]
     #[test]
-    fn kit_store_bundle_projects_alternative_version_change_lanes() {
+    fn kit_store_bundle_projects_alternative_workspace_changes() {
         block_on(async {
             let graph = crate::vcs::Graph::new().await;
             let alt_id = graph.create_alternative_from_tip("branch-a".to_string(), None).await.expect("alternative");
@@ -12138,7 +12138,7 @@ mod tests {
     fn normalized_kit_operation_create_tag_diff_and_backwards_use_scoped_ids() {
         block_on(async {
             let graph = crate::vcs::Graph::new().await;
-            let kit = graph.parent_root_for_active_draft.read().await.clone();
+            let kit = graph.mutable_kit_root.read().await.clone();
             let owner_id = kit.workspace_kit_id().await;
             let tag_id = crate::id::Id::from("tag-scope-1");
             let attribute_id = crate::id::Id::from("attr-scope-1");
@@ -12252,7 +12252,7 @@ mod tests {
     fn normalized_create_fixed_piece_replay_reuses_scoped_piece_id() {
         block_on(async {
             let graph = crate::vcs::Graph::new().await;
-            let draft_id = crate::id::Id::from("draft-scoped-1");
+            let workspace_id = crate::id::Id::from("draft-scoped-1");
             let operation = crate::operation::Operation::CreateFixedPiece {
                 scope: crate::operation::Scope::CreateFixedPiece {
                     design_id: crate::id::Id::from("design-scoped-1"),
@@ -12263,13 +12263,13 @@ mod tests {
                 input: crate::operation::Input::FixedPiece { position: crate::geom::PositionInput::default(), name: Some("Scoped Piece".to_string()), description: Some("Persisted with explicit scope ids".to_string()) },
             };
 
-            let applied = crate::kit_graph_engine::apply_kit_operation(&graph, &draft_id, &crate::id::Id::from("tx-scoped-1"), operation).await.expect("apply normalized createFixedPiece");
+            let applied = crate::kit_graph_engine::apply_kit_operation(&graph, &workspace_id, &crate::id::Id::from("tx-scoped-1"), operation).await.expect("apply normalized createFixedPiece");
 
             let piece = applied.created_piece.expect("created piece");
             assert_eq!(piece.id, crate::id::Id::from("piece-scoped-1"));
             assert_eq!(piece.name.read().await.clone().as_deref(), Some("Scoped Piece"));
 
-            let mat = graph.materialized_kit_for_change_lane(&draft_id).await;
+            let mat = graph.materialized_kit_for_workspace(&workspace_id).await;
             let design = mat.design_by_external_id(&crate::id::Id::from("design-scoped-1")).await.expect("design exists");
             assert!(design.piece_by_external_id(&crate::id::Id::from("piece-scoped-1")).await.is_some(), "piece should be addressable by scoped id");
         });
