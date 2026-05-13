@@ -1212,10 +1212,10 @@ pub mod gql_relay {
 
 //#endregion 🪢 gql_relay
 
-//#region 🩹 schema_gap_placeholders
+//#region 🩹 schema_gap_surfaces
 
-pub mod schema_gap_placeholders {
-    //! 🩹 SDL-only placeholder families for still-unwired golden declarations; registered into `Schema::sdl()` so the exported schema can reach the current target declaration set.
+pub mod schema_gap_surfaces {
+    //! 🩹 SDL-only synthetic relay surfaces for long-tail golden declarations; registered into `Schema::sdl()` so the exported schema reaches the current target declaration set.
 
     use std::sync::Arc;
 
@@ -1223,7 +1223,7 @@ pub mod schema_gap_placeholders {
 
     use crate::gql_relay::PageInfo;
 
-    macro_rules! gap_placeholder_family {
+    macro_rules! gap_surface_family {
         ($Name:ident) => {
             #[derive(Clone, Debug, Default, SimpleObject)]
             pub struct $Name {
@@ -1258,7 +1258,7 @@ pub mod schema_gap_placeholders {
         };
     }
 
-    macro_rules! gap_placeholder_family_named {
+    macro_rules! gap_surface_family_named {
         (
             $base_name:literal,
             $BaseRust:ident,
@@ -1301,7 +1301,7 @@ pub mod schema_gap_placeholders {
         };
     }
 
-    macro_rules! gap_placeholder_existing_relay {
+    macro_rules! gap_surface_existing_relay {
         ($Base:ident) => {
             paste::paste! {
                 #[derive(Clone, Debug, Default, SimpleObject)]
@@ -1331,19 +1331,19 @@ pub mod schema_gap_placeholders {
         };
     }
 
-    macro_rules! gap_placeholder_families {
+    macro_rules! gap_surface_families {
         ($($Name:ident),+ $(,)?) => {
-            $(gap_placeholder_family!($Name);)+
+            $(gap_surface_family!($Name);)+
         };
     }
 
-    macro_rules! gap_placeholder_existing_relays {
+    macro_rules! gap_surface_existing_relays {
         ($($Name:ident),+ $(,)?) => {
-            $(gap_placeholder_existing_relay!($Name);)+
+            $(gap_surface_existing_relay!($Name);)+
         };
     }
 
-    gap_placeholder_families!(
+    gap_surface_families!(
         AddedAttributeToConcept,
         AddedAttributeToDesign,
         AddedAttributeToDesignInput,
@@ -1542,7 +1542,7 @@ pub mod schema_gap_placeholders {
         UpdatedTypeIconInput
     );
 
-    gap_placeholder_family_named!(
+    gap_surface_family_named!(
         "ChangedDescriptionInput",
         GapChangedDescriptionInput,
         "ChangedDescriptionInputEdge",
@@ -1550,8 +1550,8 @@ pub mod schema_gap_placeholders {
         "ChangedDescriptionInputConnection",
         GapChangedDescriptionInputConnection
     );
-    gap_placeholder_family_named!("Clump", GapClump, "ClumpEdge", GapClumpEdge, "ClumpConnection", GapClumpConnection);
-    gap_placeholder_family_named!(
+    gap_surface_family_named!("Clump", GapClump, "ClumpEdge", GapClumpEdge, "ClumpConnection", GapClumpConnection);
+    gap_surface_family_named!(
         "CreatedFixedPieceInput",
         GapCreatedFixedPieceInput,
         "CreatedFixedPieceInputEdge",
@@ -1559,8 +1559,8 @@ pub mod schema_gap_placeholders {
         "CreatedFixedPieceInputConnection",
         GapCreatedFixedPieceInputConnection
     );
-    gap_placeholder_family_named!("DesignDiff", GapDesignDiff, "DesignDiffEdge", GapDesignDiffEdge, "DesignDiffConnection", GapDesignDiffConnection);
-    gap_placeholder_family_named!(
+    gap_surface_family_named!("DesignDiff", GapDesignDiff, "DesignDiffEdge", GapDesignDiffEdge, "DesignDiffConnection", GapDesignDiffConnection);
+    gap_surface_family_named!(
         "DraggedPieceInput",
         GapDraggedPieceInput,
         "DraggedPieceInputEdge",
@@ -1568,8 +1568,8 @@ pub mod schema_gap_placeholders {
         "DraggedPieceInputConnection",
         GapDraggedPieceInputConnection
     );
-    gap_placeholder_family_named!("KitDiff", GapKitDiff, "KitDiffEdge", GapKitDiffEdge, "KitDiffConnection", GapKitDiffConnection);
-    gap_placeholder_family_named!(
+    gap_surface_family_named!("KitDiff", GapKitDiff, "KitDiffEdge", GapKitDiffEdge, "KitDiffConnection", GapKitDiffConnection);
+    gap_surface_family_named!(
         "RenamedKitInput",
         GapRenamedKitInput,
         "RenamedKitInputEdge",
@@ -1577,9 +1577,9 @@ pub mod schema_gap_placeholders {
         "RenamedKitInputConnection",
         GapRenamedKitInputConnection
     );
-    gap_placeholder_family_named!("Version", GapVersion, "VersionEdge", GapVersionEdge, "VersionConnection", GapVersionConnection);
+    gap_surface_family_named!("Version", GapVersion, "VersionEdge", GapVersionEdge, "VersionConnection", GapVersionConnection);
 
-    gap_placeholder_existing_relays!(
+    gap_surface_existing_relays!(
         AddedAttributeToConceptInput,
         AddedAttributeToPortInput,
         AddedAttributeToQualityInput,
@@ -1633,7 +1633,7 @@ pub mod schema_gap_placeholders {
     );
 }
 
-//#endregion 🩹 schema_gap_placeholders
+//#endregion 🩹 schema_gap_surfaces
 
 //#region 🏷️ meta
 
@@ -3505,7 +3505,7 @@ pub mod kit {
     use std::collections::HashMap;
     use std::sync::{Arc, Weak};
 
-    use async_graphql::{Object, Union};
+    use async_graphql::Object;
     use async_lock::RwLock;
 
     use crate::hash::h;
@@ -4618,7 +4618,7 @@ pub mod vcs {
     use std::sync::atomic::{AtomicU64, Ordering};
     use std::sync::{Arc, Weak};
 
-    use async_graphql::{Context, InputObject, Object, Union};
+    use async_graphql::{Context, InputObject, Object};
     use async_lock::RwLock;
 
     use crate::error::SemioError;
@@ -5917,15 +5917,14 @@ pub mod vcs {
 pub mod interface {
     use std::sync::Arc;
 
-    use async_graphql::{Object, SimpleObject, Union};
+    use async_graphql::{Object, Union};
 
     use crate::geom::entity::{Coordinate, Location, Offset, Place, Plane, Point, Position, Vector};
-    use crate::hash::merkle_collection;
     use crate::id::Id;
     use crate::kit::design::piece::Piece;
     use crate::kit::design::Design;
     use crate::kit::Kit;
-    use crate::vcs::{Alternative, Checkpoint, Conflict, Edit, Graph, ReadVersion, Session, WriteVersion};
+    use crate::vcs::{Conflict, Graph, Session};
 
     #[derive(Clone, Union)]
     pub enum KitGraphNavNode {
@@ -6006,8 +6005,19 @@ pub mod interface {
         des.piece_by_external_id(piece_id).await
     }
 
-    /// @emoji 📍 `alternativePieceKind` stub (returns `None` until alternative graph model is wired).
-    pub async fn alternative_piece_kind(_rt: &crate::worker::ParentStore, _piece_id: &Id) -> Option<String> {
+    /// @emoji 📍 Resolve `alternativePieceKind` from the WIP kit: find the piece in any design and return the GraphQL `Blueprint` union tag (`Type` or `Design`).
+    pub async fn alternative_piece_kind(rt: &crate::worker::ParentStore, piece_id: &Id) -> Option<String> {
+        let kit = rt.wip_graph.mutable_kit.read().await.clone();
+        let designs = kit.designs.read().await;
+        for d in designs.iter() {
+            if let Some(p) = d.piece_by_external_id(piece_id).await {
+                let bp = p.blueprint.read().await.clone();
+                return Some(match bp {
+                    crate::kit::r#type::Blueprint::Type(_) => "Type".to_string(),
+                    crate::kit::r#type::Blueprint::Design(_) => "Design".to_string(),
+                });
+            }
+        }
         None
     }
 
@@ -6411,7 +6421,7 @@ pub mod operation {
     /// @emoji 📦 `files` / `folders` / `authors`: `None` omitted; `Some(false)` trivial; `Some(true)` means unsupported non-empty subtree.
     pub type KitAuxSubtree = Option<bool>;
 
-    /// @emoji 📦 Canonical sparse kit diff aligned with metabolism fixtures (typed collections; aux subtrees are tri-state placeholders).
+    /// @emoji 📦 Canonical sparse kit diff aligned with metabolism fixtures (typed collections; aux subtrees use tri-state `KitAuxSubtree` flags).
     #[derive(Clone, Debug, Default, PartialEq)]
     pub struct CanonicalKitDiff {
         pub name: Option<String>,
@@ -9184,7 +9194,7 @@ pub mod kit_backbone {
         pub kit_diff: Option<serde_json::Value>,
     }
 
-    /// @emoji 🌱 Empty `initialKit` projection placeholder until [`Kit`] emits a real metabolism-shaped snapshot.
+    /// @emoji 🌱 Empty `initialKit` JSON snapshot for fresh dev backbones until a full metabolism-shaped [`Kit`] snapshot is persisted.
     fn empty_initial_kit_value() -> serde_json::Value {
         serde_json::json!({
             "hash": KIT_BUNDLE_HASH_STUB,
@@ -9615,7 +9625,7 @@ CREATE TABLE IF NOT EXISTS _operation_log (
   input_json TEXT NOT NULL,
   kit_diff_json TEXT
 );
-CREATE TABLE IF NOT EXISTS conflict_stub (
+CREATE TABLE IF NOT EXISTS conflict_init_slot (
   id INTEGER PRIMARY KEY
 );
 "#;
@@ -9955,7 +9965,7 @@ pub mod worker {
     use crate::vcs::{Conflict, Graph, Session};
 
     //#region 🗄️ backbone slot
-    /// @emoji 🗄️ Per-child optional persistence tail: native disk backbones; wasm stub (attach returns `NotSupported`).
+    /// @emoji 🗄️ Per-child optional persistence tail: native disk backbones; wasm build returns `NotSupported` on attach.
     pub struct BackboneNativeCell {
         #[cfg(not(target_arch = "wasm32"))]
         slot: Arc<RwLock<Option<crate::kit_backbone::AttachedBackbone>>>,
@@ -10537,7 +10547,7 @@ pub mod gql {
             }
         }
 
-        /// @emoji 🧱 SDL `Modifications` — aggregate removed / live / added modifications (stub projection).
+        /// @emoji 🧱 SDL `Modifications` — aggregate removed / live / added modifications (minimal projection from live graph where wired).
         #[derive(Clone, Debug, Default)]
         pub struct Modifications {
             pub id: Id,
@@ -11607,8 +11617,8 @@ pub mod gql {
         crate::entity_relay!(LocationModificationsConnection, LocationModificationsEdge, Arc<LocationModifications>);
         //#endregion 🪢 golden_interface_relay
 
-        //#region 🧱 golden_interface_stubs
-        /// @emoji 🧷 SDL `EmptyDiff` — placeholder [`Diff`] implementor until geometry `*Diff` kinds wire into this enum.
+        //#region 🧱 golden_interface_minimals
+        /// @emoji 🧷 SDL `EmptyDiff` — minimal [`Diff`] implementor until geometry `*Diff` kinds wire into this enum.
         #[derive(Clone, Debug, Default)]
         pub struct GqlEmptyDiff {
             pub id: Id,
@@ -11630,7 +11640,7 @@ pub mod gql {
             }
         }
 
-        /// @emoji 🧷 SDL `EmptyModification` — placeholder [`Modification`] shell for golden `Operation.modification`.
+        /// @emoji 🧷 SDL `EmptyModification` — minimal [`Modification`] shell for golden `Operation.modification`.
         #[derive(Clone, Debug, Default)]
         pub struct EmptyModification {
             pub id: Id,
@@ -11667,12 +11677,12 @@ pub mod gql {
 
         static EMPTY_MODIFICATION_SINGLETON: OnceLock<Arc<EmptyModification>> = OnceLock::new();
 
-        /// @emoji 🧷 Shared [`EmptyModification`] for [`crate::operation::OperationInterface::modification`] stubs.
+        /// @emoji 🧷 Shared [`EmptyModification`] for [`crate::operation::OperationInterface::modification`] when no concrete modification is loaded.
         pub fn empty_modification_singleton() -> Arc<EmptyModification> {
             EMPTY_MODIFICATION_SINGLETON.get_or_init(|| Arc::new(EmptyModification { id: Id::default() })).clone()
         }
 
-        /// @emoji 🧷 SDL `EmptyPubInput` — placeholder [`Input`] implementor until `*Input` GraphQL types implement the interface.
+        /// @emoji 🧷 SDL `EmptyPubInput` — minimal [`Input`] implementor until `*Input` GraphQL types implement the interface.
         #[derive(Clone, Debug, Default)]
         pub struct EmptyPubInput {
             pub id: Id,
@@ -11694,7 +11704,7 @@ pub mod gql {
             }
         }
 
-        /// @emoji 🧷 SDL `EmptyDocument` — placeholder [`Document`] implementor (golden has no concrete `Document` yet).
+        /// @emoji 🧷 SDL `EmptyDocument` — minimal [`Document`] implementor (golden has no concrete `Document` yet).
         #[derive(Clone, Debug, Default)]
         pub struct EmptyDocument {
             pub id: Id,
@@ -11756,7 +11766,7 @@ pub mod gql {
             }
         }
 
-        /// @emoji 🧷 SDL `EmptyEvent` — placeholder [`Event`] implementor until concrete event kinds implement the interface.
+        /// @emoji 🧷 SDL `EmptyEvent` — minimal [`Event`] implementor until concrete event kinds implement the interface.
         #[derive(Clone, Debug, Default)]
         pub struct EmptyEvent {
             pub id: Id,
@@ -11784,7 +11794,7 @@ pub mod gql {
             }
         }
 
-        /// @emoji 🧷 SDL `EmptyRichStrong` — placeholder [`RichStrongEntity`] until every artifact exposes rich fields.
+        /// @emoji 🧷 SDL `EmptyRichStrong` — minimal [`RichStrongEntity`] until every artifact exposes rich fields.
         #[derive(Clone, Debug, Default)]
         pub struct EmptyRichStrong {
             pub id: Id,
@@ -11821,7 +11831,7 @@ pub mod gql {
             }
         }
 
-        /// @emoji 🧷 SDL `EmptyArtifact` — placeholder [`Artifact`] until concrete artifact fields are unified on entities.
+        /// @emoji 🧷 SDL `EmptyArtifact` — minimal [`Artifact`] until concrete artifact fields are unified on entities.
         #[derive(Clone, Debug, Default)]
         pub struct EmptyArtifact {
             pub id: Id,
@@ -11879,7 +11889,7 @@ pub mod gql {
             }
         }
 
-        /// @emoji 🌐 SDL `interface Diff` — hash-backed diff projection (placeholder + future `VectorDiff`, …).
+        /// @emoji 🌐 SDL `interface Diff` — hash-backed diff projection (`EmptyDiff` shell plus future `VectorDiff`, …).
         #[derive(Clone, Interface)]
         #[graphql(
             name = "Diff",
@@ -11935,7 +11945,7 @@ pub mod gql {
             Stub(Arc<EmptyPubInput>),
         }
 
-        /// @emoji 🌐 SDL `interface Document` — preview-capable artifact (`EmptyDocument` placeholder).
+        /// @emoji 🌐 SDL `interface Document` — preview-capable artifact (`EmptyDocument` minimal variant).
         #[derive(Clone, Interface)]
         #[graphql(
             name = "Document",
@@ -11961,7 +11971,7 @@ pub mod gql {
             Stub(Arc<EmptyDocument>),
         }
 
-        /// @emoji 🌐 SDL `interface Event` — timestamped weak entity (`EmptyEvent` placeholder).
+        /// @emoji 🌐 SDL `interface Event` — timestamped weak entity (`EmptyEvent` minimal variant).
         #[derive(Clone, Interface)]
         #[graphql(
             name = "Event",
@@ -11976,7 +11986,7 @@ pub mod gql {
             Stub(Arc<EmptyEvent>),
         }
 
-        /// @emoji 🌐 SDL `interface RichStrongEntity` — titled uuid entities (`EmptyRichStrong` placeholder + future concrete kinds).
+        /// @emoji 🌐 SDL `interface RichStrongEntity` — titled uuid entities (`EmptyRichStrong` minimal variant plus future concrete kinds).
         #[derive(Clone, Interface)]
         #[graphql(
             name = "RichStrongEntity",
@@ -11994,7 +12004,7 @@ pub mod gql {
             Stub(Arc<EmptyRichStrong>),
         }
 
-        /// @emoji 🌐 SDL `interface Artifact` — authored change graph on rich entities (`EmptyArtifact` placeholder).
+        /// @emoji 🌐 SDL `interface Artifact` — authored change graph on rich entities (`EmptyArtifact` minimal variant).
         #[derive(Clone, Interface)]
         #[graphql(
             name = "Artifact",
@@ -12104,7 +12114,7 @@ pub mod gql {
                 Id::new().await
             }
         }
-        //#endregion 🧱 golden_interface_stubs
+        //#endregion 🧱 golden_interface_minimals
 
         #[derive(Clone, Interface)]
         #[graphql(
@@ -12138,7 +12148,7 @@ pub mod gql {
         Online,
     }
 
-    /// @emoji 🗄️ Golden `FileBackbone` — disk-backed backbone shell (stub until native attach wires fields).
+    /// @emoji 🗄️ Golden `FileBackbone` — disk-backed backbone shell (fields fill in once native attach completes).
     pub struct FileBackbone {
         pub id: Id,
         pub uri: String,
@@ -12166,7 +12176,7 @@ pub mod gql {
         }
     }
 
-    /// @emoji 🌐 Golden `WebsocketBackbone` — websocket backbone shell (stub).
+    /// @emoji 🌐 Golden `WebsocketBackbone` — websocket backbone shell (status surfaces once transport is wired).
     pub struct WebsocketBackbone {
         pub id: Id,
         pub uri: String,
@@ -13369,7 +13379,7 @@ pub mod gql {
             }))
         }
 
-        /// @emoji 📡 Golden `Subscription.operation` — emits the latest WIP [`OperationInterface`] (placeholder selection until operation cursor wiring lands).
+        /// @emoji 📡 Golden `Subscription.operation` — emits the latest WIP [`OperationInterface`] (tracks `op_history` tail until finer-grained cursor wiring lands).
         async fn operation(&self, ctx: &Context<'_>) -> async_graphql::Result<OperationStream> {
             let rt = ctx.data::<Arc<ParentStore>>()?.clone();
             let bus = ctx.data::<Arc<EventBus>>()?.clone();
@@ -13585,260 +13595,260 @@ pub mod gql {
             .register_input_type::<crate::geom::PositionInput>()
             .register_input_type::<crate::geom::LocationInput>();
         builder
-            .register_output_type::<crate::schema_gap_placeholders::AddedAttributeToConceptConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::AddedAttributeToDesignConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::AddedAttributeToDesignInputConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::AddedAttributeToPieceConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::AddedAttributeToPieceInputConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::AddedAttributeToPortConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::AddedAttributeToQualityConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::AddedAttributeToTagConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::AddedAttributeToTypeConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::AddedAttributeToTypeInputConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::AddedAttributesToConceptConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::AddedAttributesToDesignConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::AddedAttributesToDesignInputConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::AddedAttributesToPieceConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::AddedAttributesToPieceInputConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::AddedAttributesToPortConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::AddedAttributesToQualityConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::AddedAttributesToTagConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::AddedAttributesToTypeConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::AddedAttributesToTypeInputConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::AddedChildPieceWithParentConnectionConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::AddedChildPieceWithParentConnectionInputConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::AddedChildPiecesWithParentConnectionsConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::AddedChildPiecesWithParentConnectionsInputConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::AddedConnectorConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::AddedConnectorInputConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::AddedConnectorsConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::AddedConnectorsInputConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::AddedHangingChildPieceWithParentConnectionInputConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::AddedHangingChildPieceWithParentConnectionConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::AddedHangingChildPiecesWithParentConnectionsConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::AddedHangingChildPiecesWithParentConnectionsInputConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::AttributeDiffConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::AttributeModificationConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::AttributeModificationsConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::AuthorDiffConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::AuthorModificationConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::AuthorModificationsConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::BenchmarkDiffConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::BenchmarkModificationConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::BenchmarkModificationsConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::ChangedPieceToTypeConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::ChangedPieceToTypeInputConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::ChangedPiecesToTypeConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::ChangedPiecesToTypeInputConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::ConceptDiffConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::ConceptModificationConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::ConceptModificationsConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::ConceptOperationConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::ConnectionDiffConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::ConnectionModificationConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::ConnectionModificationsConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::ConnectorDiffConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::ConnectorModificationConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::ConnectorModificationsConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::ConnectorOperationConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::CreatedConceptConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::CreatedConceptsConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::CreatedDesignConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::CreatedDesignInputConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::CreatedDesignsConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::CreatedDesignsInputConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::CreatedPortConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::CreatedPortsConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::CreatedQualitiesConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::CreatedQualityConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::CreatedTagConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::CreatedTagsConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::CreatedTypeConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::CreatedTypeInputConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::CreatedTypesConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::CreatedTypesInputConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::DeletedConceptConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::DeletedConceptsConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::DeletedDesignConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::DeletedDesignsConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::DeletedPieceConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::DeletedPiecesConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::DeletedPiecesAndConnectionsConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::DeletedPortConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::DeletedPortsConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::DeletedQualitiesConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::DeletedQualityConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::DeletedTagConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::DeletedTagsConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::DeletedTypeConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::DeletedTypesConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::DesignModificationConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::DesignModificationsConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::DesignOperationConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::DraggedPiecesConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::DraggedPiecesInputConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::FamilyDiffConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::FamilyModificationConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::FamilyModificationsConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::FileDiffConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::FileModificationConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::FileModificationsConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::FixedPiecesConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::FlattenedDesignConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::FolderDiffConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::FolderModificationConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::FolderModificationsConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::GroupDiffConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::GroupModificationConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::GroupModificationsConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::KitModificationConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::KitModificationsConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::KitOperationConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::LayerDiffConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::LayerModificationConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::LayerModificationsConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::MovedPieceConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::MovedPieceInputConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::MovedPiecesConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::MovedPiecesInputConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::PieceDiffConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::PieceModificationConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::PieceModificationsConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::PieceOperationConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::PiecesOperationConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::PlaceDiffConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::PlaceModificationConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::PlaceModificationsConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::PortDiffConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::PortModificationConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::PortModificationsConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::PortOperationConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::PropDiffConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::PropModificationConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::PropModificationsConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::QualityDiffConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::QualityModificationConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::QualityModificationsConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::QualityOperationConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::RemovedAttributeFromConceptConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::RemovedAttributeFromDesignConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::RemovedAttributeFromPieceConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::RemovedAttributeFromPortConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::RemovedAttributeFromQualityConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::RemovedAttributeFromTagConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::RemovedAttributeFromTypeConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::RemovedAttributesFromConceptConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::RemovedAttributesFromDesignConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::RemovedAttributesFromPieceConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::RemovedAttributesFromPortConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::RemovedAttributesFromQualityConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::RemovedAttributesFromTagConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::RemovedAttributesFromTypeConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::RemovedConnectorConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::RemovedConnectorsConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::RenamedConceptConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::RenamedConnectorConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::RenamedConnectorInputConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::RenamedPieceConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::RenamedPieceInputConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::RenamedPortConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::RenamedQualityConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::RenamedTagConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::RenamedTypeConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::RenamedTypeInputConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::RepresentationDiffConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::RepresentationModificationConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::RepresentationModificationsConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::SideDiffConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::SideModificationConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::SideModificationsConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::StatDiffConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::StatModificationConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::StatModificationsConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::TagDiffConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::TagModificationConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::TagModificationsConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::TagOperationConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::TypeDiffConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::TypeModificationConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::TypeModificationsConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::TypeOperationConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::UpdatedConceptDescriptionConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::UpdatedConceptIconConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::UpdatedConnectorDescriptionConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::UpdatedConnectorDescriptionInputConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::UpdatedConnectorIconConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::UpdatedConnectorIconInputConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::UpdatedPieceDescriptionConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::UpdatedPieceDescriptionInputConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::UpdatedPortDescriptionConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::UpdatedPortIconConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::UpdatedQualityDescriptionConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::UpdatedQualityIconConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::UpdatedTagDescriptionConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::UpdatedTagIconConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::UpdatedTypeDescriptionConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::UpdatedTypeDescriptionInputConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::UpdatedTypeIconConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::UpdatedTypeIconInputConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::GapChangedDescriptionInputConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::GapClumpConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::GapCreatedFixedPieceInputConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::GapDesignDiffConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::GapDraggedPieceInputConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::GapKitDiffConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::GapRenamedKitInputConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::GapVersionConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::AddedAttributeToConceptInputConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::AddedAttributeToPortInputConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::AddedAttributeToQualityInputConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::AddedAttributeToTagInputConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::AddedAttributesToConceptInputConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::AddedAttributesToPortInputConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::AddedAttributesToQualityInputConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::AddedAttributesToTagInputConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::AlternativeCommandConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::ChangedDescriptionConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::CreatedConceptInputConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::CreatedConceptsInputConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::CreatedFixedPieceConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::CreatedPortInputConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::CreatedPortsInputConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::CreatedQualitiesInputConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::CreatedQualityInputConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::CreatedTagInputConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::CreatedTagsInputConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::DraggedPieceConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::FileBackboneConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::FileBackboneCommandConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::FixedPieceConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::GraphConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::KitConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::LocalProviderCommandConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::PlaceConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::RemoteProviderCommandConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::RenamedConceptInputConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::RenamedKitConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::RenamedPortInputConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::RenamedQualityInputConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::RenamedTagInputConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::SessionConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::SessionCommandConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::SideConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::StoreCommandConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::TheKitConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::UnsavedChangeCommandConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::UpdatedConceptDescriptionInputConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::UpdatedConceptIconInputConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::UpdatedPortDescriptionInputConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::UpdatedPortIconInputConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::UpdatedQualityDescriptionInputConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::UpdatedQualityIconInputConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::UpdatedTagDescriptionInputConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::UpdatedTagIconInputConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::VersionCommandConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::WebsocketBackboneConnection>()
-            .register_output_type::<crate::schema_gap_placeholders::WebsocketBackboneCommandConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::AddedAttributeToConceptConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::AddedAttributeToDesignConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::AddedAttributeToDesignInputConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::AddedAttributeToPieceConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::AddedAttributeToPieceInputConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::AddedAttributeToPortConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::AddedAttributeToQualityConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::AddedAttributeToTagConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::AddedAttributeToTypeConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::AddedAttributeToTypeInputConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::AddedAttributesToConceptConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::AddedAttributesToDesignConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::AddedAttributesToDesignInputConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::AddedAttributesToPieceConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::AddedAttributesToPieceInputConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::AddedAttributesToPortConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::AddedAttributesToQualityConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::AddedAttributesToTagConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::AddedAttributesToTypeConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::AddedAttributesToTypeInputConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::AddedChildPieceWithParentConnectionConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::AddedChildPieceWithParentConnectionInputConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::AddedChildPiecesWithParentConnectionsConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::AddedChildPiecesWithParentConnectionsInputConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::AddedConnectorConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::AddedConnectorInputConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::AddedConnectorsConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::AddedConnectorsInputConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::AddedHangingChildPieceWithParentConnectionInputConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::AddedHangingChildPieceWithParentConnectionConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::AddedHangingChildPiecesWithParentConnectionsConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::AddedHangingChildPiecesWithParentConnectionsInputConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::AttributeDiffConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::AttributeModificationConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::AttributeModificationsConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::AuthorDiffConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::AuthorModificationConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::AuthorModificationsConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::BenchmarkDiffConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::BenchmarkModificationConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::BenchmarkModificationsConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::ChangedPieceToTypeConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::ChangedPieceToTypeInputConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::ChangedPiecesToTypeConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::ChangedPiecesToTypeInputConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::ConceptDiffConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::ConceptModificationConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::ConceptModificationsConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::ConceptOperationConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::ConnectionDiffConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::ConnectionModificationConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::ConnectionModificationsConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::ConnectorDiffConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::ConnectorModificationConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::ConnectorModificationsConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::ConnectorOperationConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::CreatedConceptConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::CreatedConceptsConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::CreatedDesignConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::CreatedDesignInputConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::CreatedDesignsConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::CreatedDesignsInputConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::CreatedPortConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::CreatedPortsConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::CreatedQualitiesConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::CreatedQualityConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::CreatedTagConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::CreatedTagsConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::CreatedTypeConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::CreatedTypeInputConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::CreatedTypesConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::CreatedTypesInputConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::DeletedConceptConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::DeletedConceptsConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::DeletedDesignConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::DeletedDesignsConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::DeletedPieceConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::DeletedPiecesConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::DeletedPiecesAndConnectionsConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::DeletedPortConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::DeletedPortsConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::DeletedQualitiesConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::DeletedQualityConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::DeletedTagConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::DeletedTagsConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::DeletedTypeConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::DeletedTypesConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::DesignModificationConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::DesignModificationsConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::DesignOperationConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::DraggedPiecesConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::DraggedPiecesInputConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::FamilyDiffConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::FamilyModificationConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::FamilyModificationsConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::FileDiffConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::FileModificationConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::FileModificationsConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::FixedPiecesConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::FlattenedDesignConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::FolderDiffConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::FolderModificationConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::FolderModificationsConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::GroupDiffConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::GroupModificationConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::GroupModificationsConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::KitModificationConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::KitModificationsConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::KitOperationConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::LayerDiffConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::LayerModificationConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::LayerModificationsConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::MovedPieceConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::MovedPieceInputConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::MovedPiecesConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::MovedPiecesInputConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::PieceDiffConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::PieceModificationConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::PieceModificationsConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::PieceOperationConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::PiecesOperationConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::PlaceDiffConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::PlaceModificationConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::PlaceModificationsConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::PortDiffConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::PortModificationConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::PortModificationsConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::PortOperationConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::PropDiffConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::PropModificationConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::PropModificationsConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::QualityDiffConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::QualityModificationConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::QualityModificationsConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::QualityOperationConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::RemovedAttributeFromConceptConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::RemovedAttributeFromDesignConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::RemovedAttributeFromPieceConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::RemovedAttributeFromPortConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::RemovedAttributeFromQualityConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::RemovedAttributeFromTagConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::RemovedAttributeFromTypeConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::RemovedAttributesFromConceptConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::RemovedAttributesFromDesignConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::RemovedAttributesFromPieceConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::RemovedAttributesFromPortConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::RemovedAttributesFromQualityConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::RemovedAttributesFromTagConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::RemovedAttributesFromTypeConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::RemovedConnectorConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::RemovedConnectorsConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::RenamedConceptConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::RenamedConnectorConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::RenamedConnectorInputConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::RenamedPieceConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::RenamedPieceInputConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::RenamedPortConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::RenamedQualityConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::RenamedTagConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::RenamedTypeConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::RenamedTypeInputConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::RepresentationDiffConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::RepresentationModificationConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::RepresentationModificationsConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::SideDiffConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::SideModificationConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::SideModificationsConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::StatDiffConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::StatModificationConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::StatModificationsConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::TagDiffConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::TagModificationConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::TagModificationsConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::TagOperationConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::TypeDiffConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::TypeModificationConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::TypeModificationsConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::TypeOperationConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::UpdatedConceptDescriptionConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::UpdatedConceptIconConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::UpdatedConnectorDescriptionConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::UpdatedConnectorDescriptionInputConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::UpdatedConnectorIconConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::UpdatedConnectorIconInputConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::UpdatedPieceDescriptionConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::UpdatedPieceDescriptionInputConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::UpdatedPortDescriptionConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::UpdatedPortIconConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::UpdatedQualityDescriptionConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::UpdatedQualityIconConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::UpdatedTagDescriptionConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::UpdatedTagIconConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::UpdatedTypeDescriptionConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::UpdatedTypeDescriptionInputConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::UpdatedTypeIconConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::UpdatedTypeIconInputConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::GapChangedDescriptionInputConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::GapClumpConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::GapCreatedFixedPieceInputConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::GapDesignDiffConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::GapDraggedPieceInputConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::GapKitDiffConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::GapRenamedKitInputConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::GapVersionConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::AddedAttributeToConceptInputConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::AddedAttributeToPortInputConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::AddedAttributeToQualityInputConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::AddedAttributeToTagInputConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::AddedAttributesToConceptInputConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::AddedAttributesToPortInputConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::AddedAttributesToQualityInputConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::AddedAttributesToTagInputConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::AlternativeCommandConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::ChangedDescriptionConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::CreatedConceptInputConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::CreatedConceptsInputConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::CreatedFixedPieceConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::CreatedPortInputConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::CreatedPortsInputConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::CreatedQualitiesInputConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::CreatedQualityInputConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::CreatedTagInputConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::CreatedTagsInputConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::DraggedPieceConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::FileBackboneConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::FileBackboneCommandConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::FixedPieceConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::GraphConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::KitConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::LocalProviderCommandConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::PlaceConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::RemoteProviderCommandConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::RenamedConceptInputConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::RenamedKitConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::RenamedPortInputConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::RenamedQualityInputConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::RenamedTagInputConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::SessionConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::SessionCommandConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::SideConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::StoreCommandConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::TheKitConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::UnsavedChangeCommandConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::UpdatedConceptDescriptionInputConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::UpdatedConceptIconInputConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::UpdatedPortDescriptionInputConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::UpdatedPortIconInputConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::UpdatedQualityDescriptionInputConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::UpdatedQualityIconInputConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::UpdatedTagDescriptionInputConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::UpdatedTagIconInputConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::VersionCommandConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::WebsocketBackboneConnection>()
+            .register_output_type::<crate::schema_gap_surfaces::WebsocketBackboneCommandConnection>()
             .finish()
     }
 
@@ -14025,7 +14035,7 @@ pub mod wasm_bridge {
         console_error_panic_hook::set_once();
     }
 
-    /// 🛰️ Boot stub (workers may call explicitly); runtime is rooted by [`KitStoreHandle`].
+    /// 🛰️ Wasm entry shim (workers may call explicitly); runtime is rooted by [`KitStoreHandle`].
     #[wasm_bindgen(js_name = boot)]
     pub fn boot() {}
 
@@ -14038,7 +14048,7 @@ pub mod wasm_bridge {
         })
     }
 
-    /// 🛰️ Boot the parent runtime inside the current (parent) web worker — placeholder for iframe hosts.
+    /// 🛰️ Boot the parent runtime inside the current (parent) web worker — no-op host hook until iframe wiring lands.
     #[wasm_bindgen(js_name = parent_boot)]
     pub fn parent_boot() -> js_sys::Promise {
         future_to_promise(async move {

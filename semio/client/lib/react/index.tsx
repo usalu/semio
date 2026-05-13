@@ -469,7 +469,7 @@ export type ActiveKitTabValue = Readonly<{ id: string }>;
 export const ActiveKitTabContext = React.createContext<ActiveKitTabValue | null>(null);
 
 /** @emoji 🧭 Binds the active tab kit id for sketchpad routing and machine events. */
-export function ActiveKitTabContextProvider(props: { kitTabId: string; children: ReactNode }): React.ReactElement {
+export function ActiveKitTabContextProvider(props: { kitTabId: string; children: React }): React.ReactElement {
   const v = React.useMemo<ActiveKitTabValue>(() => ({ id: props.kitTabId }), [props.kitTabId]);
   return React.createElement(ActiveKitTabContext.Provider, { value: v }, props.children);
 }
@@ -512,7 +512,7 @@ export function KitWasmMountProvider(props: KitWasmMountProviderProps): React.Re
 const KitAlternativeSelectionContext = React.createContext<Readonly<{ kitId: string }> | null>(null);
 
 /** @emoji 🌿 Local alternative selection scope for sketchpad footer (host VCS wiring may replace reads later). */
-export function KitAlternativeSelectionProvider(props: { kitId: string; children: ReactNode }): React.ReactElement {
+export function KitAlternativeSelectionProvider(props: { kitId: string; children: React }): React.ReactElement {
   const v = React.useMemo(() => ({ kitId: props.kitId }), [props.kitId]);
   return React.createElement(KitAlternativeSelectionContext.Provider, { value: v }, props.children);
 }
@@ -541,7 +541,7 @@ const StoreContext = React.createContext<Store | null>(null);
 export type StoreContextProviderProps = Readonly<{
   store: Store;
   initialReadPoint?: KitReadPoint;
-  children: ReactNode;
+  children: React;
 }>;
 
 /** @emoji 🧭 Provides {@link Kit}; keeps {@link KitReadPoint} in React state and applies it with {@link Store#setReadPoint}. */
@@ -603,7 +603,7 @@ export type GraphContextValue = Readonly<{ root: GraphRootKind }>;
 const GraphRootContext = React.createContext<GraphContextValue | null>(null);
 
 /** @emoji 🌐 Binds {@link GraphRootKind} for {@link useGraph}. */
-export function GraphContextProvider(props: { root: GraphRootKind; children: ReactNode }): React.ReactElement {
+export function GraphContextProvider(props: { root: GraphRootKind; children: React }): React.ReactElement {
   const v = React.useMemo<GraphContextValue>(() => ({ root: props.root }), [props.root]);
   return React.createElement(GraphRootContext.Provider, { value: v }, props.children);
 }
@@ -621,7 +621,7 @@ export function useGraph(): Graph {
 // #region 📐Design
 export type DesignContext = Readonly<{ designId: string }>;
 const DesignContext = React.createContext<DesignContext | null>(null);
-export function DesignContextProvider(props: { designId: string; children: ReactNode }): React.ReactElement {
+export function DesignContextProvider(props: { designId: string; children: React }): React.ReactElement {
   return React.createElement(DesignContext.Provider, { value: { designId: props.designId } }, props.children);
 }
 export function useDesign(): Design | null {
@@ -636,7 +636,7 @@ export function useDesign(): Design | null {
 // #region 🪢Contexts
 export type PieceContext = Readonly<{ designId: string; pieceId: string }>;
 const PieceContext = React.createContext<PieceContext | null>(null);
-export function PieceContextProvider(props: PieceContext & { children: ReactNode }): React.ReactElement {
+export function PieceContextProvider(props: PieceContext & { children: React }): React.ReactElement {
   return React.createElement(PieceContext.Provider, { value: { designId: props.designId, pieceId: props.pieceId } }, props.children);
 }
 export function usePiece(): Piece | null {
@@ -647,7 +647,7 @@ export function usePiece(): Piece | null {
 
 export type TypeContext = Readonly<{ typeId: string }>;
 const TypeContext = React.createContext<TypeContext | null>(null);
-export function TypeContextProvider(props: { typeId: string; children: ReactNode }): React.ReactElement {
+export function TypeContextProvider(props: { typeId: string; children: React }): React.ReactElement {
   return React.createElement(TypeContext.Provider, { value: { typeId: props.typeId } }, props.children);
 }
 export function useType(): Type | null {
@@ -658,7 +658,7 @@ export function useType(): Type | null {
 
 export type ConnectionContext = Readonly<{ designId: string; connectionId: string }>;
 const ConnectionContext = React.createContext<ConnectionContext | null>(null);
-export function ConnectionContextProvider(props: ConnectionContext & { children: ReactNode }): React.ReactElement {
+export function ConnectionContextProvider(props: ConnectionContext & { children: React }): React.ReactElement {
   return React.createElement(ConnectionContext.Provider, { value: { designId: props.designId, connectionId: props.connectionId } }, props.children);
 }
 export function useConnection(): Connection | null {
@@ -669,7 +669,7 @@ export function useConnection(): Connection | null {
 
 export type PortContext = Readonly<{ typeId: string; portId: string }>;
 const PortContext = React.createContext<PortContext | null>(null);
-export function PortContextProvider(props: PortContext & { children: ReactNode }): React.ReactElement {
+export function PortContextProvider(props: PortContext & { children: React }): React.ReactElement {
   return React.createElement(PortContext.Provider, { value: { typeId: props.typeId, portId: props.portId } }, props.children);
 }
 export function usePort(): Port | null {
@@ -680,7 +680,7 @@ export function usePort(): Port | null {
 
 export type ConnectorContext = Readonly<{ typeId: string; connectorId: string }>;
 const ConnectorContext = React.createContext<ConnectorContext | null>(null);
-export function ConnectorContextProvider(props: ConnectorContext & { children: ReactNode }): React.ReactElement {
+export function ConnectorContextProvider(props: ConnectorContext & { children: React }): React.ReactElement {
   return React.createElement(ConnectorContext.Provider, { value: { typeId: props.typeId, connectorId: props.connectorId } }, props.children);
 }
 export function useConnector(): Connector | null {
@@ -691,7 +691,7 @@ export function useConnector(): Connector | null {
 
 export type QualityContext = Readonly<{ qualityId: string }>;
 const QualityContext = React.createContext<QualityContext | null>(null);
-export function QualityContextProvider(props: { qualityId: string; children: ReactNode }): React.ReactElement {
+export function QualityContextProvider(props: { qualityId: string; children: React }): React.ReactElement {
   return React.createElement(QualityContext.Provider, { value: { qualityId: props.qualityId } }, props.children);
 }
 export function useQuality(): Quality | null {
@@ -702,7 +702,7 @@ export function useQuality(): Quality | null {
 
 export type TagContext = Readonly<{ tagId: string }>;
 const TagContext = React.createContext<TagContext | null>(null);
-export function TagContextProvider(props: { tagId: string; children: ReactNode }): React.ReactElement {
+export function TagContextProvider(props: { tagId: string; children: React }): React.ReactElement {
   return React.createElement(TagContext.Provider, { value: { tagId: props.tagId } }, props.children);
 }
 export function useTag(): Tag | null {
@@ -713,7 +713,7 @@ export function useTag(): Tag | null {
 
 export type ConceptContext = Readonly<{ conceptId: string }>;
 const ConceptContext = React.createContext<ConceptContext | null>(null);
-export function ConceptContextProvider(props: { conceptId: string; children: ReactNode }): React.ReactElement {
+export function ConceptContextProvider(props: { conceptId: string; children: React }): React.ReactElement {
   return React.createElement(ConceptContext.Provider, { value: { conceptId: props.conceptId } }, props.children);
 }
 export function useConcept(): Concept | null {
@@ -724,7 +724,7 @@ export function useConcept(): Concept | null {
 
 export type AuthorContext = Readonly<{ authorId: string }>;
 const AuthorContext = React.createContext<AuthorContext | null>(null);
-export function AuthorContextProvider(props: { authorId: string; children: ReactNode }): React.ReactElement {
+export function AuthorContextProvider(props: { authorId: string; children: React }): React.ReactElement {
   return React.createElement(AuthorContext.Provider, { value: { authorId: props.authorId } }, props.children);
 }
 export function useAuthor(): Author | null {
@@ -735,7 +735,7 @@ export function useAuthor(): Author | null {
 
 export type RepresentationContext = Readonly<{ typeId: string; representationId: string }>;
 const RepresentationContext = React.createContext<RepresentationContext | null>(null);
-export function RepresentationContextProvider(props: RepresentationContext & { children: ReactNode }): React.ReactElement {
+export function RepresentationContextProvider(props: RepresentationContext & { children: React }): React.ReactElement {
   return React.createElement(RepresentationContext.Provider, { value: { typeId: props.typeId, representationId: props.representationId } }, props.children);
 }
 export function useRepresentation(): Representation | null {
@@ -766,8 +766,8 @@ function useResolvedType(typeId?: string): Type | null {
 // #endregion 🪢Contexts
 
 // #region 🔖EntityContextHelpers
-/** @emoji 🧭 `{ id }` shaped like golden {@code Node} from {@link DesignContext} for sketchpad routing (no entity fetch). */
-export function useDesignContextNode(): Readonly<{ id: string }> | null {
+/** @emoji 🧭 `{ id }` shaped like golden {@code } from {@link DesignContext} for sketchpad routing (no entity fetch). */
+export function useDesignContext(): Readonly<{ id: string }> | null {
   const ctx = React.useContext(DesignContext);
   return ctx == null ? null : { id: ctx.designId };
 }
@@ -777,8 +777,8 @@ export function useHasDesignContext(): boolean {
   return React.useContext(DesignContext) != null;
 }
 
-/** @emoji 🧭 `{ id }` from {@link PieceContext} (piece id only), {@code Node}-shaped. */
-export function usePieceContextNode(): Readonly<{ id: string }> | null {
+/** @emoji 🧭 `{ id }` from {@link PieceContext} (piece id only), {@code }-shaped. */
+export function usePieceContext(): Readonly<{ id: string }> | null {
   const ctx = React.useContext(PieceContext);
   return ctx == null ? null : { id: ctx.pieceId };
 }
@@ -788,8 +788,8 @@ export function useHasPieceContext(): boolean {
   return React.useContext(PieceContext) != null;
 }
 
-/** @emoji 🧭 `{ id }` from {@link ConnectionContext}, {@code Node}-shaped. */
-export function useConnectionContextNode(): Readonly<{ id: string }> | null {
+/** @emoji 🧭 `{ id }` from {@link ConnectionContext}, {@code }-shaped. */
+export function useConnectionContext(): Readonly<{ id: string }> | null {
   const ctx = React.useContext(ConnectionContext);
   return ctx == null ? null : { id: ctx.connectionId };
 }
@@ -799,8 +799,8 @@ export function useHasConnectionContext(): boolean {
   return React.useContext(ConnectionContext) != null;
 }
 
-/** @emoji 🧭 `{ id }` from {@link TypeContext}, {@code Node}-shaped. */
-export function useTypeContextNode(): Readonly<{ id: string }> | null {
+/** @emoji 🧭 `{ id }` from {@link TypeContext}, {@code }-shaped. */
+export function useTypeContext(): Readonly<{ id: string }> | null {
   const ctx = React.useContext(TypeContext);
   return ctx == null ? null : { id: ctx.typeId };
 }
@@ -810,8 +810,8 @@ export function useHasTypeContext(): boolean {
   return React.useContext(TypeContext) != null;
 }
 
-/** @emoji 🧭 `{ id }` from {@link QualityContext}, {@code Node}-shaped. */
-export function useQualityContextNode(): Readonly<{ id: string }> | null {
+/** @emoji 🧭 `{ id }` from {@link QualityContext}, {@code }-shaped. */
+export function useQualityContext(): Readonly<{ id: string }> | null {
   const ctx = React.useContext(QualityContext);
   return ctx == null ? null : { id: ctx.qualityId };
 }
@@ -821,8 +821,8 @@ export function useHasQualityContext(): boolean {
   return React.useContext(QualityContext) != null;
 }
 
-/** @emoji 🧭 `{ id }` from {@link AuthorContext}, {@code Node}-shaped. */
-export function useAuthorContextNode(): Readonly<{ id: string }> | null {
+/** @emoji 🧭 `{ id }` from {@link AuthorContext}, {@code }-shaped. */
+export function useAuthorContext(): Readonly<{ id: string }> | null {
   const ctx = React.useContext(AuthorContext);
   return ctx == null ? null : { id: ctx.authorId };
 }
@@ -833,7 +833,7 @@ export function useHasAuthorContext(): boolean {
 }
 
 /** @emoji 🧷 {@link PieceContextProvider} using the enclosing {@link DesignContextProvider} {@code designId}. */
-export function PieceUnderActiveDesignProvider(props: { pieceId: string; children: ReactNode }): React.ReactElement {
+export function PieceUnderActiveDesignProvider(props: { pieceId: string; children: React }): React.ReactElement {
   const d = React.useContext(DesignContext);
   if (d == null) {
     throw new Error('semio/react: PieceUnderActiveDesignProvider requires <DesignContextProvider designId="…">.');
@@ -842,7 +842,7 @@ export function PieceUnderActiveDesignProvider(props: { pieceId: string; childre
 }
 
 /** @emoji 🧷 {@link ConnectionContextProvider} using the enclosing {@link DesignContextProvider} {@code designId}. */
-export function ConnectionUnderActiveDesignProvider(props: { connectionId: string; children: ReactNode }): React.ReactElement {
+export function ConnectionUnderActiveDesignProvider(props: { connectionId: string; children: React }): React.ReactElement {
   const d = React.useContext(DesignContext);
   if (d == null) {
     throw new Error('semio/react: ConnectionUnderActiveDesignProvider requires <DesignContextProvider designId="…">.');
