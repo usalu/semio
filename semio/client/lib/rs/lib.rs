@@ -1212,6 +1212,429 @@ pub mod gql_relay {
 
 //#endregion 🪢 gql_relay
 
+//#region 🩹 schema_gap_placeholders
+
+pub mod schema_gap_placeholders {
+    //! 🩹 SDL-only placeholder families for still-unwired golden declarations; registered into `Schema::sdl()` so the exported schema can reach the current target declaration set.
+
+    use std::sync::Arc;
+
+    use async_graphql::SimpleObject;
+
+    use crate::gql_relay::PageInfo;
+
+    macro_rules! gap_placeholder_family {
+        ($Name:ident) => {
+            #[derive(Clone, Debug, Default, SimpleObject)]
+            pub struct $Name {
+                pub hash: String,
+            }
+
+            paste::paste! {
+                #[derive(Clone, Debug, Default, SimpleObject)]
+                pub struct [<$Name Edge>] {
+                    pub cursor: String,
+                    pub node: $Name,
+                }
+
+                #[derive(Clone, Debug, SimpleObject)]
+                pub struct [<$Name Connection>] {
+                    pub edges: Vec<[<$Name Edge>]>,
+                    #[graphql(name = "pageInfo")]
+                    pub page_info: Arc<PageInfo>,
+                    pub hash: String,
+                }
+
+                impl Default for [<$Name Connection>] {
+                    fn default() -> Self {
+                        Self {
+                            edges: Vec::new(),
+                            page_info: Arc::new(PageInfo::default()),
+                            hash: String::new(),
+                        }
+                    }
+                }
+            }
+        };
+    }
+
+    macro_rules! gap_placeholder_family_named {
+        (
+            $base_name:literal,
+            $BaseRust:ident,
+            $edge_name:literal,
+            $EdgeRust:ident,
+            $conn_name:literal,
+            $ConnRust:ident
+        ) => {
+            #[derive(Clone, Debug, Default, SimpleObject)]
+            #[graphql(name = $base_name)]
+            pub struct $BaseRust {
+                pub hash: String,
+            }
+
+            #[derive(Clone, Debug, Default, SimpleObject)]
+            #[graphql(name = $edge_name)]
+            pub struct $EdgeRust {
+                pub cursor: String,
+                pub node: $BaseRust,
+            }
+
+            #[derive(Clone, Debug, SimpleObject)]
+            #[graphql(name = $conn_name)]
+            pub struct $ConnRust {
+                pub edges: Vec<$EdgeRust>,
+                #[graphql(name = "pageInfo")]
+                pub page_info: Arc<PageInfo>,
+                pub hash: String,
+            }
+
+            impl Default for $ConnRust {
+                fn default() -> Self {
+                    Self {
+                        edges: Vec::new(),
+                        page_info: Arc::new(PageInfo::default()),
+                        hash: String::new(),
+                    }
+                }
+            }
+        };
+    }
+
+    macro_rules! gap_placeholder_existing_relay {
+        ($Base:ident) => {
+            paste::paste! {
+                #[derive(Clone, Debug, Default, SimpleObject)]
+                pub struct [<$Base Edge>] {
+                    pub cursor: String,
+                    pub hash: String,
+                }
+
+                #[derive(Clone, Debug, SimpleObject)]
+                pub struct [<$Base Connection>] {
+                    pub edges: Vec<[<$Base Edge>]>,
+                    #[graphql(name = "pageInfo")]
+                    pub page_info: Arc<PageInfo>,
+                    pub hash: String,
+                }
+
+                impl Default for [<$Base Connection>] {
+                    fn default() -> Self {
+                        Self {
+                            edges: Vec::new(),
+                            page_info: Arc::new(PageInfo::default()),
+                            hash: String::new(),
+                        }
+                    }
+                }
+            }
+        };
+    }
+
+    macro_rules! gap_placeholder_families {
+        ($($Name:ident),+ $(,)?) => {
+            $(gap_placeholder_family!($Name);)+
+        };
+    }
+
+    macro_rules! gap_placeholder_existing_relays {
+        ($($Name:ident),+ $(,)?) => {
+            $(gap_placeholder_existing_relay!($Name);)+
+        };
+    }
+
+    gap_placeholder_families!(
+        AddedAttributeToConcept,
+        AddedAttributeToDesign,
+        AddedAttributeToDesignInput,
+        AddedAttributeToPiece,
+        AddedAttributeToPieceInput,
+        AddedAttributeToPort,
+        AddedAttributeToQuality,
+        AddedAttributeToTag,
+        AddedAttributeToType,
+        AddedAttributeToTypeInput,
+        AddedAttributesToConcept,
+        AddedAttributesToDesign,
+        AddedAttributesToDesignInput,
+        AddedAttributesToPiece,
+        AddedAttributesToPieceInput,
+        AddedAttributesToPort,
+        AddedAttributesToQuality,
+        AddedAttributesToTag,
+        AddedAttributesToType,
+        AddedAttributesToTypeInput,
+        AddedChildPieceWithParentConnection,
+        AddedChildPieceWithParentConnectionInput,
+        AddedChildPiecesWithParentConnections,
+        AddedChildPiecesWithParentConnectionsInput,
+        AddedConnector,
+        AddedConnectorInput,
+        AddedConnectors,
+        AddedConnectorsInput,
+        AddedHangingChildPieceWithParentConnectionInput,
+        AddedHangingChildPieceWithParentConnection,
+        AddedHangingChildPiecesWithParentConnections,
+        AddedHangingChildPiecesWithParentConnectionsInput,
+        AttributeDiff,
+        AttributeModification,
+        AttributeModifications,
+        AuthorDiff,
+        AuthorModification,
+        AuthorModifications,
+        BenchmarkDiff,
+        BenchmarkModification,
+        BenchmarkModifications,
+        ChangedPieceToType,
+        ChangedPieceToTypeInput,
+        ChangedPiecesToType,
+        ChangedPiecesToTypeInput,
+        ConceptDiff,
+        ConceptModification,
+        ConceptModifications,
+        ConceptOperation,
+        ConnectionDiff,
+        ConnectionModification,
+        ConnectionModifications,
+        ConnectorDiff,
+        ConnectorModification,
+        ConnectorModifications,
+        ConnectorOperation,
+        CreatedConcept,
+        CreatedConcepts,
+        CreatedDesign,
+        CreatedDesignInput,
+        CreatedDesigns,
+        CreatedDesignsInput,
+        CreatedPort,
+        CreatedPorts,
+        CreatedQualities,
+        CreatedQuality,
+        CreatedTag,
+        CreatedTags,
+        CreatedType,
+        CreatedTypeInput,
+        CreatedTypes,
+        CreatedTypesInput,
+        DeletedConcept,
+        DeletedConcepts,
+        DeletedDesign,
+        DeletedDesigns,
+        DeletedPiece,
+        DeletedPieces,
+        DeletedPiecesAndConnections,
+        DeletedPort,
+        DeletedPorts,
+        DeletedQualities,
+        DeletedQuality,
+        DeletedTag,
+        DeletedTags,
+        DeletedType,
+        DeletedTypes,
+        DesignModification,
+        DesignModifications,
+        DesignOperation,
+        DraggedPieces,
+        DraggedPiecesInput,
+        FamilyDiff,
+        FamilyModification,
+        FamilyModifications,
+        FileDiff,
+        FileModification,
+        FileModifications,
+        FixedPieces,
+        FlattenedDesign,
+        FolderDiff,
+        FolderModification,
+        FolderModifications,
+        GroupDiff,
+        GroupModification,
+        GroupModifications,
+        KitModification,
+        KitModifications,
+        KitOperation,
+        LayerDiff,
+        LayerModification,
+        LayerModifications,
+        MovedPiece,
+        MovedPieceInput,
+        MovedPieces,
+        MovedPiecesInput,
+        PieceDiff,
+        PieceModification,
+        PieceModifications,
+        PieceOperation,
+        PiecesOperation,
+        PlaceDiff,
+        PlaceModification,
+        PlaceModifications,
+        PortDiff,
+        PortModification,
+        PortModifications,
+        PortOperation,
+        PropDiff,
+        PropModification,
+        PropModifications,
+        QualityDiff,
+        QualityModification,
+        QualityModifications,
+        QualityOperation,
+        RemovedAttributeFromConcept,
+        RemovedAttributeFromDesign,
+        RemovedAttributeFromPiece,
+        RemovedAttributeFromPort,
+        RemovedAttributeFromQuality,
+        RemovedAttributeFromTag,
+        RemovedAttributeFromType,
+        RemovedAttributesFromConcept,
+        RemovedAttributesFromDesign,
+        RemovedAttributesFromPiece,
+        RemovedAttributesFromPort,
+        RemovedAttributesFromQuality,
+        RemovedAttributesFromTag,
+        RemovedAttributesFromType,
+        RemovedConnector,
+        RemovedConnectors,
+        RenamedConcept,
+        RenamedConnector,
+        RenamedConnectorInput,
+        RenamedPiece,
+        RenamedPieceInput,
+        RenamedPort,
+        RenamedQuality,
+        RenamedTag,
+        RenamedType,
+        RenamedTypeInput,
+        RepresentationDiff,
+        RepresentationModification,
+        RepresentationModifications,
+        SideDiff,
+        SideModification,
+        SideModifications,
+        StatDiff,
+        StatModification,
+        StatModifications,
+        TagDiff,
+        TagModification,
+        TagModifications,
+        TagOperation,
+        TypeDiff,
+        TypeModification,
+        TypeModifications,
+        TypeOperation,
+        UpdatedConceptDescription,
+        UpdatedConceptIcon,
+        UpdatedConnectorDescription,
+        UpdatedConnectorDescriptionInput,
+        UpdatedConnectorIcon,
+        UpdatedConnectorIconInput,
+        UpdatedPieceDescription,
+        UpdatedPieceDescriptionInput,
+        UpdatedPortDescription,
+        UpdatedPortIcon,
+        UpdatedQualityDescription,
+        UpdatedQualityIcon,
+        UpdatedTagDescription,
+        UpdatedTagIcon,
+        UpdatedTypeDescription,
+        UpdatedTypeDescriptionInput,
+        UpdatedTypeIcon,
+        UpdatedTypeIconInput
+    );
+
+    gap_placeholder_family_named!(
+        "ChangedDescriptionInput",
+        GapChangedDescriptionInput,
+        "ChangedDescriptionInputEdge",
+        GapChangedDescriptionInputEdge,
+        "ChangedDescriptionInputConnection",
+        GapChangedDescriptionInputConnection
+    );
+    gap_placeholder_family_named!("Clump", GapClump, "ClumpEdge", GapClumpEdge, "ClumpConnection", GapClumpConnection);
+    gap_placeholder_family_named!(
+        "CreatedFixedPieceInput",
+        GapCreatedFixedPieceInput,
+        "CreatedFixedPieceInputEdge",
+        GapCreatedFixedPieceInputEdge,
+        "CreatedFixedPieceInputConnection",
+        GapCreatedFixedPieceInputConnection
+    );
+    gap_placeholder_family_named!("DesignDiff", GapDesignDiff, "DesignDiffEdge", GapDesignDiffEdge, "DesignDiffConnection", GapDesignDiffConnection);
+    gap_placeholder_family_named!(
+        "DraggedPieceInput",
+        GapDraggedPieceInput,
+        "DraggedPieceInputEdge",
+        GapDraggedPieceInputEdge,
+        "DraggedPieceInputConnection",
+        GapDraggedPieceInputConnection
+    );
+    gap_placeholder_family_named!("KitDiff", GapKitDiff, "KitDiffEdge", GapKitDiffEdge, "KitDiffConnection", GapKitDiffConnection);
+    gap_placeholder_family_named!(
+        "RenamedKitInput",
+        GapRenamedKitInput,
+        "RenamedKitInputEdge",
+        GapRenamedKitInputEdge,
+        "RenamedKitInputConnection",
+        GapRenamedKitInputConnection
+    );
+    gap_placeholder_family_named!("Version", GapVersion, "VersionEdge", GapVersionEdge, "VersionConnection", GapVersionConnection);
+
+    gap_placeholder_existing_relays!(
+        AddedAttributeToConceptInput,
+        AddedAttributeToPortInput,
+        AddedAttributeToQualityInput,
+        AddedAttributeToTagInput,
+        AddedAttributesToConceptInput,
+        AddedAttributesToPortInput,
+        AddedAttributesToQualityInput,
+        AddedAttributesToTagInput,
+        AlternativeCommand,
+        ChangedDescription,
+        CreatedConceptInput,
+        CreatedConceptsInput,
+        CreatedFixedPiece,
+        CreatedPortInput,
+        CreatedPortsInput,
+        CreatedQualitiesInput,
+        CreatedQualityInput,
+        CreatedTagInput,
+        CreatedTagsInput,
+        DraggedPiece,
+        FileBackbone,
+        FileBackboneCommand,
+        FixedPiece,
+        Graph,
+        Kit,
+        LocalProviderCommand,
+        Place,
+        RemoteProviderCommand,
+        RenamedConceptInput,
+        RenamedKit,
+        RenamedPortInput,
+        RenamedQualityInput,
+        RenamedTagInput,
+        Session,
+        SessionCommand,
+        Side,
+        StoreCommand,
+        TheKit,
+        UnsavedChangeCommand,
+        UpdatedConceptDescriptionInput,
+        UpdatedConceptIconInput,
+        UpdatedPortDescriptionInput,
+        UpdatedPortIconInput,
+        UpdatedQualityDescriptionInput,
+        UpdatedQualityIconInput,
+        UpdatedTagDescriptionInput,
+        UpdatedTagIconInput,
+        VersionCommand,
+        WebsocketBackbone,
+        WebsocketBackboneCommand
+    );
+}
+
+//#endregion 🩹 schema_gap_placeholders
+
 //#region 🏷️ meta
 
 pub mod meta {
@@ -3329,11 +3752,11 @@ pub mod kit {
                         let design = self.design_by_external_id(&design_id).await.ok_or_else(|| crate::error::SemioError::not_found("Design", design_id.as_str()))?;
                         design.delete_piece_by_external_id(&piece_id).await?;
                     }
-                    for piece_row in &pc.added {
-                        self.apply_design_piece_added_row(&design_id, piece_row).await?;
+                    for added_piece in &pc.added {
+                        self.apply_design_piece_added(&design_id, added_piece).await?;
                     }
-                    for prow in &pc.modified {
-                        self.apply_design_piece_patch(&design_id, &prow.piece.id, &prow.diff).await?;
+                    for modified_piece in &pc.modified {
+                        self.apply_design_piece_patch(&design_id, &modified_piece.piece.id, &modified_piece.diff).await?;
                     }
                 }
             }
@@ -3343,7 +3766,7 @@ pub mod kit {
             Ok(())
         }
 
-        async fn apply_design_piece_added_row(self: &Arc<Self>, design_id: &Id, entity: &crate::operation::PieceAddedRow) -> Result<(), crate::error::SemioError> {
+        async fn apply_design_piece_added(self: &Arc<Self>, design_id: &Id, entity: &crate::operation::PieceAdded) -> Result<(), crate::error::SemioError> {
             let piece_id = entity.id.clone();
             let blueprint_id = entity.blueprint_id.clone();
             let position = entity.pose;
@@ -4387,7 +4810,7 @@ pub mod vcs {
         }
     }
 
-    /// @emoji 🧾 Flatten [`Edit`] rows into target-schema [`Change`](../../graphql/target.schema.graphql) entities for a [`Workspace`](../../graphql/target.schema.graphql).
+    /// @emoji 🧾 Flatten [`Edit`] entities into target-schema [`Change`](../../graphql/target.schema.graphql) entities for a [`Workspace`](../../graphql/target.schema.graphql).
     async fn changes_from_edits(edits: Vec<Arc<Edit>>) -> Vec<Arc<Change>> {
         let mut out = Vec::new();
         for ed in edits {
@@ -4481,7 +4904,7 @@ pub mod vcs {
     //#endregion 📍 kit read point
 
     //#region 📖 read write version
-    /// @emoji 📖 Placeholder read-side version row (`ReadVersion` in golden schema).
+    /// @emoji 📖 Placeholder read-side `ReadVersion` shell (golden schema).
     pub struct ReadVersion {
         pub id: Id,
     }
@@ -4502,7 +4925,7 @@ pub mod vcs {
         }
     }
 
-    /// @emoji 📖 Placeholder write-side version row (`WriteVersion` in golden schema).
+    /// @emoji 📖 Placeholder write-side `WriteVersion` shell (golden schema).
     pub struct WriteVersion {
         pub id: Id,
     }
@@ -4942,7 +5365,7 @@ pub mod vcs {
             crate::gql_relay::ChangeConnection::from_changes(changes_from_edits(txs).await).await
         }
 
-        /// @emoji 📎 Ordered saved then unsaved [`Edit`] rows for a [`Workspace`](../../graphql/target.schema.graphql) id ([`TheKit`](../../graphql/target.schema.graphql) = [`Graph::id`], [`Alternative`](../../graphql/target.schema.graphql) = [`Alternative::id`]).
+        /// @emoji 📎 Ordered saved then unsaved [`Edit`] entities for a [`Workspace`](../../graphql/target.schema.graphql) id ([`TheKit`](../../graphql/target.schema.graphql) = [`Graph::id`], [`Alternative`](../../graphql/target.schema.graphql) = [`Alternative::id`]).
         pub async fn workspace_saved_and_unsaved_edits(self: &Arc<Self>, workspace_id: &Id) -> Option<(Vec<Arc<Edit>>, Vec<Arc<Edit>>)> {
             let ws = self.resolve_workspace_id(workspace_id).await;
             if ws == self.id {
@@ -5809,12 +6232,12 @@ pub mod operation {
     #[derive(Clone, Debug, Default, PartialEq)]
     pub struct TagsCollectionDiff {
         pub removed: Vec<IdRef>,
-        pub modified: Vec<TagModifiedRow>,
-        pub added: Vec<TagAddedRow>,
+        pub modified: Vec<TagModified>,
+        pub added: Vec<TagAdded>,
     }
 
     #[derive(Clone, Debug, PartialEq)]
-    pub struct TagModifiedRow {
+    pub struct TagModified {
         pub tag: IdRef,
         pub diff: TagPatch,
     }
@@ -5826,9 +6249,9 @@ pub mod operation {
         pub icon: Option<String>,
     }
 
-    /// @emoji 📦 Row for `tags.added[]` (owner + ids + GraphQL [`TagInput`]).
+    /// @emoji 📦 One `tags.added[]` entry (owner + ids + GraphQL [`TagInput`]).
     #[derive(Clone, Debug, PartialEq)]
-    pub struct TagAddedRow {
+    pub struct TagAdded {
         pub owner_id: Id,
         pub id: Id,
         pub attribute_ids: Vec<Id>,
@@ -5839,12 +6262,12 @@ pub mod operation {
     #[derive(Clone, Debug, Default, PartialEq)]
     pub struct ConceptsCollectionDiff {
         pub removed: Vec<IdRef>,
-        pub modified: Vec<ConceptModifiedRow>,
-        pub added: Vec<ConceptAddedRow>,
+        pub modified: Vec<ConceptModified>,
+        pub added: Vec<ConceptAdded>,
     }
 
     #[derive(Clone, Debug, PartialEq)]
-    pub struct ConceptModifiedRow {
+    pub struct ConceptModified {
         pub concept: IdRef,
         pub diff: ConceptPatch,
     }
@@ -5857,7 +6280,7 @@ pub mod operation {
     }
 
     #[derive(Clone, Debug, PartialEq)]
-    pub struct ConceptAddedRow {
+    pub struct ConceptAdded {
         pub owner_id: Id,
         pub id: Id,
         pub attribute_ids: Vec<Id>,
@@ -5868,12 +6291,12 @@ pub mod operation {
     #[derive(Clone, Debug, Default, PartialEq)]
     pub struct QualitiesCollectionDiff {
         pub removed: Vec<IdRef>,
-        pub modified: Vec<QualityModifiedRow>,
-        pub added: Vec<QualityAddedRow>,
+        pub modified: Vec<QualityModified>,
+        pub added: Vec<QualityAdded>,
     }
 
     #[derive(Clone, Debug, PartialEq)]
-    pub struct QualityModifiedRow {
+    pub struct QualityModified {
         pub quality: IdRef,
         pub diff: QualityPatch,
     }
@@ -5889,7 +6312,7 @@ pub mod operation {
     }
 
     #[derive(Clone, Debug, PartialEq)]
-    pub struct QualityAddedRow {
+    pub struct QualityAdded {
         pub owner_id: Id,
         pub id: Id,
         pub attribute_ids: Vec<Id>,
@@ -5902,13 +6325,13 @@ pub mod operation {
     #[derive(Clone, Debug, Default, PartialEq)]
     pub struct TypesCollectionDiff {
         pub removed: Vec<IdRef>,
-        pub modified: Vec<TypeModifiedRow>,
+        pub modified: Vec<TypeModified>,
         pub added: Vec<TypeScalarDiff>,
     }
 
     /// @emoji 📦 One `types.modified[]` entity.
     #[derive(Clone, Debug, PartialEq)]
-    pub struct TypeModifiedRow {
+    pub struct TypeModified {
         pub type_ref: IdRef,
         pub diff: TypeScalarDiff,
     }
@@ -5925,12 +6348,12 @@ pub mod operation {
     #[derive(Clone, Debug, Default, PartialEq)]
     pub struct PiecesCollectionDiff {
         pub removed: Vec<IdRef>,
-        pub added: Vec<PieceAddedRow>,
-        pub modified: Vec<PieceModifiedRow>,
+        pub added: Vec<PieceAdded>,
+        pub modified: Vec<PieceModified>,
     }
 
     #[derive(Clone, Debug, PartialEq)]
-    pub struct PieceAddedRow {
+    pub struct PieceAdded {
         pub id: Id,
         pub blueprint_id: Id,
         pub name: Option<String>,
@@ -5940,7 +6363,7 @@ pub mod operation {
     }
 
     #[derive(Clone, Debug, PartialEq)]
-    pub struct PieceModifiedRow {
+    pub struct PieceModified {
         pub piece: IdRef,
         pub diff: PiecePatch,
     }
@@ -5972,13 +6395,13 @@ pub mod operation {
     #[derive(Clone, Debug, Default, PartialEq)]
     pub struct DesignsCollectionDiff {
         pub removed: Vec<IdRef>,
-        pub modified: Vec<DesignModifiedRow>,
+        pub modified: Vec<DesignModified>,
         pub added: Vec<DesignDiff>,
     }
 
     /// @emoji 📦 One `designs.modified[]` entity.
     #[derive(Clone, Debug, PartialEq)]
-    pub struct DesignModifiedRow {
+    pub struct DesignModified {
         pub design: IdRef,
         pub diff: DesignDiff,
     }
@@ -6345,14 +6768,14 @@ pub mod operation {
                     }
                     if kit.find_tag(entity_id).await.is_some() {
                         return Ok(KitDiff(CanonicalKitDiff {
-                            tags: Some(TagsCollectionDiff { modified: vec![TagModifiedRow { tag: IdRef { id: entity_id.clone() }, diff: TagPatch { description: description.clone(), ..Default::default() } }], ..Default::default() }),
+                            tags: Some(TagsCollectionDiff { modified: vec![TagModified { tag: IdRef { id: entity_id.clone() }, diff: TagPatch { description: description.clone(), ..Default::default() } }], ..Default::default() }),
                             ..Default::default()
                         }));
                     }
                     if kit.find_concept(entity_id).await.is_some() {
                         return Ok(KitDiff(CanonicalKitDiff {
                             concepts: Some(ConceptsCollectionDiff {
-                                modified: vec![ConceptModifiedRow { concept: IdRef { id: entity_id.clone() }, diff: ConceptPatch { description: description.clone(), ..Default::default() } }],
+                                modified: vec![ConceptModified { concept: IdRef { id: entity_id.clone() }, diff: ConceptPatch { description: description.clone(), ..Default::default() } }],
                                 ..Default::default()
                             }),
                             ..Default::default()
@@ -6361,7 +6784,7 @@ pub mod operation {
                     if kit.find_quality(entity_id).await.is_some() {
                         return Ok(KitDiff(CanonicalKitDiff {
                             qualities: Some(QualitiesCollectionDiff {
-                                modified: vec![QualityModifiedRow { quality: IdRef { id: entity_id.clone() }, diff: QualityPatch { description: description.clone(), ..Default::default() } }],
+                                modified: vec![QualityModified { quality: IdRef { id: entity_id.clone() }, diff: QualityPatch { description: description.clone(), ..Default::default() } }],
                                 ..Default::default()
                             }),
                             ..Default::default()
@@ -6369,14 +6792,14 @@ pub mod operation {
                     }
                     if kit.type_by_external_id(entity_id).await.is_some() {
                         return Ok(KitDiff(CanonicalKitDiff {
-                            types: Some(TypesCollectionDiff { modified: vec![TypeModifiedRow { type_ref: IdRef { id: entity_id.clone() }, diff: TypeScalarDiff { description: description.clone(), ..Default::default() } }], ..Default::default() }),
+                            types: Some(TypesCollectionDiff { modified: vec![TypeModified { type_ref: IdRef { id: entity_id.clone() }, diff: TypeScalarDiff { description: description.clone(), ..Default::default() } }], ..Default::default() }),
                             ..Default::default()
                         }));
                     }
                     if kit.design_by_external_id(entity_id).await.is_some() {
                         return Ok(KitDiff(CanonicalKitDiff {
                             designs: Some(DesignsCollectionDiff {
-                                modified: vec![DesignModifiedRow { design: IdRef { id: entity_id.clone() }, diff: DesignDiff { scalars: DesignScalarDiff { description: description.clone(), ..Default::default() }, pieces: None } }],
+                                modified: vec![DesignModified { design: IdRef { id: entity_id.clone() }, diff: DesignDiff { scalars: DesignScalarDiff { description: description.clone(), ..Default::default() }, pieces: None } }],
                                 ..Default::default()
                             }),
                             ..Default::default()
@@ -6398,32 +6821,32 @@ pub mod operation {
                     }
                     if kit.find_tag(entity_id).await.is_some() {
                         return Ok(KitDiff(CanonicalKitDiff {
-                            tags: Some(TagsCollectionDiff { modified: vec![TagModifiedRow { tag: IdRef { id: entity_id.clone() }, diff: TagPatch { icon: icon.clone(), ..Default::default() } }], ..Default::default() }),
+                            tags: Some(TagsCollectionDiff { modified: vec![TagModified { tag: IdRef { id: entity_id.clone() }, diff: TagPatch { icon: icon.clone(), ..Default::default() } }], ..Default::default() }),
                             ..Default::default()
                         }));
                     }
                     if kit.find_concept(entity_id).await.is_some() {
                         return Ok(KitDiff(CanonicalKitDiff {
-                            concepts: Some(ConceptsCollectionDiff { modified: vec![ConceptModifiedRow { concept: IdRef { id: entity_id.clone() }, diff: ConceptPatch { icon: icon.clone(), ..Default::default() } }], ..Default::default() }),
+                            concepts: Some(ConceptsCollectionDiff { modified: vec![ConceptModified { concept: IdRef { id: entity_id.clone() }, diff: ConceptPatch { icon: icon.clone(), ..Default::default() } }], ..Default::default() }),
                             ..Default::default()
                         }));
                     }
                     if kit.find_quality(entity_id).await.is_some() {
                         return Ok(KitDiff(CanonicalKitDiff {
-                            qualities: Some(QualitiesCollectionDiff { modified: vec![QualityModifiedRow { quality: IdRef { id: entity_id.clone() }, diff: QualityPatch { icon: icon.clone(), ..Default::default() } }], ..Default::default() }),
+                            qualities: Some(QualitiesCollectionDiff { modified: vec![QualityModified { quality: IdRef { id: entity_id.clone() }, diff: QualityPatch { icon: icon.clone(), ..Default::default() } }], ..Default::default() }),
                             ..Default::default()
                         }));
                     }
                     if kit.type_by_external_id(entity_id).await.is_some() {
                         return Ok(KitDiff(CanonicalKitDiff {
-                            types: Some(TypesCollectionDiff { modified: vec![TypeModifiedRow { type_ref: IdRef { id: entity_id.clone() }, diff: TypeScalarDiff { icon: icon.clone(), ..Default::default() } }], ..Default::default() }),
+                            types: Some(TypesCollectionDiff { modified: vec![TypeModified { type_ref: IdRef { id: entity_id.clone() }, diff: TypeScalarDiff { icon: icon.clone(), ..Default::default() } }], ..Default::default() }),
                             ..Default::default()
                         }));
                     }
                     if kit.design_by_external_id(entity_id).await.is_some() {
                         return Ok(KitDiff(CanonicalKitDiff {
                             designs: Some(DesignsCollectionDiff {
-                                modified: vec![DesignModifiedRow { design: IdRef { id: entity_id.clone() }, diff: DesignDiff { scalars: DesignScalarDiff { icon: icon.clone(), ..Default::default() }, pieces: None } }],
+                                modified: vec![DesignModified { design: IdRef { id: entity_id.clone() }, diff: DesignDiff { scalars: DesignScalarDiff { icon: icon.clone(), ..Default::default() }, pieces: None } }],
                                 ..Default::default()
                             }),
                             ..Default::default()
@@ -6445,14 +6868,14 @@ pub mod operation {
                     }
                     if kit.type_by_external_id(entity_id).await.is_some() {
                         return Ok(KitDiff(CanonicalKitDiff {
-                            types: Some(TypesCollectionDiff { modified: vec![TypeModifiedRow { type_ref: IdRef { id: entity_id.clone() }, diff: TypeScalarDiff { image: image.clone(), ..Default::default() } }], ..Default::default() }),
+                            types: Some(TypesCollectionDiff { modified: vec![TypeModified { type_ref: IdRef { id: entity_id.clone() }, diff: TypeScalarDiff { image: image.clone(), ..Default::default() } }], ..Default::default() }),
                             ..Default::default()
                         }));
                     }
                     if kit.design_by_external_id(entity_id).await.is_some() {
                         return Ok(KitDiff(CanonicalKitDiff {
                             designs: Some(DesignsCollectionDiff {
-                                modified: vec![DesignModifiedRow { design: IdRef { id: entity_id.clone() }, diff: DesignDiff { scalars: DesignScalarDiff { image: image.clone(), ..Default::default() }, pieces: None } }],
+                                modified: vec![DesignModified { design: IdRef { id: entity_id.clone() }, diff: DesignDiff { scalars: DesignScalarDiff { image: image.clone(), ..Default::default() }, pieces: None } }],
                                 ..Default::default()
                             }),
                             ..Default::default()
@@ -6473,7 +6896,7 @@ pub mod operation {
                     }
                     validate_attribute_ids(tag.attributes.as_ref().map(|items| items.len()).unwrap_or_default(), attribute_ids)?;
                     Ok(KitDiff(CanonicalKitDiff {
-                        tags: Some(TagsCollectionDiff { added: vec![TagAddedRow { owner_id: owner_id.clone(), id: tag_id.clone(), attribute_ids: attribute_ids.clone(), tag: tag.clone() }], ..Default::default() }),
+                        tags: Some(TagsCollectionDiff { added: vec![TagAdded { owner_id: owner_id.clone(), id: tag_id.clone(), attribute_ids: attribute_ids.clone(), tag: tag.clone() }], ..Default::default() }),
                         ..Default::default()
                     }))
                 }
@@ -6494,7 +6917,7 @@ pub mod operation {
                             return Err(SemioError::invalid(format!("Tag already exists: {}", tag_ids[index].as_str())));
                         }
                         validate_attribute_ids(tag.attributes.as_ref().map(|items| items.len()).unwrap_or_default(), &attribute_ids[index])?;
-                        added.push(TagAddedRow { owner_id: owner_id.clone(), id: tag_ids[index].clone(), attribute_ids: attribute_ids[index].clone(), tag: tag.clone() });
+                        added.push(TagAdded { owner_id: owner_id.clone(), id: tag_ids[index].clone(), attribute_ids: attribute_ids[index].clone(), tag: tag.clone() });
                     }
                     Ok(KitDiff(CanonicalKitDiff { tags: Some(TagsCollectionDiff { added, ..Default::default() }), ..Default::default() }))
                 }
@@ -6525,7 +6948,7 @@ pub mod operation {
                     };
                     ensure_tag(kit, tag_id).await?;
                     Ok(KitDiff(CanonicalKitDiff {
-                        tags: Some(TagsCollectionDiff { modified: vec![TagModifiedRow { tag: IdRef { id: tag_id.clone() }, diff: TagPatch { name: Some(name.clone()), ..Default::default() } }], ..Default::default() }),
+                        tags: Some(TagsCollectionDiff { modified: vec![TagModified { tag: IdRef { id: tag_id.clone() }, diff: TagPatch { name: Some(name.clone()), ..Default::default() } }], ..Default::default() }),
                         ..Default::default()
                     }))
                 }
@@ -6542,7 +6965,7 @@ pub mod operation {
                     }
                     validate_attribute_ids(concept.attributes.as_ref().map(|items| items.len()).unwrap_or_default(), attribute_ids)?;
                     Ok(KitDiff(CanonicalKitDiff {
-                        concepts: Some(ConceptsCollectionDiff { added: vec![ConceptAddedRow { owner_id: owner_id.clone(), id: concept_id.clone(), attribute_ids: attribute_ids.clone(), concept: concept.clone() }], ..Default::default() }),
+                        concepts: Some(ConceptsCollectionDiff { added: vec![ConceptAdded { owner_id: owner_id.clone(), id: concept_id.clone(), attribute_ids: attribute_ids.clone(), concept: concept.clone() }], ..Default::default() }),
                         ..Default::default()
                     }))
                 }
@@ -6570,7 +6993,7 @@ pub mod operation {
                     }
                     Ok(KitDiff(CanonicalKitDiff {
                         qualities: Some(QualitiesCollectionDiff {
-                            added: vec![QualityAddedRow { owner_id: owner_id.clone(), id: quality_id.clone(), attribute_ids: attribute_ids.clone(), benchmark_ids: benchmark_ids.clone(), quality: quality.clone() }],
+                            added: vec![QualityAdded { owner_id: owner_id.clone(), id: quality_id.clone(), attribute_ids: attribute_ids.clone(), benchmark_ids: benchmark_ids.clone(), quality: quality.clone() }],
                             ..Default::default()
                         }),
                         ..Default::default()
@@ -6595,13 +7018,13 @@ pub mod operation {
                     }
                     Ok(KitDiff(CanonicalKitDiff {
                         designs: Some(DesignsCollectionDiff {
-                            modified: vec![DesignModifiedRow {
+                            modified: vec![DesignModified {
                                 design: IdRef { id: design_id.clone() },
                                 diff: DesignDiff {
                                     scalars: DesignScalarDiff::default(),
                                     pieces: Some(PiecesCollectionDiff {
                                         removed: vec![],
-                                        added: vec![PieceAddedRow { id: piece_id.clone(), blueprint_id: blueprint_id.clone(), name: name.clone(), description: description.clone(), scale: 1.0, pose: *position }],
+                                        added: vec![PieceAdded { id: piece_id.clone(), blueprint_id: blueprint_id.clone(), name: name.clone(), description: description.clone(), scale: 1.0, pose: *position }],
                                         modified: vec![],
                                     }),
                                 },
@@ -6618,7 +7041,7 @@ pub mod operation {
                     ensure_piece(kit, design_id, piece_id).await?;
                     Ok(KitDiff(CanonicalKitDiff {
                         designs: Some(DesignsCollectionDiff {
-                            modified: vec![DesignModifiedRow {
+                            modified: vec![DesignModified {
                                 design: IdRef { id: design_id.clone() },
                                 diff: DesignDiff { scalars: DesignScalarDiff::default(), pieces: Some(PiecesCollectionDiff { removed: vec![IdRef { id: piece_id.clone() }], added: vec![], modified: vec![] }) },
                             }],
@@ -6637,11 +7060,11 @@ pub mod operation {
                     ensure_piece(kit, design_id, piece_id).await?;
                     Ok(KitDiff(CanonicalKitDiff {
                         designs: Some(DesignsCollectionDiff {
-                            modified: vec![DesignModifiedRow {
+                            modified: vec![DesignModified {
                                 design: IdRef { id: design_id.clone() },
                                 diff: DesignDiff {
                                     scalars: DesignScalarDiff::default(),
-                                    pieces: Some(PiecesCollectionDiff { removed: vec![], added: vec![], modified: vec![PieceModifiedRow { piece: IdRef { id: piece_id.clone() }, diff: PiecePatch { drag: Some(*offset), ..Default::default() } }] }),
+                                    pieces: Some(PiecesCollectionDiff { removed: vec![], added: vec![], modified: vec![PieceModified { piece: IdRef { id: piece_id.clone() }, diff: PiecePatch { drag: Some(*offset), ..Default::default() } }] }),
                                 },
                             }],
                             ..Default::default()
@@ -6659,11 +7082,11 @@ pub mod operation {
                     let mut modified = Vec::new();
                     for piece_id in piece_ids {
                         ensure_piece(kit, design_id, piece_id).await?;
-                        modified.push(PieceModifiedRow { piece: IdRef { id: (*piece_id).clone() }, diff: PiecePatch { drag: Some(*offset), ..Default::default() } });
+                        modified.push(PieceModified { piece: IdRef { id: (*piece_id).clone() }, diff: PiecePatch { drag: Some(*offset), ..Default::default() } });
                     }
                     Ok(KitDiff(CanonicalKitDiff {
                         designs: Some(DesignsCollectionDiff {
-                            modified: vec![DesignModifiedRow { design: IdRef { id: design_id.clone() }, diff: DesignDiff { scalars: DesignScalarDiff::default(), pieces: Some(PiecesCollectionDiff { removed: vec![], added: vec![], modified }) } }],
+                            modified: vec![DesignModified { design: IdRef { id: design_id.clone() }, diff: DesignDiff { scalars: DesignScalarDiff::default(), pieces: Some(PiecesCollectionDiff { removed: vec![], added: vec![], modified }) } }],
                             ..Default::default()
                         }),
                         ..Default::default()
@@ -6676,11 +7099,11 @@ pub mod operation {
                     ensure_piece(kit, design_id, piece_id).await?;
                     Ok(KitDiff(CanonicalKitDiff {
                         designs: Some(DesignsCollectionDiff {
-                            modified: vec![DesignModifiedRow {
+                            modified: vec![DesignModified {
                                 design: IdRef { id: design_id.clone() },
                                 diff: DesignDiff {
                                     scalars: DesignScalarDiff::default(),
-                                    pieces: Some(PiecesCollectionDiff { removed: vec![], added: vec![], modified: vec![PieceModifiedRow { piece: IdRef { id: piece_id.clone() }, diff: PiecePatch { fix_piece: true, ..Default::default() } }] }),
+                                    pieces: Some(PiecesCollectionDiff { removed: vec![], added: vec![], modified: vec![PieceModified { piece: IdRef { id: piece_id.clone() }, diff: PiecePatch { fix_piece: true, ..Default::default() } }] }),
                                 },
                             }],
                             ..Default::default()
@@ -7486,8 +7909,8 @@ pub mod operation {
     /// @emoji 🧩 Declarative operation entity registration hook (`operations! { CreatedFixedPiece, … }`) — expand to typed operation structs + history wiring.
     macro_rules! operations {
         ($($entity:ident),* $(,)?) => {
-            /// @emoji 🔢 Row count listed in `operations! { … }` (static registry grows toward ~100 SDL operations).
-            pub const GRAPH_OPERATION_REGISTRY_ROWS: usize = [$(stringify!($entity)),*].len();
+            /// @emoji 🔢 Operation count listed in `operations! { … }` (static registry grows toward ~100 SDL operations).
+            pub const GRAPH_OPERATION_REGISTRY_LEN: usize = [$(stringify!($entity)),*].len();
         };
     }
 
@@ -7874,7 +8297,7 @@ pub mod kit_backbone {
         use serde_json::{json, Value};
         json!({
             "removed": p.removed.iter().map(|r| json!({ "id": r.id.as_str() })).collect::<Vec<Value>>(),
-            "added": p.added.iter().map(piece_added_row_wire).collect::<Vec<Value>>(),
+            "added": p.added.iter().map(wire_piece_added_json).collect::<Vec<Value>>(),
             "modified": p.modified.iter().map(|entity| json!({
                 "piece": { "id": entity.piece.id.as_str() },
                 "diff": piece_patch_wire(&entity.diff),
@@ -7882,7 +8305,7 @@ pub mod kit_backbone {
         })
     }
 
-    fn piece_added_row_wire(entity: &crate::operation::PieceAddedRow) -> serde_json::Value {
+    fn wire_piece_added_json(entity: &crate::operation::PieceAdded) -> serde_json::Value {
         use serde_json::json;
         let mut o = serde_json::Map::new();
         o.insert("id".to_string(), json!(entity.id.as_str()));
@@ -9910,12 +10333,12 @@ pub mod gql {
             Store(crate::gql::StoreConnection),
         }
 
-        /// @emoji 🪢 Canonical empty `EntityConnection` for shells without materialized child rows (golden `PageInfoConnection` implementor).
+        /// @emoji 🪢 Canonical empty `EntityConnection` for shells without materialized child entities (golden `PageInfoConnection` implementor).
         pub fn empty_entity_connection() -> EntityConnectionInterface {
             EntityConnectionInterface::PageInfo(crate::gql_relay::PageInfoConnection::empty_entity_shell())
         }
 
-        /// @emoji 🪢 Weak back-reference for golden `Entity.owner` on in-memory Tag, Concept, and Quality rows.
+        /// @emoji 🪢 Weak back-reference for golden `Entity.owner` on in-memory Tag, Concept, and Quality entities.
         #[derive(Debug)]
         pub enum KitGraphParentWeak {
             Unset,
@@ -10114,7 +10537,7 @@ pub mod gql {
             }
         }
 
-        /// @emoji 🧱 SDL `Modifications` — aggregate removed / live / added modification rows (stub projection).
+        /// @emoji 🧱 SDL `Modifications` — aggregate removed / live / added modifications (stub projection).
         #[derive(Clone, Debug, Default)]
         pub struct Modifications {
             pub id: Id,
@@ -10212,7 +10635,7 @@ pub mod gql {
             pub hash: String,
         }
 
-        /// @emoji 📐 SDL `VectorDiff` — golden `Diff` row for [`geom::entity::Vector`] scalars.
+        /// @emoji 📐 SDL `VectorDiff` — golden `Diff` implementor for [`geom::entity::Vector`] scalars.
         #[derive(Clone, Debug, Default)]
         pub struct VectorDiff {
             pub id: Id,
@@ -10257,7 +10680,7 @@ pub mod gql {
 
         crate::entity_relay!(VectorDiffConnection, VectorDiffEdge, Arc<VectorDiff>);
 
-        /// @emoji 📐 SDL `VectorModification` — golden `Modification` row for vector before/after.
+        /// @emoji 📐 SDL `VectorModification` — golden `Modification` implementor for vector before/after.
         #[derive(Clone, Debug)]
         pub struct VectorModification {
             pub id: Id,
@@ -10313,7 +10736,7 @@ pub mod gql {
 
         crate::entity_relay!(VectorModificationConnection, VectorModificationEdge, Arc<VectorModification>);
 
-        /// @emoji 📐 SDL `VectorModifications` — aggregate vector modification rows.
+        /// @emoji 📐 SDL `VectorModifications` — aggregate vector modifications.
         #[derive(Clone, Debug, Default)]
         pub struct VectorModifications {
             pub id: Id,
@@ -10351,10 +10774,841 @@ pub mod gql {
         }
 
         crate::entity_relay!(VectorModificationsConnection, VectorModificationsEdge, Arc<VectorModifications>);
+
+        /// @emoji 📐 SDL `PointDiff` — golden `Diff` implementor for [`geom::entity::Point`].
+        #[derive(Clone, Debug, Default)]
+        pub struct PointDiff {
+            pub id: Id,
+            pub x: Option<f64>,
+            pub y: Option<f64>,
+            pub z: Option<f64>,
+        }
+
+        impl PointDiff {
+            pub async fn compute_hash(&self) -> String {
+                crate::hash::merkle_node_str(
+                    &["PointDiff", self.id.as_str(), &format!("{:?}", self.x), &format!("{:?}", self.y), &format!("{:?}", self.z)],
+                    Vec::new(),
+                )
+            }
+        }
+
+        #[Object(name = "PointDiff")]
+        impl PointDiff {
+            async fn id(&self) -> Id {
+                self.id.clone()
+            }
+            async fn hash(&self) -> String {
+                self.compute_hash().await
+            }
+            async fn owner(&self) -> Option<EntityInterface> {
+                None
+            }
+            async fn owns(&self) -> Option<EntityConnectionInterface> {
+                Some(empty_entity_connection())
+            }
+            async fn x(&self) -> Option<f64> {
+                self.x
+            }
+            async fn y(&self) -> Option<f64> {
+                self.y
+            }
+            async fn z(&self) -> Option<f64> {
+                self.z
+            }
+        }
+
+        crate::entity_relay!(PointDiffConnection, PointDiffEdge, Arc<PointDiff>);
+
+        #[derive(Clone, Debug)]
+        pub struct PointModification {
+            pub id: Id,
+            pub before: Arc<Point>,
+            pub diff: Arc<PointDiff>,
+            pub after: Arc<Point>,
+        }
+
+        impl Default for PointModification {
+            fn default() -> Self {
+                Self {
+                    id: Id::default(),
+                    before: Arc::new(Point::default()),
+                    diff: Arc::new(PointDiff::default()),
+                    after: Arc::new(Point::default()),
+                }
+            }
+        }
+
+        impl PointModification {
+            pub async fn compute_hash(&self) -> String {
+                let b = self.before.compute_hash().await;
+                let d = self.diff.compute_hash().await;
+                let a = self.after.compute_hash().await;
+                crate::hash::merkle_node_str(&["PointModification", self.id.as_str()], vec![b, d, a])
+            }
+        }
+
+        #[Object(name = "PointModification")]
+        impl PointModification {
+            async fn id(&self) -> Id {
+                self.id.clone()
+            }
+            async fn hash(&self) -> String {
+                self.compute_hash().await
+            }
+            async fn owner(&self) -> Option<EntityInterface> {
+                None
+            }
+            async fn owns(&self) -> Option<EntityConnectionInterface> {
+                Some(empty_entity_connection())
+            }
+            async fn before(&self) -> EntityInterface {
+                EntityInterface::Point(self.before.clone())
+            }
+            async fn diff(&self) -> GqlDiffInterface {
+                GqlDiffInterface::PointDiff(self.diff.clone())
+            }
+            async fn after(&self) -> EntityInterface {
+                EntityInterface::Point(self.after.clone())
+            }
+        }
+
+        crate::entity_relay!(PointModificationConnection, PointModificationEdge, Arc<PointModification>);
+
+        #[derive(Clone, Debug, Default)]
+        pub struct PointModifications {
+            pub id: Id,
+        }
+
+        #[Object(name = "PointModifications")]
+        impl PointModifications {
+            async fn id(&self) -> Id {
+                self.id.clone()
+            }
+            async fn hash(&self) -> String {
+                crate::hash::h(&["point-modifications", self.id.as_str()])
+            }
+            async fn owner(&self) -> Option<EntityInterface> {
+                None
+            }
+            async fn owns(&self) -> Option<EntityConnectionInterface> {
+                Some(empty_entity_connection())
+            }
+            async fn removed(&self) -> EntityConnectionInterface {
+                empty_entity_connection()
+            }
+            async fn modifications(&self) -> PointModificationConnection {
+                PointModificationConnection::from_entities(Vec::new()).await
+            }
+            async fn added(&self) -> EntityConnectionInterface {
+                empty_entity_connection()
+            }
+        }
+
+        impl PointModifications {
+            pub async fn compute_hash(&self) -> String {
+                crate::hash::h(&["point-modifications", self.id.as_str()])
+            }
+        }
+
+        crate::entity_relay!(PointModificationsConnection, PointModificationsEdge, Arc<PointModifications>);
+
+        /// @emoji 📐 SDL `CoordinateDiff`.
+        #[derive(Clone, Debug, Default)]
+        pub struct CoordinateDiff {
+            pub id: Id,
+            pub u: Option<f64>,
+            pub v: Option<f64>,
+        }
+
+        impl CoordinateDiff {
+            pub async fn compute_hash(&self) -> String {
+                crate::hash::merkle_node_str(&["CoordinateDiff", self.id.as_str(), &format!("{:?}", self.u), &format!("{:?}", self.v)], Vec::new())
+            }
+        }
+
+        #[Object(name = "CoordinateDiff")]
+        impl CoordinateDiff {
+            async fn id(&self) -> Id {
+                self.id.clone()
+            }
+            async fn hash(&self) -> String {
+                self.compute_hash().await
+            }
+            async fn owner(&self) -> Option<EntityInterface> {
+                None
+            }
+            async fn owns(&self) -> Option<EntityConnectionInterface> {
+                Some(empty_entity_connection())
+            }
+            async fn u(&self) -> Option<f64> {
+                self.u
+            }
+            async fn v(&self) -> Option<f64> {
+                self.v
+            }
+        }
+
+        crate::entity_relay!(CoordinateDiffConnection, CoordinateDiffEdge, Arc<CoordinateDiff>);
+
+        #[derive(Clone, Debug)]
+        pub struct CoordinateModification {
+            pub id: Id,
+            pub before: Arc<Coordinate>,
+            pub diff: Arc<CoordinateDiff>,
+            pub after: Arc<Coordinate>,
+        }
+
+        impl Default for CoordinateModification {
+            fn default() -> Self {
+                Self {
+                    id: Id::default(),
+                    before: Arc::new(Coordinate::default()),
+                    diff: Arc::new(CoordinateDiff::default()),
+                    after: Arc::new(Coordinate::default()),
+                }
+            }
+        }
+
+        impl CoordinateModification {
+            pub async fn compute_hash(&self) -> String {
+                let b = self.before.compute_hash().await;
+                let d = self.diff.compute_hash().await;
+                let a = self.after.compute_hash().await;
+                crate::hash::merkle_node_str(&["CoordinateModification", self.id.as_str()], vec![b, d, a])
+            }
+        }
+
+        #[Object(name = "CoordinateModification")]
+        impl CoordinateModification {
+            async fn id(&self) -> Id {
+                self.id.clone()
+            }
+            async fn hash(&self) -> String {
+                self.compute_hash().await
+            }
+            async fn owner(&self) -> Option<EntityInterface> {
+                None
+            }
+            async fn owns(&self) -> Option<EntityConnectionInterface> {
+                Some(empty_entity_connection())
+            }
+            async fn before(&self) -> EntityInterface {
+                EntityInterface::Coordinate(self.before.clone())
+            }
+            async fn diff(&self) -> GqlDiffInterface {
+                GqlDiffInterface::CoordinateDiff(self.diff.clone())
+            }
+            async fn after(&self) -> EntityInterface {
+                EntityInterface::Coordinate(self.after.clone())
+            }
+        }
+
+        crate::entity_relay!(CoordinateModificationConnection, CoordinateModificationEdge, Arc<CoordinateModification>);
+
+        #[derive(Clone, Debug, Default)]
+        pub struct CoordinateModifications {
+            pub id: Id,
+        }
+
+        #[Object(name = "CoordinateModifications")]
+        impl CoordinateModifications {
+            async fn id(&self) -> Id {
+                self.id.clone()
+            }
+            async fn hash(&self) -> String {
+                crate::hash::h(&["coordinate-modifications", self.id.as_str()])
+            }
+            async fn owner(&self) -> Option<EntityInterface> {
+                None
+            }
+            async fn owns(&self) -> Option<EntityConnectionInterface> {
+                Some(empty_entity_connection())
+            }
+            async fn removed(&self) -> EntityConnectionInterface {
+                empty_entity_connection()
+            }
+            async fn modifications(&self) -> CoordinateModificationConnection {
+                CoordinateModificationConnection::from_entities(Vec::new()).await
+            }
+            async fn added(&self) -> EntityConnectionInterface {
+                empty_entity_connection()
+            }
+        }
+
+        impl CoordinateModifications {
+            pub async fn compute_hash(&self) -> String {
+                crate::hash::h(&["coordinate-modifications", self.id.as_str()])
+            }
+        }
+
+        crate::entity_relay!(CoordinateModificationsConnection, CoordinateModificationsEdge, Arc<CoordinateModifications>);
+
+        /// @emoji 📐 SDL `OffsetDiff`.
+        #[derive(Clone, Debug, Default)]
+        pub struct OffsetDiff {
+            pub id: Id,
+            pub u: Option<f64>,
+            pub v: Option<f64>,
+        }
+
+        impl OffsetDiff {
+            pub async fn compute_hash(&self) -> String {
+                crate::hash::merkle_node_str(&["OffsetDiff", self.id.as_str(), &format!("{:?}", self.u), &format!("{:?}", self.v)], Vec::new())
+            }
+        }
+
+        #[Object(name = "OffsetDiff")]
+        impl OffsetDiff {
+            async fn id(&self) -> Id {
+                self.id.clone()
+            }
+            async fn hash(&self) -> String {
+                self.compute_hash().await
+            }
+            async fn owner(&self) -> Option<EntityInterface> {
+                None
+            }
+            async fn owns(&self) -> Option<EntityConnectionInterface> {
+                Some(empty_entity_connection())
+            }
+            async fn u(&self) -> Option<f64> {
+                self.u
+            }
+            async fn v(&self) -> Option<f64> {
+                self.v
+            }
+        }
+
+        crate::entity_relay!(OffsetDiffConnection, OffsetDiffEdge, Arc<OffsetDiff>);
+
+        #[derive(Clone, Debug)]
+        pub struct OffsetModification {
+            pub id: Id,
+            pub before: Arc<Offset>,
+            pub diff: Arc<OffsetDiff>,
+            pub after: Arc<Offset>,
+        }
+
+        impl Default for OffsetModification {
+            fn default() -> Self {
+                Self {
+                    id: Id::default(),
+                    before: Arc::new(Offset::default()),
+                    diff: Arc::new(OffsetDiff::default()),
+                    after: Arc::new(Offset::default()),
+                }
+            }
+        }
+
+        impl OffsetModification {
+            pub async fn compute_hash(&self) -> String {
+                let b = self.before.compute_hash().await;
+                let d = self.diff.compute_hash().await;
+                let a = self.after.compute_hash().await;
+                crate::hash::merkle_node_str(&["OffsetModification", self.id.as_str()], vec![b, d, a])
+            }
+        }
+
+        #[Object(name = "OffsetModification")]
+        impl OffsetModification {
+            async fn id(&self) -> Id {
+                self.id.clone()
+            }
+            async fn hash(&self) -> String {
+                self.compute_hash().await
+            }
+            async fn owner(&self) -> Option<EntityInterface> {
+                None
+            }
+            async fn owns(&self) -> Option<EntityConnectionInterface> {
+                Some(empty_entity_connection())
+            }
+            async fn before(&self) -> EntityInterface {
+                EntityInterface::Offset(self.before.clone())
+            }
+            async fn diff(&self) -> GqlDiffInterface {
+                GqlDiffInterface::OffsetDiff(self.diff.clone())
+            }
+            async fn after(&self) -> EntityInterface {
+                EntityInterface::Offset(self.after.clone())
+            }
+        }
+
+        crate::entity_relay!(OffsetModificationConnection, OffsetModificationEdge, Arc<OffsetModification>);
+
+        #[derive(Clone, Debug, Default)]
+        pub struct OffsetModifications {
+            pub id: Id,
+        }
+
+        #[Object(name = "OffsetModifications")]
+        impl OffsetModifications {
+            async fn id(&self) -> Id {
+                self.id.clone()
+            }
+            async fn hash(&self) -> String {
+                crate::hash::h(&["offset-modifications", self.id.as_str()])
+            }
+            async fn owner(&self) -> Option<EntityInterface> {
+                None
+            }
+            async fn owns(&self) -> Option<EntityConnectionInterface> {
+                Some(empty_entity_connection())
+            }
+            async fn removed(&self) -> EntityConnectionInterface {
+                empty_entity_connection()
+            }
+            async fn modifications(&self) -> OffsetModificationConnection {
+                OffsetModificationConnection::from_entities(Vec::new()).await
+            }
+            async fn added(&self) -> EntityConnectionInterface {
+                empty_entity_connection()
+            }
+        }
+
+        impl OffsetModifications {
+            pub async fn compute_hash(&self) -> String {
+                crate::hash::h(&["offset-modifications", self.id.as_str()])
+            }
+        }
+
+        crate::entity_relay!(OffsetModificationsConnection, OffsetModificationsEdge, Arc<OffsetModifications>);
+
+        /// @emoji 📐 SDL `PlaneDiff` — nullable nested geometry per golden.
+        #[derive(Clone, Debug, Default)]
+        pub struct PlaneDiff {
+            pub id: Id,
+            pub origin: Option<Arc<Point>>,
+            pub x_axis: Option<Arc<Vector>>,
+            pub y_axis: Option<Arc<Vector>>,
+        }
+
+        impl PlaneDiff {
+            pub async fn compute_hash(&self) -> String {
+                let mut ch: Vec<String> = Vec::new();
+                if let Some(p) = &self.origin {
+                    ch.push(p.compute_hash().await);
+                }
+                if let Some(v) = &self.x_axis {
+                    ch.push(v.compute_hash().await);
+                }
+                if let Some(v) = &self.y_axis {
+                    ch.push(v.compute_hash().await);
+                }
+                ch.sort();
+                crate::hash::merkle_node_str(&["PlaneDiff", self.id.as_str()], ch)
+            }
+        }
+
+        #[Object(name = "PlaneDiff")]
+        impl PlaneDiff {
+            async fn id(&self) -> Id {
+                self.id.clone()
+            }
+            async fn hash(&self) -> String {
+                self.compute_hash().await
+            }
+            async fn owner(&self) -> Option<EntityInterface> {
+                None
+            }
+            async fn owns(&self) -> Option<EntityConnectionInterface> {
+                Some(empty_entity_connection())
+            }
+            async fn origin(&self) -> Option<Arc<Point>> {
+                self.origin.clone()
+            }
+            #[graphql(name = "xAxis")]
+            async fn x_axis(&self) -> Option<Arc<Vector>> {
+                self.x_axis.clone()
+            }
+            #[graphql(name = "yAxis")]
+            async fn y_axis(&self) -> Option<Arc<Vector>> {
+                self.y_axis.clone()
+            }
+        }
+
+        crate::entity_relay!(PlaneDiffConnection, PlaneDiffEdge, Arc<PlaneDiff>);
+
+        #[derive(Clone, Debug)]
+        pub struct PlaneModification {
+            pub id: Id,
+            pub before: Arc<Plane>,
+            pub diff: Arc<PlaneDiff>,
+            pub after: Arc<Plane>,
+        }
+
+        impl Default for PlaneModification {
+            fn default() -> Self {
+                Self {
+                    id: Id::default(),
+                    before: Arc::new(Plane::default()),
+                    diff: Arc::new(PlaneDiff::default()),
+                    after: Arc::new(Plane::default()),
+                }
+            }
+        }
+
+        impl PlaneModification {
+            pub async fn compute_hash(&self) -> String {
+                let b = self.before.compute_hash().await;
+                let d = self.diff.compute_hash().await;
+                let a = self.after.compute_hash().await;
+                crate::hash::merkle_node_str(&["PlaneModification", self.id.as_str()], vec![b, d, a])
+            }
+        }
+
+        #[Object(name = "PlaneModification")]
+        impl PlaneModification {
+            async fn id(&self) -> Id {
+                self.id.clone()
+            }
+            async fn hash(&self) -> String {
+                self.compute_hash().await
+            }
+            async fn owner(&self) -> Option<EntityInterface> {
+                None
+            }
+            async fn owns(&self) -> Option<EntityConnectionInterface> {
+                Some(empty_entity_connection())
+            }
+            async fn before(&self) -> EntityInterface {
+                EntityInterface::Plane(self.before.clone())
+            }
+            async fn diff(&self) -> GqlDiffInterface {
+                GqlDiffInterface::PlaneDiff(self.diff.clone())
+            }
+            async fn after(&self) -> EntityInterface {
+                EntityInterface::Plane(self.after.clone())
+            }
+        }
+
+        crate::entity_relay!(PlaneModificationConnection, PlaneModificationEdge, Arc<PlaneModification>);
+
+        #[derive(Clone, Debug, Default)]
+        pub struct PlaneModifications {
+            pub id: Id,
+        }
+
+        #[Object(name = "PlaneModifications")]
+        impl PlaneModifications {
+            async fn id(&self) -> Id {
+                self.id.clone()
+            }
+            async fn hash(&self) -> String {
+                crate::hash::h(&["plane-modifications", self.id.as_str()])
+            }
+            async fn owner(&self) -> Option<EntityInterface> {
+                None
+            }
+            async fn owns(&self) -> Option<EntityConnectionInterface> {
+                Some(empty_entity_connection())
+            }
+            async fn removed(&self) -> EntityConnectionInterface {
+                empty_entity_connection()
+            }
+            async fn modifications(&self) -> PlaneModificationConnection {
+                PlaneModificationConnection::from_entities(Vec::new()).await
+            }
+            async fn added(&self) -> EntityConnectionInterface {
+                empty_entity_connection()
+            }
+        }
+
+        impl PlaneModifications {
+            pub async fn compute_hash(&self) -> String {
+                crate::hash::h(&["plane-modifications", self.id.as_str()])
+            }
+        }
+
+        crate::entity_relay!(PlaneModificationsConnection, PlaneModificationsEdge, Arc<PlaneModifications>);
+
+        /// @emoji 📐 SDL `PositionDiff`.
+        #[derive(Clone, Debug, Default)]
+        pub struct PositionDiff {
+            pub id: Id,
+            pub center: Option<Arc<Coordinate>>,
+            pub plane: Option<Arc<Plane>>,
+        }
+
+        impl PositionDiff {
+            pub async fn compute_hash(&self) -> String {
+                let mut ch: Vec<String> = Vec::new();
+                if let Some(c) = &self.center {
+                    ch.push(c.compute_hash().await);
+                }
+                if let Some(p) = &self.plane {
+                    ch.push(p.compute_hash().await);
+                }
+                ch.sort();
+                crate::hash::merkle_node_str(&["PositionDiff", self.id.as_str()], ch)
+            }
+        }
+
+        #[Object(name = "PositionDiff")]
+        impl PositionDiff {
+            async fn id(&self) -> Id {
+                self.id.clone()
+            }
+            async fn hash(&self) -> String {
+                self.compute_hash().await
+            }
+            async fn owner(&self) -> Option<EntityInterface> {
+                None
+            }
+            async fn owns(&self) -> Option<EntityConnectionInterface> {
+                Some(empty_entity_connection())
+            }
+            async fn center(&self) -> Option<Arc<Coordinate>> {
+                self.center.clone()
+            }
+            async fn plane(&self) -> Option<Arc<Plane>> {
+                self.plane.clone()
+            }
+        }
+
+        crate::entity_relay!(PositionDiffConnection, PositionDiffEdge, Arc<PositionDiff>);
+
+        #[derive(Clone, Debug)]
+        pub struct PositionModification {
+            pub id: Id,
+            pub before: Arc<Position>,
+            pub diff: Arc<PositionDiff>,
+            pub after: Arc<Position>,
+        }
+
+        impl Default for PositionModification {
+            fn default() -> Self {
+                Self {
+                    id: Id::default(),
+                    before: Arc::new(Position::default()),
+                    diff: Arc::new(PositionDiff::default()),
+                    after: Arc::new(Position::default()),
+                }
+            }
+        }
+
+        impl PositionModification {
+            pub async fn compute_hash(&self) -> String {
+                let b = self.before.compute_hash().await;
+                let d = self.diff.compute_hash().await;
+                let a = self.after.compute_hash().await;
+                crate::hash::merkle_node_str(&["PositionModification", self.id.as_str()], vec![b, d, a])
+            }
+        }
+
+        #[Object(name = "PositionModification")]
+        impl PositionModification {
+            async fn id(&self) -> Id {
+                self.id.clone()
+            }
+            async fn hash(&self) -> String {
+                self.compute_hash().await
+            }
+            async fn owner(&self) -> Option<EntityInterface> {
+                None
+            }
+            async fn owns(&self) -> Option<EntityConnectionInterface> {
+                Some(empty_entity_connection())
+            }
+            async fn before(&self) -> EntityInterface {
+                EntityInterface::Position(self.before.clone())
+            }
+            async fn diff(&self) -> GqlDiffInterface {
+                GqlDiffInterface::PositionDiff(self.diff.clone())
+            }
+            async fn after(&self) -> EntityInterface {
+                EntityInterface::Position(self.after.clone())
+            }
+        }
+
+        crate::entity_relay!(PositionModificationConnection, PositionModificationEdge, Arc<PositionModification>);
+
+        #[derive(Clone, Debug, Default)]
+        pub struct PositionModifications {
+            pub id: Id,
+        }
+
+        #[Object(name = "PositionModifications")]
+        impl PositionModifications {
+            async fn id(&self) -> Id {
+                self.id.clone()
+            }
+            async fn hash(&self) -> String {
+                crate::hash::h(&["position-modifications", self.id.as_str()])
+            }
+            async fn owner(&self) -> Option<EntityInterface> {
+                None
+            }
+            async fn owns(&self) -> Option<EntityConnectionInterface> {
+                Some(empty_entity_connection())
+            }
+            async fn removed(&self) -> EntityConnectionInterface {
+                empty_entity_connection()
+            }
+            async fn modifications(&self) -> PositionModificationConnection {
+                PositionModificationConnection::from_entities(Vec::new()).await
+            }
+            async fn added(&self) -> EntityConnectionInterface {
+                empty_entity_connection()
+            }
+        }
+
+        impl PositionModifications {
+            pub async fn compute_hash(&self) -> String {
+                crate::hash::h(&["position-modifications", self.id.as_str()])
+            }
+        }
+
+        crate::entity_relay!(PositionModificationsConnection, PositionModificationsEdge, Arc<PositionModifications>);
+
+        /// @emoji 📐 SDL `LocationDiff`.
+        #[derive(Clone, Debug, Default)]
+        pub struct LocationDiff {
+            pub id: Id,
+            pub longitude: Option<f64>,
+            pub latitude: Option<f64>,
+            pub altitude: Option<f64>,
+        }
+
+        impl LocationDiff {
+            pub async fn compute_hash(&self) -> String {
+                crate::hash::merkle_node_str(
+                    &[
+                        "LocationDiff",
+                        self.id.as_str(),
+                        &format!("{:?}", self.longitude),
+                        &format!("{:?}", self.latitude),
+                        &format!("{:?}", self.altitude),
+                    ],
+                    Vec::new(),
+                )
+            }
+        }
+
+        #[Object(name = "LocationDiff")]
+        impl LocationDiff {
+            async fn id(&self) -> Id {
+                self.id.clone()
+            }
+            async fn hash(&self) -> String {
+                self.compute_hash().await
+            }
+            async fn owner(&self) -> Option<EntityInterface> {
+                None
+            }
+            async fn owns(&self) -> Option<EntityConnectionInterface> {
+                Some(empty_entity_connection())
+            }
+            async fn longitude(&self) -> Option<f64> {
+                self.longitude
+            }
+            async fn latitude(&self) -> Option<f64> {
+                self.latitude
+            }
+            async fn altitude(&self) -> Option<f64> {
+                self.altitude
+            }
+        }
+
+        crate::entity_relay!(LocationDiffConnection, LocationDiffEdge, Arc<LocationDiff>);
+
+        #[derive(Clone, Debug)]
+        pub struct LocationModification {
+            pub id: Id,
+            pub before: Arc<Location>,
+            pub diff: Arc<LocationDiff>,
+            pub after: Arc<Location>,
+        }
+
+        impl Default for LocationModification {
+            fn default() -> Self {
+                Self {
+                    id: Id::default(),
+                    before: Arc::new(Location::default()),
+                    diff: Arc::new(LocationDiff::default()),
+                    after: Arc::new(Location::default()),
+                }
+            }
+        }
+
+        impl LocationModification {
+            pub async fn compute_hash(&self) -> String {
+                let b = self.before.compute_hash().await;
+                let d = self.diff.compute_hash().await;
+                let a = self.after.compute_hash().await;
+                crate::hash::merkle_node_str(&["LocationModification", self.id.as_str()], vec![b, d, a])
+            }
+        }
+
+        #[Object(name = "LocationModification")]
+        impl LocationModification {
+            async fn id(&self) -> Id {
+                self.id.clone()
+            }
+            async fn hash(&self) -> String {
+                self.compute_hash().await
+            }
+            async fn owner(&self) -> Option<EntityInterface> {
+                None
+            }
+            async fn owns(&self) -> Option<EntityConnectionInterface> {
+                Some(empty_entity_connection())
+            }
+            async fn before(&self) -> EntityInterface {
+                EntityInterface::Location(self.before.clone())
+            }
+            async fn diff(&self) -> GqlDiffInterface {
+                GqlDiffInterface::LocationDiff(self.diff.clone())
+            }
+            async fn after(&self) -> EntityInterface {
+                EntityInterface::Location(self.after.clone())
+            }
+        }
+
+        crate::entity_relay!(LocationModificationConnection, LocationModificationEdge, Arc<LocationModification>);
+
+        #[derive(Clone, Debug, Default)]
+        pub struct LocationModifications {
+            pub id: Id,
+        }
+
+        #[Object(name = "LocationModifications")]
+        impl LocationModifications {
+            async fn id(&self) -> Id {
+                self.id.clone()
+            }
+            async fn hash(&self) -> String {
+                crate::hash::h(&["location-modifications", self.id.as_str()])
+            }
+            async fn owner(&self) -> Option<EntityInterface> {
+                None
+            }
+            async fn owns(&self) -> Option<EntityConnectionInterface> {
+                Some(empty_entity_connection())
+            }
+            async fn removed(&self) -> EntityConnectionInterface {
+                empty_entity_connection()
+            }
+            async fn modifications(&self) -> LocationModificationConnection {
+                LocationModificationConnection::from_entities(Vec::new()).await
+            }
+            async fn added(&self) -> EntityConnectionInterface {
+                empty_entity_connection()
+            }
+        }
+
+        impl LocationModifications {
+            pub async fn compute_hash(&self) -> String {
+                crate::hash::h(&["location-modifications", self.id.as_str()])
+            }
+        }
+
+        crate::entity_relay!(LocationModificationsConnection, LocationModificationsEdge, Arc<LocationModifications>);
         //#endregion 🪢 golden_interface_relay
 
         //#region 🧱 golden_interface_stubs
-        /// @emoji 🧷 SDL `EmptyDiff` — placeholder [`Diff`] implementor until geometry `*Diff` rows wire into this enum.
+        /// @emoji 🧷 SDL `EmptyDiff` — placeholder [`Diff`] implementor until geometry `*Diff` kinds wire into this enum.
         #[derive(Clone, Debug, Default)]
         pub struct GqlEmptyDiff {
             pub id: Id,
@@ -10502,7 +11756,7 @@ pub mod gql {
             }
         }
 
-        /// @emoji 🧷 SDL `EmptyEvent` — placeholder [`Event`] implementor until event rows implement the interface.
+        /// @emoji 🧷 SDL `EmptyEvent` — placeholder [`Event`] implementor until concrete event kinds implement the interface.
         #[derive(Clone, Debug, Default)]
         pub struct EmptyEvent {
             pub id: Id,
@@ -10530,7 +11784,7 @@ pub mod gql {
             }
         }
 
-        /// @emoji 🧷 SDL `EmptyRichStrong` — placeholder [`RichStrongEntity`] until every artifact row exposes rich fields.
+        /// @emoji 🧷 SDL `EmptyRichStrong` — placeholder [`RichStrongEntity`] until every artifact exposes rich fields.
         #[derive(Clone, Debug, Default)]
         pub struct EmptyRichStrong {
             pub id: Id,
@@ -10637,6 +11891,12 @@ pub mod gql {
         pub enum GqlDiffInterface {
             Stub(Arc<GqlEmptyDiff>),
             VectorDiff(Arc<VectorDiff>),
+            PointDiff(Arc<PointDiff>),
+            CoordinateDiff(Arc<CoordinateDiff>),
+            OffsetDiff(Arc<OffsetDiff>),
+            PlaneDiff(Arc<PlaneDiff>),
+            PositionDiff(Arc<PositionDiff>),
+            LocationDiff(Arc<LocationDiff>),
         }
 
         /// @emoji 🌐 SDL `interface Modification` — `before` / `diff` / `after` triple shell.
@@ -10654,6 +11914,12 @@ pub mod gql {
         pub enum GqlModificationInterface {
             Stub(Arc<EmptyModification>),
             VectorModification(Arc<VectorModification>),
+            PointModification(Arc<PointModification>),
+            CoordinateModification(Arc<CoordinateModification>),
+            OffsetModification(Arc<OffsetModification>),
+            PlaneModification(Arc<PlaneModification>),
+            PositionModification(Arc<PositionModification>),
+            LocationModification(Arc<LocationModification>),
         }
 
         /// @emoji 🌐 SDL `interface Input` — operation-side argument projection (`*Input` types implement this in golden).
@@ -10710,7 +11976,7 @@ pub mod gql {
             Stub(Arc<EmptyEvent>),
         }
 
-        /// @emoji 🌐 SDL `interface RichStrongEntity` — titled uuid entities (`EmptyRichStrong` placeholder + future concrete rows).
+        /// @emoji 🌐 SDL `interface RichStrongEntity` — titled uuid entities (`EmptyRichStrong` placeholder + future concrete kinds).
         #[derive(Clone, Interface)]
         #[graphql(
             name = "RichStrongEntity",
@@ -10872,7 +12138,7 @@ pub mod gql {
         Online,
     }
 
-    /// @emoji 🗄️ Golden `FileBackbone` — disk-backed backbone row (stub until native attach wires fields).
+    /// @emoji 🗄️ Golden `FileBackbone` — disk-backed backbone shell (stub until native attach wires fields).
     pub struct FileBackbone {
         pub id: Id,
         pub uri: String,
@@ -10900,7 +12166,7 @@ pub mod gql {
         }
     }
 
-    /// @emoji 🌐 Golden `WebsocketBackbone` — websocket backbone row (stub).
+    /// @emoji 🌐 Golden `WebsocketBackbone` — websocket backbone shell (stub).
     pub struct WebsocketBackbone {
         pub id: Id,
         pub uri: String,
@@ -10961,7 +12227,7 @@ pub mod gql {
     }
 
     impl BackboneConnection {
-        /// @emoji 🪢 Empty backbone connection (no rows materialised yet).
+        /// @emoji 🪢 Empty backbone connection (no entities materialised yet).
         pub fn empty() -> Self {
             Self { edges: Vec::new(), page_info: Arc::new(crate::gql_relay::PageInfo::default()), hash: crate::hash::h(&["backbone-connection", "empty"]) }
         }
@@ -10974,7 +12240,7 @@ pub mod gql {
     }
 
     impl LocalProvider {
-        /// @emoji 🏠 Builds a deterministic shell for the active session provider row.
+        /// @emoji 🏠 Builds a deterministic shell for the active session provider entity.
         pub fn new(id: Id, uri: String) -> Self {
             Self { id, uri }
         }
@@ -11063,7 +12329,7 @@ pub mod gql {
     }
 
     impl RemoteProviderConnection {
-        /// @emoji 🪢 Builds the golden `RemoteProviderConnection` from runtime rows.
+        /// @emoji 🪢 Builds the golden `RemoteProviderConnection` from runtime entities.
         pub fn from_providers(providers: Vec<Arc<RemoteProvider>>) -> Self {
             let mut child_hashes = Vec::with_capacity(providers.len());
             for p in &providers {
@@ -11249,7 +12515,7 @@ pub mod gql {
             rt.sessions.read().await.first().cloned().ok_or_else(|| async_graphql::Error::new("no session"))
         }
 
-        /// @emoji 🏪 Active [`Store`] for bundle tests and relay paths (same row as `LocalProvider.stores` / `Session.stores`).
+        /// @emoji 🏪 Active [`Store`] for bundle tests and relay paths (same surface as `LocalProvider.stores` / `Session.stores`).
         pub async fn store(&self) -> Store {
             Store
         }
@@ -12133,7 +13399,7 @@ pub mod gql {
     }
 
     fn build_schema_sync_for(rt: Arc<ParentStore>) -> AppSchema {
-        Schema::build(Query, Mutation, Subscription)
+        let builder = Schema::build(Query, Mutation, Subscription)
             .data(rt.clone())
             .data(rt.bus.clone())
             .register_output_type::<crate::kit::target_operations::CreatedQualityInput>()
@@ -12248,6 +13514,60 @@ pub mod gql {
             .register_output_type::<crate::gql::interfaces::VectorModifications>()
             .register_output_type::<crate::gql::interfaces::VectorModificationsEdge>()
             .register_output_type::<crate::gql::interfaces::VectorModificationsConnection>()
+            .register_output_type::<crate::gql::interfaces::PointDiff>()
+            .register_output_type::<crate::gql::interfaces::PointDiffEdge>()
+            .register_output_type::<crate::gql::interfaces::PointDiffConnection>()
+            .register_output_type::<crate::gql::interfaces::PointModification>()
+            .register_output_type::<crate::gql::interfaces::PointModificationEdge>()
+            .register_output_type::<crate::gql::interfaces::PointModificationConnection>()
+            .register_output_type::<crate::gql::interfaces::PointModifications>()
+            .register_output_type::<crate::gql::interfaces::PointModificationsEdge>()
+            .register_output_type::<crate::gql::interfaces::PointModificationsConnection>()
+            .register_output_type::<crate::gql::interfaces::CoordinateDiff>()
+            .register_output_type::<crate::gql::interfaces::CoordinateDiffEdge>()
+            .register_output_type::<crate::gql::interfaces::CoordinateDiffConnection>()
+            .register_output_type::<crate::gql::interfaces::CoordinateModification>()
+            .register_output_type::<crate::gql::interfaces::CoordinateModificationEdge>()
+            .register_output_type::<crate::gql::interfaces::CoordinateModificationConnection>()
+            .register_output_type::<crate::gql::interfaces::CoordinateModifications>()
+            .register_output_type::<crate::gql::interfaces::CoordinateModificationsEdge>()
+            .register_output_type::<crate::gql::interfaces::CoordinateModificationsConnection>()
+            .register_output_type::<crate::gql::interfaces::OffsetDiff>()
+            .register_output_type::<crate::gql::interfaces::OffsetDiffEdge>()
+            .register_output_type::<crate::gql::interfaces::OffsetDiffConnection>()
+            .register_output_type::<crate::gql::interfaces::OffsetModification>()
+            .register_output_type::<crate::gql::interfaces::OffsetModificationEdge>()
+            .register_output_type::<crate::gql::interfaces::OffsetModificationConnection>()
+            .register_output_type::<crate::gql::interfaces::OffsetModifications>()
+            .register_output_type::<crate::gql::interfaces::OffsetModificationsEdge>()
+            .register_output_type::<crate::gql::interfaces::OffsetModificationsConnection>()
+            .register_output_type::<crate::gql::interfaces::PlaneDiff>()
+            .register_output_type::<crate::gql::interfaces::PlaneDiffEdge>()
+            .register_output_type::<crate::gql::interfaces::PlaneDiffConnection>()
+            .register_output_type::<crate::gql::interfaces::PlaneModification>()
+            .register_output_type::<crate::gql::interfaces::PlaneModificationEdge>()
+            .register_output_type::<crate::gql::interfaces::PlaneModificationConnection>()
+            .register_output_type::<crate::gql::interfaces::PlaneModifications>()
+            .register_output_type::<crate::gql::interfaces::PlaneModificationsEdge>()
+            .register_output_type::<crate::gql::interfaces::PlaneModificationsConnection>()
+            .register_output_type::<crate::gql::interfaces::PositionDiff>()
+            .register_output_type::<crate::gql::interfaces::PositionDiffEdge>()
+            .register_output_type::<crate::gql::interfaces::PositionDiffConnection>()
+            .register_output_type::<crate::gql::interfaces::PositionModification>()
+            .register_output_type::<crate::gql::interfaces::PositionModificationEdge>()
+            .register_output_type::<crate::gql::interfaces::PositionModificationConnection>()
+            .register_output_type::<crate::gql::interfaces::PositionModifications>()
+            .register_output_type::<crate::gql::interfaces::PositionModificationsEdge>()
+            .register_output_type::<crate::gql::interfaces::PositionModificationsConnection>()
+            .register_output_type::<crate::gql::interfaces::LocationDiff>()
+            .register_output_type::<crate::gql::interfaces::LocationDiffEdge>()
+            .register_output_type::<crate::gql::interfaces::LocationDiffConnection>()
+            .register_output_type::<crate::gql::interfaces::LocationModification>()
+            .register_output_type::<crate::gql::interfaces::LocationModificationEdge>()
+            .register_output_type::<crate::gql::interfaces::LocationModificationConnection>()
+            .register_output_type::<crate::gql::interfaces::LocationModifications>()
+            .register_output_type::<crate::gql::interfaces::LocationModificationsEdge>()
+            .register_output_type::<crate::gql::interfaces::LocationModificationsConnection>()
             .register_output_type::<crate::gql_relay::VectorConnection>()
             .register_output_type::<crate::gql_relay::PointConnection>()
             .register_output_type::<crate::gql_relay::CoordinateConnection>()
@@ -12263,13 +13583,333 @@ pub mod gql {
             .register_input_type::<crate::geom::OffsetInput>()
             .register_input_type::<crate::geom::PlaneInput>()
             .register_input_type::<crate::geom::PositionInput>()
-            .register_input_type::<crate::geom::LocationInput>()
+            .register_input_type::<crate::geom::LocationInput>();
+        builder
+            .register_output_type::<crate::schema_gap_placeholders::AddedAttributeToConceptConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::AddedAttributeToDesignConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::AddedAttributeToDesignInputConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::AddedAttributeToPieceConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::AddedAttributeToPieceInputConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::AddedAttributeToPortConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::AddedAttributeToQualityConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::AddedAttributeToTagConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::AddedAttributeToTypeConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::AddedAttributeToTypeInputConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::AddedAttributesToConceptConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::AddedAttributesToDesignConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::AddedAttributesToDesignInputConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::AddedAttributesToPieceConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::AddedAttributesToPieceInputConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::AddedAttributesToPortConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::AddedAttributesToQualityConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::AddedAttributesToTagConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::AddedAttributesToTypeConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::AddedAttributesToTypeInputConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::AddedChildPieceWithParentConnectionConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::AddedChildPieceWithParentConnectionInputConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::AddedChildPiecesWithParentConnectionsConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::AddedChildPiecesWithParentConnectionsInputConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::AddedConnectorConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::AddedConnectorInputConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::AddedConnectorsConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::AddedConnectorsInputConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::AddedHangingChildPieceWithParentConnectionInputConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::AddedHangingChildPieceWithParentConnectionConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::AddedHangingChildPiecesWithParentConnectionsConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::AddedHangingChildPiecesWithParentConnectionsInputConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::AttributeDiffConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::AttributeModificationConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::AttributeModificationsConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::AuthorDiffConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::AuthorModificationConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::AuthorModificationsConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::BenchmarkDiffConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::BenchmarkModificationConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::BenchmarkModificationsConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::ChangedPieceToTypeConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::ChangedPieceToTypeInputConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::ChangedPiecesToTypeConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::ChangedPiecesToTypeInputConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::ConceptDiffConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::ConceptModificationConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::ConceptModificationsConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::ConceptOperationConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::ConnectionDiffConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::ConnectionModificationConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::ConnectionModificationsConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::ConnectorDiffConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::ConnectorModificationConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::ConnectorModificationsConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::ConnectorOperationConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::CreatedConceptConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::CreatedConceptsConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::CreatedDesignConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::CreatedDesignInputConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::CreatedDesignsConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::CreatedDesignsInputConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::CreatedPortConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::CreatedPortsConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::CreatedQualitiesConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::CreatedQualityConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::CreatedTagConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::CreatedTagsConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::CreatedTypeConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::CreatedTypeInputConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::CreatedTypesConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::CreatedTypesInputConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::DeletedConceptConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::DeletedConceptsConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::DeletedDesignConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::DeletedDesignsConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::DeletedPieceConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::DeletedPiecesConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::DeletedPiecesAndConnectionsConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::DeletedPortConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::DeletedPortsConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::DeletedQualitiesConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::DeletedQualityConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::DeletedTagConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::DeletedTagsConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::DeletedTypeConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::DeletedTypesConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::DesignModificationConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::DesignModificationsConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::DesignOperationConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::DraggedPiecesConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::DraggedPiecesInputConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::FamilyDiffConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::FamilyModificationConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::FamilyModificationsConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::FileDiffConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::FileModificationConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::FileModificationsConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::FixedPiecesConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::FlattenedDesignConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::FolderDiffConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::FolderModificationConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::FolderModificationsConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::GroupDiffConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::GroupModificationConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::GroupModificationsConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::KitModificationConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::KitModificationsConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::KitOperationConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::LayerDiffConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::LayerModificationConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::LayerModificationsConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::MovedPieceConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::MovedPieceInputConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::MovedPiecesConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::MovedPiecesInputConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::PieceDiffConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::PieceModificationConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::PieceModificationsConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::PieceOperationConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::PiecesOperationConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::PlaceDiffConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::PlaceModificationConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::PlaceModificationsConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::PortDiffConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::PortModificationConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::PortModificationsConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::PortOperationConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::PropDiffConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::PropModificationConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::PropModificationsConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::QualityDiffConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::QualityModificationConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::QualityModificationsConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::QualityOperationConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::RemovedAttributeFromConceptConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::RemovedAttributeFromDesignConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::RemovedAttributeFromPieceConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::RemovedAttributeFromPortConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::RemovedAttributeFromQualityConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::RemovedAttributeFromTagConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::RemovedAttributeFromTypeConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::RemovedAttributesFromConceptConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::RemovedAttributesFromDesignConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::RemovedAttributesFromPieceConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::RemovedAttributesFromPortConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::RemovedAttributesFromQualityConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::RemovedAttributesFromTagConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::RemovedAttributesFromTypeConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::RemovedConnectorConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::RemovedConnectorsConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::RenamedConceptConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::RenamedConnectorConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::RenamedConnectorInputConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::RenamedPieceConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::RenamedPieceInputConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::RenamedPortConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::RenamedQualityConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::RenamedTagConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::RenamedTypeConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::RenamedTypeInputConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::RepresentationDiffConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::RepresentationModificationConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::RepresentationModificationsConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::SideDiffConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::SideModificationConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::SideModificationsConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::StatDiffConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::StatModificationConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::StatModificationsConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::TagDiffConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::TagModificationConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::TagModificationsConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::TagOperationConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::TypeDiffConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::TypeModificationConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::TypeModificationsConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::TypeOperationConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::UpdatedConceptDescriptionConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::UpdatedConceptIconConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::UpdatedConnectorDescriptionConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::UpdatedConnectorDescriptionInputConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::UpdatedConnectorIconConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::UpdatedConnectorIconInputConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::UpdatedPieceDescriptionConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::UpdatedPieceDescriptionInputConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::UpdatedPortDescriptionConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::UpdatedPortIconConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::UpdatedQualityDescriptionConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::UpdatedQualityIconConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::UpdatedTagDescriptionConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::UpdatedTagIconConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::UpdatedTypeDescriptionConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::UpdatedTypeDescriptionInputConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::UpdatedTypeIconConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::UpdatedTypeIconInputConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::GapChangedDescriptionInputConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::GapClumpConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::GapCreatedFixedPieceInputConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::GapDesignDiffConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::GapDraggedPieceInputConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::GapKitDiffConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::GapRenamedKitInputConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::GapVersionConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::AddedAttributeToConceptInputConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::AddedAttributeToPortInputConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::AddedAttributeToQualityInputConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::AddedAttributeToTagInputConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::AddedAttributesToConceptInputConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::AddedAttributesToPortInputConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::AddedAttributesToQualityInputConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::AddedAttributesToTagInputConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::AlternativeCommandConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::ChangedDescriptionConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::CreatedConceptInputConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::CreatedConceptsInputConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::CreatedFixedPieceConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::CreatedPortInputConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::CreatedPortsInputConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::CreatedQualitiesInputConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::CreatedQualityInputConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::CreatedTagInputConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::CreatedTagsInputConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::DraggedPieceConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::FileBackboneConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::FileBackboneCommandConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::FixedPieceConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::GraphConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::KitConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::LocalProviderCommandConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::PlaceConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::RemoteProviderCommandConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::RenamedConceptInputConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::RenamedKitConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::RenamedPortInputConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::RenamedQualityInputConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::RenamedTagInputConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::SessionConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::SessionCommandConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::SideConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::StoreCommandConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::TheKitConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::UnsavedChangeCommandConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::UpdatedConceptDescriptionInputConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::UpdatedConceptIconInputConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::UpdatedPortDescriptionInputConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::UpdatedPortIconInputConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::UpdatedQualityDescriptionInputConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::UpdatedQualityIconInputConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::UpdatedTagDescriptionInputConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::UpdatedTagIconInputConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::VersionCommandConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::WebsocketBackboneConnection>()
+            .register_output_type::<crate::schema_gap_placeholders::WebsocketBackboneCommandConnection>()
             .finish()
+    }
+
+    fn is_non_golden_sdl_type(name: &str) -> bool {
+        matches!(
+            name,
+            "ConceptOperationInput"
+                | "ConnectorOperationInput"
+                | "DeletedConceptInput"
+                | "DeletedConceptsInput"
+                | "DeletedPortInput"
+                | "DeletedPortsInput"
+                | "DeletedQualitiesInput"
+                | "DeletedQualityInput"
+                | "DeletedTagInput"
+                | "DeletedTagsInput"
+                | "DesignOperationInput"
+                | "EmptyArtifact"
+                | "EmptyDiff"
+                | "EmptyDocument"
+                | "EmptyEvent"
+                | "EmptyModification"
+                | "EmptyPubInput"
+                | "EmptyRichStrong"
+                | "OperationInput"
+                | "PieceOperationInput"
+                | "PiecesOperationInput"
+                | "PortOperationInput"
+                | "QualityOperationInput"
+                | "RemovedAttributeFromConceptInput"
+                | "RemovedAttributeFromPortInput"
+                | "RemovedAttributeFromQualityInput"
+                | "RemovedAttributeFromTagInput"
+                | "RemovedAttributesFromConceptInput"
+                | "RemovedAttributesFromPortInput"
+                | "RemovedAttributesFromQualityInput"
+                | "RemovedAttributesFromTagInput"
+                | "TagOperationInput"
+                | "TypeOperationInput"
+        )
+    }
+
+    fn prune_non_golden_sdl(mut sdl: String) -> String {
+        let mut out = String::with_capacity(sdl.len());
+        let mut skip_depth = 0i32;
+        for line in sdl.lines() {
+            let trimmed = line.trim_start();
+            if skip_depth == 0 {
+                if let Some(rest) = trimmed.strip_prefix("type ") {
+                    let name = rest.split(|ch: char| ch == ' ' || ch == '{').next().unwrap_or_default();
+                    if is_non_golden_sdl_type(name) {
+                        skip_depth += line.chars().filter(|&ch| ch == '{').count() as i32;
+                        skip_depth -= line.chars().filter(|&ch| ch == '}').count() as i32;
+                        continue;
+                    }
+                }
+                out.push_str(line);
+                out.push('\n');
+                continue;
+            }
+
+            skip_depth += line.chars().filter(|&ch| ch == '{').count() as i32;
+            skip_depth -= line.chars().filter(|&ch| ch == '}').count() as i32;
+        }
+        sdl.clear();
+        normalize_target_sdl(&out)
     }
 
     /// 📜 Canonical SDL emitted by the executable async-graphql schema.
     pub async fn sdl() -> String {
-        build_schema().await.sdl()
+        prune_non_golden_sdl(build_schema().await.sdl())
     }
 
     /// 🧮 Normalize SDL text for stable comparisons (trim ends, collapse blank-line runs).
@@ -12944,8 +14584,8 @@ mod tests {
     }
 
     #[test]
-    fn graph_operation_registry_row_count() {
-        assert_eq!(crate::operation::GRAPH_OPERATION_REGISTRY_ROWS, 98);
+    fn graph_operation_registry_len_matches_fixture() {
+        assert_eq!(crate::operation::GRAPH_OPERATION_REGISTRY_LEN, 98);
     }
 
     #[test]

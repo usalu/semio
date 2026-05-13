@@ -469,7 +469,7 @@ export abstract class Entity {
 //#endregion 🛠️Base
 
 //#region 🪶WeakArtifacts
-/** @emoji 🪪 Weak attribute row anchored on an owning {@link Entity} (no separate {@code node(id:)} identity). */
+/** @emoji 🪪 Weak {@link Attribute} anchored on an owning {@link Entity} (no separate {@code node(id:)} identity). */
 export class Attribute {
   constructor(
     public readonly owner: Entity,
@@ -484,7 +484,7 @@ export class Attribute {
   }
 }
 
-/** @emoji 🏁 Weak benchmark row under {@link Quality}. */
+/** @emoji 🏁 Weak {@link Benchmark} under {@link Quality}. */
 export class Benchmark {
   constructor(
     public readonly quality: Quality,
@@ -681,14 +681,14 @@ function parseAttributeConnectionUnder(ownerEntity: Entity, owner: JsonObject | 
 }
 
 //#region 📦KitBranch
-/** @emoji 📦 String field from nested kit row (e.g. `{ design: { name } }` or flattened `{ name }`). */
+/** @emoji 📦 String field from nested kit JSON (e.g. `{ design: { name } }` or flattened `{ name }`). */
 function readKitBranchString(frag: JsonObject | null | undefined, branchKey: string, field: string): string {
   const branch = frag?.[branchKey] as JsonObject | undefined;
   const v = branch?.[field] ?? frag?.[field];
   return String(v ?? "");
 }
 
-/** @emoji 📦 Numeric field from nested kit row (e.g. {@code qualitySum}). */
+/** @emoji 📦 Numeric field from nested kit JSON (e.g. {@code qualitySum}). */
 function readKitBranchNumber(frag: JsonObject | null | undefined, branchKey: string, field: string): number {
   const branch = frag?.[branchKey] as JsonObject | undefined;
   const raw = branch?.[field] ?? frag?.[field];
@@ -782,7 +782,7 @@ function parseEntityConnectionIds(frag: JsonObject | null | undefined, key: stri
   return out;
 }
 
-/** @emoji 🧩 Parses {@code key: [{ id: … }]} non-relay {@code [StrongEntity!]} lists on a JSON row (e.g. {@code Checkpoint.changes}). */
+/** @emoji 🧩 Parses {@code key: [{ id: … }]} non-relay {@code [StrongEntity!]} lists on a JSON object (e.g. {@code Checkpoint.changes}). */
 function parseStrongEntityArrayIds(frag: JsonObject | null | undefined, key: string): readonly string[] {
   const arr = frag?.[key] as readonly JsonValue[] | undefined;
   if (!Array.isArray(arr)) return [];
@@ -841,9 +841,9 @@ export class Session {
         try {
           const msg = parseJsonValue(eventJson) as GraphqlEnvelope<JsonObject>;
           if (msg.errors && Array.isArray(msg.errors) && msg.errors.length) return;
-          const row = msg.data;
-          if (row == null || typeof row !== "object") return;
-          this.dispatchSubscriptionGraphqlData(row as JsonObject);
+          const subscriptionData = msg.data;
+          if (subscriptionData == null || typeof subscriptionData !== "object") return;
+          this.dispatchSubscriptionGraphqlData(subscriptionData as JsonObject);
         } catch {
           /* ignore */
         }
@@ -1685,7 +1685,7 @@ export class Checkpoint extends Entity {
     return parseEntityConnectionIds(cp ?? null, "edits");
   }
 
-  /** @emoji 📚 Id-list-stable {@link Change} rows for this checkpoint (schema {@code changes: [Change!]!}). */
+  /** @emoji 📚 Id-list-stable {@link Change} entities for this checkpoint (schema {@code changes: [Change!]!}). */
   async changes(): Promise<readonly Change[]> {
     const ids = await this.changeIds();
     return Object.freeze(ids.map((cid) => this.change(cid)));
@@ -1735,31 +1735,31 @@ export class Change extends Entity {
   }
 
   async description(): Promise<string> {
-    const row = await this.readUnderChange("description");
-    return String(row?.["description"] ?? "");
+    const node = await this.readUnderChange("description");
+    return String(node?.["description"] ?? "");
   }
 
   async origin(): Promise<string> {
-    const row = await this.readUnderChange("origin");
-    return String(row?.["origin"] ?? "");
+    const node = await this.readUnderChange("origin");
+    return String(node?.["origin"] ?? "");
   }
 
   async saved(): Promise<boolean | null> {
-    const row = await this.readUnderChange("saved");
-    const v = row?.["saved"];
+    const node = await this.readUnderChange("saved");
+    const v = node?.["saved"];
     if (v == null) return null;
     return Boolean(v);
   }
 
   async startedAt(): Promise<string> {
-    const row = await this.readUnderChange("startedAt");
-    const v = row?.["startedAt"];
+    const node = await this.readUnderChange("startedAt");
+    const v = node?.["startedAt"];
     return v == null ? "" : String(v);
   }
 
   async savedAt(): Promise<string | null> {
-    const row = await this.readUnderChange("savedAt");
-    const v = row?.["savedAt"];
+    const node = await this.readUnderChange("savedAt");
+    const v = node?.["savedAt"];
     return v == null ? null : String(v);
   }
 }
@@ -1785,24 +1785,24 @@ export class Edit extends Entity {
   }
 
   async description(): Promise<string> {
-    const row = await this.readUnderEdit("description");
-    return String(row?.["description"] ?? "");
+    const node = await this.readUnderEdit("description");
+    return String(node?.["description"] ?? "");
   }
 
   async origin(): Promise<string> {
-    const row = await this.readUnderEdit("origin");
-    return String(row?.["origin"] ?? "");
+    const node = await this.readUnderEdit("origin");
+    return String(node?.["origin"] ?? "");
   }
 
   async sequenceNumber(): Promise<number> {
-    const row = await this.readUnderEdit("sequenceNumber");
-    const v = row?.["sequenceNumber"];
+    const node = await this.readUnderEdit("sequenceNumber");
+    const v = node?.["sequenceNumber"];
     return typeof v === "number" ? v : Number(v ?? NaN);
   }
 
   async startedAt(): Promise<string> {
-    const row = await this.readUnderEdit("startedAt");
-    const v = row?.["startedAt"];
+    const node = await this.readUnderEdit("startedAt");
+    const v = node?.["startedAt"];
     return v == null ? "" : String(v);
   }
 }
@@ -1858,7 +1858,7 @@ export abstract class Diff extends Entity { }
 /** @emoji 🧮 Abstract modification triple (before, diff, after). */
 export abstract class Modification extends Entity { }
 
-/** @emoji 🧮 Wrapper for removed/added/modification rows on an entity diff. */
+/** @emoji 🧮 Wrapper for removed/added/modification aggregates on an entity diff. */
 export class Modifications extends Entity { }
 
 /** @emoji 📥 Abstract operation input payload (arguments mirror SDL input types). */
@@ -1976,7 +1976,7 @@ export class Design extends Entity {
   }
 
   /**
-   * @emoji 📖 Stateless read for one {@code design(id){ … }} selection; {@link FieldSpec#parse} receives the kit row (with nested {@code design}).
+   * @emoji 📖 Stateless read for one {@code design(id){ … }} selection; {@link FieldSpec#parse} receives the kit JSON (with nested {@code design}).
    */
   async fieldRead<T>(spec: FieldSpec<T>): Promise<T> {
     const frag = await this.readKitInner(this.dsel(spec.selection));
@@ -2537,8 +2537,8 @@ export class Coordinate {
     const frag = (await this.parent.piece.readKitInner(
       this.parent.piece.kitPieceSelection(`${this.parent.role} { center { u v } }`),
     )) as JsonObject | null;
-    const row = pieceKit(frag)?.[this.parent.role] as JsonObject | undefined;
-    const c = row?.["center"] as JsonObject | undefined;
+    const json = pieceKit(frag)?.[this.parent.role] as JsonObject | undefined;
+    const c = json?.["center"] as JsonObject | undefined;
     return typeof c?.["u"] === "number" ? c["u"] : 0;
   }
 
@@ -2546,8 +2546,8 @@ export class Coordinate {
     const frag = (await this.parent.piece.readKitInner(
       this.parent.piece.kitPieceSelection(`${this.parent.role} { center { u v } }`),
     )) as JsonObject | null;
-    const row = pieceKit(frag)?.[this.parent.role] as JsonObject | undefined;
-    const c = row?.["center"] as JsonObject | undefined;
+    const json = pieceKit(frag)?.[this.parent.role] as JsonObject | undefined;
+    const c = json?.["center"] as JsonObject | undefined;
     return typeof c?.["v"] === "number" ? c["v"] : 0;
   }
 }
@@ -2584,8 +2584,8 @@ export class Point {
     const frag = (await this.parent.parent.piece.readKitInner(
       this.parent.parent.piece.kitPieceSelection(`${this.parent.parent.role} { plane { origin { x y z } } }`),
     )) as JsonObject | null;
-    const row = pieceKit(frag)?.[this.parent.parent.role] as JsonObject | undefined;
-    const pl = row?.["plane"] as JsonObject | undefined;
+    const json = pieceKit(frag)?.[this.parent.parent.role] as JsonObject | undefined;
+    const pl = json?.["plane"] as JsonObject | undefined;
     const o = pl?.["origin"] as JsonObject | undefined;
     return typeof o?.["x"] === "number" ? o["x"] : 0;
   }
@@ -2594,8 +2594,8 @@ export class Point {
     const frag = (await this.parent.parent.piece.readKitInner(
       this.parent.parent.piece.kitPieceSelection(`${this.parent.parent.role} { plane { origin { x y z } } }`),
     )) as JsonObject | null;
-    const row = pieceKit(frag)?.[this.parent.parent.role] as JsonObject | undefined;
-    const pl = row?.["plane"] as JsonObject | undefined;
+    const json = pieceKit(frag)?.[this.parent.parent.role] as JsonObject | undefined;
+    const pl = json?.["plane"] as JsonObject | undefined;
     const o = pl?.["origin"] as JsonObject | undefined;
     return typeof o?.["y"] === "number" ? o["y"] : 0;
   }
@@ -2604,8 +2604,8 @@ export class Point {
     const frag = (await this.parent.parent.piece.readKitInner(
       this.parent.parent.piece.kitPieceSelection(`${this.parent.parent.role} { plane { origin { x y z } } }`),
     )) as JsonObject | null;
-    const row = pieceKit(frag)?.[this.parent.parent.role] as JsonObject | undefined;
-    const pl = row?.["plane"] as JsonObject | undefined;
+    const json = pieceKit(frag)?.[this.parent.parent.role] as JsonObject | undefined;
+    const pl = json?.["plane"] as JsonObject | undefined;
     const o = pl?.["origin"] as JsonObject | undefined;
     return typeof o?.["z"] === "number" ? o["z"] : 0;
   }
@@ -2622,8 +2622,8 @@ export class Vector {
     const frag = (await this.parent.parent.piece.readKitInner(
       this.parent.parent.piece.kitPieceSelection(`${this.parent.parent.role} { plane { ${this.axisRole} { x y z } } }`),
     )) as JsonObject | null;
-    const row = pieceKit(frag)?.[this.parent.parent.role] as JsonObject | undefined;
-    const pl = row?.["plane"] as JsonObject | undefined;
+    const json = pieceKit(frag)?.[this.parent.parent.role] as JsonObject | undefined;
+    const pl = json?.["plane"] as JsonObject | undefined;
     const ax = pl?.[this.axisRole] as JsonObject | undefined;
     return typeof ax?.["x"] === "number" ? ax["x"] : 0;
   }
@@ -2632,8 +2632,8 @@ export class Vector {
     const frag = (await this.parent.parent.piece.readKitInner(
       this.parent.parent.piece.kitPieceSelection(`${this.parent.parent.role} { plane { ${this.axisRole} { x y z } } }`),
     )) as JsonObject | null;
-    const row = pieceKit(frag)?.[this.parent.parent.role] as JsonObject | undefined;
-    const pl = row?.["plane"] as JsonObject | undefined;
+    const json = pieceKit(frag)?.[this.parent.parent.role] as JsonObject | undefined;
+    const pl = json?.["plane"] as JsonObject | undefined;
     const ax = pl?.[this.axisRole] as JsonObject | undefined;
     return typeof ax?.["y"] === "number" ? ax["y"] : 0;
   }
@@ -2642,8 +2642,8 @@ export class Vector {
     const frag = (await this.parent.parent.piece.readKitInner(
       this.parent.parent.piece.kitPieceSelection(`${this.parent.parent.role} { plane { ${this.axisRole} { x y z } } }`),
     )) as JsonObject | null;
-    const row = pieceKit(frag)?.[this.parent.parent.role] as JsonObject | undefined;
-    const pl = row?.["plane"] as JsonObject | undefined;
+    const json = pieceKit(frag)?.[this.parent.parent.role] as JsonObject | undefined;
+    const pl = json?.["plane"] as JsonObject | undefined;
     const ax = pl?.[this.axisRole] as JsonObject | undefined;
     return typeof ax?.["z"] === "number" ? ax["z"] : 0;
   }
@@ -3051,18 +3051,18 @@ export class Connection extends Entity {
     return `design(id: ${gqlString(this.designId)}) { connection(id: ${gqlString(this.id)}) { ${inner} } }`;
   }
 
-  /** @emoji ⛓️ Resolved {@code design.connection} row for the given selection tail. */
-  private async connectionRow(inner: string): Promise<JsonObject | null> {
+  /** @emoji ⛓️ Resolved {@code design.connection} JSON for the given selection tail. */
+  private async connectionUnderDesign(inner: string): Promise<JsonObject | null> {
     const frag = (await this.readKitInner(this.csel(inner))) as JsonObject | null;
     return connectionKit(frag);
   }
 
   private async readConnScalarString(field: string): Promise<string> {
-    return String((await this.connectionRow(field))?.[field] ?? "");
+    return String((await this.connectionUnderDesign(field))?.[field] ?? "");
   }
 
   private async readConnScalarNumberOrNull(field: string): Promise<number | null> {
-    const v = (await this.connectionRow(field))?.[field];
+    const v = (await this.connectionUnderDesign(field))?.[field];
     return typeof v === "number" ? v : null;
   }
 
@@ -3111,17 +3111,17 @@ export class Connection extends Entity {
   }
 
   async connected(): Promise<Side | null> {
-    const row = await this.connectionRow(`connected { ${CONNECTION_SIDE_SELECTION} }`);
-    return parseSideFromJson(this.session, this.designId, this.id, "connected", row?.["connected"] as JsonObject | undefined, this.storeId);
+    const connJson = await this.connectionUnderDesign(`connected { ${CONNECTION_SIDE_SELECTION} }`);
+    return parseSideFromJson(this.session, this.designId, this.id, "connected", connJson?.["connected"] as JsonObject | undefined, this.storeId);
   }
 
   async connecting(): Promise<Side | null> {
-    const row = await this.connectionRow(`connecting { ${CONNECTION_SIDE_SELECTION} }`);
-    return parseSideFromJson(this.session, this.designId, this.id, "connecting", row?.["connecting"] as JsonObject | undefined, this.storeId);
+    const connJson = await this.connectionUnderDesign(`connecting { ${CONNECTION_SIDE_SELECTION} }`);
+    return parseSideFromJson(this.session, this.designId, this.id, "connecting", connJson?.["connecting"] as JsonObject | undefined, this.storeId);
   }
 
   async attributes(): Promise<readonly Attribute[]> {
-    return parseAttributeConnectionUnder(this, await this.connectionRow("attributes { edges { node { id key value definition } } }"));
+    return parseAttributeConnectionUnder(this, await this.connectionUnderDesign("attributes { edges { node { id key value definition } } }"));
   }
 }
 //#endregion ⛓️Connection
@@ -3438,7 +3438,7 @@ installNodeFieldMethods(Folder, "Folder", defineBoundNodeFields([
 //#endregion 📁Folder
 
 //#region 🪟Layer
-/** @emoji 🪟 Design layer row: read-only in current kit API. */
+/** @emoji 🪟 Design {@link Layer}: read-only in current kit API. */
 export class Layer extends Entity {
   readonly designId: string;
   constructor(session: Session, designId: string, id: string, storeId?: string) {

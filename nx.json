@@ -115,6 +115,10 @@
     {
       "plugin": "@nxlv/python",
       "options": {}
+    },
+    {
+      "plugin": "./repo/lib/js/nx-plugin.mjs",
+      "options": {}
     }
   ]
 }

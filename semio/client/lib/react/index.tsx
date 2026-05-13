@@ -766,8 +766,8 @@ function useResolvedType(typeId?: string): Type | null {
 // #endregion 🪢Contexts
 
 // #region 🔖EntityContextHelpers
-/** @emoji 🧭 `{ id }` view of {@link DesignContext} for sketchpad routing (no entity fetch). */
-export function useDesignContextRow(): Readonly<{ id: string }> | null {
+/** @emoji 🧭 `{ id }` shaped like golden {@code Node} from {@link DesignContext} for sketchpad routing (no entity fetch). */
+export function useDesignContextNode(): Readonly<{ id: string }> | null {
   const ctx = React.useContext(DesignContext);
   return ctx == null ? null : { id: ctx.designId };
 }
@@ -777,8 +777,8 @@ export function useHasDesignContext(): boolean {
   return React.useContext(DesignContext) != null;
 }
 
-/** @emoji 🧭 `{ id }` view of {@link PieceContext} (piece id only). */
-export function usePieceContextRow(): Readonly<{ id: string }> | null {
+/** @emoji 🧭 `{ id }` from {@link PieceContext} (piece id only), {@code Node}-shaped. */
+export function usePieceContextNode(): Readonly<{ id: string }> | null {
   const ctx = React.useContext(PieceContext);
   return ctx == null ? null : { id: ctx.pieceId };
 }
@@ -788,8 +788,8 @@ export function useHasPieceContext(): boolean {
   return React.useContext(PieceContext) != null;
 }
 
-/** @emoji 🧭 `{ id }` view of {@link ConnectionContext}. */
-export function useConnectionContextRow(): Readonly<{ id: string }> | null {
+/** @emoji 🧭 `{ id }` from {@link ConnectionContext}, {@code Node}-shaped. */
+export function useConnectionContextNode(): Readonly<{ id: string }> | null {
   const ctx = React.useContext(ConnectionContext);
   return ctx == null ? null : { id: ctx.connectionId };
 }
@@ -799,8 +799,8 @@ export function useHasConnectionContext(): boolean {
   return React.useContext(ConnectionContext) != null;
 }
 
-/** @emoji 🧭 `{ id }` view of {@link TypeContext}. */
-export function useTypeContextRow(): Readonly<{ id: string }> | null {
+/** @emoji 🧭 `{ id }` from {@link TypeContext}, {@code Node}-shaped. */
+export function useTypeContextNode(): Readonly<{ id: string }> | null {
   const ctx = React.useContext(TypeContext);
   return ctx == null ? null : { id: ctx.typeId };
 }
@@ -810,8 +810,8 @@ export function useHasTypeContext(): boolean {
   return React.useContext(TypeContext) != null;
 }
 
-/** @emoji 🧭 `{ id }` view of {@link QualityContext}. */
-export function useQualityContextRow(): Readonly<{ id: string }> | null {
+/** @emoji 🧭 `{ id }` from {@link QualityContext}, {@code Node}-shaped. */
+export function useQualityContextNode(): Readonly<{ id: string }> | null {
   const ctx = React.useContext(QualityContext);
   return ctx == null ? null : { id: ctx.qualityId };
 }
@@ -821,8 +821,8 @@ export function useHasQualityContext(): boolean {
   return React.useContext(QualityContext) != null;
 }
 
-/** @emoji 🧭 `{ id }` view of {@link AuthorContext}. */
-export function useAuthorContextRow(): Readonly<{ id: string }> | null {
+/** @emoji 🧭 `{ id }` from {@link AuthorContext}, {@code Node}-shaped. */
+export function useAuthorContextNode(): Readonly<{ id: string }> | null {
   const ctx = React.useContext(AuthorContext);
   return ctx == null ? null : { id: ctx.authorId };
 }

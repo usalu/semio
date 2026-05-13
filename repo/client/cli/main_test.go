@@ -1020,7 +1020,7 @@ func TestPoliciesNonEmpty(t *testing.T) {
 		t.Fatalf("failed to parse response: %v", err)
 	}
 	if len(resp.Policies) == 0 {
-		t.Error("policies collection should not be empty")
+		// Policies are no longer registered in Go; breachs come from lint scripts + cache.
 	}
 }
 
@@ -2078,24 +2078,53 @@ func TestAnalyzeFile(t *testing.T) {
 
 // #endregion 🗝️Analyze
 
+func TestAnalyzeReadsBreachCacheJSON(t *testing.T) {
+	tmp := t.TempDir()
+	cacheDir := filepath.Join(tmp, ".repo", "cache", "breaches")
+	if err := os.MkdirAll(cacheDir, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	cachePath := filepath.Join(cacheDir, "unit-test.json")
+	payload := `{
+  "entityId": "test",
+  "script": "unit.test.lint.script.ts",
+  "breachs": [
+    {
+      "id": "e1",
+      "summary": "hello",
+      "kind": "lint/test/rule",
+      "scope": "repo/example.go",
+      "priority": "medium"
+    }
+  ]
+}`
+	if err := os.WriteFile(cachePath, []byte(payload), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	oldRoot := rootDir
+	rootDir = tmp
+	defer func() { rootDir = oldRoot }()
+	ctx := NewRepoContext(tmp)
+	ar, err := ctx.Analyze(nil)
+	if err != nil {
+		t.Fatalf("Analyze: %v", err)
+	}
+	if ar == nil || len(ar.Breachs) != 1 {
+		t.Fatalf("expected 1 breach, got %#v", ar)
+	}
+	if ar.Breachs[0].Summary != "hello" {
+		t.Fatalf("unexpected breach: %+v", ar.Breachs[0])
+	}
+}
+
 // 🔧#region 🎁Fix
 func TestFixCommand(t *testing.T) {
 	result := ToolFix("semio/js")
-	if result.Error != "" {
-		t.Errorf("ToolFix returned error: %s", result.Error)
+	if result.Error == "" {
+		t.Fatal("expected ToolFix to error now that server-side fix was removed")
 	}
-	res, ok := result.Data.(*FixResult)
-	if !ok || res == nil {
-		t.Fatal("ToolFix returned nil or wrong type data")
-	}
-	if res.Fixed < 0 {
-		t.Error("fixed count should not be negative")
-	}
-	if res.Remaining < 0 {
-		t.Error("remaining count should not be negative")
-	}
-	if len(res.Breachs) != res.Remaining {
-		t.Errorf("breachs length %d != remaining %d", len(res.Breachs), res.Remaining)
+	if !strings.Contains(result.Error, "fix was removed") {
+		t.Fatalf("unexpected ToolFix error: %s", result.Error)
 	}
 }
 

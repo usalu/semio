@@ -46,6 +46,7 @@
     "build:engine": "bun nx run @semio/engine:build",
     "build:sites": "bun nx run-many -t build -p @semio/play @semio/docs",
     "build:coda:desktop": "bun nx run @coda/desktop:build",
+    "lint:repo": "bun nx run-many -t lint -p '@repo/*'",
     "build:repo:cli": "bun nx run @repo/client:build",
     "build:repo:server": "bun nx run @repo/coordinator:build",
     "build:repo:vscode": "bun nx run repo:build-vsix",

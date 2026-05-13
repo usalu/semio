@@ -17,7 +17,7 @@ Single code-first `lib.rs` surface: GraphQL identifiers come only from golden SD
 |-------|--------|--------|
 | 0 | Ticket + scaffold | done (umbrella ticket) |
 | 1 | Foundation: scalars + macro DSL + general interfaces + ladders | **in progress** (interfaces expanded; `Input`/`Diff`/`Modification` relay shells added; geom `Entity` bridge for weak nodes) |
-| 2 | Geom full 12-ladders | **in progress** (Vector diff/mod/mods ladder + registrations; Point…Location ladders still missing) |
+| 2 | Geom full 12-ladders | **in progress** (Vector + Point + Coordinate + Offset + Plane + Position + Location diff/mod/mods ladders registered) |
 | 3 | Meta 12-ladders | pending |
 | 4 | Type domain 12-ladders | pending |
 | 5 | Design + Clump + Blueprint | pending |
@@ -32,7 +32,7 @@ Single code-first `lib.rs` surface: GraphQL identifiers come only from golden SD
 ## Done (latest)
 
 - **Interface relay shells + registrations:** `InputEdge`/`InputConnection`, `DiffEdge`/`DiffConnection`, `ModificationEdge`/`ModificationConnection`, `Modifications` (+ edge/connection), `BackboneCommand*` relay pair, `Provider*` / `ProviderCommand*` relay pairs; all registered in `build_schema_sync_for` plus `gql_relay::{Vector,Point,…,Location}Connection`.
-- **Vector golden ladder:** `VectorDiff` (+ `GqlDiffInterface::VectorDiff`), `VectorModification` (+ `GqlModificationInterface::VectorModification`), `VectorModifications` + `entity_relay!` edges/connections; `EntityInterface` extended with weak geom variants so modification `before`/`after` resolve to golden `Entity!`.
+- **Geom ladders (Point→Location):** Same pattern as Vector — `*Diff`, `*Modification`, `*Modifications` + `entity_relay!` shells; `GqlDiffInterface` / `GqlModificationInterface` extended; `build_schema_sync_for` registers all new output types.
 - **Golden interface SDL + registration:** `build_schema_sync_for` now registers `StrongEntityInterface`, `RichStrongEntityInterface`, `ArtifactInterface`, `DocumentInterface`, `EventInterface`, `GqlDiffInterface`, `GqlModificationInterface`, `PubInputInterface`, stub `Empty*` / `GqlEmptyDiff`, `BackboneCommandInterface`, `FileBackboneCommand`, `WebsocketBackboneCommand`, `ProviderInterface`, `ProviderCommandInterface`.
 - **`BackboneCommand` collision:** Removed duplicate `BackboneCommand` `Object`; golden `interface BackboneCommand` is `BackboneCommandInterface` only. `StoreCommand.backbone` returns `BackboneCommandInterface::File(…)`; `FileBackboneCommand`/`WebsocketBackboneCommand` `detach`/`sync` call `ParentStore::dispatch_wip` (empty `connection_uri` on detach until golden exposes args).
 - **`ProviderCommand`:** Interface derive uses `method = "create_backbone"` / `attach_backbone`; resolvers return `Id` (not `Result`) to match declared field types.
@@ -42,9 +42,12 @@ Single code-first `lib.rs` surface: GraphQL identifiers come only from golden SD
 - **Dead DSL:** Removed no-op registration macros / stub macros per prior cleanup notes in git history.
 - **Tests:** `golden_macro_dsl_item_splices_compile` proves macro bodies are non-empty splices.
 
-## Verified (strict gate)
+## Golden gap (strict)
 
-- `SEMIO_GOLDEN_STRICT=1 cargo test schema_matches_target_graphql_file -p semio --lib` — **fails** (**766** missing top-level declarations after interface relay + Vector ladder + geom `EntityInterface` bridge batch, 2026-05-13 late).
+712
+
+## Verified (non-strict)
+
 - `cargo test -p semio --lib` (strict env **unset**) — **passes** (37 passed, 1 ignored).
 
 ## Next

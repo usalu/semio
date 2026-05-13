@@ -11,6 +11,16 @@ Stateless TypeScript facade for the repo CLI (`repo/client/client` or `client.ex
 
 Each run writes `.repo/cache/breaches/<sanitized-entity-id>.json` with `{ entityId, script, breachs }`.
 
+## Nx
+
+The workspace registers `./repo/lib/js/nx-plugin.mjs`, which matches `**/*lint.script.ts` (including `lint.script.ts`). Nx project inference typically **only includes git-tracked files** in the graph; untracked lint scripts will not get `breach-*` targets until they are added to version control.
+
+Run a script directly:
+
+```bash
+bun repo/lib/js/bin/lint.ts "path/to/foo.lint.script.ts"
+```
+
 ## Env
 
 - `REPO_CLI_BIN` — path to repo client binary (default: `repo/client/client.exe` on Windows, else `repo/client/client` under workspace root).

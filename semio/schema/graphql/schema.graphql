@@ -1,53 +1,633 @@
+type AddedAttributeToConcept {
+	hash: String!
+}
+
+type AddedAttributeToConceptConnection {
+	edges: [AddedAttributeToConceptEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type AddedAttributeToConceptEdge {
+	cursor: String!
+	node: AddedAttributeToConcept!
+}
+
 type AddedAttributeToConceptInput {
 	attribute: Attribute!
+}
+
+type AddedAttributeToConceptInputConnection {
+	edges: [AddedAttributeToConceptInputEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type AddedAttributeToConceptInputEdge {
+	cursor: String!
+	hash: String!
+}
+
+type AddedAttributeToDesign {
+	hash: String!
+}
+
+type AddedAttributeToDesignConnection {
+	edges: [AddedAttributeToDesignEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type AddedAttributeToDesignEdge {
+	cursor: String!
+	node: AddedAttributeToDesign!
+}
+
+type AddedAttributeToDesignInput {
+	hash: String!
+}
+
+type AddedAttributeToDesignInputConnection {
+	edges: [AddedAttributeToDesignInputEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type AddedAttributeToDesignInputEdge {
+	cursor: String!
+	node: AddedAttributeToDesignInput!
+}
+
+type AddedAttributeToPiece {
+	hash: String!
+}
+
+type AddedAttributeToPieceConnection {
+	edges: [AddedAttributeToPieceEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type AddedAttributeToPieceEdge {
+	cursor: String!
+	node: AddedAttributeToPiece!
+}
+
+type AddedAttributeToPieceInput {
+	hash: String!
+}
+
+type AddedAttributeToPieceInputConnection {
+	edges: [AddedAttributeToPieceInputEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type AddedAttributeToPieceInputEdge {
+	cursor: String!
+	node: AddedAttributeToPieceInput!
+}
+
+type AddedAttributeToPort {
+	hash: String!
+}
+
+type AddedAttributeToPortConnection {
+	edges: [AddedAttributeToPortEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type AddedAttributeToPortEdge {
+	cursor: String!
+	node: AddedAttributeToPort!
 }
 
 type AddedAttributeToPortInput {
 	attribute: Attribute!
 }
 
+type AddedAttributeToPortInputConnection {
+	edges: [AddedAttributeToPortInputEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type AddedAttributeToPortInputEdge {
+	cursor: String!
+	hash: String!
+}
+
+type AddedAttributeToQuality {
+	hash: String!
+}
+
+type AddedAttributeToQualityConnection {
+	edges: [AddedAttributeToQualityEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type AddedAttributeToQualityEdge {
+	cursor: String!
+	node: AddedAttributeToQuality!
+}
+
 type AddedAttributeToQualityInput {
 	attribute: Attribute!
+}
+
+type AddedAttributeToQualityInputConnection {
+	edges: [AddedAttributeToQualityInputEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type AddedAttributeToQualityInputEdge {
+	cursor: String!
+	hash: String!
+}
+
+type AddedAttributeToTag {
+	hash: String!
+}
+
+type AddedAttributeToTagConnection {
+	edges: [AddedAttributeToTagEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type AddedAttributeToTagEdge {
+	cursor: String!
+	node: AddedAttributeToTag!
 }
 
 type AddedAttributeToTagInput {
 	attribute: Attribute!
 }
 
+type AddedAttributeToTagInputConnection {
+	edges: [AddedAttributeToTagInputEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type AddedAttributeToTagInputEdge {
+	cursor: String!
+	hash: String!
+}
+
+type AddedAttributeToType {
+	hash: String!
+}
+
+type AddedAttributeToTypeConnection {
+	edges: [AddedAttributeToTypeEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type AddedAttributeToTypeEdge {
+	cursor: String!
+	node: AddedAttributeToType!
+}
+
+type AddedAttributeToTypeInput {
+	hash: String!
+}
+
+type AddedAttributeToTypeInputConnection {
+	edges: [AddedAttributeToTypeInputEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type AddedAttributeToTypeInputEdge {
+	cursor: String!
+	node: AddedAttributeToTypeInput!
+}
+
+type AddedAttributesToConcept {
+	hash: String!
+}
+
+type AddedAttributesToConceptConnection {
+	edges: [AddedAttributesToConceptEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type AddedAttributesToConceptEdge {
+	cursor: String!
+	node: AddedAttributesToConcept!
+}
+
 type AddedAttributesToConceptInput {
 	attributes: AttributeConnection!
+}
+
+type AddedAttributesToConceptInputConnection {
+	edges: [AddedAttributesToConceptInputEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type AddedAttributesToConceptInputEdge {
+	cursor: String!
+	hash: String!
+}
+
+type AddedAttributesToDesign {
+	hash: String!
+}
+
+type AddedAttributesToDesignConnection {
+	edges: [AddedAttributesToDesignEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type AddedAttributesToDesignEdge {
+	cursor: String!
+	node: AddedAttributesToDesign!
+}
+
+type AddedAttributesToDesignInput {
+	hash: String!
+}
+
+type AddedAttributesToDesignInputConnection {
+	edges: [AddedAttributesToDesignInputEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type AddedAttributesToDesignInputEdge {
+	cursor: String!
+	node: AddedAttributesToDesignInput!
+}
+
+type AddedAttributesToPiece {
+	hash: String!
+}
+
+type AddedAttributesToPieceConnection {
+	edges: [AddedAttributesToPieceEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type AddedAttributesToPieceEdge {
+	cursor: String!
+	node: AddedAttributesToPiece!
+}
+
+type AddedAttributesToPieceInput {
+	hash: String!
+}
+
+type AddedAttributesToPieceInputConnection {
+	edges: [AddedAttributesToPieceInputEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type AddedAttributesToPieceInputEdge {
+	cursor: String!
+	node: AddedAttributesToPieceInput!
+}
+
+type AddedAttributesToPort {
+	hash: String!
+}
+
+type AddedAttributesToPortConnection {
+	edges: [AddedAttributesToPortEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type AddedAttributesToPortEdge {
+	cursor: String!
+	node: AddedAttributesToPort!
 }
 
 type AddedAttributesToPortInput {
 	attributes: AttributeConnection!
 }
 
+type AddedAttributesToPortInputConnection {
+	edges: [AddedAttributesToPortInputEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type AddedAttributesToPortInputEdge {
+	cursor: String!
+	hash: String!
+}
+
+type AddedAttributesToQuality {
+	hash: String!
+}
+
+type AddedAttributesToQualityConnection {
+	edges: [AddedAttributesToQualityEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type AddedAttributesToQualityEdge {
+	cursor: String!
+	node: AddedAttributesToQuality!
+}
+
 type AddedAttributesToQualityInput {
 	attributes: AttributeConnection!
+}
+
+type AddedAttributesToQualityInputConnection {
+	edges: [AddedAttributesToQualityInputEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type AddedAttributesToQualityInputEdge {
+	cursor: String!
+	hash: String!
+}
+
+type AddedAttributesToTag {
+	hash: String!
+}
+
+type AddedAttributesToTagConnection {
+	edges: [AddedAttributesToTagEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type AddedAttributesToTagEdge {
+	cursor: String!
+	node: AddedAttributesToTag!
 }
 
 type AddedAttributesToTagInput {
 	attributes: AttributeConnection!
 }
 
-type Alternative implements Version {
+type AddedAttributesToTagInputConnection {
+	edges: [AddedAttributesToTagInputEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type AddedAttributesToTagInputEdge {
+	cursor: String!
+	hash: String!
+}
+
+type AddedAttributesToType {
+	hash: String!
+}
+
+type AddedAttributesToTypeConnection {
+	edges: [AddedAttributesToTypeEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type AddedAttributesToTypeEdge {
+	cursor: String!
+	node: AddedAttributesToType!
+}
+
+type AddedAttributesToTypeInput {
+	hash: String!
+}
+
+type AddedAttributesToTypeInputConnection {
+	edges: [AddedAttributesToTypeInputEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type AddedAttributesToTypeInputEdge {
+	cursor: String!
+	node: AddedAttributesToTypeInput!
+}
+
+type AddedChildPieceWithParentConnection {
+	hash: String!
+}
+
+type AddedChildPieceWithParentConnectionConnection {
+	edges: [AddedChildPieceWithParentConnectionEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type AddedChildPieceWithParentConnectionEdge {
+	cursor: String!
+	node: AddedChildPieceWithParentConnection!
+}
+
+type AddedChildPieceWithParentConnectionInput {
+	hash: String!
+}
+
+type AddedChildPieceWithParentConnectionInputConnection {
+	edges: [AddedChildPieceWithParentConnectionInputEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type AddedChildPieceWithParentConnectionInputEdge {
+	cursor: String!
+	node: AddedChildPieceWithParentConnectionInput!
+}
+
+type AddedChildPiecesWithParentConnections {
+	hash: String!
+}
+
+type AddedChildPiecesWithParentConnectionsConnection {
+	edges: [AddedChildPiecesWithParentConnectionsEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type AddedChildPiecesWithParentConnectionsEdge {
+	cursor: String!
+	node: AddedChildPiecesWithParentConnections!
+}
+
+type AddedChildPiecesWithParentConnectionsInput {
+	hash: String!
+}
+
+type AddedChildPiecesWithParentConnectionsInputConnection {
+	edges: [AddedChildPiecesWithParentConnectionsInputEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type AddedChildPiecesWithParentConnectionsInputEdge {
+	cursor: String!
+	node: AddedChildPiecesWithParentConnectionsInput!
+}
+
+type AddedConnector {
+	hash: String!
+}
+
+type AddedConnectorConnection {
+	edges: [AddedConnectorEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type AddedConnectorEdge {
+	cursor: String!
+	node: AddedConnector!
+}
+
+type AddedConnectorInput {
+	hash: String!
+}
+
+type AddedConnectorInputConnection {
+	edges: [AddedConnectorInputEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type AddedConnectorInputEdge {
+	cursor: String!
+	node: AddedConnectorInput!
+}
+
+type AddedConnectors {
+	hash: String!
+}
+
+type AddedConnectorsConnection {
+	edges: [AddedConnectorsEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type AddedConnectorsEdge {
+	cursor: String!
+	node: AddedConnectors!
+}
+
+type AddedConnectorsInput {
+	hash: String!
+}
+
+type AddedConnectorsInputConnection {
+	edges: [AddedConnectorsInputEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type AddedConnectorsInputEdge {
+	cursor: String!
+	node: AddedConnectorsInput!
+}
+
+type AddedHangingChildPieceWithParentConnection {
+	hash: String!
+}
+
+type AddedHangingChildPieceWithParentConnectionConnection {
+	edges: [AddedHangingChildPieceWithParentConnectionEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type AddedHangingChildPieceWithParentConnectionEdge {
+	cursor: String!
+	node: AddedHangingChildPieceWithParentConnection!
+}
+
+type AddedHangingChildPieceWithParentConnectionInput {
+	hash: String!
+}
+
+type AddedHangingChildPieceWithParentConnectionInputConnection {
+	edges: [AddedHangingChildPieceWithParentConnectionInputEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type AddedHangingChildPieceWithParentConnectionInputEdge {
+	cursor: String!
+	node: AddedHangingChildPieceWithParentConnectionInput!
+}
+
+type AddedHangingChildPiecesWithParentConnections {
+	hash: String!
+}
+
+type AddedHangingChildPiecesWithParentConnectionsConnection {
+	edges: [AddedHangingChildPiecesWithParentConnectionsEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type AddedHangingChildPiecesWithParentConnectionsEdge {
+	cursor: String!
+	node: AddedHangingChildPiecesWithParentConnections!
+}
+
+type AddedHangingChildPiecesWithParentConnectionsInput {
+	hash: String!
+}
+
+type AddedHangingChildPiecesWithParentConnectionsInputConnection {
+	edges: [AddedHangingChildPiecesWithParentConnectionsInputEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type AddedHangingChildPiecesWithParentConnectionsInputEdge {
+	cursor: String!
+	node: AddedHangingChildPiecesWithParentConnectionsInput!
+}
+
+type Alternative implements Workspace & Entity & StrongEntity {
 	id: ID!
 	hash: String!
-	owner: Graph
+	owner: Entity
+	owns: EntityConnection
 	name: String!
 	start: Checkpoint!
 	checkpoints: [Checkpoint!]!
-	store: Kit!
 	checkpoint: CheckpointConnection!
 	latestWipCheckpointAncestor: Checkpoint
 	savedChanges: ChangeConnection!
 	unsavedChanges: ChangeConnection!
 	kit: Kit!
+	change(id: ID!): Change
 }
 
 type AlternativeCommand {
 	version: ID!
 	integrateIntoTheKit: ID!
+}
+
+type AlternativeCommandConnection {
+	edges: [AlternativeCommandEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type AlternativeCommandEdge {
+	cursor: String!
+	hash: String!
 }
 
 type AlternativeConnection {
@@ -61,10 +641,33 @@ type AlternativeEdge {
 	node: Alternative!
 }
 
+"""
+@emoji 🌐 SDL `interface Artifact` — authored change graph on rich entities (`EmptyArtifact` placeholder).
+"""
+interface Artifact {
+	id: ID!
+	hash: String!
+	owner: Entity
+	owns: EntityConnection
+	name: String!
+	description: String!
+	icon: String!
+	createdAt: Timestamp
+	createdBy: Author
+	authoredBy: AuthorConnection!
+	changedIn: CheckpointConnection!
+	lastChangedAt: Timestamp
+	lastChangedBy: Author
+	lastChangedIn: Checkpoint
+	changes: ChangeConnection!
+	edits: EditConnection!
+}
+
 type Attribute {
 	id: ID!
 	hash: String!
-	owner: AttributeOwner!
+	owner: Entity
+	owns: EntityConnection
 	key: String!
 	value: String
 	definition: String
@@ -76,15 +679,55 @@ type AttributeConnection {
 	hash: String!
 }
 
+type AttributeDiff {
+	hash: String!
+}
+
+type AttributeDiffConnection {
+	edges: [AttributeDiffEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type AttributeDiffEdge {
+	cursor: String!
+	node: AttributeDiff!
+}
+
 type AttributeEdge {
 	cursor: String!
 	node: Attribute!
 }
 
-"""
-🏷️ Hand union for `Attribute.owner` (subset of carriers Attribute can hang off of).
-"""
-union AttributeOwner = Piece | Connector | Representation | Connection | Kit | Design | Type | Concept | Tag
+type AttributeModification {
+	hash: String!
+}
+
+type AttributeModificationConnection {
+	edges: [AttributeModificationEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type AttributeModificationEdge {
+	cursor: String!
+	node: AttributeModification!
+}
+
+type AttributeModifications {
+	hash: String!
+}
+
+type AttributeModificationsConnection {
+	edges: [AttributeModificationsEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type AttributeModificationsEdge {
+	cursor: String!
+	node: AttributeModifications!
+}
 
 type Author {
 	id: ID!
@@ -101,31 +744,111 @@ type AuthorConnection {
 	hash: String!
 }
 
+type AuthorDiff {
+	hash: String!
+}
+
+type AuthorDiffConnection {
+	edges: [AuthorDiffEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type AuthorDiffEdge {
+	cursor: String!
+	node: AuthorDiff!
+}
+
 type AuthorEdge {
 	cursor: String!
 	node: Author!
 }
 
-type BackboneCommand {
-	attach(uri: String!): ID!
-	detach(uri: String!): ID!
+type AuthorModification {
+	hash: String!
+}
+
+type AuthorModificationConnection {
+	edges: [AuthorModificationEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type AuthorModificationEdge {
+	cursor: String!
+	node: AuthorModification!
+}
+
+type AuthorModifications {
+	hash: String!
+}
+
+type AuthorModificationsConnection {
+	edges: [AuthorModificationsEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type AuthorModificationsEdge {
+	cursor: String!
+	node: AuthorModifications!
+}
+
+"""
+@emoji 🧷 Golden `interface Backbone` — concrete [`FileBackbone`] / [`WebsocketBackbone`].
+"""
+interface Backbone {
+	id: ID!
+	hash: String!
+	owner: Entity
+	owns: EntityConnection
+	uri: String!
 	status: BackboneStatus!
-	setActiveCheckpoint(id: ID!): ID!
-	syncNow: ID!
 }
 
 """
-@emoji 🗄️ Backbone materialization: dev JSON file, local `.semio/` SQLite+blobs, or remote hub (reserved).
+@emoji 🌐 SDL `interface BackboneCommand` — `detach` / `sync` command handles on backbones.
 """
-enum BackboneKind {
-	DEV
-	LOCAL
-	REMOTE
+interface BackboneCommand {
+	detach: ID!
+	sync: ID!
 }
 
-type BackboneStatus {
-	attachedUri: String
-	kind: BackboneKind
+type BackboneCommandConnection {
+	edges: [BackboneCommandEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+"""
+@emoji 🪢 SDL `BackboneCommandEdge` / `BackboneCommandConnection`.
+"""
+type BackboneCommandEdge {
+	cursor: String!
+	node: BackboneCommand!
+}
+
+type BackboneConnection {
+	edges: [BackboneEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+"""
+@emoji 🪢 Golden `BackboneEdge` / `BackboneConnection` relay shells.
+"""
+type BackboneEdge {
+	cursor: String!
+	node: Backbone!
+}
+
+"""
+@emoji 🛜 Golden `BackboneStatus` enum (`OFFLINE` / `RECONNECTING` / `ONLINE`).
+"""
+enum BackboneStatus {
+	OFFLINE
+	RECONNECTING
+	ONLINE
 }
 
 type Benchmark {
@@ -144,14 +867,56 @@ type BenchmarkConnection {
 	hash: String!
 }
 
+type BenchmarkDiff {
+	hash: String!
+}
+
+type BenchmarkDiffConnection {
+	edges: [BenchmarkDiffEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type BenchmarkDiffEdge {
+	cursor: String!
+	node: BenchmarkDiff!
+}
+
 type BenchmarkEdge {
 	cursor: String!
 	node: Benchmark!
 }
 
-"""
-🧩 Blueprint union (Type | Design) — what a Piece references and what a Piece's owner is.
-"""
+type BenchmarkModification {
+	hash: String!
+}
+
+type BenchmarkModificationConnection {
+	edges: [BenchmarkModificationEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type BenchmarkModificationEdge {
+	cursor: String!
+	node: BenchmarkModification!
+}
+
+type BenchmarkModifications {
+	hash: String!
+}
+
+type BenchmarkModificationsConnection {
+	edges: [BenchmarkModificationsEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type BenchmarkModificationsEdge {
+	cursor: String!
+	node: BenchmarkModifications!
+}
+
 union Blueprint = Type | Design
 
 type BlueprintConnection {
@@ -165,10 +930,11 @@ type BlueprintEdge {
 	node: Blueprint!
 }
 
-type Change {
+type Change implements StrongEntity {
 	id: ID!
 	hash: String!
-	owner: ChangeOwner!
+	owner: Entity
+	owns: EntityConnection
 	edits: EditConnection!
 	startedAt: Timestamp!
 	savedAt: Timestamp
@@ -196,19 +962,108 @@ type ChangeEdge {
 	node: Change!
 }
 
-union ChangeOwner = Alternative | Checkpoint
-
 type ChangedDescription implements Operation {
 	id: ID!
 	hash: String!
-	owner: OwnerEntity
-	owns: OwnedEntityConnection
+	owner: Entity
+	owns: EntityConnection
+	scope: Entity!
+	input: Input
+	modification: Modification!
 	entity: Kit!
 }
 
-type Checkpoint {
+type ChangedDescriptionConnection {
+	edges: [ChangedDescriptionEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type ChangedDescriptionEdge {
+	cursor: String!
+	hash: String!
+}
+
+type ChangedDescriptionInput {
+	hash: String!
+}
+
+type ChangedDescriptionInputConnection {
+	edges: [ChangedDescriptionInputEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type ChangedDescriptionInputEdge {
+	cursor: String!
+	node: ChangedDescriptionInput!
+}
+
+type ChangedPieceToType {
+	hash: String!
+}
+
+type ChangedPieceToTypeConnection {
+	edges: [ChangedPieceToTypeEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type ChangedPieceToTypeEdge {
+	cursor: String!
+	node: ChangedPieceToType!
+}
+
+type ChangedPieceToTypeInput {
+	hash: String!
+}
+
+type ChangedPieceToTypeInputConnection {
+	edges: [ChangedPieceToTypeInputEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type ChangedPieceToTypeInputEdge {
+	cursor: String!
+	node: ChangedPieceToTypeInput!
+}
+
+type ChangedPiecesToType {
+	hash: String!
+}
+
+type ChangedPiecesToTypeConnection {
+	edges: [ChangedPiecesToTypeEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type ChangedPiecesToTypeEdge {
+	cursor: String!
+	node: ChangedPiecesToType!
+}
+
+type ChangedPiecesToTypeInput {
+	hash: String!
+}
+
+type ChangedPiecesToTypeInputConnection {
+	edges: [ChangedPiecesToTypeInputEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type ChangedPiecesToTypeInputEdge {
+	cursor: String!
+	node: ChangedPiecesToTypeInput!
+}
+
+type Checkpoint implements Entity & StrongEntity {
 	id: ID!
 	hash: String!
+	owner: Entity
+	owns: EntityConnection
 	timestamp: Timestamp
 	authors: AuthorConnection!
 	"""
@@ -245,10 +1100,28 @@ type CheckpointEdge {
 	node: Checkpoint!
 }
 
-type Concept {
+type Clump {
+	hash: String!
+}
+
+type ClumpConnection {
+	edges: [ClumpEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type ClumpEdge {
+	cursor: String!
+	node: Clump!
+}
+
+scalar Color
+
+type Concept implements Entity & Node & StrongEntity {
 	id: ID!
 	hash: String!
-	owner: ConceptOwner!
+	owner: Entity
+	owns: EntityConnection
 	name: String!
 	description: String
 	icon: String
@@ -263,31 +1136,79 @@ type ConceptConnection {
 	hash: String!
 }
 
+type ConceptDiff {
+	hash: String!
+}
+
+type ConceptDiffConnection {
+	edges: [ConceptDiffEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type ConceptDiffEdge {
+	cursor: String!
+	node: ConceptDiff!
+}
+
 type ConceptEdge {
 	cursor: String!
 	node: Concept!
 }
 
-type ConceptOperationInput {
-	rename(newName: String!): ID!
-	changeDescription(newDescription: String!): ID!
-	changeIcon(newIcon: String!): ID!
-	addAttribute(key: String!, value: String!, definition: String!): ID!
-	removeAttribute(id: ID!): ID!
-	removeAttributes(ids: [ID!]!): ID!
+type ConceptModification {
+	hash: String!
 }
 
-"""
-@emoji 🔗 SDL `union ConceptOwner`.
-"""
-union ConceptOwner = Kit | Type
+type ConceptModificationConnection {
+	edges: [ConceptModificationEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
 
-type Conflict {
+type ConceptModificationEdge {
+	cursor: String!
+	node: ConceptModification!
+}
+
+type ConceptModifications {
+	hash: String!
+}
+
+type ConceptModificationsConnection {
+	edges: [ConceptModificationsEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type ConceptModificationsEdge {
+	cursor: String!
+	node: ConceptModifications!
+}
+
+type ConceptOperation {
+	hash: String!
+}
+
+type ConceptOperationConnection {
+	edges: [ConceptOperationEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type ConceptOperationEdge {
+	cursor: String!
+	node: ConceptOperation!
+}
+
+type Conflict implements Entity & Node & StrongEntity {
 	id: ID!
 	hash: String!
-	backboneTip: String
-	reason: String!
-	createdAt: Timestamp!
+	owner: Entity
+	owns: EntityConnection
+	authoritativeChange: Change
+	wipChange: Change
+	reasons: [String!]!
 }
 
 type ConflictConnection {
@@ -301,10 +1222,11 @@ type ConflictEdge {
 	node: Conflict!
 }
 
-type Connection {
+type Connection implements Entity & StrongEntity {
 	id: ID!
 	hash: String!
-	owner: Design!
+	owner: Entity
+	owns: EntityConnection
 	name: String!
 	description: String!
 	icon: String!
@@ -328,15 +1250,61 @@ type ConnectionConnection {
 	hash: String!
 }
 
+type ConnectionDiff {
+	hash: String!
+}
+
+type ConnectionDiffConnection {
+	edges: [ConnectionDiffEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type ConnectionDiffEdge {
+	cursor: String!
+	node: ConnectionDiff!
+}
+
 type ConnectionEdge {
 	cursor: String!
 	node: Connection!
 }
 
-type Connector {
+type ConnectionModification {
+	hash: String!
+}
+
+type ConnectionModificationConnection {
+	edges: [ConnectionModificationEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type ConnectionModificationEdge {
+	cursor: String!
+	node: ConnectionModification!
+}
+
+type ConnectionModifications {
+	hash: String!
+}
+
+type ConnectionModificationsConnection {
+	edges: [ConnectionModificationsEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type ConnectionModificationsEdge {
+	cursor: String!
+	node: ConnectionModifications!
+}
+
+type Connector implements Entity & StrongEntity {
 	id: ID!
 	hash: String!
-	owner: Type!
+	owner: Entity
+	owns: EntityConnection
 	name: String!
 	code: String!
 	description: String!
@@ -354,27 +1322,107 @@ type ConnectorConnection {
 	hash: String!
 }
 
+type ConnectorDiff {
+	hash: String!
+}
+
+type ConnectorDiffConnection {
+	edges: [ConnectorDiffEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type ConnectorDiffEdge {
+	cursor: String!
+	node: ConnectorDiff!
+}
+
 type ConnectorEdge {
 	cursor: String!
 	node: Connector!
 }
 
-type ConnectorOperationInput {
-	rename(newCode: String!): ID!
-	changeDescription(newDescription: String!): ID!
-	changeIcon(newIcon: String!): ID!
+type ConnectorModification {
+	hash: String!
+}
+
+type ConnectorModificationConnection {
+	edges: [ConnectorModificationEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type ConnectorModificationEdge {
+	cursor: String!
+	node: ConnectorModification!
+}
+
+type ConnectorModifications {
+	hash: String!
+}
+
+type ConnectorModificationsConnection {
+	edges: [ConnectorModificationsEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type ConnectorModificationsEdge {
+	cursor: String!
+	node: ConnectorModifications!
+}
+
+type ConnectorOperation {
+	hash: String!
+}
+
+type ConnectorOperationConnection {
+	edges: [ConnectorOperationEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type ConnectorOperationEdge {
+	cursor: String!
+	node: ConnectorOperation!
 }
 
 """
 @emoji 📍 WeakEntity + entity shell for [`Coordinate`] (SDL `Coordinate`).
 """
-type Coordinate implements Node {
+type Coordinate implements Entity & Node & WeakEntity {
 	id: ID!
 	hash: String!
-	owner: OwnerEntity
-	owns: OwnedEntityConnection
+	owner: Entity
+	owns: EntityConnection
 	u: Float!
 	v: Float!
+}
+
+type CoordinateConnection {
+	edges: [CoordinateEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type CoordinateDiff implements Diff {
+	id: ID!
+	hash: String!
+	owner: Entity
+	owns: EntityConnection
+	u: Float
+	v: Float
+}
+
+type CoordinateDiffConnection {
+	edges: [CoordinateDiffEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type CoordinateDiffEdge {
+	cursor: String!
+	node: CoordinateDiff!
 }
 
 type CoordinateEdge implements EntityEdge {
@@ -387,82 +1435,675 @@ input CoordinateInput {
 	v: Float!
 }
 
+type CoordinateModification implements Modification {
+	id: ID!
+	hash: String!
+	owner: Entity
+	owns: EntityConnection
+	before: Entity!
+	diff: Diff!
+	after: Entity!
+}
+
+type CoordinateModificationConnection {
+	edges: [CoordinateModificationEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type CoordinateModificationEdge {
+	cursor: String!
+	node: CoordinateModification!
+}
+
+type CoordinateModifications {
+	id: ID!
+	hash: String!
+	owner: Entity
+	owns: EntityConnection
+	removed: EntityConnection!
+	modifications: CoordinateModificationConnection!
+	added: EntityConnection!
+}
+
+type CoordinateModificationsConnection {
+	edges: [CoordinateModificationsEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type CoordinateModificationsEdge {
+	cursor: String!
+	node: CoordinateModifications!
+}
+
+type CreatedConcept {
+	hash: String!
+}
+
+type CreatedConceptConnection {
+	edges: [CreatedConceptEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type CreatedConceptEdge {
+	cursor: String!
+	node: CreatedConcept!
+}
+
 type CreatedConceptInput {
 	concept: Concept!
+}
+
+type CreatedConceptInputConnection {
+	edges: [CreatedConceptInputEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type CreatedConceptInputEdge {
+	cursor: String!
+	hash: String!
+}
+
+type CreatedConcepts {
+	hash: String!
+}
+
+type CreatedConceptsConnection {
+	edges: [CreatedConceptsEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type CreatedConceptsEdge {
+	cursor: String!
+	node: CreatedConcepts!
 }
 
 type CreatedConceptsInput {
 	concepts: ConceptConnection!
 }
 
+type CreatedConceptsInputConnection {
+	edges: [CreatedConceptsInputEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type CreatedConceptsInputEdge {
+	cursor: String!
+	hash: String!
+}
+
+type CreatedDesign {
+	hash: String!
+}
+
+type CreatedDesignConnection {
+	edges: [CreatedDesignEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type CreatedDesignEdge {
+	cursor: String!
+	node: CreatedDesign!
+}
+
+type CreatedDesignInput {
+	hash: String!
+}
+
+type CreatedDesignInputConnection {
+	edges: [CreatedDesignInputEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type CreatedDesignInputEdge {
+	cursor: String!
+	node: CreatedDesignInput!
+}
+
+type CreatedDesigns {
+	hash: String!
+}
+
+type CreatedDesignsConnection {
+	edges: [CreatedDesignsEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type CreatedDesignsEdge {
+	cursor: String!
+	node: CreatedDesigns!
+}
+
+type CreatedDesignsInput {
+	hash: String!
+}
+
+type CreatedDesignsInputConnection {
+	edges: [CreatedDesignsInputEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type CreatedDesignsInputEdge {
+	cursor: String!
+	node: CreatedDesignsInput!
+}
+
 type CreatedFixedPiece implements Operation {
 	id: ID!
 	hash: String!
-	owner: OwnerEntity
-	owns: OwnedEntityConnection
+	owner: Entity
+	owns: EntityConnection
+	scope: Entity!
+	input: Input
+	modification: Modification!
 	piece: Piece!
+}
+
+type CreatedFixedPieceConnection {
+	edges: [CreatedFixedPieceEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type CreatedFixedPieceEdge {
+	cursor: String!
+	hash: String!
+}
+
+type CreatedFixedPieceInput {
+	hash: String!
+}
+
+type CreatedFixedPieceInputConnection {
+	edges: [CreatedFixedPieceInputEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type CreatedFixedPieceInputEdge {
+	cursor: String!
+	node: CreatedFixedPieceInput!
+}
+
+type CreatedPort {
+	hash: String!
+}
+
+type CreatedPortConnection {
+	edges: [CreatedPortEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type CreatedPortEdge {
+	cursor: String!
+	node: CreatedPort!
 }
 
 type CreatedPortInput {
 	port: Port!
 }
 
+type CreatedPortInputConnection {
+	edges: [CreatedPortInputEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type CreatedPortInputEdge {
+	cursor: String!
+	hash: String!
+}
+
+type CreatedPorts {
+	hash: String!
+}
+
+type CreatedPortsConnection {
+	edges: [CreatedPortsEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type CreatedPortsEdge {
+	cursor: String!
+	node: CreatedPorts!
+}
+
 type CreatedPortsInput {
 	ports: PortConnection!
+}
+
+type CreatedPortsInputConnection {
+	edges: [CreatedPortsInputEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type CreatedPortsInputEdge {
+	cursor: String!
+	hash: String!
+}
+
+type CreatedQualities {
+	hash: String!
+}
+
+type CreatedQualitiesConnection {
+	edges: [CreatedQualitiesEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type CreatedQualitiesEdge {
+	cursor: String!
+	node: CreatedQualities!
 }
 
 type CreatedQualitiesInput {
 	qualities: QualityConnection!
 }
 
+type CreatedQualitiesInputConnection {
+	edges: [CreatedQualitiesInputEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type CreatedQualitiesInputEdge {
+	cursor: String!
+	hash: String!
+}
+
+type CreatedQuality {
+	hash: String!
+}
+
+type CreatedQualityConnection {
+	edges: [CreatedQualityEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type CreatedQualityEdge {
+	cursor: String!
+	node: CreatedQuality!
+}
+
 type CreatedQualityInput {
 	quality: Quality!
+}
+
+type CreatedQualityInputConnection {
+	edges: [CreatedQualityInputEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type CreatedQualityInputEdge {
+	cursor: String!
+	hash: String!
+}
+
+type CreatedTag {
+	hash: String!
+}
+
+type CreatedTagConnection {
+	edges: [CreatedTagEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type CreatedTagEdge {
+	cursor: String!
+	node: CreatedTag!
 }
 
 type CreatedTagInput {
 	tag: Tag!
 }
 
+type CreatedTagInputConnection {
+	edges: [CreatedTagInputEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type CreatedTagInputEdge {
+	cursor: String!
+	hash: String!
+}
+
+type CreatedTags {
+	hash: String!
+}
+
+type CreatedTagsConnection {
+	edges: [CreatedTagsEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type CreatedTagsEdge {
+	cursor: String!
+	node: CreatedTags!
+}
+
 type CreatedTagsInput {
 	tags: TagConnection!
 }
 
-type DeletedConceptInput {
-	hasInput: Boolean!
+type CreatedTagsInputConnection {
+	edges: [CreatedTagsInputEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
 }
 
-type DeletedConceptsInput {
-	hasInput: Boolean!
+type CreatedTagsInputEdge {
+	cursor: String!
+	hash: String!
 }
 
-type DeletedPortInput {
-	hasInput: Boolean!
+type CreatedType {
+	hash: String!
 }
 
-type DeletedPortsInput {
-	hasInput: Boolean!
+type CreatedTypeConnection {
+	edges: [CreatedTypeEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
 }
 
-type DeletedQualitiesInput {
-	hasInput: Boolean!
+type CreatedTypeEdge {
+	cursor: String!
+	node: CreatedType!
 }
 
-type DeletedQualityInput {
-	hasInput: Boolean!
+type CreatedTypeInput {
+	hash: String!
 }
 
-type DeletedTagInput {
-	hasInput: Boolean!
+type CreatedTypeInputConnection {
+	edges: [CreatedTypeInputEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
 }
 
-type DeletedTagsInput {
-	hasInput: Boolean!
+type CreatedTypeInputEdge {
+	cursor: String!
+	node: CreatedTypeInput!
 }
 
-type Design {
+type CreatedTypes {
+	hash: String!
+}
+
+type CreatedTypesConnection {
+	edges: [CreatedTypesEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type CreatedTypesEdge {
+	cursor: String!
+	node: CreatedTypes!
+}
+
+type CreatedTypesInput {
+	hash: String!
+}
+
+type CreatedTypesInputConnection {
+	edges: [CreatedTypesInputEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type CreatedTypesInputEdge {
+	cursor: String!
+	node: CreatedTypesInput!
+}
+
+type DeletedConcept {
+	hash: String!
+}
+
+type DeletedConceptConnection {
+	edges: [DeletedConceptEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type DeletedConceptEdge {
+	cursor: String!
+	node: DeletedConcept!
+}
+
+type DeletedConcepts {
+	hash: String!
+}
+
+type DeletedConceptsConnection {
+	edges: [DeletedConceptsEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type DeletedConceptsEdge {
+	cursor: String!
+	node: DeletedConcepts!
+}
+
+type DeletedDesign {
+	hash: String!
+}
+
+type DeletedDesignConnection {
+	edges: [DeletedDesignEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type DeletedDesignEdge {
+	cursor: String!
+	node: DeletedDesign!
+}
+
+type DeletedDesigns {
+	hash: String!
+}
+
+type DeletedDesignsConnection {
+	edges: [DeletedDesignsEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type DeletedDesignsEdge {
+	cursor: String!
+	node: DeletedDesigns!
+}
+
+type DeletedPiece {
+	hash: String!
+}
+
+type DeletedPieceConnection {
+	edges: [DeletedPieceEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type DeletedPieceEdge {
+	cursor: String!
+	node: DeletedPiece!
+}
+
+type DeletedPieces {
+	hash: String!
+}
+
+type DeletedPiecesAndConnections {
+	hash: String!
+}
+
+type DeletedPiecesAndConnectionsConnection {
+	edges: [DeletedPiecesAndConnectionsEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type DeletedPiecesAndConnectionsEdge {
+	cursor: String!
+	node: DeletedPiecesAndConnections!
+}
+
+type DeletedPiecesConnection {
+	edges: [DeletedPiecesEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type DeletedPiecesEdge {
+	cursor: String!
+	node: DeletedPieces!
+}
+
+type DeletedPort {
+	hash: String!
+}
+
+type DeletedPortConnection {
+	edges: [DeletedPortEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type DeletedPortEdge {
+	cursor: String!
+	node: DeletedPort!
+}
+
+type DeletedPorts {
+	hash: String!
+}
+
+type DeletedPortsConnection {
+	edges: [DeletedPortsEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type DeletedPortsEdge {
+	cursor: String!
+	node: DeletedPorts!
+}
+
+type DeletedQualities {
+	hash: String!
+}
+
+type DeletedQualitiesConnection {
+	edges: [DeletedQualitiesEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type DeletedQualitiesEdge {
+	cursor: String!
+	node: DeletedQualities!
+}
+
+type DeletedQuality {
+	hash: String!
+}
+
+type DeletedQualityConnection {
+	edges: [DeletedQualityEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type DeletedQualityEdge {
+	cursor: String!
+	node: DeletedQuality!
+}
+
+type DeletedTag {
+	hash: String!
+}
+
+type DeletedTagConnection {
+	edges: [DeletedTagEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type DeletedTagEdge {
+	cursor: String!
+	node: DeletedTag!
+}
+
+type DeletedTags {
+	hash: String!
+}
+
+type DeletedTagsConnection {
+	edges: [DeletedTagsEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type DeletedTagsEdge {
+	cursor: String!
+	node: DeletedTags!
+}
+
+type DeletedType {
+	hash: String!
+}
+
+type DeletedTypeConnection {
+	edges: [DeletedTypeEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type DeletedTypeEdge {
+	cursor: String!
+	node: DeletedType!
+}
+
+type DeletedTypes {
+	hash: String!
+}
+
+type DeletedTypesConnection {
+	edges: [DeletedTypesEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type DeletedTypesEdge {
+	cursor: String!
+	node: DeletedTypes!
+}
+
+type Design implements Entity & Node & StrongEntity {
 	id: ID!
 	hash: String!
-	owner: DesignOwner!
+	owner: Entity
+	owns: EntityConnection
 	name: String!
 	description: String
 	icon: String
@@ -493,45 +2134,190 @@ type DesignConnection {
 	hash: String!
 }
 
+type DesignDiff {
+	hash: String!
+}
+
+type DesignDiffConnection {
+	edges: [DesignDiffEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type DesignDiffEdge {
+	cursor: String!
+	node: DesignDiff!
+}
+
 type DesignEdge {
 	cursor: String!
 	node: Design!
 }
 
-type DesignOperationInput {
-	rename(newName: String!): ID!
-	changeDescription(newDescription: String!): ID!
-	flatten: ID!
-	addAttribute(key: String!, value: String!, definition: String!): ID!
-	removeAttribute(id: ID!): ID!
-	removeAttributes(ids: [ID!]!): ID!
-	addFixedPiece(blueprintId: ID!, position: PositionInput!, name: String, description: String): ID!
-	addChildPieceWithParentConnection(blueprintId: ID!, parentPieceId: ID!, parentConnector: String!, childConnector: String!, name: String, description: String, position: PositionInput, scale: Float): ID!
-	addHangingChildPieceWithParentConnection(blueprintId: ID!, parentPieceId: ID!, parentConnector: String!, childConnector: String!, position: PositionInput!, name: String, description: String, scale: Float): ID!
-	piece(id: ID!): PieceOperationInput!
-	pieces(ids: [ID!]!): PiecesOperationInput!
-	deletePiece(id: ID!): ID!
-	deletePieces(ids: [ID!]!): ID!
-	deletePiecesAndConnections(pieceIds: [ID!]!, connectionIds: [ID!]!): ID!
+type DesignModification {
+	hash: String!
+}
+
+type DesignModificationConnection {
+	edges: [DesignModificationEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type DesignModificationEdge {
+	cursor: String!
+	node: DesignModification!
+}
+
+type DesignModifications {
+	hash: String!
+}
+
+type DesignModificationsConnection {
+	edges: [DesignModificationsEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type DesignModificationsEdge {
+	cursor: String!
+	node: DesignModifications!
+}
+
+type DesignOperation {
+	hash: String!
+}
+
+type DesignOperationConnection {
+	edges: [DesignOperationEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type DesignOperationEdge {
+	cursor: String!
+	node: DesignOperation!
 }
 
 """
-@emoji 🏠 SDL `union DesignOwner = Kit`.
+@emoji 🌐 SDL `interface Diff` — hash-backed diff projection (placeholder + future `VectorDiff`, …).
 """
-union DesignOwner = Kit
+interface Diff {
+	id: ID!
+	hash: String!
+	owner: Entity
+	owns: EntityConnection
+}
+
+type DiffConnection {
+	edges: [DiffEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+"""
+@emoji 🪢 SDL `DiffEdge` / `DiffConnection` — relay over [`GqlDiffInterface`].
+"""
+type DiffEdge {
+	cursor: String!
+	node: Diff!
+}
+
+"""
+@emoji 🌐 SDL `interface Document` — preview-capable artifact (`EmptyDocument` placeholder).
+"""
+interface Document {
+	id: ID!
+	hash: String!
+	owner: Entity
+	owns: EntityConnection
+	name: String!
+	description: String!
+	icon: String!
+	createdAt: Timestamp
+	createdBy: Author
+	authoredBy: AuthorConnection!
+	changedIn: CheckpointConnection!
+	lastChangedAt: Timestamp
+	lastChangedBy: Author
+	lastChangedIn: Checkpoint
+	changes: ChangeConnection!
+	edits: EditConnection!
+	previewImage: File
+}
 
 type DraggedPiece implements Operation {
 	id: ID!
 	hash: String!
-	owner: OwnerEntity
-	owns: OwnedEntityConnection
+	owner: Entity
+	owns: EntityConnection
+	scope: Entity!
+	input: Input
+	modification: Modification!
 	pieces: [Piece!]!
 }
 
-type Edit {
+type DraggedPieceConnection {
+	edges: [DraggedPieceEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type DraggedPieceEdge {
+	cursor: String!
+	hash: String!
+}
+
+type DraggedPieceInput {
+	hash: String!
+}
+
+type DraggedPieceInputConnection {
+	edges: [DraggedPieceInputEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type DraggedPieceInputEdge {
+	cursor: String!
+	node: DraggedPieceInput!
+}
+
+type DraggedPieces {
+	hash: String!
+}
+
+type DraggedPiecesConnection {
+	edges: [DraggedPiecesEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type DraggedPiecesEdge {
+	cursor: String!
+	node: DraggedPieces!
+}
+
+type DraggedPiecesInput {
+	hash: String!
+}
+
+type DraggedPiecesInputConnection {
+	edges: [DraggedPiecesInputEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type DraggedPiecesInputEdge {
+	cursor: String!
+	node: DraggedPiecesInput!
+}
+
+type Edit implements Entity & StrongEntity {
 	id: ID!
 	hash: String!
-	owner: EditOwner
+	owner: Entity
+	owns: EntityConnection
 	forwards: OperationConnection!
 	backwards: OperationConnection!
 	sequenceNumber: Int!
@@ -554,10 +2340,38 @@ type EditEdge {
 	node: Edit!
 }
 
-union EditOwner = Alternative | Checkpoint
+"""
+@emoji 🌐 SDL `interface Entity` — VCS + conflict shells participating in the global owner graph.
+"""
+interface Entity {
+	id: ID!
+	hash: String!
+	owner: Entity
+	owns: EntityConnection
+}
+
+"""
+@emoji 🌐 SDL `interface EntityConnection` — shared relay tail (`StoreConnection`, golden `PageInfoConnection` for empty owns).
+"""
+interface EntityConnection {
+	pageInfo: PageInfo!
+	hash: String!
+}
 
 interface EntityEdge {
 	cursor: String!
+}
+
+"""
+@emoji 🌐 SDL `interface Event` — timestamped weak entity (`EmptyEvent` placeholder).
+"""
+interface Event {
+	id: ID!
+	hash: String!
+	owner: Entity
+	owns: EntityConnection
+	timestamp: Timestamp!
+	involves: EntityConnection
 }
 
 """
@@ -577,9 +2391,54 @@ type FamilyConnection {
 	hash: String!
 }
 
+type FamilyDiff {
+	hash: String!
+}
+
+type FamilyDiffConnection {
+	edges: [FamilyDiffEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type FamilyDiffEdge {
+	cursor: String!
+	node: FamilyDiff!
+}
+
 type FamilyEdge {
 	cursor: String!
 	node: Family!
+}
+
+type FamilyModification {
+	hash: String!
+}
+
+type FamilyModificationConnection {
+	edges: [FamilyModificationEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type FamilyModificationEdge {
+	cursor: String!
+	node: FamilyModification!
+}
+
+type FamilyModifications {
+	hash: String!
+}
+
+type FamilyModificationsConnection {
+	edges: [FamilyModificationsEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type FamilyModificationsEdge {
+	cursor: String!
+	node: FamilyModifications!
 }
 
 type File {
@@ -596,10 +2455,61 @@ type File {
 	attribute(id: ID!): Attribute
 }
 
+type FileBackbone implements Backbone {
+	id: ID!
+	hash: String!
+	owner: Entity
+	owns: EntityConnection
+	uri: String!
+	status: BackboneStatus!
+}
+
+type FileBackboneCommand implements BackboneCommand {
+	detach: ID!
+	sync: ID!
+}
+
+type FileBackboneCommandConnection {
+	edges: [FileBackboneCommandEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type FileBackboneCommandEdge {
+	cursor: String!
+	hash: String!
+}
+
+type FileBackboneConnection {
+	edges: [FileBackboneEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type FileBackboneEdge {
+	cursor: String!
+	hash: String!
+}
+
 type FileConnection {
 	edges: [FileEdge!]!
 	pageInfo: PageInfo!
 	hash: String!
+}
+
+type FileDiff {
+	hash: String!
+}
+
+type FileDiffConnection {
+	edges: [FileDiffEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type FileDiffEdge {
+	cursor: String!
+	node: FileDiff!
 }
 
 type FileEdge {
@@ -607,12 +2517,86 @@ type FileEdge {
 	node: File!
 }
 
+type FileModification {
+	hash: String!
+}
+
+type FileModificationConnection {
+	edges: [FileModificationEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type FileModificationEdge {
+	cursor: String!
+	node: FileModification!
+}
+
+type FileModifications {
+	hash: String!
+}
+
+type FileModificationsConnection {
+	edges: [FileModificationsEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type FileModificationsEdge {
+	cursor: String!
+	node: FileModifications!
+}
+
 type FixedPiece implements Operation {
 	id: ID!
 	hash: String!
-	owner: OwnerEntity
-	owns: OwnedEntityConnection
+	owner: Entity
+	owns: EntityConnection
+	scope: Entity!
+	input: Input
+	modification: Modification!
 	piece: Piece!
+}
+
+type FixedPieceConnection {
+	edges: [FixedPieceEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type FixedPieceEdge {
+	cursor: String!
+	hash: String!
+}
+
+type FixedPieces {
+	hash: String!
+}
+
+type FixedPiecesConnection {
+	edges: [FixedPiecesEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type FixedPiecesEdge {
+	cursor: String!
+	node: FixedPieces!
+}
+
+type FlattenedDesign {
+	hash: String!
+}
+
+type FlattenedDesignConnection {
+	edges: [FlattenedDesignEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type FlattenedDesignEdge {
+	cursor: String!
+	node: FlattenedDesign!
 }
 
 type Folder {
@@ -633,21 +2617,62 @@ type FolderConnection {
 	hash: String!
 }
 
+type FolderDiff {
+	hash: String!
+}
+
+type FolderDiffConnection {
+	edges: [FolderDiffEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type FolderDiffEdge {
+	cursor: String!
+	node: FolderDiff!
+}
+
 type FolderEdge {
 	cursor: String!
 	node: Folder!
 }
 
-"""
-@emoji 🌐 Global `node` / `entity` resolution union (Relay `Node` stand-in until full `Entity` interface wiring).
-"""
-union GqlNode = Graph | Kit | Design | Piece | Session | Conflict | Tag | Concept | Quality
+type FolderModification {
+	hash: String!
+}
 
-type Graph {
+type FolderModificationConnection {
+	edges: [FolderModificationEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type FolderModificationEdge {
+	cursor: String!
+	node: FolderModification!
+}
+
+type FolderModifications {
+	hash: String!
+}
+
+type FolderModificationsConnection {
+	edges: [FolderModificationsEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type FolderModificationsEdge {
+	cursor: String!
+	node: FolderModifications!
+}
+
+type Graph implements Entity & Node & StrongEntity {
 	id: ID!
 	hash: String!
-	owner: GraphOwner!
-	theKit: Version!
+	owner: Entity
+	owns: EntityConnection
+	theKit: Workspace!
 	initialKit: Kit
 	alternative(id: ID!): Alternative
 	alternatives: AlternativeConnection!
@@ -657,10 +2682,16 @@ type Graph {
 	releases: CheckpointConnection!
 }
 
-"""
-@emoji 🔗 `Graph.owner` — target SDL `union GraphOwner = Session`.
-"""
-union GraphOwner = Session
+type GraphConnection {
+	edges: [GraphEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type GraphEdge {
+	cursor: String!
+	hash: String!
+}
 
 type Group {
 	id: ID!
@@ -679,15 +2710,85 @@ type GroupConnection {
 	hash: String!
 }
 
+type GroupDiff {
+	hash: String!
+}
+
+type GroupDiffConnection {
+	edges: [GroupDiffEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type GroupDiffEdge {
+	cursor: String!
+	node: GroupDiff!
+}
+
 type GroupEdge {
 	cursor: String!
 	node: Group!
 }
 
-type Kit {
+type GroupModification {
+	hash: String!
+}
+
+type GroupModificationConnection {
+	edges: [GroupModificationEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type GroupModificationEdge {
+	cursor: String!
+	node: GroupModification!
+}
+
+type GroupModifications {
+	hash: String!
+}
+
+type GroupModificationsConnection {
+	edges: [GroupModificationsEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type GroupModificationsEdge {
+	cursor: String!
+	node: GroupModifications!
+}
+
+"""
+@emoji 🌐 SDL `interface Input` — operation-side argument projection (`*Input` types implement this in golden).
+"""
+interface Input {
 	id: ID!
 	hash: String!
-	owner: KitOwner!
+	owner: Entity
+	owns: EntityConnection
+}
+
+type InputConnection {
+	edges: [InputEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+"""
+@emoji 🪢 SDL `InputEdge` / `InputConnection` — relay over [`PubInputInterface`].
+"""
+type InputEdge {
+	cursor: String!
+	node: Input!
+}
+
+type Kit implements Entity & Node & StrongEntity {
+	id: ID!
+	hash: String!
+	owner: Entity
+	owns: EntityConnection
 	checkpoint: Checkpoint
 	name: String!
 	description: String
@@ -727,10 +2828,76 @@ type Kit {
 	stat(id: ID!): Stat
 }
 
-"""
-@emoji 🔗 SDL `union KitOwner = Graph | Checkpoint | Alternative`.
-"""
-union KitOwner = Graph | Checkpoint | Alternative
+type KitConnection {
+	edges: [KitEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type KitDiff {
+	hash: String!
+}
+
+type KitDiffConnection {
+	edges: [KitDiffEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type KitDiffEdge {
+	cursor: String!
+	node: KitDiff!
+}
+
+type KitEdge {
+	cursor: String!
+	hash: String!
+}
+
+type KitModification {
+	hash: String!
+}
+
+type KitModificationConnection {
+	edges: [KitModificationEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type KitModificationEdge {
+	cursor: String!
+	node: KitModification!
+}
+
+type KitModifications {
+	hash: String!
+}
+
+type KitModificationsConnection {
+	edges: [KitModificationsEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type KitModificationsEdge {
+	cursor: String!
+	node: KitModifications!
+}
+
+type KitOperation {
+	hash: String!
+}
+
+type KitOperationConnection {
+	edges: [KitOperationEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type KitOperationEdge {
+	cursor: String!
+	node: KitOperation!
+}
 
 type Layer {
 	id: ID!
@@ -753,22 +2920,122 @@ type LayerConnection {
 	hash: String!
 }
 
+type LayerDiff {
+	hash: String!
+}
+
+type LayerDiffConnection {
+	edges: [LayerDiffEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type LayerDiffEdge {
+	cursor: String!
+	node: LayerDiff!
+}
+
 type LayerEdge {
 	cursor: String!
 	node: Layer!
 }
 
+type LayerModification {
+	hash: String!
+}
+
+type LayerModificationConnection {
+	edges: [LayerModificationEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type LayerModificationEdge {
+	cursor: String!
+	node: LayerModification!
+}
+
+type LayerModifications {
+	hash: String!
+}
+
+type LayerModificationsConnection {
+	edges: [LayerModificationsEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type LayerModificationsEdge {
+	cursor: String!
+	node: LayerModifications!
+}
+
+type LocalProvider implements Entity & Node & StrongEntity & Provider {
+	id: ID!
+	hash: String!
+	owner: Entity
+	owns: EntityConnection
+	backbones: BackboneConnection!
+	backbone(id: ID!): Backbone
+	uri: String!
+	stores: StoreConnection!
+	store(id: ID!): StoreCommand!
+}
+
+type LocalProviderCommand implements ProviderCommand {
+	createBackbone(uri: String!): ID!
+	attachBackbone(store: ID!): ID!
+}
+
+type LocalProviderCommandConnection {
+	edges: [LocalProviderCommandEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type LocalProviderCommandEdge {
+	cursor: String!
+	hash: String!
+}
+
 """
 @emoji 🌍 WeakEntity shell for [`Location`] (SDL `Location`).
 """
-type Location implements Node {
+type Location implements Entity & Node & WeakEntity {
 	id: ID!
 	hash: String!
-	owner: OwnerEntity
-	owns: OwnedEntityConnection
+	owner: Entity
+	owns: EntityConnection
 	longitude: Float!
 	latitude: Float!
 	altitude: Float!
+}
+
+type LocationConnection {
+	edges: [LocationEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type LocationDiff implements Diff {
+	id: ID!
+	hash: String!
+	owner: Entity
+	owns: EntityConnection
+	longitude: Float
+	latitude: Float
+	altitude: Float
+}
+
+type LocationDiffConnection {
+	edges: [LocationDiffEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type LocationDiffEdge {
+	cursor: String!
+	node: LocationDiff!
 }
 
 type LocationEdge implements EntityEdge {
@@ -776,9 +3043,168 @@ type LocationEdge implements EntityEdge {
 	node: Location!
 }
 
+"""
+@emoji 🌍 Wire `LocationInput` (lon/lat/alt) for [`entity::Location`].
+"""
+input LocationInput {
+	longitude: Float!
+	latitude: Float!
+	altitude: Float!
+}
+
+type LocationModification implements Modification {
+	id: ID!
+	hash: String!
+	owner: Entity
+	owns: EntityConnection
+	before: Entity!
+	diff: Diff!
+	after: Entity!
+}
+
+type LocationModificationConnection {
+	edges: [LocationModificationEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type LocationModificationEdge {
+	cursor: String!
+	node: LocationModification!
+}
+
+type LocationModifications {
+	id: ID!
+	hash: String!
+	owner: Entity
+	owns: EntityConnection
+	removed: EntityConnection!
+	modifications: LocationModificationConnection!
+	added: EntityConnection!
+}
+
+type LocationModificationsConnection {
+	edges: [LocationModificationsEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type LocationModificationsEdge {
+	cursor: String!
+	node: LocationModifications!
+}
+
+"""
+@emoji 🌐 SDL `interface Modification` — `before` / `diff` / `after` triple shell.
+"""
+interface Modification {
+	id: ID!
+	hash: String!
+	owner: Entity
+	owns: EntityConnection
+	before: Entity!
+	diff: Diff!
+	after: Entity!
+}
+
+type ModificationConnection {
+	edges: [ModificationEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+"""
+@emoji 🪢 SDL `ModificationEdge` / `ModificationConnection` — relay over [`GqlModificationInterface`].
+"""
+type ModificationEdge {
+	cursor: String!
+	node: Modification!
+}
+
+type Modifications {
+	id: ID!
+	hash: String!
+	owner: Entity
+	owns: EntityConnection
+	removed: EntityConnection!
+	modifications: ModificationConnection!
+	added: EntityConnection!
+}
+
+type ModificationsConnection {
+	edges: [ModificationsEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type ModificationsEdge {
+	cursor: String!
+	node: Modifications!
+}
+
+type MovedPiece {
+	hash: String!
+}
+
+type MovedPieceConnection {
+	edges: [MovedPieceEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type MovedPieceEdge {
+	cursor: String!
+	node: MovedPiece!
+}
+
+type MovedPieceInput {
+	hash: String!
+}
+
+type MovedPieceInputConnection {
+	edges: [MovedPieceInputEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type MovedPieceInputEdge {
+	cursor: String!
+	node: MovedPieceInput!
+}
+
+type MovedPieces {
+	hash: String!
+}
+
+type MovedPiecesConnection {
+	edges: [MovedPiecesEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type MovedPiecesEdge {
+	cursor: String!
+	node: MovedPieces!
+}
+
+type MovedPiecesInput {
+	hash: String!
+}
+
+type MovedPiecesInputConnection {
+	edges: [MovedPiecesInputEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type MovedPiecesInputEdge {
+	cursor: String!
+	node: MovedPiecesInput!
+}
+
 type Mutation {
 	"""
-	@emoji 🎛️ Kit-changing commands — navigate via nested fields per `target.schema.graphql` `#region Commands`.
+	@emoji 🎛️ Kit-changing commands — navigate via nested fields per `target.schema.graphql` Commands block.
 	"""
 	session: SessionCommand!
 }
@@ -787,13 +3213,39 @@ interface Node {
 	id: ID!
 }
 
-type Offset implements Node {
+type Offset implements Entity & Node & WeakEntity {
 	id: ID!
 	hash: String!
-	owner: OwnerEntity
-	owns: OwnedEntityConnection
+	owner: Entity
+	owns: EntityConnection
 	u: Float!
 	v: Float!
+}
+
+type OffsetConnection {
+	edges: [OffsetEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type OffsetDiff implements Diff {
+	id: ID!
+	hash: String!
+	owner: Entity
+	owns: EntityConnection
+	u: Float
+	v: Float
+}
+
+type OffsetDiffConnection {
+	edges: [OffsetDiffEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type OffsetDiffEdge {
+	cursor: String!
+	node: OffsetDiff!
 }
 
 type OffsetEdge implements EntityEdge {
@@ -806,14 +3258,59 @@ input OffsetInput {
 	v: Float!
 }
 
+type OffsetModification implements Modification {
+	id: ID!
+	hash: String!
+	owner: Entity
+	owns: EntityConnection
+	before: Entity!
+	diff: Diff!
+	after: Entity!
+}
+
+type OffsetModificationConnection {
+	edges: [OffsetModificationEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type OffsetModificationEdge {
+	cursor: String!
+	node: OffsetModification!
+}
+
+type OffsetModifications {
+	id: ID!
+	hash: String!
+	owner: Entity
+	owns: EntityConnection
+	removed: EntityConnection!
+	modifications: OffsetModificationConnection!
+	added: EntityConnection!
+}
+
+type OffsetModificationsConnection {
+	edges: [OffsetModificationsEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type OffsetModificationsEdge {
+	cursor: String!
+	node: OffsetModifications!
+}
+
 """
 🪄 GraphQL `interface Operation` (each variant is an Arc-shared operation entity).
 """
-interface Operation {
+interface Operation implements StrongEntity {
 	id: ID!
 	hash: String!
-	owner: OwnerEntity
-	owns: OwnedEntityConnection
+	owner: Entity
+	owns: EntityConnection
+	scope: Entity!
+	input: Input
+	modification: Modification!
 }
 
 type OperationConnection {
@@ -827,52 +3324,6 @@ type OperationEdge {
 	node: Operation!
 }
 
-type OperationInput {
-	rename(newName: String!): ID!
-	changeDescription(newDescription: String!): ID!
-	createTag(name: String!, description: String, icon: String, order: Int): ID!
-	tag(id: ID!): TagOperationInput!
-	deleteTag(id: ID!): ID!
-	deleteTags(ids: [ID!]!): ID!
-	createConcept(name: String!, description: String, icon: String, order: Int): ID!
-	concept(id: ID!): ConceptOperationInput!
-	deleteConcept(id: ID!): ID!
-	deleteConcepts(ids: [ID!]!): ID!
-	createQuality(key: String!, value: String, unit: String, definition: String, description: String, icon: String): ID!
-	quality(id: ID!): QualityOperationInput!
-	deleteQuality(id: ID!): ID!
-	deleteQualities(ids: [ID!]!): ID!
-	createType(name: String!, description: String, icon: String, image: String, unit: String): ID!
-	type(id: ID!): TypeOperationInput!
-	deleteType(id: ID!): ID!
-	deleteTypes(ids: [ID!]!): ID!
-	createDesign(name: String!, description: String, icon: String, image: String, unit: String): ID!
-	design(id: ID!): DesignOperationInput!
-	deleteDesign(id: ID!): ID!
-	deleteDesigns(ids: [ID!]!): ID!
-}
-
-"""
-@emoji 🔗 SDL `OwnedEntity` subset for non-empty `owns` edges.
-"""
-union OwnedEntity = Kit | Design | Piece | Position
-
-type OwnedEntityConnection {
-	edges: [OwnedEntityEdge!]!
-	pageInfo: PageInfo!
-	hash: String!
-}
-
-type OwnedEntityEdge {
-	cursor: String!
-	node: OwnedEntity!
-}
-
-"""
-@emoji 🔗 SDL `OwnerEntity` subset (grow toward full target union).
-"""
-union OwnerEntity = Edit | Kit | Type | Representation | Connector | Design | Piece | Graph | Session | Checkpoint | Alternative | Conflict | ReadVersion | WriteVersion | Position | Coordinate | Plane | Point | Vector | Place | Offset | Location
-
 type PageInfo {
 	hasNextPage: Boolean!
 	hasPreviousPage: Boolean!
@@ -880,15 +3331,30 @@ type PageInfo {
 	endCursor: String
 }
 
-type Piece {
+type PageInfoConnection implements EntityConnection {
+	edges: [PageInfoEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+"""
+@emoji 🪢 Golden `PageInfoEdge` / `PageInfoConnection` (relay shells around [`PageInfo`]).
+"""
+type PageInfoEdge {
+	cursor: String!
+	node: PageInfo!
+}
+
+type Piece implements Entity & Node & StrongEntity {
 	id: ID!
 	hash: String!
-	owner: Blueprint!
+	owner: Entity
+	owns: EntityConnection
+	blueprint: Entity!
 	name: String
 	description: String
 	position: Position
 	scale: Float
-	blueprint: Blueprint!
 	connectionKind: PieceConnectionKind
 	flatPosition: Position!
 	replaceableBlueprints: BlueprintConnection!
@@ -917,45 +3383,184 @@ enum PieceConnectionKind {
 	CONNECTED
 }
 
+type PieceDiff {
+	hash: String!
+}
+
+type PieceDiffConnection {
+	edges: [PieceDiffEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type PieceDiffEdge {
+	cursor: String!
+	node: PieceDiff!
+}
+
 type PieceEdge {
 	cursor: String!
 	node: Piece!
 }
 
-type PieceOperationInput {
-	rename(newName: String!): ID!
-	changeDescription(newDescription: String!): ID!
-	drag(offset: OffsetInput!): ID!
-	move(position: PositionInput!): ID!
-	fix: ID!
-	changeBlueprint(blueprintId: ID!): ID!
-	addAttribute(key: String!, value: String!, definition: String!): ID!
-	removeAttribute(id: ID!): ID!
-	removeAttributes(ids: [ID!]!): ID!
+type PieceModification {
+	hash: String!
 }
 
-type PiecesOperationInput {
-	drag(offset: OffsetInput!): ID!
-	move(offset: OffsetInput!): ID!
-	fix: ID!
-	changeBlueprint(blueprintId: ID!): ID!
+type PieceModificationConnection {
+	edges: [PieceModificationEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
 }
 
-type Place {
+type PieceModificationEdge {
+	cursor: String!
+	node: PieceModification!
+}
+
+type PieceModifications {
+	hash: String!
+}
+
+type PieceModificationsConnection {
+	edges: [PieceModificationsEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type PieceModificationsEdge {
+	cursor: String!
+	node: PieceModifications!
+}
+
+type PieceOperation {
+	hash: String!
+}
+
+type PieceOperationConnection {
+	edges: [PieceOperationEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type PieceOperationEdge {
+	cursor: String!
+	node: PieceOperation!
+}
+
+type PiecesOperation {
+	hash: String!
+}
+
+type PiecesOperationConnection {
+	edges: [PiecesOperationEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type PiecesOperationEdge {
+	cursor: String!
+	node: PiecesOperation!
+}
+
+type Place implements StrongEntity {
 	id: ID!
 	hash: String!
-	owner: OwnerEntity
-	owns: OwnedEntityConnection
+	owner: Entity
+	owns: EntityConnection
 }
 
-type Plane implements Node {
+type PlaceConnection {
+	edges: [PlaceEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type PlaceDiff {
+	hash: String!
+}
+
+type PlaceDiffConnection {
+	edges: [PlaceDiffEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type PlaceDiffEdge {
+	cursor: String!
+	node: PlaceDiff!
+}
+
+type PlaceEdge {
+	cursor: String!
+	hash: String!
+}
+
+type PlaceModification {
+	hash: String!
+}
+
+type PlaceModificationConnection {
+	edges: [PlaceModificationEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type PlaceModificationEdge {
+	cursor: String!
+	node: PlaceModification!
+}
+
+type PlaceModifications {
+	hash: String!
+}
+
+type PlaceModificationsConnection {
+	edges: [PlaceModificationsEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type PlaceModificationsEdge {
+	cursor: String!
+	node: PlaceModifications!
+}
+
+type Plane implements Entity & Node & WeakEntity {
 	id: ID!
 	hash: String!
-	owner: OwnerEntity
-	owns: OwnedEntityConnection
+	owner: Entity
+	owns: EntityConnection
 	origin: Point!
 	xAxis: Vector!
 	yAxis: Vector!
+}
+
+type PlaneConnection {
+	edges: [PlaneEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type PlaneDiff implements Diff {
+	id: ID!
+	hash: String!
+	owner: Entity
+	owns: EntityConnection
+	origin: Point
+	xAxis: Vector
+	yAxis: Vector
+}
+
+type PlaneDiffConnection {
+	edges: [PlaneDiffEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type PlaneDiffEdge {
+	cursor: String!
+	node: PlaneDiff!
 }
 
 type PlaneEdge implements EntityEdge {
@@ -969,14 +3574,83 @@ input PlaneInput {
 	yAxis: VectorInput!
 }
 
-type Point implements Node {
+type PlaneModification implements Modification {
 	id: ID!
 	hash: String!
-	owner: OwnerEntity
-	owns: OwnedEntityConnection
+	owner: Entity
+	owns: EntityConnection
+	before: Entity!
+	diff: Diff!
+	after: Entity!
+}
+
+type PlaneModificationConnection {
+	edges: [PlaneModificationEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type PlaneModificationEdge {
+	cursor: String!
+	node: PlaneModification!
+}
+
+type PlaneModifications {
+	id: ID!
+	hash: String!
+	owner: Entity
+	owns: EntityConnection
+	removed: EntityConnection!
+	modifications: PlaneModificationConnection!
+	added: EntityConnection!
+}
+
+type PlaneModificationsConnection {
+	edges: [PlaneModificationsEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type PlaneModificationsEdge {
+	cursor: String!
+	node: PlaneModifications!
+}
+
+type Point implements Entity & Node & WeakEntity {
+	id: ID!
+	hash: String!
+	owner: Entity
+	owns: EntityConnection
 	x: Float!
 	y: Float!
 	z: Float!
+}
+
+type PointConnection {
+	edges: [PointEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type PointDiff implements Diff {
+	id: ID!
+	hash: String!
+	owner: Entity
+	owns: EntityConnection
+	x: Float
+	y: Float
+	z: Float
+}
+
+type PointDiffConnection {
+	edges: [PointDiffEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type PointDiffEdge {
+	cursor: String!
+	node: PointDiff!
 }
 
 type PointEdge implements EntityEdge {
@@ -990,10 +3664,53 @@ input PointInput {
 	z: Float!
 }
 
-type Port {
+type PointModification implements Modification {
 	id: ID!
 	hash: String!
-	owner: Type!
+	owner: Entity
+	owns: EntityConnection
+	before: Entity!
+	diff: Diff!
+	after: Entity!
+}
+
+type PointModificationConnection {
+	edges: [PointModificationEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type PointModificationEdge {
+	cursor: String!
+	node: PointModification!
+}
+
+type PointModifications {
+	id: ID!
+	hash: String!
+	owner: Entity
+	owns: EntityConnection
+	removed: EntityConnection!
+	modifications: PointModificationConnection!
+	added: EntityConnection!
+}
+
+type PointModificationsConnection {
+	edges: [PointModificationsEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type PointModificationsEdge {
+	cursor: String!
+	node: PointModifications!
+}
+
+type Port implements Entity & StrongEntity {
+	id: ID!
+	hash: String!
+	owner: Entity
+	owns: EntityConnection
 	code: String
 	label: String
 	order: Int
@@ -1006,27 +3723,104 @@ type PortConnection {
 	hash: String!
 }
 
+type PortDiff {
+	hash: String!
+}
+
+type PortDiffConnection {
+	edges: [PortDiffEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type PortDiffEdge {
+	cursor: String!
+	node: PortDiff!
+}
+
 type PortEdge {
 	cursor: String!
 	node: Port!
 }
 
-type PortOperationInput {
-	rename(newCode: String!, newLabel: String): ID!
-	changeDescription(newDescription: String!): ID!
-	changeIcon(newIcon: String!): ID!
-	addAttribute(key: String!, value: String!, definition: String!): ID!
-	removeAttribute(id: ID!): ID!
-	removeAttributes(ids: [ID!]!): ID!
+type PortModification {
+	hash: String!
 }
 
-type Position implements Node {
+type PortModificationConnection {
+	edges: [PortModificationEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type PortModificationEdge {
+	cursor: String!
+	node: PortModification!
+}
+
+type PortModifications {
+	hash: String!
+}
+
+type PortModificationsConnection {
+	edges: [PortModificationsEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type PortModificationsEdge {
+	cursor: String!
+	node: PortModifications!
+}
+
+type PortOperation {
+	hash: String!
+}
+
+type PortOperationConnection {
+	edges: [PortOperationEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type PortOperationEdge {
+	cursor: String!
+	node: PortOperation!
+}
+
+type Position implements Entity & Node & WeakEntity {
 	id: ID!
 	hash: String!
-	owner: OwnerEntity
-	owns: OwnedEntityConnection
+	owner: Entity
+	owns: EntityConnection
 	center: Coordinate!
 	plane: Plane!
+}
+
+type PositionConnection {
+	edges: [PositionEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type PositionDiff implements Diff {
+	id: ID!
+	hash: String!
+	owner: Entity
+	owns: EntityConnection
+	center: Coordinate
+	plane: Plane
+}
+
+type PositionDiffConnection {
+	edges: [PositionDiffEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type PositionDiffEdge {
+	cursor: String!
+	node: PositionDiff!
 }
 
 type PositionEdge implements EntityEdge {
@@ -1037,6 +3831,48 @@ type PositionEdge implements EntityEdge {
 input PositionInput {
 	center: CoordinateInput!
 	plane: PlaneInput!
+}
+
+type PositionModification implements Modification {
+	id: ID!
+	hash: String!
+	owner: Entity
+	owns: EntityConnection
+	before: Entity!
+	diff: Diff!
+	after: Entity!
+}
+
+type PositionModificationConnection {
+	edges: [PositionModificationEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type PositionModificationEdge {
+	cursor: String!
+	node: PositionModification!
+}
+
+type PositionModifications {
+	id: ID!
+	hash: String!
+	owner: Entity
+	owns: EntityConnection
+	removed: EntityConnection!
+	modifications: PositionModificationConnection!
+	added: EntityConnection!
+}
+
+type PositionModificationsConnection {
+	edges: [PositionModificationsEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type PositionModificationsEdge {
+	cursor: String!
+	node: PositionModifications!
 }
 
 type Prop {
@@ -1057,15 +3893,109 @@ type PropConnection {
 	hash: String!
 }
 
+type PropDiff {
+	hash: String!
+}
+
+type PropDiffConnection {
+	edges: [PropDiffEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type PropDiffEdge {
+	cursor: String!
+	node: PropDiff!
+}
+
 type PropEdge {
 	cursor: String!
 	node: Prop!
 }
 
-type Quality {
+type PropModification {
+	hash: String!
+}
+
+type PropModificationConnection {
+	edges: [PropModificationEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type PropModificationEdge {
+	cursor: String!
+	node: PropModification!
+}
+
+type PropModifications {
+	hash: String!
+}
+
+type PropModificationsConnection {
+	edges: [PropModificationsEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type PropModificationsEdge {
+	cursor: String!
+	node: PropModifications!
+}
+
+"""
+@emoji 🛰️ Golden `interface Provider` — concrete [`LocalProvider`] / [`RemoteProvider`].
+"""
+interface Provider {
 	id: ID!
 	hash: String!
-	owner: QualityOwner!
+	owner: Entity
+	owns: EntityConnection
+	backbones: BackboneConnection!
+	backbone(id: ID!): Backbone
+}
+
+"""
+@emoji 🎛️ Golden `interface ProviderCommand` — shared `createBackbone` / `attachBackbone` surface.
+"""
+interface ProviderCommand {
+	createBackbone(uri: String!): ID!
+	attachBackbone(store: ID!): ID!
+}
+
+type ProviderCommandConnection {
+	edges: [ProviderCommandEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+"""
+@emoji 🪢 SDL `ProviderCommandEdge` / `ProviderCommandConnection`.
+"""
+type ProviderCommandEdge {
+	cursor: String!
+	node: ProviderCommand!
+}
+
+type ProviderConnection {
+	edges: [ProviderEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+"""
+@emoji 🪢 SDL `ProviderEdge` / `ProviderConnection`.
+"""
+type ProviderEdge {
+	cursor: String!
+	node: Provider!
+}
+
+type Quality implements Entity & Node & StrongEntity {
+	id: ID!
+	hash: String!
+	owner: Entity
+	owns: EntityConnection
 	key: String!
 	value: String
 	unit: String
@@ -1083,88 +4013,511 @@ type QualityConnection {
 	hash: String!
 }
 
+type QualityDiff {
+	hash: String!
+}
+
+type QualityDiffConnection {
+	edges: [QualityDiffEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type QualityDiffEdge {
+	cursor: String!
+	node: QualityDiff!
+}
+
 type QualityEdge {
 	cursor: String!
 	node: Quality!
 }
 
-type QualityOperationInput {
-	rename(newKey: String!): ID!
-	changeDescription(newDescription: String!): ID!
-	changeIcon(newIcon: String!): ID!
-	addAttribute(key: String!, value: String!, definition: String!): ID!
-	removeAttribute(id: ID!): ID!
-	removeAttributes(ids: [ID!]!): ID!
-}
-
-"""
-@emoji 🔗 SDL `union QualityOwner`.
-"""
-union QualityOwner = Connector | Representation | Type | Design | Kit
-
-type Query {
-	"""
-	@emoji 🏪 Canonical target-schema read root.
-	"""
-	store: Store!
-	"""
-	@emoji 🔎 Relay-style global `node` lookup (WIP + authoritative + sessions + conflicts).
-	"""
-	node(id: ID!): GqlNode
-	"""
-	@emoji 🔎 Alias of [`Query::node`] for SDL `entity` entry point (`hash` merkle id).
-	"""
-	entity(hash: ID!): GqlNode
-}
-
-type ReadVersion {
-	id: ID!
+type QualityModification {
 	hash: String!
 }
 
-type RemovedAttributeFromConceptInput {
-	hasInput: Boolean!
+type QualityModificationConnection {
+	edges: [QualityModificationEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
 }
 
-type RemovedAttributeFromPortInput {
-	hasInput: Boolean!
+type QualityModificationEdge {
+	cursor: String!
+	node: QualityModification!
 }
 
-type RemovedAttributeFromQualityInput {
-	hasInput: Boolean!
+type QualityModifications {
+	hash: String!
 }
 
-type RemovedAttributeFromTagInput {
-	hasInput: Boolean!
+type QualityModificationsConnection {
+	edges: [QualityModificationsEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
 }
 
-type RemovedAttributesFromConceptInput {
-	hasInput: Boolean!
+type QualityModificationsEdge {
+	cursor: String!
+	node: QualityModifications!
 }
 
-type RemovedAttributesFromPortInput {
-	hasInput: Boolean!
+type QualityOperation {
+	hash: String!
 }
 
-type RemovedAttributesFromQualityInput {
-	hasInput: Boolean!
+type QualityOperationConnection {
+	edges: [QualityOperationEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
 }
 
-type RemovedAttributesFromTagInput {
-	hasInput: Boolean!
+type QualityOperationEdge {
+	cursor: String!
+	node: QualityOperation!
+}
+
+type Query {
+	"""
+	@emoji 🔎 Golden `Query.node(id)` — returns the `Node` interface for resolvable globals on this runtime.
+	"""
+	node(id: ID!): Node
+	"""
+	@emoji 🔎 Golden `Query.entity(hash)` — returns the `Entity` interface for VCS shells resolvable on this runtime.
+	"""
+	entity(hash: ID!): Entity
+	"""
+	@emoji 🧭 First active [`crate::vcs::Session`] on this runtime.
+	"""
+	session: Session!
+	"""
+	@emoji 🏪 Active [`Store`] for bundle tests and relay paths (same surface as `LocalProvider.stores` / `Session.stores`).
+	"""
+	store: Store!
+}
+
+type RemoteProvider implements Entity & Node & StrongEntity & Provider {
+	id: ID!
+	hash: String!
+	owner: Entity
+	owns: EntityConnection
+	uri: String!
+	backbones: BackboneConnection!
+	backbone(id: ID!): Backbone
+	url: String!
+}
+
+type RemoteProviderCommand implements ProviderCommand {
+	createBackbone(uri: String!): ID!
+	attachBackbone(store: ID!): ID!
+	login(username: String!, passwordHash: String!, hubUrl: String): ID!
+	logout: ID!
+}
+
+type RemoteProviderCommandConnection {
+	edges: [RemoteProviderCommandEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type RemoteProviderCommandEdge {
+	cursor: String!
+	hash: String!
+}
+
+type RemoteProviderConnection {
+	edges: [RemoteProviderEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type RemoteProviderEdge {
+	cursor: String!
+	node: RemoteProvider!
+}
+
+type RemovedAttributeFromConcept {
+	hash: String!
+}
+
+type RemovedAttributeFromConceptConnection {
+	edges: [RemovedAttributeFromConceptEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type RemovedAttributeFromConceptEdge {
+	cursor: String!
+	node: RemovedAttributeFromConcept!
+}
+
+type RemovedAttributeFromDesign {
+	hash: String!
+}
+
+type RemovedAttributeFromDesignConnection {
+	edges: [RemovedAttributeFromDesignEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type RemovedAttributeFromDesignEdge {
+	cursor: String!
+	node: RemovedAttributeFromDesign!
+}
+
+type RemovedAttributeFromPiece {
+	hash: String!
+}
+
+type RemovedAttributeFromPieceConnection {
+	edges: [RemovedAttributeFromPieceEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type RemovedAttributeFromPieceEdge {
+	cursor: String!
+	node: RemovedAttributeFromPiece!
+}
+
+type RemovedAttributeFromPort {
+	hash: String!
+}
+
+type RemovedAttributeFromPortConnection {
+	edges: [RemovedAttributeFromPortEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type RemovedAttributeFromPortEdge {
+	cursor: String!
+	node: RemovedAttributeFromPort!
+}
+
+type RemovedAttributeFromQuality {
+	hash: String!
+}
+
+type RemovedAttributeFromQualityConnection {
+	edges: [RemovedAttributeFromQualityEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type RemovedAttributeFromQualityEdge {
+	cursor: String!
+	node: RemovedAttributeFromQuality!
+}
+
+type RemovedAttributeFromTag {
+	hash: String!
+}
+
+type RemovedAttributeFromTagConnection {
+	edges: [RemovedAttributeFromTagEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type RemovedAttributeFromTagEdge {
+	cursor: String!
+	node: RemovedAttributeFromTag!
+}
+
+type RemovedAttributeFromType {
+	hash: String!
+}
+
+type RemovedAttributeFromTypeConnection {
+	edges: [RemovedAttributeFromTypeEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type RemovedAttributeFromTypeEdge {
+	cursor: String!
+	node: RemovedAttributeFromType!
+}
+
+type RemovedAttributesFromConcept {
+	hash: String!
+}
+
+type RemovedAttributesFromConceptConnection {
+	edges: [RemovedAttributesFromConceptEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type RemovedAttributesFromConceptEdge {
+	cursor: String!
+	node: RemovedAttributesFromConcept!
+}
+
+type RemovedAttributesFromDesign {
+	hash: String!
+}
+
+type RemovedAttributesFromDesignConnection {
+	edges: [RemovedAttributesFromDesignEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type RemovedAttributesFromDesignEdge {
+	cursor: String!
+	node: RemovedAttributesFromDesign!
+}
+
+type RemovedAttributesFromPiece {
+	hash: String!
+}
+
+type RemovedAttributesFromPieceConnection {
+	edges: [RemovedAttributesFromPieceEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type RemovedAttributesFromPieceEdge {
+	cursor: String!
+	node: RemovedAttributesFromPiece!
+}
+
+type RemovedAttributesFromPort {
+	hash: String!
+}
+
+type RemovedAttributesFromPortConnection {
+	edges: [RemovedAttributesFromPortEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type RemovedAttributesFromPortEdge {
+	cursor: String!
+	node: RemovedAttributesFromPort!
+}
+
+type RemovedAttributesFromQuality {
+	hash: String!
+}
+
+type RemovedAttributesFromQualityConnection {
+	edges: [RemovedAttributesFromQualityEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type RemovedAttributesFromQualityEdge {
+	cursor: String!
+	node: RemovedAttributesFromQuality!
+}
+
+type RemovedAttributesFromTag {
+	hash: String!
+}
+
+type RemovedAttributesFromTagConnection {
+	edges: [RemovedAttributesFromTagEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type RemovedAttributesFromTagEdge {
+	cursor: String!
+	node: RemovedAttributesFromTag!
+}
+
+type RemovedAttributesFromType {
+	hash: String!
+}
+
+type RemovedAttributesFromTypeConnection {
+	edges: [RemovedAttributesFromTypeEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type RemovedAttributesFromTypeEdge {
+	cursor: String!
+	node: RemovedAttributesFromType!
+}
+
+type RemovedConnector {
+	hash: String!
+}
+
+type RemovedConnectorConnection {
+	edges: [RemovedConnectorEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type RemovedConnectorEdge {
+	cursor: String!
+	node: RemovedConnector!
+}
+
+type RemovedConnectors {
+	hash: String!
+}
+
+type RemovedConnectorsConnection {
+	edges: [RemovedConnectorsEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type RemovedConnectorsEdge {
+	cursor: String!
+	node: RemovedConnectors!
+}
+
+type RenamedConcept {
+	hash: String!
+}
+
+type RenamedConceptConnection {
+	edges: [RenamedConceptEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type RenamedConceptEdge {
+	cursor: String!
+	node: RenamedConcept!
 }
 
 type RenamedConceptInput {
 	name: String!
 }
 
+type RenamedConceptInputConnection {
+	edges: [RenamedConceptInputEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type RenamedConceptInputEdge {
+	cursor: String!
+	hash: String!
+}
+
+type RenamedConnector {
+	hash: String!
+}
+
+type RenamedConnectorConnection {
+	edges: [RenamedConnectorEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type RenamedConnectorEdge {
+	cursor: String!
+	node: RenamedConnector!
+}
+
+type RenamedConnectorInput {
+	hash: String!
+}
+
+type RenamedConnectorInputConnection {
+	edges: [RenamedConnectorInputEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type RenamedConnectorInputEdge {
+	cursor: String!
+	node: RenamedConnectorInput!
+}
+
 type RenamedKit implements Operation {
 	id: ID!
 	requestId: ID!
 	hash: String!
-	owner: OwnerEntity
-	owns: OwnedEntityConnection
+	owner: Entity
+	owns: EntityConnection
+	scope: Entity!
+	input: Input
+	modification: Modification!
 	kit: Kit!
+}
+
+type RenamedKitConnection {
+	edges: [RenamedKitEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type RenamedKitEdge {
+	cursor: String!
+	hash: String!
+}
+
+type RenamedKitInput {
+	hash: String!
+}
+
+type RenamedKitInputConnection {
+	edges: [RenamedKitInputEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type RenamedKitInputEdge {
+	cursor: String!
+	node: RenamedKitInput!
+}
+
+type RenamedPiece {
+	hash: String!
+}
+
+type RenamedPieceConnection {
+	edges: [RenamedPieceEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type RenamedPieceEdge {
+	cursor: String!
+	node: RenamedPiece!
+}
+
+type RenamedPieceInput {
+	hash: String!
+}
+
+type RenamedPieceInputConnection {
+	edges: [RenamedPieceInputEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type RenamedPieceInputEdge {
+	cursor: String!
+	node: RenamedPieceInput!
+}
+
+type RenamedPort {
+	hash: String!
+}
+
+type RenamedPortConnection {
+	edges: [RenamedPortEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type RenamedPortEdge {
+	cursor: String!
+	node: RenamedPort!
 }
 
 type RenamedPortInput {
@@ -1172,18 +4525,112 @@ type RenamedPortInput {
 	label: String!
 }
 
+type RenamedPortInputConnection {
+	edges: [RenamedPortInputEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type RenamedPortInputEdge {
+	cursor: String!
+	hash: String!
+}
+
+type RenamedQuality {
+	hash: String!
+}
+
+type RenamedQualityConnection {
+	edges: [RenamedQualityEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type RenamedQualityEdge {
+	cursor: String!
+	node: RenamedQuality!
+}
+
 type RenamedQualityInput {
 	key: String!
+}
+
+type RenamedQualityInputConnection {
+	edges: [RenamedQualityInputEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type RenamedQualityInputEdge {
+	cursor: String!
+	hash: String!
+}
+
+type RenamedTag {
+	hash: String!
+}
+
+type RenamedTagConnection {
+	edges: [RenamedTagEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type RenamedTagEdge {
+	cursor: String!
+	node: RenamedTag!
 }
 
 type RenamedTagInput {
 	name: String!
 }
 
-type Representation {
+type RenamedTagInputConnection {
+	edges: [RenamedTagInputEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type RenamedTagInputEdge {
+	cursor: String!
+	hash: String!
+}
+
+type RenamedType {
+	hash: String!
+}
+
+type RenamedTypeConnection {
+	edges: [RenamedTypeEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type RenamedTypeEdge {
+	cursor: String!
+	node: RenamedType!
+}
+
+type RenamedTypeInput {
+	hash: String!
+}
+
+type RenamedTypeInputConnection {
+	edges: [RenamedTypeInputEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type RenamedTypeInputEdge {
+	cursor: String!
+	node: RenamedTypeInput!
+}
+
+type Representation implements Entity & StrongEntity {
 	id: ID!
 	hash: String!
-	owner: Type!
+	owner: Entity
+	owns: EntityConnection
 	name: String!
 	url: String!
 	description: String!
@@ -1203,48 +4650,184 @@ type RepresentationConnection {
 	hash: String!
 }
 
+type RepresentationDiff {
+	hash: String!
+}
+
+type RepresentationDiffConnection {
+	edges: [RepresentationDiffEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type RepresentationDiffEdge {
+	cursor: String!
+	node: RepresentationDiff!
+}
+
 type RepresentationEdge {
 	cursor: String!
 	node: Representation!
 }
 
-type Session {
+type RepresentationModification {
+	hash: String!
+}
+
+type RepresentationModificationConnection {
+	edges: [RepresentationModificationEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type RepresentationModificationEdge {
+	cursor: String!
+	node: RepresentationModification!
+}
+
+type RepresentationModifications {
+	hash: String!
+}
+
+type RepresentationModificationsConnection {
+	edges: [RepresentationModificationsEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type RepresentationModificationsEdge {
+	cursor: String!
+	node: RepresentationModifications!
+}
+
+"""
+@emoji 🌐 SDL `interface RichStrongEntity` — titled uuid entities (`EmptyRichStrong` placeholder + future concrete kinds).
+"""
+interface RichStrongEntity {
+	id: ID!
+	hash: String!
+	owner: Entity
+	owns: EntityConnection
+	name: String!
+	description: String!
+	icon: String!
+	createdAt: Timestamp
+	createdBy: Author
+}
+
+type Session implements Entity & Node & StrongEntity {
 	id: ID!
 	hash: String!
 	startedAt: Timestamp
+	owner: Entity
+	owns: EntityConnection
 	"""
 	@emoji 🌐 Same navigation as WIP [`Graph`] — resolved via [`crate::worker::ParentStore::wip_graph`] for the active runtime.
 	"""
 	alternatives: AlternativeConnection!
 	alternative(id: ID!): Alternative
-	theKit: Version!
+	theKit: Workspace!
+	stores: StoreConnection!
+	localProvider: LocalProvider!
+	remoteProviders: RemoteProviderConnection!
 }
 
 type SessionCommand {
 	start: ID!
 	end: ID!
-	login(username: String!, passwordHash: String!, hubUrl: String): ID!
-	logout: ID!
-	backbone: BackboneCommand!
-	theKit: VersionCommand!
-	alternative(id: ID!): AlternativeCommand!
-	startAlternative(name: String): ID!
+	store(id: ID!): StoreCommand!
+	localProvider: LocalProviderCommand!
+	remoteProvider(url: String!): RemoteProviderCommand!
 }
 
-type Side {
+type SessionCommandConnection {
+	edges: [SessionCommandEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type SessionCommandEdge {
+	cursor: String!
+	hash: String!
+}
+
+type SessionConnection {
+	edges: [SessionEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type SessionEdge {
+	cursor: String!
+	hash: String!
+}
+
+type Side implements StrongEntity {
 	id: ID!
 	hash: String!
-	owner: SideOwner!
+	owner: Entity
+	owns: EntityConnection
 	piece: Piece!
 	port: Port
 	designPiece: Piece
 	connector: Connector
 }
 
-"""
-@emoji 🔗 SDL `union SideOwner = Connection`.
-"""
-union SideOwner = Connection
+type SideConnection {
+	edges: [SideEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type SideDiff {
+	hash: String!
+}
+
+type SideDiffConnection {
+	edges: [SideDiffEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type SideDiffEdge {
+	cursor: String!
+	node: SideDiff!
+}
+
+type SideEdge {
+	cursor: String!
+	hash: String!
+}
+
+type SideModification {
+	hash: String!
+}
+
+type SideModificationConnection {
+	edges: [SideModificationEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type SideModificationEdge {
+	cursor: String!
+	node: SideModification!
+}
+
+type SideModifications {
+	hash: String!
+}
+
+type SideModificationsConnection {
+	edges: [SideModificationsEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type SideModificationsEdge {
+	cursor: String!
+	node: SideModifications!
+}
 
 type Stat {
 	id: ID!
@@ -1265,16 +4848,57 @@ type StatConnection {
 	hash: String!
 }
 
+type StatDiff {
+	hash: String!
+}
+
+type StatDiffConnection {
+	edges: [StatDiffEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type StatDiffEdge {
+	cursor: String!
+	node: StatDiff!
+}
+
 type StatEdge {
 	cursor: String!
 	node: Stat!
 }
 
+type StatModification {
+	hash: String!
+}
+
+type StatModificationConnection {
+	edges: [StatModificationEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type StatModificationEdge {
+	cursor: String!
+	node: StatModification!
+}
+
+type StatModifications {
+	hash: String!
+}
+
+type StatModificationsConnection {
+	edges: [StatModificationsEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type StatModificationsEdge {
+	cursor: String!
+	node: StatModifications!
+}
+
 type Store {
-	"""
-	@emoji 🧭 First active [`crate::vcs::Session`] on this runtime.
-	"""
-	session: Session!
 	"""
 	@emoji 🌐 Writable in-progress graph head.
 	"""
@@ -1289,41 +4913,61 @@ type Store {
 	conflicts: ConflictConnection!
 }
 
+type StoreCommand {
+	backbone: BackboneCommand!
+	theKit: VersionCommand
+	alternative(id: ID!): AlternativeCommand!
+	startAlternative(name: String): ID!
+}
+
+type StoreCommandConnection {
+	edges: [StoreCommandEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type StoreCommandEdge {
+	cursor: String!
+	hash: String!
+}
+
+type StoreConnection implements EntityConnection {
+	edges: [StoreEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type StoreEdge {
+	cursor: String!
+	node: Store!
+}
+
+"""
+@emoji 🌐 SDL `interface StrongEntity` — uuidv7-backed [`Entity`] projection (mirrors golden implementors reachable today).
+"""
+interface StrongEntity {
+	id: ID!
+	hash: String!
+	owner: Entity
+	owns: EntityConnection
+}
+
 type Subscription {
 	"""
-	@emoji 📡 Live-query mirror of [`Query::store`] — re-emits the explicit Store root on matching event-bus ticks.
-	"""
-	store: Store!
-	"""
-	@emoji 📡 Live-query mirror of [`Query::session`] — re-emits on each outbound [`EventBus`] tick.
+	@emoji 📡 Golden `Subscription.session` — live mirror of [`Query::session`].
 	"""
 	session: Session!
 	"""
-	@emoji 📡 Live-query mirror of [`Query::wip`].
+	@emoji 📡 Golden `Subscription.operation` — emits the latest WIP [`OperationInterface`] (placeholder selection until operation cursor wiring lands).
 	"""
-	wip: Graph!
-	"""
-	@emoji 📡 Live-query mirror of [`Query::authoritative`].
-	"""
-	authoritative: Graph!
-	"""
-	@emoji 📡 Live-query mirror of [`Query::conflicts`].
-	"""
-	conflicts: ConflictConnection!
-	"""
-	@emoji 📡 Live-query mirror of [`Query::node`].
-	"""
-	node(id: ID!): GqlNode
-	"""
-	@emoji 📡 Live-query mirror of [`Query::entity`].
-	"""
-	entity(hash: ID!): GqlNode
+	operation: Operation!
 }
 
-type Tag {
+type Tag implements Entity & Node & StrongEntity {
 	id: ID!
 	hash: String!
-	owner: TagOwner!
+	owner: Entity
+	owns: EntityConnection
 	name: String!
 	description: String
 	icon: String
@@ -1338,29 +4982,76 @@ type TagConnection {
 	hash: String!
 }
 
+type TagDiff {
+	hash: String!
+}
+
+type TagDiffConnection {
+	edges: [TagDiffEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type TagDiffEdge {
+	cursor: String!
+	node: TagDiff!
+}
+
 type TagEdge {
 	cursor: String!
 	node: Tag!
 }
 
-type TagOperationInput {
-	rename(newName: String!): ID!
-	changeDescription(newDescription: String!): ID!
-	changeIcon(newIcon: String!): ID!
-	addAttribute(key: String!, value: String!, definition: String!): ID!
-	removeAttribute(id: ID!): ID!
-	removeAttributes(ids: [ID!]!): ID!
+type TagModification {
+	hash: String!
 }
 
-"""
-@emoji 🔗 SDL `union TagOwner`.
-"""
-union TagOwner = Kit | Type | Representation
+type TagModificationConnection {
+	edges: [TagModificationEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
 
-type TheKit implements Version {
+type TagModificationEdge {
+	cursor: String!
+	node: TagModification!
+}
+
+type TagModifications {
+	hash: String!
+}
+
+type TagModificationsConnection {
+	edges: [TagModificationsEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type TagModificationsEdge {
+	cursor: String!
+	node: TagModifications!
+}
+
+type TagOperation {
+	hash: String!
+}
+
+type TagOperationConnection {
+	edges: [TagOperationEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type TagOperationEdge {
+	cursor: String!
+	node: TagOperation!
+}
+
+type TheKit implements Workspace & StrongEntity {
 	id: ID!
 	hash: String!
-	owner: Graph
+	owner: Entity
+	owns: EntityConnection
 	checkpoint: CheckpointConnection!
 	latestWipCheckpointAncestor: Checkpoint
 	savedChanges: ChangeConnection!
@@ -1368,12 +5059,24 @@ type TheKit implements Version {
 	kit: Kit!
 }
 
+type TheKitConnection {
+	edges: [TheKitEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type TheKitEdge {
+	cursor: String!
+	hash: String!
+}
+
 scalar Timestamp
 
-type Type {
+type Type implements Entity & StrongEntity {
 	id: ID!
 	hash: String!
-	owner: Kit!
+	owner: Entity
+	owns: EntityConnection
 	name: String!
 	description: String!
 	icon: String!
@@ -1410,26 +5113,69 @@ type TypeConnection {
 	hash: String!
 }
 
+type TypeDiff {
+	hash: String!
+}
+
+type TypeDiffConnection {
+	edges: [TypeDiffEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type TypeDiffEdge {
+	cursor: String!
+	node: TypeDiff!
+}
+
 type TypeEdge {
 	cursor: String!
 	node: Type!
 }
 
-type TypeOperationInput {
-	rename(newName: String!): ID!
-	changeDescription(newDescription: String!): ID!
-	changeIcon(newIcon: String!): ID!
-	addAttribute(key: String!, value: String!, definition: String!): ID!
-	removeAttribute(id: ID!): ID!
-	removeAttributes(ids: [ID!]!): ID!
-	createPort(code: String, label: String, description: String, icon: String, order: Int): ID!
-	port(id: ID!): PortOperationInput!
-	deletePort(id: ID!): ID!
-	deletePorts(ids: [ID!]!): ID!
-	addConnector(code: String!, description: String, icon: String, portId: ID): ID!
-	connector(id: ID!): ConnectorOperationInput!
-	removeConnector(id: ID!): ID!
-	removeConnectors(ids: [ID!]!): ID!
+type TypeModification {
+	hash: String!
+}
+
+type TypeModificationConnection {
+	edges: [TypeModificationEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type TypeModificationEdge {
+	cursor: String!
+	node: TypeModification!
+}
+
+type TypeModifications {
+	hash: String!
+}
+
+type TypeModificationsConnection {
+	edges: [TypeModificationsEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type TypeModificationsEdge {
+	cursor: String!
+	node: TypeModifications!
+}
+
+type TypeOperation {
+	hash: String!
+}
+
+type TypeOperationConnection {
+	edges: [TypeOperationEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type TypeOperationEdge {
+	cursor: String!
+	node: TypeOperation!
 }
 
 type UnsavedChangeCommand {
@@ -1437,46 +5183,442 @@ type UnsavedChangeCommand {
 	save: ID!
 }
 
+type UnsavedChangeCommandConnection {
+	edges: [UnsavedChangeCommandEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type UnsavedChangeCommandEdge {
+	cursor: String!
+	hash: String!
+}
+
+type UpdatedConceptDescription {
+	hash: String!
+}
+
+type UpdatedConceptDescriptionConnection {
+	edges: [UpdatedConceptDescriptionEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type UpdatedConceptDescriptionEdge {
+	cursor: String!
+	node: UpdatedConceptDescription!
+}
+
 type UpdatedConceptDescriptionInput {
 	description: String!
+}
+
+type UpdatedConceptDescriptionInputConnection {
+	edges: [UpdatedConceptDescriptionInputEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type UpdatedConceptDescriptionInputEdge {
+	cursor: String!
+	hash: String!
+}
+
+type UpdatedConceptIcon {
+	hash: String!
+}
+
+type UpdatedConceptIconConnection {
+	edges: [UpdatedConceptIconEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type UpdatedConceptIconEdge {
+	cursor: String!
+	node: UpdatedConceptIcon!
 }
 
 type UpdatedConceptIconInput {
 	icon: String!
 }
 
+type UpdatedConceptIconInputConnection {
+	edges: [UpdatedConceptIconInputEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type UpdatedConceptIconInputEdge {
+	cursor: String!
+	hash: String!
+}
+
+type UpdatedConnectorDescription {
+	hash: String!
+}
+
+type UpdatedConnectorDescriptionConnection {
+	edges: [UpdatedConnectorDescriptionEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type UpdatedConnectorDescriptionEdge {
+	cursor: String!
+	node: UpdatedConnectorDescription!
+}
+
+type UpdatedConnectorDescriptionInput {
+	hash: String!
+}
+
+type UpdatedConnectorDescriptionInputConnection {
+	edges: [UpdatedConnectorDescriptionInputEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type UpdatedConnectorDescriptionInputEdge {
+	cursor: String!
+	node: UpdatedConnectorDescriptionInput!
+}
+
+type UpdatedConnectorIcon {
+	hash: String!
+}
+
+type UpdatedConnectorIconConnection {
+	edges: [UpdatedConnectorIconEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type UpdatedConnectorIconEdge {
+	cursor: String!
+	node: UpdatedConnectorIcon!
+}
+
+type UpdatedConnectorIconInput {
+	hash: String!
+}
+
+type UpdatedConnectorIconInputConnection {
+	edges: [UpdatedConnectorIconInputEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type UpdatedConnectorIconInputEdge {
+	cursor: String!
+	node: UpdatedConnectorIconInput!
+}
+
+type UpdatedPieceDescription {
+	hash: String!
+}
+
+type UpdatedPieceDescriptionConnection {
+	edges: [UpdatedPieceDescriptionEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type UpdatedPieceDescriptionEdge {
+	cursor: String!
+	node: UpdatedPieceDescription!
+}
+
+type UpdatedPieceDescriptionInput {
+	hash: String!
+}
+
+type UpdatedPieceDescriptionInputConnection {
+	edges: [UpdatedPieceDescriptionInputEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type UpdatedPieceDescriptionInputEdge {
+	cursor: String!
+	node: UpdatedPieceDescriptionInput!
+}
+
+type UpdatedPortDescription {
+	hash: String!
+}
+
+type UpdatedPortDescriptionConnection {
+	edges: [UpdatedPortDescriptionEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type UpdatedPortDescriptionEdge {
+	cursor: String!
+	node: UpdatedPortDescription!
+}
+
 type UpdatedPortDescriptionInput {
 	description: String!
+}
+
+type UpdatedPortDescriptionInputConnection {
+	edges: [UpdatedPortDescriptionInputEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type UpdatedPortDescriptionInputEdge {
+	cursor: String!
+	hash: String!
+}
+
+type UpdatedPortIcon {
+	hash: String!
+}
+
+type UpdatedPortIconConnection {
+	edges: [UpdatedPortIconEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type UpdatedPortIconEdge {
+	cursor: String!
+	node: UpdatedPortIcon!
 }
 
 type UpdatedPortIconInput {
 	icon: String!
 }
 
+type UpdatedPortIconInputConnection {
+	edges: [UpdatedPortIconInputEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type UpdatedPortIconInputEdge {
+	cursor: String!
+	hash: String!
+}
+
+type UpdatedQualityDescription {
+	hash: String!
+}
+
+type UpdatedQualityDescriptionConnection {
+	edges: [UpdatedQualityDescriptionEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type UpdatedQualityDescriptionEdge {
+	cursor: String!
+	node: UpdatedQualityDescription!
+}
+
 type UpdatedQualityDescriptionInput {
 	description: String!
+}
+
+type UpdatedQualityDescriptionInputConnection {
+	edges: [UpdatedQualityDescriptionInputEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type UpdatedQualityDescriptionInputEdge {
+	cursor: String!
+	hash: String!
+}
+
+type UpdatedQualityIcon {
+	hash: String!
+}
+
+type UpdatedQualityIconConnection {
+	edges: [UpdatedQualityIconEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type UpdatedQualityIconEdge {
+	cursor: String!
+	node: UpdatedQualityIcon!
 }
 
 type UpdatedQualityIconInput {
 	icon: String!
 }
 
+type UpdatedQualityIconInputConnection {
+	edges: [UpdatedQualityIconInputEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type UpdatedQualityIconInputEdge {
+	cursor: String!
+	hash: String!
+}
+
+type UpdatedTagDescription {
+	hash: String!
+}
+
+type UpdatedTagDescriptionConnection {
+	edges: [UpdatedTagDescriptionEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type UpdatedTagDescriptionEdge {
+	cursor: String!
+	node: UpdatedTagDescription!
+}
+
 type UpdatedTagDescriptionInput {
 	description: String!
+}
+
+type UpdatedTagDescriptionInputConnection {
+	edges: [UpdatedTagDescriptionInputEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type UpdatedTagDescriptionInputEdge {
+	cursor: String!
+	hash: String!
+}
+
+type UpdatedTagIcon {
+	hash: String!
+}
+
+type UpdatedTagIconConnection {
+	edges: [UpdatedTagIconEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type UpdatedTagIconEdge {
+	cursor: String!
+	node: UpdatedTagIcon!
 }
 
 type UpdatedTagIconInput {
 	icon: String!
 }
 
-type Vector implements Node {
+type UpdatedTagIconInputConnection {
+	edges: [UpdatedTagIconInputEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type UpdatedTagIconInputEdge {
+	cursor: String!
+	hash: String!
+}
+
+type UpdatedTypeDescription {
+	hash: String!
+}
+
+type UpdatedTypeDescriptionConnection {
+	edges: [UpdatedTypeDescriptionEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type UpdatedTypeDescriptionEdge {
+	cursor: String!
+	node: UpdatedTypeDescription!
+}
+
+type UpdatedTypeDescriptionInput {
+	hash: String!
+}
+
+type UpdatedTypeDescriptionInputConnection {
+	edges: [UpdatedTypeDescriptionInputEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type UpdatedTypeDescriptionInputEdge {
+	cursor: String!
+	node: UpdatedTypeDescriptionInput!
+}
+
+type UpdatedTypeIcon {
+	hash: String!
+}
+
+type UpdatedTypeIconConnection {
+	edges: [UpdatedTypeIconEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type UpdatedTypeIconEdge {
+	cursor: String!
+	node: UpdatedTypeIcon!
+}
+
+type UpdatedTypeIconInput {
+	hash: String!
+}
+
+type UpdatedTypeIconInputConnection {
+	edges: [UpdatedTypeIconInputEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type UpdatedTypeIconInputEdge {
+	cursor: String!
+	node: UpdatedTypeIconInput!
+}
+
+type Vector implements Entity & Node & WeakEntity {
 	id: ID!
 	hash: String!
-	owner: OwnerEntity
-	owns: OwnedEntityConnection
+	owner: Entity
+	owns: EntityConnection
 	x: Float!
 	y: Float!
 	z: Float!
+}
+
+type VectorConnection {
+	edges: [VectorEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type VectorDiff implements Diff {
+	id: ID!
+	hash: String!
+	owner: Entity
+	owns: EntityConnection
+	x: Float
+	y: Float
+	z: Float
+}
+
+type VectorDiffConnection {
+	edges: [VectorDiffEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type VectorDiffEdge {
+	cursor: String!
+	node: VectorDiff!
 }
 
 type VectorEdge implements EntityEdge {
@@ -1490,14 +5632,50 @@ input VectorInput {
 	z: Float!
 }
 
-interface Version {
+type VectorModification implements Modification {
 	id: ID!
 	hash: String!
-	checkpoint: CheckpointConnection!
-	latestWipCheckpointAncestor: Checkpoint
-	savedChanges: ChangeConnection!
-	unsavedChanges: ChangeConnection!
-	kit: Kit!
+	owner: Entity
+	owns: EntityConnection
+	before: Entity!
+	diff: Diff!
+	after: Entity!
+}
+
+type VectorModificationConnection {
+	edges: [VectorModificationEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type VectorModificationEdge {
+	cursor: String!
+	node: VectorModification!
+}
+
+type VectorModifications {
+	id: ID!
+	hash: String!
+	owner: Entity
+	owns: EntityConnection
+	removed: EntityConnection!
+	modifications: VectorModificationConnection!
+	added: EntityConnection!
+}
+
+type VectorModificationsConnection {
+	edges: [VectorModificationsEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type VectorModificationsEdge {
+	cursor: String!
+	node: VectorModifications!
+}
+
+type Version {
+	hash: String!
 }
 
 type VersionCommand {
@@ -1507,9 +5685,92 @@ type VersionCommand {
 	createCheckpoint(message: String!): ID!
 }
 
-type WriteVersion {
+type VersionCommandConnection {
+	edges: [VersionCommandEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type VersionCommandEdge {
+	cursor: String!
+	hash: String!
+}
+
+type VersionConnection {
+	edges: [VersionEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type VersionEdge {
+	cursor: String!
+	node: Version!
+}
+
+"""
+@emoji 🏷️ SDL `VersionKind` (`INITIAL_KIT` | `MATERIALIZED`) on golden `Version`.
+"""
+enum VersionKind {
+	INITIAL_KIT
+	MATERIALIZED
+}
+
+"""
+@emoji 🌐 SDL `interface WeakEntity` — hash-backed graph nodes sharing the golden `Entity` tail (`id`, `hash`, `owner`, `owns`).
+"""
+interface WeakEntity {
 	id: ID!
 	hash: String!
+	owner: Entity
+	owns: EntityConnection
+}
+
+type WebsocketBackbone implements Backbone {
+	id: ID!
+	hash: String!
+	owner: Entity
+	owns: EntityConnection
+	uri: String!
+	status: BackboneStatus!
+}
+
+type WebsocketBackboneCommand implements BackboneCommand {
+	detach: ID!
+	sync: ID!
+}
+
+type WebsocketBackboneCommandConnection {
+	edges: [WebsocketBackboneCommandEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type WebsocketBackboneCommandEdge {
+	cursor: String!
+	hash: String!
+}
+
+type WebsocketBackboneConnection {
+	edges: [WebsocketBackboneEdge!]!
+	pageInfo: PageInfo!
+	hash: String!
+}
+
+type WebsocketBackboneEdge {
+	cursor: String!
+	hash: String!
+}
+
+interface Workspace {
+	id: ID!
+	hash: String!
+	owner: Entity
+	owns: EntityConnection
+	checkpoint: CheckpointConnection!
+	latestWipCheckpointAncestor: Checkpoint
+	savedChanges: ChangeConnection!
+	unsavedChanges: ChangeConnection!
+	kit: Kit!
 }
 
 """

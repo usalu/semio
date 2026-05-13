@@ -4,31 +4,31 @@ overview: Replace the in-Go statute/breach mechanism with co-located `*.lint.scr
 todos:
   - id: scaffold_bundle
     content: Scaffold repo/lib/js bundle (package.json, project.json, tsconfig, README)
-    status: in_progress
+    status: completed
   - id: core_facade
     content: Implement cli.ts subprocess facade and Breach/Linter base types
-    status: pending
+    status: completed
   - id: six_linters
     content: Implement TechnologyLinter, BundleLinter, FolderLinter, FileLinter, SectionLinter, DefinitionLinter
-    status: pending
+    status: completed
   - id: runner_bin
     content: Implement script.ts defineLint helper and bin/lint.ts runner that writes .repo/cache/breaches/<id>.json
-    status: pending
+    status: completed
   - id: nx_plugin
     content: Implement and register nx inferred plugin that discovers *.lint.script.ts and creates cacheable per-entity targets
-    status: pending
+    status: completed
   - id: remove_legacy
     content: Remove legacy policy/statute/CheckPolicies/Fix machinery from repo/client/cli/main.go and update main_test.go
-    status: pending
+    status: completed
   - id: rewire_analyze
     content: Rewrite analyze command to read .repo/cache/breaches/*.json with scope filtering
-    status: pending
+    status: completed
   - id: example_scripts
     content: Add example lint scripts (one per linter kind) to validate the pipeline
-    status: pending
+    status: completed
   - id: verify
     content: Run nx lint targets, confirm .repo/cache/breaches output and analyze command surfaces them
-    status: pending
+    status: completed
 isProject: false
 ---
 
