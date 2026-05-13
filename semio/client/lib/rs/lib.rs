@@ -225,7 +225,90 @@ macro_rules! entity_relay {
     };
 }
 
-/// @emoji 🪜 `entity_diffs!` — expands modification / diff relay ladder (filled when diff families migrate).
+/// @emoji 🪜 `_ladder_relay_lite!` — golden **3-shell** relay (`NameEdge` + `NameConnection`); delegates to [`entity_relay!`].
+#[macro_export]
+macro_rules! _ladder_relay_lite {
+    ($Conn:ident, $Edge:ident, $Node:ty) => {
+        $crate::entity_relay!($Conn, $Edge, $Node);
+    };
+}
+
+/// @emoji 🪜 `_ladder_relay_full!` — golden **12-shell** tail: `*Diff*` + `*Modification*` + `*Modifications*` relay triple (after main `entity_relay!`).
+#[macro_export]
+macro_rules! _ladder_relay_full {
+    (
+        $diff_conn:ident,
+        $diff_edge:ident,
+        $diff_node:ty,
+        $mod_conn:ident,
+        $mod_edge:ident,
+        $mod_node:ty,
+        $mods_conn:ident,
+        $mods_edge:ident,
+        $mods_node:ty
+    ) => {
+        $crate::entity_relay!($diff_conn, $diff_edge, $diff_node);
+        $crate::entity_relay!($mod_conn, $mod_edge, $mod_node);
+        $crate::entity_relay!($mods_conn, $mods_edge, $mods_node);
+    };
+}
+
+/// @emoji 🧱 `entity_bare!` — golden **0-shell** surface (`Query`, `Mutation`, `LocalProvider`, …): only the `#[Object]` / `SimpleObject` body (no Edge/Connection); expander lands with schema bodies.
+#[macro_export]
+macro_rules! entity_bare {
+    ($($tokens:tt)*) => {};
+}
+
+/// @emoji 🪢 `entity_lite!` — golden **3-ladder** (`Name` + `NameEdge` + `NameConnection`); expands relay via [`_ladder_relay_lite!`].
+#[macro_export]
+macro_rules! entity_lite {
+    ($Conn:ident, $Edge:ident, $Node:ty $(,)?) => {
+        $crate::_ladder_relay_lite!($Conn, $Edge, $Node);
+    };
+}
+
+/// @emoji 🏗️ `entity_full!` — golden **12-ladder** contract: main `entity_relay!` plus optional [`_ladder_relay_full!`] when diff/mod families are wired.
+#[macro_export]
+macro_rules! entity_full {
+    (
+        relay = ($conn:ident, $edge:ident, $node:ty)
+        $(, ladder_full = (
+            diff = ($diff_conn:ident, $diff_edge:ident, $diff_node:ty),
+            modification = ($mod_conn:ident, $mod_edge:ident, $mod_node:ty),
+            modifications = ($mods_conn:ident, $mods_edge:ident, $mods_node:ty)
+        ))?
+        $(,)?
+    ) => {
+        $crate::entity_relay!($conn, $edge, $node);
+        $(
+            $crate::_ladder_relay_full!(
+                $diff_conn,
+                $diff_edge,
+                $diff_node,
+                $mod_conn,
+                $mod_edge,
+                $mod_node,
+                $mods_conn,
+                $mods_edge,
+                $mods_node
+            );
+        )?
+    };
+}
+
+/// @emoji ⚙️ `operation_with_input!` — plan §macro DSL: `Operation` + `Input` lite-ladder pair (hook expands toward [`kit::target_operations`] patterns).
+#[macro_export]
+macro_rules! operation_with_input {
+    ($($tokens:tt)*) => {};
+}
+
+/// @emoji ⚙️ `operation_no_input!` — plan §macro DSL: `Operation` lite-ladder only (no companion `*Input` object).
+#[macro_export]
+macro_rules! operation_no_input {
+    ($($tokens:tt)*) => {};
+}
+
+/// @emoji 🪜 `entity_diffs!` — legacy roster hook; prefer [`entity_full!`] + [`_ladder_relay_full!`] for new golden ladders.
 #[macro_export]
 macro_rules! entity_diffs {
     ($($_base:ident),* $(,)?) => {};
@@ -987,6 +1070,23 @@ pub mod gql_relay {
         pub start_cursor: Option<String>,
         #[graphql(name = "endCursor")]
         pub end_cursor: Option<String>,
+    }
+
+    /// @emoji 🪢 Golden `PageInfoEdge` / `PageInfoConnection` (relay shells around [`PageInfo`]).
+    #[derive(Clone, Debug, Default, SimpleObject)]
+    #[graphql(name = "PageInfoEdge")]
+    pub struct PageInfoEdge {
+        pub cursor: String,
+        pub node: Arc<PageInfo>,
+    }
+
+    #[derive(Clone, Debug, Default, SimpleObject)]
+    #[graphql(name = "PageInfoConnection")]
+    pub struct PageInfoConnection {
+        pub edges: Vec<PageInfoEdge>,
+        #[graphql(name = "pageInfo")]
+        pub page_info: Arc<PageInfo>,
+        pub hash: String,
     }
 
     crate::entity_relay!(DesignConnection, DesignEdge, Arc<Design>);
@@ -11304,6 +11404,8 @@ pub mod gql {
             .register_output_type::<crate::gql::Store>()
             .register_output_type::<crate::gql::StoreEdge>()
             .register_output_type::<crate::gql::StoreConnection>()
+            .register_output_type::<crate::gql_relay::PageInfoEdge>()
+            .register_output_type::<crate::gql_relay::PageInfoConnection>()
             .register_output_type::<crate::operation::OperationInterface>()
             .finish()
     }
@@ -11591,6 +11693,7 @@ mod tests {
     fn schema_matches_target_graphql_file() {
         let from_fn = block_on(crate::gql::sdl());
         assert!(from_fn.contains("type Query"), "generated GraphQL schema must come from async-graphql Schema::sdl()");
+        assert!(from_fn.contains("type PageInfoEdge"), "golden PageInfoEdge must be reachable in generated SDL");
         assert!(!from_fn.contains("#region"), "generated GraphQL schema must not embed Rust region markers");
 
         const GOLDEN: &str = include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../schema/graphql/schema.golden.graphql"));

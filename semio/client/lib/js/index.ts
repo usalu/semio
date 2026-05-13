@@ -88,7 +88,7 @@ class InlineTransport {
   }
 }
 
-function describeWorkerThreadError(ev: Event): string {
+function describeWorkerThreadError(ev: globalThis.Event): string {
   if (ev instanceof ErrorEvent) {
     const parts: string[] = [];
     if (ev.message) parts.push(ev.message);
@@ -125,17 +125,17 @@ class WorkerStringTransport {
           reject(new Error(`worker init error: ${m.message ?? "unknown"}`));
         }
       };
-      const onError = (ev: Event) => {
+      const onError = (ev: globalThis.Event) => {
         cleanup();
         reject(new Error(`worker init error: ${describeWorkerThreadError(ev)}`));
       };
       const cleanup = () => {
         clearTimeout(t);
         this.worker.removeEventListener("message", onMessage);
-        this.worker.removeEventListener("error", onError as EventListener);
+        this.worker.removeEventListener("error", onError as globalThis.EventListener);
       };
       this.worker.addEventListener("message", onMessage);
-      this.worker.addEventListener("error", onError as EventListener);
+      this.worker.addEventListener("error", onError as globalThis.EventListener);
       this.worker.postMessage(JSON.stringify({ op: "init", uri }));
     });
   }
@@ -438,28 +438,32 @@ async function readSemioWasmBytesFromMonorepoCandidates(): Promise<Uint8Array | 
 //#region 🛠️Base
 /** @emoji 🧬 Strong entity anchor: {@link Session} + id (no cached fields on the instance). */
 export abstract class Entity {
-  public readonly store: Session;
+  public readonly session: Session;
 
-  protected constructor(store: Session, public readonly id: string, public readonly storeId?: string) {
-    this.store = store;
+  protected constructor(session: Session, public readonly id: string, public readonly storeId?: string) {
+    this.session = session;
   }
 
   /** @emoji 🧾 Reads kit fields through the owning {@link Store} scope, never through an active-store fallback. */
   async readKitInner(inner: string, variables: JsonObject = {}): Promise<JsonObject | null> {
     if (this.storeId == null || this.storeId === "") throw new Error(`${this.constructor.name} is not scoped to a Store`);
-    return this.store.readKitInnerForStore(this.storeId, inner, variables);
+    return this.session.readKitInnerForStore(this.storeId, inner, variables);
   }
 
   /** @emoji 🎬 Starts or reuses the command change ID for the owning {@link Store} scope. */
   async ensureChangeId(): Promise<string> {
     if (this.storeId == null || this.storeId === "") throw new Error(`${this.constructor.name} is not scoped to a Store`);
-    return this.store.ensureChangeId(this.storeId);
+    return this.session.ensureChangeId(this.storeId);
   }
 
   /** @emoji 🎬 Sends a kit mutation through the owning {@link Store} command scope. */
   async mutateScoped(changeId: string, kitSelection: string): Promise<SetResult> {
     if (this.storeId == null || this.storeId === "") throw new Error(`${this.constructor.name} is not scoped to a Store`);
-    return this.store.mutateScoped(this.storeId, changeId, kitSelection);
+    return this.session.mutateScoped(this.storeId, changeId, kitSelection);
+  }
+
+  protected entity<T extends Entity>(ctor: new (session: Session, id: string, storeId?: string) => T, id: string, storeId = this.storeId): T {
+    return new ctor(this.session, id, storeId);
   }
 }
 //#endregion 🛠️Base
@@ -475,8 +479,8 @@ export class Attribute {
     public readonly definition: string,
   ) { }
 
-  get store(): Session {
-    return this.owner.store;
+  get session(): Session {
+    return this.owner.session;
   }
 }
 
@@ -492,8 +496,8 @@ export class Benchmark {
     public readonly maxExcluded: boolean | null,
   ) { }
 
-  get store(): Session {
-    return this.quality.store;
+  get session(): Session {
+    return this.quality.session;
   }
 }
 
@@ -608,7 +612,7 @@ async function readNodeSelection<T>(
   parse: (node: JsonObject | undefined) => T,
 ): Promise<T> {
   const data = unwrapGraphqlData(
-    await executeStoreGraphql(entity.store, {
+    await executeSessionGraphql(entity.session, {
       query: `query($id: ID!) { node(id: $id) { ... on ${typename} { ${selection} } } }`,
       variables: { id: entity.id },
     }),
@@ -1138,8 +1142,8 @@ export class Session {
 //#region 📦Kit
 /** @emoji 📦 Target-schema kit entity beneath {@link Version}; delegates transport work to {@link Store}. */
 export class Kit extends Entity {
-  constructor(store: Session, id: string, storeId?: string) {
-    super(store, id, storeId);
+  constructor(session: Session, id: string, storeId?: string) {
+    super(session, id, storeId);
   }
 
   async rename(newName: string): Promise<SetResult> {
@@ -1278,41 +1282,41 @@ export class Kit extends Entity {
 
   async designs(): Promise<readonly Design[]> {
     const frag = await this.readKitInner("designs { edges { node { id } } }");
-    return Object.freeze(parseEntityConnectionIds(frag, "designs").map((id) => new Design(this.store, id, this.storeId)));
+    return Object.freeze(parseEntityConnectionIds(frag, "designs").map((id) => this.entity(Design, id)));
   }
 
   async types(): Promise<readonly Type[]> {
     const frag = await this.readKitInner("types { edges { node { id } } }");
-    return Object.freeze(parseEntityConnectionIds(frag, "types").map((id) => new Type(this.store, id, this.storeId)));
+    return Object.freeze(parseEntityConnectionIds(frag, "types").map((id) => this.entity(Type, id)));
   }
 
   async authors(): Promise<readonly Author[]> {
     const frag = await this.readKitInner("authors { edges { node { id } } }");
-    return Object.freeze(parseEntityConnectionIds(frag, "authors").map((id) => new Author(this.store, id, this.storeId)));
+    return Object.freeze(parseEntityConnectionIds(frag, "authors").map((id) => this.entity(Author, id)));
   }
 
   async qualities(): Promise<readonly Quality[]> {
     const frag = await this.readKitInner("qualities { edges { node { id } } }");
-    return Object.freeze(parseEntityConnectionIds(frag, "qualities").map((id) => new Quality(this.store, id, this.storeId)));
+    return Object.freeze(parseEntityConnectionIds(frag, "qualities").map((id) => this.entity(Quality, id)));
   }
 
   async tags(): Promise<readonly Tag[]> {
     const frag = await this.readKitInner("tags { edges { node { id } } }");
-    return Object.freeze(parseEntityConnectionIds(frag, "tags").map((id) => new Tag(this.store, id, this.storeId)));
+    return Object.freeze(parseEntityConnectionIds(frag, "tags").map((id) => this.entity(Tag, id)));
   }
 
   async concepts(): Promise<readonly Concept[]> {
     const frag = await this.readKitInner("concepts { edges { node { id } } }");
-    return Object.freeze(parseEntityConnectionIds(frag, "concepts").map((id) => new Concept(this.store, id, this.storeId)));
+    return Object.freeze(parseEntityConnectionIds(frag, "concepts").map((id) => this.entity(Concept, id)));
   }
 }
 //#endregion 📦Kit
 
-function executeStoreGraphql(
-  store: Session,
+function executeSessionGraphql(
+  session: Session,
   body: Readonly<{ query: string; variables?: JsonObject; operationName?: string }>,
 ): Promise<GraphqlEnvelope<JsonValue>> {
-  return (store as unknown as { gqlRun(b: typeof body): Promise<GraphqlEnvelope<JsonValue>> }).gqlRun(body);
+  return (session as unknown as { gqlRun(b: typeof body): Promise<GraphqlEnvelope<JsonValue>> }).gqlRun(body);
 }
 
 //#region 🧬VcsEntities
@@ -1326,72 +1330,72 @@ export class Store extends Entity {
   }
 
   async readKitInner(inner: string, variables: JsonObject = {}): Promise<JsonObject | null> {
-    return this.store.readKitInnerForStore(this.id, inner, variables);
+    return this.session.readKitInnerForStore(this.id, inner, variables);
   }
 
   design(id: string): Design {
-    return new Design(this.store, id, this.id);
+    return this.entity(Design, id, this.id);
   }
 
   type(id: string): Type {
-    return new Type(this.store, id, this.id);
+    return this.entity(Type, id, this.id);
   }
 
   tag(id: string): Tag {
-    return new Tag(this.store, id, this.id);
+    return this.entity(Tag, id, this.id);
   }
 
   concept(id: string): Concept {
-    return new Concept(this.store, id, this.id);
+    return this.entity(Concept, id, this.id);
   }
 
   quality(id: string): Quality {
-    return new Quality(this.store, id, this.id);
+    return this.entity(Quality, id, this.id);
   }
 
   author(id: string): Author {
-    return new Author(this.store, id, this.id);
+    return this.entity(Author, id, this.id);
   }
 
   async mutateScoped(changeId: string, kitSelection: string): Promise<SetResult> {
-    return this.store.mutateScoped(this.id, changeId, kitSelection);
+    return this.session.mutateScoped(this.id, changeId, kitSelection);
   }
 
   async ensureChangeId(): Promise<string> {
-    return this.store.ensureChangeId(this.id);
+    return this.session.ensureChangeId(this.id);
   }
 
   async saveChange(): Promise<void> {
-    await this.store.saveChange(this.id);
+    await this.session.saveChange(this.id);
   }
 
   async startNewChange(): Promise<ChangeId> {
-    return await this.store.startNewChange(this.id);
+    return await this.session.startNewChange(this.id);
   }
 
   async createCheckpoint(message: string): Promise<SetResult> {
-    return this.store.createCheckpoint(this.id, message);
+    return this.session.createCheckpoint(this.id, message);
   }
 
   async startAlternative(name?: string): Promise<SetResult> {
-    return this.store.startAlternative(this.id, name);
+    return this.session.startAlternative(this.id, name);
   }
 
   async integrateAlternative(alternativeId: string): Promise<SetResult> {
-    return this.store.integrateAlternative(this.id, alternativeId);
+    return this.session.integrateAlternative(this.id, alternativeId);
   }
 
   wip(): Graph {
-    return new Graph(this.store, "wip", this.id);
+    return new Graph(this.session, "wip", this.id);
   }
 
   authoritative(): Graph {
-    return new Graph(this.store, "authoritative", this.id);
+    return new Graph(this.session, "authoritative", this.id);
   }
 
   async conflicts(): Promise<readonly Conflict[]> {
-    const node = await this.store.readStoreInnerForId(this.id, "conflicts { edges { node { id } } }");
-    return parseEntityConnectionIds(node, "conflicts").map((id) => new Conflict(this.store, id));
+    const node = await this.session.readStoreInnerForId(this.id, "conflicts { edges { node { id } } }");
+    return parseEntityConnectionIds(node, "conflicts").map((id) => new Conflict(this.session, id));
   }
 
   async attachBackbone(provider: Provider, uri: string): Promise<SetResult> {
@@ -1399,7 +1403,7 @@ export class Store extends Entity {
   }
 
   async detachBackbone(): Promise<SetResult> {
-    const env = await executeStoreGraphql(this.store, {
+    const env = await executeSessionGraphql(this.session, {
       query: `mutation($storeId: ID!) { session { store(id: $storeId) { backbone { detach } } } }`,
       variables: { storeId: this.id },
     });
@@ -1407,7 +1411,7 @@ export class Store extends Entity {
   }
 
   async syncBackbone(): Promise<SetResult> {
-    const env = await executeStoreGraphql(this.store, {
+    const env = await executeSessionGraphql(this.session, {
       query: `mutation($storeId: ID!) { session { store(id: $storeId) { backbone { sync } } } }`,
       variables: { storeId: this.id },
     });
@@ -1417,8 +1421,8 @@ export class Store extends Entity {
 
 /** @emoji 🪢 Backbone exposed by a local or remote provider. */
 export class Backbone extends Entity {
-  constructor(store: Session, id: string, public readonly provider: Provider) {
-    super(store, id);
+  constructor(session: Session, id: string, public readonly provider: Provider) {
+    super(session, id);
   }
 }
 
@@ -1426,8 +1430,8 @@ export class Backbone extends Entity {
 export abstract class Provider extends Entity {
   protected abstract readonly commandSelection: string;
 
-  constructor(store: Session, id: string, storeId?: string) {
-    super(store, id, storeId);
+  constructor(session: Session, id: string, storeId?: string) {
+    super(session, id, storeId);
   }
 
   protected abstract providerNode(inner: string): Promise<JsonObject | null>;
@@ -1440,12 +1444,12 @@ export abstract class Provider extends Entity {
   }
 
   async createBackbone(uri: string): Promise<SetResult> {
-    const env = await executeStoreGraphql(this.store, { query: `mutation { session { ${this.commandSelection} { createBackbone(uri: ${gqlString(uri)}) } } }` });
+    const env = await executeSessionGraphql(this.session, { query: `mutation { session { ${this.commandSelection} { createBackbone(uri: ${gqlString(uri)}) } } }` });
     return gqlOkFromEnvelope(env);
   }
 
   async attachBackbone(storeId: string): Promise<SetResult> {
-    const env = await executeStoreGraphql(this.store, {
+    const env = await executeSessionGraphql(this.session, {
       query: `mutation($storeId: ID!) { session { ${this.commandSelection} { attachBackbone(store: $storeId) } } }`,
       variables: { storeId },
     });
@@ -1465,12 +1469,12 @@ export abstract class Provider extends Entity {
 export class LocalProvider extends Provider {
   protected readonly commandSelection = "localProvider";
 
-  constructor(store: Session) {
-    super(store, "local");
+  constructor(session: Session) {
+    super(session, "local");
   }
 
   protected async providerNode(inner: string): Promise<JsonObject | null> {
-    const data = unwrapGraphqlData(await executeStoreGraphql(this.store, { query: `query { session { localProvider { ${inner} } } }` })) as JsonObject;
+    const data = unwrapGraphqlData(await executeSessionGraphql(this.session, { query: `query { session { localProvider { ${inner} } } }` })) as JsonObject;
     return jsonObjectField(jsonObjectField(data, "session"), "localProvider");
   }
 }
@@ -1479,14 +1483,14 @@ export class LocalProvider extends Provider {
 export class RemoteProvider extends Provider {
   protected readonly commandSelection: string;
 
-  constructor(store: Session, public readonly url: string) {
-    super(store, url);
+  constructor(session: Session, public readonly url: string) {
+    super(session, url);
     this.commandSelection = `remoteProvider(url: ${gqlString(url)})`;
   }
 
   protected override async providerNode(inner: string): Promise<JsonObject | null> {
     const data = unwrapGraphqlData(
-      await executeStoreGraphql(this.store, { query: `query { session { remoteProviders { edges { node { url ${inner} } } } } }` }),
+      await executeSessionGraphql(this.session, { query: `query { session { remoteProviders { edges { node { url ${inner} } } } } }` }),
     ) as JsonObject;
     const edges = jsonObjectField(jsonObjectField(data, "session"), "remoteProviders")?.["edges"];
     if (!Array.isArray(edges)) return null;
@@ -1499,26 +1503,26 @@ export class RemoteProvider extends Provider {
 
   async login(username: string, passwordHash: string, hubUrl?: string | null): Promise<SetResult> {
     const h = hubUrl == null ? "null" : gqlString(hubUrl);
-    const env = await executeStoreGraphql(this.store, {
+    const env = await executeSessionGraphql(this.session, {
       query: `mutation { session { ${this.commandSelection} { login(username: ${gqlString(username)}, passwordHash: ${gqlString(passwordHash)}, hubUrl: ${h}) } } }`,
     });
     return gqlOkFromEnvelope(env);
   }
 
   async logout(): Promise<SetResult> {
-    const env = await executeStoreGraphql(this.store, { query: `mutation { session { ${this.commandSelection} { logout } } }` });
+    const env = await executeSessionGraphql(this.session, { query: `mutation { session { ${this.commandSelection} { logout } } }` });
     return gqlOkFromEnvelope(env);
   }
 }
 
 /** @emoji 🌐 VCS graph: {@code wip} / {@code authoritative} selections on {@link Store}. */
 export class Graph extends Entity {
-  constructor(store: Session, root: GraphRootKind, private readonly managedStoreId: string) {
-    super(store, root);
+  constructor(session: Session, root: GraphRootKind, private readonly managedStoreId: string) {
+    super(session, root);
   }
 
   private async readManagedStoreInner(inner: string): Promise<JsonObject | null> {
-    return this.store.readStoreInnerForId(this.managedStoreId, inner);
+    return this.session.readStoreInnerForId(this.managedStoreId, inner);
   }
 
   get root(): GraphRootKind {
@@ -1527,15 +1531,15 @@ export class Graph extends Entity {
 
   /** @emoji 🏛 {@code graph { theKit }} handle. */
   theKit(): TheKit {
-    return new TheKit(this.store, this.root, this.managedStoreId);
+    return new TheKit(this.session, this.root, this.managedStoreId);
   }
 
   checkpoint(checkpointId: string): Checkpoint {
-    return new Checkpoint(this.store, this.root, checkpointId, this.managedStoreId);
+    return new Checkpoint(this.session, this.root, checkpointId, this.managedStoreId);
   }
 
   alternative(alternativeId: string): Alternative {
-    return new Alternative(this.store, { parent: "graph", root: this.root, storeId: this.managedStoreId }, alternativeId);
+    return new Alternative(this.session, { parent: "graph", root: this.root, storeId: this.managedStoreId }, alternativeId);
   }
 
   private async readStoreGraphRootScalar(field: "id" | "hash"): Promise<string> {
@@ -1574,7 +1578,7 @@ export class Graph extends Entity {
     const run = (): void => {
       void this.alternatives().then(cb);
     };
-    return subscribeKitCoarseRefetch(this.store.bus, run);
+    return subscribeKitCoarseRefetch(this.session.bus, run);
   }
 
   /** @emoji 📡 Refetches {@link Graph#readCheckpoints} on coarse kit ticks. */
@@ -1582,7 +1586,7 @@ export class Graph extends Entity {
     const run = (): void => {
       void this.checkpoints().then(cb);
     };
-    return subscribeKitCoarseRefetch(this.store.bus, run);
+    return subscribeKitCoarseRefetch(this.session.bus, run);
   }
 }
 
@@ -1592,16 +1596,16 @@ export type AlternativeParent = { readonly parent: "graph"; readonly root: Graph
 /** @emoji 🔀 {@code Alternative} under {@link Graph} or {@link Session}. */
 export class Alternative extends Entity {
   constructor(
-    store: Session,
+    session: Session,
     private readonly ap: AlternativeParent,
     id: string,
   ) {
-    super(store, id);
+    super(session, id);
   }
 
   async name(): Promise<string> {
     const root = this.ap.parent === "graph" ? this.ap.root : "wip";
-    const storeNode = await this.store.readStoreInnerForId(this.ap.storeId, `${root} { alternative(id: ${gqlString(this.id)}) { name } }`);
+    const storeNode = await this.session.readStoreInnerForId(this.ap.storeId, `${root} { alternative(id: ${gqlString(this.id)}) { name } }`);
     const first = jsonObjectField(storeNode, root);
     const alt = first?.["alternative"] as JsonObject | undefined;
     return String(alt?.["name"] ?? "");
@@ -1610,17 +1614,17 @@ export class Alternative extends Entity {
 
 /** @emoji 🏛 {@code TheKit} under {@code wip}/{@code authoritative}. */
 export class TheKit extends Entity {
-  constructor(store: Session, private readonly graphRoot: GraphRootKind, private readonly managedStoreId: string) {
-    super(store, `theKit:${graphRoot}`);
+  constructor(session: Session, private readonly graphRoot: GraphRootKind, private readonly managedStoreId: string) {
+    super(session, `theKit:${graphRoot}`);
   }
 
   /** @emoji 📦 Target {@code Version.kit} handle beneath this version node. */
   private kitRef(id = "kit"): Kit {
-    return new Kit(this.store, id, this.managedStoreId);
+    return new Kit(this.session, id, this.managedStoreId);
   }
 
   private async kitId(): Promise<string> {
-    const storeNode = await this.store.readStoreInnerForId(this.managedStoreId, `${this.graphRoot} { theKit { id } }`);
+    const storeNode = await this.session.readStoreInnerForId(this.managedStoreId, `${this.graphRoot} { theKit { id } }`);
     const rootNode = jsonObjectField(storeNode, this.graphRoot);
     const tk = jsonObjectField(rootNode, "theKit");
     return String(tk?.["id"] ?? "");
@@ -1634,20 +1638,20 @@ export class TheKit extends Entity {
 
 /** @emoji 🏁 {@code Checkpoint} under {@link Graph}. */
 export class Checkpoint extends Entity {
-  constructor(store: Session, private readonly graphRoot: GraphRootKind, checkpointId: string, private readonly managedStoreId: string) {
-    super(store, checkpointId);
+  constructor(session: Session, private readonly graphRoot: GraphRootKind, checkpointId: string, private readonly managedStoreId: string) {
+    super(session, checkpointId);
   }
 
   private async readManagedStoreInner(inner: string): Promise<JsonObject | null> {
-    return this.store.readStoreInnerForId(this.managedStoreId, inner);
+    return this.session.readStoreInnerForId(this.managedStoreId, inner);
   }
 
   change(changeId: string): Change {
-    return new Change(this.store, this.graphRoot, this.id, changeId, this.managedStoreId);
+    return new Change(this.session, this.graphRoot, this.id, changeId, this.managedStoreId);
   }
 
   edit(editId: string): Edit {
-    return new Edit(this.store, this.graphRoot, this.id, editId, this.managedStoreId);
+    return new Edit(this.session, this.graphRoot, this.id, editId, this.managedStoreId);
   }
 
   async message(): Promise<string> {
@@ -1698,7 +1702,7 @@ export class Checkpoint extends Entity {
     const run = (): void => {
       void this.changes().then(cb);
     };
-    return subscribeKitCoarseRefetch(this.store.bus, run);
+    return subscribeKitCoarseRefetch(this.session.bus, run);
   }
 
   /** @emoji 📡 Refetches {@link Checkpoint#readEdits} on coarse kit ticks. */
@@ -1706,24 +1710,24 @@ export class Checkpoint extends Entity {
     const run = (): void => {
       void this.edits().then(cb);
     };
-    return subscribeKitCoarseRefetch(this.store.bus, run);
+    return subscribeKitCoarseRefetch(this.session.bus, run);
   }
 }
 
 /** @emoji 🔀 {@code Change} scoped to a {@link Checkpoint} (navigation shell; expand with field reads). */
 export class Change extends Entity {
   constructor(
-    store: Session,
+    session: Session,
     private readonly graphRoot: GraphRootKind,
     private readonly checkpointId: string,
     changeId: string,
     private readonly managedStoreId: string,
   ) {
-    super(store, changeId);
+    super(session, changeId);
   }
 
   private async readUnderChange(inner: string): Promise<JsonObject | null> {
-    const storeNode = await this.store.readStoreInnerForId(this.managedStoreId, `${this.graphRoot} { checkpoint(id: ${gqlString(this.checkpointId)}) { change(id: ${gqlString(this.id)}) { ${inner} } } }`);
+    const storeNode = await this.session.readStoreInnerForId(this.managedStoreId, `${this.graphRoot} { checkpoint(id: ${gqlString(this.checkpointId)}) { change(id: ${gqlString(this.id)}) { ${inner} } } }`);
     const rootNode = jsonObjectField(storeNode, this.graphRoot);
     const cp = rootNode?.["checkpoint"] as JsonObject | undefined;
     const ch = cp?.["change"] as JsonObject | undefined;
@@ -1763,17 +1767,17 @@ export class Change extends Entity {
 /** @emoji ✏️ {@code Edit} scoped to a {@link Checkpoint} (navigation shell; expand with field reads). */
 export class Edit extends Entity {
   constructor(
-    store: Session,
+    session: Session,
     private readonly graphRoot: GraphRootKind,
     private readonly checkpointId: string,
     editId: string,
     private readonly managedStoreId: string,
   ) {
-    super(store, editId);
+    super(session, editId);
   }
 
   private async readUnderEdit(inner: string): Promise<JsonObject | null> {
-    const storeNode = await this.store.readStoreInnerForId(this.managedStoreId, `${this.graphRoot} { checkpoint(id: ${gqlString(this.checkpointId)}) { edit(id: ${gqlString(this.id)}) { ${inner} } } }`);
+    const storeNode = await this.session.readStoreInnerForId(this.managedStoreId, `${this.graphRoot} { checkpoint(id: ${gqlString(this.checkpointId)}) { edit(id: ${gqlString(this.id)}) { ${inner} } } }`);
     const rootNode = jsonObjectField(storeNode, this.graphRoot);
     const cp = rootNode?.["checkpoint"] as JsonObject | undefined;
     const ed = cp?.["edit"] as JsonObject | undefined;
@@ -1805,13 +1809,13 @@ export class Edit extends Entity {
 
 /** @emoji ⚔️ {@code Conflict} via {@code node(id:)}. */
 export class Conflict extends Entity {
-  constructor(store: Session, id: string, storeId?: string) {
-    super(store, id, storeId);
+  constructor(session: Session, id: string, storeId?: string) {
+    super(session, id, storeId);
   }
 
   async reasons(): Promise<readonly string[]> {
     const data = unwrapGraphqlData(
-      await executeStoreGraphql(this.store, { query: `query($id: ID!) { node(id: $id) { ... on Conflict { reasons } } }`, variables: { id: this.id } }),
+      await executeSessionGraphql(this.session, { query: `query($id: ID!) { node(id: $id) { ... on Conflict { reasons } } }`, variables: { id: this.id } }),
     ) as JsonObject;
     const n = data["node"] as JsonObject | undefined;
     const raw = n?.["reasons"] as readonly JsonValue[] | undefined;
@@ -1821,7 +1825,7 @@ export class Conflict extends Entity {
 
   private async authoritativeChangeId(): Promise<string> {
     const data = unwrapGraphqlData(
-      await executeStoreGraphql(this.store, {
+      await executeSessionGraphql(this.session, {
         query: `query($id: ID!) { node(id: $id) { ... on Conflict { authoritativeChange { id } } } }`,
         variables: { id: this.id },
       }),
@@ -1833,7 +1837,7 @@ export class Conflict extends Entity {
 
   private async wipChangeId(): Promise<string> {
     const data = unwrapGraphqlData(
-      await executeStoreGraphql(this.store, {
+      await executeSessionGraphql(this.session, {
         query: `query($id: ID!) { node(id: $id) { ... on Conflict { wipChange { id } } } }`,
         variables: { id: this.id },
       }),
@@ -1860,8 +1864,8 @@ export class Modifications extends Entity { }
 /** @emoji 📥 Abstract operation input payload (arguments mirror SDL input types). */
 export abstract class Input extends Entity { }
 
-/** @emoji 📜 Domain ledger event (timestamp + involves — avoid shadowing DOM {@link Event}). */
-export abstract class ChangeLedgerEvent extends Entity { }
+/** @emoji 📜 Schema {@code Event}: domain ledger event with timestamp and involved entities. */
+export abstract class Event extends Entity { }
 
 //#region 🧬DiffVariants
 /** @emoji 🧬 {@code KitDiff} navigation shell. */
@@ -1897,20 +1901,20 @@ export class CreatedQualityInput extends Input { }
 
 //#region 🧬OperationVariants
 export class RenamedKit extends Operation { }
-export class ChangedDescriptionOperation extends Operation { }
-export class CreatedQualityOperation extends Operation { }
-export class CreatedQualitiesOperation extends Operation { }
-export class DeletedQualityOperation extends Operation { }
-export class CreatedTagOperation extends Operation { }
-export class DeletedPieceOperation extends Operation { }
-export class DeletedPiecesOperation extends Operation { }
-export class DraggedPieceOperation extends Operation { }
-export class MovedPieceOperation extends Operation { }
-export class FixedPieceOperation extends Operation { }
-export class FlattenedDesignOperation extends Operation { }
-export class CreatedFixedPieceOperation extends Operation { }
-export class AddedChildPieceWithParentConnectionOperation extends Operation { }
-export class AddedHangingChildPieceWithParentConnectionOperation extends Operation { }
+export class ChangedDescription extends Operation { }
+export class CreatedQuality extends Operation { }
+export class CreatedQualities extends Operation { }
+export class DeletedQuality extends Operation { }
+export class CreatedTag extends Operation { }
+export class DeletedPiece extends Operation { }
+export class DeletedPieces extends Operation { }
+export class DraggedPiece extends Operation { }
+export class MovedPiece extends Operation { }
+export class FixedPiece extends Operation { }
+export class FlattenedDesign extends Operation { }
+export class CreatedFixedPiece extends Operation { }
+export class AddedChildPieceWithParentConnection extends Operation { }
+export class AddedHangingChildPieceWithParentConnection extends Operation { }
 //#endregion 🧬OperationVariants
 //#endregion 🧮ChangeAlgebra
 
@@ -1918,8 +1922,12 @@ export class AddedHangingChildPieceWithParentConnectionOperation extends Operati
 
 //#region 📐Design
 export class Design extends Entity {
-  constructor(store: Session, id: string, storeId?: string) {
-    super(store, id, storeId);
+  constructor(session: Session, id: string, storeId?: string) {
+    super(session, id, storeId);
+  }
+
+  private child<T extends Entity>(ctor: new (session: Session, designId: string, id: string, storeId?: string) => T, id: string): T {
+    return new ctor(this.session, this.id, id, this.storeId);
   }
 
   private dsel(inner: string): string {
@@ -1932,23 +1940,34 @@ export class Design extends Entity {
   }
 
   piece(pieceId: string): Piece {
-    return new Piece(this.store, this.id, pieceId, this.storeId);
+    return this.child(Piece, pieceId);
   }
 
-  private pieceBatch(pieceIds: readonly string[]): PiecesOperations {
-    return new PiecesOperations(this.store, this.id, pieceIds, this.storeId);
+  pieces(pieceIds: readonly string[]): PiecesOperation;
+  async pieces(): Promise<readonly Piece[]>;
+  pieces(pieceIds?: readonly string[]): PiecesOperation | Promise<readonly Piece[]> {
+    if (pieceIds != null) return new PiecesOperation(this.session, this.id, pieceIds, this.storeId);
+    return this.readPieces();
+  }
+
+  private async readPieces(): Promise<readonly Piece[]> {
+    return Object.freeze((await this.pieceIds()).map((pid) => this.piece(pid)));
+  }
+
+  private piecesOperation(pieceIds: readonly string[]): PiecesOperation {
+    return new PiecesOperation(this.session, this.id, pieceIds, this.storeId);
   }
 
   connection(connectionId: string): Connection {
-    return new Connection(this.store, this.id, connectionId, this.storeId);
+    return this.child(Connection, connectionId);
   }
 
   layer(layerId: string): Layer {
-    return new Layer(this.store, this.id, layerId, this.storeId);
+    return this.child(Layer, layerId);
   }
 
   group(groupId: string): Group {
-    return new Group(this.store, this.id, groupId, this.storeId);
+    return this.child(Group, groupId);
   }
 
   /** @emoji 🧷 GraphQL kit-store tail for {@code design(id){ … }} (shared with {@link bindDefinedFieldToReact}). */
@@ -1970,14 +1989,14 @@ export class Design extends Entity {
   subscribeField<T>(spec: FieldSpec<T>, cb: (next: T) => void): Unsubscribe {
     const kind = spec.eventKind;
     if (kind == null || kind === "") return () => { };
-    return this.store.bus.subscribeKind(kind, () => {
+    return this.session.bus.subscribeKind(kind, () => {
       void this.fieldRead(spec).then(cb);
     });
   }
 
   /** @emoji 📡 Design description stream (rs {@code changedDescription}; coarse — refetches design description). */
   onDescriptionChanged(cb: (next: string) => void): Unsubscribe {
-    return this.store.bus.subscribeKind("changedDescription", () => {
+    return this.session.bus.subscribeKind("changedDescription", () => {
       void this.description().then(cb);
     });
   }
@@ -2005,17 +2024,12 @@ export class Design extends Entity {
   }
 
   /** @emoji 📚 Id-list-stable {@link Piece} handles (same order as the SDL {@code pieces} field). */
-  async pieces(): Promise<readonly Piece[]> {
-    const ids = await this.pieceIds();
-    return Object.freeze(ids.map((pid) => this.piece(pid)));
-  }
-
   /** @emoji 📡 Refetches {@link Design#readPieces} on coarse kit ticks (piece membership / graph writes). */
   subscribePieces(cb: (next: readonly Piece[]) => void): Unsubscribe {
     const run = (): void => {
       void this.pieces().then(cb);
     };
-    return subscribeKitCoarseRefetch(this.store.bus, run);
+    return subscribeKitCoarseRefetch(this.session.bus, run);
   }
 
   private async connectionIds(): Promise<readonly string[]> {
@@ -2035,7 +2049,7 @@ export class Design extends Entity {
     const run = (): void => {
       void this.connections().then(cb);
     };
-    return subscribeKitCoarseRefetch(this.store.bus, run);
+    return subscribeKitCoarseRefetch(this.session.bus, run);
   }
 
   private async attributeIds(): Promise<readonly string[]> {
@@ -2105,7 +2119,7 @@ export class Design extends Entity {
     const n = name == null ? "null" : gqlString(name);
     const d = description == null ? "null" : gqlString(description);
     const sc = scale == null ? "null" : String(scale);
-    return this.store.mutateScoped(
+    return this.session.mutateScoped(
       cid,
       this.dsel(
         `ac: addChildPieceWithParentConnection(blueprintId: ${gqlString(blueprintId)}, parentPieceId: ${gqlString(parentPieceId)}, parentConnector: ${gqlString(parentConnector)}, childConnector: ${gqlString(childConnector)}, name: ${n}, description: ${d}, position: ${pos}, scale: ${sc})`,
@@ -2128,7 +2142,7 @@ export class Design extends Entity {
     const n = name == null ? "null" : gqlString(name);
     const d = description == null ? "null" : gqlString(description);
     const sc = scale == null ? "null" : String(scale);
-    return this.store.mutateScoped(
+    return this.session.mutateScoped(
       cid,
       this.dsel(
         `ah: addHangingChildPieceWithParentConnection(blueprintId: ${gqlString(blueprintId)}, parentPieceId: ${gqlString(parentPieceId)}, parentConnector: ${gqlString(parentConnector)}, childConnector: ${gqlString(childConnector)}, position: ${pos}, name: ${n}, description: ${d}, scale: ${sc})`,
@@ -2155,8 +2169,12 @@ export class Design extends Entity {
 
 //#region 🧰Type
 export class Type extends Entity {
-  constructor(store: Session, id: string, storeId?: string) {
-    super(store, id, storeId);
+  constructor(session: Session, id: string, storeId?: string) {
+    super(session, id, storeId);
+  }
+
+  private child<T extends Entity>(ctor: new (session: Session, typeId: string, id: string, storeId?: string) => T, id: string): T {
+    return new ctor(this.session, this.id, id, this.storeId);
   }
 
   private tsel(inner: string): string {
@@ -2169,15 +2187,15 @@ export class Type extends Entity {
   }
 
   port(portId: string): Port {
-    return new Port(this.store, this.id, portId, this.storeId);
+    return this.child(Port, portId);
   }
 
   connector(connectorId: string): Connector {
-    return new Connector(this.store, this.id, connectorId, this.storeId);
+    return this.child(Connector, connectorId);
   }
 
   representation(representationId: string): Representation {
-    return new Representation(this.store, this.id, representationId, this.storeId);
+    return this.child(Representation, representationId);
   }
 
   async rename(newName: string): Promise<SetResult> {
@@ -2324,8 +2342,8 @@ const KIT_PATH_TYPE_REPRESENTATION: readonly string[] = ["type", "representation
 //#region 🔘Port
 export class Port extends Entity {
   readonly typeId: string;
-  constructor(store: Session, typeId: string, id: string, storeId?: string) {
-    super(store, id, storeId);
+  constructor(session: Session, typeId: string, id: string, storeId?: string) {
+    super(session, id, storeId);
     this.typeId = typeId;
   }
 
@@ -2409,8 +2427,8 @@ export class Port extends Entity {
 //#region 🔗Connector
 export class Connector extends Entity {
   readonly typeId: string;
-  constructor(store: Session, typeId: string, id: string, storeId?: string) {
-    super(store, id, storeId);
+  constructor(session: Session, typeId: string, id: string, storeId?: string) {
+    super(session, id, storeId);
     this.typeId = typeId;
   }
 
@@ -2471,7 +2489,7 @@ export class Connector extends Entity {
 
   async port(): Promise<Port | null> {
     const id = await this.portId();
-    return id == null ? null : new Type(this.store, this.typeId, this.storeId).port(id);
+    return id == null ? null : new Type(this.session, this.typeId, this.storeId).port(id);
   }
 }
 //#endregion 🔗Connector
@@ -2727,8 +2745,8 @@ function parseIdListConnection(obj: JsonObject | null | undefined, field: string
 export class Piece extends Entity {
   readonly designId: string;
   private readonly positionByRole = new Map<"position" | "flatPosition", Position>();
-  constructor(store: Session, designId: string, id: string, storeId?: string) {
-    super(store, id, storeId);
+  constructor(session: Session, designId: string, id: string, storeId?: string) {
+    super(session, id, storeId);
     this.designId = designId;
   }
 
@@ -2861,20 +2879,20 @@ export class Piece extends Entity {
 
   async parentPiece(): Promise<Piece | null> {
     const id = await this.parentPieceId();
-    return id == null ? null : new Design(this.store, this.designId, this.storeId).piece(id);
+    return id == null ? null : new Design(this.session, this.designId, this.storeId).piece(id);
   }
 
   async parentConnection(): Promise<Connection | null> {
     const id = await this.parentConnectionId();
-    return id == null ? null : new Design(this.store, this.designId, this.storeId).connection(id);
+    return id == null ? null : new Design(this.session, this.designId, this.storeId).connection(id);
   }
 
   async childPieces(): Promise<readonly Piece[]> {
-    return Object.freeze((await this.childPieceIds()).map((id) => new Design(this.store, this.designId, this.storeId).piece(id)));
+    return Object.freeze((await this.childPieceIds()).map((id) => new Design(this.session, this.designId, this.storeId).piece(id)));
   }
 
   async childConnections(): Promise<readonly Connection[]> {
-    return Object.freeze((await this.childConnectionIds()).map((id) => new Design(this.store, this.designId, this.storeId).connection(id)));
+    return Object.freeze((await this.childConnectionIds()).map((id) => new Design(this.session, this.designId, this.storeId).connection(id)));
   }
 
   async rename(newName: string): Promise<SetResult> {
@@ -2924,10 +2942,10 @@ export class Piece extends Entity {
 }
 //#endregion 🧩Piece
 
-//#region 🪢PiecesOperations
-export class PiecesOperations {
+//#region 🪢PiecesOperation
+export class PiecesOperation {
   constructor(
-    private readonly store: Session,
+    private readonly session: Session,
     private readonly designId: string,
     private readonly pieceIds: readonly string[],
     private readonly storeId?: string,
@@ -2938,13 +2956,13 @@ export class PiecesOperations {
   }
 
   private async ensureChangeId(): Promise<string> {
-    if (this.storeId == null || this.storeId === "") throw new Error("PiecesOperations is not scoped to a Store");
-    return this.store.ensureChangeId(this.storeId);
+    if (this.storeId == null || this.storeId === "") throw new Error("PiecesOperation is not scoped to a Store");
+    return this.session.ensureChangeId(this.storeId);
   }
 
   private async mutateScoped(changeId: string, kitSelection: string): Promise<SetResult> {
-    if (this.storeId == null || this.storeId === "") throw new Error("PiecesOperations is not scoped to a Store");
-    return this.store.mutateScoped(this.storeId, changeId, kitSelection);
+    if (this.storeId == null || this.storeId === "") throw new Error("PiecesOperation is not scoped to a Store");
+    return this.session.mutateScoped(this.storeId, changeId, kitSelection);
   }
 
   async drag(offset: OffsetInput): Promise<SetResult> {
@@ -2967,13 +2985,13 @@ export class PiecesOperations {
     return this.mutateScoped(cid, this.psel(`cb: changeBlueprint(blueprintId: ${gqlString(blueprintId)})`));
   }
 }
-//#endregion 🪢PiecesOperations
+//#endregion 🪢PiecesOperation
 
 //#region ⛓️Connection
 /** @emoji ⛓️ Schema-aligned {@link Connection} endpoint (piece + optional port / connector / designPiece ids). */
-export class ConnectionSide {
+export class Side {
   constructor(
-    public readonly store: Session,
+    public readonly session: Session,
     public readonly designId: string,
     public readonly connectionId: string,
     public readonly role: "connected" | "connecting",
@@ -2986,12 +3004,9 @@ export class ConnectionSide {
 
   /** @emoji 🧩 Resolved {@link Piece} on this kit read point. */
   piece(): Piece {
-    return new Design(this.store, this.designId, this.storeId).piece(this.pieceId);
+    return new Design(this.session, this.designId, this.storeId).piece(this.pieceId);
   }
 }
-
-/** @emoji ↔️ SDL {@code Side} alias for {@link ConnectionSide} in UI layers. */
-export type Side = ConnectionSide;
 
 const CONNECTION_SIDE_SELECTION = "piece { id } port { id } designPiece { id } connector { id }";
 
@@ -3001,14 +3016,14 @@ function connectionKit(frag: JsonObject | null | undefined): JsonObject | null {
   return c ?? null;
 }
 
-function parseConnectionSideFromJson(
-  store: Session,
+function parseSideFromJson(
+  session: Session,
   designId: string,
   connectionId: string,
   role: "connected" | "connecting",
   node: JsonObject | null | undefined,
   storeId?: string,
-): ConnectionSide | null {
+): Side | null {
   if (node == null || typeof node !== "object") return null;
   const piece = node["piece"] as JsonObject | undefined;
   const pieceId = piece == null ? "" : String(piece["id"] ?? "");
@@ -3022,13 +3037,13 @@ function parseConnectionSideFromJson(
   const conn = node["connector"] as JsonObject | undefined;
   const cxRaw = conn == null ? "" : String(conn["id"] ?? "");
   const connectorId = cxRaw === "" ? null : cxRaw;
-  return new ConnectionSide(store, designId, connectionId, role, pieceId, portId, connectorId, designPieceId, storeId);
+  return new Side(session, designId, connectionId, role, pieceId, portId, connectorId, designPieceId, storeId);
 }
 
 export class Connection extends Entity {
   readonly designId: string;
-  constructor(store: Session, designId: string, id: string, storeId?: string) {
-    super(store, id, storeId);
+  constructor(session: Session, designId: string, id: string, storeId?: string) {
+    super(session, id, storeId);
     this.designId = designId;
   }
 
@@ -3095,14 +3110,14 @@ export class Connection extends Entity {
     return await this.readConnScalarNumberOrNull("v");
   }
 
-  async connected(): Promise<ConnectionSide | null> {
+  async connected(): Promise<Side | null> {
     const row = await this.connectionRow(`connected { ${CONNECTION_SIDE_SELECTION} }`);
-    return parseConnectionSideFromJson(this.store, this.designId, this.id, "connected", row?.["connected"] as JsonObject | undefined, this.storeId);
+    return parseSideFromJson(this.session, this.designId, this.id, "connected", row?.["connected"] as JsonObject | undefined, this.storeId);
   }
 
-  async connecting(): Promise<ConnectionSide | null> {
+  async connecting(): Promise<Side | null> {
     const row = await this.connectionRow(`connecting { ${CONNECTION_SIDE_SELECTION} }`);
-    return parseConnectionSideFromJson(this.store, this.designId, this.id, "connecting", row?.["connecting"] as JsonObject | undefined, this.storeId);
+    return parseSideFromJson(this.session, this.designId, this.id, "connecting", row?.["connecting"] as JsonObject | undefined, this.storeId);
   }
 
   async attributes(): Promise<readonly Attribute[]> {
@@ -3114,8 +3129,8 @@ export class Connection extends Entity {
 //#region ✍️Author
 /** @emoji ✍️ Author artifact: kit-scoped reads only (no {@code *OperationInput} on Author in schema). */
 export class Author extends Entity {
-  constructor(store: Session, id: string, storeId?: string) {
-    super(store, id, storeId);
+  constructor(session: Session, id: string, storeId?: string) {
+    super(session, id, storeId);
   }
 
   declare name: () => Promise<string>;
@@ -3140,8 +3155,8 @@ installNodeFieldMethods(Author, "Author", AUTHOR_FIELDS);
 //#region 💎Quality
 /** @emoji 💎 Quality artifact: {@code QualityOperationInput} leaves + scalar reads via {@code quality(id:)}. */
 export class Quality extends Entity {
-  constructor(store: Session, id: string, storeId?: string) {
-    super(store, id, storeId);
+  constructor(session: Session, id: string, storeId?: string) {
+    super(session, id, storeId);
   }
 
   kitInnerPath(inner: string): string {
@@ -3223,8 +3238,8 @@ installKitOperationMethods(Quality, QUALITY_OPERATIONS);
 //#region 🏷️Tag
 /** @emoji 🏷️ Tag artifact: {@code TagOperationInput} leaves + kit-scoped reads. */
 export class Tag extends Entity {
-  constructor(store: Session, id: string, storeId?: string) {
-    super(store, id, storeId);
+  constructor(session: Session, id: string, storeId?: string) {
+    super(session, id, storeId);
   }
 
   kitInnerPath(inner: string): string {
@@ -3271,8 +3286,8 @@ installKitOperationMethods(Tag, defineBoundKitOperations([
 //#region 💡Concept
 /** @emoji 💡 Concept artifact: {@code ConceptOperationInput} leaves + kit-scoped reads. */
 export class Concept extends Entity {
-  constructor(store: Session, id: string, storeId?: string) {
-    super(store, id, storeId);
+  constructor(session: Session, id: string, storeId?: string) {
+    super(session, id, storeId);
   }
 
   kitInnerPath(inner: string): string {
@@ -3320,8 +3335,8 @@ installKitOperationMethods(Concept, defineBoundKitOperations([
 /** @emoji 🎨 Representation under {@link Type}: read-only until schema adds {@code RepresentationOperationInput}. */
 export class Representation extends Entity {
   readonly typeId: string;
-  constructor(store: Session, typeId: string, id: string, storeId?: string) {
-    super(store, id, storeId);
+  constructor(session: Session, typeId: string, id: string, storeId?: string) {
+    super(session, id, storeId);
     this.typeId = typeId;
   }
 
@@ -3349,18 +3364,18 @@ installKitFieldMethods(Representation, defineBoundKitFields([
     parse: () => null,
     parseEntity: (entity, frag) => {
       const id = String((readKitPathNode(frag as JsonObject | null, KIT_PATH_TYPE_REPRESENTATION)?.["file"] as JsonObject | undefined)?.["id"] ?? "");
-      return id === "" ? null : new File(entity.store, id, entity.storeId);
+      return id === "" ? null : new File(entity.session, id, entity.storeId);
     },
   },
   {
     selection: "tags { edges { node { id } } }",
     parse: () => [],
-    parseEntity: (entity, frag) => Object.freeze(parseIdListConnection(readKitPathNode(frag as JsonObject | null, KIT_PATH_TYPE_REPRESENTATION), "tags").map((id) => new Tag(entity.store, id, entity.storeId))),
+    parseEntity: (entity, frag) => Object.freeze(parseIdListConnection(readKitPathNode(frag as JsonObject | null, KIT_PATH_TYPE_REPRESENTATION), "tags").map((id) => new Tag(entity.session, id, entity.storeId))),
   },
   {
     selection: "qualities { edges { node { id } } }",
     parse: () => [],
-    parseEntity: (entity, frag) => Object.freeze(parseIdListConnection(readKitPathNode(frag as JsonObject | null, KIT_PATH_TYPE_REPRESENTATION), "qualities").map((id) => new Quality(entity.store, id, entity.storeId))),
+    parseEntity: (entity, frag) => Object.freeze(parseIdListConnection(readKitPathNode(frag as JsonObject | null, KIT_PATH_TYPE_REPRESENTATION), "qualities").map((id) => new Quality(entity.session, id, entity.storeId))),
   },
   {
     selection: "attributes { edges { node { id key value definition } } }",
@@ -3373,8 +3388,8 @@ installKitFieldMethods(Representation, defineBoundKitFields([
 //#region 👨‍👩‍👦Family
 /** @emoji 👨‍👩‍👦 Family artifact: read-only in current kit API. */
 export class Family extends Entity {
-  constructor(store: Session, id: string, storeId?: string) {
-    super(store, id, storeId);
+  constructor(session: Session, id: string, storeId?: string) {
+    super(session, id, storeId);
   }
 
   declare name: () => Promise<string>;
@@ -3391,8 +3406,8 @@ installNodeFieldMethods(Family, "Family", defineBoundNodeFields([
 
 //#region 📄File
 export class File extends Entity {
-  constructor(store: Session, id: string, storeId?: string) {
-    super(store, id, storeId);
+  constructor(session: Session, id: string, storeId?: string) {
+    super(session, id, storeId);
   }
 
   declare name: () => Promise<string>;
@@ -3406,8 +3421,8 @@ installNodeFieldMethods(File, "File", defineBoundNodeFields([
 //#region 📁Folder
 /** @emoji 📁 Folder artifact: read-only in current kit API. */
 export class Folder extends Entity {
-  constructor(store: Session, id: string, storeId?: string) {
-    super(store, id, storeId);
+  constructor(session: Session, id: string, storeId?: string) {
+    super(session, id, storeId);
   }
 
   declare name: () => Promise<string>;
@@ -3426,8 +3441,8 @@ installNodeFieldMethods(Folder, "Folder", defineBoundNodeFields([
 /** @emoji 🪟 Design layer row: read-only in current kit API. */
 export class Layer extends Entity {
   readonly designId: string;
-  constructor(store: Session, designId: string, id: string, storeId?: string) {
-    super(store, id, storeId);
+  constructor(session: Session, designId: string, id: string, storeId?: string) {
+    super(session, id, storeId);
     this.designId = designId;
   }
 
@@ -3488,8 +3503,8 @@ export class Layer extends Entity {
 //#region 👥Group
 export class Group extends Entity {
   readonly designId: string;
-  constructor(store: Session, designId: string, id: string, storeId?: string) {
-    super(store, id, storeId);
+  constructor(session: Session, designId: string, id: string, storeId?: string) {
+    super(session, id, storeId);
     this.designId = designId;
   }
 
@@ -3508,8 +3523,8 @@ export class Group extends Entity {
 //#region 📊Stat
 /** @emoji 📊 Stat artifact: read-only in current kit API. */
 export class Stat extends Entity {
-  constructor(store: Session, id: string, storeId?: string) {
-    super(store, id, storeId);
+  constructor(session: Session, id: string, storeId?: string) {
+    super(session, id, storeId);
   }
 
   declare key: () => Promise<string>;
@@ -3533,8 +3548,8 @@ installNodeFieldMethods(Stat, "Stat", defineBoundNodeFields([
 //#region 🎚️Prop
 /** @emoji 🎚️ Prop artifact: read-only in current kit API. */
 export class Prop extends Entity {
-  constructor(store: Session, id: string, storeId?: string) {
-    super(store, id, storeId);
+  constructor(session: Session, id: string, storeId?: string) {
+    super(session, id, storeId);
   }
 
   declare key: () => Promise<string>;
@@ -3588,7 +3603,7 @@ if (typeof process !== "undefined" && !!process.env && process.env["SEMIO_JS_RUN
       const g = new Graph(k, "wip", "store");
       expect(g.root).toBe("wip");
       expect(new TheKit(k, "wip", "store").id).toContain("theKit");
-      expect(new Kit(k, "kit1").store).toBe(k);
+      expect(new Kit(k, "kit1").session).toBe(k);
       expect(typeof new TheKit(k, "wip", "store").kit).toBe("function");
       const cp = new Checkpoint(k, "wip", "cp1", "store");
       expect(cp.change("c1").id).toBe("c1");

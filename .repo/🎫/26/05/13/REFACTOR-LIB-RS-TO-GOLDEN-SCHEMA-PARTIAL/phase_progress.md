@@ -23,3 +23,22 @@
 1. Implement `_ladder_relay_full!` / `_ladder_relay_lite!` + public `entity_full!` / `entity_lite!` / `entity_bare!` and operation macros; migrate one vertical slice (e.g. geom) end-to-end including `SchemaBuilder::register_output_type`.
 2. Script or derive `register_output_type` list from `.repo/all_type_names.txt` until `collect_schema_decl_keys` diff is empty under strict.
 3. Flip `SEMIO_GOLDEN_STRICT=1` in CI only after export matches `schema.golden.graphql`.
+
+---
+
+## Continuation (subagent session, same ticket)
+
+### Done
+
+- **Macro ladder (scaffold):** Added `_ladder_relay_lite!`, `_ladder_relay_full!`, `entity_full!`, `entity_lite!`, `entity_bare!`, `operation_with_input!`, `operation_no_input!` in `lib.rs` `//#region 🧬 entity_dsl` (per plan naming); `entity_full!` composes `entity_relay!` + optional `_ladder_relay_full!` when `ladder_full = (...)` is passed.
+- **SDL reachability:** Implemented golden `PageInfoEdge` / `PageInfoConnection` in `gql_relay` and registered both in `Schema::build` (`build_schema_sync_for`).
+- **Repo MCP `ticket_close`:** Tool schema requires `summary` (required); `files` is an optional **JSON array of path strings** (`{ "type": "array", "items": { "type": "string" } }`).
+
+### Verified / blocked
+
+- **Windows linker:** `cargo test -p semio` failed locally with `LNK1104` (cannot open `paste-*.dll` in `target/debug/deps`) — likely AV/IDE file lock; **not** re-run successfully in this environment. Prior agent reported 36 tests green without `SEMIO_GOLDEN_STRICT`.
+- **Strict count:** Not re-measured here; expect **815** missing declarations after +2 registered types (817 − 2), until `Diff` / `Modification` / entity diff families and ~70 operations are added.
+
+### Next
+
+- Emit `interface Diff` / `Modification` + 30× concrete diff/modification/modifications types (or macro-generated), then wire `register_output_type` from `.repo/all_type_names.txt`.
