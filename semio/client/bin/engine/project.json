@@ -29,14 +29,6 @@
         "forwardAllArgs": true
       }
     },
-    "build-mcp-app": {
-      "executor": "nx:run-commands",
-      "options": {
-        "cwd": "semio/client/bin/engine",
-        "command": "bunx vite build --config vite.mcp-app.config.ts",
-        "forwardAllArgs": true
-      }
-    },
     "test": {
       "executor": "nx:run-commands",
       "options": {

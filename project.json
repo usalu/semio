@@ -71,7 +71,7 @@
       "executor": "nx:run-commands",
       "cache": false,
       "options": {
-        "commands": ["bun nx run @semio/engine:build-mcp-app", "bun scripts/mcp-inspector-engine.script.ts"],
+        "commands": ["bunx vite build --config semio/client/bin/engine/vite.mcp-app.config.ts", "bun scripts/mcp-inspector-engine.script.ts"],
         "parallel": false
       }
     },

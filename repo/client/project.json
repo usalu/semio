@@ -31,14 +31,6 @@
         "command": "go test -timeout 120s -count=1 -v ./...",
         "forwardAllArgs": true
       }
-    },
-    "test-quick": {
-      "executor": "nx:run-commands",
-      "options": {
-        "cwd": "repo/client",
-        "command": "go test -short -timeout 120s -count=1 -v ./...",
-        "forwardAllArgs": true
-      }
     }
   }
 }

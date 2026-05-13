@@ -2,7 +2,7 @@
   "name": "@semio/sketchpad",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "targets": {
-    "setup-playwright": {
+    "setup": {
       "executor": "nx:run-commands",
       "cache": false,
       "options": {
@@ -15,7 +15,7 @@
     },
     "dev": {
       "executor": "nx:run-commands",
-      "dependsOn": ["@semio/rs:build-wasm"],
+      "dependsOn": ["@semio/rs:build"],
       "options": {
         "cwd": "semio/client/lib/sketchpad",
         "command": "vite",
@@ -28,7 +28,7 @@
     },
     "build": {
       "executor": "nx:run-commands",
-      "dependsOn": ["@semio/rs:build-wasm"],
+      "dependsOn": ["@semio/rs:build"],
       "options": {
         "cwd": "semio/client/lib/sketchpad",
         "command": "vite build",

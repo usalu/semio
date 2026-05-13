@@ -2,30 +2,12 @@
   "name": "@semio/grasshopper",
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "targets": {
-    "build-gh": {
-      "executor": "nx:run-commands",
-      "options": {
-        "cwd": "semio/client/ui/gh/Semio.Grasshopper",
-        "command": "bun ./build.script.ts",
-        "forwardAllArgs": true
-      }
-    },
-    "build-yak": {
-      "executor": "nx:run-commands",
-      "dependsOn": ["build-gh"],
-      "options": {
-        "cwd": "semio/client/ui/gh/Semio.Grasshopper",
-        "command": "bun ./yak/build.script.ts",
-        "forwardAllArgs": true
-      }
-    },
     "build": {
       "executor": "nx:run-commands",
-      "dependsOn": ["build-gh", "build-yak"],
       "options": {
         "cwd": "semio/client/ui/gh/Semio.Grasshopper",
-        "command": "bun -e \"process.exit(0)\"",
-        "forwardAllArgs": true
+        "commands": ["bun ./build.script.ts", "bun ./yak/build.script.ts"],
+        "parallel": false
       }
     },
     "test": {

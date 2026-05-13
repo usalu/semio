@@ -8260,45 +8260,6 @@ type ClumpConnection implements EntityConnection {
 
 #endregion Clump
 
-#region Commands
-
-type DesignOperation {
-  # Artifact
-  rename(newName: String!): ID!
-  changeDescription(newDescription: String!): ID!
-  # Design
-  flatten: ID!
-  # Attributes
-  addAttribute(key: String!, value: String!, definition: String!): ID!
-  removeAttribute(id: ID!): ID!
-  removeAttributes(ids: [ID!]!): ID!
-  # Pieces
-  addFixedPiece(blueprintId: ID!, position: Position!, name: String, description: String): ID!
-  addChildPieceWithParentConnection(blueprintId: ID!, parentPieceId: ID!, parentConnector: String!, childConnector: String!, name: String, description: String, position: Position, scale: Float): ID!
-  addHangingChildPieceWithParentConnection(blueprintId: ID!, parentPieceId: ID!, parentConnector: String!, childConnector: String!, position: Position!, name: String, description: String, scale: Float): ID!
-  piece(id: ID!): PieceOperation!
-  pieces(ids: [ID!]!): PiecesOperation!
-  deletePiece(id: ID!): ID!
-  deletePieces(ids: [ID!]!): ID!
-  deletePiecesAndConnections(pieceIds: [ID!]!, connectionIds: [ID!]!): ID!
-}
-
-type DesignOperationEdge implements EntityEdge {
-  # EntityEdge
-  cursor: String! # computed
-  # EntityEdgeNode
-  node: DesignOperation! # reference
-}
-
-type DesignOperationConnection implements EntityConnection {
-  # EntityConnection
-  edges: [DesignOperationEdge!]! # computed
-  pageInfo: PageInfo! # computed
-  hash: String! # cached
-}
-
-#endregion Commands
-
 #region Operations
 
 type CreatedDesignInput implements Input {
@@ -8658,6 +8619,45 @@ type RemovedAttributesFromDesignConnection implements EntityConnection {
   pageInfo: PageInfo! # computed
   hash: String! # cached
 }
+
+#region Commands
+
+type DesignOperation {
+  # Artifact
+  rename(newName: String!): ID!
+  changeDescription(newDescription: String!): ID!
+  # Design
+  flatten: ID!
+  # Attributes
+  addAttribute(key: String!, value: String!, definition: String!): ID!
+  removeAttribute(id: ID!): ID!
+  removeAttributes(ids: [ID!]!): ID!
+  # Pieces
+  addFixedPiece(blueprintId: ID!, position: Position!, name: String, description: String): ID!
+  addChildPieceWithParentConnection(blueprintId: ID!, parentPieceId: ID!, parentConnector: String!, childConnector: String!, name: String, description: String, position: Position, scale: Float): ID!
+  addHangingChildPieceWithParentConnection(blueprintId: ID!, parentPieceId: ID!, parentConnector: String!, childConnector: String!, position: Position!, name: String, description: String, scale: Float): ID!
+  piece(id: ID!): PieceOperation!
+  pieces(ids: [ID!]!): PiecesOperation!
+  deletePiece(id: ID!): ID!
+  deletePieces(ids: [ID!]!): ID!
+  deletePiecesAndConnections(pieceIds: [ID!]!, connectionIds: [ID!]!): ID!
+}
+
+type DesignOperationEdge implements EntityEdge {
+  # EntityEdge
+  cursor: String! # computed
+  # EntityEdgeNode
+  node: DesignOperation! # reference
+}
+
+type DesignOperationConnection implements EntityConnection {
+  # EntityConnection
+  edges: [DesignOperationEdge!]! # computed
+  pageInfo: PageInfo! # computed
+  hash: String! # cached
+}
+
+#endregion Commands
 
 #endregion Operations
 
@@ -9365,28 +9365,40 @@ enum BackboneKind {
   REMOTE
 }
 
-type BackboneStatus {
-  attachedUri: String
-  kind: BackboneKind
+enum BackboneStatus {
+  IDLE
+  SYNCING
+  BLOCKED
 }
 
-type BackboneStatusEdge implements EntityEdge {
+type Backbone implements StrongEntity {
+  # Node
+  id: ID! # data // uuidv7
+  # Entity
+  hash: String! # cached
+  owner: Entity # reference // Store
+  owns: EntityConnection # reference // Nothing
+  # Backbone
+  uri: String!
+  kind: BackboneKind!
+}
+
+type BackboneEdge implements EntityEdge {
   # EntityEdge
   cursor: String! # computed
   # EntityEdgeNode
-  node: BackboneStatus! # reference
+  node: Backbone! # reference
 }
 
-type BackboneStatusConnection implements EntityConnection {
+type BackboneConnection implements EntityConnection {
   # EntityConnection
-  edges: [BackboneStatusEdge!]! # computed
+  edges: [BackboneEdge!]! # computed
   pageInfo: PageInfo! # computed
   hash: String! # cached
 }
 
 type BackboneCommand {
-  attach(uri: String!): ID!
-  detach(uri: String!): ID!
+  detach(): ID!
   status: BackboneStatus!
   setActiveCheckpoint(id: ID!): ID!
   syncNow: ID!

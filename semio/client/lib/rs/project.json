@@ -13,20 +13,25 @@
         "parallel": false
       }
     },
-    "build-wasm": {
-      "executor": "nx:run-commands",
-      "options": {
-        "cwd": "semio/client/lib/rs",
-        "command": "bun scripts/build-wasm.script.mjs",
-        "forwardAllArgs": true
-      }
-    },
     "build": {
       "executor": "nx:run-commands",
+      "inputs": [
+        "{projectRoot}/Cargo.toml",
+        "{projectRoot}/Cargo.lock",
+        "{projectRoot}/lib.rs",
+        "{projectRoot}/package.json",
+        "{projectRoot}/.cargo/**/*",
+        "{projectRoot}/scripts/build-wasm.script.mjs",
+        "{workspaceRoot}/package.json",
+        "{workspaceRoot}/bun.lock",
+        "{workspaceRoot}/Cargo.toml",
+        "{workspaceRoot}/Cargo.lock"
+      ],
+      "outputs": ["{projectRoot}/pkg"],
       "options": {
         "cwd": "semio/client/lib/rs",
-        "command": "cargo build --release",
-        "forwardAllArgs": true
+        "commands": ["bun scripts/build-wasm.script.mjs", "cargo build --release"],
+        "parallel": false
       }
     },
     "test": {

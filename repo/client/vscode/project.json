@@ -34,19 +34,12 @@
         "forwardAllArgs": true
       }
     },
-    "package": {
+    "publish": {
       "executor": "nx:run-commands",
+      "dependsOn": ["build"],
       "options": {
         "cwd": "repo/client/vscode",
         "command": "bunx vsce package --no-dependencies --out repo.vsix",
-        "forwardAllArgs": true
-      }
-    },
-    "vscode-prepublish": {
-      "executor": "nx:run-commands",
-      "options": {
-        "cwd": "{workspaceRoot}",
-        "command": "bun nx run repo:build",
         "forwardAllArgs": true
       }
     }

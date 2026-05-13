@@ -13,7 +13,7 @@
         "forwardAllArgs": true
       }
     },
-    "test-integration": {
+    "test": {
       "executor": "nx:run-commands",
       "options": {
         "cwd": "semio/client/ui/desktop",

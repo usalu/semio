@@ -10,7 +10,7 @@
         "forwardAllArgs": true
       }
     },
-    "build-mcp-app": {
+    "build": {
       "executor": "nx:run-commands",
       "options": {
         "cwd": "coda/client/ui/assistant",
