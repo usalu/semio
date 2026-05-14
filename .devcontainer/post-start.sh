@@ -223,9 +223,6 @@ else
 fi
 #endregion 🗄️Neo4jService
 #region 🧾Neo4jCypherPersistence
-if [ -f "$WORKSPACE/generate.script.ts" ] && command -v bun >/dev/null 2>&1; then
-  (cd "$WORKSPACE" && bun ./generate.script.ts) || echo "⚠️ Neo4j semio.cypher generate skipped."
-fi
 ensure_neo4j_schema_files() {
   local technologies=("semio" "elements" "coda" "reuse")
   local schema_dir="$WORKSPACE/.repo/🛂"

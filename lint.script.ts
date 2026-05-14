@@ -8,8 +8,6 @@ import { execFileSync } from "node:child_process";
 const root = import.meta.dir;
 const sub = process.argv[2];
 
-execFileSync("bun", ["./generate.script.ts"], { cwd: root, stdio: "inherit" });
-
 if (sub === "format") {
   execFileSync("bunx", ["prettier", "-w", "."], { cwd: root, stdio: "inherit", shell: true });
   process.exit(0);

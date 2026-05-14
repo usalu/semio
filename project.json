@@ -4,16 +4,11 @@
   "projectType": "application",
   "sourceRoot": ".",
   "targets": {
-    "generate": {
+    "export-neo4j": {
       "executor": "nx:run-commands",
-      "cache": true,
-      "inputs": [
-        "{workspaceRoot}/semio/client/schema/semio/schema.yaml",
-        "{workspaceRoot}/generate.script.ts"
-      ],
-      "outputs": ["{workspaceRoot}/.repo/🛂/semio.cypher"],
+      "cache": false,
       "options": {
-        "command": "bun ./generate.script.ts"
+        "command": "bun ./export.neo4j.script.ts"
       }
     },
     "setup": {

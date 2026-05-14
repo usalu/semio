@@ -1,9 +1,3 @@
 repos:
   - repo: local
-    hooks:
-      - id: neo4j-cypher-from-semio-schema
-        name: Neo4j cypher bundle from semio schema yaml
-        entry: bun ./generate.script.ts
-        language: system
-        pass_filenames: false
-        files: ^(semio/client/schema/semio/schema\.yaml|generate\.script\.ts)$
+    hooks: []
