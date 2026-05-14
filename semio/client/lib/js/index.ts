@@ -2863,6 +2863,13 @@ export class Piece extends Entity {
     return String(pieceKit(frag)?.["icon"] ?? "");
   }
 
+  async typeId(): Promise<string | null> {
+    const frag = (await this.readKitInner(this.kitPieceSelection("type { id }"))) as JsonObject | null;
+    const n = pieceKit(frag)?.["type"] as JsonObject | undefined;
+    const tid = n == null ? "" : String(n["id"] ?? "");
+    return tid === "" ? null : tid;
+  }
+
   async scale(): Promise<number | null> {
     const frag = (await this.readKitInner(this.kitPieceSelection("scale"))) as JsonObject | null;
     const v = pieceKit(frag)?.["scale"];

@@ -1,0 +1,26 @@
+schema:
+  interfaces:
+    entity: &entity
+      fields:
+        id: string
+        hash: string
+        owner: *entity
+        owns: [*entity]
+    weakEntity:
+      contraints:
+        - "No id and uses hash as id."
+    strongEntity:
+      contraints:
+        - "id is uuidv7 at creation time"
+
+
+
+    name: string
+classes: &Entity
+  name: Alice Smith
+  role: Developer
+  manager: &Bob
+    name: Bob Jones
+    role: Lead Developer
+    direct_reports:
+      - *Alice # Bob's direct report points back to Alice

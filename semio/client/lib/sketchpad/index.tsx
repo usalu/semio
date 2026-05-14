@@ -130,8 +130,6 @@ import {
   useFilesFull,
   useFileName,
   useKitStoredFileUrls as useFileUrls,
-  useHasDesignContext,
-  useHasTypeContext,
   useIsInActiveKitTab,
   useKitAlternatives,
   useKitAlternativeSelection,
@@ -148,11 +146,11 @@ import {
   useKitStore,
   useKitStoreSnapshot,
   useKitWasmHost,
+  useJsStore,
   useMoveKitArtifactToFolder,
   useOpenKits,
   usePiece,
   usePieceContext,
-  usePieceContextRead,
   usePieceConnectionKind as usePieceConnectionKindState,
   usePieceDepth as usePieceDepthState,
   usePieceFlatCenter as usePieceFlatCenterState,
@@ -161,7 +159,6 @@ import {
   usePieces,
   useQuality,
   useQualityContext,
-  useQualityContextRead,
   useRegistryHasKit,
   useRegistryKitPersistenceKind,
   useRemoveConnector,
@@ -177,6 +174,7 @@ import {
   useReplacableDesigns as useReplacableDesignIdsFromKit,
   useReplacableTypes as useReplacableTypeIdsFromKit,
   useResolvedKitIdentifier,
+  useStoreOptional,
   useConnectionDescription as useSchemaConnectionDescription,
   useConnectionGap as useSchemaConnectionGap,
   useConnectionRise as useSchemaConnectionRise,
@@ -193,13 +191,13 @@ import {
   usePieceIsLocked as useSchemaPieceIsLocked,
   usePieceName as useSchemaPieceName,
   usePieceScale as useSchemaPieceScale,
+  usePieceTypeId,
   useTagsFull,
   useType,
   useTypeAttributes,
   useTypeAuthors,
   useTypeConnectors,
   useTypeContext,
-  useTypeContextRead,
   useTypeDescription,
   useTypeIcon,
   useTypeImage,
@@ -5714,6 +5712,11 @@ export interface KitDiagramProximityAnchor {
 }
 
 /**
+ * @emoji 📐 Kit diagram grid pitch in CSS pixels (view-only layout constant).
+ **/
+export const ICON_WIDTH = 50;
+
+/**
  * Scale multiplier applied to icon width for diagram node sizing.
  **/
 export const KIT_DIAGRAM_NODE_SCALE = 0.6;
@@ -10563,7 +10566,7 @@ export function useKitAppTypeColor(isSelected: boolean): HookNoSetResult<{ fill:
  **/
 export function useKitAppIsDesignHovered(): HookNoSetResult<boolean> {
   const designScope = useDesignContext();
-  const designId = designScope?.id;
+  const designId = designScope;
   const isHovered = useKitApp((state) => (designId ? state.hover?.design === designId : false)) as boolean;
   const canRead = designScope !== null;
   return [isHovered ?? false, undefined, canRead];
@@ -15785,7 +15788,7 @@ const KitSectionForm: FC = () => {
         <div className="flex min-w-0 w-full flex-col gap-tiny">
           <div className="flex min-w-0 w-full items-center gap-single">
             <div className="min-w-0 flex-1">
-              <Input lazy id="semio.sketchpad.app.kit.panel.details.section.kit.name" value={kitNameValue.value ?? ""} readOnly={disabled} onLazyChange={disabled ? undefined : (v) => void renameKit(v)} showLabel />
+              <Input lazy id="semio.sketchpad.app.kit.panel.details.section.kit.name" value={kitNameValue ?? ""} readOnly={disabled} onLazyChange={disabled ? undefined : (v) => void renameKit(v)} showLabel />
             </div>
             {spinning ? <Spinner size="small" className="text-muted-foreground shrink-0" /> : null}
           </div>
@@ -15793,16 +15796,16 @@ const KitSectionForm: FC = () => {
         </div>
       </TreeRow>
       <SketchpadTextareaRow
-        value={description.value ?? ""}
+        value={description ?? ""}
         commit={async (value) => changeKitDescription(String(value))}
         status={changeKitDescriptionStatus}
         id="semio.sketchpad.app.kit.panel.details.section.kit.description"
         placeholder={descriptionPlaceholder}
       />
-      <SketchpadInputRow value={icon.value ?? ""} commit={async () => ({ ok: true } as const)} status={{ kind: "idle" }} id="semio.sketchpad.app.kit.panel.details.section.kit.icon" placeholder={iconPlaceholder} readOnly />
-      <SketchpadInputRow value={image.value ?? ""} commit={async () => ({ ok: true } as const)} status={{ kind: "idle" }} id="semio.sketchpad.app.kit.panel.details.section.kit.image" placeholder={imagePlaceholder} readOnly />
-      <SketchpadInputRow value={homepage.value ?? ""} commit={async () => ({ ok: true } as const)} status={{ kind: "idle" }} id="semio.sketchpad.app.kit.panel.details.section.kit.homepage" placeholder={homepagePlaceholder} readOnly />
-      <SketchpadInputRow value={license.value ?? ""} commit={async () => ({ ok: true } as const)} status={{ kind: "idle" }} id="semio.sketchpad.app.kit.panel.details.section.kit.license" placeholder={licensePlaceholder} readOnly />
+      <SketchpadInputRow value={icon ?? ""} commit={async () => ({ ok: true } as const)} status={{ kind: "idle" }} id="semio.sketchpad.app.kit.panel.details.section.kit.icon" placeholder={iconPlaceholder} readOnly />
+      <SketchpadInputRow value={image ?? ""} commit={async () => ({ ok: true } as const)} status={{ kind: "idle" }} id="semio.sketchpad.app.kit.panel.details.section.kit.image" placeholder={imagePlaceholder} readOnly />
+      <SketchpadInputRow value={homepage ?? ""} commit={async () => ({ ok: true } as const)} status={{ kind: "idle" }} id="semio.sketchpad.app.kit.panel.details.section.kit.homepage" placeholder={homepagePlaceholder} readOnly />
+      <SketchpadInputRow value={license ?? ""} commit={async () => ({ ok: true } as const)} status={{ kind: "idle" }} id="semio.sketchpad.app.kit.panel.details.section.kit.license" placeholder={licensePlaceholder} readOnly />
     </>
   );
 };
@@ -15843,17 +15846,17 @@ const SingleTypeSectionFields: FC = () => {
 
   return (
     <>
-      <SketchpadInputRow value={name.value ?? ""} commit={async (value) => renameType(String(value))} status={renameTypeStatus} id="semio.sketchpad.app.type.panel.details.section.type.name" />
+      <SketchpadInputRow value={name ?? ""} commit={async (value) => renameType(String(value))} status={renameTypeStatus} id="semio.sketchpad.app.type.panel.details.section.type.name" />
       <SketchpadTextareaRow
-        value={description.value ?? ""}
+        value={description ?? ""}
         commit={async (value) => changeTypeDescription(String(value))}
         status={changeTypeDescriptionStatus}
         id="semio.sketchpad.app.type.panel.details.section.type.description"
         placeholderId="semio.sketchpad.app.type.descriptionPlaceholder.label"
       />
-      <SketchpadInputRow value={icon.value ?? ""} commit={async (value) => changeTypeIcon(String(value))} status={changeTypeIconStatus} id="semio.sketchpad.app.type.panel.details.section.type.icon" placeholderId="semio.sketchpad.app.type.iconPlaceholder.label" />
-      <SketchpadInputRow value={image.value ?? ""} commit={async () => ({ ok: true } as const)} status={{ kind: "idle" }} id="semio.sketchpad.app.type.panel.details.section.type.image" placeholderId="semio.sketchpad.app.type.imagePlaceholder.label" readOnly />
-      <SketchpadInputRow value={unit.value ?? ""} commit={async () => ({ ok: true } as const)} status={{ kind: "idle" }} id="semio.sketchpad.app.type.panel.details.section.type.unit" readOnly />
+      <SketchpadInputRow value={icon ?? ""} commit={async (value) => changeTypeIcon(String(value))} status={changeTypeIconStatus} id="semio.sketchpad.app.type.panel.details.section.type.icon" placeholderId="semio.sketchpad.app.type.iconPlaceholder.label" />
+      <SketchpadInputRow value={image ?? ""} commit={async () => ({ ok: true } as const)} status={{ kind: "idle" }} id="semio.sketchpad.app.type.panel.details.section.type.image" placeholderId="semio.sketchpad.app.type.imagePlaceholder.label" readOnly />
+      <SketchpadInputRow value={unit ?? ""} commit={async () => ({ ok: true } as const)} status={{ kind: "idle" }} id="semio.sketchpad.app.type.panel.details.section.type.unit" readOnly />
     </>
   );
 };
@@ -16127,35 +16130,35 @@ const SingleDesignSectionInner: FC = () => {
   const imageState = useDesignImage();
   const unitState = useDesignUnit();
   const kitDesignsField = useKitDesigns();
-  const designId = useDesign().value?.id;
+  const designId = useDesign();
   const design = useMemo(() => {
     if (designId == null) return null;
-    const rows = kitDesignsField.value ?? [];
+    const rows = kitDesignsField ?? [];
     return (rows as Design[]).find((entry) => entry.id === designId) ?? null;
-  }, [designId, kitDesignsField.value]);
+  }, [designId, kitDesignsField]);
   if (!design) return null;
   return (
     <>
       <TreeRow>
-        <Input id="semio.sketchpad.app.design.panel.details.section.design.name" value={nameState.value ?? ""} readOnly showLabel />
+        <Input id="semio.sketchpad.app.design.panel.details.section.design.name" value={nameState ?? ""} readOnly showLabel />
       </TreeRow>
       <TreeRow>
         <Textarea
           id="semio.sketchpad.app.design.panel.details.section.design.description"
-          value={descriptionState.value ?? ""}
+          value={descriptionState ?? ""}
           placeholderId="semio.sketchpad.app.design.descriptionPlaceholder"
           readOnly
           showLabel
         />
       </TreeRow>
       <TreeRow>
-        <Input id="semio.sketchpad.app.design.panel.details.section.design.icon" value={iconState.value ?? ""} placeholderId="semio.sketchpad.app.design.iconPlaceholder" readOnly showLabel />
+        <Input id="semio.sketchpad.app.design.panel.details.section.design.icon" value={iconState ?? ""} placeholderId="semio.sketchpad.app.design.iconPlaceholder" readOnly showLabel />
       </TreeRow>
       <TreeRow>
-        <Input id="semio.sketchpad.app.design.panel.details.section.design.image" value={imageState.value ?? ""} placeholderId="semio.sketchpad.app.design.imagePlaceholder" readOnly showLabel />
+        <Input id="semio.sketchpad.app.design.panel.details.section.design.image" value={imageState ?? ""} placeholderId="semio.sketchpad.app.design.imagePlaceholder" readOnly showLabel />
       </TreeRow>
       <TreeRow>
-        <Input id="semio.sketchpad.app.design.panel.details.section.design.unit" value={unitState.value ?? ""} readOnly showLabel />
+        <Input id="semio.sketchpad.app.design.panel.details.section.design.unit" value={unitState ?? ""} readOnly showLabel />
       </TreeRow>
       {design.location && (
         <>
@@ -16213,7 +16216,7 @@ const SelectedDesignLabelRowInner: FC = () => {
   const nameState = useDesignName();
   return (
     <HelperRow propertyAligned>
-      <p className="text-sm font-medium text-foreground">{nameState.value ?? ""}</p>
+      <p className="text-sm font-medium text-foreground">{nameState ?? ""}</p>
     </HelperRow>
   );
 };
@@ -16825,7 +16828,7 @@ export const kitConfig: AppConfig = {
  **/
 export function useIsPieceSelected(): boolean {
   const piece = usePieceContext();
-  return useDesignAppIsPieceSelected(undefined, piece?.id ?? "");
+  return useDesignAppIsPieceSelected(undefined, piece ?? "");
 }
 
 /**
@@ -16833,7 +16836,7 @@ export function useIsPieceSelected(): boolean {
  **/
 export function useIsPieceHovered(): boolean {
   const pieceScope = usePieceContext();
-  return useDesignAppIsPieceHovered(undefined, pieceScope?.id ?? "");
+  return useDesignAppIsPieceHovered(undefined, pieceScope ?? "");
 }
 
 /**
@@ -16841,8 +16844,8 @@ export function useIsPieceHovered(): boolean {
  **/
 export function useIsPieceTransitiveHovered(): boolean {
   const pieceScope = usePieceContext();
-  const isHovered = useDesignAppIsPieceTransitiveHovered(undefined, pieceScope?.id ?? "");
-  if (!pieceScope) return false;
+  const isHovered = useDesignAppIsPieceTransitiveHovered(undefined, pieceScope ?? "");
+  if (pieceScope == null) return false;
   return isHovered;
 }
 
@@ -16857,12 +16860,18 @@ export function usePieceStatus(): DiffStatus {
  * Hook returning the diffed piece with applied transaction edits.
  **/
 export function useDiffedPiece<T>(selector?: (piece: Piece) => T, id?: string, deep: boolean = false): T | Piece {
-  const originalPiece = usePieceContextRead(identitySelector, id, deep) as Piece;
-  const pieceScope = usePieceContext();
-  const designScope = useDesignContext();
+  const store = useStoreOptional();
+  const designId = useDesignContext();
+  const pieceCtx = usePieceContext();
+  const pieceId = id ?? pieceCtx;
   const designAppStore = useDesignStore(identitySelector) as any;
 
-  if (!designAppStore || !pieceScope || !designScope) {
+  if (store == null || designId == null || pieceId == null || pieceId === "") {
+    throw new Error("semio/sketchpad: useDiffedPiece requires StoreContextProvider, DesignContext, and PieceContext (or id).");
+  }
+  const originalPiece = store.design(designId).piece(pieceId) as Piece;
+
+  if (!designAppStore) {
     return selector ? selector(originalPiece) : originalPiece;
   }
   return selector ? selector(originalPiece) : originalPiece;
@@ -16874,7 +16883,7 @@ export function useDiffedPiece<T>(selector?: (piece: Piece) => T, id?: string, d
  **/
 export function usePieceCenterU(): HookResult<number> {
   const pieceScope = usePieceContext();
-  const id = pieceScope?.id;
+  const id = pieceScope ?? undefined;
   const [center, setCenter, ws] = useSchemaPieceCenter(id);
   const u = (center as { u?: number } | undefined)?.u ?? 0;
   const v = (center as { v?: number } | undefined)?.v ?? 0;
@@ -16890,7 +16899,7 @@ export function usePieceCenterU(): HookResult<number> {
  **/
 export function usePieceCenterV(): HookResult<number> {
   const pieceScope = usePieceContext();
-  const id = pieceScope?.id;
+  const id = pieceScope ?? undefined;
   const [center, setCenter, ws] = useSchemaPieceCenter(id);
   const u = (center as { u?: number } | undefined)?.u ?? 0;
   const v = (center as { v?: number } | undefined)?.v ?? 0;
@@ -16906,10 +16915,10 @@ export function usePieceCenterV(): HookResult<number> {
  **/
 export function usePieceScale(): HookResult<number> {
   const pieceScope = usePieceContext();
-  const binding = useSchemaPieceScale(pieceScope?.id);
+  const binding = useSchemaPieceScale(pieceScope ?? undefined);
   const [raw, setAsync, ws] = binding;
   const value = (raw as number | undefined) ?? 1;
-  const canSet = Boolean(pieceScope?.id) && ws.kind !== "readonly";
+  const canSet = Boolean(pieceScope ?? undefined) && ws.kind !== "readonly";
   const setter = (next: number) => {
     void setAsync(next);
   };
@@ -16921,10 +16930,10 @@ export function usePieceScale(): HookResult<number> {
  **/
 export function usePieceIsHidden(): HookResult<boolean> {
   const pieceScope = usePieceContext();
-  const binding = useSchemaPieceIsHidden(pieceScope?.id);
+  const binding = useSchemaPieceIsHidden(pieceScope ?? undefined);
   const [raw, setAsync, ws] = binding;
   const value = Boolean(raw);
-  const canSet = Boolean(pieceScope?.id) && ws.kind !== "readonly";
+  const canSet = Boolean(pieceScope ?? undefined) && ws.kind !== "readonly";
   const setter = (next: boolean) => {
     void setAsync(next);
   };
@@ -16936,10 +16945,10 @@ export function usePieceIsHidden(): HookResult<boolean> {
  **/
 export function usePieceIsLocked(): HookResult<boolean> {
   const pieceScope = usePieceContext();
-  const binding = useSchemaPieceIsLocked(pieceScope?.id);
+  const binding = useSchemaPieceIsLocked(pieceScope ?? undefined);
   const [raw, setAsync, ws] = binding;
   const value = Boolean(raw);
-  const canSet = Boolean(pieceScope?.id) && ws.kind !== "readonly";
+  const canSet = Boolean(pieceScope ?? undefined) && ws.kind !== "readonly";
   const setter = (next: boolean) => {
     void setAsync(next);
   };
@@ -16951,7 +16960,7 @@ export function usePieceIsLocked(): HookResult<boolean> {
  **/
 export function usePieceColor(): HookResult<string | undefined> {
   const pieceScope = usePieceContext();
-  return kitFieldBindingToHookResult(pieceScope?.id, useSchemaPieceColor(pieceScope?.id));
+  return kitFieldBindingToHookResult(pieceScope ?? undefined, useSchemaPieceColor(pieceScope ?? undefined));
 }
 
 /**
@@ -16959,7 +16968,7 @@ export function usePieceColor(): HookResult<string | undefined> {
  **/
 export function usePieceDescription(): HookResult<string | undefined> {
   const pieceScope = usePieceContext();
-  return kitFieldBindingToHookResult(pieceScope?.id, useSchemaPieceDescription(pieceScope?.id));
+  return kitFieldBindingToHookResult(pieceScope ?? undefined, useSchemaPieceDescription(pieceScope ?? undefined));
 }
 
 /**
@@ -16967,7 +16976,7 @@ export function usePieceDescription(): HookResult<string | undefined> {
  **/
 export function usePieceName(): HookResult<string | undefined> {
   const pieceScope = usePieceContext();
-  return kitFieldBindingToHookResult(pieceScope?.id, useSchemaPieceName(pieceScope?.id));
+  return kitFieldBindingToHookResult(pieceScope ?? undefined, useSchemaPieceName(pieceScope ?? undefined));
 }
 
 /**
@@ -16975,7 +16984,7 @@ export function usePieceName(): HookResult<string | undefined> {
  **/
 export function useIsConnectionSelected(): boolean {
   const connectionScope = useConnectionContext();
-  return useDesignAppIsConnectionSelected(undefined, connectionScope?.id ?? "");
+  return useDesignAppIsConnectionSelected(undefined, connectionScope ?? "");
 }
 
 /**
@@ -16983,7 +16992,7 @@ export function useIsConnectionSelected(): boolean {
  **/
 export function useIsConnectionHovered(): boolean {
   const connectionScope = useConnectionContext();
-  return useDesignAppIsConnectionHovered(undefined, connectionScope?.id ?? "");
+  return useDesignAppIsConnectionHovered(undefined, connectionScope ?? undefined ?? "");
 }
 
 /**
@@ -17030,10 +17039,10 @@ export function useConnectionStatus(): DiffStatus {
  **/
 export function useConnectionGap(): HookResult<number> {
   const connectionScope = useConnectionContext();
-  const binding = useSchemaConnectionGap(connectionScope?.id);
+  const binding = useSchemaConnectionGap(connectionScope ?? undefined);
   const [raw, setAsync, ws] = binding;
   const value = (raw as number | undefined) ?? 0;
-  const canSet = Boolean(connectionScope?.id) && ws.kind !== "readonly";
+  const canSet = Boolean(connectionScope ?? undefined) && ws.kind !== "readonly";
   return conditionalHookResult(canSet, value, (nv) => void setAsync(nv));
 }
 
@@ -17042,10 +17051,10 @@ export function useConnectionGap(): HookResult<number> {
  **/
 export function useConnectionShift(): HookResult<number> {
   const connectionScope = useConnectionContext();
-  const binding = useSchemaConnectionShift(connectionScope?.id);
+  const binding = useSchemaConnectionShift(connectionScope ?? undefined);
   const [raw, setAsync, ws] = binding;
   const value = (raw as number | undefined) ?? 0;
-  const canSet = Boolean(connectionScope?.id) && ws.kind !== "readonly";
+  const canSet = Boolean(connectionScope ?? undefined) && ws.kind !== "readonly";
   return conditionalHookResult(canSet, value, (nv) => void setAsync(nv));
 }
 
@@ -17054,10 +17063,10 @@ export function useConnectionShift(): HookResult<number> {
  **/
 export function useConnectionRise(): HookResult<number> {
   const connectionScope = useConnectionContext();
-  const binding = useSchemaConnectionRise(connectionScope?.id);
+  const binding = useSchemaConnectionRise(connectionScope ?? undefined);
   const [raw, setAsync, ws] = binding;
   const value = (raw as number | undefined) ?? 0;
-  const canSet = Boolean(connectionScope?.id) && ws.kind !== "readonly";
+  const canSet = Boolean(connectionScope ?? undefined) && ws.kind !== "readonly";
   return conditionalHookResult(canSet, value, (nv) => void setAsync(nv));
 }
 
@@ -17066,10 +17075,10 @@ export function useConnectionRise(): HookResult<number> {
  **/
 export function useConnectionRotation(): HookResult<number> {
   const connectionScope = useConnectionContext();
-  const binding = useSchemaConnectionRotation(connectionScope?.id);
+  const binding = useSchemaConnectionRotation(connectionScope ?? undefined);
   const [raw, setAsync, ws] = binding;
   const value = (raw as number | undefined) ?? 0;
-  const canSet = Boolean(connectionScope?.id) && ws.kind !== "readonly";
+  const canSet = Boolean(connectionScope ?? undefined) && ws.kind !== "readonly";
   return conditionalHookResult(canSet, value, (nv) => void setAsync(nv));
 }
 
@@ -17078,10 +17087,10 @@ export function useConnectionRotation(): HookResult<number> {
  **/
 export function useConnectionTurn(): HookResult<number> {
   const connectionScope = useConnectionContext();
-  const binding = useSchemaConnectionTurn(connectionScope?.id);
+  const binding = useSchemaConnectionTurn(connectionScope ?? undefined);
   const [raw, setAsync, ws] = binding;
   const value = (raw as number | undefined) ?? 0;
-  const canSet = Boolean(connectionScope?.id) && ws.kind !== "readonly";
+  const canSet = Boolean(connectionScope ?? undefined) && ws.kind !== "readonly";
   return conditionalHookResult(canSet, value, (nv) => void setAsync(nv));
 }
 
@@ -17090,10 +17099,10 @@ export function useConnectionTurn(): HookResult<number> {
  **/
 export function useConnectionTilt(): HookResult<number> {
   const connectionScope = useConnectionContext();
-  const binding = useSchemaConnectionTilt(connectionScope?.id);
+  const binding = useSchemaConnectionTilt(connectionScope ?? undefined);
   const [raw, setAsync, ws] = binding;
   const value = (raw as number | undefined) ?? 0;
-  const canSet = Boolean(connectionScope?.id) && ws.kind !== "readonly";
+  const canSet = Boolean(connectionScope ?? undefined) && ws.kind !== "readonly";
   return conditionalHookResult(canSet, value, (nv) => void setAsync(nv));
 }
 
@@ -17102,10 +17111,10 @@ export function useConnectionTilt(): HookResult<number> {
  **/
 export function useConnectionU(): HookResult<number> {
   const connectionScope = useConnectionContext();
-  const binding = useSchemaConnectionU(connectionScope?.id);
+  const binding = useSchemaConnectionU(connectionScope ?? undefined);
   const [raw, setAsync, ws] = binding;
   const value = (raw as number | undefined) ?? 0;
-  const canSet = Boolean(connectionScope?.id) && ws.kind !== "readonly";
+  const canSet = Boolean(connectionScope ?? undefined) && ws.kind !== "readonly";
   return conditionalHookResult(canSet, value, (nv) => void setAsync(nv));
 }
 
@@ -17114,19 +17123,19 @@ export function useConnectionU(): HookResult<number> {
  **/
 export function useConnectionV(): HookResult<number> {
   const connectionScope = useConnectionContext();
-  const binding = useSchemaConnectionV(connectionScope?.id);
+  const binding = useSchemaConnectionV(connectionScope ?? undefined);
   const [raw, setAsync, ws] = binding;
   const value = (raw as number | undefined) ?? 0;
-  const canSet = Boolean(connectionScope?.id) && ws.kind !== "readonly";
+  const canSet = Boolean(connectionScope ?? undefined) && ws.kind !== "readonly";
   return conditionalHookResult(canSet, value, (nv) => void setAsync(nv));
 }
 
 export function useConnectionDescription(): HookResult<string> {
   const connectionScope = useConnectionContext();
-  const binding = useSchemaConnectionDescription(connectionScope?.id);
+  const binding = useSchemaConnectionDescription(connectionScope ?? undefined);
   const [raw, setAsync, ws] = binding;
   const text = (raw as string | undefined) ?? "";
-  const canSet = Boolean(connectionScope?.id) && ws.kind !== "readonly";
+  const canSet = Boolean(connectionScope ?? undefined) && ws.kind !== "readonly";
   return conditionalHookResult(canSet, text, (nv) => void setAsync(nv));
 }
 
@@ -17139,7 +17148,7 @@ export function useConnectionDescription(): HookResult<string> {
 export function useClusterableGroups() {
   const designScope = useDesignContext();
   const selection = useDesignAppSelection();
-  const [groups] = useDesignClusterableGroups(designScope?.id, selection.pieces ?? []);
+  const [groups] = useDesignClusterableGroups(designScope, selection.pieces ?? []);
   return useMemo(() => {
     if (!designScope) return [] as string[][];
     if (!Array.isArray(groups) || groups.length === 0) return [];
@@ -17175,13 +17184,18 @@ export function usePortColoredTypes(): Type[] {
  * Hook returning original and diffed piece with diff indicator.
  **/
 export function usePieceWithDiff(): { original: Piece; diffed: Piece | null; hasDiff: boolean } {
-  const originalPiece = usePiece() as Piece;
+  const store = useStoreOptional();
+  const designId = useDesign();
+  const pieceId = usePiece();
+  if (store == null) throw new Error("semio/sketchpad: usePieceWithDiff requires StoreContextProvider.");
+  const originalPiece = store.design(designId).piece(pieceId) as Piece;
   const diffedPiece = useDiffedPiece() as Piece;
   const status = usePieceStatus();
 
   const hasDiff = status !== DiffStatus.Unchanged;
 
   return {
+    original: originalPiece,
     diffed: hasDiff ? diffedPiece : null,
     hasDiff,
   };
@@ -27087,7 +27101,7 @@ function useDesignAppInitialize() {
   const kitScope = useActiveKitTab();
   const designScope = useDesignContext();
   const kitId = kitScope?.id ?? "";
-  const designId = designScope?.id ?? "";
+  const designId = designScope ?? "";
   const initializedKeyRef = useRef<string | null>(null);
 
   useLayoutEffect(() => {
@@ -27152,7 +27166,7 @@ export function useDesignStore<T = DesignStore>(selector?: (store: DesignStore) 
   const kitScope = useActiveKitTab();
   const designScope = useDesignContext();
   const resolvedKitId = kitScope?.id ?? id?.kit;
-  const resolvedDesignId = designScope?.id ?? id?.design;
+  const resolvedDesignId = designScope ?? id?.design;
   if (!resolvedKitId || !resolvedDesignId) {
     return null;
   }
@@ -27170,7 +27184,7 @@ export function useDesignApp<T>(selector?: (state: DesignAppState) => T, id?: De
   const kitScope = useActiveKitTab();
   const designScope = useDesignContext();
   const kitId = kitScope?.id ?? id?.kit ?? "";
-  const designId = designScope?.id ?? id?.design ?? "";
+  const designId = designScope ?? id?.design ?? "";
 
   const state = useDesignAppXState(kitId, designId);
 
@@ -27220,7 +27234,7 @@ function useDesignAppField<T, TEvent extends { type: string }>(options: UseDesig
   const kitScope = useActiveKitTab();
   const designScope = useDesignContext();
   const kitId = kitScope?.id ?? "";
-  const designId = designScope?.id ?? "";
+  const designId = designScope ?? "";
   const granularSelector = useMemo(() => createGranularSelector(kitId, designId), [createGranularSelector, kitId, designId]);
   const rawValue = useSelector(actor, granularSelector);
   const value = rawValue ?? fallback;
@@ -27323,7 +27337,7 @@ export function useDesignAppOthers(): HookResult<DesignAppPresenceOther[]> {
   const kitScope = useActiveKitTab();
   const designScope = useDesignContext();
   const kitId = kitScope?.id ?? "";
-  const designId = designScope?.id ?? "";
+  const designId = designScope ?? "";
   const selector = useMemo(() => createDesignOthersSelector(kitId, designId), [kitId, designId]);
   const value = useSelector(actor, selector) ?? EMPTY_OTHERS;
   return readonlyHookResult(value);
@@ -27359,7 +27373,7 @@ export function useDesignAppDiagramCenter(): HookResult<Coordinate | undefined> 
   const kitScope = useActiveKitTab();
   const designScope = useDesignContext();
   const kitId = kitScope?.id ?? "";
-  const designId = designScope?.id ?? "";
+  const designId = designScope ?? "";
   const selector = useMemo(() => createDesignDiagramCenterSelector(kitId, designId), [kitId, designId]);
   const rawValue = useSelector(actor, selector);
   const value = useMemo(() => (rawValue ? { u: rawValue.x, v: rawValue.y } : undefined), [rawValue]);
@@ -27385,7 +27399,7 @@ export function useDesignAppDiagramScale(): HookResult<number | undefined> {
   const kitScope = useActiveKitTab();
   const designScope = useDesignContext();
   const kitId = kitScope?.id ?? "";
-  const designId = designScope?.id ?? "";
+  const designId = designScope ?? "";
   const selector = useMemo(() => createDesignDiagramScaleSelector(kitId, designId), [kitId, designId]);
   const value = useSelector(actor, selector);
   const canSetEvent = useMemo(() => ({ type: "DESIGN.SET_DIAGRAM_SCALE" as const, kitId, designId, scale: 1 }), [kitId, designId]);
@@ -27431,7 +27445,7 @@ export function useDesignAppSelectedRepresentationTags(): HookResult<Record<Id, 
   const kitScope = useActiveKitTab();
   const designScope = useDesignContext();
   const kitId = kitScope?.id ?? "";
-  const designId = designScope?.id ?? "";
+  const designId = designScope ?? "";
   const selector = useMemo(() => createDesignSelectedRepresentationTagsSelector(kitId, designId), [kitId, designId]);
   const value = useSelector(actor, selector) ?? EMPTY_REPRESENTATION_TAGS;
   const canSetEvent = useMemo(() => ({ type: "DESIGN.SYNC" as const, kitId, designId, state: {} }), [kitId, designId]);
@@ -27454,7 +27468,7 @@ export function useDesignAppHover(): HookResult<DesignAppHover | undefined> {
   const kitScope = useActiveKitTab();
   const designScope = useDesignContext();
   const kitId = kitScope?.id ?? "";
-  const designId = designScope?.id ?? "";
+  const designId = designScope ?? "";
   const store = useDesignStore(identitySelector) as DesignStore | null;
   const selector = useMemo(() => createDesignHoverSelector(kitId, designId), [kitId, designId]);
   const value = useSelector(actor, selector, areHoverStatesEqual);
@@ -28182,7 +28196,7 @@ export function useDesignAppYjsToXStateSync(id?: DesignAppId) {
   const kitScope = useActiveKitTab();
   const designScope = useDesignContext();
   const kitId = kitScope?.id ?? id?.kit ?? "";
-  const designId = designScope?.id ?? id?.design ?? "";
+  const designId = designScope ?? id?.design ?? "";
   const store = useDesignStore(undefined, id) as DesignStore | null;
   const [state, setState] = useState<DesignAppState | null>(() => store?.snapshot() ?? null);
   useEffect(() => {
@@ -28454,7 +28468,7 @@ export function useDesignAppIsPieceHovered(id?: DesignAppId, pieceId?: string): 
   const kitScope = useActiveKitTab();
   const designScope = useDesignContext();
   const kitId = kitScope?.id ?? id?.kit ?? "";
-  const designId = designScope?.id ?? id?.design ?? "";
+  const designId = designScope ?? id?.design ?? "";
   const stablePieceId = pieceId ?? "";
   const selector = useMemo(() => {
     const key = `${kitId}:${designId}`;
@@ -28573,7 +28587,7 @@ function HoverPiecesProviderInner({ store, children }: { store: DesignStore; chi
   const kitScope = useActiveKitTab();
   const designScope = useDesignContext();
   const syncKeyRef = useRef("");
-  syncKeyRef.current = `${kitScope?.id ?? ""}:${designScope?.id ?? ""}`;
+  syncKeyRef.current = `${kitScope?.id ?? ""}:${designScope ?? ""}`;
   const lastActorHoverRef = useRef<DesignAppHover | undefined>(undefined);
 
   useEffect(() => {
@@ -28678,7 +28692,7 @@ export function useDesignAppIsPieceSelected(id?: DesignAppId, pieceId?: string):
   const kitScope = useActiveKitTab();
   const designScope = useDesignContext();
   const kitId = kitScope?.id ?? id?.kit ?? "";
-  const designId = designScope?.id ?? id?.design ?? "";
+  const designId = designScope ?? id?.design ?? "";
   const stablePieceId = pieceId ?? "";
   const selector = useMemo(() => {
     const key = `${kitId}:${designId}`;
@@ -28757,7 +28771,7 @@ export function useDesignAppIsConnectionHovered(id?: DesignAppId, connectionId?:
   const kitScope = useActiveKitTab();
   const designScope = useDesignContext();
   const kitId = kitScope?.id ?? id?.kit ?? "";
-  const designId = designScope?.id ?? id?.design ?? "";
+  const designId = designScope ?? id?.design ?? "";
   const stableConnectionId = connectionId ?? "";
   const selector = useMemo(() => {
     const key = `${kitId}:${designId}`;
@@ -28775,7 +28789,7 @@ export function useDesignAppIsConnectionSelected(id?: DesignAppId, connectionId?
   const kitScope = useActiveKitTab();
   const designScope = useDesignContext();
   const kitId = kitScope?.id ?? id?.kit ?? "";
-  const designId = designScope?.id ?? id?.design ?? "";
+  const designId = designScope ?? id?.design ?? "";
   const stableConnectionId = connectionId ?? "";
   const selector = useMemo(() => {
     const key = `${kitId}:${designId}`;
@@ -28793,7 +28807,7 @@ export function useDesignAppIsPortHovered(id: DesignAppId | undefined, pieceId: 
   const kitScope = useActiveKitTab();
   const designScope = useDesignContext();
   const kitId = kitScope?.id ?? id?.kit ?? "";
-  const designId = designScope?.id ?? id?.design ?? "";
+  const designId = designScope ?? id?.design ?? "";
   const selector = useMemo(() => {
     const key = `${kitId}:${designId}`;
     return (state: { context: SketchpadContext }) => state.context.designApps[key]?.hover?.connectors?.some((p) => p.piece === pieceId && p.connector === connectorId) ?? false;
@@ -28819,7 +28833,7 @@ export function useDesignAppSelectedConnector(id?: DesignAppId): SelectedConnect
   const kitScope = useActiveKitTab();
   const designScope = useDesignContext();
   const kitId = kitScope?.id ?? id?.kit ?? "";
-  const designId = designScope?.id ?? id?.design ?? "";
+  const designId = designScope ?? id?.design ?? "";
   const selector = useMemo(() => {
     const key = `${kitId}:${designId}`;
     return (state: { context: SketchpadContext }) => {
@@ -28841,7 +28855,7 @@ export function useDesignAppIsPiecePortSelected(pieceId: string, connectorId?: s
   const kitScope = useActiveKitTab();
   const designScope = useDesignContext();
   const kitId = kitScope?.id ?? "";
-  const designId = designScope?.id ?? "";
+  const designId = designScope ?? "";
   const stableConnectorId = connectorId ?? "";
   const selector = useMemo(() => {
     const key = `${kitId}:${designId}`;
@@ -28928,9 +28942,9 @@ export function useDesignAppConnectionColor(id: DesignAppId | undefined, connect
 export function useDesignAppPieceCenter(id?: DesignAppId, pieceId?: Id): Coordinate | undefined {
   void id;
   const pieceScope = usePieceContext();
-  const finalPieceId = pieceId ?? pieceScope?.id;
-  const { value } = usePieceFlatCenterState(typeof finalPieceId === "string" ? finalPieceId : undefined);
-  return value ?? undefined;
+  const finalPieceId = pieceId ?? pieceScope ?? undefined;
+  const center = usePieceFlatCenterState(typeof finalPieceId === "string" ? finalPieceId : undefined);
+  return center ?? undefined;
 }
 
 /**
@@ -28940,9 +28954,9 @@ export function useDesignAppPieceCenter(id?: DesignAppId, pieceId?: Id): Coordin
 export function useDesignAppPiecePlane(id?: DesignAppId, pieceId?: Id): Plane | undefined {
   void id;
   const pieceScope = usePieceContext();
-  const finalPieceId = pieceId ?? pieceScope?.id;
-  const { value } = usePieceFlatPlaneState(typeof finalPieceId === "string" ? finalPieceId : undefined);
-  return value ?? undefined;
+  const finalPieceId = pieceId ?? pieceScope ?? undefined;
+  const plane = usePieceFlatPlaneState(typeof finalPieceId === "string" ? finalPieceId : undefined);
+  return plane ?? undefined;
 }
 
 // #region 🎮Footer
@@ -29564,13 +29578,13 @@ const DesignSectionForm: FC = () => {
       designId: match?.[2],
     };
   }, [location.pathname]);
-  const scopedDesignId = designScope?.id ?? pathScope.designId;
+  const scopedDesignId = designScope ?? pathScope.designId;
   const dsgKs = useKitStoreSnapshot();
   const kit = dsgKs?.kit as Kit | null;
   const kitDesignsField = useKitDesigns();
-  const kitDesigns = (kitDesignsField.value ?? []) as Design[];
+  const kitDesigns = (kitDesignsField ?? []) as Design[];
   const designIdentity = useDesign();
-  const activeDesignId = designIdentity.value?.id ?? scopedDesignId ?? null;
+  const activeDesignId = designIdentity ?? scopedDesignId ?? null;
   const design = useMemo(() => {
     if (activeDesignId == null) return null;
     return kitDesigns.find((entry) => entry.id === activeDesignId) ?? kit?.designs?.find((entry) => entry.id === activeDesignId) ?? null;
@@ -29609,20 +29623,20 @@ const DesignSectionForm: FC = () => {
   return (
     <>
       <SketchpadInputRow
-        value={designNameField.value ?? ""}
+        value={designNameField ?? ""}
         commit={async (v) => renameDesign(String(v))}
         status={renameDesignStatus}
         id="semio.sketchpad.app.design.panel.details.section.design.name"
       />
       <SketchpadTextareaRow
-        value={designDescriptionField.value ?? ""}
+        value={designDescriptionField ?? ""}
         commit={async (v) => changeDesignDescription(String(v))}
         status={changeDesignDescriptionStatus}
         id="semio.sketchpad.app.design.panel.details.section.design.description"
         placeholderId="semio.sketchpad.app.design.descriptionPlaceholder"
       />
       <SketchpadInputRow
-        value={designIconField.value ?? ""}
+        value={designIconField ?? ""}
         commit={async (v) => changeDesignIcon(String(v))}
         status={changeDesignIconStatus}
         id="semio.sketchpad.app.design.panel.details.section.design.icon"
@@ -29634,7 +29648,7 @@ const DesignSectionForm: FC = () => {
             <Input
               lazy
               id="semio.sketchpad.app.design.panel.details.section.design.image"
-              value={designImageField.value ?? ""}
+              value={designImageField ?? ""}
               placeholderId="semio.sketchpad.app.design.imagePlaceholder"
               readOnly
               showLabel
@@ -29648,7 +29662,7 @@ const DesignSectionForm: FC = () => {
             <Input
               lazy
               id="semio.sketchpad.app.design.panel.details.section.design.unit"
-              value={designUnitField.value ?? ""}
+              value={designUnitField ?? ""}
               readOnly
               showLabel
             />
@@ -30939,7 +30953,7 @@ export const ConnectionsSection: FC<{
   isSingle: boolean;
   count: number;
 }> = ({ connections, isSingle, count }) => {
-  const isInDesignContext = useHasDesignContext();
+  const isInDesignContext = useDesignContext() != null;
   if (!isInDesignContext) return null;
   return <ConnectionsSectionForm connections={connections} sectionLabel={undefined} />;
 };
@@ -31276,7 +31290,7 @@ const ConnectionsSectionForm: FC<{
  *MUST render the connector detail form for the selected port.
  **/
 export const ConnectorSection: FC<{ pieceId: Id; connectorId: Id }> = ({ pieceId, connectorId }) => {
-  const isInDesignContext = useHasDesignContext();
+  const isInDesignContext = useDesignContext() != null;
   if (!isInDesignContext) return null;
   return <ConnectorSectionForm pieceId={pieceId} connectorId={connectorId} />;
 };
@@ -31687,7 +31701,7 @@ type ExpandMenuProps = {
  **/
 const ExpandMenu: FC<ExpandMenuProps> = ({ nodes, edges, onExpand }) => {
   const designScope = useDesignContext();
-  const [explodeableIds] = useExplodeableDesignNodeIdsFromKit(designScope?.id ?? undefined);
+  const [explodeableIds] = useExplodeableDesignNodeIdsFromKit(designScope ?? undefined);
   const ksKit = useKitStoreSnapshot();
   const kit = ksKit?.kit as Kit;
   const explodeableDesignNodes = useMemo(() => {
@@ -33186,7 +33200,7 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
   const sketchpadCommands = useSketchpadCommands();
   const [kitTypes] = useTypes();
   const kitDesignsField = useKitDesigns();
-  const kitDesigns = (kitDesignsField.value ?? []) as Design[];
+  const kitDesigns = (kitDesignsField ?? []) as Design[];
   const ksKit = useKitStoreSnapshot();
   const kit = ksKit?.kit as Kit;
   const [activeTool] = useDesignAppActiveTool();
@@ -33201,7 +33215,7 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
   const [panelVisibility] = useDesignAppPanelVisibility();
 
   const designIdentity = useDesign();
-  const activeDesignId = designIdentity.value?.id ?? null;
+  const activeDesignId = designIdentity ?? null;
   const design = useMemo(() => {
     if (activeDesignId == null) return null;
     return kitDesigns.find((d) => d.id === activeDesignId) ?? kit.designs?.find((d) => d.id === activeDesignId) ?? null;
@@ -35088,39 +35102,38 @@ const LoadedPieceMesh: FC<{ url: string; fileExtension: string; highlightColor: 
 };
 
 const PieceMesh: FC<{ highlightColor: string | null } & DesignMeshEventProps> = ({ highlightColor, onClick, onDoubleClick, onPointerEnter, onPointerLeave }) => {
-  const piece = usePiece() as Piece;
-  const type = useTypeContextRead(undefined, typeof piece.type === "string" ? piece.type : piece.type?.id) as Type | undefined;
-  const typeConcepts = type?.concepts;
+  const pieceId = usePiece();
+  const typeId = usePieceTypeId();
+  const typeRepresentations = useTypeRepresentations(typeId) ?? [];
   const [files] = useFilesFull();
   const [selectedRepresentationTags] = useDesignAppSelectedRepresentationTags();
   const prevRepresentationIdRef = useRef<string | null>(null);
 
   useEffect(() => {
-    const typeRef = typeof piece.type === "string" ? piece.type : piece.type?.id;
-    console.log("[DEBUG] [PieceMesh] piece.id:", piece.id, "piece.type:", piece.type, "typeRef:", typeRef, "resolvedType:", type?.id, type?.name, "representations:", type?.representations?.length, "files:", (files as any[])?.length);
-  }, [piece.id, piece.type, type, files]);
+    console.log("[DEBUG] [PieceMesh] piece.id:", pieceId, "typeId:", typeId, "representations:", typeRepresentations.length, "files:", (files as any[])?.length);
+  }, [pieceId, typeId, typeRepresentations, files]);
 
   const { fileExtension, fileId, representationId, selectionReason } = useMemo(() => {
-    if (!type?.representations || type.representations.length === 0) {
-      console.log("[DEBUG] [PieceMesh] No representations for type:", type?.id, type?.name, "type object:", type);
+    if (typeRepresentations.length === 0) {
+      console.log("[DEBUG] [PieceMesh] No representations for type:", typeId);
       return { fileExtension: "", fileId: null, representationId: null, selectionReason: "no-representations" };
     }
 
-    const tagsForType = selectedRepresentationTags[type.id] ?? [];
+    const tagsForType = (typeId != null ? selectedRepresentationTags[typeId] : undefined) ?? [];
     let representation: Representation | undefined;
     let reason = "";
 
     if (tagsForType.length > 0) {
-      representation = selectBestRepresentation(type.representations, tagsForType);
+      representation = selectBestRepresentation(typeRepresentations, tagsForType);
       reason = "manual-tags";
     } else {
-      const conceptIds = typeConcepts?.map((concept) => concept.id) ?? [];
+      const conceptIds: readonly string[] = [];
       if (conceptIds.length > 0) {
-        representation = findRepresentation(type.representations, conceptIds);
+        representation = findRepresentation(typeRepresentations, conceptIds);
         reason = "type-concepts";
       } else {
-        const defaultRepresentation = type.representations.find((entry) => !entry.tags || entry.tags.length === 0);
-        representation = defaultRepresentation ?? type.representations[0];
+        const defaultRepresentation = typeRepresentations.find((entry) => !entry.tags || entry.tags.length === 0);
+        representation = defaultRepresentation ?? typeRepresentations[0];
         reason = "default/first";
       }
     }
@@ -35137,7 +35150,7 @@ const PieceMesh: FC<{ highlightColor: string | null } & DesignMeshEventProps> = 
 
     const ext = file.name?.split(".").pop() || "";
     return { fileExtension: ext, fileId: file.id, representationId: representation.id, selectionReason: reason };
-  }, [type, typeConcepts, files, selectedRepresentationTags]);
+  }, [typeId, typeRepresentations, files, selectedRepresentationTags]);
 
   const [readableUrl] = useKitFileUrl(fileId ?? undefined);
   const { url: blobUrl } = useKitFileBlobUrl(fileId ?? undefined);
@@ -35147,14 +35160,14 @@ const PieceMesh: FC<{ highlightColor: string | null } & DesignMeshEventProps> = 
     if (representationId && representationId !== prevRepresentationIdRef.current) {
       prevRepresentationIdRef.current = representationId;
     } else if (!representationId && selectionReason === "no-representations") {
-      console.warn("[PieceMesh] No representations available for type:", type?.id, type?.name);
+      console.warn("[PieceMesh] No representations available for type:", typeId);
     } else if (!representationId && selectionReason === "no-representation-found") {
-      console.warn("[PieceMesh] No representation found for type:", type?.id);
+      console.warn("[PieceMesh] No representation found for type:", typeId);
     } else if (selectionReason === "file-not-found" && representationId !== prevRepresentationIdRef.current) {
       prevRepresentationIdRef.current = representationId;
       console.warn("[PieceMesh] File not found in kit for representation:", representationId);
     }
-  }, [representationId, selectionReason, type]);
+  }, [representationId, selectionReason, typeId]);
 
   if (!renderUrl) {
     return <Geometry hovered={false} onClick={onClick} onDoubleClick={onDoubleClick} onPointerEnter={onPointerEnter} onPointerLeave={onPointerLeave} showEdges={true} />;
@@ -35177,12 +35190,15 @@ interface RepresentationPieceProps {}
  * RepresentationPiece holds the data fields for a RepresentationPiece record.
  **/
 const RepresentationPiece: FC<RepresentationPieceProps> = () => {
-  const piece = usePiece() as Piece;
+  const store = useJsStore();
+  const designId = useDesign();
+  const pieceId = usePiece();
+  const piece = useMemo(() => store.design(designId).piece(pieceId), [store, designId, pieceId]);
   const diffedPiece = useDiffedPiece() as Piece;
   const isSelected = useIsPieceSelected();
   const isHovered = useIsPieceTransitiveHovered();
   const status = usePieceStatus();
-  const [flatPlane] = usePieceFlatPlane(useDesignContext()?.id, piece.id);
+  const [flatPlane] = usePieceFlatPlane();
 
   const [selection, setSelection] = useDesignAppSelection();
   const { hoverPiece, clearHover } = useDesignAppHoverActions();
@@ -35190,7 +35206,7 @@ const RepresentationPiece: FC<RepresentationPieceProps> = () => {
   const { currentHoveredPieceIdRef, hoverClearTimeoutRef } = useHoverIntent();
   const [activeTool] = useDesignAppActiveTool();
 
-  const { fill } = useDesignAppPieceColor(undefined, piece.id);
+  const { fill } = useDesignAppPieceColor(undefined, pieceId);
 
   const foregroundColor = useMemo(() => getComputedColor("--foreground"), []);
   const mutedForegroundColor = useMemo(() => getComputedColor("--muted-foreground"), []);
@@ -35495,7 +35511,7 @@ const SceneContextBridge: FC<{
     <SketchpadInstanceContext.Provider value={sketchpadInstance}>
       <SketchpadActorContext.Provider value={sketchpadActor}>
         <ActiveKitTabContext.Provider value={kitScope}>
-          <SchemaScopeContext.Provider value={designScope?.id ? schemaScopeForEntityId("Design", designScope.id) : null}>
+          <SchemaScopeContext.Provider value={designScope ? schemaScopeForEntityId("Design", designScope.id) : null}>
             <DesignAppShellContext.Provider value={designAppShell}>
               <DesignAppActorContext.Provider value={designAppActor}>
                 <DesignFilterContext.Provider value={designFilterState}>
@@ -35528,7 +35544,7 @@ const DesignAppScene: FC = () => {
   const [projection, setProjection] = React.useState<"camera" | "orthographic">("camera");
   const [sceneTypes0] = useTypes();
   const sceneDesignsField = useKitDesigns();
-  const sceneDesigns0 = sceneDesignsField.value ?? [];
+  const sceneDesigns0 = sceneDesignsField ?? [];
   const sceneTypes = sceneTypes0 ?? [];
   const sceneDesigns = sceneDesigns0 ?? [];
   const { setActiveDraggedType, setActiveDraggedDesign } = useDragDrop();
@@ -35787,17 +35803,17 @@ const DesignWindowApp: FC<AppProps> = () => {
   const wbKs = useKitStoreSnapshot();
   const kit = wbKs?.kit as Kit | null;
   const designEntity = useDesign();
-  const scopedDesignId = designEntity.value?.id ?? designScope?.id ?? null;
+  const scopedDesignId = designEntity ?? designScope ?? null;
   const kitDesignsForWorkbench = useKitDesigns();
   const design = useMemo(() => {
     if (scopedDesignId == null || !kit) return undefined;
-    const rows = (kitDesignsForWorkbench.value ?? []) as Design[];
+    const rows = (kitDesignsForWorkbench ?? []) as Design[];
     return rows.find((entry) => entry.id === scopedDesignId) ?? kit.designs?.find((entry) => entry.id === scopedDesignId);
-  }, [scopedDesignId, kit, kitDesignsForWorkbench.value]);
+  }, [scopedDesignId, kit, kitDesignsForWorkbench]);
   const kitId = kitScope?.id ?? kit?.id;
   const [workbenchTypes0] = useTypes();
   const workbenchDesignsField = useKitDesigns();
-  const workbenchDesigns0 = workbenchDesignsField.value ?? [];
+  const workbenchDesigns0 = workbenchDesignsField ?? [];
   const workbenchTypes = workbenchTypes0 ?? [];
   const workbenchDesigns = workbenchDesigns0 ?? [];
   const appSettings = useSketchpad((s) => s.settings?.apps) as any;
@@ -38162,21 +38178,21 @@ const TypeMesh: FC = () => {
   const [selectedRepresentationId] = useTypeAppSelectedRepresentationId();
 
   const activeRepresentationId = useMemo(() => {
-    const representations = typeRepresentations.value ?? [];
+    const representations = typeRepresentations ?? [];
     if (selectedRepresentationId && representations.some((representation) => representation.id === selectedRepresentationId)) {
       return selectedRepresentationId;
     }
     return representations[0]?.id;
-  }, [selectedRepresentationId, typeRepresentations.value]);
+  }, [selectedRepresentationId, typeRepresentations]);
 
   const representationFile = useRepresentationFile(activeRepresentationId);
-  const fileId = representationFile.value?.id;
+  const fileId = representationFile;
   const fileName = useFileName(fileId);
   const fileExtension = useMemo(() => {
-    const name = fileName.value ?? "";
+    const name = fileName ?? "";
     const segments = name.split(".");
     return segments.length > 1 ? (segments.pop() ?? "") : "";
-  }, [fileName.value]);
+  }, [fileName]);
   const [readableUrl] = useKitFileUrl(fileId);
   const { url: blobUrl } = useKitFileBlobUrl(fileId);
   const renderUrl = blobUrl ?? readableUrl;
@@ -38256,7 +38272,7 @@ const Scene: FC<{ isDragOver?: boolean }> = ({ isDragOver = false }) => {
 // Detail panel sections for editing type properties, connectors, representations, authors, and attributes. MUST render within tree items.
 
 export const TypeDetails: FC = () => {
-  const isInTypeContext = useHasTypeContext();
+  const isInTypeContext = useTypeContext() != null;
   return isInTypeContext ? <TypeDetailsForm /> : null;
 };
 
@@ -38273,18 +38289,18 @@ const TypeRepresentationTreeItem: FC<{
   const representationUrl = useRepresentationUrl(representationId);
   const representationDescription = useRepresentationDescription(representationId);
   const representationFile = useRepresentationFile(representationId);
-  const representationFileName = useFileName(representationFile.value?.id);
+  const representationFileName = useFileName(representationFile);
 
   return (
     <div onPointerEnter={onHover} onPointerLeave={onLeave} onClick={onClick}>
       <TreeItem
         id="semio.sketchpad.app.type.representation"
-        label={representationUrl.value || representationFileName.value || representationId}
+        label={representationUrl || representationFileName || representationId}
         className={`${isSelected ? "bg-accent/20" : ""} ${isHovered ? "bg-hover" : ""}`}
       >
-        <SketchpadInputRow value={representationUrl.value ?? ""} commit={async () => ({ ok: true } as const)} status={READONLY_ROW_STATUS} id="semio.sketchpad.app.type.panel.details.section.representations.url" readOnly />
-        <SketchpadTextareaRow value={representationDescription.value ?? ""} commit={async () => ({ ok: true } as const)} status={READONLY_ROW_STATUS} id="semio.sketchpad.app.type.panel.details.section.representations.description" placeholderId="semio.sketchpad.app.type.representationDescriptionPlaceholder.label" readOnly />
-        <SketchpadInputRow value={representationFileName.value ?? ""} commit={async () => ({ ok: true } as const)} status={READONLY_ROW_STATUS} id="semio.sketchpad.app.type.panel.details.section.representations.file" readOnly />
+        <SketchpadInputRow value={representationUrl ?? ""} commit={async () => ({ ok: true } as const)} status={READONLY_ROW_STATUS} id="semio.sketchpad.app.type.panel.details.section.representations.url" readOnly />
+        <SketchpadTextareaRow value={representationDescription ?? ""} commit={async () => ({ ok: true } as const)} status={READONLY_ROW_STATUS} id="semio.sketchpad.app.type.panel.details.section.representations.description" placeholderId="semio.sketchpad.app.type.representationDescriptionPlaceholder.label" readOnly />
+        <SketchpadInputRow value={representationFileName ?? ""} commit={async () => ({ ok: true } as const)} status={READONLY_ROW_STATUS} id="semio.sketchpad.app.type.panel.details.section.representations.file" readOnly />
       </TreeItem>
     </div>
   );
@@ -38295,9 +38311,9 @@ const TypeAuthorTreeItem: FC<{ authorId: string }> = ({ authorId }) => {
   const authorEmail = useAuthorEmail(authorId);
 
   return (
-    <TreeItem id="semio.sketchpad.app.type.author" label={authorName.value || authorId}>
-      <SketchpadInputRow value={authorName.value ?? ""} commit={async () => ({ ok: true } as const)} status={READONLY_ROW_STATUS} id="semio.sketchpad.app.type.panel.details.section.authors.name" readOnly />
-      <SketchpadInputRow value={authorEmail.value ?? ""} commit={async () => ({ ok: true } as const)} status={READONLY_ROW_STATUS} id="semio.sketchpad.app.type.panel.details.section.authors.email" readOnly />
+    <TreeItem id="semio.sketchpad.app.type.author" label={authorName || authorId}>
+      <SketchpadInputRow value={authorName ?? ""} commit={async () => ({ ok: true } as const)} status={READONLY_ROW_STATUS} id="semio.sketchpad.app.type.panel.details.section.authors.name" readOnly />
+      <SketchpadInputRow value={authorEmail ?? ""} commit={async () => ({ ok: true } as const)} status={READONLY_ROW_STATUS} id="semio.sketchpad.app.type.panel.details.section.authors.email" readOnly />
     </TreeItem>
   );
 };
@@ -38323,7 +38339,7 @@ const TypeConnectorTreeItemContent: FC<{
     <div onPointerEnter={onHover} onPointerLeave={onLeave} onClick={onClick}>
       <TreeItem
         id="semio.sketchpad.app.type.connector"
-        label={connectorCode.value || connectorId}
+        label={connectorCode || connectorId}
         className={`${isSelected ? "bg-accent/20" : ""} ${isHovered ? "bg-hover" : ""}`}
         actions={[
           {
@@ -38333,10 +38349,10 @@ const TypeConnectorTreeItemContent: FC<{
           },
         ]}
       >
-        <SketchpadInputRow value={connectorCode.value ?? ""} commit={async (value) => renameConnector(String(value))} status={renameConnectorStatus} id="semio.sketchpad.app.type.panel.details.section.connectors.code" />
-        <SketchpadTextareaRow value={connectorDescription.value ?? ""} commit={async (value) => changeConnectorDescription(String(value))} status={changeConnectorDescriptionStatus} id="semio.sketchpad.app.type.panel.details.section.connectors.description" placeholderId="semio.sketchpad.app.type.connectorDescriptionPlaceholder.label" />
-        <SketchpadInputRow value={connectorIcon.value ?? ""} commit={async (value) => changeConnectorIcon(String(value))} status={changeConnectorIconStatus} id="semio.sketchpad.app.type.panel.details.section.connectors.icon" />
-        <SketchpadInputRow value={connectorPort.value?.id ?? ""} commit={async () => ({ ok: true } as const)} status={READONLY_ROW_STATUS} id="semio.sketchpad.app.type.panel.details.section.connectors.port" placeholderId="semio.sketchpad.app.type.connectorPortPlaceholder.label" readOnly />
+        <SketchpadInputRow value={connectorCode ?? ""} commit={async (value) => renameConnector(String(value))} status={renameConnectorStatus} id="semio.sketchpad.app.type.panel.details.section.connectors.code" />
+        <SketchpadTextareaRow value={connectorDescription ?? ""} commit={async (value) => changeConnectorDescription(String(value))} status={changeConnectorDescriptionStatus} id="semio.sketchpad.app.type.panel.details.section.connectors.description" placeholderId="semio.sketchpad.app.type.connectorDescriptionPlaceholder.label" />
+        <SketchpadInputRow value={connectorIcon ?? ""} commit={async (value) => changeConnectorIcon(String(value))} status={changeConnectorIconStatus} id="semio.sketchpad.app.type.panel.details.section.connectors.icon" />
+        <SketchpadInputRow value={connectorPort ?? ""} commit={async () => ({ ok: true } as const)} status={READONLY_ROW_STATUS} id="semio.sketchpad.app.type.panel.details.section.connectors.port" placeholderId="semio.sketchpad.app.type.connectorPortPlaceholder.label" readOnly />
       </TreeItem>
     </div>
   );
@@ -38370,17 +38386,17 @@ const TypeDetailsForm: FC = () => {
 
   return (
     <>
-      <SketchpadInputRow value={typeName.value ?? ""} commit={async (value) => renameType(String(value))} status={renameTypeStatus} id="semio.sketchpad.app.type.panel.details.section.type.name" />
-      <SketchpadTextareaRow value={typeDescription.value ?? ""} commit={async (value) => changeTypeDescription(String(value))} status={changeTypeDescriptionStatus} id="semio.sketchpad.app.type.panel.details.section.type.description" placeholderId="semio.sketchpad.app.type.descriptionPlaceholder.label" />
-      <SketchpadInputRow value={typeIcon.value ?? ""} commit={async (value) => changeTypeIcon(String(value))} status={changeTypeIconStatus} id="semio.sketchpad.app.type.panel.details.section.type.icon" placeholderId="semio.sketchpad.app.type.iconPlaceholder.label" />
+      <SketchpadInputRow value={typeName ?? ""} commit={async (value) => renameType(String(value))} status={renameTypeStatus} id="semio.sketchpad.app.type.panel.details.section.type.name" />
+      <SketchpadTextareaRow value={typeDescription ?? ""} commit={async (value) => changeTypeDescription(String(value))} status={changeTypeDescriptionStatus} id="semio.sketchpad.app.type.panel.details.section.type.description" placeholderId="semio.sketchpad.app.type.descriptionPlaceholder.label" />
+      <SketchpadInputRow value={typeIcon ?? ""} commit={async (value) => changeTypeIcon(String(value))} status={changeTypeIconStatus} id="semio.sketchpad.app.type.panel.details.section.type.icon" placeholderId="semio.sketchpad.app.type.iconPlaceholder.label" />
       <SketchpadInputRow value={typeImage.value ?? ""} commit={async () => ({ ok: true } as const)} status={READONLY_ROW_STATUS} id="semio.sketchpad.app.type.panel.details.section.type.image" placeholderId="semio.sketchpad.app.type.imagePlaceholder.label" readOnly />
-      <SketchpadInputRow value={typeUnit.value ?? ""} commit={async () => ({ ok: true } as const)} status={READONLY_ROW_STATUS} id="semio.sketchpad.app.type.panel.details.section.type.unit" readOnly />
+      <SketchpadInputRow value={typeUnit ?? ""} commit={async () => ({ ok: true } as const)} status={READONLY_ROW_STATUS} id="semio.sketchpad.app.type.panel.details.section.type.unit" readOnly />
     </>
   );
 };
 
 export const RepresentationsSection: FC = () => {
-  const isInTypeContext = useHasTypeContext();
+  const isInTypeContext = useTypeContext() != null;
   return isInTypeContext ? <RepresentationsSectionForm /> : null;
 };
 
@@ -38394,7 +38410,7 @@ const RepresentationsSectionForm: FC = () => {
 
   return (
     <TreeItem id="semio.sketchpad.app.type.representations">
-      {(typeRepresentations.value ?? []).map((representation) => (
+      {(typeRepresentations ?? []).map((representation) => (
         <TypeRepresentationTreeItem
           key={representation.id}
           representationId={representation.id}
@@ -38423,7 +38439,7 @@ const RepresentationsSectionForm: FC = () => {
 };
 
 export const ConnectorsListSection: FC = () => {
-  const isInTypeContext = useHasTypeContext();
+  const isInTypeContext = useTypeContext() != null;
   return isInTypeContext ? <ConnectorsListSectionForm /> : null;
 };
 
@@ -38488,7 +38504,7 @@ const ConnectorsListSectionForm: FC = () => {
 };
 
 export const AuthorsSection: FC = () => {
-  const isInTypeContext = useHasTypeContext();
+  const isInTypeContext = useTypeContext() != null;
   return isInTypeContext ? <AuthorsSectionForm /> : null;
 };
 
@@ -38504,7 +38520,7 @@ const AuthorsSectionForm: FC = () => {
 };
 
 export const AttributesSection: FC = () => {
-  const isInTypeContext = useHasTypeContext();
+  const isInTypeContext = useTypeContext() != null;
   return isInTypeContext ? <AttributesSectionForm /> : null;
 };
 
@@ -38576,16 +38592,16 @@ const TypeConnectorSectionFormBody: FC<{ connectorId: Id }> = ({ connectorId }) 
           <p className="text-sm text-destructive">{error.message}</p>
         </HelperRow>
       ) : null}
-      <SketchpadInputRow value={connectorCode.value ?? ""} commit={async (value) => renameConnector(String(value))} status={renameConnectorStatus} id="semio.sketchpad.app.type.panel.details.section.connectors.code" />
-      <SketchpadTextareaRow value={connectorDescription.value ?? ""} commit={async (value) => changeConnectorDescription(String(value))} status={changeConnectorDescriptionStatus} id="semio.sketchpad.app.type.panel.details.section.connectors.description" placeholderId="semio.sketchpad.app.type.connectorDescriptionPlaceholder.label" />
-      <SketchpadInputRow value={connectorIcon.value ?? ""} commit={async (value) => changeConnectorIcon(String(value))} status={changeConnectorIconStatus} id="semio.sketchpad.app.type.panel.details.section.connectors.icon" />
-      <SketchpadInputRow value={connectorPort.value?.id ?? ""} commit={async () => ({ ok: true } as const)} status={READONLY_ROW_STATUS} id="semio.sketchpad.app.type.panel.details.section.connectors.port" placeholderId="semio.sketchpad.app.type.connectorPortPlaceholder.label" readOnly />
+      <SketchpadInputRow value={connectorCode ?? ""} commit={async (value) => renameConnector(String(value))} status={renameConnectorStatus} id="semio.sketchpad.app.type.panel.details.section.connectors.code" />
+      <SketchpadTextareaRow value={connectorDescription ?? ""} commit={async (value) => changeConnectorDescription(String(value))} status={changeConnectorDescriptionStatus} id="semio.sketchpad.app.type.panel.details.section.connectors.description" placeholderId="semio.sketchpad.app.type.connectorDescriptionPlaceholder.label" />
+      <SketchpadInputRow value={connectorIcon ?? ""} commit={async (value) => changeConnectorIcon(String(value))} status={changeConnectorIconStatus} id="semio.sketchpad.app.type.panel.details.section.connectors.icon" />
+      <SketchpadInputRow value={connectorPort ?? ""} commit={async () => ({ ok: true } as const)} status={READONLY_ROW_STATUS} id="semio.sketchpad.app.type.panel.details.section.connectors.port" placeholderId="semio.sketchpad.app.type.connectorPortPlaceholder.label" readOnly />
     </>
   );
 };
 
 export const TypeConnectorSection: FC<{ connectorId: Id }> = ({ connectorId }) => {
-  const isInTypeContext = useHasTypeContext();
+  const isInTypeContext = useTypeContext() != null;
   return isInTypeContext ? <TypeConnectorSectionForm connectorId={connectorId} /> : null;
 };
 
@@ -38610,7 +38626,7 @@ const TypeConnectorSectionForm: FC<{ connectorId: Id }> = ({ connectorId }) => {
 };
 
 export const ConnectorsMultipleSection: FC<{ connectorIds: Id[] }> = ({ connectorIds }) => {
-  const isInTypeContext = useHasTypeContext();
+  const isInTypeContext = useTypeContext() != null;
   return isInTypeContext ? <ConnectorsMultipleSectionForm connectorIds={connectorIds} /> : null;
 };
 
