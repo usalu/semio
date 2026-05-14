@@ -9,7 +9,7 @@
 // #region ⚛️Imports
 import type { ReactNode } from "react";
 import * as React from "react";
-import type { Attribute, Benchmark, Coordinate, Entity, FieldSpec, GraphRootKind, OffsetInput, PieceBlueprint, Plane, Position, PositionInput, SetError, SetResult } from "../js";
+import type { Attribute, Benchmark, Coordinate, Entity, GraphRootKind, OffsetInput, PieceBlueprint, Plane, Position, PositionInput, SetError, SetResult } from "../js";
 import {
   Alternative,
   Author,
@@ -17,7 +17,6 @@ import {
   Concept,
   Connection,
   Connector,
-  defineField,
   Design,
   File,
   Graph,
@@ -40,18 +39,10 @@ import {
 // #endregion ⚛️Imports
 
 // #region 🪝FieldBind
-/** @emoji 📖 One materialized field read: value, loading, error, and manual refresh (no sync external store). */
-export type FieldReadState<T> = Readonly<{
-  value: T | undefined;
-  loading: boolean;
-  error: unknown;
-  refresh: () => Promise<void>;
-}>;
-
-export type FieldBindOptions<E, T> = Readonly<{
+type FieldBindOptions<E, T> = Readonly<{
   /** @emoji 🧲 Single async read (one GraphQL selection / entity method). */
   read: (entity: E) => Promise<T>;
-  /** @emoji 📡 When set, {@link Store#bus} {@code subscribeKind}; when omitted, only mount + {@link FieldReadState#refresh} pull fresh data. */
+  /** @emoji 📡 When set, {@link Store#bus} {@code subscribeKind}; when omitted, only mount pull fresh data. */
   eventKind?: string;
   /** @emoji 🪝  source; re-invoked each render — keep stable via {@link React#useCallback}. */
   get: () => E | null;
@@ -59,16 +50,13 @@ export type FieldBindOptions<E, T> = Readonly<{
 
 /**
  * @emoji 🪝 Binds one async entity read to React state; optional bus kind narrows refresh fan-in (no `useSyncExternalStore`).
- * @typeParam E — Concrete {@link } subclass anchor.
- * @typeParam T — Parsed field value.
+ * @returns Last resolved value, or {@code undefined} before the first successful read or when the entity is absent.
  */
-function semioInternalFieldBind<E extends Entity, T>(opts: FieldBindOptions<E, T>): () => FieldReadState<T> {
+function semioInternalFieldBind<E extends Entity, T>(opts: FieldBindOptions<E, T>): () => T | undefined {
   const { read, eventKind, get } = opts;
-  return function use(): FieldReadState<T> {
+  return function use(): T | undefined {
     const entity = get();
     const [value, setValue] = React.useState<T | undefined>(undefined);
-    const [loading, setLoading] = React.useState(false);
-    const [error, setError] = React.useState<unknown>(undefined);
     const entityRef = React.useRef(entity);
     entityRef.current = entity;
 
@@ -76,18 +64,12 @@ function semioInternalFieldBind<E extends Entity, T>(opts: FieldBindOptions<E, T
       const e = entityRef.current;
       if (e == null) {
         setValue(undefined);
-        setError(undefined);
-        setLoading(false);
         return;
       }
-      setLoading(true);
-      setError(undefined);
       try {
         setValue(await read(e));
-      } catch (err) {
-        setError(err);
-      } finally {
-        setLoading(false);
+      } catch {
+        setValue(undefined);
       }
     }, [read]);
 
@@ -102,64 +84,7 @@ function semioInternalFieldBind<E extends Entity, T>(opts: FieldBindOptions<E, T
       return e.session.bus.subscribeKind(eventKind, () => void refresh());
     }, [entity, eventKind, refresh]);
 
-    return { value, loading, error, refresh };
-  };
-}
-
-export type DefinedFieldBindOptions<E extends Entity, T> = Readonly<{
-  spec: FieldSpec<T>;
-  pathInKit: (self: E) => string;
-  get: () => E | null;
-  eventKind?: string;
-}>;
-
-/**
- * @emoji 🪝 Same as {@link semioInternalFieldBind} but connects {@link defineField} so callers share {@link FieldSpec} with tooling/docs.
- * @typeParam E — Concrete {@link } subclass anchor.
- * @typeParam T — Parsed field value.
- */
-function semioInternalDefinedFieldBind<E extends Entity, T>(opts: DefinedFieldBindOptions<E, T>): () => FieldReadState<T> {
-  const { spec, pathInKit, get, eventKind } = opts;
-  return function useDefined(): FieldReadState<T> {
-    const entity = get();
-    const [value, setValue] = React.useState<T | undefined>(undefined);
-    const [loading, setLoading] = React.useState(false);
-    const [error, setError] = React.useState<unknown>(undefined);
-    const entityRef = React.useRef(entity);
-    entityRef.current = entity;
-
-    const refresh = React.useCallback(async () => {
-      const e = entityRef.current;
-      if (e == null) {
-        setValue(undefined);
-        setError(undefined);
-        setLoading(false);
-        return;
-      }
-      const r = defineField(e, spec, pathInKit);
-      setLoading(true);
-      setError(undefined);
-      try {
-        setValue(await r());
-      } catch (err) {
-        setError(err);
-      } finally {
-        setLoading(false);
-      }
-    }, [spec, pathInKit]);
-
-    React.useEffect(() => {
-      void refresh();
-    }, [refresh, entity?.id, entity?.storeId]);
-
-    React.useEffect(() => {
-      const e = entityRef.current;
-      if (e == null) return;
-      if (eventKind == null || eventKind === "") return undefined;
-      return e.session.bus.subscribeKind(eventKind, () => void refresh());
-    }, [entity, eventKind, refresh]);
-
-    return { value, loading, error, refresh };
+    return value;
   };
 }
 // #endregion 🪝FieldBind
@@ -226,13 +151,11 @@ export type KitFieldBindOptions<T> = Readonly<{
   getKit: () => Kit | null;
 }>;
 
-function semioInternalKitFieldBind<T>(opts: KitFieldBindOptions<T>): () => FieldReadState<T> {
+function semioInternalKitFieldBind<T>(opts: KitFieldBindOptions<T>): () => T | undefined {
   const { read, eventKind, getKit } = opts;
-  return function useKitBound(): FieldReadState<T> {
+  return function useKitBound(): T | undefined {
     const kit = getKit();
     const [value, setValue] = React.useState<T | undefined>(undefined);
-    const [loading, setLoading] = React.useState(false);
-    const [error, setError] = React.useState<unknown>(undefined);
     const kitRef = React.useRef(kit);
     kitRef.current = kit;
 
@@ -240,18 +163,12 @@ function semioInternalKitFieldBind<T>(opts: KitFieldBindOptions<T>): () => Field
       const k = kitRef.current;
       if (k == null) {
         setValue(undefined);
-        setError(undefined);
-        setLoading(false);
         return;
       }
-      setLoading(true);
-      setError(undefined);
       try {
         setValue(await read(k));
-      } catch (err) {
-        setError(err);
-      } finally {
-        setLoading(false);
+      } catch {
+        setValue(undefined);
       }
     }, [read]);
 
@@ -266,7 +183,7 @@ function semioInternalKitFieldBind<T>(opts: KitFieldBindOptions<T>): () => Field
       return undefined;
     }, [kit, eventKind, refresh]);
 
-    return { value, loading, error, refresh };
+    return value;
   };
 }
 
@@ -277,13 +194,11 @@ export type StoreFieldBindOptions<T> = Readonly<{
 }>;
 
 /** @emoji 🪝 Store-root field bind for session/backbone/root fields. */
-function semioInternalStoreFieldBind<T>(opts: StoreFieldBindOptions<T>): () => FieldReadState<T> {
+function semioInternalStoreFieldBind<T>(opts: StoreFieldBindOptions<T>): () => T | undefined {
   const { read, eventKind, getStore } = opts;
-  return function useStoreBound(): FieldReadState<T> {
+  return function useStoreBound(): T | undefined {
     const store = getStore();
     const [value, setValue] = React.useState<T | undefined>(undefined);
-    const [loading, setLoading] = React.useState(false);
-    const [error, setError] = React.useState<unknown>(undefined);
     const storeRef = React.useRef(store);
     storeRef.current = store;
 
@@ -291,18 +206,12 @@ function semioInternalStoreFieldBind<T>(opts: StoreFieldBindOptions<T>): () => F
       const s = storeRef.current;
       if (s == null) {
         setValue(undefined);
-        setError(undefined);
-        setLoading(false);
         return;
       }
-      setLoading(true);
-      setError(undefined);
       try {
         setValue(await read(s));
-      } catch (err) {
-        setError(err);
-      } finally {
-        setLoading(false);
+      } catch {
+        setValue(undefined);
       }
     }, [read]);
 
@@ -317,7 +226,7 @@ function semioInternalStoreFieldBind<T>(opts: StoreFieldBindOptions<T>): () => F
       return undefined;
     }, [store, eventKind, refresh]);
 
-    return { value, loading, error, refresh };
+    return value;
   };
 }
 // #endregion 🪝KitFieldBind
@@ -395,7 +304,7 @@ function semioInternalSessionOperationBind<Args extends unknown[] = []>(impl: (s
   };
 }
 
-function useCurrentEntityField<E extends Entity, T>(entity: E | null, read: (entity: E) => Promise<T>, eventKind?: string): FieldReadState<T> {
+function useCurrentEntityField<E extends Entity, T>(entity: E | null, read: (entity: E) => Promise<T>, eventKind?: string): T | undefined {
   return semioInternalFieldBind<E, T>({ get: () => entity, read, eventKind })();
 }
 
@@ -415,24 +324,24 @@ const LocalProviderHandleContext = React.createContext<LocalProvider | null>(nul
 const RemoteProviderHandleContext = React.createContext<RemoteProvider | null>(null);
 const BackboneHandleContext = React.createContext<Backbone | null>(null);
 
-const StoreContext = React.createContext<Readonly<{ id: string }> | null>(null);
-const AlternativeContext = React.createContext<Readonly<{ id: string }> | null>(null);
-const KitContext = React.createContext<Readonly<{ id: string }> | null>(null);
-const DesignContext = React.createContext<Readonly<{ id: string }> | null>(null);
-const TypeContext = React.createContext<Readonly<{ id: string }> | null>(null);
-const AuthorContext = React.createContext<Readonly<{ id: string }> | null>(null);
-const QualityContext = React.createContext<Readonly<{ id: string }> | null>(null);
-const TagContext = React.createContext<Readonly<{ id: string }> | null>(null);
-const ConceptContext = React.createContext<Readonly<{ id: string }> | null>(null);
-const PieceContext = React.createContext<Readonly<{ id: string }> | null>(null);
-const ConnectionContext = React.createContext<Readonly<{ id: string }> | null>(null);
-const PortContext = React.createContext<Readonly<{ id: string }> | null>(null);
-const ConnectorContext = React.createContext<Readonly<{ id: string }> | null>(null);
-const RepresentationContext = React.createContext<Readonly<{ id: string }> | null>(null);
-const RemoteProviderUrlContext = React.createContext<Readonly<{ id: string }> | null>(null);
-const FileBackboneContext = React.createContext<Readonly<{ id: string }> | null>(null);
-const FolderBackboneContext = React.createContext<Readonly<{ id: string }> | null>(null);
-const WebsocketBackboneContext = React.createContext<Readonly<{ id: string }> | null>(null);
+const StoreContext = React.createContext<string | null>(null);
+const AlternativeContext = React.createContext<string | null>(null);
+const KitContext = React.createContext<string | null>(null);
+const DesignContext = React.createContext<string | null>(null);
+const TypeContext = React.createContext<string | null>(null);
+const AuthorContext = React.createContext<string | null>(null);
+const QualityContext = React.createContext<string | null>(null);
+const TagContext = React.createContext<string | null>(null);
+const ConceptContext = React.createContext<string | null>(null);
+const PieceContext = React.createContext<string | null>(null);
+const ConnectionContext = React.createContext<string | null>(null);
+const PortContext = React.createContext<string | null>(null);
+const ConnectorContext = React.createContext<string | null>(null);
+const RepresentationContext = React.createContext<string | null>(null);
+const RemoteProviderUrlContext = React.createContext<string | null>(null);
+const FileBackboneContext = React.createContext<string | null>(null);
+const FolderBackboneContext = React.createContext<string | null>(null);
+const WebsocketBackboneContext = React.createContext<string | null>(null);
 
 const WipMarkerContext = React.createContext(false);
 const StageMarkerContext = React.createContext(false);
@@ -467,8 +376,7 @@ export function StoreContextProvider(props: StoreContextProviderProps): React.Re
   const session = React.useContext(SessionHandleContext);
   if (session == null) throw new Error("semio/react: StoreContextProvider requires SessionContextProvider.");
   const store = React.useMemo(() => session.store(props.id), [session, props.id]);
-  const idRow = React.useMemo(() => ({ id: props.id }), [props.id]);
-  return React.createElement(StoreHandleContext.Provider, { value: store }, React.createElement(StoreContext.Provider, { value: idRow }, props.children));
+  return React.createElement(StoreHandleContext.Provider, { value: store }, React.createElement(StoreContext.Provider, { value: props.id }, props.children));
 }
 
 export function LocalProviderContextProvider(props: Readonly<{ children: ReactNode }>): React.ReactElement {
@@ -482,8 +390,7 @@ export function RemoteProviderContextProvider(props: Readonly<{ id: string; chil
   const session = React.useContext(SessionHandleContext);
   if (session == null) throw new Error("semio/react: RemoteProviderContextProvider requires SessionContextProvider.");
   const rp = React.useMemo(() => session.remoteProvider(props.id), [session, props.id]);
-  const idRow = React.useMemo(() => ({ id: props.id }), [props.id]);
-  return React.createElement(RemoteProviderHandleContext.Provider, { value: rp }, React.createElement(RemoteProviderUrlContext.Provider, { value: idRow }, props.children));
+  return React.createElement(RemoteProviderHandleContext.Provider, { value: rp }, React.createElement(RemoteProviderUrlContext.Provider, { value: props.id }, props.children));
 }
 
 export function WipContextProvider(props: Readonly<{ children: ReactNode }>): React.ReactElement {
@@ -518,22 +425,19 @@ export function AlternativeContextProvider(props: Readonly<{ id: string; childre
   const graph = React.useContext(GraphHandleContext);
   if (graph == null) throw new Error("semio/react: AlternativeContextProvider requires a graph tier provider.");
   const alt = React.useMemo(() => graph.alternative(props.id), [graph, props.id]);
-  const idRow = React.useMemo(() => ({ id: props.id }), [props.id]);
-  return React.createElement(AlternativeHandleContext.Provider, { value: alt }, React.createElement(AlternativeContext.Provider, { value: idRow }, props.children));
+  return React.createElement(AlternativeHandleContext.Provider, { value: alt }, React.createElement(AlternativeContext.Provider, { value: props.id }, props.children));
 }
 
 export function KitContextProvider(props: Readonly<{ id: string; children: ReactNode }>): React.ReactElement {
   const store = React.useContext(StoreHandleContext);
   if (store == null) throw new Error("semio/react: KitContextProvider requires StoreContextProvider.");
   const kit = React.useMemo(() => new Kit(store.session, props.id, store.id), [store.session, store.id, props.id]);
-  const idRow = React.useMemo(() => ({ id: props.id }), [props.id]);
-  return React.createElement(KitHandleContext.Provider, { value: kit }, React.createElement(KitContext.Provider, { value: idRow }, props.children));
+  return React.createElement(KitHandleContext.Provider, { value: kit }, React.createElement(KitContext.Provider, { value: props.id }, props.children));
 }
 
-function mkIdProvider(C: React.Context<Readonly<{ id: string }> | null>) {
+function mkIdProvider(C: React.Context<string | null>) {
   return function IdCtxProvider(props: Readonly<{ id: string; children: ReactNode }>): React.ReactElement {
-    const v = React.useMemo(() => ({ id: props.id }), [props.id]);
-    return React.createElement(C.Provider, { value: v }, props.children);
+    return React.createElement(C.Provider, { value: props.id }, props.children);
   };
 }
 
@@ -554,8 +458,7 @@ export function FileBackboneContextProvider(props: Readonly<{ id: string; childr
   const lp = React.useContext(LocalProviderHandleContext);
   if (session == null || lp == null) throw new Error("semio/react: FileBackboneContextProvider requires Session + LocalProvider.");
   const bb = React.useMemo(() => new Backbone(session, props.id, lp), [session, props.id, lp]);
-  const idRow = React.useMemo(() => ({ id: props.id }), [props.id]);
-  return React.createElement(BackboneHandleContext.Provider, { value: bb }, React.createElement(FileBackboneContext.Provider, { value: idRow }, props.children));
+  return React.createElement(BackboneHandleContext.Provider, { value: bb }, React.createElement(FileBackboneContext.Provider, { value: props.id }, props.children));
 }
 
 export function FolderBackboneContextProvider(props: Readonly<{ id: string; children: ReactNode }>): React.ReactElement {
@@ -563,8 +466,7 @@ export function FolderBackboneContextProvider(props: Readonly<{ id: string; chil
   const lp = React.useContext(LocalProviderHandleContext);
   if (session == null || lp == null) throw new Error("semio/react: FolderBackboneContextProvider requires Session + LocalProvider.");
   const bb = React.useMemo(() => new Backbone(session, props.id, lp), [session, props.id, lp]);
-  const idRow = React.useMemo(() => ({ id: props.id }), [props.id]);
-  return React.createElement(BackboneHandleContext.Provider, { value: bb }, React.createElement(FolderBackboneContext.Provider, { value: idRow }, props.children));
+  return React.createElement(BackboneHandleContext.Provider, { value: bb }, React.createElement(FolderBackboneContext.Provider, { value: props.id }, props.children));
 }
 
 export function WebsocketBackboneContextProvider(props: Readonly<{ id: string; children: ReactNode }>): React.ReactElement {
@@ -572,8 +474,7 @@ export function WebsocketBackboneContextProvider(props: Readonly<{ id: string; c
   const rp = React.useContext(RemoteProviderHandleContext);
   if (session == null || rp == null) throw new Error("semio/react: WebsocketBackboneContextProvider requires Session + RemoteProvider.");
   const bb = React.useMemo(() => new Backbone(session, props.id, rp), [session, props.id, rp]);
-  const idRow = React.useMemo(() => ({ id: props.id }), [props.id]);
-  return React.createElement(BackboneHandleContext.Provider, { value: bb }, React.createElement(WebsocketBackboneContext.Provider, { value: idRow }, props.children));
+  return React.createElement(BackboneHandleContext.Provider, { value: bb }, React.createElement(WebsocketBackboneContext.Provider, { value: props.id }, props.children));
 }
 
 export function PositionContextProvider(props: Readonly<{ children: ReactNode }>): React.ReactElement {
@@ -589,7 +490,8 @@ export function OriginContextProvider(props: Readonly<{ children: ReactNode }>):
   return React.createElement(OriginMarkerContext.Provider, { value: true }, props.children);
 }
 
-function useJsStore(): Store {
+/** @emoji 🏪 Active {@link Store} branch (requires {@link StoreContextProvider}). */
+export function useJsStore(): Store {
   const s = React.useContext(StoreHandleContext);
   if (s == null) throw new Error("semio/react: useJsStore requires StoreContextProvider id={…}.");
   return s;
@@ -601,10 +503,10 @@ function useJsSession(): Session {
   return s;
 }
 
-function readOptionalId(ctx: React.Context<Readonly<{ id: string }> | null>, override?: string): string | null {
-  const row = React.useContext(ctx);
-  const id = override ?? row?.id ?? null;
-  return id == null || id === "" ? null : id;
+function readOptionalId(ctx: React.Context<string | null>, override?: string): string | null {
+  const fromCtx = React.useContext(ctx);
+  const rid = override ?? fromCtx;
+  return rid == null || rid === "" ? null : rid;
 }
 
 function resolveKit(id?: string): Kit | null {
