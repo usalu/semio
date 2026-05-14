@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 /**
- * 🗄️ Cross-platform Neo4j MCP launcher with local Bolt defaults.
+ * 🗄️ Cross-platform Neo4j MCP launcher; defaults Bolt to localhost and graph database `semio`.
  */
 import { spawnSync } from "node:child_process";
 
@@ -18,7 +18,7 @@ const result = spawnSync("uvx", ["mcp-neo4j-cypher", ...args], {
     NEO4J_URI: process.env.NEO4J_URI || "bolt://localhost:7687",
     NEO4J_USERNAME: process.env.NEO4J_USERNAME || "neo4j",
     NEO4J_PASSWORD: process.env.NEO4J_PASSWORD || "password",
-    NEO4J_DATABASE: process.env.NEO4J_DATABASE || "neo4j",
+    NEO4J_DATABASE: process.env.NEO4J_DATABASE || "semio",
     NEO4J_TELEMETRY: process.env.NEO4J_TELEMETRY || "false",
   },
 });

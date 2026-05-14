@@ -105,6 +105,7 @@ configure_neo4j_compose_env() {
 export NEO4J_URI=bolt://localhost:7687
 export NEO4J_USERNAME=neo4j
 export NEO4J_PASSWORD=password
+export NEO4J_DATABASE=semio
 export NEO4J_TELEMETRY=false
 NEO4JPROFILE
   sudo chmod 0644 "$profile_script" || true
@@ -131,11 +132,29 @@ BASHRC
 configure_neo4j_compose_env
 #endregion 🔖Neo4jEnv
 #region 🗄️Neo4jService
+migrate_neo4j_community_graph_semio() {
+  local databases="/var/lib/neo4j/data/databases"
+  if [ ! -d "$databases" ]; then
+    return 0
+  fi
+  if [ -d "${databases}/semio" ]; then
+    return 0
+  fi
+  if [ ! -d "${databases}/neo4j" ]; then
+    return 0
+  fi
+  echo "🧾 Neo4j Community: clearing /var/lib/neo4j/data so the sole standard database is named semio (replacing legacy neo4j)."
+  sudo neo4j stop >/dev/null 2>&1 || true
+  sudo rm -rf /var/lib/neo4j/data/*
+}
+
 configure_neo4j_server() {
   if ! command -v neo4j >/dev/null 2>&1; then
     echo "⚠️ Neo4j is not installed in this devcontainer image."
     return 1
   fi
+
+  migrate_neo4j_community_graph_semio
 
   local conf="/etc/neo4j/neo4j.conf"
   sudo mkdir -p /var/lib/neo4j/data /var/log/neo4j /var/run/neo4j
@@ -158,6 +177,7 @@ configure_neo4j_server() {
   set_neo4j_conf_value "server.directories.import" "/workspaces/semio"
   set_neo4j_conf_value "dbms.security.procedures.allowlist" "apoc.*"
   set_neo4j_conf_value "dbms.security.procedures.unrestricted" "apoc.*"
+  set_neo4j_conf_value "initial.dbms.default_database" "semio"
 
   sudo tee /etc/neo4j/apoc.conf >/dev/null <<'APOCCONF'
 apoc.export.file.enabled=true
@@ -224,37 +244,41 @@ neo4j_schema_cypher_uri() {
   printf 'file:///workspaces/semio/.repo/\\uD83D\\uDEC2/%s.cypher' "$technology"
 }
 
-import_neo4j_schema_files_if_empty() {
+reload_neo4j_from_repo_cypher() {
+  local graph_db="${NEO4J_DATABASE:-semio}"
   if ! command -v cypher-shell >/dev/null 2>&1; then
     return 0
   fi
-  local node_count
-  node_count="$(cypher-shell -a bolt://localhost:7687 -u "${NEO4J_USERNAME:-neo4j}" -p "${NEO4J_PASSWORD:-password}" --format plain 'MATCH (n) RETURN count(n) AS count;' 2>/dev/null | tail -n 1 | tr -d '[:space:]')" || return 0
-  if [ "$node_count" != "0" ]; then
-    echo "✅ Neo4j contains data; leaving schema/cypher imports untouched."
+  if ! cypher-shell -a bolt://localhost:7687 -u "${NEO4J_USERNAME:-neo4j}" -p "${NEO4J_PASSWORD:-password}" -d "$graph_db" --format plain "RETURN 1 AS ok;" >/dev/null 2>&1; then
+    echo "⚠️ Neo4j Bolt unreachable for database ${graph_db}; skip cypher reload from repo."
     return 0
   fi
   local apoc_procedure_count
-  apoc_procedure_count="$(cypher-shell -a bolt://localhost:7687 -u "${NEO4J_USERNAME:-neo4j}" -p "${NEO4J_PASSWORD:-password}" --format plain "SHOW PROCEDURES YIELD name WHERE name IN ['apoc.cypher.runFile', 'apoc.export.cypher.query'] RETURN count(name) AS count;" 2>/dev/null | tail -n 1 | tr -d '[:space:]')" || return 0
+  apoc_procedure_count="$(cypher-shell -a bolt://localhost:7687 -u "${NEO4J_USERNAME:-neo4j}" -p "${NEO4J_PASSWORD:-password}" -d "$graph_db" --format plain "SHOW PROCEDURES YIELD name WHERE name IN ['apoc.cypher.runFile', 'apoc.export.cypher.query'] RETURN count(name) AS count;" 2>/dev/null | tail -n 1 | tr -d '[:space:]')" || return 0
   if [ "$apoc_procedure_count" != "2" ]; then
-    echo "⚠️ Neo4j APOC Cypher persistence skipped because required APOC procedures are unavailable."
+    echo "⚠️ Neo4j APOC Cypher reload skipped because required APOC procedures are unavailable."
     return 0
   fi
+  echo "🧾 Neo4j: clearing graph in database ${graph_db}, then loading handcrafted .repo/🛂/*.cypher …"
+  cypher-shell -a bolt://localhost:7687 -u "${NEO4J_USERNAME:-neo4j}" -p "${NEO4J_PASSWORD:-password}" -d "$graph_db" --format plain "MATCH (n) DETACH DELETE n;" >/dev/null || {
+    echo "⚠️ Neo4j wipe failed; skipping cypher file import."
+    return 0
+  }
   local imported=0
   for technology in semio elements coda reuse; do
     local schema_file="$WORKSPACE/.repo/🛂/$technology.cypher"
     local schema_uri
     schema_uri="$(neo4j_schema_cypher_uri "$technology")"
     if grep -Ev '^[[:space:]]*(//|:|$)' "$schema_file" >/dev/null 2>&1; then
-      cypher-shell -a bolt://localhost:7687 -u "${NEO4J_USERNAME:-neo4j}" -p "${NEO4J_PASSWORD:-password}" "CALL apoc.cypher.runFile('$schema_uri') YIELD row RETURN count(row) AS rows;" >/dev/null
+      cypher-shell -a bolt://localhost:7687 -u "${NEO4J_USERNAME:-neo4j}" -p "${NEO4J_PASSWORD:-password}" -d "$graph_db" "CALL apoc.cypher.runFile('$schema_uri') YIELD row RETURN count(row) AS rows;" >/dev/null
       imported=$((imported + 1))
     fi
   done
-  echo "✅ Neo4j APOC Cypher persistence ready ($imported schema files imported into empty DB)."
+  echo "✅ Neo4j reloaded database ${graph_db} from repo ($imported non-empty cypher files applied)."
 }
 
 ensure_neo4j_schema_files
-import_neo4j_schema_files_if_empty || echo "⚠️ Neo4j APOC Cypher import skipped."
+reload_neo4j_from_repo_cypher || echo "⚠️ Neo4j APOC Cypher reload skipped."
 #endregion 🧾Neo4jCypherPersistence
 #region 🔖ClaudeAuth
 CLAUDE_HOME="/home/vscode"

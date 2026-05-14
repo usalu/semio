@@ -358,7 +358,7 @@ function Invoke-Neo4jCypher {
     param(
         [string]$RepoRoot,
         [string]$Cypher,
-        [string]$Database = "neo4j",
+        [string]$Database = "semio",
         [string]$RequiredOutputPattern = ""
     )
 
@@ -520,6 +520,7 @@ function Install-Neo4jDesktopApoc {
     Set-TextSetting -Path (Join-Path $conf "neo4j.conf") -Key "dbms.security.procedures.allowlist" -Value "apoc.*"
     Set-TextSetting -Path (Join-Path $conf "neo4j.conf") -Key "dbms.security.procedures.unrestricted" -Value "apoc.*"
     Set-TextSetting -Path (Join-Path $conf "neo4j.conf") -Key "server.directories.import" -Value (($RepoRoot -replace "\\", "/"))
+    Set-TextSetting -Path (Join-Path $conf "neo4j.conf") -Key "initial.dbms.default_database" -Value "semio"
     Set-TextSetting -Path (Join-Path $conf "apoc.conf") -Key "apoc.export.file.enabled" -Value "true"
     Set-TextSetting -Path (Join-Path $conf "apoc.conf") -Key "apoc.import.file.enabled" -Value "true"
     Set-TextSetting -Path (Join-Path $conf "apoc.conf") -Key "apoc.import.file.use_neo4j_config" -Value "false"
@@ -547,6 +548,19 @@ function Install-Neo4jDesktopApoc {
     }
 
     return $true
+}
+
+function Resolve-NativeNeo4jGraphDatabase {
+    param([string]$RepoRoot)
+
+    $preferred = if ($env:NEO4J_DATABASE) { $env:NEO4J_DATABASE } else { "semio" }
+    if (Invoke-Neo4jCypher -RepoRoot $RepoRoot -Database $preferred -Cypher "RETURN 1 AS ok;") {
+        return $preferred
+    }
+    if ($preferred -ne "neo4j" -and (Invoke-Neo4jCypher -RepoRoot $RepoRoot -Database "neo4j" -Cypher "RETURN 1 AS ok;")) {
+        return "neo4j"
+    }
+    return $preferred
 }
 
 function Get-JavaMajorVersion {
@@ -668,10 +682,14 @@ function Ensure-NativeNeo4j {
     }
 
     Ensure-NativeNeo4jTools -RepoRoot $RepoRoot | Out-Null
-    $apocReady = Invoke-Neo4jCypher -RepoRoot $RepoRoot -Database "neo4j" -Cypher "SHOW PROCEDURES YIELD name WHERE name IN ['apoc.cypher.runFile', 'apoc.export.cypher.query'] RETURN count(name) AS count;" -RequiredOutputPattern "\b2\b"
+    $graphDb = Resolve-NativeNeo4jGraphDatabase -RepoRoot $RepoRoot
+    Write-Step "Neo4j graph database for imports: $graphDb"
+
+    $apocReady = Invoke-Neo4jCypher -RepoRoot $RepoRoot -Database $graphDb -Cypher "SHOW PROCEDURES YIELD name WHERE name IN ['apoc.cypher.runFile', 'apoc.export.cypher.query'] RETURN count(name) AS count;" -RequiredOutputPattern "\b2\b"
     if (-not $apocReady) {
         if (Install-Neo4jDesktopApoc -RepoRoot $RepoRoot) {
-            $apocReady = Invoke-Neo4jCypher -RepoRoot $RepoRoot -Database "neo4j" -Cypher "SHOW PROCEDURES YIELD name WHERE name IN ['apoc.cypher.runFile', 'apoc.export.cypher.query'] RETURN count(name) AS count;" -RequiredOutputPattern "\b2\b"
+            $graphDb = Resolve-NativeNeo4jGraphDatabase -RepoRoot $RepoRoot
+            $apocReady = Invoke-Neo4jCypher -RepoRoot $RepoRoot -Database $graphDb -Cypher "SHOW PROCEDURES YIELD name WHERE name IN ['apoc.cypher.runFile', 'apoc.export.cypher.query'] RETURN count(name) AS count;" -RequiredOutputPattern "\b2\b"
         }
         if (-not $apocReady) {
             Write-Step "Neo4j is reachable, but APOC is not ready. In Neo4j Desktop, install/enable APOC for the local semio DBMS and restart it."
@@ -679,21 +697,21 @@ function Ensure-NativeNeo4j {
         }
     }
 
-    foreach ($technology in $technologies) {
-        $databaseCreated = Invoke-Neo4jCypher -RepoRoot $RepoRoot -Database "system" -Cypher "CREATE DATABASE $technology IF NOT EXISTS;"
-        if ($databaseCreated) {
-            Write-Step "Neo4j database ready: $technology."
-        } else {
-            Write-Step "Neo4j database $technology was not created; using the reachable default database for this setup."
-        }
+    Invoke-Neo4jCypher -RepoRoot $RepoRoot -Database "system" -Cypher "CREATE DATABASE semio IF NOT EXISTS;" | Out-Null
+    $graphDb = Resolve-NativeNeo4jGraphDatabase -RepoRoot $RepoRoot
+    Write-Step "Neo4j graph database for imports (after optional CREATE DATABASE semio): $graphDb"
 
+    Write-Step "Neo4j: clearing graph in $graphDb, then loading handcrafted .repo/🛂/*.cypher …"
+    Invoke-Neo4jCypher -RepoRoot $RepoRoot -Database $graphDb -Cypher "MATCH (n) DETACH DELETE n;" | Out-Null
+
+    foreach ($technology in $technologies) {
         $schemaFile = Join-Path $RepoRoot ".repo\🛂\$technology.cypher"
         if (Test-Path -LiteralPath $schemaFile) {
             $meaningfulLine = Get-Content -LiteralPath $schemaFile | Where-Object { $_ -notmatch '^\s*(//|:|$)' } | Select-Object -First 1
             if ($meaningfulLine) {
                 $schemaUri = Get-Neo4jSchemaUri -RepoRoot $RepoRoot -Technology $technology
-                Invoke-Neo4jCypher -RepoRoot $RepoRoot -Database "neo4j" -Cypher "CALL apoc.cypher.runFile('$schemaUri') YIELD row RETURN count(row) AS rows;" | Out-Null
-                Write-Step "Neo4j schema imported: $technology."
+                Invoke-Neo4jCypher -RepoRoot $RepoRoot -Database $graphDb -Cypher "CALL apoc.cypher.runFile('$schemaUri') YIELD row RETURN count(row) AS rows;" | Out-Null
+                Write-Step "Neo4j schema imported into ${graphDb}: $technology."
             }
         }
     }
@@ -783,7 +801,8 @@ Set-UserEnvironmentVariable -Name "EDITOR" -Value "code --wait"
 Set-UserEnvironmentVariable -Name "NEO4J_URI" -Value "bolt://localhost:7687"
 Set-UserEnvironmentVariable -Name "NEO4J_USERNAME" -Value "neo4j"
 Set-UserEnvironmentVariable -Name "NEO4J_PASSWORD" -Value "password"
-Set-UserEnvironmentVariable -Name "NEO4J_TELEMETRY" -Value "false"
+    Set-UserEnvironmentVariable -Name "NEO4J_TELEMETRY" -Value "false"
+    Set-UserEnvironmentVariable -Name "NEO4J_DATABASE" -Value "semio"
 Sync-CodexMcpConfig -RepoRoot $repoRoot
 #endregion 🗂️UserState
 

@@ -41,7 +41,7 @@ append_neo4j_env_block() {
     printf '%s\n' "export NEO4J_URI=bolt://localhost:7687"
     printf '%s\n' "export NEO4J_USERNAME=neo4j"
     printf '%s\n' "export NEO4J_PASSWORD=password"
-    printf '%s\n' "export NEO4J_TELEMETRY=false"
+    printf '%s\n' "export NEO4J_DATABASE=semio"
     printf '%s\n' "#endregion 🔌Neo4j"
   } >>"$f"
   log "Appended Neo4j MCP env block to $f"
@@ -64,6 +64,7 @@ configure_neo4j_shell_env() {
   export NEO4J_URI="bolt://localhost:7687"
   export NEO4J_USERNAME="neo4j"
   export NEO4J_PASSWORD="password"
+  export NEO4J_DATABASE="semio"
   export NEO4J_TELEMETRY="false"
 }
 #endregion 🔖Neo4jEnv
@@ -153,6 +154,19 @@ set_text_setting() {
   fi
 }
 
+resolve_native_graph_database() {
+  local preferred="${NEO4J_DATABASE:-semio}"
+  if run_cypher "$preferred" "RETURN 1;"; then
+    printf '%s\n' "$preferred"
+    return 0
+  fi
+  if [ "$preferred" != "neo4j" ] && run_cypher neo4j "RETURN 1;"; then
+    printf '%s\n' "neo4j"
+    return 0
+  fi
+  printf '%s\n' "$preferred"
+}
+
 install_neo4j_desktop_apoc() {
   local dbms_home
   dbms_home="$(detect_neo4j_desktop_dbms_home)"
@@ -176,6 +190,7 @@ install_neo4j_desktop_apoc() {
   set_text_setting "$dbms_home/conf/neo4j.conf" "dbms.security.procedures.allowlist" "apoc.*"
   set_text_setting "$dbms_home/conf/neo4j.conf" "dbms.security.procedures.unrestricted" "apoc.*"
   set_text_setting "$dbms_home/conf/neo4j.conf" "server.directories.import" "$REPO_ROOT"
+  set_text_setting "$dbms_home/conf/neo4j.conf" "initial.dbms.default_database" "semio"
   set_text_setting "$dbms_home/conf/apoc.conf" "apoc.export.file.enabled" "true"
   set_text_setting "$dbms_home/conf/apoc.conf" "apoc.import.file.enabled" "true"
   set_text_setting "$dbms_home/conf/apoc.conf" "apoc.import.file.use_neo4j_config" "false"
@@ -268,6 +283,7 @@ ensure_native_neo4j_tools() {
   set_conf_value "$conf" "server.directories.import" "$REPO_ROOT"
   set_conf_value "$conf" "dbms.security.procedures.allowlist" "apoc.*"
   set_conf_value "$conf" "dbms.security.procedures.unrestricted" "apoc.*"
+  set_conf_value "$conf" "initial.dbms.default_database" "semio"
   {
     printf '%s\n' "apoc.export.file.enabled=true"
     printf '%s\n' "apoc.import.file.enabled=true"
@@ -289,6 +305,7 @@ set_conf_value() {
 
 ensure_native_neo4j() {
   local runtime_root
+  local graph_db
   if is_neo4j_reachable; then
     log "Neo4j is reachable at bolt://localhost:7687."
   else
@@ -297,26 +314,32 @@ ensure_native_neo4j() {
   fi
 
   runtime_root="$(ensure_native_neo4j_tools)"
-  if ! run_cypher_expect neo4j "SHOW PROCEDURES YIELD name WHERE name IN ['apoc.cypher.runFile', 'apoc.export.cypher.query'] RETURN count(name) AS count;" "\\b2\\b"; then
+  graph_db="$(resolve_native_graph_database)"
+  log "Neo4j graph database for imports: ${graph_db}"
+
+  if ! run_cypher_expect "$graph_db" "SHOW PROCEDURES YIELD name WHERE name IN ['apoc.cypher.runFile', 'apoc.export.cypher.query'] RETURN count(name) AS count;" "\\b2\\b"; then
     install_neo4j_desktop_apoc || true
-    if ! run_cypher_expect neo4j "SHOW PROCEDURES YIELD name WHERE name IN ['apoc.cypher.runFile', 'apoc.export.cypher.query'] RETURN count(name) AS count;" "\\b2\\b"; then
+    graph_db="$(resolve_native_graph_database)"
+    if ! run_cypher_expect "$graph_db" "SHOW PROCEDURES YIELD name WHERE name IN ['apoc.cypher.runFile', 'apoc.export.cypher.query'] RETURN count(name) AS count;" "\\b2\\b"; then
       log "Neo4j is reachable, but APOC is not ready. In Neo4j Desktop, install/enable APOC for the local semio DBMS and restart it."
       return 0
     fi
   fi
 
+  run_cypher system "CREATE DATABASE semio IF NOT EXISTS;" >/dev/null 2>&1 || true
+  graph_db="$(resolve_native_graph_database)"
+  log "Neo4j graph database for imports (after optional CREATE DATABASE semio): ${graph_db}"
+
+  log "Neo4j: clearing graph in ${graph_db}, then loading handcrafted .repo/🛂/*.cypher …"
+  run_cypher "$graph_db" "MATCH (n) DETACH DELETE n" || log "Neo4j wipe skipped (failed)."
+
   for technology in semio elements coda reuse; do
-    if run_cypher system "CREATE DATABASE ${technology} IF NOT EXISTS;"; then
-      log "Neo4j database ready: ${technology}."
-    else
-      log "Neo4j database ${technology} was not created; using the reachable default database for this setup."
-    fi
     local schema_file="$REPO_ROOT/.repo/🛂/${technology}.cypher"
     if [ -f "$schema_file" ] && grep -Eqv '^[[:space:]]*(//|:|$)' "$schema_file"; then
       local schema_uri
       schema_uri="$(neo4j_schema_cypher_uri "$technology")"
-      run_cypher neo4j "CALL apoc.cypher.runFile('$schema_uri') YIELD row RETURN count(row) AS rows;" || true
-      log "Neo4j schema imported: ${technology}."
+      run_cypher "$graph_db" "CALL apoc.cypher.runFile('$schema_uri') YIELD row RETURN count(row) AS rows;" || true
+      log "Neo4j schema imported into ${graph_db}: ${technology}."
     fi
   done
 }

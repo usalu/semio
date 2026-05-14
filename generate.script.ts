@@ -1,492 +1,368 @@
 #!/usr/bin/env bun
-/** 🗄️ Seeds the semio Neo4j schema graph from the schema sketch and writes a replayable dump to .repo/🛂/semio.cypher. */
+/**
+ * 🗄️ Builds `.repo/🛂/semio.cypher` from `semio/client/schema/semio/schema.yaml` for Neo4j Bloom (minimal props, no schemaTag/schemaSource/moduleName).
+ */
 import { spawnSync } from "node:child_process";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
+import { isAlias, parseDocument, YAMLMap, YAMLSeq, type Document, type Node, type Pair } from "yaml";
 
 //#region 🧭Constants
 const REPO_ROOT = import.meta.dir;
-const SCHEMA_SOURCE = "semio/dev/schema/neo4j/schema.graphql";
-const OUTPUT_FILE = ".repo/🛂/semio.cypher";
+const SCHEMA_YAML = join(REPO_ROOT, "semio/client/schema/semio/schema.yaml");
+const OUTPUT_FILE = join(REPO_ROOT, ".repo/🛂/semio.cypher");
 const NEO4J_VERSION = "5.26.26";
-const SCHEMA_TAG = "semio-neo4j-schema";
+const MODULE_KEYS = ["general", "domain"] as const;
+const SECTION_KEYS = new Set(["data", "computed", "reference"]);
 //#endregion 🧭Constants
 
-//#region 🧩Kinds
-type SemioFieldKind = "EMBEDDED" | "REFERENCE" | "COMPUTED" | "CACHED";
-type SemioNodeKind = "Module" | "Scalar" | "Interface" | "Class" | "Field" | "Constraint";
-type SemioEntityKind = "Interface" | "Class";
+//#region 🧩YamlHelpers
+function isYamlMap(n: Node | null | undefined): n is YAMLMap {
+  return n instanceof YAMLMap;
+}
 
-type FieldDef = {
-  name: string;
-  kind: SemioFieldKind;
-  targetName: string;
-  isList: boolean;
-};
+function isYamlSeq(n: Node | null | undefined): n is YAMLSeq {
+  return n instanceof YAMLSeq;
+}
 
-type EntityDef = {
-  name: string;
-  kind: SemioEntityKind;
-  moduleName: string;
-  implements: string[];
-  constraints: string[];
-  fields: FieldDef[];
-};
+function pairKey(pair: Pair): string {
+  return String(pair.key);
+}
 
-type ModuleDef = {
-  name: string;
-  scalars: string[];
-  interfaces: EntityDef[];
-  classes: EntityDef[];
-  modules: string[];
-};
-
-type SchemaModel = {
-  modules: ModuleDef[];
-};
-
-type GraphNode = {
-  id: string;
-  label: SemioNodeKind;
-  properties: Record<string, string | boolean>;
-};
-
-type GraphRelationship = {
-  from: string;
-  to: string;
-  kind: string;
-};
-//#endregion 🧩Kinds
-
-//#region 🪄Parsing
-function extractSketchLines(rawSchema: string): string[] {
-  const lines = rawSchema.split(/\r?\n/);
-  const sketchLines: string[] = [];
-  let started = false;
-
-  for (const line of lines) {
-    if (line.startsWith("#")) {
-      started = true;
-      sketchLines.push(line.replace(/^#\s?/, ""));
-      continue;
-    }
-
-    if (!started) {
-      continue;
-    }
-
-    if (!line.trim()) {
-      sketchLines.push("");
-      continue;
-    }
-
-    if (started) {
-      break;
-    }
+function fieldMapIsSectioned(fieldsRoot: YAMLMap): boolean {
+  if (fieldsRoot.items.length === 0) {
+    return false;
   }
-
-  return sketchLines;
+  return fieldsRoot.items.every((p) => SECTION_KEYS.has(pairKey(p)) && isYamlMap(p.value));
 }
 
-function parseAliasList(rawValue: string): string[] {
-  const trimmed = rawValue.trim();
-  if (!trimmed.startsWith("[") || !trimmed.endsWith("]")) {
-    return [];
+function describeFieldValue(value: Node | null): { anchor: string | null; list: boolean } {
+  if (!value) {
+    return { anchor: null, list: false };
   }
-
-  return trimmed
-    .slice(1, -1)
-    .split(",")
-    .map((entry) => normalizeAlias(entry))
-    .filter(Boolean);
-}
-
-function normalizeAlias(rawValue: string): string {
-  return rawValue.trim().replace(/^\*/, "").replace(/^&/, "");
-}
-
-function parseScalarItem(rawLine: string): string {
-  const trimmed = rawLine.trim();
-  return normalizeAlias(trimmed.replace(/^-\s*/, ""));
-}
-
-function parseEntityName(rawLine: string): string {
-  const key = rawLine.split(":", 1)[0] ?? "";
-  return key.trim();
-}
-
-function parseConstraintDescription(rawLine: string): string {
-  const trimmed = rawLine.trim().replace(/^-\s*/, "");
-  const withoutAnchor = trimmed.replace(/^&[^\s]+\s+/, "");
-  const quotedMatch = withoutAnchor.match(/^"(.+)"$/);
-  return quotedMatch ? quotedMatch[1] : withoutAnchor;
-}
-
-function mapFieldKind(rawKind: string): SemioFieldKind {
-  const normalized = rawKind.trim().toLowerCase();
-  if (normalized === "reference") {
-    return "REFERENCE";
+  if (isAlias(value)) {
+    return { anchor: value.source, list: false };
   }
-  if (normalized === "computed") {
-    return "COMPUTED";
+  if (isYamlSeq(value)) {
+    const first = value.items[0];
+    if (first && isAlias(first)) {
+      return { anchor: first.source, list: true };
+    }
+    return { anchor: null, list: true };
   }
-  if (normalized === "cached") {
-    return "CACHED";
-  }
-
-  return "EMBEDDED";
+  return { anchor: null, list: false };
 }
 
-function parseField(rawLine: string, kind: SemioFieldKind): FieldDef {
-  const [rawName, rawTarget] = rawLine.split(":", 2);
-  if (!rawName || !rawTarget) {
-    throw new Error(`Invalid field declaration: ${rawLine}`);
-  }
-
-  const targetValue = rawTarget.trim();
-  const isList = targetValue.startsWith("[") && targetValue.endsWith("]");
-  const targetName = isList ? parseAliasList(targetValue)[0] ?? "" : normalizeAlias(targetValue);
-
-  return {
-    name: rawName.trim(),
-    kind,
-    targetName,
-    isList,
-  };
-}
-
-function parseSchemaSketch(rawSchema: string): SchemaModel {
-  const lines = extractSketchLines(rawSchema);
-  const rootModule: ModuleDef = {
-    name: "schema",
-    scalars: [],
-    interfaces: [],
-    classes: [],
-    modules: ["general", "domain"],
-  };
-  const modules = new Map<string, ModuleDef>([[rootModule.name, rootModule]]);
-  let currentModule: ModuleDef | null = null;
-  let currentSection: "scalars" | "interfaces" | "classes" | null = null;
-  let currentEntity: EntityDef | null = null;
-  let currentFieldKind: SemioFieldKind | null = null;
-  let inConstraints = false;
-  let inFields = false;
-
-  for (const rawLine of lines) {
-    if (!rawLine.trim()) {
-      continue;
-    }
-
-    const indent = rawLine.length - rawLine.trimStart().length;
-    const trimmed = rawLine.trim();
-
-    if (indent === 0 && trimmed === "schema:") {
-      currentModule = null;
-      currentSection = null;
-      currentEntity = null;
-      currentFieldKind = null;
-      inConstraints = false;
-      inFields = false;
-      continue;
-    }
-
-    if (indent === 2 && /^(general|domain):/.test(trimmed)) {
-      const moduleName = parseEntityName(trimmed);
-      const moduleDef: ModuleDef = {
-        name: moduleName,
-        scalars: [],
-        interfaces: [],
-        classes: [],
-        modules: [],
-      };
-      modules.set(moduleName, moduleDef);
-      currentModule = moduleDef;
-      currentSection = null;
-      currentEntity = null;
-      currentFieldKind = null;
-      inConstraints = false;
-      inFields = false;
-      continue;
-    }
-
-    if (!currentModule) {
-      continue;
-    }
-
-    if (indent === 4 && /^(scalars|interfaces|classes):/.test(trimmed)) {
-      currentSection = parseEntityName(trimmed) as "scalars" | "interfaces" | "classes";
-      currentEntity = null;
-      currentFieldKind = null;
-      inConstraints = false;
-      inFields = false;
-      continue;
-    }
-
-    if (currentSection === "scalars" && indent === 6 && trimmed.startsWith("- ")) {
-      currentModule.scalars.push(parseScalarItem(trimmed));
-      continue;
-    }
-
-    if ((currentSection === "interfaces" || currentSection === "classes") && indent === 6 && !trimmed.startsWith("- ")) {
-      currentEntity = {
-        name: parseEntityName(trimmed),
-        kind: currentSection === "interfaces" ? "Interface" : "Class",
-        moduleName: currentModule.name,
-        implements: [],
-        constraints: [],
-        fields: [],
-      };
-      if (currentSection === "interfaces") {
-        currentModule.interfaces.push(currentEntity);
-      } else {
-        currentModule.classes.push(currentEntity);
+function collectFieldsFromMap(
+  moduleName: string,
+  ownerKind: string,
+  ownerName: string,
+  ownerId: string,
+  ownerLabel: string,
+  fieldsRoot: YAMLMap,
+  out: FieldEmit[],
+): void {
+  if (fieldMapIsSectioned(fieldsRoot)) {
+    for (const sec of fieldsRoot.items) {
+      const section = pairKey(sec);
+      if (!isYamlMap(sec.value)) {
+        continue;
       }
-      currentFieldKind = null;
-      inConstraints = false;
-      inFields = false;
-      continue;
+      for (const fp of sec.value.items) {
+        const fname = pairKey(fp);
+        const spec = describeFieldValue(fp.value);
+        const path = `${section}.${fname}`;
+        const id = fieldId(moduleName, ownerKind, ownerName, [section, fname]);
+        out.push({
+          id,
+          ownerId,
+          ownerLabel,
+          name: fname,
+          path,
+          list: spec.list,
+          refId: spec.anchor ? resolveRef(moduleName, spec.anchor).id : null,
+          refLabel: spec.anchor ? resolveRef(moduleName, spec.anchor).label : null,
+        });
+      }
     }
-
-    if (!currentEntity) {
-      continue;
-    }
-
-    if (indent === 8 && trimmed.startsWith("implements:")) {
-      currentEntity.implements = parseAliasList(trimmed.split(":", 2)[1] ?? "");
-      continue;
-    }
-
-    if (indent === 8 && /^(contraints|constraints):$/.test(trimmed)) {
-      inConstraints = true;
-      inFields = false;
-      currentFieldKind = null;
-      continue;
-    }
-
-    if (indent === 8 && trimmed === "fields:") {
-      inFields = true;
-      inConstraints = false;
-      currentFieldKind = null;
-      continue;
-    }
-
-    if (inConstraints && indent === 10 && trimmed.startsWith("- ")) {
-      currentEntity.constraints.push(parseConstraintDescription(trimmed));
-      continue;
-    }
-
-    if (inFields && indent === 10 && trimmed.endsWith(":")) {
-      currentFieldKind = mapFieldKind(trimmed.slice(0, -1));
-      continue;
-    }
-
-    if (inFields && currentFieldKind && indent === 12) {
-      currentEntity.fields.push(parseField(trimmed, currentFieldKind));
-    }
+    return;
   }
 
-  return {
-    modules: [rootModule, ...[...modules.values()].filter((moduleDef) => moduleDef.name !== rootModule.name)],
-  };
-}
-//#endregion 🪄Parsing
-
-//#region 🏗️GraphBuild
-function emojiForLabel(label: SemioNodeKind, name: string): string {
-  if (label === "Module") {
-    if (name === "schema") {
-      return "🗺️";
+  for (const pair of fieldsRoot.items) {
+    const k = pairKey(pair);
+    const v = pair.value;
+    if (k === "implements" || k === "contraints" || k === "constraints" || k === "is") {
+      continue;
     }
-    if (name === "general") {
-      return "🧰";
-    }
-    return "🏛️";
-  }
-  if (label === "Scalar") {
-    return "🔣";
-  }
-  if (label === "Interface") {
-    return "🧩";
-  }
-  if (label === "Class") {
-    return "🧱";
-  }
-  if (label === "Field") {
-    return "🏷️";
-  }
-  return "📏";
-}
-
-function nodeId(label: SemioNodeKind, name: string): string {
-  return `${label.toLowerCase()}:${name}`;
-}
-
-function entityNodeId(entity: EntityDef): string {
-  return nodeId(entity.kind, entity.name);
-}
-
-function fieldNodeId(entity: EntityDef, field: FieldDef): string {
-  return `field:${entity.kind.toLowerCase()}:${entity.name}:${field.kind.toLowerCase()}:${field.name}`;
-}
-
-function constraintNodeId(entity: EntityDef, index: number): string {
-  return `constraint:${entity.kind.toLowerCase()}:${entity.name}:${index + 1}`;
-}
-
-function buildGraph(model: SchemaModel): { nodes: GraphNode[]; relationships: GraphRelationship[] } {
-  const nodes = new Map<string, GraphNode>();
-  const relationships = new Map<string, GraphRelationship>();
-  const knownTargets = new Map<string, string>();
-
-  const addNode = (label: SemioNodeKind, name: string, properties: Record<string, string | boolean> = {}): string => {
-    const id = nodeId(label, name);
-    nodes.set(id, {
+    const spec = describeFieldValue(v);
+    const path = k;
+    const id = fieldId(moduleName, ownerKind, ownerName, [k]);
+    out.push({
       id,
-      label,
-      properties: {
-        id,
-        name,
-        emoji: emojiForLabel(label, name),
-        schemaSource: SCHEMA_SOURCE,
-        schemaTag: SCHEMA_TAG,
-        ...properties,
-      },
+      ownerId,
+      ownerLabel,
+      name: k,
+      path,
+      list: spec.list,
+      refId: spec.anchor ? resolveRef(moduleName, spec.anchor).id : null,
+      refLabel: spec.anchor ? resolveRef(moduleName, spec.anchor).label : null,
     });
-    knownTargets.set(name, id);
-    return id;
-  };
-
-  const addRelationship = (from: string, to: string, kind: string): void => {
-    relationships.set(`${from}|${kind}|${to}`, { from, to, kind });
-  };
-
-  for (const moduleDef of model.modules) {
-    addNode("Module", moduleDef.name);
   }
-
-  for (const moduleDef of model.modules.filter((entry) => entry.name !== "schema")) {
-    addRelationship(nodeId("Module", "schema"), nodeId("Module", moduleDef.name), "HAS");
-  }
-
-  for (const moduleDef of model.modules.filter((entry) => entry.name !== "schema")) {
-    for (const scalarName of moduleDef.scalars) {
-      addNode("Scalar", scalarName, { scalarKind: scalarName });
-      addRelationship(nodeId("Module", moduleDef.name), nodeId("Scalar", scalarName), "HAS");
-    }
-
-    for (const entity of [...moduleDef.interfaces, ...moduleDef.classes]) {
-      const entityId = addNode(entity.kind, entity.name, {
-        moduleName: entity.moduleName,
-        entityKind: entity.kind,
-      });
-      addRelationship(nodeId("Module", moduleDef.name), entityId, "HAS");
-
-      for (const implementedName of entity.implements) {
-        const targetId = knownTargets.get(implementedName) ?? nodeId("Interface", implementedName);
-        addRelationship(entityId, targetId, "IMPLEMENTS");
-      }
-
-      entity.fields.forEach((field, index) => {
-        const fieldId = fieldNodeId(entity, field);
-        nodes.set(fieldId, {
-          id: fieldId,
-          label: "Field",
-          properties: {
-            id: fieldId,
-            name: field.name,
-            emoji: emojiForLabel("Field", field.name),
-            kind: field.kind,
-            targetName: field.targetName,
-            isList: field.isList,
-            ownerName: entity.name,
-            ownerKind: entity.kind,
-            fieldOrder: String(index + 1),
-            schemaSource: SCHEMA_SOURCE,
-            schemaTag: SCHEMA_TAG,
-          },
-        });
-        addRelationship(entityId, fieldId, "HAS");
-
-        const targetId = knownTargets.get(field.targetName);
-        if (targetId) {
-          addRelationship(fieldId, targetId, "TARGETS");
-        }
-      });
-
-      entity.constraints.forEach((description, index) => {
-        const constraintId = constraintNodeId(entity, index);
-        nodes.set(constraintId, {
-          id: constraintId,
-          label: "Constraint",
-          properties: {
-            id: constraintId,
-            name: `${entity.name} constraint ${index + 1}`,
-            emoji: emojiForLabel("Constraint", entity.name),
-            description,
-            ownerName: entity.name,
-            ownerKind: entity.kind,
-            schemaSource: SCHEMA_SOURCE,
-            schemaTag: SCHEMA_TAG,
-          },
-        });
-        addRelationship(entityId, constraintId, "HAS");
-      });
-    }
-  }
-
-  return {
-    nodes: [...nodes.values()].sort((left, right) => left.id.localeCompare(right.id)),
-    relationships: [...relationships.values()].sort((left, right) => {
-      const leftKey = `${left.kind}|${left.from}|${left.to}`;
-      const rightKey = `${right.kind}|${right.from}|${right.to}`;
-      return leftKey.localeCompare(rightKey);
-    }),
-  };
 }
-//#endregion 🏗️GraphBuild
+//#endregion 🧩YamlHelpers
 
-//#region 📝CypherRender
+//#region 📝CypherEmit
 function cypherLiteral(value: string | boolean): string {
   if (typeof value === "boolean") {
     return value ? "true" : "false";
   }
-
   return `'${value.replace(/\\/g, "\\\\").replace(/'/g, "\\'")}'`;
 }
 
-function renderPropertyMap(properties: Record<string, string | boolean>): string {
-  return `{ ${Object.entries(properties)
-    .map(([key, value]) => `${key}: ${cypherLiteral(value)}`)
+function renderPropMap(props: Record<string, string | boolean>): string {
+  return `{ ${Object.entries(props)
+    .map(([k, v]) => `${k}: ${cypherLiteral(v)}`)
     .join(", ")} }`;
 }
 
-function renderCypher(nodes: GraphNode[], relationships: GraphRelationship[]): string {
-  const lines = [
-    "// SPDX-License-Identifier: AGPL-3.0-only",
-    "// Neo4j Cypher persistence for semio.",
-    "// Keep this file replayable with cypher-shell or APOC.",
-    `// Generated by bun ./generate.script.ts from ${SCHEMA_SOURCE}.`,
+/** Neo4j labels that collide with Cypher keywords use backticks. */
+function labelToken(label: string): string {
+  return ["interface", "class", "command"].includes(label) ? `\`${label}\`` : label;
+}
+
+function mergeNode(label: string, id: string, props: Record<string, string | boolean>): string[] {
+  const t = labelToken(label);
+  return [`MERGE (n:${t} { id: ${cypherLiteral(id)} })`, `SET n = ${renderPropMap({ id, ...props })};`, ""];
+}
+
+function mergeRel(fromId: string, rel: string, toId: string, fromLabel: string, toLabel: string): string[] {
+  return [
+    `MATCH (a:${labelToken(fromLabel)} { id: ${cypherLiteral(fromId)} }), (b:${labelToken(toLabel)} { id: ${cypherLiteral(toId)} })`,
+    `MERGE (a)-[:${rel}]->(b);`,
     "",
-    `MATCH (n { schemaTag: ${cypherLiteral(SCHEMA_TAG)} }) DETACH DELETE n;`,
+  ];
+}
+//#endregion 📝CypherEmit
+
+//#region 🏗️GraphBuild
+type FieldEmit = {
+  id: string;
+  ownerId: string;
+  ownerLabel: string;
+  name: string;
+  path: string;
+  list: boolean;
+  refId: string | null;
+  refLabel: string | null;
+};
+
+function fieldId(moduleName: string, ownerKind: string, ownerName: string, pathParts: string[]): string {
+  return `field:${moduleName}:${ownerKind}:${ownerName}:${pathParts.join(".")}`;
+}
+
+const anchorToRef = new Map<string, { label: string; id: string }>();
+
+function registerAnchor(anchor: string, label: string, id: string): void {
+  anchorToRef.set(anchor, { label, id });
+}
+
+function resolveRef(_moduleName: string, anchor: string): { label: string; id: string } {
+  const hit = anchorToRef.get(anchor);
+  if (!hit) {
+    return { label: "interface", id: `interface:${anchor}` };
+  }
+  return hit;
+}
+
+function buildGraph(doc: Document): { lines: string[] } {
+  anchorToRef.clear();
+  const lines: string[] = [
+    "// SPDX-License-Identifier: AGPL-3.0-only",
+    "// Neo4j Cypher bundle for semio schema (generated from semio/client/schema/semio/schema.yaml).",
+    "// Replay: load into database `semio` (see NEO4J_DATABASE). Bloom: pick database `semio`, auto-generate Perspective, search e.g. `kit` or `interface`.",
+    "",
+    "MATCH (n) WHERE n:module OR n:interface OR n:class OR n:field OR n:scalar OR n:command DETACH DELETE n;",
     "",
   ];
 
-  for (const node of nodes) {
-    lines.push(`MERGE (n:${node.label} { id: ${cypherLiteral(node.id)} })`);
-    lines.push(`SET n = ${renderPropertyMap(node.properties)};`);
-    lines.push("");
+  const schema = doc.get("schema");
+  if (!isYamlMap(schema)) {
+    throw new Error("schema root must be a mapping");
   }
 
-  for (const relationship of relationships) {
-    lines.push(
-      `MATCH (from { id: ${cypherLiteral(relationship.from)} }), (to { id: ${cypherLiteral(relationship.to)} }) MERGE (from)-[:${relationship.kind}]->(to);`,
-    );
+  // Scalars (general list — anchors on null scalars)
+  const scalarSeq = doc.getIn(["schema", "general", "scalars"]);
+  if (isYamlSeq(scalarSeq)) {
+    for (const it of scalarSeq.items) {
+      const anchor = (it as { anchor?: string }).anchor;
+      if (typeof anchor === "string") {
+        const id = `scalar:${anchor}`;
+        registerAnchor(anchor, "scalar", id);
+        lines.push(...mergeNode("scalar", id, { name: anchor }));
+        lines.push(...mergeRel("module:general", "OWNS", id, "module", "scalar"));
+      }
+    }
   }
 
-  lines.push("");
-  return `${lines.join("\n")}\n`;
+  // Modules
+  for (const mod of MODULE_KEYS) {
+    const mid = `module:${mod}`;
+    lines.push(...mergeNode("module", mid, { name: mod }));
+  }
+
+  // Interfaces (general + domain)
+  for (const mod of MODULE_KEYS) {
+    const ifaceRoot = doc.getIn(["schema", mod, "interfaces"]);
+    if (!isYamlMap(ifaceRoot)) {
+      continue;
+    }
+    for (const pair of ifaceRoot.items) {
+      const name = pairKey(pair);
+      const body = pair.value;
+      if (!isYamlMap(body)) {
+        continue;
+      }
+      const label = name === "command" ? "command" : "interface";
+      const id = name === "command" ? "command:command" : `interface:${name}`;
+      registerAnchor(name, label, id);
+      lines.push(...mergeNode(label, id, { name }));
+      lines.push(...mergeRel(`module:${mod}`, "OWNS", id, "module", label));
+    }
+  }
+
+  // Classes (domain only in current schema)
+  const classRoot = doc.getIn(["schema", "domain", "classes"]);
+  if (isYamlMap(classRoot)) {
+    for (const pair of classRoot.items) {
+      const name = pairKey(pair);
+      const body = pair.value;
+      if (!isYamlMap(body)) {
+        continue;
+      }
+      const id = `class:${name}`;
+      registerAnchor(name, "class", id);
+      lines.push(...mergeNode("class", id, { name }));
+      lines.push(...mergeRel("module:domain", "OWNS", id, "module", "class"));
+    }
+  }
+
+  // EXTENDS from implements
+  for (const mod of MODULE_KEYS) {
+    const ifaceRoot = doc.getIn(["schema", mod, "interfaces"]);
+    if (!isYamlMap(ifaceRoot)) {
+      continue;
+    }
+    for (const pair of ifaceRoot.items) {
+      const name = pairKey(pair);
+      const body = pair.value;
+      if (!isYamlMap(body)) {
+        continue;
+      }
+      const label = name === "command" ? "command" : "interface";
+      const id = name === "command" ? "command:command" : `interface:${name}`;
+      const impl = body.get("implements");
+      if (isYamlSeq(impl)) {
+        for (const it of impl.items) {
+          if (isAlias(it)) {
+            const parent = resolveRef(mod, it.source);
+            lines.push(...mergeRel(id, "EXTENDS", parent.id, label, parent.label));
+          }
+        }
+      }
+    }
+  }
+
+  if (isYamlMap(classRoot)) {
+    for (const pair of classRoot.items) {
+      const name = pairKey(pair);
+      const body = pair.value;
+      if (!isYamlMap(body)) {
+        continue;
+      }
+      const id = `class:${name}`;
+      const impl = body.get("implements");
+      if (isYamlSeq(impl)) {
+        for (const it of impl.items) {
+          if (isAlias(it)) {
+            const parent = resolveRef("domain", it.source);
+            lines.push(...mergeRel(id, "EXTENDS", parent.id, "class", parent.label));
+          }
+        }
+      }
+    }
+  }
+
+  // Fields
+  const fieldRows: FieldEmit[] = [];
+  for (const mod of MODULE_KEYS) {
+    const ifaceRoot = doc.getIn(["schema", mod, "interfaces"]);
+    if (isYamlMap(ifaceRoot)) {
+      for (const pair of ifaceRoot.items) {
+        const name = pairKey(pair);
+        const body = pair.value;
+        if (!isYamlMap(body)) {
+          continue;
+        }
+        const label = name === "command" ? "command" : "interface";
+        const id = name === "command" ? "command:command" : `interface:${name}`;
+        const fm = body.get("fields");
+        if (isYamlMap(fm)) {
+          collectFieldsFromMap(mod, label, name, id, label, fm, fieldRows);
+        }
+      }
+    }
+  }
+
+  if (isYamlMap(classRoot)) {
+    for (const pair of classRoot.items) {
+      const name = pairKey(pair);
+      const body = pair.value;
+      if (!isYamlMap(body)) {
+        continue;
+      }
+      const id = `class:${name}`;
+      const fm = body.get("fields");
+      if (isYamlMap(fm)) {
+        collectFieldsFromMap("domain", "class", name, id, "class", fm, fieldRows);
+      }
+    }
+  }
+
+  const modForOwner = (ownerId: string): string => {
+    const m = ownerId.match(/^field:(\w+):/);
+    return m?.[1] ?? "domain";
+  };
+
+  for (const f of fieldRows) {
+    const props: Record<string, string | boolean> = {
+      name: f.name,
+      path: f.path,
+      list: f.list,
+    };
+    lines.push(...mergeNode("field", f.id, props));
+    const mod = modForOwner(f.id);
+    lines.push(...mergeRel(`module:${mod}`, "OWNS", f.id, "module", "field"));
+    lines.push(...mergeRel(f.ownerId, "HAS_FIELD", f.id, f.ownerLabel, "field"));
+    if (f.refId && f.refLabel) {
+      lines.push(...mergeRel(f.id, "REFERENCES", f.refId, "field", f.refLabel));
+    }
+  }
+
+  // Bloom-friendly indexes on lowercase labels
+  lines.push(
+    "// Bloom / Explore: indexes on names and ids",
+    "CREATE INDEX bloom_field_path IF NOT EXISTS FOR (n:field) ON (n.path);",
+    "CREATE INDEX bloom_field_name IF NOT EXISTS FOR (n:field) ON (n.name);",
+    "CREATE INDEX bloom_class_name IF NOT EXISTS FOR (n:`class`) ON (n.name);",
+    "CREATE INDEX bloom_interface_name IF NOT EXISTS FOR (n:`interface`) ON (n.name);",
+    "CREATE INDEX bloom_scalar_name IF NOT EXISTS FOR (n:scalar) ON (n.name);",
+    "CREATE INDEX bloom_command_name IF NOT EXISTS FOR (n:`command`) ON (n.name);",
+    "",
+  );
+
+  return { lines };
 }
-//#endregion 📝CypherRender
+//#endregion 🏗️GraphBuild
 
 //#region 🚀Runtime
 function resolveCypherShell(): string | null {
@@ -512,10 +388,7 @@ function resolveCypherShell(): string | null {
 }
 
 function buildCypherEnv(): NodeJS.ProcessEnv {
-  const env = {
-    ...process.env,
-  };
-
+  const env = { ...process.env };
   if (process.platform === "win32") {
     const javaHome = "C:\\Program Files\\Microsoft\\jdk-21.0.11.10-hotspot";
     const javaExecutable = join(javaHome, "bin", "java.exe");
@@ -524,19 +397,17 @@ function buildCypherEnv(): NodeJS.ProcessEnv {
       env.Path = `${join(javaHome, "bin")};${env.Path || ""}`;
     }
   }
-
   return env;
 }
 
 function applyCypherFile(outputPath: string): void {
   const cypherShell = resolveCypherShell();
   if (!cypherShell) {
-    console.warn(`[generate] cypher-shell not found. Wrote ${OUTPUT_FILE} but did not apply it to Neo4j.`);
+    console.warn(`[generate] cypher-shell not found; wrote ${OUTPUT_FILE} only.`);
     return;
   }
 
   const cypherInput = readFileSync(outputPath, "utf8");
-
   const result = spawnSync(
     cypherShell,
     [
@@ -547,7 +418,7 @@ function applyCypherFile(outputPath: string): void {
       "-p",
       process.env.NEO4J_PASSWORD || "password",
       "-d",
-      process.env.NEO4J_DATABASE || "neo4j",
+      process.env.NEO4J_DATABASE || "semio",
       "--format",
       "plain",
     ],
@@ -565,20 +436,21 @@ function applyCypherFile(outputPath: string): void {
 }
 
 function main(): void {
-  const schemaPath = join(REPO_ROOT, SCHEMA_SOURCE);
-  const outputPath = join(REPO_ROOT, OUTPUT_FILE);
-  const rawSchema = readFileSync(schemaPath, "utf8");
-  const model = parseSchemaSketch(rawSchema);
-  const graph = buildGraph(model);
-  const cypher = renderCypher(graph.nodes, graph.relationships);
+  const raw = readFileSync(SCHEMA_YAML, "utf8");
+  const doc = parseDocument(raw);
+  if (doc.errors.length) {
+    throw new Error(`YAML parse errors: ${doc.errors.map((e) => e.message).join("; ")}`);
+  }
 
+  const { lines } = buildGraph(doc);
   mkdirSync(join(REPO_ROOT, ".repo", "🛂"), { recursive: true });
-  writeFileSync(outputPath, cypher, "utf8");
-  applyCypherFile(outputPath);
+  writeFileSync(OUTPUT_FILE, `${lines.join("\n")}\n`, "utf8");
+  console.log(`[generate] wrote ${OUTPUT_FILE} (${lines.length} lines) from ${SCHEMA_YAML}.`);
 
-  console.log(
-    `[generate] wrote ${OUTPUT_FILE} with ${graph.nodes.length} nodes and ${graph.relationships.length} relationships from ${SCHEMA_SOURCE}.`,
-  );
+  if (process.argv.includes("apply")) {
+    applyCypherFile(OUTPUT_FILE);
+    console.log("[generate] applied to Neo4j via cypher-shell.");
+  }
 }
 
 main();
