@@ -1,493 +1,354 @@
 schema:
-  summary: "🧩 Semantic model for semio kit-of-parts graphs, independent from GraphQL transport details."
-
-  scalar:
-    string: &string
-      summary: "🔤 Text value."
-      type: string
-    number: &number
-      summary: "🔢 Numeric value."
-      type: number
-    boolean: &boolean
-      summary: "✅ Truth value."
-      type: boolean
-    timestamp: &timestamp
-      summary: "🕒 Point in time."
-      type: timestamp
-    color: &color
-      summary: "🎨 Display color."
-      type: color
-    id: &id
-      summary: "🪪 Stable entity identifier."
-      type: string
-    hash: &hash
-      summary: "🔐 Content-addressed identity."
-      type: string
-    uri: &uri
-      summary: "🔗 Resource location."
-      type: string
-
-  relation:
-    owner: &owner
-      summary: "🏠 Parent entity that owns lifecycle and context."
-      cardinality: zeroOrOne
-    owns: &owns
-      summary: "🧺 Child entities owned by this entity."
-      cardinality: many
-    reference: &reference
-      summary: "🧭 Link to an entity without lifecycle ownership."
-      cardinality: zeroOrOne
-    references: &references
-      summary: "🕸️ Links to entities without lifecycle ownership."
-      cardinality: many
-
-  fieldKind:
-    data: &data
-      summary: "💾 Persisted semantic data."
-    computed: &computed
-      summary: "⚙️ Derived value."
-    cached: &cached
-      summary: "📦 Persisted derived value."
-    reference: &fieldReference
-      summary: "🧷 Entity reference."
-
-  interface:
+  scalar: &scalar
+    - &string
+    - &number
+    - &boolean
+    - &timestamp
+    - &color
+    - &uri
+  interface: &interface
     entity: &entity
-      summary: "🧬 Addressable semantic object in the graph."
       fields:
-        id:
-          <<: *data
-          type: id
-        hash:
-          <<: *cached
-          type: hash
-        owner:
-          <<: *fieldReference
-          type: entity
-          relation: owner
-        owns:
-          <<: *fieldReference
-          type: [entity]
-          relation: owns
-
+        id: *string
+        hash: *string
+        owner: *entity
+        owns: [*entity]
     weakEntity: &weakEntity
-      summary: "🪶 Entity identified by its content hash."
-      implements: [entity]
-      constraints:
-        - "id is derived from hash"
-
+      contraints:
+        - &hashAsId "id is hash of entity"
     strongEntity: &strongEntity
-      summary: "🧱 Entity with identity assigned at creation time."
-      implements: [entity]
-      constraints:
-        - "id is uuidv7"
-
-    namedEntity: &namedEntity
-      summary: "🏷️ Strong entity with human-facing label metadata."
-      implements: [strongEntity]
+      contraints:
+        - &uuidv7AsId "id is uuidv7 at creation time"
+    richStrongEntity: &richStrongEntity
+      implements: [*strongEntity]
       fields:
-        name:
-          <<: *data
-          type: string
-        description:
-          <<: *data
-          type: string
-        icon:
-          <<: *data
-          type: string
-        createdAt:
-          <<: *computed
-          type: timestamp
-        createdBy:
-          <<: *computed
-          type: author
-
+        data:
+          name: *string
+          description: *string
+          icon: *string
+        computed:
+          createdAt: *timestamp
+          createdBy: *string
     artifact: &artifact
-      summary: "📄 Named entity that participates in authorship and change history."
-      implements: [namedEntity]
+      implements: [*richStrongEntity]
       fields:
-        authoredBy:
-          <<: *computed
-          type: [author]
-        changedIn:
-          <<: *computed
-          type: [checkpoint]
-        lastChangedAt:
-          <<: *computed
-          type: timestamp
-        lastChangedBy:
-          <<: *computed
-          type: author
-        lastChangedIn:
-          <<: *computed
-          type: checkpoint
-        changes:
-          <<: *computed
-          type: [change]
-        edits:
-          <<: *computed
-          type: [edit]
-
+        computed:
+          authoredBy: [*entity]
+          changedIn: [*entity]
+          lastChangedAt: *timestamp
+          lastChangedBy: *entity
+          lastChangedIn: *entity
+          changes: [*entity]
+          edits: [*entity]
     document: &document
-      summary: "🖼️ Artifact with a preview image."
-      implements: [artifact]
+      implements: [*artifact]
       fields:
-        previewImage:
-          <<: *fieldReference
-          type: file
-
+        reference:
+          previewImage: *entity
     event: &event
-      summary: "📍 Hash-addressed occurrence involving graph entities."
-      implements: [weakEntity]
+      implements: [*weakEntity]
       fields:
-        timestamp:
-          <<: *data
-          type: timestamp
-        involves:
-          <<: *fieldReference
-          type: [entity]
-          relation: references
-
-  value:
-    vector: &vector
-      summary: "↗️ Three-dimensional direction or delta."
-      implements: [weakEntity]
-      fields:
-        x: { <<: *data, type: number }
-        y: { <<: *data, type: number }
-        z: { <<: *data, type: number }
-
-    point: &point
-      summary: "📌 Three-dimensional location."
-      implements: [weakEntity]
-      fields:
-        x: { <<: *data, type: number }
-        y: { <<: *data, type: number }
-        z: { <<: *data, type: number }
-
-    coordinate: &coordinate
-      summary: "🧮 Two-dimensional parameter coordinate."
-      implements: [weakEntity]
-      fields:
-        u: { <<: *data, type: number }
-        v: { <<: *data, type: number }
-
-    offset: &offset
-      summary: "↔️ Two-dimensional translation."
-      implements: [weakEntity]
-      fields:
-        x: { <<: *data, type: number }
-        y: { <<: *data, type: number }
-
-    plane: &plane
-      summary: "🧭 Local geometric frame."
-      implements: [weakEntity]
-      fields:
-        origin: { <<: *data, type: point }
-        xAxis: { <<: *data, type: vector }
-        yAxis: { <<: *data, type: vector }
-        zAxis: { <<: *computed, type: vector }
-
-    position: &position
-      summary: "🎯 Placement on a host with local coordinate and orientation."
-      implements: [weakEntity]
-      fields:
-        coordinate: { <<: *data, type: coordinate }
-        offset: { <<: *data, type: offset }
-        plane: { <<: *computed, type: plane }
-
-    location: &location
-      summary: "📍 Spatial placement in a design context."
-      implements: [weakEntity]
-      fields:
-        position: { <<: *data, type: position }
-        place: { <<: *fieldReference, type: place }
-
-    attribute: &attribute
-      summary: "🏷️ Typed key-value semantic annotation."
-      implements: [weakEntity]
-      fields:
-        key: { <<: *data, type: string }
-        value: { <<: *data, type: string }
-
-  class:
-    place: &place
-      summary: "🌍 Physical or conceptual site for kit content."
-      implements: [artifact]
-      fields:
-        locations: { <<: *fieldReference, type: [location] }
-
-    family: &family
-      summary: "👪 Grouping for related artifacts."
-      implements: [artifact]
-      fields:
-        artifacts: { <<: *fieldReference, type: [artifact] }
-
-    folder: &folder
-      summary: "📁 Hierarchical container for documents and artifacts."
-      implements: [artifact]
-      fields:
-        children: { <<: *fieldReference, type: [artifact] }
-
-    file: &file
-      summary: "📎 External or embedded file artifact."
-      implements: [artifact]
-      fields:
-        uri: { <<: *data, type: uri }
-        mediaType: { <<: *data, type: string }
-        size: { <<: *data, type: number }
-
-    author: &author
-      summary: "✍️ Person or agent responsible for authored changes."
-      implements: [artifact]
-      fields:
-        email: { <<: *data, type: string }
-        url: { <<: *data, type: uri }
-
-    prop: &prop
-      summary: "🧰 Reusable supporting object in a kit."
-      implements: [artifact]
-
-    benchmark: &benchmark
-      summary: "📏 Evaluation target or measurement artifact."
-      implements: [artifact]
-
-    quality: &quality
-      summary: "⭐ Named property that can qualify concepts, types, ports, pieces, and designs."
-      implements: [artifact]
-      fields:
-        attributes: { <<: *data, type: [attribute] }
-
-    tag: &tag
-      summary: "🔖 Lightweight semantic label for classifying artifacts."
-      implements: [artifact]
-      fields:
-        attributes: { <<: *data, type: [attribute] }
-
-    concept: &concept
-      summary: "💡 Abstract semantic idea represented by kit elements."
-      implements: [artifact]
-      fields:
-        qualities: { <<: *fieldReference, type: [quality] }
-        tags: { <<: *fieldReference, type: [tag] }
-        attributes: { <<: *data, type: [attribute] }
-
-    port: &port
-      summary: "🔌 Connection point exposed by a type or piece."
-      implements: [artifact]
-      fields:
-        concept: { <<: *fieldReference, type: concept }
-        position: { <<: *data, type: position }
-        qualities: { <<: *fieldReference, type: [quality] }
-        attributes: { <<: *data, type: [attribute] }
-
-    connector: &connector
-      summary: "🪢 Rule or object that joins compatible ports."
-      implements: [artifact]
-      fields:
-        from: { <<: *fieldReference, type: port }
-        to: { <<: *fieldReference, type: port }
-        qualities: { <<: *fieldReference, type: [quality] }
-        attributes: { <<: *data, type: [attribute] }
-
-    representation: &representation
-      summary: "👁️ View-specific representation of a type or piece."
-      implements: [artifact]
-      fields:
-        file: { <<: *fieldReference, type: file }
-        attributes: { <<: *data, type: [attribute] }
-
-    type: &type
-      summary: "🧩 Reusable kit part definition."
-      implements: [artifact]
-      fields:
-        concepts: { <<: *fieldReference, type: [concept] }
-        ports: { <<: *fieldReference, type: [port] }
-        representations: { <<: *fieldReference, type: [representation] }
-        attributes: { <<: *data, type: [attribute] }
-
-    layer: &layer
-      summary: "🧅 Organizational layer in a design."
-      implements: [artifact]
-      fields:
-        visible: { <<: *data, type: boolean }
-        locked: { <<: *data, type: boolean }
-
-    group: &group
-      summary: "🗂️ Named collection of pieces and connections."
-      implements: [artifact]
-      fields:
-        pieces: { <<: *fieldReference, type: [piece] }
-        connections: { <<: *fieldReference, type: [connection] }
-
-    piece: &piece
-      summary: "🧱 Placed instance of a kit type in a design."
-      implements: [artifact]
-      fields:
-        type: { <<: *fieldReference, type: type }
-        location: { <<: *data, type: location }
-        ports: { <<: *fieldReference, type: [port] }
-        attributes: { <<: *data, type: [attribute] }
-
-    side: &side
-      summary: "🧲 One endpoint of a connection."
-      implements: [strongEntity]
-      fields:
-        piece: { <<: *fieldReference, type: piece }
-        port: { <<: *fieldReference, type: port }
-
-    connection: &connection
-      summary: "🌉 Relationship between two piece sides."
-      implements: [artifact]
-      fields:
-        connector: { <<: *fieldReference, type: connector }
-        from: { <<: *fieldReference, type: side }
-        to: { <<: *fieldReference, type: side }
-        attributes: { <<: *data, type: [attribute] }
-
-    design: &design
-      summary: "🏗️ Composition of pieces, connections, layers, and groups."
-      implements: [artifact]
-      fields:
-        pieces: { <<: *data, type: [piece] }
-        connections: { <<: *data, type: [connection] }
-        layers: { <<: *data, type: [layer] }
-        groups: { <<: *data, type: [group] }
-        attributes: { <<: *data, type: [attribute] }
-
-    kit: &kit
-      summary: "🏘️ Complete kit-of-parts semantic model."
-      implements: [artifact]
-      fields:
-        places: { <<: *data, type: [place] }
-        families: { <<: *data, type: [family] }
-        concepts: { <<: *data, type: [concept] }
-        qualities: { <<: *data, type: [quality] }
-        tags: { <<: *data, type: [tag] }
-        types: { <<: *data, type: [type] }
-        connectors: { <<: *data, type: [connector] }
-        designs: { <<: *data, type: [design] }
-        files: { <<: *data, type: [file] }
-        authors: { <<: *data, type: [author] }
-
-  changeModel:
-    diff: &diff
-      summary: "🧾 Partial semantic state describing changed fields."
-      implements: [weakEntity]
-    modification: &modification
-      summary: "🔁 Before-diff-after semantic transition."
-      implements: [weakEntity]
-      fields:
-        before: { <<: *fieldReference, type: entity }
-        diff: { <<: *data, type: diff }
-        after: { <<: *fieldReference, type: entity }
-    operation: &operation
-      summary: "🪄 Atomic command result that changes or queries scoped semantic state."
-      implements: [strongEntity]
-      fields:
-        scope: { <<: *fieldReference, type: entity }
-        input: { <<: *data, type: input }
-        modification: { <<: *computed, type: modification }
-        response: { <<: *computed, type: response }
-
-  vcs:
-    edit: &edit
-      summary: "✂️ Ordered reversible set of operations."
-      implements: [strongEntity]
-      fields:
-        forwards: { <<: *data, type: [operation] }
-        backwards: { <<: *data, type: [operation] }
-        sequenceNumber: { <<: *computed, type: number }
-        startedAt: { <<: *data, type: timestamp }
-        finishedAt: { <<: *data, type: timestamp }
-        description: { <<: *data, type: string }
-        origin: { <<: *data, type: string }
-
-    change: &change
-      summary: "💬 Saveable working set of edits."
-      implements: [strongEntity]
-      fields:
-        edits: { <<: *data, type: [edit] }
-        startedAt: { <<: *data, type: timestamp }
-        savedAt: { <<: *data, type: timestamp }
-        description: { <<: *data, type: string }
-        origin: { <<: *data, type: string }
-
-    checkpoint: &checkpoint
-      summary: "📍 Versioned kit snapshot with ancestry."
-      implements: [strongEntity]
-      fields:
-        timestamp: { <<: *data, type: timestamp }
-        message: { <<: *data, type: string }
-        authors: { <<: *fieldReference, type: [author] }
-        parent: { <<: *fieldReference, type: checkpoint }
-        ancestors: { <<: *computed, type: [checkpoint] }
-        kit: { <<: *computed, type: kit }
-        changes: { <<: *data, type: [change] }
-
+        data:
+          timestamp: *timestamp
+        reference:
+          involves: [*entity]
     workspace: &workspace
-      summary: "🧪 Mutable view of kit state."
-      implements: [strongEntity]
+      implements: [*strongEntity]
       fields:
-        checkpoint: { <<: *fieldReference, type: checkpoint }
-        latestWipCheckpointAncestor: { <<: *computed, type: checkpoint }
-        savedChanges: { <<: *data, type: [change] }
-        unsavedChanges: { <<: *data, type: [change] }
-        kit: { <<: *computed, type: kit }
-
-    graph: &graph
-      summary: "🕸️ Version graph for a kit."
-      implements: [strongEntity]
+        data:
+          savedChanges: [*entity]
+          unsavedChanges: [*entity]
+        computed:
+          latestWipCheckpointAncestor: *entity
+          kit: *entity
+        reference:
+          checkpoint: *entity
+    diff: &diff
+      implements: [*weakEntity]
+    modification: &modification
+      implements: [*weakEntity]
       fields:
-        initialKit: { <<: *data, type: kit }
-        theKit: { <<: *data, type: workspace }
-        alternatives: { <<: *data, type: [workspace] }
-        checkpoints: { <<: *data, type: [checkpoint] }
-        releases: { <<: *computed, type: [checkpoint] }
-
-    conflict: &conflict
-      summary: "⚠️ Divergence between authoritative and work-in-progress changes."
-      implements: [strongEntity]
+        reference:
+          before: *entity
+          diff: *diff
+          after: *entity
+    operation: &operation
+      implements: [*strongEntity]
       fields:
-        authoritativeChange: { <<: *fieldReference, type: change }
-        wipChange: { <<: *fieldReference, type: change }
-        reasons: { <<: *data, type: [string] }
-
-  runtime:
+        data:
+          input: *entity
+        computed:
+          modification: *modification
+        reference:
+          scope: *entity
     backbone: &backbone
-      summary: "🦴 Persistence or synchronization endpoint."
-      implements: [strongEntity]
+      implements: [*strongEntity]
       fields:
-        uri: { <<: *data, type: uri }
-        status:
-          <<: *data
-          type:
-            enum: [offline, reconnecting, online]
-
+        data:
+          uri: *uri
+          status: *string
     provider: &provider
-      summary: "🚪 Source of stores and backbones."
-      implements: [strongEntity]
+      implements: [*strongEntity]
       fields:
-        uri: { <<: *data, type: uri }
-        backbones: { <<: *data, type: [backbone] }
-
+        data:
+          backbones: [*backbone]
+        computed:
+          backbone: *backbone
+    command: &command
+      implements: [*weakEntity]
+      fields:
+        computed:
+          response: *entity
+  class: &class
+    vector: &vector
+      implements: [*weakEntity]
+      fields:
+        x: *number
+        y: *number
+        z: *number
+    point: &point
+      implements: [*weakEntity]
+      fields:
+        x: *number
+        y: *number
+        z: *number
+    coordinate: &coordinate
+      implements: [*weakEntity]
+      fields:
+        u: *number
+        v: *number
+    offset: &offset
+      implements: [*weakEntity]
+      fields:
+        x: *number
+        y: *number
+    plane: &plane
+      implements: [*weakEntity]
+      fields:
+        origin: *point
+        xAxis: *vector
+        yAxis: *vector
+        zAxis: *vector
+    position: &position
+      implements: [*weakEntity]
+      fields:
+        coordinate: *coordinate
+        offset: *offset
+        plane: *plane
+    location: &location
+      implements: [*weakEntity]
+      fields:
+        position: *position
+        place: *entity
+    attribute: &attribute
+      implements: [*weakEntity]
+      fields:
+        key: *string
+        value: *string
+    place: &place
+      implements: [*artifact]
+      fields:
+        locations: [*location]
+    family: &family
+      implements: [*artifact]
+      fields:
+        artifacts: [*artifact]
+    folder: &folder
+      implements: [*artifact]
+      fields:
+        children: [*artifact]
+    file: &file
+      implements: [*document]
+      fields:
+        uri: *uri
+        mediaType: *string
+        size: *number
+    author: &author
+      implements: [*artifact]
+      fields:
+        email: *string
+        url: *uri
+    prop: &prop
+      implements: [*artifact]
+    benchmark: &benchmark
+      implements: [*artifact]
+    quality: &quality
+      implements: [*artifact]
+      fields:
+        attributes: [*attribute]
+    tag: &tag
+      implements: [*artifact]
+      fields:
+        attributes: [*attribute]
+    concept: &concept
+      implements: [*artifact]
+      fields:
+        qualities: [*quality]
+        tags: [*tag]
+        attributes: [*attribute]
+    port: &port
+      implements: [*artifact]
+      fields:
+        concept: *concept
+        position: *position
+        qualities: [*quality]
+        attributes: [*attribute]
+    connector: &connector
+      implements: [*artifact]
+      fields:
+        from: *port
+        to: *port
+        qualities: [*quality]
+        attributes: [*attribute]
+    representation: &representation
+      implements: [*artifact]
+      fields:
+        file: *file
+        attributes: [*attribute]
+    type: &type
+      implements: [*artifact]
+      fields:
+        concepts: [*concept]
+        ports: [*port]
+        representations: [*representation]
+        attributes: [*attribute]
+    layer: &layer
+      implements: [*artifact]
+      fields:
+        visible: *boolean
+        locked: *boolean
+    piece: &piece
+      implements: [*artifact]
+      fields:
+        type: *type
+        location: *location
+        ports: [*port]
+        attributes: [*attribute]
+    side: &side
+      implements: [*strongEntity]
+      fields:
+        piece: *piece
+        port: *port
+    connection: &connection
+      implements: [*artifact]
+      fields:
+        connector: *connector
+        from: *side
+        to: *side
+        attributes: [*attribute]
+    group: &group
+      implements: [*artifact]
+      fields:
+        pieces: [*piece]
+        connections: [*connection]
+    design: &design
+      implements: [*artifact]
+      fields:
+        pieces: [*piece]
+        connections: [*connection]
+        layers: [*layer]
+        groups: [*group]
+        attributes: [*attribute]
+    kit: &kit
+      implements: [*artifact]
+      fields:
+        places: [*place]
+        families: [*family]
+        folders: [*folder]
+        files: [*file]
+        authors: [*author]
+        props: [*prop]
+        benchmarks: [*benchmark]
+        qualities: [*quality]
+        tags: [*tag]
+        concepts: [*concept]
+        ports: [*port]
+        connectors: [*connector]
+        representations: [*representation]
+        types: [*type]
+        layers: [*layer]
+        pieces: [*piece]
+        connections: [*connection]
+        groups: [*group]
+        designs: [*design]
+    edit: &edit
+      implements: [*strongEntity]
+      fields:
+        forwards: [*operation]
+        backwards: [*operation]
+        sequenceNumber: *number
+        startedAt: *timestamp
+        finishedAt: *timestamp
+        finished: *boolean
+        description: *string
+        origin: *string
+    change: &change
+      implements: [*strongEntity]
+      fields:
+        edits: [*edit]
+        startedAt: *timestamp
+        savedAt: *timestamp
+        saved: *boolean
+        description: *string
+        origin: *string
+    checkpoint: &checkpoint
+      implements: [*strongEntity]
+      fields:
+        timestamp: *timestamp
+        message: *string
+        authors: [*author]
+        parent: *entity
+        ancestors: [*entity]
+        initial: *kit
+        kit: *kit
+        changes: [*change]
+        edits: [*edit]
+    theKit: &theKit
+      implements: [*workspace]
+    alternative: &alternative
+      implements: [*workspace]
+      fields:
+        name: *string
+    graph: &graph
+      implements: [*strongEntity]
+      fields:
+        initialKit: *kit
+        theKit: *theKit
+        alternatives: [*alternative]
+        checkpoints: [*checkpoint]
+        releases: [*checkpoint]
+    conflict: &conflict
+      implements: [*strongEntity]
+      fields:
+        authoritativeChange: *change
+        wipChange: *change
+        reasons: [*string]
     store: &store
-      summary: "🏪 Runtime container for graph states and synchronization."
-      implements: [strongEntity]
+      implements: [*strongEntity]
       fields:
-        wip: { <<: *data, type: graph }
-        stage: { <<: *data, type: graph }
-        authoritative: { <<: *data, type: graph }
-        conflicts: { <<: *data, type: [conflict] }
-        backbone: { <<: *fieldReference, type: backbone }
-
+        wip: *graph
+        stage: *graph
+        authoritative: *graph
+        conflicts: [*conflict]
+        backbone: *backbone
+    fileBackbone: &fileBackbone
+      implements: [*backbone]
+    websocketBackbone: &websocketBackbone
+      implements: [*backbone]
+    localProvider: &localProvider
+      implements: [*provider]
+      fields:
+        uri: *uri
+        stores: [*store]
+    remoteProvider: &remoteProvider
+      implements: [*provider]
+      fields:
+        uri: *uri
+        url: *uri
     session: &session
-      summary: "🎬 Active editing context across stores and providers."
-      implements: [strongEntity]
+      implements: [*strongEntity]
       fields:
-        stores: { <<: *data, type: [store] }
-        localProvider: { <<: *data, type: provider }
-        remoteProviders: { <<: *data, type: [provider] }
-        startedAt: { <<: *data, type: timestamp }
-
-
+        stores: [*store]
+        localProvider: *localProvider
+        remoteProviders: [*remoteProvider]
+        startedAt: *timestamp
