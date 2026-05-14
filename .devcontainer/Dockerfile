@@ -61,11 +61,14 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
-RUN mkdir -p /etc/apt/keyrings \
+RUN mkdir -p /etc/apt/keyrings /var/lib/neo4j/plugins \
     && wget -O - https://debian.neo4j.com/neotechnology.gpg.key | gpg --dearmor -o /etc/apt/keyrings/neotechnology.gpg \
     && echo 'deb [signed-by=/etc/apt/keyrings/neotechnology.gpg] https://debian.neo4j.com stable 5' > /etc/apt/sources.list.d/neo4j.list \
     && apt-get update \
     && apt-get install -y --no-install-recommends neo4j \
+    && wget -O /var/lib/neo4j/plugins/apoc-core-5.26.4-core.jar https://repo.maven.apache.org/maven2/org/neo4j/procedure/apoc-core/5.26.4/apoc-core-5.26.4-core.jar \
+    && wget -O /var/lib/neo4j/plugins/apoc-5.26.4-extended.jar https://github.com/neo4j-contrib/neo4j-apoc-procedures/releases/download/5.26.4/apoc-5.26.4-extended.jar \
+    && chown -R neo4j:neo4j /var/lib/neo4j/plugins \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 

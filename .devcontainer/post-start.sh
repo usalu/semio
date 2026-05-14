@@ -155,6 +155,15 @@ configure_neo4j_server() {
   set_neo4j_conf_value "server.bolt.listen_address" ":7687"
   set_neo4j_conf_value "server.http.listen_address" ":7474"
   set_neo4j_conf_value "dbms.usage_report.enabled" "false"
+  set_neo4j_conf_value "server.directories.import" "/workspaces/semio"
+  set_neo4j_conf_value "dbms.security.procedures.allowlist" "apoc.*"
+  set_neo4j_conf_value "dbms.security.procedures.unrestricted" "apoc.*"
+
+  sudo tee /etc/neo4j/apoc.conf >/dev/null <<'APOCCONF'
+apoc.export.file.enabled=true
+apoc.import.file.enabled=true
+apoc.import.file.use_neo4j_config=false
+APOCCONF
 
   if [ ! -f /var/lib/neo4j/data/dbms/auth.ini ] && [ ! -f /var/lib/neo4j/data/dbms/auth ]; then
     sudo neo4j-admin dbms set-initial-password "${NEO4J_PASSWORD:-password}" >/dev/null
@@ -193,6 +202,53 @@ else
   echo "⚠️ Neo4j was not reachable at bolt://localhost:7687 during post-start."
 fi
 #endregion 🗄️Neo4jService
+#region 🧾Neo4jCypherPersistence
+ensure_neo4j_schema_files() {
+  local technologies=("semio" "elements" "coda" "reuse")
+  for technology in "${technologies[@]}"; do
+    local schema_dir="$WORKSPACE/$technology/schema/cypher"
+    local schema_file="$schema_dir/schema.cypher"
+    mkdir -p "$schema_dir"
+    if [ ! -f "$schema_file" ]; then
+      cat >"$schema_file" <<EOF
+// SPDX-License-Identifier: AGPL-3.0-only
+// Neo4j Cypher persistence for $technology.
+// Keep this file replayable with cypher-shell or APOC.
+EOF
+    fi
+  done
+}
+
+import_neo4j_schema_files_if_empty() {
+  if ! command -v cypher-shell >/dev/null 2>&1; then
+    return 0
+  fi
+  local node_count
+  node_count="$(cypher-shell -a bolt://localhost:7687 -u "${NEO4J_USERNAME:-neo4j}" -p "${NEO4J_PASSWORD:-password}" --format plain 'MATCH (n) RETURN count(n) AS count;' 2>/dev/null | tail -n 1 | tr -d '[:space:]')" || return 0
+  if [ "$node_count" != "0" ]; then
+    echo "✅ Neo4j contains data; leaving schema/cypher imports untouched."
+    return 0
+  fi
+  local apoc_procedure_count
+  apoc_procedure_count="$(cypher-shell -a bolt://localhost:7687 -u "${NEO4J_USERNAME:-neo4j}" -p "${NEO4J_PASSWORD:-password}" --format plain "SHOW PROCEDURES YIELD name WHERE name IN ['apoc.cypher.runFile', 'apoc.export.cypher.query'] RETURN count(name) AS count;" 2>/dev/null | tail -n 1 | tr -d '[:space:]')" || return 0
+  if [ "$apoc_procedure_count" != "2" ]; then
+    echo "⚠️ Neo4j APOC Cypher persistence skipped because required APOC procedures are unavailable."
+    return 0
+  fi
+  local imported=0
+  for technology in semio elements coda reuse; do
+    local schema_file="$WORKSPACE/$technology/schema/cypher/schema.cypher"
+    if grep -Ev '^[[:space:]]*(//|:|$)' "$schema_file" >/dev/null 2>&1; then
+      cypher-shell -a bolt://localhost:7687 -u "${NEO4J_USERNAME:-neo4j}" -p "${NEO4J_PASSWORD:-password}" "CALL apoc.cypher.runFile('file://$schema_file') YIELD row RETURN count(row) AS rows;" >/dev/null
+      imported=$((imported + 1))
+    fi
+  done
+  echo "✅ Neo4j APOC Cypher persistence ready ($imported schema files imported into empty DB)."
+}
+
+ensure_neo4j_schema_files
+import_neo4j_schema_files_if_empty || echo "⚠️ Neo4j APOC Cypher import skipped."
+#endregion 🧾Neo4jCypherPersistence
 #region 🔖ClaudeAuth
 CLAUDE_HOME="/home/vscode"
 CLAUDE_DIR="${CLAUDE_HOME}/.claude"

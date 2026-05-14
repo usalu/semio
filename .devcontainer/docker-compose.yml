@@ -1,8 +1,11 @@
 # SPDX-License-Identifier: AGPL-3.0-only
 # #region 🔖Compose
 # Dev stack: a single workspace app container. Neo4j 5 Community runs inside `semio` and publishes localhost Bolt/HTTP ports.
+name: semio
 services:
   semio:
+    image: semio
+    container_name: semio
     build:
       context: ..
       dockerfile: .devcontainer/Dockerfile
@@ -17,14 +20,8 @@ services:
       - "host.docker.internal:host-gateway"
     volumes:
       - ..:/workspaces/semio:cached
-      - neo4j-data:/var/lib/neo4j/data
-      - neo4j-logs:/var/log/neo4j
     ports:
       - "127.0.0.1:7474:7474"
       - "127.0.0.1:7687:7687"
     command: ["sleep", "infinity"]
-
-volumes:
-  neo4j-data:
-  neo4j-logs:
 # #endregion 🔖Compose
