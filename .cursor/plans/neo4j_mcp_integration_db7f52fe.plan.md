@@ -4,10 +4,10 @@ overview: Wire up the official Neo4j MCP server (`uvx mcp-neo4j-cypher`) once pe
 todos:
   - id: mcp_configs
     content: Add 4 neo4j-<tech> MCP entries to .mcp.json, .cursor/mcp.json, .windsurf/mcp.json, .kiro/settings/mcp.json
-    status: pending
+    status: completed
   - id: devcontainer
     content: "Update .devcontainer/devcontainer.json: containerEnv, runArgs host-gateway, port 7687 forward"
-    status: pending
+    status: in_progress
   - id: install_native_ps1
     content: "Extend .devcontainer/install-native.ps1: winget Neo4j Desktop + persisted user env vars"
     status: pending

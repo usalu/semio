@@ -350,6 +350,7 @@ if (-not $SkipMachineInstall) {
     Sync-WingetPackage -Id "f3d-app.f3d" -Label "F3D"
     Sync-WingetPackage -Id "Microsoft.VisualStudioCode" -Label "VS Code"
     Sync-WingetPackage -Id "Microsoft.VisualStudioCode.CLI" -Label "VS Code CLI"
+    Sync-WingetPackage -Id "Neo4j.Neo4jDesktop" -Label "Neo4j Desktop"
     Set-UserPathPriority -PreferredEntries @(
         (Join-Path $env:LOCALAPPDATA "Programs\Python\Python314\Scripts"),
         (Join-Path $env:LOCALAPPDATA "Programs\Python\Python314"),
@@ -390,6 +391,10 @@ Set-UserEnvironmentVariable -Name "SEMIO_GITKRAKEN_AUTO_START" -Value "false"
 Set-UserEnvironmentVariable -Name "SEMIO_F3D_AUTO_START" -Value "true"
 Set-UserEnvironmentVariable -Name "SEMIO_POST_ATTACH_SKIP_EXTENSION_INSTALL" -Value ""
 Set-UserEnvironmentVariable -Name "EDITOR" -Value "code --wait"
+Set-UserEnvironmentVariable -Name "NEO4J_URI" -Value "bolt://localhost:7687"
+Set-UserEnvironmentVariable -Name "NEO4J_USERNAME" -Value "neo4j"
+Set-UserEnvironmentVariable -Name "NEO4J_PASSWORD" -Value "password"
+Set-UserEnvironmentVariable -Name "NEO4J_TELEMETRY" -Value "false"
 #endregion 🗂️UserState
 
 #region 🌐GlobalCliInstall
