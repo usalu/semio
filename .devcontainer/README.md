@@ -8,9 +8,9 @@ The monorepo registers one Neo4j MCP server (`neo4j`) in `.mcp.json` and per-cli
 
 **Native (Windows / macOS / Linux):** Run your platform bootstrap (`.devcontainer/install-native.ps1` or `.devcontainer/install-native.sh`) so `NEO4J_URI=bolt://localhost:7687` and credentials are set. Start Neo4j Desktop locally when using a native DBMS, or connect Neo4j Desktop to the devcontainer through the forwarded Bolt port.
 
-**Devcontainer:** Neo4j 5 Community runs as the **`neo4j` Compose service**. Inside **`semio`**, `NEO4J_URI` is **`bolt://neo4j:7687`**. The **`neo4j`** service publishes **`127.0.0.1:7687`** (Bolt) and **`127.0.0.1:7474`** (Browser) to the Docker host, and `devcontainer.json` forwards both ports for Codespaces and local devcontainers.
+**Devcontainer:** Neo4j 5 Community runs inside the single **`semio`** devcontainer. Inside **`semio`**, `NEO4J_URI` is **`bolt://localhost:7687`**. The **`semio`** container publishes **`127.0.0.1:7687`** (Bolt) and **`127.0.0.1:7474`** (Browser) to the Docker host, and `devcontainer.json` forwards both ports for Codespaces and local devcontainers.
 
-**Neo4j Desktop remote connection:** Docker Desktop must be running for local devcontainers. **Reopen in Container** (or recreate the Compose project) so Compose port changes apply. No image rebuild is required for these YAML/script changes. Then:
+**Neo4j Desktop remote connection:** Docker Desktop must be running for local devcontainers. **Reopen in Container** after the image has been rebuilt once so the Neo4j Debian package is available inside **`semio`**. Then:
 
 1. `Test-NetConnection -ComputerName 127.0.0.1 -Port 7687` on Windows, or `nc -vz 127.0.0.1 7687` on macOS/Linux.
 2. Desktop: **`bolt://127.0.0.1:7687`**, user **`neo4j`**, password **`password`**.
@@ -26,11 +26,11 @@ Devcontainer configuration with VS Code customizations, container/remote env, po
 
 ## docker-compose.yml
 
-Compose stack for the devcontainer: **`semio`** and **`neo4j`**. **`neo4j`** publishes **`127.0.0.1:7687`** and **`127.0.0.1:7474`** directly. MCP uses **`bolt://neo4j:7687`** from inside **`semio`**.
+Compose stack for the devcontainer: **`semio`** only. Neo4j is installed in the **`semio`** image, started by **`post-start.sh`**, and persisted in named volumes mounted at **`/var/lib/neo4j/data`** and **`/var/log/neo4j`**. MCP uses **`bolt://localhost:7687`** from inside **`semio`**.
 
 ## semio-entrypoint.sh
 
-Legacy helper kept for existing callers. The current Compose setup does not use it because Neo4j publishes its own ports directly.
+Legacy helper kept for existing callers. The current setup does not need entrypoint startup logic because **`post-start.sh`** starts Neo4j inside **`semio`**.
 
 ## post-create.sh
 
@@ -38,7 +38,7 @@ Devcontainer provisioning steps for dependency installs, including Playwright br
 
 ## post-start.sh
 
-Devcontainer start script that fixes ownership for persisted volumes, normalizes Claude Code auth storage, sets git safe directories, writes Neo4j MCP environment defaults, checks **`neo4j:7687`**, and activates the Python virtual environment.
+Devcontainer start script that fixes ownership for persisted volumes, normalizes Claude Code auth storage, sets git safe directories, writes Neo4j MCP environment defaults, configures and starts the local Neo4j service, checks **`localhost:7687`**, and activates the Python virtual environment.
 
 ## post-attach.sh
 

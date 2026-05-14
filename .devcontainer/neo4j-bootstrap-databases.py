@@ -11,7 +11,7 @@ from neo4j import GraphDatabase
 
 
 def main() -> None:
-    uri = os.environ.get("NEO4J_URI", "bolt://neo4j:7687")
+    uri = os.environ.get("NEO4J_URI", "bolt://localhost:7687")
     user = os.environ.get("NEO4J_USERNAME", "neo4j")
     password = os.environ.get("NEO4J_PASSWORD", "password")
     driver = None

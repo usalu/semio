@@ -98,11 +98,11 @@ echo "✅ Fixed ownership for persisted volume mounts."
 #region 🔖EmojiFonts
 configure_emoji_fonts
 #endregion 🔖EmojiFonts
-#region 🔖Neo4jComposeEnv
+#region 🔖Neo4jEnv
 configure_neo4j_compose_env() {
   local profile_script="/etc/profile.d/99-semio-neo4j-mcp.sh"
   sudo tee "$profile_script" >/dev/null <<'NEO4JPROFILE'
-export NEO4J_URI=bolt://neo4j:7687
+export NEO4J_URI=bolt://localhost:7687
 export NEO4J_USERNAME=neo4j
 export NEO4J_PASSWORD=password
 export NEO4J_TELEMETRY=false
@@ -125,18 +125,61 @@ BASHRC
     # shellcheck source=/dev/null
     . /etc/profile.d/99-semio-neo4j-mcp.sh
   fi
-  echo "✅ Neo4j MCP env (bolt://neo4j:7687 compose service) installed for login shells and this session."
+  echo "✅ Neo4j MCP env (bolt://localhost:7687 in the semio devcontainer) installed for login shells and this session."
 }
 
 configure_neo4j_compose_env
-#endregion 🔖Neo4jComposeEnv
-#region 🔖Neo4jReady
+#endregion 🔖Neo4jEnv
+#region 🗄️Neo4jService
+configure_neo4j_server() {
+  if ! command -v neo4j >/dev/null 2>&1; then
+    echo "⚠️ Neo4j is not installed in this devcontainer image."
+    return 1
+  fi
+
+  local conf="/etc/neo4j/neo4j.conf"
+  sudo mkdir -p /var/lib/neo4j/data /var/log/neo4j /var/run/neo4j
+  sudo chown -R neo4j:neo4j /var/lib/neo4j /var/log/neo4j /var/run/neo4j
+
+  set_neo4j_conf_value() {
+    local key="$1"
+    local value="$2"
+    if sudo grep -Eq "^[#[:space:]]*${key}=" "$conf"; then
+      sudo sed -i -E "s|^[#[:space:]]*${key}=.*|${key}=${value}|" "$conf"
+    else
+      printf '%s=%s\n' "$key" "$value" | sudo tee -a "$conf" >/dev/null
+    fi
+  }
+
+  set_neo4j_conf_value "server.default_listen_address" "0.0.0.0"
+  set_neo4j_conf_value "server.bolt.listen_address" ":7687"
+  set_neo4j_conf_value "server.http.listen_address" ":7474"
+  set_neo4j_conf_value "dbms.usage_report.enabled" "false"
+
+  if [ ! -f /var/lib/neo4j/data/dbms/auth.ini ] && [ ! -f /var/lib/neo4j/data/dbms/auth ]; then
+    sudo neo4j-admin dbms set-initial-password "${NEO4J_PASSWORD:-password}" >/dev/null
+  fi
+}
+
+start_neo4j_server() {
+  if command -v nc >/dev/null 2>&1 && nc -z localhost 7687 2>/dev/null; then
+    echo "✅ Neo4j is already running at bolt://localhost:7687."
+    return 0
+  fi
+
+  sudo neo4j start >/tmp/semio-neo4j-start.log 2>&1 || {
+    echo "⚠️ Neo4j failed to start. Last startup log lines:"
+    tail -40 /tmp/semio-neo4j-start.log || true
+    return 1
+  }
+}
+
 wait_for_neo4j_bolt() {
   for _ in $(seq 1 60); do
-    if command -v nc >/dev/null 2>&1 && nc -z neo4j 7687 2>/dev/null; then
+    if command -v nc >/dev/null 2>&1 && nc -z localhost 7687 2>/dev/null; then
       return 0
     fi
-    if timeout 1 bash -c "echo >/dev/tcp/neo4j/7687" 2>/dev/null; then
+    if timeout 1 bash -c "echo >/dev/tcp/localhost/7687" 2>/dev/null; then
       return 0
     fi
     sleep 2
@@ -144,12 +187,12 @@ wait_for_neo4j_bolt() {
   return 1
 }
 
-if wait_for_neo4j_bolt; then
-  echo "✅ Neo4j is reachable at bolt://neo4j:7687 from the devcontainer."
+if configure_neo4j_server && start_neo4j_server && wait_for_neo4j_bolt; then
+  echo "✅ Neo4j is running inside the semio devcontainer at bolt://localhost:7687."
 else
-  echo "⚠️ Neo4j was not reachable at bolt://neo4j:7687 during post-start."
+  echo "⚠️ Neo4j was not reachable at bolt://localhost:7687 during post-start."
 fi
-#endregion 🔖Neo4jReady
+#endregion 🗄️Neo4jService
 #region 🔖ClaudeAuth
 CLAUDE_HOME="/home/vscode"
 CLAUDE_DIR="${CLAUDE_HOME}/.claude"
@@ -257,10 +300,12 @@ configure_git_ssh_signing() {
 configure_git_ssh_signing
 #endregion 🔐GitSshSigning
 #region 🔖PythonVenv
-if [ -d "$WORKSPACE/.venv" ]; then
+if [ -f "$WORKSPACE/.venv/bin/activate" ]; then
   source "$WORKSPACE/.venv/bin/activate"
+  echo "✅ Activated Python virtual environment."
+else
+  echo "ℹ️ Python virtual environment is not present for this container OS yet."
 fi
-echo "✅ Activated Python virtual environment."
 #endregion 🔖PythonVenv
 echo "✅ Environment ready."
 #endregion 🔖PostStart

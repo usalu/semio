@@ -389,26 +389,17 @@ interface Scalar implements Primitive {
   name: String!
 }
 
+enum FieldKind {
+  EMBEDDED
+  REFERENCE
+  COMPUTED
+  CACHED
+}
+
 interface Field implements Node {
   # Node
   name: String!
-}
-
-interface DataField implements Field {
-  # Node
-  name: String!
-}
-
-interface ComputedField implements Field {
-  # Node
-  name: String!
-}
-
-interface 
-
-interface ReferenceField implements Field {
-  # Node
-  name: String!
+  kind: FieldKind!
 }
 
 interface Interface implements Node {

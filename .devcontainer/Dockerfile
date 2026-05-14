@@ -12,7 +12,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     fonts-noto-mono \
     fonts-noto \
     ripgrep \
-    socat \
     netcat-openbsd \
     iproute2 \
     net-tools \
@@ -57,7 +56,16 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     gnupg \
     lsb-release \
     libatomic1 \
+    openjdk-21-jre-headless \
     netbase \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN mkdir -p /etc/apt/keyrings \
+    && wget -O - https://debian.neo4j.com/neotechnology.gpg.key | gpg --dearmor -o /etc/apt/keyrings/neotechnology.gpg \
+    && echo 'deb [signed-by=/etc/apt/keyrings/neotechnology.gpg] https://debian.neo4j.com stable 5' > /etc/apt/sources.list.d/neo4j.list \
+    && apt-get update \
+    && apt-get install -y --no-install-recommends neo4j \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
@@ -69,7 +77,7 @@ ENV BUN_INSTALL=/home/vscode/.bun
 RUN curl -fsSL https://bun.sh/install | bash
 ENV PATH=/home/vscode/.bun/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 ENV NX_WORKSPACE_DATA_DIRECTORY=/workspaces/semio/.nx/workspace-data-terminal
-ENV NEO4J_URI=bolt://neo4j:7687
+ENV NEO4J_URI=bolt://localhost:7687
 ENV NEO4J_USERNAME=neo4j
 ENV NEO4J_PASSWORD=password
 ENV NEO4J_TELEMETRY=false
