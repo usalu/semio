@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 /**
- * 🖥️ Vite dev server launcher for this bundle (host + optional polling).
- * Usage: bun run.vite.script.ts --port 5174 [--strictPort] [-- extra vite args...]
+ * 💻 Vite dev server for the play site bundle.
+ * Usage: bun dev.script.ts --strictPort --port 4000 [-- extra vite args...]
  */
 import { spawn } from "node:child_process";
 

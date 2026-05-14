@@ -3,5 +3,5 @@
 set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$ROOT"
-echo "[start.mac] bun start.script.ts…"
-bun start.script.ts
+echo "[start.mac] setup.native.script.sh session…"
+SEMIO_SESSION_START=1 bash "$ROOT/setup.native.script.sh"

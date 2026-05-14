@@ -2,5 +2,5 @@
 $ErrorActionPreference = "Stop"
 $Root = $PSScriptRoot
 Set-Location $Root
-Write-Host "[start.windows] bun start.script.ts…"
-bun start.script.ts
+Write-Host "[start.windows] setup.windows.script.ps1 -SessionStart…"
+& (Join-Path $Root "setup.windows.script.ps1") -SessionStart

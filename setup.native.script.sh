@@ -10,11 +10,12 @@ set -euo pipefail
 NEO4J_DESKTOP_INSTALLER_VERSION="${NEO4J_DESKTOP_INSTALLER_VERSION:-1.6.3}"
 SKIP_NEO4J_DESKTOP="${SKIP_NEO4J_DESKTOP:-0}"
 SKIP_REPO_BOOTSTRAP="${SKIP_REPO_BOOTSTRAP:-0}"
+SEMIO_SESSION_START="${SEMIO_SESSION_START:-0}"
 #endregion 🔖Config
 
 #region 🔖Paths
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-REPO_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
+REPO_ROOT="$SCRIPT_DIR"
 #endregion 🔖Paths
 
 #region 🔖Logging
@@ -64,6 +65,71 @@ configure_neo4j_shell_env() {
   export NEO4J_TELEMETRY="false"
 }
 #endregion 🔖Neo4jEnv
+
+#region 🔖Neo4jRuntime
+is_neo4j_reachable() {
+  if command -v nc >/dev/null 2>&1; then
+    nc -z 127.0.0.1 7687 >/dev/null 2>&1
+    return $?
+  fi
+  timeout 1 bash -c "echo >/dev/tcp/127.0.0.1/7687" >/dev/null 2>&1
+}
+
+run_cypher() {
+  local database="$1"
+  local cypher="$2"
+  if command -v cypher-shell >/dev/null 2>&1; then
+    cypher-shell -a bolt://localhost:7687 -u neo4j -p password -d "$database" "$cypher" >/dev/null 2>&1
+    return $?
+  fi
+  if command -v docker >/dev/null 2>&1 && [ "$(docker ps --filter 'name=^/semio$' --format '{{.Names}}' 2>/dev/null)" = "semio" ]; then
+    docker exec semio cypher-shell -a bolt://localhost:7687 -u neo4j -p password -d "$database" "$cypher" >/dev/null 2>&1
+    return $?
+  fi
+  return 1
+}
+
+ensure_native_neo4j() {
+  if is_neo4j_reachable; then
+    log "Neo4j is reachable at bolt://localhost:7687."
+  else
+    if command -v neo4j >/dev/null 2>&1; then
+      log "Starting local Neo4j service..."
+      neo4j start >/dev/null 2>&1 || true
+    fi
+    if ! is_neo4j_reachable && command -v docker >/dev/null 2>&1; then
+      if [ "$(docker ps -a --filter 'name=^/semio$' --format '{{.Names}}' 2>/dev/null)" = "semio" ]; then
+        log "Starting Docker container semio for local Neo4j..."
+        docker start semio >/dev/null 2>&1 || true
+      elif [ -f "$REPO_ROOT/.devcontainer/docker-compose.yml" ]; then
+        log "Starting semio compose container for local Neo4j without rebuilding..."
+        docker compose -f "$REPO_ROOT/.devcontainer/docker-compose.yml" up -d --no-build >/dev/null 2>&1 || true
+      fi
+    fi
+    for _ in $(seq 1 30); do
+      is_neo4j_reachable && break
+      sleep 2
+    done
+  fi
+
+  if ! is_neo4j_reachable; then
+    log "Neo4j is not reachable yet. Start the local semio DBMS in Neo4j Desktop or the semio devcontainer."
+    return 0
+  fi
+
+  if command -v docker >/dev/null 2>&1 && [ "$(docker ps --filter 'name=^/semio$' --format '{{.Names}}' 2>/dev/null)" = "semio" ]; then
+    docker exec semio bash -lc "cd /workspaces/semio && DEVCONTAINER=true NEO4J_PASSWORD=password bash .devcontainer/post-start.sh" >/dev/null 2>&1 || true
+  fi
+
+  for technology in semio elements coda reuse; do
+    if run_cypher system "CREATE DATABASE ${technology} IF NOT EXISTS;"; then
+      log "Neo4j database ready: ${technology}."
+    else
+      log "Neo4j database ${technology} was not created; using the reachable default database for this setup."
+    fi
+  done
+}
+#endregion 🔖Neo4jRuntime
 
 #region 🔖EnsureUv
 ensure_uv() {
@@ -204,9 +270,15 @@ repo_bootstrap() {
 
 #region 🔖Main
 cd "$REPO_ROOT"
+configure_neo4j_shell_env
+if [ "$SEMIO_SESSION_START" = "1" ]; then
+  ensure_native_neo4j
+  log "Native IDE session setup complete."
+  exit 0
+fi
 install_neo4j_desktop
 ensure_uv
-configure_neo4j_shell_env
+ensure_native_neo4j
 repo_bootstrap
 log "Native (Unix) bootstrap complete. Open a new shell to load NEO4J_* from your profile, or run: export NEO4J_URI=bolt://localhost:7687 …"
 #endregion 🔖Main

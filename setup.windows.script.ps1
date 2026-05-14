@@ -10,6 +10,7 @@
 
 [CmdletBinding()]
 param(
+    [switch]$SessionStart,
     [switch]$SkipMachineInstall,
     [switch]$SkipGlobalCliInstall,
     [switch]$SkipEditorInstall,
@@ -31,7 +32,7 @@ function Write-Step {
 }
 
 function Get-RepoRoot {
-    return (Resolve-Path (Join-Path $PSScriptRoot "..")).Path
+    return (Resolve-Path $PSScriptRoot).Path
 }
 
 function Join-HomePath {
@@ -319,7 +320,117 @@ function Stop-RepoPythonProcesses {
         }
     }
 }
+
+function Test-TcpPort {
+    param(
+        [string]$HostName,
+        [int]$Port
+    )
+
+    $client = [System.Net.Sockets.TcpClient]::new()
+    try {
+        $async = $client.BeginConnect($HostName, $Port, $null, $null)
+        if (-not $async.AsyncWaitHandle.WaitOne(1000)) {
+            return $false
+        }
+        $client.EndConnect($async)
+        return $true
+    } catch {
+        return $false
+    } finally {
+        $client.Close()
+    }
+}
+
+function Invoke-Neo4jCypher {
+    param(
+        [string]$RepoRoot,
+        [string]$Cypher,
+        [string]$Database = "neo4j"
+    )
+
+    $cypherShell = Get-FirstCommandPath @("cypher-shell.cmd", "cypher-shell.exe", "cypher-shell")
+    if ($cypherShell) {
+        & $cypherShell -a "bolt://localhost:7687" -u "neo4j" -p "password" -d $Database $Cypher *> $null
+        return $LASTEXITCODE -eq 0
+    }
+
+    $docker = Get-FirstCommandPath @("docker.exe", "docker")
+    if ($docker) {
+        $container = & $docker ps --filter "name=^/semio$" --format "{{.Names}}" 2>$null
+        if ($container -eq "semio") {
+            & $docker exec semio cypher-shell -a "bolt://localhost:7687" -u "neo4j" -p "password" -d $Database $Cypher *> $null
+            return $LASTEXITCODE -eq 0
+        }
+    }
+
+    return $false
+}
+
+function Ensure-NativeNeo4j {
+    param([string]$RepoRoot)
+
+    $technologies = @("semio", "elements", "coda", "reuse")
+    if (Test-TcpPort -HostName "127.0.0.1" -Port 7687) {
+        Write-Step "Neo4j is reachable at bolt://localhost:7687."
+    } else {
+        $service = Get-Service -Name "neo4j*" -ErrorAction SilentlyContinue | Select-Object -First 1
+        if ($service -and $service.Status -ne "Running") {
+            Write-Step "Starting local Neo4j service $($service.Name)..."
+            Start-Service -Name $service.Name
+            Start-Sleep -Seconds 5
+        }
+
+        if (-not (Test-TcpPort -HostName "127.0.0.1" -Port 7687)) {
+            $docker = Get-FirstCommandPath @("docker.exe", "docker")
+            if ($docker) {
+                $container = & $docker ps -a --filter "name=^/semio$" --format "{{.Names}}" 2>$null
+                if ($container -eq "semio") {
+                    Write-Step "Starting Docker container semio for local Neo4j..."
+                    & $docker start semio | Out-Null
+                } elseif (Test-Path -LiteralPath (Join-Path $RepoRoot ".devcontainer\docker-compose.yml")) {
+                    Write-Step "Starting semio compose container for local Neo4j without rebuilding..."
+                    & $docker compose -f (Join-Path $RepoRoot ".devcontainer\docker-compose.yml") up -d --no-build | Out-Null
+                }
+            }
+        }
+
+        for ($i = 0; $i -lt 30 -and -not (Test-TcpPort -HostName "127.0.0.1" -Port 7687); $i++) {
+            Start-Sleep -Seconds 2
+        }
+    }
+
+    if (-not (Test-TcpPort -HostName "127.0.0.1" -Port 7687)) {
+        Write-Step "Neo4j is not reachable yet. Start the local semio DBMS in Neo4j Desktop or the semio devcontainer."
+        return
+    }
+
+    $docker = Get-FirstCommandPath @("docker.exe", "docker")
+    if ($docker) {
+        $container = & $docker ps --filter "name=^/semio$" --format "{{.Names}}" 2>$null
+        if ($container -eq "semio") {
+            & $docker exec semio bash -lc "cd /workspaces/semio && DEVCONTAINER=true NEO4J_PASSWORD=password bash .devcontainer/post-start.sh" | Out-Null
+        }
+    }
+
+    foreach ($technology in $technologies) {
+        $databaseCreated = Invoke-Neo4jCypher -RepoRoot $RepoRoot -Database "system" -Cypher "CREATE DATABASE $technology IF NOT EXISTS;"
+        if ($databaseCreated) {
+            Write-Step "Neo4j database ready: $technology."
+        } else {
+            Write-Step "Neo4j database $technology was not created; using the reachable default database for this setup."
+        }
+    }
+}
 #endregion 🔧Helpers
+
+if ($SessionStart) {
+    $SkipMachineInstall = $true
+    $SkipGlobalCliInstall = $true
+    $SkipEditorInstall = $true
+    $SkipPlaywrightInstall = $true
+    $SkipRepoBootstrap = $true
+}
 
 $repoRoot = Get-RepoRoot
 Set-Location $repoRoot
@@ -396,6 +507,14 @@ Set-UserEnvironmentVariable -Name "NEO4J_USERNAME" -Value "neo4j"
 Set-UserEnvironmentVariable -Name "NEO4J_PASSWORD" -Value "password"
 Set-UserEnvironmentVariable -Name "NEO4J_TELEMETRY" -Value "false"
 #endregion 🗂️UserState
+
+#region 🗄️Neo4jRuntime
+Ensure-NativeNeo4j -RepoRoot $repoRoot
+if ($SessionStart) {
+    Write-Step "Native Windows IDE session setup complete."
+    exit 0
+}
+#endregion 🗄️Neo4jRuntime
 
 #region 🌐GlobalCliInstall
 if (-not $SkipGlobalCliInstall) {

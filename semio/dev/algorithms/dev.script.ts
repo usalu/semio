@@ -1,5 +1,5 @@
 #!/usr/bin/env bun
-/** 📚 Storybook dev for the Semio UI library bundle. */
+/** 💻 Storybook dev for this bundle (devcontainer-friendly host + optional polling). */
 import { spawn } from "node:child_process";
 
 const host = process.env.DEVCONTAINER === "true" ? "0.0.0.0" : "127.0.0.1";

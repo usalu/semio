@@ -6,7 +6,7 @@
       "executor": "nx:run-commands",
       "options": {
         "cwd": "semio/site/docs",
-        "command": "bun run.vite.script.ts --port 4321",
+        "command": "bun dev.script.ts --port 4321",
         "forwardAllArgs": true
       }
     },
