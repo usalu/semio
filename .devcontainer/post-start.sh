@@ -130,6 +130,11 @@ BASHRC
 
 configure_neo4j_compose_env
 #endregion 🔖Neo4jComposeEnv
+#region 🔖Neo4jBoltHostForward
+if [ -f "$WORKSPACE/.devcontainer/neo4j-host-forward.sh" ]; then
+  bash "$WORKSPACE/.devcontainer/neo4j-host-forward.sh" || true
+fi
+#endregion 🔖Neo4jBoltHostForward
 #region 🔖Neo4jBootstrapDatabases
 bootstrap_neo4j_databases() {
   if [ ! -f "$WORKSPACE/.devcontainer/neo4j-bootstrap-databases.py" ]; then

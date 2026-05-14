@@ -1,15 +1,12 @@
 # SPDX-License-Identifier: AGPL-3.0-only
 # #region 🔖Compose
-# Dev stack: workspace app container + Neo4j 5 (Bolt). MCP and tools use bolt://neo4j:7687 from the app container.
+# Dev stack: workspace app container + Neo4j 5 (internal). MCP uses bolt://neo4j:7687; host Desktop uses editor forwardPorts + socat on semio.
 services:
   neo4j:
     image: neo4j:5-community
     restart: unless-stopped
     environment:
       NEO4J_AUTH: neo4j/password
-    ports:
-      - "7687:7687"
-      - "7474:7474"
     volumes:
       - neo4j-data:/data
     healthcheck:
