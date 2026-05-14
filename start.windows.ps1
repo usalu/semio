@@ -2,5 +2,5 @@
 $ErrorActionPreference = "Stop"
 $Root = $PSScriptRoot
 Set-Location $Root
-Write-Host "[start.windows] bun start.ts…"
-bun start.ts
+Write-Host "[start.windows] bun start.script.ts…"
+bun start.script.ts

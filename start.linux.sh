@@ -3,5 +3,5 @@
 set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$ROOT"
-echo "[start.linux] bun start.ts…"
-bun start.ts
+echo "[start.linux] bun start.script.ts…"
+bun start.script.ts

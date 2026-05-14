@@ -8,7 +8,7 @@
     "./nx-plugin": "./nx-plugin.mjs"
   },
   "scripts": {
-    "lint": "bun lint.ts",
+    "lint": "bun lint.script.ts",
     "test": "bun test ./src/index.test.ts"
   },
   "devDependencies": {

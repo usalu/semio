@@ -5,8 +5,8 @@
 - Opened manually because repo MCP resources/tools were not exposed in this Codex session and the local Go CLI is currently blocked by an unrelated workspace module mismatch.
 - Corrected the setup to a single `semio` devcontainer. Neo4j is installed in the `semio` image, starts from `post-start.sh`, and publishes `127.0.0.1:7687` and `127.0.0.1:7474` from that same container.
 - Normalized Docker artifact names so the active container is `semio` and the active image is `semio:latest`.
-- Replaced raw Neo4j store persistence with APOC-backed Cypher files under `.repo/🛂/*.cyper`.
-- Added `.repo/🛂/dev.cyper` to the same APOC persistence convention.
+- Replaced raw Neo4j store persistence with APOC-backed Cypher files under `.repo/🛂/*.cypher`.
+- Kept the technology set to `semio`, `elements`, `coda`, and `reuse`.
 - Installed APOC Core and APOC Extended, importing with `apoc.cypher.runFile` and documenting scoped `apoc.export.cypher.query` exports instead of whole-database dumps.
 - Kept the dev setup on Neo4j Community and the default `neo4j` database because Community supports one user database per DBMS.
 - Added explicit `7474` and `7687` devcontainer forwarding for Codespaces/local devcontainers.

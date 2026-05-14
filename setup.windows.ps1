@@ -12,5 +12,5 @@ if (-not (Get-Command bun -ErrorAction SilentlyContinue)) {
 Write-Host "[setup.windows] bun install…"
 bun install
 
-Write-Host "[setup.windows] bun setup.ts…"
-bun setup.ts
+Write-Host "[setup.windows] bun setup.script.ts…"
+bun setup.script.ts

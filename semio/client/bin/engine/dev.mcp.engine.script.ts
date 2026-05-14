@@ -1,12 +1,13 @@
 #!/usr/bin/env bun
-/** 🔌 Build engine MCP bundle then launch MCPJam inspector against `semio/client/bin/engine`. */
+/** 🔌 Build engine MCP bundle then launch MCPJam inspector for this engine bundle. */
 import { execFileSync } from "node:child_process";
 import { spawn } from "node:child_process";
-import { resolve } from "node:path";
+import { join } from "node:path";
 
-const root = import.meta.dir;
+const engineDir = import.meta.dir;
+const root = join(engineDir, "..", "..", "..", "..");
+
 const host = process.env.DEVCONTAINER === "true" ? "0.0.0.0" : "127.0.0.1";
-const engineDir = resolve(root, "semio", "client", "bin", "engine");
 
 execFileSync(
   "bunx",

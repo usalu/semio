@@ -1,7 +1,6 @@
 #!/usr/bin/env bun
 /** 🧹 Runs workspace lint plus dependency-cruiser on selected JS packages. */
 import { execFileSync } from "node:child_process";
-import { join } from "node:path";
 
 const root = import.meta.dir;
 execFileSync("bun", ["nx", "run-many", "-t", "lint", "--all", "--exclude", "workspace"], {

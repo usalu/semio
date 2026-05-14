@@ -32,18 +32,17 @@ Compose stack for the devcontainer: **`semio`** only. Neo4j is installed in the 
 
 APOC Core and APOC Extended are installed in the **`semio`** image and configured for file import/export. The canonical repo persistence paths are:
 
-- **`.repo/🛂/semio.cyper`**
-- **`.repo/🛂/elements.cyper`**
-- **`.repo/🛂/coda.cyper`**
-- **`.repo/🛂/reuse.cyper`**
-- **`.repo/🛂/dev.cyper`**
+- **`.repo/🛂/semio.cypher`**
+- **`.repo/🛂/elements.cypher`**
+- **`.repo/🛂/coda.cypher`**
+- **`.repo/🛂/reuse.cypher`**
 
 On devcontainer start, **`post-start.sh`** imports non-empty schema files with **`apoc.cypher.runFile`** only when the live database is empty. Export technology-scoped graph state with APOC query exports instead of dumping the whole database, for example:
 
 ```cypher
 CALL apoc.export.cypher.query(
   'MATCH (n:Semio) OPTIONAL MATCH (n)-[r]->(m:Semio) RETURN n, r, m',
-  '/workspaces/semio/.repo/\uD83D\uDEC2/semio.cyper',
+  '/workspaces/semio/.repo/\uD83D\uDEC2/semio.cypher',
   {format: 'cypher-shell'}
 );
 ```

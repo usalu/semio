@@ -1,9 +1,10 @@
 #!/usr/bin/env bun
 /** 🔌 MCP inspector wired to the `repo` server from `.cursor/mcp.json`. */
 import { spawn } from "node:child_process";
+import { join } from "node:path";
 
 const host = process.env.DEVCONTAINER === "true" ? "0.0.0.0" : "127.0.0.1";
-const root = import.meta.dir;
+const root = join(import.meta.dir, "..", "..");
 
 const child = spawn(
   "npx",

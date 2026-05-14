@@ -208,7 +208,7 @@ ensure_neo4j_schema_files() {
   local schema_dir="$WORKSPACE/.repo/🛂"
   mkdir -p "$schema_dir"
   for technology in "${technologies[@]}"; do
-    local schema_file="$schema_dir/$technology.cyper"
+    local schema_file="$schema_dir/$technology.cypher"
     if [ ! -f "$schema_file" ]; then
       cat >"$schema_file" <<EOF
 // SPDX-License-Identifier: AGPL-3.0-only

@@ -18,5 +18,5 @@ fi
 echo "[setup.linux] bun install…"
 bun install
 
-echo "[setup.linux] bun setup.ts…"
-bun setup.ts
+echo "[setup.linux] bun setup.script.ts…"
+bun setup.script.ts
