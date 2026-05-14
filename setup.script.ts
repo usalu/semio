@@ -119,12 +119,9 @@ if (process.platform === "linux") {
 }
 //#endregion
 
-//#region 🔖RepoHooks
-const configureBin = join(root, "repo", "client", process.platform === "win32" ? "client.exe" : "client");
-if (existsSync(configureBin)) {
-  console.log("[setup] repo client configure…");
-  tryRun(configureBin, ["configure"]);
-}
+//#region 🔖GitWorkspace
+console.log("[setup] git workspace (symlinks, hooks)…");
+tryRun("bun", [join(root, "git.script.ts"), "setup"]);
 //#endregion
 
 console.log("[setup] VS Code extension build & package…");

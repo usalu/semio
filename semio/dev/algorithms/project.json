@@ -6,7 +6,7 @@
       "executor": "nx:run-commands",
       "options": {
         "cwd": "semio/dev/algorithms",
-        "command": "bun ../../../scripts/dev-storybook.script.ts",
+        "command": "bun ./dev.script.ts",
         "env": {
           "STORYBOOK_PORT": "6007"
         },

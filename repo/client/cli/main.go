@@ -13536,6 +13536,35 @@ func (l *BaseLanguage) SkipDirectives() []string {
 	return append(builtIn, l.skipDirectives...)
 }
 
+// 🧭CommentTemplateState tracks nested template literal expression depth during comment scans.
+type CommentTemplateState struct {
+	ExprDepth int
+}
+
+// 🧵CommentScanState tracks string, template, and block-comment state during comment scans.
+type CommentScanState struct {
+	InBlockComment          bool
+	BlockCommentStartLine   int
+	BlockCommentStartIndex  int
+	BlockCommentStartColumn int
+	BlockCommentIsJsDoc     bool
+	BlockCommentHasTodo     bool
+	InTodoBlock             bool
+	Escaped                 bool
+	InSingleQuote           bool
+	InDoubleQuote           bool
+	InTripleDouble          bool
+	InTripleSingle          bool
+	InRawBacktick           bool
+	InVerbatimString        bool
+	Templates               []CommentTemplateState
+}
+
+// 🪡InTemplateRaw reports whether scanning is inside template literal text, not an expression.
+func (s *CommentScanState) InTemplateRaw() bool {
+	return len(s.Templates) > 0 && s.Templates[len(s.Templates)-1].ExprDepth == 0
+}
+
 // 📡ScanComments MUST operate on the BaseLanguage receiver and return consistent results.
 func (l *BaseLanguage) ScanComments(ctx *PolicyContext, file, content string, lines []string) []Breach {
 	if l.commentPrefix == "" {
@@ -17926,7 +17955,6 @@ type PolicyFunc func(ctx *PolicyContext) []Breach
 // 💿policies holds the data fields for a policies record.
 var policies = []PolicyDef{}
 
-
 // 🎯FindPolicy MUST return nil when no match is found.
 // 🔎FindPolicy searches for and returns the matching policy.
 func FindPolicy(id string) (PolicyDef, bool) {
@@ -18494,7 +18522,6 @@ func CheckPolicies(scope Scope, bundles []Bundle, policyIDs []string) ([]Breach,
 func CheckPoliciesWithContext(ctx *PolicyContext, policyIDs []string) ([]Breach, error) {
 	return nil, nil
 }
-
 
 // #endregion 🧊Policies
 
@@ -25783,7 +25810,6 @@ func inferDefinitionKindFromLine(line string) DefinitionKind {
 	}
 }
 
-
 func applyAutofixes(file string, breachs []Breach) (int, error) {
 	absPath := filepath.Join(rootDir, file)
 	content, err := ReadTextFile(absPath)
@@ -26960,7 +26986,6 @@ func findMatchingSectionStartName(lines []string, endLineIdx int, language Langu
 	}
 	return ""
 }
-
 
 // 📬TicketOpen MUST return a non-nil error when the operation fails.
 // ⚫TicketOpen performs the ticket open operation on the repo context.
@@ -35190,6 +35215,22 @@ func collectTestDefinitionsFromContent(content string, normalized string) []Defi
 		return tests
 	}
 	return fallbackTestDefinitionsFromContent(content, normalized)
+}
+
+// 🧪isTestOrBenchmarkFile reports whether a normalized path conventionally contains tests.
+func isTestOrBenchmarkFile(normalized string) bool {
+	name := strings.ToLower(filepath.Base(filepath.ToSlash(normalized)))
+	return strings.HasSuffix(name, "_test.go") ||
+		strings.HasSuffix(name, ".test.ts") ||
+		strings.HasSuffix(name, ".test.tsx") ||
+		strings.HasSuffix(name, ".test.js") ||
+		strings.HasSuffix(name, ".test.jsx") ||
+		strings.HasSuffix(name, ".spec.ts") ||
+		strings.HasSuffix(name, ".spec.tsx") ||
+		strings.HasSuffix(name, ".spec.js") ||
+		strings.HasSuffix(name, ".spec.jsx") ||
+		strings.HasPrefix(name, "test_") ||
+		strings.Contains(name, "benchmark")
 }
 
 func fallbackTestDefinitionsFromContent(content string, normalized string) []Definition {

@@ -8,7 +8,7 @@ const root = import.meta.dir;
 process.chdir(root);
 
 if (!existsSync(join(root, "node_modules", "nx", "package.json"))) {
-  console.log("[start] node_modules incomplete — run `bun install` and `bun setup.script.ts` (or platform setup script).");
+  console.log("[start] node_modules incomplete — run `bun install` and `bun ./setup.script.ts` (or platform setup script).");
   process.exit(0);
 }
 

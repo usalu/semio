@@ -6,7 +6,7 @@
       "executor": "nx:run-commands",
       "options": {
         "cwd": "semio/site/play",
-        "command": "bun ../../../scripts/dev-vite.script.ts --strictPort --port 4000",
+        "command": "bun ./dev.script.ts --strictPort --port 4000",
         "env": {
           "CHOKIDAR_USEPOLLING": "1"
         },

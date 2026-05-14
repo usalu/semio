@@ -8,56 +8,56 @@
       "executor": "nx:run-commands",
       "cache": false,
       "options": {
-        "command": "bun setup.script.ts"
+        "command": "bun ./setup.script.ts"
       }
     },
     "start": {
       "executor": "nx:run-commands",
       "cache": false,
       "options": {
-        "command": "bun start.script.ts"
+        "command": "bun ./start.script.ts"
       }
     },
     "lint": {
       "executor": "nx:run-commands",
       "dependsOn": [],
       "options": {
-        "command": "bun lint.script.ts"
+        "command": "bun ./lint.script.ts"
       }
     },
     "test": {
       "executor": "nx:run-commands",
       "dependsOn": [],
       "options": {
-        "command": "bun test.script.ts"
+        "command": "bun ./test.script.ts"
       }
     },
     "build": {
       "executor": "nx:run-commands",
       "dependsOn": [],
       "options": {
-        "command": "bun build.script.ts"
+        "command": "bun ./build.script.ts"
       }
     },
     "dev-mcp": {
       "executor": "nx:run-commands",
       "cache": false,
       "options": {
-        "command": "bun repo/client/dev.script.ts"
+        "command": "bun ./dev-mcp.script.ts"
       }
     },
     "dev-mcp-engine": {
       "executor": "nx:run-commands",
       "cache": false,
       "options": {
-        "command": "bun semio/client/bin/engine/dev.script.ts"
+        "command": "bun ./dev-mcp.script.ts engine"
       }
     },
     "dev-mcp-repo": {
       "executor": "nx:run-commands",
       "cache": false,
       "options": {
-        "command": "bun repo/client/dev.script.ts repo"
+        "command": "bun ./dev-mcp.script.ts repo"
       }
     }
   }
