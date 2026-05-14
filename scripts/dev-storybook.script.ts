@@ -1,5 +1,8 @@
 #!/usr/bin/env bun
-/** 💻 Storybook dev for this bundle (devcontainer-friendly host + optional polling). */
+/**
+ * 💻 Storybook dev server; **cwd** must be the bundle root (Nx `cwd` / run from that directory).
+ * Forwards extra argv to Storybook after the fixed flags.
+ */
 import { spawn } from "node:child_process";
 
 const host = process.env.DEVCONTAINER === "true" ? "0.0.0.0" : "127.0.0.1";
@@ -15,6 +18,6 @@ const env = {
 const child = spawn(
   "bunx",
   ["storybook", "dev", "-p", port, "--exact-port", "--host", host, "--no-open", "--debug", ...extra],
-  { stdio: "inherit", shell: true, env },
+  { stdio: "inherit", shell: true, env, cwd: process.cwd() },
 );
 child.on("exit", (c) => process.exit(c ?? 0));

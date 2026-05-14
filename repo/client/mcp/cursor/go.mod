@@ -66,4 +66,4 @@ require (
 	modernc.org/sqlite v1.48.2 // indirect
 )
 
-replace github.com/usalu/semio/repo/client => ../..
+replace github.com/usalu/semio/repo/client => ../../cli

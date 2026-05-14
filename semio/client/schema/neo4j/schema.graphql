@@ -376,6 +376,7 @@ interface Constraint {
 interface Node {
   # Node
   name: String!
+  emoji: String!
   constraints: [Constraint!]! @relationship(type: "HAS", direction: OUT)
 }
 
@@ -408,12 +409,12 @@ interface Interface implements Node {
   fields: [Field!]! @relationship(type: "HAS", direction: OUT)
 }
 
-interface Method implements Node {
+interface Command implements Node {
   # Node
   name: String!
 }
 
-interface Class implements Node {
+interface Class implements Node @node {
   # Node
   name: String!
   interfaces: [Interface!]! @relationship(type: "IMPLEMENTS", direction: OUT)

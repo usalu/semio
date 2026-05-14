@@ -1,7 +1,29 @@
-# Codex MCP Server Configuration
-# See: https://github.com/openai/codex/blob/main/docs/config.md
-
 [mcp_servers.repo]
 command = "go"
-args = ["run", "./repo/codex"]
+args = ["run", "./repo/client/mcp/codex"]
 enabled = true
+cwd = "."
+
+[mcp_servers.neo4j-semio]
+command = "bun"
+args = ["neo4j.mcp.script.ts", "semio"]
+enabled = true
+cwd = "."
+
+[mcp_servers.neo4j-elements]
+command = "bun"
+args = ["neo4j.mcp.script.ts", "elements"]
+enabled = true
+cwd = "."
+
+[mcp_servers.neo4j-coda]
+command = "bun"
+args = ["neo4j.mcp.script.ts", "coda"]
+enabled = true
+cwd = "."
+
+[mcp_servers.neo4j-reuse]
+command = "bun"
+args = ["neo4j.mcp.script.ts", "reuse"]
+enabled = true
+cwd = "."

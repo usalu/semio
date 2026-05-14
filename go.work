@@ -3,7 +3,7 @@ go 1.25.0
 use (
 	./coda/client/lib/blnbo/go
 	./coda/client/lib/programming/go
-	./repo/client
+	./repo/client/cli
 	./repo/client/mcp
 	./repo/client/mcp/claude
 	./repo/client/mcp/codex
