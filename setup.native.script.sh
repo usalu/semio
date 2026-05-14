@@ -8,6 +8,8 @@ set -euo pipefail
 
 #region 🔖Config
 NEO4J_DESKTOP_INSTALLER_VERSION="${NEO4J_DESKTOP_INSTALLER_VERSION:-1.6.3}"
+NEO4J_VERSION="${NEO4J_VERSION:-5.26.26}"
+APOC_VERSION="${APOC_VERSION:-5.26.4}"
 SKIP_NEO4J_DESKTOP="${SKIP_NEO4J_DESKTOP:-0}"
 SKIP_REPO_BOOTSTRAP="${SKIP_REPO_BOOTSTRAP:-0}"
 SEMIO_SESSION_START="${SEMIO_SESSION_START:-0}"
@@ -85,13 +87,119 @@ run_cypher() {
   return 1
 }
 
+java_major_version() {
+  if ! command -v java >/dev/null 2>&1; then
+    printf '0\n'
+    return 0
+  fi
+  java -version 2>&1 | sed -n 's/.*version "\([0-9][0-9]*\).*/\1/p' | head -1
+}
+
+ensure_java_runtime() {
+  local major
+  major="$(java_major_version)"
+  if [ -n "$major" ] && [ "$major" -ge 21 ]; then
+    return 0
+  fi
+  if [ "$SEMIO_SESSION_START" = "1" ]; then
+    log "Java 21+ is required for Neo4j. Run setup.mac.sh or setup.linux.sh to install it."
+    return 1
+  fi
+  case "$(uname -s)" in
+  Darwin)
+    if command -v brew >/dev/null 2>&1; then
+      brew install openjdk@21 || true
+      for b in /opt/homebrew/opt/openjdk@21/bin /usr/local/opt/openjdk@21/bin; do
+        [ -d "$b" ] && export PATH="$b:$PATH"
+      done
+    fi
+    ;;
+  Linux)
+    if command -v apt-get >/dev/null 2>&1; then
+      if command -v sudo >/dev/null 2>&1 && [ "$(id -u)" -ne 0 ]; then
+        sudo apt-get update -qq
+        sudo apt-get install -y --no-install-recommends openjdk-21-jre-headless || sudo apt-get install -y --no-install-recommends openjdk-17-jre-headless
+      elif [ "$(id -u)" -eq 0 ]; then
+        apt-get update -qq
+        apt-get install -y --no-install-recommends openjdk-21-jre-headless || apt-get install -y --no-install-recommends openjdk-17-jre-headless
+      fi
+    fi
+    ;;
+  esac
+}
+
+ensure_native_neo4j_runtime() {
+  local cache_root="$REPO_ROOT/.repo/cache/neo4j"
+  local runtime_root="$cache_root/neo4j-community-$NEO4J_VERSION"
+  mkdir -p "$cache_root"
+  if [ ! -d "$runtime_root" ]; then
+    local archive="$cache_root/neo4j-community-$NEO4J_VERSION-unix.tar.gz"
+    log "Downloading native Neo4j Community $NEO4J_VERSION..."
+    curl -fSL --retry 3 --retry-delay 2 -o "$archive" "https://dist.neo4j.org/neo4j-community-$NEO4J_VERSION-unix.tar.gz"
+    tar -xzf "$archive" -C "$cache_root"
+  fi
+
+  mkdir -p "$runtime_root/plugins"
+  if [ ! -f "$runtime_root/plugins/apoc-core-$APOC_VERSION-core.jar" ]; then
+    curl -fSL --retry 3 --retry-delay 2 -o "$runtime_root/plugins/apoc-core-$APOC_VERSION-core.jar" "https://repo.maven.apache.org/maven2/org/neo4j/procedure/apoc-core/$APOC_VERSION/apoc-core-$APOC_VERSION-core.jar"
+  fi
+  if [ ! -f "$runtime_root/plugins/apoc-$APOC_VERSION-extended.jar" ]; then
+    curl -fSL --retry 3 --retry-delay 2 -o "$runtime_root/plugins/apoc-$APOC_VERSION-extended.jar" "https://github.com/neo4j-contrib/neo4j-apoc-procedures/releases/download/$APOC_VERSION/apoc-$APOC_VERSION-extended.jar"
+  fi
+
+  local conf="$runtime_root/conf/neo4j.conf"
+  mkdir -p "$runtime_root/data" "$runtime_root/logs"
+  set_conf_value "$conf" "server.default_listen_address" "127.0.0.1"
+  set_conf_value "$conf" "server.bolt.listen_address" ":7687"
+  set_conf_value "$conf" "server.http.listen_address" ":7474"
+  set_conf_value "$conf" "dbms.usage_report.enabled" "false"
+  set_conf_value "$conf" "server.directories.data" "$runtime_root/data"
+  set_conf_value "$conf" "server.directories.logs" "$runtime_root/logs"
+  set_conf_value "$conf" "server.directories.import" "$REPO_ROOT"
+  set_conf_value "$conf" "dbms.security.procedures.allowlist" "apoc.*"
+  set_conf_value "$conf" "dbms.security.procedures.unrestricted" "apoc.*"
+  {
+    printf '%s\n' "apoc.export.file.enabled=true"
+    printf '%s\n' "apoc.import.file.enabled=true"
+    printf '%s\n' "apoc.import.file.use_neo4j_config=false"
+  } >"$runtime_root/conf/apoc.conf"
+  printf '%s\n' "$runtime_root"
+}
+
+set_conf_value() {
+  local conf="$1"
+  local key="$2"
+  local value="$3"
+  if grep -Eq "^[#[:space:]]*${key}=" "$conf"; then
+    sed -i.bak -E "s|^[#[:space:]]*${key}=.*|${key}=${value}|" "$conf"
+  else
+    printf '%s=%s\n' "$key" "$value" >>"$conf"
+  fi
+}
+
+start_native_neo4j_runtime() {
+  local runtime_root="$1"
+  ensure_java_runtime || return 0
+  if [ ! -f "$runtime_root/data/dbms/auth.ini" ] && [ ! -f "$runtime_root/data/dbms/auth" ]; then
+    "$runtime_root/bin/neo4j-admin" dbms set-initial-password password >/dev/null 2>&1 || true
+  fi
+  log "Starting repo-local native Neo4j runtime..."
+  mkdir -p "$runtime_root/logs"
+  nohup "$runtime_root/bin/neo4j" console >"$runtime_root/logs/semio-native-console.log" 2>&1 &
+}
+
 ensure_native_neo4j() {
+  local runtime_root
+  runtime_root="$(ensure_native_neo4j_runtime)"
   if is_neo4j_reachable; then
     log "Neo4j is reachable at bolt://localhost:7687."
   else
     if command -v neo4j >/dev/null 2>&1; then
       log "Starting local Neo4j service..."
       neo4j start >/dev/null 2>&1 || true
+    fi
+    if ! is_neo4j_reachable; then
+      start_native_neo4j_runtime "$runtime_root"
     fi
     for _ in $(seq 1 30); do
       is_neo4j_reachable && break

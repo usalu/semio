@@ -23,6 +23,8 @@ $ErrorActionPreference = "Stop"
 
 #region 🎯Targets
 $script:PythonKind = "3.14"
+$script:Neo4jVersion = "5.26.26"
+$script:ApocVersion = "5.26.4"
 #endregion 🎯Targets
 
 #region 🔧Helpers
@@ -49,6 +51,16 @@ function Ensure-Directory {
     if (-not (Test-Path -LiteralPath $Path)) {
         New-Item -ItemType Directory -Path $Path -Force | Out-Null
     }
+}
+
+function Set-TextFileUtf8NoBom {
+    param(
+        [string]$Path,
+        [string[]]$Value
+    )
+
+    $encoding = [System.Text.UTF8Encoding]::new($false)
+    [System.IO.File]::WriteAllLines($Path, $Value, $encoding)
 }
 
 function Refresh-CurrentProcessPath {
@@ -349,19 +361,161 @@ function Invoke-Neo4jCypher {
         [string]$Database = "neo4j"
     )
 
-    $cypherShell = Get-FirstCommandPath @("cypher-shell.cmd", "cypher-shell.exe", "cypher-shell")
+    $runtimeCypherShell = Join-Path $RepoRoot ".repo\cache\neo4j\neo4j-community-$($script:Neo4jVersion)\bin\cypher-shell.bat"
+    $cypherShell = Get-FirstCommandPath @($runtimeCypherShell, "cypher-shell.cmd", "cypher-shell.exe", "cypher-shell")
     if ($cypherShell) {
-        & $cypherShell -a "bolt://localhost:7687" -u "neo4j" -p "password" -d $Database $Cypher *> $null
-        return $LASTEXITCODE -eq 0
+        $logRoot = Join-Path $RepoRoot ".repo\cache\neo4j"
+        Ensure-Directory -Path $logRoot
+        $stdout = Join-Path $logRoot "cypher-shell.stdout.log"
+        $stderr = Join-Path $logRoot "cypher-shell.stderr.log"
+        $process = Start-Process -FilePath $cypherShell -ArgumentList @(
+            "-a", "bolt://localhost:7687",
+            "-u", "neo4j",
+            "-p", "password",
+            "-d", $Database,
+            $Cypher
+        ) -WorkingDirectory $RepoRoot -NoNewWindow -Wait -PassThru -RedirectStandardOutput $stdout -RedirectStandardError $stderr
+        return $process.ExitCode -eq 0
     }
 
     return $false
+}
+
+function Get-Neo4jSchemaUri {
+    param(
+        [string]$RepoRoot,
+        [string]$Technology
+    )
+
+    $rootUri = ($RepoRoot -replace "\\", "/")
+    return "file:///$rootUri/.repo/\uD83D\uDEC2/$Technology.cypher"
+}
+
+function Get-JavaMajorVersion {
+    $java = Get-FirstCommandPath @(
+        "C:\Program Files\Microsoft\jdk-21.0.11.10-hotspot\bin\java.exe",
+        "java.exe",
+        "java"
+    )
+    if (-not $java) {
+        return 0
+    }
+    $logRoot = Join-Path (Get-RepoRoot) ".repo\cache\neo4j"
+    Ensure-Directory -Path $logRoot
+    $stdout = Join-Path $logRoot "java-version.stdout.log"
+    $stderr = Join-Path $logRoot "java-version.stderr.log"
+    Start-Process -FilePath $java -ArgumentList @("-version") -NoNewWindow -Wait -PassThru -RedirectStandardOutput $stdout -RedirectStandardError $stderr | Out-Null
+    $versionText = ((Get-Content -LiteralPath $stdout -ErrorAction SilentlyContinue) + (Get-Content -LiteralPath $stderr -ErrorAction SilentlyContinue)) -join "`n"
+    if ($versionText -match 'version\s+"(\d+)') {
+        return [int]$Matches[1]
+    }
+    if ($versionText -match '(\d+)\.\d+\.\d+') {
+        return [int]$Matches[1]
+    }
+    return 0
+}
+
+function Ensure-NativeNeo4jRuntime {
+    param([string]$RepoRoot)
+
+    $cacheRoot = Join-Path $RepoRoot ".repo\cache\neo4j"
+    $runtimeRoot = Join-Path $cacheRoot ("neo4j-community-{0}" -f $script:Neo4jVersion)
+    $zipPath = Join-Path $cacheRoot ("neo4j-community-{0}-windows.zip" -f $script:Neo4jVersion)
+    Ensure-Directory -Path $cacheRoot
+
+    if (-not (Test-Path -LiteralPath $runtimeRoot)) {
+        $url = "https://dist.neo4j.org/neo4j-community-$($script:Neo4jVersion)-windows.zip"
+        Write-Step "Downloading native Neo4j Community $($script:Neo4jVersion)..."
+        Invoke-WebRequest -Uri $url -OutFile $zipPath
+        Write-Step "Extracting native Neo4j runtime..."
+        Expand-Archive -LiteralPath $zipPath -DestinationPath $cacheRoot -Force
+    }
+
+    $plugins = Join-Path $runtimeRoot "plugins"
+    Ensure-Directory -Path $plugins
+    $apocCore = Join-Path $plugins ("apoc-core-{0}-core.jar" -f $script:ApocVersion)
+    $apocExtended = Join-Path $plugins ("apoc-{0}-extended.jar" -f $script:ApocVersion)
+    if (-not (Test-Path -LiteralPath $apocCore)) {
+        Invoke-WebRequest -Uri "https://repo.maven.apache.org/maven2/org/neo4j/procedure/apoc-core/$($script:ApocVersion)/apoc-core-$($script:ApocVersion)-core.jar" -OutFile $apocCore
+    }
+    if (-not (Test-Path -LiteralPath $apocExtended)) {
+        Invoke-WebRequest -Uri "https://github.com/neo4j-contrib/neo4j-apoc-procedures/releases/download/$($script:ApocVersion)/apoc-$($script:ApocVersion)-extended.jar" -OutFile $apocExtended
+    }
+
+    $conf = Join-Path $runtimeRoot "conf\neo4j.conf"
+    $dataDir = (Join-Path $runtimeRoot "data") -replace "\\", "/"
+    $logsDir = (Join-Path $runtimeRoot "logs") -replace "\\", "/"
+    $importDir = $RepoRoot -replace "\\", "/"
+    $settings = [ordered]@{
+        "server.default_listen_address" = "127.0.0.1"
+        "server.bolt.listen_address" = ":7687"
+        "server.http.listen_address" = ":7474"
+        "dbms.usage_report.enabled" = "false"
+        "server.directories.data" = $dataDir
+        "server.directories.logs" = $logsDir
+        "server.directories.import" = $importDir
+        "dbms.security.procedures.allowlist" = "apoc.*"
+        "dbms.security.procedures.unrestricted" = "apoc.*"
+    }
+    $lines = @()
+    if (Test-Path -LiteralPath $conf) {
+        $lines = Get-Content -LiteralPath $conf
+    }
+    foreach ($key in $settings.Keys) {
+        $value = $settings[$key]
+        $pattern = "^[#\s]*$([Regex]::Escape($key))="
+        $matched = $false
+        $lines = @($lines | ForEach-Object {
+            if ($_ -match $pattern) {
+                $matched = $true
+                "$key=$value"
+            } else {
+                $_
+            }
+        })
+        if (-not $matched) {
+            $lines += "$key=$value"
+        }
+    }
+    Set-TextFileUtf8NoBom -Path $conf -Value $lines
+
+    $apocConf = Join-Path $runtimeRoot "conf\apoc.conf"
+    Set-TextFileUtf8NoBom -Path $apocConf -Value @(
+        "apoc.export.file.enabled=true",
+        "apoc.import.file.enabled=true",
+        "apoc.import.file.use_neo4j_config=false"
+    )
+
+    return $runtimeRoot
+}
+
+function Start-NativeNeo4jRuntime {
+    param([string]$RuntimeRoot)
+
+    if ((Get-JavaMajorVersion) -lt 21) {
+        Write-Step "Java 21+ is required for Neo4j. Run setup.windows.script.ps1 without -SessionStart to install Microsoft OpenJDK 21."
+        return
+    }
+
+    $neo4jAdmin = Join-Path $RuntimeRoot "bin\neo4j-admin.bat"
+    $neo4jBat = Join-Path $RuntimeRoot "bin\neo4j.bat"
+    $authIni = Join-Path $RuntimeRoot "data\dbms\auth.ini"
+    $auth = Join-Path $RuntimeRoot "data\dbms\auth"
+    if ((-not (Test-Path -LiteralPath $authIni)) -and (-not (Test-Path -LiteralPath $auth))) {
+        $logRoot = Join-Path (Get-RepoRoot) ".repo\cache\neo4j"
+        Ensure-Directory -Path $logRoot
+        Start-Process -FilePath $neo4jAdmin -ArgumentList @("dbms", "set-initial-password", "password") -WorkingDirectory $RuntimeRoot -NoNewWindow -Wait -PassThru -RedirectStandardOutput (Join-Path $logRoot "neo4j-admin.stdout.log") -RedirectStandardError (Join-Path $logRoot "neo4j-admin.stderr.log") | Out-Null
+    }
+
+    Write-Step "Starting repo-local native Neo4j runtime..."
+    Start-Process -FilePath $neo4jBat -ArgumentList @("console") -WorkingDirectory $RuntimeRoot -WindowStyle Hidden | Out-Null
 }
 
 function Ensure-NativeNeo4j {
     param([string]$RepoRoot)
 
     $technologies = @("semio", "elements", "coda", "reuse")
+    $runtimeRoot = Ensure-NativeNeo4jRuntime -RepoRoot $RepoRoot
     if (Test-TcpPort -HostName "127.0.0.1" -Port 7687) {
         Write-Step "Neo4j is reachable at bolt://localhost:7687."
     } else {
@@ -370,6 +524,9 @@ function Ensure-NativeNeo4j {
             Write-Step "Starting local Neo4j service $($service.Name)..."
             Start-Service -Name $service.Name
             Start-Sleep -Seconds 5
+        }
+        if (-not (Test-TcpPort -HostName "127.0.0.1" -Port 7687)) {
+            Start-NativeNeo4jRuntime -RuntimeRoot $runtimeRoot
         }
 
         for ($i = 0; $i -lt 30 -and -not (Test-TcpPort -HostName "127.0.0.1" -Port 7687); $i++) {
@@ -382,12 +539,28 @@ function Ensure-NativeNeo4j {
         return
     }
 
+    $apocReady = Invoke-Neo4jCypher -RepoRoot $RepoRoot -Database "neo4j" -Cypher "SHOW PROCEDURES YIELD name WHERE name IN ['apoc.cypher.runFile', 'apoc.export.cypher.query'] RETURN count(name) AS count;"
+    if (-not $apocReady) {
+        Write-Step "Neo4j is reachable but APOC is not ready yet."
+        return
+    }
+
     foreach ($technology in $technologies) {
         $databaseCreated = Invoke-Neo4jCypher -RepoRoot $RepoRoot -Database "system" -Cypher "CREATE DATABASE $technology IF NOT EXISTS;"
         if ($databaseCreated) {
             Write-Step "Neo4j database ready: $technology."
         } else {
             Write-Step "Neo4j database $technology was not created; using the reachable default database for this setup."
+        }
+
+        $schemaFile = Join-Path $RepoRoot ".repo\🛂\$technology.cypher"
+        if (Test-Path -LiteralPath $schemaFile) {
+            $meaningfulLine = Get-Content -LiteralPath $schemaFile | Where-Object { $_ -notmatch '^\s*(//|:|$)' } | Select-Object -First 1
+            if ($meaningfulLine) {
+                $schemaUri = Get-Neo4jSchemaUri -RepoRoot $RepoRoot -Technology $technology
+                Invoke-Neo4jCypher -RepoRoot $RepoRoot -Database "neo4j" -Cypher "CALL apoc.cypher.runFile('$schemaUri') YIELD row RETURN count(row) AS rows;" | Out-Null
+                Write-Step "Neo4j schema imported: $technology."
+            }
         }
     }
 }
@@ -417,6 +590,7 @@ if (-not $SkipMachineInstall) {
     Sync-WingetPackage -Id "jqlang.jq" -Label "jq"
     Sync-WingetPackage -Id "SQLite.SQLite" -Label "SQLite"
     Sync-WingetPackage -Id "Oven-sh.Bun" -Label "Bun"
+    Sync-WingetPackage -Id "Microsoft.OpenJDK.21" -Label "Microsoft OpenJDK 21"
     Sync-WingetPackage -Id "GoLang.Go" -Label "Go"
     Sync-WingetPackage -Id "Python.Python.3.14" -Label "Python 3.14"
     Sync-WingetPackage -Id "astral-sh.uv" -Label "uv"
