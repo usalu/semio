@@ -8,6 +8,14 @@ The monorepo registers one Neo4j MCP server (`neo4j`) in `.mcp.json` and per-cli
 
 **Native (Windows / macOS / Linux):** Run your root platform bootstrap (`setup.windows.script.ps1`, `setup.mac.sh`, or `setup.linux.sh`) so `NEO4J_URI=bolt://localhost:7687` and credentials are set. Native setup uses the native Neo4j Desktop/DBMS only; it does not depend on the devcontainer.
 
+Native Neo4j Desktop connection:
+
+- URL: **`bolt://127.0.0.1:7687`**
+- User: **`neo4j`**
+- Password: **`password`**
+- Browser: **`http://127.0.0.1:7474`**
+- Database: **`neo4j`**
+
 **Devcontainer:** Neo4j 5 Community runs inside the single **`semio`** devcontainer. Inside **`semio`**, `NEO4J_URI` is **`bolt://localhost:7687`**. The **`semio`** container publishes **`127.0.0.1:7687`** (Bolt) and **`127.0.0.1:7474`** (Browser) to the Docker host, and `devcontainer.json` forwards both ports for Codespaces and local devcontainers.
 
 **Neo4j Desktop remote connection:** Docker Desktop must be running for local devcontainers. **Reopen in Container** after the image has been rebuilt once so the Neo4j Debian package is available inside **`semio`**. Then:

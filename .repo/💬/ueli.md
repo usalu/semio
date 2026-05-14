@@ -182,6 +182,30 @@ TODO: Start new project `elements` that offers domain-agnostic primitives (such 
 
 ##
 
+---
+
+The current monorepo doesnt use clean scripts.
+Remove all of them and replace them with clean new style:
+
+setup.windows.ps1 # all installs and configs needed to get any windows into a zero-touch monorepo
+start.windows.ps1 # called everytime the ide initializes (to get long-running services running, etc)
+setup.linux.sh
+start.linux.sh
+setup.mac.sh
+start.mac.sh
+
+Dont define any logic inside package files and instead always create files such as:
+
+dev.ts
+dev.mcp.ts
+...
+lint.ts
+build.ts
+
+Setup everything with bun and nx
+
+---
+
 The monorepo needs to work both in devcontainer but also native. Currently we are native. Complete the install powershell script that installs and sets up everything that would overthise be available in devcontainer. Both setups need to be 100% zero-touch config and work out-of-the-box. Update every framework to use the latest available stable versions (git, python, node, rust, go, etc). There are some exceptions e.g. net 8 is needed for semio grasshopper, remove net 7
 Make sure everything runs, builds, tests, etc on all platforms.
 
@@ -1812,8 +1836,6 @@ semio/react:
 The useENTITY hooks are not implemented clean. Get rid of the resolve functions. Implement the logic to resolve directly.
 e.g. useDesign should not call resolveDesign but directly have the logic in there.
 usePiece then calls useDesign.
-
-
 
 ---
 

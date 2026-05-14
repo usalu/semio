@@ -538,12 +538,21 @@ powershell -NoProfile -ExecutionPolicy Bypass -File setup.windows.script.ps1
 The script installs the same baseline toolchain the devcontainer provides on a fresh machine:
 
 - Git, Git LFS, GitHub CLI, ripgrep, jq, SQLite
+- Microsoft OpenJDK 21 and repo-local Neo4j Community with APOC
 - Node.js 24 LTS + npm 11.7, Go 1.26, Python 3.14, uv, rustup, .NET SDK 8/9/10
 - GitKraken Desktop + CLI, F3D, VS Code + `code`
 - Gemini CLI, TypeScript LSP, Pyright
 - repo hooks, MCP client config, Python/Rust/Playwright setup, npm/uv dependencies, and the local repo VSIX
 
 After the bootstrap completes, open a new terminal and use the same repo commands as in the devcontainer. The script also keeps `PLAYWRIGHT_BROWSERS_PATH` on the repo-local shared cache so Playwright downloads stay warm across runs.
+
+Neo4j Desktop can connect directly to the native repo-local DBMS:
+
+- URL: `bolt://127.0.0.1:7687`
+- User: `neo4j`
+- Password: `password`
+- Browser: `http://127.0.0.1:7474`
+- Database: `neo4j`
 
 Native macOS and Linux use the root scripts:
 

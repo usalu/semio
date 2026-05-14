@@ -361,21 +361,30 @@ function Invoke-Neo4jCypher {
         [string]$Database = "neo4j"
     )
 
+    Use-MicrosoftOpenJdk21
     $runtimeCypherShell = Join-Path $RepoRoot ".repo\cache\neo4j\neo4j-community-$($script:Neo4jVersion)\bin\cypher-shell.bat"
     $cypherShell = Get-FirstCommandPath @($runtimeCypherShell, "cypher-shell.cmd", "cypher-shell.exe", "cypher-shell")
     if ($cypherShell) {
         $logRoot = Join-Path $RepoRoot ".repo\cache\neo4j"
         Ensure-Directory -Path $logRoot
-        $stdout = Join-Path $logRoot "cypher-shell.stdout.log"
-        $stderr = Join-Path $logRoot "cypher-shell.stderr.log"
-        $process = Start-Process -FilePath $cypherShell -ArgumentList @(
+        $logId = "{0}-{1}" -f $PID, ([Guid]::NewGuid().ToString("N"))
+        $stdout = Join-Path $logRoot "cypher-shell.$logId.stdout.log"
+        $stderr = Join-Path $logRoot "cypher-shell.$logId.stderr.log"
+        $arguments = @(
             "-a", "bolt://localhost:7687",
             "-u", "neo4j",
             "-p", "password",
             "-d", $Database,
             $Cypher
-        ) -WorkingDirectory $RepoRoot -NoNewWindow -Wait -PassThru -RedirectStandardOutput $stdout -RedirectStandardError $stderr
-        return $process.ExitCode -eq 0
+        )
+        $previousErrorActionPreference = $ErrorActionPreference
+        $ErrorActionPreference = "Continue"
+        try {
+            & $cypherShell @arguments > $stdout 2> $stderr
+            return $LASTEXITCODE -eq 0
+        } finally {
+            $ErrorActionPreference = $previousErrorActionPreference
+        }
     }
 
     return $false
@@ -415,6 +424,14 @@ function Get-JavaMajorVersion {
     return 0
 }
 
+function Use-MicrosoftOpenJdk21 {
+    $javaHome = "C:\Program Files\Microsoft\jdk-21.0.11.10-hotspot"
+    if (Test-Path -LiteralPath (Join-Path $javaHome "bin\java.exe")) {
+        $env:JAVA_HOME = $javaHome
+        $env:Path = (Join-Path $javaHome "bin") + ";" + $env:Path
+    }
+}
+
 function Ensure-NativeNeo4jRuntime {
     param([string]$RepoRoot)
 
@@ -443,6 +460,7 @@ function Ensure-NativeNeo4jRuntime {
     }
 
     $conf = Join-Path $runtimeRoot "conf\neo4j.conf"
+    Use-MicrosoftOpenJdk21
     $dataDir = (Join-Path $runtimeRoot "data") -replace "\\", "/"
     $logsDir = (Join-Path $runtimeRoot "logs") -replace "\\", "/"
     $importDir = $RepoRoot -replace "\\", "/"
@@ -492,6 +510,7 @@ function Ensure-NativeNeo4jRuntime {
 function Start-NativeNeo4jRuntime {
     param([string]$RuntimeRoot)
 
+    Use-MicrosoftOpenJdk21
     if ((Get-JavaMajorVersion) -lt 21) {
         Write-Step "Java 21+ is required for Neo4j. Run setup.windows.script.ps1 without -SessionStart to install Microsoft OpenJDK 21."
         return
@@ -606,6 +625,7 @@ if (-not $SkipMachineInstall) {
     Sync-WingetPackage -Id "Microsoft.VisualStudioCode.CLI" -Label "VS Code CLI"
     Sync-WingetPackage -Id "Neo4j.Neo4jDesktop" -Label "Neo4j Desktop"
     Set-UserPathPriority -PreferredEntries @(
+        "C:\Program Files\Microsoft\jdk-21.0.11.10-hotspot\bin",
         (Join-Path $env:LOCALAPPDATA "Programs\Python\Python314\Scripts"),
         (Join-Path $env:LOCALAPPDATA "Programs\Python\Python314"),
         (Join-Path $env:LOCALAPPDATA "Programs\Python\Launcher"),
