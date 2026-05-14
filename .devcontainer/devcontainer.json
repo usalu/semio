@@ -38,7 +38,7 @@
   "postCreateCommand": "bash .devcontainer/post-create.sh",
   "postStartCommand": "bash .devcontainer/post-start.sh",
   "postAttachCommand": "bash .devcontainer/post-attach.sh",
-  "forwardPorts": [2507, 3000, 4000, 4321, 5678, 6006, 6274, 6277, 7687, 7474],
+  "forwardPorts": [2507, 3000, 4000, 4321, 5678, 6006, 6274, 6277],
   "portsAttributes": {
     "2507": {
       "label": "Engine API",
@@ -70,14 +70,6 @@
     },
     "6277": {
       "label": "MCP Inspector Proxy",
-      "onAutoForward": "notify"
-    },
-    "7687": {
-      "label": "Neo4j Bolt (via dev container forward)",
-      "onAutoForward": "notify"
-    },
-    "7474": {
-      "label": "Neo4j Browser HTTP (via dev container forward)",
       "onAutoForward": "notify"
     }
   },

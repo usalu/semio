@@ -40,7 +40,7 @@ start_forwarders() {
   if command -v ss >/dev/null 2>&1; then
     ss -tln | grep -E ':7687|:7474' >/dev/null 2>&1 || echo "⚠️ Expected listeners on 7687/7474 not visible yet (may still come up)."
   fi
-  echo "✅ Neo4j Bolt/HTTP forwarders on :7687 / :7474 → neo4j (use editor Ports → Windows localhost)."
+  echo "✅ Neo4j Bolt/HTTP forwarders on :7687 / :7474 → neo4j (Docker publishes semio:7687/7474 to the host)."
 }
 
 main() {
