@@ -3,6 +3,8 @@
 import { execFileSync } from "node:child_process";
 
 const root = import.meta.dir;
+execFileSync("bun", ["./generate.script.ts"], { cwd: root, stdio: "inherit" });
+
 execFileSync("bun", ["nx", "run-many", "-t", "build", "-p", "@semio/js", "@semio/react"], {
   cwd: root,
   stdio: "inherit",

@@ -698,6 +698,13 @@ function Ensure-NativeNeo4j {
     }
 
     Invoke-Neo4jCypher -RepoRoot $RepoRoot -Database "system" -Cypher "CREATE DATABASE semio IF NOT EXISTS;" | Out-Null
+    #region 🔥Neo4jEnterpriseDropStockDb
+    # Enterprise Desktop: schema often lands in the stock `neo4j` DB. Ensure `semio` is default, then drop `neo4j`.
+    # Community (single user DB): these calls fail harmlessly.
+    Invoke-Neo4jCypher -RepoRoot $RepoRoot -Database "system" -Cypher "START DATABASE semio WAIT;" | Out-Null
+    Invoke-Neo4jCypher -RepoRoot $RepoRoot -Database "system" -Cypher "CALL dbms.setDefaultDatabase('semio');" | Out-Null
+    Invoke-Neo4jCypher -RepoRoot $RepoRoot -Database "system" -Cypher "DROP DATABASE neo4j IF EXISTS CASCADE ALIASES WAIT;" | Out-Null
+    #endregion 🔥Neo4jEnterpriseDropStockDb
     $graphDb = Resolve-NativeNeo4jGraphDatabase -RepoRoot $RepoRoot
     Write-Step "Neo4j graph database for imports (after optional CREATE DATABASE semio): $graphDb"
 

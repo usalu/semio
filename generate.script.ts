@@ -1,15 +1,17 @@
 #!/usr/bin/env bun
 /**
  * 🗄️ Builds `.repo/🛂/semio.cypher` from `semio/client/schema/semio/schema.yaml` for Neo4j Bloom (minimal props, no schemaTag/schemaSource/moduleName).
+ * Pass `--watch` to rebuild on YAML or generator edits; `apply` still pipes the bundle through cypher-shell when combined.
  */
 import { spawnSync } from "node:child_process";
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, watch, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { isAlias, parseDocument, YAMLMap, YAMLSeq, type Document, type Node, type Pair } from "yaml";
 
 //#region 🧭Constants
 const REPO_ROOT = import.meta.dir;
 const SCHEMA_YAML = join(REPO_ROOT, "semio/client/schema/semio/schema.yaml");
+const GENERATOR_SOURCE = join(REPO_ROOT, "generate.script.ts");
 const OUTPUT_FILE = join(REPO_ROOT, ".repo/🛂/semio.cypher");
 const NEO4J_VERSION = "5.26.26";
 const MODULE_KEYS = ["general", "domain"] as const;
@@ -132,7 +134,13 @@ function labelToken(label: string): string {
 
 function mergeNode(label: string, id: string, props: Record<string, string | boolean>): string[] {
   const t = labelToken(label);
-  return [`MERGE (n:${t} { id: ${cypherLiteral(id)} })`, `SET n = ${renderPropMap({ id, ...props })};`, ""];
+  const tail = id.includes(":") ? (id.split(":").pop() ?? id) : id;
+  const caption = String(
+    (typeof props.path === "string" && props.path) ||
+      (typeof props.name === "string" && props.name) ||
+      tail,
+  );
+  return [`MERGE (n:${t} { id: ${cypherLiteral(id)} })`, `SET n = ${renderPropMap({ id, caption, ...props })};`, ""];
 }
 
 function mergeRel(fromId: string, rel: string, toId: string, fromLabel: string, toLabel: string): string[] {
@@ -179,8 +187,14 @@ function buildGraph(doc: Document): { lines: string[] } {
   const lines: string[] = [
     "// SPDX-License-Identifier: AGPL-3.0-only",
     "// Neo4j Cypher bundle for semio schema (generated from semio/client/schema/semio/schema.yaml).",
-    "// Replay: load into database `semio` (see NEO4J_DATABASE). Bloom: pick database `semio`, auto-generate Perspective, search e.g. `kit` or `interface`.",
-    "",
+    "//",
+    "// Neo4j Desktop Explore (Bloom) — empty scene is normal until you:",
+    "//  1) Open the database dropdown and pick `semio` (not `neo4j`).",
+    "//  2) Perspective drawer → Generate / auto Perspective (wait for scan).",
+    "//  3) Empty scene card → “Show graph snippet”, or search e.g. `domain` / `kit` / `workspace`.",
+    "//  4) In Perspective editor, hide the `field` category if the graph is too dense; fields stay in Browser via MATCH.",
+    "// Ref: https://neo4j.com/docs/bloom-user-guide/current/bloom-quick-start/",
+    "//",
     "MATCH (n) WHERE n:module OR n:interface OR n:class OR n:field OR n:scalar OR n:command DETACH DELETE n;",
     "",
   ];
@@ -328,11 +342,6 @@ function buildGraph(doc: Document): { lines: string[] } {
     }
   }
 
-  const modForOwner = (ownerId: string): string => {
-    const m = ownerId.match(/^field:(\w+):/);
-    return m?.[1] ?? "domain";
-  };
-
   for (const f of fieldRows) {
     const props: Record<string, string | boolean> = {
       name: f.name,
@@ -340,23 +349,29 @@ function buildGraph(doc: Document): { lines: string[] } {
       list: f.list,
     };
     lines.push(...mergeNode("field", f.id, props));
-    const mod = modForOwner(f.id);
-    lines.push(...mergeRel(`module:${mod}`, "OWNS", f.id, "module", "field"));
     lines.push(...mergeRel(f.ownerId, "HAS_FIELD", f.id, f.ownerLabel, "field"));
     if (f.refId && f.refLabel) {
       lines.push(...mergeRel(f.id, "REFERENCES", f.refId, "field", f.refLabel));
     }
   }
 
-  // Bloom-friendly indexes on lowercase labels
+  // Bloom-friendly indexes (module→field OWNS edges omitted — huge fan-out breaks Bloom scans)
   lines.push(
-    "// Bloom / Explore: indexes on names and ids",
+    "// Bloom / Explore: property indexes + fulltext for search bar",
+    "CREATE INDEX bloom_module_name IF NOT EXISTS FOR (n:module) ON (n.name);",
+    "CREATE INDEX bloom_module_caption IF NOT EXISTS FOR (n:module) ON (n.caption);",
     "CREATE INDEX bloom_field_path IF NOT EXISTS FOR (n:field) ON (n.path);",
     "CREATE INDEX bloom_field_name IF NOT EXISTS FOR (n:field) ON (n.name);",
+    "CREATE INDEX bloom_field_caption IF NOT EXISTS FOR (n:field) ON (n.caption);",
     "CREATE INDEX bloom_class_name IF NOT EXISTS FOR (n:`class`) ON (n.name);",
+    "CREATE INDEX bloom_class_caption IF NOT EXISTS FOR (n:`class`) ON (n.caption);",
     "CREATE INDEX bloom_interface_name IF NOT EXISTS FOR (n:`interface`) ON (n.name);",
+    "CREATE INDEX bloom_interface_caption IF NOT EXISTS FOR (n:`interface`) ON (n.caption);",
     "CREATE INDEX bloom_scalar_name IF NOT EXISTS FOR (n:scalar) ON (n.name);",
+    "CREATE INDEX bloom_scalar_caption IF NOT EXISTS FOR (n:scalar) ON (n.caption);",
     "CREATE INDEX bloom_command_name IF NOT EXISTS FOR (n:`command`) ON (n.name);",
+    "CREATE INDEX bloom_command_caption IF NOT EXISTS FOR (n:`command`) ON (n.caption);",
+    "CREATE FULLTEXT INDEX bloom_schema_search IF NOT EXISTS FOR (n:module|field|scalar|`class`|`interface`|`command`) ON EACH [n.name, n.caption, n.path];",
     "",
   );
 
@@ -435,7 +450,8 @@ function applyCypherFile(outputPath: string): void {
   }
 }
 
-function main(): void {
+/** 🗄️ Writes `.repo/🛂/semio.cypher` from the hand-maintained YAML schema (idempotent; safe to run on every build). */
+function runGenerate(): void {
   const raw = readFileSync(SCHEMA_YAML, "utf8");
   const doc = parseDocument(raw);
   if (doc.errors.length) {
@@ -451,6 +467,37 @@ function main(): void {
     applyCypherFile(OUTPUT_FILE);
     console.log("[generate] applied to Neo4j via cypher-shell.");
   }
+}
+
+//#region 👁️Watch
+function runWatchMode(): void {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const schedule = (reason: string) => {
+    if (timer) clearTimeout(timer);
+    timer = setTimeout(() => {
+      timer = undefined;
+      try {
+        runGenerate();
+      } catch (e) {
+        console.error(`[generate] watch rebuild failed (${reason}):`, e);
+      }
+    }, 120);
+  };
+
+  runGenerate();
+  for (const path of [SCHEMA_YAML, GENERATOR_SOURCE]) {
+    watch(path, { persistent: true }, (_event) => schedule(path));
+  }
+  console.log(`[generate] watching ${SCHEMA_YAML} and ${GENERATOR_SOURCE} — Ctrl+C to stop.`);
+}
+//#endregion 👁️Watch
+
+function main(): void {
+  if (process.argv.includes("--watch")) {
+    runWatchMode();
+    return;
+  }
+  runGenerate();
 }
 
 main();

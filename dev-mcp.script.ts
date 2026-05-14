@@ -6,6 +6,8 @@ import { execFileSync } from "node:child_process";
 import { join } from "node:path";
 
 const root = import.meta.dir;
+execFileSync("bun", ["./generate.script.ts"], { cwd: root, stdio: "inherit" });
+
 const mode = process.argv[2] ?? "default";
 
 if (mode === "engine") {

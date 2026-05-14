@@ -4,6 +4,18 @@
   "projectType": "application",
   "sourceRoot": ".",
   "targets": {
+    "generate": {
+      "executor": "nx:run-commands",
+      "cache": true,
+      "inputs": [
+        "{workspaceRoot}/semio/client/schema/semio/schema.yaml",
+        "{workspaceRoot}/generate.script.ts"
+      ],
+      "outputs": ["{workspaceRoot}/.repo/🛂/semio.cypher"],
+      "options": {
+        "command": "bun ./generate.script.ts"
+      }
+    },
     "setup": {
       "executor": "nx:run-commands",
       "cache": false,

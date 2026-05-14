@@ -327,6 +327,13 @@ ensure_native_neo4j() {
   fi
 
   run_cypher system "CREATE DATABASE semio IF NOT EXISTS;" >/dev/null 2>&1 || true
+  #region 🔥Neo4jEnterpriseDropStockDb
+  # Enterprise Desktop: schema often lands in the stock `neo4j` DB. Ensure `semio` is default, then drop `neo4j`.
+  # Community (single user DB): these calls fail harmlessly and are skipped via `|| true`.
+  run_cypher system "START DATABASE semio WAIT;" >/dev/null 2>&1 || true
+  run_cypher system "CALL dbms.setDefaultDatabase('semio');" >/dev/null 2>&1 || true
+  run_cypher system "DROP DATABASE neo4j IF EXISTS CASCADE ALIASES WAIT;" >/dev/null 2>&1 || true
+  #endregion 🔥Neo4jEnterpriseDropStockDb
   graph_db="$(resolve_native_graph_database)"
   log "Neo4j graph database for imports (after optional CREATE DATABASE semio): ${graph_db}"
 

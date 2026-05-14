@@ -11,8 +11,25 @@ import { join } from "node:path";
 
 const root = import.meta.dir;
 
+function run(cmd: string, args: string[], opts: { cwd?: string; env?: NodeJS.ProcessEnv } = {}) {
+  execFileSync(cmd, args, {
+    stdio: "inherit",
+    cwd: opts.cwd ?? root,
+    env: opts.env ?? process.env,
+  });
+}
+
+function tryRun(cmd: string, args: string[], opts: { cwd?: string } = {}) {
+  try {
+    run(cmd, args, opts);
+  } catch {
+    /* optional steps */
+  }
+}
+
 //#region 🔖PostinstallLightningcss
 if (process.argv.includes("--postinstall")) {
+  tryRun("bun", ["./generate.script.ts"]);
   const pkgPath = join(root, "node_modules", "lightningcss", "package.json");
   if (!existsSync(pkgPath)) process.exit(0);
   const { version } = JSON.parse(readFileSync(pkgPath, "utf8")) as { version: string };
@@ -45,21 +62,8 @@ if (process.argv.includes("--postinstall")) {
 }
 //#endregion
 
-function run(cmd: string, args: string[], opts: { cwd?: string; env?: NodeJS.ProcessEnv } = {}) {
-  execFileSync(cmd, args, {
-    stdio: "inherit",
-    cwd: opts.cwd ?? root,
-    env: opts.env ?? process.env,
-  });
-}
-
-function tryRun(cmd: string, args: string[], opts: { cwd?: string } = {}) {
-  try {
-    run(cmd, args, opts);
-  } catch {
-    /* optional steps */
-  }
-}
+console.log("[setup] Neo4j cypher bundle from schema yaml…");
+tryRun("bun", ["./generate.script.ts"]);
 
 console.log("[setup] uv sync…");
 tryRun("uv", ["sync", "--all-packages", "--all-groups"]);
