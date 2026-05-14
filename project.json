@@ -8,64 +8,63 @@
       "executor": "nx:run-commands",
       "cache": false,
       "options": {
-        "command": "bun scripts/workspace-setup.script.ts"
+        "command": "bun setup.ts"
       }
     },
     "lint": {
       "executor": "nx:run-commands",
       "dependsOn": [],
       "options": {
-        "command": "bun nx run-many -t lint --all --exclude workspace && npx --yes dependency-cruiser@16 semio/client/lib/js semio/client/lib/react semio/client/lib/sketchpad --config .dependency-cruiser.cjs --output-type err"
+        "command": "bun lint.ts"
       }
     },
     "format": {
       "executor": "nx:run-commands",
       "cache": false,
       "options": {
-        "command": "bunx prettier -w ."
+        "command": "bun format.ts"
       }
     },
     "test": {
       "executor": "nx:run-commands",
       "dependsOn": [],
       "options": {
-        "command": "bun nx run-many -t test --all --exclude workspace"
+        "command": "bun test.ts"
       }
     },
     "build": {
       "executor": "nx:run-commands",
       "dependsOn": [],
       "options": {
-        "command": "bun nx run-many -t build --all --exclude workspace"
+        "command": "bun build.ts"
       }
     },
     "dev-mcp": {
       "executor": "nx:run-commands",
       "cache": false,
       "options": {
-        "command": "npx --yes @modelcontextprotocol/inspector"
+        "command": "bun dev.mcp.ts"
       }
     },
     "dev-mcp-engine": {
       "executor": "nx:run-commands",
       "cache": false,
       "options": {
-        "commands": ["bunx vite build --config semio/client/bin/engine/vite.mcp-app.config.ts", "bun scripts/mcp-inspector-engine.script.ts"],
-        "parallel": false
+        "command": "bun dev.mcp.engine.ts"
       }
     },
     "dev-mcp-repo": {
       "executor": "nx:run-commands",
       "cache": false,
       "options": {
-        "command": "bun scripts/mcp-inspector-repo.script.ts"
+        "command": "bun dev.mcp.repo.ts"
       }
     },
     "typecheck": {
       "executor": "nx:run-commands",
       "dependsOn": [],
       "options": {
-        "command": "bun nx run-many -t build -p @semio/js @semio/react && bun nx run semio/graphql:build"
+        "command": "bun typecheck.ts"
       }
     }
   }

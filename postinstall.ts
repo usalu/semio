@@ -1,10 +1,10 @@
 #!/usr/bin/env bun
-/** Ensures optional lightningcss native binary exists for the current platform. */
+/** ⚡ Ensures optional lightningcss native binary exists for the current platform. */
 import { execFileSync } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 
-const root = join(import.meta.dir, "..");
+const root = import.meta.dir;
 const pkgPath = join(root, "node_modules", "lightningcss", "package.json");
 if (!existsSync(pkgPath)) process.exit(0);
 

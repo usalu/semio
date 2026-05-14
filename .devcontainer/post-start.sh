@@ -205,10 +205,10 @@ fi
 #region 🧾Neo4jCypherPersistence
 ensure_neo4j_schema_files() {
   local technologies=("semio" "elements" "coda" "reuse")
+  local schema_dir="$WORKSPACE/.repo/🛂"
+  mkdir -p "$schema_dir"
   for technology in "${technologies[@]}"; do
-    local schema_dir="$WORKSPACE/$technology/schema/cypher"
-    local schema_file="$schema_dir/schema.cypher"
-    mkdir -p "$schema_dir"
+    local schema_file="$schema_dir/$technology.cyper"
     if [ ! -f "$schema_file" ]; then
       cat >"$schema_file" <<EOF
 // SPDX-License-Identifier: AGPL-3.0-only
@@ -217,6 +217,11 @@ ensure_neo4j_schema_files() {
 EOF
     fi
   done
+}
+
+neo4j_schema_cypher_uri() {
+  local technology="$1"
+  printf 'file:///workspaces/semio/.repo/\\uD83D\\uDEC2/%s.cypher' "$technology"
 }
 
 import_neo4j_schema_files_if_empty() {
@@ -237,9 +242,11 @@ import_neo4j_schema_files_if_empty() {
   fi
   local imported=0
   for technology in semio elements coda reuse; do
-    local schema_file="$WORKSPACE/$technology/schema/cypher/schema.cypher"
+    local schema_file="$WORKSPACE/.repo/🛂/$technology.cypher"
+    local schema_uri
+    schema_uri="$(neo4j_schema_cypher_uri "$technology")"
     if grep -Ev '^[[:space:]]*(//|:|$)' "$schema_file" >/dev/null 2>&1; then
-      cypher-shell -a bolt://localhost:7687 -u "${NEO4J_USERNAME:-neo4j}" -p "${NEO4J_PASSWORD:-password}" "CALL apoc.cypher.runFile('file://$schema_file') YIELD row RETURN count(row) AS rows;" >/dev/null
+      cypher-shell -a bolt://localhost:7687 -u "${NEO4J_USERNAME:-neo4j}" -p "${NEO4J_PASSWORD:-password}" "CALL apoc.cypher.runFile('$schema_uri') YIELD row RETURN count(row) AS rows;" >/dev/null
       imported=$((imported + 1))
     fi
   done

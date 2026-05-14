@@ -93,9 +93,6 @@
       "dependsOn": ["^update"],
       "inputs": ["default", "^default"],
       "cache": true
-    },
-    "clean": {
-      "cache": false
     }
   },
   "pluginsConfig": {

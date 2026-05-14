@@ -1,5 +1,5 @@
 #!/usr/bin/env bun
-/** Storybook dev with devcontainer-friendly host + optional polling. */
+/** 📚 Storybook dev with devcontainer-friendly host + optional polling. */
 import { spawn } from "node:child_process";
 
 const host = process.env.DEVCONTAINER === "true" ? "0.0.0.0" : "127.0.0.1";

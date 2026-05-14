@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 /**
- * Shared Vite dev server launcher (host + optional polling).
- * Usage: bun scripts/run-vite-dev.script.ts --port 4321 [--strictPort] [-- extra vite args...]
+ * 🖥️ Shared Vite dev server launcher (host + optional polling).
+ * Usage: bun run.vite.ts --port 4321 [--strictPort] [-- extra vite args...]
  */
 import { spawn } from "node:child_process";
 
