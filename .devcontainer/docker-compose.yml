@@ -1,0 +1,42 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+# #region 🔖Compose
+# Dev stack: workspace app container + Neo4j 5 (Bolt). MCP and tools use bolt://neo4j:7687 from the app container.
+services:
+  neo4j:
+    image: neo4j:5-community
+    restart: unless-stopped
+    environment:
+      NEO4J_AUTH: neo4j/password
+    ports:
+      - "7687:7687"
+      - "7474:7474"
+    volumes:
+      - neo4j-data:/data
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "cypher-shell -a bolt://localhost:7687 -u neo4j -p password 'RETURN 1' || exit 1",
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 24
+      start_period: 60s
+
+  semio:
+    build:
+      context: ..
+      dockerfile: .devcontainer/Dockerfile
+    shm_size: 1gb
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - ..:/workspaces/semio:cached
+    command: sleep infinity
+    depends_on:
+      neo4j:
+        condition: service_healthy
+
+volumes:
+  neo4j-data:
+# #endregion 🔖Compose

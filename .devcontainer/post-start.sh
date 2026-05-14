@@ -98,11 +98,11 @@ echo "✅ Fixed ownership for persisted volume mounts."
 #region 🔖EmojiFonts
 configure_emoji_fonts
 #endregion 🔖EmojiFonts
-#region 🔖Neo4jHostEnv
-configure_neo4j_host_env() {
+#region 🔖Neo4jComposeEnv
+configure_neo4j_compose_env() {
   local profile_script="/etc/profile.d/99-semio-neo4j-mcp.sh"
   sudo tee "$profile_script" >/dev/null <<'NEO4JPROFILE'
-export NEO4J_URI=bolt://host.docker.internal:7687
+export NEO4J_URI=bolt://neo4j:7687
 export NEO4J_USERNAME=neo4j
 export NEO4J_PASSWORD=password
 export NEO4J_TELEMETRY=false
@@ -125,11 +125,30 @@ BASHRC
     # shellcheck source=/dev/null
     . /etc/profile.d/99-semio-neo4j-mcp.sh
   fi
-  echo "✅ Neo4j MCP host env (bolt via host.docker.internal) installed for login shells and this session."
+  echo "✅ Neo4j MCP env (bolt://neo4j:7687 compose service) installed for login shells and this session."
 }
 
-configure_neo4j_host_env
-#endregion 🔖Neo4jHostEnv
+configure_neo4j_compose_env
+#endregion 🔖Neo4jComposeEnv
+#region 🔖Neo4jBootstrapDatabases
+bootstrap_neo4j_databases() {
+  if [ ! -f "$WORKSPACE/.devcontainer/neo4j-bootstrap-databases.py" ]; then
+    echo "⚠️ Neo4j bootstrap script missing; skipping database creation."
+    return 0
+  fi
+  if ! python3 -c "import neo4j" 2>/dev/null; then
+    echo "⚠️ Python neo4j driver not installed yet; skipping database bootstrap (run post-create / pip install neo4j)."
+    return 0
+  fi
+  if python3 "$WORKSPACE/.devcontainer/neo4j-bootstrap-databases.py"; then
+    echo "✅ Neo4j technology databases (semio, elements, coda, reuse) ensured."
+  else
+    echo "⚠️ Neo4j database bootstrap failed (Neo4j may still be starting); MCP may retry on next start."
+  fi
+}
+
+bootstrap_neo4j_databases
+#endregion 🔖Neo4jBootstrapDatabases
 #region 🔖ClaudeAuth
 CLAUDE_HOME="/home/vscode"
 CLAUDE_DIR="${CLAUDE_HOME}/.claude"

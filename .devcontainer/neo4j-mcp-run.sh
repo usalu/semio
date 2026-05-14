@@ -9,7 +9,7 @@ if [ -f /etc/profile.d/99-semio-neo4j-mcp.sh ]; then
 fi
 if [ -z "${NEO4J_URI:-}" ]; then
   if [ "${DEVCONTAINER:-}" = true ]; then
-    export NEO4J_URI="bolt://host.docker.internal:7687"
+    export NEO4J_URI="bolt://neo4j:7687"
   else
     export NEO4J_URI="bolt://localhost:7687"
   fi

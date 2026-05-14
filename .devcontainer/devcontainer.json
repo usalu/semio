@@ -2,14 +2,8 @@
 // #region 🔖Devcontainer
 {
   "name": "semio",
-  "build": {
-    "dockerfile": "Dockerfile",
-    "context": ".."
-  },
-  "runArgs": [
-    "--shm-size=1gb",
-    "--add-host=host.docker.internal:host-gateway"
-  ],
+  "dockerComposeFile": "docker-compose.yml",
+  "service": "semio",
   "features": {
     "ghcr.io/balazs23/devcontainers-features/nx:1": {},
     "ghcr.io/devcontainers/features/go:1": {
@@ -44,7 +38,7 @@
   "postCreateCommand": "bash .devcontainer/post-create.sh",
   "postStartCommand": "bash .devcontainer/post-start.sh",
   "postAttachCommand": "bash .devcontainer/post-attach.sh",
-  "forwardPorts": [2507, 3000, 4000, 4321, 5678, 6006, 6274, 6277, 7687],
+  "forwardPorts": [2507, 3000, 4000, 4321, 5678, 6006, 6274, 6277],
   "portsAttributes": {
     "2507": {
       "label": "Engine API",
@@ -76,10 +70,6 @@
     },
     "6277": {
       "label": "MCP Inspector Proxy",
-      "onAutoForward": "notify"
-    },
-    "7687": {
-      "label": "Neo4j Bolt",
       "onAutoForward": "notify"
     }
   },
@@ -118,7 +108,7 @@
     "DISPLAY": ":99",
     "ELECTRON_DISABLE_SANDBOX": "1",
     "EDITOR": "code --wait",
-    "NEO4J_URI": "bolt://host.docker.internal:7687",
+    "NEO4J_URI": "bolt://neo4j:7687",
     "NEO4J_USERNAME": "neo4j",
     "NEO4J_PASSWORD": "password",
     "NEO4J_TELEMETRY": "false"
@@ -126,7 +116,7 @@
   "remoteEnv": {
     "PLAYWRIGHT_BROWSERS_PATH": "/workspaces/semio/node_modules/.cache/ms-playwright",
     "SSH_AUTH_SOCK": "/home/vscode/.ssh/semio-ssh-agent.sock",
-    "NEO4J_URI": "bolt://host.docker.internal:7687",
+    "NEO4J_URI": "bolt://neo4j:7687",
     "NEO4J_USERNAME": "neo4j",
     "NEO4J_PASSWORD": "password",
     "NEO4J_TELEMETRY": "false"

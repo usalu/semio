@@ -8,15 +8,21 @@ The monorepo registers four Neo4j MCP servers (`neo4j-semio`, `neo4j-elements`, 
 
 **Native (Windows / macOS / Linux):** Run your platform bootstrap (`.devcontainer/install-native.ps1` or `.devcontainer/install-native.sh`) so `NEO4J_URI=bolt://localhost:7687` and credentials are set. Start Neo4j Desktop 2 locally; Bolt listens on `7687` by default.
 
-**Devcontainer:** `NEO4J_URI` is `bolt://host.docker.internal:7687` so MCP inside the container reaches Neo4j Desktop on the host. `runArgs` includes `--add-host=host.docker.internal:host-gateway` for Linux Docker.
+**Devcontainer:** Neo4j 5 runs as the **`neo4j` Compose service** (see `.devcontainer/docker-compose.yml`). Inside the workspace container, `NEO4J_URI` is **`bolt://neo4j:7687`** (Docker DNS to the sibling service). `post-start.sh` installs `/etc/profile.d/99-semio-neo4j-mcp.sh` and runs `neo4j-bootstrap-databases.py` so databases **`semio`**, **`elements`**, **`coda`**, and **`reuse`** exist. Bolt and Browser are also published to the Docker host as **`localhost:7687`** and **`localhost:7474`** (stop a host Neo4j Desktop DBMS on those ports if bind fails).
 
-**One-time databases in Desktop 2:** Create four databases named `semio`, `elements`, `coda`, and `reuse` (user `neo4j` / password `password` unless you override env). The MCP tools target those names via `NEO4J_DATABASE` per server entry.
+**Bonus — Neo4j Desktop on Windows/macOS/Linux host:** With the devcontainer running, connect with **`bolt://127.0.0.1:7687`**, user **`neo4j`**, password **`password`** (Compose `NEO4J_AUTH`). Use connection name freely; pick database **`semio`** (etc.) in the UI after connecting.
+
+**One-time databases:** In the devcontainer they are created automatically. On native Desktop only, create the four databases once if missing.
 
 # Docs
 
 ## devcontainer.json
 
 Devcontainer configuration with VS Code customizations, container/remote env, post-create/start/attach commands, and persisted volumes for AI auth, editor server state, GitKraken workspace state, and Playwright cache under `node_modules`.
+
+## docker-compose.yml
+
+Compose stack for the devcontainer: **`semio`** (this workspace image + features) and **`neo4j`** (official `neo4j:5-community` with `NEO4J_AUTH=neo4j/password`). Bolt **7687** and HTTP **7474** are published to the Docker host for optional Neo4j Browser/Desktop; MCP and agents use **`bolt://neo4j:7687`** from inside the app container.
 
 ## post-create.sh
 
