@@ -1,0 +1,25 @@
+{
+  "title": "Neo4j Devcontainer Setup",
+  "emoji": "🗄️",
+  "status": "closed",
+  "description": "Make Neo4j run zero-touch in the devcontainer and expose Bolt/HTTP so native Neo4j Desktop can connect remotely to the devcontainer.",
+  "summary": "Implemented a lean Neo4j devcontainer setup with a dedicated Neo4j Compose service publishing localhost Bolt/HTTP ports directly, explicit devcontainer port forwarding for Codespaces, shared Neo4j env values for devcontainer and plain Compose runs, a single default Neo4j MCP server, and updated docs/lifecycle scripts. Validated Docker Compose config, JSON formatting, Neo4j health, host Bolt/HTTP reachability, cypher-shell query execution, workspace-container-to-Neo4j connectivity, and mcp-neo4j-cypher startup.",
+  "files": [
+    ".mcp.json",
+    ".devcontainer/README.md",
+    ".devcontainer/devcontainer.json",
+    ".devcontainer/docker-compose.yml",
+    ".devcontainer/neo4j-bootstrap-databases.py",
+    ".devcontainer/neo4j-mcp-run.sh",
+    ".devcontainer/post-attach.sh",
+    ".devcontainer/post-create.sh",
+    ".devcontainer/post-start.sh",
+    ".devcontainer/semio-entrypoint.sh",
+    ".repo/🎫/26/05/14/NEO4J-DEVCONTAINER-SETUP/README.md",
+    ".repo/🎫/26/05/14/NEO4J-DEVCONTAINER-SETUP/ticket.json"
+  ],
+  "goal": "🎯aioptimizedrepo🎯sandboxedrepo🎯zerotouchdevcontainer",
+  "sessions": [
+    "⚪codex-neo4j-devcontainer-setup"
+  ]
+}

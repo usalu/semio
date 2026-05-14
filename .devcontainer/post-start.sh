@@ -130,30 +130,26 @@ BASHRC
 
 configure_neo4j_compose_env
 #endregion 🔖Neo4jComposeEnv
-#region 🔖Neo4jBoltHostForward
-if [ -f "$WORKSPACE/.devcontainer/neo4j-host-forward.sh" ]; then
-  bash "$WORKSPACE/.devcontainer/neo4j-host-forward.sh" || true
-fi
-#endregion 🔖Neo4jBoltHostForward
-#region 🔖Neo4jBootstrapDatabases
-bootstrap_neo4j_databases() {
-  if [ ! -f "$WORKSPACE/.devcontainer/neo4j-bootstrap-databases.py" ]; then
-    echo "⚠️ Neo4j bootstrap script missing; skipping database creation."
-    return 0
-  fi
-  if ! python3 -c "import neo4j" 2>/dev/null; then
-    echo "⚠️ Python neo4j driver not installed yet; skipping database bootstrap (run post-create / pip install neo4j)."
-    return 0
-  fi
-  if python3 "$WORKSPACE/.devcontainer/neo4j-bootstrap-databases.py"; then
-    echo "✅ Neo4j technology databases (semio, elements, coda, reuse) ensured."
-  else
-    echo "⚠️ Neo4j database bootstrap failed (Neo4j may still be starting); MCP may retry on next start."
-  fi
+#region 🔖Neo4jReady
+wait_for_neo4j_bolt() {
+  for _ in $(seq 1 60); do
+    if command -v nc >/dev/null 2>&1 && nc -z neo4j 7687 2>/dev/null; then
+      return 0
+    fi
+    if timeout 1 bash -c "echo >/dev/tcp/neo4j/7687" 2>/dev/null; then
+      return 0
+    fi
+    sleep 2
+  done
+  return 1
 }
 
-bootstrap_neo4j_databases
-#endregion 🔖Neo4jBootstrapDatabases
+if wait_for_neo4j_bolt; then
+  echo "✅ Neo4j is reachable at bolt://neo4j:7687 from the devcontainer."
+else
+  echo "⚠️ Neo4j was not reachable at bolt://neo4j:7687 during post-start."
+fi
+#endregion 🔖Neo4jReady
 #region 🔖ClaudeAuth
 CLAUDE_HOME="/home/vscode"
 CLAUDE_DIR="${CLAUDE_HOME}/.claude"

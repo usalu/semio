@@ -369,9 +369,14 @@
 #           remoteProviders: [*remoteProvider]
 #           startedAt: *timestamp
 
+interface Constraint {
+  description: String!
+}
+
 interface Node {
   # Node
   name: String!
+  constraints: [Constraint!]! @relationship(type: "HAS", direction: OUT)
 }
 
 interface Primitive implements Node {
@@ -384,7 +389,35 @@ interface Scalar implements Primitive {
   name: String!
 }
 
+interface Field implements Node {
+  # Node
+  name: String!
+}
+
+interface DataField implements Field {
+  # Node
+  name: String!
+}
+
+interface ComputedField implements Field {
+  # Node
+  name: String!
+}
+
+interface 
+
+interface ReferenceField implements Field {
+  # Node
+  name: String!
+}
+
 interface Interface implements Node {
+  # Node
+  name: String!
+  fields: [Field!]! @relationship(type: "HAS", direction: OUT)
+}
+
+interface Method implements Node {
   # Node
   name: String!
 }
@@ -392,6 +425,9 @@ interface Interface implements Node {
 interface Class implements Node {
   # Node
   name: String!
+  interfaces: [Interface!]! @relationship(type: "IMPLEMENTS", direction: OUT)
+  fields: [Field!]! @relationship(type: "HAS", direction: OUT)
+  methods: [Method!]! @relationship(type: "HAS", direction: OUT)
 }
 
 type Module implements Primitive @node {

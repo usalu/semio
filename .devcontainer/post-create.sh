@@ -75,15 +75,6 @@ fi
 echo "Installing JS deps with Bun…"
 bun install
 
-#region 🔖Neo4jPythonDriver
-echo "Installing Python neo4j driver (devcontainer Neo4j bootstrap)…"
-if command -v python3 >/dev/null 2>&1; then
-  python3 -m pip install --user neo4j 2>/dev/null || python3 -m pip install --user --break-system-packages neo4j || {
-    echo "⚠️ Could not pip install neo4j; post-start DB bootstrap may skip until resolved."
-  }
-fi
-#endregion 🔖Neo4jPythonDriver
-
 echo "Running workspace setup (polyglot toolchains + VSIX + hooks)…"
 bun nx run workspace:setup
 

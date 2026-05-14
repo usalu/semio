@@ -1,10 +1,8 @@
 #!/usr/bin/env bash
 # SPDX-License-Identifier: AGPL-3.0-only
 #region 🔖SemioEntrypoint
-# 🚀Waits for Compose `neo4j:7687`, runs `neo4j-host-forward.sh` once, then execs the devcontainer command so host `127.0.0.1:7687` maps to a live listener (not only after post-start).
+# 🚀Waits for Compose `neo4j:7687`, then execs the devcontainer command for legacy Compose callers.
 set -eu
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-FORWARD="${SCRIPT_DIR}/neo4j-host-forward.sh"
 
 wait_neo4j_bolt() {
   local i=0
@@ -26,11 +24,11 @@ wait_neo4j_bolt() {
   return 1
 }
 
-if [ -f "$FORWARD" ]; then
+if command -v getent >/dev/null 2>&1 && getent hosts neo4j >/dev/null 2>&1; then
   if wait_neo4j_bolt; then
-    bash "$FORWARD" || true
+    echo "✅ semio-entrypoint: neo4j:7687 is reachable."
   else
-    echo "⚠️ semio-entrypoint: neo4j:7687 not ready in time; post-start may still start socat later."
+    echo "⚠️ semio-entrypoint: neo4j:7687 not ready in time."
   fi
 fi
 exec "$@"

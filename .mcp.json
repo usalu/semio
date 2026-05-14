@@ -3,30 +3,12 @@
     "repo": {
       "type": "stdio",
       "command": "go",
-      "args": [
-        "run",
-        "./repo/mcp"
-      ]
+      "args": ["run", "./repo/mcp"]
     },
-    "neo4j-semio": {
+    "neo4j": {
       "type": "stdio",
       "command": "bash",
-      "args": ["./.devcontainer/neo4j-mcp-run.sh", "semio"]
-    },
-    "neo4j-elements": {
-      "type": "stdio",
-      "command": "bash",
-      "args": ["./.devcontainer/neo4j-mcp-run.sh", "elements"]
-    },
-    "neo4j-coda": {
-      "type": "stdio",
-      "command": "bash",
-      "args": ["./.devcontainer/neo4j-mcp-run.sh", "coda"]
-    },
-    "neo4j-reuse": {
-      "type": "stdio",
-      "command": "bash",
-      "args": ["./.devcontainer/neo4j-mcp-run.sh", "reuse"]
+      "args": ["./.devcontainer/neo4j-mcp-run.sh"]
     }
   }
 }

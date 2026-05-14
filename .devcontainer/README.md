@@ -4,19 +4,19 @@ Devcontainer configuration and lifecycle scripts.
 
 # Neo4j Desktop and MCP
 
-The monorepo registers four Neo4j MCP servers (`neo4j-semio`, `neo4j-elements`, `neo4j-coda`, `neo4j-reuse`) in `.mcp.json` and per-client copies. Each server uses `uvx mcp-neo4j-cypher` and a dedicated database name matching the technology.
+The monorepo registers one Neo4j MCP server (`neo4j`) in `.mcp.json` and per-client copies. It uses `uvx mcp-neo4j-cypher` against the default `neo4j` database.
 
-**Native (Windows / macOS / Linux):** Run your platform bootstrap (`.devcontainer/install-native.ps1` or `.devcontainer/install-native.sh`) so `NEO4J_URI=bolt://localhost:7687` and credentials are set. Start Neo4j Desktop 2 locally; Bolt listens on `7687` by default.
+**Native (Windows / macOS / Linux):** Run your platform bootstrap (`.devcontainer/install-native.ps1` or `.devcontainer/install-native.sh`) so `NEO4J_URI=bolt://localhost:7687` and credentials are set. Start Neo4j Desktop locally when using a native DBMS, or connect Neo4j Desktop to the devcontainer through the forwarded Bolt port.
 
-**Devcontainer:** Neo4j 5 runs as the **`neo4j` Compose service**. Inside **`semio`**, `NEO4J_URI` is **`bolt://neo4j:7687`**. **`semio-entrypoint.sh`** waits for Bolt on **`neo4j`**, runs **`neo4j-host-forward.sh`** (socat on **`0.0.0.0:7687`** / **`7474`**), then starts the main process. **`semio`** publishes **`127.0.0.1:7687`**, **`127.0.0.1:17687`** (second map to the same Bolt port if **7687** is busy on the host), and **`127.0.0.1:7474`** to the Docker host. `post-start.sh` / `post-attach.sh` still re-run **`neo4j-host-forward.sh`**. **`neo4j-bootstrap-databases.py`** creates **`semio`**, **`elements`**, **`coda`**, **`reuse`**.
+**Devcontainer:** Neo4j 5 Community runs as the **`neo4j` Compose service**. Inside **`semio`**, `NEO4J_URI` is **`bolt://neo4j:7687`**. The **`neo4j`** service publishes **`127.0.0.1:7687`** (Bolt) and **`127.0.0.1:7474`** (Browser) to the Docker host, and `devcontainer.json` forwards both ports for Codespaces and local devcontainers.
 
-**Bonus — Neo4j Desktop on Windows:** Docker Desktop must be running. **Reopen in Container** (or recreate the Compose project) so new **`ports`** and **`entrypoint`** apply—**no image rebuild required** for these YAML/script changes. Then:
+**Neo4j Desktop remote connection:** Docker Desktop must be running for local devcontainers. **Reopen in Container** (or recreate the Compose project) so Compose port changes apply. No image rebuild is required for these YAML/script changes. Then:
 
-1. `Test-NetConnection -ComputerName 127.0.0.1 -Port 7687` — if **`TcpTestSucceeded : False`**, try **`Port 17687`** (same Bolt inside the container).
-2. Desktop: **`bolt://127.0.0.1:7687`** or **`bolt://127.0.0.1:17687`**, user **`neo4j`**, password **`password`**.
-3. In **Docker Desktop → Containers → `semio`**, **PORTS** should show **`127.0.0.1:7687->7687`** (and **`17687`**). If **`semio`** is missing or ports empty, the devcontainer stack is not running from this compose file.
+1. `Test-NetConnection -ComputerName 127.0.0.1 -Port 7687` on Windows, or `nc -vz 127.0.0.1 7687` on macOS/Linux.
+2. Desktop: **`bolt://127.0.0.1:7687`**, user **`neo4j`**, password **`password`**.
+3. Browser: **`http://127.0.0.1:7474`** with the same credentials.
 
-**One-time databases:** In the devcontainer they are created automatically. On native Desktop only, create the four databases once if missing.
+**Database:** The devcontainer uses the default **`neo4j`** database. Neo4j Community supports one user database per DBMS, so separate technology databases are intentionally not created.
 
 # Docs
 
@@ -26,11 +26,11 @@ Devcontainer configuration with VS Code customizations, container/remote env, po
 
 ## docker-compose.yml
 
-Compose stack for the devcontainer: **`semio`** and **`neo4j`**. **`semio`** uses **`semio-entrypoint.sh`** then **`sleep infinity`**, publishes **`127.0.0.1:7687`**, **`127.0.0.1:17687`**, and **`127.0.0.1:7474`**, and runs **`neo4j-host-forward.sh`** (socat) to **`neo4j`**. MCP uses **`bolt://neo4j:7687`** from inside **`semio`**.
+Compose stack for the devcontainer: **`semio`** and **`neo4j`**. **`neo4j`** publishes **`127.0.0.1:7687`** and **`127.0.0.1:7474`** directly. MCP uses **`bolt://neo4j:7687`** from inside **`semio`**.
 
 ## semio-entrypoint.sh
 
-Waits for **`neo4j:7687`**, runs **`neo4j-host-forward.sh`** once, then **`exec`** the main container command so host port maps hit a live **`socat`** listener as soon as **`semio`** starts.
+Legacy helper kept for existing callers. The current Compose setup does not use it because Neo4j publishes its own ports directly.
 
 ## post-create.sh
 
@@ -38,11 +38,11 @@ Devcontainer provisioning steps for dependency installs, including Playwright br
 
 ## post-start.sh
 
-Devcontainer start script that fixes ownership for persisted volumes, normalizes Claude Code auth storage, sets git safe directories, runs **`neo4j-host-forward.sh`** (Bolt/HTTP for editor port forwarding), bootstraps Neo4j databases via **`neo4j-bootstrap-databases.py`**, and activates the Python virtual environment.
+Devcontainer start script that fixes ownership for persisted volumes, normalizes Claude Code auth storage, sets git safe directories, writes Neo4j MCP environment defaults, checks **`neo4j:7687`**, and activates the Python virtual environment.
 
 ## post-attach.sh
 
-Devcontainer post-attach script that runs **`neo4j-host-forward.sh`** (so Neo4j Bolt/HTTP stay available for editor port forwarding after each attach), uninstalls any existing repo extension via IDE IPC hook CLIs and extensions directory cleanup, clears stale VS Code and Cursor caches, builds and installs the local semio extension via VS Code, Cursor, Windsurf, or Antigravity IPC hook CLIs with list-extensions validation and extensions directory fallback plus extensions.json registration (using `$mid` location keys) on WSL-only CLI responses, generates Windsurf and Codex MCP configs from the repo `.mcp.json`, installs Linux GitKraken Desktop plus CLI when missing, and bootstraps a GitKraken local workspace for the repo plus submodules.
+Devcontainer post-attach script that uninstalls any existing repo extension via IDE IPC hook CLIs and extensions directory cleanup, clears stale VS Code and Cursor caches, builds and installs the local semio extension via VS Code, Cursor, Windsurf, or Antigravity IPC hook CLIs with list-extensions validation and extensions directory fallback plus extensions.json registration (using `$mid` location keys) on WSL-only CLI responses, generates Windsurf and Codex MCP configs from the repo `.mcp.json`, installs Linux GitKraken Desktop plus CLI when missing, and bootstraps a GitKraken local workspace for the repo plus submodules.
 
 ## Devcontainer Persistence
 

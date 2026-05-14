@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: AGPL-3.0-only
 # #region 🔖Neo4jBootstrap
-"""🗄️Idempotently creates semio/elements/coda/reuse databases on the devcontainer Neo4j service (system DB)."""
+"""🗄️Verifies the devcontainer Neo4j service and the default neo4j database for local development."""
 from __future__ import annotations
 
 import os
@@ -29,12 +29,11 @@ def main() -> None:
         print("Neo4j bootstrap: could not reach " + uri, file=sys.stderr)
         raise SystemExit(1)
     try:
-        with driver.session(database="system") as session:
-            for name in ("semio", "elements", "coda", "reuse"):
-                session.run(f"CREATE DATABASE `{name}` IF NOT EXISTS")
+        with driver.session(database="neo4j") as session:
+            session.run("RETURN 1").consume()
     finally:
         driver.close()
-    print("Neo4j bootstrap: databases semio, elements, coda, reuse are ready.")
+    print("Neo4j bootstrap: default database neo4j is ready.")
 
 
 if __name__ == "__main__":

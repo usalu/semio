@@ -14,12 +14,6 @@ GITKRAKEN_WORKSPACE_NAME="${SEMIO_GITKRAKEN_WORKSPACE_NAME:-semio}"
 SKIP_EXTENSION_INSTALL="${SEMIO_POST_ATTACH_SKIP_EXTENSION_INSTALL:-}"
 SKIP_TOOL_INSTALL="${SEMIO_POST_ATTACH_SKIP_TOOL_INSTALL:-}"
 
-#region 🔖Neo4jBoltHostForward
-if [ -f "$WORKSPACE/.devcontainer/neo4j-host-forward.sh" ]; then
-  bash "$WORKSPACE/.devcontainer/neo4j-host-forward.sh" || true
-fi
-#endregion 🔖Neo4jBoltHostForward
-
 #region 🔖GitKrakenCliHelpers
 install_gitkraken_desktop() {
   if command -v gitkraken >/dev/null 2>&1; then
