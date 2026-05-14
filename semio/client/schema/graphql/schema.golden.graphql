@@ -155,6 +155,8 @@ interface Event implements WeakEntity & Entity & Node {
   involves: EntityConnection # reference
 }
 
+#region Workspaces
+
 interface Workspace implements StrongEntity & Entity & Node {
   # Node
   id: ID! # data // uuidv7
@@ -169,6 +171,39 @@ interface Workspace implements StrongEntity & Entity & Node {
   unsavedChanges: ChangeConnection! # data
   kit: Kit! # computed
 }
+
+#region Workspaces
+
+#region Results
+
+interface Results implements WeakEntity & Entity & Node {
+  # Node
+  id: ID! # computed // hash
+  # Entity
+  hash: String! # cached
+  owner: Entity # reference // Response
+  owns: EntityConnection # reference
+  # Response
+}
+
+#endregion Results
+
+#region Responses
+
+interface Response implements WeakEntity & Entity & Node {
+  # Node
+  id: ID! # computed // hash
+  # Entity
+  hash: String! # cached
+  owner: Entity # reference // Command
+  owns: EntityConnection # reference
+  # Response
+  ok: Boolean # computed
+  errors: Error # data
+  result: Result # data
+}
+
+#region Responses
 
 #region Inputs
 
@@ -289,7 +324,7 @@ type ModificationsConnection implements EntityConnection {
 
 #region Operations
 
-interface Operation implements StrongEntity & Entity & Node {
+interface Operation implements Response & StrongEntity & Entity & Node {
   # Node
   id: ID! # data // uuidv7
   # Entity
@@ -422,6 +457,14 @@ type ProviderCommandConnection implements EntityConnection {
 }
 
 #endregion Provider
+
+#region Commands
+
+interface Command implements WeakEntity {
+  response: Response
+}
+
+#endregion Commands
 
 #endregion General
 

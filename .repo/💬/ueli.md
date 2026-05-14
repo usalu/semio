@@ -1809,6 +1809,14 @@ semio/react:
 
 ---
 
+The useENTITY hooks are not implemented clean. Get rid of the resolve functions. Implement the logic to resolve directly.
+e.g. useDesign should not call resolveDesign but directly have the logic in there.
+usePiece then calls useDesign.
+
+
+
+---
+
 The hooks are not clean.
 The context hooks are not clean.
 No legacy or duplicated hooks. No Has Context.
@@ -1869,6 +1877,18 @@ useChildConnectionsIds():ConnectionId[]
 ### ✏️sketchpad
 
 semio/sketchpad:
+
+---
+
+The rules are simple:
+Every hook either returns an id or a atomic value type.
+Every entity hook has no paramter.
+Every field hook has exactly one optional id for the entity which takes presedence over the the the Context.
+e.g.
+useDesignContext: ID | null
+useDesign(): ID
+useDesignName(id?:ID): string
+useRenameDesign(id?:ID): readonly [(newName: string) => void , OperationStatus]
 
 ---
 

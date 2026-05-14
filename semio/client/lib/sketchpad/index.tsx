@@ -27,6 +27,7 @@ import type {
   Port,
   Quality,
   Representation,
+  SetResult,
   Tag,
   Type,
 } from "@semio/js";
@@ -75,7 +76,6 @@ import {
   getKitPorts,
   getKitRegistryBridge,
   getOrCreateKitFileState,
-  ICON_WIDTH,
   InMemoryKitStore,
   KitAlternativeSelectionProvider,
   KitDiff,
@@ -151,11 +151,6 @@ import {
   useOpenKits,
   usePiece,
   usePieceContext,
-  usePieceConnectionKind as usePieceConnectionKindState,
-  usePieceDepth as usePieceDepthState,
-  usePieceFlatCenter as usePieceFlatCenterState,
-  usePieceFlatPlane as usePieceFlatPlaneState,
-  usePieceParentConnection as usePieceParentConnectionState,
   usePieces,
   useQuality,
   useQualityContext,
@@ -171,26 +166,7 @@ import {
   useRenameDesign,
   useRenameKit,
   useRenameType,
-  useReplacableDesigns as useReplacableDesignIdsFromKit,
-  useReplacableTypes as useReplacableTypeIdsFromKit,
-  useResolvedKitIdentifier,
   useStoreOptional,
-  useConnectionDescription as useSchemaConnectionDescription,
-  useConnectionGap as useSchemaConnectionGap,
-  useConnectionRise as useSchemaConnectionRise,
-  useConnectionRotation as useSchemaConnectionRotation,
-  useConnectionShift as useSchemaConnectionShift,
-  useConnectionTilt as useSchemaConnectionTilt,
-  useConnectionTurn as useSchemaConnectionTurn,
-  useConnectionU as useSchemaConnectionU,
-  useConnectionV as useSchemaConnectionV,
-  usePieceCenter as useSchemaPieceCenter,
-  usePieceColor as useSchemaPieceColor,
-  usePieceDescription as useSchemaPieceDescription,
-  usePieceIsHidden as useSchemaPieceIsHidden,
-  usePieceIsLocked as useSchemaPieceIsLocked,
-  usePieceName as useSchemaPieceName,
-  usePieceScale as useSchemaPieceScale,
   usePieceTypeId,
   useTagsFull,
   useType,
@@ -16879,105 +16855,7 @@ export function useDiffedPiece<T>(selector?: (piece: Piece) => T, id?: string, d
 
 // #region 🎨Sketchpad 🛠️Properties
 /**
- * Hook returning the piece center U coordinate with setter.
- **/
-export function usePieceCenterU(): HookResult<number> {
-  const pieceScope = usePieceContext();
-  const id = pieceScope ?? undefined;
-  const [center, setCenter, ws] = useSchemaPieceCenter(id);
-  const u = (center as { u?: number } | undefined)?.u ?? 0;
-  const v = (center as { v?: number } | undefined)?.v ?? 0;
-  const canSet = Boolean(id) && ws.kind !== "readonly";
-  const setter = (nu: number) => {
-    void setCenter({ ...(center && typeof center === "object" ? (center as object) : {}), u: nu, v } as any);
-  };
-  return conditionalHookResult(canSet, u, setter);
-}
 
-/**
- * Hook returning the piece center V coordinate with setter.
- **/
-export function usePieceCenterV(): HookResult<number> {
-  const pieceScope = usePieceContext();
-  const id = pieceScope ?? undefined;
-  const [center, setCenter, ws] = useSchemaPieceCenter(id);
-  const u = (center as { u?: number } | undefined)?.u ?? 0;
-  const v = (center as { v?: number } | undefined)?.v ?? 0;
-  const canSet = Boolean(id) && ws.kind !== "readonly";
-  const setter = (nv: number) => {
-    void setCenter({ ...(center && typeof center === "object" ? (center as object) : {}), u, v: nv } as any);
-  };
-  return conditionalHookResult(canSet, v, setter);
-}
-
-/**
- * Hook returning the piece scale with setter.
- **/
-export function usePieceScale(): HookResult<number> {
-  const pieceScope = usePieceContext();
-  const binding = useSchemaPieceScale(pieceScope ?? undefined);
-  const [raw, setAsync, ws] = binding;
-  const value = (raw as number | undefined) ?? 1;
-  const canSet = Boolean(pieceScope ?? undefined) && ws.kind !== "readonly";
-  const setter = (next: number) => {
-    void setAsync(next);
-  };
-  return conditionalHookResult(canSet, value, setter);
-}
-
-/**
- * Hook returning the piece hidden state with setter.
- **/
-export function usePieceIsHidden(): HookResult<boolean> {
-  const pieceScope = usePieceContext();
-  const binding = useSchemaPieceIsHidden(pieceScope ?? undefined);
-  const [raw, setAsync, ws] = binding;
-  const value = Boolean(raw);
-  const canSet = Boolean(pieceScope ?? undefined) && ws.kind !== "readonly";
-  const setter = (next: boolean) => {
-    void setAsync(next);
-  };
-  return conditionalHookResult(canSet, value, setter);
-}
-
-/**
- * Hook returning the piece locked state with setter.
- **/
-export function usePieceIsLocked(): HookResult<boolean> {
-  const pieceScope = usePieceContext();
-  const binding = useSchemaPieceIsLocked(pieceScope ?? undefined);
-  const [raw, setAsync, ws] = binding;
-  const value = Boolean(raw);
-  const canSet = Boolean(pieceScope ?? undefined) && ws.kind !== "readonly";
-  const setter = (next: boolean) => {
-    void setAsync(next);
-  };
-  return conditionalHookResult(canSet, value, setter);
-}
-
-/**
- * Hook returning the piece color with setter.
- **/
-export function usePieceColor(): HookResult<string | undefined> {
-  const pieceScope = usePieceContext();
-  return kitFieldBindingToHookResult(pieceScope ?? undefined, useSchemaPieceColor(pieceScope ?? undefined));
-}
-
-/**
- * Hook returning the piece description with setter.
- **/
-export function usePieceDescription(): HookResult<string | undefined> {
-  const pieceScope = usePieceContext();
-  return kitFieldBindingToHookResult(pieceScope ?? undefined, useSchemaPieceDescription(pieceScope ?? undefined));
-}
-
-/**
- * Hook returning the piece name with setter.
- **/
-export function usePieceName(): HookResult<string | undefined> {
-  const pieceScope = usePieceContext();
-  return kitFieldBindingToHookResult(pieceScope ?? undefined, useSchemaPieceName(pieceScope ?? undefined));
-}
 
 /**
  * Hook returning whether the current scoped connection is selected.
@@ -16994,266 +16872,7 @@ export function useIsConnectionHovered(): boolean {
   const connectionScope = useConnectionContext();
   return useDesignAppIsConnectionHovered(undefined, connectionScope ?? undefined ?? "");
 }
-
-/**
- * Hook returning the diff status of the current scoped connection.
- **/
-export function useConnectionStatus(): DiffStatus {
-  const connection = useConnectionContext();
-  const kitDiff = useDesignAppDiff();
-  const designScope = useDesignContext();
-
-  if (!connection || !designScope || !kitDiff?.designs?.updated) {
-    return DiffStatus.Unchanged;
-  }
-
-  for (const designUpdate of kitDiff.designs.updated) {
-    if (designUpdate.diff.connections?.added) {
-      for (const conn of designUpdate.diff.connections.added) {
-        if (conn.id === connection.id) {
-          return DiffStatus.Added;
-        }
-      }
-    }
-    if (designUpdate.diff.connections?.removed) {
-      for (const removedConn of designUpdate.diff.connections.removed) {
-        if (removedConn.id === connection.id) {
-          return DiffStatus.Removed;
-        }
-      }
-    }
-    if (designUpdate.diff.connections?.updated) {
-      for (const connUpdate of designUpdate.diff.connections.updated) {
-        if (typeof connUpdate.id === "string" && connUpdate.id === connection.id) {
-          return DiffStatus.Modified;
-        }
-      }
-    }
-  }
-
-  return DiffStatus.Unchanged;
-}
-
-/**
- * Hook returning the connection gap with setter.
- **/
-export function useConnectionGap(): HookResult<number> {
-  const connectionScope = useConnectionContext();
-  const binding = useSchemaConnectionGap(connectionScope ?? undefined);
-  const [raw, setAsync, ws] = binding;
-  const value = (raw as number | undefined) ?? 0;
-  const canSet = Boolean(connectionScope ?? undefined) && ws.kind !== "readonly";
-  return conditionalHookResult(canSet, value, (nv) => void setAsync(nv));
-}
-
-/**
- * Hook returning the connection shift with setter.
- **/
-export function useConnectionShift(): HookResult<number> {
-  const connectionScope = useConnectionContext();
-  const binding = useSchemaConnectionShift(connectionScope ?? undefined);
-  const [raw, setAsync, ws] = binding;
-  const value = (raw as number | undefined) ?? 0;
-  const canSet = Boolean(connectionScope ?? undefined) && ws.kind !== "readonly";
-  return conditionalHookResult(canSet, value, (nv) => void setAsync(nv));
-}
-
-/**
- * Hook returning the connection rise with setter.
- **/
-export function useConnectionRise(): HookResult<number> {
-  const connectionScope = useConnectionContext();
-  const binding = useSchemaConnectionRise(connectionScope ?? undefined);
-  const [raw, setAsync, ws] = binding;
-  const value = (raw as number | undefined) ?? 0;
-  const canSet = Boolean(connectionScope ?? undefined) && ws.kind !== "readonly";
-  return conditionalHookResult(canSet, value, (nv) => void setAsync(nv));
-}
-
-/**
- * Hook returning the connection rotation with setter.
- **/
-export function useConnectionRotation(): HookResult<number> {
-  const connectionScope = useConnectionContext();
-  const binding = useSchemaConnectionRotation(connectionScope ?? undefined);
-  const [raw, setAsync, ws] = binding;
-  const value = (raw as number | undefined) ?? 0;
-  const canSet = Boolean(connectionScope ?? undefined) && ws.kind !== "readonly";
-  return conditionalHookResult(canSet, value, (nv) => void setAsync(nv));
-}
-
-/**
- * Hook returning the connection turn with setter.
- **/
-export function useConnectionTurn(): HookResult<number> {
-  const connectionScope = useConnectionContext();
-  const binding = useSchemaConnectionTurn(connectionScope ?? undefined);
-  const [raw, setAsync, ws] = binding;
-  const value = (raw as number | undefined) ?? 0;
-  const canSet = Boolean(connectionScope ?? undefined) && ws.kind !== "readonly";
-  return conditionalHookResult(canSet, value, (nv) => void setAsync(nv));
-}
-
-/**
- * Hook returning the connection tilt with setter.
- **/
-export function useConnectionTilt(): HookResult<number> {
-  const connectionScope = useConnectionContext();
-  const binding = useSchemaConnectionTilt(connectionScope ?? undefined);
-  const [raw, setAsync, ws] = binding;
-  const value = (raw as number | undefined) ?? 0;
-  const canSet = Boolean(connectionScope ?? undefined) && ws.kind !== "readonly";
-  return conditionalHookResult(canSet, value, (nv) => void setAsync(nv));
-}
-
-/**
- * Hook returning the connection U coordinate with setter.
- **/
-export function useConnectionU(): HookResult<number> {
-  const connectionScope = useConnectionContext();
-  const binding = useSchemaConnectionU(connectionScope ?? undefined);
-  const [raw, setAsync, ws] = binding;
-  const value = (raw as number | undefined) ?? 0;
-  const canSet = Boolean(connectionScope ?? undefined) && ws.kind !== "readonly";
-  return conditionalHookResult(canSet, value, (nv) => void setAsync(nv));
-}
-
-/**
- * Hook returning the connection V coordinate with setter.
- **/
-export function useConnectionV(): HookResult<number> {
-  const connectionScope = useConnectionContext();
-  const binding = useSchemaConnectionV(connectionScope ?? undefined);
-  const [raw, setAsync, ws] = binding;
-  const value = (raw as number | undefined) ?? 0;
-  const canSet = Boolean(connectionScope ?? undefined) && ws.kind !== "readonly";
-  return conditionalHookResult(canSet, value, (nv) => void setAsync(nv));
-}
-
-export function useConnectionDescription(): HookResult<string> {
-  const connectionScope = useConnectionContext();
-  const binding = useSchemaConnectionDescription(connectionScope ?? undefined);
-  const [raw, setAsync, ws] = binding;
-  const text = (raw as string | undefined) ?? "";
-  const canSet = Boolean(connectionScope ?? undefined) && ws.kind !== "readonly";
-  return conditionalHookResult(canSet, text, (nv) => void setAsync(nv));
-}
-
 // #endregion 🎨Sketchpad 🛠️Properties
-
-/**
- * Clusterable piece groups for the current design (rs-backed via GraphQL `kitStore.designForId.clusterableGroups`).
- * Each group is a list of piece id strings.
- **/
-export function useClusterableGroups() {
-  const designScope = useDesignContext();
-  const selection = useDesignAppSelection();
-  const [groups] = useDesignClusterableGroups(designScope, selection.pieces ?? []);
-  return useMemo(() => {
-    if (!designScope) return [] as string[][];
-    if (!Array.isArray(groups) || groups.length === 0) return [];
-    return groups.map((g) => (Array.isArray(g) ? g : []).map((p) => (typeof p === "string" ? p : p.id)));
-  }, [designScope, groups]);
-}
-
-/**
- * Hook returning the kit with applied transaction diffs.
- **/
-export function useDiffedKit(): Kit {
-  const ksKit = useKitStoreSnapshot();
-  const kit = ksKit?.kit as Kit;
-  return kit;
-}
-
-/**
- * Hook returning types with port-colored connectors from the diffed kit.
- **/
-export function usePortColoredTypes(): Type[] {
-  const diffedKit = useDiffedKit();
-  const [kitTypes] = useTypes();
-  const typesWithColoredConnectors = useMemo(() => {
-    if (!diffedKit.types || !kitTypes) return [];
-    const colorDiff = colorPortsForTypes(diffedKit.types);
-    const updatedIds = colorDiff.updated?.map((u) => u.type.id) || [];
-    return kitTypes.filter((t) => updatedIds.includes(t.id));
-  }, [diffedKit.types, kitTypes]);
-  return typesWithColoredConnectors;
-}
-
-/**
- * Hook returning original and diffed piece with diff indicator.
- **/
-export function usePieceWithDiff(): { original: Piece; diffed: Piece | null; hasDiff: boolean } {
-  const store = useStoreOptional();
-  const designId = useDesign();
-  const pieceId = usePiece();
-  if (store == null) throw new Error("semio/sketchpad: usePieceWithDiff requires StoreContextProvider.");
-  const originalPiece = store.design(designId).piece(pieceId) as Piece;
-  const diffedPiece = useDiffedPiece() as Piece;
-  const status = usePieceStatus();
-
-  const hasDiff = status !== DiffStatus.Unchanged;
-
-  return {
-    original: originalPiece,
-    diffed: hasDiff ? diffedPiece : null,
-    hasDiff,
-  };
-}
-
-/**
- * Hook returning stroke and fill colors based on connection diff status.
- **/
-export function useConnectionColor(): { stroke: string; fill: string } {
-  const connection = useConnectionContext();
-  const kitDiff = useDesignAppDiff();
-  const designScope = useDesignContext();
-
-  let diffStatus = DiffStatus.Unchanged;
-  if (connection && designScope && kitDiff?.designs?.updated) {
-    for (const designUpdate of kitDiff.designs.updated) {
-      if (designUpdate.diff.connections?.added) {
-        for (const conn of designUpdate.diff.connections.added) {
-          if (conn.id === connection.id) {
-            diffStatus = DiffStatus.Added;
-            break;
-          }
-        }
-      }
-      if (designUpdate.diff.connections?.removed) {
-        for (const removedConn of designUpdate.diff.connections.removed) {
-          if (typeof removedConn === "string" && removedConn === connection.id) {
-            diffStatus = DiffStatus.Removed;
-            break;
-          }
-        }
-      }
-      if (designUpdate.diff.connections?.updated) {
-        for (const connUpdate of designUpdate.diff.connections.updated) {
-          if (typeof connUpdate.id === "string" && connUpdate.id === connection.id) {
-            diffStatus = DiffStatus.Modified;
-            break;
-          }
-        }
-      }
-    }
-  }
-
-  const stroke = diffStatus === DiffStatus.Added ? "#00ff00" : diffStatus === DiffStatus.Removed ? "#ff0000" : diffStatus === DiffStatus.Modified ? "#ffff00" : "#ffffff";
-  const fill = diffStatus === DiffStatus.Added ? "#00ff0033" : diffStatus === DiffStatus.Removed ? "#ff000033" : diffStatus === DiffStatus.Modified ? "#ffff0033" : "#ffffff33";
-
-  return { stroke, fill };
-}
-
-/**
- * Hook returning the design with applied transaction diffs.
- **/
-export function useDiffedDesign(): Design {
-  const kit = useDiffedKit();
-  const designScope = useDesignContext();
-  if (!designScope) throw new Error("useDiffedDesign must be called within a DesignContextProvider");
-  return findDesignInKit(kit, designScope.id);
-}
 
 // #endregion 📌Design
 
