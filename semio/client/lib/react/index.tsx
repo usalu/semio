@@ -182,8 +182,8 @@ function mapTooLong(err: SetError, maxChars: number): string {
  * @typeParam E — Concrete {@link } subclass anchor.
  * @typeParam Args — Operation arguments after the entity receiver.
  */
-function semioInternalOperationBind<E extends Entity, Args extends unknown[] = []>(impl: (entity: E, ...args: Args) => Promise<SetResult>): (get: () => E | null) => readonly [(...args: Args) => Promise<SetResult>, OperationStatus] {
-  return function useOperation(get: () => E | null): readonly [(...args: Args) => Promise<SetResult>, OperationStatus] {
+function semioInternalOperationBind<E extends Entity, Args extends unknown[] = []>(impl: (entity: E, ...args: Args) => void): (get: () => E | null) => readonly [(...args: Args) => void, OperationStatus] {
+  return function useOperation(get: () => E | null): readonly [(...args: Args) => void, OperationStatus] {
     const getRef = React.useRef(get);
     getRef.current = get;
     const [status, setStatus] = React.useState<OperationStatus>({ kind: "idle" });
@@ -324,8 +324,8 @@ function semioInternalStoreFieldBind<T>(opts: StoreFieldBindOptions<T>): () => F
 
 // #region 🪝StoreOperationBind
 /** @emoji 🪝 Binds a {@link Store} operation to `[run, status]`. */
-function semioInternalStoreOpBind<Args extends unknown[] = []>(impl: (store: Store, ...args: Args) => Promise<SetResult>): (getStore: () => Store | null) => readonly [(...args: Args) => Promise<SetResult>, OperationStatus] {
-  return function useStoreOp(getStore: () => Store | null): readonly [(...args: Args) => Promise<SetResult>, OperationStatus] {
+function semioInternalStoreOperationBind<Args extends unknown[] = []>(impl: (store: Store, ...args: Args) => void): (getStore: () => Store | null) => readonly [(...args: Args) => void, OperationStatus] {
+  return function useStoreOp(getStore: () => Store | null): readonly [(...args: Args) => void, OperationStatus] {
     const getRef = React.useRef(getStore);
     getRef.current = getStore;
     const [status, setStatus] = React.useState<OperationStatus>({ kind: "idle" });
@@ -360,8 +360,8 @@ function semioInternalStoreOpBind<Args extends unknown[] = []>(impl: (store: Sto
 }
 
 /** @emoji 🪝 Binds a {@link Session} operation to `[run, status]`. */
-function semioInternalSessionOpBind<Args extends unknown[] = []>(impl: (session: Session, ...args: Args) => Promise<SetResult>): (getSession: () => Session | null) => readonly [(...args: Args) => Promise<SetResult>, OperationStatus] {
-  return function useSessionOp(getSession: () => Session | null): readonly [(...args: Args) => Promise<SetResult>, OperationStatus] {
+function semioInternalSessionOperationBind<Args extends unknown[] = []>(impl: (session: Session, ...args: Args) => void): (getSession: () => Session | null) => readonly [(...args: Args) => void, OperationStatus] {
+  return function useSessionOp(getSession: () => Session | null): readonly [(...args: Args) => void, OperationStatus] {
     const getRef = React.useRef(getSession);
     getRef.current = getSession;
     const [status, setStatus] = React.useState<OperationStatus>({ kind: "idle" });
@@ -399,10 +399,7 @@ function useCurrentEntityField<E extends Entity, T>(entity: E | null, read: (ent
   return semioInternalFieldBind<E, T>({ get: () => entity, read, eventKind })();
 }
 
-function useCurrentEntityOperation<E extends Entity, Args extends unknown[] = []>(
-  entity: E | null,
-  useBound: (get: () => E | null) => readonly [(...args: Args) => Promise<SetResult>, OperationStatus],
-): readonly [(...args: Args) => Promise<SetResult>, OperationStatus] {
+function useCurrentEntityOperation<E extends Entity, Args extends unknown[] = []>(entity: E | null, useBound: (get: () => E | null) => readonly [(...args: Args) => void, OperationStatus]): readonly [(...args: Args) => void, OperationStatus] {
   return useBound(() => entity);
 }
 // #endregion 🪝StoreOperationBind
@@ -418,24 +415,24 @@ const LocalProviderHandleContext = React.createContext<LocalProvider | null>(nul
 const RemoteProviderHandleContext = React.createContext<RemoteProvider | null>(null);
 const BackboneHandleContext = React.createContext<Backbone | null>(null);
 
-const StoreIdContext = React.createContext<Readonly<{ id: string }> | null>(null);
-const AlternativeIdContext = React.createContext<Readonly<{ id: string }> | null>(null);
-const KitIdContext = React.createContext<Readonly<{ id: string }> | null>(null);
-const DesignIdContext = React.createContext<Readonly<{ id: string }> | null>(null);
-const TypeIdContext = React.createContext<Readonly<{ id: string }> | null>(null);
-const AuthorIdContext = React.createContext<Readonly<{ id: string }> | null>(null);
-const QualityIdContext = React.createContext<Readonly<{ id: string }> | null>(null);
-const TagIdContext = React.createContext<Readonly<{ id: string }> | null>(null);
-const ConceptIdContext = React.createContext<Readonly<{ id: string }> | null>(null);
-const PieceIdContext = React.createContext<Readonly<{ id: string }> | null>(null);
-const ConnectionIdContext = React.createContext<Readonly<{ id: string }> | null>(null);
-const PortIdContext = React.createContext<Readonly<{ id: string }> | null>(null);
-const ConnectorIdContext = React.createContext<Readonly<{ id: string }> | null>(null);
-const RepresentationIdContext = React.createContext<Readonly<{ id: string }> | null>(null);
+const StoreContext = React.createContext<Readonly<{ id: string }> | null>(null);
+const AlternativeContext = React.createContext<Readonly<{ id: string }> | null>(null);
+const KitContext = React.createContext<Readonly<{ id: string }> | null>(null);
+const DesignContext = React.createContext<Readonly<{ id: string }> | null>(null);
+const TypeContext = React.createContext<Readonly<{ id: string }> | null>(null);
+const AuthorContext = React.createContext<Readonly<{ id: string }> | null>(null);
+const QualityContext = React.createContext<Readonly<{ id: string }> | null>(null);
+const TagContext = React.createContext<Readonly<{ id: string }> | null>(null);
+const ConceptContext = React.createContext<Readonly<{ id: string }> | null>(null);
+const PieceContext = React.createContext<Readonly<{ id: string }> | null>(null);
+const ConnectionContext = React.createContext<Readonly<{ id: string }> | null>(null);
+const PortContext = React.createContext<Readonly<{ id: string }> | null>(null);
+const ConnectorContext = React.createContext<Readonly<{ id: string }> | null>(null);
+const RepresentationContext = React.createContext<Readonly<{ id: string }> | null>(null);
 const RemoteProviderUrlContext = React.createContext<Readonly<{ id: string }> | null>(null);
-const FileBackboneIdContext = React.createContext<Readonly<{ id: string }> | null>(null);
-const FolderBackboneIdContext = React.createContext<Readonly<{ id: string }> | null>(null);
-const WebsocketBackboneIdContext = React.createContext<Readonly<{ id: string }> | null>(null);
+const FileBackboneContext = React.createContext<Readonly<{ id: string }> | null>(null);
+const FolderBackboneContext = React.createContext<Readonly<{ id: string }> | null>(null);
+const WebsocketBackboneContext = React.createContext<Readonly<{ id: string }> | null>(null);
 
 const WipMarkerContext = React.createContext(false);
 const StageMarkerContext = React.createContext(false);
@@ -449,7 +446,7 @@ const OriginMarkerContext = React.createContext(false);
 
 const PiecesBatchContext = React.createContext<Readonly<{ ids: readonly string[] }> | null>(null);
 
-/** @emoji 🪢 Batch piece ids for {@link useDragPieces} under {@link DesignIdContext}. */
+/** @emoji 🪢 Batch piece ids for {@link useDragPieces} under {@link DesignContext}. */
 export function PiecesBatchContextProvider(props: Readonly<{ ids: readonly string[]; children: ReactNode }>): React.ReactElement {
   const v = React.useMemo(() => ({ ids: props.ids }), [props.ids]);
   return React.createElement(PiecesBatchContext.Provider, { value: v }, props.children);
@@ -471,7 +468,7 @@ export function StoreContextProvider(props: StoreContextProviderProps): React.Re
   if (session == null) throw new Error("semio/react: StoreContextProvider requires SessionContextProvider.");
   const store = React.useMemo(() => session.store(props.id), [session, props.id]);
   const idRow = React.useMemo(() => ({ id: props.id }), [props.id]);
-  return React.createElement(StoreHandleContext.Provider, { value: store }, React.createElement(StoreIdContext.Provider, { value: idRow }, props.children));
+  return React.createElement(StoreHandleContext.Provider, { value: store }, React.createElement(StoreContext.Provider, { value: idRow }, props.children));
 }
 
 export function LocalProviderContextProvider(props: Readonly<{ children: ReactNode }>): React.ReactElement {
@@ -522,7 +519,7 @@ export function AlternativeContextProvider(props: Readonly<{ id: string; childre
   if (graph == null) throw new Error("semio/react: AlternativeContextProvider requires a graph tier provider.");
   const alt = React.useMemo(() => graph.alternative(props.id), [graph, props.id]);
   const idRow = React.useMemo(() => ({ id: props.id }), [props.id]);
-  return React.createElement(AlternativeHandleContext.Provider, { value: alt }, React.createElement(AlternativeIdContext.Provider, { value: idRow }, props.children));
+  return React.createElement(AlternativeHandleContext.Provider, { value: alt }, React.createElement(AlternativeContext.Provider, { value: idRow }, props.children));
 }
 
 export function KitContextProvider(props: Readonly<{ id: string; children: ReactNode }>): React.ReactElement {
@@ -530,7 +527,7 @@ export function KitContextProvider(props: Readonly<{ id: string; children: React
   if (store == null) throw new Error("semio/react: KitContextProvider requires StoreContextProvider.");
   const kit = React.useMemo(() => new Kit(store.session, props.id, store.id), [store.session, store.id, props.id]);
   const idRow = React.useMemo(() => ({ id: props.id }), [props.id]);
-  return React.createElement(KitHandleContext.Provider, { value: kit }, React.createElement(KitIdContext.Provider, { value: idRow }, props.children));
+  return React.createElement(KitHandleContext.Provider, { value: kit }, React.createElement(KitContext.Provider, { value: idRow }, props.children));
 }
 
 function mkIdProvider(C: React.Context<Readonly<{ id: string }> | null>) {
@@ -540,17 +537,17 @@ function mkIdProvider(C: React.Context<Readonly<{ id: string }> | null>) {
   };
 }
 
-export const DesignContextProvider = mkIdProvider(DesignIdContext);
-export const TypeContextProvider = mkIdProvider(TypeIdContext);
-export const AuthorContextProvider = mkIdProvider(AuthorIdContext);
-export const QualityContextProvider = mkIdProvider(QualityIdContext);
-export const TagContextProvider = mkIdProvider(TagIdContext);
-export const ConceptContextProvider = mkIdProvider(ConceptIdContext);
-export const PieceContextProvider = mkIdProvider(PieceIdContext);
-export const ConnectionContextProvider = mkIdProvider(ConnectionIdContext);
-export const PortContextProvider = mkIdProvider(PortIdContext);
-export const ConnectorContextProvider = mkIdProvider(ConnectorIdContext);
-export const RepresentationContextProvider = mkIdProvider(RepresentationIdContext);
+export const DesignContextProvider = mkIdProvider(DesignContext);
+export const TypeContextProvider = mkIdProvider(TypeContext);
+export const AuthorContextProvider = mkIdProvider(AuthorContext);
+export const QualityContextProvider = mkIdProvider(QualityContext);
+export const TagContextProvider = mkIdProvider(TagContext);
+export const ConceptContextProvider = mkIdProvider(ConceptContext);
+export const PieceContextProvider = mkIdProvider(PieceContext);
+export const ConnectionContextProvider = mkIdProvider(ConnectionContext);
+export const PortContextProvider = mkIdProvider(PortContext);
+export const ConnectorContextProvider = mkIdProvider(ConnectorContext);
+export const RepresentationContextProvider = mkIdProvider(RepresentationContext);
 
 export function FileBackboneContextProvider(props: Readonly<{ id: string; children: ReactNode }>): React.ReactElement {
   const session = React.useContext(SessionHandleContext);
@@ -558,7 +555,7 @@ export function FileBackboneContextProvider(props: Readonly<{ id: string; childr
   if (session == null || lp == null) throw new Error("semio/react: FileBackboneContextProvider requires Session + LocalProvider.");
   const bb = React.useMemo(() => new Backbone(session, props.id, lp), [session, props.id, lp]);
   const idRow = React.useMemo(() => ({ id: props.id }), [props.id]);
-  return React.createElement(BackboneHandleContext.Provider, { value: bb }, React.createElement(FileBackboneIdContext.Provider, { value: idRow }, props.children));
+  return React.createElement(BackboneHandleContext.Provider, { value: bb }, React.createElement(FileBackboneContext.Provider, { value: idRow }, props.children));
 }
 
 export function FolderBackboneContextProvider(props: Readonly<{ id: string; children: ReactNode }>): React.ReactElement {
@@ -567,7 +564,7 @@ export function FolderBackboneContextProvider(props: Readonly<{ id: string; chil
   if (session == null || lp == null) throw new Error("semio/react: FolderBackboneContextProvider requires Session + LocalProvider.");
   const bb = React.useMemo(() => new Backbone(session, props.id, lp), [session, props.id, lp]);
   const idRow = React.useMemo(() => ({ id: props.id }), [props.id]);
-  return React.createElement(BackboneHandleContext.Provider, { value: bb }, React.createElement(FolderBackboneIdContext.Provider, { value: idRow }, props.children));
+  return React.createElement(BackboneHandleContext.Provider, { value: bb }, React.createElement(FolderBackboneContext.Provider, { value: idRow }, props.children));
 }
 
 export function WebsocketBackboneContextProvider(props: Readonly<{ id: string; children: ReactNode }>): React.ReactElement {
@@ -576,7 +573,7 @@ export function WebsocketBackboneContextProvider(props: Readonly<{ id: string; c
   if (session == null || rp == null) throw new Error("semio/react: WebsocketBackboneContextProvider requires Session + RemoteProvider.");
   const bb = React.useMemo(() => new Backbone(session, props.id, rp), [session, props.id, rp]);
   const idRow = React.useMemo(() => ({ id: props.id }), [props.id]);
-  return React.createElement(BackboneHandleContext.Provider, { value: bb }, React.createElement(WebsocketBackboneIdContext.Provider, { value: idRow }, props.children));
+  return React.createElement(BackboneHandleContext.Provider, { value: bb }, React.createElement(WebsocketBackboneContext.Provider, { value: idRow }, props.children));
 }
 
 export function PositionContextProvider(props: Readonly<{ children: ReactNode }>): React.ReactElement {
@@ -612,84 +609,84 @@ function readOptionalId(ctx: React.Context<Readonly<{ id: string }> | null>, ove
 
 function resolveKit(id?: string): Kit | null {
   const k = React.useContext(KitHandleContext);
-  const rid = readOptionalId(KitIdContext, id);
+  const rid = readOptionalId(KitContext, id);
   if (k == null || rid == null) return null;
   return k.id === rid ? k : new Kit(k.session, rid, k.storeId);
 }
 
 function resolveDesign(id?: string): Design | null {
   const st = React.useContext(StoreHandleContext);
-  const id = readOptionalId(DesignIdContext, id);
+  const id = readOptionalId(DesignContext, id);
   if (st == null || id == null) return null;
   return st.design(id);
 }
 
 function resolvePiece(id?: string): Piece | null {
   const d = resolveDesign();
-  const id = readOptionalId(PieceIdContext, id);
+  const id = readOptionalId(PieceContext, id);
   if (d == null || id == null) return null;
   return d.piece(id);
 }
 
 function resolveType(id?: string): Type | null {
   const st = React.useContext(StoreHandleContext);
-  const id = readOptionalId(TypeIdContext, id);
+  const id = readOptionalId(TypeContext, id);
   if (st == null || id == null) return null;
   return st.type(id);
 }
 
 function resolveConnection(id?: string): Connection | null {
   const d = resolveDesign();
-  const id = readOptionalId(ConnectionIdContext, id);
+  const id = readOptionalId(ConnectionContext, id);
   if (d == null || id == null) return null;
   return d.connection(id);
 }
 
 function resolvePort(id?: string): Port | null {
   const t = resolveType();
-  const id = readOptionalId(PortIdContext, id);
+  const id = readOptionalId(PortContext, id);
   if (t == null || id == null) return null;
   return t.port(id);
 }
 
 function resolveConnector(connectorId?: string): Connector | null {
   const t = resolveType();
-  const id = readOptionalId(ConnectorIdContext, connectorId);
+  const id = readOptionalId(ConnectorContext, connectorId);
   if (t == null || id == null) return null;
   return t.connector(id);
 }
 
 function resolveRepresentation(id?: string): Representation | null {
   const t = resolveType();
-  const id = readOptionalId(RepresentationIdContext, id);
+  const id = readOptionalId(RepresentationContext, id);
   if (t == null || id == null) return null;
   return t.representation(id);
 }
 
 function resolveQuality(id?: string): Quality | null {
   const st = React.useContext(StoreHandleContext);
-  const id = readOptionalId(QualityIdContext, id);
+  const id = readOptionalId(QualityContext, id);
   if (st == null || id == null) return null;
   return st.quality(id);
 }
 
 function resolveTag(id?: string): Tag | null {
   const st = React.useContext(StoreHandleContext);
-  const id = readOptionalId(TagIdContext, id);
+  const id = readOptionalId(TagContext, id);
   if (st == null || id == null) return null;
   return st.tag(id);
 }
 
 function resolveConcept(id?: string): Concept | null {
   const st = React.useContext(StoreHandleContext);
-  const id = readOptionalId(ConceptIdContext, id);
+  const id = readOptionalId(ConceptContext, id);
   if (st == null || id == null) return null;
   return st.concept(id);
 }
 
 function resolveAuthor(id?: string): Author | null {
   const st = React.useContext(StoreHandleContext);
-  const id = readOptionalId(AuthorIdContext, id);
+  const id = readOptionalId(AuthorContext, id);
   if (st == null || id == null) return null;
   return st.author(id);
 }
@@ -703,7 +700,7 @@ function resolveFile(id?: string): File | null {
 
 function resolveAlternative(id?: string): Alternative | null {
   const g = React.useContext(GraphHandleContext);
-  const row = React.useContext(AlternativeIdContext);
+  const row = React.useContext(AlternativeContext);
   const id = id ?? row?.id ?? null;
   if (g == null || id == null) return null;
   return g.alternative(id);
@@ -724,7 +721,7 @@ function resolveRemoteProvider(url?: string): RemoteProvider | null {
 
 function resolveBackbone(id?: string): Backbone | null {
   const bb = React.useContext(BackboneHandleContext);
-  const id = id ?? React.useContext(FileBackboneIdContext)?.id ?? React.useContext(FolderBackboneIdContext)?.id ?? React.useContext(WebsocketBackboneIdContext)?.id ?? null;
+  const id = id ?? React.useContext(FileBackboneContext)?.id ?? React.useContext(FolderBackboneContext)?.id ?? React.useContext(WebsocketBackboneContext)?.id ?? null;
   if (bb != null && (id == null || bb.id === id)) return bb;
   return null;
 }
@@ -748,7 +745,7 @@ export function useSession(): EntityReadState {
 
 export function useStore(id?: string): EntityReadState {
   const store = React.useContext(StoreHandleContext);
-  const row = React.useContext(StoreIdContext);
+  const row = React.useContext(StoreContext);
   const resolved = id ?? row?.id ?? null;
   return entityRead(() => (store != null && resolved != null && store.id === resolved ? store : null));
 }
@@ -878,13 +875,13 @@ const DesignContext = React.createContext<DesignContext | null>(null);
 /** @emoji 📐 Prefer {@link DesignContextProvider} from id-only kit; this accepts {@code id} and mirrors {@code id}. */
 export function LegacyDesignContextProvider(props: Readonly<{ id: string; children: ReactNode }>): React.ReactElement {
   const v = React.useMemo(() => ({ id: props.id }), [props.id]);
-  return React.createElement(DesignContext.Provider, { value: v }, React.createElement(DesignIdContext.Provider, { value: { id: props.id } }, props.children));
+  return React.createElement(DesignContext.Provider, { value: v }, React.createElement(DesignContext.Provider, { value: { id: props.id } }, props.children));
 }
-/** @emoji 📐 {@link Design} from legacy {@link DesignContext} or id-only {@link DesignIdContext}. */
+/** @emoji 📐 {@link Design} from legacy {@link DesignContext} or id-only {@link DesignContext}. */
 export function useDesignJs(): Design | null {
   const store = useJsStore();
   const legacy = React.useContext(DesignContext);
-  const id = legacy?.id ?? React.useContext(DesignIdContext)?.id ?? null;
+  const id = legacy?.id ?? React.useContext(DesignContext)?.id ?? null;
   return id == null ? null : store.design(id);
 }
 // #endregion 📐Design
@@ -907,9 +904,9 @@ export function GraphContextProvider(props: Readonly<{ root: GraphRootKind; chil
 // #endregion 🎭Contexts
 
 // #region 🔖EntityContextHelpers
-/** @emoji 🧭 `{ id }` from {@link DesignIdContext} or legacy {@link DesignContext}. */
+/** @emoji 🧭 `{ id }` from {@link DesignContext} or legacy {@link DesignContext}. */
 export function useDesignContext(): Readonly<{ id: string }> | null {
-  const idOnly = React.useContext(DesignIdContext);
+  const idOnly = React.useContext(DesignContext);
   if (idOnly != null) return idOnly;
   const legacy = React.useContext(DesignContext);
   return legacy == null ? null : { id: legacy.id };
@@ -917,75 +914,75 @@ export function useDesignContext(): Readonly<{ id: string }> | null {
 
 /** @emoji 🧭 True when a design scope is mounted. */
 export function useHasDesignContext(): boolean {
-  return React.useContext(DesignIdContext) != null || React.useContext(DesignContext) != null;
+  return React.useContext(DesignContext) != null || React.useContext(DesignContext) != null;
 }
 
-/** @emoji 🧭 `{ id }` from {@link PieceIdContext}. */
+/** @emoji 🧭 `{ id }` from {@link PieceContext}. */
 export function usePieceContext(): Readonly<{ id: string }> | null {
-  return React.useContext(PieceIdContext);
+  return React.useContext(PieceContext);
 }
 
 /** @emoji 🧭 True when {@link PieceContextProvider} is mounted above. */
 export function useHasPieceContext(): boolean {
-  return React.useContext(PieceIdContext) != null;
+  return React.useContext(PieceContext) != null;
 }
 
-/** @emoji 🧭 `{ id }` from {@link ConnectionIdContext}. */
+/** @emoji 🧭 `{ id }` from {@link ConnectionContext}. */
 export function useConnectionContext(): Readonly<{ id: string }> | null {
-  return React.useContext(ConnectionIdContext);
+  return React.useContext(ConnectionContext);
 }
 
 /** @emoji 🧭 True when {@link ConnectionContextProvider} is mounted above. */
 export function useHasConnectionContext(): boolean {
-  return React.useContext(ConnectionIdContext) != null;
+  return React.useContext(ConnectionContext) != null;
 }
 
-/** @emoji 🧭 `{ id }` from {@link TypeIdContext}. */
+/** @emoji 🧭 `{ id }` from {@link TypeContext}. */
 export function useTypeContext(): Readonly<{ id: string }> | null {
-  return React.useContext(TypeIdContext);
+  return React.useContext(TypeContext);
 }
 
 /** @emoji 🧭 True when {@link TypeContextProvider} is mounted above. */
 export function useHasTypeContext(): boolean {
-  return React.useContext(TypeIdContext) != null;
+  return React.useContext(TypeContext) != null;
 }
 
-/** @emoji 🧭 `{ id }` from {@link QualityIdContext}. */
+/** @emoji 🧭 `{ id }` from {@link QualityContext}. */
 export function useQualityContext(): Readonly<{ id: string }> | null {
-  return React.useContext(QualityIdContext);
+  return React.useContext(QualityContext);
 }
 
 /** @emoji 🧭 True when {@link QualityContextProvider} is mounted above. */
 export function useHasQualityContext(): boolean {
-  return React.useContext(QualityIdContext) != null;
+  return React.useContext(QualityContext) != null;
 }
 
-/** @emoji 🧭 `{ id }` from {@link AuthorIdContext}. */
+/** @emoji 🧭 `{ id }` from {@link AuthorContext}. */
 export function useAuthorContext(): Readonly<{ id: string }> | null {
-  return React.useContext(AuthorIdContext);
+  return React.useContext(AuthorContext);
 }
 
 /** @emoji 🧭 True when {@link AuthorContextProvider} is mounted above. */
 export function useHasAuthorContext(): boolean {
-  return React.useContext(AuthorIdContext) != null;
+  return React.useContext(AuthorContext) != null;
 }
 
 /** @emoji 🧷 {@link PieceContextProvider} using enclosing design scope. */
 export function PieceUnderActiveDesignProvider(props: Readonly<{ id: string; children: ReactNode }>): React.ReactElement {
-  const id = React.useContext(DesignIdContext)?.id ?? React.useContext(DesignContext)?.id;
+  const id = React.useContext(DesignContext)?.id ?? React.useContext(DesignContext)?.id;
   if (id == null) {
-    throw new Error("semio/react: PieceUnderActiveDesignProvider requires DesignContextProvider / DesignIdContext.");
+    throw new Error("semio/react: PieceUnderActiveDesignProvider requires DesignContextProvider / DesignContext.");
   }
-  return React.createElement(PieceIdContext.Provider, { value: { id: props.id } }, props.children);
+  return React.createElement(PieceContext.Provider, { value: { id: props.id } }, props.children);
 }
 
 /** @emoji 🧷 {@link ConnectionContextProvider} using enclosing design scope. */
 export function ConnectionUnderActiveDesignProvider(props: Readonly<{ id: string; children: ReactNode }>): React.ReactElement {
-  const id = React.useContext(DesignIdContext)?.id ?? React.useContext(DesignContext)?.id;
+  const id = React.useContext(DesignContext)?.id ?? React.useContext(DesignContext)?.id;
   if (id == null) {
-    throw new Error("semio/react: ConnectionUnderActiveDesignProvider requires DesignContextProvider / DesignIdContext.");
+    throw new Error("semio/react: ConnectionUnderActiveDesignProvider requires DesignContextProvider / DesignContext.");
   }
-  return React.createElement(ConnectionIdContext.Provider, { value: { id: props.id } }, props.children);
+  return React.createElement(ConnectionContext.Provider, { value: { id: props.id } }, props.children);
 }
 // #endregion 🔖EntityContextHelpers
 
@@ -1159,55 +1156,55 @@ export function useEnsureKitChangeId(): () => Promise<string> {
 
 // #region ✍️KitWrites
 /** @emoji ✍️ {@link Kit#rename}. */
-export function useRenameKit(): readonly [(newName: string) => Promise<SetResult>, OperationStatus] {
+export function useRenameKit(): readonly [(newName: string) => void, OperationStatus] {
   const kit = useWipKit();
   return semioInternalOperationBind<Kit, [string]>((k, newName) => k.rename(newName))(() => kit);
 }
 
 /** @emoji ✍️ {@link Kit#changeDescription}. */
-export function useChangeKitDescription(): readonly [(newDescription: string) => Promise<SetResult>, OperationStatus] {
+export function useChangeKitDescription(): readonly [(newDescription: string) => void, OperationStatus] {
   const kit = useWipKit();
   return semioInternalOperationBind<Kit, [string]>((k, d) => k.changeDescription(d))(() => kit);
 }
 
 /** @emoji ✍️ {@link Kit#createTag}. */
-export function useCreateTag(): readonly [(name: string, description?: string | null, icon?: string | null, order?: number | null) => Promise<SetResult>, OperationStatus] {
+export function useCreateTag(): readonly [(name: string, description?: string | null, icon?: string | null, order?: number | null) => void, OperationStatus] {
   const kit = useWipKit();
   return semioInternalOperationBind<Kit, [string, string | null | undefined, string | null | undefined, number | null | undefined]>((k, n, d, i, o) => k.createTag(n, d, i, o))(() => kit);
 }
 
 /** @emoji ✍️ {@link Kit#deleteTag}. */
-export function useDeleteTag(): readonly [(id: string) => Promise<SetResult>, OperationStatus] {
+export function useDeleteTag(): readonly [(id: string) => void, OperationStatus] {
   const kit = useWipKit();
   return semioInternalOperationBind<Kit, [string]>((k, id) => k.deleteTag(id))(() => kit);
 }
 
 /** @emoji ✍️ {@link Kit#deleteTags}. */
-export function useDeleteTags(): readonly [(ids: readonly string[]) => Promise<SetResult>, OperationStatus] {
+export function useDeleteTags(): readonly [(ids: readonly string[]) => void, OperationStatus] {
   const kit = useWipKit();
   return semioInternalOperationBind<Kit, [readonly string[]]>((k, ids) => k.deleteTags(ids))(() => kit);
 }
 
 /** @emoji ✍️ {@link Kit#createConcept}. */
-export function useCreateConcept(): readonly [(name: string, description?: string | null, icon?: string | null, order?: number | null) => Promise<SetResult>, OperationStatus] {
+export function useCreateConcept(): readonly [(name: string, description?: string | null, icon?: string | null, order?: number | null) => void, OperationStatus] {
   const kit = useWipKit();
   return semioInternalOperationBind<Kit, [string, string | null | undefined, string | null | undefined, number | null | undefined]>((k, n, d, i, o) => k.createConcept(n, d, i, o))(() => kit);
 }
 
 /** @emoji ✍️ {@link Kit#deleteConcept}. */
-export function useDeleteConcept(): readonly [(id: string) => Promise<SetResult>, OperationStatus] {
+export function useDeleteConcept(): readonly [(id: string) => void, OperationStatus] {
   const kit = useWipKit();
   return semioInternalOperationBind<Kit, [string]>((k, id) => k.deleteConcept(id))(() => kit);
 }
 
 /** @emoji ✍️ {@link Kit#deleteConcepts}. */
-export function useDeleteConcepts(): readonly [(ids: readonly string[]) => Promise<SetResult>, OperationStatus] {
+export function useDeleteConcepts(): readonly [(ids: readonly string[]) => void, OperationStatus] {
   const kit = useWipKit();
   return semioInternalOperationBind<Kit, [readonly string[]]>((k, ids) => k.deleteConcepts(ids))(() => kit);
 }
 
 /** @emoji ✍️ {@link Kit#createQuality}. */
-export function useCreateQuality(): readonly [(key: string, value?: string | null, unit?: string | null, definition?: string | null, description?: string | null, icon?: string | null) => Promise<SetResult>, OperationStatus] {
+export function useCreateQuality(): readonly [(key: string, value?: string | null, unit?: string | null, definition?: string | null, description?: string | null, icon?: string | null) => void, OperationStatus] {
   const kit = useWipKit();
   return semioInternalOperationBind<Kit, [string, string | null | undefined, string | null | undefined, string | null | undefined, string | null | undefined, string | null | undefined]>((k, key, value, unit, definition, description, icon) =>
     k.createQuality(key, value, unit, definition, description, icon),
@@ -1215,122 +1212,122 @@ export function useCreateQuality(): readonly [(key: string, value?: string | nul
 }
 
 /** @emoji ✍️ {@link Kit#deleteQuality}. */
-export function useDeleteQuality(): readonly [(id: string) => Promise<SetResult>, OperationStatus] {
+export function useDeleteQuality(): readonly [(id: string) => void, OperationStatus] {
   const kit = useWipKit();
   return semioInternalOperationBind<Kit, [string]>((k, id) => k.deleteQuality(id))(() => kit);
 }
 
 /** @emoji ✍️ {@link Kit#deleteQualities}. */
-export function useDeleteQualities(): readonly [(ids: readonly string[]) => Promise<SetResult>, OperationStatus] {
+export function useDeleteQualities(): readonly [(ids: readonly string[]) => void, OperationStatus] {
   const kit = useWipKit();
   return semioInternalOperationBind<Kit, [readonly string[]]>((k, ids) => k.deleteQualities(ids))(() => kit);
 }
 
 /** @emoji ✍️ {@link Kit#createType}. */
-export function useCreateType(): readonly [(name: string, description?: string | null, icon?: string | null, image?: string | null, unit?: string | null) => Promise<SetResult>, OperationStatus] {
+export function useCreateType(): readonly [(name: string, description?: string | null, icon?: string | null, image?: string | null, unit?: string | null) => void, OperationStatus] {
   const kit = useWipKit();
   return semioInternalOperationBind<Kit, [string, string | null | undefined, string | null | undefined, string | null | undefined, string | null | undefined]>((k, n, d, i, im, u) => k.createType(n, d, i, im, u))(() => kit);
 }
 
 /** @emoji ✍️ {@link Kit#deleteType}. */
-export function useDeleteType(): readonly [(id: string) => Promise<SetResult>, OperationStatus] {
+export function useDeleteType(): readonly [(id: string) => void, OperationStatus] {
   const kit = useWipKit();
   return semioInternalOperationBind<Kit, [string]>((k, id) => k.deleteType(id))(() => kit);
 }
 
 /** @emoji ✍️ {@link Kit#deleteTypes}. */
-export function useDeleteTypes(): readonly [(ids: readonly string[]) => Promise<SetResult>, OperationStatus] {
+export function useDeleteTypes(): readonly [(ids: readonly string[]) => void, OperationStatus] {
   const kit = useWipKit();
   return semioInternalOperationBind<Kit, [readonly string[]]>((k, ids) => k.deleteTypes(ids))(() => kit);
 }
 
 /** @emoji ✍️ {@link Kit#createDesign}. */
-export function useCreateDesign(): readonly [(name: string, description?: string | null, icon?: string | null, image?: string | null, unit?: string | null) => Promise<SetResult>, OperationStatus] {
+export function useCreateDesign(): readonly [(name: string, description?: string | null, icon?: string | null, image?: string | null, unit?: string | null) => void, OperationStatus] {
   const kit = useWipKit();
   return semioInternalOperationBind<Kit, [string, string | null | undefined, string | null | undefined, string | null | undefined, string | null | undefined]>((k, n, d, i, im, u) => k.createDesign(n, d, i, im, u))(() => kit);
 }
 
 /** @emoji ✍️ {@link Kit#deleteDesign}. */
-export function useDeleteDesign(): readonly [(id: string) => Promise<SetResult>, OperationStatus] {
+export function useDeleteDesign(): readonly [(id: string) => void, OperationStatus] {
   const kit = useWipKit();
   return semioInternalOperationBind<Kit, [string]>((k, id) => k.deleteDesign(id))(() => kit);
 }
 
 /** @emoji ✍️ {@link Kit#deleteDesigns}. */
-export function useDeleteDesigns(): readonly [(ids: readonly string[]) => Promise<SetResult>, OperationStatus] {
+export function useDeleteDesigns(): readonly [(ids: readonly string[]) => void, OperationStatus] {
   const kit = useWipKit();
   return semioInternalOperationBind<Kit, [readonly string[]]>((k, ids) => k.deleteDesigns(ids))(() => kit);
 }
 
 /** @emoji ✍️ {@link Store#saveChange}. */
-export function useSaveKitChange(): readonly [() => Promise<SetResult>, OperationStatus] {
+export function useSaveKitChange(): readonly [() => void, OperationStatus] {
   const store = useJsStore();
-  return semioInternalStoreOpBind<[]>(async (k) => {
+  return semioInternalStoreOperationBind<[]>(async (k) => {
     await k.saveChange();
     return { ok: true };
   })(() => store);
 }
 
 /** @emoji ✍️ {@link Store#createCheckpoint}. */
-export function useCreateCheckpoint(): readonly [(message: string) => Promise<SetResult>, OperationStatus] {
+export function useCreateCheckpoint(): readonly [(message: string) => void, OperationStatus] {
   const store = useJsStore();
-  return semioInternalStoreOpBind<[string]>((k, message) => k.createCheckpoint(message))(() => store);
+  return semioInternalStoreOperationBind<[string]>((k, message) => k.createCheckpoint(message))(() => store);
 }
 
 /** @emoji ✍️ {@link Store#startAlternative}. */
-export function useStartAlternative(): readonly [(name?: string | null) => Promise<SetResult>, OperationStatus] {
+export function useStartAlternative(): readonly [(name?: string | null) => void, OperationStatus] {
   const store = useJsStore();
-  return semioInternalStoreOpBind<[string | null | undefined]>((k, name) => k.startAlternative(name ?? undefined))(() => store);
+  return semioInternalStoreOperationBind<[string | null | undefined]>((k, name) => k.startAlternative(name ?? undefined))(() => store);
 }
 
 /** @emoji ✍️ {@link Store#integrateAlternative}. */
-export function useIntegrateAlternative(): readonly [(id: string) => Promise<SetResult>, OperationStatus] {
+export function useIntegrateAlternative(): readonly [(id: string) => void, OperationStatus] {
   const store = useJsStore();
-  return semioInternalStoreOpBind<[string]>((k, id) => k.integrateAlternative(id))(() => store);
+  return semioInternalStoreOperationBind<[string]>((k, id) => k.integrateAlternative(id))(() => store);
 }
 
 /** @emoji ✍️ {@link Session#login}. */
-export function useLogin(): readonly [(username: string, passwordHash: string, hubUrl?: string) => Promise<SetResult>, OperationStatus] {
+export function useLogin(): readonly [(username: string, passwordHash: string, hubUrl?: string) => void, OperationStatus] {
   const session = useJsSession();
-  return semioInternalSessionOpBind<[string, string, string | undefined]>((s, u, p, h) => s.login(u, p, h))(() => session);
+  return semioInternalSessionOperationBind<[string, string, string | undefined]>((s, u, p, h) => s.login(u, p, h))(() => session);
 }
 
 /** @emoji ✍️ {@link Session#logout}. */
-export function useLogout(): readonly [() => Promise<SetResult>, OperationStatus] {
+export function useLogout(): readonly [() => void, OperationStatus] {
   const session = useJsSession();
-  return semioInternalSessionOpBind<[]>((s) => s.logout())(() => session);
+  return semioInternalSessionOperationBind<[]>((s) => s.logout())(() => session);
 }
 
 /** @emoji ✍️ {@link Session#sessionStart}. */
-export function useStartSession(): readonly [() => Promise<SetResult>, OperationStatus] {
+export function useStartSession(): readonly [() => void, OperationStatus] {
   const session = useJsSession();
-  return semioInternalSessionOpBind<[]>((s) => s.sessionStart())(() => session);
+  return semioInternalSessionOperationBind<[]>((s) => s.sessionStart())(() => session);
 }
 
 /** @emoji ✍️ {@link Session#sessionEnd}. */
-export function useEndSession(): readonly [() => Promise<SetResult>, OperationStatus] {
+export function useEndSession(): readonly [() => void, OperationStatus] {
   const session = useJsSession();
-  return semioInternalSessionOpBind<[]>((s) => s.sessionEnd())(() => session);
+  return semioInternalSessionOperationBind<[]>((s) => s.sessionEnd())(() => session);
 }
 
 // #region 🪝BackboneOps
 /** @emoji 🛜 {@link Store#attachBackbone} — attaches via {@link LocalProvider} for the active session. */
-export function useAttachBackbone(): readonly [(uri: string) => Promise<SetResult>, OperationStatus] {
+export function useAttachBackbone(): readonly [(uri: string) => void, OperationStatus] {
   const store = useJsStore();
   const session = useJsSession();
-  return semioInternalStoreOpBind<[string]>((s, uri) => s.attachBackbone(session.localProvider(), uri))(() => store);
+  return semioInternalStoreOperationBind<[string]>((s, uri) => s.attachBackbone(session.localProvider(), uri))(() => store);
 }
 
 /** @emoji 🛜 {@link Store#detachBackbone}. */
-export function useDetachBackbone(): readonly [() => Promise<SetResult>, OperationStatus] {
+export function useDetachBackbone(): readonly [() => void, OperationStatus] {
   const store = useJsStore();
-  return semioInternalStoreOpBind<[]>((s) => s.detachBackbone())(() => store);
+  return semioInternalStoreOperationBind<[]>((s) => s.detachBackbone())(() => store);
 }
 
 /** @emoji 🛜 {@link Store#syncBackbone}. */
-export function useBackboneSyncNow(): readonly [() => Promise<SetResult>, OperationStatus] {
+export function useBackboneSyncNow(): readonly [() => void, OperationStatus] {
   const store = useJsStore();
-  return semioInternalStoreOpBind<[]>((s) => s.syncBackbone())(() => store);
+  return semioInternalStoreOperationBind<[]>((s) => s.syncBackbone())(() => store);
 }
 
 /** @emoji 🛜 Live {@link Session#backboneStatus} for the active store (refreshes on {@code commandSucceeded} bus events). */
@@ -1387,56 +1384,56 @@ export function useDesignUnit(id?: string): FieldReadState<string> {
 
 // #region ✍️DesignWrites
 /** @emoji ✍️ {@link Design#rename}. */
-export function useRenameDesign(): readonly [(newName: string) => Promise<SetResult>, OperationStatus] {
+export function useRenameDesign(): readonly [(newName: string) => void, OperationStatus] {
   const entity = resolveDesign();
   return semioInternalOperationBind<Design, [string]>((d, n) => d.rename(n))(() => entity);
 }
 
 /** @emoji ✍️ {@link Design#changeDescription}. */
-export function useChangeDesignDescription(): readonly [(newDescription: string) => Promise<SetResult>, OperationStatus] {
+export function useChangeDesignDescription(): readonly [(newDescription: string) => void, OperationStatus] {
   const entity = resolveDesign();
   return semioInternalOperationBind<Design, [string]>((d, t) => d.changeDescription(t))(() => entity);
 }
 
 /** @emoji ✍️ {@link Design#changeIcon}. */
-export function useChangeDesignIcon(): readonly [(newIcon: string) => Promise<SetResult>, OperationStatus] {
+export function useChangeDesignIcon(): readonly [(newIcon: string) => void, OperationStatus] {
   const entity = resolveDesign();
   return semioInternalOperationBind<Design, [string]>((d, i) => d.changeIcon(i))(() => entity);
 }
 
 /** @emoji ✍️ {@link Design#flatten}. */
-export function useFlattenDesign(): readonly [() => Promise<SetResult>, OperationStatus] {
+export function useFlattenDesign(): readonly [() => void, OperationStatus] {
   const entity = resolveDesign();
   return semioInternalOperationBind<Design, []>((d) => d.flatten())(() => entity);
 }
 
 /** @emoji ✍️ {@link Design#addAttribute}. */
-export function useAddDesignAttribute(): readonly [(key: string, value: string, definition: string) => Promise<SetResult>, OperationStatus] {
+export function useAddDesignAttribute(): readonly [(key: string, value: string, definition: string) => void, OperationStatus] {
   const entity = resolveDesign();
   return semioInternalOperationBind<Design, [string, string, string]>((d, k, v, def) => d.addAttribute(k, v, def))(() => entity);
 }
 
 /** @emoji ✍️ {@link Design#removeAttribute}. */
-export function useRemoveDesignAttribute(): readonly [(id: string) => Promise<SetResult>, OperationStatus] {
+export function useRemoveDesignAttribute(): readonly [(id: string) => void, OperationStatus] {
   const entity = resolveDesign();
   return semioInternalOperationBind<Design, [string]>((d, id) => d.removeAttribute(id))(() => entity);
 }
 
 /** @emoji ✍️ {@link Design#removeAttributes}. */
-export function useRemoveDesignAttributes(): readonly [(ids: readonly string[]) => Promise<SetResult>, OperationStatus] {
+export function useRemoveDesignAttributes(): readonly [(ids: readonly string[]) => void, OperationStatus] {
   const entity = resolveDesign();
   return semioInternalOperationBind<Design, [readonly string[]]>((d, ids) => d.removeAttributes(ids))(() => entity);
 }
 
 /** @emoji ✍️ {@link Design#addFixedPiece}. */
-export function useAddFixedPiece(): readonly [(blueprintId: string, position: PositionInput, name?: string | null, description?: string | null) => Promise<SetResult>, OperationStatus] {
+export function useAddFixedPiece(): readonly [(blueprint: ID, position: PositionInput, name?: string | null, description?: string | null) => void, OperationStatus] {
   const entity = resolveDesign();
   return semioInternalOperationBind<Design, [string, PositionInput, string | null | undefined, string | null | undefined]>((d, bp, pos, n, desc) => d.addFixedPiece(bp, pos, n, desc))(() => entity);
 }
 
 /** @emoji ✍️ {@link Design#addChildPieceWithParentConnection}. */
 export function useAddChildPieceWithParentConnection(): readonly [
-  (blueprintId: string, parentPieceId: string, parentConnector: string, childConnector: string, name?: string | null, description?: string | null, position?: PositionInput | null, scale?: number | null) => Promise<SetResult>,
+  (blueprint: ID, parentPiece: ID, parentConnector: string, childConnector: string, name?: string | null, description?: string | null, position?: PositionInput | null, scale?: number | null) => void,
   OperationStatus,
 ] {
   const entity = resolveDesign();
@@ -1447,7 +1444,7 @@ export function useAddChildPieceWithParentConnection(): readonly [
 
 /** @emoji ✍️ {@link Design#addHangingChildPieceWithParentConnection}. */
 export function useAddHangingChildPieceWithParentConnection(): readonly [
-  (blueprintId: string, parentPieceId: string, parentConnector: string, childConnector: string, position: PositionInput, name?: string | null, description?: string | null, scale?: number | null) => Promise<SetResult>,
+  (blueprint: ID, parentPiece: ID, parentConnector: string, childConnector: string, position: PositionInput, name?: string | null, description?: string | null, scale?: number | null) => void,
   OperationStatus,
 ] {
   const entity = resolveDesign();
@@ -1457,19 +1454,19 @@ export function useAddHangingChildPieceWithParentConnection(): readonly [
 }
 
 /** @emoji ✍️ {@link Design#deletePiece}. */
-export function useDeleteDesignPiece(): readonly [(id: string) => Promise<SetResult>, OperationStatus] {
+export function useDeleteDesignPiece(): readonly [(id: string) => void, OperationStatus] {
   const entity = resolveDesign();
   return semioInternalOperationBind<Design, [string]>((d, id) => d.deletePiece(id))(() => entity);
 }
 
 /** @emoji ✍️ {@link Design#deletePieces}. */
-export function useDeleteDesignPieces(): readonly [(ids: readonly string[]) => Promise<SetResult>, OperationStatus] {
+export function useDeleteDesignPieces(): readonly [(ids: readonly string[]) => void, OperationStatus] {
   const entity = resolveDesign();
   return semioInternalOperationBind<Design, [readonly string[]]>((d, ids) => d.deletePieces(ids))(() => entity);
 }
 
 /** @emoji ✍️ {@link Design#deletePiecesAndConnections}. */
-export function useDeleteDesignPiecesAndConnections(): readonly [(ids: readonly string[], ids: readonly string[]) => Promise<SetResult>, OperationStatus] {
+export function useDeleteDesignPiecesAndConnections(): readonly [(ids: readonly string[], ids: readonly string[]) => void, OperationStatus] {
   const entity = resolveDesign();
   return semioInternalOperationBind<Design, [readonly string[], readonly string[]]>((d, p, c) => d.deletePiecesAndConnections(p, c))(() => entity);
 }
@@ -1478,7 +1475,7 @@ export function useDeleteDesignPiecesAndConnections(): readonly [(ids: readonly 
  * @emoji ✍️ Legacy shallow {@link Design} patch runner: applies only keys backed by {@link DesignOperation} ({@code name}, {@code description}, {@code icon}, {@code flatten}); other keys are ignored with a {@code [DEBUG]} console warning.
  */
 export function useUpdateDesign(): Readonly<{
-  run: (id: string, patch: Record<string, unknown>) => Promise<SetResult>;
+  run: (id: string, patch: Record<string, unknown>) => void;
   status: OperationStatus;
 }> {
   const store = useJsStore();
@@ -1582,73 +1579,73 @@ export function useTypeAuthors(id?: string): FieldReadState<readonly Author[]> {
 }
 
 /** @emoji ✍️ {@link TypeOperationInput#rename}. */
-export function useRenameType(): readonly [(newName: string) => Promise<SetResult>, OperationStatus] {
+export function useRenameType(): readonly [(newName: string) => void, OperationStatus] {
   const e = resolveType();
   return useTypeRenameOperation(() => e);
 }
 
 /** @emoji ✍️ {@link TypeOperationInput#changeDescription}. */
-export function useChangeTypeDescription(): readonly [(newDescription: string) => Promise<SetResult>, OperationStatus] {
+export function useChangeTypeDescription(): readonly [(newDescription: string) => void, OperationStatus] {
   const e = resolveType();
   return useTypeChangeDescriptionOperation(() => e);
 }
 
 /** @emoji ✍️ {@link TypeOperationInput#changeIcon}. */
-export function useChangeTypeIcon(): readonly [(newIcon: string) => Promise<SetResult>, OperationStatus] {
+export function useChangeTypeIcon(): readonly [(newIcon: string) => void, OperationStatus] {
   const e = resolveType();
   return useTypeChangeIconOperation(() => e);
 }
 
 /** @emoji ✍️ {@link TypeOperationInput#addAttribute}. */
-export function useAddTypeAttribute(): readonly [(key: string, value: string, definition: string) => Promise<SetResult>, OperationStatus] {
+export function useAddTypeAttribute(): readonly [(key: string, value: string, definition: string) => void, OperationStatus] {
   const e = resolveType();
   return useTypeAddAttributeOperation(() => e);
 }
 
 /** @emoji ✍️ {@link TypeOperationInput#removeAttribute}. */
-export function useRemoveTypeAttribute(): readonly [(id: string) => Promise<SetResult>, OperationStatus] {
+export function useRemoveTypeAttribute(): readonly [(id: string) => void, OperationStatus] {
   const e = resolveType();
   return useTypeRemoveAttributeOperation(() => e);
 }
 
 /** @emoji ✍️ {@link TypeOperationInput#removeAttributes}. */
-export function useRemoveTypeAttributes(): readonly [(ids: readonly string[]) => Promise<SetResult>, OperationStatus] {
+export function useRemoveTypeAttributes(): readonly [(ids: readonly string[]) => void, OperationStatus] {
   const e = resolveType();
   return useTypeRemoveAttributesOperation(() => e);
 }
 
 /** @emoji ✍️ {@link TypeOperationInput#createPort}. */
-export function useCreatePort(): readonly [(code?: string | null, label?: string | null, description?: string | null, icon?: string | null, order?: number | null) => Promise<SetResult>, OperationStatus] {
+export function useCreatePort(): readonly [(code?: string | null, label?: string | null, description?: string | null, icon?: string | null, order?: number | null) => void, OperationStatus] {
   const e = resolveType();
   return useTypeCreatePortOperation(() => e);
 }
 
 /** @emoji ✍️ {@link TypeOperationInput#deletePort}. */
-export function useDeletePort(): readonly [(id: string) => Promise<SetResult>, OperationStatus] {
+export function useDeletePort(): readonly [(id: string) => void, OperationStatus] {
   const e = resolveType();
   return useTypeDeletePortOperation(() => e);
 }
 
 /** @emoji ✍️ {@link TypeOperationInput#deletePorts}. */
-export function useDeletePorts(): readonly [(ids: readonly string[]) => Promise<SetResult>, OperationStatus] {
+export function useDeletePorts(): readonly [(ids: readonly string[]) => void, OperationStatus] {
   const e = resolveType();
   return useTypeDeletePortsOperation(() => e);
 }
 
 /** @emoji ✍️ {@link TypeOperationInput#addConnector}. */
-export function useAddConnector(): readonly [(code: string, description?: string | null, icon?: string | null, id?: string | null) => Promise<SetResult>, OperationStatus] {
+export function useAddConnector(): readonly [(code: string, description?: string | null, icon?: string | null, id?: string | null) => void, OperationStatus] {
   const e = resolveType();
   return useTypeAddConnectorOperation(() => e);
 }
 
 /** @emoji ✍️ {@link TypeOperationInput#removeConnector}. */
-export function useRemoveConnector(): readonly [(id: string) => Promise<SetResult>, OperationStatus] {
+export function useRemoveConnector(): readonly [(id: string) => void, OperationStatus] {
   const e = resolveType();
   return useTypeRemoveConnectorOperation(() => e);
 }
 
 /** @emoji ✍️ {@link TypeOperationInput#removeConnectors}. */
-export function useRemoveConnectors(): readonly [(ids: readonly string[]) => Promise<SetResult>, OperationStatus] {
+export function useRemoveConnectors(): readonly [(ids: readonly string[]) => void, OperationStatus] {
   const e = resolveType();
   return useTypeRemoveConnectorsOperation(() => e);
 }
@@ -1705,37 +1702,37 @@ export function usePortAttributes(): FieldReadState<readonly Attribute[]> {
 }
 
 /** @emoji ✍️ {@link PortOperationInput#rename}. */
-export function useRenamePort(): readonly [(newCode: string, newLabel?: string | null) => Promise<SetResult>, OperationStatus] {
+export function useRenamePort(): readonly [(newCode: string, newLabel?: string | null) => void, OperationStatus] {
   const e = resolvePort();
   return usePortRenameOperation(() => e);
 }
 
 /** @emoji ✍️ {@link PortOperationInput#changeDescription}. */
-export function useChangePortDescription(): readonly [(newDescription: string) => Promise<SetResult>, OperationStatus] {
+export function useChangePortDescription(): readonly [(newDescription: string) => void, OperationStatus] {
   const e = resolvePort();
   return usePortChangeDescriptionOperation(() => e);
 }
 
 /** @emoji ✍️ {@link PortOperationInput#changeIcon}. */
-export function useChangePortIcon(): readonly [(newIcon: string) => Promise<SetResult>, OperationStatus] {
+export function useChangePortIcon(): readonly [(newIcon: string) => void, OperationStatus] {
   const e = resolvePort();
   return usePortChangeIconOperation(() => e);
 }
 
 /** @emoji ✍️ {@link PortOperationInput#addAttribute}. */
-export function useAddPortAttribute(): readonly [(key: string, value: string, definition: string) => Promise<SetResult>, OperationStatus] {
+export function useAddPortAttribute(): readonly [(key: string, value: string, definition: string) => void, OperationStatus] {
   const e = resolvePort();
   return usePortAddAttributeOperation(() => e);
 }
 
 /** @emoji ✍️ {@link PortOperationInput#removeAttribute}. */
-export function useRemovePortAttribute(): readonly [(id: string) => Promise<SetResult>, OperationStatus] {
+export function useRemovePortAttribute(): readonly [(id: string) => void, OperationStatus] {
   const e = resolvePort();
   return usePortRemoveAttributeOperation(() => e);
 }
 
 /** @emoji ✍️ {@link PortOperationInput#removeAttributes}. */
-export function useRemovePortAttributes(): readonly [(ids: readonly string[]) => Promise<SetResult>, OperationStatus] {
+export function useRemovePortAttributes(): readonly [(ids: readonly string[]) => void, OperationStatus] {
   const e = resolvePort();
   return usePortRemoveAttributesOperation(() => e);
 }
@@ -1777,19 +1774,19 @@ export function useConnectorAttributes(connectorId?: string): FieldReadState<rea
 }
 
 /** @emoji ✍️ {@link ConnectorOperationInput#rename}. */
-export function useRenameConnector(): readonly [(newCode: string) => Promise<SetResult>, OperationStatus] {
+export function useRenameConnector(): readonly [(newCode: string) => void, OperationStatus] {
   const e = resolveConnector();
   return useConnectorRenameOperation(() => e);
 }
 
 /** @emoji ✍️ {@link ConnectorOperationInput#changeDescription}. */
-export function useChangeConnectorDescription(): readonly [(newDescription: string) => Promise<SetResult>, OperationStatus] {
+export function useChangeConnectorDescription(): readonly [(newDescription: string) => void, OperationStatus] {
   const e = resolveConnector();
   return useConnectorChangeDescriptionOperation(() => e);
 }
 
 /** @emoji ✍️ {@link ConnectorOperationInput#changeIcon}. */
-export function useChangeConnectorIcon(): readonly [(newIcon: string) => Promise<SetResult>, OperationStatus] {
+export function useChangeConnectorIcon(): readonly [(newIcon: string) => void, OperationStatus] {
   const e = resolveConnector();
   return useConnectorChangeIconOperation(() => e);
 }
@@ -1890,37 +1887,37 @@ export function useQualityBenchmarks(): FieldReadState<readonly Benchmark[]> {
 }
 
 /** @emoji ✍️ {@link Quality#rename}. */
-export function useRenameQuality(): readonly [(newKey: string) => Promise<SetResult>, OperationStatus] {
+export function useRenameQuality(): readonly [(newKey: string) => void, OperationStatus] {
   const e = resolveQuality();
   return useQualityRenameOperation(() => e);
 }
 
 /** @emoji ✍️ {@link Quality#changeDescription}. */
-export function useChangeQualityDescription(): readonly [(newDescription: string) => Promise<SetResult>, OperationStatus] {
+export function useChangeQualityDescription(): readonly [(newDescription: string) => void, OperationStatus] {
   const e = resolveQuality();
   return useQualityChangeDescriptionOperation(() => e);
 }
 
 /** @emoji ✍️ {@link Quality#changeIcon}. */
-export function useChangeQualityIcon(): readonly [(newIcon: string) => Promise<SetResult>, OperationStatus] {
+export function useChangeQualityIcon(): readonly [(newIcon: string) => void, OperationStatus] {
   const e = resolveQuality();
   return useQualityChangeIconOperation(() => e);
 }
 
 /** @emoji ✍️ {@link Quality#addAttribute}. */
-export function useAddQualityAttribute(): readonly [(key: string, value: string, definition: string) => Promise<SetResult>, OperationStatus] {
+export function useAddQualityAttribute(): readonly [(key: string, value: string, definition: string) => void, OperationStatus] {
   const e = resolveQuality();
   return useQualityAddAttributeOperation(() => e);
 }
 
 /** @emoji ✍️ {@link Quality#removeAttribute}. */
-export function useRemoveQualityAttribute(): readonly [(attributeId: string) => Promise<SetResult>, OperationStatus] {
+export function useRemoveQualityAttribute(): readonly [(attribute: ID) => void, OperationStatus] {
   const e = resolveQuality();
   return useQualityRemoveAttributeOperation(() => e);
 }
 
 /** @emoji ✍️ {@link Quality#removeAttributes}. */
-export function useRemoveQualityAttributes(): readonly [(ids: readonly string[]) => Promise<SetResult>, OperationStatus] {
+export function useRemoveQualityAttributes(): readonly [(ids: readonly string[]) => void, OperationStatus] {
   const e = resolveQuality();
   return useQualityRemoveAttributesOperation(() => e);
 }
@@ -1965,37 +1962,37 @@ export function useTagAttributes(): FieldReadState<readonly Attribute[]> {
 }
 
 /** @emoji ✍️ {@link Tag#rename}. */
-export function useRenameTag(): readonly [(newName: string) => Promise<SetResult>, OperationStatus] {
+export function useRenameTag(): readonly [(newName: string) => void, OperationStatus] {
   const e = resolveTag();
   return useTagRenameOperation(() => e);
 }
 
 /** @emoji ✍️ {@link Tag#changeDescription}. */
-export function useChangeTagDescription(): readonly [(newDescription: string) => Promise<SetResult>, OperationStatus] {
+export function useChangeTagDescription(): readonly [(newDescription: string) => void, OperationStatus] {
   const e = resolveTag();
   return useTagChangeDescriptionOperation(() => e);
 }
 
 /** @emoji ✍️ {@link Tag#changeIcon}. */
-export function useChangeTagIcon(): readonly [(newIcon: string) => Promise<SetResult>, OperationStatus] {
+export function useChangeTagIcon(): readonly [(newIcon: string) => void, OperationStatus] {
   const e = resolveTag();
   return useTagChangeIconOperation(() => e);
 }
 
 /** @emoji ✍️ {@link Tag#addAttribute}. */
-export function useAddTagAttribute(): readonly [(key: string, value: string, definition: string) => Promise<SetResult>, OperationStatus] {
+export function useAddTagAttribute(): readonly [(key: string, value: string, definition: string) => void, OperationStatus] {
   const e = resolveTag();
   return useTagAddAttributeOperation(() => e);
 }
 
 /** @emoji ✍️ {@link Tag#removeAttribute}. */
-export function useRemoveTagAttribute(): readonly [(attributeId: string) => Promise<SetResult>, OperationStatus] {
+export function useRemoveTagAttribute(): readonly [(attribute: ID) => void, OperationStatus] {
   const e = resolveTag();
   return useTagRemoveAttributeOperation(() => e);
 }
 
 /** @emoji ✍️ {@link Tag#removeAttributes}. */
-export function useRemoveTagAttributes(): readonly [(ids: readonly string[]) => Promise<SetResult>, OperationStatus] {
+export function useRemoveTagAttributes(): readonly [(ids: readonly string[]) => void, OperationStatus] {
   const e = resolveTag();
   return useTagRemoveAttributesOperation(() => e);
 }
@@ -2040,37 +2037,37 @@ export function useConceptAttributes(): FieldReadState<readonly Attribute[]> {
 }
 
 /** @emoji ✍️ {@link Concept#rename}. */
-export function useRenameConcept(): readonly [(newName: string) => Promise<SetResult>, OperationStatus] {
+export function useRenameConcept(): readonly [(newName: string) => void, OperationStatus] {
   const e = resolveConcept();
   return useConceptRenameOperation(() => e);
 }
 
 /** @emoji ✍️ {@link Concept#changeDescription}. */
-export function useChangeConceptDescription(): readonly [(newDescription: string) => Promise<SetResult>, OperationStatus] {
+export function useChangeConceptDescription(): readonly [(newDescription: string) => void, OperationStatus] {
   const e = resolveConcept();
   return useConceptChangeDescriptionOperation(() => e);
 }
 
 /** @emoji ✍️ {@link Concept#changeIcon}. */
-export function useChangeConceptIcon(): readonly [(newIcon: string) => Promise<SetResult>, OperationStatus] {
+export function useChangeConceptIcon(): readonly [(newIcon: string) => void, OperationStatus] {
   const e = resolveConcept();
   return useConceptChangeIconOperation(() => e);
 }
 
 /** @emoji ✍️ {@link Concept#addAttribute}. */
-export function useAddConceptAttribute(): readonly [(key: string, value: string, definition: string) => Promise<SetResult>, OperationStatus] {
+export function useAddConceptAttribute(): readonly [(key: string, value: string, definition: string) => void, OperationStatus] {
   const e = resolveConcept();
   return useConceptAddAttributeOperation(() => e);
 }
 
 /** @emoji ✍️ {@link Concept#removeAttribute}. */
-export function useRemoveConceptAttribute(): readonly [(attributeId: string) => Promise<SetResult>, OperationStatus] {
+export function useRemoveConceptAttribute(): readonly [(attribute: ID) => void, OperationStatus] {
   const e = resolveConcept();
   return useConceptRemoveAttributeOperation(() => e);
 }
 
 /** @emoji ✍️ {@link Concept#removeAttributes}. */
-export function useRemoveConceptAttributes(): readonly [(ids: readonly string[]) => Promise<SetResult>, OperationStatus] {
+export function useRemoveConceptAttributes(): readonly [(ids: readonly string[]) => void, OperationStatus] {
   const e = resolveConcept();
   return useConceptRemoveAttributesOperation(() => e);
 }
@@ -2246,55 +2243,55 @@ const usePieceRemoveAttributeOperation = semioInternalOperationBind<Piece, [stri
 const usePieceRemoveAttributesOperation = semioInternalOperationBind<Piece, [readonly string[]]>((p, ids) => p.removeAttributes(ids));
 
 /** @emoji ✍️ {@link Piece#rename} bound to {@link PieceContext}. */
-export function useRenamePiece(): readonly [(newName: string) => Promise<SetResult>, OperationStatus] {
+export function useRenamePiece(): readonly [(newName: string) => void, OperationStatus] {
   const e = resolvePiece();
   return usePieceRenameOperation(() => e);
 }
 
 /** @emoji ✍️ {@link Piece#changeDescription}. */
-export function useChangePieceDescription(): readonly [(newDescription: string) => Promise<SetResult>, OperationStatus] {
+export function useChangePieceDescription(): readonly [(newDescription: string) => void, OperationStatus] {
   const e = resolvePiece();
   return usePieceChangeDescriptionOperation(() => e);
 }
 
 /** @emoji ✍️ {@link Piece#drag}. */
-export function useDragPiece(): readonly [(offset: OffsetInput) => Promise<SetResult>, OperationStatus] {
+export function useDragPiece(): readonly [(offset: OffsetInput) => void, OperationStatus] {
   const e = resolvePiece();
   return usePieceDragOperation(() => e);
 }
 
 /** @emoji ✍️ {@link Piece#move}. */
-export function useMovePiece(): readonly [(position: PositionInput) => Promise<SetResult>, OperationStatus] {
+export function useMovePiece(): readonly [(position: PositionInput) => void, OperationStatus] {
   const e = resolvePiece();
   return usePieceMoveOperation(() => e);
 }
 
 /** @emoji ✍️ {@link Piece#fix}. */
-export function useFixPiece(): readonly [() => Promise<SetResult>, OperationStatus] {
+export function useFixPiece(): readonly [() => void, OperationStatus] {
   const e = resolvePiece();
   return usePieceFixOperation(() => e);
 }
 
 /** @emoji ✍️ {@link Piece#changeBlueprint}. */
-export function useChangePieceBlueprint(): readonly [(blueprintId: string) => Promise<SetResult>, OperationStatus] {
+export function useChangePieceBlueprint(): readonly [(blueprint: ID) => void, OperationStatus] {
   const e = resolvePiece();
   return usePieceChangeBlueprintOperation(() => e);
 }
 
 /** @emoji ✍️ {@link Piece#addAttribute}. */
-export function useAddPieceAttribute(): readonly [(key: string, value: string, definition: string) => Promise<SetResult>, OperationStatus] {
+export function useAddPieceAttribute(): readonly [(key: string, value: string, definition: string) => void, OperationStatus] {
   const e = resolvePiece();
   return usePieceAddAttributeOperation(() => e);
 }
 
 /** @emoji ✍️ {@link Piece#removeAttribute}. */
-export function useRemovePieceAttribute(): readonly [(attributeId: string) => Promise<SetResult>, OperationStatus] {
+export function useRemovePieceAttribute(): readonly [(attribute: ID) => void, OperationStatus] {
   const e = resolvePiece();
   return usePieceRemoveAttributeOperation(() => e);
 }
 
 /** @emoji ✍️ {@link Piece#removeAttributes}. */
-export function useRemovePieceAttributes(): readonly [(ids: readonly string[]) => Promise<SetResult>, OperationStatus] {
+export function useRemovePieceAttributes(): readonly [(ids: readonly string[]) => void, OperationStatus] {
   const e = resolvePiece();
   return usePieceRemoveAttributesOperation(() => e);
 }
@@ -2305,8 +2302,8 @@ export function useRemovePieceAttributes(): readonly [(ids: readonly string[]) =
  * @emoji 🪝 Binds {@link PiecesOperation} batch mutations (not an {@link Entity} — no cached kit state on the handle).
  * @typeParam Args — forwarded to the underlying {@link PiecesOperation} method after the ops handle.
  */
-function semioInternalPiecesOpBind<Args extends unknown[]>(impl: (ops: PiecesOperation, ...args: Args) => Promise<SetResult>): (getOps: () => PiecesOperation | null) => readonly [(...args: Args) => Promise<SetResult>, OperationStatus] {
-  return function usePiecesBatchOp(getOps: () => PiecesOperation | null): readonly [(...args: Args) => Promise<SetResult>, OperationStatus] {
+function semioInternalPiecesOperationBind<Args extends unknown[]>(impl: (ops: PiecesOperation, ...args: Args) => void): (getOps: () => PiecesOperation | null) => readonly [(...args: Args) => void, OperationStatus] {
+  return function usePiecesBatchOp(getOps: () => PiecesOperation | null): readonly [(...args: Args) => void, OperationStatus] {
     const getRef = React.useRef(getOps);
     getRef.current = getOps;
     const [status, setStatus] = React.useState<OperationStatus>({ kind: "idle" });
@@ -2341,15 +2338,15 @@ function semioInternalPiecesOpBind<Args extends unknown[]>(impl: (ops: PiecesOpe
   };
 }
 
-const usePiecesDragOperation = semioInternalPiecesOpBind((ops, o: OffsetInput) => ops.drag(o));
-const usePiecesMoveOperation = semioInternalPiecesOpBind((ops, o: OffsetInput) => ops.move(o));
-const usePiecesFixOperation = semioInternalPiecesOpBind((ops) => ops.fix());
-const usePiecesChangeBlueprintOperation = semioInternalPiecesOpBind((ops, id: string) => ops.changeBlueprint(id));
+const usePiecesDragOperation = semioInternalPiecesOperationBind((ops, o: OffsetInput) => ops.drag(o));
+const usePiecesMoveOperation = semioInternalPiecesOperationBind((ops, o: OffsetInput) => ops.move(o));
+const usePiecesFixOperation = semioInternalPiecesOperationBind((ops) => ops.fix());
+const usePiecesChangeBlueprintOperation = semioInternalPiecesOperationBind((ops, id: string) => ops.changeBlueprint(id));
 
-/** @emoji ✍️ {@link PiecesOperation#drag} using {@link PiecesBatchContext} + {@link DesignIdContext}. */
-export function useDragPieces(): readonly [(offset: OffsetInput) => Promise<SetResult>, OperationStatus] {
+/** @emoji ✍️ {@link PiecesOperation#drag} using {@link PiecesBatchContext} + {@link DesignContext}. */
+export function useDragPieces(): readonly [(offset: OffsetInput) => void, OperationStatus] {
   const store = useJsStore();
-  const id = React.useContext(DesignIdContext)?.id ?? React.useContext(DesignContext)?.id ?? null;
+  const id = React.useContext(DesignContext)?.id ?? React.useContext(DesignContext)?.id ?? null;
   const batch = React.useContext(PiecesBatchContext);
   const ids = batch?.ids ?? [];
   const getOps = React.useCallback(() => (id == null || ids.length === 0 ? null : new PiecesOperation(store.session, id, ids, store.id)), [store.session, store.id, id, ids]);
@@ -2357,9 +2354,9 @@ export function useDragPieces(): readonly [(offset: OffsetInput) => Promise<SetR
 }
 
 /** @emoji ✍️ {@link PiecesOperation#move}. */
-export function useMovePieces(): readonly [(offset: OffsetInput) => Promise<SetResult>, OperationStatus] {
+export function useMovePieces(): readonly [(offset: OffsetInput) => void, OperationStatus] {
   const store = useJsStore();
-  const id = React.useContext(DesignIdContext)?.id ?? React.useContext(DesignContext)?.id ?? null;
+  const id = React.useContext(DesignContext)?.id ?? React.useContext(DesignContext)?.id ?? null;
   const batch = React.useContext(PiecesBatchContext);
   const ids = batch?.ids ?? [];
   const getOps = React.useCallback(() => (id == null || ids.length === 0 ? null : new PiecesOperation(store.session, id, ids, store.id)), [store.session, store.id, id, ids]);
@@ -2367,9 +2364,9 @@ export function useMovePieces(): readonly [(offset: OffsetInput) => Promise<SetR
 }
 
 /** @emoji ✍️ {@link PiecesOperation#fix}. */
-export function useFixPieces(): readonly [() => Promise<SetResult>, OperationStatus] {
+export function useFixPieces(): readonly [() => void, OperationStatus] {
   const store = useJsStore();
-  const id = React.useContext(DesignIdContext)?.id ?? React.useContext(DesignContext)?.id ?? null;
+  const id = React.useContext(DesignContext)?.id ?? React.useContext(DesignContext)?.id ?? null;
   const batch = React.useContext(PiecesBatchContext);
   const ids = batch?.ids ?? [];
   const getOps = React.useCallback(() => (id == null || ids.length === 0 ? null : new PiecesOperation(store.session, id, ids, store.id)), [store.session, store.id, id, ids]);
@@ -2377,9 +2374,9 @@ export function useFixPieces(): readonly [() => Promise<SetResult>, OperationSta
 }
 
 /** @emoji ✍️ {@link PiecesOperation#changeBlueprint}. */
-export function useChangePiecesBlueprint(): readonly [(blueprintId: string) => Promise<SetResult>, OperationStatus] {
+export function useChangePiecesBlueprint(): readonly [(blueprint: ID) => void, OperationStatus] {
   const store = useJsStore();
-  const id = React.useContext(DesignIdContext)?.id ?? React.useContext(DesignContext)?.id ?? null;
+  const id = React.useContext(DesignContext)?.id ?? React.useContext(DesignContext)?.id ?? null;
   const batch = React.useContext(PiecesBatchContext);
   const ids = batch?.ids ?? [];
   const getOps = React.useCallback(() => (id == null || ids.length === 0 ? null : new PiecesOperation(store.session, id, ids, store.id)), [store.session, store.id, id, ids]);

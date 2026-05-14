@@ -1809,6 +1809,26 @@ semio/react:
 
 ---
 
+The hooks are not clean.
+The context hooks are not clean.
+No legacy or duplicated hooks. No Has Context.
+No id as part of hook name.
+No IdContext.
+No type from semio/js needed.
+No FieldReadState wrapper etc.
+
+The rules are simple:
+Every hook either returns an id or a atomic value type.
+Every entity hook has no paramter.
+Every field hook has exactly one optional id for the entity which takes presedence over the the the Context.
+e.g.
+useDesignContext: ID | null
+useDesign(): ID
+useDesignName(id?:ID): string
+useRenameDesign(id?:ID): readonly [(newName: string) => void , OperationStatus]
+
+---
+
 Refactor the hooks and scopes to be more consistent and more integrated with store, graphql, event, change code.
 Align it perfectly with semio/rs and semio/js.
 Get rid of smelly old code.

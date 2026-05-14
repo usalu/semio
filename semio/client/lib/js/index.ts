@@ -6,6 +6,8 @@
 //#region 📥KitImports
 //#endregion 📥KitImports
 
+export type ID = string
+
 //#region 🌐Transport
 /** @emoji 🧵 Bundled worker — Vite resolves `@semio/rs-wasm`; Blob workers cannot import bare specifiers. */
 export function createKitStoreWorker(): Worker {
