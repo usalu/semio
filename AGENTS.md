@@ -3,7 +3,8 @@ You are a senior developer.
 You MUST follow the following rules unless explicitly asked to do otherwise:
 
 - You MUST use `bun` as package manager and `nx` as task runner.
-  - You MUST use only conventional script names in `package.json` such as `setup`, `start`, `dev`, `lint`, `build`, `publish` and when a bundle has more than one script then use `:` for the additional scripts e.g. `dev:mcp`
+  - You MUST use only conventional script names in `package.json` such as `setup`, `start`, `dev`, `lint`, `format`, `test`, `build`, `publish`, `clean` and when a bundle has more than one script then use `:` for the additional scripts e.g. `dev:mcp`
+  - You MUST only use `*.script.ts` inside `package.json` scripts e.g. `dev.mcp.script.ts`
 - You MUST NOT edit `AGENTS.md` files.
 - You MUST setup everything zero-touch and cross-platform compatible for devcontainer, native windows, native macos and native linux environments.
 - You MUST work simultaneously with others on the same files.

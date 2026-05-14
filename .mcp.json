@@ -7,8 +7,8 @@
     },
     "neo4j": {
       "type": "stdio",
-      "command": "bash",
-      "args": ["./.devcontainer/neo4j-mcp-run.sh"]
+      "command": "bun",
+      "args": ["neo4j.mcp.script.ts"]
     }
   }
 }

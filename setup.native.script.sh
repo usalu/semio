@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # SPDX-License-Identifier: AGPL-3.0-only
 # #region 🔖Header
-# Zero-touch macOS/Linux bootstrap: Neo4j Desktop 2, uv, Neo4j env vars for MCP, bun install, workspace:setup.
-# Mirrors [.devcontainer/install-native.ps1](install-native.ps1) for Unix hosts.
+# Zero-touch macOS/Linux bootstrap: Neo4j Desktop, uv, Neo4j env vars for MCP, bun install, workspace:setup.
+# Native setup is rooted here and does not depend on devcontainer scripts.
 # #endregion 🔖Header
 set -euo pipefail
 
@@ -82,10 +82,6 @@ run_cypher() {
     cypher-shell -a bolt://localhost:7687 -u neo4j -p password -d "$database" "$cypher" >/dev/null 2>&1
     return $?
   fi
-  if command -v docker >/dev/null 2>&1 && [ "$(docker ps --filter 'name=^/semio$' --format '{{.Names}}' 2>/dev/null)" = "semio" ]; then
-    docker exec semio cypher-shell -a bolt://localhost:7687 -u neo4j -p password -d "$database" "$cypher" >/dev/null 2>&1
-    return $?
-  fi
   return 1
 }
 
@@ -97,15 +93,6 @@ ensure_native_neo4j() {
       log "Starting local Neo4j service..."
       neo4j start >/dev/null 2>&1 || true
     fi
-    if ! is_neo4j_reachable && command -v docker >/dev/null 2>&1; then
-      if [ "$(docker ps -a --filter 'name=^/semio$' --format '{{.Names}}' 2>/dev/null)" = "semio" ]; then
-        log "Starting Docker container semio for local Neo4j..."
-        docker start semio >/dev/null 2>&1 || true
-      elif [ -f "$REPO_ROOT/.devcontainer/docker-compose.yml" ]; then
-        log "Starting semio compose container for local Neo4j without rebuilding..."
-        docker compose -f "$REPO_ROOT/.devcontainer/docker-compose.yml" up -d --no-build >/dev/null 2>&1 || true
-      fi
-    fi
     for _ in $(seq 1 30); do
       is_neo4j_reachable && break
       sleep 2
@@ -113,12 +100,8 @@ ensure_native_neo4j() {
   fi
 
   if ! is_neo4j_reachable; then
-    log "Neo4j is not reachable yet. Start the local semio DBMS in Neo4j Desktop or the semio devcontainer."
+    log "Neo4j is not reachable yet. Start the local semio DBMS in native Neo4j Desktop."
     return 0
-  fi
-
-  if command -v docker >/dev/null 2>&1 && [ "$(docker ps --filter 'name=^/semio$' --format '{{.Names}}' 2>/dev/null)" = "semio" ]; then
-    docker exec semio bash -lc "cd /workspaces/semio && DEVCONTAINER=true NEO4J_PASSWORD=password bash .devcontainer/post-start.sh" >/dev/null 2>&1 || true
   fi
 
   for technology in semio elements coda reuse; do

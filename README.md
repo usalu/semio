@@ -532,7 +532,7 @@ The devcontainer includes:
 Native Windows development is zero-touch through the checked-in bootstrap script:
 
 ```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File .devcontainer/install-native.ps1
+powershell -NoProfile -ExecutionPolicy Bypass -File setup.windows.script.ps1
 ```
 
 The script installs the same baseline toolchain the devcontainer provides on a fresh machine:
@@ -544,6 +544,15 @@ The script installs the same baseline toolchain the devcontainer provides on a f
 - repo hooks, MCP client config, Python/Rust/Playwright setup, npm/uv dependencies, and the local repo VSIX
 
 After the bootstrap completes, open a new terminal and use the same repo commands as in the devcontainer. The script also keeps `PLAYWRIGHT_BROWSERS_PATH` on the repo-local shared cache so Playwright downloads stay warm across runs.
+
+Native macOS and Linux use the root scripts:
+
+```bash
+bash setup.mac.sh
+bash setup.linux.sh
+```
+
+IDE startup runs the matching `start.*` script, which checks the native Neo4j endpoint at `bolt://localhost:7687` and attempts to create the technology databases `semio`, `elements`, `coda`, and `reuse` when the native DBMS edition supports multi-database administration.
 
 ## 🪄 [AI](AGENTS.md) [↑](#-development-)
 

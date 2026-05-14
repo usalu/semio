@@ -2,13 +2,48 @@
 /**
  * 🧰 Zero-touch workspace bootstrap: uv, neo4j MCP prefetch (uvx), cargo, go client, dotnet,
  * rust wasm target, cargo wasm flags, Playwright browsers, Linux Electron sandbox, git hooks, VSIX build.
+ * Pass `--postinstall` for the lightweight lightningcss native-binary fix only (npm `postinstall` hook).
  */
 import { execFileSync } from "node:child_process";
-import { existsSync, mkdirSync, chmodSync, chownSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, chmodSync, chownSync, readFileSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { join } from "node:path";
 
 const root = import.meta.dir;
+
+//#region 🔖PostinstallLightningcss
+if (process.argv.includes("--postinstall")) {
+  const pkgPath = join(root, "node_modules", "lightningcss", "package.json");
+  if (!existsSync(pkgPath)) process.exit(0);
+  const { version } = JSON.parse(readFileSync(pkgPath, "utf8")) as { version: string };
+  const report = process.report?.getReport?.() as
+    | { header?: { glibcVersionRuntime?: string } }
+    | undefined;
+  const libc =
+    process.platform === "linux"
+      ? report?.header?.glibcVersionRuntime
+        ? "gnu"
+        : "musl"
+      : "";
+  const key = [process.platform, process.arch, libc].filter(Boolean).join("/");
+  const pkgByKey: Record<string, string> = {
+    "win32/x64": "lightningcss-win32-x64-msvc",
+    "win32/arm64": "lightningcss-win32-arm64-msvc",
+    "darwin/x64": "lightningcss-darwin-x64",
+    "darwin/arm64": "lightningcss-darwin-arm64",
+    "linux/x64/gnu": "lightningcss-linux-x64-gnu",
+    "linux/x64/musl": "lightningcss-linux-x64-musl",
+    "linux/arm64/gnu": "lightningcss-linux-arm64-gnu",
+    "linux/arm64/musl": "lightningcss-linux-arm64-musl",
+  };
+  const platformPkg = pkgByKey[key];
+  if (!platformPkg) process.exit(0);
+  if (existsSync(join(root, "node_modules", platformPkg))) process.exit(0);
+  const spec = `${platformPkg}@${version}`;
+  execFileSync("bun", ["add", "--no-save", spec], { cwd: root, stdio: "inherit" });
+  process.exit(0);
+}
+//#endregion
 
 function run(cmd: string, args: string[], opts: { cwd?: string; env?: NodeJS.ProcessEnv } = {}) {
   execFileSync(cmd, args, {

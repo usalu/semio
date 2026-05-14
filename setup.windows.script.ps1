@@ -2,9 +2,9 @@
 #
 # 2026 Ueli Saluz <ueli@semio-tech.com>
 #
-# Specs: Zero-touch Windows bootstrap that mirrors the devcontainer toolchain, upgrades machine dependencies to the current supported baseline with winget, prepares repo-local caches and env vars, syncs workspace dependencies, configures repo-managed hooks/MCP clients, installs required global CLIs, and installs the local VS Code extension when editor CLIs are available.
+# Specs: Zero-touch Windows-native bootstrap that upgrades machine dependencies to the current supported baseline with winget, prepares repo-local caches and env vars, syncs workspace dependencies, configures repo-managed hooks/MCP clients, installs required global CLIs, verifies native Neo4j, and installs the local VS Code extension when editor CLIs are available.
 #
-# Summary: Windows-native bootstrap for the semio monorepo with devcontainer parity.
+# Summary: Windows-native bootstrap for the semio monorepo.
 #
 #endregion 🧲Header
 
@@ -355,15 +355,6 @@ function Invoke-Neo4jCypher {
         return $LASTEXITCODE -eq 0
     }
 
-    $docker = Get-FirstCommandPath @("docker.exe", "docker")
-    if ($docker) {
-        $container = & $docker ps --filter "name=^/semio$" --format "{{.Names}}" 2>$null
-        if ($container -eq "semio") {
-            & $docker exec semio cypher-shell -a "bolt://localhost:7687" -u "neo4j" -p "password" -d $Database $Cypher *> $null
-            return $LASTEXITCODE -eq 0
-        }
-    }
-
     return $false
 }
 
@@ -381,36 +372,14 @@ function Ensure-NativeNeo4j {
             Start-Sleep -Seconds 5
         }
 
-        if (-not (Test-TcpPort -HostName "127.0.0.1" -Port 7687)) {
-            $docker = Get-FirstCommandPath @("docker.exe", "docker")
-            if ($docker) {
-                $container = & $docker ps -a --filter "name=^/semio$" --format "{{.Names}}" 2>$null
-                if ($container -eq "semio") {
-                    Write-Step "Starting Docker container semio for local Neo4j..."
-                    & $docker start semio | Out-Null
-                } elseif (Test-Path -LiteralPath (Join-Path $RepoRoot ".devcontainer\docker-compose.yml")) {
-                    Write-Step "Starting semio compose container for local Neo4j without rebuilding..."
-                    & $docker compose -f (Join-Path $RepoRoot ".devcontainer\docker-compose.yml") up -d --no-build | Out-Null
-                }
-            }
-        }
-
         for ($i = 0; $i -lt 30 -and -not (Test-TcpPort -HostName "127.0.0.1" -Port 7687); $i++) {
             Start-Sleep -Seconds 2
         }
     }
 
     if (-not (Test-TcpPort -HostName "127.0.0.1" -Port 7687)) {
-        Write-Step "Neo4j is not reachable yet. Start the local semio DBMS in Neo4j Desktop or the semio devcontainer."
+        Write-Step "Neo4j is not reachable yet. Start the local semio DBMS in native Neo4j Desktop."
         return
-    }
-
-    $docker = Get-FirstCommandPath @("docker.exe", "docker")
-    if ($docker) {
-        $container = & $docker ps --filter "name=^/semio$" --format "{{.Names}}" 2>$null
-        if ($container -eq "semio") {
-            & $docker exec semio bash -lc "cd /workspaces/semio && DEVCONTAINER=true NEO4J_PASSWORD=password bash .devcontainer/post-start.sh" | Out-Null
-        }
     }
 
     foreach ($technology in $technologies) {

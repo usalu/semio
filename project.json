@@ -11,18 +11,18 @@
         "command": "bun setup.script.ts"
       }
     },
+    "start": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun start.script.ts"
+      }
+    },
     "lint": {
       "executor": "nx:run-commands",
       "dependsOn": [],
       "options": {
         "command": "bun lint.script.ts"
-      }
-    },
-    "format": {
-      "executor": "nx:run-commands",
-      "cache": false,
-      "options": {
-        "command": "bun format.script.ts"
       }
     },
     "test": {
@@ -43,28 +43,21 @@
       "executor": "nx:run-commands",
       "cache": false,
       "options": {
-        "command": "bun repo/client/mcp.script.ts"
+        "command": "bun repo/client/dev.script.ts"
       }
     },
     "dev-mcp-engine": {
       "executor": "nx:run-commands",
       "cache": false,
       "options": {
-        "command": "bun semio/client/bin/engine/mcp.script.ts"
+        "command": "bun semio/client/bin/engine/dev.script.ts"
       }
     },
     "dev-mcp-repo": {
       "executor": "nx:run-commands",
       "cache": false,
       "options": {
-        "command": "bun repo/client/mcp.repo.script.ts"
-      }
-    },
-    "typecheck": {
-      "executor": "nx:run-commands",
-      "dependsOn": [],
-      "options": {
-        "command": "bun typecheck.script.ts"
+        "command": "bun repo/client/dev.script.ts repo"
       }
     }
   }

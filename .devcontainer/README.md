@@ -6,7 +6,7 @@ Devcontainer configuration and lifecycle scripts.
 
 The monorepo registers one Neo4j MCP server (`neo4j`) in `.mcp.json` and per-client copies. It uses `uvx mcp-neo4j-cypher` against the default `neo4j` database.
 
-**Native (Windows / macOS / Linux):** Run your platform bootstrap (`.devcontainer/install-native.ps1` or `.devcontainer/install-native.sh`) so `NEO4J_URI=bolt://localhost:7687` and credentials are set. Start Neo4j Desktop locally when using a native DBMS, or connect Neo4j Desktop to the devcontainer through the forwarded Bolt port.
+**Native (Windows / macOS / Linux):** Run your root platform bootstrap (`setup.windows.script.ps1`, `setup.mac.sh`, or `setup.linux.sh`) so `NEO4J_URI=bolt://localhost:7687` and credentials are set. Native setup uses the native Neo4j Desktop/DBMS only; it does not depend on the devcontainer.
 
 **Devcontainer:** Neo4j 5 Community runs inside the single **`semio`** devcontainer. Inside **`semio`**, `NEO4J_URI` is **`bolt://localhost:7687`**. The **`semio`** container publishes **`127.0.0.1:7687`** (Bolt) and **`127.0.0.1:7474`** (Browser) to the Docker host, and `devcontainer.json` forwards both ports for Codespaces and local devcontainers.
 
