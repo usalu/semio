@@ -2,6 +2,16 @@
 
 Devcontainer configuration and lifecycle scripts.
 
+# Neo4j Desktop and MCP
+
+The monorepo registers four Neo4j MCP servers (`neo4j-semio`, `neo4j-elements`, `neo4j-coda`, `neo4j-reuse`) in `.mcp.json` and per-client copies. Each server uses `uvx mcp-neo4j-cypher` and a dedicated database name matching the technology.
+
+**Native (Windows / macOS / Linux):** Run your platform bootstrap (`.devcontainer/install-native.ps1` or `.devcontainer/install-native.sh`) so `NEO4J_URI=bolt://localhost:7687` and credentials are set. Start Neo4j Desktop 2 locally; Bolt listens on `7687` by default.
+
+**Devcontainer:** `NEO4J_URI` is `bolt://host.docker.internal:7687` so MCP inside the container reaches Neo4j Desktop on the host. `runArgs` includes `--add-host=host.docker.internal:host-gateway` for Linux Docker.
+
+**One-time databases in Desktop 2:** Create four databases named `semio`, `elements`, `coda`, and `reuse` (user `neo4j` / password `password` unless you override env). The MCP tools target those names via `NEO4J_DATABASE` per server entry.
+
 # Docs
 
 ## devcontainer.json

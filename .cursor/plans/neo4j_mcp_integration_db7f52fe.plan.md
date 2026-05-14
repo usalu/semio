@@ -7,16 +7,16 @@ todos:
     status: completed
   - id: devcontainer
     content: "Update .devcontainer/devcontainer.json: containerEnv, runArgs host-gateway, port 7687 forward"
-    status: in_progress
+    status: completed
   - id: install_native_ps1
     content: "Extend .devcontainer/install-native.ps1: winget Neo4j Desktop + persisted user env vars"
-    status: pending
+    status: completed
   - id: install_native_sh
     content: "Create .devcontainer/install-native.sh: macOS + Linux zero-touch (Neo4j Desktop install, env, uv, workspace setup)"
-    status: pending
+    status: completed
   - id: workspace_setup
     content: Add uvx prefetch of mcp-neo4j-cypher to scripts/workspace-setup.script.ts
-    status: pending
+    status: completed
 isProject: false
 ---
 

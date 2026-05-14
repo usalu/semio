@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 /**
- * Zero-touch workspace bootstrap: uv, cargo, go client, dotnet, rust wasm target,
- * cargo wasm flags, Playwright browsers, Linux Electron sandbox, git hooks, VSIX build.
+ * Zero-touch workspace bootstrap: uv, neo4j MCP prefetch (uvx), cargo, go client, dotnet,
+ * rust wasm target, cargo wasm flags, Playwright browsers, Linux Electron sandbox, git hooks, VSIX build.
  */
 import { execFileSync } from "node:child_process";
 import { existsSync, mkdirSync, chmodSync, chownSync, writeFileSync } from "node:fs";
@@ -28,6 +28,11 @@ function tryRun(cmd: string, args: string[], opts: { cwd?: string } = {}) {
 
 console.log("[workspace-setup] uv sync…");
 tryRun("uv", ["sync", "--all-packages", "--all-groups"]);
+
+//#region 🔖Neo4jMcpPrefetch
+console.log("[workspace-setup] neo4j MCP server prefetch (uvx)…");
+tryRun("uvx", ["--quiet", "mcp-neo4j-cypher", "--help"]);
+//#endregion
 
 console.log("[workspace-setup] cargo fetch…");
 tryRun("cargo", ["fetch", "--manifest-path", "Cargo.toml"]);

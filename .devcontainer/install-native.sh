@@ -1,0 +1,212 @@
+#!/usr/bin/env bash
+# SPDX-License-Identifier: AGPL-3.0-only
+# #region 🔖Header
+# Zero-touch macOS/Linux bootstrap: Neo4j Desktop 2, uv, Neo4j env vars for MCP, bun install, workspace:setup.
+# Mirrors [.devcontainer/install-native.ps1](install-native.ps1) for Unix hosts.
+# #endregion 🔖Header
+set -euo pipefail
+
+#region 🔖Config
+NEO4J_DESKTOP_INSTALLER_VERSION="${NEO4J_DESKTOP_INSTALLER_VERSION:-1.6.3}"
+SKIP_NEO4J_DESKTOP="${SKIP_NEO4J_DESKTOP:-0}"
+SKIP_REPO_BOOTSTRAP="${SKIP_REPO_BOOTSTRAP:-0}"
+#endregion 🔖Config
+
+#region 🔖Paths
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
+#endregion 🔖Paths
+
+#region 🔖Logging
+log() {
+  printf '%s\n' "[semio] $*"
+}
+#endregion 🔖Logging
+
+#region 🔖Neo4jEnv
+append_neo4j_env_block() {
+  local f="$1"
+  [ -n "$f" ] || return 0
+  mkdir -p "$(dirname "$f")"
+  touch "$f"
+  if grep -qF "#region 🔌Neo4j" "$f" 2>/dev/null; then
+    return 0
+  fi
+  {
+    printf '\n'
+    printf '%s\n' "#region 🔌Neo4j"
+    printf '%s\n' "export NEO4J_URI=bolt://localhost:7687"
+    printf '%s\n' "export NEO4J_USERNAME=neo4j"
+    printf '%s\n' "export NEO4J_PASSWORD=password"
+    printf '%s\n' "export NEO4J_TELEMETRY=false"
+    printf '%s\n' "#endregion 🔌Neo4j"
+  } >>"$f"
+  log "Appended Neo4j MCP env block to $f"
+}
+
+configure_neo4j_shell_env() {
+  case "$(uname -s)" in
+  Darwin)
+    append_neo4j_env_block "${HOME}/.zshrc"
+    append_neo4j_env_block "${HOME}/.bashrc"
+    ;;
+  Linux)
+    append_neo4j_env_block "${HOME}/.bashrc"
+    append_neo4j_env_block "${HOME}/.profile"
+    ;;
+  *)
+    log "Unsupported OS for shell env; set NEO4J_* manually."
+    ;;
+  esac
+  export NEO4J_URI="bolt://localhost:7687"
+  export NEO4J_USERNAME="neo4j"
+  export NEO4J_PASSWORD="password"
+  export NEO4J_TELEMETRY="false"
+}
+#endregion 🔖Neo4jEnv
+
+#region 🔖EnsureUv
+ensure_uv() {
+  if command -v uv >/dev/null 2>&1; then
+    return 0
+  fi
+  log "Installing uv…"
+  curl -LsSf https://astral.sh/uv/install.sh | sh
+  export PATH="${HOME}/.local/bin:${PATH}"
+}
+#endregion 🔖EnsureUv
+
+#region 🔖EnsureBun
+ensure_bun() {
+  if command -v bun >/dev/null 2>&1; then
+    return 0
+  fi
+  log "Installing Bun…"
+  export BUN_INSTALL="${BUN_INSTALL:-$HOME/.bun}"
+  curl -fsSL https://bun.sh/install | bash
+  export PATH="${BUN_INSTALL}/bin:${PATH}"
+}
+#endregion 🔖EnsureBun
+
+#region 🔖InstallNeo4jDesktop
+install_linux_fuse_deps() {
+  if [ "${SKIP_LINUX_APT:-0}" = "1" ]; then
+    return 0
+  fi
+  if ! command -v apt-get >/dev/null 2>&1; then
+    return 0
+  fi
+  if command -v sudo >/dev/null 2>&1 && [ "$(id -u)" -ne 0 ]; then
+    log "Installing fuse dependencies for Neo4j Desktop AppImage (apt)…"
+    sudo apt-get update -qq
+    sudo apt-get install -y --no-install-recommends wget curl ca-certificates libfuse2 fuse3 libglib2.0-0 \
+      libgtk-3-0 libnotify4 libnss3 libxss1 libxtst6 xdg-utils \
+      || log "Optional apt packages skipped (non-fatal)."
+  elif [ "$(id -u)" -eq 0 ]; then
+    apt-get update -qq
+    apt-get install -y --no-install-recommends wget curl ca-certificates libfuse2 fuse3 \
+      || true
+  fi
+}
+
+install_neo4j_desktop_linux_appimage() {
+  local arch
+  arch="$(uname -m)"
+  if [ "$arch" != "x86_64" ]; then
+    log "Neo4j Desktop Linux AppImage is published for x86_64 only; install manually from https://neo4j.com/deployment-center/?desktop-gdb (arch=${arch})."
+    return 0
+  fi
+  install_linux_fuse_deps
+  local ver="$NEO4J_DESKTOP_INSTALLER_VERSION"
+  local url="https://dist.neo4j.org/neo4j-desktop/linux/neo4j-desktop-${ver}-x86_64.AppImage"
+  local dest_dir="${HOME}/.local/share/semio/neo4j-desktop"
+  local dest="${dest_dir}/neo4j-desktop-${ver}-x86_64.AppImage"
+  mkdir -p "$dest_dir"
+  if [ -f "$dest" ]; then
+    log "Neo4j Desktop AppImage already present: $dest"
+  else
+    log "Downloading Neo4j Desktop ${ver} AppImage…"
+    curl -fSL --retry 3 --retry-delay 2 -o "$dest.partial" "$url"
+    mv "$dest.partial" "$dest"
+  fi
+  chmod a+x "$dest"
+  local link="${HOME}/.local/bin/neo4j-desktop"
+  mkdir -p "${HOME}/.local/bin"
+  ln -sf "$dest" "$link"
+  log "Neo4j Desktop ready: $link"
+}
+
+install_neo4j_desktop_macos() {
+  if ! command -v brew >/dev/null 2>&1; then
+    log "Installing Homebrew (non-interactive)…"
+    NONINTERACTIVE=1 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)" || true
+  fi
+  for b in /opt/homebrew/bin/brew /usr/local/bin/brew; do
+    if [ -x "$b" ]; then
+      eval "$("$b" shellenv)"
+      break
+    fi
+  done
+  if ! command -v brew >/dev/null 2>&1; then
+    log "Homebrew not available; install Neo4j Desktop from https://neo4j.com/deployment-center/?desktop-gdb"
+    return 0
+  fi
+  log "Installing Neo4j Desktop (Homebrew cask neo4j-desktop)…"
+  if brew list --cask neo4j-desktop >/dev/null 2>&1; then
+    brew upgrade --cask neo4j-desktop || true
+  else
+    brew install --cask neo4j-desktop
+  fi
+}
+
+install_neo4j_desktop() {
+  if [ "$SKIP_NEO4J_DESKTOP" = "1" ]; then
+    log "Skipping Neo4j Desktop install (SKIP_NEO4J_DESKTOP=1)."
+    return 0
+  fi
+  case "$(uname -s)" in
+  Darwin) install_neo4j_desktop_macos ;;
+  Linux) install_neo4j_desktop_linux_appimage ;;
+  *) log "Skipping Neo4j Desktop auto-install on this OS." ;;
+  esac
+}
+#endregion 🔖InstallNeo4jDesktop
+
+#region 🔖GitSafe
+configure_git_safe_directories() {
+  git config --global --add safe.directory "$REPO_ROOT" || true
+  if [ -f "$REPO_ROOT/.gitmodules" ]; then
+    while IFS= read -r path; do
+      [ -n "$path" ] || continue
+      git config --global --add safe.directory "$REPO_ROOT/$path" || true
+    done < <(git config -f "$REPO_ROOT/.gitmodules" --get-regexp '^submodule\..*\.path$' | awk '{print $2}')
+  fi
+}
+#endregion 🔖GitSafe
+
+#region 🔖RepoBootstrap
+repo_bootstrap() {
+  if [ "$SKIP_REPO_BOOTSTRAP" = "1" ]; then
+    log "Skipping repo bootstrap (SKIP_REPO_BOOTSTRAP=1)."
+    return 0
+  fi
+  cd "$REPO_ROOT"
+  export NX_WORKSPACE_DATA_DIRECTORY="${REPO_ROOT}/.nx/workspace-data-terminal"
+  mkdir -p "$NX_WORKSPACE_DATA_DIRECTORY"
+  configure_git_safe_directories
+  ensure_bun
+  log "bun install…"
+  bun install
+  log "workspace:setup…"
+  bun nx run workspace:setup
+}
+#endregion 🔖RepoBootstrap
+
+#region 🔖Main
+cd "$REPO_ROOT"
+install_neo4j_desktop
+ensure_uv
+configure_neo4j_shell_env
+repo_bootstrap
+log "Native (Unix) bootstrap complete. Open a new shell to load NEO4J_* from your profile, or run: export NEO4J_URI=bolt://localhost:7687 …"
+#endregion 🔖Main
