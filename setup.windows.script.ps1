@@ -557,9 +557,6 @@ function Resolve-NativeNeo4jGraphDatabase {
     if (Invoke-Neo4jCypher -RepoRoot $RepoRoot -Database $preferred -Cypher "RETURN 1 AS ok;") {
         return $preferred
     }
-    if ($preferred -ne "neo4j" -and (Invoke-Neo4jCypher -RepoRoot $RepoRoot -Database "neo4j" -Cypher "RETURN 1 AS ok;")) {
-        return "neo4j"
-    }
     return $preferred
 }
 
@@ -719,6 +716,24 @@ function Ensure-NativeNeo4j {
                 $schemaUri = Get-Neo4jSchemaUri -RepoRoot $RepoRoot -Technology $technology
                 Invoke-Neo4jCypher -RepoRoot $RepoRoot -Database $graphDb -Cypher "CALL apoc.cypher.runFile('$schemaUri') YIELD row RETURN count(row) AS rows;" | Out-Null
                 Write-Step "Neo4j schema imported into ${graphDb}: $technology."
+            }
+        }
+    }
+    if (Get-Command bun -ErrorAction SilentlyContinue) {
+        $savedDb = $env:NEO4J_DATABASE
+        $env:NEO4J_DATABASE = $graphDb
+        Push-Location $RepoRoot
+        try {
+            & bun "./prune.neo4j.script.ts" | Out-Null
+            if ($LASTEXITCODE -ne 0) {
+                Write-Step "Neo4j legacy-property prune exited with code $LASTEXITCODE (cypher-shell may be missing)."
+            }
+        } finally {
+            Pop-Location
+            if ($null -ne $savedDb) {
+                $env:NEO4J_DATABASE = $savedDb
+            } else {
+                Remove-Item Env:\NEO4J_DATABASE -ErrorAction SilentlyContinue
             }
         }
     }

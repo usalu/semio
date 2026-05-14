@@ -11,6 +11,13 @@
         "command": "bun ./export.neo4j.script.ts"
       }
     },
+    "migrate-neo4j": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./migrate.neo4j.script.ts"
+      }
+    },
     "setup": {
       "executor": "nx:run-commands",
       "cache": false,

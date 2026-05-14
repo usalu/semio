@@ -8,22 +8,34 @@
     "neo4j-semio": {
       "type": "stdio",
       "command": "bun",
-      "args": ["neo4j.mcp.script.ts", "semio"]
+      "args": ["neo4j.mcp.script.ts", "semio"],
+      "env": {
+        "NEO4J_DATABASE": "semio"
+      }
     },
     "neo4j-elements": {
       "type": "stdio",
       "command": "bun",
-      "args": ["neo4j.mcp.script.ts", "elements"]
+      "args": ["neo4j.mcp.script.ts", "elements"],
+      "env": {
+        "NEO4J_DATABASE": "elements"
+      }
     },
     "neo4j-coda": {
       "type": "stdio",
       "command": "bun",
-      "args": ["neo4j.mcp.script.ts", "coda"]
+      "args": ["neo4j.mcp.script.ts", "coda"],
+      "env": {
+        "NEO4J_DATABASE": "coda"
+      }
     },
     "neo4j-reuse": {
       "type": "stdio",
       "command": "bun",
-      "args": ["neo4j.mcp.script.ts", "reuse"]
+      "args": ["neo4j.mcp.script.ts", "reuse"],
+      "env": {
+        "NEO4J_DATABASE": "reuse"
+      }
     }
   }
 }

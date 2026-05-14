@@ -1,393 +1,23 @@
 # https://neo4j.com/docs/graphql/current/
-
-# schema:
-#   primitives:
-#     - &scalar
-#     - &interface
-#     - &class
-#     - &module
-#   general: &general
-#     is: *module
-#     scalars:
-#       - &string
-#       - &number
-#       - &boolean
-#       - &timestamp
-#       - &color
-#       - &uri
-#     interfaces:
-#       entity: &entity
-#         fields:
-#           id: *string
-#           hash: *string
-#           owner: *entity
-#           owns: [*entity]
-#       weakEntity: &weakEntity
-#         implements: [*entity]
-#         contraints:
-#           - &hashAsId "id is hash of entity"
-#       data: &data
-#         implements: [*weakEntity]
-#       strongEntity: &strongEntity
-#         implements: [*entity]
-#         contraints:
-#           - &uuidv7AsId "id is uuidv7 at creation time"
-#       richStrongEntity: &richStrongEntity
-#         implements: [*strongEntity]
-#         fields:
-#           data:
-#             name: *string
-#             description: *string
-#             icon: *string
-#           computed:
-#             createdAt: *timestamp
-#             createdBy: *string
-#       artifact: &artifact
-#         implements: [*richStrongEntity]
-#         fields:
-#           computed:
-#             authoredBy: [*entity]
-#             changedIn: [*entity]
-#             lastChangedAt: *timestamp
-#             lastChangedBy: *entity
-#             lastChangedIn: *entity
-#             changes: [*entity]
-#             edits: [*entity]
-#       document: &document
-#         implements: [*artifact]
-#         fields:
-#           reference:
-#             previewImage: *entity
-#       event: &event
-#         implements: [*weakEntity]
-#         fields:
-#           data:
-#             timestamp: *timestamp
-#           reference:
-#             involves: [*entity]
-#   domain: &domain
-#     is: *module
-#     interfaces:
-#       workspace: &workspace
-#         implements: [*strongEntity]
-#         fields:
-#           data:
-#             savedChanges: [*entity]
-#             unsavedChanges: [*entity]
-#           computed:
-#             latestWipCheckpointAncestor: *entity
-#             kit: *entity
-#           reference:
-#             checkpoint: *entity
-#       diff: &diff
-#         implements: [*weakEntity]
-#       modification: &modification
-#         implements: [*weakEntity]
-#         fields:
-#           reference:
-#             before: *entity
-#             diff: *diff
-#             after: *entity
-#       operation: &operation
-#         implements: [*strongEntity]
-#         fields:
-#           data:
-#             input: *entity
-#           computed:
-#             modification: *modification
-#           reference:
-#             scope: *entity
-#       backbone: &backbone
-#         implements: [*strongEntity]
-#         fields:
-#           data:
-#             uri: *uri
-#             status: *string
-#       provider: &provider
-#         implements: [*strongEntity]
-#         fields:
-#           data:
-#             backbones: [*backbone]
-#           computed:
-#             backbone: *backbone
-#       command: &command
-#         implements: [*weakEntity]
-#         fields:
-#           computed:
-#             response: *entity
-#     classes:
-#       vector: &vector
-#         implements: [*data]
-#         fields:
-#           x: *number
-#           y: *number
-#           z: *number
-#       point: &point
-#         implements: [*data]
-#         fields:
-#           x: *number
-#           y: *number
-#           z: *number
-#       coordinate: &coordinate
-#         implements: [*data]
-#         fields:
-#           u: *number
-#           v: *number
-#       offset: &offset
-#         implements: [*data]
-#         fields:
-#           x: *number
-#           y: *number
-#       plane: &plane
-#         implements: [*data]
-#         fields:
-#           origin: *point
-#           xAxis: *vector
-#           yAxis: *vector
-#           zAxis: *vector
-#       position: &position
-#         implements: [*weakEntity]
-#         fields:
-#           coordinate: *coordinate
-#           offset: *offset
-#           plane: *plane
-#       location: &location
-#         implements: [*weakEntity]
-#         fields:
-#           position: *position
-#           place: *entity
-#       attribute: &attribute
-#         implements: [*weakEntity]
-#         fields:
-#           key: *string
-#           value: *string
-#       place: &place
-#         implements: [*artifact]
-#         fields:
-#           locations: [*location]
-#       family: &family
-#         implements: [*artifact]
-#         fields:
-#           artifacts: [*artifact]
-#       folder: &folder
-#         implements: [*artifact]
-#         fields:
-#           children: [*artifact]
-#       file: &file
-#         implements: [*document]
-#         fields:
-#           uri: *uri
-#           mediaType: *string
-#           size: *number
-#       author: &author
-#         implements: [*artifact]
-#         fields:
-#           email: *string
-#           url: *uri
-#       prop: &prop
-#         implements: [*artifact]
-#       benchmark: &benchmark
-#         implements: [*artifact]
-#       quality: &quality
-#         implements: [*artifact]
-#         fields:
-#           attributes: [*attribute]
-#       tag: &tag
-#         implements: [*artifact]
-#         fields:
-#           attributes: [*attribute]
-#       concept: &concept
-#         implements: [*artifact]
-#         fields:
-#           qualities: [*quality]
-#           tags: [*tag]
-#           attributes: [*attribute]
-#       port: &port
-#         implements: [*artifact]
-#         fields:
-#           concept: *concept
-#           position: *position
-#           qualities: [*quality]
-#           attributes: [*attribute]
-#       connector: &connector
-#         implements: [*artifact]
-#         fields:
-#           from: *port
-#           to: *port
-#           qualities: [*quality]
-#           attributes: [*attribute]
-#       representation: &representation
-#         implements: [*artifact]
-#         fields:
-#           file: *file
-#           attributes: [*attribute]
-#       type: &type
-#         implements: [*artifact]
-#         fields:
-#           concepts: [*concept]
-#           ports: [*port]
-#           representations: [*representation]
-#           attributes: [*attribute]
-#       layer: &layer
-#         implements: [*artifact]
-#         fields:
-#           visible: *boolean
-#           locked: *boolean
-#       piece: &piece
-#         implements: [*artifact]
-#         fields:
-#           type: *type
-#           location: *location
-#           ports: [*port]
-#           attributes: [*attribute]
-#       side: &side
-#         implements: [*strongEntity]
-#         fields:
-#           piece: *piece
-#           port: *port
-#       connection: &connection
-#         implements: [*artifact]
-#         fields:
-#           connector: *connector
-#           from: *side
-#           to: *side
-#           attributes: [*attribute]
-#       group: &group
-#         implements: [*artifact]
-#         fields:
-#           pieces: [*piece]
-#           connections: [*connection]
-#       design: &design
-#         implements: [*artifact]
-#         fields:
-#           pieces: [*piece]
-#           connections: [*connection]
-#           layers: [*layer]
-#           groups: [*group]
-#           attributes: [*attribute]
-#       kit: &kit
-#         implements: [*artifact]
-#         fields:
-#           places: [*place]
-#           families: [*family]
-#           folders: [*folder]
-#           files: [*file]
-#           authors: [*author]
-#           props: [*prop]
-#           benchmarks: [*benchmark]
-#           qualities: [*quality]
-#           tags: [*tag]
-#           concepts: [*concept]
-#           ports: [*port]
-#           connectors: [*connector]
-#           representations: [*representation]
-#           types: [*type]
-#           layers: [*layer]
-#           pieces: [*piece]
-#           connections: [*connection]
-#           groups: [*group]
-#           designs: [*design]
-#       edit: &edit
-#         implements: [*strongEntity]
-#         fields:
-#           forwards: [*operation]
-#           backwards: [*operation]
-#           sequenceNumber: *number
-#           startedAt: *timestamp
-#           finishedAt: *timestamp
-#           finished: *boolean
-#           description: *string
-#           origin: *string
-#       change: &change
-#         implements: [*strongEntity]
-#         fields:
-#           edits: [*edit]
-#           startedAt: *timestamp
-#           savedAt: *timestamp
-#           saved: *boolean
-#           description: *string
-#           origin: *string
-#       checkpoint: &checkpoint
-#         implements: [*strongEntity]
-#         fields:
-#           timestamp: *timestamp
-#           message: *string
-#           authors: [*author]
-#           parent: *entity
-#           ancestors: [*entity]
-#           initial: *kit
-#           kit: *kit
-#           changes: [*change]
-#           edits: [*edit]
-#       theKit: &theKit
-#         implements: [*workspace]
-#       alternative: &alternative
-#         implements: [*workspace]
-#         fields:
-#           name: *string
-#       graph: &graph
-#         implements: [*strongEntity]
-#         fields:
-#           initialKit: *kit
-#           theKit: *theKit
-#           alternatives: [*alternative]
-#           checkpoints: [*checkpoint]
-#           releases: [*checkpoint]
-#       conflict: &conflict
-#         implements: [*strongEntity]
-#         fields:
-#           authoritativeChange: *change
-#           wipChange: *change
-#           reasons: [*string]
-#       store: &store
-#         implements: [*strongEntity]
-#         fields:
-#           wip: *graph
-#           stage: *graph
-#           authoritative: *graph
-#           conflicts: [*conflict]
-#           backbone: *backbone
-#       fileBackbone: &fileBackbone
-#         implements: [*backbone]
-#       websocketBackbone: &websocketBackbone
-#         implements: [*backbone]
-#       localProvider: &localProvider
-#         implements: [*provider]
-#         fields:
-#           uri: *uri
-#           stores: [*store]
-#       remoteProvider: &remoteProvider
-#         implements: [*provider]
-#         fields:
-#           uri: *uri
-#           url: *uri
-#       session: &session
-#         implements: [*strongEntity]
-#         fields:
-#           stores: [*store]
-#           localProvider: *localProvider
-#           remoteProviders: [*remoteProvider]
-#           startedAt: *timestamp
+# Composition and containment use HAS (…); do not persist denormalized owner names/ids/kinds on nodes — use HAS edges only.
 
 interface Constraint {
   description: String!
 }
 
 interface Node {
-  # Node
   name: String!
-  emoji: String!
   constraints: [Constraint!]! @relationship(type: "HAS", direction: OUT)
 }
 
 interface Primitive implements Node {
-  # Node
   name: String!
+  constraints: [Constraint!]! @relationship(type: "HAS", direction: OUT)
 }
 
 interface Scalar implements Primitive {
-  # Node
   name: String!
+  constraints: [Constraint!]! @relationship(type: "HAS", direction: OUT)
 }
 
 enum FieldKind {
@@ -398,24 +28,21 @@ enum FieldKind {
 }
 
 interface Field implements Node {
-  # Node
   name: String!
-  kind: FieldKind!
+  constraints: [Constraint!]! @relationship(type: "HAS", direction: OUT)
 }
 
 interface Interface implements Node {
-  # Node
   name: String!
   fields: [Field!]! @relationship(type: "HAS", direction: OUT)
 }
 
 interface Command implements Node {
-  # Node
   name: String!
+  fields: [Field!]! @relationship(type: "HAS", direction: OUT)
 }
 
 interface Class implements Node @node {
-  # Node
   name: String!
   interfaces: [Interface!]! @relationship(type: "IMPLEMENTS", direction: OUT)
   fields: [Field!]! @relationship(type: "HAS", direction: OUT)
@@ -431,5 +58,3 @@ type Module implements Primitive @node {
   classes: [Class!]! @relationship(type: "HAS", direction: OUT)
   modules: [Module!]! @relationship(type: "HAS", direction: OUT)
 }
-
-type 

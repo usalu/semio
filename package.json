@@ -35,6 +35,8 @@
     "start": "bun ./start.script.ts",
     "git:setup": "bun ./git.script.ts setup",
     "export:neo4j": "bun ./export.neo4j.script.ts",
+    "prune:neo4j": "bun ./prune.neo4j.script.ts",
+    "migrate:neo4j": "bun ./migrate.neo4j.script.ts",
     "dev": "bun nx run @semio/desktop:dev",
     "dev:mcp": "bun ./dev-mcp.script.ts",
     "dev:mcp:engine": "bun ./dev-mcp.script.ts engine",

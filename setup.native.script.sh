@@ -160,10 +160,6 @@ resolve_native_graph_database() {
     printf '%s\n' "$preferred"
     return 0
   fi
-  if [ "$preferred" != "neo4j" ] && run_cypher neo4j "RETURN 1;"; then
-    printf '%s\n' "neo4j"
-    return 0
-  fi
   printf '%s\n' "$preferred"
 }
 
@@ -349,6 +345,9 @@ ensure_native_neo4j() {
       log "Neo4j schema imported into ${graph_db}: ${technology}."
     fi
   done
+  if command -v bun >/dev/null 2>&1; then
+    (cd "$REPO_ROOT" && NEO4J_DATABASE="$graph_db" bun ./prune.neo4j.script.ts) || log "Neo4j legacy-property prune skipped (bun or cypher-shell failed)."
+  fi
 }
 #endregion 🔖Neo4jRuntime
 
