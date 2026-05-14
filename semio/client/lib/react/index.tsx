@@ -10,31 +10,7 @@
 import type { ReactNode } from "react";
 import * as React from "react";
 import type { Attribute, Coordinate, Entity, GraphRootKind, OffsetInput, PieceBlueprint, Plane, Position, PositionInput, SetError, SetResult } from "../js";
-import {
-  Alternative,
-  Author,
-  Backbone,
-  Concept,
-  Connection,
-  Connector,
-  Design,
-  File,
-  Graph,
-  Kit,
-  LocalProvider,
-  Piece,
-  PiecesOperation,
-  Port,
-  Quality,
-  RemoteProvider,
-  Representation,
-  Session,
-  Side,
-  Store,
-  Tag,
-  TheKit,
-  Type,
-} from "../js";
+import { Alternative, Author, Backbone, Concept, Connection, Connector, Design, File, Graph, Kit, LocalProvider, Piece, PiecesOperation, Port, Quality, RemoteProvider, Representation, Session, Side, Store, Tag, TheKit, Type } from "../js";
 // #endregion ⚛️Imports
 
 // #region 🪝FieldBind
@@ -513,107 +489,107 @@ function useJsSession(): Session {
   return s;
 }
 
-function readOptionalId(ctx: React.Context<string | null>, override?: string): string | null {
+function readOptional(ctx: React.Context<string | null>, id?: ID): string | null {
   const fromCtx = React.useContext(ctx);
-  const rid = override ?? fromCtx;
+  const rid = id ?? fromCtx;
   return rid == null || rid === "" ? null : rid;
 }
 
-function resolveKit(override?: string): Kit | null {
+function resolveKit(id?: ID): Kit | null {
   const k = React.useContext(KitHandleContext);
-  const rid = readOptionalId(KitContext, override);
+  const rid = readOptional(KitContext, id);
   if (k == null || rid == null) return null;
   return k.id === rid ? k : new Kit(k.session, rid, k.storeId);
 }
 
-function resolveDesign(override?: string): Design | null {
+function resolveDesign(id?: ID): Design | null {
   const st = React.useContext(StoreHandleContext);
-  const did = readOptionalId(DesignContext, override);
+  const did = readOptional(DesignContext, id);
   if (st == null || did == null) return null;
   return st.design(did);
 }
 
-function resolvePiece(override?: string): Piece | null {
+function resolvePiece(id?: ID): Piece | null {
   const d = resolveDesign();
-  const pid = readOptionalId(PieceContext, override);
+  const pid = readOptional(PieceContext, id);
   if (d == null || pid == null) return null;
   return d.piece(pid);
 }
 
-function resolveType(override?: string): Type | null {
+function resolveType(id?: ID): Type | null {
   const st = React.useContext(StoreHandleContext);
-  const tid = readOptionalId(TypeContext, override);
+  const tid = readOptional(TypeContext, id);
   if (st == null || tid == null) return null;
   return st.type(tid);
 }
 
-function resolveConnection(override?: string): Connection | null {
+function resolveConnection(id?: ID): Connection | null {
   const d = resolveDesign();
-  const cid = readOptionalId(ConnectionContext, override);
+  const cid = readOptional(ConnectionContext, id);
   if (d == null || cid == null) return null;
   return d.connection(cid);
 }
 
-function resolvePort(override?: string): Port | null {
+function resolvePort(id?: ID): Port | null {
   const t = resolveType();
-  const pid = readOptionalId(PortContext, override);
+  const pid = readOptional(PortContext, id);
   if (t == null || pid == null) return null;
   return t.port(pid);
 }
 
-function resolveConnector(override?: string): Connector | null {
+function resolveConnector(id?: ID): Connector | null {
   const t = resolveType();
-  const cid = readOptionalId(ConnectorContext, override);
+  const cid = readOptional(ConnectorContext, id);
   if (t == null || cid == null) return null;
   return t.connector(cid);
 }
 
-function resolveRepresentation(override?: string): Representation | null {
+function resolveRepresentation(id?: ID): Representation | null {
   const t = resolveType();
-  const rid = readOptionalId(RepresentationContext, override);
+  const rid = readOptional(RepresentationContext, id);
   if (t == null || rid == null) return null;
   return t.representation(rid);
 }
 
-function resolveQuality(override?: string): Quality | null {
+function resolveQuality(id?: ID): Quality | null {
   const st = React.useContext(StoreHandleContext);
-  const qid = readOptionalId(QualityContext, override);
+  const qid = readOptional(QualityContext, id);
   if (st == null || qid == null) return null;
   return st.quality(qid);
 }
 
-function resolveTag(override?: string): Tag | null {
+function resolveTag(id?: ID): Tag | null {
   const st = React.useContext(StoreHandleContext);
-  const tid = readOptionalId(TagContext, override);
+  const tid = readOptional(TagContext, id);
   if (st == null || tid == null) return null;
   return st.tag(tid);
 }
 
-function resolveConcept(override?: string): Concept | null {
+function resolveConcept(id?: ID): Concept | null {
   const st = React.useContext(StoreHandleContext);
-  const cid = readOptionalId(ConceptContext, override);
+  const cid = readOptional(ConceptContext, id);
   if (st == null || cid == null) return null;
   return st.concept(cid);
 }
 
-function resolveAuthor(override?: string): Author | null {
+function resolveAuthor(id?: ID): Author | null {
   const st = React.useContext(StoreHandleContext);
-  const aid = readOptionalId(AuthorContext, override);
+  const aid = readOptional(AuthorContext, id);
   if (st == null || aid == null) return null;
   return st.author(aid);
 }
 
-function resolveFile(override?: string): File | null {
+function resolveFile(id?: ID): File | null {
   const st = React.useContext(StoreHandleContext);
-  const fid = override ?? null;
+  const fid = id ?? null;
   if (st == null || fid == null) return null;
   return st.file(fid);
 }
 
-function resolveAlternative(override?: string): Alternative | null {
+function resolveAlternative(id?: ID): Alternative | null {
   const g = React.useContext(GraphHandleContext);
   const fromCtx = React.useContext(AlternativeContext);
-  const aid = override ?? fromCtx;
+  const aid = id ?? fromCtx;
   if (g == null || aid == null || aid === "") return null;
   return g.alternative(aid);
 }
@@ -631,20 +607,15 @@ function resolveRemoteProvider(url?: string): RemoteProvider | null {
   return useJsSession().remoteProvider(urlKey);
 }
 
-function resolveBackbone(override?: string): Backbone | null {
+function resolveBackbone(id?: ID): Backbone | null {
   const bb = React.useContext(BackboneHandleContext);
-  const bid =
-    override ??
-    React.useContext(FileBackboneContext) ??
-    React.useContext(FolderBackboneContext) ??
-    React.useContext(WebsocketBackboneContext) ??
-    null;
+  const bid = id ?? React.useContext(FileBackboneContext) ?? React.useContext(FolderBackboneContext) ?? React.useContext(WebsocketBackboneContext) ?? null;
   if (bb != null && (bid == null || bb.id === bid)) return bb;
   return null;
 }
 
 function requireEntityId(ctx: React.Context<string | null>, hookName: string): string {
-  const id = readOptionalId(ctx, undefined);
+  const id = readOptional(ctx, undefined);
   if (id == null) throw new Error(`semio/react: ${hookName} requires a matching ContextProvider above.`);
   return id;
 }
@@ -854,12 +825,12 @@ export function ConnectionUnderActiveDesignProvider(props: Readonly<{ id: string
 }
 // #endregion 🔖EntityContextHelpers
 
-function useResolvedDesign(override?: string): Design | null {
-  return resolveDesign(override);
+function useResolvedDesign(id?: ID): Design | null {
+  return resolveDesign(id);
 }
 
-function useResolvedType(override?: string): Type | null {
-  return resolveType(override);
+function useResolvedType(id?: ID): Type | null {
+  return resolveType(id);
 }
 
 // #region 🪝IdStableEntityLists
@@ -1253,10 +1224,9 @@ export function useAddFixedPiece(id?: string): readonly [(blueprint: string, pos
 }
 
 /** @emoji ✍️ {@link Design#addChildPieceWithParentConnection}. */
-export function useAddChildPieceWithParentConnection(id?: string): readonly [
-  (blueprint: string, parentPiece: string, parentConnector: string, childConnector: string, name?: string | null, description?: string | null, position?: PositionInput | null, scale?: number | null) => void,
-  OperationStatus,
-] {
+export function useAddChildPieceWithParentConnection(
+  id?: string,
+): readonly [(blueprint: string, parentPiece: string, parentConnector: string, childConnector: string, name?: string | null, description?: string | null, position?: PositionInput | null, scale?: number | null) => void, OperationStatus] {
   const entity = resolveDesign(id);
   return semioInternalOperationBind<Design, [string, string, string, string, string | null | undefined, string | null | undefined, PositionInput | null | undefined, number | null | undefined]>((d, bp, pp, pc, cc, n, desc, pos, sc) =>
     d.addChildPieceWithParentConnection(bp, pp, pc, cc, n, desc, pos, sc),
@@ -1264,10 +1234,9 @@ export function useAddChildPieceWithParentConnection(id?: string): readonly [
 }
 
 /** @emoji ✍️ {@link Design#addHangingChildPieceWithParentConnection}. */
-export function useAddHangingChildPieceWithParentConnection(id?: string): readonly [
-  (blueprint: string, parentPiece: string, parentConnector: string, childConnector: string, position: PositionInput, name?: string | null, description?: string | null, scale?: number | null) => void,
-  OperationStatus,
-] {
+export function useAddHangingChildPieceWithParentConnection(
+  id?: string,
+): readonly [(blueprint: string, parentPiece: string, parentConnector: string, childConnector: string, position: PositionInput, name?: string | null, description?: string | null, scale?: number | null) => void, OperationStatus] {
   const entity = resolveDesign(id);
   return semioInternalOperationBind<Design, [string, string, string, string, PositionInput, string | null | undefined, string | null | undefined, number | null | undefined]>((d, bp, pp, pc, cc, pos, n, desc, sc) =>
     d.addHangingChildPieceWithParentConnection(bp, pp, pc, cc, pos, n, desc, sc),
@@ -1289,9 +1258,7 @@ export function useDeleteDesignPieces(id?: string): readonly [(ids: readonly str
 /** @emoji ✍️ {@link Design#deletePiecesAndConnections}. */
 export function useDeleteDesignPiecesAndConnections(id?: string): readonly [(pieceIds: readonly string[], connectionIds: readonly string[]) => void, OperationStatus] {
   const entity = resolveDesign(id);
-  return semioInternalOperationBind<Design, [readonly string[], readonly string[]]>((d, pieceIds, connectionIds) =>
-    d.deletePiecesAndConnections(pieceIds, connectionIds),
-  )(() => entity);
+  return semioInternalOperationBind<Design, [readonly string[], readonly string[]]>((d, pieceIds, connectionIds) => d.deletePiecesAndConnections(pieceIds, connectionIds))(() => entity);
 }
 
 /**

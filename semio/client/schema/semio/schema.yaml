@@ -1,30 +1,41 @@
 schema:
-  interface:
+  scalar: &scalar
+    - &string
+    - &number
+    - &boolean
+    - &timestamp
+  interface: &interface
     entity: &entity
       fields:
-        id: string
-        hash: string
+        id: *string
+        hash: *string
         owner: *entity
         owns: [*entity]
     weakEntity: &weakEntity
       contraints:
-        - &hashAsId
-          description: "id is hash of entity"
+        - &hashAsId "id is hash of entity"
     strongEntity: &strongEntity
       contraints:
-        - &uuidv7AsId
-          description: "id is uuidv7 at creation time"
-
-    name: string
-class: &class
-  point: &point
-    is:
-    fields:
-      x: number
-      y: number
-      z: number
-  vector: &vector
-    fields:
-      x: number
-      y: number
-      z: number
+        - &uuidv7AsId "id is uuidv7 at creation time"
+    richStrongEntity: &richStrongEntity
+      fields:
+        data:
+          name: *string
+          description: *string
+          icon: *string
+        computed:
+          createdAt: *timestamp
+          createdBy: *string
+  class: &class
+    point: &point
+      implements: [*weakEntity]
+      fields:
+        x: *number
+        y: *number
+        z: *number
+    vector: &vector
+      implements: [*weakEntity]
+      fields:
+        x: *number
+        y: *number
+        z: *number
