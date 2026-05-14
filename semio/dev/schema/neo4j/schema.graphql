@@ -1,5 +1,6 @@
 # https://neo4j.com/docs/graphql/current/
 # Composition and containment use HAS (…); do not persist denormalized owner names/ids/kinds on nodes — use HAS edges only.
+# `IS` is a materialized subtype graph: Interface→Interface includes transitive supertypes; Class and Field→Interface include every ancestor of the declared interface (e.g. strongEntity/weakEntity→entity).
 
 interface Constraint {
   description: String!
@@ -20,6 +21,8 @@ interface Scalar implements Primitive {
   constraints: [Constraint!]! @relationship(type: "HAS", direction: OUT)
 }
 
+union FieldIs = Scalar | Class | Interface
+
 enum FieldKind {
   EMBEDDED
   REFERENCE
@@ -30,11 +33,13 @@ enum FieldKind {
 interface Field implements Node {
   name: String!
   constraints: [Constraint!]! @relationship(type: "HAS", direction: OUT)
+  is: FieldIs! @relationship(type: "IS", direction: OUT)
 }
 
 interface Interface implements Node {
   name: String!
   fields: [Field!]! @relationship(type: "HAS", direction: OUT)
+  is: [Interface!]! @relationship(type: "IS", direction: OUT)
 }
 
 interface Command implements Node {
@@ -44,7 +49,7 @@ interface Command implements Node {
 
 interface Class implements Node @node {
   name: String!
-  interfaces: [Interface!]! @relationship(type: "IMPLEMENTS", direction: OUT)
+  interfaces: [Interface!]! @relationship(type: "IS", direction: OUT)
   fields: [Field!]! @relationship(type: "HAS", direction: OUT)
   methods: [Method!]! @relationship(type: "HAS", direction: OUT)
 }

@@ -1,6 +1,13 @@
 schema:
   primitives:
     - &scalar
+    - &enum
+    - &field
+      kinds:
+        - &EMBEDDED
+        - &REFERENCE
+        - &COMPUTED
+        - &CACHED
     - &interface
     - &class
     - &module
@@ -13,6 +20,7 @@ schema:
       - &timestamp
       - &color
       - &uri
+      - &icon
     interfaces:
       entity: &entity
         fields:
@@ -33,24 +41,30 @@ schema:
       richStrongEntity: &richStrongEntity
         implements: [*strongEntity]
         fields:
-          data:
-            name: *string
-            description: *string
-            icon: *string
-          computed:
-            createdAt: *timestamp
-            createdBy: *string
+          name:
+            is: *string
+            kind: *EMBEDDED
+            constraints:
+              - &nameNonEmpty "name is not empty"
+              - &nameShort "name is less than 100 chars"
+          description:
+            is: *string
+            kind: *EMBEDDED
+            constraints:
+              - &descriptionShort "description is less than 1000 chars"
+          icon: *string
+          createdAt: *timestamp
+          createdBy: *string
       artifact: &artifact
         implements: [*richStrongEntity]
         fields:
-          computed:
-            authoredBy: [*entity]
-            changedIn: [*entity]
-            lastChangedAt: *timestamp
-            lastChangedBy: *entity
-            lastChangedIn: *entity
-            changes: [*entity]
-            edits: [*entity]
+          authoredBy: [*entity]
+          changedIn: [*entity]
+          lastChangedAt: *timestamp
+          lastChangedBy: *entity
+          lastChangedIn: *entity
+          changes: [*entity]
+          edits: [*entity]
       document: &document
         implements: [*artifact]
         fields:
@@ -66,49 +80,8 @@ schema:
   domain: &domain
     is: *module
     interfaces:
-      workspace: &workspace
-        implements: [*strongEntity]
-        fields:
-          data:
-            savedChanges: [*entity]
-            unsavedChanges: [*entity]
-          computed:
-            latestWipCheckpointAncestor: *entity
-            kit: *entity
-          reference:
-            checkpoint: *entity
-      diff: &diff
-        implements: [*weakEntity]
-      modification: &modification
-        implements: [*weakEntity]
-        fields:
-          reference:
-            before: *entity
-            diff: *diff
-            after: *entity
-      operation: &operation
-        implements: [*strongEntity]
-        fields:
-          data:
-            input: *entity
-          computed:
-            modification: *modification
-          reference:
-            scope: *entity
-      backbone: &backbone
-        implements: [*strongEntity]
-        fields:
-          data:
-            uri: *uri
-            status: *string
-      provider: &provider
-        implements: [*strongEntity]
-        fields:
-          data:
-            backbones: [*backbone]
-          computed:
-            backbone: *backbone
       command: &command
+        is: 
         implements: [*weakEntity]
         fields:
           computed:
@@ -366,3 +339,48 @@ schema:
           localProvider: *localProvider
           remoteProviders: [*remoteProvider]
           startedAt: *timestamp
+    vcs: &vcs
+      is: *module
+      interfaces:
+        workspace: &workspace
+          implements: [*strongEntity]
+          fields:
+            data:
+              savedChanges: [*entity]
+              unsavedChanges: [*entity]
+            computed:
+              latestWipCheckpointAncestor: *entity
+              kit: *entity
+            reference:
+              checkpoint: *entity
+        diff: &diff
+          implements: [*weakEntity]
+        modification: &modification
+          implements: [*weakEntity]
+          fields:
+            reference:
+              before: *entity
+              diff: *diff
+              after: *entity
+        operation: &operation
+          implements: [*strongEntity]
+          fields:
+            data:
+              input: *entity
+            computed:
+              modification: *modification
+            reference:
+              scope: *entity
+        backbone: &backbone
+          implements: [*strongEntity]
+          fields:
+            data:
+              uri: *uri
+              status: *string
+        provider: &provider
+          implements: [*strongEntity]
+          fields:
+            data:
+              backbones: [*backbone]
+            computed:
+              backbone: *backbone

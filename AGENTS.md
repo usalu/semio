@@ -34,7 +34,7 @@ You MUST follow the following rules unless explicitly asked to do otherwise:
   - You MUST add all temporary files, logs, scripts, … inside the ticket folder.
   - You MUST NOT delete all temporary files, logs, scripts, … inside the ticket folder after you are done.
   - You MUST NOT create any additional folders or files outside the ticket folder.
-  - You MUST add code to existing files using regions and subregions for structuring. Regions organize code into collapsible sections (e.g., `#region 🔖RegionName` / `#endregion` in C#, or `//#region 🔖RegionName` / `//#endregion` in JavaScript/TypeScript, or `pub mod` in Rust). Every emoji MUST fit the name and be unique among the siblings. Use subregions within regions for hierarchical organization. This keeps related code together and maintains a single source of truth per logical unit.
+  - You MUST add code to existing files using regions and subregions for structuring. Regions organize code into collapsible sections (e.g., `#region RegionName` / `#endregion` in C#, or `//#region RegionName` / `//#endregion` in JavaScript/TypeScript, or `pub mod` in Rust). Use subregions within regions for hierarchical organization. This keeps related code together and maintains a single source of truth per logical unit.
     - You MUST NOT create additional test files for new tests but you MUST extend the existing test files to cover everything.
     - You MUST NOT create additional example files and you MUST implement it directly in the dependent parts.
   - You MUST close the ticket once you are done with the mcp tool `ticket_close` to finish the ticket along with the summary and at all the files you worked on (created, updated or removed). When a dev sends a new message to the chat most likely it is related to the old task and you MAY reopen the same ticket with mcp tool `ticket_reopen`.
@@ -46,9 +46,7 @@ You MUST follow the following rules unless explicitly asked to do otherwise:
   - Available LLMs are: `opus-4-7`, `opus-4-6`, `opus-4-5`, `sonnet-5`, `sonnet-4-5`, `haiku-4-5`, `gemini-3-pro`, `gemini-3-flash`, `gpt-5-5`, `gpt-5-4`, `gpt-5-3-codex`, `gpt-5-2-codex`, `swe-1-5`, `gpt-5-mini`.
   - Available Clients are: `copilot-chat`, `windsurf-chat`, `cursor-chat`, `antigravity-chat`, `claude-code`, `codex`, `droid`, `kiro-cli`.
 
-- You MUST NOT mix technologies (`./elements`, `./coda`, `./semio`) if NOT explicitly asked.
-
-- You MUST summarize definitions (start with a fitting unique emoji and not longer than 256 characters) in language-native docstrings.
+- You MUST NOT mix technologies (`./elements`, `./semio`, `./coda`, `./reuse`) if NOT explicitly asked.
 
 - You MUST NOT assume and you MUST validate your assumptions.
   - You MUST NOT say that a test is passing when you didn't run it.
