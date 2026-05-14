@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: AGPL-3.0-only
 # #region 🔖Compose
-# Dev stack: workspace app container + Neo4j 5. MCP uses bolt://neo4j:7687. semio publishes 7687/7474 to the Docker host; neo4j-host-forward.sh (socat) binds those ports inside semio to neo4j.
+# Dev stack: workspace app container + Neo4j 5. MCP uses bolt://neo4j:7687. semio-entrypoint.sh + neo4j-host-forward.sh bind :7687/:7474 to neo4j; semio publishes 127.0.0.1:7687, 127.0.0.1:17687 (spare), and 127.0.0.1:7474 on the Docker host.
 services:
   neo4j:
     image: neo4j:5-community
@@ -29,13 +29,17 @@ services:
       - "host.docker.internal:host-gateway"
     volumes:
       - ..:/workspaces/semio:cached
-    command: sleep infinity
+    entrypoint:
+      - /bin/bash
+      - /workspaces/semio/.devcontainer/semio-entrypoint.sh
+    command: ["sleep", "infinity"]
     depends_on:
       neo4j:
         condition: service_healthy
     ports:
-      - "7687:7687"
-      - "7474:7474"
+      - "127.0.0.1:7687:7687"
+      - "127.0.0.1:17687:7687"
+      - "127.0.0.1:7474:7474"
 
 volumes:
   neo4j-data:

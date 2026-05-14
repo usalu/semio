@@ -8,9 +8,13 @@ The monorepo registers four Neo4j MCP servers (`neo4j-semio`, `neo4j-elements`, 
 
 **Native (Windows / macOS / Linux):** Run your platform bootstrap (`.devcontainer/install-native.ps1` or `.devcontainer/install-native.sh`) so `NEO4J_URI=bolt://localhost:7687` and credentials are set. Start Neo4j Desktop 2 locally; Bolt listens on `7687` by default.
 
-**Devcontainer:** Neo4j 5 runs as the **`neo4j` Compose service** (see `.devcontainer/docker-compose.yml`). Inside the workspace container, `NEO4J_URI` is **`bolt://neo4j:7687`**. The **`semio`** service **publishes `7687` and `7474` to the Docker host** (so **Windows `127.0.0.1:7687`** reaches the dev container without relying on the editor Ports tunnel). **`neo4j-host-forward.sh`** (from `post-start.sh` / `post-attach.sh`) runs **`socat`** on **`0.0.0.0:7687`** / **`7474`** inside **`semio`** and forwards to **`neo4j`**. `post-start.sh` also runs **`neo4j-bootstrap-databases.py`** so databases **`semio`**, **`elements`**, **`coda`**, and **`reuse`** exist.
+**Devcontainer:** Neo4j 5 runs as the **`neo4j` Compose service**. Inside **`semio`**, `NEO4J_URI` is **`bolt://neo4j:7687`**. **`semio-entrypoint.sh`** waits for Bolt on **`neo4j`**, runs **`neo4j-host-forward.sh`** (socat on **`0.0.0.0:7687`** / **`7474`**), then starts the main process. **`semio`** publishes **`127.0.0.1:7687`**, **`127.0.0.1:17687`** (second map to the same Bolt port if **7687** is busy on the host), and **`127.0.0.1:7474`** to the Docker host. `post-start.sh` / `post-attach.sh` still re-run **`neo4j-host-forward.sh`**. **`neo4j-bootstrap-databases.py`** creates **`semio`**, **`elements`**, **`coda`**, **`reuse`**.
 
-**Bonus — Neo4j Desktop on the Windows host:** 1) **Docker Desktop** must be running. 2) **Reopen in Container** (or recreate the Compose stack) so **`semio`** picks up **`ports: 7687:7687`**. 3) Wait until **post-start** has run (or run `bash .devcontainer/neo4j-host-forward.sh` in a devcontainer terminal). 4) **`Test-NetConnection -ComputerName 127.0.0.1 -Port 7687`** should show **`TcpTestSucceeded : True`**. 5) In Desktop: **`bolt://127.0.0.1:7687`**, user **`neo4j`**, password **`password`**. If port **7687** is already taken on Windows (e.g. local Neo4j Desktop), change the **left** side in compose to e.g. **`17687:7687`** and connect on **`17687`**.
+**Bonus — Neo4j Desktop on Windows:** Docker Desktop must be running. **Reopen in Container** (or recreate the Compose project) so new **`ports`** and **`entrypoint`** apply—**no image rebuild required** for these YAML/script changes. Then:
+
+1. `Test-NetConnection -ComputerName 127.0.0.1 -Port 7687` — if **`TcpTestSucceeded : False`**, try **`Port 17687`** (same Bolt inside the container).
+2. Desktop: **`bolt://127.0.0.1:7687`** or **`bolt://127.0.0.1:17687`**, user **`neo4j`**, password **`password`**.
+3. In **Docker Desktop → Containers → `semio`**, **PORTS** should show **`127.0.0.1:7687->7687`** (and **`17687`**). If **`semio`** is missing or ports empty, the devcontainer stack is not running from this compose file.
 
 **One-time databases:** In the devcontainer they are created automatically. On native Desktop only, create the four databases once if missing.
 
@@ -22,7 +26,11 @@ Devcontainer configuration with VS Code customizations, container/remote env, po
 
 ## docker-compose.yml
 
-Compose stack for the devcontainer: **`semio`** (this workspace image + features) and **`neo4j`** (official `neo4j:5-community` with `NEO4J_AUTH=neo4j/password`). **`semio`** publishes **`7687:7687`** and **`7474:7474`** to the Docker host; **`neo4j-host-forward.sh`** binds those ports inside **`semio`** and forwards to **`neo4j`**. Neo4j itself has no host ports. MCP uses **`bolt://neo4j:7687`** from inside the app container.
+Compose stack for the devcontainer: **`semio`** and **`neo4j`**. **`semio`** uses **`semio-entrypoint.sh`** then **`sleep infinity`**, publishes **`127.0.0.1:7687`**, **`127.0.0.1:17687`**, and **`127.0.0.1:7474`**, and runs **`neo4j-host-forward.sh`** (socat) to **`neo4j`**. MCP uses **`bolt://neo4j:7687`** from inside **`semio`**.
+
+## semio-entrypoint.sh
+
+Waits for **`neo4j:7687`**, runs **`neo4j-host-forward.sh`** once, then **`exec`** the main container command so host port maps hit a live **`socat`** listener as soon as **`semio`** starts.
 
 ## post-create.sh
 
