@@ -2,7 +2,7 @@
 #
 # 2026 Ueli Saluz <ueli@semio-tech.com>
 #
-# Specs: Zero-touch Windows-native bootstrap that upgrades machine dependencies to the current supported baseline with winget, prepares repo-local caches and env vars, syncs workspace dependencies, configures repo-managed hooks/MCP clients, installs required global CLIs, verifies native Neo4j, and installs the local VS Code extension when editor CLIs are available.
+# Specs: Zero-touch Windows-native bootstrap that upgrades machine dependencies to the current supported baseline with winget, prepares repo-local caches and env vars, syncs workspace dependencies, configures repo-managed hooks/MCP clients, verifies a user-created native Neo4j Desktop semio DBMS, and installs the local VS Code extension when editor CLIs are available.
 #
 # Summary: Windows-native bootstrap for the semio monorepo.
 #
@@ -358,7 +358,8 @@ function Invoke-Neo4jCypher {
     param(
         [string]$RepoRoot,
         [string]$Cypher,
-        [string]$Database = "neo4j"
+        [string]$Database = "neo4j",
+        [string]$RequiredOutputPattern = ""
     )
 
     Use-MicrosoftOpenJdk21
@@ -375,13 +376,21 @@ function Invoke-Neo4jCypher {
             "-u", "neo4j",
             "-p", "password",
             "-d", $Database,
+            "--format", "plain",
             $Cypher
         )
         $previousErrorActionPreference = $ErrorActionPreference
         $ErrorActionPreference = "Continue"
         try {
             & $cypherShell @arguments > $stdout 2> $stderr
-            return $LASTEXITCODE -eq 0
+            if ($LASTEXITCODE -ne 0) {
+                return $false
+            }
+            if ($RequiredOutputPattern) {
+                $output = Get-Content -LiteralPath $stdout -Raw -ErrorAction SilentlyContinue
+                return $output -match $RequiredOutputPattern
+            }
+            return $true
         } finally {
             $ErrorActionPreference = $previousErrorActionPreference
         }
@@ -398,6 +407,107 @@ function Get-Neo4jSchemaUri {
 
     $rootUri = ($RepoRoot -replace "\\", "/")
     return "file:///$rootUri/.repo/\uD83D\uDEC2/$Technology.cypher"
+}
+
+function Get-RunningNeo4jDesktopDbmsHome {
+    $processes = Get-CimInstance Win32_Process | Where-Object {
+        $_.CommandLine -and
+        $_.CommandLine -match "--home-dir=" -and
+        $_.CommandLine -match "\\.Neo4jDesktop2?\\Data\\dbmss\\"
+    }
+    foreach ($process in $processes) {
+        if ($process.CommandLine -match '--home-dir="([^"]+)"') {
+            return $Matches[1]
+        }
+        if ($process.CommandLine -match '--home-dir=([^\s]+)') {
+            return $Matches[1]
+        }
+    }
+    return $null
+}
+
+function Set-TextSetting {
+    param(
+        [string]$Path,
+        [string]$Key,
+        [string]$Value
+    )
+
+    $lines = @()
+    if (Test-Path -LiteralPath $Path) {
+        $lines = Get-Content -LiteralPath $Path
+    }
+    $pattern = "^[#\s]*$([Regex]::Escape($Key))="
+    $matched = $false
+    $lines = @($lines | ForEach-Object {
+        if ($_ -match $pattern) {
+            $matched = $true
+            "$Key=$Value"
+        } else {
+            $_
+        }
+    })
+    if (-not $matched) {
+        $lines += "$Key=$Value"
+    }
+    Set-TextFileUtf8NoBom -Path $Path -Value $lines
+}
+
+function Install-Neo4jDesktopApoc {
+    param([string]$RepoRoot)
+
+    $dbmsHome = Get-RunningNeo4jDesktopDbmsHome
+    if (-not $dbmsHome) {
+        Write-Step "APOC auto-install skipped because the reachable DBMS is not a running Neo4j Desktop local DBMS."
+        return $false
+    }
+
+    $plugins = Join-Path $dbmsHome "plugins"
+    $labs = Join-Path $dbmsHome "labs"
+    $conf = Join-Path $dbmsHome "conf"
+    Ensure-Directory -Path $plugins
+    $coreJar = Get-ChildItem -LiteralPath $labs -Filter "apoc-*-core.jar" -ErrorAction SilentlyContinue | Sort-Object Name -Descending | Select-Object -First 1
+    if ($coreJar) {
+        Copy-Item -LiteralPath $coreJar.FullName -Destination (Join-Path $plugins $coreJar.Name) -Force
+        if ($coreJar.Name -match "apoc-(.+)-core\.jar") {
+            $apocVersion = $Matches[1]
+            $extendedJar = Join-Path $plugins ("apoc-extended-{0}.jar" -f $apocVersion)
+            if (-not (Test-Path -LiteralPath $extendedJar)) {
+                Invoke-WebRequest -Uri "https://repo.maven.apache.org/maven2/org/neo4j/procedure/apoc-extended/$apocVersion/apoc-extended-$apocVersion.jar" -OutFile $extendedJar
+            }
+        }
+    }
+
+    Set-TextSetting -Path (Join-Path $conf "neo4j.conf") -Key "dbms.security.procedures.allowlist" -Value "apoc.*"
+    Set-TextSetting -Path (Join-Path $conf "neo4j.conf") -Key "dbms.security.procedures.unrestricted" -Value "apoc.*"
+    Set-TextSetting -Path (Join-Path $conf "neo4j.conf") -Key "server.directories.import" -Value (($RepoRoot -replace "\\", "/"))
+    Set-TextSetting -Path (Join-Path $conf "apoc.conf") -Key "apoc.export.file.enabled" -Value "true"
+    Set-TextSetting -Path (Join-Path $conf "apoc.conf") -Key "apoc.import.file.enabled" -Value "true"
+    Set-TextSetting -Path (Join-Path $conf "apoc.conf") -Key "apoc.import.file.use_neo4j_config" -Value "false"
+
+    $neo4jBat = Join-Path $dbmsHome "bin\neo4j.bat"
+    if (Test-Path -LiteralPath $neo4jBat) {
+        Write-Step "Restarting Neo4j Desktop local semio DBMS to load APOC..."
+        Use-MicrosoftOpenJdk21
+        $escapedHome = [Regex]::Escape($dbmsHome)
+        $processes = Get-CimInstance Win32_Process | Where-Object {
+            $_.Name -match "^java" -and $_.CommandLine -match $escapedHome
+        }
+        foreach ($process in $processes) {
+            Stop-Process -Id $process.ProcessId -Force
+        }
+        for ($i = 0; $i -lt 30 -and (Test-TcpPort -HostName "127.0.0.1" -Port 7687); $i++) {
+            Start-Sleep -Seconds 1
+        }
+        Start-Process -FilePath $neo4jBat -ArgumentList @("console") -WorkingDirectory $dbmsHome -WindowStyle Hidden | Out-Null
+        for ($i = 0; $i -lt 45 -and -not (Test-TcpPort -HostName "127.0.0.1" -Port 7687); $i++) {
+            Start-Sleep -Seconds 2
+        }
+    } else {
+        Write-Step "APOC installed into the semio DBMS. Restart it in Neo4j Desktop to load the plugin."
+    }
+
+    return $true
 }
 
 function Get-JavaMajorVersion {
@@ -432,7 +542,7 @@ function Use-MicrosoftOpenJdk21 {
     }
 }
 
-function Ensure-NativeNeo4jRuntime {
+function Ensure-NativeNeo4jTools {
     param([string]$RepoRoot)
 
     $cacheRoot = Join-Path $RepoRoot ".repo\cache\neo4j"
@@ -442,9 +552,9 @@ function Ensure-NativeNeo4jRuntime {
 
     if (-not (Test-Path -LiteralPath $runtimeRoot)) {
         $url = "https://dist.neo4j.org/neo4j-community-$($script:Neo4jVersion)-windows.zip"
-        Write-Step "Downloading native Neo4j Community $($script:Neo4jVersion)..."
+        Write-Step "Downloading Neo4j Community $($script:Neo4jVersion) tools for cypher-shell..."
         Invoke-WebRequest -Uri $url -OutFile $zipPath
-        Write-Step "Extracting native Neo4j runtime..."
+        Write-Step "Extracting Neo4j tools..."
         Expand-Archive -LiteralPath $zipPath -DestinationPath $cacheRoot -Force
     }
 
@@ -507,61 +617,27 @@ function Ensure-NativeNeo4jRuntime {
     return $runtimeRoot
 }
 
-function Start-NativeNeo4jRuntime {
-    param([string]$RuntimeRoot)
-
-    Use-MicrosoftOpenJdk21
-    if ((Get-JavaMajorVersion) -lt 21) {
-        Write-Step "Java 21+ is required for Neo4j. Run setup.windows.script.ps1 without -SessionStart to install Microsoft OpenJDK 21."
-        return
-    }
-
-    $neo4jAdmin = Join-Path $RuntimeRoot "bin\neo4j-admin.bat"
-    $neo4jBat = Join-Path $RuntimeRoot "bin\neo4j.bat"
-    $authIni = Join-Path $RuntimeRoot "data\dbms\auth.ini"
-    $auth = Join-Path $RuntimeRoot "data\dbms\auth"
-    if ((-not (Test-Path -LiteralPath $authIni)) -and (-not (Test-Path -LiteralPath $auth))) {
-        $logRoot = Join-Path (Get-RepoRoot) ".repo\cache\neo4j"
-        Ensure-Directory -Path $logRoot
-        Start-Process -FilePath $neo4jAdmin -ArgumentList @("dbms", "set-initial-password", "password") -WorkingDirectory $RuntimeRoot -NoNewWindow -Wait -PassThru -RedirectStandardOutput (Join-Path $logRoot "neo4j-admin.stdout.log") -RedirectStandardError (Join-Path $logRoot "neo4j-admin.stderr.log") | Out-Null
-    }
-
-    Write-Step "Starting repo-local native Neo4j runtime..."
-    Start-Process -FilePath $neo4jBat -ArgumentList @("console") -WorkingDirectory $RuntimeRoot -WindowStyle Hidden | Out-Null
-}
-
 function Ensure-NativeNeo4j {
     param([string]$RepoRoot)
 
     $technologies = @("semio", "elements", "coda", "reuse")
-    $runtimeRoot = Ensure-NativeNeo4jRuntime -RepoRoot $RepoRoot
     if (Test-TcpPort -HostName "127.0.0.1" -Port 7687) {
         Write-Step "Neo4j is reachable at bolt://localhost:7687."
     } else {
-        $service = Get-Service -Name "neo4j*" -ErrorAction SilentlyContinue | Select-Object -First 1
-        if ($service -and $service.Status -ne "Running") {
-            Write-Step "Starting local Neo4j service $($service.Name)..."
-            Start-Service -Name $service.Name
-            Start-Sleep -Seconds 5
-        }
-        if (-not (Test-TcpPort -HostName "127.0.0.1" -Port 7687)) {
-            Start-NativeNeo4jRuntime -RuntimeRoot $runtimeRoot
-        }
-
-        for ($i = 0; $i -lt 30 -and -not (Test-TcpPort -HostName "127.0.0.1" -Port 7687); $i++) {
-            Start-Sleep -Seconds 2
-        }
-    }
-
-    if (-not (Test-TcpPort -HostName "127.0.0.1" -Port 7687)) {
-        Write-Step "Neo4j is not reachable yet. Start the local semio DBMS in native Neo4j Desktop."
+        Write-Step "Neo4j is not reachable. Create and start a native Neo4j Desktop local DBMS named semio on Bolt port 7687, password password, then run this setup again."
         return
     }
 
-    $apocReady = Invoke-Neo4jCypher -RepoRoot $RepoRoot -Database "neo4j" -Cypher "SHOW PROCEDURES YIELD name WHERE name IN ['apoc.cypher.runFile', 'apoc.export.cypher.query'] RETURN count(name) AS count;"
+    Ensure-NativeNeo4jTools -RepoRoot $RepoRoot | Out-Null
+    $apocReady = Invoke-Neo4jCypher -RepoRoot $RepoRoot -Database "neo4j" -Cypher "SHOW PROCEDURES YIELD name WHERE name IN ['apoc.cypher.runFile', 'apoc.export.cypher.query'] RETURN count(name) AS count;" -RequiredOutputPattern "\b2\b"
     if (-not $apocReady) {
-        Write-Step "Neo4j is reachable but APOC is not ready yet."
-        return
+        if (Install-Neo4jDesktopApoc -RepoRoot $RepoRoot) {
+            $apocReady = Invoke-Neo4jCypher -RepoRoot $RepoRoot -Database "neo4j" -Cypher "SHOW PROCEDURES YIELD name WHERE name IN ['apoc.cypher.runFile', 'apoc.export.cypher.query'] RETURN count(name) AS count;" -RequiredOutputPattern "\b2\b"
+        }
+        if (-not $apocReady) {
+            Write-Step "Neo4j is reachable, but APOC is not ready. In Neo4j Desktop, install/enable APOC for the local semio DBMS and restart it."
+            return
+        }
     }
 
     foreach ($technology in $technologies) {

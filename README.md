@@ -538,7 +538,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File setup.windows.script.ps1
 The script installs the same baseline toolchain the devcontainer provides on a fresh machine:
 
 - Git, Git LFS, GitHub CLI, ripgrep, jq, SQLite
-- Microsoft OpenJDK 21 and repo-local Neo4j Community with APOC
+- Microsoft OpenJDK 21 and native Neo4j Desktop integration
 - Node.js 24 LTS + npm 11.7, Go 1.26, Python 3.14, uv, rustup, .NET SDK 8/9/10
 - GitKraken Desktop + CLI, F3D, VS Code + `code`
 - Gemini CLI, TypeScript LSP, Pyright
@@ -546,7 +546,7 @@ The script installs the same baseline toolchain the devcontainer provides on a f
 
 After the bootstrap completes, open a new terminal and use the same repo commands as in the devcontainer. The script also keeps `PLAYWRIGHT_BROWSERS_PATH` on the repo-local shared cache so Playwright downloads stay warm across runs.
 
-Neo4j Desktop can connect directly to the native repo-local DBMS:
+Native Neo4j Desktop must own the local DBMS. Create a Neo4j Desktop **Local Instance** named `semio`, set the initial password to `password`, and start it. The repo setup then enables APOC on that DBMS, restarts it when needed, and configures/imports through Bolt without editing Desktop internals:
 
 - URL: `bolt://127.0.0.1:7687`
 - User: `neo4j`
@@ -561,7 +561,7 @@ bash setup.mac.sh
 bash setup.linux.sh
 ```
 
-IDE startup runs the matching `start.*` script, which checks the native Neo4j endpoint at `bolt://localhost:7687` and attempts to create the technology databases `semio`, `elements`, `coda`, and `reuse` when the native DBMS edition supports multi-database administration.
+IDE startup runs the matching `start.*` script, which checks the native Neo4j Desktop `semio` DBMS at `bolt://localhost:7687`, verifies APOC, and attempts to create the technology databases `semio`, `elements`, `coda`, and `reuse` when the native DBMS edition supports multi-database administration. Neo4j Community uses the default `neo4j` database.
 
 ## 🪄 [AI](AGENTS.md) [↑](#-development-)
 

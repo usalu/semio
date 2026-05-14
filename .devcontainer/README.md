@@ -6,7 +6,7 @@ Devcontainer configuration and lifecycle scripts.
 
 The monorepo registers one Neo4j MCP server (`neo4j`) in `.mcp.json` and per-client copies. It uses `uvx mcp-neo4j-cypher` against the default `neo4j` database.
 
-**Native (Windows / macOS / Linux):** Run your root platform bootstrap (`setup.windows.script.ps1`, `setup.mac.sh`, or `setup.linux.sh`) so `NEO4J_URI=bolt://localhost:7687` and credentials are set. Native setup uses the native Neo4j Desktop/DBMS only; it does not depend on the devcontainer.
+**Native (Windows / macOS / Linux):** Create a Neo4j Desktop **Local Instance** named **`semio`**, set password **`password`**, and start it on Bolt port **`7687`**. Then run your root platform bootstrap (`setup.windows.script.ps1`, `setup.mac.sh`, or `setup.linux.sh`) so `NEO4J_URI=bolt://localhost:7687` and credentials are set. Native setup enables APOC on the local DBMS when needed, uses the native Neo4j Desktop/DBMS only, does not depend on the devcontainer, and does not edit Desktop internals.
 
 Native Neo4j Desktop connection:
 
@@ -18,7 +18,7 @@ Native Neo4j Desktop connection:
 
 **Devcontainer:** Neo4j 5 Community runs inside the single **`semio`** devcontainer. Inside **`semio`**, `NEO4J_URI` is **`bolt://localhost:7687`**. The **`semio`** container publishes **`127.0.0.1:7687`** (Bolt) and **`127.0.0.1:7474`** (Browser) to the Docker host, and `devcontainer.json` forwards both ports for Codespaces and local devcontainers.
 
-**Neo4j Desktop remote connection:** Docker Desktop must be running for local devcontainers. **Reopen in Container** after the image has been rebuilt once so the Neo4j Debian package is available inside **`semio`**. Then:
+**Neo4j Desktop remote connection for devcontainers:** Docker Desktop must be running for local devcontainers. **Reopen in Container** after the image has been rebuilt once so the Neo4j Debian package is available inside **`semio`**. Then:
 
 1. `Test-NetConnection -ComputerName 127.0.0.1 -Port 7687` on Windows, or `nc -vz 127.0.0.1 7687` on macOS/Linux.
 2. Desktop: **`bolt://127.0.0.1:7687`**, user **`neo4j`**, password **`password`**.

@@ -80,11 +80,101 @@ is_neo4j_reachable() {
 run_cypher() {
   local database="$1"
   local cypher="$2"
+  local bundled_cypher_shell="$REPO_ROOT/.repo/cache/neo4j/neo4j-community-$NEO4J_VERSION/bin/cypher-shell"
   if command -v cypher-shell >/dev/null 2>&1; then
-    cypher-shell -a bolt://localhost:7687 -u neo4j -p password -d "$database" "$cypher" >/dev/null 2>&1
+    cypher-shell -a bolt://localhost:7687 -u neo4j -p password -d "$database" --format plain "$cypher" >/dev/null 2>&1
+    return $?
+  fi
+  if [ -x "$bundled_cypher_shell" ]; then
+    "$bundled_cypher_shell" -a bolt://localhost:7687 -u neo4j -p password -d "$database" --format plain "$cypher" >/dev/null 2>&1
     return $?
   fi
   return 1
+}
+
+run_cypher_expect() {
+  local database="$1"
+  local cypher="$2"
+  local pattern="$3"
+  local bundled_cypher_shell="$REPO_ROOT/.repo/cache/neo4j/neo4j-community-$NEO4J_VERSION/bin/cypher-shell"
+  local output
+  if command -v cypher-shell >/dev/null 2>&1; then
+    output="$(cypher-shell -a bolt://localhost:7687 -u neo4j -p password -d "$database" --format plain "$cypher" 2>/dev/null)" || return 1
+    printf '%s\n' "$output" | grep -Eq "$pattern"
+    return $?
+  fi
+  if [ -x "$bundled_cypher_shell" ]; then
+    output="$("$bundled_cypher_shell" -a bolt://localhost:7687 -u neo4j -p password -d "$database" --format plain "$cypher" 2>/dev/null)" || return 1
+    printf '%s\n' "$output" | grep -Eq "$pattern"
+    return $?
+  fi
+  return 1
+}
+
+neo4j_schema_cypher_uri() {
+  local technology="$1"
+  printf 'file://%s/.repo/\\uD83D\\uDEC2/%s.cypher\n' "$REPO_ROOT" "$technology"
+}
+
+detect_neo4j_desktop_dbms_home() {
+  ps -eo args 2>/dev/null | sed -nE 's/.*--home-dir="?([^" ]*\.Neo4jDesktop2?\/Data\/dbmss\/[^" ]+)"?.*/\1/p' | head -1
+}
+
+set_text_setting() {
+  local file="$1"
+  local key="$2"
+  local value="$3"
+  mkdir -p "$(dirname "$file")"
+  touch "$file"
+  if grep -Eq "^[#[:space:]]*${key}=" "$file"; then
+    sed -i.bak -E "s|^[#[:space:]]*${key}=.*|${key}=${value}|" "$file"
+  else
+    printf '%s=%s\n' "$key" "$value" >>"$file"
+  fi
+}
+
+install_neo4j_desktop_apoc() {
+  local dbms_home
+  dbms_home="$(detect_neo4j_desktop_dbms_home)"
+  if [ -z "$dbms_home" ]; then
+    log "APOC auto-install skipped because the reachable DBMS is not a running Neo4j Desktop local DBMS."
+    return 1
+  fi
+
+  mkdir -p "$dbms_home/plugins"
+  local core_jar
+  core_jar="$(find "$dbms_home/labs" -maxdepth 1 -type f -name 'apoc-*-core.jar' 2>/dev/null | sort -r | head -1)"
+  if [ -n "$core_jar" ]; then
+    cp -f "$core_jar" "$dbms_home/plugins/$(basename "$core_jar")"
+    local apoc_version
+    apoc_version="$(basename "$core_jar" | sed -nE 's/apoc-(.+)-core\.jar/\1/p')"
+    if [ -n "$apoc_version" ] && [ ! -f "$dbms_home/plugins/apoc-extended-$apoc_version.jar" ]; then
+      curl -fSL --retry 3 --retry-delay 2 -o "$dbms_home/plugins/apoc-extended-$apoc_version.jar" "https://repo.maven.apache.org/maven2/org/neo4j/procedure/apoc-extended/$apoc_version/apoc-extended-$apoc_version.jar"
+    fi
+  fi
+
+  set_text_setting "$dbms_home/conf/neo4j.conf" "dbms.security.procedures.allowlist" "apoc.*"
+  set_text_setting "$dbms_home/conf/neo4j.conf" "dbms.security.procedures.unrestricted" "apoc.*"
+  set_text_setting "$dbms_home/conf/neo4j.conf" "server.directories.import" "$REPO_ROOT"
+  set_text_setting "$dbms_home/conf/apoc.conf" "apoc.export.file.enabled" "true"
+  set_text_setting "$dbms_home/conf/apoc.conf" "apoc.import.file.enabled" "true"
+  set_text_setting "$dbms_home/conf/apoc.conf" "apoc.import.file.use_neo4j_config" "false"
+
+  if [ -x "$dbms_home/bin/neo4j" ]; then
+    log "Restarting Neo4j Desktop local semio DBMS to load APOC..."
+    pkill -f "$dbms_home" >/dev/null 2>&1 || true
+    for _ in $(seq 1 30); do
+      is_neo4j_reachable || break
+      sleep 1
+    done
+    nohup "$dbms_home/bin/neo4j" console >"$dbms_home/logs/semio-native-console.log" 2>&1 &
+    for _ in $(seq 1 45); do
+      is_neo4j_reachable && break
+      sleep 2
+    done
+  else
+    log "APOC installed into the semio DBMS. Restart it in Neo4j Desktop to load the plugin."
+  fi
 }
 
 java_major_version() {
@@ -128,13 +218,13 @@ ensure_java_runtime() {
   esac
 }
 
-ensure_native_neo4j_runtime() {
+ensure_native_neo4j_tools() {
   local cache_root="$REPO_ROOT/.repo/cache/neo4j"
   local runtime_root="$cache_root/neo4j-community-$NEO4J_VERSION"
   mkdir -p "$cache_root"
   if [ ! -d "$runtime_root" ]; then
     local archive="$cache_root/neo4j-community-$NEO4J_VERSION-unix.tar.gz"
-    log "Downloading native Neo4j Community $NEO4J_VERSION..."
+    log "Downloading Neo4j Community $NEO4J_VERSION tools for cypher-shell..."
     curl -fSL --retry 3 --retry-delay 2 -o "$archive" "https://dist.neo4j.org/neo4j-community-$NEO4J_VERSION-unix.tar.gz"
     tar -xzf "$archive" -C "$cache_root"
   fi
@@ -177,39 +267,22 @@ set_conf_value() {
   fi
 }
 
-start_native_neo4j_runtime() {
-  local runtime_root="$1"
-  ensure_java_runtime || return 0
-  if [ ! -f "$runtime_root/data/dbms/auth.ini" ] && [ ! -f "$runtime_root/data/dbms/auth" ]; then
-    "$runtime_root/bin/neo4j-admin" dbms set-initial-password password >/dev/null 2>&1 || true
-  fi
-  log "Starting repo-local native Neo4j runtime..."
-  mkdir -p "$runtime_root/logs"
-  nohup "$runtime_root/bin/neo4j" console >"$runtime_root/logs/semio-native-console.log" 2>&1 &
-}
-
 ensure_native_neo4j() {
   local runtime_root
-  runtime_root="$(ensure_native_neo4j_runtime)"
   if is_neo4j_reachable; then
     log "Neo4j is reachable at bolt://localhost:7687."
   else
-    if command -v neo4j >/dev/null 2>&1; then
-      log "Starting local Neo4j service..."
-      neo4j start >/dev/null 2>&1 || true
-    fi
-    if ! is_neo4j_reachable; then
-      start_native_neo4j_runtime "$runtime_root"
-    fi
-    for _ in $(seq 1 30); do
-      is_neo4j_reachable && break
-      sleep 2
-    done
+    log "Neo4j is not reachable. Create and start a native Neo4j Desktop local DBMS named semio on Bolt port 7687, password password, then run this setup again."
+    return 0
   fi
 
-  if ! is_neo4j_reachable; then
-    log "Neo4j is not reachable yet. Start the local semio DBMS in native Neo4j Desktop."
-    return 0
+  runtime_root="$(ensure_native_neo4j_tools)"
+  if ! run_cypher_expect neo4j "SHOW PROCEDURES YIELD name WHERE name IN ['apoc.cypher.runFile', 'apoc.export.cypher.query'] RETURN count(name) AS count;" "\\b2\\b"; then
+    install_neo4j_desktop_apoc || true
+    if ! run_cypher_expect neo4j "SHOW PROCEDURES YIELD name WHERE name IN ['apoc.cypher.runFile', 'apoc.export.cypher.query'] RETURN count(name) AS count;" "\\b2\\b"; then
+      log "Neo4j is reachable, but APOC is not ready. In Neo4j Desktop, install/enable APOC for the local semio DBMS and restart it."
+      return 0
+    fi
   fi
 
   for technology in semio elements coda reuse; do
@@ -217,6 +290,13 @@ ensure_native_neo4j() {
       log "Neo4j database ready: ${technology}."
     else
       log "Neo4j database ${technology} was not created; using the reachable default database for this setup."
+    fi
+    local schema_file="$REPO_ROOT/.repo/🛂/${technology}.cypher"
+    if [ -f "$schema_file" ] && grep -Eqv '^[[:space:]]*(//|:|$)' "$schema_file"; then
+      local schema_uri
+      schema_uri="$(neo4j_schema_cypher_uri "$technology")"
+      run_cypher neo4j "CALL apoc.cypher.runFile('$schema_uri') YIELD row RETURN count(row) AS rows;" || true
+      log "Neo4j schema imported: ${technology}."
     fi
   done
 }
