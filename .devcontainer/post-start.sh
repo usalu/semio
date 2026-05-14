@@ -53,7 +53,7 @@ configure_emoji_fonts() {
   <!-- Force emoji rendering for color emoji -->
   <match target="pattern">
     <test name="family">
-      <string>Noto Color Emoji</family>
+      <string>Noto Color Emoji</string>
     </test>
     <edit name="fontformat" mode="assign">
       <string>TrueType</string>
@@ -98,6 +98,38 @@ echo "✅ Fixed ownership for persisted volume mounts."
 #region 🔖EmojiFonts
 configure_emoji_fonts
 #endregion 🔖EmojiFonts
+#region 🔖Neo4jHostEnv
+configure_neo4j_host_env() {
+  local profile_script="/etc/profile.d/99-semio-neo4j-mcp.sh"
+  sudo tee "$profile_script" >/dev/null <<'NEO4JPROFILE'
+export NEO4J_URI=bolt://host.docker.internal:7687
+export NEO4J_USERNAME=neo4j
+export NEO4J_PASSWORD=password
+export NEO4J_TELEMETRY=false
+NEO4JPROFILE
+  sudo chmod 0644 "$profile_script" || true
+  local marker="#region 🔌Neo4jMcp"
+  local bashrc="${HOME}/.bashrc"
+  if [ -f "$bashrc" ] && ! grep -Fq "$marker" "$bashrc" 2>/dev/null; then
+    cat >>"$bashrc" <<'BASHRC'
+
+#region 🔌Neo4jMcp
+if [ -f /etc/profile.d/99-semio-neo4j-mcp.sh ]; then
+  # shellcheck source=/dev/null
+  . /etc/profile.d/99-semio-neo4j-mcp.sh
+fi
+#endregion 🔌Neo4jMcp
+BASHRC
+  fi
+  if [ -f /etc/profile.d/99-semio-neo4j-mcp.sh ]; then
+    # shellcheck source=/dev/null
+    . /etc/profile.d/99-semio-neo4j-mcp.sh
+  fi
+  echo "✅ Neo4j MCP host env (bolt via host.docker.internal) installed for login shells and this session."
+}
+
+configure_neo4j_host_env
+#endregion 🔖Neo4jHostEnv
 #region 🔖ClaudeAuth
 CLAUDE_HOME="/home/vscode"
 CLAUDE_DIR="${CLAUDE_HOME}/.claude"

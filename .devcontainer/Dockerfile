@@ -69,6 +69,10 @@ ENV BUN_INSTALL=/home/vscode/.bun
 RUN curl -fsSL https://bun.sh/install | bash
 ENV PATH=/home/vscode/.bun/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 ENV NX_WORKSPACE_DATA_DIRECTORY=/workspaces/semio/.nx/workspace-data-terminal
+ENV NEO4J_URI=bolt://host.docker.internal:7687
+ENV NEO4J_USERNAME=neo4j
+ENV NEO4J_PASSWORD=password
+ENV NEO4J_TELEMETRY=false
 
 RUN mkdir -p /home/vscode/.local/bin \
     /home/vscode/.gitkraken \
