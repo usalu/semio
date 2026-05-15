@@ -596,6 +596,123 @@ function main(): void {
     process.exit(1);
   }
 
+  const probeNoCommandModuleOrInterface = spawnSync(
+    shell,
+    [
+      "-a",
+      process.env.NEO4J_URI || "bolt://localhost:7687",
+      "-u",
+      process.env.NEO4J_USERNAME || "neo4j",
+      "-p",
+      process.env.NEO4J_PASSWORD || "password",
+      "-d",
+      DATABASE,
+      "--format",
+      "plain",
+      "OPTIONAL MATCH (m:Module {name:'Command'}) " +
+        "WITH count(m) AS moduleCommand " +
+        "OPTIONAL MATCH (ic:Interface {name:'Command'}) " +
+        "RETURN moduleCommand, count(ic) AS interfaceCommand;",
+    ],
+    { encoding: "utf8", cwd: REPO_ROOT, env: buildCypherEnv() },
+  );
+
+  if (probeNoCommandModuleOrInterface.status !== 0) {
+    console.error(`[migrate:neo4j] Command module/interface verify failed: ${probeNoCommandModuleOrInterface.stderr}`);
+    process.exit(1);
+  }
+
+  const ncTail = String(probeNoCommandModuleOrInterface.stdout ?? "")
+    .trim()
+    .split(/\r?\n/)
+    .map((l) => l.trim())
+    .filter(Boolean);
+  const ncLast = ncTail[ncTail.length - 1] ?? "";
+  const ncParts = ncLast.split(/\s+/).filter(Boolean);
+  const moduleCommand = Number.parseInt(ncParts[0] ?? "", 10);
+  const interfaceCommand = Number.parseInt(ncParts[1] ?? "", 10);
+  if (!Number.isFinite(moduleCommand) || moduleCommand !== 0 || !Number.isFinite(interfaceCommand) || interfaceCommand !== 0) {
+    console.error(
+      `[migrate:neo4j] expected no Module or Interface named Command after consolidation; verify output:\n${probeNoCommandModuleOrInterface.stdout}`,
+    );
+    process.exit(1);
+  }
+
+  const probeVcsOwnsOperationsModule = spawnSync(
+    shell,
+    [
+      "-a",
+      process.env.NEO4J_URI || "bolt://localhost:7687",
+      "-u",
+      process.env.NEO4J_USERNAME || "neo4j",
+      "-p",
+      process.env.NEO4J_PASSWORD || "password",
+      "-d",
+      DATABASE,
+      "--format",
+      "plain",
+      "MATCH (:Module {name:'VCS'})-[:OWNS]->(ops:Module {name:'Operations'}) RETURN count(ops) AS vcsOwnsOps;",
+    ],
+    { encoding: "utf8", cwd: REPO_ROOT, env: buildCypherEnv() },
+  );
+
+  if (probeVcsOwnsOperationsModule.status !== 0) {
+    console.error(`[migrate:neo4j] VCS Operations module verify failed: ${probeVcsOwnsOperationsModule.stderr}`);
+    process.exit(1);
+  }
+
+  const voTail = String(probeVcsOwnsOperationsModule.stdout ?? "")
+    .trim()
+    .split(/\r?\n/)
+    .map((l) => l.trim())
+    .filter(Boolean);
+  const voLast = voTail[voTail.length - 1] ?? "";
+  const vcsOwnsOps = Number.parseInt(voLast.trim(), 10);
+  if (!Number.isFinite(vcsOwnsOps) || vcsOwnsOps < 1) {
+    console.error(
+      `[migrate:neo4j] expected VCS to OWNS Module Operations; verify output:\n${probeVcsOwnsOperationsModule.stdout}`,
+    );
+    process.exit(1);
+  }
+
+  const probePieceOperationModuleChain = spawnSync(
+    shell,
+    [
+      "-a",
+      process.env.NEO4J_URI || "bolt://localhost:7687",
+      "-u",
+      process.env.NEO4J_USERNAME || "neo4j",
+      "-p",
+      process.env.NEO4J_PASSWORD || "password",
+      "-d",
+      DATABASE,
+      "--format",
+      "plain",
+      "MATCH (:Class {name:'Piece'})-[:OWNS]->(:Module {name:'operation'})-[:OWNS]->(:Class {name:'RenamedPiece'}) " +
+        "RETURN count(*) AS pieceOpChain;",
+    ],
+    { encoding: "utf8", cwd: REPO_ROOT, env: buildCypherEnv() },
+  );
+
+  if (probePieceOperationModuleChain.status !== 0) {
+    console.error(`[migrate:neo4j] Piece operation module chain verify failed: ${probePieceOperationModuleChain.stderr}`);
+    process.exit(1);
+  }
+
+  const poTail = String(probePieceOperationModuleChain.stdout ?? "")
+    .trim()
+    .split(/\r?\n/)
+    .map((l) => l.trim())
+    .filter(Boolean);
+  const poLast = poTail[poTail.length - 1] ?? "";
+  const pieceOpChain = Number.parseInt(poLast.trim(), 10);
+  if (!Number.isFinite(pieceOpChain) || pieceOpChain < 1) {
+    console.error(
+      `[migrate:neo4j] expected Piece-OWNS-Module(operation)-OWNS-RenamedPiece chain; verify output:\n${probePieceOperationModuleChain.stdout}`,
+    );
+    process.exit(1);
+  }
+
   console.log("[migrate:neo4j] handwritten migrations ok.");
 }
 

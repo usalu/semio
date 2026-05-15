@@ -1,5 +1,5 @@
 // #region 🧲Header
-// 💻 elements/client/lib/board/play/playwright.config.ts — E2E against the Vite board play harness (Vello + WebGPU).
+// 💻 elements/client/lib/board/play/playwright.config.ts — E2E against the Vite board play harness (WebGPU raster).
 // #endregion 🧲Header
 
 import path from "node:path";

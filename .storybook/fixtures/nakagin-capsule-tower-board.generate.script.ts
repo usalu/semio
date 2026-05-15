@@ -1,7 +1,7 @@
 // #region 🧲Header
 // 💻 .storybook/fixtures/nakagin-capsule-tower-board.generate.script.ts
 // Specs: Regenerate `nakagin-capsule-tower.board.json` from `metabolism.kit.semio.json` parent Nakagin design (180 pieces, 179 connections).
-// Summary: Force-layout screen positions; handle ids use type connector names (`link` when unnamed); edges mirror kit `connections`.
+// Summary: Force-layout positions are piece centers on the unfolded sheet; `cs_*` slabs export as centered rectangles (64×96); handle angles aim at neighbor centers; handle ids use connector names (`link` when unnamed); edges mirror kit `connections`.
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 // #endregion 🧲Header
 
@@ -70,17 +70,22 @@ function handleId(typeById: Record<string, KitType>, pieceId: string, connectorI
 	return `${pieceId}:${connectorName(typeById, piece, connectorId)}`;
 }
 
-function pieceRadius(p: KitPiece): number {
+type PieceLayout =
+	| { bounds: "circle"; radius: number }
+	| { bounds: "rectangle"; height: number; width: number };
+
+/** @emoji 📐 Nakagin kit `cs_*` slabs are rectangles in the flat layout; `x`/`y` stay cell centers (u/v center on the unfolded sheet). */
+function pieceLayout(p: KitPiece): PieceLayout {
 	if (p.name === "b") {
-		return 20;
+		return { bounds: "circle", radius: 20 };
 	}
 	if (p.name.startsWith("cs_")) {
-		return 10;
+		return { bounds: "rectangle", height: 96, width: 64 };
 	}
 	if (p.name.startsWith("t_")) {
-		return 14;
+		return { bounds: "circle", radius: 14 };
 	}
-	return 12;
+	return { bounds: "circle", radius: 12 };
 }
 
 function mulberry32(seed: number): () => number {
@@ -170,11 +175,22 @@ function normalizeLayout(pos: Record<string, { x: number; y: number }>, pieceByI
 	let maxX = -Infinity;
 	let maxY = -Infinity;
 	for (const id of ids) {
-		const r = pieceRadius(pieceById[id]);
-		minX = Math.min(minX, pos[id].x - r);
-		maxX = Math.max(maxX, pos[id].x + r);
-		minY = Math.min(minY, pos[id].y - r);
-		maxY = Math.max(maxY, pos[id].y + r);
+		const L = pieceLayout(pieceById[id]);
+		const p = pos[id];
+		if (L.bounds === "rectangle") {
+			const hw = L.width / 2;
+			const hh = L.height / 2;
+			minX = Math.min(minX, p.x - hw);
+			maxX = Math.max(maxX, p.x + hw);
+			minY = Math.min(minY, p.y - hh);
+			maxY = Math.max(maxY, p.y + hh);
+		} else {
+			const r = L.radius;
+			minX = Math.min(minX, p.x - r);
+			maxX = Math.max(maxX, p.x + r);
+			minY = Math.min(minY, p.y - r);
+			maxY = Math.max(maxY, p.y + r);
+		}
 	}
 	const cx = (minX + maxX) / 2;
 	const cy = (minY + maxY) / 2;
@@ -227,15 +243,28 @@ function main(): void {
 	const nodes = pieceIds
 		.map((id) => {
 			const p = pieceById[id];
+			const L = pieceLayout(p);
 			const handles = [...handleAngles.keys()]
 				.filter((h) => h.startsWith(`${id}:`))
 				.map((hid) => ({ angle: handleAngles.get(hid)!, id: hid }))
 				.sort((a, b) => a.id.localeCompare(b.id));
+			if (L.bounds === "rectangle") {
+				return {
+					handles,
+					height: L.height,
+					id,
+					label: p.name,
+					shape: "rectangle" as const,
+					width: L.width,
+					x: pos[id].x,
+					y: pos[id].y,
+				};
+			}
 			return {
 				handles,
 				id,
 				label: p.name,
-				radius: pieceRadius(p),
+				radius: L.radius,
 				x: pos[id].x,
 				y: pos[id].y,
 			};

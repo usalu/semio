@@ -13,6 +13,47 @@ function toYamlKey(pascal: string): string {
   return pascal.length === 0 ? pascal : pascal.charAt(0).toLowerCase() + pascal.slice(1);
 }
 
+/** @emoji 🧭 Owning kit `Class` / `Interface` for each concrete `Operation` subtype (matches golden names). */
+function ownerForOperation(op: string): string {
+  if (op === "ChangedDescription") {
+    return "Workspace";
+  }
+  if (op === "FlattenedDesign") {
+    return "Design";
+  }
+  if (op === "RenamedKit") {
+    return "Kit";
+  }
+  if (op.includes("Piece")) {
+    return "Piece";
+  }
+  if (op.includes("Qualit")) {
+    return "Quality";
+  }
+  if (op.includes("Connector")) {
+    return "Connector";
+  }
+  if (op.includes("Concept")) {
+    return "Concept";
+  }
+  if (op.includes("Design")) {
+    return "Design";
+  }
+  if (op.includes("Port")) {
+    return "Port";
+  }
+  if (op.includes("Type")) {
+    return "Type";
+  }
+  if (op.includes("Tag")) {
+    return "Tag";
+  }
+  if (op.includes("Kit")) {
+    return "Kit";
+  }
+  return "Workspace";
+}
+
 const golden = readFileSync(goldenPath, "utf8");
 const re = /^type ([A-Za-z0-9_]+) implements Operation/gm;
 const names = new Set<string>();
@@ -54,10 +95,36 @@ writeFileSync(
     "// Generated next to gen-domain-operation-classes.script.ts — paste into migrations.cypher region MergeOperationConcreteClasses.",
     `UNWIND [${sorted.map((n) => JSON.stringify(n)).join(", ")}] AS opName`,
     "MERGE (c:Class {name: opName})",
-    "MERGE (op:Interface {name: 'Operation'})",
+    "WITH c",
+    "MATCH (op:Interface|Class)",
+    "WHERE toLower(op.name) = 'operation'",
+    "WITH c, op",
+    "ORDER BY id(op) ASC",
+    "LIMIT 1",
     "MERGE (c)-[:IS]->(op);",
     "",
   ].join("\n"),
   "utf8",
 );
 console.log(`[gen-ops-yaml] wrote ${cypherOut}`);
+
+const reparentOut = join(import.meta.dir, "reparent-operation-ownership.cypher.fragment");
+const rows = sorted.map((op) => ({ op, own: ownerForOperation(op) }));
+writeFileSync(
+  reparentOut,
+  [
+    "// Generated — each concrete operation `Class` hangs under `owner-[:OWNS]->Module(operation)-[:OWNS]->class`.",
+    `UNWIND [${rows.map((r) => `{op: '${r.op}', own: '${r.own}'}`).join(", ")}] AS row`,
+    "MATCH (c:Class {name: row.op})",
+    "MATCH (own:Class|Interface {name: row.own})",
+    "MERGE (own)-[:OWNS]->(m:Module {name: 'operation'})",
+    "MERGE (m)-[:OWNS]->(c)",
+    "WITH c, m",
+    "OPTIONAL MATCH (p:Module)-[r:OWNS]->(c)",
+    "WHERE id(p) <> id(m)",
+    "DELETE r;",
+    "",
+  ].join("\n"),
+  "utf8",
+);
+console.log(`[gen-ops-yaml] wrote ${reparentOut}`);

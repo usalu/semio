@@ -1,4 +1,4 @@
-//! 🎛️ Single-source board crate: Vello/kurbo geometry (`vcompute`), selection predicates (`geom_sel`), serde scene JSON (`scene_json`), interactive `BoardHost`, retained `BoardEngine`, and wasm-bindgen facades — all in this file (no sibling `src/` modules).
+//! 🎛️ Single-source board crate: vector geometry (`vcompute`), selection predicates (`geom_sel`), serde scene JSON (`scene_json`), interactive `BoardHost`, retained `BoardEngine`, and wasm-bindgen facades — all in this file (no sibling `src/` modules).
 #![allow(clippy::missing_errors_doc, reason = "Board engine is internal to the elements board bundle.")]
 
 mod vcompute {
@@ -104,7 +104,7 @@ mod vcompute {
 		distance_between(point, closest)
 	}
 
-	pub fn encode_board_vello_strokes(curves: &[CubicBez], stroke_width: f64) -> Scene {
+	pub fn encode_board_stroke_scene(curves: &[CubicBez], stroke_width: f64) -> Scene {
 		let mut scene = Scene::new();
 		let stroke = Stroke::new(stroke_width);
 		for curve in curves {
@@ -576,6 +576,24 @@ mod board_host {
 			self.selection_screen_preview = points;
 		}
 
+		fn sync_selection_screen_overlay(&mut self, start_screen: Point, screen_points: &[Point]) {
+			if screen_points.len() < 2 {
+				self.selection_screen_preview = None;
+				return;
+			}
+			self.selection_screen_preview = Some(if self.selection_options.method == "lasso" {
+				screen_points.to_vec()
+			} else {
+				let last = *screen_points.last().unwrap_or(&start_screen);
+				vec![
+					start_screen,
+					Point::new(last.x, start_screen.y),
+					last,
+					Point::new(start_screen.x, last.y),
+				]
+			});
+		}
+
 		fn push_event(&mut self, name: &str, payload: serde_json::Value) {
 			self.events.push(json!({ "name": name, "payload": payload }));
 		}
@@ -931,7 +949,7 @@ mod board_host {
 			true
 		}
 
-		pub fn build_vello_scene(&self) -> Scene {
+		pub fn build_vector_scene(&self) -> Scene {
 			let mut inner = Scene::new();
 			let stroke_grid = Stroke::new(1.0);
 			let step = GRID_WORLD_STEP * self.camera.zoom;
@@ -1059,7 +1077,7 @@ mod board_host {
 		}
 
 		pub fn encoded_scene_hint(&self) -> usize {
-			let s = self.build_vello_scene();
+			let s = self.build_vector_scene();
 			s.encoding().path_tags.len()
 		}
 
@@ -1129,6 +1147,7 @@ mod board_host {
 		}
 
 		pub fn pointer_down_screen(&mut self, sx: f64, sy: f64, button: u8, shift: bool) {
+			self.set_selection_screen_preview(None);
 			let screen = Point::new(sx, sy);
 			let world = self.screen_to_world(screen);
 			let hit = self.resolve_hit_world(world);
@@ -1226,6 +1245,7 @@ mod board_host {
 					let next = self.resolve_area_selection_with_initial(&initial, start, &pts);
 					let ids: Vec<_> = next.iter().cloned().collect();
 					self.set_selection_ids(&ids);
+					self.sync_selection_screen_overlay(start_screen, &screen_points);
 					self.interaction = Interaction::Selection {
 						initial_ids,
 						points,
@@ -1257,10 +1277,17 @@ mod board_host {
 				let next = self.resolve_area_selection_with_initial(&initial_ids, start, &points);
 				let ids: Vec<_> = next.iter().cloned().collect();
 				self.set_selection_ids(&ids);
+				self.set_selection_screen_preview(None);
 				let _ = screen_points;
 				return;
 			}
 			self.interaction = Interaction::None;
+		}
+
+		pub fn pointer_leave_screen(&mut self) {
+			if matches!(self.interaction, Interaction::None) {
+				self.set_hovered_id(None);
+			}
 		}
 
 		fn node_world_bounds(&self, n: &NodeData, pad: f64) -> WorldBox {
@@ -1425,7 +1452,7 @@ pub use board_host::BoardHost;
 use std::collections::{BTreeMap, BTreeSet};
 
 pub use vello::kurbo::{CubicBez, Point, Vec2};
-use vcompute::{compute_edge_bezier_points, distance_point_to_cubic_bezier, encode_board_vello_strokes};
+use vcompute::{compute_edge_bezier_points, distance_point_to_cubic_bezier, encode_board_stroke_scene};
 
 // #region 🔖Kinds
 /// 🧭 Camera state in world units with a zoom scalar suitable for a WASM host bridge.
@@ -1534,7 +1561,7 @@ fn distance(left: Point, right: Point) -> f64 {
 // #endregion 🔖Utilities
 
 // #region 🔖Engine
-/// ⚙️ Single-file retained board engine; geometry uses Vello’s kurbo curves and scene encoding.
+/// ⚙️ Single-file retained board engine; geometry uses cubic curves and vector scene encoding.
 #[derive(Clone, Debug, Default)]
 pub struct BoardEngine {
 	camera: Camera,
@@ -1697,8 +1724,8 @@ impl BoardEngine {
 				snapshot.edges.push(curve);
 			}
 		}
-		let _vello_scene = encode_board_vello_strokes(&snapshot.edges, 2.0);
-		let _ = _vello_scene.encoding().path_tags.len();
+		let _stroke_scene = encode_board_stroke_scene(&snapshot.edges, 2.0);
+		let _ = _stroke_scene.encoding().path_tags.len();
 		snapshot
 	}
 
@@ -1858,30 +1885,49 @@ pub fn board_handle_position_rectangle(cx: f64, cy: f64, width: f64, height: f64
 	vec![p.x, p.y]
 }
 
-// #region 🔖WasmVelloPresenter
-/// 🖥️ `BoardHost` plus WebGPU: encodes the board scene and rasterizes it with Vello, then blits to the canvas surface.
+// #region 🔖WasmSession
+/// 🖥️ Single WASM entry: one {@link BoardHost}, optional WebGPU surface bound via {@link BoardSession::attach_canvas}.
 #[cfg(target_arch = "wasm32")]
 #[wasm_bindgen]
-pub struct BoardVelloWasm {
-	#[cfg_attr(target_arch = "wasm32", allow(dead_code, reason = "Keeps the canvas alive for the WebGPU surface."))]
-	canvas: HtmlCanvasElement,
+pub struct BoardSession {
 	host: BoardHost,
-	render_ctx: vello::util::RenderContext,
+	#[cfg_attr(target_arch = "wasm32", allow(dead_code, reason = "Retains canvas for the WebGPU surface lifetime."))]
+	canvas: Option<HtmlCanvasElement>,
+	render_ctx: Option<vello::util::RenderContext>,
 	renderer: Option<vello::Renderer>,
 	surface: Option<vello::util::RenderSurface<'static>>,
 }
 
 #[cfg(target_arch = "wasm32")]
 #[wasm_bindgen]
-impl BoardVelloWasm {
-	/// @emoji 🌊 Creates WebGPU + Vello for `canvas`; `logical_w`/`logical_h` are CSS pixels, `dpr` scales the swapchain to backing-store pixels.
-	#[wasm_bindgen(js_name = create)]
-	pub async fn create(
+impl BoardSession {
+	#[wasm_bindgen(constructor)]
+	pub fn new() -> Self {
+		Self {
+			host: BoardHost::new(),
+			canvas: None,
+			render_ctx: None,
+			renderer: None,
+			surface: None,
+		}
+	}
+
+	#[wasm_bindgen(js_name = gpuReady)]
+	pub fn gpu_ready(&self) -> bool {
+		self.surface.is_some()
+	}
+
+	/// @emoji 🌊 Binds WebGPU presentation to `canvas` once; `logical_w`/`logical_h` are CSS pixels, `dpr` scales the swapchain backing store.
+	pub async fn attach_canvas(
+		&mut self,
 		canvas: HtmlCanvasElement,
 		logical_w: u32,
 		logical_h: u32,
 		dpr: f64,
-	) -> Result<BoardVelloWasm, JsValue> {
+	) -> Result<(), JsValue> {
+		if self.surface.is_some() {
+			return Err(JsValue::from_str("canvas surface already attached"));
+		}
 		let lw = logical_w.max(1);
 		let lh = logical_h.max(1);
 		let dpr = dpr.max(1.0);
@@ -1908,17 +1954,15 @@ impl BoardVelloWasm {
 			},
 		)
 		.map_err(|err| JsValue::from_str(&format!("{err:?}")))?;
-		let mut host = BoardHost::new();
-		host.set_size(lw, lh, dpr);
-		Ok(Self {
-			canvas,
-			host,
-			render_ctx,
-			renderer: Some(renderer),
-			surface: Some(surface),
-		})
+		self.host.set_size(lw, lh, dpr);
+		self.canvas = Some(canvas);
+		self.render_ctx = Some(render_ctx);
+		self.renderer = Some(renderer);
+		self.surface = Some(surface);
+		Ok(())
 	}
 
+	#[wasm_bindgen(js_name = setSize)]
 	pub fn set_size(&mut self, width: u32, height: u32, dpr: f64) {
 		let lw = width.max(1);
 		let lh = height.max(1);
@@ -1926,8 +1970,8 @@ impl BoardVelloWasm {
 		let pw = ((lw as f64 * dpr).round() as u32).max(1);
 		let ph = ((lh as f64 * dpr).round() as u32).max(1);
 		self.host.set_size(lw, lh, dpr);
-		if let Some(ref mut surface) = self.surface {
-			self.render_ctx.resize_surface(surface, pw, ph);
+		if let (Some(ref mut surface), Some(ref mut render_ctx)) = (self.surface.as_mut(), self.render_ctx.as_mut()) {
+			render_ctx.resize_surface(surface, pw, ph);
 		}
 	}
 
@@ -1986,6 +2030,11 @@ impl BoardVelloWasm {
 		self.host.pointer_up_screen(sx, sy);
 	}
 
+	#[wasm_bindgen(js_name = pointerLeaveScreen)]
+	pub fn pointer_leave_screen_wasm(&mut self) {
+		self.host.pointer_leave_screen();
+	}
+
 	#[wasm_bindgen(js_name = wheelScreen)]
 	pub fn wheel_screen_wasm(&mut self, sx: f64, sy: f64, delta_y: f64) {
 		self.host.wheel_screen(sx, sy, delta_y);
@@ -2016,25 +2065,34 @@ impl BoardVelloWasm {
 		self.host.set_selection_options(method, mode, target);
 	}
 
+	#[wasm_bindgen(js_name = setSelectionIdsJson)]
+	pub fn set_selection_ids_json(&mut self, json: &str) -> Result<(), JsValue> {
+		let ids: Vec<String> = serde_json::from_str(json).map_err(|err| JsValue::from_str(&err.to_string()))?;
+		self.host.set_selection_ids(&ids);
+		Ok(())
+	}
+
 	#[wasm_bindgen(js_name = encodedSceneHint)]
 	pub fn encoded_scene_hint_wasm(&self) -> usize {
 		self.host.encoded_scene_hint()
 	}
 
-	/// @emoji 🎨 Renders one frame: Vello to the intermediate texture, blit to the swapchain, present.
+	/// @emoji 🎨 Presents one frame when a GPU surface is attached; otherwise no-op `Ok`.
+	#[wasm_bindgen(js_name = renderFrame)]
 	pub fn render_frame(&mut self) -> Result<(), JsValue> {
-		let surface = self
-			.surface
-			.as_mut()
-			.ok_or_else(|| JsValue::from_str("missing surface"))?;
-		let renderer = self
-			.renderer
-			.as_mut()
-			.ok_or_else(|| JsValue::from_str("missing renderer"))?;
-		let dh = &self.render_ctx.devices[surface.dev_id];
+		let Some(surface) = self.surface.as_mut() else {
+			return Ok(());
+		};
+		let Some(renderer) = self.renderer.as_mut() else {
+			return Ok(());
+		};
+		let Some(render_ctx) = self.render_ctx.as_mut() else {
+			return Ok(());
+		};
+		let dh = &render_ctx.devices[surface.dev_id];
 		let pw = surface.config.width.max(1);
 		let ph = surface.config.height.max(1);
-		let scene = self.host.build_vello_scene();
+		let scene = self.host.build_vector_scene();
 		let params = vello::RenderParams {
 			base_color: vello::peniko::Color::WHITE,
 			width: pw,
@@ -2048,7 +2106,7 @@ impl BoardVelloWasm {
 		let surface_tex = match surface.surface.get_current_texture() {
 			vello::wgpu::CurrentSurfaceTexture::Success(t) | vello::wgpu::CurrentSurfaceTexture::Suboptimal(t) => t,
 			vello::wgpu::CurrentSurfaceTexture::Outdated => {
-				self.render_ctx.configure_surface(surface);
+				render_ctx.configure_surface(surface);
 				return Ok(());
 			}
 			vello::wgpu::CurrentSurfaceTexture::Timeout | vello::wgpu::CurrentSurfaceTexture::Occluded => return Ok(()),
@@ -2060,7 +2118,7 @@ impl BoardVelloWasm {
 			.texture
 			.create_view(&vello::wgpu::TextureViewDescriptor::default());
 		let mut encoder = dh.device.create_command_encoder(&vello::wgpu::CommandEncoderDescriptor {
-			label: Some("elements_board_vello_blit"),
+			label: Some("elements_board_surface_blit"),
 		});
 		surface
 			.blitter
@@ -2071,102 +2129,7 @@ impl BoardVelloWasm {
 		Ok(())
 	}
 }
-// #endregion 🔖WasmVelloPresenter
-
-/// 🎛️ Thin WASM façade over {@link BoardHost}: JSON descriptor sync, pointer routing, and Vello scene metrics.
-#[cfg(target_arch = "wasm32")]
-#[wasm_bindgen]
-pub struct BoardWasmHost {
-	inner: BoardHost,
-}
-
-#[cfg(target_arch = "wasm32")]
-#[wasm_bindgen]
-impl BoardWasmHost {
-	#[wasm_bindgen(constructor)]
-	pub fn new() -> Self {
-		Self {
-			inner: BoardHost::new(),
-		}
-	}
-
-	pub fn set_size(&mut self, width: u32, height: u32, dpr: f64) {
-		self.inner.set_size(width, height, dpr);
-	}
-
-	#[wasm_bindgen(js_name = setCamera)]
-	pub fn set_camera_wasm(&mut self, x: f64, y: f64, zoom: f64) {
-		self.inner.set_camera(x, y, zoom);
-	}
-
-	#[wasm_bindgen(js_name = syncDescriptorJson)]
-	pub fn sync_descriptor_json(&mut self, json: &str) -> Result<(), JsValue> {
-		let desc: SceneDescriptorJson =
-			serde_json::from_str(json).map_err(|err| JsValue::from_str(&err.to_string()))?;
-		self.inner.sync_descriptor(&desc);
-		Ok(())
-	}
-
-	#[wasm_bindgen(js_name = parseFixtureJson)]
-	pub fn parse_fixture_json(&mut self, json: &str) -> bool {
-		let raw: serde_json::Value = match serde_json::from_str(json) {
-			Ok(v) => v,
-			Err(_) => return false,
-		};
-		self.inner.parse_fixture_v1(&raw)
-	}
-
-	#[wasm_bindgen(js_name = pointerDownScreen)]
-	pub fn pointer_down_screen_wasm(&mut self, sx: f64, sy: f64, button: u8, shift: bool) {
-		self.inner.pointer_down_screen(sx, sy, button, shift);
-	}
-
-	#[wasm_bindgen(js_name = pointerMoveScreen)]
-	pub fn pointer_move_screen_wasm(&mut self, sx: f64, sy: f64) {
-		self.inner.pointer_move_screen(sx, sy);
-	}
-
-	#[wasm_bindgen(js_name = pointerUpScreen)]
-	pub fn pointer_up_screen_wasm(&mut self, sx: f64, sy: f64) {
-		self.inner.pointer_up_screen(sx, sy);
-	}
-
-	#[wasm_bindgen(js_name = wheelScreen)]
-	pub fn wheel_screen_wasm(&mut self, sx: f64, sy: f64, delta_y: f64) {
-		self.inner.wheel_screen(sx, sy, delta_y);
-	}
-
-	#[wasm_bindgen(js_name = deleteSelection)]
-	pub fn delete_selection_wasm(&mut self) {
-		self.inner.delete_selection();
-	}
-
-	#[wasm_bindgen(js_name = drainEventsJson)]
-	pub fn drain_events_json_wasm(&mut self) -> String {
-		self.inner.drain_events_json()
-	}
-
-	#[wasm_bindgen(js_name = cameraJson)]
-	pub fn camera_json(&self) -> String {
-		serde_json::json!({
-			"x": self.inner.camera.x,
-			"y": self.inner.camera.y,
-			"zoom": self.inner.camera.zoom,
-		})
-		.to_string()
-	}
-
-	#[wasm_bindgen(js_name = setSelectionOptions)]
-	pub fn set_selection_options_wasm(&mut self, method: &str, mode: &str, target: &str) {
-		self.inner.set_selection_options(method, mode, target);
-	}
-
-	#[wasm_bindgen(js_name = encodedSceneHint)]
-	pub fn encoded_scene_hint_wasm(&self) -> usize {
-		self.inner.encoded_scene_hint()
-	}
-}
-// #endregion 🔖WasmHost
+// #endregion 🔖WasmSession
 
 // #region 🔖Tests
 #[cfg(test)]

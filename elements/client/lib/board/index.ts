@@ -9,13 +9,13 @@ import {
 	NoEventPriority,
 } from "react-reconciler/constants";
 
-// #region 🔖VelloWasmBridge
+// #region 🔖GpuWasmBridge
 import initBoardWasm, {
 	boardComputeEdgeBezier,
 	boardDistancePointCubic,
 	boardHandlePositionCircle,
 	boardHandlePositionRectangle,
-	BoardVelloWasm,
+	BoardSession,
 	initSync,
 } from "./rs/pkg/elements_board.js";
 
@@ -34,8 +34,8 @@ export async function ensureElementsBoardWasmLoaded(): Promise<void> {
 	await initBoardWasm();
 }
 
-export { BoardVelloWasm };
-// #endregion 🔖VelloWasmBridge
+export { BoardSession };
+// #endregion 🔖GpuWasmBridge
 
 //#region 🔖Kinds
 export type BoardObjectKind = "node" | "handle" | "edge";
@@ -43,7 +43,7 @@ export type RenderMode = "main-thread" | "worker-offscreen" | "headless-test";
 export type BoardSelectionMethod = "lasso" | "rectangle";
 export type BoardSelectionMode = "additive" | "invertive" | "subtractive";
 export type BoardSelectionTarget = "edges" | "nodes" | "nodes&edges";
-/** 🧱 World-space raster tiling strategy for CPU canvas validation (Vello tiles will mirror this culling). */
+/** 🧱 World-space raster tiling strategy for CPU canvas validation (GPU-backed tiling mirrors this culling). */
 export type WorldRasterTilingKind = "none" | "world-clip";
 
 export interface Point {
@@ -92,7 +92,7 @@ export interface BoardFixtureHandleV1 {
 	id: string;
 }
 
-/** @emoji 📄 Circle node record inside {@link BoardFixtureV1}. */
+/** @emoji 📄 Circle node: {@link BoardFixtureCircleNodeV1.x}/{@link BoardFixtureCircleNodeV1.y} are the disk center in layout space; handle {@link BoardFixtureHandleV1.angle} aims at the connected neighbor (radians). */
 export interface BoardFixtureCircleNodeV1 {
 	cad?: { x: number; y: number; z: number } | null;
 	handles: BoardFixtureHandleV1[];
@@ -104,7 +104,7 @@ export interface BoardFixtureCircleNodeV1 {
 	y: number;
 }
 
-/** @emoji 📄 Axis-aligned rectangle node (center {@link BoardFixtureRectangleNodeV1.x}/{@link BoardFixtureRectangleNodeV1.y}, half-extents from width/height). */
+/** @emoji 📄 Axis-aligned rectangle: center (x,y) in layout space, full width/height (not half-extents); handle angle aims at neighbor like circles. */
 export interface BoardFixtureRectangleNodeV1 {
 	cad?: { x: number; y: number; z: number } | null;
 	handles: BoardFixtureHandleV1[];
@@ -226,33 +226,6 @@ type BoardCanvasContext = Pick<
 	textBaseline: CanvasTextBaseline;
 };
 
-interface PointerWorldState {
-	point: Point;
-	screenPoint: Point;
-}
-
-interface NodeDragState {
-	kind: "drag-node";
-	nodeId: string;
-	offset: Point;
-}
-
-interface PanState {
-	kind: "pan";
-	origin: CameraState;
-	start: Point;
-}
-
-interface SelectionDragState {
-	kind: "selection";
-	initialIds: Set<string>;
-	points: Point[];
-	screenPoints: Point[];
-	start: Point;
-	startScreen: Point;
-}
-
-type InteractionState = NodeDragState | PanState | SelectionDragState | null;
 //#endregion 🔖Kinds
 
 //#region 🔖Utilities
@@ -265,18 +238,8 @@ export const BOARD_CAMERA_ZOOM_MAX = 32;
 const MIN_ZOOM = BOARD_CAMERA_ZOOM_MIN;
 const MAX_ZOOM = BOARD_CAMERA_ZOOM_MAX;
 const GRID_WORLD_STEP = 96;
-const EDGE_HIT_TOLERANCE_PX = 8;
-const HANDLE_HIT_TOLERANCE_PX = 10;
 const GRID_VISIBLE_MIN_ZOOM = 18 / GRID_WORLD_STEP;
 const HANDLE_DRAW_MIN_ZOOM = 0.45;
-const SELECTION_LASSO_MIN_POINT_DISTANCE_PX = 3;
-
-interface WorldAxisBox {
-	maxX: number;
-	maxY: number;
-	minX: number;
-	minY: number;
-}
 
 const DEFAULT_STYLES: Record<string, BoardStyle> = {
 	edge: { stroke: "#475569", strokeWidth: 2 },
@@ -348,18 +311,6 @@ function arrayEqual(left: string[], right: string[]): boolean {
 	return left.every((value, index) => value === right[index]);
 }
 
-function distanceToSegment(point: Point, start: Point, end: Point): number {
-	const segment = subtractPoint(end, start);
-	const pointOffset = subtractPoint(point, start);
-	const segmentLengthSquared = segment.x * segment.x + segment.y * segment.y;
-	if (segmentLengthSquared <= Number.EPSILON) {
-		return distanceBetween(point, start);
-	}
-	const projection = clamp((pointOffset.x * segment.x + pointOffset.y * segment.y) / segmentLengthSquared, 0, 1);
-	const closestPoint = addPoint(start, scalePoint(segment, projection));
-	return distanceBetween(point, closestPoint);
-}
-
 function cubicBezierPoint(curve: CubicBezierCurve, step: number): Point {
 	const oneMinusStep = 1 - step;
 	const oneMinusSquared = oneMinusStep * oneMinusStep;
@@ -380,22 +331,6 @@ function cubicBezierPoint(curve: CubicBezierCurve, step: number): Point {
 	};
 }
 
-function distanceToBezier(point: Point, curve: CubicBezierCurve, steps = 24): number {
-	return boardDistancePointCubic(
-		point.x,
-		point.y,
-		curve.p0.x,
-		curve.p0.y,
-		curve.p1.x,
-		curve.p1.y,
-		curve.p2.x,
-		curve.p2.y,
-		curve.p3.x,
-		curve.p3.y,
-		steps,
-	);
-}
-
 function sortedSelectionIds(ids: Iterable<string>): string[] {
 	return Array.from(ids).sort((left, right) => left.localeCompare(right));
 }
@@ -410,6 +345,21 @@ function resolveSelectionOptions(options: BoardSelectionOptions | undefined): Re
 		mode: options?.mode ?? "invertive",
 		target: options?.target ?? "nodes&edges",
 	};
+}
+
+/** @emoji 🏷️ Resolves optional node caption: explicit `text` wins; kit `label` tokens like `cs_sl…` stay off-canvas (internal ids). */
+function fixtureNodeDisplayText(node: Record<string, unknown>): string | undefined {
+	if (typeof node.text === "string") {
+		return node.text;
+	}
+	const lab = typeof node.label === "string" ? node.label : undefined;
+	if (!lab) {
+		return undefined;
+	}
+	if (lab.startsWith("cs_")) {
+		return undefined;
+	}
+	return lab;
 }
 
 /** @emoji 🧾 Validates unknown JSON into {@link BoardFixtureV1} or returns null. */
@@ -465,8 +415,7 @@ export function parseBoardFixtureV1(raw: unknown): BoardFixtureV1 | null {
 			}
 			handles.push({ angle, id: hid });
 		}
-		const textFromJson =
-			typeof node.text === "string" ? node.text : typeof node.label === "string" ? node.label : undefined;
+		const textFromJson = fixtureNodeDisplayText(node);
 		const cad =
 			node.cad && typeof node.cad === "object"
 				? {
@@ -550,167 +499,6 @@ export function decodeBoardFixtureFromDragV1(text: string): BoardFixtureV1 | nul
 		return null;
 	}
 	return parseBoardFixtureV1(raw);
-}
-
-function inflateWorldBox(box: WorldAxisBox, pad: number): WorldAxisBox {
-	return {
-		maxX: box.maxX + pad,
-		maxY: box.maxY + pad,
-		minX: box.minX - pad,
-		minY: box.minY - pad,
-	};
-}
-
-function worldBoxesOverlap(left: WorldAxisBox, right: WorldAxisBox): boolean {
-	return left.minX <= right.maxX && left.maxX >= right.minX && left.minY <= right.maxY && left.maxY >= right.minY;
-}
-
-function worldBoxContainsPoint(box: WorldAxisBox, point: Point): boolean {
-	return point.x >= box.minX && point.x <= box.maxX && point.y >= box.minY && point.y <= box.maxY;
-}
-
-function worldBoxContainsBox(outer: WorldAxisBox, inner: WorldAxisBox): boolean {
-	return inner.minX >= outer.minX && inner.maxX <= outer.maxX && inner.minY >= outer.minY && inner.maxY <= outer.maxY;
-}
-
-function worldBoxCorners(box: WorldAxisBox): Point[] {
-	return [
-		{ x: box.minX, y: box.minY },
-		{ x: box.maxX, y: box.minY },
-		{ x: box.maxX, y: box.maxY },
-		{ x: box.minX, y: box.maxY },
-	];
-}
-
-function worldBoxFromPoints(points: readonly Point[]): WorldAxisBox {
-	const xs = points.map((point) => point.x);
-	const ys = points.map((point) => point.y);
-	return {
-		maxX: Math.max(...xs),
-		maxY: Math.max(...ys),
-		minX: Math.min(...xs),
-		minY: Math.min(...ys),
-	};
-}
-
-function pointInPolygon(point: Point, polygon: readonly Point[]): boolean {
-	let inside = false;
-	for (let index = 0, previous = polygon.length - 1; index < polygon.length; previous = index, index += 1) {
-		const a = polygon[index];
-		const b = polygon[previous];
-		const crosses = a.y > point.y !== b.y > point.y;
-		if (crosses && point.x < ((b.x - a.x) * (point.y - a.y)) / (b.y - a.y) + a.x) {
-			inside = !inside;
-		}
-	}
-	return inside;
-}
-
-function orientation(a: Point, b: Point, c: Point): number {
-	return Math.sign((b.y - a.y) * (c.x - b.x) - (b.x - a.x) * (c.y - b.y));
-}
-
-function pointOnSegment(point: Point, start: Point, end: Point): boolean {
-	return (
-		Math.min(start.x, end.x) - 1e-9 <= point.x &&
-		point.x <= Math.max(start.x, end.x) + 1e-9 &&
-		Math.min(start.y, end.y) - 1e-9 <= point.y &&
-		point.y <= Math.max(start.y, end.y) + 1e-9 &&
-		Math.abs((end.x - start.x) * (point.y - start.y) - (end.y - start.y) * (point.x - start.x)) <= 1e-9
-	);
-}
-
-function segmentsIntersect(a0: Point, a1: Point, b0: Point, b1: Point): boolean {
-	const o1 = orientation(a0, a1, b0);
-	const o2 = orientation(a0, a1, b1);
-	const o3 = orientation(b0, b1, a0);
-	const o4 = orientation(b0, b1, a1);
-	if (o1 !== o2 && o3 !== o4) {
-		return true;
-	}
-	return pointOnSegment(b0, a0, a1) || pointOnSegment(b1, a0, a1) || pointOnSegment(a0, b0, b1) || pointOnSegment(a1, b0, b1);
-}
-
-function worldBoxEdges(box: WorldAxisBox): Array<[Point, Point]> {
-	const [a, b, c, d] = worldBoxCorners(box);
-	return [
-		[a, b],
-		[b, c],
-		[c, d],
-		[d, a],
-	];
-}
-
-function segmentIntersectsWorldBox(start: Point, end: Point, box: WorldAxisBox): boolean {
-	if (worldBoxContainsPoint(box, start) || worldBoxContainsPoint(box, end)) {
-		return true;
-	}
-	return worldBoxEdges(box).some(([a, b]) => segmentsIntersect(start, end, a, b));
-}
-
-function polygonSegments(polygon: readonly Point[]): Array<[Point, Point]> {
-	const segments: Array<[Point, Point]> = [];
-	for (let index = 0; index < polygon.length; index += 1) {
-		segments.push([polygon[index], polygon[(index + 1) % polygon.length]]);
-	}
-	return segments;
-}
-
-function polygonContainsWorldBox(polygon: readonly Point[], box: WorldAxisBox): boolean {
-	return worldBoxCorners(box).every((point) => pointInPolygon(point, polygon));
-}
-
-function polygonIntersectsWorldBox(polygon: readonly Point[], box: WorldAxisBox): boolean {
-	if (worldBoxCorners(box).some((point) => pointInPolygon(point, polygon))) {
-		return true;
-	}
-	if (polygon.some((point) => worldBoxContainsPoint(box, point))) {
-		return true;
-	}
-	return polygonSegments(polygon).some(([start, end]) => segmentIntersectsWorldBox(start, end, box));
-}
-
-function segmentIntersectsPolygon(start: Point, end: Point, polygon: readonly Point[]): boolean {
-	if (pointInPolygon(start, polygon) || pointInPolygon(end, polygon)) {
-		return true;
-	}
-	return polygonSegments(polygon).some(([a, b]) => segmentsIntersect(start, end, a, b));
-}
-
-function cubicBezierAxisBounds(curve: CubicBezierCurve): WorldAxisBox {
-	const xs = [curve.p0.x, curve.p1.x, curve.p2.x, curve.p3.x];
-	const ys = [curve.p0.y, curve.p1.y, curve.p2.y, curve.p3.y];
-	return {
-		maxX: Math.max(...xs),
-		maxY: Math.max(...ys),
-		minX: Math.min(...xs),
-		minY: Math.min(...ys),
-	};
-}
-
-function nodeWorldBounds(node: { height: number; radius: number; shape: "circle" | "rectangle"; width: number; x: number; y: number }, padWorld: number): WorldAxisBox {
-	if (node.shape === "rectangle") {
-		const hw = node.width / 2;
-		const hh = node.height / 2;
-		return inflateWorldBox(
-			{
-				maxX: node.x + hw,
-				maxY: node.y + hh,
-				minX: node.x - hw,
-				minY: node.y - hh,
-			},
-			padWorld,
-		);
-	}
-	return inflateWorldBox(
-		{
-			maxX: node.x + node.radius,
-			maxY: node.y + node.radius,
-			minX: node.x - node.radius,
-			minY: node.y - node.radius,
-		},
-		padWorld,
-	);
 }
 
 /** 📶 Labels coarse LOD bands used by Storybook and Playwright (mirrors Rust `HANDLE_DRAW_MIN_ZOOM` gates). */
@@ -1107,8 +895,8 @@ export class BoardScene {
 }
 //#endregion 🔖Scene
 
-/** @emoji 🧯 Normalizes WebGPU/Vello errors for `data-board-vello-failure` (Playwright + local debugging). */
-function summarizeVelloFailure(err: unknown): string {
+/** @emoji 🧯 Normalizes WebGPU errors for `data-board-surface-failure` (E2E + local debugging). */
+function summarizeRasterSurfaceFailure(err: unknown): string {
 	if (err instanceof Error) {
 		return `${err.name}: ${err.message}`.slice(0, 512);
 	}
@@ -1123,12 +911,13 @@ function summarizeVelloFailure(err: unknown): string {
 }
 
 //#region 🔖Renderer
-/** 🎛️ Imperative board renderer with retained scene state and direct pointer handling. */
+/** 🎛️ Slim imperative shell: DOM/RAF, one {@link BoardSession} (WASM `BoardHost` + optional GPU), JSON scene sync, and event drains mirroring WASM onto the JS scene graph for React/tests. */
 export class BoardRenderer {
 	static activeRenderer: BoardRenderer | null = null;
 
 	readonly camera: CameraState = { ...DEFAULT_CAMERA };
 	readonly scene: BoardScene;
+	readonly session: BoardSession;
 
 	private batchDepth = 0;
 	private cameraStore = new SnapshotStore<CameraState>({ ...DEFAULT_CAMERA });
@@ -1137,7 +926,6 @@ export class BoardRenderer {
 	private emitter = new TypedEmitter<BoardEventMap>();
 	private frameListeners = new Set<FrameListener>();
 	private hoveredId: string | null = null;
-	private interaction: InteractionState = null;
 	private invalidated = true;
 	private isDisposed = false;
 	private lastRenderTimestamp: number | null = null;
@@ -1146,11 +934,11 @@ export class BoardRenderer {
 	private selectionOptions: Required<BoardSelectionOptions>;
 	private selectionStore = new SnapshotStore<BoardSelectionSnapshot>({ ids: [] });
 	private styles = new Map<string, BoardStyle>(Object.entries(DEFAULT_STYLES));
-	private vello: BoardVelloWasm | null = null;
-	private velloFailureDetail = "";
-	private velloInitPromise: Promise<void> | null = null;
-	private velloPresentedFrame = false;
-	private velloUnavailable = false;
+	private gpuSurfaceErrorDetail = "";
+	private gpuSurfaceInitPromise: Promise<void> | null = null;
+	private gpuSurfacePresentedFrame = false;
+	private gpuSurfaceUnavailable = false;
+	private suppressSceneToWasmPush = false;
 	private width = 1;
 	private height = 1;
 
@@ -1167,6 +955,7 @@ export class BoardRenderer {
 		this.selectionOptions = resolveSelectionOptions(options.selection);
 		this.worldRasterTiling = options.worldRasterTiling ?? "none";
 		this.scene = new BoardScene(this);
+		this.session = new BoardSession();
 		this.attachCanvasListeners();
 		BoardRenderer.activeRenderer = this;
 		if (this.canvas) {
@@ -1199,7 +988,9 @@ export class BoardRenderer {
 
 	/** @emoji ✅ Replaces the active selection set and syncs `selected` flags on scene objects. */
 	setSelectionIds(ids: Iterable<string>): void {
-		this.updateSelection(ids);
+		this.pushSceneToWasmDriver();
+		this.session.setSelectionIdsJson(JSON.stringify([...ids]));
+		this.applyWasmDrainToScene(this.session.drainEventsJson());
 	}
 
 	getSelectionOptions(): Required<BoardSelectionOptions> {
@@ -1213,9 +1004,8 @@ export class BoardRenderer {
 			return;
 		}
 		this.selectionOptions = next;
-		if (this.vello) {
-			this.vello.setSelectionOptions(next.method, next.mode, next.target);
-		}
+		this.session.setSelectionOptions(next.method, next.mode, next.target);
+		this.applyWasmDrainToScene(this.session.drainEventsJson());
 		this.markDirty();
 	}
 
@@ -1268,16 +1058,9 @@ export class BoardRenderer {
 	}
 
 	setCamera(x: number, y: number, zoom: number): void {
-		const nextCamera: CameraState = { x, y, zoom: clamp(zoom, MIN_ZOOM, MAX_ZOOM) };
-		if (pointsEqual(this.camera, nextCamera) && nearlyEqual(this.camera.zoom, nextCamera.zoom)) {
-			return;
-		}
-		this.camera.x = nextCamera.x;
-		this.camera.y = nextCamera.y;
-		this.camera.zoom = nextCamera.zoom;
-		this.cameraStore.setSnapshot({ ...nextCamera }, (left, right) => pointsEqual(left, right) && nearlyEqual(left.zoom, right.zoom));
-		this.emit("camera", { ...this.camera });
-		this.markDirty();
+		const z = clamp(zoom, MIN_ZOOM, MAX_ZOOM);
+		this.session.setCamera(x, y, z);
+		this.applyWasmDrainToScene(this.session.drainEventsJson());
 	}
 
 	subscribeFrame(listener: FrameListener): () => void {
@@ -1336,24 +1119,28 @@ export class BoardRenderer {
 		const frameDelta = this.lastRenderTimestamp === null ? 0 : timestamp - this.lastRenderTimestamp;
 		this.lastRenderTimestamp = timestamp;
 		this.invalidated = false;
-		if (this.renderMode !== "headless-test" && this.canvas && !this.velloUnavailable) {
-			if (!this.vello && !this.velloInitPromise) {
-				this.velloInitPromise = this.initVelloOnce()
+		if (this.renderMode === "headless-test") {
+			if (!this.suppressSceneToWasmPush) {
+				this.pushSceneToWasmDriver();
+			}
+		}
+		if (this.renderMode !== "headless-test" && this.canvas && !this.gpuSurfaceUnavailable) {
+			if (!this.session.gpuReady() && !this.gpuSurfaceInitPromise) {
+				this.gpuSurfaceInitPromise = this.initGpuSurfaceOnce()
 					.then(() => {
-						this.velloInitPromise = null;
+						this.gpuSurfaceInitPromise = null;
 						this.markDirty();
 					})
 					.catch((err: unknown) => {
-						console.error("[DEBUG] BoardRenderer Vello init failed", err);
-						this.velloFailureDetail = summarizeVelloFailure(err);
-						this.velloUnavailable = true;
-						this.velloInitPromise = null;
+						console.error("[DEBUG] BoardRenderer GPU surface init failed", err);
+						this.gpuSurfaceErrorDetail = summarizeRasterSurfaceFailure(err);
+						this.gpuSurfaceUnavailable = true;
+						this.gpuSurfaceInitPromise = null;
 						this.markDirty();
 					});
 			}
-			if (this.vello) {
-				this.syncSelectionPreviewToVello();
-				this.syncVelloFrame();
+			if (this.session.gpuReady()) {
+				this.syncGpuFrame();
 			}
 		}
 		const frameState: FrameState = {
@@ -1367,7 +1154,7 @@ export class BoardRenderer {
 		this.applyCanvasDebugAttributes();
 	}
 
-	private async initVelloOnce(): Promise<void> {
+	private async initGpuSurfaceOnce(): Promise<void> {
 		if (!this.canvas || this.renderMode === "headless-test") {
 			return;
 		}
@@ -1381,12 +1168,13 @@ export class BoardRenderer {
 			this.canvas.width = cw;
 			this.canvas.height = ch;
 		}
-		this.vello = await BoardVelloWasm.create(this.canvas, lw, lh, dpr);
+		await this.session.attach_canvas(this.canvas, lw, lh, dpr);
 		const o = this.selectionOptions;
-		this.vello.setSelectionOptions(o.method, o.mode, o.target);
+		this.session.setSelectionOptions(o.method, o.mode, o.target);
+		this.session.drainEventsJson();
 	}
 
-	private descriptorJsonForVello(): string {
+	private descriptorJsonForWasmHost(): string {
 		const nodes: Record<string, unknown>[] = [];
 		for (const node of this.scene.nodes.values()) {
 			const base: Record<string, unknown> = {
@@ -1438,68 +1226,122 @@ export class BoardRenderer {
 		return JSON.stringify({ nodes, handles, edges });
 	}
 
-	private syncVelloFrame(): void {
-		if (!this.vello || this.renderMode === "headless-test") {
+	private pushSceneToWasmDriver(): void {
+		if (this.suppressSceneToWasmPush) {
 			return;
 		}
+		const o = this.selectionOptions;
+		this.session.setSize(this.width, this.height, this.dpr);
+		this.session.setSelectionOptions(o.method, o.mode, o.target);
+		this.session.syncDescriptorJson(this.descriptorJsonForWasmHost());
+		this.session.setCamera(this.camera.x, this.camera.y, this.camera.zoom);
+		this.session.drainEventsJson();
+	}
+
+	private applyWasmDrainToScene(raw: string): void {
+		let rows: Array<{ name: string; payload: Record<string, unknown> }>;
 		try {
-			const o = this.selectionOptions;
-			this.vello.set_size(this.width, this.height, this.dpr);
-			this.vello.setSelectionOptions(o.method, o.mode, o.target);
-			this.vello.syncDescriptorJson(this.descriptorJsonForVello());
-			this.vello.setCamera(this.camera.x, this.camera.y, this.camera.zoom);
-			this.vello.render_frame();
-			this.velloPresentedFrame = true;
-			this.velloFailureDetail = "";
-		} catch (err: unknown) {
-			console.error("[DEBUG] BoardRenderer Vello frame failed", err);
-			this.velloFailureDetail = summarizeVelloFailure(err);
-			this.velloUnavailable = true;
-			this.velloPresentedFrame = false;
+			rows = JSON.parse(raw) as Array<{ name: string; payload: Record<string, unknown> }>;
+		} catch {
+			return;
+		}
+		if (rows.length === 0) {
+			return;
+		}
+		this.suppressSceneToWasmPush = true;
+		try {
+			for (const row of rows) {
+				switch (row.name) {
+					case "camera": {
+						const p = row.payload as { x: number; y: number; zoom: number };
+						this.camera.x = p.x;
+						this.camera.y = p.y;
+						this.camera.zoom = p.zoom;
+						this.cameraStore.setSnapshot(
+							{ ...this.camera },
+							(left, right) => pointsEqual(left, right) && nearlyEqual(left.zoom, right.zoom),
+						);
+						this.emitter.emit("camera", { ...this.camera });
+						break;
+					}
+					case "select": {
+						const ids = (row.payload as { ids: string[] }).ids ?? [];
+						this.selectionIds = new Set(ids);
+						for (const object of this.scene.getAllObjects()) {
+							object.selected = this.selectionIds.has(object.id);
+						}
+						const snap = createSelectionSnapshot(this.selectionIds);
+						this.selectionStore.setSnapshot(snap, (left, right) => arrayEqual(left.ids, right.ids));
+						this.emitter.emit("select", snap);
+						break;
+					}
+					case "hover": {
+						const hid = row.payload.id;
+						const next = hid === null || hid === undefined ? null : String(hid);
+						this.updateHover(next);
+						break;
+					}
+					case "nodeMove": {
+						const id = String(row.payload.id);
+						const x = Number(row.payload.x);
+						const y = Number(row.payload.y);
+						const node = this.scene.nodes.get(id);
+						if (node) {
+							node.setPosition(x, y);
+						}
+						this.emitter.emit("nodeMove", { id, x, y });
+						break;
+					}
+					case "edgeDelete": {
+						const id = String((row.payload as { id: string }).id);
+						const edge = this.scene.edges.get(id);
+						if (edge) {
+							this.scene.remove(edge);
+						}
+						this.emitter.emit("edgeDelete", { id });
+						break;
+					}
+					case "nodeDelete": {
+						const id = String((row.payload as { id: string }).id);
+						const node = this.scene.nodes.get(id);
+						if (node) {
+							this.scene.remove(node);
+						}
+						this.emitter.emit("nodeDelete", { id });
+						break;
+					}
+					default:
+						break;
+				}
+			}
+		} finally {
+			this.suppressSceneToWasmPush = false;
 		}
 	}
 
-	private syncSelectionPreviewToVello(): void {
-		if (!this.vello || this.renderMode === "headless-test") {
+	private syncGpuFrame(): void {
+		if (this.renderMode === "headless-test" || !this.session.gpuReady()) {
 			return;
 		}
-		if (this.interaction?.kind !== "selection" || this.interaction.screenPoints.length < 2) {
-			this.vello.clearSelectionScreenPreview();
-			return;
+		try {
+			this.pushSceneToWasmDriver();
+			this.session.renderFrame();
+			this.gpuSurfacePresentedFrame = true;
+			this.gpuSurfaceErrorDetail = "";
+		} catch (err: unknown) {
+			console.error("[DEBUG] BoardRenderer GPU surface frame failed", err);
+			this.gpuSurfaceErrorDetail = summarizeRasterSurfaceFailure(err);
+			this.gpuSurfaceUnavailable = true;
+			this.gpuSurfacePresentedFrame = false;
 		}
-		const points =
-			this.selectionOptions.method === "rectangle"
-				? [
-						this.interaction.startScreen,
-						{
-							x: this.interaction.screenPoints.at(-1)?.x ?? this.interaction.startScreen.x,
-							y: this.interaction.startScreen.y,
-						},
-						this.interaction.screenPoints.at(-1) ?? this.interaction.startScreen,
-						{
-							x: this.interaction.startScreen.x,
-							y: this.interaction.screenPoints.at(-1)?.y ?? this.interaction.startScreen.y,
-						},
-					]
-				: this.interaction.screenPoints;
-		const flat = new Float64Array(points.length * 2);
-		let i = 0;
-		for (const p of points) {
-			flat[i++] = p.x;
-			flat[i++] = p.y;
-		}
-		this.vello.setSelectionScreenPreview(flat);
 	}
 
 	dispose(): void {
 		this.isDisposed = true;
 		this.detachCanvasListeners();
-		if (this.vello) {
-			this.vello.free();
-			this.vello = null;
-		}
-		this.velloPresentedFrame = false;
-		this.velloFailureDetail = "";
+		this.session.free();
+		this.gpuSurfacePresentedFrame = false;
+		this.gpuSurfaceErrorDetail = "";
 		if (this.rafId !== null && globalThis.cancelAnimationFrame) {
 			globalThis.cancelAnimationFrame(this.rafId);
 		}
@@ -1563,24 +1405,8 @@ export class BoardRenderer {
 	}
 
 	private deleteSelectedObjects(): void {
-		const ids = [...this.selectionIds];
-		const edges = ids.map((id) => this.scene.edges.get(id)).filter((object): object is Edge => object != null);
-		const nodes = ids.map((id) => this.scene.nodes.get(id)).filter((object): object is Node => object != null);
-		for (const edge of edges) {
-			this.scene.remove(edge);
-			this.emit("edgeDelete", { id: edge.id });
-		}
-		for (const node of nodes) {
-			this.scene.remove(node);
-			this.emit("nodeDelete", { id: node.id });
-		}
-		const remaining = new Set<string>();
-		for (const id of this.selectionIds) {
-			if (this.scene.getObjectById(id)) {
-				remaining.add(id);
-			}
-		}
-		this.updateSelection(remaining);
+		this.session.deleteSelection();
+		this.applyWasmDrainToScene(this.session.drainEventsJson());
 	}
 
 	private readonly handleKeyDown = (event: KeyboardEvent): void => {
@@ -1600,297 +1426,90 @@ export class BoardRenderer {
 		this.deleteSelectedObjects();
 	};
 
-	private pointerStateFromEvent(event: PointerEvent | WheelEvent): PointerWorldState {
-		const rect = this.canvas?.getBoundingClientRect();
-		const screenPoint = {
-			x: event.clientX - (rect?.left ?? 0),
-			y: event.clientY - (rect?.top ?? 0),
-		};
-		return {
-			point: this.screenToWorld(screenPoint),
-			screenPoint,
-		};
-	}
-
-	private resolveHit(point: Point): BoardObject | null {
-		for (const handle of Array.from(this.scene.handles.values()).reverse()) {
-			if (!handle.visible) {
-				continue;
-			}
-			const tolerance = (HANDLE_HIT_TOLERANCE_PX / this.camera.zoom) + handle.radius;
-			if (distanceBetween(point, handle.position) <= tolerance) {
-				return handle;
-			}
-		}
-
-		for (const node of Array.from(this.scene.nodes.values()).reverse()) {
-			if (!node.visible) {
-				continue;
-			}
-			if (node.shape === "rectangle") {
-				const hw = node.width / 2;
-				const hh = node.height / 2;
-				if (Math.abs(point.x - node.x) <= hw && Math.abs(point.y - node.y) <= hh) {
-					return node;
-				}
-			} else if (distanceBetween(point, { x: node.x, y: node.y }) <= node.radius) {
-				return node;
-			}
-		}
-
-		for (const edge of Array.from(this.scene.edges.values()).reverse()) {
-			if (!edge.visible) {
-				continue;
-			}
-			if (distanceToBezier(point, edge.curve, 18) <= EDGE_HIT_TOLERANCE_PX / this.camera.zoom) {
-				return edge;
-			}
-		}
-
-		return null;
-	}
-
 	private applyCanvasDebugAttributes(): void {
 		if (!this.canvas) {
 			return;
 		}
 		if (this.renderMode === "headless-test") {
-			this.canvas.dataset.boardVelloState = "off";
-			delete this.canvas.dataset.boardVelloFailure;
-		} else if (this.velloUnavailable) {
-			this.canvas.dataset.boardVelloState = "error";
-			if (this.velloFailureDetail) {
-				this.canvas.dataset.boardVelloFailure = this.velloFailureDetail.slice(0, 512);
+			this.canvas.dataset.boardSurfaceState = "off";
+			delete this.canvas.dataset.boardSurfaceFailure;
+		} else if (this.gpuSurfaceUnavailable) {
+			this.canvas.dataset.boardSurfaceState = "error";
+			if (this.gpuSurfaceErrorDetail) {
+				this.canvas.dataset.boardSurfaceFailure = this.gpuSurfaceErrorDetail.slice(0, 512);
 			}
-		} else if (this.velloPresentedFrame && this.vello) {
-			this.canvas.dataset.boardVelloState = "ready";
-			delete this.canvas.dataset.boardVelloFailure;
-		} else if (this.velloInitPromise) {
-			this.canvas.dataset.boardVelloState = "init";
-			delete this.canvas.dataset.boardVelloFailure;
+		} else if (this.gpuSurfacePresentedFrame && this.session.gpuReady()) {
+			this.canvas.dataset.boardSurfaceState = "ready";
+			delete this.canvas.dataset.boardSurfaceFailure;
+		} else if (this.gpuSurfaceInitPromise) {
+			this.canvas.dataset.boardSurfaceState = "init";
+			delete this.canvas.dataset.boardSurfaceFailure;
 		} else {
-			this.canvas.dataset.boardVelloState = "pending";
-			delete this.canvas.dataset.boardVelloFailure;
+			this.canvas.dataset.boardSurfaceState = "pending";
+			delete this.canvas.dataset.boardSurfaceFailure;
 		}
-		this.canvas.dataset.boardRaster = "vello";
+		this.canvas.dataset.boardRaster = "gpu";
 		this.canvas.dataset.boardLod = resolveBoardLodLabel(this.camera.zoom);
 		this.canvas.dataset.boardZoom = String(Math.round(this.camera.zoom * 1000) / 1000);
 		this.canvas.dataset.boardSelection = sortedSelectionIds(this.selectionIds).join(",");
 		this.canvas.setAttribute("data-board-camera", `${this.camera.x},${this.camera.y}`);
 	}
 
-	private currentSelectionShape(selection: SelectionDragState): { box: WorldAxisBox; enclosing: boolean; polygon: Point[] } {
-		const last = selection.points.at(-1) ?? selection.start;
-		const enclosing = last.x >= selection.start.x;
-		if (this.selectionOptions.method === "lasso" && selection.points.length >= 3) {
-			return { box: worldBoxFromPoints(selection.points), enclosing, polygon: selection.points };
-		}
-		const box = worldBoxFromPoints([selection.start, last]);
-		return {
-			box,
-			enclosing,
-			polygon: [
-				{ x: box.minX, y: box.minY },
-				{ x: box.maxX, y: box.minY },
-				{ x: box.maxX, y: box.maxY },
-				{ x: box.minX, y: box.maxY },
-			],
-		};
-	}
-
-	private selectionContainsNode(node: Node, shape: { box: WorldAxisBox; enclosing: boolean; polygon: Point[] }): boolean {
-		const bounds = nodeWorldBounds(node, 0);
-		if (shape.enclosing) {
-			return this.selectionOptions.method === "lasso" ? polygonContainsWorldBox(shape.polygon, bounds) : worldBoxContainsBox(shape.box, bounds);
-		}
-		return this.selectionOptions.method === "lasso" ? polygonIntersectsWorldBox(shape.polygon, bounds) : worldBoxesOverlap(shape.box, bounds);
-	}
-
-	private selectionContainsEdge(edge: Edge, shape: { box: WorldAxisBox; enclosing: boolean; polygon: Point[] }): boolean {
-		const samples: Point[] = [];
-		const steps = 24;
-		for (let index = 0; index <= steps; index += 1) {
-			samples.push(cubicBezierPoint(edge.curve, index / steps));
-		}
-		if (shape.enclosing) {
-			return this.selectionOptions.method === "lasso"
-				? samples.every((point) => pointInPolygon(point, shape.polygon))
-				: samples.every((point) => worldBoxContainsPoint(shape.box, point));
-		}
-		for (let index = 1; index < samples.length; index += 1) {
-			const previous = samples[index - 1];
-			const current = samples[index];
-			const intersects =
-				this.selectionOptions.method === "lasso"
-					? segmentIntersectsPolygon(previous, current, shape.polygon)
-					: segmentIntersectsWorldBox(previous, current, shape.box);
-			if (intersects) {
-				return true;
-			}
-		}
-		return false;
-	}
-
-	private resolveAreaSelection(selection: SelectionDragState): Set<string> {
-		const shape = this.currentSelectionShape(selection);
-		const hits = new Set<string>();
-		if (this.selectionOptions.target === "nodes" || this.selectionOptions.target === "nodes&edges") {
-			for (const node of this.scene.nodes.values()) {
-				if (node.visible && this.selectionContainsNode(node, shape)) {
-					hits.add(node.id);
-				}
-			}
-		}
-		if (this.selectionOptions.target === "edges" || this.selectionOptions.target === "nodes&edges") {
-			for (const edge of this.scene.edges.values()) {
-				if (edge.visible && this.selectionContainsEdge(edge, shape)) {
-					hits.add(edge.id);
-				}
-			}
-		}
-		const next = new Set(selection.initialIds);
-		for (const id of hits) {
-			if (this.selectionOptions.mode === "additive") {
-				next.add(id);
-			} else if (this.selectionOptions.mode === "subtractive") {
-				next.delete(id);
-			} else if (next.has(id)) {
-				next.delete(id);
-			} else {
-				next.add(id);
-			}
-		}
-		return next;
-	}
-
 	private readonly handlePointerDown = (event: PointerEvent): void => {
+		if (!this.canvas) {
+			return;
+		}
 		if (event.button !== 0 && event.button !== 1) {
 			return;
 		}
-		this.canvas?.focus({ preventScroll: true });
+		this.canvas.focus({ preventScroll: true });
 		if (typeof event.pointerId === "number") {
-			this.canvas?.setPointerCapture?.(event.pointerId);
+			this.canvas.setPointerCapture?.(event.pointerId);
 		}
-		const pointer = this.pointerStateFromEvent(event);
-		const hitObject = this.resolveHit(pointer.point);
-		if (event.button === 1 || (!hitObject && event.shiftKey)) {
-			event.preventDefault();
-			this.interaction = {
-				kind: "pan",
-				origin: { ...this.camera },
-				start: pointer.screenPoint,
-			};
-			return;
-		}
-		if (hitObject instanceof Node && hitObject.draggable) {
-			event.preventDefault();
-			this.updateSelection([hitObject.id]);
-			this.interaction = {
-				kind: "drag-node",
-				nodeId: hitObject.id,
-				offset: subtractPoint(pointer.point, { x: hitObject.x, y: hitObject.y }),
-			};
-			return;
-		}
-		if (!hitObject && event.button === 0) {
-			event.preventDefault();
-			this.interaction = {
-				kind: "selection",
-				initialIds: new Set(this.selectionIds),
-				points: [pointer.point],
-				screenPoints: [pointer.screenPoint],
-				start: pointer.point,
-				startScreen: pointer.screenPoint,
-			};
-			this.updateHover(null);
-			this.markDirty();
-			return;
-		}
-		this.interaction = null;
-		this.updateSelection(hitObject ? [hitObject.id] : []);
-		this.updateHover(hitObject?.id ?? null);
+		event.preventDefault();
+		const rect = this.canvas.getBoundingClientRect();
+		this.session.pointerDownScreen(event.clientX - rect.left, event.clientY - rect.top, event.button, event.shiftKey);
+		this.applyWasmDrainToScene(this.session.drainEventsJson());
+		this.invalidate();
 	};
 
 	private readonly handlePointerMove = (event: PointerEvent): void => {
-		const pointer = this.pointerStateFromEvent(event);
-		if (this.interaction?.kind === "drag-node") {
-			const node = this.scene.nodes.get(this.interaction.nodeId);
-			if (!node) {
-				this.interaction = null;
-				return;
-			}
-			const nextPosition = subtractPoint(pointer.point, this.interaction.offset);
-			node.setPosition(nextPosition.x, nextPosition.y);
-			this.emit("nodeMove", { id: node.id, x: node.x, y: node.y });
-			this.markDirty();
+		if (!this.canvas) {
 			return;
 		}
-
-		if (this.interaction?.kind === "pan") {
-			const delta = subtractPoint(pointer.screenPoint, this.interaction.start);
-			this.setCamera(
-				this.interaction.origin.x - delta.x / this.interaction.origin.zoom,
-				this.interaction.origin.y - delta.y / this.interaction.origin.zoom,
-				this.interaction.origin.zoom,
-			);
-			return;
-		}
-
-		if (this.interaction?.kind === "selection") {
-			event.preventDefault();
-			const lastScreenPoint = this.interaction.screenPoints.at(-1) ?? this.interaction.startScreen;
-			if (this.selectionOptions.method === "rectangle" || distanceBetween(pointer.screenPoint, lastScreenPoint) >= SELECTION_LASSO_MIN_POINT_DISTANCE_PX) {
-				this.interaction.points.push(pointer.point);
-				this.interaction.screenPoints.push(pointer.screenPoint);
-			} else {
-				this.interaction.points[this.interaction.points.length - 1] = pointer.point;
-				this.interaction.screenPoints[this.interaction.screenPoints.length - 1] = pointer.screenPoint;
-			}
-			this.updateSelection(this.resolveAreaSelection(this.interaction));
-			return;
-		}
-
-		const hitObject = this.resolveHit(pointer.point);
-		this.updateHover(hitObject?.id ?? null);
+		const rect = this.canvas.getBoundingClientRect();
+		this.session.pointerMoveScreen(event.clientX - rect.left, event.clientY - rect.top);
+		this.applyWasmDrainToScene(this.session.drainEventsJson());
+		this.invalidate();
 	};
 
 	private readonly handlePointerUp = (event: PointerEvent): void => {
-		if (this.interaction?.kind === "selection") {
-			const pointer = this.pointerStateFromEvent(event);
-			this.interaction.points.push(pointer.point);
-			this.interaction.screenPoints.push(pointer.screenPoint);
-			this.updateSelection(this.resolveAreaSelection(this.interaction));
-			if (typeof event.pointerId === "number") {
-				this.canvas?.releasePointerCapture?.(event.pointerId);
-			}
-			this.interaction = null;
-			this.markDirty();
+		if (!this.canvas) {
 			return;
 		}
+		const rect = this.canvas.getBoundingClientRect();
+		this.session.pointerUpScreen(event.clientX - rect.left, event.clientY - rect.top);
+		this.applyWasmDrainToScene(this.session.drainEventsJson());
 		if (typeof event.pointerId === "number") {
-			this.canvas?.releasePointerCapture?.(event.pointerId);
+			this.canvas.releasePointerCapture?.(event.pointerId);
 		}
-		this.interaction = null;
+		this.invalidate();
 	};
 
 	private readonly handlePointerLeave = (): void => {
-		if (!this.interaction) {
-			this.updateHover(null);
-		}
+		this.session.pointerLeaveScreen();
+		this.applyWasmDrainToScene(this.session.drainEventsJson());
 	};
 
 	private readonly handleWheel = (event: WheelEvent): void => {
+		if (!this.canvas) {
+			return;
+		}
 		event.preventDefault();
-		const pointer = this.pointerStateFromEvent(event);
-		const zoomFactor = event.deltaY < 0 ? 1.1 : 0.9;
-		const nextZoom = clamp(this.camera.zoom * zoomFactor, MIN_ZOOM, MAX_ZOOM);
-		const worldBeforeZoom = pointer.point;
-		const cameraAfterZoom = {
-			x: worldBeforeZoom.x - (pointer.screenPoint.x - this.width / 2) / nextZoom,
-			y: worldBeforeZoom.y - (pointer.screenPoint.y - this.height / 2) / nextZoom,
-			zoom: nextZoom,
-		};
-		this.setCamera(cameraAfterZoom.x, cameraAfterZoom.y, cameraAfterZoom.zoom);
+		const rect = this.canvas.getBoundingClientRect();
+		this.session.wheelScreen(event.clientX - rect.left, event.clientY - rect.top, event.deltaY);
+		this.applyWasmDrainToScene(this.session.drainEventsJson());
+		this.invalidate();
 	};
 }
 //#endregion 🔖Renderer
@@ -2227,6 +1846,28 @@ if (boardVitest) {
 			expect(parsed?.nodes[0]).toMatchObject({ text: "primary" });
 		});
 
+		it("does not treat kit cs_ labels as display text", () => {
+			const parsed = parseBoardFixtureV1({
+				camera: { x: 0, y: 0, zoom: 1 },
+				edges: [],
+				nodes: [
+					{
+						handles: [{ angle: 0, id: "a:h" }],
+						height: 10,
+						id: "a",
+						label: "cs_sl0_d0_t_f0_b_c0",
+						shape: "rectangle",
+						width: 12,
+						x: 1,
+						y: 2,
+					},
+				],
+				schema: "elements.board.fixture/v1",
+			});
+			expect(parsed?.nodes[0]).toMatchObject({ id: "a", shape: "rectangle" });
+			expect(parsed?.nodes[0]).not.toHaveProperty("text");
+		});
+
 		it("rejects wrong schema or malformed nodes", () => {
 			expect(parseBoardFixtureV1({ schema: "other", nodes: [], edges: [], camera: { x: 0, y: 0, zoom: 1 } })).toBeNull();
 			expect(parseBoardFixtureV1({ schema: "elements.board.fixture/v1", nodes: "x", edges: [], camera: { x: 0, y: 0, zoom: 1 } })).toBeNull();
@@ -2259,8 +1900,8 @@ if (boardVitest) {
 
 let boardSchedulerPriority = NoEventPriority;
 
-/** @emoji 🧩 Static host surface required by `react-reconciler` beyond board scene mutations. */
-export const BOARD_RECONCILER_DEFAULTS: Record<string, unknown> = {
+/** @emoji 🧩 Static host surface required by the secondary renderer beyond board scene mutations. */
+export const BOARD_HOST_MOUNT_DEFAULTS: Record<string, unknown> = {
 	HostTransitionContext: React.createContext(null) as never,
 	NotPendingTransition: null,
 	acquireResource: () => null,
@@ -2646,16 +2287,16 @@ function detachHandleFromNode(nodeHost: BoardHostNode, handleHost: BoardHostHand
 const boardEmptyHostContext = Object.freeze({});
 //#endregion 🔖MountHelpers
 
-//#region 🔖Reconciler
-const boardReconciler = Reconciler({
-	...BOARD_RECONCILER_DEFAULTS,
+//#region 🔖HostMountInternals
+const boardSceneHost = Reconciler({
+	...BOARD_HOST_MOUNT_DEFAULTS,
 	supportsMutation: true,
 	supportsPersistence: false,
 	supportsHydration: false,
 	isPrimaryRenderer: false,
 	warnsIfNotActing: true,
 	supportsMicrotasks: true,
-	/** @emoji ⚡ Runs microtasks synchronously so `updateContainer` from a parent `useLayoutEffect` commits before `act()` reads the imperative scene (nested roots + `its-fine` bridge). */
+	/** @emoji ⚡ Runs microtasks synchronously so `updateContainer` from a parent `useLayoutEffect` commits before `act()` reads the imperative scene (nested host roots + cross-root context bridge). */
 	scheduleMicrotask: (fn: () => unknown) => {
 		fn();
 	},
@@ -2754,7 +2395,7 @@ const boardReconciler = Reconciler({
 		container.invalidate();
 	},
 
-	/** @emoji 🧹 No-op: React calls this on HostRoot before mutation; scene graph is driven by append/remove only (see {@link unmountBoardFiberRoot}). */
+	/** @emoji 🧹 No-op: host stack calls this on root before mutation; scene graph is driven by append/remove only (see {@link unmountBoardHostMount}). */
 	clearContainer(_container: BoardRenderer) {},
 
 	finalizeInitialChildren() {
@@ -2846,11 +2487,11 @@ const boardReconciler = Reconciler({
 	requestPaint() {},
 } as never);
 
-export type BoardFiberRoot = ReturnType<typeof boardReconciler.createContainer>;
+export type BoardHostMount = ReturnType<typeof boardSceneHost.createContainer>;
 
-/** @emoji 🌱 Creates a legacy-mode board reconciler root bound to {@link BoardRenderer} for synchronous subtree commits with DOM `act()`. */
-export function createBoardFiberRoot(renderer: BoardRenderer): BoardFiberRoot {
-	return boardReconciler.createContainer(
+/** @emoji 🌱 Creates a legacy-mode host mount bound to {@link BoardRenderer} for synchronous subtree commits with DOM `act()`. */
+export function createBoardHostMount(renderer: BoardRenderer): BoardHostMount {
+	return boardSceneHost.createContainer(
 		renderer,
 		LegacyRoot,
 		null,
@@ -2864,22 +2505,22 @@ export function createBoardFiberRoot(renderer: BoardRenderer): BoardFiberRoot {
 	);
 }
 
-/** @emoji 🔄 Schedules reconciler work and ties post-commit to {@link BoardRenderer.invalidate}. */
-export function updateBoardFiberRoot(root: BoardFiberRoot, element: ReactElement | null, parent: null): void {
-	boardReconciler.updateContainer(element, root, parent, () => {
+/** @emoji 🔄 Schedules host work and ties post-commit to {@link BoardRenderer.invalidate}. */
+export function updateBoardHostMount(root: BoardHostMount, element: ReactElement | null, parent: null): void {
+	boardSceneHost.updateContainer(element, root, parent, () => {
 		const renderer = root.containerInfo;
 		renderer.invalidate();
 	});
 }
 
-/** @emoji 🧹 Unmounts the board reconciler subtree without disposing {@link BoardRenderer}. */
-export function unmountBoardFiberRoot(root: BoardFiberRoot): void {
-	updateBoardFiberRoot(root, null, null);
+/** @emoji 🧹 Unmounts the host subtree without disposing {@link BoardRenderer}. */
+export function unmountBoardHostMount(root: BoardHostMount): void {
+	updateBoardHostMount(root, null, null);
 	const renderer = root.containerInfo as BoardRenderer;
 	renderer.scene.clear();
 	renderer.invalidate();
 }
 
-export { boardReconciler };
-//#endregion 🔖Reconciler
+export { boardSceneHost };
+//#endregion 🔖HostMountInternals
 

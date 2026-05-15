@@ -18,16 +18,16 @@ import {
 	type ReactNode,
 } from "react";
 import { createRoot } from "react-dom/client";
-import { FiberProvider, useContextBridge } from "its-fine";
+import { FiberProvider as HostMountProvider, useContextBridge as useHostMountBridge } from "its-fine";
 
 import {
 	BOARD_HOST_EDGE,
 	BOARD_HOST_HANDLE,
 	BOARD_HOST_NODE,
-	createBoardFiberRoot,
-	unmountBoardFiberRoot,
-	updateBoardFiberRoot,
-	type BoardFiberRoot,
+	createBoardHostMount,
+	unmountBoardHostMount,
+	updateBoardHostMount,
+	type BoardHostMount,
 	BoardRenderer,
 	Edge as BoardEdgeObject,
 	Handle as BoardHandleObject,
@@ -144,7 +144,7 @@ let activeBoardRenderer: BoardRenderer | null = null;
 //#endregion 🔖Context
 
 //#region 🔖Markers
-/** 🟠 Host intrinsic for the board reconciler (`react-reconciler`); assign to JSX {@link BOARD_HOST_NODE}. */
+/** 🟠 Host intrinsic for the secondary board host; assign to JSX {@link BOARD_HOST_NODE}. */
 export const Node = BOARD_HOST_NODE;
 
 /** 🟣 Host intrinsic for board handles nested under {@link Node}. */
@@ -360,26 +360,27 @@ export function syncBoardScene(renderer: BoardRenderer, descriptor: BoardSceneDe
 }
 //#endregion 🔖Scene Sync
 
-//#region 🔖ReconcilerBridge
-/** @emoji 🌉 Mounts the board `react-reconciler` subtree; remounts the inner fiber root when `children` change so host props stay applied (legacy root + remount avoids skipped host updates under nested React roots). */
-function BoardReconcilerMount({ children, renderer }: { children: ReactNode; renderer: BoardRenderer }): null {
-	const fiberRootRef = useRef<BoardFiberRoot | null>(null);
+//#region 🔖HostMountBridge
+/** @emoji 🌉 Mounts the secondary board host subtree; remounts the inner root when `children` change so host props stay applied (legacy root + remount avoids skipped host updates under nested React roots). */
+function BoardHostSubtree({ children, renderer }: { children: ReactNode; renderer: BoardRenderer }): null {
+	const hostMountRef = useRef<BoardHostMount | null>(null);
+	const Bridge = useHostMountBridge();
 
 	useLayoutEffect(() => {
-		const root = createBoardFiberRoot(renderer);
-		fiberRootRef.current = root;
-		updateBoardFiberRoot(root, createElement(Fragment, null, children), null);
+		const root = createBoardHostMount(renderer);
+		hostMountRef.current = root;
+		updateBoardHostMount(root, createElement(Bridge, null, children), null);
 		return () => {
-			unmountBoardFiberRoot(root);
-			if (fiberRootRef.current === root) {
-				fiberRootRef.current = null;
+			unmountBoardHostMount(root);
+			if (hostMountRef.current === root) {
+				hostMountRef.current = null;
 			}
 		};
-	}, [renderer, children]);
+	}, [renderer, children, Bridge]);
 
 	return null;
 }
-//#endregion 🔖ReconcilerBridge
+//#endregion 🔖HostMountBridge
 
 //#region 🔖Canvas
 /** 🖼️ React board root that keeps the hot path inside the imperative renderer. */
@@ -560,9 +561,9 @@ export function BoardCanvas({
 				>
 					<canvas data-testid="board-canvas" ref={canvasRef} style={{ display: "block", height: "100%", width: "100%" }} />
 					{contextRenderer ? (
-						<FiberProvider>
-							<BoardReconcilerMount children={children} renderer={contextRenderer} />
-						</FiberProvider>
+						<HostMountProvider>
+							<BoardHostSubtree children={children} renderer={contextRenderer} />
+						</HostMountProvider>
 					) : null}
 				</div>
 		</BoardContext.Provider>
@@ -571,7 +572,7 @@ export function BoardCanvas({
 //#endregion 🔖Canvas
 
 //#region 🔖Hooks
-/** 🎯 Access the imperative board renderer from within BoardCanvas descendants (DOM or board reconciler). */
+/** 🎯 Access the imperative board renderer from within BoardCanvas descendants (DOM or secondary host tree). */
 export function useBoard(): BoardRenderer {
 	const renderer = useContext(BoardContext);
 	if (renderer) {
@@ -700,7 +701,7 @@ if (boardReactVitest) {
 			expect(descriptor.edges).toEqual([{ from: "a.out", id: "edge-1", selected: undefined, style: undefined, to: "a.out", userData: undefined, visible: undefined }]);
 		});
 
-		it("buildBoardSceneDescriptor ignores opaque components (use reconciler for nested composition)", () => {
+		it("buildBoardSceneDescriptor ignores opaque components (use secondary host for nested composition)", () => {
 			function OpaqueScene(): ReactElement {
 				return (
 					<Node id="inner" radius={8} x={1} y={2}>
@@ -717,23 +718,23 @@ if (boardReactVitest) {
 			expect(descriptor.handles).toHaveLength(0);
 		});
 
-		it("board reconciler mounts handle under node without BoardCanvas", () => {
+		it("secondary host mounts handle under node without BoardCanvas", () => {
 			const renderer = new BoardRenderer({ renderMode: "headless-test" });
-			const fiberRoot = createBoardFiberRoot(renderer);
+			const hostMount = createBoardHostMount(renderer);
 			act(() => {
-				updateBoardFiberRoot(
-					fiberRoot,
+				updateBoardHostMount(
+					hostMount,
 					createElement(
 						BOARD_HOST_NODE,
-						{ draggable: true, id: "fiber-n", radius: 10, selected: false, visible: true, x: 0, y: 0 },
-						createElement(BOARD_HOST_HANDLE, { angle: 0, id: "fiber-h", selected: false, visible: true }),
+						{ draggable: true, id: "host-a-node", radius: 10, selected: false, visible: true, x: 0, y: 0 },
+						createElement(BOARD_HOST_HANDLE, { angle: 0, id: "host-a-handle", selected: false, visible: true }),
 					),
 					null,
 				);
 			});
-			expect(renderer.scene.getObjectById("fiber-n")).toBeInstanceOf(BoardNodeObject);
-			expect(renderer.scene.getObjectById("fiber-h")).toBeInstanceOf(BoardHandleObject);
-			unmountBoardFiberRoot(fiberRoot);
+			expect(renderer.scene.getObjectById("host-a-node")).toBeInstanceOf(BoardNodeObject);
+			expect(renderer.scene.getObjectById("host-a-handle")).toBeInstanceOf(BoardHandleObject);
+			unmountBoardHostMount(hostMount);
 			renderer.dispose();
 		});
 
@@ -765,7 +766,7 @@ if (boardReactVitest) {
 			restoreCanvas();
 		});
 
-		it("mounts nodes through wrapper components via the board reconciler", async () => {
+		it("mounts nodes through wrapper components via the secondary host", async () => {
 			const restoreCanvas = installCanvasStub();
 			const container = document.createElement("div");
 			document.body.appendChild(container);

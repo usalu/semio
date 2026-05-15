@@ -9,8 +9,8 @@ export default defineConfig({
 	root,
 	test: {
 		environment: "jsdom",
-		include: ["index.ts", "react/index.tsx"],
-		includeSource: ["index.ts", "react/index.tsx"],
+		include: ["index.ts", "index.tsx"],
+		includeSource: ["index.ts", "index.tsx"],
 		passWithNoTests: true,
 	},
 });
