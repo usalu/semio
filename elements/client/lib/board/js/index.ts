@@ -1122,6 +1122,7 @@ export class BoardRenderer {
 	private styles = new Map<string, BoardStyle>(Object.entries(DEFAULT_STYLES));
 	private vello: BoardVelloWasm | null = null;
 	private velloInitPromise: Promise<void> | null = null;
+	private velloPresentedFrame = false;
 	private velloUnavailable = false;
 	private width = 1;
 	private height = 1;
@@ -1313,10 +1314,13 @@ export class BoardRenderer {
 				this.velloInitPromise = this.initVelloOnce()
 					.then(() => {
 						this.velloInitPromise = null;
+						this.markDirty();
 					})
-					.catch(() => {
+					.catch((err: unknown) => {
+						console.error("[DEBUG] BoardRenderer Vello init failed", err);
 						this.velloUnavailable = true;
 						this.velloInitPromise = null;
+						this.markDirty();
 					});
 			}
 			if (this.vello) {
@@ -1417,8 +1421,11 @@ export class BoardRenderer {
 			this.vello.sync_descriptor_json(this.descriptorJsonForVello());
 			this.vello.set_camera_wasm(this.camera.x, this.camera.y, this.camera.zoom);
 			this.vello.render_frame();
-		} catch {
+			this.velloPresentedFrame = true;
+		} catch (err: unknown) {
+			console.error("[DEBUG] BoardRenderer Vello frame failed", err);
 			this.velloUnavailable = true;
+			this.velloPresentedFrame = false;
 		}
 	}
 
@@ -1461,6 +1468,7 @@ export class BoardRenderer {
 			this.vello.free();
 			this.vello = null;
 		}
+		this.velloPresentedFrame = false;
 		if (this.rafId !== null && globalThis.cancelAnimationFrame) {
 			globalThis.cancelAnimationFrame(this.rafId);
 		}
@@ -1614,6 +1622,17 @@ export class BoardRenderer {
 	private applyCanvasDebugAttributes(): void {
 		if (!this.canvas) {
 			return;
+		}
+		if (this.renderMode === "headless-test") {
+			this.canvas.dataset.boardVelloState = "off";
+		} else if (this.velloUnavailable) {
+			this.canvas.dataset.boardVelloState = "error";
+		} else if (this.velloPresentedFrame && this.vello) {
+			this.canvas.dataset.boardVelloState = "ready";
+		} else if (this.velloInitPromise) {
+			this.canvas.dataset.boardVelloState = "init";
+		} else {
+			this.canvas.dataset.boardVelloState = "pending";
 		}
 		this.canvas.dataset.boardRaster = "vello";
 		this.canvas.dataset.boardLod = resolveBoardLodLabel(this.camera.zoom);
