@@ -275,7 +275,11 @@ schema:
           edits: [*edit]
           startedAt: *timestamp
           savedAt: *timestamp
-          saved: *boolean
+          saved:
+            is: *boolean
+            kind: *COMPUTED
+            constraints:
+              - &changeSavedDerivedFromSavedAt "📌 saved derives from embedded sibling savedAt: non-null persisted timestamp implies the boolean reads true."
           description: *string
           origin: *string
       checkpoint: &checkpoint

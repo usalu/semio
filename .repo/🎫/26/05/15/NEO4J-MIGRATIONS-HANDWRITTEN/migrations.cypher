@@ -35,6 +35,15 @@ MATCH (c)-[:IS*1..25]->(b:Interface)
 MERGE (n)-[:IS]->(b);
 //#endregion MaterializeTransitiveIsForKitMembers
 
+//#region ReclassifyChangeSavedKitMemberAsComputation
+MATCH (:Class {name: 'Change'})-[:OWNS]->(d:Data {name: 'saved'})
+SET d:Computation, d.cached = false
+REMOVE d:Data, d.isList;
+MATCH (:Class {name: 'Change'})-[:OWNS]->(c:Computation {name: 'saved'})
+MERGE (con:Constraint {description: '📌 saved derives from embedded sibling savedAt: non-null persisted timestamp implies the boolean reads true.'})
+MERGE (c)-[:OWNS]->(con);
+//#endregion ReclassifyChangeSavedKitMemberAsComputation
+
 //#region ReplaceFieldIndexes
 DROP INDEX index_field_name IF EXISTS;
 CREATE RANGE INDEX index_data_name IF NOT EXISTS FOR (n:Data) ON (n.name);

@@ -376,6 +376,58 @@ function main(): void {
     process.exit(1);
   }
 
+  const probeChangeSaved = spawnSync(
+    shell,
+    [
+      "-a",
+      process.env.NEO4J_URI || "bolt://localhost:7687",
+      "-u",
+      process.env.NEO4J_USERNAME || "neo4j",
+      "-p",
+      process.env.NEO4J_PASSWORD || "password",
+      "-d",
+      DATABASE,
+      "--format",
+      "plain",
+      "OPTIONAL MATCH (:Class {name:'Change'})-[:OWNS]->(bad:Data {name:'saved'}) " +
+        "WITH count(bad) AS dataSaved " +
+        "OPTIONAL MATCH (:Class {name:'Change'})-[:OWNS]->(ok:Computation {name:'saved'}) " +
+        "WITH dataSaved, count(ok) AS computationSaved " +
+        "OPTIONAL MATCH (:Class {name:'Change'})-[:OWNS]->(:Computation {name:'saved'})-[:OWNS]->(con:Constraint) " +
+        "WHERE con.description CONTAINS 'savedAt' " +
+        "RETURN dataSaved, computationSaved, count(con) AS savedConstraintCount;",
+    ],
+    { encoding: "utf8", cwd: REPO_ROOT, env: buildCypherEnv() },
+  );
+
+  if (probeChangeSaved.status !== 0) {
+    console.error(`[migrate:neo4j] Change.saved kit-member verify failed: ${probeChangeSaved.stderr}`);
+    process.exit(1);
+  }
+
+  const csTail = String(probeChangeSaved.stdout ?? "")
+    .trim()
+    .split(/\r?\n/)
+    .map((l) => l.trim())
+    .filter(Boolean);
+  const csLast = csTail[csTail.length - 1] ?? "";
+  const csParts = csLast.split(/\s+/).filter(Boolean);
+  const dataSaved = Number.parseInt(csParts[0] ?? "", 10);
+  const computationSaved = Number.parseInt(csParts[1] ?? "", 10);
+  const savedConstraintCount = Number.parseInt(csParts[2] ?? "", 10);
+  if (!Number.isFinite(dataSaved) || dataSaved !== 0) {
+    console.error(`[migrate:neo4j] expected zero :Data saved under Class Change; verify output:\n${probeChangeSaved.stdout}`);
+    process.exit(1);
+  }
+  if (!Number.isFinite(computationSaved) || computationSaved < 1) {
+    console.error(`[migrate:neo4j] expected Class Change to OWNS :Computation saved; verify output:\n${probeChangeSaved.stdout}`);
+    process.exit(1);
+  }
+  if (!Number.isFinite(savedConstraintCount) || savedConstraintCount < 1) {
+    console.error(`[migrate:neo4j] expected savedAt-derived Constraint under Change.saved; verify output:\n${probeChangeSaved.stdout}`);
+    process.exit(1);
+  }
+
   console.log("[migrate:neo4j] handwritten migrations ok.");
 }
 

@@ -14,11 +14,53 @@ function significantConsoleErrors(messages: string[]): string[] {
 async function clickCanvasNormalized(page: Page, canvas: Locator, nx: number, ny: number): Promise<void> {
 	const box = await canvas.boundingBox();
 	expect(box).toBeTruthy();
-	const x = box!.x + nx * box!.width;
-	const y = box!.y + ny * box!.height;
-	await page.mouse.move(x, y);
-	await page.mouse.down();
-	await page.mouse.up();
+	const clientX = box!.x + nx * box!.width;
+	const clientY = box!.y + ny * box!.height;
+	await page.evaluate(
+		({ nextClientX, nextClientY }) => {
+			const element = document.querySelector('[data-testid="board-canvas"]');
+			if (!(element instanceof HTMLCanvasElement)) {
+				throw new Error('Board canvas not found.');
+			}
+			const move = new PointerEvent('pointermove', {
+				bubbles: true,
+				button: 0,
+				buttons: 0,
+				cancelable: true,
+				clientX: nextClientX,
+				clientY: nextClientY,
+				composed: true,
+				pointerId: 1,
+				pointerType: 'mouse',
+			});
+			const down = new PointerEvent('pointerdown', {
+				bubbles: true,
+				button: 0,
+				buttons: 1,
+				cancelable: true,
+				clientX: nextClientX,
+				clientY: nextClientY,
+				composed: true,
+				pointerId: 1,
+				pointerType: 'mouse',
+			});
+			const up = new PointerEvent('pointerup', {
+				bubbles: true,
+				button: 0,
+				buttons: 0,
+				cancelable: true,
+				clientX: nextClientX,
+				clientY: nextClientY,
+				composed: true,
+				pointerId: 1,
+				pointerType: 'mouse',
+			});
+			element.dispatchEvent(move);
+			element.dispatchEvent(down);
+			element.dispatchEvent(up);
+		},
+		{ nextClientX: clientX, nextClientY: clientY },
+	);
 }
 
 async function wheelOnCanvasNormalized(page: Page, canvas: Locator, nx: number, ny: number, deltaY: number): Promise<void> {
