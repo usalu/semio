@@ -1,8 +1,9 @@
 {
   "title": "Extend Board Selection",
   "emoji": "🎫",
-  "status": "open",
+  "status": "closed",
   "description": "Extend elements/board selection so holding left button opens selection with rectangle and lasso methods, additive/subtractive/invertive modes, node/edge/both targets, and directional partial-vs-enclosing behavior.",
+  "summary": "Implemented configurable board area selection for rectangle and lasso methods with additive, subtractive, and invertive modes. Added node/edge/nodes\u0026edges targeting, directional partial-vs-enclosing selection semantics, active selection overlay rendering, React BoardCanvas props for selection configuration, and focused inline Vitest coverage. Routed @elements/board build and test targets through the existing script.ts per repo conventions. Verified @elements/board:test and @elements/board:build; build required redirecting Nx workspace/cache directories into the ticket folder because the shared .nx workspace-data cache was locked.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/1420"
   },

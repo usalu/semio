@@ -1,0 +1,21 @@
+{
+  "run": {
+    "command": "nx build @elements/board",
+    "startTime": "2026-05-15T20:11:14.023Z",
+    "endTime": "2026-05-15T20:11:29.314Z",
+    "inner": false
+  },
+  "tasks": [
+    {
+      "taskId": "@elements/board:build",
+      "target": "build",
+      "projectName": "@elements/board",
+      "hash": "4839463126374570618",
+      "startTime": "2026-05-15T20:11:14.038Z",
+      "endTime": "2026-05-15T20:11:29.308Z",
+      "params": "",
+      "cacheStatus": "cache-miss",
+      "status": 0
+    }
+  ]
+}
