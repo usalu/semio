@@ -374,9 +374,23 @@ Add a checkbox element which is an action that can be checked and unchecked.
 
 ### 🏁board
 
+elements/board:
+
+---
+
+Add drag and drop functionality.
+Implement play elements/client/lib/board/play/index.html for board where you use the UI component from elements same as semio/dev/algorithms . Have three windows (2 columns half half and second column split in to horizontal rows). Load the .storybook/fixtures/nakagin-capsule-tower.board.json for all three windows with different zoom level, cameras and selection.
+Add dev command.
+
 ---
 
 Create a test asset (no semio depency) which is just a board json and add a story to board and an end-to-end test in playwright. .storybook/fixtures/nakagin-capsule-tower.board.json . Map the center pieces and connections from the flat nakagin capsule tower semio/assets/fixtures/metabolism.kit.semio.json . The board coordinate system is in screen coordinates and the semio is cad coordinate system (x to the right, y to front, z up)
+
+---
+
+We want to develop a high-performant infinite-canvas diagram canvas component.
+We have a diagram that have nodes (circles) with handles around (small circle) and edges (edges bezier curves that are tangent to the node circle between the handles). Nodes and edges are selectable and draggable.
+It should be imperative wasm rust tiling-based rust gpu-based ts-bindings declarative-react canvas-based rendering.
 
 ---
 

@@ -51,6 +51,7 @@ const SELECTION_OVERVIEW = new Set<string>(["01890804-66f2-4544-98f0-b6f0c061549
 const SELECTION_DETAIL = new Set<string>(["0a23d9c7-b75b-4166-8730-351367df9f8a", "0a23d9c7-b75b-4166-8730-351367df9f8a:link"]);
 const SELECTION_EDGE = new Set<string>(["015032e9-67ed-4736-adab-a6e10351079b"]);
 
+/** @emoji 🗼 Renders Nakagin-scale graphs with per-id selection highlights for multi-pane demos. */
 function NakaginBoardScene({ fixture, selectedIds }: { fixture: BoardFixtureV1; selectedIds: Set<string> }): ReactElement {
 	return (
 		<>
@@ -70,6 +71,7 @@ function NakaginBoardScene({ fixture, selectedIds }: { fixture: BoardFixtureV1; 
 // #endregion 🔖Scene
 
 // #region 🔖Panes
+/** @emoji 🪟 Left column overview camera + single-node selection. */
 function BoardOverviewPane(): ReactElement {
 	const { fixture, setFixture } = useFixture();
 	const base = fixture.camera;
@@ -83,6 +85,7 @@ function BoardOverviewPane(): ReactElement {
 	);
 }
 
+/** @emoji 🪟 Upper-right zoomed camera with node+handle selection. */
 function BoardDetailPane(): ReactElement {
 	const { fixture, setFixture } = useFixture();
 	const base = fixture.camera;
@@ -96,6 +99,7 @@ function BoardDetailPane(): ReactElement {
 	);
 }
 
+/** @emoji 🪟 Lower-right wide camera with edge selection. */
 function BoardSelectionPane(): ReactElement {
 	const { fixture, setFixture } = useFixture();
 	const base = fixture.camera;

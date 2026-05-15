@@ -508,7 +508,7 @@ export function useSelection(): BoardSelectionSnapshot {
 	return useSyncExternalStore(renderer.subscribeSelection, renderer.getSelectionSnapshot, renderer.getSelectionSnapshot);
 }
 
-/** 📡 Bind a board event listener with stable cleanup semantics. */
+/** 📡 Bind a board event listener with stable cleanup semantics (`fixtureFileDrop` fires after a valid JSON fixture lands from {@link BoardCanvasProps.fixtureFileDrop}). */
 export function useBoardEvent<TKey extends keyof BoardEventMap>(
 	name: TKey,
 	handler: (payload: BoardEventMap[TKey]) => void,

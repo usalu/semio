@@ -14,6 +14,7 @@
       }
     },
     "build": {
+      "dependsOn": [],
       "executor": "nx:run-commands",
       "options": {
         "cwd": "elements/client/lib/board/play",
@@ -22,10 +23,11 @@
       }
     },
     "test": {
+      "dependsOn": [],
       "executor": "nx:run-commands",
       "options": {
         "cwd": "elements/client/lib/board",
-        "command": "bunx vitest run --passWithNoTests --config ../../../../elements/ui/vitest.config.ts js/index.ts",
+        "command": "bunx vitest run --passWithNoTests --config vitest.config.ts",
         "forwardAllArgs": true
       }
     }
