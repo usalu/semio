@@ -24,6 +24,12 @@ The plan should be a downloadable markdown file. Add as much details as you can.
 
 ###
 
+---
+
+How does r3f turn the imperative three.js api into declarative react api? How is the code architected?
+
+---
+
 ### 🦀 rs
 
 ---
@@ -124,6 +130,26 @@ There MUST be no state on the store and every read is a request to the backend.
 There is an event stream that returns results which contain the information.
 Now we want to implement a clean Typescript Store class.
 How would you architect this?
+
+### ⭕diagram
+
+---
+
+semio:
+Our current diagram ui in sketchpad is reactflow-based. This forces that onDrag of a single node the diagram needs to redrawn into dom. This will not scale.
+
+We want to completly replace it with imperative wasm rust tiling-based rust gpu-based ts-bindings declarative-react canvas-based rendering.
+
+1. rs
+   Use https://github.com/linebender/vello Implement it in @semio/lib/diagram/rs/lib.rs
+2. js
+   typscript native bindings to rs. imperative like https://github.com/mrdoob/three.js/ Implement in @semio/lib/diagram/js/index.ts
+3. react
+   declarative react bindings to js. same architecture as https://github.com/pmndrs/react-three-fiber ontop of three.js. Implement in @semio/lib/diagram/react/index.tsx
+
+How would you architect this?
+
+---
 
 ## 🧰repo
 
@@ -2090,6 +2116,8 @@ The semio vscode bundle MUST be a seperate extension and MUST NOT be in repo. Th
 Abstract the Kit Store completly. Create a new semio bundle called studio that has the yjs kit provider. Pass it as a root prop to <Sketchpad kitStore>. Remove the yjs dependency completly from sketchpad.
 Create two more store: File store that synchronizes a kit to a json file and Folder store that synchronizes a kit to a folder with a .semio folder with sqlite database (same as python engine).
 Create a semio vscode bundle that is sketchpad and opens when a json kit file is opened and edits the file.
+
+###
 
 ### 🖥️desktop
 

@@ -1,8 +1,9 @@
 # https://neo4j.com/docs/graphql/current/
 # Composition and containment use HAS (…); do not persist denormalized owner names/ids/kinds on nodes — use HAS edges only.
-# `IS` is a materialized subtype graph: Interface→Interface includes transitive supertypes; Class and Field→Interface include every ancestor of the declared interface (e.g. `WeakEntity`/`StrongEntity`→`Entity`).
-# Do not store on nodes: data, declaringClass, declaringInterface, emoji, entityKind, fieldOrder, id, moduleName, nodes, ownerKind, ownerName, relationships, scalarKind, schemaSource, schemaTag, style, targetName, UNIQUE IMPORT ID, visualisation — use graph shape only; use `rank` (string) as the sole ordering key where needed (e.g. fields under an owner).
-# Naming: `Module.name`, `Class.name`, `Interface.name`, and `Scalar.name` are PascalCase; `Field.name` is lowerCamelCase; persisted `Enum` members stay ALL_CAPS. `Module.name` is unique only among siblings. Root `Schema` has `General` and `Domain`; kit graph modules (`Entity`, `Scalar`, `KitSchema`, `FieldKind`, …) hang under `Domain`.
+# `IS` is a materialized subtype graph: Interface→Interface includes transitive supertypes; Class and kit field nodes→Interface include every ancestor of the declared interface (e.g. `WeakEntity`/`StrongEntity`→`Entity`).
+# Do not store on nodes: data, declaringClass, declaringInterface, emoji, entityKind, fieldOrder, id, moduleName, nodes, ownerKind, ownerName, relationships, scalarKind, schemaSource, schemaTag, style, targetName, UNIQUE IMPORT ID, visualisation — use graph shape only; use `rank` (string) as the sole ordering key where needed (e.g. members under an owner).
+# Naming: `Module.name`, `Class.name`, `Interface.name`, and `Scalar.name` are PascalCase; persisted member names on `Data` / `Computation` / `Reference` are lowerCamelCase; persisted `Enum` members stay ALL_CAPS. `Module.name` is unique only among siblings. Root `Schema` has `General` and `Domain`; kit graph modules (`Entity`, `Scalar`, `KitSchema`, `FieldKind`, …) hang under `Domain`.
+# Kit members: `Data` (embedded value), `Computation` (`cached` true for cached derivations, false for computed), `Reference` (graph reference). There is no `Field` label — use `KitField` union in GraphQL over `HAS` from `Class` / `Interface` / `Command`.
 
 interface Constraint {
   description: String!
@@ -33,35 +34,54 @@ type Enum implements Primitive @node {
 
 union FieldIs = Scalar | Class | Interface
 
-enum FieldKind {
-  EMBEDDED
-  REFERENCE
-  COMPUTED
-  CACHED
-}
-
-interface Field implements Node {
+"""
+📦 Data — Embedded kit member; `IS` targets a `Scalar` (or other `FieldIs` as modeled).
+"""
+type Data implements Node @node {
   name: String!
   rank: String!
   constraints: [Constraint!]! @relationship(type: "HAS", direction: OUT)
   is: FieldIs! @relationship(type: "IS", direction: OUT)
 }
 
+"""
+⚡ Computation — Derived kit member; `cached` distinguishes cached vs on-the-fly computed.
+"""
+type Computation implements Node @node {
+  name: String!
+  rank: String!
+  cached: Boolean!
+  constraints: [Constraint!]! @relationship(type: "HAS", direction: OUT)
+  is: FieldIs! @relationship(type: "IS", direction: OUT)
+}
+
+"""
+🔗 Reference — Referential kit member; `IS` targets `Class`, `Interface`, or `Scalar` as modeled.
+"""
+type Reference implements Node @node {
+  name: String!
+  rank: String!
+  constraints: [Constraint!]! @relationship(type: "HAS", direction: OUT)
+  is: FieldIs! @relationship(type: "IS", direction: OUT)
+}
+
+union KitField = Data | Computation | Reference
+
 interface Interface implements Node {
   name: String!
-  fields: [Field!]! @relationship(type: "HAS", direction: OUT)
+  fields: [KitField!]! @relationship(type: "HAS", direction: OUT)
   is: [Interface!]! @relationship(type: "IS", direction: OUT)
 }
 
 interface Command implements Node {
   name: String!
-  fields: [Field!]! @relationship(type: "HAS", direction: OUT)
+  fields: [KitField!]! @relationship(type: "HAS", direction: OUT)
 }
 
 interface Class implements Node @node {
   name: String!
   interfaces: [Interface!]! @relationship(type: "IS", direction: OUT)
-  fields: [Field!]! @relationship(type: "HAS", direction: OUT)
+  fields: [KitField!]! @relationship(type: "HAS", direction: OUT)
   methods: [Method!]! @relationship(type: "HAS", direction: OUT)
 }
 

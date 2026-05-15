@@ -8,6 +8,7 @@ import { join } from "node:path";
 //#region 🧭Constants
 const REPO_ROOT = import.meta.dir;
 const BUN = process.execPath;
+const NEO4J_MIGRATE_SCRIPT = join(REPO_ROOT, "generate.neo4j.migrate.script.ts");
 const NEO4J_GENERATE_SCRIPT = join(REPO_ROOT, "generate.neo4j.script.ts");
 const TECHNOLOGIES = ["semio", "elements", "coda", "reuse"] as const;
 //#endregion 🧭Constants
@@ -16,10 +17,17 @@ const TECHNOLOGIES = ["semio", "elements", "coda", "reuse"] as const;
 let successes = 0;
 let failures = 0;
 for (const technology of TECHNOLOGIES) {
+  const env = { ...process.env, NEO4J_DATABASE: technology };
+  const migrate = spawnSync(BUN, [NEO4J_MIGRATE_SCRIPT], { stdio: "inherit", cwd: REPO_ROOT, env });
+  if (migrate.status !== 0) {
+    failures += 1;
+    console.error(`[generate] migrate:neo4j (${technology}) exited with status ${migrate.status ?? "unknown"}.`);
+    continue;
+  }
   const result = spawnSync(BUN, [NEO4J_GENERATE_SCRIPT, technology], {
     stdio: "inherit",
     cwd: REPO_ROOT,
-    env: { ...process.env, NEO4J_DATABASE: technology },
+    env,
   });
   if (result.status === 0) {
     successes += 1;

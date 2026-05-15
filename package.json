@@ -35,6 +35,7 @@
     "start": "bun ./start.script.ts",
     "dev": "bun ./dev.script.ts",
     "generate": "bun ./generate.script.ts",
+    "migrate:neo4j": "bun ./generate.neo4j.migrate.script.ts",
     "lint": "bun ./lint.script.ts",
     "format": "bun ./format.script.ts",
     "test": "bun ./test.script.ts",
