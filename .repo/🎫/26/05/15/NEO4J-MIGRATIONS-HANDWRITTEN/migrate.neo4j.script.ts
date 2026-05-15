@@ -306,6 +306,41 @@ function main(): void {
     process.exit(1);
   }
 
+  const probeDomainVcs = spawnSync(
+    shell,
+    [
+      "-a",
+      process.env.NEO4J_URI || "bolt://localhost:7687",
+      "-u",
+      process.env.NEO4J_USERNAME || "neo4j",
+      "-p",
+      process.env.NEO4J_PASSWORD || "password",
+      "-d",
+      DATABASE,
+      "--format",
+      "plain",
+      "MATCH (:Module {name:'Domain'})-[:OWNS]->(v:Module {name:'VCS'}) RETURN count(v) AS domainOwnsVcs;",
+    ],
+    { encoding: "utf8", cwd: REPO_ROOT, env: buildCypherEnv() },
+  );
+
+  if (probeDomainVcs.status !== 0) {
+    console.error(`[migrate:neo4j] Domain VCS verify failed: ${probeDomainVcs.stderr}`);
+    process.exit(1);
+  }
+
+  const dvTail = String(probeDomainVcs.stdout ?? "")
+    .trim()
+    .split(/\r?\n/)
+    .map((l) => l.trim())
+    .filter(Boolean);
+  const dvLast = dvTail[dvTail.length - 1] ?? "";
+  const domainOwnsVcs = Number.parseInt(dvLast.trim(), 10);
+  if (!Number.isFinite(domainOwnsVcs) || domainOwnsVcs < 1) {
+    console.error(`[migrate:neo4j] expected Domain to OWNS VCS; verify output:\n${probeDomainVcs.stdout}`);
+    process.exit(1);
+  }
+
   const probeLegacyHas = spawnSync(
     shell,
     [

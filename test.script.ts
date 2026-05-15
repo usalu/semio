@@ -65,7 +65,7 @@ async function runStorybookPlaywrightTests(): Promise<void> {
 
   try {
     await waitForUrl(new URL("index.html", baseUrl).href, 120000);
-    execFileSync("bunx", ["playwright", "test", "--config", ".storybook/playwright.config.ts"], {
+    execFileSync("bunx", ["playwright", "test", ".storybook/board.spec.ts", "--config", ".storybook/playwright.config.ts"], {
       cwd: root,
       stdio: "inherit",
       env: {

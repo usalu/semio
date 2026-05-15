@@ -1,3 +1,4 @@
+// This file has been automatically migrated to valid ESM format by Storybook.
 // #region 🧲Header
 // 💻 .storybook/main.ts
 // Specs: Aggregate the existing package-local Storybook trees into one root monorepo Storybook.

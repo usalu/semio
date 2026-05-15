@@ -180,6 +180,16 @@ MERGE (dom)-[:OWNS]->(kit)
 DELETE rk;
 //#endregion KitModuleUnderDomain
 
+//#region VcsModuleUnderDomain
+MATCH (schema:Module {name: 'Schema'})-[:OWNS]->(dom:Module {name: 'Domain'})
+MATCH (schema)-[:OWNS]->(gen:Module {name: 'General'})
+MATCH (vcs:Module {name: 'VCS'})
+WHERE (gen)-[:OWNS]->(vcs)
+MATCH (gen)-[rv:OWNS]->(vcs)
+MERGE (dom)-[:OWNS]->(vcs)
+DELETE rv;
+//#endregion VcsModuleUnderDomain
+
 //#region ScalarModuleUnderSchemaGeneral
 OPTIONAL MATCH (d:Module {name: 'Domain'})-[r:OWNS]->(sm:Module {name: 'Scalar'})
 DELETE r;

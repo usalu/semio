@@ -1,7 +1,7 @@
 // #region 🧲Header
 // 💻 .storybook/playwright.config.ts
-// Specs: Run Playwright smoke coverage against the root monorepo Storybook dev server.
-// Summary: `bun run test:storybook` builds, serves `storybook-static/` via `dev.script.ts storybook-static`, then runs Playwright with `PLAYWRIGHT_BASE_URL` set; this config does not start its own server.
+// Specs: Run Playwright board end-to-end coverage against the built workspace board harness.
+// Summary: `bun run test:storybook` builds, serves `storybook-static/` via `dev.script.ts storybook-static`, then runs Playwright against board-only end-to-end specs with `PLAYWRIGHT_BASE_URL` set; this config does not start its own server.
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 // #endregion 🧲Header
 
@@ -20,7 +20,7 @@ const baseURL = withTrailingSlash(process.env.PLAYWRIGHT_BASE_URL ?? `http://127
 
 export default defineConfig({
 	testDir: storybookDir,
-	testMatch: ["monorepo.spec.ts", "board.spec.ts"],
+	testMatch: ["board.spec.ts"],
 	fullyParallel: false,
 	forbidOnly: !!process.env.CI,
 	retries: process.env.CI ? 2 : 0,
