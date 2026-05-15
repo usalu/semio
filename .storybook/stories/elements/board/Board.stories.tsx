@@ -40,9 +40,10 @@ interface BoardFixtureNodeJson {
 	handles: BoardFixtureHandleJson[];
 	height?: number;
 	id: string;
-	label: string;
+	label?: string;
 	radius?: number;
 	shape?: "circle" | "rectangle";
+	text?: string;
 	width?: number;
 	x: number;
 	y: number;
@@ -131,13 +132,23 @@ const nakaginCapsuleTowerBoardScene: ReactElement = (
 	<>
 		{nakaginCapsuleTowerBoard.nodes.map((node) =>
 			node.shape === "rectangle" && node.width != null && node.height != null ? (
-				<Node draggable={false} height={node.height} id={node.id} key={node.id} shape="rectangle" width={node.width} x={node.x} y={node.y}>
+				<Node
+					draggable={false}
+					height={node.height}
+					id={node.id}
+					key={node.id}
+					shape="rectangle"
+					text={node.text ?? node.label}
+					width={node.width}
+					x={node.x}
+					y={node.y}
+				>
 					{node.handles.map((handle) => (
 						<Handle angle={handle.angle} id={handle.id} key={handle.id} />
 					))}
 				</Node>
 			) : (
-				<Node draggable={false} id={node.id} key={node.id} radius={node.radius ?? 0} x={node.x} y={node.y}>
+				<Node draggable={false} id={node.id} key={node.id} radius={node.radius ?? 0} text={node.text ?? node.label} x={node.x} y={node.y}>
 					{node.handles.map((handle) => (
 						<Handle angle={handle.angle} id={handle.id} key={handle.id} />
 					))}

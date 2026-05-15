@@ -1,6 +1,9 @@
 //#region 🔖Kinds
 export type BoardObjectKind = "node" | "handle" | "edge";
 export type RenderMode = "main-thread" | "worker-offscreen" | "headless-test";
+export type BoardSelectionMethod = "lasso" | "rectangle";
+export type BoardSelectionMode = "additive" | "invertive" | "subtractive";
+export type BoardSelectionTarget = "edges" | "nodes" | "nodes&edges";
 /** 🧱 World-space raster tiling strategy for CPU canvas validation (Vello tiles will mirror this culling). */
 export type WorldRasterTilingKind = "none" | "world-clip";
 
@@ -17,6 +20,12 @@ export interface CameraState {
 
 export interface BoardSelectionSnapshot {
 	ids: string[];
+}
+
+export interface BoardSelectionOptions {
+	method?: BoardSelectionMethod;
+	mode?: BoardSelectionMode;
+	target?: BoardSelectionTarget;
 }
 
 export interface BoardStyle {
@@ -152,6 +161,7 @@ type BoardCanvasContext = Pick<
 	| "beginPath"
 	| "bezierCurveTo"
 	| "clearRect"
+	| "clip"
 	| "closePath"
 	| "fill"
 	| "fillRect"
@@ -194,19 +204,34 @@ interface PanState {
 	start: Point;
 }
 
-type InteractionState = NodeDragState | PanState | null;
+interface SelectionDragState {
+	kind: "selection";
+	initialIds: Set<string>;
+	points: Point[];
+	screenPoints: Point[];
+	start: Point;
+	startScreen: Point;
+}
+
+type InteractionState = NodeDragState | PanState | SelectionDragState | null;
 //#endregion 🔖Kinds
 
 //#region 🔖Utilities
 const DEFAULT_CAMERA: CameraState = { x: 0, y: 0, zoom: 1 };
-const MIN_ZOOM = 0.2;
-const MAX_ZOOM = 8;
+/** @emoji 🔍 Smallest allowed world scale (most zoomed-out). */
+export const BOARD_CAMERA_ZOOM_MIN = 0.05;
+/** @emoji 🔎 Largest allowed world scale (most zoomed-in). */
+export const BOARD_CAMERA_ZOOM_MAX = 32;
+
+const MIN_ZOOM = BOARD_CAMERA_ZOOM_MIN;
+const MAX_ZOOM = BOARD_CAMERA_ZOOM_MAX;
 const GRID_WORLD_STEP = 96;
 const EDGE_HIT_TOLERANCE_PX = 8;
 const HANDLE_HIT_TOLERANCE_PX = 10;
 const WORLD_TILE_WORLD = 384;
 const GRID_VISIBLE_MIN_ZOOM = 18 / GRID_WORLD_STEP;
 const HANDLE_DRAW_MIN_ZOOM = 0.45;
+const SELECTION_LASSO_MIN_POINT_DISTANCE_PX = 3;
 
 interface WorldAxisBox {
 	maxX: number;
@@ -366,6 +391,14 @@ function createSelectionSnapshot(ids: Iterable<string>): BoardSelectionSnapshot 
 	return { ids: sortedSelectionIds(ids) };
 }
 
+function resolveSelectionOptions(options: BoardSelectionOptions | undefined): Required<BoardSelectionOptions> {
+	return {
+		method: options?.method ?? "rectangle",
+		mode: options?.mode ?? "invertive",
+		target: options?.target ?? "nodes&edges",
+	};
+}
+
 /** @emoji 🧾 Validates unknown JSON into {@link BoardFixtureV1} or returns null. */
 export function parseBoardFixtureV1(raw: unknown): BoardFixtureV1 | null {
 	if (!raw || typeof raw !== "object") {
@@ -419,7 +452,8 @@ export function parseBoardFixtureV1(raw: unknown): BoardFixtureV1 | null {
 			}
 			handles.push({ angle, id: hid });
 		}
-		const label = typeof node.label === "string" ? node.label : undefined;
+		const textFromJson =
+			typeof node.text === "string" ? node.text : typeof node.label === "string" ? node.label : undefined;
 		const cad =
 			node.cad && typeof node.cad === "object"
 				? {
@@ -439,10 +473,10 @@ export function parseBoardFixtureV1(raw: unknown): BoardFixtureV1 | null {
 			}
 			nodes.push({
 				...(cad !== undefined ? { cad } : {}),
+				...(textFromJson !== undefined ? { text: textFromJson } : {}),
 				handles,
 				height,
 				id,
-				label,
 				shape: "rectangle",
 				width,
 				x,
@@ -459,9 +493,9 @@ export function parseBoardFixtureV1(raw: unknown): BoardFixtureV1 | null {
 		}
 		nodes.push({
 			...(cad !== undefined ? { cad } : {}),
+			...(textFromJson !== undefined ? { text: textFromJson } : {}),
 			handles,
 			id,
-			label,
 			radius,
 			shape: "circle",
 			x,
@@ -516,6 +550,118 @@ function inflateWorldBox(box: WorldAxisBox, pad: number): WorldAxisBox {
 
 function worldBoxesOverlap(left: WorldAxisBox, right: WorldAxisBox): boolean {
 	return left.minX <= right.maxX && left.maxX >= right.minX && left.minY <= right.maxY && left.maxY >= right.minY;
+}
+
+function worldBoxContainsPoint(box: WorldAxisBox, point: Point): boolean {
+	return point.x >= box.minX && point.x <= box.maxX && point.y >= box.minY && point.y <= box.maxY;
+}
+
+function worldBoxContainsBox(outer: WorldAxisBox, inner: WorldAxisBox): boolean {
+	return inner.minX >= outer.minX && inner.maxX <= outer.maxX && inner.minY >= outer.minY && inner.maxY <= outer.maxY;
+}
+
+function worldBoxCorners(box: WorldAxisBox): Point[] {
+	return [
+		{ x: box.minX, y: box.minY },
+		{ x: box.maxX, y: box.minY },
+		{ x: box.maxX, y: box.maxY },
+		{ x: box.minX, y: box.maxY },
+	];
+}
+
+function worldBoxFromPoints(points: readonly Point[]): WorldAxisBox {
+	const xs = points.map((point) => point.x);
+	const ys = points.map((point) => point.y);
+	return {
+		maxX: Math.max(...xs),
+		maxY: Math.max(...ys),
+		minX: Math.min(...xs),
+		minY: Math.min(...ys),
+	};
+}
+
+function pointInPolygon(point: Point, polygon: readonly Point[]): boolean {
+	let inside = false;
+	for (let index = 0, previous = polygon.length - 1; index < polygon.length; previous = index, index += 1) {
+		const a = polygon[index];
+		const b = polygon[previous];
+		const crosses = a.y > point.y !== b.y > point.y;
+		if (crosses && point.x < ((b.x - a.x) * (point.y - a.y)) / (b.y - a.y) + a.x) {
+			inside = !inside;
+		}
+	}
+	return inside;
+}
+
+function orientation(a: Point, b: Point, c: Point): number {
+	return Math.sign((b.y - a.y) * (c.x - b.x) - (b.x - a.x) * (c.y - b.y));
+}
+
+function pointOnSegment(point: Point, start: Point, end: Point): boolean {
+	return (
+		Math.min(start.x, end.x) - 1e-9 <= point.x &&
+		point.x <= Math.max(start.x, end.x) + 1e-9 &&
+		Math.min(start.y, end.y) - 1e-9 <= point.y &&
+		point.y <= Math.max(start.y, end.y) + 1e-9 &&
+		Math.abs((end.x - start.x) * (point.y - start.y) - (end.y - start.y) * (point.x - start.x)) <= 1e-9
+	);
+}
+
+function segmentsIntersect(a0: Point, a1: Point, b0: Point, b1: Point): boolean {
+	const o1 = orientation(a0, a1, b0);
+	const o2 = orientation(a0, a1, b1);
+	const o3 = orientation(b0, b1, a0);
+	const o4 = orientation(b0, b1, a1);
+	if (o1 !== o2 && o3 !== o4) {
+		return true;
+	}
+	return pointOnSegment(b0, a0, a1) || pointOnSegment(b1, a0, a1) || pointOnSegment(a0, b0, b1) || pointOnSegment(a1, b0, b1);
+}
+
+function worldBoxEdges(box: WorldAxisBox): Array<[Point, Point]> {
+	const [a, b, c, d] = worldBoxCorners(box);
+	return [
+		[a, b],
+		[b, c],
+		[c, d],
+		[d, a],
+	];
+}
+
+function segmentIntersectsWorldBox(start: Point, end: Point, box: WorldAxisBox): boolean {
+	if (worldBoxContainsPoint(box, start) || worldBoxContainsPoint(box, end)) {
+		return true;
+	}
+	return worldBoxEdges(box).some(([a, b]) => segmentsIntersect(start, end, a, b));
+}
+
+function polygonSegments(polygon: readonly Point[]): Array<[Point, Point]> {
+	const segments: Array<[Point, Point]> = [];
+	for (let index = 0; index < polygon.length; index += 1) {
+		segments.push([polygon[index], polygon[(index + 1) % polygon.length]]);
+	}
+	return segments;
+}
+
+function polygonContainsWorldBox(polygon: readonly Point[], box: WorldAxisBox): boolean {
+	return worldBoxCorners(box).every((point) => pointInPolygon(point, polygon));
+}
+
+function polygonIntersectsWorldBox(polygon: readonly Point[], box: WorldAxisBox): boolean {
+	if (worldBoxCorners(box).some((point) => pointInPolygon(point, polygon))) {
+		return true;
+	}
+	if (polygon.some((point) => worldBoxContainsPoint(box, point))) {
+		return true;
+	}
+	return polygonSegments(polygon).some(([start, end]) => segmentIntersectsWorldBox(start, end, box));
+}
+
+function segmentIntersectsPolygon(start: Point, end: Point, polygon: readonly Point[]): boolean {
+	if (pointInPolygon(start, polygon) || pointInPolygon(end, polygon)) {
+		return true;
+	}
+	return polygonSegments(polygon).some(([a, b]) => segmentsIntersect(start, end, a, b));
 }
 
 function cubicBezierAxisBounds(curve: CubicBezierCurve): WorldAxisBox {
@@ -756,14 +902,22 @@ export class Node extends BoardObject {
 	height: number;
 	radius: number;
 	shape: "circle" | "rectangle";
+	text: string | null;
 	width: number;
 	x: number;
 	y: number;
 
 	constructor(options: NodeOptions) {
-		super(options.id, { ...options, draggable: options.draggable ?? true });
+		super(options.id, {
+			draggable: options.draggable ?? true,
+			selected: options.selected,
+			style: options.style,
+			userData: options.userData,
+			visible: options.visible,
+		});
 		this.x = options.x;
 		this.y = options.y;
+		this.text = options.text ?? null;
 		if (options.shape === "rectangle") {
 			this.shape = "rectangle";
 			this.width = options.width;
@@ -804,6 +958,11 @@ export class Node extends BoardObject {
 		}
 		this.width = width;
 		this.height = height;
+		return this;
+	}
+
+	setText(text: string | null): this {
+		this.text = text;
 		return this;
 	}
 
@@ -1009,6 +1168,7 @@ export class BoardRenderer {
 	private lastRenderTimestamp: number | null = null;
 	private rafId: number | null = null;
 	private selectionIds = new Set<string>();
+	private selectionOptions: Required<BoardSelectionOptions>;
 	private selectionStore = new SnapshotStore<BoardSelectionSnapshot>({ ids: [] });
 	private styles = new Map<string, BoardStyle>(Object.entries(DEFAULT_STYLES));
 	private width = 1;
@@ -1020,11 +1180,13 @@ export class BoardRenderer {
 		canvas?: HTMLCanvasElement | null;
 		context?: BoardCanvasContext | null;
 		renderMode?: RenderMode;
+		selection?: BoardSelectionOptions;
 		worldRasterTiling?: WorldRasterTilingKind;
 	} = {}) {
 		this.canvas = options.canvas ?? null;
 		this.context = resolveContext(this.canvas, options.context);
 		this.renderMode = options.renderMode ?? (this.canvas ? "main-thread" : "headless-test");
+		this.selectionOptions = resolveSelectionOptions(options.selection);
 		this.worldRasterTiling = options.worldRasterTiling ?? "none";
 		this.scene = new BoardScene(this);
 		this.attachCanvasListeners();
@@ -1060,6 +1222,20 @@ export class BoardRenderer {
 	/** @emoji ✅ Replaces the active selection set and syncs `selected` flags on scene objects. */
 	setSelectionIds(ids: Iterable<string>): void {
 		this.updateSelection(ids);
+	}
+
+	getSelectionOptions(): Required<BoardSelectionOptions> {
+		return { ...this.selectionOptions };
+	}
+
+	/** @emoji 🎯 Updates area-selection behavior for left-button drag gestures. */
+	setSelectionOptions(options: BoardSelectionOptions): void {
+		const next = resolveSelectionOptions({ ...this.selectionOptions, ...options });
+		if (next.method === this.selectionOptions.method && next.mode === this.selectionOptions.mode && next.target === this.selectionOptions.target) {
+			return;
+		}
+		this.selectionOptions = next;
+		this.markDirty();
 	}
 
 	getCameraSnapshot = (): CameraState => this.cameraStore.getSnapshot();
@@ -1213,6 +1389,7 @@ export class BoardRenderer {
 				this.drawNodes(null);
 				this.drawHandles(null);
 			}
+			this.drawSelectionOverlay();
 			this.context.restore();
 		}
 		const frameState: FrameState = {
@@ -1470,6 +1647,9 @@ export class BoardRenderer {
 			}
 			const screenPoint = this.worldToScreen({ x: node.x, y: node.y });
 			const style = this.getStyle(node.selected ? `${node.style ?? "node"}.selected` : node.style, node.selected ? "node.selected" : "node");
+			let labelCenterX = screenPoint.x;
+			let labelCenterY = screenPoint.y;
+			let maxLabelPx = 120;
 			this.context.beginPath();
 			if (node.shape === "rectangle") {
 				const halfW = node.width / 2;
@@ -1481,15 +1661,30 @@ export class BoardRenderer {
 				const rw = Math.max(1, Math.abs(c1.x - c0.x));
 				const rh = Math.max(1, Math.abs(c1.y - c0.y));
 				this.context.rect(left, top, rw, rh);
+				labelCenterX = left + rw / 2;
+				labelCenterY = top + rh / 2;
+				maxLabelPx = Math.max(24, Math.min(rw, rh) * 0.92);
 			} else {
 				const screenRadius = Math.max(1, node.radius * this.camera.zoom);
 				this.context.arc(screenPoint.x, screenPoint.y, screenRadius, 0, Math.PI * 2);
+				maxLabelPx = Math.max(24, 2 * screenRadius * 0.88);
 			}
 			this.context.fillStyle = (style.fill as string) ?? "#e2e8f0";
 			this.context.strokeStyle = (style.stroke as string) ?? "#0f172a";
 			this.context.lineWidth = style.strokeWidth ?? 2;
 			this.context.fill();
 			this.context.stroke();
+
+			const label = node.text?.trim();
+			if (label && this.camera.zoom >= HANDLE_DRAW_MIN_ZOOM) {
+				const fontPx = clamp(Math.round(10 * this.camera.zoom * 4) / 4, 9, 22);
+				this.context.font = `${fontPx}px ui-sans-serif, system-ui, sans-serif`;
+				this.context.textAlign = "center";
+				this.context.textBaseline = "middle";
+				this.context.fillStyle = "#0f172a";
+				const shown = truncateTextToCanvasWidth(this.context, label, maxLabelPx);
+				this.context.fillText(shown, labelCenterX, labelCenterY);
+			}
 		}
 	}
 
@@ -1549,14 +1744,131 @@ export class BoardRenderer {
 		}
 	}
 
+	private drawSelectionOverlay(): void {
+		if (!this.context || this.interaction?.kind !== "selection" || this.interaction.screenPoints.length < 2) {
+			return;
+		}
+		const points =
+			this.selectionOptions.method === "rectangle"
+				? [
+						this.interaction.startScreen,
+						{ x: this.interaction.screenPoints.at(-1)?.x ?? this.interaction.startScreen.x, y: this.interaction.startScreen.y },
+						this.interaction.screenPoints.at(-1) ?? this.interaction.startScreen,
+						{ x: this.interaction.startScreen.x, y: this.interaction.screenPoints.at(-1)?.y ?? this.interaction.startScreen.y },
+				  ]
+				: this.interaction.screenPoints;
+		this.context.save();
+		this.context.beginPath();
+		this.context.moveTo(points[0].x, points[0].y);
+		for (const point of points.slice(1)) {
+			this.context.lineTo(point.x, point.y);
+		}
+		this.context.closePath();
+		this.context.fillStyle = "rgba(20, 184, 166, 0.12)";
+		this.context.strokeStyle = "rgba(15, 118, 110, 0.85)";
+		this.context.lineWidth = 1.5;
+		this.context.setLineDash([6, 4]);
+		this.context.fill();
+		this.context.stroke();
+		this.context.restore();
+	}
+
+	private currentSelectionShape(selection: SelectionDragState): { box: WorldAxisBox; enclosing: boolean; polygon: Point[] } {
+		const last = selection.points.at(-1) ?? selection.start;
+		const enclosing = last.x >= selection.start.x;
+		if (this.selectionOptions.method === "lasso" && selection.points.length >= 3) {
+			return { box: worldBoxFromPoints(selection.points), enclosing, polygon: selection.points };
+		}
+		const box = worldBoxFromPoints([selection.start, last]);
+		return {
+			box,
+			enclosing,
+			polygon: [
+				{ x: box.minX, y: box.minY },
+				{ x: box.maxX, y: box.minY },
+				{ x: box.maxX, y: box.maxY },
+				{ x: box.minX, y: box.maxY },
+			],
+		};
+	}
+
+	private selectionContainsNode(node: Node, shape: { box: WorldAxisBox; enclosing: boolean; polygon: Point[] }): boolean {
+		const bounds = nodeWorldBounds(node, 0);
+		if (shape.enclosing) {
+			return this.selectionOptions.method === "lasso" ? polygonContainsWorldBox(shape.polygon, bounds) : worldBoxContainsBox(shape.box, bounds);
+		}
+		return this.selectionOptions.method === "lasso" ? polygonIntersectsWorldBox(shape.polygon, bounds) : worldBoxesOverlap(shape.box, bounds);
+	}
+
+	private selectionContainsEdge(edge: Edge, shape: { box: WorldAxisBox; enclosing: boolean; polygon: Point[] }): boolean {
+		const samples: Point[] = [];
+		const steps = 24;
+		for (let index = 0; index <= steps; index += 1) {
+			samples.push(cubicBezierPoint(edge.curve, index / steps));
+		}
+		if (shape.enclosing) {
+			return this.selectionOptions.method === "lasso"
+				? samples.every((point) => pointInPolygon(point, shape.polygon))
+				: samples.every((point) => worldBoxContainsPoint(shape.box, point));
+		}
+		for (let index = 1; index < samples.length; index += 1) {
+			const previous = samples[index - 1];
+			const current = samples[index];
+			const intersects =
+				this.selectionOptions.method === "lasso"
+					? segmentIntersectsPolygon(previous, current, shape.polygon)
+					: segmentIntersectsWorldBox(previous, current, shape.box);
+			if (intersects) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	private resolveAreaSelection(selection: SelectionDragState): Set<string> {
+		const shape = this.currentSelectionShape(selection);
+		const hits = new Set<string>();
+		if (this.selectionOptions.target === "nodes" || this.selectionOptions.target === "nodes&edges") {
+			for (const node of this.scene.nodes.values()) {
+				if (node.visible && this.selectionContainsNode(node, shape)) {
+					hits.add(node.id);
+				}
+			}
+		}
+		if (this.selectionOptions.target === "edges" || this.selectionOptions.target === "nodes&edges") {
+			for (const edge of this.scene.edges.values()) {
+				if (edge.visible && this.selectionContainsEdge(edge, shape)) {
+					hits.add(edge.id);
+				}
+			}
+		}
+		const next = new Set(selection.initialIds);
+		for (const id of hits) {
+			if (this.selectionOptions.mode === "additive") {
+				next.add(id);
+			} else if (this.selectionOptions.mode === "subtractive") {
+				next.delete(id);
+			} else if (next.has(id)) {
+				next.delete(id);
+			} else {
+				next.add(id);
+			}
+		}
+		return next;
+	}
+
 	private readonly handlePointerDown = (event: PointerEvent): void => {
 		if (event.button !== 0 && event.button !== 1) {
 			return;
 		}
 		this.canvas?.focus({ preventScroll: true });
+		if (typeof event.pointerId === "number") {
+			this.canvas?.setPointerCapture?.(event.pointerId);
+		}
 		const pointer = this.pointerStateFromEvent(event);
 		const hitObject = this.resolveHit(pointer.point);
 		if (event.button === 1 || (!hitObject && event.shiftKey)) {
+			event.preventDefault();
 			this.interaction = {
 				kind: "pan",
 				origin: { ...this.camera },
@@ -1565,12 +1877,27 @@ export class BoardRenderer {
 			return;
 		}
 		if (hitObject instanceof Node && hitObject.draggable) {
+			event.preventDefault();
 			this.updateSelection([hitObject.id]);
 			this.interaction = {
 				kind: "drag-node",
 				nodeId: hitObject.id,
 				offset: subtractPoint(pointer.point, { x: hitObject.x, y: hitObject.y }),
 			};
+			return;
+		}
+		if (!hitObject && event.button === 0) {
+			event.preventDefault();
+			this.interaction = {
+				kind: "selection",
+				initialIds: new Set(this.selectionIds),
+				points: [pointer.point],
+				screenPoints: [pointer.screenPoint],
+				start: pointer.point,
+				startScreen: pointer.screenPoint,
+			};
+			this.updateHover(null);
+			this.markDirty();
 			return;
 		}
 		this.interaction = null;
@@ -1603,11 +1930,40 @@ export class BoardRenderer {
 			return;
 		}
 
+		if (this.interaction?.kind === "selection") {
+			event.preventDefault();
+			const lastScreenPoint = this.interaction.screenPoints.at(-1) ?? this.interaction.startScreen;
+			if (this.selectionOptions.method === "rectangle" || distanceBetween(pointer.screenPoint, lastScreenPoint) >= SELECTION_LASSO_MIN_POINT_DISTANCE_PX) {
+				this.interaction.points.push(pointer.point);
+				this.interaction.screenPoints.push(pointer.screenPoint);
+			} else {
+				this.interaction.points[this.interaction.points.length - 1] = pointer.point;
+				this.interaction.screenPoints[this.interaction.screenPoints.length - 1] = pointer.screenPoint;
+			}
+			this.updateSelection(this.resolveAreaSelection(this.interaction));
+			return;
+		}
+
 		const hitObject = this.resolveHit(pointer.point);
 		this.updateHover(hitObject?.id ?? null);
 	};
 
-	private readonly handlePointerUp = (): void => {
+	private readonly handlePointerUp = (event: PointerEvent): void => {
+		if (this.interaction?.kind === "selection") {
+			const pointer = this.pointerStateFromEvent(event);
+			this.interaction.points.push(pointer.point);
+			this.interaction.screenPoints.push(pointer.screenPoint);
+			this.updateSelection(this.resolveAreaSelection(this.interaction));
+			if (typeof event.pointerId === "number") {
+				this.canvas?.releasePointerCapture?.(event.pointerId);
+			}
+			this.interaction = null;
+			this.markDirty();
+			return;
+		}
+		if (typeof event.pointerId === "number") {
+			this.canvas?.releasePointerCapture?.(event.pointerId);
+		}
 		this.interaction = null;
 	};
 
@@ -1655,14 +2011,18 @@ if (boardVitest) {
 			beginPath: vi.fn(),
 			bezierCurveTo: vi.fn(),
 			clearRect: vi.fn(),
+			clip: vi.fn(),
 			closePath: vi.fn(),
 			fill: vi.fn(),
 			fillRect: vi.fn(),
 			fillStyle: "#000000",
+			fillText: vi.fn(),
+			font: "",
 			lineCap: "round" as CanvasLineCap,
 			lineJoin: "round" as CanvasLineJoin,
 			lineTo: vi.fn(),
 			lineWidth: 1,
+			measureText: vi.fn((s: string) => ({ width: s.length * 6 })),
 			moveTo: vi.fn(),
 			rect: vi.fn(),
 			restore: vi.fn(),
@@ -1672,6 +2032,8 @@ if (boardVitest) {
 			stroke: vi.fn(),
 			strokeRect: vi.fn(),
 			strokeStyle: "#000000",
+			textAlign: "start" as CanvasTextAlign,
+			textBaseline: "alphabetic" as CanvasTextBaseline,
 		} satisfies BoardCanvasContext;
 		Object.defineProperty(canvas, "clientWidth", { configurable: true, value: width });
 		Object.defineProperty(canvas, "clientHeight", { configurable: true, value: height });
@@ -1818,6 +2180,80 @@ if (boardVitest) {
 			expect(sourceNode.selected).toBe(false);
 			renderer.dispose();
 		});
+
+		it("opens rectangle selection from a left-button drag and applies directional partial versus enclosing rules", () => {
+			const { canvas } = createMockCanvas();
+			const renderer = new BoardRenderer({ canvas, selection: { mode: "additive" } });
+			const node = new Node({ id: "node", radius: 20, x: 0, y: 0 });
+			renderer.scene.add(node);
+			renderer.render();
+
+			const rightDragStart = renderer.worldToScreen({ x: -10, y: -30 });
+			const rightDragEnd = renderer.worldToScreen({ x: 10, y: 30 });
+			canvas.dispatchEvent(new MouseEvent("pointerdown", { bubbles: true, button: 0, clientX: rightDragStart.x, clientY: rightDragStart.y }));
+			canvas.dispatchEvent(new MouseEvent("pointermove", { bubbles: true, button: 0, clientX: rightDragEnd.x, clientY: rightDragEnd.y }));
+			canvas.dispatchEvent(new MouseEvent("pointerup", { bubbles: true, button: 0, clientX: rightDragEnd.x, clientY: rightDragEnd.y }));
+			expect(renderer.selection.getSnapshot().ids).toEqual([]);
+
+			const leftDragStart = renderer.worldToScreen({ x: 30, y: -30 });
+			const leftDragEnd = renderer.worldToScreen({ x: -10, y: 30 });
+			canvas.dispatchEvent(new MouseEvent("pointerdown", { bubbles: true, button: 0, clientX: leftDragStart.x, clientY: leftDragStart.y }));
+			canvas.dispatchEvent(new MouseEvent("pointermove", { bubbles: true, button: 0, clientX: leftDragEnd.x, clientY: leftDragEnd.y }));
+			canvas.dispatchEvent(new MouseEvent("pointerup", { bubbles: true, button: 0, clientX: leftDragEnd.x, clientY: leftDragEnd.y }));
+			expect(renderer.selection.getSnapshot().ids).toEqual(["node"]);
+
+			renderer.dispose();
+		});
+
+		it("supports lasso targets and additive subtractive invertive selection modes", () => {
+			const { canvas } = createMockCanvas();
+			const renderer = new BoardRenderer({ canvas, selection: { method: "lasso", mode: "additive", target: "edges" } });
+			const sourceNode = new Node({ id: "source", radius: 12, x: -80, y: 0 });
+			const targetNode = new Node({ id: "target", radius: 12, x: 80, y: 0 });
+			const sourceHandle = new Handle({ angle: 0, id: "source.out", node: sourceNode });
+			const targetHandle = new Handle({ angle: Math.PI, id: "target.in", node: targetNode });
+			const edge = new Edge({ from: sourceHandle, id: "edge", to: targetHandle });
+			renderer.scene.add(sourceNode).add(targetNode).add(edge);
+			renderer.render();
+
+			const drawLasso = (points: Point[]): void => {
+				const [start, ...rest] = points.map((point) => renderer.worldToScreen(point));
+				canvas.dispatchEvent(new MouseEvent("pointerdown", { bubbles: true, button: 0, clientX: start.x, clientY: start.y }));
+				for (const point of rest) {
+					canvas.dispatchEvent(new MouseEvent("pointermove", { bubbles: true, button: 0, clientX: point.x, clientY: point.y }));
+				}
+				const end = rest.at(-1) ?? start;
+				canvas.dispatchEvent(new MouseEvent("pointerup", { bubbles: true, button: 0, clientX: end.x, clientY: end.y }));
+			};
+
+			drawLasso([
+				{ x: 30, y: -30 },
+				{ x: -30, y: -30 },
+				{ x: -30, y: 30 },
+				{ x: 30, y: 30 },
+				{ x: -30, y: 0 },
+			]);
+			expect(renderer.selection.getSnapshot().ids).toEqual(["edge"]);
+
+			renderer.setSelectionOptions({ method: "rectangle", mode: "subtractive", target: "edges" });
+			const subtractStart = renderer.worldToScreen({ x: 20, y: -10 });
+			const subtractEnd = renderer.worldToScreen({ x: -20, y: 10 });
+			canvas.dispatchEvent(new MouseEvent("pointerdown", { bubbles: true, button: 0, clientX: subtractStart.x, clientY: subtractStart.y }));
+			canvas.dispatchEvent(new MouseEvent("pointermove", { bubbles: true, button: 0, clientX: subtractEnd.x, clientY: subtractEnd.y }));
+			canvas.dispatchEvent(new MouseEvent("pointerup", { bubbles: true, button: 0, clientX: subtractEnd.x, clientY: subtractEnd.y }));
+			expect(renderer.selection.getSnapshot().ids).toEqual([]);
+
+			renderer.setSelectionOptions({ mode: "invertive", target: "nodes" });
+			renderer.setSelectionIds(["source"]);
+			const invertStart = renderer.worldToScreen({ x: 100, y: -30 });
+			const invertEnd = renderer.worldToScreen({ x: -100, y: 30 });
+			canvas.dispatchEvent(new MouseEvent("pointerdown", { bubbles: true, button: 0, clientX: invertStart.x, clientY: invertStart.y }));
+			canvas.dispatchEvent(new MouseEvent("pointermove", { bubbles: true, button: 0, clientX: invertEnd.x, clientY: invertEnd.y }));
+			canvas.dispatchEvent(new MouseEvent("pointerup", { bubbles: true, button: 0, clientX: invertEnd.x, clientY: invertEnd.y }));
+			expect(renderer.selection.getSnapshot().ids).toEqual(["target"]);
+
+			renderer.dispose();
+		});
 	});
 
 	describe("board fixture io", () => {
@@ -1827,14 +2263,14 @@ if (boardVitest) {
 				edges: [{ from: "a.out", id: "e1", to: "b.in" }],
 				meta: {},
 				nodes: [
-					{ handles: [{ angle: 0, id: "a.out" }], id: "a", radius: 10, x: 0, y: 0 },
+					{ handles: [{ angle: 0, id: "a.out" }], id: "a", radius: 10, text: "α", x: 0, y: 0 },
 					{ handles: [{ angle: 3.14, id: "b.in" }], id: "b", radius: 10, x: 50, y: 0 },
 				],
 				schema: "elements.board.fixture/v1",
 			});
 			expect(parsed).not.toBeNull();
 			expect(parsed?.nodes).toHaveLength(2);
-			expect(parsed?.nodes[0]).toMatchObject({ id: "a", shape: "circle", radius: 10 });
+			expect(parsed?.nodes[0]).toMatchObject({ id: "a", shape: "circle", radius: 10, text: "α" });
 			expect(parsed?.nodes[1]).toMatchObject({ id: "b", shape: "circle" });
 			expect(parsed?.edges[0]?.id).toBe("e1");
 			expect(parsed?.camera.zoom).toBe(0.5);
@@ -1850,6 +2286,7 @@ if (boardVitest) {
 						height: 24,
 						id: "box",
 						shape: "rectangle",
+						text: "crate",
 						width: 48,
 						x: 10,
 						y: -5,
@@ -1857,7 +2294,27 @@ if (boardVitest) {
 				],
 				schema: "elements.board.fixture/v1",
 			});
-			expect(parsed?.nodes[0]).toMatchObject({ shape: "rectangle", width: 48, height: 24, id: "box" });
+			expect(parsed?.nodes[0]).toMatchObject({ shape: "rectangle", width: 48, height: 24, id: "box", text: "crate" });
+		});
+
+		it("maps legacy JSON label into node text", () => {
+			const parsed = parseBoardFixtureV1({
+				camera: { x: 0, y: 0, zoom: 1 },
+				edges: [],
+				nodes: [{ handles: [{ angle: 0, id: "n1.h" }], id: "n1", label: "legacy", radius: 5, x: 0, y: 0 }],
+				schema: "elements.board.fixture/v1",
+			});
+			expect(parsed?.nodes[0]).toMatchObject({ id: "n1", text: "legacy" });
+		});
+
+		it("prefers text over label when both are present in JSON", () => {
+			const parsed = parseBoardFixtureV1({
+				camera: { x: 0, y: 0, zoom: 1 },
+				edges: [],
+				nodes: [{ handles: [{ angle: 0, id: "n1.h" }], id: "n1", label: "legacy", radius: 5, text: "primary", x: 0, y: 0 }],
+				schema: "elements.board.fixture/v1",
+			});
+			expect(parsed?.nodes[0]).toMatchObject({ text: "primary" });
 		});
 
 		it("rejects wrong schema or malformed nodes", () => {
@@ -1878,8 +2335,8 @@ if (boardVitest) {
 				camera: { x: 0, y: 0, zoom: 1 },
 				edges: [{ from: "a.out", id: "e1", to: "b.in" }],
 				nodes: [
-					{ handles: [{ angle: 0, id: "a.out" }], id: "a", radius: 10, shape: "circle", x: 0, y: 0 },
-					{ handles: [{ angle: 3.14, id: "b.in" }], id: "b", radius: 10, shape: "circle", x: 50, y: 0 },
+					{ handles: [{ angle: 0, id: "a.out" }], id: "a", radius: 10, shape: "circle", text: "A", x: 0, y: 0 },
+					{ handles: [{ angle: 3.14, id: "b.in" }], id: "b", radius: 10, shape: "circle", text: "B", x: 50, y: 0 },
 				],
 				schema: "elements.board.fixture/v1",
 			};

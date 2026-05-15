@@ -28,7 +28,10 @@ import {
 	decodeBoardFixtureFromDragV1,
 	type BoardEventMap,
 	type BoardFixtureV1,
+	type BoardSelectionMethod,
+	type BoardSelectionMode,
 	type BoardSelectionSnapshot,
+	type BoardSelectionTarget,
 	type CameraState,
 	type FrameState,
 	type RenderMode,
@@ -46,6 +49,9 @@ export interface BoardCanvasProps {
 	onFixtureDrop?: (fixture: BoardFixtureV1) => void;
 	onReady?: (renderer: BoardRenderer) => void;
 	renderMode?: RenderMode;
+	selectionMethod?: BoardSelectionMethod;
+	selectionMode?: BoardSelectionMode;
+	selectionTarget?: BoardSelectionTarget;
 	style?: CSSProperties;
 	width?: number;
 	/** 🧩 Optional world-space clip tiling for CPU canvas parity with future WASM tile culling. */
@@ -60,6 +66,7 @@ export type BoardNodeCircleProps = {
 	selected?: boolean;
 	shape?: "circle";
 	style?: string;
+	text?: string;
 	userData?: Record<string, unknown>;
 	visible?: boolean;
 	x: number;
@@ -74,6 +81,7 @@ export type BoardNodeRectangleProps = {
 	selected?: boolean;
 	shape: "rectangle";
 	style?: string;
+	text?: string;
 	userData?: Record<string, unknown>;
 	visible?: boolean;
 	width: number;
@@ -214,6 +222,7 @@ function applyNodeProps(instance: BoardNodeObject, descriptor: NodeDescriptor): 
 	instance.userData = { ...(descriptor.userData ?? {}) };
 	instance.visible = descriptor.visible ?? true;
 	instance.setPosition(descriptor.x, descriptor.y);
+	instance.setText(descriptor.text ?? null);
 	if (descriptor.shape === "rectangle") {
 		instance.setRectangleSize(descriptor.width, descriptor.height);
 	} else {
@@ -260,6 +269,7 @@ function newBoardNodeFromDescriptor(nodeDescriptor: NodeDescriptor): BoardNodeOb
 			selected: nodeDescriptor.selected,
 			shape: "rectangle",
 			style: nodeDescriptor.style,
+			text: nodeDescriptor.text,
 			userData: nodeDescriptor.userData,
 			visible: nodeDescriptor.visible,
 			width: nodeDescriptor.width,
@@ -273,6 +283,7 @@ function newBoardNodeFromDescriptor(nodeDescriptor: NodeDescriptor): BoardNodeOb
 		radius: nodeDescriptor.radius,
 		selected: nodeDescriptor.selected,
 		style: nodeDescriptor.style,
+		text: nodeDescriptor.text,
 		userData: nodeDescriptor.userData,
 		visible: nodeDescriptor.visible,
 		x: nodeDescriptor.x,
@@ -361,6 +372,9 @@ export function BoardCanvas({
 	onFixtureDrop,
 	onReady,
 	renderMode,
+	selectionMethod,
+	selectionMode,
+	selectionTarget,
 	style,
 	width,
 	worldRasterTiling,
@@ -439,7 +453,12 @@ export function BoardCanvas({
 		if (!canvasRef.current || rendererRef.current) {
 			return;
 		}
-		const renderer = new BoardRenderer({ canvas: canvasRef.current, renderMode, worldRasterTiling });
+		const renderer = new BoardRenderer({
+			canvas: canvasRef.current,
+			renderMode,
+			selection: { method: selectionMethod, mode: selectionMode, target: selectionTarget },
+			worldRasterTiling,
+		});
 		rendererRef.current = renderer;
 		activeBoardRenderer = renderer;
 		setContextRenderer(renderer);
@@ -451,7 +470,7 @@ export function BoardCanvas({
 			rendererRef.current = null;
 			setContextRenderer(null);
 		};
-	}, [renderMode, worldRasterTiling]);
+	}, [renderMode, selectionMethod, selectionMode, selectionTarget, worldRasterTiling]);
 
 	useEffect(() => {
 		if (!contextRenderer) {
@@ -459,6 +478,14 @@ export function BoardCanvas({
 		}
 		onReady?.(contextRenderer);
 	}, [contextRenderer, onReady]);
+
+	useLayoutEffect(() => {
+		const renderer = rendererRef.current;
+		if (!renderer) {
+			return;
+		}
+		renderer.setSelectionOptions({ method: selectionMethod, mode: selectionMode, target: selectionTarget });
+	}, [selectionMethod, selectionMode, selectionTarget]);
 
 	useLayoutEffect(() => {
 		const renderer = rendererRef.current;
@@ -596,14 +623,20 @@ if (boardReactVitest) {
 				beginPath: vi.fn(),
 				bezierCurveTo: vi.fn(),
 				clearRect: vi.fn(),
+				clip: vi.fn(),
+				closePath: vi.fn(),
 				fill: vi.fn(),
 				fillRect: vi.fn(),
 				fillStyle: "#000000",
+				fillText: vi.fn(),
+				font: "",
 				lineCap: "round",
 				lineJoin: "round",
 				lineTo: vi.fn(),
 				lineWidth: 1,
+				measureText: vi.fn((s: string) => ({ width: s.length * 6 })),
 				moveTo: vi.fn(),
+				rect: vi.fn(),
 				restore: vi.fn(),
 				save: vi.fn(),
 				setLineDash: vi.fn(),
@@ -611,6 +644,8 @@ if (boardReactVitest) {
 				stroke: vi.fn(),
 				strokeRect: vi.fn(),
 				strokeStyle: "#000000",
+				textAlign: "center",
+				textBaseline: "middle",
 			} as unknown as CanvasRenderingContext2D;
 		});
 		return () => {

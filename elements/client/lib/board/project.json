@@ -17,8 +17,8 @@
       "dependsOn": [],
       "executor": "nx:run-commands",
       "options": {
-        "cwd": "elements/client/lib/board/play",
-        "command": "bunx vite build",
+        "cwd": "elements/client/lib/board",
+        "command": "bun ./script.ts build",
         "forwardAllArgs": true
       }
     },
@@ -27,7 +27,7 @@
       "executor": "nx:run-commands",
       "options": {
         "cwd": "elements/client/lib/board",
-        "command": "bunx vitest run --passWithNoTests --config vitest.config.ts",
+        "command": "bun ./script.ts test",
         "forwardAllArgs": true
       }
     }

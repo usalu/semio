@@ -27,7 +27,17 @@ import {
 import { createRoot } from "react-dom/client";
 
 import nakaginFixtureJson from "../../../../../.storybook/fixtures/nakagin-capsule-tower.board.json";
-import { BOARD_FIXTURE_DRAG_V1_MIME, encodeBoardFixtureForDragV1, parseBoardFixtureV1, type BoardFixtureEdgeV1, type BoardFixtureNodeV1, type BoardFixtureV1, type CameraState } from "../js/index";
+import {
+	BOARD_CAMERA_ZOOM_MAX,
+	BOARD_CAMERA_ZOOM_MIN,
+	BOARD_FIXTURE_DRAG_V1_MIME,
+	encodeBoardFixtureForDragV1,
+	parseBoardFixtureV1,
+	type BoardFixtureEdgeV1,
+	type BoardFixtureNodeV1,
+	type BoardFixtureV1,
+	type CameraState,
+} from "../js/index";
 import { BoardCanvas, Edge, Handle, Node, useBoardEvent } from "../react/index.tsx";
 import "./globals.css";
 // #endregion 📥Imports
@@ -36,14 +46,12 @@ import "./globals.css";
 export type BoardPlayPaneId = "board-overview" | "board-detail" | "board-selection";
 
 const BOARD_PLAY_APP_ID = "elements-board-play";
-const MIN_ZOOM = 0.2;
-const MAX_ZOOM = 8;
 const REF_VIEWPORT_SHORT_PX = 640;
 // #endregion 🔖Kinds
 
 // #region 🔖Geometry
 function clampZoom(value: number): number {
-	return Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, value));
+	return Math.min(BOARD_CAMERA_ZOOM_MAX, Math.max(BOARD_CAMERA_ZOOM_MIN, value));
 }
 
 /** @emoji 📐 Axis-aligned bounds of all fixture nodes (world units). */
@@ -145,13 +153,24 @@ function nakaginBoardMarkers(fixture: BoardFixtureV1, selectedIds: Set<string>):
 		<>
 			{fixture.nodes.map((node) =>
 				node.shape === "rectangle" ? (
-					<Node draggable={false} height={node.height} id={node.id} key={node.id} shape="rectangle" selected={selectedIds.has(node.id)} width={node.width} x={node.x} y={node.y}>
+					<Node
+						draggable={false}
+						height={node.height}
+						id={node.id}
+						key={node.id}
+						shape="rectangle"
+						selected={selectedIds.has(node.id)}
+						text={node.text}
+						width={node.width}
+						x={node.x}
+						y={node.y}
+					>
 						{node.handles.map((handle) => (
 							<Handle angle={handle.angle} id={handle.id} key={handle.id} selected={selectedIds.has(handle.id)} />
 						))}
 					</Node>
 				) : (
-					<Node draggable={false} id={node.id} key={node.id} radius={node.radius} selected={selectedIds.has(node.id)} x={node.x} y={node.y}>
+					<Node draggable={false} id={node.id} key={node.id} radius={node.radius} selected={selectedIds.has(node.id)} text={node.text} x={node.x} y={node.y}>
 						{node.handles.map((handle) => (
 							<Handle angle={handle.angle} id={handle.id} key={handle.id} selected={selectedIds.has(handle.id)} />
 						))}
@@ -318,10 +337,10 @@ function BoardSelectionInspectorPanel(): ReactElement {
 								<dd className="break-all">{node.id}</dd>
 								<dt className="text-muted-foreground">shape</dt>
 								<dd>{node.shape === "rectangle" ? "rectangle" : "circle"}</dd>
-								{node.label ? (
+								{node.text ? (
 									<>
-										<dt className="text-muted-foreground">label</dt>
-										<dd>{node.label}</dd>
+										<dt className="text-muted-foreground">text</dt>
+										<dd className="break-all">{node.text}</dd>
 									</>
 								) : null}
 								{node.shape === "rectangle" ? (
