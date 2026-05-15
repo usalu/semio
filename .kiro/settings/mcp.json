@@ -2,31 +2,28 @@
   "mcpServers": {
     "repo": {
       "type": "stdio",
-      "command": "go",
-      "args": [
-        "run",
-        "./repo/kiro"
-      ]
+      "command": "bun",
+      "args": ["dev.mcp.repo.script.ts", "kiro"]
     },
     "neo4j-semio": {
       "type": "stdio",
-      "command": "bash",
-      "args": ["./.devcontainer/neo4j-mcp-run.sh", "semio"]
+      "command": "bun",
+      "args": ["dev.mcp.neo4j.script.ts", "semio"]
     },
     "neo4j-elements": {
       "type": "stdio",
-      "command": "bash",
-      "args": ["./.devcontainer/neo4j-mcp-run.sh", "elements"]
+      "command": "bun",
+      "args": ["dev.mcp.neo4j.script.ts", "elements"]
     },
     "neo4j-coda": {
       "type": "stdio",
-      "command": "bash",
-      "args": ["./.devcontainer/neo4j-mcp-run.sh", "coda"]
+      "command": "bun",
+      "args": ["dev.mcp.neo4j.script.ts", "coda"]
     },
     "neo4j-reuse": {
       "type": "stdio",
-      "command": "bash",
-      "args": ["./.devcontainer/neo4j-mcp-run.sh", "reuse"]
+      "command": "bun",
+      "args": ["dev.mcp.neo4j.script.ts", "reuse"]
     }
   }
 }

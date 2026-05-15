@@ -79,11 +79,6 @@
       "inputs": ["default", "^default"],
       "cache": true
     },
-    "publish:test": {
-      "dependsOn": ["^publish:test"],
-      "inputs": ["default", "^default"],
-      "cache": true
-    },
     "publish": {
       "dependsOn": ["^publish"],
       "inputs": ["default", "^default"],

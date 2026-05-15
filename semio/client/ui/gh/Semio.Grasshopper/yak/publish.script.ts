@@ -19,19 +19,13 @@ import { join } from "path";
 /**
  * Distribution directory containing the built Yak package.
  * MUST contain the manifest.yml and built .yak file.
- **/
-/**
-// cwd holds the data fields for a cwd record.
- **/
+ */
 const cwd = join(__dirname, "dist");
 
 /**
  * Manifest content read from the distribution folder.
  * MUST contain a version field.
- **/
-/**
-// manifestContent holds the data fields for a manifestContent record.
- **/
+ */
 const manifestContent = readFileSync(join(cwd, "manifest.yml"), "utf-8");
 /**
  * Version regex match result from the manifest.
@@ -50,15 +44,11 @@ const version = versionMatch[1].trim();
  * Yak package filename following the naming convention.
  * MUST match the built package name pattern.
  **/
- * buildName holds the data fields for a buildName record.
- **/
 const buildName = `semio-${version}-rh8_10-win.yak`;
 
 /**
  * Yak CLI executable path for Rhino 8.
  * MUST point to the installed Yak binary.
- **/
- * yak holds the data fields for a yak record.
  **/
 const yak = "C:\\Program Files\\Rhino 8\\System\\Yak.exe";
 execSync(`"${yak}" push ${buildName}`, { cwd, stdio: "inherit" });

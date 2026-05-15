@@ -1,5 +1,5 @@
 #!/usr/bin/env bun
-/** 🧪 Grasshopper .NET unit tests (`test` + `gh`). */
+/** 🧪 .NET unit tests for this Grasshopper project (`test`). */
 import { execFileSync } from "node:child_process";
 import { join } from "node:path";
 

@@ -1,5 +1,5 @@
 #!/usr/bin/env bun
-/** 🔌 Build engine MCP bundle then launch MCPJam inspector (`dev` + `mcp` + `engine`). */
+/** 🔌 Build MCP bundle for this engine package, then launch MCPJam inspector (`dev` + `mcp`). */
 import { execFileSync } from "node:child_process";
 import { spawn } from "node:child_process";
 import { join } from "node:path";

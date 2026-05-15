@@ -2,13 +2,13 @@
   "mcpServers": {
     "repo": {
       "type": "stdio",
-      "command": "go",
-      "args": ["run", "./repo/client/mcp"]
+      "command": "bun",
+      "args": ["dev.mcp.repo.script.ts", "client"]
     },
     "neo4j-semio": {
       "type": "stdio",
       "command": "bun",
-      "args": ["dev.neo4j.mcp.script.ts", "semio"],
+      "args": ["dev.mcp.neo4j.script.ts", "semio"],
       "env": {
         "NEO4J_DATABASE": "semio"
       }
@@ -16,7 +16,7 @@
     "neo4j-elements": {
       "type": "stdio",
       "command": "bun",
-      "args": ["dev.neo4j.mcp.script.ts", "elements"],
+      "args": ["dev.mcp.neo4j.script.ts", "elements"],
       "env": {
         "NEO4J_DATABASE": "elements"
       }
@@ -24,7 +24,7 @@
     "neo4j-coda": {
       "type": "stdio",
       "command": "bun",
-      "args": ["dev.neo4j.mcp.script.ts", "coda"],
+      "args": ["dev.mcp.neo4j.script.ts", "coda"],
       "env": {
         "NEO4J_DATABASE": "coda"
       }
@@ -32,7 +32,7 @@
     "neo4j-reuse": {
       "type": "stdio",
       "command": "bun",
-      "args": ["dev.neo4j.mcp.script.ts", "reuse"],
+      "args": ["dev.mcp.neo4j.script.ts", "reuse"],
       "env": {
         "NEO4J_DATABASE": "reuse"
       }

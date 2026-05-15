@@ -11,14 +11,14 @@ const argv = process.argv.slice(2);
 if (argv[0] === "mcp") {
   const mode = argv[1];
   if (mode === "engine") {
-    execFileSync("bun", [join(root, "semio", "client", "bin", "engine", "dev.mcp.engine.script.ts")], {
+    execFileSync("bun", [join(root, "semio", "client", "bin", "engine", "dev.mcp.script.ts")], {
       cwd: root,
       stdio: "inherit",
     });
   } else if (mode === "repo") {
-    execFileSync("bun", [join(root, "repo", "client", "dev.mcp.script.ts"), "repo"], { cwd: root, stdio: "inherit" });
+    execFileSync("bun", [join(root, "dev.mcp.inspector.script.ts"), "repo"], { cwd: root, stdio: "inherit" });
   } else {
-    execFileSync("bun", [join(root, "repo", "client", "dev.mcp.script.ts")], { cwd: root, stdio: "inherit" });
+    execFileSync("bun", [join(root, "dev.mcp.inspector.script.ts")], { cwd: root, stdio: "inherit" });
   }
   process.exit(0);
 }

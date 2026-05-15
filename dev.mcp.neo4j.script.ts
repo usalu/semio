@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 /**
- * 🗄️ Neo4j MCP launcher (`dev` + `neo4j` + `mcp`); Bolt defaults to localhost. Technology positional
+ * 🗄️ Neo4j MCP stdio (`dev` → `mcp` → `neo4j`); Bolt defaults to localhost. Technology positional
  * (`semio` | `elements` | `coda` | `reuse`) pins `NEO4J_DATABASE` so the wrong graph is never targeted.
  */
 import { spawnSync } from "node:child_process";

@@ -1,5 +1,5 @@
 #!/usr/bin/env bun
-/** 🏗️ Go coordinator server binary (`build` + `server`). */
+/** 🏗️ Go coordinator server binary (`build` for this package). */
 import { execFileSync } from "node:child_process";
 
 const coordinatorRoot = import.meta.dir;

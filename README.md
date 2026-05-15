@@ -667,9 +667,9 @@ Used for small bugs and focused fixes with strong repo context 🧠
 
 Used for simple tasks (small edits, small refactors, small doc updates) 🧩
 
-The canonical root agent instructions live in `AGENTS.md`. Root aliases such as `CLAUDE.md` and `GEMINI.md` are recreated from that file by `npm run git:setup`, using symlinks when the shell supports them and a hard-link fallback on restricted Windows shells.
+The canonical root agent instructions live in `AGENTS.md`. Root aliases such as `CLAUDE.md` and `GEMINI.md` are recreated from that file when you run `bun ./setup.git.script.ts` (also invoked from `npm run setup`), using symlinks when the shell supports them and a hard-link fallback on restricted Windows shells.
 
-Run `npm run git:setup` once after cloning to enable local git symlink checkout, recreate the root aliases, and install repo-managed hooks on Windows, macOS, and Linux. On Windows, true symlink creation may require Developer Mode or an elevated shell.
+Run `npm run setup` once after cloning for the full workspace bootstrap, or run `bun ./setup.git.script.ts` if you only need git symlink checkout, root alias files, and repo-managed hooks on Windows, macOS, and Linux. On Windows, true symlink creation may require Developer Mode or an elevated shell.
 
 ### ☁ Cloud [↑](#-tools-)
 
@@ -706,9 +706,9 @@ The default model for agent work is the one native to the platform we use for th
 
 </details>
 
-All automation, CI runs, and agent workflows are controlled through the canonical root commands `dev`, `fix`, `analyze`, `test`, `build`, `update`, `publish:test`, and `publish`. Only `dev` is allowed to stay live for watch mode, while the remaining commands must exit so CI and agents can finish reliably. `publish:test` and `publish` always run a full `build` first.
-The root `package.json` uses Nx to orchestrate the command pipeline, and delegates bundle builds/tests/publishing to Nx (`npx nx run-many -t <target>`).
-Git pre-commit is managed by [pre-commit](https://pre-commit.com/): run `npm run git:setup` once for symlinks and hooks, then use `npm run pre-commit` to run hooks on all files.
+All automation, CI runs, and agent workflows are controlled through the canonical root commands `setup`, `start`, `dev`, `generate`, `lint`, `format`, `test`, `build`, `publish`, and `purge` (see root `package.json`). Only `dev` is intended to stay live for watch mode, while the remaining commands exit so CI and agents can finish reliably.
+The root `package.json` uses Nx to orchestrate the command pipeline, and delegates bundle builds, tests, and publishing to Nx targets (`bun nx run …`).
+Git pre-commit is managed by [pre-commit](https://pre-commit.com/): run `bun ./setup.git.script.ts` once for symlinks and hooks, then use `pre-commit run --all-files` to run hooks on all files.
 
 # 🏘 [Examples](semio/examples) [↑](#-overview)
 

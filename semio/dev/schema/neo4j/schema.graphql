@@ -1,8 +1,8 @@
 # https://neo4j.com/docs/graphql/current/
 # Composition and containment use HAS (…); do not persist denormalized owner names/ids/kinds on nodes — use HAS edges only.
-# `IS` is a materialized subtype graph: Interface→Interface includes transitive supertypes; Class and Field→Interface include every ancestor of the declared interface (e.g. strongEntity/weakEntity→entity).
+# `IS` is a materialized subtype graph: Interface→Interface includes transitive supertypes; Class and Field→Interface include every ancestor of the declared interface (e.g. `WeakEntity`/`StrongEntity`→`Entity`).
 # Do not store on nodes: data, declaringClass, declaringInterface, emoji, entityKind, fieldOrder, id, moduleName, nodes, ownerKind, ownerName, relationships, scalarKind, schemaSource, schemaTag, style, targetName, UNIQUE IMPORT ID, visualisation — use graph shape only; use `rank` (string) as the sole ordering key where needed (e.g. fields under an owner).
-# `Module.name` is unique only among sibling modules (same parent). Under `schema` only `general` and `domain` exist; kit graph modules (`Entity`, `Scalar`, `Schema`, `FieldKind`, …) hang under `domain`, and every Class, Interface, Scalar, and persisted Enum is reached via `Module HAS` inside that tree (or under `general` when used).
+# Naming: `Module.name`, `Class.name`, `Interface.name`, and `Scalar.name` are PascalCase; `Field.name` is lowerCamelCase; persisted `Enum` members stay ALL_CAPS. `Module.name` is unique only among siblings. Root `Schema` has `General` and `Domain`; kit graph modules (`Entity`, `Scalar`, `KitSchema`, `FieldKind`, …) hang under `Domain`.
 
 interface Constraint {
   description: String!

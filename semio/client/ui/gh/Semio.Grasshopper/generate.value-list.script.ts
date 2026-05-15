@@ -5,7 +5,7 @@
 
 // This program is free software: you can redistribute it and/or modify it under the terms of the GNU Affero General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version. This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for more details. You should have received a copy of the GNU Affero General Public License along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-// Generates Grasshopper value list presets from domain data.
+// Generates value list presets from domain CSVs (Grasshopper project).
 
 // #endregion 🧲Header
 
@@ -16,9 +16,8 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from "fs";
 import { join } from "path";
 
 /**
- * Build output directory for generated value list files.
- * MUST be created if it does not exist.
- **/
+ * 📋Build output directory for generated value list files; created when missing.
+ */
 const buildDir = join(__dirname, "build");
 if (!existsSync(buildDir)) {
   mkdirSync(buildDir);
@@ -47,7 +46,7 @@ function convertCsvToValueList(csvPath: string, outputPath: string, keyColumn: s
     };
   });
 
-  const lines = records.map((record: any) => {
+  const lines = records.map((record: Record<string, string>) => {
     return `${record[keyColumn]} = "${record[valueColumn]}"`;
   });
 

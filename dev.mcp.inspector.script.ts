@@ -1,11 +1,10 @@
 #!/usr/bin/env bun
 /**
- * 🔌 Dev-time MCP inspector: default generic inspector; `repo` uses `.cursor/mcp.json` server `repo`.
+ * 🔌 MCP inspector (`dev` → `mcp` → `inspector`): default generic UI; `repo` pins `--server repo` using `.cursor/mcp.json`.
  */
 import { spawn } from "node:child_process";
-import { join } from "node:path";
 
-const root = join(import.meta.dir, "..", "..");
+const root = import.meta.dir;
 const host = process.env.DEVCONTAINER === "true" ? "0.0.0.0" : "127.0.0.1";
 const mode = process.argv[2] ?? "default";
 
