@@ -35,6 +35,7 @@
     "start": "bun ./start.script.ts",
     "dev": "bun ./dev.script.ts",
     "dev:storybook": "bun ./dev.script.ts storybook",
+    "dev:board": "bun ./dev.script.ts board",
     "generate": "bun ./generate.script.ts",
     "migrate:neo4j": "bun ./.repo/🎫/26/05/15/NEO4J-MIGRATIONS-HANDWRITTEN/migrate.neo4j.script.ts",
     "lint": "bun ./lint.script.ts",

@@ -38,10 +38,44 @@ export interface CubicBezierCurve {
 	p3: Point;
 }
 
+/** @emoji 📄 Handle record inside {@link BoardFixtureV1}. */
+export interface BoardFixtureHandleV1 {
+	angle: number;
+	id: string;
+}
+
+/** @emoji 📄 Node record inside {@link BoardFixtureV1}. */
+export interface BoardFixtureNodeV1 {
+	cad?: { x: number; y: number; z: number } | null;
+	handles: BoardFixtureHandleV1[];
+	id: string;
+	label?: string;
+	radius: number;
+	x: number;
+	y: number;
+}
+
+/** @emoji 📄 Edge record inside {@link BoardFixtureV1}. */
+export interface BoardFixtureEdgeV1 {
+	from: string;
+	id: string;
+	to: string;
+}
+
+/** @emoji 📄 Parsed `elements.board.fixture/v1` JSON for declarative board scenes. */
+export interface BoardFixtureV1 {
+	camera: CameraState;
+	edges: BoardFixtureEdgeV1[];
+	meta?: Record<string, unknown>;
+	nodes: BoardFixtureNodeV1[];
+	schema: string;
+}
+
 export interface BoardEventMap {
 	camera: CameraState;
 	edgeCreate: { id: string; from: string; to: string };
 	edgeDelete: { id: string };
+	fixtureFileDrop: BoardFixtureV1;
 	hover: { id: string | null };
 	invalidate: undefined;
 	nodeDelete: { id: string };
@@ -266,6 +300,91 @@ function sortedSelectionIds(ids: Iterable<string>): string[] {
 
 function createSelectionSnapshot(ids: Iterable<string>): BoardSelectionSnapshot {
 	return { ids: sortedSelectionIds(ids) };
+}
+
+/** @emoji 🧾 Validates unknown JSON into {@link BoardFixtureV1} or returns null. */
+export function parseBoardFixtureV1(raw: unknown): BoardFixtureV1 | null {
+	if (!raw || typeof raw !== "object") {
+		return null;
+	}
+	const root = raw as Record<string, unknown>;
+	if (root.schema !== "elements.board.fixture/v1") {
+		return null;
+	}
+	const cam = root.camera;
+	if (!cam || typeof cam !== "object") {
+		return null;
+	}
+	const cameraRecord = cam as Record<string, unknown>;
+	const camera: CameraState = {
+		x: Number(cameraRecord.x),
+		y: Number(cameraRecord.y),
+		zoom: Number(cameraRecord.zoom),
+	};
+	if (!Number.isFinite(camera.x) || !Number.isFinite(camera.y) || !Number.isFinite(camera.zoom)) {
+		return null;
+	}
+	if (!Array.isArray(root.nodes) || !Array.isArray(root.edges)) {
+		return null;
+	}
+	const nodes: BoardFixtureNodeV1[] = [];
+	for (const entry of root.nodes) {
+		if (!entry || typeof entry !== "object") {
+			return null;
+		}
+		const node = entry as Record<string, unknown>;
+		const id = typeof node.id === "string" ? node.id : null;
+		const radius = Number(node.radius);
+		const x = Number(node.x);
+		const y = Number(node.y);
+		if (!id || !Number.isFinite(radius) || !Number.isFinite(x) || !Number.isFinite(y)) {
+			return null;
+		}
+		if (!Array.isArray(node.handles)) {
+			return null;
+		}
+		const handles: BoardFixtureHandleV1[] = [];
+		for (const h of node.handles) {
+			if (!h || typeof h !== "object") {
+				return null;
+			}
+			const hr = h as Record<string, unknown>;
+			const hid = typeof hr.id === "string" ? hr.id : null;
+			const angle = Number(hr.angle);
+			if (!hid || !Number.isFinite(angle)) {
+				return null;
+			}
+			handles.push({ angle, id: hid });
+		}
+		const label = typeof node.label === "string" ? node.label : undefined;
+		const cad =
+			node.cad && typeof node.cad === "object"
+				? {
+						x: Number((node.cad as Record<string, unknown>).x),
+						y: Number((node.cad as Record<string, unknown>).y),
+						z: Number((node.cad as Record<string, unknown>).z),
+				  }
+				: node.cad === null
+				  ? null
+				  : undefined;
+		nodes.push({ ...(cad !== undefined ? { cad } : {}), handles, id, label, radius, x, y });
+	}
+	const edges: BoardFixtureEdgeV1[] = [];
+	for (const entry of root.edges) {
+		if (!entry || typeof entry !== "object") {
+			return null;
+		}
+		const edge = entry as Record<string, unknown>;
+		const id = typeof edge.id === "string" ? edge.id : null;
+		const from = typeof edge.from === "string" ? edge.from : null;
+		const to = typeof edge.to === "string" ? edge.to : null;
+		if (!id || !from || !to) {
+			return null;
+		}
+		edges.push({ from, id, to });
+	}
+	const meta = root.meta && typeof root.meta === "object" ? (root.meta as Record<string, unknown>) : undefined;
+	return { camera, edges, meta, nodes, schema: "elements.board.fixture/v1" };
 }
 
 function inflateWorldBox(box: WorldAxisBox, pad: number): WorldAxisBox {
@@ -751,6 +870,11 @@ export class BoardRenderer {
 	getSelectionSnapshot = (): BoardSelectionSnapshot => this.selectionStore.getSnapshot();
 
 	subscribeSelection = (listener: () => void): (() => void) => this.selectionStore.subscribe(listener);
+
+	/** @emoji ✅ Replaces the active selection set and syncs `selected` flags on scene objects. */
+	setSelectionIds(ids: Iterable<string>): void {
+		this.updateSelection(ids);
+	}
 
 	getCameraSnapshot = (): CameraState => this.cameraStore.getSnapshot();
 
@@ -1467,6 +1591,43 @@ if (boardVitest) {
 			expect(movableNode.y).toBeCloseTo(40);
 
 			renderer.dispose();
+		});
+
+		it("applies imperative selection via setSelectionIds", () => {
+			const { canvas } = createMockCanvas();
+			const renderer = new BoardRenderer({ canvas });
+			const sourceNode = new Node({ id: "source", radius: 20, x: 0, y: 0 });
+			const targetNode = new Node({ id: "target", radius: 20, x: 100, y: 0 });
+			renderer.scene.add(sourceNode).add(targetNode);
+			renderer.setSelectionIds(["target"]);
+			expect(renderer.selection.getSnapshot().ids).toEqual(["target"]);
+			expect(targetNode.selected).toBe(true);
+			expect(sourceNode.selected).toBe(false);
+			renderer.dispose();
+		});
+	});
+
+	describe("board fixture io", () => {
+		it("parses minimal v1 fixture payloads", () => {
+			const parsed = parseBoardFixtureV1({
+				camera: { x: 1, y: 2, zoom: 0.5 },
+				edges: [{ from: "a.out", id: "e1", to: "b.in" }],
+				meta: {},
+				nodes: [
+					{ handles: [{ angle: 0, id: "a.out" }], id: "a", radius: 10, x: 0, y: 0 },
+					{ handles: [{ angle: 3.14, id: "b.in" }], id: "b", radius: 10, x: 50, y: 0 },
+				],
+				schema: "elements.board.fixture/v1",
+			});
+			expect(parsed).not.toBeNull();
+			expect(parsed?.nodes).toHaveLength(2);
+			expect(parsed?.edges[0]?.id).toBe("e1");
+			expect(parsed?.camera.zoom).toBe(0.5);
+		});
+
+		it("rejects wrong schema or malformed nodes", () => {
+			expect(parseBoardFixtureV1({ schema: "other", nodes: [], edges: [], camera: { x: 0, y: 0, zoom: 1 } })).toBeNull();
+			expect(parseBoardFixtureV1({ schema: "elements.board.fixture/v1", nodes: "x", edges: [], camera: { x: 0, y: 0, zoom: 1 } })).toBeNull();
 		});
 	});
 }

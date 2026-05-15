@@ -4,6 +4,7 @@ import {
 	act,
 	createContext,
 	isValidElement,
+	useCallback,
 	useContext,
 	useEffect,
 	useLayoutEffect,
@@ -12,6 +13,7 @@ import {
 	useState,
 	useSyncExternalStore,
 	type CSSProperties,
+	type DragEvent,
 	type ReactElement,
 	type ReactNode,
 } from "react";
@@ -22,7 +24,9 @@ import {
 	Edge as BoardEdgeObject,
 	Handle as BoardHandleObject,
 	Node as BoardNodeObject,
+	parseBoardFixtureV1,
 	type BoardEventMap,
+	type BoardFixtureV1,
 	type BoardSelectionSnapshot,
 	type CameraState,
 	type FrameState,
@@ -35,7 +39,10 @@ export interface BoardCanvasProps {
 	camera?: Partial<CameraState>;
 	children?: ReactNode;
 	className?: string;
+	/** @emoji 📥 When true, dropping a valid `.board.json` fixture onto the canvas area updates via {@link BoardCanvasProps.onFixtureFileDrop} and emits `fixtureFileDrop`. */
+	fixtureFileDrop?: boolean;
 	height?: number;
+	onFixtureFileDrop?: (fixture: BoardFixtureV1) => void;
 	onReady?: (renderer: BoardRenderer) => void;
 	renderMode?: RenderMode;
 	style?: CSSProperties;
@@ -295,7 +302,9 @@ export function BoardCanvas({
 	camera,
 	children,
 	className,
+	fixtureFileDrop,
 	height,
+	onFixtureFileDrop,
 	onReady,
 	renderMode,
 	style,
@@ -307,6 +316,81 @@ export function BoardCanvas({
 	const [contextRenderer, setContextRenderer] = useState<BoardRenderer | null>(null);
 	const rendererRef = useRef<BoardRenderer | null>(null);
 	const descriptor = useMemo(() => buildBoardSceneDescriptor(children), [children]);
+	const [fileDragActive, setFileDragActive] = useState(false);
+	const fileDragDepthRef = useRef(0);
+	const resolvedFixtureFileDrop = fixtureFileDrop ?? Boolean(onFixtureFileDrop);
+
+	const handleDragEnter = useCallback(
+		(event: DragEvent<HTMLDivElement>): void => {
+			if (!resolvedFixtureFileDrop) {
+				return;
+			}
+			if (![...event.dataTransfer.types].includes("Files")) {
+				return;
+			}
+			fileDragDepthRef.current += 1;
+			setFileDragActive(true);
+		},
+		[resolvedFixtureFileDrop],
+	);
+
+	const handleDragLeave = useCallback(
+		(event: DragEvent<HTMLDivElement>): void => {
+			if (!resolvedFixtureFileDrop) {
+				return;
+			}
+			if (event.currentTarget.contains(event.relatedTarget as Node)) {
+				return;
+			}
+			fileDragDepthRef.current = Math.max(0, fileDragDepthRef.current - 1);
+			if (fileDragDepthRef.current === 0) {
+				setFileDragActive(false);
+			}
+		},
+		[resolvedFixtureFileDrop],
+	);
+
+	const handleDragOver = useCallback(
+		(event: DragEvent<HTMLDivElement>): void => {
+			if (!resolvedFixtureFileDrop) {
+				return;
+			}
+			if ([...event.dataTransfer.types].includes("Files")) {
+				event.preventDefault();
+				event.dataTransfer.dropEffect = "copy";
+			}
+		},
+		[resolvedFixtureFileDrop],
+	);
+
+	const handleDrop = useCallback(
+		async (event: DragEvent<HTMLDivElement>): Promise<void> => {
+			if (!resolvedFixtureFileDrop) {
+				return;
+			}
+			event.preventDefault();
+			fileDragDepthRef.current = 0;
+			setFileDragActive(false);
+			const file = event.dataTransfer.files[0];
+			if (!file) {
+				return;
+			}
+			const text = await file.text();
+			let raw: unknown;
+			try {
+				raw = JSON.parse(text) as unknown;
+			} catch {
+				return;
+			}
+			const fixture = parseBoardFixtureV1(raw);
+			if (!fixture) {
+				return;
+			}
+			onFixtureFileDrop?.(fixture);
+			rendererRef.current?.emit("fixtureFileDrop", fixture);
+		},
+		[onFixtureFileDrop, resolvedFixtureFileDrop],
+	);
 
 	useLayoutEffect(() => {
 		if (!canvasRef.current || rendererRef.current) {
@@ -385,7 +469,11 @@ export function BoardCanvas({
 	return (
 		<BoardContext.Provider value={contextRenderer}>
 			<div
-				className={className}
+				className={[className, fileDragActive ? "ring-2 ring-teal-500 ring-offset-2" : ""].filter(Boolean).join(" ") || undefined}
+				onDragEnter={handleDragEnter}
+				onDragLeave={handleDragLeave}
+				onDragOver={handleDragOver}
+				onDrop={(e) => void handleDrop(e)}
 				ref={containerRef}
 				style={{ height: height ?? "100%", position: "relative", width: width ?? "100%", ...(style ?? {}) }}
 			>

@@ -1,0 +1,33 @@
+{
+  "name": "@elements/board",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "targets": {
+    "dev": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "elements/client/lib/board",
+        "command": "bun ./dev.script.ts",
+        "env": {
+          "BOARD_PLAY_PORT": "6012"
+        },
+        "forwardAllArgs": true
+      }
+    },
+    "build": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "elements/client/lib/board/play",
+        "command": "bunx vite build",
+        "forwardAllArgs": true
+      }
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "elements/client/lib/board",
+        "command": "bunx vitest run --passWithNoTests --config ../../../../elements/ui/vitest.config.ts js/index.ts",
+        "forwardAllArgs": true
+      }
+    }
+  }
+}

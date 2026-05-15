@@ -93,6 +93,12 @@ if (argv[0] === "storybook-static") {
   await new Promise(() => {});
 }
 
+if (argv[0] === "board") {
+	const extra = argv.slice(1);
+	execFileSync("bun", ["nx", "run", "@elements/board:dev", ...extra], { cwd: root, stdio: "inherit" });
+	process.exit(0);
+}
+
 if (argv[0] === "mcp") {
   const mode = argv[1];
   if (mode === "engine") {
