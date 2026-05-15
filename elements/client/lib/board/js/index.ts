@@ -1203,7 +1203,7 @@ export class BoardRenderer {
 		}
 		this.selectionOptions = next;
 		if (this.vello) {
-			this.vello.set_selection_options_wasm(next.method, next.mode, next.target);
+			this.vello.setSelectionOptions(next.method, next.mode, next.target);
 		}
 		this.markDirty();
 	}
@@ -1305,6 +1305,11 @@ export class BoardRenderer {
 		this.invalidated = true;
 		this.emit("invalidate", undefined);
 		if (this.renderMode === "headless-test") {
+			if (this.rafId !== null && globalThis.cancelAnimationFrame) {
+				globalThis.cancelAnimationFrame(this.rafId);
+				this.rafId = null;
+			}
+			this.render(Date.now());
 			return;
 		}
 		if (this.rafId !== null) {
@@ -1372,7 +1377,7 @@ export class BoardRenderer {
 		}
 		this.vello = await BoardVelloWasm.create(this.canvas, lw, lh, dpr);
 		const o = this.selectionOptions;
-		this.vello.set_selection_options_wasm(o.method, o.mode, o.target);
+		this.vello.setSelectionOptions(o.method, o.mode, o.target);
 	}
 
 	private descriptorJsonForVello(): string {
@@ -1434,9 +1439,9 @@ export class BoardRenderer {
 		try {
 			const o = this.selectionOptions;
 			this.vello.set_size(this.width, this.height, this.dpr);
-			this.vello.set_selection_options_wasm(o.method, o.mode, o.target);
-			this.vello.sync_descriptor_json(this.descriptorJsonForVello());
-			this.vello.set_camera_wasm(this.camera.x, this.camera.y, this.camera.zoom);
+			this.vello.setSelectionOptions(o.method, o.mode, o.target);
+			this.vello.syncDescriptorJson(this.descriptorJsonForVello());
+			this.vello.setCamera(this.camera.x, this.camera.y, this.camera.zoom);
 			this.vello.render_frame();
 			this.velloPresentedFrame = true;
 			this.velloFailureDetail = "";
@@ -1453,7 +1458,7 @@ export class BoardRenderer {
 			return;
 		}
 		if (this.interaction?.kind !== "selection" || this.interaction.screenPoints.length < 2) {
-			this.vello.clear_selection_screen_preview();
+			this.vello.clearSelectionScreenPreview();
 			return;
 		}
 		const points =
@@ -1477,7 +1482,7 @@ export class BoardRenderer {
 			flat[i++] = p.x;
 			flat[i++] = p.y;
 		}
-		this.vello.set_selection_screen_preview(flat);
+		this.vello.setSelectionScreenPreview(flat);
 	}
 
 	dispose(): void {

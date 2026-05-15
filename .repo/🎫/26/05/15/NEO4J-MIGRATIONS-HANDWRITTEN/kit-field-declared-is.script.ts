@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 /**
- * @emoji 🧭 Rebuilds each kit member's declared `IS` edge from `semio/client/schema/semio/schema.yaml`, then callers may re-run transitive `IS` materialization.
+ * @emoji 🧭 Rebuilds declared `IS` from `semio/client/schema/semio/schema.yaml`: kit members get one `IS` per field; `Class`/`Interface` types keep **only** direct `implements` targets (no transitive `IS` to supertypes like Entity).
  */
 import { existsSync, readFileSync, unlinkSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
@@ -13,6 +13,12 @@ export type KitFieldDeclaredIsRow = Readonly<{
   owner: string;
   field: string;
   target: string;
+}>;
+
+/** @emoji 📐 One `Class`/`Interface` type’s YAML map key and direct `implements` targets (Neo4j node names). */
+export type TypeDeclaredIsRow = Readonly<{
+  owner: string;
+  targets: readonly string[];
 }>;
 //#endregion 🧭Types
 
@@ -84,6 +90,26 @@ function declaredTargetNameForValueNode(node: YAMLNode | null | undefined): stri
     }
   }
   return null;
+}
+
+function implementsTargetsFromTypeBody(body: YAMLMap): string[] {
+  const imp = body.get("implements", true);
+  if (imp == null) {
+    return [];
+  }
+  if (isAlias(imp)) {
+    return [targetNameFromAliasSource(imp.source)];
+  }
+  if (isSeq(imp)) {
+    const out: string[] = [];
+    for (const item of imp.items) {
+      if (item != null && isAlias(item)) {
+        out.push(targetNameFromAliasSource(item.source));
+      }
+    }
+    return out;
+  }
+  return [];
 }
 
 function collectFromOwnerMap(ownerYamlKey: string, body: unknown, rows: KitFieldDeclaredIsRow[]): void {
@@ -160,11 +186,84 @@ export function collectKitFieldDeclaredIsRows(schemaYamlText: string): KitFieldD
   }
   return [...dedup.values()];
 }
+
+/**
+ * @emoji 🗂️ Direct `implements` per `Class`/`Interface` map in schema.yaml (general + domain + vcs); merged by owner key.
+ */
+export function collectTypeDeclaredIsRows(schemaYamlText: string): TypeDeclaredIsRow[] {
+  const doc = parseDocument(schemaYamlText, { maxAliasCount: 1_000_000 });
+  const schema = doc.get("schema", true);
+  if (!isMap(schema)) {
+    throw new Error("[type-is] schema root missing or not a map");
+  }
+  const byOwner = new Map<string, Set<string>>();
+
+  function record(ownerYamlKey: string, body: unknown): void {
+    if (!isMap(body)) {
+      return;
+    }
+    if (!byOwner.has(ownerYamlKey)) {
+      byOwner.set(ownerYamlKey, new Set());
+    }
+    const set = byOwner.get(ownerYamlKey)!;
+    const targets = implementsTargetsFromTypeBody(body);
+    for (const t of targets) {
+      set.add(t);
+    }
+  }
+
+  function walkInterfaceMap(ifaceMap: unknown): void {
+    if (!isMap(ifaceMap)) {
+      return;
+    }
+    for (const pair of ifaceMap.items) {
+      const key = pair.key != null ? String(pair.key) : "";
+      if (key.length === 0) {
+        continue;
+      }
+      record(key, pair.value);
+    }
+  }
+
+  function walkClassMap(classMap: unknown): void {
+    if (!isMap(classMap)) {
+      return;
+    }
+    for (const pair of classMap.items) {
+      const key = pair.key != null ? String(pair.key) : "";
+      if (key.length === 0) {
+        continue;
+      }
+      record(key, pair.value);
+    }
+  }
+
+  const general = schema.get("general", true);
+  if (isMap(general)) {
+    walkInterfaceMap(general.get("interfaces", true));
+  }
+  const domain = schema.get("domain", true);
+  if (isMap(domain)) {
+    walkClassMap(domain.get("classes", true));
+    walkInterfaceMap(domain.get("interfaces", true));
+    const vcs = domain.get("vcs", true);
+    if (isMap(vcs)) {
+      walkInterfaceMap(vcs.get("interfaces", true));
+    }
+  }
+
+  const rows: TypeDeclaredIsRow[] = [];
+  for (const [owner, set] of byOwner) {
+    rows.push({ owner, targets: [...set].sort((a, b) => a.localeCompare(b)) });
+  }
+  rows.sort((a, b) => a.owner.localeCompare(b.owner));
+  return rows;
+}
 //#endregion 🧭YamlWalk
 
 //#region 🧭Cypher
 /**
- * @emoji 🔗 Kit members (`Data` / `Computation` / `Reference`) keep **only** the single declared `IS` from YAML (concrete `Class`, `Interface`, or `Scalar`). No transitive copy of interface supertypes onto fields — that stays on `Class`/`Interface` nodes only.
+ * @emoji 🔗 Kit members (`Data` / `Computation` / `Reference`) keep **only** the single declared `IS` from YAML (concrete `Class`, `Interface`, or `Scalar`). `Class`/`Interface` types keep **only** direct `implements` edges (see {@link buildTypeDeclaredIsRepairCypher}).
  */
 export function materializeTransitiveIsForKitMembersCypher(): string {
   return "";
@@ -198,6 +297,51 @@ function buildRepairCypher(rows: readonly KitFieldDeclaredIsRow[]): string {
       `MERGE (n)-[:IS]->(target);`,
       "",
     );
+  }
+  return lines.join("\n");
+}
+
+/**
+ * @emoji 🧷 Drops every `IS` from a type that is not listed under YAML `implements`, then `MERGE`s each declared edge (direct supertypes only).
+ */
+export function buildTypeDeclaredIsRepairCypher(rows: readonly TypeDeclaredIsRow[]): string {
+  const lines: string[] = [
+    "// SPDX-License-Identifier: AGPL-3.0-only",
+    "// Class/Interface: keep only direct schema.yaml `implements` as `IS` (strip transitive Entity/StrongEntity/… fan-out).",
+    "",
+  ];
+  for (const row of rows) {
+    const o = escapeLiteral(row.owner);
+    if (row.targets.length === 0) {
+      lines.push(
+        `MATCH (owner:Class|Interface)`,
+        `WHERE toLower(owner.name) = toLower('${o}')`,
+        `MATCH (owner)-[r:IS]->()`,
+        `DELETE r;`,
+        "",
+      );
+    } else {
+      const inList = row.targets.map((t) => `'${escapeLiteral(t.toLowerCase())}'`).join(", ");
+      lines.push(
+        `MATCH (owner:Class|Interface)`,
+        `WHERE toLower(owner.name) = toLower('${o}')`,
+        `MATCH (owner)-[r:IS]->(t)`,
+        `WHERE NOT toLower(t.name) IN [${inList}]`,
+        `DELETE r;`,
+        "",
+      );
+    }
+    for (const t of row.targets) {
+      const tl = escapeLiteral(t);
+      lines.push(
+        `MATCH (owner:Class|Interface)`,
+        `WHERE toLower(owner.name) = toLower('${o}')`,
+        `MATCH (target:Class|Interface)`,
+        `WHERE toLower(target.name) = toLower('${tl}')`,
+        `MERGE (owner)-[:IS]->(target);`,
+        "",
+      );
+    }
   }
   return lines.join("\n");
 }
@@ -263,7 +407,7 @@ function runCypherFile(repoRoot: string, shell: string, database: string, filePa
 
 //#region 🚀Entry
 /**
- * @emoji 🛠️ Deletes all `IS` from kit members and reattaches exactly one declared `IS` per field from YAML (no field-level transitive `IS`).
+ * @emoji 🛠️ Realigns `IS` with schema.yaml: kit fields get one declared `IS` each; `Class`/`Interface` get only direct `implements` (no transitive supertypes).
  */
 export function runKitFieldDeclaredIsRepair(opts: Readonly<{ repoRoot: string; database: string; cacheDir: string }>): void {
   const yamlPath = join(opts.repoRoot, "semio", "client", "schema", "semio", "schema.yaml");
@@ -275,14 +419,16 @@ export function runKitFieldDeclaredIsRepair(opts: Readonly<{ repoRoot: string; d
   if (rows.length === 0) {
     throw new Error("[kit-field-is] no declared kit field rows from yaml");
   }
+  const typeRows = collectTypeDeclaredIsRows(text);
+  if (typeRows.length === 0) {
+    throw new Error("[type-is] no class/interface rows from yaml");
+  }
   const repairBody = buildRepairCypher(rows);
+  const typeRepairBody = buildTypeDeclaredIsRepairCypher(typeRows);
   const materializeBody = materializeTransitiveIsForKitMembersCypher().trim();
   const batchPath = join(opts.cacheDir, `kit-field-declared-is-repair-${process.pid}.cypher`);
-  writeFileSync(
-    batchPath,
-    materializeBody.length > 0 ? `${repairBody.trim()}\n\n${materializeBody}\n` : `${repairBody.trim()}\n`,
-    "utf8",
-  );
+  const core = [repairBody.trim(), typeRepairBody.trim(), materializeBody].filter((s) => s.length > 0).join("\n\n");
+  writeFileSync(batchPath, `${core}\n`, "utf8");
   const shell = resolveCypherShell(opts.repoRoot);
   if (!shell) {
     try {

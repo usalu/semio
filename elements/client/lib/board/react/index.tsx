@@ -18,7 +18,7 @@ import {
 	type ReactNode,
 } from "react";
 import { createRoot } from "react-dom/client";
-import { FiberProvider, useContextBridge } from "its-fine";
+import { FiberProvider } from "its-fine";
 
 import {
 	BOARD_HOST_EDGE,
@@ -366,7 +366,6 @@ export function syncBoardScene(renderer: BoardRenderer, descriptor: BoardSceneDe
 //#region 🔖ReconcilerBridge
 /** @emoji 🌉 Bridges DOM-root context into the board `react-reconciler` subtree via `its-fine`. */
 function BoardReconcilerMount({ children, renderer }: { children: ReactNode; renderer: BoardRenderer }): null {
-	const ContextBridge = useContextBridge();
 	const fiberRootRef = useRef<BoardFiberRoot | null>(null);
 
 	useLayoutEffect(() => {
@@ -383,8 +382,8 @@ function BoardReconcilerMount({ children, renderer }: { children: ReactNode; ren
 		if (!root) {
 			return;
 		}
-		updateBoardFiberRoot(root, createElement(ContextBridge, null, children), null);
-	}, [ContextBridge, children, renderer]);
+		updateBoardFiberRoot(root, createElement(BoardContext.Provider, { value: renderer }, children), null);
+	}, [children, renderer]);
 
 	return null;
 }
@@ -719,6 +718,54 @@ if (boardReactVitest) {
 			);
 			expect(descriptor.nodes).toHaveLength(0);
 			expect(descriptor.handles).toHaveLength(0);
+		});
+
+		it("board reconciler mounts handle under node without BoardCanvas", () => {
+			const renderer = new BoardRenderer({ renderMode: "headless-test" });
+			const fiberRoot = createBoardFiberRoot(renderer);
+			act(() => {
+				updateBoardFiberRoot(
+					fiberRoot,
+					createElement(
+						BOARD_HOST_NODE,
+						{ draggable: true, id: "fiber-n", radius: 10, selected: false, visible: true, x: 0, y: 0 },
+						createElement(BOARD_HOST_HANDLE, { angle: 0, id: "fiber-h", selected: false, visible: true }),
+					),
+					null,
+				);
+			});
+			expect(renderer.scene.getObjectById("fiber-n")).toBeInstanceOf(BoardNodeObject);
+			expect(renderer.scene.getObjectById("fiber-h")).toBeInstanceOf(BoardHandleObject);
+			unmountBoardFiberRoot(fiberRoot);
+			renderer.dispose();
+		});
+
+		it("mounts handle children for flat host markers", async () => {
+			const restoreCanvas = installCanvasStub();
+			const container = document.createElement("div");
+			document.body.appendChild(container);
+			const root = createRoot(container);
+
+			await act(async () => {
+				root.render(
+					<BoardCanvas camera={{ x: 0, y: 0, zoom: 1 }} height={120} renderMode="headless-test" width={160}>
+						<Node id="direct" radius={10} x={0} y={0}>
+							<Handle angle={0} id="direct.h" />
+						</Node>
+					</BoardCanvas>,
+				);
+				await Promise.resolve();
+			});
+
+			const canvas = container.querySelector("canvas");
+			const renderer = (canvas as HTMLCanvasElement & { __boardRenderer?: BoardRenderer }).__boardRenderer;
+			expect(renderer?.scene.getObjectById("direct")).toBeInstanceOf(BoardNodeObject);
+			expect(renderer?.scene.getObjectById("direct.h")).toBeInstanceOf(BoardHandleObject);
+
+			await act(async () => {
+				root.unmount();
+			});
+			restoreCanvas();
 		});
 
 		it("mounts nodes through wrapper components via the board reconciler", async () => {

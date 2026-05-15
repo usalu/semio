@@ -1,7 +1,7 @@
 /** @emoji 🧩 `react-reconciler` host wiring for imperative {@link BoardRenderer} scene objects. */
 import type { ReactElement } from "react";
 import Reconciler from "react-reconciler";
-import { ConcurrentRoot } from "react-reconciler/constants";
+import { ConcurrentRoot, DefaultEventPriority } from "react-reconciler/constants";
 
 import {
 	BoardRenderer,
@@ -13,12 +13,6 @@ import {
 	type BoardNodeProps,
 } from "../js/index";
 import { BOARD_RECONCILER_DEFAULTS } from "./reconciler-defaults";
-
-const boardSchedulingHooks = {
-	getCurrentUpdatePriority: BOARD_RECONCILER_DEFAULTS.getCurrentUpdatePriority as () => number,
-	resolveUpdatePriority: BOARD_RECONCILER_DEFAULTS.resolveUpdatePriority as () => number,
-	setCurrentUpdatePriority: BOARD_RECONCILER_DEFAULTS.setCurrentUpdatePriority as (p: number) => void,
-};
 
 //#region 🔖HostKinds
 export const BOARD_HOST_NODE = "elements.board/node";
@@ -280,7 +274,7 @@ const boardEmptyHostContext = Object.freeze({});
 
 //#region 🔖Reconciler
 const boardReconciler = Reconciler({
-	...boardSchedulingHooks,
+	...BOARD_RECONCILER_DEFAULTS,
 	supportsMutation: true,
 	supportsPersistence: false,
 	supportsHydration: false,
@@ -292,8 +286,8 @@ const boardReconciler = Reconciler({
 	scheduleTimeout: setTimeout,
 	cancelTimeout: clearTimeout,
 
-	getRootHostContext: () => boardEmptyHostContext,
-	getChildHostContext: () => boardEmptyHostContext,
+	getRootHostContext: () => null,
+	getChildHostContext: (ctx) => ctx,
 
 	createInstance(type, props, rootContainer) {
 		const renderer = rootContainer;
