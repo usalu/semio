@@ -1,0 +1,6 @@
+{
+  "id": "26/05/15/NEO4J-MIGRATIONS-HANDWRITTEN",
+  "title": "Neo4j Migrations Handwritten In Ticket",
+  "description": "Neo4j graph migrations live as migrations.cypher in this ticket; migrate.neo4j.script.ts runs them. generate.script.ts exports only the live DB and does not run migrations.",
+  "summary": "Handwritten migrations.cypher + ticket migrate.neo4j.script.ts; generate is export-only. Hoist former Module Entity children onto Domain, delete Entity module, mirror entity ladder from Domain; verify zero Module Entity."
+}
