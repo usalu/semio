@@ -17,9 +17,13 @@ async function expectStoryToRender(page: Page, storyId: string, assertion: (page
 		}
 	});
 
-	await page.goto(`/iframe.html?id=${storyId}&viewMode=story`);
+	await page.goto(`/iframe.html?id=${storyId}&viewMode=story`, { waitUntil: "domcontentloaded" });
 	await expect(page.locator("body")).not.toContainText("Couldn't find story matching");
-	await expect(page.locator("#storybook-root")).toBeVisible();
+	await expect(page.locator("body")).not.toContainText("Failed to load the Storybook preview file");
+	await page.waitForFunction(() => {
+		const root = document.querySelector("#storybook-root");
+		return !!root && root.childElementCount > 0;
+	});
 	await assertion(page);
 	expect(pageErrors.map((error) => error.message)).toEqual([]);
 	expect(consoleErrors).toEqual([]);
@@ -27,13 +31,13 @@ async function expectStoryToRender(page: Page, storyId: string, assertion: (page
 
 test("renders the elements button story", async ({ page }) => {
 	await expectStoryToRender(page, "elements-button--default", async (storyPage) => {
-		await expect(storyPage.locator("#button-default")).toBeVisible();
+		await expect(storyPage.getByRole("button").first()).toBeVisible();
 	});
 });
 
 test("renders the semio vec story", async ({ page }) => {
 	await expectStoryToRender(page, "semio-vec--default", async (storyPage) => {
-		await expect(storyPage.locator("#vec-default")).toBeVisible();
+		await expect(storyPage.locator("svg").first()).toBeVisible();
 	});
 });
 

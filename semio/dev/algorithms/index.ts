@@ -22,7 +22,7 @@ import {
   type DesignPlain,
   type MoveVector,
   type VecValue,
-} from "../../client/lib/react/ui";
+} from "../../client/lib/react/rendering";
 import { openStore, type Store as JsStore } from "../client/lib/js";
 // #endregion 📥Imports
 
