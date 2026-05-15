@@ -38,7 +38,7 @@
         "cwd": "elements/client/lib/board",
         "command": "bun ./script.ts e2e",
         "env": {
-          "BOARD_PLAY_PORT": "6012"
+          "BOARD_PLAY_PORT": "6027"
         },
         "forwardAllArgs": true
       }

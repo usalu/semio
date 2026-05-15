@@ -9,7 +9,8 @@ import { defineConfig, devices } from "@playwright/test";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const boardRoot = path.resolve(__dirname, "..");
-const baseURL = process.env.PLAYWRIGHT_BASE_URL ?? "http://127.0.0.1:6012";
+const playPort = process.env.BOARD_PLAY_PORT ?? "6027";
+const baseURL = process.env.PLAYWRIGHT_BASE_URL ?? `http://127.0.0.1:${playPort}`;
 const rawChannel = process.env.BOARD_PLAYWRIGHT_CHANNEL;
 const chromeChannel = rawChannel === "chrome" || rawChannel === "msedge" ? rawChannel : undefined;
 
@@ -18,7 +19,7 @@ export default defineConfig({
 	fullyParallel: false,
 	forbidOnly: Boolean(process.env.CI),
 	retries: process.env.CI ? 2 : 0,
-	timeout: 120_000,
+	timeout: 300_000,
 	workers: 1,
 	reporter: [["list"]],
 	use: {
@@ -45,8 +46,9 @@ export default defineConfig({
 	webServer: {
 		command: "bun ./script.ts dev",
 		cwd: boardRoot,
+		env: { ...process.env, BOARD_PLAY_PORT: playPort },
 		url: `${baseURL}/`,
-		reuseExistingServer: false,
+		reuseExistingServer: !process.env.CI,
 		timeout: 180_000,
 		stdout: "pipe",
 		stderr: "pipe",

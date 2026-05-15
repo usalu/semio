@@ -1,7 +1,7 @@
 /** @emoji 🧩 `react-reconciler` host wiring for imperative {@link BoardRenderer} scene objects. */
 import type { ReactElement } from "react";
 import Reconciler from "react-reconciler";
-import { ConcurrentRoot, DefaultEventPriority } from "react-reconciler/constants";
+import { ConcurrentRoot } from "react-reconciler/constants";
 
 import {
 	BoardRenderer,
@@ -12,6 +12,13 @@ import {
 	type BoardHandleProps,
 	type BoardNodeProps,
 } from "../js/index";
+import { BOARD_RECONCILER_DEFAULTS } from "./reconciler-defaults";
+
+const boardSchedulingHooks = {
+	getCurrentUpdatePriority: BOARD_RECONCILER_DEFAULTS.getCurrentUpdatePriority as () => number,
+	resolveUpdatePriority: BOARD_RECONCILER_DEFAULTS.resolveUpdatePriority as () => number,
+	setCurrentUpdatePriority: BOARD_RECONCILER_DEFAULTS.setCurrentUpdatePriority as (p: number) => void,
+};
 
 //#region 🔖HostKinds
 export const BOARD_HOST_NODE = "elements.board/node";
@@ -267,37 +274,26 @@ function appendToBoardParent(parent: BoardRenderer | BoardHostInstance, child: B
 function detachHandleFromNode(nodeHost: BoardHostNode, handleHost: BoardHostHandle): void {
 	nodeHost.handleChildren.delete(handleHost);
 }
+
+const boardEmptyHostContext = Object.freeze({});
 //#endregion 🔖MountHelpers
 
 //#region 🔖Reconciler
-const boardReconciler = Reconciler<
-	BoardHostType,
-	BoardNodeProps | BoardHandleProps | BoardEdgeProps,
-	BoardRenderer,
-	BoardHostInstance,
-	never,
-	never,
-	never,
-	BoardHostInstance,
-	null,
-	boolean,
-	unknown,
-	ReturnType<typeof setTimeout>,
-	number
->({
+const boardReconciler = Reconciler({
+	...boardSchedulingHooks,
 	supportsMutation: true,
 	supportsPersistence: false,
 	supportsHydration: false,
 	isPrimaryRenderer: false,
 	warnsIfNotActing: true,
 	supportsMicrotasks: true,
-	scheduleMicrotask: (fn) => queueMicrotask(fn),
+	scheduleMicrotask: (fn: () => unknown) => queueMicrotask(fn),
 	noTimeout: -1,
 	scheduleTimeout: setTimeout,
 	cancelTimeout: clearTimeout,
 
-	getRootHostContext: () => null,
-	getChildHostContext: (ctx) => ctx,
+	getRootHostContext: () => boardEmptyHostContext,
+	getChildHostContext: () => boardEmptyHostContext,
 
 	createInstance(type, props, rootContainer) {
 		const renderer = rootContainer;
@@ -479,7 +475,7 @@ const boardReconciler = Reconciler<
 
 	getCurrentEventPriority: () => DefaultEventPriority,
 	requestPaint() {},
-});
+} as never);
 
 export type BoardFiberRoot = ReturnType<typeof boardReconciler.createContainer>;
 
