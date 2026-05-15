@@ -91,7 +91,7 @@
       }
     },
     {
-      "name": "🛠️ dev 👤 semio 📚 hub",
+      "name": "🛠️ dev 👤 semio 🌐 hub",
       "type": "node-terminal",
       "request": "launch",
       "command": "cargo run -p semio-hub",
@@ -155,7 +155,7 @@
       }
     },
     {
-      "name": "🛠️ dev 👤 semio 📚 engine 🤖 mcp",
+      "name": "🛠️ dev 👤 semio ⚙️ engine 🤖 mcp",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun ./script.ts dev mcp engine",
@@ -263,18 +263,22 @@
       }
     },
     {
-      "name": "🛠️ dev 👤 semio ⌨️ vscode",
+      "name": "🛠️ dev 👤 semio 🎗️ vscode",
       "type": "extensionHost",
       "request": "launch",
-      "args": ["--extensionDevelopmentPath=${workspaceFolder}/semio/vscode"],
-      "outFiles": ["${workspaceFolder}/semio/vscode/out/**/*.js"],
+      "args": [
+        "--extensionDevelopmentPath=${workspaceFolder}/semio/vscode"
+      ],
+      "outFiles": [
+        "${workspaceFolder}/semio/vscode/out/**/*.js"
+      ],
       "presentation": {
         "group": "3_dev",
         "order": 90
       }
     },
     {
-      "name": "🛠️ dev 👤 semio ⌨️ vscode integrated",
+      "name": "🛠️ dev 👤 semio 🎗️ vscode integrated",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx dev @semio/vscode",
@@ -320,7 +324,13 @@
       "type": "node",
       "request": "launch",
       "runtimeExecutable": "uv",
-      "runtimeArgs": ["--directory", "coda/assistant", "run", "main.py", "--mcp-stdio"],
+      "runtimeArgs": [
+        "--directory",
+        "coda/assistant",
+        "run",
+        "main.py",
+        "--mcp-stdio"
+      ],
       "env": {
         "MCP_AUTO_OPEN_ENABLED": "false",
         "MCP_PROXY_AUTH_TOKEN": "repo-mcp-token"
@@ -398,18 +408,22 @@
       }
     },
     {
-      "name": "🛠️ dev 🧰 repo ⌨️ vscode",
+      "name": "🛠️ dev 🧰 repo 🎗️ vscode",
       "type": "extensionHost",
       "request": "launch",
-      "args": ["--extensionDevelopmentPath=${workspaceFolder}/repo/vscode"],
-      "outFiles": ["${workspaceFolder}/repo/vscode/out/**/*.js"],
+      "args": [
+        "--extensionDevelopmentPath=${workspaceFolder}/repo/vscode"
+      ],
+      "outFiles": [
+        "${workspaceFolder}/repo/vscode/out/**/*.js"
+      ],
       "presentation": {
         "group": "3_dev",
         "order": 150
       }
     },
     {
-      "name": "🛠️ dev 🧰 repo ⌨️ vscode integrated",
+      "name": "🛠️ dev 🧰 repo 🎗️ vscode integrated",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx dev repo",
@@ -440,7 +454,7 @@
       "cwd": "${workspaceFolder}"
     },
     {
-      "name": "🛠️ dev 🖱️ elements 📋 board",
+      "name": "🛠️ dev 🧩elements 🏁board",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run @elements/board:dev",
@@ -505,7 +519,7 @@
       }
     },
     {
-      "name": "📦 build 👤 semio 📚 engine",
+      "name": "📦 build 👤 semio ⚙️ engine",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run build -- engine",
@@ -571,7 +585,7 @@
       }
     },
     {
-      "name": "📦 build 🧰 repo 🖱️ vscode",
+      "name": "📦 build 🧰 repo 🎗️ vscode",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run build -- repo-vscode",

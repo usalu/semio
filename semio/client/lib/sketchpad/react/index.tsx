@@ -28127,7 +28127,7 @@ class HoverPiecesStore {
  * HoverPiecesStoreContext holds a stable store reference for granular hover subscriptions.
  **/
 const HoverPiecesStoreContext = createContext<HoverPiecesStore | null>(null);
-// [👤semio📚js🗃️sketchpad💻design🔖store🛠️computehoverdata](repo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Store/d/i/computeHoverData)
+// [🏘️semio📚js🗃️sketchpad💻design🔖store🛠️computehoverdata](repo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Store/d/i/computeHoverData)
 /**
  * computeHoverData holds the data fields for a computeHoverData record.
  **/
@@ -34770,7 +34770,7 @@ const PieceMesh: FC<{ highlightColor: string | null } & DesignMeshEventProps> = 
 };
 
 interface RepresentationPieceProps {}
-// [👤semio📚js🗃️sketchpad💻design🔖canvas🔖scene🪨representationpiece](repo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Canvas/s/Scene/d/i/RepresentationPiece)
+// [🏘️semio📚js🗃️sketchpad💻design🔖canvas🔖scene🪨representationpiece](repo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Canvas/s/Scene/d/i/RepresentationPiece)
 /**
  * RepresentationPiece holds the data fields for a RepresentationPiece record.
  **/
@@ -39765,7 +39765,7 @@ const qualityAppCommands = {
 // #endregion 💧Commands
 
 // #region 🎈Store
-// [👤semio📚js🗃️sketchpad💻qualitytsx🔖store](repo://section/SEMIO/JS/SKETCHPAD/QUALITY.TSX/STORE)
+// [🏘️semio📚js🗃️sketchpad💻qualitytsx🔖store](repo://section/SEMIO/JS/SKETCHPAD/QUALITY.TSX/STORE)
 // Quality app store, hooks, and reactive state management MUST be declared here.
 
 /**

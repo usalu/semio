@@ -1761,18 +1761,18 @@ suite("Entity ID Regex Matching Test Suite", () => {
 
   test("matches bare user technology ID (👤)", () => {
     const regex = buildEntityIdRegex();
-    const text = "Main technology: 👤semio📚js";
+    const text = "Main technology: 🏘️semio📚js";
     const matches = [...text.matchAll(regex)];
     assert.strictEqual(matches.length, 1, "should match one ID");
-    assert.strictEqual(matches[0][3], "👤semio📚js");
+    assert.strictEqual(matches[0][3], "🏘️semio📚js");
   });
 
   test("matches markdown link with user technology ID", () => {
     const regex = buildEntityIdRegex();
-    const text = "[👤semio📚js💻semiots](repo://p/u/semio/b/l/js/f/semio.ts)";
+    const text = "[🏘️semio📚js💻semiots](repo://p/u/semio/b/l/js/f/semio.ts)";
     const matches = [...text.matchAll(regex)];
     assert.strictEqual(matches.length, 1, "should match one markdown link");
-    assert.strictEqual(matches[0][1], "👤semio📚js💻semiots");
+    assert.strictEqual(matches[0][1], "🏘️semio📚js💻semiots");
     assert.strictEqual(matches[0][2], "repo://p/u/semio/b/l/js/f/semio.ts");
   });
 
@@ -1817,15 +1817,15 @@ suite("Entity ID Regex Matching Test Suite", () => {
 
   test("matches full nested entity ID", () => {
     const regex = buildEntityIdRegex();
-    const text = "Full: 👤semio📚js🗃️sketchpad💻designtsx🔖statemanagement🛠️createstore";
+    const text = "Full: 🏘️semio📚js🗃️sketchpad💻designtsx🔖statemanagement🛠️createstore";
     const matches = [...text.matchAll(regex)];
     assert.strictEqual(matches.length, 1, "should match one full ID");
-    assert.strictEqual(matches[0][3], "👤semio📚js🗃️sketchpad💻designtsx🔖statemanagement🛠️createstore");
+    assert.strictEqual(matches[0][3], "🏘️semio📚js🗃️sketchpad💻designtsx🔖statemanagement🛠️createstore");
   });
 
   test("matches multiple IDs in same text", () => {
     const regex = buildEntityIdRegex();
-    const text = "Compare 🧰repo⌨️client with 👤semio📚js and 🎯goalname";
+    const text = "Compare 🧰repo⌨️client with 🏘️semio📚js and 🎯goalname";
     const matches = [...text.matchAll(regex)];
     assert.strictEqual(matches.length, 3, "should match three IDs");
   });

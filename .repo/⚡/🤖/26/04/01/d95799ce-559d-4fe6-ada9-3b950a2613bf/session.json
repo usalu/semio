@@ -2894,8 +2894,8 @@
           "tool_name": "replace_string_in_file",
           "tool_input": {
             "filePath": "/workspaces/semio/semio/sketchpad/index.tsx",
-            "newString": "  kind: KitDiagramNodeKind;\n  icon?: string | React.ReactNode;\n  parentGuid?: string;\n}\n\n/**\n * [👤semio📚js🗃️sketchpad💻kit🔖designfamilyhelpers🔖internalstatemanagement🔖canvas🔖windows🔖diagram✂️kitdiagramedge](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Kit.tsx/s/Design%20Family%20Helpers/s/Internal%20State%20Management/s/Canvas/s/Windows/s/Diagram/d/i/KitDiagramEdge)",
-            "oldString": "  kind: KitDiagramNodeKind;\n  icon?: string | React.ReactNode;\n  parentGuid?: string;\n  concepts?: string[];\n}\n\n/**\n * [👤semio📚js🗃️sketchpad💻kit🔖designfamilyhelpers🔖internalstatemanagement🔖canvas🔖windows🔖diagram✂️kitdiagramedge](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Kit.tsx/s/Design%20Family%20Helpers/s/Internal%20State%20Management/s/Canvas/s/Windows/s/Diagram/d/i/KitDiagramEdge)"
+            "newString": "  kind: KitDiagramNodeKind;\n  icon?: string | React.ReactNode;\n  parentGuid?: string;\n}\n\n/**\n * [🏘️semio📚js🗃️sketchpad💻kit🔖designfamilyhelpers🔖internalstatemanagement🔖canvas🔖windows🔖diagram✂️kitdiagramedge](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Kit.tsx/s/Design%20Family%20Helpers/s/Internal%20State%20Management/s/Canvas/s/Windows/s/Diagram/d/i/KitDiagramEdge)",
+            "oldString": "  kind: KitDiagramNodeKind;\n  icon?: string | React.ReactNode;\n  parentGuid?: string;\n  concepts?: string[];\n}\n\n/**\n * [🏘️semio📚js🗃️sketchpad💻kit🔖designfamilyhelpers🔖internalstatemanagement🔖canvas🔖windows🔖diagram✂️kitdiagramedge](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Kit.tsx/s/Design%20Family%20Helpers/s/Internal%20State%20Management/s/Canvas/s/Windows/s/Diagram/d/i/KitDiagramEdge)"
           },
           "tool_use_id": "toolu_bdrk_01WY9eUR2RzNgysqKHw5ArzE__vscode-1775022550618",
           "cwd": "/workspaces/semio"
@@ -2922,8 +2922,8 @@
           "tool_name": "replace_string_in_file",
           "tool_input": {
             "filePath": "/workspaces/semio/semio/sketchpad/index.tsx",
-            "newString": "  kind: KitDiagramNodeKind;\n  icon?: string | React.ReactNode;\n  parentGuid?: string;\n}\n\n/**\n * [👤semio📚js🗃️sketchpad💻kit🔖designfamilyhelpers🔖internalstatemanagement🔖canvas🔖windows🔖diagram✂️kitdiagramedge](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Kit.tsx/s/Design%20Family%20Helpers/s/Internal%20State%20Management/s/Canvas/s/Windows/s/Diagram/d/i/KitDiagramEdge)",
-            "oldString": "  kind: KitDiagramNodeKind;\n  icon?: string | React.ReactNode;\n  parentGuid?: string;\n  concepts?: string[];\n}\n\n/**\n * [👤semio📚js🗃️sketchpad💻kit🔖designfamilyhelpers🔖internalstatemanagement🔖canvas🔖windows🔖diagram✂️kitdiagramedge](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Kit.tsx/s/Design%20Family%20Helpers/s/Internal%20State%20Management/s/Canvas/s/Windows/s/Diagram/d/i/KitDiagramEdge)"
+            "newString": "  kind: KitDiagramNodeKind;\n  icon?: string | React.ReactNode;\n  parentGuid?: string;\n}\n\n/**\n * [🏘️semio📚js🗃️sketchpad💻kit🔖designfamilyhelpers🔖internalstatemanagement🔖canvas🔖windows🔖diagram✂️kitdiagramedge](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Kit.tsx/s/Design%20Family%20Helpers/s/Internal%20State%20Management/s/Canvas/s/Windows/s/Diagram/d/i/KitDiagramEdge)",
+            "oldString": "  kind: KitDiagramNodeKind;\n  icon?: string | React.ReactNode;\n  parentGuid?: string;\n  concepts?: string[];\n}\n\n/**\n * [🏘️semio📚js🗃️sketchpad💻kit🔖designfamilyhelpers🔖internalstatemanagement🔖canvas🔖windows🔖diagram✂️kitdiagramedge](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Kit.tsx/s/Design%20Family%20Helpers/s/Internal%20State%20Management/s/Canvas/s/Windows/s/Diagram/d/i/KitDiagramEdge)"
           },
           "tool_use_id": "toolu_bdrk_01WY9eUR2RzNgysqKHw5ArzE__vscode-1775022550618",
           "cwd": "/workspaces/semio"
@@ -2950,8 +2950,8 @@
           "tool_name": "replace_string_in_file",
           "tool_input": {
             "filePath": "/workspaces/semio/semio/sketchpad/index.tsx",
-            "newString": "  kind: KitDiagramNodeKind;\n  icon?: string | React.ReactNode;\n  parentGuid?: string;\n}\n\n/**\n * [👤semio📚js🗃️sketchpad💻kit🔖designfamilyhelpers🔖internalstatemanagement🔖canvas🔖windows🔖diagram✂️kitdiagramedge](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Kit.tsx/s/Design%20Family%20Helpers/s/Internal%20State%20Management/s/Canvas/s/Windows/s/Diagram/d/i/KitDiagramEdge)",
-            "oldString": "  kind: KitDiagramNodeKind;\n  icon?: string | React.ReactNode;\n  parentGuid?: string;\n  concepts?: string[];\n}\n\n/**\n * [👤semio📚js🗃️sketchpad💻kit🔖designfamilyhelpers🔖internalstatemanagement🔖canvas🔖windows🔖diagram✂️kitdiagramedge](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Kit.tsx/s/Design%20Family%20Helpers/s/Internal%20State%20Management/s/Canvas/s/Windows/s/Diagram/d/i/KitDiagramEdge)"
+            "newString": "  kind: KitDiagramNodeKind;\n  icon?: string | React.ReactNode;\n  parentGuid?: string;\n}\n\n/**\n * [🏘️semio📚js🗃️sketchpad💻kit🔖designfamilyhelpers🔖internalstatemanagement🔖canvas🔖windows🔖diagram✂️kitdiagramedge](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Kit.tsx/s/Design%20Family%20Helpers/s/Internal%20State%20Management/s/Canvas/s/Windows/s/Diagram/d/i/KitDiagramEdge)",
+            "oldString": "  kind: KitDiagramNodeKind;\n  icon?: string | React.ReactNode;\n  parentGuid?: string;\n  concepts?: string[];\n}\n\n/**\n * [🏘️semio📚js🗃️sketchpad💻kit🔖designfamilyhelpers🔖internalstatemanagement🔖canvas🔖windows🔖diagram✂️kitdiagramedge](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Kit.tsx/s/Design%20Family%20Helpers/s/Internal%20State%20Management/s/Canvas/s/Windows/s/Diagram/d/i/KitDiagramEdge)"
           },
           "tool_response": "",
           "tool_use_id": "toolu_bdrk_01WY9eUR2RzNgysqKHw5ArzE__vscode-1775022550618",
@@ -2979,8 +2979,8 @@
           "tool_name": "replace_string_in_file",
           "tool_input": {
             "filePath": "/workspaces/semio/semio/sketchpad/index.tsx",
-            "newString": "  kind: KitDiagramNodeKind;\n  icon?: string | React.ReactNode;\n  parentGuid?: string;\n}\n\n/**\n * [👤semio📚js🗃️sketchpad💻kit🔖designfamilyhelpers🔖internalstatemanagement🔖canvas🔖windows🔖diagram✂️kitdiagramedge](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Kit.tsx/s/Design%20Family%20Helpers/s/Internal%20State%20Management/s/Canvas/s/Windows/s/Diagram/d/i/KitDiagramEdge)",
-            "oldString": "  kind: KitDiagramNodeKind;\n  icon?: string | React.ReactNode;\n  parentGuid?: string;\n  concepts?: string[];\n}\n\n/**\n * [👤semio📚js🗃️sketchpad💻kit🔖designfamilyhelpers🔖internalstatemanagement🔖canvas🔖windows🔖diagram✂️kitdiagramedge](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Kit.tsx/s/Design%20Family%20Helpers/s/Internal%20State%20Management/s/Canvas/s/Windows/s/Diagram/d/i/KitDiagramEdge)"
+            "newString": "  kind: KitDiagramNodeKind;\n  icon?: string | React.ReactNode;\n  parentGuid?: string;\n}\n\n/**\n * [🏘️semio📚js🗃️sketchpad💻kit🔖designfamilyhelpers🔖internalstatemanagement🔖canvas🔖windows🔖diagram✂️kitdiagramedge](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Kit.tsx/s/Design%20Family%20Helpers/s/Internal%20State%20Management/s/Canvas/s/Windows/s/Diagram/d/i/KitDiagramEdge)",
+            "oldString": "  kind: KitDiagramNodeKind;\n  icon?: string | React.ReactNode;\n  parentGuid?: string;\n  concepts?: string[];\n}\n\n/**\n * [🏘️semio📚js🗃️sketchpad💻kit🔖designfamilyhelpers🔖internalstatemanagement🔖canvas🔖windows🔖diagram✂️kitdiagramedge](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Kit.tsx/s/Design%20Family%20Helpers/s/Internal%20State%20Management/s/Canvas/s/Windows/s/Diagram/d/i/KitDiagramEdge)"
           },
           "tool_response": "",
           "tool_use_id": "toolu_bdrk_01WY9eUR2RzNgysqKHw5ArzE__vscode-1775022550618",

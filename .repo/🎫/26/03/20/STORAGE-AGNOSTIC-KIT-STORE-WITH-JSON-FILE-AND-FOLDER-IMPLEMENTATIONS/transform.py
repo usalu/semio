@@ -60,7 +60,7 @@ output.append("\n")
 # Part 4: Replace ConceptStore + CollaborativeKitStore with Kit region header + executeKitCommand
 output.append("// #region Kit\n")
 output.append("\n")
-output.append("// [👤semio📚js🗃️sketchpad💻sketchpad🔖kit](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Kit)\n")
+output.append("// [🏘️semio📚js🗃️sketchpad💻sketchpad🔖kit](semiorepo://p/u/semio/b/l/js/fd/org/sketchpad/f/Sketchpad.tsx/s/Kit)\n")
 output.append("// Storage-agnostic kit store hooks using KitStore interface.\n")
 output.append("\n")
 output.append("/**\n")

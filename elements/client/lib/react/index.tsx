@@ -11374,7 +11374,7 @@ interface LabelProps {
   labelLayoutKind?: "property" | "treeGroupHeader";
   children: React.ReactNode;
 }
-// [👤semio📚js🗃️sketchpad💻elements🔖basecomponents🪨label](repo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Base%20Components/d/i/Label)
+// [🏘️semio📚js🗃️sketchpad💻elements🔖basecomponents🪨label](repo://p/u/semio/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Base%20Components/d/i/Label)
 export function Label({ id, rowId, label, labelElementId, className, children, labelLayoutKind = "property" }: LabelProps) {
   const localizedLabel = useLabel(id);
   const resolvedLabel = label ?? localizedLabel;

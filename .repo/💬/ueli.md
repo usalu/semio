@@ -408,7 +408,7 @@ Add request IDs for request/response correlation
 Add timeouts, heartbeats, and auto-restart
 Keep the renderer isolated from native details
 
-## 👤semio
+## 🏘️semio
 
 ###
 
@@ -3431,7 +3431,7 @@ but it should look like this:
 ```
 ├─ Projects
 │ ├─ 🔬coda
-│ ├─ 👤semio
+│ ├─ 🏘️semio
 │ │ ├─ 🖱️️gh
 │ │ ├─ 📚js
 │ │ │ ├─ 📁sketchpad
@@ -3478,7 +3478,7 @@ but it should look something like this, always using the <kind> emoji before the
 ```
 ├─ Projects
 │ ├─ 🔬coda
-│ ├─ 👤semio
+│ ├─ 🏘️semio
 │ │ ├─ 🖱️️gh
 │ │ ├─ 📚js
 │ │ │ ├─ 📁sketchpad
@@ -3539,7 +3539,7 @@ Header (lines 1-20)
 ```bash
 ./repo/cli/cli project list
 🔬coda
-👤semio
+🏘️semio
 🧰repo
 ```
 
@@ -4036,17 +4036,17 @@ The ids of sections and defintions are not correct.
 
 In the source code definition and section ids are also not correct
 
-section: `{{(parent-file-id|parent-section-id)?}}{{flat-section-name}}`, parent: section | file, e.g. `👤semio📚js🗃️sketchpad💻designtsx🔖statemanagment🔖store` for `Store` section with parent section `State Managment`
-definition: `{{<section-id>}}<kind>{{flat-definition-name}}`, parent: section, <kind> - 🛠️:implementation, ✂️:interface, 🪨:constant e.g. `👤semio📚js🗃️sketchpad💻designtsx🔖statemanagment🔖store🛠️createsketchpadstore` for `createSketchpadStore`
+section: `{{(parent-file-id|parent-section-id)?}}{{flat-section-name}}`, parent: section | file, e.g. `🏘️semio📚js🗃️sketchpad💻designtsx🔖statemanagment🔖store` for `Store` section with parent section `State Managment`
+definition: `{{<section-id>}}<kind>{{flat-definition-name}}`, parent: section, <kind> - 🛠️:implementation, ✂️:interface, 🪨:constant e.g. `🏘️semio📚js🗃️sketchpad💻designtsx🔖statemanagment🔖store🛠️createsketchpadstore` for `createSketchpadStore`
 
 e.g. `🧰repo⌨️cli💻maingo#GraphQL Types#GraphQL Input Types§TicketCloseInput` or `🛠️repo/cli/main.go#GraphQL Types#GraphQL Input Types§TicketCloseInput` should be only `🧰repo⌨️cli💻maingo🔖graphqltypes🔖graphqlinputtypes✂️ticketcloseInput`
 go types are not currectly identified as ✂️
 
-file: `{{(parent-root-id|parent-project-id|parent-bundle-id|parent-folder-id)?}}<kind>{{flat-file-name-with-extension*}}`, parent: folder | bundle | project | root, <kind> - 💻:code, 🥼:test, 📜:script, 📃:docs, ⚙️️:config, 💾:asset, ⚖️:license, e.g. `👤semio📚js🗃️sketchpad💻designtsx` for `semio/js/sketchpad/Design.tsx` `🛅devcontainer⚙️️devcontainerjson` for `.devcontainer/devcontainer.json`
+file: `{{(parent-root-id|parent-project-id|parent-bundle-id|parent-folder-id)?}}<kind>{{flat-file-name-with-extension*}}`, parent: folder | bundle | project | root, <kind> - 💻:code, 🥼:test, 📜:script, 📃:docs, ⚙️️:config, 💾:asset, ⚖️:license, e.g. `🏘️semio📚js🗃️sketchpad💻designtsx` for `semio/js/sketchpad/Design.tsx` `🛅devcontainer⚙️️devcontainerjson` for `.devcontainer/devcontainer.json`
 
 The id of the projects contain an @ they shouldnt. The tests check for the correct ids.
 
-- [👤semio](repo://project/@SEMIO)
+- [🏘️semio](repo://project/@SEMIO)
 
 tpl
 
@@ -6659,7 +6659,7 @@ repo/cli/cli project list
 
 - [👤pycache](repo://p/u/__pycache__)
 - [🔬coda](repo://p/r/coda)
-- [👤semio](repo://p/u/semio)
+- [🏘️semio](repo://p/u/semio)
 - [🧰repo](repo://p/i/repo)
 
 TODO: introduce proper events for repo specific tool calls.
@@ -7963,7 +7963,7 @@ e.g `./repo/cli/cli mermaid loc-by-projects-bundles-folders-files` should be som
 ```mermaid
 treemap-beta
 "Lines of Code (k)"
-    "👤semio"
+    "🏘️semio"
       "📚js"
         "🗃️skethcpad"
           "💻designtsx"
@@ -7999,7 +7999,7 @@ treemap-beta
 
 repo:
 The id system has some problems. Recently special root project and root bundle was introduced. There are only meant for orphan folders and files.
-e.g. 👤semio🏪assets🌱root🗃️repo🗃️some🗃️folder💻filefixabletsx🔖missingend should be `👤semio🏪assets🗃️some🗃️folder💻filefixabletsx🔖missingend`
+e.g. 🏘️semio🏪assets🌱root🗃️repo🗃️some🗃️folder💻filefixabletsx🔖missingend should be `🏘️semio🏪assets🗃️some🗃️folder💻filefixabletsx🔖missingend`
 
 ---
 

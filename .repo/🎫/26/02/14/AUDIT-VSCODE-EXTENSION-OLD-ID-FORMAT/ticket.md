@@ -103,7 +103,7 @@ Key functions:
 
 **In the Go CLI (`main.go`)** — these are where actual ID construction happens:
 
-- `Project.GetID()` (line 7181): `{kindEmoji}@{name}` → needs `{entityEmoji}{kindEmoji}{name}` (i.e. `🏗️👤semio`)
+- `Project.GetID()` (line 7181): `{kindEmoji}@{name}` → needs `{entityEmoji}{kindEmoji}{name}` (i.e. `🏗️🏘️semio`)
 - `Bundle.GetID()` (line 7236): `{kindEmoji}{name}` → needs `📦{kindEmoji}{name}`
 - `Folder.GetID()` (line 7386): `{kindEmoji}{path}` → needs `📁{kindEmoji}{path}`
 - `File.GetID()` (line 7618): `{kindEmoji}{path}` → needs `📄{kindEmoji}{path}`
