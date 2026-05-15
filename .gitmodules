@@ -2,5 +2,5 @@
 	path = semio/examples/metabolism
 	url = https://github.com/usalu/metabolism.git
 [submodule "reuse/recherche"]
-	path = reuse/recherche
+	path = mit-bestand/recherche
 	url = https://github.com/usalu/recherche

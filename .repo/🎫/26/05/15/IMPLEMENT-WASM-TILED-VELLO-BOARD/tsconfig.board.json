@@ -1,0 +1,15 @@
+{
+  "extends": "../../../../../../tsconfig.json",
+  "compilerOptions": {
+    "jsx": "react-jsx",
+    "lib": ["DOM", "ESNext"],
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "noEmit": true,
+    "target": "ESNext"
+  },
+  "include": [
+    "../../../../../../elements/client/lib/board/js/index.ts",
+    "../../../../../../elements/client/lib/board/react/index.tsx"
+  ]
+}
