@@ -135,10 +135,11 @@ How would you architect this?
 
 ---
 
-semio:
-Our current diagram ui in sketchpad is reactflow-based. This forces that onDrag of a single node the diagram needs to redrawn into dom. This will not scale.
+We want to develop a high-performant infinite-canvas diagram canvas component.
 
-We want to completly replace it with imperative wasm rust tiling-based rust gpu-based ts-bindings declarative-react canvas-based rendering.
+We have a diagram that have nodes (circles) with handles around (small circle) and edges (edges bezier curves that are tangent to the node circle between the handles). We have a diagram that have nodes (circles) with handles around (small circle) and edges (edges bezier curves that are tangent to the node circle between the handles). Nodes and edges are selectable and draggable. Nodes and edges are selectable and draggable.
+
+It should be imperative wasm rust tiling-based rust gpu-based ts-bindings declarative-react canvas-based rendering.
 
 1. rs
    Use https://github.com/linebender/vello Implement it in @semio/lib/diagram/rs/lib.rs

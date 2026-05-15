@@ -12,8 +12,8 @@
 // Tailwind CSS configuration extending the shared semio preset for the docs application.
 // Configuration MUST use the shared tailwindConfig preset from @elements/ui.
 
-import { tailwindConfig } from "@elements/ui";
 import type { Config } from "tailwindcss";
+import { tailwindConfig } from "../../../elements/client/lib/ui";
 
 /**
  * Tailwind CSS configuration with content paths and shared preset.

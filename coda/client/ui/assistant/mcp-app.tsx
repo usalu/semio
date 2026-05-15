@@ -4,12 +4,12 @@
 // Summary: Host iframe renders workspace payload from show_coda_workspace with panel tabs.
 // #endregion Header
 
-import { Card, CardGrid, i18next, initReactI18next } from "@elements/ui";
 import "@elements/ui/globals.css";
 import type { App as McpApp } from "@modelcontextprotocol/ext-apps";
 import { useApp, useDocumentTheme } from "@modelcontextprotocol/ext-apps/react";
 import React, { useMemo, useState } from "react";
 import { createRoot } from "react-dom/client";
+import { Card, CardGrid, i18next, initReactI18next } from "../../../../elements/client/lib/ui";
 
 i18next.use(initReactI18next).init({
   lng: "en",
@@ -21,11 +21,7 @@ i18next.use(initReactI18next).init({
 const PANELS = ["dashboard", "config", "runs", "report", "translations", "actions", "events"] as const;
 
 function JsonBlock({ value }: { value: unknown }) {
-  return (
-    <pre className="text-xs overflow-auto max-h-64 rounded border border-border p-2 bg-panel font-mono whitespace-pre-wrap">
-      {JSON.stringify(value, null, 2)}
-    </pre>
-  );
+  return <pre className="text-xs overflow-auto max-h-64 rounded border border-border p-2 bg-panel font-mono whitespace-pre-wrap">{JSON.stringify(value, null, 2)}</pre>;
 }
 
 function WorkspaceBody({ payload, activePanel }: { payload: Record<string, unknown>; activePanel: string }) {
@@ -143,12 +139,7 @@ function McpShell() {
     <div className="min-h-full flex flex-col gap-3 p-3 bg-window text-foreground">
       <div className="flex flex-wrap gap-1 border-b border-border pb-2">
         {PANELS.map((p) => (
-          <button
-            key={p}
-            type="button"
-            className={`rounded px-2 py-1 text-xs capitalize ${panel === p ? "bg-primary text-primary-foreground" : "bg-panel hover:bg-muted"}`}
-            onClick={() => setPanel(p)}
-          >
+          <button key={p} type="button" className={`rounded px-2 py-1 text-xs capitalize ${panel === p ? "bg-primary text-primary-foreground" : "bg-panel hover:bg-muted"}`} onClick={() => setPanel(p)}>
             {p}
           </button>
         ))}

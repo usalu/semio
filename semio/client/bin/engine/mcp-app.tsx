@@ -7,9 +7,9 @@
 
 // #endregion 🧲Header
 
-import { mountMcpDesignViewer, mountMcpDiagramViewer, mountMcpKitViewer, mountMcpSceneViewer } from "@semio/ui";
 import "@semio/ui/globals.css";
 import { createRoot } from "react-dom/client";
+import { mountMcpDesignViewer, mountMcpDiagramViewer, mountMcpKitViewer, mountMcpSceneViewer } from "../../lib/react/ui";
 
 const root = document.getElementById("root");
 if (!root) throw new Error("Missing #root element");

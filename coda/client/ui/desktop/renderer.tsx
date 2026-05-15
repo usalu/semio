@@ -16,7 +16,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { createRoot } from "react-dom/client";
 
-import { i18next, initReactI18next, Tree, TreeItem, useCommandHotkey, useMediaQuery } from "@elements/ui";
+import { i18next, initReactI18next, Tree, TreeItem, useCommandHotkey, useMediaQuery } from "../../../../elements/client/lib/ui";
 
 import "./globals.css";
 
@@ -918,8 +918,9 @@ function ValidationTreeNodeView({ node, defaultExpanded = true }: { node: Valida
             {descriptor.chips.map((chip) => (
               <span
                 key={`${node.id}-${chip}`}
-                className={`inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-medium shrink-0 ${chip === "counted" ? "bg-success-bg text-success-foreground" : chip === "not matching" ? "bg-info-bg text-info-foreground" : "bg-panel text-muted-foreground border border-border-window"
-                  }`}
+                className={`inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-medium shrink-0 ${
+                  chip === "counted" ? "bg-success-bg text-success-foreground" : chip === "not matching" ? "bg-info-bg text-info-foreground" : "bg-panel text-muted-foreground border border-border-window"
+                }`}
               >
                 {chip}
               </span>
@@ -952,12 +953,13 @@ function ValidationTree({ report, defaultExpanded = true }: { report: Validation
         <div className="flex items-center gap-2">
           <span className="text-sm font-semibold text-foreground">Instance: {report.instance}</span>
           <span
-            className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs font-medium ${report.truth === "true"
-              ? "bg-success-bg text-success-foreground border-success-border"
-              : report.truth === "false"
-                ? "bg-destructive-bg text-destructive-foreground border-destructive-border"
-                : "bg-info-bg text-info-foreground border-info-border"
-              }`}
+            className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs font-medium ${
+              report.truth === "true"
+                ? "bg-success-bg text-success-foreground border-success-border"
+                : report.truth === "false"
+                  ? "bg-destructive-bg text-destructive-foreground border-destructive-border"
+                  : "bg-info-bg text-info-foreground border-info-border"
+            }`}
           >
             {truthEmoji(report.truth)} {report.truth}
           </span>
@@ -1930,8 +1932,9 @@ function TargetActionCard({
                 setManualMode("translate");
                 setManualInput("");
               }}
-              className={`text-xs px-2 py-1 rounded-full border cursor-pointer transition-colors ${manualMode === "translate" ? "bg-active-base text-active-foreground border-active-base" : "border-border-window text-muted-foreground hover:bg-hover-window"
-                }`}
+              className={`text-xs px-2 py-1 rounded-full border cursor-pointer transition-colors ${
+                manualMode === "translate" ? "bg-active-base text-active-foreground border-active-base" : "border-border-window text-muted-foreground hover:bg-hover-window"
+              }`}
             >
               Translation
             </button>
@@ -1940,8 +1943,9 @@ function TargetActionCard({
                 setManualMode("validate");
                 setManualInput("");
               }}
-              className={`text-xs px-2 py-1 rounded-full border cursor-pointer transition-colors ${manualMode === "validate" ? "bg-active-base text-active-foreground border-active-base" : "border-border-window text-muted-foreground hover:bg-hover-window"
-                }`}
+              className={`text-xs px-2 py-1 rounded-full border cursor-pointer transition-colors ${
+                manualMode === "validate" ? "bg-active-base text-active-foreground border-active-base" : "border-border-window text-muted-foreground hover:bg-hover-window"
+              }`}
             >
               Validation
             </button>
@@ -2415,17 +2419,7 @@ function App() {
   }, []);
 
   useEffect(() => {
-    const refreshOn = new Set([
-      "project_files_changed",
-      "project_ready",
-      "run_started",
-      "iteration_started",
-      "translation_saved",
-      "report_saved",
-      "validation_saved",
-      "validation_completed",
-      "translate_started",
-    ]);
+    const refreshOn = new Set(["project_files_changed", "project_ready", "run_started", "iteration_started", "translation_saved", "report_saved", "validation_saved", "validation_completed", "translate_started"]);
     const unsubEvent = window.coda.onEvent((evt: CodaEvent) => {
       setEvents((prev) => [evt, ...prev]);
       if (refreshOn.has(evt.event)) setRefreshKey((k) => k + 1);
@@ -2534,8 +2528,9 @@ function App() {
                 <button
                   key={item.id}
                   onClick={() => setCurrentPage(item.id)}
-                  className={`flex w-full items-center gap-2.5 px-3 py-2 text-sm transition-colors cursor-pointer ${active ? "bg-info-bg text-active-base border-r-2 border-active-base" : "text-muted-foreground hover:bg-hover-window hover:text-foreground"
-                    }`}
+                  className={`flex w-full items-center gap-2.5 px-3 py-2 text-sm transition-colors cursor-pointer ${
+                    active ? "bg-info-bg text-active-base border-r-2 border-active-base" : "text-muted-foreground hover:bg-hover-window hover:text-foreground"
+                  }`}
                   title={item.label}
                 >
                   <Icon className="w-4 h-4 shrink-0" />

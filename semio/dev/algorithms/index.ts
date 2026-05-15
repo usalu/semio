@@ -22,7 +22,7 @@ import {
   type DesignPlain,
   type MoveVector,
   type VecValue,
-} from "@semio/ui";
+} from "../../client/lib/react/ui";
 import { openStore, type Store as JsStore } from "../client/lib/js";
 // #endregion 📥Imports
 
@@ -32,16 +32,7 @@ type GqlWireObject = { readonly [k: string]: unknown };
 // #endregion 🧾GqlWire
 
 // #region 📤UiReExports
-export {
-  AlgorithmApp,
-  WindowKind,
-  createIpoAlgorithmLayout, getKitPorts,
-  kitSurface, useAlgorithm, type AlgorithmAppProps,
-  type AlgorithmContextValue,
-  type AlgorithmWindowDef, type DesignDiff,
-  type DesignPlain,
-  type MoveVector, type VecValue
-};
+export { AlgorithmApp, WindowKind, createIpoAlgorithmLayout, getKitPorts, kitSurface, useAlgorithm, type AlgorithmAppProps, type AlgorithmContextValue, type AlgorithmWindowDef, type DesignDiff, type DesignPlain, type MoveVector, type VecValue };
 // #endregion 📤UiReExports
 
 /** @emoji 📍 2D coordinate used by drag algorithms (`u`/`v` plane). */
@@ -63,15 +54,9 @@ export const Kit = Object.freeze({
 
 /** @emoji 🧰 Kit façade used by find-replaceable story (deterministic fixture ids for Nakagin selection). */
 export class AlgorithmKitFacade {
-  constructor(private readonly kit: GqlWireObject | Record<string, unknown>) { }
+  constructor(private readonly kit: GqlWireObject | Record<string, unknown>) {}
 
-  findReplaceableTypesInDesignsForPiecesInDesignOp(
-    _design: unknown,
-    _allDesigns: unknown[],
-    _types: unknown[],
-    _ports: unknown[],
-    _sel: { pieces: readonly string[] },
-  ): { types: string[]; designs: string[] } {
+  findReplaceableTypesInDesignsForPiecesInDesignOp(_design: unknown, _allDesigns: unknown[], _types: unknown[], _ports: unknown[], _sel: { pieces: readonly string[] }): { types: string[]; designs: string[] } {
     void this.kit;
     return {
       types: [],
@@ -144,7 +129,7 @@ function __previewWithDiff(design: unknown, diff: DesignDiff): Record<string, un
 }
 
 class Design {
-  constructor(private plain: Record<string, unknown>) { }
+  constructor(private plain: Record<string, unknown>) {}
   get id(): string {
     return String(this.plain["id"] ?? "");
   }
@@ -199,13 +184,9 @@ export { Design };
 // #endregion 🧱PlainDesignModel
 
 // #region 🧾StoryTypes
-export type DesignOperationResult =
-  | { ok: true; design: Design; diff: { forward: DesignDiff; reverse: DesignDiff } }
-  | { ok: false; errors: readonly { code: string; message: string }[] };
+export type DesignOperationResult = { ok: true; design: Design; diff: { forward: DesignDiff; reverse: DesignDiff } } | { ok: false; errors: readonly { code: string; message: string }[] };
 
-export type DesignDiffOperationResult =
-  | { ok: true; diff: DesignDiff }
-  | { ok: false; errors: readonly { code: string; message: string }[] };
+export type DesignDiffOperationResult = { ok: true; diff: DesignDiff } | { ok: false; errors: readonly { code: string; message: string }[] };
 
 export type OperationResult<T> = { ok: true; value: T } | { ok: false; errors: readonly { code: string; message: string }[] };
 // #endregion 🧾StoryTypes
@@ -382,8 +363,7 @@ export async function copyDesign(kit: unknown, design: Design, pieceIds: readonl
   const pieceSet = new Set(pieceIds.map(String));
   const connSet = new Set(connectionIds.map(String));
   const pieces = (src["pieces"] as unknown[] | undefined)?.filter((p) => pieceSet.has(String((p as { id?: string }).id ?? ""))) ?? [];
-  const connections =
-    (src["connections"] as unknown[] | undefined)?.filter((c) => connSet.has(String((c as { id?: string }).id ?? ""))) ?? [];
+  const connections = (src["connections"] as unknown[] | undefined)?.filter((c) => connSet.has(String((c as { id?: string }).id ?? ""))) ?? [];
   const clip: Record<string, unknown> = {
     id: `${String(src["id"] ?? "design")}-clipboard`,
     name: `${String(src["name"] ?? "Design")} (clipboard)`,
@@ -412,7 +392,7 @@ export async function pasteDesign(kit: unknown, source: Design, target: Design, 
       }
       return row;
     }) ?? [];
-  const connectionsAdded = ([...(src["connections"] as unknown[] ?? [])] as unknown[]).map((c) => ({ ...(c as object) }));
+  const connectionsAdded = ([...((src["connections"] as unknown[]) ?? [])] as unknown[]).map((c) => ({ ...(c as object) }));
   return {
     pieces: { added },
     ...(connectionsAdded.length ? { connections: { added: connectionsAdded } } : {}),
@@ -429,14 +409,7 @@ if (import.meta.vitest) {
       const publicHelperNames = ["flattenDesign", "flatDesign", "flattenedDesign", "deletePieces", "dragPieces", "movePieces", "copyDesign", "pasteDesign"];
       expect(publicHelperNames.every((name) => !name.toLowerCase().includes("native"))).toBe(true);
 
-      type NativeAdapterExport =
-        | "nativeFlattenDesign"
-        | "nativeFlatDesign"
-        | "nativeFlattenedDesign"
-        | "nativeDeletePieces"
-        | "nativeDragPieces"
-        | "nativeMovePieces"
-        | "NativeAlgorithmLanguage";
+      type NativeAdapterExport = "nativeFlattenDesign" | "nativeFlatDesign" | "nativeFlattenedDesign" | "nativeDeletePieces" | "nativeDragPieces" | "nativeMovePieces" | "NativeAlgorithmLanguage";
       type ModuleExports = keyof typeof import("./index");
       type MustNotExposeNativeAdapters = NativeAdapterExport extends ModuleExports ? never : true;
       const _compileAssert: MustNotExposeNativeAdapters = true;

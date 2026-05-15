@@ -548,3 +548,9 @@ nul
 !coda/client/bin
 !coda/server/lib
 !coda/server/bin
+!elements/lib
+!elements/bin
+!elements/client/lib
+!elements/client/bin
+!elements/server/lib
+!elements/server/bin
