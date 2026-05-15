@@ -1,6 +1,8 @@
 //#region 🔖Kinds
 export type BoardObjectKind = "node" | "handle" | "edge";
 export type RenderMode = "main-thread" | "worker-offscreen" | "headless-test";
+/** 🧱 World-space raster tiling strategy for CPU canvas validation (Vello tiles will mirror this culling). */
+export type WorldRasterTilingKind = "none" | "world-clip";
 
 export interface Point {
 	x: number;
@@ -124,6 +126,23 @@ const MAX_ZOOM = 8;
 const GRID_WORLD_STEP = 96;
 const EDGE_HIT_TOLERANCE_PX = 8;
 const HANDLE_HIT_TOLERANCE_PX = 10;
+const WORLD_TILE_WORLD = 384;
+const GRID_VISIBLE_MIN_ZOOM = 18 / GRID_WORLD_STEP;
+const HANDLE_DRAW_MIN_ZOOM = 0.45;
+
+interface WorldAxisBox {
+	maxX: number;
+	maxY: number;
+	minX: number;
+	minY: number;
+}
+
+interface ScreenAxisBox {
+	h: number;
+	w: number;
+	x: number;
+	y: number;
+}
 
 const DEFAULT_STYLES: Record<string, BoardStyle> = {
 	edge: { stroke: "#475569", strokeWidth: 2 },
@@ -250,6 +269,69 @@ function sortedSelectionIds(ids: Iterable<string>): string[] {
 
 function createSelectionSnapshot(ids: Iterable<string>): BoardSelectionSnapshot {
 	return { ids: sortedSelectionIds(ids) };
+}
+
+function inflateWorldBox(box: WorldAxisBox, pad: number): WorldAxisBox {
+	return {
+		maxX: box.maxX + pad,
+		maxY: box.maxY + pad,
+		minX: box.minX - pad,
+		minY: box.minY - pad,
+	};
+}
+
+function worldBoxesOverlap(left: WorldAxisBox, right: WorldAxisBox): boolean {
+	return left.minX <= right.maxX && left.maxX >= right.minX && left.minY <= right.maxY && left.maxY >= right.minY;
+}
+
+function cubicBezierAxisBounds(curve: CubicBezierCurve): WorldAxisBox {
+	const xs = [curve.p0.x, curve.p1.x, curve.p2.x, curve.p3.x];
+	const ys = [curve.p0.y, curve.p1.y, curve.p2.y, curve.p3.y];
+	return {
+		maxX: Math.max(...xs),
+		maxY: Math.max(...ys),
+		minX: Math.min(...xs),
+		minY: Math.min(...ys),
+	};
+}
+
+function nodeWorldBounds(node: { radius: number; x: number; y: number }, padWorld: number): WorldAxisBox {
+	return inflateWorldBox(
+		{
+			maxX: node.x + node.radius,
+			maxY: node.y + node.radius,
+			minX: node.x - node.radius,
+			minY: node.y - node.radius,
+		},
+		padWorld,
+	);
+}
+
+function handleWorldBounds(handle: { position: Point; radius: number }, padWorld: number): WorldAxisBox {
+	const position = handle.position;
+	return inflateWorldBox(
+		{
+			maxX: position.x + handle.radius,
+			maxY: position.y + handle.radius,
+			minX: position.x - handle.radius,
+			minY: position.y - handle.radius,
+		},
+		padWorld,
+	);
+}
+
+/** 📶 Labels coarse CPU canvas LOD bands used by Storybook and Playwright (maps to future Rust LOD gates). */
+export function resolveBoardLodLabel(zoom: number): "fine" | "full" | "grid-only" | "subgrid" {
+	if (zoom < GRID_VISIBLE_MIN_ZOOM) {
+		return "subgrid";
+	}
+	if (zoom < HANDLE_DRAW_MIN_ZOOM) {
+		return "grid-only";
+	}
+	if (zoom < 2) {
+		return "full";
+	}
+	return "fine";
 }
 
 function resolveContext(
@@ -621,14 +703,18 @@ export class BoardRenderer {
 	private width = 1;
 	private height = 1;
 
+	readonly worldRasterTiling: WorldRasterTilingKind;
+
 	constructor(options: {
 		canvas?: HTMLCanvasElement | null;
 		context?: BoardCanvasContext | null;
 		renderMode?: RenderMode;
+		worldRasterTiling?: WorldRasterTilingKind;
 	} = {}) {
 		this.canvas = options.canvas ?? null;
 		this.context = resolveContext(this.canvas, options.context);
 		this.renderMode = options.renderMode ?? (this.canvas ? "main-thread" : "headless-test");
+		this.worldRasterTiling = options.worldRasterTiling ?? "none";
 		this.scene = new BoardScene(this);
 		this.attachCanvasListeners();
 		BoardRenderer.activeRenderer = this;
@@ -778,10 +864,35 @@ export class BoardRenderer {
 			this.context.save();
 			this.context.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
 			this.context.clearRect(0, 0, this.width, this.height);
-			this.drawGrid();
-			this.drawEdges();
-			this.drawNodes();
-			this.drawHandles();
+			if (this.worldRasterTiling === "world-clip") {
+				this.drawGrid();
+				const padWorld = 18 / this.camera.zoom;
+				for (const tile of this.visibleWorldTiles()) {
+					const tilePadded = inflateWorldBox(tile, padWorld);
+					const screenRect = this.worldAxisBoxToScreenRect(tile);
+					if (screenRect.w <= 1 || screenRect.h <= 1) {
+						continue;
+					}
+					this.context.save();
+					this.context.beginPath();
+					this.context.rect(
+						Math.floor(screenRect.x) - 1,
+						Math.floor(screenRect.y) - 1,
+						Math.ceil(screenRect.w) + 2,
+						Math.ceil(screenRect.h) + 2,
+					);
+					this.context.clip();
+					this.drawEdges((bounds) => worldBoxesOverlap(bounds, tilePadded));
+					this.drawNodes((bounds) => worldBoxesOverlap(bounds, tilePadded));
+					this.drawHandles((bounds) => worldBoxesOverlap(bounds, tilePadded));
+					this.context.restore();
+				}
+			} else {
+				this.drawGrid();
+				this.drawEdges(null);
+				this.drawNodes(null);
+				this.drawHandles(null);
+			}
 			this.context.restore();
 		}
 		const frameState: FrameState = {
@@ -792,6 +903,7 @@ export class BoardRenderer {
 		for (const listener of this.frameListeners) {
 			listener(frameState, frameDelta);
 		}
+		this.applyCanvasDebugAttributes();
 	}
 
 	dispose(): void {
@@ -924,12 +1036,66 @@ export class BoardRenderer {
 		this.context.restore();
 	}
 
-	private drawNodes(): void {
+	private visibleWorldTiles(): WorldAxisBox[] {
+		const halfWidthWorld = this.width / (2 * this.camera.zoom);
+		const halfHeightWorld = this.height / (2 * this.camera.zoom);
+		const minWorldX = this.camera.x - halfWidthWorld;
+		const maxWorldX = this.camera.x + halfWidthWorld;
+		const minWorldY = this.camera.y - halfHeightWorld;
+		const maxWorldY = this.camera.y + halfHeightWorld;
+		const step = WORLD_TILE_WORLD;
+		const tiles: WorldAxisBox[] = [];
+		for (let ix = Math.floor(minWorldX / step); ix <= Math.floor(maxWorldX / step); ix += 1) {
+			for (let iy = Math.floor(minWorldY / step); iy <= Math.floor(maxWorldY / step); iy += 1) {
+				tiles.push({
+					maxX: (ix + 1) * step,
+					maxY: (iy + 1) * step,
+					minX: ix * step,
+					minY: iy * step,
+				});
+			}
+		}
+		return tiles;
+	}
+
+	private worldAxisBoxToScreenRect(box: WorldAxisBox): ScreenAxisBox {
+		const cornerA = this.worldToScreen({ x: box.minX, y: box.minY });
+		const cornerB = this.worldToScreen({ x: box.maxX, y: box.minY });
+		const cornerC = this.worldToScreen({ x: box.maxX, y: box.maxY });
+		const cornerD = this.worldToScreen({ x: box.minX, y: box.maxY });
+		const minScreenX = Math.min(cornerA.x, cornerB.x, cornerC.x, cornerD.x);
+		const maxScreenX = Math.max(cornerA.x, cornerB.x, cornerC.x, cornerD.x);
+		const minScreenY = Math.min(cornerA.y, cornerB.y, cornerC.y, cornerD.y);
+		const maxScreenY = Math.max(cornerA.y, cornerB.y, cornerC.y, cornerD.y);
+		return {
+			h: maxScreenY - minScreenY,
+			w: maxScreenX - minScreenX,
+			x: minScreenX,
+			y: minScreenY,
+		};
+	}
+
+	private applyCanvasDebugAttributes(): void {
+		if (!this.canvas) {
+			return;
+		}
+		this.canvas.dataset.boardRaster = this.worldRasterTiling;
+		this.canvas.dataset.boardLod = resolveBoardLodLabel(this.camera.zoom);
+		this.canvas.dataset.boardZoom = String(Math.round(this.camera.zoom * 1000) / 1000);
+		this.canvas.dataset.boardSelection = sortedSelectionIds(this.selectionIds).join(",");
+		this.canvas.setAttribute("data-board-camera", `${this.camera.x},${this.camera.y}`);
+	}
+
+	private drawNodes(filter: ((bounds: WorldAxisBox) => boolean) | null): void {
 		if (!this.context) {
 			return;
 		}
+		const padWorld = 4 / this.camera.zoom;
 		for (const node of this.scene.nodes.values()) {
 			if (!node.visible) {
+				continue;
+			}
+			if (filter && !filter(nodeWorldBounds(node, padWorld))) {
 				continue;
 			}
 			const screenPoint = this.worldToScreen({ x: node.x, y: node.y });
@@ -945,12 +1111,16 @@ export class BoardRenderer {
 		}
 	}
 
-	private drawHandles(): void {
-		if (!this.context || this.camera.zoom < 0.45) {
+	private drawHandles(filter: ((bounds: WorldAxisBox) => boolean) | null): void {
+		if (!this.context || this.camera.zoom < HANDLE_DRAW_MIN_ZOOM) {
 			return;
 		}
+		const padWorld = 4 / this.camera.zoom;
 		for (const handle of this.scene.handles.values()) {
 			if (!handle.visible) {
+				continue;
+			}
+			if (filter && !filter(handleWorldBounds(handle, padWorld))) {
 				continue;
 			}
 			const screenPoint = this.worldToScreen(handle.position);
@@ -966,17 +1136,23 @@ export class BoardRenderer {
 		}
 	}
 
-	private drawEdges(): void {
+	private drawEdges(filter: ((bounds: WorldAxisBox) => boolean) | null): void {
 		if (!this.context) {
 			return;
 		}
 		this.context.lineCap = "round";
 		this.context.lineJoin = "round";
+		const padWorld = 14 / this.camera.zoom;
 		for (const edge of this.scene.edges.values()) {
 			if (!edge.visible) {
 				continue;
 			}
 			const curve = edge.curve;
+			const hull = cubicBezierAxisBounds(curve);
+			const bounds = inflateWorldBox(hull, padWorld);
+			if (filter && !filter(bounds)) {
+				continue;
+			}
 			const screenP0 = this.worldToScreen(curve.p0);
 			const screenP1 = this.worldToScreen(curve.p1);
 			const screenP2 = this.worldToScreen(curve.p2);
@@ -1136,6 +1312,13 @@ if (boardVitest) {
 			expect(curve.p3.y).toBeCloseTo(0);
 			expect(curve.p1.x).toBeGreaterThanOrEqual(curve.p0.x);
 			expect(curve.p2.x).toBeLessThanOrEqual(curve.p3.x);
+		});
+
+		it("labels coarse LOD bands from zoom thresholds", () => {
+			expect(resolveBoardLodLabel(0.1)).toBe("subgrid");
+			expect(resolveBoardLodLabel(0.3)).toBe("grid-only");
+			expect(resolveBoardLodLabel(1)).toBe("full");
+			expect(resolveBoardLodLabel(3)).toBe("fine");
 		});
 	});
 

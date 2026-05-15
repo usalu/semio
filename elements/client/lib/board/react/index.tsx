@@ -27,6 +27,7 @@ import {
 	type CameraState,
 	type FrameState,
 	type RenderMode,
+	type WorldRasterTilingKind,
 } from "../js/index";
 
 //#region 🔖Kinds
@@ -39,6 +40,8 @@ export interface BoardCanvasProps {
 	renderMode?: RenderMode;
 	style?: CSSProperties;
 	width?: number;
+	/** 🧩 Optional world-space clip tiling for CPU canvas parity with future WASM tile culling. */
+	worldRasterTiling?: WorldRasterTilingKind;
 }
 
 export interface BoardNodeProps {
@@ -297,6 +300,7 @@ export function BoardCanvas({
 	renderMode,
 	style,
 	width,
+	worldRasterTiling,
 }: BoardCanvasProps): ReactElement {
 	const canvasRef = useRef<HTMLCanvasElement | null>(null);
 	const containerRef = useRef<HTMLDivElement | null>(null);
@@ -308,7 +312,7 @@ export function BoardCanvas({
 		if (!canvasRef.current || rendererRef.current) {
 			return;
 		}
-		const renderer = new BoardRenderer({ canvas: canvasRef.current, renderMode });
+		const renderer = new BoardRenderer({ canvas: canvasRef.current, renderMode, worldRasterTiling });
 		rendererRef.current = renderer;
 		activeBoardRenderer = renderer;
 		setContextRenderer(renderer);
@@ -320,7 +324,7 @@ export function BoardCanvas({
 			rendererRef.current = null;
 			setContextRenderer(null);
 		};
-	}, [renderMode]);
+	}, [renderMode, worldRasterTiling]);
 
 	useEffect(() => {
 		if (!contextRenderer) {
@@ -385,7 +389,7 @@ export function BoardCanvas({
 				ref={containerRef}
 				style={{ height: height ?? "100%", position: "relative", width: width ?? "100%", ...(style ?? {}) }}
 			>
-				<canvas ref={canvasRef} style={{ display: "block", height: "100%", width: "100%" }} />
+				<canvas data-testid="board-canvas" ref={canvasRef} style={{ display: "block", height: "100%", width: "100%" }} />
 				{children}
 			</div>
 		</BoardContext.Provider>

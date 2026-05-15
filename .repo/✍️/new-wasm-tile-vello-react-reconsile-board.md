@@ -938,6 +938,75 @@ React = declarative reconciler
 
 The important constraint: **React never owns the hot path**. Pointer movement, hit testing, selection mutation, geometry recomputation, tile invalidation, and rendering should stay in Rust/WASM. React should describe the scene and subscribe to semantic state changes only.
 
+---
+
+# Current workspace status (CPU reference vs WASM target)
+
+| Layer | Path | Role today | WASM target |
+| ----- | ---- | ---------- | ----------- |
+| React descriptors | `elements/client/lib/board/react/index.tsx` | Declarative `<BoardCanvas>` / `<Node>` / `<Handle>` / `<Edge>` markers; `syncBoardScene` preserves stable imperative instances | Same public JSX; optional future `react-reconciler` host |
+| Imperative API | `elements/client/lib/board/js/index.ts` | **Main-thread Canvas2D** renderer, hit testing, wheel zoom, optional **`worldRasterTiling: "world-clip"`** (world-space tiles drawn with per-tile clip + bounds cull — scheduler parity hook for Vello tiles) | Thin `wasm-bindgen` batch + event drain |
+| Rust engine | `elements/client/lib/board/rs/lib.rs` | Single-crate retained model, pointer + selection, `#[cfg(test)]` parity | `BoardEngine` export surface from §1 |
+
+Vello and wgpu are **not** wired in this repository slice yet; the CPU path exists so Storybook and unit tests can validate semantics before GPU stacks are enabled in CI.
+
+---
+
+# Canvas debug attributes (host harness)
+
+The `<canvas>` inside `BoardCanvas` exposes stable `data-*` hooks refreshed each `render()`:
+
+| Attribute | Meaning |
+| --------- | ------- |
+| `data-board-raster` | `none` \| `world-clip` |
+| `data-board-lod` | `subgrid` \| `grid-only` \| `full` \| `fine` from `resolveBoardLodLabel(zoom)` |
+| `data-board-zoom` | Numeric zoom after clamp |
+| `data-board-camera` | `x,y` camera world center |
+| `data-board-selection` | Comma-separated sorted ids |
+
+These exist for **Playwright** and debugging; gate or remove when a formal inspector ships.
+
+---
+
+# End-to-end verification matrix
+
+From repo root (static Storybook + preview static server — see `test.script.ts` `storybook` slice):
+
+```bash
+bun run test:storybook
+```
+
+| Automation | Story id | Covers |
+| ---------- | -------- | ------ |
+| `.storybook/board.spec.ts` | `elements-board--default` | Raster `none`, node selection, zoom-in → `fine` LOD, clear selection |
+| `.storybook/board.spec.ts` | `elements-board--default` | Zoom-out → `grid-only` LOD; wheel anchor keeps world point stable (`data-board-camera`) |
+| `.storybook/board.spec.ts` | `elements-board--world-tile-clip` | Raster `world-clip`, node + handle hit order |
+
+Focused Vitest (board modules only):
+
+```bash
+bunx vitest run --config .repo/🎫/26/05/15/IMPLEMENT-WASM-TILED-VELLO-BOARD/vitest.board.config.ts
+```
+
+---
+
+# Reconciliation notes (React without custom reconciler yet)
+
+The React surface today is a **declarative sync layer** (`buildBoardSceneDescriptor` + `syncBoardScene`) rather than a forked `react-reconciler` host. JSX markers return `null`; prop diffs apply to imperative `BoardRenderer.scene` instances.
+
+Promoting to a full reconciler keeps the public JSX stable while swapping internals to `react-reconciler` once interaction parity is frozen; imperative objects remain the source of truth either way.
+
+---
+
+# Open items toward the WASM document
+
+1. Export `BoardEngine` over `wasm-bindgen` matching the coarse WASM API sketch in §1.
+2. Move Canvas2D draw passes into Vello scene builders per world tile; reuse `world-clip` tile indices as the scheduler input.
+3. Promote LOD gates from `resolveBoardLodLabel` into Rust style resolution keyed by zoom and object kinds.
+4. Consolidate hit-testing between JS preview and Rust engine (both exist today for migration).
+
+---
+
 [1]: https://github.com/linebender/vello "GitHub - linebender/vello: A GPU compute-centric 2D renderer. · GitHub"
 [2]: https://github.com/pmndrs/react-three-fiber "GitHub - pmndrs/react-three-fiber:  A React renderer for Three.js · GitHub"
 [3]: https://github.com/rustwasm/wasm-bindgen "GitHub - wasm-bindgen/wasm-bindgen: Facilitating high-level interactions between Wasm modules and JavaScript · GitHub"

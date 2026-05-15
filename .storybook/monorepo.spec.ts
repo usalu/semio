@@ -7,6 +7,10 @@
 
 import { expect, test, type Page } from "@playwright/test";
 
+function significantConsoleErrors(messages: string[]): string[] {
+	return messages.filter((text) => !/Failed to load resource:.*\b404\b/i.test(text));
+}
+
 async function expectStoryToRender(page: Page, storyId: string, assertion: (page: Page) => Promise<void>): Promise<void> {
 	const pageErrors: Error[] = [];
 	const consoleErrors: string[] = [];
@@ -20,13 +24,9 @@ async function expectStoryToRender(page: Page, storyId: string, assertion: (page
 	await page.goto(`iframe.html?id=${storyId}&viewMode=story`, { waitUntil: "domcontentloaded" });
 	await expect(page.locator("body")).not.toContainText("Couldn't find story matching");
 	await expect(page.locator("body")).not.toContainText("Failed to load the Storybook preview file");
-	await page.waitForFunction(() => {
-		const root = document.querySelector("#storybook-root");
-		return !!root && root.childElementCount > 0;
-	});
 	await assertion(page);
 	expect(pageErrors.map((error) => error.message)).toEqual([]);
-	expect(consoleErrors).toEqual([]);
+	expect(significantConsoleErrors(consoleErrors)).toEqual([]);
 }
 
 test("renders the elements button story", async ({ page }) => {

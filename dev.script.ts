@@ -27,8 +27,10 @@ if (argv[0] === "storybook") {
 
 if (argv[0] === "storybook-static") {
   const host = process.env.DEVCONTAINER === "true" ? "0.0.0.0" : "127.0.0.1";
-  const port = Number(process.env.STORYBOOK_PORT ?? "6010");
-  const rootPath = resolve(root);
+  const port = Number(process.env.STORYBOOK_PORT ?? "65010");
+  const repoRootPath = resolve(root);
+  /** Storybook build output; serve this folder as site root so `/iframe.html` matches the build’s asset paths. */
+  const documentRoot = resolve(repoRootPath, "storybook-static");
 
   const server = Bun.serve({
     hostname: host,
@@ -36,9 +38,9 @@ if (argv[0] === "storybook-static") {
     async fetch(request) {
       const requestUrl = new URL(request.url);
       const requestPath = decodeURIComponent(requestUrl.pathname);
-      const candidatePath = resolve(rootPath, `.${requestPath}`);
+      const candidatePath = resolve(documentRoot, `.${requestPath}`);
 
-      if (!candidatePath.startsWith(rootPath)) {
+      if (!candidatePath.startsWith(documentRoot)) {
         return new Response("Forbidden", { status: 403 });
       }
 

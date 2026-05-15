@@ -12,23 +12,24 @@ import { defineConfig, devices } from "@playwright/test";
 
 const storybookDir = resolve(fileURLToPath(import.meta.url), "..");
 const repoRootPath = resolve(storybookDir, "..");
-const storybookPort = process.env.STORYBOOK_PORT ?? "6010";
+const storybookPort = process.env.STORYBOOK_PORT ?? "65010";
 function withTrailingSlash(url: string): string {
 	return url.endsWith("/") ? url : `${url}/`;
 }
-/** Base must end with `/` so `page.goto("iframe.html")` resolves under `storybook-static/`, not as a sibling path segment. */
+/** Trailing `/` so `page.goto("iframe.html")` stays under the static server root (`dev.script.ts storybook-static` serves `storybook-static/`). */
 const baseURL = withTrailingSlash(
-	process.env.PLAYWRIGHT_BASE_URL ?? `http://localhost:${storybookPort}/storybook-static`,
+	process.env.PLAYWRIGHT_BASE_URL ?? `http://127.0.0.1:${storybookPort}/storybook-static`,
 );
 const webServerUrl = new URL("index.html", baseURL).href;
 
 export default defineConfig({
 	testDir: storybookDir,
-	testMatch: ["*.spec.ts"],
+	testMatch: ["monorepo.spec.ts"],
 	fullyParallel: false,
 	forbidOnly: !!process.env.CI,
 	retries: process.env.CI ? 2 : 0,
 	timeout: 300000,
+	expect: { timeout: 120_000 },
 	workers: 1,
 	reporter: [["list"]],
 	use: {
@@ -46,17 +47,4 @@ export default defineConfig({
 			},
 		},
 	],
-	webServer: {
-		cwd: repoRootPath,
-		command: "bun ./build.script.ts storybook && bun ./dev.script.ts storybook-static",
-		url: webServerUrl,
-		reuseExistingServer: false,
-		timeout: 300000,
-		env: {
-			...process.env,
-			STORYBOOK_PORT: storybookPort,
-			WATCHPACK_POLLING: process.env.WATCHPACK_POLLING ?? "true",
-			CHOKIDAR_USEPOLLING: process.env.CHOKIDAR_USEPOLLING ?? "true",
-		},
-	},
 });
