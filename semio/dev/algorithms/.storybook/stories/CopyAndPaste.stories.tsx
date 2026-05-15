@@ -14,8 +14,8 @@ import { SemioDiagram } from "@semio/ui";
 import { AlgorithmApp, WindowKind, type AlgorithmContextValue, type AlgorithmWindowDef, type VecValue } from "../../index";
 import { copyDesign, flatDesign, pasteDesign } from "../../index";
 
-import { NakaginCapsuleTowerCopySelection, NakaginCapsuleTowerPasteDesign } from "../../../assets/index";
-import metabolismKit from "../../../assets/semio/metabolism.kit.semio.json";
+import { NakaginCapsuleTowerCopySelection, NakaginCapsuleTowerPasteDesign } from "../../../../assets/index";
+import metabolismKit from "../../../../assets/fixtures/metabolism.kit.semio.json";
 
 const nakaginCapsuleTowerDesignId = "9a890dd4-0a9c-48ac-920a-9e62666465ef";
 const rawDesign = ((metabolismKit as any).designs ?? []).find((d: any) => d.id === nakaginCapsuleTowerDesignId) as any;

@@ -8,7 +8,7 @@ import { Design as DesignEntity } from "@semio/react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import * as React from "react";
 
-import metabolismKit from "../../../assets/semio/metabolism.kit.semio.json";
+import metabolismKit from "../../../../assets/fixtures/metabolism.kit.semio.json";
 import { AlgorithmApp, WindowKind, type AlgorithmContextValue, type AlgorithmWindowDef } from "../../index";
 
 import { CommandForm } from "./kit-store/CommandForm";

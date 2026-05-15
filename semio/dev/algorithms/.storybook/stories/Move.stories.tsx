@@ -12,8 +12,8 @@ import * as React from "react";
 import { AlgorithmApp, WindowKind, type AlgorithmContextValue, type AlgorithmWindowDef } from "../../index";
 import { flatDesign, movePieces } from "../../index";
 
-import metabolismKit from "../../../assets/semio/metabolism.kit.semio.json";
-import { DragPieces, MoveStoryDesign, MoveVector } from "../../../assets/index";
+import metabolismKit from "../../../../assets/fixtures/metabolism.kit.semio.json";
+import { DragPieces, MoveStoryDesign, MoveVector } from "../../../../assets/index";
 
 const rawDesign = { ...MoveStoryDesign, id: "move-preset-id", name: "Move Preset" };
 

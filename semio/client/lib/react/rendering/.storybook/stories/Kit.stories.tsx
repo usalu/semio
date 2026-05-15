@@ -6,11 +6,10 @@
 // #endregion 🧲Header
 
 import type { Kit as SemioKit } from "@semio/react";
+import { MetabolismKit as metabolismFullKit, MetabolismShallowKit as metabolismShallowKit } from "@semio/assets";
 import { SemioKit as Kit } from "@semio/ui";
 import type { Meta, StoryObj } from "@storybook/react";
 import * as React from "react";
-import metabolismFullKit from "../../../assets/semio/metabolism.kit.semio.json";
-import metabolismShallowKit from "../../../assets/semio/metabolism.shallow.kit.semio.json";
 
 // #region 🖥️Data
 

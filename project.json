@@ -26,6 +26,17 @@
         "forwardAllArgs": true
       }
     },
+    "dev-storybook": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./dev.script.ts storybook",
+        "forwardAllArgs": true,
+        "env": {
+          "STORYBOOK_PORT": "6010"
+        }
+      }
+    },
     "dev-mcp": {
       "executor": "nx:run-commands",
       "cache": false,
@@ -104,12 +115,44 @@
         "forwardAllArgs": true
       }
     },
+    "test-storybook": {
+      "executor": "nx:run-commands",
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./test.script.ts storybook",
+        "forwardAllArgs": true,
+        "env": {
+          "STORYBOOK_PORT": "6010"
+        }
+      }
+    },
     "build": {
       "executor": "nx:run-commands",
       "dependsOn": [],
       "options": {
         "command": "bun ./build.script.ts",
         "forwardAllArgs": true
+      }
+    },
+    "build-storybook": {
+      "executor": "nx:run-commands",
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./build.script.ts storybook",
+        "forwardAllArgs": true,
+        "env": {
+          "STORYBOOK_PORT": "6010"
+        }
+      }
+    },
+    "setup-storybook": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bunx playwright install --with-deps chromium",
+        "env": {
+          "PLAYWRIGHT_BROWSERS_PATH": "node_modules/.cache/ms-playwright"
+        }
       }
     },
     "publish": {

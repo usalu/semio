@@ -6,11 +6,10 @@
 // #endregion 🧲Header
 
 import { Design, Kit, type Design as DesignType, type DesignPlain } from "@semio/react";
+import { MetabolismKit as metabolismKit, NakaginCapsuleTowerDiffDesign as nakaginDiff } from "@semio/assets";
 import { SemioDiagram as Diagram } from "@semio/ui";
 import type { Meta, StoryObj } from "@storybook/react";
 import * as React from "react";
-import metabolismKit from "../../../assets/semio/metabolism.kit.semio.json";
-import nakaginDiff from "../../../assets/semio/nakgin-capsule-tower.diff.design.semio.json";
 
 // #region 🖥️Data
 

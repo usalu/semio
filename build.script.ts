@@ -11,6 +11,7 @@ const single: Record<string, string> = {
   assets: "@semio/assets:build",
   desktop: "@semio/desktop:build",
   engine: "@semio/engine:build",
+  storybook: "workspace:build-storybook",
   "coda-desktop": "@coda/desktop:build",
   "repo-cli": "@repo/client:build",
   "repo-server": "@repo/coordinator:build",
@@ -19,6 +20,18 @@ const single: Record<string, string> = {
 
 if (!slice) {
   execFileSync("bun", ["nx", "run-many", "-t", "build", "--all", "--exclude", "workspace"], {
+    cwd: root,
+    stdio: "inherit",
+  });
+  execFileSync("bun", ["nx", "run", "workspace:build-storybook"], {
+    cwd: root,
+    stdio: "inherit",
+  });
+  process.exit(0);
+}
+
+if (slice === "storybook") {
+  execFileSync("bunx", ["storybook", "build", "-c", ".storybook", "--output-dir", "storybook-static"], {
     cwd: root,
     stdio: "inherit",
   });

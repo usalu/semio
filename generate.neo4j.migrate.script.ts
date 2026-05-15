@@ -112,7 +112,7 @@ CREATE RANGE INDEX index_data_name IF NOT EXISTS FOR (n:Data) ON (n.name);
 CREATE RANGE INDEX index_computation_name IF NOT EXISTS FOR (n:Computation) ON (n.name);
 CREATE RANGE INDEX index_reference_name IF NOT EXISTS FOR (n:Reference) ON (n.name);
 DROP INDEX semio_name_fulltext IF EXISTS;
-CREATE FULLTEXT INDEX semio_name_fulltext IF NOT EXISTS FOR (n:Class|Constraint|Data|Computation|Reference|Interface|Module|Scalar|Enum) ON EACH [n.name];
+CREATE FULLTEXT INDEX semio_name_fulltext IF NOT EXISTS FOR (n:Class|Constraint|Data|Computation|Reference|Interface|Module|Scalar) ON EACH [n.name];
 //#endregion 🔍ReplaceFieldIndexes
 
 //#region 📦EntityInterfaceSubmoduleMirror
@@ -165,6 +165,34 @@ DETACH DELETE m;
 MATCH (m:Module {name: 'KitSchema'})
 DETACH DELETE m;
 //#endregion 🧹RemoveEmptyKitSchemaStub
+
+//#region 🏷️RenameKitEntityModuleToKit
+// Fold the redundant inner Module Kit (only held Class Kit) into KitEntity, then rename KitEntity to Kit.
+MATCH (parent:Module {name: 'KitEntity'})-[:HAS]->(inner:Module {name: 'Kit'})
+MATCH (inner)-[r:HAS]->(c:Class {name: 'Kit'})
+MERGE (parent)-[:HAS]->(c)
+DELETE r;
+MATCH (inner:Module {name: 'Kit'})<-[:HAS]-(parent:Module {name: 'KitEntity'})
+DETACH DELETE inner;
+MATCH (m:Module {name: 'KitEntity'})
+SET m.name = 'Kit';
+//#endregion 🏷️RenameKitEntityModuleToKit
+
+//#region 📦ScalarModuleUnderSchemaGeneral
+OPTIONAL MATCH (d:Module {name: 'Domain'})-[r:HAS]->(sm:Module {name: 'Scalar'})
+DELETE r;
+MATCH (schema:Module {name: 'Schema'})-[:HAS]->(gen:Module {name: 'General'})
+MATCH (sm:Module {name: 'Scalar'})
+MERGE (gen)-[:HAS]->(sm);
+//#endregion 📦ScalarModuleUnderSchemaGeneral
+
+//#region 🧹RemoveFieldKindMetaModule
+// Field kinds are modeled only as Data / Computation / Reference node labels; drop the legacy Module FieldKind and its Enum literals.
+MATCH (fk:Module {name: 'FieldKind'})-[:HAS]->(e:Enum)
+DETACH DELETE e;
+MATCH (fk:Module {name: 'FieldKind'})
+DETACH DELETE fk;
+//#endregion 🧹RemoveFieldKindMetaModule
 `.trim();
 //#endregion 🚀Neo4jMigrations
 
@@ -223,6 +251,43 @@ function main(): void {
   const fieldNodes = Number.parseInt(last.trim(), 10);
   if (!Number.isFinite(fieldNodes) || fieldNodes !== 0) {
     console.error(`[generate.neo4j.migrate] expected zero :Field nodes after migration; verify output:\n${probe.stdout}`);
+    process.exit(1);
+  }
+
+  const probeFk = spawnSync(
+    shell,
+    [
+      "-a",
+      process.env.NEO4J_URI || "bolt://localhost:7687",
+      "-u",
+      process.env.NEO4J_USERNAME || "neo4j",
+      "-p",
+      process.env.NEO4J_PASSWORD || "password",
+      "-d",
+      DATABASE,
+      "--format",
+      "plain",
+      "OPTIONAL MATCH (m:Module {name:'FieldKind'}) WITH count(m) AS fieldKindModules OPTIONAL MATCH (e:Enum) RETURN fieldKindModules, count(e) AS enumNodes;",
+    ],
+    { encoding: "utf8", cwd: REPO_ROOT, env: buildCypherEnv() },
+  );
+
+  if (probeFk.status !== 0) {
+    console.error(`[generate.neo4j.migrate] FieldKind/Enum verify failed: ${probeFk.stderr}`);
+    process.exit(1);
+  }
+
+  const fkTail = String(probeFk.stdout ?? "")
+    .trim()
+    .split(/\r?\n/)
+    .map((l) => l.trim())
+    .filter(Boolean);
+  const fkLast = fkTail[fkTail.length - 1] ?? "";
+  const nums = fkLast.match(/\d+/g)?.map((d) => Number.parseInt(d, 10)) ?? [];
+  if (nums.length < 2 || nums[0] !== 0 || nums[1] !== 0) {
+    console.error(
+      `[generate.neo4j.migrate] expected zero :Module FieldKind and zero :Enum after migration; verify output:\n${probeFk.stdout}`,
+    );
     process.exit(1);
   }
 

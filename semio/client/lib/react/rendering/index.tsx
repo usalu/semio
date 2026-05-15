@@ -11,7 +11,7 @@ type PlainJsonObject = Readonly<Record<string, unknown>>;
 type PlainJsonValue = string | number | boolean | null | readonly PlainJsonValue[] | PlainJsonObject;
 // #endregion 🧾PlainJson
 
-import { Breadcrumb, Button, Section } from "../../../../elements/client/lib/ui";
+import { Breadcrumb, Button, Section } from "../../../../elements/client/lib/react";
 import { Bounds, useBounds } from "@react-three/drei/core/Bounds.js";
 import { Clone } from "@react-three/drei/core/Clone.js";
 import { Edges } from "@react-three/drei/core/Edges.js";
@@ -243,7 +243,7 @@ const useInteractiveControllableValue = <T,>(value: T | undefined, defaultValue:
 
 // Re-export the runtime-safe ui primitives from @elements/ui/elements.
 
-export * from "../../../../elements/client/lib/ui";
+export * from "../../../../elements/client/lib/react";
 
 // #endregion 🗃️Exports
 
@@ -7242,7 +7242,7 @@ import {
   type UIWindowLayout,
   type UIWindowLayoutAxisNode,
   type UIWindowLayoutStackNode,
-} from "../../../../elements/client/lib/ui";
+} from "../../../../elements/client/lib/react";
 import { AlertCircleIcon, DetailsIcon, PieceIcon } from "@semio/assets/icons";
 
 /**

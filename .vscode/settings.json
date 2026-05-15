@@ -38,6 +38,10 @@
   "workbench.trustedDomains": ["*"],
   "remote.autoForwardPorts": true,
   "remote.portsAttributes": {
+    "6010": {
+      "label": "Workspace Storybook",
+      "onAutoForward": "openBrowser"
+    },
     "6274": {
       "label": "MCP Inspector UI",
       "onAutoForward": "openBrowser"

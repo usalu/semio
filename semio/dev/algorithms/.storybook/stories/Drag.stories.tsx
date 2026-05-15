@@ -12,8 +12,8 @@ import * as React from "react";
 import { AlgorithmApp, WindowKind, type AlgorithmContextValue, type AlgorithmWindowDef } from "../../index";
 import { dragPieces, flatDesign } from "../../index";
 
-import metabolismKit from "../../../assets/semio/metabolism.kit.semio.json";
-import { DragDesign, DragOffset, DragPieces } from "../../../assets/index";
+import metabolismKit from "../../../../assets/fixtures/metabolism.kit.semio.json";
+import { DragDesign, DragOffset, DragPieces } from "../../../../assets/index";
 
 const rawDesign = { ...DragDesign, id: "drag-preset-id", name: "Drag Preset" };
 

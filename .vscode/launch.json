@@ -87,6 +87,18 @@
       }
     },
     {
+      "name": "🛠️dev👤workspace📚storybook",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run workspace:dev-storybook",
+      "cwd": "${workspaceFolder}",
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "(http://localhost:6010)",
+        "uriFormat": "%s"
+      }
+    },
+    {
       "name": "🛠️dev👤semio🖱️3dm",
       "type": "node-terminal",
       "request": "launch",
@@ -130,6 +142,13 @@
         "pattern": "(http://localhost:6007)",
         "uriFormat": "%s"
       }
+    },
+    {
+      "name": "🧪test👤workspace📚storybook",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run workspace:test-storybook",
+      "cwd": "${workspaceFolder}"
     },
     {
       "name": "🛠️dev👤semio🖱️desktop",

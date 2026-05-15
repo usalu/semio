@@ -9,7 +9,7 @@ import type { ConnectorGraphDto as Connector, Kit, Type as SemioKind } from "@se
 import { SemioType as TypeView } from "@semio/ui";
 import type { Meta, StoryObj } from "@storybook/react";
 import * as React from "react";
-import metabolismKit from "../../../assets/semio/metabolism.kit.semio.json";
+import { MetabolismKit as metabolismKit } from "@semio/assets";
 
 // #region 🖥️Data
 
