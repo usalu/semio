@@ -1,0 +1,34 @@
+{
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "projectType": "library",
+  "name": "@elements/styling",
+  "version": "0.1.0",
+  "description": "elements · shared palette, Tailwind entry, and tokens",
+  "type": "module",
+  "exports": {
+    ".": "./index.ts",
+    "./elements.css": "./elements.css",
+    "./palette.css": "./palette.css",
+    "./tailwind.config": "./tailwind.config.ts"
+  },
+  "dependencies": {
+    "@tailwindcss/typography": "^0.5.19",
+    "golden-layout": "^2.6.0",
+    "tailwindcss": "^4.0.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.3"
+  },
+  "author": {
+    "name": "Ueli Saluz",
+    "email": "ueli@semio-tech.com",
+    "url": "https://github.com/usalu"
+  },
+  "license": "LGPL-3.0-or-later",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/usalu/semio.git",
+    "directory": "elements/client/lib/styling"
+  },
+  "bundleKind": "library"
+}

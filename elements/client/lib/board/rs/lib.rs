@@ -1,4 +1,11 @@
+#![allow(clippy::missing_errors_doc, reason = "Board engine is internal to the elements board bundle.")]
+
+mod vcompute;
+
 use std::collections::{BTreeMap, BTreeSet};
+
+pub use vello::kurbo::{CubicBez, Point, Vec2};
+use vcompute::{compute_edge_bezier_points, distance_point_to_cubic_bezier, encode_board_vello_strokes};
 
 // #region 🔖Kinds
 /// 🧭 Camera state in world units with a zoom scalar suitable for a WASM host bridge.
@@ -7,13 +14,6 @@ pub struct Camera {
 	pub x: f64,
 	pub y: f64,
 	pub zoom: f64,
-}
-
-/// 📍 Basic 2D vector used for retained geometry and hit testing.
-#[derive(Clone, Copy, Debug, PartialEq)]
-pub struct Vec2 {
-	pub x: f32,
-	pub y: f32,
 }
 
 /// 🧩 Stable node identifier.
@@ -27,18 +27,18 @@ pub type EdgeId = u64;
 #[derive(Clone, Debug, PartialEq)]
 pub struct Node {
 	pub id: NodeId,
-	pub center: Vec2,
-	pub radius: f32,
+	pub center: Point,
+	pub radius: f64,
 	pub draggable: bool,
 }
 
 /// 🟣 Tangent handle anchored to a node at a polar angle.
 #[derive(Clone, Debug, PartialEq)]
 pub struct Handle {
-	pub angle: f32,
+	pub angle: f64,
 	pub id: HandleId,
 	pub node_id: NodeId,
-	pub radius: f32,
+	pub radius: f64,
 }
 
 /// 🪢 Cubic edge connecting two handles.
@@ -49,20 +49,11 @@ pub struct Edge {
 	pub to_handle: HandleId,
 }
 
-/// 🌀 Cubic bezier curve whose control arms follow circle normals at the two anchors.
-#[derive(Clone, Copy, Debug, PartialEq)]
-pub struct CubicBezier {
-	pub p0: Vec2,
-	pub p1: Vec2,
-	pub p2: Vec2,
-	pub p3: Vec2,
-}
-
 /// 🎯 Semantic board event emitted after interaction or selection changes.
 #[derive(Clone, Debug, PartialEq)]
 pub enum BoardEvent {
 	HoverChanged { id: Option<u64> },
-	NodeMoved { id: NodeId, x: f32, y: f32 },
+	NodeMoved { id: NodeId, x: f64, y: f64 },
 	SelectionChanged {
 		edge_ids: Vec<EdgeId>,
 		handle_ids: Vec<HandleId>,
@@ -81,9 +72,9 @@ pub struct Selection {
 /// 🖼️ Minimal render snapshot suitable for a host-side drawing layer or tests.
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct RenderSnapshot {
-	pub edges: Vec<CubicBezier>,
-	pub handles: Vec<(HandleId, Vec2, f32)>,
-	pub nodes: Vec<(NodeId, Vec2, f32)>,
+	pub edges: Vec<CubicBez>,
+	pub handles: Vec<(HandleId, Point, f64)>,
+	pub nodes: Vec<(NodeId, Point, f64)>,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -95,10 +86,7 @@ enum HitObject {
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 enum InteractionMode {
-	DragNode {
-		node_id: NodeId,
-		offset: Vec2,
-	},
+	DragNode { node_id: NodeId, offset: Vec2 },
 	Idle,
 }
 
@@ -116,106 +104,17 @@ impl Default for Camera {
 	}
 }
 
-impl Vec2 {
-	fn dot(self, other: Self) -> f32 {
-		(self.x * other.x) + (self.y * other.y)
-	}
-
-	fn length(self) -> f32 {
-		self.dot(self).sqrt()
-	}
-
-	fn normalized(self) -> Self {
-		let length = self.length();
-		if length <= f32::EPSILON {
-			return Self { x: 0.0, y: 0.0 };
-		}
-		Self { x: self.x / length, y: self.y / length }
-	}
+fn handle_position(node: &Node, handle: &Handle) -> Point {
+	vcompute::handle_position_on_circle(node.center, node.radius, handle.angle)
 }
 
-impl std::ops::Add for Vec2 {
-	type Output = Self;
-
-	fn add(self, rhs: Self) -> Self::Output {
-		Self { x: self.x + rhs.x, y: self.y + rhs.y }
-	}
-}
-
-impl std::ops::Sub for Vec2 {
-	type Output = Self;
-
-	fn sub(self, rhs: Self) -> Self::Output {
-		Self { x: self.x - rhs.x, y: self.y - rhs.y }
-	}
-}
-
-impl std::ops::Mul<f32> for Vec2 {
-	type Output = Self;
-
-	fn mul(self, rhs: f32) -> Self::Output {
-		Self { x: self.x * rhs, y: self.y * rhs }
-	}
-}
-
-fn clamp(value: f32, min: f32, max: f32) -> f32 {
-	value.max(min).min(max)
-}
-
-fn distance(left: Vec2, right: Vec2) -> f32 {
-	(left - right).length()
-}
-
-fn handle_position(node: &Node, handle: &Handle) -> Vec2 {
-	Vec2 {
-		x: node.center.x + node.radius * handle.angle.cos(),
-		y: node.center.y + node.radius * handle.angle.sin(),
-	}
-}
-
-fn cubic_point(curve: CubicBezier, step: f32) -> Vec2 {
-	let one_minus = 1.0 - step;
-	let one_minus_squared = one_minus * one_minus;
-	let one_minus_cubed = one_minus_squared * one_minus;
-	let step_squared = step * step;
-	let step_cubed = step_squared * step;
-	Vec2 {
-		x: curve.p0.x * one_minus_cubed
-			+ 3.0 * curve.p1.x * one_minus_squared * step
-			+ 3.0 * curve.p2.x * one_minus * step_squared
-			+ curve.p3.x * step_cubed,
-		y: curve.p0.y * one_minus_cubed
-			+ 3.0 * curve.p1.y * one_minus_squared * step
-			+ 3.0 * curve.p2.y * one_minus * step_squared
-			+ curve.p3.y * step_cubed,
-	}
-}
-
-fn distance_to_segment(point: Vec2, start: Vec2, end: Vec2) -> f32 {
-	let segment = end - start;
-	let segment_len_squared = segment.dot(segment);
-	if segment_len_squared <= f32::EPSILON {
-		return distance(point, start);
-	}
-	let projection = clamp((point - start).dot(segment) / segment_len_squared, 0.0, 1.0);
-	let closest = start + (segment * projection);
-	distance(point, closest)
-}
-
-fn distance_to_curve(point: Vec2, curve: CubicBezier, segments: usize) -> f32 {
-	let mut smallest_distance = f32::MAX;
-	let mut previous = curve.p0;
-	for index in 1..=segments {
-		let next = cubic_point(curve, index as f32 / segments as f32);
-		smallest_distance = smallest_distance.min(distance_to_segment(point, previous, next));
-		previous = next;
-	}
-	smallest_distance
+fn distance(left: Point, right: Point) -> f64 {
+	vcompute::distance_between(left, right)
 }
 // #endregion 🔖Utilities
 
 // #region 🔖Engine
-/// ⚙️ Single-file retained board engine prepared for a future WASM export surface.
+/// ⚙️ Single-file retained board engine; geometry uses Vello’s kurbo curves and scene encoding.
 #[derive(Clone, Debug, Default)]
 pub struct BoardEngine {
 	camera: Camera,
@@ -237,11 +136,11 @@ impl BoardEngine {
 		self.camera = Camera { x, y, zoom };
 	}
 
-	pub fn create_node(&mut self, id: NodeId, x: f32, y: f32, radius: f32, draggable: bool) {
+	pub fn create_node(&mut self, id: NodeId, x: f64, y: f64, radius: f64, draggable: bool) {
 		self.nodes.insert(
 			id,
 			Node {
-				center: Vec2 { x, y },
+				center: Point::new(x, y),
 				draggable,
 				id,
 				radius,
@@ -249,9 +148,9 @@ impl BoardEngine {
 		);
 	}
 
-	pub fn update_node(&mut self, id: NodeId, x: f32, y: f32, radius: f32) {
+	pub fn update_node(&mut self, id: NodeId, x: f64, y: f64, radius: f64) {
 		if let Some(node) = self.nodes.get_mut(&id) {
-			node.center = Vec2 { x, y };
+			node.center = Point::new(x, y);
 			node.radius = radius;
 		}
 	}
@@ -271,7 +170,7 @@ impl BoardEngine {
 		self.push_selection_event();
 	}
 
-	pub fn create_handle(&mut self, id: HandleId, node_id: NodeId, angle: f32) {
+	pub fn create_handle(&mut self, id: HandleId, node_id: NodeId, angle: f64) {
 		self.handles.insert(
 			id,
 			Handle {
@@ -294,8 +193,8 @@ impl BoardEngine {
 		);
 	}
 
-	pub fn pointer_down(&mut self, x: f32, y: f32) {
-		let point = Vec2 { x, y };
+	pub fn pointer_down(&mut self, x: f64, y: f64) {
+		let point = Point::new(x, y);
 		match self.hit_test(point) {
 			Some(HitObject::Node(node_id)) => {
 				self.select_node(node_id);
@@ -336,8 +235,8 @@ impl BoardEngine {
 		}
 	}
 
-	pub fn pointer_move(&mut self, x: f32, y: f32) {
-		let point = Vec2 { x, y };
+	pub fn pointer_move(&mut self, x: f64, y: f64) {
+		let point = Point::new(x, y);
 		match self.interaction {
 			InteractionMode::DragNode { node_id, offset } => {
 				if let Some(node) = self.nodes.get_mut(&node_id) {
@@ -378,6 +277,8 @@ impl BoardEngine {
 				snapshot.edges.push(curve);
 			}
 		}
+		let _vello_scene = encode_board_vello_strokes(&snapshot.edges, 2.0);
+		let _ = _vello_scene.encoding().path_tags.len();
 		snapshot
 	}
 
@@ -385,7 +286,7 @@ impl BoardEngine {
 		std::mem::take(&mut self.events)
 	}
 
-	pub fn edge_curve(&self, edge_id: EdgeId) -> Option<CubicBezier> {
+	pub fn edge_curve(&self, edge_id: EdgeId) -> Option<CubicBez> {
 		let edge = self.edges.get(&edge_id)?;
 		let from_handle = self.handles.get(&edge.from_handle)?;
 		let to_handle = self.handles.get(&edge.to_handle)?;
@@ -393,22 +294,12 @@ impl BoardEngine {
 		let to_node = self.nodes.get(&to_handle.node_id)?;
 		let from_position = handle_position(from_node, from_handle);
 		let to_position = handle_position(to_node, to_handle);
-		let chord = distance(from_position, to_position);
-		let control_length = clamp(chord * 0.35, 24.0, 240.0);
-		let mut from_out = (from_position - from_node.center).normalized();
-		if from_out.length() <= f32::EPSILON {
-			from_out = (to_position - from_position).normalized();
-		}
-		let mut to_in = (to_node.center - to_position).normalized();
-		if to_in.length() <= f32::EPSILON {
-			to_in = (to_position - from_position).normalized();
-		}
-		Some(CubicBezier {
-			p0: from_position,
-			p1: from_position + (from_out * control_length),
-			p2: to_position + (to_in * control_length),
-			p3: to_position,
-		})
+		Some(compute_edge_bezier_points(
+			from_position,
+			to_position,
+			from_node.center,
+			to_node.center,
+		))
 	}
 
 	fn remove_handle(&mut self, id: HandleId) {
@@ -450,7 +341,7 @@ impl BoardEngine {
 		});
 	}
 
-	fn hit_test(&self, point: Vec2) -> Option<HitObject> {
+	fn hit_test(&self, point: Point) -> Option<HitObject> {
 		for handle in self.handles.values().rev() {
 			let node = self.nodes.get(&handle.node_id)?;
 			if distance(point, handle_position(node, handle)) <= handle.radius + 6.0 {
@@ -464,7 +355,7 @@ impl BoardEngine {
 		}
 		for edge in self.edges.values().rev() {
 			if let Some(curve) = self.edge_curve(edge.id) {
-				if distance_to_curve(point, curve, 18) <= 8.0 {
+				if distance_point_to_cubic_bezier(point, curve, 18) <= 8.0 {
 					return Some(HitObject::Edge(edge.id));
 				}
 			}
@@ -473,6 +364,77 @@ impl BoardEngine {
 	}
 }
 // #endregion 🔖Engine
+
+// #region 🔖WasmHost
+#[cfg(target_arch = "wasm32")]
+use wasm_bindgen::prelude::*;
+
+#[cfg(target_arch = "wasm32")]
+#[wasm_bindgen(js_name = boardComputeEdgeBezier)]
+pub fn board_compute_edge_bezier(
+	from_px: f64,
+	from_py: f64,
+	from_cx: f64,
+	from_cy: f64,
+	to_px: f64,
+	to_py: f64,
+	to_cx: f64,
+	to_cy: f64,
+) -> Vec<f64> {
+	let c = compute_edge_bezier_points(
+		Point::new(from_px, from_py),
+		Point::new(to_px, to_py),
+		Point::new(from_cx, from_cy),
+		Point::new(to_cx, to_cy),
+	);
+	vec![c.p0.x, c.p0.y, c.p1.x, c.p1.y, c.p2.x, c.p2.y, c.p3.x, c.p3.y]
+}
+
+#[cfg(target_arch = "wasm32")]
+#[wasm_bindgen(js_name = boardDistancePointCubic)]
+pub fn board_distance_point_cubic(
+	px: f64,
+	py: f64,
+	p0x: f64,
+	p0y: f64,
+	p1x: f64,
+	p1y: f64,
+	p2x: f64,
+	p2y: f64,
+	p3x: f64,
+	p3y: f64,
+	steps: u32,
+) -> f64 {
+	let curve = CubicBez::new(
+		Point::new(p0x, p0y),
+		Point::new(p1x, p1y),
+		Point::new(p2x, p2y),
+		Point::new(p3x, p3y),
+	);
+	distance_point_to_cubic_bezier(Point::new(px, py), curve, steps.max(1) as usize)
+}
+
+#[cfg(target_arch = "wasm32")]
+#[wasm_bindgen(js_name = boardRayRectEdge)]
+pub fn board_ray_rect_edge(hw: f64, hh: f64, ux: f64, uy: f64) -> Vec<f64> {
+	let p = vcompute::ray_from_origin_to_axis_aligned_rectangle_edge(hw, hh, ux, uy);
+	vec![p.x, p.y]
+}
+
+#[cfg(target_arch = "wasm32")]
+#[wasm_bindgen(js_name = boardHandlePositionCircle)]
+pub fn board_handle_position_circle(cx: f64, cy: f64, radius: f64, angle: f64) -> Vec<f64> {
+	let p = vcompute::handle_position_on_circle(Point::new(cx, cy), radius, angle);
+	vec![p.x, p.y]
+}
+
+#[cfg(target_arch = "wasm32")]
+#[wasm_bindgen(js_name = boardHandlePositionRectangle)]
+pub fn board_handle_position_rectangle(cx: f64, cy: f64, width: f64, height: f64, angle: f64) -> Vec<f64> {
+	let p = vcompute::handle_position_on_rectangle(Point::new(cx, cy), width, height, angle);
+	vec![p.x, p.y]
+}
+// #endregion 🔖WasmHost
 
 // #region 🔖Tests
 #[cfg(test)]
@@ -485,7 +447,7 @@ mod tests {
 		engine.create_node(1, 0.0, 0.0, 40.0, true);
 		engine.create_node(2, 300.0, 0.0, 40.0, true);
 		engine.create_handle(10, 1, 0.0);
-		engine.create_handle(20, 2, std::f32::consts::PI);
+		engine.create_handle(20, 2, std::f64::consts::PI);
 		engine.create_edge(100, 10, 20);
 
 		let curve = engine.edge_curve(100).expect("edge curve should exist");
@@ -493,12 +455,14 @@ mod tests {
 		assert!(curve.p0.y.abs() < 0.001);
 		assert!((curve.p3.x - 260.0).abs() < 0.001);
 		assert!(curve.p3.y.abs() < 0.001);
-		let outward = curve.p0 - Vec2 { x: 0.0, y: 0.0 };
+		let outward = curve.p0 - Point::ORIGIN;
 		let arm0 = curve.p1 - curve.p0;
-		assert!(outward.normalized().dot(arm0.normalized()) > 0.99);
-		let inward = Vec2 { x: 300.0, y: 0.0 } - curve.p3;
+		let align0 = vcompute::normalize_or_zero(outward).dot(vcompute::normalize_or_zero(arm0));
+		let inward = Point::new(300.0, 0.0) - curve.p3;
 		let arm1 = curve.p3 - curve.p2;
-		assert!(inward.normalized().dot(arm1.normalized()).abs() > 0.99);
+		let align1 = vcompute::normalize_or_zero(inward).dot(vcompute::normalize_or_zero(arm1)).abs();
+		assert!(align0 > 0.99);
+		assert!(align1 > 0.99);
 	}
 
 	#[test]
@@ -511,7 +475,7 @@ mod tests {
 		engine.pointer_up();
 
 		let node = engine.nodes.get(&1).expect("node should remain in the engine");
-		assert_eq!(node.center, Vec2 { x: 60.0, y: 25.0 });
+		assert_eq!(node.center, Point::new(60.0, 25.0));
 
 		let events = engine.drain_events();
 		assert!(events.iter().any(|event| matches!(event, BoardEvent::SelectionChanged { node_ids, .. } if node_ids == &vec![1])));
@@ -524,7 +488,7 @@ mod tests {
 		engine.create_node(1, 0.0, 0.0, 40.0, true);
 		engine.create_node(2, 200.0, 0.0, 40.0, true);
 		engine.create_handle(10, 1, 0.0);
-		engine.create_handle(20, 2, std::f32::consts::PI);
+		engine.create_handle(20, 2, std::f64::consts::PI);
 		engine.create_edge(100, 10, 20);
 
 		let handle_point = handle_position(engine.nodes.get(&1).unwrap(), engine.handles.get(&10).unwrap());
@@ -540,7 +504,7 @@ mod tests {
 		engine.create_node(1, 10.0, 20.0, 18.0, true);
 		engine.create_node(2, 120.0, 20.0, 18.0, true);
 		engine.create_handle(10, 1, 0.0);
-		engine.create_handle(20, 2, std::f32::consts::PI);
+		engine.create_handle(20, 2, std::f64::consts::PI);
 		engine.create_edge(100, 10, 20);
 
 		let snapshot = engine.render_snapshot();

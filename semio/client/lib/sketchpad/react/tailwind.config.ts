@@ -10,10 +10,10 @@
 
 // #region 🗄️Configuration
 // Tailwind CSS configuration extending the shared semio preset for the sketchpad application.
-// Configuration MUST use the shared tailwindConfig preset from @semio/ui.
+// Configuration MUST use the shared tailwindConfig preset from `@elements/styling`.
 
 import type { Config } from "tailwindcss";
-import { tailwindConfig } from "../react/ui";
+import { tailwindConfig } from "../../../../../elements/client/lib/styling/tailwind.config";
 
 /**
  * Tailwind CSS configuration with content paths and shared preset.

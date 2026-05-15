@@ -1,17 +1,8 @@
 // #region 🧲Header
-// 💻 elements/client/lib/board/play/index.tsx — Board play: triptych Nakagin views, in-app fixture drag shelf, selection inspector, `UI` shell.
+// 💻 elements/client/lib/board/play/index.tsx — Board play: triptych Nakagin views, in-app fixture drag shelf, selection inspector, board-local shell.
 // #endregion 🧲Header
 
 // #region 📥Imports
-import {
-	UI,
-	LevelProvider,
-	createWindowLayout,
-	getLevelBgClass,
-	type UIAppConfig,
-	type UIWindowKindDefinition,
-	type UIWindowLayout,
-} from "@elements/ui";
 import { ClipboardList, Library } from "lucide-react";
 import {
 	createContext,
@@ -44,12 +35,11 @@ import "./globals.css";
 
 // #region 🔖Kinds
 export type BoardPlayPaneId = "board-overview" | "board-detail" | "board-selection";
-
-const BOARD_PLAY_APP_ID = "elements-board-play";
-const REF_VIEWPORT_SHORT_PX = 640;
 // #endregion 🔖Kinds
 
 // #region 🔖Geometry
+const REF_VIEWPORT_SHORT_PX = 640;
+
 function clampZoom(value: number): number {
 	return Math.min(BOARD_CAMERA_ZOOM_MAX, Math.max(BOARD_CAMERA_ZOOM_MIN, value));
 }
@@ -402,42 +392,70 @@ function BoardSelectionInspectorPanel(): ReactElement {
 // #endregion 🔖SidePanels
 
 // #region 🔖Layout
-const boardPlayLayout: UIWindowLayout = {
-	root: {
-		kind: "row",
-		children: [
-			{
-				kind: "stack",
-				size: 50,
-				children: [createWindowLayout("board-overview", "Overview")],
-			},
-			{
-				kind: "column",
-				size: 50,
-				children: [
-					{ kind: "stack", size: 50, children: [createWindowLayout("board-detail", "Zoom")] },
-					{ kind: "stack", size: 50, children: [createWindowLayout("board-selection", "Selection")] },
-				],
-			},
-		],
-	},
-};
+/** @emoji 🪟 Single tab strip styled like Golden Layout headers so board play matches `elements/ui` chrome. */
+function BoardPlayPaneTabStrip({ label }: { label: string }): ReactElement {
+	return (
+		<div className="border-element flex h-[20px] min-h-[20px] max-h-[20px] shrink-0 items-end border-b bg-transparent">
+			<div className="border-element bg-window text-foreground -mb-px flex cursor-default items-center gap-1 border border-b-0 px-2 text-xs leading-none select-none">
+				<span className="truncate">{label}</span>
+			</div>
+		</div>
+	);
+}
 
-const boardWindowKinds: UIWindowKindDefinition[] = [
-	{ component: BoardOverviewPane, id: "board-overview", label: "Overview" },
-	{ component: BoardDetailPane, id: "board-detail", label: "Zoom" },
-	{ component: BoardSelectionPane, id: "board-selection", label: "Selection" },
-];
+/** @emoji 🧱 Board-only workspace: same triptych + side rails as the old `UI` harness without importing `@elements/ui`. */
+function BoardPlayWorkspace(): ReactElement {
+	return (
+		<div className="flex h-full min-h-0 w-full flex-1 overflow-hidden">
+			<div className="border-element bg-panel flex h-full w-72 shrink-0 flex-col border-r">
+				<div className="border-element text-muted-foreground flex h-[20px] shrink-0 items-center gap-2 border-b px-2 text-xs">
+					<Library className="size-3.5 shrink-0" />
+					<span className="truncate font-medium tracking-wide uppercase">Library</span>
+				</div>
+				<div className="min-h-0 flex-1 overflow-auto">
+					<BoardFixtureLibraryPanel />
+				</div>
+			</div>
+			<div className="bg-base flex min-h-0 min-w-0 flex-1 flex-col">
+				<div className="flex min-h-0 min-w-0 flex-1 flex-row">
+					<div className="border-element bg-window flex min-h-0 min-w-0 flex-[1_1_50%] flex-col border-r">
+						<BoardPlayPaneTabStrip label="Overview" />
+						<BoardOverviewPane />
+					</div>
+					<div className="flex min-h-0 min-w-0 flex-[1_1_50%] flex-col">
+						<div className="border-element bg-window flex min-h-0 flex-[1_1_50%] flex-col border-b">
+							<BoardPlayPaneTabStrip label="Zoom" />
+							<BoardDetailPane />
+						</div>
+						<div className="border-element bg-window flex min-h-0 flex-[1_1_50%] flex-col">
+							<BoardPlayPaneTabStrip label="Selection" />
+							<BoardSelectionPane />
+						</div>
+					</div>
+				</div>
+			</div>
+			<div className="border-element bg-panel flex h-full w-80 shrink-0 flex-col border-l">
+				<div className="border-element text-muted-foreground flex h-[20px] shrink-0 items-center gap-2 border-b px-2 text-xs">
+					<ClipboardList className="size-3.5 shrink-0" />
+					<span className="truncate font-medium tracking-wide uppercase">Inspector</span>
+				</div>
+				<div className="min-h-0 flex-1 overflow-auto">
+					<BoardSelectionInspectorPanel />
+				</div>
+			</div>
+		</div>
+	);
+}
 // #endregion 🔖Layout
 
 // #region 🔖Theme
-/** @emoji 🌓 Locks document `dark` mode so Golden Layout’s dark theme sheet matches the shell. */
+/** @emoji 🌓 Locks document `dark` mode so shared elements tokens match the UI shell. */
 function useBoardPlayDocumentChrome(): void {
 	useEffect(() => {
 		const root = document.documentElement;
 		const body = document.body;
 		root.classList.add("dark");
-		body.style.backgroundColor = "var(--background)";
+		body.style.backgroundColor = "var(--base)";
 		body.style.color = "var(--foreground)";
 		return () => {
 			root.classList.remove("dark");
@@ -480,34 +498,9 @@ function BoardPlayInner(): ReactElement {
 		[activePaneId, camerasByPane, fixture, setFixture, selectionByPane, setSelectionForPane],
 	);
 
-	const boardPlayApp: UIAppConfig = useMemo(
-		() => ({
-			defaultLayout: boardPlayLayout,
-			id: BOARD_PLAY_APP_ID,
-			label: "Board",
-			leftPanelTabs: [
-				{ content: () => <BoardFixtureLibraryPanel />, icon: Library, id: "board-play-library", order: 0 },
-			],
-			onActiveWindowChange: (windowKindId) => {
-				if (windowKindId === "board-overview" || windowKindId === "board-detail" || windowKindId === "board-selection") {
-					setActivePaneId(windowKindId);
-				}
-			},
-			rightPanelTabs: [
-				{ content: () => <BoardSelectionInspectorPanel />, icon: ClipboardList, id: "board-play-inspector", order: 0 },
-			],
-			windowKinds: boardWindowKinds,
-		}),
-		[setActivePaneId],
-	);
-
 	return (
 		<BoardPlayShellContext.Provider value={shellValue}>
-			<UI
-				apps={[boardPlayApp]}
-				defaultAppId={BOARD_PLAY_APP_ID}
-				initialPanelVisibility={{ leftSidePanel: true, rightSidePanel: true }}
-			/>
+			<BoardPlayWorkspace />
 		</BoardPlayShellContext.Provider>
 	);
 }
@@ -515,11 +508,9 @@ function BoardPlayInner(): ReactElement {
 function BoardPlayApp(): ReactElement {
 	useBoardPlayDocumentChrome();
 	return (
-		<LevelProvider level="window">
-			<div className={`flex h-screen min-h-0 w-screen flex-col ${getLevelBgClass("window")}`}>
-				<BoardPlayInner />
-			</div>
-		</LevelProvider>
+		<div className="bg-window text-foreground flex h-screen min-h-0 w-screen flex-col">
+			<BoardPlayInner />
+		</div>
 	);
 }
 

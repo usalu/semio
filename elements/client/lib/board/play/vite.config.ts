@@ -15,15 +15,7 @@ export default defineConfig({
   root: __dirname,
   plugins: [tailwindcss(), react()],
   resolve: {
-    alias: {
-      "@elements/ui": path.resolve(__dirname, "../../react/index.tsx"),
-    },
-  },
-  optimizeDeps: {
-    include: ["golden-layout"],
-  },
-  ssr: {
-    noExternal: ["golden-layout"],
+    alias: {},
   },
   server: {
     fs: {
