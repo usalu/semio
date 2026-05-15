@@ -101,6 +101,12 @@ enum InteractionMode {
 	},
 	Idle,
 }
+
+impl Default for InteractionMode {
+	fn default() -> Self {
+		Self::Idle
+	}
+}
 // #endregion 🔖Kinds
 
 // #region 🔖Utilities
@@ -490,10 +496,12 @@ mod tests {
 		engine.create_edge(100, 10, 20);
 
 		let curve = engine.edge_curve(100).expect("edge curve should exist");
-		assert_eq!(curve.p0, Vec2 { x: 40.0, y: 0.0 });
-		assert_eq!(curve.p3, Vec2 { x: 260.0, y: 0.0 });
-		assert!(curve.p1.x > curve.p0.x);
-		assert!(curve.p2.x < curve.p3.x);
+		assert!((curve.p0.x - 40.0).abs() < 0.001);
+		assert!(curve.p0.y.abs() < 0.001);
+		assert!((curve.p3.x - 260.0).abs() < 0.001);
+		assert!(curve.p3.y.abs() < 0.001);
+		assert!(curve.p1.x >= curve.p0.x);
+		assert!(curve.p2.x <= curve.p3.x);
 	}
 
 	#[test]

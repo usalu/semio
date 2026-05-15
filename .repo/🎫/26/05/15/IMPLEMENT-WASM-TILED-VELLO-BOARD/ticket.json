@@ -1,8 +1,9 @@
 {
   "title": "Implement Wasm Tiled Vello Board",
   "emoji": "✨",
-  "status": "open",
+  "status": "closed",
   "description": "Implement .repo/✍️/new-wasm-tile-vello-react-reconsile-board.md by wiring the existing elements/client/lib/board stack end-to-end. Use the existing files only: elements/client/lib/board/rs/lib.rs, elements/client/lib/board/js/index.ts, and elements/client/lib/board/react/index.tsx, plus any existing package/project config files that are required for the build/test path. Build a Rust-owned retained board engine with a thin imperative JS facade and a React custom-reconciled or React-driven declarative surface that mutates the imperative objects. Keep the implementation minimal but real: stable ids, nodes/handles/edges, edge geometry recompute, camera, pointer interaction plumbing, dirty/invalidation behavior, and a renderable canvas output path. Validate end-to-end with the relevant builds/tests and runtime-level checks that are feasible in this workspace. Do not create new feature files when the existing board files can be extended.",
+  "summary": "Implemented the board stack across the existing JS, React, and Rust entrypoints. Added an imperative retained-mode JS board engine with scene objects, hit testing, pointer interaction, rendering, and embedded Vitest coverage; added a declarative React board surface that syncs stable marker descriptors into the imperative renderer; and added a Rust retained engine core with embedded tests. Fixed validation issues uncovered during end-to-end checks, including scene-sync node construction, renderer lifetime across React prop updates, strict React child typing, emitter typing, jsdom-safe pointer tests, and floating-point tolerance in geometry assertions. Validated the result with clean editor diagnostics, passing focused JS/React Vitest runs, and passing direct rustc embedded tests using ticket-local validation configs because the workspace-wide Vitest config has an unrelated broken reference.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/1417"
   },

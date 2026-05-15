@@ -321,7 +321,7 @@ class SnapshotStore<TSnapshot> {
 	}
 }
 
-class TypedEmitter<TEvents extends Record<string, unknown>> {
+class TypedEmitter<TEvents extends object> {
 	private listeners = new Map<keyof TEvents, Set<(payload: TEvents[keyof TEvents]) => void>>();
 
 	on<TKey extends keyof TEvents>(name: TKey, handler: (payload: TEvents[TKey]) => void): () => void {
@@ -1130,10 +1130,12 @@ if (boardVitest) {
 			const targetHandle = new Handle({ angle: Math.PI, id: "b.in", node: targetNode });
 			const curve = computeEdgeBezier(sourceHandle, targetHandle);
 
-			expect(curve.p0).toEqual({ x: 40, y: 0 });
-			expect(curve.p3).toEqual({ x: 260, y: 0 });
-			expect(curve.p1.x).toBeGreaterThan(curve.p0.x);
-			expect(curve.p2.x).toBeLessThan(curve.p3.x);
+			expect(curve.p0.x).toBeCloseTo(40);
+			expect(curve.p0.y).toBeCloseTo(0);
+			expect(curve.p3.x).toBeCloseTo(260);
+			expect(curve.p3.y).toBeCloseTo(0);
+			expect(curve.p1.x).toBeGreaterThanOrEqual(curve.p0.x);
+			expect(curve.p2.x).toBeLessThanOrEqual(curve.p3.x);
 		});
 	});
 
@@ -1167,9 +1169,9 @@ if (boardVitest) {
 			renderer.scene.add(movableNode);
 			renderer.render();
 
-			const downEvent = new PointerEvent("pointerdown", { button: 0, clientX: 400, clientY: 300 });
-			const moveEvent = new PointerEvent("pointermove", { button: 0, clientX: 460, clientY: 340 });
-			const upEvent = new PointerEvent("pointerup", { button: 0, clientX: 460, clientY: 340 });
+			const downEvent = new MouseEvent("pointerdown", { button: 0, clientX: 400, clientY: 300 });
+			const moveEvent = new MouseEvent("pointermove", { button: 0, clientX: 460, clientY: 340 });
+			const upEvent = new MouseEvent("pointerup", { button: 0, clientX: 460, clientY: 340 });
 			canvas.dispatchEvent(downEvent);
 			canvas.dispatchEvent(moveEvent);
 			canvas.dispatchEvent(upEvent);

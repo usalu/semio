@@ -1,6 +1,7 @@
 import {
 	Children,
 	Fragment,
+	act,
 	createContext,
 	isValidElement,
 	useContext,
@@ -8,6 +9,7 @@ import {
 	useLayoutEffect,
 	useMemo,
 	useRef,
+	useState,
 	useSyncExternalStore,
 	type CSSProperties,
 	type ReactElement,
@@ -126,7 +128,7 @@ function appendHandleDescriptors(children: ReactNode, nodeId: string, handles: H
 			return;
 		}
 		if (child.type === Fragment) {
-			appendHandleDescriptors(child.props.children, nodeId, handles);
+			appendHandleDescriptors((child as ReactElement<{ children?: ReactNode }>).props.children, nodeId, handles);
 			return;
 		}
 		if (child.type === Handle) {
@@ -145,7 +147,7 @@ export function buildBoardSceneDescriptor(children: ReactNode): BoardSceneDescri
 				return;
 			}
 			if (child.type === Fragment) {
-				visit(child.props.children);
+				visit((child as ReactElement<{ children?: ReactNode }>).props.children);
 				return;
 			}
 			if (child.type === Node) {
@@ -166,6 +168,13 @@ export function buildBoardSceneDescriptor(children: ReactNode): BoardSceneDescri
 	return descriptor;
 }
 //#endregion 🔖Descriptor Build
+
+function requireRenderer(renderer: BoardRenderer | null): BoardRenderer {
+	if (!renderer) {
+		throw new Error("BoardCanvas did not publish its renderer.");
+	}
+	return renderer;
+}
 
 //#region 🔖Scene Sync
 function applyNodeProps(instance: BoardNodeObject, descriptor: NodeDescriptor): void {
@@ -225,7 +234,20 @@ export function syncBoardScene(renderer: BoardRenderer, descriptor: BoardSceneDe
 
 		for (const nodeDescriptor of descriptor.nodes) {
 			const existingNode = renderer.scene.getObjectById(nodeDescriptor.id);
-			const node = existingNode instanceof BoardNodeObject ? existingNode : new BoardNodeObject(nodeDescriptor);
+			const node =
+				existingNode instanceof BoardNodeObject
+					? existingNode
+					: new BoardNodeObject({
+							draggable: nodeDescriptor.draggable,
+							id: nodeDescriptor.id,
+							radius: nodeDescriptor.radius,
+							selected: nodeDescriptor.selected,
+							style: nodeDescriptor.style,
+							userData: nodeDescriptor.userData,
+							visible: nodeDescriptor.visible,
+							x: nodeDescriptor.x,
+							y: nodeDescriptor.y,
+					  });
 			if (!(existingNode instanceof BoardNodeObject)) {
 				renderer.scene.add(node);
 			}
@@ -278,6 +300,7 @@ export function BoardCanvas({
 }: BoardCanvasProps): ReactElement {
 	const canvasRef = useRef<HTMLCanvasElement | null>(null);
 	const containerRef = useRef<HTMLDivElement | null>(null);
+	const [contextRenderer, setContextRenderer] = useState<BoardRenderer | null>(null);
 	const rendererRef = useRef<BoardRenderer | null>(null);
 	const descriptor = useMemo(() => buildBoardSceneDescriptor(children), [children]);
 
@@ -288,15 +311,23 @@ export function BoardCanvas({
 		const renderer = new BoardRenderer({ canvas: canvasRef.current, renderMode });
 		rendererRef.current = renderer;
 		activeBoardRenderer = renderer;
-		onReady?.(renderer);
+		setContextRenderer(renderer);
 		return () => {
 			renderer.dispose();
 			if (activeBoardRenderer === renderer) {
 				activeBoardRenderer = null;
 			}
 			rendererRef.current = null;
+			setContextRenderer(null);
 		};
-	}, [onReady, renderMode]);
+	}, [renderMode]);
+
+	useEffect(() => {
+		if (!contextRenderer) {
+			return;
+		}
+		onReady?.(contextRenderer);
+	}, [contextRenderer, onReady]);
 
 	useLayoutEffect(() => {
 		const renderer = rendererRef.current;
@@ -348,7 +379,7 @@ export function BoardCanvas({
 	}, [height, width]);
 
 	return (
-		<BoardContext.Provider value={rendererRef.current}>
+		<BoardContext.Provider value={contextRenderer}>
 			<div
 				className={className}
 				ref={containerRef}
@@ -421,6 +452,7 @@ const boardReactVitest = (
 
 if (boardReactVitest) {
 	const { afterEach, describe, expect, it, vi } = boardReactVitest;
+	(globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
 	function installCanvasStub(): () => void {
 		const getContextSpy = vi.spyOn(HTMLCanvasElement.prototype, "getContext").mockImplementation(() => {
@@ -504,49 +536,54 @@ if (boardReactVitest) {
 			const root = createRoot(container);
 			let readyRenderer: BoardRenderer | null = null;
 
-			root.render(
-				<BoardCanvas
-					camera={{ x: 0, y: 0, zoom: 1 }}
-					height={480}
-					onReady={(renderer) => {
-						readyRenderer = renderer;
-					}}
-					renderMode="headless-test"
-					width={640}
-				>
-					<Node draggable id="a" radius={28} x={0} y={0}>
-						<Handle angle={0} id="a.out" />
-					</Node>
-					<Node id="b" radius={28} x={180} y={0}>
-						<Handle angle={Math.PI} id="b.in" />
-					</Node>
-					<Edge from="a.out" id="edge-1" to="b.in" />
-				</BoardCanvas>,
-			);
-
-			await Promise.resolve();
+			await act(async () => {
+				root.render(
+					<BoardCanvas
+						camera={{ x: 0, y: 0, zoom: 1 }}
+						height={480}
+						onReady={(renderer) => {
+							readyRenderer = renderer;
+						}}
+						renderMode="headless-test"
+						width={640}
+					>
+						<Node draggable id="a" radius={28} x={0} y={0}>
+							<Handle angle={0} id="a.out" />
+						</Node>
+						<Node id="b" radius={28} x={180} y={0}>
+							<Handle angle={Math.PI} id="b.in" />
+						</Node>
+						<Edge from="a.out" id="edge-1" to="b.in" />
+					</BoardCanvas>,
+				);
+				await Promise.resolve();
+			});
 			expect(readyRenderer).not.toBeNull();
-			expect(readyRenderer?.scene.getObjectById("edge-1")).toBeInstanceOf(BoardEdgeObject);
+			const createdRenderer = requireRenderer(readyRenderer);
+			expect(createdRenderer.scene.getObjectById("edge-1")).toBeInstanceOf(BoardEdgeObject);
 
-			root.render(
-				<BoardCanvas camera={{ x: 20, y: 10, zoom: 1.2 }} height={480} onReady={() => undefined} renderMode="headless-test" width={640}>
-					<Node draggable id="a" radius={28} x={120} y={40}>
-						<Handle angle={0} id="a.out" />
-					</Node>
-					<Node id="b" radius={28} x={180} y={0}>
-						<Handle angle={Math.PI} id="b.in" />
-					</Node>
-					<Edge from="a.out" id="edge-1" to="b.in" />
-				</BoardCanvas>,
-			);
-
-			await Promise.resolve();
-			const movedNode = readyRenderer?.scene.getObjectById("a") as BoardNodeObject;
+			await act(async () => {
+				root.render(
+					<BoardCanvas camera={{ x: 20, y: 10, zoom: 1.2 }} height={480} onReady={() => undefined} renderMode="headless-test" width={640}>
+						<Node draggable id="a" radius={28} x={120} y={40}>
+							<Handle angle={0} id="a.out" />
+						</Node>
+						<Node id="b" radius={28} x={180} y={0}>
+							<Handle angle={Math.PI} id="b.in" />
+						</Node>
+						<Edge from="a.out" id="edge-1" to="b.in" />
+					</BoardCanvas>,
+				);
+				await Promise.resolve();
+			});
+			const movedNode = createdRenderer.scene.getObjectById("a") as BoardNodeObject;
 			expect(movedNode.x).toBe(120);
 			expect(movedNode.y).toBe(40);
-			expect(readyRenderer?.getCameraSnapshot()).toEqual({ x: 20, y: 10, zoom: 1.2 });
+			expect(createdRenderer.getCameraSnapshot()).toEqual({ x: 20, y: 10, zoom: 1.2 });
 
-			root.unmount();
+			await act(async () => {
+				root.unmount();
+			});
 			restoreCanvas();
 		});
 	});
