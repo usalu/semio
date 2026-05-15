@@ -4,12 +4,15 @@
 #
 # Specs: Zero-touch Windows-native bootstrap that upgrades machine dependencies to the current supported baseline with winget, prepares repo-local caches and env vars, syncs workspace dependencies, configures repo-managed hooks/MCP clients, verifies a user-created native Neo4j Desktop semio DBMS, and installs the local VS Code extension when editor CLIs are available.
 #
-# Summary: Windows-native bootstrap for the semio monorepo.
+# Summary: Windows-native bootstrap for the semio monorepo. Invoke `.\script.ps1 setup` (full) or `.\script.ps1 start` (IDE session).
 #
 #endregion 🧲Header
 
 [CmdletBinding()]
 param(
+    [Parameter(Position = 0)]
+    [ValidateSet("setup", "start")]
+    [string]$Command = "setup",
     [switch]$SessionStart,
     [switch]$SkipMachineInstall,
     [switch]$SkipGlobalCliInstall,
@@ -20,6 +23,8 @@ param(
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
+
+$sessionStartEffective = $SessionStart.IsPresent -or ($Command -eq "start")
 
 #region 🎯Targets
 $script:PythonKind = "3.14"
@@ -740,7 +745,7 @@ function Ensure-NativeNeo4j {
 }
 #endregion 🔧Helpers
 
-if ($SessionStart) {
+if ($sessionStartEffective) {
     $SkipMachineInstall = $true
     $SkipGlobalCliInstall = $true
     $SkipEditorInstall = $true
@@ -830,7 +835,7 @@ Sync-CodexMcpConfig -RepoRoot $repoRoot
 
 #region 🗄️Neo4jRuntime
 Ensure-NativeNeo4j -RepoRoot $repoRoot
-if ($SessionStart) {
+if ($sessionStartEffective) {
     Write-Step "Native Windows IDE session setup complete."
     exit 0
 }

@@ -102,24 +102,17 @@ export class SetupScript extends Script {
   private runFull(): void {
     if (process.argv.includes("--with-native-os")) {
       if (process.platform === "win32") {
-        const ps = join(this.root, "setup.windows.script.ps1");
+        const ps = join(this.root, "script.ps1");
         if (existsSync(ps)) {
           console.log("[setup] Windows native bootstrap…");
-          tryRun("powershell", ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", ps]);
+          tryRun("powershell", ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", ps, "setup"]);
         }
-      } else if (process.platform === "darwin") {
-        const sh = join(this.root, "setup.mac.sh");
+      } else if (process.platform === "darwin" || process.platform === "linux") {
+        const sh = join(this.root, "script.sh");
         if (existsSync(sh)) {
-          console.log("[setup] macOS native bootstrap…");
-          tryRun("bash", [sh]);
+          console.log(`[setup] ${process.platform} native bootstrap…`);
+          tryRun("bash", [sh, "setup"]);
         }
-      } else {
-        const sh = join(this.root, "setup.linux.sh");
-        if (existsSync(sh)) {
-          console.log("[setup] Linux native bootstrap…");
-          tryRun("bash", [sh]);
-        }
-      }
     }
 
     console.log("[setup] uv sync…");
@@ -201,13 +194,11 @@ export class StartScript extends Script {
     }
 
     if (process.platform === "win32") {
-      runCmd("powershell.exe", ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", join(this.root, "setup.windows.script.ps1"), "-SessionStart"], {
+      runCmd("powershell.exe", ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", join(this.root, "script.ps1"), "start"], {
         cwd: this.root,
       });
-    } else if (process.platform === "darwin") {
-      runCmd("bash", [join(this.root, "start.mac.sh")], { cwd: this.root });
-    } else if (process.platform === "linux") {
-      runCmd("bash", [join(this.root, "start.linux.sh")], { cwd: this.root });
+    } else if (process.platform === "darwin" || process.platform === "linux") {
+      runCmd("bash", [join(this.root, "script.sh"), "start"], { cwd: this.root });
     } else {
       console.log(`[start] Unsupported platform ${process.platform}.`);
     }

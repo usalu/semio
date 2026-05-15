@@ -21626,6 +21626,8 @@ export interface UIAppConfig {
   footerItems?: FooterItem[];
   findItems?: UIFindItem[];
   onFindSelect?: (itemId: string) => void;
+  /** @emoji 🪟 Optional Golden Layout tab activation hook (`componentName` / window kind id). */
+  onActiveWindowChange?: (windowKindId: string) => void;
 }
 
 /**
@@ -21716,6 +21718,8 @@ export interface UIProps {
   mobile?: boolean;
   mobileQuery?: string;
   className?: string;
+  /** @emoji 📂 Initial left/right panel visibility (e.g. open library + inspector on load). */
+  initialPanelVisibility?: UIPanelVisibility;
 }
 
 /**
@@ -21820,11 +21824,15 @@ export const UI: React.FC<UIProps> = ({
   mobile,
   mobileQuery = "(max-width: 767px)",
   className,
+  initialPanelVisibility,
 }) => {
   const [activeAppId, setActiveAppId] = React.useState(defaultAppId ?? apps[0]?.id ?? "");
   const [leftPanelSize, setLeftPanelSize] = React.useState(280);
   const [rightPanelSize, setRightPanelSize] = React.useState(300);
-  const [panelVisibility, setPanelVisibility] = React.useState<UIPanelVisibility>({ leftSidePanel: false, rightSidePanel: false });
+  const [panelVisibility, setPanelVisibility] = React.useState<UIPanelVisibility>(() => ({
+    leftSidePanel: initialPanelVisibility?.leftSidePanel ?? false,
+    rightSidePanel: initialPanelVisibility?.rightSidePanel ?? false,
+  }));
   const [mobilePanelVisible, setMobilePanelVisible] = React.useState(false);
   const [searchOpen, setSearchOpen] = React.useState(false);
   const [findOpen, setFindOpen] = React.useState(false);
@@ -22044,6 +22052,7 @@ export const UI: React.FC<UIProps> = ({
                     )
                   : activeApp.defaultLayout
               }
+              onActiveWindowChange={activeApp.onActiveWindowChange}
             />
           }
         />

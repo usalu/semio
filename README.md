@@ -532,7 +532,7 @@ The devcontainer includes:
 Native Windows development is zero-touch through the checked-in bootstrap script:
 
 ```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File setup.windows.script.ps1
+powershell -NoProfile -ExecutionPolicy Bypass -File script.ps1 setup
 ```
 
 The script installs the same baseline toolchain the devcontainer provides on a fresh machine:
@@ -554,14 +554,13 @@ Native Neo4j Desktop must own the local DBMS. Create a Neo4j Desktop **Local Ins
 - Browser: `http://127.0.0.1:7474`
 - Database: `neo4j`
 
-Native macOS and Linux use the root scripts:
+Native macOS and Linux use the same root router:
 
 ```bash
-bash setup.mac.sh
-bash setup.linux.sh
+bash ./script.sh setup
 ```
 
-IDE startup runs the matching `start.*` script, which checks the native Neo4j Desktop `semio` DBMS at `bolt://localhost:7687`, verifies APOC, and attempts to create the technology databases `semio`, `elements`, `coda`, and `reuse` when the native DBMS edition supports multi-database administration. Neo4j Community uses the default `neo4j` database.
+IDE startup runs `bash ./script.sh start` (Windows: `.\script.ps1 start` or `.\start.windows.ps1`), which checks the native Neo4j Desktop `semio` DBMS at `bolt://localhost:7687`, verifies APOC, and attempts to create the technology databases `semio`, `elements`, `coda`, and `reuse` when the native DBMS edition supports multi-database administration. Neo4j Community uses the default `neo4j` database.
 
 ## 🪄 [AI](AGENTS.md) [↑](#-development-)
 
@@ -667,9 +666,9 @@ Used for small bugs and focused fixes with strong repo context 🧠
 
 Used for simple tasks (small edits, small refactors, small doc updates) 🧩
 
-The canonical root agent instructions live in `AGENTS.md`. Root aliases such as `CLAUDE.md` and `GEMINI.md` are recreated from that file when you run `bun ./setup.git.script.ts` (also invoked from `npm run setup`), using symlinks when the shell supports them and a hard-link fallback on restricted Windows shells.
+The canonical root agent instructions live in `AGENTS.md`. Root aliases such as `CLAUDE.md` and `GEMINI.md` are recreated from that file when you run `bun ./script.ts setup git` (also invoked from `npm run setup`), using symlinks when the shell supports them and a hard-link fallback on restricted Windows shells.
 
-Run `npm run setup` once after cloning for the full workspace bootstrap, or run `bun ./setup.git.script.ts` if you only need git symlink checkout, root alias files, and repo-managed hooks on Windows, macOS, and Linux. On Windows, true symlink creation may require Developer Mode or an elevated shell.
+Run `npm run setup` once after cloning for the full workspace bootstrap, or run `bun ./script.ts setup git` if you only need git symlink checkout, root alias files, and repo-managed hooks on Windows, macOS, and Linux. On Windows, true symlink creation may require Developer Mode or an elevated shell.
 
 ### ☁ Cloud [↑](#-tools-)
 
@@ -708,7 +707,7 @@ The default model for agent work is the one native to the platform we use for th
 
 All automation, CI runs, and agent workflows are controlled through the canonical root commands `setup`, `start`, `dev`, `generate`, `lint`, `format`, `test`, `build`, `publish`, and `purge` (see root `package.json`). Only `dev` is intended to stay live for watch mode, while the remaining commands exit so CI and agents can finish reliably.
 The root `package.json` uses Nx to orchestrate the command pipeline, and delegates bundle builds, tests, and publishing to Nx targets (`bun nx run …`).
-Git pre-commit is managed by [pre-commit](https://pre-commit.com/): run `bun ./setup.git.script.ts` once for symlinks and hooks, then use `pre-commit run --all-files` to run hooks on all files.
+Git pre-commit is managed by [pre-commit](https://pre-commit.com/): run `bun ./script.ts setup git` once for symlinks and hooks, then use `pre-commit run --all-files` to run hooks on all files.
 
 # 🏘 [Examples](semio/examples) [↑](#-overview)
 

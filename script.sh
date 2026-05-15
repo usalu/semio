@@ -2,9 +2,29 @@
 # SPDX-License-Identifier: AGPL-3.0-only
 # #region 🔖Header
 # Zero-touch macOS/Linux bootstrap: Neo4j Desktop, uv, Neo4j env vars for MCP, bun install, workspace:setup.
+# 🧭Invoke: `bash ./script.sh setup` (full bootstrap) or `bash ./script.sh start` (IDE session / Neo4j-only path).
 # Native setup is rooted here and does not depend on devcontainer scripts.
 # #endregion 🔖Header
 set -euo pipefail
+
+#region 🔖Dispatch
+REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+case "${1:-}" in
+setup)
+  shift || true
+  export SEMIO_SESSION_START=0
+  ;;
+start)
+  shift || true
+  export SEMIO_SESSION_START=1
+  ;;
+*)
+  printf '%s\n' "usage: bash ./script.sh <setup|start>" >&2
+  exit 1
+  ;;
+esac
+cd "$REPO_ROOT" || exit 1
+#endregion 🔖Dispatch
 
 #region 🔖Config
 NEO4J_DESKTOP_INSTALLER_VERSION="${NEO4J_DESKTOP_INSTALLER_VERSION:-1.6.3}"
@@ -14,11 +34,6 @@ SKIP_NEO4J_DESKTOP="${SKIP_NEO4J_DESKTOP:-0}"
 SKIP_REPO_BOOTSTRAP="${SKIP_REPO_BOOTSTRAP:-0}"
 SEMIO_SESSION_START="${SEMIO_SESSION_START:-0}"
 #endregion 🔖Config
-
-#region 🔖Paths
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-REPO_ROOT="$SCRIPT_DIR"
-#endregion 🔖Paths
 
 #region 🔖Logging
 log() {
@@ -223,7 +238,7 @@ ensure_java_runtime() {
     return 0
   fi
   if [ "$SEMIO_SESSION_START" = "1" ]; then
-    log "Java 21+ is required for Neo4j. Run setup.mac.sh or setup.linux.sh to install it."
+    log "Java 21+ is required for Neo4j. Run bash ./script.sh setup to install it."
     return 1
   fi
   case "$(uname -s)" in

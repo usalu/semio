@@ -8,3 +8,5 @@ Ticket work: elements board play page, UI shell, fixture DnD, `setSelectionIds`,
 - `elements/client/lib/board/play/*` — Vite play app, triptych layout, Nakagin fixture
 - `elements/client/lib/board/{package.json,project.json,dev.script.ts,vitest.config.ts}`
 - `dev.script.ts`, `package.json` — `dev board` / `dev:board`
+- `elements/client/lib/react/index.tsx` — `UIAppConfig.onActiveWindowChange`, `UIProps.initialPanelVisibility`, `UICanvas` wiring
+- Triptych: per-pane cameras (`triptychCamerasFromFixture`), per-pane selection (`selectionSeedForFixture` + `BoardSelectionReporter`), left panel fixture drop + stats, right panel inspector for active pane + selection
