@@ -1,20 +1,10 @@
 #!/usr/bin/env bun
-/**
- * 🔧 Git workspace helpers: `setup` enables symlink policy, AGENTS.md alias links, and repo client `configure`.
- */
+/** 🔗 Git symlink policy, AGENTS.md alias files, and repo client `configure` (invoked from `setup.script.ts`). */
 import { execFileSync } from "node:child_process";
 import { existsSync, linkSync, rmSync, symlinkSync } from "node:fs";
 import { join } from "node:path";
 
 const root = import.meta.dir;
-const sub = process.argv[2];
-
-if (sub !== "setup") {
-  console.error("usage: bun ./git.script.ts setup");
-  process.exit(1);
-}
-
-//#region 🔖GitSetup
 const source = "AGENTS.md";
 const aliases = ["CLAUDE.md", "GEMINI.md"];
 
@@ -49,4 +39,3 @@ for (const alias of aliases) {
     linkSync(join(root, source), aliasPath);
   }
 }
-//#endregion

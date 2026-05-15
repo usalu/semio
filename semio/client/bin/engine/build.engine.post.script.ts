@@ -19,7 +19,7 @@ import { join } from "path";
  * Post-build working directory.
  * MUST resolve to the engine folder.
  **/
-const cwd = __dirname;
+const cwd = import.meta.dir;
 /**
  * Platform-specific executable extension.
  * Windows uses .exe, other platforms have no extension.

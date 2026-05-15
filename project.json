@@ -4,34 +4,6 @@
   "projectType": "application",
   "sourceRoot": ".",
   "targets": {
-    "export-neo4j": {
-      "executor": "nx:run-commands",
-      "cache": false,
-      "options": {
-        "command": "bun ./export.neo4j.script.ts"
-      }
-    },
-    "generate": {
-      "executor": "nx:run-commands",
-      "cache": false,
-      "options": {
-        "command": "bun ./generate.script.ts"
-      }
-    },
-    "generate-neo4j": {
-      "executor": "nx:run-commands",
-      "cache": false,
-      "options": {
-        "command": "bun ./generate.neo4j.script.ts"
-      }
-    },
-    "migrate-neo4j": {
-      "executor": "nx:run-commands",
-      "cache": false,
-      "options": {
-        "command": "bun ./migrate.neo4j.script.ts"
-      }
-    },
     "setup": {
       "executor": "nx:run-commands",
       "cache": false,
@@ -46,46 +18,114 @@
         "command": "bun ./start.script.ts"
       }
     },
-    "lint": {
+    "dev": {
       "executor": "nx:run-commands",
-      "dependsOn": [],
+      "cache": false,
       "options": {
-        "command": "bun ./lint.script.ts"
-      }
-    },
-    "test": {
-      "executor": "nx:run-commands",
-      "dependsOn": [],
-      "options": {
-        "command": "bun ./test.script.ts"
-      }
-    },
-    "build": {
-      "executor": "nx:run-commands",
-      "dependsOn": [],
-      "options": {
-        "command": "bun ./build.script.ts"
+        "command": "bun ./dev.script.ts",
+        "forwardAllArgs": true
       }
     },
     "dev-mcp": {
       "executor": "nx:run-commands",
       "cache": false,
       "options": {
-        "command": "bun ./dev-mcp.script.ts"
+        "command": "bun ./dev.script.ts mcp",
+        "forwardAllArgs": true
       }
     },
     "dev-mcp-engine": {
       "executor": "nx:run-commands",
       "cache": false,
       "options": {
-        "command": "bun ./dev-mcp.script.ts engine"
+        "command": "bun ./dev.script.ts mcp engine",
+        "forwardAllArgs": true
       }
     },
     "dev-mcp-repo": {
       "executor": "nx:run-commands",
       "cache": false,
       "options": {
-        "command": "bun ./dev-mcp.script.ts repo"
+        "command": "bun ./dev.script.ts mcp repo",
+        "forwardAllArgs": true
+      }
+    },
+    "generate": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./generate.script.ts",
+        "forwardAllArgs": true
+      }
+    },
+    "generate-neo4j": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./generate.neo4j.script.ts",
+        "forwardAllArgs": true
+      }
+    },
+    "generate-neo4j-migrate": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./generate.neo4j.migrate.script.ts",
+        "forwardAllArgs": true
+      }
+    },
+    "lint": {
+      "executor": "nx:run-commands",
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./lint.script.ts",
+        "forwardAllArgs": true
+      }
+    },
+    "lint-repo": {
+      "executor": "nx:run-commands",
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./lint.script.ts repo"
+      }
+    },
+    "format": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./format.script.ts"
+      }
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./test.script.ts",
+        "forwardAllArgs": true
+      }
+    },
+    "build": {
+      "executor": "nx:run-commands",
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./build.script.ts",
+        "forwardAllArgs": true
+      }
+    },
+    "publish": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./publish.script.ts",
+        "forwardAllArgs": true
+      }
+    },
+    "purge": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./purge.script.ts",
+        "forwardAllArgs": true
       }
     }
   }

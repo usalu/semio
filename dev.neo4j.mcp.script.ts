@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 /**
- * 🗄️ Cross-platform Neo4j MCP launcher; Bolt defaults to localhost. The graph database is **pinned** to the
- * technology positional (`semio` | `elements` | `coda` | `reuse`) so host `NEO4J_DATABASE` never overrides the wrong DB.
+ * 🗄️ Neo4j MCP launcher (`dev` + `neo4j` + `mcp`); Bolt defaults to localhost. Technology positional
+ * (`semio` | `elements` | `coda` | `reuse`) pins `NEO4J_DATABASE` so the wrong graph is never targeted.
  */
 import { spawnSync } from "node:child_process";
 

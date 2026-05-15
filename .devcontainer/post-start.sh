@@ -276,7 +276,7 @@ reload_neo4j_from_repo_cypher() {
   done
   echo "✅ Neo4j reloaded database ${graph_db} from repo ($imported non-empty cypher files applied)."
   if command -v bun >/dev/null 2>&1 && [ -n "${WORKSPACE:-}" ]; then
-    (cd "$WORKSPACE" && NEO4J_DATABASE="$graph_db" bun ./prune.neo4j.script.ts) || echo "⚠️ Neo4j legacy-property prune skipped."
+    (cd "$WORKSPACE" && NEO4J_DATABASE="$graph_db" bun ./purge.neo4j.script.ts) || echo "⚠️ Neo4j legacy-property prune skipped."
   fi
 }
 

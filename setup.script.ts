@@ -1,11 +1,10 @@
 #!/usr/bin/env bun
 /**
- * 🧰 Zero-touch workspace bootstrap: uv, neo4j MCP prefetch (uvx), cargo, go client, dotnet,
- * rust wasm target, cargo wasm flags, Playwright browsers, Linux Electron sandbox, git hooks, VSIX build.
- * Pass `--postinstall` for the lightweight lightningcss native-binary fix only (npm `postinstall` hook).
+ * 🧰 Zero-touch workspace bootstrap: optional native OS bootstrap (`setup.*.sh` / `setup.windows.script.ps1`),
+ * uv, neo4j MCP prefetch (uvx), cargo, go client, dotnet, rust wasm, Playwright, Electron sandbox, `setup.git`, VSIX.
  */
 import { execFileSync } from "node:child_process";
-import { existsSync, mkdirSync, chmodSync, chownSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, chmodSync, chownSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { join } from "node:path";
 
@@ -27,37 +26,27 @@ function tryRun(cmd: string, args: string[], opts: { cwd?: string } = {}) {
   }
 }
 
-//#region 🔖PostinstallLightningcss
-if (process.argv.includes("--postinstall")) {
-  const pkgPath = join(root, "node_modules", "lightningcss", "package.json");
-  if (!existsSync(pkgPath)) process.exit(0);
-  const { version } = JSON.parse(readFileSync(pkgPath, "utf8")) as { version: string };
-  const report = process.report?.getReport?.() as
-    | { header?: { glibcVersionRuntime?: string } }
-    | undefined;
-  const libc =
-    process.platform === "linux"
-      ? report?.header?.glibcVersionRuntime
-        ? "gnu"
-        : "musl"
-      : "";
-  const key = [process.platform, process.arch, libc].filter(Boolean).join("/");
-  const pkgByKey: Record<string, string> = {
-    "win32/x64": "lightningcss-win32-x64-msvc",
-    "win32/arm64": "lightningcss-win32-arm64-msvc",
-    "darwin/x64": "lightningcss-darwin-x64",
-    "darwin/arm64": "lightningcss-darwin-arm64",
-    "linux/x64/gnu": "lightningcss-linux-x64-gnu",
-    "linux/x64/musl": "lightningcss-linux-x64-musl",
-    "linux/arm64/gnu": "lightningcss-linux-arm64-gnu",
-    "linux/arm64/musl": "lightningcss-linux-arm64-musl",
-  };
-  const platformPkg = pkgByKey[key];
-  if (!platformPkg) process.exit(0);
-  if (existsSync(join(root, "node_modules", platformPkg))) process.exit(0);
-  const spec = `${platformPkg}@${version}`;
-  execFileSync("bun", ["add", "--no-save", spec], { cwd: root, stdio: "inherit" });
-  process.exit(0);
+//#region 🔖NativeOsBootstrap
+if (process.argv.includes("--with-native-os")) {
+  if (process.platform === "win32") {
+    const ps = join(root, "setup.windows.script.ps1");
+    if (existsSync(ps)) {
+      console.log("[setup] Windows native bootstrap (setup.windows.script.ps1)…");
+      tryRun("powershell", ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", ps]);
+    }
+  } else if (process.platform === "darwin") {
+    const sh = join(root, "setup.mac.sh");
+    if (existsSync(sh)) {
+      console.log("[setup] macOS native bootstrap (setup.mac.sh)…");
+      tryRun("bash", [sh]);
+    }
+  } else {
+    const sh = join(root, "setup.linux.sh");
+    if (existsSync(sh)) {
+      console.log("[setup] Linux native bootstrap (setup.linux.sh)…");
+      tryRun("bash", [sh]);
+    }
+  }
 }
 //#endregion
 
@@ -121,7 +110,7 @@ if (process.platform === "linux") {
 
 //#region 🔖GitWorkspace
 console.log("[setup] git workspace (symlinks, hooks)…");
-tryRun("bun", [join(root, "git.script.ts"), "setup"]);
+tryRun("bun", [join(root, "setup.git.script.ts")]);
 //#endregion
 
 console.log("[setup] VS Code extension build & package…");

@@ -184,6 +184,16 @@ TODO: Start new project `elements` that offers domain-agnostic primitives (such 
 
 ---
 
+Make sure everything strictly follows the naming pattern.
+Only these commands are allowed: `setup`, `start`, `dev`, `generate`, `lint`, `format`, `test`, `build`, `publish`, `purge`
+COMMAND.SUB...script.ts
+The only exception are the native os scripts that are called from the common script.
+e.g. setup.windows.script.ps1 must be called from setup.script.ts when on windows.
+Make sure get rid of all old scripts.
+FIx the duplicates. There are some ts file which are scripts that dont have the script naming.
+
+---
+
 The current monorepo doesnt use clean scripts.
 Remove all of them and replace them with clean new style:
 

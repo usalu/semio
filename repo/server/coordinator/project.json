@@ -14,7 +14,7 @@
       "executor": "nx:run-commands",
       "options": {
         "cwd": "repo/server/coordinator",
-        "command": "bun scripts/build-server.script.ts",
+        "command": "bun ./build.server.script.ts",
         "forwardAllArgs": true
       }
     },

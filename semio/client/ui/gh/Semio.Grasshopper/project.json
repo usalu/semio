@@ -14,7 +14,7 @@
       "executor": "nx:run-commands",
       "options": {
         "cwd": "semio/client/ui/gh/Semio.Grasshopper",
-        "command": "bun scripts/run-tests.script.ts",
+        "command": "bun ./test.gh.script.ts",
         "forwardAllArgs": true
       }
     },

@@ -724,7 +724,7 @@ function Ensure-NativeNeo4j {
         $env:NEO4J_DATABASE = $graphDb
         Push-Location $RepoRoot
         try {
-            & bun "./prune.neo4j.script.ts" | Out-Null
+            & bun "./purge.neo4j.script.ts" | Out-Null
             if ($LASTEXITCODE -ne 0) {
                 Write-Step "Neo4j legacy-property prune exited with code $LASTEXITCODE (cypher-shell may be missing)."
             }
