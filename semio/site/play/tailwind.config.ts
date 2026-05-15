@@ -13,7 +13,7 @@
 // Configuration MUST use the shared tailwindConfig preset from @elements/ui.
 
 import type { Config } from "tailwindcss";
-import { tailwindConfig } from "../../../elements/client/lib/ui";
+import { tailwindConfig } from "../../../elements/client/lib/react";
 
 /**
  * Tailwind CSS configuration with content paths and shared preset.

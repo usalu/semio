@@ -9,7 +9,7 @@ import type { App as McpApp } from "@modelcontextprotocol/ext-apps";
 import { useApp, useDocumentTheme } from "@modelcontextprotocol/ext-apps/react";
 import React, { useMemo, useState } from "react";
 import { createRoot } from "react-dom/client";
-import { Card, CardGrid, i18next, initReactI18next } from "../../../../elements/client/lib/ui";
+import { Card, CardGrid, i18next, initReactI18next } from "../../../../elements/client/lib/react";
 
 i18next.use(initReactI18next).init({
   lng: "en",

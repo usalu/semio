@@ -12,7 +12,7 @@
 // Tailwind CSS configuration extending the shared semio preset for the desktop application.
 // Configuration MUST use the shared tailwindConfig preset from @elements/ui.
 
-import { tailwindConfig } from "../../../../elements/client/lib/ui";
+import { tailwindConfig } from "../../../../elements/client/lib/react";
 import type { Config } from "tailwindcss";
 
 /**

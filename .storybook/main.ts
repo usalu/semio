@@ -22,11 +22,15 @@ const __dirname = dirname(__filename);
 const repoRootPath = resolve(__dirname, "..");
 const elementsUiDir = resolve(repoRootPath, "elements/client/lib/react");
 const semioUiDir = resolve(repoRootPath, "semio/client/lib/react/rendering");
-const semioReactEntryPath = resolve(repoRootPath, "semio/client/lib/react/logic/index.tsx");
+const semioReactEntryPath = resolve(repoRootPath, "semio/client/lib/react/index.tsx");
 const semioJsEntryPath = resolve(repoRootPath, "semio/client/lib/js/index.ts");
 const semioRsWasmEntryPath = resolve(repoRootPath, "semio/client/lib/rs/pkg/semio.js");
 const semioAssetsDir = resolve(repoRootPath, "semio/assets");
 const semioAlgorithmsEntryPath = resolve(repoRootPath, "semio/dev/algorithms/index.ts");
+
+function toVitePath(value: string): string {
+	return value.replaceAll("\\", "/");
+}
 
 function getAbsolutePath(value: string): string {
 	try {
@@ -58,14 +62,14 @@ const config: StorybookConfig = {
 		config.resolve = config.resolve || {};
 		config.resolve.alias = {
 			...(config.resolve.alias || {}),
-			"@elements/ui": elementsUiDir,
-			"@elements/ui/elements": resolve(elementsUiDir, "index.tsx"),
-			"@semio/ui": semioUiDir,
-			"@semio/react": semioReactEntryPath,
-			"@semio/js": semioJsEntryPath,
-			"@semio/rs-wasm": semioRsWasmEntryPath,
-			"@semio/assets": semioAssetsDir,
-			"@semio/algorithms": semioAlgorithmsEntryPath,
+			"@elements/ui": toVitePath(elementsUiDir),
+			"@elements/ui/elements": toVitePath(resolve(elementsUiDir, "index.tsx")),
+			"@semio/ui": toVitePath(semioUiDir),
+			"@semio/react": toVitePath(semioReactEntryPath),
+			"@semio/js": toVitePath(semioJsEntryPath),
+			"@semio/rs-wasm": toVitePath(semioRsWasmEntryPath),
+			"@semio/assets": toVitePath(semioAssetsDir),
+			"@semio/algorithms": toVitePath(semioAlgorithmsEntryPath),
 		};
 		config.assetsInclude = [...(config.assetsInclude ?? []), "**/*.wasm"];
 		config.server = config.server || {};

@@ -56,3 +56,8 @@ You MUST follow the following rules unless explicitly asked to do otherwise:
 - You MUST only ask when in planning mode. Otherwise you MUST be opinionated and take the most appropriate choice directly.
 - You MUST NOT stop halfway and ask if you should continue.
 - You MUST be thorough.
+
+- You MUST only write consice code.
+  - You MUST NOT comment inside definitions.
+  - You SHOULD add links to related resources in native docstring format.
+    - You MUST start all docstrings with a unique and fitting emoji.

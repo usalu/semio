@@ -9,8 +9,8 @@
 // #region ⚛️Imports
 import type { ReactNode } from "react";
 import * as React from "react";
-import type { Attribute, Coordinate, Entity, GraphRootKind, OffsetInput, PieceBlueprint, Plane, Position, PositionInput, SetError, SetResult } from "../js";
-import { Alternative, Author, Backbone, Concept, Connection, Connector, Design, File, Graph, Kit, LocalProvider, Piece, PiecesOperation, Port, Quality, RemoteProvider, Representation, Session, Side, Store, Tag, TheKit, Type } from "../js";
+import type { Attribute, Coordinate, Entity, GraphRootKind, OffsetInput, PieceBlueprint, Plane, Position, PositionInput, SetError, SetResult } from "../../js";
+import { Alternative, Author, Backbone, Concept, Connection, Connector, Design, File, Graph, Kit, LocalProvider, Piece, PiecesOperation, Port, Quality, RemoteProvider, Representation, Session, Side, Store, Tag, TheKit, Type } from "../../js";
 // #endregion ⚛️Imports
 
 // #region 🪝FieldBind

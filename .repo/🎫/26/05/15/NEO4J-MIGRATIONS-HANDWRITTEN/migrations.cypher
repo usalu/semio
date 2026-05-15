@@ -1,5 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Hand-maintained Neo4j migrations for the semio graph. Run via migrate.neo4j.script.ts in this folder (not chained from generate).
+// Containment edges use relationship type OWNS (never HAS).
+
+//#region RelabelHasRelationshipsToOwns
+MATCH (a)-[r:HAS]->(b)
+CREATE (a)-[r2:OWNS]->(b)
+SET r2 += properties(r)
+DELETE r;
+//#endregion RelabelHasRelationshipsToOwns
 
 //#region RelabelFieldNodes
 MATCH (f:Field {kind: 'EMBEDDED'})
@@ -37,7 +45,7 @@ CREATE FULLTEXT INDEX semio_name_fulltext IF NOT EXISTS FOR (n:Class|Constraint|
 //#endregion ReplaceFieldIndexes
 
 //#region StripEntityModuleInterfaceEdges
-MATCH (legacy:Module {name: 'Entity'})-[r:HAS]->(i:Interface)
+MATCH (legacy:Module {name: 'Entity'})-[r:OWNS]->(i:Interface)
 WHERE i.name IN ['WeakEntity', 'StrongEntity', 'RichStrongEntity', 'Artifact', 'Document', 'Data', 'Event']
 DELETE r;
 //#endregion StripEntityModuleInterfaceEdges
@@ -45,56 +53,79 @@ DELETE r;
 //#region HoistEntityModuleChildrenToDomain
 MATCH (dom:Module {name: 'Domain'})
 MATCH (ent:Module {name: 'Entity'})
-MATCH (ent)-[r:HAS]->(ch)
-MERGE (dom)-[:HAS]->(ch)
+MATCH (ent)-[r:OWNS]->(ch)
+MERGE (dom)-[:OWNS]->(ch)
 DELETE r;
 //#endregion HoistEntityModuleChildrenToDomain
 
 //#region RemoveEntityModuleNode
-MATCH (dom:Module {name: 'Domain'})-[r:HAS]->(ent:Module {name: 'Entity'})
+MATCH (dom:Module {name: 'Domain'})-[r:OWNS]->(ent:Module {name: 'Entity'})
 DELETE r;
 MATCH (ent:Module {name: 'Entity'})
 DETACH DELETE ent;
 //#endregion RemoveEntityModuleNode
 
-//#region DomainInterfaceSubmoduleMirror
-MATCH (dom:Module {name: 'Domain'})
-MERGE (dom)-[:HAS]->(wmod:Module {name: 'WeakEntity'})
-MERGE (dom)-[:HAS]->(smod:Module {name: 'StrongEntity'})
-MERGE (smod)-[:HAS]->(rmod:Module {name: 'RichStrongEntity'})
-MERGE (rmod)-[:HAS]->(amod:Module {name: 'Artifact'})
-MERGE (amod)-[:HAS]->(dmod:Module {name: 'Document'})
-MERGE (wmod)-[:HAS]->(dataMod:Module {name: 'Data'})
-MERGE (wmod)-[:HAS]->(eventMod:Module {name: 'Event'});
+//#region FoldDupGeneralUnderDomain
+MATCH (schema:Module {name: 'Schema'})-[:OWNS]->(genCanon:Module {name: 'General'})
+MATCH (dom:Module {name: 'Domain'})-[:OWNS]->(genDup:Module {name: 'General'})
+WHERE id(genCanon) <> id(genDup)
+MATCH (genDup)-[r:OWNS]->(ch)
+MERGE (genCanon)-[:OWNS]->(ch)
+DELETE r;
+MATCH (schema:Module {name: 'Schema'})-[:OWNS]->(genCanon:Module {name: 'General'})
+MATCH (dom:Module {name: 'Domain'})-[rx:OWNS]->(genDup:Module {name: 'General'})
+WHERE id(genCanon) <> id(genDup)
+DELETE rx
+DETACH DELETE genDup;
+//#endregion FoldDupGeneralUnderDomain
 
-MATCH (dom:Module {name: 'Domain'})-[:HAS]->(wmod:Module {name: 'WeakEntity'})
+//#region HoistAllDomainChildrenToSchemaGeneral
+MATCH (schema:Module {name: 'Schema'})-[:OWNS]->(gen:Module {name: 'General'})
+MATCH (dom:Module {name: 'Domain'})-[r:OWNS]->(ch)
+MERGE (gen)-[:OWNS]->(ch)
+DELETE r;
+//#endregion HoistAllDomainChildrenToSchemaGeneral
+
+//#region GeneralInterfaceSubmoduleMirror
+MATCH (schema:Module {name: 'Schema'})-[:OWNS]->(gen:Module {name: 'General'})
+MERGE (gen)-[:OWNS]->(wmod:Module {name: 'WeakEntity'})
+MERGE (gen)-[:OWNS]->(smod:Module {name: 'StrongEntity'})
+MERGE (smod)-[:OWNS]->(rmod:Module {name: 'RichStrongEntity'})
+MERGE (rmod)-[:OWNS]->(amod:Module {name: 'Artifact'})
+MERGE (amod)-[:OWNS]->(dmod:Module {name: 'Document'})
+MERGE (wmod)-[:OWNS]->(dataMod:Module {name: 'Data'})
+MERGE (wmod)-[:OWNS]->(eventMod:Module {name: 'Event'});
+
+MATCH (schema:Module {name: 'Schema'})-[:OWNS]->(gen:Module {name: 'General'})
+MATCH (gen)-[:OWNS]->(wmod:Module {name: 'WeakEntity'})
 MATCH (i:Interface {name: 'WeakEntity'})
-MERGE (wmod)-[:HAS]->(i);
+MERGE (wmod)-[:OWNS]->(i);
 
-MATCH (dom:Module {name: 'Domain'})-[:HAS]->(smod:Module {name: 'StrongEntity'})
+MATCH (schema:Module {name: 'Schema'})-[:OWNS]->(gen:Module {name: 'General'})
+MATCH (gen)-[:OWNS]->(smod:Module {name: 'StrongEntity'})
 MATCH (i:Interface {name: 'StrongEntity'})
-MERGE (smod)-[:HAS]->(i);
+MERGE (smod)-[:OWNS]->(i);
 
-MATCH (s:Module {name: 'StrongEntity'})-[:HAS]->(rmod:Module {name: 'RichStrongEntity'})
+MATCH (s:Module {name: 'StrongEntity'})-[:OWNS]->(rmod:Module {name: 'RichStrongEntity'})
 MATCH (i:Interface {name: 'RichStrongEntity'})
-MERGE (rmod)-[:HAS]->(i);
+MERGE (rmod)-[:OWNS]->(i);
 
-MATCH (r:Module {name: 'RichStrongEntity'})-[:HAS]->(amod:Module {name: 'Artifact'})
+MATCH (r:Module {name: 'RichStrongEntity'})-[:OWNS]->(amod:Module {name: 'Artifact'})
 MATCH (i:Interface {name: 'Artifact'})
-MERGE (amod)-[:HAS]->(i);
+MERGE (amod)-[:OWNS]->(i);
 
-MATCH (a:Module {name: 'Artifact'})-[:HAS]->(dmod:Module {name: 'Document'})
+MATCH (a:Module {name: 'Artifact'})-[:OWNS]->(dmod:Module {name: 'Document'})
 MATCH (i:Interface {name: 'Document'})
-MERGE (dmod)-[:HAS]->(i);
+MERGE (dmod)-[:OWNS]->(i);
 
-MATCH (w:Module {name: 'WeakEntity'})-[:HAS]->(dataMod:Module {name: 'Data'})
+MATCH (w:Module {name: 'WeakEntity'})-[:OWNS]->(dataMod:Module {name: 'Data'})
 MATCH (i:Interface {name: 'Data'})
-MERGE (dataMod)-[:HAS]->(i);
+MERGE (dataMod)-[:OWNS]->(i);
 
-MATCH (w:Module {name: 'WeakEntity'})-[:HAS]->(eventMod:Module {name: 'Event'})
+MATCH (w:Module {name: 'WeakEntity'})-[:OWNS]->(eventMod:Module {name: 'Event'})
 MATCH (i:Interface {name: 'Event'})
-MERGE (eventMod)-[:HAS]->(i);
-//#endregion DomainInterfaceSubmoduleMirror
+MERGE (eventMod)-[:OWNS]->(i);
+//#endregion GeneralInterfaceSubmoduleMirror
 
 //#region RemoveEmptyKitSchemaStub
 MATCH (m:Module {name: 'ScopedCommand'})
@@ -104,26 +135,26 @@ DETACH DELETE m;
 //#endregion RemoveEmptyKitSchemaStub
 
 //#region RenameKitEntityModuleToKit
-MATCH (parent:Module {name: 'KitEntity'})-[:HAS]->(inner:Module {name: 'Kit'})
-MATCH (inner)-[r:HAS]->(c:Class {name: 'Kit'})
-MERGE (parent)-[:HAS]->(c)
+MATCH (parent:Module {name: 'KitEntity'})-[:OWNS]->(inner:Module {name: 'Kit'})
+MATCH (inner)-[r:OWNS]->(c:Class {name: 'Kit'})
+MERGE (parent)-[:OWNS]->(c)
 DELETE r;
-MATCH (inner:Module {name: 'Kit'})<-[:HAS]-(parent:Module {name: 'KitEntity'})
+MATCH (inner:Module {name: 'Kit'})<-[:OWNS]-(parent:Module {name: 'KitEntity'})
 DETACH DELETE inner;
 MATCH (m:Module {name: 'KitEntity'})
 SET m.name = 'Kit';
 //#endregion RenameKitEntityModuleToKit
 
 //#region ScalarModuleUnderSchemaGeneral
-OPTIONAL MATCH (d:Module {name: 'Domain'})-[r:HAS]->(sm:Module {name: 'Scalar'})
+OPTIONAL MATCH (d:Module {name: 'Domain'})-[r:OWNS]->(sm:Module {name: 'Scalar'})
 DELETE r;
-MATCH (schema:Module {name: 'Schema'})-[:HAS]->(gen:Module {name: 'General'})
+MATCH (schema:Module {name: 'Schema'})-[:OWNS]->(gen:Module {name: 'General'})
 MATCH (sm:Module {name: 'Scalar'})
-MERGE (gen)-[:HAS]->(sm);
+MERGE (gen)-[:OWNS]->(sm);
 //#endregion ScalarModuleUnderSchemaGeneral
 
 //#region RemoveFieldKindMetaModule
-MATCH (fk:Module {name: 'FieldKind'})-[:HAS]->(e:Enum)
+MATCH (fk:Module {name: 'FieldKind'})-[:OWNS]->(e:Enum)
 DETACH DELETE e;
 MATCH (fk:Module {name: 'FieldKind'})
 DETACH DELETE fk;

@@ -1,15 +1,15 @@
 ---
 name: Consolidate Storybooks Into Root
-overview: Collapse the three bundle-local Storybook configs into the existing root `.storybook` workspace, grouped as `.storybook/<technology>/<bundle>/stories/...`, and remove the per-bundle `.storybook` folders.
+overview: One root Storybook under `.storybook/` with all duplicate config and helpers merged; all story modules live under a single top-level `.storybook/stories/<technology>/<bundle>/` tree (not merged into fewer story files).
 todos:
   - id: ticket
     content: Open repo ticket for the consolidation
-    status: pending
+    status: in_progress
   - id: move-stories
-    content: Move stories/nakagin from the 3 bundle .storybook folders into .storybook/<tech>/<bundle>/
+    content: Move *.stories.* into .storybook/stories/<tech>/<bundle>/ (single top-level stories tree); non-story helpers to fixtures/ and semio/algorithms/kit-store/
     status: pending
   - id: consolidate-helpers
-    content: Create single .storybook/withLevel.tsx, withTheme.tsx, vitest.setup.ts
+    content: Single root withLevel.tsx (globals.level + optional args.level), withTheme.tsx, vitest.setup.ts; delete all bundle main/preview/with*
     status: pending
   - id: update-main-preview
     content: Update .storybook/main.ts globs and .storybook/preview.ts decorator imports
@@ -29,68 +29,67 @@ todos:
 isProject: false
 ---
 
+## Consolidation principle
+
+- **Consolidate (single copy at repo root `.storybook/`):** `main.ts`, `preview.ts`, `withLevel.tsx`, `withTheme.tsx`, `vitest.setup.ts`, `playwright.config.ts`, `monorepo.spec.ts`, shared story fixtures (e.g. `nakagin.ts`), and algorithm KitStore shell components that are not story modules.
+- **Do not consolidate:** each `*.stories.*` file remains its own module (many files); only relocate them. No merging multiple stories into one file.
+
+Technologies = `elements`, `semio` (coda has no stories; skip). Bundle folder names from `AGENTS.md` (`bundle.name`): `ui`, `algorithms` under each technology.
 
 ## Target layout
 
 ```
 .storybook/
-  main.ts                 (update story globs)
-  preview.ts              (update decorator imports)
+  main.ts
+  preview.ts              (union: theme + level toolbars like current root; both globals.css)
   playwright.config.ts
   monorepo.spec.ts
-  withLevel.tsx           (consolidated; uses @elements/ui)
-  withTheme.tsx           (consolidated)
-  vitest.setup.ts         (consolidated)
-  elements/
-    ui/
-      nakagin.ts
-      stories/*.stories.tsx
-  semio/
-    ui/
-      stories/*.stories.tsx
-    algorithms/
-      stories/
+  withLevel.tsx           (one file: globals.level for elements + args.level branch for semio stories)
+  withTheme.tsx
+  vitest.setup.ts
+  fixtures/
+    nakagin.ts            (was elements-only; imported by elements stories)
+  stories/                (one general tree for all story modules)
+    elements/
+      ui/
         *.stories.tsx
-        kit-store/*       (helpers)
+    semio/
+      ui/
+        *.stories.tsx
+      algorithms/
+        *.stories.tsx
+  semio/
+    algorithms/
+      kit-store/*         (TSX/helpers for KitStore story; not *.stories.*)
 ```
 
-Technologies = `elements`, `semio` (coda has no stories yet; no folder created). Bundle names taken from each bundle's `AGENTS.md` frontmatter (`bundle.name`): `elements/ui`, `semio/ui`, `semio/algorithms`.
+Rationale: **No per-bundle `stories/` folder** under `elements/` or `semio/` inside `.storybook`. Instead, **one** top-level `.storybook/stories/` groups by technology then bundle. Non-story support code stays outside that tree (`fixtures/`, `semio/algorithms/kit-store/`).
 
 ## Steps
 
-1. **Move stories** into new locations (preserve subfolders like `kit-store/`):
-   - `elements/client/lib/react/.storybook/stories/**` → [.storybook/elements/ui/stories/](.storybook/elements/ui/stories/)
-   - `elements/client/lib/react/.storybook/nakagin.ts` → [.storybook/elements/ui/nakagin.ts](.storybook/elements/ui/nakagin.ts)
-   - `semio/client/lib/react/rendering/.storybook/stories/**` → [.storybook/semio/ui/stories/](.storybook/semio/ui/stories/)
-   - `semio/dev/algorithms/.storybook/stories/**` → [.storybook/semio/algorithms/stories/](.storybook/semio/algorithms/stories/)
+1. **Move story modules only** (glob: `**/*.stories.@(ts|tsx|mdx|...)`):
+   - `elements/client/lib/react/.storybook/stories/**` → `.storybook/stories/elements/ui/`
+   - `semio/client/lib/react/rendering/.storybook/stories/**` → `.storybook/stories/semio/ui/`
+   - `semio/dev/algorithms/.storybook/stories/**/*.stories.*` → `.storybook/stories/semio/algorithms/`
 
-2. **Consolidate helpers** (the three copies are near-identical) into root `.storybook/`:
-   - [.storybook/withLevel.tsx](.storybook/withLevel.tsx) — single decorator using `@elements/ui` (`Level`, `LevelProvider`, `getLevelBgClass`), context-globals based to keep elements-style toolbar working.
-   - [.storybook/withTheme.tsx](.storybook/withTheme.tsx) — single theme decorator (already identical across the three).
-   - [.storybook/vitest.setup.ts](.storybook/vitest.setup.ts) — moved from `elements/client/lib/react/.storybook/`.
+2. **Move consolidatable non-story files:**
+   - `elements/.../.storybook/nakagin.ts` → `.storybook/fixtures/nakagin.ts`; update element story imports (e.g. `from "../../../fixtures/nakagin"` from `.storybook/stories/elements/ui/`).
+   - `semio/dev/algorithms/.storybook/stories/kit-store/**` → `.storybook/semio/algorithms/kit-store/**`; update `KitStore.stories.tsx` and any other imports to the new path.
 
-3. **Update [.storybook/main.ts](.storybook/main.ts)** story globs to:
-   ```ts
-   stories: [
-     "./elements/**/stories/**/*.stories.@(js|jsx|mjs|ts|tsx|mdx)",
-     "./semio/**/stories/**/*.stories.@(js|jsx|mjs|ts|tsx|mdx)",
-   ]
-   ```
-   Keep existing Vite aliases (`@elements/ui`, `@semio/ui`, `@semio/react`, `@semio/js`, `@semio/algorithms`, `@semio/assets`, `@semio/rs-wasm`) so moved stories keep working.
+3. **Single root helpers** (delete per-bundle duplicates):
+   - **withLevel:** merge behaviors: when `context.args.level` is set (semio ui / algorithms pattern), wrap like current semio `LevelWrapper`; otherwise apply `context.globals.level` like elements (toolbar stays in unified `preview.ts`).
+   - **withTheme:** one shared implementation (prefer the slightly richer elements/system branch unless a regression appears in smoke).
+   - **vitest.setup:** one file at `.storybook/vitest.setup.ts` importing root `./preview`; remove `elements/.../vitest.setup.ts` after references updated.
 
-4. **Update [.storybook/preview.ts](.storybook/preview.ts)** to import the local consolidated decorators (`./withLevel`, `./withTheme`) instead of `../elements/client/lib/react/.storybook/...`. CSS imports stay (`../elements/client/lib/react/globals.css`, `../semio/client/lib/react/rendering/globals.css`).
+4. **Unified preview:** one [.storybook/preview.ts](.storybook/preview.ts) with **both** `theme` and `level` `globalTypes` + `initialGlobals` (today’s root already does this; bundle semio previews omitted level—root wins for consistency). Import both `globals.css` from elements and semio rendering packages.
 
-5. **Rewrite relative imports in moved stories** so they don't break after the move. Replace package-internal relatives with the existing aliases:
-   - In `elements/ui/stories/*`: `from "../nakagin"` → `from "../nakagin"` (still works, nakagin lives one level up at `.storybook/elements/ui/nakagin.ts`).
-   - In `semio/algorithms/stories/*`: `from "../../index"` → `from "@semio/algorithms"`; `from "../../../../assets/index"` → `from "@semio/assets"`; `from "../../../../assets/fixtures/..."` → `from "@semio/assets/fixtures/..."`.
-   - In `semio/ui/stories/*`: similar rewrites if any relatives reach into `semio/client/...` — replace with `@semio/ui` / `@semio/react`.
+5. **Update [.storybook/main.ts](.storybook/main.ts)** `stories` glob to a single tree, e.g. `./stories/**/*.stories.@(js|jsx|mjs|ts|tsx|mdx)` (or equivalent). Keep existing Vite aliases in `viteFinal`.
 
-6. **Delete obsolete bundle-local Storybook folders** entirely:
-   - `elements/client/lib/react/.storybook/`
-   - `semio/client/lib/react/rendering/.storybook/`
-   - `semio/dev/algorithms/.storybook/`
+6. **Import fixes in moved stories:** replace broken relatives with `@semio/algorithms`, `@semio/assets`, `@semio/ui`, `@semio/react`, `@elements/ui`, and stable relatives from `.storybook/stories/...` (e.g. `../../../fixtures/nakagin`, `../../../semio/algorithms/kit-store/...`) or optional Vite aliases if you add them in `main.ts`.
 
-7. **Verify** by running `bun run dev:storybook` and `bun run build:storybook`; fix any remaining import paths surfaced by Vite. Existing `dev.script.ts` / `build.script.ts` / `test.script.ts` already point at the root `.storybook` directory, so no script changes needed.
+7. **Delete** entire `elements/client/lib/react/.storybook/`, `semio/client/lib/react/rendering/.storybook/`, `semio/dev/algorithms/.storybook/` after nothing references them.
+
+8. **Verify:** `bun run dev:storybook`, `bun run build:storybook`; grep repo for stale `.storybook` paths under `elements/` or `semio/client|dev/`.
 
 ## Open ticket
 

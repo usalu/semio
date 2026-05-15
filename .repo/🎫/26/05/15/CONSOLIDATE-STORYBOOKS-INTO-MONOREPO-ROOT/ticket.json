@@ -1,0 +1,6 @@
+{
+  "id": "26/05/15/CONSOLIDATE-STORYBOOKS-INTO-MONOREPO-ROOT",
+  "title": "Consolidate Storybooks Into Monorepo Root",
+  "description": "Single root Storybook under .storybook with shared config and decorators; stories under .storybook/stories/<technology>/<bundle>/; remove per-bundle .storybook trees.",
+  "summary": ""
+}

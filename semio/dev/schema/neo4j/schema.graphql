@@ -1,9 +1,9 @@
 # https://neo4j.com/docs/graphql/current/
-# Composition and containment use HAS (…); do not persist denormalized owner names/ids/kinds on nodes — use HAS edges only.
+# Composition and containment use OWNS (…); do not persist denormalized owner names/ids/kinds on nodes — use OWNS edges only.
 # `IS` is a materialized subtype graph: Interface→Interface includes transitive supertypes; Class and kit field nodes→Interface include every ancestor of the declared interface (e.g. `WeakEntity`/`StrongEntity`→`Entity`).
 # Do not store on nodes: data, declaringClass, declaringInterface, emoji, entityKind, fieldOrder, id, moduleName, nodes, ownerKind, ownerName, relationships, scalarKind, schemaSource, schemaTag, style, targetName, UNIQUE IMPORT ID, visualisation — use graph shape only; use `rank` (string) as the sole ordering key where needed (e.g. members under an owner).
-# Naming: `Module.name`, `Class.name`, `Interface.name`, and `Scalar.name` are PascalCase; persisted member names on `Data` / `Computation` / `Reference` are lowerCamelCase. `Module.name` is unique only among siblings. Root `Schema` has `General` and `Domain`; `Module` `Scalar` (primitive types) hangs under `General`. Kit graph modules hang directly under `Domain` (e.g. `Kit`, `Workspace`, …); the entity interface ladder is mirrored as child `Module` nodes (`WeakEntity`, `StrongEntity`, …) each `HAS` the corresponding `Interface`.
-# Kit members: `Data` (embedded value), `Computation` (`cached` true for cached derivations, false for computed), `Reference` (graph reference). There is no `Field` label — use `KitField` union in GraphQL over `HAS` from `Class` / `Interface` / `Command`.
+# Naming: `Module.name`, `Class.name`, `Interface.name`, and `Scalar.name` are PascalCase; persisted member names on `Data` / `Computation` / `Reference` are lowerCamelCase. `Module.name` is unique only among siblings. Root `Schema` has `General` and `Domain`; `Schema`→`General` holds primitives (`Scalar`), the entity interface ladder (`WeakEntity`, `StrongEntity`, …), kit graph modules (`Kit`, `Workspace`, `Diff`, `Modification`, `Vector`, `Point`, `Plane`, …), and related containment; `Domain` stays a `Schema` child with no `OWNS` module subtree in the migrated graph.
+# Kit members: `Data` (embedded value), `Computation` (`cached` true for cached derivations, false for computed), `Reference` (graph reference). There is no `Field` label — use `KitField` union in GraphQL over `OWNS` from `Class` / `Interface` / `Command`.
 
 interface Constraint {
   description: String!
@@ -11,17 +11,17 @@ interface Constraint {
 
 interface Node {
   name: String!
-  constraints: [Constraint!]! @relationship(type: "HAS", direction: OUT)
+  constraints: [Constraint!]! @relationship(type: "OWNS", direction: OUT)
 }
 
 interface Primitive implements Node {
   name: String!
-  constraints: [Constraint!]! @relationship(type: "HAS", direction: OUT)
+  constraints: [Constraint!]! @relationship(type: "OWNS", direction: OUT)
 }
 
 interface Scalar implements Primitive {
   name: String!
-  constraints: [Constraint!]! @relationship(type: "HAS", direction: OUT)
+  constraints: [Constraint!]! @relationship(type: "OWNS", direction: OUT)
 }
 
 union FieldIs = Scalar | Class | Interface
@@ -32,7 +32,7 @@ union FieldIs = Scalar | Class | Interface
 type Data implements Node @node {
   name: String!
   rank: String!
-  constraints: [Constraint!]! @relationship(type: "HAS", direction: OUT)
+  constraints: [Constraint!]! @relationship(type: "OWNS", direction: OUT)
   is: FieldIs! @relationship(type: "IS", direction: OUT)
 }
 
@@ -43,7 +43,7 @@ type Computation implements Node @node {
   name: String!
   rank: String!
   cached: Boolean!
-  constraints: [Constraint!]! @relationship(type: "HAS", direction: OUT)
+  constraints: [Constraint!]! @relationship(type: "OWNS", direction: OUT)
   is: FieldIs! @relationship(type: "IS", direction: OUT)
 }
 
@@ -53,7 +53,7 @@ type Computation implements Node @node {
 type Reference implements Node @node {
   name: String!
   rank: String!
-  constraints: [Constraint!]! @relationship(type: "HAS", direction: OUT)
+  constraints: [Constraint!]! @relationship(type: "OWNS", direction: OUT)
   is: FieldIs! @relationship(type: "IS", direction: OUT)
 }
 
@@ -61,28 +61,28 @@ union KitField = Data | Computation | Reference
 
 interface Interface implements Node {
   name: String!
-  fields: [KitField!]! @relationship(type: "HAS", direction: OUT)
+  fields: [KitField!]! @relationship(type: "OWNS", direction: OUT)
   is: [Interface!]! @relationship(type: "IS", direction: OUT)
 }
 
 interface Command implements Node {
   name: String!
-  fields: [KitField!]! @relationship(type: "HAS", direction: OUT)
+  fields: [KitField!]! @relationship(type: "OWNS", direction: OUT)
 }
 
 interface Class implements Node @node {
   name: String!
   interfaces: [Interface!]! @relationship(type: "IS", direction: OUT)
-  fields: [KitField!]! @relationship(type: "HAS", direction: OUT)
-  methods: [Method!]! @relationship(type: "HAS", direction: OUT)
+  fields: [KitField!]! @relationship(type: "OWNS", direction: OUT)
+  methods: [Method!]! @relationship(type: "OWNS", direction: OUT)
 }
 
 type Module implements Primitive @node {
   # Node
   name: String!
   # Module
-  scalars: [Scalar!]! @relationship(type: "HAS", direction: OUT)
-  interfaces: [Interface!]! @relationship(type: "HAS", direction: OUT)
-  classes: [Class!]! @relationship(type: "HAS", direction: OUT)
-  modules: [Module!]! @relationship(type: "HAS", direction: OUT)
+  scalars: [Scalar!]! @relationship(type: "OWNS", direction: OUT)
+  interfaces: [Interface!]! @relationship(type: "OWNS", direction: OUT)
+  classes: [Class!]! @relationship(type: "OWNS", direction: OUT)
+  modules: [Module!]! @relationship(type: "OWNS", direction: OUT)
 }
