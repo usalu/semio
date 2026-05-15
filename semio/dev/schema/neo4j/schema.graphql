@@ -1,6 +1,8 @@
 # https://neo4j.com/docs/graphql/current/
 # Composition and containment use HAS (…); do not persist denormalized owner names/ids/kinds on nodes — use HAS edges only.
 # `IS` is a materialized subtype graph: Interface→Interface includes transitive supertypes; Class and Field→Interface include every ancestor of the declared interface (e.g. strongEntity/weakEntity→entity).
+# Do not store on nodes: data, declaringClass, declaringInterface, emoji, entityKind, id, moduleName, nodes, ownerKind, ownerName, relationships, scalarKind, schemaSource, schemaTag, style, targetName, UNIQUE IMPORT ID, visualisation — use graph shape only.
+# `Module.name` is unique only among sibling modules (same parent). Containment: every Class, Interface, Scalar, and persisted Enum value is reached only via `Module HAS …` under the `graphql` module tree (YAML `general` / `domain` schema modules do not own those primitives).
 
 interface Constraint {
   description: String!
@@ -17,6 +19,14 @@ interface Primitive implements Node {
 }
 
 interface Scalar implements Primitive {
+  name: String!
+  constraints: [Constraint!]! @relationship(type: "HAS", direction: OUT)
+}
+
+"""
+🧩 EnumValue — Persisted enum member as a graph node (e.g. FieldKind literals); owned by a `Module` via `HAS`, distinct from GraphQL SDL `enum` blocks used by clients.
+"""
+type Enum implements Primitive @node {
   name: String!
   constraints: [Constraint!]! @relationship(type: "HAS", direction: OUT)
 }
@@ -61,5 +71,6 @@ type Module implements Primitive @node {
   scalars: [Scalar!]! @relationship(type: "HAS", direction: OUT)
   interfaces: [Interface!]! @relationship(type: "HAS", direction: OUT)
   classes: [Class!]! @relationship(type: "HAS", direction: OUT)
+  enums: [Enum!]! @relationship(type: "HAS", direction: OUT)
   modules: [Module!]! @relationship(type: "HAS", direction: OUT)
 }
