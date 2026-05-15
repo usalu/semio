@@ -512,6 +512,8 @@ mod board_host {
 		pub dpr: f64,
 		pub world_raster_tiling: String,
 		pub events: Vec<serde_json::Value>,
+		/// Screen-space preview polygon (CSS pixels) while area-selecting; cleared when idle.
+		pub selection_screen_preview: Option<Vec<Point>>,
 	}
 
 	impl Default for Camera {
@@ -540,6 +542,7 @@ mod board_host {
 				dpr: 1.0,
 				world_raster_tiling: "none".into(),
 				events: Vec::new(),
+				selection_screen_preview: None,
 			}
 		}
 	}
@@ -566,6 +569,10 @@ mod board_host {
 			self.selection_options.method = method.into();
 			self.selection_options.mode = mode.into();
 			self.selection_options.target = target.into();
+		}
+
+		pub fn set_selection_screen_preview(&mut self, points: Option<Vec<Point>>) {
+			self.selection_screen_preview = points;
 		}
 
 		fn push_event(&mut self, name: &str, payload: serde_json::Value) {
@@ -924,7 +931,7 @@ mod board_host {
 		}
 
 		pub fn build_vello_scene(&self) -> Scene {
-			let mut scene = Scene::new();
+			let mut inner = Scene::new();
 			let stroke_grid = Stroke::new(1.0);
 			let step = GRID_WORLD_STEP * self.camera.zoom;
 			if step >= 18.0 {
@@ -946,7 +953,7 @@ mod board_host {
 					p.line_to(Point::new(w, y));
 					y += step;
 				}
-				scene.stroke(
+				inner.stroke(
 					&stroke_grid,
 					Affine::IDENTITY,
 					Color::new([0.58, 0.64, 0.72, 0.18]),
@@ -966,8 +973,8 @@ mod board_host {
 						let c = self.world_to_screen(Point::new(n.x, n.y));
 						let r = (n.radius * self.camera.zoom).max(1.0);
 						let circle = Circle::new(c, r);
-						scene.fill(Fill::NonZero, Affine::IDENTITY, fill, None, &circle);
-						scene.stroke(&Stroke::new(sw), Affine::IDENTITY, stroke_c, None, &circle);
+						inner.fill(Fill::NonZero, Affine::IDENTITY, fill, None, &circle);
+						inner.stroke(&Stroke::new(sw), Affine::IDENTITY, stroke_c, None, &circle);
 					}
 					NodeShape::Rectangle => {
 						let hw = n.width / 2.0;
@@ -975,8 +982,8 @@ mod board_host {
 						let p0 = self.world_to_screen(Point::new(n.x - hw, n.y - hh));
 						let p1 = self.world_to_screen(Point::new(n.x + hw, n.y + hh));
 						let r = Rect::from_points(p0, p1);
-						scene.fill(Fill::NonZero, Affine::IDENTITY, fill, None, &r);
-						scene.stroke(&Stroke::new(sw), Affine::IDENTITY, stroke_c, None, &r);
+						inner.fill(Fill::NonZero, Affine::IDENTITY, fill, None, &r);
+						inner.stroke(&Stroke::new(sw), Affine::IDENTITY, stroke_c, None, &r);
 					}
 				}
 			}
@@ -990,8 +997,8 @@ mod board_host {
 				let circle = Circle::new(c, r);
 				let fill = handle_fill(h.selected);
 				let stroke_c = handle_stroke(h.selected);
-				scene.fill(Fill::NonZero, Affine::IDENTITY, fill, None, &circle);
-				scene.stroke(&Stroke::new(2.0), Affine::IDENTITY, stroke_c, None, &circle);
+				inner.fill(Fill::NonZero, Affine::IDENTITY, fill, None, &circle);
+				inner.stroke(&Stroke::new(2.0), Affine::IDENTITY, stroke_c, None, &circle);
 			}
 			let mut curves: Vec<CubicBez> = Vec::new();
 			for e in self.edges.values() {
@@ -1008,7 +1015,7 @@ mod board_host {
 			}
 			let edge_sw = 2.0 * self.camera.zoom.max(0.75);
 			for c in &curves {
-				scene.stroke(
+				inner.stroke(
 					&Stroke::new(edge_sw),
 					Affine::IDENTITY,
 					Color::new([0.28, 0.33, 0.41, 1.0]),
@@ -1016,7 +1023,38 @@ mod board_host {
 					c,
 				);
 			}
-			scene
+			if let Some(ref pts) = self.selection_screen_preview {
+				if pts.len() >= 2 {
+					let mut path = vello::kurbo::BezPath::new();
+					path.move_to(pts[0]);
+					for p in pts.iter().skip(1) {
+						path.line_to(*p);
+					}
+					path.close_path();
+					inner.fill(
+						Fill::NonZero,
+						Affine::IDENTITY,
+						Color::new([0.078, 0.722, 0.651, 0.12]),
+						None,
+						&path,
+					);
+					inner.stroke(
+						&Stroke::new(1.5),
+						Affine::IDENTITY,
+						Color::new([0.059, 0.463, 0.431, 0.85]),
+						None,
+						&path,
+					);
+				}
+			}
+			let scale = self.dpr.max(1.0);
+			if (scale - 1.0).abs() < f64::EPSILON {
+				inner
+			} else {
+				let mut scene = Scene::new();
+				scene.append(&inner, Some(Affine::scale(scale)));
+				scene
+			}
 		}
 
 		pub fn encoded_scene_hint(&self) -> usize {
@@ -1751,6 +1789,9 @@ impl BoardEngine {
 use wasm_bindgen::prelude::*;
 
 #[cfg(target_arch = "wasm32")]
+use web_sys::HtmlCanvasElement;
+
+#[cfg(target_arch = "wasm32")]
 #[wasm_bindgen(js_name = boardComputeEdgeBezier)]
 pub fn board_compute_edge_bezier(
 	from_px: f64,
@@ -1815,6 +1856,221 @@ pub fn board_handle_position_rectangle(cx: f64, cy: f64, width: f64, height: f64
 	let p = vcompute::handle_position_on_rectangle(Point::new(cx, cy), width, height, angle);
 	vec![p.x, p.y]
 }
+
+// #region 🔖WasmVelloPresenter
+/// 🖥️ `BoardHost` plus WebGPU: encodes the board scene and rasterizes it with Vello, then blits to the canvas surface.
+#[cfg(target_arch = "wasm32")]
+#[wasm_bindgen]
+pub struct BoardVelloWasm {
+	#[cfg_attr(target_arch = "wasm32", allow(dead_code, reason = "Keeps the canvas alive for the WebGPU surface."))]
+	canvas: HtmlCanvasElement,
+	host: BoardHost,
+	render_ctx: vello::util::RenderContext,
+	renderer: Option<vello::Renderer>,
+	surface: Option<vello::util::RenderSurface<'static>>,
+}
+
+#[cfg(target_arch = "wasm32")]
+#[wasm_bindgen]
+impl BoardVelloWasm {
+	/// @emoji 🌊 Creates WebGPU + Vello for `canvas`; `logical_w`/`logical_h` are CSS pixels, `dpr` scales the swapchain to backing-store pixels.
+	#[wasm_bindgen(js_name = create)]
+	pub async fn create(
+		canvas: HtmlCanvasElement,
+		logical_w: u32,
+		logical_h: u32,
+		dpr: f64,
+	) -> Result<BoardVelloWasm, JsValue> {
+		let lw = logical_w.max(1);
+		let lh = logical_h.max(1);
+		let dpr = dpr.max(1.0);
+		let pw = ((lw as f64 * dpr).round() as u32).max(1);
+		let ph = ((lh as f64 * dpr).round() as u32).max(1);
+		let mut render_ctx = vello::util::RenderContext::new();
+		let surface = render_ctx
+			.create_surface(
+				vello::wgpu::SurfaceTarget::Canvas(canvas.clone()),
+				pw,
+				ph,
+				vello::wgpu::PresentMode::AutoVsync,
+			)
+			.await
+			.map_err(|err| JsValue::from_str(&format!("{err:?}")))?;
+		let dev = &render_ctx.devices[surface.dev_id].device;
+		let renderer = vello::Renderer::new(
+			dev,
+			vello::RendererOptions {
+				use_cpu: false,
+				antialiasing_support: vello::AaSupport::area_only(),
+				num_init_threads: std::num::NonZeroUsize::new(1),
+				pipeline_cache: None,
+			},
+		)
+		.map_err(|err| JsValue::from_str(&format!("{err:?}")))?;
+		let mut host = BoardHost::new();
+		host.set_size(lw, lh, dpr);
+		Ok(Self {
+			canvas,
+			host,
+			render_ctx,
+			renderer: Some(renderer),
+			surface: Some(surface),
+		})
+	}
+
+	pub fn set_size(&mut self, width: u32, height: u32, dpr: f64) {
+		let lw = width.max(1);
+		let lh = height.max(1);
+		let dpr = dpr.max(1.0);
+		let pw = ((lw as f64 * dpr).round() as u32).max(1);
+		let ph = ((lh as f64 * dpr).round() as u32).max(1);
+		self.host.set_size(lw, lh, dpr);
+		if let Some(ref mut surface) = self.surface {
+			self.render_ctx.resize_surface(surface, pw, ph);
+		}
+	}
+
+	#[wasm_bindgen(js_name = setSelectionScreenPreview)]
+	pub fn set_selection_screen_preview(&mut self, flat_xy: &[f64]) {
+		if flat_xy.len() < 4 || flat_xy.len() % 2 != 0 {
+			self.host.set_selection_screen_preview(None);
+			return;
+		}
+		let mut pts = Vec::with_capacity(flat_xy.len() / 2);
+		for chunk in flat_xy.chunks_exact(2) {
+			pts.push(Point::new(chunk[0], chunk[1]));
+		}
+		self.host.set_selection_screen_preview(Some(pts));
+	}
+
+	#[wasm_bindgen(js_name = clearSelectionScreenPreview)]
+	pub fn clear_selection_screen_preview(&mut self) {
+		self.host.set_selection_screen_preview(None);
+	}
+
+	#[wasm_bindgen(js_name = syncDescriptorJson)]
+	pub fn sync_descriptor_json(&mut self, json: &str) -> Result<(), JsValue> {
+		let desc: SceneDescriptorJson =
+			serde_json::from_str(json).map_err(|e| JsValue::from_str(&e.to_string()))?;
+		self.host.sync_descriptor(&desc);
+		Ok(())
+	}
+
+	#[wasm_bindgen(js_name = parseFixtureJson)]
+	pub fn parse_fixture_json(&mut self, json: &str) -> bool {
+		let raw: serde_json::Value = match serde_json::from_str(json) {
+			Ok(v) => v,
+			Err(_) => return false,
+		};
+		self.host.parse_fixture_v1(&raw)
+	}
+
+	#[wasm_bindgen(js_name = setCamera)]
+	pub fn set_camera_wasm(&mut self, x: f64, y: f64, zoom: f64) {
+		self.host.set_camera(x, y, zoom);
+	}
+
+	#[wasm_bindgen(js_name = pointerDownScreen)]
+	pub fn pointer_down_screen_wasm(&mut self, sx: f64, sy: f64, button: u8, shift: bool) {
+		self.host.pointer_down_screen(sx, sy, button, shift);
+	}
+
+	#[wasm_bindgen(js_name = pointerMoveScreen)]
+	pub fn pointer_move_screen_wasm(&mut self, sx: f64, sy: f64) {
+		self.host.pointer_move_screen(sx, sy);
+	}
+
+	#[wasm_bindgen(js_name = pointerUpScreen)]
+	pub fn pointer_up_screen_wasm(&mut self, sx: f64, sy: f64) {
+		self.host.pointer_up_screen(sx, sy);
+	}
+
+	#[wasm_bindgen(js_name = wheelScreen)]
+	pub fn wheel_screen_wasm(&mut self, sx: f64, sy: f64, delta_y: f64) {
+		self.host.wheel_screen(sx, sy, delta_y);
+	}
+
+	#[wasm_bindgen(js_name = deleteSelection)]
+	pub fn delete_selection_wasm(&mut self) {
+		self.host.delete_selection();
+	}
+
+	#[wasm_bindgen(js_name = drainEventsJson)]
+	pub fn drain_events_json_wasm(&mut self) -> String {
+		self.host.drain_events_json()
+	}
+
+	#[wasm_bindgen(js_name = cameraJson)]
+	pub fn camera_json(&self) -> String {
+		serde_json::json!({
+			"x": self.host.camera.x,
+			"y": self.host.camera.y,
+			"zoom": self.host.camera.zoom,
+		})
+		.to_string()
+	}
+
+	#[wasm_bindgen(js_name = setSelectionOptions)]
+	pub fn set_selection_options_wasm(&mut self, method: &str, mode: &str, target: &str) {
+		self.host.set_selection_options(method, mode, target);
+	}
+
+	#[wasm_bindgen(js_name = encodedSceneHint)]
+	pub fn encoded_scene_hint_wasm(&self) -> usize {
+		self.host.encoded_scene_hint()
+	}
+
+	/// @emoji 🎨 Renders one frame: Vello to the intermediate texture, blit to the swapchain, present.
+	pub fn render_frame(&mut self) -> Result<(), JsValue> {
+		let surface = self
+			.surface
+			.as_mut()
+			.ok_or_else(|| JsValue::from_str("missing surface"))?;
+		let renderer = self
+			.renderer
+			.as_mut()
+			.ok_or_else(|| JsValue::from_str("missing renderer"))?;
+		let dh = &self.render_ctx.devices[surface.dev_id];
+		let pw = surface.config.width.max(1);
+		let ph = surface.config.height.max(1);
+		let scene = self.host.build_vello_scene();
+		let params = vello::RenderParams {
+			base_color: vello::peniko::Color::WHITE,
+			width: pw,
+			height: ph,
+			antialiasing_method: vello::AaConfig::Area,
+		};
+		renderer
+			.render_to_texture(&dh.device, &dh.queue, &scene, &surface.target_view, &params)
+			.map_err(|err| JsValue::from_str(&format!("{err:?}")))?;
+
+		let surface_tex = match surface.surface.get_current_texture() {
+			vello::wgpu::CurrentSurfaceTexture::Success(t) | vello::wgpu::CurrentSurfaceTexture::Suboptimal(t) => t,
+			vello::wgpu::CurrentSurfaceTexture::Outdated => {
+				self.render_ctx.configure_surface(surface);
+				return Ok(());
+			}
+			vello::wgpu::CurrentSurfaceTexture::Timeout | vello::wgpu::CurrentSurfaceTexture::Occluded => return Ok(()),
+			vello::wgpu::CurrentSurfaceTexture::Lost | vello::wgpu::CurrentSurfaceTexture::Validation => {
+				return Err(JsValue::from_str("surface lost or validation error"));
+			}
+		};
+		let view = surface_tex
+			.texture
+			.create_view(&vello::wgpu::TextureViewDescriptor::default());
+		let mut encoder = dh.device.create_command_encoder(&vello::wgpu::CommandEncoderDescriptor {
+			label: Some("elements_board_vello_blit"),
+		});
+		surface
+			.blitter
+			.copy(&dh.device, &mut encoder, &surface.target_view, &view);
+		dh.queue.submit(std::iter::once(encoder.finish()));
+		surface_tex.present();
+		let _ = dh.device.poll(vello::wgpu::PollType::Poll);
+		Ok(())
+	}
+}
+// #endregion 🔖WasmVelloPresenter
 
 /// 🎛️ Thin WASM façade over {@link BoardHost}: JSON descriptor sync, pointer routing, and Vello scene metrics.
 #[cfg(target_arch = "wasm32")]

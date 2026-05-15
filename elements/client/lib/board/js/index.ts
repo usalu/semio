@@ -4,6 +4,7 @@ import initBoardWasm, {
 	boardDistancePointCubic,
 	boardHandlePositionCircle,
 	boardHandlePositionRectangle,
+	BoardVelloWasm,
 	initSync,
 } from "../rs/pkg/elements_board.js";
 
@@ -21,6 +22,8 @@ if (typeof process !== "undefined" && process.env.VITEST === "true") {
 export async function ensureElementsBoardWasmLoaded(): Promise<void> {
 	await initBoardWasm();
 }
+
+export { BoardVelloWasm };
 // #endregion 🔖VelloWasmBridge
 
 //#region 🔖Kinds
@@ -253,7 +256,6 @@ const MAX_ZOOM = BOARD_CAMERA_ZOOM_MAX;
 const GRID_WORLD_STEP = 96;
 const EDGE_HIT_TOLERANCE_PX = 8;
 const HANDLE_HIT_TOLERANCE_PX = 10;
-const WORLD_TILE_WORLD = 384;
 const GRID_VISIBLE_MIN_ZOOM = 18 / GRID_WORLD_STEP;
 const HANDLE_DRAW_MIN_ZOOM = 0.45;
 const SELECTION_LASSO_MIN_POINT_DISTANCE_PX = 3;
@@ -263,13 +265,6 @@ interface WorldAxisBox {
 	maxY: number;
 	minX: number;
 	minY: number;
-}
-
-interface ScreenAxisBox {
-	h: number;
-	w: number;
-	x: number;
-	y: number;
 }
 
 const DEFAULT_STYLES: Record<string, BoardStyle> = {
@@ -283,29 +278,6 @@ const DEFAULT_STYLES: Record<string, BoardStyle> = {
 
 function clamp(value: number, min: number, max: number): number {
 	return Math.min(max, Math.max(min, value));
-}
-
-/** @emoji ✂️ Shortens string so {@link CanvasRenderingContext2D.measureText} width stays within `maxWidth`. */
-function truncateTextToCanvasWidth(ctx: Pick<BoardCanvasContext, "measureText">, text: string, maxWidth: number): string {
-	if (maxWidth <= 8) {
-		return "";
-	}
-	if (ctx.measureText(text).width <= maxWidth) {
-		return text;
-	}
-	const ellipsis = "…";
-	let lo = 0;
-	let hi = text.length;
-	while (lo < hi) {
-		const mid = Math.ceil((lo + hi) / 2);
-		const candidate = text.slice(0, mid) + ellipsis;
-		if (ctx.measureText(candidate).width <= maxWidth) {
-			lo = mid;
-		} else {
-			hi = mid - 1;
-		}
-	}
-	return lo > 0 ? `${text.slice(0, lo)}${ellipsis}` : ellipsis;
 }
 
 function nearlyEqual(left: number, right: number, tolerance = 0.0001): boolean {
@@ -730,20 +702,7 @@ function nodeWorldBounds(node: { height: number; radius: number; shape: "circle"
 	);
 }
 
-function handleWorldBounds(handle: { position: Point; radius: number }, padWorld: number): WorldAxisBox {
-	const position = handle.position;
-	return inflateWorldBox(
-		{
-			maxX: position.x + handle.radius,
-			maxY: position.y + handle.radius,
-			minX: position.x - handle.radius,
-			minY: position.y - handle.radius,
-		},
-		padWorld,
-	);
-}
-
-/** 📶 Labels coarse CPU canvas LOD bands used by Storybook and Playwright (maps to future Rust LOD gates). */
+/** 📶 Labels coarse LOD bands used by Storybook and Playwright (mirrors Rust `HANDLE_DRAW_MIN_ZOOM` gates). */
 export function resolveBoardLodLabel(zoom: number): "fine" | "full" | "grid-only" | "subgrid" {
 	if (zoom < GRID_VISIBLE_MIN_ZOOM) {
 		return "subgrid";
@@ -755,19 +714,6 @@ export function resolveBoardLodLabel(zoom: number): "fine" | "full" | "grid-only
 		return "full";
 	}
 	return "fine";
-}
-
-function resolveContext(
-	canvas: HTMLCanvasElement | null | undefined,
-	providedContext: BoardCanvasContext | null | undefined,
-): BoardCanvasContext | null {
-	if (providedContext) {
-		return providedContext;
-	}
-	if (!canvas) {
-		return null;
-	}
-	return (canvas.getContext("2d") as BoardCanvasContext | null) ?? null;
 }
 
 export function computeHandlePosition(
@@ -1161,7 +1107,6 @@ export class BoardRenderer {
 	private batchDepth = 0;
 	private cameraStore = new SnapshotStore<CameraState>({ ...DEFAULT_CAMERA });
 	private canvas: HTMLCanvasElement | null;
-	private context: BoardCanvasContext | null;
 	private dpr = 1;
 	private emitter = new TypedEmitter<BoardEventMap>();
 	private frameListeners = new Set<FrameListener>();
@@ -1175,6 +1120,9 @@ export class BoardRenderer {
 	private selectionOptions: Required<BoardSelectionOptions>;
 	private selectionStore = new SnapshotStore<BoardSelectionSnapshot>({ ids: [] });
 	private styles = new Map<string, BoardStyle>(Object.entries(DEFAULT_STYLES));
+	private vello: BoardVelloWasm | null = null;
+	private velloInitPromise: Promise<void> | null = null;
+	private velloUnavailable = false;
 	private width = 1;
 	private height = 1;
 
@@ -1182,13 +1130,11 @@ export class BoardRenderer {
 
 	constructor(options: {
 		canvas?: HTMLCanvasElement | null;
-		context?: BoardCanvasContext | null;
 		renderMode?: RenderMode;
 		selection?: BoardSelectionOptions;
 		worldRasterTiling?: WorldRasterTilingKind;
 	} = {}) {
 		this.canvas = options.canvas ?? null;
-		this.context = resolveContext(this.canvas, options.context);
 		this.renderMode = options.renderMode ?? (this.canvas ? "main-thread" : "headless-test");
 		this.selectionOptions = resolveSelectionOptions(options.selection);
 		this.worldRasterTiling = options.worldRasterTiling ?? "none";
@@ -1239,6 +1185,9 @@ export class BoardRenderer {
 			return;
 		}
 		this.selectionOptions = next;
+		if (this.vello) {
+			this.vello.set_selection_options_wasm(next.method, next.mode, next.target);
+		}
 		this.markDirty();
 	}
 
@@ -1285,7 +1234,6 @@ export class BoardRenderer {
 			if (this.canvas.width !== nextW || this.canvas.height !== nextH) {
 				this.canvas.width = nextW;
 				this.canvas.height = nextH;
-				this.context = resolveContext(this.canvas, null);
 			}
 		}
 		this.markDirty();
@@ -1360,41 +1308,21 @@ export class BoardRenderer {
 		const frameDelta = this.lastRenderTimestamp === null ? 0 : timestamp - this.lastRenderTimestamp;
 		this.lastRenderTimestamp = timestamp;
 		this.invalidated = false;
-		if (this.context) {
-			this.context.save();
-			this.context.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
-			this.context.clearRect(0, 0, this.width, this.height);
-			if (this.worldRasterTiling === "world-clip") {
-				this.drawGrid();
-				const padWorld = 18 / this.camera.zoom;
-				for (const tile of this.visibleWorldTiles()) {
-					const tilePadded = inflateWorldBox(tile, padWorld);
-					const screenRect = this.worldAxisBoxToScreenRect(tile);
-					if (screenRect.w <= 1 || screenRect.h <= 1) {
-						continue;
-					}
-					this.context.save();
-					this.context.beginPath();
-					this.context.rect(
-						Math.floor(screenRect.x) - 1,
-						Math.floor(screenRect.y) - 1,
-						Math.ceil(screenRect.w) + 2,
-						Math.ceil(screenRect.h) + 2,
-					);
-					this.context.clip();
-					this.drawEdges((bounds) => worldBoxesOverlap(bounds, tilePadded));
-					this.drawNodes((bounds) => worldBoxesOverlap(bounds, tilePadded));
-					this.drawHandles((bounds) => worldBoxesOverlap(bounds, tilePadded));
-					this.context.restore();
-				}
-			} else {
-				this.drawGrid();
-				this.drawEdges(null);
-				this.drawNodes(null);
-				this.drawHandles(null);
+		if (this.renderMode !== "headless-test" && this.canvas && !this.velloUnavailable) {
+			if (!this.vello && !this.velloInitPromise) {
+				this.velloInitPromise = this.initVelloOnce()
+					.then(() => {
+						this.velloInitPromise = null;
+					})
+					.catch(() => {
+						this.velloUnavailable = true;
+						this.velloInitPromise = null;
+					});
 			}
-			this.drawSelectionOverlay();
-			this.context.restore();
+			if (this.vello) {
+				this.syncSelectionPreviewToVello();
+				this.syncVelloFrame();
+			}
 		}
 		const frameState: FrameState = {
 			camera: { ...this.camera },
@@ -1407,9 +1335,132 @@ export class BoardRenderer {
 		this.applyCanvasDebugAttributes();
 	}
 
+	private async initVelloOnce(): Promise<void> {
+		if (!this.canvas || this.renderMode === "headless-test") {
+			return;
+		}
+		await ensureElementsBoardWasmLoaded();
+		const lw = this.width;
+		const lh = this.height;
+		const dpr = this.dpr;
+		const cw = Math.max(1, Math.round(lw * dpr));
+		const ch = Math.max(1, Math.round(lh * dpr));
+		if (this.canvas.width !== cw || this.canvas.height !== ch) {
+			this.canvas.width = cw;
+			this.canvas.height = ch;
+		}
+		this.vello = await BoardVelloWasm.create(this.canvas, lw, lh, dpr);
+		const o = this.selectionOptions;
+		this.vello.set_selection_options_wasm(o.method, o.mode, o.target);
+	}
+
+	private descriptorJsonForVello(): string {
+		const nodes: Record<string, unknown>[] = [];
+		for (const node of this.scene.nodes.values()) {
+			const base: Record<string, unknown> = {
+				id: node.id,
+				x: node.x,
+				y: node.y,
+				draggable: node.draggable,
+				selected: node.selected,
+				style: node.style,
+				text: node.text,
+				visible: node.visible,
+			};
+			if (Object.keys(node.userData).length > 0) {
+				base.userData = node.userData;
+			}
+			if (node.shape === "rectangle") {
+				base.shape = "rectangle";
+				base.width = node.width;
+				base.height = node.height;
+			} else {
+				base.shape = "circle";
+				base.radius = node.radius;
+			}
+			nodes.push(base);
+		}
+		const handles: Record<string, unknown>[] = [];
+		for (const handle of this.scene.handles.values()) {
+			handles.push({
+				id: handle.id,
+				nodeId: handle.node.id,
+				angle: handle.angle,
+				radius: handle.radius,
+				selected: handle.selected,
+				style: handle.style,
+				visible: handle.visible,
+			});
+		}
+		const edges: Record<string, unknown>[] = [];
+		for (const edge of this.scene.edges.values()) {
+			edges.push({
+				id: edge.id,
+				from: edge.from.id,
+				to: edge.to.id,
+				selected: edge.selected,
+				style: edge.style,
+				visible: edge.visible,
+			});
+		}
+		return JSON.stringify({ nodes, handles, edges });
+	}
+
+	private syncVelloFrame(): void {
+		if (!this.vello || this.renderMode === "headless-test") {
+			return;
+		}
+		try {
+			const o = this.selectionOptions;
+			this.vello.set_size(this.width, this.height, this.dpr);
+			this.vello.set_selection_options_wasm(o.method, o.mode, o.target);
+			this.vello.sync_descriptor_json(this.descriptorJsonForVello());
+			this.vello.set_camera_wasm(this.camera.x, this.camera.y, this.camera.zoom);
+			this.vello.render_frame();
+		} catch {
+			this.velloUnavailable = true;
+		}
+	}
+
+	private syncSelectionPreviewToVello(): void {
+		if (!this.vello || this.renderMode === "headless-test") {
+			return;
+		}
+		if (this.interaction?.kind !== "selection" || this.interaction.screenPoints.length < 2) {
+			this.vello.clear_selection_screen_preview();
+			return;
+		}
+		const points =
+			this.selectionOptions.method === "rectangle"
+				? [
+						this.interaction.startScreen,
+						{
+							x: this.interaction.screenPoints.at(-1)?.x ?? this.interaction.startScreen.x,
+							y: this.interaction.startScreen.y,
+						},
+						this.interaction.screenPoints.at(-1) ?? this.interaction.startScreen,
+						{
+							x: this.interaction.startScreen.x,
+							y: this.interaction.screenPoints.at(-1)?.y ?? this.interaction.startScreen.y,
+						},
+					]
+				: this.interaction.screenPoints;
+		const flat = new Float64Array(points.length * 2);
+		let i = 0;
+		for (const p of points) {
+			flat[i++] = p.x;
+			flat[i++] = p.y;
+		}
+		this.vello.set_selection_screen_preview(flat);
+	}
+
 	dispose(): void {
 		this.isDisposed = true;
 		this.detachCanvasListeners();
+		if (this.vello) {
+			this.vello.free();
+			this.vello = null;
+		}
 		if (this.rafId !== null && globalThis.cancelAnimationFrame) {
 			globalThis.cancelAnimationFrame(this.rafId);
 		}
@@ -1560,221 +1611,15 @@ export class BoardRenderer {
 		return null;
 	}
 
-	private drawGrid(): void {
-		if (!this.context) {
-			return;
-		}
-		const gridStep = GRID_WORLD_STEP * this.camera.zoom;
-		if (gridStep < 18) {
-			return;
-		}
-		const originScreen = this.worldToScreen({ x: 0, y: 0 });
-		const xOffset = ((originScreen.x % gridStep) + gridStep) % gridStep;
-		const yOffset = ((originScreen.y % gridStep) + gridStep) % gridStep;
-		this.context.save();
-		this.context.strokeStyle = "rgba(148, 163, 184, 0.18)";
-		this.context.lineWidth = 1;
-		this.context.beginPath();
-		for (let x = xOffset; x <= this.width; x += gridStep) {
-			this.context.moveTo(x, 0);
-			this.context.lineTo(x, this.height);
-		}
-		for (let y = yOffset; y <= this.height; y += gridStep) {
-			this.context.moveTo(0, y);
-			this.context.lineTo(this.width, y);
-		}
-		this.context.stroke();
-		this.context.restore();
-	}
-
-	private visibleWorldTiles(): WorldAxisBox[] {
-		const halfWidthWorld = this.width / (2 * this.camera.zoom);
-		const halfHeightWorld = this.height / (2 * this.camera.zoom);
-		const minWorldX = this.camera.x - halfWidthWorld;
-		const maxWorldX = this.camera.x + halfWidthWorld;
-		const minWorldY = this.camera.y - halfHeightWorld;
-		const maxWorldY = this.camera.y + halfHeightWorld;
-		const step = WORLD_TILE_WORLD;
-		const tiles: WorldAxisBox[] = [];
-		for (let ix = Math.floor(minWorldX / step); ix <= Math.floor(maxWorldX / step); ix += 1) {
-			for (let iy = Math.floor(minWorldY / step); iy <= Math.floor(maxWorldY / step); iy += 1) {
-				tiles.push({
-					maxX: (ix + 1) * step,
-					maxY: (iy + 1) * step,
-					minX: ix * step,
-					minY: iy * step,
-				});
-			}
-		}
-		return tiles;
-	}
-
-	private worldAxisBoxToScreenRect(box: WorldAxisBox): ScreenAxisBox {
-		const cornerA = this.worldToScreen({ x: box.minX, y: box.minY });
-		const cornerB = this.worldToScreen({ x: box.maxX, y: box.minY });
-		const cornerC = this.worldToScreen({ x: box.maxX, y: box.maxY });
-		const cornerD = this.worldToScreen({ x: box.minX, y: box.maxY });
-		const minScreenX = Math.min(cornerA.x, cornerB.x, cornerC.x, cornerD.x);
-		const maxScreenX = Math.max(cornerA.x, cornerB.x, cornerC.x, cornerD.x);
-		const minScreenY = Math.min(cornerA.y, cornerB.y, cornerC.y, cornerD.y);
-		const maxScreenY = Math.max(cornerA.y, cornerB.y, cornerC.y, cornerD.y);
-		return {
-			h: maxScreenY - minScreenY,
-			w: maxScreenX - minScreenX,
-			x: minScreenX,
-			y: minScreenY,
-		};
-	}
-
 	private applyCanvasDebugAttributes(): void {
 		if (!this.canvas) {
 			return;
 		}
-		this.canvas.dataset.boardRaster = this.worldRasterTiling;
+		this.canvas.dataset.boardRaster = "vello";
 		this.canvas.dataset.boardLod = resolveBoardLodLabel(this.camera.zoom);
 		this.canvas.dataset.boardZoom = String(Math.round(this.camera.zoom * 1000) / 1000);
 		this.canvas.dataset.boardSelection = sortedSelectionIds(this.selectionIds).join(",");
 		this.canvas.setAttribute("data-board-camera", `${this.camera.x},${this.camera.y}`);
-	}
-
-	private drawNodes(filter: ((bounds: WorldAxisBox) => boolean) | null): void {
-		if (!this.context) {
-			return;
-		}
-		const padWorld = 4 / this.camera.zoom;
-		for (const node of this.scene.nodes.values()) {
-			if (!node.visible) {
-				continue;
-			}
-			if (filter && !filter(nodeWorldBounds(node, padWorld))) {
-				continue;
-			}
-			const screenPoint = this.worldToScreen({ x: node.x, y: node.y });
-			const style = this.getStyle(node.selected ? `${node.style ?? "node"}.selected` : node.style, node.selected ? "node.selected" : "node");
-			let labelCenterX = screenPoint.x;
-			let labelCenterY = screenPoint.y;
-			let maxLabelPx = 120;
-			this.context.beginPath();
-			if (node.shape === "rectangle") {
-				const halfW = node.width / 2;
-				const halfH = node.height / 2;
-				const c0 = this.worldToScreen({ x: node.x - halfW, y: node.y - halfH });
-				const c1 = this.worldToScreen({ x: node.x + halfW, y: node.y + halfH });
-				const left = Math.min(c0.x, c1.x);
-				const top = Math.min(c0.y, c1.y);
-				const rw = Math.max(1, Math.abs(c1.x - c0.x));
-				const rh = Math.max(1, Math.abs(c1.y - c0.y));
-				this.context.rect(left, top, rw, rh);
-				labelCenterX = left + rw / 2;
-				labelCenterY = top + rh / 2;
-				maxLabelPx = Math.max(24, Math.min(rw, rh) * 0.92);
-			} else {
-				const screenRadius = Math.max(1, node.radius * this.camera.zoom);
-				this.context.arc(screenPoint.x, screenPoint.y, screenRadius, 0, Math.PI * 2);
-				maxLabelPx = Math.max(24, 2 * screenRadius * 0.88);
-			}
-			this.context.fillStyle = (style.fill as string) ?? "#e2e8f0";
-			this.context.strokeStyle = (style.stroke as string) ?? "#0f172a";
-			this.context.lineWidth = style.strokeWidth ?? 2;
-			this.context.fill();
-			this.context.stroke();
-
-			const label = node.text?.trim();
-			if (label && this.camera.zoom >= HANDLE_DRAW_MIN_ZOOM) {
-				const fontPx = clamp(Math.round(10 * this.camera.zoom * 4) / 4, 9, 22);
-				this.context.font = `${fontPx}px ui-sans-serif, system-ui, sans-serif`;
-				this.context.textAlign = "center";
-				this.context.textBaseline = "middle";
-				this.context.fillStyle = "#0f172a";
-				const shown = truncateTextToCanvasWidth(this.context, label, maxLabelPx);
-				this.context.fillText(shown, labelCenterX, labelCenterY);
-			}
-		}
-	}
-
-	private drawHandles(filter: ((bounds: WorldAxisBox) => boolean) | null): void {
-		if (!this.context || this.camera.zoom < HANDLE_DRAW_MIN_ZOOM) {
-			return;
-		}
-		const padWorld = 4 / this.camera.zoom;
-		for (const handle of this.scene.handles.values()) {
-			if (!handle.visible) {
-				continue;
-			}
-			if (filter && !filter(handleWorldBounds(handle, padWorld))) {
-				continue;
-			}
-			const screenPoint = this.worldToScreen(handle.position);
-			const screenRadius = handle.radius * this.camera.zoom;
-			const style = this.getStyle(handle.selected ? `${handle.style ?? "handle"}.selected` : handle.style, handle.selected ? "handle.selected" : "handle");
-			this.context.beginPath();
-			this.context.arc(screenPoint.x, screenPoint.y, screenRadius, 0, Math.PI * 2);
-			this.context.fillStyle = (style.fill as string) ?? "#ffffff";
-			this.context.strokeStyle = (style.stroke as string) ?? "#0f172a";
-			this.context.lineWidth = style.strokeWidth ?? 2;
-			this.context.fill();
-			this.context.stroke();
-		}
-	}
-
-	private drawEdges(filter: ((bounds: WorldAxisBox) => boolean) | null): void {
-		if (!this.context) {
-			return;
-		}
-		this.context.lineCap = "round";
-		this.context.lineJoin = "round";
-		const padWorld = 14 / this.camera.zoom;
-		for (const edge of this.scene.edges.values()) {
-			if (!edge.visible) {
-				continue;
-			}
-			const curve = edge.curve;
-			const hull = cubicBezierAxisBounds(curve);
-			const bounds = inflateWorldBox(hull, padWorld);
-			if (filter && !filter(bounds)) {
-				continue;
-			}
-			const screenP0 = this.worldToScreen(curve.p0);
-			const screenP1 = this.worldToScreen(curve.p1);
-			const screenP2 = this.worldToScreen(curve.p2);
-			const screenP3 = this.worldToScreen(curve.p3);
-			const style = this.getStyle(edge.selected ? `${edge.style ?? "edge"}.selected` : edge.style, edge.selected ? "edge.selected" : "edge");
-			this.context.beginPath();
-			this.context.moveTo(screenP0.x, screenP0.y);
-			this.context.bezierCurveTo(screenP1.x, screenP1.y, screenP2.x, screenP2.y, screenP3.x, screenP3.y);
-			this.context.strokeStyle = (style.stroke as string) ?? "#475569";
-			this.context.lineWidth = (style.strokeWidth ?? 2) * Math.max(1, this.camera.zoom * 0.75);
-			this.context.stroke();
-		}
-	}
-
-	private drawSelectionOverlay(): void {
-		if (!this.context || this.interaction?.kind !== "selection" || this.interaction.screenPoints.length < 2) {
-			return;
-		}
-		const points =
-			this.selectionOptions.method === "rectangle"
-				? [
-						this.interaction.startScreen,
-						{ x: this.interaction.screenPoints.at(-1)?.x ?? this.interaction.startScreen.x, y: this.interaction.startScreen.y },
-						this.interaction.screenPoints.at(-1) ?? this.interaction.startScreen,
-						{ x: this.interaction.startScreen.x, y: this.interaction.screenPoints.at(-1)?.y ?? this.interaction.startScreen.y },
-				  ]
-				: this.interaction.screenPoints;
-		this.context.save();
-		this.context.beginPath();
-		this.context.moveTo(points[0].x, points[0].y);
-		for (const point of points.slice(1)) {
-			this.context.lineTo(point.x, point.y);
-		}
-		this.context.closePath();
-		this.context.fillStyle = "rgba(20, 184, 166, 0.12)";
-		this.context.strokeStyle = "rgba(15, 118, 110, 0.85)";
-		this.context.lineWidth = 1.5;
-		this.context.setLineDash([6, 4]);
-		this.context.fill();
-		this.context.stroke();
-		this.context.restore();
 	}
 
 	private currentSelectionShape(selection: SelectionDragState): { box: WorldAxisBox; enclosing: boolean; polygon: Point[] } {
@@ -2095,7 +1940,7 @@ if (boardVitest) {
 	describe("board scene", () => {
 		it("stores nodes, handles, and edges with stable ids and emits edge creation", () => {
 			const { canvas } = createMockCanvas();
-			const renderer = new BoardRenderer({ canvas });
+			const renderer = new BoardRenderer({ canvas, renderMode: "headless-test" });
 			const edgeEvents: Array<{ id: string; from: string; to: string }> = [];
 			renderer.on("edgeCreate", (event) => edgeEvents.push(event));
 
@@ -2117,7 +1962,7 @@ if (boardVitest) {
 
 		it("deletes selected edges and nodes when the canvas receives Delete", () => {
 			const { canvas } = createMockCanvas();
-			const renderer = new BoardRenderer({ canvas });
+			const renderer = new BoardRenderer({ canvas, renderMode: "headless-test" });
 			const edgeDeletes: string[] = [];
 			const nodeDeletes: string[] = [];
 			renderer.on("edgeDelete", (event) => edgeDeletes.push(event.id));
@@ -2157,7 +2002,7 @@ if (boardVitest) {
 
 		it("moves a selected draggable node from pointer events without React involvement", () => {
 			const { canvas } = createMockCanvas();
-			const renderer = new BoardRenderer({ canvas });
+			const renderer = new BoardRenderer({ canvas, renderMode: "headless-test" });
 			const movableNode = new Node({ draggable: true, id: "movable", radius: 30, x: 0, y: 0 });
 			renderer.scene.add(movableNode);
 			renderer.render();
@@ -2178,7 +2023,7 @@ if (boardVitest) {
 
 		it("applies imperative selection via setSelectionIds", () => {
 			const { canvas } = createMockCanvas();
-			const renderer = new BoardRenderer({ canvas });
+			const renderer = new BoardRenderer({ canvas, renderMode: "headless-test" });
 			const sourceNode = new Node({ id: "source", radius: 20, x: 0, y: 0 });
 			const targetNode = new Node({ id: "target", radius: 20, x: 100, y: 0 });
 			renderer.scene.add(sourceNode).add(targetNode);
@@ -2191,7 +2036,7 @@ if (boardVitest) {
 
 		it("opens rectangle selection from a left-button drag and applies directional partial versus enclosing rules", () => {
 			const { canvas } = createMockCanvas();
-			const renderer = new BoardRenderer({ canvas, selection: { mode: "additive" } });
+			const renderer = new BoardRenderer({ canvas, renderMode: "headless-test", selection: { mode: "additive" } });
 			const node = new Node({ id: "node", radius: 20, x: 0, y: 0 });
 			renderer.scene.add(node);
 			renderer.render();
@@ -2215,7 +2060,7 @@ if (boardVitest) {
 
 		it("supports lasso targets and additive subtractive invertive selection modes", () => {
 			const { canvas } = createMockCanvas();
-			const renderer = new BoardRenderer({ canvas, selection: { method: "lasso", mode: "additive", target: "edges" } });
+			const renderer = new BoardRenderer({ canvas, renderMode: "headless-test", selection: { method: "lasso", mode: "additive", target: "edges" } });
 			const sourceNode = new Node({ id: "source", radius: 12, x: -80, y: 0 });
 			const targetNode = new Node({ id: "target", radius: 12, x: 80, y: 0 });
 			const sourceHandle = new Handle({ angle: 0, id: "source.out", node: sourceNode });
