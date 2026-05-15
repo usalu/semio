@@ -18,6 +18,7 @@ import {
 	type ReactNode,
 } from "react";
 import { createRoot } from "react-dom/client";
+import { flushSync } from "react-dom";
 import { FiberProvider } from "its-fine";
 
 import {
@@ -364,7 +365,7 @@ export function syncBoardScene(renderer: BoardRenderer, descriptor: BoardSceneDe
 //#endregion 🔖Scene Sync
 
 //#region 🔖ReconcilerBridge
-/** @emoji 🌉 Bridges DOM-root context into the board `react-reconciler` subtree via `its-fine`. */
+/** @emoji 🌉 Mounts the board `react-reconciler` root; pushes children every layout flush and bridges DOM context via `its-fine`. */
 function BoardReconcilerMount({ children, renderer }: { children: ReactNode; renderer: BoardRenderer }): null {
 	const fiberRootRef = useRef<BoardFiberRoot | null>(null);
 
@@ -382,8 +383,21 @@ function BoardReconcilerMount({ children, renderer }: { children: ReactNode; ren
 		if (!root) {
 			return;
 		}
-		updateBoardFiberRoot(root, createElement(BoardContext.Provider, { value: renderer }, children), null);
-	}, [children, renderer]);
+		let firstNodeX: number | undefined;
+		Children.forEach(children, (c) => {
+			if (firstNodeX !== undefined) {
+				return;
+			}
+			if (!isValidElement(c)) {
+				return;
+			}
+			if (c.type === BOARD_HOST_NODE) {
+				firstNodeX = (c.props as BoardNodeProps).x;
+			}
+		});
+		console.log("[DEBUG] BoardReconcilerMount layout flush firstNodeX", firstNodeX);
+		updateBoardFiberRoot(root, createElement(Fragment, null, children), null);
+	});
 
 	return null;
 }
@@ -556,8 +570,7 @@ export function BoardCanvas({
 	}, [height, width]);
 
 	return (
-		<FiberProvider>
-			<BoardContext.Provider value={contextRenderer}>
+		<BoardContext.Provider value={contextRenderer}>
 				<div
 					className={[className, fixtureDragActive ? "ring-2 ring-teal-500 ring-offset-2" : ""].filter(Boolean).join(" ") || undefined}
 					onDragEnter={handleDragEnter}
@@ -568,10 +581,13 @@ export function BoardCanvas({
 					style={{ height: height ?? "100%", position: "relative", width: width ?? "100%", ...(style ?? {}) }}
 				>
 					<canvas data-testid="board-canvas" ref={canvasRef} style={{ display: "block", height: "100%", width: "100%" }} />
-					{contextRenderer ? <BoardReconcilerMount children={children} renderer={contextRenderer} /> : null}
+					{contextRenderer ? (
+						<FiberProvider>
+							<BoardReconcilerMount children={children} renderer={contextRenderer} />
+						</FiberProvider>
+					) : null}
 				</div>
-			</BoardContext.Provider>
-		</FiberProvider>
+		</BoardContext.Provider>
 	);
 }
 //#endregion 🔖Canvas
@@ -860,6 +876,7 @@ if (boardReactVitest) {
 			await act(async () => {
 				root.render(
 					<BoardCanvas
+						key="board-stable"
 						camera={{ x: 0, y: 0, zoom: 1 }}
 						height={480}
 						onReady={(renderer) => {
@@ -885,7 +902,7 @@ if (boardReactVitest) {
 
 			await act(async () => {
 				root.render(
-					<BoardCanvas camera={{ x: 20, y: 10, zoom: 1.2 }} height={480} onReady={() => undefined} renderMode="headless-test" width={640}>
+					<BoardCanvas key="board-stable" camera={{ x: 20, y: 10, zoom: 1.2 }} height={480} onReady={() => undefined} renderMode="headless-test" width={640}>
 						<Node draggable id="a" radius={28} x={120} y={40}>
 							<Handle angle={0} id="a.out" />
 						</Node>
@@ -897,10 +914,14 @@ if (boardReactVitest) {
 				);
 				await Promise.resolve();
 			});
-			const movedNode = createdRenderer.scene.getObjectById("a") as BoardNodeObject;
+			const canvasAfterMove = container.querySelector("canvas");
+			const rendererAfterMove = requireRenderer(
+				(canvasAfterMove as HTMLCanvasElement & { __boardRenderer?: BoardRenderer | undefined }).__boardRenderer,
+			);
+			const movedNode = rendererAfterMove.scene.getObjectById("a") as BoardNodeObject;
 			expect(movedNode.x).toBe(120);
 			expect(movedNode.y).toBe(40);
-			expect(createdRenderer.getCameraSnapshot()).toEqual({ x: 20, y: 10, zoom: 1.2 });
+			expect(rendererAfterMove.getCameraSnapshot()).toEqual({ x: 20, y: 10, zoom: 1.2 });
 
 			await act(async () => {
 				root.unmount();

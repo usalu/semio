@@ -53,34 +53,37 @@ schema:
       artifact: &artifact
         implements: [*richStrongEntity]
         fields:
-          authoredBy: [*entity]
-          changedIn: [*entity]
+          authoredBy: [*author]
+          changedIn: [*artifact]
           lastChangedAt: *timestamp
-          lastChangedBy: *entity
-          lastChangedIn: *entity
-          changes: [*entity]
-          edits: [*entity]
+          lastChangedBy: *author
+          lastChangedIn: *artifact
+          changes: [*change]
+          edits: [*edit]
       document: &document
         implements: [*artifact]
         fields:
           reference:
-            previewImage: *entity
+            previewImage: *artifact
       event: &event
         implements: [*weakEntity]
         fields:
           data:
             timestamp: *timestamp
           reference:
-            involves: [*entity]
+            involves: [*artifact]
   domain: &domain
     is: *module
     interfaces:
       command: &command
-        is: 
         implements: [*weakEntity]
         fields:
           computed:
-            response: *entity
+            response: *response
+      response: &response
+        implements: [*weakEntity]
+      input: &input
+        implements: [*weakEntity]
     classes:
       vector: &vector
         implements: [*data]
@@ -121,7 +124,7 @@ schema:
         implements: [*weakEntity]
         fields:
           position: *position
-          place: *entity
+          place: *place
       attribute: &attribute
         implements: [*weakEntity]
         fields:
@@ -283,8 +286,8 @@ schema:
           timestamp: *timestamp
           message: *string
           authors: [*author]
-          parent: *entity
-          ancestors: [*entity]
+          parent: *checkpoint
+          ancestors: [*checkpoint]
           initial: *kit
           kit: *kit
           changes: [*change]
@@ -345,31 +348,31 @@ schema:
           implements: [*strongEntity]
           fields:
             data:
-              savedChanges: [*entity]
-              unsavedChanges: [*entity]
+              savedChanges: [*change]
+              unsavedChanges: [*change]
             computed:
-              latestWipCheckpointAncestor: *entity
-              kit: *entity
+              latestWipCheckpointAncestor: *checkpoint
+              kit: *kit
             reference:
-              checkpoint: *entity
+              checkpoint: *checkpoint
         diff: &diff
           implements: [*weakEntity]
         modification: &modification
           implements: [*weakEntity]
           fields:
             reference:
-              before: *entity
+              before: *graph
               diff: *diff
-              after: *entity
+              after: *graph
         operation: &operation
           implements: [*strongEntity]
           fields:
             data:
-              input: *entity
+              input: *input
             computed:
               modification: *modification
             reference:
-              scope: *entity
+              scope: *artifact
         backbone: &backbone
           implements: [*strongEntity]
           fields:

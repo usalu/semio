@@ -1305,11 +1305,6 @@ export class BoardRenderer {
 		this.invalidated = true;
 		this.emit("invalidate", undefined);
 		if (this.renderMode === "headless-test") {
-			if (this.rafId !== null && globalThis.cancelAnimationFrame) {
-				globalThis.cancelAnimationFrame(this.rafId);
-				this.rafId = null;
-			}
-			this.render(Date.now());
 			return;
 		}
 		if (this.rafId !== null) {

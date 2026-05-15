@@ -286,12 +286,13 @@ const boardReconciler = Reconciler({
 	scheduleTimeout: setTimeout,
 	cancelTimeout: clearTimeout,
 
-	getRootHostContext: () => null,
-	getChildHostContext: (ctx) => ctx,
+	getRootHostContext: () => boardEmptyHostContext,
+	getChildHostContext: () => boardEmptyHostContext,
 
 	createInstance(type, props, rootContainer) {
 		const renderer = rootContainer;
 		if (type === BOARD_HOST_NODE) {
+			console.log("[DEBUG] createInstance node", (props as BoardNodeProps).id, (props as BoardNodeProps).x);
 			return { kind: "node", handleChildren: new Set(), impl: newBoardNodeFromProps(props as BoardNodeProps), renderer };
 		}
 		if (type === BOARD_HOST_HANDLE) {
@@ -377,10 +378,8 @@ const boardReconciler = Reconciler({
 		container.invalidate();
 	},
 
-	clearContainer(container) {
-		container.scene.clear();
-		container.invalidate();
-	},
+	/** @emoji 🧹 No-op: React calls this on HostRoot before mutation; scene graph is driven by append/remove only (see {@link unmountBoardFiberRoot}). */
+	clearContainer(_container: BoardRenderer) {},
 
 	finalizeInitialChildren() {
 		return false;
@@ -398,7 +397,9 @@ const boardReconciler = Reconciler({
 
 	prepareUpdate(instance, type, oldProps, newProps) {
 		if (type === BOARD_HOST_NODE) {
-			return !propsEqualNode(oldProps as BoardNodeProps, newProps as BoardNodeProps);
+			const should = !propsEqualNode(oldProps as BoardNodeProps, newProps as BoardNodeProps);
+			console.log("[DEBUG] prepareUpdate node", should, (oldProps as BoardNodeProps).x, (newProps as BoardNodeProps).x);
+			return should;
 		}
 		if (type === BOARD_HOST_HANDLE) {
 			return !propsEqualHandle(oldProps as BoardHandleProps, newProps as BoardHandleProps);
@@ -414,6 +415,7 @@ const boardReconciler = Reconciler({
 		if (type === BOARD_HOST_NODE) {
 			const next = nextProps as BoardNodeProps;
 			const host = instance as BoardHostNode;
+			console.log("[DEBUG] commitUpdate node", host.impl.id, host.impl.x, next.x);
 			if (instanceShapeSyncKey(host.impl) !== nodeShapeSyncKey(next)) {
 				replaceNodeImpl(renderer, host, next);
 				return;
@@ -500,6 +502,9 @@ export function updateBoardFiberRoot(root: BoardFiberRoot, element: ReactElement
 /** @emoji 🧹 Unmounts the board reconciler subtree without disposing {@link BoardRenderer}. */
 export function unmountBoardFiberRoot(root: BoardFiberRoot): void {
 	updateBoardFiberRoot(root, null, null);
+	const renderer = root.containerInfo as BoardRenderer;
+	renderer.scene.clear();
+	renderer.invalidate();
 }
 
 export { boardReconciler };
