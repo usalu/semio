@@ -49,7 +49,7 @@ pub struct Edge {
 	pub to_handle: HandleId,
 }
 
-/// 🌀 Cubic bezier curve derived from two tangent handles.
+/// 🌀 Cubic bezier curve whose control arms follow circle normals at the two anchors.
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct CubicBezier {
 	pub p0: Vec2,
@@ -170,19 +170,6 @@ fn handle_position(node: &Node, handle: &Handle) -> Vec2 {
 	Vec2 {
 		x: node.center.x + node.radius * handle.angle.cos(),
 		y: node.center.y + node.radius * handle.angle.sin(),
-	}
-}
-
-fn handle_tangent(angle: f32) -> Vec2 {
-	Vec2 { x: -angle.sin(), y: angle.cos() }
-}
-
-fn choose_tangent(position: Vec2, tangent: Vec2, target: Vec2) -> Vec2 {
-	let towards_target = (target - position).normalized();
-	if tangent.dot(towards_target) >= 0.0 {
-		tangent
-	} else {
-		tangent * -1.0
 	}
 }
 
@@ -406,14 +393,20 @@ impl BoardEngine {
 		let to_node = self.nodes.get(&to_handle.node_id)?;
 		let from_position = handle_position(from_node, from_handle);
 		let to_position = handle_position(to_node, to_handle);
-		let tangent_distance = distance(from_position, to_position);
-		let control_length = clamp(tangent_distance * 0.35, 24.0, 240.0);
-		let from_tangent = choose_tangent(from_position, handle_tangent(from_handle.angle), to_position);
-		let to_tangent = choose_tangent(to_position, handle_tangent(to_handle.angle), from_position);
+		let chord = distance(from_position, to_position);
+		let control_length = clamp(chord * 0.35, 24.0, 240.0);
+		let mut from_out = (from_position - from_node.center).normalized();
+		if from_out.length() <= f32::EPSILON {
+			from_out = (to_position - from_position).normalized();
+		}
+		let mut to_in = (to_node.center - to_position).normalized();
+		if to_in.length() <= f32::EPSILON {
+			to_in = (to_position - from_position).normalized();
+		}
 		Some(CubicBezier {
 			p0: from_position,
-			p1: from_position + (from_tangent * control_length),
-			p2: to_position + (to_tangent * control_length),
+			p1: from_position + (from_out * control_length),
+			p2: to_position + (to_in * control_length),
 			p3: to_position,
 		})
 	}
@@ -500,8 +493,12 @@ mod tests {
 		assert!(curve.p0.y.abs() < 0.001);
 		assert!((curve.p3.x - 260.0).abs() < 0.001);
 		assert!(curve.p3.y.abs() < 0.001);
-		assert!(curve.p1.x >= curve.p0.x);
-		assert!(curve.p2.x <= curve.p3.x);
+		let outward = curve.p0 - Vec2 { x: 0.0, y: 0.0 };
+		let arm0 = curve.p1 - curve.p0;
+		assert!(outward.normalized().dot(arm0.normalized()) > 0.99);
+		let inward = Vec2 { x: 300.0, y: 0.0 } - curve.p3;
+		let arm1 = curve.p3 - curve.p2;
+		assert!(inward.normalized().dot(arm1.normalized()).abs() > 0.99);
 	}
 
 	#[test]

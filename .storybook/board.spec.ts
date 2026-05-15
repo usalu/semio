@@ -11,11 +11,17 @@ type BoardCanvasDebugElement = HTMLCanvasElement & {
 	__boardRenderer?: {
 		resolveHit?: (point: { x: number; y: number }) => { id: string } | null;
 		scene: {
+			edges: Map<string, { curve: { p0: Point; p1: Point; p2: Point; p3: Point } }>;
 			getObjectById: (id: string) => { position?: { x: number; y: number }; x?: number; y?: number } | undefined;
 		};
 		worldToScreen: (point: { x: number; y: number }) => { x: number; y: number };
 	};
 };
+
+interface Point {
+	x: number;
+	y: number;
+}
 
 function significantConsoleErrors(messages: string[]): string[] {
 	return messages.filter((text) => !/Failed to load resource:.*\b404\b/i.test(text));
@@ -90,6 +96,50 @@ async function clickBoardObject(page: Page, objectId: string): Promise<void> {
 	await page.mouse.click(point.clientX, point.clientY);
 }
 
+function cubicBezierPoint(curve: { p0: Point; p1: Point; p2: Point; p3: Point }, step: number): Point {
+	const oneMinusStep = 1 - step;
+	const oneMinusSquared = oneMinusStep * oneMinusStep;
+	const oneMinusCubed = oneMinusSquared * oneMinusStep;
+	const stepSquared = step * step;
+	const stepCubed = stepSquared * step;
+	return {
+		x:
+			curve.p0.x * oneMinusCubed +
+			3 * curve.p1.x * oneMinusSquared * step +
+			3 * curve.p2.x * oneMinusStep * stepSquared +
+			curve.p3.x * stepCubed,
+		y:
+			curve.p0.y * oneMinusCubed +
+			3 * curve.p1.y * oneMinusSquared * step +
+			3 * curve.p2.y * oneMinusStep * stepSquared +
+			curve.p3.y * stepCubed,
+	};
+}
+
+async function boardEdgeMidClientPoint(page: Page, edgeId: string): Promise<{ clientX: number; clientY: number }> {
+	const point = await page.evaluate((nextEdgeId) => {
+		const element = document.querySelector('[data-testid="board-canvas"]');
+		if (!(element instanceof HTMLCanvasElement)) {
+			return null;
+		}
+		const boardElement = element as BoardCanvasDebugElement;
+		const renderer = boardElement.__boardRenderer;
+		const edge = renderer?.scene.edges.get(nextEdgeId);
+		if (!renderer || !edge) {
+			return null;
+		}
+		const mid = cubicBezierPoint(edge.curve, 0.5);
+		const screenPoint = renderer.worldToScreen(mid);
+		const rect = boardElement.getBoundingClientRect();
+		return {
+			clientX: rect.left + screenPoint.x,
+			clientY: rect.top + screenPoint.y,
+		};
+	}, edgeId);
+	expect(point).toBeTruthy();
+	return point!;
+}
+
 async function wheelOnCanvasNormalized(page: Page, canvas: Locator, nx: number, ny: number, deltaY: number): Promise<void> {
 	const box = await canvas.boundingBox();
 	expect(box).toBeTruthy();
@@ -149,6 +199,47 @@ test("board default: selection, zoom in to fine LOD, clear selection", async ({ 
 	expect(zoomed).toBeGreaterThan(initialZoom);
 
 	await clickCanvasNormalized(page, canvas, 0.04, 0.04);
+	await expect(canvas).toHaveAttribute("data-board-selection", "");
+});
+
+test("board default: deletes selected node after Delete and keeps scene in sync", async ({ page }) => {
+	const canvas = await expectBoardStory(page, "elements-board--default");
+	await clickBoardObject(page, "beta");
+	await expect(canvas).toHaveAttribute("data-board-selection", "beta");
+	await page.keyboard.press("Delete");
+	await expect
+		.poll(async () =>
+			page.evaluate(() => {
+				const element = document.querySelector('[data-testid="board-canvas"]');
+				if (!(element instanceof HTMLCanvasElement)) {
+					return null;
+				}
+				const boardElement = element as BoardCanvasDebugElement;
+				return boardElement.__boardRenderer?.scene.getObjectById("beta") ? "present" : "absent";
+			}),
+		)
+		.toBe("absent");
+	await expect(canvas).toHaveAttribute("data-board-selection", "");
+});
+
+test("board default: deletes selected edge after Delete", async ({ page }) => {
+	const canvas = await expectBoardStory(page, "elements-board--default");
+	const mid = await boardEdgeMidClientPoint(page, "link-1");
+	await page.mouse.click(mid.clientX, mid.clientY);
+	await expect(canvas).toHaveAttribute("data-board-selection", "link-1");
+	await page.keyboard.press("Delete");
+	await expect
+		.poll(async () =>
+			page.evaluate(() => {
+				const element = document.querySelector('[data-testid="board-canvas"]');
+				if (!(element instanceof HTMLCanvasElement)) {
+					return null;
+				}
+				const boardElement = element as BoardCanvasDebugElement;
+				return boardElement.__boardRenderer?.scene.edges.has("link-1") ? "present" : "absent";
+			}),
+		)
+		.toBe("absent");
 	await expect(canvas).toHaveAttribute("data-board-selection", "");
 });
 

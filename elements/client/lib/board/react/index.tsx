@@ -181,7 +181,7 @@ function requireRenderer(renderer: BoardRenderer | null): BoardRenderer {
 
 //#region 🔖Scene Sync
 function applyNodeProps(instance: BoardNodeObject, descriptor: NodeDescriptor): void {
-	instance.draggable = descriptor.draggable ?? false;
+	instance.draggable = descriptor.draggable ?? true;
 	instance.selected = descriptor.selected ?? false;
 	instance.style = descriptor.style ?? null;
 	instance.userData = { ...(descriptor.userData ?? {}) };
@@ -241,7 +241,7 @@ export function syncBoardScene(renderer: BoardRenderer, descriptor: BoardSceneDe
 				existingNode instanceof BoardNodeObject
 					? existingNode
 					: new BoardNodeObject({
-							draggable: nodeDescriptor.draggable,
+							draggable: nodeDescriptor.draggable ?? true,
 							id: nodeDescriptor.id,
 							radius: nodeDescriptor.radius,
 							selected: nodeDescriptor.selected,

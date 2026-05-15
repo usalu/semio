@@ -41,8 +41,10 @@ export interface CubicBezierCurve {
 export interface BoardEventMap {
 	camera: CameraState;
 	edgeCreate: { id: string; from: string; to: string };
+	edgeDelete: { id: string };
 	hover: { id: string | null };
 	invalidate: undefined;
+	nodeDelete: { id: string };
 	nodeMove: { id: string; x: number; y: number };
 	select: BoardSelectionSnapshot;
 }
@@ -258,12 +260,6 @@ function distanceToBezier(point: Point, curve: CubicBezierCurve, steps = 24): nu
 	return smallestDistance;
 }
 
-function chooseEdgeTangent(position: Point, tangent: Point, target: Point): Point {
-	const towardsTarget = normalizePoint(subtractPoint(target, position));
-	const tangentScore = tangent.x * towardsTarget.x + tangent.y * towardsTarget.y;
-	return tangentScore >= 0 ? tangent : scalePoint(tangent, -1);
-}
-
 function sortedSelectionIds(ids: Iterable<string>): string[] {
 	return Array.from(ids).sort((left, right) => left.localeCompare(right));
 }
@@ -362,17 +358,26 @@ export function computeHandleTangent(angle: number): Point {
 	};
 }
 
+/** 🧭 Builds a cubic whose control arms leave/arrive along circle normals (radial), not along handle tangents. */
 export function computeEdgeBezier(fromHandle: Handle, toHandle: Handle): CubicBezierCurve {
 	const fromPoint = fromHandle.position;
 	const toPoint = toHandle.position;
+	const fromCenter = { x: fromHandle.node.x, y: fromHandle.node.y };
+	const toCenter = { x: toHandle.node.x, y: toHandle.node.y };
+	let fromOut = normalizePoint(subtractPoint(fromPoint, fromCenter));
+	if (lengthOf(fromOut) <= Number.EPSILON) {
+		fromOut = normalizePoint(subtractPoint(toPoint, fromPoint));
+	}
+	let toIn = normalizePoint(subtractPoint(toCenter, toPoint));
+	if (lengthOf(toIn) <= Number.EPSILON) {
+		toIn = normalizePoint(subtractPoint(toPoint, fromPoint));
+	}
 	const handleDistance = distanceBetween(fromPoint, toPoint);
 	const controlLength = clamp(handleDistance * 0.35, 24, 240);
-	const fromTangent = chooseEdgeTangent(fromPoint, fromHandle.tangent, toPoint);
-	const toTangent = chooseEdgeTangent(toPoint, toHandle.tangent, fromPoint);
 	return {
 		p0: fromPoint,
-		p1: addPoint(fromPoint, scalePoint(fromTangent, controlLength)),
-		p2: addPoint(toPoint, scalePoint(toTangent, controlLength)),
+		p1: addPoint(fromPoint, scalePoint(fromOut, controlLength)),
+		p2: addPoint(toPoint, scalePoint(toIn, controlLength)),
 		p3: toPoint,
 	};
 }
@@ -464,12 +469,12 @@ export class BoardObject {
 	}
 }
 
-/** 🟠 Circular node primitive with stable world-space center and radius. */
+/** 🟠 Circular node primitive with stable world-space center and radius; draggable defaults on unless opted out. */
 export class Node extends BoardObject {
 	handles: Handle[] = [];
 
 	constructor(options: NodeOptions) {
-		super(options.id, options);
+		super(options.id, { ...options, draggable: options.draggable ?? true });
 		this.x = options.x;
 		this.y = options.y;
 		this.radius = options.radius;
@@ -542,7 +547,7 @@ export class Handle extends BoardObject {
 	}
 }
 
-/** 🪢 Cubic edge connecting two tangent handles. */
+/** 🪢 Cubic edge between two boundary handles; geometry uses circle normals at the anchors. */
 export class Edge extends BoardObject {
 	from: Handle;
 	to: Handle;
@@ -930,12 +935,14 @@ export class BoardRenderer {
 		if (!this.canvas) {
 			return;
 		}
+		this.canvas.tabIndex = 0;
 		this.canvas.style.touchAction = "none";
 		this.canvas.addEventListener("pointerdown", this.handlePointerDown as EventListener);
 		this.canvas.addEventListener("pointermove", this.handlePointerMove as EventListener);
 		this.canvas.addEventListener("pointerup", this.handlePointerUp as EventListener);
 		this.canvas.addEventListener("pointerleave", this.handlePointerLeave as EventListener);
 		this.canvas.addEventListener("wheel", this.handleWheel as EventListener, { passive: false });
+		this.canvas.addEventListener("keydown", this.handleKeyDown as EventListener);
 	}
 
 	private detachCanvasListeners(): void {
@@ -947,6 +954,7 @@ export class BoardRenderer {
 		this.canvas.removeEventListener("pointerup", this.handlePointerUp as EventListener);
 		this.canvas.removeEventListener("pointerleave", this.handlePointerLeave as EventListener);
 		this.canvas.removeEventListener("wheel", this.handleWheel as EventListener);
+		this.canvas.removeEventListener("keydown", this.handleKeyDown as EventListener);
 	}
 
 	private updateSelection(ids: Iterable<string>): void {
@@ -972,6 +980,44 @@ export class BoardRenderer {
 		this.emit("hover", { id });
 		this.markDirty();
 	}
+
+	private deleteSelectedObjects(): void {
+		const ids = [...this.selectionIds];
+		const edges = ids.map((id) => this.scene.edges.get(id)).filter((object): object is Edge => object != null);
+		const nodes = ids.map((id) => this.scene.nodes.get(id)).filter((object): object is Node => object != null);
+		for (const edge of edges) {
+			this.scene.remove(edge);
+			this.emit("edgeDelete", { id: edge.id });
+		}
+		for (const node of nodes) {
+			this.scene.remove(node);
+			this.emit("nodeDelete", { id: node.id });
+		}
+		const remaining = new Set<string>();
+		for (const id of this.selectionIds) {
+			if (this.scene.getObjectById(id)) {
+				remaining.add(id);
+			}
+		}
+		this.updateSelection(remaining);
+	}
+
+	private readonly handleKeyDown = (event: KeyboardEvent): void => {
+		if (event.repeat) {
+			return;
+		}
+		if (event.target !== this.canvas) {
+			return;
+		}
+		if (event.key !== "Delete" && event.key !== "Backspace") {
+			return;
+		}
+		if (this.selectionIds.size === 0) {
+			return;
+		}
+		event.preventDefault();
+		this.deleteSelectedObjects();
+	};
 
 	private pointerStateFromEvent(event: PointerEvent | WheelEvent): PointerWorldState {
 		const rect = this.canvas?.getBoundingClientRect();
@@ -1179,6 +1225,7 @@ export class BoardRenderer {
 		if (event.button !== 0 && event.button !== 1) {
 			return;
 		}
+		this.canvas?.focus({ preventScroll: true });
 		const pointer = this.pointerStateFromEvent(event);
 		const hitObject = this.resolveHit(pointer.point);
 		if (event.button === 1 || (!hitObject && event.shiftKey)) {
@@ -1307,7 +1354,7 @@ if (boardVitest) {
 	}
 
 	describe("board geometry helpers", () => {
-		it("derives handle positions and cubic edge control points from node tangents", () => {
+		it("places cubic edge control arms along circle normals at the anchors", () => {
 			const sourceNode = new Node({ id: "a", radius: 40, x: 0, y: 0 });
 			const targetNode = new Node({ id: "b", radius: 40, x: 300, y: 0 });
 			const sourceHandle = new Handle({ angle: 0, id: "a.out", node: sourceNode });
@@ -1318,8 +1365,16 @@ if (boardVitest) {
 			expect(curve.p0.y).toBeCloseTo(0);
 			expect(curve.p3.x).toBeCloseTo(260);
 			expect(curve.p3.y).toBeCloseTo(0);
-			expect(curve.p1.x).toBeGreaterThanOrEqual(curve.p0.x);
-			expect(curve.p2.x).toBeLessThanOrEqual(curve.p3.x);
+			const outward0 = { x: curve.p0.x - sourceNode.x, y: curve.p0.y - sourceNode.y };
+			const arm0 = { x: curve.p1.x - curve.p0.x, y: curve.p1.y - curve.p0.y };
+			const inward1 = { x: targetNode.x - curve.p3.x, y: targetNode.y - curve.p3.y };
+			const arm1 = { x: curve.p3.x - curve.p2.x, y: curve.p3.y - curve.p2.y };
+			const align0 =
+				(outward0.x * arm0.x + outward0.y * arm0.y) / (Math.hypot(outward0.x, outward0.y) * Math.hypot(arm0.x, arm0.y));
+			const align1 =
+				Math.abs((inward1.x * arm1.x + inward1.y * arm1.y) / (Math.hypot(inward1.x, inward1.y) * Math.hypot(arm1.x, arm1.y)));
+			expect(align0).toBeGreaterThan(0.99);
+			expect(align1).toBeGreaterThan(0.99);
 		});
 
 		it("labels coarse LOD bands from zoom thresholds", () => {
@@ -1349,6 +1404,46 @@ if (boardVitest) {
 			expect(renderer.scene.getObjectById("source.out")).toBe(sourceHandle);
 			expect(renderer.scene.getObjectById("edge-1")).toBe(edge);
 			expect(edgeEvents).toEqual([{ id: "edge-1", from: "source.out", to: "target.in" }]);
+
+			renderer.dispose();
+		});
+
+		it("deletes selected edges and nodes when the canvas receives Delete", () => {
+			const { canvas } = createMockCanvas();
+			const renderer = new BoardRenderer({ canvas });
+			const edgeDeletes: string[] = [];
+			const nodeDeletes: string[] = [];
+			renderer.on("edgeDelete", (event) => edgeDeletes.push(event.id));
+			renderer.on("nodeDelete", (event) => nodeDeletes.push(event.id));
+
+			const sourceNode = new Node({ id: "source", radius: 36, x: 0, y: 0 });
+			const targetNode = new Node({ id: "target", radius: 36, x: 220, y: 0 });
+			const sourceHandle = new Handle({ angle: 0, id: "source.out", node: sourceNode });
+			const targetHandle = new Handle({ angle: Math.PI, id: "target.in", node: targetNode });
+			const edge = new Edge({ from: sourceHandle, id: "edge-1", to: targetHandle });
+			renderer.scene.add(sourceNode).add(targetNode).add(edge);
+			renderer.render();
+
+			canvas.focus();
+			const mid = cubicBezierPoint(edge.curve, 0.5);
+			const screen = renderer.worldToScreen(mid);
+			canvas.dispatchEvent(
+				new MouseEvent("pointerdown", { bubbles: true, button: 0, clientX: screen.x, clientY: screen.y }),
+			);
+			canvas.dispatchEvent(new KeyboardEvent("keydown", { bubbles: true, key: "Delete" }));
+
+			expect(renderer.scene.edges.has("edge-1")).toBe(false);
+			expect(edgeDeletes).toEqual(["edge-1"]);
+			expect(renderer.selection.getSnapshot().ids).toEqual([]);
+
+			const nodeScreen = renderer.worldToScreen({ x: sourceNode.x, y: sourceNode.y });
+			canvas.dispatchEvent(
+				new MouseEvent("pointerdown", { bubbles: true, button: 0, clientX: nodeScreen.x, clientY: nodeScreen.y }),
+			);
+			canvas.dispatchEvent(new KeyboardEvent("keydown", { bubbles: true, key: "Delete" }));
+
+			expect(renderer.scene.nodes.has("source")).toBe(false);
+			expect(nodeDeletes).toContain("source");
 
 			renderer.dispose();
 		});

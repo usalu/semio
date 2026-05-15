@@ -6,9 +6,15 @@
 // #endregion 🧲Header
 
 import type { Meta, StoryObj } from "@storybook/react";
-import type { ReactElement } from "react";
+import { useCallback, useState, type Dispatch, type ReactElement, type SetStateAction } from "react";
 
-import { BoardCanvas, Edge, Handle, Node } from "../../../../elements/client/lib/board/react/index.tsx";
+import {
+	BoardCanvas,
+	Edge,
+	Handle,
+	Node,
+	useBoardEvent,
+} from "../../../../elements/client/lib/board/react/index.tsx";
 import nakaginCapsuleTowerBoardFixture from "../../../fixtures/nakagin-capsule-tower.board.json";
 
 const meta = {
@@ -55,17 +61,67 @@ interface BoardFixtureV1 {
 
 const nakaginCapsuleTowerBoard = nakaginCapsuleTowerBoardFixture as BoardFixtureV1;
 
-const boardSceneFixture: ReactElement = (
-	<>
-		<Node draggable id="alpha" radius={44} x={0} y={0}>
-			<Handle angle={0} id="alpha.out" />
-		</Node>
-		<Node id="beta" radius={40} x={280} y={120}>
-			<Handle angle={Math.PI} id="beta.in" />
-		</Node>
-		<Edge from="alpha.out" id="link-1" to="beta.in" />
-	</>
-);
+type DefaultBoardGraphNode = {
+	handles: { angle: number; id: string }[];
+	id: string;
+	radius: number;
+	x: number;
+	y: number;
+};
+
+type DefaultBoardGraphEdge = { from: string; id: string; to: string };
+
+type DefaultBoardGraph = { edges: DefaultBoardGraphEdge[]; nodes: DefaultBoardGraphNode[] };
+
+const defaultBoardGraph: DefaultBoardGraph = {
+	edges: [{ from: "alpha.out", id: "link-1", to: "beta.in" }],
+	nodes: [
+		{ handles: [{ angle: 0, id: "alpha.out" }], id: "alpha", radius: 44, x: 0, y: 0 },
+		{ handles: [{ angle: Math.PI, id: "beta.in" }], id: "beta", radius: 40, x: 280, y: 120 },
+	],
+};
+
+function BoardDeleteReconciler({ setGraph }: { setGraph: Dispatch<SetStateAction<DefaultBoardGraph>> }): null {
+	useBoardEvent(
+		"edgeDelete",
+		useCallback(({ id }: { id: string }) => {
+			setGraph((graph) => ({ ...graph, edges: graph.edges.filter((edge) => edge.id !== id) }));
+		}, [setGraph]),
+	);
+	useBoardEvent(
+		"nodeDelete",
+		useCallback(({ id }: { id: string }) => {
+			setGraph((graph) => {
+				const node = graph.nodes.find((entry) => entry.id === id);
+				const handleIds = new Set(node?.handles.map((handle) => handle.id) ?? []);
+				return {
+					edges: graph.edges.filter((edge) => !handleIds.has(edge.from) && !handleIds.has(edge.to)),
+					nodes: graph.nodes.filter((entry) => entry.id !== id),
+				};
+			});
+		}, [setGraph]),
+	);
+	return null;
+}
+
+function StatefulInteractiveBoardScene(): ReactElement {
+	const [graph, setGraph] = useState(() => defaultBoardGraph);
+	return (
+		<>
+			<BoardDeleteReconciler setGraph={setGraph} />
+			{graph.nodes.map((node) => (
+				<Node id={node.id} key={node.id} radius={node.radius} x={node.x} y={node.y}>
+					{node.handles.map((handle) => (
+						<Handle angle={handle.angle} id={handle.id} key={handle.id} />
+					))}
+				</Node>
+			))}
+			{graph.edges.map((edge) => (
+				<Edge from={edge.from} id={edge.id} key={edge.id} to={edge.to} />
+			))}
+		</>
+	);
+}
 
 /** 🗼 Full Nakagin Capsule Tower board from `nakagin-capsule-tower.board.json` (regenerate via `nakagin-capsule-tower-board.generate.script.ts`). */
 const nakaginCapsuleTowerBoardScene: ReactElement = (
@@ -77,16 +133,16 @@ const nakaginCapsuleTowerBoardScene: ReactElement = (
 				))}
 			</Node>
 		))}
-			{nakaginCapsuleTowerBoard.edges.map((edge) => (
-				<Edge from={edge.from} id={edge.id} key={edge.id} to={edge.to} />
-			))}
+		{nakaginCapsuleTowerBoard.edges.map((edge) => (
+			<Edge from={edge.from} id={edge.id} key={edge.id} to={edge.to} />
+		))}
 	</>
 );
 
 export const Default: Story = {
 	render: (args) => (
 		<BoardCanvas {...args}>
-			{boardSceneFixture}
+			<StatefulInteractiveBoardScene />
 		</BoardCanvas>
 	),
 	args: {
@@ -100,7 +156,7 @@ export const Default: Story = {
 export const WorldTileClip: Story = {
 	render: (args) => (
 		<BoardCanvas {...args}>
-			{boardSceneFixture}
+			<StatefulInteractiveBoardScene />
 		</BoardCanvas>
 	),
 	args: {
