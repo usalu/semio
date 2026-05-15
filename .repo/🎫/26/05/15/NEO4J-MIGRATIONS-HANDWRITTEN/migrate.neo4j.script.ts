@@ -483,6 +483,41 @@ function main(): void {
     process.exit(1);
   }
 
+  const probeNoKindProperty = spawnSync(
+    shell,
+    [
+      "-a",
+      process.env.NEO4J_URI || "bolt://localhost:7687",
+      "-u",
+      process.env.NEO4J_USERNAME || "neo4j",
+      "-p",
+      process.env.NEO4J_PASSWORD || "password",
+      "-d",
+      DATABASE,
+      "--format",
+      "plain",
+      "MATCH (n) WHERE n.kind IS NOT NULL RETURN count(n) AS kindPropertyCount;",
+    ],
+    { encoding: "utf8", cwd: REPO_ROOT, env: buildCypherEnv() },
+  );
+
+  if (probeNoKindProperty.status !== 0) {
+    console.error(`[migrate:neo4j] kind-property verify failed: ${probeNoKindProperty.stderr}`);
+    process.exit(1);
+  }
+
+  const nkTail = String(probeNoKindProperty.stdout ?? "")
+    .trim()
+    .split(/\r?\n/)
+    .map((l) => l.trim())
+    .filter(Boolean);
+  const nkLast = nkTail[nkTail.length - 1] ?? "";
+  const kindPropertyCount = Number.parseInt(nkLast.trim(), 10);
+  if (!Number.isFinite(kindPropertyCount) || kindPropertyCount !== 0) {
+    console.error(`[migrate:neo4j] expected zero nodes with legacy \`kind\` property; verify output:\n${probeNoKindProperty.stdout}`);
+    process.exit(1);
+  }
+
   console.log("[migrate:neo4j] handwritten migrations ok.");
 }
 

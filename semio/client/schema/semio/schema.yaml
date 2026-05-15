@@ -3,11 +3,6 @@ schema:
     - &scalar
     - &enum
     - &field
-      kinds:
-        - &EMBEDDED
-        - &REFERENCE
-        - &COMPUTED
-        - &CACHED
     - &interface
     - &class
     - &module
@@ -43,18 +38,18 @@ schema:
         fields:
           name:
             is: *string
-            kind: *EMBEDDED
             constraints:
               - &nameNonEmpty "name is not empty"
               - &nameShort "name is less than 100 chars"
           description:
             is: *string
-            kind: *EMBEDDED
             constraints:
               - &descriptionShort "description is less than 1000 chars"
           icon: *string
           createdAt: *timestamp
-          createdBy: *string
+          createdBy:
+            is: *author
+            cached: false
       artifact: &artifact
         implements: [*richStrongEntity]
         fields:
@@ -277,7 +272,7 @@ schema:
           savedAt: *timestamp
           saved:
             is: *boolean
-            kind: *COMPUTED
+            cached: false
             constraints:
               - &changeSavedDerivedFromSavedAt "📌 saved derives from embedded sibling savedAt: non-null persisted timestamp implies the boolean reads true."
           description: *string

@@ -1,7 +1,7 @@
 // #region 🧲Header
 // 💻 .storybook/stories/elements/board/Board.stories.tsx
 // Specs: Host the elements board canvas for Storybook + Playwright raster/LOD/selection checks.
-// Summary: Raster modes, JSON fixture (Nakagin flat center cluster), and Playwright harness stories.
+// Summary: Raster modes, full Nakagin board fixture (180 nodes / 179 kit connections), and Playwright harness stories.
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 // #endregion 🧲Header
 
@@ -67,7 +67,7 @@ const boardSceneFixture: ReactElement = (
 	</>
 );
 
-/** 🗼 Nakagin center cluster from `nakagin-capsule-tower.board.json` (parent-design connections; handle ids follow piece-kind connector names, `link` when the kind exposes a single port). */
+/** 🗼 Full Nakagin Capsule Tower board from `nakagin-capsule-tower.board.json` (regenerate via `nakagin-capsule-tower-board.generate.script.ts`). */
 const nakaginCapsuleTowerBoardScene: ReactElement = (
 	<>
 		{nakaginCapsuleTowerBoard.nodes.map((node) => (

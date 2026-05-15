@@ -35,8 +35,9 @@ function targetNameFromAliasSource(aliasSource: string): string {
   return scalarAliasToNeo4jScalarName[aliasSource] ?? pascalFromYamlKey(aliasSource);
 }
 
+/** @emoji 🎯 True when this map is a leaf field spec (has `is`); sibling keys like `cached` or `constraints` do not affect declared-`IS` repair. */
 function isTerminalFieldMap(m: YAMLMap): boolean {
-  return m.has("is", true) || m.has("kind", true);
+  return m.has("is", true);
 }
 
 function collectFlatFields(fieldsMap: YAMLMap, out: { name: string; valueNode: YAMLNode }[]): void {

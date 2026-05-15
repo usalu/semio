@@ -223,3 +223,9 @@ WITH n,
   END AS d
 SET n = { description: d };
 //#endregion StripLegacySemioGraphNodeProperties
+
+//#region RemoveResidualKindProperty
+MATCH (n)
+WHERE n.kind IS NOT NULL
+REMOVE n.kind;
+//#endregion RemoveResidualKindProperty
