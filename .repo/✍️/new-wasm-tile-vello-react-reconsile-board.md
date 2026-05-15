@@ -970,7 +970,7 @@ These exist for **Playwright** and debugging; gate or remove when a formal inspe
 
 # End-to-end verification matrix
 
-From repo root (static Storybook + preview static server — see `test.script.ts` `storybook` slice):
+From repo root (static Storybook + Bun static server on `http://127.0.0.1:<port>/`; default port `6010`, override with `STORYBOOK_PORT` if busy):
 
 ```bash
 bun run test:storybook

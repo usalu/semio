@@ -26,8 +26,9 @@ if (argv[0] === "storybook") {
 }
 
 if (argv[0] === "storybook-static") {
-  const host = process.env.DEVCONTAINER === "true" ? "0.0.0.0" : "127.0.0.1";
-  const port = Number(process.env.STORYBOOK_PORT ?? "65010");
+  /** `0.0.0.0` so `localhost` (IPv4/IPv6) and `127.0.0.1` both reach Playwright smoke tests on Windows. */
+  const host = process.env.STORYBOOK_STATIC_HOST ?? "0.0.0.0";
+  const port = Number(process.env.STORYBOOK_PORT ?? "6010");
   const repoRootPath = resolve(root);
   /** Storybook build output; serve this folder as site root so `/iframe.html` matches the build’s asset paths. */
   const documentRoot = resolve(repoRootPath, "storybook-static");

@@ -19,39 +19,39 @@ async function waitForUrl(url: string, timeoutMs: number): Promise<void> {
 }
 
 if (slice === "storybook") {
-  const storybookPort = process.env.STORYBOOK_PORT ?? "65010";
-  const baseUrl = process.env.PLAYWRIGHT_BASE_URL ?? `http://127.0.0.1:${storybookPort}/storybook-static/`;
+	const storybookPort = process.env.STORYBOOK_PORT ?? "6010";
+	const baseUrl = `http://127.0.0.1:${storybookPort}/`;
 
-  execFileSync("bun", ["./build.script.ts", "storybook"], {
-    cwd: root,
-    stdio: "inherit",
-  });
+	execFileSync("bun", ["./build.script.ts", "storybook"], {
+		cwd: root,
+		stdio: "inherit",
+	});
 
-  const server = spawn("bun", ["./dev.script.ts", "storybook-static"], {
-    cwd: root,
-    stdio: "inherit",
-    env: {
-      ...process.env,
-      STORYBOOK_PORT: storybookPort,
-    },
-  });
+	const server = spawn("bun", ["./dev.script.ts", "storybook-static"], {
+		cwd: root,
+		stdio: "inherit",
+		env: {
+			...process.env,
+			STORYBOOK_PORT: storybookPort,
+		},
+	});
 
-  try {
-    await waitForUrl(new URL("index.html", baseUrl).href, 120000);
-    execFileSync("bunx", ["playwright", "test", "--config", ".storybook/playwright.config.ts"], {
-      cwd: root,
-      stdio: "inherit",
-      env: {
-        ...process.env,
-        PLAYWRIGHT_BASE_URL: baseUrl,
-        PLAYWRIGHT_BROWSERS_PATH: process.env.PLAYWRIGHT_BROWSERS_PATH ?? `${root}/node_modules/.cache/ms-playwright`,
-        STORYBOOK_PORT: storybookPort,
-      },
-    });
-  } finally {
-    server.kill();
-  }
-  process.exit(0);
+	try {
+		await waitForUrl(new URL("index.html", baseUrl).href, 120000);
+		execFileSync("bunx", ["playwright", "test", ".storybook/monorepo.spec.ts", "--config", ".storybook/playwright.config.ts"], {
+			cwd: root,
+			stdio: "inherit",
+			env: {
+				...process.env,
+				PLAYWRIGHT_BASE_URL: baseUrl,
+				PLAYWRIGHT_BROWSERS_PATH: process.env.PLAYWRIGHT_BROWSERS_PATH ?? `${root}/node_modules/.cache/ms-playwright`,
+				STORYBOOK_PORT: storybookPort,
+			},
+		});
+	} finally {
+		server.kill();
+	}
+	process.exit(0);
 }
 
 execFileSync("bun", ["nx", "run-many", "-t", "build", "-p", "@semio/js", "@semio/react"], {

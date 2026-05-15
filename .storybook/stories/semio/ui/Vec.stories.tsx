@@ -22,7 +22,7 @@ type Story = StoryObj<typeof meta>;
 
 const defaultArgs = {
   id: "vec-default",
-  defaultVec: { u: 0.3, v: 0.5 } as VecValue,
+  vec: { u: 0.3, v: 0.5 } as VecValue,
   minU: -1,
   maxU: 1,
   minV: -1,
@@ -46,7 +46,18 @@ export const NoOrigin: Story = {
 };
 
 export const PositiveDomain: Story = {
-  args: { ...defaultArgs, id: "vec-positive-domain", minU: 0, maxU: 10, minV: 0, maxV: 10, defaultVec: { u: 5, v: 5 } },
+  args: (() => {
+    const { vec: _ignored, ...withoutVec } = defaultArgs;
+    return {
+      ...withoutVec,
+      id: "vec-positive-domain",
+      minU: 0,
+      maxU: 10,
+      minV: 0,
+      maxV: 10,
+      vec: { u: 5, v: 5 } as VecValue,
+    };
+  })(),
 };
 
 export const Large: Story = {

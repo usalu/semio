@@ -54,7 +54,7 @@ const config: StorybookConfig = {
 	core: {
 		disableTelemetry: true,
 	},
-	async viteFinal(config) {
+	async viteFinal(config, { configType }) {
 		config.resolve = config.resolve || {};
 		config.resolve.alias = {
 			...(config.resolve.alias || {}),
@@ -131,11 +131,19 @@ const config: StorybookConfig = {
 		};
 		config.build = config.build || {};
 		config.build.target = "es2022";
-		config.mode = "development";
-		config.define = {
-			...config.define,
-			"process.env.NODE_ENV": JSON.stringify("development"),
-		};
+		if (configType === "DEVELOPMENT") {
+			config.mode = "development";
+			config.define = {
+				...config.define,
+				"process.env.NODE_ENV": JSON.stringify("development"),
+			};
+		} else {
+			config.mode = "production";
+			config.define = {
+				...config.define,
+				"process.env.NODE_ENV": JSON.stringify("production"),
+			};
+		}
 		config.worker = {
 			...(config.worker || {}),
 			format: "es",

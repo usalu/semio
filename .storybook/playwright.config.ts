@@ -1,7 +1,7 @@
 // #region 🧲Header
 // 💻 .storybook/playwright.config.ts
 // Specs: Run Playwright smoke coverage against the root monorepo Storybook dev server.
-// Summary: Configures Playwright for Storybook end-to-end verification across aggregated workspace stories.
+// Summary: `bun run test:storybook` builds, serves `storybook-static/` via `dev.script.ts storybook-static`, then runs Playwright with `PLAYWRIGHT_BASE_URL` set; this config does not start its own server.
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 // #endregion 🧲Header
 
@@ -11,16 +11,12 @@ import { fileURLToPath } from "node:url";
 import { defineConfig, devices } from "@playwright/test";
 
 const storybookDir = resolve(fileURLToPath(import.meta.url), "..");
-const repoRootPath = resolve(storybookDir, "..");
-const storybookPort = process.env.STORYBOOK_PORT ?? "65010";
+const storybookPort = process.env.STORYBOOK_PORT ?? "6010";
 function withTrailingSlash(url: string): string {
 	return url.endsWith("/") ? url : `${url}/`;
 }
-/** Trailing `/` so `page.goto("iframe.html")` stays under the static server root (`dev.script.ts storybook-static` serves `storybook-static/`). */
-const baseURL = withTrailingSlash(
-	process.env.PLAYWRIGHT_BASE_URL ?? `http://127.0.0.1:${storybookPort}/storybook-static`,
-);
-const webServerUrl = new URL("index.html", baseURL).href;
+/** Trailing `/` so `page.goto("iframe.html")` resolves at the static server root. */
+const baseURL = withTrailingSlash(process.env.PLAYWRIGHT_BASE_URL ?? `http://127.0.0.1:${storybookPort}/`);
 
 export default defineConfig({
 	testDir: storybookDir,
