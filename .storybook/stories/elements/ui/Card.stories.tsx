@@ -18,7 +18,7 @@ import { MemoryRouter } from "react-router";
 // #region 🎬Card
 
 const meta = {
-  title: "elements/Card",
+  title: "elements/react/Card",
   component: Card,
   parameters: {
     layout: "padded",

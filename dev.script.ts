@@ -13,7 +13,24 @@ if (argv[0] === "storybook") {
   const host = process.env.DEVCONTAINER === "true" ? "0.0.0.0" : "127.0.0.1";
   const port = process.env.STORYBOOK_PORT ?? "6010";
   const extra = argv.slice(1);
-  execFileSync("bunx", ["storybook", "dev", "-c", ".storybook", "-p", port, "--exact-port", "--host", host, "--no-open", "--debug", ...extra], {
+  const useExactPort =
+    process.env.STORYBOOK_EXACT_PORT === "1" || process.env.STORYBOOK_EXACT_PORT === "true";
+  /** Without `--exact-port`, Storybook can use the next free port when `STORYBOOK_PORT` is busy. Set `STORYBOOK_EXACT_PORT=1` for fail-fast (e.g. CI). */
+  const storybookArgs = [
+    "storybook",
+    "dev",
+    "-c",
+    ".storybook",
+    "-p",
+    port,
+    ...(useExactPort ? ["--exact-port"] : []),
+    "--host",
+    host,
+    "--no-open",
+    "--debug",
+    ...extra,
+  ];
+  execFileSync("bunx", storybookArgs, {
     cwd: root,
     stdio: "inherit",
     env: {

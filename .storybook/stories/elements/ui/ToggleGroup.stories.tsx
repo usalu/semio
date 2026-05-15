@@ -14,7 +14,7 @@ import { Box, List, Lock, Network, Plus, Settings } from "lucide-react";
 
 // 🔷#region 🧩ToggleGroup
 const meta = {
-  title: "elements/ToggleGroup",
+  title: "elements/react/ToggleGroup",
   component: ToggleGroup,
   parameters: {
     layout: "centered",

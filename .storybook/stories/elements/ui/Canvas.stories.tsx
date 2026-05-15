@@ -13,7 +13,7 @@ import type { Meta, StoryObj } from "@storybook/react";
 
 // 🔷#region ⚙️Canvas
 const meta = {
-  title: "elements/Canvas",
+  title: "elements/react/Canvas",
   component: Canvas,
   parameters: {
     layout: "fullscreen",

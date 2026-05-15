@@ -13,7 +13,7 @@ import type { Meta, StoryObj } from "@storybook/react";
 
 // 📝#region 🩺Input
 const meta = {
-  title: "elements/Input",
+  title: "elements/react/Input",
   component: Input,
   parameters: {
     layout: "centered",

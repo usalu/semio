@@ -17,7 +17,7 @@ import type { Meta, StoryObj } from "@storybook/react";
 // #region 📢Strip
 
 const stripMeta = {
-  title: "elements/Strip",
+  title: "elements/react/Strip",
   component: Strip,
   parameters: {
     layout: "padded",

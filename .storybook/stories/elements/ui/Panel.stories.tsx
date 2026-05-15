@@ -19,7 +19,7 @@ import { useState } from "react";
 // #region 🦉Panel
 
 const meta = {
-  title: "elements/Panel",
+  title: "elements/react/Panel",
   component: Panel,
   parameters: {
     layout: "padded",

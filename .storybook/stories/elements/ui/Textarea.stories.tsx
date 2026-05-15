@@ -14,7 +14,7 @@ import { nakagin } from "../../../fixtures/nakagin";
 
 // 📝#region 🎏Textarea
 const meta = {
-  title: "elements/Textarea",
+  title: "elements/react/Textarea",
   component: Textarea,
   parameters: {
     layout: "centered",

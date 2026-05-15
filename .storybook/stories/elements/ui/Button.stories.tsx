@@ -15,7 +15,7 @@ import { useState } from "react";
 
 // 🔘#region 🔤Button
 const meta = {
-  title: "elements/Button",
+  title: "elements/react/Button",
   component: Button,
   parameters: {
     layout: "centered",
@@ -39,7 +39,7 @@ export const Default: Story = {
 // #region 🪬ButtonCycle
 
 const cycleMeta = {
-  title: "elements/ButtonCycle",
+  title: "elements/react/ButtonCycle",
   component: ButtonCycle,
   parameters: {
     layout: "centered",

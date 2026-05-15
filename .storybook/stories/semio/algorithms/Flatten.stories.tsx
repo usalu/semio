@@ -67,7 +67,7 @@ function FlattenFrame() {
 }
 
 const meta = {
-  title: "semio-algorithms/Flatten",
+  title: "semio/algorithms/Flatten",
   component: FlattenFrame,
   parameters: { layout: "fullscreen" },
   tags: ["autodocs"],

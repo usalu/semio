@@ -11,10 +11,14 @@ function significantConsoleErrors(messages: string[]): string[] {
 	return messages.filter((text) => !/Failed to load resource:.*\b404\b/i.test(text));
 }
 
-async function clickCanvasNormalized(canvas: Locator, nx: number, ny: number): Promise<void> {
+async function clickCanvasNormalized(page: Page, canvas: Locator, nx: number, ny: number): Promise<void> {
 	const box = await canvas.boundingBox();
 	expect(box).toBeTruthy();
-	await canvas.click({ force: true, position: { x: nx * box!.width, y: ny * box!.height } });
+	const x = box!.x + nx * box!.width;
+	const y = box!.y + ny * box!.height;
+	await page.mouse.move(x, y);
+	await page.mouse.down();
+	await page.mouse.up();
 }
 
 async function wheelOnCanvasNormalized(page: Page, canvas: Locator, nx: number, ny: number, deltaY: number): Promise<void> {
@@ -65,7 +69,7 @@ test("board default: selection, zoom in to fine LOD, clear selection", async ({ 
 	const initialZoom = Number(await canvas.getAttribute("data-board-zoom"));
 	expect(initialZoom).toBeCloseTo(1, 1);
 
-	await clickCanvasNormalized(canvas, 0.5, 0.5);
+	await clickCanvasNormalized(page, canvas, 0.5, 0.5);
 	await expect(canvas).toHaveAttribute("data-board-selection", "alpha");
 
 	for (let index = 0; index < 18; index += 1) {
@@ -75,7 +79,7 @@ test("board default: selection, zoom in to fine LOD, clear selection", async ({ 
 	const zoomed = Number(await canvas.getAttribute("data-board-zoom"));
 	expect(zoomed).toBeGreaterThan(initialZoom);
 
-	await clickCanvasNormalized(canvas, 0.04, 0.04);
+	await clickCanvasNormalized(page, canvas, 0.04, 0.04);
 	await expect(canvas).toHaveAttribute("data-board-selection", "");
 });
 
@@ -140,12 +144,12 @@ test("board world-clip: raster mode, node selection, handle hit", async ({ page 
 	const canvas = await expectBoardStory(page, "elements-board--world-tile-clip");
 	await expect(canvas).toHaveAttribute("data-board-raster", "world-clip");
 
-	await clickCanvasNormalized(canvas, 0.5, 0.5);
+	await clickCanvasNormalized(page, canvas, 0.5, 0.5);
 	await expect(canvas).toHaveAttribute("data-board-selection", "alpha");
 
 	const box = await canvas.boundingBox();
 	expect(box).toBeTruthy();
 	const nx = 0.5 + 44 / box!.width;
-	await clickCanvasNormalized(canvas, nx, 0.5);
+	await clickCanvasNormalized(page, canvas, nx, 0.5);
 	await expect(canvas).toHaveAttribute("data-board-selection", "alpha.out");
 });

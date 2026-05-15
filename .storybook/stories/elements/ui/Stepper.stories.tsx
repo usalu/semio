@@ -14,7 +14,7 @@ import { useState } from "react";
 
 // 🔷#region 🏬Stepper
 const meta = {
-  title: "elements/Stepper",
+  title: "elements/react/Stepper",
   component: Stepper,
   parameters: {
     layout: "centered",

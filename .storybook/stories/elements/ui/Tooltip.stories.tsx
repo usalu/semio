@@ -63,7 +63,7 @@ const TooltipExamples = () => (
 
 // 🔷#region 🎙️Tooltip
 const meta = {
-  title: "elements/Tooltip",
+  title: "elements/react/Tooltip",
   component: TooltipExamples,
   parameters: {
     layout: "centered",

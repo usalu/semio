@@ -14,7 +14,7 @@ import { Box, List, Network } from "lucide-react";
 
 // 🔘#region 🧵ButtonGroup
 const meta = {
-  title: "elements/ButtonGroup",
+  title: "elements/react/ButtonGroup",
   component: ButtonGroup,
   parameters: {
     layout: "centered",

@@ -476,7 +476,7 @@ const incompleteDataReport: ValidationReport = {
 
 // 🌳#region ✏️ValidationTreeMeta
 const validationMeta = {
-  title: "elements/ValidationTree",
+  title: "elements/react/ValidationTree",
   component: ValidationTree,
   parameters: {
     layout: "padded",

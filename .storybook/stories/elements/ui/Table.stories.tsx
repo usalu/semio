@@ -14,7 +14,7 @@ import { FileCode, FileImage, FolderIcon } from "lucide-react";
 
 // 📊#region 🛎️Table
 const meta = {
-  title: "elements/Table",
+  title: "elements/react/Table",
   component: Table,
   parameters: {
     layout: "padded",

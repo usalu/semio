@@ -17,7 +17,7 @@ import type { Meta, StoryObj } from "@storybook/react";
 // #region 🌊Window
 
 const meta = {
-  title: "elements/Window",
+  title: "elements/react/Window",
   component: Window,
   parameters: {
     layout: "fullscreen",

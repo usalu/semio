@@ -117,7 +117,7 @@ function DragFrame() {
 }
 
 const meta = {
-  title: "semio-algorithms/Drag",
+  title: "semio/algorithms/Drag",
   component: DragFrame,
   parameters: { layout: "fullscreen" },
   tags: ["autodocs"],

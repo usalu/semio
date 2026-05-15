@@ -103,7 +103,7 @@ function DeleteFrame() {
 }
 
 const meta = {
-  title: "semio-algorithms/Delete",
+  title: "semio/algorithms/Delete",
   component: DeleteFrame,
   parameters: { layout: "fullscreen" },
   tags: ["autodocs"],

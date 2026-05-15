@@ -19,7 +19,7 @@ import { expect, userEvent, within } from "storybook/test";
 // #region 🎊UI
 
 const meta = {
-  title: "elements/UI",
+  title: "elements/react/UI",
   component: UI,
   parameters: {
     layout: "fullscreen",

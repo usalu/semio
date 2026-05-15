@@ -14,7 +14,7 @@ import { useState } from "react";
 
 // 🔷#region 🪬Resizable
 const meta = {
-  title: "elements/Resizable",
+  title: "elements/react/Resizable",
   component: ResizablePanelGroup,
   parameters: {
     layout: "centered",

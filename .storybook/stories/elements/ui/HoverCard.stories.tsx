@@ -55,7 +55,7 @@ const HoverCardExamples = () => (
 
 // 🔷#region 🔧HoverCard
 const meta = {
-  title: "elements/HoverCard",
+  title: "elements/react/HoverCard",
   component: HoverCardExamples,
   parameters: {
     layout: "centered",

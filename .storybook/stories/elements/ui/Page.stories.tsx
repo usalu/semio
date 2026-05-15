@@ -17,7 +17,7 @@ import type { Meta, StoryObj } from "@storybook/react";
 // #region 🌈Page
 
 const meta = {
-  title: "elements/Page",
+  title: "elements/react/Page",
   component: Page,
   parameters: {
     layout: "padded",

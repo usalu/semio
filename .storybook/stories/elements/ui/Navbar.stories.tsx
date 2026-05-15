@@ -14,7 +14,7 @@ import { Bell, ChevronDown, Home, Menu, Redo, Search, Settings, Undo, User, Zoom
 
 // 🔷#region 🩺Navbar
 const meta = {
-  title: "elements/Navbar",
+  title: "elements/react/Navbar",
   component: Navbar,
   parameters: {
     layout: "fullscreen",

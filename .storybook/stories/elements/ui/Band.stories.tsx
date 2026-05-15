@@ -14,7 +14,7 @@ import { AddIcon, AwardIcon, DocumentIcon, FolderIcon, LayoutIcon, TypeIcon, Use
 import type { Meta, StoryObj } from "@storybook/react";
 
 const meta = {
-  title: "elements/Band",
+  title: "elements/react/Band",
   component: Band,
   parameters: {
     layout: "centered",

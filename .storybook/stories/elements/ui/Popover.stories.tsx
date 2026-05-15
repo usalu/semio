@@ -14,7 +14,7 @@ import { Settings } from "lucide-react";
 
 // 🔷#region 🌐Popover
 const meta = {
-  title: "elements/Popover",
+  title: "elements/react/Popover",
   component: Popover,
   parameters: {
     layout: "centered",

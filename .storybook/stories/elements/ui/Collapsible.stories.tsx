@@ -15,7 +15,7 @@ import { useState } from "react";
 
 // 🔷#region 🖥️Collapsible
 const meta = {
-  title: "elements/Collapsible",
+  title: "elements/react/Collapsible",
   component: Collapsible,
   parameters: {
     layout: "centered",

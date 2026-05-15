@@ -18,7 +18,7 @@ import { MemoryRouter } from "react-router";
 // #region 🪩PageNavigation
 
 const meta = {
-  title: "elements/PageNavigation",
+  title: "elements/react/PageNavigation",
   component: PageNavigation,
   parameters: {
     layout: "padded",

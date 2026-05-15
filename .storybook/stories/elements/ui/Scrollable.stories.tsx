@@ -13,7 +13,7 @@ import type { Meta, StoryObj } from "@storybook/react";
 
 // 🔷#region 🎮Scrollable
 const meta = {
-  title: "elements/Scrollable",
+  title: "elements/react/Scrollable",
   component: Scrollable,
   parameters: {
     layout: "centered",

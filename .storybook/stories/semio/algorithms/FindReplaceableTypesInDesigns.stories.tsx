@@ -199,7 +199,7 @@ function FindReplaceableTypesInDesignsFrame() {
 //#endregion 🔍FindReplaceableTypesInDesigns
 
 const meta = {
-  title: "semio-algorithms/FindReplaceableTypesInDesigns",
+  title: "semio/algorithms/FindReplaceableTypesInDesigns",
   component: FindReplaceableTypesInDesignsFrame,
   parameters: { layout: "fullscreen" },
   tags: ["autodocs"],

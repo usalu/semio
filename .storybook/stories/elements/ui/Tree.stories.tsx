@@ -16,7 +16,7 @@ import { expect, fireEvent, within } from "storybook/test";
 
 // 🌳#region 📜Tree
 const meta = {
-  title: "elements/Tree",
+  title: "elements/react/Tree",
   component: Tree,
   parameters: {
     layout: "centered",

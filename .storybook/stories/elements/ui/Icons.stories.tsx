@@ -14,7 +14,7 @@ import { Box } from "lucide-react";
 
 // 🖼️#region 🛒Icons
 const meta = {
-  title: "elements/Icons",
+  title: "elements/react/Icons",
   component: Cursor,
   parameters: {
     layout: "centered",

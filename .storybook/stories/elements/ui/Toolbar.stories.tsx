@@ -18,7 +18,7 @@ import { Eye, EyeOff, Hand, Maximize2, MousePointer, Move, RotateCcw, RotateCw, 
 // #region 🌙Toolbar
 
 const meta = {
-  title: "elements/Toolbar",
+  title: "elements/react/Toolbar",
   component: ToolbarZone,
   parameters: {
     layout: "centered",

@@ -14,7 +14,7 @@ import { CheckCircle2 } from "lucide-react";
 
 // 🔷#region 🎮Footer
 const meta = {
-  title: "elements/Footer",
+  title: "elements/react/Footer",
   component: Footer,
   parameters: {
     layout: "fullscreen",

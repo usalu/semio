@@ -34,7 +34,7 @@ const firstConnectorId = (storyKind.connectors ?? [])[0]?.id ?? "";
 // #region 🧱Type
 
 const meta: Meta<typeof TypeView> = {
-  title: "semio/Type",
+  title: "semio/react/Type",
   component: TypeView,
   tags: ["autodocs"],
   parameters: { layout: "centered" },

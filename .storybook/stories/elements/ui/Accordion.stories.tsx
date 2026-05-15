@@ -13,7 +13,7 @@ import type { Meta, StoryObj } from "@storybook/react";
 
 // 🔷#region 🛒Accordion
 const meta = {
-  title: "elements/Accordion",
+  title: "elements/react/Accordion",
   component: Accordion,
   parameters: {
     layout: "centered",

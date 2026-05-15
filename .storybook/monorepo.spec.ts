@@ -30,13 +30,13 @@ async function expectStoryToRender(page: Page, storyId: string, assertion: (page
 }
 
 test("renders the elements button story", async ({ page }) => {
-	await expectStoryToRender(page, "elements-button--default", async (storyPage) => {
+	await expectStoryToRender(page, "elements-react-button--default", async (storyPage) => {
 		await expect(storyPage.getByRole("button").first()).toBeVisible();
 	});
 });
 
 test("renders the semio vec story", async ({ page }) => {
-	await expectStoryToRender(page, "semio-vec--default", async (storyPage) => {
+	await expectStoryToRender(page, "semio-react-vec--default", async (storyPage) => {
 		await expect(storyPage.locator("svg").first()).toBeVisible();
 	});
 });

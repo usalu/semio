@@ -15,7 +15,7 @@ import { MemoryRouter } from "react-router";
 
 // 📖#region 💡Breadcrumb
 const meta = {
-  title: "elements/Breadcrumb",
+  title: "elements/react/Breadcrumb",
   component: Breadcrumb,
   parameters: {
     layout: "centered",

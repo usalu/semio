@@ -14,7 +14,7 @@ import { useState } from "react";
 
 // 🔷#region 📧Combobox
 const meta = {
-  title: "elements/Combobox",
+  title: "elements/react/Combobox",
   component: Combobox,
   parameters: {
     layout: "centered",

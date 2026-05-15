@@ -273,7 +273,7 @@ function KitStoreFrame() {
 }
 
 const meta = {
-  title: "semio-algorithms/Store",
+  title: "semio/algorithms/Store",
   component: KitStoreFrame,
   parameters: { layout: "fullscreen" },
   tags: ["autodocs"],

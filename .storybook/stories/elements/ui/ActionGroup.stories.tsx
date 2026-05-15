@@ -14,7 +14,7 @@ import { Copy, Download, ExternalLink } from "lucide-react";
 
 // 🔷#region 🌩️ActionGroup
 const meta = {
-  title: "elements/ActionGroup",
+  title: "elements/react/ActionGroup",
   component: ActionGroup,
   parameters: {
     layout: "centered",

@@ -15,7 +15,7 @@ import { useState } from "react";
 
 // 🔷#region 🪨Layout
 const meta = {
-  title: "elements/Layout",
+  title: "elements/react/Layout",
   component: Layout,
   parameters: {
     layout: "fullscreen",

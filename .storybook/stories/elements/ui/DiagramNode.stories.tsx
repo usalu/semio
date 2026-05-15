@@ -17,7 +17,7 @@ import type { Meta, StoryObj } from "@storybook/react";
 // #region 🔓DiagramNode
 
 const meta = {
-  title: "elements/DiagramNode",
+  title: "elements/react/DiagramNode",
   component: DiagramNode,
   parameters: {
     layout: "padded",

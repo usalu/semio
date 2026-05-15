@@ -15,7 +15,7 @@ import { useState } from "react";
 
 // 🔷#region 🪆Command
 const meta = {
-  title: "elements/Command",
+  title: "elements/react/Command",
   component: Command,
   parameters: {
     layout: "centered",

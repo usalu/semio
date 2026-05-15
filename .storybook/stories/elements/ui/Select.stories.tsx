@@ -14,7 +14,7 @@ import { Box, Circle, Cylinder, Hexagon } from "lucide-react";
 
 // 🔷#region 🔎Select
 const meta = {
-  title: "elements/Select",
+  title: "elements/react/Select",
   component: Select,
   parameters: {
     layout: "centered",

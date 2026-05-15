@@ -15,7 +15,7 @@ import { useState } from "react";
 
 // 🔷#region 🧫Ring
 const meta = {
-  title: "elements/Ring",
+  title: "elements/react/Ring",
   component: Ring,
   parameters: {
     layout: "centered",
