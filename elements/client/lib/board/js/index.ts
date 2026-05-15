@@ -1096,6 +1096,21 @@ export class BoardScene {
 }
 //#endregion 🔖Scene
 
+/** @emoji 🧯 Normalizes WebGPU/Vello errors for `data-board-vello-failure` (Playwright + local debugging). */
+function summarizeVelloFailure(err: unknown): string {
+	if (err instanceof Error) {
+		return `${err.name}: ${err.message}`.slice(0, 512);
+	}
+	if (typeof err === "string") {
+		return err.slice(0, 512);
+	}
+	try {
+		return JSON.stringify(err).slice(0, 512);
+	} catch {
+		return String(err).slice(0, 512);
+	}
+}
+
 //#region 🔖Renderer
 /** 🎛️ Imperative board renderer with retained scene state and direct pointer handling. */
 export class BoardRenderer {
@@ -1121,6 +1136,7 @@ export class BoardRenderer {
 	private selectionStore = new SnapshotStore<BoardSelectionSnapshot>({ ids: [] });
 	private styles = new Map<string, BoardStyle>(Object.entries(DEFAULT_STYLES));
 	private vello: BoardVelloWasm | null = null;
+	private velloFailureDetail = "";
 	private velloInitPromise: Promise<void> | null = null;
 	private velloPresentedFrame = false;
 	private velloUnavailable = false;
@@ -1318,6 +1334,7 @@ export class BoardRenderer {
 					})
 					.catch((err: unknown) => {
 						console.error("[DEBUG] BoardRenderer Vello init failed", err);
+						this.velloFailureDetail = summarizeVelloFailure(err);
 						this.velloUnavailable = true;
 						this.velloInitPromise = null;
 						this.markDirty();
@@ -1422,8 +1439,10 @@ export class BoardRenderer {
 			this.vello.set_camera_wasm(this.camera.x, this.camera.y, this.camera.zoom);
 			this.vello.render_frame();
 			this.velloPresentedFrame = true;
+			this.velloFailureDetail = "";
 		} catch (err: unknown) {
 			console.error("[DEBUG] BoardRenderer Vello frame failed", err);
+			this.velloFailureDetail = summarizeVelloFailure(err);
 			this.velloUnavailable = true;
 			this.velloPresentedFrame = false;
 		}
@@ -1469,6 +1488,7 @@ export class BoardRenderer {
 			this.vello = null;
 		}
 		this.velloPresentedFrame = false;
+		this.velloFailureDetail = "";
 		if (this.rafId !== null && globalThis.cancelAnimationFrame) {
 			globalThis.cancelAnimationFrame(this.rafId);
 		}
@@ -1625,14 +1645,21 @@ export class BoardRenderer {
 		}
 		if (this.renderMode === "headless-test") {
 			this.canvas.dataset.boardVelloState = "off";
+			delete this.canvas.dataset.boardVelloFailure;
 		} else if (this.velloUnavailable) {
 			this.canvas.dataset.boardVelloState = "error";
+			if (this.velloFailureDetail) {
+				this.canvas.dataset.boardVelloFailure = this.velloFailureDetail.slice(0, 512);
+			}
 		} else if (this.velloPresentedFrame && this.vello) {
 			this.canvas.dataset.boardVelloState = "ready";
+			delete this.canvas.dataset.boardVelloFailure;
 		} else if (this.velloInitPromise) {
 			this.canvas.dataset.boardVelloState = "init";
+			delete this.canvas.dataset.boardVelloFailure;
 		} else {
 			this.canvas.dataset.boardVelloState = "pending";
+			delete this.canvas.dataset.boardVelloFailure;
 		}
 		this.canvas.dataset.boardRaster = "vello";
 		this.canvas.dataset.boardLod = resolveBoardLodLabel(this.camera.zoom);

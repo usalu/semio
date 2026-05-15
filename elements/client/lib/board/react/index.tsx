@@ -3,12 +3,12 @@ import {
 	Fragment,
 	act,
 	createContext,
+	createElement,
 	isValidElement,
 	useCallback,
 	useContext,
 	useEffect,
 	useLayoutEffect,
-	useMemo,
 	useRef,
 	useState,
 	useSyncExternalStore,
@@ -18,6 +18,17 @@ import {
 	type ReactNode,
 } from "react";
 import { createRoot } from "react-dom/client";
+import { FiberProvider, useContextBridge } from "its-fine";
+
+import {
+	BOARD_HOST_EDGE,
+	BOARD_HOST_HANDLE,
+	BOARD_HOST_NODE,
+	createBoardFiberRoot,
+	unmountBoardFiberRoot,
+	updateBoardFiberRoot,
+	type BoardFiberRoot,
+} from "./reconciler-host";
 
 import {
 	BoardRenderer,
@@ -113,15 +124,15 @@ export interface BoardEdgeProps {
 	visible?: boolean;
 }
 
-interface NodeDescriptor extends BoardNodeProps {
+export interface NodeDescriptor extends BoardNodeProps {
 	handles: HandleDescriptor[];
 }
 
-interface HandleDescriptor extends BoardHandleProps {
+export interface HandleDescriptor extends BoardHandleProps {
 	nodeId: string;
 }
 
-interface EdgeDescriptor extends BoardEdgeProps {}
+export interface EdgeDescriptor extends BoardEdgeProps {}
 
 interface BoardSceneDescriptor {
 	edges: EdgeDescriptor[];
@@ -136,29 +147,19 @@ let activeBoardRenderer: BoardRenderer | null = null;
 //#endregion 🔖Context
 
 //#region 🔖Markers
-/** 🟠 Declarative node marker synced into the imperative board scene. */
-export function Node(_props: BoardNodeProps): null {
-	return null;
-}
+/** 🟠 Host intrinsic for the board reconciler (`react-reconciler`); assign to JSX {@link BOARD_HOST_NODE}. */
+export const Node = BOARD_HOST_NODE;
 
-/** 🟣 Declarative handle marker nested inside a board node. */
-export function Handle(_props: BoardHandleProps): null {
-	return null;
-}
+/** 🟣 Host intrinsic for board handles nested under {@link Node}. */
+export const Handle = BOARD_HOST_HANDLE;
 
-/** 🪢 Declarative edge marker connected by stable handle ids. */
-export function Edge(_props: BoardEdgeProps): null {
-	return null;
-}
-
-Node.displayName = "BoardNode";
-Handle.displayName = "BoardHandle";
-Edge.displayName = "BoardEdge";
+/** 🪢 Host intrinsic for directed edges between handle ids. */
+export const Edge = BOARD_HOST_EDGE;
 //#endregion 🔖Markers
 
 //#region 🔖Descriptor Build
 function isMarkerElement(element: ReactElement): boolean {
-	return element.type === Node || element.type === Handle || element.type === Edge;
+	return element.type === BOARD_HOST_NODE || element.type === BOARD_HOST_HANDLE || element.type === BOARD_HOST_EDGE;
 }
 
 function appendHandleDescriptors(children: ReactNode, nodeId: string, handles: HandleDescriptor[]): void {
@@ -170,7 +171,7 @@ function appendHandleDescriptors(children: ReactNode, nodeId: string, handles: H
 			appendHandleDescriptors((child as ReactElement<{ children?: ReactNode }>).props.children, nodeId, handles);
 			return;
 		}
-		if (child.type === Handle) {
+		if (child.type === BOARD_HOST_HANDLE) {
 			const props = child.props as BoardHandleProps;
 			handles.push({ ...props, nodeId });
 		}
@@ -189,7 +190,7 @@ export function buildBoardSceneDescriptor(children: ReactNode): BoardSceneDescri
 				visit((child as ReactElement<{ children?: ReactNode }>).props.children);
 				return;
 			}
-			if (child.type === Node) {
+			if (child.type === BOARD_HOST_NODE) {
 				const props = child.props as BoardNodeProps;
 				const handles: HandleDescriptor[] = [];
 				appendHandleDescriptors(props.children, props.id, handles);
@@ -197,7 +198,7 @@ export function buildBoardSceneDescriptor(children: ReactNode): BoardSceneDescri
 				descriptor.handles.push(...handles);
 				return;
 			}
-			if (child.type === Edge) {
+			if (child.type === BOARD_HOST_EDGE) {
 				descriptor.edges.push(child.props as BoardEdgeProps);
 			}
 		});
@@ -362,6 +363,33 @@ export function syncBoardScene(renderer: BoardRenderer, descriptor: BoardSceneDe
 }
 //#endregion 🔖Scene Sync
 
+//#region 🔖ReconcilerBridge
+/** @emoji 🌉 Bridges DOM-root context into the board `react-reconciler` subtree via `its-fine`. */
+function BoardReconcilerMount({ children, renderer }: { children: ReactNode; renderer: BoardRenderer }): null {
+	const ContextBridge = useContextBridge();
+	const fiberRootRef = useRef<BoardFiberRoot | null>(null);
+
+	useLayoutEffect(() => {
+		const root = createBoardFiberRoot(renderer);
+		fiberRootRef.current = root;
+		return () => {
+			unmountBoardFiberRoot(root);
+			fiberRootRef.current = null;
+		};
+	}, [renderer]);
+
+	useLayoutEffect(() => {
+		const root = fiberRootRef.current;
+		if (!root) {
+			return;
+		}
+		updateBoardFiberRoot(root, createElement(ContextBridge, null, children), null);
+	}, [ContextBridge, children, renderer]);
+
+	return null;
+}
+//#endregion 🔖ReconcilerBridge
+
 //#region 🔖Canvas
 /** 🖼️ React board root that keeps the hot path inside the imperative renderer. */
 export function BoardCanvas({
@@ -384,7 +412,6 @@ export function BoardCanvas({
 	const containerRef = useRef<HTMLDivElement | null>(null);
 	const [contextRenderer, setContextRenderer] = useState<BoardRenderer | null>(null);
 	const rendererRef = useRef<BoardRenderer | null>(null);
-	const descriptor = useMemo(() => buildBoardSceneDescriptor(children), [children]);
 	const [fixtureDragActive, setFixtureDragActive] = useState(false);
 	const fileDragDepthRef = useRef(0);
 	const resolvedFixtureDragDrop = fixtureDragDrop ?? Boolean(onFixtureDrop);
@@ -407,7 +434,7 @@ export function BoardCanvas({
 			if (!resolvedFixtureDragDrop) {
 				return;
 			}
-			if (event.currentTarget.contains(event.relatedTarget as Node)) {
+			if (event.currentTarget.contains(event.relatedTarget as globalThis.Node)) {
 				return;
 			}
 			fileDragDepthRef.current = Math.max(0, fileDragDepthRef.current - 1);
@@ -503,14 +530,6 @@ export function BoardCanvas({
 
 	useLayoutEffect(() => {
 		const renderer = rendererRef.current;
-		if (!renderer) {
-			return;
-		}
-		syncBoardScene(renderer, descriptor);
-	}, [descriptor]);
-
-	useLayoutEffect(() => {
-		const renderer = rendererRef.current;
 		const container = containerRef.current;
 		if (!renderer || !container) {
 			return;
@@ -538,20 +557,22 @@ export function BoardCanvas({
 	}, [height, width]);
 
 	return (
-		<BoardContext.Provider value={contextRenderer}>
-			<div
-				className={[className, fixtureDragActive ? "ring-2 ring-teal-500 ring-offset-2" : ""].filter(Boolean).join(" ") || undefined}
-				onDragEnter={handleDragEnter}
-				onDragLeave={handleDragLeave}
-				onDragOver={handleDragOver}
-				onDrop={(e) => void handleDrop(e)}
-				ref={containerRef}
-				style={{ height: height ?? "100%", position: "relative", width: width ?? "100%", ...(style ?? {}) }}
-			>
-				<canvas data-testid="board-canvas" ref={canvasRef} style={{ display: "block", height: "100%", width: "100%" }} />
-				{contextRenderer ? children : null}
-			</div>
-		</BoardContext.Provider>
+		<FiberProvider>
+			<BoardContext.Provider value={contextRenderer}>
+				<div
+					className={[className, fixtureDragActive ? "ring-2 ring-teal-500 ring-offset-2" : ""].filter(Boolean).join(" ") || undefined}
+					onDragEnter={handleDragEnter}
+					onDragLeave={handleDragLeave}
+					onDragOver={handleDragOver}
+					onDrop={(e) => void handleDrop(e)}
+					ref={containerRef}
+					style={{ height: height ?? "100%", position: "relative", width: width ?? "100%", ...(style ?? {}) }}
+				>
+					<canvas data-testid="board-canvas" ref={canvasRef} style={{ display: "block", height: "100%", width: "100%" }} />
+					{contextRenderer ? <BoardReconcilerMount children={children} renderer={contextRenderer} /> : null}
+				</div>
+			</BoardContext.Provider>
+		</FiberProvider>
 	);
 }
 //#endregion 🔖Canvas
@@ -683,7 +704,7 @@ if (boardReactVitest) {
 			expect(descriptor.edges).toEqual([{ from: "a.out", id: "edge-1", selected: undefined, style: undefined, to: "a.out", userData: undefined, visible: undefined }]);
 		});
 
-		it("does not traverse custom wrapper components (markers must be Fragment / Node / Edge children of BoardCanvas)", () => {
+		it("buildBoardSceneDescriptor ignores opaque components (use reconciler for nested composition)", () => {
 			function OpaqueScene(): ReactElement {
 				return (
 					<Node id="inner" radius={8} x={1} y={2}>
@@ -698,6 +719,40 @@ if (boardReactVitest) {
 			);
 			expect(descriptor.nodes).toHaveLength(0);
 			expect(descriptor.handles).toHaveLength(0);
+		});
+
+		it("mounts nodes through wrapper components via the board reconciler", async () => {
+			const restoreCanvas = installCanvasStub();
+			const container = document.createElement("div");
+			document.body.appendChild(container);
+			const root = createRoot(container);
+
+			function WrappedScene(): ReactElement {
+				return (
+					<Node id="wrapped" radius={14} x={3} y={4}>
+						<Handle angle={0} id="wrapped.h" />
+					</Node>
+				);
+			}
+
+			await act(async () => {
+				root.render(
+					<BoardCanvas camera={{ x: 0, y: 0, zoom: 1 }} height={120} renderMode="headless-test" width={160}>
+						<WrappedScene />
+					</BoardCanvas>,
+				);
+				await Promise.resolve();
+			});
+
+			const canvas = container.querySelector("canvas");
+			const renderer = (canvas as HTMLCanvasElement & { __boardRenderer?: BoardRenderer }).__boardRenderer;
+			expect(renderer?.scene.getObjectById("wrapped")).toBeInstanceOf(BoardNodeObject);
+			expect(renderer?.scene.getObjectById("wrapped.h")).toBeInstanceOf(BoardHandleObject);
+
+			await act(async () => {
+				root.unmount();
+			});
+			restoreCanvas();
 		});
 
 		it("syncs declarative updates into stable imperative instances", () => {

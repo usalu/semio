@@ -10,6 +10,8 @@ import { defineConfig, devices } from "@playwright/test";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const boardRoot = path.resolve(__dirname, "..");
 const baseURL = process.env.PLAYWRIGHT_BASE_URL ?? "http://127.0.0.1:6012";
+const rawChannel = process.env.BOARD_PLAYWRIGHT_CHANNEL;
+const chromeChannel = rawChannel === "chrome" || rawChannel === "msedge" ? rawChannel : undefined;
 
 export default defineConfig({
 	testDir: path.join(__dirname, "e2e"),
@@ -28,8 +30,14 @@ export default defineConfig({
 			name: "chromium",
 			use: {
 				...devices["Desktop Chrome"],
+				...(chromeChannel ? { channel: chromeChannel } : {}),
 				launchOptions: {
-					args: ["--enable-unsafe-webgpu", "--disable-background-timer-throttling"],
+					args: [
+						"--enable-unsafe-webgpu",
+						"--disable-background-timer-throttling",
+						"--ignore-gpu-blocklist",
+						"--enable-features=UseSkiaRenderer",
+					],
 				},
 			},
 		},
@@ -38,7 +46,7 @@ export default defineConfig({
 		command: "bun ./script.ts dev",
 		cwd: boardRoot,
 		url: `${baseURL}/`,
-		reuseExistingServer: !process.env.CI,
+		reuseExistingServer: false,
 		timeout: 180_000,
 		stdout: "pipe",
 		stderr: "pipe",

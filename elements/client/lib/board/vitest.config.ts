@@ -10,7 +10,7 @@ export default defineConfig({
 	test: {
 		environment: "jsdom",
 		include: ["js/index.ts", "react/index.tsx"],
-		includeSource: ["js/index.ts", "react/index.tsx"],
+		includeSource: ["js/index.ts", "react/index.tsx", "react/reconciler-host.ts"],
 		passWithNoTests: true,
 	},
 });
