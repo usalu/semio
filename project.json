@@ -11,6 +11,20 @@
         "command": "bun ./export.neo4j.script.ts"
       }
     },
+    "generate": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./generate.script.ts"
+      }
+    },
+    "generate-neo4j": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./generate.neo4j.script.ts"
+      }
+    },
     "migrate-neo4j": {
       "executor": "nx:run-commands",
       "cache": false,

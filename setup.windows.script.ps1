@@ -705,7 +705,7 @@ function Ensure-NativeNeo4j {
     $graphDb = Resolve-NativeNeo4jGraphDatabase -RepoRoot $RepoRoot
     Write-Step "Neo4j graph database for imports (after optional CREATE DATABASE semio): $graphDb"
 
-    Write-Step "Neo4j: clearing graph in $graphDb, then loading handcrafted .repo/🛂/*.cypher …"
+    Write-Step "Neo4j: clearing graph in $graphDb, then loading generated .repo/🛂/*.cypher (from `bun run generate`) …"
     Invoke-Neo4jCypher -RepoRoot $RepoRoot -Database $graphDb -Cypher "MATCH (n) DETACH DELETE n;" | Out-Null
 
     foreach ($technology in $technologies) {

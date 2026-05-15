@@ -333,7 +333,7 @@ ensure_native_neo4j() {
   graph_db="$(resolve_native_graph_database)"
   log "Neo4j graph database for imports (after optional CREATE DATABASE semio): ${graph_db}"
 
-  log "Neo4j: clearing graph in ${graph_db}, then loading handcrafted .repo/🛂/*.cypher …"
+  log "Neo4j: clearing graph in ${graph_db}, then loading generated .repo/🛂/*.cypher (from bun run generate) …"
   run_cypher "$graph_db" "MATCH (n) DETACH DELETE n" || log "Neo4j wipe skipped (failed)."
 
   for technology in semio elements coda reuse; do

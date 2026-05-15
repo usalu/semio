@@ -259,7 +259,7 @@ reload_neo4j_from_repo_cypher() {
     echo "⚠️ Neo4j APOC Cypher reload skipped because required APOC procedures are unavailable."
     return 0
   fi
-  echo "🧾 Neo4j: clearing graph in database ${graph_db}, then loading handcrafted .repo/🛂/*.cypher …"
+  echo "🧾 Neo4j: clearing graph in database ${graph_db}, then loading generated .repo/🛂/*.cypher (from bun run generate) …"
   cypher-shell -a bolt://localhost:7687 -u "${NEO4J_USERNAME:-neo4j}" -p "${NEO4J_PASSWORD:-password}" -d "$graph_db" --format plain "MATCH (n) DETACH DELETE n;" >/dev/null || {
     echo "⚠️ Neo4j wipe failed; skipping cypher file import."
     return 0

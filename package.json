@@ -32,6 +32,8 @@
   "scripts": {
     "postinstall": "bun ./setup.script.ts --postinstall",
     "setup": "bun ./setup.script.ts",
+    "generate": "bun ./generate.script.ts",
+    "generate:neo4j": "bun ./generate.neo4j.script.ts",
     "start": "bun ./start.script.ts",
     "git:setup": "bun ./git.script.ts setup",
     "export:neo4j": "bun ./export.neo4j.script.ts",
