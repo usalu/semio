@@ -40,9 +40,9 @@ interface BoardFixtureNodeJson {
 }
 
 interface BoardFixtureEdgeJson {
-	fromHandle: string;
+	from: string;
 	id: string;
-	toHandle: string;
+	to: string;
 }
 
 interface BoardFixtureV1 {
@@ -67,23 +67,21 @@ const boardSceneFixture: ReactElement = (
 	</>
 );
 
-/** 🗼 Nakagin center cluster from `nakagin-capsule-tower.board.json` (piece ids + connection ids from copy selection; layout anchored to CAD-derived `t_f1_b_c1`). */
-function NakaginCapsuleTowerBoardScene(): ReactElement {
-	return (
-		<>
-			{nakaginCapsuleTowerBoard.nodes.map((node) => (
-				<Node draggable={false} id={node.id} key={node.id} radius={node.radius} x={node.x} y={node.y}>
-					{node.handles.map((handle) => (
-						<Handle angle={handle.angle} id={handle.id} key={handle.id} />
-					))}
-				</Node>
-			))}
+/** 🗼 Nakagin center cluster from `nakagin-capsule-tower.board.json` (parent-design connections; handle ids follow piece-kind connector names, `link` when the kind exposes a single port). */
+const nakaginCapsuleTowerBoardScene: ReactElement = (
+	<>
+		{nakaginCapsuleTowerBoard.nodes.map((node) => (
+			<Node draggable={false} id={node.id} key={node.id} radius={node.radius} x={node.x} y={node.y}>
+				{node.handles.map((handle) => (
+					<Handle angle={handle.angle} id={handle.id} key={handle.id} />
+				))}
+			</Node>
+		))}
 			{nakaginCapsuleTowerBoard.edges.map((edge) => (
-				<Edge from={edge.fromHandle} id={edge.id} key={edge.id} to={edge.toHandle} />
+				<Edge from={edge.from} id={edge.id} key={edge.id} to={edge.to} />
 			))}
-		</>
-	);
-}
+	</>
+);
 
 export const Default: Story = {
 	render: (args) => (
@@ -114,7 +112,7 @@ export const WorldTileClip: Story = {
 export const NakaginCapsuleTowerFlatSelection: Story = {
 	render: (args) => (
 		<BoardCanvas {...args}>
-			<NakaginCapsuleTowerBoardScene />
+			{nakaginCapsuleTowerBoardScene}
 		</BoardCanvas>
 	),
 	args: {

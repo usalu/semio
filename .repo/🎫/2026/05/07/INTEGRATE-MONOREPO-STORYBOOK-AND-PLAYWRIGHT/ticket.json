@@ -1,7 +1,7 @@
 {
   "title": "Integrate Monorepo Storybook And Playwright",
-  "status": "open",
-  "summary": "Re-audited command semantics after the earlier rename pass. Fixed misleading and ambiguous names instead of forcing everything into generic targets. Renamed the repo VS Code VSIX step from publish to build-vsix because setup/devcontainer only build a local artifact, not publish anything. Split MCP inspector entrypoints into clear dev variants: added generic workspace dev-mcp plus dev-mcp-engine and dev-mcp-repo, then exposed root package scripts dev:mcp, dev:mcp:engine, and dev:mcp:repo. Restored a root package command surface with conventional verb-first colon scripts for the launch-config entrypoints, and updated launch.json to use the renamed coda/repo script names plus the corrected repo/client/mcp path. Fixed the inspector launchers to use npx --yes instead of bunx -y / bunx for non-workspace packages so the renamed MCP commands actually start. Validation: bun run dev:mcp starts the generic inspector; bun run dev:mcp:repo starts the repo inspector and serves the inspector URL; file diagnostics are clean. Remaining unrelated failure: bun run build:repo:vscode still fails inside the existing semio/rs Rust/WASM build due pre-existing Rust compile errors, not because of the naming changes.",
+  "status": "closed",
+  "summary": "Repointed the workspace Playwright flow from Storybook smoke coverage to board-only end-to-end coverage, removed the monorepo smoke spec from the active runner, exposed the board renderer on the canvas for runtime-accurate board object targeting in Playwright, and fixed both board fixture stories so BoardCanvas receives marker elements directly instead of opaque React scene components. Validated with `bun nx run workspace:test-storybook` and all 4 board end-to-end tests now pass.",
   "goal": "🎯graphqltargetsemiors",
   "sessions": [
     "⚪d723dbfbdbf7465e8e0b3cbfe817cf89",

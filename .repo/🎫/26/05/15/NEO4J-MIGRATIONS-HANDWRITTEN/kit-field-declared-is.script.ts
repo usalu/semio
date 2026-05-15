@@ -162,28 +162,11 @@ export function collectKitFieldDeclaredIsRows(schemaYamlText: string): KitFieldD
 //#endregion 🧭YamlWalk
 
 //#region 🧭Cypher
-/** @emoji 📐 Kit `IS` targets that only implement `Data` in YAML — do not copy the entity interface ladder onto kit members. */
-const PRIMITIVE_VALUE_CLASS_NAMES = [
-  "Vector",
-  "Point",
-  "Coordinate",
-  "Offset",
-  "Plane",
-] as const;
-
-/** @emoji 🔗 Transitive `IS` on kit members: full interface closure from direct `Interface` hops; from `Class` only when not a primitive value class (avoids `xAxis`→`Vector`→`Entity` noise). */
+/**
+ * @emoji 🔗 Kit members (`Data` / `Computation` / `Reference`) keep **only** the single declared `IS` from YAML (concrete `Class`, `Interface`, or `Scalar`). No transitive copy of interface supertypes onto fields — that stays on `Class`/`Interface` nodes only.
+ */
 export function materializeTransitiveIsForKitMembersCypher(): string {
-  const skipList = PRIMITIVE_VALUE_CLASS_NAMES.map((n) => `'${n}'`).join(", ");
-  return [
-    "MATCH (n:Data|Computation|Reference)-[:IS]->(i:Interface)",
-    "MATCH (i)-[:IS*1..25]->(b:Interface)",
-    "WHERE n <> b",
-    "MERGE (n)-[:IS]->(b);",
-    "MATCH (n:Data|Computation|Reference)-[:IS]->(c:Class)",
-    `WHERE NOT c.name IN [${skipList}]`,
-    "MATCH (c)-[:IS*1..25]->(b:Interface)",
-    "MERGE (n)-[:IS]->(b);",
-  ].join("\n");
+  return "";
 }
 
 function escapeLiteral(s: string): string {
@@ -279,7 +262,7 @@ function runCypherFile(repoRoot: string, shell: string, database: string, filePa
 
 //#region 🚀Entry
 /**
- * @emoji 🛠️ Deletes all `IS` from kit members, attaches declared targets from YAML, then materializes transitive interface `IS` edges.
+ * @emoji 🛠️ Deletes all `IS` from kit members and reattaches exactly one declared `IS` per field from YAML (no field-level transitive `IS`).
  */
 export function runKitFieldDeclaredIsRepair(opts: Readonly<{ repoRoot: string; database: string; cacheDir: string }>): void {
   const yamlPath = join(opts.repoRoot, "semio", "client", "schema", "semio", "schema.yaml");
@@ -292,9 +275,13 @@ export function runKitFieldDeclaredIsRepair(opts: Readonly<{ repoRoot: string; d
     throw new Error("[kit-field-is] no declared kit field rows from yaml");
   }
   const repairBody = buildRepairCypher(rows);
-  const materializeBody = materializeTransitiveIsForKitMembersCypher();
+  const materializeBody = materializeTransitiveIsForKitMembersCypher().trim();
   const batchPath = join(opts.cacheDir, `kit-field-declared-is-repair-${process.pid}.cypher`);
-  writeFileSync(batchPath, `${repairBody.trim()}\n\n${materializeBody.trim()}\n`, "utf8");
+  writeFileSync(
+    batchPath,
+    materializeBody.length > 0 ? `${repairBody.trim()}\n\n${materializeBody}\n` : `${repairBody.trim()}\n`,
+    "utf8",
+  );
   const shell = resolveCypherShell(opts.repoRoot);
   if (!shell) {
     try {
