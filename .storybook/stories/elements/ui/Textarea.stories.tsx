@@ -10,7 +10,7 @@
 
 import { Textarea } from "@elements/ui";
 import type { Meta, StoryObj } from "@storybook/react";
-import { nakagin } from "../nakagin";
+import { nakagin } from "../../../fixtures/nakagin";
 
 // 📝#region 🎏Textarea
 const meta = {

@@ -41,11 +41,7 @@ function getAbsolutePath(value: string): string {
 }
 
 const config: StorybookConfig = {
-	stories: [
-		"../elements/client/lib/react/.storybook/stories/**/*.stories.@(js|jsx|mjs|ts|tsx|mdx)",
-		"../semio/client/lib/react/rendering/.storybook/stories/**/*.stories.@(js|jsx|mjs|ts|tsx|mdx)",
-		"../semio/dev/algorithms/.storybook/stories/**/*.stories.@(js|jsx|mjs|ts|tsx|mdx)",
-	],
+	stories: ["./stories/**/*.stories.@(js|jsx|mjs|ts|tsx|mdx)"],
 	addons: [getAbsolutePath("@storybook/addon-vitest"), getAbsolutePath("@storybook/addon-docs")],
 	framework: {
 		name: getAbsolutePath("@storybook/react-vite"),

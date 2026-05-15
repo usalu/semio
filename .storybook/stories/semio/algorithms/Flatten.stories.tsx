@@ -9,10 +9,10 @@ import type { Design, DesignDiff } from "@semio/react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import * as React from "react";
 
-import { AlgorithmApp, WindowKind, type AlgorithmContextValue, type AlgorithmWindowDef } from "../../index";
-import { flatDesign, flattenDesign, flattenedDesign } from "../../index";
+import { AlgorithmApp, WindowKind, type AlgorithmContextValue, type AlgorithmWindowDef } from "@semio/algorithms";
+import { flatDesign, flattenDesign, flattenedDesign } from "@semio/algorithms";
 
-import metabolismKit from "../../../../assets/fixtures/metabolism.kit.semio.json";
+import metabolismKit from "@semio/assets/fixtures/metabolism.kit.semio.json";
 
 const nakaginCapsuleTowerDesignId = "9a890dd4-0a9c-48ac-920a-9e62666465ef";
 const rawDesign = (metabolismKit.designs ?? []).find((d: any) => d.id === nakaginCapsuleTowerDesignId) as any;

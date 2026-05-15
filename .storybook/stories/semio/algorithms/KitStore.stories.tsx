@@ -8,17 +8,17 @@ import { Design as DesignEntity } from "@semio/react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import * as React from "react";
 
-import metabolismKit from "../../../../assets/fixtures/metabolism.kit.semio.json";
-import { AlgorithmApp, WindowKind, type AlgorithmContextValue, type AlgorithmWindowDef } from "../../index";
+import metabolismKit from "@semio/assets/fixtures/metabolism.kit.semio.json";
+import { AlgorithmApp, WindowKind, type AlgorithmContextValue, type AlgorithmWindowDef } from "@semio/algorithms";
 
-import { CommandForm } from "./kit-store/CommandForm";
-import { ALL_CHANGE_KIT_ROOT_KEYS, CHANGE_TYPE_COMMAND_KEYS, KIT_STORE_COVERAGE_ROWS } from "./kit-store/commandSchema";
-import { DiffViewer } from "./kit-store/DiffViewer";
-import { applyEntityPlaceholders, EntityPicker } from "./kit-store/EntityPicker";
-import { EventsFeed } from "./kit-store/EventsFeed";
-import { HistoryControls, KitTreeGraph } from "./kit-store/HistoryControls";
-import { SnapshotViewer } from "./kit-store/SnapshotViewer";
-import { useKitStore } from "./kit-store/useKitStore";
+import { CommandForm } from "../../../semio/algorithms/kit-store/CommandForm";
+import { ALL_CHANGE_KIT_ROOT_KEYS, CHANGE_TYPE_COMMAND_KEYS, KIT_STORE_COVERAGE_ROWS } from "../../../semio/algorithms/kit-store/commandSchema";
+import { DiffViewer } from "../../../semio/algorithms/kit-store/DiffViewer";
+import { applyEntityPlaceholders, EntityPicker } from "../../../semio/algorithms/kit-store/EntityPicker";
+import { EventsFeed } from "../../../semio/algorithms/kit-store/EventsFeed";
+import { HistoryControls, KitTreeGraph } from "../../../semio/algorithms/kit-store/HistoryControls";
+import { SnapshotViewer } from "../../../semio/algorithms/kit-store/SnapshotViewer";
+import { useKitStore } from "../../../semio/algorithms/kit-store/useKitStore";
 
 const kitJson = metabolismKit as unknown;
 const anyKit = kitJson as { designs?: { id: string }[]; types?: { id: string }[]; name?: string };

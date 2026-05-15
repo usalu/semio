@@ -7,8 +7,8 @@
 
 import type { Preview } from "@storybook/react-vite";
 
-import { withLevel } from "../elements/client/lib/react/.storybook/withLevel";
-import { withTheme } from "../elements/client/lib/react/.storybook/withTheme";
+import { withLevel } from "./withLevel";
+import { withTheme } from "./withTheme";
 
 import "../elements/client/lib/react/globals.css";
 import "../semio/client/lib/react/rendering/globals.css";

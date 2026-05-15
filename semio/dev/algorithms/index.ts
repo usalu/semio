@@ -1,6 +1,6 @@
 // #region 🧲Header
 // 💻 semio/algorithms/index.ts
-// Specs: Story helpers over `@semio/js` `openStore` plus plain JSON {@link Design} types from `@semio/ui`.
+// Specs: Story helpers over `@semio/js` `openSession` plus plain JSON {@link Design} types from `@semio/ui`.
 // Summary: WASM-backed flatten/drag/move reads and local diff helpers for Storybook; no snapshot store or schema bridge.
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 // #endregion 🧲Header
@@ -23,7 +23,7 @@ import {
   type MoveVector,
   type VecValue,
 } from "../../client/lib/react/rendering";
-import { openStore, type Store as JsStore } from "../../client/lib/js";
+import { openSession, type Store as JsStore } from "../../client/lib/js";
 // #endregion 📥Imports
 
 // #region 🧾GqlWire
@@ -197,12 +197,15 @@ function __toBootstrap(kit: unknown): GqlWireObject {
 }
 
 async function __withJsStore<T>(kit: unknown, fn: (store: JsStore) => Promise<T>): Promise<T> {
-  const store = await openStore(JSON.stringify(__toBootstrap(kit)));
-  try {
-    return await fn(store);
-  } finally {
-    await store.dispose();
-  }
+	const session = await openSession(JSON.stringify(__toBootstrap(kit)));
+	try {
+		const stores = await session.stores();
+		const store = stores[0];
+		if (!store) throw new Error("__withJsStore: session has no stores");
+		return await fn(store);
+	} finally {
+		await session.dispose();
+	}
 }
 
 async function __readFlattenLayout(store: JsStore, designId: string): Promise<readonly { pieceId: string; plane: unknown; center: { u: number; v: number } }[]> {

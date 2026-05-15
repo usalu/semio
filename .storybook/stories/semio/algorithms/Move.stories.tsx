@@ -9,11 +9,11 @@ import type { Design, DesignDiff } from "@semio/react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import * as React from "react";
 
-import { AlgorithmApp, WindowKind, type AlgorithmContextValue, type AlgorithmWindowDef } from "../../index";
-import { flatDesign, movePieces } from "../../index";
+import { AlgorithmApp, WindowKind, type AlgorithmContextValue, type AlgorithmWindowDef } from "@semio/algorithms";
+import { flatDesign, movePieces } from "@semio/algorithms";
 
-import metabolismKit from "../../../../assets/fixtures/metabolism.kit.semio.json";
-import { DragPieces, MoveStoryDesign, MoveVector } from "../../../../assets/index";
+import metabolismKit from "@semio/assets/fixtures/metabolism.kit.semio.json";
+import { DragPieces, MoveStoryDesign, MoveVector } from "@semio/assets";
 
 const rawDesign = { ...MoveStoryDesign, id: "move-preset-id", name: "Move Preset" };
 

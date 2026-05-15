@@ -3,12 +3,12 @@
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 // #endregion
 
-import initSemio, { boot, generateId, KitStoreHandle } from "@semio/rs-wasm";
+import initSemio, { boot, KitStoreHandle } from "@semio/rs-wasm";
 
 // Bundle `semio.js` in Storybook, the default `new URL("semio_bg.wasm", import.meta.url)` is often wrong;
 // point at the pkg explicitly so `fetch` loads the file.
-// Path: .storybook/stories/kit-store/ → parent×4 = semio/semio → sibling rs/pkg
-const semioWasmUrl = new URL("../../../../rs/pkg/semio_bg.wasm", import.meta.url);
+// Path: `.storybook/semio/algorithms/kit-store/` → three parents = repo root → `semio/client/lib/rs/pkg`.
+const semioWasmUrl = new URL("../../../semio/client/lib/rs/pkg/semio_bg.wasm", import.meta.url);
 
 let initPromise: Promise<void> | null = null;
 
@@ -31,7 +31,7 @@ export function ensureSemioWasm(): Promise<void> {
   return initPromise;
 }
 
-export { boot, generateId, initSemio, KitStoreHandle };
+export { boot, initSemio, KitStoreHandle };
 
 // #region 🧰StorybookGraphqlWire
 /** @emoji 🔌 Storybook-only GraphQL execute boundary (same shape as WASM `KitStoreHandle.execute`).

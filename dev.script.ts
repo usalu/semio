@@ -3,7 +3,8 @@
  * 💻 Root `dev` entry: default `@semio/desktop` via Nx; `mcp`, `mcp repo`, `mcp engine` delegate to bundle-local MCP scripts.
  */
 import { execFileSync } from "node:child_process";
-import { join } from "node:path";
+import { stat } from "node:fs/promises";
+import { extname, join, resolve } from "node:path";
 
 const root = import.meta.dir;
 const argv = process.argv.slice(2);
@@ -22,6 +23,54 @@ if (argv[0] === "storybook") {
     },
   });
   process.exit(0);
+}
+
+if (argv[0] === "storybook-static") {
+  const host = process.env.DEVCONTAINER === "true" ? "0.0.0.0" : "127.0.0.1";
+  const port = Number(process.env.STORYBOOK_PORT ?? "6010");
+  const rootPath = resolve(root);
+
+  const server = Bun.serve({
+    hostname: host,
+    port,
+    async fetch(request) {
+      const requestUrl = new URL(request.url);
+      const requestPath = decodeURIComponent(requestUrl.pathname);
+      const candidatePath = resolve(rootPath, `.${requestPath}`);
+
+      if (!candidatePath.startsWith(rootPath)) {
+        return new Response("Forbidden", { status: 403 });
+      }
+
+      const filePath = await (async () => {
+        try {
+          const fileInfo = await stat(candidatePath);
+          if (fileInfo.isDirectory()) {
+            return resolve(candidatePath, "index.html");
+          }
+          return candidatePath;
+        } catch {
+          if (extname(candidatePath) === "") {
+            return resolve(candidatePath, "index.html");
+          }
+          return candidatePath;
+        }
+      })();
+
+      try {
+        const file = Bun.file(filePath);
+        if (!(await file.exists())) {
+          return new Response("Not Found", { status: 404 });
+        }
+        return new Response(file);
+      } catch {
+        return new Response("Not Found", { status: 404 });
+      }
+    },
+  });
+
+  console.log(`storybook-static listening on http://${host}:${port}`);
+  await new Promise(() => {});
 }
 
 if (argv[0] === "mcp") {

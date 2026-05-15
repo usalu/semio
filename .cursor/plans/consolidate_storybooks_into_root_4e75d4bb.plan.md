@@ -10,22 +10,22 @@ todos:
     status: completed
   - id: consolidate-helpers
     content: Single root withLevel.tsx (globals.level + optional args.level), withTheme.tsx, vitest.setup.ts; delete all bundle main/preview/with*
-    status: in_progress
+    status: completed
   - id: update-main-preview
     content: Update .storybook/main.ts globs and .storybook/preview.ts decorator imports
-    status: pending
+    status: completed
   - id: fix-imports
     content: Rewrite relative imports in moved stories to use @semio/* and @elements/* aliases
-    status: pending
+    status: completed
   - id: delete-old
     content: Delete elements/client/lib/react/.storybook, semio/client/lib/react/rendering/.storybook, semio/dev/algorithms/.storybook
-    status: pending
+    status: completed
   - id: verify
     content: Run dev:storybook and build:storybook; fix breakages
-    status: pending
+    status: completed
   - id: close-ticket
     content: Close the ticket with summary and file list
-    status: pending
+    status: completed
 isProject: false
 ---
 

@@ -5,15 +5,23 @@
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 // #endregion 🧲Header
 
-import { getKitPorts, Kit, type Design } from "../../index";
+import {
+	getKitPorts,
+	Kit,
+	type Design,
+	AlgorithmApp,
+	WindowKind,
+	type AlgorithmContextValue,
+	type AlgorithmWindowDef,
+	useAlgorithm,
+	flatDesign,
+} from "@semio/algorithms";
+
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import * as React from "react";
 
-import { AlgorithmApp, WindowKind, type AlgorithmContextValue, type AlgorithmWindowDef, useAlgorithm } from "../../index";
-import { flatDesign } from "../../index";
-
-import { NakaginCapsuleTowerCopySelection } from "../../../../assets/index";
-import metabolismKit from "../../../../assets/fixtures/metabolism.kit.semio.json";
+import { NakaginCapsuleTowerCopySelection } from "@semio/assets";
+import metabolismKit from "@semio/assets/fixtures/metabolism.kit.semio.json";
 
 const nakaginCapsuleTowerDesignId = "9a890dd4-0a9c-48ac-920a-9e62666465ef";
 const rawDesign = ((metabolismKit as any).designs ?? []).find((d: any) => d.id === nakaginCapsuleTowerDesignId) as any;

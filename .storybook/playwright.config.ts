@@ -13,7 +13,14 @@ import { defineConfig, devices } from "@playwright/test";
 const storybookDir = resolve(fileURLToPath(import.meta.url), "..");
 const repoRootPath = resolve(storybookDir, "..");
 const storybookPort = process.env.STORYBOOK_PORT ?? "6010";
-const baseURL = process.env.PLAYWRIGHT_BASE_URL ?? `http://localhost:${storybookPort}`;
+function withTrailingSlash(url: string): string {
+	return url.endsWith("/") ? url : `${url}/`;
+}
+/** Base must end with `/` so `page.goto("iframe.html")` resolves under `storybook-static/`, not as a sibling path segment. */
+const baseURL = withTrailingSlash(
+	process.env.PLAYWRIGHT_BASE_URL ?? `http://localhost:${storybookPort}/storybook-static`,
+);
+const webServerUrl = new URL("index.html", baseURL).href;
 
 export default defineConfig({
 	testDir: storybookDir,
@@ -41,8 +48,8 @@ export default defineConfig({
 	],
 	webServer: {
 		cwd: repoRootPath,
-		command: "bun ./dev.script.ts storybook --ci",
-		url: baseURL,
+		command: "bun ./build.script.ts storybook && bun ./dev.script.ts storybook-static",
+		url: webServerUrl,
 		reuseExistingServer: false,
 		timeout: 300000,
 		env: {
