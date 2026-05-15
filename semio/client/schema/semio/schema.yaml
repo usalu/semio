@@ -75,11 +75,6 @@ schema:
   domain: &domain
     is: *module
     interfaces:
-      command: &command
-        implements: [*weakEntity]
-        fields:
-          computed:
-            response: *response
       response: &response
         implements: [*weakEntity]
       input: &input
@@ -346,6 +341,291 @@ schema:
           localProvider: *localProvider
           remoteProviders: [*remoteProvider]
           startedAt: *timestamp
+      addedAttributesToConcept:
+        implements: [*operation]
+        fields: {}
+      addedAttributesToDesign:
+        implements: [*operation]
+        fields: {}
+      addedAttributesToPiece:
+        implements: [*operation]
+        fields: {}
+      addedAttributesToPort:
+        implements: [*operation]
+        fields: {}
+      addedAttributesToQuality:
+        implements: [*operation]
+        fields: {}
+      addedAttributesToTag:
+        implements: [*operation]
+        fields: {}
+      addedAttributesToType:
+        implements: [*operation]
+        fields: {}
+      addedAttributeToConcept:
+        implements: [*operation]
+        fields: {}
+      addedAttributeToDesign:
+        implements: [*operation]
+        fields: {}
+      addedAttributeToPiece:
+        implements: [*operation]
+        fields: {}
+      addedAttributeToPort:
+        implements: [*operation]
+        fields: {}
+      addedAttributeToQuality:
+        implements: [*operation]
+        fields: {}
+      addedAttributeToTag:
+        implements: [*operation]
+        fields: {}
+      addedAttributeToType:
+        implements: [*operation]
+        fields: {}
+      addedChildPiecesWithParentConnections:
+        implements: [*operation]
+        fields: {}
+      addedChildPieceWithParentConnection:
+        implements: [*operation]
+        fields: {}
+      addedConnector:
+        implements: [*operation]
+        fields: {}
+      addedConnectors:
+        implements: [*operation]
+        fields: {}
+      addedHangingChildPiecesWithParentConnections:
+        implements: [*operation]
+        fields: {}
+      addedHangingChildPieceWithParentConnection:
+        implements: [*operation]
+        fields: {}
+      changedDescription:
+        implements: [*operation]
+        fields: {}
+      changedPiecesToType:
+        implements: [*operation]
+        fields: {}
+      changedPieceToType:
+        implements: [*operation]
+        fields: {}
+      createdConcept:
+        implements: [*operation]
+        fields: {}
+      createdConcepts:
+        implements: [*operation]
+        fields: {}
+      createdDesign:
+        implements: [*operation]
+        fields: {}
+      createdDesigns:
+        implements: [*operation]
+        fields: {}
+      createdFixedPiece:
+        implements: [*operation]
+        fields: {}
+      createdPort:
+        implements: [*operation]
+        fields: {}
+      createdPorts:
+        implements: [*operation]
+        fields: {}
+      createdQualities:
+        implements: [*operation]
+        fields: {}
+      createdQuality:
+        implements: [*operation]
+        fields: {}
+      createdTag:
+        implements: [*operation]
+        fields: {}
+      createdTags:
+        implements: [*operation]
+        fields: {}
+      createdType:
+        implements: [*operation]
+        fields: {}
+      createdTypes:
+        implements: [*operation]
+        fields: {}
+      deletedConcept:
+        implements: [*operation]
+        fields: {}
+      deletedConcepts:
+        implements: [*operation]
+        fields: {}
+      deletedDesign:
+        implements: [*operation]
+        fields: {}
+      deletedDesigns:
+        implements: [*operation]
+        fields: {}
+      deletedPiece:
+        implements: [*operation]
+        fields: {}
+      deletedPieces:
+        implements: [*operation]
+        fields: {}
+      deletedPiecesAndConnections:
+        implements: [*operation]
+        fields: {}
+      deletedPort:
+        implements: [*operation]
+        fields: {}
+      deletedPorts:
+        implements: [*operation]
+        fields: {}
+      deletedQualities:
+        implements: [*operation]
+        fields: {}
+      deletedQuality:
+        implements: [*operation]
+        fields: {}
+      deletedTag:
+        implements: [*operation]
+        fields: {}
+      deletedTags:
+        implements: [*operation]
+        fields: {}
+      deletedType:
+        implements: [*operation]
+        fields: {}
+      deletedTypes:
+        implements: [*operation]
+        fields: {}
+      draggedPiece:
+        implements: [*operation]
+        fields: {}
+      draggedPieces:
+        implements: [*operation]
+        fields: {}
+      fixedPiece:
+        implements: [*operation]
+        fields: {}
+      fixedPieces:
+        implements: [*operation]
+        fields: {}
+      flattenedDesign:
+        implements: [*operation]
+        fields: {}
+      movedPiece:
+        implements: [*operation]
+        fields: {}
+      movedPieces:
+        implements: [*operation]
+        fields: {}
+      removedAttributeFromConcept:
+        implements: [*operation]
+        fields: {}
+      removedAttributeFromDesign:
+        implements: [*operation]
+        fields: {}
+      removedAttributeFromPiece:
+        implements: [*operation]
+        fields: {}
+      removedAttributeFromPort:
+        implements: [*operation]
+        fields: {}
+      removedAttributeFromQuality:
+        implements: [*operation]
+        fields: {}
+      removedAttributeFromTag:
+        implements: [*operation]
+        fields: {}
+      removedAttributeFromType:
+        implements: [*operation]
+        fields: {}
+      removedAttributesFromConcept:
+        implements: [*operation]
+        fields: {}
+      removedAttributesFromDesign:
+        implements: [*operation]
+        fields: {}
+      removedAttributesFromPiece:
+        implements: [*operation]
+        fields: {}
+      removedAttributesFromPort:
+        implements: [*operation]
+        fields: {}
+      removedAttributesFromQuality:
+        implements: [*operation]
+        fields: {}
+      removedAttributesFromTag:
+        implements: [*operation]
+        fields: {}
+      removedAttributesFromType:
+        implements: [*operation]
+        fields: {}
+      removedConnector:
+        implements: [*operation]
+        fields: {}
+      removedConnectors:
+        implements: [*operation]
+        fields: {}
+      renamedConcept:
+        implements: [*operation]
+        fields: {}
+      renamedConnector:
+        implements: [*operation]
+        fields: {}
+      renamedKit:
+        implements: [*operation]
+        fields: {}
+      renamedPiece:
+        implements: [*operation]
+        fields: {}
+      renamedPort:
+        implements: [*operation]
+        fields: {}
+      renamedQuality:
+        implements: [*operation]
+        fields: {}
+      renamedTag:
+        implements: [*operation]
+        fields: {}
+      renamedType:
+        implements: [*operation]
+        fields: {}
+      updatedConceptDescription:
+        implements: [*operation]
+        fields: {}
+      updatedConceptIcon:
+        implements: [*operation]
+        fields: {}
+      updatedConnectorDescription:
+        implements: [*operation]
+        fields: {}
+      updatedConnectorIcon:
+        implements: [*operation]
+        fields: {}
+      updatedPieceDescription:
+        implements: [*operation]
+        fields: {}
+      updatedPortDescription:
+        implements: [*operation]
+        fields: {}
+      updatedPortIcon:
+        implements: [*operation]
+        fields: {}
+      updatedQualityDescription:
+        implements: [*operation]
+        fields: {}
+      updatedQualityIcon:
+        implements: [*operation]
+        fields: {}
+      updatedTagDescription:
+        implements: [*operation]
+        fields: {}
+      updatedTagIcon:
+        implements: [*operation]
+        fields: {}
+      updatedTypeDescription:
+        implements: [*operation]
+        fields: {}
+      updatedTypeIcon:
+        implements: [*operation]
+        fields: {}
     vcs: &vcs
       is: *module
       interfaces:
@@ -370,7 +650,7 @@ schema:
               diff: *diff
               after: *graph
         operation: &operation
-          implements: [*strongEntity]
+          implements: [*response, *strongEntity]
           fields:
             data:
               input: *input

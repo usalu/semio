@@ -37,8 +37,8 @@ import {
 	type BoardFixtureNodeV1,
 	type BoardFixtureV1,
 	type CameraState,
-} from "../js/index";
-import { BoardCanvas, Edge, Handle, Node, useBoardEvent } from "../react/index.tsx";
+} from "../index";
+import { BoardCanvas, Edge, Handle, Node, useBoardEvent } from "../index.tsx";
 import "./globals.css";
 // #endregion 📥Imports
 

@@ -14,7 +14,7 @@ import {
 	Handle,
 	Node,
 	useBoardEvent,
-} from "../../../../elements/client/lib/board/react/index.tsx";
+} from "../../../../elements/client/lib/board/index.tsx";
 import nakaginCapsuleTowerBoardFixture from "../../../fixtures/nakagin-capsule-tower.board.json";
 
 const meta = {

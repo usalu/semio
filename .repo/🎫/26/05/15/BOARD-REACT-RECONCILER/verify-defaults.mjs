@@ -4,7 +4,7 @@ const required = fs
 	.readFileSync(new URL("./required-keys.txt", import.meta.url), "utf8")
 	.split(/\n/)
 	.filter(Boolean);
-const src = fs.readFileSync("c:/git/semio/elements/client/lib/board/react/reconciler-defaults.ts", "utf8");
+const src = fs.readFileSync("c:/git/semio/elements/client/lib/board/index.ts", "utf8");
 const missing = required.filter((k) => {
 	const prop = new RegExp(`\\b${k}\\s*:`);
 	const method = new RegExp(`\\b${k}\\s*\\(`);

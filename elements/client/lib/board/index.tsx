@@ -28,9 +28,6 @@ import {
 	unmountBoardFiberRoot,
 	updateBoardFiberRoot,
 	type BoardFiberRoot,
-} from "./reconciler-host";
-
-import {
 	BoardRenderer,
 	Edge as BoardEdgeObject,
 	Handle as BoardHandleObject,
@@ -48,7 +45,7 @@ import {
 	type FrameState,
 	type RenderMode,
 	type WorldRasterTilingKind,
-} from "../js/index";
+} from "./index";
 
 //#region 🔖Kinds
 export interface BoardCanvasProps {

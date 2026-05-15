@@ -9,7 +9,7 @@
     "target": "ESNext"
   },
   "include": [
-    "../../../../../../elements/client/lib/board/js/index.ts",
-    "../../../../../../elements/client/lib/board/react/index.tsx"
+    "../../../../../../elements/client/lib/board/index.ts",
+    "../../../../../../elements/client/lib/board/index.tsx"
   ]
 }

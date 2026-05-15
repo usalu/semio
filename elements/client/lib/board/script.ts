@@ -1,5 +1,5 @@
 #!/usr/bin/env bun
-/** 🧭 Board package task router: `bun ./script.ts <dev|build|test|e2e> [args…]`. */
+/** 🧭 Board package task router: `bun ./script.ts <dev|build|test> [args…]` — `test` runs Rust, wasm build, Vitest, then Playwright against the play harness. */
 import { spawn, spawnSync } from "node:child_process";
 import { join } from "node:path";
 
@@ -60,10 +60,8 @@ if (command === "dev") {
   runSync(["cargo", "test", "-p", "elements_board"], { cwd: repoRoot });
   runSync(["bun", join(cwd, "rs/scripts/build-wasm.script.ts")]);
   runSync(["bunx", "vitest", "run", "--passWithNoTests", "--config", "vitest.config.ts", ...extra]);
-} else if (command === "e2e") {
-  runSync(["bun", join(cwd, "rs/scripts/build-wasm.script.ts")]);
   runSync(["bunx", "playwright", "test", "--config", "play/playwright.config.ts", ...extra], { cwd });
 } else {
-  console.error("usage: bun ./script.ts <dev|build|test|e2e> [args…]");
+  console.error("usage: bun ./script.ts <dev|build|test> [args…]");
   process.exit(1);
 }

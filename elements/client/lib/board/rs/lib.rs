@@ -1,3 +1,4 @@
+//! 🎛️ Single-source board crate: Vello/kurbo geometry (`vcompute`), selection predicates (`geom_sel`), serde scene JSON (`scene_json`), interactive `BoardHost`, retained `BoardEngine`, and wasm-bindgen facades — all in this file (no sibling `src/` modules).
 #![allow(clippy::missing_errors_doc, reason = "Board engine is internal to the elements board bundle.")]
 
 mod vcompute {
