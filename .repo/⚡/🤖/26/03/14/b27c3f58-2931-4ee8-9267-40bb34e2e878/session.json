@@ -29,13 +29,13 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "🗃️elements🛅ui💻elements"
+            "id": "🧩elements🛅ui💻elements"
           }
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
         "ranges": [
-          "🗃️elements🛅ui💻elements📌1📌8552"
+          "🧩elements🛅ui💻elements📌1📌8552"
         ],
         "second": "🎆26🌙03☀️14⏰21⌚44⏱️09",
         "session": "⚪b27c3f5829314ee8926740bb34e2e878",
@@ -190,14 +190,14 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "🗃️elements🛅ui💻elements"
+            "id": "🧩elements🛅ui💻elements"
           }
         ],
         "error": "File content (338.3KB) exceeds maximum allowed size (256KB). Use offset and limit parameters to read specific portions of the file, or search for specific content instead of reading the whole file.",
         "kind": "agent.tool.search.ended",
         "parent": "",
         "ranges": [
-          "🗃️elements🛅ui💻elements📌1📌8552"
+          "🧩elements🛅ui💻elements📌1📌8552"
         ],
         "second": "🎆26🌙03☀️14⏰21⌚44⏱️23",
         "session": "⚪b27c3f5829314ee8926740bb34e2e878",
@@ -360,18 +360,18 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "🗃️elements🛅ui💻elements✂️layoutprops",
+            "id": "🧩elements🛅ui💻elements✂️layoutprops",
             "loc": 10
           },
           {
-            "id": "🗃️elements🛅ui💻elements🛠️layout",
+            "id": "🧩elements🛅ui💻elements🛠️layout",
             "loc": 1
           }
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
         "ranges": [
-          "🗃️elements🛅ui💻elements📌689📌738"
+          "🧩elements🛅ui💻elements📌689📌738"
         ],
         "second": "🎆26🌙03☀️14⏰21⌚46⏱️03",
         "session": "⚪b27c3f5829314ee8926740bb34e2e878",
@@ -414,18 +414,18 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "🗃️elements🛅ui💻elements✂️layoutprops",
+            "id": "🧩elements🛅ui💻elements✂️layoutprops",
             "loc": 10
           },
           {
-            "id": "🗃️elements🛅ui💻elements🛠️layout",
+            "id": "🧩elements🛅ui💻elements🛠️layout",
             "loc": 1
           }
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
         "ranges": [
-          "🗃️elements🛅ui💻elements📌689📌738"
+          "🧩elements🛅ui💻elements📌689📌738"
         ],
         "second": "🎆26🌙03☀️14⏰21⌚46⏱️19",
         "session": "⚪b27c3f5829314ee8926740bb34e2e878",
@@ -458,50 +458,50 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "🗃️elements🛅ui💻elements✂️sidepanelprops",
+            "id": "🧩elements🛅ui💻elements✂️sidepanelprops",
             "loc": 13
           },
           {
-            "id": "🗃️elements🛅ui💻elements✂️sidepaneltabconfig",
+            "id": "🧩elements🛅ui💻elements✂️sidepaneltabconfig",
             "loc": 6
           },
           {
-            "id": "🗃️elements🛅ui💻elements✂️toolbargroupprops",
+            "id": "🧩elements🛅ui💻elements✂️toolbargroupprops",
             "loc": 3
           },
           {
-            "id": "🗃️elements🛅ui💻elements✂️toolbaritemprops",
+            "id": "🧩elements🛅ui💻elements✂️toolbaritemprops",
             "loc": 3
           },
           {
-            "id": "🗃️elements🛅ui💻elements✂️toolbarzoneprops",
+            "id": "🧩elements🛅ui💻elements✂️toolbarzoneprops",
             "loc": 3
           },
           {
-            "id": "🗃️elements🛅ui💻elements🛠️toolbardivider",
+            "id": "🧩elements🛅ui💻elements🛠️toolbardivider",
             "loc": 1
           },
           {
-            "id": "🗃️elements🛅ui💻elements🛠️toolbargroup",
+            "id": "🧩elements🛅ui💻elements🛠️toolbargroup",
             "loc": 1
           },
           {
-            "id": "🗃️elements🛅ui💻elements🛠️toolbaritem",
+            "id": "🧩elements🛅ui💻elements🛠️toolbaritem",
             "loc": 1
           },
           {
-            "id": "🗃️elements🛅ui💻elements🛠️toolbarzone",
+            "id": "🧩elements🛅ui💻elements🛠️toolbarzone",
             "loc": 1
           },
           {
-            "id": "🗃️elements🛅ui💻elements🪨sidepanel",
+            "id": "🧩elements🛅ui💻elements🪨sidepanel",
             "loc": 13
           }
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
         "ranges": [
-          "🗃️elements🛅ui💻elements📌6371📌6570"
+          "🧩elements🛅ui💻elements📌6371📌6570"
         ],
         "second": "🎆26🌙03☀️14⏰21⌚46⏱️34",
         "session": "⚪b27c3f5829314ee8926740bb34e2e878",
@@ -544,50 +544,50 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "🗃️elements🛅ui💻elements✂️sidepanelprops",
+            "id": "🧩elements🛅ui💻elements✂️sidepanelprops",
             "loc": 13
           },
           {
-            "id": "🗃️elements🛅ui💻elements✂️sidepaneltabconfig",
+            "id": "🧩elements🛅ui💻elements✂️sidepaneltabconfig",
             "loc": 6
           },
           {
-            "id": "🗃️elements🛅ui💻elements✂️toolbargroupprops",
+            "id": "🧩elements🛅ui💻elements✂️toolbargroupprops",
             "loc": 3
           },
           {
-            "id": "🗃️elements🛅ui💻elements✂️toolbaritemprops",
+            "id": "🧩elements🛅ui💻elements✂️toolbaritemprops",
             "loc": 3
           },
           {
-            "id": "🗃️elements🛅ui💻elements✂️toolbarzoneprops",
+            "id": "🧩elements🛅ui💻elements✂️toolbarzoneprops",
             "loc": 3
           },
           {
-            "id": "🗃️elements🛅ui💻elements🛠️toolbardivider",
+            "id": "🧩elements🛅ui💻elements🛠️toolbardivider",
             "loc": 1
           },
           {
-            "id": "🗃️elements🛅ui💻elements🛠️toolbargroup",
+            "id": "🧩elements🛅ui💻elements🛠️toolbargroup",
             "loc": 1
           },
           {
-            "id": "🗃️elements🛅ui💻elements🛠️toolbaritem",
+            "id": "🧩elements🛅ui💻elements🛠️toolbaritem",
             "loc": 1
           },
           {
-            "id": "🗃️elements🛅ui💻elements🛠️toolbarzone",
+            "id": "🧩elements🛅ui💻elements🛠️toolbarzone",
             "loc": 1
           },
           {
-            "id": "🗃️elements🛅ui💻elements🪨sidepanel",
+            "id": "🧩elements🛅ui💻elements🪨sidepanel",
             "loc": 13
           }
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
         "ranges": [
-          "🗃️elements🛅ui💻elements📌6371📌6570"
+          "🧩elements🛅ui💻elements📌6371📌6570"
         ],
         "second": "🎆26🌙03☀️14⏰21⌚46⏱️48",
         "session": "⚪b27c3f5829314ee8926740bb34e2e878",
@@ -956,26 +956,26 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "🗃️elements🛅ui💻elements✂️windowconfig",
+            "id": "🧩elements🛅ui💻elements✂️windowconfig",
             "loc": 16
           },
           {
-            "id": "🗃️elements🛅ui💻elements✂️windowprops",
+            "id": "🧩elements🛅ui💻elements✂️windowprops",
             "loc": 3
           },
           {
-            "id": "🗃️elements🛅ui💻elements🛠️defaulterrordisplay",
+            "id": "🧩elements🛅ui💻elements🛠️defaulterrordisplay",
             "loc": 1
           },
           {
-            "id": "🗃️elements🛅ui💻elements🛠️window",
+            "id": "🧩elements🛅ui💻elements🛠️window",
             "loc": 1
           }
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
         "ranges": [
-          "🗃️elements🛅ui💻elements📌6567📌6686"
+          "🧩elements🛅ui💻elements📌6567📌6686"
         ],
         "second": "🎆26🌙03☀️14⏰21⌚48⏱️52",
         "session": "⚪b27c3f5829314ee8926740bb34e2e878",
@@ -1018,26 +1018,26 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "🗃️elements🛅ui💻elements✂️windowconfig",
+            "id": "🧩elements🛅ui💻elements✂️windowconfig",
             "loc": 16
           },
           {
-            "id": "🗃️elements🛅ui💻elements✂️windowprops",
+            "id": "🧩elements🛅ui💻elements✂️windowprops",
             "loc": 3
           },
           {
-            "id": "🗃️elements🛅ui💻elements🛠️defaulterrordisplay",
+            "id": "🧩elements🛅ui💻elements🛠️defaulterrordisplay",
             "loc": 1
           },
           {
-            "id": "🗃️elements🛅ui💻elements🛠️window",
+            "id": "🧩elements🛅ui💻elements🛠️window",
             "loc": 1
           }
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
         "ranges": [
-          "🗃️elements🛅ui💻elements📌6567📌6686"
+          "🧩elements🛅ui💻elements📌6567📌6686"
         ],
         "second": "🎆26🌙03☀️14⏰21⌚49⏱️12",
         "session": "⚪b27c3f5829314ee8926740bb34e2e878",
@@ -1316,7 +1316,7 @@
         "kind": "agent.tool.search.starting",
         "parent": "",
         "ranges": [
-          "🗃️elements🛅ui💻elements📌8547📌8556"
+          "🧩elements🛅ui💻elements📌8547📌8556"
         ],
         "second": "🎆26🌙03☀️14⏰21⌚52⏱️14",
         "session": "⚪b27c3f5829314ee8926740bb34e2e878",
@@ -1360,7 +1360,7 @@
         "kind": "agent.tool.search.ended",
         "parent": "",
         "ranges": [
-          "🗃️elements🛅ui💻elements📌8547📌8556"
+          "🧩elements🛅ui💻elements📌8547📌8556"
         ],
         "second": "🎆26🌙03☀️14⏰21⌚52⏱️53",
         "session": "⚪b27c3f5829314ee8926740bb34e2e878",
@@ -1396,7 +1396,7 @@
         "new": "// #endregion Canvas\n\n// #endregion Window Components\n\n// #region UI\n\n// Domain-neutral composite component providing a full application shell.\n// Consumers register apps with window layouts, panel tabs, toolbar and footer items.\n// The UI component manages app switching, panel state, and the overall layout.\n\n/**\n * Window kind classification for app windows.\n **/\nexport enum WindowKind {\n  GRAPH = \"graph\",\n  SCENE = \"scene\",\n  TABLE = \"table\",\n  PAGE = \"page\",\n  CUSTOM = \"custom\",\n}\n\n/**\n * UI theme classification.\n **/\nexport enum Theme {\n  SYSTEM = \"system\",\n  LIGHT = \"light\",\n  DARK = \"dark\",\n}\n\n/**\n * UI interaction mode.\n **/\nexport enum Mode {\n  VIEW = \"view\",\n  EDIT = \"edit\",\n}\n\n/**\n * Configuration for a single window within an app.\n **/\nexport interface UIWindowConfig {\n  id: string;\n  label: string;\n  content: React.ReactNode;\n  defaultSize?: number;\n  controls?: React.ReactNode;\n  windowKind?: WindowKind;\n}\n\n/**\n * Configuration for a single app registered with the UI.\n **/\nexport interface UIAppConfig {\n  id: string;\n  label: string;\n  icon?: React.ReactNode;\n  windows: UIWindowConfig[];\n  leftPanelTabs?: SidePanelTabConfig[];\n  rightPanelTabs?: SidePanelTabConfig[];\n  bottomPanelSections?: PanelSection[];\n  toolbarContent?: React.ReactNode;\n  footerItems?: FooterItem[];\n}\n\n/**\n * Props for the UI composite component.\n **/\nexport interface UIProps {\n  apps: UIAppConfig[];\n  defaultAppId?: string;\n  navbarLeading?: NavbarItem[];\n  navbarTrailing?: NavbarItem[];\n  footerItems?: FooterItem[];\n  className?: string;\n}\n\n/**\n * Context for the active UI app state.\n **/\ninterface UIContextValue {\n  activeAppId: string;\n  setActiveAppId: (id: string) =\u003e void;\n  apps: UIAppConfig[];\n}\n\nconst UIContext = React.createContext\u003cUIContextValue | undefined\u003e(undefined);\n\n/**\n * Hook to access the UI context.\n **/\nexport function useUI(): UIContextValue {\n  const ctx = React.useContext(UIContext);\n  if (!ctx) throw new Error(\"useUI must be used within a UI component\");\n  return ctx;\n}\n\n/**\n * Domain-neutral composite component providing a full application shell.\n * Manages multiple apps with window layouts, panels, toolbar and footer.\n **/\nexport const UI: React.FC\u003cUIProps\u003e = ({ apps, defaultAppId, navbarLeading = [], navbarTrailing = [], footerItems: globalFooterItems = [], className }) =\u003e {\n  const [activeAppId, setActiveAppId] = React.useState(defaultAppId ?? apps[0]?.id ?? \"\");\n  const [leftPanelSize, setLeftPanelSize] = React.useState(280);\n  const [rightPanelSize, setRightPanelSize] = React.useState(300);\n  const [bottomPanelSize, setBottomPanelSize] = React.useState(200);\n\n  const activeApp = apps.find((a) =\u003e a.id === activeAppId) ?? apps[0];\n  if (!activeApp) return null;\n\n  const appNavItems: NavbarItem[] = apps.map((app) =\u003e ({\n    key: app.id,\n    content: (\n      \u003cbutton\n        onClick={() =\u003e setActiveAppId(app.id)}\n        className={cn(\"flex items-center gap-single px-small py-single cursor-pointer transition-colors\", app.id === activeAppId ? \"text-foreground font-semibold\" : \"text-muted-foreground hover:text-foreground\")}\n      \u003e\n        {app.icon}\n        \u003cspan\u003e{app.label}\u003c/span\u003e\n      \u003c/button\u003e\n    ),\n  }));\n\n  const allNavbarItems = [...navbarLeading, ...appNavItems, ...navbarTrailing];\n\n  const mergedFooterItems = [...globalFooterItems, ...(activeApp.footerItems ?? [])].sort((a, b) =\u003e (a.order ?? 0) - (b.order ?? 0));\n\n  const hasLeftPanel = activeApp.leftPanelTabs \u0026\u0026 activeApp.leftPanelTabs.length \u003e 0;\n  const hasRightPanel = activeApp.rightPanelTabs \u0026\u0026 activeApp.rightPanelTabs.length \u003e 0;\n  const hasBottomPanel = activeApp.bottomPanelSections \u0026\u0026 activeApp.bottomPanelSections.length \u003e 0;\n\n  const windowContent = (\n    \u003cCanvas\u003e\n      {activeApp.windows.length === 1 ? (\n        \u003cWindow id={activeApp.windows[0].id} controls={activeApp.windows[0].controls}\u003e\n          {activeApp.windows[0].content}\n        \u003c/Window\u003e\n      ) : (\n        \u003cHorizontalWindows\u003e\n          {activeApp.windows.map((w) =\u003e (\n            \u003cWindow key={w.id} id={w.id} defaultSize={w.defaultSize} controls={w.controls}\u003e\n              {w.content}\n            \u003c/Window\u003e\n          ))}\n        \u003c/HorizontalWindows\u003e\n      )}\n    \u003c/Canvas\u003e\n  );\n\n  return (\n    \u003cUIContext.Provider value={{ activeAppId, setActiveAppId, apps }}\u003e\n      \u003cLayout\n        className={className}\n        navbar={\u003cNavbar items={allNavbarItems} /\u003e}\n        footer={mergedFooterItems.length \u003e 0 ? \u003cFooter items={mergedFooterItems} /\u003e : undefined}\n        toolbar={activeApp.toolbarContent}\n        leftSidePanel={\n          hasLeftPanel\n            ? {\n                position: \"left\" as const,\n                visible: true,\n                size: leftPanelSize,\n                onSizeChange: setLeftPanelSize,\n                tabs: activeApp.leftPanelTabs!,\n              }\n            : undefined\n        }\n        rightSidePanel={\n          hasRightPanel\n            ? {\n                position: \"right\" as const,\n                visible: true,\n                size: rightPanelSize,\n                onSizeChange: setRightPanelSize,\n                tabs: activeApp.rightPanelTabs!,\n              }\n            : undefined\n        }\n        bottomPanel={\n          hasBottomPanel\n            ? {\n                visible: true,\n                size: bottomPanelSize,\n                onSizeChange: setBottomPanelSize,\n                sections: activeApp.bottomPanelSections!,\n              }\n            : undefined\n        }\n        canvas={windowContent}\n      /\u003e\n    \u003c/UIContext.Provider\u003e\n  );\n};\n\n// #endregion UI",
         "old": "// #endregion Canvas\n\n// #endregion Window Components",
         "parent": "",
-        "path": "🗃️elements🛅ui💻elements",
+        "path": "🧩elements🛅ui💻elements",
         "second": "🎆26🌙03☀️14⏰21⌚53⏱️47",
         "session": "⚪b27c3f5829314ee8926740bb34e2e878",
         "transcript": "/home/vscode/.claude/projects/-workspaces-semio/b27c3f58-2931-4ee8-9267-40bb34e2e878.jsonl"
@@ -1644,7 +1644,7 @@
         "new": "// #endregion Canvas\n\n// #endregion Window Components\n\n// #region UI\n\n// Domain-neutral composite component providing a full application shell.\n// Consumers register apps with window layouts, panel tabs, toolbar and footer items.\n// The UI component manages app switching, panel state, and the overall layout.\n\n/**\n * Window kind classification for app windows.\n **/\nexport enum WindowKind {\n  GRAPH = \"graph\",\n  SCENE = \"scene\",\n  TABLE = \"table\",\n  PAGE = \"page\",\n  CUSTOM = \"custom\",\n}\n\n/**\n * UI theme classification.\n **/\nexport enum Theme {\n  SYSTEM = \"system\",\n  LIGHT = \"light\",\n  DARK = \"dark\",\n}\n\n/**\n * UI interaction mode.\n **/\nexport enum Mode {\n  VIEW = \"view\",\n  EDIT = \"edit\",\n}\n\n/**\n * Configuration for a single window within an app.\n **/\nexport interface UIWindowConfig {\n  id: string;\n  label: string;\n  content: React.ReactNode;\n  defaultSize?: number;\n  controls?: React.ReactNode;\n  windowKind?: WindowKind;\n}\n\n/**\n * Configuration for a single app registered with the UI.\n **/\nexport interface UIAppConfig {\n  id: string;\n  label: string;\n  icon?: React.ReactNode;\n  windows: UIWindowConfig[];\n  leftPanelTabs?: SidePanelTabConfig[];\n  rightPanelTabs?: SidePanelTabConfig[];\n  bottomPanelSections?: PanelSection[];\n  toolbarContent?: React.ReactNode;\n  footerItems?: FooterItem[];\n}\n\n/**\n * Props for the UI composite component.\n **/\nexport interface UIProps {\n  apps: UIAppConfig[];\n  defaultAppId?: string;\n  navbarLeading?: NavbarItem[];\n  navbarTrailing?: NavbarItem[];\n  footerItems?: FooterItem[];\n  className?: string;\n}\n\n/**\n * Context for the active UI app state.\n **/\ninterface UIContextValue {\n  activeAppId: string;\n  setActiveAppId: (id: string) =\u003e void;\n  apps: UIAppConfig[];\n}\n\nconst UIContext = React.createContext\u003cUIContextValue | undefined\u003e(undefined);\n\n/**\n * Hook to access the UI context.\n **/\nexport function useUI(): UIContextValue {\n  const ctx = React.useContext(UIContext);\n  if (!ctx) throw new Error(\"useUI must be used within a UI component\");\n  return ctx;\n}\n\n/**\n * Domain-neutral composite component providing a full application shell.\n * Manages multiple apps with window layouts, panels, toolbar and footer.\n **/\nexport const UI: React.FC\u003cUIProps\u003e = ({ apps, defaultAppId, navbarLeading = [], navbarTrailing = [], footerItems: globalFooterItems = [], className }) =\u003e {\n  const [activeAppId, setActiveAppId] = React.useState(defaultAppId ?? apps[0]?.id ?? \"\");\n  const [leftPanelSize, setLeftPanelSize] = React.useState(280);\n  const [rightPanelSize, setRightPanelSize] = React.useState(300);\n  const [bottomPanelSize, setBottomPanelSize] = React.useState(200);\n\n  const activeApp = apps.find((a) =\u003e a.id === activeAppId) ?? apps[0];\n  if (!activeApp) return null;\n\n  const appNavItems: NavbarItem[] = apps.map((app) =\u003e ({\n    key: app.id,\n    content: (\n      \u003cbutton\n        onClick={() =\u003e setActiveAppId(app.id)}\n        className={cn(\"flex items-center gap-single px-small py-single cursor-pointer transition-colors\", app.id === activeAppId ? \"text-foreground font-semibold\" : \"text-muted-foreground hover:text-foreground\")}\n      \u003e\n        {app.icon}\n        \u003cspan\u003e{app.label}\u003c/span\u003e\n      \u003c/button\u003e\n    ),\n  }));\n\n  const allNavbarItems = [...navbarLeading, ...appNavItems, ...navbarTrailing];\n\n  const mergedFooterItems = [...globalFooterItems, ...(activeApp.footerItems ?? [])].sort((a, b) =\u003e (a.order ?? 0) - (b.order ?? 0));\n\n  const hasLeftPanel = activeApp.leftPanelTabs \u0026\u0026 activeApp.leftPanelTabs.length \u003e 0;\n  const hasRightPanel = activeApp.rightPanelTabs \u0026\u0026 activeApp.rightPanelTabs.length \u003e 0;\n  const hasBottomPanel = activeApp.bottomPanelSections \u0026\u0026 activeApp.bottomPanelSections.length \u003e 0;\n\n  const windowContent = (\n    \u003cCanvas\u003e\n      {activeApp.windows.length === 1 ? (\n        \u003cWindow id={activeApp.windows[0].id} controls={activeApp.windows[0].controls}\u003e\n          {activeApp.windows[0].content}\n        \u003c/Window\u003e\n      ) : (\n        \u003cHorizontalWindows\u003e\n          {activeApp.windows.map((w) =\u003e (\n            \u003cWindow key={w.id} id={w.id} defaultSize={w.defaultSize} controls={w.controls}\u003e\n              {w.content}\n            \u003c/Window\u003e\n          ))}\n        \u003c/HorizontalWindows\u003e\n      )}\n    \u003c/Canvas\u003e\n  );\n\n  return (\n    \u003cUIContext.Provider value={{ activeAppId, setActiveAppId, apps }}\u003e\n      \u003cLayout\n        className={className}\n        navbar={\u003cNavbar items={allNavbarItems} /\u003e}\n        footer={mergedFooterItems.length \u003e 0 ? \u003cFooter items={mergedFooterItems} /\u003e : undefined}\n        toolbar={activeApp.toolbarContent}\n        leftSidePanel={\n          hasLeftPanel\n            ? {\n                position: \"left\" as const,\n                visible: true,\n                size: leftPanelSize,\n                onSizeChange: setLeftPanelSize,\n                tabs: activeApp.leftPanelTabs!,\n              }\n            : undefined\n        }\n        rightSidePanel={\n          hasRightPanel\n            ? {\n                position: \"right\" as const,\n                visible: true,\n                size: rightPanelSize,\n                onSizeChange: setRightPanelSize,\n                tabs: activeApp.rightPanelTabs!,\n              }\n            : undefined\n        }\n        bottomPanel={\n          hasBottomPanel\n            ? {\n                visible: true,\n                size: bottomPanelSize,\n                onSizeChange: setBottomPanelSize,\n                sections: activeApp.bottomPanelSections!,\n              }\n            : undefined\n        }\n        canvas={windowContent}\n      /\u003e\n    \u003c/UIContext.Provider\u003e\n  );\n};\n\n// #endregion UI",
         "old": "// #endregion Canvas\n\n// #endregion Window Components",
         "parent": "",
-        "path": "🗃️elements🛅ui💻elements",
+        "path": "🧩elements🛅ui💻elements",
         "second": "🎆26🌙03☀️14⏰21⌚54⏱️33",
         "session": "⚪b27c3f5829314ee8926740bb34e2e878",
         "transcript": "/home/vscode/.claude/projects/-workspaces-semio/b27c3f58-2931-4ee8-9267-40bb34e2e878.jsonl"
@@ -1676,18 +1676,18 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "🗃️elements🛅ui💻elements✂️bottompanelprops",
+            "id": "🧩elements🛅ui💻elements✂️bottompanelprops",
             "loc": 8
           },
           {
-            "id": "🗃️elements🛅ui💻elements🛠️bottompanel",
+            "id": "🧩elements🛅ui💻elements🛠️bottompanel",
             "loc": 1
           }
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
         "ranges": [
-          "🗃️elements🛅ui💻elements📌6357📌6371"
+          "🧩elements🛅ui💻elements📌6357📌6371"
         ],
         "second": "🎆26🌙03☀️14⏰21⌚55⏱️33",
         "session": "⚪b27c3f5829314ee8926740bb34e2e878",
@@ -1730,18 +1730,18 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "🗃️elements🛅ui💻elements✂️bottompanelprops",
+            "id": "🧩elements🛅ui💻elements✂️bottompanelprops",
             "loc": 8
           },
           {
-            "id": "🗃️elements🛅ui💻elements🛠️bottompanel",
+            "id": "🧩elements🛅ui💻elements🛠️bottompanel",
             "loc": 1
           }
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
         "ranges": [
-          "🗃️elements🛅ui💻elements📌6357📌6371"
+          "🧩elements🛅ui💻elements📌6357📌6371"
         ],
         "second": "🎆26🌙03☀️14⏰21⌚56⏱️29",
         "session": "⚪b27c3f5829314ee8926740bb34e2e878",
@@ -1774,18 +1774,18 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "🗃️elements🛅ui💻elements✂️panelprops",
+            "id": "🧩elements🛅ui💻elements✂️panelprops",
             "loc": 4
           },
           {
-            "id": "🗃️elements🛅ui💻elements✂️panelsection",
+            "id": "🧩elements🛅ui💻elements✂️panelsection",
             "loc": 15
           }
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
         "ranges": [
-          "🗃️elements🛅ui💻elements📌6085📌6109"
+          "🧩elements🛅ui💻elements📌6085📌6109"
         ],
         "second": "🎆26🌙03☀️14⏰21⌚57⏱️36",
         "session": "⚪b27c3f5829314ee8926740bb34e2e878",
@@ -1828,18 +1828,18 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "🗃️elements🛅ui💻elements✂️panelprops",
+            "id": "🧩elements🛅ui💻elements✂️panelprops",
             "loc": 4
           },
           {
-            "id": "🗃️elements🛅ui💻elements✂️panelsection",
+            "id": "🧩elements🛅ui💻elements✂️panelsection",
             "loc": 15
           }
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
         "ranges": [
-          "🗃️elements🛅ui💻elements📌6085📌6109"
+          "🧩elements🛅ui💻elements📌6085📌6109"
         ],
         "second": "🎆26🌙03☀️14⏰21⌚58⏱️38",
         "session": "⚪b27c3f5829314ee8926740bb34e2e878",
@@ -1872,18 +1872,18 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "🗃️elements🛅ui💻elements✂️layoutprops",
+            "id": "🧩elements🛅ui💻elements✂️layoutprops",
             "loc": 10
           },
           {
-            "id": "🗃️elements🛅ui💻elements🛠️layout",
+            "id": "🧩elements🛅ui💻elements🛠️layout",
             "loc": 1
           }
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
         "ranges": [
-          "🗃️elements🛅ui💻elements📌700📌714"
+          "🧩elements🛅ui💻elements📌700📌714"
         ],
         "second": "🎆26🌙03☀️14⏰21⌚59⏱️41",
         "session": "⚪b27c3f5829314ee8926740bb34e2e878",
@@ -1926,18 +1926,18 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "🗃️elements🛅ui💻elements✂️layoutprops",
+            "id": "🧩elements🛅ui💻elements✂️layoutprops",
             "loc": 10
           },
           {
-            "id": "🗃️elements🛅ui💻elements🛠️layout",
+            "id": "🧩elements🛅ui💻elements🛠️layout",
             "loc": 1
           }
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
         "ranges": [
-          "🗃️elements🛅ui💻elements📌700📌714"
+          "🧩elements🛅ui💻elements📌700📌714"
         ],
         "second": "🎆26🌙03☀️14⏰22⌚00⏱️47",
         "session": "⚪b27c3f5829314ee8926740bb34e2e878",
@@ -2167,7 +2167,7 @@
         "contributor": "🧑‍💻ueli",
         "kind": "agent.tool.code.edit.starting",
         "parent": "",
-        "path": "🗃️elements🛅ui🛅storybook🗃️stories🗃️elements🥼uistories",
+        "path": "🧩elements🛅ui🛅storybook🗃️stories🧩elements🥼uistories",
         "second": "🎆26🌙03☀️14⏰22⌚07⏱️08",
         "session": "⚪b27c3f5829314ee8926740bb34e2e878",
         "transcript": "/home/vscode/.claude/projects/-workspaces-semio/b27c3f58-2931-4ee8-9267-40bb34e2e878.jsonl"
@@ -2205,7 +2205,7 @@
         "contributor": "🧑‍💻ueli",
         "kind": "agent.tool.code.edit.ended",
         "parent": "",
-        "path": "🗃️elements🛅ui🛅storybook🗃️stories🗃️elements🥼uistories",
+        "path": "🧩elements🛅ui🛅storybook🗃️stories🧩elements🥼uistories",
         "second": "🎆26🌙03☀️14⏰22⌚08⏱️09",
         "session": "⚪b27c3f5829314ee8926740bb34e2e878",
         "transcript": "/home/vscode/.claude/projects/-workspaces-semio/b27c3f58-2931-4ee8-9267-40bb34e2e878.jsonl"
@@ -2236,7 +2236,7 @@
         "contributor": "🧑‍💻ueli",
         "kind": "agent.tool.code.edit.starting",
         "parent": "",
-        "path": "🗃️elements🛅ui🛅storybook🗃️stories🗃️elements🗃️window🥼windowstories",
+        "path": "🧩elements🛅ui🛅storybook🗃️stories🧩elements🗃️window🥼windowstories",
         "second": "🎆26🌙03☀️14⏰22⌚09⏱️43",
         "session": "⚪b27c3f5829314ee8926740bb34e2e878",
         "transcript": "/home/vscode/.claude/projects/-workspaces-semio/b27c3f58-2931-4ee8-9267-40bb34e2e878.jsonl"
@@ -2274,7 +2274,7 @@
         "contributor": "🧑‍💻ueli",
         "kind": "agent.tool.code.edit.ended",
         "parent": "",
-        "path": "🗃️elements🛅ui🛅storybook🗃️stories🗃️elements🗃️window🥼windowstories",
+        "path": "🧩elements🛅ui🛅storybook🗃️stories🧩elements🗃️window🥼windowstories",
         "second": "🎆26🌙03☀️14⏰22⌚10⏱️57",
         "session": "⚪b27c3f5829314ee8926740bb34e2e878",
         "transcript": "/home/vscode/.claude/projects/-workspaces-semio/b27c3f58-2931-4ee8-9267-40bb34e2e878.jsonl"
@@ -2305,7 +2305,7 @@
         "contributor": "🧑‍💻ueli",
         "kind": "agent.tool.code.edit.starting",
         "parent": "",
-        "path": "🗃️elements🛅ui🛅storybook🗃️stories🗃️elements🗃️window🥼pagestories",
+        "path": "🧩elements🛅ui🛅storybook🗃️stories🧩elements🗃️window🥼pagestories",
         "second": "🎆26🌙03☀️14⏰22⌚12⏱️41",
         "session": "⚪b27c3f5829314ee8926740bb34e2e878",
         "transcript": "/home/vscode/.claude/projects/-workspaces-semio/b27c3f58-2931-4ee8-9267-40bb34e2e878.jsonl"
@@ -2343,7 +2343,7 @@
         "contributor": "🧑‍💻ueli",
         "kind": "agent.tool.code.edit.ended",
         "parent": "",
-        "path": "🗃️elements🛅ui🛅storybook🗃️stories🗃️elements🗃️window🥼pagestories",
+        "path": "🧩elements🛅ui🛅storybook🗃️stories🧩elements🗃️window🥼pagestories",
         "second": "🎆26🌙03☀️14⏰22⌚14⏱️00",
         "session": "⚪b27c3f5829314ee8926740bb34e2e878",
         "transcript": "/home/vscode/.claude/projects/-workspaces-semio/b27c3f58-2931-4ee8-9267-40bb34e2e878.jsonl"
@@ -2374,7 +2374,7 @@
         "contributor": "🧑‍💻ueli",
         "kind": "agent.tool.code.edit.starting",
         "parent": "",
-        "path": "🗃️elements🛅ui🛅storybook🗃️stories🗃️elements🥼panelstories",
+        "path": "🧩elements🛅ui🛅storybook🗃️stories🧩elements🥼panelstories",
         "second": "🎆26🌙03☀️14⏰22⌚15⏱️20",
         "session": "⚪b27c3f5829314ee8926740bb34e2e878",
         "transcript": "/home/vscode/.claude/projects/-workspaces-semio/b27c3f58-2931-4ee8-9267-40bb34e2e878.jsonl"
@@ -2412,7 +2412,7 @@
         "contributor": "🧑‍💻ueli",
         "kind": "agent.tool.code.edit.ended",
         "parent": "",
-        "path": "🗃️elements🛅ui🛅storybook🗃️stories🗃️elements🥼panelstories",
+        "path": "🧩elements🛅ui🛅storybook🗃️stories🧩elements🥼panelstories",
         "second": "🎆26🌙03☀️14⏰22⌚16⏱️11",
         "session": "⚪b27c3f5829314ee8926740bb34e2e878",
         "transcript": "/home/vscode/.claude/projects/-workspaces-semio/b27c3f58-2931-4ee8-9267-40bb34e2e878.jsonl"
@@ -2443,7 +2443,7 @@
         "contributor": "🧑‍💻ueli",
         "kind": "agent.tool.code.edit.starting",
         "parent": "",
-        "path": "🗃️elements🛅ui🛅storybook🗃️stories🗃️elements🥼toolbarstories",
+        "path": "🧩elements🛅ui🛅storybook🗃️stories🧩elements🥼toolbarstories",
         "second": "🎆26🌙03☀️14⏰22⌚17⏱️18",
         "session": "⚪b27c3f5829314ee8926740bb34e2e878",
         "transcript": "/home/vscode/.claude/projects/-workspaces-semio/b27c3f58-2931-4ee8-9267-40bb34e2e878.jsonl"
@@ -2481,7 +2481,7 @@
         "contributor": "🧑‍💻ueli",
         "kind": "agent.tool.code.edit.ended",
         "parent": "",
-        "path": "🗃️elements🛅ui🛅storybook🗃️stories🗃️elements🥼toolbarstories",
+        "path": "🧩elements🛅ui🛅storybook🗃️stories🧩elements🥼toolbarstories",
         "second": "🎆26🌙03☀️14⏰22⌚18⏱️40",
         "session": "⚪b27c3f5829314ee8926740bb34e2e878",
         "transcript": "/home/vscode/.claude/projects/-workspaces-semio/b27c3f58-2931-4ee8-9267-40bb34e2e878.jsonl"
@@ -2512,7 +2512,7 @@
         "contributor": "🧑‍💻ueli",
         "kind": "agent.tool.code.edit.starting",
         "parent": "",
-        "path": "🗃️elements🛅ui🛅storybook🗃️stories🗃️elements🥼stripstories",
+        "path": "🧩elements🛅ui🛅storybook🗃️stories🧩elements🥼stripstories",
         "second": "🎆26🌙03☀️14⏰22⌚20⏱️02",
         "session": "⚪b27c3f5829314ee8926740bb34e2e878",
         "transcript": "/home/vscode/.claude/projects/-workspaces-semio/b27c3f58-2931-4ee8-9267-40bb34e2e878.jsonl"
@@ -2550,7 +2550,7 @@
         "contributor": "🧑‍💻ueli",
         "kind": "agent.tool.code.edit.ended",
         "parent": "",
-        "path": "🗃️elements🛅ui🛅storybook🗃️stories🗃️elements🥼stripstories",
+        "path": "🧩elements🛅ui🛅storybook🗃️stories🧩elements🥼stripstories",
         "second": "🎆26🌙03☀️14⏰22⌚21⏱️04",
         "session": "⚪b27c3f5829314ee8926740bb34e2e878",
         "transcript": "/home/vscode/.claude/projects/-workspaces-semio/b27c3f58-2931-4ee8-9267-40bb34e2e878.jsonl"
@@ -2581,7 +2581,7 @@
         "contributor": "🧑‍💻ueli",
         "kind": "agent.tool.code.edit.starting",
         "parent": "",
-        "path": "🗃️elements🛅ui🛅storybook🗃️stories🗃️elements🗃️display🥼cardstories",
+        "path": "🧩elements🛅ui🛅storybook🗃️stories🧩elements🗃️display🥼cardstories",
         "second": "🎆26🌙03☀️14⏰22⌚22⏱️19",
         "session": "⚪b27c3f5829314ee8926740bb34e2e878",
         "transcript": "/home/vscode/.claude/projects/-workspaces-semio/b27c3f58-2931-4ee8-9267-40bb34e2e878.jsonl"
@@ -2619,7 +2619,7 @@
         "contributor": "🧑‍💻ueli",
         "kind": "agent.tool.code.edit.ended",
         "parent": "",
-        "path": "🗃️elements🛅ui🛅storybook🗃️stories🗃️elements🗃️display🥼cardstories",
+        "path": "🧩elements🛅ui🛅storybook🗃️stories🧩elements🗃️display🥼cardstories",
         "second": "🎆26🌙03☀️14⏰22⌚22⏱️51",
         "session": "⚪b27c3f5829314ee8926740bb34e2e878",
         "transcript": "/home/vscode/.claude/projects/-workspaces-semio/b27c3f58-2931-4ee8-9267-40bb34e2e878.jsonl"
@@ -2650,7 +2650,7 @@
         "contributor": "🧑‍💻ueli",
         "kind": "agent.tool.code.edit.starting",
         "parent": "",
-        "path": "🗃️elements🛅ui🛅storybook🗃️stories🗃️elements🗃️display🥼diagramnodestories",
+        "path": "🧩elements🛅ui🛅storybook🗃️stories🧩elements🗃️display🥼diagramnodestories",
         "second": "🎆26🌙03☀️14⏰22⌚23⏱️35",
         "session": "⚪b27c3f5829314ee8926740bb34e2e878",
         "transcript": "/home/vscode/.claude/projects/-workspaces-semio/b27c3f58-2931-4ee8-9267-40bb34e2e878.jsonl"
@@ -2688,7 +2688,7 @@
         "contributor": "🧑‍💻ueli",
         "kind": "agent.tool.code.edit.ended",
         "parent": "",
-        "path": "🗃️elements🛅ui🛅storybook🗃️stories🗃️elements🗃️display🥼diagramnodestories",
+        "path": "🧩elements🛅ui🛅storybook🗃️stories🧩elements🗃️display🥼diagramnodestories",
         "second": "🎆26🌙03☀️14⏰22⌚24⏱️40",
         "session": "⚪b27c3f5829314ee8926740bb34e2e878",
         "transcript": "/home/vscode/.claude/projects/-workspaces-semio/b27c3f58-2931-4ee8-9267-40bb34e2e878.jsonl"
@@ -2719,7 +2719,7 @@
         "contributor": "🧑‍💻ueli",
         "kind": "agent.tool.code.edit.starting",
         "parent": "",
-        "path": "🗃️elements🛅ui🛅storybook🗃️stories🗃️elements🗃️navigation🥼pagenavigationstories",
+        "path": "🧩elements🛅ui🛅storybook🗃️stories🧩elements🗃️navigation🥼pagenavigationstories",
         "second": "🎆26🌙03☀️14⏰22⌚26⏱️13",
         "session": "⚪b27c3f5829314ee8926740bb34e2e878",
         "transcript": "/home/vscode/.claude/projects/-workspaces-semio/b27c3f58-2931-4ee8-9267-40bb34e2e878.jsonl"
@@ -2757,7 +2757,7 @@
         "contributor": "🧑‍💻ueli",
         "kind": "agent.tool.code.edit.ended",
         "parent": "",
-        "path": "🗃️elements🛅ui🛅storybook🗃️stories🗃️elements🗃️navigation🥼pagenavigationstories",
+        "path": "🧩elements🛅ui🛅storybook🗃️stories🧩elements🗃️navigation🥼pagenavigationstories",
         "second": "🎆26🌙03☀️14⏰22⌚27⏱️29",
         "session": "⚪b27c3f5829314ee8926740bb34e2e878",
         "transcript": "/home/vscode/.claude/projects/-workspaces-semio/b27c3f58-2931-4ee8-9267-40bb34e2e878.jsonl"
@@ -2789,22 +2789,22 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "🗃️elements🛅ui💻elements✂️pagefrontmatter",
+            "id": "🧩elements🛅ui💻elements✂️pagefrontmatter",
             "loc": 8
           },
           {
-            "id": "🗃️elements🛅ui💻elements✂️pageprops",
+            "id": "🧩elements🛅ui💻elements✂️pageprops",
             "loc": 7
           },
           {
-            "id": "🗃️elements🛅ui💻elements🛠️page",
+            "id": "🧩elements🛅ui💻elements🛠️page",
             "loc": 1
           }
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
         "ranges": [
-          "🗃️elements🛅ui💻elements📌6695📌6729"
+          "🧩elements🛅ui💻elements📌6695📌6729"
         ],
         "second": "🎆26🌙03☀️14⏰22⌚28⏱️32",
         "session": "⚪b27c3f5829314ee8926740bb34e2e878",
@@ -2847,22 +2847,22 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "🗃️elements🛅ui💻elements✂️pagefrontmatter",
+            "id": "🧩elements🛅ui💻elements✂️pagefrontmatter",
             "loc": 8
           },
           {
-            "id": "🗃️elements🛅ui💻elements✂️pageprops",
+            "id": "🧩elements🛅ui💻elements✂️pageprops",
             "loc": 7
           },
           {
-            "id": "🗃️elements🛅ui💻elements🛠️page",
+            "id": "🧩elements🛅ui💻elements🛠️page",
             "loc": 1
           }
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
         "ranges": [
-          "🗃️elements🛅ui💻elements📌6695📌6729"
+          "🧩elements🛅ui💻elements📌6695📌6729"
         ],
         "second": "🎆26🌙03☀️14⏰22⌚29⏱️39",
         "session": "⚪b27c3f5829314ee8926740bb34e2e878",
@@ -2898,7 +2898,7 @@
         "new": "export const WithFooter: Story = {\n  args: {\n    frontmatter: {\n      title: \"Tutorial: Hello World\",\n      description: \"Your first project step by step.\",\n    },\n    children: (\n      \u003c\u003e\n        \u003ch2\u003eStep 1: Setup\u003c/h2\u003e\n        \u003cp\u003eInstall the required dependencies.\u003c/p\u003e\n        \u003ch2\u003eStep 2: Create a project\u003c/h2\u003e\n        \u003cp\u003eInitialize a new project with the CLI.\u003c/p\u003e\n      \u003c/\u003e\n    ),\n    footer: \u003cdiv className=\"text-sm text-muted-foreground border-t pt-4 mt-4\"\u003eLast updated: March 2026\u003c/div\u003e,\n  },\n  render: (args) =\u003e (\n    \u003cdiv className=\"h-[500px] w-[700px] border\"\u003e\n      \u003cPage {...args} /\u003e\n    \u003c/div\u003e\n  ),\n};",
         "old": "export const WithNavigation: Story = {\n  args: {\n    frontmatter: {\n      title: \"Tutorial: Hello World\",\n      description: \"Your first project step by step.\",\n    },\n    children: (\n      \u003c\u003e\n        \u003ch2\u003eStep 1: Setup\u003c/h2\u003e\n        \u003cp\u003eInstall the required dependencies.\u003c/p\u003e\n        \u003ch2\u003eStep 2: Create a project\u003c/h2\u003e\n        \u003cp\u003eInitialize a new project with the CLI.\u003c/p\u003e\n      \u003c/\u003e\n    ),\n    previousPage: { label: \"Installation\", href: \"/installation\" },\n    nextPage: { label: \"Advanced Topics\", href: \"/advanced\" },\n  },\n  render: (args) =\u003e (\n    \u003cdiv className=\"h-[500px] w-[700px] border\"\u003e\n      \u003cPage {...args} /\u003e\n    \u003c/div\u003e\n  ),\n};",
         "parent": "",
-        "path": "🗃️elements🛅ui🛅storybook🗃️stories🗃️elements🗃️window🥼pagestories",
+        "path": "🧩elements🛅ui🛅storybook🗃️stories🧩elements🗃️window🥼pagestories",
         "second": "🎆26🌙03☀️14⏰22⌚31⏱️04",
         "session": "⚪b27c3f5829314ee8926740bb34e2e878",
         "transcript": "/home/vscode/.claude/projects/-workspaces-semio/b27c3f58-2931-4ee8-9267-40bb34e2e878.jsonl"
@@ -2976,7 +2976,7 @@
         "new": "export const WithFooter: Story = {\n  args: {\n    frontmatter: {\n      title: \"Tutorial: Hello World\",\n      description: \"Your first project step by step.\",\n    },\n    children: (\n      \u003c\u003e\n        \u003ch2\u003eStep 1: Setup\u003c/h2\u003e\n        \u003cp\u003eInstall the required dependencies.\u003c/p\u003e\n        \u003ch2\u003eStep 2: Create a project\u003c/h2\u003e\n        \u003cp\u003eInitialize a new project with the CLI.\u003c/p\u003e\n      \u003c/\u003e\n    ),\n    footer: \u003cdiv className=\"text-sm text-muted-foreground border-t pt-4 mt-4\"\u003eLast updated: March 2026\u003c/div\u003e,\n  },\n  render: (args) =\u003e (\n    \u003cdiv className=\"h-[500px] w-[700px] border\"\u003e\n      \u003cPage {...args} /\u003e\n    \u003c/div\u003e\n  ),\n};",
         "old": "export const WithNavigation: Story = {\n  args: {\n    frontmatter: {\n      title: \"Tutorial: Hello World\",\n      description: \"Your first project step by step.\",\n    },\n    children: (\n      \u003c\u003e\n        \u003ch2\u003eStep 1: Setup\u003c/h2\u003e\n        \u003cp\u003eInstall the required dependencies.\u003c/p\u003e\n        \u003ch2\u003eStep 2: Create a project\u003c/h2\u003e\n        \u003cp\u003eInitialize a new project with the CLI.\u003c/p\u003e\n      \u003c/\u003e\n    ),\n    previousPage: { label: \"Installation\", href: \"/installation\" },\n    nextPage: { label: \"Advanced Topics\", href: \"/advanced\" },\n  },\n  render: (args) =\u003e (\n    \u003cdiv className=\"h-[500px] w-[700px] border\"\u003e\n      \u003cPage {...args} /\u003e\n    \u003c/div\u003e\n  ),\n};",
         "parent": "",
-        "path": "🗃️elements🛅ui🛅storybook🗃️stories🗃️elements🗃️window🥼pagestories",
+        "path": "🧩elements🛅ui🛅storybook🗃️stories🧩elements🗃️window🥼pagestories",
         "second": "🎆26🌙03☀️14⏰22⌚32⏱️08",
         "session": "⚪b27c3f5829314ee8926740bb34e2e878",
         "transcript": "/home/vscode/.claude/projects/-workspaces-semio/b27c3f58-2931-4ee8-9267-40bb34e2e878.jsonl"
@@ -3077,18 +3077,18 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "🗃️elements🛅ui💻elements✂️asideprops",
+            "id": "🧩elements🛅ui💻elements✂️asideprops",
             "loc": 5
           },
           {
-            "id": "🗃️elements🛅ui💻elements🪨iconmap",
+            "id": "🧩elements🛅ui💻elements🪨iconmap",
             "loc": 5
           }
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
         "ranges": [
-          "🗃️elements🛅ui💻elements📌1175📌1189"
+          "🧩elements🛅ui💻elements📌1175📌1189"
         ],
         "second": "🎆26🌙03☀️14⏰22⌚34⏱️34",
         "session": "⚪b27c3f5829314ee8926740bb34e2e878",
@@ -3131,18 +3131,18 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "🗃️elements🛅ui💻elements✂️asideprops",
+            "id": "🧩elements🛅ui💻elements✂️asideprops",
             "loc": 5
           },
           {
-            "id": "🗃️elements🛅ui💻elements🪨iconmap",
+            "id": "🧩elements🛅ui💻elements🪨iconmap",
             "loc": 5
           }
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
         "ranges": [
-          "🗃️elements🛅ui💻elements📌1175📌1189"
+          "🧩elements🛅ui💻elements📌1175📌1189"
         ],
         "second": "🎆26🌙03☀️14⏰22⌚35⏱️28",
         "session": "⚪b27c3f5829314ee8926740bb34e2e878",
@@ -3178,7 +3178,7 @@
         "new": "      \u003cAside title=\"Note\" kind=\"note\"\u003e\n        This is an informational aside with important context.\n      \u003c/Aside\u003e",
         "old": "      \u003cAside title=\"Note\" variant=\"info\"\u003e\n        This is an informational aside with important context.\n      \u003c/Aside\u003e",
         "parent": "",
-        "path": "🗃️elements🛅ui🛅storybook🗃️stories🗃️elements🗃️display🥼cardstories",
+        "path": "🧩elements🛅ui🛅storybook🗃️stories🧩elements🗃️display🥼cardstories",
         "second": "🎆26🌙03☀️14⏰22⌚36⏱️11",
         "session": "⚪b27c3f5829314ee8926740bb34e2e878",
         "transcript": "/home/vscode/.claude/projects/-workspaces-semio/b27c3f58-2931-4ee8-9267-40bb34e2e878.jsonl"
@@ -3239,7 +3239,7 @@
         "new": "      \u003cAside title=\"Note\" kind=\"note\"\u003e\n        This is an informational aside with important context.\n      \u003c/Aside\u003e",
         "old": "      \u003cAside title=\"Note\" variant=\"info\"\u003e\n        This is an informational aside with important context.\n      \u003c/Aside\u003e",
         "parent": "",
-        "path": "🗃️elements🛅ui🛅storybook🗃️stories🗃️elements🗃️display🥼cardstories",
+        "path": "🧩elements🛅ui🛅storybook🗃️stories🧩elements🗃️display🥼cardstories",
         "second": "🎆26🌙03☀️14⏰22⌚37⏱️03",
         "session": "⚪b27c3f5829314ee8926740bb34e2e878",
         "transcript": "/home/vscode/.claude/projects/-workspaces-semio/b27c3f58-2931-4ee8-9267-40bb34e2e878.jsonl"
@@ -3271,30 +3271,30 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "🗃️elements🛅ui💻elements✂️cardgridprops",
+            "id": "🧩elements🛅ui💻elements✂️cardgridprops",
             "loc": 5
           },
           {
-            "id": "🗃️elements🛅ui💻elements✂️cardprops",
+            "id": "🧩elements🛅ui💻elements✂️cardprops",
             "loc": 6
           },
           {
-            "id": "🗃️elements🛅ui💻elements✂️spinnerprops",
+            "id": "🧩elements🛅ui💻elements✂️spinnerprops",
             "loc": 4
           },
           {
-            "id": "🗃️elements🛅ui💻elements🛠️card",
+            "id": "🧩elements🛅ui💻elements🛠️card",
             "loc": 1
           },
           {
-            "id": "🗃️elements🛅ui💻elements🛠️cardgrid",
+            "id": "🧩elements🛅ui💻elements🛠️cardgrid",
             "loc": 1
           }
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
         "ranges": [
-          "🗃️elements🛅ui💻elements📌1405📌1464"
+          "🧩elements🛅ui💻elements📌1405📌1464"
         ],
         "second": "🎆26🌙03☀️14⏰22⌚37⏱️53",
         "session": "⚪b27c3f5829314ee8926740bb34e2e878",
@@ -3337,30 +3337,30 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "🗃️elements🛅ui💻elements✂️cardgridprops",
+            "id": "🧩elements🛅ui💻elements✂️cardgridprops",
             "loc": 5
           },
           {
-            "id": "🗃️elements🛅ui💻elements✂️cardprops",
+            "id": "🧩elements🛅ui💻elements✂️cardprops",
             "loc": 6
           },
           {
-            "id": "🗃️elements🛅ui💻elements✂️spinnerprops",
+            "id": "🧩elements🛅ui💻elements✂️spinnerprops",
             "loc": 4
           },
           {
-            "id": "🗃️elements🛅ui💻elements🛠️card",
+            "id": "🧩elements🛅ui💻elements🛠️card",
             "loc": 1
           },
           {
-            "id": "🗃️elements🛅ui💻elements🛠️cardgrid",
+            "id": "🧩elements🛅ui💻elements🛠️cardgrid",
             "loc": 1
           }
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
         "ranges": [
-          "🗃️elements🛅ui💻elements📌1405📌1464"
+          "🧩elements🛅ui💻elements📌1405📌1464"
         ],
         "second": "🎆26🌙03☀️14⏰22⌚38⏱️43",
         "session": "⚪b27c3f5829314ee8926740bb34e2e878",
@@ -3393,18 +3393,18 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "🗃️elements🛅ui💻elements✂️notfoundprops",
+            "id": "🧩elements🛅ui💻elements✂️notfoundprops",
             "loc": 7
           },
           {
-            "id": "🗃️elements🛅ui💻elements🛠️notfound",
+            "id": "🧩elements🛅ui💻elements🛠️notfound",
             "loc": 1
           }
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
         "ranges": [
-          "🗃️elements🛅ui💻elements📌1494📌1538"
+          "🧩elements🛅ui💻elements📌1494📌1538"
         ],
         "second": "🎆26🌙03☀️14⏰22⌚39⏱️39",
         "session": "⚪b27c3f5829314ee8926740bb34e2e878",
@@ -3447,18 +3447,18 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "🗃️elements🛅ui💻elements✂️notfoundprops",
+            "id": "🧩elements🛅ui💻elements✂️notfoundprops",
             "loc": 7
           },
           {
-            "id": "🗃️elements🛅ui💻elements🛠️notfound",
+            "id": "🧩elements🛅ui💻elements🛠️notfound",
             "loc": 1
           }
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
         "ranges": [
-          "🗃️elements🛅ui💻elements📌1494📌1538"
+          "🧩elements🛅ui💻elements📌1494📌1538"
         ],
         "second": "🎆26🌙03☀️14⏰22⌚40⏱️31",
         "session": "⚪b27c3f5829314ee8926740bb34e2e878",
@@ -3491,18 +3491,18 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "🗃️elements🛅ui💻elements✂️loadingrowprops",
+            "id": "🧩elements🛅ui💻elements✂️loadingrowprops",
             "loc": 5
           },
           {
-            "id": "🗃️elements🛅ui💻elements🛠️loadingrow",
+            "id": "🧩elements🛅ui💻elements🛠️loadingrow",
             "loc": 1
           }
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
         "ranges": [
-          "🗃️elements🛅ui💻elements📌1538📌1567"
+          "🧩elements🛅ui💻elements📌1538📌1567"
         ],
         "second": "🎆26🌙03☀️14⏰22⌚41⏱️24",
         "session": "⚪b27c3f5829314ee8926740bb34e2e878",
@@ -3545,18 +3545,18 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "🗃️elements🛅ui💻elements✂️loadingrowprops",
+            "id": "🧩elements🛅ui💻elements✂️loadingrowprops",
             "loc": 5
           },
           {
-            "id": "🗃️elements🛅ui💻elements🛠️loadingrow",
+            "id": "🧩elements🛅ui💻elements🛠️loadingrow",
             "loc": 1
           }
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
         "ranges": [
-          "🗃️elements🛅ui💻elements📌1538📌1567"
+          "🧩elements🛅ui💻elements📌1538📌1567"
         ],
         "second": "🎆26🌙03☀️14⏰22⌚42⏱️17",
         "session": "⚪b27c3f5829314ee8926740bb34e2e878",
@@ -3589,18 +3589,18 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "🗃️elements🛅ui💻elements✂️sectionprops",
+            "id": "🧩elements🛅ui💻elements✂️sectionprops",
             "loc": 6
           },
           {
-            "id": "🗃️elements🛅ui💻elements🛠️section",
+            "id": "🧩elements🛅ui💻elements🛠️section",
             "loc": 1
           }
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
         "ranges": [
-          "🗃️elements🛅ui💻elements📌1731📌1760"
+          "🧩elements🛅ui💻elements📌1731📌1760"
         ],
         "second": "🎆26🌙03☀️14⏰22⌚43⏱️14",
         "session": "⚪b27c3f5829314ee8926740bb34e2e878",
@@ -3643,18 +3643,18 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "🗃️elements🛅ui💻elements✂️sectionprops",
+            "id": "🧩elements🛅ui💻elements✂️sectionprops",
             "loc": 6
           },
           {
-            "id": "🗃️elements🛅ui💻elements🛠️section",
+            "id": "🧩elements🛅ui💻elements🛠️section",
             "loc": 1
           }
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
         "ranges": [
-          "🗃️elements🛅ui💻elements📌1731📌1760"
+          "🧩elements🛅ui💻elements📌1731📌1760"
         ],
         "second": "🎆26🌙03☀️14⏰22⌚44⏱️05",
         "session": "⚪b27c3f5829314ee8926740bb34e2e878",
@@ -3685,13 +3685,13 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "🗃️elements🛅ui🛅storybook🗃️stories🗃️elements🗃️display🥼cardstories"
+            "id": "🧩elements🛅ui🛅storybook🗃️stories🧩elements🗃️display🥼cardstories"
           }
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
         "ranges": [
-          "🗃️elements🛅ui🛅storybook🗃️stories🗃️elements🗃️display🥼cardstories📌1📌139"
+          "🧩elements🛅ui🛅storybook🗃️stories🧩elements🗃️display🥼cardstories📌1📌139"
         ],
         "second": "🎆26🌙03☀️14⏰22⌚45⏱️00",
         "session": "⚪b27c3f5829314ee8926740bb34e2e878",
@@ -3732,13 +3732,13 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "🗃️elements🛅ui🛅storybook🗃️stories🗃️elements🗃️display🥼cardstories"
+            "id": "🧩elements🛅ui🛅storybook🗃️stories🧩elements🗃️display🥼cardstories"
           }
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
         "ranges": [
-          "🗃️elements🛅ui🛅storybook🗃️stories🗃️elements🗃️display🥼cardstories📌1📌139"
+          "🧩elements🛅ui🛅storybook🗃️stories🧩elements🗃️display🥼cardstories📌1📌139"
         ],
         "second": "🎆26🌙03☀️14⏰22⌚45⏱️49",
         "session": "⚪b27c3f5829314ee8926740bb34e2e878",
@@ -3770,7 +3770,7 @@
         "contributor": "🧑‍💻ueli",
         "kind": "agent.tool.code.edit.starting",
         "parent": "",
-        "path": "🗃️elements🛅ui🛅storybook🗃️stories🗃️elements🗃️display🥼cardstories",
+        "path": "🧩elements🛅ui🛅storybook🗃️stories🧩elements🗃️display🥼cardstories",
         "second": "🎆26🌙03☀️14⏰22⌚46⏱️58",
         "session": "⚪b27c3f5829314ee8926740bb34e2e878",
         "transcript": "/home/vscode/.claude/projects/-workspaces-semio/b27c3f58-2931-4ee8-9267-40bb34e2e878.jsonl"
@@ -4003,7 +4003,7 @@
         "contributor": "🧑‍💻ueli",
         "kind": "agent.tool.code.edit.ended",
         "parent": "",
-        "path": "🗃️elements🛅ui🛅storybook🗃️stories🗃️elements🗃️display🥼cardstories",
+        "path": "🧩elements🛅ui🛅storybook🗃️stories🧩elements🗃️display🥼cardstories",
         "second": "🎆26🌙03☀️14⏰22⌚47⏱️17",
         "session": "⚪b27c3f5829314ee8926740bb34e2e878",
         "transcript": "/home/vscode/.claude/projects/-workspaces-semio/b27c3f58-2931-4ee8-9267-40bb34e2e878.jsonl"
@@ -4035,22 +4035,22 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "🗃️elements🛅ui💻elements✂️pagenavigationlink",
+            "id": "🧩elements🛅ui💻elements✂️pagenavigationlink",
             "loc": 5
           },
           {
-            "id": "🗃️elements🛅ui💻elements✂️pagenavigationprops",
+            "id": "🧩elements🛅ui💻elements✂️pagenavigationprops",
             "loc": 4
           },
           {
-            "id": "🗃️elements🛅ui💻elements🛠️pagenavigation",
+            "id": "🧩elements🛅ui💻elements🛠️pagenavigation",
             "loc": 1
           }
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
         "ranges": [
-          "🗃️elements🛅ui💻elements📌6009📌6068"
+          "🧩elements🛅ui💻elements📌6009📌6068"
         ],
         "second": "🎆26🌙03☀️14⏰22⌚47⏱️39",
         "session": "⚪b27c3f5829314ee8926740bb34e2e878",
@@ -4093,22 +4093,22 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "🗃️elements🛅ui💻elements✂️pagenavigationlink",
+            "id": "🧩elements🛅ui💻elements✂️pagenavigationlink",
             "loc": 5
           },
           {
-            "id": "🗃️elements🛅ui💻elements✂️pagenavigationprops",
+            "id": "🧩elements🛅ui💻elements✂️pagenavigationprops",
             "loc": 4
           },
           {
-            "id": "🗃️elements🛅ui💻elements🛠️pagenavigation",
+            "id": "🧩elements🛅ui💻elements🛠️pagenavigation",
             "loc": 1
           }
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
         "ranges": [
-          "🗃️elements🛅ui💻elements📌6009📌6068"
+          "🧩elements🛅ui💻elements📌6009📌6068"
         ],
         "second": "🎆26🌙03☀️14⏰22⌚48⏱️00",
         "session": "⚪b27c3f5829314ee8926740bb34e2e878",
@@ -4140,7 +4140,7 @@
         "contributor": "🧑‍💻ueli",
         "kind": "agent.tool.code.edit.starting",
         "parent": "",
-        "path": "🗃️elements🛅ui🛅storybook🗃️stories🗃️elements🗃️navigation🥼pagenavigationstories",
+        "path": "🧩elements🛅ui🛅storybook🗃️stories🧩elements🗃️navigation🥼pagenavigationstories",
         "second": "🎆26🌙03☀️14⏰22⌚48⏱️51",
         "session": "⚪b27c3f5829314ee8926740bb34e2e878",
         "transcript": "/home/vscode/.claude/projects/-workspaces-semio/b27c3f58-2931-4ee8-9267-40bb34e2e878.jsonl"
@@ -4219,7 +4219,7 @@
         "contributor": "🧑‍💻ueli",
         "kind": "agent.tool.code.edit.ended",
         "parent": "",
-        "path": "🗃️elements🛅ui🛅storybook🗃️stories🗃️elements🗃️navigation🥼pagenavigationstories",
+        "path": "🧩elements🛅ui🛅storybook🗃️stories🧩elements🗃️navigation🥼pagenavigationstories",
         "second": "🎆26🌙03☀️14⏰22⌚49⏱️10",
         "session": "⚪b27c3f5829314ee8926740bb34e2e878",
         "transcript": "/home/vscode/.claude/projects/-workspaces-semio/b27c3f58-2931-4ee8-9267-40bb34e2e878.jsonl"
@@ -4251,18 +4251,18 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "🗃️elements🛅ui💻elements✂️stepsprops",
+            "id": "🧩elements🛅ui💻elements✂️stepsprops",
             "loc": 4
           },
           {
-            "id": "🗃️elements🛅ui💻elements🛠️steps",
+            "id": "🧩elements🛅ui💻elements🛠️steps",
             "loc": 1
           }
         ],
         "kind": "agent.tool.search.starting",
         "parent": "",
         "ranges": [
-          "🗃️elements🛅ui💻elements📌1758📌1787"
+          "🧩elements🛅ui💻elements📌1758📌1787"
         ],
         "second": "🎆26🌙03☀️14⏰22⌚49⏱️35",
         "session": "⚪b27c3f5829314ee8926740bb34e2e878",
@@ -4305,18 +4305,18 @@
         "contributor": "🧑‍💻ueli",
         "definitions": [
           {
-            "id": "🗃️elements🛅ui💻elements✂️stepsprops",
+            "id": "🧩elements🛅ui💻elements✂️stepsprops",
             "loc": 4
           },
           {
-            "id": "🗃️elements🛅ui💻elements🛠️steps",
+            "id": "🧩elements🛅ui💻elements🛠️steps",
             "loc": 1
           }
         ],
         "kind": "agent.tool.search.ended",
         "parent": "",
         "ranges": [
-          "🗃️elements🛅ui💻elements📌1758📌1787"
+          "🧩elements🛅ui💻elements📌1758📌1787"
         ],
         "second": "🎆26🌙03☀️14⏰22⌚49⏱️55",
         "session": "⚪b27c3f5829314ee8926740bb34e2e878",
@@ -4348,7 +4348,7 @@
         "contributor": "🧑‍💻ueli",
         "kind": "agent.tool.code.edit.starting",
         "parent": "",
-        "path": "🗃️elements🛅ui🛅storybook🗃️stories🗃️elements🗃️display🥼stepsstories",
+        "path": "🧩elements🛅ui🛅storybook🗃️stories🧩elements🗃️display🥼stepsstories",
         "second": "🎆26🌙03☀️14⏰22⌚50⏱️28",
         "session": "⚪b27c3f5829314ee8926740bb34e2e878",
         "transcript": "/home/vscode/.claude/projects/-workspaces-semio/b27c3f58-2931-4ee8-9267-40bb34e2e878.jsonl"
@@ -4386,7 +4386,7 @@
         "contributor": "🧑‍💻ueli",
         "kind": "agent.tool.code.edit.ended",
         "parent": "",
-        "path": "🗃️elements🛅ui🛅storybook🗃️stories🗃️elements🗃️display🥼stepsstories",
+        "path": "🧩elements🛅ui🛅storybook🗃️stories🧩elements🗃️display🥼stepsstories",
         "second": "🎆26🌙03☀️14⏰22⌚50⏱️46",
         "session": "⚪b27c3f5829314ee8926740bb34e2e878",
         "transcript": "/home/vscode/.claude/projects/-workspaces-semio/b27c3f58-2931-4ee8-9267-40bb34e2e878.jsonl"
@@ -4417,7 +4417,7 @@
         "contributor": "🧑‍💻ueli",
         "kind": "agent.tool.code.edit.starting",
         "parent": "",
-        "path": "🗃️elements🛅ui🛅storybook🗃️stories🗃️elements🗃️window🥼diagramstories",
+        "path": "🧩elements🛅ui🛅storybook🗃️stories🧩elements🗃️window🥼diagramstories",
         "second": "🎆26🌙03☀️14⏰22⌚51⏱️13",
         "session": "⚪b27c3f5829314ee8926740bb34e2e878",
         "transcript": "/home/vscode/.claude/projects/-workspaces-semio/b27c3f58-2931-4ee8-9267-40bb34e2e878.jsonl"
@@ -4455,7 +4455,7 @@
         "contributor": "🧑‍💻ueli",
         "kind": "agent.tool.code.edit.ended",
         "parent": "",
-        "path": "🗃️elements🛅ui🛅storybook🗃️stories🗃️elements🗃️window🥼diagramstories",
+        "path": "🧩elements🛅ui🛅storybook🗃️stories🧩elements🗃️window🥼diagramstories",
         "second": "🎆26🌙03☀️14⏰22⌚52⏱️15",
         "session": "⚪b27c3f5829314ee8926740bb34e2e878",
         "transcript": "/home/vscode/.claude/projects/-workspaces-semio/b27c3f58-2931-4ee8-9267-40bb34e2e878.jsonl"

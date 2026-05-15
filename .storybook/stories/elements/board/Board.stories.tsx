@@ -38,9 +38,12 @@ interface BoardFixtureHandleJson {
 interface BoardFixtureNodeJson {
 	cad?: { x: number; y: number; z: number } | null;
 	handles: BoardFixtureHandleJson[];
+	height?: number;
 	id: string;
 	label: string;
-	radius: number;
+	radius?: number;
+	shape?: "circle" | "rectangle";
+	width?: number;
 	x: number;
 	y: number;
 }
@@ -126,13 +129,21 @@ function StatefulInteractiveBoardScene(): ReactElement {
 /** 🗼 Full Nakagin Capsule Tower board from `nakagin-capsule-tower.board.json` (regenerate via `nakagin-capsule-tower-board.generate.script.ts`). */
 const nakaginCapsuleTowerBoardScene: ReactElement = (
 	<>
-		{nakaginCapsuleTowerBoard.nodes.map((node) => (
-			<Node draggable={false} id={node.id} key={node.id} radius={node.radius} x={node.x} y={node.y}>
-				{node.handles.map((handle) => (
-					<Handle angle={handle.angle} id={handle.id} key={handle.id} />
-				))}
-			</Node>
-		))}
+		{nakaginCapsuleTowerBoard.nodes.map((node) =>
+			node.shape === "rectangle" && node.width != null && node.height != null ? (
+				<Node draggable={false} height={node.height} id={node.id} key={node.id} shape="rectangle" width={node.width} x={node.x} y={node.y}>
+					{node.handles.map((handle) => (
+						<Handle angle={handle.angle} id={handle.id} key={handle.id} />
+					))}
+				</Node>
+			) : (
+				<Node draggable={false} id={node.id} key={node.id} radius={node.radius ?? 0} x={node.x} y={node.y}>
+					{node.handles.map((handle) => (
+						<Handle angle={handle.angle} id={handle.id} key={handle.id} />
+					))}
+				</Node>
+			),
+		)}
 		{nakaginCapsuleTowerBoard.edges.map((edge) => (
 			<Edge from={edge.from} id={edge.id} key={edge.id} to={edge.to} />
 		))}

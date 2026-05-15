@@ -1,5 +1,5 @@
 // #region 🧲Header
-// 💻 elements/client/lib/board/play/index.tsx — Board play: triptych Nakagin views, fixture library (DnD), selection inspector, `UI` shell.
+// 💻 elements/client/lib/board/play/index.tsx — Board play: triptych Nakagin views, in-app fixture drag shelf, selection inspector, `UI` shell.
 // #endregion 🧲Header
 
 // #region 📥Imports
@@ -12,7 +12,7 @@ import {
 	type UIWindowKindDefinition,
 	type UIWindowLayout,
 } from "@elements/ui";
-import { ClipboardList, FileUp } from "lucide-react";
+import { ClipboardList, Library } from "lucide-react";
 import {
 	createContext,
 	useCallback,
@@ -27,7 +27,7 @@ import {
 import { createRoot } from "react-dom/client";
 
 import nakaginFixtureJson from "../../../../../.storybook/fixtures/nakagin-capsule-tower.board.json";
-import { parseBoardFixtureV1, type BoardFixtureEdgeV1, type BoardFixtureNodeV1, type BoardFixtureV1, type CameraState } from "../js/index";
+import { BOARD_FIXTURE_DRAG_V1_MIME, encodeBoardFixtureForDragV1, parseBoardFixtureV1, type BoardFixtureEdgeV1, type BoardFixtureNodeV1, type BoardFixtureV1, type CameraState } from "../js/index";
 import { BoardCanvas, Edge, Handle, Node, useBoardEvent } from "../react/index.tsx";
 import "./globals.css";
 // #endregion 📥Imports
@@ -53,10 +53,19 @@ function fixtureWorldBounds(fixture: BoardFixtureV1): { cx: number; cy: number; 
 	let maxX = Number.NEGATIVE_INFINITY;
 	let maxY = Number.NEGATIVE_INFINITY;
 	for (const node of fixture.nodes) {
-		minX = Math.min(minX, node.x - node.radius);
-		maxX = Math.max(maxX, node.x + node.radius);
-		minY = Math.min(minY, node.y - node.radius);
-		maxY = Math.max(maxY, node.y + node.radius);
+		if (node.shape === "rectangle") {
+			const hw = node.width / 2;
+			const hh = node.height / 2;
+			minX = Math.min(minX, node.x - hw);
+			maxX = Math.max(maxX, node.x + hw);
+			minY = Math.min(minY, node.y - hh);
+			maxY = Math.max(maxY, node.y + hh);
+		} else {
+			minX = Math.min(minX, node.x - node.radius);
+			maxX = Math.max(maxX, node.x + node.radius);
+			minY = Math.min(minY, node.y - node.radius);
+			maxY = Math.max(maxY, node.y + node.radius);
+		}
 	}
 	if (!Number.isFinite(minX)) {
 		return { cx: 0, cy: 0, halfSpan: 400 };
@@ -130,17 +139,25 @@ function useBoardPlayShell(): BoardPlayShellValue {
 // #endregion 🔖ShellContext
 
 // #region 🔖Scene
-/** @emoji 🗼 Renders the shared Nakagin graph with per-pane selection highlights. */
-function NakaginBoardScene({ fixture, selectedIds }: { fixture: BoardFixtureV1; selectedIds: Set<string> }): ReactElement {
+/** @emoji 🗼 Marker tree for {@link BoardCanvas} — must stay a Fragment of {@link Node}/{@link Edge} so {@link buildBoardSceneDescriptor} sees markers (custom wrappers are opaque to the static walk). */
+function nakaginBoardMarkers(fixture: BoardFixtureV1, selectedIds: Set<string>): ReactElement {
 	return (
 		<>
-			{fixture.nodes.map((node) => (
-				<Node draggable={false} id={node.id} key={node.id} radius={node.radius} selected={selectedIds.has(node.id)} x={node.x} y={node.y}>
-					{node.handles.map((handle) => (
-						<Handle angle={handle.angle} id={handle.id} key={handle.id} selected={selectedIds.has(handle.id)} />
-					))}
-				</Node>
-			))}
+			{fixture.nodes.map((node) =>
+				node.shape === "rectangle" ? (
+					<Node draggable={false} height={node.height} id={node.id} key={node.id} shape="rectangle" selected={selectedIds.has(node.id)} width={node.width} x={node.x} y={node.y}>
+						{node.handles.map((handle) => (
+							<Handle angle={handle.angle} id={handle.id} key={handle.id} selected={selectedIds.has(handle.id)} />
+						))}
+					</Node>
+				) : (
+					<Node draggable={false} id={node.id} key={node.id} radius={node.radius} selected={selectedIds.has(node.id)} x={node.x} y={node.y}>
+						{node.handles.map((handle) => (
+							<Handle angle={handle.angle} id={handle.id} key={handle.id} selected={selectedIds.has(handle.id)} />
+						))}
+					</Node>
+				),
+			)}
 			{fixture.edges.map((edge) => (
 				<Edge from={edge.from} id={edge.id} key={edge.id} selected={selectedIds.has(edge.id)} to={edge.to} />
 			))}
@@ -185,9 +202,9 @@ function BoardOverviewPane(): ReactElement {
 	const selectedIds = selectionByPane[paneId];
 	return (
 		<BoardPaneChrome paneId={paneId}>
-			<BoardCanvas camera={camera} className="min-h-0 flex-1" fixtureFileDrop onFixtureFileDrop={setFixture}>
+			<BoardCanvas camera={camera} className="min-h-0 flex-1" fixtureDragDrop onFixtureDrop={setFixture}>
 				<BoardSelectionReporter paneId={paneId} />
-				<NakaginBoardScene fixture={fixture} selectedIds={selectedIds} />
+				{nakaginBoardMarkers(fixture, selectedIds)}
 			</BoardCanvas>
 		</BoardPaneChrome>
 	);
@@ -200,9 +217,9 @@ function BoardDetailPane(): ReactElement {
 	const selectedIds = selectionByPane[paneId];
 	return (
 		<BoardPaneChrome paneId={paneId}>
-			<BoardCanvas camera={camera} className="min-h-0 flex-1" fixtureFileDrop onFixtureFileDrop={setFixture}>
+			<BoardCanvas camera={camera} className="min-h-0 flex-1" fixtureDragDrop onFixtureDrop={setFixture}>
 				<BoardSelectionReporter paneId={paneId} />
-				<NakaginBoardScene fixture={fixture} selectedIds={selectedIds} />
+				{nakaginBoardMarkers(fixture, selectedIds)}
 			</BoardCanvas>
 		</BoardPaneChrome>
 	);
@@ -215,9 +232,9 @@ function BoardSelectionPane(): ReactElement {
 	const selectedIds = selectionByPane[paneId];
 	return (
 		<BoardPaneChrome paneId={paneId}>
-			<BoardCanvas camera={camera} className="min-h-0 flex-1" fixtureFileDrop onFixtureFileDrop={setFixture}>
+			<BoardCanvas camera={camera} className="min-h-0 flex-1" fixtureDragDrop onFixtureDrop={setFixture}>
 				<BoardSelectionReporter paneId={paneId} />
-				<NakaginBoardScene fixture={fixture} selectedIds={selectedIds} />
+				{nakaginBoardMarkers(fixture, selectedIds)}
 			</BoardCanvas>
 		</BoardPaneChrome>
 	);
@@ -225,72 +242,28 @@ function BoardSelectionPane(): ReactElement {
 // #endregion 🔖Panes
 
 // #region 🔖SidePanels
-function applyDroppedFixtureJson(text: string, setFixture: (f: BoardFixtureV1) => void): void {
-	let raw: unknown;
-	try {
-		raw = JSON.parse(text) as unknown;
-	} catch {
-		return;
-	}
-	const parsed = parseBoardFixtureV1(raw);
-	if (parsed) {
-		setFixture(parsed);
-	}
-}
-
-/** @emoji 📥 Left rail: drop `.board.json` fixtures (same contract as canvas file drop). */
+/** @emoji 📥 Left rail: drag the active graph onto a board pane (in-app MIME payload, not filesystem JSON files). */
 function BoardFixtureLibraryPanel(): ReactElement {
-	const { fixture, setFixture } = useBoardPlayShell();
-	const [dragOver, setDragOver] = useState(false);
+	const { fixture } = useBoardPlayShell();
 
-	const onDragEnter = useCallback((e: DragEvent<HTMLDivElement>) => {
-		if ([...e.dataTransfer.types].includes("Files")) {
-			setDragOver(true);
-		}
-	}, []);
-
-	const onDragLeave = useCallback((e: DragEvent<HTMLDivElement>) => {
-		if (!e.currentTarget.contains(e.relatedTarget as Node)) {
-			setDragOver(false);
-		}
-	}, []);
-
-	const onDragOver = useCallback((e: DragEvent<HTMLDivElement>) => {
-		if ([...e.dataTransfer.types].includes("Files")) {
-			e.preventDefault();
-			e.dataTransfer.dropEffect = "copy";
-		}
-	}, []);
-
-	const onDrop = useCallback(
-		async (e: DragEvent<HTMLDivElement>) => {
-			e.preventDefault();
-			setDragOver(false);
-			const file = e.dataTransfer.files[0];
-			if (!file) {
-				return;
-			}
-			const text = await file.text();
-			applyDroppedFixtureJson(text, setFixture);
+	const onShelfDragStart = useCallback(
+		(e: DragEvent<HTMLDivElement>) => {
+			e.dataTransfer.setData(BOARD_FIXTURE_DRAG_V1_MIME, encodeBoardFixtureForDragV1(fixture));
+			e.dataTransfer.effectAllowed = "copy";
 		},
-		[setFixture],
+		[fixture],
 	);
 
 	return (
 		<div className="flex h-full min-h-0 flex-col gap-3 p-3 text-sm">
-			<div className="text-muted-foreground text-xs uppercase tracking-wide">Fixture library</div>
+			<div className="text-muted-foreground text-xs uppercase tracking-wide">Fixture shelf</div>
 			<div
-				className={`flex min-h-[140px] flex-1 flex-col items-center justify-center rounded-md border border-dashed p-4 text-center transition-colors ${
-					dragOver ? "border-primary bg-primary/10" : "border-element bg-muted/30"
-				}`}
-				onDragEnter={onDragEnter}
-				onDragLeave={onDragLeave}
-				onDragOver={onDragOver}
-				onDrop={(ev) => void onDrop(ev)}
+				className="border-element bg-muted/30 flex min-h-[120px] cursor-grab flex-col justify-center gap-2 rounded-md border p-4 active:cursor-grabbing"
+				draggable
+				onDragStart={onShelfDragStart}
 			>
-				<FileUp className="mb-2 size-8 opacity-70" />
-				<p className="font-medium">Drop a board JSON</p>
-				<p className="text-muted-foreground mt-1 text-xs">Replaces all three windows with the same graph; cameras re-fit automatically.</p>
+				<p className="font-medium">Active graph</p>
+				<p className="text-muted-foreground text-xs">Drag onto any board tab to load this graph (same payload for all panes).</p>
 			</div>
 			<div className="border-element space-y-1 rounded border p-2 text-xs">
 				<div className="text-muted-foreground">Loaded</div>
@@ -343,16 +316,29 @@ function BoardSelectionInspectorPanel(): ReactElement {
 							<dl key={id} className="border-element space-y-1 rounded border p-2 font-mono">
 								<dt className="text-muted-foreground">node</dt>
 								<dd className="break-all">{node.id}</dd>
+								<dt className="text-muted-foreground">shape</dt>
+								<dd>{node.shape === "rectangle" ? "rectangle" : "circle"}</dd>
 								{node.label ? (
 									<>
 										<dt className="text-muted-foreground">label</dt>
 										<dd>{node.label}</dd>
 									</>
 								) : null}
-								<dt className="text-muted-foreground">x · y · r</dt>
-								<dd>
-									{node.x.toFixed(3)} · {node.y.toFixed(3)} · {node.radius}
-								</dd>
+								{node.shape === "rectangle" ? (
+									<>
+										<dt className="text-muted-foreground">x · y · w · h</dt>
+										<dd>
+											{node.x.toFixed(3)} · {node.y.toFixed(3)} · {node.width} · {node.height}
+										</dd>
+									</>
+								) : (
+									<>
+										<dt className="text-muted-foreground">x · y · r</dt>
+										<dd>
+											{node.x.toFixed(3)} · {node.y.toFixed(3)} · {node.radius}
+										</dd>
+									</>
+								)}
 								<dt className="text-muted-foreground">handles</dt>
 								<dd>{node.handles.length}</dd>
 							</dl>
@@ -481,7 +467,7 @@ function BoardPlayInner(): ReactElement {
 			id: BOARD_PLAY_APP_ID,
 			label: "Board",
 			leftPanelTabs: [
-				{ content: () => <BoardFixtureLibraryPanel />, icon: FileUp, id: "board-play-library", order: 0 },
+				{ content: () => <BoardFixtureLibraryPanel />, icon: Library, id: "board-play-library", order: 0 },
 			],
 			onActiveWindowChange: (windowKindId) => {
 				if (windowKindId === "board-overview" || windowKindId === "board-detail" || windowKindId === "board-selection") {

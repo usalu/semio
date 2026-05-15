@@ -44,16 +44,33 @@ export interface BoardFixtureHandleV1 {
 	id: string;
 }
 
-/** @emoji 📄 Node record inside {@link BoardFixtureV1}. */
-export interface BoardFixtureNodeV1 {
+/** @emoji 📄 Circle node record inside {@link BoardFixtureV1}. */
+export interface BoardFixtureCircleNodeV1 {
 	cad?: { x: number; y: number; z: number } | null;
 	handles: BoardFixtureHandleV1[];
 	id: string;
-	label?: string;
 	radius: number;
+	shape?: "circle";
+	text?: string;
 	x: number;
 	y: number;
 }
+
+/** @emoji 📄 Axis-aligned rectangle node (center {@link BoardFixtureRectangleNodeV1.x}/{@link BoardFixtureRectangleNodeV1.y}, half-extents from width/height). */
+export interface BoardFixtureRectangleNodeV1 {
+	cad?: { x: number; y: number; z: number } | null;
+	handles: BoardFixtureHandleV1[];
+	height: number;
+	id: string;
+	shape: "rectangle";
+	text?: string;
+	width: number;
+	x: number;
+	y: number;
+}
+
+/** @emoji 📄 Node record inside {@link BoardFixtureV1} (circle or rectangle body). */
+export type BoardFixtureNodeV1 = BoardFixtureCircleNodeV1 | BoardFixtureRectangleNodeV1;
 
 /** @emoji 📄 Edge record inside {@link BoardFixtureV1}. */
 export interface BoardFixtureEdgeV1 {
@@ -75,7 +92,7 @@ export interface BoardEventMap {
 	camera: CameraState;
 	edgeCreate: { id: string; from: string; to: string };
 	edgeDelete: { id: string };
-	fixtureFileDrop: BoardFixtureV1;
+	fixtureDrop: BoardFixtureV1;
 	hover: { id: string | null };
 	invalidate: undefined;
 	nodeDelete: { id: string };
@@ -92,12 +109,29 @@ export interface BoardObjectOptions {
 	visible?: boolean;
 }
 
-export interface NodeOptions extends BoardObjectOptions {
+/** @emoji 🔵 World-space circle node (center + radius). */
+export type CircleNodeOptions = BoardObjectOptions & {
 	handles?: Handle[];
 	radius: number;
+	shape?: "circle";
+	text?: string;
 	x: number;
 	y: number;
-}
+};
+
+/** @emoji 🟩 World-space axis-aligned rectangle node (center + full width and height). */
+export type RectangleNodeOptions = BoardObjectOptions & {
+	handles?: Handle[];
+	height: number;
+	shape: "rectangle";
+	text?: string;
+	width: number;
+	x: number;
+	y: number;
+};
+
+/** @emoji 🧩 Constructor payload for {@link Node} (circle or rectangle). */
+export type NodeOptions = CircleNodeOptions | RectangleNodeOptions;
 
 export interface HandleOptions extends BoardObjectOptions {
 	angle: number;
@@ -118,10 +152,14 @@ type BoardCanvasContext = Pick<
 	| "beginPath"
 	| "bezierCurveTo"
 	| "clearRect"
+	| "closePath"
 	| "fill"
 	| "fillRect"
+	| "fillText"
 	| "lineTo"
+	| "measureText"
 	| "moveTo"
+	| "rect"
 	| "restore"
 	| "save"
 	| "setLineDash"
@@ -130,10 +168,13 @@ type BoardCanvasContext = Pick<
 	| "strokeRect"
 > & {
 	fillStyle: string | CanvasGradient | CanvasPattern;
+	font: string;
 	lineCap: CanvasLineCap;
 	lineJoin: CanvasLineJoin;
 	lineWidth: number;
 	strokeStyle: string | CanvasGradient | CanvasPattern;
+	textAlign: CanvasTextAlign;
+	textBaseline: CanvasTextBaseline;
 };
 
 interface PointerWorldState {
@@ -192,6 +233,29 @@ const DEFAULT_STYLES: Record<string, BoardStyle> = {
 
 function clamp(value: number, min: number, max: number): number {
 	return Math.min(max, Math.max(min, value));
+}
+
+/** @emoji ✂️ Shortens string so {@link CanvasRenderingContext2D.measureText} width stays within `maxWidth`. */
+function truncateTextToCanvasWidth(ctx: Pick<BoardCanvasContext, "measureText">, text: string, maxWidth: number): string {
+	if (maxWidth <= 8) {
+		return "";
+	}
+	if (ctx.measureText(text).width <= maxWidth) {
+		return text;
+	}
+	const ellipsis = "…";
+	let lo = 0;
+	let hi = text.length;
+	while (lo < hi) {
+		const mid = Math.ceil((lo + hi) / 2);
+		const candidate = text.slice(0, mid) + ellipsis;
+		if (ctx.measureText(candidate).width <= maxWidth) {
+			lo = mid;
+		} else {
+			hi = mid - 1;
+		}
+	}
+	return lo > 0 ? `${text.slice(0, lo)}${ellipsis}` : ellipsis;
 }
 
 function nearlyEqual(left: number, right: number, tolerance = 0.0001): boolean {
@@ -334,10 +398,9 @@ export function parseBoardFixtureV1(raw: unknown): BoardFixtureV1 | null {
 		}
 		const node = entry as Record<string, unknown>;
 		const id = typeof node.id === "string" ? node.id : null;
-		const radius = Number(node.radius);
 		const x = Number(node.x);
 		const y = Number(node.y);
-		if (!id || !Number.isFinite(radius) || !Number.isFinite(x) || !Number.isFinite(y)) {
+		if (!id || !Number.isFinite(x) || !Number.isFinite(y)) {
 			return null;
 		}
 		if (!Array.isArray(node.handles)) {
@@ -367,7 +430,43 @@ export function parseBoardFixtureV1(raw: unknown): BoardFixtureV1 | null {
 				: node.cad === null
 				  ? null
 				  : undefined;
-		nodes.push({ ...(cad !== undefined ? { cad } : {}), handles, id, label, radius, x, y });
+		const shapeRaw = node.shape;
+		if (shapeRaw === "rectangle") {
+			const width = Number(node.width);
+			const height = Number(node.height);
+			if (!Number.isFinite(width) || !Number.isFinite(height) || width <= 0 || height <= 0) {
+				return null;
+			}
+			nodes.push({
+				...(cad !== undefined ? { cad } : {}),
+				handles,
+				height,
+				id,
+				label,
+				shape: "rectangle",
+				width,
+				x,
+				y,
+			});
+			continue;
+		}
+		if (shapeRaw !== undefined && shapeRaw !== "circle") {
+			return null;
+		}
+		const radius = Number(node.radius);
+		if (!Number.isFinite(radius) || radius <= 0) {
+			return null;
+		}
+		nodes.push({
+			...(cad !== undefined ? { cad } : {}),
+			handles,
+			id,
+			label,
+			radius,
+			shape: "circle",
+			x,
+			y,
+		});
 	}
 	const edges: BoardFixtureEdgeV1[] = [];
 	for (const entry of root.edges) {
@@ -385,6 +484,25 @@ export function parseBoardFixtureV1(raw: unknown): BoardFixtureV1 | null {
 	}
 	const meta = root.meta && typeof root.meta === "object" ? (root.meta as Record<string, unknown>) : undefined;
 	return { camera, edges, meta, nodes, schema: "elements.board.fixture/v1" };
+}
+
+/** @emoji 📌 MIME for in-app board fixture drags (not host filesystem file drops). */
+export const BOARD_FIXTURE_DRAG_V1_MIME = "application/x-elements-board-fixture-v1";
+
+/** @emoji 📦 Serializes a validated fixture for {@link BOARD_FIXTURE_DRAG_V1_MIME}. */
+export function encodeBoardFixtureForDragV1(fixture: BoardFixtureV1): string {
+	return JSON.stringify(fixture);
+}
+
+/** @emoji 📥 Parses drag payload from {@link BOARD_FIXTURE_DRAG_V1_MIME}. */
+export function decodeBoardFixtureFromDragV1(text: string): BoardFixtureV1 | null {
+	let raw: unknown;
+	try {
+		raw = JSON.parse(text) as unknown;
+	} catch {
+		return null;
+	}
+	return parseBoardFixtureV1(raw);
 }
 
 function inflateWorldBox(box: WorldAxisBox, pad: number): WorldAxisBox {
@@ -411,7 +529,43 @@ function cubicBezierAxisBounds(curve: CubicBezierCurve): WorldAxisBox {
 	};
 }
 
-function nodeWorldBounds(node: { radius: number; x: number; y: number }, padWorld: number): WorldAxisBox {
+/** @emoji 📐 First intersection of a ray from the origin along `(ux,uy)` with the rectangle boundary `|x|≤hw`, `|y|≤hh` (local space). */
+function rayFromOriginToAxisAlignedRectangleEdge(hw: number, hh: number, ux: number, uy: number): Point {
+	let tBest = Number.POSITIVE_INFINITY;
+	if (Math.abs(ux) > 1e-12) {
+		const tx = (Math.sign(ux) * hw) / ux;
+		const yAt = uy * tx;
+		if (tx > 0 && Math.abs(yAt) <= hh + 1e-9) {
+			tBest = Math.min(tBest, tx);
+		}
+	}
+	if (Math.abs(uy) > 1e-12) {
+		const ty = (Math.sign(uy) * hh) / uy;
+		const xAt = ux * ty;
+		if (ty > 0 && Math.abs(xAt) <= hw + 1e-9) {
+			tBest = Math.min(tBest, ty);
+		}
+	}
+	if (!Number.isFinite(tBest) || tBest <= 0 || tBest === Number.POSITIVE_INFINITY) {
+		return { x: hw, y: 0 };
+	}
+	return { x: ux * tBest, y: uy * tBest };
+}
+
+function nodeWorldBounds(node: { height: number; radius: number; shape: "circle" | "rectangle"; width: number; x: number; y: number }, padWorld: number): WorldAxisBox {
+	if (node.shape === "rectangle") {
+		const hw = node.width / 2;
+		const hh = node.height / 2;
+		return inflateWorldBox(
+			{
+				maxX: node.x + hw,
+				maxY: node.y + hh,
+				minX: node.x - hw,
+				minY: node.y - hh,
+			},
+			padWorld,
+		);
+	}
 	return inflateWorldBox(
 		{
 			maxX: node.x + node.radius,
@@ -463,11 +617,19 @@ function resolveContext(
 	return (canvas.getContext("2d") as BoardCanvasContext | null) ?? null;
 }
 
-export function computeHandlePosition(node: Pick<Node, "x" | "y" | "radius">, angle: number): Point {
-	return {
-		x: node.x + Math.cos(angle) * node.radius,
-		y: node.y + Math.sin(angle) * node.radius,
-	};
+export function computeHandlePosition(
+	node: { height: number; radius: number; shape: "circle" | "rectangle"; width: number; x: number; y: number },
+	angle: number,
+): Point {
+	const ux = Math.cos(angle);
+	const uy = Math.sin(angle);
+	if (node.shape === "rectangle") {
+		const hw = node.width / 2;
+		const hh = node.height / 2;
+		const local = rayFromOriginToAxisAlignedRectangleEdge(hw, hh, ux, uy);
+		return { x: node.x + local.x, y: node.y + local.y };
+	}
+	return { x: node.x + ux * node.radius, y: node.y + uy * node.radius };
 }
 
 export function computeHandleTangent(angle: number): Point {
@@ -588,23 +750,35 @@ export class BoardObject {
 	}
 }
 
-/** 🟠 Circular node primitive with stable world-space center and radius; draggable defaults on unless opted out. */
+/** 🟠 Board node: circle (radius) or axis-aligned rectangle (width × height) centered at (x,y). */
 export class Node extends BoardObject {
 	handles: Handle[] = [];
+	height: number;
+	radius: number;
+	shape: "circle" | "rectangle";
+	width: number;
+	x: number;
+	y: number;
 
 	constructor(options: NodeOptions) {
 		super(options.id, { ...options, draggable: options.draggable ?? true });
 		this.x = options.x;
 		this.y = options.y;
-		this.radius = options.radius;
+		if (options.shape === "rectangle") {
+			this.shape = "rectangle";
+			this.width = options.width;
+			this.height = options.height;
+			this.radius = 0;
+		} else {
+			this.shape = "circle";
+			this.radius = options.radius;
+			this.width = 0;
+			this.height = 0;
+		}
 		for (const handle of options.handles ?? []) {
 			this.attachHandle(handle);
 		}
 	}
-
-	radius: number;
-	x: number;
-	y: number;
 
 	get kind(): BoardObjectKind {
 		return "node";
@@ -617,7 +791,19 @@ export class Node extends BoardObject {
 	}
 
 	setRadius(radius: number): this {
+		if (this.shape !== "circle") {
+			return this;
+		}
 		this.radius = radius;
+		return this;
+	}
+
+	setRectangleSize(width: number, height: number): this {
+		if (this.shape !== "rectangle") {
+			return this;
+		}
+		this.width = width;
+		this.height = height;
 		return this;
 	}
 
@@ -666,7 +852,7 @@ export class Handle extends BoardObject {
 	}
 }
 
-/** 🪢 Cubic edge between two boundary handles; geometry uses circle normals at the anchors. */
+/** 🪢 Cubic edge between two boundary handles; geometry uses outward directions from each anchor toward its node center. */
 export class Edge extends BoardObject {
 	from: Handle;
 	to: Handle;
@@ -1170,7 +1356,13 @@ export class BoardRenderer {
 			if (!node.visible) {
 				continue;
 			}
-			if (distanceBetween(point, { x: node.x, y: node.y }) <= node.radius) {
+			if (node.shape === "rectangle") {
+				const hw = node.width / 2;
+				const hh = node.height / 2;
+				if (Math.abs(point.x - node.x) <= hw && Math.abs(point.y - node.y) <= hh) {
+					return node;
+				}
+			} else if (distanceBetween(point, { x: node.x, y: node.y }) <= node.radius) {
 				return node;
 			}
 		}
@@ -1277,10 +1469,22 @@ export class BoardRenderer {
 				continue;
 			}
 			const screenPoint = this.worldToScreen({ x: node.x, y: node.y });
-			const screenRadius = node.radius * this.camera.zoom;
 			const style = this.getStyle(node.selected ? `${node.style ?? "node"}.selected` : node.style, node.selected ? "node.selected" : "node");
 			this.context.beginPath();
-			this.context.arc(screenPoint.x, screenPoint.y, screenRadius, 0, Math.PI * 2);
+			if (node.shape === "rectangle") {
+				const halfW = node.width / 2;
+				const halfH = node.height / 2;
+				const c0 = this.worldToScreen({ x: node.x - halfW, y: node.y - halfH });
+				const c1 = this.worldToScreen({ x: node.x + halfW, y: node.y + halfH });
+				const left = Math.min(c0.x, c1.x);
+				const top = Math.min(c0.y, c1.y);
+				const rw = Math.max(1, Math.abs(c1.x - c0.x));
+				const rh = Math.max(1, Math.abs(c1.y - c0.y));
+				this.context.rect(left, top, rw, rh);
+			} else {
+				const screenRadius = Math.max(1, node.radius * this.camera.zoom);
+				this.context.arc(screenPoint.x, screenPoint.y, screenRadius, 0, Math.PI * 2);
+			}
 			this.context.fillStyle = (style.fill as string) ?? "#e2e8f0";
 			this.context.strokeStyle = (style.stroke as string) ?? "#0f172a";
 			this.context.lineWidth = style.strokeWidth ?? 2;
@@ -1451,6 +1655,7 @@ if (boardVitest) {
 			beginPath: vi.fn(),
 			bezierCurveTo: vi.fn(),
 			clearRect: vi.fn(),
+			closePath: vi.fn(),
 			fill: vi.fn(),
 			fillRect: vi.fn(),
 			fillStyle: "#000000",
@@ -1459,6 +1664,7 @@ if (boardVitest) {
 			lineTo: vi.fn(),
 			lineWidth: 1,
 			moveTo: vi.fn(),
+			rect: vi.fn(),
 			restore: vi.fn(),
 			save: vi.fn(),
 			setLineDash: vi.fn(),
@@ -1499,6 +1705,13 @@ if (boardVitest) {
 				Math.abs((inward1.x * arm1.x + inward1.y * arm1.y) / (Math.hypot(inward1.x, inward1.y) * Math.hypot(arm1.x, arm1.y)));
 			expect(align0).toBeGreaterThan(0.99);
 			expect(align1).toBeGreaterThan(0.99);
+		});
+
+		it("places rectangle handles on the perimeter by polar angle from center", () => {
+			const rectNode = new Node({ height: 20, id: "r", shape: "rectangle", width: 40, x: 100, y: 50 });
+			const p = computeHandlePosition(rectNode, 0);
+			expect(p.x).toBeCloseTo(120);
+			expect(p.y).toBeCloseTo(50);
 		});
 
 		it("labels coarse LOD bands from zoom thresholds", () => {
@@ -1621,13 +1834,57 @@ if (boardVitest) {
 			});
 			expect(parsed).not.toBeNull();
 			expect(parsed?.nodes).toHaveLength(2);
+			expect(parsed?.nodes[0]).toMatchObject({ id: "a", shape: "circle", radius: 10 });
+			expect(parsed?.nodes[1]).toMatchObject({ id: "b", shape: "circle" });
 			expect(parsed?.edges[0]?.id).toBe("e1");
 			expect(parsed?.camera.zoom).toBe(0.5);
+		});
+
+		it("parses rectangle fixture nodes", () => {
+			const parsed = parseBoardFixtureV1({
+				camera: { x: 0, y: 0, zoom: 1 },
+				edges: [],
+				nodes: [
+					{
+						handles: [{ angle: 0, id: "box.out" }],
+						height: 24,
+						id: "box",
+						shape: "rectangle",
+						width: 48,
+						x: 10,
+						y: -5,
+					},
+				],
+				schema: "elements.board.fixture/v1",
+			});
+			expect(parsed?.nodes[0]).toMatchObject({ shape: "rectangle", width: 48, height: 24, id: "box" });
 		});
 
 		it("rejects wrong schema or malformed nodes", () => {
 			expect(parseBoardFixtureV1({ schema: "other", nodes: [], edges: [], camera: { x: 0, y: 0, zoom: 1 } })).toBeNull();
 			expect(parseBoardFixtureV1({ schema: "elements.board.fixture/v1", nodes: "x", edges: [], camera: { x: 0, y: 0, zoom: 1 } })).toBeNull();
+			expect(
+				parseBoardFixtureV1({
+					camera: { x: 0, y: 0, zoom: 1 },
+					edges: [],
+					nodes: [{ handles: [], id: "bad", shape: "triangle", x: 0, y: 0 }],
+					schema: "elements.board.fixture/v1",
+				}),
+			).toBeNull();
+		});
+
+		it("round-trips drag codec for v1 fixtures", () => {
+			const fixture: BoardFixtureV1 = {
+				camera: { x: 0, y: 0, zoom: 1 },
+				edges: [{ from: "a.out", id: "e1", to: "b.in" }],
+				nodes: [
+					{ handles: [{ angle: 0, id: "a.out" }], id: "a", radius: 10, shape: "circle", x: 0, y: 0 },
+					{ handles: [{ angle: 3.14, id: "b.in" }], id: "b", radius: 10, shape: "circle", x: 50, y: 0 },
+				],
+				schema: "elements.board.fixture/v1",
+			};
+			const decoded = decodeBoardFixtureFromDragV1(encodeBoardFixtureForDragV1(fixture));
+			expect(decoded).toEqual(fixture);
 		});
 	});
 }

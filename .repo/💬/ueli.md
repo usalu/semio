@@ -378,6 +378,24 @@ elements/board:
 
 ---
 
+Extend selection.
+When holding down left button then selection should be opened.
+There are two methods: Rectangle (default) and Lasso
+Additionally there are three modes: additive (only add), subtractive (only subtract), invertive (add and subtract depending on the previous selection)
+Make sure that the selection has a special behaviour:
+When ending more left than started then partial selection is enough.
+When ending more right than started then full enclosing is necessary otherwise the edge or node is not selected.
+Make sure target can be set to nodes, edges, nodes&edges (default)
+holding down left button should trigger
+
+---
+
+Generalize nodes.
+There are circle nodes and rectangle nodes.
+accept text for each node
+
+---
+
 Add drag and drop functionality.
 Implement play elements/client/lib/board/play/index.html for board where you use the UI component from elements same as semio/dev/algorithms . Have three windows (2 columns half half and second column split in to horizontal rows). Load the .storybook/fixtures/nakagin-capsule-tower.board.json for all three windows with different zoom level, cameras and selection.
 Add dev command.

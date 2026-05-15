@@ -24,7 +24,8 @@ import {
 	Edge as BoardEdgeObject,
 	Handle as BoardHandleObject,
 	Node as BoardNodeObject,
-	parseBoardFixtureV1,
+	BOARD_FIXTURE_DRAG_V1_MIME,
+	decodeBoardFixtureFromDragV1,
 	type BoardEventMap,
 	type BoardFixtureV1,
 	type BoardSelectionSnapshot,
@@ -39,10 +40,10 @@ export interface BoardCanvasProps {
 	camera?: Partial<CameraState>;
 	children?: ReactNode;
 	className?: string;
-	/** @emoji 📥 When true, dropping a valid `.board.json` fixture onto the canvas area updates via {@link BoardCanvasProps.onFixtureFileDrop} and emits `fixtureFileDrop`. */
-	fixtureFileDrop?: boolean;
+	/** @emoji 📥 When true, accepts in-app fixture drags using {@link BOARD_FIXTURE_DRAG_V1_MIME} (not OS file drops). */
+	fixtureDragDrop?: boolean;
 	height?: number;
-	onFixtureFileDrop?: (fixture: BoardFixtureV1) => void;
+	onFixtureDrop?: (fixture: BoardFixtureV1) => void;
 	onReady?: (renderer: BoardRenderer) => void;
 	renderMode?: RenderMode;
 	style?: CSSProperties;
@@ -51,18 +52,37 @@ export interface BoardCanvasProps {
 	worldRasterTiling?: WorldRasterTilingKind;
 }
 
-export interface BoardNodeProps {
+export type BoardNodeCircleProps = {
 	children?: ReactNode;
 	draggable?: boolean;
 	id: string;
 	radius: number;
 	selected?: boolean;
+	shape?: "circle";
 	style?: string;
 	userData?: Record<string, unknown>;
 	visible?: boolean;
 	x: number;
 	y: number;
-}
+};
+
+export type BoardNodeRectangleProps = {
+	children?: ReactNode;
+	draggable?: boolean;
+	height: number;
+	id: string;
+	selected?: boolean;
+	shape: "rectangle";
+	style?: string;
+	userData?: Record<string, unknown>;
+	visible?: boolean;
+	width: number;
+	x: number;
+	y: number;
+};
+
+/** @emoji 🟠 Declarative node marker: {@link BoardNodeCircleProps} or {@link BoardNodeRectangleProps}. */
+export type BoardNodeProps = BoardNodeCircleProps | BoardNodeRectangleProps;
 
 export interface BoardHandleProps {
 	angle: number;
@@ -194,7 +214,11 @@ function applyNodeProps(instance: BoardNodeObject, descriptor: NodeDescriptor): 
 	instance.userData = { ...(descriptor.userData ?? {}) };
 	instance.visible = descriptor.visible ?? true;
 	instance.setPosition(descriptor.x, descriptor.y);
-	instance.setRadius(descriptor.radius);
+	if (descriptor.shape === "rectangle") {
+		instance.setRectangleSize(descriptor.width, descriptor.height);
+	} else {
+		instance.setRadius(descriptor.radius);
+	}
 }
 
 function applyHandleProps(instance: BoardHandleObject, descriptor: HandleDescriptor, node: BoardNodeObject): void {
@@ -217,6 +241,43 @@ function applyEdgeProps(instance: BoardEdgeObject, descriptor: EdgeDescriptor, f
 	instance.userData = { ...(descriptor.userData ?? {}) };
 	instance.visible = descriptor.visible ?? true;
 	instance.setEndpoints(fromHandle, toHandle);
+}
+
+function nodeShapeSyncKey(descriptor: NodeDescriptor): "circle" | "rectangle" {
+	return descriptor.shape === "rectangle" ? "rectangle" : "circle";
+}
+
+function instanceShapeSyncKey(node: BoardNodeObject): "circle" | "rectangle" {
+	return node.shape;
+}
+
+function newBoardNodeFromDescriptor(nodeDescriptor: NodeDescriptor): BoardNodeObject {
+	if (nodeDescriptor.shape === "rectangle") {
+		return new BoardNodeObject({
+			draggable: nodeDescriptor.draggable ?? true,
+			height: nodeDescriptor.height,
+			id: nodeDescriptor.id,
+			selected: nodeDescriptor.selected,
+			shape: "rectangle",
+			style: nodeDescriptor.style,
+			userData: nodeDescriptor.userData,
+			visible: nodeDescriptor.visible,
+			width: nodeDescriptor.width,
+			x: nodeDescriptor.x,
+			y: nodeDescriptor.y,
+		});
+	}
+	return new BoardNodeObject({
+		draggable: nodeDescriptor.draggable ?? true,
+		id: nodeDescriptor.id,
+		radius: nodeDescriptor.radius,
+		selected: nodeDescriptor.selected,
+		style: nodeDescriptor.style,
+		userData: nodeDescriptor.userData,
+		visible: nodeDescriptor.visible,
+		x: nodeDescriptor.x,
+		y: nodeDescriptor.y,
+	});
 }
 
 /** 🔁 Declarative-to-imperative scene sync that preserves stable instances by id. */
@@ -243,22 +304,15 @@ export function syncBoardScene(renderer: BoardRenderer, descriptor: BoardSceneDe
 		}
 
 		for (const nodeDescriptor of descriptor.nodes) {
-			const existingNode = renderer.scene.getObjectById(nodeDescriptor.id);
+			let existingNode = renderer.scene.getObjectById(nodeDescriptor.id);
+			if (existingNode instanceof BoardNodeObject && instanceShapeSyncKey(existingNode) !== nodeShapeSyncKey(nodeDescriptor)) {
+				renderer.scene.remove(existingNode);
+				existingNode = undefined;
+			}
+			const resolvedExisting = renderer.scene.getObjectById(nodeDescriptor.id);
 			const node =
-				existingNode instanceof BoardNodeObject
-					? existingNode
-					: new BoardNodeObject({
-							draggable: nodeDescriptor.draggable ?? true,
-							id: nodeDescriptor.id,
-							radius: nodeDescriptor.radius,
-							selected: nodeDescriptor.selected,
-							style: nodeDescriptor.style,
-							userData: nodeDescriptor.userData,
-							visible: nodeDescriptor.visible,
-							x: nodeDescriptor.x,
-							y: nodeDescriptor.y,
-					  });
-			if (!(existingNode instanceof BoardNodeObject)) {
+				resolvedExisting instanceof BoardNodeObject ? resolvedExisting : newBoardNodeFromDescriptor(nodeDescriptor);
+			if (!(resolvedExisting instanceof BoardNodeObject)) {
 				renderer.scene.add(node);
 			}
 			applyNodeProps(node, nodeDescriptor);
@@ -302,9 +356,9 @@ export function BoardCanvas({
 	camera,
 	children,
 	className,
-	fixtureFileDrop,
+	fixtureDragDrop,
 	height,
-	onFixtureFileDrop,
+	onFixtureDrop,
 	onReady,
 	renderMode,
 	style,
@@ -316,27 +370,26 @@ export function BoardCanvas({
 	const [contextRenderer, setContextRenderer] = useState<BoardRenderer | null>(null);
 	const rendererRef = useRef<BoardRenderer | null>(null);
 	const descriptor = useMemo(() => buildBoardSceneDescriptor(children), [children]);
-	const [fileDragActive, setFileDragActive] = useState(false);
+	const [fixtureDragActive, setFixtureDragActive] = useState(false);
 	const fileDragDepthRef = useRef(0);
-	const resolvedFixtureFileDrop = fixtureFileDrop ?? Boolean(onFixtureFileDrop);
-
+	const resolvedFixtureDragDrop = fixtureDragDrop ?? Boolean(onFixtureDrop);
 	const handleDragEnter = useCallback(
 		(event: DragEvent<HTMLDivElement>): void => {
-			if (!resolvedFixtureFileDrop) {
+			if (!resolvedFixtureDragDrop) {
 				return;
 			}
-			if (![...event.dataTransfer.types].includes("Files")) {
+			if (![...event.dataTransfer.types].includes(BOARD_FIXTURE_DRAG_V1_MIME)) {
 				return;
 			}
 			fileDragDepthRef.current += 1;
-			setFileDragActive(true);
+			setFixtureDragActive(true);
 		},
-		[resolvedFixtureFileDrop],
+		[resolvedFixtureDragDrop],
 	);
 
 	const handleDragLeave = useCallback(
 		(event: DragEvent<HTMLDivElement>): void => {
-			if (!resolvedFixtureFileDrop) {
+			if (!resolvedFixtureDragDrop) {
 				return;
 			}
 			if (event.currentTarget.contains(event.relatedTarget as Node)) {
@@ -344,52 +397,42 @@ export function BoardCanvas({
 			}
 			fileDragDepthRef.current = Math.max(0, fileDragDepthRef.current - 1);
 			if (fileDragDepthRef.current === 0) {
-				setFileDragActive(false);
+				setFixtureDragActive(false);
 			}
 		},
-		[resolvedFixtureFileDrop],
+		[resolvedFixtureDragDrop],
 	);
 
 	const handleDragOver = useCallback(
 		(event: DragEvent<HTMLDivElement>): void => {
-			if (!resolvedFixtureFileDrop) {
+			if (!resolvedFixtureDragDrop) {
 				return;
 			}
-			if ([...event.dataTransfer.types].includes("Files")) {
+			if ([...event.dataTransfer.types].includes(BOARD_FIXTURE_DRAG_V1_MIME)) {
 				event.preventDefault();
 				event.dataTransfer.dropEffect = "copy";
 			}
 		},
-		[resolvedFixtureFileDrop],
+		[resolvedFixtureDragDrop],
 	);
 
 	const handleDrop = useCallback(
-		async (event: DragEvent<HTMLDivElement>): Promise<void> => {
-			if (!resolvedFixtureFileDrop) {
+		(event: DragEvent<HTMLDivElement>): void => {
+			if (!resolvedFixtureDragDrop) {
 				return;
 			}
 			event.preventDefault();
 			fileDragDepthRef.current = 0;
-			setFileDragActive(false);
-			const file = event.dataTransfer.files[0];
-			if (!file) {
-				return;
-			}
-			const text = await file.text();
-			let raw: unknown;
-			try {
-				raw = JSON.parse(text) as unknown;
-			} catch {
-				return;
-			}
-			const fixture = parseBoardFixtureV1(raw);
+			setFixtureDragActive(false);
+			const text = event.dataTransfer.getData(BOARD_FIXTURE_DRAG_V1_MIME);
+			const fixture = decodeBoardFixtureFromDragV1(text);
 			if (!fixture) {
 				return;
 			}
-			onFixtureFileDrop?.(fixture);
-			rendererRef.current?.emit("fixtureFileDrop", fixture);
+			onFixtureDrop?.(fixture);
+			rendererRef.current?.emit("fixtureDrop", fixture);
 		},
-		[onFixtureFileDrop, resolvedFixtureFileDrop],
+		[onFixtureDrop, resolvedFixtureDragDrop],
 	);
 
 	useLayoutEffect(() => {
@@ -469,7 +512,7 @@ export function BoardCanvas({
 	return (
 		<BoardContext.Provider value={contextRenderer}>
 			<div
-				className={[className, fileDragActive ? "ring-2 ring-teal-500 ring-offset-2" : ""].filter(Boolean).join(" ") || undefined}
+				className={[className, fixtureDragActive ? "ring-2 ring-teal-500 ring-offset-2" : ""].filter(Boolean).join(" ") || undefined}
 				onDragEnter={handleDragEnter}
 				onDragLeave={handleDragLeave}
 				onDragOver={handleDragOver}
@@ -478,7 +521,7 @@ export function BoardCanvas({
 				style={{ height: height ?? "100%", position: "relative", width: width ?? "100%", ...(style ?? {}) }}
 			>
 				<canvas data-testid="board-canvas" ref={canvasRef} style={{ display: "block", height: "100%", width: "100%" }} />
-				{children}
+				{contextRenderer ? children : null}
 			</div>
 		</BoardContext.Provider>
 	);
@@ -508,7 +551,7 @@ export function useSelection(): BoardSelectionSnapshot {
 	return useSyncExternalStore(renderer.subscribeSelection, renderer.getSelectionSnapshot, renderer.getSelectionSnapshot);
 }
 
-/** 📡 Bind a board event listener with stable cleanup semantics (`fixtureFileDrop` fires after a valid JSON fixture lands from {@link BoardCanvasProps.fixtureFileDrop}). */
+/** 📡 Bind a board event listener with stable cleanup semantics (`fixtureDrop` fires after a valid in-app fixture drag lands via {@link BoardCanvasProps.fixtureDragDrop}). */
 export function useBoardEvent<TKey extends keyof BoardEventMap>(
 	name: TKey,
 	handler: (payload: BoardEventMap[TKey]) => void,
@@ -579,6 +622,11 @@ if (boardReactVitest) {
 		document.body.innerHTML = "";
 	});
 
+	function BoardSelectListenerStub(): null {
+		useBoardEvent("select", () => undefined);
+		return null;
+	}
+
 	describe("board react helpers", () => {
 		it("builds a flat scene descriptor from declarative markers", () => {
 			const descriptor = buildBoardSceneDescriptor(
@@ -593,6 +641,23 @@ if (boardReactVitest) {
 			expect(descriptor.nodes).toHaveLength(1);
 			expect(descriptor.handles).toEqual([{ angle: 0, id: "a.out", nodeId: "a", radius: undefined, selected: undefined, style: undefined, userData: undefined, visible: undefined }]);
 			expect(descriptor.edges).toEqual([{ from: "a.out", id: "edge-1", selected: undefined, style: undefined, to: "a.out", userData: undefined, visible: undefined }]);
+		});
+
+		it("does not traverse custom wrapper components (markers must be Fragment / Node / Edge children of BoardCanvas)", () => {
+			function OpaqueScene(): ReactElement {
+				return (
+					<Node id="inner" radius={8} x={1} y={2}>
+						<Handle angle={0} id="inner.h" />
+					</Node>
+				);
+			}
+			const descriptor = buildBoardSceneDescriptor(
+				<>
+					<OpaqueScene />
+				</>,
+			);
+			expect(descriptor.nodes).toHaveLength(0);
+			expect(descriptor.handles).toHaveLength(0);
 		});
 
 		it("syncs declarative updates into stable imperative instances", () => {
@@ -618,6 +683,28 @@ if (boardReactVitest) {
 			expect((secondNode as BoardNodeObject).x).toBe(40);
 			expect((secondNode as BoardNodeObject).radius).toBe(30);
 
+			renderer.dispose();
+		});
+
+		it("replaces the imperative node when declarative shape changes from circle to rectangle", () => {
+			const renderer = new BoardRenderer({ renderMode: "headless-test" });
+			const circleDescriptor = buildBoardSceneDescriptor(
+				<Node id="a" radius={20} x={0} y={0}>
+					<Handle angle={0} id="a.out" />
+				</Node>,
+			);
+			syncBoardScene(renderer, circleDescriptor);
+			const firstNode = renderer.scene.getObjectById("a");
+			const rectDescriptor = buildBoardSceneDescriptor(
+				<Node height={30} id="a" shape="rectangle" width={40} x={0} y={0}>
+					<Handle angle={0} id="a.out" />
+				</Node>,
+			);
+			syncBoardScene(renderer, rectDescriptor);
+			const secondNode = renderer.scene.getObjectById("a");
+			expect(secondNode).not.toBe(firstNode);
+			expect((secondNode as BoardNodeObject).shape).toBe("rectangle");
+			expect((secondNode as BoardNodeObject).width).toBe(40);
 			renderer.dispose();
 		});
 
@@ -672,6 +759,30 @@ if (boardReactVitest) {
 			expect(movedNode.x).toBe(120);
 			expect(movedNode.y).toBe(40);
 			expect(createdRenderer.getCameraSnapshot()).toEqual({ x: 20, y: 10, zoom: 1.2 });
+
+			await act(async () => {
+				root.unmount();
+			});
+			restoreCanvas();
+		});
+
+		it("defers BoardCanvas children until the renderer exists so useBoard hooks do not throw", async () => {
+			const restoreCanvas = installCanvasStub();
+			const container = document.createElement("div");
+			document.body.appendChild(container);
+			const root = createRoot(container);
+
+			await act(async () => {
+				root.render(
+					<BoardCanvas camera={{ x: 0, y: 0, zoom: 1 }} height={120} renderMode="headless-test" width={160}>
+						<BoardSelectListenerStub />
+						<Node draggable id="a" radius={12} x={0} y={0}>
+							<Handle angle={0} id="a.out" />
+						</Node>
+					</BoardCanvas>,
+				);
+				await Promise.resolve();
+			});
 
 			await act(async () => {
 				root.unmount();
