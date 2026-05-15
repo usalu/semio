@@ -14,8 +14,13 @@ const repoRoot = path.resolve(__dirname, "../../../../../");
 export default defineConfig({
   root: __dirname,
   plugins: [tailwindcss(), react()],
+  build: {
+    target: "esnext",
+  },
   resolve: {
-    alias: {},
+    alias: {
+      "@elements/ui": path.resolve(__dirname, "../../react/index.tsx"),
+    },
   },
   server: {
     fs: {

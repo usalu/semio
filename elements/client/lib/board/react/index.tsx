@@ -26,6 +26,7 @@ import {
 	Node as BoardNodeObject,
 	BOARD_FIXTURE_DRAG_V1_MIME,
 	decodeBoardFixtureFromDragV1,
+	ensureElementsBoardWasmLoaded,
 	type BoardEventMap,
 	type BoardFixtureV1,
 	type BoardSelectionMethod,
@@ -613,8 +614,12 @@ const boardReactVitest = (
 ).vitest;
 
 if (boardReactVitest) {
-	const { afterEach, describe, expect, it, vi } = boardReactVitest;
+	const { afterEach, beforeAll, describe, expect, it, vi } = boardReactVitest;
 	(globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
+
+	beforeAll(async () => {
+		await ensureElementsBoardWasmLoaded();
+	});
 
 	function installCanvasStub(): () => void {
 		const getContextSpy = vi.spyOn(HTMLCanvasElement.prototype, "getContext").mockImplementation(() => {

@@ -1,3 +1,28 @@
+// #region 🔖VelloWasmBridge
+import initBoardWasm, {
+	boardComputeEdgeBezier,
+	boardDistancePointCubic,
+	boardHandlePositionCircle,
+	boardHandlePositionRectangle,
+	initSync,
+} from "../rs/pkg/elements_board.js";
+
+if (typeof process !== "undefined" && process.env.VITEST === "true") {
+	const { readFileSync } = await import("node:fs");
+	const { dirname, join } = await import("node:path");
+	const { fileURLToPath } = await import("node:url");
+	const wasmPath = join(dirname(fileURLToPath(import.meta.url)), "../rs/pkg/elements_board_bg.wasm");
+	initSync({ module: readFileSync(wasmPath) });
+} else {
+	await initBoardWasm();
+}
+
+/** @emoji 🌐 Idempotent: resolves after the wasm-bindgen `web` target has finished instantiating. */
+export async function ensureElementsBoardWasmLoaded(): Promise<void> {
+	await initBoardWasm();
+}
+// #endregion 🔖VelloWasmBridge
+
 //#region 🔖Kinds
 export type BoardObjectKind = "node" | "handle" | "edge";
 export type RenderMode = "main-thread" | "worker-offscreen" | "headless-test";
@@ -373,14 +398,19 @@ function cubicBezierPoint(curve: CubicBezierCurve, step: number): Point {
 }
 
 function distanceToBezier(point: Point, curve: CubicBezierCurve, steps = 24): number {
-	let smallestDistance = Number.POSITIVE_INFINITY;
-	let previousPoint = curve.p0;
-	for (let index = 1; index <= steps; index += 1) {
-		const nextPoint = cubicBezierPoint(curve, index / steps);
-		smallestDistance = Math.min(smallestDistance, distanceToSegment(point, previousPoint, nextPoint));
-		previousPoint = nextPoint;
-	}
-	return smallestDistance;
+	return boardDistancePointCubic(
+		point.x,
+		point.y,
+		curve.p0.x,
+		curve.p0.y,
+		curve.p1.x,
+		curve.p1.y,
+		curve.p2.x,
+		curve.p2.y,
+		curve.p3.x,
+		curve.p3.y,
+		steps,
+	);
 }
 
 function sortedSelectionIds(ids: Iterable<string>): string[] {
@@ -675,29 +705,6 @@ function cubicBezierAxisBounds(curve: CubicBezierCurve): WorldAxisBox {
 	};
 }
 
-/** @emoji 📐 First intersection of a ray from the origin along `(ux,uy)` with the rectangle boundary `|x|≤hw`, `|y|≤hh` (local space). */
-function rayFromOriginToAxisAlignedRectangleEdge(hw: number, hh: number, ux: number, uy: number): Point {
-	let tBest = Number.POSITIVE_INFINITY;
-	if (Math.abs(ux) > 1e-12) {
-		const tx = (Math.sign(ux) * hw) / ux;
-		const yAt = uy * tx;
-		if (tx > 0 && Math.abs(yAt) <= hh + 1e-9) {
-			tBest = Math.min(tBest, tx);
-		}
-	}
-	if (Math.abs(uy) > 1e-12) {
-		const ty = (Math.sign(uy) * hh) / uy;
-		const xAt = ux * ty;
-		if (ty > 0 && Math.abs(xAt) <= hw + 1e-9) {
-			tBest = Math.min(tBest, ty);
-		}
-	}
-	if (!Number.isFinite(tBest) || tBest <= 0 || tBest === Number.POSITIVE_INFINITY) {
-		return { x: hw, y: 0 };
-	}
-	return { x: ux * tBest, y: uy * tBest };
-}
-
 function nodeWorldBounds(node: { height: number; radius: number; shape: "circle" | "rectangle"; width: number; x: number; y: number }, padWorld: number): WorldAxisBox {
 	if (node.shape === "rectangle") {
 		const hw = node.width / 2;
@@ -767,15 +774,12 @@ export function computeHandlePosition(
 	node: { height: number; radius: number; shape: "circle" | "rectangle"; width: number; x: number; y: number },
 	angle: number,
 ): Point {
-	const ux = Math.cos(angle);
-	const uy = Math.sin(angle);
 	if (node.shape === "rectangle") {
-		const hw = node.width / 2;
-		const hh = node.height / 2;
-		const local = rayFromOriginToAxisAlignedRectangleEdge(hw, hh, ux, uy);
-		return { x: node.x + local.x, y: node.y + local.y };
+		const flat = boardHandlePositionRectangle(node.x, node.y, node.width, node.height, angle);
+		return { x: flat[0], y: flat[1] };
 	}
-	return { x: node.x + ux * node.radius, y: node.y + uy * node.radius };
+	const flat = boardHandlePositionCircle(node.x, node.y, node.radius, angle);
+	return { x: flat[0], y: flat[1] };
 }
 
 export function computeHandleTangent(angle: number): Point {
@@ -791,21 +795,21 @@ export function computeEdgeBezier(fromHandle: Handle, toHandle: Handle): CubicBe
 	const toPoint = toHandle.position;
 	const fromCenter = { x: fromHandle.node.x, y: fromHandle.node.y };
 	const toCenter = { x: toHandle.node.x, y: toHandle.node.y };
-	let fromOut = normalizePoint(subtractPoint(fromPoint, fromCenter));
-	if (lengthOf(fromOut) <= Number.EPSILON) {
-		fromOut = normalizePoint(subtractPoint(toPoint, fromPoint));
-	}
-	let toIn = normalizePoint(subtractPoint(toCenter, toPoint));
-	if (lengthOf(toIn) <= Number.EPSILON) {
-		toIn = normalizePoint(subtractPoint(toPoint, fromPoint));
-	}
-	const handleDistance = distanceBetween(fromPoint, toPoint);
-	const controlLength = clamp(handleDistance * 0.35, 24, 240);
+	const flat = boardComputeEdgeBezier(
+		fromPoint.x,
+		fromPoint.y,
+		fromCenter.x,
+		fromCenter.y,
+		toPoint.x,
+		toPoint.y,
+		toCenter.x,
+		toCenter.y,
+	);
 	return {
-		p0: fromPoint,
-		p1: addPoint(fromPoint, scalePoint(fromOut, controlLength)),
-		p2: addPoint(toPoint, scalePoint(toIn, controlLength)),
-		p3: toPoint,
+		p0: { x: flat[0], y: flat[1] },
+		p1: { x: flat[2], y: flat[3] },
+		p2: { x: flat[4], y: flat[5] },
+		p3: { x: flat[6], y: flat[7] },
 	};
 }
 //#endregion 🔖Utilities
@@ -2002,7 +2006,11 @@ const boardVitest = (
 ).vitest;
 
 if (boardVitest) {
-	const { describe, expect, it, vi } = boardVitest;
+	const { beforeAll, describe, expect, it, vi } = boardVitest;
+
+	beforeAll(async () => {
+		await ensureElementsBoardWasmLoaded();
+	});
 
 	function createMockCanvas(width = 800, height = 600): { canvas: HTMLCanvasElement; context: BoardCanvasContext } {
 		const canvas = document.createElement("canvas");

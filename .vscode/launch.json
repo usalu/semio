@@ -4,7 +4,7 @@
   "configurations": [
     // #region ⌨️ Keyboard
     {
-      "name": "⌨️ gemini",
+      "name": "⌨️gemini",
       "type": "node-terminal",
       "request": "launch",
       "command": "gemini --yolo",
@@ -15,7 +15,7 @@
       }
     },
     {
-      "name": "⌨️ kiro",
+      "name": "⌨️kiro",
       "type": "node-terminal",
       "request": "launch",
       "command": "kiro-cli chat --trust-all-tools",
@@ -28,7 +28,7 @@
     // #endregion
     // #region 🖱️ Mouse
     {
-      "name": "🖱️ f3d",
+      "name": "🖱️f3d",
       "type": "node-terminal",
       "request": "launch",
       "command": "f3d",
@@ -39,7 +39,7 @@
       }
     },
     {
-      "name": "🖱️ gitkraken",
+      "name": "🖱️gitkraken",
       "type": "node-terminal",
       "request": "launch",
       "command": "gitkraken --path \"${workspaceFolder}\"",
@@ -50,7 +50,7 @@
       }
     },
     {
-      "name": "🖱️ mcp inspector",
+      "name": "🖱️mcpinspector",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run dev -- mcp",
@@ -72,7 +72,7 @@
     // #endregion
     // #region 🛠️ Dev
     {
-      "name": "🛠️ dev 📚 storybook",
+      "name": "🛠️dev📚storybook",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run dev:storybook",
@@ -91,7 +91,7 @@
       }
     },
     {
-      "name": "🛠️ dev 👤 semio 🌐 hub",
+      "name": "🛠️dev👤semio🌐hub",
       "type": "node-terminal",
       "request": "launch",
       "command": "cargo run -p semio-hub",
@@ -109,7 +109,7 @@
       }
     },
     {
-      "name": "🛠️ dev 👤 semio 🖱️ 3dm",
+      "name": "🛠️dev👤semio🖱️3dm",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx dev @semio/3dm-ui",
@@ -144,7 +144,7 @@
       }
     },
     {
-      "name": "🛠️ dev 👤 semio 🖱️ desktop",
+      "name": "🛠️dev👤semio🖱️desktop",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run dev",
@@ -155,7 +155,7 @@
       }
     },
     {
-      "name": "🛠️ dev 👤 semio ⚙️ engine 🤖 mcp",
+      "name": "🛠️dev👤semio⚙️engine🤖mcp",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun ./script.ts dev mcp engine",
@@ -191,7 +191,7 @@
       }
     },
     {
-      "name": "🛠️ dev 👤 semio 🖱️ sketchpad 🎛️ play",
+      "name": "🛠️dev👤semio🖱️sketchpad🎛️play",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run @semio/play:dev",
@@ -207,7 +207,7 @@
       }
     },
     {
-      "name": "🛠️ dev 👤 semio 🏪 store 📊 graphiql",
+      "name": "🛠️dev👤semio🏪store📊graphiql",
       "type": "node-terminal",
       "request": "launch",
       "command": "cargo run -p semio-store",
@@ -227,7 +227,7 @@
       }
     },
     {
-      "name": "🛠️ dev 👤 semio 🖱️ sketchpad",
+      "name": "🛠️dev👤semio🖱️sketchpad",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx dev @semio/sketchpad",
@@ -263,7 +263,7 @@
       }
     },
     {
-      "name": "🛠️ dev 👤 semio 🎗️ vscode",
+      "name": "🛠️dev👤semio🎗️vscode",
       "type": "extensionHost",
       "request": "launch",
       "args": [
@@ -278,7 +278,7 @@
       }
     },
     {
-      "name": "🛠️ dev 👤 semio 🎗️ vscode integrated",
+      "name": "🛠️dev👤semio🎗️vscodeintegrated",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx dev @semio/vscode",
@@ -309,7 +309,7 @@
       "cwd": "${workspaceFolder}"
     },
     {
-      "name": "🛠️ dev 🔬 coda 🖱️ desktop",
+      "name": "🛠️dev🔬coda🖱️desktop",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run @coda/desktop:dev",
@@ -320,7 +320,7 @@
       }
     },
     {
-      "name": "🛠️ dev 🔬 coda 🤖 mcp",
+      "name": "🛠️dev🔬coda🤖mcp",
       "type": "node",
       "request": "launch",
       "runtimeExecutable": "uv",
@@ -348,7 +348,7 @@
       }
     },
     {
-      "name": "🛠️ dev 🔬 coda 🤖 mcp inspector",
+      "name": "🛠️dev🔬coda🤖mcpinspector",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun ./script.ts dev mcp",
@@ -388,7 +388,7 @@
       }
     },
     {
-      "name": "🛠️ dev 🧰 repo 🤖 mcp",
+      "name": "🛠️dev🧰repo🤖mcp",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run dev -- mcp repo",
@@ -408,7 +408,7 @@
       }
     },
     {
-      "name": "🛠️ dev 🧰 repo 🎗️ vscode",
+      "name": "🛠️dev🧰repo🎗️vscode",
       "type": "extensionHost",
       "request": "launch",
       "args": [
@@ -423,7 +423,7 @@
       }
     },
     {
-      "name": "🛠️ dev 🧰 repo 🎗️ vscode integrated",
+      "name": "🛠️dev🧰repo🎗️vscodeintegrated",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx dev repo",
@@ -454,7 +454,7 @@
       "cwd": "${workspaceFolder}"
     },
     {
-      "name": "🛠️ dev 🧩elements 🏁board",
+      "name": "🛠️dev🧩elements🏁board",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run @elements/board:dev",
@@ -475,7 +475,7 @@
     // #endregion
     // #region 📦 Build
     {
-      "name": "📦 build 📚 storybook",
+      "name": "📦build📚storybook",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run build:storybook",
@@ -486,7 +486,7 @@
       }
     },
     {
-      "name": "📦 build 👤 semio 🖱️ 3dm",
+      "name": "📦build👤semio🖱️3dm",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run build -- 3dm",
@@ -497,7 +497,7 @@
       }
     },
     {
-      "name": "📦 build 👤 semio 🏪 assets",
+      "name": "📦build👤semio🏪assets",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run build -- assets",
@@ -508,7 +508,7 @@
       }
     },
     {
-      "name": "📦 build 👤 semio 🖱️ desktop",
+      "name": "📦build👤semio🖱️desktop",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run build -- desktop",
@@ -519,7 +519,7 @@
       }
     },
     {
-      "name": "📦 build 👤 semio ⚙️ engine",
+      "name": "📦build👤semio⚙️engine",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run build -- engine",
@@ -530,7 +530,7 @@
       }
     },
     {
-      "name": "📦 build 👤 semio 🔗 graphql",
+      "name": "📦build👤semio🔗graphql",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run semio/graphql:build",
@@ -541,7 +541,7 @@
       }
     },
     {
-      "name": "📦 build 👤 semio 🖱️ sketchpad",
+      "name": "📦build👤semio🖱️sketchpad",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run build -- sites",
@@ -552,7 +552,7 @@
       }
     },
     {
-      "name": "📦 build 🔬 coda 🖱️ desktop",
+      "name": "📦build🔬coda🖱️desktop",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run build -- coda-desktop",
@@ -563,7 +563,7 @@
       }
     },
     {
-      "name": "📦 build 🧰 repo ⌨️ client",
+      "name": "📦build🧰repo⌨️client",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run build -- repo-cli",
@@ -574,7 +574,7 @@
       }
     },
     {
-      "name": "📦 build 🧰 repo ⌨️ server",
+      "name": "📦build🧰repo⌨️server",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run build -- repo-server",
@@ -585,7 +585,7 @@
       }
     },
     {
-      "name": "📦 build 🧰 repo 🎗️ vscode",
+      "name": "📦build🧰repo🎗️vscode",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run build -- repo-vscode",
@@ -598,7 +598,7 @@
     // #endregion
     // #region ⬆️ Publish
     {
-      "name": "⬆️ publish 👤 semio 🖱️ desktop",
+      "name": "⬆️publish👤semio🖱️desktop",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run publish -- desktop",
@@ -609,7 +609,7 @@
       }
     },
     {
-      "name": "⬆️ publish 👤 semio 🖱️ sketchpad 🎛️ play",
+      "name": "⬆️publish👤semio🖱️sketchpad🎛️play",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run publish -- play",
@@ -620,7 +620,7 @@
       }
     },
     {
-      "name": "⬆️ publish 👤 semio 🖱️ sketchpad",
+      "name": "⬆️publish👤semio🖱️sketchpad",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run publish -- sketchpad",
@@ -631,7 +631,7 @@
       }
     },
     {
-      "name": "⬆️ publish 👤 semio 🖱️ sketchpad 📖 docs",
+      "name": "⬆️publish👤semio🖱️sketchpad📖docs",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run publish -- docs",
@@ -642,7 +642,7 @@
       }
     },
     {
-      "name": "⬆️ publish 🔬 coda 🖱️ desktop",
+      "name": "⬆️publish🔬coda🖱️desktop",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run publish -- coda-desktop",

@@ -23,6 +23,7 @@ pub fn normalize_or_zero(vector: Vec2) -> Vec2 {
 	vector / len
 }
 
+#[cfg_attr(not(target_arch = "wasm32"), allow(dead_code))]
 pub fn ray_from_origin_to_axis_aligned_rectangle_edge(hw: f64, hh: f64, ux: f64, uy: f64) -> Point {
 	let mut t_best = f64::INFINITY;
 	if ux.abs() > 1e-12 {
@@ -51,6 +52,7 @@ pub fn handle_position_on_circle(center: Point, radius: f64, angle: f64) -> Poin
 	center + Vec2::new(ux * radius, uy * radius)
 }
 
+#[cfg_attr(not(target_arch = "wasm32"), allow(dead_code))]
 pub fn handle_position_on_rectangle(center: Point, width: f64, height: f64, angle: f64) -> Point {
 	let hw = width / 2.0;
 	let hh = height / 2.0;
