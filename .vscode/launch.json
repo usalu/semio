@@ -75,26 +75,17 @@
       }
     },
     {
-      "name": "🛠️dev👤elements📚ui📖storybook",
+      "name": "🛠️dev📚storybook",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run @elements/ui:dev",
+      "command": "bun run dev:storybook",
       "cwd": "${workspaceFolder}",
+      "env": {
+        "STORYBOOK_PORT": "6010"
+      },
       "serverReadyAction": {
         "action": "openExternally",
-        "pattern": "(http://localhost:6006)",
-        "uriFormat": "%s"
-      }
-    },
-    {
-      "name": "🛠️dev👤workspace📚storybook",
-      "type": "node-terminal",
-      "request": "launch",
-      "command": "bun nx run workspace:dev-storybook",
-      "cwd": "${workspaceFolder}",
-      "serverReadyAction": {
-        "action": "openExternally",
-        "pattern": "(http://localhost:6010)",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6010)",
         "uriFormat": "%s"
       }
     },
@@ -132,23 +123,26 @@
       }
     },
     {
-      "name": "🛠️dev👤semio🧮algorithms📖storybook",
+      "name": "🧪test📚storybook",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run @semio/algorithms:dev",
+      "command": "bun run test:storybook",
       "cwd": "${workspaceFolder}",
-      "serverReadyAction": {
-        "action": "openExternally",
-        "pattern": "(http://localhost:6007)",
-        "uriFormat": "%s"
+      "env": {
+        "STORYBOOK_PORT": "6010",
+        "PLAYWRIGHT_BROWSERS_PATH": "${workspaceFolder}/node_modules/.cache/ms-playwright"
       }
     },
     {
-      "name": "🧪test👤workspace📚storybook",
+      "name": "🧪debug📚storybook📖playwright",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run workspace:test-storybook",
-      "cwd": "${workspaceFolder}"
+      "command": "bunx playwright test --config .storybook/playwright.config.ts --debug",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "STORYBOOK_PORT": "6010",
+        "PLAYWRIGHT_BROWSERS_PATH": "${workspaceFolder}/node_modules/.cache/ms-playwright"
+      }
     },
     {
       "name": "🛠️dev👤semio🖱️desktop",
@@ -254,14 +248,24 @@
       }
     },
     {
-      "name": "🛠️dev👤semio📚ui📖storybook",
+      "name": "📦build📚storybook",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run @semio/ui:dev",
+      "command": "bun run build:storybook",
+      "cwd": "${workspaceFolder}"
+    },
+    {
+      "name": "🛠️dev📚storybook📖static",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun ./dev.script.ts storybook-static",
       "cwd": "${workspaceFolder}",
+      "env": {
+        "STORYBOOK_PORT": "6010"
+      },
       "serverReadyAction": {
         "action": "openExternally",
-        "pattern": "(http://localhost:6008)",
+        "pattern": "storybook-static listening on (http://[^\\s]+)",
         "uriFormat": "%s"
       }
     },

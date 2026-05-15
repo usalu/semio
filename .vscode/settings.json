@@ -39,7 +39,7 @@
   "remote.autoForwardPorts": true,
   "remote.portsAttributes": {
     "6010": {
-      "label": "Workspace Storybook",
+      "label": "Monorepo Storybook",
       "onAutoForward": "openBrowser"
     },
     "6274": {

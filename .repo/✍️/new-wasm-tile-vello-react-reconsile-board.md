@@ -976,6 +976,8 @@ From repo root (static Storybook + Bun static server on `http://127.0.0.1:<port>
 bun run test:storybook
 ```
 
+`test.script.ts` builds Storybook, spawns `bun ./dev.script.ts storybook-static` (serving `storybook-static/` at the site root), waits for `index.html`, then runs Playwright with `PLAYWRIGHT_BASE_URL` — no second `webServer` in Playwright config. `testMatch` lists `monorepo.spec.ts` and `board.spec.ts` explicitly because `*.spec.ts` did not discover every spec on Windows here.
+
 | Automation | Story id | Covers |
 | ---------- | -------- | ------ |
 | `.storybook/board.spec.ts` | `elements-board--default` | Raster `none`, node selection, zoom-in → `fine` LOD, clear selection |
