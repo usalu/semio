@@ -6,7 +6,7 @@
     "sourceCopyDesign": "semio/assets/fixtures/nakagin-capsule-tower.copy.design.semio.json",
     "cad": {
       "axes": "x=right,y=front,z=up",
-      "boardPlane": "screen.x=cad.x*k+offset, screen.y=-cad.z*k+offset (plan projection; cad.y omitted)"
+      "boardPlane": "screen.x=cad.x*k, screen.y=-cad.z*k (plan projection; cad.y omitted for 2D board)"
     },
     "anchorPieceId": "31be08e1-e75c-4024-86b4-c3c6d3939fbb",
     "anchorCad": {
@@ -15,6 +15,11 @@
       "wz": 10.25
     },
     "pixelsPerCadMeter": 32
+  },
+  "camera": {
+    "x": 360,
+    "y": 260,
+    "zoom": 1
   },
   "nodes": [
     {
@@ -25,8 +30,8 @@
         "y": 0,
         "z": 0
       },
-      "x": 1207.453856,
-      "y": 1008,
+      "x": 360,
+      "y": 379,
       "radius": 20,
       "handles": [
         {
@@ -39,8 +44,8 @@
       "id": "9d18882e-d90b-40de-a171-47cb4564ffa6",
       "label": "t_f2_b_c1",
       "cad": null,
-      "x": 1207.453856,
-      "y": 888,
+      "x": 360,
+      "y": 249,
       "radius": 26,
       "handles": [
         {
@@ -53,8 +58,8 @@
       "id": "536f3512-ca21-45ab-a6a8-08f48a939c8f",
       "label": "cs_sl0_d0_t_f2_b_c1",
       "cad": null,
-      "x": 1207.453856,
-      "y": 780,
+      "x": 360,
+      "y": 141,
       "radius": 20,
       "handles": [
         {
@@ -67,8 +72,8 @@
       "id": "7ef59b73-e757-47a6-a5dd-a8d1dbd59c8e",
       "label": "cs_sl0_d3_t_f2_b_c1",
       "cad": null,
-      "x": 1283.8213883681472,
-      "y": 811.6324676318528,
+      "x": 436.368,
+      "y": 172.632,
       "radius": 20,
       "handles": [
         {
@@ -81,8 +86,8 @@
       "id": "5c18fab0-05cb-4639-8d97-a8e1f7cf23fc",
       "label": "cs_sl2_d0_t_f2_b_c1",
       "cad": null,
-      "x": 1315.453856,
-      "y": 888,
+      "x": 468,
+      "y": 249,
       "radius": 20,
       "handles": [
         {
@@ -95,8 +100,8 @@
       "id": "8cf31906-5b4c-48d7-929f-cbe0e469d423",
       "label": "cs_sl2_d1_t_f2_b_c1",
       "cad": null,
-      "x": 1283.8213883681472,
-      "y": 964.3675323681472,
+      "x": 436.368,
+      "y": 325.368,
       "radius": 20,
       "handles": [
         {
@@ -109,8 +114,8 @@
       "id": "dcf9ff79-1f52-412d-9eb4-7329f77b237c",
       "label": "cs_sl1_d1_t_f2_b_c1",
       "cad": null,
-      "x": 1207.453856,
-      "y": 996,
+      "x": 360,
+      "y": 357,
       "radius": 20,
       "handles": [
         {
@@ -123,8 +128,8 @@
       "id": "d064105d-9a9d-442b-a53f-ed010b155b89",
       "label": "cs_sl1_d0_t_f2_b_c1",
       "cad": null,
-      "x": 1131.086323631853,
-      "y": 964.3675323681472,
+      "x": 283.632,
+      "y": 325.368,
       "radius": 20,
       "handles": [
         {
@@ -137,8 +142,8 @@
       "id": "3b0444ad-2307-442e-972a-7f1c2cc7dcb9",
       "label": "cs_sl0_d2_t_f2_b_c1",
       "cad": null,
-      "x": 1099.453856,
-      "y": 888,
+      "x": 252,
+      "y": 249,
       "radius": 20,
       "handles": [
         {
@@ -151,8 +156,8 @@
       "id": "31be08e1-e75c-4024-86b4-c3c6d3939fbb",
       "label": "t_f1_b_c1",
       "cad": null,
-      "x": 1131.086323631853,
-      "y": 811.6324676318529,
+      "x": 283.632,
+      "y": 172.632,
       "radius": 20,
       "handles": [
         {
@@ -192,11 +197,6 @@
       "id": "6bc57a6b-f0b4-4bb7-bf4c-ca06ef510ecd",
       "fromHandle": "9d18882e-d90b-40de-a171-47cb4564ffa6:c",
       "toHandle": "d064105d-9a9d-442b-a53f-ed010b155b89:c"
-    },
-    {
-      "id": "b1ecc6c5-722a-4814-9047-a87222bbaa4d",
-      "fromHandle": "17d5dec8-87b2-44a9-84ff-93b7e7419bdd:c",
-      "toHandle": "31be08e1-e75c-4024-86b4-c3c6d3939fbb:c"
     },
     {
       "id": "bb5449be-247b-498e-b8c8-309697ddea7b",

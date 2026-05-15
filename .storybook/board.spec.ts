@@ -209,6 +209,15 @@ test("board default: zoom out to grid-only LOD while preserving wheel anchor", a
 	expect(Math.abs((worldAfter as { y: number }).y - (worldBefore as { y: number }).y)).toBeLessThan(2.5);
 });
 
+const nakaginCapsuleTowerHubPieceId = "9d18882e-d90b-40de-a171-47cb4564ffa6";
+
+test("board nakagin fixture: json scene hub piece selects", async ({ page }) => {
+	const canvas = await expectBoardStory(page, "elements-board--nakagin-capsule-tower-flat-selection");
+	await expect(canvas).toHaveAttribute("data-board-raster", "none");
+	await clickBoardObject(page, nakaginCapsuleTowerHubPieceId);
+	await expect(canvas).toHaveAttribute("data-board-selection", nakaginCapsuleTowerHubPieceId);
+});
+
 test("board world-clip: raster mode, node selection, handle hit", async ({ page }) => {
 	const canvas = await expectBoardStory(page, "elements-board--world-tile-clip");
 	await expect(canvas).toHaveAttribute("data-board-raster", "world-clip");

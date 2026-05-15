@@ -162,14 +162,25 @@ export function collectKitFieldDeclaredIsRows(schemaYamlText: string): KitFieldD
 //#endregion 🧭YamlWalk
 
 //#region 🧭Cypher
-/** @emoji 🔗 Same logic as migrations.cypher `MaterializeTransitiveIsForKitMembers` — kept here so it runs after YAML repair. */
+/** @emoji 📐 Kit `IS` targets that only implement `Data` in YAML — do not copy the entity interface ladder onto kit members. */
+const PRIMITIVE_VALUE_CLASS_NAMES = [
+  "Vector",
+  "Point",
+  "Coordinate",
+  "Offset",
+  "Plane",
+] as const;
+
+/** @emoji 🔗 Transitive `IS` on kit members: full interface closure from direct `Interface` hops; from `Class` only when not a primitive value class (avoids `xAxis`→`Vector`→`Entity` noise). */
 export function materializeTransitiveIsForKitMembersCypher(): string {
+  const skipList = PRIMITIVE_VALUE_CLASS_NAMES.map((n) => `'${n}'`).join(", ");
   return [
     "MATCH (n:Data|Computation|Reference)-[:IS]->(i:Interface)",
     "MATCH (i)-[:IS*1..25]->(b:Interface)",
     "WHERE n <> b",
     "MERGE (n)-[:IS]->(b);",
     "MATCH (n:Data|Computation|Reference)-[:IS]->(c:Class)",
+    `WHERE NOT c.name IN [${skipList}]`,
     "MATCH (c)-[:IS*1..25]->(b:Interface)",
     "MERGE (n)-[:IS]->(b);",
   ].join("\n");
