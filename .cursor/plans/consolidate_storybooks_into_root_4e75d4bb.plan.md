@@ -4,13 +4,13 @@ overview: One root Storybook under `.storybook/` with all duplicate config and h
 todos:
   - id: ticket
     content: Open repo ticket for the consolidation
-    status: in_progress
+    status: completed
   - id: move-stories
     content: Move *.stories.* into .storybook/stories/<tech>/<bundle>/ (single top-level stories tree); non-story helpers to fixtures/ and semio/algorithms/kit-store/
-    status: pending
+    status: completed
   - id: consolidate-helpers
     content: Single root withLevel.tsx (globals.level + optional args.level), withTheme.tsx, vitest.setup.ts; delete all bundle main/preview/with*
-    status: pending
+    status: in_progress
   - id: update-main-preview
     content: Update .storybook/main.ts globs and .storybook/preview.ts decorator imports
     status: pending
