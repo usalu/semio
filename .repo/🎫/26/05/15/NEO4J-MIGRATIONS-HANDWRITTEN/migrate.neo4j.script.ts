@@ -518,6 +518,84 @@ function main(): void {
     process.exit(1);
   }
 
+  const probeProviderSubclassBackboneOwns = spawnSync(
+    shell,
+    [
+      "-a",
+      process.env.NEO4J_URI || "bolt://localhost:7687",
+      "-u",
+      process.env.NEO4J_USERNAME || "neo4j",
+      "-p",
+      process.env.NEO4J_PASSWORD || "password",
+      "-d",
+      DATABASE,
+      "--format",
+      "plain",
+      "OPTIONAL MATCH (sub:Class)-[:OWNS]->(f:Data|Computation|Reference) " +
+        "WHERE sub.name IN ['LocalProvider','RemoteProvider'] AND f.name IN ['backbone','backbones'] " +
+        "RETURN count(f) AS subclassOwnsBackboneKitMembers;",
+    ],
+    { encoding: "utf8", cwd: REPO_ROOT, env: buildCypherEnv() },
+  );
+
+  if (probeProviderSubclassBackboneOwns.status !== 0) {
+    console.error(`[migrate:neo4j] Provider backbone OWNS verify failed: ${probeProviderSubclassBackboneOwns.stderr}`);
+    process.exit(1);
+  }
+
+  const pbTail = String(probeProviderSubclassBackboneOwns.stdout ?? "")
+    .trim()
+    .split(/\r?\n/)
+    .map((l) => l.trim())
+    .filter(Boolean);
+  const pbLast = pbTail[pbTail.length - 1] ?? "";
+  const subclassOwnsBackboneKitMembers = Number.parseInt(pbLast.trim(), 10);
+  if (!Number.isFinite(subclassOwnsBackboneKitMembers) || subclassOwnsBackboneKitMembers !== 0) {
+    console.error(
+      `[migrate:neo4j] expected LocalProvider/RemoteProvider to not OWNS backbone/backbones kit members (Provider does); verify output:\n${probeProviderSubclassBackboneOwns.stdout}`,
+    );
+    process.exit(1);
+  }
+
+  const probeOperationOwnsConnectorKit = spawnSync(
+    shell,
+    [
+      "-a",
+      process.env.NEO4J_URI || "bolt://localhost:7687",
+      "-u",
+      process.env.NEO4J_USERNAME || "neo4j",
+      "-p",
+      process.env.NEO4J_PASSWORD || "password",
+      "-d",
+      DATABASE,
+      "--format",
+      "plain",
+      "OPTIONAL MATCH (op:Class|Interface)-[:OWNS]->(f:Data|Computation|Reference) " +
+        "WHERE toLower(op.name) = 'operation' AND f.name IN ['connector','connectors'] " +
+        "RETURN count(f) AS operationOwnsConnectorKitMembers;",
+    ],
+    { encoding: "utf8", cwd: REPO_ROOT, env: buildCypherEnv() },
+  );
+
+  if (probeOperationOwnsConnectorKit.status !== 0) {
+    console.error(`[migrate:neo4j] Type connector OWNS verify failed: ${probeOperationOwnsConnectorKit.stderr}`);
+    process.exit(1);
+  }
+
+  const ocTail = String(probeOperationOwnsConnectorKit.stdout ?? "")
+    .trim()
+    .split(/\r?\n/)
+    .map((l) => l.trim())
+    .filter(Boolean);
+  const ocLast = ocTail[ocTail.length - 1] ?? "";
+  const operationOwnsConnectorKitMembers = Number.parseInt(ocLast.trim(), 10);
+  if (!Number.isFinite(operationOwnsConnectorKitMembers) || operationOwnsConnectorKitMembers !== 0) {
+    console.error(
+      `[migrate:neo4j] expected Operation to not OWNS connector/connectors kit members (Type does); verify output:\n${probeOperationOwnsConnectorKit.stdout}`,
+    );
+    process.exit(1);
+  }
+
   console.log("[migrate:neo4j] handwritten migrations ok.");
 }
 

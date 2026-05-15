@@ -1,7 +1,7 @@
 /** @emoji 🧩 `react-reconciler` host wiring for imperative {@link BoardRenderer} scene objects. */
 import type { ReactElement } from "react";
 import Reconciler from "react-reconciler";
-import { ConcurrentRoot, DefaultEventPriority } from "react-reconciler/constants";
+import { LegacyRoot, DefaultEventPriority } from "react-reconciler/constants";
 
 import {
 	BoardRenderer,
@@ -281,7 +281,10 @@ const boardReconciler = Reconciler({
 	isPrimaryRenderer: false,
 	warnsIfNotActing: true,
 	supportsMicrotasks: true,
-	scheduleMicrotask: (fn: () => unknown) => queueMicrotask(fn),
+	/** @emoji ⚡ Runs microtasks synchronously so `updateContainer` from a parent `useLayoutEffect` commits before `act()` reads the imperative scene (nested roots + `its-fine` bridge). */
+	scheduleMicrotask: (fn: () => unknown) => {
+		fn();
+	},
 	noTimeout: -1,
 	scheduleTimeout: setTimeout,
 	cancelTimeout: clearTimeout,
@@ -292,7 +295,6 @@ const boardReconciler = Reconciler({
 	createInstance(type, props, rootContainer) {
 		const renderer = rootContainer;
 		if (type === BOARD_HOST_NODE) {
-			console.log("[DEBUG] createInstance node", (props as BoardNodeProps).id, (props as BoardNodeProps).x);
 			return { kind: "node", handleChildren: new Set(), impl: newBoardNodeFromProps(props as BoardNodeProps), renderer };
 		}
 		if (type === BOARD_HOST_HANDLE) {
@@ -397,9 +399,7 @@ const boardReconciler = Reconciler({
 
 	prepareUpdate(instance, type, oldProps, newProps) {
 		if (type === BOARD_HOST_NODE) {
-			const should = !propsEqualNode(oldProps as BoardNodeProps, newProps as BoardNodeProps);
-			console.log("[DEBUG] prepareUpdate node", should, (oldProps as BoardNodeProps).x, (newProps as BoardNodeProps).x);
-			return should;
+			return !propsEqualNode(oldProps as BoardNodeProps, newProps as BoardNodeProps);
 		}
 		if (type === BOARD_HOST_HANDLE) {
 			return !propsEqualHandle(oldProps as BoardHandleProps, newProps as BoardHandleProps);
@@ -415,7 +415,6 @@ const boardReconciler = Reconciler({
 		if (type === BOARD_HOST_NODE) {
 			const next = nextProps as BoardNodeProps;
 			const host = instance as BoardHostNode;
-			console.log("[DEBUG] commitUpdate node", host.impl.id, host.impl.x, next.x);
 			if (instanceShapeSyncKey(host.impl) !== nodeShapeSyncKey(next)) {
 				replaceNodeImpl(renderer, host, next);
 				return;
@@ -475,11 +474,11 @@ const boardReconciler = Reconciler({
 
 export type BoardFiberRoot = ReturnType<typeof boardReconciler.createContainer>;
 
-/** @emoji 🌱 Creates a concurrent board reconciler root bound to {@link BoardRenderer}. */
+/** @emoji 🌱 Creates a legacy-mode board reconciler root bound to {@link BoardRenderer} for synchronous subtree commits with DOM `act()`. */
 export function createBoardFiberRoot(renderer: BoardRenderer): BoardFiberRoot {
 	return boardReconciler.createContainer(
 		renderer,
-		ConcurrentRoot,
+		LegacyRoot,
 		null,
 		false,
 		null,

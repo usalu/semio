@@ -229,3 +229,29 @@ MATCH (n)
 WHERE n.kind IS NOT NULL
 REMOVE n.kind;
 //#endregion RemoveResidualKindProperty
+
+//#region ReparentProviderBackboneKitMembers
+// `backbone` / `backbones` are defined on `Provider` in schema.yaml; concrete backbones (`FileBackbone`, `WebsocketBackbone` classes) still `IS` `Backbone`. Subclasses must not OWNS those shared kit members.
+MATCH (provider:Interface|Class)
+WHERE toLower(provider.name) = 'provider'
+WITH provider ORDER BY id(provider) ASC LIMIT 1
+MATCH (sub:Class)
+WHERE sub.name IN ['LocalProvider', 'RemoteProvider']
+MATCH (sub)-[rw:OWNS]->(f:Data|Computation|Reference)
+WHERE f.name IN ['backbone', 'backbones']
+MERGE (provider)-[:OWNS]->(f)
+DELETE rw;
+//#endregion ReparentProviderBackboneKitMembers
+
+//#region ReparentTypeConnectorKitMembersFromOperation
+// `connector` / `connectors` belong on `Type` (see schema.yaml + GraphQL `Type.connector(s)`), not on `Operation`.
+MATCH (t:Class|Interface)
+WHERE toLower(t.name) = 'type'
+WITH t ORDER BY id(t) ASC LIMIT 1
+MATCH (op:Class|Interface)
+WHERE toLower(op.name) = 'operation'
+MATCH (op)-[rw:OWNS]->(f:Data|Computation|Reference)
+WHERE f.name IN ['connector', 'connectors']
+MERGE (t)-[:OWNS]->(f)
+DELETE rw;
+//#endregion ReparentTypeConnectorKitMembersFromOperation

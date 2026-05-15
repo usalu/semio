@@ -197,6 +197,11 @@ schema:
           ports: [*port]
           representations: [*representation]
           attributes: [*attribute]
+          # Neo4j: `connector` / `connectors` kit members OWNS from Class Type (not Interface Operation). Kit-level `connectors` on Class Kit stays separate.
+          data:
+            connectors: [*connector]
+          computed:
+            connector: *connector
       layer: &layer
         implements: [*artifact]
         fields:
@@ -382,6 +387,7 @@ schema:
         provider: &provider
           implements: [*strongEntity]
           fields:
+            # Neo4j: `backbone` / `backbones` kit members OWNS from Interface Provider (not LocalProvider / RemoteProvider). List entries are concrete backbone instances; each still `IS` `Backbone`.
             data:
               backbones: [*backbone]
             computed:

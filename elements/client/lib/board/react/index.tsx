@@ -18,8 +18,7 @@ import {
 	type ReactNode,
 } from "react";
 import { createRoot } from "react-dom/client";
-import { flushSync } from "react-dom";
-import { FiberProvider } from "its-fine";
+import { FiberProvider, useContextBridge } from "its-fine";
 
 import {
 	BOARD_HOST_EDGE,
@@ -365,39 +364,21 @@ export function syncBoardScene(renderer: BoardRenderer, descriptor: BoardSceneDe
 //#endregion 🔖Scene Sync
 
 //#region 🔖ReconcilerBridge
-/** @emoji 🌉 Mounts the board `react-reconciler` root; pushes children every layout flush and bridges DOM context via `its-fine`. */
+/** @emoji 🌉 Mounts the board `react-reconciler` subtree; remounts the inner fiber root when `children` change so host props stay applied (legacy root + remount avoids skipped host updates under nested React roots). */
 function BoardReconcilerMount({ children, renderer }: { children: ReactNode; renderer: BoardRenderer }): null {
 	const fiberRootRef = useRef<BoardFiberRoot | null>(null);
 
 	useLayoutEffect(() => {
 		const root = createBoardFiberRoot(renderer);
 		fiberRootRef.current = root;
+		updateBoardFiberRoot(root, createElement(Fragment, null, children), null);
 		return () => {
 			unmountBoardFiberRoot(root);
-			fiberRootRef.current = null;
+			if (fiberRootRef.current === root) {
+				fiberRootRef.current = null;
+			}
 		};
-	}, [renderer]);
-
-	useLayoutEffect(() => {
-		const root = fiberRootRef.current;
-		if (!root) {
-			return;
-		}
-		let firstNodeX: number | undefined;
-		Children.forEach(children, (c) => {
-			if (firstNodeX !== undefined) {
-				return;
-			}
-			if (!isValidElement(c)) {
-				return;
-			}
-			if (c.type === BOARD_HOST_NODE) {
-				firstNodeX = (c.props as BoardNodeProps).x;
-			}
-		});
-		console.log("[DEBUG] BoardReconcilerMount layout flush firstNodeX", firstNodeX);
-		updateBoardFiberRoot(root, createElement(Fragment, null, children), null);
-	});
+	}, [renderer, children]);
 
 	return null;
 }
@@ -593,13 +574,16 @@ export function BoardCanvas({
 //#endregion 🔖Canvas
 
 //#region 🔖Hooks
-/** 🎯 Access the imperative board renderer from within BoardCanvas descendants. */
+/** 🎯 Access the imperative board renderer from within BoardCanvas descendants (DOM or board reconciler). */
 export function useBoard(): BoardRenderer {
 	const renderer = useContext(BoardContext);
-	if (!renderer) {
-		throw new Error("useBoard must be used inside BoardCanvas.");
+	if (renderer) {
+		return renderer;
 	}
-	return renderer;
+	if (activeBoardRenderer) {
+		return activeBoardRenderer;
+	}
+	throw new Error("useBoard must be used inside BoardCanvas.");
 }
 
 /** 📷 Read and update camera state through an external store subscription. */
@@ -876,7 +860,6 @@ if (boardReactVitest) {
 			await act(async () => {
 				root.render(
 					<BoardCanvas
-						key="board-stable"
 						camera={{ x: 0, y: 0, zoom: 1 }}
 						height={480}
 						onReady={(renderer) => {
@@ -902,7 +885,7 @@ if (boardReactVitest) {
 
 			await act(async () => {
 				root.render(
-					<BoardCanvas key="board-stable" camera={{ x: 20, y: 10, zoom: 1.2 }} height={480} onReady={() => undefined} renderMode="headless-test" width={640}>
+					<BoardCanvas camera={{ x: 20, y: 10, zoom: 1.2 }} height={480} onReady={() => undefined} renderMode="headless-test" width={640}>
 						<Node draggable id="a" radius={28} x={120} y={40}>
 							<Handle angle={0} id="a.out" />
 						</Node>
