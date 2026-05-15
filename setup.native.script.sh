@@ -346,7 +346,7 @@ ensure_native_neo4j() {
     fi
   done
   if command -v bun >/dev/null 2>&1; then
-    (cd "$REPO_ROOT" && NEO4J_DATABASE="$graph_db" bun ./purge.neo4j.script.ts) || log "Neo4j legacy-property prune skipped (bun or cypher-shell failed)."
+    (cd "$REPO_ROOT" && NEO4J_DATABASE="$graph_db" bun ./script.ts purge neo4j) || log "Neo4j legacy-property prune skipped (bun or cypher-shell failed)."
   fi
 }
 #endregion 🔖Neo4jRuntime

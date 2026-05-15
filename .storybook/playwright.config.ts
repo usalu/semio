@@ -1,7 +1,7 @@
 // #region 🧲Header
 // 💻 .storybook/playwright.config.ts
 // Specs: Run Playwright board end-to-end coverage against the built workspace board harness.
-// Summary: `bun run test:storybook` builds, serves `storybook-static/` via `dev.script.ts storybook-static`, then runs Playwright against board-only end-to-end specs with `PLAYWRIGHT_BASE_URL` set; this config does not start its own server.
+// Summary: `bun run test:storybook` builds, serves `storybook-static/` via `script.ts dev storybook-static`, then runs Playwright against board-only end-to-end specs with `PLAYWRIGHT_BASE_URL` set; this config does not start its own server.
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 // #endregion 🧲Header
 

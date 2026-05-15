@@ -5,8 +5,8 @@
     "dev": {
       "executor": "nx:run-commands",
       "options": {
-        "cwd": "semio/site/play",
-        "command": "bun ./dev.script.ts --strictPort --port 4000",
+        "cwd": "semio/client/lib/sketchpad/play",
+        "command": "bun ./script.ts dev --strictPort --port 4000",
         "env": {
           "CHOKIDAR_USEPOLLING": "1"
         },
@@ -16,7 +16,7 @@
     "build": {
       "executor": "nx:run-commands",
       "options": {
-        "cwd": "semio/site/play",
+        "cwd": "semio/client/lib/sketchpad/play",
         "command": "vite build",
         "forwardAllArgs": true
       }
@@ -24,7 +24,7 @@
     "publish": {
       "executor": "nx:run-commands",
       "options": {
-        "cwd": "semio/site/play",
+        "cwd": "semio/client/lib/sketchpad/play",
         "commands": ["vite build", "bun publish"],
         "parallel": false,
         "forwardAllArgs": true

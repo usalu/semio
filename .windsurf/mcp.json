@@ -3,31 +3,31 @@
     "repo": {
       "type": "stdio",
       "command": "bun",
-      "args": ["dev.mcp.repo.script.ts", "client"],
+      "args": ["script.ts", "dev", "mcp", "stdio", "client"],
       "disabled": false
     },
     "neo4j-semio": {
       "type": "stdio",
       "command": "bun",
-      "args": ["dev.mcp.neo4j.script.ts", "semio"],
+      "args": ["script.ts", "dev", "mcp", "neo4j", "semio"],
       "disabled": false
     },
     "neo4j-elements": {
       "type": "stdio",
       "command": "bun",
-      "args": ["dev.mcp.neo4j.script.ts", "elements"],
+      "args": ["script.ts", "dev", "mcp", "neo4j", "elements"],
       "disabled": false
     },
     "neo4j-coda": {
       "type": "stdio",
       "command": "bun",
-      "args": ["dev.mcp.neo4j.script.ts", "coda"],
+      "args": ["script.ts", "dev", "mcp", "neo4j", "coda"],
       "disabled": false
     },
     "neo4j-reuse": {
       "type": "stdio",
       "command": "bun",
-      "args": ["dev.mcp.neo4j.script.ts", "reuse"],
+      "args": ["script.ts", "dev", "mcp", "neo4j", "reuse"],
       "disabled": false
     }
   }

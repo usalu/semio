@@ -8,21 +8,21 @@
       "executor": "nx:run-commands",
       "cache": false,
       "options": {
-        "command": "bun ./setup.script.ts"
+        "command": "bun ./script.ts setup"
       }
     },
     "start": {
       "executor": "nx:run-commands",
       "cache": false,
       "options": {
-        "command": "bun ./start.script.ts"
+        "command": "bun ./script.ts start"
       }
     },
     "dev": {
       "executor": "nx:run-commands",
       "cache": false,
       "options": {
-        "command": "bun ./dev.script.ts",
+        "command": "bun ./script.ts dev",
         "forwardAllArgs": true
       }
     },
@@ -30,7 +30,7 @@
       "executor": "nx:run-commands",
       "cache": false,
       "options": {
-        "command": "bun ./dev.script.ts storybook",
+        "command": "bun ./script.ts dev storybook",
         "forwardAllArgs": true,
         "env": {
           "STORYBOOK_PORT": "6010"
@@ -41,7 +41,7 @@
       "executor": "nx:run-commands",
       "cache": false,
       "options": {
-        "command": "bun ./dev.script.ts mcp",
+        "command": "bun ./script.ts dev mcp",
         "forwardAllArgs": true
       }
     },
@@ -49,7 +49,7 @@
       "executor": "nx:run-commands",
       "cache": false,
       "options": {
-        "command": "bun ./dev.script.ts mcp engine",
+        "command": "bun ./script.ts dev mcp engine",
         "forwardAllArgs": true
       }
     },
@@ -57,7 +57,7 @@
       "executor": "nx:run-commands",
       "cache": false,
       "options": {
-        "command": "bun ./dev.script.ts mcp repo",
+        "command": "bun ./script.ts dev mcp repo",
         "forwardAllArgs": true
       }
     },
@@ -65,7 +65,7 @@
       "executor": "nx:run-commands",
       "cache": false,
       "options": {
-        "command": "bun ./generate.script.ts",
+        "command": "bun ./script.ts generate",
         "forwardAllArgs": true
       }
     },
@@ -73,7 +73,7 @@
       "executor": "nx:run-commands",
       "cache": false,
       "options": {
-        "command": "bun ./generate.neo4j.script.ts",
+        "command": "bun ./script.ts generate neo4j",
         "forwardAllArgs": true
       }
     },
@@ -89,7 +89,7 @@
       "executor": "nx:run-commands",
       "dependsOn": [],
       "options": {
-        "command": "bun ./lint.script.ts",
+        "command": "bun ./script.ts lint",
         "forwardAllArgs": true
       }
     },
@@ -97,21 +97,21 @@
       "executor": "nx:run-commands",
       "dependsOn": [],
       "options": {
-        "command": "bun ./lint.script.ts repo"
+        "command": "bun ./script.ts lint repo"
       }
     },
     "format": {
       "executor": "nx:run-commands",
       "cache": false,
       "options": {
-        "command": "bun ./format.script.ts"
+        "command": "bun ./script.ts format"
       }
     },
     "test": {
       "executor": "nx:run-commands",
       "dependsOn": [],
       "options": {
-        "command": "bun ./test.script.ts",
+        "command": "bun ./script.ts test",
         "forwardAllArgs": true
       }
     },
@@ -119,7 +119,7 @@
       "executor": "nx:run-commands",
       "dependsOn": [],
       "options": {
-        "command": "bun ./test.script.ts storybook",
+        "command": "bun ./script.ts test storybook",
         "forwardAllArgs": true,
         "env": {
           "STORYBOOK_PORT": "6010"
@@ -130,7 +130,7 @@
       "executor": "nx:run-commands",
       "dependsOn": [],
       "options": {
-        "command": "bun ./build.script.ts",
+        "command": "bun ./script.ts build",
         "forwardAllArgs": true
       }
     },
@@ -138,7 +138,7 @@
       "executor": "nx:run-commands",
       "dependsOn": [],
       "options": {
-        "command": "bun ./build.script.ts storybook",
+        "command": "bun ./script.ts build storybook",
         "forwardAllArgs": true,
         "env": {
           "STORYBOOK_PORT": "6010"
@@ -159,7 +159,7 @@
       "executor": "nx:run-commands",
       "cache": false,
       "options": {
-        "command": "bun ./publish.script.ts",
+        "command": "bun ./script.ts publish",
         "forwardAllArgs": true
       }
     },
@@ -167,7 +167,7 @@
       "executor": "nx:run-commands",
       "cache": false,
       "options": {
-        "command": "bun ./purge.script.ts",
+        "command": "bun ./script.ts purge",
         "forwardAllArgs": true
       }
     }

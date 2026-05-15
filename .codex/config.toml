@@ -1,29 +1,29 @@
 [mcp_servers.repo]
 command = "bun"
-args = ["dev.mcp.repo.script.ts", "codex"]
+args = ["script.ts", "dev", "mcp", "stdio", "codex"]
 enabled = true
 cwd = "."
 
 [mcp_servers.neo4j-semio]
 command = "bun"
-args = ["dev.mcp.neo4j.script.ts", "semio"]
+args = ["script.ts", "dev", "mcp", "neo4j", "semio"]
 enabled = true
 cwd = "."
 
 [mcp_servers.neo4j-elements]
 command = "bun"
-args = ["dev.mcp.neo4j.script.ts", "elements"]
+args = ["script.ts", "dev", "mcp", "neo4j", "elements"]
 enabled = true
 cwd = "."
 
 [mcp_servers.neo4j-coda]
 command = "bun"
-args = ["dev.mcp.neo4j.script.ts", "coda"]
+args = ["script.ts", "dev", "mcp", "neo4j", "coda"]
 enabled = true
 cwd = "."
 
 [mcp_servers.neo4j-reuse]
 command = "bun"
-args = ["dev.mcp.neo4j.script.ts", "reuse"]
+args = ["script.ts", "dev", "mcp", "neo4j", "reuse"]
 enabled = true
 cwd = "."

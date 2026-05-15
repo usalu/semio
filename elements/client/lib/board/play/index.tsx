@@ -5,12 +5,14 @@
 // #region 📥Imports
 import {
 	UI,
+	LevelProvider,
 	createWindowLayout,
+	getLevelBgClass,
 	type UIAppConfig,
 	type UIWindowKindDefinition,
 	type UIWindowLayout,
 } from "@elements/ui";
-import { createContext, useCallback, useContext, useMemo, useState, type ReactElement } from "react";
+import { createContext, useContext, useEffect, useMemo, useState, type ReactElement } from "react";
 import { createRoot } from "react-dom/client";
 
 import nakaginFixtureJson from "../../../../../.storybook/fixtures/nakagin-capsule-tower.board.json";
@@ -150,18 +152,39 @@ const boardPlayApp: UIAppConfig = {
 };
 // #endregion 🔖Layout
 
+// #region 🔖Theme
+/** @emoji 🌓 Locks document `dark` mode so Golden Layout’s dark theme sheet matches the shell (algorithms-style). */
+function useBoardPlayDocumentChrome(): void {
+	useEffect(() => {
+		const root = document.documentElement;
+		const body = document.body;
+		root.classList.add("dark");
+		body.style.backgroundColor = "var(--background)";
+		body.style.color = "var(--foreground)";
+		return () => {
+			root.classList.remove("dark");
+			body.style.backgroundColor = "";
+			body.style.color = "";
+		};
+	}, []);
+}
+// #endregion 🔖Theme
+
 // #region 🔖Entrypoint
 const initialFixture = parseBoardFixtureV1(nakaginFixtureJson as unknown) ?? (nakaginFixtureJson as BoardFixtureV1);
 
 function BoardPlayApp(): ReactElement {
+	useBoardPlayDocumentChrome();
 	const [fixture, setFixture] = useState<BoardFixtureV1>(initialFixture);
 	const value = useMemo(() => ({ fixture, setFixture }), [fixture]);
 	return (
-		<FixtureContext.Provider value={value}>
-			<div className="h-screen w-screen">
-				<UI apps={[boardPlayApp]} defaultAppId={boardPlayApp.id} />
-			</div>
-		</FixtureContext.Provider>
+		<LevelProvider level="window">
+			<FixtureContext.Provider value={value}>
+				<div className={`flex h-screen min-h-0 w-screen flex-col ${getLevelBgClass("window")}`}>
+					<UI apps={[boardPlayApp]} defaultAppId={boardPlayApp.id} />
+				</div>
+			</FixtureContext.Provider>
+		</LevelProvider>
 	);
 }
 

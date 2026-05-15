@@ -1,31 +1,19 @@
 #!/usr/bin/env bun
-// #region DesktopTestRunner
-// Launcher mirroring @vscode/test-electron `runTests`: spawns the desktop app with SEMIO_EXTENSION_TESTS_PATH set.
-// Usage: from `semio/client/ui/desktop`: `bun ./test/test.script.ts`
-// Specs: See https://code.visualstudio.com/api/working-with-extensions/testing-extension
-
+/** 🧭 Desktop app router: `bun ./script.ts test` (integration test runner). */
 import { spawn } from "node:child_process";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const defaultDesktopRoot = path.resolve(__dirname, "..");
+const desktopRoot = import.meta.dir;
+const segs = process.argv.slice(2);
 
-/**
- * @param {{
- *   extensionDevelopmentPath?: string;
- *   extensionTestsPath?: string;
- *   workspaceFolder?: string;
- *   launchArgs?: string[];
- * }} [options] — same shape as `runTests` from @vscode/test-electron; `extensionTestsPath` overrides `.semio-test.mjs` `files`.
- */
 export async function runTests(options: {
   extensionDevelopmentPath?: string;
   extensionTestsPath?: string;
   workspaceFolder?: string;
   launchArgs?: string[];
 } = {}) {
-  const extensionDevelopmentPath = path.resolve(options.extensionDevelopmentPath ?? defaultDesktopRoot);
+  const extensionDevelopmentPath = path.resolve(options.extensionDevelopmentPath ?? desktopRoot);
   let extensionTestsPath = options.extensionTestsPath;
   if (!extensionTestsPath) {
     const cfgHref = pathToFileURL(path.join(extensionDevelopmentPath, ".semio-test.mjs")).href;
@@ -63,14 +51,12 @@ export async function runTests(options: {
   });
 }
 
-const invokedDirectly =
-  process.argv[1] &&
-  pathToFileURL(path.resolve(process.argv[1])).href === pathToFileURL(fileURLToPath(import.meta.url)).href;
-if (invokedDirectly) {
+if (segs[0] === "test") {
   runTests().catch((err) => {
     console.error(err);
     process.exit(1);
   });
+} else {
+  console.error("usage: bun ./script.ts test");
+  process.exit(1);
 }
-
-// #endregion DesktopTestRunner

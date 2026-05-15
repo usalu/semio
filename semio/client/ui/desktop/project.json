@@ -17,7 +17,7 @@
       "executor": "nx:run-commands",
       "options": {
         "cwd": "semio/client/ui/desktop",
-        "command": "bun ./test/test.script.ts",
+        "command": "bun ./script.ts test",
         "forwardAllArgs": true
       }
     },

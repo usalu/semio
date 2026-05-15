@@ -5,15 +5,15 @@
     "dev": {
       "executor": "nx:run-commands",
       "options": {
-        "cwd": "semio/site/docs",
-        "command": "bun ./dev.script.ts --port 4321",
+        "cwd": "semio/client/lib/sketchpad/docs",
+        "command": "bun ./script.ts dev --port 4321",
         "forwardAllArgs": true
       }
     },
     "build": {
       "executor": "nx:run-commands",
       "options": {
-        "cwd": "semio/site/docs",
+        "cwd": "semio/client/lib/sketchpad/docs",
         "command": "vite build",
         "forwardAllArgs": true
       }
@@ -21,7 +21,7 @@
     "publish": {
       "executor": "nx:run-commands",
       "options": {
-        "cwd": "semio/site/docs",
+        "cwd": "semio/client/lib/sketchpad/docs",
         "commands": ["vite build", "bun publish"],
         "parallel": false,
         "forwardAllArgs": true

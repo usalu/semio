@@ -25,7 +25,7 @@
       "executor": "nx:run-commands",
       "options": {
         "cwd": "semio/client/bin/engine",
-        "command": "bun ./build.script.ts",
+        "command": "bun ./script.ts build",
         "forwardAllArgs": true
       }
     },
@@ -33,7 +33,7 @@
       "executor": "nx:run-commands",
       "options": {
         "cwd": "semio/client/bin/engine",
-        "command": "bun ./test.script.ts",
+        "command": "bun ./script.ts test",
         "forwardAllArgs": true
       }
     }

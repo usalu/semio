@@ -1,3 +1,7 @@
+#!/usr/bin/env bun
+/**
+ * 🧭 Logo workspace router: `bun ./script.ts generate` — builds `logo_generated.svg` from keyframe SVGs.
+ */
 // #region 🧲Header
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
@@ -335,8 +339,8 @@ function createAnimatedSVG(keyframes: KeyframeData[], outputPath: string): void 
 //#region 🚀Entrypoint
 // Entrypoint MUST scan the local logo keyframe files and regenerate the checked-in animated logo asset.
 
-function main(): void {
-  const logoDir = path.dirname(__filename);
+function runLogoGenerate(): void {
+  const logoDir = import.meta.dir;
   const keyframes: KeyframeData[] = [];
 
   for (let index = 1; index <= 6; index += 1) {
@@ -356,11 +360,14 @@ function main(): void {
   createAnimatedSVG(keyframes, path.join(logoDir, "logo_generated.svg"));
 }
 
-if (require.main === module) {
-  main();
-}
-
 export { createAnimatedSVG, generateKeyframeSequence, parseSVGFile };
+
+const segs = process.argv.slice(2);
+if (segs[0] !== "generate") {
+  console.error("usage: bun ./script.ts generate");
+  process.exit(1);
+}
+runLogoGenerate();
 
 //#endregion 🚀Entrypoint
 

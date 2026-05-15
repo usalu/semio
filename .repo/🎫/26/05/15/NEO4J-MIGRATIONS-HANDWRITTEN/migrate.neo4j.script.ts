@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 /**
- * 🧩 Runs ticket migrations.cypher via cypher-shell; copies batch to .repo/cache for Windows -f paths. NEO4J_DATABASE defaults to semio; not used by generate.script.ts.
+ * 🧩 Runs ticket migrations.cypher via cypher-shell; copies batch to .repo/cache for Windows -f paths. NEO4J_DATABASE defaults to semio; live schema export is `bun ./script.ts generate`, not this ticket.
  */
 import { existsSync, mkdirSync, readFileSync, unlinkSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
@@ -17,12 +17,12 @@ const MIGRATIONS_CYPHER = join(TICKET_DIR, "migrations.cypher");
 
 //#region 🧭ResolveRepoRoot
 /**
- * 📁 Finds workspace root (directory containing generate.neo4j.script.ts) for Neo4j tool cache paths.
+ * 📁 Finds workspace root (directory containing root `script.ts`) for Neo4j tool cache paths.
  */
 function resolveRepoRoot(start: string): string {
   let dir = start;
   for (let i = 0; i < 24; i++) {
-    if (existsSync(join(dir, "generate.neo4j.script.ts"))) {
+    if (existsSync(join(dir, "script.ts"))) {
       return dir;
     }
     const parent = dirname(dir);
@@ -31,7 +31,7 @@ function resolveRepoRoot(start: string): string {
     }
     dir = parent;
   }
-  throw new Error("[migrate:neo4j] could not locate repo root (generate.neo4j.script.ts missing in parents).");
+  throw new Error("[migrate:neo4j] could not locate repo root (script.ts missing in parents).");
 }
 //#endregion 🧭ResolveRepoRoot
 

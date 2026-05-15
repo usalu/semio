@@ -6,7 +6,7 @@
       "executor": "nx:run-commands",
       "options": {
         "cwd": "semio/assets/logo",
-        "command": "bun --watch ./generate.script.ts",
+        "command": "bun --watch ./script.ts generate",
         "forwardAllArgs": true
       }
     },
@@ -14,7 +14,7 @@
       "executor": "nx:run-commands",
       "options": {
         "cwd": "semio/assets/logo",
-        "command": "bun ./generate.script.ts",
+        "command": "bun ./script.ts generate",
         "forwardAllArgs": true
       }
     }

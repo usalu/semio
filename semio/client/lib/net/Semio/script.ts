@@ -10,12 +10,18 @@
 // #endregion 🧲Header
 
 // #region 🐹Build
-// .NET build script. MUST compile the Semio C# project via dotnet build (cross-platform).
-
 import { spawnSync } from "node:child_process";
 
+const cwd = import.meta.dir;
+const segs = process.argv.slice(2);
+
+if (segs[0] !== "build") {
+  console.error("usage: bun ./script.ts build");
+  process.exit(1);
+}
+
 const buildResult = spawnSync("dotnet", ["build", "Semio.csproj", "-c", "Debug"], {
-  cwd: __dirname,
+  cwd,
   stdio: "inherit",
 });
 

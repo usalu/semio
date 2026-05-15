@@ -6,7 +6,7 @@
       "executor": "nx:run-commands",
       "options": {
         "cwd": "elements/client/lib/board",
-        "command": "bun ./dev.script.ts",
+        "command": "bun ./script.ts dev",
         "env": {
           "BOARD_PLAY_PORT": "6012"
         },

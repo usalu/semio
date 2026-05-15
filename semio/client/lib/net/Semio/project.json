@@ -6,7 +6,7 @@
       "executor": "nx:run-commands",
       "options": {
         "cwd": "semio/client/lib/net/Semio",
-        "command": "bun ./build.script.ts",
+        "command": "bun ./script.ts build",
         "forwardAllArgs": true
       }
     },

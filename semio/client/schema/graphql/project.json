@@ -7,8 +7,8 @@
       "dependsOn": ["@semio/rs:build"],
       "cache": false,
       "options": {
-        "cwd": "semio/schema/graphql",
-        "command": "bun ./build.script.ts"
+        "cwd": "semio/client/schema/graphql",
+        "command": "bun ./script.ts build"
       }
     }
   }
