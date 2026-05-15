@@ -1,6 +1,6 @@
 ---
-name: semio
-description: Interacts with `./semio` technology.
+name: coda
+description: Interacts with `./coda` technology.
 argument-hint: The task to perform.
 tools:
  [
@@ -36,4 +36,4 @@ tools:
  ]
 ---
 
-You are a senior developer specialized in working with the `./semio` technology within the monorepo.
+You are a senior developer specialized in working with the `./coda` technology within the monorepo.

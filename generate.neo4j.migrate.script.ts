@@ -78,7 +78,7 @@ function runCypherFile(filePath: string): { ok: boolean; stderr: string } {
 }
 //#endregion 📝CypherShell
 
-//#region 🚀MigrateFieldToKitMembers
+//#region 🚀Neo4jMigrations
 const MIGRATION = `
 //#region 🏷️RelabelFieldNodes
 MATCH (f:Field {kind: 'EMBEDDED'})
@@ -114,13 +114,64 @@ CREATE RANGE INDEX index_reference_name IF NOT EXISTS FOR (n:Reference) ON (n.na
 DROP INDEX semio_name_fulltext IF EXISTS;
 CREATE FULLTEXT INDEX semio_name_fulltext IF NOT EXISTS FOR (n:Class|Constraint|Data|Computation|Reference|Interface|Module|Scalar|Enum) ON EACH [n.name];
 //#endregion 🔍ReplaceFieldIndexes
+
+//#region 📦EntityInterfaceSubmoduleMirror
+// Mirror the YAML entity family under Module Entity: each interface tier gets a sibling-unique child Module, then Module HAS Interface.
+MATCH (entityMod:Module {name: 'Entity'})
+MERGE (entityMod)-[:HAS]->(wmod:Module {name: 'WeakEntity'})
+MERGE (entityMod)-[:HAS]->(smod:Module {name: 'StrongEntity'})
+MERGE (smod)-[:HAS]->(rmod:Module {name: 'RichStrongEntity'})
+MERGE (rmod)-[:HAS]->(amod:Module {name: 'Artifact'})
+MERGE (amod)-[:HAS]->(dmod:Module {name: 'Document'})
+MERGE (wmod)-[:HAS]->(dataMod:Module {name: 'Data'})
+MERGE (wmod)-[:HAS]->(eventMod:Module {name: 'Event'});
+
+MATCH (entityMod:Module {name: 'Entity'})-[r:HAS]->(i:Interface)
+WHERE i.name IN ['WeakEntity', 'StrongEntity', 'RichStrongEntity', 'Artifact', 'Document', 'Data', 'Event']
+DELETE r;
+
+MATCH (e:Module {name: 'Entity'})-[:HAS]->(wmod:Module {name: 'WeakEntity'})
+MATCH (i:Interface {name: 'WeakEntity'})
+MERGE (wmod)-[:HAS]->(i);
+
+MATCH (e:Module {name: 'Entity'})-[:HAS]->(smod:Module {name: 'StrongEntity'})
+MATCH (i:Interface {name: 'StrongEntity'})
+MERGE (smod)-[:HAS]->(i);
+
+MATCH (s:Module {name: 'StrongEntity'})-[:HAS]->(rmod:Module {name: 'RichStrongEntity'})
+MATCH (i:Interface {name: 'RichStrongEntity'})
+MERGE (rmod)-[:HAS]->(i);
+
+MATCH (r:Module {name: 'RichStrongEntity'})-[:HAS]->(amod:Module {name: 'Artifact'})
+MATCH (i:Interface {name: 'Artifact'})
+MERGE (amod)-[:HAS]->(i);
+
+MATCH (a:Module {name: 'Artifact'})-[:HAS]->(dmod:Module {name: 'Document'})
+MATCH (i:Interface {name: 'Document'})
+MERGE (dmod)-[:HAS]->(i);
+
+MATCH (w:Module {name: 'WeakEntity'})-[:HAS]->(dataMod:Module {name: 'Data'})
+MATCH (i:Interface {name: 'Data'})
+MERGE (dataMod)-[:HAS]->(i);
+
+MATCH (w:Module {name: 'WeakEntity'})-[:HAS]->(eventMod:Module {name: 'Event'})
+MATCH (i:Interface {name: 'Event'})
+MERGE (eventMod)-[:HAS]->(i);
+//#endregion 📦EntityInterfaceSubmoduleMirror
+
+//#region 🧹RemoveEmptyKitSchemaStub
+MATCH (m:Module {name: 'ScopedCommand'})
+DETACH DELETE m;
+MATCH (m:Module {name: 'KitSchema'})
+DETACH DELETE m;
+//#endregion 🧹RemoveEmptyKitSchemaStub
 `.trim();
-//#endregion 🚀MigrateFieldToKitMembers
+//#endregion 🚀Neo4jMigrations
 
 function main(): void {
   const cacheDir = join(REPO_ROOT, ".repo", "cache");
   mkdirSync(cacheDir, { recursive: true });
-  const path = join(cacheDir, `neo4j-migrate-field-kit-${process.pid}.cypher`);
+  const path = join(cacheDir, `neo4j-migrate-all-${process.pid}.cypher`);
   writeFileSync(path, `${MIGRATION}\n`, "utf8");
 
   const { ok, stderr } = runCypherFile(path);
@@ -175,7 +226,7 @@ function main(): void {
     process.exit(1);
   }
 
-  console.log("[generate.neo4j.migrate] Field→Data|Computation|Reference migration + indexes ok.");
+  console.log("[generate.neo4j.migrate] Neo4j migrations ok (Field kit split + entity submodule mirror + indexes).");
 }
 
 main();

@@ -36,4 +36,4 @@ tools:
  ]
 ---
 
-You are a senior developer specialized in working with the `./semio` technology within the monorepo.
+You are a development agent specialized in working with the semio monorepo that ALWAYS follows `AGENTS.md`.
