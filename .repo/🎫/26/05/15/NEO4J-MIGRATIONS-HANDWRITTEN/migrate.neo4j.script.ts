@@ -6,6 +6,8 @@ import { existsSync, mkdirSync, readFileSync, unlinkSync, writeFileSync } from "
 import { dirname, join } from "node:path";
 import { spawnSync } from "node:child_process";
 
+import { runKitFieldDeclaredIsRepair } from "./kit-field-declared-is.script.ts";
+
 //#region 🧭Constants
 const TICKET_DIR = import.meta.dir;
 const NEO4J_VERSION = "5.26.26";
@@ -123,6 +125,14 @@ function main(): void {
 
   if (!ok) {
     console.error(`[migrate:neo4j] migration failed:\n${stderr}`);
+    process.exit(1);
+  }
+
+  try {
+    runKitFieldDeclaredIsRepair({ repoRoot: REPO_ROOT, database: DATABASE, cacheDir });
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    console.error(`[migrate:neo4j] kit-field IS repair failed: ${msg}`);
     process.exit(1);
   }
 
@@ -425,6 +435,51 @@ function main(): void {
   }
   if (!Number.isFinite(savedConstraintCount) || savedConstraintCount < 1) {
     console.error(`[migrate:neo4j] expected savedAt-derived Constraint under Change.saved; verify output:\n${probeChangeSaved.stdout}`);
+    process.exit(1);
+  }
+
+  const probeMinimalProps = spawnSync(
+    shell,
+    [
+      "-a",
+      process.env.NEO4J_URI || "bolt://localhost:7687",
+      "-u",
+      process.env.NEO4J_USERNAME || "neo4j",
+      "-p",
+      process.env.NEO4J_PASSWORD || "password",
+      "-d",
+      DATABASE,
+      "--format",
+      "plain",
+      "OPTIONAL MATCH (n:Data) " +
+        "WITH coalesce(sum(CASE WHEN n IS NULL THEN 0 WHEN size(keys(n)) <> 3 OR any(k IN keys(n) WHERE NOT k IN ['name','rank','isList']) THEN 1 ELSE 0 END), 0) AS badData " +
+        "OPTIONAL MATCH (n:Reference) " +
+        "WITH badData, coalesce(sum(CASE WHEN n IS NULL THEN 0 WHEN size(keys(n)) <> 3 OR any(k IN keys(n) WHERE NOT k IN ['name','rank','isList']) THEN 1 ELSE 0 END), 0) AS badRef " +
+        "OPTIONAL MATCH (n:Computation) " +
+        "WITH badData, badRef, coalesce(sum(CASE WHEN n IS NULL THEN 0 WHEN size(keys(n)) <> 4 OR any(k IN keys(n) WHERE NOT k IN ['name','rank','isList','cached']) THEN 1 ELSE 0 END), 0) AS badComp " +
+        "OPTIONAL MATCH (n:Class|Interface|Scalar|Module) " +
+        "WITH badData, badRef, badComp, coalesce(sum(CASE WHEN n IS NULL THEN 0 WHEN size(keys(n)) <> 1 OR NOT 'name' IN keys(n) THEN 1 ELSE 0 END), 0) AS badNamed " +
+        "OPTIONAL MATCH (n:Constraint) " +
+        "WITH badData, badRef, badComp, badNamed, coalesce(sum(CASE WHEN n IS NULL THEN 0 WHEN size(keys(n)) <> 1 OR NOT 'description' IN keys(n) THEN 1 ELSE 0 END), 0) AS badCon " +
+        "RETURN badData + badRef + badComp + badNamed + badCon AS violations;",
+    ],
+    { encoding: "utf8", cwd: REPO_ROOT, env: buildCypherEnv() },
+  );
+
+  if (probeMinimalProps.status !== 0) {
+    console.error(`[migrate:neo4j] minimal-property verify failed: ${probeMinimalProps.stderr}`);
+    process.exit(1);
+  }
+
+  const mpTail = String(probeMinimalProps.stdout ?? "")
+    .trim()
+    .split(/\r?\n/)
+    .map((l) => l.trim())
+    .filter(Boolean);
+  const mpLast = mpTail[mpTail.length - 1] ?? "";
+  const violations = Number.parseInt(mpLast.trim(), 10);
+  if (!Number.isFinite(violations) || violations !== 0) {
+    console.error(`[migrate:neo4j] expected zero property-shape violations; verify output:\n${probeMinimalProps.stdout}`);
     process.exit(1);
   }
 

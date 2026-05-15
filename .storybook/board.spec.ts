@@ -7,6 +7,16 @@
 
 import { expect, test, type Locator, type Page } from "@playwright/test";
 
+type BoardCanvasDebugElement = HTMLCanvasElement & {
+	__boardRenderer?: {
+		resolveHit?: (point: { x: number; y: number }) => { id: string } | null;
+		scene: {
+			getObjectById: (id: string) => { position?: { x: number; y: number }; x?: number; y?: number } | undefined;
+		};
+		worldToScreen: (point: { x: number; y: number }) => { x: number; y: number };
+	};
+};
+
 function significantConsoleErrors(messages: string[]): string[] {
 	return messages.filter((text) => !/Failed to load resource:.*\b404\b/i.test(text));
 }
@@ -14,53 +24,70 @@ function significantConsoleErrors(messages: string[]): string[] {
 async function clickCanvasNormalized(page: Page, canvas: Locator, nx: number, ny: number): Promise<void> {
 	const box = await canvas.boundingBox();
 	expect(box).toBeTruthy();
-	const clientX = box!.x + nx * box!.width;
-	const clientY = box!.y + ny * box!.height;
-	await page.evaluate(
-		({ nextClientX, nextClientY }) => {
-			const element = document.querySelector('[data-testid="board-canvas"]');
-			if (!(element instanceof HTMLCanvasElement)) {
-				throw new Error('Board canvas not found.');
-			}
-			const move = new PointerEvent('pointermove', {
-				bubbles: true,
-				button: 0,
-				buttons: 0,
-				cancelable: true,
-				clientX: nextClientX,
-				clientY: nextClientY,
-				composed: true,
-				pointerId: 1,
-				pointerType: 'mouse',
-			});
-			const down = new PointerEvent('pointerdown', {
-				bubbles: true,
-				button: 0,
-				buttons: 1,
-				cancelable: true,
-				clientX: nextClientX,
-				clientY: nextClientY,
-				composed: true,
-				pointerId: 1,
-				pointerType: 'mouse',
-			});
-			const up = new PointerEvent('pointerup', {
-				bubbles: true,
-				button: 0,
-				buttons: 0,
-				cancelable: true,
-				clientX: nextClientX,
-				clientY: nextClientY,
-				composed: true,
-				pointerId: 1,
-				pointerType: 'mouse',
-			});
-			element.dispatchEvent(move);
-			element.dispatchEvent(down);
-			element.dispatchEvent(up);
+	await canvas.click({
+		force: true,
+		position: {
+			x: nx * box!.width,
+			y: ny * box!.height,
 		},
-		{ nextClientX: clientX, nextClientY: clientY },
-	);
+	});
+}
+
+async function boardObjectClientPoint(page: Page, objectId: string): Promise<{ clientX: number; clientY: number }> {
+	const point = await page.evaluate((nextObjectId) => {
+		const element = document.querySelector('[data-testid="board-canvas"]');
+		if (!(element instanceof HTMLCanvasElement)) {
+			return null;
+		}
+		const boardElement = element as BoardCanvasDebugElement;
+		const renderer = boardElement.__boardRenderer;
+		const object = renderer?.scene.getObjectById(nextObjectId);
+		if (!renderer || !object) {
+			return null;
+		}
+		const worldPoint = object.position ?? (typeof object.x === "number" && typeof object.y === "number" ? { x: object.x, y: object.y } : null);
+		if (!worldPoint) {
+			return null;
+		}
+		const screenPoint = renderer.worldToScreen(worldPoint);
+		const rect = boardElement.getBoundingClientRect();
+		return {
+			clientX: rect.left + screenPoint.x,
+			clientY: rect.top + screenPoint.y,
+		};
+	}, objectId);
+	expect(point).toBeTruthy();
+	return point!;
+}
+
+async function expectBoardObjectHit(page: Page, objectId: string): Promise<void> {
+	await expect
+		.poll(async () =>
+			page.evaluate((nextObjectId) => {
+				const element = document.querySelector('[data-testid="board-canvas"]');
+				if (!(element instanceof HTMLCanvasElement)) {
+					return null;
+				}
+				const boardElement = element as BoardCanvasDebugElement;
+				const renderer = boardElement.__boardRenderer;
+				const object = renderer?.scene.getObjectById(nextObjectId);
+				if (!renderer || !object || !renderer.resolveHit) {
+					return null;
+				}
+				const worldPoint = object.position ?? (typeof object.x === "number" && typeof object.y === "number" ? { x: object.x, y: object.y } : null);
+				if (!worldPoint) {
+					return null;
+				}
+				return renderer.resolveHit(worldPoint)?.id ?? null;
+			}, objectId),
+		)
+		.toBe(objectId);
+}
+
+async function clickBoardObject(page: Page, objectId: string): Promise<void> {
+	await expectBoardObjectHit(page, objectId);
+	const point = await boardObjectClientPoint(page, objectId);
+	await page.mouse.click(point.clientX, point.clientY);
 }
 
 async function wheelOnCanvasNormalized(page: Page, canvas: Locator, nx: number, ny: number, deltaY: number): Promise<void> {
@@ -111,7 +138,7 @@ test("board default: selection, zoom in to fine LOD, clear selection", async ({ 
 	const initialZoom = Number(await canvas.getAttribute("data-board-zoom"));
 	expect(initialZoom).toBeCloseTo(1, 1);
 
-	await clickCanvasNormalized(page, canvas, 0.5, 0.5);
+	await clickBoardObject(page, "alpha");
 	await expect(canvas).toHaveAttribute("data-board-selection", "alpha");
 
 	for (let index = 0; index < 18; index += 1) {
@@ -186,12 +213,9 @@ test("board world-clip: raster mode, node selection, handle hit", async ({ page 
 	const canvas = await expectBoardStory(page, "elements-board--world-tile-clip");
 	await expect(canvas).toHaveAttribute("data-board-raster", "world-clip");
 
-	await clickCanvasNormalized(page, canvas, 0.5, 0.5);
+	await clickBoardObject(page, "alpha");
 	await expect(canvas).toHaveAttribute("data-board-selection", "alpha");
 
-	const box = await canvas.boundingBox();
-	expect(box).toBeTruthy();
-	const nx = 0.5 + 44 / box!.width;
-	await clickCanvasNormalized(page, canvas, nx, 0.5);
+	await clickBoardObject(page, "alpha.out");
 	await expect(canvas).toHaveAttribute("data-board-selection", "alpha.out");
 });

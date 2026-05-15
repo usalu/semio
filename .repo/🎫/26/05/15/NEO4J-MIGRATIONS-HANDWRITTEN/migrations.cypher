@@ -25,16 +25,6 @@ SET f:Reference
 REMOVE f:Field, f.kind;
 //#endregion RelabelFieldNodes
 
-//#region MaterializeTransitiveIsForKitMembers
-MATCH (n:Data|Computation|Reference)-[:IS]->(i:Interface)
-MATCH (i)-[:IS*1..25]->(b:Interface)
-WHERE n <> b
-MERGE (n)-[:IS]->(b);
-MATCH (n:Data|Computation|Reference)-[:IS]->(c:Class)
-MATCH (c)-[:IS*1..25]->(b:Interface)
-MERGE (n)-[:IS]->(b);
-//#endregion MaterializeTransitiveIsForKitMembers
-
 //#region ReclassifyChangeSavedKitMemberAsComputation
 MATCH (:Class {name: 'Change'})-[:OWNS]->(d:Data {name: 'saved'})
 SET d:Computation, d.cached = false
@@ -213,3 +203,23 @@ DETACH DELETE e;
 MATCH (fk:Module {name: 'FieldKind'})
 DETACH DELETE fk;
 //#endregion RemoveFieldKindMetaModule
+
+//#region StripLegacySemioGraphNodeProperties
+// Persist only graph-native kit metadata: `rank` is sibling order (string); `isList` flags list-shaped members; `cached` only on Computation.
+MATCH (n:Data)
+SET n = { name: n.name, rank: coalesce(n.rank, ''), isList: coalesce(n.isList, false) };
+MATCH (n:Reference)
+SET n = { name: n.name, rank: coalesce(n.rank, ''), isList: coalesce(n.isList, false) };
+MATCH (n:Computation)
+SET n = { name: n.name, rank: coalesce(n.rank, ''), isList: coalesce(n.isList, false), cached: coalesce(n.cached, false) };
+MATCH (n:Class|Interface|Scalar|Module)
+SET n = { name: n.name };
+MATCH (n:Constraint)
+WITH n,
+  CASE
+    WHEN coalesce(n.description, '') <> '' THEN n.description
+    WHEN coalesce(toString(n.name), '') <> '' THEN toString(n.name)
+    ELSE 'constraint'
+  END AS d
+SET n = { description: d };
+//#endregion StripLegacySemioGraphNodeProperties

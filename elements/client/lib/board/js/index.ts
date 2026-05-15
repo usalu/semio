@@ -75,6 +75,7 @@ export interface EdgeOptions extends BoardObjectOptions {
 }
 
 type FrameListener = (state: FrameState, dt: number) => void;
+type BoardCanvasElement = HTMLCanvasElement & { __boardRenderer?: BoardRenderer };
 type BoardCanvasContext = Pick<
 	CanvasRenderingContext2D,
 	| "arc"
@@ -719,6 +720,7 @@ export class BoardRenderer {
 		this.attachCanvasListeners();
 		BoardRenderer.activeRenderer = this;
 		if (this.canvas) {
+			(this.canvas as BoardCanvasElement).__boardRenderer = this;
 			const initialWidth = this.canvas.clientWidth || this.canvas.width || 1;
 			const initialHeight = this.canvas.clientHeight || this.canvas.height || 1;
 			this.setSize(initialWidth, initialHeight, globalThis.devicePixelRatio || 1);
@@ -783,10 +785,13 @@ export class BoardRenderer {
 		this.height = Math.max(1, Math.round(height));
 		this.dpr = Math.max(1, dpr);
 		if (this.canvas) {
-			this.canvas.width = Math.round(this.width * this.dpr);
-			this.canvas.height = Math.round(this.height * this.dpr);
-			this.canvas.style.width = `${this.width}px`;
-			this.canvas.style.height = `${this.height}px`;
+			const nextW = Math.round(this.width * this.dpr);
+			const nextH = Math.round(this.height * this.dpr);
+			if (this.canvas.width !== nextW || this.canvas.height !== nextH) {
+				this.canvas.width = nextW;
+				this.canvas.height = nextH;
+				this.context = resolveContext(this.canvas, null);
+			}
 		}
 		this.markDirty();
 	}
@@ -915,6 +920,9 @@ export class BoardRenderer {
 		this.scene.clear();
 		if (BoardRenderer.activeRenderer === this) {
 			BoardRenderer.activeRenderer = null;
+		}
+		if (this.canvas) {
+			delete (this.canvas as BoardCanvasElement).__boardRenderer;
 		}
 	}
 

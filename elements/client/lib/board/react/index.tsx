@@ -354,7 +354,7 @@ export function BoardCanvas({
 		syncBoardScene(renderer, descriptor);
 	}, [descriptor]);
 
-	useEffect(() => {
+	useLayoutEffect(() => {
 		const renderer = rendererRef.current;
 		const container = containerRef.current;
 		if (!renderer || !container) {

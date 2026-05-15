@@ -2,7 +2,7 @@
 // #region 🧲Header
 // 💻 .storybook/main.ts
 // Specs: Aggregate the existing package-local Storybook trees into one root monorepo Storybook.
-// Summary: Configures the workspace Storybook with shared aliases, MDX support, and module-worker-safe Vite behavior.
+// Summary: Configures the workspace Storybook with shared aliases, MDX support, Vite `resolve.conditions` so `node_modules` `exports` resolve (`import` before `storybook`), and module-worker-safe Vite behavior.
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 // #endregion 🧲Header
 
@@ -57,6 +57,17 @@ const config: StorybookConfig = {
 	},
 	async viteFinal(config, { configType }) {
 		config.resolve = config.resolve || {};
+		// #region 🔖ResolvePackageExports
+		/** SB 10’s resolver prefers `storybook`/`stories` export conditions; most deps only declare `import`/`require`, so `"."` fails. Put standard bundler conditions first. */
+		const previousConditions = config.resolve.conditions ?? [];
+		config.resolve.conditions = [
+			"import",
+			"module",
+			"browser",
+			"default",
+			...previousConditions.filter((c) => !["import", "module", "browser", "default"].includes(c)),
+		];
+		// #endregion 🔖ResolvePackageExports
 		config.resolve.alias = {
 			...(config.resolve.alias || {}),
 			"@elements/ui": toVitePath(elementsUiDir),

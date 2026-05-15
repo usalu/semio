@@ -372,6 +372,14 @@ This MUST NOT happen.
 
 Add a checkbox element which is an action that can be checked and unchecked.
 
+### 🏁board
+
+---
+
+Create a test asset (no semio depency) which is just a board json and add a story to board and an end-to-end test in playwright. .storybook/fixtures/nakagin-capsule-tower.board.json . Map the center pieces and connections from the flat nakagin capsule tower semio/assets/fixtures/metabolism.kit.semio.json . The board coordinate system is in screen coordinates and the semio is cad coordinate system (x to the right, y to front, z up)
+
+---
+
 ## 🔬coda
 
 coda:
@@ -2118,7 +2126,7 @@ Abstract the Kit Store completly. Create a new semio bundle called studio that h
 Create two more store: File store that synchronizes a kit to a json file and Folder store that synchronizes a kit to a folder with a .semio folder with sqlite database (same as python engine).
 Create a semio vscode bundle that is sketchpad and opens when a json kit file is opened and edits the file.
 
-###
+### ⭕diagram
 
 ### 🖥️desktop
 
