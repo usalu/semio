@@ -231,12 +231,12 @@ function main(): void {
     .filter(Boolean);
   const entLast = entTail[entTail.length - 1] ?? "";
   const entityModCount = Number.parseInt(entLast.trim(), 10);
-  if (!Number.isFinite(entityModCount) || entityModCount !== 0) {
-    console.error(`[migrate:neo4j] expected zero :Module Entity after migration; verify output:\n${probeEntityMod.stdout}`);
+  if (!Number.isFinite(entityModCount) || entityModCount !== 1) {
+    console.error(`[migrate:neo4j] expected exactly one :Module Entity after migration; verify output:\n${probeEntityMod.stdout}`);
     process.exit(1);
   }
 
-  const probeDomainChildren = spawnSync(
+  const probeEntityLadder = spawnSync(
     shell,
     [
       "-a",
@@ -249,25 +249,60 @@ function main(): void {
       DATABASE,
       "--format",
       "plain",
-      "MATCH (d:Module {name:'Domain'})-[:OWNS]->(x) RETURN count(x) AS domainOwnsCount;",
+      "MATCH (:Module {name:'Entity'})-[:OWNS]->(w:Module {name:'WeakEntity'}) RETURN count(w) AS weakUnderEntity;",
     ],
     { encoding: "utf8", cwd: REPO_ROOT, env: buildCypherEnv() },
   );
 
-  if (probeDomainChildren.status !== 0) {
-    console.error(`[migrate:neo4j] Domain OWNS verify failed: ${probeDomainChildren.stderr}`);
+  if (probeEntityLadder.status !== 0) {
+    console.error(`[migrate:neo4j] Entity ladder verify failed: ${probeEntityLadder.stderr}`);
     process.exit(1);
   }
 
-  const dcTail = String(probeDomainChildren.stdout ?? "")
+  const elTail = String(probeEntityLadder.stdout ?? "")
     .trim()
     .split(/\r?\n/)
     .map((l) => l.trim())
     .filter(Boolean);
-  const dcLast = dcTail[dcTail.length - 1] ?? "";
-  const domainOwnsCount = Number.parseInt(dcLast.trim(), 10);
-  if (!Number.isFinite(domainOwnsCount) || domainOwnsCount !== 0) {
-    console.error(`[migrate:neo4j] expected Domain to have zero OWNS children after migration; verify output:\n${probeDomainChildren.stdout}`);
+  const elLast = elTail[elTail.length - 1] ?? "";
+  const weakUnderEntity = Number.parseInt(elLast.trim(), 10);
+  if (!Number.isFinite(weakUnderEntity) || weakUnderEntity < 1) {
+    console.error(`[migrate:neo4j] expected Entity to OWNS WeakEntity; verify output:\n${probeEntityLadder.stdout}`);
+    process.exit(1);
+  }
+
+  const probeDomainKit = spawnSync(
+    shell,
+    [
+      "-a",
+      process.env.NEO4J_URI || "bolt://localhost:7687",
+      "-u",
+      process.env.NEO4J_USERNAME || "neo4j",
+      "-p",
+      process.env.NEO4J_PASSWORD || "password",
+      "-d",
+      DATABASE,
+      "--format",
+      "plain",
+      "MATCH (:Module {name:'Domain'})-[:OWNS]->(k:Module {name:'Kit'}) RETURN count(k) AS domainOwnsKit;",
+    ],
+    { encoding: "utf8", cwd: REPO_ROOT, env: buildCypherEnv() },
+  );
+
+  if (probeDomainKit.status !== 0) {
+    console.error(`[migrate:neo4j] Domain Kit verify failed: ${probeDomainKit.stderr}`);
+    process.exit(1);
+  }
+
+  const dkTail = String(probeDomainKit.stdout ?? "")
+    .trim()
+    .split(/\r?\n/)
+    .map((l) => l.trim())
+    .filter(Boolean);
+  const dkLast = dkTail[dkTail.length - 1] ?? "";
+  const domainOwnsKit = Number.parseInt(dkLast.trim(), 10);
+  if (!Number.isFinite(domainOwnsKit) || domainOwnsKit < 1) {
+    console.error(`[migrate:neo4j] expected Domain to OWNS Kit; verify output:\n${probeDomainKit.stdout}`);
     process.exit(1);
   }
 
