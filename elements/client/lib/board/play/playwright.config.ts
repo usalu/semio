@@ -44,7 +44,7 @@ export default defineConfig({
 		},
 	],
 	webServer: {
-		command: "bun ./script.ts dev",
+		command: `bun ./rs/scripts/build-wasm.script.ts && bunx vite --config play/vite.config.ts --host 127.0.0.1 --port ${playPort}`,
 		cwd: boardRoot,
 		env: { ...process.env, BOARD_PLAY_PORT: playPort },
 		url: `${baseURL}/`,

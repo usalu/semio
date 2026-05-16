@@ -1461,6 +1461,8 @@ export class BoardRenderer {
 	private batchDepth = 0;
 	/** @emoji 🔁 Nesting depth for {@link BoardRenderer.render}; defers {@link BoardRenderer.invalidate} so ResizeObserver / layout cannot re-enter WASM during `renderFrame` (`borrow_fail`). */
 	private renderPipelineDepth = 0;
+	/** @emoji ⛓️ Tracks async WASM session borrows such as {@link BoardSession.attach_canvas} so sync probes like `gpuReady()` do not re-enter the same `RefCell`. */
+	private wasmSessionBorrowDepth = 0;
 	/** @emoji 🧷 Tracks `pushSceneToWasmDriver` + {@link BoardSession.renderFrame} where `device.poll` may synchronously re-enter JS while WASM still borrows `BoardSession`. */
 	private wasmGpuFrameDepth = 0;
 	/** @emoji 💾 Last `gpuReady` snapshot; used while {@link BoardRenderer.wasmGpuFrameDepth} is non-zero to avoid `RefCell` conflicts with in-flight `renderFrame`. */
@@ -1865,7 +1867,13 @@ export class BoardRenderer {
 			this.canvas.width = cw;
 			this.canvas.height = ch;
 		}
-		await this.session.attach_canvas(this.canvas, lw, lh, dpr);
+		this.wasmSessionBorrowDepth += 1;
+		this.cachedWasmGpuReady = false;
+		try {
+			await this.session.attach_canvas(this.canvas, lw, lh, dpr);
+		} finally {
+			this.wasmSessionBorrowDepth = Math.max(0, this.wasmSessionBorrowDepth - 1);
+		}
 		const o = this.selectionOptions;
 		this.session.setSelectionOptions(o.method, o.mode, o.target);
 		this.session.setWorldRasterTiling(this.worldRasterTiling);
@@ -2171,7 +2179,7 @@ export class BoardRenderer {
 
 	/** @emoji 🛡️ Reads GPU-surface attach state without calling WASM while `renderFrame` may still borrow the session across `device.poll` re-entry. */
 	private readGpuReady(): boolean {
-		if (this.wasmGpuFrameDepth > 0) {
+		if (this.wasmGpuFrameDepth > 0 || this.wasmSessionBorrowDepth > 0) {
 			return this.cachedWasmGpuReady;
 		}
 		this.syncGpuReadyCacheFromSession();
@@ -2182,6 +2190,9 @@ export class BoardRenderer {
 	private syncGpuReadyCacheFromSession(): void {
 		if (this.isDisposed) {
 			this.cachedWasmGpuReady = false;
+			return;
+		}
+		if (this.wasmSessionBorrowDepth > 0 || this.wasmGpuFrameDepth > 0) {
 			return;
 		}
 		try {

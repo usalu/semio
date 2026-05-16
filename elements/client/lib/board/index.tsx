@@ -753,6 +753,7 @@ export function BoardCanvas({
 			const nextWidth = width ?? container.clientWidth ?? 1;
 			const nextHeight = height ?? container.clientHeight ?? 1;
 			renderer.setSize(nextWidth, nextHeight, globalThis.devicePixelRatio || 1);
+			renderer.render();
 		};
 
 		applySize();

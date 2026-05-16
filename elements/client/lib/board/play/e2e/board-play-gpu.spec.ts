@@ -14,9 +14,7 @@ test.describe("board play", () => {
 		await expect(page.getByText("Fixture shelf", { exact: false })).toBeVisible({ timeout: 120_000 });
 		const canvas = page.locator('[data-testid="board-canvas"]').first();
 		await expect(canvas).toBeVisible({ timeout: 120_000 });
-		const box = await canvas.boundingBox();
-		expect(box).toBeTruthy();
-		await page.mouse.click(box!.x + box!.width / 2, box!.y + box!.height / 2, { button: "right" });
+			await canvas.click({ button: "right", position: { x: 24, y: 24 } });
 		await expect(page.getByRole("menuitem", { name: "Board background menu" })).toBeVisible({ timeout: 30_000 });
 	});
 

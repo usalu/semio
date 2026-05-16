@@ -49,7 +49,7 @@ import {
 	type ReactNode,
 } from "react";
 import { createPortal } from "react-dom";
-import { createRoot } from "react-dom/client";
+import { createRoot, type Root } from "react-dom/client";
 
 import nakaginFixtureJson from "../../../../../.storybook/fixtures/nakagin-capsule-tower.board.json";
 import {
@@ -1703,10 +1703,13 @@ function BoardPlayApp(): ReactElement {
 	);
 }
 
-const mount = document.getElementById("root");
+type BoardPlayDomRoot = HTMLElement & { __boardPlayReactRoot?: Root };
+
+const mount = document.getElementById("root") as BoardPlayDomRoot | null;
 if (!mount) {
 	throw new Error("Board play root #root missing.");
 }
 
-createRoot(mount).render(<BoardPlayApp />);
+mount.__boardPlayReactRoot ??= createRoot(mount);
+mount.__boardPlayReactRoot.render(<BoardPlayApp />);
 // #endregion 🔖Entrypoint
