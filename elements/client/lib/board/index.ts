@@ -143,6 +143,7 @@ export interface BoardFixtureV1 {
 
 export interface BoardEventMap {
 	camera: CameraState;
+	contextmenu: { clientX: number; clientY: number; id: string | null; x: number; y: number };
 	edgeCreate: { id: string; from: string; to: string };
 	edgeDelete: { id: string };
 	fixtureDrop: BoardFixtureV1;
@@ -1540,6 +1541,7 @@ export class BoardRenderer {
 		}
 		this.canvas.tabIndex = 0;
 		this.canvas.style.touchAction = "none";
+		this.canvas.addEventListener("contextmenu", this.handleContextMenu as EventListener);
 		this.canvas.addEventListener("pointerdown", this.handlePointerDown as EventListener);
 		this.canvas.addEventListener("pointermove", this.handlePointerMove as EventListener);
 		this.canvas.addEventListener("pointerup", this.handlePointerUp as EventListener);
@@ -1552,6 +1554,7 @@ export class BoardRenderer {
 		if (!this.canvas) {
 			return;
 		}
+		this.canvas.removeEventListener("contextmenu", this.handleContextMenu as EventListener);
 		this.canvas.removeEventListener("pointerdown", this.handlePointerDown as EventListener);
 		this.canvas.removeEventListener("pointermove", this.handlePointerMove as EventListener);
 		this.canvas.removeEventListener("pointerup", this.handlePointerUp as EventListener);
@@ -1637,6 +1640,22 @@ export class BoardRenderer {
 		this.canvas.dataset.boardSelection = sortedSelectionIds(this.selectionIds).join(",");
 		this.canvas.setAttribute("data-board-camera", `${this.camera.x},${this.camera.y}`);
 	}
+
+	private readonly handleContextMenu = (event: MouseEvent): void => {
+		if (!this.canvas) {
+			return;
+		}
+		event.preventDefault();
+		BoardRenderer.activeRenderer = this;
+		const rect = this.canvas.getBoundingClientRect();
+		const sx = event.clientX - rect.left;
+		const sy = event.clientY - rect.top;
+		this.session.pointerMoveScreen(sx, sy);
+		this.applyWasmDrainToScene(this.session.drainEventsJson());
+		const world = this.screenToWorld({ x: sx, y: sy });
+		this.emit("contextmenu", { clientX: event.clientX, clientY: event.clientY, id: this.hoveredId, x: world.x, y: world.y });
+		this.invalidate();
+	};
 
 	private readonly handlePointerDown = (event: PointerEvent): void => {
 		if (!this.canvas) {

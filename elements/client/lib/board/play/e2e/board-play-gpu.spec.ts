@@ -9,6 +9,17 @@ test.describe("board play", () => {
 		await page.setViewportSize({ width: 1600, height: 900 });
 	});
 
+	test("opens board background context menu on overview canvas", async ({ page }) => {
+		await page.goto("/", { waitUntil: "load", timeout: 180_000 });
+		await expect(page.getByText("Fixture shelf", { exact: false })).toBeVisible({ timeout: 120_000 });
+		const canvas = page.locator('[data-testid="board-canvas"]').first();
+		await expect(canvas).toBeVisible({ timeout: 120_000 });
+		const box = await canvas.boundingBox();
+		expect(box).toBeTruthy();
+		await page.mouse.click(box!.x + box!.width / 2, box!.y + box!.height / 2, { button: "right" });
+		await expect(page.getByRole("menuitem", { name: "Board background menu" })).toBeVisible({ timeout: 30_000 });
+	});
+
 	test("each board canvas reaches GPU ready state", async ({ page }, testInfo) => {
 		await page.goto("/", { waitUntil: "load", timeout: 180_000 });
 		const adapterOk = await page.evaluate(async () => {

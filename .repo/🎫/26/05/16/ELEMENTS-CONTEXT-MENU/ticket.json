@@ -1,0 +1,12 @@
+{
+  "title": "Elements Context Menu Mechanism",
+  "emoji": "🖱️",
+  "status": "open",
+  "description": "Unified prop-based contextMenu across @elements/ui, board Node/Edge/Handle, and UIWindowKindDefinition. Radix @radix-ui/react-context-menu, BoardEventMap.contextmenu with hit-test, ContextMenuController on BoardCanvas, vitest and Playwright coverage.",
+  "summary": "",
+  "github": {
+    "issue": ""
+  },
+  "goal": "🎯r2602🎯runningsketchpad🎯runningsketchpadapps",
+  "sessions": []
+}

@@ -5,6 +5,7 @@
 // #region 📥Imports
 import {
 	Button,
+	Expertise,
 	Input,
 	Label,
 	Select,
@@ -18,7 +19,12 @@ import {
 	LevelProvider,
 	createWindowLayout,
 	getLevelBgClass,
+	useElementsSurfaceChrome,
+	type ElementsSurfaceDevice,
+	type ElementsSurfaceTheme,
+	type FooterItem,
 	type TreeDataSection,
+	type ContextMenuItem,
 	type UIAppConfig,
 	type UIWindowKindDefinition,
 	type UIWindowLayout,
@@ -48,6 +54,7 @@ import {
 	encodeBoardFixtureForDragV1,
 	parseBoardFixtureV1,
 	type BoardFixtureEdgeV1,
+	type BoardFixtureHandleV1,
 	type BoardFixtureNodeV1,
 	type BoardFixtureRectangleNodeV1,
 	type BoardFixtureV1,
@@ -61,6 +68,60 @@ import "./globals.css";
 export type BoardPlayPaneId = "board-overview" | "board-detail" | "board-selection";
 
 const BOARD_PLAY_APP_ID = "elements-board-play";
+
+const boardPlayOverviewWindowContextMenu: ContextMenuItem[] = [{ id: "win-demo", label: "Overview window menu demo" }];
+const boardPlayDemoNodeContextMenu: ContextMenuItem[] = [
+	{ id: "demo-node", label: "Demo capsule action" },
+	{ children: [{ id: "demo-sub-1", label: "Nested item" }], id: "demo-sub", label: "Demo nested" },
+];
+const boardPlayDemoEdgeContextMenu: ContextMenuItem[] = [{ id: "demo-edge", label: "Demo edge action" }];
+const boardPlayCanvasBackgroundMenu: ContextMenuItem[] = [{ id: "demo-bg", label: "Board background menu" }];
+
+const LS_THEME = "elements.board-play.surface.theme";
+const LS_DEVICE = "elements.board-play.surface.device";
+const LS_EXPERTISE = "elements.board-play.surface.expertise";
+
+function parseStoredTheme(raw: string | null): ElementsSurfaceTheme {
+	if (raw === "light" || raw === "dark" || raw === "system") return raw;
+	return "system";
+}
+
+function parseStoredDevice(raw: string | null): ElementsSurfaceDevice {
+	if (raw === "desktop" || raw === "tablet" || raw === "mobile") return raw;
+	return "desktop";
+}
+
+function parseStoredExpertise(raw: string | null): Expertise {
+	if (raw === Expertise.BEGINNER || raw === Expertise.NORMAL || raw === Expertise.EXPERT) return raw;
+	return Expertise.NORMAL;
+}
+
+function readTheme(): ElementsSurfaceTheme {
+	if (typeof localStorage === "undefined") return "system";
+	try {
+		return parseStoredTheme(localStorage.getItem(LS_THEME));
+	} catch {
+		return "system";
+	}
+}
+
+function readDevice(): ElementsSurfaceDevice {
+	if (typeof localStorage === "undefined") return "desktop";
+	try {
+		return parseStoredDevice(localStorage.getItem(LS_DEVICE));
+	} catch {
+		return "desktop";
+	}
+}
+
+function readExpertise(): Expertise {
+	if (typeof localStorage === "undefined") return Expertise.NORMAL;
+	try {
+		return parseStoredExpertise(localStorage.getItem(LS_EXPERTISE));
+	} catch {
+		return Expertise.NORMAL;
+	}
+}
 // #endregion 🔖Kinds
 
 // #region 🔖Geometry
@@ -144,10 +205,12 @@ function selectionSeedForFixture(fixture: BoardFixtureV1): Record<BoardPlayPaneI
 interface BoardPlayShellValue {
 	fixture: BoardFixtureV1;
 	setFixture: (next: BoardFixtureV1) => void;
+	patchFixture: (updater: (prev: BoardFixtureV1) => BoardFixtureV1) => void;
 	activePaneId: BoardPlayPaneId;
 	setActivePaneId: (id: BoardPlayPaneId) => void;
 	selectionByPane: Record<BoardPlayPaneId, Set<string>>;
 	setSelectionForPane: (pane: BoardPlayPaneId, ids: readonly string[]) => void;
+	remapIdInSelections: (from: string, to: string) => void;
 	camerasByPane: Record<BoardPlayPaneId, CameraState>;
 	/** @emoji 🗑️ Drops ids from the shared fixture after the canvas emits structural delete events. */
 	applyStructuralDelete: (kind: "edge" | "node", id: string) => void;
@@ -167,11 +230,14 @@ function useBoardPlayShell(): BoardPlayShellValue {
 // #region 🔖Scene
 /** @emoji 🗼 Marker tree for {@link BoardCanvas} — must stay a Fragment of {@link Node}/{@link Edge} so {@link buildBoardSceneDescriptor} sees markers (custom wrappers are opaque to the static walk). */
 function nakaginBoardMarkers(fixture: BoardFixtureV1, selectedIds: Set<string>): ReactElement {
+	const demoNodeId = fixture.nodes[0]?.id;
+	const demoEdgeId = fixture.edges[0]?.id;
 	return (
 		<>
 			{fixture.nodes.map((node) =>
 				node.shape === "rectangle" ? (
 					<Node
+						contextMenu={node.id === demoNodeId ? boardPlayDemoNodeContextMenu : undefined}
 						draggable
 						height={node.height}
 						id={node.id}
@@ -195,7 +261,18 @@ function nakaginBoardMarkers(fixture: BoardFixtureV1, selectedIds: Set<string>):
 						))}
 					</Node>
 				) : (
-					<Node draggable id={node.id} key={node.id} radius={node.radius} selected={selectedIds.has(node.id)} text={node.text} textAutofit={node.textAutofit === true} x={node.x} y={node.y}>
+					<Node
+						contextMenu={node.id === demoNodeId ? boardPlayDemoNodeContextMenu : undefined}
+						draggable
+						id={node.id}
+						key={node.id}
+						radius={node.radius}
+						selected={selectedIds.has(node.id)}
+						text={node.text}
+						textAutofit={node.textAutofit === true}
+						x={node.x}
+						y={node.y}
+					>
 						{node.handles.map((handle) => (
 							<Handle
 								angle={handle.angle}
@@ -209,7 +286,14 @@ function nakaginBoardMarkers(fixture: BoardFixtureV1, selectedIds: Set<string>):
 				),
 			)}
 			{fixture.edges.map((edge) => (
-				<Edge from={edge.from} id={edge.id} key={edge.id} selected={selectedIds.has(edge.id)} to={edge.to} />
+				<Edge
+					contextMenu={edge.id === demoEdgeId ? boardPlayDemoEdgeContextMenu : undefined}
+					from={edge.from}
+					id={edge.id}
+					key={edge.id}
+					selected={selectedIds.has(edge.id)}
+					to={edge.to}
+				/>
 			))}
 		</>
 	);
@@ -271,7 +355,7 @@ function BoardOverviewPane(): ReactElement {
 	const selectedIds = selectionByPane[paneId];
 	return (
 		<BoardPaneChrome paneId={paneId}>
-			<BoardCanvas camera={camera} className="min-h-0 flex-1" fixtureDragDrop onFixtureDrop={setFixture}>
+			<BoardCanvas camera={camera} className="min-h-0 flex-1" contextMenu={boardPlayCanvasBackgroundMenu} fixtureDragDrop onFixtureDrop={setFixture}>
 				<BoardSelectionReporter paneId={paneId} />
 				<BoardStructuralDeleteReporter />
 				{nakaginBoardMarkers(fixture, selectedIds)}
@@ -420,7 +504,7 @@ function normalizeAngleRad(t: number): number {
 }
 
 /** @emoji ⭕ Draggable ring control for handle polar angle `t` (radians, east-zero CCW in board space). */
-function AngleTRing({ value, onChange }: { onChange: (next: number) => void; value: number }): ReactElement {
+function AngleTRing({ angleUniform, onChange, value }: { angleUniform: boolean; onChange: (next: number) => void; value: number }): ReactElement {
 	const ref = useRef<HTMLDivElement | null>(null);
 	const dragging = useRef(false);
 
@@ -480,11 +564,11 @@ function AngleTRing({ value, onChange }: { onChange: (next: number) => void; val
 	return (
 		<div className="flex flex-col items-center gap-1">
 			<div
-				className="border-element bg-muted/20 touch-none select-none rounded-full border"
+				className={`border-element bg-muted/20 touch-none select-none rounded-full border ${angleUniform ? "" : "pointer-events-none opacity-40"}`}
 				onPointerCancel={onPointerUp}
-				onPointerDown={onPointerDown}
-				onPointerMove={onPointerMove}
-				onPointerUp={onPointerUp}
+				onPointerDown={angleUniform ? onPointerDown : undefined}
+				onPointerMove={angleUniform ? onPointerMove : undefined}
+				onPointerUp={angleUniform ? onPointerUp : undefined}
 				ref={ref}
 				style={{ height: size, width: size }}
 			>
@@ -495,7 +579,7 @@ function AngleTRing({ value, onChange }: { onChange: (next: number) => void; val
 					<circle cx={knobX} cy={knobY} fill="var(--foreground)" r={5} stroke="var(--background)" strokeWidth={2} />
 				</svg>
 			</div>
-			<div className="text-muted-foreground font-mono text-[10px]">t = {value.toFixed(4)} rad</div>
+			<div className="text-muted-foreground font-mono text-[10px]">{angleUniform ? `t = ${value.toFixed(4)} rad` : "Mixed t"}</div>
 		</div>
 	);
 }
@@ -503,20 +587,24 @@ function AngleTRing({ value, onChange }: { onChange: (next: number) => void; val
 function NumericStepperRow({
 	id,
 	label,
-	onChange,
+	onAbsolute,
+	onDelta,
 	step,
+	uniform,
 	value,
 }: {
 	id: string;
 	label: string;
-	onChange: (next: number) => void;
+	onAbsolute: (next: number) => void;
+	onDelta: (delta: number) => void;
 	step: number;
+	uniform: boolean;
 	value: number;
 }): ReactElement {
 	return (
 		<Label id={id} label={label}>
 			<div className="flex min-w-0 items-center gap-1">
-				<Button className="h-7 shrink-0 px-2" onClick={() => onChange(value - step)} type="button" variant="outline">
+				<Button className="h-7 shrink-0 px-2" onClick={() => onDelta(-step)} type="button" variant="outline">
 					−
 				</Button>
 				<Input
@@ -524,12 +612,13 @@ function NumericStepperRow({
 					onChange={(e: ChangeEvent<HTMLInputElement>) => {
 						const parsed = Number(e.target.value);
 						if (Number.isFinite(parsed)) {
-							onChange(parsed);
+							onAbsolute(parsed);
 						}
 					}}
-					value={Number.isFinite(value) ? String(value) : ""}
+					placeholder={uniform ? undefined : "Mixed"}
+					value={uniform && Number.isFinite(value) ? String(value) : ""}
 				/>
-				<Button className="h-7 shrink-0 px-2" onClick={() => onChange(value + step)} type="button" variant="outline">
+				<Button className="h-7 shrink-0 px-2" onClick={() => onDelta(step)} type="button" variant="outline">
 					+
 				</Button>
 			</div>
@@ -541,11 +630,13 @@ function NumericStepperRow({
 function InspectorNodeBatch({
 	fixture,
 	nodeIds,
-	setFixture,
+	patchFixture,
+	remapIdInSelections,
 }: {
 	fixture: BoardFixtureV1;
 	nodeIds: readonly string[];
-	setFixture: (next: BoardFixtureV1 | ((prev: BoardFixtureV1) => BoardFixtureV1)) => void;
+	patchFixture: (updater: (prev: BoardFixtureV1) => BoardFixtureV1) => void;
+	remapIdInSelections: (from: string, to: string) => void;
 }): ReactElement {
 	const idSet = useMemo(() => new Set(nodeIds), [nodeIds]);
 	const targets = useMemo(
@@ -559,7 +650,7 @@ function InspectorNodeBatch({
 
 	const shapes = targets.map((n) => (nodeIsRectangle(n) ? "rectangle" : "circle"));
 	const shapeUniform = allEqual(shapes);
-	const shapeValue = shapeUniform ? shapes[0] : "__mixed__";
+	const shapeValue = shapeUniform ? shapes[0] : undefined;
 
 	const xs = targets.map((n) => n.x);
 	const ys = targets.map((n) => n.y);
@@ -580,12 +671,12 @@ function InspectorNodeBatch({
 
 	const patchNodes = useCallback(
 		(updater: (n: BoardFixtureNodeV1) => BoardFixtureNodeV1) => {
-			setFixture((prev) => ({
+			patchFixture((prev) => ({
 				...prev,
 				nodes: prev.nodes.map((n) => (idSet.has(n.id) ? updater(n) : n)),
 			}));
 		},
-		[idSet, setFixture],
+		[idSet, patchFixture],
 	);
 
 	const onText = useCallback(
@@ -612,6 +703,27 @@ function InspectorNodeBatch({
 
 	return (
 		<div className="border-element/60 space-y-3 border-l pl-2">
+			{nodeIds.length === 1 ? (
+				<Label id="board-play.inspector.node.id" label="Id">
+					<Input
+						className="h-7 font-mono text-xs"
+						defaultValue={nodeIds[0]}
+						key={nodeIds[0]}
+						onBlur={(e) => {
+							const nextId = e.currentTarget.value.trim();
+							const oldId = nodeIds[0];
+							if (!oldId || !nextId || nextId === oldId) {
+								return;
+							}
+							patchFixture((prev) => ({
+								...prev,
+								nodes: prev.nodes.map((n) => (n.id === oldId ? { ...n, id: nextId } : n)),
+							}));
+							remapIdInSelections(oldId, nextId);
+						}}
+					/>
+				</Label>
+			) : null}
 			<Label id="board-play.inspector.node.name" label="Name">
 				<Input
 					className="h-7 font-mono text-xs"
@@ -622,15 +734,16 @@ function InspectorNodeBatch({
 			</Label>
 			<Label id="board-play.inspector.node.shape" label="Shape">
 				<Select
+					key={shapeUniform && shapeValue ? `shape-${shapeValue}` : "shape-mixed"}
 					onValueChange={(v) => {
 						if (v === "circle" || v === "rectangle") {
 							onShape(v);
 						}
 					}}
-					value={shapeValue === "__mixed__" ? undefined : shapeValue}
+					value={shapeUniform && shapeValue ? shapeValue : undefined}
 				>
 					<SelectTrigger className="h-7 font-mono text-xs">
-						<SelectValue placeholder={shapeUniform ? undefined : "Mixed"} />
+						<SelectValue placeholder={shapeUniform ? "shape" : "Mixed"} />
 					</SelectTrigger>
 					<SelectContent>
 						<SelectItem value="circle">circle</SelectItem>
@@ -638,15 +751,55 @@ function InspectorNodeBatch({
 					</SelectContent>
 				</Select>
 			</Label>
-			<NumericStepperRow id="board-play.inspector.node.x" label="x" onChange={(v) => patchNodes((n) => ({ ...n, x: v }))} step={1} value={xValue} />
-			<NumericStepperRow id="board-play.inspector.node.y" label="y" onChange={(v) => patchNodes((n) => ({ ...n, y: v }))} step={1} value={yValue} />
+			<NumericStepperRow
+				id="board-play.inspector.node.x"
+				label="x"
+				onAbsolute={(v) => patchNodes((n) => ({ ...n, x: v }))}
+				onDelta={(d) => patchNodes((n) => ({ ...n, x: n.x + d }))}
+				step={1}
+				uniform={xUniform}
+				value={xValue}
+			/>
+			<NumericStepperRow
+				id="board-play.inspector.node.y"
+				label="y"
+				onAbsolute={(v) => patchNodes((n) => ({ ...n, y: v }))}
+				onDelta={(d) => patchNodes((n) => ({ ...n, y: n.y + d }))}
+				step={1}
+				uniform={yUniform}
+				value={yValue}
+			/>
 			{targets.some((n) => !nodeIsRectangle(n)) ? (
-				<NumericStepperRow id="board-play.inspector.node.r" label="radius" onChange={(v) => patchNodes((n) => (nodeIsRectangle(n) ? n : { ...n, radius: Math.max(1e-6, v) }))} step={1} value={rValue} />
+				<NumericStepperRow
+					id="board-play.inspector.node.r"
+					label="radius"
+					onAbsolute={(v) => patchNodes((n) => (nodeIsRectangle(n) ? n : { ...n, radius: Math.max(1e-6, v) }))}
+					onDelta={(d) => patchNodes((n) => (nodeIsRectangle(n) ? n : { ...n, radius: Math.max(1e-6, n.radius + d) }))}
+					step={1}
+					uniform={rUniform}
+					value={rValue}
+				/>
 			) : null}
 			{targets.some(nodeIsRectangle) ? (
 				<>
-					<NumericStepperRow id="board-play.inspector.node.w" label="width" onChange={(v) => patchNodes((n) => (nodeIsRectangle(n) ? { ...n, width: Math.max(1e-6, v) } : n))} step={1} value={wValue} />
-					<NumericStepperRow id="board-play.inspector.node.h" label="height" onChange={(v) => patchNodes((n) => (nodeIsRectangle(n) ? { ...n, height: Math.max(1e-6, v) } : n))} step={1} value={hValue} />
+					<NumericStepperRow
+						id="board-play.inspector.node.w"
+						label="width"
+						onAbsolute={(v) => patchNodes((n) => (nodeIsRectangle(n) ? { ...n, width: Math.max(1e-6, v) } : n))}
+						onDelta={(d) => patchNodes((n) => (nodeIsRectangle(n) ? { ...n, width: Math.max(1e-6, n.width + d) } : n))}
+						step={1}
+						uniform={wUniform}
+						value={wValue}
+					/>
+					<NumericStepperRow
+						id="board-play.inspector.node.h"
+						label="height"
+						onAbsolute={(v) => patchNodes((n) => (nodeIsRectangle(n) ? { ...n, height: Math.max(1e-6, v) } : n))}
+						onDelta={(d) => patchNodes((n) => (nodeIsRectangle(n) ? { ...n, height: Math.max(1e-6, n.height + d) } : n))}
+						step={1}
+						uniform={hUniform}
+						value={hValue}
+					/>
 				</>
 			) : null}
 		</div>
@@ -657,11 +810,13 @@ function InspectorNodeBatch({
 function InspectorHandleBatch({
 	fixture,
 	handleIds,
-	setFixture,
+	patchFixture,
+	remapIdInSelections,
 }: {
 	fixture: BoardFixtureV1;
 	handleIds: readonly string[];
-	setFixture: (next: BoardFixtureV1 | ((prev: BoardFixtureV1) => BoardFixtureV1)) => void;
+	patchFixture: (updater: (prev: BoardFixtureV1) => BoardFixtureV1) => void;
+	remapIdInSelections: (from: string, to: string) => void;
 }): ReactElement {
 	const idSet = useMemo(() => new Set(handleIds), [handleIds]);
 	const handles = useMemo(
@@ -670,14 +825,14 @@ function InspectorHandleBatch({
 	);
 	const angles = handles.map((h) => h.angle);
 	const angleUniform = allEqual(angles);
-	const angleValue = angleUniform ? angles[0] : 0;
+	const angleValue = angleUniform ? angles[0]! : 0;
 	const radii = handles.map((h) => h.radius ?? 8);
 	const radiusUniform = allEqual(radii);
-	const radiusValue = radiusUniform ? radii[0] : Number.NaN;
+	const radiusValue = radiusUniform ? radii[0]! : Number.NaN;
 
 	const patchHandles = useCallback(
 		(updater: (h: BoardFixtureHandleV1) => BoardFixtureHandleV1) => {
-			setFixture((prev) => ({
+			patchFixture((prev) => ({
 				...prev,
 				nodes: prev.nodes.map((node) => ({
 					...node,
@@ -685,13 +840,14 @@ function InspectorHandleBatch({
 				})),
 			}));
 		},
-		[idSet, setFixture],
+		[idSet, patchFixture],
 	);
 
 	return (
 		<div className="border-element/60 space-y-3 border-l pl-2">
 			<div className="flex flex-wrap items-start gap-4">
 				<AngleTRing
+					angleUniform={angleUniform}
 					onChange={(t) => {
 						patchHandles((h) => ({ ...h, angle: t }));
 					}}
@@ -701,28 +857,34 @@ function InspectorHandleBatch({
 					<NumericStepperRow
 						id="board-play.inspector.handle.t"
 						label="t (rad)"
-						onChange={(v) => patchHandles((h) => ({ ...h, angle: normalizeAngleRad(v) }))}
+						onAbsolute={(v) => patchHandles((h) => ({ ...h, angle: normalizeAngleRad(v) }))}
+						onDelta={(d) => patchHandles((h) => ({ ...h, angle: normalizeAngleRad(h.angle + d) }))}
 						step={0.05}
+						uniform={angleUniform}
 						value={angleUniform ? angleValue : Number.NaN}
 					/>
 					<NumericStepperRow
 						id="board-play.inspector.handle.radius"
 						label="Hit radius"
-						onChange={(v) => patchHandles((h) => ({ ...h, radius: Math.max(1e-6, v) }))}
+						onAbsolute={(v) => patchHandles((h) => ({ ...h, radius: Math.max(1e-6, v) }))}
+						onDelta={(d) => patchHandles((h) => ({ ...h, radius: Math.max(1e-6, (h.radius ?? 8) + d) }))}
 						step={1}
+						uniform={radiusUniform}
 						value={radiusValue}
 					/>
 					{handleIds.length === 1 ? (
 						<Label id="board-play.inspector.handle.id" label="Id">
 							<Input
 								className="h-7 font-mono text-xs"
-								onChange={(e: ChangeEvent<HTMLInputElement>) => {
-									const nextId = e.target.value;
+								defaultValue={handleIds[0]}
+								key={handleIds[0]}
+								onBlur={(e) => {
+									const nextId = e.currentTarget.value.trim();
 									const oldId = handleIds[0];
-									if (!oldId || nextId === oldId) {
+									if (!oldId || !nextId || nextId === oldId) {
 										return;
 									}
-									setFixture((prev) => ({
+									patchFixture((prev) => ({
 										...prev,
 										edges: prev.edges.map((edge) => ({
 											...edge,
@@ -734,8 +896,8 @@ function InspectorHandleBatch({
 											handles: node.handles.map((h) => (h.id === oldId ? { ...h, id: nextId } : h)),
 										})),
 									}));
+									remapIdInSelections(oldId, nextId);
 								}}
-								value={handleIds[0]}
 							/>
 						</Label>
 					) : null}
@@ -749,11 +911,13 @@ function InspectorHandleBatch({
 function InspectorEdgeBatch({
 	fixture,
 	edgeIds,
-	setFixture,
+	patchFixture,
+	remapIdInSelections,
 }: {
 	fixture: BoardFixtureV1;
 	edgeIds: readonly string[];
-	setFixture: (next: BoardFixtureV1 | ((prev: BoardFixtureV1) => BoardFixtureV1)) => void;
+	patchFixture: (updater: (prev: BoardFixtureV1) => BoardFixtureV1) => void;
+	remapIdInSelections: (from: string, to: string) => void;
 }): ReactElement {
 	const idSet = useMemo(() => new Set(edgeIds), [edgeIds]);
 	const edges = useMemo(
@@ -768,12 +932,12 @@ function InspectorEdgeBatch({
 
 	const patchEdges = useCallback(
 		(updater: (e: BoardFixtureEdgeV1) => BoardFixtureEdgeV1) => {
-			setFixture((prev) => ({
+			patchFixture((prev) => ({
 				...prev,
 				edges: prev.edges.map((e) => (idSet.has(e.id) ? updater(e) : e)),
 			}));
 		},
-		[idSet, setFixture],
+		[idSet, patchFixture],
 	);
 
 	return (
@@ -820,18 +984,20 @@ function InspectorEdgeBatch({
 				<Label id="board-play.inspector.edge.id" label="Id">
 					<Input
 						className="h-7 font-mono text-xs"
-						onChange={(e: ChangeEvent<HTMLInputElement>) => {
-							const nextId = e.target.value;
+						defaultValue={edgeIds[0]}
+						key={edgeIds[0]}
+						onBlur={(e) => {
+							const nextId = e.currentTarget.value.trim();
 							const oldId = edgeIds[0];
-							if (!oldId || nextId === oldId) {
+							if (!oldId || !nextId || nextId === oldId) {
 								return;
 							}
-							setFixture((prev) => ({
+							patchFixture((prev) => ({
 								...prev,
 								edges: prev.edges.map((edge) => (edge.id === oldId ? { ...edge, id: nextId } : edge)),
 							}));
+							remapIdInSelections(oldId, nextId);
 						}}
-						value={edgeIds[0]}
 					/>
 				</Label>
 			) : null}
@@ -841,7 +1007,7 @@ function InspectorEdgeBatch({
 
 /** @emoji 🔎 Sketchpad-style tree inspector with batch edits for the active pane selection. */
 function BoardSelectionInspectorPanel(): ReactElement {
-	const { activePaneId, fixture, selectionByPane, setFixture } = useBoardPlayShell();
+	const { activePaneId, fixture, patchFixture, remapIdInSelections, selectionByPane } = useBoardPlayShell();
 	const ids = useMemo(() => [...selectionByPane[activePaneId]].sort((a, b) => a.localeCompare(b)), [activePaneId, selectionByPane]);
 
 	const { edgeIds, handleIds, nodeIds } = useMemo(() => {
@@ -873,7 +1039,7 @@ function BoardSelectionInspectorPanel(): ReactElement {
 		const sections: TreeDataSection[] = [];
 		if (nodeIds.length > 0) {
 			sections.push({
-				content: <InspectorNodeBatch fixture={fixture} nodeIds={nodeIds} setFixture={setFixture} />,
+				content: <InspectorNodeBatch fixture={fixture} nodeIds={nodeIds} patchFixture={patchFixture} remapIdInSelections={remapIdInSelections} />,
 				defaultOpen: true,
 				id: "board-play-inspector-nodes",
 				label: `Nodes (${nodeIds.length})`,
@@ -881,7 +1047,7 @@ function BoardSelectionInspectorPanel(): ReactElement {
 		}
 		if (handleIds.length > 0) {
 			sections.push({
-				content: <InspectorHandleBatch fixture={fixture} handleIds={handleIds} setFixture={setFixture} />,
+				content: <InspectorHandleBatch fixture={fixture} handleIds={handleIds} patchFixture={patchFixture} remapIdInSelections={remapIdInSelections} />,
 				defaultOpen: true,
 				id: "board-play-inspector-handles",
 				label: `Handles (${handleIds.length})`,
@@ -889,7 +1055,7 @@ function BoardSelectionInspectorPanel(): ReactElement {
 		}
 		if (edgeIds.length > 0) {
 			sections.push({
-				content: <InspectorEdgeBatch edgeIds={edgeIds} fixture={fixture} setFixture={setFixture} />,
+				content: <InspectorEdgeBatch edgeIds={edgeIds} fixture={fixture} patchFixture={patchFixture} remapIdInSelections={remapIdInSelections} />,
 				defaultOpen: true,
 				id: "board-play-inspector-edges",
 				label: `Edges (${edgeIds.length})`,
@@ -907,7 +1073,7 @@ function BoardSelectionInspectorPanel(): ReactElement {
 			});
 		}
 		return sections;
-	}, [edgeIds, fixture, handleIds, ids, ids.length, nodeIds, setFixture]);
+	}, [edgeIds, fixture, handleIds, ids, nodeIds, patchFixture, remapIdInSelections]);
 
 	return (
 		<div className="flex h-full min-h-0 flex-col gap-2 p-3 text-xs">
@@ -951,29 +1117,61 @@ const boardPlayLayout: UIWindowLayout = {
 };
 
 const boardWindowKinds: UIWindowKindDefinition[] = [
-	{ component: BoardOverviewPane, id: "board-overview", label: "Overview" },
+	{ component: BoardOverviewPane, contextMenu: boardPlayOverviewWindowContextMenu, id: "board-overview", label: "Overview" },
 	{ component: BoardDetailPane, id: "board-detail", label: "Zoom" },
 	{ component: BoardSelectionPane, id: "board-selection", label: "Selection" },
 ];
 // #endregion 🔖Layout
 
-// #region 🔖Theme
-/** @emoji 🌓 Locks document `dark` mode so Golden Layout’s dark theme sheet matches the shell. */
-function useBoardPlayDocumentChrome(): void {
-	useEffect(() => {
-		const root = document.documentElement;
-		const body = document.body;
-		root.classList.add("dark");
-		body.style.backgroundColor = "var(--base)";
-		body.style.color = "var(--foreground)";
-		return () => {
-			root.classList.remove("dark");
-			body.style.backgroundColor = "";
-			body.style.color = "";
-		};
-	}, []);
+// #region 🔖Surface
+function BoardPlaySurfaceFooter(props: {
+	theme: ElementsSurfaceTheme;
+	device: ElementsSurfaceDevice;
+	expertise: Expertise;
+	onTheme: (v: ElementsSurfaceTheme) => void;
+	onDevice: (v: ElementsSurfaceDevice) => void;
+	onExpertise: (v: Expertise) => void;
+}): ReactElement {
+	const { theme, device, expertise, onDevice, onExpertise, onTheme } = props;
+	return (
+		<div className="flex min-w-0 flex-wrap items-center gap-double px-single py-tiny">
+			<span className="shrink-0 text-xs text-muted-foreground">Theme</span>
+			<Select onValueChange={(v) => onTheme(v as ElementsSurfaceTheme)} value={theme}>
+				<SelectTrigger className="h-medium w-[7.5rem]" id="board-play-surface-theme" size="sm">
+					<SelectValue />
+				</SelectTrigger>
+				<SelectContent>
+					<SelectItem value="system">System</SelectItem>
+					<SelectItem value="light">Light</SelectItem>
+					<SelectItem value="dark">Dark</SelectItem>
+				</SelectContent>
+			</Select>
+			<span className="shrink-0 text-xs text-muted-foreground">Device</span>
+			<Select onValueChange={(v) => onDevice(v as ElementsSurfaceDevice)} value={device}>
+				<SelectTrigger className="h-medium w-[7.5rem]" id="board-play-surface-device" size="sm">
+					<SelectValue />
+				</SelectTrigger>
+				<SelectContent>
+					<SelectItem value="desktop">Desktop</SelectItem>
+					<SelectItem value="tablet">Tablet</SelectItem>
+					<SelectItem value="mobile">Mobile</SelectItem>
+				</SelectContent>
+			</Select>
+			<span className="shrink-0 text-xs text-muted-foreground">Expertise</span>
+			<Select onValueChange={(v) => onExpertise(v as Expertise)} value={expertise}>
+				<SelectTrigger className="h-medium w-[7.5rem]" id="board-play-surface-expertise" size="sm">
+					<SelectValue />
+				</SelectTrigger>
+				<SelectContent>
+					<SelectItem value={Expertise.BEGINNER}>Beginner</SelectItem>
+					<SelectItem value={Expertise.NORMAL}>Normal</SelectItem>
+					<SelectItem value={Expertise.EXPERT}>Expert</SelectItem>
+				</SelectContent>
+			</Select>
+		</div>
+	);
 }
-// #endregion 🔖Theme
+// #endregion 🔖Surface
 
 // #region 🔖Entrypoint
 const initialFixture = parseBoardFixtureV1(nakaginFixtureJson as unknown) ?? (nakaginFixtureJson as BoardFixtureV1);
@@ -984,6 +1182,55 @@ function BoardPlayInner(): ReactElement {
 	fixtureRef.current = fixture;
 	const [activePaneId, setActivePaneId] = useState<BoardPlayPaneId>("board-overview");
 	const [selectionByPane, setSelectionByPane] = useState<Record<BoardPlayPaneId, Set<string>>>(() => selectionSeedForFixture(initialFixture));
+	const [theme, setTheme] = useState<ElementsSurfaceTheme>(readTheme);
+	const [device, setDevice] = useState<ElementsSurfaceDevice>(readDevice);
+	const [expertise, setExpertise] = useState<Expertise>(readExpertise);
+
+	const { mobile } = useElementsSurfaceChrome({ theme, device, expertise });
+
+	useEffect(() => {
+		try {
+			localStorage.setItem(LS_THEME, theme);
+		} catch {
+			/* ignore */
+		}
+	}, [theme]);
+
+	useEffect(() => {
+		try {
+			localStorage.setItem(LS_DEVICE, device);
+		} catch {
+			/* ignore */
+		}
+	}, [device]);
+
+	useEffect(() => {
+		try {
+			localStorage.setItem(LS_EXPERTISE, expertise);
+		} catch {
+			/* ignore */
+		}
+	}, [expertise]);
+
+	const surfaceFooterItems = useMemo<FooterItem[]>(
+		() => [
+			{
+				content: (
+					<BoardPlaySurfaceFooter
+						device={device}
+						expertise={expertise}
+						onDevice={setDevice}
+						onExpertise={setExpertise}
+						onTheme={setTheme}
+						theme={theme}
+					/>
+				),
+				id: "board-play-surface",
+				order: 0,
+			},
+		],
+		[device, expertise, theme],
+	);
 
 	const applyStructuralDelete = useCallback((kind: "edge" | "node", id: string) => {
 		const pruneSelections = (removeIds: readonly string[]): void => {
@@ -1029,8 +1276,26 @@ function BoardPlayInner(): ReactElement {
 		setSelectionByPane(selectionSeedForFixture(next));
 	}, []);
 
+	const patchFixture = useCallback((updater: (prev: BoardFixtureV1) => BoardFixtureV1) => {
+		setFixtureState((prev) => updater(prev));
+	}, []);
+
 	const setSelectionForPane = useCallback((pane: BoardPlayPaneId, ids: readonly string[]) => {
 		setSelectionByPane((prev) => ({ ...prev, [pane]: new Set(ids) }));
+	}, []);
+
+	const remapIdInSelections = useCallback((from: string, to: string) => {
+		if (from === to) {
+			return;
+		}
+		const panes: BoardPlayPaneId[] = ["board-overview", "board-detail", "board-selection"];
+		setSelectionByPane((prev) => {
+			const next: Record<BoardPlayPaneId, Set<string>> = { ...prev };
+			for (const p of panes) {
+				next[p] = new Set([...prev[p]].map((id) => (id === from ? to : id)));
+			}
+			return next;
+		});
 	}, []);
 
 	const camerasByPane = useMemo(() => triptychCamerasFromFixture(fixture), [fixture]);
@@ -1041,12 +1306,14 @@ function BoardPlayInner(): ReactElement {
 			applyStructuralDelete,
 			camerasByPane,
 			fixture,
+			patchFixture,
+			remapIdInSelections,
 			setActivePaneId,
 			setFixture,
 			selectionByPane,
 			setSelectionForPane,
 		}),
-		[activePaneId, applyStructuralDelete, camerasByPane, fixture, setFixture, selectionByPane, setSelectionForPane],
+		[activePaneId, applyStructuralDelete, camerasByPane, fixture, patchFixture, remapIdInSelections, setFixture, selectionByPane, setSelectionForPane],
 	);
 
 	const boardPlayApp: UIAppConfig = useMemo(
@@ -1075,14 +1342,15 @@ function BoardPlayInner(): ReactElement {
 			<UI
 				apps={[boardPlayApp]}
 				defaultAppId={BOARD_PLAY_APP_ID}
+				footerItems={surfaceFooterItems}
 				initialPanelVisibility={{ leftSidePanel: true, rightSidePanel: true }}
+				mobile={mobile}
 			/>
 		</BoardPlayShellContext.Provider>
 	);
 }
 
 function BoardPlayApp(): ReactElement {
-	useBoardPlayDocumentChrome();
 	return (
 		<LevelProvider level="window">
 			<div className={`flex h-screen min-h-0 w-screen flex-col ${getLevelBgClass("window")}`}>

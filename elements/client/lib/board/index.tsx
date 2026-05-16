@@ -46,12 +46,14 @@ import {
 	type RenderMode,
 	type WorldRasterTilingKind,
 } from "./index";
+import { ContextMenuController, type ContextMenuItem } from "@elements/ui";
 
 //#region 🔖Kinds
 export interface BoardCanvasProps {
 	camera?: Partial<CameraState>;
 	children?: ReactNode;
 	className?: string;
+	contextMenu?: ContextMenuItem[];
 	/** @emoji 📥 When true, accepts in-app fixture drags using {@link BOARD_FIXTURE_DRAG_V1_MIME} (not OS file drops). */
 	fixtureDragDrop?: boolean;
 	height?: number;
@@ -69,6 +71,7 @@ export interface BoardCanvasProps {
 
 export type BoardNodeCircleProps = {
 	children?: ReactNode;
+	contextMenu?: ContextMenuItem[];
 	draggable?: boolean;
 	id: string;
 	radius: number;
@@ -86,6 +89,7 @@ export type BoardNodeCircleProps = {
 
 export type BoardNodeRectangleProps = {
 	children?: ReactNode;
+	contextMenu?: ContextMenuItem[];
 	draggable?: boolean;
 	height: number;
 	id: string;
@@ -107,6 +111,7 @@ export type BoardNodeProps = BoardNodeCircleProps | BoardNodeRectangleProps;
 
 export interface BoardHandleProps {
 	angle: number;
+	contextMenu?: ContextMenuItem[];
 	id: string;
 	radius?: number;
 	selected?: boolean;
@@ -116,6 +121,7 @@ export interface BoardHandleProps {
 }
 
 export interface BoardEdgeProps {
+	contextMenu?: ContextMenuItem[];
 	from: string;
 	id: string;
 	selected?: boolean;
@@ -395,6 +401,7 @@ export function BoardCanvas({
 	camera,
 	children,
 	className,
+	contextMenu,
 	fixtureDragDrop,
 	height,
 	onFixtureDrop,
@@ -412,6 +419,8 @@ export function BoardCanvas({
 	const containerRef = useRef<HTMLDivElement | null>(null);
 	const [contextRenderer, setContextRenderer] = useState<BoardRenderer | null>(null);
 	const rendererRef = useRef<BoardRenderer | null>(null);
+	const boardTargetMenusRef = useRef(new Map<string, ContextMenuItem[]>());
+	const [surfaceContextMenu, setSurfaceContextMenu] = useState<{ clientX: number; clientY: number; items: ContextMenuItem[] } | null>(null);
 	const [fixtureDragActive, setFixtureDragActive] = useState(false);
 	const fileDragDepthRef = useRef(0);
 	const resolvedFixtureDragDrop = fixtureDragDrop ?? Boolean(onFixtureDrop);
@@ -476,6 +485,44 @@ export function BoardCanvas({
 		},
 		[onFixtureDrop, resolvedFixtureDragDrop],
 	);
+
+	useLayoutEffect(() => {
+		const renderer = rendererRef.current;
+		if (!renderer) {
+			return;
+		}
+		const descriptor = buildBoardSceneDescriptor(children);
+		const next = new Map<string, ContextMenuItem[]>();
+		for (const n of descriptor.nodes) {
+			if (n.contextMenu?.length) {
+				next.set(n.id, n.contextMenu);
+			}
+		}
+		for (const h of descriptor.handles) {
+			if (h.contextMenu?.length) {
+				next.set(h.id, h.contextMenu);
+			}
+		}
+		for (const e of descriptor.edges) {
+			if (e.contextMenu?.length) {
+				next.set(e.id, e.contextMenu);
+			}
+		}
+		boardTargetMenusRef.current = next;
+	}, [children, contextRenderer]);
+
+	useEffect(() => {
+		if (!contextRenderer) {
+			return () => undefined;
+		}
+		return contextRenderer.on("contextmenu", (payload) => {
+			const items = payload.id ? boardTargetMenusRef.current.get(payload.id) ?? [] : contextMenu ?? [];
+			if (!items.length) {
+				return;
+			}
+			setSurfaceContextMenu({ clientX: payload.clientX, clientY: payload.clientY, items });
+		});
+	}, [contextMenu, contextRenderer]);
 
 	useLayoutEffect(() => {
 		if (!canvasRef.current || rendererRef.current) {
@@ -592,6 +639,16 @@ export function BoardCanvas({
 							<BoardHostSubtree children={children} renderer={contextRenderer} />
 						</HostMountProvider>
 					) : null}
+					<ContextMenuController
+						items={surfaceContextMenu?.items ?? []}
+						onOpenChange={(nextOpen) => {
+							if (!nextOpen) {
+								setSurfaceContextMenu(null);
+							}
+						}}
+						open={surfaceContextMenu !== null}
+						position={surfaceContextMenu ? { x: surfaceContextMenu.clientX, y: surfaceContextMenu.clientY } : null}
+					/>
 				</div>
 		</BoardContext.Provider>
 	);
@@ -724,8 +781,70 @@ if (boardReactVitest) {
 			);
 
 			expect(descriptor.nodes).toHaveLength(1);
-			expect(descriptor.handles).toEqual([{ angle: 0, id: "a.out", nodeId: "a", radius: undefined, selected: undefined, style: undefined, userData: undefined, visible: undefined }]);
-			expect(descriptor.edges).toEqual([{ from: "a.out", id: "edge-1", selected: undefined, style: undefined, to: "a.out", userData: undefined, visible: undefined }]);
+			expect(descriptor.handles).toEqual([
+				{ angle: 0, contextMenu: undefined, id: "a.out", nodeId: "a", radius: undefined, selected: undefined, style: undefined, userData: undefined, visible: undefined },
+			]);
+			expect(descriptor.edges).toEqual([
+				{ contextMenu: undefined, from: "a.out", id: "edge-1", selected: undefined, style: undefined, to: "a.out", userData: undefined, visible: undefined },
+			]);
+		});
+
+		it("preserves contextMenu entries on descriptors", () => {
+			const nodeMenu: ContextMenuItem[] = [{ id: "n1", label: "Node" }];
+			const handleMenu: ContextMenuItem[] = [{ id: "h1", label: "Handle" }];
+			const edgeMenu: ContextMenuItem[] = [{ id: "e1", label: "Edge" }];
+			const descriptor = buildBoardSceneDescriptor(
+				<>
+					<Node contextMenu={nodeMenu} id="a" radius={24} x={0} y={0}>
+						<Handle angle={0} contextMenu={handleMenu} id="a.out" />
+					</Node>
+					<Edge contextMenu={edgeMenu} from="a.out" id="edge-1" to="a.out" />
+				</>,
+			);
+			expect(descriptor.nodes[0]?.contextMenu).toEqual(nodeMenu);
+			expect(descriptor.handles[0]?.contextMenu).toEqual(handleMenu);
+			expect(descriptor.edges[0]?.contextMenu).toEqual(edgeMenu);
+		});
+
+		it("emits contextmenu with hovered id after wasm hit pass", () => {
+			const { canvas } = createMockCanvas();
+			const renderer = new BoardRenderer({ canvas, renderMode: "headless-test" });
+			syncBoardScene(
+				renderer,
+				buildBoardSceneDescriptor(
+					<Node id="hit" radius={50} x={0} y={0}>
+						<Handle angle={0} id="hit.out" />
+					</Node>,
+				),
+			);
+			renderer.render();
+			const payloads: Array<{ id: string | null }> = [];
+			renderer.on("contextmenu", (ev) => payloads.push({ id: ev.id }));
+			const at = renderer.worldToScreen({ x: 0, y: 0 });
+			canvas.dispatchEvent(new MouseEvent("contextmenu", { bubbles: true, clientX: at.x, clientY: at.y }));
+			expect(payloads).toHaveLength(1);
+			expect(payloads[0]?.id).toBe("hit");
+			renderer.dispose();
+		});
+
+		it("emits contextmenu with null id when pointer misses scene objects", () => {
+			const { canvas } = createMockCanvas();
+			const renderer = new BoardRenderer({ canvas, renderMode: "headless-test" });
+			syncBoardScene(
+				renderer,
+				buildBoardSceneDescriptor(
+					<Node id="lonely" radius={10} x={0} y={0}>
+						<Handle angle={0} id="lonely.out" />
+					</Node>,
+				),
+			);
+			renderer.render();
+			const ids: Array<string | null> = [];
+			renderer.on("contextmenu", (ev) => ids.push(ev.id));
+			const far = renderer.worldToScreen({ x: 1_000_000, y: 1_000_000 });
+			canvas.dispatchEvent(new MouseEvent("contextmenu", { bubbles: true, clientX: far.x, clientY: far.y }));
+			expect(ids).toEqual([null]);
+			renderer.dispose();
 		});
 
 		it("buildBoardSceneDescriptor ignores opaque components (use secondary host for nested composition)", () => {

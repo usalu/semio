@@ -16,6 +16,7 @@
 import * as AccordionPrimitive from "@radix-ui/react-accordion";
 import * as AvatarPrimitive from "@radix-ui/react-avatar";
 import * as CollapsiblePrimitive from "@radix-ui/react-collapsible";
+import * as ContextMenuPrimitive from "@radix-ui/react-context-menu";
 import * as DialogPrimitive from "@radix-ui/react-dialog";
 import * as DropdownMenuPrimitive from "@radix-ui/react-dropdown-menu";
 import * as HoverCardPrimitive from "@radix-ui/react-hover-card";
@@ -115,6 +116,174 @@ import { twMerge } from "tailwind-merge";
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
+
+// #region 🖱️ContextMenu
+
+const contextMenuContentClassName =
+  "bg-transparent backdrop-blur-sm w-auto min-w-[10rem] overflow-hidden border p-single z-temporary text-foreground";
+const contextMenuItemClassName =
+  "text-foreground hover:bg-hover-temporary focus:bg-hover-temporary relative flex items-center gap-single p-single text-sm outline-none whitespace-nowrap cursor-default select-none data-[disabled]:pointer-events-none data-[disabled]:opacity-50";
+const contextMenuShortcutClassName = "ml-auto text-xs text-muted-foreground pl-tiny";
+
+/**
+ * 🧩 Serializable right-click entry for {@link ContextMenu} and board/window surfaces.
+ **/
+export interface ContextMenuItem {
+  id: string;
+  label?: string;
+  icon?: LucideIcon | string;
+  shortcut?: string;
+  disabled?: boolean;
+  separator?: boolean;
+  checked?: boolean;
+  destructive?: boolean;
+  onSelect?: (event: Event) => void;
+  children?: ContextMenuItem[];
+}
+
+function renderContextMenuIcon(icon: ContextMenuItem["icon"]): React.ReactNode {
+  if (!icon) {
+    return null;
+  }
+  if (typeof icon === "string") {
+    return <span className="text-base shrink-0">{icon}</span>;
+  }
+  const Icon = icon;
+  return <Icon className="size-small shrink-0" />;
+}
+
+/**
+ * 🧩 Recursively renders {@link ContextMenuItem} rows for Radix context menu surfaces.
+ **/
+export function renderContextMenuItems(items: ContextMenuItem[] | undefined): React.ReactNode {
+  if (!items?.length) {
+    return null;
+  }
+  const rows: React.ReactNode[] = [];
+  for (const item of items) {
+    if (item.separator) {
+      rows.push(<ContextMenuPrimitive.Separator key={`${item.id}-sep`} className="h-px bg-border my-single" />);
+      continue;
+    }
+    if (item.children?.length) {
+      rows.push(
+        <ContextMenuPrimitive.Sub key={item.id}>
+          <ContextMenuPrimitive.SubTrigger
+            disabled={item.disabled}
+            className={cn(contextMenuItemClassName, item.destructive && "text-destructive focus:bg-destructive/10")}
+          >
+            {renderContextMenuIcon(item.icon)}
+            <span className="truncate">{item.label ?? item.id}</span>
+            <span className={contextMenuShortcutClassName}>{item.shortcut}</span>
+          </ContextMenuPrimitive.SubTrigger>
+          <ContextMenuPrimitive.Portal>
+            <ContextMenuPrimitive.SubContent className={contextMenuContentClassName}>{renderContextMenuItems(item.children)}</ContextMenuPrimitive.SubContent>
+          </ContextMenuPrimitive.Portal>
+        </ContextMenuPrimitive.Sub>,
+      );
+      continue;
+    }
+    if (item.checked !== undefined) {
+      rows.push(
+        <ContextMenuPrimitive.Item
+          key={item.id}
+          disabled={item.disabled}
+          className={cn(contextMenuItemClassName, item.destructive && "text-destructive focus:bg-destructive/10")}
+          onSelect={(event) => item.onSelect?.(event as unknown as Event)}
+        >
+          <span className="size-small shrink-0 text-center">{item.checked ? "✓" : ""}</span>
+          {renderContextMenuIcon(item.icon)}
+          <span className="truncate">{item.label ?? item.id}</span>
+          {item.shortcut ? <span className={contextMenuShortcutClassName}>{item.shortcut}</span> : null}
+        </ContextMenuPrimitive.Item>,
+      );
+      continue;
+    }
+    rows.push(
+      <ContextMenuPrimitive.Item
+        key={item.id}
+        disabled={item.disabled}
+        className={cn(contextMenuItemClassName, item.destructive && "text-destructive focus:bg-destructive/10")}
+        onSelect={(event) => item.onSelect?.(event as unknown as Event)}
+      >
+        {renderContextMenuIcon(item.icon)}
+        <span className="truncate">{item.label ?? item.id}</span>
+        {item.shortcut ? <span className={contextMenuShortcutClassName}>{item.shortcut}</span> : null}
+      </ContextMenuPrimitive.Item>,
+    );
+  }
+  return <>{rows}</>;
+}
+
+export interface ContextMenuProps {
+  items?: ContextMenuItem[];
+  children: React.ReactNode;
+}
+
+/**
+ * 🧩 Radix context menu wrapper; passes children through when `items` is empty.
+ **/
+export const ContextMenu: React.FC<ContextMenuProps> = ({ items, children }) => {
+  if (!items?.length) {
+    return <>{children}</>;
+  }
+  return (
+    <ContextMenuPrimitive.Root modal={false}>
+      <ContextMenuPrimitive.Trigger asChild>{children}</ContextMenuPrimitive.Trigger>
+      <ContextMenuPrimitive.Portal>
+        <ContextMenuPrimitive.Content className={contextMenuContentClassName}>{renderContextMenuItems(items)}</ContextMenuPrimitive.Content>
+      </ContextMenuPrimitive.Portal>
+    </ContextMenuPrimitive.Root>
+  );
+};
+
+export interface ContextMenuControllerProps {
+  open: boolean;
+  position: { x: number; y: number } | null;
+  items: ContextMenuItem[];
+  onOpenChange: (open: boolean) => void;
+}
+
+/**
+ * 🧩 Controlled context menu anchored at viewport coordinates (board canvas bridge).
+ **/
+export const ContextMenuController: React.FC<ContextMenuControllerProps> = ({ open, position, items, onOpenChange }) => {
+  const body = renderContextMenuItems(items);
+  if (!items.length) {
+    return null;
+  }
+  return (
+    <ContextMenuPrimitive.Root modal={false} onOpenChange={onOpenChange} open={open}>
+      <ContextMenuPrimitive.Trigger asChild>
+        <span
+          aria-hidden
+          style={{
+            height: 1,
+            left: position?.x ?? 0,
+            opacity: 0,
+            pointerEvents: "none",
+            position: "fixed",
+            top: position?.y ?? 0,
+            width: 1,
+          }}
+        />
+      </ContextMenuPrimitive.Trigger>
+      {open ? (
+        <ContextMenuPrimitive.Portal>
+          <ContextMenuPrimitive.Content
+            className={contextMenuContentClassName}
+            onCloseAutoFocus={(event) => event.preventDefault()}
+            style={{ position: "fixed", left: position?.x ?? 0, top: position?.y ?? 0 }}
+          >
+            {body}
+          </ContextMenuPrimitive.Content>
+        </ContextMenuPrimitive.Portal>
+      ) : null}
+    </ContextMenuPrimitive.Root>
+  );
+};
+
+// #endregion 🖱️ContextMenu
 
 /**
  * Expertise levels for label resolution.
@@ -11887,22 +12056,25 @@ export interface CardProps {
   icon?: string | LucideIcon;
   children: React.ReactNode;
   className?: string;
+  contextMenu?: ContextMenuItem[];
 }
 
 /**
  * Content card with title, icon, and children.
  **/
-export const Card: React.FC<CardProps> = ({ title, icon, children, className = "" }) => {
+export const Card: React.FC<CardProps> = ({ title, icon, children, className = "", contextMenu }) => {
   const IconComponent = typeof icon === "string" ? null : icon;
   return (
-    <div className={`border p-single ${className}`}>
-      <div className="flex items-start gap-tiny mb-single">
-        {IconComponent && <IconComponent className="size-small flex-shrink-0 mt-0.5" />}
-        {typeof icon === "string" && <span className="text-xl flex-shrink-0">{icon}</span>}
-        <h3 className="font-semibold text-base">{title}</h3>
+    <ContextMenu items={contextMenu}>
+      <div className={`border p-single ${className}`}>
+        <div className="flex items-start gap-tiny mb-single">
+          {IconComponent && <IconComponent className="size-small flex-shrink-0 mt-0.5" />}
+          {typeof icon === "string" && <span className="text-xl flex-shrink-0">{icon}</span>}
+          <h3 className="font-semibold text-base">{title}</h3>
+        </div>
+        <div className="text-sm">{children}</div>
       </div>
-      <div className="text-sm">{children}</div>
-    </div>
+    </ContextMenu>
   );
 };
 
@@ -12033,15 +12205,29 @@ export interface DiagramNodeProps {
   onMouseEnter?: () => void;
   onMouseLeave?: () => void;
   onClick?: () => void;
+  contextMenu?: ContextMenuItem[];
 }
 
 /**
  * Individual node element within a diagram graph.
  **/
-export const DiagramNode: React.FC<DiagramNodeProps> = ({ content, selected = false, hovered = false, isPlaceholder = false, showTopHandle = false, showBottomHandle = false, className = "", onMouseEnter, onMouseLeave, onClick }) => {
+export const DiagramNode: React.FC<DiagramNodeProps> = ({
+  content,
+  selected = false,
+  hovered = false,
+  isPlaceholder = false,
+  showTopHandle = false,
+  showBottomHandle = false,
+  className = "",
+  onMouseEnter,
+  onMouseLeave,
+  onClick,
+  contextMenu,
+}) => {
   return (
-    <div
-      className={`
+    <ContextMenu items={contextMenu}>
+      <div
+        className={`
         relative flex items-center justify-center
         size-large size-large rounded-full
         ${isPlaceholder ? "border-2 border-dashed" : "border-2 border-solid"}
@@ -12052,16 +12238,17 @@ export const DiagramNode: React.FC<DiagramNodeProps> = ({ content, selected = fa
         ${onClick ? "cursor-selectable" : "cursor-default"}
         ${className}
       `}
-      onMouseEnter={onMouseEnter}
-      onMouseLeave={onMouseLeave}
-      onClick={onClick}
-    >
-      {showTopHandle && <Handle type="target" position={Position.Top as any} className="size-dot !bg-[color:var(--foreground-panel)] !border-[color:var(--background-panel)]" />}
+        onMouseEnter={onMouseEnter}
+        onMouseLeave={onMouseLeave}
+        onClick={onClick}
+      >
+        {showTopHandle && <Handle type="target" position={Position.Top as any} className="size-dot !bg-[color:var(--foreground-panel)] !border-[color:var(--background-panel)]" />}
 
-      <div className="text-sm font-medium text-[color:var(--foreground-panel)] truncate px-single">{content}</div>
+        <div className="text-sm font-medium text-[color:var(--foreground-panel)] truncate px-single">{content}</div>
 
-      {showBottomHandle && <Handle type="source" position={Position.Bottom as any} className="size-dot !bg-[color:var(--foreground-panel)] !border-[color:var(--background-panel)]" />}
-    </div>
+        {showBottomHandle && <Handle type="source" position={Position.Bottom as any} className="size-dot !bg-[color:var(--foreground-panel)] !border-[color:var(--background-panel)]" />}
+      </div>
+    </ContextMenu>
   );
 };
 /**
@@ -20878,6 +21065,7 @@ export interface UIWindowKindDefinition {
   icon?: React.ReactNode;
   component: React.ComponentType<any>;
   controls?: UIWindowControl[];
+  contextMenu?: ContextMenuItem[];
   variants?: {
     id: string;
     icon?: React.ReactNode;
@@ -21357,7 +21545,11 @@ const UICanvas: React.FC<{
             onClose={() => clickGoldenLayoutControl(".lm_close")}
             controls={portal.windowKind.controls ? <UIWindowControlsGroup controls={portal.windowKind.controls} /> : undefined}
           >
-            <WindowComponent />
+            <ContextMenu items={portal.windowKind.contextMenu}>
+              <div className="flex min-h-0 min-w-0 flex-1 flex-col">
+                <WindowComponent />
+              </div>
+            </ContextMenu>
           </Window>,
           portal.element,
         );
@@ -22236,6 +22428,13 @@ const treeVitest = (
 
 if (treeVitest) {
   const { describe, expect, it, vi } = treeVitest;
+
+  describe("context menu helpers", () => {
+    it("renders nothing when items are empty or undefined", () => {
+      expect(renderContextMenuItems(undefined)).toBeNull();
+      expect(renderContextMenuItems([])).toBeNull();
+    });
+  });
 
   describe("tree helpers", () => {
     it("adds an empty-row-sized gap before a same-depth group row after a leaf/property row", () => {
