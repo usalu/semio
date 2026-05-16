@@ -234,7 +234,7 @@ const inputSurfaceLines = [
   "",
   `UNWIND [${sorted.map((n) => JSON.stringify(n)).join(", ")}] AS opName`,
   "MATCH (cmd:Command {name: opName})-[:OWNS]->(inp:Input {name: opName})",
-  "OPTIONAL MATCH (cmd)-[rx:OWNS]->(f:Data|Computation|Reference)",
+  "OPTIONAL MATCH (cmd)-[rx:OWNS]->(f:Data|Derived|Reference)",
   "WHERE toLower(f.name) = 'input'",
   "DELETE rx",
   "WITH inp, f",

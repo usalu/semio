@@ -401,11 +401,11 @@ function main(): void {
       "plain",
       "OPTIONAL MATCH (:Class {name:'Change'})-[:OWNS]->(bad:Data {name:'saved'}) " +
         "WITH count(bad) AS dataSaved " +
-        "OPTIONAL MATCH (:Class {name:'Change'})-[:OWNS]->(ok:Computation {name:'saved'}) " +
-        "WITH dataSaved, count(ok) AS computationSaved " +
-        "OPTIONAL MATCH (:Class {name:'Change'})-[:OWNS]->(:Computation {name:'saved'})-[:OWNS]->(con:Constraint) " +
+        "OPTIONAL MATCH (:Class {name:'Change'})-[:OWNS]->(ok:Derived {name:'saved'}) " +
+        "WITH dataSaved, count(ok) AS derivedSaved " +
+        "OPTIONAL MATCH (:Class {name:'Change'})-[:OWNS]->(:Derived {name:'saved'})-[:OWNS]->(con:Constraint) " +
         "WHERE con.description CONTAINS 'savedAt' " +
-        "RETURN dataSaved, computationSaved, count(con) AS savedConstraintCount;",
+        "RETURN dataSaved, derivedSaved, count(con) AS savedConstraintCount;",
     ],
     { encoding: "utf8", cwd: REPO_ROOT, env: buildCypherEnv() },
   );
@@ -423,14 +423,14 @@ function main(): void {
   const csLast = csTail[csTail.length - 1] ?? "";
   const csParts = csLast.split(/\s+/).filter(Boolean);
   const dataSaved = Number.parseInt(csParts[0] ?? "", 10);
-  const computationSaved = Number.parseInt(csParts[1] ?? "", 10);
+  const derivedSaved = Number.parseInt(csParts[1] ?? "", 10);
   const savedConstraintCount = Number.parseInt(csParts[2] ?? "", 10);
   if (!Number.isFinite(dataSaved) || dataSaved !== 0) {
     console.error(`[migrate:neo4j] expected zero :Data saved under Class Change; verify output:\n${probeChangeSaved.stdout}`);
     process.exit(1);
   }
-  if (!Number.isFinite(computationSaved) || computationSaved < 1) {
-    console.error(`[migrate:neo4j] expected Class Change to OWNS :Computation saved; verify output:\n${probeChangeSaved.stdout}`);
+  if (!Number.isFinite(derivedSaved) || derivedSaved < 1) {
+    console.error(`[migrate:neo4j] expected Class Change to OWNS :Derived saved; verify output:\n${probeChangeSaved.stdout}`);
     process.exit(1);
   }
   if (!Number.isFinite(savedConstraintCount) || savedConstraintCount < 1) {
@@ -455,13 +455,13 @@ function main(): void {
         "WITH coalesce(sum(CASE WHEN n IS NULL THEN 0 WHEN size(keys(n)) <> 3 OR any(k IN keys(n) WHERE NOT k IN ['name','rank','isList']) THEN 1 ELSE 0 END), 0) AS badData " +
         "OPTIONAL MATCH (n:Reference) " +
         "WITH badData, coalesce(sum(CASE WHEN n IS NULL THEN 0 WHEN size(keys(n)) <> 3 OR any(k IN keys(n) WHERE NOT k IN ['name','rank','isList']) THEN 1 ELSE 0 END), 0) AS badRef " +
-        "OPTIONAL MATCH (n:Computation) " +
-        "WITH badData, badRef, coalesce(sum(CASE WHEN n IS NULL THEN 0 WHEN size(keys(n)) <> 4 OR any(k IN keys(n) WHERE NOT k IN ['name','rank','isList','cached']) THEN 1 ELSE 0 END), 0) AS badComp " +
+        "OPTIONAL MATCH (n:Derived) " +
+        "WITH badData, badRef, coalesce(sum(CASE WHEN n IS NULL THEN 0 WHEN size(keys(n)) <> 4 OR any(k IN keys(n) WHERE NOT k IN ['name','rank','isList','cached']) THEN 1 ELSE 0 END), 0) AS badDerived " +
         "OPTIONAL MATCH (n:Class|Interface|Scalar|Module) " +
-        "WITH badData, badRef, badComp, coalesce(sum(CASE WHEN n IS NULL THEN 0 WHEN size(keys(n)) <> 1 OR NOT 'name' IN keys(n) THEN 1 ELSE 0 END), 0) AS badNamed " +
+        "WITH badData, badRef, badDerived, coalesce(sum(CASE WHEN n IS NULL THEN 0 WHEN size(keys(n)) <> 1 OR NOT 'name' IN keys(n) THEN 1 ELSE 0 END), 0) AS badNamed " +
         "OPTIONAL MATCH (n:Constraint) " +
-        "WITH badData, badRef, badComp, badNamed, coalesce(sum(CASE WHEN n IS NULL THEN 0 WHEN size(keys(n)) <> 1 OR NOT 'description' IN keys(n) THEN 1 ELSE 0 END), 0) AS badCon " +
-        "RETURN badData + badRef + badComp + badNamed + badCon AS violations;",
+        "WITH badData, badRef, badDerived, badNamed, coalesce(sum(CASE WHEN n IS NULL THEN 0 WHEN size(keys(n)) <> 1 OR NOT 'description' IN keys(n) THEN 1 ELSE 0 END), 0) AS badCon " +
+        "RETURN badData + badRef + badDerived + badNamed + badCon AS violations;",
     ],
     { encoding: "utf8", cwd: REPO_ROOT, env: buildCypherEnv() },
   );
@@ -531,7 +531,7 @@ function main(): void {
       DATABASE,
       "--format",
       "plain",
-      "OPTIONAL MATCH (sub:Class)-[:OWNS]->(f:Data|Computation|Reference) " +
+      "OPTIONAL MATCH (sub:Class)-[:OWNS]->(f:Data|Derived|Reference) " +
         "WHERE sub.name IN ['LocalProvider','RemoteProvider'] AND f.name IN ['backbone','backbones'] " +
         "RETURN count(f) AS subclassOwnsBackboneKitMembers;",
     ],
@@ -570,7 +570,7 @@ function main(): void {
       DATABASE,
       "--format",
       "plain",
-      "OPTIONAL MATCH (op:Class|Interface)-[:OWNS]->(f:Data|Computation|Reference) " +
+      "OPTIONAL MATCH (op:Class|Interface)-[:OWNS]->(f:Data|Derived|Reference) " +
         "WHERE toLower(op.name) = 'operation' AND f.name IN ['connector','connectors'] " +
         "RETURN count(f) AS operationOwnsConnectorKitMembers;",
     ],
@@ -688,8 +688,8 @@ function main(): void {
       DATABASE,
       "--format",
       "plain",
-      "MATCH (:Class {name:'Piece'})-[:OWNS]->(:Module {name:'operation'})-[:OWNS]->(:Command {name:'RenamePiece'}) " +
-        "RETURN count(*) AS pieceOpChain;",
+      "MATCH (:Command)-[:OWNS]->(:Input)-[:OWNS]->(:Reference {name: 'input'}) " +
+        "RETURN count(*) AS cmdInputChain;",
     ],
     { encoding: "utf8", cwd: REPO_ROOT, env: buildCypherEnv() },
   );
@@ -708,7 +708,7 @@ function main(): void {
   const pieceOpChain = Number.parseInt(poLast.trim(), 10);
   if (!Number.isFinite(pieceOpChain) || pieceOpChain < 1) {
     console.error(
-      `[migrate:neo4j] expected Piece-OWNS-Module(operation)-OWNS-RenamePiece Command chain; verify output:\n${probePieceOperationModuleChain.stdout}`,
+      `[migrate:neo4j] expected at least one Command-OWNS-Input-OWNS-Reference(input) chain; verify output:\n${probePieceOperationModuleChain.stdout}`,
     );
     process.exit(1);
   }

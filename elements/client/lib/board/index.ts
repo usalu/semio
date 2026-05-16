@@ -945,6 +945,7 @@ export class BoardRenderer {
 	private gpuSurfacePresentedFrame = false;
 	private gpuSurfaceUnavailable = false;
 	private lastPushedDescriptorJson: string | null = null;
+	private lastWasAreaSelectDrag = false;
 	private lastNodeAuthoringPositionById = new Map<string, { x: number; y: number }>();
 	private suppressSceneToWasmPush = false;
 	private width = 1;
@@ -1262,10 +1263,17 @@ export class BoardRenderer {
 		const o = this.selectionOptions;
 		this.session.setSize(this.width, this.height, this.dpr);
 		this.session.setSelectionOptions(o.method, o.mode, o.target);
-		const desc = this.descriptorJsonForWasmHost();
-		if (desc !== this.lastPushedDescriptorJson) {
-			this.session.syncDescriptorJson(desc);
-			this.lastPushedDescriptorJson = desc;
+		const dragging = this.session.isDraggingAreaSelect();
+		if (this.lastWasAreaSelectDrag && !dragging) {
+			this.lastPushedDescriptorJson = null;
+		}
+		this.lastWasAreaSelectDrag = dragging;
+		if (!dragging) {
+			const desc = this.descriptorJsonForWasmHost();
+			if (desc !== this.lastPushedDescriptorJson) {
+				this.session.syncDescriptorJson(desc);
+				this.lastPushedDescriptorJson = desc;
+			}
 		}
 		this.session.setCamera(this.camera.x, this.camera.y, this.camera.zoom);
 		this.session.drainEventsJson();

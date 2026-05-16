@@ -480,9 +480,10 @@ mod board_host {
 			origin: Camera,
 			start_screen: Point,
 		},
-		DragNode {
-			node_id: String,
+		DragNodes {
 			offset: Vec2,
+			primary_id: String,
+			start_positions: BTreeMap<String, (f64, f64)>,
 		},
 		Selection {
 			initial_ids: BTreeSet<String>,
@@ -1189,10 +1190,26 @@ mod board_host {
 						let nid = hid.clone();
 						let nx = node.x;
 						let ny = node.y;
-						self.set_selection_ids(&[nid.clone()]);
-						self.interaction = Interaction::DragNode {
-							node_id: nid,
+						let members: Vec<String> = self
+							.selection
+							.iter()
+							.filter(|id| self.nodes.get(*id).is_some_and(|n| n.draggable))
+							.cloned()
+							.collect();
+						let drag_group = members.contains(&nid) && members.len() > 1;
+						if !drag_group {
+							self.set_selection_ids(std::slice::from_ref(&nid));
+						}
+						let mut start_positions = BTreeMap::new();
+						for id in if drag_group { members.as_slice() } else { std::slice::from_ref(&nid) } {
+							if let Some(n) = self.nodes.get(id) {
+								start_positions.insert(id.clone(), (n.x, n.y));
+							}
+						}
+						self.interaction = Interaction::DragNodes {
+							primary_id: nid,
 							offset: world - Point::new(nx, ny),
+							start_positions,
 						};
 						self.set_hovered_id(hit);
 						return;
@@ -1224,17 +1241,33 @@ mod board_host {
 			let screen = Point::new(sx, sy);
 			let world = self.screen_to_world(screen);
 			match std::mem::replace(&mut self.interaction, Interaction::None) {
-				Interaction::DragNode { node_id, offset } => {
-					let nid = node_id.clone();
-					let off = offset;
-					if let Some(n) = self.nodes.get_mut(&nid) {
-						let nx = world.x - off.x;
-						let ny = world.y - off.y;
-						n.x = nx;
-						n.y = ny;
-						self.push_event("nodeMove", json!({ "id": nid, "x": nx, "y": ny }));
+				Interaction::DragNodes {
+					primary_id,
+					offset,
+					start_positions,
+				} => {
+					let primary_id = primary_id.clone();
+					let offset = offset;
+					let start_positions_cloned = start_positions.clone();
+					let (px0, py0) = start_positions.get(&primary_id).copied().unwrap_or((0.0, 0.0));
+					let nx = world.x - offset.x;
+					let ny = world.y - offset.y;
+					let dx = nx - px0;
+					let dy = ny - py0;
+					for (id, (ox0, oy0)) in &start_positions {
+						if let Some(n) = self.nodes.get_mut(id) {
+							let mx = ox0 + dx;
+							let my = oy0 + dy;
+							n.x = mx;
+							n.y = my;
+							self.push_event("nodeMove", json!({ "id": id, "x": mx, "y": my }));
+						}
 					}
-					self.interaction = Interaction::DragNode { node_id, offset };
+					self.interaction = Interaction::DragNodes {
+						primary_id,
+						offset,
+						start_positions: start_positions_cloned,
+					};
 				}
 				Interaction::Pan { origin, start_screen } => {
 					let delta = screen - start_screen;
@@ -2359,6 +2392,44 @@ mod host_tests {
 		h.pointer_up_screen(s.x + 50.0, s.y + 30.0);
 		let ev = h.drain_events_json();
 		assert!(ev.contains("nodeMove"));
+	}
+
+	#[test]
+	fn board_host_multi_select_drag_moves_each_selected_node() {
+		let mut h = BoardHost::new();
+		h.set_size(800, 600, 1.0);
+		let mut desc = sample_scene();
+		desc.nodes.push(NodeDescJson {
+			id: "b".into(),
+			x: 100.0,
+			y: 0.0,
+			draggable: Some(true),
+			selected: None,
+			style: None,
+			text: None,
+			user_data: None,
+			visible: None,
+			shape: Some("circle".into()),
+			radius: Some(40.0),
+			width: None,
+			height: None,
+		});
+		h.sync_descriptor(&desc);
+		h.set_selection_ids(&["a".into(), "b".into()]);
+		let _ = h.drain_events_json();
+		let w = Point::new(0.0, 0.0);
+		let s = h.world_to_screen(w);
+		h.pointer_down_screen(s.x, s.y, 0, false);
+		h.pointer_move_screen(s.x + 10.0, s.y + 5.0);
+		h.pointer_up_screen(s.x + 10.0, s.y + 5.0);
+		let a = h.nodes.get("a").expect("node a");
+		let b = h.nodes.get("b").expect("node b");
+		assert!((a.x - 10.0).abs() < 1e-6);
+		assert!((a.y - 5.0).abs() < 1e-6);
+		assert!((b.x - 110.0).abs() < 1e-6);
+		assert!((b.y - 5.0).abs() < 1e-6);
+		let sorted: Vec<_> = h.selection.iter().cloned().collect();
+		assert_eq!(sorted, vec!["a".to_string(), "b".to_string()]);
 	}
 }
 

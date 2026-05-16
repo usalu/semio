@@ -264,291 +264,671 @@ schema:
           sequenceNumber: *number
           startedAt: *timestamp
 
-      addAttributesToConcept:
-        implements: [*operation]
-        fields: {}
-      addAttributesToDesign:
-        implements: [*operation]
-        fields: {}
-      addAttributesToPiece:
-        implements: [*operation]
-        fields: {}
-      addAttributesToPort:
-        implements: [*operation]
-        fields: {}
-      addAttributesToQuality:
-        implements: [*operation]
-        fields: {}
-      addAttributesToTag:
-        implements: [*operation]
-        fields: {}
-      addAttributesToType:
-        implements: [*operation]
-        fields: {}
-      addAttributeToConcept:
-        implements: [*operation]
-        fields: {}
-      addAttributeToDesign:
-        implements: [*operation]
-        fields: {}
-      addAttributeToPiece:
-        implements: [*operation]
-        fields: {}
-      addAttributeToPort:
-        implements: [*operation]
-        fields: {}
-      addAttributeToQuality:
-        implements: [*operation]
-        fields: {}
-      addAttributeToTag:
-        implements: [*operation]
-        fields: {}
-      addAttributeToType:
-        implements: [*operation]
-        fields: {}
-      addChildPiecesWithParentConnections:
-        implements: [*operation]
-        fields: {}
-      addChildPieceWithParentConnection:
-        implements: [*operation]
-        fields: {}
-      addConnector:
-        implements: [*operation]
-        fields: {}
-      addConnectors:
-        implements: [*operation]
-        fields: {}
-      addHangingChildPiecesWithParentConnections:
-        implements: [*operation]
-        fields: {}
-      addHangingChildPieceWithParentConnection:
-        implements: [*operation]
-        fields: {}
-      changeDescription:
-        implements: [*operation]
-        fields: {}
-      changePiecesToType:
-        implements: [*operation]
-        fields: {}
-      changePieceToType:
-        implements: [*operation]
-        fields: {}
-      createConcept:
-        implements: [*operation]
-        fields: {}
-      createConcepts:
-        implements: [*operation]
-        fields: {}
-      createDesign:
-        implements: [*operation]
-        fields: {}
-      createDesigns:
-        implements: [*operation]
-        fields: {}
-      createFixedPiece:
-        implements: [*operation]
-        fields: {}
-      createPort:
-        implements: [*operation]
-        fields: {}
-      createPorts:
-        implements: [*operation]
-        fields: {}
-      createQualities:
-        implements: [*operation]
-        fields: {}
-      createQuality:
-        implements: [*operation]
-        fields: {}
-      createTag:
-        implements: [*operation]
-        fields: {}
-      createTags:
-        implements: [*operation]
-        fields: {}
-      createType:
-        implements: [*operation]
-        fields: {}
-      createTypes:
-        implements: [*operation]
-        fields: {}
-      deleteConcept:
-        implements: [*operation]
-        fields: {}
-      deleteConcepts:
-        implements: [*operation]
-        fields: {}
-      deleteDesign:
-        implements: [*operation]
-        fields: {}
-      deleteDesigns:
-        implements: [*operation]
-        fields: {}
-      deletePiece:
-        implements: [*operation]
-        fields: {}
-      deletePieces:
-        implements: [*operation]
-        fields: {}
-      deletePiecesAndConnections:
-        implements: [*operation]
-        fields: {}
-      deletePort:
-        implements: [*operation]
-        fields: {}
-      deletePorts:
-        implements: [*operation]
-        fields: {}
-      deleteQualities:
-        implements: [*operation]
-        fields: {}
-      deleteQuality:
-        implements: [*operation]
-        fields: {}
-      deleteTag:
-        implements: [*operation]
-        fields: {}
-      deleteTags:
-        implements: [*operation]
-        fields: {}
-      deleteType:
-        implements: [*operation]
-        fields: {}
-      deleteTypes:
-        implements: [*operation]
-        fields: {}
-      dragPiece:
-        implements: [*operation]
-        fields: {}
-      dragPieces:
-        implements: [*operation]
-        fields: {}
-      fixPiece:
-        implements: [*operation]
-        fields: {}
-      fixPieces:
-        implements: [*operation]
-        fields: {}
-      flattenDesign:
-        implements: [*operation]
-        fields: {}
-      movePiece:
-        implements: [*operation]
-        fields: {}
-      movePieces:
-        implements: [*operation]
-        fields: {}
-      removeAttributeFromConcept:
-        implements: [*operation]
-        fields: {}
-      removeAttributeFromDesign:
-        implements: [*operation]
-        fields: {}
-      removeAttributeFromPiece:
-        implements: [*operation]
-        fields: {}
-      removeAttributeFromPort:
-        implements: [*operation]
-        fields: {}
-      removeAttributeFromQuality:
-        implements: [*operation]
-        fields: {}
-      removeAttributeFromTag:
-        implements: [*operation]
-        fields: {}
-      removeAttributeFromType:
-        implements: [*operation]
-        fields: {}
-      removeAttributesFromConcept:
-        implements: [*operation]
-        fields: {}
-      removeAttributesFromDesign:
-        implements: [*operation]
-        fields: {}
-      removeAttributesFromPiece:
-        implements: [*operation]
-        fields: {}
-      removeAttributesFromPort:
-        implements: [*operation]
-        fields: {}
-      removeAttributesFromQuality:
-        implements: [*operation]
-        fields: {}
-      removeAttributesFromTag:
-        implements: [*operation]
-        fields: {}
-      removeAttributesFromType:
-        implements: [*operation]
-        fields: {}
-      removeConnector:
-        implements: [*operation]
-        fields: {}
-      removeConnectors:
-        implements: [*operation]
-        fields: {}
-      renameConcept:
-        implements: [*operation]
-        fields: {}
-      renameConnector:
-        implements: [*operation]
-        fields: {}
-      renameKit:
-        implements: [*operation]
-        fields: {}
-      renamePiece:
-        implements: [*operation]
-        fields: {}
-      renamePort:
-        implements: [*operation]
-        fields: {}
-      renameQuality:
-        implements: [*operation]
-        fields: {}
-      renameTag:
-        implements: [*operation]
-        fields: {}
-      renameType:
-        implements: [*operation]
-        fields: {}
-      updateConceptDescription:
-        implements: [*operation]
-        fields: {}
-      updateConceptIcon:
-        implements: [*operation]
-        fields: {}
-      updateConnectorDescription:
-        implements: [*operation]
-        fields: {}
-      updateConnectorIcon:
-        implements: [*operation]
-        fields: {}
-      updatePieceDescription:
-        implements: [*operation]
-        fields: {}
-      updatePortDescription:
-        implements: [*operation]
-        fields: {}
-      updatePortIcon:
-        implements: [*operation]
-        fields: {}
-      updateQualityDescription:
-        implements: [*operation]
-        fields: {}
-      updateQualityIcon:
-        implements: [*operation]
-        fields: {}
-      updateTagDescription:
-        implements: [*operation]
-        fields: {}
-      updateTagIcon:
-        implements: [*operation]
-        fields: {}
-      updateTypeDescription:
-        implements: [*operation]
-        fields: {}
-      updateTypeIcon:
-        implements: [*operation]
-        fields: {}
+      addedAttributesToConcept:
+        implements: [*operation]
+        fields:
+          computed:
+            modification: *modification
+          reference:
+            scope: *artifact
+      addedAttributesToDesign:
+        implements: [*operation]
+        fields:
+          computed:
+            modification: *modification
+          reference:
+            scope: *artifact
+      addedAttributesToPiece:
+        implements: [*operation]
+        fields:
+          computed:
+            modification: *modification
+          reference:
+            scope: *artifact
+      addedAttributesToPort:
+        implements: [*operation]
+        fields:
+          computed:
+            modification: *modification
+          reference:
+            scope: *artifact
+      addedAttributesToQuality:
+        implements: [*operation]
+        fields:
+          computed:
+            modification: *modification
+          reference:
+            scope: *artifact
+      addedAttributesToTag:
+        implements: [*operation]
+        fields:
+          computed:
+            modification: *modification
+          reference:
+            scope: *artifact
+      addedAttributesToType:
+        implements: [*operation]
+        fields:
+          computed:
+            modification: *modification
+          reference:
+            scope: *artifact
+      addedAttributeToConcept:
+        implements: [*operation]
+        fields:
+          computed:
+            modification: *modification
+          reference:
+            scope: *artifact
+      addedAttributeToDesign:
+        implements: [*operation]
+        fields:
+          computed:
+            modification: *modification
+          reference:
+            scope: *artifact
+      addedAttributeToPiece:
+        implements: [*operation]
+        fields:
+          computed:
+            modification: *modification
+          reference:
+            scope: *artifact
+      addedAttributeToPort:
+        implements: [*operation]
+        fields:
+          computed:
+            modification: *modification
+          reference:
+            scope: *artifact
+      addedAttributeToQuality:
+        implements: [*operation]
+        fields:
+          computed:
+            modification: *modification
+          reference:
+            scope: *artifact
+      addedAttributeToTag:
+        implements: [*operation]
+        fields:
+          computed:
+            modification: *modification
+          reference:
+            scope: *artifact
+      addedAttributeToType:
+        implements: [*operation]
+        fields:
+          computed:
+            modification: *modification
+          reference:
+            scope: *artifact
+      addedChildPiecesWithParentConnections:
+        implements: [*operation]
+        fields:
+          computed:
+            modification: *modification
+          reference:
+            scope: *artifact
+      addedChildPieceWithParentConnection:
+        implements: [*operation]
+        fields:
+          computed:
+            modification: *modification
+          reference:
+            scope: *artifact
+      addedConnector:
+        implements: [*operation]
+        fields:
+          computed:
+            modification: *modification
+          reference:
+            scope: *artifact
+      addedConnectors:
+        implements: [*operation]
+        fields:
+          computed:
+            modification: *modification
+          reference:
+            scope: *artifact
+      addedHangingChildPiecesWithParentConnections:
+        implements: [*operation]
+        fields:
+          computed:
+            modification: *modification
+          reference:
+            scope: *artifact
+      addedHangingChildPieceWithParentConnection:
+        implements: [*operation]
+        fields:
+          computed:
+            modification: *modification
+          reference:
+            scope: *artifact
+      changedDescription:
+        implements: [*operation]
+        fields:
+          computed:
+            modification: *modification
+          reference:
+            scope: *artifact
+      changedPiecesToType:
+        implements: [*operation]
+        fields:
+          computed:
+            modification: *modification
+          reference:
+            scope: *artifact
+      changedPieceToType:
+        implements: [*operation]
+        fields:
+          computed:
+            modification: *modification
+          reference:
+            scope: *artifact
+      createdConcept:
+        implements: [*operation]
+        fields:
+          computed:
+            modification: *modification
+          reference:
+            scope: *artifact
+      createdConcepts:
+        implements: [*operation]
+        fields:
+          computed:
+            modification: *modification
+          reference:
+            scope: *artifact
+      createdDesign:
+        implements: [*operation]
+        fields:
+          computed:
+            modification: *modification
+          reference:
+            scope: *artifact
+      createdDesigns:
+        implements: [*operation]
+        fields:
+          computed:
+            modification: *modification
+          reference:
+            scope: *artifact
+      createdFixedPiece:
+        implements: [*operation]
+        fields:
+          computed:
+            modification: *modification
+          reference:
+            scope: *artifact
+      createdPort:
+        implements: [*operation]
+        fields:
+          computed:
+            modification: *modification
+          reference:
+            scope: *artifact
+      createdPorts:
+        implements: [*operation]
+        fields:
+          computed:
+            modification: *modification
+          reference:
+            scope: *artifact
+      createdQualities:
+        implements: [*operation]
+        fields:
+          computed:
+            modification: *modification
+          reference:
+            scope: *artifact
+      createdQuality:
+        implements: [*operation]
+        fields:
+          computed:
+            modification: *modification
+          reference:
+            scope: *artifact
+      createdTag:
+        implements: [*operation]
+        fields:
+          computed:
+            modification: *modification
+          reference:
+            scope: *artifact
+      createdTags:
+        implements: [*operation]
+        fields:
+          computed:
+            modification: *modification
+          reference:
+            scope: *artifact
+      createdType:
+        implements: [*operation]
+        fields:
+          computed:
+            modification: *modification
+          reference:
+            scope: *artifact
+      createdTypes:
+        implements: [*operation]
+        fields:
+          computed:
+            modification: *modification
+          reference:
+            scope: *artifact
+      deletedConcept:
+        implements: [*operation]
+        fields:
+          computed:
+            modification: *modification
+          reference:
+            scope: *artifact
+      deletedConcepts:
+        implements: [*operation]
+        fields:
+          computed:
+            modification: *modification
+          reference:
+            scope: *artifact
+      deletedDesign:
+        implements: [*operation]
+        fields:
+          computed:
+            modification: *modification
+          reference:
+            scope: *artifact
+      deletedDesigns:
+        implements: [*operation]
+        fields:
+          computed:
+            modification: *modification
+          reference:
+            scope: *artifact
+      deletedPiece:
+        implements: [*operation]
+        fields:
+          computed:
+            modification: *modification
+          reference:
+            scope: *artifact
+      deletedPieces:
+        implements: [*operation]
+        fields:
+          computed:
+            modification: *modification
+          reference:
+            scope: *artifact
+      deletedPiecesAndConnections:
+        implements: [*operation]
+        fields:
+          computed:
+            modification: *modification
+          reference:
+            scope: *artifact
+      deletedPort:
+        implements: [*operation]
+        fields:
+          computed:
+            modification: *modification
+          reference:
+            scope: *artifact
+      deletedPorts:
+        implements: [*operation]
+        fields:
+          computed:
+            modification: *modification
+          reference:
+            scope: *artifact
+      deletedQualities:
+        implements: [*operation]
+        fields:
+          computed:
+            modification: *modification
+          reference:
+            scope: *artifact
+      deletedQuality:
+        implements: [*operation]
+        fields:
+          computed:
+            modification: *modification
+          reference:
+            scope: *artifact
+      deletedTag:
+        implements: [*operation]
+        fields:
+          computed:
+            modification: *modification
+          reference:
+            scope: *artifact
+      deletedTags:
+        implements: [*operation]
+        fields:
+          computed:
+            modification: *modification
+          reference:
+            scope: *artifact
+      deletedType:
+        implements: [*operation]
+        fields:
+          computed:
+            modification: *modification
+          reference:
+            scope: *artifact
+      deletedTypes:
+        implements: [*operation]
+        fields:
+          computed:
+            modification: *modification
+          reference:
+            scope: *artifact
+      draggedPiece:
+        implements: [*operation]
+        fields:
+          computed:
+            modification: *modification
+          reference:
+            scope: *artifact
+      draggedPieces:
+        implements: [*operation]
+        fields:
+          computed:
+            modification: *modification
+          reference:
+            scope: *artifact
+      fixedPiece:
+        implements: [*operation]
+        fields:
+          computed:
+            modification: *modification
+          reference:
+            scope: *artifact
+      fixedPieces:
+        implements: [*operation]
+        fields:
+          computed:
+            modification: *modification
+          reference:
+            scope: *artifact
+      flattenedDesign:
+        implements: [*operation]
+        fields:
+          computed:
+            modification: *modification
+          reference:
+            scope: *artifact
+      movedPiece:
+        implements: [*operation]
+        fields:
+          computed:
+            modification: *modification
+          reference:
+            scope: *artifact
+      movedPieces:
+        implements: [*operation]
+        fields:
+          computed:
+            modification: *modification
+          reference:
+            scope: *artifact
+      removedAttributeFromConcept:
+        implements: [*operation]
+        fields:
+          computed:
+            modification: *modification
+          reference:
+            scope: *artifact
+      removedAttributeFromDesign:
+        implements: [*operation]
+        fields:
+          computed:
+            modification: *modification
+          reference:
+            scope: *artifact
+      removedAttributeFromPiece:
+        implements: [*operation]
+        fields:
+          computed:
+            modification: *modification
+          reference:
+            scope: *artifact
+      removedAttributeFromPort:
+        implements: [*operation]
+        fields:
+          computed:
+            modification: *modification
+          reference:
+            scope: *artifact
+      removedAttributeFromQuality:
+        implements: [*operation]
+        fields:
+          computed:
+            modification: *modification
+          reference:
+            scope: *artifact
+      removedAttributeFromTag:
+        implements: [*operation]
+        fields:
+          computed:
+            modification: *modification
+          reference:
+            scope: *artifact
+      removedAttributeFromType:
+        implements: [*operation]
+        fields:
+          computed:
+            modification: *modification
+          reference:
+            scope: *artifact
+      removedAttributesFromConcept:
+        implements: [*operation]
+        fields:
+          computed:
+            modification: *modification
+          reference:
+            scope: *artifact
+      removedAttributesFromDesign:
+        implements: [*operation]
+        fields:
+          computed:
+            modification: *modification
+          reference:
+            scope: *artifact
+      removedAttributesFromPiece:
+        implements: [*operation]
+        fields:
+          computed:
+            modification: *modification
+          reference:
+            scope: *artifact
+      removedAttributesFromPort:
+        implements: [*operation]
+        fields:
+          computed:
+            modification: *modification
+          reference:
+            scope: *artifact
+      removedAttributesFromQuality:
+        implements: [*operation]
+        fields:
+          computed:
+            modification: *modification
+          reference:
+            scope: *artifact
+      removedAttributesFromTag:
+        implements: [*operation]
+        fields:
+          computed:
+            modification: *modification
+          reference:
+            scope: *artifact
+      removedAttributesFromType:
+        implements: [*operation]
+        fields:
+          computed:
+            modification: *modification
+          reference:
+            scope: *artifact
+      removedConnector:
+        implements: [*operation]
+        fields:
+          computed:
+            modification: *modification
+          reference:
+            scope: *artifact
+      removedConnectors:
+        implements: [*operation]
+        fields:
+          computed:
+            modification: *modification
+          reference:
+            scope: *artifact
+      renamedConcept:
+        implements: [*operation]
+        fields:
+          computed:
+            modification: *modification
+          reference:
+            scope: *artifact
+      renamedConnector:
+        implements: [*operation]
+        fields:
+          computed:
+            modification: *modification
+          reference:
+            scope: *artifact
+      renamedKit:
+        implements: [*operation]
+        fields:
+          computed:
+            modification: *modification
+          reference:
+            scope: *artifact
+      renamedPiece:
+        implements: [*operation]
+        fields:
+          computed:
+            modification: *modification
+          reference:
+            scope: *artifact
+      renamedPort:
+        implements: [*operation]
+        fields:
+          computed:
+            modification: *modification
+          reference:
+            scope: *artifact
+      renamedQuality:
+        implements: [*operation]
+        fields:
+          computed:
+            modification: *modification
+          reference:
+            scope: *artifact
+      renamedTag:
+        implements: [*operation]
+        fields:
+          computed:
+            modification: *modification
+          reference:
+            scope: *artifact
+      renamedType:
+        implements: [*operation]
+        fields:
+          computed:
+            modification: *modification
+          reference:
+            scope: *artifact
+      updatedConceptDescription:
+        implements: [*operation]
+        fields:
+          computed:
+            modification: *modification
+          reference:
+            scope: *artifact
+      updatedConceptIcon:
+        implements: [*operation]
+        fields:
+          computed:
+            modification: *modification
+          reference:
+            scope: *artifact
+      updatedConnectorDescription:
+        implements: [*operation]
+        fields:
+          computed:
+            modification: *modification
+          reference:
+            scope: *artifact
+      updatedConnectorIcon:
+        implements: [*operation]
+        fields:
+          computed:
+            modification: *modification
+          reference:
+            scope: *artifact
+      updatedPieceDescription:
+        implements: [*operation]
+        fields:
+          computed:
+            modification: *modification
+          reference:
+            scope: *artifact
+      updatedPortDescription:
+        implements: [*operation]
+        fields:
+          computed:
+            modification: *modification
+          reference:
+            scope: *artifact
+      updatedPortIcon:
+        implements: [*operation]
+        fields:
+          computed:
+            modification: *modification
+          reference:
+            scope: *artifact
+      updatedQualityDescription:
+        implements: [*operation]
+        fields:
+          computed:
+            modification: *modification
+          reference:
+            scope: *artifact
+      updatedQualityIcon:
+        implements: [*operation]
+        fields:
+          computed:
+            modification: *modification
+          reference:
+            scope: *artifact
+      updatedTagDescription:
+        implements: [*operation]
+        fields:
+          computed:
+            modification: *modification
+          reference:
+            scope: *artifact
+      updatedTagIcon:
+        implements: [*operation]
+        fields:
+          computed:
+            modification: *modification
+          reference:
+            scope: *artifact
+      updatedTypeDescription:
+        implements: [*operation]
+        fields:
+          computed:
+            modification: *modification
+          reference:
+            scope: *artifact
+      updatedTypeIcon:
+        implements: [*operation]
+        fields:
+          computed:
+            modification: *modification
+          reference:
+            scope: *artifact
     vcs: &vcs
       is: *module
       interfaces:

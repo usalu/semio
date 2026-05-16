@@ -155,7 +155,7 @@ function nakaginBoardMarkers(fixture: BoardFixtureV1, selectedIds: Set<string>):
 			{fixture.nodes.map((node) =>
 				node.shape === "rectangle" ? (
 					<Node
-						draggable={false}
+						draggable
 						height={node.height}
 						id={node.id}
 						key={node.id}
@@ -177,7 +177,7 @@ function nakaginBoardMarkers(fixture: BoardFixtureV1, selectedIds: Set<string>):
 						))}
 					</Node>
 				) : (
-					<Node draggable={false} id={node.id} key={node.id} radius={node.radius} selected={selectedIds.has(node.id)} text={node.text} x={node.x} y={node.y}>
+					<Node draggable id={node.id} key={node.id} radius={node.radius} selected={selectedIds.has(node.id)} text={node.text} x={node.x} y={node.y}>
 						{node.handles.map((handle) => (
 							<Handle
 								angle={handle.angle}

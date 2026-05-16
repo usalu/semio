@@ -1,9 +1,9 @@
 # https://neo4j.com/docs/graphql/current/
 # Composition and containment use OWNS (…); do not persist denormalized owner names/ids/kinds on nodes — use OWNS edges only.
-# `IS`: Each kit member (`Data` / `Computation` / `Reference`) has **exactly one** outgoing `IS` to its declared `FieldIs` from `semio/client/schema/semio/schema.yaml`. Each `Class` / `Command` / `Input` / `Interface` keeps **only** direct `implements` targets as `IS` (no persisted transitive closure to supertypes like Entity or StrongEntity — walk the chain in application logic if needed).
-# Persisted node properties are minimal: `Data`/`Reference`/`Computation` keep `name`, `rank` (sibling order string), `isList`, and `Computation` also `cached`; `Class`/`Command`/`Input`/`Interface`/`Scalar`/`Module` keep `name`; `Constraint` keeps `description` only. Everything else (e.g. `targetName`, `UNIQUE IMPORT ID`, …) must not be stored — use `OWNS`/`IS` shape only. In `schema.yaml`, derived kit members set `cached` on the field map (Neo4j `Computation`); there is no separate field-`kind` property.
-# Naming: `Module.name`, `Class.name`, `Command.name`, `Input.name`, `Interface.name`, and `Scalar.name` are PascalCase; persisted member names on `Data` / `Computation` / `Reference` are lowerCamelCase. `Module.name` is unique only among siblings. Root `Schema` has `General` and `Domain`; `Schema`→`General` holds `Scalar`, `Module` `Entity` (with `WeakEntity`, `StrongEntity`, … under it), and other shared kit graph modules; `Schema`→`Domain` holds `Module` `Kit`, `Module` `VCS` (version-control shell subtree), and other domain-scoped modules as modeled.
-# Kit members: `Data` (embedded value), `Computation` (`cached` true for cached derivations, false for computed), `Reference` (graph reference). There is no `Field` label — use `KitField` union in GraphQL over `OWNS` from `Class` / `Command` / `Input` / `Interface` only.
+# `IS`: Each kit member (`Data` / `Derived` / `Reference`) has **exactly one** outgoing `IS` to its declared `FieldIs` from `semio/client/schema/semio/schema.yaml`. Each `Class` / `Command` / `Input` / `Interface` keeps **only** direct `implements` targets as `IS` (no persisted transitive closure to supertypes like Entity or StrongEntity — walk the chain in application logic if needed).
+# Persisted node properties are minimal: `Data`/`Reference`/`Derived` keep `name`, `rank` (sibling order string), `isList`, and `Derived` also `cached`; `Class`/`Command`/`Input`/`Interface`/`Scalar`/`Module` keep `name`; `Constraint` keeps `description` only. Everything else (e.g. `targetName`, `UNIQUE IMPORT ID`, …) must not be stored — use `OWNS`/`IS` shape only. In `schema.yaml`, derived kit members set `cached` on the field map (Neo4j `Derived`); there is no separate field-`kind` property.
+# Naming: `Module.name`, `Class.name`, `Command.name`, `Input.name`, `Interface.name`, and `Scalar.name` are PascalCase; persisted member names on `Data` / `Derived` / `Reference` are lowerCamelCase. `Module.name` is unique only among siblings. Root `Schema` has `General` and `Domain`; `Schema`→`General` holds `Scalar`, `Module` `Entity` (with `WeakEntity`, `StrongEntity`, … under it), and other shared kit graph modules; `Schema`→`Domain` holds `Module` `Kit`, `Module` `VCS` (version-control shell subtree), and other domain-scoped modules as modeled.
+# Kit members: `Data` (embedded value), `Derived` (`cached` true for cached derivations, false for on-the-fly computed), `Reference` (graph reference). There is no `Field` label — use `KitField` union in GraphQL over `OWNS` from `Class` / `Command` / `Input` / `Interface` only.
 
 interface Constraint {
   description: String!
@@ -37,9 +37,9 @@ type Data implements Node @node {
 }
 
 """
-⚡ Computation — Derived kit member; `cached` distinguishes cached vs on-the-fly computed.
+⚡ Derived — Kit member for computed values; `cached` distinguishes cached vs on-the-fly computed.
 """
-type Computation implements Node @node {
+type Derived implements Node @node {
   name: String!
   rank: String!
   cached: Boolean!
@@ -57,7 +57,7 @@ type Reference implements Node @node {
   is: FieldIs! @relationship(type: "IS", direction: OUT)
 }
 
-union KitField = Data | Computation | Reference
+union KitField = Data | Derived | Reference
 
 interface Interface implements Node {
   name: String!
