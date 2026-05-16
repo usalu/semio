@@ -17,6 +17,7 @@ import {
 	type ReactElement,
 	type ReactNode,
 } from "react";
+import { flushSync } from "react-dom";
 import { createRoot } from "react-dom/client";
 import { FiberProvider as HostMountProvider, useContextBridge as useHostMountBridge } from "its-fine";
 
@@ -70,7 +71,7 @@ export interface BoardCanvasProps {
 	selectionTarget?: BoardSelectionTarget;
 	style?: CSSProperties;
 	width?: number;
-	/** 🧩 Optional world-space clip tiling for CPU canvas parity with future WASM tile culling. */
+	/** 🧩 World-space clip tiling for Vello (`world-clip`, default) vs monolithic scene (`none`). */
 	worldRasterTiling?: WorldRasterTilingKind;
 }
 
@@ -405,32 +406,46 @@ export function syncBoardScene(renderer: BoardRenderer, descriptor: BoardSceneDe
 //#endregion 🔖Scene Sync
 
 //#region 🔖HostMountBridge
-/** @emoji 🌉 Secondary host root per {@link BoardRenderer}; mount is tied to `renderer` identity while {@link updateBoardHostMount} applies `children` without clearing the scene on every parent render. */
-function BoardHostSubtree({ children, renderer }: { children: ReactNode; renderer: BoardRenderer }): null {
+/** @emoji 🌉 Secondary host root per {@link BoardRenderer}; syncs JSX `children`, flushes {@link BoardRenderer.render}, then applies `camera` to WASM in one layout pass. */
+function BoardHostSubtree({
+	camera,
+	children,
+	renderer,
+}: {
+	camera?: Partial<CameraState>;
+	children: ReactNode;
+	renderer: BoardRenderer;
+}): null {
 	const hostMountRef = useRef<BoardHostMount | null>(null);
+	const mountedRendererRef = useRef<BoardRenderer | null>(null);
 	const Bridge = useHostMountBridge();
 
 	useLayoutEffect(() => {
-		if (hostMountRef.current) {
-			unmountBoardHostMount(hostMountRef.current);
-			hostMountRef.current = null;
-		}
-		hostMountRef.current = createBoardHostMount(renderer);
-		return () => {
+		if (hostMountRef.current === null || mountedRendererRef.current !== renderer) {
 			if (hostMountRef.current) {
 				unmountBoardHostMount(hostMountRef.current);
 				hostMountRef.current = null;
 			}
-		};
-	}, [renderer]);
-
-	useLayoutEffect(() => {
-		const root = hostMountRef.current;
-		if (!root) {
-			return;
+			hostMountRef.current = createBoardHostMount(renderer);
+			mountedRendererRef.current = renderer;
 		}
-		updateBoardHostMount(root, createElement(Bridge, null, children), null);
-	}, [Bridge, children, renderer]);
+		updateBoardHostMount(hostMountRef.current, createElement(Bridge, null, children), null);
+		const cx = camera?.x ?? 0;
+		const cy = camera?.y ?? 0;
+		const cz = camera?.zoom ?? 1;
+		renderer.setCamera(cx, cy, cz);
+	}, [Bridge, camera?.x, camera?.y, camera?.zoom, children, renderer]);
+
+	useLayoutEffect(
+		() => () => {
+			if (hostMountRef.current) {
+				unmountBoardHostMount(hostMountRef.current);
+				hostMountRef.current = null;
+				mountedRendererRef.current = null;
+			}
+		},
+		[],
+	);
 
 	return null;
 }
@@ -588,14 +603,14 @@ export function BoardCanvas({
 		activeBoardRenderer = renderer;
 		setContextRenderer(renderer);
 		return () => {
+			setContextRenderer(null);
 			renderer.dispose();
 			if (activeBoardRenderer === renderer) {
 				activeBoardRenderer = null;
 			}
 			rendererRef.current = null;
-			setContextRenderer(null);
 		};
-	}, [renderMode, selectionMethod, selectionMode, selectionTarget, worldRasterTiling]);
+	}, [renderMode, worldRasterTiling]);
 
 	useEffect(() => {
 		if (!contextRenderer) {
@@ -629,19 +644,6 @@ export function BoardCanvas({
 		}
 		renderer.setSelectionOptions({ method: selectionMethod, mode: selectionMode, target: selectionTarget });
 	}, [selectionMethod, selectionMode, selectionTarget]);
-
-	useLayoutEffect(() => {
-		const renderer = rendererRef.current;
-		if (!renderer) {
-			return;
-		}
-		const nextCamera = {
-			x: camera?.x ?? 0,
-			y: camera?.y ?? 0,
-			zoom: camera?.zoom ?? 1,
-		};
-		renderer.setCamera(nextCamera.x, nextCamera.y, nextCamera.zoom);
-	}, [camera?.x, camera?.y, camera?.zoom]);
 
 	useLayoutEffect(() => {
 		const renderer = rendererRef.current;
@@ -708,7 +710,7 @@ export function BoardCanvas({
 					</div>
 					{contextRenderer ? (
 						<HostMountProvider>
-							<BoardHostSubtree children={children} renderer={contextRenderer} />
+							<BoardHostSubtree camera={camera} children={children} renderer={contextRenderer} />
 						</HostMountProvider>
 					) : null}
 					<ContextMenuController
@@ -1141,6 +1143,70 @@ if (boardReactVitest) {
 			await act(async () => {
 				root.unmount();
 			});
+			restoreCanvas();
+		});
+
+		it("does not dispose BoardRenderer when only selection props change", async () => {
+			const restoreCanvas = installCanvasStub();
+			const disposeSpy = vi.spyOn(BoardRenderer.prototype, "dispose");
+			const container = document.createElement("div");
+			document.body.appendChild(container);
+			const root = createRoot(container);
+
+			await act(async () => {
+				root.render(
+					<BoardCanvas
+						camera={{ x: 0, y: 0, zoom: 1 }}
+						height={120}
+						renderMode="headless-test"
+						selectionMethod="rectangle"
+						selectionMode="additive"
+						selectionTarget="nodes"
+						width={160}
+					>
+						<Node id="a" radius={12} x={0} y={0}>
+							<Handle angle={0} id="a.out" />
+						</Node>
+					</BoardCanvas>,
+				);
+				await Promise.resolve();
+			});
+
+			disposeSpy.mockClear();
+
+			await act(async () => {
+				root.render(
+					<BoardCanvas
+						camera={{ x: 0, y: 0, zoom: 1 }}
+						height={120}
+						renderMode="headless-test"
+						selectionMethod="lasso"
+						selectionMode="invertive"
+						selectionTarget="edges"
+						width={160}
+					>
+						<Node id="a" radius={12} x={0} y={0}>
+							<Handle angle={0} id="a.out" />
+						</Node>
+					</BoardCanvas>,
+				);
+				await Promise.resolve();
+			});
+
+			expect(disposeSpy).not.toHaveBeenCalled();
+			const canvas = container.querySelector("canvas");
+			const renderer = requireRenderer(
+				(canvas as HTMLCanvasElement & { __boardRenderer?: BoardRenderer | undefined }).__boardRenderer ?? null,
+			);
+			expect(renderer.getSelectionOptions().method).toBe("lasso");
+			expect(renderer.getSelectionOptions().mode).toBe("invertive");
+			expect(renderer.getSelectionOptions().target).toBe("edges");
+
+			await act(async () => {
+				root.unmount();
+			});
+			expect(disposeSpy).toHaveBeenCalledTimes(1);
+			disposeSpy.mockRestore();
 			restoreCanvas();
 		});
 

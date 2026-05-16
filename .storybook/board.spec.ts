@@ -182,7 +182,8 @@ async function expectBoardStory(page: Page, storyId: string): Promise<Locator> {
 
 test("board default: selection, zoom in to fine LOD, clear selection", async ({ page }) => {
 	const canvas = await expectBoardStory(page, "elements-board--default");
-	await expect(canvas).toHaveAttribute("data-board-raster", "none");
+	await expect(canvas).toHaveAttribute("data-board-raster", "gpu");
+	await expect(canvas).toHaveAttribute("data-board-world-tiling", "none");
 	await expect(canvas).toHaveAttribute("data-board-lod", "full");
 
 	const initialZoom = Number(await canvas.getAttribute("data-board-zoom"));
@@ -304,14 +305,15 @@ const nakaginCapsuleTowerHubPieceId = "9d18882e-d90b-40de-a171-47cb4564ffa6";
 
 test("board nakagin fixture: json scene hub piece selects", async ({ page }) => {
 	const canvas = await expectBoardStory(page, "elements-board--nakagin-capsule-tower-flat-selection");
-	await expect(canvas).toHaveAttribute("data-board-raster", "none");
+	await expect(canvas).toHaveAttribute("data-board-raster", "gpu");
+	await expect(canvas).toHaveAttribute("data-board-world-tiling", "none");
 	await clickBoardObject(page, nakaginCapsuleTowerHubPieceId);
 	await expect(canvas).toHaveAttribute("data-board-selection", nakaginCapsuleTowerHubPieceId);
 });
 
 test("board world-clip: raster mode, node selection, handle hit", async ({ page }) => {
 	const canvas = await expectBoardStory(page, "elements-board--world-tile-clip");
-	await expect(canvas).toHaveAttribute("data-board-raster", "world-clip");
+	await expect(canvas).toHaveAttribute("data-board-world-tiling", "world-clip");
 
 	await clickBoardObject(page, "alpha");
 	await expect(canvas).toHaveAttribute("data-board-selection", "alpha");

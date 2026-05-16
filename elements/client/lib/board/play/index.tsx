@@ -261,6 +261,9 @@ function boardToolbarToggleClass(active: boolean): string {
 	].join(" ");
 }
 
+/** @emoji 📐 Toolbar “add circle” radius; “add rectangle” uses width = height = 2× this (same as circle diameter). */
+const BOARD_PLAY_TOOLBAR_DEFAULT_NODE_RADIUS = 44;
+
 /** @emoji 🧰 Sketchpad-style tools: marquee kind, merge mode, hit target, and circle or rectangle authoring at the active pane camera. */
 function BoardPlayToolbar(): ReactElement {
 	const {
@@ -284,7 +287,7 @@ function BoardPlayToolbar(): ReactElement {
 		const node: BoardFixtureCircleNodeV1 = {
 			handles: [{ angle: 0, id: handleId }],
 			id,
-			radius: 44,
+			radius: BOARD_PLAY_TOOLBAR_DEFAULT_NODE_RADIUS,
 			x: camera.x,
 			y: camera.y,
 		};
@@ -295,12 +298,13 @@ function BoardPlayToolbar(): ReactElement {
 	const appendRectangle = useCallback(() => {
 		const id = newBoardAuthoringId("node");
 		const handleId = `${id}.h0`;
+		const d = BOARD_PLAY_TOOLBAR_DEFAULT_NODE_RADIUS * 2;
 		const node: BoardFixtureRectangleNodeV1 = {
 			handles: [{ angle: 0, id: handleId }],
-			height: 80,
+			height: d,
 			id,
 			shape: "rectangle",
-			width: 128,
+			width: d,
 			x: camera.x,
 			y: camera.y,
 		};
@@ -589,12 +593,15 @@ function BoardSelectionPane(): ReactElement {
 
 // #region 🔖SidePanels
 // #region 🔖PaletteFixtureShelf
+/** @emoji 📐 Palette circle chip radius; rectangle chip uses width = height = 2× this (same as circle diameter). */
+const BOARD_PLAY_PALETTE_NODE_RADIUS = 28;
+
 const BOARD_PLAY_PALETTE_CIRCLE_DRAG_FIXTURE: BoardFixtureV1 =
 	parseBoardFixtureV1({
 		camera: { x: 0, y: 0, zoom: 1 },
 		edges: [],
 		meta: { boardFixtureDragKind: BOARD_FIXTURE_DRAG_KIND_PALETTE_NODE },
-		nodes: [{ handles: [{ angle: 0, id: "palette-seed-circle.h0" }], id: "palette-seed-circle", radius: 28, x: 0, y: 0 }],
+		nodes: [{ handles: [{ angle: 0, id: "palette-seed-circle.h0" }], id: "palette-seed-circle", radius: BOARD_PLAY_PALETTE_NODE_RADIUS, x: 0, y: 0 }],
 		schema: "elements.board.fixture/v1",
 	}) ?? (() => {
 		throw new Error("Board play: palette circle drag fixture failed validation.");
@@ -608,10 +615,10 @@ const BOARD_PLAY_PALETTE_RECTANGLE_DRAG_FIXTURE: BoardFixtureV1 =
 		nodes: [
 			{
 				handles: [{ angle: 0, id: "palette-seed-rectangle.h0" }],
-				height: 48,
+				height: BOARD_PLAY_PALETTE_NODE_RADIUS * 2,
 				id: "palette-seed-rectangle",
 				shape: "rectangle",
-				width: 72,
+				width: BOARD_PLAY_PALETTE_NODE_RADIUS * 2,
 				x: 0,
 				y: 0,
 			},
@@ -710,7 +717,7 @@ function BoardFixtureLibraryPanel(): ReactElement {
 					<BoardFixturePaletteDraggable
 						fixture={BOARD_PLAY_PALETTE_RECTANGLE_DRAG_FIXTURE}
 						label="Drag rectangle onto the board"
-						preview={<div className="border-primary h-8 w-11 shrink-0 rounded-sm border-2 bg-accent/30" />}
+						preview={<div className="border-primary size-9 shrink-0 rounded-sm border-2 bg-accent/30" />}
 					/>
 				</div>
 			</div>

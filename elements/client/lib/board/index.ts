@@ -43,7 +43,7 @@ export type RenderMode = "main-thread" | "worker-offscreen" | "headless-test";
 export type BoardSelectionMethod = "lasso" | "rectangle";
 export type BoardSelectionMode = "additive" | "invertive" | "subtractive";
 export type BoardSelectionTarget = "edges" | "nodes" | "nodes&edges";
-/** 🧱 World-space raster tiling strategy for CPU canvas validation (GPU-backed tiling mirrors this culling). */
+/** 🧱 World-space clip tiling for the Vello WASM canvas (`world-clip`) or monolithic encoding (`none`). */
 export type WorldRasterTilingKind = "none" | "world-clip";
 
 export interface Point {
@@ -1334,7 +1334,7 @@ export class BoardRenderer {
 		this.canvas = options.canvas ?? null;
 		this.renderMode = options.renderMode ?? (this.canvas ? "main-thread" : "headless-test");
 		this.selectionOptions = resolveSelectionOptions(options.selection);
-		this.worldRasterTiling = options.worldRasterTiling ?? "none";
+		this.worldRasterTiling = options.worldRasterTiling ?? "world-clip";
 		this.scene = new BoardScene(this);
 		this.session = new BoardSession();
 		this.attachCanvasListeners();
@@ -1506,6 +1506,10 @@ export class BoardRenderer {
 		this.invalidated = true;
 		this.emit("invalidate", undefined);
 		if (this.renderMode === "headless-test") {
+			if (this.batchDepth > 0) {
+				return;
+			}
+			this.render(globalThis.performance?.now?.() ?? Date.now());
 			return;
 		}
 		if (this.rafId !== null) {
@@ -1579,6 +1583,7 @@ export class BoardRenderer {
 		await this.session.attach_canvas(this.canvas, lw, lh, dpr);
 		const o = this.selectionOptions;
 		this.session.setSelectionOptions(o.method, o.mode, o.target);
+		this.session.setWorldRasterTiling(this.worldRasterTiling);
 		this.session.drainEventsJson();
 	}
 
@@ -1675,6 +1680,7 @@ export class BoardRenderer {
 		const o = this.selectionOptions;
 		this.session.setSize(this.width, this.height, this.dpr);
 		this.session.setSelectionOptions(o.method, o.mode, o.target);
+		this.session.setWorldRasterTiling(this.worldRasterTiling);
 		const dragging = this.session.isDraggingAreaSelect();
 		if (this.lastWasAreaSelectDrag && !dragging) {
 			this.lastPushedDescriptorJson = null;
@@ -1982,6 +1988,7 @@ export class BoardRenderer {
 			delete this.canvas.dataset.boardSurfaceFailure;
 		}
 		this.canvas.dataset.boardRaster = "gpu";
+		this.canvas.dataset.boardWorldTiling = this.worldRasterTiling;
 		this.canvas.dataset.boardLod = resolveBoardLodLabel(this.camera.zoom);
 		this.canvas.dataset.boardZoom = String(Math.round(this.camera.zoom * 1000) / 1000);
 		this.canvas.dataset.boardSelection = sortedSelectionIds(this.selectionIds).join(",");
@@ -3272,14 +3279,18 @@ const boardSceneHost = Reconciler({
 		return false;
 	},
 
-	commitUpdate(instance, _payload, type, _oldProps, nextProps) {
+	commitUpdate(instance, _payload, type, oldProps, nextProps) {
 		const renderer = instance.renderer;
 		if (type === BOARD_HOST_NODE) {
 			const next = nextProps as NodeOptions;
+			const prev = oldProps as NodeOptions;
 			const host = instance as BoardHostNode;
 			if (instanceShapeSyncKey(host.impl) !== nodeShapeSyncKey(next)) {
 				replaceNodeImpl(renderer, host, next);
 				return;
+			}
+			if (prev.x !== next.x || prev.y !== next.y) {
+				renderer.evictNodeAuthoringPosition(next.id);
 			}
 			renderer.batch(() => {
 				applyNodeProps(renderer, host.impl, next);

@@ -2737,6 +2737,34 @@ mod host_tests {
 	}
 
 	#[test]
+	fn board_host_world_clip_changes_vector_encoding() {
+		let mut h = BoardHost::new();
+		h.set_size(800, 600, 1.0);
+		let mut desc = sample_scene();
+		desc.nodes.push(NodeDescJson {
+			id: "b".into(),
+			x: 600.0,
+			y: 400.0,
+			draggable: Some(true),
+			selected: None,
+			style: None,
+			text: None,
+			user_data: None,
+			visible: None,
+			shape: Some("circle".into()),
+			radius: Some(40.0),
+			width: None,
+			height: None,
+		});
+		h.sync_descriptor(&desc);
+		h.set_world_raster_tiling("none");
+		let monolithic = h.encoded_scene_hint();
+		h.set_world_raster_tiling("world-clip");
+		let tiled = h.encoded_scene_hint();
+		assert!(tiled >= monolithic);
+	}
+
+	#[test]
 	fn board_host_drag_emits_node_move() {
 		let mut h = BoardHost::new();
 		h.set_size(800, 600, 1.0);
