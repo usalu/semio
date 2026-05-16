@@ -10,10 +10,10 @@
 import type { ReactNode } from "react";
 import * as React from "react";
 import type { Attribute, Coordinate, Entity, GraphRootKind, ID, OffsetInput, PieceBlueprint, Plane, Position, PositionInput, SessionHttpOpenOptions, SetError, SetResult } from "../../js";
-import { Alternative, Author, Backbone, Concept, Connection, Connector, Design, File, Graph, Kit, LocalProvider, openSessionHttp, Piece, PiecesOperation, Port, Quality, RemoteProvider, Representation, Session, Side, Store, Tag, TheKit, Type } from "../../js";
+import { Alternative, Author, Backbone, Camera, Concept, Connection, Connector, Design, File, Graph, Kit, LocalProvider, openSessionHttp, Piece, PiecesOperation, Port, Quality, RemoteProvider, Representation, Session, Side, Store, Tag, TheKit, Type } from "../../js";
 
 export type { Attribute, Coordinate, Entity, GraphRootKind, ID, OffsetInput, PieceBlueprint, Plane, Position, PositionInput, SessionHttpOpenOptions, SetError, SetResult } from "../../js";
-export { Alternative, Author, Backbone, Concept, Connection, Connector, Design, File, Graph, Kit, LocalProvider, openSessionHttp, Piece, PiecesOperation, Port, Quality, RemoteProvider, Representation, Session, Side, Store, Tag, TheKit, Type } from "../../js";
+export { Alternative, Author, Backbone, Camera, Concept, Connection, Connector, Design, File, Graph, Kit, LocalProvider, openSessionHttp, Piece, PiecesOperation, Port, Quality, RemoteProvider, Representation, Session, Side, Store, Tag, TheKit, Type } from "../../js";
 // #endregion ⚛️Imports
 
 // #region 🪝FieldBind

@@ -1321,6 +1321,7 @@ export class BoardScene {
 		this.edges.delete(object.id);
 		object.parent = null;
 		object.attachRenderer(null);
+		this.renderer?.forgetWasmHostAuthoredEdge(object.id);
 		this.renderer?.markDirty();
 		return this;
 	}
@@ -1468,6 +1469,8 @@ export class BoardRenderer {
 	readonly camera: CameraState = { ...DEFAULT_CAMERA };
 	readonly scene: BoardScene;
 	readonly session: BoardSession;
+	/** @emoji 🔗 Edge ids created by the WASM host (link gesture) until the same id appears in React `children`; merged into the descriptor passed to {@link syncBoardScene}. */
+	readonly wasmHostAuthoredEdgeIds = new Set<string>();
 
 	private batchDepth = 0;
 	/** @emoji 🔁 Nesting depth for {@link BoardRenderer.render}; defers {@link BoardRenderer.invalidate} so ResizeObserver / layout cannot re-enter WASM during `renderFrame` (`borrow_fail`). */
@@ -2110,6 +2113,8 @@ export class BoardRenderer {
 						const edge = this.scene.edges.get(id);
 						if (edge) {
 							this.scene.remove(edge);
+						} else {
+							this.wasmHostAuthoredEdgeIds.delete(id);
 						}
 						this.emitter.emit("edgeDelete", { id });
 						break;
@@ -2135,6 +2140,7 @@ export class BoardRenderer {
 						if (!from || !to) {
 							break;
 						}
+						this.wasmHostAuthoredEdgeIds.add(id);
 						this.scene.ingestWasmEdge(new Edge({ id, from, to }));
 						this.emitter.emit("edgeCreate", { id, from: fromId, to: toId });
 						break;
@@ -2266,10 +2272,16 @@ export class BoardRenderer {
 		}
 	}
 
+	/** @emoji 🔗 Drops a WASM‑authored edge id when the edge leaves the scene (no longer merged on the next React sync). */
+	forgetWasmHostAuthoredEdge(edgeId: string): void {
+		this.wasmHostAuthoredEdgeIds.delete(edgeId);
+	}
+
 	dispose(): void {
 		this.isDisposed = true;
 		this.detachCanvasListeners();
 		this.textOverlayCanvas = null;
+		this.wasmHostAuthoredEdgeIds.clear();
 		this.session.free();
 		this.gpuSurfacePresentedFrame = false;
 		this.gpuSurfaceErrorDetail = "";

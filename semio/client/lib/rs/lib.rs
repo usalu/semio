@@ -14307,7 +14307,7 @@ mod tests {
         assert!(from_fn.contains("type PageInfoEdge"), "golden PageInfoEdge must be reachable in generated SDL");
         assert!(!from_fn.contains("#region"), "generated GraphQL schema must not embed Rust region markers");
 
-        const GOLDEN: &str = include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../schema/graphql/schema.golden.graphql"));
+        const GOLDEN: &str = include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../schema/graphql/schema.golden.graphql"));
         let golden_keys = collect_schema_decl_keys(GOLDEN);
         let gen_keys = collect_schema_decl_keys(&from_fn);
         let missing: Vec<_> = golden_keys.difference(&gen_keys).cloned().collect();

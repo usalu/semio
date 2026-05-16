@@ -357,6 +357,40 @@ function newBoardNodeFromDescriptor(nodeDescriptor: NodeDescriptor): BoardNodeOb
 	});
 }
 
+/** @emoji 🔗 Merges WASM‑created edges into the JSX descriptor until React children list the same edge id (then it is dropped from {@link BoardRenderer.wasmHostAuthoredEdgeIds}). */
+export function mergeWasmHostAuthoredEdgesIntoDescriptor(
+	renderer: BoardRenderer,
+	descriptor: BoardSceneDescriptor,
+): BoardSceneDescriptor {
+	const jsxEdgeIds = new Set(descriptor.edges.map((edge) => edge.id));
+	for (const id of renderer.wasmHostAuthoredEdgeIds) {
+		if (jsxEdgeIds.has(id)) {
+			renderer.wasmHostAuthoredEdgeIds.delete(id);
+		}
+	}
+	const extra: EdgeDescriptor[] = [];
+	for (const id of Array.from(renderer.wasmHostAuthoredEdgeIds)) {
+		const edge = renderer.scene.edges.get(id);
+		if (!edge) {
+			renderer.wasmHostAuthoredEdgeIds.delete(id);
+			continue;
+		}
+		extra.push({
+			id: edge.id,
+			from: edge.from.id,
+			to: edge.to.id,
+			selected: edge.selected,
+			style: edge.style ?? undefined,
+			visible: edge.visible,
+			userData: { ...edge.userData },
+		});
+	}
+	if (extra.length === 0) {
+		return descriptor;
+	}
+	return { ...descriptor, edges: [...descriptor.edges, ...extra] };
+}
+
 /** 🔁 Declarative-to-imperative scene sync that preserves stable instances by id. */
 export function syncBoardScene(renderer: BoardRenderer, descriptor: BoardSceneDescriptor): void {
 	const desiredNodeIds = new Set(descriptor.nodes.map((node) => node.id));
@@ -452,7 +486,8 @@ function BoardHostSubtree({
 			mountedRendererRef.current = renderer;
 		}
 		updateBoardHostMount(hostMountRef.current, createElement(Bridge, null, children), null);
-		syncBoardScene(renderer, buildBoardSceneDescriptor(children));
+		const jsxDescriptor = buildBoardSceneDescriptor(children);
+		syncBoardScene(renderer, mergeWasmHostAuthoredEdgesIntoDescriptor(renderer, jsxDescriptor));
 	}, [children, renderer]);
 
 	useLayoutEffect(() => {
@@ -976,6 +1011,50 @@ if (boardReactVitest) {
 			expect(descriptor.nodes[0]?.contextMenu).toEqual(nodeMenu);
 			expect(descriptor.handles[0]?.contextMenu).toEqual(handleMenu);
 			expect(descriptor.edges[0]?.contextMenu).toEqual(edgeMenu);
+		});
+
+		it("mergeWasmHostAuthoredEdgesIntoDescriptor keeps WASM gesture edges across JSX-only syncs until adopted", () => {
+			const renderer = new BoardRenderer({ renderMode: "headless-test" });
+			const jsx = buildBoardSceneDescriptor(
+				<>
+					<Node id="a" radius={40} x={0} y={0}>
+						<Handle angle={0} id="a.out" />
+					</Node>
+					<Node id="b" radius={40} x={200} y={0}>
+						<Handle angle={Math.PI} id="b.in" />
+					</Node>
+				</>,
+			);
+			syncBoardScene(renderer, jsx);
+			const aOut = renderer.scene.handles.get("a.out");
+			const bIn = renderer.scene.handles.get("b.in");
+			expect(aOut).toBeDefined();
+			expect(bIn).toBeDefined();
+			renderer.scene.ingestWasmEdge(
+				new BoardEdgeObject({ from: aOut as BoardHandleObject, id: "edge-link-99", to: bIn as BoardHandleObject }),
+			);
+			renderer.wasmHostAuthoredEdgeIds.add("edge-link-99");
+			const merged = mergeWasmHostAuthoredEdgesIntoDescriptor(renderer, jsx);
+			expect(merged.edges.some((e) => e.id === "edge-link-99")).toBe(true);
+			syncBoardScene(renderer, merged);
+			expect(renderer.scene.edges.has("edge-link-99")).toBe(true);
+			const merged2 = mergeWasmHostAuthoredEdgesIntoDescriptor(renderer, jsx);
+			syncBoardScene(renderer, merged2);
+			expect(renderer.scene.edges.has("edge-link-99")).toBe(true);
+			const adopted = buildBoardSceneDescriptor(
+				<>
+					<Node id="a" radius={40} x={0} y={0}>
+						<Handle angle={0} id="a.out" />
+					</Node>
+					<Node id="b" radius={40} x={200} y={0}>
+						<Handle angle={Math.PI} id="b.in" />
+					</Node>
+					<Edge from="a.out" id="edge-link-99" to="b.in" />
+				</>,
+			);
+			mergeWasmHostAuthoredEdgesIntoDescriptor(renderer, adopted);
+			expect(renderer.wasmHostAuthoredEdgeIds.has("edge-link-99")).toBe(false);
+			renderer.dispose();
 		});
 
 		it("emits contextmenu with hovered id after wasm hit pass", () => {
