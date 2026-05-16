@@ -420,10 +420,18 @@ General to Specific
 
 ---
 
-The lod zoom levels should make the grid more adaptive:
-Minimap: No grid, no outlines on nodes, no handles, no labels
+There should be 4 lods depending on the zoom level:
+Minimap: No grid, no outlines on nodes, nodes filling is outline color, finer edges, no handles, no labels
 Overview: Large grid (10x10), outlines on node, no handles, abbreviated labels
-Detail: Large grid with finer small grid (1x1), handles, labels
+Normal: Large grid with finer medium grid (5x5), normal labels
+Detail: Large grid with medium gird with finer small grid (1x1), handles, svg instead of label
+
+Within one lod nothing changes. Make the trigger zoom points props.
+
+Add a grid snap option which snaps to the current visible grids. Add a toggle to the toolbar 
+
+For svg use: https://github.com/linebender/vello_svg
+You can find the svgs for the node kinds under @
 
 ---
 

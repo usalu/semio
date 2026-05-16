@@ -340,6 +340,8 @@ mod scene_json {
 		#[serde(default)]
 		pub text: Option<String>,
 		#[serde(default)]
+		pub icon_kind: Option<String>,
+		#[serde(default)]
 		pub user_data: Option<serde_json::Value>,
 		#[serde(default)]
 		pub visible: Option<bool>,
@@ -1480,6 +1482,120 @@ mod elements_board_palette {
 	include!(concat!(env!("OUT_DIR"), "/elements_styling_board.rs"));
 }
 
+mod board_metabolism_icons {
+	include!(concat!(env!("OUT_DIR"), "/board_metabolism_icon_match.rs"));
+}
+
+/// @emoji 🖼️ Parses SVG via `usvg` and emits path fills/strokes into a Vello scene (subset of linebender/vello_svg: solid paints + transforms).
+mod svg_icon_vello09 {
+	use vello::kurbo::{Affine, BezPath, Point, Stroke};
+	use vello::peniko::{Color, Fill};
+	use vello::Scene;
+	use usvg;
+
+	fn to_affine(ts: &usvg::Transform) -> Affine {
+		let usvg::Transform { sx, kx, ky, sy, tx, ty } = *ts;
+		Affine::new([sx, ky, kx, sy, tx, ty].map(f64::from))
+	}
+
+	fn to_bez_path(path: &usvg::Path) -> BezPath {
+		let mut local_path = BezPath::new();
+		let mut just_closed = false;
+		let mut most_recent_initial = (0_f64, 0_f64);
+		for elt in path.data().segments() {
+			match elt {
+				usvg::tiny_skia_path::PathSegment::MoveTo(p) => {
+					if std::mem::take(&mut just_closed) {
+						local_path.move_to(most_recent_initial);
+					}
+					most_recent_initial = (p.x.into(), p.y.into());
+					local_path.move_to(most_recent_initial);
+				}
+				usvg::tiny_skia_path::PathSegment::LineTo(p) => {
+					if std::mem::take(&mut just_closed) {
+						local_path.move_to(most_recent_initial);
+					}
+					local_path.line_to(Point::new(p.x as f64, p.y as f64));
+				}
+				usvg::tiny_skia_path::PathSegment::QuadTo(p1, p2) => {
+					if std::mem::take(&mut just_closed) {
+						local_path.move_to(most_recent_initial);
+					}
+					local_path.quad_to(
+						Point::new(p1.x as f64, p1.y as f64),
+						Point::new(p2.x as f64, p2.y as f64),
+					);
+				}
+				usvg::tiny_skia_path::PathSegment::CubicTo(p1, p2, p3) => {
+					if std::mem::take(&mut just_closed) {
+						local_path.move_to(most_recent_initial);
+					}
+					local_path.curve_to(
+						Point::new(p1.x as f64, p1.y as f64),
+						Point::new(p2.x as f64, p2.y as f64),
+						Point::new(p3.x as f64, p3.y as f64),
+					);
+				}
+				usvg::tiny_skia_path::PathSegment::Close => {
+					just_closed = true;
+					local_path.close_path();
+				}
+			}
+		}
+		local_path
+	}
+
+	fn solid_color(paint: &usvg::Paint, opacity: usvg::Opacity) -> Option<Color> {
+		match paint {
+			usvg::Paint::Color(c) => Some(Color::from_rgba8(c.red, c.green, c.blue, opacity.to_u8())),
+			_ => None,
+		}
+	}
+
+	fn render_group(scene: &mut Scene, group: &usvg::Group, transform: Affine) {
+		for node in group.children() {
+			let transform = transform * to_affine(&node.abs_transform());
+			match node {
+				usvg::Node::Group(g) => render_group(scene, g, transform),
+				usvg::Node::Path(path) => {
+					if !path.is_visible() {
+						continue;
+					}
+					let local_path = to_bez_path(path);
+					if let Some(fill) = path.fill() {
+						if let Some(color) = solid_color(fill.paint(), fill.opacity()) {
+							scene.fill(
+								match fill.rule() {
+									usvg::FillRule::NonZero => Fill::NonZero,
+									usvg::FillRule::EvenOdd => Fill::EvenOdd,
+								},
+								transform,
+								color,
+								None,
+								&local_path,
+							);
+						}
+					}
+					if let Some(stroke) = path.stroke() {
+						if let Some(color) = solid_color(stroke.paint(), stroke.opacity()) {
+							let conv = Stroke::new(stroke.width().get() as f64);
+							scene.stroke(&conv, transform, color, None, &local_path);
+						}
+					}
+				}
+				_ => {}
+			}
+		}
+	}
+
+	pub fn append_svg_str(scene: &mut Scene, svg: &str) -> Result<(), String> {
+		let opt = usvg::Options::default();
+		let tree = usvg::Tree::from_str(svg, &opt).map_err(|e| e.to_string())?;
+		render_group(scene, tree.root(), Affine::IDENTITY);
+		Ok(())
+	}
+}
+
 mod board_host {
 	use super::elements_board_palette as board_palette;
 	use super::scene_json::*;
@@ -1488,6 +1604,7 @@ mod board_host {
 	use vello::kurbo::{Affine, Circle, CubicBez, Point, Rect, Stroke, Vec2};
 	use vello::peniko::{Color, Fill};
 	use vello::Scene;
+	use usvg;
 
 	use super::geom_sel::{
 		cubic_bezier_axis_bounds, cubic_bezier_point, inflate_world_box, point_in_polygon, polygon_contains_world_box,
@@ -1499,12 +1616,15 @@ mod board_host {
 		handle_position_on_rectangle,
 	};
 
-	const LOD_MINIMAP_MAX_ZOOM: f64 = 0.15;
-	const LOD_DETAIL_MIN_ZOOM: f64 = 0.5;
-	const GRID_MAJOR_QUANTUM_WORLD: f64 = 10.0;
-	const GRID_MINOR_WORLD: f64 = 1.0;
-	const GRID_SCREEN_STEP_MIN_MAJOR_PX: f64 = 18.0;
-	const GRID_SCREEN_STEP_MIN_MINOR_PX: f64 = 6.0;
+	use std::cell::RefCell;
+	use std::collections::HashMap;
+
+	const LOD_MINIMAP_MAX_ZOOM_DEFAULT: f64 = 0.15;
+	const LOD_OVERVIEW_MAX_ZOOM_DEFAULT: f64 = 0.35;
+	const LOD_NORMAL_MAX_ZOOM_DEFAULT: f64 = 0.5;
+	const GRID_WORLD_LARGE: f64 = 10.0;
+	const GRID_WORLD_MEDIUM: f64 = 5.0;
+	const GRID_WORLD_SMALL: f64 = 1.0;
 	const WORLD_CLIP_TILE_WORLD: f64 = 256.0;
 	const MAX_WORLD_CLIP_TILES: u32 = 768;
 	const EDGE_HIT_TOLERANCE_PX: f64 = 8.0;
@@ -1520,22 +1640,15 @@ mod board_host {
 	enum BoardDrawLod {
 		Minimap,
 		Overview,
+		Normal,
 		Detail,
 	}
 
-	fn draw_lod(zoom: f64) -> BoardDrawLod {
-		if zoom < LOD_MINIMAP_MAX_ZOOM {
-			BoardDrawLod::Minimap
-		} else if zoom < LOD_DETAIL_MIN_ZOOM {
-			BoardDrawLod::Overview
-		} else {
-			BoardDrawLod::Detail
-		}
-	}
-
-	fn major_world_step_for_grid(zoom: f64) -> f64 {
-		let raw = (GRID_SCREEN_STEP_MIN_MAJOR_PX / zoom.max(1e-9)).max(GRID_MAJOR_QUANTUM_WORLD);
-		(raw / GRID_MAJOR_QUANTUM_WORLD).ceil() * GRID_MAJOR_QUANTUM_WORLD
+	#[derive(Clone)]
+	struct CachedIconScene {
+		w: f64,
+		h: f64,
+		scene: Scene,
 	}
 
 	#[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -1559,6 +1672,7 @@ mod board_host {
 		pub root: bool,
 		pub style: Option<String>,
 		pub text: Option<String>,
+		pub icon_kind: Option<String>,
 	}
 
 	#[derive(Clone, Debug)]
@@ -1681,7 +1795,7 @@ mod board_host {
 		}
 	}
 
-	#[derive(Clone, Debug)]
+	#[derive(Clone)]
 	pub struct BoardHost {
 		pub camera: Camera,
 		pub nodes: BTreeMap<String, NodeData>,
@@ -1705,6 +1819,13 @@ mod board_host {
 		/// Screen-space open polyline (typically two points) while dragging a new handle link.
 		pub link_screen_preview: Option<Vec<Point>>,
 		pub vello_theme: VelloThemePalette,
+		/// @emoji 📶 Upper bounds for zoom bands: `zoom < minimap`, then overview, then normal, else detail.
+		pub lod_minimap_max_zoom: f64,
+		pub lod_overview_max_zoom: f64,
+		pub lod_normal_max_zoom: f64,
+		/// @emoji 🧲 When true, node drags snap to the finest visible LOD grid (`1` / `5` / `10` world units).
+		pub grid_snap_enabled: bool,
+		icon_vector_cache: RefCell<HashMap<String, CachedIconScene>>,
 	}
 
 	impl Default for Camera {
@@ -1740,6 +1861,11 @@ mod board_host {
 				selection_screen_preview: None,
 				link_screen_preview: None,
 				vello_theme: VelloThemePalette::default(),
+				lod_minimap_max_zoom: LOD_MINIMAP_MAX_ZOOM_DEFAULT,
+				lod_overview_max_zoom: LOD_OVERVIEW_MAX_ZOOM_DEFAULT,
+				lod_normal_max_zoom: LOD_NORMAL_MAX_ZOOM_DEFAULT,
+				grid_snap_enabled: false,
+				icon_vector_cache: RefCell::new(HashMap::new()),
 			}
 		}
 	}
@@ -1755,6 +1881,92 @@ mod board_host {
 
 		pub fn new() -> Self {
 			Self::default()
+		}
+
+		fn current_draw_lod(&self) -> BoardDrawLod {
+			let z = self.camera.zoom;
+			if z < self.lod_minimap_max_zoom {
+				BoardDrawLod::Minimap
+			} else if z < self.lod_overview_max_zoom {
+				BoardDrawLod::Overview
+			} else if z < self.lod_normal_max_zoom {
+				BoardDrawLod::Normal
+			} else {
+				BoardDrawLod::Detail
+			}
+		}
+
+		fn lod_visible_grid_snap_step_world(&self) -> Option<f64> {
+			match self.current_draw_lod() {
+				BoardDrawLod::Minimap => None,
+				BoardDrawLod::Overview => Some(GRID_WORLD_LARGE),
+				BoardDrawLod::Normal => Some(GRID_WORLD_MEDIUM),
+				BoardDrawLod::Detail => Some(GRID_WORLD_SMALL),
+			}
+		}
+
+		fn snap_world_scalar(&self, v: f64) -> f64 {
+			if !self.grid_snap_enabled {
+				return v;
+			}
+			let Some(step) = self.lod_visible_grid_snap_step_world() else {
+				return v;
+			};
+			(v / step).round() * step
+		}
+
+		fn snap_world_pair(&self, x: f64, y: f64) -> (f64, f64) {
+			(self.snap_world_scalar(x), self.snap_world_scalar(y))
+		}
+
+		/// @emoji 📶 JSON `{ "minimapMaxZoom", "overviewMaxZoom", "normalMaxZoom" }` strictly increasing CSS-scale zoom values.
+		pub fn set_lod_zoom_thresholds_from_json(&mut self, json: &str) -> Result<(), String> {
+			let v: serde_json::Value = serde_json::from_str(json).map_err(|e| e.to_string())?;
+			let a = v.get("minimapMaxZoom").and_then(|x| x.as_f64()).ok_or_else(|| "minimapMaxZoom".to_string())?;
+			let b = v.get("overviewMaxZoom").and_then(|x| x.as_f64()).ok_or_else(|| "overviewMaxZoom".to_string())?;
+			let c = v.get("normalMaxZoom").and_then(|x| x.as_f64()).ok_or_else(|| "normalMaxZoom".to_string())?;
+			if !(BOARD_CAMERA_ZOOM_MIN..=BOARD_CAMERA_ZOOM_MAX).contains(&a)
+				|| !(BOARD_CAMERA_ZOOM_MIN..=BOARD_CAMERA_ZOOM_MAX).contains(&b)
+				|| !(BOARD_CAMERA_ZOOM_MIN..=BOARD_CAMERA_ZOOM_MAX).contains(&c)
+			{
+				return Err("lod zoom thresholds must lie within camera zoom bounds".into());
+			}
+			if !(a < b && b < c) {
+				return Err("lod zoom thresholds must satisfy minimap < overview < normal".into());
+			}
+			self.lod_minimap_max_zoom = a;
+			self.lod_overview_max_zoom = b;
+			self.lod_normal_max_zoom = c;
+			Ok(())
+		}
+
+		pub fn set_grid_snap_enabled(&mut self, enabled: bool) {
+			self.grid_snap_enabled = enabled;
+		}
+
+		fn get_or_build_icon_scene(&self, kind: &str, svg: &str) -> Option<(f64, f64, Scene)> {
+			let key = kind.trim().to_string();
+			if key.is_empty() {
+				return None;
+			}
+			{
+				let g = self.icon_vector_cache.borrow();
+				if let Some(c) = g.get(&key) {
+					return Some((c.w, c.h, c.scene.clone()));
+				}
+			}
+			let opt = usvg::Options::default();
+			let tree = usvg::Tree::from_str(svg, &opt).ok()?;
+			let w = f64::from(tree.size().width());
+			let h = f64::from(tree.size().height());
+			if w <= 0.0 || h <= 0.0 || !w.is_finite() || !h.is_finite() {
+				return None;
+			}
+			let mut s = Scene::new();
+			super::svg_icon_vello09::append_svg_str(&mut s, svg).ok()?;
+			let cached = CachedIconScene { w, h, scene: s.clone() };
+			self.icon_vector_cache.borrow_mut().insert(key, cached);
+			Some((w, h, s))
 		}
 
 		pub fn set_size(&mut self, width: u32, height: u32, dpr: f64) {
@@ -2216,6 +2428,7 @@ mod board_host {
 						root: n.root.unwrap_or(false),
 						style: n.style.clone(),
 						text: n.text.clone(),
+						icon_kind: n.icon_kind.clone(),
 					},
 				);
 			}
@@ -2398,6 +2611,12 @@ mod board_host {
 						return false;
 					}
 					let root = obj.get("root").and_then(|v| v.as_bool());
+					let icon_kind = obj
+						.get("iconKind")
+						.and_then(|v| v.as_str())
+						.map(str::trim)
+						.filter(|s| !s.is_empty())
+						.map(|s| s.to_string());
 					desc.nodes.push(NodeDescJson {
 						id: id.into(),
 						x,
@@ -2406,6 +2625,7 @@ mod board_host {
 						selected: None,
 						style: None,
 						text,
+						icon_kind,
 						user_data: None,
 						visible: None,
 						root,
@@ -2422,6 +2642,12 @@ mod board_host {
 						return false;
 					}
 					let root = obj.get("root").and_then(|v| v.as_bool());
+					let icon_kind = obj
+						.get("iconKind")
+						.and_then(|v| v.as_str())
+						.map(str::trim)
+						.filter(|s| !s.is_empty())
+						.map(|s| s.to_string());
 					desc.nodes.push(NodeDescJson {
 						id: id.into(),
 						x,
@@ -2430,6 +2656,7 @@ mod board_host {
 						selected: None,
 						style: None,
 						text,
+						icon_kind,
 						user_data: None,
 						visible: None,
 						root,
@@ -2582,8 +2809,12 @@ mod board_host {
 						continue;
 					}
 				}
-				let fill = node_fill_color(&self.vello_theme, n.selected);
 				let stroke_c = node_stroke_color(&self.vello_theme, n.selected);
+				let fill = if lod == BoardDrawLod::Minimap {
+					stroke_c
+				} else {
+					node_fill_color(&self.vello_theme, n.selected)
+				};
 				let sw = 2.0_f64;
 				match n.shape {
 					NodeShape::Circle => {
@@ -2607,6 +2838,30 @@ mod board_host {
 						}
 					}
 				}
+				if lod == BoardDrawLod::Detail {
+					if let Some(k) = n.icon_kind.as_ref().map(|s| s.trim()).filter(|s| !s.is_empty()) {
+						if let Some(svg) = super::board_metabolism_icons::board_metabolism_icon_svg(k) {
+							if let Some((iw, ih, icon_scene)) = self.get_or_build_icon_scene(k, svg) {
+								let inset = 0.88;
+								let (sx_half, sy_half) = match n.shape {
+									NodeShape::Circle => {
+										let s = n.radius * self.camera.zoom * inset;
+										(s, s)
+									}
+									NodeShape::Rectangle => (
+										n.width * self.camera.zoom * inset * 0.5,
+										n.height * self.camera.zoom * inset * 0.5,
+									),
+								};
+								let center = self.world_to_screen(Point::new(n.x, n.y));
+								let scale = ((2.0 * sx_half) / iw).min((2.0 * sy_half) / ih);
+								let aff = Affine::translate((center.x - iw * scale * 0.5, center.y - ih * scale * 0.5))
+									* Affine::scale(scale);
+								scene.append(&icon_scene, Some(aff));
+							}
+						}
+					}
+				}
 			}
 			for h in self.handles.values() {
 				if !h.visible || !draw_handles {
@@ -2627,7 +2882,11 @@ mod board_host {
 				scene.fill(Fill::NonZero, Affine::IDENTITY, fill, None, &circle);
 				scene.stroke(&Stroke::new(2.0), Affine::IDENTITY, stroke_c, None, &circle);
 			}
-			let edge_sw = 2.0 * self.camera.zoom.max(0.75);
+			let edge_sw = if lod == BoardDrawLod::Minimap {
+				1.12_f64
+			} else {
+				2.0 * self.camera.zoom.max(0.75)
+			};
 			let edge_stroke = Stroke::new(edge_sw);
 			for e in self.edges.values() {
 				if !e.visible {
@@ -2657,22 +2916,18 @@ mod board_host {
 
 		pub fn build_vector_scene(&self) -> Scene {
 			let mut inner = Scene::new();
-			let lod = draw_lod(self.camera.zoom);
+			let lod = self.current_draw_lod();
 			let grid_color = self.vello_theme.grid_minor_stroke;
 			if lod != BoardDrawLod::Minimap {
-				let major_w = major_world_step_for_grid(self.camera.zoom);
-				self.stroke_world_step_grid(&mut inner, grid_color, 1.0, major_w, GRID_SCREEN_STEP_MIN_MAJOR_PX);
-				if lod == BoardDrawLod::Detail {
-					let minor_step = GRID_MINOR_WORLD * self.camera.zoom;
-					if minor_step >= GRID_SCREEN_STEP_MIN_MINOR_PX {
-						self.stroke_world_step_grid(
-							&mut inner,
-							grid_color,
-							0.55,
-							GRID_MINOR_WORLD,
-							GRID_SCREEN_STEP_MIN_MINOR_PX,
-						);
+				self.stroke_world_step_grid(&mut inner, grid_color, 1.0, GRID_WORLD_LARGE, 0.0);
+				match lod {
+					BoardDrawLod::Normal | BoardDrawLod::Detail => {
+						self.stroke_world_step_grid(&mut inner, grid_color, 0.72, GRID_WORLD_MEDIUM, 0.0);
 					}
+					_ => {}
+				}
+				if lod == BoardDrawLod::Detail {
+					self.stroke_world_step_grid(&mut inner, grid_color, 0.48, GRID_WORLD_SMALL, 0.0);
 				}
 			}
 			let use_tiles = self.world_raster_tiling == "world-clip";
@@ -3041,8 +3296,13 @@ mod board_host {
 					let (px0, py0) = start_positions.get(&primary_id).copied().unwrap_or((0.0, 0.0));
 					let nx = world.x - offset.x;
 					let ny = world.y - offset.y;
-					let dx = nx - px0;
-					let dy = ny - py0;
+					let mut dx = nx - px0;
+					let mut dy = ny - py0;
+					if self.grid_snap_enabled {
+						let (snx, sny) = self.snap_world_pair(nx, ny);
+						dx = snx - px0;
+						dy = sny - py0;
+					}
 					for (id, (ox0, oy0)) in &start_positions {
 						if let Some(n) = self.nodes.get_mut(id) {
 							let mx = ox0 + dx;
@@ -4140,6 +4400,20 @@ impl BoardSession {
 	#[wasm_bindgen(js_name = setWorldRasterTiling)]
 	pub fn set_world_raster_tiling_wasm(&mut self, mode: &str) {
 		self.state.borrow_mut().host.set_world_raster_tiling(mode);
+	}
+
+	#[wasm_bindgen(js_name = setLodZoomThresholdsJson)]
+	pub fn set_lod_zoom_thresholds_json_wasm(&mut self, json: &str) -> Result<(), JsValue> {
+		self.state
+			.borrow_mut()
+			.host
+			.set_lod_zoom_thresholds_from_json(json)
+			.map_err(|e| JsValue::from_str(&e))
+	}
+
+	#[wasm_bindgen(js_name = setGridSnapEnabled)]
+	pub fn set_grid_snap_enabled_wasm(&mut self, enabled: bool) {
+		self.state.borrow_mut().host.set_grid_snap_enabled(enabled);
 	}
 
 	#[wasm_bindgen(js_name = setSelectionIdsJson)]

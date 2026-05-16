@@ -1,7 +1,6 @@
 // @emoji 🎨 Emits `OUT_DIR/elements_styling_board.rs` — linear-sRGB `Color` defaults for the board canvas from `tokens.json` `colors` (same keys as Tailwind `@theme` / `--color-*`).
 use serde_json::Value;
 use std::collections::BTreeMap;
-use std::env;
 use std::fs;
 use std::io::Write;
 use std::path::Path;
@@ -130,9 +129,8 @@ const BOARD_PAINT_ROWS: &[BoardPaintRow<'_>] = &[
 	},
 ];
 
-fn main() {
-	let manifest = env::var("CARGO_MANIFEST_DIR").expect("CARGO_MANIFEST_DIR");
-	let tokens_path = Path::new(&manifest).join("../../../../core/styling/tokens.json");
+pub fn emit_board_vello_styles(manifest_dir: &Path, out_dir: &Path) {
+	let tokens_path = manifest_dir.join("../../../../core/styling/tokens.json");
 	println!("cargo:rerun-if-changed={}", tokens_path.display());
 	let raw = fs::read_to_string(&tokens_path).unwrap_or_else(|e| panic!("read {}: {e}", tokens_path.display()));
 	let root: Value = serde_json::from_str(&raw).expect("parse tokens.json");
@@ -140,7 +138,7 @@ fn main() {
 	let colors_obj = colors_val.as_object().expect("colors must be object");
 	let colors: BTreeMap<String, Value> = colors_obj.iter().map(|(k, v)| (k.clone(), v.clone())).collect();
 
-	let out_path = Path::new(&env::var("OUT_DIR").expect("OUT_DIR")).join("elements_styling_board.rs");
+	let out_path = out_dir.join("elements_styling_board.rs");
 	let mut f = fs::File::create(&out_path).expect("create elements_styling_board.rs");
 
 	for row in BOARD_PAINT_ROWS {

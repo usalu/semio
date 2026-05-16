@@ -323,6 +323,8 @@ export interface BoardObjectOptions {
 /** @emoji 🔵 World-space circle node (center + radius). */
 export type CircleNodeOptions = BoardObjectOptions & {
 	handles?: Handle[];
+	/** @emoji 🖼️ Metabolism example SVG stem for detail LOD vector icon. */
+	iconKind?: string;
 	/** @emoji 🌳 Marks this node as a hierarchy root; edges follow parent {@link Handle} {@link Edge.source} → child {@link Edge.target}. */
 	root?: boolean;
 	radius: number;
@@ -344,6 +346,8 @@ export type CircleNodeOptions = BoardObjectOptions & {
 export type RectangleNodeOptions = BoardObjectOptions & {
 	handles?: Handle[];
 	height: number;
+	/** @emoji 🖼️ Metabolism example SVG stem for detail LOD vector icon. */
+	iconKind?: string;
 	/** @emoji 🌳 Marks this node as a hierarchy root; edges follow parent {@link Handle} {@link Edge.source} → child {@link Edge.target}. */
 	root?: boolean;
 	shape: "rectangle";
@@ -467,24 +471,40 @@ function shouldBoardHandleDeleteShortcut(): boolean {
 	}
 	return true;
 }
-/** 📐 Quantized major grid step in world units at overview/detail (mirrors Rust `GRID_MAJOR_QUANTUM_WORLD`). */
+/** @emoji 📐 Default LOD zoom boundaries (world scale / CSS pixels); minimap < `minimapMaxZoom` < overview < `overviewMaxZoom` < normal < `normalMaxZoom` ≤ detail. */
+export interface BoardLodZoomThresholds {
+	minimapMaxZoom: number;
+	overviewMaxZoom: number;
+	normalMaxZoom: number;
+}
+
+export const DEFAULT_BOARD_LOD_ZOOM_THRESHOLDS: BoardLodZoomThresholds = {
+	minimapMaxZoom: 0.15,
+	overviewMaxZoom: 0.35,
+	normalMaxZoom: 0.5,
+};
+
+/** 📐 Quantized major grid step in world units (legacy constant; LOD grids use fixed 10/5/1). */
 export const BOARD_LOD_GRID_MAJOR_QUANTUM = 10;
 
-/** 📐 Below this zoom the board is minimap mode: no grid, no node outlines, no handle glyphs (mirrors Rust `LOD_MINIMAP_MAX_ZOOM`). */
-export const BOARD_LOD_MINIMAP_MAX_ZOOM = 0.15;
-
-/** 📐 At or above this zoom the board is detail mode: minor grid, handles (mirrors Rust `LOD_DETAIL_MIN_ZOOM`). */
-export const BOARD_LOD_DETAIL_MIN_ZOOM = 0.5;
-
-/** 📶 LOD tier for `data-board-lod` (mirrors Rust `draw_lod`). */
-export function resolveBoardLodLabel(zoom: number): "detail" | "minimap" | "overview" {
-	if (zoom < BOARD_LOD_MINIMAP_MAX_ZOOM) {
+/** @emoji 📶 LOD label for `data-board-lod` using explicit thresholds. */
+export function resolveBoardLodLabelFromThresholds(zoom: number, t: BoardLodZoomThresholds): "detail" | "minimap" | "normal" | "overview" {
+	const z = zoom;
+	if (z < t.minimapMaxZoom) {
 		return "minimap";
 	}
-	if (zoom < BOARD_LOD_DETAIL_MIN_ZOOM) {
+	if (z < t.overviewMaxZoom) {
 		return "overview";
 	}
+	if (z < t.normalMaxZoom) {
+		return "normal";
+	}
 	return "detail";
+}
+
+/** @emoji 📶 LOD tier for `data-board-lod` using {@link DEFAULT_BOARD_LOD_ZOOM_THRESHOLDS}. */
+export function resolveBoardLodLabel(zoom: number): "detail" | "minimap" | "normal" | "overview" {
+	return resolveBoardLodLabelFromThresholds(zoom, DEFAULT_BOARD_LOD_ZOOM_THRESHOLDS);
 }
 
 /** @emoji 🎨 Offline / headless stroke/fill defaults aligned with `tokens.json` `colors` (same as `--color-*` / board canvas paint). */
@@ -1204,6 +1224,8 @@ export class Node extends BoardObject {
 	radius: number;
 	shape: "circle" | "rectangle";
 	text: string | null;
+	/** @emoji 🖼️ Metabolism SVG stem for detail LOD icon rendering in WASM. */
+	iconKind: string | null;
 	/** @emoji 📏 When true, {@link BoardRenderer} scales overlay text to the node interior (always drawn at node center). */
 	textAutofit: boolean;
 	/** @emoji 🧭 When not autofitting, anchors single-line caption inside the node-centered box. */
@@ -1230,6 +1252,8 @@ export class Node extends BoardObject {
 		this.x = options.x;
 		this.y = options.y;
 		this.text = options.text ?? null;
+		this.iconKind =
+			typeof options.iconKind === "string" && options.iconKind.trim() !== "" ? options.iconKind.trim() : null;
 		this.textAutofit = options.textAutofit ?? false;
 		this.textAlignment = options.textAlignment ?? BOARD_NODE_TEXT_ALIGNMENT_DEFAULT;
 		this.textFontFamily =
