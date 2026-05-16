@@ -823,13 +823,13 @@ mod board_host {
 			start: Point,
 			start_screen: Point,
 		},
-		LinkFromHandle {
-			from_id: String,
+		LinkAtSourceHandle {
+			source_id: String,
 			start_screen: Point,
 		},
-		LinkDragging {
-			from_id: String,
-			snap_id: Option<String>,
+		LinkDragSnap {
+			source_id: String,
+			target_id: Option<String>,
 		},
 	}
 
@@ -886,7 +886,7 @@ mod board_host {
 		pub edges: BTreeMap<String, EdgeData>,
 		/// Catalog keyed by `handle_kind` id (`{ id, name, color }` from `set_handle_kinds_from_json`).
 		pub handle_kinds: BTreeMap<String, HandleKindDef>,
-		/// Ordered pairs `(from_handle_kind, to_handle_kind)` allowed for handle-link gestures; empty = unrestricted.
+		/// Ordered pairs `(source_handle_kind, target_handle_kind)` allowed for handle-link gestures; empty = unrestricted.
 		pub handle_link_compat_pairs: Vec<(String, String)>,
 		pub selection: BTreeSet<String>,
 		pub selection_options: SelectionOptions,
@@ -1250,7 +1250,7 @@ mod board_host {
 		pub fn defers_descriptor_sync_from_js(&self) -> bool {
 			matches!(
 				self.interaction,
-				Interaction::LinkFromHandle { .. } | Interaction::LinkDragging { .. }
+				Interaction::LinkAtSourceHandle { .. } | Interaction::LinkDragSnap { .. }
 			)
 		}
 
@@ -1364,7 +1364,7 @@ mod board_host {
 			self.link_screen_preview = None;
 			if matches!(
 				self.interaction,
-				Interaction::LinkFromHandle { .. } | Interaction::LinkDragging { .. }
+				Interaction::LinkAtSourceHandle { .. } | Interaction::LinkDragSnap { .. }
 			) {
 				self.interaction = Interaction::None;
 			}
@@ -2027,18 +2027,18 @@ mod board_host {
 			(HANDLE_HIT_TOLERANCE_PX + LINK_HANDLE_SNAP_EXTRA_PX) / z + h.radius
 		}
 
-		fn nearest_link_snap_handle_world(&self, from_id: &str, world: Point) -> Option<String> {
-			let from_handle = self.handles.get(from_id)?;
-			let from_node = from_handle.node_id.as_str();
+		fn nearest_link_snap_handle_world(&self, source_handle_id: &str, world: Point) -> Option<String> {
+			let source_handle = self.handles.get(source_handle_id)?;
+			let source_node_id = source_handle.node_id.as_str();
 			let mut best: Option<(f64, String)> = None;
 			for (id, h) in &self.handles {
-				if id == from_id || !h.visible {
+				if id == source_handle_id || !h.visible {
 					continue;
 				}
-				if h.node_id == from_node {
+				if h.node_id == source_node_id {
 					continue;
 				}
-				if !self.handles_link_compatible_for_drag(from_handle, h) {
+				if !self.handles_link_compatible_for_drag(source_handle, h) {
 					continue;
 				}
 				let pw = self.handle_world_pos(h)?;
@@ -2051,15 +2051,21 @@ mod board_host {
 			best.map(|(_, id)| id)
 		}
 
-		fn sync_link_drag_preview(&mut self, from_id: &str, end_screen: Point, world: Point, snap_id: Option<&str>) {
-			let Some(start_w) = self.handles.get(from_id).and_then(|h| self.handle_world_pos(h)) else {
+		fn sync_link_drag_preview(
+			&mut self,
+			source_handle_id: &str,
+			end_screen: Point,
+			world: Point,
+			target_handle_id: Option<&str>,
+		) {
+			let Some(start_w) = self.handles.get(source_handle_id).and_then(|h| self.handle_world_pos(h)) else {
 				self.link_screen_preview = None;
 				return;
 			};
 			let start_s = self.world_to_screen(start_w);
-			let end_s = if let Some(sid) = snap_id {
+			let end_s = if let Some(tid) = target_handle_id {
 				self.handles
-					.get(sid)
+					.get(tid)
 					.and_then(|h| self.handle_world_pos(h))
 					.map(|w| self.world_to_screen(w))
 					.unwrap_or(end_screen)
@@ -2067,31 +2073,31 @@ mod board_host {
 				end_screen
 			};
 			self.link_screen_preview = Some(vec![start_s, end_s]);
-			if let Some(sid) = snap_id {
-				self.set_hovered_id(Some(sid.to_string()));
+			if let Some(tid) = target_handle_id {
+				self.set_hovered_id(Some(tid.to_string()));
 			} else {
 				self.update_hover_from_world(world);
 			}
 		}
 
-		fn try_commit_link_edge(&mut self, from_id: &str, to_id: &str) -> bool {
-			if from_id == to_id {
+		fn try_commit_link_edge(&mut self, source_handle_id: &str, target_handle_id: &str) -> bool {
+			if source_handle_id == target_handle_id {
 				return false;
 			}
-			let Some(fh) = self.handles.get(from_id) else {
+			let Some(source_row) = self.handles.get(source_handle_id) else {
 				return false;
 			};
-			let Some(th) = self.handles.get(to_id) else {
+			let Some(target_row) = self.handles.get(target_handle_id) else {
 				return false;
 			};
-			if fh.node_id == th.node_id {
+			if source_row.node_id == target_row.node_id {
 				return false;
 			}
-			if !self.handles_link_compatible_for_drag(fh, th) {
+			if !self.handles_link_compatible_for_drag(source_row, target_row) {
 				return false;
 			}
 			for e in self.edges.values() {
-				if e.source == from_id && e.target == to_id {
+				if e.source == source_handle_id && e.target == target_handle_id {
 					return false;
 				}
 			}
@@ -2107,8 +2113,8 @@ mod board_host {
 				id.clone(),
 				EdgeData {
 					id: id.clone(),
-					source: from_id.to_string(),
-					target: to_id.to_string(),
+					source: source_handle_id.to_string(),
+					target: target_handle_id.to_string(),
 					selected: false,
 					visible: true,
 					style: None,
@@ -2116,7 +2122,7 @@ mod board_host {
 			);
 			self.push_event(
 				"edgeCreate",
-				json!({ "id": id, "source": from_id, "target": to_id }),
+				json!({ "id": id, "source": source_handle_id, "target": target_handle_id }),
 			);
 			true
 		}
@@ -2173,8 +2179,8 @@ mod board_host {
 					let next = Self::merge_pick_into_selection(&self.selection, hid, self.selection_options.mode.as_str());
 					let ids: Vec<_> = next.iter().cloned().collect();
 					self.set_selection_ids(&ids);
-					self.interaction = Interaction::LinkFromHandle {
-						from_id: hid.clone(),
+					self.interaction = Interaction::LinkAtSourceHandle {
+						source_id: hid.clone(),
 						start_screen: screen,
 					};
 					self.set_hovered_id(Some(hid.clone()));
@@ -2279,26 +2285,26 @@ mod board_host {
 						start_screen,
 					};
 				}
-				Interaction::LinkFromHandle { from_id, start_screen } => {
+				Interaction::LinkAtSourceHandle { source_id, start_screen } => {
 					if distance_between(screen, start_screen) >= LINK_DRAG_MIN_DISTANCE_PX {
-						let snap = self.nearest_link_snap_handle_world(&from_id, world);
-						self.sync_link_drag_preview(&from_id, screen, world, snap.as_deref());
-						self.interaction = Interaction::LinkDragging {
-							from_id: from_id.clone(),
-							snap_id: snap,
+						let snap = self.nearest_link_snap_handle_world(&source_id, world);
+						self.sync_link_drag_preview(&source_id, screen, world, snap.as_deref());
+						self.interaction = Interaction::LinkDragSnap {
+							source_id: source_id.clone(),
+							target_id: snap,
 						};
 					} else {
 						self.link_screen_preview = None;
-						self.interaction = Interaction::LinkFromHandle { from_id, start_screen };
+						self.interaction = Interaction::LinkAtSourceHandle { source_id, start_screen };
 						self.update_hover_from_world(world);
 					}
 				}
-				Interaction::LinkDragging { from_id, .. } => {
-					let snap = self.nearest_link_snap_handle_world(&from_id, world);
-					self.sync_link_drag_preview(&from_id, screen, world, snap.as_deref());
-					self.interaction = Interaction::LinkDragging {
-						from_id: from_id.clone(),
-						snap_id: snap,
+				Interaction::LinkDragSnap { source_id, .. } => {
+					let snap = self.nearest_link_snap_handle_world(&source_id, world);
+					self.sync_link_drag_preview(&source_id, screen, world, snap.as_deref());
+					self.interaction = Interaction::LinkDragSnap {
+						source_id: source_id.clone(),
+						target_id: snap,
 					};
 				}
 				Interaction::None => {
@@ -2313,15 +2319,15 @@ mod board_host {
 			let world = self.screen_to_world(screen);
 			let grabbed = std::mem::take(&mut self.interaction);
 			match grabbed {
-				Interaction::LinkDragging { from_id, snap_id } => {
+				Interaction::LinkDragSnap { source_id, target_id } => {
 					self.link_screen_preview = None;
-					if let Some(to_id) = snap_id {
-						self.try_commit_link_edge(&from_id, &to_id);
+					if let Some(tid) = target_id {
+						self.try_commit_link_edge(&source_id, &tid);
 					}
 					self.interaction = Interaction::None;
 					self.update_hover_from_world(world);
 				}
-				Interaction::LinkFromHandle { .. } => {
+				Interaction::LinkAtSourceHandle { .. } => {
 					self.link_screen_preview = None;
 					self.interaction = Interaction::None;
 					self.update_hover_from_world(world);
@@ -2593,9 +2599,9 @@ pub struct Handle {
 /// 🪢 Cubic edge connecting two handles.
 #[derive(Clone, Debug, PartialEq)]
 pub struct Edge {
-	pub from_handle: HandleId,
 	pub id: EdgeId,
-	pub to_handle: HandleId,
+	pub source_handle: HandleId,
+	pub target_handle: HandleId,
 }
 
 /// 🎯 Semantic board event emitted after interaction or selection changes.
@@ -2731,13 +2737,13 @@ impl BoardEngine {
 		);
 	}
 
-	pub fn create_edge(&mut self, id: EdgeId, from_handle: HandleId, to_handle: HandleId) {
+	pub fn create_edge(&mut self, id: EdgeId, source_handle: HandleId, target_handle: HandleId) {
 		self.edges.insert(
 			id,
 			Edge {
-				from_handle,
 				id,
-				to_handle,
+				source_handle,
+				target_handle,
 			},
 		);
 	}
@@ -2829,17 +2835,17 @@ impl BoardEngine {
 
 	pub fn edge_curve(&self, edge_id: EdgeId) -> Option<CubicBez> {
 		let edge = self.edges.get(&edge_id)?;
-		let from_handle = self.handles.get(&edge.from_handle)?;
-		let to_handle = self.handles.get(&edge.to_handle)?;
-		let from_node = self.nodes.get(&from_handle.node_id)?;
-		let to_node = self.nodes.get(&to_handle.node_id)?;
-		let from_position = handle_position(from_node, from_handle);
-		let to_position = handle_position(to_node, to_handle);
+		let source_handle = self.handles.get(&edge.source_handle)?;
+		let target_handle = self.handles.get(&edge.target_handle)?;
+		let source_node = self.nodes.get(&source_handle.node_id)?;
+		let target_node = self.nodes.get(&target_handle.node_id)?;
+		let source_position = handle_position(source_node, source_handle);
+		let target_position = handle_position(target_node, target_handle);
 		Some(compute_edge_bezier_points(
-			from_position,
-			to_position,
-			from_node.center,
-			to_node.center,
+			source_position,
+			target_position,
+			source_node.center,
+			target_node.center,
 		))
 	}
 
@@ -2848,7 +2854,7 @@ impl BoardEngine {
 		let removed_edges: Vec<EdgeId> = self
 			.edges
 			.values()
-			.filter(|edge| edge.from_handle == id || edge.to_handle == id)
+			.filter(|edge| edge.source_handle == id || edge.target_handle == id)
 			.map(|edge| edge.id)
 			.collect();
 		for edge_id in removed_edges {
@@ -3343,12 +3349,12 @@ mod tests {
 		assert!(curve.p0.y.abs() < 0.001);
 		assert!((curve.p3.x - 260.0).abs() < 0.001);
 		assert!(curve.p3.y.abs() < 0.001);
-		let outward = curve.p0 - Point::ORIGIN;
+		let source_radial = curve.p0 - Point::ORIGIN;
 		let arm0 = curve.p1 - curve.p0;
-		let align0 = vcompute::normalize_or_zero(outward).dot(vcompute::normalize_or_zero(arm0));
-		let inward = Point::new(300.0, 0.0) - curve.p3;
+		let align0 = vcompute::normalize_or_zero(source_radial).dot(vcompute::normalize_or_zero(arm0));
+		let target_approach = Point::new(300.0, 0.0) - curve.p3;
 		let arm1 = curve.p3 - curve.p2;
-		let align1 = vcompute::normalize_or_zero(inward).dot(vcompute::normalize_or_zero(arm1));
+		let align1 = vcompute::normalize_or_zero(target_approach).dot(vcompute::normalize_or_zero(arm1));
 		assert!(align0 > 0.99);
 		assert!(align1 > 0.99);
 	}

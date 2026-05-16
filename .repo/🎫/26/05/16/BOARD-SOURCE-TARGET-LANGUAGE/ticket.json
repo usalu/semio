@@ -1,0 +1,8 @@
+{
+  "title": "Board Source Target Language Cleanup",
+  "emoji": "🧭",
+  "status": "open",
+  "description": "Remove remaining in/out and from-style naming from board link gestures and engine edge structs; use source/target consistently.",
+  "summary": "",
+  "goal": "🎯r2602"
+}

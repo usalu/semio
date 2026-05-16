@@ -1158,7 +1158,7 @@ export class Node extends BoardObject {
 	width: number;
 	x: number;
 	y: number;
-	/** @emoji 🌳 When true, {@link computeBoardGraphObservationSnapshot} treats outgoing {@link Edge} links as parent→child. */
+	/** @emoji 🌳 When true, {@link computeBoardGraphObservationSnapshot} treats each {@link Edge} as parent {@link Edge.source} → child {@link Edge.target} along node ids. */
 	root: boolean;
 
 	constructor(options: NodeOptions) {
@@ -1294,7 +1294,7 @@ export class Handle extends BoardObject {
 	}
 }
 
-/** 🪢 Cubic edge between two boundary handles; control points sit on the radial **outside** of each node so the stroke never bows inward through the disk. Handles are not reversible: {@link Edge.source} is the parent-side anchor and {@link Edge.target} the child-side anchor for {@link Node.root} subtree reachability. */
+/** 🪢 Cubic edge between two boundary handles; control arms stay on the radial **outside** of each node so the stroke does not cut through the disk interior. {@link Edge.source} is the parent-side anchor and {@link Edge.target} the child-side anchor for {@link Node.root} subtree reachability. */
 export class Edge extends BoardObject {
 	source: Handle;
 	target: Handle;
@@ -2909,14 +2909,14 @@ if (boardVitest) {
 			expect(curve.p0.y).toBeCloseTo(0);
 			expect(curve.p3.x).toBeCloseTo(260);
 			expect(curve.p3.y).toBeCloseTo(0);
-			const outward0 = { x: curve.p0.x - sourceNode.x, y: curve.p0.y - sourceNode.y };
+			const sourceRadial0 = { x: curve.p0.x - sourceNode.x, y: curve.p0.y - sourceNode.y };
 			const arm0 = { x: curve.p1.x - curve.p0.x, y: curve.p1.y - curve.p0.y };
-			const inward1 = { x: targetNode.x - curve.p3.x, y: targetNode.y - curve.p3.y };
+			const targetApproach1 = { x: targetNode.x - curve.p3.x, y: targetNode.y - curve.p3.y };
 			const arm1 = { x: curve.p3.x - curve.p2.x, y: curve.p3.y - curve.p2.y };
 			const align0 =
-				(outward0.x * arm0.x + outward0.y * arm0.y) / (Math.hypot(outward0.x, outward0.y) * Math.hypot(arm0.x, arm0.y));
+				(sourceRadial0.x * arm0.x + sourceRadial0.y * arm0.y) / (Math.hypot(sourceRadial0.x, sourceRadial0.y) * Math.hypot(arm0.x, arm0.y));
 			const align1 =
-				Math.abs((inward1.x * arm1.x + inward1.y * arm1.y) / (Math.hypot(inward1.x, inward1.y) * Math.hypot(arm1.x, arm1.y)));
+				Math.abs((targetApproach1.x * arm1.x + targetApproach1.y * arm1.y) / (Math.hypot(targetApproach1.x, targetApproach1.y) * Math.hypot(arm1.x, arm1.y)));
 			expect(align0).toBeGreaterThan(0.99);
 			expect(align1).toBeGreaterThan(0.99);
 		});
@@ -3555,11 +3555,11 @@ if (boardVitest) {
 			const mid = new Node({ id: "mid", radius: 10, x: 50, y: 0 });
 			const leaf = new Node({ id: "leaf", radius: 10, x: 100, y: 0 });
 			const hRoot = new Handle({ handleKind: BOARD_BUILTIN_PORT_HANDLE_KIND, angle: 0, id: "root:h0", node: root });
-			const hMidIn = new Handle({ handleKind: BOARD_BUILTIN_PORT_HANDLE_KIND, angle: Math.PI, id: "mid:h0", node: mid });
-			const hMidOut = new Handle({ handleKind: BOARD_BUILTIN_PORT_HANDLE_KIND, angle: 0, id: "mid:h1", node: mid });
-			const hLeafIn = new Handle({ handleKind: BOARD_BUILTIN_PORT_HANDLE_KIND, angle: Math.PI, id: "leaf:h0", node: leaf });
-			const e1 = new Edge({ source: hRoot, id: "e1", target: hMidIn });
-			const e2 = new Edge({ source: hMidOut, id: "e2", target: hLeafIn });
+			const hMidTarget = new Handle({ handleKind: BOARD_BUILTIN_PORT_HANDLE_KIND, angle: Math.PI, id: "mid:h0", node: mid });
+			const hMidSource = new Handle({ handleKind: BOARD_BUILTIN_PORT_HANDLE_KIND, angle: 0, id: "mid:h1", node: mid });
+			const hLeafTarget = new Handle({ handleKind: BOARD_BUILTIN_PORT_HANDLE_KIND, angle: Math.PI, id: "leaf:h0", node: leaf });
+			const e1 = new Edge({ source: hRoot, id: "e1", target: hMidTarget });
+			const e2 = new Edge({ source: hMidSource, id: "e2", target: hLeafTarget });
 			renderer.scene.add(root).add(mid).add(leaf).add(e1).add(e2);
 			const snap = computeBoardGraphObservationSnapshot(renderer.scene);
 			expect(snap.rootIds).toEqual(["root"]);
@@ -3584,9 +3584,9 @@ if (boardVitest) {
 			];
 			const root = new Node({ id: "root", radius: 10, root: true, x: 0, y: 0 });
 			const child = new Node({ id: "child", radius: 10, x: 40, y: 0 });
-			const hOut = new Handle({ handleKind: BOARD_BUILTIN_PORT_HANDLE_KIND, angle: 0, id: "root:h0", node: root });
-			const hIn = new Handle({ handleKind: BOARD_BUILTIN_PORT_HANDLE_KIND, angle: Math.PI, id: "child:h0", node: child });
-			const edge = new Edge({ source: hOut, id: "link", target: hIn });
+			const hRootSource = new Handle({ handleKind: BOARD_BUILTIN_PORT_HANDLE_KIND, angle: 0, id: "root:h0", node: root });
+			const hChildTarget = new Handle({ handleKind: BOARD_BUILTIN_PORT_HANDLE_KIND, angle: Math.PI, id: "child:h0", node: child });
+			const edge = new Edge({ source: hRootSource, id: "link", target: hChildTarget });
 			renderer.scene.add(root).add(child).add(edge);
 			await Promise.resolve();
 			expect(events.some((e) => e.startsWith("parentNodeChange:root"))).toBe(true);

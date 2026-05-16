@@ -15,6 +15,10 @@ import {
 	Node,
 	useBoardEvent,
 } from "../../../../elements/client/lib/board/index.tsx";
+import {
+	BOARD_BUILTIN_PORT_HANDLE_KIND,
+	BOARD_DEFAULT_HANDLE_KIND_CATALOG,
+} from "../../../../elements/client/lib/board/index";
 import nakaginCapsuleTowerBoardFixture from "../../../fixtures/nakagin-capsule-tower.board.json";
 
 const meta = {
@@ -32,7 +36,10 @@ type Story = StoryObj<typeof meta>;
 
 interface BoardFixtureHandleJson {
 	angle: number;
+	color?: string;
+	handleKind?: string;
 	id: string;
+	radius?: number;
 }
 
 interface BoardFixtureNodeJson {
@@ -66,7 +73,7 @@ interface BoardFixtureV1 {
 const nakaginCapsuleTowerBoard = nakaginCapsuleTowerBoardFixture as BoardFixtureV1;
 
 type DefaultBoardGraphNode = {
-	handles: { angle: number; id: string }[];
+	handles: { angle: number; handleKind: string; id: string }[];
 	id: string;
 	radius: number;
 	x: number;
@@ -80,8 +87,8 @@ type DefaultBoardGraph = { edges: DefaultBoardGraphEdge[]; nodes: DefaultBoardGr
 const defaultBoardGraph: DefaultBoardGraph = {
 	edges: [{ from: "alpha.out", id: "link-1", to: "beta.in" }],
 	nodes: [
-		{ handles: [{ angle: 0, id: "alpha.out" }], id: "alpha", radius: 44, x: 0, y: 0 },
-		{ handles: [{ angle: Math.PI, id: "beta.in" }], id: "beta", radius: 40, x: 280, y: 120 },
+		{ handles: [{ angle: 0, handleKind: BOARD_BUILTIN_PORT_HANDLE_KIND, id: "alpha.out" }], id: "alpha", radius: 44, x: 0, y: 0 },
+		{ handles: [{ angle: Math.PI, handleKind: BOARD_BUILTIN_PORT_HANDLE_KIND, id: "beta.in" }], id: "beta", radius: 40, x: 280, y: 120 },
 	],
 };
 
@@ -116,7 +123,7 @@ function StatefulInteractiveBoardScene(): ReactElement {
 			{graph.nodes.map((node) => (
 				<Node id={node.id} key={node.id} radius={node.radius} x={node.x} y={node.y}>
 					{node.handles.map((handle) => (
-						<Handle angle={handle.angle} id={handle.id} key={handle.id} />
+						<Handle angle={handle.angle} handleKind={handle.handleKind} id={handle.id} key={handle.id} />
 					))}
 				</Node>
 			))}
@@ -144,13 +151,27 @@ const nakaginCapsuleTowerBoardScene: ReactElement = (
 					y={node.y}
 				>
 					{node.handles.map((handle) => (
-						<Handle angle={handle.angle} id={handle.id} key={handle.id} radius={handle.radius} />
+						<Handle
+							angle={handle.angle}
+							color={handle.color}
+							handleKind={handle.handleKind ?? BOARD_BUILTIN_PORT_HANDLE_KIND}
+							id={handle.id}
+							key={handle.id}
+							radius={handle.radius}
+						/>
 					))}
 				</Node>
 			) : (
 				<Node draggable={false} id={node.id} key={node.id} radius={node.radius ?? 0} text={node.text ?? node.label} x={node.x} y={node.y}>
 					{node.handles.map((handle) => (
-						<Handle angle={handle.angle} id={handle.id} key={handle.id} radius={handle.radius} />
+						<Handle
+							angle={handle.angle}
+							color={handle.color}
+							handleKind={handle.handleKind ?? BOARD_BUILTIN_PORT_HANDLE_KIND}
+							id={handle.id}
+							key={handle.id}
+							radius={handle.radius}
+						/>
 					))}
 				</Node>
 			),
@@ -169,6 +190,7 @@ export const Default: Story = {
 	),
 	args: {
 		camera: { x: 0, y: 0, zoom: 1 },
+		handleKinds: [...BOARD_DEFAULT_HANDLE_KIND_CATALOG],
 		height: 520,
 		width: 720,
 		worldRasterTiling: "none",
