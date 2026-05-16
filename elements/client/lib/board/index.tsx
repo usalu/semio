@@ -40,8 +40,12 @@ import {
 	decodeBoardFixtureFromDragV1,
 	ensureElementsBoardWasmLoaded,
 	type BoardEventMap,
+	type BoardChildEdgesChangePayload,
+	type BoardChildNodesChangePayload,
 	type BoardFixtureDropDetail,
 	type BoardFixtureV1,
+	type BoardGraphEdgeIdPayload,
+	type BoardGraphNodeIdPayload,
 	type BoardHoverPayload,
 	type BoardNodeTextAlignment,
 	type BoardSelectionMethod,
@@ -68,6 +72,15 @@ export interface BoardCanvasProps {
 	/** @emoji 🖱️ Fires after pointer-driven hit tests (same cadence as canvas moves); use for tooltips and status. */
 	onHover?: (payload: BoardHoverPayload) => void;
 	onReady?: (renderer: BoardRenderer) => void;
+	/** @emoji 🔔 Fires after any graph observation emission in this flush (see other `on*` graph props). */
+	onChange?: () => void;
+	onChildEdgeChange?: (payload: BoardGraphEdgeIdPayload) => void;
+	onChildEdgesChange?: (payload: BoardChildEdgesChangePayload) => void;
+	onChildNodeChange?: (payload: BoardGraphNodeIdPayload) => void;
+	onChildNodesChange?: (payload: BoardChildNodesChangePayload) => void;
+	onNodeChange?: (payload: BoardGraphNodeIdPayload) => void;
+	onParentEdgeChange?: (payload: BoardGraphEdgeIdPayload) => void;
+	onParentNodeChange?: (payload: BoardGraphNodeIdPayload) => void;
 	renderMode?: RenderMode;
 	selectionMethod?: BoardSelectionMethod;
 	selectionMode?: BoardSelectionMode;
@@ -84,6 +97,8 @@ export type BoardNodeCircleProps = {
 	draggable?: boolean;
 	id: string;
 	radius: number;
+	/** @emoji 🌳 Declares a directed subtree root (edges: parent {@link Handle} → child {@link Handle}). */
+	root?: boolean;
 	selected?: boolean;
 	shape?: "circle";
 	style?: string;
@@ -108,6 +123,8 @@ export type BoardNodeRectangleProps = {
 	draggable?: boolean;
 	height: number;
 	id: string;
+	/** @emoji 🌳 Declares a directed subtree root (edges: parent {@link Handle} → child {@link Handle}). */
+	root?: boolean;
 	selected?: boolean;
 	shape: "rectangle";
 	style?: string;
@@ -251,6 +268,7 @@ function applyNodeProps(renderer: BoardRenderer, instance: BoardNodeObject, desc
 	instance.style = descriptor.style ?? null;
 	instance.userData = { ...(descriptor.userData ?? {}) };
 	instance.visible = descriptor.visible ?? true;
+	instance.root = descriptor.root === true;
 	instance.textAutofit = descriptor.textAutofit ?? false;
 	instance.textAlignment = descriptor.textAlignment ?? BOARD_NODE_TEXT_ALIGNMENT_DEFAULT;
 	instance.textFontFamily =
@@ -305,6 +323,7 @@ function newBoardNodeFromDescriptor(nodeDescriptor: NodeDescriptor): BoardNodeOb
 			draggable: nodeDescriptor.draggable ?? true,
 			height: nodeDescriptor.height,
 			id: nodeDescriptor.id,
+			root: nodeDescriptor.root,
 			selected: nodeDescriptor.selected,
 			shape: "rectangle",
 			style: nodeDescriptor.style,
@@ -324,6 +343,7 @@ function newBoardNodeFromDescriptor(nodeDescriptor: NodeDescriptor): BoardNodeOb
 		draggable: nodeDescriptor.draggable ?? true,
 		id: nodeDescriptor.id,
 		radius: nodeDescriptor.radius,
+		root: nodeDescriptor.root,
 		selected: nodeDescriptor.selected,
 		style: nodeDescriptor.style,
 		text: nodeDescriptor.text,
@@ -464,8 +484,16 @@ export function BoardCanvas({
 	contextMenu,
 	fixtureDragDrop,
 	height,
+	onChange,
+	onChildEdgeChange,
+	onChildEdgesChange,
+	onChildNodeChange,
+	onChildNodesChange,
 	onFixtureDrop,
 	onHover,
+	onNodeChange,
+	onParentEdgeChange,
+	onParentNodeChange,
 	onReady,
 	renderMode,
 	selectionMethod,
@@ -587,6 +615,52 @@ export function BoardCanvas({
 		}
 		return contextRenderer.on("hover", onHover);
 	}, [contextRenderer, onHover]);
+
+	useEffect(() => {
+		if (!contextRenderer) {
+			return () => undefined;
+		}
+		const unsubs: Array<() => void> = [];
+		if (onChange) {
+			unsubs.push(contextRenderer.on("change", onChange));
+		}
+		if (onNodeChange) {
+			unsubs.push(contextRenderer.on("nodeChange", onNodeChange));
+		}
+		if (onParentNodeChange) {
+			unsubs.push(contextRenderer.on("parentNodeChange", onParentNodeChange));
+		}
+		if (onParentEdgeChange) {
+			unsubs.push(contextRenderer.on("parentEdgeChange", onParentEdgeChange));
+		}
+		if (onChildNodeChange) {
+			unsubs.push(contextRenderer.on("childNodeChange", onChildNodeChange));
+		}
+		if (onChildEdgeChange) {
+			unsubs.push(contextRenderer.on("childEdgeChange", onChildEdgeChange));
+		}
+		if (onChildNodesChange) {
+			unsubs.push(contextRenderer.on("childNodesChange", onChildNodesChange));
+		}
+		if (onChildEdgesChange) {
+			unsubs.push(contextRenderer.on("childEdgesChange", onChildEdgesChange));
+		}
+		return () => {
+			for (const u of unsubs) {
+				u();
+			}
+		};
+	}, [
+		contextRenderer,
+		onChange,
+		onChildEdgeChange,
+		onChildEdgesChange,
+		onChildNodeChange,
+		onChildNodesChange,
+		onNodeChange,
+		onParentEdgeChange,
+		onParentNodeChange,
+	]);
 
 	useEffect(() => {
 		if (!contextRenderer) {

@@ -326,6 +326,8 @@ mod scene_json {
 		pub user_data: Option<serde_json::Value>,
 		#[serde(default)]
 		pub visible: Option<bool>,
+		#[serde(default)]
+		pub root: Option<bool>,
 		pub shape: Option<String>,
 		#[serde(default)]
 		pub radius: Option<f64>,
@@ -442,6 +444,7 @@ mod board_host {
 		pub draggable: bool,
 		pub selected: bool,
 		pub visible: bool,
+		pub root: bool,
 		pub style: Option<String>,
 		pub text: Option<String>,
 	}
@@ -925,6 +928,7 @@ mod board_host {
 						draggable: n.draggable.unwrap_or(true),
 						selected: n.selected.unwrap_or(false),
 						visible: n.visible.unwrap_or(true),
+						root: n.root.unwrap_or(false),
 						style: n.style.clone(),
 						text: n.text.clone(),
 					},
@@ -1076,6 +1080,7 @@ mod board_host {
 					if width <= 0.0 || height <= 0.0 {
 						return false;
 					}
+					let root = obj.get("root").and_then(|v| v.as_bool());
 					desc.nodes.push(NodeDescJson {
 						id: id.into(),
 						x,
@@ -1086,6 +1091,7 @@ mod board_host {
 						text,
 						user_data: None,
 						visible: None,
+						root,
 						shape: Some("rectangle".into()),
 						radius: None,
 						width: Some(width),
@@ -1098,6 +1104,7 @@ mod board_host {
 					if radius <= 0.0 {
 						return false;
 					}
+					let root = obj.get("root").and_then(|v| v.as_bool());
 					desc.nodes.push(NodeDescJson {
 						id: id.into(),
 						x,
@@ -1108,6 +1115,7 @@ mod board_host {
 						text,
 						user_data: None,
 						visible: None,
+						root,
 						shape: Some("circle".into()),
 						radius: Some(radius),
 						width: None,
@@ -2676,6 +2684,7 @@ mod host_tests {
 				text: None,
 				user_data: None,
 				visible: None,
+				root: None,
 				shape: Some("circle".into()),
 				radius: Some(40.0),
 				width: None,
@@ -2730,6 +2739,7 @@ mod host_tests {
 			text: None,
 			user_data: None,
 			visible: None,
+			root: None,
 			shape: Some("circle".into()),
 			radius: Some(40.0),
 			width: None,

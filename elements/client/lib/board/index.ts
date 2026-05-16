@@ -98,6 +98,8 @@ export interface BoardFixtureCircleNodeV1 {
 	cad?: { x: number; y: number; z: number } | null;
 	handles: BoardFixtureHandleV1[];
 	id: string;
+	/** @emoji 🌳 When true, directed edges {@link Edge.from}→{@link Edge.to} form parent→child links; subtree membership derives from this root. */
+	root?: boolean;
 	radius: number;
 	shape?: "circle";
 	text?: string;
@@ -119,6 +121,8 @@ export interface BoardFixtureRectangleNodeV1 {
 	handles: BoardFixtureHandleV1[];
 	height: number;
 	id: string;
+	/** @emoji 🌳 When true, directed edges {@link Edge.from}→{@link Edge.to} form parent→child links; subtree membership derives from this root. */
+	root?: boolean;
 	shape: "rectangle";
 	text?: string;
 	/** @emoji 📏 Optional: scale overlay text to fit inside the node; drawn at node center to avoid jitter. */
@@ -165,16 +169,46 @@ export interface BoardHoverPayload {
 	worldY: number;
 }
 
+/** @emoji 🪪 Payload for {@link BoardEventMap.nodeChange} and other single-node graph notifications. */
+export interface BoardGraphNodeIdPayload {
+	id: string;
+}
+
+/** @emoji 🪪 Payload for {@link BoardEventMap.childEdgeChange} and {@link BoardEventMap.parentEdgeChange}. */
+export interface BoardGraphEdgeIdPayload {
+	id: string;
+}
+
+/** @emoji 🌳 Emitted when the multiset of subtree child node ids under all {@link Node.root} nodes changes. */
+export interface BoardChildNodesChangePayload {
+	rootIds: string[];
+	nodeIds: string[];
+}
+
+/** @emoji 🌳 Emitted when the multiset of subtree edge ids under roots changes (see {@link BoardChildNodesChangePayload}). */
+export interface BoardChildEdgesChangePayload {
+	rootIds: string[];
+	edgeIds: string[];
+}
+
 export interface BoardEventMap {
 	camera: CameraState;
+	change: undefined;
+	childEdgeChange: BoardGraphEdgeIdPayload;
+	childEdgesChange: BoardChildEdgesChangePayload;
+	childNodeChange: BoardGraphNodeIdPayload;
+	childNodesChange: BoardChildNodesChangePayload;
 	contextmenu: { clientX: number; clientY: number; id: string | null; x: number; y: number };
 	edgeCreate: { id: string; from: string; to: string };
 	edgeDelete: { id: string };
 	fixtureDrop: BoardFixtureDropDetail;
 	hover: BoardHoverPayload;
 	invalidate: undefined;
+	nodeChange: BoardGraphNodeIdPayload;
 	nodeDelete: { id: string };
 	nodeMove: { id: string; x: number; y: number };
+	parentEdgeChange: BoardGraphEdgeIdPayload;
+	parentNodeChange: BoardGraphNodeIdPayload;
 	select: BoardSelectionSnapshot;
 }
 
@@ -190,6 +224,8 @@ export interface BoardObjectOptions {
 /** @emoji 🔵 World-space circle node (center + radius). */
 export type CircleNodeOptions = BoardObjectOptions & {
 	handles?: Handle[];
+	/** @emoji 🌳 Marks this node as a hierarchy root; edges follow parent {@link Handle} {@link Edge.from} → child {@link Edge.to}. */
+	root?: boolean;
 	radius: number;
 	shape?: "circle";
 	text?: string;
@@ -209,6 +245,8 @@ export type CircleNodeOptions = BoardObjectOptions & {
 export type RectangleNodeOptions = BoardObjectOptions & {
 	handles?: Handle[];
 	height: number;
+	/** @emoji 🌳 Marks this node as a hierarchy root; edges follow parent {@link Handle} {@link Edge.from} → child {@link Edge.to}. */
+	root?: boolean;
 	shape: "rectangle";
 	text?: string;
 	/** @emoji 📏 When true, overlay label scales to fit inside the rectangle (layout px); drawn at node center. */
@@ -660,6 +698,7 @@ export function parseBoardFixtureV1(raw: unknown): BoardFixtureV1 | null {
 		const textFontFamily = fixtureOptionalTextFontFamily(node);
 		const textFontSize = fixtureOptionalTextFontSize(node);
 		const textAlignment = fixtureOptionalTextAlignment(node);
+		const rootFlag = node.root === true;
 		const cad =
 			node.cad && typeof node.cad === "object"
 				? {
@@ -684,6 +723,7 @@ export function parseBoardFixtureV1(raw: unknown): BoardFixtureV1 | null {
 				...(textFontFamily !== undefined ? { textFontFamily } : {}),
 				...(textFontSize !== undefined ? { textFontSize } : {}),
 				...(textAlignment !== undefined ? { textAlignment } : {}),
+				...(rootFlag ? { root: true } : {}),
 				handles,
 				height,
 				id,
@@ -708,6 +748,7 @@ export function parseBoardFixtureV1(raw: unknown): BoardFixtureV1 | null {
 			...(textFontFamily !== undefined ? { textFontFamily } : {}),
 			...(textFontSize !== undefined ? { textFontSize } : {}),
 			...(textAlignment !== undefined ? { textAlignment } : {}),
+			...(rootFlag ? { root: true } : {}),
 			handles,
 			id,
 			radius,
@@ -1028,6 +1069,8 @@ export class Node extends BoardObject {
 	width: number;
 	x: number;
 	y: number;
+	/** @emoji 🌳 When true, {@link computeBoardGraphObservationSnapshot} treats outgoing {@link Edge} links as parent→child. */
+	root: boolean;
 
 	constructor(options: NodeOptions) {
 		super(options.id, {
@@ -1037,6 +1080,7 @@ export class Node extends BoardObject {
 			userData: options.userData,
 			visible: options.visible,
 		});
+		this.root = options.root === true;
 		this.x = options.x;
 		this.y = options.y;
 		this.text = options.text ?? null;
@@ -1089,6 +1133,11 @@ export class Node extends BoardObject {
 		}
 		this.width = width;
 		this.height = height;
+		return this;
+	}
+
+	setRoot(root: boolean): this {
+		this.root = root;
 		return this;
 	}
 
@@ -1287,6 +1336,104 @@ export class BoardScene {
 }
 //#endregion 🔖Scene
 
+//#region 🔖DirectedGraphObservation
+/** @emoji 🧮 Immutable snapshot for {@link BoardRenderer} hierarchy callbacks (roots + directed reachability along {@link Edge.from}→{@link Edge.to}). */
+export interface BoardGraphObservationSnapshot {
+	childEdgeIds: string[];
+	childNodeIds: string[];
+	edgeSigById: Map<string, string>;
+	nodeSigById: Map<string, string>;
+	parentEdgeIds: string[];
+	rootIds: string[];
+}
+
+function sortIds(ids: Iterable<string>): string[] {
+	return [...ids].sort();
+}
+
+function sortedStringArraysEqual(a: string[], b: string[]): boolean {
+	if (a.length !== b.length) {
+		return false;
+	}
+	for (let i = 0; i < a.length; i += 1) {
+		if (a[i] !== b[i]) {
+			return false;
+		}
+	}
+	return true;
+}
+
+function boardGraphNodeSig(node: Node): string {
+	return JSON.stringify({
+		draggable: node.draggable,
+		height: node.height,
+		id: node.id,
+		radius: node.radius,
+		root: node.root,
+		selected: node.selected,
+		shape: node.shape,
+		style: node.style,
+		text: node.text,
+		textAlignment: node.textAlignment,
+		textAutofit: node.textAutofit,
+		textFontFamily: node.textFontFamily,
+		textFontSize: node.textFontSize,
+		visible: node.visible,
+		width: node.width,
+		x: node.x,
+		y: node.y,
+	});
+}
+
+function boardGraphEdgeSig(edge: Edge): string {
+	return JSON.stringify({
+		from: edge.from.id,
+		id: edge.id,
+		selected: edge.selected,
+		style: edge.style,
+		to: edge.to.id,
+		visible: edge.visible,
+	});
+}
+
+/** @emoji 🌳 Builds subtree membership: BFS from every {@link Node.root} following directed edges from parent handle node to child handle node. */
+export function computeBoardGraphObservationSnapshot(scene: BoardScene): BoardGraphObservationSnapshot {
+	const rootIds = sortIds([...scene.nodes.values()].filter((n) => n.root).map((n) => n.id));
+	const rootSet = new Set(rootIds);
+	const reachable = new Set<string>(rootSet);
+	const queue = [...rootSet];
+	while (queue.length > 0) {
+		const u = queue.shift()!;
+		for (const edge of scene.edges.values()) {
+			if (edge.from.node.id !== u) {
+				continue;
+			}
+			const v = edge.to.node.id;
+			if (!reachable.has(v)) {
+				reachable.add(v);
+				queue.push(v);
+			}
+		}
+	}
+	const childNodeIds = sortIds([...reachable].filter((id) => !rootSet.has(id)));
+	const childEdgeIds = sortIds(
+		[...scene.edges.values()]
+			.filter((e) => reachable.has(e.from.node.id) && reachable.has(e.to.node.id))
+			.map((e) => e.id),
+	);
+	const parentEdgeIds = sortIds([...scene.edges.values()].filter((e) => rootSet.has(e.from.node.id)).map((e) => e.id));
+	const nodeSigById = new Map<string, string>();
+	for (const node of scene.nodes.values()) {
+		nodeSigById.set(node.id, boardGraphNodeSig(node));
+	}
+	const edgeSigById = new Map<string, string>();
+	for (const edge of scene.edges.values()) {
+		edgeSigById.set(edge.id, boardGraphEdgeSig(edge));
+	}
+	return { childEdgeIds, childNodeIds, edgeSigById, nodeSigById, parentEdgeIds, rootIds };
+}
+//#endregion 🔖DirectedGraphObservation
+
 /** @emoji 🧯 Normalizes WebGPU errors for `data-board-surface-failure` (E2E + local debugging). */
 function summarizeRasterSurfaceFailure(err: unknown): string {
 	if (err instanceof Error) {
@@ -1312,6 +1459,8 @@ export class BoardRenderer {
 	readonly session: BoardSession;
 
 	private batchDepth = 0;
+	/** @emoji 🔁 Nesting depth for {@link BoardRenderer.render}; defers {@link BoardRenderer.invalidate} so ResizeObserver / layout cannot re-enter WASM during `renderFrame` (`borrow_fail`). */
+	private renderPipelineDepth = 0;
 	private cameraStore = new SnapshotStore<CameraState>({ ...DEFAULT_CAMERA });
 	private canvas: HTMLCanvasElement | null;
 	private dpr = 1;
@@ -1339,6 +1488,8 @@ export class BoardRenderer {
 	private lastWasAreaSelectDrag = false;
 	private lastNodeAuthoringPositionById = new Map<string, { x: number; y: number }>();
 	private suppressSceneToWasmPush = false;
+	private graphObservationFlushPending = false;
+	private lastGraphObservation: BoardGraphObservationSnapshot | null = null;
 	private width = 1;
 	private height = 1;
 	private textOverlayCanvas: HTMLCanvasElement | null = null;
@@ -1367,6 +1518,7 @@ export class BoardRenderer {
 			const initialHeight = this.canvas.clientHeight || this.canvas.height || 1;
 			this.setSize(initialWidth, initialHeight, globalThis.devicePixelRatio || 1);
 		}
+		this.lastGraphObservation = computeBoardGraphObservationSnapshot(this.scene);
 	}
 
 	readonly renderMode: RenderMode;
@@ -1458,12 +1610,92 @@ export class BoardRenderer {
 		this.emitter.emit(name, payload);
 	}
 
+	private enqueueBoardGraphObservationFlush(): void {
+		if (this.graphObservationFlushPending) {
+			return;
+		}
+		this.graphObservationFlushPending = true;
+		queueMicrotask(() => {
+			this.graphObservationFlushPending = false;
+			this.flushBoardGraphObservation();
+		});
+	}
+
+	private flushBoardGraphObservation(): void {
+		const prev = this.lastGraphObservation;
+		if (prev === null) {
+			this.lastGraphObservation = computeBoardGraphObservationSnapshot(this.scene);
+			return;
+		}
+		const next = computeBoardGraphObservationSnapshot(this.scene);
+		let anyEmitted = false;
+		const prevRoot = new Set(prev.rootIds);
+		const nextRoot = new Set(next.rootIds);
+		const rootUnion = new Set([...prevRoot, ...nextRoot]);
+		for (const id of rootUnion) {
+			const inPrev = prevRoot.has(id);
+			const inNext = nextRoot.has(id);
+			const sigP = prev.nodeSigById.get(id);
+			const sigN = next.nodeSigById.get(id);
+			if (inPrev !== inNext || (inNext && sigP !== sigN)) {
+				this.emitter.emit("parentNodeChange", { id });
+				anyEmitted = true;
+			}
+		}
+		const prevParentEdge = new Set(prev.parentEdgeIds);
+		const nextParentEdge = new Set(next.parentEdgeIds);
+		for (const id of new Set([...prevParentEdge, ...nextParentEdge])) {
+			const sigP = prev.edgeSigById.get(id);
+			const sigN = next.edgeSigById.get(id);
+			if (prevParentEdge.has(id) !== nextParentEdge.has(id) || (nextParentEdge.has(id) && sigP !== sigN)) {
+				this.emitter.emit("parentEdgeChange", { id });
+				anyEmitted = true;
+			}
+		}
+		if (!sortedStringArraysEqual(prev.childNodeIds, next.childNodeIds)) {
+			this.emitter.emit("childNodesChange", { nodeIds: next.childNodeIds, rootIds: next.rootIds });
+			anyEmitted = true;
+		}
+		if (!sortedStringArraysEqual(prev.childEdgeIds, next.childEdgeIds)) {
+			this.emitter.emit("childEdgesChange", { edgeIds: next.childEdgeIds, rootIds: next.rootIds });
+			anyEmitted = true;
+		}
+		const nextChildNodeSet = new Set(next.childNodeIds);
+		for (const id of nextChildNodeSet) {
+			if (prev.nodeSigById.get(id) !== next.nodeSigById.get(id)) {
+				this.emitter.emit("childNodeChange", { id });
+				anyEmitted = true;
+			}
+		}
+		const nextChildEdgeSet = new Set(next.childEdgeIds);
+		for (const id of nextChildEdgeSet) {
+			if (prev.edgeSigById.get(id) !== next.edgeSigById.get(id)) {
+				this.emitter.emit("childEdgeChange", { id });
+				anyEmitted = true;
+			}
+		}
+		const allNodeIds = new Set([...prev.nodeSigById.keys(), ...next.nodeSigById.keys()]);
+		for (const id of allNodeIds) {
+			if (prev.nodeSigById.get(id) !== next.nodeSigById.get(id)) {
+				this.emitter.emit("nodeChange", { id });
+				anyEmitted = true;
+			}
+		}
+		if (anyEmitted) {
+			this.emitter.emit("change", undefined);
+		}
+		this.lastGraphObservation = next;
+	}
+
 	batch(action: () => void): void {
 		this.batchDepth += 1;
 		try {
 			action();
 		} finally {
 			this.batchDepth -= 1;
+			if (this.batchDepth === 0) {
+				this.enqueueBoardGraphObservationFlush();
+			}
 			if (this.batchDepth === 0 && this.invalidated) {
 				this.invalidate();
 			}
@@ -1530,6 +1762,7 @@ export class BoardRenderer {
 		if (this.batchDepth > 0) {
 			return;
 		}
+		this.enqueueBoardGraphObservationFlush();
 		this.invalidate();
 	}
 
@@ -1538,6 +1771,9 @@ export class BoardRenderer {
 			return;
 		}
 		this.invalidated = true;
+		if (this.renderPipelineDepth > 0) {
+			return;
+		}
 		this.emit("invalidate", undefined);
 		if (this.renderMode === "headless-test") {
 			return;
@@ -1557,43 +1793,57 @@ export class BoardRenderer {
 	}
 
 	render(timestamp = globalThis.performance?.now?.() ?? Date.now()): void {
+		if (this.renderPipelineDepth > 0) {
+			this.invalidated = true;
+			return;
+		}
+		this.renderPipelineDepth += 1;
 		const frameDelta = this.lastRenderTimestamp === null ? 0 : timestamp - this.lastRenderTimestamp;
 		this.lastRenderTimestamp = timestamp;
 		this.invalidated = false;
-		if (this.renderMode === "headless-test") {
-			if (!this.suppressSceneToWasmPush) {
-				this.pushSceneToWasmDriver();
+		try {
+			if (this.renderMode === "headless-test") {
+				if (!this.suppressSceneToWasmPush) {
+					this.pushSceneToWasmDriver();
+				}
+			}
+			if (this.renderMode !== "headless-test" && this.canvas && !this.gpuSurfaceUnavailable) {
+				let gpuReady = this.session.gpuReady();
+				if (!gpuReady && !this.gpuSurfaceInitPromise) {
+					this.gpuSurfaceInitPromise = this.initGpuSurfaceOnce()
+						.then(() => {
+							this.gpuSurfaceInitPromise = null;
+							this.markDirty();
+						})
+						.catch((err: unknown) => {
+							console.error("[DEBUG] BoardRenderer GPU surface init failed", err);
+							this.gpuSurfaceErrorDetail = summarizeRasterSurfaceFailure(err);
+							this.gpuSurfaceUnavailable = true;
+							this.gpuSurfaceInitPromise = null;
+							this.markDirty();
+						});
+				}
+				gpuReady = this.session.gpuReady();
+				if (gpuReady) {
+					this.syncGpuFrame();
+				}
+			}
+			this.paintTextOverlays();
+			const frameState: FrameState = {
+				camera: { ...this.camera },
+				renderer: this,
+				selection: this.selectionStore.getSnapshot(),
+			};
+			for (const listener of this.frameListeners) {
+				listener(frameState, frameDelta);
+			}
+			this.applyCanvasDebugAttributes();
+		} finally {
+			this.renderPipelineDepth -= 1;
+			if (this.renderPipelineDepth === 0 && this.invalidated && !this.isDisposed) {
+				this.invalidate();
 			}
 		}
-		if (this.renderMode !== "headless-test" && this.canvas && !this.gpuSurfaceUnavailable) {
-			if (!this.session.gpuReady() && !this.gpuSurfaceInitPromise) {
-				this.gpuSurfaceInitPromise = this.initGpuSurfaceOnce()
-					.then(() => {
-						this.gpuSurfaceInitPromise = null;
-						this.markDirty();
-					})
-					.catch((err: unknown) => {
-						console.error("[DEBUG] BoardRenderer GPU surface init failed", err);
-						this.gpuSurfaceErrorDetail = summarizeRasterSurfaceFailure(err);
-						this.gpuSurfaceUnavailable = true;
-						this.gpuSurfaceInitPromise = null;
-						this.markDirty();
-					});
-			}
-			if (this.session.gpuReady()) {
-				this.syncGpuFrame();
-			}
-		}
-		this.paintTextOverlays();
-		const frameState: FrameState = {
-			camera: { ...this.camera },
-			renderer: this,
-			selection: this.selectionStore.getSnapshot(),
-		};
-		for (const listener of this.frameListeners) {
-			listener(frameState, frameDelta);
-		}
-		this.applyCanvasDebugAttributes();
 	}
 
 	private async initGpuSurfaceOnce(): Promise<void> {
@@ -1630,6 +1880,9 @@ export class BoardRenderer {
 				text: node.text,
 				visible: node.visible,
 			};
+			if (node.root) {
+				base.root = true;
+			}
 			if (Object.keys(node.userData).length > 0) {
 				base.userData = node.userData;
 			}
@@ -1817,6 +2070,7 @@ export class BoardRenderer {
 			}
 		} finally {
 			this.suppressSceneToWasmPush = false;
+			this.enqueueBoardGraphObservationFlush();
 		}
 	}
 
@@ -1906,6 +2160,7 @@ export class BoardRenderer {
 		this.session.free();
 		this.gpuSurfacePresentedFrame = false;
 		this.gpuSurfaceErrorDetail = "";
+		this.lastGraphObservation = null;
 		if (this.rafId !== null && globalThis.cancelAnimationFrame) {
 			globalThis.cancelAnimationFrame(this.rafId);
 		}
@@ -2323,6 +2578,22 @@ if (boardVitest) {
 			expect(resolveBoardLodLabel(0.3)).toBe("grid-only");
 			expect(resolveBoardLodLabel(1)).toBe("full");
 			expect(resolveBoardLodLabel(3)).toBe("fine");
+		});
+	});
+
+	describe("board renderer render pipeline", () => {
+		it("coalesces nested render calls from frame listeners instead of re-entering the render pass", () => {
+			const renderer = new BoardRenderer({ renderMode: "headless-test" });
+			let frameCount = 0;
+			renderer.subscribeFrame(() => {
+				frameCount += 1;
+				if (frameCount === 1) {
+					renderer.render();
+				}
+			});
+			renderer.render();
+			expect(frameCount).toBe(1);
+			renderer.dispose();
 		});
 	});
 
@@ -2815,6 +3086,82 @@ if (boardVitest) {
 			const decoded = decodeBoardFixtureFromDragV1(encodeBoardFixtureForDragV1(fixture));
 			expect(decoded).toEqual(fixture);
 		});
+
+		it("parses optional root on fixture nodes", () => {
+			const parsed = parseBoardFixtureV1({
+				camera: { x: 0, y: 0, zoom: 1 },
+				edges: [],
+				nodes: [
+					{ handles: [{ angle: 0, id: "r.h" }], id: "r", radius: 6, root: true, x: 0, y: 0 },
+					{
+						handles: [{ angle: 0, id: "sq.h" }],
+						height: 10,
+						id: "sq",
+						root: false,
+						shape: "rectangle",
+						width: 10,
+						x: 1,
+						y: 2,
+					},
+				],
+				schema: "elements.board.fixture/v1",
+			});
+			expect(parsed?.nodes[0]).toMatchObject({ id: "r", root: true });
+			expect(parsed?.nodes[1]).toMatchObject({ id: "sq", shape: "rectangle" });
+			expect(parsed?.nodes[1]).not.toHaveProperty("root");
+		});
+	});
+
+	describe("board directed graph observation", () => {
+		it("computes subtree from roots along directed edges", () => {
+			const renderer = new BoardRenderer({ renderMode: "headless-test" });
+			const root = new Node({ id: "root", radius: 10, root: true, x: 0, y: 0 });
+			const mid = new Node({ id: "mid", radius: 10, x: 50, y: 0 });
+			const leaf = new Node({ id: "leaf", radius: 10, x: 100, y: 0 });
+			const hRoot = new Handle({ angle: 0, id: "root.out", node: root });
+			const hMidIn = new Handle({ angle: Math.PI, id: "mid.in", node: mid });
+			const hMidOut = new Handle({ angle: 0, id: "mid.out", node: mid });
+			const hLeafIn = new Handle({ angle: Math.PI, id: "leaf.in", node: leaf });
+			const e1 = new Edge({ from: hRoot, id: "e1", to: hMidIn });
+			const e2 = new Edge({ from: hMidOut, id: "e2", to: hLeafIn });
+			renderer.scene.add(root).add(mid).add(leaf).add(e1).add(e2);
+			const snap = computeBoardGraphObservationSnapshot(renderer.scene);
+			expect(snap.rootIds).toEqual(["root"]);
+			expect(snap.childNodeIds).toEqual(["leaf", "mid"]);
+			expect(snap.childEdgeIds).toEqual(["e1", "e2"]);
+			expect(snap.parentEdgeIds).toEqual(["e1"]);
+			renderer.dispose();
+		});
+
+		it("emits graph observation events after scene mutations flush", async () => {
+			const renderer = new BoardRenderer({ renderMode: "headless-test" });
+			const events: string[] = [];
+			const unsubs = [
+				renderer.on("change", () => events.push("change")),
+				renderer.on("nodeChange", (p) => events.push(`nodeChange:${p.id}`)),
+				renderer.on("parentNodeChange", (p) => events.push(`parentNodeChange:${p.id}`)),
+				renderer.on("parentEdgeChange", (p) => events.push(`parentEdgeChange:${p.id}`)),
+				renderer.on("childNodesChange", (p) => events.push(`childNodesChange:${p.nodeIds.join(",")}`)),
+				renderer.on("childEdgesChange", (p) => events.push(`childEdgesChange:${p.edgeIds.join(",")}`)),
+				renderer.on("childNodeChange", (p) => events.push(`childNodeChange:${p.id}`)),
+				renderer.on("childEdgeChange", (p) => events.push(`childEdgeChange:${p.id}`)),
+			];
+			const root = new Node({ id: "root", radius: 10, root: true, x: 0, y: 0 });
+			const child = new Node({ id: "child", radius: 10, x: 40, y: 0 });
+			const hOut = new Handle({ angle: 0, id: "root.out", node: root });
+			const hIn = new Handle({ angle: Math.PI, id: "child.in", node: child });
+			const edge = new Edge({ from: hOut, id: "link", to: hIn });
+			renderer.scene.add(root).add(child).add(edge);
+			await Promise.resolve();
+			expect(events.some((e) => e.startsWith("parentNodeChange:root"))).toBe(true);
+			expect(events.some((e) => e === "childNodesChange:child")).toBe(true);
+			expect(events.some((e) => e === "childEdgesChange:link")).toBe(true);
+			expect(events.some((e) => e === "change")).toBe(true);
+			for (const u of unsubs) {
+				u();
+			}
+			renderer.dispose();
+		});
 	});
 }
 //#endregion 🔖Vitest
@@ -3002,6 +3349,7 @@ function newBoardNodeFromProps(props: NodeOptions): Node {
 			draggable: props.draggable ?? true,
 			height: props.height,
 			id: props.id,
+			root: props.root,
 			selected: props.selected,
 			shape: "rectangle",
 			style: props.style,
@@ -3021,6 +3369,7 @@ function newBoardNodeFromProps(props: NodeOptions): Node {
 		draggable: props.draggable ?? true,
 		id: props.id,
 		radius: props.radius,
+		root: props.root,
 		selected: props.selected,
 		style: props.style,
 		text: props.text,
@@ -3041,6 +3390,7 @@ function applyNodeProps(renderer: BoardRenderer, instance: Node, props: NodeOpti
 	instance.style = props.style ?? null;
 	instance.userData = { ...(props.userData ?? {}) };
 	instance.visible = props.visible ?? true;
+	instance.root = props.root === true;
 	instance.textAutofit = props.textAutofit ?? false;
 	instance.textAlignment = props.textAlignment ?? BOARD_NODE_TEXT_ALIGNMENT_DEFAULT;
 	instance.textFontFamily =
@@ -3126,7 +3476,8 @@ function propsEqualNode(a: NodeOptions, b: NodeOptions): boolean {
 		(a.textAutofit ?? false) !== (b.textAutofit ?? false) ||
 		(a.textAlignment ?? BOARD_NODE_TEXT_ALIGNMENT_DEFAULT) !== (b.textAlignment ?? BOARD_NODE_TEXT_ALIGNMENT_DEFAULT) ||
 		(a.textFontFamily ?? BOARD_NODE_TEXT_FONT_FAMILY_DEFAULT) !== (b.textFontFamily ?? BOARD_NODE_TEXT_FONT_FAMILY_DEFAULT) ||
-		(a.textFontSize ?? BOARD_NODE_TEXT_FONT_PX_DEFAULT) !== (b.textFontSize ?? BOARD_NODE_TEXT_FONT_PX_DEFAULT)
+		(a.textFontSize ?? BOARD_NODE_TEXT_FONT_PX_DEFAULT) !== (b.textFontSize ?? BOARD_NODE_TEXT_FONT_PX_DEFAULT) ||
+		(a.root === true) !== (b.root === true)
 	) {
 		return false;
 	}
@@ -3460,13 +3811,12 @@ export function createBoardHostMount(renderer: BoardRenderer): BoardHostMount {
 	);
 }
 
-/** @emoji 🔄 Commits the secondary host synchronously (see {@link boardSceneHost.flushSyncWork}) so `useLayoutEffect` + `act()` observe updated scene state before paint. */
+/** @emoji 🔄 Schedules host work and ties post-commit to {@link BoardRenderer.invalidate}. */
 export function updateBoardHostMount(root: BoardHostMount, element: ReactElement | null, parent: null): void {
-	boardSceneHost.updateContainerSync(element, root, parent, () => {
+	boardSceneHost.updateContainer(element, root, parent, () => {
 		const renderer = root.containerInfo;
 		renderer.invalidate();
 	});
-	boardSceneHost.flushSyncWork();
 }
 
 /** @emoji 🧹 Unmounts the host subtree without disposing {@link BoardRenderer}. */

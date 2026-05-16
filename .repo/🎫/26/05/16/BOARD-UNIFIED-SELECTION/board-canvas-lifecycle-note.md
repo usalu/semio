@@ -13,3 +13,9 @@
 ## Tests
 
 Vitest: `does not dispose BoardRenderer when only selection props change` plus existing suite (`bunx vitest run --config vitest.config.ts` in `elements/client/lib/board`).
+
+## WASM `borrow_fail` / `gpuReady` (2026-05-16 follow-up)
+
+`ResizeObserver` (and similar sync layout) could call `renderer.render()` while an outer `render()` was still inside `session.renderFrame()` / `pushSceneToWasmDriver()`, re-entering the same `BoardSession` WASM object → `recursive use of an object detected` at `boardsession_gpuReady`.
+
+**Mitigation:** `renderPipelineDepth` on `BoardRenderer`: nested `render()` sets `invalidated` and returns; `invalidate()` defers emit + rAF while depth > 0; outer `render` `finally` calls `invalidate()` once if coalesced. GPU block uses a single refreshed `gpuReady` local before `syncGpuFrame`.
