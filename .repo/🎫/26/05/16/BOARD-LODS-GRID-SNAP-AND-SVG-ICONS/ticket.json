@@ -3,9 +3,10 @@
   "emoji": "🗺️",
   "status": "closed",
   "description": "Board: four discrete LODs (minimap/overview/normal/detail) with configurable zoom thresholds as props; per-LOD grid (none / 10 / 10+5 / 10+5+1), node stroke/fill, edge weight, handles, labels vs abbreviated vs vello_svg icons; grid snap to visible grid lines with toolbar toggle; integrate vello_svg for detail node icons from metabolism example SVGs.",
-  "summary": "Runtime node iconKind: Rust resolves catalog keys or inline SVG/XML strings before usvg/Vello paint; WASM path unchanged for cache key. TypeScript: four-band LOD thresholds (BoardLodZoomThresholds), resolveBoardLodLabelFromThresholds, BoardRenderer lod/grid WASM sync (setLodZoomThresholdsJson, setGridSnapEnabled), descriptor iconKind, overlay captions by LOD (minimap off, overview abbreviated, detail skips when icon set), Node iconKind + fixture parse. React: BoardCanvas props, play toolbar grid snap + DEFAULT thresholds. Restored WASM fixture layout API: layoutBoardFixtureForceGraph via boardRedrawLayoutFixtureJson; exported layoutBoardFixtureRedrawNodes/Handles and redraw option kinds for play. Vitest 54 passed; play Vite build succeeded. Native cargo test on Windows still blocked by wgpu/windows duplicate (pre-existing).",
+  "summary": "Extended board LODs from four bands to five by adding a micro tier and detailMaxZoom threshold in TypeScript and the Rust/WASM host. Updated LOD resolution, default thresholds, overlay caption policy, and grid math to match the new spec: minimap none, overview 100, normal 100+25, detail 100+25+5, micro 100+25+5+1. Rust draw logic now renders node icons in detail+micro, handle icons only in micro, keeps minimap outline-free with stroke-colored fills, and snaps to the finest visible grid per tier. Extended board tests for five-band threshold resolution and caption behavior. Validation: focused Vitest on elements/client/lib/board/index.ts passed 42 tests; cargo test --manifest-path elements/client/lib/board/rs/Cargo.toml passed 31 tests.",
   "goal": "🎯r2602🎯runningsketchpad",
   "sessions": [
-    "⚪5c9f973215db4264aa7cf18c27dd77d5"
+    "⚪5c9f973215db4264aa7cf18c27dd77d5",
+    "⚪0fbc95fde1f2461890d418a90dc26135"
   ]
 }

@@ -393,6 +393,26 @@ Wait for 1s without changing camera then in the next 2s zoom to the bounding box
 
 ---
 
+There should be 5 lods depending on the zoom level:
+Minimap: No grid, no outlines on nodes, nodes filling is outline color, finer edges, no handles, no labels, selection possible with group selection, no individual nodes or edges or handels are selectable, no drag possible
+Overview: Huge grid (100x100), outlines on node, no handles, node with abbreviated labels, selection possible, nodes and edges are individually selectable, drag possible
+Normal: Huge grid with finer large grid (25x25), handles, node with labels, selection possible, nodes and edges and handles are individually selectable, drag possible, connect possible
+Detail: Huge grid with large gird with finer medium grid (5x5), handles with abbreviated label, node with icon and abbreviated label, selection possible, drag possible, connect possible, proximity connect possible
+Micro: Huge grid with large gird with medium grid with finer small grid (1x1), handles with icon, node with icon and label
+
+Within one lod nothing changes. Make the trigger zoom points props.
+
+---
+
+Introduce a new feature: proximity connect
+
+When a node is not yet connected, then when it gets within the bounds of another node, the nearest compatible handles start to show a wire.
+When released then the wire is turned into an edge.
+
+This feature is not active in minimap and overview lod.
+
+---
+
 All nodes, handles, edges, wire must have a kind (referenced by id).
 Every kind provides default for a new instance.
 Every default can be overwritten by the instance.
@@ -424,21 +444,12 @@ General to Specific
 
 The most specific compatibility wins. Important bypasses the specificity.
 
+Compatbility is used in several places. Currently it is used when a wire is drawn and it will not connect or snap to an incompatible handle.
+
 ---
 
 Introduce a new entity besides graph, nodes, edges, handles: wire
 A wire is the temporary edge used e.g. when the user start clicking and dragging from a handle.
-
----
-
-There should be 5 lods depending on the zoom level:
-Minimap: No grid, no outlines on nodes, nodes filling is outline color, finer edges, no handles, no labels
-Overview: Huge grid (100x100), outlines on node, no handles, node with abbreviated labels
-Normal: Huge grid with finer large grid (25x25), handles, node with labels
-Detail: Huge grid with large gird with finer medium grid (5x5), handles with abbreviated label, node with icon and abbreviated label
-Micro: Huge grid with large gird with medium grid with finer small grid (1x1), handles with icon, node with icon and label
-
-Within one lod nothing changes. Make the trigger zoom points props.
 
 ---
 

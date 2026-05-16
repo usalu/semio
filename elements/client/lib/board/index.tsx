@@ -128,7 +128,7 @@ export type BoardNodeCircleProps = {
 	shape?: "circle";
 	style?: string;
 	text?: string;
-	/** @emoji 🏷️ Runtime icon encoding (catalog id or inline SVG) for detail LOD vector paint. */
+	/** @emoji 🏷️ Runtime icon encoding (`typst:`, `emoji:`, `image:data:…`, catalog id, or inline SVG) for detail LOD vector paint. */
 	iconKind?: string;
 	/** @emoji 📏 When true, caption scales to fit inside the node on the text overlay canvas. */
 	textAutofit?: boolean;
@@ -156,7 +156,7 @@ export type BoardNodeRectangleProps = {
 	shape: "rectangle";
 	style?: string;
 	text?: string;
-	/** @emoji 🏷️ Runtime icon encoding (catalog id or inline SVG) for detail LOD vector paint. */
+	/** @emoji 🏷️ Runtime icon encoding (`typst:`, `emoji:`, `image:data:…`, catalog id, or inline SVG) for detail LOD vector paint. */
 	iconKind?: string;
 	/** @emoji 📏 When true, caption scales to fit inside the node on the text overlay canvas. */
 	textAutofit?: boolean;
@@ -324,6 +324,10 @@ function applyHandleProps(instance: BoardHandleObject, descriptor: HandleDescrip
 	instance.visible = descriptor.visible ?? true;
 	instance.radius = descriptor.radius ?? 8;
 	instance.handleKind = (descriptor.handleKind ?? "").trim();
+	instance.iconKind =
+		typeof descriptor.iconKind === "string" && descriptor.iconKind.trim() !== ""
+			? descriptor.iconKind.trim()
+			: null;
 	const rawC = descriptor.color;
 	const cs = rawC === undefined || rawC === null ? "" : String(rawC).trim();
 	instance.color = cs !== "" ? cs : null;

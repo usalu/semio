@@ -135,6 +135,8 @@ export interface BoardFixtureHandleV1 {
 	id: string;
 	/** @emoji 🎨 Optional CSS `#rgb` / `#rrggbb` / `#rrggbbaa` overriding the catalog color for this handle. */
 	color?: string;
+	/** @emoji 🏷️ Optional icon encoding for WASM detail LOD (`typst:`, `emoji:`, `image:data:…`, catalog id, or inline SVG). */
+	iconKind?: string;
 	radius?: number;
 }
 
@@ -148,7 +150,7 @@ export interface BoardFixtureCircleNodeV1 {
 	radius: number;
 	shape?: "circle";
 	text?: string;
-	/** @emoji 🏷️ Runtime icon encoding for detail LOD (catalog id or inline SVG). */
+	/** @emoji 🏷️ Runtime icon encoding for detail LOD (`typst:`, `emoji:`, `image:data:…`, catalog id, or inline SVG). */
 	iconKind?: string;
 	/** @emoji 📏 Optional: scale overlay text to fit inside the node; drawn at node center to avoid jitter. */
 	textAutofit?: boolean;
@@ -172,7 +174,7 @@ export interface BoardFixtureRectangleNodeV1 {
 	root?: boolean;
 	shape: "rectangle";
 	text?: string;
-	/** @emoji 🏷️ Runtime icon encoding for detail LOD (catalog id or inline SVG). */
+	/** @emoji 🏷️ Runtime icon encoding for detail LOD (`typst:`, `emoji:`, `image:data:…`, catalog id, or inline SVG). */
 	iconKind?: string;
 	/** @emoji 📏 Optional: scale overlay text to fit inside the node; drawn at node center to avoid jitter. */
 	textAutofit?: boolean;
@@ -383,6 +385,8 @@ export interface HandleOptions extends BoardObjectOptions {
 	angle: number;
 	/** @emoji 🎨 Optional CSS hex fill overriding the handle-kind catalog color on the WASM host. */
 	color?: string | null;
+	/** @emoji 🏷️ Optional icon encoding for WASM detail LOD (`typst:`, `emoji:`, `image:data:…`, catalog id, or inline SVG). */
+	iconKind?: string;
 	/** @emoji 🔗 Semantic handle kind for WASM link compatibility (not {@link BoardObject.kind}). */
 	handleKind: string;
 	node: Node;
@@ -397,6 +401,8 @@ export interface BoardHandleProps {
 	/** @emoji 🔗 Semantic handle kind for WASM link compatibility (not the host intrinsic object kind). */
 	handleKind: string;
 	id: string;
+	/** @emoji 🏷️ Optional icon encoding for WASM detail LOD (`typst:`, `emoji:`, `image:data:…`, catalog id, or inline SVG). */
+	iconKind?: string;
 	radius?: number;
 	selected?: boolean;
 	style?: string;
@@ -503,23 +509,25 @@ function shouldBoardHandleDeleteShortcut(): boolean {
 	}
 	return true;
 }
-/** 📐 Quantized major grid step in world units (legacy constant; LOD grids scale `10` / `5` / `1` by {@link DEFAULT_BOARD_GRID_FACTOR}). */
+/** 📐 Quantized large grid step in world units (LOD grids scale `10` / `2.5` / `0.5` / `0.1` by {@link DEFAULT_BOARD_GRID_FACTOR}). */
 export const BOARD_LOD_GRID_MAJOR_QUANTUM = 10;
 
-/** @emoji 📐 Positive multiplier for LOD world grid steps (`10×` / `5×` / `1×` world units per band); default `10` yields `100` / `50` / `10`. */
+/** @emoji 📐 Positive multiplier for LOD world grid steps (`10×` / `2.5×` / `0.5×` / `0.1×` world units per band); default `10` yields `100` / `25` / `5` / `1`. */
 export const DEFAULT_BOARD_GRID_FACTOR = 10;
 
-/** @emoji 📐 Default LOD zoom boundaries (world scale / CSS pixels); minimap < `minimapMaxZoom` < overview < `overviewMaxZoom` < normal < `normalMaxZoom` ≤ detail. */
+/** @emoji 📐 Default LOD zoom boundaries (world scale / CSS pixels); minimap < `minimapMaxZoom` < overview < `overviewMaxZoom` < normal < `normalMaxZoom` < detail < `detailMaxZoom` ≤ micro. */
 export interface BoardLodZoomThresholds {
 	minimapMaxZoom: number;
 	overviewMaxZoom: number;
 	normalMaxZoom: number;
+	detailMaxZoom: number;
 }
 
 export const DEFAULT_BOARD_LOD_ZOOM_THRESHOLDS: BoardLodZoomThresholds = {
 	minimapMaxZoom: 0.15,
 	overviewMaxZoom: 0.35,
 	normalMaxZoom: 1.25,
+	detailMaxZoom: 2.5,
 };
 
 /** 📐 Alias of {@link DEFAULT_BOARD_LOD_ZOOM_THRESHOLDS.minimapMaxZoom}. */
@@ -528,11 +536,14 @@ export const BOARD_LOD_MINIMAP_MAX_ZOOM = DEFAULT_BOARD_LOD_ZOOM_THRESHOLDS.mini
 /** 📐 Alias of {@link DEFAULT_BOARD_LOD_ZOOM_THRESHOLDS.normalMaxZoom} (detail band starts here). */
 export const BOARD_LOD_DETAIL_MIN_ZOOM = DEFAULT_BOARD_LOD_ZOOM_THRESHOLDS.normalMaxZoom;
 
+/** 📐 Alias of {@link DEFAULT_BOARD_LOD_ZOOM_THRESHOLDS.detailMaxZoom} (micro band starts here). */
+export const BOARD_LOD_MICRO_MIN_ZOOM = DEFAULT_BOARD_LOD_ZOOM_THRESHOLDS.detailMaxZoom;
+
 /** @emoji 📶 LOD label for `data-board-lod` using explicit thresholds. */
 export function resolveBoardLodLabelFromThresholds(
 	zoom: number,
 	t: BoardLodZoomThresholds,
-): "detail" | "minimap" | "normal" | "overview" {
+): "detail" | "micro" | "minimap" | "normal" | "overview" {
 	const z = zoom;
 	if (z < t.minimapMaxZoom) {
 		return "minimap";
@@ -543,11 +554,14 @@ export function resolveBoardLodLabelFromThresholds(
 	if (z < t.normalMaxZoom) {
 		return "normal";
 	}
-	return "detail";
+	if (z < t.detailMaxZoom) {
+		return "detail";
+	}
+	return "micro";
 }
 
 /** @emoji 📶 LOD tier for `data-board-lod` using {@link DEFAULT_BOARD_LOD_ZOOM_THRESHOLDS}. */
-export function resolveBoardLodLabel(zoom: number): "detail" | "minimap" | "normal" | "overview" {
+export function resolveBoardLodLabel(zoom: number): "detail" | "micro" | "minimap" | "normal" | "overview" {
 	return resolveBoardLodLabelFromThresholds(zoom, DEFAULT_BOARD_LOD_ZOOM_THRESHOLDS);
 }
 
@@ -909,9 +923,17 @@ export function parseBoardFixtureV1(raw: unknown): BoardFixtureV1 | null {
 				typeof colorRaw === "string" && colorRaw.trim() !== "" ? colorRaw.trim() : undefined;
 			const hradius = Number(hr.radius);
 			const withRadius = Number.isFinite(hradius) && hradius > 0;
-			const base: BoardFixtureHandleV1 = colorTrim
-				? { angle, handleKind, id: hid, color: colorTrim, ...(withRadius ? { radius: hradius } : {}) }
-				: { angle, handleKind, id: hid, ...(withRadius ? { radius: hradius } : {}) };
+			const iconRaw = hr.iconKind;
+			const iconTrim =
+				typeof iconRaw === "string" && iconRaw.trim() !== "" ? iconRaw.trim() : undefined;
+			const base: BoardFixtureHandleV1 = {
+				angle,
+				handleKind,
+				id: hid,
+				...(colorTrim !== undefined ? { color: colorTrim } : {}),
+				...(withRadius ? { radius: hradius } : {}),
+				...(iconTrim !== undefined ? { iconKind: iconTrim } : {}),
+			};
 			handles.push(base);
 		}
 		const textFromJson = fixtureNodeDisplayText(node);
@@ -1294,7 +1316,7 @@ export class Node extends BoardObject {
 	radius: number;
 	shape: "circle" | "rectangle";
 	text: string | null;
-	/** @emoji 🏷️ Runtime icon encoding forwarded to WASM detail LOD (catalog id or inline SVG string). */
+	/** @emoji 🏷️ Runtime icon encoding forwarded to WASM detail LOD (`typst:`, `emoji:`, `image:data:…`, baked catalog id, or inline SVG). */
 	iconKind: string | null;
 	/** @emoji 📏 When true, {@link BoardRenderer} scales overlay text to the node interior (always drawn at node center). */
 	textAutofit: boolean;
@@ -1793,9 +1815,13 @@ function summarizeRasterSurfaceFailure(err: unknown): string {
 	}
 }
 
+function boardAbbreviateCaption(raw: string, maxChars: number): string {
+	return raw.length <= maxChars ? raw : `${raw.slice(0, Math.max(1, maxChars - 1))}…`;
+}
+
 function boardTextOverlayCaptionForLod(
 	raw: string,
-	lod: "detail" | "minimap" | "normal" | "overview",
+	lod: "detail" | "micro" | "minimap" | "normal" | "overview",
 	iconKind: string | null,
 ): string | null {
 	const t = raw.trim();
@@ -1806,10 +1832,10 @@ function boardTextOverlayCaptionForLod(
 		return null;
 	}
 	if (lod === "overview") {
-		return t.length <= 6 ? t : `${t.slice(0, 4)}…`;
+		return boardAbbreviateCaption(t, 5);
 	}
-	if (lod === "detail" && (iconKind?.trim() ?? "") !== "") {
-		return null;
+	if (lod === "detail") {
+		return boardAbbreviateCaption(t, (iconKind?.trim() ?? "") !== "" ? 8 : 10);
 	}
 	return raw;
 }
@@ -1905,6 +1931,7 @@ export class BoardRenderer {
 					minimapMaxZoom: options.lodZoomThresholds.minimapMaxZoom,
 					overviewMaxZoom: options.lodZoomThresholds.overviewMaxZoom,
 					normalMaxZoom: options.lodZoomThresholds.normalMaxZoom,
+					detailMaxZoom: options.lodZoomThresholds.detailMaxZoom,
 				}
 			: { ...DEFAULT_BOARD_LOD_ZOOM_THRESHOLDS };
 		this.gridSnapEnabled = options.gridSnapEnabled ?? false;
@@ -2025,17 +2052,19 @@ export class BoardRenderer {
 		this.markDirty();
 	}
 
-	/** @emoji 📶 Updates LOD zoom thresholds on the WASM host and text overlay; mirrors `setLodZoomThresholdsJson` (`minimapMaxZoom` / `overviewMaxZoom` / `normalMaxZoom`). */
+	/** @emoji 📶 Updates LOD zoom thresholds on the WASM host and text overlay; mirrors `setLodZoomThresholdsJson` (`minimapMaxZoom` / `overviewMaxZoom` / `normalMaxZoom` / `detailMaxZoom`). */
 	setLodZoomThresholds(next: BoardLodZoomThresholds): void {
 		const c: BoardLodZoomThresholds = {
 			minimapMaxZoom: next.minimapMaxZoom,
 			overviewMaxZoom: next.overviewMaxZoom,
 			normalMaxZoom: next.normalMaxZoom,
+			detailMaxZoom: next.detailMaxZoom,
 		};
 		if (
 			c.minimapMaxZoom === this.lodZoomThresholds.minimapMaxZoom &&
 			c.overviewMaxZoom === this.lodZoomThresholds.overviewMaxZoom &&
-			c.normalMaxZoom === this.lodZoomThresholds.normalMaxZoom
+			c.normalMaxZoom === this.lodZoomThresholds.normalMaxZoom &&
+			c.detailMaxZoom === this.lodZoomThresholds.detailMaxZoom
 		) {
 			return;
 		}
@@ -2507,6 +2536,9 @@ export class BoardRenderer {
 			if (handle.color) {
 				row.color = handle.color;
 			}
+			if (handle.iconKind) {
+				row.iconKind = handle.iconKind;
+			}
 			handles.push(row);
 		}
 		const edges: Record<string, unknown>[] = [];
@@ -2573,6 +2605,7 @@ export class BoardRenderer {
 			minimapMaxZoom: this.lodZoomThresholds.minimapMaxZoom,
 			overviewMaxZoom: this.lodZoomThresholds.overviewMaxZoom,
 			normalMaxZoom: this.lodZoomThresholds.normalMaxZoom,
+			detailMaxZoom: this.lodZoomThresholds.detailMaxZoom,
 		});
 		if (lodJson !== this.lastLodThresholdsJsonForWasm) {
 			try {
@@ -3360,17 +3393,32 @@ if (boardVitest) {
 			expect(pE.y).toBeCloseTo(50);
 		});
 
-		it("labels minimap, overview, normal, and detail LOD bands from zoom thresholds", () => {
+		it("labels minimap, overview, normal, detail, and micro LOD bands from zoom thresholds", () => {
 			expect(resolveBoardLodLabel(0.1)).toBe("minimap");
 			expect(resolveBoardLodLabel(0.25)).toBe("overview");
 			expect(resolveBoardLodLabel(0.4)).toBe("normal");
 			expect(resolveBoardLodLabel(0.9)).toBe("normal");
 			expect(resolveBoardLodLabel(1.3)).toBe("detail");
-			const tight: BoardLodZoomThresholds = { minimapMaxZoom: 0.2, overviewMaxZoom: 0.4, normalMaxZoom: 0.6 };
+			expect(resolveBoardLodLabel(2.6)).toBe("micro");
+			const tight: BoardLodZoomThresholds = {
+				minimapMaxZoom: 0.2,
+				overviewMaxZoom: 0.4,
+				normalMaxZoom: 0.6,
+				detailMaxZoom: 1,
+			};
 			expect(resolveBoardLodLabelFromThresholds(0.15, tight)).toBe("minimap");
 			expect(resolveBoardLodLabelFromThresholds(0.35, tight)).toBe("overview");
 			expect(resolveBoardLodLabelFromThresholds(0.5, tight)).toBe("normal");
 			expect(resolveBoardLodLabelFromThresholds(0.7, tight)).toBe("detail");
+			expect(resolveBoardLodLabelFromThresholds(1.1, tight)).toBe("micro");
+		});
+
+		it("switches caption policy across the five LOD bands", () => {
+			expect(boardTextOverlayCaptionForLod("Node Label", "minimap", null)).toBeNull();
+			expect(boardTextOverlayCaptionForLod("Node Label", "overview", null)).toBe("Node…");
+			expect(boardTextOverlayCaptionForLod("Node Label", "normal", null)).toBe("Node Label");
+			expect(boardTextOverlayCaptionForLod("Node Label", "detail", "catalog-icon")).toBe("Node La…");
+			expect(boardTextOverlayCaptionForLod("Node Label", "micro", "catalog-icon")).toBe("Node Label");
 		});
 	});
 
@@ -3809,6 +3857,25 @@ if (boardVitest) {
 				schema: "elements.board.fixture/v1",
 			});
 			expect(parsed?.nodes[0]).toMatchObject({ id: "nk", iconKind: "capsule-with-balcony_p" });
+		});
+
+		it("parses optional iconKind on fixture handles", () => {
+			const parsed = parseBoardFixtureV1({
+				camera: { x: 0, y: 0, zoom: 1 },
+				edges: [],
+				nodes: [
+					{
+						handles: [{ angle: 0, id: "hk.h", iconKind: "  typst:$1+1$  " }],
+						id: "hk",
+						radius: 10,
+						x: 0,
+						y: 0,
+					},
+				],
+				schema: "elements.board.fixture/v1",
+			});
+			const n = parsed?.nodes[0];
+			expect(n && "handles" in n ? n.handles[0] : undefined).toMatchObject({ id: "hk.h", iconKind: "typst:$1+1$" });
 		});
 
 		it("parses optional textAutofit on fixture nodes", () => {
@@ -4365,6 +4432,8 @@ function applyHandleProps(instance: Handle, props: BoardHandleProps, node: Node)
 	instance.visible = props.visible ?? true;
 	instance.radius = props.radius ?? 8;
 	instance.handleKind = (props.handleKind ?? "").trim();
+	instance.iconKind =
+		typeof props.iconKind === "string" && props.iconKind.trim() !== "" ? props.iconKind.trim() : null;
 	const rawC = props.color;
 	const cs = rawC === undefined || rawC === null ? "" : String(rawC).trim();
 	instance.color = cs !== "" ? cs : null;
@@ -4414,6 +4483,7 @@ function propsEqualHandle(a: BoardHandleProps, b: BoardHandleProps): boolean {
 		a.angle === b.angle &&
 		a.radius === b.radius &&
 		(a.handleKind ?? "").trim() === (b.handleKind ?? "").trim() &&
+		(a.iconKind ?? "") === (b.iconKind ?? "") &&
 		ac === bc &&
 		a.selected === b.selected &&
 		a.style === b.style &&

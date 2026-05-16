@@ -1,0 +1,10 @@
+{
+  "title": "Board Central Kinds And Compatibility",
+  "emoji": "🧩",
+  "status": "open",
+  "description": "Implement central board kind catalogs (node, edge, handle, wire) with id-referenced kinds, instance overrides, and unified compatibility pairs with specificity ordering (general \u003c node \u003c edge \u003c handle \u003c wire) plus important flag; wire-draw snap uses compatibility. Extend TS + WASM board.",
+  "goal": "🎯r2602",
+  "sessions": [
+    "⚪8e45e8413f0a455292ddb74910808509"
+  ]
+}

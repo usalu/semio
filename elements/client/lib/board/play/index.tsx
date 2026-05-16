@@ -844,6 +844,7 @@ function nakaginBoardMarkers(fixture: BoardFixtureV1, selectedIds: Set<string>):
 								key={handle.id}
 								radius={handle.radius}
 								selected={selectedIds.has(handle.id)}
+								{...(handle.iconKind ? { iconKind: handle.iconKind } : {})}
 							/>
 						))}
 					</Node>
@@ -873,6 +874,7 @@ function nakaginBoardMarkers(fixture: BoardFixtureV1, selectedIds: Set<string>):
 								key={handle.id}
 								radius={handle.radius}
 								selected={selectedIds.has(handle.id)}
+								{...(handle.iconKind ? { iconKind: handle.iconKind } : {})}
 							/>
 						))}
 					</Node>
