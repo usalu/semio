@@ -317,13 +317,317 @@ WHERE toLower(r.name) = 'input' AND NOT ()-[:OWNS]->(r)
 DETACH DELETE r;
 
 MATCH (cmd:Command {name: 'AddAttributesToConcept'})
-OPTIONAL MATCH (cmd)-[:OWNS]->(pivot:Data)
+OPTIONAL MATCH (cmd)-[r:OWNS]->(pivot:Data)
 WHERE pivot.name IN ['attributes']
-WITH cmd, [n IN collect(pivot) WHERE n IS NOT NULL] AS pivots
-FOREACH (x IN pivots | DETACH DELETE x);
+DELETE r;
+
+MATCH (cmd:Command {name: 'AddAttributesToDesign'})
+OPTIONAL MATCH (cmd)-[r:OWNS]->(pivot:Data)
+WHERE pivot.name IN ['attributes']
+DELETE r;
+
+MATCH (cmd:Command {name: 'AddAttributesToPiece'})
+OPTIONAL MATCH (cmd)-[r:OWNS]->(pivot:Data)
+WHERE pivot.name IN ['attributes']
+DELETE r;
+
+MATCH (cmd:Command {name: 'AddAttributesToPort'})
+OPTIONAL MATCH (cmd)-[r:OWNS]->(pivot:Data)
+WHERE pivot.name IN ['attributes']
+DELETE r;
+
+MATCH (cmd:Command {name: 'AddAttributesToQuality'})
+OPTIONAL MATCH (cmd)-[r:OWNS]->(pivot:Data)
+WHERE pivot.name IN ['attributes']
+DELETE r;
+
+MATCH (cmd:Command {name: 'AddAttributesToTag'})
+OPTIONAL MATCH (cmd)-[r:OWNS]->(pivot:Data)
+WHERE pivot.name IN ['attributes']
+DELETE r;
+
+MATCH (cmd:Command {name: 'AddAttributesToType'})
+OPTIONAL MATCH (cmd)-[r:OWNS]->(pivot:Data)
+WHERE pivot.name IN ['attributes']
+DELETE r;
+
+MATCH (cmd:Command {name: 'AddAttributeToConcept'})
+OPTIONAL MATCH (cmd)-[r:OWNS]->(pivot:Data)
+WHERE pivot.name IN ['attribute']
+DELETE r;
+
+MATCH (cmd:Command {name: 'AddAttributeToDesign'})
+OPTIONAL MATCH (cmd)-[r:OWNS]->(pivot:Data)
+WHERE pivot.name IN ['attribute']
+DELETE r;
+
+MATCH (cmd:Command {name: 'AddAttributeToPiece'})
+OPTIONAL MATCH (cmd)-[r:OWNS]->(pivot:Data)
+WHERE pivot.name IN ['attribute']
+DELETE r;
+
+MATCH (cmd:Command {name: 'AddAttributeToPort'})
+OPTIONAL MATCH (cmd)-[r:OWNS]->(pivot:Data)
+WHERE pivot.name IN ['attribute']
+DELETE r;
+
+MATCH (cmd:Command {name: 'AddAttributeToQuality'})
+OPTIONAL MATCH (cmd)-[r:OWNS]->(pivot:Data)
+WHERE pivot.name IN ['attribute']
+DELETE r;
+
+MATCH (cmd:Command {name: 'AddAttributeToTag'})
+OPTIONAL MATCH (cmd)-[r:OWNS]->(pivot:Data)
+WHERE pivot.name IN ['attribute']
+DELETE r;
+
+MATCH (cmd:Command {name: 'AddAttributeToType'})
+OPTIONAL MATCH (cmd)-[r:OWNS]->(pivot:Data)
+WHERE pivot.name IN ['attribute']
+DELETE r;
+
+MATCH (cmd:Command {name: 'AddChildPiecesWithParentConnections'})
+OPTIONAL MATCH (cmd)-[r:OWNS]->(pivot:Data)
+WHERE pivot.name IN ['pieces', 'connections']
+DELETE r;
+
+MATCH (cmd:Command {name: 'AddChildPieceWithParentConnection'})
+OPTIONAL MATCH (cmd)-[r:OWNS]->(pivot:Data)
+WHERE pivot.name IN ['piece']
+DELETE r;
+
+MATCH (cmd:Command {name: 'AddConnector'})
+OPTIONAL MATCH (cmd)-[r:OWNS]->(pivot:Data)
+WHERE pivot.name IN ['connector']
+DELETE r;
+
+MATCH (cmd:Command {name: 'AddConnectors'})
+OPTIONAL MATCH (cmd)-[r:OWNS]->(pivot:Data)
+WHERE pivot.name IN ['connectors']
+DELETE r;
+
+MATCH (cmd:Command {name: 'AddHangingChildPiecesWithParentConnections'})
+OPTIONAL MATCH (cmd)-[r:OWNS]->(pivot:Data)
+WHERE pivot.name IN ['pieces', 'connections']
+DELETE r;
+
+MATCH (cmd:Command {name: 'AddHangingChildPieceWithParentConnection'})
+OPTIONAL MATCH (cmd)-[r:OWNS]->(pivot:Data)
+WHERE pivot.name IN ['piece']
+DELETE r;
+
+MATCH (cmd:Command {name: 'ChangeDescription'})
+OPTIONAL MATCH (cmd)-[r:OWNS]->(pivot:Data)
+WHERE pivot.name IN ['description']
+DELETE r;
+
+MATCH (cmd:Command {name: 'ChangePiecesToType'})
+OPTIONAL MATCH (cmd)-[r:OWNS]->(pivot:Data)
+WHERE pivot.name IN ['blueprintId']
+DELETE r;
+
+MATCH (cmd:Command {name: 'ChangePieceToType'})
+OPTIONAL MATCH (cmd)-[r:OWNS]->(pivot:Data)
+WHERE pivot.name IN ['blueprintId']
+DELETE r;
+
+MATCH (cmd:Command {name: 'CreateConcept'})
+OPTIONAL MATCH (cmd)-[r:OWNS]->(pivot:Data)
+WHERE pivot.name IN ['concept']
+DELETE r;
+
+MATCH (cmd:Command {name: 'CreateConcepts'})
+OPTIONAL MATCH (cmd)-[r:OWNS]->(pivot:Data)
+WHERE pivot.name IN ['concepts']
+DELETE r;
+
+MATCH (cmd:Command {name: 'CreateDesign'})
+OPTIONAL MATCH (cmd)-[r:OWNS]->(pivot:Data)
+WHERE pivot.name IN ['design']
+DELETE r;
+
+MATCH (cmd:Command {name: 'CreateDesigns'})
+OPTIONAL MATCH (cmd)-[r:OWNS]->(pivot:Data)
+WHERE pivot.name IN ['designs']
+DELETE r;
+
+MATCH (cmd:Command {name: 'CreateFixedPiece'})
+OPTIONAL MATCH (cmd)-[r:OWNS]->(pivot:Data)
+WHERE pivot.name IN ['blueprintId', 'position']
+DELETE r;
+
+MATCH (cmd:Command {name: 'CreatePort'})
+OPTIONAL MATCH (cmd)-[r:OWNS]->(pivot:Data)
+WHERE pivot.name IN ['port']
+DELETE r;
+
+MATCH (cmd:Command {name: 'CreatePorts'})
+OPTIONAL MATCH (cmd)-[r:OWNS]->(pivot:Data)
+WHERE pivot.name IN ['ports']
+DELETE r;
+
+MATCH (cmd:Command {name: 'CreateQualities'})
+OPTIONAL MATCH (cmd)-[r:OWNS]->(pivot:Data)
+WHERE pivot.name IN ['qualities']
+DELETE r;
+
+MATCH (cmd:Command {name: 'CreateQuality'})
+OPTIONAL MATCH (cmd)-[r:OWNS]->(pivot:Data)
+WHERE pivot.name IN ['quality']
+DELETE r;
+
+MATCH (cmd:Command {name: 'CreateTag'})
+OPTIONAL MATCH (cmd)-[r:OWNS]->(pivot:Data)
+WHERE pivot.name IN ['tag']
+DELETE r;
+
+MATCH (cmd:Command {name: 'CreateTags'})
+OPTIONAL MATCH (cmd)-[r:OWNS]->(pivot:Data)
+WHERE pivot.name IN ['tags']
+DELETE r;
+
+MATCH (cmd:Command {name: 'CreateType'})
+OPTIONAL MATCH (cmd)-[r:OWNS]->(pivot:Data)
+WHERE pivot.name IN ['type']
+DELETE r;
+
+MATCH (cmd:Command {name: 'CreateTypes'})
+OPTIONAL MATCH (cmd)-[r:OWNS]->(pivot:Data)
+WHERE pivot.name IN ['types']
+DELETE r;
+
+MATCH (cmd:Command {name: 'DragPiece'})
+OPTIONAL MATCH (cmd)-[r:OWNS]->(pivot:Data)
+WHERE pivot.name IN ['offset']
+DELETE r;
+
+MATCH (cmd:Command {name: 'DragPieces'})
+OPTIONAL MATCH (cmd)-[r:OWNS]->(pivot:Data)
+WHERE pivot.name IN ['offset']
+DELETE r;
+
+MATCH (cmd:Command {name: 'MovePiece'})
+OPTIONAL MATCH (cmd)-[r:OWNS]->(pivot:Data)
+WHERE pivot.name IN ['position']
+DELETE r;
+
+MATCH (cmd:Command {name: 'MovePieces'})
+OPTIONAL MATCH (cmd)-[r:OWNS]->(pivot:Data)
+WHERE pivot.name IN ['offset']
+DELETE r;
+
+MATCH (cmd:Command {name: 'RenameConcept'})
+OPTIONAL MATCH (cmd)-[r:OWNS]->(pivot:Data)
+WHERE pivot.name IN ['name']
+DELETE r;
+
+MATCH (cmd:Command {name: 'RenameConnector'})
+OPTIONAL MATCH (cmd)-[r:OWNS]->(pivot:Data)
+WHERE pivot.name IN ['code']
+DELETE r;
+
+MATCH (cmd:Command {name: 'RenameKit'})
+OPTIONAL MATCH (cmd)-[r:OWNS]->(pivot:Data)
+WHERE pivot.name IN ['name']
+DELETE r;
+
+MATCH (cmd:Command {name: 'RenamePiece'})
+OPTIONAL MATCH (cmd)-[r:OWNS]->(pivot:Data)
+WHERE pivot.name IN ['name']
+DELETE r;
+
+MATCH (cmd:Command {name: 'RenamePort'})
+OPTIONAL MATCH (cmd)-[r:OWNS]->(pivot:Data)
+WHERE pivot.name IN ['code', 'label']
+DELETE r;
+
+MATCH (cmd:Command {name: 'RenameQuality'})
+OPTIONAL MATCH (cmd)-[r:OWNS]->(pivot:Data)
+WHERE pivot.name IN ['key']
+DELETE r;
+
+MATCH (cmd:Command {name: 'RenameTag'})
+OPTIONAL MATCH (cmd)-[r:OWNS]->(pivot:Data)
+WHERE pivot.name IN ['name']
+DELETE r;
+
+MATCH (cmd:Command {name: 'RenameType'})
+OPTIONAL MATCH (cmd)-[r:OWNS]->(pivot:Data)
+WHERE pivot.name IN ['name']
+DELETE r;
+
+MATCH (cmd:Command {name: 'UpdateConceptDescription'})
+OPTIONAL MATCH (cmd)-[r:OWNS]->(pivot:Data)
+WHERE pivot.name IN ['description']
+DELETE r;
+
+MATCH (cmd:Command {name: 'UpdateConceptIcon'})
+OPTIONAL MATCH (cmd)-[r:OWNS]->(pivot:Data)
+WHERE pivot.name IN ['icon']
+DELETE r;
+
+MATCH (cmd:Command {name: 'UpdateConnectorDescription'})
+OPTIONAL MATCH (cmd)-[r:OWNS]->(pivot:Data)
+WHERE pivot.name IN ['description']
+DELETE r;
+
+MATCH (cmd:Command {name: 'UpdateConnectorIcon'})
+OPTIONAL MATCH (cmd)-[r:OWNS]->(pivot:Data)
+WHERE pivot.name IN ['icon']
+DELETE r;
+
+MATCH (cmd:Command {name: 'UpdatePieceDescription'})
+OPTIONAL MATCH (cmd)-[r:OWNS]->(pivot:Data)
+WHERE pivot.name IN ['description']
+DELETE r;
+
+MATCH (cmd:Command {name: 'UpdatePortDescription'})
+OPTIONAL MATCH (cmd)-[r:OWNS]->(pivot:Data)
+WHERE pivot.name IN ['description']
+DELETE r;
+
+MATCH (cmd:Command {name: 'UpdatePortIcon'})
+OPTIONAL MATCH (cmd)-[r:OWNS]->(pivot:Data)
+WHERE pivot.name IN ['icon']
+DELETE r;
+
+MATCH (cmd:Command {name: 'UpdateQualityDescription'})
+OPTIONAL MATCH (cmd)-[r:OWNS]->(pivot:Data)
+WHERE pivot.name IN ['description']
+DELETE r;
+
+MATCH (cmd:Command {name: 'UpdateQualityIcon'})
+OPTIONAL MATCH (cmd)-[r:OWNS]->(pivot:Data)
+WHERE pivot.name IN ['icon']
+DELETE r;
+
+MATCH (cmd:Command {name: 'UpdateTagDescription'})
+OPTIONAL MATCH (cmd)-[r:OWNS]->(pivot:Data)
+WHERE pivot.name IN ['description']
+DELETE r;
+
+MATCH (cmd:Command {name: 'UpdateTagIcon'})
+OPTIONAL MATCH (cmd)-[r:OWNS]->(pivot:Data)
+WHERE pivot.name IN ['icon']
+DELETE r;
+
+MATCH (cmd:Command {name: 'UpdateTypeDescription'})
+OPTIONAL MATCH (cmd)-[r:OWNS]->(pivot:Data)
+WHERE pivot.name IN ['description']
+DELETE r;
+
+MATCH (cmd:Command {name: 'UpdateTypeIcon'})
+OPTIONAL MATCH (cmd)-[r:OWNS]->(pivot:Data)
+WHERE pivot.name IN ['icon']
+DELETE r;
+
+// Drop detached kit `Data` (no `OWNS` parent) that still carry `IS` — stale shared argument rows after `soleOwnerKey` split.
+MATCH (d:Data)
+WHERE NOT ()-[:OWNS]->(d) AND EXISTS { (d)-[:IS]->(:Class|Interface|Scalar|Command) }
+DETACH DELETE d;
 
 MATCH (cmd:Command {name: 'AddAttributesToConcept'})
-MERGE (arg_AddAttributesToConcept_attributes:Data {name: 'attributes', rank: '0', isList: true})
+MERGE (arg_AddAttributesToConcept_attributes:Data {name: 'attributes', soleOwnerKey: 'AddAttributesToConcept', rank: '0', isList: true})
 MERGE (cmd)-[:OWNS]->(arg_AddAttributesToConcept_attributes)
 WITH arg_AddAttributesToConcept_attributes
 OPTIONAL MATCH (t)
@@ -333,13 +637,7 @@ LIMIT 1
 FOREACH (_ IN CASE WHEN t IS NULL THEN [] ELSE [1] END | MERGE (arg_AddAttributesToConcept_attributes)-[:IS]->(t));
 
 MATCH (cmd:Command {name: 'AddAttributesToDesign'})
-OPTIONAL MATCH (cmd)-[:OWNS]->(pivot:Data)
-WHERE pivot.name IN ['attributes']
-WITH cmd, [n IN collect(pivot) WHERE n IS NOT NULL] AS pivots
-FOREACH (x IN pivots | DETACH DELETE x);
-
-MATCH (cmd:Command {name: 'AddAttributesToDesign'})
-MERGE (arg_AddAttributesToDesign_attributes:Data {name: 'attributes', rank: '0', isList: true})
+MERGE (arg_AddAttributesToDesign_attributes:Data {name: 'attributes', soleOwnerKey: 'AddAttributesToDesign', rank: '0', isList: true})
 MERGE (cmd)-[:OWNS]->(arg_AddAttributesToDesign_attributes)
 WITH arg_AddAttributesToDesign_attributes
 OPTIONAL MATCH (t)
@@ -349,13 +647,7 @@ LIMIT 1
 FOREACH (_ IN CASE WHEN t IS NULL THEN [] ELSE [1] END | MERGE (arg_AddAttributesToDesign_attributes)-[:IS]->(t));
 
 MATCH (cmd:Command {name: 'AddAttributesToPiece'})
-OPTIONAL MATCH (cmd)-[:OWNS]->(pivot:Data)
-WHERE pivot.name IN ['attributes']
-WITH cmd, [n IN collect(pivot) WHERE n IS NOT NULL] AS pivots
-FOREACH (x IN pivots | DETACH DELETE x);
-
-MATCH (cmd:Command {name: 'AddAttributesToPiece'})
-MERGE (arg_AddAttributesToPiece_attributes:Data {name: 'attributes', rank: '0', isList: true})
+MERGE (arg_AddAttributesToPiece_attributes:Data {name: 'attributes', soleOwnerKey: 'AddAttributesToPiece', rank: '0', isList: true})
 MERGE (cmd)-[:OWNS]->(arg_AddAttributesToPiece_attributes)
 WITH arg_AddAttributesToPiece_attributes
 OPTIONAL MATCH (t)
@@ -365,13 +657,7 @@ LIMIT 1
 FOREACH (_ IN CASE WHEN t IS NULL THEN [] ELSE [1] END | MERGE (arg_AddAttributesToPiece_attributes)-[:IS]->(t));
 
 MATCH (cmd:Command {name: 'AddAttributesToPort'})
-OPTIONAL MATCH (cmd)-[:OWNS]->(pivot:Data)
-WHERE pivot.name IN ['attributes']
-WITH cmd, [n IN collect(pivot) WHERE n IS NOT NULL] AS pivots
-FOREACH (x IN pivots | DETACH DELETE x);
-
-MATCH (cmd:Command {name: 'AddAttributesToPort'})
-MERGE (arg_AddAttributesToPort_attributes:Data {name: 'attributes', rank: '0', isList: true})
+MERGE (arg_AddAttributesToPort_attributes:Data {name: 'attributes', soleOwnerKey: 'AddAttributesToPort', rank: '0', isList: true})
 MERGE (cmd)-[:OWNS]->(arg_AddAttributesToPort_attributes)
 WITH arg_AddAttributesToPort_attributes
 OPTIONAL MATCH (t)
@@ -381,13 +667,7 @@ LIMIT 1
 FOREACH (_ IN CASE WHEN t IS NULL THEN [] ELSE [1] END | MERGE (arg_AddAttributesToPort_attributes)-[:IS]->(t));
 
 MATCH (cmd:Command {name: 'AddAttributesToQuality'})
-OPTIONAL MATCH (cmd)-[:OWNS]->(pivot:Data)
-WHERE pivot.name IN ['attributes']
-WITH cmd, [n IN collect(pivot) WHERE n IS NOT NULL] AS pivots
-FOREACH (x IN pivots | DETACH DELETE x);
-
-MATCH (cmd:Command {name: 'AddAttributesToQuality'})
-MERGE (arg_AddAttributesToQuality_attributes:Data {name: 'attributes', rank: '0', isList: true})
+MERGE (arg_AddAttributesToQuality_attributes:Data {name: 'attributes', soleOwnerKey: 'AddAttributesToQuality', rank: '0', isList: true})
 MERGE (cmd)-[:OWNS]->(arg_AddAttributesToQuality_attributes)
 WITH arg_AddAttributesToQuality_attributes
 OPTIONAL MATCH (t)
@@ -397,13 +677,7 @@ LIMIT 1
 FOREACH (_ IN CASE WHEN t IS NULL THEN [] ELSE [1] END | MERGE (arg_AddAttributesToQuality_attributes)-[:IS]->(t));
 
 MATCH (cmd:Command {name: 'AddAttributesToTag'})
-OPTIONAL MATCH (cmd)-[:OWNS]->(pivot:Data)
-WHERE pivot.name IN ['attributes']
-WITH cmd, [n IN collect(pivot) WHERE n IS NOT NULL] AS pivots
-FOREACH (x IN pivots | DETACH DELETE x);
-
-MATCH (cmd:Command {name: 'AddAttributesToTag'})
-MERGE (arg_AddAttributesToTag_attributes:Data {name: 'attributes', rank: '0', isList: true})
+MERGE (arg_AddAttributesToTag_attributes:Data {name: 'attributes', soleOwnerKey: 'AddAttributesToTag', rank: '0', isList: true})
 MERGE (cmd)-[:OWNS]->(arg_AddAttributesToTag_attributes)
 WITH arg_AddAttributesToTag_attributes
 OPTIONAL MATCH (t)
@@ -413,13 +687,7 @@ LIMIT 1
 FOREACH (_ IN CASE WHEN t IS NULL THEN [] ELSE [1] END | MERGE (arg_AddAttributesToTag_attributes)-[:IS]->(t));
 
 MATCH (cmd:Command {name: 'AddAttributesToType'})
-OPTIONAL MATCH (cmd)-[:OWNS]->(pivot:Data)
-WHERE pivot.name IN ['attributes']
-WITH cmd, [n IN collect(pivot) WHERE n IS NOT NULL] AS pivots
-FOREACH (x IN pivots | DETACH DELETE x);
-
-MATCH (cmd:Command {name: 'AddAttributesToType'})
-MERGE (arg_AddAttributesToType_attributes:Data {name: 'attributes', rank: '0', isList: true})
+MERGE (arg_AddAttributesToType_attributes:Data {name: 'attributes', soleOwnerKey: 'AddAttributesToType', rank: '0', isList: true})
 MERGE (cmd)-[:OWNS]->(arg_AddAttributesToType_attributes)
 WITH arg_AddAttributesToType_attributes
 OPTIONAL MATCH (t)
@@ -429,13 +697,7 @@ LIMIT 1
 FOREACH (_ IN CASE WHEN t IS NULL THEN [] ELSE [1] END | MERGE (arg_AddAttributesToType_attributes)-[:IS]->(t));
 
 MATCH (cmd:Command {name: 'AddAttributeToConcept'})
-OPTIONAL MATCH (cmd)-[:OWNS]->(pivot:Data)
-WHERE pivot.name IN ['attribute']
-WITH cmd, [n IN collect(pivot) WHERE n IS NOT NULL] AS pivots
-FOREACH (x IN pivots | DETACH DELETE x);
-
-MATCH (cmd:Command {name: 'AddAttributeToConcept'})
-MERGE (arg_AddAttributeToConcept_attribute:Data {name: 'attribute', rank: '0', isList: false})
+MERGE (arg_AddAttributeToConcept_attribute:Data {name: 'attribute', soleOwnerKey: 'AddAttributeToConcept', rank: '0', isList: false})
 MERGE (cmd)-[:OWNS]->(arg_AddAttributeToConcept_attribute)
 WITH arg_AddAttributeToConcept_attribute
 OPTIONAL MATCH (t)
@@ -445,13 +707,7 @@ LIMIT 1
 FOREACH (_ IN CASE WHEN t IS NULL THEN [] ELSE [1] END | MERGE (arg_AddAttributeToConcept_attribute)-[:IS]->(t));
 
 MATCH (cmd:Command {name: 'AddAttributeToDesign'})
-OPTIONAL MATCH (cmd)-[:OWNS]->(pivot:Data)
-WHERE pivot.name IN ['attribute']
-WITH cmd, [n IN collect(pivot) WHERE n IS NOT NULL] AS pivots
-FOREACH (x IN pivots | DETACH DELETE x);
-
-MATCH (cmd:Command {name: 'AddAttributeToDesign'})
-MERGE (arg_AddAttributeToDesign_attribute:Data {name: 'attribute', rank: '0', isList: false})
+MERGE (arg_AddAttributeToDesign_attribute:Data {name: 'attribute', soleOwnerKey: 'AddAttributeToDesign', rank: '0', isList: false})
 MERGE (cmd)-[:OWNS]->(arg_AddAttributeToDesign_attribute)
 WITH arg_AddAttributeToDesign_attribute
 OPTIONAL MATCH (t)
@@ -461,13 +717,7 @@ LIMIT 1
 FOREACH (_ IN CASE WHEN t IS NULL THEN [] ELSE [1] END | MERGE (arg_AddAttributeToDesign_attribute)-[:IS]->(t));
 
 MATCH (cmd:Command {name: 'AddAttributeToPiece'})
-OPTIONAL MATCH (cmd)-[:OWNS]->(pivot:Data)
-WHERE pivot.name IN ['attribute']
-WITH cmd, [n IN collect(pivot) WHERE n IS NOT NULL] AS pivots
-FOREACH (x IN pivots | DETACH DELETE x);
-
-MATCH (cmd:Command {name: 'AddAttributeToPiece'})
-MERGE (arg_AddAttributeToPiece_attribute:Data {name: 'attribute', rank: '0', isList: false})
+MERGE (arg_AddAttributeToPiece_attribute:Data {name: 'attribute', soleOwnerKey: 'AddAttributeToPiece', rank: '0', isList: false})
 MERGE (cmd)-[:OWNS]->(arg_AddAttributeToPiece_attribute)
 WITH arg_AddAttributeToPiece_attribute
 OPTIONAL MATCH (t)
@@ -477,13 +727,7 @@ LIMIT 1
 FOREACH (_ IN CASE WHEN t IS NULL THEN [] ELSE [1] END | MERGE (arg_AddAttributeToPiece_attribute)-[:IS]->(t));
 
 MATCH (cmd:Command {name: 'AddAttributeToPort'})
-OPTIONAL MATCH (cmd)-[:OWNS]->(pivot:Data)
-WHERE pivot.name IN ['attribute']
-WITH cmd, [n IN collect(pivot) WHERE n IS NOT NULL] AS pivots
-FOREACH (x IN pivots | DETACH DELETE x);
-
-MATCH (cmd:Command {name: 'AddAttributeToPort'})
-MERGE (arg_AddAttributeToPort_attribute:Data {name: 'attribute', rank: '0', isList: false})
+MERGE (arg_AddAttributeToPort_attribute:Data {name: 'attribute', soleOwnerKey: 'AddAttributeToPort', rank: '0', isList: false})
 MERGE (cmd)-[:OWNS]->(arg_AddAttributeToPort_attribute)
 WITH arg_AddAttributeToPort_attribute
 OPTIONAL MATCH (t)
@@ -493,13 +737,7 @@ LIMIT 1
 FOREACH (_ IN CASE WHEN t IS NULL THEN [] ELSE [1] END | MERGE (arg_AddAttributeToPort_attribute)-[:IS]->(t));
 
 MATCH (cmd:Command {name: 'AddAttributeToQuality'})
-OPTIONAL MATCH (cmd)-[:OWNS]->(pivot:Data)
-WHERE pivot.name IN ['attribute']
-WITH cmd, [n IN collect(pivot) WHERE n IS NOT NULL] AS pivots
-FOREACH (x IN pivots | DETACH DELETE x);
-
-MATCH (cmd:Command {name: 'AddAttributeToQuality'})
-MERGE (arg_AddAttributeToQuality_attribute:Data {name: 'attribute', rank: '0', isList: false})
+MERGE (arg_AddAttributeToQuality_attribute:Data {name: 'attribute', soleOwnerKey: 'AddAttributeToQuality', rank: '0', isList: false})
 MERGE (cmd)-[:OWNS]->(arg_AddAttributeToQuality_attribute)
 WITH arg_AddAttributeToQuality_attribute
 OPTIONAL MATCH (t)
@@ -509,13 +747,7 @@ LIMIT 1
 FOREACH (_ IN CASE WHEN t IS NULL THEN [] ELSE [1] END | MERGE (arg_AddAttributeToQuality_attribute)-[:IS]->(t));
 
 MATCH (cmd:Command {name: 'AddAttributeToTag'})
-OPTIONAL MATCH (cmd)-[:OWNS]->(pivot:Data)
-WHERE pivot.name IN ['attribute']
-WITH cmd, [n IN collect(pivot) WHERE n IS NOT NULL] AS pivots
-FOREACH (x IN pivots | DETACH DELETE x);
-
-MATCH (cmd:Command {name: 'AddAttributeToTag'})
-MERGE (arg_AddAttributeToTag_attribute:Data {name: 'attribute', rank: '0', isList: false})
+MERGE (arg_AddAttributeToTag_attribute:Data {name: 'attribute', soleOwnerKey: 'AddAttributeToTag', rank: '0', isList: false})
 MERGE (cmd)-[:OWNS]->(arg_AddAttributeToTag_attribute)
 WITH arg_AddAttributeToTag_attribute
 OPTIONAL MATCH (t)
@@ -525,13 +757,7 @@ LIMIT 1
 FOREACH (_ IN CASE WHEN t IS NULL THEN [] ELSE [1] END | MERGE (arg_AddAttributeToTag_attribute)-[:IS]->(t));
 
 MATCH (cmd:Command {name: 'AddAttributeToType'})
-OPTIONAL MATCH (cmd)-[:OWNS]->(pivot:Data)
-WHERE pivot.name IN ['attribute']
-WITH cmd, [n IN collect(pivot) WHERE n IS NOT NULL] AS pivots
-FOREACH (x IN pivots | DETACH DELETE x);
-
-MATCH (cmd:Command {name: 'AddAttributeToType'})
-MERGE (arg_AddAttributeToType_attribute:Data {name: 'attribute', rank: '0', isList: false})
+MERGE (arg_AddAttributeToType_attribute:Data {name: 'attribute', soleOwnerKey: 'AddAttributeToType', rank: '0', isList: false})
 MERGE (cmd)-[:OWNS]->(arg_AddAttributeToType_attribute)
 WITH arg_AddAttributeToType_attribute
 OPTIONAL MATCH (t)
@@ -541,13 +767,7 @@ LIMIT 1
 FOREACH (_ IN CASE WHEN t IS NULL THEN [] ELSE [1] END | MERGE (arg_AddAttributeToType_attribute)-[:IS]->(t));
 
 MATCH (cmd:Command {name: 'AddChildPiecesWithParentConnections'})
-OPTIONAL MATCH (cmd)-[:OWNS]->(pivot:Data)
-WHERE pivot.name IN ['pieces', 'connections']
-WITH cmd, [n IN collect(pivot) WHERE n IS NOT NULL] AS pivots
-FOREACH (x IN pivots | DETACH DELETE x);
-
-MATCH (cmd:Command {name: 'AddChildPiecesWithParentConnections'})
-MERGE (arg_AddChildPiecesWithParentConnections_pieces:Data {name: 'pieces', rank: '0', isList: true})
+MERGE (arg_AddChildPiecesWithParentConnections_pieces:Data {name: 'pieces', soleOwnerKey: 'AddChildPiecesWithParentConnections', rank: '0', isList: true})
 MERGE (cmd)-[:OWNS]->(arg_AddChildPiecesWithParentConnections_pieces)
 WITH arg_AddChildPiecesWithParentConnections_pieces
 OPTIONAL MATCH (t)
@@ -557,7 +777,7 @@ LIMIT 1
 FOREACH (_ IN CASE WHEN t IS NULL THEN [] ELSE [1] END | MERGE (arg_AddChildPiecesWithParentConnections_pieces)-[:IS]->(t));
 
 MATCH (cmd:Command {name: 'AddChildPiecesWithParentConnections'})
-MERGE (arg_AddChildPiecesWithParentConnections_connections:Data {name: 'connections', rank: '1', isList: true})
+MERGE (arg_AddChildPiecesWithParentConnections_connections:Data {name: 'connections', soleOwnerKey: 'AddChildPiecesWithParentConnections', rank: '1', isList: true})
 MERGE (cmd)-[:OWNS]->(arg_AddChildPiecesWithParentConnections_connections)
 WITH arg_AddChildPiecesWithParentConnections_connections
 OPTIONAL MATCH (t)
@@ -567,13 +787,7 @@ LIMIT 1
 FOREACH (_ IN CASE WHEN t IS NULL THEN [] ELSE [1] END | MERGE (arg_AddChildPiecesWithParentConnections_connections)-[:IS]->(t));
 
 MATCH (cmd:Command {name: 'AddChildPieceWithParentConnection'})
-OPTIONAL MATCH (cmd)-[:OWNS]->(pivot:Data)
-WHERE pivot.name IN ['piece']
-WITH cmd, [n IN collect(pivot) WHERE n IS NOT NULL] AS pivots
-FOREACH (x IN pivots | DETACH DELETE x);
-
-MATCH (cmd:Command {name: 'AddChildPieceWithParentConnection'})
-MERGE (arg_AddChildPieceWithParentConnection_piece:Data {name: 'piece', rank: '0', isList: false})
+MERGE (arg_AddChildPieceWithParentConnection_piece:Data {name: 'piece', soleOwnerKey: 'AddChildPieceWithParentConnection', rank: '0', isList: false})
 MERGE (cmd)-[:OWNS]->(arg_AddChildPieceWithParentConnection_piece)
 WITH arg_AddChildPieceWithParentConnection_piece
 OPTIONAL MATCH (t)
@@ -583,13 +797,7 @@ LIMIT 1
 FOREACH (_ IN CASE WHEN t IS NULL THEN [] ELSE [1] END | MERGE (arg_AddChildPieceWithParentConnection_piece)-[:IS]->(t));
 
 MATCH (cmd:Command {name: 'AddConnector'})
-OPTIONAL MATCH (cmd)-[:OWNS]->(pivot:Data)
-WHERE pivot.name IN ['connector']
-WITH cmd, [n IN collect(pivot) WHERE n IS NOT NULL] AS pivots
-FOREACH (x IN pivots | DETACH DELETE x);
-
-MATCH (cmd:Command {name: 'AddConnector'})
-MERGE (arg_AddConnector_connector:Data {name: 'connector', rank: '0', isList: false})
+MERGE (arg_AddConnector_connector:Data {name: 'connector', soleOwnerKey: 'AddConnector', rank: '0', isList: false})
 MERGE (cmd)-[:OWNS]->(arg_AddConnector_connector)
 WITH arg_AddConnector_connector
 OPTIONAL MATCH (t)
@@ -599,13 +807,7 @@ LIMIT 1
 FOREACH (_ IN CASE WHEN t IS NULL THEN [] ELSE [1] END | MERGE (arg_AddConnector_connector)-[:IS]->(t));
 
 MATCH (cmd:Command {name: 'AddConnectors'})
-OPTIONAL MATCH (cmd)-[:OWNS]->(pivot:Data)
-WHERE pivot.name IN ['connectors']
-WITH cmd, [n IN collect(pivot) WHERE n IS NOT NULL] AS pivots
-FOREACH (x IN pivots | DETACH DELETE x);
-
-MATCH (cmd:Command {name: 'AddConnectors'})
-MERGE (arg_AddConnectors_connectors:Data {name: 'connectors', rank: '0', isList: true})
+MERGE (arg_AddConnectors_connectors:Data {name: 'connectors', soleOwnerKey: 'AddConnectors', rank: '0', isList: true})
 MERGE (cmd)-[:OWNS]->(arg_AddConnectors_connectors)
 WITH arg_AddConnectors_connectors
 OPTIONAL MATCH (t)
@@ -615,13 +817,7 @@ LIMIT 1
 FOREACH (_ IN CASE WHEN t IS NULL THEN [] ELSE [1] END | MERGE (arg_AddConnectors_connectors)-[:IS]->(t));
 
 MATCH (cmd:Command {name: 'AddHangingChildPiecesWithParentConnections'})
-OPTIONAL MATCH (cmd)-[:OWNS]->(pivot:Data)
-WHERE pivot.name IN ['pieces', 'connections']
-WITH cmd, [n IN collect(pivot) WHERE n IS NOT NULL] AS pivots
-FOREACH (x IN pivots | DETACH DELETE x);
-
-MATCH (cmd:Command {name: 'AddHangingChildPiecesWithParentConnections'})
-MERGE (arg_AddHangingChildPiecesWithParentConnections_pieces:Data {name: 'pieces', rank: '0', isList: true})
+MERGE (arg_AddHangingChildPiecesWithParentConnections_pieces:Data {name: 'pieces', soleOwnerKey: 'AddHangingChildPiecesWithParentConnections', rank: '0', isList: true})
 MERGE (cmd)-[:OWNS]->(arg_AddHangingChildPiecesWithParentConnections_pieces)
 WITH arg_AddHangingChildPiecesWithParentConnections_pieces
 OPTIONAL MATCH (t)
@@ -631,7 +827,7 @@ LIMIT 1
 FOREACH (_ IN CASE WHEN t IS NULL THEN [] ELSE [1] END | MERGE (arg_AddHangingChildPiecesWithParentConnections_pieces)-[:IS]->(t));
 
 MATCH (cmd:Command {name: 'AddHangingChildPiecesWithParentConnections'})
-MERGE (arg_AddHangingChildPiecesWithParentConnections_connections:Data {name: 'connections', rank: '1', isList: true})
+MERGE (arg_AddHangingChildPiecesWithParentConnections_connections:Data {name: 'connections', soleOwnerKey: 'AddHangingChildPiecesWithParentConnections', rank: '1', isList: true})
 MERGE (cmd)-[:OWNS]->(arg_AddHangingChildPiecesWithParentConnections_connections)
 WITH arg_AddHangingChildPiecesWithParentConnections_connections
 OPTIONAL MATCH (t)
@@ -641,13 +837,7 @@ LIMIT 1
 FOREACH (_ IN CASE WHEN t IS NULL THEN [] ELSE [1] END | MERGE (arg_AddHangingChildPiecesWithParentConnections_connections)-[:IS]->(t));
 
 MATCH (cmd:Command {name: 'AddHangingChildPieceWithParentConnection'})
-OPTIONAL MATCH (cmd)-[:OWNS]->(pivot:Data)
-WHERE pivot.name IN ['piece']
-WITH cmd, [n IN collect(pivot) WHERE n IS NOT NULL] AS pivots
-FOREACH (x IN pivots | DETACH DELETE x);
-
-MATCH (cmd:Command {name: 'AddHangingChildPieceWithParentConnection'})
-MERGE (arg_AddHangingChildPieceWithParentConnection_piece:Data {name: 'piece', rank: '0', isList: false})
+MERGE (arg_AddHangingChildPieceWithParentConnection_piece:Data {name: 'piece', soleOwnerKey: 'AddHangingChildPieceWithParentConnection', rank: '0', isList: false})
 MERGE (cmd)-[:OWNS]->(arg_AddHangingChildPieceWithParentConnection_piece)
 WITH arg_AddHangingChildPieceWithParentConnection_piece
 OPTIONAL MATCH (t)
@@ -657,13 +847,7 @@ LIMIT 1
 FOREACH (_ IN CASE WHEN t IS NULL THEN [] ELSE [1] END | MERGE (arg_AddHangingChildPieceWithParentConnection_piece)-[:IS]->(t));
 
 MATCH (cmd:Command {name: 'ChangeDescription'})
-OPTIONAL MATCH (cmd)-[:OWNS]->(pivot:Data)
-WHERE pivot.name IN ['description']
-WITH cmd, [n IN collect(pivot) WHERE n IS NOT NULL] AS pivots
-FOREACH (x IN pivots | DETACH DELETE x);
-
-MATCH (cmd:Command {name: 'ChangeDescription'})
-MERGE (arg_ChangeDescription_description:Data {name: 'description', rank: '0', isList: false})
+MERGE (arg_ChangeDescription_description:Data {name: 'description', soleOwnerKey: 'ChangeDescription', rank: '0', isList: false})
 MERGE (cmd)-[:OWNS]->(arg_ChangeDescription_description)
 WITH arg_ChangeDescription_description
 OPTIONAL MATCH (t)
@@ -673,13 +857,7 @@ LIMIT 1
 FOREACH (_ IN CASE WHEN t IS NULL THEN [] ELSE [1] END | MERGE (arg_ChangeDescription_description)-[:IS]->(t));
 
 MATCH (cmd:Command {name: 'ChangePiecesToType'})
-OPTIONAL MATCH (cmd)-[:OWNS]->(pivot:Data)
-WHERE pivot.name IN ['blueprintId']
-WITH cmd, [n IN collect(pivot) WHERE n IS NOT NULL] AS pivots
-FOREACH (x IN pivots | DETACH DELETE x);
-
-MATCH (cmd:Command {name: 'ChangePiecesToType'})
-MERGE (arg_ChangePiecesToType_blueprintId:Data {name: 'blueprintId', rank: '0', isList: false})
+MERGE (arg_ChangePiecesToType_blueprintId:Data {name: 'blueprintId', soleOwnerKey: 'ChangePiecesToType', rank: '0', isList: false})
 MERGE (cmd)-[:OWNS]->(arg_ChangePiecesToType_blueprintId)
 WITH arg_ChangePiecesToType_blueprintId
 OPTIONAL MATCH (t)
@@ -689,13 +867,7 @@ LIMIT 1
 FOREACH (_ IN CASE WHEN t IS NULL THEN [] ELSE [1] END | MERGE (arg_ChangePiecesToType_blueprintId)-[:IS]->(t));
 
 MATCH (cmd:Command {name: 'ChangePieceToType'})
-OPTIONAL MATCH (cmd)-[:OWNS]->(pivot:Data)
-WHERE pivot.name IN ['blueprintId']
-WITH cmd, [n IN collect(pivot) WHERE n IS NOT NULL] AS pivots
-FOREACH (x IN pivots | DETACH DELETE x);
-
-MATCH (cmd:Command {name: 'ChangePieceToType'})
-MERGE (arg_ChangePieceToType_blueprintId:Data {name: 'blueprintId', rank: '0', isList: false})
+MERGE (arg_ChangePieceToType_blueprintId:Data {name: 'blueprintId', soleOwnerKey: 'ChangePieceToType', rank: '0', isList: false})
 MERGE (cmd)-[:OWNS]->(arg_ChangePieceToType_blueprintId)
 WITH arg_ChangePieceToType_blueprintId
 OPTIONAL MATCH (t)
@@ -705,13 +877,7 @@ LIMIT 1
 FOREACH (_ IN CASE WHEN t IS NULL THEN [] ELSE [1] END | MERGE (arg_ChangePieceToType_blueprintId)-[:IS]->(t));
 
 MATCH (cmd:Command {name: 'CreateConcept'})
-OPTIONAL MATCH (cmd)-[:OWNS]->(pivot:Data)
-WHERE pivot.name IN ['concept']
-WITH cmd, [n IN collect(pivot) WHERE n IS NOT NULL] AS pivots
-FOREACH (x IN pivots | DETACH DELETE x);
-
-MATCH (cmd:Command {name: 'CreateConcept'})
-MERGE (arg_CreateConcept_concept:Data {name: 'concept', rank: '0', isList: false})
+MERGE (arg_CreateConcept_concept:Data {name: 'concept', soleOwnerKey: 'CreateConcept', rank: '0', isList: false})
 MERGE (cmd)-[:OWNS]->(arg_CreateConcept_concept)
 WITH arg_CreateConcept_concept
 OPTIONAL MATCH (t)
@@ -721,13 +887,7 @@ LIMIT 1
 FOREACH (_ IN CASE WHEN t IS NULL THEN [] ELSE [1] END | MERGE (arg_CreateConcept_concept)-[:IS]->(t));
 
 MATCH (cmd:Command {name: 'CreateConcepts'})
-OPTIONAL MATCH (cmd)-[:OWNS]->(pivot:Data)
-WHERE pivot.name IN ['concepts']
-WITH cmd, [n IN collect(pivot) WHERE n IS NOT NULL] AS pivots
-FOREACH (x IN pivots | DETACH DELETE x);
-
-MATCH (cmd:Command {name: 'CreateConcepts'})
-MERGE (arg_CreateConcepts_concepts:Data {name: 'concepts', rank: '0', isList: true})
+MERGE (arg_CreateConcepts_concepts:Data {name: 'concepts', soleOwnerKey: 'CreateConcepts', rank: '0', isList: true})
 MERGE (cmd)-[:OWNS]->(arg_CreateConcepts_concepts)
 WITH arg_CreateConcepts_concepts
 OPTIONAL MATCH (t)
@@ -737,13 +897,7 @@ LIMIT 1
 FOREACH (_ IN CASE WHEN t IS NULL THEN [] ELSE [1] END | MERGE (arg_CreateConcepts_concepts)-[:IS]->(t));
 
 MATCH (cmd:Command {name: 'CreateDesign'})
-OPTIONAL MATCH (cmd)-[:OWNS]->(pivot:Data)
-WHERE pivot.name IN ['design']
-WITH cmd, [n IN collect(pivot) WHERE n IS NOT NULL] AS pivots
-FOREACH (x IN pivots | DETACH DELETE x);
-
-MATCH (cmd:Command {name: 'CreateDesign'})
-MERGE (arg_CreateDesign_design:Data {name: 'design', rank: '0', isList: false})
+MERGE (arg_CreateDesign_design:Data {name: 'design', soleOwnerKey: 'CreateDesign', rank: '0', isList: false})
 MERGE (cmd)-[:OWNS]->(arg_CreateDesign_design)
 WITH arg_CreateDesign_design
 OPTIONAL MATCH (t)
@@ -753,13 +907,7 @@ LIMIT 1
 FOREACH (_ IN CASE WHEN t IS NULL THEN [] ELSE [1] END | MERGE (arg_CreateDesign_design)-[:IS]->(t));
 
 MATCH (cmd:Command {name: 'CreateDesigns'})
-OPTIONAL MATCH (cmd)-[:OWNS]->(pivot:Data)
-WHERE pivot.name IN ['designs']
-WITH cmd, [n IN collect(pivot) WHERE n IS NOT NULL] AS pivots
-FOREACH (x IN pivots | DETACH DELETE x);
-
-MATCH (cmd:Command {name: 'CreateDesigns'})
-MERGE (arg_CreateDesigns_designs:Data {name: 'designs', rank: '0', isList: true})
+MERGE (arg_CreateDesigns_designs:Data {name: 'designs', soleOwnerKey: 'CreateDesigns', rank: '0', isList: true})
 MERGE (cmd)-[:OWNS]->(arg_CreateDesigns_designs)
 WITH arg_CreateDesigns_designs
 OPTIONAL MATCH (t)
@@ -769,13 +917,7 @@ LIMIT 1
 FOREACH (_ IN CASE WHEN t IS NULL THEN [] ELSE [1] END | MERGE (arg_CreateDesigns_designs)-[:IS]->(t));
 
 MATCH (cmd:Command {name: 'CreateFixedPiece'})
-OPTIONAL MATCH (cmd)-[:OWNS]->(pivot:Data)
-WHERE pivot.name IN ['blueprintId', 'position']
-WITH cmd, [n IN collect(pivot) WHERE n IS NOT NULL] AS pivots
-FOREACH (x IN pivots | DETACH DELETE x);
-
-MATCH (cmd:Command {name: 'CreateFixedPiece'})
-MERGE (arg_CreateFixedPiece_blueprintId:Data {name: 'blueprintId', rank: '0', isList: false})
+MERGE (arg_CreateFixedPiece_blueprintId:Data {name: 'blueprintId', soleOwnerKey: 'CreateFixedPiece', rank: '0', isList: false})
 MERGE (cmd)-[:OWNS]->(arg_CreateFixedPiece_blueprintId)
 WITH arg_CreateFixedPiece_blueprintId
 OPTIONAL MATCH (t)
@@ -785,7 +927,7 @@ LIMIT 1
 FOREACH (_ IN CASE WHEN t IS NULL THEN [] ELSE [1] END | MERGE (arg_CreateFixedPiece_blueprintId)-[:IS]->(t));
 
 MATCH (cmd:Command {name: 'CreateFixedPiece'})
-MERGE (arg_CreateFixedPiece_position:Data {name: 'position', rank: '1', isList: false})
+MERGE (arg_CreateFixedPiece_position:Data {name: 'position', soleOwnerKey: 'CreateFixedPiece', rank: '1', isList: false})
 MERGE (cmd)-[:OWNS]->(arg_CreateFixedPiece_position)
 WITH arg_CreateFixedPiece_position
 OPTIONAL MATCH (t)
@@ -795,13 +937,7 @@ LIMIT 1
 FOREACH (_ IN CASE WHEN t IS NULL THEN [] ELSE [1] END | MERGE (arg_CreateFixedPiece_position)-[:IS]->(t));
 
 MATCH (cmd:Command {name: 'CreatePort'})
-OPTIONAL MATCH (cmd)-[:OWNS]->(pivot:Data)
-WHERE pivot.name IN ['port']
-WITH cmd, [n IN collect(pivot) WHERE n IS NOT NULL] AS pivots
-FOREACH (x IN pivots | DETACH DELETE x);
-
-MATCH (cmd:Command {name: 'CreatePort'})
-MERGE (arg_CreatePort_port:Data {name: 'port', rank: '0', isList: false})
+MERGE (arg_CreatePort_port:Data {name: 'port', soleOwnerKey: 'CreatePort', rank: '0', isList: false})
 MERGE (cmd)-[:OWNS]->(arg_CreatePort_port)
 WITH arg_CreatePort_port
 OPTIONAL MATCH (t)
@@ -811,13 +947,7 @@ LIMIT 1
 FOREACH (_ IN CASE WHEN t IS NULL THEN [] ELSE [1] END | MERGE (arg_CreatePort_port)-[:IS]->(t));
 
 MATCH (cmd:Command {name: 'CreatePorts'})
-OPTIONAL MATCH (cmd)-[:OWNS]->(pivot:Data)
-WHERE pivot.name IN ['ports']
-WITH cmd, [n IN collect(pivot) WHERE n IS NOT NULL] AS pivots
-FOREACH (x IN pivots | DETACH DELETE x);
-
-MATCH (cmd:Command {name: 'CreatePorts'})
-MERGE (arg_CreatePorts_ports:Data {name: 'ports', rank: '0', isList: true})
+MERGE (arg_CreatePorts_ports:Data {name: 'ports', soleOwnerKey: 'CreatePorts', rank: '0', isList: true})
 MERGE (cmd)-[:OWNS]->(arg_CreatePorts_ports)
 WITH arg_CreatePorts_ports
 OPTIONAL MATCH (t)
@@ -827,13 +957,7 @@ LIMIT 1
 FOREACH (_ IN CASE WHEN t IS NULL THEN [] ELSE [1] END | MERGE (arg_CreatePorts_ports)-[:IS]->(t));
 
 MATCH (cmd:Command {name: 'CreateQualities'})
-OPTIONAL MATCH (cmd)-[:OWNS]->(pivot:Data)
-WHERE pivot.name IN ['qualities']
-WITH cmd, [n IN collect(pivot) WHERE n IS NOT NULL] AS pivots
-FOREACH (x IN pivots | DETACH DELETE x);
-
-MATCH (cmd:Command {name: 'CreateQualities'})
-MERGE (arg_CreateQualities_qualities:Data {name: 'qualities', rank: '0', isList: true})
+MERGE (arg_CreateQualities_qualities:Data {name: 'qualities', soleOwnerKey: 'CreateQualities', rank: '0', isList: true})
 MERGE (cmd)-[:OWNS]->(arg_CreateQualities_qualities)
 WITH arg_CreateQualities_qualities
 OPTIONAL MATCH (t)
@@ -843,13 +967,7 @@ LIMIT 1
 FOREACH (_ IN CASE WHEN t IS NULL THEN [] ELSE [1] END | MERGE (arg_CreateQualities_qualities)-[:IS]->(t));
 
 MATCH (cmd:Command {name: 'CreateQuality'})
-OPTIONAL MATCH (cmd)-[:OWNS]->(pivot:Data)
-WHERE pivot.name IN ['quality']
-WITH cmd, [n IN collect(pivot) WHERE n IS NOT NULL] AS pivots
-FOREACH (x IN pivots | DETACH DELETE x);
-
-MATCH (cmd:Command {name: 'CreateQuality'})
-MERGE (arg_CreateQuality_quality:Data {name: 'quality', rank: '0', isList: false})
+MERGE (arg_CreateQuality_quality:Data {name: 'quality', soleOwnerKey: 'CreateQuality', rank: '0', isList: false})
 MERGE (cmd)-[:OWNS]->(arg_CreateQuality_quality)
 WITH arg_CreateQuality_quality
 OPTIONAL MATCH (t)
@@ -859,13 +977,7 @@ LIMIT 1
 FOREACH (_ IN CASE WHEN t IS NULL THEN [] ELSE [1] END | MERGE (arg_CreateQuality_quality)-[:IS]->(t));
 
 MATCH (cmd:Command {name: 'CreateTag'})
-OPTIONAL MATCH (cmd)-[:OWNS]->(pivot:Data)
-WHERE pivot.name IN ['tag']
-WITH cmd, [n IN collect(pivot) WHERE n IS NOT NULL] AS pivots
-FOREACH (x IN pivots | DETACH DELETE x);
-
-MATCH (cmd:Command {name: 'CreateTag'})
-MERGE (arg_CreateTag_tag:Data {name: 'tag', rank: '0', isList: false})
+MERGE (arg_CreateTag_tag:Data {name: 'tag', soleOwnerKey: 'CreateTag', rank: '0', isList: false})
 MERGE (cmd)-[:OWNS]->(arg_CreateTag_tag)
 WITH arg_CreateTag_tag
 OPTIONAL MATCH (t)
@@ -875,13 +987,7 @@ LIMIT 1
 FOREACH (_ IN CASE WHEN t IS NULL THEN [] ELSE [1] END | MERGE (arg_CreateTag_tag)-[:IS]->(t));
 
 MATCH (cmd:Command {name: 'CreateTags'})
-OPTIONAL MATCH (cmd)-[:OWNS]->(pivot:Data)
-WHERE pivot.name IN ['tags']
-WITH cmd, [n IN collect(pivot) WHERE n IS NOT NULL] AS pivots
-FOREACH (x IN pivots | DETACH DELETE x);
-
-MATCH (cmd:Command {name: 'CreateTags'})
-MERGE (arg_CreateTags_tags:Data {name: 'tags', rank: '0', isList: true})
+MERGE (arg_CreateTags_tags:Data {name: 'tags', soleOwnerKey: 'CreateTags', rank: '0', isList: true})
 MERGE (cmd)-[:OWNS]->(arg_CreateTags_tags)
 WITH arg_CreateTags_tags
 OPTIONAL MATCH (t)
@@ -891,13 +997,7 @@ LIMIT 1
 FOREACH (_ IN CASE WHEN t IS NULL THEN [] ELSE [1] END | MERGE (arg_CreateTags_tags)-[:IS]->(t));
 
 MATCH (cmd:Command {name: 'CreateType'})
-OPTIONAL MATCH (cmd)-[:OWNS]->(pivot:Data)
-WHERE pivot.name IN ['type']
-WITH cmd, [n IN collect(pivot) WHERE n IS NOT NULL] AS pivots
-FOREACH (x IN pivots | DETACH DELETE x);
-
-MATCH (cmd:Command {name: 'CreateType'})
-MERGE (arg_CreateType_type:Data {name: 'type', rank: '0', isList: false})
+MERGE (arg_CreateType_type:Data {name: 'type', soleOwnerKey: 'CreateType', rank: '0', isList: false})
 MERGE (cmd)-[:OWNS]->(arg_CreateType_type)
 WITH arg_CreateType_type
 OPTIONAL MATCH (t)
@@ -907,13 +1007,7 @@ LIMIT 1
 FOREACH (_ IN CASE WHEN t IS NULL THEN [] ELSE [1] END | MERGE (arg_CreateType_type)-[:IS]->(t));
 
 MATCH (cmd:Command {name: 'CreateTypes'})
-OPTIONAL MATCH (cmd)-[:OWNS]->(pivot:Data)
-WHERE pivot.name IN ['types']
-WITH cmd, [n IN collect(pivot) WHERE n IS NOT NULL] AS pivots
-FOREACH (x IN pivots | DETACH DELETE x);
-
-MATCH (cmd:Command {name: 'CreateTypes'})
-MERGE (arg_CreateTypes_types:Data {name: 'types', rank: '0', isList: true})
+MERGE (arg_CreateTypes_types:Data {name: 'types', soleOwnerKey: 'CreateTypes', rank: '0', isList: true})
 MERGE (cmd)-[:OWNS]->(arg_CreateTypes_types)
 WITH arg_CreateTypes_types
 OPTIONAL MATCH (t)
@@ -923,13 +1017,7 @@ LIMIT 1
 FOREACH (_ IN CASE WHEN t IS NULL THEN [] ELSE [1] END | MERGE (arg_CreateTypes_types)-[:IS]->(t));
 
 MATCH (cmd:Command {name: 'DragPiece'})
-OPTIONAL MATCH (cmd)-[:OWNS]->(pivot:Data)
-WHERE pivot.name IN ['offset']
-WITH cmd, [n IN collect(pivot) WHERE n IS NOT NULL] AS pivots
-FOREACH (x IN pivots | DETACH DELETE x);
-
-MATCH (cmd:Command {name: 'DragPiece'})
-MERGE (arg_DragPiece_offset:Data {name: 'offset', rank: '0', isList: false})
+MERGE (arg_DragPiece_offset:Data {name: 'offset', soleOwnerKey: 'DragPiece', rank: '0', isList: false})
 MERGE (cmd)-[:OWNS]->(arg_DragPiece_offset)
 WITH arg_DragPiece_offset
 OPTIONAL MATCH (t)
@@ -939,13 +1027,7 @@ LIMIT 1
 FOREACH (_ IN CASE WHEN t IS NULL THEN [] ELSE [1] END | MERGE (arg_DragPiece_offset)-[:IS]->(t));
 
 MATCH (cmd:Command {name: 'DragPieces'})
-OPTIONAL MATCH (cmd)-[:OWNS]->(pivot:Data)
-WHERE pivot.name IN ['offset']
-WITH cmd, [n IN collect(pivot) WHERE n IS NOT NULL] AS pivots
-FOREACH (x IN pivots | DETACH DELETE x);
-
-MATCH (cmd:Command {name: 'DragPieces'})
-MERGE (arg_DragPieces_offset:Data {name: 'offset', rank: '0', isList: false})
+MERGE (arg_DragPieces_offset:Data {name: 'offset', soleOwnerKey: 'DragPieces', rank: '0', isList: false})
 MERGE (cmd)-[:OWNS]->(arg_DragPieces_offset)
 WITH arg_DragPieces_offset
 OPTIONAL MATCH (t)
@@ -955,13 +1037,7 @@ LIMIT 1
 FOREACH (_ IN CASE WHEN t IS NULL THEN [] ELSE [1] END | MERGE (arg_DragPieces_offset)-[:IS]->(t));
 
 MATCH (cmd:Command {name: 'MovePiece'})
-OPTIONAL MATCH (cmd)-[:OWNS]->(pivot:Data)
-WHERE pivot.name IN ['position']
-WITH cmd, [n IN collect(pivot) WHERE n IS NOT NULL] AS pivots
-FOREACH (x IN pivots | DETACH DELETE x);
-
-MATCH (cmd:Command {name: 'MovePiece'})
-MERGE (arg_MovePiece_position:Data {name: 'position', rank: '0', isList: false})
+MERGE (arg_MovePiece_position:Data {name: 'position', soleOwnerKey: 'MovePiece', rank: '0', isList: false})
 MERGE (cmd)-[:OWNS]->(arg_MovePiece_position)
 WITH arg_MovePiece_position
 OPTIONAL MATCH (t)
@@ -971,13 +1047,7 @@ LIMIT 1
 FOREACH (_ IN CASE WHEN t IS NULL THEN [] ELSE [1] END | MERGE (arg_MovePiece_position)-[:IS]->(t));
 
 MATCH (cmd:Command {name: 'MovePieces'})
-OPTIONAL MATCH (cmd)-[:OWNS]->(pivot:Data)
-WHERE pivot.name IN ['offset']
-WITH cmd, [n IN collect(pivot) WHERE n IS NOT NULL] AS pivots
-FOREACH (x IN pivots | DETACH DELETE x);
-
-MATCH (cmd:Command {name: 'MovePieces'})
-MERGE (arg_MovePieces_offset:Data {name: 'offset', rank: '0', isList: false})
+MERGE (arg_MovePieces_offset:Data {name: 'offset', soleOwnerKey: 'MovePieces', rank: '0', isList: false})
 MERGE (cmd)-[:OWNS]->(arg_MovePieces_offset)
 WITH arg_MovePieces_offset
 OPTIONAL MATCH (t)
@@ -987,13 +1057,7 @@ LIMIT 1
 FOREACH (_ IN CASE WHEN t IS NULL THEN [] ELSE [1] END | MERGE (arg_MovePieces_offset)-[:IS]->(t));
 
 MATCH (cmd:Command {name: 'RenameConcept'})
-OPTIONAL MATCH (cmd)-[:OWNS]->(pivot:Data)
-WHERE pivot.name IN ['name']
-WITH cmd, [n IN collect(pivot) WHERE n IS NOT NULL] AS pivots
-FOREACH (x IN pivots | DETACH DELETE x);
-
-MATCH (cmd:Command {name: 'RenameConcept'})
-MERGE (arg_RenameConcept_name:Data {name: 'name', rank: '0', isList: false})
+MERGE (arg_RenameConcept_name:Data {name: 'name', soleOwnerKey: 'RenameConcept', rank: '0', isList: false})
 MERGE (cmd)-[:OWNS]->(arg_RenameConcept_name)
 WITH arg_RenameConcept_name
 OPTIONAL MATCH (t)
@@ -1003,13 +1067,7 @@ LIMIT 1
 FOREACH (_ IN CASE WHEN t IS NULL THEN [] ELSE [1] END | MERGE (arg_RenameConcept_name)-[:IS]->(t));
 
 MATCH (cmd:Command {name: 'RenameConnector'})
-OPTIONAL MATCH (cmd)-[:OWNS]->(pivot:Data)
-WHERE pivot.name IN ['code']
-WITH cmd, [n IN collect(pivot) WHERE n IS NOT NULL] AS pivots
-FOREACH (x IN pivots | DETACH DELETE x);
-
-MATCH (cmd:Command {name: 'RenameConnector'})
-MERGE (arg_RenameConnector_code:Data {name: 'code', rank: '0', isList: false})
+MERGE (arg_RenameConnector_code:Data {name: 'code', soleOwnerKey: 'RenameConnector', rank: '0', isList: false})
 MERGE (cmd)-[:OWNS]->(arg_RenameConnector_code)
 WITH arg_RenameConnector_code
 OPTIONAL MATCH (t)
@@ -1019,13 +1077,7 @@ LIMIT 1
 FOREACH (_ IN CASE WHEN t IS NULL THEN [] ELSE [1] END | MERGE (arg_RenameConnector_code)-[:IS]->(t));
 
 MATCH (cmd:Command {name: 'RenameKit'})
-OPTIONAL MATCH (cmd)-[:OWNS]->(pivot:Data)
-WHERE pivot.name IN ['name']
-WITH cmd, [n IN collect(pivot) WHERE n IS NOT NULL] AS pivots
-FOREACH (x IN pivots | DETACH DELETE x);
-
-MATCH (cmd:Command {name: 'RenameKit'})
-MERGE (arg_RenameKit_name:Data {name: 'name', rank: '0', isList: false})
+MERGE (arg_RenameKit_name:Data {name: 'name', soleOwnerKey: 'RenameKit', rank: '0', isList: false})
 MERGE (cmd)-[:OWNS]->(arg_RenameKit_name)
 WITH arg_RenameKit_name
 OPTIONAL MATCH (t)
@@ -1035,13 +1087,7 @@ LIMIT 1
 FOREACH (_ IN CASE WHEN t IS NULL THEN [] ELSE [1] END | MERGE (arg_RenameKit_name)-[:IS]->(t));
 
 MATCH (cmd:Command {name: 'RenamePiece'})
-OPTIONAL MATCH (cmd)-[:OWNS]->(pivot:Data)
-WHERE pivot.name IN ['name']
-WITH cmd, [n IN collect(pivot) WHERE n IS NOT NULL] AS pivots
-FOREACH (x IN pivots | DETACH DELETE x);
-
-MATCH (cmd:Command {name: 'RenamePiece'})
-MERGE (arg_RenamePiece_name:Data {name: 'name', rank: '0', isList: false})
+MERGE (arg_RenamePiece_name:Data {name: 'name', soleOwnerKey: 'RenamePiece', rank: '0', isList: false})
 MERGE (cmd)-[:OWNS]->(arg_RenamePiece_name)
 WITH arg_RenamePiece_name
 OPTIONAL MATCH (t)
@@ -1051,13 +1097,7 @@ LIMIT 1
 FOREACH (_ IN CASE WHEN t IS NULL THEN [] ELSE [1] END | MERGE (arg_RenamePiece_name)-[:IS]->(t));
 
 MATCH (cmd:Command {name: 'RenamePort'})
-OPTIONAL MATCH (cmd)-[:OWNS]->(pivot:Data)
-WHERE pivot.name IN ['code', 'label']
-WITH cmd, [n IN collect(pivot) WHERE n IS NOT NULL] AS pivots
-FOREACH (x IN pivots | DETACH DELETE x);
-
-MATCH (cmd:Command {name: 'RenamePort'})
-MERGE (arg_RenamePort_code:Data {name: 'code', rank: '0', isList: false})
+MERGE (arg_RenamePort_code:Data {name: 'code', soleOwnerKey: 'RenamePort', rank: '0', isList: false})
 MERGE (cmd)-[:OWNS]->(arg_RenamePort_code)
 WITH arg_RenamePort_code
 OPTIONAL MATCH (t)
@@ -1067,7 +1107,7 @@ LIMIT 1
 FOREACH (_ IN CASE WHEN t IS NULL THEN [] ELSE [1] END | MERGE (arg_RenamePort_code)-[:IS]->(t));
 
 MATCH (cmd:Command {name: 'RenamePort'})
-MERGE (arg_RenamePort_label:Data {name: 'label', rank: '1', isList: false})
+MERGE (arg_RenamePort_label:Data {name: 'label', soleOwnerKey: 'RenamePort', rank: '1', isList: false})
 MERGE (cmd)-[:OWNS]->(arg_RenamePort_label)
 WITH arg_RenamePort_label
 OPTIONAL MATCH (t)
@@ -1077,13 +1117,7 @@ LIMIT 1
 FOREACH (_ IN CASE WHEN t IS NULL THEN [] ELSE [1] END | MERGE (arg_RenamePort_label)-[:IS]->(t));
 
 MATCH (cmd:Command {name: 'RenameQuality'})
-OPTIONAL MATCH (cmd)-[:OWNS]->(pivot:Data)
-WHERE pivot.name IN ['key']
-WITH cmd, [n IN collect(pivot) WHERE n IS NOT NULL] AS pivots
-FOREACH (x IN pivots | DETACH DELETE x);
-
-MATCH (cmd:Command {name: 'RenameQuality'})
-MERGE (arg_RenameQuality_key:Data {name: 'key', rank: '0', isList: false})
+MERGE (arg_RenameQuality_key:Data {name: 'key', soleOwnerKey: 'RenameQuality', rank: '0', isList: false})
 MERGE (cmd)-[:OWNS]->(arg_RenameQuality_key)
 WITH arg_RenameQuality_key
 OPTIONAL MATCH (t)
@@ -1093,13 +1127,7 @@ LIMIT 1
 FOREACH (_ IN CASE WHEN t IS NULL THEN [] ELSE [1] END | MERGE (arg_RenameQuality_key)-[:IS]->(t));
 
 MATCH (cmd:Command {name: 'RenameTag'})
-OPTIONAL MATCH (cmd)-[:OWNS]->(pivot:Data)
-WHERE pivot.name IN ['name']
-WITH cmd, [n IN collect(pivot) WHERE n IS NOT NULL] AS pivots
-FOREACH (x IN pivots | DETACH DELETE x);
-
-MATCH (cmd:Command {name: 'RenameTag'})
-MERGE (arg_RenameTag_name:Data {name: 'name', rank: '0', isList: false})
+MERGE (arg_RenameTag_name:Data {name: 'name', soleOwnerKey: 'RenameTag', rank: '0', isList: false})
 MERGE (cmd)-[:OWNS]->(arg_RenameTag_name)
 WITH arg_RenameTag_name
 OPTIONAL MATCH (t)
@@ -1109,13 +1137,7 @@ LIMIT 1
 FOREACH (_ IN CASE WHEN t IS NULL THEN [] ELSE [1] END | MERGE (arg_RenameTag_name)-[:IS]->(t));
 
 MATCH (cmd:Command {name: 'RenameType'})
-OPTIONAL MATCH (cmd)-[:OWNS]->(pivot:Data)
-WHERE pivot.name IN ['name']
-WITH cmd, [n IN collect(pivot) WHERE n IS NOT NULL] AS pivots
-FOREACH (x IN pivots | DETACH DELETE x);
-
-MATCH (cmd:Command {name: 'RenameType'})
-MERGE (arg_RenameType_name:Data {name: 'name', rank: '0', isList: false})
+MERGE (arg_RenameType_name:Data {name: 'name', soleOwnerKey: 'RenameType', rank: '0', isList: false})
 MERGE (cmd)-[:OWNS]->(arg_RenameType_name)
 WITH arg_RenameType_name
 OPTIONAL MATCH (t)
@@ -1125,13 +1147,7 @@ LIMIT 1
 FOREACH (_ IN CASE WHEN t IS NULL THEN [] ELSE [1] END | MERGE (arg_RenameType_name)-[:IS]->(t));
 
 MATCH (cmd:Command {name: 'UpdateConceptDescription'})
-OPTIONAL MATCH (cmd)-[:OWNS]->(pivot:Data)
-WHERE pivot.name IN ['description']
-WITH cmd, [n IN collect(pivot) WHERE n IS NOT NULL] AS pivots
-FOREACH (x IN pivots | DETACH DELETE x);
-
-MATCH (cmd:Command {name: 'UpdateConceptDescription'})
-MERGE (arg_UpdateConceptDescription_description:Data {name: 'description', rank: '0', isList: false})
+MERGE (arg_UpdateConceptDescription_description:Data {name: 'description', soleOwnerKey: 'UpdateConceptDescription', rank: '0', isList: false})
 MERGE (cmd)-[:OWNS]->(arg_UpdateConceptDescription_description)
 WITH arg_UpdateConceptDescription_description
 OPTIONAL MATCH (t)
@@ -1141,13 +1157,7 @@ LIMIT 1
 FOREACH (_ IN CASE WHEN t IS NULL THEN [] ELSE [1] END | MERGE (arg_UpdateConceptDescription_description)-[:IS]->(t));
 
 MATCH (cmd:Command {name: 'UpdateConceptIcon'})
-OPTIONAL MATCH (cmd)-[:OWNS]->(pivot:Data)
-WHERE pivot.name IN ['icon']
-WITH cmd, [n IN collect(pivot) WHERE n IS NOT NULL] AS pivots
-FOREACH (x IN pivots | DETACH DELETE x);
-
-MATCH (cmd:Command {name: 'UpdateConceptIcon'})
-MERGE (arg_UpdateConceptIcon_icon:Data {name: 'icon', rank: '0', isList: false})
+MERGE (arg_UpdateConceptIcon_icon:Data {name: 'icon', soleOwnerKey: 'UpdateConceptIcon', rank: '0', isList: false})
 MERGE (cmd)-[:OWNS]->(arg_UpdateConceptIcon_icon)
 WITH arg_UpdateConceptIcon_icon
 OPTIONAL MATCH (t)
@@ -1157,13 +1167,7 @@ LIMIT 1
 FOREACH (_ IN CASE WHEN t IS NULL THEN [] ELSE [1] END | MERGE (arg_UpdateConceptIcon_icon)-[:IS]->(t));
 
 MATCH (cmd:Command {name: 'UpdateConnectorDescription'})
-OPTIONAL MATCH (cmd)-[:OWNS]->(pivot:Data)
-WHERE pivot.name IN ['description']
-WITH cmd, [n IN collect(pivot) WHERE n IS NOT NULL] AS pivots
-FOREACH (x IN pivots | DETACH DELETE x);
-
-MATCH (cmd:Command {name: 'UpdateConnectorDescription'})
-MERGE (arg_UpdateConnectorDescription_description:Data {name: 'description', rank: '0', isList: false})
+MERGE (arg_UpdateConnectorDescription_description:Data {name: 'description', soleOwnerKey: 'UpdateConnectorDescription', rank: '0', isList: false})
 MERGE (cmd)-[:OWNS]->(arg_UpdateConnectorDescription_description)
 WITH arg_UpdateConnectorDescription_description
 OPTIONAL MATCH (t)
@@ -1173,13 +1177,7 @@ LIMIT 1
 FOREACH (_ IN CASE WHEN t IS NULL THEN [] ELSE [1] END | MERGE (arg_UpdateConnectorDescription_description)-[:IS]->(t));
 
 MATCH (cmd:Command {name: 'UpdateConnectorIcon'})
-OPTIONAL MATCH (cmd)-[:OWNS]->(pivot:Data)
-WHERE pivot.name IN ['icon']
-WITH cmd, [n IN collect(pivot) WHERE n IS NOT NULL] AS pivots
-FOREACH (x IN pivots | DETACH DELETE x);
-
-MATCH (cmd:Command {name: 'UpdateConnectorIcon'})
-MERGE (arg_UpdateConnectorIcon_icon:Data {name: 'icon', rank: '0', isList: false})
+MERGE (arg_UpdateConnectorIcon_icon:Data {name: 'icon', soleOwnerKey: 'UpdateConnectorIcon', rank: '0', isList: false})
 MERGE (cmd)-[:OWNS]->(arg_UpdateConnectorIcon_icon)
 WITH arg_UpdateConnectorIcon_icon
 OPTIONAL MATCH (t)
@@ -1189,13 +1187,7 @@ LIMIT 1
 FOREACH (_ IN CASE WHEN t IS NULL THEN [] ELSE [1] END | MERGE (arg_UpdateConnectorIcon_icon)-[:IS]->(t));
 
 MATCH (cmd:Command {name: 'UpdatePieceDescription'})
-OPTIONAL MATCH (cmd)-[:OWNS]->(pivot:Data)
-WHERE pivot.name IN ['description']
-WITH cmd, [n IN collect(pivot) WHERE n IS NOT NULL] AS pivots
-FOREACH (x IN pivots | DETACH DELETE x);
-
-MATCH (cmd:Command {name: 'UpdatePieceDescription'})
-MERGE (arg_UpdatePieceDescription_description:Data {name: 'description', rank: '0', isList: false})
+MERGE (arg_UpdatePieceDescription_description:Data {name: 'description', soleOwnerKey: 'UpdatePieceDescription', rank: '0', isList: false})
 MERGE (cmd)-[:OWNS]->(arg_UpdatePieceDescription_description)
 WITH arg_UpdatePieceDescription_description
 OPTIONAL MATCH (t)
@@ -1205,13 +1197,7 @@ LIMIT 1
 FOREACH (_ IN CASE WHEN t IS NULL THEN [] ELSE [1] END | MERGE (arg_UpdatePieceDescription_description)-[:IS]->(t));
 
 MATCH (cmd:Command {name: 'UpdatePortDescription'})
-OPTIONAL MATCH (cmd)-[:OWNS]->(pivot:Data)
-WHERE pivot.name IN ['description']
-WITH cmd, [n IN collect(pivot) WHERE n IS NOT NULL] AS pivots
-FOREACH (x IN pivots | DETACH DELETE x);
-
-MATCH (cmd:Command {name: 'UpdatePortDescription'})
-MERGE (arg_UpdatePortDescription_description:Data {name: 'description', rank: '0', isList: false})
+MERGE (arg_UpdatePortDescription_description:Data {name: 'description', soleOwnerKey: 'UpdatePortDescription', rank: '0', isList: false})
 MERGE (cmd)-[:OWNS]->(arg_UpdatePortDescription_description)
 WITH arg_UpdatePortDescription_description
 OPTIONAL MATCH (t)
@@ -1221,13 +1207,7 @@ LIMIT 1
 FOREACH (_ IN CASE WHEN t IS NULL THEN [] ELSE [1] END | MERGE (arg_UpdatePortDescription_description)-[:IS]->(t));
 
 MATCH (cmd:Command {name: 'UpdatePortIcon'})
-OPTIONAL MATCH (cmd)-[:OWNS]->(pivot:Data)
-WHERE pivot.name IN ['icon']
-WITH cmd, [n IN collect(pivot) WHERE n IS NOT NULL] AS pivots
-FOREACH (x IN pivots | DETACH DELETE x);
-
-MATCH (cmd:Command {name: 'UpdatePortIcon'})
-MERGE (arg_UpdatePortIcon_icon:Data {name: 'icon', rank: '0', isList: false})
+MERGE (arg_UpdatePortIcon_icon:Data {name: 'icon', soleOwnerKey: 'UpdatePortIcon', rank: '0', isList: false})
 MERGE (cmd)-[:OWNS]->(arg_UpdatePortIcon_icon)
 WITH arg_UpdatePortIcon_icon
 OPTIONAL MATCH (t)
@@ -1237,13 +1217,7 @@ LIMIT 1
 FOREACH (_ IN CASE WHEN t IS NULL THEN [] ELSE [1] END | MERGE (arg_UpdatePortIcon_icon)-[:IS]->(t));
 
 MATCH (cmd:Command {name: 'UpdateQualityDescription'})
-OPTIONAL MATCH (cmd)-[:OWNS]->(pivot:Data)
-WHERE pivot.name IN ['description']
-WITH cmd, [n IN collect(pivot) WHERE n IS NOT NULL] AS pivots
-FOREACH (x IN pivots | DETACH DELETE x);
-
-MATCH (cmd:Command {name: 'UpdateQualityDescription'})
-MERGE (arg_UpdateQualityDescription_description:Data {name: 'description', rank: '0', isList: false})
+MERGE (arg_UpdateQualityDescription_description:Data {name: 'description', soleOwnerKey: 'UpdateQualityDescription', rank: '0', isList: false})
 MERGE (cmd)-[:OWNS]->(arg_UpdateQualityDescription_description)
 WITH arg_UpdateQualityDescription_description
 OPTIONAL MATCH (t)
@@ -1253,13 +1227,7 @@ LIMIT 1
 FOREACH (_ IN CASE WHEN t IS NULL THEN [] ELSE [1] END | MERGE (arg_UpdateQualityDescription_description)-[:IS]->(t));
 
 MATCH (cmd:Command {name: 'UpdateQualityIcon'})
-OPTIONAL MATCH (cmd)-[:OWNS]->(pivot:Data)
-WHERE pivot.name IN ['icon']
-WITH cmd, [n IN collect(pivot) WHERE n IS NOT NULL] AS pivots
-FOREACH (x IN pivots | DETACH DELETE x);
-
-MATCH (cmd:Command {name: 'UpdateQualityIcon'})
-MERGE (arg_UpdateQualityIcon_icon:Data {name: 'icon', rank: '0', isList: false})
+MERGE (arg_UpdateQualityIcon_icon:Data {name: 'icon', soleOwnerKey: 'UpdateQualityIcon', rank: '0', isList: false})
 MERGE (cmd)-[:OWNS]->(arg_UpdateQualityIcon_icon)
 WITH arg_UpdateQualityIcon_icon
 OPTIONAL MATCH (t)
@@ -1269,13 +1237,7 @@ LIMIT 1
 FOREACH (_ IN CASE WHEN t IS NULL THEN [] ELSE [1] END | MERGE (arg_UpdateQualityIcon_icon)-[:IS]->(t));
 
 MATCH (cmd:Command {name: 'UpdateTagDescription'})
-OPTIONAL MATCH (cmd)-[:OWNS]->(pivot:Data)
-WHERE pivot.name IN ['description']
-WITH cmd, [n IN collect(pivot) WHERE n IS NOT NULL] AS pivots
-FOREACH (x IN pivots | DETACH DELETE x);
-
-MATCH (cmd:Command {name: 'UpdateTagDescription'})
-MERGE (arg_UpdateTagDescription_description:Data {name: 'description', rank: '0', isList: false})
+MERGE (arg_UpdateTagDescription_description:Data {name: 'description', soleOwnerKey: 'UpdateTagDescription', rank: '0', isList: false})
 MERGE (cmd)-[:OWNS]->(arg_UpdateTagDescription_description)
 WITH arg_UpdateTagDescription_description
 OPTIONAL MATCH (t)
@@ -1285,13 +1247,7 @@ LIMIT 1
 FOREACH (_ IN CASE WHEN t IS NULL THEN [] ELSE [1] END | MERGE (arg_UpdateTagDescription_description)-[:IS]->(t));
 
 MATCH (cmd:Command {name: 'UpdateTagIcon'})
-OPTIONAL MATCH (cmd)-[:OWNS]->(pivot:Data)
-WHERE pivot.name IN ['icon']
-WITH cmd, [n IN collect(pivot) WHERE n IS NOT NULL] AS pivots
-FOREACH (x IN pivots | DETACH DELETE x);
-
-MATCH (cmd:Command {name: 'UpdateTagIcon'})
-MERGE (arg_UpdateTagIcon_icon:Data {name: 'icon', rank: '0', isList: false})
+MERGE (arg_UpdateTagIcon_icon:Data {name: 'icon', soleOwnerKey: 'UpdateTagIcon', rank: '0', isList: false})
 MERGE (cmd)-[:OWNS]->(arg_UpdateTagIcon_icon)
 WITH arg_UpdateTagIcon_icon
 OPTIONAL MATCH (t)
@@ -1301,13 +1257,7 @@ LIMIT 1
 FOREACH (_ IN CASE WHEN t IS NULL THEN [] ELSE [1] END | MERGE (arg_UpdateTagIcon_icon)-[:IS]->(t));
 
 MATCH (cmd:Command {name: 'UpdateTypeDescription'})
-OPTIONAL MATCH (cmd)-[:OWNS]->(pivot:Data)
-WHERE pivot.name IN ['description']
-WITH cmd, [n IN collect(pivot) WHERE n IS NOT NULL] AS pivots
-FOREACH (x IN pivots | DETACH DELETE x);
-
-MATCH (cmd:Command {name: 'UpdateTypeDescription'})
-MERGE (arg_UpdateTypeDescription_description:Data {name: 'description', rank: '0', isList: false})
+MERGE (arg_UpdateTypeDescription_description:Data {name: 'description', soleOwnerKey: 'UpdateTypeDescription', rank: '0', isList: false})
 MERGE (cmd)-[:OWNS]->(arg_UpdateTypeDescription_description)
 WITH arg_UpdateTypeDescription_description
 OPTIONAL MATCH (t)
@@ -1317,13 +1267,7 @@ LIMIT 1
 FOREACH (_ IN CASE WHEN t IS NULL THEN [] ELSE [1] END | MERGE (arg_UpdateTypeDescription_description)-[:IS]->(t));
 
 MATCH (cmd:Command {name: 'UpdateTypeIcon'})
-OPTIONAL MATCH (cmd)-[:OWNS]->(pivot:Data)
-WHERE pivot.name IN ['icon']
-WITH cmd, [n IN collect(pivot) WHERE n IS NOT NULL] AS pivots
-FOREACH (x IN pivots | DETACH DELETE x);
-
-MATCH (cmd:Command {name: 'UpdateTypeIcon'})
-MERGE (arg_UpdateTypeIcon_icon:Data {name: 'icon', rank: '0', isList: false})
+MERGE (arg_UpdateTypeIcon_icon:Data {name: 'icon', soleOwnerKey: 'UpdateTypeIcon', rank: '0', isList: false})
 MERGE (cmd)-[:OWNS]->(arg_UpdateTypeIcon_icon)
 WITH arg_UpdateTypeIcon_icon
 OPTIONAL MATCH (t)

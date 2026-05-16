@@ -1877,6 +1877,9 @@ export class BoardRenderer {
 			await this.session.attach_canvas(this.canvas, lw, lh, dpr);
 		} finally {
 			this.wasmSessionBorrowDepth = Math.max(0, this.wasmSessionBorrowDepth - 1);
+			if (this.wasmSessionBorrowDepth === 0 && !this.isDisposed) {
+				this.invalidate();
+			}
 		}
 		const o = this.selectionOptions;
 		this.session.setSelectionOptions(o.method, o.mode, o.target);
@@ -1974,8 +1977,13 @@ export class BoardRenderer {
 		}
 	}
 
+	/** @emoji 🛡️ Defers WASM scene push when `attach_canvas` or `renderFrame` still holds a session borrow; sets {@link BoardRenderer.invalidated} so the next frame retries. */
 	private pushSceneToWasmDriver(): void {
 		if (this.suppressSceneToWasmPush) {
+			return;
+		}
+		if (this.wasmSessionBorrowDepth > 0 || this.wasmGpuFrameDepth > 0) {
+			this.invalidated = true;
 			return;
 		}
 		const o = this.selectionOptions;

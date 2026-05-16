@@ -4,16 +4,16 @@ overview: Stop `pushSceneToWasmDriver` from being called while another `&mut Boa
 todos:
   - id: guard-push
     content: Guard pushSceneToWasmDriver against wasmSessionBorrowDepth/wasmGpuFrameDepth and mark invalidated for retry.
-    status: in_progress
+    status: completed
   - id: reinvalidate-attach
     content: Re-invalidate from initGpuSurfaceOnce finally block when borrow depth returns to zero.
-    status: pending
+    status: completed
   - id: drop-sync-render
     content: Drop synchronous renderer.render() from applySize in index.tsx.
-    status: pending
+    status: completed
   - id: verify
     content: Run board vitest + playwright + manual play app sanity check (pan/zoom/select).
-    status: pending
+    status: completed
 isProject: false
 ---
 

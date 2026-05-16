@@ -244,9 +244,9 @@ function buildCommandArgumentDataCypher(golden: string, pastOps: readonly string
     );
   }
   lines.push(
-    "// Drop argument `Data` left without an incoming `OWNS` after detach (stale shared rows).",
+    "// Drop detached kit `Data` (no `OWNS` parent) that still carry `IS` — stale shared argument rows after `soleOwnerKey` split.",
     "MATCH (d:Data)",
-    "WHERE NOT ()-[:OWNS]->(d)",
+    "WHERE NOT ()-[:OWNS]->(d) AND EXISTS { (d)-[:IS]->(:Class|Interface|Scalar|Command) }",
     "DETACH DELETE d;",
     "",
   );

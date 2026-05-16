@@ -452,7 +452,7 @@ function main(): void {
       "--format",
       "plain",
       "OPTIONAL MATCH (n:Data) " +
-        "WITH coalesce(sum(CASE WHEN n IS NULL THEN 0 WHEN size(keys(n)) <> 3 OR any(k IN keys(n) WHERE NOT k IN ['name','rank','isList']) THEN 1 ELSE 0 END), 0) AS badData " +
+        "WITH coalesce(sum(CASE WHEN n IS NULL THEN 0 WHEN NOT size(keys(n)) IN [3, 4] OR any(k IN keys(n) WHERE NOT k IN ['name','rank','isList','soleOwnerKey']) OR (size(keys(n)) = 4 AND (NOT ('soleOwnerKey' IN keys(n)) OR n.soleOwnerKey IS NULL OR trim(toString(n.soleOwnerKey)) = '')) THEN 1 ELSE 0 END), 0) AS badData " +
         "OPTIONAL MATCH (n:Reference) " +
         "WITH badData, coalesce(sum(CASE WHEN n IS NULL THEN 0 WHEN size(keys(n)) <> 3 OR any(k IN keys(n) WHERE NOT k IN ['name','rank','isList']) THEN 1 ELSE 0 END), 0) AS badRef " +
         "OPTIONAL MATCH (n:Derived) " +
@@ -688,7 +688,7 @@ function main(): void {
       DATABASE,
       "--format",
       "plain",
-      "MATCH (:Command {name: 'CreateConcept'})-[:OWNS]->(d:Data {name: 'concept'}) " +
+      "MATCH (:Command {name: 'CreateConcept'})-[:OWNS]->(d:Data {name: 'concept', soleOwnerKey: 'CreateConcept'}) " +
         "RETURN count(d) AS createConceptArgChain;",
     ],
     { encoding: "utf8", cwd: REPO_ROOT, env: buildCypherEnv() },
