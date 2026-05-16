@@ -2002,6 +2002,32 @@ pub mod hash {
         hasher.finalize().to_hex().to_string()
     }
 
+    /// @emoji 🔢 Canonical `f64` text for hash joins (integral-ish values without trailing `.0`; trims fractional noise).
+    pub fn format_number_for_hash(n: f64) -> String {
+        if n.is_nan() {
+            return "nan".to_string();
+        }
+        if n.is_infinite() {
+            return if n.is_sign_positive() { "inf".into() } else { "-inf".into() };
+        }
+        if n == 0.0 {
+            return "0".into();
+        }
+        if (n - n.round()).abs() < 1e-9 && n.abs() < 1e15 {
+            return format!("{:.0}", n);
+        }
+        let mut s = format!("{n:.12}");
+        if s.contains('.') {
+            while s.ends_with('0') {
+                s.pop();
+            }
+            if s.ends_with('.') {
+                s.pop();
+            }
+        }
+        if s == "-0" { "0".into() } else { s }
+    }
+
     /// @emoji 🌳 Merkle fold: concatenates `own` in order, then **sorted** `children` hex digests (order-independent set hashing).
     pub fn merkle_node_str(own: &[&str], mut children: Vec<String>) -> String {
         children.sort();
@@ -2804,8 +2830,21 @@ pub mod kit {
                     Arc::new(Self { id: Id::new().await, piece: RwLock::new(piece), ..Default::default() })
                 }
 
+                /// @emoji 🪪 Blake3 digest over `Side` wire shape: optional `connector` + `designPiece`, then `piece` (matches kit JSON `parent` / `child` objects).
                 pub async fn compute_hash(&self) -> String {
-                    h(&[self.id.as_str()])
+                    let mut parts: Vec<String> = vec!["Side".into()];
+                    if let Some(co) = self.connector.read().await.as_ref() {
+                        parts.push("connector".into());
+                        parts.push(co.id.as_str().to_string());
+                    }
+                    if let Some(dp) = self.design_piece.read().await.as_ref() {
+                        parts.push("designPiece".into());
+                        parts.push(dp.id.as_str().to_string());
+                    }
+                    parts.push("piece".into());
+                    parts.push(self.piece.read().await.id.as_str().to_string());
+                    let refs: Vec<&str> = parts.iter().map(|s| s.as_str()).collect();
+                    h(&refs)
                 }
             }
 
@@ -2856,12 +2895,47 @@ pub mod kit {
             }
 
             impl Connection {
+                /// @emoji 🪪 Blake3 digest over `Connection` wire shape: sorted `attributes`, `parent` / `child` [`Side`] digests, optional `description`, then scalar join fields.
                 pub async fn compute_hash(&self) -> String {
+                    use crate::hash::{format_number_for_hash, merkle_collection};
+                    let mut parts: Vec<String> = vec!["Connection".into()];
+                    let attrs = self.attributes.read().await;
+                    if !attrs.is_empty() {
+                        let hs: Vec<String> = attrs.iter().map(|a| a.compute_entity_hash()).collect();
+                        parts.push("attributes".into());
+                        parts.push(merkle_collection(hs));
+                    }
                     let parent = self.parent.read().await;
                     let child = self.child.read().await;
-                    let cp = parent.piece.read().await.id.0.clone();
-                    let np = child.piece.read().await.id.0.clone();
-                    h(&[self.id.as_str(), cp.as_str(), np.as_str()])
+                    parts.push("parent".into());
+                    parts.push(parent.compute_hash().await);
+                    parts.push("child".into());
+                    parts.push(child.compute_hash().await);
+                    let desc = self.description.read().await.clone();
+                    if !desc.is_empty() {
+                        parts.push("description".into());
+                        parts.push(desc);
+                    }
+                    parts.push("gap".into());
+                    parts.push(format_number_for_hash(self.gap.read().await.unwrap_or(0.0)));
+                    parts.push("id".into());
+                    parts.push(self.id.as_str().to_string());
+                    parts.push("rise".into());
+                    parts.push(format_number_for_hash(self.rise.read().await.unwrap_or(0.0)));
+                    parts.push("rotation".into());
+                    parts.push(format_number_for_hash(self.rotation.read().await.unwrap_or(0.0)));
+                    parts.push("shift".into());
+                    parts.push(format_number_for_hash(self.shift.read().await.unwrap_or(0.0)));
+                    parts.push("tilt".into());
+                    parts.push(format_number_for_hash(self.tilt.read().await.unwrap_or(0.0)));
+                    parts.push("turn".into());
+                    parts.push(format_number_for_hash(self.turn.read().await.unwrap_or(0.0)));
+                    parts.push("u".into());
+                    parts.push(format_number_for_hash(self.u.read().await.unwrap_or(0.0)));
+                    parts.push("v".into());
+                    parts.push(format_number_for_hash(self.v.read().await.unwrap_or(0.0)));
+                    let refs: Vec<&str> = parts.iter().map(|s| s.as_str()).collect();
+                    h(&refs)
                 }
             }
 
@@ -15187,6 +15261,25 @@ mod tests {
                 y_axis: crate::geom::VectorInput { x: 0.0, y: 1.0, z: 0.0 },
             });
             assert_eq!(pl.compute_hash().await, pl.compute_hash().await);
+        });
+    }
+
+    #[test]
+    fn format_number_for_hash_trims_fractional_noise() {
+        assert_eq!(crate::hash::format_number_for_hash(0.0), "0");
+        assert_eq!(crate::hash::format_number_for_hash(-0.0), "0");
+        assert_eq!(crate::hash::format_number_for_hash(42.0), "42");
+        assert_eq!(crate::hash::format_number_for_hash(1.25), "1.25");
+    }
+
+    #[test]
+    fn design_connection_compute_hash_is_deterministic() {
+        block_on(async {
+            let c = std::sync::Arc::new(crate::kit::design::connection::Connection::default());
+            let a = c.compute_hash().await;
+            let b = c.compute_hash().await;
+            assert_eq!(a, b);
+            assert_eq!(a.len(), 64);
         });
     }
 

@@ -47,7 +47,8 @@
     "build": "bun ./script.ts build",
     "build:storybook": "bun ./script.ts build storybook",
     "publish": "bun ./script.ts publish",
-    "purge": "bun ./script.ts purge"
+    "purge": "bun ./script.ts purge",
+    "seed:neo4j-metabolism-light-kit": "nx run workspace:seed-neo4j-metabolism-light-kit"
   },
   "devDependencies": {
     "@mdx-js/rollup": "^3.1.1",

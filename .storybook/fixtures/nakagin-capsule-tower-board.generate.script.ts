@@ -1,7 +1,7 @@
 // #region 🧲Header
 // 💻 .storybook/fixtures/nakagin-capsule-tower-board.generate.script.ts
 // Specs: Regenerate `nakagin-capsule-tower.board.json` from `metabolism.kit.semio.json` Nakagin parent design (180 pieces, 179 connections).
-// Summary: Piece centers are only `pose.center` u/v from the kit Flat child design (`NAKAGIN_FLAT_DESIGN_ID`); world layout is `x=u`, `y=-v` so towers grow upward; rectangle sizes match flat sheet scale (~min cs–cs spacing); handle angles use north-zero CCW on rectangles and `atan2(dy,dx)` on circles toward each neighbor; edges mirror parent `connections`.
+// Summary: Piece centers are only `pose.center` u/v from the kit Flat child design (`NAKAGIN_FLAT_DESIGN_ID`); world layout is `x=u`, `y=-v` so towers grow upward; `cs_*` squares use the same u/v span as `t_*` cluster circle diameter; handle angles use north-zero CCW on rectangles and `atan2(dy,dx)` on circles toward each neighbor; edges mirror parent `connections`.
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 // #endregion 🧲Header
 
@@ -38,10 +38,25 @@ interface KitPiece {
 	type: { id: string };
 }
 
+type KitConnectionEnd = { connector: { id: string }; piece: { id: string } };
+
 interface KitConnection {
-	connected: { connector: { id: string }; piece: { id: string } };
-	connecting: { connector: { id: string }; piece: { id: string } };
 	id: string;
+	connected?: KitConnectionEnd;
+	connecting?: KitConnectionEnd;
+	parent?: KitConnectionEnd;
+	child?: KitConnectionEnd;
+}
+
+/** @emoji 🔁 Normalizes kit connection endpoints across legacy (`connected`/`connecting`) and current (`parent`/`child`) shapes. */
+function kitConnectionEnds(c: KitConnection): { from: KitConnectionEnd; to: KitConnectionEnd } {
+	if (c.connected && c.connecting) {
+		return { from: c.connected, to: c.connecting };
+	}
+	if (c.parent && c.child) {
+		return { from: c.parent, to: c.child };
+	}
+	throw new Error(`[nakagin-board] connection ${c.id}: expected connected/connecting or parent/child`);
 }
 
 function loadKit(): {
@@ -99,16 +114,20 @@ type PieceLayout =
 	| { bounds: "circle"; radius: number }
 	| { bounds: "rectangle"; height: number; width: number };
 
-/** @emoji 📐 Bounds in sheet u/v units (same as Flat pose.center); cs_* kept below ~0.95 minimum center spacing in the flat kit. */
+/** @emoji 📐 `t_*` cluster circles use this u/v radius; `cs_*` axis-aligned squares use 2× as width/height so default footprint matches cluster circle diameter. */
+const NAKAGIN_CLUSTER_NODE_RADIUS_UV = 0.22;
+
+/** @emoji 📐 Bounds in sheet u/v units (same as Flat pose.center); cs_* footprint matches t_* headline circle diameter. */
 function pieceLayout(p: KitPiece): PieceLayout {
 	if (p.name === "b") {
 		return { bounds: "circle", radius: 0.36 };
 	}
 	if (p.name.startsWith("cs_")) {
-		return { bounds: "rectangle", height: 1.38, width: 0.44 };
+		const d = NAKAGIN_CLUSTER_NODE_RADIUS_UV * 2;
+		return { bounds: "rectangle", height: d, width: d };
 	}
 	if (p.name.startsWith("t_")) {
-		return { bounds: "circle", radius: 0.22 };
+		return { bounds: "circle", radius: NAKAGIN_CLUSTER_NODE_RADIUS_UV };
 	}
 	return { bounds: "circle", radius: 0.16 };
 }
@@ -214,10 +233,11 @@ function main(): void {
 
 	const handleAngles = new Map<string, number>();
 	for (const c of connections) {
-		const pa = c.connected.piece.id;
-		const pb = c.connecting.piece.id;
-		const ha = handleId(typeById, pa, c.connected.connector.id, pieceById);
-		const hb = handleId(typeById, pb, c.connecting.connector.id, pieceById);
+		const { from: endA, to: endB } = kitConnectionEnds(c);
+		const pa = endA.piece.id;
+		const pb = endB.piece.id;
+		const ha = handleId(typeById, pa, endA.connector.id, pieceById);
+		const hb = handleId(typeById, pb, endB.connector.id, pieceById);
 		const ax = pos[pa].x;
 		const ay = pos[pa].y;
 		const bx = pos[pb].x;
@@ -259,11 +279,14 @@ function main(): void {
 		.sort((a, b) => a.id.localeCompare(b.id));
 
 	const edges = connections
-		.map((c) => ({
-			from: handleId(typeById, c.connected.piece.id, c.connected.connector.id, pieceById),
-			id: c.id,
-			to: handleId(typeById, c.connecting.piece.id, c.connecting.connector.id, pieceById),
-		}))
+		.map((c) => {
+			const { from: endA, to: endB } = kitConnectionEnds(c);
+			return {
+				from: handleId(typeById, endA.piece.id, endA.connector.id, pieceById),
+				id: c.id,
+				to: handleId(typeById, endB.piece.id, endB.connector.id, pieceById),
+			};
+		})
 		.sort((a, b) => a.id.localeCompare(b.id));
 
 	const fixture = {

@@ -170,6 +170,17 @@
         "command": "bun ./script.ts purge",
         "forwardAllArgs": true
       }
+    },
+    "seed-neo4j-metabolism-light-kit": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./script.ts seed neo4j metabolism-light-kit",
+        "forwardAllArgs": true,
+        "env": {
+          "NEO4J_DATABASE": "metabolism"
+        }
+      }
     }
   }
 }
