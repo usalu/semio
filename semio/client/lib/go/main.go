@@ -1568,8 +1568,8 @@ type SideDiff struct {
 // 🔗Connection represents a spatial relationship between two pieces with gap, shift and rotation.
 type Connection struct {
 	Id        string      `json:"id"`
-	Connected   Side        `json:"connected"`
-	Connecting  Side        `json:"connecting"`
+	Parent    Side        `json:"parent"`
+	Child     Side        `json:"child"`
 	Gap         float64     `json:"gap"`
 	Shift       float64     `json:"shift"`
 	Rise        float64     `json:"rise"`
@@ -1584,8 +1584,8 @@ type Connection struct {
 
 // ⛓️ConnectionDiff represents a partial update to a connection's sides, gap, shift, rotation or tilt.
 type ConnectionDiff struct {
-	Connected   *SideDiff       `json:"connected,omitempty"`
-	Connecting  *SideDiff       `json:"connecting,omitempty"`
+	Parent   *SideDiff       `json:"parent,omitempty"`
+	Child    *SideDiff       `json:"child,omitempty"`
 	Gap         *float64        `json:"gap,omitempty"`
 	Shift       *float64        `json:"shift,omitempty"`
 	Rise        *float64        `json:"rise,omitempty"`
@@ -1611,8 +1611,8 @@ type ConnectionsDiff struct {
 // 🧷ConnectionMeta represents the scalar-only view of a connection excluding attributes.
 type ConnectionMeta struct {
 	Id        string  `json:"id"`
-	Connected   Side    `json:"connected"`
-	Connecting  Side    `json:"connecting"`
+	Parent    Side    `json:"parent"`
+	Child     Side    `json:"child"`
 	Gap         float64 `json:"gap"`
 	Shift       float64 `json:"shift"`
 	Rise        float64 `json:"rise"`
@@ -2250,7 +2250,7 @@ func DeletePiecesAndConnectionsInDesign(kit *Kit, design Design, pieceIds []stri
 	// Find stale connections: connections referencing any deleted piece
 	staleConnectionIds := make(map[string]bool)
 	for _, conn := range design.Connections {
-		if deletedPieceSet[conn.Connected.Piece.Id] || deletedPieceSet[conn.Connecting.Piece.Id] {
+		if deletedPieceSet[conn.Parent.Piece.Id] || deletedPieceSet[conn.Child.Piece.Id] {
 			staleConnectionIds[conn.Id] = true
 		}
 	}
@@ -2278,14 +2278,14 @@ func DeletePiecesAndConnectionsInDesign(kit *Kit, design Design, pieceIds []stri
 		if conn == nil {
 			continue
 		}
-		connectingId := conn.Connecting.Piece.Id
+		connectingId := conn.Child.Piece.Id
 		if deletedPieceSet[connectingId] {
 			continue
 		}
 		// Check if this piece has another parent connection not in the removed set
 		hasOtherParent := false
 		for _, c := range design.Connections {
-			if c.Connecting.Piece.Id == connectingId && !allRemovedConnectionIds[c.Id] {
+			if c.Child.Piece.Id == connectingId && !allRemovedConnectionIds[c.Id] {
 				hasOtherParent = true
 				break
 			}
@@ -2514,7 +2514,7 @@ func ToGroupMeta(g Group) GroupMeta {
 
 // 🔗ToConnectionMeta converts a Connection to its scalar-only Meta view.
 func ToConnectionMeta(c Connection) ConnectionMeta {
-	return ConnectionMeta{Id: c.Id, Connected: c.Connected, Connecting: c.Connecting, Gap: c.Gap, Shift: c.Shift, Rise: c.Rise, Rotation: c.Rotation, Turn: c.Turn, Tilt: c.Tilt, U: c.U, V: c.V, Description: c.Description}
+	return ConnectionMeta{Id: c.Id, Parent: c.Parent, Child: c.Child, Gap: c.Gap, Shift: c.Shift, Rise: c.Rise, Rotation: c.Rotation, Turn: c.Turn, Tilt: c.Tilt, U: c.U, V: c.V, Description: c.Description}
 }
 
 // 📈ToStatMeta converts a Stat to its scalar-only Meta view.
@@ -3524,10 +3524,10 @@ func HashConnection(c Connection) string {
 		}
 		w.writeHashList(hashes)
 	}
-	w.writeString("connected")
-	w.writeHash(HashSide(c.Connected))
-	w.writeString("connecting")
-	w.writeHash(HashSide(c.Connecting))
+	w.writeString("parent")
+	w.writeHash(HashSide(c.Parent))
+	w.writeString("child")
+	w.writeHash(HashSide(c.Child))
 	if c.Description != nil {
 		w.writeString("description")
 		w.writeString(*c.Description)
@@ -4876,13 +4876,13 @@ func HashConnectionDiff(d ConnectionDiff) string {
 		w.writeString("attributes")
 		w.writeHash(HashAttributesDiff(*d.Attributes))
 	}
-	if d.Connected != nil {
-		w.writeString("connected")
-		w.writeHash(HashSideDiff(*d.Connected))
+	if d.Parent != nil {
+		w.writeString("parent")
+		w.writeHash(HashSideDiff(*d.Parent))
 	}
-	if d.Connecting != nil {
-		w.writeString("connecting")
-		w.writeHash(HashSideDiff(*d.Connecting))
+	if d.Child != nil {
+		w.writeString("child")
+		w.writeHash(HashSideDiff(*d.Child))
 	}
 	writeOptStringDiff(w, "description", d.Description)
 	writeOptNumberDiff(w, "gap", d.Gap)
@@ -5382,11 +5382,11 @@ func NewPiece() Piece {
 }
 
 // 🔗NewConnection creates a new connection between two pieces by their IDs.
-func NewConnection(connectedPieceId, connectingPieceId string) Connection {
+func NewConnection(parentPieceId, childPieceId string) Connection {
 	return Connection{
-		Id:       Id(),
-		Connected:  Side{Piece: PieceId{Id: connectedPieceId}},
-		Connecting: Side{Piece: PieceId{Id: connectingPieceId}},
+		Id:     Id(),
+		Parent: Side{Piece: PieceId{Id: parentPieceId}},
+		Child:  Side{Piece: PieceId{Id: childPieceId}},
 	}
 }
 
@@ -7584,11 +7584,11 @@ func inverseConnectionsDiff(original []Connection, appliedDiff ConnectionsDiff) 
 
 func inverseConnectionDiff(original Connection, appliedDiff ConnectionDiff) ConnectionDiff {
 	inverse := ConnectionDiff{}
-	if appliedDiff.Connected != nil {
-		inverse.Connected = inverseSideDiff(original.Connected, *appliedDiff.Connected)
+	if appliedDiff.Parent != nil {
+		inverse.Parent = inverseSideDiff(original.Parent, *appliedDiff.Parent)
 	}
-	if appliedDiff.Connecting != nil {
-		inverse.Connecting = inverseSideDiff(original.Connecting, *appliedDiff.Connecting)
+	if appliedDiff.Child != nil {
+		inverse.Child = inverseSideDiff(original.Child, *appliedDiff.Child)
 	}
 	if appliedDiff.Gap != nil {
 		v := -*appliedDiff.Gap
@@ -8723,13 +8723,13 @@ func getSideDiff(before, after Side) *SideDiff {
 
 func getConnectionDiff(before, after Connection) ConnectionDiff {
 	diff := ConnectionDiff{}
-	connectedDiff := getSideDiff(before.Connected, after.Connected)
+	connectedDiff := getSideDiff(before.Parent, after.Parent)
 	if connectedDiff != nil {
-		diff.Connected = connectedDiff
+		diff.Parent = connectedDiff
 	}
-	connectingDiff := getSideDiff(before.Connecting, after.Connecting)
+	connectingDiff := getSideDiff(before.Child, after.Child)
 	if connectingDiff != nil {
-		diff.Connecting = connectingDiff
+		diff.Child = connectingDiff
 	}
 	if before.Gap != after.Gap {
 		d := after.Gap - before.Gap
@@ -8774,7 +8774,7 @@ func getConnectionDiff(before, after Connection) ConnectionDiff {
 }
 
 func isConnectionDiffEmpty(diff ConnectionDiff) bool {
-	return diff.Connected == nil && diff.Connecting == nil && diff.Gap == nil && diff.Shift == nil && diff.Rise == nil && diff.Rotation == nil && diff.Turn == nil && diff.Tilt == nil && diff.U == nil && diff.V == nil && diff.Description == nil && diff.Attributes == nil
+	return diff.Parent == nil && diff.Child == nil && diff.Gap == nil && diff.Shift == nil && diff.Rise == nil && diff.Rotation == nil && diff.Turn == nil && diff.Tilt == nil && diff.U == nil && diff.V == nil && diff.Description == nil && diff.Attributes == nil
 }
 
 func areTypesEqual(a, b Type) bool {
@@ -9082,16 +9082,16 @@ func arePiecesEqual(a, b Piece) bool {
 }
 
 func areConnectionsEqual(a, b Connection) bool {
-	if a.Connected.Piece.Id != b.Connected.Piece.Id {
+	if a.Parent.Piece.Id != b.Parent.Piece.Id {
 		return false
 	}
-	if a.Connecting.Piece.Id != b.Connecting.Piece.Id {
+	if a.Child.Piece.Id != b.Child.Piece.Id {
 		return false
 	}
-	if !areSidesEqual(a.Connected, b.Connected) {
+	if !areSidesEqual(a.Parent, b.Parent) {
 		return false
 	}
-	if !areSidesEqual(a.Connecting, b.Connecting) {
+	if !areSidesEqual(a.Child, b.Child) {
 		return false
 	}
 	if !floatEqual(a.Gap, b.Gap, 1e-9) {
@@ -10453,11 +10453,11 @@ func applyConnectionsDiff(items *[]Connection, diff *ConnectionsDiff) {
 }
 
 func applyConnectionDiff(item *Connection, diff *ConnectionDiff) {
-	if diff.Connected != nil {
-		applySideDiff(&item.Connected, diff.Connected)
+	if diff.Parent != nil {
+		applySideDiff(&item.Parent, diff.Parent)
 	}
-	if diff.Connecting != nil {
-		applySideDiff(&item.Connecting, diff.Connecting)
+	if diff.Child != nil {
+		applySideDiff(&item.Child, diff.Child)
 	}
 	if diff.Gap != nil {
 		item.Gap = item.Gap + *diff.Gap
@@ -11633,15 +11633,15 @@ func FindReplaceableTypesInDesignsForPiecesInDesign(design Design, designs []Des
 	getBoundaryRequirementPortIds := func() []string {
 		requirementPortIds := []string{}
 		for _, conn := range design.Connections {
-			connectedSelected := selectedPieceSet[conn.Connected.Piece.Id]
-			connectingSelected := selectedPieceSet[conn.Connecting.Piece.Id]
+			connectedSelected := selectedPieceSet[conn.Parent.Piece.Id]
+			connectingSelected := selectedPieceSet[conn.Child.Piece.Id]
 			if connectedSelected == connectingSelected {
 				continue
 			}
 
-			otherSide := conn.Connected
+			otherSide := conn.Parent
 			if connectedSelected {
-				otherSide = conn.Connecting
+				otherSide = conn.Child
 			}
 			otherPiece, ok := pieceMap[otherSide.Piece.Id]
 			if !ok || otherPiece.Type == nil {
@@ -11735,7 +11735,7 @@ func FindReplaceableTypesInDesignsForPiecesInDesign(design Design, designs []Des
 	candidateDesignAvailablePortIds := func(candidateDesign Design) []string {
 		consumedConnectorKeys := make(map[string]bool)
 		for _, conn := range candidateDesign.Connections {
-			for _, side := range []Side{conn.Connected, conn.Connecting} {
+			for _, side := range []Side{conn.Parent, conn.Child} {
 				if side.Connector != nil && side.Connector.Id != "" {
 					consumedConnectorKeys[side.Piece.Id+"::"+side.Connector.Id] = true
 				}
@@ -11863,7 +11863,7 @@ func CopyDesign(kit *Kit, design Design, pieceIds []string, connectionIds []stri
 	}
 	parentMap := make(map[string]parentInfo)
 	for _, conn := range design.Connections {
-		parentMap[conn.Connecting.Piece.Id] = parentInfo{conn.Connected.Piece.Id, conn}
+		parentMap[conn.Child.Piece.Id] = parentInfo{conn.Parent.Piece.Id, conn}
 	}
 
 	// Flatten the design to get absolute planes/centers
@@ -11945,8 +11945,8 @@ func CopyDesign(kit *Kit, design Design, pieceIds []string, connectionIds []stri
 			continue
 		}
 
-		connectedId := conn.Connected.Piece.Id
-		connectingId := conn.Connecting.Piece.Id
+		connectedId := conn.Parent.Piece.Id
+		connectingId := conn.Child.Piece.Id
 		connectedSelected := selectedPieceSet[connectedId]
 		connectingSelected := selectedPieceSet[connectingId]
 
@@ -12045,8 +12045,8 @@ func PasteDesign(kit *Kit, source Design, target Design, anchoring string, coord
 	}
 	sourceParentMap := make(map[string]parentInfo)
 	for _, conn := range source.Connections {
-		childId := conn.Connecting.Piece.Id
-		parentId := conn.Connected.Piece.Id
+		childId := conn.Child.Piece.Id
+		parentId := conn.Parent.Piece.Id
 		prev, exists := sourceParentMap[childId]
 		if !exists {
 			sourceParentMap[childId] = parentInfo{parentId, conn}
@@ -12235,15 +12235,15 @@ func PasteDesign(kit *Kit, source Design, target Design, anchoring string, coord
 
 				if candidates, ok := targetPiecesByName[extName]; ok && extName != "" {
 					parentConn := pInfo.connection
-					isParentConnected := parentConn.Connected.Piece.Id == pInfo.parentId
+					isParentConnected := parentConn.Parent.Piece.Id == pInfo.parentId
 					parentConnectorId := ""
 					if isParentConnected {
-						if parentConn.Connected.Connector != nil {
-							parentConnectorId = parentConn.Connected.Connector.Id
+						if parentConn.Parent.Connector != nil {
+							parentConnectorId = parentConn.Parent.Connector.Id
 						}
 					} else {
-						if parentConn.Connecting.Connector != nil {
-							parentConnectorId = parentConn.Connecting.Connector.Id
+						if parentConn.Child.Connector != nil {
+							parentConnectorId = parentConn.Child.Connector.Id
 						}
 					}
 
@@ -12273,21 +12273,21 @@ func PasteDesign(kit *Kit, source Design, target Design, anchoring string, coord
 
 								copiedConn := deepCloneConnection(parentConn)
 								if isParentConnected {
-									copiedConn.Connected = Side{
+									copiedConn.Parent = Side{
 										Piece:     PieceId{Id: candidate.Id},
 										Connector: &ConnectorId{Id: matchingConnector.Id},
 									}
 								} else {
-									copiedConn.Connecting = Side{
+									copiedConn.Child = Side{
 										Piece:     PieceId{Id: candidate.Id},
 										Connector: &ConnectorId{Id: matchingConnector.Id},
 									}
 								}
 								if coordinate != nil {
-									connectedStub := externalOriginIds[parentConn.Connected.Piece.Id]
-									connectingStub := externalOriginIds[parentConn.Connecting.Piece.Id]
-									connMatchesParentage := (parentConn.Connecting.Piece.Id == piece.Id && parentConn.Connected.Piece.Id == pInfo.parentId) ||
-										(parentConn.Connected.Piece.Id == piece.Id && parentConn.Connecting.Piece.Id == pInfo.parentId)
+									connectedStub := externalOriginIds[parentConn.Parent.Piece.Id]
+									connectingStub := externalOriginIds[parentConn.Child.Piece.Id]
+									connMatchesParentage := (parentConn.Child.Piece.Id == piece.Id && parentConn.Parent.Piece.Id == pInfo.parentId) ||
+										(parentConn.Parent.Piece.Id == piece.Id && parentConn.Child.Piece.Id == pInfo.parentId)
 									// Specs: Coordinate may shift diagram u/v only for the remapped bridge to a clipboard external stub;
 									// internal–internal source edges (neither side a stub) must keep cloned u/v.
 									if connMatchesParentage && connectedStub != connectingStub {
@@ -12390,8 +12390,8 @@ func PasteDesign(kit *Kit, source Design, target Design, anchoring string, coord
 		addedPieceIds[p.Id] = true
 	}
 	for _, conn := range source.Connections {
-		connectedId := conn.Connected.Piece.Id
-		connectingId := conn.Connecting.Piece.Id
+		connectedId := conn.Parent.Piece.Id
+		connectingId := conn.Child.Piece.Id
 
 		if externalOriginIds[connectedId] || externalOriginIds[connectingId] {
 			continue
@@ -12660,17 +12660,17 @@ func updateIdEverywhere(kit *Kit, oldId, newId string) {
 			if c.Id == oldId {
 				c.Id = newId
 			}
-			if c.Connected.Piece.Id == oldId {
-				c.Connected.Piece.Id = newId
+			if c.Parent.Piece.Id == oldId {
+				c.Parent.Piece.Id = newId
 			}
-			if c.Connecting.Piece.Id == oldId {
-				c.Connecting.Piece.Id = newId
+			if c.Child.Piece.Id == oldId {
+				c.Child.Piece.Id = newId
 			}
-			if c.Connected.Connector != nil && c.Connected.Connector.Id == oldId {
-				c.Connected.Connector.Id = newId
+			if c.Parent.Connector != nil && c.Parent.Connector.Id == oldId {
+				c.Parent.Connector.Id = newId
 			}
-			if c.Connecting.Connector != nil && c.Connecting.Connector.Id == oldId {
-				c.Connecting.Connector.Id = newId
+			if c.Child.Connector != nil && c.Child.Connector.Id == oldId {
+				c.Child.Connector.Id = newId
 			}
 		}
 	}
@@ -13633,8 +13633,8 @@ func FlattenDesignDiff(kit *Kit, designId string) DesignDiff {
 
 	for i := range design.Connections {
 		conn := &design.Connections[i]
-		srcId := conn.Connected.Piece.Id
-		tgtId := conn.Connecting.Piece.Id
+		srcId := conn.Parent.Piece.Id
+		tgtId := conn.Child.Piece.Id
 		if pieceMap[srcId] == nil || pieceMap[tgtId] == nil {
 			continue
 		}
@@ -13693,12 +13693,12 @@ func FlattenDesignDiff(kit *Kit, designId string) DesignDiff {
 				conn := neighbor.connection
 
 				var parentSide, childSide *Side
-				if conn.Connected.Piece.Id == currentId {
-					parentSide = &conn.Connected
-					childSide = &conn.Connecting
+				if conn.Parent.Piece.Id == currentId {
+					parentSide = &conn.Parent
+					childSide = &conn.Child
 				} else {
-					parentSide = &conn.Connecting
-					childSide = &conn.Connected
+					parentSide = &conn.Child
+					childSide = &conn.Parent
 				}
 
 				var parentType, childType *Type
@@ -14172,7 +14172,7 @@ func connectionDiffFromStructuralMoveVector(
 }
 
 // MovePiecesInDesign computes a DesignDiff that translates root piece planes and adjusts connection diffs using a numerical Jacobian for selected child movers.
-// A piece's parent connection is the connection where it is the Connecting (child) piece.
+// A piece's parent connection is the connection where it is the child side.
 func MovePiecesInDesign(kit Kit, design Design, pieces Design, vector MoveVector) DesignDiff {
 	typesDict := make(map[string]*Type)
 	for i := range kit.Types {
@@ -14184,7 +14184,7 @@ func MovePiecesInDesign(kit Kit, design Design, pieces Design, vector MoveVector
 	}
 	parentMap := make(map[string]struct{ connectionId, parentId string })
 	for _, c := range design.Connections {
-		parentMap[c.Connecting.Piece.Id] = struct{ connectionId, parentId string }{c.Id, c.Connected.Piece.Id}
+		parentMap[c.Child.Piece.Id] = struct{ connectionId, parentId string }{c.Id, c.Parent.Piece.Id}
 	}
 	fixedIds := make(map[string]bool)
 	for id := range selectedIds {
@@ -14261,14 +14261,14 @@ func MovePiecesInDesign(kit Kit, design Design, pieces Design, vector MoveVector
 		parentType := typesDict[parentPiece.Type.Id]
 		childType := typesDict[childPiece.Type.Id]
 		parentConnector := getConnector(typesDict, parentType, func() *string {
-			if connection.Connected.Connector != nil {
-				return &connection.Connected.Connector.Id
+			if connection.Parent.Connector != nil {
+				return &connection.Parent.Connector.Id
 			}
 			return nil
 		}())
 		childConnector := getConnector(typesDict, childType, func() *string {
-			if connection.Connecting.Connector != nil {
-				return &connection.Connecting.Connector.Id
+			if connection.Child.Connector != nil {
+				return &connection.Child.Connector.Id
 			}
 			return nil
 		}())
@@ -14309,7 +14309,7 @@ func MovePiecesInDesign(kit Kit, design Design, pieces Design, vector MoveVector
 }
 
 // 🔌DragPiecesInDesign computes a DesignDiff that offsets selected piece centers and adjusts orphan connections.
-// 🔗A piece's parent connection is the connection where it is the Connecting (child) piece.
+// 🔗A piece's parent connection is the connection where it is the child side.
 func DragPiecesInDesign(design Design, pieces Design, offset Coordinate) DesignDiff {
 	selectedIds := make(map[string]bool)
 	for _, p := range pieces.Pieces {
@@ -14317,7 +14317,7 @@ func DragPiecesInDesign(design Design, pieces Design, offset Coordinate) DesignD
 	}
 	parentMap := make(map[string]struct{ connectionId, parentId string })
 	for _, c := range design.Connections {
-		parentMap[c.Connecting.Piece.Id] = struct{ connectionId, parentId string }{c.Id, c.Connected.Piece.Id}
+		parentMap[c.Child.Piece.Id] = struct{ connectionId, parentId string }{c.Id, c.Parent.Piece.Id}
 	}
 	fixedIds := make(map[string]bool)
 	for id := range selectedIds {
@@ -14508,8 +14508,8 @@ func ComputeFlatHashes(kit *Kit, designId string) map[string]FlatMerkleHashes {
 	})
 	for i := range design.Connections {
 		conn := &design.Connections[i]
-		srcId := conn.Connected.Piece.Id
-		tgtId := conn.Connecting.Piece.Id
+		srcId := conn.Parent.Piece.Id
+		tgtId := conn.Child.Piece.Id
 		if pieceMap[srcId] == nil || pieceMap[tgtId] == nil {
 			continue
 		}
@@ -14595,12 +14595,12 @@ func ComputeFlatHashes(kit *Kit, designId string) map[string]FlatMerkleHashes {
 				childId := nb.neighborId
 				conn := nb.connection
 				var parentSide, childSide *Side
-				if conn.Connected.Piece.Id == current {
-					parentSide = &conn.Connected
-					childSide = &conn.Connecting
+				if conn.Parent.Piece.Id == current {
+					parentSide = &conn.Parent
+					childSide = &conn.Child
 				} else {
-					parentSide = &conn.Connecting
-					childSide = &conn.Connected
+					parentSide = &conn.Child
+					childSide = &conn.Parent
 				}
 				childPiece := pieceMap[childId]
 				var parentType, childType *Type
@@ -15219,8 +15219,8 @@ func ExportDesignRepresentation(kit *Kit, designId string, format string, tags [
 	})
 	for i := range design.Connections {
 		conn := &design.Connections[i]
-		srcId := conn.Connected.Piece.Id
-		tgtId := conn.Connecting.Piece.Id
+		srcId := conn.Parent.Piece.Id
+		tgtId := conn.Child.Piece.Id
 		if pieceMap[srcId] == nil || pieceMap[tgtId] == nil {
 			continue
 		}
@@ -15266,12 +15266,12 @@ func ExportDesignRepresentation(kit *Kit, designId string, format string, tags [
 				conn := neighbor.connection
 
 				var parentSide, childSide *Side
-				if conn.Connected.Piece.Id == currentId {
-					parentSide = &conn.Connected
-					childSide = &conn.Connecting
+				if conn.Parent.Piece.Id == currentId {
+					parentSide = &conn.Parent
+					childSide = &conn.Child
 				} else {
-					parentSide = &conn.Connecting
-					childSide = &conn.Connected
+					parentSide = &conn.Child
+					childSide = &conn.Parent
 				}
 
 				var parentType, childType *Type
@@ -16253,19 +16253,19 @@ func loadConnections(db *sql.DB, designId string, pieces []Piece, types []Type) 
 		_ = cSide
 		_ = gSide
 		c.Id = id
-		c.Connected.Piece = PieceId{Id: cPiece}
+		c.Parent.Piece = PieceId{Id: cPiece}
 		if cDesPiece.Valid {
-			c.Connected.DesignPiece = &PieceId{Id: cDesPiece.String}
+			c.Parent.DesignPiece = &PieceId{Id: cDesPiece.String}
 		}
 		if connID := connectorIDForTypePort(types, pieceType[cPiece], cPort); connID != nil {
-			c.Connected.Connector = connID
+			c.Parent.Connector = connID
 		}
-		c.Connecting.Piece = PieceId{Id: gPiece}
+		c.Child.Piece = PieceId{Id: gPiece}
 		if gDesPiece.Valid {
-			c.Connecting.DesignPiece = &PieceId{Id: gDesPiece.String}
+			c.Child.DesignPiece = &PieceId{Id: gDesPiece.String}
 		}
 		if connID := connectorIDForTypePort(types, pieceType[gPiece], gPort); connID != nil {
-			c.Connecting.Connector = connID
+			c.Child.Connector = connID
 		}
 		if gap.Valid {
 			c.Gap = gap.Float64
@@ -16625,20 +16625,20 @@ func KitToSqlite(kit *Kit, dbPath string, schemaSQL string) error {
 		}
 		for ci := range d.Connections {
 			c := d.Connections[ci]
-			cpid, err := connectionSidePortID(kit.Types, c.Connected)
+			cpid, err := connectionSidePortID(kit.Types, c.Parent)
 			if err != nil {
-				return fmt.Errorf("connection %s connected side: %w", c.Id, err)
+				return fmt.Errorf("connection %s parent side: %w", c.Id, err)
 			}
-			gpid, err := connectionSidePortID(kit.Types, c.Connecting)
+			gpid, err := connectionSidePortID(kit.Types, c.Child)
 			if err != nil {
-				return fmt.Errorf("connection %s connecting side: %w", c.Id, err)
+				return fmt.Errorf("connection %s child side: %w", c.Id, err)
 			}
 			var cdes, gdes *string
-			if c.Connected.DesignPiece != nil {
-				cdes = &c.Connected.DesignPiece.Id
+			if c.Parent.DesignPiece != nil {
+				cdes = &c.Parent.DesignPiece.Id
 			}
-			if c.Connecting.DesignPiece != nil {
-				gdes = &c.Connecting.DesignPiece.Id
+			if c.Child.DesignPiece != nil {
+				gdes = &c.Child.DesignPiece.Id
 			}
 			if _, err := db.Exec(`INSERT INTO connection (
 					id, ordinal,
@@ -16647,8 +16647,8 @@ func KitToSqlite(kit *Kit, dbPath string, schemaSQL string) error {
 					gap, shift, rise, rotation, turn, tilt, x, y, description, design_id
 				) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
 				c.Id, ci,
-				fmt.Sprintf("%s:connected", c.Id), c.Connected.Piece.Id, cpid, cdes,
-				fmt.Sprintf("%s:connecting", c.Id), c.Connecting.Piece.Id, gpid, gdes,
+				fmt.Sprintf("%s:parent", c.Id), c.Parent.Piece.Id, cpid, cdes,
+				fmt.Sprintf("%s:child", c.Id), c.Child.Piece.Id, gpid, gdes,
 				c.Gap, c.Shift, c.Rise, c.Rotation, c.Turn, c.Tilt, c.U, c.V, c.Description, d.Id,
 			); err != nil {
 				return fmt.Errorf("failed to insert connection %s: %w", c.Id, err)

@@ -1675,8 +1675,8 @@ public class Tests
                 Rotation = 90,
                 Turn = 0,
                 Tilt = 0,
-                Connected = new Side { Piece = new PieceId { Id = "p1" } },
-                Connecting = new Side { Piece = new PieceId { Id = "p2" } }
+                Parent = new Side { Piece = new PieceId { Id = "p1" } },
+                Child = new Side { Piece = new PieceId { Id = "p2" } }
             };
             var h1 = Hashing.HashConnection(c);
             var h2 = Hashing.HashConnection(c);

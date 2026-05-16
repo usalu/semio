@@ -9926,9 +9926,9 @@ public static class Hashing
             w.WriteString("attributes");
             w.WriteHashList(c.Attributes.Select(HashAttribute).ToList());
         }
-        w.WriteString("connected");
+        w.WriteString("parent");
         w.WriteHash(HashSide(c.Parent));
-        w.WriteString("connecting");
+        w.WriteString("child");
         w.WriteHash(HashSide(c.Child));
         if (c.Description != null)
         {
@@ -10941,12 +10941,12 @@ public static class Hashing
         }
         if (d.ShouldSerializeParent() && d.Parent != null)
         {
-            w.WriteString("connected");
+            w.WriteString("parent");
             w.WriteHash(HashSideDiff(d.Parent));
         }
         if (d.ShouldSerializeChild() && d.Child != null)
         {
-            w.WriteString("connecting");
+            w.WriteString("child");
             w.WriteHash(HashSideDiff(d.Child));
         }
         WriteDiffOptString(w, "description", d.Description, d.ShouldSerializeDescription());

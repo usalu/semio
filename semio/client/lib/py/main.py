@@ -7488,7 +7488,7 @@ def hash_connection(c: dict) -> str:
         w.writeHashList([hash_attribute(a) for a in attrs])
     w.writeString("parent")
     w.writeHash(hash_side(c["parent"]))
-    w.writeString("connecting")
+    w.writeString("child")
     w.writeHash(hash_side(c["child"]))
     if c.get("description") is not None:
         w.writeString("description")
@@ -10514,7 +10514,7 @@ def _applyConnectionDiff(target: dict, diff: dict) -> None:
     for key in ["description"]:
         if key in diff:
             target[key] = diff[key]
-    for key in ["child", "connected"]:
+    for key in ["parent", "child"]:
         if key in diff:
             target[key] = diff[key]
     if diff.get("attributes") or target.get("attributes"):
@@ -11523,43 +11523,7 @@ def _inverseConnectionDiff(original: dict, appliedDiff: dict) -> dict:
     for key in ["description"]:
         if key in appliedDiff:
             inverse[key] = original.get(key)
-    for key in ["child", "connected"]:
-        if key in appliedDiff:
-            inverse[key] = original.get(key)
-    if appliedDiff.get("attributes"):
-        inverse["attributes"] = _inverseAttributesDiff(
-            original.get("attributes", []), appliedDiff["attributes"]
-        )
-    return inverse
-
-
-def _inverseRepresentationDiff(original: dict, appliedDiff: dict) -> dict:
-    """🔖Compute inverse of a representation diff."""
-    inverse: dict = {}
-    for key in ["name", "description"]:
-        if key in appliedDiff:
-            inverse[key] = original.get(key)
-    if "file" in appliedDiff:
-        inverse["file"] = original.get("file")
-    if "tags" in appliedDiff:
-        inverse["tags"] = original.get("tags")
-    if appliedDiff.get("attributes"):
-        inverse["attributes"] = _inverseAttributesDiff(
-            original.get("attributes", []), appliedDiff["attributes"]
-        )
-    return inverse
-
-
-def _inverseConnectionDiff(original: dict, appliedDiff: dict) -> dict:
-    """🔖Compute inverse of a connection diff (negate numeric deltas)."""
-    inverse: dict = {}
-    for key in ["gap", "shift", "rise", "rotation", "turn", "tilt", "u", "v"]:
-        if key in appliedDiff:
-            inverse[key] = -(appliedDiff[key] or 0)
-    for key in ["description"]:
-        if key in appliedDiff:
-            inverse[key] = original.get(key)
-    for key in ["child", "connected"]:
+    for key in ["parent", "child"]:
         if key in appliedDiff:
             inverse[key] = original.get(key)
     if appliedDiff.get("attributes"):
@@ -15265,15 +15229,15 @@ def _parse_connection_from_sqlite(row: dict) -> dict:
     """🔖_parse_connection_from_sqlite performs the _parse_connection_from_sqlite operation."""
     return {
         "id": row.get("id"),
-        "connected": {
+        "parent": {
             "piece": row.get("parent_piece_id"),
             "designPiece": row.get("parent_design_piece_id"),
-            "connector": row.get("connected_connector_id"),
+            "connector": row.get("parent_port_id"),
         },
-        "connecting": {
+        "child": {
             "piece": row.get("child_piece_id"),
             "designPiece": row.get("child_design_piece_id"),
-            "connector": row.get("connecting_connector_id"),
+            "connector": row.get("child_port_id"),
         },
         "gap": row.get("gap", 0.0),
         "shift": row.get("shift", 0.0),
@@ -15524,7 +15488,7 @@ def _read_kit_from_sqlite(db_path: str) -> dict:
         connections_by_design: dict[str, list[dict]] = {}
         for row in cursor.execute("SELECT * FROM connection ORDER BY id").fetchall():
             connection = _parse_connection_from_sqlite(dict(row))
-            for side in ["parent", "connecting"]:
+            for side in ["parent", "child"]:
                 for key in ["piece", "designPiece", "connector"]:
                     ref = connection.get(side, {}).get(key)
                     if ref:
@@ -20785,8 +20749,8 @@ class TestDesignShallow:
             if len(shallow["connections"]) > 0:
                 first_conn = shallow["connections"][0]
                 assert "id" in first_conn
-                assert "connected" in first_conn
-                assert "connecting" in first_conn
+                assert "parent" in first_conn
+                assert "child" in first_conn
 
 
 class TestKitMeta:

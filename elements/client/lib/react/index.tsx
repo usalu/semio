@@ -18991,7 +18991,7 @@ const Window: React.FC<WindowProps> = ({ id, children, onDoubleClick, className 
 
   return (
     <LevelProvider level="window">
-      <div ref={windowRef} onDoubleClick={onDoubleClick} className={cn(`relative w-full h-full overflow-hidden ${bgClass}`, className)}>
+      <div ref={windowRef} onDoubleClick={onDoubleClick} className={cn(`relative flex h-full min-h-0 w-full flex-col overflow-hidden ${bgClass}`, className)}>
         {headerElement
           ? createPortal(<div className="absolute right-1 top-0 -bottom-px flex items-center z-panel bg-window border-t border-l border-element">{controlsContent}</div>, headerElement)
           : hasControls && <div className="absolute top-1 right-1 z-panel flex items-stretch gap-single">{controlsContent}</div>}

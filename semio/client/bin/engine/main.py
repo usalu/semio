@@ -62,7 +62,7 @@ try:
 except Exception:  # pragma: no cover
     openai = None
 
-_semio_core_path = str(pathlib.Path(__file__).parent.parent / "py" / "main.py")
+_semio_core_path = str(pathlib.Path(__file__).parent.parent.parent / "lib" / "py" / "main.py")
 _semio_core_spec = _ilu.spec_from_file_location("semio_core", _semio_core_path)
 _semio_core = _ilu.module_from_spec(_semio_core_spec)
 sys.modules["semio_core"] = _semio_core
@@ -971,20 +971,20 @@ def decodeDesign(design: dict):
         ],
         "connections": [
             {
-                "connected": {
+                "parent": {
                     "piece": {
-                        "id_": (c["connectedPieceId"] if c["connectedPieceId"] != "DEFAULT" else ""),
+                        "id_": (c["parentPieceId"] if c["parentPieceId"] != "DEFAULT" else ""),
                     },
                     "connector": {
-                        "id_": (c["connectedPieceTypePortId"] if c["connectedPieceTypePortId"] != "DEFAULT" else ""),
+                        "id_": (c["parentPieceTypePortId"] if c["parentPieceTypePortId"] != "DEFAULT" else ""),
                     },
                 },
-                "connecting": {
+                "child": {
                     "piece": {
-                        "id_": (c["connectingPieceId"] if c["connectingPieceId"] != "DEFAULT" else ""),
+                        "id_": (c["childPieceId"] if c["childPieceId"] != "DEFAULT" else ""),
                     },
                     "connector": {
-                        "id_": (c["connectingPieceTypePortId"] if c["connectingPieceTypePortId"] != "DEFAULT" else ""),
+                        "id_": (c["childPieceTypePortId"] if c["childPieceTypePortId"] != "DEFAULT" else ""),
                     },
                 },
                 "gap": c["gap"],
@@ -1037,37 +1037,37 @@ def healDesign(design: DesignPrediction, types: list[TypeContext]):
 
     validConnections = []
     for connection in designClone.connections:
-        if connection.connected.piece.id_ not in pieceD:
+        if connection.parent.piece.id_ not in pieceD:
             try:
-                connection.connected.piece.id_ = difflib.get_close_matches(connection.connected.piece.id_, pieceD.keys(), n=1)[0]
+                connection.parent.piece.id_ = difflib.get_close_matches(connection.parent.piece.id_, pieceD.keys(), n=1)[0]
             except Error:
                 continue
-        if connection.connecting.piece.id_ not in pieceD:
+        if connection.child.piece.id_ not in pieceD:
             try:
-                connection.connecting.piece.id_ = difflib.get_close_matches(connection.connecting.piece.id_, pieceD.keys(), n=1)[0]
+                connection.child.piece.id_ = difflib.get_close_matches(connection.child.piece.id_, pieceD.keys(), n=1)[0]
             except Error:
                 continue
-        connectedType = typeD[pieceD[connection.connected.piece.id_].type.name][pieceD[connection.connected.piece.id_].type.variant]
-        connectingType = typeD[pieceD[connection.connecting.piece.id_].type.name][pieceD[connection.connecting.piece.id_].type.variant]
+        parentType = typeD[pieceD[connection.parent.piece.id_].type.name][pieceD[connection.parent.piece.id_].type.variant]
+        childType = typeD[pieceD[connection.child.piece.id_].type.name][pieceD[connection.child.piece.id_].type.variant]
 
-        if connection.connected.connector.id_ not in connectorD[connectedType.name][connectedType.variant]:
-            connection.connected.connector.id_ = difflib.get_close_matches(
-                connection.connected.connector.id_,
-                connectorD[connectedType.name][connectedType.variant].keys(),
+        if connection.parent.connector is not None and connection.parent.connector.id_ not in connectorD[parentType.name][parentType.variant]:
+            connection.parent.connector.id_ = difflib.get_close_matches(
+                connection.parent.connector.id_,
+                connectorD[parentType.name][parentType.variant].keys(),
                 n=1,
             )[0]
-        if connection.connecting.connector.id_ not in connectorD[connectingType.name][connectingType.variant]:
-            connection.connecting.connector.id_ = difflib.get_close_matches(
-                connection.connecting.connector.id_,
-                connectorD[connectingType.name][connectingType.variant].keys(),
+        if connection.child.connector is not None and connection.child.connector.id_ not in connectorD[childType.name][childType.variant]:
+            connection.child.connector.id_ = difflib.get_close_matches(
+                connection.child.connector.id_,
+                connectorD[childType.name][childType.variant].keys(),
                 n=1,
             )[0]
         validConnections.append(connection)
     designClone.connections = validConnections
 
-    designClone.connections = [c for c in designClone.connections if c.connected.piece.id_ != c.connecting]
+    designClone.connections = [c for c in designClone.connections if c.parent.piece.id_ != c.child.piece.id_]
 
-    designClone.pieces = [p for p in designClone.pieces if any(c for c in designClone.connections if c.connected.piece.id_ == p.id_ or c.connecting.piece.id_ == p.id_)]
+    designClone.pieces = [p for p in designClone.pieces if any(c for c in designClone.connections if c.parent.piece.id_ == p.id_ or c.child.piece.id_ == p.id_)]
     return designClone
 
 
@@ -1081,18 +1081,18 @@ Constraints:
 Every piece MUST have a type that exists. The type name and type variant MUST match.
 Two pieces are different when they have a different type name or type variant.
 Two types are different when they have a different name or different variant.
-Every connected and connecting piece MUST be part of the pieces of the design. The ids MUST match.
-The connector of connected and connecting pieces MUST exist in the type of the piece. The ids MUST match.
-The connector of connected and connecting pieces SHOULD match.
-If the connectors of connected and connecting pieces have a port, they should be compatible.
+Every parent-side and child-side piece MUST be part of the pieces of the design. The ids MUST match.
+The connector on each side MUST exist in the kind of that piece. The ids MUST match.
+The two connectors SHOULD match.
+If the connectors have a port, they should be compatible.
 If one connector has the other connector as ocompatible that's enough.
 Every piece in the design MUST be connected to at least one other piece.
 One piece is the root piece of the design. The connections MUST form a tree.
 Ids SHOULD be abreviated and don't have to be globally unique.
 Rotation, tilt, gap, shift SHOULD NOT be added unless specifically instructed.
 The diagram is only a nice 2D representation of the design and does not change the design.
-When a piece is [on, next to, above, below, ...] another piece, there SHOULD be a connected between the pieces.
-When a piece fits to a connector of another piece, there SHOULD be a connecting between the pieces."""
+When a piece is [on, next to, above, below, ...] another piece, there SHOULD be a connection with that piece as parent and the other as child when the relationship is asymmetric.
+When a piece fits to a connector of another piece, encode parent and child so the attachment direction matches the physical intent."""
 
 designGenerationPromptTemplate = jinja2.Template(
     """Your task is to help to puzzle together a design.
@@ -1157,43 +1157,43 @@ designResponseFormat = json.loads(
                 "type": "array",
                 "items": {
                     "type": "object",
-                    "description": "A bidirectional connection between two pieces of a design.",
+                    "description": "A directed connection: parent side attaches to child side.",
                     "properties": {
-                        "connectedPieceId": {
+                        "parentPieceId": {
                             "type": "string"
                         },
-                        "connectedPieceTypePortId": {
+                        "parentPieceTypePortId": {
                             "type": "string"
                         },
-                        "connectingPieceId": {
+                        "childPieceId": {
                             "type": "string"
                         },
-                        "connectingPieceTypePortId": {
+                        "childPieceTypePortId": {
                             "type": "string"
                         },
                         "gap": {
                             "type": "number",
-                            "description": "The optional longitudinal gap (applied after rotation and tilt in connector direction) between the connected and the connecting piece. "
+                            "description": "The optional longitudinal gap (applied after rotation and tilt in connector direction) from parent toward child. "
                         },
                         "shift": {
                             "type": "number",
-                            "description": "The optional lateral shift (applied after the rotation, the turn and the tilt in the plane) between the connected and the connecting piece.."
+                            "description": "The optional lateral shift (applied after the rotation, the turn and the tilt in the plane) between parent and child sides."
                         },
                         "rise": {
                             "type": "number",
-                            "description": "The optional vertical rise in connector direction between the connected and the connecting piece. Set this only when necessary as it is not a symmetric property which means that when the parent piece and child piece are flipped it yields a different result."
+                            "description": "The optional vertical rise in connector direction between parent and child. Set this only when necessary as it is not a symmetric property which means that when the parent piece and child piece are flipped it yields a different result."
                         },
                         "rotation": {
                             "type": "number",
-                            "description": "The optional horizontal rotation in connector direction between the connected and the connecting piece in degrees."
+                            "description": "The optional horizontal rotation in connector direction between parent and child in degrees."
                         },
                         "turn": {
                             "type": "number",
-                            "description": "The optional turn perpendicular to the connector direction (applied after rotation and the turn) between the connected and the connecting piece in degrees.  Set this only when necessary as it is not a symmetric property which means that when the parent piece and child piece are flipped it yields a different result."
+                            "description": "The optional turn perpendicular to the connector direction (applied after rotation and the turn) between parent and child in degrees.  Set this only when necessary as it is not a symmetric property which means that when the parent piece and child piece are flipped it yields a different result."
                         },
                         "tilt": {
                             "type": "number",
-                            "description": "The optional horizontal tilt perpendicular to the connector direction (applied after rotation and the turn) between the connected and the connecting piece in degrees."
+                            "description": "The optional horizontal tilt perpendicular to the connector direction (applied after rotation and the turn) between parent and child in degrees."
                         },
                         "x": {
                             "description": "The optional offset in x direction between the icons of the child and the parent piece in the diagram. One unit is equal the width of a piece icon.",
@@ -1205,10 +1205,10 @@ designResponseFormat = json.loads(
                         }
                     },
                     "required": [
-                        "connectedPieceId",
-                        "connectedPieceTypePortId",
-                        "connectingPieceId",
-                        "connectingPieceTypePortId",
+                        "parentPieceId",
+                        "parentPieceTypePortId",
+                        "childPieceId",
+                        "childPieceTypePortId",
                         "gap",
                         "shift",
                         "rise",
@@ -3442,8 +3442,8 @@ def _build_diagram_data(kit: dict, design_id: str, design_diff: dict | None = No
         id = c.get("id")
         if not id:
             continue
-        source_id = c.get("connected", {}).get("piece", {}).get("id")
-        target_id = c.get("connecting", {}).get("piece", {}).get("id")
+        source_id = c.get("parent", {}).get("piece", {}).get("id")
+        target_id = c.get("child", {}).get("piece", {}).get("id")
         source = piece_map.get(source_id)
         target = piece_map.get(target_id)
         if not source or not target:
@@ -4359,7 +4359,7 @@ class TestMcp:
                         {"id": "p2", "name": "Piece2", "type": {"id": "t1"}},
                     ],
                     "connections": [
-                        {"id": "conn1", "connected": {"piece": {"id": "p1"}, "connector": {"id": "c1"}}, "connecting": {"piece": {"id": "p2"}, "connector": {"id": "c1"}}},
+                        {"id": "conn1", "parent": {"piece": {"id": "p1"}, "connector": {"id": "c1"}}, "child": {"piece": {"id": "p2"}, "connector": {"id": "c1"}}},
                     ],
                 },
             ],
@@ -4376,7 +4376,7 @@ class TestMcp:
                 {"id": "p2", "name": "P2"},
             ],
             "connections": [
-                {"id": "c1", "connected": {"piece": {"id": "p1"}}, "connecting": {"piece": {"id": "p2"}}},
+                {"id": "c1", "parent": {"piece": {"id": "p1"}}, "child": {"piece": {"id": "p2"}}},
             ],
         }
         result = engine.create_clustered_design(design, ["p1", "p2"], "Cluster")
@@ -4390,7 +4390,7 @@ class TestMcp:
                 {"id": "p2", "name": "P2"},
             ],
             "connections": [
-                {"id": "c1", "connected": {"piece": {"id": "p1"}}, "connecting": {"piece": {"id": "p2"}}},
+                {"id": "c1", "parent": {"piece": {"id": "p1"}}, "child": {"piece": {"id": "p2"}}},
             ],
         }
         result = engine.get_clusterable_groups(design, ["p1", "p2"])
@@ -4894,10 +4894,10 @@ class TestMcp:
         for connection in expected_design.get("connections", []):
             result = engine.add_current_design_connection(
                 connection["id"],
-                connection["connected"]["piece"]["id"],
-                connection["connected"]["connector"]["id"],
-                connection["connecting"]["piece"]["id"],
-                connection["connecting"]["connector"]["id"],
+                connection["parent"]["piece"]["id"],
+                connection["parent"]["connector"]["id"],
+                connection["child"]["piece"]["id"],
+                connection["child"]["connector"]["id"],
                 connection["rotation"],
                 connection["u"],
                 connection["v"],
