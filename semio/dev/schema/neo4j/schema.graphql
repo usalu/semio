@@ -1,6 +1,7 @@
 # https://neo4j.com/docs/graphql/current/
 # Composition and containment use OWNS (…); do not persist denormalized owner names/ids/kinds on nodes — use OWNS edges only.
-# `IS`: Each kit member (`Data` / `Derived` / `Reference`) has **exactly one** outgoing `IS` to its declared `FieldIs` from `semio/client/schema/semio/schema.yaml`. Each `Class` / `Command` / `Interface` keeps **only** direct `implements` targets as `IS` (no persisted transitive closure to supertypes like Entity or StrongEntity — walk the chain in application logic if needed).
+# **Cardinality (GraphQL):** Use **singular (non-list)** `@relationship(..., direction: IN)` for **at most one** incoming `OWNS` / `OWNS`-equivalent parent on each child type (`ownsHost`, `parentModule`, …). Neo4j does **not** enforce edge cardinality at the database layer — keep writers single-sourced or validate in migrations.
+# `IS`: Each kit member (`Data` / `Derived` / `Reference`) has **exactly one** outgoing `IS` (`is: FieldIs!`, singular) to its declared `FieldIs` from `semio/client/schema/semio/schema.yaml`. **`FieldIs` targets (`Scalar` / `Class` / `Command` / `Interface`) may have many incoming `IS`** from different kit rows — do **not** model a singular incoming-`IS` field there. Subtype `implements` edges (`Class` / `Command` → `Interface`) are **outgoing** `IS` on the subtype; **`Interface` may have many incoming `IS`** from implementing classes — use a **list** when exposing that inverse. Each `Class` / `Command` / `Interface` keeps **only** direct `implements` targets as `IS` (no persisted transitive closure to supertypes like Entity or StrongEntity — walk the chain in application logic if needed).
 # Persisted node properties are minimal: `Data`/`Reference`/`Derived` keep `name`, `rank` (sibling order string), `isList`, optional `soleOwnerKey` (when this `Data` is an imperative `Command` argument clone — **never** share one `Data` across commands; `MERGE` uses `name`+`soleOwnerKey`), and `Derived` also `cached`; `Class`/`Command`/`Interface`/`Scalar`/`Module` keep `name`; `Constraint` keeps `description` only. Everything else (e.g. `targetName`, `UNIQUE IMPORT ID`, …) must not be stored — use `OWNS`/`IS` shape only. In `schema.yaml`, derived kit members set `cached` on the field map (Neo4j `Derived`); there is no separate field-`kind` property.
 # Naming: `Module.name`, `Class.name`, `Command.name`, `Interface.name`, and `Scalar.name` are PascalCase; persisted member names on `Data` / `Derived` / `Reference` are lowerCamelCase. `Module.name` is unique only among siblings. Root `Schema` has `General` and `Domain`; `Schema`→`General` holds `Scalar`, `Module` `Entity` (with `WeakEntity`, `StrongEntity`, … under it), and other shared kit graph modules; `Schema`→`Domain` holds `Module` `Kit`, `Module` `VCS` (version-control shell subtree), and other domain-scoped modules as modeled.
 # Kit members: `Data` (embedded value), `Derived` (`cached` true for cached derivations, false for on-the-fly computed), `Reference` (graph reference). There is no `Field` label — use `KitField` union in GraphQL over `OWNS` from `Class` / `Command` / `Interface` only.
@@ -17,6 +18,7 @@ interface Node {
 interface Primitive implements Node {
   name: String!
   constraints: [Constraint!]! @relationship(type: "OWNS", direction: OUT)
+  parentModule: Module @relationship(type: "OWNS", direction: IN)
 }
 
 interface Scalar implements Primitive {
@@ -27,6 +29,13 @@ interface Scalar implements Primitive {
 union FieldIs = Scalar | Class | Command | Interface
 
 """
+🔳 OwningKitHost — `Class` / `Command` / `Interface` hosts for incoming `OWNS` from kit rows (`Data` / `Derived` / `Reference`) and from `Method` (`ownsHost`); GraphQL uses a **singular** `direction: IN` field per child for at most one parent in the API.
+"""
+interface OwningKitHost {
+  name: String!
+}
+
+"""
 📦 Data — Embedded kit member; `IS` targets a `Scalar` (or other `FieldIs` as modeled). `soleOwnerKey` when set holds the owning `Command.name` for argument clones (exclusive `OWNS`, never shared across commands).
 """
 type Data implements Node @node {
@@ -34,7 +43,11 @@ type Data implements Node @node {
   rank: String!
   soleOwnerKey: String
   constraints: [Constraint!]! @relationship(type: "OWNS", direction: OUT)
+  """
+  Singular outgoing `IS` to the declared `FieldIs` (at most one target in GraphQL; see header for DB limits).
+  """
   is: FieldIs! @relationship(type: "IS", direction: OUT)
+  ownsHost: OwningKitHost @relationship(type: "OWNS", direction: IN)
 }
 
 """
@@ -45,7 +58,11 @@ type Derived implements Node @node {
   rank: String!
   cached: Boolean!
   constraints: [Constraint!]! @relationship(type: "OWNS", direction: OUT)
+  """
+  Singular outgoing `IS` to the declared `FieldIs` (at most one target in GraphQL; see header for DB limits).
+  """
   is: FieldIs! @relationship(type: "IS", direction: OUT)
+  ownsHost: OwningKitHost @relationship(type: "OWNS", direction: IN)
 }
 
 """
@@ -55,32 +72,48 @@ type Reference implements Node @node {
   name: String!
   rank: String!
   constraints: [Constraint!]! @relationship(type: "OWNS", direction: OUT)
+  """
+  Singular outgoing `IS` to the declared `FieldIs` (at most one target in GraphQL; see header for DB limits).
+  """
   is: FieldIs! @relationship(type: "IS", direction: OUT)
+  ownsHost: OwningKitHost @relationship(type: "OWNS", direction: IN)
 }
 
 union KitField = Data | Derived | Reference
 
-interface Interface implements Node {
+interface Interface implements Node & OwningKitHost {
   name: String!
   fields: [KitField!]! @relationship(type: "OWNS", direction: OUT)
   is: [Interface!]! @relationship(type: "IS", direction: OUT)
+  parentModule: Module @relationship(type: "OWNS", direction: IN)
 }
 
-interface Class implements Node @node {
+interface Class implements Node & OwningKitHost @node {
   name: String!
   interfaces: [Interface!]! @relationship(type: "IS", direction: OUT)
   fields: [KitField!]! @relationship(type: "OWNS", direction: OUT)
   methods: [Method!]! @relationship(type: "OWNS", direction: OUT)
+  parentModule: Module @relationship(type: "OWNS", direction: IN)
 }
 
 """
 ⚙️ Command — Concrete domain `Operation` kit surface in Neo4j (same kit shape as `Class`, distinct label for CQRS commands).
 """
-type Command implements Node @node {
+type Command implements Node & OwningKitHost @node {
   name: String!
   interfaces: [Interface!]! @relationship(type: "IS", direction: OUT)
   fields: [KitField!]! @relationship(type: "OWNS", direction: OUT)
   methods: [Method!]! @relationship(type: "OWNS", direction: OUT)
+  parentModule: Module @relationship(type: "OWNS", direction: IN)
+}
+
+"""
+🔧 Method — Operation body under a `Class` or `Command`; **at most one** incoming `OWNS` from that kit host (`ownsHost`).
+"""
+type Method implements Node @node {
+  name: String!
+  constraints: [Constraint!]! @relationship(type: "OWNS", direction: OUT)
+  ownsHost: OwningKitHost @relationship(type: "OWNS", direction: IN)
 }
 
 type Module implements Primitive @node {

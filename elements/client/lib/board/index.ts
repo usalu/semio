@@ -1465,6 +1465,11 @@ export class BoardRenderer {
 	private wasmSessionBorrowDepth = 0;
 	/** @emoji 🧷 Tracks `pushSceneToWasmDriver` + {@link BoardSession.renderFrame} where `device.poll` may synchronously re-enter JS while WASM still borrows `BoardSession`. */
 	private wasmGpuFrameDepth = 0;
+
+	/** @emoji 🚧 True while wasm-bindgen holds `&mut BoardSession`; any other JS→wasm call on this session must defer (see commit 379 + follow-up). */
+	private wasmSessionCallBlockedForReentry(): boolean {
+		return this.wasmSessionBorrowDepth > 0 || this.wasmGpuFrameDepth > 0;
+	}
 	/** @emoji 💾 Last `gpuReady` snapshot; used while {@link BoardRenderer.wasmGpuFrameDepth} is non-zero to avoid `RefCell` conflicts with in-flight `renderFrame`. */
 	private cachedWasmGpuReady = false;
 	private cameraStore = new SnapshotStore<CameraState>({ ...DEFAULT_CAMERA });
@@ -1555,6 +1560,10 @@ export class BoardRenderer {
 
 	/** @emoji ✅ Replaces the active selection set and syncs `selected` flags on scene objects. */
 	setSelectionIds(ids: Iterable<string>): void {
+		if (this.wasmSessionCallBlockedForReentry()) {
+			this.updateSelection(ids);
+			return;
+		}
 		this.pushSceneToWasmDriver();
 		this.session.setSelectionIdsJson(JSON.stringify([...ids]));
 		this.applyWasmDrainToScene(this.session.drainEventsJson());
@@ -1571,6 +1580,10 @@ export class BoardRenderer {
 			return;
 		}
 		this.selectionOptions = next;
+		if (this.wasmSessionCallBlockedForReentry()) {
+			this.invalidated = true;
+			return;
+		}
 		this.session.setSelectionOptions(next.method, next.mode, next.target);
 		this.applyWasmDrainToScene(this.session.drainEventsJson());
 		this.markDirty();
@@ -1583,6 +1596,10 @@ export class BoardRenderer {
 			return;
 		}
 		this.worldRasterTiling = next;
+		if (this.wasmSessionCallBlockedForReentry()) {
+			this.invalidated = true;
+			return;
+		}
 		this.session.setWorldRasterTiling(next);
 		this.markDirty();
 	}
@@ -1736,6 +1753,15 @@ export class BoardRenderer {
 		const z = clamp(zoom, MIN_ZOOM, MAX_ZOOM);
 		const next: CameraState = { x, y, zoom: z };
 		if (pointsEqual(this.camera, next) && nearlyEqual(this.camera.zoom, next.zoom)) {
+			return;
+		}
+		this.camera.x = next.x;
+		this.camera.y = next.y;
+		this.camera.zoom = next.zoom;
+		this.cameraStore.setSnapshot({ ...this.camera }, (left, right) => pointsEqual(left, right) && nearlyEqual(left.zoom, right.zoom));
+		this.emitter.emit("camera", { ...this.camera });
+		if (this.wasmSessionCallBlockedForReentry()) {
+			this.invalidated = true;
 			return;
 		}
 		this.session.setCamera(x, y, z);
@@ -1982,7 +2008,7 @@ export class BoardRenderer {
 		if (this.suppressSceneToWasmPush) {
 			return;
 		}
-		if (this.wasmSessionBorrowDepth > 0 || this.wasmGpuFrameDepth > 0) {
+		if (this.wasmSessionCallBlockedForReentry()) {
 			this.invalidated = true;
 			return;
 		}
@@ -2230,7 +2256,10 @@ export class BoardRenderer {
 			BoardRenderer.activeRenderer = null;
 		}
 		if (this.canvas) {
-			delete (this.canvas as BoardCanvasElement).__boardRenderer;
+			const el = this.canvas as BoardCanvasElement;
+			if (el.__boardRenderer === this) {
+				delete el.__boardRenderer;
+			}
 		}
 	}
 
@@ -2306,6 +2335,10 @@ export class BoardRenderer {
 	}
 
 	private deleteSelectedObjects(): void {
+		if (this.wasmSessionCallBlockedForReentry()) {
+			this.invalidated = true;
+			return;
+		}
 		this.session.deleteSelection();
 		this.applyWasmDrainToScene(this.session.drainEventsJson());
 		this.invalidate();
@@ -2367,6 +2400,10 @@ export class BoardRenderer {
 		}
 		event.preventDefault();
 		BoardRenderer.activeRenderer = this;
+		if (this.wasmSessionCallBlockedForReentry()) {
+			this.invalidated = true;
+			return;
+		}
 		const rect = this.canvas.getBoundingClientRect();
 		const sx = event.clientX - rect.left;
 		const sy = event.clientY - rect.top;
@@ -2392,6 +2429,10 @@ export class BoardRenderer {
 			this.canvas.setPointerCapture?.(event.pointerId);
 		}
 		event.preventDefault();
+		if (this.wasmSessionCallBlockedForReentry()) {
+			this.invalidated = true;
+			return;
+		}
 		const rect = this.canvas.getBoundingClientRect();
 		const sx = event.clientX - rect.left;
 		const sy = event.clientY - rect.top;
@@ -2406,6 +2447,10 @@ export class BoardRenderer {
 		if (!this.canvas) {
 			return;
 		}
+		if (this.wasmSessionCallBlockedForReentry()) {
+			this.invalidated = true;
+			return;
+		}
 		const rect = this.canvas.getBoundingClientRect();
 		const sx = event.clientX - rect.left;
 		const sy = event.clientY - rect.top;
@@ -2418,6 +2463,13 @@ export class BoardRenderer {
 
 	private readonly handlePointerUp = (event: PointerEvent): void => {
 		if (!this.canvas) {
+			return;
+		}
+		if (this.wasmSessionCallBlockedForReentry()) {
+			this.invalidated = true;
+			if (typeof event.pointerId === "number") {
+				this.canvas.releasePointerCapture?.(event.pointerId);
+			}
 			return;
 		}
 		const rect = this.canvas.getBoundingClientRect();
@@ -2440,6 +2492,10 @@ export class BoardRenderer {
 			const sy = event.clientY - rect.top;
 			this.recordPointerClient(event.clientX, event.clientY, sx, sy);
 		}
+		if (this.wasmSessionCallBlockedForReentry()) {
+			this.invalidated = true;
+			return;
+		}
 		this.session.pointerLeaveScreen();
 		this.applyWasmDrainToScene(this.session.drainEventsJson());
 		this.publishHover();
@@ -2451,6 +2507,10 @@ export class BoardRenderer {
 			return;
 		}
 		event.preventDefault();
+		if (this.wasmSessionCallBlockedForReentry()) {
+			this.invalidated = true;
+			return;
+		}
 		const rect = this.canvas.getBoundingClientRect();
 		const sx = event.clientX - rect.left;
 		const sy = event.clientY - rect.top;

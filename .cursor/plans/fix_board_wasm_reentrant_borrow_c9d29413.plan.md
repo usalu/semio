@@ -103,3 +103,41 @@ Open / reopen a repo MCP ticket under goal that includes `BOARD-WASM-GPUREADY-RE
 - "Pan with left-drag empty" UX. Today pan is only middle-button or `Shift+left-drag on empty`; left-drag empty starts marquee. Not a freeze.
 - The `delete (this.canvas).__boardRenderer` happening in deferred `R1.dispose()` after R2 already set the expando. Currently harmless in production but worth fixing alongside (just check `this.canvas.__boardRenderer === this` before deleting).
 - Discarded `drainEventsJson()` at the tail of `pushSceneToWasmDriver`. Latent footgun, separate cleanup.
+
+## 6 Follow-up (why the first fix was incomplete)
+
+### 6.1 What worked (first wave)
+
+- Guarding **`pushSceneToWasmDriver`** when `wasmSessionBorrowDepth > 0` or `wasmGpuFrameDepth > 0` stopped **`setSize`** from racing **`attach_canvas`** during the same `render()` path.
+- **`invalidate()`** after `attach_canvas` `finally` ensured a frame ran once the borrow was released.
+- Removing synchronous **`renderer.render()`** from **`applySize`** reduced nested render pressure.
+
+### 6.2 What did not work / user still saw `borrow_fail`
+
+Guarding **only** `pushSceneToWasmDriver` was **insufficient**: many other call sites call **`this.session.*`** while `attach_canvas` still holds `&mut BoardSession` across its `await`. Any of these can throw the same wasm-bindgen error (often still reported at `setSize` because that was the first session call in `push`, or at another entry point):
+
+- **`setCamera`** (React `camera` prop / `BoardHostSubtree` layout effect) — very likely with **three canvases** mounting and props updating during GPU init.
+- **`setSelectionOptions`**, **`setWorldRasterTilingOption`**
+- **`setSelectionIds`** (after `push` returned early, **`setSelectionIdsJson` still ran** → crash)
+- **Pointer / wheel / contextmenu** handlers and **`deleteSelection`**
+
+### 6.3 Current hypothesis (second wave)
+
+Introduce **`wasmSessionCallBlockedForReentry()`** (`wasmSessionBorrowDepth > 0 || wasmGpuFrameDepth > 0`) and:
+
+- **Defer all `BoardSession` mutations** on those paths: update JS-side state where possible (`setCamera` updates `camera` + store + emit, then returns; next successful `pushSceneToWasmDriver` syncs WASM via trailing `setCamera` in push).
+- **Skip pointer/wheel/context** during the block (set `invalidated` / `invalidate` for retry) so we never call `pointerDownScreen` / `wheelScreen` / … concurrently with `attach_canvas`.
+- **`setSelectionIds`** when blocked: use **`updateSelection`** (scene + store) and skip WASM until unblocked.
+
+### 6.4 How to test (WebGPU on developer machine)
+
+- **Playwright:** new test **`no wasm borrow_fail during load and viewport resize stress`** in [`elements/client/lib/board/play/e2e/board-play-gpu.spec.ts`](elements/client/lib/board/play/e2e/board-play-gpu.spec.ts) — collects `console` errors + `pageerror`, waits for all three canvases `data-board-surface-state=ready`, then **resizes the viewport** several times (ResizeObserver → `setSize` → `invalidate` → `render` stress).
+- **Bundled Chromium often has no WebGPU adapter** on Windows; use **installed Chrome**: `BOARD_PLAYWRIGHT_CHANNEL=chrome` (documented in [`play/playwright.config.ts`](elements/client/lib/board/play/playwright.config.ts)).
+
+### 6.5 Outcomes table (update as you verify)
+
+| Approach | Result |
+|----------|--------|
+| Guard `pushSceneToWasmDriver` only | Reduced `setSize` races; **user still hit `borrow_fail`** |
+| Fence **all** `session` entry points during attach / `renderFrame` | **Implemented** in `index.ts` (`wasmSessionCallBlockedForReentry`); verify locally with WebGPU + optional `BOARD_PLAYWRIGHT_CHANNEL=chrome` |
+| Playwright resize-stress + console capture | **Automated regression signal** |

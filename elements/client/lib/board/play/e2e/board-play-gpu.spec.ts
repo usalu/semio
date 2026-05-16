@@ -39,6 +39,44 @@ test.describe("board play", () => {
 				.toBe(true);
 	});
 
+	test("no wasm borrow_fail during load and viewport resize stress", async ({ page }) => {
+		const errors: string[] = [];
+		page.on("console", (msg) => {
+			if (msg.type() === "error") {
+				errors.push(msg.text());
+			}
+		});
+		page.on("pageerror", (err) => {
+			errors.push(err.message);
+		});
+		await page.goto("/", { waitUntil: "load", timeout: 180_000 });
+		await expect(page.getByText("Fixture shelf", { exact: false })).toBeVisible({ timeout: 120_000 });
+		const canvases = page.locator('[data-testid="board-canvas"]');
+		await expect(canvases).toHaveCount(3, { timeout: 180_000 });
+		await expect
+			.poll(
+				async () => {
+					const loc = page.locator('[data-testid="board-canvas"]');
+					return await loc.evaluateAll((els) => els.every((el) => el.getAttribute("data-board-surface-state") === "ready"));
+				},
+				{ timeout: 120_000 },
+			)
+			.toBe(true);
+		for (let i = 0; i < 8; i++) {
+			await page.setViewportSize({ width: 1280 + i * 40, height: 720 + i * 20 });
+			await page.waitForTimeout(40);
+		}
+		const borrowLike = errors.filter(
+			(t) =>
+				t.includes("borrow_fail") ||
+				t.includes("unsafe aliasing") ||
+				t.includes("recursive use of an object"),
+		);
+		if (borrowLike.length > 0) {
+			throw new Error(`WASM re-entry / borrow errors in console:\n${borrowLike.join("\n")}\n--- all console errors ---\n${errors.join("\n")}`);
+		}
+	});
+
 	test("each board canvas reaches GPU ready state", async ({ page }, testInfo) => {
 		await page.goto("/", { waitUntil: "load", timeout: 180_000 });
 		const adapterOk = await page.evaluate(async () => {
