@@ -1914,7 +1914,7 @@ public class Tests
         public void Connected_Piece()
         {
             var asset = LoadFindReplaceableAsset();
-            var c = GetCase(asset, "connected_piece_yields_only_exact_design_matches");
+            var c = GetCase(asset, "parent_piece_yields_only_exact_design_matches");
             var kitFile = (string)c["kit"]!;
             var designName = (string)c["designName"]!;
             var pieceNames = ((JArray)c["pieceNames"]!).Select(t => (string)t!).ToList();

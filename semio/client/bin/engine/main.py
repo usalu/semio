@@ -2870,10 +2870,10 @@ def add_current_design_piece_with_plane(
 @mcp.tool()
 def add_current_design_connection(
     id: str,
-    connected_piece_id: str,
-    connected_connector_id: str,
-    connecting_piece_id: str,
-    connecting_connector_id: str,
+    parent_piece_id: str,
+    parent_connector_id: str,
+    child_piece_id: str,
+    child_connector_id: str,
     rotation: float,
     u: float,
     v: float,
@@ -2894,17 +2894,17 @@ def add_current_design_connection(
                     "id": id,
                     "gap": gap,
                     "description": description,
-                    "connected": {
-                        "piece": {"id": connected_piece_id},
-                        "connector": {"id": connected_connector_id},
+                    "parent": {
+                        "piece": {"id": parent_piece_id},
+                        "connector": {"id": parent_connector_id},
                     },
                     "tilt": tilt,
                     "rotation": rotation,
                     "rise": rise,
                     "turn": turn,
-                    "connecting": {
-                        "piece": {"id": connecting_piece_id},
-                        "connector": {"id": connecting_connector_id},
+                    "child": {
+                        "piece": {"id": child_piece_id},
+                        "connector": {"id": child_connector_id},
                     },
                     "shift": shift,
                     "u": u,

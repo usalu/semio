@@ -13,9 +13,19 @@ todos:
     status: completed
   - id: verify
     content: Run board vitest + playwright + manual play app sanity check (pan/zoom/select).
-    status: completed
+    status: cancelled
+  - id: e2e-honest
+    content: Document why Vitest does not cover main-thread WebGPU; add/adjust real-browser checks (Playwright+Chrome or manual script).
+    status: pending
 isProject: false
 ---
+
+## 0 Why “all tests pass” but the app is still broken
+
+- **Vitest (`elements/client/lib/board`)** almost exclusively constructs `BoardRenderer` with **`renderMode: "headless-test"`** (see `index.ts` Vitest region). That path **never** runs `initGpuSurfaceOnce` / `attach_canvas` / `syncGpuFrame` / the real WebGPU present loop.
+- **`initSync` WASM** in Vitest loads the wasm bytes from disk; it does **not** reproduce Chromium’s WebGPU adapter, `ResizeObserver` + flex layout from `@elements/ui` windows, multi-pane focus, or `device.poll` re-entry.
+- **Playwright GPU specs** often **skip** on bundled Chromium without a WebGPU adapter (`board-play-gpu.spec.ts`); unless CI runs **`BOARD_PLAYWRIGHT_CHANNEL=chrome`**, the “GPU” tests are frequently no-ops.
+- **Conclusion:** Passing Vitest proves **headless WASM + scene graph invariants**, not **board play triptych + WebGPU + DOM layout**. Treat Vitest green as **necessary, not sufficient**.
 
 ## 1 Problem
 

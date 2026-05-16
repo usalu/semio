@@ -17,7 +17,7 @@
       "designFamilies": []
     },
     {
-      "name": "connected_piece_yields_only_exact_design_matches",
+      "name": "parent_piece_yields_only_exact_design_matches",
       "kit": "metabolism.kit.semio.json",
       "designName": "Nakagin Capsule Tower",
       "pieceNames": [

@@ -506,7 +506,6 @@ export function BoardCanvas({
 	worldRasterTiling,
 }: BoardCanvasProps): ReactElement {
 	const canvasRef = useRef<HTMLCanvasElement | null>(null);
-	const textOverlayRef = useRef<HTMLCanvasElement | null>(null);
 	const containerRef = useRef<HTMLDivElement | null>(null);
 	const [contextRenderer, setContextRenderer] = useState<BoardRenderer | null>(null);
 	const rendererRef = useRef<BoardRenderer | null>(null);
@@ -782,18 +781,6 @@ export function BoardCanvas({
 		};
 	}, [height, width]);
 
-	useLayoutEffect(() => {
-		const renderer = rendererRef.current;
-		const overlay = textOverlayRef.current;
-		if (!renderer || !overlay) {
-			return;
-		}
-		renderer.attachTextOverlayCanvas(overlay);
-		return () => {
-			renderer.attachTextOverlayCanvas(null);
-		};
-	}, [contextRenderer]);
-
 	return (
 		<BoardContext.Provider value={contextRenderer}>
 				<div
@@ -813,20 +800,12 @@ export function BoardCanvas({
 					ref={containerRef}
 					style={{ height: height ?? "100%", position: "relative", width: width ?? "100%", ...(style ?? {}) }}
 				>
-					<div className="relative flex min-h-0 min-w-0 flex-1 flex-col">
-						<canvas
-							className="min-h-0 flex-1 touch-none"
-							data-testid="board-canvas"
-							ref={canvasRef}
-							style={{ display: "block", height: "100%", width: "100%" }}
-						/>
-						<canvas
-							aria-hidden
-							className="pointer-events-none absolute inset-0 z-[1] min-h-0 flex-1"
-							ref={textOverlayRef}
-							style={{ display: "block", height: "100%", width: "100%" }}
-						/>
-					</div>
+					<canvas
+						className="min-h-0 min-w-0 flex-1 touch-none"
+						data-testid="board-canvas"
+						ref={canvasRef}
+						style={{ display: "block", height: "100%", width: "100%" }}
+					/>
 					{contextRenderer ? (
 						<HostMountProvider>
 							<BoardHostSubtree camera={camera} children={children} renderer={contextRenderer} />

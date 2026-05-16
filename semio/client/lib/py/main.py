@@ -4020,13 +4020,13 @@ class SideInputNode(InputNode):
 class ConnectionConnectedField(MaskedField, abc.ABC):
     """🔖Field mixin for the connected of a connection."""
 
-    connected: Side = pydantic.Field()
+    parent: Side = pydantic.Field()
 
 
 class ConnectionConnectingField(MaskedField, abc.ABC):
     """🔖Field mixin for the connecting of a connection."""
 
-    connecting: Side = pydantic.Field()
+    child: Side = pydantic.Field()
 
 
 class ConnectionDescriptionField(RealField, abc.ABC):
@@ -4122,8 +4122,8 @@ class ConnectionInput(
 
     pass
 
-    connected: SideInput = pydantic.Field()
-    connecting: SideInput = pydantic.Field()
+    parent: SideInput = pydantic.Field()
+    child: SideInput = pydantic.Field()
 
 
 class ConnectionContext(
@@ -4142,8 +4142,8 @@ class ConnectionContext(
 
     pass
 
-    connected: SideContext = pydantic.Field()
-    connecting: SideContext = pydantic.Field()
+    parent: SideContext = pydantic.Field()
+    child: SideContext = pydantic.Field()
 
 
 class ConnectionOutput(
@@ -4162,8 +4162,8 @@ class ConnectionOutput(
 
     pass
 
-    connected: SideOutput = pydantic.Field()
-    connecting: SideOutput = pydantic.Field()
+    parent: SideOutput = pydantic.Field()
+    child: SideOutput = pydantic.Field()
 
 
 class ConnectionPrediction(
@@ -4182,8 +4182,8 @@ class ConnectionPrediction(
 
     pass
 
-    connected: SidePrediction = pydantic.Field()
-    connecting: SidePrediction = pydantic.Field()
+    parent: SidePrediction = pydantic.Field()
+    child: SidePrediction = pydantic.Field()
 
 
 class Connection(
@@ -4205,7 +4205,7 @@ class Connection(
     attributes: list[Attribute] = pydantic.Field(default_factory=list)
 
     @property
-    def connected(self) -> Side:
+    def parent(self) -> Side:
         return Side(
             piece=self.connectedPiece,
             designPiece=(
@@ -4217,7 +4217,7 @@ class Connection(
         )
 
     @property
-    def connecting(self) -> Side:
+    def child(self) -> Side:
         return Side(
             piece=self.connectingPiece,
             designPiece=(
@@ -4251,8 +4251,8 @@ class Connection(
             else input.__dict__
         )
         piecesDict = {p.id_: p for p in pieces}
-        connected = Side.parse(obj["connected"])
-        connecting = Side.parse(obj["connecting"])
+        connected = Side.parse(obj["parent"])
+        connecting = Side.parse(obj["child"])
         connectedPiece = piecesDict[connected.piece.id_]
         connectedType = connectedPiece.type
         if connectedType is None:
@@ -4367,8 +4367,8 @@ class Connection(
 
     def dump(self) -> "ConnectionOutput":
         entity = {**ConnectionProps.representation_validate(self).representation_dump()}
-        entity["connected"] = self.connected.dump()
-        entity["connecting"] = self.connecting.dump()
+        entity["parent"] = self.parent.dump()
+        entity["child"] = self.child.dump()
         entity["attributes"] = [q.dump() for q in self.attributes]
         return ConnectionOutput(**entity)
 
@@ -4390,16 +4390,16 @@ class Connection(
     # TODO: Automatic derive from Id representation.
     def idMembers(self) -> RecursiveAnyList:
         return [
-            self.connected.piece.id_,
+            self.parent.piece.id_,
             (
-                self.connected.connector.id_
-                if self.connected.connector is not None
+                self.parent.connector.id_
+                if self.parent.connector is not None
                 else ""
             ),
-            self.connecting.piece.id_,
+            self.child.piece.id_,
             (
-                self.connecting.connector.id_
-                if self.connecting.connector is not None
+                self.child.connector.id_
+                if self.child.connector is not None
                 else ""
             ),
         ]
@@ -5463,7 +5463,7 @@ class Kit(
         return [
             c
             for c in (design.connections or [])
-            if c.connected.piece.id == piece_id or c.connecting.piece.id == piece_id
+            if c.parent.piece.id == piece_id or c.child.piece.id == piece_id
         ]
 
     def find_piece_type_in_design(self, design_id: str, piece_id: str) -> "Type":
@@ -5485,16 +5485,16 @@ class Kit(
         self, type_id: str, connection: "Connection", piece_id: str
     ) -> typing.Optional["Connector"]:
         """🔖Gets the connector used by a piece in a connection."""
-        if connection.connected.piece.id == piece_id:
+        if connection.parent.piece.id == piece_id:
             connector_id = (
-                connection.connected.connector.id
-                if connection.connected.connector
+                connection.parent.connector.id
+                if connection.parent.connector
                 else None
             )
         else:
             connector_id = (
-                connection.connecting.connector.id
-                if connection.connecting.connector
+                connection.child.connector.id
+                if connection.child.connector
                 else None
             )
         if not connector_id:
@@ -5531,23 +5531,23 @@ class Kit(
         for connection in connections:
             try:
                 other_piece_id = (
-                    connection.connecting.piece.id
-                    if connection.connected.piece.id == piece_id
-                    else connection.connected.piece.id
+                    connection.child.piece.id
+                    if connection.parent.piece.id == piece_id
+                    else connection.parent.piece.id
                 )
                 other_piece = self.find_piece_in_design(design_id, other_piece_id)
                 if not other_piece.type or not other_piece.type.id:
                     continue
-                if connection.connected.piece.id == piece_id:
+                if connection.parent.piece.id == piece_id:
                     other_connector_id = (
-                        connection.connecting.connector.id
-                        if connection.connecting.connector
+                        connection.child.connector.id
+                        if connection.child.connector
                         else None
                     )
                 else:
                     other_connector_id = (
-                        connection.connected.connector.id
-                        if connection.connected.connector
+                        connection.parent.connector.id
+                        if connection.parent.connector
                         else None
                     )
                 if not other_connector_id:
@@ -5590,9 +5590,9 @@ class Kit(
             connections = self.find_piece_connections_in_design(design_id, piece_id)
             for connection in connections:
                 other_piece_id = (
-                    connection.connecting.piece.id
-                    if connection.connected.piece.id == piece_id
-                    else connection.connected.piece.id
+                    connection.child.piece.id
+                    if connection.parent.piece.id == piece_id
+                    else connection.parent.piece.id
                 )
                 if other_piece_id not in piece_ids:
                     try:
@@ -5601,16 +5601,16 @@ class Kit(
                         )
                         if not other_piece.type or not other_piece.type.id:
                             continue
-                        if connection.connected.piece.id == piece_id:
+                        if connection.parent.piece.id == piece_id:
                             other_connector_id = (
-                                connection.connecting.connector.id
-                                if connection.connecting.connector
+                                connection.child.connector.id
+                                if connection.child.connector
                                 else None
                             )
                         else:
                             other_connector_id = (
-                                connection.connected.connector.id
-                                if connection.connected.connector
+                                connection.parent.connector.id
+                                if connection.parent.connector
                                 else None
                             )
                         if not other_connector_id:
@@ -6308,8 +6308,8 @@ ConnectionMeta = typing.TypedDict(
     "ConnectionMeta",
     {
         "id": str,
-        "connected": dict,
-        "connecting": dict,
+        "parent": dict,
+        "child": dict,
         "gap": typing.NotRequired[float],
         "shift": typing.NotRequired[float],
         "rise": typing.NotRequired[float],
@@ -6564,8 +6564,8 @@ _PIECE_META_KEYS = [
 _GROUP_META_KEYS = ["id", "name", "color", "description"]
 _CONNECTION_META_KEYS = [
     "id",
-    "connected",
-    "connecting",
+    "parent",
+    "child",
     "gap",
     "shift",
     "rise",
@@ -7486,10 +7486,10 @@ def hash_connection(c: dict) -> str:
     if attrs and len(attrs) > 0:
         w.writeString("attributes")
         w.writeHashList([hash_attribute(a) for a in attrs])
-    w.writeString("connected")
-    w.writeHash(hash_side(c["connected"]))
+    w.writeString("parent")
+    w.writeHash(hash_side(c["parent"]))
     w.writeString("connecting")
-    w.writeHash(hash_side(c["connecting"]))
+    w.writeHash(hash_side(c["child"]))
     if c.get("description") is not None:
         w.writeString("description")
         w.writeString(c["description"])
@@ -8235,8 +8235,8 @@ def hash_connection_diff(d: dict) -> str:
     w = HashWriter()
     w.writeString("ConnectionDiff")
     _write_diff_hash(w, "attributes", d, hash_attributes_diff)
-    _write_diff_hash(w, "connected", d, hash_side_diff)
-    _write_diff_hash(w, "connecting", d, hash_side_diff)
+    _write_diff_hash(w, "parent", d, hash_side_diff)
+    _write_diff_hash(w, "child", d, hash_side_diff)
     _write_diff_string(w, "description", d)
     _write_diff_number(w, "gap", d)
     _write_diff_number(w, "rise", d)
@@ -8403,8 +8403,8 @@ def _findPieceConnectionsInDesignDict(design: dict, piece_id: str) -> list[dict]
     return [
         c
         for c in design.get("connections", [])
-        if c.get("connected", {}).get("piece", {}).get("id") == piece_id
-        or c.get("connecting", {}).get("piece", {}).get("id") == piece_id
+        if c.get("parent", {}).get("piece", {}).get("id") == piece_id
+        or c.get("child", {}).get("piece", {}).get("id") == piece_id
     ]
 
 
@@ -8520,14 +8520,14 @@ def createClusteredDesignDict(
     internal_connections = [
         c
         for c in connections
-        if c.get("connected", {}).get("piece", {}).get("id") in cluster_set
-        and c.get("connecting", {}).get("piece", {}).get("id") in cluster_set
+        if c.get("parent", {}).get("piece", {}).get("id") in cluster_set
+        and c.get("child", {}).get("piece", {}).get("id") in cluster_set
     ]
     external_connections = [
         c
         for c in connections
-        if (c.get("connected", {}).get("piece", {}).get("id") in cluster_set)
-        != (c.get("connecting", {}).get("piece", {}).get("id") in cluster_set)
+        if (c.get("parent", {}).get("piece", {}).get("id") in cluster_set)
+        != (c.get("child", {}).get("piece", {}).get("id") in cluster_set)
     ]
     import datetime as dt
     import uuid
@@ -8562,26 +8562,26 @@ def replaceClusterWithDesignDict(
     connections_to_remove = [
         {"id": c.get("id")}
         for c in connections
-        if c.get("connected", {}).get("piece", {}).get("id") in cluster_set
-        or c.get("connecting", {}).get("piece", {}).get("id") in cluster_set
+        if c.get("parent", {}).get("piece", {}).get("id") in cluster_set
+        or c.get("child", {}).get("piece", {}).get("id") in cluster_set
     ]
     updated_external = []
     for connection in external_connections:
         connected_in_cluster = (
-            connection.get("connected", {}).get("piece", {}).get("id") in cluster_set
+            connection.get("parent", {}).get("piece", {}).get("id") in cluster_set
         )
         connecting_in_cluster = (
-            connection.get("connecting", {}).get("piece", {}).get("id") in cluster_set
+            connection.get("child", {}).get("piece", {}).get("id") in cluster_set
         )
         import copy
 
         new_conn = copy.deepcopy(connection)
         if connected_in_cluster:
-            new_conn.setdefault("connected", {})["designPiece"] = {
+            new_conn.setdefault("parent", {})["designPiece"] = {
                 "id": clustered_design.get("id")
             }
         elif connecting_in_cluster:
-            new_conn.setdefault("connecting", {})["designPiece"] = {
+            new_conn.setdefault("child", {})["designPiece"] = {
                 "id": clustered_design.get("id")
             }
         updated_external.append(new_conn)
@@ -8599,8 +8599,8 @@ def getClusterableGroupsDict(
         return []
     adjacency: dict[str, set[str]] = {}
     for connection in design.get("connections", []):
-        source_id = connection.get("connecting", {}).get("piece", {}).get("id", "")
-        target_id = connection.get("connected", {}).get("piece", {}).get("id", "")
+        source_id = connection.get("child", {}).get("piece", {}).get("id", "")
+        target_id = connection.get("parent", {}).get("piece", {}).get("id", "")
         adjacency.setdefault(source_id, set()).add(target_id)
         adjacency.setdefault(target_id, set()).add(source_id)
     selected_set = set(selected_piece_ids)
@@ -8636,8 +8636,8 @@ def expandDesignPiecesDict(design: dict, kit: dict) -> dict:
 
     connections = design.get("connections", [])
     has_design_connections = any(
-        c.get("connected", {}).get("designPiece")
-        or c.get("connecting", {}).get("designPiece")
+        c.get("parent", {}).get("designPiece")
+        or c.get("child", {}).get("designPiece")
         for c in connections
     )
     if not has_design_connections:
@@ -8645,10 +8645,10 @@ def expandDesignPiecesDict(design: dict, kit: dict) -> dict:
     expanded = copy.deepcopy(design)
     design_ids: set[str] = set()
     for conn in connections:
-        dp = conn.get("connected", {}).get("designPiece")
+        dp = conn.get("parent", {}).get("designPiece")
         if dp:
             design_ids.add(dp.get("id", ""))
-        dp = conn.get("connecting", {}).get("designPiece")
+        dp = conn.get("child", {}).get("designPiece")
         if dp:
             design_ids.add(dp.get("id", ""))
     if not design_ids:
@@ -8671,12 +8671,12 @@ def expandDesignPiecesDict(design: dict, kit: dict) -> dict:
         updated_connections = []
         for conn in expanded.get("connections", []):
             new_conn = copy.deepcopy(conn)
-            connected_dp = new_conn.get("connected", {}).get("designPiece")
+            connected_dp = new_conn.get("parent", {}).get("designPiece")
             if connected_dp and connected_dp.get("id") == design_ref_id:
-                new_conn["connected"].pop("designPiece", None)
-            connecting_dp = new_conn.get("connecting", {}).get("designPiece")
+                new_conn["parent"].pop("designPiece", None)
+            connecting_dp = new_conn.get("child", {}).get("designPiece")
             if connecting_dp and connecting_dp.get("id") == design_ref_id:
-                new_conn["connecting"].pop("designPiece", None)
+                new_conn["child"].pop("designPiece", None)
             updated_connections.append(new_conn)
         expanded["pieces"] = list(expanded.get("pieces", [])) + transformed_pieces
         expanded["connections"] = updated_connections + transformed_connections
@@ -8834,10 +8834,10 @@ def findUsedConnectorsByPieceInDesignDict(
     connections = _findPieceConnectionsInDesignDict(design, piece_id)
     result = []
     for c in connections:
-        if c.get("connected", {}).get("piece", {}).get("id") == piece_id:
-            connector_id = (c.get("connected", {}).get("connector") or {}).get("id")
+        if c.get("parent", {}).get("piece", {}).get("id") == piece_id:
+            connector_id = (c.get("parent", {}).get("connector") or {}).get("id")
         else:
-            connector_id = (c.get("connecting", {}).get("connector") or {}).get("id")
+            connector_id = (c.get("child", {}).get("connector") or {}).get("id")
         if connector_id:
             try:
                 result.append(_findConnectorInTypeDict(type_dict, connector_id))
@@ -8933,14 +8933,14 @@ def findReplaceableTypesInDesignsForPiecesInDesignDict(
     def get_boundary_requirement_port_ids() -> list[str]:
         requirement_port_ids: list[str] = []
         for conn in connections:
-            connected_id = conn.get("connected", {}).get("piece", {}).get("id", "")
-            connecting_id = conn.get("connecting", {}).get("piece", {}).get("id", "")
+            connected_id = conn.get("parent", {}).get("piece", {}).get("id", "")
+            connecting_id = conn.get("child", {}).get("piece", {}).get("id", "")
             connected_selected = connected_id in selected_piece_set
             connecting_selected = connecting_id in selected_piece_set
             if connected_selected == connecting_selected:
                 continue
             other_side = (
-                conn.get("connecting") if connected_selected else conn.get("connected")
+                conn.get("child") if connected_selected else conn.get("parent")
             )
             other_piece_id = (other_side or {}).get("piece", {}).get("id", "")
             other_piece = piece_map.get(other_piece_id) or {}
@@ -9009,8 +9009,8 @@ def findReplaceableTypesInDesignsForPiecesInDesignDict(
         consumed_connector_keys = set()
         for connection in candidate_design.get("connections") or []:
             for side in [
-                connection.get("connected") or {},
-                connection.get("connecting") or {},
+                connection.get("parent") or {},
+                connection.get("child") or {},
             ]:
                 piece_id = (side.get("piece") or {}).get("id", "")
                 connector_id = (side.get("connector") or {}).get("id", "")
@@ -9506,8 +9506,8 @@ def areConnectionsEqualDict(
         connB = next((x for x in arrB if x.get("id") == connA.get("id")), None)
         if connB is None:
             return False
-        connectedA = connA.get("connected", {})
-        connectedB = connB.get("connected", {})
+        connectedA = connA.get("parent", {})
+        connectedB = connB.get("parent", {})
 
         if _getIdFromRef(connectedA.get("piece")) != _getIdFromRef(
             connectedB.get("piece")
@@ -9521,8 +9521,8 @@ def areConnectionsEqualDict(
             connectedB.get("connector")
         ):
             return False
-        connectingA = connA.get("connecting", {})
-        connectingB = connB.get("connecting", {})
+        connectingA = connA.get("child", {})
+        connectingB = connB.get("child", {})
         if _getIdFromRef(connectingA.get("piece")) != _getIdFromRef(
             connectingB.get("piece")
         ):
@@ -10494,10 +10494,10 @@ def _getConnectionDiff(before: dict, after: dict) -> dict:
         after.get("description")
     ):
         diff["description"] = after.get("description")
-    if before.get("connecting") != after.get("connecting"):
-        diff["connecting"] = after.get("connecting")
-    if before.get("connected") != after.get("connected"):
-        diff["connected"] = after.get("connected")
+    if before.get("child") != after.get("child"):
+        diff["child"] = after.get("child")
+    if before.get("parent") != after.get("parent"):
+        diff["parent"] = after.get("parent")
     attributesDiff = _getAttributesDiff(
         before.get("attributes", []), after.get("attributes", [])
     )
@@ -10514,7 +10514,7 @@ def _applyConnectionDiff(target: dict, diff: dict) -> None:
     for key in ["description"]:
         if key in diff:
             target[key] = diff[key]
-    for key in ["connecting", "connected"]:
+    for key in ["child", "connected"]:
         if key in diff:
             target[key] = diff[key]
     if diff.get("attributes") or target.get("attributes"):
@@ -11523,7 +11523,7 @@ def _inverseConnectionDiff(original: dict, appliedDiff: dict) -> dict:
     for key in ["description"]:
         if key in appliedDiff:
             inverse[key] = original.get(key)
-    for key in ["connecting", "connected"]:
+    for key in ["child", "connected"]:
         if key in appliedDiff:
             inverse[key] = original.get(key)
     if appliedDiff.get("attributes"):
@@ -11559,7 +11559,7 @@ def _inverseConnectionDiff(original: dict, appliedDiff: dict) -> dict:
     for key in ["description"]:
         if key in appliedDiff:
             inverse[key] = original.get(key)
-    for key in ["connecting", "connected"]:
+    for key in ["child", "connected"]:
         if key in appliedDiff:
             inverse[key] = original.get(key)
     if appliedDiff.get("attributes"):
@@ -12090,8 +12090,8 @@ def copyDesignDict(
     # Build parent map: child id -> (parent id, connection)
     parentMap: dict[str, tuple[str, dict]] = {}
     for conn in connections:
-        connectingId = conn.get("connecting", {}).get("piece", {}).get("id", "")
-        connectedId = conn.get("connected", {}).get("piece", {}).get("id", "")
+        connectingId = conn.get("child", {}).get("piece", {}).get("id", "")
+        connectedId = conn.get("parent", {}).get("piece", {}).get("id", "")
         parentMap[connectingId] = (connectedId, conn)
 
     # Flatten the design to get absolute planes/centers
@@ -12168,8 +12168,8 @@ def copyDesignDict(
         if conn is None:
             continue
 
-        connectedId = conn.get("connected", {}).get("piece", {}).get("id", "")
-        connectingId = conn.get("connecting", {}).get("piece", {}).get("id", "")
+        connectedId = conn.get("parent", {}).get("piece", {}).get("id", "")
+        connectingId = conn.get("child", {}).get("piece", {}).get("id", "")
         connectedSelected = connectedId in selectedPieceSet
         connectingSelected = connectingId in selectedPieceSet
 
@@ -12243,8 +12243,8 @@ def pasteDesignDict(
 
     sourceParentMap: dict[str, tuple[str, dict]] = {}
     for conn in sourceConnections:
-        connectingId = conn.get("connecting", {}).get("piece", {}).get("id", "")
-        connectedId = conn.get("connected", {}).get("piece", {}).get("id", "")
+        connectingId = conn.get("child", {}).get("piece", {}).get("id", "")
+        connectedId = conn.get("parent", {}).get("piece", {}).get("id", "")
         if connectingId not in sourceParentMap:
             sourceParentMap[connectingId] = (connectedId, conn)
             continue
@@ -12377,18 +12377,18 @@ def pasteDesignDict(
                 if extName and extName in targetPiecesByName:
                     candidates = targetPiecesByName[extName]
                     isParentConnected = (
-                        parentConn.get("connected", {}).get("piece", {}).get("id", "")
+                        parentConn.get("parent", {}).get("piece", {}).get("id", "")
                         == parentId
                     )
                     if isParentConnected:
                         parentConnectorId = (
-                            parentConn.get("connected", {})
+                            parentConn.get("parent", {})
                             .get("connector", {})
                             .get("id", "")
                         )
                     else:
                         parentConnectorId = (
-                            parentConn.get("connecting", {})
+                            parentConn.get("child", {})
                             .get("connector", {})
                             .get("id", "")
                         )
@@ -12418,24 +12418,24 @@ def pasteDesignDict(
 
                                 copiedConn = _deepCopy(parentConn)
                                 if isParentConnected:
-                                    copiedConn["connected"] = {
+                                    copiedConn["parent"] = {
                                         "piece": {"id": candidate["id"]},
                                         "connector": {"id": matchingConnector["id"]},
                                     }
                                 else:
-                                    copiedConn["connecting"] = {
+                                    copiedConn["child"] = {
                                         "piece": {"id": candidate["id"]},
                                         "connector": {"id": matchingConnector["id"]},
                                     }
 
                                 if coordinate is not None:
                                     connected_id = (
-                                        parentConn.get("connected", {})
+                                        parentConn.get("parent", {})
                                         .get("piece", {})
                                         .get("id", "")
                                     )
                                     connecting_id = (
-                                        parentConn.get("connecting", {})
+                                        parentConn.get("child", {})
                                         .get("piece", {})
                                         .get("id", "")
                                     )
@@ -12583,8 +12583,8 @@ def pasteDesignDict(
     # Process source connections (non-external internal connections)
     addedPieceIds = {p["id"] for p in addedPieces}
     for conn in sourceConnections:
-        connectedId = conn.get("connected", {}).get("piece", {}).get("id", "")
-        connectingId = conn.get("connecting", {}).get("piece", {}).get("id", "")
+        connectedId = conn.get("parent", {}).get("piece", {}).get("id", "")
+        connectingId = conn.get("child", {}).get("piece", {}).get("id", "")
 
         if connectedId in externalOriginIds or connectingId in externalOriginIds:
             continue
@@ -12618,8 +12618,8 @@ def deletePiecesAndConnectionsInDesignDict(
     # Find stale connections: connections referencing any deleted piece
     staleConnectionIds = set()
     for conn in connections:
-        connectedId = conn.get("connected", {}).get("piece", {}).get("id", "")
-        connectingId = conn.get("connecting", {}).get("piece", {}).get("id", "")
+        connectedId = conn.get("parent", {}).get("piece", {}).get("id", "")
+        connectingId = conn.get("child", {}).get("piece", {}).get("id", "")
         if connectedId in deletedPieceSet or connectingId in deletedPieceSet:
             staleConnectionIds.add(conn["id"])
 
@@ -12632,12 +12632,12 @@ def deletePiecesAndConnectionsInDesignDict(
         conn = next((c for c in connections if c["id"] == connId), None)
         if conn is None:
             continue
-        connectingId = conn.get("connecting", {}).get("piece", {}).get("id", "")
+        connectingId = conn.get("child", {}).get("piece", {}).get("id", "")
         if connectingId in deletedPieceSet:
             continue
         # Check if this piece has another parent connection not in the removed set
         hasOtherParent = any(
-            c.get("connecting", {}).get("piece", {}).get("id", "") == connectingId
+            c.get("child", {}).get("piece", {}).get("id", "") == connectingId
             and c["id"] not in allRemovedConnectionIds
             for c in connections
         )
@@ -12766,7 +12766,7 @@ def _expandConnectionEntityDict(d: dict) -> dict:
     """🔖Full connection snapshots may omit numeric fields when zero; golden fixtures often spell them out."""
     if not isinstance(d, dict):
         return d
-    if "connected" not in d or "connecting" not in d:
+    if "parent" not in d or "child" not in d:
         return d
     out = dict(d)
     for k in _CONNECTION_OPTIONAL_NUMERIC_KEYS:
@@ -12976,10 +12976,10 @@ class ConnectionNode(TableEntityNode):
     connecting = graphene.NonNull(lambda: SideNode)
 
     def resolve_connected(self, info):
-        return self.connected
+        return self.parent
 
     def resolve_connecting(self, info):
-        return self.connecting
+        return self.child
 
 
 class DesignNode(TableEntityNode):
@@ -13987,8 +13987,8 @@ def buildPieceGraph(design: Design | dict) -> networkx.Graph:
         G.add_node(pieceId, piece=piece)
     for connection in connections:
         if isinstance(connection, dict):
-            sourceId = connection["connected"]["piece"]["id"]
-            targetId = connection["connecting"]["piece"]["id"]
+            sourceId = connection["parent"]["piece"]["id"]
+            targetId = connection["child"]["piece"]["id"]
         else:
             sourceId = connection.connectedPiece.id
             targetId = connection.connectingPiece.id
@@ -14326,8 +14326,8 @@ def flattenDesignDict(kit: dict, designId: str) -> dict:
     piecePaths: dict[str, str] = {}
     adjacency: dict[str, list[tuple[str, dict]]] = {}
     for conn in design.get("connections", []):
-        src = conn["connected"]["piece"]["id"]
-        tgt = conn["connecting"]["piece"]["id"]
+        src = conn["parent"]["piece"]["id"]
+        tgt = conn["child"]["piece"]["id"]
         if src not in pieceMap or tgt not in pieceMap:
             continue
         adjacency.setdefault(src, []).append((tgt, conn))
@@ -14363,12 +14363,12 @@ def flattenDesignDict(kit: dict, designId: str) -> dict:
                 parent_plane = current_plane
                 parent_piece = current_piece
                 child_piece = pieceMap[child_id]
-                if conn["connected"]["piece"]["id"] == parent_id:
-                    parent_side = conn["connected"]
-                    child_side = conn["connecting"]
+                if conn["parent"]["piece"]["id"] == parent_id:
+                    parent_side = conn["parent"]
+                    child_side = conn["child"]
                 else:
-                    parent_side = conn["connecting"]
-                    child_side = conn["connected"]
+                    parent_side = conn["child"]
+                    child_side = conn["parent"]
                 parent_type = types_by_id.get(
                     parent_piece.get("type", {}).get("id", "")
                 )
@@ -14699,14 +14699,14 @@ def computeFlatHashesDict(kit: dict, designId: str) -> dict[str, dict]:
             parentType = getTypeById(kit, parentPiece.get("type", {}).get("id", ""))
             childType = getTypeById(kit, childPiece.get("type", {}).get("id", ""))
             parentSide = (
-                connection["connected"]
-                if connection["connected"]["piece"]["id"] == parentId
-                else connection["connecting"]
+                connection["parent"]
+                if connection["parent"]["piece"]["id"] == parentId
+                else connection["child"]
             )
             childSide = (
-                connection["connecting"]
-                if connection["connecting"]["piece"]["id"] == childId
-                else connection["connected"]
+                connection["child"]
+                if connection["child"]["piece"]["id"] == childId
+                else connection["parent"]
             )
             parentConnectorId = (
                 parentSide.get("connector", {}).get("id")
@@ -15266,13 +15266,13 @@ def _parse_connection_from_sqlite(row: dict) -> dict:
     return {
         "id": row.get("id"),
         "connected": {
-            "piece": row.get("connected_piece_id"),
-            "designPiece": row.get("connected_design_piece_id"),
+            "piece": row.get("parent_piece_id"),
+            "designPiece": row.get("parent_design_piece_id"),
             "connector": row.get("connected_connector_id"),
         },
         "connecting": {
-            "piece": row.get("connecting_piece_id"),
-            "designPiece": row.get("connecting_design_piece_id"),
+            "piece": row.get("child_piece_id"),
+            "designPiece": row.get("child_design_piece_id"),
             "connector": row.get("connecting_connector_id"),
         },
         "gap": row.get("gap", 0.0),
@@ -15524,7 +15524,7 @@ def _read_kit_from_sqlite(db_path: str) -> dict:
         connections_by_design: dict[str, list[dict]] = {}
         for row in cursor.execute("SELECT * FROM connection ORDER BY id").fetchall():
             connection = _parse_connection_from_sqlite(dict(row))
-            for side in ["connected", "connecting"]:
+            for side in ["parent", "connecting"]:
                 for key in ["piece", "designPiece", "connector"]:
                     ref = connection.get(side, {}).get(key)
                     if ref:
@@ -15948,11 +15948,11 @@ def _write_kit_to_sqlite(kit_data: KitData | dict, db_path: str) -> None:
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS connection (
             id VARCHAR(36) PRIMARY KEY,
-            connected_piece_id VARCHAR(36) NOT NULL,
-            connected_design_piece_id VARCHAR(36),
+            parent_piece_id VARCHAR(36) NOT NULL,
+            parent_design_piece_id VARCHAR(36),
             connected_connector_id VARCHAR(36),
-            connecting_piece_id VARCHAR(36) NOT NULL,
-            connecting_design_piece_id VARCHAR(36),
+            child_piece_id VARCHAR(36) NOT NULL,
+            child_design_piece_id VARCHAR(36),
             connecting_connector_id VARCHAR(36),
             gap FLOAT DEFAULT 0,
             shift FLOAT DEFAULT 0,
@@ -16184,16 +16184,16 @@ def _write_kit_to_sqlite(kit_data: KitData | dict, db_path: str) -> None:
             )
 
         for c in d.get("connections", []):
-            connected = c.get("connected", {})
-            connecting = c.get("connecting", {})
+            connected = c.get("parent", {})
+            connecting = c.get("child", {})
             connected_piece = connected.get("piece")
-            connected_piece_id = (
+            parent_piece_id = (
                 connected_piece.get("id")
                 if isinstance(connected_piece, dict)
                 else connected_piece
             )
             connected_design_piece = connected.get("designPiece")
-            connected_design_piece_id = (
+            parent_design_piece_id = (
                 connected_design_piece.get("id")
                 if isinstance(connected_design_piece, dict)
                 else connected_design_piece
@@ -16205,13 +16205,13 @@ def _write_kit_to_sqlite(kit_data: KitData | dict, db_path: str) -> None:
                 else connected_connector
             )
             connecting_piece = connecting.get("piece")
-            connecting_piece_id = (
+            child_piece_id = (
                 connecting_piece.get("id")
                 if isinstance(connecting_piece, dict)
                 else connecting_piece
             )
             connecting_design_piece = connecting.get("designPiece")
-            connecting_design_piece_id = (
+            child_design_piece_id = (
                 connecting_design_piece.get("id")
                 if isinstance(connecting_design_piece, dict)
                 else connecting_design_piece
@@ -16224,18 +16224,18 @@ def _write_kit_to_sqlite(kit_data: KitData | dict, db_path: str) -> None:
             )
             cursor.execute(
                 """
-                INSERT INTO connection (id, connected_piece_id, connected_design_piece_id, connected_connector_id,
-                    connecting_piece_id, connecting_design_piece_id, connecting_connector_id,
+                INSERT INTO connection (id, parent_piece_id, parent_design_piece_id, connected_connector_id,
+                    child_piece_id, child_design_piece_id, connecting_connector_id,
                     gap, shift, rise, rotation, turn, tilt, u, v, description, design_id)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """,
                 (
                     c.get("id", str(uuid.uuid4())),
-                    connected_piece_id,
-                    connected_design_piece_id,
+                    parent_piece_id,
+                    parent_design_piece_id,
                     connected_connector_id,
-                    connecting_piece_id,
-                    connecting_design_piece_id,
+                    child_piece_id,
+                    child_design_piece_id,
                     connecting_connector_id,
                     c.get("gap", 0.0),
                     c.get("shift", 0.0),
@@ -16838,8 +16838,8 @@ def export_design_representation(
             piece_id: [] for piece_id in piece_by_id
         }
         for connection in connections:
-            connected_id = connection.get("connected", {}).get("piece", {}).get("id")
-            connecting_id = connection.get("connecting", {}).get("piece", {}).get("id")
+            connected_id = connection.get("parent", {}).get("piece", {}).get("id")
+            connecting_id = connection.get("child", {}).get("piece", {}).get("id")
             if connected_id in adjacency:
                 adjacency[connected_id].append((connection, connecting_id))
             if connecting_id in adjacency:
@@ -16925,7 +16925,7 @@ def export_design_representation(
                 if neighbor_id in visited:
                     continue
                 if (
-                    connection.get("connected", {}).get("piece", {}).get("id")
+                    connection.get("parent", {}).get("piece", {}).get("id")
                     != current_id
                 ):
                     continue
@@ -16935,11 +16935,11 @@ def export_design_representation(
                 child_type = _find_type_for_piece_dict(child_piece)
                 parent_connector = _find_connector_dict(
                     parent_type,
-                    connection.get("connected", {}).get("connector", {}).get("id"),
+                    connection.get("parent", {}).get("connector", {}).get("id"),
                 )
                 child_connector = _find_connector_dict(
                     child_type,
-                    connection.get("connecting", {}).get("connector", {}).get("id"),
+                    connection.get("child", {}).get("connector", {}).get("id"),
                 )
                 if parent_connector is not None and child_connector is not None:
                     piece_planes[neighbor_id] = computeChildPlaneDict(
@@ -17150,8 +17150,8 @@ def export_design_representation(
     for p in pieces:
         adjacency[p.id_] = []
     for conn in connections:
-        connected_id = conn.connected.piece.id_
-        connecting_id = conn.connecting.piece.id_
+        connected_id = conn.parent.piece.id_
+        connecting_id = conn.child.piece.id_
         if connected_id in adjacency:
             adjacency[connected_id].append((conn, connecting_id))
         if connecting_id in adjacency:
@@ -17201,7 +17201,7 @@ def export_design_representation(
         for conn, neighbor_id in adjacency.get(current_id, []):
             if neighbor_id in visited:
                 continue
-            is_parent = conn.connected.piece.id_ == current_id
+            is_parent = conn.parent.piece.id_ == current_id
             if not is_parent:
                 continue
 
@@ -17211,8 +17211,8 @@ def export_design_representation(
             child_piece = pieces_dict[child_id]
             parent_type = _get_type(parent_piece)
             child_type = _get_type(child_piece)
-            parent_connector = _get_connector(parent_type, conn.connected.connector)
-            child_connector = _get_connector(child_type, conn.connecting.connector)
+            parent_connector = _get_connector(parent_type, conn.parent.connector)
+            child_connector = _get_connector(child_type, conn.child.connector)
 
             if parent_connector and child_connector:
                 child_plane = computeChildPlane(
@@ -17987,10 +17987,10 @@ def _export_ifc_from_dict(
 
     # #region 🌪️Step 5: Connections As Port Relationships
     for connection in connections:
-        connected = connection.get("connected", {})
-        connecting = connection.get("connecting", {})
-        connected_piece_id = connected.get("piece", {}).get("id")
-        connecting_piece_id = connecting.get("piece", {}).get("id")
+        connected = connection.get("parent", {})
+        connecting = connection.get("child", {})
+        parent_piece_id = connected.get("piece", {}).get("id")
+        child_piece_id = connecting.get("piece", {}).get("id")
         connected_connector_id = (
             connected.get("connector", {}).get("id")
             if connected.get("connector")
@@ -18004,12 +18004,12 @@ def _export_ifc_from_dict(
 
         connected_port = None
         connecting_port = None
-        if connected_piece_id in ifc_connector_ports and connected_connector_id:
-            connected_port = ifc_connector_ports[connected_piece_id].get(
+        if parent_piece_id in ifc_connector_ports and connected_connector_id:
+            connected_port = ifc_connector_ports[parent_piece_id].get(
                 connected_connector_id
             )
-        if connecting_piece_id in ifc_connector_ports and connecting_connector_id:
-            connecting_port = ifc_connector_ports[connecting_piece_id].get(
+        if child_piece_id in ifc_connector_ports and connecting_connector_id:
+            connecting_port = ifc_connector_ports[child_piece_id].get(
                 connecting_connector_id
             )
 
@@ -18023,8 +18023,8 @@ def _export_ifc_from_dict(
             )
 
         # IfcRelConnectsElements
-        connected_elem = ifc_occurrences.get(connected_piece_id)
-        connecting_elem = ifc_occurrences.get(connecting_piece_id)
+        connected_elem = ifc_occurrences.get(parent_piece_id)
+        connecting_elem = ifc_occurrences.get(child_piece_id)
         if connected_elem is not None and connecting_elem is not None:
             ifc.create_entity(
                 "IfcRelConnectsElements",
@@ -18357,13 +18357,13 @@ def _export_ifc_from_entities(
 
     # #region 🌪️Step 5: Connections As Port Relationships
     for conn in connections:
-        connected_id = conn.connected.piece.id_
-        connecting_id = conn.connecting.piece.id_
+        connected_id = conn.parent.piece.id_
+        connecting_id = conn.child.piece.id_
         connected_connector_id = (
-            conn.connected.connector.id_ if conn.connected.connector else None
+            conn.parent.connector.id_ if conn.parent.connector else None
         )
         connecting_connector_id = (
-            conn.connecting.connector.id_ if conn.connecting.connector else None
+            conn.child.connector.id_ if conn.child.connector else None
         )
 
         connected_port = None
