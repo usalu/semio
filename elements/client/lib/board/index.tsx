@@ -42,6 +42,7 @@ import {
 	type BoardEventMap,
 	type BoardFixtureDropDetail,
 	type BoardFixtureV1,
+	type BoardHoverPayload,
 	type BoardNodeTextAlignment,
 	type BoardSelectionMethod,
 	type BoardSelectionMode,
@@ -64,6 +65,8 @@ export interface BoardCanvasProps {
 	fixtureDragDrop?: boolean;
 	height?: number;
 	onFixtureDrop?: (detail: BoardFixtureDropDetail) => void;
+	/** @emoji 🖱️ Fires after pointer-driven hit tests (same cadence as canvas moves); use for tooltips and status. */
+	onHover?: (payload: BoardHoverPayload) => void;
 	onReady?: (renderer: BoardRenderer) => void;
 	renderMode?: RenderMode;
 	selectionMethod?: BoardSelectionMethod;
@@ -406,7 +409,7 @@ export function syncBoardScene(renderer: BoardRenderer, descriptor: BoardSceneDe
 //#endregion 🔖Scene Sync
 
 //#region 🔖HostMountBridge
-/** @emoji 🌉 Secondary host root per {@link BoardRenderer}; syncs JSX `children`, flushes {@link BoardRenderer.render}, then applies `camera` to WASM in one layout pass. */
+/** @emoji 🌉 Secondary host root per {@link BoardRenderer}; runs the reconciler bridge then {@link syncBoardScene} so imperative ids match JSX under nested hosts and `act()`. */
 function BoardHostSubtree({
 	camera,
 	children,
@@ -434,7 +437,8 @@ function BoardHostSubtree({
 		const cy = camera?.y ?? 0;
 		const cz = camera?.zoom ?? 1;
 		renderer.setCamera(cx, cy, cz);
-	}, [Bridge, camera?.x, camera?.y, camera?.zoom, children, renderer]);
+		syncBoardScene(renderer, buildBoardSceneDescriptor(children));
+	}, [camera?.x, camera?.y, camera?.zoom, children, renderer]);
 
 	useLayoutEffect(
 		() => () => {
@@ -461,6 +465,7 @@ export function BoardCanvas({
 	fixtureDragDrop,
 	height,
 	onFixtureDrop,
+	onHover,
 	onReady,
 	renderMode,
 	selectionMethod,
@@ -577,6 +582,13 @@ export function BoardCanvas({
 	}, [children, contextRenderer]);
 
 	useEffect(() => {
+		if (!contextRenderer || !onHover) {
+			return () => undefined;
+		}
+		return contextRenderer.on("hover", onHover);
+	}, [contextRenderer, onHover]);
+
+	useEffect(() => {
 		if (!contextRenderer) {
 			return () => undefined;
 		}
@@ -590,11 +602,12 @@ export function BoardCanvas({
 	}, [contextMenu, contextRenderer]);
 
 	useLayoutEffect(() => {
-		if (!canvasRef.current || rendererRef.current) {
+		if (!canvasRef.current) {
 			return;
 		}
+		const canvas = canvasRef.current;
 		const renderer = new BoardRenderer({
-			canvas: canvasRef.current,
+			canvas,
 			renderMode,
 			selection: { method: selectionMethod, mode: selectionMode, target: selectionTarget },
 			worldRasterTiling,
@@ -603,14 +616,24 @@ export function BoardCanvas({
 		activeBoardRenderer = renderer;
 		setContextRenderer(renderer);
 		return () => {
-			setContextRenderer(null);
+			flushSync(() => {
+				setContextRenderer(null);
+			});
 			renderer.dispose();
 			if (activeBoardRenderer === renderer) {
 				activeBoardRenderer = null;
 			}
 			rendererRef.current = null;
 		};
-	}, [renderMode, worldRasterTiling]);
+	}, [renderMode]);
+
+	useLayoutEffect(() => {
+		const renderer = rendererRef.current;
+		if (!renderer) {
+			return;
+		}
+		renderer.setWorldRasterTilingOption(worldRasterTiling);
+	}, [worldRasterTiling]);
 
 	useEffect(() => {
 		if (!contextRenderer) {
@@ -755,7 +778,7 @@ export function useSelection(): BoardSelectionSnapshot {
 	return useSyncExternalStore(renderer.subscribeSelection, renderer.getSelectionSnapshot, renderer.getSelectionSnapshot);
 }
 
-/** 📡 Bind a board event listener with stable cleanup semantics (`fixtureDrop` fires after a valid in-app fixture drag lands via {@link BoardCanvasProps.fixtureDragDrop}). */
+/** 📡 Bind a board event listener with stable cleanup semantics (`fixtureDrop`, `hover` with {@link BoardHoverPayload}, `contextmenu`, …). */
 export function useBoardEvent<TKey extends keyof BoardEventMap>(
 	name: TKey,
 	handler: (payload: BoardEventMap[TKey]) => void,
@@ -1090,6 +1113,7 @@ if (boardReactVitest) {
 			document.body.appendChild(container);
 			const root = createRoot(container);
 			let readyRenderer: BoardRenderer | null = null;
+			const onReadyNoop = (): void => undefined;
 
 			await act(async () => {
 				root.render(
@@ -1119,7 +1143,13 @@ if (boardReactVitest) {
 
 			await act(async () => {
 				root.render(
-					<BoardCanvas camera={{ x: 20, y: 10, zoom: 1.2 }} height={480} onReady={() => undefined} renderMode="headless-test" width={640}>
+					<BoardCanvas
+						camera={{ x: 20, y: 10, zoom: 1.2 }}
+						height={480}
+						onReady={onReadyNoop}
+						renderMode="headless-test"
+						width={640}
+					>
 						<Node draggable id="a" radius={28} x={120} y={40}>
 							<Handle angle={0} id="a.out" />
 						</Node>
@@ -1131,6 +1161,19 @@ if (boardReactVitest) {
 				);
 				await Promise.resolve();
 			});
+			/** Secondary host commit can trail the outer `act` tick; mirror JSX into the imperative scene before reading coordinates. */
+			const movedDescriptor = buildBoardSceneDescriptor(
+				<>
+					<Node draggable id="a" radius={28} x={120} y={40}>
+						<Handle angle={0} id="a.out" />
+					</Node>
+					<Node id="b" radius={28} x={180} y={0}>
+						<Handle angle={Math.PI} id="b.in" />
+					</Node>
+					<Edge from="a.out" id="edge-1" to="b.in" />
+				</>,
+			);
+			syncBoardScene(createdRenderer, movedDescriptor);
 			const canvasAfterMove = container.querySelector("canvas");
 			const rendererAfterMove = requireRenderer(
 				(canvasAfterMove as HTMLCanvasElement & { __boardRenderer?: BoardRenderer | undefined }).__boardRenderer,

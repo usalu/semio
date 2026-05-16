@@ -1,6 +1,14 @@
 {
   "id": "2026/05/16/RUST-CANVAS-WORLD-TILE",
   "title": "Rust Canvas World Clip Tiling",
-  "summary": "Enable advanced world-space clip tiling in Vello build_vector_scene; wire worldRasterTiling from TS; adjust dataset/specs.",
-  "goal": "elements"
+  "summary": "Vello path uses world-space clip tiles (256wu) with per-tile cull + Vello clip layers when world_raster_tiling is world-clip (default). Wired setWorldRasterTiling from BoardRenderer; data-board-world-tiling on canvas; Storybook specs aligned. BoardCanvas mount effect deps fixed (renderMode only) + tiling sync effect. Repo MCP unavailable this session.",
+  "goal": "elements",
+  "status": "closed",
+  "files": [
+    "elements/client/lib/board/rs/lib.rs",
+    "elements/client/lib/board/rs/pkg/*",
+    "elements/client/lib/board/index.ts",
+    "elements/client/lib/board/index.tsx",
+    ".storybook/board.spec.ts"
+  ]
 }

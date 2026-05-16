@@ -313,6 +313,7 @@ test("board nakagin fixture: json scene hub piece selects", async ({ page }) => 
 
 test("board world-clip: raster mode, node selection, handle hit", async ({ page }) => {
 	const canvas = await expectBoardStory(page, "elements-board--world-tile-clip");
+	await expect(canvas).toHaveAttribute("data-board-raster", "gpu");
 	await expect(canvas).toHaveAttribute("data-board-world-tiling", "world-clip");
 
 	await clickBoardObject(page, "alpha");

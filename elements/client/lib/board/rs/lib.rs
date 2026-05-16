@@ -1412,6 +1412,10 @@ mod board_host {
 			let nx = world_before.x - (sx - self.width as f64 / 2.0) / next_zoom;
 			let ny = world_before.y - (sy - self.height as f64 / 2.0) / next_zoom;
 			self.set_camera(nx, ny, next_zoom);
+			if matches!(self.interaction, Interaction::None) {
+				let world = self.screen_to_world(screen);
+				self.update_hover_from_world(world);
+			}
 		}
 
 		pub fn delete_selection(&mut self) {
@@ -1636,9 +1640,11 @@ mod board_host {
 					self.set_selection_ids(&ids);
 				}
 				self.set_selection_screen_preview(None);
+				self.update_hover_from_world(world);
 				return;
 			}
 			self.interaction = Interaction::None;
+			self.update_hover_from_world(world);
 		}
 
 		pub fn pointer_leave_screen(&mut self) {

@@ -1,11 +1,15 @@
 {
   "title": "Board Unified Selection And Background Clear",
   "emoji": "🎯",
-  "status": "open",
+  "status": "closed",
   "description": "Single selection set for nodes, edges, and handles; background click deselects; area marquee includes handles; BoardEngine extend pick.",
-  "summary": "",
+  "summary": "BoardHost: background pointer-up without drag clears selection (screen distance < 4px); rectangle/lasso area selection adds handles when target is nodes&edges only; pointer_up uses start_screen vs end_screen for click detection. BoardEngine: pointer_down(x,y,extend_selection) merges mixed kinds when extend is true. Vitest: background click clears, marquee includes handles. Rust host/engine tests added. React test: stable onReady + syncBoardScene after second render so imperative scene matches JSX (nested host vs act timing). WASM rebuilt.",
   "github": { "issue": "" },
   "goal": "",
   "sessions": [],
-  "files": []
+  "files": [
+    "elements/client/lib/board/rs/lib.rs",
+    "elements/client/lib/board/index.ts",
+    "elements/client/lib/board/index.tsx"
+  ]
 }

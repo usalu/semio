@@ -153,13 +153,25 @@ export interface BoardFixtureV1 {
 	schema: string;
 }
 
+/** @emoji 🖱️ Hit-under-pointer payload for {@link BoardEventMap.hover} (tooltips, status, …). */
+export interface BoardHoverPayload {
+	clientX: number;
+	clientY: number;
+	id: string | null;
+	/** @emoji 📐 Canvas-local CSS pixels passed to {@link BoardRenderer.screenToWorld}. */
+	screenX: number;
+	screenY: number;
+	worldX: number;
+	worldY: number;
+}
+
 export interface BoardEventMap {
 	camera: CameraState;
 	contextmenu: { clientX: number; clientY: number; id: string | null; x: number; y: number };
 	edgeCreate: { id: string; from: string; to: string };
 	edgeDelete: { id: string };
 	fixtureDrop: BoardFixtureDropDetail;
-	hover: { id: string | null };
+	hover: BoardHoverPayload;
 	invalidate: undefined;
 	nodeDelete: { id: string };
 	nodeMove: { id: string; x: number; y: number };
@@ -1180,6 +1192,10 @@ export class BoardScene {
 
 	add(object: BoardObject): this {
 		if (object instanceof Node) {
+			const prior = this.nodes.get(object.id);
+			if (prior && prior !== object) {
+				this.remove(prior);
+			}
 			this.nodes.set(object.id, object);
 			object.parent = this;
 			object.attachRenderer(this.renderer);
@@ -1302,6 +1318,10 @@ export class BoardRenderer {
 	private emitter = new TypedEmitter<BoardEventMap>();
 	private frameListeners = new Set<FrameListener>();
 	private hoveredId: string | null = null;
+	private lastPointerClientX = 0;
+	private lastPointerClientY = 0;
+	private lastPointerScreenX = 0;
+	private lastPointerScreenY = 0;
 	private invalidated = true;
 	private isDisposed = false;
 	private lastRenderTimestamp: number | null = null;
@@ -1323,7 +1343,7 @@ export class BoardRenderer {
 	private height = 1;
 	private textOverlayCanvas: HTMLCanvasElement | null = null;
 
-	readonly worldRasterTiling: WorldRasterTilingKind;
+	worldRasterTiling: WorldRasterTilingKind;
 
 	constructor(options: {
 		canvas?: HTMLCanvasElement | null;
@@ -1337,6 +1357,9 @@ export class BoardRenderer {
 		this.worldRasterTiling = options.worldRasterTiling ?? "world-clip";
 		this.scene = new BoardScene(this);
 		this.session = new BoardSession();
+		const initialSel = this.selectionOptions;
+		this.session.setSelectionOptions(initialSel.method, initialSel.mode, initialSel.target);
+		this.applyWasmDrainToScene(this.session.drainEventsJson());
 		this.attachCanvasListeners();
 		if (this.canvas) {
 			(this.canvas as BoardCanvasElement).__boardRenderer = this;
@@ -1392,6 +1415,17 @@ export class BoardRenderer {
 		this.selectionOptions = next;
 		this.session.setSelectionOptions(next.method, next.mode, next.target);
 		this.applyWasmDrainToScene(this.session.drainEventsJson());
+		this.markDirty();
+	}
+
+	/** @emoji 🧩 Updates world-space Vello clip tiling mode (`none` | `world-clip`) without recreating the renderer shell. */
+	setWorldRasterTilingOption(kind: WorldRasterTilingKind | undefined): void {
+		const next = kind ?? "world-clip";
+		if (this.worldRasterTiling === next) {
+			return;
+		}
+		this.worldRasterTiling = next;
+		this.session.setWorldRasterTiling(next);
 		this.markDirty();
 	}
 
@@ -1506,10 +1540,6 @@ export class BoardRenderer {
 		this.invalidated = true;
 		this.emit("invalidate", undefined);
 		if (this.renderMode === "headless-test") {
-			if (this.batchDepth > 0) {
-				return;
-			}
-			this.render(globalThis.performance?.now?.() ?? Date.now());
 			return;
 		}
 		if (this.rafId !== null) {
@@ -1936,7 +1966,27 @@ export class BoardRenderer {
 			return;
 		}
 		this.hoveredId = id;
-		this.emit("hover", { id });
+	}
+
+	/** @emoji 📡 Emits {@link BoardEventMap.hover} using the last recorded pointer and current {@link BoardRenderer.hoveredId}. */
+	private publishHover(): void {
+		const world = this.screenToWorld({ x: this.lastPointerScreenX, y: this.lastPointerScreenY });
+		this.emit("hover", {
+			clientX: this.lastPointerClientX,
+			clientY: this.lastPointerClientY,
+			id: this.hoveredId,
+			screenX: this.lastPointerScreenX,
+			screenY: this.lastPointerScreenY,
+			worldX: world.x,
+			worldY: world.y,
+		});
+	}
+
+	private recordPointerClient(clientX: number, clientY: number, screenX: number, screenY: number): void {
+		this.lastPointerClientX = clientX;
+		this.lastPointerClientY = clientY;
+		this.lastPointerScreenX = screenX;
+		this.lastPointerScreenY = screenY;
 	}
 
 	private deleteSelectedObjects(): void {
@@ -2004,8 +2054,10 @@ export class BoardRenderer {
 		const rect = this.canvas.getBoundingClientRect();
 		const sx = event.clientX - rect.left;
 		const sy = event.clientY - rect.top;
+		this.recordPointerClient(event.clientX, event.clientY, sx, sy);
 		this.session.pointerMoveScreen(sx, sy);
 		this.applyWasmDrainToScene(this.session.drainEventsJson());
+		this.publishHover();
 		const world = this.screenToWorld({ x: sx, y: sy });
 		this.emit("contextmenu", { clientX: event.clientX, clientY: event.clientY, id: this.hoveredId, x: world.x, y: world.y });
 		this.invalidate();
@@ -2025,8 +2077,12 @@ export class BoardRenderer {
 		}
 		event.preventDefault();
 		const rect = this.canvas.getBoundingClientRect();
-		this.session.pointerDownScreen(event.clientX - rect.left, event.clientY - rect.top, event.button, event.shiftKey);
+		const sx = event.clientX - rect.left;
+		const sy = event.clientY - rect.top;
+		this.recordPointerClient(event.clientX, event.clientY, sx, sy);
+		this.session.pointerDownScreen(sx, sy, event.button, event.shiftKey);
 		this.applyWasmDrainToScene(this.session.drainEventsJson());
+		this.publishHover();
 		this.invalidate();
 	};
 
@@ -2035,8 +2091,12 @@ export class BoardRenderer {
 			return;
 		}
 		const rect = this.canvas.getBoundingClientRect();
-		this.session.pointerMoveScreen(event.clientX - rect.left, event.clientY - rect.top);
+		const sx = event.clientX - rect.left;
+		const sy = event.clientY - rect.top;
+		this.recordPointerClient(event.clientX, event.clientY, sx, sy);
+		this.session.pointerMoveScreen(sx, sy);
 		this.applyWasmDrainToScene(this.session.drainEventsJson());
+		this.publishHover();
 		this.invalidate();
 	};
 
@@ -2045,17 +2105,28 @@ export class BoardRenderer {
 			return;
 		}
 		const rect = this.canvas.getBoundingClientRect();
-		this.session.pointerUpScreen(event.clientX - rect.left, event.clientY - rect.top);
+		const sx = event.clientX - rect.left;
+		const sy = event.clientY - rect.top;
+		this.recordPointerClient(event.clientX, event.clientY, sx, sy);
+		this.session.pointerUpScreen(sx, sy);
 		this.applyWasmDrainToScene(this.session.drainEventsJson());
+		this.publishHover();
 		if (typeof event.pointerId === "number") {
 			this.canvas.releasePointerCapture?.(event.pointerId);
 		}
 		this.invalidate();
 	};
 
-	private readonly handlePointerLeave = (): void => {
+	private readonly handlePointerLeave = (event: PointerEvent): void => {
+		if (this.canvas) {
+			const rect = this.canvas.getBoundingClientRect();
+			const sx = event.clientX - rect.left;
+			const sy = event.clientY - rect.top;
+			this.recordPointerClient(event.clientX, event.clientY, sx, sy);
+		}
 		this.session.pointerLeaveScreen();
 		this.applyWasmDrainToScene(this.session.drainEventsJson());
+		this.publishHover();
 		this.invalidate();
 	};
 
@@ -2065,8 +2136,12 @@ export class BoardRenderer {
 		}
 		event.preventDefault();
 		const rect = this.canvas.getBoundingClientRect();
-		this.session.wheelScreen(event.clientX - rect.left, event.clientY - rect.top, event.deltaY);
+		const sx = event.clientX - rect.left;
+		const sy = event.clientY - rect.top;
+		this.recordPointerClient(event.clientX, event.clientY, sx, sy);
+		this.session.wheelScreen(sx, sy, event.deltaY);
 		this.applyWasmDrainToScene(this.session.drainEventsJson());
+		this.publishHover();
 		this.invalidate();
 	};
 }
@@ -2180,6 +2255,28 @@ if (boardVitest) {
 		});
 		return { canvas, context };
 	}
+
+	describe("board hover publication", () => {
+		it("emits hover with hit id and pointer/world coordinates after pointermove", () => {
+			const { canvas } = createMockCanvas();
+			const renderer = new BoardRenderer({ canvas, renderMode: "headless-test" });
+			const hovers: BoardHoverPayload[] = [];
+			renderer.on("hover", (h) => hovers.push(h));
+			const node = new Node({ id: "hover-node", radius: 24, x: 0, y: 0 });
+			renderer.scene.add(node);
+			renderer.render();
+			const p = renderer.worldToScreen({ x: 0, y: 0 });
+			canvas.dispatchEvent(
+				new MouseEvent("pointermove", { bubbles: true, clientX: p.x, clientY: p.y }),
+			);
+			expect(hovers.length).toBeGreaterThanOrEqual(1);
+			const last = hovers.at(-1)!;
+			expect(last.id).toBe("hover-node");
+			expect(last.clientX).toBeCloseTo(p.x);
+			expect(last.worldX).toBeCloseTo(0, 1);
+			renderer.dispose();
+		});
+	});
 
 	describe("board geometry helpers", () => {
 		it("places cubic edge control arms along circle normals at the anchors", () => {
@@ -3363,12 +3460,13 @@ export function createBoardHostMount(renderer: BoardRenderer): BoardHostMount {
 	);
 }
 
-/** @emoji 🔄 Schedules host work and ties post-commit to {@link BoardRenderer.invalidate}. */
+/** @emoji 🔄 Commits the secondary host synchronously (see {@link boardSceneHost.flushSyncWork}) so `useLayoutEffect` + `act()` observe updated scene state before paint. */
 export function updateBoardHostMount(root: BoardHostMount, element: ReactElement | null, parent: null): void {
-	boardSceneHost.updateContainer(element, root, parent, () => {
+	boardSceneHost.updateContainerSync(element, root, parent, () => {
 		const renderer = root.containerInfo;
 		renderer.invalidate();
 	});
+	boardSceneHost.flushSyncWork();
 }
 
 /** @emoji 🧹 Unmounts the host subtree without disposing {@link BoardRenderer}. */
