@@ -33,10 +33,14 @@ import {
 	Handle as BoardHandleObject,
 	Node as BoardNodeObject,
 	BOARD_FIXTURE_DRAG_V1_MIME,
+	BOARD_NODE_TEXT_ALIGNMENT_DEFAULT,
+	BOARD_NODE_TEXT_FONT_FAMILY_DEFAULT,
+	BOARD_NODE_TEXT_FONT_PX_DEFAULT,
 	decodeBoardFixtureFromDragV1,
 	ensureElementsBoardWasmLoaded,
 	type BoardEventMap,
 	type BoardFixtureV1,
+	type BoardNodeTextAlignment,
 	type BoardSelectionMethod,
 	type BoardSelectionMode,
 	type BoardSelectionSnapshot,
@@ -81,6 +85,12 @@ export type BoardNodeCircleProps = {
 	text?: string;
 	/** @emoji 📏 When true, caption scales to fit inside the node on the text overlay canvas. */
 	textAutofit?: boolean;
+	/** @emoji 🧭 Caption alignment inside the node box when not autofitting. */
+	textAlignment?: BoardNodeTextAlignment;
+	/** @emoji 🔤 CSS font family for overlay caption. */
+	textFontFamily?: string;
+	/** @emoji 🔤 Caption size in layout px when not autofitting. */
+	textFontSize?: number;
 	userData?: Record<string, unknown>;
 	visible?: boolean;
 	x: number;
@@ -99,6 +109,12 @@ export type BoardNodeRectangleProps = {
 	text?: string;
 	/** @emoji 📏 When true, caption scales to fit inside the node on the text overlay canvas. */
 	textAutofit?: boolean;
+	/** @emoji 🧭 Caption alignment inside the node box when not autofitting. */
+	textAlignment?: BoardNodeTextAlignment;
+	/** @emoji 🔤 CSS font family for overlay caption. */
+	textFontFamily?: string;
+	/** @emoji 🔤 Caption size in layout px when not autofitting. */
+	textFontSize?: number;
 	userData?: Record<string, unknown>;
 	visible?: boolean;
 	width: number;
@@ -231,6 +247,14 @@ function applyNodeProps(renderer: BoardRenderer, instance: BoardNodeObject, desc
 	instance.userData = { ...(descriptor.userData ?? {}) };
 	instance.visible = descriptor.visible ?? true;
 	instance.textAutofit = descriptor.textAutofit ?? false;
+	instance.textAlignment = descriptor.textAlignment ?? BOARD_NODE_TEXT_ALIGNMENT_DEFAULT;
+	instance.textFontFamily =
+		typeof descriptor.textFontFamily === "string" && descriptor.textFontFamily.trim() !== ""
+			? descriptor.textFontFamily.trim()
+			: BOARD_NODE_TEXT_FONT_FAMILY_DEFAULT;
+	const dsz = descriptor.textFontSize;
+	instance.textFontSize =
+		typeof dsz === "number" && Number.isFinite(dsz) && dsz > 0 ? dsz : BOARD_NODE_TEXT_FONT_PX_DEFAULT;
 	renderer.applyNodePositionFromProps(instance.id, descriptor.x, descriptor.y, instance);
 	instance.setText(descriptor.text ?? null);
 	if (descriptor.shape === "rectangle") {
@@ -280,7 +304,10 @@ function newBoardNodeFromDescriptor(nodeDescriptor: NodeDescriptor): BoardNodeOb
 			shape: "rectangle",
 			style: nodeDescriptor.style,
 			text: nodeDescriptor.text,
+			textAlignment: nodeDescriptor.textAlignment,
 			textAutofit: nodeDescriptor.textAutofit,
+			textFontFamily: nodeDescriptor.textFontFamily,
+			textFontSize: nodeDescriptor.textFontSize,
 			userData: nodeDescriptor.userData,
 			visible: nodeDescriptor.visible,
 			width: nodeDescriptor.width,
@@ -295,7 +322,10 @@ function newBoardNodeFromDescriptor(nodeDescriptor: NodeDescriptor): BoardNodeOb
 		selected: nodeDescriptor.selected,
 		style: nodeDescriptor.style,
 		text: nodeDescriptor.text,
+		textAlignment: nodeDescriptor.textAlignment,
 		textAutofit: nodeDescriptor.textAutofit,
+		textFontFamily: nodeDescriptor.textFontFamily,
+		textFontSize: nodeDescriptor.textFontSize,
 		userData: nodeDescriptor.userData,
 		visible: nodeDescriptor.visible,
 		x: nodeDescriptor.x,
@@ -807,7 +837,14 @@ if (boardReactVitest) {
 		});
 
 		it("emits contextmenu with hovered id after wasm hit pass", () => {
-			const { canvas } = createMockCanvas();
+			const restoreCanvas = installCanvasStub();
+			const canvas = document.createElement("canvas");
+			Object.defineProperty(canvas, "clientWidth", { configurable: true, value: 800 });
+			Object.defineProperty(canvas, "clientHeight", { configurable: true, value: 600 });
+			Object.defineProperty(canvas, "getBoundingClientRect", {
+				configurable: true,
+				value: () => ({ bottom: 600, height: 600, left: 0, right: 800, top: 0, width: 800, x: 0, y: 0 }),
+			});
 			const renderer = new BoardRenderer({ canvas, renderMode: "headless-test" });
 			syncBoardScene(
 				renderer,
@@ -825,10 +862,18 @@ if (boardReactVitest) {
 			expect(payloads).toHaveLength(1);
 			expect(payloads[0]?.id).toBe("hit");
 			renderer.dispose();
+			restoreCanvas();
 		});
 
 		it("emits contextmenu with null id when pointer misses scene objects", () => {
-			const { canvas } = createMockCanvas();
+			const restoreCanvas = installCanvasStub();
+			const canvas = document.createElement("canvas");
+			Object.defineProperty(canvas, "clientWidth", { configurable: true, value: 800 });
+			Object.defineProperty(canvas, "clientHeight", { configurable: true, value: 600 });
+			Object.defineProperty(canvas, "getBoundingClientRect", {
+				configurable: true,
+				value: () => ({ bottom: 600, height: 600, left: 0, right: 800, top: 0, width: 800, x: 0, y: 0 }),
+			});
 			const renderer = new BoardRenderer({ canvas, renderMode: "headless-test" });
 			syncBoardScene(
 				renderer,
@@ -845,6 +890,7 @@ if (boardReactVitest) {
 			canvas.dispatchEvent(new MouseEvent("contextmenu", { bubbles: true, clientX: far.x, clientY: far.y }));
 			expect(ids).toEqual([null]);
 			renderer.dispose();
+			restoreCanvas();
 		});
 
 		it("buildBoardSceneDescriptor ignores opaque components (use secondary host for nested composition)", () => {

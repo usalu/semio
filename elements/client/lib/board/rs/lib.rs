@@ -691,46 +691,71 @@ mod board_host {
 
 		pub fn resolve_hit_world(&self, point: Point) -> Option<String> {
 			let zoom = self.camera.zoom;
-			for h in self.handles.values().rev() {
-				if !h.visible {
-					continue;
-				}
-				let pos = self.handle_world_pos(h)?;
-				let tol = (HANDLE_HIT_TOLERANCE_PX / zoom) + h.radius;
-				if distance_between(point, pos) <= tol {
-					return Some(h.id.clone());
-				}
-			}
-			for n in self.nodes.values().rev() {
-				if !n.visible {
-					continue;
-				}
-				match n.shape {
-					NodeShape::Rectangle => {
-						let hw = n.width / 2.0;
-						let hh = n.height / 2.0;
-						if (point.x - n.x).abs() <= hw && (point.y - n.y).abs() <= hh {
-							return Some(n.id.clone());
-						}
+			let t = self.selection_options.target.as_str();
+			if t == "nodes" || t == "nodes&edges" {
+				for h in self.handles.values().rev() {
+					if !h.visible {
+						continue;
 					}
-					NodeShape::Circle => {
-						if distance_between(point, Point::new(n.x, n.y)) <= n.radius {
-							return Some(n.id.clone());
-						}
+					let pos = self.handle_world_pos(h)?;
+					let tol = (HANDLE_HIT_TOLERANCE_PX / zoom) + h.radius;
+					if distance_between(point, pos) <= tol {
+						return Some(h.id.clone());
 					}
 				}
-			}
-			for e in self.edges.values().rev() {
-				if !e.visible {
-					continue;
+				for n in self.nodes.values().rev() {
+					if !n.visible {
+						continue;
+					}
+					match n.shape {
+						NodeShape::Rectangle => {
+							let hw = n.width / 2.0;
+							let hh = n.height / 2.0;
+							if (point.x - n.x).abs() <= hw && (point.y - n.y).abs() <= hh {
+								return Some(n.id.clone());
+							}
+						}
+						NodeShape::Circle => {
+							if distance_between(point, Point::new(n.x, n.y)) <= n.radius {
+								return Some(n.id.clone());
+							}
+						}
+					}
 				}
-				if let Some(c) = self.edge_curve(e) {
-					if distance_point_to_cubic_bezier(point, c, 18) <= EDGE_HIT_TOLERANCE_PX / zoom {
-						return Some(e.id.clone());
+			}
+			if t == "edges" || t == "nodes&edges" {
+				for e in self.edges.values().rev() {
+					if !e.visible {
+						continue;
+					}
+					if let Some(c) = self.edge_curve(e) {
+						if distance_point_to_cubic_bezier(point, c, 18) <= EDGE_HIT_TOLERANCE_PX / zoom {
+							return Some(e.id.clone());
+						}
 					}
 				}
 			}
 			None
+		}
+
+		fn merge_pick_into_selection(initial: &BTreeSet<String>, hit_id: &str, mode: &str) -> BTreeSet<String> {
+			let mut next = initial.clone();
+			match mode {
+				"additive" => {
+					next.insert(hit_id.to_string());
+				}
+				"subtractive" => {
+					next.remove(hit_id);
+				}
+				_ => {
+					if next.contains(hit_id) {
+						next.remove(hit_id);
+					} else {
+						next.insert(hit_id.to_string());
+					}
+				}
+			}
+			next
 		}
 
 		pub fn sync_descriptor(&mut self, desc: &SceneDescriptorJson) {
@@ -1210,7 +1235,9 @@ mod board_host {
 							.collect();
 						let drag_group = members.contains(&nid) && members.len() > 1;
 						if !drag_group {
-							self.set_selection_ids(std::slice::from_ref(&nid));
+							let next = Self::merge_pick_into_selection(&self.selection, &nid, self.selection_options.mode.as_str());
+							let ids: Vec<_> = next.iter().cloned().collect();
+							self.set_selection_ids(&ids);
 						}
 						let mut start_positions = BTreeMap::new();
 						for id in if drag_group { members.as_slice() } else { std::slice::from_ref(&nid) } {

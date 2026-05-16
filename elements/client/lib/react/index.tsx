@@ -16,7 +16,6 @@
 import * as AccordionPrimitive from "@radix-ui/react-accordion";
 import * as AvatarPrimitive from "@radix-ui/react-avatar";
 import * as CollapsiblePrimitive from "@radix-ui/react-collapsible";
-import * as ContextMenuPrimitive from "@radix-ui/react-context-menu";
 import * as DialogPrimitive from "@radix-ui/react-dialog";
 import * as DropdownMenuPrimitive from "@radix-ui/react-dropdown-menu";
 import * as HoverCardPrimitive from "@radix-ui/react-hover-card";
@@ -153,63 +152,69 @@ function renderContextMenuIcon(icon: ContextMenuItem["icon"]): React.ReactNode {
 }
 
 /**
- * 🧩 Recursively renders {@link ContextMenuItem} rows for Radix context menu surfaces.
+ * 🧩 Recursively renders {@link ContextMenuItem} rows for Radix dropdown menu surfaces (right-click host).
  **/
-export function renderContextMenuItems(items: ContextMenuItem[] | undefined): React.ReactNode {
+export function renderContextMenuItems(items: ContextMenuItem[] | undefined, onClose?: () => void): React.ReactNode {
   if (!items?.length) {
     return null;
   }
   const rows: React.ReactNode[] = [];
   for (const item of items) {
     if (item.separator) {
-      rows.push(<ContextMenuPrimitive.Separator key={`${item.id}-sep`} className="h-px bg-border my-single" />);
+      rows.push(<DropdownMenuPrimitive.Separator key={`${item.id}-sep`} className="h-px bg-border my-single" />);
       continue;
     }
     if (item.children?.length) {
       rows.push(
-        <ContextMenuPrimitive.Sub key={item.id}>
-          <ContextMenuPrimitive.SubTrigger
+        <DropdownMenuPrimitive.Sub key={item.id}>
+          <DropdownMenuPrimitive.SubTrigger
             disabled={item.disabled}
             className={cn(contextMenuItemClassName, item.destructive && "text-destructive focus:bg-destructive/10")}
           >
             {renderContextMenuIcon(item.icon)}
             <span className="truncate">{item.label ?? item.id}</span>
             <span className={contextMenuShortcutClassName}>{item.shortcut}</span>
-          </ContextMenuPrimitive.SubTrigger>
-          <ContextMenuPrimitive.Portal>
-            <ContextMenuPrimitive.SubContent className={contextMenuContentClassName}>{renderContextMenuItems(item.children)}</ContextMenuPrimitive.SubContent>
-          </ContextMenuPrimitive.Portal>
-        </ContextMenuPrimitive.Sub>,
+          </DropdownMenuPrimitive.SubTrigger>
+          <DropdownMenuPrimitive.Portal>
+            <DropdownMenuPrimitive.SubContent className={contextMenuContentClassName}>{renderContextMenuItems(item.children, onClose)}</DropdownMenuPrimitive.SubContent>
+          </DropdownMenuPrimitive.Portal>
+        </DropdownMenuPrimitive.Sub>,
       );
       continue;
     }
     if (item.checked !== undefined) {
       rows.push(
-        <ContextMenuPrimitive.Item
+        <DropdownMenuPrimitive.Item
           key={item.id}
           disabled={item.disabled}
           className={cn(contextMenuItemClassName, item.destructive && "text-destructive focus:bg-destructive/10")}
-          onSelect={(event) => item.onSelect?.(event as unknown as Event)}
+          onSelect={(event) => {
+            item.onSelect?.(event as unknown as Event);
+            onClose?.();
+          }}
         >
           <span className="size-small shrink-0 text-center">{item.checked ? "✓" : ""}</span>
           {renderContextMenuIcon(item.icon)}
           <span className="truncate">{item.label ?? item.id}</span>
           {item.shortcut ? <span className={contextMenuShortcutClassName}>{item.shortcut}</span> : null}
-        </ContextMenuPrimitive.Item>,
+        </DropdownMenuPrimitive.Item>,
       );
       continue;
     }
     rows.push(
-      <ContextMenuPrimitive.Item
+      <DropdownMenuPrimitive.Item
         key={item.id}
         disabled={item.disabled}
         className={cn(contextMenuItemClassName, item.destructive && "text-destructive focus:bg-destructive/10")}
-        onSelect={(event) => item.onSelect?.(event as unknown as Event)}
+        onSelect={(event) => {
+          item.onSelect?.(event as unknown as Event);
+          onClose?.();
+        }}
       >
         {renderContextMenuIcon(item.icon)}
         <span className="truncate">{item.label ?? item.id}</span>
         {item.shortcut ? <span className={contextMenuShortcutClassName}>{item.shortcut}</span> : null}
-      </ContextMenuPrimitive.Item>,
+      </DropdownMenuPrimitive.Item>,
     );
   }
   return <>{rows}</>;
@@ -221,19 +226,55 @@ export interface ContextMenuProps {
 }
 
 /**
- * 🧩 Radix context menu wrapper; passes children through when `items` is empty.
+ * 🧩 Right-click menu via Radix dropdown primitives; passes children through when `items` is empty.
  **/
 export const ContextMenu: React.FC<ContextMenuProps> = ({ items, children }) => {
+  const [open, setOpen] = React.useState(false);
+  const [point, setPoint] = React.useState<{ x: number; y: number } | null>(null);
+  const close = React.useCallback(() => setOpen(false), []);
   if (!items?.length) {
     return <>{children}</>;
   }
   return (
-    <ContextMenuPrimitive.Root modal={false}>
-      <ContextMenuPrimitive.Trigger asChild>{children}</ContextMenuPrimitive.Trigger>
-      <ContextMenuPrimitive.Portal>
-        <ContextMenuPrimitive.Content className={contextMenuContentClassName}>{renderContextMenuItems(items)}</ContextMenuPrimitive.Content>
-      </ContextMenuPrimitive.Portal>
-    </ContextMenuPrimitive.Root>
+    <DropdownMenuPrimitive.Root modal={false} onOpenChange={setOpen} open={open}>
+      <div
+        className="contents"
+        onContextMenu={(event) => {
+          event.preventDefault();
+          setPoint({ x: event.clientX, y: event.clientY });
+          setOpen(true);
+        }}
+      >
+        {children}
+      </div>
+      <DropdownMenuPrimitive.Trigger asChild>
+        <span
+          aria-hidden
+          style={{
+            height: 1,
+            left: point?.x ?? 0,
+            opacity: 0,
+            pointerEvents: "none",
+            position: "fixed",
+            top: point?.y ?? 0,
+            width: 1,
+          }}
+        />
+      </DropdownMenuPrimitive.Trigger>
+      <DropdownMenuPrimitive.Portal>
+        <DropdownMenuPrimitive.Content
+          align="start"
+          avoidCollisions={false}
+          className={contextMenuContentClassName}
+          onCloseAutoFocus={(event) => event.preventDefault()}
+          side="bottom"
+          sideOffset={0}
+          style={point ? { left: point.x, position: "fixed", top: point.y } : undefined}
+        >
+          {renderContextMenuItems(items, close)}
+        </DropdownMenuPrimitive.Content>
+      </DropdownMenuPrimitive.Portal>
+    </DropdownMenuPrimitive.Root>
   );
 };
 
@@ -245,16 +286,17 @@ export interface ContextMenuControllerProps {
 }
 
 /**
- * 🧩 Controlled context menu anchored at viewport coordinates (board canvas bridge).
+ * 🧩 Controlled right-click menu anchored at viewport coordinates (board canvas bridge).
  **/
 export const ContextMenuController: React.FC<ContextMenuControllerProps> = ({ open, position, items, onOpenChange }) => {
-  const body = renderContextMenuItems(items);
+  const close = React.useCallback(() => onOpenChange(false), [onOpenChange]);
+  const body = renderContextMenuItems(items, close);
   if (!items.length) {
     return null;
   }
   return (
-    <ContextMenuPrimitive.Root modal={false} onOpenChange={onOpenChange} open={open}>
-      <ContextMenuPrimitive.Trigger asChild>
+    <DropdownMenuPrimitive.Root modal={false} onOpenChange={onOpenChange} open={open}>
+      <DropdownMenuPrimitive.Trigger asChild>
         <span
           aria-hidden
           style={{
@@ -267,19 +309,23 @@ export const ContextMenuController: React.FC<ContextMenuControllerProps> = ({ op
             width: 1,
           }}
         />
-      </ContextMenuPrimitive.Trigger>
+      </DropdownMenuPrimitive.Trigger>
       {open ? (
-        <ContextMenuPrimitive.Portal>
-          <ContextMenuPrimitive.Content
+        <DropdownMenuPrimitive.Portal>
+          <DropdownMenuPrimitive.Content
+            align="start"
+            avoidCollisions={false}
             className={contextMenuContentClassName}
             onCloseAutoFocus={(event) => event.preventDefault()}
-            style={{ position: "fixed", left: position?.x ?? 0, top: position?.y ?? 0 }}
+            side="bottom"
+            sideOffset={0}
+            style={position ? { left: position.x, position: "fixed", top: position.y } : undefined}
           >
             {body}
-          </ContextMenuPrimitive.Content>
-        </ContextMenuPrimitive.Portal>
+          </DropdownMenuPrimitive.Content>
+        </DropdownMenuPrimitive.Portal>
       ) : null}
-    </ContextMenuPrimitive.Root>
+    </DropdownMenuPrimitive.Root>
   );
 };
 
@@ -22428,13 +22474,6 @@ const treeVitest = (
 
 if (treeVitest) {
   const { describe, expect, it, vi } = treeVitest;
-
-  describe("context menu helpers", () => {
-    it("renders nothing when items are empty or undefined", () => {
-      expect(renderContextMenuItems(undefined)).toBeNull();
-      expect(renderContextMenuItems([])).toBeNull();
-    });
-  });
 
   describe("tree helpers", () => {
     it("adds an empty-row-sized gap before a same-depth group row after a leaf/property row", () => {

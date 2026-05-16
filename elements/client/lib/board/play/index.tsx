@@ -245,7 +245,10 @@ function nakaginBoardMarkers(fixture: BoardFixtureV1, selectedIds: Set<string>):
 						shape="rectangle"
 						selected={selectedIds.has(node.id)}
 						text={node.text}
+						textAlignment={node.textAlignment}
 						textAutofit={node.textAutofit === true}
+						textFontFamily={node.textFontFamily}
+						textFontSize={node.textFontSize}
 						width={node.width}
 						x={node.x}
 						y={node.y}
@@ -269,7 +272,10 @@ function nakaginBoardMarkers(fixture: BoardFixtureV1, selectedIds: Set<string>):
 						radius={node.radius}
 						selected={selectedIds.has(node.id)}
 						text={node.text}
+						textAlignment={node.textAlignment}
 						textAutofit={node.textAutofit === true}
+						textFontFamily={node.textFontFamily}
+						textFontSize={node.textFontSize}
 						x={node.x}
 						y={node.y}
 					>

@@ -101,8 +101,14 @@ export interface BoardFixtureCircleNodeV1 {
 	radius: number;
 	shape?: "circle";
 	text?: string;
-	/** @emoji 📏 Optional: scale overlay text to fit inside the node. */
+	/** @emoji 📏 Optional: scale overlay text to fit inside the node; drawn at node center to avoid jitter. */
 	textAutofit?: boolean;
+	/** @emoji 🧭 Caption alignment inside the node box when not using autofit. */
+	textAlignment?: BoardNodeTextAlignment;
+	/** @emoji 🔤 Optional CSS font family for overlay caption. */
+	textFontFamily?: string;
+	/** @emoji 🔤 Optional caption size in layout px when not using autofit. */
+	textFontSize?: number;
 	x: number;
 	y: number;
 }
@@ -115,8 +121,14 @@ export interface BoardFixtureRectangleNodeV1 {
 	id: string;
 	shape: "rectangle";
 	text?: string;
-	/** @emoji 📏 Optional: scale overlay text to fit inside the node. */
+	/** @emoji 📏 Optional: scale overlay text to fit inside the node; drawn at node center to avoid jitter. */
 	textAutofit?: boolean;
+	/** @emoji 🧭 Caption alignment inside the node box when not using autofit. */
+	textAlignment?: BoardNodeTextAlignment;
+	/** @emoji 🔤 Optional CSS font family for overlay caption. */
+	textFontFamily?: string;
+	/** @emoji 🔤 Optional caption size in layout px when not using autofit. */
+	textFontSize?: number;
 	width: number;
 	x: number;
 	y: number;
@@ -169,8 +181,14 @@ export type CircleNodeOptions = BoardObjectOptions & {
 	radius: number;
 	shape?: "circle";
 	text?: string;
-	/** @emoji 📏 When true, overlay label scales to fit inside the circle (layout px). */
+	/** @emoji 📏 When true, overlay label scales to fit inside the circle (layout px); drawn at node center. */
 	textAutofit?: boolean;
+	/** @emoji 🧭 Caption alignment inside the node box when not using autofit. */
+	textAlignment?: BoardNodeTextAlignment;
+	/** @emoji 🔤 CSS font family for overlay caption. */
+	textFontFamily?: string;
+	/** @emoji 🔤 Caption size in layout px when not using autofit. */
+	textFontSize?: number;
 	x: number;
 	y: number;
 };
@@ -181,8 +199,14 @@ export type RectangleNodeOptions = BoardObjectOptions & {
 	height: number;
 	shape: "rectangle";
 	text?: string;
-	/** @emoji 📏 When true, overlay label scales to fit inside the rectangle (layout px). */
+	/** @emoji 📏 When true, overlay label scales to fit inside the rectangle (layout px); drawn at node center. */
 	textAutofit?: boolean;
+	/** @emoji 🧭 Caption alignment inside the node box when not using autofit. */
+	textAlignment?: BoardNodeTextAlignment;
+	/** @emoji 🔤 CSS font family for overlay caption. */
+	textFontFamily?: string;
+	/** @emoji 🔤 Caption size in layout px when not using autofit. */
+	textFontSize?: number;
 	width: number;
 	x: number;
 	y: number;
@@ -275,6 +299,29 @@ const DEFAULT_STYLES: Record<string, BoardStyle> = {
 	node: { fill: "#e2e8f0", stroke: "#0f172a", strokeWidth: 2 },
 	"node.selected": { fill: "#99f6e4", stroke: "#0f766e", strokeWidth: 3 },
 };
+
+/** @emoji 🧭 Caption anchor inside the node box (compass, origin at node center). */
+export const BOARD_NODE_TEXT_ALIGNMENTS = ["c", "e", "n", "ne", "nw", "s", "se", "sw", "w"] as const;
+export type BoardNodeTextAlignment = (typeof BOARD_NODE_TEXT_ALIGNMENTS)[number];
+
+/** @emoji ⬅️ Default: reading-order start at west edge, vertically centered (`w`). */
+export const BOARD_NODE_TEXT_ALIGNMENT_DEFAULT: BoardNodeTextAlignment = "w";
+
+/** @emoji 🔤 Default overlay caption size (layout px) when `textAutofit` is false. */
+export const BOARD_NODE_TEXT_FONT_PX_DEFAULT = 14;
+
+/** @emoji 🔤 Default sans stack for overlay captions. */
+export const BOARD_NODE_TEXT_FONT_FAMILY_DEFAULT = "system-ui,Segoe UI,sans-serif";
+
+/** @emoji ✅ True when `value` is a known {@link BoardNodeTextAlignment} token. */
+export function isBoardNodeTextAlignment(value: string): value is BoardNodeTextAlignment {
+	return (BOARD_NODE_TEXT_ALIGNMENTS as readonly string[]).includes(value);
+}
+
+/** @emoji 🖋️ Builds a `CanvasRenderingContext2D.font` string from size and family. */
+export function boardBuildCanvasFontSpec(px: number, fontFamily: string): string {
+	return `${px}px ${fontFamily}`;
+}
 
 function clamp(value: number, min: number, max: number): number {
 	return Math.min(max, Math.max(min, value));
@@ -388,6 +435,25 @@ function fixtureNodeDisplayText(node: Record<string, unknown>): string | undefin
 	return lab;
 }
 
+function fixtureOptionalTextFontFamily(node: Record<string, unknown>): string | undefined {
+	const raw = node.textFontFamily ?? node.fontFamily;
+	if (typeof raw !== "string") {
+		return undefined;
+	}
+	const trimmed = raw.trim();
+	return trimmed !== "" ? trimmed : undefined;
+}
+
+function fixtureOptionalTextFontSize(node: Record<string, unknown>): number | undefined {
+	const n = Number(node.textFontSize);
+	return Number.isFinite(n) && n > 0 ? n : undefined;
+}
+
+function fixtureOptionalTextAlignment(node: Record<string, unknown>): BoardNodeTextAlignment | undefined {
+	const v = node.textAlignment;
+	return typeof v === "string" && isBoardNodeTextAlignment(v) ? v : undefined;
+}
+
 /** @emoji 🧾 Validates unknown JSON into {@link BoardFixtureV1} or returns null. */
 export function parseBoardFixtureV1(raw: unknown): BoardFixtureV1 | null {
 	if (!raw || typeof raw !== "object") {
@@ -446,6 +512,9 @@ export function parseBoardFixtureV1(raw: unknown): BoardFixtureV1 | null {
 		}
 		const textFromJson = fixtureNodeDisplayText(node);
 		const textAutofit = node.textAutofit === true;
+		const textFontFamily = fixtureOptionalTextFontFamily(node);
+		const textFontSize = fixtureOptionalTextFontSize(node);
+		const textAlignment = fixtureOptionalTextAlignment(node);
 		const cad =
 			node.cad && typeof node.cad === "object"
 				? {
@@ -467,6 +536,9 @@ export function parseBoardFixtureV1(raw: unknown): BoardFixtureV1 | null {
 				...(cad !== undefined ? { cad } : {}),
 				...(textFromJson !== undefined ? { text: textFromJson } : {}),
 				...(textAutofit ? { textAutofit: true } : {}),
+				...(textFontFamily !== undefined ? { textFontFamily } : {}),
+				...(textFontSize !== undefined ? { textFontSize } : {}),
+				...(textAlignment !== undefined ? { textAlignment } : {}),
 				handles,
 				height,
 				id,
@@ -488,6 +560,9 @@ export function parseBoardFixtureV1(raw: unknown): BoardFixtureV1 | null {
 			...(cad !== undefined ? { cad } : {}),
 			...(textFromJson !== undefined ? { text: textFromJson } : {}),
 			...(textAutofit ? { textAutofit: true } : {}),
+			...(textFontFamily !== undefined ? { textFontFamily } : {}),
+			...(textFontSize !== undefined ? { textFontSize } : {}),
+			...(textAlignment !== undefined ? { textAlignment } : {}),
 			handles,
 			id,
 			radius,
@@ -575,6 +650,7 @@ export function boardFitTextFontPx(
 	maxH: number,
 	minPx: number,
 	maxPx: number,
+	fontFamily: string = BOARD_NODE_TEXT_FONT_FAMILY_DEFAULT,
 ): number {
 	const lo = Math.max(4, minPx);
 	const hi = Math.max(lo, maxPx);
@@ -583,7 +659,7 @@ export function boardFitTextFontPx(
 	let high = hi;
 	while (low <= high) {
 		const mid = Math.floor((low + high) / 2);
-		ctx.font = `${mid}px system-ui,Segoe UI,sans-serif`;
+		ctx.font = boardBuildCanvasFontSpec(mid, fontFamily);
 		const w = ctx.measureText(text).width;
 		const h = mid * 1.2;
 		if (w <= maxW && h <= maxH) {
@@ -594,6 +670,75 @@ export function boardFitTextFontPx(
 		}
 	}
 	return best;
+}
+
+/** @emoji ✂️ Single-line tail truncation with `…` so measured width ≤ `maxWidth` (`ctx.font` must be set). */
+export function boardEllipsisTextToWidth(ctx: CanvasTextMeasuring, text: string, maxWidth: number): string {
+	if (text === "") {
+		return text;
+	}
+	const ell = "…";
+	const widthOf = (value: string): number => ctx.measureText(value).width;
+	if (widthOf(text) <= maxWidth) {
+		return text;
+	}
+	if (widthOf(ell) > maxWidth) {
+		return "";
+	}
+	let low = 0;
+	let high = text.length;
+	let best = 0;
+	while (low <= high) {
+		const mid = Math.floor((low + high) / 2);
+		const candidate = `${text.slice(0, mid)}${ell}`;
+		if (widthOf(candidate) <= maxWidth) {
+			best = mid;
+			low = mid + 1;
+		} else {
+			high = mid - 1;
+		}
+	}
+	return best === 0 ? ell : `${text.slice(0, best)}${ell}`;
+}
+
+/** @emoji 📍 Maps a node-centered box to `fillText` origin + canvas alignment (layout px). */
+export function boardNodeTextPlacementAnchor(
+	centerX: number,
+	centerY: number,
+	maxW: number,
+	maxH: number,
+	alignment: BoardNodeTextAlignment,
+): { fillX: number; fillY: number; textAlign: CanvasTextAlign; textBaseline: CanvasTextBaseline } {
+	const halfW = maxW / 2;
+	const halfH = maxH / 2;
+	const left = centerX - halfW;
+	const right = centerX + halfW;
+	const top = centerY - halfH;
+	const bottom = centerY + halfH;
+	switch (alignment) {
+		case "nw":
+			return { fillX: left, fillY: top, textAlign: "left", textBaseline: "top" };
+		case "n":
+			return { fillX: centerX, fillY: top, textAlign: "center", textBaseline: "top" };
+		case "ne":
+			return { fillX: right, fillY: top, textAlign: "right", textBaseline: "top" };
+		case "w":
+			return { fillX: left, fillY: centerY, textAlign: "left", textBaseline: "middle" };
+		case "c":
+			return { fillX: centerX, fillY: centerY, textAlign: "center", textBaseline: "middle" };
+		case "e":
+			return { fillX: right, fillY: centerY, textAlign: "right", textBaseline: "middle" };
+		case "sw":
+			return { fillX: left, fillY: bottom, textAlign: "left", textBaseline: "bottom" };
+		case "s":
+			return { fillX: centerX, fillY: bottom, textAlign: "center", textBaseline: "bottom" };
+		case "se":
+			return { fillX: right, fillY: bottom, textAlign: "right", textBaseline: "bottom" };
+		default: {
+			const _: never = alignment;
+			return _;
+		}
+	}
 }
 
 /** @emoji 🧾 Minimal 2D canvas text metrics surface for {@link boardFitTextFontPx}. */
@@ -717,8 +862,14 @@ export class Node extends BoardObject {
 	radius: number;
 	shape: "circle" | "rectangle";
 	text: string | null;
-	/** @emoji 📏 When true, {@link BoardRenderer} scales overlay text to the node interior. */
+	/** @emoji 📏 When true, {@link BoardRenderer} scales overlay text to the node interior (always drawn at node center). */
 	textAutofit: boolean;
+	/** @emoji 🧭 When not autofitting, anchors single-line caption inside the node-centered box. */
+	textAlignment: BoardNodeTextAlignment;
+	/** @emoji 🔤 CSS font family string for overlay captions. */
+	textFontFamily: string;
+	/** @emoji 🔤 Font size in layout px when not autofitting. */
+	textFontSize: number;
 	width: number;
 	x: number;
 	y: number;
@@ -735,6 +886,14 @@ export class Node extends BoardObject {
 		this.y = options.y;
 		this.text = options.text ?? null;
 		this.textAutofit = options.textAutofit ?? false;
+		this.textAlignment = options.textAlignment ?? BOARD_NODE_TEXT_ALIGNMENT_DEFAULT;
+		this.textFontFamily =
+			typeof options.textFontFamily === "string" && options.textFontFamily.trim() !== ""
+				? options.textFontFamily.trim()
+				: BOARD_NODE_TEXT_FONT_FAMILY_DEFAULT;
+		const rawSize = options.textFontSize;
+		this.textFontSize =
+			typeof rawSize === "number" && Number.isFinite(rawSize) && rawSize > 0 ? rawSize : BOARD_NODE_TEXT_FONT_PX_DEFAULT;
 		if (options.shape === "rectangle") {
 			this.shape = "rectangle";
 			this.width = options.width;
@@ -1298,6 +1457,15 @@ export class BoardRenderer {
 			if (node.textAutofit) {
 				base.textAutofit = true;
 			}
+			if (node.textFontFamily !== BOARD_NODE_TEXT_FONT_FAMILY_DEFAULT) {
+				base.textFontFamily = node.textFontFamily;
+			}
+			if (node.textFontSize !== BOARD_NODE_TEXT_FONT_PX_DEFAULT) {
+				base.textFontSize = node.textFontSize;
+			}
+			if (node.textAlignment !== BOARD_NODE_TEXT_ALIGNMENT_DEFAULT) {
+				base.textAlignment = node.textAlignment;
+			}
 			if (node.shape === "rectangle") {
 				base.shape = "rectangle";
 				base.width = node.width;
@@ -1466,7 +1634,6 @@ export class BoardRenderer {
 			return;
 		}
 		const inset = 0.88;
-		const fontFamily = "system-ui,Segoe UI,sans-serif";
 		ctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
 		ctx.clearRect(0, 0, this.width, this.height);
 		for (const node of this.scene.nodes.values()) {
@@ -1486,16 +1653,29 @@ export class BoardRenderer {
 			if (maxW < 4 || maxH < 4) {
 				continue;
 			}
-			const center = this.worldToScreen({ x: node.x, y: node.y });
+			const boxCenter = this.worldToScreen({ x: node.x, y: node.y });
 			const style = this.getStyle(node.style, node.selected ? "node.selected" : "node");
-			const fontPx = node.textAutofit
-				? boardFitTextFontPx(ctx, node.text, maxW, maxH, 4, 512)
-				: boardFitTextFontPx(ctx, node.text, maxW, maxH, 4, 14);
-			ctx.font = `${fontPx}px ${fontFamily}`;
-			ctx.textAlign = "center";
-			ctx.textBaseline = "middle";
+			const family = node.textFontFamily;
 			ctx.fillStyle = style.stroke ?? "#0f172a";
-			ctx.fillText(node.text, center.x, center.y);
+			if (node.textAutofit) {
+				const fontPx = boardFitTextFontPx(ctx, node.text, maxW, maxH, 4, 512, family);
+				ctx.font = boardBuildCanvasFontSpec(fontPx, family);
+				let line = node.text;
+				if (ctx.measureText(line).width > maxW) {
+					line = boardEllipsisTextToWidth(ctx, node.text, maxW);
+				}
+				ctx.textAlign = "center";
+				ctx.textBaseline = "middle";
+				ctx.fillText(line, boxCenter.x, boxCenter.y);
+				continue;
+			}
+			const fontPx = node.textFontSize;
+			ctx.font = boardBuildCanvasFontSpec(fontPx, family);
+			const line = boardEllipsisTextToWidth(ctx, node.text, maxW);
+			const anchor = boardNodeTextPlacementAnchor(boxCenter.x, boxCenter.y, maxW, maxH, node.textAlignment);
+			ctx.textAlign = anchor.textAlign;
+			ctx.textBaseline = anchor.textBaseline;
+			ctx.fillText(line, anchor.fillX, anchor.fillY);
 		}
 	}
 
@@ -1753,8 +1933,36 @@ if (boardVitest) {
 					return { width: size * text.length };
 				},
 			};
-			const fit = boardFitTextFontPx(ctx, "aa", 100, 24, 4, 200);
+			const fit = boardFitTextFontPx(ctx, "aa", 100, 24, 4, 200, "monospace");
 			expect(fit).toBe(20);
+		});
+	});
+
+	describe("boardEllipsisTextToWidth", () => {
+		it("returns the original string when it already fits", () => {
+			const ctx: CanvasTextMeasuring = {
+				font: "14px monospace",
+				measureText: (t: string) => ({ width: t.length * 7 }),
+			};
+			expect(boardEllipsisTextToWidth(ctx, "short", 400)).toBe("short");
+		});
+
+		it("truncates with an ellipsis when the string is too wide", () => {
+			const ctx: CanvasTextMeasuring = {
+				font: "10px monospace",
+				measureText: (t: string) => ({ width: t.length * 8 }),
+			};
+			const out = boardEllipsisTextToWidth(ctx, "abcdefghij", 50);
+			expect(out.endsWith("…")).toBe(true);
+			expect(ctx.measureText(out).width).toBeLessThanOrEqual(50);
+			expect(out.length).toBeLessThan("abcdefghij".length + 1);
+		});
+	});
+
+	describe("boardNodeTextPlacementAnchor", () => {
+		it("anchors west at the left-middle of the node-centered box", () => {
+			const a = boardNodeTextPlacementAnchor(100, 50, 80, 40, "w");
+			expect(a).toEqual({ fillX: 60, fillY: 50, textAlign: "left", textBaseline: "middle" });
 		});
 	});
 
@@ -2157,6 +2365,39 @@ if (boardVitest) {
 			expect(rect?.nodes[0]).toMatchObject({ id: "r", textAutofit: true });
 		});
 
+		it("parses optional caption font, size, alignment, and fontFamily alias", () => {
+			const parsed = parseBoardFixtureV1({
+				camera: { x: 0, y: 0, zoom: 1 },
+				edges: [],
+				nodes: [
+					{
+						fontFamily: " Georgia ",
+						handles: [{ angle: 0, id: "z.h" }],
+						id: "z",
+						radius: 8,
+						text: "z",
+						textAlignment: "ne",
+						textFontSize: 18,
+						x: 0,
+						y: 0,
+					},
+				],
+				schema: "elements.board.fixture/v1",
+			});
+			expect(parsed?.nodes[0]).toMatchObject({
+				id: "z",
+				textFontFamily: "Georgia",
+				textFontSize: 18,
+				textAlignment: "ne",
+			});
+			expect(parseBoardFixtureV1({
+				camera: { x: 0, y: 0, zoom: 1 },
+				edges: [],
+				nodes: [{ handles: [{ angle: 0, id: "bad.aln" }], id: "bad", radius: 3, textAlignment: "xx", x: 0, y: 0 }],
+				schema: "elements.board.fixture/v1",
+			})?.nodes[0]).not.toHaveProperty("textAlignment");
+		});
+
 		it("parses optional handle radius on fixture nodes", () => {
 			const parsed = parseBoardFixtureV1({
 				camera: { x: 0, y: 0, zoom: 1 },
@@ -2237,7 +2478,18 @@ if (boardVitest) {
 				camera: { x: 0, y: 0, zoom: 1 },
 				edges: [{ from: "a.out", id: "e1", to: "b.in" }],
 				nodes: [
-					{ handles: [{ angle: 0, id: "a.out" }], id: "a", radius: 10, shape: "circle", text: "A", textAutofit: true, x: 0, y: 0 },
+					{
+						handles: [{ angle: 0, id: "a.out" }],
+						id: "a",
+						radius: 10,
+						shape: "circle",
+						text: "A",
+						textAlignment: "c",
+						textAutofit: true,
+						textFontSize: 11,
+						x: 0,
+						y: 0,
+					},
 					{ handles: [{ angle: 3.14, id: "b.in" }], id: "b", radius: 10, shape: "circle", text: "B", x: 50, y: 0 },
 				],
 				schema: "elements.board.fixture/v1",
@@ -2436,7 +2688,10 @@ function newBoardNodeFromProps(props: NodeOptions): Node {
 			shape: "rectangle",
 			style: props.style,
 			text: props.text,
+			textAlignment: props.textAlignment,
 			textAutofit: props.textAutofit,
+			textFontFamily: props.textFontFamily,
+			textFontSize: props.textFontSize,
 			userData: props.userData,
 			visible: props.visible,
 			width: props.width,
@@ -2451,7 +2706,10 @@ function newBoardNodeFromProps(props: NodeOptions): Node {
 		selected: props.selected,
 		style: props.style,
 		text: props.text,
+		textAlignment: props.textAlignment,
 		textAutofit: props.textAutofit,
+		textFontFamily: props.textFontFamily,
+		textFontSize: props.textFontSize,
 		userData: props.userData,
 		visible: props.visible,
 		x: props.x,
@@ -2466,6 +2724,14 @@ function applyNodeProps(renderer: BoardRenderer, instance: Node, props: NodeOpti
 	instance.userData = { ...(props.userData ?? {}) };
 	instance.visible = props.visible ?? true;
 	instance.textAutofit = props.textAutofit ?? false;
+	instance.textAlignment = props.textAlignment ?? BOARD_NODE_TEXT_ALIGNMENT_DEFAULT;
+	instance.textFontFamily =
+		typeof props.textFontFamily === "string" && props.textFontFamily.trim() !== ""
+			? props.textFontFamily.trim()
+			: BOARD_NODE_TEXT_FONT_FAMILY_DEFAULT;
+	const psz = props.textFontSize;
+	instance.textFontSize =
+		typeof psz === "number" && Number.isFinite(psz) && psz > 0 ? psz : BOARD_NODE_TEXT_FONT_PX_DEFAULT;
 	renderer.applyNodePositionFromProps(instance.id, props.x, props.y, instance);
 	instance.setText(props.text ?? null);
 	if (props.shape === "rectangle") {
@@ -2539,7 +2805,10 @@ function propsEqualNode(a: NodeOptions, b: NodeOptions): boolean {
 		a.style !== b.style ||
 		a.visible !== b.visible ||
 		a.text !== b.text ||
-		(a.textAutofit ?? false) !== (b.textAutofit ?? false)
+		(a.textAutofit ?? false) !== (b.textAutofit ?? false) ||
+		(a.textAlignment ?? BOARD_NODE_TEXT_ALIGNMENT_DEFAULT) !== (b.textAlignment ?? BOARD_NODE_TEXT_ALIGNMENT_DEFAULT) ||
+		(a.textFontFamily ?? BOARD_NODE_TEXT_FONT_FAMILY_DEFAULT) !== (b.textFontFamily ?? BOARD_NODE_TEXT_FONT_FAMILY_DEFAULT) ||
+		(a.textFontSize ?? BOARD_NODE_TEXT_FONT_PX_DEFAULT) !== (b.textFontSize ?? BOARD_NODE_TEXT_FONT_PX_DEFAULT)
 	) {
 		return false;
 	}

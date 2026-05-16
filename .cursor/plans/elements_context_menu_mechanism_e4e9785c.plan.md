@@ -7,28 +7,28 @@ todos:
     status: completed
   - id: schema
     content: Add ContextMenuItem type + ContextMenu wrapper + ContextMenuController + useContextMenuItems in elements/client/lib/react/index.tsx; add @radix-ui/react-context-menu to package.json
-    status: in_progress
+    status: completed
   - id: ui-adopt
     content: Add contextMenu prop to Card and DiagramNode as canonical examples
-    status: pending
+    status: completed
   - id: windows
     content: Add contextMenu to UIWindowKindDefinition and wrap window panes in UICanvas registerComponent
-    status: pending
+    status: completed
   - id: board-event
     content: Add contextmenu to BoardEventMap and emit it from BoardRenderer with WASM hit-test results
-    status: pending
+    status: completed
   - id: board-react
     content: Thread contextMenu through Node/Edge/Handle descriptors; render ContextMenuController in BoardCanvas; add background contextMenu prop
-    status: pending
+    status: completed
   - id: play
     content: Wire example contextMenu on a node, edge, and BoardCanvas background in board/play/index.tsx
-    status: pending
+    status: completed
   - id: tests
     content: Extend existing vitest + Playwright tests to cover DOM, window, and board context menus
-    status: pending
+    status: completed
   - id: close
     content: Close the ticket via repo mcp with summary and file list
-    status: pending
+    status: completed
 isProject: false
 ---
 
