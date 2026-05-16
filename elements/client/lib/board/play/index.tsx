@@ -167,13 +167,25 @@ function nakaginBoardMarkers(fixture: BoardFixtureV1, selectedIds: Set<string>):
 						y={node.y}
 					>
 						{node.handles.map((handle) => (
-							<Handle angle={handle.angle} id={handle.id} key={handle.id} selected={selectedIds.has(handle.id)} />
+							<Handle
+								angle={handle.angle}
+								id={handle.id}
+								key={handle.id}
+								radius={handle.radius}
+								selected={selectedIds.has(handle.id)}
+							/>
 						))}
 					</Node>
 				) : (
 					<Node draggable={false} id={node.id} key={node.id} radius={node.radius} selected={selectedIds.has(node.id)} text={node.text} x={node.x} y={node.y}>
 						{node.handles.map((handle) => (
-							<Handle angle={handle.angle} id={handle.id} key={handle.id} selected={selectedIds.has(handle.id)} />
+							<Handle
+								angle={handle.angle}
+								id={handle.id}
+								key={handle.id}
+								radius={handle.radius}
+								selected={selectedIds.has(handle.id)}
+							/>
 						))}
 					</Node>
 				),

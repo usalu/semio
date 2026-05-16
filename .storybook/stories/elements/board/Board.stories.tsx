@@ -144,13 +144,13 @@ const nakaginCapsuleTowerBoardScene: ReactElement = (
 					y={node.y}
 				>
 					{node.handles.map((handle) => (
-						<Handle angle={handle.angle} id={handle.id} key={handle.id} />
+						<Handle angle={handle.angle} id={handle.id} key={handle.id} radius={handle.radius} />
 					))}
 				</Node>
 			) : (
 				<Node draggable={false} id={node.id} key={node.id} radius={node.radius ?? 0} text={node.text ?? node.label} x={node.x} y={node.y}>
 					{node.handles.map((handle) => (
-						<Handle angle={handle.angle} id={handle.id} key={handle.id} />
+						<Handle angle={handle.angle} id={handle.id} key={handle.id} radius={handle.radius} />
 					))}
 				</Node>
 			),

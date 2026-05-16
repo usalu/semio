@@ -688,7 +688,7 @@ function main(): void {
       DATABASE,
       "--format",
       "plain",
-      "MATCH (:Class {name:'Piece'})-[:OWNS]->(:Module {name:'operation'})-[:OWNS]->(:Class {name:'RenamedPiece'}) " +
+      "MATCH (:Class {name:'Piece'})-[:OWNS]->(:Module {name:'operation'})-[:OWNS]->(:Command {name:'RenamePiece'}) " +
         "RETURN count(*) AS pieceOpChain;",
     ],
     { encoding: "utf8", cwd: REPO_ROOT, env: buildCypherEnv() },
@@ -708,7 +708,7 @@ function main(): void {
   const pieceOpChain = Number.parseInt(poLast.trim(), 10);
   if (!Number.isFinite(pieceOpChain) || pieceOpChain < 1) {
     console.error(
-      `[migrate:neo4j] expected Piece-OWNS-Module(operation)-OWNS-RenamedPiece chain; verify output:\n${probePieceOperationModuleChain.stdout}`,
+      `[migrate:neo4j] expected Piece-OWNS-Module(operation)-OWNS-RenamePiece Command chain; verify output:\n${probePieceOperationModuleChain.stdout}`,
     );
     process.exit(1);
   }

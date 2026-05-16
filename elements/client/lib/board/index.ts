@@ -86,10 +86,11 @@ export interface CubicBezierCurve {
 	p3: Point;
 }
 
-/** @emoji 📄 Handle record inside {@link BoardFixtureV1}. */
+/** @emoji 📄 Handle record inside {@link BoardFixtureV1}; optional `radius` overrides default world-space hit/draw size. */
 export interface BoardFixtureHandleV1 {
 	angle: number;
 	id: string;
+	radius?: number;
 }
 
 /** @emoji 📄 Circle node: {@link BoardFixtureCircleNodeV1.x}/{@link BoardFixtureCircleNodeV1.y} are the disk center in layout space; handle {@link BoardFixtureHandleV1.angle} aims at the connected neighbor (radians). */
@@ -104,7 +105,7 @@ export interface BoardFixtureCircleNodeV1 {
 	y: number;
 }
 
-/** @emoji 📄 Axis-aligned rectangle: center (x,y) in layout space, full width/height (not half-extents); handle angle aims at neighbor like circles. */
+/** @emoji 📄 Axis-aligned rectangle: center (x,y) in layout space, full width/height (not half-extents); handle `angle` is **0 at north** (top center), **CCW** in `[0,2π)` (`π/4` NW corner, `π/2` west, …); circles use **east-zero** polar `atan2(dy,dx)`. */
 export interface BoardFixtureRectangleNodeV1 {
 	cad?: { x: number; y: number; z: number } | null;
 	handles: BoardFixtureHandleV1[];
@@ -413,7 +414,10 @@ export function parseBoardFixtureV1(raw: unknown): BoardFixtureV1 | null {
 			if (!hid || !Number.isFinite(angle)) {
 				return null;
 			}
-			handles.push({ angle, id: hid });
+			const hradius = Number(hr.radius);
+			handles.push(
+				Number.isFinite(hradius) && hradius > 0 ? { angle, id: hid, radius: hradius } : { angle, id: hid },
+			);
 		}
 		const textFromJson = fixtureNodeDisplayText(node);
 		const cad =
@@ -515,6 +519,7 @@ export function resolveBoardLodLabel(zoom: number): "fine" | "full" | "grid-only
 	return "fine";
 }
 
+/** @emoji 📍 Handle anchor on node perimeter: **rectangle** uses north-zero CCW angle; **circle** uses east-zero `atan2` convention (matches {@link boardHandlePositionCircle}). */
 export function computeHandlePosition(
 	node: { height: number; radius: number; shape: "circle" | "rectangle"; width: number; x: number; y: number },
 	angle: number,
@@ -848,6 +853,7 @@ export class BoardScene {
 			this.nodes.delete(object.id);
 			object.parent = null;
 			object.attachRenderer(null);
+			this.renderer?.evictNodeAuthoringPosition(object.id);
 			this.renderer?.markDirty();
 			return this;
 		}
@@ -938,6 +944,8 @@ export class BoardRenderer {
 	private gpuSurfaceInitPromise: Promise<void> | null = null;
 	private gpuSurfacePresentedFrame = false;
 	private gpuSurfaceUnavailable = false;
+	private lastPushedDescriptorJson: string | null = null;
+	private lastNodeAuthoringPositionById = new Map<string, { x: number; y: number }>();
 	private suppressSceneToWasmPush = false;
 	private width = 1;
 	private height = 1;
@@ -1009,6 +1017,23 @@ export class BoardRenderer {
 		this.markDirty();
 	}
 
+	/** @emoji 📍 Applies declarative node x/y while keeping wasm-dragged coordinates when React props still show the pre-drag authoring values. */
+	applyNodePositionFromProps(nodeId: string, x: number, y: number, instance: Node): void {
+		const last = this.lastNodeAuthoringPositionById.get(nodeId);
+		const propsUnchangedSinceLastSync = last !== undefined && last.x === x && last.y === y;
+		const sceneMatchesDescriptor = instance.x === x && instance.y === y;
+		if (propsUnchangedSinceLastSync && !sceneMatchesDescriptor) {
+			return;
+		}
+		instance.setPosition(x, y);
+		this.lastNodeAuthoringPositionById.set(nodeId, { x, y });
+	}
+
+	/** @emoji 🧹 Drops cached declarative coordinates for a removed node id (see {@link BoardRenderer.applyNodePositionFromProps}). */
+	evictNodeAuthoringPosition(nodeId: string): void {
+		this.lastNodeAuthoringPositionById.delete(nodeId);
+	}
+
 	getCameraSnapshot = (): CameraState => this.cameraStore.getSnapshot();
 
 	subscribeCamera = (listener: () => void): (() => void) => this.cameraStore.subscribe(listener);
@@ -1059,6 +1084,10 @@ export class BoardRenderer {
 
 	setCamera(x: number, y: number, zoom: number): void {
 		const z = clamp(zoom, MIN_ZOOM, MAX_ZOOM);
+		const next: CameraState = { x, y, zoom: z };
+		if (pointsEqual(this.camera, next) && nearlyEqual(this.camera.zoom, next.zoom)) {
+			return;
+		}
 		this.session.setCamera(x, y, z);
 		this.applyWasmDrainToScene(this.session.drainEventsJson());
 	}
@@ -1233,7 +1262,11 @@ export class BoardRenderer {
 		const o = this.selectionOptions;
 		this.session.setSize(this.width, this.height, this.dpr);
 		this.session.setSelectionOptions(o.method, o.mode, o.target);
-		this.session.syncDescriptorJson(this.descriptorJsonForWasmHost());
+		const desc = this.descriptorJsonForWasmHost();
+		if (desc !== this.lastPushedDescriptorJson) {
+			this.session.syncDescriptorJson(desc);
+			this.lastPushedDescriptorJson = desc;
+		}
 		this.session.setCamera(this.camera.x, this.camera.y, this.camera.zoom);
 		this.session.drainEventsJson();
 	}
@@ -1254,9 +1287,13 @@ export class BoardRenderer {
 				switch (row.name) {
 					case "camera": {
 						const p = row.payload as { x: number; y: number; zoom: number };
+						const nextZoom = clamp(p.zoom, MIN_ZOOM, MAX_ZOOM);
+						if (pointsEqual(this.camera, { x: p.x, y: p.y }) && nearlyEqual(this.camera.zoom, nextZoom)) {
+							break;
+						}
 						this.camera.x = p.x;
 						this.camera.y = p.y;
-						this.camera.zoom = p.zoom;
+						this.camera.zoom = nextZoom;
 						this.cameraStore.setSnapshot(
 							{ ...this.camera },
 							(left, right) => pointsEqual(left, right) && nearlyEqual(left.zoom, right.zoom),
@@ -1266,6 +1303,10 @@ export class BoardRenderer {
 					}
 					case "select": {
 						const ids = (row.payload as { ids: string[] }).ids ?? [];
+						const nextKeys = [...ids].sort();
+						if (arrayEqual(nextKeys, sortedSelectionIds(this.selectionIds))) {
+							break;
+						}
 						this.selectionIds = new Set(ids);
 						for (const object of this.scene.getAllObjects()) {
 							object.selected = this.selectionIds.has(object.id);
@@ -1287,6 +1328,9 @@ export class BoardRenderer {
 						const y = Number(row.payload.y);
 						const node = this.scene.nodes.get(id);
 						if (node) {
+							if (nearlyEqual(node.x, x) && nearlyEqual(node.y, y)) {
+								break;
+							}
 							node.setPosition(x, y);
 						}
 						this.emitter.emit("nodeMove", { id, x, y });
@@ -1401,7 +1445,6 @@ export class BoardRenderer {
 		}
 		this.hoveredId = id;
 		this.emit("hover", { id });
-		this.markDirty();
 	}
 
 	private deleteSelectedObjects(): void {
@@ -1499,6 +1542,7 @@ export class BoardRenderer {
 	private readonly handlePointerLeave = (): void => {
 		this.session.pointerLeaveScreen();
 		this.applyWasmDrainToScene(this.session.drainEventsJson());
+		this.invalidate();
 	};
 
 	private readonly handleWheel = (event: WheelEvent): void => {
@@ -1598,11 +1642,20 @@ if (boardVitest) {
 			expect(align1).toBeGreaterThan(0.99);
 		});
 
-		it("places rectangle handles on the perimeter by polar angle from center", () => {
+		it("places rectangle handles on the perimeter by north-zero CCW angle", () => {
 			const rectNode = new Node({ height: 20, id: "r", shape: "rectangle", width: 40, x: 100, y: 50 });
-			const p = computeHandlePosition(rectNode, 0);
-			expect(p.x).toBeCloseTo(120);
-			expect(p.y).toBeCloseTo(50);
+			const p0 = computeHandlePosition(rectNode, 0);
+			expect(p0.x).toBeCloseTo(100);
+			expect(p0.y).toBeCloseTo(40);
+			const pW = computeHandlePosition(rectNode, Math.PI / 2);
+			expect(pW.x).toBeCloseTo(80);
+			expect(pW.y).toBeCloseTo(50);
+			const pS = computeHandlePosition(rectNode, Math.PI);
+			expect(pS.x).toBeCloseTo(100);
+			expect(pS.y).toBeCloseTo(60);
+			const pE = computeHandlePosition(rectNode, (3 * Math.PI) / 2);
+			expect(pE.x).toBeCloseTo(120);
+			expect(pE.y).toBeCloseTo(50);
 		});
 
 		it("labels coarse LOD bands from zoom thresholds", () => {
@@ -1694,6 +1747,22 @@ if (boardVitest) {
 			expect(movableNode.x).toBeCloseTo(60);
 			expect(movableNode.y).toBeCloseTo(40);
 
+			renderer.dispose();
+		});
+
+		it("keeps imperative node coordinates when declarative props still show pre-drag authoring values", () => {
+			const { canvas } = createMockCanvas();
+			const renderer = new BoardRenderer({ canvas, renderMode: "headless-test" });
+			const node = new Node({ id: "n", radius: 10, x: 10, y: 20 });
+			renderer.scene.add(node);
+			renderer.applyNodePositionFromProps(node.id, 10, 20, node);
+			node.setPosition(100, 200);
+			renderer.applyNodePositionFromProps(node.id, 10, 20, node);
+			expect(node.x).toBe(100);
+			expect(node.y).toBe(200);
+			renderer.applyNodePositionFromProps(node.id, 5, 6, node);
+			expect(node.x).toBe(5);
+			expect(node.y).toBe(6);
 			renderer.dispose();
 		});
 
@@ -1824,6 +1893,26 @@ if (boardVitest) {
 				schema: "elements.board.fixture/v1",
 			});
 			expect(parsed?.nodes[0]).toMatchObject({ shape: "rectangle", width: 48, height: 24, id: "box", text: "crate" });
+		});
+
+		it("parses optional handle radius on fixture nodes", () => {
+			const parsed = parseBoardFixtureV1({
+				camera: { x: 0, y: 0, zoom: 1 },
+				edges: [],
+				nodes: [
+					{
+						handles: [{ angle: 1.2, id: "h1", radius: 4.5 }],
+						height: 20,
+						id: "r1",
+						shape: "rectangle",
+						width: 30,
+						x: 0,
+						y: 0,
+					},
+				],
+				schema: "elements.board.fixture/v1",
+			});
+			expect(parsed?.nodes[0]?.handles[0]).toMatchObject({ angle: 1.2, id: "h1", radius: 4.5 });
 		});
 
 		it("maps legacy JSON label into node text", () => {
@@ -2106,13 +2195,13 @@ function newBoardNodeFromProps(props: BoardNodeProps): Node {
 	});
 }
 
-function applyNodeProps(instance: Node, props: BoardNodeProps): void {
+function applyNodeProps(renderer: BoardRenderer, instance: Node, props: BoardNodeProps): void {
 	instance.draggable = props.draggable ?? true;
 	instance.selected = props.selected ?? false;
 	instance.style = props.style ?? null;
 	instance.userData = { ...(props.userData ?? {}) };
 	instance.visible = props.visible ?? true;
-	instance.setPosition(props.x, props.y);
+	renderer.applyNodePositionFromProps(instance.id, props.x, props.y, instance);
 	instance.setText(props.text ?? null);
 	if (props.shape === "rectangle") {
 		instance.setRectangleSize(props.width, props.height);
@@ -2256,7 +2345,7 @@ function replaceNodeImpl(renderer: BoardRenderer, host: BoardHostNode, nextProps
 		return;
 	}
 	renderer.batch(() => {
-		applyNodeProps(host.impl, nextProps);
+		applyNodeProps(renderer, host.impl, nextProps);
 	});
 	renderer.invalidate();
 }
@@ -2435,7 +2524,7 @@ const boardSceneHost = Reconciler({
 				return;
 			}
 			renderer.batch(() => {
-				applyNodeProps(host.impl, next);
+				applyNodeProps(renderer, host.impl, next);
 			});
 			renderer.invalidate();
 			return;

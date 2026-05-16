@@ -54,12 +54,13 @@ mod vcompute {
 		center + Vec2::new(ux * radius, uy * radius)
 	}
 
+	/// 🧭 Rectangle handle `angle` is **0 at top edge center (north)**, increasing **counter‑clockwise** in board space (`y` down): `π/4` NW corner, `π/2` west midpoint, `π` south, `3π/2` east; circles keep **east‑zero** `atan2(dy,dx)` convention.
 	#[cfg_attr(not(target_arch = "wasm32"), allow(dead_code))]
 	pub fn handle_position_on_rectangle(center: Point, width: f64, height: f64, angle: f64) -> Point {
 		let hw = width / 2.0;
 		let hh = height / 2.0;
-		let ux = angle.cos();
-		let uy = angle.sin();
+		let ux = -angle.sin();
+		let uy = -angle.cos();
 		let local = ray_from_origin_to_axis_aligned_rectangle_edge(hw, hh, ux, uy);
 		center + Vec2::new(local.x, local.y)
 	}
@@ -560,9 +561,16 @@ mod board_host {
 		}
 
 		pub fn set_camera(&mut self, x: f64, y: f64, zoom: f64) {
+			let zoom = zoom.clamp(BOARD_CAMERA_ZOOM_MIN, BOARD_CAMERA_ZOOM_MAX);
+			if (self.camera.x - x).abs() < 1e-9
+				&& (self.camera.y - y).abs() < 1e-9
+				&& (self.camera.zoom - zoom).abs() < 1e-9
+			{
+				return;
+			}
 			self.camera.x = x;
 			self.camera.y = y;
-			self.camera.zoom = zoom.clamp(BOARD_CAMERA_ZOOM_MIN, BOARD_CAMERA_ZOOM_MAX);
+			self.camera.zoom = zoom;
 			self.push_event("camera", json!({ "x": self.camera.x, "y": self.camera.y, "zoom": self.camera.zoom }));
 		}
 
@@ -604,8 +612,7 @@ mod board_host {
 			out
 		}
 
-		pub fn set_selection_ids(&mut self, ids: &[String]) {
-			self.selection = ids.iter().cloned().collect();
+		fn sync_selection_flags_to_objects(&mut self) {
 			for n in self.nodes.values_mut() {
 				n.selected = self.selection.contains(&n.id);
 			}
@@ -615,9 +622,27 @@ mod board_host {
 			for e in self.edges.values_mut() {
 				e.selected = self.selection.contains(&e.id);
 			}
+		}
+
+		fn push_select_event(&mut self) {
 			let mut sorted: Vec<_> = self.selection.iter().cloned().collect();
 			sorted.sort();
 			self.push_event("select", json!({ "ids": sorted }));
+		}
+
+		pub fn set_selection_ids(&mut self, ids: &[String]) {
+			let next: BTreeSet<String> = ids.iter().cloned().collect();
+			if next == self.selection {
+				return;
+			}
+			self.selection = next;
+			self.sync_selection_flags_to_objects();
+			self.push_select_event();
+		}
+
+		/// @emoji 🧿 True during left‑button rectangle/lasso drag so callers can avoid descriptor round‑trips that fight the live marquee state.
+		pub fn is_dragging_area_select(&self) -> bool {
+			matches!(&self.interaction, Interaction::Selection { .. })
 		}
 
 		pub fn world_to_screen(&self, p: Point) -> Point {
@@ -1142,8 +1167,8 @@ mod board_host {
 			for id in node_ids {
 				self.selection.remove(&id);
 			}
-			let ids: Vec<_> = self.selection.iter().cloned().collect();
-			self.set_selection_ids(&ids);
+			self.sync_selection_flags_to_objects();
+			self.push_select_event();
 		}
 
 		pub fn pointer_down_screen(&mut self, sx: f64, sy: f64, button: u8, shift: bool) {
@@ -1917,6 +1942,11 @@ impl BoardSession {
 		self.surface.is_some()
 	}
 
+	#[wasm_bindgen(js_name = isDraggingAreaSelect)]
+	pub fn is_dragging_area_select(&self) -> bool {
+		self.host.is_dragging_area_select()
+	}
+
 	/// @emoji 🌊 Binds WebGPU presentation to `canvas` once; `logical_w`/`logical_h` are CSS pixels, `dpr` scales the swapchain backing store.
 	pub async fn attach_canvas(
 		&mut self,
@@ -1971,7 +2001,11 @@ impl BoardSession {
 		let ph = ((lh as f64 * dpr).round() as u32).max(1);
 		self.host.set_size(lw, lh, dpr);
 		if let (Some(ref mut surface), Some(ref mut render_ctx)) = (self.surface.as_mut(), self.render_ctx.as_mut()) {
-			render_ctx.resize_surface(surface, pw, ph);
+			let cur_w = surface.config.width;
+			let cur_h = surface.config.height;
+			if cur_w != pw || cur_h != ph {
+				render_ctx.resize_surface(surface, pw, ph);
+			}
 		}
 	}
 
@@ -2080,52 +2114,55 @@ impl BoardSession {
 	/// @emoji 🎨 Presents one frame when a GPU surface is attached; otherwise no-op `Ok`.
 	#[wasm_bindgen(js_name = renderFrame)]
 	pub fn render_frame(&mut self) -> Result<(), JsValue> {
-		let Some(surface) = self.surface.as_mut() else {
-			return Ok(());
-		};
-		let Some(renderer) = self.renderer.as_mut() else {
-			return Ok(());
-		};
-		let Some(render_ctx) = self.render_ctx.as_mut() else {
-			return Ok(());
-		};
-		let dh = &render_ctx.devices[surface.dev_id];
-		let pw = surface.config.width.max(1);
-		let ph = surface.config.height.max(1);
-		let scene = self.host.build_vector_scene();
-		let params = vello::RenderParams {
-			base_color: vello::peniko::Color::WHITE,
-			width: pw,
-			height: ph,
-			antialiasing_method: vello::AaConfig::Area,
-		};
-		renderer
-			.render_to_texture(&dh.device, &dh.queue, &scene, &surface.target_view, &params)
-			.map_err(|err| JsValue::from_str(&format!("{err:?}")))?;
-
-		let surface_tex = match surface.surface.get_current_texture() {
-			vello::wgpu::CurrentSurfaceTexture::Success(t) | vello::wgpu::CurrentSurfaceTexture::Suboptimal(t) => t,
-			vello::wgpu::CurrentSurfaceTexture::Outdated => {
-				render_ctx.configure_surface(surface);
+		for _attempt in 0..3u8 {
+			let scene = self.host.build_vector_scene();
+			let Some(surface) = self.surface.as_mut() else {
 				return Ok(());
-			}
-			vello::wgpu::CurrentSurfaceTexture::Timeout | vello::wgpu::CurrentSurfaceTexture::Occluded => return Ok(()),
-			vello::wgpu::CurrentSurfaceTexture::Lost | vello::wgpu::CurrentSurfaceTexture::Validation => {
-				return Err(JsValue::from_str("surface lost or validation error"));
-			}
-		};
-		let view = surface_tex
-			.texture
-			.create_view(&vello::wgpu::TextureViewDescriptor::default());
-		let mut encoder = dh.device.create_command_encoder(&vello::wgpu::CommandEncoderDescriptor {
-			label: Some("elements_board_surface_blit"),
-		});
-		surface
-			.blitter
-			.copy(&dh.device, &mut encoder, &surface.target_view, &view);
-		dh.queue.submit(std::iter::once(encoder.finish()));
-		surface_tex.present();
-		let _ = dh.device.poll(vello::wgpu::PollType::Poll);
+			};
+			let Some(renderer) = self.renderer.as_mut() else {
+				return Ok(());
+			};
+			let Some(render_ctx) = self.render_ctx.as_mut() else {
+				return Ok(());
+			};
+			let dh = &render_ctx.devices[surface.dev_id];
+			let pw = surface.config.width.max(1);
+			let ph = surface.config.height.max(1);
+			let params = vello::RenderParams {
+				base_color: vello::peniko::Color::WHITE,
+				width: pw,
+				height: ph,
+				antialiasing_method: vello::AaConfig::Area,
+			};
+			renderer
+				.render_to_texture(&dh.device, &dh.queue, &scene, &surface.target_view, &params)
+				.map_err(|err| JsValue::from_str(&format!("{err:?}")))?;
+
+			let surface_tex = match surface.surface.get_current_texture() {
+				vello::wgpu::CurrentSurfaceTexture::Success(t) | vello::wgpu::CurrentSurfaceTexture::Suboptimal(t) => t,
+				vello::wgpu::CurrentSurfaceTexture::Outdated => {
+					render_ctx.configure_surface(surface);
+					continue;
+				}
+				vello::wgpu::CurrentSurfaceTexture::Timeout | vello::wgpu::CurrentSurfaceTexture::Occluded => return Ok(()),
+				vello::wgpu::CurrentSurfaceTexture::Lost | vello::wgpu::CurrentSurfaceTexture::Validation => {
+					return Err(JsValue::from_str("surface lost or validation error"));
+				}
+			};
+			let view = surface_tex
+				.texture
+				.create_view(&vello::wgpu::TextureViewDescriptor::default());
+			let mut encoder = dh.device.create_command_encoder(&vello::wgpu::CommandEncoderDescriptor {
+				label: Some("elements_board_surface_blit"),
+			});
+			surface
+				.blitter
+				.copy(&dh.device, &mut encoder, &surface.target_view, &view);
+			dh.queue.submit(std::iter::once(encoder.finish()));
+			surface_tex.present();
+			let _ = dh.device.poll(vello::wgpu::PollType::Poll);
+			return Ok(());
+		}
 		Ok(())
 	}
 }

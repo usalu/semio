@@ -263,367 +263,290 @@ schema:
           backwards: [*operation]
           sequenceNumber: *number
           startedAt: *timestamp
-          finishedAt: *timestamp
-          finished: *boolean
-          description: *string
-          origin: *string
-      change: &change
-        implements: [*strongEntity]
-        fields:
-          edits: [*edit]
-          startedAt: *timestamp
-          savedAt: *timestamp
-          saved:
-            is: *boolean
-            cached: false
-            constraints:
-              - &changeSavedDerivedFromSavedAt "📌 saved derives from embedded sibling savedAt: non-null persisted timestamp implies the boolean reads true."
-          description: *string
-          origin: *string
-      checkpoint: &checkpoint
-        implements: [*strongEntity]
-        fields:
-          timestamp: *timestamp
-          message: *string
-          authors: [*author]
-          parent: *checkpoint
-          ancestors: [*checkpoint]
-          initial: *kit
-          kit: *kit
-          changes: [*change]
-          edits: [*edit]
-      theKit: &theKit
-        implements: [*workspace]
-      alternative: &alternative
-        implements: [*workspace]
-        fields:
-          name: *string
-      graph: &graph
-        implements: [*strongEntity]
-        fields:
-          initialKit: *kit
-          theKit: *theKit
-          alternatives: [*alternative]
-          checkpoints: [*checkpoint]
-          releases: [*checkpoint]
-      conflict: &conflict
-        implements: [*strongEntity]
-        fields:
-          authoritativeChange: *change
-          wipChange: *change
-          reasons: [*string]
-      store: &store
-        implements: [*strongEntity]
-        fields:
-          wip: *graph
-          stage: *graph
-          authoritative: *graph
-          conflicts: [*conflict]
-          backbone: *backbone
-      fileBackbone: &fileBackbone
-        implements: [*backbone]
-      websocketBackbone: &websocketBackbone
-        implements: [*backbone]
-      localProvider: &localProvider
-        implements: [*provider]
-        fields:
-          uri: *uri
-          stores: [*store]
-      remoteProvider: &remoteProvider
-        implements: [*provider]
-        fields:
-          uri: *uri
-          url: *uri
-      session: &session
-        implements: [*strongEntity]
-        fields:
-          stores: [*store]
-          localProvider: *localProvider
-          remoteProviders: [*remoteProvider]
-          startedAt: *timestamp
-      addedAttributesToConcept:
+
+      addAttributesToConcept:
         implements: [*operation]
         fields: {}
-      addedAttributesToDesign:
+      addAttributesToDesign:
         implements: [*operation]
         fields: {}
-      addedAttributesToPiece:
+      addAttributesToPiece:
         implements: [*operation]
         fields: {}
-      addedAttributesToPort:
+      addAttributesToPort:
         implements: [*operation]
         fields: {}
-      addedAttributesToQuality:
+      addAttributesToQuality:
         implements: [*operation]
         fields: {}
-      addedAttributesToTag:
+      addAttributesToTag:
         implements: [*operation]
         fields: {}
-      addedAttributesToType:
+      addAttributesToType:
         implements: [*operation]
         fields: {}
-      addedAttributeToConcept:
+      addAttributeToConcept:
         implements: [*operation]
         fields: {}
-      addedAttributeToDesign:
+      addAttributeToDesign:
         implements: [*operation]
         fields: {}
-      addedAttributeToPiece:
+      addAttributeToPiece:
         implements: [*operation]
         fields: {}
-      addedAttributeToPort:
+      addAttributeToPort:
         implements: [*operation]
         fields: {}
-      addedAttributeToQuality:
+      addAttributeToQuality:
         implements: [*operation]
         fields: {}
-      addedAttributeToTag:
+      addAttributeToTag:
         implements: [*operation]
         fields: {}
-      addedAttributeToType:
+      addAttributeToType:
         implements: [*operation]
         fields: {}
-      addedChildPiecesWithParentConnections:
+      addChildPiecesWithParentConnections:
         implements: [*operation]
         fields: {}
-      addedChildPieceWithParentConnection:
+      addChildPieceWithParentConnection:
         implements: [*operation]
         fields: {}
-      addedConnector:
+      addConnector:
         implements: [*operation]
         fields: {}
-      addedConnectors:
+      addConnectors:
         implements: [*operation]
         fields: {}
-      addedHangingChildPiecesWithParentConnections:
+      addHangingChildPiecesWithParentConnections:
         implements: [*operation]
         fields: {}
-      addedHangingChildPieceWithParentConnection:
+      addHangingChildPieceWithParentConnection:
         implements: [*operation]
         fields: {}
-      changedDescription:
+      changeDescription:
         implements: [*operation]
         fields: {}
-      changedPiecesToType:
+      changePiecesToType:
         implements: [*operation]
         fields: {}
-      changedPieceToType:
+      changePieceToType:
         implements: [*operation]
         fields: {}
-      createdConcept:
+      createConcept:
         implements: [*operation]
         fields: {}
-      createdConcepts:
+      createConcepts:
         implements: [*operation]
         fields: {}
-      createdDesign:
+      createDesign:
         implements: [*operation]
         fields: {}
-      createdDesigns:
+      createDesigns:
         implements: [*operation]
         fields: {}
-      createdFixedPiece:
+      createFixedPiece:
         implements: [*operation]
         fields: {}
-      createdPort:
+      createPort:
         implements: [*operation]
         fields: {}
-      createdPorts:
+      createPorts:
         implements: [*operation]
         fields: {}
-      createdQualities:
+      createQualities:
         implements: [*operation]
         fields: {}
-      createdQuality:
+      createQuality:
         implements: [*operation]
         fields: {}
-      createdTag:
+      createTag:
         implements: [*operation]
         fields: {}
-      createdTags:
+      createTags:
         implements: [*operation]
         fields: {}
-      createdType:
+      createType:
         implements: [*operation]
         fields: {}
-      createdTypes:
+      createTypes:
         implements: [*operation]
         fields: {}
-      deletedConcept:
+      deleteConcept:
         implements: [*operation]
         fields: {}
-      deletedConcepts:
+      deleteConcepts:
         implements: [*operation]
         fields: {}
-      deletedDesign:
+      deleteDesign:
         implements: [*operation]
         fields: {}
-      deletedDesigns:
+      deleteDesigns:
         implements: [*operation]
         fields: {}
-      deletedPiece:
+      deletePiece:
         implements: [*operation]
         fields: {}
-      deletedPieces:
+      deletePieces:
         implements: [*operation]
         fields: {}
-      deletedPiecesAndConnections:
+      deletePiecesAndConnections:
         implements: [*operation]
         fields: {}
-      deletedPort:
+      deletePort:
         implements: [*operation]
         fields: {}
-      deletedPorts:
+      deletePorts:
         implements: [*operation]
         fields: {}
-      deletedQualities:
+      deleteQualities:
         implements: [*operation]
         fields: {}
-      deletedQuality:
+      deleteQuality:
         implements: [*operation]
         fields: {}
-      deletedTag:
+      deleteTag:
         implements: [*operation]
         fields: {}
-      deletedTags:
+      deleteTags:
         implements: [*operation]
         fields: {}
-      deletedType:
+      deleteType:
         implements: [*operation]
         fields: {}
-      deletedTypes:
+      deleteTypes:
         implements: [*operation]
         fields: {}
-      draggedPiece:
+      dragPiece:
         implements: [*operation]
         fields: {}
-      draggedPieces:
+      dragPieces:
         implements: [*operation]
         fields: {}
-      fixedPiece:
+      fixPiece:
         implements: [*operation]
         fields: {}
-      fixedPieces:
+      fixPieces:
         implements: [*operation]
         fields: {}
-      flattenedDesign:
+      flattenDesign:
         implements: [*operation]
         fields: {}
-      movedPiece:
+      movePiece:
         implements: [*operation]
         fields: {}
-      movedPieces:
+      movePieces:
         implements: [*operation]
         fields: {}
-      removedAttributeFromConcept:
+      removeAttributeFromConcept:
         implements: [*operation]
         fields: {}
-      removedAttributeFromDesign:
+      removeAttributeFromDesign:
         implements: [*operation]
         fields: {}
-      removedAttributeFromPiece:
+      removeAttributeFromPiece:
         implements: [*operation]
         fields: {}
-      removedAttributeFromPort:
+      removeAttributeFromPort:
         implements: [*operation]
         fields: {}
-      removedAttributeFromQuality:
+      removeAttributeFromQuality:
         implements: [*operation]
         fields: {}
-      removedAttributeFromTag:
+      removeAttributeFromTag:
         implements: [*operation]
         fields: {}
-      removedAttributeFromType:
+      removeAttributeFromType:
         implements: [*operation]
         fields: {}
-      removedAttributesFromConcept:
+      removeAttributesFromConcept:
         implements: [*operation]
         fields: {}
-      removedAttributesFromDesign:
+      removeAttributesFromDesign:
         implements: [*operation]
         fields: {}
-      removedAttributesFromPiece:
+      removeAttributesFromPiece:
         implements: [*operation]
         fields: {}
-      removedAttributesFromPort:
+      removeAttributesFromPort:
         implements: [*operation]
         fields: {}
-      removedAttributesFromQuality:
+      removeAttributesFromQuality:
         implements: [*operation]
         fields: {}
-      removedAttributesFromTag:
+      removeAttributesFromTag:
         implements: [*operation]
         fields: {}
-      removedAttributesFromType:
+      removeAttributesFromType:
         implements: [*operation]
         fields: {}
-      removedConnector:
+      removeConnector:
         implements: [*operation]
         fields: {}
-      removedConnectors:
+      removeConnectors:
         implements: [*operation]
         fields: {}
-      renamedConcept:
+      renameConcept:
         implements: [*operation]
         fields: {}
-      renamedConnector:
+      renameConnector:
         implements: [*operation]
         fields: {}
-      renamedKit:
+      renameKit:
         implements: [*operation]
         fields: {}
-      renamedPiece:
+      renamePiece:
         implements: [*operation]
         fields: {}
-      renamedPort:
+      renamePort:
         implements: [*operation]
         fields: {}
-      renamedQuality:
+      renameQuality:
         implements: [*operation]
         fields: {}
-      renamedTag:
+      renameTag:
         implements: [*operation]
         fields: {}
-      renamedType:
+      renameType:
         implements: [*operation]
         fields: {}
-      updatedConceptDescription:
+      updateConceptDescription:
         implements: [*operation]
         fields: {}
-      updatedConceptIcon:
+      updateConceptIcon:
         implements: [*operation]
         fields: {}
-      updatedConnectorDescription:
+      updateConnectorDescription:
         implements: [*operation]
         fields: {}
-      updatedConnectorIcon:
+      updateConnectorIcon:
         implements: [*operation]
         fields: {}
-      updatedPieceDescription:
+      updatePieceDescription:
         implements: [*operation]
         fields: {}
-      updatedPortDescription:
+      updatePortDescription:
         implements: [*operation]
         fields: {}
-      updatedPortIcon:
+      updatePortIcon:
         implements: [*operation]
         fields: {}
-      updatedQualityDescription:
+      updateQualityDescription:
         implements: [*operation]
         fields: {}
-      updatedQualityIcon:
+      updateQualityIcon:
         implements: [*operation]
         fields: {}
-      updatedTagDescription:
+      updateTagDescription:
         implements: [*operation]
         fields: {}
-      updatedTagIcon:
+      updateTagIcon:
         implements: [*operation]
         fields: {}
-      updatedTypeDescription:
+      updateTypeDescription:
         implements: [*operation]
         fields: {}
-      updatedTypeIcon:
+      updateTypeIcon:
         implements: [*operation]
         fields: {}
     vcs: &vcs

@@ -214,13 +214,13 @@ function requireRenderer(renderer: BoardRenderer | null): BoardRenderer {
 }
 
 //#region 🔖Scene Sync
-function applyNodeProps(instance: BoardNodeObject, descriptor: NodeDescriptor): void {
+function applyNodeProps(renderer: BoardRenderer, instance: BoardNodeObject, descriptor: NodeDescriptor): void {
 	instance.draggable = descriptor.draggable ?? true;
 	instance.selected = descriptor.selected ?? false;
 	instance.style = descriptor.style ?? null;
 	instance.userData = { ...(descriptor.userData ?? {}) };
 	instance.visible = descriptor.visible ?? true;
-	instance.setPosition(descriptor.x, descriptor.y);
+	renderer.applyNodePositionFromProps(instance.id, descriptor.x, descriptor.y, instance);
 	instance.setText(descriptor.text ?? null);
 	if (descriptor.shape === "rectangle") {
 		instance.setRectangleSize(descriptor.width, descriptor.height);
@@ -325,7 +325,7 @@ export function syncBoardScene(renderer: BoardRenderer, descriptor: BoardSceneDe
 			if (!(resolvedExisting instanceof BoardNodeObject)) {
 				renderer.scene.add(node);
 			}
-			applyNodeProps(node, nodeDescriptor);
+			applyNodeProps(renderer, node, nodeDescriptor);
 		}
 
 		for (const handleDescriptor of descriptor.handles) {
