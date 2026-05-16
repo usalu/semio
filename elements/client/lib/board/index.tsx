@@ -753,7 +753,6 @@ export function BoardCanvas({
 			const nextWidth = width ?? container.clientWidth ?? 1;
 			const nextHeight = height ?? container.clientHeight ?? 1;
 			renderer.setSize(nextWidth, nextHeight, globalThis.devicePixelRatio || 1);
-			renderer.render();
 		};
 
 		applySize();
@@ -762,7 +761,15 @@ export function BoardCanvas({
 		}
 
 		const observer = new ResizeObserver(() => {
-			applySize();
+			const schedule =
+				typeof globalThis.requestAnimationFrame === "function"
+					? (fn: () => void) => {
+							globalThis.requestAnimationFrame(fn);
+						}
+					: (fn: () => void) => {
+							queueMicrotask(fn);
+						};
+			schedule(applySize);
 		});
 		observer.observe(container);
 		return () => {
@@ -852,7 +859,7 @@ export function useSelection(): BoardSelectionSnapshot {
 	return useSyncExternalStore(renderer.subscribeSelection, renderer.getSelectionSnapshot, renderer.getSelectionSnapshot);
 }
 
-/** 📡 Bind a board event listener with stable cleanup semantics (`fixtureDrop`, `hover` with {@link BoardHoverPayload}, `contextmenu`, …). */
+/** 📡 Bind a board event listener with stable cleanup (`fixtureDrop`, `hover`, `change` / graph observation events, `contextmenu`, …). */
 export function useBoardEvent<TKey extends keyof BoardEventMap>(
 	name: TKey,
 	handler: (payload: BoardEventMap[TKey]) => void,

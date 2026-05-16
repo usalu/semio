@@ -1196,7 +1196,7 @@ export class Handle extends BoardObject {
 	}
 }
 
-/** 🪢 Cubic edge between two boundary handles; control points sit on the radial **outside** of each node so the stroke never bows inward through the disk. */
+/** 🪢 Cubic edge between two boundary handles; control points sit on the radial **outside** of each node so the stroke never bows inward through the disk. Handles are not reversible: {@link from} is the parent-side anchor and {@link to} the child-side anchor for {@link Node.root} subtree reachability. */
 export class Edge extends BoardObject {
 	from: Handle;
 	to: Handle;
@@ -1461,6 +1461,10 @@ export class BoardRenderer {
 	private batchDepth = 0;
 	/** @emoji 🔁 Nesting depth for {@link BoardRenderer.render}; defers {@link BoardRenderer.invalidate} so ResizeObserver / layout cannot re-enter WASM during `renderFrame` (`borrow_fail`). */
 	private renderPipelineDepth = 0;
+	/** @emoji 🧷 Tracks `pushSceneToWasmDriver` + {@link BoardSession.renderFrame} where `device.poll` may synchronously re-enter JS while WASM still borrows `BoardSession`. */
+	private wasmGpuFrameDepth = 0;
+	/** @emoji 💾 Last `gpuReady` snapshot; used while {@link BoardRenderer.wasmGpuFrameDepth} is non-zero to avoid `RefCell` conflicts with in-flight `renderFrame`. */
+	private cachedWasmGpuReady = false;
 	private cameraStore = new SnapshotStore<CameraState>({ ...DEFAULT_CAMERA });
 	private canvas: HTMLCanvasElement | null;
 	private dpr = 1;
@@ -1808,7 +1812,7 @@ export class BoardRenderer {
 				}
 			}
 			if (this.renderMode !== "headless-test" && this.canvas && !this.gpuSurfaceUnavailable) {
-				let gpuReady = this.session.gpuReady();
+				let gpuReady = this.readGpuReady();
 				if (!gpuReady && !this.gpuSurfaceInitPromise) {
 					this.gpuSurfaceInitPromise = this.initGpuSurfaceOnce()
 						.then(() => {
@@ -1819,11 +1823,12 @@ export class BoardRenderer {
 							console.error("[DEBUG] BoardRenderer GPU surface init failed", err);
 							this.gpuSurfaceErrorDetail = summarizeRasterSurfaceFailure(err);
 							this.gpuSurfaceUnavailable = true;
+							this.cachedWasmGpuReady = false;
 							this.gpuSurfaceInitPromise = null;
 							this.markDirty();
 						});
 				}
-				gpuReady = this.session.gpuReady();
+				gpuReady = this.readGpuReady();
 				if (gpuReady) {
 					this.syncGpuFrame();
 				}
@@ -1865,6 +1870,7 @@ export class BoardRenderer {
 		this.session.setSelectionOptions(o.method, o.mode, o.target);
 		this.session.setWorldRasterTiling(this.worldRasterTiling);
 		this.session.drainEventsJson();
+		this.syncGpuReadyCacheFromSession();
 	}
 
 	private descriptorJsonForWasmHost(): string {
@@ -2137,9 +2143,13 @@ export class BoardRenderer {
 	}
 
 	private syncGpuFrame(): void {
-		if (this.renderMode === "headless-test" || !this.session.gpuReady()) {
+		if (this.renderMode === "headless-test" || !this.readGpuReady()) {
 			return;
 		}
+		if (this.wasmGpuFrameDepth > 0) {
+			return;
+		}
+		this.wasmGpuFrameDepth += 1;
 		try {
 			this.pushSceneToWasmDriver();
 			this.session.renderFrame();
@@ -2150,6 +2160,34 @@ export class BoardRenderer {
 			this.gpuSurfaceErrorDetail = summarizeRasterSurfaceFailure(err);
 			this.gpuSurfaceUnavailable = true;
 			this.gpuSurfacePresentedFrame = false;
+			this.cachedWasmGpuReady = false;
+		} finally {
+			this.wasmGpuFrameDepth -= 1;
+			if (this.wasmGpuFrameDepth === 0) {
+				this.syncGpuReadyCacheFromSession();
+			}
+		}
+	}
+
+	/** @emoji 🛡️ Reads GPU-surface attach state without calling WASM while `renderFrame` may still borrow the session across `device.poll` re-entry. */
+	private readGpuReady(): boolean {
+		if (this.wasmGpuFrameDepth > 0) {
+			return this.cachedWasmGpuReady;
+		}
+		this.syncGpuReadyCacheFromSession();
+		return this.cachedWasmGpuReady;
+	}
+
+	/** @emoji 📡 Refreshes {@link BoardRenderer.cachedWasmGpuReady} from WASM when no in-flight GPU frame holds the session borrow. */
+	private syncGpuReadyCacheFromSession(): void {
+		if (this.isDisposed) {
+			this.cachedWasmGpuReady = false;
+			return;
+		}
+		try {
+			this.cachedWasmGpuReady = this.session.gpuReady();
+		} catch {
+			this.cachedWasmGpuReady = false;
 		}
 	}
 
@@ -2282,7 +2320,7 @@ export class BoardRenderer {
 			if (this.gpuSurfaceErrorDetail) {
 				this.canvas.dataset.boardSurfaceFailure = this.gpuSurfaceErrorDetail.slice(0, 512);
 			}
-		} else if (this.gpuSurfacePresentedFrame && this.session.gpuReady()) {
+		} else if (this.gpuSurfacePresentedFrame && this.readGpuReady()) {
 			this.canvas.dataset.boardSurfaceState = "ready";
 			delete this.canvas.dataset.boardSurfaceFailure;
 		} else if (this.gpuSurfaceInitPromise) {
