@@ -168,11 +168,11 @@ export interface BoardHandleProps {
 
 export interface BoardEdgeProps {
 	contextMenu?: ContextMenuItem[];
-	from: string;
 	id: string;
 	selected?: boolean;
+	source: string;
 	style?: string;
-	to: string;
+	target: string;
 	userData?: Record<string, unknown>;
 	visible?: boolean;
 }
@@ -310,12 +310,12 @@ function applyHandleProps(instance: BoardHandleObject, descriptor: HandleDescrip
 	instance.setAngle(descriptor.angle);
 }
 
-function applyEdgeProps(instance: BoardEdgeObject, descriptor: EdgeDescriptor, fromHandle: BoardHandleObject, toHandle: BoardHandleObject): void {
+function applyEdgeProps(instance: BoardEdgeObject, descriptor: EdgeDescriptor, sourceHandle: BoardHandleObject, targetHandle: BoardHandleObject): void {
 	instance.selected = descriptor.selected ?? false;
 	instance.style = descriptor.style ?? null;
 	instance.userData = { ...(descriptor.userData ?? {}) };
 	instance.visible = descriptor.visible ?? true;
-	instance.setEndpoints(fromHandle, toHandle);
+	instance.setEndpoints(sourceHandle, targetHandle);
 }
 
 function nodeShapeSyncKey(descriptor: NodeDescriptor): "circle" | "rectangle" {
@@ -367,32 +367,49 @@ function newBoardNodeFromDescriptor(nodeDescriptor: NodeDescriptor): BoardNodeOb
 	});
 }
 
-/** @emoji 🔗 Merges WASM‑created edges into the JSX descriptor until React children list the same edge id (then it is dropped from {@link BoardRenderer.wasmHostAuthoredEdgeIds}). */
+/** @emoji 🔗 Merges WASM‑created edges into the JSX descriptor until React children list the same edge id (then authorship is cleared via {@link BoardRenderer.clearWasmHostAuthorshipForEdge}). */
 export function mergeWasmHostAuthoredEdgesIntoDescriptor(
 	renderer: BoardRenderer,
 	descriptor: BoardSceneDescriptor,
 ): BoardSceneDescriptor {
 	const jsxEdgeIds = new Set(descriptor.edges.map((edge) => edge.id));
-	for (const id of renderer.wasmHostAuthoredEdgeIds) {
+	for (const id of Array.from(renderer.wasmHostAuthoredEdgeIds)) {
 		if (jsxEdgeIds.has(id)) {
-			renderer.wasmHostAuthoredEdgeIds.delete(id);
+			renderer.clearWasmHostAuthorshipForEdge(id);
 		}
 	}
 	const extra: EdgeDescriptor[] = [];
 	for (const id of Array.from(renderer.wasmHostAuthoredEdgeIds)) {
 		const edge = renderer.scene.edges.get(id);
-		if (!edge) {
-			renderer.wasmHostAuthoredEdgeIds.delete(id);
+		if (edge) {
+			extra.push({
+				id: edge.id,
+				source: edge.source.id,
+				target: edge.target.id,
+				selected: edge.selected,
+				style: edge.style ?? undefined,
+				visible: edge.visible,
+				userData: { ...edge.userData },
+			});
+			continue;
+		}
+		const link = renderer.wasmHostAuthoredLinkByEdgeId.get(id);
+		if (!link) {
+			renderer.clearWasmHostAuthorshipForEdge(id);
+			continue;
+		}
+		const sourceH = renderer.scene.getObjectById(link.source);
+		const targetH = renderer.scene.getObjectById(link.target);
+		if (!(sourceH instanceof BoardHandleObject) || !(targetH instanceof BoardHandleObject)) {
 			continue;
 		}
 		extra.push({
-			id: edge.id,
-			from: edge.from.id,
-			to: edge.to.id,
-			selected: edge.selected,
-			style: edge.style ?? undefined,
-			visible: edge.visible,
-			userData: { ...edge.userData },
+			id,
+			source: link.source,
+			target: link.target,
+			selected: false,
+			visible: true,
+			userData: {},
 		});
 	}
 	if (extra.length === 0) {
@@ -408,22 +425,6 @@ export function syncBoardScene(renderer: BoardRenderer, descriptor: BoardSceneDe
 	const desiredEdgeIds = new Set(descriptor.edges.map((edge) => edge.id));
 
 	renderer.batch(() => {
-		for (const edge of Array.from(renderer.scene.edges.values())) {
-			if (!desiredEdgeIds.has(edge.id)) {
-				renderer.scene.remove(edge);
-			}
-		}
-		for (const handle of Array.from(renderer.scene.handles.values())) {
-			if (!desiredHandleIds.has(handle.id)) {
-				renderer.scene.remove(handle);
-			}
-		}
-		for (const node of Array.from(renderer.scene.nodes.values())) {
-			if (!desiredNodeIds.has(node.id)) {
-				renderer.scene.remove(node);
-			}
-		}
-
 		for (const nodeDescriptor of descriptor.nodes) {
 			let existingNode = renderer.scene.getObjectById(nodeDescriptor.id);
 			if (existingNode instanceof BoardNodeObject && instanceShapeSyncKey(existingNode) !== nodeShapeSyncKey(nodeDescriptor)) {
@@ -453,17 +454,34 @@ export function syncBoardScene(renderer: BoardRenderer, descriptor: BoardSceneDe
 		}
 
 		for (const edgeDescriptor of descriptor.edges) {
-			const fromHandle = renderer.scene.getObjectById(edgeDescriptor.from);
-			const toHandle = renderer.scene.getObjectById(edgeDescriptor.to);
-			if (!(fromHandle instanceof BoardHandleObject) || !(toHandle instanceof BoardHandleObject)) {
+			const sourceHandle = renderer.scene.getObjectById(edgeDescriptor.source);
+			const targetHandle = renderer.scene.getObjectById(edgeDescriptor.target);
+			if (!(sourceHandle instanceof BoardHandleObject) || !(targetHandle instanceof BoardHandleObject)) {
 				continue;
 			}
 			const existingEdge = renderer.scene.getObjectById(edgeDescriptor.id);
-			const edge = existingEdge instanceof BoardEdgeObject ? existingEdge : new BoardEdgeObject({ ...edgeDescriptor, from: fromHandle, to: toHandle });
+			const edge = existingEdge instanceof BoardEdgeObject ? existingEdge : new BoardEdgeObject({ ...edgeDescriptor, source: sourceHandle, target: targetHandle });
 			if (!(existingEdge instanceof BoardEdgeObject)) {
 				renderer.scene.add(edge);
 			}
-			applyEdgeProps(edge, edgeDescriptor, fromHandle, toHandle);
+			applyEdgeProps(edge, edgeDescriptor, sourceHandle, targetHandle);
+		}
+
+		for (const edge of Array.from(renderer.scene.edges.values())) {
+			if (!desiredEdgeIds.has(edge.id)) {
+				renderer.clearWasmHostAuthorshipForEdge(edge.id);
+				renderer.scene.remove(edge);
+			}
+		}
+		for (const handle of Array.from(renderer.scene.handles.values())) {
+			if (!desiredHandleIds.has(handle.id)) {
+				renderer.scene.remove(handle);
+			}
+		}
+		for (const node of Array.from(renderer.scene.nodes.values())) {
+			if (!desiredNodeIds.has(node.id)) {
+				renderer.scene.remove(node);
+			}
 		}
 	});
 
@@ -1005,18 +1023,18 @@ if (boardReactVitest) {
 			const descriptor = buildBoardSceneDescriptor(
 				<>
 					<Node id="a" radius={24} x={0} y={0}>
-						<Handle angle={0} id="a.out" />
+						<Handle angle={0} id="a:h0" />
 					</Node>
-					<Edge from="a.out" id="edge-1" to="a.out" />
+					<Edge id="edge-1" source="a:h0" target="a:h0" />
 				</>,
 			);
 
 			expect(descriptor.nodes).toHaveLength(1);
 			expect(descriptor.handles).toEqual([
-				{ angle: 0, contextMenu: undefined, id: "a.out", nodeId: "a", radius: undefined, selected: undefined, style: undefined, userData: undefined, visible: undefined },
+				{ angle: 0, contextMenu: undefined, id: "a:h0", nodeId: "a", radius: undefined, selected: undefined, style: undefined, userData: undefined, visible: undefined },
 			]);
 			expect(descriptor.edges).toEqual([
-				{ contextMenu: undefined, from: "a.out", id: "edge-1", selected: undefined, style: undefined, to: "a.out", userData: undefined, visible: undefined },
+				{ contextMenu: undefined, id: "edge-1", selected: undefined, source: "a:h0", style: undefined, target: "a:h0", userData: undefined, visible: undefined },
 			]);
 		});
 
@@ -1027,9 +1045,9 @@ if (boardReactVitest) {
 			const descriptor = buildBoardSceneDescriptor(
 				<>
 					<Node contextMenu={nodeMenu} id="a" radius={24} x={0} y={0}>
-						<Handle angle={0} contextMenu={handleMenu} id="a.out" />
+						<Handle angle={0} contextMenu={handleMenu} id="a:h0" />
 					</Node>
-					<Edge contextMenu={edgeMenu} from="a.out" id="edge-1" to="a.out" />
+					<Edge contextMenu={edgeMenu} id="edge-1" source="a:h0" target="a:h0" />
 				</>,
 			);
 			expect(descriptor.nodes[0]?.contextMenu).toEqual(nodeMenu);
@@ -1042,22 +1060,23 @@ if (boardReactVitest) {
 			const jsx = buildBoardSceneDescriptor(
 				<>
 					<Node id="a" radius={40} x={0} y={0}>
-						<Handle angle={0} id="a.out" />
+						<Handle angle={0} id="a:h0" />
 					</Node>
 					<Node id="b" radius={40} x={200} y={0}>
-						<Handle angle={Math.PI} id="b.in" />
+						<Handle angle={Math.PI} id="b:h0" />
 					</Node>
 				</>,
 			);
 			syncBoardScene(renderer, jsx);
-			const aOut = renderer.scene.handles.get("a.out");
-			const bIn = renderer.scene.handles.get("b.in");
+			const aOut = renderer.scene.handles.get("a:h0");
+			const bIn = renderer.scene.handles.get("b:h0");
 			expect(aOut).toBeDefined();
 			expect(bIn).toBeDefined();
 			renderer.scene.ingestWasmEdge(
-				new BoardEdgeObject({ from: aOut as BoardHandleObject, id: "edge-link-99", to: bIn as BoardHandleObject }),
+				new BoardEdgeObject({ id: "edge-link-99", source: aOut as BoardHandleObject, target: bIn as BoardHandleObject }),
 			);
 			renderer.wasmHostAuthoredEdgeIds.add("edge-link-99");
+			renderer.wasmHostAuthoredLinkByEdgeId.set("edge-link-99", { source: "a:h0", target: "b:h0" });
 			const merged = mergeWasmHostAuthoredEdgesIntoDescriptor(renderer, jsx);
 			expect(merged.edges.some((e) => e.id === "edge-link-99")).toBe(true);
 			syncBoardScene(renderer, merged);
@@ -1068,16 +1087,47 @@ if (boardReactVitest) {
 			const adopted = buildBoardSceneDescriptor(
 				<>
 					<Node id="a" radius={40} x={0} y={0}>
-						<Handle angle={0} id="a.out" />
+						<Handle angle={0} id="a:h0" />
 					</Node>
 					<Node id="b" radius={40} x={200} y={0}>
-						<Handle angle={Math.PI} id="b.in" />
+						<Handle angle={Math.PI} id="b:h0" />
 					</Node>
-					<Edge from="a.out" id="edge-link-99" to="b.in" />
+					<Edge id="edge-link-99" source="a:h0" target="b:h0" />
 				</>,
 			);
 			mergeWasmHostAuthoredEdgesIntoDescriptor(renderer, adopted);
 			expect(renderer.wasmHostAuthoredEdgeIds.has("edge-link-99")).toBe(false);
+			expect(renderer.wasmHostAuthoredLinkByEdgeId.has("edge-link-99")).toBe(false);
+			renderer.dispose();
+		});
+
+		it("mergeWasmHostAuthoredEdgesIntoDescriptor rebuilds from link map after scene edge removal", () => {
+			const renderer = new BoardRenderer({ renderMode: "headless-test" });
+			const jsx = buildBoardSceneDescriptor(
+				<>
+					<Node id="a" radius={40} x={0} y={0}>
+						<Handle angle={0} id="a:h0" />
+					</Node>
+					<Node id="b" radius={40} x={200} y={0}>
+						<Handle angle={Math.PI} id="b:h0" />
+					</Node>
+				</>,
+			);
+			syncBoardScene(renderer, jsx);
+			const aOut = renderer.scene.handles.get("a:h0");
+			const bIn = renderer.scene.handles.get("b:h0");
+			expect(aOut).toBeDefined();
+			expect(bIn).toBeDefined();
+			const edge = new BoardEdgeObject({ id: "edge-link-map", source: aOut as BoardHandleObject, target: bIn as BoardHandleObject });
+			renderer.scene.ingestWasmEdge(edge);
+			renderer.wasmHostAuthoredEdgeIds.add("edge-link-map");
+			renderer.wasmHostAuthoredLinkByEdgeId.set("edge-link-map", { source: "a:h0", target: "b:h0" });
+			renderer.scene.remove(edge);
+			expect(renderer.scene.edges.has("edge-link-map")).toBe(false);
+			const merged = mergeWasmHostAuthoredEdgesIntoDescriptor(renderer, jsx);
+			expect(merged.edges.some((e) => e.id === "edge-link-map")).toBe(true);
+			syncBoardScene(renderer, merged);
+			expect(renderer.scene.edges.has("edge-link-map")).toBe(true);
 			renderer.dispose();
 		});
 
@@ -1099,10 +1149,10 @@ if (boardReactVitest) {
 						width={800}
 					>
 						<Node id="a" radius={40} x={0} y={0}>
-							<Handle angle={0} id="a.out" />
+							<Handle angle={0} id="a:h0" />
 						</Node>
 						<Node id="b" radius={40} x={280} y={0}>
-							<Handle angle={Math.PI} id="b.in" />
+							<Handle angle={Math.PI} id="b:h0" />
 						</Node>
 					</BoardCanvas>,
 				);
@@ -1117,7 +1167,7 @@ if (boardReactVitest) {
 				configurable: true,
 				value: () => ({ bottom: 600, height: 600, left: 0, right: 800, top: 0, width: 800, x: 0, y: 0 }),
 			});
-			expect(renderer.scene.getObjectById("a.out")).toBeDefined();
+			expect(renderer.scene.getObjectById("a:h0")).toBeDefined();
 			expect(renderer.getWasmHostSceneMergeResyncEpoch()).toBe(0);
 			renderer.render();
 			const nodeA = renderer.scene.getObjectById("a") as BoardNodeObject;
@@ -1137,6 +1187,28 @@ if (boardReactVitest) {
 			expect(linkIds.length).toBe(1);
 			expect(renderer.wasmHostAuthoredEdgeIds.has(linkIds[0]!)).toBe(true);
 			expect(renderer.getWasmHostSceneMergeResyncEpoch()).toBeGreaterThan(0);
+			await act(async () => {
+				root.render(
+					<BoardCanvas
+						camera={{ x: 0, y: 0, zoom: 1 }}
+						height={600}
+						onReady={(r) => {
+							readyRenderer = r;
+						}}
+						renderMode="headless-test"
+						width={800}
+					>
+						<Node id="a" radius={40} x={0} y={0}>
+							<Handle angle={0} id="a:h0" />
+						</Node>
+						<Node id="b" radius={40} x={280} y={0}>
+							<Handle angle={Math.PI} id="b:h0" />
+						</Node>
+					</BoardCanvas>,
+				);
+			});
+			const linkIdsAfterRelayout = [...renderer.scene.edges.keys()].filter((k) => k.startsWith("edge-link-"));
+			expect(linkIdsAfterRelayout).toEqual(linkIds);
 			await act(async () => {
 				root.unmount();
 			});
@@ -1158,7 +1230,7 @@ if (boardReactVitest) {
 				renderer,
 				buildBoardSceneDescriptor(
 					<Node id="hit" radius={50} x={0} y={0}>
-						<Handle angle={0} id="hit.out" />
+						<Handle angle={0} id="hit:h0" />
 					</Node>,
 				),
 			);
@@ -1187,7 +1259,7 @@ if (boardReactVitest) {
 				renderer,
 				buildBoardSceneDescriptor(
 					<Node id="lonely" radius={10} x={0} y={0}>
-						<Handle angle={0} id="lonely.out" />
+						<Handle angle={0} id="lonely:h0" />
 					</Node>,
 				),
 			);
@@ -1304,7 +1376,7 @@ if (boardReactVitest) {
 			const renderer = new BoardRenderer({ renderMode: "headless-test" });
 			const firstDescriptor = buildBoardSceneDescriptor(
 				<Node draggable id="a" radius={24} x={10} y={20}>
-					<Handle angle={0} id="a.out" />
+					<Handle angle={0} id="a:h0" />
 				</Node>,
 			);
 			syncBoardScene(renderer, firstDescriptor);
@@ -1312,7 +1384,7 @@ if (boardReactVitest) {
 			const firstNode = renderer.scene.getObjectById("a");
 			const secondDescriptor = buildBoardSceneDescriptor(
 				<Node draggable id="a" radius={30} x={40} y={50}>
-					<Handle angle={Math.PI / 2} id="a.out" />
+					<Handle angle={Math.PI / 2} id="a:h0" />
 				</Node>,
 			);
 			syncBoardScene(renderer, secondDescriptor);
@@ -1330,12 +1402,12 @@ if (boardReactVitest) {
 			const renderer = new BoardRenderer({ renderMode: "headless-test" });
 			const descriptor = buildBoardSceneDescriptor(
 				<Node id="n" radius={20} x={0} y={0}>
-					<Handle angle={0} handleKind="flow-out" id="h1" />
+					<Handle angle={0} handleKind="slot-a" id="h1" />
 				</Node>,
 			);
 			syncBoardScene(renderer, descriptor);
 			const h = renderer.scene.getObjectById("h1") as BoardHandleObject;
-			expect(h.handleKind).toBe("flow-out");
+			expect(h.handleKind).toBe("slot-a");
 			renderer.dispose();
 		});
 
@@ -1343,14 +1415,14 @@ if (boardReactVitest) {
 			const renderer = new BoardRenderer({ renderMode: "headless-test" });
 			const circleDescriptor = buildBoardSceneDescriptor(
 				<Node id="a" radius={20} x={0} y={0}>
-					<Handle angle={0} id="a.out" />
+					<Handle angle={0} id="a:h0" />
 				</Node>,
 			);
 			syncBoardScene(renderer, circleDescriptor);
 			const firstNode = renderer.scene.getObjectById("a");
 			const rectDescriptor = buildBoardSceneDescriptor(
 				<Node height={30} id="a" shape="rectangle" width={40} x={0} y={0}>
-					<Handle angle={0} id="a.out" />
+					<Handle angle={0} id="a:h0" />
 				</Node>,
 			);
 			syncBoardScene(renderer, rectDescriptor);
@@ -1381,12 +1453,12 @@ if (boardReactVitest) {
 						width={640}
 					>
 						<Node draggable id="a" radius={28} x={0} y={0}>
-							<Handle angle={0} id="a.out" />
+							<Handle angle={0} id="a:h0" />
 						</Node>
 						<Node id="b" radius={28} x={180} y={0}>
-							<Handle angle={Math.PI} id="b.in" />
+							<Handle angle={Math.PI} id="b:h0" />
 						</Node>
-						<Edge from="a.out" id="edge-1" to="b.in" />
+						<Edge id="edge-1" source="a:h0" target="b:h0" />
 					</BoardCanvas>,
 				);
 				await Promise.resolve();
@@ -1405,12 +1477,12 @@ if (boardReactVitest) {
 						width={640}
 					>
 						<Node draggable id="a" radius={28} x={120} y={40}>
-							<Handle angle={0} id="a.out" />
+							<Handle angle={0} id="a:h0" />
 						</Node>
 						<Node id="b" radius={28} x={180} y={0}>
-							<Handle angle={Math.PI} id="b.in" />
+							<Handle angle={Math.PI} id="b:h0" />
 						</Node>
-						<Edge from="a.out" id="edge-1" to="b.in" />
+						<Edge id="edge-1" source="a:h0" target="b:h0" />
 					</BoardCanvas>,
 				);
 				await Promise.resolve();
@@ -1419,12 +1491,12 @@ if (boardReactVitest) {
 			const movedDescriptor = buildBoardSceneDescriptor(
 				<>
 					<Node draggable id="a" radius={28} x={120} y={40}>
-						<Handle angle={0} id="a.out" />
+						<Handle angle={0} id="a:h0" />
 					</Node>
 					<Node id="b" radius={28} x={180} y={0}>
-						<Handle angle={Math.PI} id="b.in" />
+						<Handle angle={Math.PI} id="b:h0" />
 					</Node>
-					<Edge from="a.out" id="edge-1" to="b.in" />
+					<Edge id="edge-1" source="a:h0" target="b:h0" />
 				</>,
 			);
 			syncBoardScene(createdRenderer, movedDescriptor);
@@ -1462,7 +1534,7 @@ if (boardReactVitest) {
 						width={160}
 					>
 						<Node id="a" radius={12} x={0} y={0}>
-							<Handle angle={0} id="a.out" />
+							<Handle angle={0} id="a:h0" />
 						</Node>
 					</BoardCanvas>,
 				);
@@ -1483,7 +1555,7 @@ if (boardReactVitest) {
 						width={160}
 					>
 						<Node id="a" radius={12} x={0} y={0}>
-							<Handle angle={0} id="a.out" />
+							<Handle angle={0} id="a:h0" />
 						</Node>
 					</BoardCanvas>,
 				);
@@ -1518,7 +1590,7 @@ if (boardReactVitest) {
 					<BoardCanvas camera={{ x: 0, y: 0, zoom: 1 }} height={120} renderMode="headless-test" width={160}>
 						<BoardSelectListenerStub />
 						<Node draggable id="a" radius={12} x={0} y={0}>
-							<Handle angle={0} id="a.out" />
+							<Handle angle={0} id="a:h0" />
 						</Node>
 					</BoardCanvas>,
 				);

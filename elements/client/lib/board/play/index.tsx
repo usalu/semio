@@ -454,11 +454,11 @@ function nakaginBoardMarkers(fixture: BoardFixtureV1, selectedIds: Set<string>):
 			{fixture.edges.map((edge) => (
 				<Edge
 					contextMenu={edge.id === demoEdgeId ? boardPlayDemoEdgeContextMenu : undefined}
-					from={edge.from}
 					id={edge.id}
 					key={edge.id}
 					selected={selectedIds.has(edge.id)}
-					to={edge.to}
+					source={edge.source}
+					target={edge.target}
 				/>
 			))}
 		</>
@@ -1196,8 +1196,8 @@ function InspectorHandleBatch({
 										...prev,
 										edges: prev.edges.map((edge) => ({
 											...edge,
-											from: edge.from === oldId ? nextId : edge.from,
-											to: edge.to === oldId ? nextId : edge.to,
+											source: edge.source === oldId ? nextId : edge.source,
+											target: edge.target === oldId ? nextId : edge.target,
 										})),
 										nodes: prev.nodes.map((node) => ({
 											...node,
@@ -1232,10 +1232,10 @@ function InspectorEdgeBatch({
 		() => edgeIds.map((id) => findEdge(fixture, id)).filter((e): e is BoardFixtureEdgeV1 => Boolean(e)),
 		[edgeIds, fixture],
 	);
-	const froms = edges.map((e) => e.from);
-	const tos = edges.map((e) => e.to);
-	const fromUniform = allEqual(froms);
-	const toUniform = allEqual(tos);
+	const sources = edges.map((e) => e.source);
+	const targets = edges.map((e) => e.target);
+	const sourceUniform = allEqual(sources);
+	const targetUniform = allEqual(targets);
 	const handleOptions = useMemo(() => listHandleIds(fixture), [fixture]);
 
 	const patchEdges = useCallback(
@@ -1250,15 +1250,15 @@ function InspectorEdgeBatch({
 
 	return (
 		<div className="border-element/60 space-y-3 border-l pl-2">
-			<Label id="board-play.inspector.edge.from" label="From">
+			<Label id="board-play.inspector.edge.source" label="Source">
 				<Select
 					onValueChange={(v) => {
-						patchEdges((e) => ({ ...e, from: v }));
+						patchEdges((e) => ({ ...e, source: v }));
 					}}
-					value={fromUniform ? froms[0] : undefined}
+					value={sourceUniform ? sources[0] : undefined}
 				>
 					<SelectTrigger className="h-7 font-mono text-xs">
-						<SelectValue placeholder={fromUniform ? undefined : "Mixed"} />
+						<SelectValue placeholder={sourceUniform ? undefined : "Mixed"} />
 					</SelectTrigger>
 					<SelectContent>
 						{handleOptions.map((hid) => (
@@ -1269,19 +1269,19 @@ function InspectorEdgeBatch({
 					</SelectContent>
 				</Select>
 			</Label>
-			<Label id="board-play.inspector.edge.to" label="To">
+			<Label id="board-play.inspector.edge.target" label="Target">
 				<Select
 					onValueChange={(v) => {
-						patchEdges((e) => ({ ...e, to: v }));
+						patchEdges((e) => ({ ...e, target: v }));
 					}}
-					value={toUniform ? tos[0] : undefined}
+					value={targetUniform ? targets[0] : undefined}
 				>
 					<SelectTrigger className="h-7 font-mono text-xs">
-						<SelectValue placeholder={toUniform ? undefined : "Mixed"} />
+						<SelectValue placeholder={targetUniform ? undefined : "Mixed"} />
 					</SelectTrigger>
 					<SelectContent>
 						{handleOptions.map((hid) => (
-							<SelectItem key={`to-${hid}`} value={hid}>
+							<SelectItem key={`target-${hid}`} value={hid}>
 								{hid}
 							</SelectItem>
 						))}
@@ -1575,7 +1575,7 @@ function BoardPlayInner(): ReactElement {
 			const hset = new Set(n.handles.map((h) => h.id));
 			return {
 				...prev,
-				edges: prev.edges.filter((e) => !hset.has(e.from) && !hset.has(e.to)),
+				edges: prev.edges.filter((e) => !hset.has(e.source) && !hset.has(e.target)),
 				nodes: prev.nodes.filter((x) => x.id !== id),
 			};
 		});

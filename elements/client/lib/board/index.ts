@@ -44,10 +44,10 @@ export type BoardSelectionMethod = "lasso" | "rectangle";
 export type BoardSelectionMode = "additive" | "invertive" | "subtractive";
 export type BoardSelectionTarget = "edges" | "nodes" | "nodes&edges";
 
-/** @emoji 🔗 One allowed directed pair for handle link gestures (`from` source handle kind → `to` target handle kind). */
+/** @emoji 🔗 One allowed directed pair for handle link gestures (`source` handle kind → `target` handle kind). */
 export interface BoardHandleLinkCompatPair {
-	from: string;
-	to: string;
+	source: string;
+	target: string;
 }
 /** 🧱 World-space clip tiling for the Vello WASM canvas (`world-clip`) or monolithic encoding (`none`). */
 export type WorldRasterTilingKind = "none" | "world-clip";
@@ -104,7 +104,7 @@ export interface BoardFixtureCircleNodeV1 {
 	cad?: { x: number; y: number; z: number } | null;
 	handles: BoardFixtureHandleV1[];
 	id: string;
-	/** @emoji 🌳 When true, directed edges {@link Edge.from}→{@link Edge.to} form parent→child links; subtree membership derives from this root. */
+	/** @emoji 🌳 When true, directed edges {@link Edge.source}→{@link Edge.target} form parent→child links; subtree membership derives from this root. */
 	root?: boolean;
 	radius: number;
 	shape?: "circle";
@@ -127,7 +127,7 @@ export interface BoardFixtureRectangleNodeV1 {
 	handles: BoardFixtureHandleV1[];
 	height: number;
 	id: string;
-	/** @emoji 🌳 When true, directed edges {@link Edge.from}→{@link Edge.to} form parent→child links; subtree membership derives from this root. */
+	/** @emoji 🌳 When true, directed edges {@link Edge.source}→{@link Edge.target} form parent→child links; subtree membership derives from this root. */
 	root?: boolean;
 	shape: "rectangle";
 	text?: string;
@@ -149,9 +149,9 @@ export type BoardFixtureNodeV1 = BoardFixtureCircleNodeV1 | BoardFixtureRectangl
 
 /** @emoji 📄 Edge record inside {@link BoardFixtureV1}. */
 export interface BoardFixtureEdgeV1 {
-	from: string;
 	id: string;
-	to: string;
+	source: string;
+	target: string;
 }
 
 /** @emoji 📄 Parsed `elements.board.fixture/v1` JSON for declarative board scenes. */
@@ -205,7 +205,7 @@ export interface BoardEventMap {
 	childNodeChange: BoardGraphNodeIdPayload;
 	childNodesChange: BoardChildNodesChangePayload;
 	contextmenu: { clientX: number; clientY: number; id: string | null; x: number; y: number };
-	edgeCreate: { id: string; from: string; to: string };
+	edgeCreate: { id: string; source: string; target: string };
 	edgeDelete: { id: string };
 	fixtureDrop: BoardFixtureDropDetail;
 	hover: BoardHoverPayload;
@@ -230,7 +230,7 @@ export interface BoardObjectOptions {
 /** @emoji 🔵 World-space circle node (center + radius). */
 export type CircleNodeOptions = BoardObjectOptions & {
 	handles?: Handle[];
-	/** @emoji 🌳 Marks this node as a hierarchy root; edges follow parent {@link Handle} {@link Edge.from} → child {@link Edge.to}. */
+	/** @emoji 🌳 Marks this node as a hierarchy root; edges follow parent {@link Handle} {@link Edge.source} → child {@link Edge.target}. */
 	root?: boolean;
 	radius: number;
 	shape?: "circle";
@@ -251,7 +251,7 @@ export type CircleNodeOptions = BoardObjectOptions & {
 export type RectangleNodeOptions = BoardObjectOptions & {
 	handles?: Handle[];
 	height: number;
-	/** @emoji 🌳 Marks this node as a hierarchy root; edges follow parent {@link Handle} {@link Edge.from} → child {@link Edge.to}. */
+	/** @emoji 🌳 Marks this node as a hierarchy root; edges follow parent {@link Handle} {@link Edge.source} → child {@link Edge.target}. */
 	root?: boolean;
 	shape: "rectangle";
 	text?: string;
@@ -280,8 +280,8 @@ export interface HandleOptions extends BoardObjectOptions {
 }
 
 export interface EdgeOptions extends BoardObjectOptions {
-	from: Handle;
-	to: Handle;
+	source: Handle;
+	target: Handle;
 }
 
 type FrameListener = (state: FrameState, dt: number) => void;
@@ -788,12 +788,12 @@ export function parseBoardFixtureV1(raw: unknown): BoardFixtureV1 | null {
 		}
 		const edge = entry as Record<string, unknown>;
 		const id = typeof edge.id === "string" ? edge.id : null;
-		const from = typeof edge.from === "string" ? edge.from : null;
-		const to = typeof edge.to === "string" ? edge.to : null;
-		if (!id || !from || !to) {
+		const source = typeof edge.source === "string" ? edge.source : null;
+		const target = typeof edge.target === "string" ? edge.target : null;
+		if (!id || !source || !target) {
 			return null;
 		}
-		edges.push({ from, id, to });
+		edges.push({ id, source, target });
 	}
 	const meta = root.meta && typeof root.meta === "object" ? (root.meta as Record<string, unknown>) : undefined;
 	return { camera, edges, meta, nodes, schema: "elements.board.fixture/v1" };
@@ -951,11 +951,11 @@ export function boardNodeTextPlacementAnchor(
 export type CanvasTextMeasuring = Pick<CanvasRenderingContext2D, "font" | "measureText">;
 
 /** 🧭 Builds a cubic whose control arms leave/arrive along circle normals (radial), not along handle tangents. */
-export function computeEdgeBezier(fromHandle: Handle, toHandle: Handle): CubicBezierCurve {
-	const fromPoint = fromHandle.position;
-	const toPoint = toHandle.position;
-	const fromCenter = { x: fromHandle.node.x, y: fromHandle.node.y };
-	const toCenter = { x: toHandle.node.x, y: toHandle.node.y };
+export function computeEdgeBezier(sourceHandle: Handle, targetHandle: Handle): CubicBezierCurve {
+	const fromPoint = sourceHandle.position;
+	const toPoint = targetHandle.position;
+	const fromCenter = { x: sourceHandle.node.x, y: sourceHandle.node.y };
+	const toCenter = { x: targetHandle.node.x, y: targetHandle.node.y };
 	const flat = boardComputeEdgeBezier(
 		fromPoint.x,
 		fromPoint.y,
@@ -1209,15 +1209,15 @@ export class Handle extends BoardObject {
 	}
 }
 
-/** 🪢 Cubic edge between two boundary handles; control points sit on the radial **outside** of each node so the stroke never bows inward through the disk. Handles are not reversible: {@link from} is the parent-side anchor and {@link to} the child-side anchor for {@link Node.root} subtree reachability. */
+/** 🪢 Cubic edge between two boundary handles; control points sit on the radial **outside** of each node so the stroke never bows inward through the disk. Handles are not reversible: {@link Edge.source} is the parent-side anchor and {@link Edge.target} the child-side anchor for {@link Node.root} subtree reachability. */
 export class Edge extends BoardObject {
-	from: Handle;
-	to: Handle;
+	source: Handle;
+	target: Handle;
 
 	constructor(options: EdgeOptions) {
 		super(options.id, options);
-		this.from = options.from;
-		this.to = options.to;
+		this.source = options.source;
+		this.target = options.target;
 	}
 
 	get kind(): BoardObjectKind {
@@ -1225,12 +1225,12 @@ export class Edge extends BoardObject {
 	}
 
 	get curve(): CubicBezierCurve {
-		return computeEdgeBezier(this.from, this.to);
+		return computeEdgeBezier(this.source, this.target);
 	}
 
-	setEndpoints(fromHandle: Handle, toHandle: Handle): this {
-		this.from = fromHandle;
-		this.to = toHandle;
+	setEndpoints(sourceHandle: Handle, targetHandle: Handle): this {
+		this.source = sourceHandle;
+		this.target = targetHandle;
 		return this;
 	}
 }
@@ -1283,7 +1283,7 @@ export class BoardScene {
 		this.edges.set(object.id, object as Edge);
 		object.parent = this;
 		object.attachRenderer(this.renderer);
-		this.renderer?.emit("edgeCreate", { id: object.id, from: (object as Edge).from.id, to: (object as Edge).to.id });
+		this.renderer?.emit("edgeCreate", { id: object.id, source: (object as Edge).source.id, target: (object as Edge).target.id });
 		this.renderer?.markDirty();
 		return this;
 	}
@@ -1300,7 +1300,8 @@ export class BoardScene {
 	remove(object: BoardObject): this {
 		if (object instanceof Node) {
 			for (const edge of Array.from(this.edges.values())) {
-				if (edge.from.node === object || edge.to.node === object) {
+				if (edge.source.node === object || edge.target.node === object) {
+					this.renderer?.clearWasmHostAuthorshipForEdge(edge.id);
 					this.remove(edge);
 				}
 			}
@@ -1317,7 +1318,8 @@ export class BoardScene {
 
 		if (object instanceof Handle) {
 			for (const edge of Array.from(this.edges.values())) {
-				if (edge.from === object || edge.to === object) {
+				if (edge.source === object || edge.target === object) {
+					this.renderer?.clearWasmHostAuthorshipForEdge(edge.id);
 					this.remove(edge);
 				}
 			}
@@ -1332,7 +1334,6 @@ export class BoardScene {
 		this.edges.delete(object.id);
 		object.parent = null;
 		object.attachRenderer(null);
-		this.renderer?.forgetWasmHostAuthoredEdge(object.id);
 		this.renderer?.markDirty();
 		return this;
 	}
@@ -1360,7 +1361,7 @@ export class BoardScene {
 //#endregion 🔖Scene
 
 //#region 🔖DirectedGraphObservation
-/** @emoji 🧮 Immutable snapshot for {@link BoardRenderer} hierarchy callbacks (roots + directed reachability along {@link Edge.from}→{@link Edge.to}). */
+/** @emoji 🧮 Immutable snapshot for {@link BoardRenderer} hierarchy callbacks (roots + directed reachability along {@link Edge.source}→{@link Edge.target}). */
 export interface BoardGraphObservationSnapshot {
 	childEdgeIds: string[];
 	childNodeIds: string[];
@@ -1410,11 +1411,11 @@ function boardGraphNodeSig(node: Node): string {
 
 function boardGraphEdgeSig(edge: Edge): string {
 	return JSON.stringify({
-		from: edge.from.id,
+		source: edge.source.id,
 		id: edge.id,
 		selected: edge.selected,
 		style: edge.style,
-		to: edge.to.id,
+		target: edge.target.id,
 		visible: edge.visible,
 	});
 }
@@ -1428,10 +1429,10 @@ export function computeBoardGraphObservationSnapshot(scene: BoardScene): BoardGr
 	while (queue.length > 0) {
 		const u = queue.shift()!;
 		for (const edge of scene.edges.values()) {
-			if (edge.from.node.id !== u) {
+			if (edge.source.node.id !== u) {
 				continue;
 			}
-			const v = edge.to.node.id;
+			const v = edge.target.node.id;
 			if (!reachable.has(v)) {
 				reachable.add(v);
 				queue.push(v);
@@ -1441,10 +1442,10 @@ export function computeBoardGraphObservationSnapshot(scene: BoardScene): BoardGr
 	const childNodeIds = sortIds([...reachable].filter((id) => !rootSet.has(id)));
 	const childEdgeIds = sortIds(
 		[...scene.edges.values()]
-			.filter((e) => reachable.has(e.from.node.id) && reachable.has(e.to.node.id))
+			.filter((e) => reachable.has(e.source.node.id) && reachable.has(e.target.node.id))
 			.map((e) => e.id),
 	);
-	const parentEdgeIds = sortIds([...scene.edges.values()].filter((e) => rootSet.has(e.from.node.id)).map((e) => e.id));
+	const parentEdgeIds = sortIds([...scene.edges.values()].filter((e) => rootSet.has(e.source.node.id)).map((e) => e.id));
 	const nodeSigById = new Map<string, string>();
 	for (const node of scene.nodes.values()) {
 		nodeSigById.set(node.id, boardGraphNodeSig(node));
@@ -1482,6 +1483,8 @@ export class BoardRenderer {
 	readonly session: BoardSession;
 	/** @emoji 🔗 Edge ids created by the WASM host (link gesture) until the same id appears in React `children`; merged into the descriptor passed to {@link syncBoardScene}. */
 	readonly wasmHostAuthoredEdgeIds = new Set<string>();
+	/** @emoji 🔗 Endpoint ids for each {@link BoardRenderer.wasmHostAuthoredEdgeIds} entry so merge can rebuild the descriptor if the scene edge was removed transiently (e.g. handle purge ordering). */
+	readonly wasmHostAuthoredLinkByEdgeId = new Map<string, { source: string; target: string }>();
 
 	private batchDepth = 0;
 	/** @emoji 🔁 Nesting depth for {@link BoardRenderer.render}; defers {@link BoardRenderer.invalidate} so ResizeObserver / layout cannot re-enter WASM during `renderFrame` (`borrow_fail`). */
@@ -1641,8 +1644,8 @@ export class BoardRenderer {
 	/** @emoji 🔗 Sets ordered handle-kind compatibility pairs for link gestures (empty = unrestricted). */
 	setHandleLinkCompatibility(pairs: readonly BoardHandleLinkCompatPair[] | undefined): void {
 		const normalized = (pairs ?? []).map((p) => ({
-			from: String(p.from ?? "").trim(),
-			to: String(p.to ?? "").trim(),
+			source: String(p.source ?? "").trim(),
+			target: String(p.target ?? "").trim(),
 		}));
 		const json = JSON.stringify(normalized);
 		if (json === this.handleLinkCompatJson) {
@@ -2020,8 +2023,8 @@ export class BoardRenderer {
 		for (const edge of this.scene.edges.values()) {
 			edges.push({
 				id: edge.id,
-				from: edge.from.id,
-				to: edge.to.id,
+				source: edge.source.id,
+				target: edge.target.id,
 				selected: edge.selected,
 				style: edge.style,
 				visible: edge.visible,
@@ -2159,10 +2162,11 @@ export class BoardRenderer {
 						const id = String((row.payload as { id: string }).id);
 						const edge = this.scene.edges.get(id);
 						if (edge) {
+							this.clearWasmHostAuthorshipForEdge(id);
 							this.scene.remove(edge);
 							graphMutatedForHostMerge = true;
 						} else {
-							this.wasmHostAuthoredEdgeIds.delete(id);
+							this.clearWasmHostAuthorshipForEdge(id);
 							graphMutatedForHostMerge = true;
 						}
 						this.emitter.emit("edgeDelete", { id });
@@ -2180,20 +2184,21 @@ export class BoardRenderer {
 					}
 					case "edgeCreate": {
 						const id = String(row.payload.id ?? "");
-						const fromId = String(row.payload.from ?? "");
-						const toId = String(row.payload.to ?? "");
-						if (!id || !fromId || !toId || this.scene.edges.has(id)) {
+						const sourceId = String(row.payload.source ?? "");
+						const targetId = String(row.payload.target ?? "");
+						if (!id || !sourceId || !targetId || this.scene.edges.has(id)) {
 							break;
 						}
-						const fromObj = this.scene.getObjectById(fromId);
-						const toObj = this.scene.getObjectById(toId);
-						if (!(fromObj instanceof Handle) || !(toObj instanceof Handle)) {
+						const sourceObj = this.scene.getObjectById(sourceId);
+						const targetObj = this.scene.getObjectById(targetId);
+						if (!(sourceObj instanceof Handle) || !(targetObj instanceof Handle)) {
 							break;
 						}
 						this.wasmHostAuthoredEdgeIds.add(id);
-						this.scene.ingestWasmEdge(new Edge({ id, from: fromObj, to: toObj }));
+						this.wasmHostAuthoredLinkByEdgeId.set(id, { source: sourceId, target: targetId });
+						this.scene.ingestWasmEdge(new Edge({ id, source: sourceObj, target: targetObj }));
 						graphMutatedForHostMerge = true;
-						this.emitter.emit("edgeCreate", { id, from: fromId, to: toId });
+						this.emitter.emit("edgeCreate", { id, source: sourceId, target: targetId });
 						break;
 					}
 					default:
@@ -2326,9 +2331,10 @@ export class BoardRenderer {
 		}
 	}
 
-	/** @emoji 🔗 Drops a WASM‑authored edge id when the edge leaves the scene (no longer merged on the next React sync). */
-	forgetWasmHostAuthoredEdge(edgeId: string): void {
+	/** @emoji 🔗 Clears WASM‑host authorship for an edge id (gesture link tracking + endpoint map); call when the link is deleted, adopted into JSX, or purged from the merged descriptor. */
+	clearWasmHostAuthorshipForEdge(edgeId: string): void {
 		this.wasmHostAuthoredEdgeIds.delete(edgeId);
+		this.wasmHostAuthoredLinkByEdgeId.delete(edgeId);
 	}
 
 	dispose(): void {
@@ -2336,6 +2342,7 @@ export class BoardRenderer {
 		this.detachCanvasListeners();
 		this.textOverlayCanvas = null;
 		this.wasmHostAuthoredEdgeIds.clear();
+		this.wasmHostAuthoredLinkByEdgeId.clear();
 		this.session.free();
 		this.gpuSurfacePresentedFrame = false;
 		this.gpuSurfaceErrorDetail = "";
@@ -2753,8 +2760,8 @@ if (boardVitest) {
 		it("places cubic edge control arms along circle normals at the anchors", () => {
 			const sourceNode = new Node({ id: "a", radius: 40, x: 0, y: 0 });
 			const targetNode = new Node({ id: "b", radius: 40, x: 300, y: 0 });
-			const sourceHandle = new Handle({ angle: 0, id: "a.out", node: sourceNode });
-			const targetHandle = new Handle({ angle: Math.PI, id: "b.in", node: targetNode });
+			const sourceHandle = new Handle({ angle: 0, id: "a:h0", node: sourceNode });
+			const targetHandle = new Handle({ angle: Math.PI, id: "b:h0", node: targetNode });
 			const curve = computeEdgeBezier(sourceHandle, targetHandle);
 
 			expect(curve.p0.x).toBeCloseTo(40);
@@ -2817,21 +2824,21 @@ if (boardVitest) {
 		it("stores nodes, handles, and edges with stable ids and emits edge creation", () => {
 			const { canvas } = createMockCanvas();
 			const renderer = new BoardRenderer({ canvas, renderMode: "headless-test" });
-			const edgeEvents: Array<{ id: string; from: string; to: string }> = [];
+			const edgeEvents: Array<{ id: string; source: string; target: string }> = [];
 			renderer.on("edgeCreate", (event) => edgeEvents.push(event));
 
 			const sourceNode = new Node({ id: "source", radius: 36, x: 0, y: 0 });
 			const targetNode = new Node({ id: "target", radius: 36, x: 220, y: 80 });
-			const sourceHandle = new Handle({ angle: 0, id: "source.out", node: sourceNode });
-			const targetHandle = new Handle({ angle: Math.PI, id: "target.in", node: targetNode });
-			const edge = new Edge({ from: sourceHandle, id: "edge-1", to: targetHandle });
+			const sourceHandle = new Handle({ angle: 0, id: "src-h", node: sourceNode });
+			const targetHandle = new Handle({ angle: Math.PI, id: "tgt-h", node: targetNode });
+			const edge = new Edge({ source: sourceHandle, id: "edge-1", target: targetHandle });
 
 			renderer.scene.add(sourceNode).add(targetNode).add(edge);
 
 			expect(renderer.scene.getObjectById("source")).toBe(sourceNode);
-			expect(renderer.scene.getObjectById("source.out")).toBe(sourceHandle);
+			expect(renderer.scene.getObjectById("src-h")).toBe(sourceHandle);
 			expect(renderer.scene.getObjectById("edge-1")).toBe(edge);
-			expect(edgeEvents).toEqual([{ id: "edge-1", from: "source.out", to: "target.in" }]);
+			expect(edgeEvents).toEqual([{ id: "edge-1", source: "src-h", target: "tgt-h" }]);
 
 			renderer.dispose();
 		});
@@ -2839,13 +2846,13 @@ if (boardVitest) {
 		it("creates an edge when linking two handles with a pointer drag through WASM", () => {
 			const { canvas } = createMockCanvas();
 			const renderer = new BoardRenderer({ canvas, renderMode: "headless-test" });
-			const edgeEvents: Array<{ id: string; from: string; to: string }> = [];
+			const edgeEvents: Array<{ id: string; source: string; target: string }> = [];
 			renderer.on("edgeCreate", (event) => edgeEvents.push(event));
 
 			const a = new Node({ id: "a", radius: 40, x: 0, y: 0 });
 			const b = new Node({ id: "b", radius: 40, x: 280, y: 0 });
-			new Handle({ angle: 0, id: "a.out", node: a });
-			new Handle({ angle: Math.PI, id: "b.in", node: b });
+			new Handle({ angle: 0, id: "a:h0", node: a });
+			new Handle({ angle: Math.PI, id: "b:h0", node: b });
 			renderer.scene.add(a).add(b);
 			renderer.render();
 
@@ -2868,8 +2875,8 @@ if (boardVitest) {
 
 			expect(edgeEvents.length).toBe(1);
 			expect(renderer.scene.edges.has(edgeEvents[0].id)).toBe(true);
-			expect(edgeEvents[0].from).toBe("a.out");
-			expect(edgeEvents[0].to).toBe("b.in");
+			expect(edgeEvents[0].source).toBe("a:h0");
+			expect(edgeEvents[0].target).toBe("b:h0");
 
 			renderer.dispose();
 		});
@@ -2884,9 +2891,9 @@ if (boardVitest) {
 
 			const sourceNode = new Node({ id: "source", radius: 36, x: 0, y: 0 });
 			const targetNode = new Node({ id: "target", radius: 36, x: 220, y: 0 });
-			const sourceHandle = new Handle({ angle: 0, id: "source.out", node: sourceNode });
-			const targetHandle = new Handle({ angle: Math.PI, id: "target.in", node: targetNode });
-			const edge = new Edge({ from: sourceHandle, id: "edge-1", to: targetHandle });
+			const sourceHandle = new Handle({ angle: 0, id: "src-h", node: sourceNode });
+			const targetHandle = new Handle({ angle: Math.PI, id: "tgt-h", node: targetNode });
+			const edge = new Edge({ source: sourceHandle, id: "edge-1", target: targetHandle });
 			renderer.scene.add(sourceNode).add(targetNode).add(edge);
 			renderer.render();
 
@@ -2920,9 +2927,9 @@ if (boardVitest) {
 			const renderer = new BoardRenderer({ canvas, renderMode: "headless-test" });
 			const sourceNode = new Node({ id: "source", radius: 36, x: 0, y: 0 });
 			const targetNode = new Node({ id: "target", radius: 36, x: 220, y: 0 });
-			const sourceHandle = new Handle({ angle: 0, id: "source.out", node: sourceNode });
-			const targetHandle = new Handle({ angle: Math.PI, id: "target.in", node: targetNode });
-			const edge = new Edge({ from: sourceHandle, id: "edge-1", to: targetHandle });
+			const sourceHandle = new Handle({ angle: 0, id: "src-h", node: sourceNode });
+			const targetHandle = new Handle({ angle: Math.PI, id: "tgt-h", node: targetNode });
+			const edge = new Edge({ source: sourceHandle, id: "edge-1", target: targetHandle });
 			renderer.scene.add(sourceNode).add(targetNode).add(edge);
 			renderer.render();
 
@@ -3069,9 +3076,9 @@ if (boardVitest) {
 			});
 			const sourceNode = new Node({ id: "source", radius: 40, x: 0, y: 0 });
 			const targetNode = new Node({ id: "target", radius: 40, x: 200, y: 0 });
-			const sourceHandle = new Handle({ angle: 0, id: "source.out", node: sourceNode });
-			const targetHandle = new Handle({ angle: Math.PI, id: "target.in", node: targetNode });
-			const edge = new Edge({ from: sourceHandle, id: "edge-1", to: targetHandle });
+			const sourceHandle = new Handle({ angle: 0, id: "src-h", node: sourceNode });
+			const targetHandle = new Handle({ angle: Math.PI, id: "tgt-h", node: targetNode });
+			const edge = new Edge({ source: sourceHandle, id: "edge-1", target: targetHandle });
 			renderer.scene.add(sourceNode).add(targetNode).add(edge);
 			renderer.render();
 
@@ -3083,7 +3090,7 @@ if (boardVitest) {
 
 			const ids = renderer.selection.getSnapshot().ids;
 			expect(ids.includes("source")).toBe(true);
-			expect(ids.includes("source.out")).toBe(true);
+			expect(ids.includes("src-h")).toBe(true);
 			renderer.dispose();
 		});
 
@@ -3092,9 +3099,9 @@ if (boardVitest) {
 			const renderer = new BoardRenderer({ canvas, renderMode: "headless-test", selection: { method: "lasso", mode: "additive", target: "edges" } });
 			const sourceNode = new Node({ id: "source", radius: 12, x: -80, y: 0 });
 			const targetNode = new Node({ id: "target", radius: 12, x: 80, y: 0 });
-			const sourceHandle = new Handle({ angle: 0, id: "source.out", node: sourceNode });
-			const targetHandle = new Handle({ angle: Math.PI, id: "target.in", node: targetNode });
-			const edge = new Edge({ from: sourceHandle, id: "edge", to: targetHandle });
+			const sourceHandle = new Handle({ angle: 0, id: "src-h", node: sourceNode });
+			const targetHandle = new Handle({ angle: Math.PI, id: "tgt-h", node: targetNode });
+			const edge = new Edge({ source: sourceHandle, id: "edge", target: targetHandle });
 			renderer.scene.add(sourceNode).add(targetNode).add(edge);
 			renderer.render();
 
@@ -3142,11 +3149,11 @@ if (boardVitest) {
 		it("parses minimal v1 fixture payloads", () => {
 			const parsed = parseBoardFixtureV1({
 				camera: { x: 1, y: 2, zoom: 0.5 },
-				edges: [{ from: "a.out", id: "e1", to: "b.in" }],
+				edges: [{ id: "e1", source: "a:h0", target: "b:h0" }],
 				meta: {},
 				nodes: [
-					{ handles: [{ angle: 0, id: "a.out" }], id: "a", radius: 10, text: "α", x: 0, y: 0 },
-					{ handles: [{ angle: 3.14, id: "b.in" }], id: "b", radius: 10, x: 50, y: 0 },
+					{ handles: [{ angle: 0, id: "a:h0" }], id: "a", radius: 10, text: "α", x: 0, y: 0 },
+					{ handles: [{ angle: 3.14, id: "b:h0" }], id: "b", radius: 10, x: 50, y: 0 },
 				],
 				schema: "elements.board.fixture/v1",
 			});
@@ -3164,7 +3171,7 @@ if (boardVitest) {
 				edges: [],
 				nodes: [
 					{
-						handles: [{ angle: 0, id: "box.out" }],
+						handles: [{ angle: 0, id: "box:h0" }],
 						height: 24,
 						id: "box",
 						shape: "rectangle",
@@ -3319,10 +3326,10 @@ if (boardVitest) {
 		it("round-trips drag codec for v1 fixtures", () => {
 			const fixture: BoardFixtureV1 = {
 				camera: { x: 0, y: 0, zoom: 1 },
-				edges: [{ from: "a.out", id: "e1", to: "b.in" }],
+				edges: [{ id: "e1", source: "a:h0", target: "b:h0" }],
 				nodes: [
 					{
-						handles: [{ angle: 0, id: "a.out" }],
+						handles: [{ angle: 0, id: "a:h0" }],
 						id: "a",
 						radius: 10,
 						shape: "circle",
@@ -3333,7 +3340,7 @@ if (boardVitest) {
 						x: 0,
 						y: 0,
 					},
-					{ handles: [{ angle: 3.14, id: "b.in" }], id: "b", radius: 10, shape: "circle", text: "B", x: 50, y: 0 },
+					{ handles: [{ angle: 3.14, id: "b:h0" }], id: "b", radius: 10, shape: "circle", text: "B", x: 50, y: 0 },
 				],
 				schema: "elements.board.fixture/v1",
 			};
@@ -3372,12 +3379,12 @@ if (boardVitest) {
 			const root = new Node({ id: "root", radius: 10, root: true, x: 0, y: 0 });
 			const mid = new Node({ id: "mid", radius: 10, x: 50, y: 0 });
 			const leaf = new Node({ id: "leaf", radius: 10, x: 100, y: 0 });
-			const hRoot = new Handle({ angle: 0, id: "root.out", node: root });
-			const hMidIn = new Handle({ angle: Math.PI, id: "mid.in", node: mid });
-			const hMidOut = new Handle({ angle: 0, id: "mid.out", node: mid });
-			const hLeafIn = new Handle({ angle: Math.PI, id: "leaf.in", node: leaf });
-			const e1 = new Edge({ from: hRoot, id: "e1", to: hMidIn });
-			const e2 = new Edge({ from: hMidOut, id: "e2", to: hLeafIn });
+			const hRoot = new Handle({ angle: 0, id: "root:h0", node: root });
+			const hMidIn = new Handle({ angle: Math.PI, id: "mid:h0", node: mid });
+			const hMidOut = new Handle({ angle: 0, id: "mid:h1", node: mid });
+			const hLeafIn = new Handle({ angle: Math.PI, id: "leaf:h0", node: leaf });
+			const e1 = new Edge({ source: hRoot, id: "e1", target: hMidIn });
+			const e2 = new Edge({ source: hMidOut, id: "e2", target: hLeafIn });
 			renderer.scene.add(root).add(mid).add(leaf).add(e1).add(e2);
 			const snap = computeBoardGraphObservationSnapshot(renderer.scene);
 			expect(snap.rootIds).toEqual(["root"]);
@@ -3402,9 +3409,9 @@ if (boardVitest) {
 			];
 			const root = new Node({ id: "root", radius: 10, root: true, x: 0, y: 0 });
 			const child = new Node({ id: "child", radius: 10, x: 40, y: 0 });
-			const hOut = new Handle({ angle: 0, id: "root.out", node: root });
-			const hIn = new Handle({ angle: Math.PI, id: "child.in", node: child });
-			const edge = new Edge({ from: hOut, id: "link", to: hIn });
+			const hOut = new Handle({ angle: 0, id: "root:h0", node: root });
+			const hIn = new Handle({ angle: Math.PI, id: "child:h0", node: child });
+			const edge = new Edge({ source: hOut, id: "link", target: hIn });
 			renderer.scene.add(root).add(child).add(edge);
 			await Promise.resolve();
 			expect(events.some((e) => e.startsWith("parentNodeChange:root"))).toBe(true);
@@ -3678,12 +3685,12 @@ function applyHandleProps(instance: Handle, props: BoardHandleProps, node: Node)
 	instance.setAngle(props.angle);
 }
 
-function applyEdgeProps(instance: Edge, props: BoardEdgeProps, fromHandle: Handle, toHandle: Handle): void {
+function applyEdgeProps(instance: Edge, props: BoardEdgeProps, sourceHandle: Handle, targetHandle: Handle): void {
 	instance.selected = props.selected ?? false;
 	instance.style = props.style ?? null;
 	instance.userData = { ...(props.userData ?? {}) };
 	instance.visible = props.visible ?? true;
-	instance.setEndpoints(fromHandle, toHandle);
+	instance.setEndpoints(sourceHandle, targetHandle);
 }
 
 function nodeShapeSyncKey(props: NodeOptions): "circle" | "rectangle" {
@@ -3710,8 +3717,8 @@ function propsEqualHandle(a: BoardHandleProps, b: BoardHandleProps): boolean {
 function propsEqualEdge(a: BoardEdgeProps, b: BoardEdgeProps): boolean {
 	return (
 		a.id === b.id &&
-		a.from === b.from &&
-		a.to === b.to &&
+		a.source === b.source &&
+		a.target === b.target &&
 		a.selected === b.selected &&
 		a.style === b.style &&
 		a.visible === b.visible &&
@@ -3778,17 +3785,17 @@ function mountEdge(renderer: BoardRenderer, edgeHost: BoardHostEdge): void {
 	if (edgeHost.impl?.parent) {
 		return;
 	}
-	const from = renderer.scene.getObjectById(edgeHost.props.from);
-	const to = renderer.scene.getObjectById(edgeHost.props.to);
-	if (!(from instanceof Handle) || !(to instanceof Handle)) {
+	const source = renderer.scene.getObjectById(edgeHost.props.source);
+	const target = renderer.scene.getObjectById(edgeHost.props.target);
+	if (!(source instanceof Handle) || !(target instanceof Handle)) {
 		return;
 	}
 	renderer.batch(() => {
 		if (!edgeHost.impl) {
-			edgeHost.impl = new Edge({ ...edgeHost.props, from, to });
+			edgeHost.impl = new Edge({ ...edgeHost.props, source, target });
 			renderer.scene.add(edgeHost.impl);
 		} else {
-			applyEdgeProps(edgeHost.impl, edgeHost.props, from, to);
+			applyEdgeProps(edgeHost.impl, edgeHost.props, source, target);
 		}
 	});
 	renderer.invalidate();
@@ -4018,14 +4025,14 @@ const boardSceneHost = Reconciler({
 		if (type === BOARD_HOST_EDGE) {
 			const e = instance as BoardHostEdge;
 			e.props = nextProps as BoardEdgeProps;
-			const from = renderer.scene.getObjectById(e.props.from);
-			const to = renderer.scene.getObjectById(e.props.to);
+			const from = renderer.scene.getObjectById(e.props.source);
+			const to = renderer.scene.getObjectById(e.props.target);
 			if (!(from instanceof Handle) || !(to instanceof Handle)) {
 				return;
 			}
 			renderer.batch(() => {
 				if (!e.impl) {
-					e.impl = new Edge({ ...e.props, from, to });
+					e.impl = new Edge({ ...e.props, source: from, target: to });
 					renderer.scene.add(e.impl);
 				} else {
 					applyEdgeProps(e.impl, e.props, from, to);

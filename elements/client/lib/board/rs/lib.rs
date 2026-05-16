@@ -361,8 +361,8 @@ mod scene_json {
 	#[serde(rename_all = "camelCase")]
 	pub struct EdgeDescJson {
 		pub id: String,
-		pub from: String,
-		pub to: String,
+		pub source: String,
+		pub target: String,
 		#[serde(default)]
 		pub selected: Option<bool>,
 		#[serde(default)]
@@ -494,8 +494,8 @@ mod board_host {
 	#[derive(Clone, Debug)]
 	pub struct EdgeData {
 		pub id: String,
-		pub from: String,
-		pub to: String,
+		pub source: String,
+		pub target: String,
 		pub selected: bool,
 		pub visible: bool,
 		pub style: Option<String>,
@@ -686,39 +686,39 @@ mod board_host {
 			self.selection_options.target = target.into();
 		}
 
-		/// @emoji 🔗 JSON `[{ "from": "…", "to": "…" }, …]` of allowed directed handle-kind pairs for link gestures; empty clears restrictions.
+		/// @emoji 🔗 JSON `[{ "source": "…", "target": "…" }, …]` of allowed directed handle-kind pairs for link gestures; empty clears restrictions.
 		pub fn set_handle_link_compat_from_json(&mut self, json: &str) -> Result<(), String> {
 			let v: serde_json::Value = serde_json::from_str(json).map_err(|e| e.to_string())?;
 			let arr = v
 				.as_array()
-				.ok_or_else(|| "expected JSON array of {from,to} objects".to_string())?;
+				.ok_or_else(|| "expected JSON array of {source,target} objects".to_string())?;
 			let mut next = Vec::new();
 			for row in arr {
 				let o = row.as_object().ok_or("compat row must be object")?;
-				let from = o
-					.get("from")
+				let source = o
+					.get("source")
 					.and_then(|x| x.as_str())
-					.ok_or_else(|| "compat row missing string from".to_string())?
+					.ok_or_else(|| "compat row missing string source".to_string())?
 					.trim()
 					.to_string();
-				let to = o
-					.get("to")
+				let target = o
+					.get("target")
 					.and_then(|x| x.as_str())
-					.ok_or_else(|| "compat row missing string to".to_string())?
+					.ok_or_else(|| "compat row missing string target".to_string())?
 					.trim()
 					.to_string();
-				next.push((from, to));
+				next.push((source, target));
 			}
 			self.handle_link_compat_pairs = next;
 			Ok(())
 		}
 
-		fn handles_link_compatible_for_drag(&self, from: &HandleData, to: &HandleData) -> bool {
+		fn handles_link_compatible_for_drag(&self, source: &HandleData, target: &HandleData) -> bool {
 			if self.handle_link_compat_pairs.is_empty() {
 				return true;
 			}
-			let fk = from.handle_kind.as_str();
-			let tk = to.handle_kind.as_str();
+			let fk = source.handle_kind.as_str();
+			let tk = target.handle_kind.as_str();
 			self
 				.handle_link_compat_pairs
 				.iter()
@@ -907,8 +907,8 @@ mod board_host {
 		}
 
 		fn edge_curve(&self, e: &EdgeData) -> Option<CubicBez> {
-			let fh = self.handles.get(&e.from)?;
-			let th = self.handles.get(&e.to)?;
+			let fh = self.handles.get(&e.source)?;
+			let th = self.handles.get(&e.target)?;
 			let fn_ = self.nodes.get(&fh.node_id)?;
 			let tn = self.nodes.get(&th.node_id)?;
 			let fp = self.handle_world_pos(fh)?;
@@ -1054,8 +1054,8 @@ mod board_host {
 					e.id.clone(),
 					EdgeData {
 						id: e.id.clone(),
-						from: e.from.clone(),
-						to: e.to.clone(),
+						source: e.source.clone(),
+						target: e.target.clone(),
 						selected: e.selected.unwrap_or(false),
 						visible: e.visible.unwrap_or(true),
 						style: e.style.clone(),
@@ -1064,7 +1064,7 @@ mod board_host {
 				if !existed {
 					self.push_event(
 						"edgeCreate",
-						json!({ "id": e.id, "from": e.from, "to": e.to }),
+						json!({ "id": e.id, "source": e.source, "target": e.target }),
 					);
 				}
 			}
@@ -1239,16 +1239,16 @@ mod board_host {
 				let Some(id) = e.get("id").and_then(|v| v.as_str()) else {
 					return false;
 				};
-				let Some(from) = e.get("from").and_then(|v| v.as_str()) else {
+				let Some(source) = e.get("source").and_then(|v| v.as_str()) else {
 					return false;
 				};
-				let Some(to) = e.get("to").and_then(|v| v.as_str()) else {
+				let Some(target) = e.get("target").and_then(|v| v.as_str()) else {
 					return false;
 				};
 				desc.edges.push(EdgeDescJson {
 					id: id.into(),
-					from: from.into(),
-					to: to.into(),
+					source: source.into(),
+					target: target.into(),
 					selected: None,
 					style: None,
 					user_data: None,
@@ -1603,7 +1603,7 @@ mod board_host {
 					let eids: Vec<_> = self
 						.edges
 						.iter()
-						.filter(|(_, e)| e.from == hid || e.to == hid)
+						.filter(|(_, e)| e.source == hid || e.target == hid)
 						.map(|(k, _)| k.clone())
 						.collect();
 					for eid in eids {
@@ -1696,7 +1696,7 @@ mod board_host {
 				return false;
 			}
 			for e in self.edges.values() {
-				if e.from == from_id && e.to == to_id {
+				if e.source == from_id && e.target == to_id {
 					return false;
 				}
 			}
@@ -1712,8 +1712,8 @@ mod board_host {
 				id.clone(),
 				EdgeData {
 					id: id.clone(),
-					from: from_id.to_string(),
-					to: to_id.to_string(),
+					source: from_id.to_string(),
+					target: to_id.to_string(),
 					selected: false,
 					visible: true,
 					style: None,
@@ -1721,7 +1721,7 @@ mod board_host {
 			);
 			self.push_event(
 				"edgeCreate",
-				json!({ "id": id, "from": from_id, "to": to_id }),
+				json!({ "id": id, "source": from_id, "target": to_id }),
 			);
 			true
 		}
@@ -3048,7 +3048,7 @@ mod host_tests {
 			}],
 			handles: vec![
 				HandleDescJson {
-					id: "a.out".into(),
+					id: "a:h0".into(),
 					node_id: "a".into(),
 					angle: 0.0,
 					radius: None,
@@ -3059,7 +3059,7 @@ mod host_tests {
 					visible: None,
 				},
 				HandleDescJson {
-					id: "b.in".into(),
+					id: "b:h0".into(),
 					node_id: "b".into(),
 					angle: std::f64::consts::PI,
 					radius: None,
@@ -3072,8 +3072,8 @@ mod host_tests {
 			],
 			edges: vec![EdgeDescJson {
 				id: "e1".into(),
-				from: "a.out".into(),
-				to: "b.in".into(),
+				source: "a:h0".into(),
+				target: "b:h0".into(),
 				selected: None,
 				style: None,
 				user_data: None,
@@ -3106,7 +3106,7 @@ mod host_tests {
 		h.sync_descriptor(&desc);
 		let hp = handle_position_on_circle(Point::new(0.0, 0.0), 40.0, 0.0);
 		let hit = h.resolve_hit_world(hp);
-		assert_eq!(hit.as_deref(), Some("a.out"));
+		assert_eq!(hit.as_deref(), Some("a:h0"));
 		assert!(h.encoded_scene_hint() > 10);
 	}
 
@@ -3336,7 +3336,7 @@ mod host_tests {
 		let mut got: Vec<_> = h.selection.iter().cloned().collect();
 		got.sort();
 		assert!(got.contains(&"a".to_string()));
-		assert!(got.contains(&"a.out".to_string()));
+		assert!(got.contains(&"a:h0".to_string()));
 	}
 
 	fn link_test_scene_no_edge() -> SceneDescriptorJson {
@@ -3377,7 +3377,7 @@ mod host_tests {
 			],
 			handles: vec![
 				HandleDescJson {
-					id: "a.out".into(),
+					id: "a:h0".into(),
 					node_id: "a".into(),
 					angle: 0.0,
 					radius: None,
@@ -3388,7 +3388,7 @@ mod host_tests {
 					visible: None,
 				},
 				HandleDescJson {
-					id: "b.in".into(),
+					id: "b:h0".into(),
 					node_id: "b".into(),
 					angle: std::f64::consts::PI,
 					radius: None,
@@ -3420,8 +3420,8 @@ mod host_tests {
 		h.pointer_up_screen(s1.x, s1.y);
 		let ev = h.drain_events_json();
 		assert!(ev.contains("edgeCreate"));
-		assert!(ev.contains("a.out"));
-		assert!(ev.contains("b.in"));
+		assert!(ev.contains("a:h0"));
+		assert!(ev.contains("b:h0"));
 		let created: Vec<_> = h.edges.keys().filter(|k| k.starts_with("edge-link-")).cloned().collect();
 		assert_eq!(created.len(), 1);
 	}
@@ -3430,12 +3430,12 @@ mod host_tests {
 	fn board_host_link_rejects_incompatible_handle_kind_pairs() {
 		let mut h = BoardHost::new();
 		h.set_size(800, 600, 1.0);
-		h.set_handle_link_compat_from_json(r#"[{"from":"child","to":"parent"}]"#).unwrap();
+		h.set_handle_link_compat_from_json(r#"[{"source":"child","target":"parent"}]"#).unwrap();
 		let mut desc = link_test_scene_no_edge();
 		for handle in &mut desc.handles {
 			match handle.id.as_str() {
-				"a.out" => handle.handle_kind = Some("parent".into()),
-				"b.in" => handle.handle_kind = Some("child".into()),
+				"a:h0" => handle.handle_kind = Some("parent".into()),
+				"b:h0" => handle.handle_kind = Some("child".into()),
 				_ => {}
 			}
 		}
@@ -3458,12 +3458,12 @@ mod host_tests {
 	fn board_host_link_accepts_matching_handle_kind_pair() {
 		let mut h = BoardHost::new();
 		h.set_size(800, 600, 1.0);
-		h.set_handle_link_compat_from_json(r#"[{"from":"parent","to":"child"}]"#).unwrap();
+		h.set_handle_link_compat_from_json(r#"[{"source":"parent","target":"child"}]"#).unwrap();
 		let mut desc = link_test_scene_no_edge();
 		for handle in &mut desc.handles {
 			match handle.id.as_str() {
-				"a.out" => handle.handle_kind = Some("parent".into()),
-				"b.in" => handle.handle_kind = Some("child".into()),
+				"a:h0" => handle.handle_kind = Some("parent".into()),
+				"b:h0" => handle.handle_kind = Some("child".into()),
 				_ => {}
 			}
 		}
