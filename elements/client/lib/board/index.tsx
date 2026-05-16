@@ -24,6 +24,7 @@ import {
 	BOARD_HOST_EDGE,
 	BOARD_HOST_HANDLE,
 	BOARD_HOST_NODE,
+	BOARD_HOST_WIRE,
 	createBoardHostMount,
 	unmountBoardHostMount,
 	updateBoardHostMount,
@@ -32,6 +33,7 @@ import {
 	Edge as BoardEdgeObject,
 	Handle as BoardHandleObject,
 	Node as BoardNodeObject,
+	Wire as BoardWireObject,
 	BOARD_FIXTURE_DRAG_V1_MIME,
 	BOARD_NODE_TEXT_ALIGNMENT_DEFAULT,
 	BOARD_NODE_TEXT_FONT_FAMILY_DEFAULT,
@@ -50,6 +52,7 @@ import {
 	type BoardHandleLinkCompatPair,
 	type BoardHandleProps,
 	type BoardEdgeProps,
+	type BoardWireProps,
 	type BoardHoverPayload,
 	type BoardNodeTextAlignment,
 	type BoardSelectionMethod,
@@ -61,11 +64,12 @@ import {
 	type RenderMode,
 	type WorldRasterTilingKind,
 	DEFAULT_BOARD_LOD_ZOOM_THRESHOLDS,
+	DEFAULT_BOARD_GRID_FACTOR,
 	type BoardLodZoomThresholds,
 } from "./index";
 
 export type { BoardLodZoomThresholds } from "./index";
-export { DEFAULT_BOARD_LOD_ZOOM_THRESHOLDS } from "./index";
+export { DEFAULT_BOARD_LOD_ZOOM_THRESHOLDS, DEFAULT_BOARD_GRID_FACTOR } from "./index";
 
 import { ContextMenuController, type ContextMenuItem } from "@elements/ui";
 
@@ -90,6 +94,8 @@ export interface BoardCanvasProps {
 	onChange?: () => void;
 	/** @emoji 📶 LOD zoom bands for WASM draw + overlay captions (`data-board-lod`). */
 	lodZoomThresholds?: BoardLodZoomThresholds;
+	/** @emoji 📐 Positive multiplier for LOD world grid steps on the WASM host (default {@link DEFAULT_BOARD_GRID_FACTOR}). */
+	gridFactor?: number;
 	/** @emoji 🧲 When true, node drags snap to the finest visible LOD grid on the WASM host. */
 	gridSnapEnabled?: boolean;
 	onChildEdgeChange?: (payload: BoardGraphEdgeIdPayload) => void;
@@ -180,10 +186,13 @@ export interface HandleDescriptor extends BoardHandleProps {
 
 export interface EdgeDescriptor extends BoardEdgeProps {}
 
+export interface WireDescriptor extends BoardWireProps {}
+
 interface BoardSceneDescriptor {
 	edges: EdgeDescriptor[];
 	handles: HandleDescriptor[];
 	nodes: NodeDescriptor[];
+	wires: WireDescriptor[];
 }
 //#endregion 🔖Kinds
 
@@ -201,11 +210,19 @@ export const Handle = BOARD_HOST_HANDLE;
 
 /** 🪢 Host intrinsic for directed edges between handle ids. */
 export const Edge = BOARD_HOST_EDGE;
+
+/** 🧵 Host intrinsic for transient wires from a handle to another handle or a free world end. */
+export const Wire = BOARD_HOST_WIRE;
 //#endregion 🔖Markers
 
 //#region 🔖Descriptor Build
 function isMarkerElement(element: ReactElement): boolean {
-	return element.type === BOARD_HOST_NODE || element.type === BOARD_HOST_HANDLE || element.type === BOARD_HOST_EDGE;
+	return (
+		element.type === BOARD_HOST_NODE ||
+		element.type === BOARD_HOST_HANDLE ||
+		element.type === BOARD_HOST_EDGE ||
+		element.type === BOARD_HOST_WIRE
+	);
 }
 
 function appendHandleDescriptors(children: ReactNode, nodeId: string, handles: HandleDescriptor[]): void {
@@ -225,7 +242,7 @@ function appendHandleDescriptors(children: ReactNode, nodeId: string, handles: H
 }
 
 export function buildBoardSceneDescriptor(children: ReactNode): BoardSceneDescriptor {
-	const descriptor: BoardSceneDescriptor = { edges: [], handles: [], nodes: [] };
+	const descriptor: BoardSceneDescriptor = { edges: [], handles: [], nodes: [], wires: [] };
 
 	const visit = (node: ReactNode): void => {
 		Children.forEach(node, (child) => {
@@ -246,6 +263,11 @@ export function buildBoardSceneDescriptor(children: ReactNode): BoardSceneDescri
 			}
 			if (child.type === BOARD_HOST_EDGE) {
 				descriptor.edges.push(child.props as BoardEdgeProps);
+				return;
+			}
+			if (child.type === BOARD_HOST_WIRE) {
+				descriptor.wires.push(child.props as BoardWireProps);
+				return;
 			}
 		});
 	};
@@ -314,6 +336,30 @@ function applyEdgeProps(instance: BoardEdgeObject, descriptor: EdgeDescriptor, s
 	instance.userData = { ...(descriptor.userData ?? {}) };
 	instance.visible = descriptor.visible ?? true;
 	instance.setEndpoints(sourceHandle, targetHandle);
+}
+
+function applyWireProps(
+	instance: BoardWireObject,
+	descriptor: WireDescriptor,
+	sourceHandle: BoardHandleObject,
+	targetHandle: BoardHandleObject | null,
+): void {
+	instance.selected = descriptor.selected ?? false;
+	instance.style = descriptor.style ?? null;
+	instance.userData = { ...(descriptor.userData ?? {}) };
+	instance.visible = descriptor.visible ?? true;
+	const tid = (descriptor.target ?? "").trim();
+	const nextTarget = tid !== "" ? targetHandle : null;
+	const ex = descriptor.endX;
+	const ey = descriptor.endY;
+	const endOk = typeof ex === "number" && Number.isFinite(ex) && typeof ey === "number" && Number.isFinite(ey);
+	if (nextTarget) {
+		instance.setAnchors(sourceHandle, nextTarget, null);
+	} else if (endOk) {
+		instance.setAnchors(sourceHandle, null, { x: ex, y: ey });
+	} else {
+		instance.setAnchors(sourceHandle, null, null);
+	}
 }
 
 function nodeShapeSyncKey(descriptor: NodeDescriptor): "circle" | "rectangle" {
@@ -423,6 +469,7 @@ export function syncBoardScene(renderer: BoardRenderer, descriptor: BoardSceneDe
 	const desiredNodeIds = new Set(descriptor.nodes.map((node) => node.id));
 	const desiredHandleIds = new Set(descriptor.handles.map((handle) => handle.id));
 	const desiredEdgeIds = new Set(descriptor.edges.map((edge) => edge.id));
+	const desiredWireIds = new Set(descriptor.wires.map((wire) => wire.id));
 
 	renderer.batch(() => {
 		for (const nodeDescriptor of descriptor.nodes) {
@@ -467,10 +514,52 @@ export function syncBoardScene(renderer: BoardRenderer, descriptor: BoardSceneDe
 			applyEdgeProps(edge, edgeDescriptor, sourceHandle, targetHandle);
 		}
 
+		for (const wireDescriptor of descriptor.wires) {
+			const sourceHandle = renderer.scene.getObjectById(wireDescriptor.source);
+			if (!(sourceHandle instanceof BoardHandleObject)) {
+				continue;
+			}
+			const tid = (wireDescriptor.target ?? "").trim();
+			let targetHandle: BoardHandleObject | null = null;
+			if (tid !== "") {
+				const t = renderer.scene.getObjectById(tid);
+				if (!(t instanceof BoardHandleObject)) {
+					continue;
+				}
+				targetHandle = t;
+			}
+			const existingWire = renderer.scene.getObjectById(wireDescriptor.id);
+			const ex = wireDescriptor.endX;
+			const ey = wireDescriptor.endY;
+			const wire =
+				existingWire instanceof BoardWireObject
+					? existingWire
+					: new BoardWireObject({
+							id: wireDescriptor.id,
+							source: sourceHandle,
+							target: targetHandle,
+							selected: wireDescriptor.selected,
+							style: wireDescriptor.style,
+							userData: wireDescriptor.userData,
+							visible: wireDescriptor.visible,
+							endX: typeof ex === "number" && Number.isFinite(ex) ? ex : null,
+							endY: typeof ey === "number" && Number.isFinite(ey) ? ey : null,
+						});
+			if (!(existingWire instanceof BoardWireObject)) {
+				renderer.scene.add(wire);
+			}
+			applyWireProps(wire, wireDescriptor, sourceHandle, targetHandle);
+		}
+
 		for (const edge of Array.from(renderer.scene.edges.values())) {
 			if (!desiredEdgeIds.has(edge.id)) {
 				renderer.clearWasmHostAuthorshipForEdge(edge.id);
 				renderer.scene.remove(edge);
+			}
+		}
+		for (const wire of Array.from(renderer.scene.wires.values())) {
+			if (!desiredWireIds.has(wire.id)) {
+				renderer.scene.remove(wire);
 			}
 		}
 		for (const handle of Array.from(renderer.scene.handles.values())) {
@@ -554,6 +643,7 @@ export function BoardCanvas({
 	contextMenu,
 	fixtureDragDrop,
 	height,
+	gridFactor,
 	gridSnapEnabled,
 	handleKinds,
 	handleLinkCompatibility,
@@ -755,6 +845,7 @@ export function BoardCanvas({
 		const canvas = canvasRef.current;
 		const renderer = new BoardRenderer({
 			canvas,
+			gridFactor: gridFactor ?? DEFAULT_BOARD_GRID_FACTOR,
 			gridSnapEnabled: gridSnapEnabled ?? false,
 			lodZoomThresholds: lodZoomThresholds ?? DEFAULT_BOARD_LOD_ZOOM_THRESHOLDS,
 			renderMode,
@@ -785,6 +876,14 @@ export function BoardCanvas({
 		}
 		renderer.setWorldRasterTilingOption(worldRasterTiling);
 	}, [worldRasterTiling]);
+
+	useLayoutEffect(() => {
+		const renderer = rendererRef.current;
+		if (!renderer) {
+			return;
+		}
+		renderer.setGridFactor(gridFactor ?? DEFAULT_BOARD_GRID_FACTOR);
+	}, [gridFactor]);
 
 	useLayoutEffect(() => {
 		const renderer = rendererRef.current;

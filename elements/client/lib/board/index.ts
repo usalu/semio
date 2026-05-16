@@ -40,7 +40,7 @@ export { BoardSession };
 // #endregion 🔖GpuWasmBridge
 
 //#region 🔖Kinds
-export type BoardObjectKind = "node" | "handle" | "edge";
+export type BoardObjectKind = "node" | "handle" | "edge" | "wire";
 export type RenderMode = "main-thread" | "worker-offscreen" | "headless-test";
 export type BoardSelectionMethod = "lasso" | "rectangle";
 export type BoardSelectionMode = "additive" | "invertive" | "subtractive";
@@ -416,9 +416,30 @@ export interface BoardEdgeProps {
 	visible?: boolean;
 }
 
+/** @emoji 🧵 Declarative wire props: anchored at {@link BoardWireProps.source}; either {@link BoardWireProps.target} handle id **or** {@link BoardWireProps.endX}/{@link BoardWireProps.endY} world end. */
+export interface BoardWireProps {
+	contextMenu?: ContextMenuItem[];
+	endX?: number;
+	endY?: number;
+	id: string;
+	selected?: boolean;
+	source: string;
+	style?: string;
+	target?: string;
+	userData?: Record<string, unknown>;
+	visible?: boolean;
+}
+
 export interface EdgeOptions extends BoardObjectOptions {
 	source: Handle;
 	target: Handle;
+}
+
+export interface WireOptions extends BoardObjectOptions {
+	endX?: number | null;
+	endY?: number | null;
+	source: Handle;
+	target: Handle | null;
 }
 
 type FrameListener = (state: FrameState, dt: number) => void;
@@ -969,8 +990,10 @@ export function parseBoardFixtureV1(raw: unknown): BoardFixtureV1 | null {
 		}
 		const edge = entry as Record<string, unknown>;
 		const id = typeof edge.id === "string" ? edge.id : null;
-		const source = typeof edge.source === "string" ? edge.source : null;
-		const target = typeof edge.target === "string" ? edge.target : null;
+		const sourceRaw = edge.source ?? edge.from;
+		const targetRaw = edge.target ?? edge.to;
+		const source = typeof sourceRaw === "string" ? sourceRaw : null;
+		const target = typeof targetRaw === "string" ? targetRaw : null;
 		if (!id || !source || !target) {
 			return null;
 		}
@@ -1146,6 +1169,28 @@ export function computeEdgeBezier(sourceHandle: Handle, targetHandle: Handle): C
 		targetPoint.y,
 		targetCenter.x,
 		targetCenter.y,
+	);
+	return {
+		p0: { x: flat[0], y: flat[1] },
+		p1: { x: flat[2], y: flat[3] },
+		p2: { x: flat[4], y: flat[5] },
+		p3: { x: flat[6], y: flat[7] },
+	};
+}
+
+/** 🧵 Same radial cubic as {@link computeEdgeBezier} but the far end is a free world point (transient link / {@link Wire}). */
+export function computeWireBezier(sourceHandle: Handle, endWorld: Point): CubicBezierCurve {
+	const sourcePoint = sourceHandle.position;
+	const sourceCenter = { x: sourceHandle.node.x, y: sourceHandle.node.y };
+	const flat = boardComputeEdgeBezier(
+		sourcePoint.x,
+		sourcePoint.y,
+		sourceCenter.x,
+		sourceCenter.y,
+		endWorld.x,
+		endWorld.y,
+		endWorld.x,
+		endWorld.y,
 	);
 	return {
 		p0: { x: flat[0], y: flat[1] },
@@ -1425,14 +1470,62 @@ export class Edge extends BoardObject {
 		return this;
 	}
 }
+
+/** 🧵 Transient cubic from one {@link Handle} to another handle or a free world point (in‑progress link drag). */
+export class Wire extends BoardObject {
+	endX: number | null;
+	endY: number | null;
+	source: Handle;
+	target: Handle | null;
+
+	constructor(options: WireOptions) {
+		super(options.id, options);
+		this.source = options.source;
+		this.target = options.target;
+		const ex = options.endX;
+		const ey = options.endY;
+		this.endX = typeof ex === "number" && Number.isFinite(ex) ? ex : null;
+		this.endY = typeof ey === "number" && Number.isFinite(ey) ? ey : null;
+	}
+
+	get kind(): BoardObjectKind {
+		return "wire";
+	}
+
+	get curve(): CubicBezierCurve {
+		if (this.target) {
+			return computeEdgeBezier(this.source, this.target);
+		}
+		const x = this.endX ?? this.source.position.x;
+		const y = this.endY ?? this.source.position.y;
+		return computeWireBezier(this.source, { x, y });
+	}
+
+	setAnchors(sourceHandle: Handle, targetHandle: Handle | null, endWorld?: Point | null): this {
+		this.source = sourceHandle;
+		this.target = targetHandle;
+		if (endWorld && Number.isFinite(endWorld.x) && Number.isFinite(endWorld.y)) {
+			this.endX = endWorld.x;
+			this.endY = endWorld.y;
+		} else if (!targetHandle) {
+			this.endX = null;
+			this.endY = null;
+		} else {
+			this.endX = null;
+			this.endY = null;
+		}
+		return this;
+	}
+}
 //#endregion 🔖Objects
 
 //#region 🔖Scene
-/** 🧭 Retained scene catalog owning nodes, handles, and edges by stable id. */
+/** 🧭 Retained scene catalog owning nodes, handles, edges, and wires by stable id. */
 export class BoardScene {
 	readonly edges = new Map<string, Edge>();
 	readonly handles = new Map<string, Handle>();
 	readonly nodes = new Map<string, Node>();
+	readonly wires = new Map<string, Wire>();
 
 	constructor(private renderer: BoardRenderer | null = null) { }
 
@@ -1471,6 +1564,20 @@ export class BoardScene {
 			return this;
 		}
 
+		if (object instanceof Wire) {
+			if (!this.nodes.has(object.source.node.id)) {
+				this.add(object.source.node);
+			}
+			if (object.target && !this.nodes.has(object.target.node.id)) {
+				this.add(object.target.node);
+			}
+			this.wires.set(object.id, object);
+			object.parent = this;
+			object.attachRenderer(this.renderer);
+			this.renderer?.markDirty();
+			return this;
+		}
+
 		this.edges.set(object.id, object as Edge);
 		object.parent = this;
 		object.attachRenderer(this.renderer);
@@ -1496,6 +1603,11 @@ export class BoardScene {
 					this.remove(edge);
 				}
 			}
+			for (const wire of Array.from(this.wires.values())) {
+				if (wire.source.node === object || wire.target?.node === object) {
+					this.remove(wire);
+				}
+			}
 			for (const handle of Array.from(object.handles)) {
 				this.remove(handle);
 			}
@@ -1514,8 +1626,21 @@ export class BoardScene {
 					this.remove(edge);
 				}
 			}
+			for (const wire of Array.from(this.wires.values())) {
+				if (wire.source === object || wire.target === object) {
+					this.remove(wire);
+				}
+			}
 			object.node.detachHandle(object);
 			this.handles.delete(object.id);
+			object.parent = null;
+			object.attachRenderer(null);
+			this.renderer?.markDirty();
+			return this;
+		}
+
+		if (object instanceof Wire) {
+			this.wires.delete(object.id);
 			object.parent = null;
 			object.attachRenderer(null);
 			this.renderer?.markDirty();
@@ -1533,6 +1658,9 @@ export class BoardScene {
 		for (const edge of Array.from(this.edges.values())) {
 			this.remove(edge);
 		}
+		for (const wire of Array.from(this.wires.values())) {
+			this.remove(wire);
+		}
 		for (const handle of Array.from(this.handles.values())) {
 			this.remove(handle);
 		}
@@ -1542,11 +1670,11 @@ export class BoardScene {
 	}
 
 	getObjectById(id: string): BoardObject | undefined {
-		return this.nodes.get(id) ?? this.handles.get(id) ?? this.edges.get(id);
+		return this.nodes.get(id) ?? this.handles.get(id) ?? this.edges.get(id) ?? this.wires.get(id);
 	}
 
 	getAllObjects(): BoardObject[] {
-		return [...this.nodes.values(), ...this.handles.values(), ...this.edges.values()];
+		return [...this.nodes.values(), ...this.handles.values(), ...this.edges.values(), ...this.wires.values()];
 	}
 }
 //#endregion 🔖Scene
@@ -1780,6 +1908,9 @@ export class BoardRenderer {
 				}
 			: { ...DEFAULT_BOARD_LOD_ZOOM_THRESHOLDS };
 		this.gridSnapEnabled = options.gridSnapEnabled ?? false;
+		const gf = options.gridFactor;
+		this.gridFactor =
+			typeof gf === "number" && Number.isFinite(gf) && gf > 0 && gf <= 1e6 ? gf : DEFAULT_BOARD_GRID_FACTOR;
 		this.scene = new BoardScene(this);
 		this.session = new BoardSession();
 		const initialSel = this.selectionOptions;
@@ -1914,6 +2045,21 @@ export class BoardRenderer {
 			return;
 		}
 		this.lastLodThresholdsJsonForWasm = null;
+		this.markDirty();
+	}
+
+	/** @emoji 📐 Positive multiplier for LOD world grid steps on the WASM host (see {@link DEFAULT_BOARD_GRID_FACTOR}). */
+	setGridFactor(next: number): void {
+		const n = typeof next === "number" && Number.isFinite(next) && next > 0 && next <= 1e6 ? next : DEFAULT_BOARD_GRID_FACTOR;
+		if (n === this.gridFactor) {
+			return;
+		}
+		this.gridFactor = n;
+		if (this.wasmSessionCallBlockedForReentry()) {
+			this.invalidated = true;
+			return;
+		}
+		this.lastGridFactorForWasm = null;
 		this.markDirty();
 	}
 
@@ -2360,7 +2506,25 @@ export class BoardRenderer {
 				visible: edge.visible,
 			});
 		}
-		return JSON.stringify({ nodes, handles, edges });
+		const wires: Record<string, unknown>[] = [];
+		for (const wire of this.scene.wires.values()) {
+			const row: Record<string, unknown> = {
+				id: wire.id,
+				source: wire.source.id,
+				selected: wire.selected,
+				style: wire.style,
+				visible: wire.visible,
+			};
+			if (wire.target) {
+				row.target = wire.target.id;
+			}
+			if (wire.endX != null && wire.endY != null) {
+				row.endX = wire.endX;
+				row.endY = wire.endY;
+			}
+			wires.push(row);
+		}
+		return JSON.stringify({ nodes, handles, edges, wires });
 	}
 
 	private syncBoardAppearanceFromDocument(): void {
@@ -2407,6 +2571,14 @@ export class BoardRenderer {
 		if (this.lastGridSnapEnabledForWasm !== this.gridSnapEnabled) {
 			this.session.setGridSnapEnabled(this.gridSnapEnabled);
 			this.lastGridSnapEnabledForWasm = this.gridSnapEnabled;
+		}
+		if (this.lastGridFactorForWasm !== this.gridFactor) {
+			try {
+				this.session.setGridFactor(this.gridFactor);
+				this.lastGridFactorForWasm = this.gridFactor;
+			} catch (err) {
+				console.error("[DEBUG] setGridFactor failed", err);
+			}
 		}
 	}
 
@@ -3148,6 +3320,16 @@ if (boardVitest) {
 			expect(align1).toBeGreaterThan(0.99);
 		});
 
+		it("builds a radial cubic for a wire whose far end is a free world point", () => {
+			const sourceNode = new Node({ id: "a", radius: 40, x: 0, y: 0 });
+			const sourceHandle = new Handle({ handleKind: BOARD_BUILTIN_PORT_HANDLE_KIND, angle: 0, id: "a:h0", node: sourceNode });
+			const curve = computeWireBezier(sourceHandle, { x: 200, y: 100 });
+			expect(curve.p0.x).toBeCloseTo(40);
+			expect(curve.p0.y).toBeCloseTo(0);
+			expect(curve.p3.x).toBeCloseTo(200);
+			expect(curve.p3.y).toBeCloseTo(100);
+		});
+
 		it("places rectangle handles on the perimeter by north-zero CCW angle", () => {
 			const rectNode = new Node({ height: 20, id: "r", shape: "rectangle", width: 40, x: 100, y: 50 });
 			const p0 = computeHandlePosition(rectNode, 0);
@@ -3168,7 +3350,8 @@ if (boardVitest) {
 			expect(resolveBoardLodLabel(0.1)).toBe("minimap");
 			expect(resolveBoardLodLabel(0.25)).toBe("overview");
 			expect(resolveBoardLodLabel(0.4)).toBe("normal");
-			expect(resolveBoardLodLabel(1)).toBe("detail");
+			expect(resolveBoardLodLabel(0.9)).toBe("normal");
+			expect(resolveBoardLodLabel(1.3)).toBe("detail");
 			const tight: BoardLodZoomThresholds = { minimapMaxZoom: 0.2, overviewMaxZoom: 0.4, normalMaxZoom: 0.6 };
 			expect(resolveBoardLodLabelFromThresholds(0.15, tight)).toBe("minimap");
 			expect(resolveBoardLodLabelFromThresholds(0.35, tight)).toBe("overview");
@@ -3213,6 +3396,19 @@ if (boardVitest) {
 			expect(renderer.scene.getObjectById("edge-1")).toBe(edge);
 			expect(edgeEvents).toEqual([{ id: "edge-1", source: "src-h", target: "tgt-h" }]);
 
+			renderer.dispose();
+		});
+
+		it("stores wires and drops them when an endpoint handle is removed", () => {
+			const renderer = new BoardRenderer({ renderMode: "headless-test" });
+			const n = new Node({ id: "n", radius: 22, x: 0, y: 0 });
+			const h = new Handle({ handleKind: BOARD_BUILTIN_PORT_HANDLE_KIND, angle: 0, id: "h0", node: n });
+			const w = new Wire({ endX: 90, endY: 0, id: "w-1", source: h, target: null });
+			renderer.scene.add(n).add(w);
+			expect(renderer.scene.wires.get("w-1")).toBe(w);
+			expect(w.kind).toBe("wire");
+			renderer.scene.remove(h);
+			expect(renderer.scene.wires.has("w-1")).toBe(false);
 			renderer.dispose();
 		});
 
@@ -3683,6 +3879,19 @@ if (boardVitest) {
 			expect(parsed?.nodes[0]?.handles[0]).toMatchObject({ angle: 1.2, id: "h1", radius: 4.5 });
 		});
 
+		it("normalizes fixture edge `from`/`to` keys into source/target", () => {
+			const parsed = parseBoardFixtureV1({
+				camera: { x: 0, y: 0, zoom: 1 },
+				edges: [{ from: "a:h0", id: "e1", to: "b:h0" }],
+				nodes: [
+					{ handles: [{ angle: 0, id: "a:h0" }], id: "a", radius: 20, x: 0, y: 0 },
+					{ handles: [{ angle: 3.14, id: "b:h0" }], id: "b", radius: 20, x: 100, y: 0 },
+				],
+				schema: "elements.board.fixture/v1",
+			});
+			expect(parsed?.edges).toEqual([{ id: "e1", source: "a:h0", target: "b:h0" }]);
+		});
+
 		it("maps legacy JSON label into node text", () => {
 			const parsed = parseBoardFixtureV1({
 				camera: { x: 0, y: 0, zoom: 1 },
@@ -4024,8 +4233,9 @@ export const BOARD_HOST_MOUNT_DEFAULTS: Record<string, unknown> = {
 export const BOARD_HOST_NODE = "elements.board/node";
 export const BOARD_HOST_HANDLE = "elements.board/handle";
 export const BOARD_HOST_EDGE = "elements.board/edge";
+export const BOARD_HOST_WIRE = "elements.board/wire";
 
-export type BoardHostType = typeof BOARD_HOST_NODE | typeof BOARD_HOST_HANDLE | typeof BOARD_HOST_EDGE;
+export type BoardHostType = typeof BOARD_HOST_NODE | typeof BOARD_HOST_HANDLE | typeof BOARD_HOST_EDGE | typeof BOARD_HOST_WIRE;
 
 interface BoardHostNode {
 	kind: "node";
@@ -4048,7 +4258,14 @@ interface BoardHostEdge {
 	renderer: BoardRenderer;
 }
 
-export type BoardHostInstance = BoardHostNode | BoardHostHandle | BoardHostEdge;
+interface BoardHostWire {
+	kind: "wire";
+	impl: Wire | null;
+	props: BoardWireProps;
+	renderer: BoardRenderer;
+}
+
+export type BoardHostInstance = BoardHostNode | BoardHostHandle | BoardHostEdge | BoardHostWire;
 //#endregion 🔖HostKinds
 
 //#region 🔖PropApply
@@ -4148,6 +4365,25 @@ function applyEdgeProps(instance: Edge, props: BoardEdgeProps, sourceHandle: Han
 	instance.setEndpoints(sourceHandle, targetHandle);
 }
 
+function applyWireProps(instance: Wire, props: BoardWireProps, sourceHandle: Handle, targetHandle: Handle | null): void {
+	instance.selected = props.selected ?? false;
+	instance.style = props.style ?? null;
+	instance.userData = { ...(props.userData ?? {}) };
+	instance.visible = props.visible ?? true;
+	const tid = (props.target ?? "").trim();
+	const nextTarget = tid !== "" ? targetHandle : null;
+	const ex = props.endX;
+	const ey = props.endY;
+	const endOk = typeof ex === "number" && Number.isFinite(ex) && typeof ey === "number" && Number.isFinite(ey);
+	if (nextTarget) {
+		instance.setAnchors(sourceHandle, nextTarget, null);
+	} else if (endOk) {
+		instance.setAnchors(sourceHandle, null, { x: ex, y: ey });
+	} else {
+		instance.setAnchors(sourceHandle, null, null);
+	}
+}
+
 function nodeShapeSyncKey(props: NodeOptions): "circle" | "rectangle" {
 	return props.shape === "rectangle" ? "rectangle" : "circle";
 }
@@ -4177,6 +4413,20 @@ function propsEqualEdge(a: BoardEdgeProps, b: BoardEdgeProps): boolean {
 		a.id === b.id &&
 		a.source === b.source &&
 		a.target === b.target &&
+		a.selected === b.selected &&
+		a.style === b.style &&
+		a.visible === b.visible &&
+		shallowEqualRecord(a.userData ?? {}, b.userData ?? {})
+	);
+}
+
+function propsEqualWire(a: BoardWireProps, b: BoardWireProps): boolean {
+	return (
+		a.id === b.id &&
+		a.source === b.source &&
+		(a.target ?? "") === (b.target ?? "") &&
+		(a.endX ?? Number.NaN) === (b.endX ?? Number.NaN) &&
+		(a.endY ?? Number.NaN) === (b.endY ?? Number.NaN) &&
 		a.selected === b.selected &&
 		a.style === b.style &&
 		a.visible === b.visible &&
@@ -4260,6 +4510,46 @@ function mountEdge(renderer: BoardRenderer, edgeHost: BoardHostEdge): void {
 	renderer.invalidate();
 }
 
+function mountWire(renderer: BoardRenderer, wireHost: BoardHostWire): void {
+	if (wireHost.impl?.parent) {
+		return;
+	}
+	const source = renderer.scene.getObjectById(wireHost.props.source);
+	if (!(source instanceof Handle)) {
+		return;
+	}
+	const tid = (wireHost.props.target ?? "").trim();
+	let target: Handle | null = null;
+	if (tid !== "") {
+		const t = renderer.scene.getObjectById(tid);
+		if (!(t instanceof Handle)) {
+			return;
+		}
+		target = t;
+	}
+	renderer.batch(() => {
+		if (!wireHost.impl) {
+			const ex = wireHost.props.endX;
+			const ey = wireHost.props.endY;
+			wireHost.impl = new Wire({
+				id: wireHost.props.id,
+				source,
+				target,
+				selected: wireHost.props.selected,
+				style: wireHost.props.style,
+				userData: wireHost.props.userData,
+				visible: wireHost.props.visible,
+				endX: typeof ex === "number" && Number.isFinite(ex) ? ex : null,
+				endY: typeof ey === "number" && Number.isFinite(ey) ? ey : null,
+			});
+			renderer.scene.add(wireHost.impl);
+		} else {
+			applyWireProps(wireHost.impl, wireHost.props, source, target);
+		}
+	});
+	renderer.invalidate();
+}
+
 function replaceNodeImpl(renderer: BoardRenderer, host: BoardHostNode, nextProps: NodeOptions): void {
 	if (instanceShapeSyncKey(host.impl) !== nodeShapeSyncKey(nextProps)) {
 		renderer.batch(() => {
@@ -4296,6 +4586,8 @@ function appendToBoardParent(parent: BoardRenderer | BoardHostInstance, child: B
 			mountNode(renderer, child);
 		} else if (child.kind === "edge") {
 			mountEdge(renderer, child);
+		} else if (child.kind === "wire") {
+			mountWire(renderer, child);
 		}
 		return;
 	}
@@ -4342,6 +4634,9 @@ const boardSceneHost = Reconciler({
 		if (type === BOARD_HOST_EDGE) {
 			return { kind: "edge", impl: null, props: props as BoardEdgeProps, renderer };
 		}
+		if (type === BOARD_HOST_WIRE) {
+			return { kind: "wire", impl: null, props: props as BoardWireProps, renderer };
+		}
 		throw new Error(`Unknown board host type: ${String(type)}`);
 	},
 
@@ -4364,6 +4659,8 @@ const boardSceneHost = Reconciler({
 			mountNode(container, child);
 		} else if (child.kind === "edge") {
 			mountEdge(container, child);
+		} else if (child.kind === "wire") {
+			mountWire(container, child);
 		}
 	},
 
@@ -4376,6 +4673,8 @@ const boardSceneHost = Reconciler({
 			mountNode(container, child);
 		} else if (child.kind === "edge") {
 			mountEdge(container, child);
+		} else if (child.kind === "wire") {
+			mountWire(container, child);
 		}
 	},
 
@@ -4387,7 +4686,7 @@ const boardSceneHost = Reconciler({
 		if (child.impl?.parent) {
 			renderer.scene.remove(child.impl);
 		}
-		if (child.kind === "handle" || child.kind === "edge") {
+		if (child.kind === "handle" || child.kind === "edge" || child.kind === "wire") {
 			child.impl = null;
 		}
 		renderer.invalidate();
@@ -4413,7 +4712,7 @@ const boardSceneHost = Reconciler({
 		if (child.impl?.parent) {
 			container.scene.remove(child.impl);
 		}
-		if (child.kind === "handle" || child.kind === "edge") {
+		if (child.kind === "handle" || child.kind === "edge" || child.kind === "wire") {
 			child.impl = null;
 		}
 		container.invalidate();
@@ -4445,6 +4744,9 @@ const boardSceneHost = Reconciler({
 		}
 		if (type === BOARD_HOST_EDGE) {
 			return !propsEqualEdge(oldProps as BoardEdgeProps, newProps as BoardEdgeProps);
+		}
+		if (type === BOARD_HOST_WIRE) {
+			return !propsEqualWire(oldProps as BoardWireProps, newProps as BoardWireProps);
 		}
 		return false;
 	},
@@ -4495,6 +4797,45 @@ const boardSceneHost = Reconciler({
 					renderer.scene.add(e.impl);
 				} else {
 					applyEdgeProps(e.impl, e.props, from, to);
+				}
+			});
+			renderer.invalidate();
+			return;
+		}
+		if (type === BOARD_HOST_WIRE) {
+			const w = instance as BoardHostWire;
+			w.props = nextProps as BoardWireProps;
+			const from = renderer.scene.getObjectById(w.props.source);
+			if (!(from instanceof Handle)) {
+				return;
+			}
+			const tid = (w.props.target ?? "").trim();
+			let to: Handle | null = null;
+			if (tid !== "") {
+				const t = renderer.scene.getObjectById(tid);
+				if (!(t instanceof Handle)) {
+					return;
+				}
+				to = t;
+			}
+			renderer.batch(() => {
+				if (!w.impl) {
+					const ex = w.props.endX;
+					const ey = w.props.endY;
+					w.impl = new Wire({
+						id: w.props.id,
+						source: from,
+						target: to,
+						selected: w.props.selected,
+						style: w.props.style,
+						userData: w.props.userData,
+						visible: w.props.visible,
+						endX: typeof ex === "number" && Number.isFinite(ex) ? ex : null,
+						endY: typeof ey === "number" && Number.isFinite(ey) ? ey : null,
+					});
+					renderer.scene.add(w.impl);
+				} else {
+					applyWireProps(w.impl, w.props, from, to);
 				}
 			});
 			renderer.invalidate();

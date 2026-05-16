@@ -393,18 +393,24 @@ Wait for 1s without changing camera then in the next 2s zoom to the bounding box
 
 ---
 
-All nodes, handles, edges, must have a kind (referenced by id).
+All nodes, handles, edges, wire must have a kind (referenced by id).
 Every kind provides default for a new instance.
 Every default can be overwritten by the instance.
 Kinds are passed centrally to the board.
 Compatbility is passed centrally to the board.
 
 node kinds:
-id, name, shape [default values], color, defaultHandleKind, etc
+id, name, shape [circle | rectangle, defaultShapeProps], stroke, color, defaultHandleKind, icon (svg or emoji), etc
+
+edge kinds:
+id, name, shape (line | bezier, defaultShapeProps), stroke, color, pattern, etc
 
 handle kinds:
-id, name, color, radius, defaultEdgeKind, etc
-The edge kind determines which
+id, name, shape (circle | rectangle, defaultShapeProps), stroke, color, defaultWireKind, etc
+
+wire kinds:
+id, name, shape (line | bezier, defaultShapeProps), color, pattern, default
+
 When a handle has a color, then it overrides the color of the handle kind.
 
 Kinds are compatible. There is central list of compatible pairs.
@@ -414,9 +420,17 @@ A compatible pair has source, target, bidirectional flag, important flag.
 General to Specific
 
 1. General (0,0,0,0)
-1. Node (0,0,1,0)
-1. Edge (0,1,0,0)
-1. Handle (1,0,0,0)
+2. Node (0,0,0,1,0)
+3. Edge (0,0,1,0,0)
+4. Handle (0,1,0,0,0)
+5. Wire (1,0,0,0,0)
+
+The most specific compatibility wins. Important bypasses the specificity.
+
+---
+
+Introduce a new entity besides graph, nodes, edges, handles: wire
+A wire is the temporary edge used e.g. when the user start clicking and dragging from a handle.
 
 ---
 
@@ -428,7 +442,7 @@ Detail: Large grid with medium gird with finer small grid (1x1), handles, svg in
 
 Within one lod nothing changes. Make the trigger zoom points props.
 
-Add a grid snap option which snaps to the current visible grids. Add a toggle to the toolbar 
+Add a grid snap option which snaps to the current visible grids. Add a toggle to the toolbar
 
 For svg use: https://github.com/linebender/vello_svg
 You can find the svgs for the node kinds under @

@@ -396,11 +396,35 @@ mod scene_json {
 		pub visible: Option<bool>,
 	}
 
+	/// @emoji 🧵 Transient cubic link from a handle to another handle or a free world point (descriptor + link gesture).
+	#[derive(Clone, Debug, Deserialize, Serialize)]
+	#[serde(rename_all = "camelCase")]
+	pub struct WireDescJson {
+		pub id: String,
+		pub source: String,
+		#[serde(default)]
+		pub target: Option<String>,
+		#[serde(default)]
+		pub end_x: Option<f64>,
+		#[serde(default)]
+		pub end_y: Option<f64>,
+		#[serde(default)]
+		pub selected: Option<bool>,
+		#[serde(default)]
+		pub style: Option<String>,
+		#[serde(default)]
+		pub user_data: Option<serde_json::Value>,
+		#[serde(default)]
+		pub visible: Option<bool>,
+	}
+
 	#[derive(Clone, Debug, Default, Deserialize, Serialize)]
 	pub struct SceneDescriptorJson {
 		pub nodes: Vec<NodeDescJson>,
 		pub handles: Vec<HandleDescJson>,
 		pub edges: Vec<EdgeDescJson>,
+		#[serde(default)]
+		pub wires: Vec<WireDescJson>,
 	}
 
 	#[derive(Clone, Debug, Deserialize, Serialize)]
@@ -412,9 +436,27 @@ mod scene_json {
 		#[serde(default)]
 		pub meta: Option<serde_json::Value>,
 	}
+
+	/// 🧾 Reads fixture edge endpoint handle ids: prefers `source`/`target`, else `from`/`to` on disk (same ids, canonical field names in memory).
+	pub fn fixture_edge_handle_ids_from_object(
+		eo: &serde_json::Map<String, serde_json::Value>,
+	) -> Option<(&str, &str)> {
+		let source = eo
+			.get("source")
+			.and_then(|v| v.as_str())
+			.or_else(|| eo.get("from").and_then(|v| v.as_str()))?;
+		let target = eo
+			.get("target")
+			.and_then(|v| v.as_str())
+			.or_else(|| eo.get("to").and_then(|v| v.as_str()))?;
+		Some((source, target))
+	}
 }
 
-pub use scene_json::{CameraJson, EdgeDescJson, FixtureV1Json, HandleDescJson, NodeDescJson, SceneDescriptorJson};
+pub use scene_json::{
+	CameraJson, EdgeDescJson, FixtureV1Json, HandleDescJson, NodeDescJson, SceneDescriptorJson, WireDescJson,
+	fixture_edge_handle_ids_from_object,
+};
 
 // #region 🕸️ForceGraphLayout
 mod force_graph {
@@ -422,6 +464,8 @@ mod force_graph {
 	use serde::{Deserialize, Serialize};
 	use serde_json::Value;
 	use std::collections::{HashMap, HashSet};
+
+	use super::fixture_edge_handle_ids_from_object;
 
 	#[derive(Clone, Debug, Deserialize, Serialize)]
 	#[serde(rename_all = "camelCase")]
@@ -610,10 +654,7 @@ mod force_graph {
 			let Some(eo) = e.as_object() else {
 				continue;
 			};
-			let Some(src_h) = eo.get("source").and_then(|v| v.as_str()) else {
-				continue;
-			};
-			let Some(tgt_h) = eo.get("target").and_then(|v| v.as_str()) else {
+			let Some((src_h, tgt_h)) = fixture_edge_handle_ids_from_object(eo) else {
 				continue;
 			};
 			let Some(a) = handle_to_node.get(src_h) else {
@@ -726,6 +767,8 @@ mod hierarchical_tree {
 	use serde::Deserialize;
 	use serde_json::Value;
 	use std::collections::{HashMap, HashSet};
+
+	use super::fixture_edge_handle_ids_from_object;
 
 	/// 🌳 Buchheim tidy-tree knobs: rank gap, sibling breadth, growth-axis string, optional world anchor for the laid subtree.
 	#[derive(Clone, Debug, Deserialize)]
@@ -1149,10 +1192,7 @@ mod hierarchical_tree {
 			let Some(eo) = e.as_object() else {
 				continue;
 			};
-			let Some(src_h) = eo.get("source").and_then(|v| v.as_str()) else {
-				continue;
-			};
-			let Some(tgt_h) = eo.get("target").and_then(|v| v.as_str()) else {
+			let Some((src_h, tgt_h)) = fixture_edge_handle_ids_from_object(eo) else {
 				continue;
 			};
 			let Some(source_node_id) = handle_to_node.get(src_h) else {
@@ -1289,6 +1329,7 @@ mod redraw_layout {
 	use std::collections::HashMap;
 	use vello::kurbo::Point;
 
+	use super::fixture_edge_handle_ids_from_object;
 	use super::force_graph::{apply_force_graph_layout_to_fixture_v1_value, ForceGraphLayoutOptions};
 	use super::hierarchical_tree::{apply_hierarchical_tree_layout_to_fixture_v1_value, HierarchicalTreeLayoutOptions};
 	use super::vcompute::{circle_handle_angle_toward, distance_between, rectangle_handle_angle_toward};
@@ -1368,10 +1409,7 @@ mod redraw_layout {
 			let Some(eo) = e.as_object() else {
 				continue;
 			};
-			let Some(src_h) = eo.get("source").and_then(|v| v.as_str()) else {
-				continue;
-			};
-			let Some(tgt_h) = eo.get("target").and_then(|v| v.as_str()) else {
+			let Some((src_h, tgt_h)) = fixture_edge_handle_ids_from_object(eo) else {
 				continue;
 			};
 			let Some(&(ni_a, hi_a)) = handle_loc.get(src_h) else {
@@ -1502,7 +1540,7 @@ fn resolve_node_icon_svg_from_encoding(encoded: &str) -> Option<String> {
 	None
 }
 
-/// @emoji 🖼️ Parses SVG via `usvg` and emits path fills/strokes into a Vello scene (subset of linebender/vello_svg: solid paints + transforms).
+/// @emoji 🖼️ Parses SVG via `usvg` into Vello paths; maps near-black / near-white fills and strokes to caller `fg` / `bg` (multiply with paint opacity); `render_svg_tree_themed` shares one parse with bbox sizing in the host.
 mod svg_icon_vello09 {
 	use vello::kurbo::{Affine, BezPath, Point, Stroke};
 	use vello::peniko::{Color, Fill};
@@ -1561,25 +1599,32 @@ mod svg_icon_vello09 {
 		local_path
 	}
 
-	fn solid_color(paint: &usvg::Paint, opacity: usvg::Opacity) -> Option<Color> {
-		match paint {
-			usvg::Paint::Color(c) => Some(Color::from_rgba8(c.red, c.green, c.blue, opacity.to_u8())),
-			_ => None,
+	fn map_solid_icon_paint(paint: &usvg::Paint, opacity: usvg::Opacity, fg: Color, bg: Color) -> Option<Color> {
+		let usvg::Paint::Color(c) = paint else {
+			return None;
+		};
+		let a = opacity.get();
+		if c.red < 22 && c.green < 22 && c.blue < 22 {
+			return Some(fg.multiply_alpha(a));
 		}
+		if c.red > 233 && c.green > 233 && c.blue > 233 {
+			return Some(bg.multiply_alpha(a));
+		}
+		Some(Color::from_rgba8(c.red, c.green, c.blue, opacity.to_u8()))
 	}
 
-	fn render_group(scene: &mut Scene, group: &usvg::Group, transform: Affine) {
+	fn render_group(scene: &mut Scene, group: &usvg::Group, transform: Affine, fg: Color, bg: Color) {
 		for node in group.children() {
 			let transform = transform * to_affine(&node.abs_transform());
 			match node {
-				usvg::Node::Group(g) => render_group(scene, g, transform),
+				usvg::Node::Group(g) => render_group(scene, g, transform, fg, bg),
 				usvg::Node::Path(path) => {
 					if !path.is_visible() {
 						continue;
 					}
 					let local_path = to_bez_path(path);
 					if let Some(fill) = path.fill() {
-						if let Some(color) = solid_color(fill.paint(), fill.opacity()) {
+						if let Some(color) = map_solid_icon_paint(fill.paint(), fill.opacity(), fg, bg) {
 							scene.fill(
 								match fill.rule() {
 									usvg::FillRule::NonZero => Fill::NonZero,
@@ -1593,8 +1638,8 @@ mod svg_icon_vello09 {
 						}
 					}
 					if let Some(stroke) = path.stroke() {
-						if let Some(color) = solid_color(stroke.paint(), stroke.opacity()) {
-							let conv = Stroke::new(stroke.width().get() as f64);
+						if let Some(color) = map_solid_icon_paint(stroke.paint(), stroke.opacity(), fg, bg) {
+							let conv = Stroke::new(f64::from(stroke.width().get()));
 							scene.stroke(&conv, transform, color, None, &local_path);
 						}
 					}
@@ -1604,11 +1649,21 @@ mod svg_icon_vello09 {
 		}
 	}
 
-	pub fn append_svg_str(scene: &mut Scene, svg: &str) -> Result<(), String> {
+	pub fn render_svg_tree_themed(scene: &mut Scene, tree: &usvg::Tree, fg: Color, bg: Color) {
+		render_group(scene, tree.root(), Affine::IDENTITY, fg, bg);
+	}
+
+	#[allow(dead_code)]
+	pub fn append_svg_str_themed(scene: &mut Scene, svg: &str, fg: Color, bg: Color) -> Result<(), String> {
 		let opt = usvg::Options::default();
 		let tree = usvg::Tree::from_str(svg, &opt).map_err(|e| e.to_string())?;
-		render_group(scene, tree.root(), Affine::IDENTITY);
+		render_svg_tree_themed(scene, &tree, fg, bg);
 		Ok(())
+	}
+
+	#[allow(dead_code)]
+	pub fn append_svg_str(scene: &mut Scene, svg: &str) -> Result<(), String> {
+		append_svg_str_themed(scene, svg, Color::BLACK, Color::WHITE)
 	}
 }
 
@@ -1637,10 +1692,11 @@ mod board_host {
 
 	const LOD_MINIMAP_MAX_ZOOM_DEFAULT: f64 = 0.15;
 	const LOD_OVERVIEW_MAX_ZOOM_DEFAULT: f64 = 0.35;
-	const LOD_NORMAL_MAX_ZOOM_DEFAULT: f64 = 0.5;
+	const LOD_NORMAL_MAX_ZOOM_DEFAULT: f64 = 1.25;
 	const GRID_WORLD_LARGE: f64 = 10.0;
 	const GRID_WORLD_MEDIUM: f64 = 5.0;
 	const GRID_WORLD_SMALL: f64 = 1.0;
+	const GRID_FACTOR_DEFAULT: f64 = 10.0;
 	const WORLD_CLIP_TILE_WORLD: f64 = 256.0;
 	const MAX_WORLD_CLIP_TILES: u32 = 768;
 	const EDGE_HIT_TOLERANCE_PX: f64 = 8.0;
@@ -1662,8 +1718,10 @@ mod board_host {
 
 	#[derive(Clone)]
 	struct CachedIconScene {
-		w: f64,
-		h: f64,
+		bx: f64,
+		by: f64,
+		bw: f64,
+		bh: f64,
 		scene: Scene,
 	}
 
@@ -1723,6 +1781,18 @@ mod board_host {
 	}
 
 	#[derive(Clone, Debug)]
+	pub struct WireData {
+		pub id: String,
+		pub source: String,
+		pub target: Option<String>,
+		pub end_x: Option<f64>,
+		pub end_y: Option<f64>,
+		pub selected: bool,
+		pub visible: bool,
+		pub style: Option<String>,
+	}
+
+	#[derive(Clone, Debug)]
 	pub struct Camera {
 		pub x: f64,
 		pub y: f64,
@@ -1764,6 +1834,7 @@ mod board_host {
 		LinkDragSnap {
 			source_id: String,
 			target_id: Option<String>,
+			end_world: Point,
 		},
 	}
 
@@ -1818,6 +1889,7 @@ mod board_host {
 		pub nodes: BTreeMap<String, NodeData>,
 		pub handles: BTreeMap<String, HandleData>,
 		pub edges: BTreeMap<String, EdgeData>,
+		pub wires: BTreeMap<String, WireData>,
 		/// Catalog keyed by `handle_kind` id (`{ id, name, color }` from `set_handle_kinds_from_json`).
 		pub handle_kinds: BTreeMap<String, HandleKindDef>,
 		/// Ordered pairs `(source_handle_kind, target_handle_kind)` allowed for handle-link gestures; empty = unrestricted.
@@ -1833,14 +1905,16 @@ mod board_host {
 		pub events: Vec<serde_json::Value>,
 		/// Screen-space preview polygon (CSS pixels) while area-selecting; cleared when idle.
 		pub selection_screen_preview: Option<Vec<Point>>,
-		/// Screen-space open polyline (typically two points) while dragging a new handle link.
+		/// Screen-space polyline preview (CSS px) while dragging a handle link before drop.
 		pub link_screen_preview: Option<Vec<Point>>,
 		pub vello_theme: VelloThemePalette,
 		/// @emoji 📶 Upper bounds for zoom bands: `zoom < minimap`, then overview, then normal, else detail.
 		pub lod_minimap_max_zoom: f64,
 		pub lod_overview_max_zoom: f64,
 		pub lod_normal_max_zoom: f64,
-		/// @emoji 🧲 When true, node drags snap to the finest visible LOD grid (`1` / `5` / `10` world units).
+		/// @emoji 📐 Positive multiplier for LOD world grid steps (`10` / `5` / `1` base world units per band).
+		pub grid_factor: f64,
+		/// @emoji 🧲 When true, node drags snap to the finest visible LOD grid (step scales with `grid_factor`).
 		pub grid_snap_enabled: bool,
 		icon_vector_cache: RefCell<HashMap<String, CachedIconScene>>,
 	}
@@ -1858,6 +1932,7 @@ mod board_host {
 				nodes: BTreeMap::new(),
 				handles: BTreeMap::new(),
 				edges: BTreeMap::new(),
+				wires: BTreeMap::new(),
 				handle_kinds: BTreeMap::new(),
 				handle_link_compat_pairs: Vec::new(),
 				selection: BTreeSet::new(),
@@ -1881,6 +1956,7 @@ mod board_host {
 				lod_minimap_max_zoom: LOD_MINIMAP_MAX_ZOOM_DEFAULT,
 				lod_overview_max_zoom: LOD_OVERVIEW_MAX_ZOOM_DEFAULT,
 				lod_normal_max_zoom: LOD_NORMAL_MAX_ZOOM_DEFAULT,
+				grid_factor: GRID_FACTOR_DEFAULT,
 				grid_snap_enabled: false,
 				icon_vector_cache: RefCell::new(HashMap::new()),
 			}
@@ -1894,6 +1970,16 @@ mod board_host {
 			let b = u8::try_from(arr.get(2)?.as_u64().unwrap_or(0).min(255)).ok()?;
 			let a = u8::try_from(arr.get(3).and_then(|x| x.as_u64()).unwrap_or(255).min(255)).ok()?;
 			Some(Color::from_rgba8(r, g, b, a))
+		}
+
+		fn grid_step_large_world(&self) -> f64 {
+			GRID_WORLD_LARGE * self.grid_factor
+		}
+		fn grid_step_medium_world(&self) -> f64 {
+			GRID_WORLD_MEDIUM * self.grid_factor
+		}
+		fn grid_step_small_world(&self) -> f64 {
+			GRID_WORLD_SMALL * self.grid_factor
 		}
 
 		pub fn new() -> Self {
@@ -1916,9 +2002,9 @@ mod board_host {
 		fn lod_visible_grid_snap_step_world(&self) -> Option<f64> {
 			match self.current_draw_lod() {
 				BoardDrawLod::Minimap => None,
-				BoardDrawLod::Overview => Some(GRID_WORLD_LARGE),
-				BoardDrawLod::Normal => Some(GRID_WORLD_MEDIUM),
-				BoardDrawLod::Detail => Some(GRID_WORLD_SMALL),
+				BoardDrawLod::Overview => Some(self.grid_step_large_world()),
+				BoardDrawLod::Normal => Some(self.grid_step_medium_world()),
+				BoardDrawLod::Detail => Some(self.grid_step_small_world()),
 			}
 		}
 
@@ -1961,29 +2047,94 @@ mod board_host {
 			self.grid_snap_enabled = enabled;
 		}
 
-		fn get_or_build_icon_scene(&self, kind: &str, svg: &str) -> Option<(f64, f64, Scene)> {
-			let key = kind.trim().to_string();
-			if key.is_empty() {
+		pub fn set_grid_factor(&mut self, v: f64) -> Result<(), String> {
+			if !v.is_finite() || v <= 0.0 || v > 1_000_000.0 {
+				return Err("gridFactor must be finite and in (0, 1e6]".into());
+			}
+			self.grid_factor = v;
+			Ok(())
+		}
+
+		fn get_or_build_icon_scene(&self, kind: &str, svg: &str, fg: Color, bg: Color) -> Option<(f64, f64, f64, f64, Scene)> {
+			let kind_s = kind.trim();
+			if kind_s.is_empty() {
 				return None;
 			}
+			let key = Self::icon_scene_cache_key(kind_s, fg, bg);
 			{
 				let g = self.icon_vector_cache.borrow();
 				if let Some(c) = g.get(&key) {
-					return Some((c.w, c.h, c.scene.clone()));
+					return Some((c.bx, c.by, c.bw, c.bh, c.scene.clone()));
 				}
 			}
 			let opt = usvg::Options::default();
 			let tree = usvg::Tree::from_str(svg, &opt).ok()?;
-			let w = f64::from(tree.size().width());
-			let h = f64::from(tree.size().height());
-			if w <= 0.0 || h <= 0.0 || !w.is_finite() || !h.is_finite() {
+			let (bx, by, bw, bh) = Self::icon_content_bounds(&tree);
+			if !(bw > 0.0 && bh > 0.0 && bw.is_finite() && bh.is_finite()) {
 				return None;
 			}
 			let mut s = Scene::new();
-			super::svg_icon_vello09::append_svg_str(&mut s, svg).ok()?;
-			let cached = CachedIconScene { w, h, scene: s.clone() };
+			super::svg_icon_vello09::render_svg_tree_themed(&mut s, &tree, fg, bg);
+			let cached = CachedIconScene { bx, by, bw, bh, scene: s.clone() };
 			self.icon_vector_cache.borrow_mut().insert(key, cached);
-			Some((w, h, s))
+			Some((bx, by, bw, bh, s))
+		}
+
+		fn icon_scene_cache_key(kind: &str, fg: Color, bg: Color) -> String {
+			let f = fg.to_rgba8();
+			let b = bg.to_rgba8();
+			format!(
+				"{kind}\0v4\0{:02x}{:02x}{:02x}{:02x}-{:02x}{:02x}{:02x}{:02x}",
+				f.r, f.g, f.b, f.a, b.r, b.g, b.b, b.a
+			)
+		}
+
+		fn icon_rect_xywh(r: usvg::Rect) -> Option<(f64, f64, f64, f64)> {
+			let w = f64::from(r.width());
+			let h = f64::from(r.height());
+			if !(w > 1e-6 && h > 1e-6 && w.is_finite() && h.is_finite()) {
+				return None;
+			}
+			Some((f64::from(r.x()), f64::from(r.y()), w, h))
+		}
+
+		fn icon_rect_nonzero(r: usvg::tiny_skia_path::NonZeroRect) -> (f64, f64, f64, f64) {
+			(
+				f64::from(r.x()),
+				f64::from(r.y()),
+				f64::from(r.width()),
+				f64::from(r.height()),
+			)
+		}
+
+		fn icon_union_xywh(a: (f64, f64, f64, f64), b: (f64, f64, f64, f64)) -> (f64, f64, f64, f64) {
+			let ax1 = a.0 + a.2;
+			let ay1 = a.1 + a.3;
+			let bx1 = b.0 + b.2;
+			let by1 = b.1 + b.3;
+			let x0 = a.0.min(b.0);
+			let y0 = a.1.min(b.1);
+			let x1 = ax1.max(bx1);
+			let y1 = ay1.max(by1);
+			(x0, y0, x1 - x0, y1 - y0)
+		}
+
+		fn icon_content_bounds(tree: &usvg::Tree) -> (f64, f64, f64, f64) {
+			let root = tree.root();
+			let mut u = Self::icon_rect_nonzero(root.abs_layer_bounding_box());
+			if let Some(r) = Self::icon_rect_xywh(root.abs_stroke_bounding_box()) {
+				u = Self::icon_union_xywh(u, r);
+			}
+			if let Some(r) = Self::icon_rect_xywh(root.abs_bounding_box()) {
+				u = Self::icon_union_xywh(u, r);
+			}
+			let (_, _, bw, bh) = u;
+			if bw > 1e-6 && bh > 1e-6 {
+				return u;
+			}
+			let w = f64::from(tree.size().width());
+			let h = f64::from(tree.size().height());
+			(0.0, 0.0, w.max(1.0), h.max(1.0))
 		}
 
 		pub fn set_size(&mut self, width: u32, height: u32, dpr: f64) {
@@ -2225,6 +2376,7 @@ mod board_host {
 				}
 			}
 			self.vello_theme = next;
+			self.icon_vector_cache.borrow_mut().clear();
 			Ok(())
 		}
 
@@ -2265,6 +2417,9 @@ mod board_host {
 			}
 			for e in self.edges.values_mut() {
 				e.selected = self.selection.contains(&e.id);
+			}
+			for w in self.wires.values_mut() {
+				w.selected = self.selection.contains(&w.id);
 			}
 		}
 
@@ -2332,6 +2487,68 @@ mod board_host {
 				Point::new(source_node.x, source_node.y),
 				Point::new(target_node.x, target_node.y),
 			))
+		}
+
+		fn link_drag_wire_curve_world(&self, source_id: &str, target_id: Option<&str>, end_world: Point) -> Option<CubicBez> {
+			let source_handle = self.handles.get(source_id)?;
+			let source_node = self.nodes.get(&source_handle.node_id)?;
+			let source_pos = self.handle_world_pos(source_handle)?;
+			let source_center = Point::new(source_node.x, source_node.y);
+			let (target_pos, target_center) = if let Some(tid) = target_id {
+				let th = self.handles.get(tid)?;
+				let tn = self.nodes.get(&th.node_id)?;
+				(
+					self.handle_world_pos(th)?,
+					Point::new(tn.x, tn.y),
+				)
+			} else {
+				(end_world, end_world)
+			};
+			Some(compute_edge_bezier_points(
+				source_pos,
+				target_pos,
+				source_center,
+				target_center,
+			))
+		}
+
+		fn active_link_wire_curve(&self) -> Option<CubicBez> {
+			let Interaction::LinkDragSnap {
+				source_id,
+				target_id,
+				end_world,
+			} = &self.interaction
+			else {
+				return None;
+			};
+			self.link_drag_wire_curve_world(source_id.as_str(), target_id.as_deref(), *end_world)
+		}
+
+		fn wire_curve(&self, w: &WireData) -> Option<CubicBez> {
+			let end_world = match (&w.target, w.end_x, w.end_y) {
+				(None, Some(x), Some(y)) if x.is_finite() && y.is_finite() => Point::new(x, y),
+				(Some(tid), _, _) => {
+					self.handles.get(tid)?;
+					return self.edge_curve(&EdgeData {
+						id: w.id.clone(),
+						source: w.source.clone(),
+						target: tid.clone(),
+						selected: w.selected,
+						visible: w.visible,
+						style: w.style.clone(),
+					});
+				}
+				_ => return None,
+			};
+			self.link_drag_wire_curve_world(w.source.as_str(), None, end_world)
+		}
+
+		fn apply_link_drag_snap_hover(&mut self, _source_handle_id: &str, world: Point, target_handle_id: Option<&str>) {
+			if let Some(tid) = target_handle_id {
+				self.set_hovered_id(Some(tid.to_string()));
+			} else {
+				self.update_hover_from_world(world);
+			}
 		}
 
 		pub fn resolve_hit_world(&self, point: Point) -> Option<String> {
@@ -2406,7 +2623,6 @@ mod board_host {
 		}
 
 		pub fn sync_descriptor(&mut self, desc: &SceneDescriptorJson) -> Result<(), String> {
-			self.link_screen_preview = None;
 			if matches!(
 				self.interaction,
 				Interaction::LinkAtSourceHandle { .. } | Interaction::LinkDragSnap { .. }
@@ -2416,7 +2632,9 @@ mod board_host {
 			let want_nodes: BTreeSet<_> = desc.nodes.iter().map(|n| n.id.clone()).collect();
 			let want_handles: BTreeSet<_> = desc.handles.iter().map(|h| h.id.clone()).collect();
 			let want_edges: BTreeSet<_> = desc.edges.iter().map(|e| e.id.clone()).collect();
+			let want_wires: BTreeSet<_> = desc.wires.iter().map(|w| w.id.clone()).collect();
 			self.edges.retain(|id, _| want_edges.contains(id));
+			self.wires.retain(|id, _| want_wires.contains(id));
 			self.handles.retain(|id, _| want_handles.contains(id));
 			self.nodes.retain(|id, _| want_nodes.contains(id));
 			for n in &desc.nodes {
@@ -2498,6 +2716,43 @@ mod board_host {
 					);
 				}
 			}
+			for w in &desc.wires {
+				let target = w
+					.target
+					.as_ref()
+					.map(|s| s.trim().to_string())
+					.filter(|s| !s.is_empty());
+				let (end_x, end_y) = match &target {
+					Some(_) => (None, None),
+					None => {
+						let x = match w.end_x {
+							Some(v) if v.is_finite() => Some(v),
+							_ => None,
+						};
+						let y = match w.end_y {
+							Some(v) if v.is_finite() => Some(v),
+							_ => None,
+						};
+						if x.is_none() || y.is_none() {
+							continue;
+						}
+						(x, y)
+					}
+				};
+				self.wires.insert(
+					w.id.clone(),
+					WireData {
+						id: w.id.clone(),
+						source: w.source.clone(),
+						target,
+						end_x,
+						end_y,
+						selected: w.selected.unwrap_or(false),
+						visible: w.visible.unwrap_or(true),
+						style: w.style.clone(),
+					},
+				);
+			}
 			let mut new_selection = BTreeSet::new();
 			for n in &desc.nodes {
 				if n.selected == Some(true) {
@@ -2514,6 +2769,11 @@ mod board_host {
 					new_selection.insert(e.id.clone());
 				}
 			}
+			for w in &desc.wires {
+				if w.selected == Some(true) {
+					new_selection.insert(w.id.clone());
+				}
+			}
 			let prev_sel = self.selection.clone();
 			self.selection = new_selection;
 			for n in self.nodes.values_mut() {
@@ -2525,6 +2785,9 @@ mod board_host {
 			for e in self.edges.values_mut() {
 				e.selected = self.selection.contains(&e.id);
 			}
+			for w in self.wires.values_mut() {
+				w.selected = self.selection.contains(&w.id);
+			}
 			if prev_sel != self.selection {
 				let mut sorted: Vec<_> = self.selection.iter().cloned().collect();
 				sorted.sort();
@@ -2535,6 +2798,7 @@ mod board_host {
 
 		pub fn clear_scene(&mut self) {
 			self.edges.clear();
+			self.wires.clear();
 			self.handles.clear();
 			self.nodes.clear();
 			self.selection.clear();
@@ -2692,10 +2956,7 @@ mod board_host {
 				let Some(id) = e.get("id").and_then(|v| v.as_str()) else {
 					return false;
 				};
-				let Some(source) = e.get("source").and_then(|v| v.as_str()) else {
-					return false;
-				};
-				let Some(target) = e.get("target").and_then(|v| v.as_str()) else {
+				let Some((source, target)) = fixture_edge_handle_ids_from_object(e) else {
 					return false;
 				};
 				desc.edges.push(EdgeDescJson {
@@ -2858,23 +3119,49 @@ mod board_host {
 				if lod == BoardDrawLod::Detail {
 					if let Some(k) = n.icon_kind.as_ref().map(|s| s.trim()).filter(|s| !s.is_empty()) {
 						if let Some(svg) = super::resolve_node_icon_svg_from_encoding(k) {
-							if let Some((iw, ih, icon_scene)) = self.get_or_build_icon_scene(k, &svg) {
-								let inset = 0.88;
+							if let Some((bx, by, bw, bh, icon_scene)) =
+								self.get_or_build_icon_scene(k, &svg, stroke_c, fill)
+							{
+								let clip_inset = 0.88;
+								let fit_inset = 0.76;
 								let (sx_half, sy_half) = match n.shape {
 									NodeShape::Circle => {
-										let s = n.radius * self.camera.zoom * inset;
+										let s = n.radius * self.camera.zoom * fit_inset;
 										(s, s)
 									}
 									NodeShape::Rectangle => (
-										n.width * self.camera.zoom * inset * 0.5,
-										n.height * self.camera.zoom * inset * 0.5,
+										n.width * self.camera.zoom * fit_inset * 0.5,
+										n.height * self.camera.zoom * fit_inset * 0.5,
 									),
 								};
 								let center = self.world_to_screen(Point::new(n.x, n.y));
-								let scale = ((2.0 * sx_half) / iw).min((2.0 * sy_half) / ih);
-								let aff = Affine::translate((center.x - iw * scale * 0.5, center.y - ih * scale * 0.5))
-									* Affine::scale(scale);
-								scene.append(&icon_scene, Some(aff));
+								let cx = bx + bw * 0.5;
+								let cy = by + bh * 0.5;
+								let avail_w = 2.0 * sx_half;
+								let avail_h = 2.0 * sy_half;
+								let scale = (avail_w / bw).min(avail_h / bh);
+								// Aspect-preserving fit: entire union bbox inside the fit inset rect; centered at node.
+								let aff = Affine::translate((center.x - scale * cx, center.y - scale * cy)) * Affine::scale(scale);
+								match n.shape {
+									NodeShape::Circle => {
+										let r_clip = (n.radius * self.camera.zoom * clip_inset).max(1.0);
+										let disc = Circle::new(center, r_clip);
+										scene.push_clip_layer(Fill::NonZero, Affine::IDENTITY, &disc);
+										scene.append(&icon_scene, Some(aff));
+										scene.pop_layer();
+									}
+									NodeShape::Rectangle => {
+										let hw = n.width * self.camera.zoom * clip_inset * 0.5;
+										let hh = n.height * self.camera.zoom * clip_inset * 0.5;
+										let clip_r = Rect::from_points(
+											Point::new(center.x - hw, center.y - hh),
+											Point::new(center.x + hw, center.y + hh),
+										);
+										scene.push_clip_layer(Fill::NonZero, Affine::IDENTITY, &clip_r);
+										scene.append(&icon_scene, Some(aff));
+										scene.pop_layer();
+									}
+								}
 							}
 						}
 					}
@@ -2929,6 +3216,30 @@ mod board_host {
 					scene.stroke(&edge_stroke, Affine::IDENTITY, stroke_color, None, &curve);
 				}
 			}
+			let wire_sw = 2.25_f64;
+			let wire_stroke = Stroke::new(wire_sw);
+			let wire_color = self.vello_theme.selection_preview_stroke;
+			for w in self.wires.values() {
+				if !w.visible {
+					continue;
+				}
+				if let Some(c) = self.wire_curve(w) {
+					let p0 = self.world_to_screen(c.p0);
+					let p1 = self.world_to_screen(c.p1);
+					let p2 = self.world_to_screen(c.p2);
+					let p3 = self.world_to_screen(c.p3);
+					let curve = CubicBez::new(p0, p1, p2, p3);
+					scene.stroke(&wire_stroke, Affine::IDENTITY, wire_color, None, &curve);
+				}
+			}
+			if let Some(c) = self.active_link_wire_curve() {
+				let p0 = self.world_to_screen(c.p0);
+				let p1 = self.world_to_screen(c.p1);
+				let p2 = self.world_to_screen(c.p2);
+				let p3 = self.world_to_screen(c.p3);
+				let curve = CubicBez::new(p0, p1, p2, p3);
+				scene.stroke(&wire_stroke, Affine::IDENTITY, wire_color, None, &curve);
+			}
 		}
 
 		pub fn build_vector_scene(&self) -> Scene {
@@ -2936,15 +3247,15 @@ mod board_host {
 			let lod = self.current_draw_lod();
 			let grid_color = self.vello_theme.grid_minor_stroke;
 			if lod != BoardDrawLod::Minimap {
-				self.stroke_world_step_grid(&mut inner, grid_color, 1.0, GRID_WORLD_LARGE, 0.0);
+				self.stroke_world_step_grid(&mut inner, grid_color, 1.0, self.grid_step_large_world(), 0.0);
 				match lod {
 					BoardDrawLod::Normal | BoardDrawLod::Detail => {
-						self.stroke_world_step_grid(&mut inner, grid_color, 0.72, GRID_WORLD_MEDIUM, 0.0);
+						self.stroke_world_step_grid(&mut inner, grid_color, 0.72, self.grid_step_medium_world(), 0.0);
 					}
 					_ => {}
 				}
 				if lod == BoardDrawLod::Detail {
-					self.stroke_world_step_grid(&mut inner, grid_color, 0.48, GRID_WORLD_SMALL, 0.0);
+					self.stroke_world_step_grid(&mut inner, grid_color, 0.48, self.grid_step_small_world(), 0.0);
 				}
 			}
 			let use_tiles = self.world_raster_tiling == "world-clip";
@@ -2997,22 +3308,6 @@ mod board_host {
 					);
 					inner.stroke(
 						&Stroke::new(1.5),
-						Affine::IDENTITY,
-						self.vello_theme.selection_preview_stroke,
-						None,
-						&path,
-					);
-				}
-			}
-			if let Some(ref pts) = self.link_screen_preview {
-				if pts.len() >= 2 {
-					let mut path = vello::kurbo::BezPath::new();
-					path.move_to(pts[0]);
-					for p in pts.iter().skip(1) {
-						path.line_to(*p);
-					}
-					inner.stroke(
-						&Stroke::new(2.25),
 						Affine::IDENTITY,
 						self.vello_theme.selection_preview_stroke,
 						None,
@@ -3083,6 +3378,16 @@ mod board_host {
 					.map(|(k, _)| k.clone())
 					.collect();
 				for hid in handle_ids {
+					let wids: Vec<_> = self
+						.wires
+						.iter()
+						.filter(|(_, w)| w.source == *hid || w.target.as_ref() == Some(&hid))
+						.map(|(k, _)| k.clone())
+						.collect();
+					for wid in &wids {
+						self.wires.remove(wid);
+						self.selection.remove(wid);
+					}
 					let eids: Vec<_> = self
 						.edges
 						.iter()
@@ -3139,35 +3444,6 @@ mod board_host {
 			best.map(|(_, id)| id)
 		}
 
-		fn sync_link_drag_preview(
-			&mut self,
-			source_handle_id: &str,
-			end_screen: Point,
-			world: Point,
-			target_handle_id: Option<&str>,
-		) {
-			let Some(start_w) = self.handles.get(source_handle_id).and_then(|h| self.handle_world_pos(h)) else {
-				self.link_screen_preview = None;
-				return;
-			};
-			let start_s = self.world_to_screen(start_w);
-			let end_s = if let Some(tid) = target_handle_id {
-				self.handles
-					.get(tid)
-					.and_then(|h| self.handle_world_pos(h))
-					.map(|w| self.world_to_screen(w))
-					.unwrap_or(end_screen)
-			} else {
-				end_screen
-			};
-			self.link_screen_preview = Some(vec![start_s, end_s]);
-			if let Some(tid) = target_handle_id {
-				self.set_hovered_id(Some(tid.to_string()));
-			} else {
-				self.update_hover_from_world(world);
-			}
-		}
-
 		fn try_commit_link_edge(&mut self, source_handle_id: &str, target_handle_id: &str) -> bool {
 			if source_handle_id == target_handle_id {
 				return false;
@@ -3217,7 +3493,6 @@ mod board_host {
 
 		pub fn pointer_down_screen(&mut self, sx: f64, sy: f64, button: u8, shift: bool) {
 			self.set_selection_screen_preview(None);
-			self.link_screen_preview = None;
 			let screen = Point::new(sx, sy);
 			let world = self.screen_to_world(screen);
 			let hit = self.resolve_hit_world(world);
@@ -3381,23 +3656,24 @@ mod board_host {
 				Interaction::LinkAtSourceHandle { source_id, start_screen } => {
 					if distance_between(screen, start_screen) >= LINK_DRAG_MIN_DISTANCE_PX {
 						let optional_target_handle_id = self.nearest_link_snap_handle_world(&source_id, world);
-						self.sync_link_drag_preview(&source_id, screen, world, optional_target_handle_id.as_deref());
+						self.apply_link_drag_snap_hover(&source_id, world, optional_target_handle_id.as_deref());
 						self.interaction = Interaction::LinkDragSnap {
 							source_id: source_id.clone(),
 							target_id: optional_target_handle_id,
+							end_world: world,
 						};
 					} else {
-						self.link_screen_preview = None;
 						self.interaction = Interaction::LinkAtSourceHandle { source_id, start_screen };
 						self.update_hover_from_world(world);
 					}
 				}
 				Interaction::LinkDragSnap { source_id, .. } => {
 					let optional_target_handle_id = self.nearest_link_snap_handle_world(&source_id, world);
-					self.sync_link_drag_preview(&source_id, screen, world, optional_target_handle_id.as_deref());
+					self.apply_link_drag_snap_hover(&source_id, world, optional_target_handle_id.as_deref());
 					self.interaction = Interaction::LinkDragSnap {
 						source_id: source_id.clone(),
 						target_id: optional_target_handle_id,
+						end_world: world,
 					};
 				}
 				Interaction::None => {
@@ -3412,8 +3688,7 @@ mod board_host {
 			let world = self.screen_to_world(screen);
 			let grabbed = std::mem::take(&mut self.interaction);
 			match grabbed {
-				Interaction::LinkDragSnap { source_id, target_id } => {
-					self.link_screen_preview = None;
+				Interaction::LinkDragSnap { source_id, target_id, .. } => {
 					if let Some(target_handle_id) = target_id {
 						self.try_commit_link_edge(&source_id, &target_handle_id);
 					}
@@ -3421,7 +3696,6 @@ mod board_host {
 					self.update_hover_from_world(world);
 				}
 				Interaction::LinkAtSourceHandle { .. } => {
-					self.link_screen_preview = None;
 					self.interaction = Interaction::None;
 					self.update_hover_from_world(world);
 				}
@@ -4433,6 +4707,15 @@ impl BoardSession {
 		self.state.borrow_mut().host.set_grid_snap_enabled(enabled);
 	}
 
+	#[wasm_bindgen(js_name = setGridFactor)]
+	pub fn set_grid_factor_wasm(&mut self, v: f64) -> Result<(), JsValue> {
+		self.state
+			.borrow_mut()
+			.host
+			.set_grid_factor(v)
+			.map_err(|e| JsValue::from_str(&e))
+	}
+
 	#[wasm_bindgen(js_name = setSelectionIdsJson)]
 	pub fn set_selection_ids_json(&mut self, json: &str) -> Result<(), JsValue> {
 		let ids: Vec<String> = serde_json::from_str(json).map_err(|err| JsValue::from_str(&err.to_string()))?;
@@ -4621,6 +4904,7 @@ mod host_tests {
 				user_data: None,
 				visible: None,
 			}],
+			wires: vec![],
 		}
 	}
 
@@ -4954,6 +5238,7 @@ mod host_tests {
 				},
 			],
 			edges: vec![],
+			wires: vec![],
 		}
 	}
 
@@ -5414,6 +5699,17 @@ mod force_graph_tests {
 		});
 		let err = apply_redraw_layout_to_fixture_v1_json(&fixture.to_string(), r#"{"mode":"nope"}"#).unwrap_err();
 		assert!(err.contains("unknown redraw mode"));
+	}
+
+	#[test]
+	fn svg_icon_vello09_append_smoke() {
+		let mut scene = vello::Scene::new();
+		let svg = r##"<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10"><rect width="10" height="10" fill="#ffffff"/><path d="M0 0 L10 10" stroke="#000000" stroke-width="1"/></svg>"##;
+		super::svg_icon_vello09::append_svg_str(&mut scene, svg).expect("parse svg");
+		let fg = vello::peniko::Color::from_rgba8(200, 10, 10, 255);
+		let bg = vello::peniko::Color::from_rgba8(10, 200, 10, 255);
+		let mut scene2 = vello::Scene::new();
+		super::svg_icon_vello09::append_svg_str_themed(&mut scene2, svg, fg, bg).expect("parse themed");
 	}
 }
 
