@@ -92,7 +92,7 @@ This reverts the half of commit 378 that was kept "to match prior behavior" but 
 
 - Reload `bun ./script.ts dev` for the board play. Confirm no `borrow_fail` in console, all three panes reach `data-board-surface-state="ready"`, panning with middle-click (or `Shift+left-drag` on empty area), wheel zoom, and node click selection all work.
 - Run `bunx vitest run --config vitest.config.ts` in `elements/client/lib/board` — all existing tests must still pass.
-- Run `bun ./script.ts e2e` for the board play Playwright spec.
+- Run `bunx playwright test --config play/playwright.config.ts` in `elements/client/lib/board`. With bundled Chromium (no adapter), GPU + stress tests **skip**; on a WebGPU machine run **`BOARD_PLAYWRIGHT_CHANNEL=chrome bunx playwright test …`** so both run and the stress test asserts **no** `borrow_fail` / `unsafe aliasing` / `recursive use of an object` in console after viewport resizes.
 
 ## 4 Ticket
 
@@ -141,3 +141,5 @@ Introduce **`wasmSessionCallBlockedForReentry()`** (`wasmSessionBorrowDepth > 0 
 | Guard `pushSceneToWasmDriver` only | Reduced `setSize` races; **user still hit `borrow_fail`** |
 | Fence **all** `session` entry points during attach / `renderFrame` | **Implemented** in `index.ts` (`wasmSessionCallBlockedForReentry`); verify locally with WebGPU + optional `BOARD_PLAYWRIGHT_CHANNEL=chrome` |
 | Playwright resize-stress + console capture | **Automated regression signal** |
+| **`setPointerCapture` before WASM re-entry guard** | **Likely root of “no mouse after init”**: if `pointerdown` ran while GPU attach borrowed the session, we returned early **after** capturing the pointer, so the canvas kept capture while WASM never saw `pointerDown` — **permanent broken input**. **Fix:** `releasePointerCapture` on the blocked early-return path. |
+| Flex `h-full` in nested flex (Golden Layout) | **Hypothesis for “canvas cut at bottom”**: inner stack used `h-full` without establishing a flex column chain; **Fix:** `flex flex-1 min-h-0 flex-col` on container + inner + `flex-1 min-h-0` on canvases. |

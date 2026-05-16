@@ -113,6 +113,7 @@ export class SetupScript extends Script {
           console.log(`[setup] ${process.platform} native bootstrap…`);
           tryRun("bash", [sh, "setup"]);
         }
+      }
     }
 
     console.log("[setup] uv sync…");

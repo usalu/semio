@@ -797,7 +797,11 @@ export function BoardCanvas({
 		<BoardContext.Provider value={contextRenderer}>
 				<div
 					className={
-						[className, fixtureDragActive ? "ring-2 ring-[color:var(--color-accent)] ring-offset-2 ring-offset-[color:var(--color-base)]" : ""]
+						[
+							"flex min-h-0 min-w-0 flex-1 flex-col",
+							className,
+							fixtureDragActive ? "ring-2 ring-[color:var(--color-accent)] ring-offset-2 ring-offset-[color:var(--color-base)]" : "",
+						]
 							.filter(Boolean)
 							.join(" ") || undefined
 					}
@@ -808,12 +812,18 @@ export function BoardCanvas({
 					ref={containerRef}
 					style={{ height: height ?? "100%", position: "relative", width: width ?? "100%", ...(style ?? {}) }}
 				>
-					<div className="relative h-full w-full min-h-0">
-						<canvas data-testid="board-canvas" ref={canvasRef} style={{ display: "block", height: "100%", width: "100%" }} />
+					<div className="relative flex min-h-0 min-w-0 flex-1 flex-col">
+						<canvas
+							className="min-h-0 flex-1 touch-none"
+							data-testid="board-canvas"
+							ref={canvasRef}
+							style={{ display: "block", height: "100%", width: "100%" }}
+						/>
 						<canvas
 							aria-hidden
+							className="pointer-events-none absolute inset-0 z-[1] min-h-0 flex-1"
 							ref={textOverlayRef}
-							style={{ display: "block", height: "100%", inset: 0, pointerEvents: "none", position: "absolute", width: "100%", zIndex: 1 }}
+							style={{ display: "block", height: "100%", width: "100%" }}
 						/>
 					</div>
 					{contextRenderer ? (

@@ -2431,6 +2431,9 @@ export class BoardRenderer {
 		event.preventDefault();
 		if (this.wasmSessionCallBlockedForReentry()) {
 			this.invalidated = true;
+			if (typeof event.pointerId === "number") {
+				this.canvas.releasePointerCapture?.(event.pointerId);
+			}
 			return;
 		}
 		const rect = this.canvas.getBoundingClientRect();
