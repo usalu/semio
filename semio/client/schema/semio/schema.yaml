@@ -237,6 +237,15 @@ schema:
       kit: &kit
         implements: [*artifact]
         fields:
+          data:
+            image: *string
+            preview: *string
+            remote: *uri
+            homepage: *uri
+            license: *string
+            uri: *uri
+            version: *string
+            updatedAt: *timestamp
           places: [*place]
           families: [*family]
           folders: [*folder]

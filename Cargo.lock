@@ -966,6 +966,7 @@ name = "elements_board"
 version = "0.1.0"
 dependencies = [
  "js-sys",
+ "nalgebra 0.33.3",
  "serde",
  "serde-wasm-bindgen",
  "serde_json",
@@ -2301,6 +2302,21 @@ dependencies = [
 
 [[package]]
 name = "nalgebra"
+version = "0.33.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9d43ddcacf343185dfd6de2ee786d9e8b1c2301622afab66b6c73baf9882abfd"
+dependencies = [
+ "approx",
+ "matrixmultiply",
+ "num-complex",
+ "num-rational",
+ "num-traits",
+ "simba",
+ "typenum",
+]
+
+[[package]]
+name = "nalgebra"
 version = "0.34.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "df76ea0ff5c7e6b88689085804d6132ded0ddb9de5ca5b8aeb9eeadc0508a70a"
@@ -3365,7 +3381,7 @@ dependencies = [
  "getrandom 0.3.4",
  "hex",
  "js-sys",
- "nalgebra",
+ "nalgebra 0.34.2",
  "paste",
  "rusqlite",
  "serde",

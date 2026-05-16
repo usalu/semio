@@ -1,5 +1,6 @@
 import React from "react";
 import type { ReactElement } from "react";
+import type { ContextMenuItem } from "@elements/ui";
 import Reconciler from "react-reconciler";
 import {
 	ContinuousEventPriority,
@@ -13,6 +14,7 @@ import {
 import initBoardWasm, {
 	boardComputeEdgeBezier,
 	boardDistancePointCubic,
+	boardForceGraphLayoutFixtureJson,
 	boardHandlePositionCircle,
 	boardHandlePositionRectangle,
 	BoardSession,
@@ -49,6 +51,21 @@ export interface BoardHandleLinkCompatPair {
 	source: string;
 	target: string;
 }
+
+/** @emoji 🎨 Catalog row for WASM handle-kind fill defaults (`id` matches {@link Handle.handleKind}; per-handle {@link Handle.color} overrides). */
+export interface BoardHandleKindCatalogEntry {
+	color: string;
+	id: string;
+	name: string;
+}
+
+/** @emoji 🧷 Builtin handle kind id used when fixture JSON omits `handleKind` (aligned with Rust `parse_fixture_v1`). */
+export const BOARD_BUILTIN_PORT_HANDLE_KIND = "board.port";
+
+/** @emoji 🎨 Default WASM catalog so `board.port` handles resolve a catalog color without host configuration. */
+export const BOARD_DEFAULT_HANDLE_KIND_CATALOG: readonly BoardHandleKindCatalogEntry[] = [
+	{ color: "#94a3b8", id: BOARD_BUILTIN_PORT_HANDLE_KIND, name: "Port" },
+];
 /** 🧱 World-space clip tiling for the Vello WASM canvas (`world-clip`) or monolithic encoding (`none`). */
 export type WorldRasterTilingKind = "none" | "world-clip";
 
@@ -95,7 +112,11 @@ export interface CubicBezierCurve {
 /** @emoji 📄 Handle record inside {@link BoardFixtureV1}; optional `radius` overrides default world-space hit/draw size. */
 export interface BoardFixtureHandleV1 {
 	angle: number;
+	/** @emoji 🔗 Required after {@link parseBoardFixtureV1}; JSON may omit it and receive {@link BOARD_BUILTIN_PORT_HANDLE_KIND}. */
+	handleKind: string;
 	id: string;
+	/** @emoji 🎨 Optional CSS `#rgb` / `#rrggbb` / `#rrggbbaa` overriding the catalog color for this handle. */
+	color?: string;
 	radius?: number;
 }
 
@@ -161,6 +182,28 @@ export interface BoardFixtureV1 {
 	meta?: Record<string, unknown>;
 	nodes: BoardFixtureNodeV1[];
 	schema: string;
+}
+
+/** @emoji 🕸️ JSON options for {@link layoutBoardFixtureForceGraph} (camelCase; matches Rust `ForceGraphLayoutOptions` / dimforge `nalgebra` spring layout). */
+export interface BoardForceGraphLayoutOptions {
+	centerX?: number;
+	centerY?: number;
+	gravity?: number;
+	idealEdgeLength?: number;
+	iterations?: number;
+	maxSpeed?: number;
+	randomSeed?: number;
+	repulsionStrength?: number;
+	springStrength?: number;
+	timeStep?: number;
+	velocityDamping?: number;
+}
+
+/** @emoji 🕸️ Runs WASM force-directed layout on fixture node centers (edges via handle ids); uses dimforge `nalgebra` in Rust. */
+export function layoutBoardFixtureForceGraph(fixture: BoardFixtureV1, options?: BoardForceGraphLayoutOptions): BoardFixtureV1 {
+	const optsJson = options === undefined ? "" : JSON.stringify(options);
+	const out = boardForceGraphLayoutFixtureJson(JSON.stringify(fixture), optsJson);
+	return JSON.parse(out) as BoardFixtureV1;
 }
 
 /** @emoji 🖱️ Hit-under-pointer payload for {@link BoardEventMap.hover} (tooltips, status, …). */
@@ -273,10 +316,39 @@ export type NodeOptions = CircleNodeOptions | RectangleNodeOptions;
 
 export interface HandleOptions extends BoardObjectOptions {
 	angle: number;
+	/** @emoji 🎨 Optional CSS hex fill overriding the handle-kind catalog color on the WASM host. */
+	color?: string | null;
 	/** @emoji 🔗 Semantic handle kind for WASM link compatibility (not {@link BoardObject.kind}). */
-	handleKind?: string;
+	handleKind: string;
 	node: Node;
 	radius?: number;
+}
+
+/** @emoji 🟣 Declarative handle marker props (React + reconciler). */
+export interface BoardHandleProps {
+	angle: number;
+	color?: string | null;
+	contextMenu?: ContextMenuItem[];
+	/** @emoji 🔗 Semantic handle kind for WASM link compatibility (not the host intrinsic object kind). */
+	handleKind: string;
+	id: string;
+	radius?: number;
+	selected?: boolean;
+	style?: string;
+	userData?: Record<string, unknown>;
+	visible?: boolean;
+}
+
+/** @emoji 🪢 Declarative edge marker props. */
+export interface BoardEdgeProps {
+	contextMenu?: ContextMenuItem[];
+	id: string;
+	selected?: boolean;
+	source: string;
+	style?: string;
+	target: string;
+	userData?: Record<string, unknown>;
+	visible?: boolean;
 }
 
 export interface EdgeOptions extends BoardObjectOptions {
@@ -712,10 +784,17 @@ export function parseBoardFixtureV1(raw: unknown): BoardFixtureV1 | null {
 			if (!hid || !Number.isFinite(angle)) {
 				return null;
 			}
+			const rawKind = typeof hr.handleKind === "string" ? hr.handleKind.trim() : "";
+			const handleKind = rawKind !== "" ? rawKind : BOARD_BUILTIN_PORT_HANDLE_KIND;
+			const colorRaw = hr.color;
+			const colorTrim =
+				typeof colorRaw === "string" && colorRaw.trim() !== "" ? colorRaw.trim() : undefined;
 			const hradius = Number(hr.radius);
-			handles.push(
-				Number.isFinite(hradius) && hradius > 0 ? { angle, id: hid, radius: hradius } : { angle, id: hid },
-			);
+			const withRadius = Number.isFinite(hradius) && hradius > 0;
+			const base: BoardFixtureHandleV1 = colorTrim
+				? { angle, handleKind, id: hid, color: colorTrim, ...(withRadius ? { radius: hradius } : {}) }
+				: { angle, handleKind, id: hid, ...(withRadius ? { radius: hradius } : {}) };
+			handles.push(base);
 		}
 		const textFromJson = fixtureNodeDisplayText(node);
 		const textAutofit = node.textAutofit === true;
@@ -1177,6 +1256,8 @@ export class Node extends BoardObject {
 /** 🟣 Tangent handle anchored to a node boundary at a polar angle. */
 export class Handle extends BoardObject {
 	angle: number;
+	/** @emoji 🎨 CSS `#…` fill override for the WASM host; `null` uses catalog / theme only. */
+	color: string | null;
 	/** @emoji 🔗 Semantic kind for ordered link compatibility on the host (JSON `handleKind`). */
 	handleKind: string;
 	node: Node;
@@ -1185,7 +1266,11 @@ export class Handle extends BoardObject {
 	constructor(options: HandleOptions) {
 		super(options.id, options);
 		this.angle = options.angle;
-		this.handleKind = (options.handleKind ?? "").trim();
+		const ck = String(options.handleKind ?? "").trim();
+		this.handleKind = ck;
+		const rawC = options.color;
+		const cs = rawC === undefined || rawC === null ? "" : String(rawC).trim();
+		this.color = cs !== "" ? cs : null;
 		this.node = options.node;
 		this.radius = options.radius ?? 8;
 		this.node.attachHandle(this);
@@ -1526,6 +1611,8 @@ export class BoardRenderer {
 	private lastVelloThemeJson = "";
 	private lastDescriptorPushDeferred = false;
 	private handleLinkCompatJson = "[]";
+	private handleKindsJson = "[]";
+	private lastPushedHandleKindsJson: string | null = null;
 	private wasmHostSceneMergeResyncStore = new SnapshotStore<number>(0);
 	private lastNodeAuthoringPositionById = new Map<string, { x: number; y: number }>();
 	private suppressSceneToWasmPush = false;
@@ -1552,6 +1639,12 @@ export class BoardRenderer {
 		const initialSel = this.selectionOptions;
 		this.session.setSelectionOptions(initialSel.method, initialSel.mode, initialSel.target);
 		this.session.setHandleLinkCompatJson(this.handleLinkCompatJson);
+		try {
+			this.session.setHandleKindsJson(this.handleKindsJson);
+		} catch (err) {
+			console.error("[DEBUG] setHandleKindsJson failed during BoardRenderer init", err);
+		}
+		this.lastPushedHandleKindsJson = this.handleKindsJson;
 		this.applyWasmDrainToScene(this.session.drainEventsJson());
 		this.attachCanvasListeners();
 		if (this.canvas) {
@@ -1652,6 +1745,32 @@ export class BoardRenderer {
 			return;
 		}
 		this.handleLinkCompatJson = json;
+		if (this.wasmSessionCallBlockedForReentry()) {
+			this.invalidated = true;
+			return;
+		}
+		this.pushSceneToWasmDriver();
+	}
+
+	/** @emoji 🎨 Sets WASM handle-kind catalog (`[{id,name,color},…]`); empty clears to theme-only fallback. */
+	setHandleKindCatalog(entries: readonly BoardHandleKindCatalogEntry[] | undefined): void {
+		const normalized = (entries ?? [])
+			.map((e) => ({
+				color: String(e.color ?? "").trim(),
+				id: String(e.id ?? "").trim(),
+				name: String(e.name ?? "").trim(),
+			}))
+			.filter((e) => e.id !== "" && e.color !== "")
+			.map((e) => ({
+				color: e.color,
+				id: e.id,
+				name: e.name !== "" ? e.name : e.id,
+			}));
+		const json = JSON.stringify(normalized);
+		if (json === this.handleKindsJson) {
+			return;
+		}
+		this.handleKindsJson = json;
 		if (this.wasmSessionCallBlockedForReentry()) {
 			this.invalidated = true;
 			return;
@@ -1961,6 +2080,12 @@ export class BoardRenderer {
 		this.session.setSelectionOptions(o.method, o.mode, o.target);
 		this.session.setWorldRasterTiling(this.worldRasterTiling);
 		this.session.setHandleLinkCompatJson(this.handleLinkCompatJson);
+		try {
+			this.session.setHandleKindsJson(this.handleKindsJson);
+		} catch (err) {
+			console.error("[DEBUG] setHandleKindsJson failed after attach_canvas", err);
+		}
+		this.lastPushedHandleKindsJson = this.handleKindsJson;
 		this.applyWasmDrainToScene(this.session.drainEventsJson());
 		this.syncGpuReadyCacheFromSession();
 	}
@@ -2008,7 +2133,7 @@ export class BoardRenderer {
 		}
 		const handles: Record<string, unknown>[] = [];
 		for (const handle of this.scene.handles.values()) {
-			handles.push({
+			const row: Record<string, unknown> = {
 				id: handle.id,
 				nodeId: handle.node.id,
 				angle: handle.angle,
@@ -2017,7 +2142,11 @@ export class BoardRenderer {
 				style: handle.style,
 				visible: handle.visible,
 				handleKind: handle.handleKind,
-			});
+			};
+			if (handle.color) {
+				row.color = handle.color;
+			}
+			handles.push(row);
 		}
 		const edges: Record<string, unknown>[] = [];
 		for (const edge of this.scene.edges.values()) {
@@ -2074,6 +2203,14 @@ export class BoardRenderer {
 		this.session.setSelectionOptions(o.method, o.mode, o.target);
 		this.session.setWorldRasterTiling(this.worldRasterTiling);
 		this.session.setHandleLinkCompatJson(this.handleLinkCompatJson);
+		if (this.handleKindsJson !== this.lastPushedHandleKindsJson) {
+			try {
+				this.session.setHandleKindsJson(this.handleKindsJson);
+			} catch (err) {
+				console.error("[DEBUG] setHandleKindsJson failed", err);
+			}
+			this.lastPushedHandleKindsJson = this.handleKindsJson;
+		}
 		const deferDescriptorSync =
 			this.session.isDraggingAreaSelect() || this.session.defersDescriptorSyncFromJs();
 		if (this.lastDescriptorPushDeferred && !deferDescriptorSync) {
@@ -2083,8 +2220,12 @@ export class BoardRenderer {
 		if (!deferDescriptorSync) {
 			const desc = this.descriptorJsonForWasmHost();
 			if (desc !== this.lastPushedDescriptorJson) {
-				this.session.syncDescriptorJson(desc);
-				this.lastPushedDescriptorJson = desc;
+				try {
+					this.session.syncDescriptorJson(desc);
+					this.lastPushedDescriptorJson = desc;
+				} catch (err) {
+					console.error("[DEBUG] syncDescriptorJson failed", err);
+				}
 			}
 		}
 		this.session.setCamera(this.camera.x, this.camera.y, this.camera.zoom);
@@ -2760,8 +2901,8 @@ if (boardVitest) {
 		it("places cubic edge control arms along circle normals at the anchors", () => {
 			const sourceNode = new Node({ id: "a", radius: 40, x: 0, y: 0 });
 			const targetNode = new Node({ id: "b", radius: 40, x: 300, y: 0 });
-			const sourceHandle = new Handle({ angle: 0, id: "a:h0", node: sourceNode });
-			const targetHandle = new Handle({ angle: Math.PI, id: "b:h0", node: targetNode });
+			const sourceHandle = new Handle({ handleKind: BOARD_BUILTIN_PORT_HANDLE_KIND, angle: 0, id: "a:h0", node: sourceNode });
+			const targetHandle = new Handle({ handleKind: BOARD_BUILTIN_PORT_HANDLE_KIND, angle: Math.PI, id: "b:h0", node: targetNode });
 			const curve = computeEdgeBezier(sourceHandle, targetHandle);
 
 			expect(curve.p0.x).toBeCloseTo(40);
@@ -2829,8 +2970,8 @@ if (boardVitest) {
 
 			const sourceNode = new Node({ id: "source", radius: 36, x: 0, y: 0 });
 			const targetNode = new Node({ id: "target", radius: 36, x: 220, y: 80 });
-			const sourceHandle = new Handle({ angle: 0, id: "src-h", node: sourceNode });
-			const targetHandle = new Handle({ angle: Math.PI, id: "tgt-h", node: targetNode });
+			const sourceHandle = new Handle({ handleKind: BOARD_BUILTIN_PORT_HANDLE_KIND, angle: 0, id: "src-h", node: sourceNode });
+			const targetHandle = new Handle({ handleKind: BOARD_BUILTIN_PORT_HANDLE_KIND, angle: Math.PI, id: "tgt-h", node: targetNode });
 			const edge = new Edge({ source: sourceHandle, id: "edge-1", target: targetHandle });
 
 			renderer.scene.add(sourceNode).add(targetNode).add(edge);
@@ -2851,8 +2992,8 @@ if (boardVitest) {
 
 			const a = new Node({ id: "a", radius: 40, x: 0, y: 0 });
 			const b = new Node({ id: "b", radius: 40, x: 280, y: 0 });
-			new Handle({ angle: 0, id: "a:h0", node: a });
-			new Handle({ angle: Math.PI, id: "b:h0", node: b });
+			new Handle({ handleKind: BOARD_BUILTIN_PORT_HANDLE_KIND, angle: 0, id: "a:h0", node: a });
+			new Handle({ handleKind: BOARD_BUILTIN_PORT_HANDLE_KIND, angle: Math.PI, id: "b:h0", node: b });
 			renderer.scene.add(a).add(b);
 			renderer.render();
 
@@ -2891,8 +3032,8 @@ if (boardVitest) {
 
 			const sourceNode = new Node({ id: "source", radius: 36, x: 0, y: 0 });
 			const targetNode = new Node({ id: "target", radius: 36, x: 220, y: 0 });
-			const sourceHandle = new Handle({ angle: 0, id: "src-h", node: sourceNode });
-			const targetHandle = new Handle({ angle: Math.PI, id: "tgt-h", node: targetNode });
+			const sourceHandle = new Handle({ handleKind: BOARD_BUILTIN_PORT_HANDLE_KIND, angle: 0, id: "src-h", node: sourceNode });
+			const targetHandle = new Handle({ handleKind: BOARD_BUILTIN_PORT_HANDLE_KIND, angle: Math.PI, id: "tgt-h", node: targetNode });
 			const edge = new Edge({ source: sourceHandle, id: "edge-1", target: targetHandle });
 			renderer.scene.add(sourceNode).add(targetNode).add(edge);
 			renderer.render();
@@ -2927,8 +3068,8 @@ if (boardVitest) {
 			const renderer = new BoardRenderer({ canvas, renderMode: "headless-test" });
 			const sourceNode = new Node({ id: "source", radius: 36, x: 0, y: 0 });
 			const targetNode = new Node({ id: "target", radius: 36, x: 220, y: 0 });
-			const sourceHandle = new Handle({ angle: 0, id: "src-h", node: sourceNode });
-			const targetHandle = new Handle({ angle: Math.PI, id: "tgt-h", node: targetNode });
+			const sourceHandle = new Handle({ handleKind: BOARD_BUILTIN_PORT_HANDLE_KIND, angle: 0, id: "src-h", node: sourceNode });
+			const targetHandle = new Handle({ handleKind: BOARD_BUILTIN_PORT_HANDLE_KIND, angle: Math.PI, id: "tgt-h", node: targetNode });
 			const edge = new Edge({ source: sourceHandle, id: "edge-1", target: targetHandle });
 			renderer.scene.add(sourceNode).add(targetNode).add(edge);
 			renderer.render();
@@ -3076,8 +3217,8 @@ if (boardVitest) {
 			});
 			const sourceNode = new Node({ id: "source", radius: 40, x: 0, y: 0 });
 			const targetNode = new Node({ id: "target", radius: 40, x: 200, y: 0 });
-			const sourceHandle = new Handle({ angle: 0, id: "src-h", node: sourceNode });
-			const targetHandle = new Handle({ angle: Math.PI, id: "tgt-h", node: targetNode });
+			const sourceHandle = new Handle({ handleKind: BOARD_BUILTIN_PORT_HANDLE_KIND, angle: 0, id: "src-h", node: sourceNode });
+			const targetHandle = new Handle({ handleKind: BOARD_BUILTIN_PORT_HANDLE_KIND, angle: Math.PI, id: "tgt-h", node: targetNode });
 			const edge = new Edge({ source: sourceHandle, id: "edge-1", target: targetHandle });
 			renderer.scene.add(sourceNode).add(targetNode).add(edge);
 			renderer.render();
@@ -3099,8 +3240,8 @@ if (boardVitest) {
 			const renderer = new BoardRenderer({ canvas, renderMode: "headless-test", selection: { method: "lasso", mode: "additive", target: "edges" } });
 			const sourceNode = new Node({ id: "source", radius: 12, x: -80, y: 0 });
 			const targetNode = new Node({ id: "target", radius: 12, x: 80, y: 0 });
-			const sourceHandle = new Handle({ angle: 0, id: "src-h", node: sourceNode });
-			const targetHandle = new Handle({ angle: Math.PI, id: "tgt-h", node: targetNode });
+			const sourceHandle = new Handle({ handleKind: BOARD_BUILTIN_PORT_HANDLE_KIND, angle: 0, id: "src-h", node: sourceNode });
+			const targetHandle = new Handle({ handleKind: BOARD_BUILTIN_PORT_HANDLE_KIND, angle: Math.PI, id: "tgt-h", node: targetNode });
 			const edge = new Edge({ source: sourceHandle, id: "edge", target: targetHandle });
 			renderer.scene.add(sourceNode).add(targetNode).add(edge);
 			renderer.render();
@@ -3159,6 +3300,7 @@ if (boardVitest) {
 			});
 			expect(parsed).not.toBeNull();
 			expect(parsed?.nodes).toHaveLength(2);
+			expect(parsed?.nodes[0]?.handles[0]?.handleKind).toBe(BOARD_BUILTIN_PORT_HANDLE_KIND);
 			expect(parsed?.nodes[0]).toMatchObject({ id: "a", shape: "circle", radius: 10, text: "α" });
 			expect(parsed?.nodes[1]).toMatchObject({ id: "b", shape: "circle" });
 			expect(parsed?.edges[0]?.id).toBe("e1");
@@ -3327,9 +3469,10 @@ if (boardVitest) {
 			const fixture: BoardFixtureV1 = {
 				camera: { x: 0, y: 0, zoom: 1 },
 				edges: [{ id: "e1", source: "a:h0", target: "b:h0" }],
+				meta: {},
 				nodes: [
 					{
-						handles: [{ angle: 0, id: "a:h0" }],
+						handles: [{ angle: 0, handleKind: BOARD_BUILTIN_PORT_HANDLE_KIND, id: "a:h0" }],
 						id: "a",
 						radius: 10,
 						shape: "circle",
@@ -3340,7 +3483,15 @@ if (boardVitest) {
 						x: 0,
 						y: 0,
 					},
-					{ handles: [{ angle: 3.14, id: "b:h0" }], id: "b", radius: 10, shape: "circle", text: "B", x: 50, y: 0 },
+					{
+						handles: [{ angle: 3.14, handleKind: BOARD_BUILTIN_PORT_HANDLE_KIND, id: "b:h0" }],
+						id: "b",
+						radius: 10,
+						shape: "circle",
+						text: "B",
+						x: 50,
+						y: 0,
+					},
 				],
 				schema: "elements.board.fixture/v1",
 			};
@@ -3373,16 +3524,40 @@ if (boardVitest) {
 		});
 	});
 
+	describe("board force graph layout", () => {
+		it("spreads linked nodes using wasm+nalgebra layout", () => {
+			const fixture: BoardFixtureV1 = {
+				camera: { x: 0, y: 0, zoom: 1 },
+				edges: [{ id: "e1", source: "a:h0", target: "b:h0" }],
+				nodes: [
+					{ handles: [{ angle: 0, id: "a:h0" }], id: "a", radius: 40, shape: "circle", x: 0, y: 0 },
+					{ handles: [{ angle: Math.PI, id: "b:h0" }], id: "b", radius: 40, shape: "circle", x: 2, y: 0 },
+				],
+				schema: "elements.board.fixture/v1",
+			};
+			const laid = layoutBoardFixtureForceGraph(fixture, { gravity: 0, iterations: 220, idealEdgeLength: 200, randomSeed: 11 });
+			const ax = (laid.nodes[0] as { x: number }).x;
+			const bx = (laid.nodes[1] as { x: number }).x;
+			expect(Math.abs(bx - ax)).toBeGreaterThan(90);
+			expect(laid.schema).toBe("elements.board.fixture/v1");
+		});
+
+		it("throws on invalid fixture schema from wasm", () => {
+			const bad = { camera: { x: 0, y: 0, zoom: 1 }, edges: [], nodes: [], schema: "wrong" } as unknown as BoardFixtureV1;
+			expect(() => layoutBoardFixtureForceGraph(bad)).toThrow();
+		});
+	});
+
 	describe("board directed graph observation", () => {
 		it("computes subtree from roots along directed edges", () => {
 			const renderer = new BoardRenderer({ renderMode: "headless-test" });
 			const root = new Node({ id: "root", radius: 10, root: true, x: 0, y: 0 });
 			const mid = new Node({ id: "mid", radius: 10, x: 50, y: 0 });
 			const leaf = new Node({ id: "leaf", radius: 10, x: 100, y: 0 });
-			const hRoot = new Handle({ angle: 0, id: "root:h0", node: root });
-			const hMidIn = new Handle({ angle: Math.PI, id: "mid:h0", node: mid });
-			const hMidOut = new Handle({ angle: 0, id: "mid:h1", node: mid });
-			const hLeafIn = new Handle({ angle: Math.PI, id: "leaf:h0", node: leaf });
+			const hRoot = new Handle({ handleKind: BOARD_BUILTIN_PORT_HANDLE_KIND, angle: 0, id: "root:h0", node: root });
+			const hMidIn = new Handle({ handleKind: BOARD_BUILTIN_PORT_HANDLE_KIND, angle: Math.PI, id: "mid:h0", node: mid });
+			const hMidOut = new Handle({ handleKind: BOARD_BUILTIN_PORT_HANDLE_KIND, angle: 0, id: "mid:h1", node: mid });
+			const hLeafIn = new Handle({ handleKind: BOARD_BUILTIN_PORT_HANDLE_KIND, angle: Math.PI, id: "leaf:h0", node: leaf });
 			const e1 = new Edge({ source: hRoot, id: "e1", target: hMidIn });
 			const e2 = new Edge({ source: hMidOut, id: "e2", target: hLeafIn });
 			renderer.scene.add(root).add(mid).add(leaf).add(e1).add(e2);
@@ -3409,8 +3584,8 @@ if (boardVitest) {
 			];
 			const root = new Node({ id: "root", radius: 10, root: true, x: 0, y: 0 });
 			const child = new Node({ id: "child", radius: 10, x: 40, y: 0 });
-			const hOut = new Handle({ angle: 0, id: "root:h0", node: root });
-			const hIn = new Handle({ angle: Math.PI, id: "child:h0", node: child });
+			const hOut = new Handle({ handleKind: BOARD_BUILTIN_PORT_HANDLE_KIND, angle: 0, id: "root:h0", node: root });
+			const hIn = new Handle({ handleKind: BOARD_BUILTIN_PORT_HANDLE_KIND, angle: Math.PI, id: "child:h0", node: child });
 			const edge = new Edge({ source: hOut, id: "link", target: hIn });
 			renderer.scene.add(root).add(child).add(edge);
 			await Promise.resolve();
@@ -3682,6 +3857,9 @@ function applyHandleProps(instance: Handle, props: BoardHandleProps, node: Node)
 	instance.visible = props.visible ?? true;
 	instance.radius = props.radius ?? 8;
 	instance.handleKind = (props.handleKind ?? "").trim();
+	const rawC = props.color;
+	const cs = rawC === undefined || rawC === null ? "" : String(rawC).trim();
+	instance.color = cs !== "" ? cs : null;
 	instance.setAngle(props.angle);
 }
 
@@ -3702,11 +3880,14 @@ function instanceShapeSyncKey(node: Node): "circle" | "rectangle" {
 }
 
 function propsEqualHandle(a: BoardHandleProps, b: BoardHandleProps): boolean {
+	const ac = a.color === undefined || a.color === null ? "" : String(a.color).trim();
+	const bc = b.color === undefined || b.color === null ? "" : String(b.color).trim();
 	return (
 		a.id === b.id &&
 		a.angle === b.angle &&
 		a.radius === b.radius &&
 		(a.handleKind ?? "").trim() === (b.handleKind ?? "").trim() &&
+		ac === bc &&
 		a.selected === b.selected &&
 		a.style === b.style &&
 		a.visible === b.visible &&

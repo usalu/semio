@@ -33,7 +33,7 @@ import {
 	type UIWindowKindDefinition,
 	type UIWindowLayout,
 } from "@elements/ui";
-import { BoxSelect, Circle, ClipboardList, Lasso, Library, Minus, Plus, Repeat2, Square } from "lucide-react";
+import { BoxSelect, Circle, ClipboardList, Lasso, Library, Minus, Network, Plus, Repeat2, Square } from "lucide-react";
 import {
 	createContext,
 	useCallback,
@@ -53,11 +53,14 @@ import { createRoot, type Root } from "react-dom/client";
 
 import nakaginFixtureJson from "../../../../../.storybook/fixtures/nakagin-capsule-tower.board.json";
 import {
+	BOARD_BUILTIN_PORT_HANDLE_KIND,
 	BOARD_CAMERA_ZOOM_MAX,
 	BOARD_CAMERA_ZOOM_MIN,
+	BOARD_DEFAULT_HANDLE_KIND_CATALOG,
 	BOARD_FIXTURE_DRAG_KIND_PALETTE_NODE,
 	BOARD_FIXTURE_DRAG_V1_MIME,
 	encodeBoardFixtureForDragV1,
+	layoutBoardFixtureForceGraph,
 	parseBoardFixtureV1,
 	type BoardFixtureDropDetail,
 	type BoardFixtureCircleNodeV1,
@@ -280,12 +283,15 @@ function BoardPlayToolbar(): ReactElement {
 	} = useBoardPlayShell();
 
 	const camera = camerasByPane[activePaneId];
+	const [forceIterations, setForceIterations] = useState("420");
+	const [forceIdealLength, setForceIdealLength] = useState("140");
+	const [forceGravity, setForceGravity] = useState("0.018");
 
 	const appendCircle = useCallback(() => {
 		const id = newBoardAuthoringId("node");
 		const handleId = `${id}.h0`;
 		const node: BoardFixtureCircleNodeV1 = {
-			handles: [{ angle: 0, id: handleId }],
+			handles: [{ angle: 0, handleKind: BOARD_BUILTIN_PORT_HANDLE_KIND, id: handleId }],
 			id,
 			radius: BOARD_PLAY_TOOLBAR_DEFAULT_NODE_RADIUS,
 			x: camera.x,
@@ -300,7 +306,7 @@ function BoardPlayToolbar(): ReactElement {
 		const handleId = `${id}.h0`;
 		const d = BOARD_PLAY_TOOLBAR_DEFAULT_NODE_RADIUS * 2;
 		const node: BoardFixtureRectangleNodeV1 = {
-			handles: [{ angle: 0, id: handleId }],
+			handles: [{ angle: 0, handleKind: BOARD_BUILTIN_PORT_HANDLE_KIND, id: handleId }],
 			height: d,
 			id,
 			shape: "rectangle",
@@ -311,6 +317,21 @@ function BoardPlayToolbar(): ReactElement {
 		patchFixture((prev) => ({ ...prev, nodes: [...prev.nodes, node] }));
 		setSelectionForPane(activePaneId, [id]);
 	}, [activePaneId, camera.x, camera.y, patchFixture, setSelectionForPane]);
+
+	const applyForceGraphLayout = useCallback(() => {
+		const iterations = Math.max(1, Math.min(5000, Math.round(Number.parseFloat(forceIterations) || 420)));
+		const idealEdgeLength = Math.max(4, Number.parseFloat(forceIdealLength) || 140);
+		const gravity = Math.max(0, Number.parseFloat(forceGravity) || 0);
+		patchFixture((prev) =>
+			layoutBoardFixtureForceGraph(prev, {
+				centerX: camera.x,
+				centerY: camera.y,
+				gravity,
+				idealEdgeLength,
+				iterations,
+			}),
+		);
+	}, [camera.x, camera.y, forceGravity, forceIdealLength, forceIterations, patchFixture]);
 
 	return (
 		<div className="pointer-events-none flex w-full justify-center px-2 py-1">
@@ -381,6 +402,62 @@ function BoardPlayToolbar(): ReactElement {
 						</button>
 					</ToolbarItem>
 				</ToolbarGroup>
+				<ToolbarDivider />
+				<ToolbarGroup className="min-w-0 items-center gap-1">
+					<ToolbarItem>
+						<span className="text-muted-foreground pr-1 text-[10px] font-semibold uppercase tracking-wide">Layout</span>
+					</ToolbarItem>
+					<ToolbarItem>
+						<details className="relative">
+							<summary className="list-none cursor-pointer [&::-webkit-details-marker]:hidden">
+								<span className={boardToolbarToggleClass(false)} title="Force graph options (dimforge nalgebra)">
+									<Network className="size-4" aria-hidden />
+								</span>
+							</summary>
+							<div className="bg-panel border-element absolute left-0 z-50 mt-1 flex min-w-[220px] flex-col gap-2 rounded border p-2 shadow-md">
+								<div className="flex items-center gap-2">
+									<Label className="w-24 shrink-0 text-[10px] uppercase" htmlFor="board-force-iters">
+										Iters
+									</Label>
+									<Input
+										className="h-7 text-xs"
+										id="board-force-iters"
+										inputMode="numeric"
+										value={forceIterations}
+										onChange={(e: ChangeEvent<HTMLInputElement>) => setForceIterations(e.target.value)}
+									/>
+								</div>
+								<div className="flex items-center gap-2">
+									<Label className="w-24 shrink-0 text-[10px] uppercase" htmlFor="board-force-ideal">
+										Ideal px
+									</Label>
+									<Input
+										className="h-7 text-xs"
+										id="board-force-ideal"
+										inputMode="decimal"
+										value={forceIdealLength}
+										onChange={(e: ChangeEvent<HTMLInputElement>) => setForceIdealLength(e.target.value)}
+									/>
+								</div>
+								<div className="flex items-center gap-2">
+									<Label className="w-24 shrink-0 text-[10px] uppercase" htmlFor="board-force-grav">
+										Gravity
+									</Label>
+									<Input
+										className="h-7 text-xs"
+										id="board-force-grav"
+										inputMode="decimal"
+										value={forceGravity}
+										onChange={(e: ChangeEvent<HTMLInputElement>) => setForceGravity(e.target.value)}
+									/>
+								</div>
+								<Button className="h-8 w-full text-xs" type="button" variant="secondary" onClick={applyForceGraphLayout}>
+									Apply force layout
+								</Button>
+							</div>
+						</details>
+					</ToolbarItem>
+				</ToolbarGroup>
 			</ToolbarZone>
 		</div>
 	);
@@ -416,6 +493,8 @@ function nakaginBoardMarkers(fixture: BoardFixtureV1, selectedIds: Set<string>):
 						{node.handles.map((handle) => (
 							<Handle
 								angle={handle.angle}
+								color={handle.color}
+								handleKind={handle.handleKind}
 								id={handle.id}
 								key={handle.id}
 								radius={handle.radius}
@@ -442,6 +521,8 @@ function nakaginBoardMarkers(fixture: BoardFixtureV1, selectedIds: Set<string>):
 						{node.handles.map((handle) => (
 							<Handle
 								angle={handle.angle}
+								color={handle.color}
+								handleKind={handle.handleKind}
 								id={handle.id}
 								key={handle.id}
 								radius={handle.radius}
@@ -527,6 +608,7 @@ function BoardOverviewPane(): ReactElement {
 				className="min-h-0 flex-1"
 				contextMenu={boardPlayCanvasBackgroundMenu}
 				fixtureDragDrop
+				handleKinds={BOARD_DEFAULT_HANDLE_KIND_CATALOG}
 				onFixtureDrop={(d) => handleCanvasFixtureDrop(paneId, d)}
 				selectionMethod={boardSelectionMethod}
 				selectionMode={boardSelectionMode}
@@ -552,6 +634,7 @@ function BoardDetailPane(): ReactElement {
 				camera={camera}
 				className="min-h-0 flex-1"
 				fixtureDragDrop
+				handleKinds={BOARD_DEFAULT_HANDLE_KIND_CATALOG}
 				onFixtureDrop={(d) => handleCanvasFixtureDrop(paneId, d)}
 				selectionMethod={boardSelectionMethod}
 				selectionMode={boardSelectionMode}
@@ -577,6 +660,7 @@ function BoardSelectionPane(): ReactElement {
 				camera={camera}
 				className="min-h-0 flex-1"
 				fixtureDragDrop
+				handleKinds={BOARD_DEFAULT_HANDLE_KIND_CATALOG}
 				onFixtureDrop={(d) => handleCanvasFixtureDrop(paneId, d)}
 				selectionMethod={boardSelectionMethod}
 				selectionMode={boardSelectionMode}

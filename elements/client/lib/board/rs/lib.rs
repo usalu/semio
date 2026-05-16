@@ -351,6 +351,9 @@ mod scene_json {
 		pub style: Option<String>,
 		#[serde(default)]
 		pub handle_kind: Option<String>,
+		/// CSS `#rgb` / `#rrggbb` / `#rrggbbaa` overriding catalog color for this handle.
+		#[serde(default)]
+		pub color: Option<String>,
 		#[serde(default)]
 		pub user_data: Option<serde_json::Value>,
 		#[serde(default)]
@@ -392,6 +395,284 @@ mod scene_json {
 }
 
 pub use scene_json::{CameraJson, EdgeDescJson, FixtureV1Json, HandleDescJson, NodeDescJson, SceneDescriptorJson};
+
+// #region 🕸️ForceGraphLayout
+mod force_graph {
+	use nalgebra::Vector2;
+	use serde::{Deserialize, Serialize};
+	use serde_json::Value;
+	use std::collections::{HashMap, HashSet};
+
+	#[derive(Clone, Debug, Deserialize, Serialize)]
+	#[serde(rename_all = "camelCase")]
+	pub struct ForceGraphLayoutOptions {
+		#[serde(default = "default_iterations")]
+		pub iterations: u32,
+		#[serde(default = "default_ideal_edge_length")]
+		pub ideal_edge_length: f64,
+		#[serde(default = "default_repulsion_strength")]
+		pub repulsion_strength: f64,
+		#[serde(default = "default_spring_strength")]
+		pub spring_strength: f64,
+		#[serde(default = "default_gravity")]
+		pub gravity: f64,
+		#[serde(default)]
+		pub center_x: Option<f64>,
+		#[serde(default)]
+		pub center_y: Option<f64>,
+		#[serde(default = "default_time_step")]
+		pub time_step: f64,
+		#[serde(default = "default_velocity_damping")]
+		pub velocity_damping: f64,
+		#[serde(default = "default_max_speed")]
+		pub max_speed: f64,
+		#[serde(default = "default_random_seed")]
+		pub random_seed: u64,
+	}
+
+	fn default_iterations() -> u32 {
+		420
+	}
+	fn default_ideal_edge_length() -> f64 {
+		140.0
+	}
+	fn default_repulsion_strength() -> f64 {
+		6500.0
+	}
+	fn default_spring_strength() -> f64 {
+		0.028
+	}
+	fn default_gravity() -> f64 {
+		0.018
+	}
+	fn default_time_step() -> f64 {
+		0.85
+	}
+	fn default_velocity_damping() -> f64 {
+		0.88
+	}
+	fn default_max_speed() -> f64 {
+		48.0
+	}
+	fn default_random_seed() -> u64 {
+		0x5eedfaced0u64
+	}
+
+	impl Default for ForceGraphLayoutOptions {
+		fn default() -> Self {
+			Self {
+				iterations: default_iterations(),
+				ideal_edge_length: default_ideal_edge_length(),
+				repulsion_strength: default_repulsion_strength(),
+				spring_strength: default_spring_strength(),
+				gravity: default_gravity(),
+				center_x: None,
+				center_y: None,
+				time_step: default_time_step(),
+				velocity_damping: default_velocity_damping(),
+				max_speed: default_max_speed(),
+				random_seed: default_random_seed(),
+			}
+		}
+	}
+
+	fn split_mix64(mut z: u64) -> u64 {
+		z = (z ^ (z >> 30)).wrapping_mul(0xBF58476D1CE4E5B9);
+		z = (z ^ (z >> 27)).wrapping_mul(0x94D049BB133111EB);
+		z ^ (z >> 31)
+	}
+
+	fn rand_unit_interval(seed: &mut u64) -> f64 {
+		*seed = split_mix64(*seed);
+		(*seed as f64) / (u64::MAX as f64)
+	}
+
+	fn node_repulsion_radius(node: &Value) -> f64 {
+		let Some(obj) = node.as_object() else {
+			return 32.0;
+		};
+		if obj.get("shape").and_then(|v| v.as_str()) == Some("rectangle") {
+			let w = obj.get("width").and_then(|v| v.as_f64()).unwrap_or(40.0);
+			let h = obj.get("height").and_then(|v| v.as_f64()).unwrap_or(40.0);
+			return ((w * w + h * h).sqrt() * 0.5).max(8.0);
+		}
+		obj.get("radius").and_then(|v| v.as_f64()).filter(|r| r.is_finite() && *r > 0.0).unwrap_or(32.0)
+	}
+
+	pub fn apply_force_graph_layout_to_fixture_v1_value(fixture: &mut Value, opts: &ForceGraphLayoutOptions) -> Result<(), String> {
+		let Some(root) = fixture.as_object_mut() else {
+			return Err("fixture root must be object".into());
+		};
+		if root.get("schema").and_then(|v| v.as_str()) != Some("elements.board.fixture/v1") {
+			return Err("schema must be elements.board.fixture/v1".into());
+		}
+		let edges = root.get("edges").and_then(|v| v.as_array()).cloned().unwrap_or_default();
+		let Some(nodes) = root.get_mut("nodes").and_then(|v| v.as_array_mut()) else {
+			return Err("nodes array missing".into());
+		};
+		if nodes.is_empty() {
+			return Ok(());
+		}
+		let mut handle_to_node: HashMap<String, String> = HashMap::new();
+		for node in nodes.iter() {
+			let Some(obj) = node.as_object() else {
+				continue;
+			};
+			let Some(nid) = obj.get("id").and_then(|v| v.as_str()) else {
+				continue;
+			};
+			let Some(handles) = obj.get("handles").and_then(|v| v.as_array()) else {
+				continue;
+			};
+			for h in handles {
+				let Some(ho) = h.as_object() else {
+					continue;
+				};
+				if let Some(hid) = ho.get("id").and_then(|v| v.as_str()) {
+					handle_to_node.insert(hid.to_string(), nid.to_string());
+				}
+			}
+		}
+		let mut id_to_index: HashMap<String, usize> = HashMap::new();
+		let mut positions: Vec<Vector2<f64>> = Vec::new();
+		let mut velocities: Vec<Vector2<f64>> = Vec::new();
+		let mut radii: Vec<f64> = Vec::new();
+		for (idx, node) in nodes.iter().enumerate() {
+			let Some(obj) = node.as_object() else {
+				return Err("node must be object".into());
+			};
+			let Some(nid) = obj.get("id").and_then(|v| v.as_str()) else {
+				return Err("node id missing".into());
+			};
+			let x = obj.get("x").and_then(|v| v.as_f64()).ok_or_else(|| format!("node {nid} x missing"))?;
+			let y = obj.get("y").and_then(|v| v.as_f64()).ok_or_else(|| format!("node {nid} y missing"))?;
+			if !x.is_finite() || !y.is_finite() {
+				return Err(format!("node {nid} non-finite position"));
+			}
+			id_to_index.insert(nid.to_string(), idx);
+			positions.push(Vector2::new(x, y));
+			velocities.push(Vector2::zeros());
+			radii.push(node_repulsion_radius(node));
+		}
+		let n = positions.len();
+		let mut edge_pairs: Vec<(usize, usize)> = Vec::new();
+		let mut seen: HashSet<(usize, usize)> = HashSet::new();
+		for e in &edges {
+			let Some(eo) = e.as_object() else {
+				continue;
+			};
+			let Some(src_h) = eo.get("source").and_then(|v| v.as_str()) else {
+				continue;
+			};
+			let Some(tgt_h) = eo.get("target").and_then(|v| v.as_str()) else {
+				continue;
+			};
+			let Some(a) = handle_to_node.get(src_h) else {
+				continue;
+			};
+			let Some(b) = handle_to_node.get(tgt_h) else {
+				continue;
+			};
+			if a == b {
+				continue;
+			}
+			let Some(&ia) = id_to_index.get(a) else {
+				continue;
+			};
+			let Some(&ib) = id_to_index.get(b) else {
+				continue;
+			};
+			let lo = ia.min(ib);
+			let hi = ia.max(ib);
+			if seen.insert((lo, hi)) {
+				edge_pairs.push((lo, hi));
+			}
+		}
+		let mut cx = 0.0f64;
+		let mut cy = 0.0f64;
+		for p in &positions {
+			cx += p.x;
+			cy += p.y;
+		}
+		cx /= n as f64;
+		cy /= n as f64;
+		let gx = opts.center_x.unwrap_or(cx);
+		let gy = opts.center_y.unwrap_or(cy);
+		let k = opts.ideal_edge_length.max(1e-6);
+		let mut rng = opts.random_seed;
+		for p in &mut positions {
+			if (p.x - gx).abs() < 1e-6 && (p.y - gy).abs() < 1e-6 {
+				let jx = (rand_unit_interval(&mut rng) - 0.5) * 12.0;
+				let jy = (rand_unit_interval(&mut rng) - 0.5) * 12.0;
+				*p += Vector2::new(jx, jy);
+			}
+		}
+		let iters = opts.iterations.max(1);
+		for iter in 0..iters {
+			let cool = (1.0 - iter as f64 / iters as f64).max(0.08);
+			let mut forces = vec![Vector2::zeros(); n];
+			for i in 0..n {
+				for j in (i + 1)..n {
+					let delta = positions[j] - positions[i];
+					let dist = delta.norm().max(1e-4);
+					let rep = opts.repulsion_strength * cool * (radii[i] * radii[j]).max(1.0) / (dist * dist);
+					let dir = delta / dist;
+					let f = dir * rep;
+					forces[i] -= f;
+					forces[j] += f;
+				}
+			}
+			for &(i, j) in &edge_pairs {
+				let delta = positions[j] - positions[i];
+				let dist = delta.norm().max(1e-4);
+				let dir = delta / dist;
+				let displacement = dist - k;
+				let f = dir * (opts.spring_strength * cool * displacement);
+				forces[i] += f;
+				forces[j] -= f;
+			}
+			if opts.gravity > 0.0 {
+				let g = opts.gravity * cool;
+				for i in 0..n {
+					let to_c = Vector2::new(gx - positions[i].x, gy - positions[i].y);
+					forces[i] += to_c * g;
+				}
+			}
+			let dt = opts.time_step * cool.sqrt();
+			for i in 0..n {
+				let mut v = (velocities[i] + forces[i] * dt) * opts.velocity_damping;
+				let spd = v.norm();
+				if spd > opts.max_speed {
+					v *= opts.max_speed / spd;
+				}
+				velocities[i] = v;
+				positions[i] += v * dt;
+			}
+		}
+		for (idx, node) in nodes.iter_mut().enumerate() {
+			let Some(obj) = node.as_object_mut() else {
+				continue;
+			};
+			obj.insert("x".into(), serde_json::json!(positions[idx].x));
+			obj.insert("y".into(), serde_json::json!(positions[idx].y));
+		}
+		Ok(())
+	}
+
+	pub fn apply_force_graph_layout_to_fixture_v1_json(fixture_json: &str, options_json: &str) -> Result<String, String> {
+		let mut fixture: Value = serde_json::from_str(fixture_json).map_err(|e| e.to_string())?;
+		let opts: ForceGraphLayoutOptions = if options_json.trim().is_empty() {
+			ForceGraphLayoutOptions::default()
+		} else {
+			serde_json::from_str(options_json).map_err(|e| e.to_string())?
+		};
+		apply_force_graph_layout_to_fixture_v1_value(&mut fixture, &opts)?;
+		serde_json::to_string(&fixture).map_err(|e| e.to_string())
+	}
+}
+
+pub use force_graph::{apply_force_graph_layout_to_fixture_v1_json, apply_force_graph_layout_to_fixture_v1_value, ForceGraphLayoutOptions};
+// #endregion 🕸️ForceGraphLayout
 
 mod elements_board_palette {
 	use vello::peniko::Color;
@@ -480,6 +761,12 @@ mod board_host {
 	}
 
 	#[derive(Clone, Debug)]
+	pub struct HandleKindDef {
+		pub name: String,
+		pub color: Color,
+	}
+
+	#[derive(Clone, Debug)]
 	pub struct HandleData {
 		pub id: String,
 		pub node_id: String,
@@ -489,6 +776,8 @@ mod board_host {
 		pub visible: bool,
 		pub style: Option<String>,
 		pub handle_kind: String,
+		/// Parsed from descriptor `color` when set (overrides catalog fill).
+		pub color_fill: Option<Color>,
 	}
 
 	#[derive(Clone, Debug)]
@@ -595,6 +884,8 @@ mod board_host {
 		pub nodes: BTreeMap<String, NodeData>,
 		pub handles: BTreeMap<String, HandleData>,
 		pub edges: BTreeMap<String, EdgeData>,
+		/// Catalog keyed by `handle_kind` id (`{ id, name, color }` from `set_handle_kinds_from_json`).
+		pub handle_kinds: BTreeMap<String, HandleKindDef>,
 		/// Ordered pairs `(from_handle_kind, to_handle_kind)` allowed for handle-link gestures; empty = unrestricted.
 		pub handle_link_compat_pairs: Vec<(String, String)>,
 		pub selection: BTreeSet<String>,
@@ -626,6 +917,7 @@ mod board_host {
 				nodes: BTreeMap::new(),
 				handles: BTreeMap::new(),
 				edges: BTreeMap::new(),
+				handle_kinds: BTreeMap::new(),
 				handle_link_compat_pairs: Vec::new(),
 				selection: BTreeSet::new(),
 				selection_options: SelectionOptions {
@@ -711,6 +1003,84 @@ mod board_host {
 			}
 			self.handle_link_compat_pairs = next;
 			Ok(())
+		}
+
+		/// @emoji 🎨 JSON `[{ "id": "…", "name": "…", "color": "#rrggbb" }, …]` catalog for handle-kind fill colors (`name` reserved for UI).
+		pub fn set_handle_kinds_from_json(&mut self, json: &str) -> Result<(), String> {
+			let v: serde_json::Value = serde_json::from_str(json).map_err(|e| e.to_string())?;
+			let arr = v
+				.as_array()
+				.ok_or_else(|| "expected JSON array of {id,name,color} objects".to_string())?;
+			let mut next = BTreeMap::new();
+			for row in arr {
+				let o = row.as_object().ok_or("handle kind row must be object")?;
+				let id = o
+					.get("id")
+					.and_then(|x| x.as_str())
+					.map(str::trim)
+					.filter(|s| !s.is_empty())
+					.ok_or("handle kind id missing")?;
+				let name = o
+					.get("name")
+					.and_then(|x| x.as_str())
+					.unwrap_or("")
+					.to_string();
+				let color_s = o
+					.get("color")
+					.and_then(|x| x.as_str())
+					.map(str::trim)
+					.filter(|s| !s.is_empty())
+					.ok_or("handle kind color missing")?;
+				let color = Self::parse_css_hex_color(color_s).ok_or_else(|| format!("invalid handle kind color {color_s:?}"))?;
+				next.insert(id.to_string(), HandleKindDef { name, color });
+			}
+			self.handle_kinds = next;
+			Ok(())
+		}
+
+		fn parse_css_hex_color(s: &str) -> Option<Color> {
+			let s = s.trim();
+			let hex = s.strip_prefix('#')?;
+			match hex.len() {
+				3 => {
+					let mut full = String::new();
+					for ch in hex.chars() {
+						full.push(ch);
+						full.push(ch);
+					}
+					let v = u32::from_str_radix(&full, 16).ok()?;
+					let r = ((v >> 16) & 0xff) as u8;
+					let g = ((v >> 8) & 0xff) as u8;
+					let b = (v & 0xff) as u8;
+					Some(Color::from_rgba8(r, g, b, 255))
+				}
+				6 => {
+					let v = u32::from_str_radix(hex, 16).ok()?;
+					let r = ((v >> 16) & 0xff) as u8;
+					let g = ((v >> 8) & 0xff) as u8;
+					let b = (v & 0xff) as u8;
+					Some(Color::from_rgba8(r, g, b, 255))
+				}
+				8 => {
+					let v = u32::from_str_radix(hex, 16).ok()?;
+					let r = ((v >> 24) & 0xff) as u8;
+					let g = ((v >> 16) & 0xff) as u8;
+					let b = ((v >> 8) & 0xff) as u8;
+					let a = (v & 0xff) as u8;
+					Some(Color::from_rgba8(r, g, b, a))
+				}
+				_ => None,
+			}
+		}
+
+		fn resolve_handle_fill_color(&self, h: &HandleData, theme: &VelloThemePalette) -> Color {
+			if let Some(c) = h.color_fill {
+				return c;
+			}
+			if let Some(def) = self.handle_kinds.get(&h.handle_kind) {
+				return def.color;
+			}
+			handle_fill(theme, h.selected)
 		}
 
 		fn handles_link_compatible_for_drag(&self, source: &HandleData, target: &HandleData) -> bool {
@@ -990,7 +1360,7 @@ mod board_host {
 			next
 		}
 
-		pub fn sync_descriptor(&mut self, desc: &SceneDescriptorJson) {
+		pub fn sync_descriptor(&mut self, desc: &SceneDescriptorJson) -> Result<(), String> {
 			self.link_screen_preview = None;
 			if matches!(
 				self.interaction,
@@ -1034,6 +1404,19 @@ mod board_host {
 				);
 			}
 			for h in &desc.handles {
+				let kind = h
+					.handle_kind
+					.as_deref()
+					.unwrap_or("")
+					.trim()
+					.to_string();
+				let color_fill = match h.color.as_ref().map(|s| s.trim()).filter(|s| !s.is_empty()) {
+					None => None,
+					Some(s) => Some(
+						Self::parse_css_hex_color(s)
+							.ok_or_else(|| format!("invalid color on handle {}: {s:?}", h.id))?,
+					),
+				};
 				self.handles.insert(
 					h.id.clone(),
 					HandleData {
@@ -1044,7 +1427,8 @@ mod board_host {
 						selected: h.selected.unwrap_or(false),
 						visible: h.visible.unwrap_or(true),
 						style: h.style.clone(),
-						handle_kind: h.handle_kind.clone().unwrap_or_default().trim().to_string(),
+						handle_kind: kind,
+						color_fill,
 					},
 				);
 			}
@@ -1100,6 +1484,7 @@ mod board_host {
 				sorted.sort();
 				self.push_event("select", json!({ "ids": sorted }));
 			}
+			Ok(())
 		}
 
 		pub fn clear_scene(&mut self) {
@@ -1164,6 +1549,13 @@ mod board_host {
 						.and_then(|v| v.as_str())
 						.map(str::trim)
 						.filter(|s| !s.is_empty())
+						.map(String::from)
+						.unwrap_or_else(|| "board.port".into());
+					let handle_color = ho
+						.get("color")
+						.and_then(|v| v.as_str())
+						.map(str::trim)
+						.filter(|s| !s.is_empty())
 						.map(String::from);
 					handles.push(HandleDescJson {
 						id: hid.into(),
@@ -1172,7 +1564,8 @@ mod board_host {
 						radius: None,
 						selected: None,
 						style: None,
-						handle_kind,
+						handle_kind: Some(handle_kind),
+						color: handle_color,
 						user_data: None,
 						visible: None,
 					});
@@ -1255,7 +1648,9 @@ mod board_host {
 					visible: None,
 				});
 			}
-			self.sync_descriptor(&desc);
+			if self.sync_descriptor(&desc).is_err() {
+				return false;
+			}
 			true
 		}
 
@@ -1411,7 +1806,7 @@ mod board_host {
 				let c = self.world_to_screen(wp);
 				let r = (h.radius * self.camera.zoom).max(1.0);
 				let circle = Circle::new(c, r);
-				let fill = handle_fill(&self.vello_theme, h.selected);
+				let fill = self.resolve_handle_fill_color(h, &self.vello_theme);
 				let stroke_c = handle_stroke(&self.vello_theme, h.selected);
 				scene.fill(Fill::NonZero, Affine::IDENTITY, fill, None, &circle);
 				scene.stroke(&Stroke::new(2.0), Affine::IDENTITY, stroke_c, None, &circle);
@@ -2603,6 +2998,12 @@ pub fn board_handle_position_rectangle(cx: f64, cy: f64, width: f64, height: f64
 	vec![p.x, p.y]
 }
 
+#[cfg(target_arch = "wasm32")]
+#[wasm_bindgen(js_name = boardForceGraphLayoutFixtureJson)]
+pub fn board_force_graph_layout_fixture_json(fixture_json: &str, options_json: &str) -> Result<String, JsValue> {
+	apply_force_graph_layout_to_fixture_v1_json(fixture_json, options_json).map_err(|e| JsValue::from_str(&e))
+}
+
 // #region 🔖WasmSession
 /// 🖥️ Single WASM entry: one {@link BoardHost}, optional WebGPU surface bound via {@link BoardSession::attach_canvas}.
 #[cfg(target_arch = "wasm32")]
@@ -2806,8 +3207,17 @@ impl BoardSession {
 	pub fn sync_descriptor_json(&mut self, json: &str) -> Result<(), JsValue> {
 		let desc: SceneDescriptorJson =
 			serde_json::from_str(json).map_err(|e| JsValue::from_str(&e.to_string()))?;
-		self.state.borrow_mut().host.sync_descriptor(&desc);
+		self.state.borrow_mut().host.sync_descriptor(&desc).map_err(|e| JsValue::from_str(&e))?;
 		Ok(())
+	}
+
+	#[wasm_bindgen(js_name = setHandleKindsJson)]
+	pub fn set_handle_kinds_json(&mut self, json: &str) -> Result<(), JsValue> {
+		self.state
+			.borrow_mut()
+			.host
+			.set_handle_kinds_from_json(json)
+			.map_err(|e| JsValue::from_str(&e))
 	}
 
 	#[wasm_bindgen(js_name = setVelloThemeJson)]
@@ -3054,7 +3464,8 @@ mod host_tests {
 					radius: None,
 					selected: None,
 					style: None,
-					handle_kind: None,
+					handle_kind: Some("port".into()),
+					color: None,
 					user_data: None,
 					visible: None,
 				},
@@ -3065,7 +3476,8 @@ mod host_tests {
 					radius: None,
 					selected: None,
 					style: None,
-					handle_kind: None,
+					handle_kind: Some("port".into()),
+					color: None,
 					user_data: None,
 					visible: None,
 				},
@@ -3103,7 +3515,7 @@ mod host_tests {
 			width: None,
 			height: None,
 		});
-		h.sync_descriptor(&desc);
+		h.sync_descriptor(&desc).unwrap();
 		let hp = handle_position_on_circle(Point::new(0.0, 0.0), 40.0, 0.0);
 		let hit = h.resolve_hit_world(hp);
 		assert_eq!(hit.as_deref(), Some("a:h0"));
@@ -3131,7 +3543,7 @@ mod host_tests {
 			width: None,
 			height: None,
 		});
-		h.sync_descriptor(&desc);
+		h.sync_descriptor(&desc).unwrap();
 		h.set_world_raster_tiling("none");
 		let monolithic = h.encoded_scene_hint();
 		h.set_world_raster_tiling("world-clip");
@@ -3160,7 +3572,7 @@ mod host_tests {
 			width: None,
 			height: None,
 		});
-		h.sync_descriptor(&desc);
+		h.sync_descriptor(&desc).unwrap();
 		let _ = h.drain_events_json();
 		let w = Point::new(0.0, 0.0);
 		let s = h.world_to_screen(w);
@@ -3192,7 +3604,7 @@ mod host_tests {
 			width: None,
 			height: None,
 		});
-		h.sync_descriptor(&desc);
+		h.sync_descriptor(&desc).unwrap();
 		h.set_selection_ids(&["a".into(), "b".into()]);
 		let _ = h.drain_events_json();
 		let w = Point::new(0.0, 0.0);
@@ -3232,7 +3644,7 @@ mod host_tests {
 			width: None,
 			height: None,
 		});
-		h.sync_descriptor(&desc);
+		h.sync_descriptor(&desc).unwrap();
 		let inside_node_a = Point::new(0.0, 0.0);
 		assert!(h.resolve_hit_world(inside_node_a).is_none());
 		let on_edge = Point::new(150.0, 0.0);
@@ -3261,7 +3673,7 @@ mod host_tests {
 			width: None,
 			height: None,
 		});
-		h.sync_descriptor(&desc);
+		h.sync_descriptor(&desc).unwrap();
 		h.set_selection_ids(&["a".into()]);
 		let _ = h.drain_events_json();
 		let on_edge = Point::new(150.0, 0.0);
@@ -3293,7 +3705,7 @@ mod host_tests {
 			width: None,
 			height: None,
 		});
-		h.sync_descriptor(&desc);
+		h.sync_descriptor(&desc).unwrap();
 		h.set_selection_ids(&["a".into(), "e1".into()]);
 		let away = Point::new(5000.0, 5000.0);
 		let s = h.world_to_screen(away);
@@ -3324,7 +3736,7 @@ mod host_tests {
 			width: None,
 			height: None,
 		});
-		h.sync_descriptor(&desc);
+		h.sync_descriptor(&desc).unwrap();
 		let _ = h.drain_events_json();
 		let w0 = Point::new(-90.0, -70.0);
 		let w1 = Point::new(90.0, 90.0);
@@ -3383,7 +3795,8 @@ mod host_tests {
 					radius: None,
 					selected: None,
 					style: None,
-					handle_kind: None,
+					handle_kind: Some("parent".into()),
+					color: None,
 					user_data: None,
 					visible: None,
 				},
@@ -3394,7 +3807,8 @@ mod host_tests {
 					radius: None,
 					selected: None,
 					style: None,
-					handle_kind: None,
+					handle_kind: Some("child".into()),
+					color: None,
 					user_data: None,
 					visible: None,
 				},
@@ -3407,7 +3821,7 @@ mod host_tests {
 	fn board_host_link_drag_snap_emits_edge_create() {
 		let mut h = BoardHost::new();
 		h.set_size(800, 600, 1.0);
-		h.sync_descriptor(&link_test_scene_no_edge());
+		h.sync_descriptor(&link_test_scene_no_edge()).unwrap();
 		let _ = h.drain_events_json();
 		let hp_a = handle_position_on_circle(Point::new(0.0, 0.0), 40.0, 0.0);
 		let hp_b = handle_position_on_circle(Point::new(280.0, 0.0), 40.0, std::f64::consts::PI);
@@ -3431,15 +3845,8 @@ mod host_tests {
 		let mut h = BoardHost::new();
 		h.set_size(800, 600, 1.0);
 		h.set_handle_link_compat_from_json(r#"[{"source":"child","target":"parent"}]"#).unwrap();
-		let mut desc = link_test_scene_no_edge();
-		for handle in &mut desc.handles {
-			match handle.id.as_str() {
-				"a:h0" => handle.handle_kind = Some("parent".into()),
-				"b:h0" => handle.handle_kind = Some("child".into()),
-				_ => {}
-			}
-		}
-		h.sync_descriptor(&desc);
+		let desc = link_test_scene_no_edge();
+		h.sync_descriptor(&desc).unwrap();
 		let _ = h.drain_events_json();
 		let hp_a = handle_position_on_circle(Point::new(0.0, 0.0), 40.0, 0.0);
 		let hp_b = handle_position_on_circle(Point::new(280.0, 0.0), 40.0, std::f64::consts::PI);
@@ -3459,15 +3866,8 @@ mod host_tests {
 		let mut h = BoardHost::new();
 		h.set_size(800, 600, 1.0);
 		h.set_handle_link_compat_from_json(r#"[{"source":"parent","target":"child"}]"#).unwrap();
-		let mut desc = link_test_scene_no_edge();
-		for handle in &mut desc.handles {
-			match handle.id.as_str() {
-				"a:h0" => handle.handle_kind = Some("parent".into()),
-				"b:h0" => handle.handle_kind = Some("child".into()),
-				_ => {}
-			}
-		}
-		h.sync_descriptor(&desc);
+		let desc = link_test_scene_no_edge();
+		h.sync_descriptor(&desc).unwrap();
 		let _ = h.drain_events_json();
 		let hp_a = handle_position_on_circle(Point::new(0.0, 0.0), 40.0, 0.0);
 		let hp_b = handle_position_on_circle(Point::new(280.0, 0.0), 40.0, std::f64::consts::PI);
@@ -3486,7 +3886,7 @@ mod host_tests {
 	fn board_host_link_short_drag_does_not_emit_edge_create() {
 		let mut h = BoardHost::new();
 		h.set_size(800, 600, 1.0);
-		h.sync_descriptor(&link_test_scene_no_edge());
+		h.sync_descriptor(&link_test_scene_no_edge()).unwrap();
 		let _ = h.drain_events_json();
 		let hp_a = handle_position_on_circle(Point::new(0.0, 0.0), 40.0, 0.0);
 		let s0 = h.world_to_screen(hp_a);
@@ -3495,6 +3895,57 @@ mod host_tests {
 		h.pointer_up_screen(s0.x + 2.0, s0.y);
 		let ev = h.drain_events_json();
 		assert!(!ev.contains("edgeCreate"));
+	}
+}
+
+#[cfg(test)]
+mod force_graph_tests {
+	use super::apply_force_graph_layout_to_fixture_v1_json;
+	use serde_json::json;
+
+	#[test]
+	fn force_graph_spreads_two_linked_circles_along_x() {
+		let fixture = json!({
+			"schema": "elements.board.fixture/v1",
+			"camera": { "x": 0.0, "y": 0.0, "zoom": 1.0 },
+			"nodes": [
+				{
+					"id": "a",
+					"x": 0.0,
+					"y": 0.0,
+					"radius": 40.0,
+					"handles": [{ "id": "a:h0", "angle": 0.0, "handleKind": "board.port" }]
+				},
+				{
+					"id": "b",
+					"x": 1.0,
+					"y": 0.0,
+					"radius": 40.0,
+					"handles": [{ "id": "b:h0", "angle": 3.14159, "handleKind": "board.port" }]
+				}
+			],
+			"edges": [{ "id": "e1", "source": "a:h0", "target": "b:h0" }]
+		});
+		let opts = json!({
+			"iterations": 200,
+			"idealEdgeLength": 180.0,
+			"repulsionStrength": 8000.0,
+			"springStrength": 0.04,
+			"gravity": 0.0,
+			"randomSeed": 7
+		});
+		let out = apply_force_graph_layout_to_fixture_v1_json(&fixture.to_string(), &opts.to_string()).unwrap();
+		let parsed: serde_json::Value = serde_json::from_str(&out).unwrap();
+		let nodes = parsed["nodes"].as_array().unwrap();
+		let ax = nodes[0]["x"].as_f64().unwrap();
+		let bx = nodes[1]["x"].as_f64().unwrap();
+		assert!((bx - ax).abs() > 80.0, "expected horizontal separation, got a={ax} b={bx}");
+	}
+
+	#[test]
+	fn force_graph_rejects_bad_schema() {
+		let err = apply_force_graph_layout_to_fixture_v1_json(r#"{"schema":"x","nodes":[],"edges":[]}"#, "{}").unwrap_err();
+		assert!(err.contains("schema"));
 	}
 }
 

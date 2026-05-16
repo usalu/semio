@@ -46,7 +46,10 @@ import {
 	type BoardFixtureV1,
 	type BoardGraphEdgeIdPayload,
 	type BoardGraphNodeIdPayload,
+	type BoardHandleKindCatalogEntry,
 	type BoardHandleLinkCompatPair,
+	type BoardHandleProps,
+	type BoardEdgeProps,
 	type BoardHoverPayload,
 	type BoardNodeTextAlignment,
 	type BoardSelectionMethod,
@@ -59,7 +62,7 @@ import {
 	type WorldRasterTilingKind,
 } from "./index";
 
-export type { BoardHandleLinkCompatPair } from "./index";
+export type { BoardHandleKindCatalogEntry, BoardHandleLinkCompatPair, BoardHandleProps, BoardEdgeProps } from "./index";
 
 import { ContextMenuController, type ContextMenuItem } from "@elements/ui";
 
@@ -74,6 +77,8 @@ export interface BoardCanvasProps {
 	height?: number;
 	/** @emoji 🔗 Allowed directed handle-kind pairs for link gestures; empty omits filtering. */
 	handleLinkCompatibility?: readonly BoardHandleLinkCompatPair[];
+	/** @emoji 🎨 WASM catalog rows `{id,name,color}` for default handle fills (per-handle `color` prop overrides). */
+	handleKinds?: readonly BoardHandleKindCatalogEntry[];
 	onFixtureDrop?: (detail: BoardFixtureDropDetail) => void;
 	/** @emoji 🖱️ Fires after pointer-driven hit tests (same cadence as canvas moves); use for tooltips and status. */
 	onHover?: (payload: BoardHoverPayload) => void;
@@ -152,30 +157,6 @@ export type BoardNodeRectangleProps = {
 
 /** @emoji 🟠 Declarative node marker: {@link BoardNodeCircleProps} or {@link BoardNodeRectangleProps}. */
 export type BoardNodeProps = BoardNodeCircleProps | BoardNodeRectangleProps;
-
-export interface BoardHandleProps {
-	angle: number;
-	contextMenu?: ContextMenuItem[];
-	/** @emoji 🔗 Semantic handle kind for WASM link compatibility (not the host intrinsic object kind). */
-	handleKind?: string;
-	id: string;
-	radius?: number;
-	selected?: boolean;
-	style?: string;
-	userData?: Record<string, unknown>;
-	visible?: boolean;
-}
-
-export interface BoardEdgeProps {
-	contextMenu?: ContextMenuItem[];
-	id: string;
-	selected?: boolean;
-	source: string;
-	style?: string;
-	target: string;
-	userData?: Record<string, unknown>;
-	visible?: boolean;
-}
 
 export interface NodeDescriptor extends BoardNodeProps {
 	handles: HandleDescriptor[];
@@ -307,6 +288,9 @@ function applyHandleProps(instance: BoardHandleObject, descriptor: HandleDescrip
 	instance.visible = descriptor.visible ?? true;
 	instance.radius = descriptor.radius ?? 8;
 	instance.handleKind = (descriptor.handleKind ?? "").trim();
+	const rawC = descriptor.color;
+	const cs = rawC === undefined || rawC === null ? "" : String(rawC).trim();
+	instance.color = cs !== "" ? cs : null;
 	instance.setAngle(descriptor.angle);
 }
 
@@ -554,6 +538,7 @@ export function BoardCanvas({
 	contextMenu,
 	fixtureDragDrop,
 	height,
+	handleKinds,
 	handleLinkCompatibility,
 	onChange,
 	onChildEdgeChange,
@@ -819,6 +804,14 @@ export function BoardCanvas({
 		if (!renderer) {
 			return;
 		}
+		renderer.setHandleKindCatalog(handleKinds);
+	}, [handleKinds]);
+
+	useLayoutEffect(() => {
+		const renderer = rendererRef.current;
+		if (!renderer) {
+			return;
+		}
 		renderer.setHandleLinkCompatibility(handleLinkCompatibility);
 	}, [handleLinkCompatibility]);
 
@@ -1023,7 +1016,7 @@ if (boardReactVitest) {
 			const descriptor = buildBoardSceneDescriptor(
 				<>
 					<Node id="a" radius={24} x={0} y={0}>
-						<Handle angle={0} id="a:h0" />
+						<Handle handleKind="board.port" angle={0} id="a:h0" />
 					</Node>
 					<Edge id="edge-1" source="a:h0" target="a:h0" />
 				</>,
@@ -1031,7 +1024,19 @@ if (boardReactVitest) {
 
 			expect(descriptor.nodes).toHaveLength(1);
 			expect(descriptor.handles).toEqual([
-				{ angle: 0, contextMenu: undefined, id: "a:h0", nodeId: "a", radius: undefined, selected: undefined, style: undefined, userData: undefined, visible: undefined },
+				{
+					angle: 0,
+					color: undefined,
+					contextMenu: undefined,
+					handleKind: "board.port",
+					id: "a:h0",
+					nodeId: "a",
+					radius: undefined,
+					selected: undefined,
+					style: undefined,
+					userData: undefined,
+					visible: undefined,
+				},
 			]);
 			expect(descriptor.edges).toEqual([
 				{ contextMenu: undefined, id: "edge-1", selected: undefined, source: "a:h0", style: undefined, target: "a:h0", userData: undefined, visible: undefined },
@@ -1045,7 +1050,7 @@ if (boardReactVitest) {
 			const descriptor = buildBoardSceneDescriptor(
 				<>
 					<Node contextMenu={nodeMenu} id="a" radius={24} x={0} y={0}>
-						<Handle angle={0} contextMenu={handleMenu} id="a:h0" />
+						<Handle handleKind="board.port" angle={0} contextMenu={handleMenu} id="a:h0" />
 					</Node>
 					<Edge contextMenu={edgeMenu} id="edge-1" source="a:h0" target="a:h0" />
 				</>,
@@ -1060,10 +1065,10 @@ if (boardReactVitest) {
 			const jsx = buildBoardSceneDescriptor(
 				<>
 					<Node id="a" radius={40} x={0} y={0}>
-						<Handle angle={0} id="a:h0" />
+						<Handle handleKind="board.port" angle={0} id="a:h0" />
 					</Node>
 					<Node id="b" radius={40} x={200} y={0}>
-						<Handle angle={Math.PI} id="b:h0" />
+						<Handle handleKind="board.port" angle={Math.PI} id="b:h0" />
 					</Node>
 				</>,
 			);
@@ -1087,10 +1092,10 @@ if (boardReactVitest) {
 			const adopted = buildBoardSceneDescriptor(
 				<>
 					<Node id="a" radius={40} x={0} y={0}>
-						<Handle angle={0} id="a:h0" />
+						<Handle handleKind="board.port" angle={0} id="a:h0" />
 					</Node>
 					<Node id="b" radius={40} x={200} y={0}>
-						<Handle angle={Math.PI} id="b:h0" />
+						<Handle handleKind="board.port" angle={Math.PI} id="b:h0" />
 					</Node>
 					<Edge id="edge-link-99" source="a:h0" target="b:h0" />
 				</>,
@@ -1106,10 +1111,10 @@ if (boardReactVitest) {
 			const jsx = buildBoardSceneDescriptor(
 				<>
 					<Node id="a" radius={40} x={0} y={0}>
-						<Handle angle={0} id="a:h0" />
+						<Handle handleKind="board.port" angle={0} id="a:h0" />
 					</Node>
 					<Node id="b" radius={40} x={200} y={0}>
-						<Handle angle={Math.PI} id="b:h0" />
+						<Handle handleKind="board.port" angle={Math.PI} id="b:h0" />
 					</Node>
 				</>,
 			);
@@ -1149,10 +1154,10 @@ if (boardReactVitest) {
 						width={800}
 					>
 						<Node id="a" radius={40} x={0} y={0}>
-							<Handle angle={0} id="a:h0" />
+							<Handle handleKind="board.port" angle={0} id="a:h0" />
 						</Node>
 						<Node id="b" radius={40} x={280} y={0}>
-							<Handle angle={Math.PI} id="b:h0" />
+							<Handle handleKind="board.port" angle={Math.PI} id="b:h0" />
 						</Node>
 					</BoardCanvas>,
 				);
@@ -1199,10 +1204,10 @@ if (boardReactVitest) {
 						width={800}
 					>
 						<Node id="a" radius={40} x={0} y={0}>
-							<Handle angle={0} id="a:h0" />
+							<Handle handleKind="board.port" angle={0} id="a:h0" />
 						</Node>
 						<Node id="b" radius={40} x={280} y={0}>
-							<Handle angle={Math.PI} id="b:h0" />
+							<Handle handleKind="board.port" angle={Math.PI} id="b:h0" />
 						</Node>
 					</BoardCanvas>,
 				);
@@ -1230,7 +1235,7 @@ if (boardReactVitest) {
 				renderer,
 				buildBoardSceneDescriptor(
 					<Node id="hit" radius={50} x={0} y={0}>
-						<Handle angle={0} id="hit:h0" />
+						<Handle handleKind="board.port" angle={0} id="hit:h0" />
 					</Node>,
 				),
 			);
@@ -1259,7 +1264,7 @@ if (boardReactVitest) {
 				renderer,
 				buildBoardSceneDescriptor(
 					<Node id="lonely" radius={10} x={0} y={0}>
-						<Handle angle={0} id="lonely:h0" />
+						<Handle handleKind="board.port" angle={0} id="lonely:h0" />
 					</Node>,
 				),
 			);
@@ -1277,7 +1282,7 @@ if (boardReactVitest) {
 			function OpaqueScene(): ReactElement {
 				return (
 					<Node id="inner" radius={8} x={1} y={2}>
-						<Handle angle={0} id="inner.h" />
+						<Handle handleKind="board.port" angle={0} id="inner.h" />
 					</Node>
 				);
 			}
@@ -1320,7 +1325,7 @@ if (boardReactVitest) {
 				root.render(
 					<BoardCanvas camera={{ x: 0, y: 0, zoom: 1 }} height={120} renderMode="headless-test" width={160}>
 						<Node id="direct" radius={10} x={0} y={0}>
-							<Handle angle={0} id="direct.h" />
+							<Handle handleKind="board.port" angle={0} id="direct.h" />
 						</Node>
 					</BoardCanvas>,
 				);
@@ -1347,7 +1352,7 @@ if (boardReactVitest) {
 			function WrappedScene(): ReactElement {
 				return (
 					<Node id="wrapped" radius={14} x={3} y={4}>
-						<Handle angle={0} id="wrapped.h" />
+						<Handle handleKind="board.port" angle={0} id="wrapped.h" />
 					</Node>
 				);
 			}
@@ -1376,7 +1381,7 @@ if (boardReactVitest) {
 			const renderer = new BoardRenderer({ renderMode: "headless-test" });
 			const firstDescriptor = buildBoardSceneDescriptor(
 				<Node draggable id="a" radius={24} x={10} y={20}>
-					<Handle angle={0} id="a:h0" />
+					<Handle handleKind="board.port" angle={0} id="a:h0" />
 				</Node>,
 			);
 			syncBoardScene(renderer, firstDescriptor);
@@ -1384,7 +1389,7 @@ if (boardReactVitest) {
 			const firstNode = renderer.scene.getObjectById("a");
 			const secondDescriptor = buildBoardSceneDescriptor(
 				<Node draggable id="a" radius={30} x={40} y={50}>
-					<Handle angle={Math.PI / 2} id="a:h0" />
+					<Handle handleKind="board.port" angle={Math.PI / 2} id="a:h0" />
 				</Node>,
 			);
 			syncBoardScene(renderer, secondDescriptor);
@@ -1415,14 +1420,14 @@ if (boardReactVitest) {
 			const renderer = new BoardRenderer({ renderMode: "headless-test" });
 			const circleDescriptor = buildBoardSceneDescriptor(
 				<Node id="a" radius={20} x={0} y={0}>
-					<Handle angle={0} id="a:h0" />
+					<Handle handleKind="board.port" angle={0} id="a:h0" />
 				</Node>,
 			);
 			syncBoardScene(renderer, circleDescriptor);
 			const firstNode = renderer.scene.getObjectById("a");
 			const rectDescriptor = buildBoardSceneDescriptor(
 				<Node height={30} id="a" shape="rectangle" width={40} x={0} y={0}>
-					<Handle angle={0} id="a:h0" />
+					<Handle handleKind="board.port" angle={0} id="a:h0" />
 				</Node>,
 			);
 			syncBoardScene(renderer, rectDescriptor);
@@ -1453,10 +1458,10 @@ if (boardReactVitest) {
 						width={640}
 					>
 						<Node draggable id="a" radius={28} x={0} y={0}>
-							<Handle angle={0} id="a:h0" />
+							<Handle handleKind="board.port" angle={0} id="a:h0" />
 						</Node>
 						<Node id="b" radius={28} x={180} y={0}>
-							<Handle angle={Math.PI} id="b:h0" />
+							<Handle handleKind="board.port" angle={Math.PI} id="b:h0" />
 						</Node>
 						<Edge id="edge-1" source="a:h0" target="b:h0" />
 					</BoardCanvas>,
@@ -1477,10 +1482,10 @@ if (boardReactVitest) {
 						width={640}
 					>
 						<Node draggable id="a" radius={28} x={120} y={40}>
-							<Handle angle={0} id="a:h0" />
+							<Handle handleKind="board.port" angle={0} id="a:h0" />
 						</Node>
 						<Node id="b" radius={28} x={180} y={0}>
-							<Handle angle={Math.PI} id="b:h0" />
+							<Handle handleKind="board.port" angle={Math.PI} id="b:h0" />
 						</Node>
 						<Edge id="edge-1" source="a:h0" target="b:h0" />
 					</BoardCanvas>,
@@ -1491,10 +1496,10 @@ if (boardReactVitest) {
 			const movedDescriptor = buildBoardSceneDescriptor(
 				<>
 					<Node draggable id="a" radius={28} x={120} y={40}>
-						<Handle angle={0} id="a:h0" />
+						<Handle handleKind="board.port" angle={0} id="a:h0" />
 					</Node>
 					<Node id="b" radius={28} x={180} y={0}>
-						<Handle angle={Math.PI} id="b:h0" />
+						<Handle handleKind="board.port" angle={Math.PI} id="b:h0" />
 					</Node>
 					<Edge id="edge-1" source="a:h0" target="b:h0" />
 				</>,
@@ -1534,7 +1539,7 @@ if (boardReactVitest) {
 						width={160}
 					>
 						<Node id="a" radius={12} x={0} y={0}>
-							<Handle angle={0} id="a:h0" />
+							<Handle handleKind="board.port" angle={0} id="a:h0" />
 						</Node>
 					</BoardCanvas>,
 				);
@@ -1555,7 +1560,7 @@ if (boardReactVitest) {
 						width={160}
 					>
 						<Node id="a" radius={12} x={0} y={0}>
-							<Handle angle={0} id="a:h0" />
+							<Handle handleKind="board.port" angle={0} id="a:h0" />
 						</Node>
 					</BoardCanvas>,
 				);
@@ -1590,7 +1595,7 @@ if (boardReactVitest) {
 					<BoardCanvas camera={{ x: 0, y: 0, zoom: 1 }} height={120} renderMode="headless-test" width={160}>
 						<BoardSelectListenerStub />
 						<Node draggable id="a" radius={12} x={0} y={0}>
-							<Handle angle={0} id="a:h0" />
+							<Handle handleKind="board.port" angle={0} id="a:h0" />
 						</Node>
 					</BoardCanvas>,
 				);

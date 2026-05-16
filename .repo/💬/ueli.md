@@ -378,6 +378,43 @@ elements/board:
 
 ---
 
+All handles must have handle kind.
+Handle kinds are passed separatley (id, name, color)
+When a handle has a color, then it overrides the color of the handle kind.
+
+---
+
+Add a new feature: handle kinds
+Every handle can have a kind and then centrally a list of compatible pairs can be provided.
+Two handles that are not compatible cant be connected. It doesnt snap, etc
+
+---
+
+The lod zoom levels should make the grid more adaptive:
+Minimap: No grid, no outlines on nodes, no handles
+Overview: Large grid (10x10), outlines on node, no handles
+Detail: Large grid with finer small grid (1x1), handles
+
+---
+
+Two handles should be connectable. A preview should be shown, It should snap to other handles.
+
+---
+
+board:
+Rename from/to to source/target
+There is no in and out.
+
+---
+
+selecting edges should have the same mechanism as selecting nodes.
+Add a toolbar to ui (same as sketchpad).
+Select, Create as categories
+select: rectangle/lasso, additive/subtractive/invertive
+create: Circle, Recangle
+
+---
+
 Extend selection.
 When holding down left button then selection should be opened.
 There are two methods: Rectangle (default) and Lasso

@@ -1,9 +1,8 @@
 {
   "title": "Board Edge Source And Target Naming",
   "emoji": "🧭",
-  "status": "open",
+  "status": "closed",
   "description": "Rename board edge endpoints from/from-to to source/target across TS, React markers, fixture JSON, WASM events, and Rust host. Drop in/out handle id suffixes in tests.",
-  "summary": "",
-  "goal": "🎯r2602",
-  "sessions": []
+  "summary": "Renamed board edge endpoints from from/to to source/target across TS, React, Rust/WASM JSON, and nakagin fixture; neutral handle ids in tests; handle-link compat JSON uses source/target.",
+  "goal": "🎯r2602"
 }

@@ -41,6 +41,7 @@ interface OwningKitHost {
 type Data implements Node @node {
   name: String!
   rank: String!
+  isList: Boolean!
   soleOwnerKey: String
   constraints: [Constraint!]! @relationship(type: "OWNS", direction: OUT)
   """
@@ -56,6 +57,7 @@ type Data implements Node @node {
 type Derived implements Node @node {
   name: String!
   rank: String!
+  isList: Boolean!
   cached: Boolean!
   constraints: [Constraint!]! @relationship(type: "OWNS", direction: OUT)
   """
@@ -71,6 +73,7 @@ type Derived implements Node @node {
 type Reference implements Node @node {
   name: String!
   rank: String!
+  isList: Boolean!
   constraints: [Constraint!]! @relationship(type: "OWNS", direction: OUT)
   """
   Singular outgoing `IS` to the declared `FieldIs` (at most one target in GraphQL; see header for DB limits).
