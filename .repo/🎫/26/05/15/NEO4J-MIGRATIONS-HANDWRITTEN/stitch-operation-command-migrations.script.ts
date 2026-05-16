@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 /**
- * @emoji 🧷 Inlines generated Neo4j fragments into `migrations.cypher` (operation `Command` + `Input` surface regions).
+ * @emoji 🧷 Inlines generated Neo4j fragments into `migrations.cypher` (operation `Command` relabel/merge/reparent + imperative renames + `Data` argument kit from golden `*Input`).
  */
 import { readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";

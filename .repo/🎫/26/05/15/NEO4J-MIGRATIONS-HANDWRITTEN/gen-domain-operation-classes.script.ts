@@ -207,11 +207,11 @@ function cypherIdent(cmd: string, field: string): string {
   return `arg_${cmd}_${field}`.replace(/[^A-Za-z0-9_]/g, "_");
 }
 
-/** @emoji 🧭 Neo4j `Data` argument kit + `IS` to `FieldIs` for each golden operation input field (skipped when parameter-less). */
+/** @emoji 🧭 Neo4j `Data` argument kit: one node per `(Command.name, field.name)` via `soleOwnerKey` + detach/rewire so kit `Data` is never shared across commands. */
 function buildCommandArgumentDataCypher(golden: string, pastOps: readonly string[]): string {
   const esc = (x: string) => x.replace(/'/g, "\\'");
   const lines: string[] = [
-    "// Generated — remove legacy `Input` / orphan `input` references; merge golden `*Input` argument fields as `Data` under imperative `Command` via `OWNS`.",
+    "// Generated — remove legacy `Input` / orphan `input` references; imperative `Command` argument `Data` uses `soleOwnerKey` (no cross-command sharing).",
     "MATCH (inp:Input)-[:OWNS]->(ch)",
     "DETACH DELETE ch;",
     "MATCH (inp:Input)",
@@ -221,6 +221,7 @@ function buildCommandArgumentDataCypher(golden: string, pastOps: readonly string
     "DETACH DELETE r;",
     "",
   ];
+  const cmdsWithFields: { cmd: string; fieldNames: string[] }[] = [];
   for (const past of pastOps) {
     const cmd = imperativeOperationStem(past);
     if (!operationUsesSpecificInputType(golden, past)) {
@@ -230,15 +231,34 @@ function buildCommandArgumentDataCypher(golden: string, pastOps: readonly string
     if (fields.length === 0) {
       continue;
     }
-    const fieldNames = fields.map((f) => `'${esc(f.name)}'`).join(", ");
+    cmdsWithFields.push({ cmd, fieldNames: fields.map((f) => f.name) });
+  }
+  for (const { cmd, fieldNames } of cmdsWithFields) {
+    const inList = fieldNames.map((n) => `'${esc(n)}'`).join(", ");
     lines.push(
       `MATCH (cmd:Command {name: '${esc(cmd)}'})`,
-      `OPTIONAL MATCH (cmd)-[:OWNS]->(pivot:Data)`,
-      `WHERE pivot.name IN [${fieldNames}]`,
-      `WITH cmd, [n IN collect(pivot) WHERE n IS NOT NULL] AS pivots`,
-      `FOREACH (x IN pivots | DETACH DELETE x);`,
+      `OPTIONAL MATCH (cmd)-[r:OWNS]->(pivot:Data)`,
+      `WHERE pivot.name IN [${inList}]`,
+      `DELETE r;`,
       "",
     );
+  }
+  lines.push(
+    "// Drop argument `Data` left without an incoming `OWNS` after detach (stale shared rows).",
+    "MATCH (d:Data)",
+    "WHERE NOT ()-[:OWNS]->(d)",
+    "DETACH DELETE d;",
+    "",
+  );
+  for (const past of pastOps) {
+    const cmd = imperativeOperationStem(past);
+    if (!operationUsesSpecificInputType(golden, past)) {
+      continue;
+    }
+    const fields = extractOperationInputFields(golden, past);
+    if (fields.length === 0) {
+      continue;
+    }
     for (let i = 0; i < fields.length; i++) {
       const f = fields[i]!;
       const id = cypherIdent(cmd, f.name);
@@ -246,7 +266,7 @@ function buildCommandArgumentDataCypher(golden: string, pastOps: readonly string
       const core = esc(f.coreType);
       lines.push(
         `MATCH (cmd:Command {name: '${esc(cmd)}'})`,
-        `MERGE (${id}:Data {name: '${esc(f.name)}', rank: '${i}', isList: ${isList}})`,
+        `MERGE (${id}:Data {name: '${esc(f.name)}', soleOwnerKey: '${esc(cmd)}', rank: '${i}', isList: ${isList}})`,
         `MERGE (cmd)-[:OWNS]->(${id})`,
         `WITH ${id}`,
         `OPTIONAL MATCH (t)`,

@@ -215,7 +215,7 @@ DETACH DELETE fk;
 //#region StripLegacySemioGraphNodeProperties
 // Persist only graph-native kit metadata: `rank` is sibling order (string); `isList` flags list-shaped members; `cached` only on Derived.
 MATCH (n:Data)
-SET n = { name: n.name, rank: coalesce(n.rank, ''), isList: coalesce(n.isList, false) };
+SET n = { name: n.name, rank: coalesce(n.rank, ''), isList: coalesce(n.isList, false), soleOwnerKey: n.soleOwnerKey };
 MATCH (n:Reference)
 SET n = { name: n.name, rank: coalesce(n.rank, ''), isList: coalesce(n.isList, false) };
 MATCH (n:Derived)
