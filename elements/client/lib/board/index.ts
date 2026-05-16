@@ -2341,6 +2341,20 @@ export class BoardRenderer {
 		});
 	}
 
+	/** @emoji 🧹 Drops WASM parsed-SVG icon scenes so the next draw rebuilds from current {@link Node.iconKind} bytes (catalog hot-swap or identical key with new SVG). */
+	clearIconVectorCache(): void {
+		if (this.wasmSessionCallBlockedForReentry()) {
+			this.invalidated = true;
+			return;
+		}
+		try {
+			this.session.clearIconVectorCache();
+		} catch (err) {
+			console.error("[DEBUG] clearIconVectorCache failed", err);
+		}
+		this.invalidate();
+	}
+
 	render(timestamp = globalThis.performance?.now?.() ?? Date.now()): void {
 		if (this.renderPipelineDepth > 0) {
 			this.invalidated = true;

@@ -1649,6 +1649,92 @@ mod svg_icon_vello09 {
 		}
 	}
 
+	fn icon_rect_xywh(r: usvg::Rect) -> Option<(f64, f64, f64, f64)> {
+		let w = f64::from(r.width());
+		let h = f64::from(r.height());
+		if !(w > 1e-6 && h > 1e-6 && w.is_finite() && h.is_finite()) {
+			return None;
+		}
+		Some((f64::from(r.x()), f64::from(r.y()), w, h))
+	}
+
+	fn icon_rect_nonzero(r: usvg::tiny_skia_path::NonZeroRect) -> (f64, f64, f64, f64) {
+		(
+			f64::from(r.x()),
+			f64::from(r.y()),
+			f64::from(r.width()),
+			f64::from(r.height()),
+		)
+	}
+
+	fn icon_union_xywh(a: (f64, f64, f64, f64), b: (f64, f64, f64, f64)) -> (f64, f64, f64, f64) {
+		let ax1 = a.0 + a.2;
+		let ay1 = a.1 + a.3;
+		let bx1 = b.0 + b.2;
+		let by1 = b.1 + b.3;
+		let x0 = a.0.min(b.0);
+		let y0 = a.1.min(b.1);
+		let x1 = ax1.max(bx1);
+		let y1 = ay1.max(by1);
+		(x0, y0, x1 - x0, y1 - y0)
+	}
+
+	fn icon_union_rects_into(acc: &mut Option<(f64, f64, f64, f64)>, r: usvg::Rect) {
+		if let Some(xy) = icon_rect_xywh(r) {
+			*acc = Some(match acc.take() {
+				None => xy,
+				Some(a) => icon_union_xywh(a, xy),
+			});
+		}
+	}
+
+	fn icon_visit_node_bounds(node: &usvg::Node, acc: &mut Option<(f64, f64, f64, f64)>) {
+		match node {
+			usvg::Node::Group(g) => {
+				for c in g.children() {
+					icon_visit_node_bounds(c, acc);
+				}
+			}
+			usvg::Node::Path(p) => {
+				if !p.is_visible() {
+					return;
+				}
+				icon_union_rects_into(acc, p.abs_bounding_box());
+				icon_union_rects_into(acc, p.abs_stroke_bounding_box());
+			}
+			_ => {}
+		}
+	}
+
+	/// @emoji 📐 Union of visible path paint bounds in absolute SVG space for uniform scale-and-center fits.
+	pub fn svg_icon_content_bounds(tree: &usvg::Tree) -> (f64, f64, f64, f64) {
+		let mut acc = None::<(f64, f64, f64, f64)>;
+		for c in tree.root().children() {
+			icon_visit_node_bounds(c, &mut acc);
+		}
+		if let Some(u) = acc {
+			let (_, _, bw, bh) = u;
+			if bw > 1e-6 && bh > 1e-6 {
+				return u;
+			}
+		}
+		let root = tree.root();
+		let mut u = icon_rect_nonzero(root.abs_layer_bounding_box());
+		if let Some(r) = icon_rect_xywh(root.abs_stroke_bounding_box()) {
+			u = icon_union_xywh(u, r);
+		}
+		if let Some(r) = icon_rect_xywh(root.abs_bounding_box()) {
+			u = icon_union_xywh(u, r);
+		}
+		let (_, _, bw, bh) = u;
+		if bw > 1e-6 && bh > 1e-6 {
+			return u;
+		}
+		let w = f64::from(tree.size().width());
+		let h = f64::from(tree.size().height());
+		(0.0, 0.0, w.max(1.0), h.max(1.0))
+	}
+
 	pub fn render_svg_tree_themed(scene: &mut Scene, tree: &usvg::Tree, fg: Color, bg: Color) {
 		render_group(scene, tree.root(), Affine::IDENTITY, fg, bg);
 	}
@@ -1689,6 +1775,7 @@ mod board_host {
 
 	use std::cell::RefCell;
 	use std::collections::HashMap;
+	use std::hash::{Hash, Hasher};
 
 	const LOD_MINIMAP_MAX_ZOOM_DEFAULT: f64 = 0.15;
 	const LOD_OVERVIEW_MAX_ZOOM_DEFAULT: f64 = 0.35;
@@ -2055,21 +2142,20 @@ mod board_host {
 			Ok(())
 		}
 
-		fn get_or_build_icon_scene(&self, kind: &str, svg: &str, fg: Color, bg: Color) -> Option<(f64, f64, f64, f64, Scene)> {
-			let kind_s = kind.trim();
-			if kind_s.is_empty() {
+		fn get_or_build_icon_scene(&self, svg: &str, fg: Color, bg: Color) -> Option<(f64, f64, f64, f64, Scene)> {
+			let svg_t = svg.trim();
+			if svg_t.is_empty() {
 				return None;
 			}
-			let key = Self::icon_scene_cache_key(kind_s, fg, bg);
+			let key = Self::icon_scene_cache_key(svg_t, fg, bg);
 			{
 				let g = self.icon_vector_cache.borrow();
 				if let Some(c) = g.get(&key) {
 					return Some((c.bx, c.by, c.bw, c.bh, c.scene.clone()));
 				}
 			}
-			let opt = usvg::Options::default();
-			let tree = usvg::Tree::from_str(svg, &opt).ok()?;
-			let (bx, by, bw, bh) = Self::icon_content_bounds(&tree);
+			let tree = usvg::Tree::from_str(svg_t, &usvg::Options::default()).ok()?;
+			let (bx, by, bw, bh) = super::svg_icon_vello09::svg_icon_content_bounds(&tree);
 			if !(bw > 0.0 && bh > 0.0 && bw.is_finite() && bh.is_finite()) {
 				return None;
 			}
@@ -2080,61 +2166,21 @@ mod board_host {
 			Some((bx, by, bw, bh, s))
 		}
 
-		fn icon_scene_cache_key(kind: &str, fg: Color, bg: Color) -> String {
+		pub fn clear_icon_vector_cache(&mut self) {
+			self.icon_vector_cache.borrow_mut().clear();
+		}
+
+		fn icon_scene_cache_key(svg: &str, fg: Color, bg: Color) -> String {
+			let mut hasher = std::collections::hash_map::DefaultHasher::new();
+			svg.hash(&mut hasher);
+			let h = hasher.finish();
 			let f = fg.to_rgba8();
 			let b = bg.to_rgba8();
 			format!(
-				"{kind}\0v4\0{:02x}{:02x}{:02x}{:02x}-{:02x}{:02x}{:02x}{:02x}",
+				"v6|{h:x}|{}|{:02x}{:02x}{:02x}{:02x}|{:02x}{:02x}{:02x}{:02x}",
+				svg.len(),
 				f.r, f.g, f.b, f.a, b.r, b.g, b.b, b.a
 			)
-		}
-
-		fn icon_rect_xywh(r: usvg::Rect) -> Option<(f64, f64, f64, f64)> {
-			let w = f64::from(r.width());
-			let h = f64::from(r.height());
-			if !(w > 1e-6 && h > 1e-6 && w.is_finite() && h.is_finite()) {
-				return None;
-			}
-			Some((f64::from(r.x()), f64::from(r.y()), w, h))
-		}
-
-		fn icon_rect_nonzero(r: usvg::tiny_skia_path::NonZeroRect) -> (f64, f64, f64, f64) {
-			(
-				f64::from(r.x()),
-				f64::from(r.y()),
-				f64::from(r.width()),
-				f64::from(r.height()),
-			)
-		}
-
-		fn icon_union_xywh(a: (f64, f64, f64, f64), b: (f64, f64, f64, f64)) -> (f64, f64, f64, f64) {
-			let ax1 = a.0 + a.2;
-			let ay1 = a.1 + a.3;
-			let bx1 = b.0 + b.2;
-			let by1 = b.1 + b.3;
-			let x0 = a.0.min(b.0);
-			let y0 = a.1.min(b.1);
-			let x1 = ax1.max(bx1);
-			let y1 = ay1.max(by1);
-			(x0, y0, x1 - x0, y1 - y0)
-		}
-
-		fn icon_content_bounds(tree: &usvg::Tree) -> (f64, f64, f64, f64) {
-			let root = tree.root();
-			let mut u = Self::icon_rect_nonzero(root.abs_layer_bounding_box());
-			if let Some(r) = Self::icon_rect_xywh(root.abs_stroke_bounding_box()) {
-				u = Self::icon_union_xywh(u, r);
-			}
-			if let Some(r) = Self::icon_rect_xywh(root.abs_bounding_box()) {
-				u = Self::icon_union_xywh(u, r);
-			}
-			let (_, _, bw, bh) = u;
-			if bw > 1e-6 && bh > 1e-6 {
-				return u;
-			}
-			let w = f64::from(tree.size().width());
-			let h = f64::from(tree.size().height());
-			(0.0, 0.0, w.max(1.0), h.max(1.0))
 		}
 
 		pub fn set_size(&mut self, width: u32, height: u32, dpr: f64) {
@@ -3120,7 +3166,7 @@ mod board_host {
 					if let Some(k) = n.icon_kind.as_ref().map(|s| s.trim()).filter(|s| !s.is_empty()) {
 						if let Some(svg) = super::resolve_node_icon_svg_from_encoding(k) {
 							if let Some((bx, by, bw, bh, icon_scene)) =
-								self.get_or_build_icon_scene(k, &svg, stroke_c, fill)
+								self.get_or_build_icon_scene(&svg, stroke_c, fill)
 							{
 								let clip_inset = 0.88;
 								let fit_inset = 0.76;
@@ -4604,6 +4650,11 @@ impl BoardSession {
 		let _ = self.state.borrow_mut().host.set_vello_theme_from_json(json);
 	}
 
+	#[wasm_bindgen(js_name = clearIconVectorCache)]
+	pub fn clear_icon_vector_cache_wasm(&mut self) {
+		self.state.borrow_mut().host.clear_icon_vector_cache();
+	}
+
 	#[wasm_bindgen(js_name = parseFixtureJson)]
 	pub fn parse_fixture_json(&mut self, json: &str) -> bool {
 		let raw: serde_json::Value = match serde_json::from_str(json) {
@@ -5710,6 +5761,16 @@ mod force_graph_tests {
 		let bg = vello::peniko::Color::from_rgba8(10, 200, 10, 255);
 		let mut scene2 = vello::Scene::new();
 		super::svg_icon_vello09::append_svg_str_themed(&mut scene2, svg, fg, bg).expect("parse themed");
+	}
+
+	#[test]
+	fn svg_icon_content_bounds_follows_nested_group_translate() {
+		let svg = r#"<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200"><g transform="translate(72 88)"><rect width="12" height="12" fill="rgb(8,8,8)"/></g></svg>"#;
+		let tree = usvg::Tree::from_str(svg, &usvg::Options::default()).expect("parse");
+		let (x, y, w, h) = super::svg_icon_vello09::svg_icon_content_bounds(&tree);
+		assert!(x >= 70.0 && x <= 74.0, "expected translated art near x≈72, got {x}");
+		assert!(y >= 86.0 && y <= 90.0, "expected translated art near y≈88, got {y}");
+		assert!(w > 10.0 && w < 14.0 && h > 10.0 && h < 14.0, "expected ~12×12 bbox, got {w}×{h}");
 	}
 }
 

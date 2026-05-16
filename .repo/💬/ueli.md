@@ -397,25 +397,22 @@ All nodes, handles, edges, wire must have a kind (referenced by id).
 Every kind provides default for a new instance.
 Every default can be overwritten by the instance.
 Kinds are passed centrally to the board.
+Kinds can be compatible with each other.
 Compatbility is passed centrally to the board.
 
 node kinds:
-id, name, shape [circle | rectangle, defaultShapeProps], stroke, color, defaultHandleKind, icon (svg or emoji), etc
+id, label, icon (svg or emoji), shape [circle | rectangle, defaultShapeProps], stroke, color, defaultHandleKind, etc
 
 edge kinds:
-id, name, shape (line | bezier, defaultShapeProps), stroke, color, pattern, etc
+id, label, shape (line | bezier, defaultShapeProps), stroke, color, pattern, etc
 
 handle kinds:
-id, name, shape (circle | rectangle, defaultShapeProps), stroke, color, defaultWireKind, etc
+id, label, shape (circle | rectangle, defaultShapeProps), stroke, color, defaultWireKind, etc
 
 wire kinds:
-id, name, shape (line | bezier, defaultShapeProps), color, pattern, default
+id, label, shape (line | bezier, defaultShapeProps), color, pattern, defaultEdgeKind, etc
 
-When a handle has a color, then it overrides the color of the handle kind.
-
-Kinds are compatible. There is central list of compatible pairs.
-
-A compatible pair has source, target, bidirectional flag, important flag.
+A compatiblity is a pair with source, target, bidirectional flag, important flag.
 
 General to Specific
 
@@ -434,17 +431,26 @@ A wire is the temporary edge used e.g. when the user start clicking and dragging
 
 ---
 
-There should be 4 lods depending on the zoom level:
+There should be 5 lods depending on the zoom level:
 Minimap: No grid, no outlines on nodes, nodes filling is outline color, finer edges, no handles, no labels
-Overview: Large grid (10x10), outlines on node, no handles, abbreviated labels
-Normal: Large grid with finer medium grid (5x5), normal labels
-Detail: Large grid with medium gird with finer small grid (1x1), handles, svg instead of label
+Overview: Huge grid (100x100), outlines on node, no handles, node with abbreviated labels
+Normal: Huge grid with finer large grid (20x20), handles, node with labels
+Detail: Huge grid with large gird with finer medium grid (5x5), handles with abbreviated label, node with icon and abbreviated label
+Micro: Huge grid with large gird with medium grid with finer small grid (1x1), handles with icon, node with icon and label
 
 Within one lod nothing changes. Make the trigger zoom points props.
 
+---
+
 Add a grid snap option which snaps to the current visible grids. Add a toggle to the toolbar
 
+---
+
+Add icons to nodes and handles.
+icons can be either emoji, math (typist string), svg or image (png, jpg, etc)
 For svg use: https://github.com/linebender/vello_svg
+For typist string
+https://crates.io/crates/typst-svg
 You can find the svgs for the node kinds under @
 
 ---
