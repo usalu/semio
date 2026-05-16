@@ -15,6 +15,8 @@ const env = {
     ? {}
     : { WATCHPACK_POLLING: "true", CHOKIDAR_USEPOLLING: "true" }),
 };
+delete env.NODE_OPTIONS;
+delete env.VSCODE_INSPECTOR_OPTIONS;
 
 const repoRoot = join(cwd, "../../../..");
 

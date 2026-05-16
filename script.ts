@@ -33,6 +33,16 @@ function runCmd(cmd: string, args: string[], opts: { cwd?: string; env?: NodeJS.
   });
 }
 
+function devToolingEnv(extra: NodeJS.ProcessEnv = {}): NodeJS.ProcessEnv {
+  const env = { ...process.env, ...extra };
+  delete env.NODE_OPTIONS;
+  delete env.VSCODE_INSPECTOR_OPTIONS;
+  env.NX_NATIVE_COMMAND_RUNNER ??= "false";
+  env.NX_TASKS_RUNNER_DYNAMIC_OUTPUT ??= "false";
+  env.NX_TUI ??= "false";
+  return env;
+}
+
 function tryRun(cmd: string, args: string[], opts: { cwd?: string } = {}): void {
   try {
     runCmd(cmd, args, opts);
@@ -225,7 +235,7 @@ export class DevScript extends Script {
       return;
     }
     if (segments[0] === "board") {
-      runCmd("bun", ["nx", "run", "@elements/board:dev", ...segments.slice(1)], { cwd: this.root });
+      runCmd("bun", ["nx", "run", "@elements/board:dev", ...segments.slice(1)], { cwd: this.root, env: devToolingEnv() });
       return;
     }
     if (segments[0] === "mcp") {
@@ -377,6 +387,17 @@ export class DevScript extends Script {
   }
 }
 //#endregion 🔖DevScript
+
+//#region 🔖NxScript
+export class NxScript extends Script {
+  run(segments: string[]): void {
+    runCmd("node", [join(this.root, "node_modules", "nx", "bin", "nx.js"), ...segments], {
+      cwd: this.root,
+      env: devToolingEnv(),
+    });
+  }
+}
+//#endregion 🔖NxScript
 
 //#region 🔖GenerateScript
 export class GenerateScript extends Script {
@@ -615,6 +636,7 @@ export class PurgeScript extends Script {
 
 //#region 🔖Dispatch
 const registry = new Map<string, Script>([
+  ["nx", new NxScript(WORKSPACE_ROOT)],
   ["setup", new SetupScript(WORKSPACE_ROOT)],
   ["start", new StartScript(WORKSPACE_ROOT)],
   ["dev", new DevScript(WORKSPACE_ROOT)],
@@ -630,7 +652,7 @@ const registry = new Map<string, Script>([
 async function main(): Promise<void> {
   const segments = process.argv.slice(2);
   if (segments.length === 0) {
-    console.error("usage: bun ./script.ts <setup|start|dev|generate|lint|format|test|build|publish|purge> [segments…]");
+    console.error("usage: bun ./script.ts <nx|setup|start|dev|generate|lint|format|test|build|publish|purge> [segments…]");
     process.exit(1);
   }
   const verb = segments[0];
