@@ -282,7 +282,6 @@ mod geom_sel {
 			.any(|&(a, b)| segments_intersect(start, end, a, b))
 	}
 
-	#[allow(dead_code)]
 	pub fn cubic_bezier_axis_bounds(c: CubicBez) -> WorldBox {
 		let xs = [c.p0.x, c.p1.x, c.p2.x, c.p3.x];
 		let ys = [c.p0.y, c.p1.y, c.p2.y, c.p3.y];
@@ -405,9 +404,9 @@ mod board_host {
 	use vello::Scene;
 
 	use super::geom_sel::{
-		cubic_bezier_point, inflate_world_box, point_in_polygon, polygon_contains_world_box, polygon_intersects_world_box,
-		segment_intersects_polygon, segment_intersects_world_box, world_box_contains_box, world_box_contains_point,
-		world_box_from_points, world_boxes_overlap, WorldBox,
+		cubic_bezier_axis_bounds, cubic_bezier_point, inflate_world_box, point_in_polygon, polygon_contains_world_box,
+		polygon_intersects_world_box, segment_intersects_polygon, segment_intersects_world_box, world_box_contains_box,
+		world_box_contains_point, world_box_from_points, world_boxes_overlap, WorldBox,
 	};
 	use super::vcompute::{
 		compute_edge_bezier_points, distance_between, distance_point_to_cubic_bezier, handle_position_on_circle,
@@ -415,6 +414,8 @@ mod board_host {
 	};
 
 	const GRID_WORLD_STEP: f64 = 96.0;
+	const WORLD_CLIP_TILE_WORLD: f64 = 256.0;
+	const MAX_WORLD_CLIP_TILES: u32 = 768;
 	const EDGE_HIT_TOLERANCE_PX: f64 = 8.0;
 	const HANDLE_HIT_TOLERANCE_PX: f64 = 10.0;
 	const HANDLE_DRAW_MIN_ZOOM: f64 = 0.45;
@@ -590,7 +591,7 @@ mod board_host {
 				width: 1,
 				height: 1,
 				dpr: 1.0,
-				world_raster_tiling: "none".into(),
+				world_raster_tiling: "world-clip".into(),
 				events: Vec::new(),
 				selection_screen_preview: None,
 				vello_theme: VelloThemePalette::default(),
@@ -635,6 +636,15 @@ mod board_host {
 			self.selection_options.method = method.into();
 			self.selection_options.mode = mode.into();
 			self.selection_options.target = target.into();
+		}
+
+		/// @emoji 🧩 Selects world-space clip tiling for Vello scene construction (`none` | `world-clip`).
+		pub fn set_world_raster_tiling(&mut self, mode: &str) {
+			let next = if mode == "world-clip" { "world-clip".into() } else { "none".into() };
+			if self.world_raster_tiling == next {
+				return;
+			}
+			self.world_raster_tiling = next;
 		}
 
 		pub fn set_selection_screen_preview(&mut self, points: Option<Vec<Point>>) {
@@ -1133,6 +1143,151 @@ mod board_host {
 			true
 		}
 
+		fn drawable_cull_pad_world(&self) -> f64 {
+			16.0 / self.camera.zoom.max(1e-9)
+		}
+
+		fn visible_world_box(&self, pad_world: f64) -> WorldBox {
+			let corners = [
+				self.screen_to_world(Point::new(0.0, 0.0)),
+				self.screen_to_world(Point::new(self.width as f64, 0.0)),
+				self.screen_to_world(Point::new(self.width as f64, self.height as f64)),
+				self.screen_to_world(Point::new(0.0, self.height as f64)),
+			];
+			let base = world_box_from_points(&corners).unwrap_or(WorldBox {
+				min_x: self.camera.x - 1.0,
+				min_y: self.camera.y - 1.0,
+				max_x: self.camera.x + 1.0,
+				max_y: self.camera.y + 1.0,
+			});
+			inflate_world_box(base, pad_world)
+		}
+
+		fn world_tile_screen_clip_rect(&self, ix: i32, iy: i32, tile: f64) -> Rect {
+			let wx0 = ix as f64 * tile;
+			let wy0 = iy as f64 * tile;
+			let wx1 = wx0 + tile;
+			let wy1 = wy0 + tile;
+			let ps = [
+				self.world_to_screen(Point::new(wx0, wy0)),
+				self.world_to_screen(Point::new(wx1, wy0)),
+				self.world_to_screen(Point::new(wx1, wy1)),
+				self.world_to_screen(Point::new(wx0, wy1)),
+			];
+			let mut min_x = f64::INFINITY;
+			let mut min_y = f64::INFINITY;
+			let mut max_x = f64::NEG_INFINITY;
+			let mut max_y = f64::NEG_INFINITY;
+			for p in ps {
+				min_x = min_x.min(p.x);
+				min_y = min_y.min(p.y);
+				max_x = max_x.max(p.x);
+				max_y = max_y.max(p.y);
+			}
+			Rect::from_points(Point::new(min_x, min_y), Point::new(max_x, max_y)).inflate(1.0, 1.0)
+		}
+
+		fn handle_world_bounds_cull(&self, h: &HandleData) -> Option<WorldBox> {
+			let pos = self.handle_world_pos(h)?;
+			let pad = self.drawable_cull_pad_world() + h.radius.max(1.0);
+			Some(inflate_world_box(
+				WorldBox {
+					min_x: pos.x,
+					min_y: pos.y,
+					max_x: pos.x,
+					max_y: pos.y,
+				},
+				pad,
+			))
+		}
+
+		fn edge_world_bounds_for_cull(&self, e: &EdgeData) -> Option<WorldBox> {
+			let c = self.edge_curve(e)?;
+			let axis = cubic_bezier_axis_bounds(c);
+			let half_w_world = self.camera.zoom.max(0.75) / self.camera.zoom.max(1e-9);
+			Some(inflate_world_box(axis, half_w_world + self.drawable_cull_pad_world()))
+		}
+
+		fn append_nodes_handles_edges(&self, scene: &mut Scene, tile_filter: Option<&WorldBox>) {
+			let pad = self.drawable_cull_pad_world();
+			for n in self.nodes.values() {
+				if !n.visible {
+					continue;
+				}
+				if let Some(tb) = tile_filter {
+					if !world_boxes_overlap(*tb, self.node_world_bounds(n, pad)) {
+						continue;
+					}
+				}
+				let fill = node_fill_color(&self.vello_theme, n.selected);
+				let stroke_c = node_stroke_color(&self.vello_theme, n.selected);
+				let sw = 2.0_f64;
+				match n.shape {
+					NodeShape::Circle => {
+						let c = self.world_to_screen(Point::new(n.x, n.y));
+						let r = (n.radius * self.camera.zoom).max(1.0);
+						let circle = Circle::new(c, r);
+						scene.fill(Fill::NonZero, Affine::IDENTITY, fill, None, &circle);
+						scene.stroke(&Stroke::new(sw), Affine::IDENTITY, stroke_c, None, &circle);
+					}
+					NodeShape::Rectangle => {
+						let hw = n.width / 2.0;
+						let hh = n.height / 2.0;
+						let p0 = self.world_to_screen(Point::new(n.x - hw, n.y - hh));
+						let p1 = self.world_to_screen(Point::new(n.x + hw, n.y + hh));
+						let r = Rect::from_points(p0, p1);
+						scene.fill(Fill::NonZero, Affine::IDENTITY, fill, None, &r);
+						scene.stroke(&Stroke::new(sw), Affine::IDENTITY, stroke_c, None, &r);
+					}
+				}
+			}
+			for h in self.handles.values() {
+				if !h.visible || self.camera.zoom < HANDLE_DRAW_MIN_ZOOM {
+					continue;
+				}
+				if let Some(tb) = tile_filter {
+					let Some(hb) = self.handle_world_bounds_cull(h) else { continue };
+					if !world_boxes_overlap(*tb, hb) {
+						continue;
+					}
+				}
+				let Some(wp) = self.handle_world_pos(h) else { continue };
+				let c = self.world_to_screen(wp);
+				let r = (h.radius * self.camera.zoom).max(1.0);
+				let circle = Circle::new(c, r);
+				let fill = handle_fill(&self.vello_theme, h.selected);
+				let stroke_c = handle_stroke(&self.vello_theme, h.selected);
+				scene.fill(Fill::NonZero, Affine::IDENTITY, fill, None, &circle);
+				scene.stroke(&Stroke::new(2.0), Affine::IDENTITY, stroke_c, None, &circle);
+			}
+			let edge_sw = 2.0 * self.camera.zoom.max(0.75);
+			let edge_stroke = Stroke::new(edge_sw);
+			for e in self.edges.values() {
+				if !e.visible {
+					continue;
+				}
+				if let Some(tb) = tile_filter {
+					let Some(eb) = self.edge_world_bounds_for_cull(e) else { continue };
+					if !world_boxes_overlap(*tb, eb) {
+						continue;
+					}
+				}
+				if let Some(c) = self.edge_curve(e) {
+					let p0 = self.world_to_screen(c.p0);
+					let p1 = self.world_to_screen(c.p1);
+					let p2 = self.world_to_screen(c.p2);
+					let p3 = self.world_to_screen(c.p3);
+					let curve = CubicBez::new(p0, p1, p2, p3);
+					let stroke_color = if e.selected {
+						self.vello_theme.edge_stroke_selected
+					} else {
+						self.vello_theme.edge_stroke
+					};
+					scene.stroke(&edge_stroke, Affine::IDENTITY, stroke_color, None, &curve);
+				}
+			}
+		}
+
 		pub fn build_vector_scene(&self) -> Scene {
 			let mut inner = Scene::new();
 			let stroke_grid = Stroke::new(1.0);
@@ -1164,64 +1319,38 @@ mod board_host {
 					&p,
 				);
 			}
-			for n in self.nodes.values() {
-				if !n.visible {
-					continue;
-				}
-				let fill = node_fill_color(&self.vello_theme, n.selected);
-				let stroke_c = node_stroke_color(&self.vello_theme, n.selected);
-				let sw = 2.0_f64;
-				match n.shape {
-					NodeShape::Circle => {
-						let c = self.world_to_screen(Point::new(n.x, n.y));
-						let r = (n.radius * self.camera.zoom).max(1.0);
-						let circle = Circle::new(c, r);
-						inner.fill(Fill::NonZero, Affine::IDENTITY, fill, None, &circle);
-						inner.stroke(&Stroke::new(sw), Affine::IDENTITY, stroke_c, None, &circle);
+			let use_tiles = self.world_raster_tiling == "world-clip";
+			if use_tiles {
+				let pad = self.drawable_cull_pad_world();
+				let vis = self.visible_world_box(pad);
+				let t = WORLD_CLIP_TILE_WORLD;
+				let ix0 = (vis.min_x / t).floor() as i32;
+				let iy0 = (vis.min_y / t).floor() as i32;
+				let ix1 = (vis.max_x / t).floor() as i32;
+				let iy1 = (vis.max_y / t).floor() as i32;
+				let nx = (ix1 - ix0 + 1).max(0) as u32;
+				let ny = (iy1 - iy0 + 1).max(0) as u32;
+				let n_tiles = nx.saturating_mul(ny);
+				if n_tiles == 0 || n_tiles > MAX_WORLD_CLIP_TILES {
+					self.append_nodes_handles_edges(&mut inner, None);
+				} else {
+					for iy in iy0..=iy1 {
+						for ix in ix0..=ix1 {
+							let tile_box = WorldBox {
+								min_x: ix as f64 * t,
+								min_y: iy as f64 * t,
+								max_x: (ix as f64 + 1.0) * t,
+								max_y: (iy as f64 + 1.0) * t,
+							};
+							let clip = self.world_tile_screen_clip_rect(ix, iy, t);
+							inner.push_clip_layer(Fill::NonZero, Affine::IDENTITY, &clip);
+							self.append_nodes_handles_edges(&mut inner, Some(&tile_box));
+							inner.pop_layer();
+						}
 					}
-					NodeShape::Rectangle => {
-						let hw = n.width / 2.0;
-						let hh = n.height / 2.0;
-						let p0 = self.world_to_screen(Point::new(n.x - hw, n.y - hh));
-						let p1 = self.world_to_screen(Point::new(n.x + hw, n.y + hh));
-						let r = Rect::from_points(p0, p1);
-						inner.fill(Fill::NonZero, Affine::IDENTITY, fill, None, &r);
-						inner.stroke(&Stroke::new(sw), Affine::IDENTITY, stroke_c, None, &r);
-					}
 				}
-			}
-			for h in self.handles.values() {
-				if !h.visible || self.camera.zoom < HANDLE_DRAW_MIN_ZOOM {
-					continue;
-				}
-				let Some(wp) = self.handle_world_pos(h) else { continue };
-				let c = self.world_to_screen(wp);
-				let r = (h.radius * self.camera.zoom).max(1.0);
-				let circle = Circle::new(c, r);
-				let fill = handle_fill(&self.vello_theme, h.selected);
-				let stroke_c = handle_stroke(&self.vello_theme, h.selected);
-				inner.fill(Fill::NonZero, Affine::IDENTITY, fill, None, &circle);
-				inner.stroke(&Stroke::new(2.0), Affine::IDENTITY, stroke_c, None, &circle);
-			}
-			let edge_sw = 2.0 * self.camera.zoom.max(0.75);
-			let edge_stroke = Stroke::new(edge_sw);
-			for e in self.edges.values() {
-				if !e.visible {
-					continue;
-				}
-				if let Some(c) = self.edge_curve(e) {
-					let p0 = self.world_to_screen(c.p0);
-					let p1 = self.world_to_screen(c.p1);
-					let p2 = self.world_to_screen(c.p2);
-					let p3 = self.world_to_screen(c.p3);
-					let curve = CubicBez::new(p0, p1, p2, p3);
-					let stroke_color = if e.selected {
-						self.vello_theme.edge_stroke_selected
-					} else {
-						self.vello_theme.edge_stroke
-					};
-					inner.stroke(&edge_stroke, Affine::IDENTITY, stroke_color, None, &curve);
-				}
+			} else {
+				self.append_nodes_handles_edges(&mut inner, None);
 			}
 			if let Some(ref pts) = self.selection_screen_preview {
 				if pts.len() >= 2 {
@@ -2337,11 +2466,16 @@ impl BoardSession {
 	}
 
 	#[wasm_bindgen(js_name = setSelectionOptions)]
-	pub fn set_selection_options_wasm(&mut self, method: &str, mode: &str, target: &str) {
-		self.host.set_selection_options(method, mode, target);
-	}
+		pub fn set_selection_options_wasm(&mut self, method: &str, mode: &str, target: &str) {
+			self.host.set_selection_options(method, mode, target);
+		}
 
-	#[wasm_bindgen(js_name = setSelectionIdsJson)]
+		#[wasm_bindgen(js_name = setWorldRasterTiling)]
+		pub fn set_world_raster_tiling_wasm(&mut self, mode: &str) {
+			self.host.set_world_raster_tiling(mode);
+		}
+
+		#[wasm_bindgen(js_name = setSelectionIdsJson)]
 	pub fn set_selection_ids_json(&mut self, json: &str) -> Result<(), JsValue> {
 		let ids: Vec<String> = serde_json::from_str(json).map_err(|err| JsValue::from_str(&err.to_string()))?;
 		self.host.set_selection_ids(&ids);

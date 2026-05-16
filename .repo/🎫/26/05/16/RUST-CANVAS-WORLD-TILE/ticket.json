@@ -1,0 +1,6 @@
+{
+  "id": "2026/05/16/RUST-CANVAS-WORLD-TILE",
+  "title": "Rust Canvas World Clip Tiling",
+  "summary": "Enable advanced world-space clip tiling in Vello build_vector_scene; wire worldRasterTiling from TS; adjust dataset/specs.",
+  "goal": "elements"
+}

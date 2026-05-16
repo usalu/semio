@@ -1344,7 +1344,6 @@ export class BoardRenderer {
 			const initialHeight = this.canvas.clientHeight || this.canvas.height || 1;
 			this.setSize(initialWidth, initialHeight, globalThis.devicePixelRatio || 1);
 		}
-		this.syncBoardAppearanceFromDocument();
 	}
 
 	readonly renderMode: RenderMode;

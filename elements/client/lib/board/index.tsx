@@ -405,34 +405,32 @@ export function syncBoardScene(renderer: BoardRenderer, descriptor: BoardSceneDe
 //#endregion 🔖Scene Sync
 
 //#region 🔖HostMountBridge
-/** @emoji 🌉 Secondary host root per {@link BoardRenderer}; swaps mount only when `renderer` changes and otherwise applies {@link updateBoardHostMount} so parent re-renders do not clear the scene. */
+/** @emoji 🌉 Secondary host root per {@link BoardRenderer}; mount is tied to `renderer` identity while {@link updateBoardHostMount} applies `children` without clearing the scene on every parent render. */
 function BoardHostSubtree({ children, renderer }: { children: ReactNode; renderer: BoardRenderer }): null {
 	const hostMountRef = useRef<BoardHostMount | null>(null);
-	const mountedRendererRef = useRef<BoardRenderer | null>(null);
 	const Bridge = useHostMountBridge();
 
 	useLayoutEffect(() => {
-		if (hostMountRef.current === null || mountedRendererRef.current !== renderer) {
-			if (hostMountRef.current) {
-				unmountBoardHostMount(hostMountRef.current);
-				hostMountRef.current = null;
-			}
-			hostMountRef.current = createBoardHostMount(renderer);
-			mountedRendererRef.current = renderer;
+		if (hostMountRef.current) {
+			unmountBoardHostMount(hostMountRef.current);
+			hostMountRef.current = null;
 		}
-		updateBoardHostMount(hostMountRef.current, createElement(Bridge, null, children), null);
-	}, [Bridge, children, renderer]);
-
-	useLayoutEffect(
-		() => () => {
+		hostMountRef.current = createBoardHostMount(renderer);
+		return () => {
 			if (hostMountRef.current) {
 				unmountBoardHostMount(hostMountRef.current);
 				hostMountRef.current = null;
-				mountedRendererRef.current = null;
 			}
-		},
-		[],
-	);
+		};
+	}, [renderer]);
+
+	useLayoutEffect(() => {
+		const root = hostMountRef.current;
+		if (!root) {
+			return;
+		}
+		updateBoardHostMount(root, createElement(Bridge, null, children), null);
+	}, [Bridge, children, renderer]);
 
 	return null;
 }
