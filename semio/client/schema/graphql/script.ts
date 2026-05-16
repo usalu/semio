@@ -16,7 +16,7 @@ if (segs[0] === "build") {
     [
       "test",
       "--manifest-path",
-      join(cwd, "..", "..", "client", "lib", "rs", "Cargo.toml"),
+      join(cwd, "..", "..", "lib", "rs", "Cargo.toml"),
       "export_semio_graphql_schema_file",
       "--",
       "--ignored",

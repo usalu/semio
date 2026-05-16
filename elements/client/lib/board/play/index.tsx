@@ -63,7 +63,7 @@ import {
 	BOARD_FIXTURE_DRAG_V1_MIME,
 	BOARD_SELECTION_TARGETS_DEFAULT,
 	encodeBoardFixtureForDragV1,
-	layoutBoardFixtureForceGraph,
+	layoutBoardFixtureRedraw,
 	parseBoardFixtureV1,
 	type BoardFixtureDropDetail,
 	type BoardFixtureCircleNodeV1,
@@ -72,6 +72,9 @@ import {
 	type BoardFixtureNodeV1,
 	type BoardFixtureRectangleNodeV1,
 	type BoardFixtureV1,
+	type BoardHierarchicalTreeDirectionKind,
+	type BoardRedrawLayoutOptions,
+	type BoardRedrawModeKind,
 	type BoardForceGraphLayoutOptions,
 	type BoardSelectionMethod,
 	type BoardSelectionMode,
@@ -230,7 +233,8 @@ interface BoardPlayShellValue {
 	setActivePaneId: (id: BoardPlayPaneId) => void;
 	selectionByPane: Record<BoardPlayPaneId, Set<string>>;
 	setSelectionForPane: (pane: BoardPlayPaneId, ids: readonly string[]) => void;
-	remapIdInSelections: (from: string, to: string) => void;
+	/** @emoji 🔁 Rewrites selection ids when an object id changes (`replacedId` → `replacementId`); unrelated to edge endpoint fields. */
+	remapIdInSelections: (replacedId: string, replacementId: string) => void;
 	camerasByPane: Record<BoardPlayPaneId, CameraState>;
 	boardSelectionMethod: BoardSelectionMethod;
 	setBoardSelectionMethod: (value: BoardSelectionMethod) => void;
@@ -240,9 +244,11 @@ interface BoardPlayShellValue {
 	setBoardSelectionTargets: (value: BoardSelectionTargets | ((prev: BoardSelectionTargets) => BoardSelectionTargets)) => void;
 	/** @emoji 🗑️ Drops ids from the shared fixture after the canvas emits structural delete events. */
 	applyStructuralDelete: (kind: "edge" | "node", id: string) => void;
-	/** @emoji ⏯️ When true, the toolbar play control runs periodic force-layout ticks (see settings). */
-	forceLayoutPlaying: boolean;
-	setForceLayoutPlaying: (value: boolean) => void;
+	/** @emoji ⏯️ When true, the toolbar play control runs periodic redraw ticks for the active {@link BoardRedrawModeKind}. */
+	boardRedrawPlaying: boolean;
+	setBoardRedrawPlaying: (value: boolean) => void;
+	boardRedrawMode: BoardRedrawModeKind;
+	setBoardRedrawMode: (value: BoardRedrawModeKind) => void;
 	forceLayoutFullIterations: number;
 	setForceLayoutFullIterations: (value: number) => void;
 	forceLayoutIdealEdgeLength: number;
@@ -251,11 +257,17 @@ interface BoardPlayShellValue {
 	setForceLayoutGravity: (value: number) => void;
 	forceLayoutRepulsionStrength: number;
 	setForceLayoutRepulsionStrength: (value: number) => void;
-	forceLayoutTickMs: number;
-	setForceLayoutTickMs: (value: number) => void;
-	forceLayoutTickIterations: number;
-	setForceLayoutTickIterations: (value: number) => void;
-	applyForceGraphLayoutOnce: () => void;
+	boardRedrawTickMs: number;
+	setBoardRedrawTickMs: (value: number) => void;
+	boardRedrawTickIterations: number;
+	setBoardRedrawTickIterations: (value: number) => void;
+	treeLayoutLayerSpacing: number;
+	setTreeLayoutLayerSpacing: (value: number) => void;
+	treeLayoutSiblingGap: number;
+	setTreeLayoutSiblingGap: (value: number) => void;
+	treeLayoutDirection: BoardHierarchicalTreeDirectionKind;
+	setTreeLayoutDirection: (value: BoardHierarchicalTreeDirectionKind) => void;
+	applyBoardRedrawOnce: () => void;
 }
 
 const BoardPlayShellContext = createContext<BoardPlayShellValue | null>(null);
@@ -287,24 +299,43 @@ function boardToolbarToggleClass(active: boolean): string {
 /** @emoji 📐 Default node span in px: circle radius = span/2; rectangle width = height = span (40×40). */
 const BOARD_PLAY_DEFAULT_NODE_SIZE_PX = 40;
 
-/** @emoji 📐 Builds {@link BoardForceGraphLayoutOptions} for the active pane camera center (dimforge layout). */
-function boardPlayForceLayoutOpts(
+/** @emoji 📐 Builds {@link BoardRedrawLayoutOptions} for the active pane camera center and redraw mode. */
+function boardPlayRedrawLayoutOpts(
 	pane: BoardPlayPaneId,
 	camerasByPane: Record<BoardPlayPaneId, CameraState>,
-	iterations: number,
-	idealEdge: number,
-	gravity: number,
-	repulsionStrength: number,
-): BoardForceGraphLayoutOptions {
+	mode: BoardRedrawModeKind,
+	forceIters: number,
+	forceIdealEdge: number,
+	forceGravity: number,
+	forceRepulsion: number,
+	treeLayerSpacing: number,
+	treeSiblingGap: number,
+	treeDirection: BoardHierarchicalTreeDirectionKind,
+): BoardRedrawLayoutOptions {
 	const cam = camerasByPane[pane];
-	return {
-		centerX: cam.x,
-		centerY: cam.y,
-		gravity: Math.max(0, gravity),
-		idealEdgeLength: Math.max(8, idealEdge),
-		iterations: Math.max(1, Math.min(5000, Math.round(iterations))),
-		repulsionStrength: Math.max(40, repulsionStrength),
+	const cx = cam.x;
+	const cy = cam.y;
+	if (mode === "hierarchical-tree") {
+		return {
+			centerX: cx,
+			centerY: cy,
+			hierarchicalTree: {
+				direction: treeDirection,
+				layerSpacing: Math.max(24, treeLayerSpacing),
+				siblingGap: Math.max(0, treeSiblingGap),
+			},
+			mode: "hierarchical-tree",
+		};
+	}
+	const fg: BoardForceGraphLayoutOptions = {
+		centerX: cx,
+		centerY: cy,
+		gravity: Math.max(0, forceGravity),
+		idealEdgeLength: Math.max(8, forceIdealEdge),
+		iterations: Math.max(1, Math.min(5000, Math.round(forceIters))),
+		repulsionStrength: Math.max(40, forceRepulsion),
 	};
+	return { centerX: cx, centerY: cy, forceGraph: fg, mode: "force-graph" };
 }
 
 /** @emoji 🧰 Sketchpad-style tools: marquee kind, merge mode, hit target, and circle or rectangle authoring at the active pane camera. */
@@ -315,12 +346,12 @@ function BoardPlayToolbar(): ReactElement {
 		boardSelectionMode,
 		boardSelectionTargets,
 		camerasByPane,
-		forceLayoutPlaying,
+		boardRedrawPlaying,
 		patchFixture,
 		setBoardSelectionMethod,
 		setBoardSelectionMode,
 		setBoardSelectionTargets,
-		setForceLayoutPlaying,
+		setBoardRedrawPlaying,
 		setSelectionForPane,
 	} = useBoardPlayShell();
 
@@ -452,11 +483,15 @@ function BoardPlayToolbar(): ReactElement {
 					<ToolbarItem>
 						<button
 							type="button"
-							className={boardToolbarToggleClass(forceLayoutPlaying)}
-							title={forceLayoutPlaying ? "Pause automatic force layout ticks" : "Play automatic force layout ticks (interval in Settings)"}
-							onClick={() => setForceLayoutPlaying(!forceLayoutPlaying)}
+							className={boardToolbarToggleClass(boardRedrawPlaying)}
+							title={
+								boardRedrawPlaying
+									? "Pause automatic redraw ticks"
+									: "Play automatic redraw ticks (interval and mode in Settings)"
+							}
+							onClick={() => setBoardRedrawPlaying(!boardRedrawPlaying)}
 						>
-							{forceLayoutPlaying ? <Pause className="size-4" aria-hidden /> : <Play className="size-4" aria-hidden />}
+							{boardRedrawPlaying ? <Pause className="size-4" aria-hidden /> : <Play className="size-4" aria-hidden />}
 						</button>
 					</ToolbarItem>
 				</ToolbarGroup>
@@ -467,23 +502,31 @@ function BoardPlayToolbar(): ReactElement {
 // #endregion 🔖Toolbar
 
 // #region 🔖SettingsPanel
-/** @emoji ⚙️ Board play settings: force-directed layout parameters and manual apply (play/pause lives on the toolbar). */
+/** @emoji ⚙️ Board play redraw settings: shared tick timing, mode switch, and per-mode layout parameters. */
 function BoardPlaySettingsPanel(): ReactElement {
 	const {
 		activePaneId,
-		applyForceGraphLayoutOnce,
+		applyBoardRedrawOnce,
+		boardRedrawMode,
+		boardRedrawTickIterations,
+		boardRedrawTickMs,
 		forceLayoutFullIterations,
 		forceLayoutGravity,
 		forceLayoutIdealEdgeLength,
 		forceLayoutRepulsionStrength,
-		forceLayoutTickIterations,
-		forceLayoutTickMs,
+		setBoardRedrawMode,
+		setBoardRedrawTickIterations,
+		setBoardRedrawTickMs,
 		setForceLayoutFullIterations,
 		setForceLayoutGravity,
 		setForceLayoutIdealEdgeLength,
 		setForceLayoutRepulsionStrength,
-		setForceLayoutTickIterations,
-		setForceLayoutTickMs,
+		setTreeLayoutLayerSpacing,
+		setTreeLayoutDirection,
+		setTreeLayoutSiblingGap,
+		treeLayoutLayerSpacing,
+		treeLayoutDirection,
+		treeLayoutSiblingGap,
 	} = useBoardPlayShell();
 
 	return (
@@ -495,70 +538,129 @@ function BoardPlaySettingsPanel(): ReactElement {
 					<div className="text-[11px] opacity-80">pane: {activePaneId}</div>
 				</div>
 			</div>
-			<div className="text-muted-foreground shrink-0 text-[11px] font-medium uppercase tracking-wide">Force graph layout</div>
+			<div className="text-muted-foreground shrink-0 text-[11px] font-medium uppercase tracking-wide">Redraw</div>
 			<div className="min-h-0 flex-1 space-y-4 overflow-y-auto">
-				<Label id="board.play.settings.force.fullIterations" label="Iterations (apply once)">
-					<Slider
-						id="board-play-slider-force-full-iters"
-						max={720}
-						min={24}
-						step={4}
-						value={[forceLayoutFullIterations]}
-						onValueChange={(vals) => setForceLayoutFullIterations(vals[0] ?? 200)}
-					/>
+				<Label id="board.play.settings.redraw.mode" label="Redraw mode">
+					<Select onValueChange={(v) => setBoardRedrawMode(v as BoardRedrawModeKind)} value={boardRedrawMode}>
+						<SelectTrigger className="h-8 w-full" id="board-play-redraw-mode" size="sm">
+							<SelectValue />
+						</SelectTrigger>
+						<SelectContent>
+							<SelectItem value="force-graph">Force graph</SelectItem>
+							<SelectItem value="hierarchical-tree">Hierarchical tree</SelectItem>
+						</SelectContent>
+					</Select>
 				</Label>
-				<Label id="board.play.settings.force.idealEdge" label="Ideal edge (px)">
+				<Label id="board.play.settings.redraw.tickMs" label="Play interval (ms)">
 					<Slider
-						id="board-play-slider-force-ideal"
-						max={160}
-						min={20}
-						step={2}
-						value={[forceLayoutIdealEdgeLength]}
-						onValueChange={(vals) => setForceLayoutIdealEdgeLength(vals[0] ?? 64)}
-					/>
-				</Label>
-				<Label id="board.play.settings.force.repulsion" label="Repulsion">
-					<Slider
-						id="board-play-slider-force-repulsion"
-						max={1800}
-						min={80}
-						step={20}
-						value={[forceLayoutRepulsionStrength]}
-						onValueChange={(vals) => setForceLayoutRepulsionStrength(vals[0] ?? 480)}
-					/>
-				</Label>
-				<Label id="board.play.settings.force.gravity" label="Gravity">
-					<Slider
-						id="board-play-slider-force-gravity"
-						max={0.05}
-						min={0}
-						step={0.002}
-						value={[forceLayoutGravity]}
-						onValueChange={(vals) => setForceLayoutGravity(vals[0] ?? 0)}
-					/>
-				</Label>
-				<Label id="board.play.settings.force.tickMs" label="Play interval (ms)">
-					<Slider
-						id="board-play-slider-force-tick-ms"
+						id="board-play-slider-redraw-tick-ms"
 						max={400}
 						min={24}
 						step={8}
-						value={[forceLayoutTickMs]}
-						onValueChange={(vals) => setForceLayoutTickMs(vals[0] ?? 96)}
+						value={[boardRedrawTickMs]}
+						onValueChange={(vals) => setBoardRedrawTickMs(vals[0] ?? 96)}
 					/>
 				</Label>
-				<Label id="board.play.settings.force.tickIterations" label="Iterations per play tick">
-					<Slider
-						id="board-play-slider-force-tick-iters"
-						max={72}
-						min={1}
-						step={1}
-						value={[forceLayoutTickIterations]}
-						onValueChange={(vals) => setForceLayoutTickIterations(vals[0] ?? 10)}
-					/>
-				</Label>
-				<Button className="h-8 w-full text-xs" type="button" variant="secondary" onClick={applyForceGraphLayoutOnce}>
-					Apply layout once
+				{boardRedrawMode === "force-graph" ? (
+					<Label id="board.play.settings.redraw.tickIterations" label="Iterations per play tick">
+						<Slider
+							id="board-play-slider-redraw-tick-iters"
+							max={72}
+							min={1}
+							step={1}
+							value={[boardRedrawTickIterations]}
+							onValueChange={(vals) => setBoardRedrawTickIterations(vals[0] ?? 10)}
+						/>
+					</Label>
+				) : (
+					<p className="text-muted-foreground text-[11px] leading-snug">
+						Hierarchical tree redraw is deterministic; each tick re-centers the ranked layout on the active pane camera.
+					</p>
+				)}
+				{boardRedrawMode === "force-graph" ? (
+					<>
+						<div className="text-muted-foreground pt-1 text-[11px] font-medium uppercase tracking-wide">Force graph</div>
+						<Label id="board.play.settings.force.fullIterations" label="Iterations (apply once)">
+							<Slider
+								id="board-play-slider-force-full-iters"
+								max={720}
+								min={24}
+								step={4}
+								value={[forceLayoutFullIterations]}
+								onValueChange={(vals) => setForceLayoutFullIterations(vals[0] ?? 200)}
+							/>
+						</Label>
+						<Label id="board.play.settings.force.idealEdge" label="Ideal edge (px)">
+							<Slider
+								id="board-play-slider-force-ideal"
+								max={160}
+								min={20}
+								step={2}
+								value={[forceLayoutIdealEdgeLength]}
+								onValueChange={(vals) => setForceLayoutIdealEdgeLength(vals[0] ?? 64)}
+							/>
+						</Label>
+						<Label id="board.play.settings.force.repulsion" label="Repulsion">
+							<Slider
+								id="board-play-slider-force-repulsion"
+								max={1800}
+								min={80}
+								step={20}
+								value={[forceLayoutRepulsionStrength]}
+								onValueChange={(vals) => setForceLayoutRepulsionStrength(vals[0] ?? 480)}
+							/>
+						</Label>
+						<Label id="board.play.settings.force.gravity" label="Gravity">
+							<Slider
+								id="board-play-slider-force-gravity"
+								max={0.05}
+								min={0}
+								step={0.002}
+								value={[forceLayoutGravity]}
+								onValueChange={(vals) => setForceLayoutGravity(vals[0] ?? 0)}
+							/>
+						</Label>
+					</>
+				) : (
+					<>
+						<div className="text-muted-foreground pt-1 text-[11px] font-medium uppercase tracking-wide">Hierarchical tree</div>
+						<Label id="board.play.settings.tree.layerSpacing" label="Layer spacing (px)">
+							<Slider
+								id="board-play-slider-tree-layer"
+								max={280}
+								min={40}
+								step={4}
+								value={[treeLayoutLayerSpacing]}
+								onValueChange={(vals) => setTreeLayoutLayerSpacing(vals[0] ?? 120)}
+							/>
+						</Label>
+						<Label id="board.play.settings.tree.siblingGap" label="Sibling gap (px)">
+							<Slider
+								id="board-play-slider-tree-sibling"
+								max={120}
+								min={0}
+								step={2}
+								value={[treeLayoutSiblingGap]}
+								onValueChange={(vals) => setTreeLayoutSiblingGap(vals[0] ?? 28)}
+							/>
+						</Label>
+						<Label id="board.play.settings.tree.direction" label="Direction">
+							<Select onValueChange={(v) => setTreeLayoutDirection(v as BoardHierarchicalTreeDirectionKind)} value={treeLayoutDirection}>
+								<SelectTrigger className="h-8 w-full" id="board-play-tree-direction" size="sm">
+									<SelectValue />
+								</SelectTrigger>
+								<SelectContent>
+									<SelectItem value="downwards">Downwards</SelectItem>
+									<SelectItem value="upwards">Upwards</SelectItem>
+									<SelectItem value="right">Right</SelectItem>
+									<SelectItem value="left">Left</SelectItem>
+								</SelectContent>
+							</Select>
+						</Label>
+					</>
+				)}
+				<Button className="h-8 w-full text-xs" type="button" variant="secondary" onClick={applyBoardRedrawOnce}>
+					Apply redraw once
 				</Button>
 				<p className="text-muted-foreground text-[11px] leading-snug">
 					While play is on, camera framing stays pinned to the graph as it was when you pressed play, so zoom and pan no longer jump each tick. Pause to re-frame from the latest layout.
@@ -1134,7 +1236,7 @@ function InspectorNodeBatch({
 	fixture: BoardFixtureV1;
 	nodeIds: readonly string[];
 	patchFixture: (updater: (prev: BoardFixtureV1) => BoardFixtureV1) => void;
-	remapIdInSelections: (from: string, to: string) => void;
+	remapIdInSelections: (replacedId: string, replacementId: string) => void;
 }): ReactElement {
 	const idSet = useMemo(() => new Set(nodeIds), [nodeIds]);
 	const targets = useMemo(
@@ -1314,7 +1416,7 @@ function InspectorHandleBatch({
 	fixture: BoardFixtureV1;
 	handleIds: readonly string[];
 	patchFixture: (updater: (prev: BoardFixtureV1) => BoardFixtureV1) => void;
-	remapIdInSelections: (from: string, to: string) => void;
+	remapIdInSelections: (replacedId: string, replacementId: string) => void;
 }): ReactElement {
 	const idSet = useMemo(() => new Set(handleIds), [handleIds]);
 	const handles = useMemo(
@@ -1415,7 +1517,7 @@ function InspectorEdgeBatch({
 	fixture: BoardFixtureV1;
 	edgeIds: readonly string[];
 	patchFixture: (updater: (prev: BoardFixtureV1) => BoardFixtureV1) => void;
-	remapIdInSelections: (from: string, to: string) => void;
+	remapIdInSelections: (replacedId: string, replacementId: string) => void;
 }): ReactElement {
 	const idSet = useMemo(() => new Set(edgeIds), [edgeIds]);
 	const edges = useMemo(
@@ -1682,13 +1784,17 @@ function BoardPlayInner(): ReactElement {
 	const [boardSelectionMethod, setBoardSelectionMethod] = useState<BoardSelectionMethod>("rectangle");
 	const [boardSelectionMode, setBoardSelectionMode] = useState<BoardSelectionMode>("invertive");
 	const [boardSelectionTargets, setBoardSelectionTargets] = useState<BoardSelectionTargets>(() => ({ ...BOARD_SELECTION_TARGETS_DEFAULT }));
-	const [forceLayoutPlaying, setForceLayoutPlaying] = useState(false);
+	const [boardRedrawPlaying, setBoardRedrawPlaying] = useState(false);
 	const [forceLayoutFullIterations, setForceLayoutFullIterations] = useState(200);
 	const [forceLayoutIdealEdgeLength, setForceLayoutIdealEdgeLength] = useState(64);
 	const [forceLayoutGravity, setForceLayoutGravity] = useState(0.012);
 	const [forceLayoutRepulsionStrength, setForceLayoutRepulsionStrength] = useState(480);
-	const [forceLayoutTickMs, setForceLayoutTickMs] = useState(96);
-	const [forceLayoutTickIterations, setForceLayoutTickIterations] = useState(10);
+	const [boardRedrawTickMs, setBoardRedrawTickMs] = useState(96);
+	const [boardRedrawTickIterations, setBoardRedrawTickIterations] = useState(10);
+	const [boardRedrawMode, setBoardRedrawMode] = useState<BoardRedrawModeKind>("force-graph");
+	const [treeLayoutLayerSpacing, setTreeLayoutLayerSpacing] = useState(120);
+	const [treeLayoutSiblingGap, setTreeLayoutSiblingGap] = useState(28);
+	const [treeLayoutDirection, setTreeLayoutDirection] = useState<BoardHierarchicalTreeDirectionKind>("downwards");
 	const [windowOptionDemo, setWindowOptionDemo] = useState({
 		ovToggle: true,
 		ovSelect: "fit",
@@ -1968,15 +2074,15 @@ function BoardPlayInner(): ReactElement {
 		setFixture(detail.fixture);
 	}, [patchFixture, setFixture, setSelectionForPane]);
 
-	const remapIdInSelections = useCallback((from: string, to: string) => {
-		if (from === to) {
+	const remapIdInSelections = useCallback((replacedId: string, replacementId: string) => {
+		if (replacedId === replacementId) {
 			return;
 		}
 		const panes: BoardPlayPaneId[] = ["board-overview", "board-detail", "board-selection"];
 		setSelectionByPane((prev) => {
 			const next: Record<BoardPlayPaneId, Set<string>> = { ...prev };
 			for (const p of panes) {
-				next[p] = new Set([...prev[p]].map((id) => (id === from ? to : id)));
+				next[p] = new Set([...prev[p]].map((id) => (id === replacedId ? replacementId : id)));
 			}
 			return next;
 		});
@@ -1984,70 +2090,82 @@ function BoardPlayInner(): ReactElement {
 
 	const cameraBasisFixtureRef = useRef<BoardFixtureV1>(fixture);
 	const [cameraBasisTick, setCameraBasisTick] = useState(0);
-	const prevForceLayoutPlayingRef = useRef(false);
+	const prevBoardRedrawPlayingRef = useRef(false);
 
 	useEffect(() => {
-		if (!forceLayoutPlaying) {
+		if (!boardRedrawPlaying) {
 			cameraBasisFixtureRef.current = fixture;
 			setCameraBasisTick((t) => t + 1);
 		}
-	}, [fixture, forceLayoutPlaying]);
+	}, [fixture, boardRedrawPlaying]);
 
 	useEffect(() => {
-		if (forceLayoutPlaying && !prevForceLayoutPlayingRef.current) {
+		if (boardRedrawPlaying && !prevBoardRedrawPlayingRef.current) {
 			cameraBasisFixtureRef.current = fixture;
 			setCameraBasisTick((t) => t + 1);
 		}
-		prevForceLayoutPlayingRef.current = forceLayoutPlaying;
-	}, [forceLayoutPlaying, fixture]);
+		prevBoardRedrawPlayingRef.current = boardRedrawPlaying;
+	}, [boardRedrawPlaying, fixture]);
 
 	const camerasByPane = useMemo(() => triptychCamerasFromFixture(cameraBasisFixtureRef.current), [cameraBasisTick]);
 
-	const applyForceGraphLayoutOnce = useCallback(() => {
+	const applyBoardRedrawOnce = useCallback(() => {
 		const full = Math.max(1, Math.min(5000, Math.round(forceLayoutFullIterations)));
 		patchFixture((prev) =>
-			layoutBoardFixtureForceGraph(
+			layoutBoardFixtureRedraw(
 				prev,
-				boardPlayForceLayoutOpts(
+				boardPlayRedrawLayoutOpts(
 					activePaneId,
 					camerasByPane,
+					boardRedrawMode,
 					full,
 					forceLayoutIdealEdgeLength,
 					forceLayoutGravity,
 					forceLayoutRepulsionStrength,
+					treeLayoutLayerSpacing,
+					treeLayoutSiblingGap,
+					treeLayoutDirection,
 				),
 			),
 		);
 	}, [
 		activePaneId,
+		boardRedrawMode,
 		camerasByPane,
 		forceLayoutFullIterations,
 		forceLayoutGravity,
 		forceLayoutIdealEdgeLength,
 		forceLayoutRepulsionStrength,
 		patchFixture,
+		treeLayoutLayerSpacing,
+		treeLayoutDirection,
+		treeLayoutSiblingGap,
 	]);
 
 	useEffect(() => {
-		if (!forceLayoutPlaying) {
+		if (!boardRedrawPlaying) {
 			return;
 		}
-		const tickMs = Math.max(33, Math.min(5000, Math.round(forceLayoutTickMs)));
-		const tickIters = Math.max(1, Math.min(500, Math.round(forceLayoutTickIterations)));
+		const tickMs = Math.max(33, Math.min(5000, Math.round(boardRedrawTickMs)));
+		const tickIters = Math.max(1, Math.min(500, Math.round(boardRedrawTickIterations)));
 		const id = window.setInterval(() => {
 			patchFixture((prev) => {
 				if (prev.nodes.length === 0) {
 					return prev;
 				}
-				return layoutBoardFixtureForceGraph(
+				return layoutBoardFixtureRedraw(
 					prev,
-					boardPlayForceLayoutOpts(
+					boardPlayRedrawLayoutOpts(
 						activePaneId,
 						camerasByPane,
+						boardRedrawMode,
 						tickIters,
 						forceLayoutIdealEdgeLength,
 						forceLayoutGravity,
 						forceLayoutRepulsionStrength,
+						treeLayoutLayerSpacing,
+						treeLayoutSiblingGap,
+						treeLayoutDirection,
 					),
 				);
 			});
@@ -2055,21 +2173,29 @@ function BoardPlayInner(): ReactElement {
 		return () => window.clearInterval(id);
 	}, [
 		activePaneId,
+		boardRedrawMode,
 		camerasByPane,
 		forceLayoutGravity,
 		forceLayoutIdealEdgeLength,
-		forceLayoutPlaying,
+		boardRedrawPlaying,
 		forceLayoutRepulsionStrength,
-		forceLayoutTickIterations,
-		forceLayoutTickMs,
+		boardRedrawTickIterations,
+		boardRedrawTickMs,
 		patchFixture,
+		treeLayoutLayerSpacing,
+		treeLayoutDirection,
+		treeLayoutSiblingGap,
 	]);
 
 	const shellValue = useMemo<BoardPlayShellValue>(
 		() => ({
 			activePaneId,
-			applyForceGraphLayoutOnce,
+			applyBoardRedrawOnce,
 			applyStructuralDelete,
+			boardRedrawMode,
+			boardRedrawPlaying,
+			boardRedrawTickIterations,
+			boardRedrawTickMs,
 			boardSelectionMethod,
 			boardSelectionMode,
 			boardSelectionTargets,
@@ -2078,14 +2204,15 @@ function BoardPlayInner(): ReactElement {
 			forceLayoutFullIterations,
 			forceLayoutGravity,
 			forceLayoutIdealEdgeLength,
-			forceLayoutPlaying,
 			forceLayoutRepulsionStrength,
-			forceLayoutTickIterations,
-			forceLayoutTickMs,
 			handleCanvasFixtureDrop,
 			patchFixture,
 			remapIdInSelections,
 			setActivePaneId,
+			setBoardRedrawMode,
+			setBoardRedrawPlaying,
+			setBoardRedrawTickIterations,
+			setBoardRedrawTickMs,
 			setBoardSelectionMethod,
 			setBoardSelectionMode,
 			setBoardSelectionTargets,
@@ -2093,17 +2220,24 @@ function BoardPlayInner(): ReactElement {
 			setForceLayoutFullIterations,
 			setForceLayoutGravity,
 			setForceLayoutIdealEdgeLength,
-			setForceLayoutPlaying,
 			setForceLayoutRepulsionStrength,
-			setForceLayoutTickIterations,
-			setForceLayoutTickMs,
+			setTreeLayoutLayerSpacing,
+			setTreeLayoutDirection,
+			setTreeLayoutSiblingGap,
 			selectionByPane,
 			setSelectionForPane,
+			treeLayoutLayerSpacing,
+			treeLayoutDirection,
+			treeLayoutSiblingGap,
 		}),
 		[
 			activePaneId,
-			applyForceGraphLayoutOnce,
+			applyBoardRedrawOnce,
 			applyStructuralDelete,
+			boardRedrawMode,
+			boardRedrawPlaying,
+			boardRedrawTickIterations,
+			boardRedrawTickMs,
 			boardSelectionMethod,
 			boardSelectionMode,
 			boardSelectionTargets,
@@ -2112,16 +2246,15 @@ function BoardPlayInner(): ReactElement {
 			forceLayoutFullIterations,
 			forceLayoutGravity,
 			forceLayoutIdealEdgeLength,
-			forceLayoutPlaying,
 			forceLayoutRepulsionStrength,
-			forceLayoutTickIterations,
-			forceLayoutTickMs,
 			handleCanvasFixtureDrop,
 			patchFixture,
 			remapIdInSelections,
-			setFixture,
 			selectionByPane,
 			setSelectionForPane,
+			treeLayoutLayerSpacing,
+			treeLayoutDirection,
+			treeLayoutSiblingGap,
 		],
 	);
 

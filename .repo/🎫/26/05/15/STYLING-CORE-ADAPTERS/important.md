@@ -1,8 +1,8 @@
 # Styling core + adapters
 
-- **Core:** `elements/core/styling/tokens.json` (colors, spacing, fonts, `board_vello_canvas`).
-- **JS/Tailwind:** `bun ./elements/client/lib/styling/script.ts generate` → `elements/client/lib/styling/generated/*.css`; `palette.css` imports generated files only.
-- **Rust:** `elements/client/lib/board/rs/build.rs` → `OUT_DIR/elements_styling_board.rs`; `lib.rs` uses `board_palette::*`.
-- **.NET:** `semio/client/lib/net/Elements.Styling` + generated `Palette.g.cs` / `BoardVelloCanvas`; referenced from `Semio`, `Semio.Grasshopper`, `Semio.Rhino`.
-- **Monorepo.sln:** project paths aligned under `semio/client/...`; solution folder renamed to avoid duplicate `semio` name conflict.
-- **Other:** Rhino `Semio.Rhino.cs` template placeholders (`__DOT_ID_UPPER__`, etc.) repaired; full solution still hits Rhino API / GH test issues unrelated to tokens.
+- **Core (framework-neutral):** `elements/core/styling/tokens.json` — colors, spacing, fonts, `board_vello_canvas`. Discover adapters via `elements/core/styling/adapters.manifest.json`.
+- **Nx:** `nx run @elements/styling-core:generate` (or `bun ./elements/core/styling/script.ts generate`).
+- **JS / Tailwind:** `elements/core/styling/js/tailwind/generate.ts` → `elements/client/lib/styling/generated/*.css`; `@elements/styling` (`palette.css`) imports generated files only.
+- **Rust (board Vello):** `elements/core/styling/rs/board_vello_build.inc.rs` — included from `elements/client/lib/board/rs/build.rs`; emits `OUT_DIR/elements_styling_board.rs`.
+- **.NET:** `Elements.Styling/Generated/Palette.g.cs` (+ `BoardVelloCanvas`) under `semio/client/lib/net/Elements.Styling` — referenced from `Semio`, `Semio.Grasshopper`, `Semio.Rhino`.
+- **Monorepo.sln:** project paths under `semio/client/...`; Grasshopper uses `Elements.Styling` via `ProjectReference` (no duplicate palette in GH UI code).

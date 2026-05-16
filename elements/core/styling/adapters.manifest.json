@@ -12,13 +12,13 @@
     },
     {
       "id": "dotnet-elements-styling",
-      "description": "C# Palette + BoardVelloCanvas arrays for Semio, Grasshopper, Rhino",
+      "description": "C# `Palette` hex strings from `tokens.json` `colors`",
       "generator": "js/tailwind/generate.ts",
       "outputs": ["../../../semio/client/lib/net/Elements.Styling/Generated/Palette.g.cs"]
     },
     {
       "id": "rust-board-vello",
-      "description": "OUT_DIR/elements_styling_board.rs Color constants from board_vello_canvas",
+      "description": "OUT_DIR/elements_styling_board.rs — board canvas `Color` defaults from `tokens.json` `colors` (Tailwind palette keys)",
       "codegen": "rs/board_vello_build.inc.rs",
       "cargoInclude": "../../client/lib/board/rs/build.rs",
       "tokenInput": "tokens.json"

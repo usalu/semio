@@ -14,7 +14,7 @@ import {
 import initBoardWasm, {
 	boardComputeEdgeBezier,
 	boardDistancePointCubic,
-	boardForceGraphLayoutFixtureJson,
+	boardRedrawLayoutFixtureJson,
 	boardHandlePositionCircle,
 	boardHandlePositionRectangle,
 	BoardSession,
@@ -202,7 +202,7 @@ export interface BoardFixtureV1 {
 	schema: string;
 }
 
-/** @emoji 🕸️ JSON options for {@link layoutBoardFixtureForceGraph} (camelCase; matches Rust `ForceGraphLayoutOptions` / dimforge `nalgebra` spring layout). */
+/** @emoji 🕸️ JSON options nested under {@link BoardRedrawLayoutOptions.forceGraph} (camelCase; matches Rust `ForceGraphLayoutOptions`). */
 export interface BoardForceGraphLayoutOptions {
 	centerX?: number;
 	centerY?: number;
@@ -217,10 +217,34 @@ export interface BoardForceGraphLayoutOptions {
 	velocityDamping?: number;
 }
 
-/** @emoji 🕸️ Runs WASM force-directed layout on fixture node centers (edges via handle ids); uses dimforge `nalgebra` in Rust. */
-export function layoutBoardFixtureForceGraph(fixture: BoardFixtureV1, options?: BoardForceGraphLayoutOptions): BoardFixtureV1 {
-	const optsJson = options === undefined ? "" : JSON.stringify(options);
-	const out = boardForceGraphLayoutFixtureJson(JSON.stringify(fixture), optsJson);
+/** @emoji 🌳 Which WASM redraw pass runs on the logical fixture graph (tick-driven play uses the same dispatcher). */
+export type BoardRedrawModeKind = "force-graph" | "hierarchical-tree";
+
+/** @emoji 🌳 Rank growth axis for {@link layoutBoardFixtureRedraw} hierarchical mode (`downwards` | `upwards` | `right` | `left`). */
+export type BoardHierarchicalTreeDirectionKind = "downwards" | "left" | "right" | "upwards";
+
+/** @emoji 🌳 JSON for {@link layoutBoardFixtureRedraw} hierarchical mode (camelCase; matches Rust `HierarchicalTreeLayoutOptions`). */
+export interface BoardHierarchicalTreeLayoutOptions {
+	centerX?: number;
+	centerY?: number;
+	direction?: BoardHierarchicalTreeDirectionKind;
+	layerSpacing?: number;
+	siblingGap?: number;
+}
+
+/** @emoji 🔁 Unified redraw request: shared camera center + optional seed; mode-specific knobs live in {@link BoardRedrawLayoutOptions.forceGraph} or {@link BoardRedrawLayoutOptions.hierarchicalTree}. */
+export interface BoardRedrawLayoutOptions {
+	centerX?: number;
+	centerY?: number;
+	forceGraph?: BoardForceGraphLayoutOptions;
+	hierarchicalTree?: BoardHierarchicalTreeLayoutOptions;
+	mode: BoardRedrawModeKind;
+	randomSeed?: number;
+}
+
+/** @emoji 🔁 Runs the selected WASM redraw pass (force graph or hierarchical tree); nodes may omit coordinates until this returns positioned centers. */
+export function layoutBoardFixtureRedraw(fixture: BoardFixtureV1, options: BoardRedrawLayoutOptions): BoardFixtureV1 {
+	const out = boardRedrawLayoutFixtureJson(JSON.stringify(fixture), JSON.stringify(options));
 	return JSON.parse(out) as BoardFixtureV1;
 }
 
@@ -455,7 +479,7 @@ export function resolveBoardLodLabel(zoom: number): "detail" | "minimap" | "over
 	return "detail";
 }
 
-/** @emoji 🎨 Offline / headless paint defaults aligned with `elements/core/styling/tokens.json` `board_vello_canvas` sRGB (Vello host defaults before DOM tokens sync). */
+/** @emoji 🎨 Offline / headless stroke/fill defaults aligned with `tokens.json` `colors` (same as `--color-*` / board canvas paint). */
 const BOARD_STYLES_HEADLESS_FALLBACK: Record<string, BoardStyle> = {
 	edge: { stroke: "#7b827d", strokeWidth: 2 },
 	"edge.selected": { stroke: "#ff344f", strokeWidth: 3 },
@@ -468,7 +492,7 @@ const BOARD_STYLES_HEADLESS_FALLBACK: Record<string, BoardStyle> = {
 const DEFAULT_STYLES: Record<string, BoardStyle> = BOARD_STYLES_HEADLESS_FALLBACK;
 
 //#region 🎨ElementsUiBoardPaint
-/** @emoji 🎨 Resolves Elements semantic CSS (`elements.css` / `@theme`) for board canvas + Vello: only `var(--…)` tokens wired here — no ad-hoc palettes. */
+/** @emoji 🎨 sRGBA8888 defaults for `setVelloThemeJson` when computed-style probe fails; RGB matches `tokens.json` `colors` (`gray`, `primary`, `light`, `l-l-l-g`, `dark`). */
 const BOARD_VELLO_THEME_FALLBACK_RGBA = {
 	rasterClear: [247, 243, 227, 255] as [number, number, number, number],
 	gridMinorStroke: [123, 130, 125, 56] as [number, number, number, number],
@@ -520,6 +544,7 @@ function boardProbeCssComputed(property: "color" | "backgroundColor", value: str
 	return out;
 }
 
+/** @emoji 🎨 Resolves `var(--color-*)` / `var(--base)` from the live theme for canvas stroke and fill when `document` exists. */
 function boardDefaultStylesFromElementsUiTokens(): Record<string, BoardStyle> {
 	const f = BOARD_STYLES_HEADLESS_FALLBACK;
 	const c = (prop: "color" | "backgroundColor", expr: string, fb: string): string => {
@@ -787,8 +812,10 @@ export function parseBoardFixtureV1(raw: unknown): BoardFixtureV1 | null {
 		}
 		const node = entry as Record<string, unknown>;
 		const id = typeof node.id === "string" ? node.id : null;
-		const x = Number(node.x);
-		const y = Number(node.y);
+		const xRaw = node.x;
+		const yRaw = node.y;
+		const x = xRaw === undefined || xRaw === null ? 0 : Number(xRaw);
+		const y = yRaw === undefined || yRaw === null ? 0 : Number(yRaw);
 		if (!id || !Number.isFinite(x) || !Number.isFinite(y)) {
 			return null;
 		}
@@ -1527,7 +1554,7 @@ function boardGraphEdgeSig(edge: Edge): string {
 	});
 }
 
-/** @emoji 🌳 Builds subtree membership: BFS from every {@link Node.root} following directed edges from parent handle node to child handle node. */
+/** @emoji 🌳 Builds subtree membership: BFS from every {@link Node.root} along directed edges ({@link Edge.source} handle’s node → {@link Edge.target} handle’s node). */
 export function computeBoardGraphObservationSnapshot(scene: BoardScene): BoardGraphObservationSnapshot {
 	const rootIds = sortIds([...scene.nodes.values()].filter((n) => n.root).map((n) => n.id));
 	const rootSet = new Set(rootIds);
@@ -3535,6 +3562,16 @@ if (boardVitest) {
 			expect(decoded).toEqual(fixture);
 		});
 
+		it("parses nodes when x or y is omitted (defaults to 0)", () => {
+			const parsed = parseBoardFixtureV1({
+				camera: { x: 0, y: 0, zoom: 1 },
+				edges: [],
+				nodes: [{ handles: [{ angle: 0, id: "n.h" }], id: "n", radius: 8, schema: undefined }],
+				schema: "elements.board.fixture/v1",
+			});
+			expect(parsed?.nodes[0]).toMatchObject({ id: "n", x: 0, y: 0 });
+		});
+
 		it("parses optional root on fixture nodes", () => {
 			const parsed = parseBoardFixtureV1({
 				camera: { x: 0, y: 0, zoom: 1 },
@@ -3560,7 +3597,7 @@ if (boardVitest) {
 		});
 	});
 
-	describe("board force graph layout", () => {
+	describe("board redraw layout", () => {
 		it("spreads linked nodes using wasm+nalgebra layout", () => {
 			const fixture: BoardFixtureV1 = {
 				camera: { x: 0, y: 0, zoom: 1 },
@@ -3571,7 +3608,11 @@ if (boardVitest) {
 				],
 				schema: "elements.board.fixture/v1",
 			};
-			const laid = layoutBoardFixtureForceGraph(fixture, { gravity: 0, iterations: 220, idealEdgeLength: 200, randomSeed: 11 });
+			const laid = layoutBoardFixtureRedraw(fixture, {
+				forceGraph: { gravity: 0, idealEdgeLength: 200, iterations: 220 },
+				mode: "force-graph",
+				randomSeed: 11,
+			});
 			const ax = (laid.nodes[0] as { x: number }).x;
 			const bx = (laid.nodes[1] as { x: number }).x;
 			expect(Math.abs(bx - ax)).toBeGreaterThan(90);
@@ -3580,7 +3621,41 @@ if (boardVitest) {
 
 		it("throws on invalid fixture schema from wasm", () => {
 			const bad = { camera: { x: 0, y: 0, zoom: 1 }, edges: [], nodes: [], schema: "wrong" } as unknown as BoardFixtureV1;
-			expect(() => layoutBoardFixtureForceGraph(bad)).toThrow();
+			expect(() => layoutBoardFixtureRedraw(bad, { mode: "force-graph" })).toThrow();
+		});
+
+		it("lays a small rooted tree in hierarchical mode", () => {
+			const fixture: BoardFixtureV1 = {
+				camera: { x: 0, y: 0, zoom: 1 },
+				edges: [
+					{ id: "e1", source: "r:h", target: "c:h" },
+					{ id: "e2", source: "c:h2", target: "l:h" },
+				],
+				nodes: [
+					{ handles: [{ angle: 0, id: "r:h" }], id: "r", radius: 16, root: true, x: 0, y: 0 },
+					{
+						handles: [
+							{ angle: 0, id: "c:h" },
+							{ angle: 0, id: "c:h2" },
+						],
+						id: "c",
+						radius: 16,
+						x: 0,
+						y: 0,
+					},
+					{ handles: [{ angle: 0, id: "l:h" }], id: "l", radius: 16, x: 0, y: 0 },
+				],
+				schema: "elements.board.fixture/v1",
+			};
+			const laid = layoutBoardFixtureRedraw(fixture, {
+				centerX: 0,
+				centerY: 0,
+				hierarchicalTree: { direction: "downwards", layerSpacing: 100, siblingGap: 20 },
+				mode: "hierarchical-tree",
+			});
+			const ry = (laid.nodes.find((n) => n.id === "r") as BoardFixtureCircleNodeV1).y;
+			const ly = (laid.nodes.find((n) => n.id === "l") as BoardFixtureCircleNodeV1).y;
+			expect(Math.abs(ly - ry)).toBeGreaterThan(40);
 		});
 	});
 
@@ -4002,17 +4077,17 @@ function mountEdge(renderer: BoardRenderer, edgeHost: BoardHostEdge): void {
 	if (edgeHost.impl?.parent) {
 		return;
 	}
-	const source = renderer.scene.getObjectById(edgeHost.props.source);
-	const target = renderer.scene.getObjectById(edgeHost.props.target);
-	if (!(source instanceof Handle) || !(target instanceof Handle)) {
+	const sourceHandle = renderer.scene.getObjectById(edgeHost.props.source);
+	const targetHandle = renderer.scene.getObjectById(edgeHost.props.target);
+	if (!(sourceHandle instanceof Handle) || !(targetHandle instanceof Handle)) {
 		return;
 	}
 	renderer.batch(() => {
 		if (!edgeHost.impl) {
-			edgeHost.impl = new Edge({ ...edgeHost.props, source, target });
+			edgeHost.impl = new Edge({ ...edgeHost.props, source: sourceHandle, target: targetHandle });
 			renderer.scene.add(edgeHost.impl);
 		} else {
-			applyEdgeProps(edgeHost.impl, edgeHost.props, source, target);
+			applyEdgeProps(edgeHost.impl, edgeHost.props, sourceHandle, targetHandle);
 		}
 	});
 	renderer.invalidate();
@@ -4242,17 +4317,17 @@ const boardSceneHost = Reconciler({
 		if (type === BOARD_HOST_EDGE) {
 			const e = instance as BoardHostEdge;
 			e.props = nextProps as BoardEdgeProps;
-			const from = renderer.scene.getObjectById(e.props.source);
-			const to = renderer.scene.getObjectById(e.props.target);
-			if (!(from instanceof Handle) || !(to instanceof Handle)) {
+			const sourceHandle = renderer.scene.getObjectById(e.props.source);
+			const targetHandle = renderer.scene.getObjectById(e.props.target);
+			if (!(sourceHandle instanceof Handle) || !(targetHandle instanceof Handle)) {
 				return;
 			}
 			renderer.batch(() => {
 				if (!e.impl) {
-					e.impl = new Edge({ ...e.props, source: from, target: to });
+					e.impl = new Edge({ ...e.props, source: sourceHandle, target: targetHandle });
 					renderer.scene.add(e.impl);
 				} else {
-					applyEdgeProps(e.impl, e.props, from, to);
+					applyEdgeProps(e.impl, e.props, sourceHandle, targetHandle);
 				}
 			});
 			renderer.invalidate();

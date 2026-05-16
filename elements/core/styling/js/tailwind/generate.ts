@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 /** @emoji ⚙️ Reads `elements/core/styling/tokens.json`; emits Tailwind palette CSS under `@elements/styling` and `Elements.Styling/Generated/Palette.g.cs` for Semio / Grasshopper / Rhino. */
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
-import { dirname, join } from "node:path";
+import { join } from "node:path";
 
 const here = import.meta.dir;
 const coreStylingRoot = join(here, "..", "..");
@@ -14,14 +14,6 @@ const netPaletteDir = join(repoRoot, "semio", "client", "lib", "net", "Elements.
 
 function colorKeyToCssVar(key: string): string {
 	return `--color-${key.replaceAll("_", "-")}`;
-}
-
-function toPascalCaseFromSnake(s: string): string {
-	return s
-		.split("_")
-		.filter(Boolean)
-		.map((p) => p[0]!.toUpperCase() + p.slice(1).toLowerCase())
-		.join("");
 }
 
 function toPascalCase(s: string): string {
@@ -38,7 +30,6 @@ interface Tokens {
 	spacing: Record<string, string>;
 	fontStacks: Record<string, string>;
 	fontFaces: { family: string; src: string }[];
-	board_vello_canvas: Record<string, number[]>;
 }
 
 function loadTokens(): Tokens {
@@ -99,14 +90,6 @@ function emitCSharpPalette(tokens: Tokens): string {
 	for (const [k, v] of Object.entries(tokens.colors)) {
 		const name = toPascalCase(k);
 		lines.push(`  public const string ${name} = "${v}";`);
-	}
-	lines.push("}");
-	lines.push("");
-	lines.push("public static class BoardVelloCanvas");
-	lines.push("{");
-	for (const [k, arr] of Object.entries(tokens.board_vello_canvas)) {
-		const name = toPascalCaseFromSnake(k);
-		lines.push(`  public static readonly float[] ${name} = new float[] { ${arr.map((n) => `${n}f`).join(", ")} };`);
 	}
 	lines.push("}");
 	lines.push("");

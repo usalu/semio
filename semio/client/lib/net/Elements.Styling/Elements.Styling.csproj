@@ -7,7 +7,7 @@
     <Nullable>enable</Nullable>
     <RootNamespace>Elements.Styling</RootNamespace>
     <AssemblyName>Elements.Styling</AssemblyName>
-    <Description>🎨 Generated palette and canvas tokens from elements/core/styling/tokens.json.</Description>
+    <Description>Generated from elements/core/styling (adapters.manifest.json); Palette hex strings from tokens.json colors.</Description>
   </PropertyGroup>
 
 </Project>

@@ -1,6 +1,0 @@
-{
-  "title": "Neo4j Migrations Handwritten In Ticket",
-  "status": "closed",
-  "description": "Neo4j graph migrations live as migrations.cypher in this ticket; migrate.neo4j.script.ts runs them. generate.script.ts exports only the live DB and does not run migrations.",
-  "summary": "Integrated a root monorepo Storybook and Playwright smoke suite into the workspace Nx/Bun flow, repaired stale post-restructure imports and package aliases that blocked the aggregated Storybook graph, added a repo-native built-storybook static serve path for Playwright, and fixed the semio Vec story args so the representative elements, semio UI, and algorithms smoke stories pass end to end."
-}

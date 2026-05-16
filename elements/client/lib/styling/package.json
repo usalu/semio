@@ -3,7 +3,7 @@
   "projectType": "library",
   "name": "@elements/styling",
   "version": "0.1.0",
-  "description": "elements · shared palette, Tailwind entry, and tokens",
+  "description": "elements · Tailwind/CSS surface; canonical tokens + codegen live in elements/core/styling (@elements/styling-core)",
   "type": "module",
   "exports": {
     ".": "./index.ts",

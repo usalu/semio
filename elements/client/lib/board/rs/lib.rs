@@ -719,8 +719,8 @@ mod hierarchical_tree {
 		pub layer_spacing: f64,
 		#[serde(default = "default_sibling_gap")]
 		pub sibling_gap: f64,
-		#[serde(default = "default_orientation")]
-		pub orientation: String,
+		#[serde(default = "default_direction")]
+		pub direction: String,
 		#[serde(default)]
 		pub center_x: Option<f64>,
 		#[serde(default)]
@@ -733,8 +733,8 @@ mod hierarchical_tree {
 	fn default_sibling_gap() -> f64 {
 		28.0
 	}
-	fn default_orientation() -> String {
-		"top-down".into()
+	fn default_direction() -> String {
+		"downwards".into()
 	}
 
 	impl Default for HierarchicalTreeLayoutOptions {
@@ -742,9 +742,29 @@ mod hierarchical_tree {
 			Self {
 				layer_spacing: default_layer_spacing(),
 				sibling_gap: default_sibling_gap(),
-				orientation: default_orientation(),
+				direction: default_direction(),
 				center_x: None,
 				center_y: None,
+			}
+		}
+	}
+
+	#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+	enum TreeDirection {
+		Downwards,
+		Upwards,
+		Right,
+		Left,
+	}
+
+	impl TreeDirection {
+		fn parse(s: &str) -> Result<Self, String> {
+			match s.trim().to_ascii_lowercase().as_str() {
+				"down" | "downwards" => Ok(Self::Downwards),
+				"up" | "upwards" => Ok(Self::Upwards),
+				"right" => Ok(Self::Right),
+				"left" => Ok(Self::Left),
+				_ => Err(format!("unknown hierarchical tree direction: {s}")),
 			}
 		}
 	}
@@ -762,6 +782,7 @@ mod hierarchical_tree {
 	}
 
 	pub fn apply_hierarchical_tree_layout_to_fixture_v1_value(fixture: &mut Value, opts: &HierarchicalTreeLayoutOptions) -> Result<(), String> {
+		let dir = TreeDirection::parse(&opts.direction)?;
 		let Some(root) = fixture.as_object_mut() else {
 			return Err("fixture root must be object".into());
 		};
@@ -809,32 +830,32 @@ mod hierarchical_tree {
 			let Some(tgt_h) = eo.get("target").and_then(|v| v.as_str()) else {
 				continue;
 			};
-			let Some(pa) = handle_to_node.get(src_h) else {
+			let Some(source_node_id) = handle_to_node.get(src_h) else {
 				continue;
 			};
-			let Some(pb) = handle_to_node.get(tgt_h) else {
+			let Some(target_node_id) = handle_to_node.get(tgt_h) else {
 				continue;
 			};
-			if pa == pb {
+			if source_node_id == target_node_id {
 				continue;
 			}
-			if seen_dir.insert((pa.clone(), pb.clone())) {
-				directed.push((pa.clone(), pb.clone()));
+			if seen_dir.insert((source_node_id.clone(), target_node_id.clone())) {
+				directed.push((source_node_id.clone(), target_node_id.clone()));
 			}
 		}
-		let mut indeg: HashMap<String, u32> = HashMap::new();
+		let mut incoming_edge_count_by_node: HashMap<String, u32> = HashMap::new();
 		for id in id_to_node.keys() {
-			indeg.insert(id.clone(), 0);
+			incoming_edge_count_by_node.insert(id.clone(), 0);
 		}
-		for (_p, c) in &directed {
-			*indeg.entry(c.clone()).or_insert(0) += 1;
+		for (_source_nid, target_nid) in &directed {
+			*incoming_edge_count_by_node.entry(target_nid.clone()).or_insert(0) += 1;
 		}
 		let mut roots: Vec<String> = Vec::new();
 		for node in nodes.iter() {
 			let Some(obj) = node.as_object() else {
 				continue;
 			};
-			if obj.get("root") == Some(&serde_json::json!(true)) {
+			if obj.get("root").and_then(|v| v.as_bool()) == Some(true) {
 				if let Some(nid) = obj.get("id").and_then(|v| v.as_str()) {
 					roots.push(nid.to_string());
 				}
@@ -843,7 +864,7 @@ mod hierarchical_tree {
 		roots.sort();
 		roots.dedup();
 		if roots.is_empty() {
-			for (id, &d) in &indeg {
+			for (id, &d) in &incoming_edge_count_by_node {
 				if d == 0 {
 					roots.push(id.clone());
 				}
@@ -861,14 +882,14 @@ mod hierarchical_tree {
 		let cap = directed.len().saturating_mul(3).saturating_add(nodes.len()).saturating_add(8);
 		for _ in 0..cap {
 			let mut changed = false;
-			for (p, c) in &directed {
-				let Some(&dp) = depth.get(p) else {
+			for (source_nid, target_nid) in &directed {
+				let Some(&dp) = depth.get(source_nid) else {
 					continue;
 				};
 				let nd = dp + 1;
-				let cur = *depth.get(c).unwrap_or(&-1);
+				let cur = *depth.get(target_nid).unwrap_or(&-1);
 				if nd > cur {
-					depth.insert(c.clone(), nd);
+					depth.insert(target_nid.clone(), nd);
 					changed = true;
 				}
 			}
@@ -888,7 +909,6 @@ mod hierarchical_tree {
 			ids.sort();
 		}
 		let mut pos: HashMap<String, (f64, f64)> = HashMap::new();
-		let top_down = opts.orientation != "left-right";
 		for (d, ids) in &layers {
 			let mut acc = 0.0f64;
 			let mut centers: Vec<(String, f64)> = Vec::new();
@@ -908,11 +928,13 @@ mod hierarchical_tree {
 			for (id, c) in centers {
 				let along = c + shift;
 				let orth = (*d as f64) * opts.layer_spacing;
-				if top_down {
-					pos.insert(id, (along, orth));
-				} else {
-					pos.insert(id, (orth, along));
-				}
+				let (lx, ly) = match dir {
+					TreeDirection::Downwards => (along, orth),
+					TreeDirection::Upwards => (along, -orth),
+					TreeDirection::Right => (orth, along),
+					TreeDirection::Left => (-orth, along),
+				};
+				pos.insert(id, (lx, ly));
 			}
 		}
 		let mut minx = f64::INFINITY;
@@ -998,14 +1020,14 @@ mod redraw_layout {
 				apply_force_graph_layout_to_fixture_v1_value(&mut fixture, &fo)?;
 			}
 			"hierarchical-tree" => {
-				let mut to = opts.hierarchical_tree.clone().unwrap_or_default();
+				let mut hierarchical_opts = opts.hierarchical_tree.clone().unwrap_or_default();
 				if opts.center_x.is_some() {
-					to.center_x = opts.center_x;
+					hierarchical_opts.center_x = opts.center_x;
 				}
 				if opts.center_y.is_some() {
-					to.center_y = opts.center_y;
+					hierarchical_opts.center_y = opts.center_y;
 				}
-				apply_hierarchical_tree_layout_to_fixture_v1_value(&mut fixture, &to)?;
+				apply_hierarchical_tree_layout_to_fixture_v1_value(&mut fixture, &hierarchical_opts)?;
 			}
 			other => return Err(format!("unknown redraw mode: {other}")),
 		}
@@ -2645,11 +2667,11 @@ mod board_host {
 				}
 				Interaction::LinkAtSourceHandle { source_id, start_screen } => {
 					if distance_between(screen, start_screen) >= LINK_DRAG_MIN_DISTANCE_PX {
-						let snap = self.nearest_link_snap_handle_world(&source_id, world);
-						self.sync_link_drag_preview(&source_id, screen, world, snap.as_deref());
+						let optional_target_handle_id = self.nearest_link_snap_handle_world(&source_id, world);
+						self.sync_link_drag_preview(&source_id, screen, world, optional_target_handle_id.as_deref());
 						self.interaction = Interaction::LinkDragSnap {
 							source_id: source_id.clone(),
-							target_id: snap,
+							target_id: optional_target_handle_id,
 						};
 					} else {
 						self.link_screen_preview = None;
@@ -2658,11 +2680,11 @@ mod board_host {
 					}
 				}
 				Interaction::LinkDragSnap { source_id, .. } => {
-					let snap = self.nearest_link_snap_handle_world(&source_id, world);
-					self.sync_link_drag_preview(&source_id, screen, world, snap.as_deref());
+					let optional_target_handle_id = self.nearest_link_snap_handle_world(&source_id, world);
+					self.sync_link_drag_preview(&source_id, screen, world, optional_target_handle_id.as_deref());
 					self.interaction = Interaction::LinkDragSnap {
 						source_id: source_id.clone(),
-						target_id: snap,
+						target_id: optional_target_handle_id,
 					};
 				}
 				Interaction::None => {
@@ -2679,8 +2701,8 @@ mod board_host {
 			match grabbed {
 				Interaction::LinkDragSnap { source_id, target_id } => {
 					self.link_screen_preview = None;
-					if let Some(tid) = target_id {
-						self.try_commit_link_edge(&source_id, &tid);
+					if let Some(target_handle_id) = target_id {
+						self.try_commit_link_edge(&source_id, &target_handle_id);
 					}
 					self.interaction = Interaction::None;
 					self.update_hover_from_world(world);
@@ -4431,7 +4453,7 @@ mod force_graph_tests {
 			"mode": "hierarchical-tree",
 			"centerX": 0.0,
 			"centerY": 0.0,
-			"hierarchicalTree": { "layerSpacing": 90.0, "siblingGap": 12.0, "orientation": "top-down" }
+			"hierarchicalTree": { "direction": "downwards", "layerSpacing": 90.0, "siblingGap": 12.0 }
 		});
 		let out = apply_redraw_layout_to_fixture_v1_json(&fixture.to_string(), &opts.to_string()).unwrap();
 		let parsed: serde_json::Value = serde_json::from_str(&out).unwrap();
@@ -4446,6 +4468,105 @@ mod force_graph_tests {
 		assert!((c1y - ry).abs() > 40.0, "expected child below root");
 		assert!((c2y - ry).abs() > 40.0);
 		assert!((c1y - c2y).abs() < 1e-3, "siblings share row");
+	}
+
+	#[test]
+	fn hierarchical_tree_right_places_children_larger_x_than_root() {
+		let fixture = json!({
+			"schema": "elements.board.fixture/v1",
+			"camera": { "x": 0.0, "y": 0.0, "zoom": 1.0 },
+			"nodes": [
+				{
+					"id": "r",
+					"root": true,
+					"radius": 18.0,
+					"handles": [{ "id": "r:h", "angle": 0.0, "handleKind": "board.port" }]
+				},
+				{
+					"id": "c1",
+					"radius": 18.0,
+					"handles": [{ "id": "c1:h", "angle": 0.0, "handleKind": "board.port" }]
+				}
+			],
+			"edges": [{ "id": "e1", "source": "r:h", "target": "c1:h" }]
+		});
+		let opts = json!({
+			"mode": "hierarchical-tree",
+			"centerX": 0.0,
+			"centerY": 0.0,
+			"hierarchicalTree": { "direction": "right", "layerSpacing": 90.0, "siblingGap": 12.0 }
+		});
+		let out = apply_redraw_layout_to_fixture_v1_json(&fixture.to_string(), &opts.to_string()).unwrap();
+		let parsed: serde_json::Value = serde_json::from_str(&out).unwrap();
+		let mut xs: HashMap<String, f64> = HashMap::new();
+		for n in parsed["nodes"].as_array().unwrap() {
+			let id = n["id"].as_str().unwrap().to_string();
+			xs.insert(id, n["x"].as_f64().unwrap());
+		}
+		let rx = *xs.get("r").unwrap();
+		let c1x = *xs.get("c1").unwrap();
+		assert!(c1x > rx + 40.0, "expected child to the right of root");
+	}
+
+	#[test]
+	fn hierarchical_tree_upwards_places_children_smaller_y_than_root() {
+		let fixture = json!({
+			"schema": "elements.board.fixture/v1",
+			"camera": { "x": 0.0, "y": 0.0, "zoom": 1.0 },
+			"nodes": [
+				{
+					"id": "r",
+					"root": true,
+					"radius": 18.0,
+					"handles": [{ "id": "r:h", "angle": 0.0, "handleKind": "board.port" }]
+				},
+				{
+					"id": "c1",
+					"radius": 18.0,
+					"handles": [{ "id": "c1:h", "angle": 0.0, "handleKind": "board.port" }]
+				}
+			],
+			"edges": [{ "id": "e1", "source": "r:h", "target": "c1:h" }]
+		});
+		let opts = json!({
+			"mode": "hierarchical-tree",
+			"centerX": 0.0,
+			"centerY": 0.0,
+			"hierarchicalTree": { "direction": "upwards", "layerSpacing": 90.0, "siblingGap": 12.0 }
+		});
+		let out = apply_redraw_layout_to_fixture_v1_json(&fixture.to_string(), &opts.to_string()).unwrap();
+		let parsed: serde_json::Value = serde_json::from_str(&out).unwrap();
+		let mut ys: HashMap<String, f64> = HashMap::new();
+		for n in parsed["nodes"].as_array().unwrap() {
+			let id = n["id"].as_str().unwrap().to_string();
+			ys.insert(id, n["y"].as_f64().unwrap());
+		}
+		let ry = *ys.get("r").unwrap();
+		let c1y = *ys.get("c1").unwrap();
+		assert!(c1y < ry - 40.0, "expected child above root (smaller y)");
+	}
+
+	#[test]
+	fn hierarchical_tree_rejects_unknown_direction() {
+		let fixture = json!({
+			"schema": "elements.board.fixture/v1",
+			"camera": { "x": 0.0, "y": 0.0, "zoom": 1.0 },
+			"nodes": [
+				{
+					"id": "r",
+					"root": true,
+					"radius": 18.0,
+					"handles": [{ "id": "r:h", "angle": 0.0, "handleKind": "board.port" }]
+				}
+			],
+			"edges": []
+		});
+		let opts = json!({
+			"mode": "hierarchical-tree",
+			"hierarchicalTree": { "direction": "sideways" }
+		});
+		let err = apply_redraw_layout_to_fixture_v1_json(&fixture.to_string(), &opts.to_string()).unwrap_err();
+		assert!(err.contains("unknown hierarchical tree direction"));
 	}
 
 	#[test]
