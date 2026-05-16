@@ -284,8 +284,8 @@ function boardToolbarToggleClass(active: boolean): string {
 	].join(" ");
 }
 
-/** @emoji 📐 Toolbar “add circle” radius; “add rectangle” uses width = height = 2× this (same as circle diameter). */
-const BOARD_PLAY_TOOLBAR_DEFAULT_NODE_RADIUS = 44;
+/** @emoji 📐 Default node span in px: circle radius = span/2; rectangle width = height = span (40×40). */
+const BOARD_PLAY_DEFAULT_NODE_SIZE_PX = 40;
 
 /** @emoji 📐 Builds {@link BoardForceGraphLayoutOptions} for the active pane camera center (dimforge layout). */
 function boardPlayForceLayoutOpts(
@@ -332,7 +332,7 @@ function BoardPlayToolbar(): ReactElement {
 		const node: BoardFixtureCircleNodeV1 = {
 			handles: [{ angle: 0, handleKind: BOARD_BUILTIN_PORT_HANDLE_KIND, id: handleId }],
 			id,
-			radius: BOARD_PLAY_TOOLBAR_DEFAULT_NODE_RADIUS,
+			radius: BOARD_PLAY_DEFAULT_NODE_SIZE_PX / 2,
 			x: camera.x,
 			y: camera.y,
 		};
@@ -343,7 +343,7 @@ function BoardPlayToolbar(): ReactElement {
 	const appendRectangle = useCallback(() => {
 		const id = newBoardAuthoringId("node");
 		const handleId = `${id}.h0`;
-		const d = BOARD_PLAY_TOOLBAR_DEFAULT_NODE_RADIUS * 2;
+		const d = BOARD_PLAY_DEFAULT_NODE_SIZE_PX;
 		const node: BoardFixtureRectangleNodeV1 = {
 			handles: [{ angle: 0, handleKind: BOARD_BUILTIN_PORT_HANDLE_KIND, id: handleId }],
 			height: d,
@@ -782,15 +782,14 @@ function BoardSelectionPane(): ReactElement {
 
 // #region 🔖SidePanels
 // #region 🔖PaletteFixtureShelf
-/** @emoji 📐 Palette circle chip radius; rectangle chip uses width = height = 2× this (same as circle diameter). */
-const BOARD_PLAY_PALETTE_NODE_RADIUS = 28;
+/** @emoji 📐 Palette seeds match {@link BOARD_PLAY_DEFAULT_NODE_SIZE_PX} (circle radius = span/2). */
 
 const BOARD_PLAY_PALETTE_CIRCLE_DRAG_FIXTURE: BoardFixtureV1 =
 	parseBoardFixtureV1({
 		camera: { x: 0, y: 0, zoom: 1 },
 		edges: [],
 		meta: { boardFixtureDragKind: BOARD_FIXTURE_DRAG_KIND_PALETTE_NODE },
-		nodes: [{ handles: [{ angle: 0, id: "palette-seed-circle.h0" }], id: "palette-seed-circle", radius: BOARD_PLAY_PALETTE_NODE_RADIUS, x: 0, y: 0 }],
+		nodes: [{ handles: [{ angle: 0, id: "palette-seed-circle.h0" }], id: "palette-seed-circle", radius: BOARD_PLAY_DEFAULT_NODE_SIZE_PX / 2, x: 0, y: 0 }],
 		schema: "elements.board.fixture/v1",
 	}) ?? (() => {
 		throw new Error("Board play: palette circle drag fixture failed validation.");
@@ -804,10 +803,10 @@ const BOARD_PLAY_PALETTE_RECTANGLE_DRAG_FIXTURE: BoardFixtureV1 =
 		nodes: [
 			{
 				handles: [{ angle: 0, id: "palette-seed-rectangle.h0" }],
-				height: BOARD_PLAY_PALETTE_NODE_RADIUS * 2,
+				height: BOARD_PLAY_DEFAULT_NODE_SIZE_PX,
 				id: "palette-seed-rectangle",
 				shape: "rectangle",
-				width: BOARD_PLAY_PALETTE_NODE_RADIUS * 2,
+				width: BOARD_PLAY_DEFAULT_NODE_SIZE_PX,
 				x: 0,
 				y: 0,
 			},
@@ -860,7 +859,7 @@ function BoardFixturePaletteDraggable(props: { fixture: BoardFixtureV1; label: s
 							aria-hidden
 							className="border-element bg-muted/40 pointer-events-none fixed z-[2147483000] flex items-center justify-center rounded-lg border shadow-sm"
 							ref={ghostRef}
-							style={{ height: 52, left: -9999, top: 0, width: 52 }}
+							style={{ height: BOARD_PLAY_DEFAULT_NODE_SIZE_PX, left: -9999, top: 0, width: BOARD_PLAY_DEFAULT_NODE_SIZE_PX }}
 						>
 							{preview}
 						</div>,
@@ -868,7 +867,7 @@ function BoardFixturePaletteDraggable(props: { fixture: BoardFixtureV1; label: s
 					)
 				: null}
 			<div
-				className="border-element bg-background flex h-14 w-14 shrink-0 cursor-grab items-center justify-center rounded-lg border active:cursor-grabbing"
+				className="border-element bg-background flex h-10 w-10 shrink-0 cursor-grab items-center justify-center rounded-lg border active:cursor-grabbing"
 				draggable
 				onDragStart={onDragStart}
 				title={label}
@@ -903,12 +902,12 @@ function BoardFixtureLibraryPanel(): ReactElement {
 					<BoardFixturePaletteDraggable
 						fixture={BOARD_PLAY_PALETTE_CIRCLE_DRAG_FIXTURE}
 						label="Drag circle onto the board"
-						preview={<div className="border-primary size-9 shrink-0 rounded-full border-2 bg-accent/30" />}
+						preview={<div className="border-primary size-10 shrink-0 rounded-full border-2 bg-accent/30" />}
 					/>
 					<BoardFixturePaletteDraggable
 						fixture={BOARD_PLAY_PALETTE_RECTANGLE_DRAG_FIXTURE}
 						label="Drag rectangle onto the board"
-						preview={<div className="border-primary size-9 shrink-0 rounded-sm border-2 bg-accent/30" />}
+						preview={<div className="border-primary size-10 shrink-0 rounded-sm border-2 bg-accent/30" />}
 					/>
 				</div>
 			</div>

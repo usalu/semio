@@ -1,0 +1,10 @@
+{
+  "title": "Board Redraw Modes And Logical Graph Layout",
+  "emoji": "📐",
+  "status": "open",
+  "description": "Generalize board layout simulation into Redraw modes: force-graph and hierarchical-tree share tick-based redraw plumbing; each accepts logical fixture nodes without required x,y (seed positions in WASM). Unify TS API and board play settings UI (shared vs per-mode params).",
+  "goal": "🎯r2602🎯runningsketchpad",
+  "sessions": [
+    "⚪3493d810ae3e4f2ca7329c3d4dba203e"
+  ]
+}

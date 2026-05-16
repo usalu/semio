@@ -1,7 +1,7 @@
 // #region 🧲Header
 // 💻 .storybook/fixtures/nakagin-capsule-tower-board.generate.script.ts
 // Specs: Regenerate `nakagin-capsule-tower.board.json` from `metabolism.kit.semio.json` Nakagin parent design (180 pieces, 179 connections).
-// Summary: Piece centers are only `pose.center` u/v from the kit Flat child design (`NAKAGIN_FLAT_DESIGN_ID`); world layout is `x=u`, `y=-v` so towers grow upward; `cs_*` squares use the same u/v span as `t_*` cluster circle diameter; handle angles use north-zero CCW on rectangles and `atan2(dy,dx)` on circles toward each neighbor; edges mirror parent `connections`.
+// Summary: Piece centers are only `pose.center` u/v from the kit Flat child design (`NAKAGIN_FLAT_DESIGN_ID`); world layout is `x=u`, `y=-v` so towers grow upward; handle angles use north-zero CCW on rectangles and `atan2(dy,dx)` on circles toward each neighbor; edges mirror parent `connections`. Every node is emitted at a uniform **40×40** world px footprint (circles radius 20) regardless of kit piece kind.
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 // #endregion 🧲Header
 
@@ -200,6 +200,37 @@ function normalizeLayout(pos: Record<string, { x: number; y: number }>, pieceByI
 }
 //#endregion 🔖Layout
 
+/** @emoji 📐 Uniform world footprint for every node (rectangles 40×40; circles radius 20). */
+const NAKAGIN_BOARD_UNIFORM_NODE_SIZE_PX = 40;
+
+type GeneratedBoardNode =
+	| { handles: { angle: number; id: string; radius: number }[]; height: number; id: string; label: string; shape: "rectangle"; width: number; x: number; y: number }
+	| { handles: { angle: number; id: string; radius: number }[]; id: string; label: string; radius: number; x: number; y: number };
+
+/** @emoji 📐 Replaces scaled per-kind sizes with {@link NAKAGIN_BOARD_UNIFORM_NODE_SIZE_PX} and matching handle hit radii. */
+function applyUniformNodeFootprint(nodes: GeneratedBoardNode[]): void {
+	const d = NAKAGIN_BOARD_UNIFORM_NODE_SIZE_PX;
+	const circleR = d / 2;
+	for (const n of nodes) {
+		if ("shape" in n && n.shape === "rectangle") {
+			n.width = d;
+			n.height = d;
+			const rh = Math.max(2.5, d * 0.065);
+			const rounded = Math.round(rh * 1000) / 1000;
+			for (const h of n.handles) {
+				h.radius = rounded;
+			}
+		} else {
+			n.radius = circleR;
+			const rh = Math.max(2.5, circleR * 0.28);
+			const rounded = Math.round(rh * 1000) / 1000;
+			for (const h of n.handles) {
+				h.radius = rounded;
+			}
+		}
+	}
+}
+
 //#region 🔖Main
 function main(): void {
 	const { centerUvByName, connections, pieceById, typeById } = loadKit();
@@ -277,6 +308,8 @@ function main(): void {
 			};
 		})
 		.sort((a, b) => a.id.localeCompare(b.id));
+
+	applyUniformNodeFootprint(nodes);
 
 	const edges = connections
 		.map((c) => {
