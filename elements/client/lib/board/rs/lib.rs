@@ -65,6 +65,18 @@ mod vcompute {
 		center + Vec2::new(local.x, local.y)
 	}
 
+	/// 🧭 East-zero polar angle for a circle handle that meets the ray from `center` toward `toward` on the rim.
+	pub fn circle_handle_angle_toward(center: Point, toward: Point) -> f64 {
+		let d = toward - center;
+		f64::atan2(d.y, d.x)
+	}
+
+	/// 🧭 North-zero rectangle handle angle so the rim point lies on the ray from `center` toward `toward`.
+	pub fn rectangle_handle_angle_toward(center: Point, _width: f64, _height: f64, toward: Point) -> f64 {
+		let u = normalize_or_zero(toward - center);
+		f64::atan2(-u.x, -u.y)
+	}
+
 	pub fn compute_edge_bezier_points(
 		source_point: Point,
 		target_point: Point,
@@ -1271,9 +1283,139 @@ mod hierarchical_tree {
 mod redraw_layout {
 	use serde::Deserialize;
 	use serde_json::Value;
+	use std::collections::HashMap;
+	use vello::kurbo::Point;
 
 	use super::force_graph::{apply_force_graph_layout_to_fixture_v1_value, ForceGraphLayoutOptions};
 	use super::hierarchical_tree::{apply_hierarchical_tree_layout_to_fixture_v1_value, HierarchicalTreeLayoutOptions};
+	use super::vcompute::{circle_handle_angle_toward, distance_between, rectangle_handle_angle_toward};
+
+	#[derive(Debug, Clone, Copy)]
+	enum NodeShapeSnap {
+		Circle { cx: f64, cy: f64 },
+		Rect { cx: f64, cy: f64, w: f64, h: f64 },
+	}
+
+	impl NodeShapeSnap {
+		fn center(self) -> Point {
+			match self {
+				NodeShapeSnap::Circle { cx, cy, .. } | NodeShapeSnap::Rect { cx, cy, .. } => Point::new(cx, cy),
+			}
+		}
+
+		fn handle_angle_toward(self, toward: Point) -> Option<f64> {
+			let c = self.center();
+			if distance_between(c, toward) <= 1e-9 {
+				return None;
+			}
+			Some(match self {
+				NodeShapeSnap::Circle { cx, cy, .. } => circle_handle_angle_toward(Point::new(cx, cy), toward),
+				NodeShapeSnap::Rect { cx, cy, w, h } => rectangle_handle_angle_toward(Point::new(cx, cy), w, h, toward),
+			})
+		}
+	}
+
+	fn parse_node_shape_snap(node: &serde_json::Map<String, Value>) -> Option<NodeShapeSnap> {
+		let cx = node.get("x").and_then(|v| v.as_f64())?;
+		let cy = node.get("y").and_then(|v| v.as_f64())?;
+		if node.get("shape").and_then(|v| v.as_str()) == Some("rectangle") {
+			let w = node.get("width").and_then(|v| v.as_f64())?;
+			let h = node.get("height").and_then(|v| v.as_f64())?;
+			Some(NodeShapeSnap::Rect { cx, cy, w, h })
+		} else {
+			node.get("radius").and_then(|v| v.as_f64())?;
+			Some(NodeShapeSnap::Circle { cx, cy })
+		}
+	}
+
+	/// 🔗 Sets each edge endpoint handle `angle` so the chord follows node centers; last edge wins on shared handles.
+	pub fn apply_edge_handle_snap_to_fixture_v1_value(fixture: &mut Value) -> Result<(), String> {
+		let Some(root) = fixture.as_object_mut() else {
+			return Err("fixture root must be object".into());
+		};
+		if root.get("schema").and_then(|v| v.as_str()) != Some("elements.board.fixture/v1") {
+			return Err("schema must be elements.board.fixture/v1".into());
+		}
+		let edges_json = root.get("edges").and_then(|v| v.as_array()).cloned().unwrap_or_default();
+		let Some(nodes) = root.get_mut("nodes").and_then(|v| v.as_array_mut()) else {
+			return Err("nodes array missing".into());
+		};
+		let mut shapes: Vec<Option<NodeShapeSnap>> = Vec::with_capacity(nodes.len());
+		let mut handle_loc: HashMap<String, (usize, usize)> = HashMap::new();
+		for (ni, node_val) in nodes.iter().enumerate() {
+			let Some(no) = node_val.as_object() else {
+				shapes.push(None);
+				continue;
+			};
+			shapes.push(parse_node_shape_snap(no));
+			let Some(hs) = no.get("handles").and_then(|v| v.as_array()) else {
+				continue;
+			};
+			for (hi, h) in hs.iter().enumerate() {
+				let Some(ho) = h.as_object() else {
+					continue;
+				};
+				if let Some(hid) = ho.get("id").and_then(|v| v.as_str()) {
+					handle_loc.insert(hid.to_string(), (ni, hi));
+				}
+			}
+		}
+		let mut angle_by_loc: HashMap<(usize, usize), f64> = HashMap::new();
+		for e in &edges_json {
+			let Some(eo) = e.as_object() else {
+				continue;
+			};
+			let Some(src_h) = eo.get("source").and_then(|v| v.as_str()) else {
+				continue;
+			};
+			let Some(tgt_h) = eo.get("target").and_then(|v| v.as_str()) else {
+				continue;
+			};
+			let Some(&(ni_a, hi_a)) = handle_loc.get(src_h) else {
+				continue;
+			};
+			let Some(&(ni_b, hi_b)) = handle_loc.get(tgt_h) else {
+				continue;
+			};
+			let Some(sa) = shapes.get(ni_a).copied().flatten() else {
+				continue;
+			};
+			let Some(sb) = shapes.get(ni_b).copied().flatten() else {
+				continue;
+			};
+			if let Some(ang_a) = sa.handle_angle_toward(sb.center()) {
+				angle_by_loc.insert((ni_a, hi_a), ang_a);
+			}
+			if let Some(ang_b) = sb.handle_angle_toward(sa.center()) {
+				angle_by_loc.insert((ni_b, hi_b), ang_b);
+			}
+		}
+		for ((ni, hi), ang) in angle_by_loc {
+			let Some(node_val) = nodes.get_mut(ni) else {
+				continue;
+			};
+			let Some(no) = node_val.as_object_mut() else {
+				continue;
+			};
+			let Some(hs) = no.get_mut("handles").and_then(|v| v.as_array_mut()) else {
+				continue;
+			};
+			let Some(h) = hs.get_mut(hi) else {
+				continue;
+			};
+			let Some(ho) = h.as_object_mut() else {
+				continue;
+			};
+			ho.insert("angle".into(), serde_json::json!(ang));
+		}
+		Ok(())
+	}
+
+	pub fn apply_edge_handle_snap_to_fixture_v1_json(fixture_json: &str) -> Result<String, String> {
+		let mut fixture: Value = serde_json::from_str(fixture_json).map_err(|e| e.to_string())?;
+		apply_edge_handle_snap_to_fixture_v1_value(&mut fixture)?;
+		serde_json::to_string(&fixture).map_err(|e| e.to_string())
+	}
 
 	#[derive(Debug, Deserialize)]
 	#[serde(rename_all = "camelCase")]
@@ -1285,6 +1427,8 @@ mod redraw_layout {
 		center_y: Option<f64>,
 		#[serde(default)]
 		random_seed: Option<u64>,
+		#[serde(default)]
+		redraw_handles_after: bool,
 		#[serde(default)]
 		force_graph: Option<ForceGraphLayoutOptions>,
 		#[serde(default)]
@@ -1320,13 +1464,16 @@ mod redraw_layout {
 			}
 			other => return Err(format!("unknown redraw mode: {other}")),
 		}
+		if opts.redraw_handles_after {
+			apply_edge_handle_snap_to_fixture_v1_value(&mut fixture)?;
+		}
 		serde_json::to_string(&fixture).map_err(|e| e.to_string())
 	}
 }
 // #endregion 🔁RedrawLayout
 
 pub use force_graph::{apply_force_graph_layout_to_fixture_v1_json, apply_force_graph_layout_to_fixture_v1_value, ForceGraphLayoutOptions};
-pub use redraw_layout::apply_redraw_layout_to_fixture_v1_json;
+pub use redraw_layout::{apply_edge_handle_snap_to_fixture_v1_json, apply_redraw_layout_to_fixture_v1_json};
 
 mod elements_board_palette {
 	use vello::peniko::Color;
@@ -3679,6 +3826,12 @@ pub fn board_redraw_layout_fixture_json(fixture_json: &str, options_json: &str) 
 	apply_redraw_layout_to_fixture_v1_json(fixture_json, options_json).map_err(|e| JsValue::from_str(&e))
 }
 
+#[cfg(target_arch = "wasm32")]
+#[wasm_bindgen(js_name = boardRedrawHandlesFixtureJson)]
+pub fn board_redraw_handles_fixture_json(fixture_json: &str) -> Result<String, JsValue> {
+	apply_edge_handle_snap_to_fixture_v1_json(fixture_json).map_err(|e| JsValue::from_str(&e))
+}
+
 // #region 🔖WasmSession
 /// 🖥️ Single WASM entry: one {@link BoardHost}, optional WebGPU surface bound via {@link BoardSession::attach_canvas}.
 #[cfg(target_arch = "wasm32")]
@@ -4585,7 +4738,9 @@ mod host_tests {
 
 #[cfg(test)]
 mod force_graph_tests {
-	use super::{apply_force_graph_layout_to_fixture_v1_json, apply_redraw_layout_to_fixture_v1_json};
+	use super::{
+		apply_edge_handle_snap_to_fixture_v1_json, apply_force_graph_layout_to_fixture_v1_json, apply_redraw_layout_to_fixture_v1_json,
+	};
 	use serde_json::json;
 	use std::collections::HashMap;
 
@@ -4674,6 +4829,95 @@ mod force_graph_tests {
 		let ax = nodes[0]["x"].as_f64().unwrap();
 		let bx = nodes[1]["x"].as_f64().unwrap();
 		assert!((bx - ax).abs() > 80.0);
+	}
+
+	#[test]
+	fn edge_handle_snap_sets_circle_handle_angles_on_center_line() {
+		let fixture = json!({
+			"schema": "elements.board.fixture/v1",
+			"camera": { "x": 0.0, "y": 0.0, "zoom": 1.0 },
+			"nodes": [
+				{
+					"id": "a",
+					"x": 0.0,
+					"y": 0.0,
+					"radius": 40.0,
+					"handles": [{ "id": "a:h0", "angle": 1.57, "handleKind": "board.port" }]
+				},
+				{
+					"id": "b",
+					"x": 200.0,
+					"y": 0.0,
+					"radius": 40.0,
+					"handles": [{ "id": "b:h0", "angle": 0.0, "handleKind": "board.port" }]
+				}
+			],
+			"edges": [{ "id": "e1", "source": "a:h0", "target": "b:h0" }]
+		});
+		let out = apply_edge_handle_snap_to_fixture_v1_json(&fixture.to_string()).unwrap();
+		let parsed: serde_json::Value = serde_json::from_str(&out).unwrap();
+		let nodes = parsed["nodes"].as_array().unwrap();
+		let ang_a = nodes[0]["handles"][0]["angle"].as_f64().unwrap();
+		let ang_b = nodes[1]["handles"][0]["angle"].as_f64().unwrap();
+		assert!((ang_a - 0.0).abs() < 1e-6, "expected east on a, got {ang_a}");
+		assert!((ang_b - std::f64::consts::PI).abs() < 1e-6, "expected west on b, got {ang_b}");
+	}
+
+	#[test]
+	fn redraw_force_graph_with_snap_sets_handle_angles() {
+		let fixture = json!({
+			"schema": "elements.board.fixture/v1",
+			"camera": { "x": 0.0, "y": 0.0, "zoom": 1.0 },
+			"nodes": [
+				{
+					"id": "a",
+					"x": 0.0,
+					"y": 0.0,
+					"radius": 40.0,
+					"handles": [{ "id": "a:h0", "angle": 1.57, "handleKind": "board.port" }]
+				},
+				{
+					"id": "b",
+					"x": 200.0,
+					"y": 0.0,
+					"radius": 40.0,
+					"handles": [{ "id": "b:h0", "angle": 0.0, "handleKind": "board.port" }]
+				}
+			],
+			"edges": [{ "id": "e1", "source": "a:h0", "target": "b:h0" }]
+		});
+		let opts = json!({
+			"mode": "force-graph",
+			"redrawHandlesAfter": true,
+			"randomSeed": 7,
+			"forceGraph": {
+				"iterations": 200,
+				"idealEdgeLength": 180.0,
+				"repulsionStrength": 8000.0,
+				"springStrength": 0.04,
+				"gravity": 0.0
+			}
+		});
+		let out = apply_redraw_layout_to_fixture_v1_json(&fixture.to_string(), &opts.to_string()).unwrap();
+		let parsed: serde_json::Value = serde_json::from_str(&out).unwrap();
+		let nodes = parsed["nodes"].as_array().unwrap();
+		let ang_a = nodes[0]["handles"][0]["angle"].as_f64().unwrap();
+		let ang_b = nodes[1]["handles"][0]["angle"].as_f64().unwrap();
+		let ax = nodes[0]["x"].as_f64().unwrap();
+		let bx = nodes[1]["x"].as_f64().unwrap();
+		let ay = nodes[0]["y"].as_f64().unwrap();
+		let by = nodes[1]["y"].as_f64().unwrap();
+		let exp_a = f64::atan2(by - ay, bx - ax);
+		let exp_b = f64::atan2(ay - by, ax - bx);
+		let wrap_diff = |a: f64, b: f64| {
+			let mut d = (a - b).rem_euclid(std::f64::consts::TAU);
+			if d > std::f64::consts::PI {
+				d -= std::f64::consts::TAU;
+			}
+			d.abs()
+		};
+		assert!(wrap_diff(ang_a, exp_a) < 0.03, "a angle {ang_a} vs exp {exp_a}");
+		assert!(wrap_diff(ang_b, exp_b) < 0.03, "b angle {ang_b} vs exp {exp_b}");
 	}
 
 	#[test]

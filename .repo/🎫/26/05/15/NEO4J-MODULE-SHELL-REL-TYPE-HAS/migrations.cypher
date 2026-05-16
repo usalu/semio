@@ -1352,6 +1352,12 @@ WHERE id(p) <> id(m)
 DELETE r;
 //#endregion ReparentOperationCommandsUnderOwnerOperationModules
 
+//#region DeleteOrphanOperationModulesWithoutIncoming
+MATCH (op:Module {name: 'operation'})
+WHERE NOT ()-[:OWNS]->(op)
+DETACH DELETE op;
+//#endregion DeleteOrphanOperationModulesWithoutIncoming
+
 //#region CollapseDuplicateOperationModulesPerFolder
 MATCH (folder:Module)-[:OWNS]->(op:Module {name: 'operation'})
 WITH folder, collect(op) AS ops
@@ -1375,23 +1381,50 @@ DETACH DELETE ic;
 //#endregion DetachCommandKitInterfaceNode
 
 //#region AssertOwnsContainmentShape
-OPTIONAL MATCH (m:Module) WHERE NOT ()-[:OWNS]->(m) AND coalesce(m.name, '') <> 'Schema'
-WITH count(m) AS strayModuleRoots
-CALL apoc.util.validate(strayModuleRoots = 0, 'Every `Module` except the `Schema` row must have incoming `OWNS`; extra module roots=%d', [strayModuleRoots]);
+// `apoc.util.validate(predicate, …)` throws when `predicate` is **true** (error condition), so each predicate is an `EXISTS { … }` violation pattern.
+CALL apoc.util.validate(
+  EXISTS { MATCH (m:Module) WHERE NOT ()-[:OWNS]->(m) AND coalesce(m.name, '') <> 'Schema' RETURN 1 AS _ },
+  'Every `Module` except the `Schema` row must have incoming `OWNS` (found extra module root).',
+  []
+);
 
-OPTIONAL MATCH (:Module)-[r:OWNS]->(x) WHERE NOT (x:Module OR x:Constraint OR x:Enum)
-WITH count(r) AS badModuleOwns
-CALL apoc.util.validate(badModuleOwns = 0, '`Module` must `OWNS` only `Module`, `Constraint`, or `Enum`; violations=%d', [badModuleOwns]);
+CALL apoc.util.validate(
+  EXISTS {
+    MATCH (:Module)-[:OWNS]->(x)
+    WHERE NOT (x:Module OR x:Constraint OR x:Enum)
+    RETURN 1 AS _
+  },
+  '`Module` must `OWNS` only `Module`, `Constraint`, or `Enum` (found other target).',
+  []
+);
 
-OPTIONAL MATCH (:Class)-[r:OWNS]->(x) WHERE NOT (x:Class OR x:Command OR x:Data OR x:Derived OR x:Reference OR x:Method OR x:Constraint)
-WITH count(r) AS badClassOwns
-CALL apoc.util.validate(badClassOwns = 0, '`Class` `OWNS` target outside kit shell set; violations=%d', [badClassOwns]);
+CALL apoc.util.validate(
+  EXISTS {
+    MATCH (:Class)-[:OWNS]->(x)
+    WHERE NOT (x:Class OR x:Command OR x:Data OR x:Derived OR x:Reference OR x:Method OR x:Constraint)
+    RETURN 1 AS _
+  },
+  '`Class` `OWNS` target outside allowed kit shell set.',
+  []
+);
 
-OPTIONAL MATCH (:Interface)-[r:OWNS]->(x) WHERE NOT (x:Class OR x:Command OR x:Data OR x:Derived OR x:Reference OR x:Method OR x:Constraint)
-WITH count(r) AS badInterfaceOwns
-CALL apoc.util.validate(badInterfaceOwns = 0, '`Interface` `OWNS` target outside kit shell set; violations=%d', [badInterfaceOwns]);
+CALL apoc.util.validate(
+  EXISTS {
+    MATCH (:Interface)-[:OWNS]->(x)
+    WHERE NOT (x:Class OR x:Command OR x:Data OR x:Derived OR x:Reference OR x:Method OR x:Constraint)
+    RETURN 1 AS _
+  },
+  '`Interface` `OWNS` target outside allowed kit shell set.',
+  []
+);
 
-OPTIONAL MATCH (:Command)-[r:OWNS]->(x) WHERE NOT (x:Data OR x:Constraint)
-WITH count(r) AS badCommandOwns
-CALL apoc.util.validate(badCommandOwns = 0, '`Command` may `OWNS` only `Data` or `Constraint`; violations=%d', [badCommandOwns]);
+CALL apoc.util.validate(
+  EXISTS {
+    MATCH (:Command)-[:OWNS]->(x)
+    WHERE NOT (x:Data OR x:Constraint)
+    RETURN 1 AS _
+  },
+  '`Command` may `OWNS` only `Data` or `Constraint`.',
+  []
+);
 //#endregion AssertOwnsContainmentShape

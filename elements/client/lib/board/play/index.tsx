@@ -33,9 +33,8 @@ import {
 	type UIAppConfig,
 	type UIWindowKindDefinition,
 	type UIWindowLayout,
-	type UIWindowOption,
 } from "@elements/ui";
-import { BoxSelect, Circle, ClipboardList, Lasso, Library, Minus, Pause, Play, Plus, Repeat2, Settings, Square } from "lucide-react";
+import { BoxSelect, Circle, ClipboardList, Lasso, Library, Link2, Minus, Pause, Play, Plus, Repeat2, Settings, Square } from "lucide-react";
 import {
 	createContext,
 	useCallback,
@@ -63,7 +62,8 @@ import {
 	BOARD_FIXTURE_DRAG_V1_MIME,
 	BOARD_SELECTION_TARGETS_DEFAULT,
 	encodeBoardFixtureForDragV1,
-	layoutBoardFixtureRedraw,
+	layoutBoardFixtureRedrawHandles,
+	layoutBoardFixtureRedrawNodes,
 	parseBoardFixtureV1,
 	type BoardFixtureDropDetail,
 	type BoardFixtureCircleNodeV1,
@@ -268,6 +268,9 @@ interface BoardPlayShellValue {
 	treeLayoutDirection: BoardHierarchicalTreeDirectionKind;
 	setTreeLayoutDirection: (value: BoardHierarchicalTreeDirectionKind) => void;
 	applyBoardRedrawOnce: () => void;
+	applyBoardRedrawHandlesOnce: () => void;
+	boardRedrawHandlesAfterNodes: boolean;
+	setBoardRedrawHandlesAfterNodes: (value: boolean) => void;
 }
 
 const BoardPlayShellContext = createContext<BoardPlayShellValue | null>(null);
@@ -311,6 +314,7 @@ function boardPlayRedrawLayoutOpts(
 	treeLayerSpacing: number,
 	treeSiblingGap: number,
 	treeDirection: BoardHierarchicalTreeDirectionKind,
+	redrawHandlesAfter: boolean,
 ): BoardRedrawLayoutOptions {
 	const cam = camerasByPane[pane];
 	const cx = cam.x;
@@ -325,6 +329,7 @@ function boardPlayRedrawLayoutOpts(
 				siblingGap: Math.max(0, treeSiblingGap),
 			},
 			mode: "hierarchical-tree",
+			redrawHandlesAfter,
 		};
 	}
 	const fg: BoardForceGraphLayoutOptions = {
@@ -335,13 +340,14 @@ function boardPlayRedrawLayoutOpts(
 		iterations: Math.max(1, Math.min(5000, Math.round(forceIters))),
 		repulsionStrength: Math.max(40, forceRepulsion),
 	};
-	return { centerX: cx, centerY: cy, forceGraph: fg, mode: "force-graph" };
+	return { centerX: cx, centerY: cy, forceGraph: fg, mode: "force-graph", redrawHandlesAfter };
 }
 
 /** @emoji 🧰 Sketchpad-style tools: marquee kind, merge mode, hit target, and circle or rectangle authoring at the active pane camera. */
 function BoardPlayToolbar(): ReactElement {
 	const {
 		activePaneId,
+		applyBoardRedrawHandlesOnce,
 		boardSelectionMethod,
 		boardSelectionMode,
 		boardSelectionTargets,
@@ -494,6 +500,16 @@ function BoardPlayToolbar(): ReactElement {
 							{boardRedrawPlaying ? <Pause className="size-4" aria-hidden /> : <Play className="size-4" aria-hidden />}
 						</button>
 					</ToolbarItem>
+					<ToolbarItem>
+						<button
+							type="button"
+							className={boardToolbarToggleClass(false)}
+							title="Redraw handles: anchors on the straight segment between node centers"
+							onClick={() => applyBoardRedrawHandlesOnce()}
+						>
+							<Link2 className="size-4" aria-hidden />
+						</button>
+					</ToolbarItem>
 				</ToolbarGroup>
 			</ToolbarZone>
 		</div>
@@ -506,7 +522,9 @@ function BoardPlayToolbar(): ReactElement {
 function BoardPlaySettingsPanel(): ReactElement {
 	const {
 		activePaneId,
+		applyBoardRedrawHandlesOnce,
 		applyBoardRedrawOnce,
+		boardRedrawHandlesAfterNodes,
 		boardRedrawMode,
 		boardRedrawTickIterations,
 		boardRedrawTickMs,
@@ -515,6 +533,7 @@ function BoardPlaySettingsPanel(): ReactElement {
 		forceLayoutIdealEdgeLength,
 		forceLayoutRepulsionStrength,
 		setBoardRedrawMode,
+		setBoardRedrawHandlesAfterNodes,
 		setBoardRedrawTickIterations,
 		setBoardRedrawTickMs,
 		setForceLayoutFullIterations,
@@ -540,17 +559,30 @@ function BoardPlaySettingsPanel(): ReactElement {
 			</div>
 			<div className="text-muted-foreground shrink-0 text-[11px] font-medium uppercase tracking-wide">Redraw</div>
 			<div className="min-h-0 flex-1 space-y-4 overflow-y-auto">
-				<Label id="board.play.settings.redraw.mode" label="Redraw mode">
+				<div className="text-muted-foreground text-[11px] font-medium uppercase tracking-wide">Redraw nodes</div>
+				<Label id="board.play.settings.redraw.mode" label="Layout kind">
 					<Select onValueChange={(v) => setBoardRedrawMode(v as BoardRedrawModeKind)} value={boardRedrawMode}>
 						<SelectTrigger className="h-8 w-full" id="board-play-redraw-mode" size="sm">
 							<SelectValue />
 						</SelectTrigger>
 						<SelectContent>
-							<SelectItem value="force-graph">Force graph</SelectItem>
-							<SelectItem value="hierarchical-tree">Hierarchical tree</SelectItem>
+							<SelectItem value="force-graph">Graph</SelectItem>
+							<SelectItem value="hierarchical-tree">Tree</SelectItem>
 						</SelectContent>
 					</Select>
 				</Label>
+				<div className="flex items-center gap-2">
+					<input
+						checked={boardRedrawHandlesAfterNodes}
+						className="accent-accent size-3.5 shrink-0"
+						id="board-play-redraw-handles-after-nodes"
+						onChange={(e) => setBoardRedrawHandlesAfterNodes(e.target.checked)}
+						type="checkbox"
+					/>
+					<label className="text-muted-foreground cursor-pointer select-none text-[11px] leading-snug" htmlFor="board-play-redraw-handles-after-nodes">
+						Also redraw handles after node redraw
+					</label>
+				</div>
 				<Label id="board.play.settings.redraw.tickMs" label="Play interval (ms)">
 					<Slider
 						id="board-play-slider-redraw-tick-ms"
@@ -579,7 +611,7 @@ function BoardPlaySettingsPanel(): ReactElement {
 				)}
 				{boardRedrawMode === "force-graph" ? (
 					<>
-						<div className="text-muted-foreground pt-1 text-[11px] font-medium uppercase tracking-wide">Force graph</div>
+						<div className="text-muted-foreground pt-1 text-[11px] font-medium uppercase tracking-wide">Graph</div>
 						<Label id="board.play.settings.force.fullIterations" label="Iterations (apply once)">
 							<Slider
 								id="board-play-slider-force-full-iters"
@@ -623,7 +655,7 @@ function BoardPlaySettingsPanel(): ReactElement {
 					</>
 				) : (
 					<>
-						<div className="text-muted-foreground pt-1 text-[11px] font-medium uppercase tracking-wide">Hierarchical tree</div>
+						<div className="text-muted-foreground pt-1 text-[11px] font-medium uppercase tracking-wide">Tree</div>
 						<Label id="board.play.settings.tree.layerSpacing" label="Layer spacing (px)">
 							<Slider
 								id="board-play-slider-tree-layer"
@@ -660,7 +692,14 @@ function BoardPlaySettingsPanel(): ReactElement {
 					</>
 				)}
 				<Button className="h-8 w-full text-xs" type="button" variant="secondary" onClick={applyBoardRedrawOnce}>
-					Apply redraw once
+					Redraw nodes
+				</Button>
+				<div className="text-muted-foreground border-t border-element pt-2 text-[11px] font-medium uppercase tracking-wide">Redraw handles</div>
+				<p className="text-muted-foreground text-[11px] leading-snug">
+					Each edge uses the straight segment between node centers; handle anchors move to where that segment meets each shape (shortest chord through the bodies).
+				</p>
+				<Button className="h-8 w-full text-xs" type="button" variant="secondary" onClick={applyBoardRedrawHandlesOnce}>
+					Redraw handles
 				</Button>
 				<p className="text-muted-foreground text-[11px] leading-snug">
 					While play is on, camera framing stays pinned to the graph as it was when you pressed play, so zoom and pan no longer jump each tick. Pause to re-frame from the latest layout.
@@ -1716,6 +1755,12 @@ const boardPlayLayout: UIWindowLayout = {
 	},
 };
 
+const boardWindowKinds: UIWindowKindDefinition[] = [
+	{ component: BoardOverviewPane, contextMenu: boardPlayOverviewWindowContextMenu, id: "board-overview", label: "Overview" },
+	{ component: BoardDetailPane, id: "board-detail", label: "Zoom" },
+	{ component: BoardSelectionPane, id: "board-selection", label: "Selection" },
+];
+
 // #endregion 🔖Layout
 
 // #region 🔖Surface
@@ -1792,181 +1837,10 @@ function BoardPlayInner(): ReactElement {
 	const [boardRedrawTickMs, setBoardRedrawTickMs] = useState(96);
 	const [boardRedrawTickIterations, setBoardRedrawTickIterations] = useState(10);
 	const [boardRedrawMode, setBoardRedrawMode] = useState<BoardRedrawModeKind>("force-graph");
+	const [boardRedrawHandlesAfterNodes, setBoardRedrawHandlesAfterNodes] = useState(false);
 	const [treeLayoutLayerSpacing, setTreeLayoutLayerSpacing] = useState(120);
 	const [treeLayoutSiblingGap, setTreeLayoutSiblingGap] = useState(28);
 	const [treeLayoutDirection, setTreeLayoutDirection] = useState<BoardHierarchicalTreeDirectionKind>("downwards");
-	const [windowOptionDemo, setWindowOptionDemo] = useState({
-		ovToggle: true,
-		ovSelect: "fit",
-		ovCombo: "alpha",
-		ovCycle: "a",
-		ovInput: "sample",
-		ovText: "notes",
-		ovCheck: true,
-		ovRadio: "one",
-		ovSlider: 40,
-		ovNumber: 3,
-		ovColor: "#3366cc",
-		detailSlider: 50,
-		selMode: "nodes",
-	});
-
-	const boardWindowKinds = useMemo<UIWindowKindDefinition[]>(
-		() => [
-			{
-				component: BoardOverviewPane,
-				contextMenu: boardPlayOverviewWindowContextMenu,
-				id: "board-overview",
-				label: "Overview",
-				options: [
-					{ id: "board-ov-sec", kind: "section", title: "Window options" },
-					{ id: "board-ov-sep0", kind: "separator" },
-					{
-						icon: <Square className="size-small" />,
-						id: "board-ov-toggle",
-						kind: "toggle",
-						label: "Preview",
-						pressed: windowOptionDemo.ovToggle,
-						onPressedChange: (pressed) => setWindowOptionDemo((p) => ({ ...p, ovToggle: pressed })),
-					},
-					{
-						id: "board-ov-select",
-						items: [
-							{ id: "fit", label: "Fit", value: "fit" },
-							{ id: "fill", label: "Fill", value: "fill" },
-							{ id: "1x", label: "1×", value: "1x" },
-						],
-						kind: "select",
-						label: "Scale",
-						onValueChange: (value) => setWindowOptionDemo((p) => ({ ...p, ovSelect: value })),
-						value: windowOptionDemo.ovSelect,
-					},
-					{
-						id: "board-ov-combo",
-						kind: "combobox",
-						label: "Search preset",
-						onValueChange: (value) => setWindowOptionDemo((p) => ({ ...p, ovCombo: value })),
-						options: [
-							{ label: "Alpha", value: "alpha" },
-							{ label: "Beta", value: "beta" },
-							{ label: "Gamma", value: "gamma" },
-						],
-						placeholder: "Pick…",
-						value: windowOptionDemo.ovCombo,
-					},
-					{
-						id: "board-ov-cycle",
-						items: [
-							{ label: "A", value: "a" },
-							{ label: "B", value: "b" },
-							{ label: "C", value: "c" },
-						],
-						kind: "buttonCycle",
-						label: "Cycle",
-						onValueChange: (value) => setWindowOptionDemo((p) => ({ ...p, ovCycle: value })),
-						value: windowOptionDemo.ovCycle,
-					},
-					{ id: "board-ov-btn", kind: "button", label: "Action", onClick: () => undefined, text: "Ping" },
-					{
-						id: "board-ov-input",
-						kind: "input",
-						label: "Tag",
-						onLazyChange: (value) => setWindowOptionDemo((p) => ({ ...p, ovInput: value })),
-						placeholder: "id…",
-						value: windowOptionDemo.ovInput,
-					},
-					{
-						id: "board-ov-textarea",
-						kind: "textarea",
-						label: "Memo",
-						onLazyChange: (value) => setWindowOptionDemo((p) => ({ ...p, ovText: value })),
-						rows: 3,
-						value: windowOptionDemo.ovText,
-					},
-					{
-						checked: windowOptionDemo.ovCheck,
-						id: "board-ov-check",
-						kind: "checkbox",
-						label: "Snap",
-						onCheckedChange: (checked) => setWindowOptionDemo((p) => ({ ...p, ovCheck: checked })),
-					},
-					{
-						id: "board-ov-radio",
-						items: [
-							{ label: "One", value: "one" },
-							{ label: "Two", value: "two" },
-						],
-						kind: "radio",
-						label: "Band",
-						onChange: (value) => setWindowOptionDemo((p) => ({ ...p, ovRadio: value })),
-						value: windowOptionDemo.ovRadio,
-					},
-					{
-						id: "board-ov-slider",
-						kind: "slider",
-						label: "Opacity",
-						max: 100,
-						min: 0,
-						onValueChange: (value) => setWindowOptionDemo((p) => ({ ...p, ovSlider: value })),
-						value: windowOptionDemo.ovSlider,
-					},
-					{
-						id: "board-ov-number",
-						kind: "number",
-						label: "Copies",
-						max: 9,
-						min: 0,
-						onChange: (value) => setWindowOptionDemo((p) => ({ ...p, ovNumber: value })),
-						value: windowOptionDemo.ovNumber,
-					},
-					{
-						id: "board-ov-color",
-						kind: "color",
-						label: "Accent",
-						onChange: (value) => setWindowOptionDemo((p) => ({ ...p, ovColor: value })),
-						value: windowOptionDemo.ovColor,
-					},
-				] satisfies UIWindowOption[],
-			},
-			{
-				component: BoardDetailPane,
-				id: "board-detail",
-				label: "Zoom",
-				options: [
-					{ id: "board-d-sec", kind: "section", title: "Zoom" },
-					{
-						id: "board-d-slider",
-						kind: "slider",
-						label: "Focus",
-						max: 100,
-						min: 0,
-						onValueChange: (value) => setWindowOptionDemo((p) => ({ ...p, detailSlider: value })),
-						value: windowOptionDemo.detailSlider,
-					},
-				] satisfies UIWindowOption[],
-			},
-			{
-				component: BoardSelectionPane,
-				id: "board-selection",
-				label: "Selection",
-				options: [
-					{
-						id: "board-s-sel",
-						items: [
-							{ id: "n", label: "Nodes", value: "nodes" },
-							{ id: "e", label: "Edges", value: "edges" },
-							{ id: "h", label: "Handles", value: "handles" },
-						],
-						kind: "select",
-						label: "Target",
-						onValueChange: (value) => setWindowOptionDemo((p) => ({ ...p, selMode: value })),
-						value: windowOptionDemo.selMode,
-					},
-				] satisfies UIWindowOption[],
-			},
-		],
-		[windowOptionDemo],
-	);
 
 	useEffect(() => {
 		try {
@@ -2109,10 +1983,14 @@ function BoardPlayInner(): ReactElement {
 
 	const camerasByPane = useMemo(() => triptychCamerasFromFixture(cameraBasisFixtureRef.current), [cameraBasisTick]);
 
+	const applyBoardRedrawHandlesOnce = useCallback(() => {
+		patchFixture((prev) => layoutBoardFixtureRedrawHandles(prev));
+	}, [patchFixture]);
+
 	const applyBoardRedrawOnce = useCallback(() => {
 		const full = Math.max(1, Math.min(5000, Math.round(forceLayoutFullIterations)));
 		patchFixture((prev) =>
-			layoutBoardFixtureRedraw(
+			layoutBoardFixtureRedrawNodes(
 				prev,
 				boardPlayRedrawLayoutOpts(
 					activePaneId,
@@ -2125,11 +2003,13 @@ function BoardPlayInner(): ReactElement {
 					treeLayoutLayerSpacing,
 					treeLayoutSiblingGap,
 					treeLayoutDirection,
+					boardRedrawHandlesAfterNodes,
 				),
 			),
 		);
 	}, [
 		activePaneId,
+		boardRedrawHandlesAfterNodes,
 		boardRedrawMode,
 		camerasByPane,
 		forceLayoutFullIterations,
@@ -2153,7 +2033,7 @@ function BoardPlayInner(): ReactElement {
 				if (prev.nodes.length === 0) {
 					return prev;
 				}
-				return layoutBoardFixtureRedraw(
+				return layoutBoardFixtureRedrawNodes(
 					prev,
 					boardPlayRedrawLayoutOpts(
 						activePaneId,
@@ -2166,6 +2046,7 @@ function BoardPlayInner(): ReactElement {
 						treeLayoutLayerSpacing,
 						treeLayoutSiblingGap,
 						treeLayoutDirection,
+						boardRedrawHandlesAfterNodes,
 					),
 				);
 			});
@@ -2173,6 +2054,7 @@ function BoardPlayInner(): ReactElement {
 		return () => window.clearInterval(id);
 	}, [
 		activePaneId,
+		boardRedrawHandlesAfterNodes,
 		boardRedrawMode,
 		camerasByPane,
 		forceLayoutGravity,
@@ -2190,8 +2072,10 @@ function BoardPlayInner(): ReactElement {
 	const shellValue = useMemo<BoardPlayShellValue>(
 		() => ({
 			activePaneId,
+			applyBoardRedrawHandlesOnce,
 			applyBoardRedrawOnce,
 			applyStructuralDelete,
+			boardRedrawHandlesAfterNodes,
 			boardRedrawMode,
 			boardRedrawPlaying,
 			boardRedrawTickIterations,
@@ -2209,6 +2093,7 @@ function BoardPlayInner(): ReactElement {
 			patchFixture,
 			remapIdInSelections,
 			setActivePaneId,
+			setBoardRedrawHandlesAfterNodes,
 			setBoardRedrawMode,
 			setBoardRedrawPlaying,
 			setBoardRedrawTickIterations,
@@ -2232,8 +2117,10 @@ function BoardPlayInner(): ReactElement {
 		}),
 		[
 			activePaneId,
+			applyBoardRedrawHandlesOnce,
 			applyBoardRedrawOnce,
 			applyStructuralDelete,
+			boardRedrawHandlesAfterNodes,
 			boardRedrawMode,
 			boardRedrawPlaying,
 			boardRedrawTickIterations,

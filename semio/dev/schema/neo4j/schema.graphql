@@ -30,7 +30,7 @@ interface Scalar implements Primitive {
 union FieldIs = Scalar | Class | Command | Interface
 
 """
-🔳 OwningKitHost — `Class` / `Command` / `Interface` hosts for incoming `OWNS` from kit rows (`Data` / `Derived` / `Reference`) and from `Method` (`ownsHost`); GraphQL uses a **singular** `direction: IN` field per child for at most one parent in the API.
+🔳 OwningKitHost — Kit hosts for `OWNS` members (`Data`/`Derived`/`Reference`) and `Method`; `Command` also uses incoming `HAS` from `Module(operation)` (`parentModule`). Singular `direction: IN` fields model at most one parent.
 """
 interface OwningKitHost {
   name: String!

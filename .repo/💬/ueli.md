@@ -378,6 +378,16 @@ elements/board:
 
 ---
 
+Split the monolithic Redraw feature into two features:
+
+- Redraw handles
+- Redraw nodes
+
+For Redraw nodes make an option to automatically redraw handles as a toggle.
+Add mode dropdown (Graph, Tree)
+Add an additional button just for Redraw handles.
+This features changes t, so that the edge is the smallest path. Take the centers of the shapes and then reset the handles to the intersection point between the shape and the line.
+
 ---
 
 All nodes, handles and edges must have a kind (referenced by id).

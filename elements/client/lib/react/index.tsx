@@ -18996,14 +18996,20 @@ const Window: React.FC<WindowProps> = ({ id, children, onDoubleClick, className 
         {headerElement
           ? createPortal(<div className="absolute right-1 top-0 -bottom-px flex items-center z-panel bg-window border-t border-l border-element">{controlsContent}</div>, headerElement)
           : hasControls && <div className="absolute top-1 right-1 z-panel flex items-stretch gap-single">{controlsContent}</div>}
-        <div className="flex min-h-0 min-w-0 flex-1 flex-row">
-          <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
-            {error ? <DefaultErrorDisplay error={error} /> : loading && skeleton ? skeleton : children}
-          </div>
+        <div className="relative flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
+          {error ? <DefaultErrorDisplay error={error} /> : loading && skeleton ? skeleton : children}
           {options ? (
-            <aside data-slot="window-options-rail" className="border-element bg-window flex max-w-[11rem] shrink-0 flex-col gap-single overflow-y-auto border-l p-single">
-              {options}
-            </aside>
+            <div
+              data-slot="window-options-overlay"
+              className="pointer-events-none absolute inset-0 z-panel flex flex-col items-end justify-start gap-half overflow-hidden p-single"
+            >
+              <div
+                data-slot="window-options-rail"
+                className="pointer-events-auto flex max-h-full max-w-[min(11rem,calc(100%-0.5rem))] flex-col items-end gap-half overflow-y-auto overscroll-contain"
+              >
+                {options}
+              </div>
+            </div>
           ) : null}
         </div>
       </div>
@@ -21112,7 +21118,7 @@ export interface UIWindowControl {
 }
 
 /**
- * 🧱 Declarative per-window option entries rendered top-to-bottom in the window options rail (right side).
+ * 🧱 Declarative per-window option entries rendered as small floating controls stacked top-to-bottom along the right edge.
  **/
 export type UIWindowOption =
   | { kind: "section"; id: string; title: string }
@@ -21131,7 +21137,7 @@ export type UIWindowOption =
   | { kind: "color"; id: string; label?: string; value?: string; onChange?: (value: string) => void };
 
 /**
- * Definition of a window kind with label, icon, component, controls, and options rail entries.
+ * Definition of a window kind with label, icon, component, controls, and optional floating window options.
  * Each app registers the window kinds it can render.
  **/
 export interface UIWindowKindDefinition {
@@ -21437,41 +21443,49 @@ const UIWindowControlsGroup: React.FC<{ controls: UIWindowControl[] }> = ({ cont
   </ActionGroup>
 );
 
-// #region 🪟WindowOptionsRail
+// #region 🪟WindowOptionsOverlay
 
-const UIWindowOptionRow: React.FC<{ optionId: string; label?: string; children: React.ReactNode }> = ({ optionId, label, children }) => (
-  <div data-slot="window-option-row" data-option-id={optionId} className="flex w-full min-w-0 flex-col gap-half">
-    {label ? <span className="text-muted-foreground truncate text-xs font-medium">{label}</span> : null}
+const UIWindowOptionFloat: React.FC<{ optionId: string; label?: string; children: React.ReactNode }> = ({ optionId, label, children }) => (
+  <div
+    data-slot="window-option-float"
+    data-option-id={optionId}
+    className="border-element/80 bg-window/90 max-w-[11rem] min-w-0 rounded-md border px-single py-half shadow-md backdrop-blur-sm"
+  >
+    {label ? <span className="text-muted-foreground mb-half block max-w-full truncate text-[10px] font-semibold uppercase tracking-wide">{label}</span> : null}
     <div className="min-w-0 w-full">{children}</div>
   </div>
 );
 
 /**
- * 🪟 Maps declarative `UIWindowOption` entries into controls stacked top-to-bottom for the window options rail.
+ * 🪟 Maps declarative `UIWindowOption` entries into compact floating controls aligned to the right edge.
  **/
 export const UIWindowOptionsRail: React.FC<{ options: UIWindowOption[] }> = ({ options }) => (
-  <div data-slot="window-options-rail-inner" className="flex flex-col gap-single">
+  <div data-slot="window-options-rail-inner" className="flex flex-col items-end gap-half">
     {options.map((option) => {
       switch (option.kind) {
         case "section":
           return (
-            <div key={option.id} data-slot="window-option-section" className="text-muted-foreground border-element border-b pb-half text-[10px] font-semibold uppercase tracking-wide">
-              {option.title}
+            <div
+              key={option.id}
+              data-slot="window-option-section"
+              className="border-element/60 bg-window/85 max-w-[11rem] rounded-md border px-single py-tiny text-center shadow-sm backdrop-blur-sm"
+            >
+              <span className="text-muted-foreground text-[10px] font-semibold uppercase tracking-wide">{option.title}</span>
             </div>
           );
         case "separator":
-          return <div key={option.id} data-slot="window-option-separator" className="bg-element my-half h-px w-full shrink-0" />;
+          return <div key={option.id} data-slot="window-option-separator" className="bg-muted-foreground/35 my-half h-px w-8 shrink-0 rounded-full" aria-hidden />;
         case "toggle":
           return (
-            <UIWindowOptionRow key={option.id} optionId={option.id} label={option.label}>
+            <UIWindowOptionFloat key={option.id} optionId={option.id} label={option.label}>
               <Toggle id={option.id} pressed={option.pressed} defaultPressed={option.defaultPressed} onPressedChange={option.onPressedChange} icon={option.icon ?? <CheckIcon className="size-small" />} text={option.text} />
-            </UIWindowOptionRow>
+            </UIWindowOptionFloat>
           );
         case "select":
           return (
-            <UIWindowOptionRow key={option.id} optionId={option.id} label={option.label}>
+            <UIWindowOptionFloat key={option.id} optionId={option.id} label={option.label}>
               <Select id={option.id} value={option.value} defaultValue={option.defaultValue} onValueChange={option.onValueChange}>
-                <SelectTrigger className="h-medium w-full min-w-0" size="sm">
+                <SelectTrigger className="h-medium w-full min-w-0 max-w-[9.5rem]" size="sm">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -21482,58 +21496,60 @@ export const UIWindowOptionsRail: React.FC<{ options: UIWindowOption[] }> = ({ o
                   ))}
                 </SelectContent>
               </Select>
-            </UIWindowOptionRow>
+            </UIWindowOptionFloat>
           );
         case "combobox":
           return (
-            <UIWindowOptionRow key={option.id} optionId={option.id} label={option.label}>
-              <Combobox id={option.id} value={option.value} options={option.options} placeholder={option.placeholder} onValueChange={option.onValueChange} className="w-full min-w-0" />
-            </UIWindowOptionRow>
+            <UIWindowOptionFloat key={option.id} optionId={option.id} label={option.label}>
+              <Combobox id={option.id} value={option.value} options={option.options} placeholder={option.placeholder} onValueChange={option.onValueChange} className="w-full min-w-0 max-w-[9.5rem]" />
+            </UIWindowOptionFloat>
           );
         case "button":
           return (
-            <UIWindowOptionRow key={option.id} optionId={option.id} label={option.label}>
+            <UIWindowOptionFloat key={option.id} optionId={option.id} label={option.label}>
               <Button id={option.id} text={option.text} icon={option.icon} onClick={option.onClick} />
-            </UIWindowOptionRow>
+            </UIWindowOptionFloat>
           );
         case "buttonCycle":
           return (
-            <UIWindowOptionRow key={option.id} optionId={option.id} label={option.label}>
+            <UIWindowOptionFloat key={option.id} optionId={option.id} label={option.label}>
               <ButtonCycle id={option.id} value={option.value} onValueChange={option.onValueChange} items={option.items} />
-            </UIWindowOptionRow>
+            </UIWindowOptionFloat>
           );
         case "input":
           return (
-            <UIWindowOptionRow key={option.id} optionId={option.id} label={option.label}>
-              <Input id={option.id} lazy className="h-medium w-full min-w-0" value={option.value} placeholder={option.placeholder} onLazyChange={option.onLazyChange} />
-            </UIWindowOptionRow>
+            <UIWindowOptionFloat key={option.id} optionId={option.id} label={option.label}>
+              <Input id={option.id} lazy className="h-medium w-full min-w-0 max-w-[9.5rem]" value={option.value} placeholder={option.placeholder} onLazyChange={option.onLazyChange} />
+            </UIWindowOptionFloat>
           );
         case "textarea":
           return (
-            <UIWindowOptionRow key={option.id} optionId={option.id} label={option.label}>
-              <Textarea id={option.id} lazy className="min-h-[4rem] w-full min-w-0" value={option.value} placeholder={option.placeholder} rows={option.rows} onLazyChange={option.onLazyChange} />
-            </UIWindowOptionRow>
+            <UIWindowOptionFloat key={option.id} optionId={option.id} label={option.label}>
+              <Textarea id={option.id} lazy className="min-h-[4rem] w-full min-w-0 max-w-[9.5rem]" value={option.value} placeholder={option.placeholder} rows={option.rows} onLazyChange={option.onLazyChange} />
+            </UIWindowOptionFloat>
           );
         case "checkbox":
           return (
-            <div key={option.id} data-slot="window-option-row" data-option-id={option.id} className="text-foreground flex w-full min-w-0 items-center gap-single text-xs">
-              <input
-                id={option.id}
-                type="checkbox"
-                className="border-element accent-foreground size-small shrink-0 rounded border"
-                {...(option.checked !== undefined ? { checked: option.checked } : { defaultChecked: option.defaultChecked })}
-                onChange={(event) => option.onCheckedChange?.(event.target.checked)}
-              />
-              {option.label ? (
-                <label htmlFor={option.id} className="cursor-pointer select-none">
-                  {option.label}
-                </label>
-              ) : null}
-            </div>
+            <UIWindowOptionFloat key={option.id} optionId={option.id}>
+              <div className="text-foreground flex w-full min-w-0 items-center gap-single text-xs">
+                <input
+                  id={option.id}
+                  type="checkbox"
+                  className="border-element accent-foreground size-small shrink-0 rounded border"
+                  {...(option.checked !== undefined ? { checked: option.checked } : { defaultChecked: option.defaultChecked })}
+                  onChange={(event) => option.onCheckedChange?.(event.target.checked)}
+                />
+                {option.label ? (
+                  <label htmlFor={option.id} className="cursor-pointer select-none">
+                    {option.label}
+                  </label>
+                ) : null}
+              </div>
+            </UIWindowOptionFloat>
           );
         case "radio":
           return (
-            <UIWindowOptionRow key={option.id} optionId={option.id} label={option.label}>
+            <UIWindowOptionFloat key={option.id} optionId={option.id} label={option.label}>
               <div className="flex flex-col gap-half" role="radiogroup" aria-labelledby={option.id}>
                 {option.items.map((item) => (
                   <button
@@ -21541,7 +21557,7 @@ export const UIWindowOptionsRail: React.FC<{ options: UIWindowOption[] }> = ({ o
                     type="button"
                     data-slot="window-option-radio-item"
                     className={cn(
-                      "border-element hover:bg-hover-window rounded border px-single py-half text-left text-xs transition-colors",
+                      "border-element/80 hover:bg-hover-window rounded border px-single py-half text-left text-xs transition-colors",
                       option.value === item.value && "bg-active-base text-active-foreground",
                     )}
                     onClick={() => option.onChange?.(item.value)}
@@ -21550,29 +21566,29 @@ export const UIWindowOptionsRail: React.FC<{ options: UIWindowOption[] }> = ({ o
                   </button>
                 ))}
               </div>
-            </UIWindowOptionRow>
+            </UIWindowOptionFloat>
           );
         case "slider": {
           const min = option.min ?? 0;
           const max = option.max ?? 100;
           const v = option.value ?? min;
           return (
-            <UIWindowOptionRow key={option.id} optionId={option.id} label={option.label}>
+            <UIWindowOptionFloat key={option.id} optionId={option.id} label={option.label}>
               <Slider id={option.id} value={[v]} min={min} max={max} step={option.step} onValueChange={(vals) => option.onValueChange?.(vals[0] ?? min)} />
-            </UIWindowOptionRow>
+            </UIWindowOptionFloat>
           );
         }
         case "number":
           return (
-            <UIWindowOptionRow key={option.id} optionId={option.id} label={option.label}>
+            <UIWindowOptionFloat key={option.id} optionId={option.id} label={option.label}>
               <Stepper id={option.id} value={option.value} min={option.min} max={option.max} step={option.step} onChange={option.onChange} />
-            </UIWindowOptionRow>
+            </UIWindowOptionFloat>
           );
         case "color":
           return (
-            <UIWindowOptionRow key={option.id} optionId={option.id} label={option.label}>
-              <Input id={option.id} type="color" className="h-medium w-full min-w-0 cursor-pointer" value={option.value} onChange={(event) => option.onChange?.(event.target.value)} />
-            </UIWindowOptionRow>
+            <UIWindowOptionFloat key={option.id} optionId={option.id} label={option.label}>
+              <Input id={option.id} type="color" className="h-medium w-full min-w-0 max-w-[9.5rem] cursor-pointer" value={option.value} onChange={(event) => option.onChange?.(event.target.value)} />
+            </UIWindowOptionFloat>
           );
         default: {
           const _exhaustive: never = option;
@@ -21583,7 +21599,7 @@ export const UIWindowOptionsRail: React.FC<{ options: UIWindowOption[] }> = ({ o
   </div>
 );
 
-// #endregion 🪟WindowOptionsRail
+// #endregion 🪟WindowOptionsOverlay
 
 /**
  * Portal target for a golden-layout window kind.
@@ -23395,18 +23411,19 @@ if (treeVitest) {
     });
   });
 
-  describe("window options rail", () => {
-    it("renders window options rail aside when options prop is set", () => {
+  describe("window options overlay", () => {
+    it("renders floating window options overlay without consuming main layout width", () => {
       const markup = renderToStaticMarkup(
         <Window id="opt-win" options={<span data-testid="opt-slot">o</span>}>
           <div>main-body</div>
         </Window>,
       );
+      expect(markup).toContain('data-slot="window-options-overlay"');
       expect(markup).toContain('data-slot="window-options-rail"');
       expect(markup).toContain("main-body");
     });
 
-    it("renders declarative UIWindowOptionsRail entries top-to-bottom", () => {
+    it("renders declarative UIWindowOptionsRail entries as right-aligned floats", () => {
       const opts: UIWindowOption[] = [
         { id: "sec", kind: "section", title: "Group" },
         { id: "sep", kind: "separator" },
@@ -23417,6 +23434,7 @@ if (treeVitest) {
       const markup = renderToStaticMarkup(<UIWindowOptionsRail options={opts} />);
       expect(markup).toContain('data-slot="window-options-rail-inner"');
       expect(markup).toContain('data-slot="window-option-section"');
+      expect(markup).toContain('data-slot="window-option-float"');
       expect(markup).toContain('data-slot="window-option-radio-item"');
     });
   });

@@ -14,6 +14,7 @@ import {
 import initBoardWasm, {
 	boardComputeEdgeBezier,
 	boardDistancePointCubic,
+	boardRedrawHandlesFixtureJson,
 	boardRedrawLayoutFixtureJson,
 	boardHandlePositionCircle,
 	boardHandlePositionRectangle,
@@ -220,7 +221,7 @@ export interface BoardForceGraphLayoutOptions {
 /** @emoji 🌳 Which WASM redraw pass runs on the logical fixture graph (tick-driven play uses the same dispatcher). */
 export type BoardRedrawModeKind = "force-graph" | "hierarchical-tree";
 
-/** @emoji 🌳 Rank growth axis for {@link layoutBoardFixtureRedraw} hierarchical mode (`downwards` | `upwards` | `right` | `left`). */
+/** @emoji 🌳 Rank growth axis for {@link layoutBoardFixtureRedrawNodes} hierarchical mode (`downwards` | `upwards` | `right` | `left`). */
 export type BoardHierarchicalTreeDirectionKind = "downwards" | "left" | "right" | "upwards";
 
 /** @emoji 🌳 Hierarchical redraw opts (camelCase); WASM runs a Buchheim tidy-tree on a spanning forest (min-depth parent), ranks mapped by `direction`. */
@@ -232,7 +233,7 @@ export interface BoardHierarchicalTreeLayoutOptions {
 	siblingGap?: number;
 }
 
-/** @emoji 🔁 Unified redraw request: shared camera center + optional seed; mode-specific knobs live in {@link BoardRedrawLayoutOptions.forceGraph} or {@link BoardRedrawLayoutOptions.hierarchicalTree}. */
+/** @emoji 🔁 Node-layout redraw: shared camera center + optional seed; `redrawHandlesAfter` runs center-chord handle snap after layout. */
 export interface BoardRedrawLayoutOptions {
 	centerX?: number;
 	centerY?: number;
@@ -240,11 +241,18 @@ export interface BoardRedrawLayoutOptions {
 	hierarchicalTree?: BoardHierarchicalTreeLayoutOptions;
 	mode: BoardRedrawModeKind;
 	randomSeed?: number;
+	redrawHandlesAfter?: boolean;
 }
 
-/** @emoji 🔁 WASM redraw: force graph or Buchheim hierarchical tree; nodes may omit centers until this returns positioned `x`/`y`. */
-export function layoutBoardFixtureRedraw(fixture: BoardFixtureV1, options: BoardRedrawLayoutOptions): BoardFixtureV1 {
+/** @emoji 🔁 WASM node redraw (graph or tree); optional `redrawHandlesAfter` snaps handles to the center chord. */
+export function layoutBoardFixtureRedrawNodes(fixture: BoardFixtureV1, options: BoardRedrawLayoutOptions): BoardFixtureV1 {
 	const out = boardRedrawLayoutFixtureJson(JSON.stringify(fixture), JSON.stringify(options));
+	return JSON.parse(out) as BoardFixtureV1;
+}
+
+/** @emoji 🔗 WASM only: sets each linked handle `angle` so anchors sit on the straight segment between node centers (shortest visual chord). */
+export function layoutBoardFixtureRedrawHandles(fixture: BoardFixtureV1): BoardFixtureV1 {
+	const out = boardRedrawHandlesFixtureJson(JSON.stringify(fixture));
 	return JSON.parse(out) as BoardFixtureV1;
 }
 
@@ -3608,7 +3616,7 @@ if (boardVitest) {
 				],
 				schema: "elements.board.fixture/v1",
 			};
-			const laid = layoutBoardFixtureRedraw(fixture, {
+			const laid = layoutBoardFixtureRedrawNodes(fixture, {
 				forceGraph: { gravity: 0, idealEdgeLength: 200, iterations: 220 },
 				mode: "force-graph",
 				randomSeed: 11,
@@ -3621,7 +3629,7 @@ if (boardVitest) {
 
 		it("throws on invalid fixture schema from wasm", () => {
 			const bad = { camera: { x: 0, y: 0, zoom: 1 }, edges: [], nodes: [], schema: "wrong" } as unknown as BoardFixtureV1;
-			expect(() => layoutBoardFixtureRedraw(bad, { mode: "force-graph" })).toThrow();
+			expect(() => layoutBoardFixtureRedrawNodes(bad, { mode: "force-graph" })).toThrow();
 		});
 
 		it("lays a small rooted tree in hierarchical mode", () => {
@@ -3647,7 +3655,7 @@ if (boardVitest) {
 				],
 				schema: "elements.board.fixture/v1",
 			};
-			const laid = layoutBoardFixtureRedraw(fixture, {
+			const laid = layoutBoardFixtureRedrawNodes(fixture, {
 				centerX: 0,
 				centerY: 0,
 				hierarchicalTree: { direction: "downwards", layerSpacing: 100, siblingGap: 20 },
@@ -3656,6 +3664,81 @@ if (boardVitest) {
 			const ry = (laid.nodes.find((n) => n.id === "r") as BoardFixtureCircleNodeV1).y;
 			const ly = (laid.nodes.find((n) => n.id === "l") as BoardFixtureCircleNodeV1).y;
 			expect(Math.abs(ly - ry)).toBeGreaterThan(40);
+		});
+
+		it("snaps handle angles along center chord", () => {
+			const fixture: BoardFixtureV1 = {
+				camera: { x: 0, y: 0, zoom: 1 },
+				edges: [{ id: "e1", source: "a:h0", target: "b:h0" }],
+				nodes: [
+					{
+						handles: [{ angle: 1.2, handleKind: BOARD_BUILTIN_PORT_HANDLE_KIND, id: "a:h0" }],
+						id: "a",
+						radius: 40,
+						shape: "circle",
+						x: 0,
+						y: 0,
+					},
+					{
+						handles: [{ angle: 0.1, handleKind: BOARD_BUILTIN_PORT_HANDLE_KIND, id: "b:h0" }],
+						id: "b",
+						radius: 40,
+						shape: "circle",
+						x: 200,
+						y: 0,
+					},
+				],
+				schema: "elements.board.fixture/v1",
+			};
+			const out = layoutBoardFixtureRedrawHandles(fixture);
+			const a = out.nodes[0] as BoardFixtureCircleNodeV1;
+			const b = out.nodes[1] as BoardFixtureCircleNodeV1;
+			expect(a.handles[0].angle).toBeCloseTo(0, 5);
+			expect(b.handles[0].angle).toBeCloseTo(Math.PI, 5);
+		});
+
+		it("runs handle snap after node redraw when redrawHandlesAfter is true", () => {
+			const fixture: BoardFixtureV1 = {
+				camera: { x: 0, y: 0, zoom: 1 },
+				edges: [{ id: "e1", source: "a:h0", target: "b:h0" }],
+				nodes: [
+					{
+						handles: [{ angle: 1.2, handleKind: BOARD_BUILTIN_PORT_HANDLE_KIND, id: "a:h0" }],
+						id: "a",
+						radius: 40,
+						shape: "circle",
+						x: 0,
+						y: 0,
+					},
+					{
+						handles: [{ angle: 0.1, handleKind: BOARD_BUILTIN_PORT_HANDLE_KIND, id: "b:h0" }],
+						id: "b",
+						radius: 40,
+						shape: "circle",
+						x: 200,
+						y: 0,
+					},
+				],
+				schema: "elements.board.fixture/v1",
+			};
+			const out = layoutBoardFixtureRedrawNodes(fixture, {
+				forceGraph: { gravity: 0, idealEdgeLength: 180, iterations: 120 },
+				mode: "force-graph",
+				randomSeed: 3,
+				redrawHandlesAfter: true,
+			});
+			const a = out.nodes[0] as BoardFixtureCircleNodeV1;
+			const b = out.nodes[1] as BoardFixtureCircleNodeV1;
+			const expA = Math.atan2(b.y - a.y, b.x - a.x);
+			const expB = Math.atan2(a.y - b.y, a.x - b.x);
+			const wrapDiff = (x: number, y: number) => {
+				let d = ((x - y) % (2 * Math.PI)) + 2 * Math.PI;
+				d %= 2 * Math.PI;
+				if (d > Math.PI) d -= 2 * Math.PI;
+				return Math.abs(d);
+			};
+			expect(wrapDiff(a.handles[0].angle, expA)).toBeLessThan(0.05);
+			expect(wrapDiff(b.handles[0].angle, expB)).toBeLessThan(0.05);
 		});
 	});
 
