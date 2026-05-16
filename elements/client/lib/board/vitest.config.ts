@@ -9,6 +9,8 @@ export default defineConfig({
 	root,
 	test: {
 		environment: "jsdom",
+		fileParallelism: false,
+		maxConcurrency: 1,
 		include: ["index.ts", "index.tsx"],
 		includeSource: ["index.ts", "index.tsx"],
 		passWithNoTests: true,

@@ -4,8 +4,8 @@
 // technology: coda | database: coda | generated: 2026-05-15T10:33:32.506Z
 //
 :begin
-CREATE FULLTEXT INDEX semio_name_fulltext FOR (n:Class|Constraint|Data|Computation|Reference|Interface|Module|Scalar|Enum) ON EACH [n.`name`];
-CREATE RANGE INDEX IF NOT EXISTS FOR (n:Computation) ON (n.name);
+CREATE FULLTEXT INDEX semio_name_fulltext FOR (n:Class|Constraint|Data|Derived|Reference|Interface|Module|Scalar|Enum) ON EACH [n.`name`];
+CREATE RANGE INDEX IF NOT EXISTS FOR (n:Derived) ON (n.name);
 CREATE RANGE INDEX IF NOT EXISTS FOR (n:Data) ON (n.name);
 CREATE RANGE INDEX IF NOT EXISTS FOR (n:Reference) ON (n.name);
 :commit

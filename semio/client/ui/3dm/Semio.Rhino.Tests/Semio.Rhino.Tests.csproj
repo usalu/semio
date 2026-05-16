@@ -24,7 +24,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Semio.Rhino\Semio.Rhino.csproj" />
-    <ProjectReference Include="..\..\net\Semio\Semio.csproj" />
+    <ProjectReference Include="..\..\..\lib\net\Semio\Semio.csproj" />
   </ItemGroup>
 
 </Project>

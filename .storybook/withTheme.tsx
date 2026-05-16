@@ -1,45 +1,33 @@
 // #region 🧲Header
-// 💻 .storybook/withTheme.tsx
-// Specs: Shared light/dark/system theme for all Storybook stories.
-// Summary: Toggles document root `dark` class and body CSS variables from globals.theme.
-// 2026 Ueli Saluz <ueli@semio-tech.com>
+// 💻 .storybook/withTheme.tsx — Storybook decorator: theme (system/light/dark), device (desktop/tablet/mobile), expertise via {@link useElementsSurfaceChrome} from `@elements/ui`.
 // #endregion 🧲Header
 
-import type { Decorator } from "@storybook/react";
-import { useEffect } from "react";
+import {
+	Expertise,
+	useElementsSurfaceChrome,
+	type ElementsSurfaceDevice,
+	type ElementsSurfaceTheme,
+} from "@elements/ui";
+import type { Decorator } from "@storybook/react-vite";
+import * as React from "react";
 
-// #region 🧩Theme
-enum Theme {
-	SYSTEM = "system",
-	LIGHT = "light",
-	DARK = "dark",
-}
-
-export const withTheme: Decorator = (Story, context) => {
-	const theme = context.globals.theme as Theme;
-	useEffect(() => {
-		const root = window.document.documentElement;
-		const body = window.document.body;
-		root.classList.remove(Theme.DARK);
-		if (theme === Theme.DARK) {
-			root.classList.add(Theme.DARK);
-			body.style.backgroundColor = "var(--background)";
-			body.style.color = "var(--foreground)";
-		} else if (theme === Theme.SYSTEM) {
-			const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-			if (prefersDark) {
-				root.classList.add(Theme.DARK);
-				body.style.backgroundColor = "var(--background)";
-				body.style.color = "var(--foreground)";
-			} else {
-				body.style.backgroundColor = "var(--background)";
-				body.style.color = "var(--foreground)";
-			}
-		} else {
-			body.style.backgroundColor = "var(--background)";
-			body.style.color = "var(--foreground)";
-		}
-	}, [theme]);
-	return <Story />;
+// #region 🌈StorySurfaceHost
+const StorySurfaceHost: React.FC<{
+	children: React.ReactNode;
+	globals: { theme?: string; device?: string; expertise?: string };
+}> = ({ children, globals }) => {
+	const theme = (globals.theme as ElementsSurfaceTheme | undefined) ?? "system";
+	const device = (globals.device as ElementsSurfaceDevice | undefined) ?? "desktop";
+	const expertise = (globals.expertise as Expertise | undefined) ?? Expertise.NORMAL;
+	useElementsSurfaceChrome({ theme, device, expertise });
+	return <>{children}</>;
 };
-// #endregion 🧩Theme
+// #endregion 🌈StorySurfaceHost
+
+// #region 🌈WithTheme
+export const withTheme: Decorator = (Story, context) => (
+	<StorySurfaceHost globals={context.globals as { theme?: string; device?: string; expertise?: string }}>
+		<Story />
+	</StorySurfaceHost>
+);
+// #endregion 🌈WithTheme

@@ -9,8 +9,17 @@ test.describe("board play", () => {
 		await page.setViewportSize({ width: 1600, height: 900 });
 	});
 
-	test("each board canvas reaches GPU ready state", async ({ page }) => {
+	test("each board canvas reaches GPU ready state", async ({ page }, testInfo) => {
 		await page.goto("/", { waitUntil: "load", timeout: 180_000 });
+		const adapterOk = await page.evaluate(async () => {
+			const gpu = globalThis.navigator?.gpu;
+			if (!gpu) return false;
+			const adapter = await gpu.requestAdapter();
+			return adapter != null;
+		});
+		if (!adapterOk) {
+			testInfo.skip(true, "No WebGPU adapter reported by the browser");
+		}
 		await expect(page.getByText("Fixture shelf", { exact: false })).toBeVisible({ timeout: 120_000 });
 		const canvases = page.locator('[data-testid="board-canvas"]');
 		await expect(canvases).toHaveCount(3, { timeout: 180_000 });
@@ -29,6 +38,9 @@ test.describe("board play", () => {
 		} catch (cause) {
 			const detail =
 				(await page.locator('[data-testid="board-canvas"]').first().getAttribute("data-board-surface-failure")) ?? "(no data-board-surface-failure)";
+			if (detail === "NoCompatibleDevice") {
+				testInfo.skip(true, `WebGPU surface unavailable: ${detail}`);
+			}
 			throw new Error(`Expected three ready GPU canvases. data-board-surface-failure (first canvas): ${detail}`, { cause });
 		}
 		for (const c of await canvases.all()) {

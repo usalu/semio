@@ -45,7 +45,7 @@ using File = Semio.File;
 // Assembly-level attributes required by Rhino to identify this plugin.
 // The Id is the plugin ID. PlugInDescription attributes show in Rhino Options > Plug-ins.
 #if RHINO_PLUGIN
-[assembly: __SYS_RUNTIME_ID__("A1B2C3D4-E5F6-7890-ABCD-EF1234567890")]
+[assembly: Guid("A1B2C3D4-E5F6-7890-ABCD-EF1234567890")]
 [assembly: PlugInDescription(DescriptionType.Address, "")]
 [assembly: PlugInDescription(DescriptionType.Country, "")]
 [assembly: PlugInDescription(DescriptionType.Email, "ueli@semio-tech.com")]
@@ -337,7 +337,7 @@ public static class LayerService
             if (!string.Equals(layer.Name, name, StringComparison.OrdinalIgnoreCase))
                 continue;
 
-            if (parentIndex < 0 && layer.ParentLayerId == __ID_EMPTY__)
+            if (parentIndex < 0 && layer.ParentLayerId == Guid.Empty)
                 return i;
 
             if (parentIndex >= 0 && layer.ParentLayerId == doc.Layers[parentIndex].Id)
@@ -589,7 +589,7 @@ public class SemioWebViewControl : System.Windows.Controls.UserControl
 /// 👁️WpfElementHost panel wrapping SemioWebViewControl for Rhino docking.
 /// Handles panel close/reopen lifecycle by disconnecting the WPF child.
 /// </summary>
-[__ATTR_ID__(Constants.PanelId)]
+[Guid(Constants.PanelId)]
 public class SemioPanelHost : RhinoWindows.Controls.WpfElementHost
 {
     private readonly SemioWebViewControl? _webViewControl;
@@ -617,7 +617,7 @@ public class SemioPanelHost : RhinoWindows.Controls.WpfElementHost
     public static void Reinitialize(SemioWebViewControl? webViewControl)
     {
         if (webViewControl == null) return;
-        if (Panels.IsPanelVisible(typeof(SemioPanelHost)__DOT_ID_UPPER__)) return;
+        if (Panels.IsPanelVisible(new Guid(Constants.PanelId))) return;
         if (LogicalTreeHelper.GetParent(webViewControl) is Border border)
         {
             border.Child = null;
@@ -626,8 +626,9 @@ public class SemioPanelHost : RhinoWindows.Controls.WpfElementHost
 
     private void PanelsOnClosed(object? sender, PanelEventArgs e)
     {
-        if (e.PanelId != typeof(SemioPanelHost)__DOT_ID_UPPER__) return;
-        if (!Panels.IsPanelVisible(typeof(SemioPanelHost)__DOT_ID_UPPER__)) return;
+        var semioPanelGuid = new Guid(Constants.PanelId);
+        if (e.PanelId != semioPanelGuid) return;
+        if (!Panels.IsPanelVisible(semioPanelGuid)) return;
 
         Panels.Closed -= PanelsOnClosed;
 
@@ -684,7 +685,7 @@ public class ShowSemioCommand : Command
 
     protected override Result RunCommand(RhinoDoc doc, RunMode mode)
     {
-        var panelId = typeof(SemioPanelHost)__DOT_ID_UPPER__;
+        var panelId = new Guid(Constants.PanelId);
 
         if (mode == RunMode.Interactive)
         {

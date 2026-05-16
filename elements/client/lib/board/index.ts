@@ -101,6 +101,8 @@ export interface BoardFixtureCircleNodeV1 {
 	radius: number;
 	shape?: "circle";
 	text?: string;
+	/** @emoji 📏 Optional: scale overlay text to fit inside the node. */
+	textAutofit?: boolean;
 	x: number;
 	y: number;
 }
@@ -113,6 +115,8 @@ export interface BoardFixtureRectangleNodeV1 {
 	id: string;
 	shape: "rectangle";
 	text?: string;
+	/** @emoji 📏 Optional: scale overlay text to fit inside the node. */
+	textAutofit?: boolean;
 	width: number;
 	x: number;
 	y: number;
@@ -164,6 +168,8 @@ export type CircleNodeOptions = BoardObjectOptions & {
 	radius: number;
 	shape?: "circle";
 	text?: string;
+	/** @emoji 📏 When true, overlay label scales to fit inside the circle (layout px). */
+	textAutofit?: boolean;
 	x: number;
 	y: number;
 };
@@ -174,6 +180,8 @@ export type RectangleNodeOptions = BoardObjectOptions & {
 	height: number;
 	shape: "rectangle";
 	text?: string;
+	/** @emoji 📏 When true, overlay label scales to fit inside the rectangle (layout px). */
+	textAutofit?: boolean;
 	width: number;
 	x: number;
 	y: number;
@@ -238,6 +246,22 @@ export const BOARD_CAMERA_ZOOM_MAX = 32;
 
 const MIN_ZOOM = BOARD_CAMERA_ZOOM_MIN;
 const MAX_ZOOM = BOARD_CAMERA_ZOOM_MAX;
+
+/** @emoji ⌨️ True when Delete/Backspace should reach the board instead of staying in a focused text control. */
+function shouldBoardHandleDeleteShortcut(): boolean {
+	const el = document.activeElement;
+	if (!el || !(el instanceof HTMLElement)) {
+		return true;
+	}
+	const tag = el.tagName;
+	if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") {
+		return false;
+	}
+	if (el.isContentEditable) {
+		return false;
+	}
+	return true;
+}
 const GRID_WORLD_STEP = 96;
 const GRID_VISIBLE_MIN_ZOOM = 18 / GRID_WORLD_STEP;
 const HANDLE_DRAW_MIN_ZOOM = 0.45;
@@ -420,6 +444,7 @@ export function parseBoardFixtureV1(raw: unknown): BoardFixtureV1 | null {
 			);
 		}
 		const textFromJson = fixtureNodeDisplayText(node);
+		const textAutofit = node.textAutofit === true;
 		const cad =
 			node.cad && typeof node.cad === "object"
 				? {
@@ -440,6 +465,7 @@ export function parseBoardFixtureV1(raw: unknown): BoardFixtureV1 | null {
 			nodes.push({
 				...(cad !== undefined ? { cad } : {}),
 				...(textFromJson !== undefined ? { text: textFromJson } : {}),
+				...(textAutofit ? { textAutofit: true } : {}),
 				handles,
 				height,
 				id,
@@ -460,6 +486,7 @@ export function parseBoardFixtureV1(raw: unknown): BoardFixtureV1 | null {
 		nodes.push({
 			...(cad !== undefined ? { cad } : {}),
 			...(textFromJson !== undefined ? { text: textFromJson } : {}),
+			...(textAutofit ? { textAutofit: true } : {}),
 			handles,
 			id,
 			radius,
@@ -538,6 +565,38 @@ export function computeHandleTangent(angle: number): Point {
 		y: Math.cos(angle),
 	};
 }
+
+/** @emoji 📏 Largest font size (px) so a single-line string fits `maxW`×`maxH` in layout pixels (binary search). */
+export function boardFitTextFontPx(
+	ctx: CanvasTextMeasuring,
+	text: string,
+	maxW: number,
+	maxH: number,
+	minPx: number,
+	maxPx: number,
+): number {
+	const lo = Math.max(4, minPx);
+	const hi = Math.max(lo, maxPx);
+	let best = lo;
+	let low = lo;
+	let high = hi;
+	while (low <= high) {
+		const mid = Math.floor((low + high) / 2);
+		ctx.font = `${mid}px system-ui,Segoe UI,sans-serif`;
+		const w = ctx.measureText(text).width;
+		const h = mid * 1.2;
+		if (w <= maxW && h <= maxH) {
+			best = mid;
+			low = mid + 1;
+		} else {
+			high = mid - 1;
+		}
+	}
+	return best;
+}
+
+/** @emoji 🧾 Minimal 2D canvas text metrics surface for {@link boardFitTextFontPx}. */
+export type CanvasTextMeasuring = Pick<CanvasRenderingContext2D, "font" | "measureText">;
 
 /** 🧭 Builds a cubic whose control arms leave/arrive along circle normals (radial), not along handle tangents. */
 export function computeEdgeBezier(fromHandle: Handle, toHandle: Handle): CubicBezierCurve {
@@ -657,6 +716,8 @@ export class Node extends BoardObject {
 	radius: number;
 	shape: "circle" | "rectangle";
 	text: string | null;
+	/** @emoji 📏 When true, {@link BoardRenderer} scales overlay text to the node interior. */
+	textAutofit: boolean;
 	width: number;
 	x: number;
 	y: number;
@@ -672,6 +733,7 @@ export class Node extends BoardObject {
 		this.x = options.x;
 		this.y = options.y;
 		this.text = options.text ?? null;
+		this.textAutofit = options.textAutofit ?? false;
 		if (options.shape === "rectangle") {
 			this.shape = "rectangle";
 			this.width = options.width;
@@ -720,6 +782,11 @@ export class Node extends BoardObject {
 		return this;
 	}
 
+	setTextAutofit(value: boolean): this {
+		this.textAutofit = value;
+		return this;
+	}
+
 	attachHandle(handle: Handle): void {
 		if (this.handles.includes(handle)) {
 			return;
@@ -765,7 +832,7 @@ export class Handle extends BoardObject {
 	}
 }
 
-/** 🪢 Cubic edge between two boundary handles; geometry uses outward directions from each anchor toward its node center. */
+/** 🪢 Cubic edge between two boundary handles; control points sit on the radial **outside** of each node so the stroke never bows inward through the disk. */
 export class Edge extends BoardObject {
 	from: Handle;
 	to: Handle;
@@ -950,6 +1017,7 @@ export class BoardRenderer {
 	private suppressSceneToWasmPush = false;
 	private width = 1;
 	private height = 1;
+	private textOverlayCanvas: HTMLCanvasElement | null = null;
 
 	readonly worldRasterTiling: WorldRasterTilingKind;
 
@@ -966,7 +1034,6 @@ export class BoardRenderer {
 		this.scene = new BoardScene(this);
 		this.session = new BoardSession();
 		this.attachCanvasListeners();
-		BoardRenderer.activeRenderer = this;
 		if (this.canvas) {
 			(this.canvas as BoardCanvasElement).__boardRenderer = this;
 			const initialWidth = this.canvas.clientWidth || this.canvas.width || 1;
@@ -991,9 +1058,15 @@ export class BoardRenderer {
 		};
 	}
 
-	getSelectionSnapshot = (): BoardSelectionSnapshot => this.selectionStore.getSnapshot();
+	/** @emoji 🪟 Binds a stacked 2D canvas used for node captions (WebGPU path does not draw text). */
+	attachTextOverlayCanvas(canvas: HTMLCanvasElement | null): void {
+		this.textOverlayCanvas = canvas;
+		this.invalidate();
+	}
 
 	subscribeSelection = (listener: () => void): (() => void) => this.selectionStore.subscribe(listener);
+
+	getSelectionSnapshot = (): BoardSelectionSnapshot => this.selectionStore.getSnapshot();
 
 	/** @emoji ✅ Replaces the active selection set and syncs `selected` flags on scene objects. */
 	setSelectionIds(ids: Iterable<string>): void {
@@ -1173,6 +1246,7 @@ export class BoardRenderer {
 				this.syncGpuFrame();
 			}
 		}
+		this.paintTextOverlays();
 		const frameState: FrameState = {
 			camera: { ...this.camera },
 			renderer: this,
@@ -1219,6 +1293,9 @@ export class BoardRenderer {
 			};
 			if (Object.keys(node.userData).length > 0) {
 				base.userData = node.userData;
+			}
+			if (node.textAutofit) {
+				base.textAutofit = true;
 			}
 			if (node.shape === "rectangle") {
 				base.shape = "rectangle";
@@ -1371,6 +1448,56 @@ export class BoardRenderer {
 		}
 	}
 
+	/** @emoji 🏷️ Draws node captions on {@link BoardRenderer.attachTextOverlayCanvas} (GPU path has no text primitives). */
+	private paintTextOverlays(): void {
+		if (this.renderMode === "headless-test" || !this.textOverlayCanvas) {
+			return;
+		}
+		const el = this.textOverlayCanvas;
+		const nextW = Math.max(1, Math.round(this.width * this.dpr));
+		const nextH = Math.max(1, Math.round(this.height * this.dpr));
+		if (el.width !== nextW || el.height !== nextH) {
+			el.width = nextW;
+			el.height = nextH;
+		}
+		const ctx = el.getContext("2d");
+		if (!ctx) {
+			return;
+		}
+		const inset = 0.88;
+		const fontFamily = "system-ui,Segoe UI,sans-serif";
+		ctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
+		ctx.clearRect(0, 0, this.width, this.height);
+		for (const node of this.scene.nodes.values()) {
+			if (!node.visible || node.text === null || node.text === "") {
+				continue;
+			}
+			let maxW: number;
+			let maxH: number;
+			if (node.shape === "rectangle") {
+				maxW = node.width * this.camera.zoom * inset;
+				maxH = node.height * this.camera.zoom * inset;
+			} else {
+				const d = 2 * node.radius * this.camera.zoom * inset;
+				maxW = d;
+				maxH = d;
+			}
+			if (maxW < 4 || maxH < 4) {
+				continue;
+			}
+			const center = this.worldToScreen({ x: node.x, y: node.y });
+			const style = this.getStyle(node.style, node.selected ? "node.selected" : "node");
+			const fontPx = node.textAutofit
+				? boardFitTextFontPx(ctx, node.text, maxW, maxH, 4, 512)
+				: boardFitTextFontPx(ctx, node.text, maxW, maxH, 4, 14);
+			ctx.font = `${fontPx}px ${fontFamily}`;
+			ctx.textAlign = "center";
+			ctx.textBaseline = "middle";
+			ctx.fillStyle = style.stroke ?? "#0f172a";
+			ctx.fillText(node.text, center.x, center.y);
+		}
+	}
+
 	private syncGpuFrame(): void {
 		if (this.renderMode === "headless-test" || !this.session.gpuReady()) {
 			return;
@@ -1391,6 +1518,7 @@ export class BoardRenderer {
 	dispose(): void {
 		this.isDisposed = true;
 		this.detachCanvasListeners();
+		this.textOverlayCanvas = null;
 		this.session.free();
 		this.gpuSurfacePresentedFrame = false;
 		this.gpuSurfaceErrorDetail = "";
@@ -1417,7 +1545,7 @@ export class BoardRenderer {
 		this.canvas.addEventListener("pointerup", this.handlePointerUp as EventListener);
 		this.canvas.addEventListener("pointerleave", this.handlePointerLeave as EventListener);
 		this.canvas.addEventListener("wheel", this.handleWheel as EventListener, { passive: false });
-		this.canvas.addEventListener("keydown", this.handleKeyDown as EventListener);
+		globalThis.addEventListener("keydown", this.handleWindowKeyDown as EventListener, true);
 	}
 
 	private detachCanvasListeners(): void {
@@ -1429,7 +1557,7 @@ export class BoardRenderer {
 		this.canvas.removeEventListener("pointerup", this.handlePointerUp as EventListener);
 		this.canvas.removeEventListener("pointerleave", this.handlePointerLeave as EventListener);
 		this.canvas.removeEventListener("wheel", this.handleWheel as EventListener);
-		this.canvas.removeEventListener("keydown", this.handleKeyDown as EventListener);
+		globalThis.removeEventListener("keydown", this.handleWindowKeyDown as EventListener, true);
 	}
 
 	private updateSelection(ids: Iterable<string>): void {
@@ -1458,13 +1586,17 @@ export class BoardRenderer {
 	private deleteSelectedObjects(): void {
 		this.session.deleteSelection();
 		this.applyWasmDrainToScene(this.session.drainEventsJson());
+		this.invalidate();
 	}
 
-	private readonly handleKeyDown = (event: KeyboardEvent): void => {
+	private readonly handleWindowKeyDown = (event: KeyboardEvent): void => {
 		if (event.repeat) {
 			return;
 		}
-		if (event.target !== this.canvas) {
+		if (BoardRenderer.activeRenderer !== this) {
+			return;
+		}
+		if (!shouldBoardHandleDeleteShortcut()) {
 			return;
 		}
 		if (event.key !== "Delete" && event.key !== "Backspace") {
@@ -1513,6 +1645,7 @@ export class BoardRenderer {
 		if (event.button !== 0 && event.button !== 1) {
 			return;
 		}
+		BoardRenderer.activeRenderer = this;
 		this.canvas.focus({ preventScroll: true });
 		if (typeof event.pointerId === "number") {
 			this.canvas.setPointerCapture?.(event.pointerId);
@@ -1583,6 +1716,27 @@ if (boardVitest) {
 
 	beforeAll(async () => {
 		await ensureElementsBoardWasmLoaded();
+	});
+
+	describe("boardFitTextFontPx", () => {
+		it("chooses the largest font bounded by line height and measured width", () => {
+			const state = { font: "" };
+			const ctx: CanvasTextMeasuring = {
+				get font() {
+					return state.font;
+				},
+				set font(value: string) {
+					state.font = value;
+				},
+				measureText(text: string) {
+					const match = /^(\d+)px/u.exec(state.font);
+					const size = match ? Number(match[1]) : 0;
+					return { width: size * text.length };
+				},
+			};
+			const fit = boardFitTextFontPx(ctx, "aa", 100, 24, 4, 200);
+			expect(fit).toBe(20);
+		});
 	});
 
 	function createMockCanvas(width = 800, height = 600): { canvas: HTMLCanvasElement; context: BoardCanvasContext } {
@@ -1697,7 +1851,7 @@ if (boardVitest) {
 			renderer.dispose();
 		});
 
-		it("deletes selected edges and nodes when the canvas receives Delete", () => {
+		it("deletes selected edges and nodes when Delete reaches the window listener after pointerdown", () => {
 			const { canvas } = createMockCanvas();
 			const renderer = new BoardRenderer({ canvas, renderMode: "headless-test" });
 			const edgeDeletes: string[] = [];
@@ -1719,7 +1873,7 @@ if (boardVitest) {
 			canvas.dispatchEvent(
 				new MouseEvent("pointerdown", { bubbles: true, button: 0, clientX: screen.x, clientY: screen.y }),
 			);
-			canvas.dispatchEvent(new KeyboardEvent("keydown", { bubbles: true, key: "Delete" }));
+			window.dispatchEvent(new KeyboardEvent("keydown", { bubbles: true, key: "Delete" }));
 
 			expect(renderer.scene.edges.has("edge-1")).toBe(false);
 			expect(edgeDeletes).toEqual(["edge-1"]);
@@ -1729,12 +1883,44 @@ if (boardVitest) {
 			canvas.dispatchEvent(
 				new MouseEvent("pointerdown", { bubbles: true, button: 0, clientX: nodeScreen.x, clientY: nodeScreen.y }),
 			);
-			canvas.dispatchEvent(new KeyboardEvent("keydown", { bubbles: true, key: "Delete" }));
+			window.dispatchEvent(new KeyboardEvent("keydown", { bubbles: true, key: "Delete" }));
 
 			expect(renderer.scene.nodes.has("source")).toBe(false);
 			expect(nodeDeletes).toContain("source");
 
 			renderer.dispose();
+		});
+
+		it("does not delete the board selection while a text field owns focus", () => {
+			const { canvas } = createMockCanvas();
+			document.body.appendChild(canvas);
+			const renderer = new BoardRenderer({ canvas, renderMode: "headless-test" });
+			const sourceNode = new Node({ id: "source", radius: 36, x: 0, y: 0 });
+			const targetNode = new Node({ id: "target", radius: 36, x: 220, y: 0 });
+			const sourceHandle = new Handle({ angle: 0, id: "source.out", node: sourceNode });
+			const targetHandle = new Handle({ angle: Math.PI, id: "target.in", node: targetNode });
+			const edge = new Edge({ from: sourceHandle, id: "edge-1", to: targetHandle });
+			renderer.scene.add(sourceNode).add(targetNode).add(edge);
+			renderer.render();
+
+			const mid = cubicBezierPoint(edge.curve, 0.5);
+			const screen = renderer.worldToScreen(mid);
+			canvas.dispatchEvent(
+				new MouseEvent("pointerdown", { bubbles: true, button: 0, clientX: screen.x, clientY: screen.y }),
+			);
+
+			const input = document.createElement("input");
+			document.body.appendChild(input);
+			input.focus();
+			window.dispatchEvent(new KeyboardEvent("keydown", { bubbles: true, key: "Delete" }));
+			expect(renderer.scene.edges.has("edge-1")).toBe(true);
+
+			input.remove();
+			window.dispatchEvent(new KeyboardEvent("keydown", { bubbles: true, key: "Delete" }));
+			expect(renderer.scene.edges.has("edge-1")).toBe(false);
+
+			renderer.dispose();
+			canvas.remove();
 		});
 
 		it("moves a selected draggable node from pointer events without React involvement", () => {
@@ -1755,6 +1941,26 @@ if (boardVitest) {
 			expect(movableNode.x).toBeCloseTo(60);
 			expect(movableNode.y).toBeCloseTo(40);
 
+			renderer.dispose();
+		});
+
+		it("moves every selected draggable node when dragging one of them", () => {
+			const { canvas } = createMockCanvas();
+			const renderer = new BoardRenderer({ canvas, renderMode: "headless-test" });
+			const a = new Node({ draggable: true, id: "a", radius: 20, x: 0, y: 0 });
+			const b = new Node({ draggable: true, id: "b", radius: 20, x: 100, y: 0 });
+			renderer.scene.add(a).add(b);
+			renderer.render();
+			renderer.setSelectionIds(["a", "b"]);
+			const screenA = renderer.worldToScreen({ x: 0, y: 0 });
+			canvas.dispatchEvent(new MouseEvent("pointerdown", { bubbles: true, button: 0, clientX: screenA.x, clientY: screenA.y }));
+			canvas.dispatchEvent(new MouseEvent("pointermove", { bubbles: true, button: 0, clientX: screenA.x + 10, clientY: screenA.y + 5 }));
+			canvas.dispatchEvent(new MouseEvent("pointerup", { bubbles: true, button: 0, clientX: screenA.x + 10, clientY: screenA.y + 5 }));
+			expect(a.x).toBeCloseTo(10, 5);
+			expect(a.y).toBeCloseTo(5, 5);
+			expect(b.x).toBeCloseTo(110, 5);
+			expect(b.y).toBeCloseTo(5, 5);
+			expect([...renderer.selection.getSnapshot().ids].sort()).toEqual(["a", "b"]);
 			renderer.dispose();
 		});
 
@@ -1903,6 +2109,35 @@ if (boardVitest) {
 			expect(parsed?.nodes[0]).toMatchObject({ shape: "rectangle", width: 48, height: 24, id: "box", text: "crate" });
 		});
 
+		it("parses optional textAutofit on fixture nodes", () => {
+			const circle = parseBoardFixtureV1({
+				camera: { x: 0, y: 0, zoom: 1 },
+				edges: [],
+				nodes: [{ handles: [{ angle: 0, id: "c.h" }], id: "c", radius: 12, text: "cap", textAutofit: true, x: 0, y: 0 }],
+				schema: "elements.board.fixture/v1",
+			});
+			expect(circle?.nodes[0]).toMatchObject({ id: "c", textAutofit: true, text: "cap" });
+			const rect = parseBoardFixtureV1({
+				camera: { x: 0, y: 0, zoom: 1 },
+				edges: [],
+				nodes: [
+					{
+						handles: [{ angle: 0, id: "r.h" }],
+						height: 20,
+						id: "r",
+						shape: "rectangle",
+						text: "wide",
+						textAutofit: true,
+						width: 80,
+						x: 0,
+						y: 0,
+					},
+				],
+				schema: "elements.board.fixture/v1",
+			});
+			expect(rect?.nodes[0]).toMatchObject({ id: "r", textAutofit: true });
+		});
+
 		it("parses optional handle radius on fixture nodes", () => {
 			const parsed = parseBoardFixtureV1({
 				camera: { x: 0, y: 0, zoom: 1 },
@@ -1983,7 +2218,7 @@ if (boardVitest) {
 				camera: { x: 0, y: 0, zoom: 1 },
 				edges: [{ from: "a.out", id: "e1", to: "b.in" }],
 				nodes: [
-					{ handles: [{ angle: 0, id: "a.out" }], id: "a", radius: 10, shape: "circle", text: "A", x: 0, y: 0 },
+					{ handles: [{ angle: 0, id: "a.out" }], id: "a", radius: 10, shape: "circle", text: "A", textAutofit: true, x: 0, y: 0 },
 					{ handles: [{ angle: 3.14, id: "b.in" }], id: "b", radius: 10, shape: "circle", text: "B", x: 50, y: 0 },
 				],
 				schema: "elements.board.fixture/v1",
@@ -2172,7 +2407,7 @@ export type BoardHostInstance = BoardHostNode | BoardHostHandle | BoardHostEdge;
 //#endregion 🔖HostKinds
 
 //#region 🔖PropApply
-function newBoardNodeFromProps(props: BoardNodeProps): Node {
+function newBoardNodeFromProps(props: NodeOptions): Node {
 	if (props.shape === "rectangle") {
 		return new Node({
 			draggable: props.draggable ?? true,
@@ -2182,6 +2417,7 @@ function newBoardNodeFromProps(props: BoardNodeProps): Node {
 			shape: "rectangle",
 			style: props.style,
 			text: props.text,
+			textAutofit: props.textAutofit,
 			userData: props.userData,
 			visible: props.visible,
 			width: props.width,
@@ -2196,6 +2432,7 @@ function newBoardNodeFromProps(props: BoardNodeProps): Node {
 		selected: props.selected,
 		style: props.style,
 		text: props.text,
+		textAutofit: props.textAutofit,
 		userData: props.userData,
 		visible: props.visible,
 		x: props.x,
@@ -2203,12 +2440,13 @@ function newBoardNodeFromProps(props: BoardNodeProps): Node {
 	});
 }
 
-function applyNodeProps(renderer: BoardRenderer, instance: Node, props: BoardNodeProps): void {
+function applyNodeProps(renderer: BoardRenderer, instance: Node, props: NodeOptions): void {
 	instance.draggable = props.draggable ?? true;
 	instance.selected = props.selected ?? false;
 	instance.style = props.style ?? null;
 	instance.userData = { ...(props.userData ?? {}) };
 	instance.visible = props.visible ?? true;
+	instance.textAutofit = props.textAutofit ?? false;
 	renderer.applyNodePositionFromProps(instance.id, props.x, props.y, instance);
 	instance.setText(props.text ?? null);
 	if (props.shape === "rectangle") {
@@ -2240,7 +2478,7 @@ function applyEdgeProps(instance: Edge, props: BoardEdgeProps, fromHandle: Handl
 	instance.setEndpoints(fromHandle, toHandle);
 }
 
-function nodeShapeSyncKey(props: BoardNodeProps): "circle" | "rectangle" {
+function nodeShapeSyncKey(props: NodeOptions): "circle" | "rectangle" {
 	return props.shape === "rectangle" ? "rectangle" : "circle";
 }
 
@@ -2272,8 +2510,18 @@ function propsEqualEdge(a: BoardEdgeProps, b: BoardEdgeProps): boolean {
 	);
 }
 
-function propsEqualNode(a: BoardNodeProps, b: BoardNodeProps): boolean {
-	if (a.id !== b.id || a.x !== b.x || a.y !== b.y || a.draggable !== b.draggable || a.selected !== b.selected || a.style !== b.style || a.visible !== b.visible || a.text !== b.text) {
+function propsEqualNode(a: NodeOptions, b: NodeOptions): boolean {
+	if (
+		a.id !== b.id ||
+		a.x !== b.x ||
+		a.y !== b.y ||
+		a.draggable !== b.draggable ||
+		a.selected !== b.selected ||
+		a.style !== b.style ||
+		a.visible !== b.visible ||
+		a.text !== b.text ||
+		(a.textAutofit ?? false) !== (b.textAutofit ?? false)
+	) {
 		return false;
 	}
 	if (!shallowEqualRecord(a.userData ?? {}, b.userData ?? {})) {
@@ -2333,7 +2581,7 @@ function mountEdge(renderer: BoardRenderer, edgeHost: BoardHostEdge): void {
 	renderer.invalidate();
 }
 
-function replaceNodeImpl(renderer: BoardRenderer, host: BoardHostNode, nextProps: BoardNodeProps): void {
+function replaceNodeImpl(renderer: BoardRenderer, host: BoardHostNode, nextProps: NodeOptions): void {
 	if (instanceShapeSyncKey(host.impl) !== nodeShapeSyncKey(nextProps)) {
 		renderer.batch(() => {
 			for (const handleHost of host.handleChildren) {
@@ -2407,7 +2655,7 @@ const boardSceneHost = Reconciler({
 	createInstance(type, props, rootContainer) {
 		const renderer = rootContainer;
 		if (type === BOARD_HOST_NODE) {
-			return { kind: "node", handleChildren: new Set(), impl: newBoardNodeFromProps(props as BoardNodeProps), renderer };
+			return { kind: "node", handleChildren: new Set(), impl: newBoardNodeFromProps(props as NodeOptions), renderer };
 		}
 		if (type === BOARD_HOST_HANDLE) {
 			return { kind: "handle", impl: null, props: props as BoardHandleProps, renderer };
@@ -2511,7 +2759,7 @@ const boardSceneHost = Reconciler({
 
 	prepareUpdate(instance, type, oldProps, newProps) {
 		if (type === BOARD_HOST_NODE) {
-			return !propsEqualNode(oldProps as BoardNodeProps, newProps as BoardNodeProps);
+			return !propsEqualNode(oldProps as NodeOptions, newProps as NodeOptions);
 		}
 		if (type === BOARD_HOST_HANDLE) {
 			return !propsEqualHandle(oldProps as BoardHandleProps, newProps as BoardHandleProps);
@@ -2525,7 +2773,7 @@ const boardSceneHost = Reconciler({
 	commitUpdate(instance, _payload, type, _oldProps, nextProps) {
 		const renderer = instance.renderer;
 		if (type === BOARD_HOST_NODE) {
-			const next = nextProps as BoardNodeProps;
+			const next = nextProps as NodeOptions;
 			const host = instance as BoardHostNode;
 			if (instanceShapeSyncKey(host.impl) !== nodeShapeSyncKey(next)) {
 				replaceNodeImpl(renderer, host, next);

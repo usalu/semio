@@ -7,6 +7,7 @@
 
 import type { Preview } from "@storybook/react-vite";
 
+import { Expertise } from "@elements/ui";
 import { withLevel } from "./withLevel";
 import { withTheme } from "./withTheme";
 
@@ -25,6 +26,12 @@ enum Level {
 	PANEL = "panel",
 	OVERLAY = "overlay",
 	TEMPORARY = "temporary",
+}
+
+enum Device {
+	DESKTOP = "desktop",
+	TABLET = "tablet",
+	MOBILE = "mobile",
 }
 
 const preview: Preview = {
@@ -65,10 +72,38 @@ const preview: Preview = {
 				dynamicTitle: true,
 			},
 		},
+		device: {
+			description: "Layout density / shell device (Elements + sketchpad parity)",
+			toolbar: {
+				title: "Device",
+				icon: "mobile",
+				items: [
+					{ value: Device.DESKTOP, title: "Desktop" },
+					{ value: Device.TABLET, title: "Tablet" },
+					{ value: Device.MOBILE, title: "Mobile" },
+				],
+				dynamicTitle: true,
+			},
+		},
+		expertise: {
+			description: "Tooltip and label verbosity (Elements expertise provider)",
+			toolbar: {
+				title: "Expertise",
+				icon: "user",
+				items: [
+					{ value: Expertise.BEGINNER, title: "Beginner" },
+					{ value: Expertise.NORMAL, title: "Normal" },
+					{ value: Expertise.EXPERT, title: "Expert" },
+				],
+				dynamicTitle: true,
+			},
+		},
 	},
 	initialGlobals: {
 		theme: Theme.SYSTEM,
 		level: Level.BASE,
+		device: Device.DESKTOP,
+		expertise: Expertise.NORMAL,
 	},
 	decorators: [withLevel, withTheme],
 	tags: ["autodocs"],

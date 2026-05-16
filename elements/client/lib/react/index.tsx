@@ -134,6 +134,73 @@ export function setExpertiseProvider(fn: () => Expertise) {
   _expertiseProvider = fn;
 }
 
+// #region 🌈SurfaceChrome
+/** @emoji 🌈 Document-level UI chrome shared by Elements shells: theme (system/light/dark), device (desktop/tablet/mobile), and tooltip expertise — mirrors sketchpad `Theme` / `Device` behavior on `documentElement`. */
+export type ElementsSurfaceTheme = "system" | "light" | "dark";
+export type ElementsSurfaceDevice = "desktop" | "tablet" | "mobile";
+
+export interface ElementsSurfaceChromeInput {
+  theme: ElementsSurfaceTheme;
+  device: ElementsSurfaceDevice;
+  expertise: Expertise;
+}
+
+function applyDocumentBodyBaseColors(): void {
+  if (typeof document === "undefined") return;
+  document.body.style.backgroundColor = "var(--base)";
+  document.body.style.color = "var(--foreground)";
+}
+
+/**
+ * @emoji 🌓 Syncs `document.documentElement` (`dark`, `touch`, `data-ui-device`), body base colors, and {@link setExpertiseProvider} for tooltips; returns `mobile` for {@link UIProps.mobile}.
+ */
+export function useElementsSurfaceChrome({ theme, device, expertise }: ElementsSurfaceChromeInput): { mobile: boolean } {
+  React.useEffect(() => {
+    setExpertiseProvider(() => expertise);
+    return () => {
+      setExpertiseProvider(() => Expertise.NORMAL);
+    };
+  }, [expertise]);
+
+  React.useEffect(() => {
+    if (typeof window === "undefined" || typeof document === "undefined") return undefined;
+    const root = document.documentElement;
+    const mq = window.matchMedia("(prefers-color-scheme: dark)");
+    const apply = (): void => {
+      const prefersDark = mq.matches;
+      const dark = theme === "dark" || (theme === "system" && prefersDark);
+      root.classList.toggle("dark", dark);
+      applyDocumentBodyBaseColors();
+    };
+    apply();
+    mq.addEventListener("change", apply);
+    return () => {
+      mq.removeEventListener("change", apply);
+      root.classList.remove("dark");
+      document.body.style.backgroundColor = "";
+      document.body.style.color = "";
+    };
+  }, [theme]);
+
+  React.useEffect(() => {
+    if (typeof document === "undefined") return undefined;
+    const root = document.documentElement;
+    root.dataset.uiDevice = device;
+    if (device === "tablet") {
+      root.classList.add("touch");
+    } else {
+      root.classList.remove("touch");
+    }
+    return () => {
+      delete root.dataset.uiDevice;
+      root.classList.remove("touch");
+    };
+  }, [device]);
+
+  return { mobile: device === "mobile" };
+}
+// #endregion 🌈SurfaceChrome
+
 // #region 🪁I18n Resources
 
 // Shared UI translation bundles and initialization for all multilingual UI surfaces.

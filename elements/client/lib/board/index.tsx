@@ -76,6 +76,8 @@ export type BoardNodeCircleProps = {
 	shape?: "circle";
 	style?: string;
 	text?: string;
+	/** @emoji 📏 When true, caption scales to fit inside the node on the text overlay canvas. */
+	textAutofit?: boolean;
 	userData?: Record<string, unknown>;
 	visible?: boolean;
 	x: number;
@@ -91,6 +93,8 @@ export type BoardNodeRectangleProps = {
 	shape: "rectangle";
 	style?: string;
 	text?: string;
+	/** @emoji 📏 When true, caption scales to fit inside the node on the text overlay canvas. */
+	textAutofit?: boolean;
 	userData?: Record<string, unknown>;
 	visible?: boolean;
 	width: number;
@@ -220,6 +224,7 @@ function applyNodeProps(renderer: BoardRenderer, instance: BoardNodeObject, desc
 	instance.style = descriptor.style ?? null;
 	instance.userData = { ...(descriptor.userData ?? {}) };
 	instance.visible = descriptor.visible ?? true;
+	instance.textAutofit = descriptor.textAutofit ?? false;
 	renderer.applyNodePositionFromProps(instance.id, descriptor.x, descriptor.y, instance);
 	instance.setText(descriptor.text ?? null);
 	if (descriptor.shape === "rectangle") {
@@ -269,6 +274,7 @@ function newBoardNodeFromDescriptor(nodeDescriptor: NodeDescriptor): BoardNodeOb
 			shape: "rectangle",
 			style: nodeDescriptor.style,
 			text: nodeDescriptor.text,
+			textAutofit: nodeDescriptor.textAutofit,
 			userData: nodeDescriptor.userData,
 			visible: nodeDescriptor.visible,
 			width: nodeDescriptor.width,
@@ -283,6 +289,7 @@ function newBoardNodeFromDescriptor(nodeDescriptor: NodeDescriptor): BoardNodeOb
 		selected: nodeDescriptor.selected,
 		style: nodeDescriptor.style,
 		text: nodeDescriptor.text,
+		textAutofit: nodeDescriptor.textAutofit,
 		userData: nodeDescriptor.userData,
 		visible: nodeDescriptor.visible,
 		x: nodeDescriptor.x,
@@ -401,6 +408,7 @@ export function BoardCanvas({
 	worldRasterTiling,
 }: BoardCanvasProps): ReactElement {
 	const canvasRef = useRef<HTMLCanvasElement | null>(null);
+	const textOverlayRef = useRef<HTMLCanvasElement | null>(null);
 	const containerRef = useRef<HTMLDivElement | null>(null);
 	const [contextRenderer, setContextRenderer] = useState<BoardRenderer | null>(null);
 	const rendererRef = useRef<BoardRenderer | null>(null);
@@ -548,6 +556,18 @@ export function BoardCanvas({
 		};
 	}, [height, width]);
 
+	useLayoutEffect(() => {
+		const renderer = rendererRef.current;
+		const overlay = textOverlayRef.current;
+		if (!renderer || !overlay) {
+			return;
+		}
+		renderer.attachTextOverlayCanvas(overlay);
+		return () => {
+			renderer.attachTextOverlayCanvas(null);
+		};
+	}, [contextRenderer]);
+
 	return (
 		<BoardContext.Provider value={contextRenderer}>
 				<div
@@ -559,7 +579,14 @@ export function BoardCanvas({
 					ref={containerRef}
 					style={{ height: height ?? "100%", position: "relative", width: width ?? "100%", ...(style ?? {}) }}
 				>
-					<canvas data-testid="board-canvas" ref={canvasRef} style={{ display: "block", height: "100%", width: "100%" }} />
+					<div className="relative h-full w-full min-h-0">
+						<canvas data-testid="board-canvas" ref={canvasRef} style={{ display: "block", height: "100%", width: "100%" }} />
+						<canvas
+							aria-hidden
+							ref={textOverlayRef}
+							style={{ display: "block", height: "100%", inset: 0, pointerEvents: "none", position: "absolute", width: "100%", zIndex: 1 }}
+						/>
+					</div>
 					{contextRenderer ? (
 						<HostMountProvider>
 							<BoardHostSubtree children={children} renderer={contextRenderer} />

@@ -28,6 +28,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Elements.Styling\Elements.Styling.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="FluentValidation" Version="11.12.0" />
     <PackageReference Include="Humanizer" Version="3.0.1" />
     <PackageReference Include="Microsoft.CSharp" Version="4.7.0" />

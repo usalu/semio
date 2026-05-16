@@ -70,14 +70,14 @@ mod vcompute {
 		if from_out == Vec2::new(0.0, 0.0) {
 			from_out = normalize_or_zero(to_point - from_point);
 		}
-		let mut to_in = normalize_or_zero(to_center - to_point);
-		if to_in == Vec2::new(0.0, 0.0) {
-			to_in = normalize_or_zero(to_point - from_point);
+		let mut to_out = normalize_or_zero(to_point - to_center);
+		if to_out == Vec2::new(0.0, 0.0) {
+			to_out = normalize_or_zero(to_point - from_point);
 		}
 		let handle_distance = distance_between(from_point, to_point);
 		let control_length = clamp_f64(handle_distance * 0.35, 24.0, 240.0);
 		let p1 = from_point + from_out * control_length;
-		let p2 = to_point + to_in * control_length;
+		let p2 = to_point + to_out * control_length;
 		CubicBez::new(from_point, p1, p2, to_point)
 	}
 
@@ -390,7 +390,13 @@ mod scene_json {
 
 pub use scene_json::{CameraJson, EdgeDescJson, FixtureV1Json, HandleDescJson, NodeDescJson, SceneDescriptorJson};
 
+mod elements_board_palette {
+	use vello::peniko::Color;
+	include!(concat!(env!("OUT_DIR"), "/elements_styling_board.rs"));
+}
+
 mod board_host {
+	use super::elements_board_palette as board_palette;
 	use super::scene_json::*;
 	use serde_json::json;
 	use std::collections::{BTreeMap, BTreeSet};
@@ -1001,7 +1007,7 @@ mod board_host {
 				inner.stroke(
 					&stroke_grid,
 					Affine::IDENTITY,
-					Color::new([0.58, 0.64, 0.72, 0.18]),
+					board_palette::GRID_MINOR_STROKE,
 					None,
 					&p,
 				);
@@ -1063,7 +1069,7 @@ mod board_host {
 				inner.stroke(
 					&Stroke::new(edge_sw),
 					Affine::IDENTITY,
-					Color::new([0.28, 0.33, 0.41, 1.0]),
+					board_palette::EDGE_STROKE,
 					None,
 					c,
 				);
@@ -1079,14 +1085,14 @@ mod board_host {
 					inner.fill(
 						Fill::NonZero,
 						Affine::IDENTITY,
-						Color::new([0.078, 0.722, 0.651, 0.12]),
+						board_palette::SELECTION_PREVIEW_FILL,
 						None,
 						&path,
 					);
 					inner.stroke(
 						&Stroke::new(1.5),
 						Affine::IDENTITY,
-						Color::new([0.059, 0.463, 0.431, 0.85]),
+						board_palette::SELECTION_PREVIEW_STROKE,
 						None,
 						&path,
 					);
@@ -1136,7 +1142,13 @@ mod board_host {
 				self.edges.remove(id);
 				self.push_event("edgeDelete", json!({ "id": id }));
 			}
-			let node_ids: Vec<_> = self.selection.iter().filter(|id| self.nodes.contains_key(*id)).cloned().collect();
+			let mut node_ids: BTreeSet<String> = self.selection.iter().filter(|id| self.nodes.contains_key(*id)).cloned().collect();
+			for id in self.selection.iter() {
+				if let Some(handle) = self.handles.get(id) {
+					node_ids.insert(handle.node_id.clone());
+				}
+			}
+			let node_ids: Vec<_> = node_ids.into_iter().collect();
 			for nid in &node_ids {
 				let handle_ids: Vec<_> = self
 					.handles
@@ -1474,23 +1486,23 @@ mod board_host {
 
 	fn node_fill_color(sel: bool) -> Color {
 		if sel {
-			Color::new([0.6, 0.96, 0.9, 1.0])
+			board_palette::NODE_FILL_SELECTED
 		} else {
-			Color::new([0.89, 0.91, 0.94, 1.0])
+			board_palette::NODE_FILL
 		}
 	}
 
 	fn node_stroke_color(sel: bool) -> Color {
 		if sel {
-			Color::new([0.06, 0.46, 0.43, 1.0])
+			board_palette::NODE_STROKE_SELECTED
 		} else {
-			Color::new([0.06, 0.09, 0.16, 1.0])
+			board_palette::NODE_STROKE
 		}
 	}
 
 	fn handle_fill(sel: bool) -> Color {
 		if sel {
-			Color::new([0.08, 0.73, 0.65, 1.0])
+			board_palette::HANDLE_FILL_SELECTED
 		} else {
 			Color::WHITE
 		}
@@ -1498,9 +1510,9 @@ mod board_host {
 
 	fn handle_stroke(sel: bool) -> Color {
 		if sel {
-			Color::new([0.06, 0.46, 0.43, 1.0])
+			board_palette::HANDLE_STROKE_SELECTED
 		} else {
-			Color::new([0.06, 0.09, 0.16, 1.0])
+			board_palette::HANDLE_STROKE
 		}
 	}
 }
@@ -2225,7 +2237,7 @@ mod tests {
 		let align0 = vcompute::normalize_or_zero(outward).dot(vcompute::normalize_or_zero(arm0));
 		let inward = Point::new(300.0, 0.0) - curve.p3;
 		let arm1 = curve.p3 - curve.p2;
-		let align1 = vcompute::normalize_or_zero(inward).dot(vcompute::normalize_or_zero(arm1)).abs();
+		let align1 = vcompute::normalize_or_zero(inward).dot(vcompute::normalize_or_zero(arm1));
 		assert!(align0 > 0.99);
 		assert!(align1 > 0.99);
 	}

@@ -26,7 +26,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\net\Semio\Semio.csproj" />
+    <ProjectReference Include="..\..\..\lib\net\Elements.Styling\Elements.Styling.csproj" />
+    <ProjectReference Include="..\..\..\lib\net\Semio\Semio.csproj" />
   </ItemGroup>
 
   <ItemGroup>
