@@ -1911,7 +1911,7 @@ public class Tests
         }
 
         [Fact]
-        public void Connected_Piece()
+        public void Parent_Piece()
         {
             var asset = LoadFindReplaceableAsset();
             var c = GetCase(asset, "parent_piece_yields_only_exact_design_matches");

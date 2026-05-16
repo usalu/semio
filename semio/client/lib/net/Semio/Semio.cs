@@ -4493,7 +4493,7 @@ public class ConnectionId : Entity<ConnectionId>
     public Side Parent { get; set; } = new();
     public Side Child { get; set; } = new();
 
-    public string ToIdString() => $"{Connected.Piece.Id + (Connected.Connector.Id != "" ? ":" + Connected.Connector.Id : "")}--{(Connecting.Connector.Id != "" ? Connecting.Connector.Id + ":" : "") + Connecting.Piece.Id}";
+    public string ToIdString() => $"{Parent.Piece.Id + (Parent.Connector.Id != "" ? ":" + Parent.Connector.Id : "")}--{(Child.Connector.Id != "" ? Child.Connector.Id + ":" : "") + Child.Piece.Id}";
     public string ToHumanIdString() => $"{ToIdString()}";
     public override string ToString() => $"ConId({ToHumanIdString()})";
 
@@ -4550,8 +4550,8 @@ public class ConnectionDiff : Entity<ConnectionDiff>
     {
         return new ConnectionDiff
         {
-            Parent = other.Parent is not null ? (other.Parent.MergeDiff(Parent ?? new SideDiff())) : Connected,
-            Child = other.Child is not null ? (other.Child.MergeDiff(Child ?? new SideDiff())) : Connecting,
+            Parent = other.Parent is not null ? (other.Parent.MergeDiff(Parent ?? new SideDiff())) : Parent,
+            Child = other.Child is not null ? (other.Child.MergeDiff(Child ?? new SideDiff())) : Child,
             Description = string.IsNullOrEmpty(other.Description) ? Description : other.Description,
             Gap = other.Gap ?? Gap,
             Shift = other.Shift ?? Shift,
@@ -4601,7 +4601,7 @@ public class Connection : Entity<Connection>
     public double? V { get; set; }
     public List<Attribute> Attributes { get; set; } = new();
 
-    public string ToIdString() => $"{Connected.Piece.Id + (Connected.Connector.Id != "" ? ":" + Connected.Connector.Id : "")}--{(Connecting.Connector.Id != "" ? Connecting.Connector.Id + ":" : "") + Connecting.Piece.Id}";
+    public string ToIdString() => $"{Parent.Piece.Id + (Parent.Connector.Id != "" ? ":" + Parent.Connector.Id : "")}--{(Child.Connector.Id != "" ? Child.Connector.Id + ":" : "") + Child.Piece.Id}";
     public string ToHumanIdString() => $"{ToIdString()}";
     public override string ToString() => $"Con({ToHumanIdString()})";
 

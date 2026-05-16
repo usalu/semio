@@ -10,10 +10,10 @@ todos:
     status: completed
   - id: drop-sync-render
     content: Drop synchronous renderer.render() from applySize in index.tsx.
-    status: completed
+    status: cancelled
   - id: verify
     content: Run board vitest + playwright + manual play app sanity check (pan/zoom/select).
-    status: cancelled
+    status: pending
   - id: e2e-honest
     content: Document why Vitest does not cover main-thread WebGPU; add/adjust real-browser checks (Playwright+Chrome or manual script).
     status: pending
@@ -120,7 +120,7 @@ Open / reopen a repo MCP ticket under goal that includes `BOARD-WASM-GPUREADY-RE
 
 - Guarding **`pushSceneToWasmDriver`** when `wasmSessionBorrowDepth > 0` or `wasmGpuFrameDepth > 0` stopped **`setSize`** from racing **`attach_canvas`** during the same `render()` path.
 - **`invalidate()`** after `attach_canvas` `finally` ensured a frame ran once the borrow was released.
-- Removing synchronous **`renderer.render()`** from **`applySize`** reduced nested render pressure.
+- Removing synchronous **`renderer.render()`** from **`applySize`** was tried to reduce nested render pressure; **superseded** by **368 parity** (§9) — `applySize` again calls **`renderer.render()`** after **`setSize`**.
 
 ### 6.2 What did not work / user still saw `borrow_fail`
 
@@ -153,3 +153,41 @@ Introduce **`wasmSessionCallBlockedForReentry()`** (`wasmSessionBorrowDepth > 0 
 | Playwright resize-stress + console capture | **Automated regression signal** |
 | **`setPointerCapture` before WASM re-entry guard** | **Likely root of “no mouse after init”**: if `pointerdown` ran while GPU attach borrowed the session, we returned early **after** capturing the pointer, so the canvas kept capture while WASM never saw `pointerDown` — **permanent broken input**. **Fix:** `releasePointerCapture` on the blocked early-return path. |
 | Flex `h-full` in nested flex (Golden Layout) | **Hypothesis for “canvas cut at bottom”**: inner stack used `h-full` without establishing a flex column chain; **Fix:** `flex flex-1 min-h-0 flex-col` on container + inner + `flex-1 min-h-0` on canvases. |
+| **Commit `369` (`c3889ca27`) dual canvas in `BoardCanvas`** | **First DOM divergence after `368`:** second stacked canvas (`textOverlayRef`) + inner wrapper around the WebGPU canvas (`elements/client/lib/board/index.tsx`). **`368`** used a **single** canvas as the flex child measured by `ResizeObserver`. Dual layer risks flex height, compositor quirks, and hit-testing. **Mitigation (2026-05-16):** revert to **one canvas** (GPU captions skipped until overlay is reintroduced safely). |
+| `BoardRenderer.activeRenderer` removed from constructor (`369` `index.ts`) | **Low** for pan/zoom; affects **Delete/Backspace** (`handleWindowKeyDown` checks `activeRenderer`). |
+
+## 7 Hypotheses (ordered — update as disproven)
+
+1. **H1 — Dual canvas / wrapper (`369` `index.tsx`)**  
+   Stacked overlay + inner `div` broke layout or targeting vs **`containerRef`** sizing. **368 = one canvas.**  
+   **Status:** **Mitigated** by single-canvas revert (2026-05-16).
+
+2. **H2 — WASM `borrow_fail` / half-present**  
+   `attach_canvas` + overlapping `setSize` / `renderFrame` / `device.poll`.  
+   **Status:** **Partially addressed** (Rust `Rc<RefCell<…>>` + `future_to_promise`; JS fences; render schedule closer to `368`).
+
+3. **H3 — `pushSceneToWasmDriver` before `gpuReady`**  
+   **368** only pushed inside `syncGpuFrame` after `gpuReady`.  
+   **Status:** **Restored** 368-style flow + `pushScene` immediately before `renderFrame` inside `syncGpuFrame`.
+
+4. **H4 — `wasmSessionCallBlockedForReentry` / `readGpuReady` stuck**  
+   Could block all pointer entry while a partial frame shows. Needs **`[DEBUG]`** logs on attach, `gpuReady`, blocked handlers.
+
+5. **H5 — UI layer above canvas**  
+   Toolbar/modal/invisible Radix layer. **368 play** already had `BoardPaneChrome` capture — lower probability unless later UI commits add a full-screen veil.
+
+6. **H6 — Stale wasm under Vite**  
+   `play/vite.config.ts` ignores `../rs/**` — Rust edits may not rebuild `rs/pkg`. **Verify:** wasm rebuild + hard reload.
+
+## 8 Next discovery steps (real browser)
+
+1. Rebuild wasm (`bun ./rs/scripts/build-wasm.script.ts`), hard reload.
+2. On each `[data-testid=board-canvas]`, confirm `data-board-surface-state=ready`.
+3. If broken: copy **first** console error + stack (`borrow_fail`, `GPU`, `Validation`, etc.).
+4. Run **`BOARD_PLAYWRIGHT_CHANNEL=chrome bunx playwright test --config play/playwright.config.ts`** so WebGPU tests do not skip on stock Chromium.
+5. If still ambiguous: **`git bisect`** `a01093653..HEAD` with a short manual script (pan, wheel, select).
+
+## 9 Plan / code drift notes
+
+- Section **2.3** (“drop `renderer.render()` from `applySize`”) was implemented then **superseded**: **`368` always called `render()` after `setSize` in `applySize`**; that was restored for 368 parity.
+- **`verify` todo** in this plan is **not sufficient** if Playwright GPU tests skip; treat **Vitest green** as **headless-only** signal (see §0).
