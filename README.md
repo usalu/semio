@@ -564,7 +564,7 @@ IDE startup runs `bash ./script.sh start` (Windows: `.\script.ps1 start` or `.\s
 
 **Where “databases” show up:** In Neo4j Browser, open your DBMS at `http://127.0.0.1:7474`, sign in, then use the **database dropdown** (next to the query editor). Only editions that support multi-database list more than one user graph besides `system`. To confirm what the server supports, run `SHOW DATABASES` while connected (Community typically shows `system` and one user database).
 
-**Optional MCP graph:** Set **`NEO4J_EXTRA_GRAPH_DATABASE`** to a single Bolt graph name and use the **`neo4j-extra`** MCP server (it runs `… mcp neo4j` with no argv segments so `NEO4J_DATABASE` comes from that env). **`bun run generate`** uses **`NEO4J_EXTRA_GRAPH_DATABASES`** (plural, comma list) to include extra graphs in the APOC export loop alongside the four product graphs.
+**Optional MCP graphs:** The **`neo4j-metabolism`** server runs `… mcp neo4j metabolism` (Bolt database `metabolism`, same argv pattern as the four product servers). For any other extra Bolt name without adding another MCP entry, set **`NEO4J_EXTRA_GRAPH_DATABASE`** and use **`neo4j-extra`** (it runs `… mcp neo4j` with no argv segments so `NEO4J_DATABASE` comes from that env). **`bun run generate`** uses **`NEO4J_EXTRA_GRAPH_DATABASES`** (plural, comma list) to include extra graphs in the APOC export loop alongside the four product graphs.
 
 **If you use Enterprise and an extra graph is missing:** Connect to the `system` database and run `CREATE DATABASE <name> IF NOT EXISTS;` then `START DATABASE <name> WAIT;` (use backticks around `<name>` if it contains `-` or other special characters), and refresh the database list.
 

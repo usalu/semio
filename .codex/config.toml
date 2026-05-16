@@ -28,6 +28,12 @@ args = ["script.ts", "dev", "mcp", "neo4j", "reuse"]
 enabled = true
 cwd = "."
 
+[mcp_servers.neo4j-metabolism]
+command = "bun"
+args = ["script.ts", "dev", "mcp", "neo4j", "metabolism"]
+enabled = true
+cwd = "."
+
 [mcp_servers.neo4j-extra]
 command = "bun"
 args = ["script.ts", "dev", "mcp", "neo4j"]

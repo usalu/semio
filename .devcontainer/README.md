@@ -6,6 +6,7 @@ Devcontainer configuration and lifecycle scripts.
 
 The monorepo registers Neo4j MCP servers in `.mcp.json` and per-client copies. They use `uvx mcp-neo4j-cypher` against graph database **`semio`** (Neo4j Community: one user database per DBMS, named `semio` via `initial.dbms.default_database`).
 
+MCP server ids include **`neo4j-semio`**, **`neo4j-elements`**, **`neo4j-coda`**, **`neo4j-reuse`**, **`neo4j-metabolism`** (argv targets Bolt graph **`metabolism`**), and **`neo4j-extra`** (targets **`NEO4J_EXTRA_GRAPH_DATABASE`** when set).
 **Native (Windows / macOS / Linux):** Create a Neo4j Desktop **Local Instance** named **`semio`**, set password **`password`**, and start it on Bolt port **`7687`**. On DBMS editions that support multiple user databases, create the product graphs **`elements`**, **`coda`**, **`reuse`**, and any extra Bolt names you list in **`NEO4J_EXTRA_GRAPH_DATABASES`** (comma-separated) so `bun run generate` and MCP can target them. Graph argv for `neo4j-*` / `generate neo4j`: one or more tokens joined with `-` (e.g. `… neo4j my graph` → database `my-graph`). On **Neo4j Community**, only **one** standard user graph exists per DBMS; use **Enterprise** (or equivalent) for multiple isolated graphs, or point every MCP entry at your single graph name. Native setup enables APOC on the local DBMS when needed, uses the native Neo4j Desktop/DBMS only, does not depend on the devcontainer, and does not edit Desktop internals.
 
 Native Neo4j Desktop connection:
