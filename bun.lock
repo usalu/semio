@@ -204,6 +204,10 @@
         "typescript": "^5.9.3",
       },
     },
+    "elements/core/styling": {
+      "name": "@elements/styling-core",
+      "version": "0.1.0",
+    },
     "repo/client/cli": {
       "name": "@repo/client",
       "version": "1.0.0",
@@ -917,6 +921,8 @@
     "@elements/board": ["@elements/board@workspace:elements/client/lib/board"],
 
     "@elements/styling": ["@elements/styling@workspace:elements/client/lib/styling"],
+
+    "@elements/styling-core": ["@elements/styling-core@workspace:elements/core/styling"],
 
     "@elements/ui": ["@elements/ui@workspace:elements/client/lib/react"],
 

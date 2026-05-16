@@ -4,6 +4,7 @@
   "type": "module",
   "description": "🧩 Design-Information-Modeling for Kit-of-Parts 🏘️",
   "workspaces": [
+    "elements/core/*",
     "elements/client/lib/*",
     "coda/client/ui/*",
     "coda/client/lib/*/*",

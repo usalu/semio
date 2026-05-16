@@ -1,0 +1,27 @@
+{
+  "tokens": "tokens.json",
+  "adapters": [
+    {
+      "id": "js-tailwind",
+      "description": "Tailwind v4 @theme fragments + @font-face for @elements/styling",
+      "generator": "js/tailwind/generate.ts",
+      "outputs": [
+        "../../client/lib/styling/generated/palette-fonts.css",
+        "../../client/lib/styling/generated/palette-theme.css"
+      ]
+    },
+    {
+      "id": "dotnet-elements-styling",
+      "description": "C# Palette + BoardVelloCanvas arrays for Semio, Grasshopper, Rhino",
+      "generator": "js/tailwind/generate.ts",
+      "outputs": ["../../../semio/client/lib/net/Elements.Styling/Generated/Palette.g.cs"]
+    },
+    {
+      "id": "rust-board-vello",
+      "description": "OUT_DIR/elements_styling_board.rs Color constants from board_vello_canvas",
+      "codegen": "rs/board_vello_build.inc.rs",
+      "cargoInclude": "../../client/lib/board/rs/build.rs",
+      "tokenInput": "tokens.json"
+    }
+  ]
+}

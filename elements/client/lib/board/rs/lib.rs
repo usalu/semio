@@ -539,6 +539,7 @@ mod force_graph {
 			}
 		}
 		let mut id_to_index: HashMap<String, usize> = HashMap::new();
+		let mut optional_xy: Vec<Option<(f64, f64)>> = Vec::new();
 		let mut positions: Vec<Vector2<f64>> = Vec::new();
 		let mut velocities: Vec<Vector2<f64>> = Vec::new();
 		let mut radii: Vec<f64> = Vec::new();
@@ -549,17 +550,45 @@ mod force_graph {
 			let Some(nid) = obj.get("id").and_then(|v| v.as_str()) else {
 				return Err("node id missing".into());
 			};
-			let x = obj.get("x").and_then(|v| v.as_f64()).ok_or_else(|| format!("node {nid} x missing"))?;
-			let y = obj.get("y").and_then(|v| v.as_f64()).ok_or_else(|| format!("node {nid} y missing"))?;
-			if !x.is_finite() || !y.is_finite() {
-				return Err(format!("node {nid} non-finite position"));
-			}
+			let x_opt = obj.get("x").and_then(|v| v.as_f64());
+			let y_opt = obj.get("y").and_then(|v| v.as_f64());
+			let xy = match (x_opt, y_opt) {
+				(Some(x), Some(y)) if x.is_finite() && y.is_finite() => Some((x, y)),
+				_ => None,
+			};
 			id_to_index.insert(nid.to_string(), idx);
-			positions.push(Vector2::new(x, y));
+			optional_xy.push(xy);
+			positions.push(Vector2::zeros());
 			velocities.push(Vector2::zeros());
 			radii.push(node_repulsion_radius(node));
 		}
 		let n = positions.len();
+		let mut sum = Vector2::zeros();
+		let mut finite_ct: u32 = 0;
+		for xy in &optional_xy {
+			if let Some((x, y)) = xy {
+				sum += Vector2::new(*x, *y);
+				finite_ct += 1;
+			}
+		}
+		let anchor = if finite_ct > 0 {
+			sum / (finite_ct as f64)
+		} else {
+			Vector2::new(opts.center_x.unwrap_or(0.0), opts.center_y.unwrap_or(0.0))
+		};
+		let mut seed_rng = opts.random_seed;
+		for i in 0..n {
+			positions[i] = if let Some((x, y)) = optional_xy[i] {
+				Vector2::new(x, y)
+			} else {
+				let t = i as f64;
+				let ang = t * 2.39996322972865332;
+				let r = 10.0 + t.sqrt() * 22.0;
+				let jx = (rand_unit_interval(&mut seed_rng) - 0.5) * 6.0;
+				let jy = (rand_unit_interval(&mut seed_rng) - 0.5) * 6.0;
+				anchor + Vector2::new(r * ang.cos() + jx, r * ang.sin() + jy)
+			};
+		}
 		let mut edge_pairs: Vec<(usize, usize)> = Vec::new();
 		let mut seen: HashSet<(usize, usize)> = HashSet::new();
 		for e in &edges {
@@ -675,9 +704,318 @@ mod force_graph {
 		serde_json::to_string(&fixture).map_err(|e| e.to_string())
 	}
 }
+// #endregion 🕸️ForceGraphLayout
+
+// #region 🌳HierarchicalTreeLayout
+mod hierarchical_tree {
+	use serde::Deserialize;
+	use serde_json::Value;
+	use std::collections::{BTreeMap, HashMap, HashSet};
+
+	#[derive(Clone, Debug, Deserialize)]
+	#[serde(rename_all = "camelCase")]
+	pub struct HierarchicalTreeLayoutOptions {
+		#[serde(default = "default_layer_spacing")]
+		pub layer_spacing: f64,
+		#[serde(default = "default_sibling_gap")]
+		pub sibling_gap: f64,
+		#[serde(default = "default_orientation")]
+		pub orientation: String,
+		#[serde(default)]
+		pub center_x: Option<f64>,
+		#[serde(default)]
+		pub center_y: Option<f64>,
+	}
+
+	fn default_layer_spacing() -> f64 {
+		120.0
+	}
+	fn default_sibling_gap() -> f64 {
+		28.0
+	}
+	fn default_orientation() -> String {
+		"top-down".into()
+	}
+
+	impl Default for HierarchicalTreeLayoutOptions {
+		fn default() -> Self {
+			Self {
+				layer_spacing: default_layer_spacing(),
+				sibling_gap: default_sibling_gap(),
+				orientation: default_orientation(),
+				center_x: None,
+				center_y: None,
+			}
+		}
+	}
+
+	fn half_extent(node: &Value) -> f64 {
+		let Some(obj) = node.as_object() else {
+			return 24.0;
+		};
+		if obj.get("shape").and_then(|v| v.as_str()) == Some("rectangle") {
+			let w = obj.get("width").and_then(|v| v.as_f64()).unwrap_or(40.0);
+			let h = obj.get("height").and_then(|v| v.as_f64()).unwrap_or(40.0);
+			return (w.max(h) * 0.5).max(8.0);
+		}
+		obj.get("radius").and_then(|v| v.as_f64()).filter(|r| r.is_finite() && *r > 0.0).unwrap_or(24.0)
+	}
+
+	pub fn apply_hierarchical_tree_layout_to_fixture_v1_value(fixture: &mut Value, opts: &HierarchicalTreeLayoutOptions) -> Result<(), String> {
+		let Some(root) = fixture.as_object_mut() else {
+			return Err("fixture root must be object".into());
+		};
+		if root.get("schema").and_then(|v| v.as_str()) != Some("elements.board.fixture/v1") {
+			return Err("schema must be elements.board.fixture/v1".into());
+		}
+		let edges_json = root.get("edges").and_then(|v| v.as_array()).cloned().unwrap_or_default();
+		let Some(nodes) = root.get_mut("nodes").and_then(|v| v.as_array_mut()) else {
+			return Err("nodes array missing".into());
+		};
+		if nodes.is_empty() {
+			return Ok(());
+		}
+		let mut handle_to_node: HashMap<String, String> = HashMap::new();
+		let mut id_to_node: HashMap<String, Value> = HashMap::new();
+		for node in nodes.iter() {
+			let Some(obj) = node.as_object() else {
+				continue;
+			};
+			let Some(nid) = obj.get("id").and_then(|v| v.as_str()) else {
+				continue;
+			};
+			id_to_node.insert(nid.to_string(), node.clone());
+			let Some(handles) = obj.get("handles").and_then(|v| v.as_array()) else {
+				continue;
+			};
+			for h in handles {
+				let Some(ho) = h.as_object() else {
+					continue;
+				};
+				if let Some(hid) = ho.get("id").and_then(|v| v.as_str()) {
+					handle_to_node.insert(hid.to_string(), nid.to_string());
+				}
+			}
+		}
+		let mut directed: Vec<(String, String)> = Vec::new();
+		let mut seen_dir: HashSet<(String, String)> = HashSet::new();
+		for e in &edges_json {
+			let Some(eo) = e.as_object() else {
+				continue;
+			};
+			let Some(src_h) = eo.get("source").and_then(|v| v.as_str()) else {
+				continue;
+			};
+			let Some(tgt_h) = eo.get("target").and_then(|v| v.as_str()) else {
+				continue;
+			};
+			let Some(pa) = handle_to_node.get(src_h) else {
+				continue;
+			};
+			let Some(pb) = handle_to_node.get(tgt_h) else {
+				continue;
+			};
+			if pa == pb {
+				continue;
+			}
+			if seen_dir.insert((pa.clone(), pb.clone())) {
+				directed.push((pa.clone(), pb.clone()));
+			}
+		}
+		let mut indeg: HashMap<String, u32> = HashMap::new();
+		for id in id_to_node.keys() {
+			indeg.insert(id.clone(), 0);
+		}
+		for (_p, c) in &directed {
+			*indeg.entry(c.clone()).or_insert(0) += 1;
+		}
+		let mut roots: Vec<String> = Vec::new();
+		for node in nodes.iter() {
+			let Some(obj) = node.as_object() else {
+				continue;
+			};
+			if obj.get("root") == Some(&serde_json::json!(true)) {
+				if let Some(nid) = obj.get("id").and_then(|v| v.as_str()) {
+					roots.push(nid.to_string());
+				}
+			}
+		}
+		roots.sort();
+		roots.dedup();
+		if roots.is_empty() {
+			for (id, &d) in &indeg {
+				if d == 0 {
+					roots.push(id.clone());
+				}
+			}
+			roots.sort();
+		}
+		if roots.is_empty() {
+			roots = id_to_node.keys().cloned().collect();
+			roots.sort();
+		}
+		let mut depth: HashMap<String, i32> = HashMap::new();
+		for r in &roots {
+			depth.insert(r.clone(), 0);
+		}
+		let cap = directed.len().saturating_mul(3).saturating_add(nodes.len()).saturating_add(8);
+		for _ in 0..cap {
+			let mut changed = false;
+			for (p, c) in &directed {
+				let Some(&dp) = depth.get(p) else {
+					continue;
+				};
+				let nd = dp + 1;
+				let cur = *depth.get(c).unwrap_or(&-1);
+				if nd > cur {
+					depth.insert(c.clone(), nd);
+					changed = true;
+				}
+			}
+			if !changed {
+				break;
+			}
+		}
+		let max_depth = depth.values().copied().max().unwrap_or(0);
+		for id in id_to_node.keys() {
+			depth.entry(id.clone()).or_insert(max_depth + 1);
+		}
+		let mut layers: BTreeMap<i32, Vec<String>> = BTreeMap::new();
+		for (id, d) in &depth {
+			layers.entry(*d).or_default().push(id.clone());
+		}
+		for (_d, ids) in layers.iter_mut() {
+			ids.sort();
+		}
+		let mut pos: HashMap<String, (f64, f64)> = HashMap::new();
+		let top_down = opts.orientation != "left-right";
+		for (d, ids) in &layers {
+			let mut acc = 0.0f64;
+			let mut centers: Vec<(String, f64)> = Vec::new();
+			for id in ids {
+				let node_v = id_to_node.get(id).ok_or_else(|| format!("missing node {id}"))?;
+				let h = half_extent(node_v);
+				acc += h;
+				centers.push((id.clone(), acc));
+				acc += h + opts.sibling_gap;
+			}
+			let total = if ids.is_empty() {
+				0.0
+			} else {
+				acc - opts.sibling_gap
+			};
+			let shift = -total * 0.5;
+			for (id, c) in centers {
+				let along = c + shift;
+				let orth = (*d as f64) * opts.layer_spacing;
+				if top_down {
+					pos.insert(id, (along, orth));
+				} else {
+					pos.insert(id, (orth, along));
+				}
+			}
+		}
+		let mut minx = f64::INFINITY;
+		let mut maxx = f64::NEG_INFINITY;
+		let mut miny = f64::INFINITY;
+		let mut maxy = f64::NEG_INFINITY;
+		for (id, (x, y)) in &pos {
+			let h = half_extent(id_to_node.get(id).unwrap());
+			minx = minx.min(x - h);
+			maxx = maxx.max(x + h);
+			miny = miny.min(y - h);
+			maxy = maxy.max(y + h);
+		}
+		if !minx.is_finite() {
+			minx = 0.0;
+			maxx = 1.0;
+			miny = 0.0;
+			maxy = 1.0;
+		}
+		let cx = (minx + maxx) * 0.5;
+		let cy = (miny + maxy) * 0.5;
+		let gx = opts.center_x.unwrap_or(0.0);
+		let gy = opts.center_y.unwrap_or(0.0);
+		let dx = gx - cx;
+		let dy = gy - cy;
+		for (id, (x, y)) in pos {
+			let fx = x + dx;
+			let fy = y + dy;
+			let idx = nodes
+				.iter()
+				.position(|n| n.get("id").and_then(|v| v.as_str()) == Some(id.as_str()))
+				.ok_or_else(|| format!("node index {id}"))?;
+			let Some(obj) = nodes[idx].as_object_mut() else {
+				continue;
+			};
+			obj.insert("x".into(), serde_json::json!(fx));
+			obj.insert("y".into(), serde_json::json!(fy));
+		}
+		Ok(())
+	}
+}
+// #endregion 🌳HierarchicalTreeLayout
+
+// #region 🔁RedrawLayout
+mod redraw_layout {
+	use serde::Deserialize;
+	use serde_json::Value;
+
+	use super::force_graph::{apply_force_graph_layout_to_fixture_v1_value, ForceGraphLayoutOptions};
+	use super::hierarchical_tree::{apply_hierarchical_tree_layout_to_fixture_v1_value, HierarchicalTreeLayoutOptions};
+
+	#[derive(Debug, Deserialize)]
+	#[serde(rename_all = "camelCase")]
+	struct RedrawFixtureOptions {
+		mode: String,
+		#[serde(default)]
+		center_x: Option<f64>,
+		#[serde(default)]
+		center_y: Option<f64>,
+		#[serde(default)]
+		random_seed: Option<u64>,
+		#[serde(default)]
+		force_graph: Option<ForceGraphLayoutOptions>,
+		#[serde(default)]
+		hierarchical_tree: Option<HierarchicalTreeLayoutOptions>,
+	}
+
+	pub fn apply_redraw_layout_to_fixture_v1_json(fixture_json: &str, options_json: &str) -> Result<String, String> {
+		let opts: RedrawFixtureOptions = serde_json::from_str(options_json).map_err(|e| e.to_string())?;
+		let mut fixture: Value = serde_json::from_str(fixture_json).map_err(|e| e.to_string())?;
+		match opts.mode.as_str() {
+			"force-graph" => {
+				let mut fo = opts.force_graph.clone().unwrap_or_default();
+				if opts.center_x.is_some() {
+					fo.center_x = opts.center_x;
+				}
+				if opts.center_y.is_some() {
+					fo.center_y = opts.center_y;
+				}
+				if let Some(s) = opts.random_seed {
+					fo.random_seed = s;
+				}
+				apply_force_graph_layout_to_fixture_v1_value(&mut fixture, &fo)?;
+			}
+			"hierarchical-tree" => {
+				let mut to = opts.hierarchical_tree.clone().unwrap_or_default();
+				if opts.center_x.is_some() {
+					to.center_x = opts.center_x;
+				}
+				if opts.center_y.is_some() {
+					to.center_y = opts.center_y;
+				}
+				apply_hierarchical_tree_layout_to_fixture_v1_value(&mut fixture, &to)?;
+			}
+			other => return Err(format!("unknown redraw mode: {other}")),
+		}
+		serde_json::to_string(&fixture).map_err(|e| e.to_string())
+	}
+}
+// #endregion 🔁RedrawLayout
 
 pub use force_graph::{apply_force_graph_layout_to_fixture_v1_json, apply_force_graph_layout_to_fixture_v1_value, ForceGraphLayoutOptions};
-// #endregion 🕸️ForceGraphLayout
+pub use redraw_layout::apply_redraw_layout_to_fixture_v1_json;
 
 mod elements_board_palette {
 	use vello::peniko::Color;
@@ -3025,9 +3363,9 @@ pub fn board_handle_position_rectangle(cx: f64, cy: f64, width: f64, height: f64
 }
 
 #[cfg(target_arch = "wasm32")]
-#[wasm_bindgen(js_name = boardForceGraphLayoutFixtureJson)]
-pub fn board_force_graph_layout_fixture_json(fixture_json: &str, options_json: &str) -> Result<String, JsValue> {
-	apply_force_graph_layout_to_fixture_v1_json(fixture_json, options_json).map_err(|e| JsValue::from_str(&e))
+#[wasm_bindgen(js_name = boardRedrawLayoutFixtureJson)]
+pub fn board_redraw_layout_fixture_json(fixture_json: &str, options_json: &str) -> Result<String, JsValue> {
+	apply_redraw_layout_to_fixture_v1_json(fixture_json, options_json).map_err(|e| JsValue::from_str(&e))
 }
 
 // #region 🔖WasmSession
@@ -3936,8 +4274,9 @@ mod host_tests {
 
 #[cfg(test)]
 mod force_graph_tests {
-	use super::apply_force_graph_layout_to_fixture_v1_json;
+	use super::{apply_force_graph_layout_to_fixture_v1_json, apply_redraw_layout_to_fixture_v1_json};
 	use serde_json::json;
+	use std::collections::HashMap;
 
 	#[test]
 	fn force_graph_spreads_two_linked_circles_along_x() {
@@ -3982,6 +4321,143 @@ mod force_graph_tests {
 	fn force_graph_rejects_bad_schema() {
 		let err = apply_force_graph_layout_to_fixture_v1_json(r#"{"schema":"x","nodes":[],"edges":[]}"#, "{}").unwrap_err();
 		assert!(err.contains("schema"));
+	}
+
+	#[test]
+	fn redraw_force_graph_wraps_flat_options() {
+		let fixture = json!({
+			"schema": "elements.board.fixture/v1",
+			"camera": { "x": 0.0, "y": 0.0, "zoom": 1.0 },
+			"nodes": [
+				{
+					"id": "a",
+					"x": 0.0,
+					"y": 0.0,
+					"radius": 40.0,
+					"handles": [{ "id": "a:h0", "angle": 0.0, "handleKind": "board.port" }]
+				},
+				{
+					"id": "b",
+					"x": 1.0,
+					"y": 0.0,
+					"radius": 40.0,
+					"handles": [{ "id": "b:h0", "angle": 3.14159, "handleKind": "board.port" }]
+				}
+			],
+			"edges": [{ "id": "e1", "source": "a:h0", "target": "b:h0" }]
+		});
+		let opts = json!({
+			"mode": "force-graph",
+			"randomSeed": 7,
+			"forceGraph": {
+				"iterations": 200,
+				"idealEdgeLength": 180.0,
+				"repulsionStrength": 8000.0,
+				"springStrength": 0.04,
+				"gravity": 0.0
+			}
+		});
+		let out = apply_redraw_layout_to_fixture_v1_json(&fixture.to_string(), &opts.to_string()).unwrap();
+		let parsed: serde_json::Value = serde_json::from_str(&out).unwrap();
+		let nodes = parsed["nodes"].as_array().unwrap();
+		let ax = nodes[0]["x"].as_f64().unwrap();
+		let bx = nodes[1]["x"].as_f64().unwrap();
+		assert!((bx - ax).abs() > 80.0);
+	}
+
+	#[test]
+	fn force_graph_accepts_logical_nodes_without_xy() {
+		let fixture = json!({
+			"schema": "elements.board.fixture/v1",
+			"camera": { "x": 0.0, "y": 0.0, "zoom": 1.0 },
+			"nodes": [
+				{
+					"id": "a",
+					"radius": 40.0,
+					"handles": [{ "id": "a:h0", "angle": 0.0, "handleKind": "board.port" }]
+				},
+				{
+					"id": "b",
+					"radius": 40.0,
+					"handles": [{ "id": "b:h0", "angle": 3.14159, "handleKind": "board.port" }]
+				}
+			],
+			"edges": [{ "id": "e1", "source": "a:h0", "target": "b:h0" }]
+		});
+		let opts = json!({
+			"mode": "force-graph",
+			"centerX": 0.0,
+			"centerY": 0.0,
+			"randomSeed": 3,
+			"forceGraph": { "iterations": 120, "idealEdgeLength": 160.0, "gravity": 0.0 }
+		});
+		let out = apply_redraw_layout_to_fixture_v1_json(&fixture.to_string(), &opts.to_string()).unwrap();
+		let parsed: serde_json::Value = serde_json::from_str(&out).unwrap();
+		for n in parsed["nodes"].as_array().unwrap() {
+			assert!(n["x"].as_f64().unwrap().is_finite());
+			assert!(n["y"].as_f64().unwrap().is_finite());
+		}
+	}
+
+	#[test]
+	fn hierarchical_tree_stacks_by_depth() {
+		let fixture = json!({
+			"schema": "elements.board.fixture/v1",
+			"camera": { "x": 0.0, "y": 0.0, "zoom": 1.0 },
+			"nodes": [
+				{
+					"id": "r",
+					"root": true,
+					"radius": 18.0,
+					"handles": [{ "id": "r:h", "angle": 0.0, "handleKind": "board.port" }]
+				},
+				{
+					"id": "c1",
+					"radius": 18.0,
+					"handles": [{ "id": "c1:h", "angle": 0.0, "handleKind": "board.port" }]
+				},
+				{
+					"id": "c2",
+					"radius": 18.0,
+					"handles": [{ "id": "c2:h", "angle": 0.0, "handleKind": "board.port" }]
+				}
+			],
+			"edges": [
+				{ "id": "e1", "source": "r:h", "target": "c1:h" },
+				{ "id": "e2", "source": "r:h", "target": "c2:h" }
+			]
+		});
+		let opts = json!({
+			"mode": "hierarchical-tree",
+			"centerX": 0.0,
+			"centerY": 0.0,
+			"hierarchicalTree": { "layerSpacing": 90.0, "siblingGap": 12.0, "orientation": "top-down" }
+		});
+		let out = apply_redraw_layout_to_fixture_v1_json(&fixture.to_string(), &opts.to_string()).unwrap();
+		let parsed: serde_json::Value = serde_json::from_str(&out).unwrap();
+		let mut ys: HashMap<String, f64> = HashMap::new();
+		for n in parsed["nodes"].as_array().unwrap() {
+			let id = n["id"].as_str().unwrap().to_string();
+			ys.insert(id, n["y"].as_f64().unwrap());
+		}
+		let ry = *ys.get("r").unwrap();
+		let c1y = *ys.get("c1").unwrap();
+		let c2y = *ys.get("c2").unwrap();
+		assert!((c1y - ry).abs() > 40.0, "expected child below root");
+		assert!((c2y - ry).abs() > 40.0);
+		assert!((c1y - c2y).abs() < 1e-3, "siblings share row");
+	}
+
+	#[test]
+	fn redraw_rejects_unknown_mode() {
+		let fixture = json!({
+			"schema": "elements.board.fixture/v1",
+			"camera": { "x": 0.0, "y": 0.0, "zoom": 1.0 },
+			"nodes": [],
+			"edges": []
+		});
+		let err = apply_redraw_layout_to_fixture_v1_json(&fixture.to_string(), r#"{"mode":"nope"}"#).unwrap_err();
+		assert!(err.contains("unknown redraw mode"));
 	}
 }
 

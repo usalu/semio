@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 /** @emoji 🧭 `@elements/styling` task router: `bun ./script.ts generate`. */
-import { generateStylingArtifacts } from "./js/tailwind/generate.ts";
+import { generateStylingArtifacts } from "../../../core/styling/js/tailwind/generate.ts";
 
 const cmd = process.argv[2];
 if (cmd === "generate") {
