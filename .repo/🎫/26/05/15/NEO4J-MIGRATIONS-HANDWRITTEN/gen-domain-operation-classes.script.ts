@@ -221,7 +221,7 @@ function buildCommandArgumentDataCypher(golden: string, pastOps: readonly string
     "DETACH DELETE r;",
     "",
   ];
-  const cmdsWithFields: { cmd: string; fieldNames: string[] }[] = [];
+  const cmdsByCmdFields = new Map<string, ArgField[]>();
   for (const past of pastOps) {
     const cmd = imperativeOperationStem(past);
     if (!operationUsesSpecificInputType(golden, past)) {
@@ -231,10 +231,21 @@ function buildCommandArgumentDataCypher(golden: string, pastOps: readonly string
     if (fields.length === 0) {
       continue;
     }
-    cmdsWithFields.push({ cmd, fieldNames: fields.map((f) => f.name) });
+    const prev = cmdsByCmdFields.get(cmd);
+    if (prev == null) {
+      cmdsByCmdFields.set(cmd, [...fields]);
+    } else {
+      const merged = [...prev];
+      for (const f of fields) {
+        if (!merged.some((x) => x.name === f.name)) {
+          merged.push(f);
+        }
+      }
+      cmdsByCmdFields.set(cmd, merged);
+    }
   }
-  for (const { cmd, fieldNames } of cmdsWithFields) {
-    const inList = fieldNames.map((n) => `'${esc(n)}'`).join(", ");
+  for (const [cmd, fields] of cmdsByCmdFields) {
+    const inList = fields.map((f) => `'${esc(f.name)}'`).join(", ");
     lines.push(
       `MATCH (cmd:Command {name: '${esc(cmd)}'})`,
       `OPTIONAL MATCH (cmd)-[r:OWNS]->(pivot:Data)`,
@@ -250,15 +261,7 @@ function buildCommandArgumentDataCypher(golden: string, pastOps: readonly string
     "DETACH DELETE d;",
     "",
   );
-  for (const past of pastOps) {
-    const cmd = imperativeOperationStem(past);
-    if (!operationUsesSpecificInputType(golden, past)) {
-      continue;
-    }
-    const fields = extractOperationInputFields(golden, past);
-    if (fields.length === 0) {
-      continue;
-    }
+  for (const [cmd, fields] of cmdsByCmdFields) {
     for (let i = 0; i < fields.length; i++) {
       const f = fields[i]!;
       const id = cypherIdent(cmd, f.name);

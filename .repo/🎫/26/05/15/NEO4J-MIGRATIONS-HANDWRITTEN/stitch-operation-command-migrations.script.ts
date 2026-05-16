@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 /**
- * @emoji 🧷 Inlines generated Neo4j fragments into `migrations.cypher` (operation `Command` relabel/merge/reparent + imperative renames + `Data` argument kit from golden `*Input`).
+ * @emoji 🧷 Inlines generated Neo4j fragments into `migrations.cypher` (operation `Command` relabel/merge/dedupe/reparent + imperative renames + `Data` argument kit from golden `*Input`).
  */
 import { readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
@@ -10,6 +10,7 @@ const migPath = join(dir, "migrations.cypher");
 const relabelPath = join(dir, "relabel-rename-operation-commands.cypher.fragment");
 const mergePath = join(dir, "merge-operation-classes.cypher.fragment");
 const inputSurfacePath = join(dir, "merge-command-input-surfaces.cypher.fragment");
+const dedupePath = join(dir, "dedupe-duplicate-operation-commands.cypher.fragment");
 const reparentPath = join(dir, "reparent-operation-ownership.cypher.fragment");
 
 const mig = readFileSync(migPath, "utf8");
@@ -36,6 +37,8 @@ const reparentBody = reparent
   .join("\n")
   .trim();
 
+const dedupeBlock = readFileSync(dedupePath, "utf8").trimEnd();
+
 const relabelBlock = [
   "//#region RelabelRenameOperationCommands",
   relabel,
@@ -44,6 +47,8 @@ const relabelBlock = [
   "//#region MergeOperationConcreteCommands",
   mergeBody,
   "//#endregion MergeOperationConcreteCommands",
+  "",
+  dedupeBlock,
   "",
   "//#region MergeCommandInputSurfaces",
   inputBody,
