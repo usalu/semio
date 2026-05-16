@@ -565,6 +565,17 @@ function Resolve-NativeNeo4jGraphDatabase {
     return $preferred
 }
 
+function Get-Neo4jExtraBoltGraphNamesFromEnv {
+    if ([string]::IsNullOrWhiteSpace($env:NEO4J_EXTRA_GRAPH_DATABASES)) { return @() }
+    $env:NEO4J_EXTRA_GRAPH_DATABASES.Split(',', [StringSplitOptions]::RemoveEmptyEntries) | ForEach-Object { $_.Trim() } | Where-Object { $_ -ne '' }
+}
+
+function Format-Neo4jDatabaseNameForCypher {
+    param([string]$Name)
+    if ($Name -match '^[a-zA-Z_][a-zA-Z0-9_]*$') { return $Name }
+    return ('`' + ($Name -replace '`', '``') + '`')
+}
+
 function Get-JavaMajorVersion {
     $java = Get-FirstCommandPath @(
         "C:\Program Files\Microsoft\jdk-21.0.11.10-hotspot\bin\java.exe",
@@ -675,7 +686,7 @@ function Ensure-NativeNeo4jTools {
 function Ensure-NativeNeo4j {
     param([string]$RepoRoot)
 
-    $technologies = @("semio", "elements", "coda", "reuse", "metabolism")
+    $technologies = @("semio", "elements", "coda", "reuse") + @(Get-Neo4jExtraBoltGraphNamesFromEnv)
     if (Test-TcpPort -HostName "127.0.0.1" -Port 7687) {
         Write-Step "Neo4j is reachable at bolt://localhost:7687."
     } else {
@@ -700,7 +711,10 @@ function Ensure-NativeNeo4j {
     }
 
     Invoke-Neo4jCypher -RepoRoot $RepoRoot -Database "system" -Cypher "CREATE DATABASE semio IF NOT EXISTS;" | Out-Null
-    Invoke-Neo4jCypher -RepoRoot $RepoRoot -Database "system" -Cypher "CREATE DATABASE metabolism IF NOT EXISTS;" | Out-Null
+    foreach ($extraDb in (Get-Neo4jExtraBoltGraphNamesFromEnv)) {
+        $q = Format-Neo4jDatabaseNameForCypher -Name $extraDb
+        Invoke-Neo4jCypher -RepoRoot $RepoRoot -Database "system" -Cypher "CREATE DATABASE $q IF NOT EXISTS;" | Out-Null
+    }
     #region 🔥Neo4jEnterpriseDropStockDb
     # Enterprise Desktop: schema often lands in the stock `neo4j` DB. Ensure `semio` is default, then drop `neo4j`.
     # Community (single user DB): these calls fail harmlessly.

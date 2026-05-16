@@ -1,7 +1,5 @@
-# Neo4j `metabolism`
+# Neo4j extra graphs (generic)
 
-- **MCP:** `neo4j-metabolism` → `bun script.ts dev mcp neo4j metabolism` (Bolt database `metabolism`).
-- **Generate:** `bun ./script.ts generate neo4j metabolism` or full `bun run generate` exports APOC `apoc.export.cypher.all` to `.repo/🛂/metabolism.cypher` when the live graph exists.
-- **Native setup:** `CREATE DATABASE metabolism IF NOT EXISTS` on multi-db editions; import loop loads `metabolism.cypher` into the resolved default graph like other bundles.
-
-Repo MCP (`search`, `ticket_close`) was not available in this session; ticket closed locally in `ticket.json`.
+- **Product graphs (code):** `semio`, `elements`, `coda`, `reuse` — `NEO4J_PRODUCT_GRAPH_DATABASE_SPECS` in `generate.neo4j.gen.ts`.
+- **Extra Bolt graphs (env):** `NEO4J_EXTRA_GRAPH_DATABASES=comma,separated,names` — included in `bun run generate`, native `CREATE DATABASE`, `.repo/🛂/<name>.cypher` stubs, and devcontainer post-start reload.
+- **MCP `neo4j-extra`:** set **`NEO4J_EXTRA_GRAPH_DATABASE`** to one Bolt graph name; server runs `… mcp neo4j` with `NEO4J_DATABASE` from that env.

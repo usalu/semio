@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 /**
- * 🧭 Monorepo command router: `bun ./script.ts <verb> [segments…]` (e.g. `script.ts dev`, `script.ts dev mcp`, `script.ts generate neo4j metabolism`).
+ * 🧭 Monorepo command router: `bun ./script.ts <verb> [segments…]` (e.g. `script.ts dev`, `script.ts dev mcp`, `script.ts generate neo4j semio`).
  */
 import { execFileSync, spawn, spawnSync } from "node:child_process";
 import { existsSync, linkSync, mkdirSync, chmodSync, chownSync, readFileSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
@@ -10,7 +10,7 @@ import { createServer } from "node:net";
 import { stat } from "node:fs/promises";
 import {
   Neo4jCypherExport,
-  NEO4J_GRAPH_DATABASE_SPECS,
+  getAllNeo4jGraphExportSpecs,
   joinNeo4jGraphDatabaseName,
   partitionNeo4jGraphCliArgv,
 } from "./generate.neo4j.gen.ts";
@@ -388,7 +388,7 @@ export class GenerateScript extends Script {
     let successes = 0;
     let failures = 0;
     const exporter = new Neo4jCypherExport(this.root);
-    for (const spec of NEO4J_GRAPH_DATABASE_SPECS) {
+    for (const spec of getAllNeo4jGraphExportSpecs(process.env)) {
       const joined = joinNeo4jGraphDatabaseName(spec);
       const prev = process.env.NEO4J_DATABASE;
       process.env.NEO4J_DATABASE = joined;

@@ -314,6 +314,28 @@ set_conf_value() {
   fi
 }
 
+extra_neo4j_graph_names_from_env() {
+  [ -z "${NEO4J_EXTRA_GRAPH_DATABASES:-}" ] && return 0
+  local _ifs=$IFS
+  IFS=,
+  local s n
+  for s in $NEO4J_EXTRA_GRAPH_DATABASES; do
+    n="$(echo "$s" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')"
+    [ -n "$n" ] && printf '%s\n' "$n"
+  done
+  IFS=$_ifs
+}
+
+neo4j_quote_db_name() {
+  local n="$1"
+  if [[ "$n" =~ ^[a-zA-Z_][a-zA-Z0-9_]*$ ]]; then
+    printf '%s' "$n"
+  else
+    local e="${n//\`/``}"
+    printf '`%s`' "$e"
+  fi
+}
+
 ensure_native_neo4j() {
   local runtime_root
   local graph_db
@@ -338,7 +360,11 @@ ensure_native_neo4j() {
   fi
 
   run_cypher system "CREATE DATABASE semio IF NOT EXISTS;" >/dev/null 2>&1 || true
-  run_cypher system "CREATE DATABASE metabolism IF NOT EXISTS;" >/dev/null 2>&1 || true
+  while IFS= read -r db; do
+    [ -z "$db" ] && continue
+    q="$(neo4j_quote_db_name "$db")"
+    run_cypher system "CREATE DATABASE $q IF NOT EXISTS;" >/dev/null 2>&1 || true
+  done < <(extra_neo4j_graph_names_from_env)
   #region 🔥Neo4jEnterpriseDropStockDb
   # Enterprise Desktop: schema often lands in the stock `neo4j` DB. Ensure `semio` is default, then drop `neo4j`.
   # Community (single user DB): these calls fail harmlessly and are skipped via `|| true`.
@@ -352,7 +378,12 @@ ensure_native_neo4j() {
   log "Neo4j: clearing graph in ${graph_db}, then loading generated .repo/🛂/*.cypher (from bun run generate) …"
   run_cypher "$graph_db" "MATCH (n) DETACH DELETE n" || log "Neo4j wipe skipped (failed)."
 
-  for technology in semio elements coda reuse metabolism; do
+  local technologies=(semio elements coda reuse)
+  local ex
+  while IFS= read -r ex; do
+    [ -n "$ex" ] && technologies+=("$ex")
+  done < <(extra_neo4j_graph_names_from_env)
+  for technology in "${technologies[@]}"; do
     local schema_file="$REPO_ROOT/.repo/🛂/${technology}.cypher"
     if [ -f "$schema_file" ] && grep -Eqv '^[[:space:]]*(//|:|$)' "$schema_file"; then
       local schema_uri

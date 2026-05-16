@@ -223,8 +223,24 @@ else
 fi
 #endregion 🗄️Neo4jService
 #region 🧾Neo4jCypherPersistence
+extra_neo4j_graph_names_from_env() {
+  [ -z "${NEO4J_EXTRA_GRAPH_DATABASES:-}" ] && return 0
+  local _ifs=$IFS
+  IFS=,
+  local s n
+  for s in $NEO4J_EXTRA_GRAPH_DATABASES; do
+    n="$(echo "$s" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')"
+    [ -n "$n" ] && printf '%s\n' "$n"
+  done
+  IFS=$_ifs
+}
+
 ensure_neo4j_schema_files() {
-  local technologies=("semio" "elements" "coda" "reuse" "metabolism")
+  local technologies=("semio" "elements" "coda" "reuse")
+  local ex
+  while IFS= read -r ex; do
+    [ -n "$ex" ] && technologies+=("$ex")
+  done < <(extra_neo4j_graph_names_from_env)
   local schema_dir="$WORKSPACE/.repo/🛂"
   mkdir -p "$schema_dir"
   for technology in "${technologies[@]}"; do
@@ -265,7 +281,12 @@ reload_neo4j_from_repo_cypher() {
     return 0
   }
   local imported=0
-  for technology in semio elements coda reuse metabolism; do
+  local technologies=("semio" "elements" "coda" "reuse")
+  local ex
+  while IFS= read -r ex; do
+    [ -n "$ex" ] && technologies+=("$ex")
+  done < <(extra_neo4j_graph_names_from_env)
+  for technology in "${technologies[@]}"; do
     local schema_file="$WORKSPACE/.repo/🛂/$technology.cypher"
     local schema_uri
     schema_uri="$(neo4j_schema_cypher_uri "$technology")"

@@ -120,7 +120,9 @@
     "NEO4J_USERNAME": "neo4j",
     "NEO4J_PASSWORD": "password",
     "NEO4J_DATABASE": "semio",
-    "NEO4J_TELEMETRY": "false"
+    "NEO4J_TELEMETRY": "false",
+    "NEO4J_EXTRA_GRAPH_DATABASES": "",
+    "NEO4J_EXTRA_GRAPH_DATABASE": ""
   },
   "remoteEnv": {
     "PLAYWRIGHT_BROWSERS_PATH": "/workspaces/semio/node_modules/.cache/ms-playwright",
@@ -129,7 +131,9 @@
     "NEO4J_USERNAME": "neo4j",
     "NEO4J_PASSWORD": "password",
     "NEO4J_DATABASE": "semio",
-    "NEO4J_TELEMETRY": "false"
+    "NEO4J_TELEMETRY": "false",
+    "NEO4J_EXTRA_GRAPH_DATABASES": "",
+    "NEO4J_EXTRA_GRAPH_DATABASE": ""
   },
   "customizations": {
     "vscode": {

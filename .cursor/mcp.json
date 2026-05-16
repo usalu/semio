@@ -28,10 +28,13 @@
       "command": "bun",
       "args": ["script.ts", "dev", "mcp", "neo4j", "reuse"]
     },
-    "neo4j-metabolism": {
+    "neo4j-extra": {
       "type": "stdio",
       "command": "bun",
-      "args": ["script.ts", "dev", "mcp", "neo4j", "metabolism"]
+      "args": ["script.ts", "dev", "mcp", "neo4j"],
+      "env": {
+        "NEO4J_DATABASE": "${env:NEO4J_EXTRA_GRAPH_DATABASE}"
+      }
     }
   }
 }

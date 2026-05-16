@@ -28,8 +28,9 @@ args = ["script.ts", "dev", "mcp", "neo4j", "reuse"]
 enabled = true
 cwd = "."
 
-[mcp_servers.neo4j-metabolism]
+[mcp_servers.neo4j-extra]
 command = "bun"
-args = ["script.ts", "dev", "mcp", "neo4j", "metabolism"]
+args = ["script.ts", "dev", "mcp", "neo4j"]
 enabled = true
 cwd = "."
+env = { NEO4J_DATABASE = "${env:NEO4J_EXTRA_GRAPH_DATABASE}" }

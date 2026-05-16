@@ -1,7 +1,9 @@
 import { describe, expect, test } from "bun:test";
 import {
   NEO4J_GRAPH_DATABASE_NAMES,
+  getAllNeo4jGraphExportSpecs,
   joinNeo4jGraphDatabaseName,
+  parseExtraNeo4jGraphDatabaseNamesFromEnv,
   partitionNeo4jGraphCliArgv,
 } from "../../../../generate.neo4j.gen.ts";
 import { defineLint } from "./script.ts";
@@ -19,8 +21,16 @@ describe("Neo4j graph database registry", () => {
     });
   });
 
-  test("includes metabolism for MCP and generate export", () => {
-    expect(NEO4J_GRAPH_DATABASE_NAMES).toContain("metabolism");
+  test("product graphs are fixed four joined names", () => {
+    expect(NEO4J_GRAPH_DATABASE_NAMES).toEqual(["semio", "elements", "coda", "reuse"]);
+  });
+
+  test("NEO4J_EXTRA_GRAPH_DATABASES extends export specs", () => {
+    const env = { NEO4J_EXTRA_GRAPH_DATABASES: " foo , bar-baz " };
+    expect(parseExtraNeo4jGraphDatabaseNamesFromEnv(env)).toEqual(["foo", "bar-baz"]);
+    const names = getAllNeo4jGraphExportSpecs(env).map((s) => joinNeo4jGraphDatabaseName(s));
+    expect(names).toContain("foo");
+    expect(names).toContain("bar-baz");
   });
 });
 
