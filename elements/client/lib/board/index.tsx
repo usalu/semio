@@ -1073,12 +1073,12 @@ if (boardReactVitest) {
 				</>,
 			);
 			syncBoardScene(renderer, jsx);
-			const aOut = renderer.scene.handles.get("a:h0");
-			const bIn = renderer.scene.handles.get("b:h0");
-			expect(aOut).toBeDefined();
-			expect(bIn).toBeDefined();
+			const sourceHandle = renderer.scene.handles.get("a:h0");
+			const targetHandle = renderer.scene.handles.get("b:h0");
+			expect(sourceHandle).toBeDefined();
+			expect(targetHandle).toBeDefined();
 			renderer.scene.ingestWasmEdge(
-				new BoardEdgeObject({ id: "edge-link-99", source: aOut as BoardHandleObject, target: bIn as BoardHandleObject }),
+				new BoardEdgeObject({ id: "edge-link-99", source: sourceHandle as BoardHandleObject, target: targetHandle as BoardHandleObject }),
 			);
 			renderer.wasmHostAuthoredEdgeIds.add("edge-link-99");
 			renderer.wasmHostAuthoredLinkByEdgeId.set("edge-link-99", { source: "a:h0", target: "b:h0" });
@@ -1119,11 +1119,15 @@ if (boardReactVitest) {
 				</>,
 			);
 			syncBoardScene(renderer, jsx);
-			const aOut = renderer.scene.handles.get("a:h0");
-			const bIn = renderer.scene.handles.get("b:h0");
-			expect(aOut).toBeDefined();
-			expect(bIn).toBeDefined();
-			const edge = new BoardEdgeObject({ id: "edge-link-map", source: aOut as BoardHandleObject, target: bIn as BoardHandleObject });
+			const sourceHandle = renderer.scene.handles.get("a:h0");
+			const targetHandle = renderer.scene.handles.get("b:h0");
+			expect(sourceHandle).toBeDefined();
+			expect(targetHandle).toBeDefined();
+			const edge = new BoardEdgeObject({
+				id: "edge-link-map",
+				source: sourceHandle as BoardHandleObject,
+				target: targetHandle as BoardHandleObject,
+			});
 			renderer.scene.ingestWasmEdge(edge);
 			renderer.wasmHostAuthoredEdgeIds.add("edge-link-map");
 			renderer.wasmHostAuthoredLinkByEdgeId.set("edge-link-map", { source: "a:h0", target: "b:h0" });

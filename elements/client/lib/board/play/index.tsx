@@ -789,7 +789,9 @@ function BoardFixtureLibraryPanel(): ReactElement {
 
 	return (
 		<div className="flex h-full min-h-0 flex-col gap-3 p-3 text-sm">
-			<div className="text-muted-foreground text-xs uppercase tracking-wide">Fixture shelf</div>
+			<div className="text-muted-foreground text-xs uppercase tracking-wide" data-testid="board-play-fixture-shelf">
+				Fixture shelf
+			</div>
 			<div className="flex flex-col gap-2">
 				<div className="text-muted-foreground text-[11px] uppercase tracking-wide">Shapes</div>
 				<div className="flex flex-wrap gap-2">

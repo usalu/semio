@@ -65,20 +65,25 @@ mod vcompute {
 		center + Vec2::new(local.x, local.y)
 	}
 
-	pub fn compute_edge_bezier_points(from_point: Point, to_point: Point, from_center: Point, to_center: Point) -> CubicBez {
-		let mut from_out = normalize_or_zero(from_point - from_center);
-		if from_out == Vec2::new(0.0, 0.0) {
-			from_out = normalize_or_zero(to_point - from_point);
+	pub fn compute_edge_bezier_points(
+		source_point: Point,
+		target_point: Point,
+		source_center: Point,
+		target_center: Point,
+	) -> CubicBez {
+		let mut source_radial = normalize_or_zero(source_point - source_center);
+		if source_radial == Vec2::new(0.0, 0.0) {
+			source_radial = normalize_or_zero(target_point - source_point);
 		}
-		let mut to_out = normalize_or_zero(to_point - to_center);
-		if to_out == Vec2::new(0.0, 0.0) {
-			to_out = normalize_or_zero(to_point - from_point);
+		let mut target_radial = normalize_or_zero(target_point - target_center);
+		if target_radial == Vec2::new(0.0, 0.0) {
+			target_radial = normalize_or_zero(target_point - source_point);
 		}
-		let handle_distance = distance_between(from_point, to_point);
+		let handle_distance = distance_between(source_point, target_point);
 		let control_length = clamp_f64(handle_distance * 0.35, 24.0, 240.0);
-		let p1 = from_point + from_out * control_length;
-		let p2 = to_point + to_out * control_length;
-		CubicBez::new(from_point, p1, p2, to_point)
+		let p1 = source_point + source_radial * control_length;
+		let p2 = target_point + target_radial * control_length;
+		CubicBez::new(source_point, p1, p2, target_point)
 	}
 
 	pub fn distance_point_to_cubic_bezier(point: Point, curve: CubicBez, segments: usize) -> f64 {
@@ -1277,17 +1282,17 @@ mod board_host {
 		}
 
 		fn edge_curve(&self, e: &EdgeData) -> Option<CubicBez> {
-			let fh = self.handles.get(&e.source)?;
-			let th = self.handles.get(&e.target)?;
-			let fn_ = self.nodes.get(&fh.node_id)?;
-			let tn = self.nodes.get(&th.node_id)?;
-			let fp = self.handle_world_pos(fh)?;
-			let tp = self.handle_world_pos(th)?;
+			let source_handle = self.handles.get(&e.source)?;
+			let target_handle = self.handles.get(&e.target)?;
+			let source_node = self.nodes.get(&source_handle.node_id)?;
+			let target_node = self.nodes.get(&target_handle.node_id)?;
+			let source_pos = self.handle_world_pos(source_handle)?;
+			let target_pos = self.handle_world_pos(target_handle)?;
 			Some(compute_edge_bezier_points(
-				fp,
-				tp,
-				Point::new(fn_.x, fn_.y),
-				Point::new(tn.x, tn.y),
+				source_pos,
+				target_pos,
+				Point::new(source_node.x, source_node.y),
+				Point::new(target_node.x, target_node.y),
 			))
 		}
 
@@ -2941,20 +2946,20 @@ use wasm_bindgen_futures::future_to_promise;
 #[cfg(target_arch = "wasm32")]
 #[wasm_bindgen(js_name = boardComputeEdgeBezier)]
 pub fn board_compute_edge_bezier(
-	from_px: f64,
-	from_py: f64,
-	from_cx: f64,
-	from_cy: f64,
-	to_px: f64,
-	to_py: f64,
-	to_cx: f64,
-	to_cy: f64,
+	source_px: f64,
+	source_py: f64,
+	source_cx: f64,
+	source_cy: f64,
+	target_px: f64,
+	target_py: f64,
+	target_cx: f64,
+	target_cy: f64,
 ) -> Vec<f64> {
 	let c = compute_edge_bezier_points(
-		Point::new(from_px, from_py),
-		Point::new(to_px, to_py),
-		Point::new(from_cx, from_cy),
-		Point::new(to_cx, to_cy),
+		Point::new(source_px, source_py),
+		Point::new(target_px, target_py),
+		Point::new(source_cx, source_cy),
+		Point::new(target_cx, target_cy),
 	);
 	vec![c.p0.x, c.p0.y, c.p1.x, c.p1.y, c.p2.x, c.p2.y, c.p3.x, c.p3.y]
 }

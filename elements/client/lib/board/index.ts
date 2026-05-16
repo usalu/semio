@@ -1031,19 +1031,19 @@ export type CanvasTextMeasuring = Pick<CanvasRenderingContext2D, "font" | "measu
 
 /** 🧭 Builds a cubic whose control arms leave/arrive along circle normals (radial), not along handle tangents. */
 export function computeEdgeBezier(sourceHandle: Handle, targetHandle: Handle): CubicBezierCurve {
-	const fromPoint = sourceHandle.position;
-	const toPoint = targetHandle.position;
-	const fromCenter = { x: sourceHandle.node.x, y: sourceHandle.node.y };
-	const toCenter = { x: targetHandle.node.x, y: targetHandle.node.y };
+	const sourcePoint = sourceHandle.position;
+	const targetPoint = targetHandle.position;
+	const sourceCenter = { x: sourceHandle.node.x, y: sourceHandle.node.y };
+	const targetCenter = { x: targetHandle.node.x, y: targetHandle.node.y };
 	const flat = boardComputeEdgeBezier(
-		fromPoint.x,
-		fromPoint.y,
-		fromCenter.x,
-		fromCenter.y,
-		toPoint.x,
-		toPoint.y,
-		toCenter.x,
-		toCenter.y,
+		sourcePoint.x,
+		sourcePoint.y,
+		sourceCenter.x,
+		sourceCenter.y,
+		targetPoint.x,
+		targetPoint.y,
+		targetCenter.x,
+		targetCenter.y,
 	);
 	return {
 		p0: { x: flat[0], y: flat[1] },

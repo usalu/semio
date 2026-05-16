@@ -11,7 +11,7 @@ test.describe("board play", () => {
 
 	test("opens board background context menu on overview canvas", async ({ page }) => {
 		await page.goto("/", { waitUntil: "load", timeout: 180_000 });
-		await expect(page.getByText("Fixture shelf", { exact: false })).toBeVisible({ timeout: 120_000 });
+		await expect(page.getByTestId("board-play-fixture-shelf")).toBeVisible({ timeout: 120_000 });
 		const canvas = page.locator('[data-testid="board-canvas"]').first();
 		await expect(canvas).toBeVisible({ timeout: 120_000 });
 			await expect
@@ -59,7 +59,7 @@ test.describe("board play", () => {
 			testInfo.skip(true, "No WebGPU adapter: use BOARD_PLAYWRIGHT_CHANNEL=chrome to exercise this test");
 		}
 		await page.goto("/", { waitUntil: "load", timeout: 180_000 });
-		await expect(page.getByText("Fixture shelf", { exact: false })).toBeVisible({ timeout: 120_000 });
+		await expect(page.getByTestId("board-play-fixture-shelf")).toBeVisible({ timeout: 120_000 });
 		const canvases = page.locator('[data-testid="board-canvas"]');
 		await expect(canvases).toHaveCount(3, { timeout: 180_000 });
 		try {
@@ -101,7 +101,7 @@ test.describe("board play", () => {
 		if (!adapterOk) {
 			testInfo.skip(true, "No WebGPU adapter reported by the browser");
 		}
-		await expect(page.getByText("Fixture shelf", { exact: false })).toBeVisible({ timeout: 120_000 });
+		await expect(page.getByTestId("board-play-fixture-shelf")).toBeVisible({ timeout: 120_000 });
 		const canvases = page.locator('[data-testid="board-canvas"]');
 		await expect(canvases).toHaveCount(3, { timeout: 180_000 });
 		try {
