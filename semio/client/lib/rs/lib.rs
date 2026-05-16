@@ -2819,8 +2819,8 @@ pub mod kit {
                 pub name: RwLock<String>,
                 pub description: RwLock<String>,
                 pub icon: RwLock<String>,
-                pub connected: RwLock<Arc<Side>>,
-                pub connecting: RwLock<Arc<Side>>,
+                pub parent: RwLock<Arc<Side>>,
+                pub child: RwLock<Arc<Side>>,
                 pub gap: RwLock<Option<f64>>,
                 pub shift: RwLock<Option<f64>>,
                 pub rise: RwLock<Option<f64>>,
@@ -2840,8 +2840,8 @@ pub mod kit {
                         name: RwLock::new(String::new()),
                         description: RwLock::new(String::new()),
                         icon: RwLock::new(String::new()),
-                        connected: RwLock::new(Arc::new(Side::default())),
-                        connecting: RwLock::new(Arc::new(Side::default())),
+                        parent: RwLock::new(Arc::new(Side::default())),
+                        child: RwLock::new(Arc::new(Side::default())),
                         gap: RwLock::new(None),
                         shift: RwLock::new(None),
                         rise: RwLock::new(None),
@@ -2857,10 +2857,10 @@ pub mod kit {
 
             impl Connection {
                 pub async fn compute_hash(&self) -> String {
-                    let connected = self.connected.read().await;
-                    let connecting = self.connecting.read().await;
-                    let cp = connected.piece.read().await.id.0.clone();
-                    let np = connecting.piece.read().await.id.0.clone();
+                    let parent = self.parent.read().await;
+                    let child = self.child.read().await;
+                    let cp = parent.piece.read().await.id.0.clone();
+                    let np = child.piece.read().await.id.0.clone();
                     h(&[self.id.as_str(), cp.as_str(), np.as_str()])
                 }
             }
@@ -2888,11 +2888,11 @@ pub mod kit {
                 pub async fn icon(&self) -> String {
                     self.icon.read().await.clone()
                 }
-                pub async fn connected(&self) -> Arc<Side> {
-                    self.connected.read().await.clone()
+                pub async fn parent(&self) -> Arc<Side> {
+                    self.parent.read().await.clone()
                 }
-                pub async fn connecting(&self) -> Arc<Side> {
-                    self.connecting.read().await.clone()
+                pub async fn child(&self) -> Arc<Side> {
+                    self.child.read().await.clone()
                 }
                 pub async fn gap(&self) -> Option<f64> {
                     *self.gap.read().await

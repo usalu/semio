@@ -122,7 +122,7 @@
       "connections": [
         {
           "id": "019ab664-3333-3333-3333-333333333333",
-          "connected": {
+          "parent": {
             "piece": {
               "id": "019ab664-4444-4444-4444-444444444444"
             },
@@ -130,7 +130,7 @@
               "id": "019ab664-AAAA-AAAA-AAAA-AAAAAAAAAAAA"
             }
           },
-          "connecting": {
+          "child": {
             "piece": {
               "id": "019ab664-5555-5555-5555-555555555555"
             },

@@ -248,7 +248,7 @@
       "u": -1.003736574948555,
       "v": 1.010535189313679,
       "description": "",
-      "connected": {
+      "parent": {
         "piece": {
           "id": "e2faf536-dbe0-49e2-97b2-965e57acd512"
         },
@@ -256,7 +256,7 @@
           "id": "c5465220-19ba-4443-8f1d-617c832dd13c"
         }
       },
-      "connecting": {
+      "child": {
         "piece": {
           "id": "e72975ab-2adc-4bdd-a3fa-4e2df7dd61a1"
         },
@@ -276,7 +276,7 @@
       "u": 0.01900304198758363,
       "v": 0.9239401660320317,
       "description": "",
-      "connected": {
+      "parent": {
         "piece": {
           "id": "e72975ab-2adc-4bdd-a3fa-4e2df7dd61a1"
         },
@@ -284,7 +284,7 @@
           "id": "8001a609-ea58-4cc1-a1bb-a1e56fbc2f3a"
         }
       },
-      "connecting": {
+      "child": {
         "piece": {
           "id": "ade12a05-81e1-4d2a-b442-7152ab3f9df9"
         },
@@ -304,7 +304,7 @@
       "u": -2.0253399652715736,
       "v": -0.2982472182878894,
       "description": "",
-      "connected": {
+      "parent": {
         "piece": {
           "id": "ade12a05-81e1-4d2a-b442-7152ab3f9df9"
         },
@@ -312,7 +312,7 @@
           "id": "26ed7622-ef47-4bc2-ae9c-af32f63e3b64"
         }
       },
-      "connecting": {
+      "child": {
         "piece": {
           "id": "ed7b6b3c-02d5-4ed6-ae51-f9cbec92cb83"
         },
@@ -332,7 +332,7 @@
       "u": 1.0067427782973244,
       "v": 1.0687619718940504,
       "description": "",
-      "connected": {
+      "parent": {
         "piece": {
           "id": "e2faf536-dbe0-49e2-97b2-965e57acd512"
         },
@@ -340,7 +340,7 @@
           "id": "d25a91ed-b124-4e5b-8e7e-af832541c953"
         }
       },
-      "connecting": {
+      "child": {
         "piece": {
           "id": "a7a6c527-0e89-4922-b6c1-2af6fb64ae29"
         },
@@ -360,7 +360,7 @@
       "u": 0.3538625748690606,
       "v": 1.7063479516740943,
       "description": "",
-      "connected": {
+      "parent": {
         "piece": {
           "id": "f0b8dd4a-f9a2-4db8-8958-a9d9396a0d91"
         },
@@ -368,7 +368,7 @@
           "id": "c5465220-19ba-4443-8f1d-617c832dd13c"
         }
       },
-      "connecting": {
+      "child": {
         "piece": {
           "id": "b6aff18a-820b-4629-a401-4c8e2ed0e01a"
         },
@@ -388,7 +388,7 @@
       "u": 0.016506124075738173,
       "v": 1.157366767748889,
       "description": "",
-      "connected": {
+      "parent": {
         "piece": {
           "id": "ade12a05-81e1-4d2a-b442-7152ab3f9df9"
         },
@@ -396,7 +396,7 @@
           "id": "a074038c-a741-427c-a90f-6ec66000b09e"
         }
       },
-      "connecting": {
+      "child": {
         "piece": {
           "id": "c52879d5-d5dc-47da-a37b-b97a5889756e"
         },
@@ -416,7 +416,7 @@
       "u": 1.0471949192133116,
       "v": 0.8607438607421182,
       "description": "",
-      "connected": {
+      "parent": {
         "piece": {
           "id": "d885ae2c-87b7-4627-b8cd-f5a236b5ba34"
         },
@@ -424,7 +424,7 @@
           "id": "d25a91ed-b124-4e5b-8e7e-af832541c953"
         }
       },
-      "connecting": {
+      "child": {
         "piece": {
           "id": "99969c34-c228-451d-b054-67a69748a5cd"
         },

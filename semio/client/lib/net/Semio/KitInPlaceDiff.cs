@@ -455,21 +455,21 @@ public static class KitInPlaceDiff
                 var connection = connections.FirstOrDefault(c => c.Id == update.Connection.Id);
                 if (connection != null && update.Diff != null)
                 {
-                    if (update.Diff.ShouldSerializeConnected() && update.Diff.Connected != null)
+                    if (update.Diff.ShouldSerializeParent() && update.Diff.Parent != null)
                     {
-                        var s = connection.Connected ?? new Side();
-                        if (update.Diff.Connected.ShouldSerializePiece()) s.Piece = update.Diff.Connected.Piece;
-                        if (update.Diff.Connected.ShouldSerializeDesignPiece()) s.DesignPiece = update.Diff.Connected.DesignPiece;
-                        if (update.Diff.Connected.ShouldSerializeConnector()) s.Connector = update.Diff.Connected.Connector;
-                        connection.Connected = s;
+                        var s = connection.Parent ?? new Side();
+                        if (update.Diff.Parent.ShouldSerializePiece()) s.Piece = update.Diff.Parent.Piece;
+                        if (update.Diff.Parent.ShouldSerializeDesignPiece()) s.DesignPiece = update.Diff.Parent.DesignPiece;
+                        if (update.Diff.Parent.ShouldSerializeConnector()) s.Connector = update.Diff.Parent.Connector;
+                        connection.Parent = s;
                     }
-                    if (update.Diff.ShouldSerializeConnecting() && update.Diff.Connecting != null)
+                    if (update.Diff.ShouldSerializeChild() && update.Diff.Child != null)
                     {
-                        var s = connection.Connecting ?? new Side();
-                        if (update.Diff.Connecting.ShouldSerializePiece()) s.Piece = update.Diff.Connecting.Piece;
-                        if (update.Diff.Connecting.ShouldSerializeDesignPiece()) s.DesignPiece = update.Diff.Connecting.DesignPiece;
-                        if (update.Diff.Connecting.ShouldSerializeConnector()) s.Connector = update.Diff.Connecting.Connector;
-                        connection.Connecting = s;
+                        var s = connection.Child ?? new Side();
+                        if (update.Diff.Child.ShouldSerializePiece()) s.Piece = update.Diff.Child.Piece;
+                        if (update.Diff.Child.ShouldSerializeDesignPiece()) s.DesignPiece = update.Diff.Child.DesignPiece;
+                        if (update.Diff.Child.ShouldSerializeConnector()) s.Connector = update.Diff.Child.Connector;
+                        connection.Child = s;
                     }
                     if (update.Diff.ShouldSerializeDescription()) connection.Description = update.Diff.Description;
                     if (update.Diff.ShouldSerializeGap()) connection.Gap = connection.Gap + (update.Diff.Gap ?? 0f);

@@ -2247,16 +2247,16 @@ export function useConnectionV(): number | null | undefined {
   return useCurrentEntityField(entity, (c) => c.v());
 }
 
-/** @emoji 📖 Live {@link Connection#connected}. */
-export function useConnectionConnected(): Side | null | undefined {
+/** @emoji 📖 Live {@link Connection#parent}. */
+export function useConnectionParent(): Side | null | undefined {
   const entity = resolveConnection();
-  return useCurrentEntityField(entity, (c) => c.connected());
+  return useCurrentEntityField(entity, (c) => c.parent());
 }
 
-/** @emoji 📖 Live {@link Connection#connecting}. */
-export function useConnectionConnecting(): Side | null | undefined {
+/** @emoji 📖 Live {@link Connection#child}. */
+export function useConnectionChild(): Side | null | undefined {
   const entity = resolveConnection();
-  return useCurrentEntityField(entity, (c) => c.connecting());
+  return useCurrentEntityField(entity, (c) => c.child());
 }
 
 /** @emoji 📖 Live {@link Connection#name}. */

@@ -16229,8 +16229,8 @@ func loadConnections(db *sql.DB, designId string, pieces []Piece, types []Type) 
 		}
 	}
 	rows, err := db.Query(`SELECT id,
-		connected_side_id, connected_piece_id, connected_port_id, connected_design_piece_id,
-		connecting_side_id, connecting_piece_id, connecting_port_id, connecting_design_piece_id,
+		parent_side_id, parent_piece_id, parent_port_id, parent_design_piece_id,
+		child_side_id, child_piece_id, child_port_id, child_design_piece_id,
 		gap, shift, rise, rotation, turn, tilt, x, y, description
 		FROM connection WHERE design_id = ? ORDER BY ordinal`, designId)
 	if err != nil {
@@ -16642,8 +16642,8 @@ func KitToSqlite(kit *Kit, dbPath string, schemaSQL string) error {
 			}
 			if _, err := db.Exec(`INSERT INTO connection (
 					id, ordinal,
-					connected_side_id, connected_piece_id, connected_port_id, connected_design_piece_id,
-					connecting_side_id, connecting_piece_id, connecting_port_id, connecting_design_piece_id,
+					parent_side_id, parent_piece_id, parent_port_id, parent_design_piece_id,
+					child_side_id, child_piece_id, child_port_id, child_design_piece_id,
 					gap, shift, rise, rotation, turn, tilt, x, y, description, design_id
 				) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
 				c.Id, ci,

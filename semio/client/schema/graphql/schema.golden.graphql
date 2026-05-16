@@ -6918,8 +6918,8 @@ type Connection implements Artifact & RichStrongEntity & StrongEntity & Entity &
   changes: ChangeConnection # computed
   edits: EditConnection # computed
   # Connection
-  connected: Side! # data
-  connecting: Side! # data
+  parent: Side! # data
+  child: Side! # data
   gap: Float # data
   shift: Float # data
   rise: Float # data

@@ -55,16 +55,16 @@
                     "title": "V",
                     "type": "number"
                 },
-                "connected": {
+                "parent": {
                     "$ref": "#/$defs/Side"
                 },
-                "connecting": {
+                "child": {
                     "$ref": "#/$defs/Side"
                 }
             },
             "required": [
-                "connected",
-                "connecting"
+                "parent",
+                "child"
             ],
             "title": "Connection",
             "type": "object"

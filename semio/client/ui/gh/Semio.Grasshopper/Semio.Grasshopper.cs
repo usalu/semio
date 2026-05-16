@@ -7219,8 +7219,8 @@ public class ConnectionComponent : PassthroughComponent<ConnectionParam, Connect
         var attributes = new List<AttributeGoo>();
 
         if (DA.GetData(2, ref id)) representation.Id = id;
-        if (DA.GetData(3, ref connected)) representation.Connected = connected.Value.DeepClone();
-        if (DA.GetData(4, ref connecting)) representation.Connecting = connecting.Value.DeepClone();
+        if (DA.GetData(3, ref connected)) representation.Parent = connected.Value.DeepClone();
+        if (DA.GetData(4, ref connecting)) representation.Child = connecting.Value.DeepClone();
         if (DA.GetData(5, ref description)) representation.Description = description;
         if (DA.GetData(6, ref gap)) representation.Gap = (float)gap;
         if (DA.GetData(7, ref shift)) representation.Shift = (float)shift;
@@ -7236,8 +7236,8 @@ public class ConnectionComponent : PassthroughComponent<ConnectionParam, Connect
     protected override void SetRepresentationData(IGH_DataAccess DA, Connection representation)
     {
         DA.SetData(2, representation.Id);
-        DA.SetData(3, new SideGoo(representation.Connected.DeepClone()));
-        DA.SetData(4, new SideGoo(representation.Connecting.DeepClone()));
+        DA.SetData(3, new SideGoo(representation.Parent.DeepClone()));
+        DA.SetData(4, new SideGoo(representation.Child.DeepClone()));
         DA.SetData(5, representation.Description);
         DA.SetData(6, representation.Gap);
         DA.SetData(7, representation.Shift);
@@ -7440,8 +7440,8 @@ public class ConnectionDiffComponent : DiffComponent<ConnectionDiffParam, Connec
         string description = null;
         double gap = 0, shift = 0, rise = 0, rotation = 0, turn = 0, tilt = 0, u = 0, v = 0;
         var attributes = new List<AttributeGoo>();
-        if (DA.GetData(2, ref connected)) representation.Connected = connected.Value?.DeepClone();
-        if (DA.GetData(3, ref connecting)) representation.Connecting = connecting.Value?.DeepClone();
+        if (DA.GetData(2, ref connected)) representation.Parent = connected.Value?.DeepClone();
+        if (DA.GetData(3, ref connecting)) representation.Child = connecting.Value?.DeepClone();
         if (DA.GetData(4, ref description)) representation.Description = description;
         if (DA.GetData(5, ref gap)) representation.Gap = (float)gap;
         if (DA.GetData(6, ref shift)) representation.Shift = (float)shift;
@@ -7456,8 +7456,8 @@ public class ConnectionDiffComponent : DiffComponent<ConnectionDiffParam, Connec
 
     protected override void SetRepresentationData(IGH_DataAccess DA, ConnectionDiff representation)
     {
-        if (representation.ShouldSerializeConnected() && representation.Connected is not null) DA.SetData(2, new SideDiffGoo(representation.Connected.DeepClone()));
-        if (representation.ShouldSerializeConnecting() && representation.Connecting is not null) DA.SetData(3, new SideDiffGoo(representation.Connecting.DeepClone()));
+        if (representation.ShouldSerializeParent() && representation.Parent is not null) DA.SetData(2, new SideDiffGoo(representation.Parent.DeepClone()));
+        if (representation.ShouldSerializeChild() && representation.Child is not null) DA.SetData(3, new SideDiffGoo(representation.Child.DeepClone()));
         if (representation.ShouldSerializeDescription()) DA.SetData(4, representation.Description);
         if (representation.ShouldSerializeGap()) DA.SetData(5, representation.Gap);
         if (representation.ShouldSerializeShift()) DA.SetData(6, representation.Shift);
@@ -7559,13 +7559,13 @@ public class ConnectionsDiffComponent : DiffComponent<ConnectionsDiffParam, Conn
             representation.Modified = updated.Select(u =>
             {
                 var connection = new ConnectionId();
-                if (u.Value.Connected is not null)
+                if (u.Value.Parent is not null)
                 {
-                    connection.Connected = new Side { Piece = u.Value.Connected.Piece, Connector = u.Value.Connected.Connector };
+                    connection.Parent = new Side { Piece = u.Value.Parent.Piece, Connector = u.Value.Parent.Connector };
                 }
-                if (u.Value.Connecting is not null)
+                if (u.Value.Child is not null)
                 {
-                    connection.Connecting = new Side { Piece = u.Value.Connecting.Piece, Connector = u.Value.Connecting.Connector };
+                    connection.Child = new Side { Piece = u.Value.Child.Piece, Connector = u.Value.Child.Connector };
                 }
 
                 return new ConnectionDiffUpdate { Connection = connection, Diff = u.Value.DeepClone() };
@@ -7586,15 +7586,15 @@ public class ConnectionsDiffComponent : DiffComponent<ConnectionsDiffParam, Conn
 
             return new ConnectionDiffGoo(new ConnectionDiff
             {
-                Connected = new SideDiff
+                Parent = new SideDiff
                 {
-                    Piece = u.Connection.Connected.Piece,
-                    Connector = u.Connection.Connected.Connector,
+                    Piece = u.Connection.Parent.Piece,
+                    Connector = u.Connection.Parent.Connector,
                 },
-                Connecting = new SideDiff
+                Child = new SideDiff
                 {
-                    Piece = u.Connection.Connecting.Piece,
-                    Connector = u.Connection.Connecting.Connector,
+                    Piece = u.Connection.Child.Piece,
+                    Connector = u.Connection.Child.Connector,
                 },
             });
         }).ToList());
@@ -11241,8 +11241,8 @@ public class ExportDesignToBlocksComponent : ScriptingComponent
             foreach (var p in pieces) adjacency[p.Id] = new List<(Connection, string)>();
             foreach (var conn in connections)
             {
-                var connectedId = conn.Connected.Piece.Id;
-                var connectingId = conn.Connecting.Piece.Id;
+                var connectedId = conn.Parent.Piece.Id;
+                var connectingId = conn.Child.Piece.Id;
                 if (adjacency.ContainsKey(connectedId))
                     adjacency[connectedId].Add((conn, connectingId));
                 if (adjacency.ContainsKey(connectingId))
@@ -11295,7 +11295,7 @@ public class ExportDesignToBlocksComponent : ScriptingComponent
                 {
                     if (visited.Contains(edge.neighborId)) continue;
                     var conn = edge.connection;
-                    var isParent = conn.Connected.Piece.Id == currentId;
+                    var isParent = conn.Parent.Piece.Id == currentId;
                     if (!isParent) continue;
 
                     var childId = edge.neighborId;
@@ -11303,8 +11303,8 @@ public class ExportDesignToBlocksComponent : ScriptingComponent
                     var childPiece = piecesDict[childId];
                     var parentType = parentPiece.Type != null ? GetTypeLocal(parentPiece.Type.Id) : null;
                     var childType = childPiece.Type != null ? GetTypeLocal(childPiece.Type.Id) : null;
-                    var parentConnector = GetConnectorLocal(parentType, conn.Connected.Connector?.Id);
-                    var childConnector = GetConnectorLocal(childType, conn.Connecting.Connector?.Id);
+                    var parentConnector = GetConnectorLocal(parentType, conn.Parent.Connector?.Id);
+                    var childConnector = GetConnectorLocal(childType, conn.Child.Connector?.Id);
 
                     if (parentConnector != null && childConnector != null &&
                         parentConnector.Point != null && parentConnector.Direction != null &&

@@ -403,8 +403,8 @@
             "added": [
               {
                 "id": "019caa00-0000-7000-a000-000000000011",
-                "connected": {},
-                "connecting": {},
+                "parent": {},
+                "child": {},
                 "gap": 10,
                 "shift": 5,
                 "rise": 2,
@@ -497,8 +497,8 @@
         "_connections": [
           {
             "id": "019caa00-0000-7000-a000-000000000018",
-            "connected": {},
-            "connecting": {},
+            "parent": {},
+            "child": {},
             "gap": 0,
             "description": "New design connection",
             "attributes": []

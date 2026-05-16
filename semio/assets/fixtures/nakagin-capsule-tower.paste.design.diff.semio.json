@@ -205,7 +205,7 @@
     "added": [
       {
         "id": "06e4aa42-4a30-4149-9f0d-0eea397c0120",
-        "connected": {
+        "parent": {
           "piece": {
             "id": "9d18882e-d90b-40de-a171-47cb4564ffa6"
           },
@@ -214,7 +214,7 @@
             "id": "d6038721-3f2a-42cd-affd-d8041fdb8bdd"
           }
         },
-        "connecting": {
+        "child": {
           "piece": {
             "id": "536f3512-ca21-45ab-a6a8-08f48a939c8f"
           },
@@ -236,7 +236,7 @@
       },
       {
         "id": "138cdf8a-711b-4585-94e7-7451b2e003e4",
-        "connected": {
+        "parent": {
           "piece": {
             "id": "9d18882e-d90b-40de-a171-47cb4564ffa6"
           },
@@ -245,7 +245,7 @@
             "id": "26ed7622-ef47-4bc2-ae9c-af32f63e3b64"
           }
         },
-        "connecting": {
+        "child": {
           "piece": {
             "id": "7ef59b73-e757-47a6-a5dd-a8d1dbd59c8e"
           },
@@ -267,7 +267,7 @@
       },
       {
         "id": "345d3126-7233-4ca6-9dd2-a30776c55e72",
-        "connected": {
+        "parent": {
           "piece": {
             "id": "9d18882e-d90b-40de-a171-47cb4564ffa6"
           },
@@ -276,7 +276,7 @@
             "id": "22c85739-0973-47c2-9b15-0f21f5958f9c"
           }
         },
-        "connecting": {
+        "child": {
           "piece": {
             "id": "5c18fab0-05cb-4639-8d97-a8e1f7cf23fc"
           },
@@ -298,7 +298,7 @@
       },
       {
         "id": "37dc5318-eebc-4ef8-a79b-78c28e0845c4",
-        "connected": {
+        "parent": {
           "piece": {
             "id": "9d18882e-d90b-40de-a171-47cb4564ffa6"
           },
@@ -307,7 +307,7 @@
             "id": "aaab3a27-ac93-4141-be16-4058507947c8"
           }
         },
-        "connecting": {
+        "child": {
           "piece": {
             "id": "8cf31906-5b4c-48d7-929f-cbe0e469d423"
           },
@@ -329,7 +329,7 @@
       },
       {
         "id": "6a474315-df57-416d-8b0a-6bf4976cecb9",
-        "connected": {
+        "parent": {
           "piece": {
             "id": "9d18882e-d90b-40de-a171-47cb4564ffa6"
           },
@@ -338,7 +338,7 @@
             "id": "1bc49750-e3f1-4e6d-be49-b685ec02688d"
           }
         },
-        "connecting": {
+        "child": {
           "piece": {
             "id": "dcf9ff79-1f52-412d-9eb4-7329f77b237c"
           },
@@ -360,7 +360,7 @@
       },
       {
         "id": "6bc57a6b-f0b4-4bb7-bf4c-ca06ef510ecd",
-        "connected": {
+        "parent": {
           "piece": {
             "id": "9d18882e-d90b-40de-a171-47cb4564ffa6"
           },
@@ -369,7 +369,7 @@
             "id": "f842a603-8ede-49b6-82c6-27543f70f993"
           }
         },
-        "connecting": {
+        "child": {
           "piece": {
             "id": "d064105d-9a9d-442b-a53f-ed010b155b89"
           },
@@ -391,7 +391,7 @@
       },
       {
         "id": "bb5449be-247b-498e-b8c8-309697ddea7b",
-        "connected": {
+        "parent": {
           "piece": {
             "id": "9d18882e-d90b-40de-a171-47cb4564ffa6"
           },
@@ -400,7 +400,7 @@
             "id": "43b0ad58-5a1f-4965-98ec-6a76f337f0ed"
           }
         },
-        "connecting": {
+        "child": {
           "piece": {
             "id": "3b0444ad-2307-442e-972a-7f1c2cc7dcb9"
           },
@@ -422,7 +422,7 @@
       },
       {
         "id": "ddf9e0e4-40e1-4079-aa40-c86cf699788b",
-        "connected": {
+        "parent": {
           "piece": {
             "id": "31be08e1-e75c-4024-86b4-c3c6d3939fbb"
           },
@@ -431,7 +431,7 @@
             "id": "a074038c-a741-427c-a90f-6ec66000b09e"
           }
         },
-        "connecting": {
+        "child": {
           "piece": {
             "id": "9d18882e-d90b-40de-a171-47cb4564ffa6"
           },

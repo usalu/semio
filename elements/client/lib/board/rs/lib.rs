@@ -2225,6 +2225,15 @@ use wasm_bindgen::prelude::*;
 use web_sys::HtmlCanvasElement;
 
 #[cfg(target_arch = "wasm32")]
+use std::cell::RefCell;
+#[cfg(target_arch = "wasm32")]
+use std::rc::Rc;
+#[cfg(target_arch = "wasm32")]
+use js_sys::Promise;
+#[cfg(target_arch = "wasm32")]
+use wasm_bindgen_futures::future_to_promise;
+
+#[cfg(target_arch = "wasm32")]
 #[wasm_bindgen(js_name = boardComputeEdgeBezier)]
 pub fn board_compute_edge_bezier(
 	from_px: f64,
@@ -2293,10 +2302,9 @@ pub fn board_handle_position_rectangle(cx: f64, cy: f64, width: f64, height: f64
 // #region 🔖WasmSession
 /// 🖥️ Single WASM entry: one {@link BoardHost}, optional WebGPU surface bound via {@link BoardSession::attach_canvas}.
 #[cfg(target_arch = "wasm32")]
-#[wasm_bindgen]
-pub struct BoardSession {
+struct BoardSessionInner {
 	host: BoardHost,
-	#[cfg_attr(target_arch = "wasm32", allow(dead_code, reason = "Retains canvas for the WebGPU surface lifetime."))]
+	#[allow(dead_code, reason = "Retains canvas for the WebGPU surface lifetime.")]
 	canvas: Option<HtmlCanvasElement>,
 	render_ctx: Option<vello::util::RenderContext>,
 	renderer: Option<vello::Renderer>,
@@ -2304,83 +2312,10 @@ pub struct BoardSession {
 }
 
 #[cfg(target_arch = "wasm32")]
-#[wasm_bindgen]
-impl BoardSession {
-	#[wasm_bindgen(constructor)]
-	pub fn new() -> Self {
-		Self {
-			host: BoardHost::new(),
-			canvas: None,
-			render_ctx: None,
-			renderer: None,
-			surface: None,
-		}
-	}
-
-	#[wasm_bindgen(js_name = gpuReady)]
-	pub fn gpu_ready(&self) -> bool {
-		self.surface.is_some()
-	}
-
-	#[wasm_bindgen(js_name = isDraggingAreaSelect)]
-	pub fn is_dragging_area_select(&self) -> bool {
-		self.host.is_dragging_area_select()
-	}
-
-	/// @emoji 🌊 Binds WebGPU presentation to `canvas` once; `logical_w`/`logical_h` are CSS pixels, `dpr` scales the swapchain backing store.
-	pub async fn attach_canvas(
-		&mut self,
-		canvas: HtmlCanvasElement,
-		logical_w: u32,
-		logical_h: u32,
-		dpr: f64,
-	) -> Result<(), JsValue> {
-		if self.surface.is_some() {
-			return Err(JsValue::from_str("canvas surface already attached"));
-		}
-		let lw = logical_w.max(1);
-		let lh = logical_h.max(1);
-		let dpr = dpr.max(1.0);
-		let pw = ((lw as f64 * dpr).round() as u32).max(1);
-		let ph = ((lh as f64 * dpr).round() as u32).max(1);
-		let mut render_ctx = vello::util::RenderContext::new();
-		let surface = render_ctx
-			.create_surface(
-				vello::wgpu::SurfaceTarget::Canvas(canvas.clone()),
-				pw,
-				ph,
-				vello::wgpu::PresentMode::AutoVsync,
-			)
-			.await
-			.map_err(|err| JsValue::from_str(&format!("{err:?}")))?;
-		let dev = &render_ctx.devices[surface.dev_id].device;
-		let renderer = vello::Renderer::new(
-			dev,
-			vello::RendererOptions {
-				use_cpu: false,
-				antialiasing_support: vello::AaSupport::area_only(),
-				num_init_threads: std::num::NonZeroUsize::new(1),
-				pipeline_cache: None,
-			},
-		)
-		.map_err(|err| JsValue::from_str(&format!("{err:?}")))?;
+impl BoardSessionInner {
+	fn set_logical_size_and_maybe_resize_surface(&mut self, lw: u32, lh: u32, dpr: f64, pw: u32, ph: u32) {
 		self.host.set_size(lw, lh, dpr);
-		self.canvas = Some(canvas);
-		self.render_ctx = Some(render_ctx);
-		self.renderer = Some(renderer);
-		self.surface = Some(surface);
-		Ok(())
-	}
-
-	#[wasm_bindgen(js_name = setSize)]
-	pub fn set_size(&mut self, width: u32, height: u32, dpr: f64) {
-		let lw = width.max(1);
-		let lh = height.max(1);
-		let dpr = dpr.max(1.0);
-		let pw = ((lw as f64 * dpr).round() as u32).max(1);
-		let ph = ((lh as f64 * dpr).round() as u32).max(1);
-		self.host.set_size(lw, lh, dpr);
-		if let (Some(ref mut surface), Some(ref mut render_ctx)) = (self.surface.as_mut(), self.render_ctx.as_mut()) {
+		if let (Some(surface), Some(render_ctx)) = (self.surface.as_mut(), self.render_ctx.as_mut()) {
 			let cur_w = surface.config.width;
 			let cur_h = surface.config.height;
 			if cur_w != pw || cur_h != ph {
@@ -2389,131 +2324,16 @@ impl BoardSession {
 		}
 	}
 
-	#[wasm_bindgen(js_name = setSelectionScreenPreview)]
-	pub fn set_selection_screen_preview(&mut self, flat_xy: &[f64]) {
-		if flat_xy.len() < 4 || flat_xy.len() % 2 != 0 {
-			self.host.set_selection_screen_preview(None);
-			return;
-		}
-		let mut pts = Vec::with_capacity(flat_xy.len() / 2);
-		for chunk in flat_xy.chunks_exact(2) {
-			pts.push(Point::new(chunk[0], chunk[1]));
-		}
-		self.host.set_selection_screen_preview(Some(pts));
-	}
-
-	#[wasm_bindgen(js_name = clearSelectionScreenPreview)]
-	pub fn clear_selection_screen_preview(&mut self) {
-		self.host.set_selection_screen_preview(None);
-	}
-
-	#[wasm_bindgen(js_name = syncDescriptorJson)]
-	pub fn sync_descriptor_json(&mut self, json: &str) -> Result<(), JsValue> {
-		let desc: SceneDescriptorJson =
-			serde_json::from_str(json).map_err(|e| JsValue::from_str(&e.to_string()))?;
-		self.host.sync_descriptor(&desc);
-		Ok(())
-	}
-
-	#[wasm_bindgen(js_name = setVelloThemeJson)]
-	pub fn set_vello_theme_json(&mut self, json: &str) {
-		let _ = self.host.set_vello_theme_from_json(json);
-	}
-
-	#[wasm_bindgen(js_name = parseFixtureJson)]
-	pub fn parse_fixture_json(&mut self, json: &str) -> bool {
-		let raw: serde_json::Value = match serde_json::from_str(json) {
-			Ok(v) => v,
-			Err(_) => return false,
-		};
-		self.host.parse_fixture_v1(&raw)
-	}
-
-	#[wasm_bindgen(js_name = setCamera)]
-	pub fn set_camera_wasm(&mut self, x: f64, y: f64, zoom: f64) {
-		self.host.set_camera(x, y, zoom);
-	}
-
-	#[wasm_bindgen(js_name = pointerDownScreen)]
-	pub fn pointer_down_screen_wasm(&mut self, sx: f64, sy: f64, button: u8, shift: bool) {
-		self.host.pointer_down_screen(sx, sy, button, shift);
-	}
-
-	#[wasm_bindgen(js_name = pointerMoveScreen)]
-	pub fn pointer_move_screen_wasm(&mut self, sx: f64, sy: f64) {
-		self.host.pointer_move_screen(sx, sy);
-	}
-
-	#[wasm_bindgen(js_name = pointerUpScreen)]
-	pub fn pointer_up_screen_wasm(&mut self, sx: f64, sy: f64) {
-		self.host.pointer_up_screen(sx, sy);
-	}
-
-	#[wasm_bindgen(js_name = pointerLeaveScreen)]
-	pub fn pointer_leave_screen_wasm(&mut self) {
-		self.host.pointer_leave_screen();
-	}
-
-	#[wasm_bindgen(js_name = wheelScreen)]
-	pub fn wheel_screen_wasm(&mut self, sx: f64, sy: f64, delta_y: f64) {
-		self.host.wheel_screen(sx, sy, delta_y);
-	}
-
-	#[wasm_bindgen(js_name = deleteSelection)]
-	pub fn delete_selection_wasm(&mut self) {
-		self.host.delete_selection();
-	}
-
-	#[wasm_bindgen(js_name = drainEventsJson)]
-	pub fn drain_events_json_wasm(&mut self) -> String {
-		self.host.drain_events_json()
-	}
-
-	#[wasm_bindgen(js_name = cameraJson)]
-	pub fn camera_json(&self) -> String {
-		serde_json::json!({
-			"x": self.host.camera.x,
-			"y": self.host.camera.y,
-			"zoom": self.host.camera.zoom,
-		})
-		.to_string()
-	}
-
-	#[wasm_bindgen(js_name = setSelectionOptions)]
-		pub fn set_selection_options_wasm(&mut self, method: &str, mode: &str, target: &str) {
-			self.host.set_selection_options(method, mode, target);
-		}
-
-		#[wasm_bindgen(js_name = setWorldRasterTiling)]
-		pub fn set_world_raster_tiling_wasm(&mut self, mode: &str) {
-			self.host.set_world_raster_tiling(mode);
-		}
-
-		#[wasm_bindgen(js_name = setSelectionIdsJson)]
-	pub fn set_selection_ids_json(&mut self, json: &str) -> Result<(), JsValue> {
-		let ids: Vec<String> = serde_json::from_str(json).map_err(|err| JsValue::from_str(&err.to_string()))?;
-		self.host.set_selection_ids(&ids);
-		Ok(())
-	}
-
-	#[wasm_bindgen(js_name = encodedSceneHint)]
-	pub fn encoded_scene_hint_wasm(&self) -> usize {
-		self.host.encoded_scene_hint()
-	}
-
-	/// @emoji 🎨 Presents one frame when a GPU surface is attached; otherwise no-op `Ok`.
-	#[wasm_bindgen(js_name = renderFrame)]
-	pub fn render_frame(&mut self) -> Result<(), JsValue> {
+	fn render_frame_gpu(&mut self) -> Result<(), JsValue> {
 		for _attempt in 0..3u8 {
 			let scene = self.host.build_vector_scene();
-			let Some(surface) = self.surface.as_mut() else {
-				return Ok(());
-			};
-			let Some(renderer) = self.renderer.as_mut() else {
-				return Ok(());
-			};
-			let Some(render_ctx) = self.render_ctx.as_mut() else {
-				return Ok(());
+			let (surface, renderer, render_ctx) = match (
+				self.surface.as_mut(),
+				self.renderer.as_mut(),
+				self.render_ctx.as_mut(),
+			) {
+				(Some(s), Some(r), Some(rc)) => (s, r, rc),
+				_ => return Ok(()),
 			};
 			let dh = &render_ctx.devices[surface.dev_id];
 			let pw = surface.config.width.max(1);
@@ -2554,6 +2374,224 @@ impl BoardSession {
 			return Ok(());
 		}
 		Ok(())
+	}
+}
+
+#[cfg(target_arch = "wasm32")]
+#[wasm_bindgen]
+pub struct BoardSession {
+	state: Rc<RefCell<BoardSessionInner>>,
+}
+
+#[cfg(target_arch = "wasm32")]
+#[wasm_bindgen]
+impl BoardSession {
+	#[wasm_bindgen(constructor)]
+	pub fn new() -> Self {
+		Self {
+			state: Rc::new(RefCell::new(BoardSessionInner {
+				host: BoardHost::new(),
+				canvas: None,
+				render_ctx: None,
+				renderer: None,
+				surface: None,
+			})),
+		}
+	}
+
+	#[wasm_bindgen(js_name = gpuReady)]
+	pub fn gpu_ready(&self) -> bool {
+		self.state.borrow().surface.is_some()
+	}
+
+	#[wasm_bindgen(js_name = isDraggingAreaSelect)]
+	pub fn is_dragging_area_select(&self) -> bool {
+		self.state.borrow().host.is_dragging_area_select()
+	}
+
+	/// @emoji 🌊 Binds WebGPU presentation to `canvas` once; `logical_w`/`logical_h` are CSS pixels, `dpr` scales the swapchain backing store; uses `future_to_promise` so wasm-bindgen does not hold `&mut BoardSession` across `await` (avoids `borrow_fail` vs `setSize` during GPU setup).
+	#[wasm_bindgen(js_name = attach_canvas)]
+	pub fn attach_canvas(
+		&mut self,
+		canvas: HtmlCanvasElement,
+		logical_w: u32,
+		logical_h: u32,
+		dpr: f64,
+	) -> Promise {
+		let inner = self.state.clone();
+		if inner.borrow().surface.is_some() {
+			return future_to_promise(async move { Err(JsValue::from_str("canvas surface already attached")) });
+		}
+		let lw = logical_w.max(1);
+		let lh = logical_h.max(1);
+		let dpr = dpr.max(1.0);
+		let pw = ((lw as f64 * dpr).round() as u32).max(1);
+		let ph = ((lh as f64 * dpr).round() as u32).max(1);
+		let canvas = canvas.clone();
+		future_to_promise(async move {
+			let mut render_ctx = vello::util::RenderContext::new();
+			let surface = render_ctx
+				.create_surface(
+					vello::wgpu::SurfaceTarget::Canvas(canvas.clone()),
+					pw,
+					ph,
+					vello::wgpu::PresentMode::AutoVsync,
+				)
+				.await
+				.map_err(|err| JsValue::from_str(&format!("{err:?}")))?;
+			let dev = &render_ctx.devices[surface.dev_id].device;
+			let renderer = vello::Renderer::new(
+				dev,
+				vello::RendererOptions {
+					use_cpu: false,
+					antialiasing_support: vello::AaSupport::area_only(),
+					num_init_threads: std::num::NonZeroUsize::new(1),
+					pipeline_cache: None,
+				},
+			)
+			.map_err(|err| JsValue::from_str(&format!("{err:?}")))?;
+			let mut g = inner.borrow_mut();
+			if g.surface.is_some() {
+				return Err(JsValue::from_str("canvas surface already attached"));
+			}
+			g.host.set_size(lw, lh, dpr);
+			g.canvas = Some(canvas);
+			g.render_ctx = Some(render_ctx);
+			g.renderer = Some(renderer);
+			g.surface = Some(surface);
+			Ok(JsValue::UNDEFINED)
+		})
+	}
+
+	#[wasm_bindgen(js_name = setSize)]
+	pub fn set_size(&mut self, width: u32, height: u32, dpr: f64) {
+		let lw = width.max(1);
+		let lh = height.max(1);
+		let dpr = dpr.max(1.0);
+		let pw = ((lw as f64 * dpr).round() as u32).max(1);
+		let ph = ((lh as f64 * dpr).round() as u32).max(1);
+		let mut inner = self.state.borrow_mut();
+		inner.set_logical_size_and_maybe_resize_surface(lw, lh, dpr, pw, ph);
+	}
+
+	#[wasm_bindgen(js_name = setSelectionScreenPreview)]
+	pub fn set_selection_screen_preview(&mut self, flat_xy: &[f64]) {
+		let mut inner = self.state.borrow_mut();
+		if flat_xy.len() < 4 || flat_xy.len() % 2 != 0 {
+			inner.host.set_selection_screen_preview(None);
+			return;
+		}
+		let mut pts = Vec::with_capacity(flat_xy.len() / 2);
+		for chunk in flat_xy.chunks_exact(2) {
+			pts.push(Point::new(chunk[0], chunk[1]));
+		}
+		inner.host.set_selection_screen_preview(Some(pts));
+	}
+
+	#[wasm_bindgen(js_name = clearSelectionScreenPreview)]
+	pub fn clear_selection_screen_preview(&mut self) {
+		self.state.borrow_mut().host.set_selection_screen_preview(None);
+	}
+
+	#[wasm_bindgen(js_name = syncDescriptorJson)]
+	pub fn sync_descriptor_json(&mut self, json: &str) -> Result<(), JsValue> {
+		let desc: SceneDescriptorJson =
+			serde_json::from_str(json).map_err(|e| JsValue::from_str(&e.to_string()))?;
+		self.state.borrow_mut().host.sync_descriptor(&desc);
+		Ok(())
+	}
+
+	#[wasm_bindgen(js_name = setVelloThemeJson)]
+	pub fn set_vello_theme_json(&mut self, json: &str) {
+		let _ = self.state.borrow_mut().host.set_vello_theme_from_json(json);
+	}
+
+	#[wasm_bindgen(js_name = parseFixtureJson)]
+	pub fn parse_fixture_json(&mut self, json: &str) -> bool {
+		let raw: serde_json::Value = match serde_json::from_str(json) {
+			Ok(v) => v,
+			Err(_) => return false,
+		};
+		self.state.borrow_mut().host.parse_fixture_v1(&raw)
+	}
+
+	#[wasm_bindgen(js_name = setCamera)]
+	pub fn set_camera_wasm(&mut self, x: f64, y: f64, zoom: f64) {
+		self.state.borrow_mut().host.set_camera(x, y, zoom);
+	}
+
+	#[wasm_bindgen(js_name = pointerDownScreen)]
+	pub fn pointer_down_screen_wasm(&mut self, sx: f64, sy: f64, button: u8, shift: bool) {
+		self.state.borrow_mut().host.pointer_down_screen(sx, sy, button, shift);
+	}
+
+	#[wasm_bindgen(js_name = pointerMoveScreen)]
+	pub fn pointer_move_screen_wasm(&mut self, sx: f64, sy: f64) {
+		self.state.borrow_mut().host.pointer_move_screen(sx, sy);
+	}
+
+	#[wasm_bindgen(js_name = pointerUpScreen)]
+	pub fn pointer_up_screen_wasm(&mut self, sx: f64, sy: f64) {
+		self.state.borrow_mut().host.pointer_up_screen(sx, sy);
+	}
+
+	#[wasm_bindgen(js_name = pointerLeaveScreen)]
+	pub fn pointer_leave_screen_wasm(&mut self) {
+		self.state.borrow_mut().host.pointer_leave_screen();
+	}
+
+	#[wasm_bindgen(js_name = wheelScreen)]
+	pub fn wheel_screen_wasm(&mut self, sx: f64, sy: f64, delta_y: f64) {
+		self.state.borrow_mut().host.wheel_screen(sx, sy, delta_y);
+	}
+
+	#[wasm_bindgen(js_name = deleteSelection)]
+	pub fn delete_selection_wasm(&mut self) {
+		self.state.borrow_mut().host.delete_selection();
+	}
+
+	#[wasm_bindgen(js_name = drainEventsJson)]
+	pub fn drain_events_json_wasm(&mut self) -> String {
+		self.state.borrow_mut().host.drain_events_json()
+	}
+
+	#[wasm_bindgen(js_name = cameraJson)]
+	pub fn camera_json(&self) -> String {
+		let inner = self.state.borrow();
+		serde_json::json!({
+			"x": inner.host.camera.x,
+			"y": inner.host.camera.y,
+			"zoom": inner.host.camera.zoom,
+		})
+		.to_string()
+	}
+
+	#[wasm_bindgen(js_name = setSelectionOptions)]
+	pub fn set_selection_options_wasm(&mut self, method: &str, mode: &str, target: &str) {
+		self.state.borrow_mut().host.set_selection_options(method, mode, target);
+	}
+
+	#[wasm_bindgen(js_name = setWorldRasterTiling)]
+	pub fn set_world_raster_tiling_wasm(&mut self, mode: &str) {
+		self.state.borrow_mut().host.set_world_raster_tiling(mode);
+	}
+
+	#[wasm_bindgen(js_name = setSelectionIdsJson)]
+	pub fn set_selection_ids_json(&mut self, json: &str) -> Result<(), JsValue> {
+		let ids: Vec<String> = serde_json::from_str(json).map_err(|err| JsValue::from_str(&err.to_string()))?;
+		self.state.borrow_mut().host.set_selection_ids(&ids);
+		Ok(())
+	}
+
+	#[wasm_bindgen(js_name = encodedSceneHint)]
+	pub fn encoded_scene_hint_wasm(&self) -> usize {
+		self.state.borrow().host.encoded_scene_hint()
+	}
+
+	/// @emoji 🎨 Presents one frame when a GPU surface is attached; otherwise no-op `Ok`.
+	#[wasm_bindgen(js_name = renderFrame)]
+	pub fn render_frame(&mut self) -> Result<(), JsValue> {
+		self.state.borrow_mut().render_frame_gpu()
 	}
 }
 // #endregion 🔖WasmSession

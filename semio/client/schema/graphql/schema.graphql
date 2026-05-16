@@ -1230,8 +1230,8 @@ type Connection implements Entity & StrongEntity {
 	name: String!
 	description: String!
 	icon: String!
-	connected: Side!
-	connecting: Side!
+	parent: Side!
+	child: Side!
 	gap: Float
 	shift: Float
 	rise: Float

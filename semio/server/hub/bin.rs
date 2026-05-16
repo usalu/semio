@@ -477,8 +477,8 @@ pub struct PlaneState { pub origin: [f64; 3], pub x_axis: [f64; 3], pub y_axis: 
 #[derive(Debug, Clone)]
 pub struct ConnectionState {
     pub connection_id: Uuid,
-    pub connected_piece_id: Uuid, pub connected_design_piece_id: Option<Uuid>, pub connected_connector_id: Option<Uuid>,
-    pub connecting_piece_id: Uuid, pub connecting_design_piece_id: Option<Uuid>, pub connecting_connector_id: Option<Uuid>,
+    pub parent_piece_id: Uuid, pub parent_design_piece_id: Option<Uuid>, pub parent_connector_id: Option<Uuid>,
+    pub child_piece_id: Uuid, pub child_design_piece_id: Option<Uuid>, pub child_connector_id: Option<Uuid>,
     pub gap: f64, pub shift: f64, pub rise: f64,
     pub rotation: f64, pub turn: f64, pub tilt: f64,
     pub u: Option<f64>, pub v: Option<f64>, pub description: Option<String>,
@@ -822,8 +822,8 @@ async fn create_core_group(pool: &PgPool) {
 async fn create_core_connection(pool: &PgPool) {
     exec(pool, "CREATE TABLE IF NOT EXISTS core.connection (
         session_id UUID NOT NULL, connection_id UUID NOT NULL, design_id UUID NOT NULL,
-        connected_piece_id UUID NOT NULL, connected_design_piece_id UUID, connected_connector_id UUID,
-        connecting_piece_id UUID NOT NULL, connecting_design_piece_id UUID, connecting_connector_id UUID,
+        parent_piece_id UUID NOT NULL, parent_design_piece_id UUID, parent_connector_id UUID,
+        child_piece_id UUID NOT NULL, child_design_piece_id UUID, child_connector_id UUID,
         gap DOUBLE PRECISION NOT NULL DEFAULT 0, shift_val DOUBLE PRECISION NOT NULL DEFAULT 0,
         rise DOUBLE PRECISION NOT NULL DEFAULT 0, rotation DOUBLE PRECISION NOT NULL DEFAULT 0,
         turn DOUBLE PRECISION NOT NULL DEFAULT 0, tilt DOUBLE PRECISION NOT NULL DEFAULT 0,
@@ -1226,8 +1226,8 @@ async fn load_pieces_into_designs(pool: &PgPool, sid: Uuid, designs: &mut BTreeM
 
 async fn load_connections_into_designs(pool: &PgPool, sid: Uuid, designs: &mut BTreeMap<Uuid, DesignState>) -> Result<(), SessionError> {
     let rows = sqlx_core::query::query(
-        "SELECT connection_id, design_id, connected_piece_id, connected_design_piece_id, connected_connector_id,
-                connecting_piece_id, connecting_design_piece_id, connecting_connector_id,
+        "SELECT connection_id, design_id, parent_piece_id, parent_design_piece_id, parent_connector_id,
+                child_piece_id, child_design_piece_id, child_connector_id,
                 gap, shift_val, rise, rotation, turn, tilt, u, v, description
          FROM core.connection WHERE session_id = $1 AND lifecycle = 'active'"
     ).bind(sid).fetch_all(pool).await?;
@@ -1237,8 +1237,8 @@ async fn load_connections_into_designs(pool: &PgPool, sid: Uuid, designs: &mut B
         if let Some(design) = designs.get_mut(&design_id) {
             design.connections.insert(connection_id, ConnectionState {
                 connection_id,
-                connected_piece_id: r.get(2), connected_design_piece_id: r.get(3), connected_connector_id: r.get(4),
-                connecting_piece_id: r.get(5), connecting_design_piece_id: r.get(6), connecting_connector_id: r.get(7),
+                parent_piece_id: r.get(2), parent_design_piece_id: r.get(3), parent_connector_id: r.get(4),
+                child_piece_id: r.get(5), child_design_piece_id: r.get(6), child_connector_id: r.get(7),
                 gap: r.get(8), shift: r.get(9), rise: r.get(10),
                 rotation: r.get(11), turn: r.get(12), tilt: r.get(13),
                 u: r.get(14), v: r.get(15), description: r.get(16), lifecycle: Lifecycle::Active,
@@ -1490,15 +1490,15 @@ pub fn serialize_session_kit(state: &SessionState) -> serde_json::Value {
         let connections: Vec<serde_json::Value> = d.connections.values().filter(|c| c.lifecycle.is_active()).map(|c| {
             serde_json::json!({
                 "id": c.connection_id,
-                "connected": {
-                    "piece": { "id": c.connected_piece_id },
-                    "designPiece": c.connected_design_piece_id.map(|id| serde_json::json!({ "id": id })),
-                    "connector": c.connected_connector_id.map(|id| serde_json::json!({ "id": id })),
+                "parent": {
+                    "piece": { "id": c.parent_piece_id },
+                    "designPiece": c.parent_design_piece_id.map(|id| serde_json::json!({ "id": id })),
+                    "connector": c.parent_connector_id.map(|id| serde_json::json!({ "id": id })),
                 },
-                "connecting": {
-                    "piece": { "id": c.connecting_piece_id },
-                    "designPiece": c.connecting_design_piece_id.map(|id| serde_json::json!({ "id": id })),
-                    "connector": c.connecting_connector_id.map(|id| serde_json::json!({ "id": id })),
+                "child": {
+                    "piece": { "id": c.child_piece_id },
+                    "designPiece": c.child_design_piece_id.map(|id| serde_json::json!({ "id": id })),
+                    "connector": c.child_connector_id.map(|id| serde_json::json!({ "id": id })),
                 },
                 "gap": c.gap, "shift": c.shift, "rise": c.rise,
                 "rotation": c.rotation, "turn": c.turn, "tilt": c.tilt,
@@ -2047,15 +2047,15 @@ impl SessionActor {
                 changes.push(EntityChange::Deleted { entity_kind: EntityKind::Piece, entity_id: del.entity_id });
             }
             DomainCommand::CreateConnection(create) => {
-                let connected_piece = create.fields.get("connected_piece_id").and_then(|v| v.as_str()).and_then(|s| Uuid::parse_str(s).ok()).unwrap_or(Uuid::nil());
-                let connecting_piece = create.fields.get("connecting_piece_id").and_then(|v| v.as_str()).and_then(|s| Uuid::parse_str(s).ok()).unwrap_or(Uuid::nil());
-                sqlx_core::query::query("INSERT INTO core.connection (session_id, connection_id, design_id, connected_piece_id, connecting_piece_id) VALUES ($1, $2, $3, $4, $5)")
+                let connected_piece = create.fields.get("parent_piece_id").and_then(|v| v.as_str()).and_then(|s| Uuid::parse_str(s).ok()).unwrap_or(Uuid::nil());
+                let connecting_piece = create.fields.get("child_piece_id").and_then(|v| v.as_str()).and_then(|s| Uuid::parse_str(s).ok()).unwrap_or(Uuid::nil());
+                sqlx_core::query::query("INSERT INTO core.connection (session_id, connection_id, design_id, parent_piece_id, child_piece_id) VALUES ($1, $2, $3, $4, $5)")
                     .bind(sid).bind(create.connection_id).bind(create.design_id).bind(connected_piece).bind(connecting_piece).execute(&self.pool).await?;
                 if let Some(design) = self.state.designs.get_mut(&create.design_id) {
                     design.connections.insert(create.connection_id, ConnectionState {
                         connection_id: create.connection_id,
-                        connected_piece_id: connected_piece, connected_design_piece_id: None, connected_connector_id: None,
-                        connecting_piece_id: connecting_piece, connecting_design_piece_id: None, connecting_connector_id: None,
+                        parent_piece_id: connected_piece, parent_design_piece_id: None, parent_connector_id: None,
+                        child_piece_id: connecting_piece, child_design_piece_id: None, child_connector_id: None,
                         gap: 0.0, shift: 0.0, rise: 0.0, rotation: 0.0, turn: 0.0, tilt: 0.0,
                         u: None, v: None, description: None, lifecycle: Lifecycle::Active,
                     });
@@ -3450,7 +3450,7 @@ use super::*;
         let cmd = DomainCommand::CreateConnection(CreateConnection {
             connection_id: Uuid::now_v7(),
             design_id: Uuid::now_v7(),
-            fields: serde_json::json!({"connected_piece_id": Uuid::nil().to_string()}),
+            fields: serde_json::json!({"parent_piece_id": Uuid::nil().to_string()}),
         });
         let json = serde_json::to_string(&cmd).unwrap();
         assert!(json.contains("CreateConnection"));
@@ -3680,8 +3680,8 @@ use super::*;
             is_hidden: None, is_locked: None, color: None, description: None, lifecycle: Lifecycle::Active,
         });
         ds.connections.insert(conn_id, ConnectionState {
-            connection_id: conn_id, connected_piece_id: p1, connected_design_piece_id: None, connected_connector_id: None,
-            connecting_piece_id: p2, connecting_design_piece_id: None, connecting_connector_id: None,
+            connection_id: conn_id, parent_piece_id: p1, parent_design_piece_id: None, parent_connector_id: None,
+            child_piece_id: p2, child_design_piece_id: None, child_connector_id: None,
             gap: 0.0, shift: 0.0, rise: 0.0, rotation: 0.0, turn: 0.0, tilt: 0.0,
             u: None, v: None, description: None, lifecycle: Lifecycle::Active,
         });
@@ -3856,14 +3856,14 @@ use super::*;
         }
         for c in design_json["connections"].as_array().unwrap() {
             let cid = Uuid::parse_str(c["id"].as_str().unwrap()).unwrap();
-            let connected_piece = c.get("connected").and_then(|v| v.get("piece")).and_then(|v| v.as_str())
+            let connected_piece = c.get("parent").and_then(|v| v.get("piece")).and_then(|v| v.as_str())
                 .and_then(|s| Uuid::parse_str(s).ok()).unwrap_or(Uuid::nil());
-            let connecting_piece = c.get("connecting").and_then(|v| v.get("piece")).and_then(|v| v.as_str())
+            let connecting_piece = c.get("child").and_then(|v| v.get("piece")).and_then(|v| v.as_str())
                 .and_then(|s| Uuid::parse_str(s).ok()).unwrap_or(Uuid::nil());
             ds.connections.insert(cid, ConnectionState {
                 connection_id: cid,
-                connected_piece_id: connected_piece, connected_design_piece_id: None, connected_connector_id: None,
-                connecting_piece_id: connecting_piece, connecting_design_piece_id: None, connecting_connector_id: None,
+                parent_piece_id: connected_piece, parent_design_piece_id: None, parent_connector_id: None,
+                child_piece_id: connecting_piece, child_design_piece_id: None, child_connector_id: None,
                 gap: c.get("gap").and_then(|v| v.as_f64()).unwrap_or(0.0),
                 shift: c.get("shift").and_then(|v| v.as_f64()).unwrap_or(0.0),
                 rise: c.get("rise").and_then(|v| v.as_f64()).unwrap_or(0.0),
@@ -3915,11 +3915,11 @@ use super::*;
         let mut commands: Vec<DomainCommand> = Vec::new();
         for c in conns_json {
             let cid = Uuid::parse_str(c["id"].as_str().unwrap()).unwrap();
-            let connected_piece = c.get("connected").and_then(|v| v.get("piece")).and_then(|v| v.as_str()).unwrap_or("");
-            let connecting_piece = c.get("connecting").and_then(|v| v.get("piece")).and_then(|v| v.as_str()).unwrap_or("");
+            let connected_piece = c.get("parent").and_then(|v| v.get("piece")).and_then(|v| v.as_str()).unwrap_or("");
+            let connecting_piece = c.get("child").and_then(|v| v.get("piece")).and_then(|v| v.as_str()).unwrap_or("");
             let fields = serde_json::json!({
-                "connected_piece_id": connected_piece,
-                "connecting_piece_id": connecting_piece,
+                "parent_piece_id": connected_piece,
+                "child_piece_id": connecting_piece,
                 "gap": c.get("gap"),
                 "shift": c.get("shift"),
             });
@@ -4133,14 +4133,14 @@ use super::*;
         }
         for c in design_json["connections"].as_array().unwrap() {
             let cid = Uuid::parse_str(c["id"].as_str().unwrap()).unwrap();
-            let connected_piece = c.get("connected").and_then(|v| v.get("piece")).and_then(|v| v.as_str())
+            let connected_piece = c.get("parent").and_then(|v| v.get("piece")).and_then(|v| v.as_str())
                 .and_then(|s| Uuid::parse_str(s).ok()).unwrap_or(Uuid::nil());
-            let connecting_piece = c.get("connecting").and_then(|v| v.get("piece")).and_then(|v| v.as_str())
+            let connecting_piece = c.get("child").and_then(|v| v.get("piece")).and_then(|v| v.as_str())
                 .and_then(|s| Uuid::parse_str(s).ok()).unwrap_or(Uuid::nil());
             ds.connections.insert(cid, ConnectionState {
                 connection_id: cid,
-                connected_piece_id: connected_piece, connected_design_piece_id: None, connected_connector_id: None,
-                connecting_piece_id: connecting_piece, connecting_design_piece_id: None, connecting_connector_id: None,
+                parent_piece_id: connected_piece, parent_design_piece_id: None, parent_connector_id: None,
+                child_piece_id: connecting_piece, child_design_piece_id: None, child_connector_id: None,
                 gap: c.get("gap").and_then(|v| v.as_f64()).unwrap_or(0.0),
                 shift: c.get("shift").and_then(|v| v.as_f64()).unwrap_or(0.0),
                 rise: c.get("rise").and_then(|v| v.as_f64()).unwrap_or(0.0),

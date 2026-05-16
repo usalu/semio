@@ -1838,31 +1838,26 @@ export class BoardRenderer {
 				if (!this.suppressSceneToWasmPush) {
 					this.pushSceneToWasmDriver();
 				}
-			} else if (this.canvas) {
-				if (!this.suppressSceneToWasmPush) {
-					this.pushSceneToWasmDriver();
+			} else if (this.canvas && !this.gpuSurfaceUnavailable) {
+				let gpuReady = this.readGpuReady();
+				if (!gpuReady && !this.gpuSurfaceInitPromise) {
+					this.gpuSurfaceInitPromise = this.initGpuSurfaceOnce()
+						.then(() => {
+							this.gpuSurfaceInitPromise = null;
+							this.markDirty();
+						})
+						.catch((err: unknown) => {
+							console.error("[DEBUG] BoardRenderer GPU surface init failed", err);
+							this.gpuSurfaceErrorDetail = summarizeRasterSurfaceFailure(err);
+							this.gpuSurfaceUnavailable = true;
+							this.cachedWasmGpuReady = false;
+							this.gpuSurfaceInitPromise = null;
+							this.markDirty();
+						});
 				}
-				if (!this.gpuSurfaceUnavailable) {
-					let gpuReady = this.readGpuReady();
-					if (!gpuReady && !this.gpuSurfaceInitPromise) {
-						this.gpuSurfaceInitPromise = this.initGpuSurfaceOnce()
-							.then(() => {
-								this.gpuSurfaceInitPromise = null;
-								this.markDirty();
-							})
-							.catch((err: unknown) => {
-								console.error("[DEBUG] BoardRenderer GPU surface init failed", err);
-								this.gpuSurfaceErrorDetail = summarizeRasterSurfaceFailure(err);
-								this.gpuSurfaceUnavailable = true;
-								this.cachedWasmGpuReady = false;
-								this.gpuSurfaceInitPromise = null;
-								this.markDirty();
-							});
-					}
-					gpuReady = this.readGpuReady();
-					if (gpuReady) {
-						this.syncGpuFrame();
-					}
+				gpuReady = this.readGpuReady();
+				if (gpuReady) {
+					this.syncGpuFrame();
 				}
 			}
 			this.paintTextOverlays();
@@ -2188,13 +2183,16 @@ export class BoardRenderer {
 		}
 	}
 
-	/** @emoji 🎨 Presents one GPU frame; {@link BoardRenderer.pushSceneToWasmDriver} is invoked from {@link BoardRenderer.render} even when the surface is not ready so WASM hit tests stay live. */
+	/** @emoji 🎨 Presents one GPU frame after {@link BoardRenderer.pushSceneToWasmDriver} (same order as pre-369 main-thread canvas: no WASM scene push until the swapchain exists). */
 	private syncGpuFrame(): void {
 		if (this.renderMode === "headless-test" || !this.readGpuReady()) {
 			return;
 		}
 		if (this.wasmGpuFrameDepth > 0) {
 			return;
+		}
+		if (!this.suppressSceneToWasmPush) {
+			this.pushSceneToWasmDriver();
 		}
 		this.wasmGpuFrameDepth += 1;
 		try {

@@ -122,7 +122,7 @@
       "id": "08a57668-2a99-4de1-adf9-cc8398ff9a08",
       "gap": 0,
       "description": "",
-      "connected": {
+      "parent": {
         "piece": {
           "id": "31be08e1-e75c-4024-86b4-c3c6d3939fbb"
         },
@@ -134,7 +134,7 @@
       "rotation": 0,
       "rise": 0,
       "turn": 0,
-      "connecting": {
+      "child": {
         "piece": {
           "id": "f537171c-bacd-4422-abed-09e1ab19c572"
         },
@@ -150,7 +150,7 @@
       "id": "8ca91bd6-2ed9-4c32-ad1b-fdb2f1e3ccf7",
       "gap": 0,
       "description": "",
-      "connected": {
+      "parent": {
         "piece": {
           "id": "31be08e1-e75c-4024-86b4-c3c6d3939fbb"
         },
@@ -162,7 +162,7 @@
       "rotation": 0,
       "rise": 0,
       "turn": 0,
-      "connecting": {
+      "child": {
         "piece": {
           "id": "ba35dd11-3022-4408-913f-0f6d25b40a83"
         },
@@ -178,7 +178,7 @@
       "id": "8972a3e1-a73e-4325-81fa-0624167bae9c",
       "gap": 0,
       "description": "",
-      "connected": {
+      "parent": {
         "piece": {
           "id": "31be08e1-e75c-4024-86b4-c3c6d3939fbb"
         },
@@ -190,7 +190,7 @@
       "rotation": 0,
       "rise": 0,
       "turn": 0,
-      "connecting": {
+      "child": {
         "piece": {
           "id": "9901f61f-d0da-4a2a-a0f4-3028be4f54d8"
         },
@@ -206,7 +206,7 @@
       "id": "1cf214bc-05a3-4254-82b6-983e38588c8e",
       "gap": 0,
       "description": "",
-      "connected": {
+      "parent": {
         "piece": {
           "id": "31be08e1-e75c-4024-86b4-c3c6d3939fbb"
         },
@@ -218,7 +218,7 @@
       "rotation": 0,
       "rise": 0,
       "turn": 0,
-      "connecting": {
+      "child": {
         "piece": {
           "id": "fe8bb27a-9ac4-4731-8760-5ab24e35ed7f"
         },
@@ -234,7 +234,7 @@
       "id": "120320be-7b45-479f-b03f-da51ed1c557f",
       "gap": 0,
       "description": "",
-      "connected": {
+      "parent": {
         "piece": {
           "id": "31be08e1-e75c-4024-86b4-c3c6d3939fbb"
         },
@@ -246,7 +246,7 @@
       "rotation": 0,
       "rise": 0,
       "turn": 0,
-      "connecting": {
+      "child": {
         "piece": {
           "id": "0bb2a1dd-c9e3-4cb8-9590-faf1bc8d32ad"
         },
@@ -262,7 +262,7 @@
       "id": "7ec41887-abba-4091-950e-aff6a8550ea9",
       "gap": 0,
       "description": "",
-      "connected": {
+      "parent": {
         "piece": {
           "id": "31be08e1-e75c-4024-86b4-c3c6d3939fbb"
         },
@@ -274,7 +274,7 @@
       "rotation": 0,
       "rise": 0,
       "turn": 0,
-      "connecting": {
+      "child": {
         "piece": {
           "id": "d88f2d4c-4e31-454f-aee5-446636931c37"
         },
@@ -290,7 +290,7 @@
       "id": "f41dd156-75c2-4024-ae2e-ff42cb83ca18",
       "gap": 0,
       "description": "",
-      "connected": {
+      "parent": {
         "piece": {
           "id": "31be08e1-e75c-4024-86b4-c3c6d3939fbb"
         },
@@ -302,7 +302,7 @@
       "rotation": 0,
       "rise": 0,
       "turn": 0,
-      "connecting": {
+      "child": {
         "piece": {
           "id": "288f5a34-305a-4b76-87c2-3ed34b5675a9"
         },
@@ -318,7 +318,7 @@
       "id": "db7befc0-f9f2-4087-ae48-cbaeaaf38244",
       "gap": 0,
       "description": "",
-      "connected": {
+      "parent": {
         "piece": {
           "id": "31be08e1-e75c-4024-86b4-c3c6d3939fbb"
         },
@@ -330,7 +330,7 @@
       "rotation": 0,
       "rise": 0,
       "turn": 0,
-      "connecting": {
+      "child": {
         "piece": {
           "id": "323375ad-496b-4b23-8454-3e02a76fced3"
         },

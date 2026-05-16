@@ -16,4 +16,10 @@
 
 **Verification:** Vitest 46 passed.
 
-**Files touched:** `elements/client/lib/board/index.ts`, `elements/client/lib/board/index.tsx`, `elements/client/lib/board/play/index.tsx`, this ticket.
+**Follow-up 4 (2026-05-16):** Root cause for regressions after WebGPU attach is wasm-bindgen’s **`async fn attach_canvas(&mut self)`** holding the session **`RefCell` borrow across `await`**. Any overlapping **`setSize`** (from **`pushSceneToWasmDriver`**) still produced **`borrow_fail`** when fences missed timing. **Rust fix:** `BoardSession` now wraps state in **`Rc<RefCell<BoardSessionInner>>`**; **`attach_canvas`** is a sync export returning **`future_to_promise`** so the outer wasm borrow ends before GPU **`await`**, while **`setSize` / `renderFrame`** take short **`borrow_mut`** scopes. **`BoardSessionInner`** helpers satisfy the borrow checker for resize + GPU frame.
+
+**Verification (follow-up 4):** `bun ./rs/scripts/build-wasm.script.ts`; Vitest 46 passed.
+
+**Follow-up 5 (2026-05-16):** Compared **`a01093653` (368)** vs HEAD: **368 never called `pushSceneToWasmDriver` from `render()` for main-thread canvas**—only **`syncGpuFrame`** ran when **`gpuReady`**, and **`syncGpuFrame`** did **`pushSceneToWasmDriver` then `renderFrame`**. Later code pushed WASM every frame **before** the swapchain existed, which differed from 368 and amplified attach/resize races. **Restored 368 behavior:** canvas branch only runs GPU init + **`syncGpuFrame`** when `!gpuSurfaceUnavailable`; **`syncGpuFrame`** prepends **`pushSceneToWasmDriver`**. **`BoardCanvas` `applySize`** again calls **`renderer.render()`** after **`setSize`** (368). Vitest 46 passed.
+
+**Files touched:** `elements/client/lib/board/index.ts`, `elements/client/lib/board/index.tsx`, `elements/client/lib/board/play/index.tsx`, `elements/client/lib/board/rs/lib.rs`, `elements/client/lib/board/rs/pkg/*` (generated), this ticket.

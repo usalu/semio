@@ -3080,7 +3080,7 @@ export class Side {
     public readonly session: Session,
     public readonly designId: string,
     public readonly connectionId: string,
-    public readonly role: "connected" | "connecting",
+    public readonly role: "parent" | "child",
     public readonly pieceId: string,
     public readonly portId: string | null,
     public readonly connectorId: string | null,
@@ -3106,7 +3106,7 @@ function parseSideFromJson(
   session: Session,
   designId: string,
   connectionId: string,
-  role: "connected" | "connecting",
+  role: "parent" | "child",
   node: JsonObject | null | undefined,
   storeId?: string,
 ): Side | null {
@@ -3196,14 +3196,14 @@ export class Connection extends Entity {
     return await this.readConnScalarNumberOrNull("v");
   }
 
-  async connected(): Promise<Side | null> {
-    const connJson = await this.connectionUnderDesign(`connected { ${CONNECTION_SIDE_SELECTION} }`);
-    return parseSideFromJson(this.session, this.designId, this.id, "connected", connJson?.["connected"] as JsonObject | undefined, this.storeId);
+  async parent(): Promise<Side | null> {
+    const connJson = await this.connectionUnderDesign(`parent { ${CONNECTION_SIDE_SELECTION} }`);
+    return parseSideFromJson(this.session, this.designId, this.id, "parent", connJson?.["parent"] as JsonObject | undefined, this.storeId);
   }
 
-  async connecting(): Promise<Side | null> {
-    const connJson = await this.connectionUnderDesign(`connecting { ${CONNECTION_SIDE_SELECTION} }`);
-    return parseSideFromJson(this.session, this.designId, this.id, "connecting", connJson?.["connecting"] as JsonObject | undefined, this.storeId);
+  async child(): Promise<Side | null> {
+    const connJson = await this.connectionUnderDesign(`child { ${CONNECTION_SIDE_SELECTION} }`);
+    return parseSideFromJson(this.session, this.designId, this.id, "child", connJson?.["child"] as JsonObject | undefined, this.storeId);
   }
 
   async attributes(): Promise<readonly Attribute[]> {

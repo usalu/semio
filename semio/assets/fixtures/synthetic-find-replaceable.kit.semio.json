@@ -350,7 +350,7 @@
       "connections": [
         {
           "id": "external-lg-l",
-          "connected": {
+          "parent": {
             "piece": {
               "id": "piece-external-lg"
             },
@@ -358,7 +358,7 @@
               "id": "selected-external-lg-connector-0"
             }
           },
-          "connecting": {
+          "child": {
             "piece": {
               "id": "neighbor-piece-l"
             },
@@ -369,7 +369,7 @@
         },
         {
           "id": "external-lg-g",
-          "connected": {
+          "parent": {
             "piece": {
               "id": "piece-external-lg"
             },
@@ -377,7 +377,7 @@
               "id": "selected-external-lg-connector-1"
             }
           },
-          "connecting": {
+          "child": {
             "piece": {
               "id": "neighbor-piece-g"
             },
@@ -388,7 +388,7 @@
         },
         {
           "id": "external-ll-a",
-          "connected": {
+          "parent": {
             "piece": {
               "id": "piece-external-ll"
             },
@@ -396,7 +396,7 @@
               "id": "selected-external-ll-connector-0"
             }
           },
-          "connecting": {
+          "child": {
             "piece": {
               "id": "neighbor-piece-l-a"
             },
@@ -407,7 +407,7 @@
         },
         {
           "id": "external-ll-b",
-          "connected": {
+          "parent": {
             "piece": {
               "id": "piece-external-ll"
             },
@@ -415,7 +415,7 @@
               "id": "selected-external-ll-connector-1"
             }
           },
-          "connecting": {
+          "child": {
             "piece": {
               "id": "neighbor-piece-l-b"
             },
@@ -458,7 +458,7 @@
       "connections": [
         {
           "id": "candidate-design-consumed-link",
-          "connected": {
+          "parent": {
             "piece": {
               "id": "candidate-design-consumed-a"
             },
@@ -466,7 +466,7 @@
               "id": "candidate-lg-connector-0"
             }
           },
-          "connecting": {
+          "child": {
             "piece": {
               "id": "candidate-design-consumed-b"
             },

@@ -3696,7 +3696,7 @@ public class Connector : Entity<Connector>
 
     public static Connector? FindForPieceInConnection(Type type, Connection connection, string pieceId)
     {
-        string? connectorId = connection.Connected.Piece.Id == pieceId ? connection.Connected.Connector?.Id : connection.Connecting.Connector?.Id;
+        string? connectorId = connection.Parent.Piece.Id == pieceId ? connection.Parent.Connector?.Id : connection.Child.Connector?.Id;
         if (string.IsNullOrEmpty(connectorId)) return null;
         return FindInType(type, connectorId);
     }
@@ -4490,22 +4490,22 @@ public class Side : Entity<Side>
 public class ConnectionId : Entity<ConnectionId>
 {
     public string Id { get; set; } = "";
-    public Side Connected { get; set; } = new();
-    public Side Connecting { get; set; } = new();
+    public Side Parent { get; set; } = new();
+    public Side Child { get; set; } = new();
 
     public string ToIdString() => $"{Connected.Piece.Id + (Connected.Connector.Id != "" ? ":" + Connected.Connector.Id : "")}--{(Connecting.Connector.Id != "" ? Connecting.Connector.Id + ":" : "") + Connecting.Piece.Id}";
     public string ToHumanIdString() => $"{ToIdString()}";
     public override string ToString() => $"ConId({ToHumanIdString()})";
 
-    public static implicit operator ConnectionId(Connection connection) => new() { Connected = connection.Connected, Connecting = connection.Connecting };
-    public static implicit operator ConnectionId(ConnectionDiff diff) => new() { Connected = diff.Connected ?? new(), Connecting = diff.Connecting ?? new() };
+    public static implicit operator ConnectionId(Connection connection) => new() { Parent = connection.Parent, Child = connection.Child };
+    public static implicit operator ConnectionId(ConnectionDiff diff) => new() { Parent = diff.Parent ?? new(), Child = diff.Child ?? new() };
 }
 
 public class ConnectionDiff : Entity<ConnectionDiff>
 {
     private readonly HashSet<string> _setProperties = new();
-    private SideDiff? _connected;
-    private SideDiff? _connecting;
+    private SideDiff? _parentSideDiff;
+    private SideDiff? _childSideDiff;
     private string? _description;
     private double? _gap;
     private double? _shift;
@@ -4517,8 +4517,8 @@ public class ConnectionDiff : Entity<ConnectionDiff>
     private double? _v;
     private AttributesDiff? _attributes;
 
-    public SideDiff? Connected { get => _connected; set { _connected = value; _setProperties.Add("Connected"); } }
-    public SideDiff? Connecting { get => _connecting; set { _connecting = value; _setProperties.Add("Connecting"); } }
+    public SideDiff? Parent { get => _parentSideDiff; set { _parentSideDiff = value; _setProperties.Add("Parent"); } }
+    public SideDiff? Child { get => _childSideDiff; set { _childSideDiff = value; _setProperties.Add("Child"); } }
     public string? Description { get => _description; set { _description = value; _setProperties.Add("Description"); } }
     public double? Gap { get => _gap; set { _gap = value; _setProperties.Add("Gap"); } }
     public double? Shift { get => _shift; set { _shift = value; _setProperties.Add("Shift"); } }
@@ -4530,8 +4530,8 @@ public class ConnectionDiff : Entity<ConnectionDiff>
     public double? V { get => _v; set { _v = value; _setProperties.Add("V"); } }
     public AttributesDiff? Attributes { get => _attributes; set { _attributes = value; _setProperties.Add("Attributes"); } }
 
-    public bool ShouldSerializeConnected() => _setProperties.Contains("Connected");
-    public bool ShouldSerializeConnecting() => _setProperties.Contains("Connecting");
+    public bool ShouldSerializeParent() => _setProperties.Contains("Parent");
+    public bool ShouldSerializeChild() => _setProperties.Contains("Child");
     public bool ShouldSerializeDescription() => _setProperties.Contains("Description");
     public bool ShouldSerializeGap() => _setProperties.Contains("Gap");
     public bool ShouldSerializeShift() => _setProperties.Contains("Shift");
@@ -4543,15 +4543,15 @@ public class ConnectionDiff : Entity<ConnectionDiff>
     public bool ShouldSerializeV() => _setProperties.Contains("V");
     public bool ShouldSerializeAttributes() => _setProperties.Contains("Attributes");
 
-    public static implicit operator ConnectionDiff(ConnectionId id) => new() { Connected = new SideDiff { Piece = id.Connected.Piece, DesignPiece = id.Connected.DesignPiece, Connector = id.Connected.Connector }, Connecting = new SideDiff { Piece = id.Connecting.Piece, DesignPiece = id.Connecting.DesignPiece, Connector = id.Connecting.Connector } };
-    public static implicit operator ConnectionDiff(Connection connection) => new() { Connected = Side.CreateDiff(connection.Connected), Connecting = Side.CreateDiff(connection.Connecting), Description = connection.Description, Gap = connection.Gap, Shift = connection.Shift, Rise = connection.Rise, Rotation = connection.Rotation, Turn = connection.Turn, Tilt = connection.Tilt, U = connection.U, V = connection.V, Attributes = connection.Attributes };
+    public static implicit operator ConnectionDiff(ConnectionId id) => new() { Parent = new SideDiff { Piece = id.Parent.Piece, DesignPiece = id.Parent.DesignPiece, Connector = id.Parent.Connector }, Child = new SideDiff { Piece = id.Child.Piece, DesignPiece = id.Child.DesignPiece, Connector = id.Child.Connector } };
+    public static implicit operator ConnectionDiff(Connection connection) => new() { Parent = Side.CreateDiff(connection.Parent), Child = Side.CreateDiff(connection.Child), Description = connection.Description, Gap = connection.Gap, Shift = connection.Shift, Rise = connection.Rise, Rotation = connection.Rotation, Turn = connection.Turn, Tilt = connection.Tilt, U = connection.U, V = connection.V, Attributes = connection.Attributes };
 
     public ConnectionDiff MergeDiff(ConnectionDiff other)
     {
         return new ConnectionDiff
         {
-            Connected = other.Connected is not null ? (other.Connected.MergeDiff(Connected ?? new SideDiff())) : Connected,
-            Connecting = other.Connecting is not null ? (other.Connecting.MergeDiff(Connecting ?? new SideDiff())) : Connecting,
+            Parent = other.Parent is not null ? (other.Parent.MergeDiff(Parent ?? new SideDiff())) : Connected,
+            Child = other.Child is not null ? (other.Child.MergeDiff(Child ?? new SideDiff())) : Connecting,
             Description = string.IsNullOrEmpty(other.Description) ? Description : other.Description,
             Gap = other.Gap ?? Gap,
             Shift = other.Shift ?? Shift,
@@ -4580,7 +4580,7 @@ public class ConnectionsDiff : Entity<ConnectionsDiff>
         {
             Removed = other.Removed.Concat(Removed).Distinct().ToList(),
             Modified = other.Modified.Concat(Modified).GroupBy(u => u.Connection.Id).Select(g => g.Last()).ToList(),
-            Added = other.Added.Concat(Added).GroupBy(a => a.Connected.Piece.Id + "--" + a.Connecting.Piece.Id).Select(g => g.Last()).ToList()
+            Added = other.Added.Concat(Added).GroupBy(a => a.Parent.Piece.Id + "--" + a.Child.Piece.Id).Select(g => g.Last()).ToList()
         };
     }
 }
@@ -4588,8 +4588,8 @@ public class ConnectionsDiff : Entity<ConnectionsDiff>
 public class Connection : Entity<Connection>
 {
     public string Id { get; set; } = "";
-    public Side Connected { get; set; } = new();
-    public Side Connecting { get; set; } = new();
+    public Side Parent { get; set; } = new();
+    public Side Child { get; set; } = new();
     public string? Description { get; set; }
     public double Gap { get; set; } = 0;
     public double Shift { get; set; } = 0;
@@ -4605,15 +4605,15 @@ public class Connection : Entity<Connection>
     public string ToHumanIdString() => $"{ToIdString()}";
     public override string ToString() => $"Con({ToHumanIdString()})";
 
-    public static implicit operator Connection(ConnectionId id) => new() { Connected = id.Connected, Connecting = id.Connecting };
-    public static implicit operator Connection(ConnectionDiff diff) => new() { Connected = diff.Connected ?? new(), Connecting = diff.Connecting ?? new(), Description = diff.Description ?? "", Gap = diff.Gap ?? 0, Shift = diff.Shift ?? 0, Rise = diff.Rise ?? 0, Rotation = diff.Rotation ?? 0, Turn = diff.Turn ?? 0, Tilt = diff.Tilt ?? 0, U = diff.U, V = diff.V, Attributes = diff.Attributes?.Added ?? new() };
+    public static implicit operator Connection(ConnectionId id) => new() { Parent = id.Parent, Child = id.Child };
+    public static implicit operator Connection(ConnectionDiff diff) => new() { Parent = diff.Parent ?? new(), Child = diff.Child ?? new(), Description = diff.Description ?? "", Gap = diff.Gap ?? 0, Shift = diff.Shift ?? 0, Rise = diff.Rise ?? 0, Rotation = diff.Rotation ?? 0, Turn = diff.Turn ?? 0, Tilt = diff.Tilt ?? 0, U = diff.U, V = diff.V, Attributes = diff.Attributes?.Added ?? new() };
 
     public static Connection ApplyDiff(Connection connection, ConnectionDiff diff)
     {
         return new Connection
         {
-            Connected = diff.Connected is not null ? Side.ApplyDiff(connection.Connected, diff.Connected) : connection.Connected,
-            Connecting = diff.Connecting is not null ? Side.ApplyDiff(connection.Connecting, diff.Connecting) : connection.Connecting,
+            Parent = diff.Parent is not null ? Side.ApplyDiff(connection.Parent, diff.Parent) : connection.Parent,
+            Child = diff.Child is not null ? Side.ApplyDiff(connection.Child, diff.Child) : connection.Child,
             Description = string.IsNullOrEmpty(diff.Description) ? connection.Description : diff.Description,
             Gap = diff.Gap ?? connection.Gap,
             Shift = diff.Shift ?? connection.Shift,
@@ -4631,8 +4631,8 @@ public class Connection : Entity<Connection>
     {
         return new ConnectionDiff
         {
-            Connected = Side.CreateDiff(connection.Connected),
-            Connecting = Side.CreateDiff(connection.Connecting),
+            Parent = Side.CreateDiff(connection.Parent),
+            Child = Side.CreateDiff(connection.Child),
             Description = connection.Description,
             Gap = connection.Gap,
             Shift = connection.Shift,
@@ -4650,8 +4650,8 @@ public class Connection : Entity<Connection>
     {
         return new ConnectionDiff
         {
-            Connected = appliedDiff.Connected is not null ? Side.CreateDiff(connection.Connected) : null,
-            Connecting = appliedDiff.Connecting is not null ? Side.CreateDiff(connection.Connecting) : null,
+            Parent = appliedDiff.Parent is not null ? Side.CreateDiff(connection.Parent) : null,
+            Child = appliedDiff.Child is not null ? Side.CreateDiff(connection.Child) : null,
             Description = appliedDiff.Description is not null ? connection.Description : "",
             Gap = appliedDiff.Gap.HasValue ? connection.Gap : null,
             Shift = appliedDiff.Shift.HasValue ? connection.Shift : null,
@@ -4670,13 +4670,13 @@ public class Connection : Entity<Connection>
         if (other is null) return false;
         if (strict)
         {
-            return connection.Connected.Piece.Id == other.Connected.Piece.Id &&
-                   connection.Connected.Connector.Id == other.Connected.Connector.Id &&
-                   connection.Connecting.Piece.Id == other.Connecting.Piece.Id &&
-                   connection.Connecting.Connector.Id == other.Connecting.Connector.Id;
+            return connection.Parent.Piece.Id == other.Parent.Piece.Id &&
+                   connection.Parent.Connector.Id == other.Parent.Connector.Id &&
+                   connection.Child.Piece.Id == other.Child.Piece.Id &&
+                   connection.Child.Connector.Id == other.Child.Connector.Id;
         }
-        return (connection.Connected.Piece.Id == other.Connected.Piece.Id && connection.Connecting.Piece.Id == other.Connecting.Piece.Id) ||
-               (connection.Connected.Piece.Id == other.Connecting.Piece.Id && connection.Connecting.Piece.Id == other.Connected.Piece.Id);
+        return connection.Parent.Piece.Id == other.Parent.Piece.Id &&
+               connection.Child.Piece.Id == other.Child.Piece.Id;
     }
 
     public static Connection SetAttribute(Connection connection, Attribute attribute)
@@ -4691,8 +4691,8 @@ public class Connection : Entity<Connection>
 
         return new Connection
         {
-            Connected = connection.Connected,
-            Connecting = connection.Connecting,
+            Parent = connection.Parent,
+            Child = connection.Child,
             Description = connection.Description,
             Gap = connection.Gap,
             Shift = connection.Shift,
@@ -4715,7 +4715,7 @@ public class Connection : Entity<Connection>
 
     public static List<Connection> FindByPiece(List<Connection> connections, string pieceId)
     {
-        return connections.Where(c => c.Connected.Piece.Id == pieceId || c.Connecting.Piece.Id == pieceId).ToList();
+        return connections.Where(c => c.Parent.Piece.Id == pieceId || c.Child.Piece.Id == pieceId).ToList();
     }
 
     public static Connection FindInDesign(Design design, string connectionId)
@@ -4736,8 +4736,8 @@ public class Connection : Entity<Connection>
     public static (Piece connecting, Piece connected) FindPiecesInDesign(Design design, Connection connection)
     {
         return (
-            Piece.FindInDesign(design, connection.Connecting.Piece.Id),
-            Piece.FindInDesign(design, connection.Connected.Piece.Id)
+            Piece.FindInDesign(design, connection.Child.Piece.Id),
+            Piece.FindInDesign(design, connection.Parent.Piece.Id)
         );
     }
 
@@ -4747,8 +4747,8 @@ public class Connection : Entity<Connection>
         {
             try
             {
-                Piece.FindInDesign(design, c.Connected.Piece.Id);
-                Piece.FindInDesign(design, c.Connecting.Piece.Id);
+                Piece.FindInDesign(design, c.Parent.Piece.Id);
+                Piece.FindInDesign(design, c.Child.Piece.Id);
                 return false;
             }
             catch
@@ -5184,7 +5184,7 @@ public class Design : Entity<Design>
         foreach (var piece in design.Pieces)
             graph.AddVertex(piece.Id);
         foreach (var connection in design.Connections)
-            graph.AddEdge(new Edge<string>(connection.Connected.Piece.Id, connection.Connecting.Piece.Id));
+            graph.AddEdge(new Edge<string>(connection.Parent.Piece.Id, connection.Child.Piece.Id));
         var components = new Dictionary<string, int>();
         graph.ConnectedComponents(components);
         var componentPieces = new Dictionary<int, Dictionary<string, Piece>>();
@@ -5201,10 +5201,10 @@ public class Design : Entity<Design>
             foreach (var piece in component.Value)
                 subGraph.AddVertex(piece.Key);
             foreach (var connection in design.Connections)
-                if (component.Value.ContainsKey(connection.Connected.Piece.Id) &&
-                    component.Value.ContainsKey(connection.Connecting.Piece.Id))
+                if (component.Value.ContainsKey(connection.Parent.Piece.Id) &&
+                    component.Value.ContainsKey(connection.Child.Piece.Id))
                     subGraph.AddEdge(
-                        new Edge<string>(connection.Connected.Piece.Id, connection.Connecting.Piece.Id));
+                        new Edge<string>(connection.Parent.Piece.Id, connection.Child.Piece.Id));
             var root = subGraph.Vertices.FirstOrDefault(p => pieces[p].Plane is not null);
             if (root is null)
                 root = subGraph.Vertices.First();
@@ -5218,8 +5218,8 @@ public class Design : Entity<Design>
                 var parent = pieces[edge.Source];
                 var child = pieces[edge.Target];
                 var connection = design.Connections.First(c =>
-                    (c.Connected.Piece.Id == parent.Id && c.Connecting.Piece.Id == child.Id) ||
-                    (c.Connected.Piece.Id == child.Id && c.Connecting.Piece.Id == parent.Id));
+                    (c.Parent.Piece.Id == parent.Id && c.Child.Piece.Id == child.Id) ||
+                    (c.Parent.Piece.Id == child.Id && c.Child.Piece.Id == parent.Id));
                 onConnection(parent, child, connection);
             };
             bfs.Compute();
@@ -5250,20 +5250,20 @@ public class Design : Entity<Design>
             }
             foreach (var connection in design.Connections)
             {
-                var connectedPiece = design.Pieces.First(p => p.Id == connection.Connected.Piece.Id);
+                var connectedPiece = design.Pieces.First(p => p.Id == connection.Parent.Piece.Id);
                 if (connectedPiece.Type is null)
                     throw new Exception($"Flatten requires all pieces to have a type. Piece ({connectedPiece.Id}) has no type.");
                 var connectedType = types.First(t => t.Id == connectedPiece.Type.Id);
-                if (!connectors[connectedType.Id].ContainsKey(connection.Connected.Connector.Id))
+                if (!connectors[connectedType.Id].ContainsKey(connection.Parent.Connector.Id))
                     throw new Exception(
-                        $"The type {connectedType.ToHumanIdString()} of the connection {connection.ToHumanIdString()} doesn't have the connector {connection.Connected.Connector.Id}.");
-                var connectingPiece = design.Pieces.First(p => p.Id == connection.Connecting.Piece.Id);
+                        $"The type {connectedType.ToHumanIdString()} of the connection {connection.ToHumanIdString()} doesn't have the connector {connection.Parent.Connector.Id}.");
+                var connectingPiece = design.Pieces.First(p => p.Id == connection.Child.Piece.Id);
                 if (connectingPiece.Type is null)
                     throw new Exception($"Flatten requires all pieces to have a type. Piece ({connectingPiece.Id}) has no type.");
                 var connectingType = types.First(t => t.Id == connectingPiece.Type.Id);
-                if (!connectors[connectingType.Id].ContainsKey(connection.Connecting.Connector.Id))
+                if (!connectors[connectingType.Id].ContainsKey(connection.Child.Connector.Id))
                     throw new Exception(
-                        $"The type {connectingType.ToHumanIdString()} of the connection {connection.ToHumanIdString()} doesn't have the connector {connection.Connecting.Connector.Id}.");
+                        $"The type {connectingType.ToHumanIdString()} of the connection {connection.ToHumanIdString()} doesn't have the connector {connection.Child.Connector.Id}.");
             }
 
             var piecePlanes = new Dictionary<string, Plane>();
@@ -5277,14 +5277,14 @@ public class Design : Entity<Design>
             });
             var onConnection = new Action<Piece, Piece, Connection>((parent, child, connection) =>
             {
-                var isParentConnected = connection.Connected.Piece.Id == parent.Id;
+                var isParentConnected = connection.Parent.Piece.Id == parent.Id;
                 if (!piecePlanes.TryGetValue(parent.Id, out var parentPlane) || parent.Type is null || child.Type is null) return;
                 var parentConnector =
                     connectors[parent.Type.Id][
-                        isParentConnected ? connection.Connected.Connector.Id : connection.Connecting.Connector.Id];
+                        isParentConnected ? connection.Parent.Connector.Id : connection.Child.Connector.Id];
                 var childConnector =
                     connectors[child.Type.Id][
-                        isParentConnected ? connection.Connecting.Connector.Id : connection.Connected.Connector.Id];
+                        isParentConnected ? connection.Child.Connector.Id : connection.Parent.Connector.Id];
                 if (parentConnector.Point is null || parentConnector.Direction is null || childConnector.Point is null || childConnector.Direction is null) return;
                 var childPlane = computeChildPlane(parentPlane, parentConnector.Point, parentConnector.Direction,
                     childConnector.Point, childConnector.Direction,
@@ -5691,13 +5691,13 @@ public class Design : Entity<Design>
             {
                 sortedPieces.Add(child);
                 Connection sortedConnection;
-                if (connection.Connected.Piece.Id != parent.Id)
+                if (connection.Parent.Piece.Id != parent.Id)
                 {
                     sortedConnection = new Connection
                     {
                         Id = connection.Id,
-                        Connected = new Side { Piece = new PieceId { Id = child.Id }, Connector = connection.Connected.Connector },
-                        Connecting = new Side { Piece = new PieceId { Id = parent.Id }, Connector = connection.Connecting.Connector },
+                        Parent = new Side { Piece = new PieceId { Id = child.Id }, Connector = connection.Parent.Connector },
+                        Child = new Side { Piece = new PieceId { Id = parent.Id }, Connector = connection.Child.Connector },
                         Description = connection.Description,
                         Gap = connection.Gap,
                         Shift = connection.Shift,
@@ -5954,8 +5954,8 @@ public class Design : Entity<Design>
 
         foreach (var connection in design.Connections)
         {
-            var connectedPieceFlat = GetPiece(flatCloneInSvgCoordinates, connection.Connected.Piece.Id);
-            var connectingPieceFlat = GetPiece(flatCloneInSvgCoordinates, connection.Connecting.Piece.Id);
+            var connectedPieceFlat = GetPiece(flatCloneInSvgCoordinates, connection.Parent.Piece.Id);
+            var connectingPieceFlat = GetPiece(flatCloneInSvgCoordinates, connection.Child.Piece.Id);
             if (connectedPieceFlat?.Center is null || connectingPieceFlat?.Center is null) continue;
             var connectionLine = new SvgLine
             {
@@ -6070,27 +6070,27 @@ text {
                 errors.Add($"A piece is invalid: There are multiple pieces with id ({duplicatePieceId}).");
         }
 
-        var nonExistingConnectedPieces = Connections.Where(c => !pieceIds.Contains(c.Connected.Piece.Id)).ToList()
-            .Select(c => c.Connected.Piece.Id).ToArray();
+        var nonExistingConnectedPieces = Connections.Where(c => !pieceIds.Contains(c.Parent.Piece.Id)).ToList()
+            .Select(c => c.Parent.Piece.Id).ToArray();
         if (nonExistingConnectedPieces.Length != 0)
         {
             isValid = false;
             foreach (var nonExistingConnectedPiece in nonExistingConnectedPieces)
             {
-                var connection = Connections.First(c => c.Connected.Piece.Id == nonExistingConnectedPiece);
+                var connection = Connections.First(c => c.Parent.Piece.Id == nonExistingConnectedPiece);
                 errors.Add(
                     $"A connection({connection.ToHumanIdString()}) is invalid: The referenced connected piece ({nonExistingConnectedPiece}) is not part of the design.");
             }
         }
 
-        var nonExistingConnectingPieces = Connections.Where(c => !pieceIds.Contains(c.Connecting.Piece.Id)).ToList()
-            .Select(c => c.Connecting.Piece.Id).ToArray();
+        var nonExistingConnectingPieces = Connections.Where(c => !pieceIds.Contains(c.Child.Piece.Id)).ToList()
+            .Select(c => c.Child.Piece.Id).ToArray();
         if (nonExistingConnectingPieces.Length != 0)
         {
             isValid = false;
             foreach (var nonExistingConnectingPiece in nonExistingConnectingPieces)
             {
-                var connection = Connections.First(c => c.Connecting.Piece.Id == nonExistingConnectingPiece);
+                var connection = Connections.First(c => c.Child.Piece.Id == nonExistingConnectingPiece);
                 errors.Add(
                     $"A connection({connection.ToHumanIdString()}) is invalid: The referenced connecting piece ({nonExistingConnectingPiece}) is not part of the design.");
             }
@@ -6098,10 +6098,10 @@ text {
 
         var connectionKeys = Connections
             .Select(c => (
-                ConnectedPieceId: c.Connected.Piece.Id,
-                ConnectedDesignPieceId: c.Connected.DesignPiece?.Id ?? "",
-                ConnectingPieceId: c.Connecting.Piece.Id,
-                ConnectingDesignPieceId: c.Connecting.DesignPiece?.Id ?? ""))
+                ParentPieceId: c.Parent.Piece.Id,
+                ParentDesignPieceId: c.Parent.DesignPiece?.Id ?? "",
+                ChildPieceId: c.Child.Piece.Id,
+                ChildDesignPieceId: c.Child.DesignPiece?.Id ?? ""))
             .ToList();
         var duplicateConnections = connectionKeys
             .GroupBy(k => k)
@@ -6112,7 +6112,7 @@ text {
         {
             isValid = false;
             foreach (var key in duplicateConnections)
-                errors.Add($"A connection is duplicated for ({key.ConnectedPieceId},{key.ConnectedDesignPieceId},{key.ConnectingPieceId},{key.ConnectingDesignPieceId}).");
+                errors.Add($"A connection is duplicated for ({key.ParentPieceId},{key.ParentDesignPieceId},{key.ChildPieceId},{key.ChildDesignPieceId}).");
         }
 
         return (isValid, errors);
@@ -6135,15 +6135,15 @@ text {
     {
         var connection = design.Connections.FirstOrDefault(c => Connection.IsSameAs(c, connectionToFind, strict));
         if (connection is null)
-            throw new ArgumentException($"Connection {connectionToFind.Connected.Piece.Id} -> {connectionToFind.Connecting.Piece.Id} not found in design");
+            throw new ArgumentException($"Connection {connectionToFind.Parent.Piece.Id} -> {connectionToFind.Child.Piece.Id} not found in design");
         return connection;
     }
 
     public static List<Connection> FindPieceConnections(Design design, string pieceId)
     {
         return design.Connections.Where(c =>
-            c.Connected.Piece.Id == pieceId ||
-            c.Connecting.Piece.Id == pieceId).ToList();
+            c.Parent.Piece.Id == pieceId ||
+            c.Child.Piece.Id == pieceId).ToList();
     }
 
     public static Design AddPiece(Design design, Piece piece)
@@ -6171,8 +6171,8 @@ text {
     {
         var newPieces = design.Pieces.Where(p => p.Id != pieceId).ToList();
         var newConnections = design.Connections.Where(c =>
-            c.Connected.Piece.Id != pieceId &&
-            c.Connecting.Piece.Id != pieceId).ToList();
+            c.Parent.Piece.Id != pieceId &&
+            c.Child.Piece.Id != pieceId).ToList();
         return new Design
         {
             Id = design.Id,
@@ -6269,7 +6269,7 @@ text {
         var connectionByChild = new Dictionary<string, Connection>();
         foreach (var conn in designConnections)
         {
-            connectionByChild[conn.Connecting.Piece.Id] = conn;
+            connectionByChild[conn.Child.Piece.Id] = conn;
         }
         var fixedIds = new HashSet<string>();
         foreach (var id in selectedIds)
@@ -6298,7 +6298,7 @@ text {
             var current = id;
             while (connectionByChild.TryGetValue(current, out var conn))
             {
-                var parentId = conn.Connected.Piece.Id;
+                var parentId = conn.Parent.Piece.Id;
                 if (selectedIds.Contains(parentId))
                 {
                     isDescendant = true;
@@ -6431,8 +6431,8 @@ text {
         var c = new Connection
         {
             Id = connection.Id,
-            Connected = connection.Connected,
-            Connecting = connection.Connecting,
+            Parent = connection.Parent,
+            Child = connection.Child,
             Description = connection.Description,
             Gap = connection.Gap,
             Shift = connection.Shift,
@@ -6609,7 +6609,7 @@ text {
         var selectedIds = new HashSet<string>(pieces.Pieces.Select(p => p.Id));
         var connectionByChild = new Dictionary<string, Connection>();
         foreach (var conn in design.Connections)
-            connectionByChild[conn.Connecting.Piece.Id] = conn;
+            connectionByChild[conn.Child.Piece.Id] = conn;
 
         var fixedIds = new HashSet<string>();
         foreach (var id in selectedIds)
@@ -6650,22 +6650,22 @@ text {
             var current = id;
             while (connectionByChild.TryGetValue(current, out var conn))
             {
-                var parentId = conn.Connected.Piece.Id;
+                var parentId = conn.Parent.Piece.Id;
                 if (selectedIds.Contains(parentId)) { isDescendant = true; break; }
                 current = parentId;
             }
             if (isDescendant) continue;
             if (!connectionByChild.TryGetValue(id, out var parentConn)) continue;
-            pieceMap.TryGetValue(parentConn.Connected.Piece.Id, out var parentPiece);
+            pieceMap.TryGetValue(parentConn.Parent.Piece.Id, out var parentPiece);
             pieceMap.TryGetValue(id, out var childPiece);
             if (parentPiece == null || childPiece == null) continue;
             if (parentPiece.Type == null || childPiece.Type == null) continue;
             typesDict.TryGetValue(parentPiece.Type.Id, out var parentType);
             typesDict.TryGetValue(childPiece.Type.Id, out var childType);
             var parentConnector = GetConnectorFromType(typesDict, parentType,
-                parentConn.Connected.Connector?.Id ?? "");
+                parentConn.Parent.Connector?.Id ?? "");
             var childConnector = GetConnectorFromType(typesDict, childType,
-                parentConn.Connecting.Connector?.Id ?? "");
+                parentConn.Child.Connector?.Id ?? "");
             if (parentConnector == null) continue;
             var parentPlane = parentPiece.Plane ?? IdentityPlaneForStructuralMove();
             var connDiff = ConnectionDiffFromStructuralMoveVector(
@@ -6702,8 +6702,8 @@ text {
         var staleConnectionIds = new HashSet<string>();
         foreach (var conn in design.Connections)
         {
-            if (deletedPieceSet.Contains(conn.Connected.Piece.Id) ||
-                deletedPieceSet.Contains(conn.Connecting.Piece.Id))
+            if (deletedPieceSet.Contains(conn.Parent.Piece.Id) ||
+                deletedPieceSet.Contains(conn.Child.Piece.Id))
             {
                 staleConnectionIds.Add(conn.Id);
             }
@@ -6722,11 +6722,11 @@ text {
         {
             var conn = design.Connections.FirstOrDefault(c => c.Id == connId);
             if (conn == null) continue;
-            var connectingId = conn.Connecting.Piece.Id;
+            var connectingId = conn.Child.Piece.Id;
             if (deletedPieceSet.Contains(connectingId)) continue;
             // Check if this piece has another parent connection not in the removed set
             var hasOtherParent = design.Connections.Any(c =>
-                c.Connecting.Piece.Id == connectingId &&
+                c.Child.Piece.Id == connectingId &&
                 !allRemovedConnectionIds.Contains(c.Id));
             if (!hasOtherParent && !fixedPieceIds.Contains(connectingId))
                 fixedPieceIds.Add(connectingId);
@@ -6806,7 +6806,7 @@ text {
         var parentMap = new Dictionary<string, (string parentId, Connection connection)>();
         foreach (var conn in design.Connections)
         {
-            parentMap[conn.Connecting.Piece.Id] = (conn.Connected.Piece.Id, conn);
+            parentMap[conn.Child.Piece.Id] = (conn.Parent.Piece.Id, conn);
         }
 
         // Flatten the design to get absolute planes/centers
@@ -6872,8 +6872,8 @@ text {
         foreach (var connId in connectionIds)
         {
             var conn = design.Connections.First(c => c.Id == connId);
-            var connectedId = conn.Connected.Piece.Id;
-            var connectingId = conn.Connecting.Piece.Id;
+            var connectedId = conn.Parent.Piece.Id;
+            var connectingId = conn.Child.Piece.Id;
             var connectedSelected = selectedPieceSet.Contains(connectedId);
             var connectingSelected = selectedPieceSet.Contains(connectingId);
 
@@ -6962,8 +6962,8 @@ text {
         var sourceParentMap = new Dictionary<string, (string parentId, Connection connection)>();
         foreach (var conn in source.Connections)
         {
-            var childId = conn.Connecting.Piece.Id;
-            var parentId = conn.Connected.Piece.Id;
+            var childId = conn.Child.Piece.Id;
+            var parentId = conn.Parent.Piece.Id;
             if (!sourceParentMap.TryGetValue(childId, out var prev))
             {
                 sourceParentMap[childId] = (parentId, conn);
@@ -6999,8 +6999,8 @@ text {
         // Also add centers for external pieces referenced by connections
         foreach (var conn in source.Connections)
         {
-            var connectedId = conn.Connected.Piece.Id;
-            var connectingId = conn.Connecting.Piece.Id;
+            var connectedId = conn.Parent.Piece.Id;
+            var connectingId = conn.Child.Piece.Id;
             if (externalOriginIds.Contains(connectedId) && sourcePieceMap.TryGetValue(connectedId, out var extPiece1))
             {
                 Coordinate? c = extPiece1.Center;
@@ -7125,10 +7125,10 @@ text {
 
                     if (targetPiecesByName.TryGetValue(externalParent.Name, out var candidates))
                     {
-                        var isParentConnected = parentConn.Connected.Piece.Id == parentId;
+                        var isParentConnected = parentConn.Parent.Piece.Id == parentId;
                         var parentConnectorId = isParentConnected
-                            ? parentConn.Connected.Connector.Id
-                            : parentConn.Connecting.Connector.Id;
+                            ? parentConn.Parent.Connector.Id
+                            : parentConn.Child.Connector.Id;
 
                         // Get the external parent's type to find the connector
                         Connector? sourceParentConnector = null;
@@ -7156,7 +7156,7 @@ text {
                                     var copiedConn = Entity<Connection>.DeepClone(parentConn)!;
                                     if (isParentConnected)
                                     {
-                                        copiedConn.Connected = new Side
+                                        copiedConn.Parent = new Side
                                         {
                                             Piece = new PieceId { Id = candidate.Id },
                                             Connector = new ConnectorId { Id = matchingConnector.Id }
@@ -7164,7 +7164,7 @@ text {
                                     }
                                     else
                                     {
-                                        copiedConn.Connecting = new Side
+                                        copiedConn.Child = new Side
                                         {
                                             Piece = new PieceId { Id = candidate.Id },
                                             Connector = new ConnectorId { Id = matchingConnector.Id }
@@ -7173,11 +7173,11 @@ text {
 
                                     if (coordinate is not null)
                                     {
-                                        var connectedStub = externalOriginIds.Contains(parentConn.Connected.Piece.Id);
-                                        var connectingStub = externalOriginIds.Contains(parentConn.Connecting.Piece.Id);
+                                        var connectedStub = externalOriginIds.Contains(parentConn.Parent.Piece.Id);
+                                        var connectingStub = externalOriginIds.Contains(parentConn.Child.Piece.Id);
                                         var connMatchesParentage =
-                                            (parentConn.Connecting.Piece.Id == piece.Id && parentConn.Connected.Piece.Id == parentId) ||
-                                            (parentConn.Connected.Piece.Id == piece.Id && parentConn.Connecting.Piece.Id == parentId);
+                                            (parentConn.Child.Piece.Id == piece.Id && parentConn.Parent.Piece.Id == parentId) ||
+                                            (parentConn.Parent.Piece.Id == piece.Id && parentConn.Child.Piece.Id == parentId);
                                         // Specs: Coordinate may shift diagram u/v only for the remapped bridge to a clipboard external stub;
                                         // internal–internal source edges (neither side a stub) must keep cloned u/v.
                                         if (connMatchesParentage && connectedStub != connectingStub)
@@ -7241,8 +7241,8 @@ text {
         // Process source connections (non-external internal connections)
         foreach (var conn in source.Connections)
         {
-            var connectedId = conn.Connected.Piece.Id;
-            var connectingId = conn.Connecting.Piece.Id;
+            var connectedId = conn.Parent.Piece.Id;
+            var connectingId = conn.Child.Piece.Id;
 
             // Skip if either piece is external-origin (these are handled during piece processing)
             if (externalOriginIds.Contains(connectedId) || externalOriginIds.Contains(connectingId))
@@ -8032,15 +8032,15 @@ public partial class Kit : Entity<Kit>
     public static Piece FindParentPieceInDesign(Kit kit, string designId, string pieceId)
     {
         var design = FindDesign(kit, designId);
-        var connection = Connection.FindByPieceInDesign(design, pieceId).FirstOrDefault(c => c.Connecting.Piece.Id == pieceId);
+        var connection = Connection.FindByPieceInDesign(design, pieceId).FirstOrDefault(c => c.Child.Piece.Id == pieceId);
         if (connection == null) throw new Exception($"No parent piece found for piece {pieceId}");
-        return Piece.FindInDesign(design, connection.Connected.Piece.Id);
+        return Piece.FindInDesign(design, connection.Parent.Piece.Id);
     }
 
     public static Connection FindParentConnectionForPieceInDesign(Kit kit, string designId, string pieceId)
     {
         var design = FindDesign(kit, designId);
-        var connection = Connection.FindByPieceInDesign(design, pieceId).FirstOrDefault(c => c.Connecting.Piece.Id == pieceId);
+        var connection = Connection.FindByPieceInDesign(design, pieceId).FirstOrDefault(c => c.Child.Piece.Id == pieceId);
         if (connection == null) throw new Exception($"No parent connection found for piece {pieceId}");
         return connection;
     }
@@ -8048,8 +8048,8 @@ public partial class Kit : Entity<Kit>
     public static List<Piece> FindChildrenPiecesInDesign(Kit kit, string designId, string pieceId)
     {
         var design = FindDesign(kit, designId);
-        var connections = Connection.FindByPieceInDesign(design, pieceId).Where(c => c.Connected.Piece.Id == pieceId);
-        return connections.Select(c => Piece.FindInDesign(design, c.Connecting.Piece.Id)).ToList();
+        var connections = Connection.FindByPieceInDesign(design, pieceId).Where(c => c.Parent.Piece.Id == pieceId);
+        return connections.Select(c => Piece.FindInDesign(design, c.Child.Piece.Id)).ToList();
     }
 
     public static List<Connector> FindUsedConnectorsByPieceInDesign(Kit kit, string designId, string pieceId)
@@ -8079,12 +8079,12 @@ public partial class Kit : Entity<Kit>
         {
             try
             {
-                var otherPieceId = connection.Connected.Piece.Id == pieceId ? connection.Connecting.Piece.Id : connection.Connected.Piece.Id;
+                var otherPieceId = connection.Parent.Piece.Id == pieceId ? connection.Child.Piece.Id : connection.Parent.Piece.Id;
                 var otherPiece = Piece.FindInDesign(design, otherPieceId);
                 if (otherPiece.Type == null) continue;
 
                 var otherType = FindType(kit, otherPiece.Type.Id);
-                var otherPortId = connection.Connected.Piece.Id == pieceId ? connection.Connecting.Connector?.Id : connection.Connected.Connector?.Id;
+                var otherPortId = connection.Parent.Piece.Id == pieceId ? connection.Child.Connector?.Id : connection.Parent.Connector?.Id;
                 var otherPort = Connector.FindInType(otherType, otherPortId ?? "");
                 requiredConnectors.Add(otherPort);
             }
@@ -8118,7 +8118,7 @@ public partial class Kit : Entity<Kit>
             var connections = Connection.FindByPieceInDesign(design, piece.Id);
             foreach (var connection in connections)
             {
-                var otherPieceId = connection.Connected.Piece.Id == piece.Id ? connection.Connecting.Piece.Id : connection.Connected.Piece.Id;
+                var otherPieceId = connection.Parent.Piece.Id == piece.Id ? connection.Child.Piece.Id : connection.Parent.Piece.Id;
                 if (!pieceIds.Contains(otherPieceId))
                 {
                     try
@@ -8127,7 +8127,7 @@ public partial class Kit : Entity<Kit>
                         if (otherPiece.Type == null) continue;
 
                         var otherType = FindType(kit, otherPiece.Type.Id);
-                        var otherPortId = connection.Connected.Piece.Id == piece.Id ? connection.Connecting.Connector?.Id : connection.Connected.Connector?.Id;
+                        var otherPortId = connection.Parent.Piece.Id == piece.Id ? connection.Child.Connector?.Id : connection.Parent.Connector?.Id;
                         var otherPort = Connector.FindInType(otherType, otherPortId ?? "");
                         externalConnections.Add((connection, otherPort));
                     }
@@ -8574,8 +8574,8 @@ public class GroupMeta
 public class ConnectionMeta
 {
     public string Id { get; set; } = "";
-    public Side Connected { get; set; } = new();
-    public Side Connecting { get; set; } = new();
+    public Side Parent { get; set; } = new();
+    public Side Child { get; set; } = new();
     public string? Description { get; set; }
     public double Gap { get; set; } = 0;
     public double Shift { get; set; } = 0;
@@ -8902,8 +8902,8 @@ public static class MetaShallowConversions
     public static ConnectionMeta ToMeta(this Connection c) => new()
     {
         Id = c.Id,
-        Connected = c.Connected,
-        Connecting = c.Connecting,
+        Parent = c.Parent,
+        Child = c.Child,
         Description = c.Description,
         Gap = c.Gap,
         Shift = c.Shift,
@@ -9927,9 +9927,9 @@ public static class Hashing
             w.WriteHashList(c.Attributes.Select(HashAttribute).ToList());
         }
         w.WriteString("connected");
-        w.WriteHash(HashSide(c.Connected));
+        w.WriteHash(HashSide(c.Parent));
         w.WriteString("connecting");
-        w.WriteHash(HashSide(c.Connecting));
+        w.WriteHash(HashSide(c.Child));
         if (c.Description != null)
         {
             w.WriteString("description");
@@ -10939,15 +10939,15 @@ public static class Hashing
             w.WriteString("attributes");
             w.WriteHash(HashAttributesDiff(d.Attributes));
         }
-        if (d.ShouldSerializeConnected() && d.Connected != null)
+        if (d.ShouldSerializeParent() && d.Parent != null)
         {
             w.WriteString("connected");
-            w.WriteHash(HashSideDiff(d.Connected));
+            w.WriteHash(HashSideDiff(d.Parent));
         }
-        if (d.ShouldSerializeConnecting() && d.Connecting != null)
+        if (d.ShouldSerializeChild() && d.Child != null)
         {
             w.WriteString("connecting");
-            w.WriteHash(HashSideDiff(d.Connecting));
+            w.WriteHash(HashSideDiff(d.Child));
         }
         WriteDiffOptString(w, "description", d.Description, d.ShouldSerializeDescription());
         WriteDiffOptNumber(w, "gap", d.Gap, d.ShouldSerializeGap());
@@ -11518,8 +11518,8 @@ public partial class Kit
         // Find external connections
         var externalConnections = connections.Where(conn =>
         {
-            var connectedSelected = selectedSet.Contains(conn.Connected.Piece.Id);
-            var connectingSelected = selectedSet.Contains(conn.Connecting.Piece.Id);
+            var connectedSelected = selectedSet.Contains(conn.Parent.Piece.Id);
+            var connectingSelected = selectedSet.Contains(conn.Child.Piece.Id);
             return connectedSelected != connectingSelected;
         }).ToList();
 
@@ -11532,10 +11532,10 @@ public partial class Kit
             var perConnectionSets = new List<HashSet<string>>();
             foreach (var conn in externalConnections)
             {
-                var connectedSelected = selectedSet.Contains(conn.Connected.Piece.Id);
+                var connectedSelected = selectedSet.Contains(conn.Parent.Piece.Id);
                 var otherPieceId = connectedSelected
-                    ? conn.Connecting.Piece.Id
-                    : conn.Connected.Piece.Id;
+                    ? conn.Child.Piece.Id
+                    : conn.Parent.Piece.Id;
                 if (!pieceMap.TryGetValue(otherPieceId, out var otherPiece)) continue;
                 var otherTypeId = otherPiece.Type?.Id;
                 if (string.IsNullOrEmpty(otherTypeId)) continue;
@@ -11726,8 +11726,8 @@ public partial class Kit
 
         var filteredConnections = (flatDesign.Connections ?? new List<Connection>()).Where(connection =>
         {
-            var sourceId = connection.Connected.Piece.Id;
-            var targetId = connection.Connecting.Piece.Id;
+            var sourceId = connection.Parent.Piece.Id;
+            var targetId = connection.Child.Piece.Id;
             return pieceMap.ContainsKey(sourceId) && pieceMap.ContainsKey(targetId);
         }).ToList();
 
@@ -11737,14 +11737,14 @@ public partial class Kit
         var connectionByEndpoints = new Dictionary<(string, string), Connection>();
         foreach (var c in filteredConnections)
         {
-            var a = c.Connected.Piece.Id;
-            var b = c.Connecting.Piece.Id;
+            var a = c.Parent.Piece.Id;
+            var b = c.Child.Piece.Id;
             connectionByEndpoints[NormalizeEdgeEndpoints(a, b)] = c;
         }
 
         var graph = new UndirectedGraph<string, Edge<string>>();
         foreach (var p in flatDesign.Pieces) graph.AddVertex(p.Id);
-        foreach (var c in filteredConnections) graph.AddEdge(new Edge<string>(c.Connected.Piece.Id, c.Connecting.Piece.Id));
+        foreach (var c in filteredConnections) graph.AddEdge(new Edge<string>(c.Parent.Piece.Id, c.Child.Piece.Id));
 
         var algorithm = new ConnectedComponentsAlgorithm<string, Edge<string>>(graph);
         algorithm.Compute();
@@ -11822,8 +11822,8 @@ public partial class Kit
 
                 if (!connectionByEndpoints.TryGetValue(NormalizeEdgeEndpoints(parentId, childId), out var connection)) return;
 
-                var parentSide = connection.Connected.Piece.Id == parentId ? connection.Connected : connection.Connecting;
-                var childSide = connection.Connecting.Piece.Id == childId ? connection.Connecting : connection.Connected;
+                var parentSide = connection.Parent.Piece.Id == parentId ? connection.Parent : connection.Child;
+                var childSide = connection.Child.Piece.Id == childId ? connection.Child : connection.Parent;
 
                 var parentType = parentPiece.Type != null ? GetConnectorType(parentPiece.Type.Id) : null;
                 var childType = childPiece.Type != null ? GetConnectorType(childPiece.Type.Id) : null;
@@ -12048,14 +12048,14 @@ public partial class Kit
         }
 
         var filteredConnections = (design.Connections ?? new List<Connection>())
-            .Where(c => pieceMap.ContainsKey(c.Connected.Piece.Id) && pieceMap.ContainsKey(c.Connecting.Piece.Id))
+            .Where(c => pieceMap.ContainsKey(c.Parent.Piece.Id) && pieceMap.ContainsKey(c.Child.Piece.Id))
             .ToList();
 
         var graph = new UndirectedGraph<string, Edge<string>>();
         foreach (var piece in design.Pieces)
             if (!string.IsNullOrEmpty(piece.Id)) graph.AddVertex(piece.Id);
         foreach (var c in filteredConnections)
-            graph.AddEdge(new Edge<string>(c.Connected.Piece.Id, c.Connecting.Piece.Id));
+            graph.AddEdge(new Edge<string>(c.Parent.Piece.Id, c.Child.Piece.Id));
 
         var ccAlg = new ConnectedComponentsAlgorithm<string, Edge<string>>(graph);
         ccAlg.Compute();
@@ -12108,12 +12108,12 @@ public partial class Kit
                 if (parentPiece == null || childPiece == null) return;
 
                 var connection = filteredConnections.FirstOrDefault(c =>
-                    (c.Connected.Piece.Id == parentId && c.Connecting.Piece.Id == childId) ||
-                    (c.Connecting.Piece.Id == parentId && c.Connected.Piece.Id == childId));
+                    (c.Parent.Piece.Id == parentId && c.Child.Piece.Id == childId) ||
+                    (c.Child.Piece.Id == parentId && c.Parent.Piece.Id == childId));
                 if (connection == null) return;
 
-                var parentSide = connection.Connected.Piece.Id == parentId ? connection.Connected : connection.Connecting;
-                var childSide = connection.Connecting.Piece.Id == childId ? connection.Connecting : connection.Connected;
+                var parentSide = connection.Parent.Piece.Id == parentId ? connection.Parent : connection.Child;
+                var childSide = connection.Child.Piece.Id == childId ? connection.Child : connection.Parent;
 
                 var parentType = parentPiece.Type != null ? GetConnectorType(parentPiece.Type.Id) : null;
                 var childType = childPiece.Type != null ? GetConnectorType(childPiece.Type.Id) : null;
@@ -12230,11 +12230,11 @@ public partial class Kit
             Connections = new ConnectionsDiff
             {
                 Removed = (originalDesign.Connections ?? new List<Connection>())
-                    .Where(c => clusterPieceIds.Contains(c.Connected.Piece.Id) || clusterPieceIds.Contains(c.Connecting.Piece.Id))
+                    .Where(c => clusterPieceIds.Contains(c.Parent.Piece.Id) || clusterPieceIds.Contains(c.Child.Piece.Id))
                     .Select(c => new ConnectionId
                     {
-                        Connected = new Side { Piece = new PieceId { Id = c.Connected.Piece.Id } },
-                        Connecting = new Side { Piece = new PieceId { Id = c.Connecting.Piece.Id } }
+                        Parent = new Side { Piece = new PieceId { Id = c.Parent.Piece.Id } },
+                        Child = new Side { Piece = new PieceId { Id = c.Child.Piece.Id } }
                     }).ToList(),
                 Added = addedConnections
             }
@@ -12288,8 +12288,8 @@ public partial class Kit
         foreach (var p in pieces) adjacency[p.Id] = new List<(Connection, string)>();
         foreach (var conn in connections)
         {
-            var connectedId = conn.Connected.Piece.Id;
-            var connectingId = conn.Connecting.Piece.Id;
+            var connectedId = conn.Parent.Piece.Id;
+            var connectingId = conn.Child.Piece.Id;
             if (adjacency.ContainsKey(connectedId))
                 adjacency[connectedId].Add((conn, connectingId));
             if (adjacency.ContainsKey(connectingId))
@@ -12348,7 +12348,7 @@ public partial class Kit
             {
                 if (visited.Contains(edge.neighborId)) continue;
                 var conn = edge.connection;
-                var isParent = conn.Connected.Piece.Id == currentId;
+                var isParent = conn.Parent.Piece.Id == currentId;
                 if (!isParent) continue;
 
                 var childId = edge.neighborId;
@@ -12356,8 +12356,8 @@ public partial class Kit
                 var childPiece = piecesDict[childId];
                 var parentType = parentPiece.Type != null ? GetType(parentPiece.Type.Id) : null;
                 var childType = childPiece.Type != null ? GetType(childPiece.Type.Id) : null;
-                var parentConnector = GetConnector(parentType, conn.Connected.Connector?.Id);
-                var childConnector = GetConnector(childType, conn.Connecting.Connector?.Id);
+                var parentConnector = GetConnector(parentType, conn.Parent.Connector?.Id);
+                var childConnector = GetConnector(childType, conn.Child.Connector?.Id);
 
                 if (parentConnector != null && childConnector != null &&
                     parentConnector.Point != null && parentConnector.Direction != null &&

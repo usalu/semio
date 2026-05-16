@@ -66,8 +66,8 @@ type Piece = PlainJsonObject & {
 /** @emoji 🧾 Plain connection JSON between two piece endpoints. */
 type Connection = PlainJsonObject & {
   id?: string;
-  connected?: { piece?: { id?: string } };
-  connecting?: { piece?: { id?: string } };
+  parent?: { piece?: { id?: string } };
+  child?: { piece?: { id?: string } };
   attributes?: readonly Attribute[];
 };
 
@@ -1554,8 +1554,8 @@ const buildDiagramSnapshot = (design: Design, padding: number, designDiff?: Desi
   const lineMap = new Map<string, DiagramLine>();
   snapshotDesignConnections(mergedRow as unknown as Design).forEach((connection) => {
     if (!connection.id) return;
-    const srcId = connection.connected?.piece?.id;
-    const tgtId = connection.connecting?.piece?.id;
+    const srcId = connection.parent?.piece?.id;
+    const tgtId = connection.child?.piece?.id;
     if (!srcId || !tgtId) return;
     const source = pointsById.get(srcId);
     const target = pointsById.get(tgtId);
@@ -1569,8 +1569,8 @@ const buildDiagramSnapshot = (design: Design, padding: number, designDiff?: Desi
   if (designDiff) {
     for (const line of lineMap.values()) {
       if (line.status === "default") {
-        const srcId = line.connection.connected?.piece?.id;
-        const tgtId = line.connection.connecting?.piece?.id;
+        const srcId = line.connection.parent?.piece?.id;
+        const tgtId = line.connection.child?.piece?.id;
         if (!srcId || !tgtId) continue;
         const src = pointMap.get(srcId);
         const tgt = pointMap.get(tgtId);
@@ -2808,8 +2808,8 @@ const buildSceneSnapshot = (design: Design, designDiff?: DesignDiff): SceneSnaps
   const connectionMap = new Map<string, SceneConnectionAsset>();
   snapshotDesignConnections(mergedRow as unknown as Design).forEach((connection) => {
     if (!connection.id) return;
-    const srcId = connection.connected?.piece?.id;
-    const tgtId = connection.connecting?.piece?.id;
+    const srcId = connection.parent?.piece?.id;
+    const tgtId = connection.child?.piece?.id;
     if (!srcId || !tgtId) return;
     const sourcePiece = piecesById.get(srcId);
     const targetPiece = piecesById.get(tgtId);
@@ -2823,7 +2823,7 @@ const buildSceneSnapshot = (design: Design, designDiff?: DesignDiff): SceneSnaps
   if (designDiff) {
     for (const connAsset of connectionMap.values()) {
       if (connAsset.status !== "default") {
-        const childId = connAsset.connection.connecting?.piece?.id;
+        const childId = connAsset.connection.child?.piece?.id;
         if (!childId) continue;
         const childAsset = pieceMap.get(childId);
         if (childAsset && childAsset.status === "default") {
@@ -4722,8 +4722,8 @@ export function mcpMapPayloadToDesignViewerViewRepresentation(p: McpDiagramPaylo
     pieces: p.points.map((pt) => ({ id: pt.id, center: { u: pt.u, v: pt.v } })),
     connections: p.lines.map((l) => ({
       id: l.id,
-      connected: { piece: { id: p.points.find((q) => q.u === l.sourceU && q.v === l.sourceV)?.id ?? "" } },
-      connecting: { piece: { id: p.points.find((q) => q.u === l.targetU && q.v === l.targetV)?.id ?? "" } },
+      parent: { piece: { id: p.points.find((q) => q.u === l.sourceU && q.v === l.sourceV)?.id ?? "" } },
+      child: { piece: { id: p.points.find((q) => q.u === l.targetU && q.v === l.targetV)?.id ?? "" } },
     })),
   } as unknown as Design;
   // Prefer JS-flattened design (correct BFS placement centers) over raw Python-enriched design, over points fallback.
@@ -5564,8 +5564,8 @@ export const McpDiagramViewer: React.FC = () => {
     pieces: (payload.points ?? []).map((pt) => ({ id: pt.id, center: { u: pt.u, v: pt.v } })),
     connections: (payload.lines ?? []).map((l) => ({
       id: l.id,
-      connected: { piece: { id: (payload.points ?? []).find((q) => q.u === l.sourceU && q.v === l.sourceV)?.id ?? "" } },
-      connecting: { piece: { id: (payload.points ?? []).find((q) => q.u === l.targetU && q.v === l.targetV)?.id ?? "" } },
+      parent: { piece: { id: (payload.points ?? []).find((q) => q.u === l.sourceU && q.v === l.sourceV)?.id ?? "" } },
+      child: { piece: { id: (payload.points ?? []).find((q) => q.u === l.targetU && q.v === l.targetV)?.id ?? "" } },
     })),
   } as unknown as Design;
   const candidateDesign = (designFlat ?? design) as Design | undefined;
@@ -6684,13 +6684,13 @@ if ((import.meta as any).vitest) {
 
       const connectionA = {
         id: "connection-a",
-        connected: { piece: { id: "piece-a" } },
-        connecting: { piece: { id: "piece-b" } },
+        parent: { piece: { id: "piece-a" } },
+        child: { piece: { id: "piece-b" } },
       } as unknown as Connection;
       const connectionB = {
         id: "connection-b",
-        connected: { piece: { id: "piece-b" } },
-        connecting: { piece: { id: "piece-c" } },
+        parent: { piece: { id: "piece-b" } },
+        child: { piece: { id: "piece-c" } },
       } as unknown as Connection;
 
       const design = {
@@ -6744,8 +6744,8 @@ if ((import.meta as any).vitest) {
 
       const connectionA = {
         id: "connection-a",
-        connected: { piece: { id: "piece-a" } },
-        connecting: { piece: { id: "piece-b" } },
+        parent: { piece: { id: "piece-a" } },
+        child: { piece: { id: "piece-b" } },
       } as unknown as Connection;
 
       const design = {
@@ -6799,8 +6799,8 @@ if ((import.meta as any).vitest) {
 
       const connectionA = {
         id: "connection-a",
-        connected: { piece: { id: "piece-a" } },
-        connecting: { piece: { id: "piece-b" } },
+        parent: { piece: { id: "piece-a" } },
+        child: { piece: { id: "piece-b" } },
       } as unknown as Connection;
 
       const design = {
@@ -6815,7 +6815,7 @@ if ((import.meta as any).vitest) {
             {
               connection: { id: "connection-a" },
               diff: {
-                connected: { piece: { id: "piece-c" } },
+                parent: { piece: { id: "piece-c" } },
               },
             },
           ],
@@ -6872,7 +6872,7 @@ if ((import.meta as any).vitest) {
           { id: "piece-b", type: { id: "k" }, plane: testPlane, center: { u: 5, v: 3 } } as unknown as Piece,
           { id: "piece-c", type: { id: "k" }, plane: testPlane, center: { u: 10, v: 0 } } as unknown as Piece,
         ],
-        connections: [{ id: "conn-ab", connected: { piece: { id: "piece-a" } }, connecting: { piece: { id: "piece-b" } } } as unknown as Connection],
+        connections: [{ id: "conn-ab", parent: { piece: { id: "piece-a" } }, child: { piece: { id: "piece-b" } } } as unknown as Connection],
       } as unknown as Design;
 
       const diff: DesignDiff = {
@@ -6916,8 +6916,8 @@ if ((import.meta as any).vitest) {
           { id: "piece-c", type: { id: "k" }, plane: testPlane, center: { u: 10, v: 0 } } as unknown as Piece,
         ],
         connections: [
-          { id: "conn-ab", connected: { piece: { id: "piece-a" } }, connecting: { piece: { id: "piece-b" } } } as unknown as Connection,
-          { id: "conn-bc", connected: { piece: { id: "piece-b" } }, connecting: { piece: { id: "piece-c" } } } as unknown as Connection,
+          { id: "conn-ab", parent: { piece: { id: "piece-a" } }, child: { piece: { id: "piece-b" } } } as unknown as Connection,
+          { id: "conn-bc", parent: { piece: { id: "piece-b" } }, child: { piece: { id: "piece-c" } } } as unknown as Connection,
         ],
       } as unknown as Design;
 
@@ -6948,8 +6948,8 @@ if ((import.meta as any).vitest) {
         id: "d",
         pieces: [{ id: "piece-a", type: { id: "k" }, plane: testPlane, center: { u: 0, v: 0 } } as unknown as Piece, { id: "piece-b", type: { id: "k" }, plane: testPlane, center: { u: 5, v: 3 } } as unknown as Piece],
         connections: [
-          { id: "conn-ab", connected: { piece: { id: "piece-a" } }, connecting: { piece: { id: "piece-b" } } } as unknown as Connection,
-          { id: "conn-ac", connected: { piece: { id: "piece-a" } }, connecting: { piece: { id: "piece-c" } } } as unknown as Connection,
+          { id: "conn-ab", parent: { piece: { id: "piece-a" } }, child: { piece: { id: "piece-b" } } } as unknown as Connection,
+          { id: "conn-ac", parent: { piece: { id: "piece-a" } }, child: { piece: { id: "piece-c" } } } as unknown as Connection,
         ],
       } as unknown as Design;
 
@@ -6971,7 +6971,7 @@ if ((import.meta as any).vitest) {
       const design = {
         id: "d",
         pieces: [{ id: "piece-a", type: { id: "k" }, plane: testPlane, center: { u: 0, v: 0 } } as unknown as Piece, { id: "piece-b", type: { id: "k" }, plane: testPlane, center: { u: 5, v: 3 } } as unknown as Piece],
-        connections: [{ id: "conn-ab", connected: { piece: { id: "piece-a" } }, connecting: { piece: { id: "piece-b" } } } as unknown as Connection],
+        connections: [{ id: "conn-ab", parent: { piece: { id: "piece-a" } }, child: { piece: { id: "piece-b" } } } as unknown as Connection],
       } as unknown as Design;
 
       const snapshot = buildDiagramSnapshot(design, 12, undefined);
@@ -7014,8 +7014,8 @@ if ((import.meta as any).vitest) {
           { id: "piece-d", type: { id: "k" }, plane: testPlane, center: { u: 15, v: 0 } } as unknown as Piece,
         ],
         connections: [
-          { id: "conn-ab", connected: { piece: { id: "piece-a" } }, connecting: { piece: { id: "piece-b" } } } as unknown as Connection,
-          { id: "conn-bc", connected: { piece: { id: "piece-b" } }, connecting: { piece: { id: "piece-c" } } } as unknown as Connection,
+          { id: "conn-ab", parent: { piece: { id: "piece-a" } }, child: { piece: { id: "piece-b" } } } as unknown as Connection,
+          { id: "conn-bc", parent: { piece: { id: "piece-b" } }, child: { piece: { id: "piece-c" } } } as unknown as Connection,
         ],
       } as unknown as Design;
 
@@ -7118,8 +7118,8 @@ if ((import.meta as any).vitest) {
         { id: "p3", type: { id: "t1" }, center: { u: 2, v: 0 } } as unknown as Piece,
       ],
       connections: [
-        { id: "c1", connected: { piece: { id: "p1" } }, connecting: { piece: { id: "p2" } } } as unknown as Connection,
-        { id: "c2", connected: { piece: { id: "p2" } }, connecting: { piece: { id: "p3" } } } as unknown as Connection,
+        { id: "c1", parent: { piece: { id: "p1" } }, child: { piece: { id: "p2" } } } as unknown as Connection,
+        { id: "c2", parent: { piece: { id: "p2" } }, child: { piece: { id: "p3" } } } as unknown as Connection,
       ],
     } as unknown as Design;
 
@@ -7130,7 +7130,7 @@ if ((import.meta as any).vitest) {
         updated: [{ piece: { id: "p2" }, diff: { name: "UpdatedP2" } }],
       },
       connections: {
-        added: [{ id: "c3", connected: { piece: { id: "p1" } }, connecting: { piece: { id: "p4" } } } as unknown as Connection],
+        added: [{ id: "c3", parent: { piece: { id: "p1" } }, child: { piece: { id: "p4" } } } as unknown as Connection],
         removed: [{ id: "c2" }],
         updated: [{ connection: { id: "c1" }, diff: {} }],
       },
@@ -7341,26 +7341,26 @@ const resolveAlgorithmConnectionDiffId = (connectionLike: unknown, fallbackIndex
       return formatAlgorithmDiffId(connectionLike.id, `connection-${fallbackIndex}`);
     }
     const connectedPieceId =
-      "connected" in connectionLike &&
-      connectionLike.connected &&
-      typeof connectionLike.connected === "object" &&
-      "piece" in connectionLike.connected &&
-      connectionLike.connected.piece &&
-      typeof connectionLike.connected.piece === "object" &&
-      "id" in connectionLike.connected.piece &&
-      typeof connectionLike.connected.piece.id === "string"
-        ? connectionLike.connected.piece.id
+      "parent" in connectionLike &&
+      connectionLike.parent &&
+      typeof connectionLike.parent === "object" &&
+      "piece" in connectionLike.parent &&
+      connectionLike.parent.piece &&
+      typeof connectionLike.parent.piece === "object" &&
+      "id" in connectionLike.parent.piece &&
+      typeof connectionLike.parent.piece.id === "string"
+        ? connectionLike.parent.piece.id
         : undefined;
     const connectingPieceId =
-      "connecting" in connectionLike &&
-      connectionLike.connecting &&
-      typeof connectionLike.connecting === "object" &&
-      "piece" in connectionLike.connecting &&
-      connectionLike.connecting.piece &&
-      typeof connectionLike.connecting.piece === "object" &&
-      "id" in connectionLike.connecting.piece &&
-      typeof connectionLike.connecting.piece.id === "string"
-        ? connectionLike.connecting.piece.id
+      "child" in connectionLike &&
+      connectionLike.child &&
+      typeof connectionLike.child === "object" &&
+      "piece" in connectionLike.child &&
+      connectionLike.child.piece &&
+      typeof connectionLike.child.piece === "object" &&
+      "id" in connectionLike.child.piece &&
+      typeof connectionLike.child.piece.id === "string"
+        ? connectionLike.child.piece.id
         : undefined;
     if (connectedPieceId || connectingPieceId) {
       return `${connectedPieceId ?? "from"}-${connectingPieceId ?? "to"}`;
@@ -7462,29 +7462,29 @@ const resolveAlgorithmConnectionDiffLabel = (design: Design | undefined, connect
   const connectedPieceId =
     (connectionLike &&
     typeof connectionLike === "object" &&
-    "connected" in connectionLike &&
-    connectionLike.connected &&
-    typeof connectionLike.connected === "object" &&
-    "piece" in connectionLike.connected &&
-    connectionLike.connected.piece &&
-    typeof connectionLike.connected.piece === "object" &&
-    "id" in connectionLike.connected.piece &&
-    typeof connectionLike.connected.piece.id === "string"
-      ? connectionLike.connected.piece.id
-      : undefined) ?? sourceConnection?.connected?.piece?.id;
+    "parent" in connectionLike &&
+    connectionLike.parent &&
+    typeof connectionLike.parent === "object" &&
+    "piece" in connectionLike.parent &&
+    connectionLike.parent.piece &&
+    typeof connectionLike.parent.piece === "object" &&
+    "id" in connectionLike.parent.piece &&
+    typeof connectionLike.parent.piece.id === "string"
+      ? connectionLike.parent.piece.id
+      : undefined) ?? sourceConnection?.parent?.piece?.id;
   const connectingPieceId =
     (connectionLike &&
     typeof connectionLike === "object" &&
-    "connecting" in connectionLike &&
-    connectionLike.connecting &&
-    typeof connectionLike.connecting === "object" &&
-    "piece" in connectionLike.connecting &&
-    connectionLike.connecting.piece &&
-    typeof connectionLike.connecting.piece === "object" &&
-    "id" in connectionLike.connecting.piece &&
-    typeof connectionLike.connecting.piece.id === "string"
-      ? connectionLike.connecting.piece.id
-      : undefined) ?? sourceConnection?.connecting?.piece?.id;
+    "child" in connectionLike &&
+    connectionLike.child &&
+    typeof connectionLike.child === "object" &&
+    "piece" in connectionLike.child &&
+    connectionLike.child.piece &&
+    typeof connectionLike.child.piece === "object" &&
+    "id" in connectionLike.child.piece &&
+    typeof connectionLike.child.piece.id === "string"
+      ? connectionLike.child.piece.id
+      : undefined) ?? sourceConnection?.child?.piece?.id;
 
   const pieceRows = __itemsOf((design as PlainJsonObject | undefined)?.["pieces"]) as Piece[];
   const connectedPieceName = connectedPieceId ? (pieceRows.find((piece) => piece.id === connectedPieceId)?.name ?? connectedPieceId) : undefined;
@@ -8482,7 +8482,7 @@ if (algorithmVitest) {
         id: "design-1",
         name: "Design",
         pieces: [{ id: "piece-a", name: "Piece A", type: { id: "type-a" }, center: { u: 0, v: 0 } } as unknown as Piece, { id: "piece-b", name: "Piece B", type: { id: "type-a" }, center: { u: 1, v: 0 } } as unknown as Piece],
-        connections: [{ id: "connection-a", connected: { piece: { id: "piece-a" } }, connecting: { piece: { id: "piece-b" } } } as unknown as Connection],
+        connections: [{ id: "connection-a", parent: { piece: { id: "piece-a" } }, child: { piece: { id: "piece-b" } } } as unknown as Connection],
       } as unknown as Design;
       const diff: DesignDiff = {
         pieces: {
@@ -8491,7 +8491,7 @@ if (algorithmVitest) {
           updated: [{ piece: { id: "piece-a" }, diff: { name: "Renamed Piece A" } }],
         },
         connections: {
-          added: [{ id: "connection-b", connected: { piece: { id: "piece-a" } }, connecting: { piece: { id: "piece-c" } } } as unknown as Connection],
+          added: [{ id: "connection-b", parent: { piece: { id: "piece-a" } }, child: { piece: { id: "piece-c" } } } as unknown as Connection],
           removed: [{ id: "connection-a" }],
           updated: [],
         },
