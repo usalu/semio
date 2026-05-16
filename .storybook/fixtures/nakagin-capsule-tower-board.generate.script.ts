@@ -1,7 +1,7 @@
 // #region 🧲Header
 // 💻 .storybook/fixtures/nakagin-capsule-tower-board.generate.script.ts
 // Specs: Regenerate `nakagin-capsule-tower.board.json` from `metabolism.kit.semio.json` Nakagin parent design (180 pieces, 179 connections).
-// Summary: Piece centers are only `pose.center` u/v from the kit Flat child design (`NAKAGIN_FLAT_DESIGN_ID`); world layout is `x=u`, `y=-v` so towers grow upward; handle angles use north-zero CCW on rectangles and `atan2(dy,dx)` on circles toward each neighbor; edges mirror parent `connections`. Every node is emitted at a uniform **40×40** world px footprint (circles radius 20) regardless of kit piece kind.
+// Summary: Piece centers are only `pose.center` u/v from the kit Flat child design (`NAKAGIN_FLAT_DESIGN_ID`); world layout is `x=u`, `y=-v` so towers grow upward; handle angles use north-zero CCW on rectangles and `atan2(dy,dx)` on circles toward each neighbor; edges mirror parent `connections`. Every node is emitted at a uniform **40×40** world px footprint (circles radius 20) regardless of kit piece kind. Each node's optional **`iconKind`** is the metabolism icon catalog stem from the piece type's kit `icon` path (`icons/capsule_p.svg` → `capsule_p`) for WASM detail SVG lookup.
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 // #endregion 🧲Header
 
@@ -28,6 +28,7 @@ interface KitConnector {
 
 interface KitType {
 	connectors?: { items?: KitConnector[] };
+	icon?: string;
 	id: string;
 }
 
@@ -94,6 +95,19 @@ function loadKit(): {
 	}
 	const typeById = Object.fromEntries(kit.types.items.map((t) => [t.id, t]));
 	return { centerUvByName, connections: nak.connections.items, pieceById, typeById };
+}
+
+/** @emoji 🏷️ Kit `icon` like `icons/capsule_p.svg` → catalog stem `capsule_p` baked in `board_metabolism_icon_match`. */
+function catalogKeyFromKitIconPath(icon: string | undefined): string | undefined {
+	if (icon === undefined || typeof icon !== "string") {
+		return undefined;
+	}
+	const t = icon.trim();
+	if (!t) {
+		return undefined;
+	}
+	const base = t.replace(/^.*\//, "").replace(/\.svg$/i, "");
+	return base.length > 0 ? base : undefined;
 }
 //#endregion 🔖Kit
 
@@ -203,9 +217,10 @@ function normalizeLayout(pos: Record<string, { x: number; y: number }>, pieceByI
 /** @emoji 📐 Uniform world footprint for every node (rectangles 40×40; circles radius 20). */
 const NAKAGIN_BOARD_UNIFORM_NODE_SIZE_PX = 40;
 
-type GeneratedBoardNode =
+type GeneratedBoardNode = (
 	| { handles: { angle: number; id: string; radius: number }[]; height: number; id: string; label: string; shape: "rectangle"; width: number; x: number; y: number }
-	| { handles: { angle: number; id: string; radius: number }[]; id: string; label: string; radius: number; x: number; y: number };
+	| { handles: { angle: number; id: string; radius: number }[]; id: string; label: string; radius: number; x: number; y: number }
+) & { iconKind?: string };
 
 /** @emoji 📐 Replaces scaled per-kind sizes with {@link NAKAGIN_BOARD_UNIFORM_NODE_SIZE_PX} and matching handle hit radii. */
 function applyUniformNodeFootprint(nodes: GeneratedBoardNode[]): void {
@@ -280,6 +295,7 @@ function main(): void {
 	const nodes = pieceIds
 		.map((id) => {
 			const p = pieceById[id];
+			const iconKind = catalogKeyFromKitIconPath(typeById[p.type.id]?.icon);
 			const L = scaledLayout(id);
 			const rh = Math.round(handleRadiusWorld(id) * 1000) / 1000;
 			const handles = [...handleAngles.keys()]
@@ -291,6 +307,7 @@ function main(): void {
 					handles,
 					height: L.height,
 					id,
+					...(iconKind !== undefined ? { iconKind } : {}),
 					label: p.name,
 					shape: "rectangle" as const,
 					width: L.width,
@@ -301,6 +318,7 @@ function main(): void {
 			return {
 				handles,
 				id,
+				...(iconKind !== undefined ? { iconKind } : {}),
 				label: p.name,
 				radius: L.radius,
 				x: pos[id].x,

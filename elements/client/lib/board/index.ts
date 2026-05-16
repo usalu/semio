@@ -13,11 +13,12 @@ import {
 // #region 🔖GpuWasmBridge
 import initBoardWasm, {
 	boardComputeEdgeBezier,
-	boardForceGraphLayoutFixtureJson,
 	boardHandlePositionCircle,
 	boardHandlePositionRectangle,
+	boardRedrawHandlesFixtureJson,
+	boardRedrawLayoutFixtureJson,
 	BoardSession,
-	initSync
+	initSync,
 } from "./rs/pkg/elements_board.js";
 
 if (typeof process !== "undefined" && process.env.VITEST === "true") {
@@ -220,10 +221,49 @@ export interface BoardForceGraphLayoutOptions {
 	velocityDamping?: number;
 }
 
+/** @emoji 🌳 Rank growth axis for hierarchical redraw (`downwards` | `upwards` | `right` | `left`). */
+export type BoardHierarchicalTreeDirectionKind = "downwards" | "left" | "right" | "upwards";
+
+/** @emoji 🕸️ WASM redraw dispatcher mode for {@link layoutBoardFixtureRedrawNodes}. */
+export type BoardRedrawModeKind = "force-graph" | "hierarchical-tree";
+
+/** @emoji 🧩 Options for {@link layoutBoardFixtureRedrawNodes} (camelCase; mirrors Rust `RedrawFixtureOptions`). */
+export interface BoardRedrawLayoutOptions {
+	mode: BoardRedrawModeKind;
+	redrawHandlesAfter: boolean;
+	centerX?: number;
+	centerY?: number;
+	randomSeed?: number;
+	forceGraph?: BoardForceGraphLayoutOptions;
+	hierarchicalTree?: {
+		direction: BoardHierarchicalTreeDirectionKind;
+		layerSpacing: number;
+		siblingGap: number;
+	};
+}
+
 /** @emoji 🕸️ Runs WASM force-directed layout on fixture node centers (edges via handle ids); uses dimforge `nalgebra` in Rust. */
 export function layoutBoardFixtureForceGraph(fixture: BoardFixtureV1, options?: BoardForceGraphLayoutOptions): BoardFixtureV1 {
-	const optsJson = options === undefined ? "" : JSON.stringify(options);
-	const out = boardForceGraphLayoutFixtureJson(JSON.stringify(fixture), optsJson);
+	const out = boardRedrawLayoutFixtureJson(
+		JSON.stringify(fixture),
+		JSON.stringify({
+			forceGraph: options ?? {},
+			mode: "force-graph",
+			redrawHandlesAfter: false,
+		}),
+	);
+	return JSON.parse(out) as BoardFixtureV1;
+}
+
+/** @emoji 🧩 Runs WASM fixture redraw (force graph or hierarchical tree) with optional chained handle snap. */
+export function layoutBoardFixtureRedrawNodes(fixture: BoardFixtureV1, options: BoardRedrawLayoutOptions): BoardFixtureV1 {
+	const out = boardRedrawLayoutFixtureJson(JSON.stringify(fixture), JSON.stringify(options));
+	return JSON.parse(out) as BoardFixtureV1;
+}
+
+/** @emoji 🔗 Snaps fixture handle angles to straight chords between linked node centers (WASM). */
+export function layoutBoardFixtureRedrawHandles(fixture: BoardFixtureV1): BoardFixtureV1 {
+	const out = boardRedrawHandlesFixtureJson(JSON.stringify(fixture));
 	return JSON.parse(out) as BoardFixtureV1;
 }
 
@@ -442,8 +482,11 @@ function shouldBoardHandleDeleteShortcut(): boolean {
 	}
 	return true;
 }
-/** 📐 Quantized major grid step in world units (legacy constant; LOD grids use fixed 10/5/1). */
+/** 📐 Quantized major grid step in world units (legacy constant; LOD grids scale `10` / `5` / `1` by {@link DEFAULT_BOARD_GRID_FACTOR}). */
 export const BOARD_LOD_GRID_MAJOR_QUANTUM = 10;
+
+/** @emoji 📐 Positive multiplier for LOD world grid steps (`10×` / `5×` / `1×` world units per band); default `10` yields `100` / `50` / `10`. */
+export const DEFAULT_BOARD_GRID_FACTOR = 10;
 
 /** @emoji 📐 Default LOD zoom boundaries (world scale / CSS pixels); minimap < `minimapMaxZoom` < overview < `overviewMaxZoom` < normal < `normalMaxZoom` ≤ detail. */
 export interface BoardLodZoomThresholds {
@@ -455,7 +498,7 @@ export interface BoardLodZoomThresholds {
 export const DEFAULT_BOARD_LOD_ZOOM_THRESHOLDS: BoardLodZoomThresholds = {
 	minimapMaxZoom: 0.15,
 	overviewMaxZoom: 0.35,
-	normalMaxZoom: 0.5,
+	normalMaxZoom: 1.25,
 };
 
 /** 📐 Alias of {@link DEFAULT_BOARD_LOD_ZOOM_THRESHOLDS.minimapMaxZoom}. */
@@ -1709,8 +1752,10 @@ export class BoardRenderer {
 
 	private lodZoomThresholds: BoardLodZoomThresholds = { ...DEFAULT_BOARD_LOD_ZOOM_THRESHOLDS };
 	private gridSnapEnabled = false;
+	private gridFactor = DEFAULT_BOARD_GRID_FACTOR;
 	private lastLodThresholdsJsonForWasm: string | null = null;
 	private lastGridSnapEnabledForWasm: boolean | null = null;
+	private lastGridFactorForWasm: number | null = null;
 
 	worldRasterTiling: WorldRasterTilingKind;
 
@@ -1721,6 +1766,7 @@ export class BoardRenderer {
 		worldRasterTiling?: WorldRasterTilingKind;
 		lodZoomThresholds?: BoardLodZoomThresholds;
 		gridSnapEnabled?: boolean;
+		gridFactor?: number;
 	} = {}) {
 		this.canvas = options.canvas ?? null;
 		this.renderMode = options.renderMode ?? (this.canvas ? "main-thread" : "headless-test");
@@ -3534,6 +3580,25 @@ if (boardVitest) {
 				id: "ic",
 				iconKind: "<svg xmlns=\"http://www.w3.org/2000/svg\"/>",
 			});
+		});
+
+		it("parses optional metabolism catalog iconKind on fixture nodes", () => {
+			const parsed = parseBoardFixtureV1({
+				camera: { x: 0, y: 0, zoom: 1 },
+				edges: [],
+				nodes: [
+					{
+						handles: [{ angle: 0, id: "nk.h" }],
+						iconKind: "  capsule-with-balcony_p  ",
+						id: "nk",
+						radius: 10,
+						x: 0,
+						y: 0,
+					},
+				],
+				schema: "elements.board.fixture/v1",
+			});
+			expect(parsed?.nodes[0]).toMatchObject({ id: "nk", iconKind: "capsule-with-balcony_p" });
 		});
 
 		it("parses optional textAutofit on fixture nodes", () => {
