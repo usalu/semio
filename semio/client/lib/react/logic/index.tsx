@@ -9,11 +9,11 @@
 // #region ⚛️Imports
 import type { ReactNode } from "react";
 import * as React from "react";
-import type { Attribute, Coordinate, Entity, GraphRootKind, OffsetInput, PieceBlueprint, Plane, Position, PositionInput, SetError, SetResult } from "../../js";
-import { Alternative, Author, Backbone, Concept, Connection, Connector, Design, File, Graph, Kit, LocalProvider, Piece, PiecesOperation, Port, Quality, RemoteProvider, Representation, Session, Side, Store, Tag, TheKit, Type } from "../../js";
+import type { Attribute, Coordinate, Entity, GraphRootKind, ID, OffsetInput, PieceBlueprint, Plane, Position, PositionInput, SessionHttpOpenOptions, SetError, SetResult } from "../../js";
+import { Alternative, Author, Backbone, Concept, Connection, Connector, Design, File, Graph, Kit, LocalProvider, openSessionHttp, Piece, PiecesOperation, Port, Quality, RemoteProvider, Representation, Session, Side, Store, Tag, TheKit, Type } from "../../js";
 
-export type { Attribute, Coordinate, Entity, GraphRootKind, OffsetInput, PieceBlueprint, Plane, Position, PositionInput, SetError, SetResult } from "../../js";
-export { Alternative, Author, Backbone, Concept, Connection, Connector, Design, File, Graph, Kit, LocalProvider, Piece, PiecesOperation, Port, Quality, RemoteProvider, Representation, Session, Side, Store, Tag, TheKit, Type } from "../../js";
+export type { Attribute, Coordinate, Entity, GraphRootKind, ID, OffsetInput, PieceBlueprint, Plane, Position, PositionInput, SessionHttpOpenOptions, SetError, SetResult } from "../../js";
+export { Alternative, Author, Backbone, Concept, Connection, Connector, Design, File, Graph, Kit, LocalProvider, openSessionHttp, Piece, PiecesOperation, Port, Quality, RemoteProvider, Representation, Session, Side, Store, Tag, TheKit, Type } from "../../js";
 // #endregion ⚛️Imports
 
 // #region 🪝FieldBind
@@ -354,6 +354,83 @@ export function PiecesBatchContextProvider(props: Readonly<{ ids: readonly strin
 export function SessionContextProvider(props: Readonly<{ session: unknown; children: ReactNode }>): React.ReactElement {
   return React.createElement(SessionHandleContext.Provider, { value: props.session as Session }, props.children);
 }
+
+//#region 🌐SemioStoreKitLineHost
+/** @emoji 🌐 Composes `SessionContextProvider` → `StoreContextProvider` → WIP graph → `TheKit` → `KitContextProvider` for native `semio-store` + {@link openSessionHttp}. */
+export type SemioStoreKitLineHostProps = Readonly<
+  {
+    baseUrl: string;
+    children: ReactNode;
+    /** @emoji ⏳ Shown until the HTTP session and first store/kit ids resolve. */
+    fallback?: ReactNode;
+  } & Pick<SessionHttpOpenOptions, "timeoutMs" | "installCreateDto">
+>;
+
+export function SemioStoreKitLineHost(props: SemioStoreKitLineHostProps): React.ReactElement {
+  const { baseUrl, children, fallback = null, timeoutMs, installCreateDto } = props;
+  const [phase, setPhase] = React.useState<"boot" | "ready" | "err">("boot");
+  const [errMsg, setErrMsg] = React.useState<string | null>(null);
+  const sessionRef = React.useRef<Session | null>(null);
+  const [storeId, setStoreId] = React.useState<string | null>(null);
+  const [kitId, setKitId] = React.useState<string | null>(null);
+
+  React.useEffect(() => {
+    let cancelled = false;
+    let sess: Session | null = null;
+    void (async () => {
+      try {
+        const root = baseUrl.replace(/\/$/, "");
+        const s = await openSessionHttp(root, { timeoutMs, installCreateDto });
+        if (cancelled) {
+          await s.dispose();
+          return;
+        }
+        sess = s;
+        sessionRef.current = s;
+        const stores = await s.stores();
+        if (stores.length === 0) {
+          throw new Error("semio/react: SemioStoreKitLineHost found no stores — POST /install first or pass installCreateDto.");
+        }
+        const sid = stores[0]!.id;
+        const kitHandle = await s.store(sid).wip().theKit().kit();
+        const kid = kitHandle.id;
+        if (cancelled) {
+          await s.dispose();
+          return;
+        }
+        setStoreId(sid);
+        setKitId(kid);
+        setPhase("ready");
+      } catch (e) {
+        const msg = e instanceof Error ? e.message : String(e);
+        if (!cancelled) {
+          setErrMsg(msg);
+          setPhase("err");
+        }
+      }
+    })();
+    return () => {
+      cancelled = true;
+      sessionRef.current = null;
+      if (sess != null) void sess.dispose();
+    };
+  }, [baseUrl, timeoutMs, installCreateDto]);
+
+  if (phase === "err") {
+    return React.createElement(React.Fragment, null, errMsg ?? "error");
+  }
+  if (phase !== "ready" || sessionRef.current == null || storeId == null || kitId == null) {
+    return React.createElement(React.Fragment, null, fallback);
+  }
+  const session = sessionRef.current;
+  const kitBranch = React.createElement(KitContextProvider, { id: kitId, children });
+  const theKitBranch = React.createElement(TheKitContextProvider, { children: kitBranch });
+  const wipBranch = React.createElement(WipContextProvider, { children: theKitBranch });
+  const localBranch = React.createElement(LocalProviderContextProvider, { children: wipBranch });
+  const storeBranch = React.createElement(StoreContextProvider, { id: storeId, children: localBranch });
+  return React.createElement(SessionContextProvider, { session, children: storeBranch });
+}
+//#endregion 🌐SemioStoreKitLineHost
 
 export type StoreContextProviderProps = Readonly<{
   id: string;
@@ -2329,7 +2406,7 @@ if (import.meta.vitest) {
   const { existsSync, readFileSync } = await import("node:fs");
   const path = await import("node:path");
   const { fileURLToPath } = await import("node:url");
-  const { describe, expect, it } = import.meta.vitest;
+  const { describe, expect, it, vi } = import.meta.vitest;
   const reactSrcPath = (() => {
     const candidates: string[] = [];
     try {
@@ -2348,6 +2425,69 @@ if (import.meta.vitest) {
   const reactSrc = readFileSync(reactSrcPath, "utf8");
   const vitestRegion = reactSrc.indexOf("// #region 🧪Vitest");
   const reactSrcForBannedScan = vitestRegion === -1 ? reactSrc : reactSrc.slice(0, vitestRegion);
+  describe("SemioStoreKitLineHost", () => {
+    it("opens HTTP session, wraps children, and disposes on unmount", async () => {
+      const { render, screen, waitFor } = await import("@testing-library/react");
+      const JsMod = await import("../../js");
+      const dispose = vi.fn().mockResolvedValue(undefined);
+      const mockSession: {
+        stores: ReturnType<typeof vi.fn>;
+        store: ReturnType<typeof vi.fn>;
+        localProvider: ReturnType<typeof vi.fn>;
+        dispose: ReturnType<typeof vi.fn>;
+      } = {
+        stores: vi.fn(),
+        store: vi.fn(),
+        localProvider: vi.fn().mockReturnValue({}),
+        dispose,
+      };
+      mockSession.stores.mockResolvedValue([{ id: "store-a" }]);
+      mockSession.store.mockImplementation((sid: string) => ({
+        id: sid,
+        session: mockSession,
+        wip: () => ({
+          theKit: () => ({
+            kit: vi.fn().mockResolvedValue({ id: "kit-b" }),
+          }),
+        }),
+      }));
+      const spy = vi.spyOn(JsMod, "openSessionHttp").mockResolvedValue(mockSession as unknown as Session);
+      const ui = render(
+        React.createElement(SemioStoreKitLineHost, {
+          baseUrl: "http://127.0.0.1:59999/",
+          children: React.createElement("span", null, "child-mark"),
+        }),
+      );
+      await waitFor(() => {
+        expect(screen.getByText("child-mark")).toBeTruthy();
+      });
+      expect(spy).toHaveBeenCalledWith("http://127.0.0.1:59999", expect.objectContaining({}));
+      ui.unmount();
+      await waitFor(() => {
+        expect(dispose).toHaveBeenCalledTimes(1);
+      });
+      spy.mockRestore();
+    });
+
+    it("shows an error message when the session has no stores", async () => {
+      const { render, screen, waitFor } = await import("@testing-library/react");
+      const JsMod = await import("../../js");
+      const dispose = vi.fn().mockResolvedValue(undefined);
+      const mockSession = {
+        stores: vi.fn().mockResolvedValue([]),
+        dispose,
+      };
+      const spy = vi.spyOn(JsMod, "openSessionHttp").mockResolvedValue(mockSession as unknown as Session);
+      const ui = render(React.createElement(SemioStoreKitLineHost, { baseUrl: "http://x", children: React.createElement("span", null, "nope") }));
+      await waitFor(() => {
+        expect(screen.queryByText("nope")).toBeNull();
+        expect(screen.getByText(/no stores/i)).toBeTruthy();
+      });
+      ui.unmount();
+      spy.mockRestore();
+    });
+  });
+
   describe("semio/react sealed surface", () => {
     const exportNames = [...reactSrc.matchAll(/^export (?:function|const) (\w+)/gm)].map((m) => m[1]);
     const bannedExports = new Set([

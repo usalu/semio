@@ -337,9 +337,25 @@ function shouldBoardHandleDeleteShortcut(): boolean {
 	}
 	return true;
 }
-const GRID_WORLD_STEP = 96;
-const GRID_VISIBLE_MIN_ZOOM = 18 / GRID_WORLD_STEP;
-const HANDLE_DRAW_MIN_ZOOM = 0.45;
+/** 📐 Quantized major grid step in world units at overview/detail (mirrors Rust `GRID_MAJOR_QUANTUM_WORLD`). */
+export const BOARD_LOD_GRID_MAJOR_QUANTUM = 10;
+
+/** 📐 Below this zoom the board is minimap mode: no grid, no node outlines, no handle glyphs (mirrors Rust `LOD_MINIMAP_MAX_ZOOM`). */
+export const BOARD_LOD_MINIMAP_MAX_ZOOM = 0.15;
+
+/** 📐 At or above this zoom the board is detail mode: minor grid, handles (mirrors Rust `LOD_DETAIL_MIN_ZOOM`). */
+export const BOARD_LOD_DETAIL_MIN_ZOOM = 0.5;
+
+/** 📶 LOD tier for `data-board-lod` (mirrors Rust `draw_lod`). */
+export function resolveBoardLodLabel(zoom: number): "detail" | "minimap" | "overview" {
+	if (zoom < BOARD_LOD_MINIMAP_MAX_ZOOM) {
+		return "minimap";
+	}
+	if (zoom < BOARD_LOD_DETAIL_MIN_ZOOM) {
+		return "overview";
+	}
+	return "detail";
+}
 
 /** @emoji 🎨 Offline / headless paint defaults aligned with `elements/core/styling/tokens.json` `board_vello_canvas` sRGB (Vello host defaults before DOM tokens sync). */
 const BOARD_STYLES_HEADLESS_FALLBACK: Record<string, BoardStyle> = {
@@ -802,20 +818,6 @@ export function decodeBoardFixtureFromDragV1(text: string): BoardFixtureV1 | nul
 		return null;
 	}
 	return parseBoardFixtureV1(raw);
-}
-
-/** 📶 Labels coarse LOD bands used by Storybook and Playwright (mirrors Rust `HANDLE_DRAW_MIN_ZOOM` gates). */
-export function resolveBoardLodLabel(zoom: number): "fine" | "full" | "grid-only" | "subgrid" {
-	if (zoom < GRID_VISIBLE_MIN_ZOOM) {
-		return "subgrid";
-	}
-	if (zoom < HANDLE_DRAW_MIN_ZOOM) {
-		return "grid-only";
-	}
-	if (zoom < 2) {
-		return "full";
-	}
-	return "fine";
 }
 
 /** @emoji 📍 Handle anchor on node perimeter: **rectangle** uses north-zero CCW angle; **circle** uses east-zero `atan2` convention (matches {@link boardHandlePositionCircle}). */
@@ -2721,11 +2723,11 @@ if (boardVitest) {
 			expect(pE.y).toBeCloseTo(50);
 		});
 
-		it("labels coarse LOD bands from zoom thresholds", () => {
-			expect(resolveBoardLodLabel(0.1)).toBe("subgrid");
-			expect(resolveBoardLodLabel(0.3)).toBe("grid-only");
-			expect(resolveBoardLodLabel(1)).toBe("full");
-			expect(resolveBoardLodLabel(3)).toBe("fine");
+		it("labels minimap, overview, and detail LOD bands from zoom thresholds", () => {
+			expect(resolveBoardLodLabel(0.1)).toBe("minimap");
+			expect(resolveBoardLodLabel(0.3)).toBe("overview");
+			expect(resolveBoardLodLabel(1)).toBe("detail");
+			expect(resolveBoardLodLabel(3)).toBe("detail");
 		});
 	});
 

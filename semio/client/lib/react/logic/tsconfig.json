@@ -32,13 +32,13 @@
         "./*"
       ],
       "@semio/js": [
-        "../js"
+        "../../js"
       ],
       "@semio/js/*": [
-        "../js/*"
+        "../../js/*"
       ],
       "@semio/rs-wasm": [
-        "../rs/pkg/semio.d.ts"
+        "../../rs/pkg/semio.d.ts"
       ],
       "@semio/sketchpad": [
         "../client/ui/sketchpad"

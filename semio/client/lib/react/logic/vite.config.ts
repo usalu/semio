@@ -14,13 +14,13 @@ import { fileURLToPath } from "node:url";
 import { defineConfig } from "vitest/config";
 
 const reactDir = path.dirname(fileURLToPath(import.meta.url));
-const semioWasmBg = path.resolve(reactDir, "../rs/pkg/semio_bg.wasm");
+const rsPkgDir = path.resolve(reactDir, "../../rs/pkg");
+const semioWasmBg = path.resolve(rsPkgDir, "semio_bg.wasm");
 
 export default defineConfig({
   resolve: {
     alias: {
-      // 🧷 Direct file alias — survives `wasm-pack build --no-pack` regenerating `pkg/`.
-      "@semio/rs-wasm": path.resolve(__dirname, "../rs/pkg/semio.js"),
+      "@semio/rs-wasm": path.resolve(rsPkgDir, "semio.js"),
     },
   },
   test: {

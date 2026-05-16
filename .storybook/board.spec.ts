@@ -180,11 +180,11 @@ async function expectBoardStory(page: Page, storyId: string): Promise<Locator> {
 	return canvas;
 }
 
-test("board default: selection, zoom in to fine LOD, clear selection", async ({ page }) => {
+test("board default: selection, zoom in stays on detail LOD while raising zoom", async ({ page }) => {
 	const canvas = await expectBoardStory(page, "elements-board--default");
 	await expect(canvas).toHaveAttribute("data-board-raster", "gpu");
 	await expect(canvas).toHaveAttribute("data-board-world-tiling", "none");
-	await expect(canvas).toHaveAttribute("data-board-lod", "full");
+	await expect(canvas).toHaveAttribute("data-board-lod", "detail");
 
 	const initialZoom = Number(await canvas.getAttribute("data-board-zoom"));
 	expect(initialZoom).toBeCloseTo(1, 1);
@@ -195,7 +195,7 @@ test("board default: selection, zoom in to fine LOD, clear selection", async ({ 
 	for (let index = 0; index < 18; index += 1) {
 		await wheelOnCanvasNormalized(page, canvas, 0.5, 0.5, -120);
 	}
-	await expect.poll(async () => canvas.getAttribute("data-board-lod")).toBe("fine");
+	await expect.poll(async () => canvas.getAttribute("data-board-lod")).toBe("detail");
 	const zoomed = Number(await canvas.getAttribute("data-board-zoom"));
 	expect(zoomed).toBeGreaterThan(initialZoom);
 
@@ -244,7 +244,7 @@ test("board default: deletes selected edge after Delete", async ({ page }) => {
 	await expect(canvas).toHaveAttribute("data-board-selection", "");
 });
 
-test("board default: zoom out to grid-only LOD while preserving wheel anchor", async ({ page }) => {
+test("board default: zoom out to overview LOD while preserving wheel anchor", async ({ page }) => {
 	const canvas = await expectBoardStory(page, "elements-board--default");
 	const box = await canvas.boundingBox();
 	expect(box).toBeTruthy();
@@ -275,7 +275,7 @@ test("board default: zoom out to grid-only LOD while preserving wheel anchor", a
 		await page.mouse.move(cx, cy);
 		await page.mouse.wheel(0, 140);
 	}
-	await expect.poll(async () => canvas.getAttribute("data-board-lod")).toBe("grid-only");
+	await expect.poll(async () => canvas.getAttribute("data-board-lod")).toBe("overview");
 
 	const worldAfter = await page.evaluate(([px, py]) => {
 		const el = document.querySelector("[data-testid=\"board-canvas\"]") as HTMLCanvasElement | null;

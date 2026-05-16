@@ -6,8 +6,8 @@
       "executor": "nx:run-commands",
       "dependsOn": ["@semio/rs:build"],
       "options": {
-        "cwd": "semio/client/lib/react",
-        "command": "bunx tsc --noEmit",
+        "cwd": "semio/client/lib/react/logic",
+        "command": "bunx tsc --noEmit -p tsconfig.json",
         "forwardAllArgs": true
       }
     },
@@ -15,7 +15,7 @@
       "executor": "nx:run-commands",
       "dependsOn": ["@semio/rs:build"],
       "options": {
-        "cwd": "semio/client/lib/react",
+        "cwd": "semio/client/lib/react/logic",
         "command": "bunx vitest run --config vite.config.ts index.tsx",
         "forwardAllArgs": true,
         "env": {
