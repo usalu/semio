@@ -1,8 +1,8 @@
 # https://neo4j.com/docs/graphql/current/
-# Composition and containment use OWNS (…); do not persist denormalized owner names/ids/kinds on nodes — use OWNS edges only.
-# **Cardinality (GraphQL):** Use **singular (non-list)** `@relationship(..., direction: IN)` for **at most one** incoming `OWNS` / `OWNS`-equivalent parent on each child type (`ownsHost`, `parentModule`, …). Neo4j does **not** enforce edge cardinality at the database layer — keep writers single-sourced or validate in migrations.
+# **Containment:** `Module`→`Module`, `Module`→`Command`, and kit hosts→`Data`/`Derived`/`Reference`/`Method` use **`OWNS`**. `Module`→`Class` / `Interface` / `Scalar` (schema shell under a module) use **`PART_OF`** instead of `OWNS`. Do not persist denormalized owner names on nodes — use these edges only.
+# **Cardinality (GraphQL):** Use **singular (non-list)** `@relationship(..., direction: IN)` for **at most one** incoming parent edge on each child (`ownsHost`, `parentModule`, …). Neo4j does **not** enforce edge cardinality at the database layer — keep writers single-sourced or validate in migrations.
 # `IS`: Each kit member (`Data` / `Derived` / `Reference`) has **exactly one** outgoing `IS` (`is: FieldIs!`, singular) to its declared `FieldIs` from `semio/client/schema/semio/schema.yaml`. **`FieldIs` targets (`Scalar` / `Class` / `Command` / `Interface`) may have many incoming `IS`** from different kit rows — do **not** model a singular incoming-`IS` field there. Subtype `implements` edges (`Class` / `Command` → `Interface`) are **outgoing** `IS` on the subtype; **`Interface` may have many incoming `IS`** from implementing classes — use a **list** when exposing that inverse. Each `Class` / `Command` / `Interface` keeps **only** direct `implements` targets as `IS` (no persisted transitive closure to supertypes like Entity or StrongEntity — walk the chain in application logic if needed).
-# Persisted node properties are minimal: `Data`/`Reference`/`Derived` keep `name`, `rank` (sibling order string), `isList`, optional `soleOwnerKey` (when this `Data` is an imperative `Command` argument clone — **never** share one `Data` across commands; `MERGE` uses `name`+`soleOwnerKey`), and `Derived` also `cached`; `Class`/`Command`/`Interface`/`Scalar`/`Module` keep `name`; `Constraint` keeps `description` only. Everything else (e.g. `targetName`, `UNIQUE IMPORT ID`, …) must not be stored — use `OWNS`/`IS` shape only. In `schema.yaml`, derived kit members set `cached` on the field map (Neo4j `Derived`); there is no separate field-`kind` property.
+# Persisted node properties are minimal: `Data`/`Reference`/`Derived` keep `name`, `rank` (sibling order string), `isList`, optional `soleOwnerKey` (when this `Data` is an imperative `Command` argument clone — **never** share one `Data` across commands; `MERGE` uses `name`+`soleOwnerKey`), and `Derived` also `cached`; `Class`/`Command`/`Interface`/`Scalar`/`Module` keep `name`; `Constraint` keeps `description` only. Everything else (e.g. `targetName`, `UNIQUE IMPORT ID`, …) must not be stored — use `OWNS` / `PART_OF` / `IS` shape only. In `schema.yaml`, derived kit members set `cached` on the field map (Neo4j `Derived`); there is no separate field-`kind` property.
 # Naming: `Module.name`, `Class.name`, `Command.name`, `Interface.name`, and `Scalar.name` are PascalCase; persisted member names on `Data` / `Derived` / `Reference` are lowerCamelCase. `Module.name` is unique only among siblings. Root `Schema` has `General` and `Domain`; `Schema`→`General` holds `Scalar`, `Module` `Entity` (with `WeakEntity`, `StrongEntity`, … under it), and other shared kit graph modules; `Schema`→`Domain` holds `Module` `Kit`, `Module` `VCS` (version-control shell subtree), and other domain-scoped modules as modeled.
 # Kit members: `Data` (embedded value), `Derived` (`cached` true for cached derivations, false for on-the-fly computed), `Reference` (graph reference). There is no `Field` label — use `KitField` union in GraphQL over `OWNS` from `Class` / `Command` / `Interface` only.
 
@@ -18,12 +18,12 @@ interface Node {
 interface Primitive implements Node {
   name: String!
   constraints: [Constraint!]! @relationship(type: "OWNS", direction: OUT)
-  parentModule: Module @relationship(type: "OWNS", direction: IN)
 }
 
 interface Scalar implements Primitive {
   name: String!
   constraints: [Constraint!]! @relationship(type: "OWNS", direction: OUT)
+  parentModule: Module @relationship(type: "PART_OF", direction: IN)
 }
 
 union FieldIs = Scalar | Class | Command | Interface
@@ -88,7 +88,7 @@ interface Interface implements Node & OwningKitHost {
   name: String!
   fields: [KitField!]! @relationship(type: "OWNS", direction: OUT)
   is: [Interface!]! @relationship(type: "IS", direction: OUT)
-  parentModule: Module @relationship(type: "OWNS", direction: IN)
+  parentModule: Module @relationship(type: "PART_OF", direction: IN)
 }
 
 interface Class implements Node & OwningKitHost @node {
@@ -96,7 +96,7 @@ interface Class implements Node & OwningKitHost @node {
   interfaces: [Interface!]! @relationship(type: "IS", direction: OUT)
   fields: [KitField!]! @relationship(type: "OWNS", direction: OUT)
   methods: [Method!]! @relationship(type: "OWNS", direction: OUT)
-  parentModule: Module @relationship(type: "OWNS", direction: IN)
+  parentModule: Module @relationship(type: "PART_OF", direction: IN)
 }
 
 """
@@ -122,10 +122,11 @@ type Method implements Node @node {
 type Module implements Primitive @node {
   # Node
   name: String!
+  parentModule: Module @relationship(type: "OWNS", direction: IN)
   # Module
-  scalars: [Scalar!]! @relationship(type: "OWNS", direction: OUT)
-  interfaces: [Interface!]! @relationship(type: "OWNS", direction: OUT)
-  classes: [Class!]! @relationship(type: "OWNS", direction: OUT)
+  scalars: [Scalar!]! @relationship(type: "PART_OF", direction: OUT)
+  interfaces: [Interface!]! @relationship(type: "PART_OF", direction: OUT)
+  classes: [Class!]! @relationship(type: "PART_OF", direction: OUT)
   commands: [Command!]! @relationship(type: "OWNS", direction: OUT)
   modules: [Module!]! @relationship(type: "OWNS", direction: OUT)
 }

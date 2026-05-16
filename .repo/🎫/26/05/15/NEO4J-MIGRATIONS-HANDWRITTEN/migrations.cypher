@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Hand-maintained Neo4j migrations for the semio graph. Run via migrate.neo4j.script.ts in this folder (not chained from generate).
-// Containment edges use relationship type OWNS (never HAS).
+// Containment: `OWNS` for module trees, commands, kit rows, and `HAS` relabel targets; `PART_OF` for `Module`→`Class`/`Interface`/`Scalar` (see `semio/dev/schema/neo4j/schema.graphql`).
 
 //#region RelabelHasRelationshipsToOwns
 MATCH (a)-[r:HAS]->(b)
@@ -56,6 +56,14 @@ MATCH (schema:Module {name: 'Schema'})-[:OWNS]->(genCanon:Module {name: 'General
 MATCH (dom:Module {name: 'Domain'})-[:OWNS]->(genDup:Module {name: 'General'})
 WHERE id(genCanon) <> id(genDup)
 MATCH (genDup)-[r:OWNS]->(ch)
+WHERE ch:Class OR ch:Interface OR ch:Scalar
+MERGE (genCanon)-[:PART_OF]->(ch)
+DELETE r;
+MATCH (schema:Module {name: 'Schema'})-[:OWNS]->(genCanon:Module {name: 'General'})
+MATCH (dom:Module {name: 'Domain'})-[:OWNS]->(genDup:Module {name: 'General'})
+WHERE id(genCanon) <> id(genDup)
+MATCH (genDup)-[r:OWNS]->(ch)
+WHERE NOT (ch:Class OR ch:Interface OR ch:Scalar)
 MERGE (genCanon)-[:OWNS]->(ch)
 DELETE r;
 MATCH (schema:Module {name: 'Schema'})-[:OWNS]->(genCanon:Module {name: 'General'})
@@ -68,6 +76,12 @@ DETACH DELETE genDup;
 //#region HoistAllDomainChildrenToSchemaGeneral
 MATCH (schema:Module {name: 'Schema'})-[:OWNS]->(gen:Module {name: 'General'})
 MATCH (dom:Module {name: 'Domain'})-[r:OWNS]->(ch)
+WHERE ch:Class OR ch:Interface OR ch:Scalar
+MERGE (gen)-[:PART_OF]->(ch)
+DELETE r;
+MATCH (schema:Module {name: 'Schema'})-[:OWNS]->(gen:Module {name: 'General'})
+MATCH (dom:Module {name: 'Domain'})-[r:OWNS]->(ch)
+WHERE NOT (ch:Class OR ch:Interface OR ch:Scalar)
 MERGE (gen)-[:OWNS]->(ch)
 DELETE r;
 //#endregion HoistAllDomainChildrenToSchemaGeneral
@@ -102,33 +116,33 @@ MATCH (schema:Module {name: 'Schema'})-[:OWNS]->(gen:Module {name: 'General'})
 MATCH (gen)-[:OWNS]->(ent:Module {name: 'Entity'})
 MATCH (ent)-[:OWNS]->(wmod:Module {name: 'WeakEntity'})
 MATCH (i:Interface {name: 'WeakEntity'})
-MERGE (wmod)-[:OWNS]->(i);
+MERGE (wmod)-[:PART_OF]->(i);
 
 MATCH (schema:Module {name: 'Schema'})-[:OWNS]->(gen:Module {name: 'General'})
 MATCH (gen)-[:OWNS]->(ent:Module {name: 'Entity'})
 MATCH (ent)-[:OWNS]->(smod:Module {name: 'StrongEntity'})
 MATCH (i:Interface {name: 'StrongEntity'})
-MERGE (smod)-[:OWNS]->(i);
+MERGE (smod)-[:PART_OF]->(i);
 
 MATCH (s:Module {name: 'StrongEntity'})-[:OWNS]->(rmod:Module {name: 'RichStrongEntity'})
 MATCH (i:Interface {name: 'RichStrongEntity'})
-MERGE (rmod)-[:OWNS]->(i);
+MERGE (rmod)-[:PART_OF]->(i);
 
 MATCH (r:Module {name: 'RichStrongEntity'})-[:OWNS]->(amod:Module {name: 'Artifact'})
 MATCH (i:Interface {name: 'Artifact'})
-MERGE (amod)-[:OWNS]->(i);
+MERGE (amod)-[:PART_OF]->(i);
 
 MATCH (a:Module {name: 'Artifact'})-[:OWNS]->(dmod:Module {name: 'Document'})
 MATCH (i:Interface {name: 'Document'})
-MERGE (dmod)-[:OWNS]->(i);
+MERGE (dmod)-[:PART_OF]->(i);
 
 MATCH (w:Module {name: 'WeakEntity'})-[:OWNS]->(dataMod:Module {name: 'Data'})
 MATCH (i:Interface {name: 'Data'})
-MERGE (dataMod)-[:OWNS]->(i);
+MERGE (dataMod)-[:PART_OF]->(i);
 
 MATCH (w:Module {name: 'WeakEntity'})-[:OWNS]->(eventMod:Module {name: 'Event'})
 MATCH (i:Interface {name: 'Event'})
-MERGE (eventMod)-[:OWNS]->(i);
+MERGE (eventMod)-[:PART_OF]->(i);
 //#endregion EntityInterfaceSubmoduleMirror
 
 //#region DeduplicateEntityLadderModulesByName
@@ -169,7 +183,7 @@ DETACH DELETE m;
 //#region RenameKitEntityModuleToKit
 MATCH (parent:Module {name: 'KitEntity'})-[:OWNS]->(inner:Module {name: 'Kit'})
 MATCH (inner)-[r:OWNS]->(c:Class {name: 'Kit'})
-MERGE (parent)-[:OWNS]->(c)
+MERGE (parent)-[:PART_OF]->(c)
 DELETE r;
 MATCH (inner:Module {name: 'Kit'})<-[:OWNS]-(parent:Module {name: 'KitEntity'})
 DETACH DELETE inner;
@@ -1307,6 +1321,14 @@ OPTIONAL MATCH (p:Module)-[r:OWNS]->(c)
 WHERE id(p) <> id(m)
 DELETE r;
 //#endregion ReparentOperationCommandsUnderOwnerOperationModules
+
+//#region RetypeResidualModuleOwnsToPartOf
+// Final sweep: any `Module-[:OWNS]->(Class|Interface|Scalar)` left from legacy imports becomes `PART_OF` (idempotent with MERGE).
+MATCH (m:Module)-[r:OWNS]->(x)
+WHERE x:Class OR x:Interface OR x:Scalar
+MERGE (m)-[:PART_OF]->(x)
+DELETE r;
+//#endregion RetypeResidualModuleOwnsToPartOf
 
 //#region DetachCommandKitInterfaceNode
 OPTIONAL MATCH (ic:Interface {name: 'Command'})

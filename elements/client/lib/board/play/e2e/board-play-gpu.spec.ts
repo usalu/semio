@@ -6,6 +6,15 @@ import { expect, test } from "@playwright/test";
 
 test.describe("board play", () => {
 	test.beforeEach(async ({ page }) => {
+		await page.addInitScript(() => {
+			try {
+				localStorage.removeItem("elements.board-play.surface.device");
+				localStorage.removeItem("elements.board-play.surface.theme");
+				localStorage.removeItem("elements.board-play.surface.expertise");
+			} catch {
+				/* ignore */
+			}
+		});
 		await page.setViewportSize({ width: 1600, height: 900 });
 	});
 

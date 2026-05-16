@@ -3,9 +3,10 @@
   "emoji": "🕸️",
   "status": "closed",
   "description": "Add force-directed graph layout for the elements board: WASM/TS tool with configurable options, using nalgebra (dimforge) for 2D vector math in Rust. Wire into board play UI as a toolbar action. Extend existing board tests.",
-  "summary": "Added force-directed graph layout for board fixtures: Rust module uses dimforge nalgebra (Vector2) for 2D forces (repulsion, edge springs, optional gravity to center). JSON options mirror TS BoardForceGraphLayoutOptions. WASM export boardForceGraphLayoutFixtureJson plus TS helper layoutBoardFixtureForceGraph. Board play toolbar gained a Layout section with a details panel (iterations, ideal edge px, gravity) and Apply. Completed HandleDescJson color + HandleData color_fill wiring in sync_descriptor/parse_fixture and host tests unwrap() for sync_descriptor Result. Rust force_graph_tests + Vitest board force graph tests.",
+  "summary": "Fixed dev board crash: @elements/ui Label is the property-row inspector component (required string id, uses id.split in useMemo). Force-layout toolbar fields incorrectly used Label with htmlFor only, so id was undefined. Swapped those three controls to native HTML label + htmlFor.",
   "goal": "🎯r2602🎯runningsketchpad",
   "sessions": [
-    "⚪af8323f98038460b9a133d9b058641aa"
+    "⚪af8323f98038460b9a133d9b058641aa",
+    "⚪1a5cbfe18b4b423aa10d2f2918686040"
   ]
 }

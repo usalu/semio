@@ -416,9 +416,9 @@ function BoardPlayToolbar(): ReactElement {
 							</summary>
 							<div className="bg-panel border-element absolute left-0 z-50 mt-1 flex min-w-[220px] flex-col gap-2 rounded border p-2 shadow-md">
 								<div className="flex items-center gap-2">
-									<Label className="w-24 shrink-0 text-[10px] uppercase" htmlFor="board-force-iters">
+									<label className="text-muted-foreground w-24 shrink-0 text-[10px] font-medium uppercase" htmlFor="board-force-iters">
 										Iters
-									</Label>
+									</label>
 									<Input
 										className="h-7 text-xs"
 										id="board-force-iters"
@@ -428,9 +428,9 @@ function BoardPlayToolbar(): ReactElement {
 									/>
 								</div>
 								<div className="flex items-center gap-2">
-									<Label className="w-24 shrink-0 text-[10px] uppercase" htmlFor="board-force-ideal">
+									<label className="text-muted-foreground w-24 shrink-0 text-[10px] font-medium uppercase" htmlFor="board-force-ideal">
 										Ideal px
-									</Label>
+									</label>
 									<Input
 										className="h-7 text-xs"
 										id="board-force-ideal"
@@ -440,9 +440,9 @@ function BoardPlayToolbar(): ReactElement {
 									/>
 								</div>
 								<div className="flex items-center gap-2">
-									<Label className="w-24 shrink-0 text-[10px] uppercase" htmlFor="board-force-grav">
+									<label className="text-muted-foreground w-24 shrink-0 text-[10px] font-medium uppercase" htmlFor="board-force-grav">
 										Gravity
-									</Label>
+									</label>
 									<Input
 										className="h-7 text-xs"
 										id="board-force-grav"

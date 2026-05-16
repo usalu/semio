@@ -44,12 +44,14 @@ export default defineConfig({
 			},
 		},
 	],
+	// Playwright web server: Vite only; `script.ts test` already builds wasm—rebuilding wasm here rewrote `rs/pkg` and triggered Vite HMR mid-test.
 	webServer: {
-		command: `bun ./rs/scripts/build-wasm.script.ts && bunx vite --config play/vite.config.ts --host 127.0.0.1 --port ${playPort}`,
+		command: `bunx vite --config play/vite.config.ts --host 127.0.0.1 --port ${playPort}`,
 		cwd: boardRoot,
 		env: { ...process.env, BOARD_PLAY_PORT: playPort },
 		url: `${baseURL}/`,
-		reuseExistingServer: !process.env.CI,
+		/** Avoid picking up an unrelated process already bound to the play port (stale local dev servers). */
+		reuseExistingServer: false,
 		timeout: 180_000,
 		stdout: "pipe",
 		stderr: "pipe",

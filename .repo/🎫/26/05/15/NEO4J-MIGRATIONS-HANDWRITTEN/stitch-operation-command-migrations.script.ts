@@ -72,7 +72,7 @@ if (reCombinedWithInput.test(out)) {
 
 const newReparent = [
   "//#region ReparentOperationCommandsUnderOwnerOperationModules",
-  "// Each domain `Class` / `Interface` (Piece, Quality, …) OWNS `Module(operation)` which OWNS concrete operation `Command` nodes (golden `Operation` subtypes).",
+  "// Each domain `Class` / `Interface` (Piece, Quality, …) `OWNS` `Module(operation)` which `OWNS` concrete operation `Command` nodes (golden `Operation` subtypes). `Module`→`Class`/`Interface`/`Scalar` shell uses `PART_OF` (see migrations + Neo4j SDL).",
   reparentBody,
   "//#endregion ReparentOperationCommandsUnderOwnerOperationModules",
 ].join("\n");

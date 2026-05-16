@@ -1,8 +1,8 @@
 {
   "title": "Board Source Target Language Cleanup",
   "emoji": "🧭",
-  "status": "open",
+  "status": "closed",
   "description": "Remove remaining in/out and from-style naming from board link gestures and engine edge structs; use source/target consistently.",
-  "summary": "",
+  "summary": "Renamed remaining board edge/handle language to source/target: React tests use sourceHandle/targetHandle; Rust vcompute compute_edge_bezier_points and WASM boardComputeEdgeBezier use source_/target_ parameters; BoardHost edge_curve locals aligned; TS computeEdgeBezier uses sourcePoint/targetPoint. Rust edge curve test uses source_radial/target_approach. Playwright: stable data-testid for fixture shelf, localStorage reset in beforeEach, webServer runs Vite only (no duplicate wasm-pack) to avoid mid-test HMR, reuseExistingServer false. Full nx run @elements/board:test passes.",
   "goal": "🎯r2602"
 }
