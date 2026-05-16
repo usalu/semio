@@ -34,7 +34,7 @@ import {
 	type UIWindowKindDefinition,
 	type UIWindowLayout,
 } from "@elements/ui";
-import { BoxSelect, Circle, ClipboardList, Lasso, Library, Link2, Minus, Pause, Play, Plus, Repeat2, Settings, Square } from "lucide-react";
+import { BoxSelect, Circle, ClipboardList, Lasso, Library, Link2, Magnet, Minus, Pause, Play, Plus, Repeat2, Settings, Square } from "lucide-react";
 import {
 	createContext,
 	useCallback,
@@ -80,6 +80,8 @@ import {
 	type BoardSelectionMode,
 	type BoardSelectionTargets,
 	type CameraState,
+	DEFAULT_BOARD_LOD_ZOOM_THRESHOLDS,
+	type BoardLodZoomThresholds,
 } from "../index";
 import { BoardCanvas, Edge, Handle, Node, useBoardEvent } from "../index.tsx";
 import "./globals.css";
@@ -273,6 +275,8 @@ interface BoardPlayShellValue {
 	setBoardSelectionMode: (value: BoardSelectionMode) => void;
 	boardSelectionTargets: BoardSelectionTargets;
 	setBoardSelectionTargets: (value: BoardSelectionTargets | ((prev: BoardSelectionTargets) => BoardSelectionTargets)) => void;
+	boardGridSnapEnabled: boolean;
+	setBoardGridSnapEnabled: (value: boolean) => void;
 	/** @emoji 🗑️ Drops ids from the shared fixture after the canvas emits structural delete events. */
 	applyStructuralDelete: (kind: "edge" | "node", id: string) => void;
 	/** @emoji ⏯️ When true, play runs layout work on `requestAnimationFrame` (graph packs multiple WASM passes per ~14ms frame; tree one pass per frame). */
@@ -393,12 +397,14 @@ function BoardPlayToolbar(): ReactElement {
 	const {
 		activePaneId,
 		applyBoardRedrawHandlesOnce,
+		boardGridSnapEnabled,
 		boardSelectionMethod,
 		boardSelectionMode,
 		boardSelectionTargets,
 		camerasByPane,
 		boardRedrawPlaying,
 		patchFixture,
+		setBoardGridSnapEnabled,
 		setBoardSelectionMethod,
 		setBoardSelectionMode,
 		setBoardSelectionTargets,
@@ -507,6 +513,22 @@ function BoardPlayToolbar(): ReactElement {
 							onClick={() => setBoardSelectionTargets((p) => ({ ...p, handles: !p.handles }))}
 						>
 							<span className="px-0.5">Handles</span>
+						</button>
+					</ToolbarItem>
+				</ToolbarGroup>
+				<ToolbarDivider />
+				<ToolbarGroup className="min-w-0 items-center gap-1">
+					<ToolbarItem>
+						<span className="text-muted-foreground pr-1 text-[10px] font-semibold uppercase tracking-wide">Grid</span>
+					</ToolbarItem>
+					<ToolbarItem>
+						<button
+							type="button"
+							className={boardToolbarToggleClass(boardGridSnapEnabled)}
+							title="Snap node drags to the finest visible LOD grid"
+							onClick={() => setBoardGridSnapEnabled(!boardGridSnapEnabled)}
+						>
+							<Magnet className="size-4" aria-hidden />
 						</button>
 					</ToolbarItem>
 				</ToolbarGroup>
@@ -794,6 +816,7 @@ function nakaginBoardMarkers(fixture: BoardFixtureV1, selectedIds: Set<string>):
 						width={node.width}
 						x={node.x}
 						y={node.y}
+						{...(node.iconKind ? { iconKind: node.iconKind } : {})}
 					>
 						{node.handles.map((handle) => (
 							<Handle
@@ -822,6 +845,7 @@ function nakaginBoardMarkers(fixture: BoardFixtureV1, selectedIds: Set<string>):
 						textFontSize={node.textFontSize}
 						x={node.x}
 						y={node.y}
+						{...(node.iconKind ? { iconKind: node.iconKind } : {})}
 					>
 						{node.handles.map((handle) => (
 							<Handle
@@ -914,8 +938,16 @@ function BoardPaneChrome({ children, paneId }: { children: ReactNode; paneId: Bo
 }
 
 function BoardOverviewPane(): ReactElement {
-	const { boardSelectionMethod, boardSelectionMode, boardSelectionTargets, fixture, handleCanvasFixtureDrop, camerasByPane, selectionByPane } =
-		useBoardPlayShell();
+	const {
+		boardGridSnapEnabled,
+		boardSelectionMethod,
+		boardSelectionMode,
+		boardSelectionTargets,
+		fixture,
+		handleCanvasFixtureDrop,
+		camerasByPane,
+		selectionByPane,
+	} = useBoardPlayShell();
 	const paneId: BoardPlayPaneId = "board-overview";
 	const camera = camerasByPane[paneId];
 	const selectedIds = selectionByPane[paneId];
@@ -926,7 +958,9 @@ function BoardOverviewPane(): ReactElement {
 				className="min-h-0 flex-1"
 				contextMenu={boardPlayCanvasBackgroundMenu}
 				fixtureDragDrop
+				gridSnapEnabled={boardGridSnapEnabled}
 				handleKinds={BOARD_DEFAULT_HANDLE_KIND_CATALOG}
+				lodZoomThresholds={DEFAULT_BOARD_LOD_ZOOM_THRESHOLDS}
 				onFixtureDrop={(d) => handleCanvasFixtureDrop(paneId, d)}
 				selectionMethod={boardSelectionMethod}
 				selectionMode={boardSelectionMode}
@@ -942,8 +976,16 @@ function BoardOverviewPane(): ReactElement {
 }
 
 function BoardDetailPane(): ReactElement {
-	const { boardSelectionMethod, boardSelectionMode, boardSelectionTargets, fixture, handleCanvasFixtureDrop, camerasByPane, selectionByPane } =
-		useBoardPlayShell();
+	const {
+		boardGridSnapEnabled,
+		boardSelectionMethod,
+		boardSelectionMode,
+		boardSelectionTargets,
+		fixture,
+		handleCanvasFixtureDrop,
+		camerasByPane,
+		selectionByPane,
+	} = useBoardPlayShell();
 	const paneId: BoardPlayPaneId = "board-detail";
 	const camera = camerasByPane[paneId];
 	const selectedIds = selectionByPane[paneId];
@@ -953,7 +995,9 @@ function BoardDetailPane(): ReactElement {
 				camera={camera}
 				className="min-h-0 flex-1"
 				fixtureDragDrop
+				gridSnapEnabled={boardGridSnapEnabled}
 				handleKinds={BOARD_DEFAULT_HANDLE_KIND_CATALOG}
+				lodZoomThresholds={DEFAULT_BOARD_LOD_ZOOM_THRESHOLDS}
 				onFixtureDrop={(d) => handleCanvasFixtureDrop(paneId, d)}
 				selectionMethod={boardSelectionMethod}
 				selectionMode={boardSelectionMode}
@@ -969,8 +1013,16 @@ function BoardDetailPane(): ReactElement {
 }
 
 function BoardSelectionPane(): ReactElement {
-	const { boardSelectionMethod, boardSelectionMode, boardSelectionTargets, fixture, handleCanvasFixtureDrop, camerasByPane, selectionByPane } =
-		useBoardPlayShell();
+	const {
+		boardGridSnapEnabled,
+		boardSelectionMethod,
+		boardSelectionMode,
+		boardSelectionTargets,
+		fixture,
+		handleCanvasFixtureDrop,
+		camerasByPane,
+		selectionByPane,
+	} = useBoardPlayShell();
 	const paneId: BoardPlayPaneId = "board-selection";
 	const camera = camerasByPane[paneId];
 	const selectedIds = selectionByPane[paneId];
@@ -980,7 +1032,9 @@ function BoardSelectionPane(): ReactElement {
 				camera={camera}
 				className="min-h-0 flex-1"
 				fixtureDragDrop
+				gridSnapEnabled={boardGridSnapEnabled}
 				handleKinds={BOARD_DEFAULT_HANDLE_KIND_CATALOG}
+				lodZoomThresholds={DEFAULT_BOARD_LOD_ZOOM_THRESHOLDS}
 				onFixtureDrop={(d) => handleCanvasFixtureDrop(paneId, d)}
 				selectionMethod={boardSelectionMethod}
 				selectionMode={boardSelectionMode}
@@ -1920,6 +1974,7 @@ function BoardPlayInner(): ReactElement {
 	const [boardSelectionMethod, setBoardSelectionMethod] = useState<BoardSelectionMethod>("rectangle");
 	const [boardSelectionMode, setBoardSelectionMode] = useState<BoardSelectionMode>("invertive");
 	const [boardSelectionTargets, setBoardSelectionTargets] = useState<BoardSelectionTargets>(() => ({ ...BOARD_SELECTION_TARGETS_DEFAULT }));
+	const [boardGridSnapEnabled, setBoardGridSnapEnabled] = useState(false);
 	const [boardRedrawPlaying, setBoardRedrawPlaying] = useState(false);
 	const [forceLayoutFullIterations, setForceLayoutFullIterations] = useState(200);
 	const [forceLayoutIdealEdgeLength, setForceLayoutIdealEdgeLength] = useState(64);
@@ -2335,6 +2390,7 @@ function BoardPlayInner(): ReactElement {
 			boardSelectionMethod,
 			boardSelectionMode,
 			boardSelectionTargets,
+			boardGridSnapEnabled,
 			camerasByPane,
 			fixture,
 			forceLayoutFullIterations,
@@ -2352,6 +2408,7 @@ function BoardPlayInner(): ReactElement {
 			setBoardRedrawPlaying,
 			setBoardRedrawProgressiveAutoStopMs,
 			setBoardRedrawProgressiveEnabled,
+			setBoardGridSnapEnabled,
 			setBoardSelectionMethod,
 			setBoardSelectionMode,
 			setBoardSelectionTargets,
@@ -2383,6 +2440,7 @@ function BoardPlayInner(): ReactElement {
 			boardSelectionMethod,
 			boardSelectionMode,
 			boardSelectionTargets,
+			boardGridSnapEnabled,
 			camerasByPane,
 			fixture,
 			forceLayoutFullIterations,

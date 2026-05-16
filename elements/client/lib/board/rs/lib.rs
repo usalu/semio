@@ -339,6 +339,7 @@ mod scene_json {
 		pub style: Option<String>,
 		#[serde(default)]
 		pub text: Option<String>,
+		/// @emoji 🏷️ Runtime host encoding: catalog id from the baked icon table or inline SVG (`<?xml` / `<svg` …) parsed at detail LOD.
 		#[serde(default)]
 		pub icon_kind: Option<String>,
 		#[serde(default)]
@@ -1486,6 +1487,21 @@ mod board_metabolism_icons {
 	include!(concat!(env!("OUT_DIR"), "/board_metabolism_icon_match.rs"));
 }
 
+fn resolve_node_icon_svg_from_encoding(encoded: &str) -> Option<String> {
+	let t = encoded.trim();
+	if t.is_empty() {
+		return None;
+	}
+	if let Some(s) = board_metabolism_icons::board_metabolism_icon_svg(t) {
+		return Some(s.to_string());
+	}
+	let lower = t.to_ascii_lowercase();
+	if lower.starts_with("<?xml") || lower.contains("<svg") {
+		return Some(t.to_string());
+	}
+	None
+}
+
 /// @emoji 🖼️ Parses SVG via `usvg` and emits path fills/strokes into a Vello scene (subset of linebender/vello_svg: solid paints + transforms).
 mod svg_icon_vello09 {
 	use vello::kurbo::{Affine, BezPath, Point, Stroke};
@@ -1672,6 +1688,7 @@ mod board_host {
 		pub root: bool,
 		pub style: Option<String>,
 		pub text: Option<String>,
+		/// @emoji 🏷️ Runtime host encoding: catalog id from the baked icon table or inline SVG (`<?xml` / `<svg` …) parsed at detail LOD.
 		pub icon_kind: Option<String>,
 	}
 
@@ -2840,8 +2857,8 @@ mod board_host {
 				}
 				if lod == BoardDrawLod::Detail {
 					if let Some(k) = n.icon_kind.as_ref().map(|s| s.trim()).filter(|s| !s.is_empty()) {
-						if let Some(svg) = super::board_metabolism_icons::board_metabolism_icon_svg(k) {
-							if let Some((iw, ih, icon_scene)) = self.get_or_build_icon_scene(k, svg) {
+						if let Some(svg) = super::resolve_node_icon_svg_from_encoding(k) {
+							if let Some((iw, ih, icon_scene)) = self.get_or_build_icon_scene(k, &svg) {
 								let inset = 0.88;
 								let (sx_half, sy_half) = match n.shape {
 									NodeShape::Circle => {
@@ -4560,6 +4577,7 @@ mod host_tests {
 				selected: None,
 				style: None,
 				text: None,
+				icon_kind: None,
 				user_data: None,
 				visible: None,
 				root: None,
@@ -4619,6 +4637,7 @@ mod host_tests {
 			selected: None,
 			style: None,
 			text: None,
+			icon_kind: None,
 			user_data: None,
 			visible: None,
 			root: None,
@@ -4647,6 +4666,7 @@ mod host_tests {
 			selected: None,
 			style: None,
 			text: None,
+			icon_kind: None,
 			user_data: None,
 			visible: None,
 			root: None,
@@ -4676,6 +4696,7 @@ mod host_tests {
 			selected: None,
 			style: None,
 			text: None,
+			icon_kind: None,
 			user_data: None,
 			visible: None,
 			root: None,
@@ -4708,6 +4729,7 @@ mod host_tests {
 			selected: None,
 			style: None,
 			text: None,
+			icon_kind: None,
 			user_data: None,
 			visible: None,
 			root: None,
@@ -4748,6 +4770,7 @@ mod host_tests {
 			selected: None,
 			style: None,
 			text: None,
+			icon_kind: None,
 			user_data: None,
 			visible: None,
 			root: None,
@@ -4777,6 +4800,7 @@ mod host_tests {
 			selected: None,
 			style: None,
 			text: None,
+			icon_kind: None,
 			user_data: None,
 			visible: None,
 			root: None,
@@ -4809,6 +4833,7 @@ mod host_tests {
 			selected: None,
 			style: None,
 			text: None,
+			icon_kind: None,
 			user_data: None,
 			visible: None,
 			root: None,
@@ -4840,6 +4865,7 @@ mod host_tests {
 			selected: None,
 			style: None,
 			text: None,
+			icon_kind: None,
 			user_data: None,
 			visible: None,
 			root: None,
@@ -4874,6 +4900,7 @@ mod host_tests {
 					selected: None,
 					style: None,
 					text: None,
+					icon_kind: None,
 					user_data: None,
 					visible: None,
 					root: None,
@@ -4890,6 +4917,7 @@ mod host_tests {
 					selected: None,
 					style: None,
 					text: None,
+					icon_kind: None,
 					user_data: None,
 					visible: None,
 					root: None,

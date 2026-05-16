@@ -1,6 +1,6 @@
-import React from "react";
-import type { ReactElement } from "react";
 import type { ContextMenuItem } from "@elements/ui";
+import type { ReactElement } from "react";
+import React from "react";
 import Reconciler from "react-reconciler";
 import {
 	ContinuousEventPriority,
@@ -13,13 +13,11 @@ import {
 // #region 🔖GpuWasmBridge
 import initBoardWasm, {
 	boardComputeEdgeBezier,
-	boardDistancePointCubic,
-	boardRedrawHandlesFixtureJson,
-	boardRedrawLayoutFixtureJson,
+	boardForceGraphLayoutFixtureJson,
 	boardHandlePositionCircle,
 	boardHandlePositionRectangle,
 	BoardSession,
-	initSync,
+	initSync
 } from "./rs/pkg/elements_board.js";
 
 if (typeof process !== "undefined" && process.env.VITEST === "true") {
@@ -149,6 +147,8 @@ export interface BoardFixtureCircleNodeV1 {
 	radius: number;
 	shape?: "circle";
 	text?: string;
+	/** @emoji 🏷️ Runtime icon encoding for detail LOD (catalog id or inline SVG). */
+	iconKind?: string;
 	/** @emoji 📏 Optional: scale overlay text to fit inside the node; drawn at node center to avoid jitter. */
 	textAutofit?: boolean;
 	/** @emoji 🧭 Caption alignment inside the node box when not using autofit. */
@@ -171,6 +171,8 @@ export interface BoardFixtureRectangleNodeV1 {
 	root?: boolean;
 	shape: "rectangle";
 	text?: string;
+	/** @emoji 🏷️ Runtime icon encoding for detail LOD (catalog id or inline SVG). */
+	iconKind?: string;
 	/** @emoji 📏 Optional: scale overlay text to fit inside the node; drawn at node center to avoid jitter. */
 	textAutofit?: boolean;
 	/** @emoji 🧭 Caption alignment inside the node box when not using autofit. */
@@ -203,7 +205,7 @@ export interface BoardFixtureV1 {
 	schema: string;
 }
 
-/** @emoji 🕸️ JSON options nested under {@link BoardRedrawLayoutOptions.forceGraph} (camelCase; matches Rust `ForceGraphLayoutOptions`). */
+/** @emoji 🕸️ JSON options for {@link layoutBoardFixtureForceGraph} (camelCase; matches Rust `ForceGraphLayoutOptions` / dimforge `nalgebra` spring layout). */
 export interface BoardForceGraphLayoutOptions {
 	centerX?: number;
 	centerY?: number;
@@ -218,41 +220,10 @@ export interface BoardForceGraphLayoutOptions {
 	velocityDamping?: number;
 }
 
-/** @emoji 🌳 Which WASM redraw pass runs on the logical fixture graph (tick-driven play uses the same dispatcher). */
-export type BoardRedrawModeKind = "force-graph" | "hierarchical-tree";
-
-/** @emoji 🌳 Rank growth axis for {@link layoutBoardFixtureRedrawNodes} hierarchical mode (`downwards` | `upwards` | `right` | `left`). */
-export type BoardHierarchicalTreeDirectionKind = "downwards" | "left" | "right" | "upwards";
-
-/** @emoji 🌳 Hierarchical redraw opts (camelCase); WASM runs a Buchheim tidy-tree on a spanning forest (min-depth parent), ranks mapped by `direction`. */
-export interface BoardHierarchicalTreeLayoutOptions {
-	centerX?: number;
-	centerY?: number;
-	direction?: BoardHierarchicalTreeDirectionKind;
-	layerSpacing?: number;
-	siblingGap?: number;
-}
-
-/** @emoji 🔁 Node-layout redraw: shared camera center + optional seed; `redrawHandlesAfter` runs center-chord handle snap after layout. */
-export interface BoardRedrawLayoutOptions {
-	centerX?: number;
-	centerY?: number;
-	forceGraph?: BoardForceGraphLayoutOptions;
-	hierarchicalTree?: BoardHierarchicalTreeLayoutOptions;
-	mode: BoardRedrawModeKind;
-	randomSeed?: number;
-	redrawHandlesAfter?: boolean;
-}
-
-/** @emoji 🔁 WASM node redraw (graph or tree); optional `redrawHandlesAfter` snaps handles to the center chord. */
-export function layoutBoardFixtureRedrawNodes(fixture: BoardFixtureV1, options: BoardRedrawLayoutOptions): BoardFixtureV1 {
-	const out = boardRedrawLayoutFixtureJson(JSON.stringify(fixture), JSON.stringify(options));
-	return JSON.parse(out) as BoardFixtureV1;
-}
-
-/** @emoji 🔗 WASM only: sets each linked handle `angle` so anchors sit on the straight segment between node centers (shortest visual chord). */
-export function layoutBoardFixtureRedrawHandles(fixture: BoardFixtureV1): BoardFixtureV1 {
-	const out = boardRedrawHandlesFixtureJson(JSON.stringify(fixture));
+/** @emoji 🕸️ Runs WASM force-directed layout on fixture node centers (edges via handle ids); uses dimforge `nalgebra` in Rust. */
+export function layoutBoardFixtureForceGraph(fixture: BoardFixtureV1, options?: BoardForceGraphLayoutOptions): BoardFixtureV1 {
+	const optsJson = options === undefined ? "" : JSON.stringify(options);
+	const out = boardForceGraphLayoutFixtureJson(JSON.stringify(fixture), optsJson);
 	return JSON.parse(out) as BoardFixtureV1;
 }
 
@@ -323,7 +294,7 @@ export interface BoardObjectOptions {
 /** @emoji 🔵 World-space circle node (center + radius). */
 export type CircleNodeOptions = BoardObjectOptions & {
 	handles?: Handle[];
-	/** @emoji 🖼️ Metabolism example SVG stem for detail LOD vector icon. */
+	/** @emoji 🏷️ Runtime icon encoding: baked catalog id or inline SVG string for detail LOD vector paint. */
 	iconKind?: string;
 	/** @emoji 🌳 Marks this node as a hierarchy root; edges follow parent {@link Handle} {@link Edge.source} → child {@link Edge.target}. */
 	root?: boolean;
@@ -346,7 +317,7 @@ export type CircleNodeOptions = BoardObjectOptions & {
 export type RectangleNodeOptions = BoardObjectOptions & {
 	handles?: Handle[];
 	height: number;
-	/** @emoji 🖼️ Metabolism example SVG stem for detail LOD vector icon. */
+	/** @emoji 🏷️ Runtime icon encoding: baked catalog id or inline SVG string for detail LOD vector paint. */
 	iconKind?: string;
 	/** @emoji 🌳 Marks this node as a hierarchy root; edges follow parent {@link Handle} {@link Edge.source} → child {@link Edge.target}. */
 	root?: boolean;
@@ -471,6 +442,9 @@ function shouldBoardHandleDeleteShortcut(): boolean {
 	}
 	return true;
 }
+/** 📐 Quantized major grid step in world units (legacy constant; LOD grids use fixed 10/5/1). */
+export const BOARD_LOD_GRID_MAJOR_QUANTUM = 10;
+
 /** @emoji 📐 Default LOD zoom boundaries (world scale / CSS pixels); minimap < `minimapMaxZoom` < overview < `overviewMaxZoom` < normal < `normalMaxZoom` ≤ detail. */
 export interface BoardLodZoomThresholds {
 	minimapMaxZoom: number;
@@ -484,11 +458,17 @@ export const DEFAULT_BOARD_LOD_ZOOM_THRESHOLDS: BoardLodZoomThresholds = {
 	normalMaxZoom: 0.5,
 };
 
-/** 📐 Quantized major grid step in world units (legacy constant; LOD grids use fixed 10/5/1). */
-export const BOARD_LOD_GRID_MAJOR_QUANTUM = 10;
+/** 📐 Alias of {@link DEFAULT_BOARD_LOD_ZOOM_THRESHOLDS.minimapMaxZoom}. */
+export const BOARD_LOD_MINIMAP_MAX_ZOOM = DEFAULT_BOARD_LOD_ZOOM_THRESHOLDS.minimapMaxZoom;
+
+/** 📐 Alias of {@link DEFAULT_BOARD_LOD_ZOOM_THRESHOLDS.normalMaxZoom} (detail band starts here). */
+export const BOARD_LOD_DETAIL_MIN_ZOOM = DEFAULT_BOARD_LOD_ZOOM_THRESHOLDS.normalMaxZoom;
 
 /** @emoji 📶 LOD label for `data-board-lod` using explicit thresholds. */
-export function resolveBoardLodLabelFromThresholds(zoom: number, t: BoardLodZoomThresholds): "detail" | "minimap" | "normal" | "overview" {
+export function resolveBoardLodLabelFromThresholds(
+	zoom: number,
+	t: BoardLodZoomThresholds,
+): "detail" | "minimap" | "normal" | "overview" {
 	const z = zoom;
 	if (z < t.minimapMaxZoom) {
 		return "minimap";
@@ -507,7 +487,7 @@ export function resolveBoardLodLabel(zoom: number): "detail" | "minimap" | "norm
 	return resolveBoardLodLabelFromThresholds(zoom, DEFAULT_BOARD_LOD_ZOOM_THRESHOLDS);
 }
 
-/** @emoji 🎨 Offline / headless stroke/fill defaults aligned with `tokens.json` `colors` (same as `--color-*` / board canvas paint). */
+/** @emoji 🎨 Offline / headless paint defaults aligned with `elements/core/styling/tokens.json` `board_vello_canvas` sRGB (Vello host defaults before DOM tokens sync). */
 const BOARD_STYLES_HEADLESS_FALLBACK: Record<string, BoardStyle> = {
 	edge: { stroke: "#7b827d", strokeWidth: 2 },
 	"edge.selected": { stroke: "#ff344f", strokeWidth: 3 },
@@ -520,7 +500,7 @@ const BOARD_STYLES_HEADLESS_FALLBACK: Record<string, BoardStyle> = {
 const DEFAULT_STYLES: Record<string, BoardStyle> = BOARD_STYLES_HEADLESS_FALLBACK;
 
 //#region 🎨ElementsUiBoardPaint
-/** @emoji 🎨 sRGBA8888 defaults for `setVelloThemeJson` when computed-style probe fails; RGB matches `tokens.json` `colors` (`gray`, `primary`, `light`, `l-l-l-g`, `dark`). */
+/** @emoji 🎨 Resolves Elements semantic CSS (`elements.css` / `@theme`) for board canvas + Vello: only `var(--…)` tokens wired here — no ad-hoc palettes. */
 const BOARD_VELLO_THEME_FALLBACK_RGBA = {
 	rasterClear: [247, 243, 227, 255] as [number, number, number, number],
 	gridMinorStroke: [123, 130, 125, 56] as [number, number, number, number],
@@ -572,7 +552,6 @@ function boardProbeCssComputed(property: "color" | "backgroundColor", value: str
 	return out;
 }
 
-/** @emoji 🎨 Resolves `var(--color-*)` / `var(--base)` from the live theme for canvas stroke and fill when `document` exists. */
 function boardDefaultStylesFromElementsUiTokens(): Record<string, BoardStyle> {
 	const f = BOARD_STYLES_HEADLESS_FALLBACK;
 	const c = (prop: "color" | "backgroundColor", expr: string, fb: string): string => {
@@ -840,10 +819,8 @@ export function parseBoardFixtureV1(raw: unknown): BoardFixtureV1 | null {
 		}
 		const node = entry as Record<string, unknown>;
 		const id = typeof node.id === "string" ? node.id : null;
-		const xRaw = node.x;
-		const yRaw = node.y;
-		const x = xRaw === undefined || xRaw === null ? 0 : Number(xRaw);
-		const y = yRaw === undefined || yRaw === null ? 0 : Number(yRaw);
+		const x = Number(node.x);
+		const y = Number(node.y);
 		if (!id || !Number.isFinite(x) || !Number.isFinite(y)) {
 			return null;
 		}
@@ -879,16 +856,19 @@ export function parseBoardFixtureV1(raw: unknown): BoardFixtureV1 | null {
 		const textFontSize = fixtureOptionalTextFontSize(node);
 		const textAlignment = fixtureOptionalTextAlignment(node);
 		const rootFlag = node.root === true;
+		const iconKindRaw = (node as Record<string, unknown>).iconKind;
+		const iconKind =
+			typeof iconKindRaw === "string" && iconKindRaw.trim() !== "" ? iconKindRaw.trim() : undefined;
 		const cad =
 			node.cad && typeof node.cad === "object"
 				? {
-						x: Number((node.cad as Record<string, unknown>).x),
-						y: Number((node.cad as Record<string, unknown>).y),
-						z: Number((node.cad as Record<string, unknown>).z),
-				  }
+					x: Number((node.cad as Record<string, unknown>).x),
+					y: Number((node.cad as Record<string, unknown>).y),
+					z: Number((node.cad as Record<string, unknown>).z),
+				}
 				: node.cad === null
-				  ? null
-				  : undefined;
+					? null
+					: undefined;
 		const shapeRaw = node.shape;
 		if (shapeRaw === "rectangle") {
 			const width = Number(node.width);
@@ -904,6 +884,7 @@ export function parseBoardFixtureV1(raw: unknown): BoardFixtureV1 | null {
 				...(textFontSize !== undefined ? { textFontSize } : {}),
 				...(textAlignment !== undefined ? { textAlignment } : {}),
 				...(rootFlag ? { root: true } : {}),
+				...(iconKind !== undefined ? { iconKind } : {}),
 				handles,
 				height,
 				id,
@@ -929,6 +910,7 @@ export function parseBoardFixtureV1(raw: unknown): BoardFixtureV1 | null {
 			...(textFontSize !== undefined ? { textFontSize } : {}),
 			...(textAlignment !== undefined ? { textAlignment } : {}),
 			...(rootFlag ? { root: true } : {}),
+			...(iconKind !== undefined ? { iconKind } : {}),
 			handles,
 			id,
 			radius,
@@ -1135,7 +1117,7 @@ export function computeEdgeBezier(sourceHandle: Handle, targetHandle: Handle): C
 class SnapshotStore<TSnapshot> {
 	private listeners = new Set<() => void>();
 
-	constructor(private snapshot: TSnapshot) {}
+	constructor(private snapshot: TSnapshot) { }
 
 	getSnapshot = (): TSnapshot => this.snapshot;
 
@@ -1224,7 +1206,7 @@ export class Node extends BoardObject {
 	radius: number;
 	shape: "circle" | "rectangle";
 	text: string | null;
-	/** @emoji 🖼️ Metabolism SVG stem for detail LOD icon rendering in WASM. */
+	/** @emoji 🏷️ Runtime icon encoding forwarded to WASM detail LOD (catalog id or inline SVG string). */
 	iconKind: string | null;
 	/** @emoji 📏 When true, {@link BoardRenderer} scales overlay text to the node interior (always drawn at node center). */
 	textAutofit: boolean;
@@ -1409,7 +1391,7 @@ export class BoardScene {
 	readonly handles = new Map<string, Handle>();
 	readonly nodes = new Map<string, Node>();
 
-	constructor(private renderer: BoardRenderer | null = null) {}
+	constructor(private renderer: BoardRenderer | null = null) { }
 
 	setRenderer(renderer: BoardRenderer | null): void {
 		this.renderer = renderer;
@@ -1557,6 +1539,7 @@ function boardGraphNodeSig(node: Node): string {
 	return JSON.stringify({
 		draggable: node.draggable,
 		height: node.height,
+		iconKind: node.iconKind,
 		id: node.id,
 		radius: node.radius,
 		root: node.root,
@@ -1586,7 +1569,7 @@ function boardGraphEdgeSig(edge: Edge): string {
 	});
 }
 
-/** @emoji 🌳 Builds subtree membership: BFS from every {@link Node.root} along directed edges ({@link Edge.source} handle’s node → {@link Edge.target} handle’s node). */
+/** @emoji 🌳 Builds subtree membership: BFS from every {@link Node.root} following directed edges from parent handle node to child handle node. */
 export function computeBoardGraphObservationSnapshot(scene: BoardScene): BoardGraphObservationSnapshot {
 	const rootIds = sortIds([...scene.nodes.values()].filter((n) => n.root).map((n) => n.id));
 	const rootSet = new Set(rootIds);
@@ -1637,6 +1620,27 @@ function summarizeRasterSurfaceFailure(err: unknown): string {
 	} catch {
 		return String(err).slice(0, 512);
 	}
+}
+
+function boardTextOverlayCaptionForLod(
+	raw: string,
+	lod: "detail" | "minimap" | "normal" | "overview",
+	iconKind: string | null,
+): string | null {
+	const t = raw.trim();
+	if (t === "") {
+		return null;
+	}
+	if (lod === "minimap") {
+		return null;
+	}
+	if (lod === "overview") {
+		return t.length <= 6 ? t : `${t.slice(0, 4)}…`;
+	}
+	if (lod === "detail" && (iconKind?.trim() ?? "") !== "") {
+		return null;
+	}
+	return raw;
 }
 
 //#region 🔖Renderer
@@ -1703,6 +1707,11 @@ export class BoardRenderer {
 	private height = 1;
 	private textOverlayCanvas: HTMLCanvasElement | null = null;
 
+	private lodZoomThresholds: BoardLodZoomThresholds = { ...DEFAULT_BOARD_LOD_ZOOM_THRESHOLDS };
+	private gridSnapEnabled = false;
+	private lastLodThresholdsJsonForWasm: string | null = null;
+	private lastGridSnapEnabledForWasm: boolean | null = null;
+
 	worldRasterTiling: WorldRasterTilingKind;
 
 	constructor(options: {
@@ -1710,11 +1719,21 @@ export class BoardRenderer {
 		renderMode?: RenderMode;
 		selection?: BoardSelectionOptions;
 		worldRasterTiling?: WorldRasterTilingKind;
+		lodZoomThresholds?: BoardLodZoomThresholds;
+		gridSnapEnabled?: boolean;
 	} = {}) {
 		this.canvas = options.canvas ?? null;
 		this.renderMode = options.renderMode ?? (this.canvas ? "main-thread" : "headless-test");
 		this.selectionOptions = resolveSelectionOptions(options.selection);
 		this.worldRasterTiling = options.worldRasterTiling ?? "world-clip";
+		this.lodZoomThresholds = options.lodZoomThresholds
+			? {
+					minimapMaxZoom: options.lodZoomThresholds.minimapMaxZoom,
+					overviewMaxZoom: options.lodZoomThresholds.overviewMaxZoom,
+					normalMaxZoom: options.lodZoomThresholds.normalMaxZoom,
+				}
+			: { ...DEFAULT_BOARD_LOD_ZOOM_THRESHOLDS };
+		this.gridSnapEnabled = options.gridSnapEnabled ?? false;
 		this.scene = new BoardScene(this);
 		this.session = new BoardSession();
 		const initialSel = this.selectionOptions;
@@ -1826,6 +1845,43 @@ export class BoardRenderer {
 			return;
 		}
 		this.session.setWorldRasterTiling(next);
+		this.markDirty();
+	}
+
+	/** @emoji 📶 Updates LOD zoom thresholds on the WASM host and text overlay; mirrors `setLodZoomThresholdsJson` (`minimapMaxZoom` / `overviewMaxZoom` / `normalMaxZoom`). */
+	setLodZoomThresholds(next: BoardLodZoomThresholds): void {
+		const c: BoardLodZoomThresholds = {
+			minimapMaxZoom: next.minimapMaxZoom,
+			overviewMaxZoom: next.overviewMaxZoom,
+			normalMaxZoom: next.normalMaxZoom,
+		};
+		if (
+			c.minimapMaxZoom === this.lodZoomThresholds.minimapMaxZoom &&
+			c.overviewMaxZoom === this.lodZoomThresholds.overviewMaxZoom &&
+			c.normalMaxZoom === this.lodZoomThresholds.normalMaxZoom
+		) {
+			return;
+		}
+		this.lodZoomThresholds = c;
+		if (this.wasmSessionCallBlockedForReentry()) {
+			this.invalidated = true;
+			return;
+		}
+		this.lastLodThresholdsJsonForWasm = null;
+		this.markDirty();
+	}
+
+	/** @emoji 🧲 Enables snapping dragged nodes to the finest visible LOD grid on the WASM host. */
+	setGridSnapEnabled(enabled: boolean): void {
+		if (this.gridSnapEnabled === enabled) {
+			return;
+		}
+		this.gridSnapEnabled = enabled;
+		if (this.wasmSessionCallBlockedForReentry()) {
+			this.invalidated = true;
+			return;
+		}
+		this.lastGridSnapEnabledForWasm = null;
 		this.markDirty();
 	}
 
@@ -2174,6 +2230,7 @@ export class BoardRenderer {
 		const o = this.selectionOptions;
 		this.session.setSelectionOptions(o.method, o.mode, o.targets.nodes, o.targets.edges, o.targets.handles);
 		this.session.setWorldRasterTiling(this.worldRasterTiling);
+		this.pushLodAndGridSnapToWasmSession();
 		this.session.setHandleLinkCompatJson(this.handleLinkCompatJson);
 		try {
 			this.session.setHandleKindsJson(this.handleKindsJson);
@@ -2198,6 +2255,9 @@ export class BoardRenderer {
 				text: node.text,
 				visible: node.visible,
 			};
+			if (node.iconKind) {
+				base.iconKind = node.iconKind;
+			}
 			if (node.root) {
 				base.root = true;
 			}
@@ -2284,6 +2344,26 @@ export class BoardRenderer {
 		this.wasmHostSceneMergeResyncStore.setSnapshot(prev + 1, (a, b) => a === b);
 	}
 
+	private pushLodAndGridSnapToWasmSession(): void {
+		const lodJson = JSON.stringify({
+			minimapMaxZoom: this.lodZoomThresholds.minimapMaxZoom,
+			overviewMaxZoom: this.lodZoomThresholds.overviewMaxZoom,
+			normalMaxZoom: this.lodZoomThresholds.normalMaxZoom,
+		});
+		if (lodJson !== this.lastLodThresholdsJsonForWasm) {
+			try {
+				this.session.setLodZoomThresholdsJson(lodJson);
+				this.lastLodThresholdsJsonForWasm = lodJson;
+			} catch (err) {
+				console.error("[DEBUG] setLodZoomThresholdsJson failed", err);
+			}
+		}
+		if (this.lastGridSnapEnabledForWasm !== this.gridSnapEnabled) {
+			this.session.setGridSnapEnabled(this.gridSnapEnabled);
+			this.lastGridSnapEnabledForWasm = this.gridSnapEnabled;
+		}
+	}
+
 	/** @emoji 🛡️ Defers WASM scene push when `attach_canvas` or `renderFrame` still holds a session borrow; sets {@link BoardRenderer.invalidated} so the next frame retries. */
 	private pushSceneToWasmDriver(): void {
 		if (this.suppressSceneToWasmPush) {
@@ -2297,6 +2377,7 @@ export class BoardRenderer {
 		this.session.setSize(this.width, this.height, this.dpr);
 		this.session.setSelectionOptions(o.method, o.mode, o.targets.nodes, o.targets.edges, o.targets.handles);
 		this.session.setWorldRasterTiling(this.worldRasterTiling);
+		this.pushLodAndGridSnapToWasmSession();
 		this.session.setHandleLinkCompatJson(this.handleLinkCompatJson);
 		if (this.handleKindsJson !== this.lastPushedHandleKindsJson) {
 			try {
@@ -2469,8 +2550,13 @@ export class BoardRenderer {
 		const inset = 0.88;
 		ctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
 		ctx.clearRect(0, 0, this.width, this.height);
+		const lod = resolveBoardLodLabelFromThresholds(this.camera.zoom, this.lodZoomThresholds);
 		for (const node of this.scene.nodes.values()) {
-			if (!node.visible || node.text === null || node.text === "") {
+			if (!node.visible) {
+				continue;
+			}
+			const caption = boardTextOverlayCaptionForLod(node.text ?? "", lod, node.iconKind);
+			if (caption === null) {
 				continue;
 			}
 			let maxW: number;
@@ -2491,11 +2577,11 @@ export class BoardRenderer {
 			const family = node.textFontFamily;
 			ctx.fillStyle = style.stroke ?? BOARD_STYLES_HEADLESS_FALLBACK.node.stroke ?? "#001117";
 			if (node.textAutofit) {
-				const fontPx = boardFitTextFontPx(ctx, node.text, maxW, maxH, 4, 512, family);
+				const fontPx = boardFitTextFontPx(ctx, caption, maxW, maxH, 4, 512, family);
 				ctx.font = boardBuildCanvasFontSpec(fontPx, family);
-				let line = node.text;
+				let line = caption;
 				if (ctx.measureText(line).width > maxW) {
-					line = boardEllipsisTextToWidth(ctx, node.text, maxW);
+					line = boardEllipsisTextToWidth(ctx, caption, maxW);
 				}
 				ctx.textAlign = "center";
 				ctx.textBaseline = "middle";
@@ -2504,7 +2590,7 @@ export class BoardRenderer {
 			}
 			const fontPx = node.textFontSize;
 			ctx.font = boardBuildCanvasFontSpec(fontPx, family);
-			const line = boardEllipsisTextToWidth(ctx, node.text, maxW);
+			const line = boardEllipsisTextToWidth(ctx, caption, maxW);
 			const anchor = boardNodeTextPlacementAnchor(boxCenter.x, boxCenter.y, maxW, maxH, node.textAlignment);
 			ctx.textAlign = anchor.textAlign;
 			ctx.textBaseline = anchor.textBaseline;
@@ -2723,7 +2809,7 @@ export class BoardRenderer {
 		}
 		this.canvas.dataset.boardRaster = "gpu";
 		this.canvas.dataset.boardWorldTiling = this.worldRasterTiling;
-		this.canvas.dataset.boardLod = resolveBoardLodLabel(this.camera.zoom);
+		this.canvas.dataset.boardLod = resolveBoardLodLabelFromThresholds(this.camera.zoom, this.lodZoomThresholds);
 		this.canvas.dataset.boardZoom = String(Math.round(this.camera.zoom * 1000) / 1000);
 		this.canvas.dataset.boardSelection = sortedSelectionIds(this.selectionIds).join(",");
 		this.canvas.setAttribute("data-board-camera", `${this.camera.x},${this.camera.y}`);
@@ -3032,11 +3118,16 @@ if (boardVitest) {
 			expect(pE.y).toBeCloseTo(50);
 		});
 
-		it("labels minimap, overview, and detail LOD bands from zoom thresholds", () => {
+		it("labels minimap, overview, normal, and detail LOD bands from zoom thresholds", () => {
 			expect(resolveBoardLodLabel(0.1)).toBe("minimap");
-			expect(resolveBoardLodLabel(0.3)).toBe("overview");
+			expect(resolveBoardLodLabel(0.25)).toBe("overview");
+			expect(resolveBoardLodLabel(0.4)).toBe("normal");
 			expect(resolveBoardLodLabel(1)).toBe("detail");
-			expect(resolveBoardLodLabel(3)).toBe("detail");
+			const tight: BoardLodZoomThresholds = { minimapMaxZoom: 0.2, overviewMaxZoom: 0.4, normalMaxZoom: 0.6 };
+			expect(resolveBoardLodLabelFromThresholds(0.15, tight)).toBe("minimap");
+			expect(resolveBoardLodLabelFromThresholds(0.35, tight)).toBe("overview");
+			expect(resolveBoardLodLabelFromThresholds(0.5, tight)).toBe("normal");
+			expect(resolveBoardLodLabelFromThresholds(0.7, tight)).toBe("detail");
 		});
 	});
 
@@ -3423,6 +3514,28 @@ if (boardVitest) {
 			expect(parsed?.nodes[0]).toMatchObject({ shape: "rectangle", width: 48, height: 24, id: "box", text: "crate" });
 		});
 
+		it("parses optional iconKind on fixture nodes", () => {
+			const parsed = parseBoardFixtureV1({
+				camera: { x: 0, y: 0, zoom: 1 },
+				edges: [],
+				nodes: [
+					{
+						handles: [{ angle: 0, id: "ic.h" }],
+						iconKind: "  <svg xmlns=\"http://www.w3.org/2000/svg\"/> ",
+						id: "ic",
+						radius: 10,
+						x: 0,
+						y: 0,
+					},
+				],
+				schema: "elements.board.fixture/v1",
+			});
+			expect(parsed?.nodes[0]).toMatchObject({
+				id: "ic",
+				iconKind: "<svg xmlns=\"http://www.w3.org/2000/svg\"/>",
+			});
+		});
+
 		it("parses optional textAutofit on fixture nodes", () => {
 			const circle = parseBoardFixtureV1({
 				camera: { x: 0, y: 0, zoom: 1 },
@@ -3594,16 +3707,6 @@ if (boardVitest) {
 			expect(decoded).toEqual(fixture);
 		});
 
-		it("parses nodes when x or y is omitted (defaults to 0)", () => {
-			const parsed = parseBoardFixtureV1({
-				camera: { x: 0, y: 0, zoom: 1 },
-				edges: [],
-				nodes: [{ handles: [{ angle: 0, id: "n.h" }], id: "n", radius: 8, schema: undefined }],
-				schema: "elements.board.fixture/v1",
-			});
-			expect(parsed?.nodes[0]).toMatchObject({ id: "n", x: 0, y: 0 });
-		});
-
 		it("parses optional root on fixture nodes", () => {
 			const parsed = parseBoardFixtureV1({
 				camera: { x: 0, y: 0, zoom: 1 },
@@ -3629,7 +3732,7 @@ if (boardVitest) {
 		});
 	});
 
-	describe("board redraw layout", () => {
+	describe("board force graph layout", () => {
 		it("spreads linked nodes using wasm+nalgebra layout", () => {
 			const fixture: BoardFixtureV1 = {
 				camera: { x: 0, y: 0, zoom: 1 },
@@ -3640,11 +3743,7 @@ if (boardVitest) {
 				],
 				schema: "elements.board.fixture/v1",
 			};
-			const laid = layoutBoardFixtureRedrawNodes(fixture, {
-				forceGraph: { gravity: 0, idealEdgeLength: 200, iterations: 220 },
-				mode: "force-graph",
-				randomSeed: 11,
-			});
+			const laid = layoutBoardFixtureForceGraph(fixture, { gravity: 0, iterations: 220, idealEdgeLength: 200, randomSeed: 11 });
 			const ax = (laid.nodes[0] as { x: number }).x;
 			const bx = (laid.nodes[1] as { x: number }).x;
 			expect(Math.abs(bx - ax)).toBeGreaterThan(90);
@@ -3653,116 +3752,7 @@ if (boardVitest) {
 
 		it("throws on invalid fixture schema from wasm", () => {
 			const bad = { camera: { x: 0, y: 0, zoom: 1 }, edges: [], nodes: [], schema: "wrong" } as unknown as BoardFixtureV1;
-			expect(() => layoutBoardFixtureRedrawNodes(bad, { mode: "force-graph" })).toThrow();
-		});
-
-		it("lays a small rooted tree in hierarchical mode", () => {
-			const fixture: BoardFixtureV1 = {
-				camera: { x: 0, y: 0, zoom: 1 },
-				edges: [
-					{ id: "e1", source: "r:h", target: "c:h" },
-					{ id: "e2", source: "c:h2", target: "l:h" },
-				],
-				nodes: [
-					{ handles: [{ angle: 0, id: "r:h" }], id: "r", radius: 16, root: true, x: 0, y: 0 },
-					{
-						handles: [
-							{ angle: 0, id: "c:h" },
-							{ angle: 0, id: "c:h2" },
-						],
-						id: "c",
-						radius: 16,
-						x: 0,
-						y: 0,
-					},
-					{ handles: [{ angle: 0, id: "l:h" }], id: "l", radius: 16, x: 0, y: 0 },
-				],
-				schema: "elements.board.fixture/v1",
-			};
-			const laid = layoutBoardFixtureRedrawNodes(fixture, {
-				centerX: 0,
-				centerY: 0,
-				hierarchicalTree: { direction: "downwards", layerSpacing: 100, siblingGap: 20 },
-				mode: "hierarchical-tree",
-			});
-			const ry = (laid.nodes.find((n) => n.id === "r") as BoardFixtureCircleNodeV1).y;
-			const ly = (laid.nodes.find((n) => n.id === "l") as BoardFixtureCircleNodeV1).y;
-			expect(Math.abs(ly - ry)).toBeGreaterThan(40);
-		});
-
-		it("snaps handle angles along center chord", () => {
-			const fixture: BoardFixtureV1 = {
-				camera: { x: 0, y: 0, zoom: 1 },
-				edges: [{ id: "e1", source: "a:h0", target: "b:h0" }],
-				nodes: [
-					{
-						handles: [{ angle: 1.2, handleKind: BOARD_BUILTIN_PORT_HANDLE_KIND, id: "a:h0" }],
-						id: "a",
-						radius: 40,
-						shape: "circle",
-						x: 0,
-						y: 0,
-					},
-					{
-						handles: [{ angle: 0.1, handleKind: BOARD_BUILTIN_PORT_HANDLE_KIND, id: "b:h0" }],
-						id: "b",
-						radius: 40,
-						shape: "circle",
-						x: 200,
-						y: 0,
-					},
-				],
-				schema: "elements.board.fixture/v1",
-			};
-			const out = layoutBoardFixtureRedrawHandles(fixture);
-			const a = out.nodes[0] as BoardFixtureCircleNodeV1;
-			const b = out.nodes[1] as BoardFixtureCircleNodeV1;
-			expect(a.handles[0].angle).toBeCloseTo(0, 5);
-			expect(b.handles[0].angle).toBeCloseTo(Math.PI, 5);
-		});
-
-		it("runs handle snap after node redraw when redrawHandlesAfter is true", () => {
-			const fixture: BoardFixtureV1 = {
-				camera: { x: 0, y: 0, zoom: 1 },
-				edges: [{ id: "e1", source: "a:h0", target: "b:h0" }],
-				nodes: [
-					{
-						handles: [{ angle: 1.2, handleKind: BOARD_BUILTIN_PORT_HANDLE_KIND, id: "a:h0" }],
-						id: "a",
-						radius: 40,
-						shape: "circle",
-						x: 0,
-						y: 0,
-					},
-					{
-						handles: [{ angle: 0.1, handleKind: BOARD_BUILTIN_PORT_HANDLE_KIND, id: "b:h0" }],
-						id: "b",
-						radius: 40,
-						shape: "circle",
-						x: 200,
-						y: 0,
-					},
-				],
-				schema: "elements.board.fixture/v1",
-			};
-			const out = layoutBoardFixtureRedrawNodes(fixture, {
-				forceGraph: { gravity: 0, idealEdgeLength: 180, iterations: 120 },
-				mode: "force-graph",
-				randomSeed: 3,
-				redrawHandlesAfter: true,
-			});
-			const a = out.nodes[0] as BoardFixtureCircleNodeV1;
-			const b = out.nodes[1] as BoardFixtureCircleNodeV1;
-			const expA = Math.atan2(b.y - a.y, b.x - a.x);
-			const expB = Math.atan2(a.y - b.y, a.x - b.x);
-			const wrapDiff = (x: number, y: number) => {
-				let d = ((x - y) % (2 * Math.PI)) + 2 * Math.PI;
-				d %= 2 * Math.PI;
-				if (d > Math.PI) d -= 2 * Math.PI;
-				return Math.abs(d);
-			};
-			expect(wrapDiff(a.handles[0].angle, expA)).toBeLessThan(0.05);
-			expect(wrapDiff(b.handles[0].angle, expB)).toBeLessThan(0.05);
+			expect(() => layoutBoardFixtureForceGraph(bad)).toThrow();
 		});
 	});
 
@@ -3828,14 +3818,14 @@ export const BOARD_HOST_MOUNT_DEFAULTS: Record<string, unknown> = {
 	NotPendingTransition: null,
 	acquireResource: () => null,
 	acquireSingletonInstance: () => null,
-	appendChildToContainerChildSet: () => {},
+	appendChildToContainerChildSet: () => { },
 	bindToConsole: () => () => undefined,
 	canHydrateActivityInstance: () => false,
 	canHydrateFormStateMarker: () => false,
 	canHydrateInstance: () => false,
 	canHydrateSuspenseInstance: () => false,
 	canHydrateTextInstance: () => false,
-	clearSuspenseBoundary: () => {},
+	clearSuspenseBoundary: () => { },
 	cloneHiddenInstance: () => {
 		throw new Error("Board host: cloneHiddenInstance unsupported");
 	},
@@ -3849,14 +3839,14 @@ export const BOARD_HOST_MOUNT_DEFAULTS: Record<string, unknown> = {
 	commitHydratedContainer: () => null,
 	commitHydratedInstance: () => null,
 	commitHydratedSuspenseInstance: () => null,
-	commitTextUpdate: () => {},
+	commitTextUpdate: () => { },
 	createContainerChildSet: () => ({}),
 	createHoistableInstance: () => null,
-	diffHydratedPropsForDevWarnings: () => {},
+	diffHydratedPropsForDevWarnings: () => { },
 	diffHydratedTextForDevWarnings: () => null,
-	describeHydratableInstanceForDevWarnings: () => {},
+	describeHydratableInstanceForDevWarnings: () => { },
 	extraDevToolsConfig: {},
-	finalizeContainerChildren: () => {},
+	finalizeContainerChildren: () => { },
 	finalizeHydratedChildren: () => null,
 	findFiberRoot: () => null,
 	flushHydrationEvents: () => null,
@@ -3876,8 +3866,8 @@ export const BOARD_HOST_MOUNT_DEFAULTS: Record<string, unknown> = {
 	getSuspenseInstanceFallbackErrorDetails: () => null,
 	getTextContent: () => null,
 	hideDehydratedBoundary: () => null,
-	hideInstance: () => {},
-	hideTextInstance: () => {},
+	hideInstance: () => { },
+	hideTextInstance: () => { },
 	hydrateActivityInstance: () => null,
 	hydrateHoistable: () => null,
 	hydrateInstance: () => null,
@@ -3899,14 +3889,14 @@ export const BOARD_HOST_MOUNT_DEFAULTS: Record<string, unknown> = {
 	preloadInstance: () => true,
 	preloadResource: () => false,
 	prepareToCommitHoistables: () => null,
-	registerSuspenseInstanceRetry: () => {},
+	registerSuspenseInstanceRetry: () => { },
 	releaseResource: () => null,
 	releaseSingletonInstance: () => null,
 	rendererPackageName: "@elements/board",
 	rendererVersion: "0.1.0",
-	replaceContainerChildren: () => {},
-	resetFormInstance: () => {},
-	resetTextContent: () => {},
+	replaceContainerChildren: () => { },
+	resetFormInstance: () => { },
+	resetTextContent: () => { },
 	resolveEventTimeStamp: () => -1.1,
 	resolveEventType: () => null,
 	resolveSingletonInstance: () => null,
@@ -3952,17 +3942,17 @@ export const BOARD_HOST_MOUNT_DEFAULTS: Record<string, unknown> = {
 	supportsResources: false,
 	supportsSingletons: false,
 	supportsTestSelectors: false,
-	suspendInstance: () => {},
+	suspendInstance: () => { },
 	suspendResource: () => false,
-	trackSchedulerEvent: () => {},
+	trackSchedulerEvent: () => { },
 	unhideDehydratedBoundary: () => null,
-	unhideInstance: () => {},
-	unhideTextInstance: () => {},
+	unhideInstance: () => { },
+	unhideTextInstance: () => { },
 	unmountHoistable: () => null,
-	validateHydratableInstance: () => {},
-	validateHydratableTextInstance: () => {},
+	validateHydratableInstance: () => { },
+	validateHydratableTextInstance: () => { },
 	waitForCommitToBeReady: () => null,
-	clearSuspenseBoundaryFromContainer: () => {},
+	clearSuspenseBoundaryFromContainer: () => { },
 };
 
 //#region 🔖HostKinds
@@ -4002,6 +3992,7 @@ function newBoardNodeFromProps(props: NodeOptions): Node {
 		return new Node({
 			draggable: props.draggable ?? true,
 			height: props.height,
+			iconKind: props.iconKind,
 			id: props.id,
 			root: props.root,
 			selected: props.selected,
@@ -4021,6 +4012,7 @@ function newBoardNodeFromProps(props: NodeOptions): Node {
 	}
 	return new Node({
 		draggable: props.draggable ?? true,
+		iconKind: props.iconKind,
 		id: props.id,
 		radius: props.radius,
 		root: props.root,
@@ -4054,6 +4046,8 @@ function applyNodeProps(renderer: BoardRenderer, instance: Node, props: NodeOpti
 	const psz = props.textFontSize;
 	instance.textFontSize =
 		typeof psz === "number" && Number.isFinite(psz) && psz > 0 ? psz : BOARD_NODE_TEXT_FONT_PX_DEFAULT;
+	instance.iconKind =
+		typeof props.iconKind === "string" && props.iconKind.trim() !== "" ? props.iconKind.trim() : null;
 	renderer.applyNodePositionFromProps(instance.id, props.x, props.y, instance);
 	instance.setText(props.text ?? null);
 	if (props.shape === "rectangle") {
@@ -4139,7 +4133,8 @@ function propsEqualNode(a: NodeOptions, b: NodeOptions): boolean {
 		(a.textAlignment ?? BOARD_NODE_TEXT_ALIGNMENT_DEFAULT) !== (b.textAlignment ?? BOARD_NODE_TEXT_ALIGNMENT_DEFAULT) ||
 		(a.textFontFamily ?? BOARD_NODE_TEXT_FONT_FAMILY_DEFAULT) !== (b.textFontFamily ?? BOARD_NODE_TEXT_FONT_FAMILY_DEFAULT) ||
 		(a.textFontSize ?? BOARD_NODE_TEXT_FONT_PX_DEFAULT) !== (b.textFontSize ?? BOARD_NODE_TEXT_FONT_PX_DEFAULT) ||
-		(a.root === true) !== (b.root === true)
+		(a.root === true) !== (b.root === true) ||
+		(a.iconKind ?? "") !== (b.iconKind ?? "")
 	) {
 		return false;
 	}
@@ -4184,17 +4179,17 @@ function mountEdge(renderer: BoardRenderer, edgeHost: BoardHostEdge): void {
 	if (edgeHost.impl?.parent) {
 		return;
 	}
-	const sourceHandle = renderer.scene.getObjectById(edgeHost.props.source);
-	const targetHandle = renderer.scene.getObjectById(edgeHost.props.target);
-	if (!(sourceHandle instanceof Handle) || !(targetHandle instanceof Handle)) {
+	const source = renderer.scene.getObjectById(edgeHost.props.source);
+	const target = renderer.scene.getObjectById(edgeHost.props.target);
+	if (!(source instanceof Handle) || !(target instanceof Handle)) {
 		return;
 	}
 	renderer.batch(() => {
 		if (!edgeHost.impl) {
-			edgeHost.impl = new Edge({ ...edgeHost.props, source: sourceHandle, target: targetHandle });
+			edgeHost.impl = new Edge({ ...edgeHost.props, source, target });
 			renderer.scene.add(edgeHost.impl);
 		} else {
-			applyEdgeProps(edgeHost.impl, edgeHost.props, sourceHandle, targetHandle);
+			applyEdgeProps(edgeHost.impl, edgeHost.props, source, target);
 		}
 	});
 	renderer.invalidate();
@@ -4360,7 +4355,7 @@ const boardSceneHost = Reconciler({
 	},
 
 	/** @emoji 🧹 No-op: host stack calls this on root before mutation; scene graph is driven by append/remove only (see {@link unmountBoardHostMount}). */
-	clearContainer(_container: BoardRenderer) {},
+	clearContainer(_container: BoardRenderer) { },
 
 	finalizeInitialChildren() {
 		return false;
@@ -4373,8 +4368,8 @@ const boardSceneHost = Reconciler({
 	prepareForCommit() {
 		return null;
 	},
-	resetAfterCommit() {},
-	preparePortalMount() {},
+	resetAfterCommit() { },
+	preparePortalMount() { },
 
 	prepareUpdate(instance, type, oldProps, newProps) {
 		if (type === BOARD_HOST_NODE) {
@@ -4424,35 +4419,35 @@ const boardSceneHost = Reconciler({
 		if (type === BOARD_HOST_EDGE) {
 			const e = instance as BoardHostEdge;
 			e.props = nextProps as BoardEdgeProps;
-			const sourceHandle = renderer.scene.getObjectById(e.props.source);
-			const targetHandle = renderer.scene.getObjectById(e.props.target);
-			if (!(sourceHandle instanceof Handle) || !(targetHandle instanceof Handle)) {
+			const from = renderer.scene.getObjectById(e.props.source);
+			const to = renderer.scene.getObjectById(e.props.target);
+			if (!(from instanceof Handle) || !(to instanceof Handle)) {
 				return;
 			}
 			renderer.batch(() => {
 				if (!e.impl) {
-					e.impl = new Edge({ ...e.props, source: sourceHandle, target: targetHandle });
+					e.impl = new Edge({ ...e.props, source: from, target: to });
 					renderer.scene.add(e.impl);
 				} else {
-					applyEdgeProps(e.impl, e.props, sourceHandle, targetHandle);
+					applyEdgeProps(e.impl, e.props, from, to);
 				}
 			});
 			renderer.invalidate();
 		}
 	},
 
-	commitMount() {},
+	commitMount() { },
 
-	detachDeletedInstance() {},
+	detachDeletedInstance() { },
 
 	getInstanceFromNode: () => null,
-	beforeActiveInstanceBlur() {},
-	afterActiveInstanceBlur() {},
-	prepareScopeUpdate() {},
+	beforeActiveInstanceBlur() { },
+	afterActiveInstanceBlur() { },
+	prepareScopeUpdate() { },
 	getInstanceFromScope: () => null,
 
 	getCurrentEventPriority: () => DefaultEventPriority,
-	requestPaint() {},
+	requestPaint() { },
 } as never);
 
 export type BoardHostMount = ReturnType<typeof boardSceneHost.createContainer>;

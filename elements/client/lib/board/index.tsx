@@ -60,9 +60,12 @@ import {
 	type FrameState,
 	type RenderMode,
 	type WorldRasterTilingKind,
+	DEFAULT_BOARD_LOD_ZOOM_THRESHOLDS,
+	type BoardLodZoomThresholds,
 } from "./index";
 
-export type { BoardHandleKindCatalogEntry, BoardHandleLinkCompatPair, BoardHandleProps, BoardEdgeProps, BoardSelectionTargets } from "./index";
+export type { BoardLodZoomThresholds } from "./index";
+export { DEFAULT_BOARD_LOD_ZOOM_THRESHOLDS } from "./index";
 
 import { ContextMenuController, type ContextMenuItem } from "@elements/ui";
 
@@ -85,6 +88,10 @@ export interface BoardCanvasProps {
 	onReady?: (renderer: BoardRenderer) => void;
 	/** @emoji 🔔 Fires after any graph observation emission in this flush (see other `on*` graph props). */
 	onChange?: () => void;
+	/** @emoji 📶 LOD zoom bands for WASM draw + overlay captions (`data-board-lod`). */
+	lodZoomThresholds?: BoardLodZoomThresholds;
+	/** @emoji 🧲 When true, node drags snap to the finest visible LOD grid on the WASM host. */
+	gridSnapEnabled?: boolean;
 	onChildEdgeChange?: (payload: BoardGraphEdgeIdPayload) => void;
 	onChildEdgesChange?: (payload: BoardChildEdgesChangePayload) => void;
 	onChildNodeChange?: (payload: BoardGraphNodeIdPayload) => void;
@@ -115,6 +122,8 @@ export type BoardNodeCircleProps = {
 	shape?: "circle";
 	style?: string;
 	text?: string;
+	/** @emoji 🏷️ Runtime icon encoding (catalog id or inline SVG) for detail LOD vector paint. */
+	iconKind?: string;
 	/** @emoji 📏 When true, caption scales to fit inside the node on the text overlay canvas. */
 	textAutofit?: boolean;
 	/** @emoji 🧭 Caption alignment inside the node box when not autofitting. */
@@ -141,6 +150,8 @@ export type BoardNodeRectangleProps = {
 	shape: "rectangle";
 	style?: string;
 	text?: string;
+	/** @emoji 🏷️ Runtime icon encoding (catalog id or inline SVG) for detail LOD vector paint. */
+	iconKind?: string;
 	/** @emoji 📏 When true, caption scales to fit inside the node on the text overlay canvas. */
 	textAutofit?: boolean;
 	/** @emoji 🧭 Caption alignment inside the node box when not autofitting. */
@@ -268,6 +279,8 @@ function applyNodeProps(renderer: BoardRenderer, instance: BoardNodeObject, desc
 	const dsz = descriptor.textFontSize;
 	instance.textFontSize =
 		typeof dsz === "number" && Number.isFinite(dsz) && dsz > 0 ? dsz : BOARD_NODE_TEXT_FONT_PX_DEFAULT;
+	instance.iconKind =
+		typeof descriptor.iconKind === "string" && descriptor.iconKind.trim() !== "" ? descriptor.iconKind.trim() : null;
 	renderer.applyNodePositionFromProps(instance.id, descriptor.x, descriptor.y, instance);
 	instance.setText(descriptor.text ?? null);
 	if (descriptor.shape === "rectangle") {
@@ -316,6 +329,7 @@ function newBoardNodeFromDescriptor(nodeDescriptor: NodeDescriptor): BoardNodeOb
 		return new BoardNodeObject({
 			draggable: nodeDescriptor.draggable ?? true,
 			height: nodeDescriptor.height,
+			iconKind: nodeDescriptor.iconKind,
 			id: nodeDescriptor.id,
 			root: nodeDescriptor.root,
 			selected: nodeDescriptor.selected,
@@ -335,6 +349,7 @@ function newBoardNodeFromDescriptor(nodeDescriptor: NodeDescriptor): BoardNodeOb
 	}
 	return new BoardNodeObject({
 		draggable: nodeDescriptor.draggable ?? true,
+		iconKind: nodeDescriptor.iconKind,
 		id: nodeDescriptor.id,
 		radius: nodeDescriptor.radius,
 		root: nodeDescriptor.root,
@@ -539,8 +554,10 @@ export function BoardCanvas({
 	contextMenu,
 	fixtureDragDrop,
 	height,
+	gridSnapEnabled,
 	handleKinds,
 	handleLinkCompatibility,
+	lodZoomThresholds,
 	onChange,
 	onChildEdgeChange,
 	onChildEdgesChange,
@@ -738,6 +755,8 @@ export function BoardCanvas({
 		const canvas = canvasRef.current;
 		const renderer = new BoardRenderer({
 			canvas,
+			gridSnapEnabled: gridSnapEnabled ?? false,
+			lodZoomThresholds: lodZoomThresholds ?? DEFAULT_BOARD_LOD_ZOOM_THRESHOLDS,
 			renderMode,
 			selection: { method: selectionMethod, mode: selectionMode, targets: selectionTargets },
 			worldRasterTiling,
@@ -766,6 +785,22 @@ export function BoardCanvas({
 		}
 		renderer.setWorldRasterTilingOption(worldRasterTiling);
 	}, [worldRasterTiling]);
+
+	useLayoutEffect(() => {
+		const renderer = rendererRef.current;
+		if (!renderer) {
+			return;
+		}
+		renderer.setLodZoomThresholds(lodZoomThresholds ?? DEFAULT_BOARD_LOD_ZOOM_THRESHOLDS);
+	}, [lodZoomThresholds]);
+
+	useLayoutEffect(() => {
+		const renderer = rendererRef.current;
+		if (!renderer) {
+			return;
+		}
+		renderer.setGridSnapEnabled(gridSnapEnabled ?? false);
+	}, [gridSnapEnabled]);
 
 	useEffect(() => {
 		if (!contextRenderer) {
