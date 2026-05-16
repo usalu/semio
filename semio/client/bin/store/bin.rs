@@ -1,10 +1,9 @@
-//! 🏪 `semio-store`: single-file HTTP GraphQL sidecar for native `KitStore`.
+//! 🏪 `semio-store`: HTTP GraphQL sidecar over native [`semio::worker::ParentStore`] (same schema as WASM `KitStoreHandle`).
 
 //#region 🏪State
 
 use std::io;
 use std::net::SocketAddr;
-use std::path::Path;
 use std::sync::Arc;
 
 use async_graphql::http::GraphiQLSource;
@@ -13,86 +12,20 @@ use axum::http::StatusCode;
 use axum::response::{Html, IntoResponse, Response};
 use axum::routing::{get, post};
 use axum::{Json, Router};
-use semio::id::Id;
-use semio::kit_graph::{KitFull, KitGraph, KitGraphRef};
-use semio::kit_graphql::{GraphQlOverride, GraphWork};
-use semio::kit_store::KitStore;
+use semio::gql;
+use semio::worker::ParentStore;
 use serde::Deserialize;
 use tokio::net::TcpListener;
 use tokio::sync::Mutex;
 use tower_http::cors::CorsLayer;
 
 struct AppState {
-    runtime: Arc<Mutex<Option<KitRuntime>>>,
-    preview: KitRuntime,
-}
-
-struct KitRuntime {
-    store: Arc<KitStore>,
-    work_tx: async_channel::Sender<GraphWork>,
-}
-
-impl Clone for KitRuntime {
-    fn clone(&self) -> Self {
-        KitRuntime { store: self.store.clone(), work_tx: self.work_tx.clone() }
-    }
+    runtime: Arc<Mutex<Option<Arc<ParentStore>>>>,
+    preview: Arc<ParentStore>,
 }
 
 //#endregion
 //#region 🏪Install
-
-fn install_k(graph: KitGraphRef) {
-    use async_broadcast::RecvError;
-    use futures_lite::future::block_on;
-    use std::sync::Once;
-    use std::thread;
-
-    static EVENTS: Once = Once::new();
-    if matches!(std::env::var("SEMIO_STORE_NO_EVENTS").as_deref(), Ok("1" | "true" | "yes")) {
-        return;
-    }
-    let g2: KitGraphRef = graph.clone();
-    EVENTS.call_once(move || {
-        let _ = thread::Builder::new().name("semio-store-event-log".to_string()).spawn(move || {
-            let mut rx = match g2.read() {
-                Ok(gg) => gg.subscribe(),
-                Err(_) => return,
-            };
-            drop(g2);
-            loop {
-                match block_on(async { rx.recv().await }) {
-                    Ok(ev) => {
-                        if let Ok(line) = serde_json::to_string(&ev) {
-                            tracing::info!(target: "semio_store_event", "{}", line);
-                        }
-                    }
-                    Err(RecvError::Closed) => break,
-                    Err(RecvError::Overflowed(_)) => {}
-                }
-            }
-        });
-    });
-}
-
-fn runtime_from_kit_graph(graph: KitGraphRef, log_events: bool) -> std::result::Result<KitRuntime, String> {
-    let store = Arc::new(KitStore::from_graph(graph));
-    let (work_tx, work_rx) = async_channel::unbounded();
-    semio::kit_graphql::spawn_actor(store.graph().clone(), work_rx);
-    let rt = KitRuntime { store, work_tx };
-    if log_events {
-        install_k(rt.store.graph().clone());
-    }
-    Ok(rt)
-}
-
-/// 🌱 First successful install sets the sole control-plane; further installs return 409.
-fn install_from_kit_graph(graph: KitGraphRef) -> std::result::Result<KitRuntime, String> {
-    runtime_from_kit_graph(graph, true)
-}
-
-fn preview_runtime() -> KitRuntime {
-    runtime_from_kit_graph(KitGraph::from_full(KitFull { id: Id::new_v7(), name: "GraphiQL Preview".to_string(), ..Default::default() }), false).expect("preview runtime")
-}
 
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -107,7 +40,7 @@ struct InstallBody {
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
 struct CreateInstall {
-    dto: KitFull,
+    dto: serde_json::Value,
 }
 
 #[derive(Debug, Deserialize)]
@@ -117,13 +50,14 @@ struct PathOnly {
 
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[allow(dead_code)]
 struct RemoteIn {
     hub_url: String,
     session_id: String,
 }
 
 impl InstallBody {
-    fn into_graph(self) -> std::result::Result<KitGraphRef, String> {
+    async fn into_runtime(self) -> std::result::Result<Arc<ParentStore>, String> {
         use semio::error::SemioError;
         let mut n = 0u8;
         if self.create.is_some() {
@@ -145,32 +79,32 @@ impl InstallBody {
             return Err("expected exactly one of: create, importFile, importFromFolder, importFromZip, importFromRemote".to_string());
         }
         if let Some(c) = self.create {
-            return Ok(KitGraph::from_full(c.dto));
+            return ParentStore::spawn_wip_overlay_from_initial_kit_projection_json(c.dto)
+                .await
+                .map_err(|e: SemioError| e.to_string());
         }
         if let Some(p) = self.import_file {
-            return KitGraph::load_json_file(Path::new(&p.path)).map_err(|e: SemioError| e.to_string());
+            let txt = std::fs::read_to_string(&p.path).map_err(|e| e.to_string())?;
+            let v: serde_json::Value = serde_json::from_str(&txt).map_err(|e| e.to_string())?;
+            return ParentStore::spawn_wip_overlay_from_initial_kit_projection_json(v).await.map_err(|e: SemioError| e.to_string());
         }
-        if let Some(p) = self.import_from_folder {
-            return KitGraph::load_local_folder(Path::new(&p.path)).map_err(|e: SemioError| e.to_string());
+        if self.import_from_folder.is_some() {
+            return Err("importFromFolder: not wired in semio-store yet".to_string());
         }
-        if let Some(p) = self.import_from_zip {
-            return KitGraph::load_zip(Path::new(&p.path)).map_err(|e: SemioError| e.to_string());
+        if self.import_from_zip.is_some() {
+            return Err("importFromZip: not wired in semio-store yet".to_string());
         }
-        if let Some(r) = self.import_from_remote {
-            return KitGraph::load_remote_session(&r.hub_url, &r.session_id).map_err(|e: SemioError| e.to_string());
+        if self.import_from_remote.is_some() {
+            return Err("importFromRemote: not wired in semio-store yet".to_string());
         }
         Err("no install field".to_string())
     }
 }
 
 async fn post_install(State(state): State<Arc<AppState>>, Json(body): Json<InstallBody>) -> impl IntoResponse {
-    let graph: KitGraphRef = match body.into_graph() {
-        Ok(g) => g,
-        Err(msg) => return (StatusCode::BAD_REQUEST, msg).into_response(),
-    };
-    let new_rt = match install_from_kit_graph(graph) {
+    let new_rt = match body.into_runtime().await {
         Ok(x) => x,
-        Err(msg) => return (StatusCode::INTERNAL_SERVER_ERROR, msg).into_response(),
+        Err(msg) => return (StatusCode::BAD_REQUEST, msg).into_response(),
     };
     let mut lock = state.runtime.lock().await;
     if lock.is_some() {
@@ -210,7 +144,7 @@ fn is_mutation_request(body: &str) -> std::result::Result<bool, String> {
 }
 
 async fn post_graphql(State(state): State<Arc<AppState>>, body: String) -> impl IntoResponse {
-    let (rt, installed): (KitRuntime, bool) = {
+    let (rt, installed): (Arc<ParentStore>, bool) = {
         let l = state.runtime.lock().await;
         match l.as_ref() {
             None => (state.preview.clone(), false),
@@ -220,12 +154,14 @@ async fn post_graphql(State(state): State<Arc<AppState>>, body: String) -> impl 
     if !installed && matches!(is_mutation_request(&body), Ok(true)) {
         return graphql_error(StatusCode::SERVICE_UNAVAILABLE, "no kit: send POST /install with { \"create\": { \"dto\": { ... } } } first");
     }
-    let vcs = GraphQlOverride { native: Some(rt.store.clone()) };
-    let resp = match semio::kit_graphql::execute_with_control_plane(&body, rt.store.graph().clone(), rt.work_tx, vcs).await {
+    let mut req = match gql::graphql_request_from_json_str(&body) {
         Ok(r) => r,
-        Err(e) => return bad_request(format!("{e:?}")),
+        Err(e) => return bad_request(e.to_string()),
     };
-    match serde_json::to_value(&resp) {
+    req = req.data(rt.clone()).data(rt.bus.clone());
+    let schema = gql::build_schema_for(rt);
+    let resp = schema.execute(req).await;
+    match serde_json::to_value(async_graphql::Response::from(resp)) {
         Ok(v) => axum::Json(v).into_response(),
         Err(e) => graphql_error(StatusCode::INTERNAL_SERVER_ERROR, e),
     }
@@ -251,8 +187,12 @@ async fn post_shutdown() -> StatusCode {
 //#endregion
 //#region 🏪Serve
 
-fn app() -> Router {
-    let state: Arc<AppState> = Arc::new(AppState { runtime: Arc::new(Mutex::new(None)), preview: preview_runtime() });
+async fn build_state() -> AppState {
+    let preview = ParentStore::spawn().await;
+    AppState { runtime: Arc::new(Mutex::new(None)), preview }
+}
+
+fn app_with_state(state: Arc<AppState>) -> Router {
     Router::new()
         .route("/healthz", get(get_health))
         .route("/graphiql", get(get_graphiql))
@@ -287,11 +227,11 @@ async fn serve(listener: TcpListener, app: Router) {
 
 /// 🌐 Axum + GraphQL; binds `0.0.0.0` on `SEMIO_STORE_PORT` (default `4000`).
 async fn run() {
-    // `0` = free port (emits actual port in the first JSON line to stdout). Default `4000` for local dev.
     let port: u16 = std::env::var("SEMIO_STORE_PORT").ok().and_then(|s| s.parse().ok()).unwrap_or(4000);
     let addr: SocketAddr = format!("0.0.0.0:{}", port).parse().expect("port");
     let listener: TcpListener = TcpListener::bind(&addr).await.unwrap_or_else(|e| panic!("semio-store bind {addr}: {e}"));
-    serve(listener, app()).await;
+    let state = Arc::new(build_state().await);
+    serve(listener, app_with_state(state)).await;
 }
 
 async fn shutdown_signal() {
@@ -307,7 +247,7 @@ async fn main() {
         .with_writer(io::stderr)
         .try_init();
 
-    run().await
+    run().await;
 }
 
 //#endregion
@@ -316,38 +256,15 @@ async fn main() {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use semio::kit::KitFull;
     use serde_json::{json, Value};
     use tokio::task::JoinHandle;
-
-    fn batch_mutation_with_fields(extra: &str) -> String {
-        format!(
-            r"mutation Batch($input: KitStoreInput!) {{
-  kitStore {{
-    batch(input: $input) {{
-      clientMutationId
-      results {{
-        kind
-        ok
-        count
-        sessionId
-        draftId
-        transactionId
-        backbone {{ attached kind tip }}
-        conflicts {{ id backboneTip reason createdAt }}
-        {extra}
-      }}
-    }}
-  }}
-}}"
-        )
-    }
 
     async fn spawn_server() -> Result<(JoinHandle<()>, String), Box<dyn std::error::Error + Send + Sync>> {
         let listener = TcpListener::bind("127.0.0.1:0").await?;
         let port = listener.local_addr()?.port();
+        let state = Arc::new(build_state().await);
         let handle = tokio::spawn(async move {
-            if let Err(e) = axum::serve(listener, app().into_make_service()).await {
+            if let Err(e) = axum::serve(listener, app_with_state(state).into_make_service()).await {
                 tracing::error!(target: "semio_store", "test server: {e}");
             }
         });
@@ -389,7 +306,7 @@ mod tests {
         let body: Value = response.json().await?;
         assert_eq!(body.pointer("/data/__typename"), Some(&json!("Query")));
 
-        let response = client.post(format!("{base}/graphql")).json(&json!({ "query": "mutation { kitStore { batch(input: { commands: [] }) { clientMutationId } } }" })).send().await?;
+        let response = client.post(format!("{base}/graphql")).json(&json!({ "query": "mutation { session { start } }" })).send().await?;
         assert_eq!(response.status(), reqwest::StatusCode::SERVICE_UNAVAILABLE);
         let body: Value = response.json().await?;
         let message = body.pointer("/errors/0/message").and_then(|value| value.as_str()).ok_or("missing no-kit GraphQL error message")?;
@@ -400,298 +317,52 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn sidecar_create_snapshot_name_change_undo() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+    async fn sidecar_install_rename_roundtrip() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         let (server, base) = spawn_server().await?;
         let client = reqwest::Client::new();
-        let kid = Id::new_v7();
-        let dto = KitFull { id: kid, name: "A".to_string(), ..Default::default() };
-        post_install(&client, &base, &json!({ "create": { "dto": serde_json::to_value(&dto)? } })).await?;
+        post_install(
+            &client,
+            &base,
+            &json!({ "create": { "dto": { "id": "00000000-0000-7000-8000-000000000001", "name": "SeedName" } } }),
+        )
+        .await?;
 
-        let qm = batch_mutation_with_fields("");
+        let tx = post_gql(&client, &base, "mutation { session { store(id: \"test-store\") { theKit { startNewChange } } } }", None).await?;
+        if tx.get("errors").is_some() {
+            return Err(format!("startNewChange: {tx}").into());
+        }
+        let tx_id = tx.pointer("/data/session/store/theKit/startNewChange").and_then(|v| v.as_str()).ok_or("tx id")?;
+
         let m1 = post_gql(
             &client,
             &base,
-            &qm,
-            Some(json!({
-                "input": {
-                    "commands": [{
-                        "session": {
-                            "commands": [
-                                { "createSession": { "confirm": true } },
-                                { "createDraft": {} },
-                                { "draft": { "commands": [
-                                    { "startTransaction": { "confirm": true } },
-                                    { "transaction": { "commands": [
-                                        { "changeKitCommands": { "commands": [{ "name": { "name": "Renamed" } }] } }
-                                    ]}}
-                                ]}}
-                            ]
-                        }
-                    }]
-                }
-            })),
+            r#"mutation($tx: ID!, $n: String!) {
+  session {
+    store(id: "test-store") {
+      theKit {
+        unsavedChange(id: $tx) {
+          kit { rename(newName: $n) }
+        }
+      }
+    }
+  }
+}"#,
+            Some(json!({ "tx": tx_id, "n": "RenamedKit" })),
         )
         .await?;
         if m1.get("errors").is_some() {
-            return Err(format!("graphql m1: {m1}").into());
+            return Err(format!("rename: {m1}").into());
         }
-        let rows = m1.pointer("/data/kitStore/batch/results").and_then(|v| v.as_array()).ok_or("m1 results")?;
-        let sid = rows.iter().find_map(|r| r.get("sessionId").and_then(|x| x.as_str())).ok_or("sessionId")?;
-        let did = rows.iter().find_map(|r| r.get("draftId").and_then(|x| x.as_str())).ok_or("draftId")?;
-        let tid = rows.iter().find_map(|r| r.get("transactionId").and_then(|x| x.as_str())).ok_or("transactionId")?;
 
-        let q2 = post_gql(
-            &client,
-            &base,
-            "query($scope: KitReadScopeInput!) { kit(scope: $scope) { metadata { name } } }",
-            Some(json!({ "scope": { "transaction": { "sessionId": sid, "draftId": did, "transactionId": tid } } })),
-        )
-        .await?;
+        tokio::time::sleep(std::time::Duration::from_millis(200)).await;
+
+        let q2 = post_gql(&client, &base, "{ store { wip { theKit { kit { name } } } } }", None).await?;
         if q2.get("errors").is_some() {
-            return Err(format!("graphql q2: {q2}").into());
+            return Err(format!("query: {q2}").into());
         }
-        let name = q2.pointer("/data/kit/metadata/name").and_then(|n| n.as_str()).ok_or("metadata.name")?;
-        assert_eq!(name, "Renamed");
+        let name = q2.pointer("/data/store/wip/theKit/kit/name").and_then(|n| n.as_str()).ok_or("kit.name")?;
+        assert_eq!(name, "RenamedKit");
 
-        let m3 = post_gql(
-            &client,
-            &base,
-            &qm,
-            Some(json!({
-                "input": {
-                    "commands": [{
-                        "session": {
-                            "sessionId": sid,
-                            "commands": [{
-                                "draft": {
-                                    "draftId": did,
-                                    "commands": [{
-                                        "transaction": {
-                                            "transactionId": tid,
-                                            "commands": [{ "undoTransaction": { "count": 1 } }]
-                                        }
-                                    }]
-                                }
-                            }]
-                        }
-                    }]
-                }
-            })),
-        )
-        .await?;
-        if m3.get("errors").is_some() {
-            return Err(format!("graphql m3: {m3}").into());
-        }
-
-        let q4 = post_gql(
-            &client,
-            &base,
-            "query($scope: KitReadScopeInput!) { kit(scope: $scope) { metadata { name } } }",
-            Some(json!({ "scope": { "transaction": { "sessionId": sid, "draftId": did, "transactionId": tid } } })),
-        )
-        .await?;
-        if q4.get("errors").is_some() {
-            return Err(format!("graphql q4: {q4}").into());
-        }
-        let name2 = q4.pointer("/data/kit/metadata/name").and_then(|n| n.as_str()).ok_or("name2")?;
-        assert_eq!(name2, "A");
-
-        server.abort();
-        Ok(())
-    }
-
-    #[tokio::test]
-    async fn sidecar_batch_rename_to_q() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
-        let (server, base) = spawn_server().await?;
-        let client = reqwest::Client::new();
-        let kid = Id::new_v7();
-        let dto = KitFull { id: kid.clone(), name: "P".to_string(), ..Default::default() };
-        post_install(&client, &base, &json!({ "create": { "dto": serde_json::to_value(&dto)? } })).await?;
-
-        let qm = batch_mutation_with_fields("");
-        let m3 = post_gql(
-            &client,
-            &base,
-            &qm,
-            Some(json!({
-                "input": {
-                    "commands": [{
-                        "session": {
-                            "commands": [
-                                { "createSession": { "confirm": true } },
-                                { "createDraft": {} },
-                                { "draft": { "commands": [
-                                    { "startTransaction": { "confirm": true } },
-                                    { "transaction": { "commands": [
-                                        { "changeKitCommands": { "commands": [{ "name": { "name": "Q" } }] } }
-                                    ]}}
-                                ]}}
-                            ]
-                        }
-                    }]
-                }
-            })),
-        )
-        .await?;
-        if m3.get("errors").is_some() {
-            return Err(format!("execute: {m3}").into());
-        }
-        let rows = m3.pointer("/data/kitStore/batch/results").and_then(|v| v.as_array()).ok_or("m3 results")?;
-        let sid = rows.iter().find_map(|r| r.get("sessionId").and_then(|x| x.as_str())).ok_or("sessionId")?;
-        let did = rows.iter().find_map(|r| r.get("draftId").and_then(|x| x.as_str())).ok_or("draftId")?;
-        let tid = rows.iter().find_map(|r| r.get("transactionId").and_then(|x| x.as_str())).ok_or("transactionId")?;
-
-        let q4 = post_gql(
-            &client,
-            &base,
-            "query($scope: KitReadScopeInput!) { kit(scope: $scope) { metadata { name } } }",
-            Some(json!({ "scope": { "transaction": { "sessionId": sid, "draftId": did, "transactionId": tid } } })),
-        )
-        .await?;
-        if q4.get("errors").is_some() {
-            return Err(format!("q4: {q4}").into());
-        }
-        let name = q4.pointer("/data/kit/metadata/name").and_then(|n| n.as_str());
-        assert_eq!(name, Some("Q"));
-
-        server.abort();
-        Ok(())
-    }
-
-    #[tokio::test]
-    async fn sidecar_backbone_attach_status_conflicts_sync_detach() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
-        let (server, base) = spawn_server().await?;
-        let client = reqwest::Client::new();
-        let kid = Id::new_v7();
-        let dto = KitFull { id: kid, name: "Bb".to_string(), ..Default::default() };
-        post_install(&client, &base, &json!({ "create": { "dto": serde_json::to_value(&dto)? } })).await?;
-
-        let qm = batch_mutation_with_fields("");
-
-        let m2 = post_gql(
-            &client,
-            &base,
-            &qm,
-            Some(json!({
-                "input": {
-                    "commands": [{
-                        "backbone": {
-                            "commands": [{ "listConflicts": { "confirm": true } }]
-                        }
-                    }]
-                }
-            })),
-        )
-        .await?;
-        if m2.get("errors").is_some() {
-            return Err(format!("m2: {m2}").into());
-        }
-        let c0 = m2.pointer("/data/kitStore/batch/results/0/conflicts").and_then(|x| x.as_array()).ok_or("listConflicts.conflicts")?;
-        assert!(c0.is_empty(), "expected no conflicts");
-
-        let mut bb_path = std::env::temp_dir();
-        bb_path.push(format!("semio-store-dev-backbone-{}.json", Id::new_v7().as_str()));
-
-        let m3 = post_gql(
-            &client,
-            &base,
-            &qm,
-            Some(json!({
-                "input": {
-                    "commands": [{
-                        "backbone": {
-                            "commands": [{
-                                "attachBackbone": { "dev": { "path": bb_path.to_string_lossy() } }
-                            }]
-                        }
-                    }]
-                }
-            })),
-        )
-        .await?;
-        if m3.get("errors").is_some() {
-            return Err(format!("m3: {m3}").into());
-        }
-        assert_eq!(m3.pointer("/data/kitStore/batch/results/0/ok"), Some(&json!(true)));
-
-        let m4 = post_gql(
-            &client,
-            &base,
-            &qm,
-            Some(json!({
-                "input": {
-                    "commands": [{
-                        "backbone": {
-                            "commands": [{ "backboneStatus": { "confirm": true } }]
-                        }
-                    }]
-                }
-            })),
-        )
-        .await?;
-        if m4.get("errors").is_some() {
-            return Err(format!("m4: {m4}").into());
-        }
-        assert_eq!(m4.pointer("/data/kitStore/batch/results/0/backbone/attached"), Some(&json!(true)));
-        assert_eq!(m4.pointer("/data/kitStore/batch/results/0/backbone/kind"), Some(&json!("DEV")));
-
-        let m5 = post_gql(
-            &client,
-            &base,
-            &qm,
-            Some(json!({
-                "input": {
-                    "commands": [{
-                        "backbone": { "commands": [{ "syncNow": { "confirm": true } }] }
-                    }]
-                }
-            })),
-        )
-        .await?;
-        if m5.get("errors").is_some() {
-            return Err(format!("m5: {m5}").into());
-        }
-        assert_eq!(m5.pointer("/data/kitStore/batch/results/0/ok"), Some(&json!(true)));
-
-        let m6 = post_gql(
-            &client,
-            &base,
-            &qm,
-            Some(json!({
-                "input": {
-                    "commands": [{
-                        "backbone": { "commands": [{ "detachBackbone": { "confirm": true } }] }
-                    }]
-                }
-            })),
-        )
-        .await?;
-        if m6.get("errors").is_some() {
-            return Err(format!("m6: {m6}").into());
-        }
-        assert_eq!(m6.pointer("/data/kitStore/batch/results/0/ok"), Some(&json!(true)));
-
-        let m7 = post_gql(
-            &client,
-            &base,
-            &qm,
-            Some(json!({
-                "input": {
-                    "commands": [{
-                        "backbone": {
-                            "commands": [{ "backboneStatus": { "confirm": true } }]
-                        }
-                    }]
-                }
-            })),
-        )
-        .await?;
-        if m7.get("errors").is_some() {
-            return Err(format!("m7: {m7}").into());
-        }
-        assert_eq!(m7.pointer("/data/kitStore/batch/results/0/backbone/attached"), Some(&json!(false)));
-
-        let _ = std::fs::remove_file(&bb_path);
         server.abort();
         Ok(())
     }

@@ -420,6 +420,8 @@ mod board_host {
 	const MAX_WORLD_CLIP_TILES: u32 = 768;
 	const EDGE_HIT_TOLERANCE_PX: f64 = 8.0;
 	const HANDLE_HIT_TOLERANCE_PX: f64 = 10.0;
+	const LINK_DRAG_MIN_DISTANCE_PX: f64 = 5.0;
+	const LINK_HANDLE_SNAP_EXTRA_PX: f64 = 22.0;
 	const HANDLE_DRAW_MIN_ZOOM: f64 = 0.45;
 	const SELECTION_LASSO_MIN_POINT_DISTANCE_PX: f64 = 3.0;
 	const SELECTION_CLICK_MAX_DISTANCE_PX: f64 = 4.0;
@@ -503,6 +505,14 @@ mod board_host {
 			start: Point,
 			start_screen: Point,
 		},
+		LinkFromHandle {
+			from_id: String,
+			start_screen: Point,
+		},
+		LinkDragging {
+			from_id: String,
+			snap_id: Option<String>,
+		},
 	}
 
 	impl Default for Interaction {
@@ -567,6 +577,8 @@ mod board_host {
 		pub events: Vec<serde_json::Value>,
 		/// Screen-space preview polygon (CSS pixels) while area-selecting; cleared when idle.
 		pub selection_screen_preview: Option<Vec<Point>>,
+		/// Screen-space open polyline (typically two points) while dragging a new handle link.
+		pub link_screen_preview: Option<Vec<Point>>,
 		pub vello_theme: VelloThemePalette,
 	}
 
@@ -597,6 +609,7 @@ mod board_host {
 				world_raster_tiling: "world-clip".into(),
 				events: Vec::new(),
 				selection_screen_preview: None,
+				link_screen_preview: None,
 				vello_theme: VelloThemePalette::default(),
 			}
 		}
@@ -792,6 +805,14 @@ mod board_host {
 			matches!(&self.interaction, Interaction::Selection { .. })
 		}
 
+		/// @emoji 🧿 True while a handle link gesture is active so JS can defer `syncDescriptorJson` the same way as area select.
+		pub fn defers_descriptor_sync_from_js(&self) -> bool {
+			matches!(
+				self.interaction,
+				Interaction::LinkFromHandle { .. } | Interaction::LinkDragging { .. }
+			)
+		}
+
 		pub fn world_to_screen(&self, p: Point) -> Point {
 			Point::new(
 				(p.x - self.camera.x) * self.camera.zoom + self.width as f64 / 2.0,
@@ -899,6 +920,13 @@ mod board_host {
 		}
 
 		pub fn sync_descriptor(&mut self, desc: &SceneDescriptorJson) {
+			self.link_screen_preview = None;
+			if matches!(
+				self.interaction,
+				Interaction::LinkFromHandle { .. } | Interaction::LinkDragging { .. }
+			) {
+				self.interaction = Interaction::None;
+			}
 			let want_nodes: BTreeSet<_> = desc.nodes.iter().map(|n| n.id.clone()).collect();
 			let want_handles: BTreeSet<_> = desc.handles.iter().map(|h| h.id.clone()).collect();
 			let want_edges: BTreeSet<_> = desc.edges.iter().map(|e| e.id.clone()).collect();
@@ -1384,6 +1412,22 @@ mod board_host {
 					);
 				}
 			}
+			if let Some(ref pts) = self.link_screen_preview {
+				if pts.len() >= 2 {
+					let mut path = vello::kurbo::BezPath::new();
+					path.move_to(pts[0]);
+					for p in pts.iter().skip(1) {
+						path.line_to(*p);
+					}
+					inner.stroke(
+						&Stroke::new(2.25),
+						Affine::IDENTITY,
+						self.vello_theme.selection_preview_stroke,
+						None,
+						&path,
+					);
+				}
+			}
 			let scale = self.dpr.max(1.0);
 			if (scale - 1.0).abs() < f64::EPSILON {
 				inner
@@ -1474,8 +1518,102 @@ mod board_host {
 			self.push_select_event();
 		}
 
+		fn link_snap_tolerance_world(&self, h: &HandleData) -> f64 {
+			let z = self.camera.zoom.max(1e-9);
+			(HANDLE_HIT_TOLERANCE_PX + LINK_HANDLE_SNAP_EXTRA_PX) / z + h.radius
+		}
+
+		fn nearest_link_snap_handle_world(&self, from_id: &str, world: Point) -> Option<String> {
+			let from_handle = self.handles.get(from_id)?;
+			let from_node = from_handle.node_id.as_str();
+			let mut best: Option<(f64, String)> = None;
+			for (id, h) in &self.handles {
+				if id == from_id || !h.visible {
+					continue;
+				}
+				if h.node_id == from_node {
+					continue;
+				}
+				let pw = self.handle_world_pos(h)?;
+				let tol = self.link_snap_tolerance_world(h);
+				let d = distance_between(world, pw);
+				if d <= tol && best.as_ref().map(|(bd, _)| d < *bd).unwrap_or(true) {
+					best = Some((d, id.clone()));
+				}
+			}
+			best.map(|(_, id)| id)
+		}
+
+		fn sync_link_drag_preview(&mut self, from_id: &str, end_screen: Point, world: Point, snap_id: Option<&str>) {
+			let Some(start_w) = self.handles.get(from_id).and_then(|h| self.handle_world_pos(h)) else {
+				self.link_screen_preview = None;
+				return;
+			};
+			let start_s = self.world_to_screen(start_w);
+			let end_s = if let Some(sid) = snap_id {
+				self.handles
+					.get(sid)
+					.and_then(|h| self.handle_world_pos(h))
+					.map(|w| self.world_to_screen(w))
+					.unwrap_or(end_screen)
+			} else {
+				end_screen
+			};
+			self.link_screen_preview = Some(vec![start_s, end_s]);
+			if let Some(sid) = snap_id {
+				self.set_hovered_id(Some(sid.to_string()));
+			} else {
+				self.update_hover_from_world(world);
+			}
+		}
+
+		fn try_commit_link_edge(&mut self, from_id: &str, to_id: &str) -> bool {
+			if from_id == to_id {
+				return false;
+			}
+			let Some(fh) = self.handles.get(from_id) else {
+				return false;
+			};
+			let Some(th) = self.handles.get(to_id) else {
+				return false;
+			};
+			if fh.node_id == th.node_id {
+				return false;
+			}
+			for e in self.edges.values() {
+				if e.from == from_id && e.to == to_id {
+					return false;
+				}
+			}
+			let mut n = self.edges.len().saturating_add(1);
+			let id = loop {
+				let candidate = format!("edge-link-{n}");
+				if !self.edges.contains_key(&candidate) {
+					break candidate;
+				}
+				n = n.saturating_add(1);
+			};
+			self.edges.insert(
+				id.clone(),
+				EdgeData {
+					id: id.clone(),
+					from: from_id.to_string(),
+					to: to_id.to_string(),
+					selected: false,
+					visible: true,
+					style: None,
+				},
+			);
+			self.push_event(
+				"edgeCreate",
+				json!({ "id": id, "from": from_id, "to": to_id }),
+			);
+			true
+		}
+
 		pub fn pointer_down_screen(&mut self, sx: f64, sy: f64, button: u8, shift: bool) {
 			self.set_selection_screen_preview(None);
+			self.link_screen_preview = None;
 			let screen = Point::new(sx, sy);
 			let world = self.screen_to_world(screen);
 			let hit = self.resolve_hit_world(world);
@@ -1518,6 +1656,19 @@ mod board_host {
 						self.set_hovered_id(hit);
 						return;
 					}
+				}
+			}
+			if let Some(ref hid) = hit {
+				if button == 0 && self.handles.contains_key(hid) {
+					let next = Self::merge_pick_into_selection(&self.selection, hid, self.selection_options.mode.as_str());
+					let ids: Vec<_> = next.iter().cloned().collect();
+					self.set_selection_ids(&ids);
+					self.interaction = Interaction::LinkFromHandle {
+						from_id: hid.clone(),
+						start_screen: screen,
+					};
+					self.set_hovered_id(Some(hid.clone()));
+					return;
 				}
 			}
 			if hit.is_none() && button == 0 {
@@ -1618,6 +1769,28 @@ mod board_host {
 						start_screen,
 					};
 				}
+				Interaction::LinkFromHandle { from_id, start_screen } => {
+					if distance_between(screen, start_screen) >= LINK_DRAG_MIN_DISTANCE_PX {
+						let snap = self.nearest_link_snap_handle_world(&from_id, world);
+						self.sync_link_drag_preview(&from_id, screen, world, snap.as_deref());
+						self.interaction = Interaction::LinkDragging {
+							from_id: from_id.clone(),
+							snap_id: snap,
+						};
+					} else {
+						self.link_screen_preview = None;
+						self.interaction = Interaction::LinkFromHandle { from_id, start_screen };
+						self.update_hover_from_world(world);
+					}
+				}
+				Interaction::LinkDragging { from_id, .. } => {
+					let snap = self.nearest_link_snap_handle_world(&from_id, world);
+					self.sync_link_drag_preview(&from_id, screen, world, snap.as_deref());
+					self.interaction = Interaction::LinkDragging {
+						from_id: from_id.clone(),
+						snap_id: snap,
+					};
+				}
 				Interaction::None => {
 					self.interaction = Interaction::None;
 					self.update_hover_from_world(world);
@@ -1628,31 +1801,47 @@ mod board_host {
 		pub fn pointer_up_screen(&mut self, sx: f64, sy: f64) {
 			let screen = Point::new(sx, sy);
 			let world = self.screen_to_world(screen);
-			if let Interaction::Selection {
-				mut points,
-				mut screen_points,
-				start,
-				initial_ids,
-				start_screen,
-			} = std::mem::take(&mut self.interaction)
-			{
-				points.push(world);
-				screen_points.push(screen);
-				let end_screen = screen_points.last().copied().unwrap_or(start_screen);
-				let click_only = distance_between(start_screen, end_screen) < SELECTION_CLICK_MAX_DISTANCE_PX;
-				if click_only {
-					self.set_selection_ids(&[]);
-				} else {
-					let next = self.resolve_area_selection_with_initial(&initial_ids, start, &points);
-					let ids: Vec<_> = next.iter().cloned().collect();
-					self.set_selection_ids(&ids);
+			let grabbed = std::mem::take(&mut self.interaction);
+			match grabbed {
+				Interaction::LinkDragging { from_id, snap_id } => {
+					self.link_screen_preview = None;
+					if let Some(to_id) = snap_id {
+						self.try_commit_link_edge(&from_id, &to_id);
+					}
+					self.interaction = Interaction::None;
+					self.update_hover_from_world(world);
 				}
-				self.set_selection_screen_preview(None);
-				self.update_hover_from_world(world);
-				return;
+				Interaction::LinkFromHandle { .. } => {
+					self.link_screen_preview = None;
+					self.interaction = Interaction::None;
+					self.update_hover_from_world(world);
+				}
+				Interaction::Selection {
+					mut points,
+					mut screen_points,
+					start,
+					initial_ids,
+					start_screen,
+				} => {
+					points.push(world);
+					screen_points.push(screen);
+					let end_screen = screen_points.last().copied().unwrap_or(start_screen);
+					let click_only = distance_between(start_screen, end_screen) < SELECTION_CLICK_MAX_DISTANCE_PX;
+					if click_only {
+						self.set_selection_ids(&[]);
+					} else {
+						let next = self.resolve_area_selection_with_initial(&initial_ids, start, &points);
+						let ids: Vec<_> = next.iter().cloned().collect();
+						self.set_selection_ids(&ids);
+					}
+					self.set_selection_screen_preview(None);
+					self.update_hover_from_world(world);
+				}
+				_ => {
+					self.interaction = Interaction::None;
+					self.update_hover_from_world(world);
+				}
 			}
-			self.interaction = Interaction::None;
-			self.update_hover_from_world(world);
 		}
 
 		pub fn pointer_leave_screen(&mut self) {
@@ -2409,6 +2598,11 @@ impl BoardSession {
 		self.state.borrow().host.is_dragging_area_select()
 	}
 
+	#[wasm_bindgen(js_name = defersDescriptorSyncFromJs)]
+	pub fn defers_descriptor_sync_from_js(&self) -> bool {
+		self.state.borrow().host.defers_descriptor_sync_from_js()
+	}
+
 	/// @emoji 🌊 Binds WebGPU presentation to `canvas` once; `logical_w`/`logical_h` are CSS pixels, `dpr` scales the swapchain backing store; uses `future_to_promise` so wasm-bindgen does not hold `&mut BoardSession` across `await` (avoids `borrow_fail` vs `setSize` during GPU setup).
 	#[wasm_bindgen(js_name = attach_canvas)]
 	pub fn attach_canvas(
@@ -3017,6 +3211,106 @@ mod host_tests {
 		got.sort();
 		assert!(got.contains(&"a".to_string()));
 		assert!(got.contains(&"a.out".to_string()));
+	}
+
+	fn link_test_scene_no_edge() -> SceneDescriptorJson {
+		SceneDescriptorJson {
+			nodes: vec![
+				NodeDescJson {
+					id: "a".into(),
+					x: 0.0,
+					y: 0.0,
+					draggable: Some(true),
+					selected: None,
+					style: None,
+					text: None,
+					user_data: None,
+					visible: None,
+					root: None,
+					shape: Some("circle".into()),
+					radius: Some(40.0),
+					width: None,
+					height: None,
+				},
+				NodeDescJson {
+					id: "b".into(),
+					x: 280.0,
+					y: 0.0,
+					draggable: Some(true),
+					selected: None,
+					style: None,
+					text: None,
+					user_data: None,
+					visible: None,
+					root: None,
+					shape: Some("circle".into()),
+					radius: Some(40.0),
+					width: None,
+					height: None,
+				},
+			],
+			handles: vec![
+				HandleDescJson {
+					id: "a.out".into(),
+					node_id: "a".into(),
+					angle: 0.0,
+					radius: None,
+					selected: None,
+					style: None,
+					user_data: None,
+					visible: None,
+				},
+				HandleDescJson {
+					id: "b.in".into(),
+					node_id: "b".into(),
+					angle: std::f64::consts::PI,
+					radius: None,
+					selected: None,
+					style: None,
+					user_data: None,
+					visible: None,
+				},
+			],
+			edges: vec![],
+		}
+	}
+
+	#[test]
+	fn board_host_link_drag_snap_emits_edge_create() {
+		let mut h = BoardHost::new();
+		h.set_size(800, 600, 1.0);
+		h.sync_descriptor(&link_test_scene_no_edge());
+		let _ = h.drain_events_json();
+		let hp_a = handle_position_on_circle(Point::new(0.0, 0.0), 40.0, 0.0);
+		let hp_b = handle_position_on_circle(Point::new(280.0, 0.0), 40.0, std::f64::consts::PI);
+		let s0 = h.world_to_screen(hp_a);
+		h.pointer_down_screen(s0.x, s0.y, 0, false);
+		let s_mid = h.world_to_screen(Point::new(140.0, 0.0));
+		h.pointer_move_screen(s_mid.x + 20.0, s_mid.y);
+		let s1 = h.world_to_screen(hp_b);
+		h.pointer_move_screen(s1.x, s1.y);
+		h.pointer_up_screen(s1.x, s1.y);
+		let ev = h.drain_events_json();
+		assert!(ev.contains("edgeCreate"));
+		assert!(ev.contains("a.out"));
+		assert!(ev.contains("b.in"));
+		let created: Vec<_> = h.edges.keys().filter(|k| k.starts_with("edge-link-")).cloned().collect();
+		assert_eq!(created.len(), 1);
+	}
+
+	#[test]
+	fn board_host_link_short_drag_does_not_emit_edge_create() {
+		let mut h = BoardHost::new();
+		h.set_size(800, 600, 1.0);
+		h.sync_descriptor(&link_test_scene_no_edge());
+		let _ = h.drain_events_json();
+		let hp_a = handle_position_on_circle(Point::new(0.0, 0.0), 40.0, 0.0);
+		let s0 = h.world_to_screen(hp_a);
+		h.pointer_down_screen(s0.x, s0.y, 0, false);
+		h.pointer_move_screen(s0.x + 2.0, s0.y);
+		h.pointer_up_screen(s0.x + 2.0, s0.y);
+		let ev = h.drain_events_json();
+		assert!(!ev.contains("edgeCreate"));
 	}
 }
 

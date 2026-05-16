@@ -1275,6 +1275,15 @@ export class BoardScene {
 		return this;
 	}
 
+	/** @emoji 🔗 Inserts a WASM‑drained edge without emitting {@link BoardEventMap.edgeCreate} (the renderer applies that once per drain row). */
+	ingestWasmEdge(edge: Edge): this {
+		this.edges.set(edge.id, edge);
+		edge.parent = this;
+		edge.attachRenderer(this.renderer);
+		this.renderer?.markDirty();
+		return this;
+	}
+
 	remove(object: BoardObject): this {
 		if (object instanceof Node) {
 			for (const edge of Array.from(this.edges.values())) {
@@ -1496,7 +1505,7 @@ export class BoardRenderer {
 	private gpuSurfaceUnavailable = false;
 	private lastPushedDescriptorJson: string | null = null;
 	private lastVelloThemeJson = "";
-	private lastWasAreaSelectDrag = false;
+	private lastDescriptorPushDeferred = false;
 	private lastNodeAuthoringPositionById = new Map<string, { x: number; y: number }>();
 	private suppressSceneToWasmPush = false;
 	private graphObservationFlushPending = false;
@@ -2011,12 +2020,13 @@ export class BoardRenderer {
 		this.session.setSize(this.width, this.height, this.dpr);
 		this.session.setSelectionOptions(o.method, o.mode, o.target);
 		this.session.setWorldRasterTiling(this.worldRasterTiling);
-		const dragging = this.session.isDraggingAreaSelect();
-		if (this.lastWasAreaSelectDrag && !dragging) {
+		const deferDescriptorSync =
+			this.session.isDraggingAreaSelect() || this.session.defersDescriptorSyncFromJs();
+		if (this.lastDescriptorPushDeferred && !deferDescriptorSync) {
 			this.lastPushedDescriptorJson = null;
 		}
-		this.lastWasAreaSelectDrag = dragging;
-		if (!dragging) {
+		this.lastDescriptorPushDeferred = deferDescriptorSync;
+		if (!deferDescriptorSync) {
 			const desc = this.descriptorJsonForWasmHost();
 			if (desc !== this.lastPushedDescriptorJson) {
 				this.session.syncDescriptorJson(desc);
@@ -2109,6 +2119,22 @@ export class BoardRenderer {
 							this.scene.remove(node);
 						}
 						this.emitter.emit("nodeDelete", { id });
+						break;
+					}
+					case "edgeCreate": {
+						const id = String(row.payload.id ?? "");
+						const fromId = String(row.payload.from ?? "");
+						const toId = String(row.payload.to ?? "");
+						if (!id || !fromId || !toId || this.scene.edges.has(id)) {
+							break;
+						}
+						const from = this.scene.handles.get(fromId);
+						const to = this.scene.handles.get(toId);
+						if (!from || !to) {
+							break;
+						}
+						this.scene.ingestWasmEdge(new Edge({ id, from, to }));
+						this.emitter.emit("edgeCreate", { id, from: fromId, to: toId });
 						break;
 					}
 					default:
@@ -2738,6 +2764,44 @@ if (boardVitest) {
 			expect(renderer.scene.getObjectById("source.out")).toBe(sourceHandle);
 			expect(renderer.scene.getObjectById("edge-1")).toBe(edge);
 			expect(edgeEvents).toEqual([{ id: "edge-1", from: "source.out", to: "target.in" }]);
+
+			renderer.dispose();
+		});
+
+		it("creates an edge when linking two handles with a pointer drag through WASM", () => {
+			const { canvas } = createMockCanvas();
+			const renderer = new BoardRenderer({ canvas, renderMode: "headless-test" });
+			const edgeEvents: Array<{ id: string; from: string; to: string }> = [];
+			renderer.on("edgeCreate", (event) => edgeEvents.push(event));
+
+			const a = new Node({ id: "a", radius: 40, x: 0, y: 0 });
+			const b = new Node({ id: "b", radius: 40, x: 280, y: 0 });
+			new Handle({ angle: 0, id: "a.out", node: a });
+			new Handle({ angle: Math.PI, id: "b.in", node: b });
+			renderer.scene.add(a).add(b);
+			renderer.render();
+
+			const p0 = renderer.worldToScreen(computeHandlePosition(a, 0));
+			const pMid = renderer.worldToScreen({ x: 140, y: 0 });
+			const p1 = renderer.worldToScreen(computeHandlePosition(b, Math.PI));
+
+			canvas.dispatchEvent(
+				new MouseEvent("pointerdown", { bubbles: true, button: 0, clientX: p0.x, clientY: p0.y }),
+			);
+			canvas.dispatchEvent(
+				new MouseEvent("pointermove", { bubbles: true, clientX: pMid.x + 20, clientY: pMid.y }),
+			);
+			canvas.dispatchEvent(
+				new MouseEvent("pointermove", { bubbles: true, clientX: p1.x, clientY: p1.y }),
+			);
+			canvas.dispatchEvent(
+				new MouseEvent("pointerup", { bubbles: true, button: 0, clientX: p1.x, clientY: p1.y }),
+			);
+
+			expect(edgeEvents.length).toBe(1);
+			expect(renderer.scene.edges.has(edgeEvents[0].id)).toBe(true);
+			expect(edgeEvents[0].from).toBe("a.out");
+			expect(edgeEvents[0].to).toBe("b.in");
 
 			renderer.dispose();
 		});

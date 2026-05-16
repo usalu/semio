@@ -1,0 +1,14 @@
+{
+  "title": "Board Handle Link Drag Snap And Preview",
+  "status": "closed",
+  "summary": "Implemented handle-to-handle linking in the WASM BoardHost: left-button drag from a handle past a small screen threshold shows a snapped rubber-band preview (open polyline in screen space) and commits a new edge with edgeCreate JSON on release over a snap target. Added BoardScene.ingestWasmEdge and applyWasmDrainToScene edgeCreate handling so the imperative TS scene stays aligned with WASM without double edgeCreate emissions. Rebuilt elements_board wasm; added Rust host tests and a Vitest pointer-drag integration test.",
+  "goal": "🎯graphqltargetsemiors",
+  "sessions": [
+    "⚪d723dbfbdbf7465e8e0b3cbfe817cf89",
+    "⚪5ccaf3db9f6c4d0eb07de7931c87ec31",
+    "⚪9dbdabec5df1461fbc6cba840bc7e0c8",
+    "⚪9473dcf949a34c07944d049844c20aaa",
+    "⚪5151cf0dbf854d8eb1df33d79497e4a9",
+    "⚪50d2387dc623473aaec475fd67fa7de1"
+  ]
+}

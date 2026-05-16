@@ -14031,6 +14031,31 @@ pub mod gql {
     pub async fn build_schema() -> AppSchema {
         build_schema_sync_for(ParentStore::spawn().await)
     }
+
+    //#region 🌐native_http_graphql
+    /// @emoji 🌐 Parses a GraphQL-over-HTTP JSON body (`query`, optional `variables`, optional `operationName`) into an async-graphql [`Request`].
+    pub fn graphql_request_from_json_str(body: &str) -> Result<async_graphql::Request, crate::error::SemioError> {
+        use async_graphql::Variables;
+        let v: serde_json::Value = serde_json::from_str(body).map_err(|e| crate::error::SemioError::invalid(format!("graphql json: {e}")))?;
+        let query = v
+            .get("query")
+            .and_then(|x| x.as_str())
+            .ok_or_else(|| crate::error::SemioError::invalid("graphql json: missing query"))?
+            .to_string();
+        let mut req = async_graphql::Request::new(query);
+        if let Some(vars) = v.get("variables") {
+            if !vars.is_null() {
+                req = req.variables(Variables::from_json(vars.clone()));
+            }
+        }
+        if let Some(op) = v.get("operationName").and_then(|x| x.as_str()) {
+            if !op.is_empty() {
+                req = req.operation_name(op);
+            }
+        }
+        Ok(req)
+    }
+    //#endregion 🌐native_http_graphql
 }
 
 //#endregion 🌐 gql

@@ -201,9 +201,35 @@ class WorkerStringTransport {
   }
 }
 
+//#region 🌐HttpStoreTransport
+/** @emoji 🌐 GraphQL-over-HTTP to native `semio-store` (no WASM); subscriptions are no-ops until the sidecar exposes a stream. */
+class HttpStringTransport {
+  constructor(private readonly baseUrl: string) {}
+
+  async execute(requestJson: string): Promise<string> {
+    const r = await fetch(`${this.baseUrl}/graphql`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Accept: "application/json" },
+      body: requestJson,
+    });
+    const t = await r.text();
+    if (!r.ok) throw new Error(`graphql http ${r.status}: ${t}`);
+    return t;
+  }
+
+  async subscribe(_requestJson: string, _onEvent: (eventJson: string) => void): Promise<void> {
+    return;
+  }
+
+  dispose(): void {}
+}
+//#endregion 🌐HttpStoreTransport
+
+type KitStoreInnerTransport = WorkerStringTransport | InlineTransport | HttpStringTransport;
+
 /** @emoji 🌐 Thin GraphQL JSON transport: request in, JSON string out; pairs with rs {@code KitStoreHandle}. */
 export class GqlTransport {
-  constructor(private readonly inner: WorkerStringTransport | InlineTransport) { }
+  constructor(private readonly inner: KitStoreInnerTransport) { }
 
   async executeJson(body: { readonly query: string; readonly variables?: JsonObject; readonly operationName?: string }, timeoutMs: number): Promise<GraphqlEnvelope<JsonValue>> {
     const json = await withTimeout(this.inner.execute(JSON.stringify(body)), timeoutMs, "graphql");
@@ -316,6 +342,9 @@ export type SessionOpenOptions = Readonly<{
   wasmSpecifier?: string;
   workerFactory?: () => Worker;
 }>;
+
+/** @emoji 🌐 Options for {@link Session.openHttp} against `semio-store` (POST `/install` + POST `/graphql`). */
+export type SessionHttpOpenOptions = Readonly<SessionOpenOptions & { readonly installCreateDto?: JsonObject }>;
 
 function gqlString(s: string): string {
   return JSON.stringify(s);
@@ -803,7 +832,7 @@ function parseStrongEntityArrayIds(frag: JsonObject | null | undefined, key: str
 export class Session {
   private readonly timeoutMs: number;
   private readonly handle: GraphqlExecuteHandle;
-  private readonly innerTransport: WorkerStringTransport | InlineTransport;
+  private readonly innerTransport: KitStoreInnerTransport;
   private gqlLoopRunning = false;
   private disposed = false;
   private readonly commandIds = new Set<string>();
@@ -813,7 +842,7 @@ export class Session {
   /** @emoji 📡 Demuxed subscription fan-out. */
   readonly bus: EventBus;
 
-  private constructor(timeoutMs: number, inner: WorkerStringTransport | InlineTransport) {
+  private constructor(timeoutMs: number, inner: KitStoreInnerTransport) {
     this.timeoutMs = timeoutMs;
     this.innerTransport = inner;
     this.handle = { execute: (j) => inner.execute(j) };
@@ -1123,6 +1152,25 @@ export class Session {
     }
     const t = new InlineTransport(wasmHandle as { execute: ExecuteFn; subscribe: SubscribeFn; free?: () => void });
     const k = new Session(timeoutMs, t);
+    await withTimeout(k.warmGraphqlRead(), timeoutMs, "graphql");
+    void k.startSubscriptionLoop();
+    return k;
+  }
+
+  /** @emoji 🌐 Opens a {@link Session} against native `semio-store` at {@code baseUrl} (optional POST `/install` first). */
+  static async openHttp(baseUrl: string, opts?: SessionHttpOpenOptions): Promise<Session> {
+    const timeoutMs = opts?.timeoutMs ?? 60_000;
+    const root = baseUrl.replace(/\/$/, "");
+    if (opts?.installCreateDto != null) {
+      const r = await fetch(`${root}/install`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Accept: "application/json" },
+        body: JSON.stringify({ create: { dto: opts.installCreateDto } }),
+      });
+      if (!r.ok) throw new Error(`semio-store install ${r.status}: ${await r.text()}`);
+    }
+    const inner = new HttpStringTransport(root);
+    const k = new Session(timeoutMs, inner);
     await withTimeout(k.warmGraphqlRead(), timeoutMs, "graphql");
     void k.startSubscriptionLoop();
     return k;
@@ -3666,6 +3714,11 @@ installNodeFieldMethods(Prop, "Prop", defineBoundNodeFields([
 /** @emoji 🚀 Opens a {@link Session} backed by rs WASM (worker or inline). */
 export async function openSession(uri: string, opts?: SessionOpenOptions): Promise<Session> {
   return Session.open(uri, opts);
+}
+
+/** @emoji 🚀 Opens a {@link Session} against native `semio-store` HTTP GraphQL. */
+export async function openSessionHttp(baseUrl: string, opts?: SessionHttpOpenOptions): Promise<Session> {
+  return Session.openHttp(baseUrl, opts);
 }
 //#endregion 🚀PublicAPI
 
