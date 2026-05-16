@@ -351,7 +351,7 @@ function main(): void {
     process.exit(1);
   }
 
-  const probeLegacyHas = spawnSync(
+  const probeStructuralHas = spawnSync(
     shell,
     [
       "-a",
@@ -369,20 +369,20 @@ function main(): void {
     { encoding: "utf8", cwd: REPO_ROOT, env: buildCypherEnv() },
   );
 
-  if (probeLegacyHas.status !== 0) {
-    console.error(`[migrate:neo4j] legacy HAS rel verify failed: ${probeLegacyHas.stderr}`);
+  if (probeStructuralHas.status !== 0) {
+    console.error(`[migrate:neo4j] structural HAS rel verify failed: ${probeStructuralHas.stderr}`);
     process.exit(1);
   }
 
-  const lhTail = String(probeLegacyHas.stdout ?? "")
+  const lhTail = String(probeStructuralHas.stdout ?? "")
     .trim()
     .split(/\r?\n/)
     .map((l) => l.trim())
     .filter(Boolean);
   const lhLast = lhTail[lhTail.length - 1] ?? "";
   const hasRelCount = Number.parseInt(lhLast.trim(), 10);
-  if (!Number.isFinite(hasRelCount) || hasRelCount !== 0) {
-    console.error(`[migrate:neo4j] expected zero :HAS relationships after migration; verify output:\n${probeLegacyHas.stdout}`);
+  if (!Number.isFinite(hasRelCount) || hasRelCount < 1) {
+    console.error(`[migrate:neo4j] expected at least one structural :HAS edge after migration; verify output:\n${probeStructuralHas.stdout}`);
     process.exit(1);
   }
 

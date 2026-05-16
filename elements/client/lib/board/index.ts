@@ -223,7 +223,7 @@ export type BoardRedrawModeKind = "force-graph" | "hierarchical-tree";
 /** @emoji 🌳 Rank growth axis for {@link layoutBoardFixtureRedraw} hierarchical mode (`downwards` | `upwards` | `right` | `left`). */
 export type BoardHierarchicalTreeDirectionKind = "downwards" | "left" | "right" | "upwards";
 
-/** @emoji 🌳 JSON for {@link layoutBoardFixtureRedraw} hierarchical mode (camelCase; matches Rust `HierarchicalTreeLayoutOptions`). */
+/** @emoji 🌳 Hierarchical redraw opts (camelCase); WASM runs a Buchheim tidy-tree on a spanning forest (min-depth parent), ranks mapped by `direction`. */
 export interface BoardHierarchicalTreeLayoutOptions {
 	centerX?: number;
 	centerY?: number;
@@ -242,7 +242,7 @@ export interface BoardRedrawLayoutOptions {
 	randomSeed?: number;
 }
 
-/** @emoji 🔁 Runs the selected WASM redraw pass (force graph or hierarchical tree); nodes may omit coordinates until this returns positioned centers. */
+/** @emoji 🔁 WASM redraw: force graph or Buchheim hierarchical tree; nodes may omit centers until this returns positioned `x`/`y`. */
 export function layoutBoardFixtureRedraw(fixture: BoardFixtureV1, options: BoardRedrawLayoutOptions): BoardFixtureV1 {
 	const out = boardRedrawLayoutFixtureJson(JSON.stringify(fixture), JSON.stringify(options));
 	return JSON.parse(out) as BoardFixtureV1;

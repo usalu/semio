@@ -1,0 +1,10 @@
+{
+  "title": "Neo4j Owns Tree And Shape Enforcement",
+  "emoji": "🌳",
+  "status": "open",
+  "description": "Clean OWNS tree so only Module{name:Schema} has no incoming OWNS among module roots; remove duplicate domain-module vs class ownership of Module(operation); retype Module(operation)-Command to HAS; enforce OWNS shape (Module→Module only; Class→Class|Command|Data|Derived|Reference|Method; Command→Data only with optional Method exception documented); add apoc.util.validate checks at end of migrations.",
+  "goal": "🎯r2602",
+  "sessions": [
+    "⚪9fa11f31ef1a42fd8814c7d7e10fdb42"
+  ]
+}

@@ -642,7 +642,7 @@ type AlternativeEdge {
 }
 
 """
-@emoji 🌐 SDL `interface Artifact` — authored change graph on rich entities (`EmptyArtifact` placeholder).
+@emoji 🌐 SDL `interface Artifact` — authored change graph on rich entities (`EmptyArtifact` minimal variant).
 """
 interface Artifact {
 	id: ID!
@@ -2200,7 +2200,7 @@ type DesignOperationEdge {
 }
 
 """
-@emoji 🌐 SDL `interface Diff` — hash-backed diff projection (placeholder + future `VectorDiff`, …).
+@emoji 🌐 SDL `interface Diff` — hash-backed diff projection (`EmptyDiff` shell plus future `VectorDiff`, …).
 """
 interface Diff {
 	id: ID!
@@ -2224,7 +2224,7 @@ type DiffEdge {
 }
 
 """
-@emoji 🌐 SDL `interface Document` — preview-capable artifact (`EmptyDocument` placeholder).
+@emoji 🌐 SDL `interface Document` — preview-capable artifact (`EmptyDocument` minimal variant).
 """
 interface Document {
 	id: ID!
@@ -2363,7 +2363,7 @@ interface EntityEdge {
 }
 
 """
-@emoji 🌐 SDL `interface Event` — timestamped weak entity (`EmptyEvent` placeholder).
+@emoji 🌐 SDL `interface Event` — timestamped weak entity (`EmptyEvent` minimal variant).
 """
 interface Event {
 	id: ID!
@@ -4701,7 +4701,7 @@ type RepresentationModificationsEdge {
 }
 
 """
-@emoji 🌐 SDL `interface RichStrongEntity` — titled uuid entities (`EmptyRichStrong` placeholder + future concrete kinds).
+@emoji 🌐 SDL `interface RichStrongEntity` — titled uuid entities (`EmptyRichStrong` minimal variant plus future concrete kinds).
 """
 interface RichStrongEntity {
 	id: ID!
@@ -4958,7 +4958,7 @@ type Subscription {
 	"""
 	session: Session!
 	"""
-	@emoji 📡 Golden `Subscription.operation` — emits the latest WIP [`OperationInterface`] (placeholder selection until operation cursor wiring lands).
+	@emoji 📡 Golden `Subscription.operation` — emits the latest WIP [`OperationInterface`] (tracks `op_history` tail until finer-grained cursor wiring lands).
 	"""
 	operation: Operation!
 }

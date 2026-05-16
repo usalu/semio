@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // Hand-maintained Neo4j migrations for the semio graph. Run via migrate.neo4j.script.ts in this folder (not chained from generate).
-// Containment: `OWNS` for module trees, commands, kit rows, and legacy `HAS`→`OWNS` relabel targets; structural `HAS` for `Module`→`Class`/`Interface`/`Scalar` (see `semio/dev/schema/neo4j/schema.graphql`).
+// Containment: `OWNS` for module trees, kit rows, and legacy `HAS`→`OWNS` relabel targets; structural `HAS` for `Module`→`Class`/`Interface`/`Scalar`/`Command` (see `semio/dev/schema/neo4j/schema.graphql`).
 
 //#region RelabelHasRelationshipsToOwns
 MATCH (a)-[r:HAS]->(b)
-WHERE NOT (a:Module AND (b:Class OR b:Interface OR b:Scalar))
+WHERE NOT (a:Module AND (b:Class OR b:Interface OR b:Scalar OR b:Command))
 CREATE (a)-[r2:OWNS]->(b)
 SET r2 += properties(r)
 DELETE r;
@@ -12,7 +12,7 @@ DELETE r;
 
 //#region RelabelLegacyPartOfStructuralEdgesToHas
 MATCH (m:Module)-[r:PART_OF]->(x)
-WHERE x:Class OR x:Interface OR x:Scalar
+WHERE x:Class OR x:Interface OR x:Scalar OR x:Command
 MERGE (m)-[:HAS]->(x)
 DELETE r;
 //#endregion RelabelLegacyPartOfStructuralEdgesToHas
@@ -1317,23 +1317,54 @@ LIMIT 1
 FOREACH (_ IN CASE WHEN t IS NULL THEN [] ELSE [1] END | MERGE (arg_UpdateTypeIcon_icon)-[:IS]->(t));
 //#endregion MergeCommandInputSurfaces
 
+//#region EnsureDomainWorkspaceModuleShell
+MATCH (dom:Module {name: 'Domain'})
+MERGE (ws:Module {name: 'Workspace'})
+OPTIONAL MATCH (p:Module)-[rx:OWNS]->(ws)
+WHERE id(p) <> id(dom)
+DELETE rx
+MERGE (dom)-[:OWNS]->(ws);
+//#endregion EnsureDomainWorkspaceModuleShell
+
+//#region RetypeModuleOwnsCommandToHas
+MATCH (mod:Module)-[r:OWNS]->(cmd:Command)
+MERGE (mod)-[:HAS]->(cmd)
+DELETE r;
+//#endregion RetypeModuleOwnsCommandToHas
+
+//#region DetachKitHostOwnsOperationModules
+MATCH (host:Class|Interface)-[r:OWNS]->(op:Module {name: 'operation'})
+DELETE r;
+//#endregion DetachKitHostOwnsOperationModules
+
 //#region ReparentOperationCommandsUnderOwnerOperationModules
-// Each domain `Class` / `Interface` (Piece, Quality, …) OWNS `Module(operation)` which OWNS concrete operation `Command` nodes (golden `Operation` subtypes).
+// Each domain `Module` (Piece, Quality, …) `OWNS` `Module(operation)` which `HAS` concrete operation `Command` nodes (golden `Operation` subtypes). Kit `Class`/`Interface` do not `OWNS` the operation folder. `Module`→`Class`/`Interface`/`Scalar` shell uses `HAS` (see migrations + Neo4j SDL).
 UNWIND [{op: 'AddAttributesToConcept', own: 'Concept'}, {op: 'AddAttributesToDesign', own: 'Design'}, {op: 'AddAttributesToPiece', own: 'Piece'}, {op: 'AddAttributesToPort', own: 'Port'}, {op: 'AddAttributesToQuality', own: 'Quality'}, {op: 'AddAttributesToTag', own: 'Tag'}, {op: 'AddAttributesToType', own: 'Type'}, {op: 'AddAttributeToConcept', own: 'Concept'}, {op: 'AddAttributeToDesign', own: 'Design'}, {op: 'AddAttributeToPiece', own: 'Piece'}, {op: 'AddAttributeToPort', own: 'Port'}, {op: 'AddAttributeToQuality', own: 'Quality'}, {op: 'AddAttributeToTag', own: 'Tag'}, {op: 'AddAttributeToType', own: 'Type'}, {op: 'AddChildPiecesWithParentConnections', own: 'Piece'}, {op: 'AddChildPieceWithParentConnection', own: 'Piece'}, {op: 'AddConnector', own: 'Connector'}, {op: 'AddConnectors', own: 'Connector'}, {op: 'AddHangingChildPiecesWithParentConnections', own: 'Piece'}, {op: 'AddHangingChildPieceWithParentConnection', own: 'Piece'}, {op: 'ChangeDescription', own: 'Workspace'}, {op: 'ChangePiecesToType', own: 'Piece'}, {op: 'ChangePieceToType', own: 'Piece'}, {op: 'CreateConcept', own: 'Concept'}, {op: 'CreateConcepts', own: 'Concept'}, {op: 'CreateDesign', own: 'Design'}, {op: 'CreateDesigns', own: 'Design'}, {op: 'CreateFixedPiece', own: 'Piece'}, {op: 'CreatePort', own: 'Port'}, {op: 'CreatePorts', own: 'Port'}, {op: 'CreateQualities', own: 'Quality'}, {op: 'CreateQuality', own: 'Quality'}, {op: 'CreateTag', own: 'Tag'}, {op: 'CreateTags', own: 'Tag'}, {op: 'CreateType', own: 'Type'}, {op: 'CreateTypes', own: 'Type'}, {op: 'DeleteConcept', own: 'Concept'}, {op: 'DeleteConcepts', own: 'Concept'}, {op: 'DeleteDesign', own: 'Design'}, {op: 'DeleteDesigns', own: 'Design'}, {op: 'DeletePiece', own: 'Piece'}, {op: 'DeletePieces', own: 'Piece'}, {op: 'DeletePiecesAndConnections', own: 'Piece'}, {op: 'DeletePort', own: 'Port'}, {op: 'DeletePorts', own: 'Port'}, {op: 'DeleteQualities', own: 'Quality'}, {op: 'DeleteQuality', own: 'Quality'}, {op: 'DeleteTag', own: 'Tag'}, {op: 'DeleteTags', own: 'Tag'}, {op: 'DeleteType', own: 'Type'}, {op: 'DeleteTypes', own: 'Type'}, {op: 'DragPiece', own: 'Piece'}, {op: 'DragPieces', own: 'Piece'}, {op: 'FixPiece', own: 'Piece'}, {op: 'FixPieces', own: 'Piece'}, {op: 'FlattenDesign', own: 'Design'}, {op: 'MovePiece', own: 'Piece'}, {op: 'MovePieces', own: 'Piece'}, {op: 'RemoveAttributeFromConcept', own: 'Concept'}, {op: 'RemoveAttributeFromDesign', own: 'Design'}, {op: 'RemoveAttributeFromPiece', own: 'Piece'}, {op: 'RemoveAttributeFromPort', own: 'Port'}, {op: 'RemoveAttributeFromQuality', own: 'Quality'}, {op: 'RemoveAttributeFromTag', own: 'Tag'}, {op: 'RemoveAttributeFromType', own: 'Type'}, {op: 'RemoveAttributesFromConcept', own: 'Concept'}, {op: 'RemoveAttributesFromDesign', own: 'Design'}, {op: 'RemoveAttributesFromPiece', own: 'Piece'}, {op: 'RemoveAttributesFromPort', own: 'Port'}, {op: 'RemoveAttributesFromQuality', own: 'Quality'}, {op: 'RemoveAttributesFromTag', own: 'Tag'}, {op: 'RemoveAttributesFromType', own: 'Type'}, {op: 'RemoveConnector', own: 'Connector'}, {op: 'RemoveConnectors', own: 'Connector'}, {op: 'RenameConcept', own: 'Concept'}, {op: 'RenameConnector', own: 'Connector'}, {op: 'RenameKit', own: 'Kit'}, {op: 'RenamePiece', own: 'Piece'}, {op: 'RenamePort', own: 'Port'}, {op: 'RenameQuality', own: 'Quality'}, {op: 'RenameTag', own: 'Tag'}, {op: 'RenameType', own: 'Type'}, {op: 'UpdateConceptDescription', own: 'Concept'}, {op: 'UpdateConceptIcon', own: 'Concept'}, {op: 'UpdateConnectorDescription', own: 'Connector'}, {op: 'UpdateConnectorIcon', own: 'Connector'}, {op: 'UpdatePieceDescription', own: 'Piece'}, {op: 'UpdatePortDescription', own: 'Port'}, {op: 'UpdatePortIcon', own: 'Port'}, {op: 'UpdateQualityDescription', own: 'Quality'}, {op: 'UpdateQualityIcon', own: 'Quality'}, {op: 'UpdateTagDescription', own: 'Tag'}, {op: 'UpdateTagIcon', own: 'Tag'}, {op: 'UpdateTypeDescription', own: 'Type'}, {op: 'UpdateTypeIcon', own: 'Type'}] AS row
 MATCH (c:Command {name: row.op})
-MATCH (own:Class|Interface {name: row.own})
-MERGE (own)-[:OWNS]->(m:Module {name: 'operation'})
-MERGE (m)-[:OWNS]->(c)
+MATCH (folder:Module {name: row.own})
+OPTIONAL MATCH (c)<-[h:HAS]-(:Module {name: 'operation'})
+DELETE h
+MERGE (folder)-[:OWNS]->(m:Module {name: 'operation'})
+MERGE (m)-[:HAS]->(c)
 WITH c, m
-OPTIONAL MATCH (p:Module)-[r:OWNS]->(c)
+OPTIONAL MATCH (p)-[r:OWNS]->(c)
 WHERE id(p) <> id(m)
 DELETE r;
 //#endregion ReparentOperationCommandsUnderOwnerOperationModules
 
+//#region CollapseDuplicateOperationModulesPerFolder
+MATCH (folder:Module)-[:OWNS]->(op:Module {name: 'operation'})
+WITH folder, collect(op) AS ops
+WHERE size(ops) > 1
+CALL apoc.refactor.mergeNodes(ops, {properties: "discard", mergeRels: true})
+YIELD node
+RETURN count(*) AS mergedDuplicateOperationModules;
+//#endregion CollapseDuplicateOperationModulesPerFolder
+
 //#region RetypeResidualModuleOwnsToHas
-// Final sweep: any `Module-[:OWNS]->(Class|Interface|Scalar)` left from legacy imports becomes `HAS` (idempotent with MERGE).
+// Final sweep: any `Module-[:OWNS]->(Class|Interface|Scalar|Command)` left from legacy imports becomes `HAS` (idempotent with MERGE).
 MATCH (m:Module)-[r:OWNS]->(x)
-WHERE x:Class OR x:Interface OR x:Scalar
+WHERE x:Class OR x:Interface OR x:Scalar OR x:Command
 MERGE (m)-[:HAS]->(x)
 DELETE r;
 //#endregion RetypeResidualModuleOwnsToHas
@@ -1342,3 +1373,25 @@ DELETE r;
 OPTIONAL MATCH (ic:Interface {name: 'Command'})
 DETACH DELETE ic;
 //#endregion DetachCommandKitInterfaceNode
+
+//#region AssertOwnsContainmentShape
+OPTIONAL MATCH (m:Module) WHERE NOT ()-[:OWNS]->(m) AND coalesce(m.name, '') <> 'Schema'
+WITH count(m) AS strayModuleRoots
+CALL apoc.util.validate(strayModuleRoots = 0, 'Every `Module` except the `Schema` row must have incoming `OWNS`; extra module roots=%d', [strayModuleRoots]);
+
+OPTIONAL MATCH (:Module)-[r:OWNS]->(x) WHERE NOT (x:Module OR x:Constraint OR x:Enum)
+WITH count(r) AS badModuleOwns
+CALL apoc.util.validate(badModuleOwns = 0, '`Module` must `OWNS` only `Module`, `Constraint`, or `Enum`; violations=%d', [badModuleOwns]);
+
+OPTIONAL MATCH (:Class)-[r:OWNS]->(x) WHERE NOT (x:Class OR x:Command OR x:Data OR x:Derived OR x:Reference OR x:Method OR x:Constraint)
+WITH count(r) AS badClassOwns
+CALL apoc.util.validate(badClassOwns = 0, '`Class` `OWNS` target outside kit shell set; violations=%d', [badClassOwns]);
+
+OPTIONAL MATCH (:Interface)-[r:OWNS]->(x) WHERE NOT (x:Class OR x:Command OR x:Data OR x:Derived OR x:Reference OR x:Method OR x:Constraint)
+WITH count(r) AS badInterfaceOwns
+CALL apoc.util.validate(badInterfaceOwns = 0, '`Interface` `OWNS` target outside kit shell set; violations=%d', [badInterfaceOwns]);
+
+OPTIONAL MATCH (:Command)-[r:OWNS]->(x) WHERE NOT (x:Data OR x:Constraint)
+WITH count(r) AS badCommandOwns
+CALL apoc.util.validate(badCommandOwns = 0, '`Command` may `OWNS` only `Data` or `Constraint`; violations=%d', [badCommandOwns]);
+//#endregion AssertOwnsContainmentShape

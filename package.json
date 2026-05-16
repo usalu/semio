@@ -40,7 +40,7 @@
     "dev:storybook": "bun ./script.ts dev storybook",
     "dev:board": "bun ./script.ts dev board",
     "generate": "bun ./script.ts generate",
-    "migrate:neo4j": "bun ./.repo/🎫/26/05/15/NEO4J-MIGRATIONS-HANDWRITTEN/migrate.neo4j.script.ts",
+    "migrate:neo4j": "bun ./.repo/🎫/26/05/15/NEO4J-MODULE-SHELL-REL-TYPE-HAS/migrate.neo4j.script.ts",
     "lint": "bun ./script.ts lint",
     "format": "bun ./script.ts format",
     "test": "bun ./script.ts test",

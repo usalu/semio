@@ -378,34 +378,32 @@ elements/board:
 
 ---
 
-All nodes, handles and edges must have a kind.
+---
+
+All nodes, handles and edges must have a kind (referenced by id).
+Every kind provides default for a new instance.
+Every default can be overwritten by the instance.
+Kinds are passed centrally to the board.
+Compatbility is passed centrally to the board.
+
+node kinds:
+id, name, shape [default values], color, defaultHandleKind, etc
+
+handle kinds:
+id, name, color, radius, defaultEdgeKind, etc
+The edge kind determines which
+When a handle has a color, then it overrides the color of the handle kind.
+
 Kinds are compatible. There is central list of compatible pairs.
 
 A compatible pair has source, target, bidirectional flag, important flag.
 
 General to Specific
+
 1. General (0,0,0,0)
 1. Node (0,0,1,0)
-2. Edge (0,1,0,0)
-3. Handle (1,0,0,0)
-
-
-
-handle kinds:
-Every handle can have a kind and then centrally a list of compatible pairs can be provided.
-Two handles that are not compatible cant be connected. It doesnt snap, etc
-
-All handles must have handle kind.
-Handle kinds are passed separatley (id, name, color)
-When a handle has a color, then it overrides the color of the handle kind.
-
-All nodes must have node kind.
-Node kinds are passed separatley (id, name, shape, color, defaultHandleKind)
-If nodes have properties such as color, handle, they override it.
-Nodes kinds can be compatible with other node kinds.
-
----
-
+1. Edge (0,1,0,0)
+1. Handle (1,0,0,0)
 
 ---
 
