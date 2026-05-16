@@ -203,6 +203,9 @@ function triptychCamerasFromFixture(fixture: BoardFixtureV1): Record<BoardPlayPa
 /** @emoji ⏱️ After redraw play stops: camera stays fixed for the first third of this span, then eases in the remaining two thirds to bbox fit (3s total). */
 const BOARD_PLAY_CAMERA_POST_REDRAW_TOTAL_MS = 3000;
 
+/** @emoji 📷 Linear blend toward bbox-fit cameras each fixture commit while redraw play is on (damped follow). */
+const BOARD_PLAY_REDRAW_CAMERA_CHASE_BLEND = 0.22;
+
 function easeInOutCubic01(t: number): number {
 	const x = Math.min(1, Math.max(0, t));
 	return x < 0.5 ? 4 * x * x * x : 1 - (-2 * x + 2) ** 3 / 2;
@@ -228,6 +231,30 @@ function blendTriptychCameras(
 		"board-detail": lerpCameraState(from["board-detail"], to["board-detail"], tLinear),
 		"board-overview": lerpCameraState(from["board-overview"], to["board-overview"], tLinear),
 		"board-selection": lerpCameraState(from["board-selection"], to["board-selection"], tLinear),
+	};
+}
+
+function dampCameraStateLinear(a: CameraState, b: CameraState, w: number): CameraState {
+	const t = Math.min(1, Math.max(0, w));
+	const zoom =
+		a.zoom > 1e-9 && b.zoom > 1e-9 ? a.zoom * (b.zoom / a.zoom) ** t : a.zoom + (b.zoom - a.zoom) * t;
+	return {
+		x: a.x + (b.x - a.x) * t,
+		y: a.y + (b.y - a.y) * t,
+		zoom: clampZoom(zoom),
+	};
+}
+
+/** @emoji 📷 Linear per-frame damping of all pane cameras toward `to` (used while redraw play runs). */
+function dampTriptychCamerasLinear(
+	from: Record<BoardPlayPaneId, CameraState>,
+	to: Record<BoardPlayPaneId, CameraState>,
+	w: number,
+): Record<BoardPlayPaneId, CameraState> {
+	return {
+		"board-detail": dampCameraStateLinear(from["board-detail"], to["board-detail"], w),
+		"board-overview": dampCameraStateLinear(from["board-overview"], to["board-overview"], w),
+		"board-selection": dampCameraStateLinear(from["board-selection"], to["board-selection"], w),
 	};
 }
 
@@ -773,7 +800,7 @@ function BoardPlaySettingsPanel(): ReactElement {
 					Redraw handles
 				</Button>
 				<p className="text-muted-foreground text-[11px] leading-snug">
-					While play is on, camera framing stays pinned to the graph as it was when you pressed play. After pause, over three seconds the camera stays fixed for the first third, then eases through the last two thirds (slow–fast–slow) to a bounding-box fit without a final jump. Dragging a node resets progressive ramp and the auto-stop timer.
+					While play is on, cameras ease each tick toward a bbox fit of the current layout (damped). After pause, over three seconds the camera stays fixed for the first third, then eases through the last two thirds (slow–fast–slow) to the final bbox fit without a jump. Dragging a node resets progressive ramp and the auto-stop timer.
 				</p>
 			</div>
 		</div>
@@ -2111,6 +2138,7 @@ function BoardPlayInner(): ReactElement {
 	const [cameraDisplayOverrideByPane, setCameraDisplayOverrideByPane] = useState<Record<BoardPlayPaneId, CameraState> | null>(null);
 	const suppressCameraBasisSyncRef = useRef(false);
 	const cameraPlayEndAnimRafRef = useRef<number | null>(null);
+	const boardPlayRedrawCameraChaseRef = useRef<Record<BoardPlayPaneId, CameraState> | null>(null);
 	const lastPlayingForCameraEaseRef = useRef(false);
 
 	useEffect(() => {
@@ -2140,7 +2168,13 @@ function BoardPlayInner(): ReactElement {
 			setCameraDisplayOverrideByPane(null);
 			suppressCameraBasisSyncRef.current = false;
 			cameraBasisFixtureRef.current = fixture;
-			setBoardPlayPaneCamerasBaseline(triptychCamerasFromFixture(fixture));
+			const playCam = triptychCamerasFromFixture(fixture);
+			setBoardPlayPaneCamerasBaseline(playCam);
+			boardPlayRedrawCameraChaseRef.current = {
+				"board-detail": { ...playCam["board-detail"] },
+				"board-overview": { ...playCam["board-overview"] },
+				"board-selection": { ...playCam["board-selection"] },
+			};
 		} else if (!suppressCameraBasisSyncRef.current) {
 			if (cameraPlayEndAnimRafRef.current != null) {
 				cancelAnimationFrame(cameraPlayEndAnimRafRef.current);
@@ -2148,6 +2182,25 @@ function BoardPlayInner(): ReactElement {
 			}
 		}
 		prevBoardRedrawPlayingRef.current = boardRedrawPlaying;
+	}, [boardRedrawPlaying, fixture]);
+
+	useEffect(() => {
+		if (!boardRedrawPlaying) {
+			boardPlayRedrawCameraChaseRef.current = null;
+			return;
+		}
+		if (suppressCameraBasisSyncRef.current) {
+			return;
+		}
+		const target = triptychCamerasFromFixture(fixture);
+		const prev = boardPlayRedrawCameraChaseRef.current ?? target;
+		const next = dampTriptychCamerasLinear(prev, target, BOARD_PLAY_REDRAW_CAMERA_CHASE_BLEND);
+		boardPlayRedrawCameraChaseRef.current = {
+			"board-detail": { ...next["board-detail"] },
+			"board-overview": { ...next["board-overview"] },
+			"board-selection": { ...next["board-selection"] },
+		};
+		setBoardPlayPaneCamerasBaseline(boardPlayRedrawCameraChaseRef.current);
 	}, [boardRedrawPlaying, fixture]);
 
 	useEffect(() => {

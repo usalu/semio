@@ -1,0 +1,10 @@
+{
+  "title": "Board Node And Handle Icons Multikind",
+  "emoji": "🖼️",
+  "status": "open",
+  "description": "Board nodes and handles: iconKind supports emoji (emoji:), Typst (typst:) via typst+typst-svg, SVG via vello_svg, raster data URLs (image:/data:). Align crate on vello_svg's vello 0.7. Extend TS/React fixture types and Vitest.",
+  "goal": "🎯r2602🎯runningsketchpad",
+  "sessions": [
+    "⚪b88ade8bef734d5eaa60945ba0e93790"
+  ]
+}

@@ -1,10 +1,13 @@
 //! 🎛️ Single-source board crate: vector geometry (`vcompute`), selection predicates (`geom_sel`), serde scene JSON (`scene_json`), interactive `BoardHost`, retained `BoardEngine`, and wasm-bindgen facades — all in this file (no sibling `src/` modules).
 #![allow(clippy::missing_errors_doc, reason = "Board engine is internal to the elements board bundle.")]
 
+pub use vello_svg::usvg;
+pub use vello_svg::vello;
+
 mod vcompute {
-	use vello::kurbo::{Affine, CubicBez, ParamCurve, Point, Vec2, Stroke};
-	use vello::peniko::Color;
-	use vello::Scene;
+	use crate::vello::kurbo::{Affine, CubicBez, ParamCurve, Point, Vec2, Stroke};
+	use crate::vello::peniko::Color;
+	use crate::vello::Scene;
 
 	#[inline]
 	pub fn clamp_f64(value: f64, min: f64, max: f64) -> f64 {
@@ -133,7 +136,7 @@ mod vcompute {
 }
 
 mod geom_sel {
-	use vello::kurbo::{CubicBez, ParamCurve, Point};
+	use crate::vello::kurbo::{CubicBez, ParamCurve, Point};
 
 	#[derive(Clone, Copy, Debug)]
 	pub struct WorldBox {
@@ -374,6 +377,9 @@ mod scene_json {
 		/// CSS `#rgb` / `#rrggbb` / `#rrggbbaa` overriding catalog color for this handle.
 		#[serde(default)]
 		pub color: Option<String>,
+		/// @emoji 🏷️ Runtime host encoding: `typst:`, `emoji:`, `image:data:…`, catalog id, or inline SVG for detail LOD.
+		#[serde(default)]
+		pub icon_kind: Option<String>,
 		#[serde(default)]
 		pub user_data: Option<serde_json::Value>,
 		#[serde(default)]
@@ -1327,7 +1333,7 @@ mod redraw_layout {
 	use serde::Deserialize;
 	use serde_json::Value;
 	use std::collections::HashMap;
-	use vello::kurbo::Point;
+	use crate::vello::kurbo::Point;
 
 	use super::fixture_edge_handle_ids_from_object;
 	use super::force_graph::{apply_force_graph_layout_to_fixture_v1_value, ForceGraphLayoutOptions};
@@ -1517,7 +1523,7 @@ pub use force_graph::{apply_force_graph_layout_to_fixture_v1_json, apply_force_g
 pub use redraw_layout::{apply_edge_handle_snap_to_fixture_v1_json, apply_redraw_layout_to_fixture_v1_json};
 
 mod elements_board_palette {
-	use vello::peniko::Color;
+	use crate::vello::peniko::Color;
 	include!(concat!(env!("OUT_DIR"), "/elements_styling_board.rs"));
 }
 
@@ -1540,12 +1546,184 @@ fn resolve_node_icon_svg_from_encoding(encoded: &str) -> Option<String> {
 	None
 }
 
+mod board_icon_codec {
+	use base64::Engine as _;
+	use std::path::PathBuf;
+	use std::sync::{Arc, OnceLock};
+	use typst::foundations::{Bytes, Datetime};
+	use typst::layout::{Abs, PagedDocument};
+	use typst::text::Font;
+	use typst::Library;
+	use typst::LibraryExt;
+	use typst::World;
+	use typst::syntax::{FileId, Source, VirtualPath};
+	use typst::utils::LazyHash;
+
+	pub enum BoardResolvedIcon {
+		None,
+		SvgThemed(String),
+		SvgPlain(String),
+		RasterRgba8 {
+			rgba: Arc<[u8]>,
+			w: u32,
+			h: u32,
+		},
+	}
+
+	struct RgbaImage {
+		data: Arc<[u8]>,
+		w: u32,
+		h: u32,
+	}
+
+	fn decode_raster_icon_bytes(t: &str) -> Option<RgbaImage> {
+		let s = t.trim().strip_prefix("image:").unwrap_or(t.trim()).trim();
+		let rest = s
+			.strip_prefix("data:image/png;base64,")
+			.or_else(|| s.strip_prefix("data:image/jpeg;base64,"))
+			.or_else(|| s.strip_prefix("data:image/jpg;base64,"))?;
+		let raw = base64::engine::general_purpose::STANDARD.decode(rest.trim()).ok()?;
+		let img = image::load_from_memory(&raw).ok()?;
+		let rgba = img.to_rgba8();
+		let (w, h) = rgba.dimensions();
+		if w == 0 || h == 0 {
+			return None;
+		}
+		Some(RgbaImage {
+			data: Arc::from(rgba.into_raw().into_boxed_slice()),
+			w,
+			h,
+		})
+	}
+
+	pub fn board_typst_markup_to_svg(markup: &str) -> Option<String> {
+		static LIB: OnceLock<LazyHash<Library>> = OnceLock::new();
+		static BOOK: OnceLock<LazyHash<typst::text::FontBook>> = OnceLock::new();
+		static FONTS: OnceLock<Vec<Font>> = OnceLock::new();
+		static MAIN: OnceLock<FileId> = OnceLock::new();
+		let library = LIB.get_or_init(|| LazyHash::new(Library::default()));
+		let fonts = FONTS.get_or_init(|| {
+			let mut out = Vec::new();
+			for bytes in typst_assets::fonts() {
+				let blob = Bytes::new(bytes);
+				let mut idx = 0u32;
+				loop {
+					if let Some(f) = Font::new(blob.clone(), idx) {
+						out.push(f);
+						idx = idx.saturating_add(1);
+					} else {
+						break;
+					}
+				}
+			}
+			out
+		});
+		let book = BOOK.get_or_init(|| LazyHash::new(typst::text::FontBook::from_fonts(fonts.iter())));
+		let main = *MAIN.get_or_init(|| FileId::new(None, VirtualPath::new("/board.typ")));
+		let source = Source::new(main, markup.to_string());
+		struct BoardTypstWorld<'a> {
+			library: &'static LazyHash<Library>,
+			book: &'static LazyHash<typst::text::FontBook>,
+			main: FileId,
+			source: Source,
+			fonts: &'a [Font],
+		}
+		impl World for BoardTypstWorld<'_> {
+			fn library(&self) -> &LazyHash<Library> {
+				self.library
+			}
+			fn book(&self) -> &LazyHash<typst::text::FontBook> {
+				self.book
+			}
+			fn main(&self) -> FileId {
+				self.main
+			}
+			fn source(&self, id: FileId) -> typst::diag::FileResult<Source> {
+				if id == self.main {
+					Ok(self.source.clone())
+				} else {
+					Err(typst::diag::FileError::NotFound(PathBuf::from("board.typ")))
+				}
+			}
+			fn file(&self, _id: FileId) -> typst::diag::FileResult<Bytes> {
+				Err(typst::diag::FileError::NotFound(PathBuf::from("board.bin")))
+			}
+			fn font(&self, index: usize) -> Option<Font> {
+				self.fonts.get(index).cloned()
+			}
+			fn today(&self, _offset: Option<i64>) -> Option<Datetime> {
+				None
+			}
+		}
+		let w = BoardTypstWorld {
+			library,
+			book,
+			main,
+			source,
+			fonts: fonts.as_slice(),
+		};
+		let warned = typst::compile::<PagedDocument>(&w);
+		let doc = warned.output.ok()?;
+		if doc.pages.is_empty() {
+			return None;
+		}
+		Some(typst_svg::svg_merged(&doc, Abs::pt(3.0)))
+	}
+
+	pub fn board_resolve_icon_kind(encoded: &str) -> BoardResolvedIcon {
+		let t = encoded.trim();
+		if t.is_empty() {
+			return BoardResolvedIcon::None;
+		}
+		if let Some(src) = t.strip_prefix("typst:") {
+			let src = src.trim();
+			if src.is_empty() {
+				return BoardResolvedIcon::None;
+			}
+			let wrapped = format!(
+				"#set page(width: 96pt, height: 96pt, margin: 3pt, fill: none)\n{src}"
+			);
+			return match board_typst_markup_to_svg(&wrapped) {
+				Some(s) => BoardResolvedIcon::SvgPlain(s),
+				None => BoardResolvedIcon::None,
+			};
+		}
+		if let Some(em) = t.strip_prefix("emoji:") {
+			let em = em.trim();
+			if em.is_empty() {
+				return BoardResolvedIcon::None;
+			}
+			let wrapped = format!(
+				"#set page(width: 88pt, height: 88pt, margin: 2pt, fill: none)\n#set align(center + horizon)\n#set text(size: 44pt)\n{em}"
+			);
+			return match board_typst_markup_to_svg(&wrapped) {
+				Some(s) => BoardResolvedIcon::SvgPlain(s),
+				None => BoardResolvedIcon::None,
+			};
+		}
+		if let Some(img) = decode_raster_icon_bytes(t) {
+			return BoardResolvedIcon::RasterRgba8 {
+				rgba: img.data,
+				w: img.w,
+				h: img.h,
+			};
+		}
+		if let Some(svg) = super::resolve_node_icon_svg_from_encoding(t) {
+			if super::board_metabolism_icons::board_metabolism_icon_svg(t).is_some() {
+				return BoardResolvedIcon::SvgThemed(svg);
+			}
+			return BoardResolvedIcon::SvgPlain(svg);
+		}
+		BoardResolvedIcon::None
+	}
+}
+
 /// @emoji 🖼️ Parses SVG via `usvg` into Vello paths; maps near-black / near-white fills and strokes to caller `fg` / `bg` (multiply with paint opacity). Each path uses `path.abs_transform()` only (usvg already stores document-absolute transforms; do not compose parent × abs when walking groups).
 mod svg_icon_vello09 {
-	use vello::kurbo::{Affine, BezPath, Point, Stroke};
-	use vello::peniko::{Color, Fill};
-	use vello::Scene;
-	use usvg;
+	use crate::vello::kurbo::{Affine, BezPath, Point, Stroke};
+	use crate::vello::peniko::{Color, Fill};
+	use crate::vello::Scene;
+	use crate::usvg;
 
 	fn to_affine(ts: &usvg::Transform) -> Affine {
 		let usvg::Transform { sx, kx, ky, sy, tx, ty } = *ts;
@@ -1758,10 +1936,10 @@ mod board_host {
 	use super::scene_json::*;
 	use serde_json::json;
 	use std::collections::{BTreeMap, BTreeSet};
-	use vello::kurbo::{Affine, Circle, CubicBez, Point, Rect, Stroke, Vec2};
-	use vello::peniko::{Color, Fill};
-	use vello::Scene;
-	use usvg;
+	use crate::vello::kurbo::{Affine, Circle, CubicBez, Point, Rect, Stroke, Vec2};
+	use crate::vello::peniko::{Blob, Color, Fill, ImageAlphaType, ImageBrush, ImageData, ImageFormat};
+	use crate::vello::Scene;
+	use crate::usvg;
 
 	use super::geom_sel::{
 		cubic_bezier_axis_bounds, cubic_bezier_point, inflate_world_box, point_in_polygon, polygon_contains_world_box,
@@ -1776,6 +1954,7 @@ mod board_host {
 	use std::cell::RefCell;
 	use std::collections::HashMap;
 	use std::hash::{Hash, Hasher};
+	use std::sync::Arc;
 
 	const LOD_MINIMAP_MAX_ZOOM_DEFAULT: f64 = 0.15;
 	const LOD_OVERVIEW_MAX_ZOOM_DEFAULT: f64 = 0.35;
@@ -1804,12 +1983,18 @@ mod board_host {
 	}
 
 	#[derive(Clone)]
-	struct CachedIconScene {
+	enum CachedIconBody {
+		Vector(Scene),
+		Raster(Arc<ImageData>),
+	}
+
+	#[derive(Clone)]
+	struct CachedIconPaint {
 		bx: f64,
 		by: f64,
 		bw: f64,
 		bh: f64,
-		scene: Scene,
+		body: CachedIconBody,
 	}
 
 	#[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -1855,6 +2040,8 @@ mod board_host {
 		pub handle_kind: String,
 		/// Parsed from descriptor `color` when set (overrides catalog fill).
 		pub color_fill: Option<Color>,
+		/// @emoji 🏷️ Runtime host encoding: `typst:`, `emoji:`, `image:data:…`, catalog id, or inline SVG for detail LOD.
+		pub icon_kind: Option<String>,
 	}
 
 	#[derive(Clone, Debug)]
@@ -2003,7 +2190,7 @@ mod board_host {
 		pub grid_factor: f64,
 		/// @emoji 🧲 When true, node drags snap to the finest visible LOD grid (step scales with `grid_factor`).
 		pub grid_snap_enabled: bool,
-		icon_vector_cache: RefCell<HashMap<String, CachedIconScene>>,
+		icon_vector_cache: RefCell<HashMap<String, CachedIconPaint>>,
 	}
 
 	impl Default for Camera {
@@ -2142,45 +2329,97 @@ mod board_host {
 			Ok(())
 		}
 
-		fn get_or_build_icon_scene(&self, svg: &str, fg: Color, bg: Color) -> Option<(f64, f64, f64, f64, Scene)> {
-			let svg_t = svg.trim();
-			if svg_t.is_empty() {
-				return None;
-			}
-			let key = Self::icon_scene_cache_key(svg_t, fg, bg);
+		fn get_or_build_icon_paint(&self, encoded: &str, fg: Color, bg: Color) -> Option<(f64, f64, f64, f64, CachedIconBody)> {
+			let resolved = super::board_icon_codec::board_resolve_icon_kind(encoded);
+			let key = match &resolved {
+				super::board_icon_codec::BoardResolvedIcon::None => return None,
+				super::board_icon_codec::BoardResolvedIcon::SvgThemed(s) => {
+					Self::icon_vector_cache_key("t", s.as_str(), fg, bg)
+				}
+				super::board_icon_codec::BoardResolvedIcon::SvgPlain(s) => {
+					Self::icon_vector_cache_key("p", s.as_str(), fg, bg)
+				}
+				super::board_icon_codec::BoardResolvedIcon::RasterRgba8 { rgba, w, h } => {
+					Self::icon_raster_cache_key(rgba, *w, *h)
+				}
+			};
 			{
 				let g = self.icon_vector_cache.borrow();
 				if let Some(c) = g.get(&key) {
-					return Some((c.bx, c.by, c.bw, c.bh, c.scene.clone()));
+					return Some((c.bx, c.by, c.bw, c.bh, c.body.clone()));
 				}
 			}
-			let tree = usvg::Tree::from_str(svg_t, &usvg::Options::default()).ok()?;
-			let (bx, by, bw, bh) = super::svg_icon_vello09::svg_icon_content_bounds(&tree);
-			if !(bw > 0.0 && bh > 0.0 && bw.is_finite() && bh.is_finite()) {
-				return None;
-			}
-			let mut s = Scene::new();
-			super::svg_icon_vello09::render_svg_tree_themed(&mut s, &tree, fg, bg);
-			let cached = CachedIconScene { bx, by, bw, bh, scene: s.clone() };
+			let (bx, by, bw, bh, body) = match resolved {
+				super::board_icon_codec::BoardResolvedIcon::None => return None,
+				super::board_icon_codec::BoardResolvedIcon::SvgThemed(s) => {
+					let tree = usvg::Tree::from_str(s.trim(), &usvg::Options::default()).ok()?;
+					let (bx, by, bw, bh) = super::svg_icon_vello09::svg_icon_content_bounds(&tree);
+					if !(bw > 0.0 && bh > 0.0 && bw.is_finite() && bh.is_finite()) {
+						return None;
+					}
+					let mut s = Scene::new();
+					super::svg_icon_vello09::render_svg_tree_themed(&mut s, &tree, fg, bg);
+					(bx, by, bw, bh, CachedIconBody::Vector(s))
+				}
+				super::board_icon_codec::BoardResolvedIcon::SvgPlain(s) => {
+					let svg_t = s.trim();
+					let tree = usvg::Tree::from_str(svg_t, &usvg::Options::default()).ok()?;
+					let (bx, by, bw, bh) = super::svg_icon_vello09::svg_icon_content_bounds(&tree);
+					if !(bw > 0.0 && bh > 0.0 && bw.is_finite() && bh.is_finite()) {
+						return None;
+					}
+					let mut s = Scene::new();
+					let _ = vello_svg::append_tree(&mut s, &tree);
+					(bx, by, bw, bh, CachedIconBody::Vector(s))
+				}
+				super::board_icon_codec::BoardResolvedIcon::RasterRgba8 { rgba, w, h } => {
+					let bx = 0.0_f64;
+					let by = 0.0_f64;
+					let bw = f64::from(w);
+					let bh = f64::from(h);
+					let img = ImageData {
+						data: Blob::new(Arc::new(rgba.as_ref().to_vec())),
+						format: ImageFormat::Rgba8,
+						alpha_type: ImageAlphaType::Alpha,
+						width: w,
+						height: h,
+					};
+					(bx, by, bw, bh, CachedIconBody::Raster(Arc::new(img)))
+				}
+			};
+			let cached = CachedIconPaint {
+				bx,
+				by,
+				bw,
+				bh,
+				body: body.clone(),
+			};
 			self.icon_vector_cache.borrow_mut().insert(key, cached);
-			Some((bx, by, bw, bh, s))
+			Some((bx, by, bw, bh, body))
 		}
 
 		pub fn clear_icon_vector_cache(&mut self) {
 			self.icon_vector_cache.borrow_mut().clear();
 		}
 
-		fn icon_scene_cache_key(svg: &str, fg: Color, bg: Color) -> String {
+		fn icon_vector_cache_key(tag: &str, svg: &str, fg: Color, bg: Color) -> String {
 			let mut hasher = std::collections::hash_map::DefaultHasher::new();
 			svg.hash(&mut hasher);
-			let h = hasher.finish();
+			let hx = hasher.finish();
 			let f = fg.to_rgba8();
 			let b = bg.to_rgba8();
 			format!(
-				"v7|{h:x}|{}|{:02x}{:02x}{:02x}{:02x}|{:02x}{:02x}{:02x}{:02x}",
+				"v8|{tag}|{hx:x}|{}|{:02x}{:02x}{:02x}{:02x}|{:02x}{:02x}{:02x}{:02x}",
 				svg.len(),
 				f.r, f.g, f.b, f.a, b.r, b.g, b.b, b.a
 			)
+		}
+
+		fn icon_raster_cache_key(rgba: &Arc<[u8]>, w: u32, h: u32) -> String {
+			let mut hasher = std::collections::hash_map::DefaultHasher::new();
+			rgba.as_ref().hash(&mut hasher);
+			let hx = hasher.finish();
+			format!("v8|r|{w}x{h}|{hx:x}|{}", rgba.len())
 		}
 
 		pub fn set_size(&mut self, width: u32, height: u32, dpr: f64) {
@@ -2727,6 +2966,12 @@ mod board_host {
 							.ok_or_else(|| format!("invalid color on handle {}: {s:?}", h.id))?,
 					),
 				};
+				let icon_kind = h
+					.icon_kind
+					.as_ref()
+					.map(|s| s.trim())
+					.filter(|s| !s.is_empty())
+					.map(|s| s.to_string());
 				self.handles.insert(
 					h.id.clone(),
 					HandleData {
@@ -2739,6 +2984,7 @@ mod board_host {
 						style: h.style.clone(),
 						handle_kind: kind,
 						color_fill,
+						icon_kind,
 					},
 				);
 			}
@@ -2913,6 +3159,12 @@ mod board_host {
 						.map(str::trim)
 						.filter(|s| !s.is_empty())
 						.map(String::from);
+					let handle_icon_kind = ho
+						.get("iconKind")
+						.and_then(|v| v.as_str())
+						.map(str::trim)
+						.filter(|s| !s.is_empty())
+						.map(|s| s.to_string());
 					handles.push(HandleDescJson {
 						id: hid.into(),
 						node_id: id.into(),
@@ -2922,6 +3174,7 @@ mod board_host {
 						style: None,
 						handle_kind: Some(handle_kind),
 						color: handle_color,
+						icon_kind: handle_icon_kind,
 						user_data: None,
 						visible: None,
 					});
@@ -3104,7 +3357,7 @@ mod board_host {
 			let origin = self.world_to_screen(Point::new(0.0, 0.0));
 			let x_off = ((origin.x % step) + step) % step;
 			let y_off = ((origin.y % step) + step) % step;
-			let mut p = vello::kurbo::BezPath::new();
+			let mut p = crate::vello::kurbo::BezPath::new();
 			let mut x = x_off;
 			while x <= w {
 				p.move_to(Point::new(x, 0.0));
@@ -3164,49 +3417,59 @@ mod board_host {
 				}
 				if lod == BoardDrawLod::Detail {
 					if let Some(k) = n.icon_kind.as_ref().map(|s| s.trim()).filter(|s| !s.is_empty()) {
-						if let Some(svg) = super::resolve_node_icon_svg_from_encoding(k) {
-							if let Some((bx, by, bw, bh, icon_scene)) =
-								self.get_or_build_icon_scene(&svg, stroke_c, fill)
-							{
-								let clip_inset = 0.88;
-								let fit_inset = 0.76;
-								let (sx_half, sy_half) = match n.shape {
-									NodeShape::Circle => {
-										let s = n.radius * self.camera.zoom * fit_inset;
-										(s, s)
+						if let Some((bx, by, bw, bh, body)) = self.get_or_build_icon_paint(k, stroke_c, fill) {
+							let clip_inset = 0.88;
+							let fit_inset = 0.76;
+							let (sx_half, sy_half) = match n.shape {
+								NodeShape::Circle => {
+									let s = n.radius * self.camera.zoom * fit_inset;
+									(s, s)
+								}
+								NodeShape::Rectangle => (
+									n.width * self.camera.zoom * fit_inset * 0.5,
+									n.height * self.camera.zoom * fit_inset * 0.5,
+								),
+							};
+							let center = self.world_to_screen(Point::new(n.x, n.y));
+							let cx = bx + bw * 0.5;
+							let cy = by + bh * 0.5;
+							let avail_w = 2.0 * sx_half;
+							let avail_h = 2.0 * sy_half;
+							let scale = (avail_w / bw).min(avail_h / bh);
+							let aff = Affine::translate((center.x - scale * cx, center.y - scale * cy))
+								* Affine::scale(scale);
+							match n.shape {
+								NodeShape::Circle => {
+									let r_clip = (n.radius * self.camera.zoom * clip_inset).max(1.0);
+									let disc = Circle::new(center, r_clip);
+									scene.push_clip_layer(Fill::NonZero, Affine::IDENTITY, &disc);
+									match &body {
+										CachedIconBody::Vector(icon_scene) => {
+											scene.append(icon_scene, Some(aff));
+										}
+										CachedIconBody::Raster(img) => {
+											scene.draw_image(&ImageBrush::new((**img).clone()), aff);
+										}
 									}
-									NodeShape::Rectangle => (
-										n.width * self.camera.zoom * fit_inset * 0.5,
-										n.height * self.camera.zoom * fit_inset * 0.5,
-									),
-								};
-								let center = self.world_to_screen(Point::new(n.x, n.y));
-								let cx = bx + bw * 0.5;
-								let cy = by + bh * 0.5;
-								let avail_w = 2.0 * sx_half;
-								let avail_h = 2.0 * sy_half;
-								let scale = (avail_w / bw).min(avail_h / bh);
-								// Aspect-preserving fit: entire union bbox inside the fit inset rect; centered at node.
-								let aff = Affine::translate((center.x - scale * cx, center.y - scale * cy)) * Affine::scale(scale);
-								match n.shape {
-									NodeShape::Circle => {
-										let r_clip = (n.radius * self.camera.zoom * clip_inset).max(1.0);
-										let disc = Circle::new(center, r_clip);
-										scene.push_clip_layer(Fill::NonZero, Affine::IDENTITY, &disc);
-										scene.append(&icon_scene, Some(aff));
-										scene.pop_layer();
+									scene.pop_layer();
+								}
+								NodeShape::Rectangle => {
+									let hw = n.width * self.camera.zoom * clip_inset * 0.5;
+									let hh = n.height * self.camera.zoom * clip_inset * 0.5;
+									let clip_r = Rect::from_points(
+										Point::new(center.x - hw, center.y - hh),
+										Point::new(center.x + hw, center.y + hh),
+									);
+									scene.push_clip_layer(Fill::NonZero, Affine::IDENTITY, &clip_r);
+									match &body {
+										CachedIconBody::Vector(icon_scene) => {
+											scene.append(icon_scene, Some(aff));
+										}
+										CachedIconBody::Raster(img) => {
+											scene.draw_image(&ImageBrush::new((**img).clone()), aff);
+										}
 									}
-									NodeShape::Rectangle => {
-										let hw = n.width * self.camera.zoom * clip_inset * 0.5;
-										let hh = n.height * self.camera.zoom * clip_inset * 0.5;
-										let clip_r = Rect::from_points(
-											Point::new(center.x - hw, center.y - hh),
-											Point::new(center.x + hw, center.y + hh),
-										);
-										scene.push_clip_layer(Fill::NonZero, Affine::IDENTITY, &clip_r);
-										scene.append(&icon_scene, Some(aff));
-										scene.pop_layer();
-									}
+									scene.pop_layer();
 								}
 							}
 						}
@@ -3231,6 +3494,30 @@ mod board_host {
 				let stroke_c = handle_stroke(&self.vello_theme, h.selected);
 				scene.fill(Fill::NonZero, Affine::IDENTITY, fill, None, &circle);
 				scene.stroke(&Stroke::new(2.0), Affine::IDENTITY, stroke_c, None, &circle);
+				if let Some(k) = h.icon_kind.as_ref().map(|s| s.trim()).filter(|s| !s.is_empty()) {
+					if let Some((bx, by, bw, bh, body)) = self.get_or_build_icon_paint(k, stroke_c, fill) {
+						let fit_inset = 0.62;
+						let s = h.radius * self.camera.zoom * fit_inset;
+						let center = c;
+						let cx = bx + bw * 0.5;
+						let cy = by + bh * 0.5;
+						let avail = 2.0 * s;
+						let scale = (avail / bw).min(avail / bh);
+						let aff = Affine::translate((center.x - scale * cx, center.y - scale * cy)) * Affine::scale(scale);
+						let r_clip = (h.radius * self.camera.zoom * 0.82).max(1.0);
+						let disc = Circle::new(center, r_clip);
+						scene.push_clip_layer(Fill::NonZero, Affine::IDENTITY, &disc);
+						match &body {
+							CachedIconBody::Vector(icon_scene) => {
+								scene.append(icon_scene, Some(aff));
+							}
+							CachedIconBody::Raster(img) => {
+								scene.draw_image(&ImageBrush::new((**img).clone()), aff);
+							}
+						}
+						scene.pop_layer();
+					}
+				}
 			}
 			let edge_sw = if lod == BoardDrawLod::Minimap {
 				1.12_f64
@@ -3339,7 +3626,7 @@ mod board_host {
 			}
 			if let Some(ref pts) = self.selection_screen_preview {
 				if pts.len() >= 2 {
-					let mut path = vello::kurbo::BezPath::new();
+					let mut path = crate::vello::kurbo::BezPath::new();
 					path.move_to(pts[0]);
 					for p in pts.iter().skip(1) {
 						path.line_to(*p);
@@ -3972,7 +4259,7 @@ pub use board_host::BoardHost;
 
 use std::collections::{BTreeMap, BTreeSet};
 
-pub use vello::kurbo::{CubicBez, Point, Vec2};
+pub use crate::vello::kurbo::{CubicBez, Point, Vec2};
 use vcompute::{compute_edge_bezier_points, distance_point_to_cubic_bezier, encode_board_stroke_scene};
 
 // #region 🔖Kinds
@@ -4436,9 +4723,9 @@ struct BoardSessionInner {
 	host: BoardHost,
 	#[allow(dead_code, reason = "Retains canvas for the WebGPU surface lifetime.")]
 	canvas: Option<HtmlCanvasElement>,
-	render_ctx: Option<vello::util::RenderContext>,
-	renderer: Option<vello::Renderer>,
-	surface: Option<vello::util::RenderSurface<'static>>,
+	render_ctx: Option<crate::vello::util::RenderContext>,
+	renderer: Option<crate::vello::Renderer>,
+	surface: Option<crate::vello::util::RenderSurface<'static>>,
 }
 
 #[cfg(target_arch = "wasm32")]
@@ -4468,31 +4755,31 @@ impl BoardSessionInner {
 			let dh = &render_ctx.devices[surface.dev_id];
 			let pw = surface.config.width.max(1);
 			let ph = surface.config.height.max(1);
-			let params = vello::RenderParams {
+			let params = crate::vello::RenderParams {
 				base_color: self.host.vello_theme.raster_clear,
 				width: pw,
 				height: ph,
-				antialiasing_method: vello::AaConfig::Area,
+				antialiasing_method: crate::vello::AaConfig::Area,
 			};
 			renderer
 				.render_to_texture(&dh.device, &dh.queue, &scene, &surface.target_view, &params)
 				.map_err(|err| JsValue::from_str(&format!("{err:?}")))?;
 
 			let surface_tex = match surface.surface.get_current_texture() {
-				vello::wgpu::CurrentSurfaceTexture::Success(t) | vello::wgpu::CurrentSurfaceTexture::Suboptimal(t) => t,
-				vello::wgpu::CurrentSurfaceTexture::Outdated => {
+				crate::vello::wgpu::CurrentSurfaceTexture::Success(t) | crate::vello::wgpu::CurrentSurfaceTexture::Suboptimal(t) => t,
+				crate::vello::wgpu::CurrentSurfaceTexture::Outdated => {
 					render_ctx.configure_surface(surface);
 					continue;
 				}
-				vello::wgpu::CurrentSurfaceTexture::Timeout | vello::wgpu::CurrentSurfaceTexture::Occluded => return Ok(()),
-				vello::wgpu::CurrentSurfaceTexture::Lost | vello::wgpu::CurrentSurfaceTexture::Validation => {
+				crate::vello::wgpu::CurrentSurfaceTexture::Timeout | crate::vello::wgpu::CurrentSurfaceTexture::Occluded => return Ok(()),
+				crate::vello::wgpu::CurrentSurfaceTexture::Lost | crate::vello::wgpu::CurrentSurfaceTexture::Validation => {
 					return Err(JsValue::from_str("surface lost or validation error"));
 				}
 			};
 			let view = surface_tex
 				.texture
-				.create_view(&vello::wgpu::TextureViewDescriptor::default());
-			let mut encoder = dh.device.create_command_encoder(&vello::wgpu::CommandEncoderDescriptor {
+				.create_view(&crate::vello::wgpu::TextureViewDescriptor::default());
+			let mut encoder = dh.device.create_command_encoder(&crate::vello::wgpu::CommandEncoderDescriptor {
 				label: Some("elements_board_surface_blit"),
 			});
 			surface
@@ -4500,7 +4787,7 @@ impl BoardSessionInner {
 				.copy(&dh.device, &mut encoder, &surface.target_view, &view);
 			dh.queue.submit(std::iter::once(encoder.finish()));
 			surface_tex.present();
-			let _ = dh.device.poll(vello::wgpu::PollType::Poll);
+			let _ = dh.device.poll(crate::vello::wgpu::PollType::Poll);
 			return Ok(());
 		}
 		Ok(())
@@ -4564,22 +4851,22 @@ impl BoardSession {
 		let ph = ((lh as f64 * dpr).round() as u32).max(1);
 		let canvas = canvas.clone();
 		future_to_promise(async move {
-			let mut render_ctx = vello::util::RenderContext::new();
+			let mut render_ctx = crate::vello::util::RenderContext::new();
 			let surface = render_ctx
 				.create_surface(
-					vello::wgpu::SurfaceTarget::Canvas(canvas.clone()),
+					crate::vello::wgpu::SurfaceTarget::Canvas(canvas.clone()),
 					pw,
 					ph,
-					vello::wgpu::PresentMode::AutoVsync,
+					crate::vello::wgpu::PresentMode::AutoVsync,
 				)
 				.await
 				.map_err(|err| JsValue::from_str(&format!("{err:?}")))?;
 			let dev = &render_ctx.devices[surface.dev_id].device;
-			let renderer = vello::Renderer::new(
+			let renderer = crate::vello::Renderer::new(
 				dev,
-				vello::RendererOptions {
+				crate::vello::RendererOptions {
 					use_cpu: false,
-					antialiasing_support: vello::AaSupport::area_only(),
+					antialiasing_support: crate::vello::AaSupport::area_only(),
 					num_init_threads: std::num::NonZeroUsize::new(1),
 					pipeline_cache: None,
 				},
@@ -4899,7 +5186,7 @@ mod tests {
 mod host_tests {
 	use super::vcompute::handle_position_on_circle;
 	use super::{BoardHost, EdgeDescJson, HandleDescJson, NodeDescJson, SceneDescriptorJson};
-	use vello::kurbo::Point;
+	use crate::vello::kurbo::Point;
 
 	fn sample_scene() -> SceneDescriptorJson {
 		SceneDescriptorJson {
@@ -4930,6 +5217,7 @@ mod host_tests {
 					style: None,
 					handle_kind: Some("port".into()),
 					color: None,
+					icon_kind: None,
 					user_data: None,
 					visible: None,
 				},
@@ -4942,6 +5230,7 @@ mod host_tests {
 					style: None,
 					handle_kind: Some("port".into()),
 					color: None,
+					icon_kind: None,
 					user_data: None,
 					visible: None,
 				},
@@ -5272,6 +5561,7 @@ mod host_tests {
 					style: None,
 					handle_kind: Some("parent".into()),
 					color: None,
+					icon_kind: None,
 					user_data: None,
 					visible: None,
 				},
@@ -5284,6 +5574,7 @@ mod host_tests {
 					style: None,
 					handle_kind: Some("child".into()),
 					color: None,
+					icon_kind: None,
 					user_data: None,
 					visible: None,
 				},
@@ -5754,12 +6045,12 @@ mod force_graph_tests {
 
 	#[test]
 	fn svg_icon_vello09_append_smoke() {
-		let mut scene = vello::Scene::new();
+		let mut scene = crate::vello::Scene::new();
 		let svg = r##"<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10"><rect width="10" height="10" fill="#ffffff"/><path d="M0 0 L10 10" stroke="#000000" stroke-width="1"/></svg>"##;
 		super::svg_icon_vello09::append_svg_str(&mut scene, svg).expect("parse svg");
-		let fg = vello::peniko::Color::from_rgba8(200, 10, 10, 255);
-		let bg = vello::peniko::Color::from_rgba8(10, 200, 10, 255);
-		let mut scene2 = vello::Scene::new();
+		let fg = crate::vello::peniko::Color::from_rgba8(200, 10, 10, 255);
+		let bg = crate::vello::peniko::Color::from_rgba8(10, 200, 10, 255);
+		let mut scene2 = crate::vello::Scene::new();
 		super::svg_icon_vello09::append_svg_str_themed(&mut scene2, svg, fg, bg).expect("parse themed");
 	}
 
