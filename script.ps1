@@ -675,7 +675,7 @@ function Ensure-NativeNeo4jTools {
 function Ensure-NativeNeo4j {
     param([string]$RepoRoot)
 
-    $technologies = @("semio", "elements", "coda", "reuse")
+    $technologies = @("semio", "elements", "coda", "reuse", "semio-metabolism")
     if (Test-TcpPort -HostName "127.0.0.1" -Port 7687) {
         Write-Step "Neo4j is reachable at bolt://localhost:7687."
     } else {
@@ -700,6 +700,7 @@ function Ensure-NativeNeo4j {
     }
 
     Invoke-Neo4jCypher -RepoRoot $RepoRoot -Database "system" -Cypher "CREATE DATABASE semio IF NOT EXISTS;" | Out-Null
+    Invoke-Neo4jCypher -RepoRoot $RepoRoot -Database "system" -Cypher "CREATE DATABASE ``semio-metabolism`` IF NOT EXISTS;" | Out-Null
     #region 🔥Neo4jEnterpriseDropStockDb
     # Enterprise Desktop: schema often lands in the stock `neo4j` DB. Ensure `semio` is default, then drop `neo4j`.
     # Community (single user DB): these calls fail harmlessly.

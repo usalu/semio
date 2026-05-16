@@ -1,12 +1,17 @@
 /**
- * 🛂 Neo4j → `.repo/🛂/<technology>.cypher` export (pure module; invoked from root `script.ts`).
+ * 🛂 Neo4j → `.repo/🛂/<graph-database>.cypher` export (pure module; invoked from root `script.ts`). `NEO4J_GRAPH_DATABASE_NAMES` is the canonical list of live user graph names (MCP + `bun ./script.ts generate`).
  */
 import { spawnSync } from "node:child_process";
 import { existsSync, mkdirSync, readFileSync, unlinkSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 
 const NEO4J_VERSION = "5.26.26";
-const ALLOWED = new Set(["semio", "elements", "coda", "reuse"]);
+
+/** 🗄️Canonical Neo4j user graph database names wired for MCP + `generate` APOC export. */
+export const NEO4J_GRAPH_DATABASE_NAMES = ["semio", "elements", "coda", "reuse", "semio-metabolism"] as const;
+export type Neo4jGraphDatabaseName = (typeof NEO4J_GRAPH_DATABASE_NAMES)[number];
+
+const NEO4J_GRAPH_DATABASE_LOOKUP = new Set<string>(NEO4J_GRAPH_DATABASE_NAMES);
 
 export class Neo4jCypherExport {
   constructor(private readonly repoRoot: string) {}
@@ -130,10 +135,12 @@ export class Neo4jCypherExport {
   }
 
   tryExportFromArgv(argv: string[]): boolean {
-    const arg = argv.find((a) => ALLOWED.has(a));
+    const arg = argv.find((a) => NEO4J_GRAPH_DATABASE_LOOKUP.has(a));
     const technology = arg ?? process.env.NEO4J_DATABASE ?? "semio";
-    if (!ALLOWED.has(technology)) {
-      console.error(`[generate:neo4j] technology must be one of: ${[...ALLOWED].join(", ")} (got ${JSON.stringify(technology)})`);
+    if (!NEO4J_GRAPH_DATABASE_LOOKUP.has(technology)) {
+      console.error(
+        `[generate:neo4j] graph database must be one of: ${NEO4J_GRAPH_DATABASE_NAMES.join(", ")} (got ${JSON.stringify(technology)})`,
+      );
       return false;
     }
 

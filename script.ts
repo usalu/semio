@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 /**
- * 🧭 Monorepo command router: `bun ./script.ts <verb> [segments…]` (e.g. `script.ts dev`, `script.ts dev mcp`, `script.ts generate neo4j semio`).
+ * 🧭 Monorepo command router: `bun ./script.ts <verb> [segments…]` (e.g. `script.ts dev`, `script.ts dev mcp`, `script.ts generate neo4j semio-metabolism`).
  */
 import { execFileSync, spawn, spawnSync } from "node:child_process";
 import { existsSync, linkSync, mkdirSync, chmodSync, chownSync, readFileSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
@@ -8,7 +8,7 @@ import { homedir } from "node:os";
 import { extname, join, resolve } from "node:path";
 import { createServer } from "node:net";
 import { stat } from "node:fs/promises";
-import { Neo4jCypherExport } from "./generate.neo4j.gen.ts";
+import { Neo4jCypherExport, NEO4J_GRAPH_DATABASE_NAMES } from "./generate.neo4j.gen.ts";
 
 const WORKSPACE_ROOT = import.meta.dir;
 const BUN = process.execPath;
@@ -331,7 +331,7 @@ export class DevScript extends Script {
     const args = technology ? [...rest] : neoSegments;
     if (technology && !args.includes("--namespace")) args.push("--namespace", technology);
     const graphDatabase =
-      technology && ["semio", "elements", "coda", "reuse"].includes(technology)
+      technology && (NEO4J_GRAPH_DATABASE_NAMES as readonly string[]).includes(technology)
         ? technology
         : process.env.NEO4J_DATABASE || "semio";
     const r = spawnSync("uvx", ["mcp-neo4j-cypher", ...args], {
@@ -381,7 +381,7 @@ export class GenerateScript extends Script {
       new Neo4jCypherExport(this.root).runFromArgv(segments.slice(1));
       return;
     }
-    const technologies = ["semio", "elements", "coda", "reuse"] as const;
+    const technologies = NEO4J_GRAPH_DATABASE_NAMES;
     let successes = 0;
     let failures = 0;
     const exporter = new Neo4jCypherExport(this.root);

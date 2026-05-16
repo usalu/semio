@@ -1,0 +1,9 @@
+{
+  "title": "Add Neo4j Semio Metabolism Database Mcp And Generate",
+  "emoji": "🎫",
+  "status": "closed",
+  "description": "Add developer Neo4j user graph `semio-metabolism`: MCP server entries mirroring other graphs, extend `bun ./script.ts generate` / APOC export to `.repo/🛂/semio-metabolism.cypher`, native setup CREATE DATABASE + import loop, docs, and a registry unit test.",
+  "summary": "Exported `NEO4J_GRAPH_DATABASE_NAMES` from `generate.neo4j.gen.ts` and wired `script.ts` MCP + generate loops. Added `neo4j-semio-metabolism` to `.mcp.json`, `.cursor/mcp.json`, `.windsurf/mcp.json`, `.kiro/settings/mcp.json`, `.vscode/mcp.json`, `.codex/config.toml`. Extended `script.ps1` / `script.sh` with `semio-metabolism` in schema import list and `CREATE DATABASE \\`semio-metabolism\\`` on multi-db editions. Updated README, `.devcontainer/README.md`, `.github/agents/semio.agent.md`. Added `@repo/lib` test asserting registry contains `semio-metabolism`. Verified `bun ./repo/lib/js/...` tests pass; `bun ./script.ts generate neo4j semio-metabolism` reaches cypher-shell and fails with expected \"Database does not exist\" when the graph is absent.",
+  "github": {},
+  "sessions": []
+}

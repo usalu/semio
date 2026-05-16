@@ -29,6 +29,12 @@
       "command": "bun",
       "args": ["script.ts", "dev", "mcp", "neo4j", "reuse"],
       "disabled": false
+    },
+    "neo4j-semio-metabolism": {
+      "type": "stdio",
+      "command": "bun",
+      "args": ["script.ts", "dev", "mcp", "neo4j", "semio-metabolism"],
+      "disabled": false
     }
   }
 }

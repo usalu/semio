@@ -6,7 +6,7 @@ Devcontainer configuration and lifecycle scripts.
 
 The monorepo registers Neo4j MCP servers in `.mcp.json` and per-client copies. They use `uvx mcp-neo4j-cypher` against graph database **`semio`** (Neo4j Community: one user database per DBMS, named `semio` via `initial.dbms.default_database`).
 
-**Native (Windows / macOS / Linux):** Create a Neo4j Desktop **Local Instance** named **`semio`**, set password **`password`**, and start it on Bolt port **`7687`**. Then run your root platform bootstrap (`script.ps1 setup` on Windows, or `bash ./script.sh setup` on macOS/Linux) so `NEO4J_URI=bolt://localhost:7687` and credentials are set. Native setup enables APOC on the local DBMS when needed, uses the native Neo4j Desktop/DBMS only, does not depend on the devcontainer, and does not edit Desktop internals.
+**Native (Windows / macOS / Linux):** Create a Neo4j Desktop **Local Instance** named **`semio`**, set password **`password`**, and start it on Bolt port **`7687`**. On DBMS editions that support multiple user databases, also create **`elements`**, **`coda`**, **`reuse`**, and **`semio-metabolism`** so the matching MCP servers (`neo4j-*` in `.mcp.json`) and `bun run generate` APOC exports can run against each graph. Then run your root platform bootstrap (`script.ps1 setup` on Windows, or `bash ./script.sh setup` on macOS/Linux) so `NEO4J_URI=bolt://localhost:7687` and credentials are set. Native setup enables APOC on the local DBMS when needed, uses the native Neo4j Desktop/DBMS only, does not depend on the devcontainer, and does not edit Desktop internals.
 
 Native Neo4j Desktop connection:
 

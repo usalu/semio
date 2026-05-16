@@ -338,6 +338,7 @@ ensure_native_neo4j() {
   fi
 
   run_cypher system "CREATE DATABASE semio IF NOT EXISTS;" >/dev/null 2>&1 || true
+  run_cypher system 'CREATE DATABASE `semio-metabolism` IF NOT EXISTS;' >/dev/null 2>&1 || true
   #region 🔥Neo4jEnterpriseDropStockDb
   # Enterprise Desktop: schema often lands in the stock `neo4j` DB. Ensure `semio` is default, then drop `neo4j`.
   # Community (single user DB): these calls fail harmlessly and are skipped via `|| true`.
@@ -351,7 +352,7 @@ ensure_native_neo4j() {
   log "Neo4j: clearing graph in ${graph_db}, then loading generated .repo/🛂/*.cypher (from bun run generate) …"
   run_cypher "$graph_db" "MATCH (n) DETACH DELETE n" || log "Neo4j wipe skipped (failed)."
 
-  for technology in semio elements coda reuse; do
+  for technology in semio elements coda reuse semio-metabolism; do
     local schema_file="$REPO_ROOT/.repo/🛂/${technology}.cypher"
     if [ -f "$schema_file" ] && grep -Eqv '^[[:space:]]*(//|:|$)' "$schema_file"; then
       local schema_uri

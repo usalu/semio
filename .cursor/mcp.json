@@ -39,6 +39,14 @@
       "env": {
         "NEO4J_DATABASE": "reuse"
       }
+    },
+    "neo4j-semio-metabolism": {
+      "type": "stdio",
+      "command": "bun",
+      "args": ["script.ts", "dev", "mcp", "neo4j", "semio-metabolism"],
+      "env": {
+        "NEO4J_DATABASE": "semio-metabolism"
+      }
     }
   }
 }

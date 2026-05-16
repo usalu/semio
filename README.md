@@ -560,7 +560,7 @@ Native macOS and Linux use the same root router:
 bash ./script.sh setup
 ```
 
-IDE startup runs `bash ./script.sh start` (Windows: `.\script.ps1 start` or `.\start.windows.ps1`), which checks the native Neo4j Desktop `semio` DBMS at `bolt://localhost:7687`, verifies APOC, and attempts to create the technology databases `semio`, `elements`, `coda`, and `reuse` when the native DBMS edition supports multi-database administration. Neo4j Community uses the default `neo4j` database.
+IDE startup runs `bash ./script.sh start` (Windows: `.\script.ps1 start` or `.\start.windows.ps1`), which checks the native Neo4j Desktop `semio` DBMS at `bolt://localhost:7687`, verifies APOC, and attempts to create the graph databases `semio`, `elements`, `coda`, `reuse`, and `semio-metabolism` when the native DBMS edition supports multi-database administration. Neo4j Community uses the default `neo4j` database.
 
 ## 🪄 [AI](AGENTS.md) [↑](#-development-)
 

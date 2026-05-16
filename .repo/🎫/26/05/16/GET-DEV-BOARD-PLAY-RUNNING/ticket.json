@@ -1,0 +1,14 @@
+{
+  "title": "Get Dev Board Play Running",
+  "emoji": "🎫",
+  "status": "closed",
+  "description": "Fix the worktree so `bun i` succeeds and the development board play target can run. Initial failure: `@semio/sketchpad@*`, `@semio/sketchpad@^0.1.0`, and `semio@file:../../client/lib/rs/pkg` fail to resolve during `bun install`. Scope: inspect and update existing package/Nx/script configuration for the board play path and related local workspace packages, then validate install and runtime as far as feasible.",
+  "summary": "Fixed the worktree install and board play dev path. Added the sketchpad child workspace glob so @semio/sketchpad resolves locally, removed the stale semio file dependency on the generated Rust pkg from semio/dev/algorithms, adjusted the board script to launch Vite through the package-local Bun script from the board root, and inlined the elements palette CSS so board play does not depend on absent generated CSS files. Validated `bun i`, `bun nx run @elements/board:build`, HTTP 200 from the live board dev server, and a Playwright browser load showing the board fixture UI and six canvases. Headless Chromium reports NoCompatibleDevice for WebGPU, which is an adapter limitation in this environment.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1421"
+  },
+  "goal": "🎯r2602/🎯runningsketchpad",
+  "sessions": [
+    "⚪8538c5989b1f471e98b7444cae36e7f2"
+  ]
+}
