@@ -434,7 +434,7 @@ A wire is the temporary edge used e.g. when the user start clicking and dragging
 There should be 5 lods depending on the zoom level:
 Minimap: No grid, no outlines on nodes, nodes filling is outline color, finer edges, no handles, no labels
 Overview: Huge grid (100x100), outlines on node, no handles, node with abbreviated labels
-Normal: Huge grid with finer large grid (20x20), handles, node with labels
+Normal: Huge grid with finer large grid (25x25), handles, node with labels
 Detail: Huge grid with large gird with finer medium grid (5x5), handles with abbreviated label, node with icon and abbreviated label
 Micro: Huge grid with large gird with medium grid with finer small grid (1x1), handles with icon, node with icon and label
 
@@ -449,9 +449,7 @@ Add a grid snap option which snaps to the current visible grids. Add a toggle to
 Add icons to nodes and handles.
 icons can be either emoji, math (typist string), svg or image (png, jpg, etc)
 For svg use: https://github.com/linebender/vello_svg
-For typist string
-https://crates.io/crates/typst-svg
-You can find the svgs for the node kinds under @
+For typist string use typist and typist-svg: https://crates.io/crates/typst https://crates.io/crates/typst-svg
 
 ---
 

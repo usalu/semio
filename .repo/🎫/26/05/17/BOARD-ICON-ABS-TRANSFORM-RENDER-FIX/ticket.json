@@ -1,0 +1,11 @@
+{
+  "title": "Board Icon Abs Transform Render Fix",
+  "emoji": "🎯",
+  "status": "closed",
+  "description": "Fix board SVG icon rendering: render_group was multiplying parent affine with node.abs_transform() but usvg abs_transform is already document-absolute, causing double transform (oversized/off-center). Use path.abs_transform() only per path; bump icon cache key v7.",
+  "summary": "Root cause: svg_icon_vello09::render_group multiplied parent Affine with each child’s usvg abs_transform(); usvg abs_transform is already document-absolute, so nested groups double-applied transforms—icons drew oversized and off-center vs bbox-based fit. Fix: recurse groups without accumulating; for each Path use to_affine(path.abs_transform()) only. Icon scene cache prefix bumped v6→v7 so stale GPU scenes are not reused. wasm32 check, wasm-pack release, Vitest 58 passed.",
+  "goal": "🎯r2602🎯runningsketchpad",
+  "sessions": [
+    "⚪37aa8ba505c24b459472f16b68e86b5c"
+  ]
+}

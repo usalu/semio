@@ -1540,7 +1540,7 @@ fn resolve_node_icon_svg_from_encoding(encoded: &str) -> Option<String> {
 	None
 }
 
-/// @emoji 🖼️ Parses SVG via `usvg` into Vello paths; maps near-black / near-white fills and strokes to caller `fg` / `bg` (multiply with paint opacity); `render_svg_tree_themed` shares one parse with bbox sizing in the host.
+/// @emoji 🖼️ Parses SVG via `usvg` into Vello paths; maps near-black / near-white fills and strokes to caller `fg` / `bg` (multiply with paint opacity). Each path uses `path.abs_transform()` only (usvg already stores document-absolute transforms; do not compose parent × abs when walking groups).
 mod svg_icon_vello09 {
 	use vello::kurbo::{Affine, BezPath, Point, Stroke};
 	use vello::peniko::{Color, Fill};
@@ -1613,15 +1613,15 @@ mod svg_icon_vello09 {
 		Some(Color::from_rgba8(c.red, c.green, c.blue, opacity.to_u8()))
 	}
 
-	fn render_group(scene: &mut Scene, group: &usvg::Group, transform: Affine, fg: Color, bg: Color) {
+	fn render_group(scene: &mut Scene, group: &usvg::Group, fg: Color, bg: Color) {
 		for node in group.children() {
-			let transform = transform * to_affine(&node.abs_transform());
 			match node {
-				usvg::Node::Group(g) => render_group(scene, g, transform, fg, bg),
+				usvg::Node::Group(g) => render_group(scene, g, fg, bg),
 				usvg::Node::Path(path) => {
 					if !path.is_visible() {
 						continue;
 					}
+					let transform = to_affine(&path.abs_transform());
 					let local_path = to_bez_path(path);
 					if let Some(fill) = path.fill() {
 						if let Some(color) = map_solid_icon_paint(fill.paint(), fill.opacity(), fg, bg) {
@@ -1736,7 +1736,7 @@ mod svg_icon_vello09 {
 	}
 
 	pub fn render_svg_tree_themed(scene: &mut Scene, tree: &usvg::Tree, fg: Color, bg: Color) {
-		render_group(scene, tree.root(), Affine::IDENTITY, fg, bg);
+		render_group(scene, tree.root(), fg, bg);
 	}
 
 	#[allow(dead_code)]
@@ -2177,7 +2177,7 @@ mod board_host {
 			let f = fg.to_rgba8();
 			let b = bg.to_rgba8();
 			format!(
-				"v6|{h:x}|{}|{:02x}{:02x}{:02x}{:02x}|{:02x}{:02x}{:02x}{:02x}",
+				"v7|{h:x}|{}|{:02x}{:02x}{:02x}{:02x}|{:02x}{:02x}{:02x}{:02x}",
 				svg.len(),
 				f.r, f.g, f.b, f.a, b.r, b.g, b.b, b.a
 			)

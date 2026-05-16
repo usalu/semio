@@ -200,8 +200,8 @@ function triptychCamerasFromFixture(fixture: BoardFixtureV1): Record<BoardPlayPa
 	};
 }
 
-const BOARD_PLAY_CAMERA_REST_HOLD_MS = 1000;
-const BOARD_PLAY_CAMERA_REST_ANIM_MS = 2000;
+/** @emoji ⏱️ After redraw play stops: camera stays fixed for the first third of this span, then eases in the remaining two thirds to bbox fit (3s total). */
+const BOARD_PLAY_CAMERA_POST_REDRAW_TOTAL_MS = 3000;
 
 function easeInOutCubic01(t: number): number {
 	const x = Math.min(1, Math.max(0, t));
@@ -773,7 +773,7 @@ function BoardPlaySettingsPanel(): ReactElement {
 					Redraw handles
 				</Button>
 				<p className="text-muted-foreground text-[11px] leading-snug">
-					While play is on, camera framing stays pinned to the graph as it was when you pressed play. After pause, the view holds 1s with no camera change, then eases over 2s (slow–fast–slow) to a bounding-box fit of the laid-out graph without a final jump. Dragging a node resets progressive ramp and the auto-stop timer.
+					While play is on, camera framing stays pinned to the graph as it was when you pressed play. After pause, over three seconds the camera stays fixed for the first third, then eases through the last two thirds (slow–fast–slow) to a bounding-box fit without a final jump. Dragging a node resets progressive ramp and the auto-stop timer.
 				</p>
 			</div>
 		</div>
@@ -2110,7 +2110,6 @@ function BoardPlayInner(): ReactElement {
 	const prevBoardRedrawPlayingRef = useRef(false);
 	const [cameraDisplayOverrideByPane, setCameraDisplayOverrideByPane] = useState<Record<BoardPlayPaneId, CameraState> | null>(null);
 	const suppressCameraBasisSyncRef = useRef(false);
-	const cameraPlayEndHoldTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 	const cameraPlayEndAnimRafRef = useRef<number | null>(null);
 	const lastPlayingForCameraEaseRef = useRef(false);
 
@@ -2134,10 +2133,6 @@ function BoardPlayInner(): ReactElement {
 		const playJustStarted = boardRedrawPlaying && !prevPlaying;
 
 		if (playJustStarted) {
-			if (cameraPlayEndHoldTimerRef.current != null) {
-				clearTimeout(cameraPlayEndHoldTimerRef.current);
-				cameraPlayEndHoldTimerRef.current = null;
-			}
 			if (cameraPlayEndAnimRafRef.current != null) {
 				cancelAnimationFrame(cameraPlayEndAnimRafRef.current);
 				cameraPlayEndAnimRafRef.current = null;
@@ -2147,10 +2142,6 @@ function BoardPlayInner(): ReactElement {
 			cameraBasisFixtureRef.current = fixture;
 			setBoardPlayPaneCamerasBaseline(triptychCamerasFromFixture(fixture));
 		} else if (!suppressCameraBasisSyncRef.current) {
-			if (cameraPlayEndHoldTimerRef.current != null) {
-				clearTimeout(cameraPlayEndHoldTimerRef.current);
-				cameraPlayEndHoldTimerRef.current = null;
-			}
 			if (cameraPlayEndAnimRafRef.current != null) {
 				cancelAnimationFrame(cameraPlayEndAnimRafRef.current);
 				cameraPlayEndAnimRafRef.current = null;
@@ -2163,10 +2154,6 @@ function BoardPlayInner(): ReactElement {
 		if (boardRedrawPlaying) {
 			lastPlayingForCameraEaseRef.current = true;
 			return () => {
-				if (cameraPlayEndHoldTimerRef.current != null) {
-					clearTimeout(cameraPlayEndHoldTimerRef.current);
-					cameraPlayEndHoldTimerRef.current = null;
-				}
 				if (cameraPlayEndAnimRafRef.current != null) {
 					cancelAnimationFrame(cameraPlayEndAnimRafRef.current);
 					cameraPlayEndAnimRafRef.current = null;
@@ -2189,36 +2176,34 @@ function BoardPlayInner(): ReactElement {
 		suppressCameraBasisSyncRef.current = true;
 		setCameraDisplayOverrideByPane(from);
 
-		cameraPlayEndHoldTimerRef.current = setTimeout(() => {
-			cameraPlayEndHoldTimerRef.current = null;
-			const t0 = typeof performance !== "undefined" ? performance.now() : Date.now();
-			const tickInner = () => {
-				const now = typeof performance !== "undefined" ? performance.now() : Date.now();
-				const te = now - t0;
-				if (te >= BOARD_PLAY_CAMERA_REST_ANIM_MS) {
-					const endCameras = blendTriptychCameras(from, to, 1);
-					setCameraDisplayOverrideByPane(endCameras);
-					suppressCameraBasisSyncRef.current = false;
-					cameraBasisFixtureRef.current = fixtureRef.current;
-					cameraPlayEndAnimRafRef.current = requestAnimationFrame(() => {
-						setCameraDisplayOverrideByPane(null);
-						setBoardPlayPaneCamerasBaseline(triptychCamerasFromFixture(fixtureRef.current));
-						cameraPlayEndAnimRafRef.current = null;
-					});
-					return;
-				}
-				const u = te / BOARD_PLAY_CAMERA_REST_ANIM_MS;
+		const total = BOARD_PLAY_CAMERA_POST_REDRAW_TOTAL_MS;
+		const holdEnd = total / 3;
+		const animSpan = total - holdEnd;
+		const t0 = typeof performance !== "undefined" ? performance.now() : Date.now();
+		const tickInner = () => {
+			const now = typeof performance !== "undefined" ? performance.now() : Date.now();
+			const elapsed = now - t0;
+			if (elapsed >= total) {
+				const endCameras = blendTriptychCameras(from, to, 1);
+				setCameraDisplayOverrideByPane(endCameras);
+				suppressCameraBasisSyncRef.current = false;
+				cameraBasisFixtureRef.current = fixtureRef.current;
+				cameraPlayEndAnimRafRef.current = requestAnimationFrame(() => {
+					setCameraDisplayOverrideByPane(null);
+					setBoardPlayPaneCamerasBaseline(triptychCamerasFromFixture(fixtureRef.current));
+					cameraPlayEndAnimRafRef.current = null;
+				});
+				return;
+			}
+			if (elapsed >= holdEnd) {
+				const u = Math.min(1, Math.max(0, (elapsed - holdEnd) / animSpan));
 				setCameraDisplayOverrideByPane(blendTriptychCameras(from, to, u));
-				cameraPlayEndAnimRafRef.current = requestAnimationFrame(tickInner);
-			};
+			}
 			cameraPlayEndAnimRafRef.current = requestAnimationFrame(tickInner);
-		}, BOARD_PLAY_CAMERA_REST_HOLD_MS);
+		};
+		cameraPlayEndAnimRafRef.current = requestAnimationFrame(tickInner);
 
 		return () => {
-			if (cameraPlayEndHoldTimerRef.current != null) {
-				clearTimeout(cameraPlayEndHoldTimerRef.current);
-				cameraPlayEndHoldTimerRef.current = null;
-			}
 			if (cameraPlayEndAnimRafRef.current != null) {
 				cancelAnimationFrame(cameraPlayEndAnimRafRef.current);
 				cameraPlayEndAnimRafRef.current = null;
