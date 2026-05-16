@@ -388,9 +388,12 @@ Add mode dropdown (Graph, Tree)
 Add an additional button just for Redraw handles.
 This features changes t, so that the edge is the smallest path. Take the centers of the shapes and then reset the handles to the intersection point between the shape and the line.
 
+Currently the camera jumps at the end. Never jump.
+Wait for 1s without changing camera then in the next 2s zoom to the bounding box of the graph. Start slow then fast and end slow.
+
 ---
 
-All nodes, handles and edges must have a kind (referenced by id).
+All nodes, handles, edges, must have a kind (referenced by id).
 Every kind provides default for a new instance.
 Every default can be overwritten by the instance.
 Kinds are passed centrally to the board.

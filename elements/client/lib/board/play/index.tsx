@@ -208,6 +208,37 @@ function triptychCamerasFromFixture(fixture: BoardFixtureV1): Record<BoardPlayPa
 	};
 }
 
+const BOARD_PLAY_CAMERA_REST_HOLD_MS = 1000;
+const BOARD_PLAY_CAMERA_REST_ANIM_MS = 2000;
+
+function smoothstep01(t: number): number {
+	const x = Math.min(1, Math.max(0, t));
+	return x * x * (3 - 2 * x);
+}
+
+function lerpCameraState(a: CameraState, b: CameraState, tLinear: number): CameraState {
+	const w = smoothstep01(tLinear);
+	const zoom =
+		a.zoom > 1e-9 && b.zoom > 1e-9 ? a.zoom * (b.zoom / a.zoom) ** w : a.zoom + (b.zoom - a.zoom) * w;
+	return {
+		x: a.x + (b.x - a.x) * w,
+		y: a.y + (b.y - a.y) * w,
+		zoom: clampZoom(zoom),
+	};
+}
+
+function blendTriptychCameras(
+	from: Record<BoardPlayPaneId, CameraState>,
+	to: Record<BoardPlayPaneId, CameraState>,
+	tLinear: number,
+): Record<BoardPlayPaneId, CameraState> {
+	return {
+		"board-detail": lerpCameraState(from["board-detail"], to["board-detail"], tLinear),
+		"board-overview": lerpCameraState(from["board-overview"], to["board-overview"], tLinear),
+		"board-selection": lerpCameraState(from["board-selection"], to["board-selection"], tLinear),
+	};
+}
+
 /** @emoji ✅ Distinct default selections per pane (indices stable on full Nakagin graph). */
 function selectionSeedForFixture(fixture: BoardFixtureV1): Record<BoardPlayPaneId, Set<string>> {
 	const nodeA = fixture.nodes[0];
@@ -244,7 +275,7 @@ interface BoardPlayShellValue {
 	setBoardSelectionTargets: (value: BoardSelectionTargets | ((prev: BoardSelectionTargets) => BoardSelectionTargets)) => void;
 	/** @emoji 🗑️ Drops ids from the shared fixture after the canvas emits structural delete events. */
 	applyStructuralDelete: (kind: "edge" | "node", id: string) => void;
-	/** @emoji ⏯️ When true, the toolbar play control runs periodic redraw ticks for the active {@link BoardRedrawModeKind}. */
+	/** @emoji ⏯️ When true, play runs layout work on `requestAnimationFrame` (graph packs multiple WASM passes per ~14ms frame; tree one pass per frame). */
 	boardRedrawPlaying: boolean;
 	setBoardRedrawPlaying: (value: boolean) => void;
 	boardRedrawMode: BoardRedrawModeKind;
@@ -257,10 +288,14 @@ interface BoardPlayShellValue {
 	setForceLayoutGravity: (value: number) => void;
 	forceLayoutRepulsionStrength: number;
 	setForceLayoutRepulsionStrength: (value: number) => void;
-	boardRedrawTickMs: number;
-	setBoardRedrawTickMs: (value: number) => void;
-	boardRedrawTickIterations: number;
-	setBoardRedrawTickIterations: (value: number) => void;
+	boardRedrawPlayMaxItersPerFrame: number;
+	setBoardRedrawPlayMaxItersPerFrame: (value: number) => void;
+	boardRedrawProgressiveEnabled: boolean;
+	setBoardRedrawProgressiveEnabled: (value: boolean) => void;
+	boardRedrawProgressiveAutoStopMs: number;
+	setBoardRedrawProgressiveAutoStopMs: (value: number) => void;
+	/** @emoji 🔁 Restarts progressive iteration ramp and auto-stop clock (used when the user drags a node during play). */
+	resetBoardRedrawProgressiveEpoch: () => void;
 	treeLayoutLayerSpacing: number;
 	setTreeLayoutLayerSpacing: (value: number) => void;
 	treeLayoutSiblingGap: number;
@@ -302,6 +337,16 @@ function boardToolbarToggleClass(active: boolean): string {
 /** @emoji 📐 Default node span in px: circle radius = span/2; rectangle width = height = span (40×40). */
 const BOARD_PLAY_DEFAULT_NODE_SIZE_PX = 40;
 
+const BOARD_PLAYRedraw_FRAME_BUDGET_MS = 14;
+
+/** @emoji 📈 Force-graph play: iteration budget per inner WASM call ramps from 2 up to `playMax` over `autoStopMs` (or ~3.8s when stop is off). */
+function boardPlayProgressiveForceIters(elapsedMs: number, autoStopMs: number, playMax: number): number {
+	const cap = Math.max(4, Math.min(500, Math.round(playMax)));
+	const rampWindow = autoStopMs > 0 ? autoStopMs * 0.88 : 3800;
+	const t = Math.min(1, elapsedMs / Math.max(100, rampWindow));
+	return Math.max(2, Math.round(2 + t * (cap - 2)));
+}
+
 /** @emoji 📐 Builds {@link BoardRedrawLayoutOptions} for the active pane camera center and redraw mode. */
 function boardPlayRedrawLayoutOpts(
 	pane: BoardPlayPaneId,
@@ -338,7 +383,7 @@ function boardPlayRedrawLayoutOpts(
 		gravity: Math.max(0, forceGravity),
 		idealEdgeLength: Math.max(8, forceIdealEdge),
 		iterations: Math.max(1, Math.min(5000, Math.round(forceIters))),
-		repulsionStrength: Math.max(40, forceRepulsion),
+		repulsionStrength: Math.max(40, Math.min(120, Math.round(forceRepulsion))),
 	};
 	return { centerX: cx, centerY: cy, forceGraph: fg, mode: "force-graph", redrawHandlesAfter };
 }
@@ -492,8 +537,8 @@ function BoardPlayToolbar(): ReactElement {
 							className={boardToolbarToggleClass(boardRedrawPlaying)}
 							title={
 								boardRedrawPlaying
-									? "Pause automatic redraw ticks"
-									: "Play automatic redraw ticks (interval and mode in Settings)"
+									? "Pause redraw (requestAnimationFrame; packs WASM work per frame)"
+									: "Play redraw: as much layout work per frame as fits ~14ms budget"
 							}
 							onClick={() => setBoardRedrawPlaying(!boardRedrawPlaying)}
 						>
@@ -518,7 +563,7 @@ function BoardPlayToolbar(): ReactElement {
 // #endregion 🔖Toolbar
 
 // #region 🔖SettingsPanel
-/** @emoji ⚙️ Board play redraw settings: shared tick timing, mode switch, and per-mode layout parameters. */
+/** @emoji ⚙️ Board play redraw settings: play uses requestAnimationFrame (packed WASM per frame), progressive ramp, and per-mode layout parameters. */
 function BoardPlaySettingsPanel(): ReactElement {
 	const {
 		activePaneId,
@@ -526,16 +571,18 @@ function BoardPlaySettingsPanel(): ReactElement {
 		applyBoardRedrawOnce,
 		boardRedrawHandlesAfterNodes,
 		boardRedrawMode,
-		boardRedrawTickIterations,
-		boardRedrawTickMs,
+		boardRedrawPlayMaxItersPerFrame,
+		boardRedrawProgressiveAutoStopMs,
+		boardRedrawProgressiveEnabled,
 		forceLayoutFullIterations,
 		forceLayoutGravity,
 		forceLayoutIdealEdgeLength,
 		forceLayoutRepulsionStrength,
 		setBoardRedrawMode,
 		setBoardRedrawHandlesAfterNodes,
-		setBoardRedrawTickIterations,
-		setBoardRedrawTickMs,
+		setBoardRedrawPlayMaxItersPerFrame,
+		setBoardRedrawProgressiveAutoStopMs,
+		setBoardRedrawProgressiveEnabled,
 		setForceLayoutFullIterations,
 		setForceLayoutGravity,
 		setForceLayoutIdealEdgeLength,
@@ -583,30 +630,42 @@ function BoardPlaySettingsPanel(): ReactElement {
 						Also redraw handles after node redraw
 					</label>
 				</div>
-				<Label id="board.play.settings.redraw.tickMs" label="Play interval (ms)">
+				<div className="flex items-center gap-2">
+					<input
+						checked={boardRedrawProgressiveEnabled}
+						className="accent-accent size-3.5 shrink-0"
+						id="board-play-redraw-progressive"
+						onChange={(e) => setBoardRedrawProgressiveEnabled(e.target.checked)}
+						type="checkbox"
+					/>
+					<label className="text-muted-foreground cursor-pointer select-none text-[11px] leading-snug" htmlFor="board-play-redraw-progressive">
+						Progressive iterations while play is on (graph ramps up; tree still one pass per frame)
+					</label>
+				</div>
+				<Label id="board.play.settings.redraw.autoStopMs" label="Auto-stop play after (ms, 0 = off)">
 					<Slider
-						id="board-play-slider-redraw-tick-ms"
-						max={400}
-						min={24}
-						step={8}
-						value={[boardRedrawTickMs]}
-						onValueChange={(vals) => setBoardRedrawTickMs(vals[0] ?? 96)}
+						id="board-play-slider-redraw-autostop"
+						max={12000}
+						min={0}
+						step={250}
+						value={[boardRedrawProgressiveAutoStopMs]}
+						onValueChange={(vals) => setBoardRedrawProgressiveAutoStopMs(vals[0] ?? 3000)}
 					/>
 				</Label>
 				{boardRedrawMode === "force-graph" ? (
-					<Label id="board.play.settings.redraw.tickIterations" label="Iterations per play tick">
+					<Label id="board.play.settings.redraw.playMaxIters" label="Max iterations per WASM call (play ramp ceiling)">
 						<Slider
-							id="board-play-slider-redraw-tick-iters"
-							max={72}
-							min={1}
-							step={1}
-							value={[boardRedrawTickIterations]}
-							onValueChange={(vals) => setBoardRedrawTickIterations(vals[0] ?? 10)}
+							id="board-play-slider-redraw-play-max-iters"
+							max={220}
+							min={12}
+							step={2}
+							value={[boardRedrawPlayMaxItersPerFrame]}
+							onValueChange={(vals) => setBoardRedrawPlayMaxItersPerFrame(vals[0] ?? 96)}
 						/>
 					</Label>
 				) : (
 					<p className="text-muted-foreground text-[11px] leading-snug">
-						Hierarchical tree redraw is deterministic; each tick re-centers the ranked layout on the active pane camera.
+						Tree redraw runs once per animation frame while play is on; use auto-stop to end play after a duration.
 					</p>
 				)}
 				{boardRedrawMode === "force-graph" ? (
@@ -632,14 +691,14 @@ function BoardPlaySettingsPanel(): ReactElement {
 								onValueChange={(vals) => setForceLayoutIdealEdgeLength(vals[0] ?? 64)}
 							/>
 						</Label>
-						<Label id="board.play.settings.force.repulsion" label="Repulsion">
+						<Label id="board.play.settings.force.repulsion" label="Repulsion (medium 80, ±40)">
 							<Slider
 								id="board-play-slider-force-repulsion"
-								max={1800}
-								min={80}
-								step={20}
+								max={120}
+								min={40}
+								step={2}
 								value={[forceLayoutRepulsionStrength]}
-								onValueChange={(vals) => setForceLayoutRepulsionStrength(vals[0] ?? 480)}
+								onValueChange={(vals) => setForceLayoutRepulsionStrength(vals[0] ?? 80)}
 							/>
 						</Label>
 						<Label id="board.play.settings.force.gravity" label="Gravity">
@@ -702,7 +761,7 @@ function BoardPlaySettingsPanel(): ReactElement {
 					Redraw handles
 				</Button>
 				<p className="text-muted-foreground text-[11px] leading-snug">
-					While play is on, camera framing stays pinned to the graph as it was when you pressed play, so zoom and pan no longer jump each tick. Pause to re-frame from the latest layout.
+					While play is on, camera framing stays pinned to the graph as it was when you pressed play. After pause, the view holds for 1s then eases over 2s to fit the laid-out graph (no snap). Dragging a node resets progressive ramp and the auto-stop timer.
 				</p>
 			</div>
 		</div>
@@ -823,6 +882,19 @@ function BoardStructuralDeleteReporter(): null {
 	useBoardEvent("nodeDelete", onNodeDelete);
 	return null;
 }
+
+/** @emoji 🔁 While play is on, each user `nodeMove` restarts the progressive graph ramp and auto-stop clock. */
+function BoardPlayRedrawProgressReset(): null {
+	const { boardRedrawPlaying, resetBoardRedrawProgressiveEpoch } = useBoardPlayShell();
+	const handler = useCallback(() => {
+		if (!boardRedrawPlaying) {
+			return;
+		}
+		resetBoardRedrawProgressiveEpoch();
+	}, [boardRedrawPlaying, resetBoardRedrawProgressiveEpoch]);
+	useBoardEvent("nodeMove", handler);
+	return null;
+}
 // #endregion 🔖Scene
 
 // #region 🔖Panes
@@ -862,6 +934,7 @@ function BoardOverviewPane(): ReactElement {
 			>
 				<BoardSelectionReporter paneId={paneId} />
 				<BoardStructuralDeleteReporter />
+				<BoardPlayRedrawProgressReset />
 				{nakaginBoardMarkers(fixture, selectedIds)}
 			</BoardCanvas>
 		</BoardPaneChrome>
@@ -888,6 +961,7 @@ function BoardDetailPane(): ReactElement {
 			>
 				<BoardSelectionReporter paneId={paneId} />
 				<BoardStructuralDeleteReporter />
+				<BoardPlayRedrawProgressReset />
 				{nakaginBoardMarkers(fixture, selectedIds)}
 			</BoardCanvas>
 		</BoardPaneChrome>
@@ -914,6 +988,7 @@ function BoardSelectionPane(): ReactElement {
 			>
 				<BoardSelectionReporter paneId={paneId} />
 				<BoardStructuralDeleteReporter />
+				<BoardPlayRedrawProgressReset />
 				{nakaginBoardMarkers(fixture, selectedIds)}
 			</BoardCanvas>
 		</BoardPaneChrome>
@@ -1813,6 +1888,22 @@ function BoardPlaySurfaceFooter(props: {
 }
 // #endregion 🔖Surface
 
+interface BoardPlayRedrawLoopSnapshot {
+	activePaneId: BoardPlayPaneId;
+	boardRedrawHandlesAfterNodes: boolean;
+	boardRedrawProgressiveAutoStopMs: number;
+	boardRedrawProgressiveEnabled: boolean;
+	boardRedrawPlayMaxItersPerFrame: number;
+	camerasByPane: Record<BoardPlayPaneId, CameraState>;
+	forceLayoutGravity: number;
+	forceLayoutIdealEdgeLength: number;
+	forceLayoutRepulsionStrength: number;
+	mode: BoardRedrawModeKind;
+	treeLayoutDirection: BoardHierarchicalTreeDirectionKind;
+	treeLayoutLayerSpacing: number;
+	treeLayoutSiblingGap: number;
+}
+
 // #region 🔖Entrypoint
 const initialFixture = parseBoardFixtureV1(nakaginFixtureJson as unknown) ?? (nakaginFixtureJson as BoardFixtureV1);
 
@@ -1833,9 +1924,10 @@ function BoardPlayInner(): ReactElement {
 	const [forceLayoutFullIterations, setForceLayoutFullIterations] = useState(200);
 	const [forceLayoutIdealEdgeLength, setForceLayoutIdealEdgeLength] = useState(64);
 	const [forceLayoutGravity, setForceLayoutGravity] = useState(0.012);
-	const [forceLayoutRepulsionStrength, setForceLayoutRepulsionStrength] = useState(480);
-	const [boardRedrawTickMs, setBoardRedrawTickMs] = useState(96);
-	const [boardRedrawTickIterations, setBoardRedrawTickIterations] = useState(10);
+	const [forceLayoutRepulsionStrength, setForceLayoutRepulsionStrength] = useState(80);
+	const [boardRedrawPlayMaxItersPerFrame, setBoardRedrawPlayMaxItersPerFrame] = useState(96);
+	const [boardRedrawProgressiveEnabled, setBoardRedrawProgressiveEnabled] = useState(true);
+	const [boardRedrawProgressiveAutoStopMs, setBoardRedrawProgressiveAutoStopMs] = useState(3000);
 	const [boardRedrawMode, setBoardRedrawMode] = useState<BoardRedrawModeKind>("force-graph");
 	const [boardRedrawHandlesAfterNodes, setBoardRedrawHandlesAfterNodes] = useState(false);
 	const [treeLayoutLayerSpacing, setTreeLayoutLayerSpacing] = useState(120);
@@ -1939,6 +2031,7 @@ function BoardPlayInner(): ReactElement {
 	}, []);
 
 	const handleCanvasFixtureDrop = useCallback((pane: BoardPlayPaneId, detail: BoardFixtureDropDetail) => {
+		skipNextCameraBasisResyncRef.current = true;
 		const merged = mergePaletteNodeFromDrop(detail);
 		if (merged) {
 			patchFixture((prev) => ({ ...prev, nodes: [...prev.nodes, merged] }));
@@ -1964,24 +2057,148 @@ function BoardPlayInner(): ReactElement {
 
 	const cameraBasisFixtureRef = useRef<BoardFixtureV1>(fixture);
 	const [cameraBasisTick, setCameraBasisTick] = useState(0);
+	/** @emoji 📌 One-shot: sync {@link cameraBasisFixtureRef} without bumping {@link cameraBasisTick} so triptych framing stays stable after palette / shelf fixture drop. */
+	const skipNextCameraBasisResyncRef = useRef(false);
 	const prevBoardRedrawPlayingRef = useRef(false);
+	const [cameraDisplayOverrideByPane, setCameraDisplayOverrideByPane] = useState<Record<BoardPlayPaneId, CameraState> | null>(null);
+	const suppressCameraBasisSyncRef = useRef(false);
+	const cameraPlayEndHoldTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+	const cameraPlayEndAnimRafRef = useRef<number | null>(null);
+	const lastPlayingForCameraEaseRef = useRef(false);
 
 	useEffect(() => {
-		if (!boardRedrawPlaying) {
-			cameraBasisFixtureRef.current = fixture;
-			setCameraBasisTick((t) => t + 1);
+		if (boardRedrawPlaying) {
+			return;
 		}
+		if (suppressCameraBasisSyncRef.current) {
+			return;
+		}
+		if (skipNextCameraBasisResyncRef.current) {
+			skipNextCameraBasisResyncRef.current = false;
+			cameraBasisFixtureRef.current = fixture;
+			return;
+		}
+		cameraBasisFixtureRef.current = fixture;
+		setCameraBasisTick((t) => t + 1);
 	}, [fixture, boardRedrawPlaying]);
 
 	useEffect(() => {
+		if (cameraPlayEndHoldTimerRef.current != null) {
+			clearTimeout(cameraPlayEndHoldTimerRef.current);
+			cameraPlayEndHoldTimerRef.current = null;
+		}
+		if (cameraPlayEndAnimRafRef.current != null) {
+			cancelAnimationFrame(cameraPlayEndAnimRafRef.current);
+			cameraPlayEndAnimRafRef.current = null;
+		}
 		if (boardRedrawPlaying && !prevBoardRedrawPlayingRef.current) {
+			setCameraDisplayOverrideByPane(null);
+			suppressCameraBasisSyncRef.current = false;
 			cameraBasisFixtureRef.current = fixture;
 			setCameraBasisTick((t) => t + 1);
 		}
 		prevBoardRedrawPlayingRef.current = boardRedrawPlaying;
 	}, [boardRedrawPlaying, fixture]);
 
-	const camerasByPane = useMemo(() => triptychCamerasFromFixture(cameraBasisFixtureRef.current), [cameraBasisTick]);
+	useEffect(() => {
+		if (boardRedrawPlaying) {
+			lastPlayingForCameraEaseRef.current = true;
+			return () => {
+				if (cameraPlayEndHoldTimerRef.current != null) {
+					clearTimeout(cameraPlayEndHoldTimerRef.current);
+					cameraPlayEndHoldTimerRef.current = null;
+				}
+				if (cameraPlayEndAnimRafRef.current != null) {
+					cancelAnimationFrame(cameraPlayEndAnimRafRef.current);
+					cameraPlayEndAnimRafRef.current = null;
+				}
+			};
+		}
+		if (!lastPlayingForCameraEaseRef.current) {
+			return;
+		}
+		lastPlayingForCameraEaseRef.current = false;
+
+		const snapshotFixture = fixtureRef.current;
+		const from = triptychCamerasFromFixture(cameraBasisFixtureRef.current);
+		cameraBasisFixtureRef.current = snapshotFixture;
+		const to = triptychCamerasFromFixture(snapshotFixture);
+		suppressCameraBasisSyncRef.current = true;
+		setCameraDisplayOverrideByPane(from);
+
+		cameraPlayEndHoldTimerRef.current = setTimeout(() => {
+			cameraPlayEndHoldTimerRef.current = null;
+			const t0 = typeof performance !== "undefined" ? performance.now() : Date.now();
+			const tickInner = () => {
+				const now = typeof performance !== "undefined" ? performance.now() : Date.now();
+				const te = now - t0;
+				if (te >= BOARD_PLAY_CAMERA_REST_ANIM_MS) {
+					suppressCameraBasisSyncRef.current = false;
+					cameraBasisFixtureRef.current = fixtureRef.current;
+					setCameraDisplayOverrideByPane(null);
+					setCameraBasisTick((t) => t + 1);
+					cameraPlayEndAnimRafRef.current = null;
+					return;
+				}
+				const u = te / BOARD_PLAY_CAMERA_REST_ANIM_MS;
+				setCameraDisplayOverrideByPane(blendTriptychCameras(from, to, u));
+				cameraPlayEndAnimRafRef.current = requestAnimationFrame(tickInner);
+			};
+			cameraPlayEndAnimRafRef.current = requestAnimationFrame(tickInner);
+		}, BOARD_PLAY_CAMERA_REST_HOLD_MS);
+
+		return () => {
+			if (cameraPlayEndHoldTimerRef.current != null) {
+				clearTimeout(cameraPlayEndHoldTimerRef.current);
+				cameraPlayEndHoldTimerRef.current = null;
+			}
+			if (cameraPlayEndAnimRafRef.current != null) {
+				cancelAnimationFrame(cameraPlayEndAnimRafRef.current);
+				cameraPlayEndAnimRafRef.current = null;
+			}
+		};
+	}, [boardRedrawPlaying]);
+
+	const cameraBasisDerivedByPane = useMemo(() => triptychCamerasFromFixture(cameraBasisFixtureRef.current), [cameraBasisTick]);
+	const camerasByPane = cameraDisplayOverrideByPane ?? cameraBasisDerivedByPane;
+
+	const redrawPlayingRef = useRef(false);
+	const redrawProgressiveEpochRef = useRef(0);
+	const redrawLoopSnapshotRef = useRef<BoardPlayRedrawLoopSnapshot>({
+		activePaneId: "board-overview",
+		boardRedrawHandlesAfterNodes: false,
+		boardRedrawProgressiveAutoStopMs: 3000,
+		boardRedrawProgressiveEnabled: true,
+		boardRedrawPlayMaxItersPerFrame: 96,
+		camerasByPane: triptychCamerasFromFixture(initialFixture),
+		forceLayoutGravity: 0.012,
+		forceLayoutIdealEdgeLength: 64,
+		forceLayoutRepulsionStrength: 80,
+		mode: "force-graph",
+		treeLayoutDirection: "downwards",
+		treeLayoutLayerSpacing: 120,
+		treeLayoutSiblingGap: 28,
+	});
+
+	const resetBoardRedrawProgressiveEpoch = useCallback(() => {
+		redrawProgressiveEpochRef.current = typeof performance !== "undefined" ? performance.now() : Date.now();
+	}, []);
+
+	redrawLoopSnapshotRef.current = {
+		activePaneId,
+		boardRedrawHandlesAfterNodes,
+		boardRedrawProgressiveAutoStopMs,
+		boardRedrawProgressiveEnabled,
+		boardRedrawPlayMaxItersPerFrame,
+		camerasByPane,
+		forceLayoutGravity,
+		forceLayoutIdealEdgeLength,
+		forceLayoutRepulsionStrength,
+		mode: boardRedrawMode,
+		treeLayoutDirection,
+		treeLayoutLayerSpacing,
+		treeLayoutSiblingGap,
+	};
 
 	const applyBoardRedrawHandlesOnce = useCallback(() => {
 		patchFixture((prev) => layoutBoardFixtureRedrawHandles(prev));
@@ -2024,50 +2241,84 @@ function BoardPlayInner(): ReactElement {
 
 	useEffect(() => {
 		if (!boardRedrawPlaying) {
+			redrawPlayingRef.current = false;
 			return;
 		}
-		const tickMs = Math.max(33, Math.min(5000, Math.round(boardRedrawTickMs)));
-		const tickIters = Math.max(1, Math.min(500, Math.round(boardRedrawTickIterations)));
-		const id = window.setInterval(() => {
+		redrawPlayingRef.current = true;
+		redrawProgressiveEpochRef.current = typeof performance !== "undefined" ? performance.now() : Date.now();
+		let raf = 0;
+		const step = () => {
+			if (!redrawPlayingRef.current) {
+				return;
+			}
+			const snap = redrawLoopSnapshotRef.current;
+			const now = typeof performance !== "undefined" ? performance.now() : Date.now();
+			const elapsed = now - redrawProgressiveEpochRef.current;
+			if (snap.boardRedrawProgressiveAutoStopMs > 0 && elapsed >= snap.boardRedrawProgressiveAutoStopMs) {
+				redrawPlayingRef.current = false;
+				setBoardRedrawPlaying(false);
+				return;
+			}
+			let innerIters = 1;
+			if (snap.mode === "force-graph") {
+				if (snap.boardRedrawProgressiveEnabled) {
+					innerIters = boardPlayProgressiveForceIters(elapsed, snap.boardRedrawProgressiveAutoStopMs, snap.boardRedrawPlayMaxItersPerFrame);
+				} else {
+					innerIters = Math.max(1, Math.min(500, Math.round(snap.boardRedrawPlayMaxItersPerFrame)));
+				}
+			}
 			patchFixture((prev) => {
 				if (prev.nodes.length === 0) {
 					return prev;
 				}
-				return layoutBoardFixtureRedrawNodes(
-					prev,
-					boardPlayRedrawLayoutOpts(
-						activePaneId,
-						camerasByPane,
-						boardRedrawMode,
-						tickIters,
-						forceLayoutIdealEdgeLength,
-						forceLayoutGravity,
-						forceLayoutRepulsionStrength,
-						treeLayoutLayerSpacing,
-						treeLayoutSiblingGap,
-						treeLayoutDirection,
-						boardRedrawHandlesAfterNodes,
-					),
-				);
+				if (snap.mode === "hierarchical-tree") {
+					return layoutBoardFixtureRedrawNodes(
+						prev,
+						boardPlayRedrawLayoutOpts(
+							snap.activePaneId,
+							snap.camerasByPane,
+							snap.mode,
+							1,
+							snap.forceLayoutIdealEdgeLength,
+							snap.forceLayoutGravity,
+							snap.forceLayoutRepulsionStrength,
+							snap.treeLayoutLayerSpacing,
+							snap.treeLayoutSiblingGap,
+							snap.treeLayoutDirection,
+							snap.boardRedrawHandlesAfterNodes,
+						),
+					);
+				}
+				const t0 = typeof performance !== "undefined" ? performance.now() : Date.now();
+				let cur = prev;
+				while (redrawPlayingRef.current && (typeof performance !== "undefined" ? performance.now() : Date.now()) - t0 < BOARD_PLAYRedraw_FRAME_BUDGET_MS) {
+					cur = layoutBoardFixtureRedrawNodes(
+						cur,
+						boardPlayRedrawLayoutOpts(
+							snap.activePaneId,
+							snap.camerasByPane,
+							snap.mode,
+							innerIters,
+							snap.forceLayoutIdealEdgeLength,
+							snap.forceLayoutGravity,
+							snap.forceLayoutRepulsionStrength,
+							snap.treeLayoutLayerSpacing,
+							snap.treeLayoutSiblingGap,
+							snap.treeLayoutDirection,
+							snap.boardRedrawHandlesAfterNodes,
+						),
+					);
+				}
+				return cur;
 			});
-		}, tickMs);
-		return () => window.clearInterval(id);
-	}, [
-		activePaneId,
-		boardRedrawHandlesAfterNodes,
-		boardRedrawMode,
-		camerasByPane,
-		forceLayoutGravity,
-		forceLayoutIdealEdgeLength,
-		boardRedrawPlaying,
-		forceLayoutRepulsionStrength,
-		boardRedrawTickIterations,
-		boardRedrawTickMs,
-		patchFixture,
-		treeLayoutLayerSpacing,
-		treeLayoutDirection,
-		treeLayoutSiblingGap,
-	]);
+			raf = requestAnimationFrame(step);
+		};
+		raf = requestAnimationFrame(step);
+		return () => {
+			redrawPlayingRef.current = false;
+			cancelAnimationFrame(raf);
+		};
+	}, [boardRedrawPlaying, patchFixture, setBoardRedrawPlaying]);
 
 	const shellValue = useMemo<BoardPlayShellValue>(
 		() => ({
@@ -2077,9 +2328,10 @@ function BoardPlayInner(): ReactElement {
 			applyStructuralDelete,
 			boardRedrawHandlesAfterNodes,
 			boardRedrawMode,
+			boardRedrawPlayMaxItersPerFrame,
 			boardRedrawPlaying,
-			boardRedrawTickIterations,
-			boardRedrawTickMs,
+			boardRedrawProgressiveAutoStopMs,
+			boardRedrawProgressiveEnabled,
 			boardSelectionMethod,
 			boardSelectionMode,
 			boardSelectionTargets,
@@ -2092,12 +2344,14 @@ function BoardPlayInner(): ReactElement {
 			handleCanvasFixtureDrop,
 			patchFixture,
 			remapIdInSelections,
+			resetBoardRedrawProgressiveEpoch,
 			setActivePaneId,
 			setBoardRedrawHandlesAfterNodes,
 			setBoardRedrawMode,
+			setBoardRedrawPlayMaxItersPerFrame,
 			setBoardRedrawPlaying,
-			setBoardRedrawTickIterations,
-			setBoardRedrawTickMs,
+			setBoardRedrawProgressiveAutoStopMs,
+			setBoardRedrawProgressiveEnabled,
 			setBoardSelectionMethod,
 			setBoardSelectionMode,
 			setBoardSelectionTargets,
@@ -2122,9 +2376,10 @@ function BoardPlayInner(): ReactElement {
 			applyStructuralDelete,
 			boardRedrawHandlesAfterNodes,
 			boardRedrawMode,
+			boardRedrawPlayMaxItersPerFrame,
 			boardRedrawPlaying,
-			boardRedrawTickIterations,
-			boardRedrawTickMs,
+			boardRedrawProgressiveAutoStopMs,
+			boardRedrawProgressiveEnabled,
 			boardSelectionMethod,
 			boardSelectionMode,
 			boardSelectionTargets,
@@ -2137,6 +2392,7 @@ function BoardPlayInner(): ReactElement {
 			handleCanvasFixtureDrop,
 			patchFixture,
 			remapIdInSelections,
+			resetBoardRedrawProgressiveEpoch,
 			selectionByPane,
 			setSelectionForPane,
 			treeLayoutLayerSpacing,
