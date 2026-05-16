@@ -43,6 +43,12 @@ export type RenderMode = "main-thread" | "worker-offscreen" | "headless-test";
 export type BoardSelectionMethod = "lasso" | "rectangle";
 export type BoardSelectionMode = "additive" | "invertive" | "subtractive";
 export type BoardSelectionTarget = "edges" | "nodes" | "nodes&edges";
+
+/** @emoji 🔗 One allowed directed pair for handle link gestures (`from` source handle kind → `to` target handle kind). */
+export interface BoardHandleLinkCompatPair {
+	from: string;
+	to: string;
+}
 /** 🧱 World-space clip tiling for the Vello WASM canvas (`world-clip`) or monolithic encoding (`none`). */
 export type WorldRasterTilingKind = "none" | "world-clip";
 
@@ -267,6 +273,8 @@ export type NodeOptions = CircleNodeOptions | RectangleNodeOptions;
 
 export interface HandleOptions extends BoardObjectOptions {
 	angle: number;
+	/** @emoji 🔗 Semantic handle kind for WASM link compatibility (not {@link BoardObject.kind}). */
+	handleKind?: string;
 	node: Node;
 	radius?: number;
 }
@@ -1169,12 +1177,15 @@ export class Node extends BoardObject {
 /** 🟣 Tangent handle anchored to a node boundary at a polar angle. */
 export class Handle extends BoardObject {
 	angle: number;
+	/** @emoji 🔗 Semantic kind for ordered link compatibility on the host (JSON `handleKind`). */
+	handleKind: string;
 	node: Node;
 	radius: number;
 
 	constructor(options: HandleOptions) {
 		super(options.id, options);
 		this.angle = options.angle;
+		this.handleKind = (options.handleKind ?? "").trim();
 		this.node = options.node;
 		this.radius = options.radius ?? 8;
 		this.node.attachHandle(this);
@@ -1511,6 +1522,8 @@ export class BoardRenderer {
 	private lastPushedDescriptorJson: string | null = null;
 	private lastVelloThemeJson = "";
 	private lastDescriptorPushDeferred = false;
+	private handleLinkCompatJson = "[]";
+	private wasmHostSceneMergeResyncStore = new SnapshotStore<number>(0);
 	private lastNodeAuthoringPositionById = new Map<string, { x: number; y: number }>();
 	private suppressSceneToWasmPush = false;
 	private graphObservationFlushPending = false;
@@ -1535,6 +1548,7 @@ export class BoardRenderer {
 		this.session = new BoardSession();
 		const initialSel = this.selectionOptions;
 		this.session.setSelectionOptions(initialSel.method, initialSel.mode, initialSel.target);
+		this.session.setHandleLinkCompatJson(this.handleLinkCompatJson);
 		this.applyWasmDrainToScene(this.session.drainEventsJson());
 		this.attachCanvasListeners();
 		if (this.canvas) {
@@ -1547,6 +1561,12 @@ export class BoardRenderer {
 	}
 
 	readonly renderMode: RenderMode;
+
+	/** @emoji 🔗 Subscribes to an epoch bumped when WASM event drains mutate edges/nodes so the React host can re-merge {@link BoardRenderer.wasmHostAuthoredEdgeIds} into JSX sync without waiting for `children` identity changes. */
+	subscribeWasmHostSceneMergeResync = (listener: () => void): (() => void) => this.wasmHostSceneMergeResyncStore.subscribe(listener);
+
+	/** @emoji 🔗 Snapshot for {@link BoardRenderer.subscribeWasmHostSceneMergeResync} (use with `useSyncExternalStore`). */
+	getWasmHostSceneMergeResyncEpoch = (): number => this.wasmHostSceneMergeResyncStore.getSnapshot();
 
 	get selection(): {
 		getSnapshot: () => BoardSelectionSnapshot;
@@ -1616,6 +1636,24 @@ export class BoardRenderer {
 		}
 		this.session.setWorldRasterTiling(next);
 		this.markDirty();
+	}
+
+	/** @emoji 🔗 Sets ordered handle-kind compatibility pairs for link gestures (empty = unrestricted). */
+	setHandleLinkCompatibility(pairs: readonly BoardHandleLinkCompatPair[] | undefined): void {
+		const normalized = (pairs ?? []).map((p) => ({
+			from: String(p.from ?? "").trim(),
+			to: String(p.to ?? "").trim(),
+		}));
+		const json = JSON.stringify(normalized);
+		if (json === this.handleLinkCompatJson) {
+			return;
+		}
+		this.handleLinkCompatJson = json;
+		if (this.wasmSessionCallBlockedForReentry()) {
+			this.invalidated = true;
+			return;
+		}
+		this.pushSceneToWasmDriver();
 	}
 
 	/** @emoji 📍 Applies declarative node x/y while keeping wasm-dragged coordinates when React props still show the pre-drag authoring values. */
@@ -1919,7 +1957,8 @@ export class BoardRenderer {
 		const o = this.selectionOptions;
 		this.session.setSelectionOptions(o.method, o.mode, o.target);
 		this.session.setWorldRasterTiling(this.worldRasterTiling);
-		this.session.drainEventsJson();
+		this.session.setHandleLinkCompatJson(this.handleLinkCompatJson);
+		this.applyWasmDrainToScene(this.session.drainEventsJson());
 		this.syncGpuReadyCacheFromSession();
 	}
 
@@ -1974,6 +2013,7 @@ export class BoardRenderer {
 				selected: handle.selected,
 				style: handle.style,
 				visible: handle.visible,
+				handleKind: handle.handleKind,
 			});
 		}
 		const edges: Record<string, unknown>[] = [];
@@ -2012,6 +2052,11 @@ export class BoardRenderer {
 		}
 	}
 
+	private bumpWasmHostSceneMergeResyncEpoch(): void {
+		const prev = this.wasmHostSceneMergeResyncStore.getSnapshot();
+		this.wasmHostSceneMergeResyncStore.setSnapshot(prev + 1, (a, b) => a === b);
+	}
+
 	/** @emoji 🛡️ Defers WASM scene push when `attach_canvas` or `renderFrame` still holds a session borrow; sets {@link BoardRenderer.invalidated} so the next frame retries. */
 	private pushSceneToWasmDriver(): void {
 		if (this.suppressSceneToWasmPush) {
@@ -2025,6 +2070,7 @@ export class BoardRenderer {
 		this.session.setSize(this.width, this.height, this.dpr);
 		this.session.setSelectionOptions(o.method, o.mode, o.target);
 		this.session.setWorldRasterTiling(this.worldRasterTiling);
+		this.session.setHandleLinkCompatJson(this.handleLinkCompatJson);
 		const deferDescriptorSync =
 			this.session.isDraggingAreaSelect() || this.session.defersDescriptorSyncFromJs();
 		if (this.lastDescriptorPushDeferred && !deferDescriptorSync) {
@@ -2040,7 +2086,7 @@ export class BoardRenderer {
 		}
 		this.session.setCamera(this.camera.x, this.camera.y, this.camera.zoom);
 		this.syncBoardAppearanceFromDocument();
-		this.session.drainEventsJson();
+		this.applyWasmDrainToScene(this.session.drainEventsJson());
 	}
 
 	private applyWasmDrainToScene(raw: string): void {
@@ -2053,6 +2099,7 @@ export class BoardRenderer {
 		if (rows.length === 0) {
 			return;
 		}
+		let graphMutatedForHostMerge = false;
 		this.suppressSceneToWasmPush = true;
 		try {
 			for (const row of rows) {
@@ -2113,8 +2160,10 @@ export class BoardRenderer {
 						const edge = this.scene.edges.get(id);
 						if (edge) {
 							this.scene.remove(edge);
+							graphMutatedForHostMerge = true;
 						} else {
 							this.wasmHostAuthoredEdgeIds.delete(id);
+							graphMutatedForHostMerge = true;
 						}
 						this.emitter.emit("edgeDelete", { id });
 						break;
@@ -2124,6 +2173,7 @@ export class BoardRenderer {
 						const node = this.scene.nodes.get(id);
 						if (node) {
 							this.scene.remove(node);
+							graphMutatedForHostMerge = true;
 						}
 						this.emitter.emit("nodeDelete", { id });
 						break;
@@ -2135,13 +2185,14 @@ export class BoardRenderer {
 						if (!id || !fromId || !toId || this.scene.edges.has(id)) {
 							break;
 						}
-						const from = this.scene.handles.get(fromId);
-						const to = this.scene.handles.get(toId);
-						if (!from || !to) {
+						const fromObj = this.scene.getObjectById(fromId);
+						const toObj = this.scene.getObjectById(toId);
+						if (!(fromObj instanceof Handle) || !(toObj instanceof Handle)) {
 							break;
 						}
 						this.wasmHostAuthoredEdgeIds.add(id);
-						this.scene.ingestWasmEdge(new Edge({ id, from, to }));
+						this.scene.ingestWasmEdge(new Edge({ id, from: fromObj, to: toObj }));
+						graphMutatedForHostMerge = true;
 						this.emitter.emit("edgeCreate", { id, from: fromId, to: toId });
 						break;
 					}
@@ -2152,6 +2203,9 @@ export class BoardRenderer {
 		} finally {
 			this.suppressSceneToWasmPush = false;
 			this.enqueueBoardGraphObservationFlush();
+			if (graphMutatedForHostMerge) {
+				this.bumpWasmHostSceneMergeResyncEpoch();
+			}
 		}
 	}
 
@@ -3620,6 +3674,7 @@ function applyHandleProps(instance: Handle, props: BoardHandleProps, node: Node)
 	instance.userData = { ...(props.userData ?? {}) };
 	instance.visible = props.visible ?? true;
 	instance.radius = props.radius ?? 8;
+	instance.handleKind = (props.handleKind ?? "").trim();
 	instance.setAngle(props.angle);
 }
 
@@ -3644,6 +3699,7 @@ function propsEqualHandle(a: BoardHandleProps, b: BoardHandleProps): boolean {
 		a.id === b.id &&
 		a.angle === b.angle &&
 		a.radius === b.radius &&
+		(a.handleKind ?? "").trim() === (b.handleKind ?? "").trim() &&
 		a.selected === b.selected &&
 		a.style === b.style &&
 		a.visible === b.visible &&

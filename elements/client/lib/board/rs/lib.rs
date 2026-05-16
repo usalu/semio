@@ -350,6 +350,8 @@ mod scene_json {
 		#[serde(default)]
 		pub style: Option<String>,
 		#[serde(default)]
+		pub handle_kind: Option<String>,
+		#[serde(default)]
 		pub user_data: Option<serde_json::Value>,
 		#[serde(default)]
 		pub visible: Option<bool>,
@@ -486,6 +488,7 @@ mod board_host {
 		pub selected: bool,
 		pub visible: bool,
 		pub style: Option<String>,
+		pub handle_kind: String,
 	}
 
 	#[derive(Clone, Debug)]
@@ -592,6 +595,8 @@ mod board_host {
 		pub nodes: BTreeMap<String, NodeData>,
 		pub handles: BTreeMap<String, HandleData>,
 		pub edges: BTreeMap<String, EdgeData>,
+		/// Ordered pairs `(from_handle_kind, to_handle_kind)` allowed for handle-link gestures; empty = unrestricted.
+		pub handle_link_compat_pairs: Vec<(String, String)>,
 		pub selection: BTreeSet<String>,
 		pub selection_options: SelectionOptions,
 		pub hovered_id: Option<String>,
@@ -621,6 +626,7 @@ mod board_host {
 				nodes: BTreeMap::new(),
 				handles: BTreeMap::new(),
 				edges: BTreeMap::new(),
+				handle_link_compat_pairs: Vec::new(),
 				selection: BTreeSet::new(),
 				selection_options: SelectionOptions {
 					method: "rectangle".into(),
@@ -678,6 +684,45 @@ mod board_host {
 			self.selection_options.method = method.into();
 			self.selection_options.mode = mode.into();
 			self.selection_options.target = target.into();
+		}
+
+		/// @emoji 🔗 JSON `[{ "from": "…", "to": "…" }, …]` of allowed directed handle-kind pairs for link gestures; empty clears restrictions.
+		pub fn set_handle_link_compat_from_json(&mut self, json: &str) -> Result<(), String> {
+			let v: serde_json::Value = serde_json::from_str(json).map_err(|e| e.to_string())?;
+			let arr = v
+				.as_array()
+				.ok_or_else(|| "expected JSON array of {from,to} objects".to_string())?;
+			let mut next = Vec::new();
+			for row in arr {
+				let o = row.as_object().ok_or("compat row must be object")?;
+				let from = o
+					.get("from")
+					.and_then(|x| x.as_str())
+					.ok_or_else(|| "compat row missing string from".to_string())?
+					.trim()
+					.to_string();
+				let to = o
+					.get("to")
+					.and_then(|x| x.as_str())
+					.ok_or_else(|| "compat row missing string to".to_string())?
+					.trim()
+					.to_string();
+				next.push((from, to));
+			}
+			self.handle_link_compat_pairs = next;
+			Ok(())
+		}
+
+		fn handles_link_compatible_for_drag(&self, from: &HandleData, to: &HandleData) -> bool {
+			if self.handle_link_compat_pairs.is_empty() {
+				return true;
+			}
+			let fk = from.handle_kind.as_str();
+			let tk = to.handle_kind.as_str();
+			self
+				.handle_link_compat_pairs
+				.iter()
+				.any(|(a, b)| a.as_str() == fk && b.as_str() == tk)
 		}
 
 		/// @emoji 🧩 Selects world-space clip tiling for Vello scene construction (`none` | `world-clip`).
@@ -999,6 +1044,7 @@ mod board_host {
 						selected: h.selected.unwrap_or(false),
 						visible: h.visible.unwrap_or(true),
 						style: h.style.clone(),
+						handle_kind: h.handle_kind.clone().unwrap_or_default().trim().to_string(),
 					},
 				);
 			}
@@ -1112,6 +1158,13 @@ mod board_host {
 					if !angle.is_finite() {
 						return false;
 					}
+					let handle_kind = ho
+						.get("handleKind")
+						.or_else(|| ho.get("handle_kind"))
+						.and_then(|v| v.as_str())
+						.map(str::trim)
+						.filter(|s| !s.is_empty())
+						.map(String::from);
 					handles.push(HandleDescJson {
 						id: hid.into(),
 						node_id: id.into(),
@@ -1119,6 +1172,7 @@ mod board_host {
 						radius: None,
 						selected: None,
 						style: None,
+						handle_kind,
 						user_data: None,
 						visible: None,
 					});
@@ -1589,6 +1643,9 @@ mod board_host {
 				if h.node_id == from_node {
 					continue;
 				}
+				if !self.handles_link_compatible_for_drag(from_handle, h) {
+					continue;
+				}
 				let pw = self.handle_world_pos(h)?;
 				let tol = self.link_snap_tolerance_world(h);
 				let d = distance_between(world, pw);
@@ -1633,6 +1690,9 @@ mod board_host {
 				return false;
 			};
 			if fh.node_id == th.node_id {
+				return false;
+			}
+			if !self.handles_link_compatible_for_drag(fh, th) {
 				return false;
 			}
 			for e in self.edges.values() {
@@ -2820,6 +2880,15 @@ impl BoardSession {
 		self.state.borrow_mut().host.set_selection_options(method, mode, target);
 	}
 
+	#[wasm_bindgen(js_name = setHandleLinkCompatJson)]
+	pub fn set_handle_link_compat_json(&mut self, json: &str) -> Result<(), JsValue> {
+		self.state
+			.borrow_mut()
+			.host
+			.set_handle_link_compat_from_json(json)
+			.map_err(|e| JsValue::from_str(&e))
+	}
+
 	#[wasm_bindgen(js_name = setWorldRasterTiling)]
 	pub fn set_world_raster_tiling_wasm(&mut self, mode: &str) {
 		self.state.borrow_mut().host.set_world_raster_tiling(mode);
@@ -2985,6 +3054,7 @@ mod host_tests {
 					radius: None,
 					selected: None,
 					style: None,
+					handle_kind: None,
 					user_data: None,
 					visible: None,
 				},
@@ -2995,6 +3065,7 @@ mod host_tests {
 					radius: None,
 					selected: None,
 					style: None,
+					handle_kind: None,
 					user_data: None,
 					visible: None,
 				},
@@ -3312,6 +3383,7 @@ mod host_tests {
 					radius: None,
 					selected: None,
 					style: None,
+					handle_kind: None,
 					user_data: None,
 					visible: None,
 				},
@@ -3322,6 +3394,7 @@ mod host_tests {
 					radius: None,
 					selected: None,
 					style: None,
+					handle_kind: None,
 					user_data: None,
 					visible: None,
 				},
@@ -3351,6 +3424,62 @@ mod host_tests {
 		assert!(ev.contains("b.in"));
 		let created: Vec<_> = h.edges.keys().filter(|k| k.starts_with("edge-link-")).cloned().collect();
 		assert_eq!(created.len(), 1);
+	}
+
+	#[test]
+	fn board_host_link_rejects_incompatible_handle_kind_pairs() {
+		let mut h = BoardHost::new();
+		h.set_size(800, 600, 1.0);
+		h.set_handle_link_compat_from_json(r#"[{"from":"child","to":"parent"}]"#).unwrap();
+		let mut desc = link_test_scene_no_edge();
+		for handle in &mut desc.handles {
+			match handle.id.as_str() {
+				"a.out" => handle.handle_kind = Some("parent".into()),
+				"b.in" => handle.handle_kind = Some("child".into()),
+				_ => {}
+			}
+		}
+		h.sync_descriptor(&desc);
+		let _ = h.drain_events_json();
+		let hp_a = handle_position_on_circle(Point::new(0.0, 0.0), 40.0, 0.0);
+		let hp_b = handle_position_on_circle(Point::new(280.0, 0.0), 40.0, std::f64::consts::PI);
+		let s0 = h.world_to_screen(hp_a);
+		h.pointer_down_screen(s0.x, s0.y, 0, false);
+		let s_mid = h.world_to_screen(Point::new(140.0, 0.0));
+		h.pointer_move_screen(s_mid.x + 20.0, s_mid.y);
+		let s1 = h.world_to_screen(hp_b);
+		h.pointer_move_screen(s1.x, s1.y);
+		h.pointer_up_screen(s1.x, s1.y);
+		let ev = h.drain_events_json();
+		assert!(!ev.contains("edgeCreate"));
+	}
+
+	#[test]
+	fn board_host_link_accepts_matching_handle_kind_pair() {
+		let mut h = BoardHost::new();
+		h.set_size(800, 600, 1.0);
+		h.set_handle_link_compat_from_json(r#"[{"from":"parent","to":"child"}]"#).unwrap();
+		let mut desc = link_test_scene_no_edge();
+		for handle in &mut desc.handles {
+			match handle.id.as_str() {
+				"a.out" => handle.handle_kind = Some("parent".into()),
+				"b.in" => handle.handle_kind = Some("child".into()),
+				_ => {}
+			}
+		}
+		h.sync_descriptor(&desc);
+		let _ = h.drain_events_json();
+		let hp_a = handle_position_on_circle(Point::new(0.0, 0.0), 40.0, 0.0);
+		let hp_b = handle_position_on_circle(Point::new(280.0, 0.0), 40.0, std::f64::consts::PI);
+		let s0 = h.world_to_screen(hp_a);
+		h.pointer_down_screen(s0.x, s0.y, 0, false);
+		let s_mid = h.world_to_screen(Point::new(140.0, 0.0));
+		h.pointer_move_screen(s_mid.x + 20.0, s_mid.y);
+		let s1 = h.world_to_screen(hp_b);
+		h.pointer_move_screen(s1.x, s1.y);
+		h.pointer_up_screen(s1.x, s1.y);
+		let ev = h.drain_events_json();
+		assert!(ev.contains("edgeCreate"));
 	}
 
 	#[test]

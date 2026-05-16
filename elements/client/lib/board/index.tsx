@@ -36,6 +36,7 @@ import {
 	BOARD_NODE_TEXT_ALIGNMENT_DEFAULT,
 	BOARD_NODE_TEXT_FONT_FAMILY_DEFAULT,
 	BOARD_NODE_TEXT_FONT_PX_DEFAULT,
+	computeHandlePosition,
 	decodeBoardFixtureFromDragV1,
 	ensureElementsBoardWasmLoaded,
 	type BoardEventMap,
@@ -45,6 +46,7 @@ import {
 	type BoardFixtureV1,
 	type BoardGraphEdgeIdPayload,
 	type BoardGraphNodeIdPayload,
+	type BoardHandleLinkCompatPair,
 	type BoardHoverPayload,
 	type BoardNodeTextAlignment,
 	type BoardSelectionMethod,
@@ -56,6 +58,9 @@ import {
 	type RenderMode,
 	type WorldRasterTilingKind,
 } from "./index";
+
+export type { BoardHandleLinkCompatPair } from "./index";
+
 import { ContextMenuController, type ContextMenuItem } from "@elements/ui";
 
 //#region 🔖Kinds
@@ -67,6 +72,8 @@ export interface BoardCanvasProps {
 	/** @emoji 📥 When true, accepts in-app fixture drags using {@link BOARD_FIXTURE_DRAG_V1_MIME} (not OS file drops). */
 	fixtureDragDrop?: boolean;
 	height?: number;
+	/** @emoji 🔗 Allowed directed handle-kind pairs for link gestures; empty omits filtering. */
+	handleLinkCompatibility?: readonly BoardHandleLinkCompatPair[];
 	onFixtureDrop?: (detail: BoardFixtureDropDetail) => void;
 	/** @emoji 🖱️ Fires after pointer-driven hit tests (same cadence as canvas moves); use for tooltips and status. */
 	onHover?: (payload: BoardHoverPayload) => void;
@@ -149,6 +156,8 @@ export type BoardNodeProps = BoardNodeCircleProps | BoardNodeRectangleProps;
 export interface BoardHandleProps {
 	angle: number;
 	contextMenu?: ContextMenuItem[];
+	/** @emoji 🔗 Semantic handle kind for WASM link compatibility (not the host intrinsic object kind). */
+	handleKind?: string;
 	id: string;
 	radius?: number;
 	selected?: boolean;
@@ -297,6 +306,7 @@ function applyHandleProps(instance: BoardHandleObject, descriptor: HandleDescrip
 	instance.userData = { ...(descriptor.userData ?? {}) };
 	instance.visible = descriptor.visible ?? true;
 	instance.radius = descriptor.radius ?? 8;
+	instance.handleKind = (descriptor.handleKind ?? "").trim();
 	instance.setAngle(descriptor.angle);
 }
 
@@ -462,7 +472,7 @@ export function syncBoardScene(renderer: BoardRenderer, descriptor: BoardSceneDe
 //#endregion 🔖Scene Sync
 
 //#region 🔖HostMountBridge
-/** @emoji 🌉 Secondary host root per {@link BoardRenderer}; scene sync runs on `children` changes, camera only on `camera` prop changes so marker/selection JSX churn does not reset pan/zoom. */
+/** @emoji 🌉 Secondary host root per {@link BoardRenderer}; scene sync runs on `children` changes and on {@link BoardRenderer.subscribeWasmHostSceneMergeResync} bumps (WASM graph drains), camera only on `camera` prop changes so marker/selection JSX churn does not reset pan/zoom. */
 function BoardHostSubtree({
 	camera,
 	children,
@@ -475,6 +485,11 @@ function BoardHostSubtree({
 	const hostMountRef = useRef<BoardHostMount | null>(null);
 	const mountedRendererRef = useRef<BoardRenderer | null>(null);
 	const Bridge = useHostMountBridge();
+	const wasmHostSceneMergeResyncEpoch = useSyncExternalStore(
+		renderer.subscribeWasmHostSceneMergeResync,
+		renderer.getWasmHostSceneMergeResyncEpoch,
+		renderer.getWasmHostSceneMergeResyncEpoch,
+	);
 
 	useLayoutEffect(() => {
 		if (hostMountRef.current === null || mountedRendererRef.current !== renderer) {
@@ -488,7 +503,7 @@ function BoardHostSubtree({
 		updateBoardHostMount(hostMountRef.current, createElement(Bridge, null, children), null);
 		const jsxDescriptor = buildBoardSceneDescriptor(children);
 		syncBoardScene(renderer, mergeWasmHostAuthoredEdgesIntoDescriptor(renderer, jsxDescriptor));
-	}, [children, renderer]);
+	}, [children, renderer, wasmHostSceneMergeResyncEpoch]);
 
 	useLayoutEffect(() => {
 		const cx = camera?.x ?? 0;
@@ -521,6 +536,7 @@ export function BoardCanvas({
 	contextMenu,
 	fixtureDragDrop,
 	height,
+	handleLinkCompatibility,
 	onChange,
 	onChildEdgeChange,
 	onChildEdgesChange,
@@ -779,6 +795,14 @@ export function BoardCanvas({
 		}
 		renderer.setSelectionOptions({ method: selectionMethod, mode: selectionMode, target: selectionTarget });
 	}, [selectionMethod, selectionMode, selectionTarget]);
+
+	useLayoutEffect(() => {
+		const renderer = rendererRef.current;
+		if (!renderer) {
+			return;
+		}
+		renderer.setHandleLinkCompatibility(handleLinkCompatibility);
+	}, [handleLinkCompatibility]);
 
 	useLayoutEffect(() => {
 		const renderer = rendererRef.current;
@@ -1057,6 +1081,69 @@ if (boardReactVitest) {
 			renderer.dispose();
 		});
 
+		it("keeps wasm-only link edges after graph drain by re-running JSX merge when children omit Edge markers", async () => {
+			const restoreCanvas = installCanvasStub();
+			const container = document.createElement("div");
+			document.body.appendChild(container);
+			const root = createRoot(container);
+			let readyRenderer: BoardRenderer | null = null;
+			await act(async () => {
+				root.render(
+					<BoardCanvas
+						camera={{ x: 0, y: 0, zoom: 1 }}
+						height={600}
+						onReady={(r) => {
+							readyRenderer = r;
+						}}
+						renderMode="headless-test"
+						width={800}
+					>
+						<Node id="a" radius={40} x={0} y={0}>
+							<Handle angle={0} id="a.out" />
+						</Node>
+						<Node id="b" radius={40} x={280} y={0}>
+							<Handle angle={Math.PI} id="b.in" />
+						</Node>
+					</BoardCanvas>,
+				);
+				await Promise.resolve();
+				await Promise.resolve();
+			});
+			const canvas = container.querySelector("canvas") as HTMLCanvasElement & { __boardRenderer?: BoardRenderer };
+			const renderer = requireRenderer(canvas.__boardRenderer ?? readyRenderer);
+			Object.defineProperty(canvas, "clientWidth", { configurable: true, value: 800 });
+			Object.defineProperty(canvas, "clientHeight", { configurable: true, value: 600 });
+			Object.defineProperty(canvas, "getBoundingClientRect", {
+				configurable: true,
+				value: () => ({ bottom: 600, height: 600, left: 0, right: 800, top: 0, width: 800, x: 0, y: 0 }),
+			});
+			expect(renderer.scene.getObjectById("a.out")).toBeDefined();
+			expect(renderer.getWasmHostSceneMergeResyncEpoch()).toBe(0);
+			renderer.render();
+			const nodeA = renderer.scene.getObjectById("a") as BoardNodeObject;
+			const nodeB = renderer.scene.getObjectById("b") as BoardNodeObject;
+			const p0 = renderer.worldToScreen(computeHandlePosition(nodeA, 0));
+			const pMid = renderer.worldToScreen({ x: 140, y: 0 });
+			const p1 = renderer.worldToScreen(computeHandlePosition(nodeB, Math.PI));
+			await act(async () => {
+				canvas.dispatchEvent(new MouseEvent("pointerdown", { bubbles: true, button: 0, clientX: p0.x, clientY: p0.y }));
+				canvas.dispatchEvent(new MouseEvent("pointermove", { bubbles: true, clientX: pMid.x + 20, clientY: pMid.y }));
+				canvas.dispatchEvent(new MouseEvent("pointermove", { bubbles: true, clientX: p1.x, clientY: p1.y }));
+				canvas.dispatchEvent(new MouseEvent("pointerup", { bubbles: true, button: 0, clientX: p1.x, clientY: p1.y }));
+				await Promise.resolve();
+				await Promise.resolve();
+			});
+			const linkIds = [...renderer.scene.edges.keys()].filter((k) => k.startsWith("edge-link-"));
+			expect(linkIds.length).toBe(1);
+			expect(renderer.wasmHostAuthoredEdgeIds.has(linkIds[0]!)).toBe(true);
+			expect(renderer.getWasmHostSceneMergeResyncEpoch()).toBeGreaterThan(0);
+			await act(async () => {
+				root.unmount();
+			});
+			document.body.removeChild(container);
+			restoreCanvas();
+		});
+
 		it("emits contextmenu with hovered id after wasm hit pass", () => {
 			const restoreCanvas = installCanvasStub();
 			const canvas = document.createElement("canvas");
@@ -1236,6 +1323,19 @@ if (boardReactVitest) {
 			expect((secondNode as BoardNodeObject).x).toBe(40);
 			expect((secondNode as BoardNodeObject).radius).toBe(30);
 
+			renderer.dispose();
+		});
+
+		it("syncs handleKind from declarative handles into scene instances", () => {
+			const renderer = new BoardRenderer({ renderMode: "headless-test" });
+			const descriptor = buildBoardSceneDescriptor(
+				<Node id="n" radius={20} x={0} y={0}>
+					<Handle angle={0} handleKind="flow-out" id="h1" />
+				</Node>,
+			);
+			syncBoardScene(renderer, descriptor);
+			const h = renderer.scene.getObjectById("h1") as BoardHandleObject;
+			expect(h.handleKind).toBe("flow-out");
 			renderer.dispose();
 		});
 
