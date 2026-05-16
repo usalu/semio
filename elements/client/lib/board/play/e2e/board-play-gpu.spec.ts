@@ -14,8 +14,29 @@ test.describe("board play", () => {
 		await expect(page.getByText("Fixture shelf", { exact: false })).toBeVisible({ timeout: 120_000 });
 		const canvas = page.locator('[data-testid="board-canvas"]').first();
 		await expect(canvas).toBeVisible({ timeout: 120_000 });
-			await canvas.click({ button: "right", position: { x: 24, y: 24 } });
-		await expect(page.getByRole("menuitem", { name: "Board background menu" })).toBeVisible({ timeout: 30_000 });
+			await expect
+				.poll(async () => await canvas.getAttribute("data-board-surface-state"), { timeout: 120_000 })
+				.not.toBe("init");
+			await expect
+				.poll(
+					async () => {
+						await canvas.evaluate((el) => {
+							const rect = el.getBoundingClientRect();
+							el.dispatchEvent(
+								new MouseEvent("contextmenu", {
+									bubbles: true,
+									button: 2,
+									cancelable: true,
+									clientX: rect.right - 24,
+									clientY: rect.bottom - 24,
+								}),
+							);
+						});
+						return await page.getByRole("menuitem", { name: "Board background menu" }).isVisible();
+					},
+					{ timeout: 30_000 },
+				)
+				.toBe(true);
 	});
 
 	test("each board canvas reaches GPU ready state", async ({ page }, testInfo) => {

@@ -17,7 +17,6 @@ import {
 	type ReactElement,
 	type ReactNode,
 } from "react";
-import { flushSync } from "react-dom";
 import { createRoot } from "react-dom/client";
 import { FiberProvider as HostMountProvider, useContextBridge as useHostMountBridge } from "its-fine";
 
@@ -429,7 +428,7 @@ export function syncBoardScene(renderer: BoardRenderer, descriptor: BoardSceneDe
 //#endregion 🔖Scene Sync
 
 //#region 🔖HostMountBridge
-/** @emoji 🌉 Secondary host root per {@link BoardRenderer}; runs the reconciler bridge then {@link syncBoardScene} so imperative ids match JSX under nested hosts and `act()`. */
+/** @emoji 🌉 Secondary host root per {@link BoardRenderer}; scene sync runs on `children` changes, camera only on `camera` prop changes so marker/selection JSX churn does not reset pan/zoom. */
 function BoardHostSubtree({
 	camera,
 	children,
@@ -453,12 +452,15 @@ function BoardHostSubtree({
 			mountedRendererRef.current = renderer;
 		}
 		updateBoardHostMount(hostMountRef.current, createElement(Bridge, null, children), null);
+		syncBoardScene(renderer, buildBoardSceneDescriptor(children));
+	}, [children, renderer]);
+
+	useLayoutEffect(() => {
 		const cx = camera?.x ?? 0;
 		const cy = camera?.y ?? 0;
 		const cz = camera?.zoom ?? 1;
 		renderer.setCamera(cx, cy, cz);
-		syncBoardScene(renderer, buildBoardSceneDescriptor(children));
-	}, [camera?.x, camera?.y, camera?.zoom, children, renderer]);
+	}, [camera?.x, camera?.y, camera?.zoom, renderer]);
 
 	useLayoutEffect(
 		() => () => {
@@ -690,14 +692,16 @@ export function BoardCanvas({
 		activeBoardRenderer = renderer;
 		setContextRenderer(renderer);
 		return () => {
-			flushSync(() => {
-				setContextRenderer(null);
+			const r = renderer;
+			queueMicrotask(() => {
+				r.dispose();
+				if (activeBoardRenderer === r) {
+					activeBoardRenderer = null;
+				}
+				if (rendererRef.current === r) {
+					rendererRef.current = null;
+				}
 			});
-			renderer.dispose();
-			if (activeBoardRenderer === renderer) {
-				activeBoardRenderer = null;
-			}
-			rendererRef.current = null;
 		};
 	}, [renderMode]);
 

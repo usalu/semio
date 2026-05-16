@@ -1812,27 +1812,31 @@ export class BoardRenderer {
 				if (!this.suppressSceneToWasmPush) {
 					this.pushSceneToWasmDriver();
 				}
-			}
-			if (this.renderMode !== "headless-test" && this.canvas && !this.gpuSurfaceUnavailable) {
-				let gpuReady = this.readGpuReady();
-				if (!gpuReady && !this.gpuSurfaceInitPromise) {
-					this.gpuSurfaceInitPromise = this.initGpuSurfaceOnce()
-						.then(() => {
-							this.gpuSurfaceInitPromise = null;
-							this.markDirty();
-						})
-						.catch((err: unknown) => {
-							console.error("[DEBUG] BoardRenderer GPU surface init failed", err);
-							this.gpuSurfaceErrorDetail = summarizeRasterSurfaceFailure(err);
-							this.gpuSurfaceUnavailable = true;
-							this.cachedWasmGpuReady = false;
-							this.gpuSurfaceInitPromise = null;
-							this.markDirty();
-						});
+			} else if (this.canvas) {
+				if (!this.suppressSceneToWasmPush) {
+					this.pushSceneToWasmDriver();
 				}
-				gpuReady = this.readGpuReady();
-				if (gpuReady) {
-					this.syncGpuFrame();
+				if (!this.gpuSurfaceUnavailable) {
+					let gpuReady = this.readGpuReady();
+					if (!gpuReady && !this.gpuSurfaceInitPromise) {
+						this.gpuSurfaceInitPromise = this.initGpuSurfaceOnce()
+							.then(() => {
+								this.gpuSurfaceInitPromise = null;
+								this.markDirty();
+							})
+							.catch((err: unknown) => {
+								console.error("[DEBUG] BoardRenderer GPU surface init failed", err);
+								this.gpuSurfaceErrorDetail = summarizeRasterSurfaceFailure(err);
+								this.gpuSurfaceUnavailable = true;
+								this.cachedWasmGpuReady = false;
+								this.gpuSurfaceInitPromise = null;
+								this.markDirty();
+							});
+					}
+					gpuReady = this.readGpuReady();
+					if (gpuReady) {
+						this.syncGpuFrame();
+					}
 				}
 			}
 			this.paintTextOverlays();
@@ -2150,6 +2154,7 @@ export class BoardRenderer {
 		}
 	}
 
+	/** @emoji 🎨 Presents one GPU frame; {@link BoardRenderer.pushSceneToWasmDriver} is invoked from {@link BoardRenderer.render} even when the surface is not ready so WASM hit tests stay live. */
 	private syncGpuFrame(): void {
 		if (this.renderMode === "headless-test" || !this.readGpuReady()) {
 			return;
@@ -2159,7 +2164,6 @@ export class BoardRenderer {
 		}
 		this.wasmGpuFrameDepth += 1;
 		try {
-			this.pushSceneToWasmDriver();
 			this.session.renderFrame();
 			this.gpuSurfacePresentedFrame = true;
 			this.gpuSurfaceErrorDetail = "";
