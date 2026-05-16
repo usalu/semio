@@ -263,7 +263,7 @@ export function collectTypeDeclaredIsRows(schemaYamlText: string): TypeDeclaredI
 
 //#region 🧭Cypher
 /**
- * @emoji 🔗 Kit members (`Data` / `Derived` / `Reference`) keep **only** the single declared `IS` from YAML (concrete `Class`, `Interface`, or `Scalar`). `Class`/`Interface`/`Command`/`Input` types keep **only** direct `implements` edges (see {@link buildTypeDeclaredIsRepairCypher}).
+ * @emoji 🔗 Kit members (`Data` / `Derived` / `Reference`) keep **only** the single declared `IS` from YAML (concrete `Class`, `Interface`, or `Scalar`). `Class`/`Interface`/`Command` types keep **only** direct `implements` edges (see {@link buildTypeDeclaredIsRepairCypher}).
  */
 export function materializeTransitiveIsForKitMembersCypher(): string {
   return "";
@@ -280,7 +280,7 @@ function buildRepairCypher(rows: readonly KitFieldDeclaredIsRow[]): string {
     "",
     "MATCH (n:Data|Derived|Reference)-[r:IS]->()",
     "MATCH (n)<-[:OWNS]-(owner)",
-    "WHERE owner:Class OR owner:Interface OR owner:Command OR owner:Input",
+    "WHERE owner:Class OR owner:Interface OR owner:Command",
     "DELETE r;",
     "",
   ];
@@ -289,7 +289,7 @@ function buildRepairCypher(rows: readonly KitFieldDeclaredIsRow[]): string {
     const f = escapeLiteral(r.field);
     const t = escapeLiteral(r.target);
     lines.push(
-      `MATCH (owner:Class|Interface|Command|Input)`,
+      `MATCH (owner:Class|Interface|Command)`,
       `WHERE toLower(owner.name) = toLower('${o}')`,
       `MATCH (owner)-[:OWNS]->(n:Data|Derived|Reference {name: '${f}'})`,
       `MATCH (target)`,
@@ -307,14 +307,14 @@ function buildRepairCypher(rows: readonly KitFieldDeclaredIsRow[]): string {
 export function buildTypeDeclaredIsRepairCypher(rows: readonly TypeDeclaredIsRow[]): string {
   const lines: string[] = [
     "// SPDX-License-Identifier: AGPL-3.0-only",
-    "// Class/Interface/Command/Input: keep only direct schema.yaml `implements` as `IS` (strip transitive Entity/StrongEntity/… fan-out).",
+    "// Class/Interface/Command: keep only direct schema.yaml `implements` as `IS` (strip transitive Entity/StrongEntity/… fan-out).",
     "",
   ];
   for (const row of rows) {
     const o = escapeLiteral(row.owner);
     if (row.targets.length === 0) {
       lines.push(
-        `MATCH (owner:Class|Interface|Command|Input)`,
+        `MATCH (owner:Class|Interface|Command)`,
         `WHERE toLower(owner.name) = toLower('${o}')`,
         `MATCH (owner)-[r:IS]->()`,
         `DELETE r;`,
@@ -323,7 +323,7 @@ export function buildTypeDeclaredIsRepairCypher(rows: readonly TypeDeclaredIsRow
     } else {
       const inList = row.targets.map((t) => `'${escapeLiteral(t.toLowerCase())}'`).join(", ");
       lines.push(
-        `MATCH (owner:Class|Interface|Command|Input)`,
+        `MATCH (owner:Class|Interface|Command)`,
         `WHERE toLower(owner.name) = toLower('${o}')`,
         `MATCH (owner)-[r:IS]->(t)`,
         `WHERE NOT toLower(t.name) IN [${inList}]`,
@@ -334,7 +334,7 @@ export function buildTypeDeclaredIsRepairCypher(rows: readonly TypeDeclaredIsRow
     for (const t of row.targets) {
       const tl = escapeLiteral(t);
       lines.push(
-        `MATCH (owner:Class|Interface|Command|Input)`,
+        `MATCH (owner:Class|Interface|Command)`,
         `WHERE toLower(owner.name) = toLower('${o}')`,
         `MATCH (target:Class|Interface)`,
         `WHERE toLower(target.name) = toLower('${tl}')`,

@@ -675,7 +675,7 @@ function main(): void {
     process.exit(1);
   }
 
-  const probePieceOperationModuleChain = spawnSync(
+  const probeCommandArgumentData = spawnSync(
     shell,
     [
       "-a",
@@ -688,27 +688,27 @@ function main(): void {
       DATABASE,
       "--format",
       "plain",
-      "MATCH (:Command)-[:OWNS]->(:Input)-[:OWNS]->(:Reference {name: 'input'}) " +
-        "RETURN count(*) AS cmdInputChain;",
+      "MATCH (:Command {name: 'CreateConcept'})-[:OWNS]->(d:Data {name: 'concept'}) " +
+        "RETURN count(d) AS createConceptArgChain;",
     ],
     { encoding: "utf8", cwd: REPO_ROOT, env: buildCypherEnv() },
   );
 
-  if (probePieceOperationModuleChain.status !== 0) {
-    console.error(`[migrate:neo4j] Piece operation module chain verify failed: ${probePieceOperationModuleChain.stderr}`);
+  if (probeCommandArgumentData.status !== 0) {
+    console.error(`[migrate:neo4j] command argument Data chain verify failed: ${probeCommandArgumentData.stderr}`);
     process.exit(1);
   }
 
-  const poTail = String(probePieceOperationModuleChain.stdout ?? "")
+  const poTail = String(probeCommandArgumentData.stdout ?? "")
     .trim()
     .split(/\r?\n/)
     .map((l) => l.trim())
     .filter(Boolean);
   const poLast = poTail[poTail.length - 1] ?? "";
-  const pieceOpChain = Number.parseInt(poLast.trim(), 10);
-  if (!Number.isFinite(pieceOpChain) || pieceOpChain < 1) {
+  const createConceptArgChain = Number.parseInt(poLast.trim(), 10);
+  if (!Number.isFinite(createConceptArgChain) || createConceptArgChain < 1) {
     console.error(
-      `[migrate:neo4j] expected at least one Command-OWNS-Input-OWNS-Reference(input) chain; verify output:\n${probePieceOperationModuleChain.stdout}`,
+      `[migrate:neo4j] expected CreateConcept Command→Data(concept); verify output:\n${probeCommandArgumentData.stdout}`,
     );
     process.exit(1);
   }

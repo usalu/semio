@@ -264,665 +264,665 @@ schema:
           sequenceNumber: *number
           startedAt: *timestamp
 
-      addedAttributesToConcept:
+      addAttributesToConcept:
         implements: [*operation]
         fields:
           computed:
             modification: *modification
           reference:
             scope: *artifact
-      addedAttributesToDesign:
+      addAttributesToDesign:
         implements: [*operation]
         fields:
           computed:
             modification: *modification
           reference:
             scope: *artifact
-      addedAttributesToPiece:
+      addAttributesToPiece:
         implements: [*operation]
         fields:
           computed:
             modification: *modification
           reference:
             scope: *artifact
-      addedAttributesToPort:
+      addAttributesToPort:
         implements: [*operation]
         fields:
           computed:
             modification: *modification
           reference:
             scope: *artifact
-      addedAttributesToQuality:
+      addAttributesToQuality:
         implements: [*operation]
         fields:
           computed:
             modification: *modification
           reference:
             scope: *artifact
-      addedAttributesToTag:
+      addAttributesToTag:
         implements: [*operation]
         fields:
           computed:
             modification: *modification
           reference:
             scope: *artifact
-      addedAttributesToType:
+      addAttributesToType:
         implements: [*operation]
         fields:
           computed:
             modification: *modification
           reference:
             scope: *artifact
-      addedAttributeToConcept:
+      addAttributeToConcept:
         implements: [*operation]
         fields:
           computed:
             modification: *modification
           reference:
             scope: *artifact
-      addedAttributeToDesign:
+      addAttributeToDesign:
         implements: [*operation]
         fields:
           computed:
             modification: *modification
           reference:
             scope: *artifact
-      addedAttributeToPiece:
+      addAttributeToPiece:
         implements: [*operation]
         fields:
           computed:
             modification: *modification
           reference:
             scope: *artifact
-      addedAttributeToPort:
+      addAttributeToPort:
         implements: [*operation]
         fields:
           computed:
             modification: *modification
           reference:
             scope: *artifact
-      addedAttributeToQuality:
+      addAttributeToQuality:
         implements: [*operation]
         fields:
           computed:
             modification: *modification
           reference:
             scope: *artifact
-      addedAttributeToTag:
+      addAttributeToTag:
         implements: [*operation]
         fields:
           computed:
             modification: *modification
           reference:
             scope: *artifact
-      addedAttributeToType:
+      addAttributeToType:
         implements: [*operation]
         fields:
           computed:
             modification: *modification
           reference:
             scope: *artifact
-      addedChildPiecesWithParentConnections:
+      addChildPiecesWithParentConnections:
         implements: [*operation]
         fields:
           computed:
             modification: *modification
           reference:
             scope: *artifact
-      addedChildPieceWithParentConnection:
+      addChildPieceWithParentConnection:
         implements: [*operation]
         fields:
           computed:
             modification: *modification
           reference:
             scope: *artifact
-      addedConnector:
+      addConnector:
         implements: [*operation]
         fields:
           computed:
             modification: *modification
           reference:
             scope: *artifact
-      addedConnectors:
+      addConnectors:
         implements: [*operation]
         fields:
           computed:
             modification: *modification
           reference:
             scope: *artifact
-      addedHangingChildPiecesWithParentConnections:
+      addHangingChildPiecesWithParentConnections:
         implements: [*operation]
         fields:
           computed:
             modification: *modification
           reference:
             scope: *artifact
-      addedHangingChildPieceWithParentConnection:
+      addHangingChildPieceWithParentConnection:
         implements: [*operation]
         fields:
           computed:
             modification: *modification
           reference:
             scope: *artifact
-      changedDescription:
+      changeDescription:
         implements: [*operation]
         fields:
           computed:
             modification: *modification
           reference:
             scope: *artifact
-      changedPiecesToType:
+      changePiecesToType:
         implements: [*operation]
         fields:
           computed:
             modification: *modification
           reference:
             scope: *artifact
-      changedPieceToType:
+      changePieceToType:
         implements: [*operation]
         fields:
           computed:
             modification: *modification
           reference:
             scope: *artifact
-      createdConcept:
+      createConcept:
         implements: [*operation]
         fields:
           computed:
             modification: *modification
           reference:
             scope: *artifact
-      createdConcepts:
+      createConcepts:
         implements: [*operation]
         fields:
           computed:
             modification: *modification
           reference:
             scope: *artifact
-      createdDesign:
+      createDesign:
         implements: [*operation]
         fields:
           computed:
             modification: *modification
           reference:
             scope: *artifact
-      createdDesigns:
+      createDesigns:
         implements: [*operation]
         fields:
           computed:
             modification: *modification
           reference:
             scope: *artifact
-      createdFixedPiece:
+      createFixedPiece:
         implements: [*operation]
         fields:
           computed:
             modification: *modification
           reference:
             scope: *artifact
-      createdPort:
+      createPort:
         implements: [*operation]
         fields:
           computed:
             modification: *modification
           reference:
             scope: *artifact
-      createdPorts:
+      createPorts:
         implements: [*operation]
         fields:
           computed:
             modification: *modification
           reference:
             scope: *artifact
-      createdQualities:
+      createQualities:
         implements: [*operation]
         fields:
           computed:
             modification: *modification
           reference:
             scope: *artifact
-      createdQuality:
+      createQuality:
         implements: [*operation]
         fields:
           computed:
             modification: *modification
           reference:
             scope: *artifact
-      createdTag:
+      createTag:
         implements: [*operation]
         fields:
           computed:
             modification: *modification
           reference:
             scope: *artifact
-      createdTags:
+      createTags:
         implements: [*operation]
         fields:
           computed:
             modification: *modification
           reference:
             scope: *artifact
-      createdType:
+      createType:
         implements: [*operation]
         fields:
           computed:
             modification: *modification
           reference:
             scope: *artifact
-      createdTypes:
+      createTypes:
         implements: [*operation]
         fields:
           computed:
             modification: *modification
           reference:
             scope: *artifact
-      deletedConcept:
+      deleteConcept:
         implements: [*operation]
         fields:
           computed:
             modification: *modification
           reference:
             scope: *artifact
-      deletedConcepts:
+      deleteConcepts:
         implements: [*operation]
         fields:
           computed:
             modification: *modification
           reference:
             scope: *artifact
-      deletedDesign:
+      deleteDesign:
         implements: [*operation]
         fields:
           computed:
             modification: *modification
           reference:
             scope: *artifact
-      deletedDesigns:
+      deleteDesigns:
         implements: [*operation]
         fields:
           computed:
             modification: *modification
           reference:
             scope: *artifact
-      deletedPiece:
+      deletePiece:
         implements: [*operation]
         fields:
           computed:
             modification: *modification
           reference:
             scope: *artifact
-      deletedPieces:
+      deletePieces:
         implements: [*operation]
         fields:
           computed:
             modification: *modification
           reference:
             scope: *artifact
-      deletedPiecesAndConnections:
+      deletePiecesAndConnections:
         implements: [*operation]
         fields:
           computed:
             modification: *modification
           reference:
             scope: *artifact
-      deletedPort:
+      deletePort:
         implements: [*operation]
         fields:
           computed:
             modification: *modification
           reference:
             scope: *artifact
-      deletedPorts:
+      deletePorts:
         implements: [*operation]
         fields:
           computed:
             modification: *modification
           reference:
             scope: *artifact
-      deletedQualities:
+      deleteQualities:
         implements: [*operation]
         fields:
           computed:
             modification: *modification
           reference:
             scope: *artifact
-      deletedQuality:
+      deleteQuality:
         implements: [*operation]
         fields:
           computed:
             modification: *modification
           reference:
             scope: *artifact
-      deletedTag:
+      deleteTag:
         implements: [*operation]
         fields:
           computed:
             modification: *modification
           reference:
             scope: *artifact
-      deletedTags:
+      deleteTags:
         implements: [*operation]
         fields:
           computed:
             modification: *modification
           reference:
             scope: *artifact
-      deletedType:
+      deleteType:
         implements: [*operation]
         fields:
           computed:
             modification: *modification
           reference:
             scope: *artifact
-      deletedTypes:
+      deleteTypes:
         implements: [*operation]
         fields:
           computed:
             modification: *modification
           reference:
             scope: *artifact
-      draggedPiece:
+      dragPiece:
         implements: [*operation]
         fields:
           computed:
             modification: *modification
           reference:
             scope: *artifact
-      draggedPieces:
+      dragPieces:
         implements: [*operation]
         fields:
           computed:
             modification: *modification
           reference:
             scope: *artifact
-      fixedPiece:
+      fixPiece:
         implements: [*operation]
         fields:
           computed:
             modification: *modification
           reference:
             scope: *artifact
-      fixedPieces:
+      fixPieces:
         implements: [*operation]
         fields:
           computed:
             modification: *modification
           reference:
             scope: *artifact
-      flattenedDesign:
+      flattenDesign:
         implements: [*operation]
         fields:
           computed:
             modification: *modification
           reference:
             scope: *artifact
-      movedPiece:
+      movePiece:
         implements: [*operation]
         fields:
           computed:
             modification: *modification
           reference:
             scope: *artifact
-      movedPieces:
+      movePieces:
         implements: [*operation]
         fields:
           computed:
             modification: *modification
           reference:
             scope: *artifact
-      removedAttributeFromConcept:
+      removeAttributeFromConcept:
         implements: [*operation]
         fields:
           computed:
             modification: *modification
           reference:
             scope: *artifact
-      removedAttributeFromDesign:
+      removeAttributeFromDesign:
         implements: [*operation]
         fields:
           computed:
             modification: *modification
           reference:
             scope: *artifact
-      removedAttributeFromPiece:
+      removeAttributeFromPiece:
         implements: [*operation]
         fields:
           computed:
             modification: *modification
           reference:
             scope: *artifact
-      removedAttributeFromPort:
+      removeAttributeFromPort:
         implements: [*operation]
         fields:
           computed:
             modification: *modification
           reference:
             scope: *artifact
-      removedAttributeFromQuality:
+      removeAttributeFromQuality:
         implements: [*operation]
         fields:
           computed:
             modification: *modification
           reference:
             scope: *artifact
-      removedAttributeFromTag:
+      removeAttributeFromTag:
         implements: [*operation]
         fields:
           computed:
             modification: *modification
           reference:
             scope: *artifact
-      removedAttributeFromType:
+      removeAttributeFromType:
         implements: [*operation]
         fields:
           computed:
             modification: *modification
           reference:
             scope: *artifact
-      removedAttributesFromConcept:
+      removeAttributesFromConcept:
         implements: [*operation]
         fields:
           computed:
             modification: *modification
           reference:
             scope: *artifact
-      removedAttributesFromDesign:
+      removeAttributesFromDesign:
         implements: [*operation]
         fields:
           computed:
             modification: *modification
           reference:
             scope: *artifact
-      removedAttributesFromPiece:
+      removeAttributesFromPiece:
         implements: [*operation]
         fields:
           computed:
             modification: *modification
           reference:
             scope: *artifact
-      removedAttributesFromPort:
+      removeAttributesFromPort:
         implements: [*operation]
         fields:
           computed:
             modification: *modification
           reference:
             scope: *artifact
-      removedAttributesFromQuality:
+      removeAttributesFromQuality:
         implements: [*operation]
         fields:
           computed:
             modification: *modification
           reference:
             scope: *artifact
-      removedAttributesFromTag:
+      removeAttributesFromTag:
         implements: [*operation]
         fields:
           computed:
             modification: *modification
           reference:
             scope: *artifact
-      removedAttributesFromType:
+      removeAttributesFromType:
         implements: [*operation]
         fields:
           computed:
             modification: *modification
           reference:
             scope: *artifact
-      removedConnector:
+      removeConnector:
         implements: [*operation]
         fields:
           computed:
             modification: *modification
           reference:
             scope: *artifact
-      removedConnectors:
+      removeConnectors:
         implements: [*operation]
         fields:
           computed:
             modification: *modification
           reference:
             scope: *artifact
-      renamedConcept:
+      renameConcept:
         implements: [*operation]
         fields:
           computed:
             modification: *modification
           reference:
             scope: *artifact
-      renamedConnector:
+      renameConnector:
         implements: [*operation]
         fields:
           computed:
             modification: *modification
           reference:
             scope: *artifact
-      renamedKit:
+      renameKit:
         implements: [*operation]
         fields:
           computed:
             modification: *modification
           reference:
             scope: *artifact
-      renamedPiece:
+      renamePiece:
         implements: [*operation]
         fields:
           computed:
             modification: *modification
           reference:
             scope: *artifact
-      renamedPort:
+      renamePort:
         implements: [*operation]
         fields:
           computed:
             modification: *modification
           reference:
             scope: *artifact
-      renamedQuality:
+      renameQuality:
         implements: [*operation]
         fields:
           computed:
             modification: *modification
           reference:
             scope: *artifact
-      renamedTag:
+      renameTag:
         implements: [*operation]
         fields:
           computed:
             modification: *modification
           reference:
             scope: *artifact
-      renamedType:
+      renameType:
         implements: [*operation]
         fields:
           computed:
             modification: *modification
           reference:
             scope: *artifact
-      updatedConceptDescription:
+      updateConceptDescription:
         implements: [*operation]
         fields:
           computed:
             modification: *modification
           reference:
             scope: *artifact
-      updatedConceptIcon:
+      updateConceptIcon:
         implements: [*operation]
         fields:
           computed:
             modification: *modification
           reference:
             scope: *artifact
-      updatedConnectorDescription:
+      updateConnectorDescription:
         implements: [*operation]
         fields:
           computed:
             modification: *modification
           reference:
             scope: *artifact
-      updatedConnectorIcon:
+      updateConnectorIcon:
         implements: [*operation]
         fields:
           computed:
             modification: *modification
           reference:
             scope: *artifact
-      updatedPieceDescription:
+      updatePieceDescription:
         implements: [*operation]
         fields:
           computed:
             modification: *modification
           reference:
             scope: *artifact
-      updatedPortDescription:
+      updatePortDescription:
         implements: [*operation]
         fields:
           computed:
             modification: *modification
           reference:
             scope: *artifact
-      updatedPortIcon:
+      updatePortIcon:
         implements: [*operation]
         fields:
           computed:
             modification: *modification
           reference:
             scope: *artifact
-      updatedQualityDescription:
+      updateQualityDescription:
         implements: [*operation]
         fields:
           computed:
             modification: *modification
           reference:
             scope: *artifact
-      updatedQualityIcon:
+      updateQualityIcon:
         implements: [*operation]
         fields:
           computed:
             modification: *modification
           reference:
             scope: *artifact
-      updatedTagDescription:
+      updateTagDescription:
         implements: [*operation]
         fields:
           computed:
             modification: *modification
           reference:
             scope: *artifact
-      updatedTagIcon:
+      updateTagIcon:
         implements: [*operation]
         fields:
           computed:
             modification: *modification
           reference:
             scope: *artifact
-      updatedTypeDescription:
+      updateTypeDescription:
         implements: [*operation]
         fields:
           computed:
             modification: *modification
           reference:
             scope: *artifact
-      updatedTypeIcon:
+      updateTypeIcon:
         implements: [*operation]
         fields:
           computed:

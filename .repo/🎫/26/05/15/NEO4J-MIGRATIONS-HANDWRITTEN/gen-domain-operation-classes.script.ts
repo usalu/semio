@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 /**
- * @emoji 🧩 Splices concrete `Operation` commands from `schema.golden.graphql` into `semio/client/schema/semio/schema.yaml` (camelCase keys, `implements: [*operation]`, empty `fields`); emits Neo4j `Command` merge/reparent/name-sync fragments.
+ * @emoji 🧩 Splices concrete `Operation` commands from `schema.golden.graphql` into `semio/client/schema/semio/schema.yaml` (camelCase keys, `implements: [*operation]`, empty `fields`); emits Neo4j `Command` merge/reparent/rename + `Data` argument kit from golden `*Input` types (imperative command names only).
  */
 import { readFileSync, writeFileSync } from "node:fs";
 import { join, relative } from "node:path";
@@ -47,6 +47,90 @@ function collectOperationNames(golden: string): string[] {
   return names;
 }
 
+function escapeRe(s: string): string {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+/** @emoji 🧭 Golden `type Op implements Operation` carries `input: OpInput!` only when the operation has a typed argument bag. */
+function operationUsesSpecificInputType(golden: string, pastOp: string): boolean {
+  const re = new RegExp(
+    `type ${escapeRe(pastOp)} implements Operation[\\s\\S]*?\\binput:\\s*${escapeRe(pastOp)}Input!`,
+    "m",
+  );
+  return re.test(golden);
+}
+
+type ArgField = { name: string; kind: "data" | "reference" | "computed"; typeStr: string; isList: boolean; coreType: string };
+
+function stripGraphqlWrappers(typeLine: string): { core: string; isList: boolean } {
+  let t = typeLine.trim();
+  let isList = false;
+  if (t.endsWith("!")) {
+    t = t.slice(0, -1).trim();
+  }
+  if (t.endsWith("Connection")) {
+    isList = true;
+    t = t.replace(/Connection$/, "").trim();
+  }
+  if (t.startsWith("[") && t.endsWith("]")) {
+    isList = true;
+    let inner = t.slice(1, -1).trim();
+    if (inner.endsWith("!")) {
+      inner = inner.slice(0, -1).trim();
+    }
+    t = inner;
+  }
+  return { core: t, isList };
+}
+
+/** @emoji 🧭 Reads `# Arguments` section of `type ${pastOp}Input` in golden SDL. */
+function extractOperationInputFields(golden: string, pastOp: string): ArgField[] {
+  const inputType = `${pastOp}Input`;
+  const re = new RegExp(`type ${escapeRe(inputType)} implements[^{]+\\{([\\s\\S]*?)\\n\\}`, "m");
+  const m = golden.match(re);
+  if (!m?.[1]) {
+    return [];
+  }
+  const body = m[1];
+  const ix = body.indexOf("# Arguments");
+  if (ix === -1) {
+    return [];
+  }
+  const tail = body.slice(ix);
+  const lines = tail.split(/\r?\n/);
+  const out: ArgField[] = [];
+  for (const raw of lines.slice(1)) {
+    const line = raw.trim();
+    if (line === "" || line.startsWith("#")) {
+      continue;
+    }
+    if (line === "}" || line.startsWith("}")) {
+      break;
+    }
+    const nm = /^(\w+)\s*:\s*(.+)$/.exec(line);
+    if (!nm) {
+      continue;
+    }
+    const name = nm[1]!;
+    let rhs = nm[2]!.trim();
+    let kind: ArgField["kind"] = "data";
+    const km = rhs.match(/#\s*(data|reference|computed)\b/);
+    if (km?.[1]) {
+      kind = km[1] as ArgField["kind"];
+    }
+    rhs = rhs.split("#")[0]!.trim();
+    if (!rhs.endsWith("!")) {
+      continue;
+    }
+    const { core, isList } = stripGraphqlWrappers(rhs);
+    if (!core || core.includes("[[")) {
+      continue;
+    }
+    out.push({ name, kind, typeStr: rhs, isList, coreType: core });
+  }
+  return out;
+}
+
 /** @emoji 🧭 Pairs `HEAD` golden name → working-tree name when both share the same imperative stem (migration rename on existing DB). */
 function renamePairsHeadToDisk(diskGolden: string): { from: string; to: string }[] {
   const git = spawnSync("git", ["show", `HEAD:${goldenRepoRel}`], { cwd: REPO, encoding: "utf8", maxBuffer: 64 * 1024 * 1024 });
@@ -78,7 +162,7 @@ function renamePairsHeadToDisk(diskGolden: string): { from: string; to: string }
   return rows;
 }
 
-/** @emoji 🧭 Owning kit `Class` / `Interface` for each concrete `Operation` subtype (matches golden names). */
+/** @emoji 🧭 Owning kit `Class` / `Interface` for each concrete `Command` (imperative names). */
 function ownerForOperation(op: string): string {
   if (op === "ChangeDescription") {
     return "Workspace";
@@ -119,15 +203,74 @@ function ownerForOperation(op: string): string {
   return "Workspace";
 }
 
+function cypherIdent(cmd: string, field: string): string {
+  return `arg_${cmd}_${field}`.replace(/[^A-Za-z0-9_]/g, "_");
+}
+
+/** @emoji 🧭 Neo4j `Data` argument kit + `IS` to `FieldIs` for each golden operation input field (skipped when parameter-less). */
+function buildCommandArgumentDataCypher(golden: string, pastOps: readonly string[]): string {
+  const esc = (x: string) => x.replace(/'/g, "\\'");
+  const lines: string[] = [
+    "// Generated — remove legacy `Input` / orphan `input` references; merge golden `*Input` argument fields as `Data` under imperative `Command` via `OWNS`.",
+    "MATCH (inp:Input)-[:OWNS]->(ch)",
+    "DETACH DELETE ch;",
+    "MATCH (inp:Input)",
+    "DETACH DELETE inp;",
+    "MATCH (r:Reference)",
+    "WHERE toLower(r.name) = 'input' AND NOT ()-[:OWNS]->(r)",
+    "DETACH DELETE r;",
+    "",
+  ];
+  for (const past of pastOps) {
+    const cmd = imperativeOperationStem(past);
+    if (!operationUsesSpecificInputType(golden, past)) {
+      continue;
+    }
+    const fields = extractOperationInputFields(golden, past);
+    if (fields.length === 0) {
+      continue;
+    }
+    const fieldNames = fields.map((f) => `'${esc(f.name)}'`).join(", ");
+    lines.push(
+      `MATCH (cmd:Command {name: '${esc(cmd)}'})`,
+      `OPTIONAL MATCH (cmd)-[:OWNS]->(pivot:Data)`,
+      `WHERE pivot.name IN [${fieldNames}]`,
+      `WITH cmd, [n IN collect(pivot) WHERE n IS NOT NULL] AS pivots`,
+      `FOREACH (x IN pivots | DETACH DELETE x);`,
+      "",
+    );
+    for (let i = 0; i < fields.length; i++) {
+      const f = fields[i]!;
+      const id = cypherIdent(cmd, f.name);
+      const isList = f.isList ? "true" : "false";
+      const core = esc(f.coreType);
+      lines.push(
+        `MATCH (cmd:Command {name: '${esc(cmd)}'})`,
+        `MERGE (${id}:Data {name: '${esc(f.name)}', rank: '${i}', isList: ${isList}})`,
+        `MERGE (cmd)-[:OWNS]->(${id})`,
+        `WITH ${id}`,
+        `OPTIONAL MATCH (t)`,
+        `WHERE (t:Class OR t:Interface OR t:Scalar OR t:Command) AND t.name = '${core}'`,
+        `WITH ${id}, t ORDER BY CASE WHEN t:Class THEN 0 WHEN t:Interface THEN 1 WHEN t:Command THEN 2 ELSE 3 END`,
+        `LIMIT 1`,
+        `FOREACH (_ IN CASE WHEN t IS NULL THEN [] ELSE [1] END | MERGE (${id})-[:IS]->(t));`,
+        "",
+      );
+    }
+  }
+  return lines.join("\n");
+}
+
 const golden = readFileSync(goldenPath, "utf8");
-const sorted = [...new Set(collectOperationNames(golden))].sort((a, b) => a.localeCompare(b));
+const pastOps = [...new Set(collectOperationNames(golden))].sort((a, b) => a.localeCompare(b));
+const uniqueImperative = [...new Set(pastOps.map(imperativeOperationStem))].sort((a, b) => a.localeCompare(b));
 const opFieldBlock = `        implements: [*operation]
         fields:
           computed:
             modification: *modification
           reference:
             scope: *artifact`;
-const block = sorted.map((p) => `      ${toYamlKey(p)}:\n${opFieldBlock}`).join("\n");
+const block = uniqueImperative.map((p) => `      ${toYamlKey(p)}:\n${opFieldBlock}`).join("\n");
 
 let s = readFileSync(schemaPath, "utf8");
 const before = s;
@@ -151,25 +294,46 @@ if (s === before) {
   console.log("[gen-ops-yaml] note: no net yaml change (command strip / implements / block already applied)");
 }
 writeFileSync(schemaPath, s, "utf8");
-console.log(`[gen-ops-yaml] wrote ${schemaPath} (+${sorted.length} operation commands)`);
+console.log(`[gen-ops-yaml] wrote ${schemaPath} (+${uniqueImperative.length} imperative operation commands)`);
 
-const renameRows = renamePairsHeadToDisk(golden);
+const headDiskPairs = renamePairsHeadToDisk(golden);
+const imperativePairs = pastOps
+  .map((from) => ({ from, to: imperativeOperationStem(from) }))
+  .filter((p) => p.from !== p.to)
+  .sort((a, b) => a.from.localeCompare(b.from));
+
+const renameUnwindBody =
+  imperativePairs.length === 0
+    ? "// (no past→imperative command renames; skip name sync)"
+    : [
+        "UNWIND [",
+        imperativePairs.map((r) => `{from: ${JSON.stringify(r.from)}, to: ${JSON.stringify(r.to)}}`).join(", "),
+        "] AS row",
+        "MATCH (c:Command {name: row.from})",
+        "SET c.name = row.to;",
+      ].join("\n");
+
+const headDiskNote =
+  headDiskPairs.length === 0
+    ? ""
+    : [
+        "",
+        "// HEAD→disk golden drift (supplementary renames when both stems already imperative-deduped):",
+        "UNWIND [",
+        headDiskPairs.map((r) => `{from: ${JSON.stringify(r.from)}, to: ${JSON.stringify(r.to)}}`).join(", "),
+        "] AS row",
+        "MATCH (c:Command {name: row.from})",
+        "SET c.name = row.to;",
+      ].join("\n");
 
 const relabelAndRenameLines = [
-  "// Generated — relabel legacy `Class` operation kit nodes to `Command`, then rename when `HEAD` golden differed.",
+  "// Generated — relabel legacy `Class` operation kit nodes to `Command`, then sync names to imperative verbs (deduped).",
   "MATCH (c:Class)-[:IS]->(op:Interface|Class)",
   "WHERE toLower(op.name) = 'operation'",
   "REMOVE c:Class",
   "SET c:Command;",
-  renameRows.length === 0
-    ? "// (no HEAD→disk operation renames; skip name sync)"
-    : [
-        "UNWIND [",
-        renameRows.map((r) => `{from: ${JSON.stringify(r.from)}, to: ${JSON.stringify(r.to)}}`).join(", "),
-        "] AS row",
-        "MATCH (c:Command {name: row.from})",
-        "SET c.name = row.to;",
-      ].join("\n"),
+  renameUnwindBody,
+  headDiskNote,
   "",
 ].join("\n");
 
@@ -182,7 +346,7 @@ writeFileSync(
   mergeOut,
   [
     "// Generated — paste after relabel-rename fragment inside migrations.cypher region MergeOperationConcreteCommands.",
-    `UNWIND [${sorted.map((n) => JSON.stringify(n)).join(", ")}] AS opName`,
+    `UNWIND [${uniqueImperative.map((n) => JSON.stringify(n)).join(", ")}] AS opName`,
     "MERGE (c:Command {name: opName})",
     "WITH c",
     "MATCH (op:Interface|Class)",
@@ -198,7 +362,7 @@ writeFileSync(
 console.log(`[gen-ops-yaml] wrote ${mergeOut}`);
 
 const reparentOut = join(import.meta.dir, "reparent-operation-ownership.cypher.fragment");
-const rows = sorted.map((op) => ({ op, own: ownerForOperation(op) }));
+const rows = uniqueImperative.map((op) => ({ op, own: ownerForOperation(op) }));
 writeFileSync(
   reparentOut,
   [
@@ -218,44 +382,6 @@ writeFileSync(
 );
 console.log(`[gen-ops-yaml] wrote ${reparentOut}`);
 
-const inputSurfaceLines = [
-  "// Generated — one `Input` kit node per `Command` (same `name`); `data.input` reference lives under the `Input` surface.",
-  `UNWIND [${sorted.map((n) => JSON.stringify(n)).join(", ")}] AS opName`,
-  "MATCH (cmd:Command {name: opName})",
-  "MERGE (inp:Input {name: opName})",
-  "MERGE (cmd)-[:OWNS]->(inp)",
-  "WITH inp",
-  "MATCH (iface:Interface)",
-  "WHERE toLower(iface.name) = 'input'",
-  "WITH inp, iface",
-  "ORDER BY id(iface) ASC",
-  "LIMIT 1",
-  "MERGE (inp)-[:IS]->(iface);",
-  "",
-  `UNWIND [${sorted.map((n) => JSON.stringify(n)).join(", ")}] AS opName`,
-  "MATCH (cmd:Command {name: opName})-[:OWNS]->(inp:Input {name: opName})",
-  "OPTIONAL MATCH (cmd)-[rx:OWNS]->(f:Data|Derived|Reference)",
-  "WHERE toLower(f.name) = 'input'",
-  "DELETE rx",
-  "WITH inp, f",
-  "WHERE f IS NOT NULL",
-  "MERGE (inp)-[:OWNS]->(f);",
-  "",
-  `UNWIND [${sorted.map((n) => JSON.stringify(n)).join(", ")}] AS opName`,
-  "MATCH (cmd:Command {name: opName})-[:OWNS]->(inp:Input {name: opName})",
-  "WHERE NOT (inp)-[:OWNS]->(:Reference {name: 'input'})",
-  "CREATE (r:Reference {name: 'input', rank: '', isList: false})",
-  "MERGE (inp)-[:OWNS]->(r);",
-  "",
-  "MATCH (inp:Input)-[:OWNS]->(r:Reference {name: 'input'})",
-  "MATCH (iface:Interface)",
-  "WHERE toLower(iface.name) = 'input'",
-  "WITH r, iface",
-  "ORDER BY id(iface) ASC",
-  "LIMIT 1",
-  "MERGE (r)-[:IS]->(iface);",
-  "",
-].join("\n");
 const inputSurfaceOut = join(import.meta.dir, "merge-command-input-surfaces.cypher.fragment");
-writeFileSync(inputSurfaceOut, inputSurfaceLines, "utf8");
+writeFileSync(inputSurfaceOut, buildCommandArgumentDataCypher(golden, pastOps), "utf8");
 console.log(`[gen-ops-yaml] wrote ${inputSurfaceOut}`);
