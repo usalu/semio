@@ -378,22 +378,41 @@ elements/board:
 
 ---
 
+All nodes, handles and edges must have a kind.
+Kinds are compatible. There is central list of compatible pairs.
+
+A compatible pair has source, target, bidirectional flag, important flag.
+
+General to Specific
+1. General (0,0,0,0)
+1. Node (0,0,1,0)
+2. Edge (0,1,0,0)
+3. Handle (1,0,0,0)
+
+
+
+handle kinds:
+Every handle can have a kind and then centrally a list of compatible pairs can be provided.
+Two handles that are not compatible cant be connected. It doesnt snap, etc
+
 All handles must have handle kind.
 Handle kinds are passed separatley (id, name, color)
 When a handle has a color, then it overrides the color of the handle kind.
 
+All nodes must have node kind.
+Node kinds are passed separatley (id, name, shape, color, defaultHandleKind)
+If nodes have properties such as color, handle, they override it.
+Nodes kinds can be compatible with other node kinds.
+
 ---
 
-Add a new feature: handle kinds
-Every handle can have a kind and then centrally a list of compatible pairs can be provided.
-Two handles that are not compatible cant be connected. It doesnt snap, etc
 
 ---
 
 The lod zoom levels should make the grid more adaptive:
-Minimap: No grid, no outlines on nodes, no handles
-Overview: Large grid (10x10), outlines on node, no handles
-Detail: Large grid with finer small grid (1x1), handles
+Minimap: No grid, no outlines on nodes, no handles, no labels
+Overview: Large grid (10x10), outlines on node, no handles, abbreviated labels
+Detail: Large grid with finer small grid (1x1), handles, labels
 
 ---
 
@@ -412,6 +431,7 @@ Add a toolbar to ui (same as sketchpad).
 Select, Create as categories
 select: rectangle/lasso, additive/subtractive/invertive
 create: Circle, Recangle
+Change selection for composition. In the ui add three toggles: Nodes, Edges, Handles
 
 ---
 

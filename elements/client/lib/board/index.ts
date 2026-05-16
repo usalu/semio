@@ -44,9 +44,20 @@ export type BoardObjectKind = "node" | "handle" | "edge";
 export type RenderMode = "main-thread" | "worker-offscreen" | "headless-test";
 export type BoardSelectionMethod = "lasso" | "rectangle";
 export type BoardSelectionMode = "additive" | "invertive" | "subtractive";
-export type BoardSelectionTarget = "edges" | "nodes" | "nodes&edges";
 
-/** @emoji 🔗 One allowed directed pair for handle link gestures (`source` handle kind → `target` handle kind). */
+/** @emoji 🎯 Which graph kinds participate in rectangle/lasso selection and hit picking. */
+export interface BoardSelectionTargets {
+	edges: boolean;
+	handles: boolean;
+	nodes: boolean;
+}
+
+/** @emoji 🎯 Default: nodes, edges, and handles all participate (matches prior `nodes&edges`). */
+export const BOARD_SELECTION_TARGETS_DEFAULT: BoardSelectionTargets = {
+	edges: true,
+	handles: true,
+	nodes: true,
+};
 export interface BoardHandleLinkCompatPair {
 	source: string;
 	target: string;
@@ -87,8 +98,15 @@ export interface BoardSelectionSnapshot {
 export interface BoardSelectionOptions {
 	method?: BoardSelectionMethod;
 	mode?: BoardSelectionMode;
-	target?: BoardSelectionTarget;
+	targets?: Partial<BoardSelectionTargets>;
 }
+
+/** @emoji 🎯 Resolved selection options passed to WASM (`targets` fully specified). */
+export type ResolvedBoardSelectionOptions = {
+	method: BoardSelectionMethod;
+	mode: BoardSelectionMode;
+	targets: BoardSelectionTargets;
+};
 
 export interface BoardStyle {
 	fill?: string;
@@ -691,11 +709,15 @@ function createSelectionSnapshot(ids: Iterable<string>): BoardSelectionSnapshot 
 	return { ids: sortedSelectionIds(ids) };
 }
 
-function resolveSelectionOptions(options: BoardSelectionOptions | undefined): Required<BoardSelectionOptions> {
+function resolveSelectionOptions(options: BoardSelectionOptions | undefined): ResolvedBoardSelectionOptions {
 	return {
 		method: options?.method ?? "rectangle",
 		mode: options?.mode ?? "invertive",
-		target: options?.target ?? "nodes&edges",
+		targets: {
+			edges: options?.targets?.edges ?? BOARD_SELECTION_TARGETS_DEFAULT.edges,
+			handles: options?.targets?.handles ?? BOARD_SELECTION_TARGETS_DEFAULT.handles,
+			nodes: options?.targets?.nodes ?? BOARD_SELECTION_TARGETS_DEFAULT.nodes,
+		},
 	};
 }
 
@@ -1600,7 +1622,7 @@ export class BoardRenderer {
 	private lastRenderTimestamp: number | null = null;
 	private rafId: number | null = null;
 	private selectionIds = new Set<string>();
-	private selectionOptions: Required<BoardSelectionOptions>;
+	private selectionOptions: ResolvedBoardSelectionOptions;
 	private selectionStore = new SnapshotStore<BoardSelectionSnapshot>({ ids: [] });
 	private styles = new Map<string, BoardStyle>(Object.entries(DEFAULT_STYLES));
 	private gpuSurfaceErrorDetail = "";
@@ -1637,7 +1659,13 @@ export class BoardRenderer {
 		this.scene = new BoardScene(this);
 		this.session = new BoardSession();
 		const initialSel = this.selectionOptions;
-		this.session.setSelectionOptions(initialSel.method, initialSel.mode, initialSel.target);
+		this.session.setSelectionOptions(
+			initialSel.method,
+			initialSel.mode,
+			initialSel.targets.nodes,
+			initialSel.targets.edges,
+			initialSel.targets.handles,
+		);
 		this.session.setHandleLinkCompatJson(this.handleLinkCompatJson);
 		try {
 			this.session.setHandleKindsJson(this.handleKindsJson);
@@ -1699,14 +1727,22 @@ export class BoardRenderer {
 		this.applyWasmDrainToScene(this.session.drainEventsJson());
 	}
 
-	getSelectionOptions(): Required<BoardSelectionOptions> {
-		return { ...this.selectionOptions };
+	getSelectionOptions(): ResolvedBoardSelectionOptions {
+		return { ...this.selectionOptions, targets: { ...this.selectionOptions.targets } };
 	}
 
 	/** @emoji 🎯 Updates area-selection behavior for left-button drag gestures. */
 	setSelectionOptions(options: BoardSelectionOptions): void {
 		const next = resolveSelectionOptions({ ...this.selectionOptions, ...options });
-		if (next.method === this.selectionOptions.method && next.mode === this.selectionOptions.mode && next.target === this.selectionOptions.target) {
+		const tn = next.targets;
+		const tc = this.selectionOptions.targets;
+		if (
+			next.method === this.selectionOptions.method &&
+			next.mode === this.selectionOptions.mode &&
+			tn.nodes === tc.nodes &&
+			tn.edges === tc.edges &&
+			tn.handles === tc.handles
+		) {
 			return;
 		}
 		this.selectionOptions = next;
@@ -1714,7 +1750,7 @@ export class BoardRenderer {
 			this.invalidated = true;
 			return;
 		}
-		this.session.setSelectionOptions(next.method, next.mode, next.target);
+		this.session.setSelectionOptions(next.method, next.mode, next.targets.nodes, next.targets.edges, next.targets.handles);
 		this.applyWasmDrainToScene(this.session.drainEventsJson());
 		this.markDirty();
 	}
@@ -2077,7 +2113,7 @@ export class BoardRenderer {
 			}
 		}
 		const o = this.selectionOptions;
-		this.session.setSelectionOptions(o.method, o.mode, o.target);
+		this.session.setSelectionOptions(o.method, o.mode, o.targets.nodes, o.targets.edges, o.targets.handles);
 		this.session.setWorldRasterTiling(this.worldRasterTiling);
 		this.session.setHandleLinkCompatJson(this.handleLinkCompatJson);
 		try {
@@ -2200,7 +2236,7 @@ export class BoardRenderer {
 		}
 		const o = this.selectionOptions;
 		this.session.setSize(this.width, this.height, this.dpr);
-		this.session.setSelectionOptions(o.method, o.mode, o.target);
+		this.session.setSelectionOptions(o.method, o.mode, o.targets.nodes, o.targets.edges, o.targets.handles);
 		this.session.setWorldRasterTiling(this.worldRasterTiling);
 		this.session.setHandleLinkCompatJson(this.handleLinkCompatJson);
 		if (this.handleKindsJson !== this.lastPushedHandleKindsJson) {
@@ -3213,7 +3249,7 @@ if (boardVitest) {
 			const renderer = new BoardRenderer({
 				canvas,
 				renderMode: "headless-test",
-				selection: { method: "rectangle", mode: "invertive", target: "nodes&edges" },
+				selection: { method: "rectangle", mode: "invertive", targets: { ...BOARD_SELECTION_TARGETS_DEFAULT } },
 			});
 			const sourceNode = new Node({ id: "source", radius: 40, x: 0, y: 0 });
 			const targetNode = new Node({ id: "target", radius: 40, x: 200, y: 0 });
@@ -3237,7 +3273,7 @@ if (boardVitest) {
 
 		it("supports lasso targets and additive subtractive invertive selection modes", () => {
 			const { canvas } = createMockCanvas();
-			const renderer = new BoardRenderer({ canvas, renderMode: "headless-test", selection: { method: "lasso", mode: "additive", target: "edges" } });
+			const renderer = new BoardRenderer({ canvas, renderMode: "headless-test", selection: { method: "lasso", mode: "additive", targets: { nodes: false, edges: true, handles: false } } });
 			const sourceNode = new Node({ id: "source", radius: 12, x: -80, y: 0 });
 			const targetNode = new Node({ id: "target", radius: 12, x: 80, y: 0 });
 			const sourceHandle = new Handle({ handleKind: BOARD_BUILTIN_PORT_HANDLE_KIND, angle: 0, id: "src-h", node: sourceNode });
@@ -3265,7 +3301,7 @@ if (boardVitest) {
 			]);
 			expect(renderer.selection.getSnapshot().ids).toEqual(["edge"]);
 
-			renderer.setSelectionOptions({ method: "rectangle", mode: "subtractive", target: "edges" });
+			renderer.setSelectionOptions({ method: "rectangle", mode: "subtractive", targets: { nodes: false, edges: true, handles: false } });
 			const subtractStart = renderer.worldToScreen({ x: 20, y: -10 });
 			const subtractEnd = renderer.worldToScreen({ x: -20, y: 10 });
 			canvas.dispatchEvent(new MouseEvent("pointerdown", { bubbles: true, button: 0, clientX: subtractStart.x, clientY: subtractStart.y }));
@@ -3273,7 +3309,7 @@ if (boardVitest) {
 			canvas.dispatchEvent(new MouseEvent("pointerup", { bubbles: true, button: 0, clientX: subtractEnd.x, clientY: subtractEnd.y }));
 			expect(renderer.selection.getSnapshot().ids).toEqual([]);
 
-			renderer.setSelectionOptions({ mode: "invertive", target: "nodes" });
+			renderer.setSelectionOptions({ mode: "invertive", targets: { nodes: true, edges: false, handles: false } });
 			renderer.setSelectionIds(["source"]);
 			const invertStart = renderer.worldToScreen({ x: 100, y: -30 });
 			const invertEnd = renderer.worldToScreen({ x: -100, y: 30 });

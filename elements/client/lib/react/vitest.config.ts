@@ -6,6 +6,7 @@ export default defineConfig({
   root: process.cwd(),
   test: {
     environment: "node",
+    include: ["index.tsx"],
     includeSource: ["index.tsx"],
     passWithNoTests: true,
   },

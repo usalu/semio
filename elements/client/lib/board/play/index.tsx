@@ -13,6 +13,7 @@ import {
 	SelectItem,
 	SelectTrigger,
 	SelectValue,
+	Slider,
 	Tree,
 	TreeStateProvider,
 	UI,
@@ -32,8 +33,9 @@ import {
 	type UIAppConfig,
 	type UIWindowKindDefinition,
 	type UIWindowLayout,
+	type UIWindowOption,
 } from "@elements/ui";
-import { BoxSelect, Circle, ClipboardList, Lasso, Library, Minus, Network, Plus, Repeat2, Square } from "lucide-react";
+import { BoxSelect, Circle, ClipboardList, Lasso, Library, Minus, Pause, Play, Plus, Repeat2, Settings, Square } from "lucide-react";
 import {
 	createContext,
 	useCallback,
@@ -59,6 +61,7 @@ import {
 	BOARD_DEFAULT_HANDLE_KIND_CATALOG,
 	BOARD_FIXTURE_DRAG_KIND_PALETTE_NODE,
 	BOARD_FIXTURE_DRAG_V1_MIME,
+	BOARD_SELECTION_TARGETS_DEFAULT,
 	encodeBoardFixtureForDragV1,
 	layoutBoardFixtureForceGraph,
 	parseBoardFixtureV1,
@@ -69,9 +72,10 @@ import {
 	type BoardFixtureNodeV1,
 	type BoardFixtureRectangleNodeV1,
 	type BoardFixtureV1,
+	type BoardForceGraphLayoutOptions,
 	type BoardSelectionMethod,
 	type BoardSelectionMode,
-	type BoardSelectionTarget,
+	type BoardSelectionTargets,
 	type CameraState,
 } from "../index";
 import { BoardCanvas, Edge, Handle, Node, useBoardEvent } from "../index.tsx";
@@ -232,10 +236,26 @@ interface BoardPlayShellValue {
 	setBoardSelectionMethod: (value: BoardSelectionMethod) => void;
 	boardSelectionMode: BoardSelectionMode;
 	setBoardSelectionMode: (value: BoardSelectionMode) => void;
-	boardSelectionTarget: BoardSelectionTarget;
-	setBoardSelectionTarget: (value: BoardSelectionTarget) => void;
+	boardSelectionTargets: BoardSelectionTargets;
+	setBoardSelectionTargets: (value: BoardSelectionTargets | ((prev: BoardSelectionTargets) => BoardSelectionTargets)) => void;
 	/** @emoji 🗑️ Drops ids from the shared fixture after the canvas emits structural delete events. */
 	applyStructuralDelete: (kind: "edge" | "node", id: string) => void;
+	/** @emoji ⏯️ When true, the toolbar play control runs periodic force-layout ticks (see settings). */
+	forceLayoutPlaying: boolean;
+	setForceLayoutPlaying: (value: boolean) => void;
+	forceLayoutFullIterations: number;
+	setForceLayoutFullIterations: (value: number) => void;
+	forceLayoutIdealEdgeLength: number;
+	setForceLayoutIdealEdgeLength: (value: number) => void;
+	forceLayoutGravity: number;
+	setForceLayoutGravity: (value: number) => void;
+	forceLayoutRepulsionStrength: number;
+	setForceLayoutRepulsionStrength: (value: number) => void;
+	forceLayoutTickMs: number;
+	setForceLayoutTickMs: (value: number) => void;
+	forceLayoutTickIterations: number;
+	setForceLayoutTickIterations: (value: number) => void;
+	applyForceGraphLayoutOnce: () => void;
 }
 
 const BoardPlayShellContext = createContext<BoardPlayShellValue | null>(null);
@@ -267,25 +287,44 @@ function boardToolbarToggleClass(active: boolean): string {
 /** @emoji 📐 Toolbar “add circle” radius; “add rectangle” uses width = height = 2× this (same as circle diameter). */
 const BOARD_PLAY_TOOLBAR_DEFAULT_NODE_RADIUS = 44;
 
+/** @emoji 📐 Builds {@link BoardForceGraphLayoutOptions} for the active pane camera center (dimforge layout). */
+function boardPlayForceLayoutOpts(
+	pane: BoardPlayPaneId,
+	camerasByPane: Record<BoardPlayPaneId, CameraState>,
+	iterations: number,
+	idealEdge: number,
+	gravity: number,
+	repulsionStrength: number,
+): BoardForceGraphLayoutOptions {
+	const cam = camerasByPane[pane];
+	return {
+		centerX: cam.x,
+		centerY: cam.y,
+		gravity: Math.max(0, gravity),
+		idealEdgeLength: Math.max(8, idealEdge),
+		iterations: Math.max(1, Math.min(5000, Math.round(iterations))),
+		repulsionStrength: Math.max(40, repulsionStrength),
+	};
+}
+
 /** @emoji 🧰 Sketchpad-style tools: marquee kind, merge mode, hit target, and circle or rectangle authoring at the active pane camera. */
 function BoardPlayToolbar(): ReactElement {
 	const {
 		activePaneId,
 		boardSelectionMethod,
 		boardSelectionMode,
-		boardSelectionTarget,
+		boardSelectionTargets,
 		camerasByPane,
+		forceLayoutPlaying,
 		patchFixture,
 		setBoardSelectionMethod,
 		setBoardSelectionMode,
-		setBoardSelectionTarget,
+		setBoardSelectionTargets,
+		setForceLayoutPlaying,
 		setSelectionForPane,
 	} = useBoardPlayShell();
 
 	const camera = camerasByPane[activePaneId];
-	const [forceIterations, setForceIterations] = useState("420");
-	const [forceIdealLength, setForceIdealLength] = useState("140");
-	const [forceGravity, setForceGravity] = useState("0.018");
 
 	const appendCircle = useCallback(() => {
 		const id = newBoardAuthoringId("node");
@@ -317,21 +356,6 @@ function BoardPlayToolbar(): ReactElement {
 		patchFixture((prev) => ({ ...prev, nodes: [...prev.nodes, node] }));
 		setSelectionForPane(activePaneId, [id]);
 	}, [activePaneId, camera.x, camera.y, patchFixture, setSelectionForPane]);
-
-	const applyForceGraphLayout = useCallback(() => {
-		const iterations = Math.max(1, Math.min(5000, Math.round(Number.parseFloat(forceIterations) || 420)));
-		const idealEdgeLength = Math.max(4, Number.parseFloat(forceIdealLength) || 140);
-		const gravity = Math.max(0, Number.parseFloat(forceGravity) || 0);
-		patchFixture((prev) =>
-			layoutBoardFixtureForceGraph(prev, {
-				centerX: camera.x,
-				centerY: camera.y,
-				gravity,
-				idealEdgeLength,
-				iterations,
-			}),
-		);
-	}, [camera.x, camera.y, forceGravity, forceIdealLength, forceIterations, patchFixture]);
 
 	return (
 		<div className="pointer-events-none flex w-full justify-center px-2 py-1">
@@ -371,18 +395,36 @@ function BoardPlayToolbar(): ReactElement {
 						</button>
 					</ToolbarItem>
 					<ToolbarItem>
-						<button type="button" className={boardToolbarToggleClass(boardSelectionTarget === "nodes")} title="Nodes only" onClick={() => setBoardSelectionTarget("nodes")}>
+						<span className="text-muted-foreground pr-1 text-[10px] font-semibold uppercase tracking-wide">Targets</span>
+					</ToolbarItem>
+					<ToolbarItem>
+						<button
+							type="button"
+							className={boardToolbarToggleClass(boardSelectionTargets.nodes)}
+							title="Select nodes"
+							onClick={() => setBoardSelectionTargets((p) => ({ ...p, nodes: !p.nodes }))}
+						>
 							<span className="px-0.5">Nodes</span>
 						</button>
 					</ToolbarItem>
 					<ToolbarItem>
-						<button type="button" className={boardToolbarToggleClass(boardSelectionTarget === "edges")} title="Edges only" onClick={() => setBoardSelectionTarget("edges")}>
+						<button
+							type="button"
+							className={boardToolbarToggleClass(boardSelectionTargets.edges)}
+							title="Select edges"
+							onClick={() => setBoardSelectionTargets((p) => ({ ...p, edges: !p.edges }))}
+						>
 							<span className="px-0.5">Edges</span>
 						</button>
 					</ToolbarItem>
 					<ToolbarItem>
-						<button type="button" className={boardToolbarToggleClass(boardSelectionTarget === "nodes&edges")} title="Nodes and edges" onClick={() => setBoardSelectionTarget("nodes&edges")}>
-							<span className="px-0.5">Both</span>
+						<button
+							type="button"
+							className={boardToolbarToggleClass(boardSelectionTargets.handles)}
+							title="Select handles"
+							onClick={() => setBoardSelectionTargets((p) => ({ ...p, handles: !p.handles }))}
+						>
+							<span className="px-0.5">Handles</span>
 						</button>
 					</ToolbarItem>
 				</ToolbarGroup>
@@ -408,54 +450,14 @@ function BoardPlayToolbar(): ReactElement {
 						<span className="text-muted-foreground pr-1 text-[10px] font-semibold uppercase tracking-wide">Layout</span>
 					</ToolbarItem>
 					<ToolbarItem>
-						<details className="relative">
-							<summary className="list-none cursor-pointer [&::-webkit-details-marker]:hidden">
-								<span className={boardToolbarToggleClass(false)} title="Force graph options (dimforge nalgebra)">
-									<Network className="size-4" aria-hidden />
-								</span>
-							</summary>
-							<div className="bg-panel border-element absolute left-0 z-50 mt-1 flex min-w-[220px] flex-col gap-2 rounded border p-2 shadow-md">
-								<div className="flex items-center gap-2">
-									<label className="text-muted-foreground w-24 shrink-0 text-[10px] font-medium uppercase" htmlFor="board-force-iters">
-										Iters
-									</label>
-									<Input
-										className="h-7 text-xs"
-										id="board-force-iters"
-										inputMode="numeric"
-										value={forceIterations}
-										onChange={(e: ChangeEvent<HTMLInputElement>) => setForceIterations(e.target.value)}
-									/>
-								</div>
-								<div className="flex items-center gap-2">
-									<label className="text-muted-foreground w-24 shrink-0 text-[10px] font-medium uppercase" htmlFor="board-force-ideal">
-										Ideal px
-									</label>
-									<Input
-										className="h-7 text-xs"
-										id="board-force-ideal"
-										inputMode="decimal"
-										value={forceIdealLength}
-										onChange={(e: ChangeEvent<HTMLInputElement>) => setForceIdealLength(e.target.value)}
-									/>
-								</div>
-								<div className="flex items-center gap-2">
-									<label className="text-muted-foreground w-24 shrink-0 text-[10px] font-medium uppercase" htmlFor="board-force-grav">
-										Gravity
-									</label>
-									<Input
-										className="h-7 text-xs"
-										id="board-force-grav"
-										inputMode="decimal"
-										value={forceGravity}
-										onChange={(e: ChangeEvent<HTMLInputElement>) => setForceGravity(e.target.value)}
-									/>
-								</div>
-								<Button className="h-8 w-full text-xs" type="button" variant="secondary" onClick={applyForceGraphLayout}>
-									Apply force layout
-								</Button>
-							</div>
-						</details>
+						<button
+							type="button"
+							className={boardToolbarToggleClass(forceLayoutPlaying)}
+							title={forceLayoutPlaying ? "Pause automatic force layout ticks" : "Play automatic force layout ticks (interval in Settings)"}
+							onClick={() => setForceLayoutPlaying(!forceLayoutPlaying)}
+						>
+							{forceLayoutPlaying ? <Pause className="size-4" aria-hidden /> : <Play className="size-4" aria-hidden />}
+						</button>
 					</ToolbarItem>
 				</ToolbarGroup>
 			</ToolbarZone>
@@ -463,6 +465,109 @@ function BoardPlayToolbar(): ReactElement {
 	);
 }
 // #endregion 🔖Toolbar
+
+// #region 🔖SettingsPanel
+/** @emoji ⚙️ Board play settings: force-directed layout parameters and manual apply (play/pause lives on the toolbar). */
+function BoardPlaySettingsPanel(): ReactElement {
+	const {
+		activePaneId,
+		applyForceGraphLayoutOnce,
+		forceLayoutFullIterations,
+		forceLayoutGravity,
+		forceLayoutIdealEdgeLength,
+		forceLayoutRepulsionStrength,
+		forceLayoutTickIterations,
+		forceLayoutTickMs,
+		setForceLayoutFullIterations,
+		setForceLayoutGravity,
+		setForceLayoutIdealEdgeLength,
+		setForceLayoutRepulsionStrength,
+		setForceLayoutTickIterations,
+		setForceLayoutTickMs,
+	} = useBoardPlayShell();
+
+	return (
+		<div className="flex h-full min-h-0 flex-col gap-2 p-3 text-xs">
+			<div className="text-muted-foreground flex shrink-0 items-center gap-2 border-b border-element pb-2">
+				<Settings className="size-4 shrink-0" />
+				<div>
+					<div className="font-semibold uppercase tracking-wide">Settings</div>
+					<div className="text-[11px] opacity-80">pane: {activePaneId}</div>
+				</div>
+			</div>
+			<div className="text-muted-foreground shrink-0 text-[11px] font-medium uppercase tracking-wide">Force graph layout</div>
+			<div className="min-h-0 flex-1 space-y-4 overflow-y-auto">
+				<Label id="board.play.settings.force.fullIterations" label="Iterations (apply once)">
+					<Slider
+						id="board-play-slider-force-full-iters"
+						max={720}
+						min={24}
+						step={4}
+						value={[forceLayoutFullIterations]}
+						onValueChange={(vals) => setForceLayoutFullIterations(vals[0] ?? 200)}
+					/>
+				</Label>
+				<Label id="board.play.settings.force.idealEdge" label="Ideal edge (px)">
+					<Slider
+						id="board-play-slider-force-ideal"
+						max={160}
+						min={20}
+						step={2}
+						value={[forceLayoutIdealEdgeLength]}
+						onValueChange={(vals) => setForceLayoutIdealEdgeLength(vals[0] ?? 64)}
+					/>
+				</Label>
+				<Label id="board.play.settings.force.repulsion" label="Repulsion">
+					<Slider
+						id="board-play-slider-force-repulsion"
+						max={1800}
+						min={80}
+						step={20}
+						value={[forceLayoutRepulsionStrength]}
+						onValueChange={(vals) => setForceLayoutRepulsionStrength(vals[0] ?? 480)}
+					/>
+				</Label>
+				<Label id="board.play.settings.force.gravity" label="Gravity">
+					<Slider
+						id="board-play-slider-force-gravity"
+						max={0.05}
+						min={0}
+						step={0.002}
+						value={[forceLayoutGravity]}
+						onValueChange={(vals) => setForceLayoutGravity(vals[0] ?? 0)}
+					/>
+				</Label>
+				<Label id="board.play.settings.force.tickMs" label="Play interval (ms)">
+					<Slider
+						id="board-play-slider-force-tick-ms"
+						max={400}
+						min={24}
+						step={8}
+						value={[forceLayoutTickMs]}
+						onValueChange={(vals) => setForceLayoutTickMs(vals[0] ?? 96)}
+					/>
+				</Label>
+				<Label id="board.play.settings.force.tickIterations" label="Iterations per play tick">
+					<Slider
+						id="board-play-slider-force-tick-iters"
+						max={72}
+						min={1}
+						step={1}
+						value={[forceLayoutTickIterations]}
+						onValueChange={(vals) => setForceLayoutTickIterations(vals[0] ?? 10)}
+					/>
+				</Label>
+				<Button className="h-8 w-full text-xs" type="button" variant="secondary" onClick={applyForceGraphLayoutOnce}>
+					Apply layout once
+				</Button>
+				<p className="text-muted-foreground text-[11px] leading-snug">
+					While play is on, camera framing stays pinned to the graph as it was when you pressed play, so zoom and pan no longer jump each tick. Pause to re-frame from the latest layout.
+				</p>
+			</div>
+		</div>
+	);
+}
+// #endregion 🔖SettingsPanel
 
 // #region 🔖Scene
 /** @emoji 🗼 Marker tree for {@link BoardCanvas} — must stay a Fragment of {@link Node}/{@link Edge} so {@link buildBoardSceneDescriptor} sees markers (custom wrappers are opaque to the static walk). */
@@ -596,7 +701,7 @@ function BoardPaneChrome({ children, paneId }: { children: ReactNode; paneId: Bo
 }
 
 function BoardOverviewPane(): ReactElement {
-	const { boardSelectionMethod, boardSelectionMode, boardSelectionTarget, fixture, handleCanvasFixtureDrop, camerasByPane, selectionByPane } =
+	const { boardSelectionMethod, boardSelectionMode, boardSelectionTargets, fixture, handleCanvasFixtureDrop, camerasByPane, selectionByPane } =
 		useBoardPlayShell();
 	const paneId: BoardPlayPaneId = "board-overview";
 	const camera = camerasByPane[paneId];
@@ -612,7 +717,7 @@ function BoardOverviewPane(): ReactElement {
 				onFixtureDrop={(d) => handleCanvasFixtureDrop(paneId, d)}
 				selectionMethod={boardSelectionMethod}
 				selectionMode={boardSelectionMode}
-				selectionTarget={boardSelectionTarget}
+				selectionTargets={boardSelectionTargets}
 			>
 				<BoardSelectionReporter paneId={paneId} />
 				<BoardStructuralDeleteReporter />
@@ -623,7 +728,7 @@ function BoardOverviewPane(): ReactElement {
 }
 
 function BoardDetailPane(): ReactElement {
-	const { boardSelectionMethod, boardSelectionMode, boardSelectionTarget, fixture, handleCanvasFixtureDrop, camerasByPane, selectionByPane } =
+	const { boardSelectionMethod, boardSelectionMode, boardSelectionTargets, fixture, handleCanvasFixtureDrop, camerasByPane, selectionByPane } =
 		useBoardPlayShell();
 	const paneId: BoardPlayPaneId = "board-detail";
 	const camera = camerasByPane[paneId];
@@ -638,7 +743,7 @@ function BoardDetailPane(): ReactElement {
 				onFixtureDrop={(d) => handleCanvasFixtureDrop(paneId, d)}
 				selectionMethod={boardSelectionMethod}
 				selectionMode={boardSelectionMode}
-				selectionTarget={boardSelectionTarget}
+				selectionTargets={boardSelectionTargets}
 			>
 				<BoardSelectionReporter paneId={paneId} />
 				<BoardStructuralDeleteReporter />
@@ -649,7 +754,7 @@ function BoardDetailPane(): ReactElement {
 }
 
 function BoardSelectionPane(): ReactElement {
-	const { boardSelectionMethod, boardSelectionMode, boardSelectionTarget, fixture, handleCanvasFixtureDrop, camerasByPane, selectionByPane } =
+	const { boardSelectionMethod, boardSelectionMode, boardSelectionTargets, fixture, handleCanvasFixtureDrop, camerasByPane, selectionByPane } =
 		useBoardPlayShell();
 	const paneId: BoardPlayPaneId = "board-selection";
 	const camera = camerasByPane[paneId];
@@ -664,7 +769,7 @@ function BoardSelectionPane(): ReactElement {
 				onFixtureDrop={(d) => handleCanvasFixtureDrop(paneId, d)}
 				selectionMethod={boardSelectionMethod}
 				selectionMode={boardSelectionMode}
-				selectionTarget={boardSelectionTarget}
+				selectionTargets={boardSelectionTargets}
 			>
 				<BoardSelectionReporter paneId={paneId} />
 				<BoardStructuralDeleteReporter />
@@ -1510,11 +1615,6 @@ const boardPlayLayout: UIWindowLayout = {
 	},
 };
 
-const boardWindowKinds: UIWindowKindDefinition[] = [
-	{ component: BoardOverviewPane, contextMenu: boardPlayOverviewWindowContextMenu, id: "board-overview", label: "Overview" },
-	{ component: BoardDetailPane, id: "board-detail", label: "Zoom" },
-	{ component: BoardSelectionPane, id: "board-selection", label: "Selection" },
-];
 // #endregion 🔖Layout
 
 // #region 🔖Surface
@@ -1579,11 +1679,189 @@ function BoardPlayInner(): ReactElement {
 	const [theme, setTheme] = useState<ElementsSurfaceTheme>(readTheme);
 	const [device, setDevice] = useState<ElementsSurfaceDevice>(readDevice);
 	const [expertise, setExpertise] = useState<Expertise>(readExpertise);
+	const { mobile } = useElementsSurfaceChrome({ theme, device, expertise });
 	const [boardSelectionMethod, setBoardSelectionMethod] = useState<BoardSelectionMethod>("rectangle");
 	const [boardSelectionMode, setBoardSelectionMode] = useState<BoardSelectionMode>("invertive");
-	const [boardSelectionTarget, setBoardSelectionTarget] = useState<BoardSelectionTarget>("nodes&edges");
+	const [boardSelectionTargets, setBoardSelectionTargets] = useState<BoardSelectionTargets>(() => ({ ...BOARD_SELECTION_TARGETS_DEFAULT }));
+	const [forceLayoutPlaying, setForceLayoutPlaying] = useState(false);
+	const [forceLayoutFullIterations, setForceLayoutFullIterations] = useState(200);
+	const [forceLayoutIdealEdgeLength, setForceLayoutIdealEdgeLength] = useState(64);
+	const [forceLayoutGravity, setForceLayoutGravity] = useState(0.012);
+	const [forceLayoutRepulsionStrength, setForceLayoutRepulsionStrength] = useState(480);
+	const [forceLayoutTickMs, setForceLayoutTickMs] = useState(96);
+	const [forceLayoutTickIterations, setForceLayoutTickIterations] = useState(10);
+	const [windowOptionDemo, setWindowOptionDemo] = useState({
+		ovToggle: true,
+		ovSelect: "fit",
+		ovCombo: "alpha",
+		ovCycle: "a",
+		ovInput: "sample",
+		ovText: "notes",
+		ovCheck: true,
+		ovRadio: "one",
+		ovSlider: 40,
+		ovNumber: 3,
+		ovColor: "#3366cc",
+		detailSlider: 50,
+		selMode: "nodes",
+	});
 
-	const { mobile } = useElementsSurfaceChrome({ theme, device, expertise });
+	const boardWindowKinds = useMemo<UIWindowKindDefinition[]>(
+		() => [
+			{
+				component: BoardOverviewPane,
+				contextMenu: boardPlayOverviewWindowContextMenu,
+				id: "board-overview",
+				label: "Overview",
+				options: [
+					{ id: "board-ov-sec", kind: "section", title: "Window options" },
+					{ id: "board-ov-sep0", kind: "separator" },
+					{
+						icon: <Square className="size-small" />,
+						id: "board-ov-toggle",
+						kind: "toggle",
+						label: "Preview",
+						pressed: windowOptionDemo.ovToggle,
+						onPressedChange: (pressed) => setWindowOptionDemo((p) => ({ ...p, ovToggle: pressed })),
+					},
+					{
+						id: "board-ov-select",
+						items: [
+							{ id: "fit", label: "Fit", value: "fit" },
+							{ id: "fill", label: "Fill", value: "fill" },
+							{ id: "1x", label: "1×", value: "1x" },
+						],
+						kind: "select",
+						label: "Scale",
+						onValueChange: (value) => setWindowOptionDemo((p) => ({ ...p, ovSelect: value })),
+						value: windowOptionDemo.ovSelect,
+					},
+					{
+						id: "board-ov-combo",
+						kind: "combobox",
+						label: "Search preset",
+						onValueChange: (value) => setWindowOptionDemo((p) => ({ ...p, ovCombo: value })),
+						options: [
+							{ label: "Alpha", value: "alpha" },
+							{ label: "Beta", value: "beta" },
+							{ label: "Gamma", value: "gamma" },
+						],
+						placeholder: "Pick…",
+						value: windowOptionDemo.ovCombo,
+					},
+					{
+						id: "board-ov-cycle",
+						items: [
+							{ label: "A", value: "a" },
+							{ label: "B", value: "b" },
+							{ label: "C", value: "c" },
+						],
+						kind: "buttonCycle",
+						label: "Cycle",
+						onValueChange: (value) => setWindowOptionDemo((p) => ({ ...p, ovCycle: value })),
+						value: windowOptionDemo.ovCycle,
+					},
+					{ id: "board-ov-btn", kind: "button", label: "Action", onClick: () => undefined, text: "Ping" },
+					{
+						id: "board-ov-input",
+						kind: "input",
+						label: "Tag",
+						onLazyChange: (value) => setWindowOptionDemo((p) => ({ ...p, ovInput: value })),
+						placeholder: "id…",
+						value: windowOptionDemo.ovInput,
+					},
+					{
+						id: "board-ov-textarea",
+						kind: "textarea",
+						label: "Memo",
+						onLazyChange: (value) => setWindowOptionDemo((p) => ({ ...p, ovText: value })),
+						rows: 3,
+						value: windowOptionDemo.ovText,
+					},
+					{
+						checked: windowOptionDemo.ovCheck,
+						id: "board-ov-check",
+						kind: "checkbox",
+						label: "Snap",
+						onCheckedChange: (checked) => setWindowOptionDemo((p) => ({ ...p, ovCheck: checked })),
+					},
+					{
+						id: "board-ov-radio",
+						items: [
+							{ label: "One", value: "one" },
+							{ label: "Two", value: "two" },
+						],
+						kind: "radio",
+						label: "Band",
+						onChange: (value) => setWindowOptionDemo((p) => ({ ...p, ovRadio: value })),
+						value: windowOptionDemo.ovRadio,
+					},
+					{
+						id: "board-ov-slider",
+						kind: "slider",
+						label: "Opacity",
+						max: 100,
+						min: 0,
+						onValueChange: (value) => setWindowOptionDemo((p) => ({ ...p, ovSlider: value })),
+						value: windowOptionDemo.ovSlider,
+					},
+					{
+						id: "board-ov-number",
+						kind: "number",
+						label: "Copies",
+						max: 9,
+						min: 0,
+						onChange: (value) => setWindowOptionDemo((p) => ({ ...p, ovNumber: value })),
+						value: windowOptionDemo.ovNumber,
+					},
+					{
+						id: "board-ov-color",
+						kind: "color",
+						label: "Accent",
+						onChange: (value) => setWindowOptionDemo((p) => ({ ...p, ovColor: value })),
+						value: windowOptionDemo.ovColor,
+					},
+				] satisfies UIWindowOption[],
+			},
+			{
+				component: BoardDetailPane,
+				id: "board-detail",
+				label: "Zoom",
+				options: [
+					{ id: "board-d-sec", kind: "section", title: "Zoom" },
+					{
+						id: "board-d-slider",
+						kind: "slider",
+						label: "Focus",
+						max: 100,
+						min: 0,
+						onValueChange: (value) => setWindowOptionDemo((p) => ({ ...p, detailSlider: value })),
+						value: windowOptionDemo.detailSlider,
+					},
+				] satisfies UIWindowOption[],
+			},
+			{
+				component: BoardSelectionPane,
+				id: "board-selection",
+				label: "Selection",
+				options: [
+					{
+						id: "board-s-sel",
+						items: [
+							{ id: "n", label: "Nodes", value: "nodes" },
+							{ id: "e", label: "Edges", value: "edges" },
+							{ id: "h", label: "Handles", value: "handles" },
+						],
+						kind: "select",
+						label: "Target",
+						onValueChange: (value) => setWindowOptionDemo((p) => ({ ...p, selMode: value })),
+						value: windowOptionDemo.selMode,
+					},
+				] satisfies UIWindowOption[],
+			},
+		],
+		[windowOptionDemo],
+	);
 
 	useEffect(() => {
 		try {
@@ -1705,36 +1983,140 @@ function BoardPlayInner(): ReactElement {
 		});
 	}, []);
 
-	const camerasByPane = useMemo(() => triptychCamerasFromFixture(fixture), [fixture]);
+	const cameraBasisFixtureRef = useRef<BoardFixtureV1>(fixture);
+	const [cameraBasisTick, setCameraBasisTick] = useState(0);
+	const prevForceLayoutPlayingRef = useRef(false);
+
+	useEffect(() => {
+		if (!forceLayoutPlaying) {
+			cameraBasisFixtureRef.current = fixture;
+			setCameraBasisTick((t) => t + 1);
+		}
+	}, [fixture, forceLayoutPlaying]);
+
+	useEffect(() => {
+		if (forceLayoutPlaying && !prevForceLayoutPlayingRef.current) {
+			cameraBasisFixtureRef.current = fixture;
+			setCameraBasisTick((t) => t + 1);
+		}
+		prevForceLayoutPlayingRef.current = forceLayoutPlaying;
+	}, [forceLayoutPlaying, fixture]);
+
+	const camerasByPane = useMemo(() => triptychCamerasFromFixture(cameraBasisFixtureRef.current), [cameraBasisTick]);
+
+	const applyForceGraphLayoutOnce = useCallback(() => {
+		const full = Math.max(1, Math.min(5000, Math.round(forceLayoutFullIterations)));
+		patchFixture((prev) =>
+			layoutBoardFixtureForceGraph(
+				prev,
+				boardPlayForceLayoutOpts(
+					activePaneId,
+					camerasByPane,
+					full,
+					forceLayoutIdealEdgeLength,
+					forceLayoutGravity,
+					forceLayoutRepulsionStrength,
+				),
+			),
+		);
+	}, [
+		activePaneId,
+		camerasByPane,
+		forceLayoutFullIterations,
+		forceLayoutGravity,
+		forceLayoutIdealEdgeLength,
+		forceLayoutRepulsionStrength,
+		patchFixture,
+	]);
+
+	useEffect(() => {
+		if (!forceLayoutPlaying) {
+			return;
+		}
+		const tickMs = Math.max(33, Math.min(5000, Math.round(forceLayoutTickMs)));
+		const tickIters = Math.max(1, Math.min(500, Math.round(forceLayoutTickIterations)));
+		const id = window.setInterval(() => {
+			patchFixture((prev) => {
+				if (prev.nodes.length === 0) {
+					return prev;
+				}
+				return layoutBoardFixtureForceGraph(
+					prev,
+					boardPlayForceLayoutOpts(
+						activePaneId,
+						camerasByPane,
+						tickIters,
+						forceLayoutIdealEdgeLength,
+						forceLayoutGravity,
+						forceLayoutRepulsionStrength,
+					),
+				);
+			});
+		}, tickMs);
+		return () => window.clearInterval(id);
+	}, [
+		activePaneId,
+		camerasByPane,
+		forceLayoutGravity,
+		forceLayoutIdealEdgeLength,
+		forceLayoutPlaying,
+		forceLayoutRepulsionStrength,
+		forceLayoutTickIterations,
+		forceLayoutTickMs,
+		patchFixture,
+	]);
 
 	const shellValue = useMemo<BoardPlayShellValue>(
 		() => ({
 			activePaneId,
+			applyForceGraphLayoutOnce,
 			applyStructuralDelete,
 			boardSelectionMethod,
 			boardSelectionMode,
-			boardSelectionTarget,
+			boardSelectionTargets,
 			camerasByPane,
 			fixture,
+			forceLayoutFullIterations,
+			forceLayoutGravity,
+			forceLayoutIdealEdgeLength,
+			forceLayoutPlaying,
+			forceLayoutRepulsionStrength,
+			forceLayoutTickIterations,
+			forceLayoutTickMs,
 			handleCanvasFixtureDrop,
 			patchFixture,
 			remapIdInSelections,
 			setActivePaneId,
 			setBoardSelectionMethod,
 			setBoardSelectionMode,
-			setBoardSelectionTarget,
+			setBoardSelectionTargets,
 			setFixture,
+			setForceLayoutFullIterations,
+			setForceLayoutGravity,
+			setForceLayoutIdealEdgeLength,
+			setForceLayoutPlaying,
+			setForceLayoutRepulsionStrength,
+			setForceLayoutTickIterations,
+			setForceLayoutTickMs,
 			selectionByPane,
 			setSelectionForPane,
 		}),
 		[
 			activePaneId,
+			applyForceGraphLayoutOnce,
 			applyStructuralDelete,
 			boardSelectionMethod,
 			boardSelectionMode,
-			boardSelectionTarget,
+			boardSelectionTargets,
 			camerasByPane,
 			fixture,
+			forceLayoutFullIterations,
+			forceLayoutGravity,
+			forceLayoutIdealEdgeLength,
+			forceLayoutPlaying,
+			forceLayoutRepulsionStrength,
+			forceLayoutTickIterations,
+			forceLayoutTickMs,
 			handleCanvasFixtureDrop,
 			patchFixture,
 			remapIdInSelections,
@@ -1759,6 +2141,7 @@ function BoardPlayInner(): ReactElement {
 			},
 			rightPanelTabs: [
 				{ content: () => <BoardSelectionInspectorPanel />, icon: ClipboardList, id: "board-play-inspector", order: 0 },
+				{ content: () => <BoardPlaySettingsPanel />, icon: Settings, id: "board-play-settings", order: 1 },
 			],
 			toolbarContent: <BoardPlayToolbar />,
 			windowKinds: boardWindowKinds,

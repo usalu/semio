@@ -802,11 +802,13 @@ mod board_host {
 		pub zoom: f64,
 	}
 
-	#[derive(Clone, Debug, Default, PartialEq, Eq)]
+	#[derive(Clone, Debug, PartialEq, Eq)]
 	pub struct SelectionOptions {
 		pub method: String,
 		pub mode: String,
-		pub target: String,
+		pub select_nodes: bool,
+		pub select_edges: bool,
+		pub select_handles: bool,
 	}
 
 	#[derive(Clone, Debug)]
@@ -928,7 +930,9 @@ mod board_host {
 				selection_options: SelectionOptions {
 					method: "rectangle".into(),
 					mode: "invertive".into(),
-					target: "nodes&edges".into(),
+					select_nodes: true,
+					select_edges: true,
+					select_handles: true,
 				},
 				hovered_id: None,
 				interaction: Interaction::None,
@@ -977,10 +981,19 @@ mod board_host {
 			self.push_event("camera", json!({ "x": self.camera.x, "y": self.camera.y, "zoom": self.camera.zoom }));
 		}
 
-		pub fn set_selection_options(&mut self, method: &str, mode: &str, target: &str) {
+		pub fn set_selection_options(
+			&mut self,
+			method: &str,
+			mode: &str,
+			select_nodes: bool,
+			select_edges: bool,
+			select_handles: bool,
+		) {
 			self.selection_options.method = method.into();
 			self.selection_options.mode = mode.into();
-			self.selection_options.target = target.into();
+			self.selection_options.select_nodes = select_nodes;
+			self.selection_options.select_edges = select_edges;
+			self.selection_options.select_handles = select_handles;
 		}
 
 		/// @emoji 🔗 JSON `[{ "source": "…", "target": "…" }, …]` of allowed directed handle-kind pairs for link gestures; empty clears restrictions.
@@ -1298,8 +1311,8 @@ mod board_host {
 
 		pub fn resolve_hit_world(&self, point: Point) -> Option<String> {
 			let zoom = self.camera.zoom;
-			let t = self.selection_options.target.as_str();
-			if t == "nodes" || t == "nodes&edges" {
+			let o = &self.selection_options;
+			if o.select_handles {
 				for h in self.handles.values().rev() {
 					if !h.visible {
 						continue;
@@ -1310,6 +1323,8 @@ mod board_host {
 						return Some(h.id.clone());
 					}
 				}
+			}
+			if o.select_nodes {
 				for n in self.nodes.values().rev() {
 					if !n.visible {
 						continue;
@@ -1330,7 +1345,7 @@ mod board_host {
 					}
 				}
 			}
-			if t == "edges" || t == "nodes&edges" {
+			if o.select_edges {
 				for e in self.edges.values().rev() {
 					if !e.visible {
 						continue;
@@ -2478,22 +2493,22 @@ mod board_host {
 				return initial.clone();
 			};
 			let mut hits = BTreeSet::new();
-			let t = self.selection_options.target.as_str();
-			if t == "nodes" || t == "nodes&edges" {
+			let o = &self.selection_options;
+			if o.select_nodes {
 				for n in self.nodes.values() {
 					if n.visible && self.selection_contains_node(n, box_, enclosing, polygon) {
 						hits.insert(n.id.clone());
 					}
 				}
 			}
-			if t == "nodes&edges" {
+			if o.select_handles {
 				for h in self.handles.values() {
 					if h.visible && self.selection_contains_handle(h, box_, enclosing, polygon) {
 						hits.insert(h.id.clone());
 					}
 				}
 			}
-			if t == "edges" || t == "nodes&edges" {
+			if o.select_edges {
 				for e in self.edges.values() {
 					if !e.visible {
 						continue;
@@ -3297,8 +3312,18 @@ impl BoardSession {
 	}
 
 	#[wasm_bindgen(js_name = setSelectionOptions)]
-	pub fn set_selection_options_wasm(&mut self, method: &str, mode: &str, target: &str) {
-		self.state.borrow_mut().host.set_selection_options(method, mode, target);
+	pub fn set_selection_options_wasm(
+		&mut self,
+		method: &str,
+		mode: &str,
+		select_nodes: bool,
+		select_edges: bool,
+		select_handles: bool,
+	) {
+		self.state
+			.borrow_mut()
+			.host
+			.set_selection_options(method, mode, select_nodes, select_edges, select_handles);
 	}
 
 	#[wasm_bindgen(js_name = setHandleLinkCompatJson)]
@@ -3637,7 +3662,7 @@ mod host_tests {
 	fn board_host_selection_target_edges_skips_node_geometry() {
 		let mut h = BoardHost::new();
 		h.set_size(800, 600, 1.0);
-		h.set_selection_options("rectangle", "invertive", "edges");
+		h.set_selection_options("rectangle", "invertive", false, true, false);
 		let mut desc = sample_scene();
 		desc.nodes.push(NodeDescJson {
 			id: "b".into(),
@@ -3666,7 +3691,7 @@ mod host_tests {
 	fn board_host_additive_click_merges_edge_into_existing_selection() {
 		let mut h = BoardHost::new();
 		h.set_size(800, 600, 1.0);
-		h.set_selection_options("rectangle", "additive", "nodes&edges");
+		h.set_selection_options("rectangle", "additive", true, true, true);
 		let mut desc = sample_scene();
 		desc.nodes.push(NodeDescJson {
 			id: "b".into(),
@@ -3729,7 +3754,7 @@ mod host_tests {
 	fn board_host_rectangle_area_select_includes_handles_with_nodes() {
 		let mut h = BoardHost::new();
 		h.set_size(800, 600, 1.0);
-		h.set_selection_options("rectangle", "invertive", "nodes&edges");
+		h.set_selection_options("rectangle", "invertive", true, true, true);
 		let mut desc = sample_scene();
 		desc.nodes.push(NodeDescJson {
 			id: "b".into(),

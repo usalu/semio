@@ -55,14 +55,14 @@ import {
 	type BoardSelectionMethod,
 	type BoardSelectionMode,
 	type BoardSelectionSnapshot,
-	type BoardSelectionTarget,
+	type BoardSelectionTargets,
 	type CameraState,
 	type FrameState,
 	type RenderMode,
 	type WorldRasterTilingKind,
 } from "./index";
 
-export type { BoardHandleKindCatalogEntry, BoardHandleLinkCompatPair, BoardHandleProps, BoardEdgeProps } from "./index";
+export type { BoardHandleKindCatalogEntry, BoardHandleLinkCompatPair, BoardHandleProps, BoardEdgeProps, BoardSelectionTargets } from "./index";
 
 import { ContextMenuController, type ContextMenuItem } from "@elements/ui";
 
@@ -95,7 +95,8 @@ export interface BoardCanvasProps {
 	renderMode?: RenderMode;
 	selectionMethod?: BoardSelectionMethod;
 	selectionMode?: BoardSelectionMode;
-	selectionTarget?: BoardSelectionTarget;
+	/** @emoji 🎯 Independent toggles for which kinds participate in marquee/lasso and hit picking. */
+	selectionTargets?: BoardSelectionTargets;
 	style?: CSSProperties;
 	width?: number;
 	/** 🧩 World-space clip tiling for Vello (`world-clip`, default) vs monolithic scene (`none`). */
@@ -554,7 +555,7 @@ export function BoardCanvas({
 	renderMode,
 	selectionMethod,
 	selectionMode,
-	selectionTarget,
+	selectionTargets,
 	style,
 	width,
 	worldRasterTiling,
@@ -738,7 +739,7 @@ export function BoardCanvas({
 		const renderer = new BoardRenderer({
 			canvas,
 			renderMode,
-			selection: { method: selectionMethod, mode: selectionMode, target: selectionTarget },
+			selection: { method: selectionMethod, mode: selectionMode, targets: selectionTargets },
 			worldRasterTiling,
 		});
 		rendererRef.current = renderer;
@@ -796,8 +797,8 @@ export function BoardCanvas({
 		if (!renderer) {
 			return;
 		}
-		renderer.setSelectionOptions({ method: selectionMethod, mode: selectionMode, target: selectionTarget });
-	}, [selectionMethod, selectionMode, selectionTarget]);
+		renderer.setSelectionOptions({ method: selectionMethod, mode: selectionMode, targets: selectionTargets });
+	}, [selectionMethod, selectionMode, selectionTargets]);
 
 	useLayoutEffect(() => {
 		const renderer = rendererRef.current;
@@ -1539,7 +1540,7 @@ if (boardReactVitest) {
 						renderMode="headless-test"
 						selectionMethod="rectangle"
 						selectionMode="additive"
-						selectionTarget="nodes"
+						selectionTargets={{ nodes: true, edges: false, handles: false }}
 						width={160}
 					>
 						<Node id="a" radius={12} x={0} y={0}>
@@ -1560,7 +1561,7 @@ if (boardReactVitest) {
 						renderMode="headless-test"
 						selectionMethod="lasso"
 						selectionMode="invertive"
-						selectionTarget="edges"
+						selectionTargets={{ nodes: false, edges: true, handles: false }}
 						width={160}
 					>
 						<Node id="a" radius={12} x={0} y={0}>
@@ -1578,7 +1579,7 @@ if (boardReactVitest) {
 			);
 			expect(renderer.getSelectionOptions().method).toBe("lasso");
 			expect(renderer.getSelectionOptions().mode).toBe("invertive");
-			expect(renderer.getSelectionOptions().target).toBe("edges");
+			expect(renderer.getSelectionOptions().targets).toEqual({ nodes: false, edges: true, handles: false });
 
 			await act(async () => {
 				root.unmount();

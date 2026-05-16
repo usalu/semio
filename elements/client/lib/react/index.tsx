@@ -18912,6 +18912,7 @@ export interface WindowConfig {
   onMinimize?: () => void;
   onClose?: () => void;
   controls?: React.ReactNode;
+  options?: React.ReactNode;
 }
 
 /**
@@ -18940,7 +18941,7 @@ const DefaultErrorDisplay: React.FC<{ error: Error }> = ({ error }) => {
 /**
  * Window holds the data fields for a Window record.
  **/
-const Window: React.FC<WindowProps> = ({ id, children, onDoubleClick, className = "", isVisible = true, loading = false, error = null, skeleton, showControls = false, onOpenInNewWindow, onMaximize, onMinimize, onClose, controls }) => {
+const Window: React.FC<WindowProps> = ({ id, children, onDoubleClick, className = "", isVisible = true, loading = false, error = null, skeleton, showControls = false, onOpenInNewWindow, onMaximize, onMinimize, onClose, controls, options }) => {
   const [isMaximized, setIsMaximized] = React.useState(false);
   const [headerElement, setHeaderElement] = React.useState<HTMLElement | null>(null);
   const windowRef = React.useRef<HTMLDivElement>(null);
@@ -18995,7 +18996,16 @@ const Window: React.FC<WindowProps> = ({ id, children, onDoubleClick, className 
         {headerElement
           ? createPortal(<div className="absolute right-1 top-0 -bottom-px flex items-center z-panel bg-window border-t border-l border-element">{controlsContent}</div>, headerElement)
           : hasControls && <div className="absolute top-1 right-1 z-panel flex items-stretch gap-single">{controlsContent}</div>}
-        {error ? <DefaultErrorDisplay error={error} /> : loading && skeleton ? skeleton : children}
+        <div className="flex min-h-0 min-w-0 flex-1 flex-row">
+          <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
+            {error ? <DefaultErrorDisplay error={error} /> : loading && skeleton ? skeleton : children}
+          </div>
+          {options ? (
+            <aside data-slot="window-options-rail" className="border-element bg-window flex max-w-[11rem] shrink-0 flex-col gap-single overflow-y-auto border-l p-single">
+              {options}
+            </aside>
+          ) : null}
+        </div>
       </div>
     </LevelProvider>
   );
@@ -21102,7 +21112,26 @@ export interface UIWindowControl {
 }
 
 /**
- * Definition of a window kind with label, icon, component, and controls.
+ * 🧱 Declarative per-window option entries rendered top-to-bottom in the window options rail (right side).
+ **/
+export type UIWindowOption =
+  | { kind: "section"; id: string; title: string }
+  | { kind: "separator"; id: string }
+  | { kind: "toggle"; id: string; label?: string; pressed?: boolean; defaultPressed?: boolean; icon?: React.ReactNode; text?: string; onPressedChange?: (pressed: boolean) => void }
+  | { kind: "select"; id: string; label?: string; value?: string; defaultValue?: string; items: { id: string; value: string; label: string }[]; onValueChange?: (value: string) => void }
+  | { kind: "combobox"; id: string; label?: string; value?: string; placeholder?: string; options: { value: string; label: string }[]; onValueChange?: (value: string) => void }
+  | { kind: "button"; id: string; label?: string; text: string; icon?: React.ReactNode; onClick?: () => void }
+  | { kind: "buttonCycle"; id: string; label?: string; value?: string; items: { value: string; label: string; icon?: React.ReactNode; text?: string; id?: string }[]; onValueChange?: (value: string) => void }
+  | { kind: "input"; id: string; label?: string; value?: string; placeholder?: string; onLazyChange?: (value: string) => void }
+  | { kind: "textarea"; id: string; label?: string; value?: string; placeholder?: string; rows?: number; onLazyChange?: (value: string) => void }
+  | { kind: "checkbox"; id: string; label?: string; checked?: boolean; defaultChecked?: boolean; onCheckedChange?: (checked: boolean) => void }
+  | { kind: "radio"; id: string; label?: string; value: string; items: { value: string; label: string }[]; onChange?: (value: string) => void }
+  | { kind: "slider"; id: string; label?: string; value?: number; min?: number; max?: number; step?: number; onValueChange?: (value: number) => void }
+  | { kind: "number"; id: string; label?: string; value?: number; min?: number; max?: number; step?: number; onChange?: (value: number) => void }
+  | { kind: "color"; id: string; label?: string; value?: string; onChange?: (value: string) => void };
+
+/**
+ * Definition of a window kind with label, icon, component, controls, and options rail entries.
  * Each app registers the window kinds it can render.
  **/
 export interface UIWindowKindDefinition {
@@ -21111,6 +21140,7 @@ export interface UIWindowKindDefinition {
   icon?: React.ReactNode;
   component: React.ComponentType<any>;
   controls?: UIWindowControl[];
+  options?: UIWindowOption[];
   contextMenu?: ContextMenuItem[];
   variants?: {
     id: string;
@@ -21407,6 +21437,154 @@ const UIWindowControlsGroup: React.FC<{ controls: UIWindowControl[] }> = ({ cont
   </ActionGroup>
 );
 
+// #region 🪟WindowOptionsRail
+
+const UIWindowOptionRow: React.FC<{ optionId: string; label?: string; children: React.ReactNode }> = ({ optionId, label, children }) => (
+  <div data-slot="window-option-row" data-option-id={optionId} className="flex w-full min-w-0 flex-col gap-half">
+    {label ? <span className="text-muted-foreground truncate text-xs font-medium">{label}</span> : null}
+    <div className="min-w-0 w-full">{children}</div>
+  </div>
+);
+
+/**
+ * 🪟 Maps declarative `UIWindowOption` entries into controls stacked top-to-bottom for the window options rail.
+ **/
+export const UIWindowOptionsRail: React.FC<{ options: UIWindowOption[] }> = ({ options }) => (
+  <div data-slot="window-options-rail-inner" className="flex flex-col gap-single">
+    {options.map((option) => {
+      switch (option.kind) {
+        case "section":
+          return (
+            <div key={option.id} data-slot="window-option-section" className="text-muted-foreground border-element border-b pb-half text-[10px] font-semibold uppercase tracking-wide">
+              {option.title}
+            </div>
+          );
+        case "separator":
+          return <div key={option.id} data-slot="window-option-separator" className="bg-element my-half h-px w-full shrink-0" />;
+        case "toggle":
+          return (
+            <UIWindowOptionRow key={option.id} optionId={option.id} label={option.label}>
+              <Toggle id={option.id} pressed={option.pressed} defaultPressed={option.defaultPressed} onPressedChange={option.onPressedChange} icon={option.icon ?? <CheckIcon className="size-small" />} text={option.text} />
+            </UIWindowOptionRow>
+          );
+        case "select":
+          return (
+            <UIWindowOptionRow key={option.id} optionId={option.id} label={option.label}>
+              <Select id={option.id} value={option.value} defaultValue={option.defaultValue} onValueChange={option.onValueChange}>
+                <SelectTrigger className="h-medium w-full min-w-0" size="sm">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {option.items.map((item) => (
+                    <SelectItem key={item.id} value={item.value}>
+                      {item.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </UIWindowOptionRow>
+          );
+        case "combobox":
+          return (
+            <UIWindowOptionRow key={option.id} optionId={option.id} label={option.label}>
+              <Combobox id={option.id} value={option.value} options={option.options} placeholder={option.placeholder} onValueChange={option.onValueChange} className="w-full min-w-0" />
+            </UIWindowOptionRow>
+          );
+        case "button":
+          return (
+            <UIWindowOptionRow key={option.id} optionId={option.id} label={option.label}>
+              <Button id={option.id} text={option.text} icon={option.icon} onClick={option.onClick} />
+            </UIWindowOptionRow>
+          );
+        case "buttonCycle":
+          return (
+            <UIWindowOptionRow key={option.id} optionId={option.id} label={option.label}>
+              <ButtonCycle id={option.id} value={option.value} onValueChange={option.onValueChange} items={option.items} />
+            </UIWindowOptionRow>
+          );
+        case "input":
+          return (
+            <UIWindowOptionRow key={option.id} optionId={option.id} label={option.label}>
+              <Input id={option.id} lazy className="h-medium w-full min-w-0" value={option.value} placeholder={option.placeholder} onLazyChange={option.onLazyChange} />
+            </UIWindowOptionRow>
+          );
+        case "textarea":
+          return (
+            <UIWindowOptionRow key={option.id} optionId={option.id} label={option.label}>
+              <Textarea id={option.id} lazy className="min-h-[4rem] w-full min-w-0" value={option.value} placeholder={option.placeholder} rows={option.rows} onLazyChange={option.onLazyChange} />
+            </UIWindowOptionRow>
+          );
+        case "checkbox":
+          return (
+            <div key={option.id} data-slot="window-option-row" data-option-id={option.id} className="text-foreground flex w-full min-w-0 items-center gap-single text-xs">
+              <input
+                id={option.id}
+                type="checkbox"
+                className="border-element accent-foreground size-small shrink-0 rounded border"
+                {...(option.checked !== undefined ? { checked: option.checked } : { defaultChecked: option.defaultChecked })}
+                onChange={(event) => option.onCheckedChange?.(event.target.checked)}
+              />
+              {option.label ? (
+                <label htmlFor={option.id} className="cursor-pointer select-none">
+                  {option.label}
+                </label>
+              ) : null}
+            </div>
+          );
+        case "radio":
+          return (
+            <UIWindowOptionRow key={option.id} optionId={option.id} label={option.label}>
+              <div className="flex flex-col gap-half" role="radiogroup" aria-labelledby={option.id}>
+                {option.items.map((item) => (
+                  <button
+                    key={item.value}
+                    type="button"
+                    data-slot="window-option-radio-item"
+                    className={cn(
+                      "border-element hover:bg-hover-window rounded border px-single py-half text-left text-xs transition-colors",
+                      option.value === item.value && "bg-active-base text-active-foreground",
+                    )}
+                    onClick={() => option.onChange?.(item.value)}
+                  >
+                    {item.label}
+                  </button>
+                ))}
+              </div>
+            </UIWindowOptionRow>
+          );
+        case "slider": {
+          const min = option.min ?? 0;
+          const max = option.max ?? 100;
+          const v = option.value ?? min;
+          return (
+            <UIWindowOptionRow key={option.id} optionId={option.id} label={option.label}>
+              <Slider id={option.id} value={[v]} min={min} max={max} step={option.step} onValueChange={(vals) => option.onValueChange?.(vals[0] ?? min)} />
+            </UIWindowOptionRow>
+          );
+        }
+        case "number":
+          return (
+            <UIWindowOptionRow key={option.id} optionId={option.id} label={option.label}>
+              <Stepper id={option.id} value={option.value} min={option.min} max={option.max} step={option.step} onChange={option.onChange} />
+            </UIWindowOptionRow>
+          );
+        case "color":
+          return (
+            <UIWindowOptionRow key={option.id} optionId={option.id} label={option.label}>
+              <Input id={option.id} type="color" className="h-medium w-full min-w-0 cursor-pointer" value={option.value} onChange={(event) => option.onChange?.(event.target.value)} />
+            </UIWindowOptionRow>
+          );
+        default: {
+          const _exhaustive: never = option;
+          return _exhaustive;
+        }
+      }
+    })}
+  </div>
+);
+
+// #endregion 🪟WindowOptionsRail
+
 /**
  * Portal target for a golden-layout window kind.
  * Holds the DOM element, window kind definition, and a unique key.
@@ -21590,6 +21768,7 @@ const UICanvas: React.FC<{
             onMinimize={() => clickGoldenLayoutControl(".lm_maximise")}
             onClose={() => clickGoldenLayoutControl(".lm_close")}
             controls={portal.windowKind.controls ? <UIWindowControlsGroup controls={portal.windowKind.controls} /> : undefined}
+            options={portal.windowKind.options?.length ? <UIWindowOptionsRail options={portal.windowKind.options} /> : undefined}
           >
             <ContextMenu items={portal.windowKind.contextMenu}>
               <div className="flex min-h-0 min-w-0 flex-1 flex-col">
@@ -22704,7 +22883,7 @@ if (treeVitest) {
       expect(toggleMarkup).toContain("w-fit shrink-0");
     });
 
-    it("renders ring as a tree group header row and exposes the ring label", () => {
+    it("renders ring inside tree-aligned property row with label and fit control", () => {
       const ringMarkup = renderToStaticMarkup(
         <TreeContext.Provider value={{ level: 1, isLastAtLevel: [true], showLines: true, isTree: true, indentMultiplier: 1 }}>
           <TreeRowAlignmentContext.Provider value={true}>
@@ -22719,11 +22898,9 @@ if (treeVitest) {
 
       expect(ringMarkup).toContain('data-slot="tree-row-layout"');
       expect(ringMarkup).toContain('data-slot="tree-gutter"');
-      expect(ringMarkup).toContain('data-slot="tree-group-header-row"');
-      expect(ringMarkup).toContain('data-slot="tree-label"');
-      expect(ringMarkup).toContain('data-slot="tree-group-header-control"');
-      expect(ringMarkup).not.toContain('data-slot="property-row"');
-      expect(ringMarkup).not.toContain('data-slot="property-control"');
+      expect(ringMarkup).toContain('data-slot="property-row"');
+      expect(ringMarkup).toContain('data-slot="property-label"');
+      expect(ringMarkup).toContain('data-slot="property-control"');
       expect(ringMarkup).toContain('data-slot="ring"');
       expect(ringMarkup).toContain('data-detail-panel-control="fit"');
       expect(ringMarkup).toContain("w-fit shrink-0");
@@ -23215,6 +23392,32 @@ if (treeVitest) {
 
       expect(markup).not.toContain('data-panel="leftSidePanel"');
       expect(markup).not.toContain('data-panel="rightSidePanel"');
+    });
+  });
+
+  describe("window options rail", () => {
+    it("renders window options rail aside when options prop is set", () => {
+      const markup = renderToStaticMarkup(
+        <Window id="opt-win" options={<span data-testid="opt-slot">o</span>}>
+          <div>main-body</div>
+        </Window>,
+      );
+      expect(markup).toContain('data-slot="window-options-rail"');
+      expect(markup).toContain("main-body");
+    });
+
+    it("renders declarative UIWindowOptionsRail entries top-to-bottom", () => {
+      const opts: UIWindowOption[] = [
+        { id: "sec", kind: "section", title: "Group" },
+        { id: "sep", kind: "separator" },
+        { id: "btn", kind: "button", onClick: () => undefined, text: "Run" },
+        { checked: true, id: "chk", kind: "checkbox", label: "On", onCheckedChange: () => undefined },
+        { id: "rad", items: [{ label: "A", value: "a" }], kind: "radio", onChange: () => undefined, value: "a" },
+      ];
+      const markup = renderToStaticMarkup(<UIWindowOptionsRail options={opts} />);
+      expect(markup).toContain('data-slot="window-options-rail-inner"');
+      expect(markup).toContain('data-slot="window-option-section"');
+      expect(markup).toContain('data-slot="window-option-radio-item"');
     });
   });
 
