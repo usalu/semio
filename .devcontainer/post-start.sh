@@ -224,7 +224,7 @@ fi
 #endregion 🗄️Neo4jService
 #region 🧾Neo4jCypherPersistence
 ensure_neo4j_schema_files() {
-  local technologies=("semio" "elements" "coda" "reuse" "semio-metabolism")
+  local technologies=("semio" "elements" "coda" "reuse" "metabolism")
   local schema_dir="$WORKSPACE/.repo/🛂"
   mkdir -p "$schema_dir"
   for technology in "${technologies[@]}"; do
@@ -265,7 +265,7 @@ reload_neo4j_from_repo_cypher() {
     return 0
   }
   local imported=0
-  for technology in semio elements coda reuse semio-metabolism; do
+  for technology in semio elements coda reuse metabolism; do
     local schema_file="$WORKSPACE/.repo/🛂/$technology.cypher"
     local schema_uri
     schema_uri="$(neo4j_schema_cypher_uri "$technology")"

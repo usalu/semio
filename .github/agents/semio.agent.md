@@ -27,7 +27,7 @@ tools:
   browser,
   "repo/*",
   "neo4j-semio/*",
-  "neo4j-semio-metabolism/*",
+  "neo4j-metabolism/*",
   todo,
  ]
 ---

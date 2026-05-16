@@ -9,18 +9,18 @@ import type { FileLinter } from "./linter.ts";
 
 describe("Neo4j graph database registry", () => {
   test("joins name segments with hyphen", () => {
-    expect(joinNeo4jGraphDatabaseName(["semio", "metabolism"])).toBe("semio-metabolism");
+    expect(joinNeo4jGraphDatabaseName(["semio", "kit"])).toBe("semio-kit");
   });
 
   test("partitions argv into name segments and uvx passthrough", () => {
-    expect(partitionNeo4jGraphCliArgv(["semio", "metabolism", "--verbose"])).toEqual({
-      nameParts: ["semio", "metabolism"],
+    expect(partitionNeo4jGraphCliArgv(["metabolism", "--verbose"])).toEqual({
+      nameParts: ["metabolism"],
       passthrough: ["--verbose"],
     });
   });
 
-  test("includes semio-metabolism for MCP and generate export", () => {
-    expect(NEO4J_GRAPH_DATABASE_NAMES).toContain("semio-metabolism");
+  test("includes metabolism for MCP and generate export", () => {
+    expect(NEO4J_GRAPH_DATABASE_NAMES).toContain("metabolism");
   });
 });
 

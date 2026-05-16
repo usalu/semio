@@ -30,10 +30,10 @@
       "args": ["script.ts", "dev", "mcp", "neo4j", "reuse"],
       "disabled": false
     },
-    "neo4j-semio-metabolism": {
+    "neo4j-metabolism": {
       "type": "stdio",
       "command": "bun",
-      "args": ["script.ts", "dev", "mcp", "neo4j", "semio", "metabolism"],
+      "args": ["script.ts", "dev", "mcp", "neo4j", "metabolism"],
       "disabled": false
     }
   }

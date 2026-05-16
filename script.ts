@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 /**
- * 🧭 Monorepo command router: `bun ./script.ts <verb> [segments…]` (e.g. `script.ts dev`, `script.ts dev mcp`, `script.ts generate neo4j semio metabolism`).
+ * 🧭 Monorepo command router: `bun ./script.ts <verb> [segments…]` (e.g. `script.ts dev`, `script.ts dev mcp`, `script.ts generate neo4j metabolism`).
  */
 import { execFileSync, spawn, spawnSync } from "node:child_process";
 import { existsSync, linkSync, mkdirSync, chmodSync, chownSync, readFileSync, rmSync, symlinkSync, writeFileSync } from "node:fs";

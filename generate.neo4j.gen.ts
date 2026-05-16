@@ -1,5 +1,5 @@
 /**
- * 🛂 Neo4j → `.repo/🛂/<graph-database>.cypher` export (pure module; invoked from root `script.ts`). Graph id = `joinNeo4jGraphDatabaseName(parts)` (e.g. `["semio","metabolism"]` → `semio-metabolism`); MCP uses `… mcp neo4j … <parts…>` the same way.
+ * 🛂 Neo4j → `.repo/🛂/<graph-database>.cypher` export (pure module; invoked from root `script.ts`). Graph id = `joinNeo4jGraphDatabaseName(parts)` (e.g. `["a","b"]` → `a-b`, `["metabolism"]` → `metabolism`); MCP uses `… mcp neo4j … <parts…>` the same way.
  */
 import { spawnSync } from "node:child_process";
 import { existsSync, mkdirSync, readFileSync, unlinkSync, writeFileSync } from "node:fs";
@@ -13,7 +13,7 @@ export const NEO4J_GRAPH_DATABASE_SPECS = [
   ["elements"],
   ["coda"],
   ["reuse"],
-  ["semio", "metabolism"],
+  ["metabolism"],
 ] as const;
 
 /** 🔗Bolt user graph name from MCP/generate name segments (hyphen join). */

@@ -560,11 +560,11 @@ Native macOS and Linux use the same root router:
 bash ./script.sh setup
 ```
 
-IDE startup runs `bash ./script.sh start` (Windows: `.\script.ps1 start` or `.\start.windows.ps1`), which checks the native Neo4j Desktop `semio` DBMS at `bolt://localhost:7687`, verifies APOC, and attempts to create the graph databases `semio`, `elements`, `coda`, `reuse`, and `semio-metabolism` when the native DBMS edition supports multi-database administration. **Neo4j Community Edition allows only one standard user graph per DBMS** (often still named `neo4j` until you rename it). Those `CREATE DATABASE` calls do nothing useful on Community, so you will **not** see separate graphs like `semio-metabolism` in Desktop or Browser. Use **Neo4j Enterprise** (or another deployment that supports multiple standard databases) if you need isolated Bolt databases for each MCP entry.
+IDE startup runs `bash ./script.sh start` (Windows: `.\script.ps1 start` or `.\start.windows.ps1`), which checks the native Neo4j Desktop `semio` DBMS at `bolt://localhost:7687`, verifies APOC, and attempts to create the graph databases `semio`, `elements`, `coda`, `reuse`, and `metabolism` when the native DBMS edition supports multi-database administration. **Neo4j Community Edition allows only one standard user graph per DBMS** (often still named `neo4j` until you rename it). Those `CREATE DATABASE` calls do nothing useful on Community, so you will **not** see separate graphs like `metabolism` in Desktop or Browser. Use **Neo4j Enterprise** (or another deployment that supports multiple standard databases) if you need isolated Bolt databases for each MCP entry.
 
 **Where “databases” show up:** In Neo4j Browser, open your DBMS at `http://127.0.0.1:7474`, sign in, then use the **database dropdown** (next to the query editor). Only editions that support multi-database list more than one user graph besides `system`. To confirm what the server supports, run `SHOW DATABASES` while connected (Community typically shows `system` and one user database).
 
-**If you use Enterprise and still miss `semio-metabolism`:** Connect to the `system` database and run `CREATE DATABASE \`semio-metabolism\` IF NOT EXISTS;` then `START DATABASE \`semio-metabolism\` WAIT;` and refresh the database list.
+**If you use Enterprise and still miss `metabolism`:** Connect to the `system` database and run `CREATE DATABASE metabolism IF NOT EXISTS;` then `START DATABASE metabolism WAIT;` and refresh the database list.
 
 ## 🪄 [AI](AGENTS.md) [↑](#-development-)
 
