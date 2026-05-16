@@ -20,6 +20,10 @@ import {
 	createWindowLayout,
 	getLevelBgClass,
 	useElementsSurfaceChrome,
+	ToolbarDivider,
+	ToolbarGroup,
+	ToolbarItem,
+	ToolbarZone,
 	type ElementsSurfaceDevice,
 	type ElementsSurfaceTheme,
 	type FooterItem,
@@ -29,7 +33,7 @@ import {
 	type UIWindowKindDefinition,
 	type UIWindowLayout,
 } from "@elements/ui";
-import { ClipboardList, Library } from "lucide-react";
+import { BoxSelect, Circle, ClipboardList, Lasso, Library, Minus, Plus, Repeat2, Square } from "lucide-react";
 import {
 	createContext,
 	useCallback,
@@ -44,20 +48,27 @@ import {
 	type ReactElement,
 	type ReactNode,
 } from "react";
+import { createPortal } from "react-dom";
 import { createRoot } from "react-dom/client";
 
 import nakaginFixtureJson from "../../../../../.storybook/fixtures/nakagin-capsule-tower.board.json";
 import {
 	BOARD_CAMERA_ZOOM_MAX,
 	BOARD_CAMERA_ZOOM_MIN,
+	BOARD_FIXTURE_DRAG_KIND_PALETTE_NODE,
 	BOARD_FIXTURE_DRAG_V1_MIME,
 	encodeBoardFixtureForDragV1,
 	parseBoardFixtureV1,
+	type BoardFixtureDropDetail,
+	type BoardFixtureCircleNodeV1,
 	type BoardFixtureEdgeV1,
 	type BoardFixtureHandleV1,
 	type BoardFixtureNodeV1,
 	type BoardFixtureRectangleNodeV1,
 	type BoardFixtureV1,
+	type BoardSelectionMethod,
+	type BoardSelectionMode,
+	type BoardSelectionTarget,
 	type CameraState,
 } from "../index";
 import { BoardCanvas, Edge, Handle, Node, useBoardEvent } from "../index.tsx";
@@ -205,6 +216,8 @@ function selectionSeedForFixture(fixture: BoardFixtureV1): Record<BoardPlayPaneI
 interface BoardPlayShellValue {
 	fixture: BoardFixtureV1;
 	setFixture: (next: BoardFixtureV1) => void;
+	/** @emoji 🎯 Palette drags merge one node at the pointer; full fixtures replace the graph. */
+	handleCanvasFixtureDrop: (pane: BoardPlayPaneId, detail: BoardFixtureDropDetail) => void;
 	patchFixture: (updater: (prev: BoardFixtureV1) => BoardFixtureV1) => void;
 	activePaneId: BoardPlayPaneId;
 	setActivePaneId: (id: BoardPlayPaneId) => void;
@@ -212,6 +225,12 @@ interface BoardPlayShellValue {
 	setSelectionForPane: (pane: BoardPlayPaneId, ids: readonly string[]) => void;
 	remapIdInSelections: (from: string, to: string) => void;
 	camerasByPane: Record<BoardPlayPaneId, CameraState>;
+	boardSelectionMethod: BoardSelectionMethod;
+	setBoardSelectionMethod: (value: BoardSelectionMethod) => void;
+	boardSelectionMode: BoardSelectionMode;
+	setBoardSelectionMode: (value: BoardSelectionMode) => void;
+	boardSelectionTarget: BoardSelectionTarget;
+	setBoardSelectionTarget: (value: BoardSelectionTarget) => void;
 	/** @emoji 🗑️ Drops ids from the shared fixture after the canvas emits structural delete events. */
 	applyStructuralDelete: (kind: "edge" | "node", id: string) => void;
 }
@@ -226,6 +245,143 @@ function useBoardPlayShell(): BoardPlayShellValue {
 	return value;
 }
 // #endregion 🔖ShellContext
+
+// #region 🔖Toolbar
+function newBoardAuthoringId(prefix: string): string {
+	if (typeof globalThis.crypto !== "undefined" && typeof globalThis.crypto.randomUUID === "function") {
+		return `${prefix}-${globalThis.crypto.randomUUID()}`;
+	}
+	return `${prefix}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
+}
+
+function boardToolbarToggleClass(active: boolean): string {
+	return [
+		"inline-flex shrink-0 items-center justify-center rounded px-2 py-1 text-xs font-medium transition-colors",
+		active ? "bg-accent text-accent-foreground border border-element" : "text-muted-foreground hover:bg-hover-panel border border-transparent",
+	].join(" ");
+}
+
+/** @emoji 🧰 Sketchpad-style tools: marquee kind, merge mode, hit target, and circle or rectangle authoring at the active pane camera. */
+function BoardPlayToolbar(): ReactElement {
+	const {
+		activePaneId,
+		boardSelectionMethod,
+		boardSelectionMode,
+		boardSelectionTarget,
+		camerasByPane,
+		patchFixture,
+		setBoardSelectionMethod,
+		setBoardSelectionMode,
+		setBoardSelectionTarget,
+		setSelectionForPane,
+	} = useBoardPlayShell();
+
+	const camera = camerasByPane[activePaneId];
+
+	const appendCircle = useCallback(() => {
+		const id = newBoardAuthoringId("node");
+		const handleId = `${id}.h0`;
+		const node: BoardFixtureCircleNodeV1 = {
+			handles: [{ angle: 0, id: handleId }],
+			id,
+			radius: 44,
+			x: camera.x,
+			y: camera.y,
+		};
+		patchFixture((prev) => ({ ...prev, nodes: [...prev.nodes, node] }));
+		setSelectionForPane(activePaneId, [id]);
+	}, [activePaneId, camera.x, camera.y, patchFixture, setSelectionForPane]);
+
+	const appendRectangle = useCallback(() => {
+		const id = newBoardAuthoringId("node");
+		const handleId = `${id}.h0`;
+		const node: BoardFixtureRectangleNodeV1 = {
+			handles: [{ angle: 0, id: handleId }],
+			height: 80,
+			id,
+			shape: "rectangle",
+			width: 128,
+			x: camera.x,
+			y: camera.y,
+		};
+		patchFixture((prev) => ({ ...prev, nodes: [...prev.nodes, node] }));
+		setSelectionForPane(activePaneId, [id]);
+	}, [activePaneId, camera.x, camera.y, patchFixture, setSelectionForPane]);
+
+	return (
+		<div className="pointer-events-none flex w-full justify-center px-2 py-1">
+			<ToolbarZone className="pointer-events-auto max-w-full flex-wrap justify-center gap-[var(--toolbar-gap)] px-2">
+				<ToolbarGroup className="min-w-0 items-center gap-1">
+					<ToolbarItem>
+						<span className="text-muted-foreground pr-1 text-[10px] font-semibold uppercase tracking-wide">Select</span>
+					</ToolbarItem>
+					<ToolbarItem>
+						<button
+							type="button"
+							className={boardToolbarToggleClass(boardSelectionMethod === "rectangle")}
+							title="Rectangle selection"
+							onClick={() => setBoardSelectionMethod("rectangle")}
+						>
+							<BoxSelect className="size-4" aria-hidden />
+						</button>
+					</ToolbarItem>
+					<ToolbarItem>
+						<button type="button" className={boardToolbarToggleClass(boardSelectionMethod === "lasso")} title="Lasso selection" onClick={() => setBoardSelectionMethod("lasso")}>
+							<Lasso className="size-4" aria-hidden />
+						</button>
+					</ToolbarItem>
+					<ToolbarItem>
+						<button type="button" className={boardToolbarToggleClass(boardSelectionMode === "additive")} title="Additive" onClick={() => setBoardSelectionMode("additive")}>
+							<Plus className="size-4" aria-hidden />
+						</button>
+					</ToolbarItem>
+					<ToolbarItem>
+						<button type="button" className={boardToolbarToggleClass(boardSelectionMode === "subtractive")} title="Subtractive" onClick={() => setBoardSelectionMode("subtractive")}>
+							<Minus className="size-4" aria-hidden />
+						</button>
+					</ToolbarItem>
+					<ToolbarItem>
+						<button type="button" className={boardToolbarToggleClass(boardSelectionMode === "invertive")} title="Invertive" onClick={() => setBoardSelectionMode("invertive")}>
+							<Repeat2 className="size-4" aria-hidden />
+						</button>
+					</ToolbarItem>
+					<ToolbarItem>
+						<button type="button" className={boardToolbarToggleClass(boardSelectionTarget === "nodes")} title="Nodes only" onClick={() => setBoardSelectionTarget("nodes")}>
+							<span className="px-0.5">Nodes</span>
+						</button>
+					</ToolbarItem>
+					<ToolbarItem>
+						<button type="button" className={boardToolbarToggleClass(boardSelectionTarget === "edges")} title="Edges only" onClick={() => setBoardSelectionTarget("edges")}>
+							<span className="px-0.5">Edges</span>
+						</button>
+					</ToolbarItem>
+					<ToolbarItem>
+						<button type="button" className={boardToolbarToggleClass(boardSelectionTarget === "nodes&edges")} title="Nodes and edges" onClick={() => setBoardSelectionTarget("nodes&edges")}>
+							<span className="px-0.5">Both</span>
+						</button>
+					</ToolbarItem>
+				</ToolbarGroup>
+				<ToolbarDivider />
+				<ToolbarGroup className="min-w-0 items-center gap-1">
+					<ToolbarItem>
+						<span className="text-muted-foreground pr-1 text-[10px] font-semibold uppercase tracking-wide">Create</span>
+					</ToolbarItem>
+					<ToolbarItem>
+						<button type="button" className={boardToolbarToggleClass(false)} title="Circle" onClick={appendCircle}>
+							<Circle className="size-4" aria-hidden />
+						</button>
+					</ToolbarItem>
+					<ToolbarItem>
+						<button type="button" className={boardToolbarToggleClass(false)} title="Rectangle" onClick={appendRectangle}>
+							<Square className="size-4" aria-hidden />
+						</button>
+					</ToolbarItem>
+				</ToolbarGroup>
+			</ToolbarZone>
+		</div>
+	);
+}
+// #endregion 🔖Toolbar
 
 // #region 🔖Scene
 /** @emoji 🗼 Marker tree for {@link BoardCanvas} — must stay a Fragment of {@link Node}/{@link Edge} so {@link buildBoardSceneDescriptor} sees markers (custom wrappers are opaque to the static walk). */
@@ -355,13 +511,23 @@ function BoardPaneChrome({ children, paneId }: { children: ReactNode; paneId: Bo
 }
 
 function BoardOverviewPane(): ReactElement {
-	const { fixture, setFixture, camerasByPane, selectionByPane } = useBoardPlayShell();
+	const { boardSelectionMethod, boardSelectionMode, boardSelectionTarget, fixture, handleCanvasFixtureDrop, camerasByPane, selectionByPane } =
+		useBoardPlayShell();
 	const paneId: BoardPlayPaneId = "board-overview";
 	const camera = camerasByPane[paneId];
 	const selectedIds = selectionByPane[paneId];
 	return (
 		<BoardPaneChrome paneId={paneId}>
-			<BoardCanvas camera={camera} className="min-h-0 flex-1" contextMenu={boardPlayCanvasBackgroundMenu} fixtureDragDrop onFixtureDrop={setFixture}>
+			<BoardCanvas
+				camera={camera}
+				className="min-h-0 flex-1"
+				contextMenu={boardPlayCanvasBackgroundMenu}
+				fixtureDragDrop
+				onFixtureDrop={(d) => handleCanvasFixtureDrop(paneId, d)}
+				selectionMethod={boardSelectionMethod}
+				selectionMode={boardSelectionMode}
+				selectionTarget={boardSelectionTarget}
+			>
 				<BoardSelectionReporter paneId={paneId} />
 				<BoardStructuralDeleteReporter />
 				{nakaginBoardMarkers(fixture, selectedIds)}
@@ -371,13 +537,22 @@ function BoardOverviewPane(): ReactElement {
 }
 
 function BoardDetailPane(): ReactElement {
-	const { fixture, setFixture, camerasByPane, selectionByPane } = useBoardPlayShell();
+	const { boardSelectionMethod, boardSelectionMode, boardSelectionTarget, fixture, handleCanvasFixtureDrop, camerasByPane, selectionByPane } =
+		useBoardPlayShell();
 	const paneId: BoardPlayPaneId = "board-detail";
 	const camera = camerasByPane[paneId];
 	const selectedIds = selectionByPane[paneId];
 	return (
 		<BoardPaneChrome paneId={paneId}>
-			<BoardCanvas camera={camera} className="min-h-0 flex-1" fixtureDragDrop onFixtureDrop={setFixture}>
+			<BoardCanvas
+				camera={camera}
+				className="min-h-0 flex-1"
+				fixtureDragDrop
+				onFixtureDrop={(d) => handleCanvasFixtureDrop(paneId, d)}
+				selectionMethod={boardSelectionMethod}
+				selectionMode={boardSelectionMode}
+				selectionTarget={boardSelectionTarget}
+			>
 				<BoardSelectionReporter paneId={paneId} />
 				<BoardStructuralDeleteReporter />
 				{nakaginBoardMarkers(fixture, selectedIds)}
@@ -387,13 +562,22 @@ function BoardDetailPane(): ReactElement {
 }
 
 function BoardSelectionPane(): ReactElement {
-	const { fixture, setFixture, camerasByPane, selectionByPane } = useBoardPlayShell();
+	const { boardSelectionMethod, boardSelectionMode, boardSelectionTarget, fixture, handleCanvasFixtureDrop, camerasByPane, selectionByPane } =
+		useBoardPlayShell();
 	const paneId: BoardPlayPaneId = "board-selection";
 	const camera = camerasByPane[paneId];
 	const selectedIds = selectionByPane[paneId];
 	return (
 		<BoardPaneChrome paneId={paneId}>
-			<BoardCanvas camera={camera} className="min-h-0 flex-1" fixtureDragDrop onFixtureDrop={setFixture}>
+			<BoardCanvas
+				camera={camera}
+				className="min-h-0 flex-1"
+				fixtureDragDrop
+				onFixtureDrop={(d) => handleCanvasFixtureDrop(paneId, d)}
+				selectionMethod={boardSelectionMethod}
+				selectionMode={boardSelectionMode}
+				selectionTarget={boardSelectionTarget}
+			>
 				<BoardSelectionReporter paneId={paneId} />
 				<BoardStructuralDeleteReporter />
 				{nakaginBoardMarkers(fixture, selectedIds)}
@@ -404,6 +588,102 @@ function BoardSelectionPane(): ReactElement {
 // #endregion 🔖Panes
 
 // #region 🔖SidePanels
+// #region 🔖PaletteFixtureShelf
+const BOARD_PLAY_PALETTE_CIRCLE_DRAG_FIXTURE: BoardFixtureV1 =
+	parseBoardFixtureV1({
+		camera: { x: 0, y: 0, zoom: 1 },
+		edges: [],
+		meta: { boardFixtureDragKind: BOARD_FIXTURE_DRAG_KIND_PALETTE_NODE },
+		nodes: [{ handles: [{ angle: 0, id: "palette-seed-circle.h0" }], id: "palette-seed-circle", radius: 28, x: 0, y: 0 }],
+		schema: "elements.board.fixture/v1",
+	}) ?? (() => {
+		throw new Error("Board play: palette circle drag fixture failed validation.");
+	})();
+
+const BOARD_PLAY_PALETTE_RECTANGLE_DRAG_FIXTURE: BoardFixtureV1 =
+	parseBoardFixtureV1({
+		camera: { x: 0, y: 0, zoom: 1 },
+		edges: [],
+		meta: { boardFixtureDragKind: BOARD_FIXTURE_DRAG_KIND_PALETTE_NODE },
+		nodes: [
+			{
+				handles: [{ angle: 0, id: "palette-seed-rectangle.h0" }],
+				height: 48,
+				id: "palette-seed-rectangle",
+				shape: "rectangle",
+				width: 72,
+				x: 0,
+				y: 0,
+			},
+		],
+		schema: "elements.board.fixture/v1",
+	}) ?? (() => {
+		throw new Error("Board play: palette rectangle drag fixture failed validation.");
+	})();
+
+/** @emoji 🧩 When {@link BOARD_FIXTURE_DRAG_KIND_PALETTE_NODE} is on meta, returns one node placed at the drop world point; else null so the scene should be replaced. */
+function mergePaletteNodeFromDrop(detail: BoardFixtureDropDetail): BoardFixtureNodeV1 | null {
+	if (detail.fixture.meta?.boardFixtureDragKind !== BOARD_FIXTURE_DRAG_KIND_PALETTE_NODE) {
+		return null;
+	}
+	const template = detail.fixture.nodes[0];
+	if (!template) {
+		return null;
+	}
+	const newId = newBoardAuthoringId("node");
+	return {
+		...template,
+		handles: template.handles.map((h, i) => ({ ...h, id: `${newId}.h${i}` })),
+		id: newId,
+		x: detail.world.x,
+		y: detail.world.y,
+	};
+}
+
+/** @emoji 👻 Draggable chip with drag image rendered under `document.body` so host panel overflow does not clip the preview. */
+function BoardFixturePaletteDraggable(props: { fixture: BoardFixtureV1; label: string; preview: ReactNode }): ReactElement {
+	const { fixture: dragFixture, label, preview } = props;
+	const ghostRef = useRef<HTMLDivElement>(null);
+	const onDragStart = useCallback(
+		(e: DragEvent<HTMLDivElement>) => {
+			e.dataTransfer.setData(BOARD_FIXTURE_DRAG_V1_MIME, encodeBoardFixtureForDragV1(dragFixture));
+			e.dataTransfer.effectAllowed = "copy";
+			const ghost = ghostRef.current;
+			if (ghost) {
+				const { height, width } = ghost.getBoundingClientRect();
+				e.dataTransfer.setDragImage(ghost, width / 2, height / 2);
+			}
+		},
+		[dragFixture],
+	);
+	return (
+		<>
+			{typeof document !== "undefined"
+				? createPortal(
+						<div
+							aria-hidden
+							className="border-element bg-muted/40 pointer-events-none fixed z-[2147483000] flex items-center justify-center rounded-lg border shadow-sm"
+							ref={ghostRef}
+							style={{ height: 52, left: -9999, top: 0, width: 52 }}
+						>
+							{preview}
+						</div>,
+						document.body,
+					)
+				: null}
+			<div
+				className="border-element bg-background flex h-14 w-14 shrink-0 cursor-grab items-center justify-center rounded-lg border active:cursor-grabbing"
+				draggable
+				onDragStart={onDragStart}
+				title={label}
+			>
+				{preview}
+			</div>
+		</>
+	);
+}
+// #endregion 🔖PaletteFixtureShelf
+
 /** @emoji 📥 Left rail: drag the active graph onto a board pane (in-app MIME payload, not filesystem JSON files). */
 function BoardFixtureLibraryPanel(): ReactElement {
 	const { fixture } = useBoardPlayShell();
@@ -419,6 +699,21 @@ function BoardFixtureLibraryPanel(): ReactElement {
 	return (
 		<div className="flex h-full min-h-0 flex-col gap-3 p-3 text-sm">
 			<div className="text-muted-foreground text-xs uppercase tracking-wide">Fixture shelf</div>
+			<div className="flex flex-col gap-2">
+				<div className="text-muted-foreground text-[11px] uppercase tracking-wide">Shapes</div>
+				<div className="flex flex-wrap gap-2">
+					<BoardFixturePaletteDraggable
+						fixture={BOARD_PLAY_PALETTE_CIRCLE_DRAG_FIXTURE}
+						label="Drag circle onto the board"
+						preview={<div className="border-primary size-9 shrink-0 rounded-full border-2 bg-accent/30" />}
+					/>
+					<BoardFixturePaletteDraggable
+						fixture={BOARD_PLAY_PALETTE_RECTANGLE_DRAG_FIXTURE}
+						label="Drag rectangle onto the board"
+						preview={<div className="border-primary h-8 w-11 shrink-0 rounded-sm border-2 bg-accent/30" />}
+					/>
+				</div>
+			</div>
 			<div
 				className="border-element bg-muted/30 flex min-h-[120px] cursor-grab flex-col justify-center gap-2 rounded-md border p-4 active:cursor-grabbing"
 				draggable
@@ -1070,7 +1365,7 @@ function BoardSelectionInspectorPanel(): ReactElement {
 		if (sections.length === 0) {
 			sections.push({
 				content: (
-					<div className="text-amber-300 px-1 py-2 font-mono text-xs">
+					<div className="px-1 py-2 font-mono text-xs" style={{ color: "var(--warning-foreground)" }}>
 						Unknown ids: {ids.join(", ")}
 					</div>
 				),
@@ -1191,6 +1486,9 @@ function BoardPlayInner(): ReactElement {
 	const [theme, setTheme] = useState<ElementsSurfaceTheme>(readTheme);
 	const [device, setDevice] = useState<ElementsSurfaceDevice>(readDevice);
 	const [expertise, setExpertise] = useState<Expertise>(readExpertise);
+	const [boardSelectionMethod, setBoardSelectionMethod] = useState<BoardSelectionMethod>("rectangle");
+	const [boardSelectionMode, setBoardSelectionMode] = useState<BoardSelectionMode>("invertive");
+	const [boardSelectionTarget, setBoardSelectionTarget] = useState<BoardSelectionTarget>("nodes&edges");
 
 	const { mobile } = useElementsSurfaceChrome({ theme, device, expertise });
 
@@ -1290,6 +1588,16 @@ function BoardPlayInner(): ReactElement {
 		setSelectionByPane((prev) => ({ ...prev, [pane]: new Set(ids) }));
 	}, []);
 
+	const handleCanvasFixtureDrop = useCallback((pane: BoardPlayPaneId, detail: BoardFixtureDropDetail) => {
+		const merged = mergePaletteNodeFromDrop(detail);
+		if (merged) {
+			patchFixture((prev) => ({ ...prev, nodes: [...prev.nodes, merged] }));
+			setSelectionForPane(pane, [merged.id]);
+			return;
+		}
+		setFixture(detail.fixture);
+	}, [patchFixture, setFixture, setSelectionForPane]);
+
 	const remapIdInSelections = useCallback((from: string, to: string) => {
 		if (from === to) {
 			return;
@@ -1310,16 +1618,37 @@ function BoardPlayInner(): ReactElement {
 		() => ({
 			activePaneId,
 			applyStructuralDelete,
+			boardSelectionMethod,
+			boardSelectionMode,
+			boardSelectionTarget,
 			camerasByPane,
 			fixture,
+			handleCanvasFixtureDrop,
 			patchFixture,
 			remapIdInSelections,
 			setActivePaneId,
+			setBoardSelectionMethod,
+			setBoardSelectionMode,
+			setBoardSelectionTarget,
 			setFixture,
 			selectionByPane,
 			setSelectionForPane,
 		}),
-		[activePaneId, applyStructuralDelete, camerasByPane, fixture, patchFixture, remapIdInSelections, setFixture, selectionByPane, setSelectionForPane],
+		[
+			activePaneId,
+			applyStructuralDelete,
+			boardSelectionMethod,
+			boardSelectionMode,
+			boardSelectionTarget,
+			camerasByPane,
+			fixture,
+			handleCanvasFixtureDrop,
+			patchFixture,
+			remapIdInSelections,
+			setFixture,
+			selectionByPane,
+			setSelectionForPane,
+		],
 	);
 
 	const boardPlayApp: UIAppConfig = useMemo(
@@ -1338,6 +1667,7 @@ function BoardPlayInner(): ReactElement {
 			rightPanelTabs: [
 				{ content: () => <BoardSelectionInspectorPanel />, icon: ClipboardList, id: "board-play-inspector", order: 0 },
 			],
+			toolbarContent: <BoardPlayToolbar />,
 			windowKinds: boardWindowKinds,
 		}),
 		[setActivePaneId],

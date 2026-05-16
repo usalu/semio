@@ -26,5 +26,8 @@ export default defineConfig({
     fs: {
       allow: [repoRoot],
     },
+    watch: {
+      ignored: ["../rs/**"],
+    },
   },
 });

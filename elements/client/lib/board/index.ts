@@ -158,7 +158,7 @@ export interface BoardEventMap {
 	contextmenu: { clientX: number; clientY: number; id: string | null; x: number; y: number };
 	edgeCreate: { id: string; from: string; to: string };
 	edgeDelete: { id: string };
-	fixtureDrop: BoardFixtureV1;
+	fixtureDrop: BoardFixtureDropDetail;
 	hover: { id: string | null };
 	invalidate: undefined;
 	nodeDelete: { id: string };
@@ -291,14 +291,147 @@ const GRID_WORLD_STEP = 96;
 const GRID_VISIBLE_MIN_ZOOM = 18 / GRID_WORLD_STEP;
 const HANDLE_DRAW_MIN_ZOOM = 0.45;
 
-const DEFAULT_STYLES: Record<string, BoardStyle> = {
-	edge: { stroke: "#475569", strokeWidth: 2 },
-	"edge.selected": { stroke: "#0f766e", strokeWidth: 3 },
-	handle: { fill: "#ffffff", stroke: "#0f172a", strokeWidth: 2 },
-	"handle.selected": { fill: "#14b8a6", stroke: "#0f172a", strokeWidth: 2 },
-	node: { fill: "#e2e8f0", stroke: "#0f172a", strokeWidth: 2 },
-	"node.selected": { fill: "#99f6e4", stroke: "#0f766e", strokeWidth: 3 },
+/** @emoji 🎨 Offline / headless paint defaults aligned with `elements/core/styling/tokens.json` `board_vello_canvas` sRGB (Vello host defaults before DOM tokens sync). */
+const BOARD_STYLES_HEADLESS_FALLBACK: Record<string, BoardStyle> = {
+	edge: { stroke: "#7b827d", strokeWidth: 2 },
+	"edge.selected": { stroke: "#ff344f", strokeWidth: 3 },
+	handle: { fill: "#f7f3e3", stroke: "#001117", strokeWidth: 2 },
+	"handle.selected": { fill: "#ff344f", stroke: "#001117", strokeWidth: 2 },
+	node: { fill: "#eeeadb", stroke: "#001117", strokeWidth: 2 },
+	"node.selected": { fill: "#f0c8cc", stroke: "#ff344f", strokeWidth: 3 },
 };
+
+const DEFAULT_STYLES: Record<string, BoardStyle> = BOARD_STYLES_HEADLESS_FALLBACK;
+
+//#region 🎨ElementsUiBoardPaint
+/** @emoji 🎨 Resolves Elements semantic CSS (`elements.css` / `@theme`) for board canvas + Vello: only `var(--…)` tokens wired here — no ad-hoc palettes. */
+const BOARD_VELLO_THEME_FALLBACK_RGBA = {
+	rasterClear: [247, 243, 227, 255] as [number, number, number, number],
+	gridMinorStroke: [123, 130, 125, 56] as [number, number, number, number],
+	edgeStroke: [123, 130, 125, 255] as [number, number, number, number],
+	edgeStrokeSelected: [255, 52, 79, 255] as [number, number, number, number],
+	nodeFill: [238, 234, 219, 255] as [number, number, number, number],
+	nodeStroke: [0, 17, 23, 255] as [number, number, number, number],
+	nodeFillSelected: [240, 200, 204, 255] as [number, number, number, number],
+	nodeStrokeSelected: [255, 52, 79, 255] as [number, number, number, number],
+	handleFill: [247, 243, 227, 255] as [number, number, number, number],
+	handleStroke: [0, 17, 23, 255] as [number, number, number, number],
+	handleFillSelected: [255, 52, 79, 255] as [number, number, number, number],
+	handleStrokeSelected: [255, 52, 79, 255] as [number, number, number, number],
+	selectionPreviewFill: [255, 52, 79, 36] as [number, number, number, number],
+	selectionPreviewStroke: [255, 52, 79, 191] as [number, number, number, number],
+};
+
+function boardParseCssColorToRgba8888(css: string, fallback: [number, number, number, number]): [number, number, number, number] {
+	const m = css.match(/rgba?\(\s*([\d.]+)\s*,\s*([\d.]+)\s*,\s*([\d.]+)(?:\s*,\s*([\d.]+%?)\s*)?\)/u);
+	if (!m) {
+		return fallback;
+	}
+	const r = Math.min(255, Math.max(0, Math.round(Number(m[1]))));
+	const g = Math.min(255, Math.max(0, Math.round(Number(m[2]))));
+	const b = Math.min(255, Math.max(0, Math.round(Number(m[3]))));
+	let a = 255;
+	if (m[4] !== undefined && m[4] !== "") {
+		const raw = m[4];
+		if (raw.endsWith("%")) {
+			a = Math.min(255, Math.max(0, Math.round((Number(raw.slice(0, -1)) / 100) * 255)));
+		} else {
+			const n = Number(raw);
+			a = Math.min(255, Math.max(0, Math.round(n <= 1 ? n * 255 : n)));
+		}
+	}
+	return [r, g, b, a];
+}
+
+function boardProbeCssComputed(property: "color" | "backgroundColor", value: string): string {
+	if (typeof document === "undefined") {
+		return "";
+	}
+	const el = document.createElement("span");
+	const key = property === "color" ? "color" : "background-color";
+	el.setAttribute("style", `${key}:${value};position:absolute;left:0;top:0;visibility:hidden;pointer-events:none`);
+	document.documentElement.appendChild(el);
+	const out = getComputedStyle(el)[property];
+	el.remove();
+	return out;
+}
+
+function boardDefaultStylesFromElementsUiTokens(): Record<string, BoardStyle> {
+	const f = BOARD_STYLES_HEADLESS_FALLBACK;
+	const c = (prop: "color" | "backgroundColor", expr: string, fb: string): string => {
+		const raw = boardProbeCssComputed(prop, expr);
+		if (!raw || raw === "rgba(0, 0, 0, 0)") {
+			return fb;
+		}
+		return raw;
+	};
+	return {
+		edge: { stroke: c("color", "var(--color-muted-foreground)", f.edge.stroke ?? "#7b827d"), strokeWidth: 2 },
+		"edge.selected": { stroke: c("color", "var(--color-accent)", f["edge.selected"].stroke ?? "#ff344f"), strokeWidth: 3 },
+		handle: {
+			fill: c("backgroundColor", "var(--color-base)", f.handle.fill ?? "#f7f3e3"),
+			stroke: c("color", "var(--color-element)", f.handle.stroke ?? "#001117"),
+			strokeWidth: 2,
+		},
+		"handle.selected": {
+			fill: c("backgroundColor", "var(--color-accent)", f["handle.selected"].fill ?? "#ff344f"),
+			stroke: c("color", "var(--color-foreground)", f["handle.selected"].stroke ?? "#001117"),
+			strokeWidth: 2,
+		},
+		node: {
+			fill: c("backgroundColor", "var(--color-panel)", f.node.fill ?? "#eeeadb"),
+			stroke: c("color", "var(--color-element)", f.node.stroke ?? "#001117"),
+			strokeWidth: 2,
+		},
+		"node.selected": {
+			fill: c("backgroundColor", "var(--color-selected-added)", f["node.selected"].fill ?? "#f0c8cc"),
+			stroke: c("color", "var(--color-accent)", f["node.selected"].stroke ?? "#ff344f"),
+			strokeWidth: 3,
+		},
+	};
+}
+
+function serializeElementsBoardVelloThemeJson(): string {
+	const fb = BOARD_VELLO_THEME_FALLBACK_RGBA;
+	const pc = (prop: "color" | "backgroundColor", expr: string, fall: [number, number, number, number]): number[] => {
+		const raw = boardProbeCssComputed(prop, expr);
+		return [...boardParseCssColorToRgba8888(raw, fall)];
+	};
+	const payload = {
+		rasterClear: pc("backgroundColor", "var(--base)", fb.rasterClear),
+		gridMinorStroke: (() => {
+			const border = boardParseCssColorToRgba8888(boardProbeCssComputed("color", "var(--color-border)"), [
+				fb.gridMinorStroke[0],
+				fb.gridMinorStroke[1],
+				fb.gridMinorStroke[2],
+				255,
+			]);
+			return [border[0], border[1], border[2], fb.gridMinorStroke[3]];
+		})(),
+		edgeStroke: pc("color", "var(--color-muted-foreground)", fb.edgeStroke),
+		edgeStrokeSelected: pc("color", "var(--color-accent)", fb.edgeStrokeSelected),
+		nodeFill: pc("backgroundColor", "var(--color-panel)", fb.nodeFill),
+		nodeStroke: pc("color", "var(--color-element)", fb.nodeStroke),
+		nodeFillSelected: pc("backgroundColor", "var(--color-selected-added)", fb.nodeFillSelected),
+		nodeStrokeSelected: pc("color", "var(--color-accent)", fb.nodeStrokeSelected),
+		handleFill: pc("backgroundColor", "var(--color-base)", fb.handleFill),
+		handleStroke: pc("color", "var(--color-element)", fb.handleStroke),
+		handleFillSelected: pc("backgroundColor", "var(--color-accent)", fb.handleFillSelected),
+		handleStrokeSelected: pc("color", "var(--color-accent)", fb.handleStrokeSelected),
+		selectionPreviewFill: pc(
+			"backgroundColor",
+			"color-mix(in oklab, var(--color-accent) 14%, transparent)",
+			fb.selectionPreviewFill,
+		),
+		selectionPreviewStroke: pc(
+			"backgroundColor",
+			"color-mix(in oklab, var(--color-accent) 75%, transparent)",
+			fb.selectionPreviewStroke,
+		),
+	};
+	return JSON.stringify(payload);
+}
+//#endregion 🎨ElementsUiBoardPaint
 
 /** @emoji 🧭 Caption anchor inside the node box (compass, origin at node center). */
 export const BOARD_NODE_TEXT_ALIGNMENTS = ["c", "e", "n", "ne", "nw", "s", "se", "sw", "w"] as const;
@@ -591,6 +724,16 @@ export function parseBoardFixtureV1(raw: unknown): BoardFixtureV1 | null {
 
 /** @emoji 📌 MIME for in-app board fixture drags (not host filesystem file drops). */
 export const BOARD_FIXTURE_DRAG_V1_MIME = "application/x-elements-board-fixture-v1";
+
+/** @emoji 🧩 `BoardFixtureV1.meta.boardFixtureDragKind` — shelf palette drops merge one node at the pointer; any other payload replaces the scene. */
+export const BOARD_FIXTURE_DRAG_KIND_PALETTE_NODE = "palette-node";
+
+/** @emoji 📍 Payload for board canvas fixture drops: scene plus pointer in canvas CSS space and mapped world coordinates. */
+export interface BoardFixtureDropDetail {
+	fixture: BoardFixtureV1;
+	screen: { x: number; y: number };
+	world: { x: number; y: number };
+}
 
 /** @emoji 📦 Serializes a validated fixture for {@link BOARD_FIXTURE_DRAG_V1_MIME}. */
 export function encodeBoardFixtureForDragV1(fixture: BoardFixtureV1): string {
@@ -1172,6 +1315,7 @@ export class BoardRenderer {
 	private gpuSurfacePresentedFrame = false;
 	private gpuSurfaceUnavailable = false;
 	private lastPushedDescriptorJson: string | null = null;
+	private lastVelloThemeJson = "";
 	private lastWasAreaSelectDrag = false;
 	private lastNodeAuthoringPositionById = new Map<string, { x: number; y: number }>();
 	private suppressSceneToWasmPush = false;
@@ -1200,6 +1344,7 @@ export class BoardRenderer {
 			const initialHeight = this.canvas.clientHeight || this.canvas.height || 1;
 			this.setSize(initialWidth, initialHeight, globalThis.devicePixelRatio || 1);
 		}
+		this.syncBoardAppearanceFromDocument();
 	}
 
 	readonly renderMode: RenderMode;
@@ -1502,6 +1647,28 @@ export class BoardRenderer {
 		return JSON.stringify({ nodes, handles, edges });
 	}
 
+	private syncBoardAppearanceFromDocument(): void {
+		if (this.renderMode === "headless-test") {
+			return;
+		}
+		if (typeof document === "undefined") {
+			return;
+		}
+		try {
+			const json = serializeElementsBoardVelloThemeJson();
+			if (json !== this.lastVelloThemeJson) {
+				this.lastVelloThemeJson = json;
+				this.session.setVelloThemeJson(json);
+			}
+		} catch {
+			this.lastVelloThemeJson = "";
+		}
+		const styles = boardDefaultStylesFromElementsUiTokens();
+		for (const [key, value] of Object.entries(styles)) {
+			this.styles.set(key, value);
+		}
+	}
+
 	private pushSceneToWasmDriver(): void {
 		if (this.suppressSceneToWasmPush) {
 			return;
@@ -1522,6 +1689,7 @@ export class BoardRenderer {
 			}
 		}
 		this.session.setCamera(this.camera.x, this.camera.y, this.camera.zoom);
+		this.syncBoardAppearanceFromDocument();
 		this.session.drainEventsJson();
 	}
 
@@ -1656,7 +1824,7 @@ export class BoardRenderer {
 			const boxCenter = this.worldToScreen({ x: node.x, y: node.y });
 			const style = this.getStyle(node.style, node.selected ? "node.selected" : "node");
 			const family = node.textFontFamily;
-			ctx.fillStyle = style.stroke ?? "#0f172a";
+			ctx.fillStyle = style.stroke ?? BOARD_STYLES_HEADLESS_FALLBACK.node.stroke ?? "#001117";
 			if (node.textAutofit) {
 				const fontPx = boardFitTextFontPx(ctx, node.text, maxW, maxH, 4, 512, family);
 				ctx.font = boardBuildCanvasFontSpec(fontPx, family);
@@ -2241,6 +2409,53 @@ if (boardVitest) {
 			canvas.dispatchEvent(new MouseEvent("pointerup", { bubbles: true, button: 0, clientX: leftDragEnd.x, clientY: leftDragEnd.y }));
 			expect(renderer.selection.getSnapshot().ids).toEqual(["node"]);
 
+			renderer.dispose();
+		});
+
+		it("clears selection when clicking the background without dragging", () => {
+			const { canvas } = createMockCanvas();
+			const renderer = new BoardRenderer({ canvas, renderMode: "headless-test" });
+			const node = new Node({ draggable: true, id: "solo", radius: 36, x: 0, y: 0 });
+			renderer.scene.add(node);
+			renderer.render();
+
+			const onNode = renderer.worldToScreen({ x: 0, y: 0 });
+			canvas.dispatchEvent(new MouseEvent("pointerdown", { bubbles: true, button: 0, clientX: onNode.x, clientY: onNode.y }));
+			canvas.dispatchEvent(new MouseEvent("pointerup", { bubbles: true, button: 0, clientX: onNode.x, clientY: onNode.y }));
+			expect(renderer.selection.getSnapshot().ids).toEqual(["solo"]);
+
+			const background = renderer.worldToScreen({ x: 900, y: 900 });
+			canvas.dispatchEvent(new MouseEvent("pointerdown", { bubbles: true, button: 0, clientX: background.x, clientY: background.y }));
+			canvas.dispatchEvent(new MouseEvent("pointerup", { bubbles: true, button: 0, clientX: background.x, clientY: background.y }));
+
+			expect(renderer.selection.getSnapshot().ids).toEqual([]);
+			renderer.dispose();
+		});
+
+		it("includes handles in rectangle selection with nodes and edges target", () => {
+			const { canvas } = createMockCanvas();
+			const renderer = new BoardRenderer({
+				canvas,
+				renderMode: "headless-test",
+				selection: { method: "rectangle", mode: "invertive", target: "nodes&edges" },
+			});
+			const sourceNode = new Node({ id: "source", radius: 40, x: 0, y: 0 });
+			const targetNode = new Node({ id: "target", radius: 40, x: 200, y: 0 });
+			const sourceHandle = new Handle({ angle: 0, id: "source.out", node: sourceNode });
+			const targetHandle = new Handle({ angle: Math.PI, id: "target.in", node: targetNode });
+			const edge = new Edge({ from: sourceHandle, id: "edge-1", to: targetHandle });
+			renderer.scene.add(sourceNode).add(targetNode).add(edge);
+			renderer.render();
+
+			const s0 = renderer.worldToScreen({ x: -90, y: -70 });
+			const s1 = renderer.worldToScreen({ x: 90, y: 70 });
+			canvas.dispatchEvent(new MouseEvent("pointerdown", { bubbles: true, button: 0, clientX: s0.x, clientY: s0.y }));
+			canvas.dispatchEvent(new MouseEvent("pointermove", { bubbles: true, button: 0, clientX: s1.x, clientY: s1.y }));
+			canvas.dispatchEvent(new MouseEvent("pointerup", { bubbles: true, button: 0, clientX: s1.x, clientY: s1.y }));
+
+			const ids = renderer.selection.getSnapshot().ids;
+			expect(ids.includes("source")).toBe(true);
+			expect(ids.includes("source.out")).toBe(true);
 			renderer.dispose();
 		});
 

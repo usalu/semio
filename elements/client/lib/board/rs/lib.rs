@@ -419,6 +419,7 @@ mod board_host {
 	const HANDLE_HIT_TOLERANCE_PX: f64 = 10.0;
 	const HANDLE_DRAW_MIN_ZOOM: f64 = 0.45;
 	const SELECTION_LASSO_MIN_POINT_DISTANCE_PX: f64 = 3.0;
+	const SELECTION_CLICK_MAX_DISTANCE_PX: f64 = 4.0;
 	pub const BOARD_CAMERA_ZOOM_MIN: f64 = 0.05;
 	pub const BOARD_CAMERA_ZOOM_MAX: f64 = 32.0;
 
@@ -506,6 +507,45 @@ mod board_host {
 		}
 	}
 
+	#[derive(Clone, Copy, Debug)]
+	pub struct VelloThemePalette {
+		pub raster_clear: Color,
+		pub grid_minor_stroke: Color,
+		pub edge_stroke: Color,
+		pub edge_stroke_selected: Color,
+		pub node_fill: Color,
+		pub node_stroke: Color,
+		pub node_fill_selected: Color,
+		pub node_stroke_selected: Color,
+		pub handle_fill: Color,
+		pub handle_stroke: Color,
+		pub handle_fill_selected: Color,
+		pub handle_stroke_selected: Color,
+		pub selection_preview_fill: Color,
+		pub selection_preview_stroke: Color,
+	}
+
+	impl Default for VelloThemePalette {
+		fn default() -> Self {
+			Self {
+				raster_clear: board_palette::RASTER_CLEAR,
+				grid_minor_stroke: board_palette::GRID_MINOR_STROKE,
+				edge_stroke: board_palette::EDGE_STROKE,
+				edge_stroke_selected: board_palette::EDGE_STROKE_SELECTED,
+				node_fill: board_palette::NODE_FILL,
+				node_stroke: board_palette::NODE_STROKE,
+				node_fill_selected: board_palette::NODE_FILL_SELECTED,
+				node_stroke_selected: board_palette::NODE_STROKE_SELECTED,
+				handle_fill: board_palette::HANDLE_FILL,
+				handle_stroke: board_palette::HANDLE_STROKE,
+				handle_fill_selected: board_palette::HANDLE_FILL_SELECTED,
+				handle_stroke_selected: board_palette::HANDLE_STROKE_SELECTED,
+				selection_preview_fill: board_palette::SELECTION_PREVIEW_FILL,
+				selection_preview_stroke: board_palette::SELECTION_PREVIEW_STROKE,
+			}
+		}
+	}
+
 	#[derive(Clone, Debug)]
 	pub struct BoardHost {
 		pub camera: Camera,
@@ -523,6 +563,7 @@ mod board_host {
 		pub events: Vec<serde_json::Value>,
 		/// Screen-space preview polygon (CSS pixels) while area-selecting; cleared when idle.
 		pub selection_screen_preview: Option<Vec<Point>>,
+		pub vello_theme: VelloThemePalette,
 	}
 
 	impl Default for Camera {
@@ -552,11 +593,20 @@ mod board_host {
 				world_raster_tiling: "none".into(),
 				events: Vec::new(),
 				selection_screen_preview: None,
+				vello_theme: VelloThemePalette::default(),
 			}
 		}
 	}
 
 	impl BoardHost {
+		fn color_from_json_rgba8(arr: &[serde_json::Value]) -> Option<Color> {
+			let r = u8::try_from(arr.get(0)?.as_u64().unwrap_or(0).min(255)).ok()?;
+			let g = u8::try_from(arr.get(1)?.as_u64().unwrap_or(0).min(255)).ok()?;
+			let b = u8::try_from(arr.get(2)?.as_u64().unwrap_or(0).min(255)).ok()?;
+			let a = u8::try_from(arr.get(3).and_then(|x| x.as_u64()).unwrap_or(255).min(255)).ok()?;
+			Some(Color::from_rgba8(r, g, b, a))
+		}
+
 		pub fn new() -> Self {
 			Self::default()
 		}
@@ -589,6 +639,83 @@ mod board_host {
 
 		pub fn set_selection_screen_preview(&mut self, points: Option<Vec<Point>>) {
 			self.selection_screen_preview = points;
+		}
+
+		pub fn set_vello_theme_from_json(&mut self, json: &str) -> Result<(), String> {
+			let v: serde_json::Value = serde_json::from_str(json).map_err(|e| e.to_string())?;
+			let mut next = self.vello_theme;
+			if let Some(arr) = v.get("rasterClear").and_then(|x| x.as_array()) {
+				if let Some(c) = Self::color_from_json_rgba8(arr) {
+					next.raster_clear = c;
+				}
+			}
+			if let Some(arr) = v.get("gridMinorStroke").and_then(|x| x.as_array()) {
+				if let Some(c) = Self::color_from_json_rgba8(arr) {
+					next.grid_minor_stroke = c;
+				}
+			}
+			if let Some(arr) = v.get("edgeStroke").and_then(|x| x.as_array()) {
+				if let Some(c) = Self::color_from_json_rgba8(arr) {
+					next.edge_stroke = c;
+				}
+			}
+			if let Some(arr) = v.get("edgeStrokeSelected").and_then(|x| x.as_array()) {
+				if let Some(c) = Self::color_from_json_rgba8(arr) {
+					next.edge_stroke_selected = c;
+				}
+			}
+			if let Some(arr) = v.get("nodeFill").and_then(|x| x.as_array()) {
+				if let Some(c) = Self::color_from_json_rgba8(arr) {
+					next.node_fill = c;
+				}
+			}
+			if let Some(arr) = v.get("nodeStroke").and_then(|x| x.as_array()) {
+				if let Some(c) = Self::color_from_json_rgba8(arr) {
+					next.node_stroke = c;
+				}
+			}
+			if let Some(arr) = v.get("nodeFillSelected").and_then(|x| x.as_array()) {
+				if let Some(c) = Self::color_from_json_rgba8(arr) {
+					next.node_fill_selected = c;
+				}
+			}
+			if let Some(arr) = v.get("nodeStrokeSelected").and_then(|x| x.as_array()) {
+				if let Some(c) = Self::color_from_json_rgba8(arr) {
+					next.node_stroke_selected = c;
+				}
+			}
+			if let Some(arr) = v.get("handleFill").and_then(|x| x.as_array()) {
+				if let Some(c) = Self::color_from_json_rgba8(arr) {
+					next.handle_fill = c;
+				}
+			}
+			if let Some(arr) = v.get("handleStroke").and_then(|x| x.as_array()) {
+				if let Some(c) = Self::color_from_json_rgba8(arr) {
+					next.handle_stroke = c;
+				}
+			}
+			if let Some(arr) = v.get("handleFillSelected").and_then(|x| x.as_array()) {
+				if let Some(c) = Self::color_from_json_rgba8(arr) {
+					next.handle_fill_selected = c;
+				}
+			}
+			if let Some(arr) = v.get("handleStrokeSelected").and_then(|x| x.as_array()) {
+				if let Some(c) = Self::color_from_json_rgba8(arr) {
+					next.handle_stroke_selected = c;
+				}
+			}
+			if let Some(arr) = v.get("selectionPreviewFill").and_then(|x| x.as_array()) {
+				if let Some(c) = Self::color_from_json_rgba8(arr) {
+					next.selection_preview_fill = c;
+				}
+			}
+			if let Some(arr) = v.get("selectionPreviewStroke").and_then(|x| x.as_array()) {
+				if let Some(c) = Self::color_from_json_rgba8(arr) {
+					next.selection_preview_stroke = c;
+				}
+			}
+			self.vello_theme = next;
+			Ok(())
 		}
 
 		fn sync_selection_screen_overlay(&mut self, start_screen: Point, screen_points: &[Point]) {
@@ -1032,7 +1159,7 @@ mod board_host {
 				inner.stroke(
 					&stroke_grid,
 					Affine::IDENTITY,
-					board_palette::GRID_MINOR_STROKE,
+					self.vello_theme.grid_minor_stroke,
 					None,
 					&p,
 				);
@@ -1041,8 +1168,8 @@ mod board_host {
 				if !n.visible {
 					continue;
 				}
-				let fill = node_fill_color(n.selected);
-				let stroke_c = node_stroke_color(n.selected);
+				let fill = node_fill_color(&self.vello_theme, n.selected);
+				let stroke_c = node_stroke_color(&self.vello_theme, n.selected);
 				let sw = 2.0_f64;
 				match n.shape {
 					NodeShape::Circle => {
@@ -1071,12 +1198,13 @@ mod board_host {
 				let c = self.world_to_screen(wp);
 				let r = (h.radius * self.camera.zoom).max(1.0);
 				let circle = Circle::new(c, r);
-				let fill = handle_fill(h.selected);
-				let stroke_c = handle_stroke(h.selected);
+				let fill = handle_fill(&self.vello_theme, h.selected);
+				let stroke_c = handle_stroke(&self.vello_theme, h.selected);
 				inner.fill(Fill::NonZero, Affine::IDENTITY, fill, None, &circle);
 				inner.stroke(&Stroke::new(2.0), Affine::IDENTITY, stroke_c, None, &circle);
 			}
-			let mut curves: Vec<CubicBez> = Vec::new();
+			let edge_sw = 2.0 * self.camera.zoom.max(0.75);
+			let edge_stroke = Stroke::new(edge_sw);
 			for e in self.edges.values() {
 				if !e.visible {
 					continue;
@@ -1086,18 +1214,14 @@ mod board_host {
 					let p1 = self.world_to_screen(c.p1);
 					let p2 = self.world_to_screen(c.p2);
 					let p3 = self.world_to_screen(c.p3);
-					curves.push(CubicBez::new(p0, p1, p2, p3));
+					let curve = CubicBez::new(p0, p1, p2, p3);
+					let stroke_color = if e.selected {
+						self.vello_theme.edge_stroke_selected
+					} else {
+						self.vello_theme.edge_stroke
+					};
+					inner.stroke(&edge_stroke, Affine::IDENTITY, stroke_color, None, &curve);
 				}
-			}
-			let edge_sw = 2.0 * self.camera.zoom.max(0.75);
-			for c in &curves {
-				inner.stroke(
-					&Stroke::new(edge_sw),
-					Affine::IDENTITY,
-					board_palette::EDGE_STROKE,
-					None,
-					c,
-				);
 			}
 			if let Some(ref pts) = self.selection_screen_preview {
 				if pts.len() >= 2 {
@@ -1110,14 +1234,14 @@ mod board_host {
 					inner.fill(
 						Fill::NonZero,
 						Affine::IDENTITY,
-						board_palette::SELECTION_PREVIEW_FILL,
+						self.vello_theme.selection_preview_fill,
 						None,
 						&path,
 					);
 					inner.stroke(
 						&Stroke::new(1.5),
 						Affine::IDENTITY,
-						board_palette::SELECTION_PREVIEW_STROKE,
+						self.vello_theme.selection_preview_stroke,
 						None,
 						&path,
 					);
@@ -1268,7 +1392,9 @@ mod board_host {
 			}
 			self.interaction = Interaction::None;
 			if let Some(id) = hit {
-				self.set_selection_ids(&[id.clone()]);
+				let next = Self::merge_pick_into_selection(&self.selection, &id, self.selection_options.mode.as_str());
+				let ids: Vec<_> = next.iter().cloned().collect();
+				self.set_selection_ids(&ids);
 				self.set_hovered_id(Some(id));
 			} else {
 				self.set_selection_ids(&[]);
@@ -1366,16 +1492,21 @@ mod board_host {
 				mut screen_points,
 				start,
 				initial_ids,
-				..
+				start_screen,
 			} = std::mem::take(&mut self.interaction)
 			{
 				points.push(world);
 				screen_points.push(screen);
-				let next = self.resolve_area_selection_with_initial(&initial_ids, start, &points);
-				let ids: Vec<_> = next.iter().cloned().collect();
-				self.set_selection_ids(&ids);
+				let end_screen = screen_points.last().copied().unwrap_or(start_screen);
+				let click_only = distance_between(start_screen, end_screen) < SELECTION_CLICK_MAX_DISTANCE_PX;
+				if click_only {
+					self.set_selection_ids(&[]);
+				} else {
+					let next = self.resolve_area_selection_with_initial(&initial_ids, start, &points);
+					let ids: Vec<_> = next.iter().cloned().collect();
+					self.set_selection_ids(&ids);
+				}
 				self.set_selection_screen_preview(None);
-				let _ = screen_points;
 				return;
 			}
 			self.interaction = Interaction::None;
@@ -1443,6 +1574,31 @@ mod board_host {
 			}
 		}
 
+		fn selection_contains_handle(&self, h: &HandleData, box_: WorldBox, enclosing: bool, polygon: &[Point]) -> bool {
+			let Some(pos) = self.handle_world_pos(h) else {
+				return false;
+			};
+			let pad = h.radius.max(1.0);
+			let bounds = WorldBox {
+				min_x: pos.x - pad,
+				min_y: pos.y - pad,
+				max_x: pos.x + pad,
+				max_y: pos.y + pad,
+			};
+			let lasso = self.selection_options.method == "lasso";
+			if enclosing {
+				if lasso {
+					polygon_contains_world_box(polygon, bounds)
+				} else {
+					world_box_contains_box(box_, bounds)
+				}
+			} else if lasso {
+				polygon_intersects_world_box(polygon, bounds)
+			} else {
+				world_boxes_overlap(box_, bounds)
+			}
+		}
+
 		fn selection_contains_edge(&self, c: CubicBez, box_: WorldBox, enclosing: bool, polygon: &[Point]) -> bool {
 			const STEPS: usize = 24;
 			let mut samples = Vec::with_capacity(STEPS + 1);
@@ -1474,6 +1630,13 @@ mod board_host {
 				for n in self.nodes.values() {
 					if n.visible && self.selection_contains_node(n, box_, enclosing, polygon) {
 						hits.insert(n.id.clone());
+					}
+				}
+			}
+			if t == "nodes&edges" {
+				for h in self.handles.values() {
+					if h.visible && self.selection_contains_handle(h, box_, enclosing, polygon) {
+						hits.insert(h.id.clone());
 					}
 				}
 			}
@@ -1511,35 +1674,35 @@ mod board_host {
 		}
 	}
 
-	fn node_fill_color(sel: bool) -> Color {
+	fn node_fill_color(theme: &VelloThemePalette, sel: bool) -> Color {
 		if sel {
-			board_palette::NODE_FILL_SELECTED
+			theme.node_fill_selected
 		} else {
-			board_palette::NODE_FILL
+			theme.node_fill
 		}
 	}
 
-	fn node_stroke_color(sel: bool) -> Color {
+	fn node_stroke_color(theme: &VelloThemePalette, sel: bool) -> Color {
 		if sel {
-			board_palette::NODE_STROKE_SELECTED
+			theme.node_stroke_selected
 		} else {
-			board_palette::NODE_STROKE
+			theme.node_stroke
 		}
 	}
 
-	fn handle_fill(sel: bool) -> Color {
+	fn handle_fill(theme: &VelloThemePalette, sel: bool) -> Color {
 		if sel {
-			board_palette::HANDLE_FILL_SELECTED
+			theme.handle_fill_selected
 		} else {
-			Color::WHITE
+			theme.handle_fill
 		}
 	}
 
-	fn handle_stroke(sel: bool) -> Color {
+	fn handle_stroke(theme: &VelloThemePalette, sel: bool) -> Color {
 		if sel {
-			board_palette::HANDLE_STROKE_SELECTED
+			theme.handle_stroke_selected
 		} else {
-			board_palette::HANDLE_STROKE
+			theme.handle_stroke
 		}
 	}
 }
@@ -1737,11 +1900,11 @@ impl BoardEngine {
 		);
 	}
 
-	pub fn pointer_down(&mut self, x: f64, y: f64) {
+	pub fn pointer_down(&mut self, x: f64, y: f64, extend_selection: bool) {
 		let point = Point::new(x, y);
 		match self.hit_test(point) {
 			Some(HitObject::Node(node_id)) => {
-				self.select_node(node_id);
+				self.apply_pick_selection(HitObject::Node(node_id), extend_selection);
 				if let Some(node) = self.nodes.get(&node_id) {
 					if node.draggable {
 						self.interaction = InteractionMode::DragNode {
@@ -1753,20 +1916,12 @@ impl BoardEngine {
 				self.update_hover(Some(node_id));
 			}
 			Some(HitObject::Handle(handle_id)) => {
-				self.selection.handle_ids.clear();
-				self.selection.edge_ids.clear();
-				self.selection.node_ids.clear();
-				self.selection.handle_ids.insert(handle_id);
-				self.push_selection_event();
+				self.apply_pick_selection(HitObject::Handle(handle_id), extend_selection);
 				self.update_hover(Some(handle_id));
 				self.interaction = InteractionMode::Idle;
 			}
 			Some(HitObject::Edge(edge_id)) => {
-				self.selection.handle_ids.clear();
-				self.selection.node_ids.clear();
-				self.selection.edge_ids.clear();
-				self.selection.edge_ids.insert(edge_id);
-				self.push_selection_event();
+				self.apply_pick_selection(HitObject::Edge(edge_id), extend_selection);
 				self.update_hover(Some(edge_id));
 				self.interaction = InteractionMode::Idle;
 			}
@@ -1861,11 +2016,21 @@ impl BoardEngine {
 		self.selection.handle_ids.remove(&id);
 	}
 
-	fn select_node(&mut self, node_id: NodeId) {
-		self.selection.edge_ids.clear();
-		self.selection.handle_ids.clear();
-		self.selection.node_ids.clear();
-		self.selection.node_ids.insert(node_id);
+	fn apply_pick_selection(&mut self, hit: HitObject, extend_selection: bool) {
+		if !extend_selection {
+			self.selection = Selection::default();
+		}
+		match hit {
+			HitObject::Node(id) => {
+				self.selection.node_ids.insert(id);
+			}
+			HitObject::Handle(id) => {
+				self.selection.handle_ids.insert(id);
+			}
+			HitObject::Edge(id) => {
+				self.selection.edge_ids.insert(id);
+			}
+		}
 		self.push_selection_event();
 	}
 
@@ -2107,6 +2272,11 @@ impl BoardSession {
 		Ok(())
 	}
 
+	#[wasm_bindgen(js_name = setVelloThemeJson)]
+	pub fn set_vello_theme_json(&mut self, json: &str) {
+		let _ = self.host.set_vello_theme_from_json(json);
+	}
+
 	#[wasm_bindgen(js_name = parseFixtureJson)]
 	pub fn parse_fixture_json(&mut self, json: &str) -> bool {
 		let raw: serde_json::Value = match serde_json::from_str(json) {
@@ -2201,7 +2371,7 @@ impl BoardSession {
 			let pw = surface.config.width.max(1);
 			let ph = surface.config.height.max(1);
 			let params = vello::RenderParams {
-				base_color: vello::peniko::Color::WHITE,
+				base_color: self.host.vello_theme.raster_clear,
 				width: pw,
 				height: ph,
 				antialiasing_method: vello::AaConfig::Area,
@@ -2274,7 +2444,7 @@ mod tests {
 		let mut engine = BoardEngine::new();
 		engine.create_node(1, 0.0, 0.0, 30.0, true);
 
-		engine.pointer_down(0.0, 0.0);
+		engine.pointer_down(0.0, 0.0, false);
 		engine.pointer_move(60.0, 25.0);
 		engine.pointer_up();
 
@@ -2296,7 +2466,7 @@ mod tests {
 		engine.create_edge(100, 10, 20);
 
 		let handle_point = handle_position(engine.nodes.get(&1).unwrap(), engine.handles.get(&10).unwrap());
-		engine.pointer_down(handle_point.x, handle_point.y);
+		engine.pointer_down(handle_point.x, handle_point.y, false);
 
 		let events = engine.drain_events();
 		assert!(events.iter().any(|event| matches!(event, BoardEvent::SelectionChanged { handle_ids, .. } if handle_ids == &vec![10])));
@@ -2315,6 +2485,36 @@ mod tests {
 		assert_eq!(snapshot.nodes.len(), 2);
 		assert_eq!(snapshot.handles.len(), 2);
 		assert_eq!(snapshot.edges.len(), 1);
+	}
+
+	#[test]
+	fn engine_extend_pick_keeps_node_when_adding_handle() {
+		let mut engine = BoardEngine::new();
+		engine.create_node(1, 0.0, 0.0, 40.0, true);
+		engine.create_node(2, 300.0, 0.0, 40.0, true);
+		engine.create_handle(10, 1, 0.0);
+		engine.create_handle(20, 2, std::f64::consts::PI);
+		engine.create_edge(100, 10, 20);
+
+		engine.pointer_down(0.0, 0.0, false);
+		let _ = engine.drain_events();
+		let hp = handle_position(engine.nodes.get(&1).unwrap(), engine.handles.get(&10).unwrap());
+		engine.pointer_down(hp.x, hp.y, true);
+		let events = engine.drain_events();
+		let last = events.iter().rev().find_map(|event| match event {
+			BoardEvent::SelectionChanged {
+				node_ids,
+				handle_ids,
+				edge_ids,
+			} => Some((node_ids.clone(), handle_ids.clone(), edge_ids.clone())),
+			_ => None,
+		});
+		let Some((node_ids, handle_ids, edge_ids)) = last else {
+			panic!("expected SelectionChanged");
+		};
+		assert!(node_ids.contains(&1));
+		assert!(handle_ids.contains(&10));
+		assert!(edge_ids.is_empty());
 	}
 }
 
@@ -2469,6 +2669,131 @@ mod host_tests {
 		assert!((b.y - 5.0).abs() < 1e-6);
 		let sorted: Vec<_> = h.selection.iter().cloned().collect();
 		assert_eq!(sorted, vec!["a".to_string(), "b".to_string()]);
+	}
+
+	#[test]
+	fn board_host_selection_target_edges_skips_node_geometry() {
+		let mut h = BoardHost::new();
+		h.set_size(800, 600, 1.0);
+		h.set_selection_options("rectangle", "invertive", "edges");
+		let mut desc = sample_scene();
+		desc.nodes.push(NodeDescJson {
+			id: "b".into(),
+			x: 300.0,
+			y: 0.0,
+			draggable: Some(true),
+			selected: None,
+			style: None,
+			text: None,
+			user_data: None,
+			visible: None,
+			shape: Some("circle".into()),
+			radius: Some(40.0),
+			width: None,
+			height: None,
+		});
+		h.sync_descriptor(&desc);
+		let inside_node_a = Point::new(0.0, 0.0);
+		assert!(h.resolve_hit_world(inside_node_a).is_none());
+		let on_edge = Point::new(150.0, 0.0);
+		assert_eq!(h.resolve_hit_world(on_edge).as_deref(), Some("e1"));
+	}
+
+	#[test]
+	fn board_host_additive_click_merges_edge_into_existing_selection() {
+		let mut h = BoardHost::new();
+		h.set_size(800, 600, 1.0);
+		h.set_selection_options("rectangle", "additive", "nodes&edges");
+		let mut desc = sample_scene();
+		desc.nodes.push(NodeDescJson {
+			id: "b".into(),
+			x: 300.0,
+			y: 0.0,
+			draggable: Some(true),
+			selected: None,
+			style: None,
+			text: None,
+			user_data: None,
+			visible: None,
+			shape: Some("circle".into()),
+			radius: Some(40.0),
+			width: None,
+			height: None,
+		});
+		h.sync_descriptor(&desc);
+		h.set_selection_ids(&["a".into()]);
+		let _ = h.drain_events_json();
+		let on_edge = Point::new(150.0, 0.0);
+		let s = h.world_to_screen(on_edge);
+		h.pointer_down_screen(s.x, s.y, 0, false);
+		let mut got: Vec<_> = h.selection.iter().cloned().collect();
+		got.sort();
+		assert_eq!(got, vec!["a".to_string(), "e1".to_string()]);
+	}
+
+	#[test]
+	fn board_host_background_click_without_drag_clears_selection() {
+		let mut h = BoardHost::new();
+		h.set_size(800, 600, 1.0);
+		let mut desc = sample_scene();
+		desc.nodes.push(NodeDescJson {
+			id: "b".into(),
+			x: 300.0,
+			y: 0.0,
+			draggable: Some(true),
+			selected: None,
+			style: None,
+			text: None,
+			user_data: None,
+			visible: None,
+			shape: Some("circle".into()),
+			radius: Some(40.0),
+			width: None,
+			height: None,
+		});
+		h.sync_descriptor(&desc);
+		h.set_selection_ids(&["a".into(), "e1".into()]);
+		let away = Point::new(5000.0, 5000.0);
+		let s = h.world_to_screen(away);
+		h.pointer_down_screen(s.x, s.y, 0, false);
+		h.pointer_up_screen(s.x, s.y);
+		assert!(h.selection.is_empty());
+	}
+
+	#[test]
+	fn board_host_rectangle_area_select_includes_handles_with_nodes() {
+		let mut h = BoardHost::new();
+		h.set_size(800, 600, 1.0);
+		h.set_selection_options("rectangle", "invertive", "nodes&edges");
+		let mut desc = sample_scene();
+		desc.nodes.push(NodeDescJson {
+			id: "b".into(),
+			x: 300.0,
+			y: 0.0,
+			draggable: Some(true),
+			selected: None,
+			style: None,
+			text: None,
+			user_data: None,
+			visible: None,
+			shape: Some("circle".into()),
+			radius: Some(40.0),
+			width: None,
+			height: None,
+		});
+		h.sync_descriptor(&desc);
+		let _ = h.drain_events_json();
+		let w0 = Point::new(-90.0, -70.0);
+		let w1 = Point::new(90.0, 90.0);
+		let s0 = h.world_to_screen(w0);
+		let s1 = h.world_to_screen(w1);
+		h.pointer_down_screen(s0.x, s0.y, 0, false);
+		h.pointer_move_screen(s1.x, s1.y);
+		h.pointer_up_screen(s1.x, s1.y);
+		let mut got: Vec<_> = h.selection.iter().cloned().collect();
+		got.sort();
+		assert!(got.contains(&"a".to_string()));
+		assert!(got.contains(&"a.out".to_string()));
 	}
 }
 

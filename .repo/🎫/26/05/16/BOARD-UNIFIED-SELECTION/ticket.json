@@ -1,0 +1,11 @@
+{
+  "title": "Board Unified Selection And Background Clear",
+  "emoji": "🎯",
+  "status": "open",
+  "description": "Single selection set for nodes, edges, and handles; background click deselects; area marquee includes handles; BoardEngine extend pick.",
+  "summary": "",
+  "github": { "issue": "" },
+  "goal": "",
+  "sessions": [],
+  "files": []
+}

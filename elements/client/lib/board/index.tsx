@@ -39,6 +39,7 @@ import {
 	decodeBoardFixtureFromDragV1,
 	ensureElementsBoardWasmLoaded,
 	type BoardEventMap,
+	type BoardFixtureDropDetail,
 	type BoardFixtureV1,
 	type BoardNodeTextAlignment,
 	type BoardSelectionMethod,
@@ -61,7 +62,7 @@ export interface BoardCanvasProps {
 	/** @emoji 📥 When true, accepts in-app fixture drags using {@link BOARD_FIXTURE_DRAG_V1_MIME} (not OS file drops). */
 	fixtureDragDrop?: boolean;
 	height?: number;
-	onFixtureDrop?: (fixture: BoardFixtureV1) => void;
+	onFixtureDrop?: (detail: BoardFixtureDropDetail) => void;
 	onReady?: (renderer: BoardRenderer) => void;
 	renderMode?: RenderMode;
 	selectionMethod?: BoardSelectionMethod;
@@ -404,22 +405,34 @@ export function syncBoardScene(renderer: BoardRenderer, descriptor: BoardSceneDe
 //#endregion 🔖Scene Sync
 
 //#region 🔖HostMountBridge
-/** @emoji 🌉 Mounts the secondary board host subtree; remounts the inner root when `children` change so host props stay applied (legacy root + remount avoids skipped host updates under nested React roots). */
+/** @emoji 🌉 Secondary host root per {@link BoardRenderer}; swaps mount only when `renderer` changes and otherwise applies {@link updateBoardHostMount} so parent re-renders do not clear the scene. */
 function BoardHostSubtree({ children, renderer }: { children: ReactNode; renderer: BoardRenderer }): null {
 	const hostMountRef = useRef<BoardHostMount | null>(null);
+	const mountedRendererRef = useRef<BoardRenderer | null>(null);
 	const Bridge = useHostMountBridge();
 
 	useLayoutEffect(() => {
-		const root = createBoardHostMount(renderer);
-		hostMountRef.current = root;
-		updateBoardHostMount(root, createElement(Bridge, null, children), null);
-		return () => {
-			unmountBoardHostMount(root);
-			if (hostMountRef.current === root) {
+		if (hostMountRef.current === null || mountedRendererRef.current !== renderer) {
+			if (hostMountRef.current) {
+				unmountBoardHostMount(hostMountRef.current);
 				hostMountRef.current = null;
 			}
-		};
-	}, [renderer, children, Bridge]);
+			hostMountRef.current = createBoardHostMount(renderer);
+			mountedRendererRef.current = renderer;
+		}
+		updateBoardHostMount(hostMountRef.current, createElement(Bridge, null, children), null);
+	}, [Bridge, children, renderer]);
+
+	useLayoutEffect(
+		() => () => {
+			if (hostMountRef.current) {
+				unmountBoardHostMount(hostMountRef.current);
+				hostMountRef.current = null;
+				mountedRendererRef.current = null;
+			}
+		},
+		[],
+	);
 
 	return null;
 }
@@ -510,8 +523,17 @@ export function BoardCanvas({
 			if (!fixture) {
 				return;
 			}
-			onFixtureDrop?.(fixture);
-			rendererRef.current?.emit("fixtureDrop", fixture);
+			const canvas = canvasRef.current;
+			const renderer = rendererRef.current;
+			if (!canvas || !renderer) {
+				return;
+			}
+			const bounds = canvas.getBoundingClientRect();
+			const screen = { x: event.clientX - bounds.left, y: event.clientY - bounds.top };
+			const world = renderer.screenToWorld(screen);
+			const detail: BoardFixtureDropDetail = { fixture, screen, world };
+			onFixtureDrop?.(detail);
+			renderer.emit("fixtureDrop", detail);
 		},
 		[onFixtureDrop, resolvedFixtureDragDrop],
 	);
@@ -584,6 +606,24 @@ export function BoardCanvas({
 		onReady?.(contextRenderer);
 	}, [contextRenderer, onReady]);
 
+	useEffect(() => {
+		const renderer = rendererRef.current;
+		if (!renderer || typeof document === "undefined" || typeof MutationObserver === "undefined") {
+			return undefined;
+		}
+		if (renderMode === "headless-test") {
+			return undefined;
+		}
+		const root = document.documentElement;
+		const observer = new MutationObserver(() => {
+			renderer.invalidate();
+		});
+		observer.observe(root, { attributeFilter: ["class", "style"], attributes: true });
+		return () => {
+			observer.disconnect();
+		};
+	}, [contextRenderer, renderMode]);
+
 	useLayoutEffect(() => {
 		const renderer = rendererRef.current;
 		if (!renderer) {
@@ -648,7 +688,11 @@ export function BoardCanvas({
 	return (
 		<BoardContext.Provider value={contextRenderer}>
 				<div
-					className={[className, fixtureDragActive ? "ring-2 ring-teal-500 ring-offset-2" : ""].filter(Boolean).join(" ") || undefined}
+					className={
+						[className, fixtureDragActive ? "ring-2 ring-[color:var(--color-accent)] ring-offset-2 ring-offset-[color:var(--color-base)]" : ""]
+							.filter(Boolean)
+							.join(" ") || undefined
+					}
 					onDragEnter={handleDragEnter}
 					onDragLeave={handleDragLeave}
 					onDragOver={handleDragOver}
