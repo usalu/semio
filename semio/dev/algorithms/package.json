@@ -26,7 +26,6 @@
     "@storybook/react-vite": "^10.3.5",
     "react": "^19.2.3",
     "react-dom": "^19.2.3",
-    "semio": "file:../../client/lib/rs/pkg",
     "storybook": "^10.3.5"
   },
   "devDependencies": {

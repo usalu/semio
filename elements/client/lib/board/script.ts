@@ -19,7 +19,7 @@ const env = {
 const repoRoot = join(cwd, "../../../..");
 
 function run(args: string[], options: { cwd?: string } = {}): void {
-  const child = spawn("bunx", args, {
+  const child = spawn("bun", args, {
     cwd: options.cwd ?? cwd,
     env,
     shell: true,
@@ -52,10 +52,10 @@ if (command === "dev") {
   runSync(["bun", join(cwd, "rs/scripts/build-wasm.script.ts")]);
   const host = process.env.DEVCONTAINER === "true" ? "0.0.0.0" : "127.0.0.1";
   const port = process.env.BOARD_PLAY_PORT ?? "6012";
-  run(["vite", "--host", host, "--port", port, ...extra], { cwd: join(cwd, "play") });
+  run(["run", "vite", "--config", "play/vite.config.ts", "--host", host, "--port", port, ...extra]);
 } else if (command === "build") {
   runSync(["bun", join(cwd, "rs/scripts/build-wasm.script.ts")]);
-  runSync(["bunx", "vite", "build", ...extra], { cwd: join(cwd, "play") });
+  runSync(["bun", "run", "vite", "build", "--config", "play/vite.config.ts", ...extra]);
 } else if (command === "test") {
   runSync(["cargo", "test", "-p", "elements_board"], { cwd: repoRoot });
   runSync(["bun", join(cwd, "rs/scripts/build-wasm.script.ts")]);

@@ -17,6 +17,7 @@
     "semio/client/lib/*",
     "semio/client/lib/net/*",
     "semio/client/lib/react/*",
+    "semio/client/lib/sketchpad/*",
     "semio/client/schema/*",
     "semio/client/ui/*",
     "semio/client/ui/3dm/*",
