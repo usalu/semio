@@ -11,42 +11,27 @@
     "neo4j-semio": {
       "type": "stdio",
       "command": "bun",
-      "args": ["script.ts", "dev", "mcp", "neo4j", "semio"],
-      "env": {
-        "NEO4J_DATABASE": "semio"
-      }
+      "args": ["script.ts", "dev", "mcp", "neo4j", "semio"]
     },
     "neo4j-elements": {
       "type": "stdio",
       "command": "bun",
-      "args": ["script.ts", "dev", "mcp", "neo4j", "elements"],
-      "env": {
-        "NEO4J_DATABASE": "elements"
-      }
+      "args": ["script.ts", "dev", "mcp", "neo4j", "elements"]
     },
     "neo4j-coda": {
       "type": "stdio",
       "command": "bun",
-      "args": ["script.ts", "dev", "mcp", "neo4j", "coda"],
-      "env": {
-        "NEO4J_DATABASE": "coda"
-      }
+      "args": ["script.ts", "dev", "mcp", "neo4j", "coda"]
     },
     "neo4j-reuse": {
       "type": "stdio",
       "command": "bun",
-      "args": ["script.ts", "dev", "mcp", "neo4j", "reuse"],
-      "env": {
-        "NEO4J_DATABASE": "reuse"
-      }
+      "args": ["script.ts", "dev", "mcp", "neo4j", "reuse"]
     },
     "neo4j-semio-metabolism": {
       "type": "stdio",
       "command": "bun",
-      "args": ["script.ts", "dev", "mcp", "neo4j", "semio-metabolism"],
-      "env": {
-        "NEO4J_DATABASE": "semio-metabolism"
-      }
+      "args": ["script.ts", "dev", "mcp", "neo4j", "semio", "metabolism"]
     }
   }
 }

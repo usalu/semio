@@ -30,6 +30,6 @@ cwd = "."
 
 [mcp_servers.neo4j-semio-metabolism]
 command = "bun"
-args = ["script.ts", "dev", "mcp", "neo4j", "semio-metabolism"]
+args = ["script.ts", "dev", "mcp", "neo4j", "semio", "metabolism"]
 enabled = true
 cwd = "."

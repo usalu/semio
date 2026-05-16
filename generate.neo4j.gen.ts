@@ -1,5 +1,5 @@
 /**
- * 🛂 Neo4j → `.repo/🛂/<graph-database>.cypher` export (pure module; invoked from root `script.ts`). `NEO4J_GRAPH_DATABASE_NAMES` is the canonical list of live user graph names (MCP + `bun ./script.ts generate`).
+ * 🛂 Neo4j → `.repo/🛂/<graph-database>.cypher` export (pure module; invoked from root `script.ts`). Graph id = `joinNeo4jGraphDatabaseName(parts)` (e.g. `["semio","metabolism"]` → `semio-metabolism`); MCP uses `… mcp neo4j … <parts…>` the same way.
  */
 import { spawnSync } from "node:child_process";
 import { existsSync, mkdirSync, readFileSync, unlinkSync, writeFileSync } from "node:fs";
@@ -7,8 +7,33 @@ import { join } from "node:path";
 
 const NEO4J_VERSION = "5.26.26";
 
-/** 🗄️Canonical Neo4j user graph database names wired for MCP + `generate` APOC export. */
-export const NEO4J_GRAPH_DATABASE_NAMES = ["semio", "elements", "coda", "reuse", "semio-metabolism"] as const;
+/** 🗄️Canonical graph specs: each row is argv segments after `neo4j` / `generate neo4j`, joined with `-` for Bolt `NEO4J_DATABASE` and export filename. */
+export const NEO4J_GRAPH_DATABASE_SPECS = [
+  ["semio"],
+  ["elements"],
+  ["coda"],
+  ["reuse"],
+  ["semio", "metabolism"],
+] as const;
+
+/** 🔗Bolt user graph name from MCP/generate name segments (hyphen join). */
+export function joinNeo4jGraphDatabaseName(parts: readonly string[]): string {
+  return parts.join("-");
+}
+
+/** 🔀Leading argv tokens until the first `-` flag become the graph name segments; remainder is passed through to `uvx` (MCP only). */
+export function partitionNeo4jGraphCliArgv(segments: string[]): { nameParts: string[]; passthrough: string[] } {
+  const nameParts: string[] = [];
+  let i = 0;
+  while (i < segments.length && !segments[i]!.startsWith("-")) {
+    nameParts.push(segments[i]!);
+    i += 1;
+  }
+  return { nameParts, passthrough: segments.slice(i) };
+}
+
+export const NEO4J_GRAPH_DATABASE_NAMES = NEO4J_GRAPH_DATABASE_SPECS.map((s) => joinNeo4jGraphDatabaseName(s));
+
 export type Neo4jGraphDatabaseName = (typeof NEO4J_GRAPH_DATABASE_NAMES)[number];
 
 const NEO4J_GRAPH_DATABASE_LOOKUP = new Set<string>(NEO4J_GRAPH_DATABASE_NAMES);
@@ -135,16 +160,22 @@ export class Neo4jCypherExport {
   }
 
   tryExportFromArgv(argv: string[]): boolean {
-    const arg = argv.find((a) => NEO4J_GRAPH_DATABASE_LOOKUP.has(a));
-    const technology = arg ?? process.env.NEO4J_DATABASE ?? "semio";
-    if (!NEO4J_GRAPH_DATABASE_LOOKUP.has(technology)) {
+    const { nameParts, passthrough } = partitionNeo4jGraphCliArgv(argv);
+    if (passthrough.length > 0) {
+      console.error(`[generate:neo4j] unexpected extra arguments (use only graph name segments before any -flags): ${JSON.stringify(passthrough)}`);
+      return false;
+    }
+    const joined =
+      nameParts.length > 0 ? joinNeo4jGraphDatabaseName(nameParts) : (process.env.NEO4J_DATABASE ?? "semio");
+    if (!NEO4J_GRAPH_DATABASE_LOOKUP.has(joined)) {
       console.error(
-        `[generate:neo4j] graph database must be one of: ${NEO4J_GRAPH_DATABASE_NAMES.join(", ")} (got ${JSON.stringify(technology)})`,
+        `[generate:neo4j] graph database must be one of: ${NEO4J_GRAPH_DATABASE_NAMES.join(", ")} (got ${JSON.stringify(joined)}; argv segments ${JSON.stringify(nameParts)})`,
       );
       return false;
     }
 
-    const database = process.env.NEO4J_DATABASE ?? technology;
+    const technology = joined;
+    const database = process.env.NEO4J_DATABASE ?? joined;
     const outDir = join(this.repoRoot, ".repo", "🛂");
     mkdirSync(outDir, { recursive: true });
 
