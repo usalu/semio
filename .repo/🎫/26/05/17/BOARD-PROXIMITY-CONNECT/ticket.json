@@ -3,10 +3,11 @@
   "emoji": "🔌",
   "status": "closed",
   "description": "Implement proximity connect: when dragging a node with no incident edges, overlapping another node's bounds shows a wire between nearest compatible handles (normal/detail/micro LOD only); release commits edge. Disabled in minimap and overview LOD.",
-  "summary": "Proximity connect for unconnected single-node drag: overlapping node bounds picks nearest compatible handle pair, shows transient link wire (normal/detail/micro LOD), commits edge on release; skipped at minimap/overview. Pointer-down prefers link source over node drag. Fixed link-drop to LinkTargetNode (removed bad LOD gate). Tests updated for normal LOD handle hit and minimap (no node drag).",
+  "summary": "Proximity connect restored/extended: only considers handles on the overlapping peer node that have no incident edges (handle_has_incident_edge skip in best_proximity_compatible_handle_pair). Re-added DragNodes proximity_connect flow, LOD gate lod_allows_node_bounds_proximity_connect, preview wire, commit on release. Tests: base proximity, overview/minimap skip, node-with-edge skip, busy-only-other-handle skip, prefer free b:h1 when b:h0 linked.",
   "goal": "🎯r2602",
   "sessions": [
     "⚪e80ef43ea64e47c5a4b9b52a1b31e67b",
-    "⚪eeafb1b5e6ad42759a79bb86d7eacd26"
+    "⚪eeafb1b5e6ad42759a79bb86d7eacd26",
+    "⚪e1ca0b9d3a2543709d2f34d0ff0f5773"
   ]
 }

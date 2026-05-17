@@ -1,0 +1,10 @@
+{
+  "title": "Board Icon String Dollar Data Emoji",
+  "emoji": "🏷️",
+  "status": "open",
+  "description": "Board iconKind: always a string; leading $ = Typst math; data: URL = mime-detected svg or raster; else emoji via bundled Noto Color Emoji subset (Noto emoji family). Remove typst:/emoji:/image: prefixes. Keep metabolism catalog + inline SVG sniff as non-$ non-data vector fallback. Update TS docs/tests and Vitest.",
+  "goal": "🎯r2602🎯runningsketchpad",
+  "sessions": [
+    "⚪efb7fdfe5b4a4ad191d68c266309cfbd"
+  ]
+}

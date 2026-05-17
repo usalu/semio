@@ -1304,7 +1304,7 @@ if (boardReactVitest) {
 			await act(async () => {
 				root.render(
 					<BoardCanvas
-						camera={{ x: 0, y: 0, zoom: 2 }}
+						camera={{ x: 0, y: 0, zoom: 1 }}
 						height={600}
 						onReady={(r) => {
 							readyRenderer = r;
@@ -1354,7 +1354,7 @@ if (boardReactVitest) {
 			await act(async () => {
 				root.render(
 					<BoardCanvas
-						camera={{ x: 0, y: 0, zoom: 2 }}
+						camera={{ x: 0, y: 0, zoom: 1 }}
 						height={600}
 						onReady={(r) => {
 							readyRenderer = r;
