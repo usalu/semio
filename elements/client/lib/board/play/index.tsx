@@ -15,10 +15,6 @@ import {
 	SelectTrigger,
 	SelectValue,
 	Slider,
-	Tabs,
-	TabsContent,
-	TabsList,
-	TabsTrigger,
 	Tree,
 	TreeStateProvider,
 	UI,
@@ -126,7 +122,6 @@ import "./globals.css";
 
 // #region 🔖Kinds
 export type BoardPlayPaneId = "board-overview" | "board-detail" | "board-selection";
-type BoardWorkbenchTab = "constraints" | "graph" | "kinds";
 
 interface BoardPlayWireRecord {
 	endX?: number;
@@ -454,8 +449,6 @@ interface BoardPlayShellValue {
 	setActivePaneId: (id: BoardPlayPaneId) => void;
 	selectionByPane: Record<BoardPlayPaneId, Set<string>>;
 	setSelectionForPane: (pane: BoardPlayPaneId, ids: readonly string[]) => void;
-	workbenchTab: BoardWorkbenchTab;
-	setWorkbenchTab: (value: BoardWorkbenchTab) => void;
 	workbenchSelection: BoardWorkbenchSelection | null;
 	setWorkbenchSelection: (value: BoardWorkbenchSelection | null) => void;
 	focusGraphSelection: (ids: readonly string[]) => void;
@@ -995,7 +988,7 @@ function BoardPlaySettingsPanel(): ReactElement {
 					Redraw handles
 				</Button>
 				<p className="text-muted-foreground text-[11px] leading-snug">
-					While play is on, cameras ease each tick toward a bbox fit of the current layout (damped). After pause, over three seconds the camera stays fixed for the first third, then eases through the last two thirds (slow–fast–slow) to the final bbox fit without a jump. Dragging a node resets progressive ramp and the auto-stop timer.
+					Enable Redraw zoom on a board window to let that window follow redraw toward the current layout fit. When it is off, redraw keeps the current camera. Dragging a node resets progressive ramp and the auto-stop timer.
 				</p>
 			</div>
 		</div>
@@ -2661,21 +2654,42 @@ function boardWorkbenchRowClass(active: boolean): string {
 	].join(" ");
 }
 
-function BoardWorkbenchPanel(): ReactElement {
+function BoardWorkbenchTreePanel({
+	header,
+	icon,
+	sections,
+	subtitle,
+}: {
+	header: string;
+	icon: ReactNode;
+	sections: TreeDataSection[];
+	subtitle?: string;
+}): ReactElement {
+	return (
+		<div className="flex h-full min-h-0 flex-col gap-2 p-3 text-xs">
+			<div className="text-muted-foreground flex shrink-0 items-center gap-2 border-b border-element pb-2">
+				{icon}
+				<div>
+					<div className="font-semibold uppercase tracking-wide">{header}</div>
+					{subtitle ? <div className="text-[11px] opacity-80">{subtitle}</div> : null}
+				</div>
+			</div>
+			<TreeStateProvider>
+				<Tree className="min-h-0 min-w-0 flex-1 overflow-y-auto overflow-x-hidden" sections={sections} />
+			</TreeStateProvider>
+		</div>
+	);
+}
+
+function BoardWorkbenchGraphPanel(): ReactElement {
 	const {
 		activePaneId,
-		appendConstraint,
-		appendKind,
 		fixture,
 		focusGraphSelection,
 		kindCatalogs,
-		kindCompatibility,
 		selectionByPane,
-		setWorkbenchTab,
 		wires,
 		workbenchSelection,
-		workbenchTab,
-		focusWorkbenchSelection,
 	} = useBoardPlayShell();
 	const selectedIds = selectionByPane[activePaneId];
 	const graphSections = useMemo<TreeDataSection[]>(
@@ -2729,6 +2743,11 @@ function BoardWorkbenchPanel(): ReactElement {
 		],
 		[fixture.edges, fixture.nodes, focusGraphSelection, kindCatalogs.handles, selectedIds, wires, workbenchSelection],
 	);
+	return <BoardWorkbenchTreePanel header="Graph" icon={<FolderTree className="size-4 shrink-0" />} sections={graphSections} subtitle={`pane: ${activePaneId}`} />;
+}
+
+function BoardWorkbenchKindsPanel(): ReactElement {
+	const { appendKind, focusWorkbenchSelection, kindCatalogs, workbenchSelection } = useBoardPlayShell();
 	const kindSections = useMemo<TreeDataSection[]>(
 		() => [
 			{
@@ -2788,6 +2807,11 @@ function BoardWorkbenchPanel(): ReactElement {
 		],
 		[appendKind, focusWorkbenchSelection, kindCatalogs.edges, kindCatalogs.nodes, kindCatalogs.wires, workbenchSelection],
 	);
+	return <BoardWorkbenchTreePanel header="Kinds" icon={<Circle className="size-4 shrink-0" />} sections={kindSections} subtitle="Node, edge, and wire kind catalogs" />;
+}
+
+function BoardWorkbenchConstraintsPanel(): ReactElement {
+	const { appendConstraint, focusWorkbenchSelection, kindCatalogs, kindCompatibility, workbenchSelection } = useBoardPlayShell();
 	const constraintSections = useMemo<TreeDataSection[]>(
 		() => [
 			{
@@ -2811,39 +2835,7 @@ function BoardWorkbenchPanel(): ReactElement {
 		],
 		[appendConstraint, focusWorkbenchSelection, kindCatalogs, kindCompatibility, workbenchSelection],
 	);
-	return (
-		<div className="flex h-full min-h-0 flex-col gap-2 p-3 text-xs">
-			<div className="text-muted-foreground flex shrink-0 items-center gap-2 border-b border-element pb-2">
-				<FolderTree className="size-4 shrink-0" />
-				<div>
-					<div className="font-semibold uppercase tracking-wide">Workbench</div>
-					<div className="text-[11px] opacity-80">pane: {activePaneId}</div>
-				</div>
-			</div>
-			<Tabs className="min-h-0 flex-1" onValueChange={(value) => setWorkbenchTab(value as BoardWorkbenchTab)} value={workbenchTab}>
-				<TabsList className="grid w-full grid-cols-3 gap-0 text-xs">
-					<TabsTrigger value="graph">Graph</TabsTrigger>
-					<TabsTrigger value="kinds">Kinds</TabsTrigger>
-					<TabsTrigger value="constraints">Constraints</TabsTrigger>
-				</TabsList>
-				<TabsContent className="min-h-0 overflow-hidden" value="graph">
-					<TreeStateProvider>
-						<Tree className="min-h-0 min-w-0 flex-1 overflow-y-auto overflow-x-hidden" sections={graphSections} />
-					</TreeStateProvider>
-				</TabsContent>
-				<TabsContent className="min-h-0 overflow-hidden" value="kinds">
-					<TreeStateProvider>
-						<Tree className="min-h-0 min-w-0 flex-1 overflow-y-auto overflow-x-hidden" sections={kindSections} />
-					</TreeStateProvider>
-				</TabsContent>
-				<TabsContent className="min-h-0 overflow-hidden" value="constraints">
-					<TreeStateProvider>
-						<Tree className="min-h-0 min-w-0 flex-1 overflow-y-auto overflow-x-hidden" sections={constraintSections} />
-					</TreeStateProvider>
-				</TabsContent>
-			</Tabs>
-		</div>
-	);
+	return <BoardWorkbenchTreePanel header="Constraints" icon={<Link2 className="size-4 shrink-0" />} sections={constraintSections} subtitle="Compatibility rules and priority" />;
 }
 
 function InspectorNodeKindDetails({ entry, patchKindCatalogs, renameKind }: { entry: BoardNodeKindCatalogEntry; patchKindCatalogs: (updater: (prev: BoardKindCatalogBundle) => BoardKindCatalogBundle) => void; renameKind: (previousId: string, nextId: string) => void }): ReactElement {
@@ -3179,7 +3171,6 @@ function BoardPlayInner(): ReactElement {
 	const [kindCompatibility, setKindCompatibilityState] = useState<BoardKindCompatEntry[]>(initialDocument.kindCompatibility);
 	const [lockedIdList, setLockedIdList] = useState<string[]>(initialDocument.lockedIds);
 	const lockedIds = useMemo(() => new Set(lockedIdList), [lockedIdList]);
-	const [workbenchTab, setWorkbenchTab] = useState<BoardWorkbenchTab>("graph");
 	const [workbenchSelection, setWorkbenchSelection] = useState<BoardWorkbenchSelection | null>(null);
 	const [boardPlayPaneCamerasBaseline, setBoardPlayPaneCamerasBaseline] = useState<
 		Record<BoardPlayPaneId, CameraState>
@@ -3426,18 +3417,15 @@ function BoardPlayInner(): ReactElement {
 		if (kind === "node-kind") {
 			setKindCatalogsState((prev) => ({ ...prev, nodes: [...(prev.nodes ?? []), { id: nextId, label: nextId }] }));
 			setWorkbenchSelection({ id: nextId, kind });
-			setWorkbenchTab("kinds");
 			return;
 		}
 		if (kind === "edge-kind") {
 			setKindCatalogsState((prev) => ({ ...prev, edges: [...(prev.edges ?? []), { id: nextId, label: nextId }] }));
 			setWorkbenchSelection({ id: nextId, kind });
-			setWorkbenchTab("kinds");
 			return;
 		}
 		setKindCatalogsState((prev) => ({ ...prev, wires: [...(prev.wires ?? []), { id: nextId, label: nextId }] }));
 		setWorkbenchSelection({ id: nextId, kind });
-		setWorkbenchTab("kinds");
 	}, []);
 
 	const appendConstraint = useCallback(() => {
@@ -3445,7 +3433,6 @@ function BoardPlayInner(): ReactElement {
 		const target = kindCatalogs.handles?.[0]?.id ?? BOARD_BUILTIN_PORT_HANDLE_KIND;
 		setKindCompatibilityState((prev) => [...prev, { source, target }]);
 		setWorkbenchSelection({ id: `constraint:${kindCompatibility.length}`, kind: "constraint" });
-		setWorkbenchTab("constraints");
 	}, [kindCatalogs.handles, kindCompatibility.length]);
 
 	const deleteWorkbenchSelection = useCallback(() => {
@@ -3761,6 +3748,26 @@ function BoardPlayInner(): ReactElement {
 		}
 	}, [cameraDisplayOverrideByPane]);
 
+	useEffect(() => {
+		const pane = activePaneIdRef.current;
+		if (boardRedrawInteractiveZoomByPane[pane]) {
+			return;
+		}
+		boardPlayRedrawCameraChaseRef.current = null;
+		nodesRedrawEaseGenerationRef.current += 1;
+		nodesRedrawEaseFromRef.current = null;
+		if (boardPlayNodesRedrawCameraAnimRafRef.current != null) {
+			cancelAnimationFrame(boardPlayNodesRedrawCameraAnimRafRef.current);
+			boardPlayNodesRedrawCameraAnimRafRef.current = null;
+		}
+		if (cameraPlayEndAnimRafRef.current != null) {
+			cancelAnimationFrame(cameraPlayEndAnimRafRef.current);
+			cameraPlayEndAnimRafRef.current = null;
+		}
+		setCameraDisplayOverrideByPane(null);
+		suppressCameraBasisSyncRef.current = false;
+	}, [activePaneId, boardRedrawInteractiveZoomByPane]);
+
 	const redrawPlayingRef = useRef(false);
 	const redrawProgressiveEpochRef = useRef(0);
 	const redrawLoopSnapshotRef = useRef<BoardPlayRedrawLoopSnapshot>({
@@ -3809,11 +3816,14 @@ function BoardPlayInner(): ReactElement {
 			boardPlayNodesRedrawCameraAnimRafRef.current = null;
 		}
 		nodesRedrawEaseGenerationRef.current += 1;
-		nodesRedrawEaseFromRef.current = {
-			"board-detail": { ...camerasByPane["board-detail"] },
-			"board-overview": { ...camerasByPane["board-overview"] },
-			"board-selection": { ...camerasByPane["board-selection"] },
-		};
+		const interactiveZoomEnabled = boardRedrawInteractiveZoomByPaneRef.current[activePaneId];
+		nodesRedrawEaseFromRef.current = interactiveZoomEnabled
+			? {
+					"board-detail": { ...camerasByPane["board-detail"] },
+					"board-overview": { ...camerasByPane["board-overview"] },
+					"board-selection": { ...camerasByPane["board-selection"] },
+				}
+			: null;
 		const full = Math.max(1, Math.min(5000, Math.round(forceLayoutFullIterations)));
 		patchFixture((prev) => {
 			const laidOut = layoutBoardFixtureRedrawNodes(
@@ -3834,7 +3844,9 @@ function BoardPlayInner(): ReactElement {
 			);
 			return { ...laidOut, camera: { ...prev.camera } };
 		});
-		setNodesRedrawCameraEaseTick((n) => n + 1);
+		if (interactiveZoomEnabled) {
+			setNodesRedrawCameraEaseTick((n) => n + 1);
+		}
 	}, [
 		activePaneId,
 		boardRedrawHandlesAfterNodes,
@@ -3995,13 +4007,11 @@ function BoardPlayInner(): ReactElement {
 			selectionByPane,
 			setSelectionForPane,
 			setWorkbenchSelection,
-			setWorkbenchTab,
 			treeLayoutLayerSpacing,
 			treeLayoutDirection,
 			treeLayoutSiblingGap,
 			wires,
 			workbenchSelection,
-			workbenchTab,
 		}),
 		[
 			activePaneId,
@@ -4049,8 +4059,12 @@ function BoardPlayInner(): ReactElement {
 			treeLayoutSiblingGap,
 			wires,
 			workbenchSelection,
-			workbenchTab,
 		],
+	);
+
+	const boardWindowKinds = useMemo(
+		() => boardWindowKindsWithRedrawZoomOptions(boardRedrawInteractiveZoomByPane, setBoardRedrawInteractiveZoomByPane),
+		[boardRedrawInteractiveZoomByPane],
 	);
 
 	const boardPlayApp: UIAppConfig = useMemo(
@@ -4060,7 +4074,9 @@ function BoardPlayInner(): ReactElement {
 			label: "Board",
 			leftPanelTabs: [
 				{ content: () => <BoardFixtureLibraryPanel />, icon: Library, id: "board-play-library", order: 0 },
-				{ content: () => <BoardWorkbenchPanel />, icon: FolderTree, id: "board-play-workbench", order: 1 },
+				{ content: () => <BoardWorkbenchGraphPanel />, icon: FolderTree, id: "board-play-workbench-graph", order: 1 },
+				{ content: () => <BoardWorkbenchKindsPanel />, icon: Circle, id: "board-play-workbench-kinds", order: 2 },
+				{ content: () => <BoardWorkbenchConstraintsPanel />, icon: Link2, id: "board-play-workbench-constraints", order: 3 },
 			],
 			onActiveWindowChange: (windowKindId) => {
 				if (windowKindId === "board-overview" || windowKindId === "board-detail" || windowKindId === "board-selection") {
@@ -4074,7 +4090,7 @@ function BoardPlayInner(): ReactElement {
 			toolbarContent: <BoardPlayToolbar />,
 			windowKinds: boardWindowKinds,
 		}),
-		[setActivePaneId],
+		[boardWindowKinds, setActivePaneId],
 	);
 
 	return (
