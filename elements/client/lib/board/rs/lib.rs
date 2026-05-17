@@ -1605,39 +1605,46 @@ mod board_icon_codec {
 		})
 	}
 
-	pub fn board_typst_markup_to_svg(markup: &str) -> Option<String> {
-		static LIB: OnceLock<LazyHash<Library>> = OnceLock::new();
-		static BOOK: OnceLock<LazyHash<typst::text::FontBook>> = OnceLock::new();
-		static FONTS: OnceLock<Vec<Font>> = OnceLock::new();
-		static MAIN: OnceLock<FileId> = OnceLock::new();
-		let library = LIB.get_or_init(|| LazyHash::new(Library::default()));
-		let fonts = FONTS.get_or_init(|| {
-			let mut out = Vec::new();
-			for bytes in typst_assets::fonts() {
-				let blob = Bytes::new(bytes);
-				let mut idx = 0u32;
-				loop {
-					if let Some(f) = Font::new(blob.clone(), idx) {
-						out.push(f);
-						idx = idx.saturating_add(1);
-					} else {
-						break;
-					}
-				}
-			}
-			let emoji_blob = Bytes::new(BOARD_ICON_NOTO_COLOR_EMOJI_SUBSET);
+	fn typst_asset_font_list() -> Vec<Font> {
+		let mut out = Vec::new();
+		for bytes in typst_assets::fonts() {
+			let blob = Bytes::new(bytes);
 			let mut idx = 0u32;
 			loop {
-				if let Some(f) = Font::new(emoji_blob.clone(), idx) {
+				if let Some(f) = Font::new(blob.clone(), idx) {
 					out.push(f);
 					idx = idx.saturating_add(1);
 				} else {
 					break;
 				}
 			}
-			out
-		});
-		let book = BOOK.get_or_init(|| LazyHash::new(typst::text::FontBook::from_fonts(fonts.iter())));
+		}
+		out
+	}
+
+	fn typst_asset_font_list_plus_noto_color_emoji() -> Vec<Font> {
+		let mut out = typst_asset_font_list();
+		let emoji_blob = Bytes::new(BOARD_ICON_NOTO_COLOR_EMOJI_SUBSET);
+		let mut idx = 0u32;
+		loop {
+			if let Some(f) = Font::new(emoji_blob.clone(), idx) {
+				out.push(f);
+				idx = idx.saturating_add(1);
+			} else {
+				break;
+			}
+		}
+		out
+	}
+
+	fn board_typst_compile_markup_to_svg(
+		markup: &str,
+		fonts: &'static [Font],
+		book: &'static LazyHash<typst::text::FontBook>,
+	) -> Option<String> {
+		static LIB: OnceLock<LazyHash<Library>> = OnceLock::new();
+		static MAIN: OnceLock<FileId> = OnceLock::new();
+		let library = LIB.get_or_init(|| LazyHash::new(Library::default()));
 		let main = *MAIN.get_or_init(|| FileId::new(None, VirtualPath::new("/board.typ")));
 		let source = Source::new(main, markup.to_string());
 		struct BoardTypstWorld<'a> {
@@ -1679,7 +1686,7 @@ mod board_icon_codec {
 			book,
 			main,
 			source,
-			fonts: fonts.as_slice(),
+			fonts,
 		};
 		let warned = typst::compile::<PagedDocument>(&w);
 		let doc = warned.output.ok()?;
@@ -1687,6 +1694,25 @@ mod board_icon_codec {
 			return None;
 		}
 		Some(typst_svg::svg_merged(&doc, Abs::pt(3.0)))
+	}
+
+	static TYPST_ASSET_FONTS: OnceLock<Vec<Font>> = OnceLock::new();
+	static TYPST_ASSET_BOOK: OnceLock<LazyHash<typst::text::FontBook>> = OnceLock::new();
+	// Noto Color Emoji (COLR) in the same `FontBook` as math broke `typst:` icon compiles; keep a second pool for `emoji:` only.
+	static TYPST_ICON_EMOJI_FONTS: OnceLock<Vec<Font>> = OnceLock::new();
+	static TYPST_ICON_EMOJI_BOOK: OnceLock<LazyHash<typst::text::FontBook>> = OnceLock::new();
+
+	pub fn board_typst_markup_to_svg(markup: &str) -> Option<String> {
+		let fonts = TYPST_ASSET_FONTS.get_or_init(typst_asset_font_list);
+		let book = TYPST_ASSET_BOOK.get_or_init(|| LazyHash::new(typst::text::FontBook::from_fonts(fonts.iter())));
+		board_typst_compile_markup_to_svg(markup, fonts.as_slice(), book)
+	}
+
+	fn board_typst_markup_to_svg_for_icon_emoji(markup: &str) -> Option<String> {
+		let fonts = TYPST_ICON_EMOJI_FONTS.get_or_init(typst_asset_font_list_plus_noto_color_emoji);
+		let book =
+			TYPST_ICON_EMOJI_BOOK.get_or_init(|| LazyHash::new(typst::text::FontBook::from_fonts(fonts.iter())));
+		board_typst_compile_markup_to_svg(markup, fonts.as_slice(), book)
 	}
 
 	pub fn board_resolve_icon_kind(encoded: &str) -> BoardResolvedIcon {
@@ -1715,7 +1741,7 @@ mod board_icon_codec {
 			let wrapped = format!(
 				"#set page(width: 88pt, height: 88pt, margin: 2pt, fill: none)\n#set align(center + horizon)\n#set text(size: 44pt, font: \"Noto Color Emoji\")\n{em}"
 			);
-			return match board_typst_markup_to_svg(&wrapped) {
+			return match board_typst_markup_to_svg_for_icon_emoji(&wrapped) {
 				Some(s) => BoardResolvedIcon::SvgPlain(s),
 				None => BoardResolvedIcon::None,
 			};
@@ -3058,22 +3084,127 @@ mod board_host {
 			}
 		}
 
-		/// @emoji 🧭 Resolves which single node draws the normal-LOD indirect handle ring (idle single selection, link source drag, or indirect target pick).
+		/// @emoji 🧭 Resolves which single node draws the normal-LOD indirect handle ring when that node has **more than one** eligible free handle (otherwise the sole handle is implicit).
 		fn indirect_ring_node_id(&self, lod: BoardDrawLod) -> Option<String> {
 			if lod != BoardDrawLod::Normal {
 				return None;
 			}
-			if let Interaction::LinkTargetNode { target_node_id, .. } = &self.interaction {
-				return self.nodes.get(target_node_id).filter(|n| n.visible).map(|n| n.id.clone());
+			let ring_nid = if let Interaction::LinkTargetNode { target_node_id, .. } = &self.interaction {
+				target_node_id.clone()
+			} else if let Some(nid) = self.indirect_ring_source_node_id_from_interaction() {
+				nid
+			} else if self.selection.len() == 1 {
+				self.selection.iter().next()?.clone()
+			} else {
+				return None;
+			};
+			let n = self.nodes.get(&ring_nid).filter(|n| n.visible)?;
+			if self.eligible_indirect_handle_count_on_node(n.id.as_str()) > 1 {
+				Some(ring_nid)
+			} else {
+				None
 			}
-			if let Some(nid) = self.indirect_ring_source_node_id_from_interaction() {
-				return self.nodes.get(&nid).filter(|n| n.visible).map(|n| n.id.clone());
+		}
+
+		fn eligible_indirect_handle_count_on_node(&self, node_id: &str) -> usize {
+			self.handles
+				.iter()
+				.filter(|(id, h)| {
+					h.node_id == node_id && h.visible && self.handle_eligible_indirect_connect_ring(id.as_str())
+				})
+				.count()
+		}
+
+		/// @emoji 🧭 Returns the handle id when `node_id` has exactly one visible free indirect-eligible handle.
+		fn sole_eligible_indirect_handle_on_node(&self, node_id: &str) -> Option<String> {
+			let mut found: Option<String> = None;
+			for (id, h) in &self.handles {
+				if h.node_id != node_id || !h.visible || !self.handle_eligible_indirect_connect_ring(id.as_str()) {
+					continue;
+				}
+				if found.is_some() {
+					return None;
+				}
+				found = Some(id.clone());
+			}
+			found
+		}
+
+		/// @emoji 🧭 When the drop target has exactly one free handle compatible with `source_handle_id`, returns that handle id (otherwise `None`).
+		fn node_sole_free_link_compatible_handle(&self, source_handle_id: &str, target_node_id: &str) -> Option<String> {
+			let source = self.handles.get(source_handle_id)?;
+			if source.node_id == target_node_id {
+				return None;
+			}
+			let mut found: Option<String> = None;
+			for (id, h) in &self.handles {
+				if h.node_id != target_node_id || !h.visible {
+					continue;
+				}
+				if self.handle_has_incident_edge(id.as_str()) {
+					continue;
+				}
+				if !self.handles_link_compatible_for_drag(source, h) {
+					continue;
+				}
+				if found.is_some() {
+					return None;
+				}
+				found = Some(id.clone());
+			}
+			found
+		}
+
+		fn point_in_node_world(&self, n: &NodeData, point: Point) -> bool {
+			match n.shape {
+				NodeShape::Rectangle => {
+					let hw = n.width / 2.0;
+					let hh = n.height / 2.0;
+					(point.x - n.x).abs() <= hw && (point.y - n.y).abs() <= hh
+				}
+				NodeShape::Circle => distance_between(point, Point::new(n.x, n.y)) <= n.radius,
+			}
+		}
+
+		fn sole_indirect_handle_hit_link_target(&self, point: Point) -> Option<String> {
+			let Interaction::LinkTargetNode {
+				source_id,
+				target_node_id,
+			} = &self.interaction
+			else {
+				return None;
+			};
+			let th = self.node_sole_free_link_compatible_handle(source_id, target_node_id)?;
+			let n = self.nodes.get(target_node_id)?;
+			if !n.visible {
+				return None;
+			}
+			if !self.point_in_node_world(n, point) {
+				return None;
+			}
+			Some(th)
+		}
+
+		fn sole_indirect_handle_hit_idle_selected_node(&self, point: Point) -> Option<String> {
+			if !matches!(self.interaction, Interaction::None) {
+				return None;
 			}
 			if self.selection.len() != 1 {
 				return None;
 			}
-			let id = self.selection.iter().next()?;
-			self.nodes.get(id).filter(|n| n.visible).map(|n| n.id.clone())
+			let nid = self.selection.iter().next()?;
+			if !self.nodes.contains_key(nid) {
+				return None;
+			}
+			let sole = self.sole_eligible_indirect_handle_on_node(nid)?;
+			let n = self.nodes.get(nid)?;
+			if !n.visible {
+				return None;
+			}
+			if !self.point_in_node_world(n, point) {
+				return None;
+			}
+			Some(sole)
 		}
 
 		/// @emoji 🧭 True when `target_node_id` hosts at least one visible free handle that can pair with `source_handle_id` under link-compat rules.
@@ -3223,6 +3354,11 @@ mod board_host {
 			let zoom = self.camera.zoom;
 			let o = &self.selection_options;
 			if o.select_handles {
+				if matches!(self.current_draw_lod(), BoardDrawLod::Normal) {
+					if let Some(hid) = self.sole_indirect_handle_hit_link_target(point) {
+						return Some(hid);
+					}
+				}
 				if let Some(ring_node_id) = self.indirect_ring_node_id(self.current_draw_lod()) {
 					for h in self.handles.values().rev() {
 						if !h.visible || h.node_id != ring_node_id {
@@ -3248,6 +3384,11 @@ mod board_host {
 						if distance_between(point, pos) <= tol {
 							return Some(h.id.clone());
 						}
+					}
+				}
+				if matches!(self.current_draw_lod(), BoardDrawLod::Normal) {
+					if let Some(hid) = self.sole_indirect_handle_hit_idle_selected_node(point) {
+						return Some(hid);
 					}
 				}
 			}
@@ -4304,7 +4445,10 @@ mod board_host {
 
 		/// @emoji 💫 True when the handle may be drawn or hit-tested on the indirect-connect ghost ring (`normal` LOD).
 		fn handle_eligible_indirect_connect_ring(&self, handle_id: &str) -> bool {
-			!self.handle_has_incident_edge(handle_id)
+			let Some(h) = self.handles.get(handle_id) else {
+				return false;
+			};
+			h.visible && !self.handle_has_incident_edge(handle_id)
 		}
 
 		fn nearest_link_snap_handle_world(&self, source_handle_id: &str, world: Point) -> Option<String> {
@@ -4407,6 +4551,13 @@ mod board_host {
 			{
 				self.interaction = Interaction::None;
 				if button == 0 {
+					if let Some(th) = self.node_sole_free_link_compatible_handle(&source_id, &target_node_id) {
+						if hit.as_deref() == Some(target_node_id.as_str()) || hit.as_deref() == Some(th.as_str()) {
+							self.try_commit_link_edge(&source_id, &th, Some("indirectConnect"));
+							self.update_hover_from_world(world);
+							return;
+						}
+					}
 					if let Some(hid) = hit.as_ref().filter(|id| {
 						self.handles.get(*id).is_some_and(|h| h.node_id == target_node_id && h.visible)
 							&& !self.handle_has_incident_edge(id.as_str())
@@ -4627,11 +4778,18 @@ mod board_host {
 					} else if let Some(target_node_id) = self.resolve_node_hit_world(world) {
 						let source_node_id = self.handles.get(&source_id).map(|h| h.node_id.clone());
 						if source_node_id.as_deref() != Some(target_node_id.as_str()) {
-							self.interaction = Interaction::LinkTargetNode {
-								source_id,
-								target_node_id: target_node_id.clone(),
-							};
-							self.set_hovered_id(Some(target_node_id));
+							if let Some(sole_target) =
+								self.node_sole_free_link_compatible_handle(source_id.as_str(), target_node_id.as_str())
+							{
+								self.try_commit_link_edge(&source_id, &sole_target, Some("indirectConnect"));
+							} else {
+								self.interaction = Interaction::LinkTargetNode {
+									source_id,
+									target_node_id: target_node_id.clone(),
+								};
+								self.set_hovered_id(Some(target_node_id));
+							}
+							self.update_hover_from_world(world);
 							return;
 						}
 					}
@@ -6214,6 +6372,42 @@ mod host_tests {
 		}
 	}
 
+	fn link_test_scene_node_a_two_free_handles() -> SceneDescriptorJson {
+		let mut s = link_test_scene_no_edge();
+		s.handles.push(HandleDescJson {
+			id: "a:h1".into(),
+			node_id: "a".into(),
+			angle: std::f64::consts::FRAC_PI_2,
+			radius: None,
+			selected: None,
+			style: None,
+			handle_kind: Some("parent".into()),
+			color: None,
+			icon_kind: None,
+			user_data: None,
+			visible: None,
+		});
+		s
+	}
+
+	fn link_test_scene_b_two_free_child_handles() -> SceneDescriptorJson {
+		let mut s = link_test_scene_no_edge();
+		s.handles.push(HandleDescJson {
+			id: "b:h1".into(),
+			node_id: "b".into(),
+			angle: 0.0,
+			radius: None,
+			selected: None,
+			style: None,
+			handle_kind: Some("child".into()),
+			color: None,
+			icon_kind: None,
+			user_data: None,
+			visible: None,
+		});
+		s
+	}
+
 	fn link_test_scene_target_b_handle_busy() -> SceneDescriptorJson {
 		let mut s = link_test_scene_no_edge();
 		s.nodes.push(NodeDescJson {
@@ -6381,39 +6575,60 @@ mod host_tests {
 		h.sync_descriptor(&link_test_scene_node_a_two_handles_one_busy()).unwrap();
 		let _ = h.drain_events_json();
 		h.set_selection_ids(&["a".into()]);
-		let ha0 = h.handles.get("a:h0").unwrap().clone();
-		let ha1 = h.handles.get("a:h1").unwrap().clone();
-		let ring_busy = h.indirect_handle_world_pos(&ha0).unwrap();
-		let ring_free = h.indirect_handle_world_pos(&ha1).unwrap();
-		assert_eq!(h.resolve_hit_world(ring_free).as_deref(), Some("a:h1"));
+		let ha0 = h.handles.get("a:h0").unwrap();
+		let ring_busy = h.indirect_handle_world_pos(ha0).unwrap();
 		assert_ne!(h.resolve_hit_world(ring_busy).as_deref(), Some("a:h0"));
+		assert_eq!(h.resolve_hit_world(Point::new(0.0, 0.0)).as_deref(), Some("a:h1"));
 	}
 
 	#[test]
-	fn board_host_indirect_handle_ring_creates_edge_after_target_handle_choice() {
+	fn board_host_indirect_sole_compatible_drop_creates_edge_immediately() {
 		let mut h = BoardHost::new();
 		h.set_size(800, 600, 1.0);
+		h.set_camera(0.0, 0.0, 1.0);
+		h.set_handle_link_compat_from_json(r#"[{"source":"parent","target":"child"}]"#).unwrap();
 		h.sync_descriptor(&link_test_scene_no_edge()).unwrap();
 		let _ = h.drain_events_json();
 		h.set_selection_ids(&["a".into()]);
-		let source = h.handles.get("a:h0").unwrap().clone();
-		let source_ring = h.indirect_handle_world_pos(&source).unwrap();
-		let s0 = h.world_to_screen(source_ring);
-		h.pointer_down_screen(s0.x, s0.y, 0, false);
-		let target_center = h.world_to_screen(Point::new(280.0, 0.0));
-		h.pointer_move_screen(target_center.x, target_center.y);
-		h.pointer_up_screen(target_center.x, target_center.y);
+		let inside_a = h.world_to_screen(Point::new(0.0, 0.0));
+		h.pointer_down_screen(inside_a.x, inside_a.y, 0, false);
 		assert!(matches!(
 			h.interaction,
-			Interaction::LinkTargetNode {
-				ref source_id,
-				ref target_node_id
-			} if source_id == "a:h0" && target_node_id == "b"
+			Interaction::LinkAtSourceHandle { ref source_id, .. } if source_id == "a:h0"
 		));
-		assert!(h.drain_events_json().contains("\"select\""));
-		let target = h.handles.get("b:h0").unwrap().clone();
-		let target_ring = h.indirect_handle_world_pos(&target).unwrap();
-		let s1 = h.world_to_screen(target_ring);
+		let inside_b = h.world_to_screen(Point::new(280.0, 0.0));
+		h.pointer_move_screen(inside_b.x, inside_b.y);
+		assert!(matches!(h.interaction, Interaction::LinkDragSnap { .. }));
+		h.pointer_up_screen(inside_b.x, inside_b.y);
+		assert!(matches!(h.interaction, Interaction::None));
+		let ev = h.drain_events_json();
+		assert!(ev.contains("edgeCreate"));
+		assert!(ev.contains("indirectConnect"));
+		assert!(ev.contains("a:h0"));
+		assert!(ev.contains("b:h0"));
+	}
+
+	#[test]
+	fn board_host_indirect_two_compatible_child_handles_on_target_require_ring_pick() {
+		let mut h = BoardHost::new();
+		h.set_size(800, 600, 1.0);
+		h.set_camera(0.0, 0.0, 1.0);
+		h.set_handle_link_compat_from_json(r#"[{"source":"parent","target":"child"}]"#).unwrap();
+		h.sync_descriptor(&link_test_scene_b_two_free_child_handles()).unwrap();
+		let _ = h.drain_events_json();
+		h.set_selection_ids(&["a".into()]);
+		let sa = h.world_to_screen(Point::new(0.0, 0.0));
+		h.pointer_down_screen(sa.x, sa.y, 0, false);
+		let sb = h.world_to_screen(Point::new(280.0, 0.0));
+		h.pointer_move_screen(sb.x, sb.y);
+		h.pointer_up_screen(sb.x, sb.y);
+		assert!(matches!(
+			h.interaction,
+			Interaction::LinkTargetNode { ref target_node_id, .. } if target_node_id == "b"
+		));
+		let b0 = h.handles.get("b:h0").unwrap();
+		let ring0 = h.indirect_handle_world_pos(b0).unwrap();
+		let s1 = h.world_to_screen(ring0);
 		h.pointer_down_screen(s1.x, s1.y, 0, false);
 		let ev = h.drain_events_json();
 		assert!(ev.contains("edgeCreate"));
@@ -6426,12 +6641,12 @@ mod host_tests {
 	fn board_host_indirect_target_click_elsewhere_stops_wire() {
 		let mut h = BoardHost::new();
 		h.set_size(800, 600, 1.0);
-		h.sync_descriptor(&link_test_scene_no_edge()).unwrap();
+		h.set_camera(0.0, 0.0, 1.0);
+		h.set_handle_link_compat_from_json(r#"[{"source":"parent","target":"child"}]"#).unwrap();
+		h.sync_descriptor(&link_test_scene_b_two_free_child_handles()).unwrap();
 		h.set_selection_ids(&["a".into()]);
-		let source = h.handles.get("a:h0").unwrap().clone();
-		let source_ring = h.indirect_handle_world_pos(&source).unwrap();
-		let s0 = h.world_to_screen(source_ring);
-		h.pointer_down_screen(s0.x, s0.y, 0, false);
+		let sa = h.world_to_screen(Point::new(0.0, 0.0));
+		h.pointer_down_screen(sa.x, sa.y, 0, false);
 		let target_center = h.world_to_screen(Point::new(280.0, 0.0));
 		h.pointer_move_screen(target_center.x, target_center.y);
 		h.pointer_up_screen(target_center.x, target_center.y);
@@ -6442,29 +6657,17 @@ mod host_tests {
 	}
 
 	#[test]
-	fn board_host_indirect_ring_stays_hit_testable_after_starting_link() {
+	fn board_host_indirect_ring_shown_when_node_has_two_free_handles() {
 		let mut h = BoardHost::new();
 		h.set_size(800, 600, 1.0);
 		h.set_camera(0.0, 0.0, 1.0);
 		h.set_handle_link_compat_from_json(r#"[{"source":"parent","target":"child"}]"#).unwrap();
-		h.sync_descriptor(&link_test_scene_no_edge()).unwrap();
+		h.sync_descriptor(&link_test_scene_node_a_two_free_handles()).unwrap();
 		let _ = h.drain_events_json();
 		h.set_selection_ids(&["a".into()]);
-		let ha = h.handles.get("a:h0").unwrap().clone();
-		let ring = h.indirect_handle_world_pos(&ha).unwrap();
-		let s0 = h.world_to_screen(ring);
-		h.pointer_down_screen(s0.x, s0.y, 0, false);
-		assert!(matches!(h.interaction, Interaction::LinkAtSourceHandle { .. }));
-		assert!(h.selection.len() >= 2);
-		let ring_pt = h.indirect_handle_world_pos(&ha).unwrap();
-		let pick = h.resolve_hit_world(h.screen_to_world(h.world_to_screen(ring_pt)));
-		assert_eq!(pick.as_deref(), Some("a:h0"));
-		let far = h.world_to_screen(Point::new(200.0, 0.0));
-		h.pointer_move_screen(far.x, far.y);
-		assert!(matches!(h.interaction, Interaction::LinkDragSnap { .. }));
-		let ring2 = h.indirect_handle_world_pos(&ha).unwrap();
-		let pick2 = h.resolve_hit_world(h.screen_to_world(h.world_to_screen(ring2)));
-		assert_eq!(pick2.as_deref(), Some("a:h0"));
+		let ha0 = h.handles.get("a:h0").unwrap();
+		let ring = h.indirect_handle_world_pos(ha0).unwrap();
+		assert_eq!(h.resolve_hit_world(ring).as_deref(), Some("a:h0"));
 	}
 
 	#[test]
@@ -6608,13 +6811,13 @@ mod host_tests {
 	fn board_host_indirect_does_not_commit_on_busy_target_handle() {
 		let mut h = BoardHost::new();
 		h.set_size(800, 600, 1.0);
+		h.set_camera(0.0, 0.0, 1.0);
+		h.set_handle_link_compat_from_json(r#"[{"source":"parent","target":"child"}]"#).unwrap();
 		h.sync_descriptor(&link_test_scene_target_b_handle_busy()).unwrap();
 		let _ = h.drain_events_json();
 		h.set_selection_ids(&["a".into()]);
-		let source = h.handles.get("a:h0").unwrap().clone();
-		let source_ring = h.indirect_handle_world_pos(&source).unwrap();
-		let s0 = h.world_to_screen(source_ring);
-		h.pointer_down_screen(s0.x, s0.y, 0, false);
+		let sa = h.world_to_screen(Point::new(0.0, 0.0));
+		h.pointer_down_screen(sa.x, sa.y, 0, false);
 		let target_center = h.world_to_screen(Point::new(280.0, 0.0));
 		h.pointer_move_screen(target_center.x, target_center.y);
 		h.pointer_up_screen(target_center.x, target_center.y);
@@ -6626,10 +6829,8 @@ mod host_tests {
 			} if source_id == "a:h0" && target_node_id == "b"
 		));
 		let _ = h.drain_events_json();
-		let target = h.handles.get("b:h0").unwrap().clone();
-		let target_ring = h.indirect_handle_world_pos(&target).unwrap();
-		let s1 = h.world_to_screen(target_ring);
-		h.pointer_down_screen(s1.x, s1.y, 0, false);
+		let sb = h.world_to_screen(Point::new(280.0, 0.0));
+		h.pointer_down_screen(sb.x, sb.y, 0, false);
 		let ev = h.drain_events_json();
 		assert!(!ev.contains("edgeCreate"));
 		assert_eq!(h.edges.len(), 1);
